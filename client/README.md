@@ -246,6 +246,16 @@ cd client && npm install && npm run dev
 6. 军事面板仍仅有出征表单（**无** 取消行军/加速按钮）；[世界坐标 CLIENT-015](#手动验收世界坐标-client-015) 填入出征目标流程不退化。
 7. 单测：`worldMinimap.test.ts`、`MarchListPanel` 选中用例；`cd client && npm test`。
 
+### 手动验收（小地图比例尺与多行军 CLIENT-037）
+
+在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上：
+
+1. 展开小地图时右下角应有 **近似比例尺**（`≈N格` 文案 + 横条），缩放/平移后 N 会随视野变化。
+2. 多条进行中行军：列表刷新后小地图应绘制 **起终点连线**；**行军中** 为实线、**撤回中** 为虚线（颜色与 CLIENT-028 点标区分）；在列表 **选中一行** 后该行军连线加粗高亮，优先于阶段默认样式。
+3. 点右上角 **▼** 折叠为角标「世界 ▶」，刷新页面后折叠状态应保持（`sessionStorage` 键 `rxsg.client.worldMinimap.collapsed`）；折叠后点击角标可展开。
+4. 折叠状态下点击原小地图区域内的 **农田** 等槽位仍应响应（折叠条仅占右上角窄条，不占 270×210 hit 区）。
+5. 仍无取消行军/加速；`cd client && npm test` 含 `worldMinimap` 比例尺/折叠/描边用例。
+
 ### 手动验收（世界坐标 CLIENT-015）
 
 1. 进入主城后点 **「世界」**（或世界城池面板入口，与 `world.v1.ListPlayerCities` 一致）→ **「刷新城池」**。
@@ -398,7 +408,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`worldMinimap`（小地图缩放/行军高亮）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`worldMinimap`（小地图缩放/行军高亮/比例尺/折叠 sessionStorage/多行军描边）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

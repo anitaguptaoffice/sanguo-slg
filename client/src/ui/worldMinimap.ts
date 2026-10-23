@@ -7,6 +7,14 @@ export const WORLD_MAP_EDGE = 500;
 /** 主城舞台上的小地图区域（layout 坐标，位于 STAGE 带内右上角）。 */
 export const MINIMAP_LAYOUT_RECT = { x: 1310, y: 72, w: 270, h: 210 };
 
+/** 折叠后仅保留角标条，不占原 270×210 槽位 hit 区。 */
+export const MINIMAP_COLLAPSED_CHROME_RECT = { x: 1310, y: 72, w: 112, h: 28 };
+
+export const MINIMAP_COLLAPSED_SESSION_KEY = "rxsg.client.worldMinimap.collapsed";
+
+const MARCH_PHASE_MARCHING = 2;
+const MARCH_PHASE_RETURNING = 4;
+
 export type MinimapLayoutRect = typeof MINIMAP_LAYOUT_RECT;
 
 export type MinimapView = {
@@ -141,6 +149,129 @@ export function layoutPointInMinimap(
     layoutY >= rect.y &&
     layoutY < rect.y + rect.h
   );
+}
+
+/** 展开时完整小地图交互区；折叠时无地图区（不挡建筑槽位）。 */
+export function minimapMapInteractionRect(collapsed: boolean): MinimapLayoutRect | null {
+  return collapsed ? null : MINIMAP_LAYOUT_RECT;
+}
+
+export function layoutPointInMinimapMap(
+  layoutX: number,
+  layoutY: number,
+  collapsed: boolean,
+): boolean {
+  const rect = minimapMapInteractionRect(collapsed);
+  return rect != null && layoutPointInMinimap(layoutX, layoutY, rect);
+}
+
+export function minimapCollapseToggleRect(collapsed: boolean): MinimapLayoutRect {
+  if (collapsed) return MINIMAP_COLLAPSED_CHROME_RECT;
+  return {
+    x: MINIMAP_LAYOUT_RECT.x + MINIMAP_LAYOUT_RECT.w - 28,
+    y: MINIMAP_LAYOUT_RECT.y + 2,
+    w: 26,
+    h: 22,
+  };
+}
+
+export function layoutPointInMinimapToggle(
+  layoutX: number,
+  layoutY: number,
+  collapsed: boolean,
+): boolean {
+  return layoutPointInMinimap(layoutX, layoutY, minimapCollapseToggleRect(collapsed));
+}
+
+export function readMinimapCollapsedFromSession(
+  storage: Pick<Storage, "getItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): boolean {
+  try {
+    return storage?.getItem(MINIMAP_COLLAPSED_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function writeMinimapCollapsedToSession(
+  collapsed: boolean,
+  storage: Pick<Storage, "setItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): void {
+  try {
+    storage?.setItem(MINIMAP_COLLAPSED_SESSION_KEY, collapsed ? "1" : "0");
+  } catch {
+    /* ignore quota / private mode */
+  }
+}
+
+export function marchHasRouteOnMinimap(m: MarchSummary): boolean {
+  if (!marchShowsDestOnMinimap(m)) return false;
+  return m.from_x != null && m.from_y != null && m.to_x != null && m.to_y != null;
+}
+
+export type MinimapMarchRouteStroke = {
+  color: string;
+  lineWidth: number;
+  dash: number[];
+};
+
+/** 选中行样式优先；否则按 marching / returning 区分实线/虚线。 */
+export function minimapMarchRouteStroke(
+  phase: number | undefined,
+  isSelected: boolean,
+): MinimapMarchRouteStroke {
+  if (isSelected) {
+    return { color: "#f0c674", lineWidth: 3, dash: [] };
+  }
+  const p = phase ?? 0;
+  if (p === MARCH_PHASE_RETURNING) {
+    return { color: "#8ab4f8", lineWidth: 2, dash: [8, 5] };
+  }
+  if (p === MARCH_PHASE_MARCHING) {
+    return { color: "#c97b63", lineWidth: 2, dash: [] };
+  }
+  return { color: "rgba(201, 123, 99, 0.55)", lineWidth: 1.5, dash: [4, 4] };
+}
+
+function pickNiceScaleWorldUnits(raw: number): number {
+  if (!Number.isFinite(raw) || raw <= 0) return 1;
+  const exp = Math.floor(Math.log10(raw));
+  const pow = Math.pow(10, exp);
+  const norm = raw / pow;
+  let nice = 10;
+  if (norm <= 1) nice = 1;
+  else if (norm <= 2) nice = 2;
+  else if (norm <= 5) nice = 5;
+  return nice * pow;
+}
+
+export type MinimapScaleBarSpec = {
+  /** 角标文案，如「≈25格」。 */
+  label: string;
+  /** 比例尺条在 layout 上的长度（px）。 */
+  barLayoutPx: number;
+  worldUnits: number;
+};
+
+/** 由小地图舞台尺寸与当前视野推导近似比例尺（纯函数）。 */
+export function computeMinimapScaleBar(
+  bounds: WorldBounds,
+  rect: MinimapLayoutRect,
+  view: MinimapView,
+  targetBarLayoutPx = 64,
+): MinimapScaleBarSpec {
+  const span = boundsSpan(bounds);
+  const visibleWorldW = span.w / view.zoom;
+  const worldPerLayoutPx = visibleWorldW / Math.max(1, rect.w);
+  const rawUnits = worldPerLayoutPx * targetBarLayoutPx;
+  const worldUnits = pickNiceScaleWorldUnits(rawUnits);
+  const barLayoutPx = worldUnits / worldPerLayoutPx;
+  const label = `≈${worldUnits}格`;
+  return { label, barLayoutPx, worldUnits };
 }
 
 export function findFirstMarchByDest(

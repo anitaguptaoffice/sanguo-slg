@@ -1,15 +1,22 @@
 import { describe, expect, it } from "vitest";
 import type { MarchSummary } from "@/net/militaryFormat";
 import {
+  MINIMAP_COLLAPSED_SESSION_KEY,
   MINIMAP_LAYOUT_RECT,
   applyMinimapPan,
   collectMinimapDestMarkers,
+  computeMinimapScaleBar,
   computeMinimapWorldBounds,
   findFirstMarchByDest,
   findMarchIdForMinimapDestClick,
   layoutPointInMinimap,
+  layoutPointInMinimapMap,
+  layoutPointInMinimapToggle,
   marchSelectionMatchesListRow,
   marchShowsDestOnMinimap,
+  minimapMarchRouteStroke,
+  readMinimapCollapsedFromSession,
+  writeMinimapCollapsedToSession,
   worldToMinimapLayout,
   DEFAULT_MINIMAP_VIEW,
 } from "@/ui/worldMinimap";
@@ -67,5 +74,45 @@ describe("worldMinimap", () => {
   it("matches list selection by march id", () => {
     expect(marchSelectionMatchesListRow(2, 2)).toBe(true);
     expect(marchSelectionMatchesListRow(2, 3)).toBe(false);
+  });
+
+  it("derives scale bar label from minimap stage size and view", () => {
+    const bounds = computeMinimapWorldBounds(5, 5, marches, null);
+    const bar = computeMinimapScaleBar(bounds, MINIMAP_LAYOUT_RECT, DEFAULT_MINIMAP_VIEW);
+    expect(bar.label).toMatch(/^≈\d+格$/);
+    expect(bar.barLayoutPx).toBeGreaterThan(8);
+    expect(bar.worldUnits).toBeGreaterThan(0);
+  });
+
+  it("styles marching vs returning routes; selected wins", () => {
+    const marching = minimapMarchRouteStroke(2, false);
+    const returning = minimapMarchRouteStroke(4, false);
+    expect(marching.dash).toEqual([]);
+    expect(returning.dash.length).toBeGreaterThan(0);
+    const selected = minimapMarchRouteStroke(4, true);
+    expect(selected.lineWidth).toBeGreaterThan(returning.lineWidth);
+    expect(selected.dash).toEqual([]);
+  });
+
+  it("persists collapsed flag in sessionStorage", () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, v),
+    };
+    expect(readMinimapCollapsedFromSession(storage)).toBe(false);
+    writeMinimapCollapsedToSession(true, storage);
+    expect(storage.getItem(MINIMAP_COLLAPSED_SESSION_KEY)).toBe("1");
+    expect(readMinimapCollapsedFromSession(storage)).toBe(true);
+  });
+
+  it("collapsed map does not block former minimap slot hits", () => {
+    const centerX = MINIMAP_LAYOUT_RECT.x + MINIMAP_LAYOUT_RECT.w / 2;
+    const centerY = MINIMAP_LAYOUT_RECT.y + MINIMAP_LAYOUT_RECT.h / 2;
+    expect(layoutPointInMinimapMap(centerX, centerY, true)).toBe(false);
+    expect(layoutPointInMinimapMap(centerX, centerY, false)).toBe(true);
+    expect(layoutPointInMinimapToggle(MINIMAP_LAYOUT_RECT.x + 4, MINIMAP_LAYOUT_RECT.y + 10, true)).toBe(
+      true,
+    );
   });
 });
