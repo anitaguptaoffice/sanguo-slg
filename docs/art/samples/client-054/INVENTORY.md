@@ -2,7 +2,7 @@
 
 CLIENT-046 美术 FAIL 后的纸底字色 + primary 接线修复。皮肤：`ui.panel.default.v1` + `ui.button.primary.v1`。**不**将 CLIENT-040 军事 PASS 扩展为本目录四面板。
 
-| 证据 tip SHA | `1ee7691a1455b9c8eb245116ac9357027fecac2e` |
+| 证据 tip SHA | `0d2bdf3c16eb3adc0396199d250f7eb8d2b4caad` |
 |---|---|
 
 | 路径 | 字节 | 视口 | 面板 | 状态 | 备注 |
