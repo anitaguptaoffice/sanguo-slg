@@ -70,6 +70,17 @@ import {
   syncRecruitSubmitButton,
   walletMaterialDeductPulseKeys,
 } from "@/net/recruitSubmitFeedback";
+import {
+  pickRestoredHeroId,
+  readHeroDetailSelectedSession,
+  writeHeroDetailSelectedSession,
+} from "@/net/heroDetailSelectedSession";
+import {
+  scheduleHeroListRefreshPulse,
+  scrollHeroListRowIntoView,
+  setHeroListFormErrorDisplay,
+  syncHeroListRefreshButton,
+} from "@/net/heroListRefreshFeedback";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -90,6 +101,7 @@ export class HeroMailPanels {
   private recruitHeroInflight = false;
   private recruitLastError: string | null = null;
   private recruitLastSuccessHeroId: number | null = null;
+  private heroesRefreshInflight = false;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -206,7 +218,7 @@ export class HeroMailPanels {
     this.heroPanel.classList.toggle("hidden");
     if (!this.heroPanel.classList.contains("hidden")) {
       void this.refreshRecruitTemplates();
-      void this.refreshHeroes();
+      void this.refreshHeroes({ restoreSelection: true });
     }
   }
 
@@ -378,6 +390,7 @@ export class HeroMailPanels {
       <h3>将领</h3>
       <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
       <button type="button" data-action="refresh-heroes">刷新列表</button>
+      <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <button type="button" data-action="refresh-templates">刷新招募模板</button>
       <label>招募模板
         <select data-field="template-select"><option value="">（先刷新模板）</option></select>
@@ -668,7 +681,14 @@ export class HeroMailPanels {
     }
   }
 
-  private async refreshHeroes(): Promise<void> {
+  private async refreshHeroes(opts?: {
+    restoreSelection?: boolean;
+    pulseOnSuccess?: boolean;
+  }): Promise<void> {
+    if (this.heroesRefreshInflight) return;
+    this.heroesRefreshInflight = true;
+    syncHeroListRefreshButton(this.heroPanel, true);
+    setHeroListFormErrorDisplay(this.heroPanel, null);
     const sid = this.serverId();
     this.onStatus("拉取将领…");
     try {
@@ -677,17 +697,43 @@ export class HeroMailPanels {
         total_count?: number;
       };
       this.heroes = res.heroes ?? [];
+      if (opts?.restoreSelection) {
+        const stored = readHeroDetailSelectedSession();
+        const pick = pickRestoredHeroId(this.heroes, stored);
+        if (pick) this.selectedHeroId = pick;
+      } else if (
+        this.selectedHeroId > 0 &&
+        !this.heroes.some((h) => h.hero_id === this.selectedHeroId)
+      ) {
+        this.selectedHeroId = 0;
+        this.heroDetail = null;
+      }
       this.renderHeroList();
       this.renderTemplateList();
+      if (opts?.restoreSelection && this.selectedHeroId > 0) {
+        await this.loadHeroDetail(this.selectedHeroId);
+        scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+      }
+      if (opts?.pulseOnSuccess) {
+        scheduleHeroListRefreshPulse(
+          this.heroPanel.querySelector('[data-role="hero-list"]') as HTMLElement | null,
+        );
+      }
       this.onStatus(`将领 ${this.heroes.length}/${res.total_count ?? this.heroes.length} 名`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      setHeroListFormErrorDisplay(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.heroesRefreshInflight = false;
+      syncHeroListRefreshButton(this.heroPanel, false);
     }
   }
 
   private async loadHeroDetail(heroId: number): Promise<void> {
     const sid = this.serverId();
     this.selectedHeroId = heroId;
+    writeHeroDetailSelectedSession(heroId);
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
@@ -1081,7 +1127,7 @@ export class HeroMailPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-heroes") void this.refreshHeroes();
+    if (a === "refresh-heroes") void this.refreshHeroes({ pulseOnSuccess: true });
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "recruit-hero") void this.recruitHero();
     if (a === "recruit-open-hero-detail") {
