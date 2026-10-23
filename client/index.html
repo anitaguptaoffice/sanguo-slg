@@ -221,12 +221,17 @@
       .military-panel button.art-btn-primary {
         margin-top: 8px; cursor: pointer;
       }
+      .military-panel button.art-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
       .military-panel hr { border: none; border-top: 1px solid rgba(61, 46, 31, 0.35); margin: 12px 0; }
       .military-panel .march-target-fields.march-target-field-highlight input {
         outline: 2px solid #c9a227;
         background: rgba(201, 162, 39, 0.12);
       }
       .military-panel .march-target-hint { margin: 4px 0 6px; font-size: 12px; color: #6b4f1a; }
+      .military-panel .troop-recruit-preview {
+        font-size: 12px; line-height: 1.45; color: #6b4f1a; margin: 4px 0 6px;
+        word-break: break-word;
+      }
       .military-panel .march-form-error {
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
         color: #8b1a1a; background: rgba(139, 26, 26, 0.1); border-radius: 4px;

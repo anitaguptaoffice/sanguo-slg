@@ -65,6 +65,7 @@ import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
+import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import {
@@ -271,6 +272,8 @@ export class MainCityScene implements Scene {
           </select>
         </label>
         <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
+        <p class="troop-recruit-preview" data-role="troop-recruit-preview"></p>
+        <p class="march-form-error hidden" data-role="troop-recruit-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
         <hr />
         <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
@@ -556,6 +559,8 @@ export class MainCityScene implements Scene {
     skinCenterPrimary(this.social.getRankRoot());
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
+    this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));
+    this.militaryPanel.addEventListener("input", (ev) => this.onMilitaryRecruitFieldChange(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
     this.canvas.addEventListener("wheel", this.onCanvasWheelBound, { passive: false });
     this.canvas.addEventListener("pointermove", this.onCanvasPointerBound);
@@ -781,6 +786,13 @@ export class MainCityScene implements Scene {
         : "出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。";
     }
     syncMarchSubmitButton(this.militaryPanel, this.marchSubmitInflight);
+    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+  }
+
+  private onMilitaryRecruitFieldChange(ev: Event): void {
+    const t = ev.target as HTMLElement;
+    if (!t.matches('[data-field="unit"], [data-field="recruit-count"]')) return;
+    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
   }
 
   private minimapBoundsExtra(): MinimapWorldPoint[] {
@@ -1065,6 +1077,9 @@ export class MainCityScene implements Scene {
     if (patch.wallet !== undefined || patch.buildings !== undefined) {
       this.buildingPanel?.sync();
     }
+    if (patch.wallet !== undefined) {
+      this.syncMilitaryPanel();
+    }
   }
 
   private isAnyPanelVisible(): boolean {
@@ -1348,8 +1363,16 @@ export class MainCityScene implements Scene {
 
   private async recruit(): Promise<void> {
     if (!this.session) return;
-    const unitCfgId = Number((this.field("unit") as HTMLSelectElement)?.value ?? 1);
-    const count = Number((this.field("recruit-count") as HTMLInputElement)?.value ?? 1);
+    const preview = syncTroopRecruitFormPreview(this.militaryPanel, this.session.wallet);
+    if (!preview?.canAfford) {
+      setTroopRecruitFormError(this.militaryPanel, preview?.insufficientHint ?? "资源不足");
+      this.status = preview?.insufficientHint ?? "资源不足";
+      this.renderHud();
+      return;
+    }
+    const unitCfgId = preview.troopCfgId;
+    const count = preview.qty;
+    setTroopRecruitFormError(this.militaryPanel, null);
     this.status = `募兵 ${unitLabel(unitCfgId)}×${count}…`;
     this.renderHud();
     try {
@@ -1370,7 +1393,9 @@ export class MainCityScene implements Scene {
         ? `募兵排队 #${res.queue_id}，预计 ${finish}（见「队列」面板）`
         : `募兵完成，${unitLabel(unitCfgId)} 当前 ${res.troop?.count ?? "?"}`;
     } catch (e) {
-      this.status = (e as Error).message;
+      const msg = formatPanelGatewayErrorFromUnknown("march", e);
+      setTroopRecruitFormError(this.militaryPanel, msg);
+      this.status = msg;
     }
     this.renderHud();
     this.syncMilitaryPanel();
