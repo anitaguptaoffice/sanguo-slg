@@ -2,21 +2,19 @@ import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import { DAILY_QUEST_CHAIN_ID, dailyQuestsFromListResponse, type DailyQuestRow } from "@/net/dailyQuestState";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { MAIL_INBOX_FILTER_ALL, MAIL_INBOX_FILTER_UNREAD, type MailRow } from "@/net/heroMailState";
+import type { CityBuilding } from "@/net/bootstrapSession";
 import {
-  countClaimableDailyQuests,
-  countClaimableMails,
   pickFirstClaimableDailyQuestCfgId,
   pickFirstClaimableMailId,
 } from "@/net/hudCenterTodo";
 import {
-  aggregateHudTodoCounts,
-  countDailyTodoQuests,
   EMPTY_HUD_TODO_DEEP_LINK,
   mailUnreadSnapshotFromListResponse,
   pickFirstDailyTodoQuestCfgId,
   type HudTodoBadgeCounts,
   type HudTodoDeepLinkSnapshot,
 } from "@/net/hudTodoBadge";
+import { buildHudTodoBadges } from "@/net/hudTodoBadges";
 import {
   CITY_STATE_POLL_FAST_SEC,
   CITY_STATE_POLL_SLOW_SEC,
@@ -26,12 +24,15 @@ export type HudTodoBadgePollOptions = {
   gateway: GatewayPort;
   getServerId: () => number;
   getCityId: () => number | null;
+  getBuildings: () => CityBuilding[] | undefined;
+  getBuildCompleteCount: () => number;
   battleReportUnread: BattleReportUnreadSession;
   /** 与 CityStatePoll 相同：任意面板打开时较快轮询。 */
   isPanelVisible: () => boolean;
   isMailSuppressed: () => boolean;
   isDailySuppressed: () => boolean;
   isReportsSuppressed: () => boolean;
+  isQueueSuppressed: () => boolean;
   onCounts: (counts: HudTodoBadgeCounts) => void;
   fastIntervalSec?: number;
   slowIntervalSec?: number;
@@ -43,7 +44,8 @@ export class HudTodoBadgePoll {
   private readonly fastSec: number;
   private readonly slowSec: number;
   private mailInflight: Promise<{ count: number; firstId: number }> | null = null;
-  private mailClaimableInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private mailClaimableInflight: Promise<{ count: number; firstId: number; mails: MailRow[] }> | null =
+    null;
   private dailyInflight: Promise<{
     count: number;
     firstId: number;
@@ -64,6 +66,21 @@ export class HudTodoBadgePoll {
     return this.deepLink;
   }
 
+  /** GetCityState 建造队列变更后重算队列角标（不额外 RPC）。 */
+  recomputeToolbarCounts(): void {
+    const dl = this.deepLink;
+    this.deepLink = {
+      ...dl,
+      ...this.toolbarCountsFromParts({
+        mailUnreadTotal: dl.mailUnreadTotal,
+        mailClaimablePage: dl.mailClaimablePage,
+        dailyRows: dl.dailyChainRows,
+        battleReportUnread: dl.battleReportUnread,
+      }),
+    };
+    this.opts.onCounts(this.toolbarCountsForUi());
+  }
+
   reset(): void {
     this.accumSec = 0;
     this.mailInflight = null;
@@ -75,20 +92,26 @@ export class HudTodoBadgePoll {
 
   /** 领取附件等局部刷新后写入邮件未读快照，避免等关面板再 poll。 */
   applyMailUnreadSnapshot(count: number, firstUnreadMailId = 0): void {
-    const mailUnread = Math.max(0, count);
+    const mailUnreadTotal = Math.max(0, count);
     const firstId =
-      firstUnreadMailId > 0 ? firstUnreadMailId : mailUnread > 0 ? this.deepLink.firstUnreadMailId : 0;
+      firstUnreadMailId > 0
+        ? firstUnreadMailId
+        : mailUnreadTotal > 0
+          ? this.deepLink.firstUnreadMailId
+          : 0;
     this.deepLink = {
       ...this.deepLink,
-      mailUnread,
+      mailUnreadTotal,
       firstUnreadMailId: firstId,
+      ...this.toolbarCountsFromParts({
+        mailUnreadTotal,
+        mailClaimablePage: this.deepLink.mailClaimablePage,
+        dailyRows: this.deepLink.dailyChainRows,
+        battleReportUnread: this.deepLink.battleReportUnread,
+      }),
     };
     if (!this.opts.isMailSuppressed()) {
-      this.opts.onCounts({
-        mailUnread: this.deepLink.mailUnread,
-        dailyTodo: this.deepLink.dailyTodo,
-        battleReportUnread: this.deepLink.battleReportUnread,
-      });
+      this.opts.onCounts(this.toolbarCountsForUi());
     }
   }
 
@@ -106,7 +129,7 @@ export class HudTodoBadgePoll {
         ? { count: 0, firstId: 0 }
         : this.fetchMailSnapshot(),
       this.opts.isMailSuppressed()
-        ? { count: 0, firstId: 0 }
+        ? { count: 0, firstId: 0, mails: [] }
         : this.fetchMailClaimableSnapshot(),
       this.opts.isDailySuppressed()
         ? { count: 0, firstId: 0, claimableCount: 0, claimableFirstId: 0, rows: [] }
@@ -115,12 +138,17 @@ export class HudTodoBadgePoll {
         ? { count: 0, firstId: 0 }
         : this.fetchBattleReportSnapshot(),
     ]);
+    const mailClaimablePage = mailClaimable.mails;
+    const toolbarParts = this.toolbarCountsFromParts({
+      mailUnreadTotal: mail.count,
+      mailClaimablePage,
+      dailyRows: daily.rows,
+      battleReportUnread: reports.count,
+    });
     this.deepLink = {
-      ...aggregateHudTodoCounts({
-        mailUnread: mail.count,
-        dailyTodo: daily.count,
-        battleReportUnread: reports.count,
-      }),
+      ...toolbarParts,
+      mailUnreadTotal: mail.count,
+      mailClaimablePage,
       firstUnreadMailId: mail.firstId,
       firstDailyTodoCfgId: daily.firstId,
       firstUnreadBattleReportId: reports.firstId,
@@ -130,7 +158,43 @@ export class HudTodoBadgePoll {
       dailyClaimable: daily.claimableCount,
       firstClaimableDailyCfgId: daily.claimableFirstId,
     };
-    this.opts.onCounts(this.deepLink);
+    this.opts.onCounts(this.toolbarCountsForUi());
+  }
+
+  private toolbarCountsFromParts(parts: {
+    mailUnreadTotal: number;
+    mailClaimablePage: MailRow[];
+    dailyRows: DailyQuestRow[];
+    battleReportUnread: number;
+  }): HudTodoBadgeCounts {
+    const bundle = buildHudTodoBadges({
+      mailUnreadTotal: parts.mailUnreadTotal,
+      mailClaimablePage: parts.mailClaimablePage,
+      dailyRows: parts.dailyRows,
+      buildings: this.opts.getBuildings(),
+      buildCompleteCount: this.opts.getBuildCompleteCount(),
+      battleReportUnread: parts.battleReportUnread,
+    });
+    return {
+      mailUnread: bundle.toolbar.mail,
+      dailyTodo: bundle.toolbar.daily,
+      queueBuilding: bundle.toolbar.queue,
+      battleReportUnread: bundle.toolbar.reports,
+    };
+  }
+
+  private toolbarCountsForUi(): HudTodoBadgeCounts {
+    let counts: HudTodoBadgeCounts = {
+      mailUnread: this.deepLink.mailUnread,
+      dailyTodo: this.deepLink.dailyTodo,
+      queueBuilding: this.deepLink.queueBuilding,
+      battleReportUnread: this.deepLink.battleReportUnread,
+    };
+    if (this.opts.isMailSuppressed()) counts = { ...counts, mailUnread: 0 };
+    if (this.opts.isDailySuppressed()) counts = { ...counts, dailyTodo: 0 };
+    if (this.opts.isReportsSuppressed()) counts = { ...counts, battleReportUnread: 0 };
+    if (this.opts.isQueueSuppressed()) counts = { ...counts, queueBuilding: 0 };
+    return counts;
   }
 
   private fetchMailSnapshot(): Promise<{ count: number; firstId: number }> {
@@ -151,20 +215,28 @@ export class HudTodoBadgePoll {
     return p;
   }
 
-  private fetchMailClaimableSnapshot(): Promise<{ count: number; firstId: number }> {
+  private fetchMailClaimableSnapshot(): Promise<{ count: number; firstId: number; mails: MailRow[] }> {
     if (this.mailClaimableInflight) return this.mailClaimableInflight;
     const sid = this.opts.getServerId();
-    if (!sid) return Promise.resolve({ count: 0, firstId: 0 });
+    if (!sid) return Promise.resolve({ count: 0, firstId: 0, mails: [] });
     const p = this.opts.gateway
       .listPlayerMail(sid, { filter: MAIL_INBOX_FILTER_ALL, pageSize: 50, pageOffset: 0 })
       .then((res) => {
         const mails = (res as { mails?: MailRow[] }).mails ?? [];
+        const bundle = buildHudTodoBadges({
+          mailUnreadTotal: 0,
+          mailClaimablePage: mails,
+          dailyRows: [],
+          buildCompleteCount: 0,
+          battleReportUnread: 0,
+        });
         return {
-          count: countClaimableMails(mails),
+          count: bundle.center.mailClaimable,
           firstId: pickFirstClaimableMailId(mails),
+          mails,
         };
       })
-      .catch(() => ({ count: 0, firstId: 0 }))
+      .catch(() => ({ count: 0, firstId: 0, mails: [] }))
       .finally(() => {
         if (this.mailClaimableInflight === p) this.mailClaimableInflight = null;
       });
@@ -194,10 +266,17 @@ export class HudTodoBadgePoll {
       .listPlayerQuests(sid, { chainId: DAILY_QUEST_CHAIN_ID, includeCompleted: true })
       .then((res) => {
         const rows = dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] });
+        const bundle = buildHudTodoBadges({
+          mailUnreadTotal: 0,
+          mailClaimablePage: [],
+          dailyRows: rows,
+          buildCompleteCount: 0,
+          battleReportUnread: 0,
+        });
         return {
-          count: countDailyTodoQuests(rows),
-          firstId: pickFirstDailyTodoQuestCfgId(rows),
-          claimableCount: countClaimableDailyQuests(rows),
+          count: bundle.toolbar.daily,
+          firstId: pickFirstClaimableDailyQuestCfgId(rows) || pickFirstDailyTodoQuestCfgId(rows),
+          claimableCount: bundle.center.dailyClaimable,
           claimableFirstId: pickFirstClaimableDailyQuestCfgId(rows),
           rows,
         };
