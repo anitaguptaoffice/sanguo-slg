@@ -1,3 +1,4 @@
-// Package guild implements per-shard legion create/join/leave and member listing (GUILD-001).
-// Wire WebSocket routes via GatewayHandlers or RegisterM3; INTG-003 replaces assembly stubs.
+// Package guild implements per-shard legion lifecycle (GUILD-001) and guild-channel chat
+// orchestration (GUILD-002). Chat storage and mute deadlines reuse internal/chat via
+// ChatCoordinator; call RegisterM3Chat from assembly wiring instead of chat.GatewayHandlers.
 package guild

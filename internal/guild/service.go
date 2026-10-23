@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/anitaguptaoffice/sanguo-slg/internal/chat"
 	guildv1 "github.com/anitaguptaoffice/sanguo-slg/internal/guild/pb/sanguo/guild/v1"
 )
 
@@ -187,6 +188,28 @@ func (s *Service) ListGuildMembers(ctx context.Context, actor Actor, req *guildv
 		Members:    out,
 		TotalCount: total,
 	}, nil
+}
+
+// RequireGuildMember ensures the player belongs to guildID on the shard (for guild chat).
+func (s *Service) RequireGuildMember(ctx context.Context, serverID int32, playerID, guildID int64) error {
+	if guildID == 0 {
+		return ErrGuildRequired
+	}
+	mem, err := s.store.GetMembership(ctx, serverID, playerID)
+	if err != nil {
+		if errors.Is(err, ErrNotMember) {
+			return chat.ErrChannelForbidden
+		}
+		return err
+	}
+	if mem.GuildID != guildID {
+		return chat.ErrChannelForbidden
+	}
+	return nil
+}
+
+func canManageMembers(role int16) bool {
+	return role == RoleLeader || role == RoleOfficer
 }
 
 func (s *Service) enrichMember(ctx context.Context, m *Member) {

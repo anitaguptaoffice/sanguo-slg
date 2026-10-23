@@ -13,4 +13,8 @@ var (
 	ErrFull                = errors.New("guild: full")
 	ErrLeaderCannotLeave   = errors.New("guild: leader must transfer or disband first")
 	ErrPermissionDenied    = errors.New("guild: permission denied")
+	ErrGuildRequired       = errors.New("guild: guild_id required")
+	ErrChatStoreUnsupported = errors.New("guild: chat store cannot allocate guild channel")
+	ErrCannotKickLeader    = errors.New("guild: cannot kick leader")
+	ErrInvalidRole         = errors.New("guild: invalid role")
 )

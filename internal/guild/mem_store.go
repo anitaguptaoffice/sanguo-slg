@@ -137,6 +137,19 @@ func (m *MemStore) AddMember(_ context.Context, serverID int32, guildID int64, m
 	return nil
 }
 
+func (m *MemStore) UpdateMemberRole(_ context.Context, serverID int32, guildID int64, playerID int64, role int16) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	mk := memberKey{serverID: serverID, playerID: playerID}
+	mem, ok := m.members[mk]
+	if !ok || mem.GuildID != guildID {
+		return ErrNotMember
+	}
+	mem.Role = role
+	m.members[mk] = mem
+	return nil
+}
+
 func (m *MemStore) RemoveMember(_ context.Context, serverID int32, playerID int64) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

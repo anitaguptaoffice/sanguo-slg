@@ -147,6 +147,20 @@ func (p *PGStore) AddMember(ctx context.Context, serverID int32, guildID int64, 
 	return tx.Commit(ctx)
 }
 
+func (p *PGStore) UpdateMemberRole(ctx context.Context, serverID int32, guildID int64, playerID int64, role int16) error {
+	tag, err := p.Pool.Exec(ctx, `
+		UPDATE guild_member SET role = $4
+		WHERE server_id = $1 AND guild_id = $2 AND player_id = $3
+	`, serverID, guildID, playerID, role)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotMember
+	}
+	return nil
+}
+
 func (p *PGStore) RemoveMember(ctx context.Context, serverID int32, playerID int64) error {
 	tx, err := p.Pool.Begin(ctx)
 	if err != nil {
