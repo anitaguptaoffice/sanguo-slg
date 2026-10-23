@@ -45,6 +45,8 @@ export type MarchListPanelOptions = {
   /** CLIENT-061 世界列表当前选中格（「世界选中格」筛选）。 */
   getWorldSelectedGrid?: () => { x: number; y: number } | null;
   onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
+  /** CLIENT-093：军情行再出征 → 军事面板预填。 */
+  onRemarchFromRow?: (march: MarchSummary) => void;
 };
 
 export class MarchListPanel {
@@ -59,6 +61,7 @@ export class MarchListPanel {
   private readonly onSelectionChange?: (march: MarchSummary | null) => void;
   private readonly getWorldSelectedGrid?: () => { x: number; y: number } | null;
   private readonly onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
+  private readonly onRemarchFromRow?: (march: MarchSummary) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
@@ -79,6 +82,15 @@ export class MarchListPanel {
     this.onSelectionChange = options?.onSelectionChange;
     this.getWorldSelectedGrid = options?.getWorldSelectedGrid;
     this.onMarchArrivalReminders = options?.onMarchArrivalReminders;
+    this.onRemarchFromRow = options?.onRemarchFromRow;
+  }
+
+  /** 用户手动改出征目标时清除 CLIENT-080 高亮（再出征本身不调用）。 */
+  clearRecentMarchHighlight(): void {
+    this.highlightState = null;
+    clearMarchHighlightSession();
+    this.clearHighlightExpiryTimer();
+    if (this.isOpen()) this.renderList();
   }
 
   getRoot(): HTMLElement {
@@ -361,6 +373,15 @@ export class MarchListPanel {
       body.appendChild(primary);
       body.appendChild(meta);
       li.appendChild(body);
+      if (m.march_id != null && Number.isFinite(m.to_x) && Number.isFinite(m.to_y)) {
+        const remarch = document.createElement("button");
+        remarch.type = "button";
+        remarch.className = "march-row-remarch-btn";
+        remarch.setAttribute("data-action", "march-remarch");
+        remarch.setAttribute("data-march-id", String(m.march_id));
+        remarch.textContent = "再出征";
+        li.appendChild(remarch);
+      }
       if (m.march_id != null) {
         li.setAttribute("data-march-id", String(m.march_id));
         meta.setAttribute("data-march-id", String(m.march_id));
@@ -568,6 +589,17 @@ export class MarchListPanel {
   }
 
   private onClick(ev: Event): void {
+    const remarchBtn = (ev.target as HTMLElement).closest('[data-action="march-remarch"]');
+    if (remarchBtn) {
+      ev.stopPropagation();
+      const id = Number(remarchBtn.getAttribute("data-march-id"));
+      if (!Number.isNaN(id)) {
+        const march = this.marches.find((row) => row.march_id === id) ?? null;
+        if (march) this.onRemarchFromRow?.(march);
+      }
+      return;
+    }
+
     const filterRadio = (ev.target as HTMLElement).closest(
       'input[name="march-dest-filter"]',
     ) as HTMLInputElement | null;

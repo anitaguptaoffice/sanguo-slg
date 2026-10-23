@@ -8,7 +8,12 @@ export const DEFAULT_MARCH_TARGET = { x: 5, y: 5 };
 export type MarchTargetCoords = { x: number; y: number };
 
 /** 写入表单的来源，用于状态栏文案与高亮（CLIENT-043）。 */
-export type MarchTargetSource = "minimap" | "world_city" | "start_march" | "session_restore";
+export type MarchTargetSource =
+  | "minimap"
+  | "world_city"
+  | "start_march"
+  | "session_restore"
+  | "march_intel";
 
 /**
  * 出征目标记忆与冲突（CLIENT-043），相对 CLIENT-015 / CLIENT-041：
@@ -86,6 +91,8 @@ export function marchTargetStatusMessage(source: MarchTargetSource, x: number, y
       return `出征目标 ${coord} 已记住`;
     case "session_restore":
       return `已恢复上次出征目标 ${coord}`;
+    case "march_intel":
+      return `军情再出征：已预填目标 ${coord}（已记住）`;
     default:
       return `出征目标 ${coord}`;
   }

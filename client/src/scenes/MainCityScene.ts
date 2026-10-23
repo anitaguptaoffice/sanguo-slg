@@ -75,6 +75,10 @@ import {
 } from "@/net/marchFormSummary";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
+import {
+  applyMarchIntelRemarchPrefill,
+  buildMarchIntelRemarchPrefill,
+} from "@/net/marchIntelRemarch";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import {
   formatHudCenterTodoBadge,
@@ -156,6 +160,8 @@ export class MainCityScene implements Scene {
   private status = "";
   private lastMarch: MarchSummary | null = null;
   private marchSubmitInflight = false;
+  private intelRemarchTroopsLine: string | null = null;
+  private suppressMarchTargetHighlightClear = false;
   private social!: SocialPanels;
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
@@ -289,6 +295,7 @@ export class MainCityScene implements Scene {
           <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
           <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
         </div>
+        <p class="march-intel-last-troops hidden" data-role="march-intel-last-troops"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
@@ -418,6 +425,7 @@ export class MainCityScene implements Scene {
           this.world?.refreshMarchDestCounts();
         },
         onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
+        onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
         onSelectionChange: (march) => {
           if (march) {
             const tx = march.to_x;
@@ -578,7 +586,11 @@ export class MainCityScene implements Scene {
     this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));
     this.militaryPanel.addEventListener("input", (ev) => {
       this.onMilitaryRecruitFieldChange(ev);
-      this.syncMilitaryPanel();
+      this.onMilitaryFormInput(ev);
+      const field = (ev.target as HTMLElement).getAttribute("data-field");
+      if (field === "unit" || field === "recruit-count") {
+        this.syncMilitaryPanel();
+      }
     });
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
     this.canvas.addEventListener("wheel", this.onCanvasWheelBound, { passive: false });
@@ -780,10 +792,43 @@ export class MainCityScene implements Scene {
     if (action === "march") void this.startMarch();
     if (action === "clear-march-target") {
       clearMarchTargetFromForm(this.militaryPanel);
+      this.intelRemarchTroopsLine = null;
+      this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
       this.renderHud();
       this.syncMilitaryPanel();
     }
+  }
+
+  private onMilitaryFormInput(ev: Event): void {
+    const field = (ev.target as HTMLElement).getAttribute("data-field");
+    if (field !== "to-x" && field !== "to-y" && field !== "march-count") return;
+    if (field === "to-x" || field === "to-y") {
+      if (!this.suppressMarchTargetHighlightClear) {
+        this.marchList.clearRecentMarchHighlight();
+        this.intelRemarchTroopsLine = null;
+      }
+    }
+    this.syncMilitaryPanel();
+  }
+
+  private openMilitaryFromIntelRemarch(march: MarchSummary): void {
+    const prefill = buildMarchIntelRemarchPrefill(march);
+    if (!prefill) {
+      this.status = "该行缺少有效目的格点，无法再出征";
+      this.renderHud();
+      return;
+    }
+    this.militaryPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.militaryPanel);
+    this.suppressMarchTargetHighlightClear = true;
+    applyMarchIntelRemarchPrefill(this.militaryPanel, prefill);
+    this.suppressMarchTargetHighlightClear = false;
+    this.intelRemarchTroopsLine = prefill.lastTroopsSummary;
+    setMarchTargetFieldHighlight(this.militaryPanel, false);
+    this.status = marchTargetStatusMessage("march_intel", prefill.toX, prefill.toY);
+    this.syncMilitaryPanel();
+    this.renderHud();
   }
 
   private field(name: string): HTMLInputElement | HTMLSelectElement | null {
@@ -806,6 +851,12 @@ export class MainCityScene implements Scene {
       hintEl.textContent = highlighted
         ? "小地图选点已填入下方目标坐标（高亮）；与世界城池点选冲突时以最后一次操作为准。"
         : "出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。";
+    }
+    const lastTroopsEl = this.militaryPanel.querySelector('[data-role="march-intel-last-troops"]');
+    if (lastTroopsEl) {
+      const line = this.intelRemarchTroopsLine;
+      lastTroopsEl.textContent = line ?? "";
+      lastTroopsEl.classList.toggle("hidden", !line);
     }
     syncMarchSubmitButton(this.militaryPanel, this.marchSubmitInflight);
     syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
