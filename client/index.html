@@ -172,10 +172,10 @@
       }
       .main-city-toolbar .toolbar-scroll {
         flex: 0 1 auto; width: 100%;
-        overflow-x: auto; overflow-y: hidden;
+        overflow-x: auto; overflow-y: visible;
         -webkit-overflow-scrolling: touch;
         scrollbar-gutter: stable;
-        padding: 0 6px;
+        padding: 2px 6px 0;
         box-sizing: border-box;
       }
       .main-city-toolbar .toolbar-scroll-inner {
@@ -204,6 +204,13 @@
         gap: 4px;
         padding: 0;
         line-height: 1.1;
+        overflow: visible;
+      }
+      .main-city-toolbar button.toolbar-chrome-btn--with-icon:not(:disabled):hover .toolbar-btn-icon {
+        filter: brightness(1.08);
+      }
+      .main-city-toolbar button.toolbar-chrome-btn--with-icon:not(:disabled):active .toolbar-btn-icon {
+        filter: brightness(0.88);
       }
       .main-city-toolbar .toolbar-btn-icon {
         display: block;
@@ -1449,8 +1456,7 @@
       }
       #layout-frame.layout-narrow .main-city-toolbar button {
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        overflow: visible;
       }
       #layout-frame.layout-narrow .main-city-toolbar button[data-has-badge] {
         padding-right: 1.35rem;
