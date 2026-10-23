@@ -7,6 +7,12 @@ import {
   mergeRewardBundle,
   mergeWallet,
 } from "@/net/bagState";
+import {
+  formatShopOfferListLine,
+  formatShopPurchaseFeedback,
+  formatUseConsumableEffectSummary,
+  gatewayErrorMessage,
+} from "@/net/contentFeedback";
 import { formatQuestLine, formatWalletPrice, itemLabel } from "@/net/contentFormat";
 
 type QuestProgress = {
@@ -37,6 +43,8 @@ export class ContentPanels {
   private selectedQuestId = 1001;
   private selectedItemId = 2001;
   private selectedOfferId = 1001;
+  /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
+  private shopPurchaseFlash = new Map<number, string>();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -92,6 +100,30 @@ export class ContentPanels {
     this.renderBagList();
   }
 
+  private setBagFeedback(text: string | null): void {
+    const el = this.bagPanel.querySelector('[data-role="bag-feedback"]') as HTMLElement | null;
+    if (!el) return;
+    if (!text) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.textContent = text;
+  }
+
+  private setShopFeedback(text: string | null): void {
+    const el = this.shopPanel.querySelector('[data-role="shop-feedback"]') as HTMLElement | null;
+    if (!el) return;
+    if (!text) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.textContent = text;
+  }
+
   private buildQuestPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
@@ -115,6 +147,7 @@ export class ContentPanels {
     el.innerHTML = `
       <h3>背包</h3>
       <p data-role="bag-hint">「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量；领奖/购买仍会先合并到本会话。</p>
+      <p class="panel-feedback" data-role="bag-feedback" hidden></p>
       <label>道具
         <select data-field="item-id">
           <option value="2001">2001 谷袋·初备</option>
@@ -135,6 +168,7 @@ export class ContentPanels {
     el.innerHTML = `
       <h3>商城</h3>
       <p data-role="shop-hint">扣费结果以 wallet_after 为准（ECON-001 真钱包）。</p>
+      <p class="panel-feedback" data-role="shop-feedback" hidden></p>
       <button type="button" data-action="refresh-shop">刷新货架</button>
       <label>商品 offer
         <select data-field="offer-id"></select>
@@ -182,16 +216,10 @@ export class ContentPanels {
     for (const o of this.shopOffers) {
       const li = document.createElement("li");
       const price = formatWalletPrice(o.price_resources ?? {});
-      const limitHint =
-        o.purchase_limit != null
-          ? ` · 限购 ${o.purchased_count ?? 0}/${o.purchase_limit}`
-          : o.purchased_count != null && o.purchased_count > 0
-            ? ` · 已购 ${o.purchased_count}`
-            : "";
-      li.textContent =
-        `#${o.offer_id} ${o.shelf_name ?? ""} → ${itemLabel(o.item_cfg_id)}×${o.quantity_per_purchase ?? 1} · ${price}` +
-        (o.sold_out ? " · 售罄" : "") +
-        limitHint;
+      let line = formatShopOfferListLine(o, price);
+      const flash = this.shopPurchaseFlash.get(o.offer_id ?? 0);
+      if (flash) line += ` · ${flash}`;
+      li.textContent = line;
       ul.appendChild(li);
       const opt = document.createElement("option");
       opt.value = String(o.offer_id ?? 0);
@@ -214,7 +242,7 @@ export class ContentPanels {
       this.renderQuestList();
       this.onStatus(`任务 ${this.questRows.length} 条`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(gatewayErrorMessage(e));
     }
   }
 
@@ -227,7 +255,7 @@ export class ContentPanels {
       await this.refreshQuests();
       this.onStatus(`已接取 #${id}`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(gatewayErrorMessage(e));
     }
   }
 
@@ -240,7 +268,7 @@ export class ContentPanels {
       await this.refreshQuests();
       this.onStatus("进度已上报");
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(gatewayErrorMessage(e));
     }
   }
 
@@ -261,7 +289,7 @@ export class ContentPanels {
       await this.refreshQuests();
       this.onStatus("任务奖励已领取");
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(gatewayErrorMessage(e));
     }
   }
 
@@ -277,7 +305,7 @@ export class ContentPanels {
       this.onStatus(`背包 ${stacks.length} 种道具（content.v1）`);
     } catch (e) {
       this.renderBagList();
-      this.onStatus(`背包刷新失败：${(e as Error).message}`);
+      this.onStatus(`背包刷新失败：${gatewayErrorMessage(e)}`);
     }
   }
 
@@ -286,6 +314,7 @@ export class ContentPanels {
     const count = Number((this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1);
     const itemId = this.selectedItemId;
     this.onStatus(`使用 ${itemLabel(itemId)}×${count}…`);
+    this.setBagFeedback(null);
     try {
       const res = (await this.gateway.useConsumable(sid, itemId, count)) as {
         remaining?: number;
@@ -294,15 +323,19 @@ export class ContentPanels {
         speedup_seconds?: number;
       };
       const session = this.getSession();
+      const walletBefore = session?.wallet;
       if (session) {
         const bag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
         const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
         this.onSessionPatch({ bag, wallet });
       }
-      const hint = res.effect_summary || (res.speedup_seconds ? `加速 ${res.speedup_seconds}s` : "已使用");
-      this.onStatus(hint);
+      const summary = formatUseConsumableEffectSummary(itemId, res, walletBefore, res.wallet_after);
+      this.setBagFeedback(summary);
+      this.onStatus(summary);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      const msg = gatewayErrorMessage(e);
+      this.setBagFeedback(msg);
+      this.onStatus(msg);
     }
   }
 
@@ -315,7 +348,7 @@ export class ContentPanels {
       this.renderShopList();
       this.onStatus(`货架 ${this.shopOffers.length} 个商品`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(gatewayErrorMessage(e));
     }
   }
 
@@ -323,10 +356,13 @@ export class ContentPanels {
     const sid = this.serverId();
     const offerId = this.selectedOfferId;
     this.onStatus(`购买 offer ${offerId}…`);
+    this.setShopFeedback(null);
+    const purchaseCount = 1;
     try {
-      const res = (await this.gateway.purchaseShopOffer(sid, offerId, 1)) as {
+      const res = (await this.gateway.purchaseShopOffer(sid, offerId, purchaseCount)) as {
         granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] };
         wallet_after?: ResourceWallet;
+        offer?: ShopOffer;
       };
       const session = this.getSession();
       if (session) {
@@ -334,10 +370,20 @@ export class ContentPanels {
         const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
         this.onSessionPatch({ bag, wallet });
       }
+      const granted = res.granted_items?.items?.[0];
+      const grantedQty = (granted?.quantity ?? 1) * purchaseCount;
+      const feedback = formatShopPurchaseFeedback(purchaseCount, res.wallet_after, {
+        itemCfgId: granted?.item_cfg_id,
+        grantedQty,
+      });
+      this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
+      this.setShopFeedback(feedback);
       await this.refreshShop();
-      this.onStatus("购买成功");
+      this.onStatus(feedback);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      const msg = gatewayErrorMessage(e);
+      this.setShopFeedback(msg);
+      this.onStatus(msg);
     }
   }
 
