@@ -9,6 +9,8 @@ import {
 import {
   adjacentBattleReportId,
   battleReportIdsInListOrder,
+  BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
+  isBattleReportAdjNavKeyboardEnabled,
 } from "@/net/battleReportListNav";
 import {
   computeOutcomeStreak,
@@ -96,6 +98,8 @@ export class BattleReportPanel {
   private detailError = "";
   private listLoading = false;
   private detailLoading = false;
+  /** 上一封/下一封切换后把焦点拉回详情顶栏导航（CLIENT-094）。 */
+  private focusDetailNavAfterRender = false;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -174,7 +178,6 @@ export class BattleReportPanel {
     const el = document.createElement("div");
     el.className = "content-panel hidden battle-report-panel";
     el.dataset.centerPanel = "battle-report";
-    el.tabIndex = 0;
     el.innerHTML = `
       <h3>战报</h3>
       <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
@@ -393,9 +396,16 @@ export class BattleReportPanel {
         !this.detailError || this.detailLoading || !this.selectedReportId;
     }
 
+    detailEl.removeAttribute("role");
+    detailEl.removeAttribute("aria-label");
+    detailEl.removeAttribute("tabindex");
     detailEl.textContent = "";
     if (!this.selectedReportId || this.detailLoading) return;
     if (this.detailError) return;
+
+    detailEl.setAttribute("role", "region");
+    detailEl.setAttribute("aria-label", BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL);
+    detailEl.tabIndex = 0;
 
     const orderedIds = battleReportIdsInListOrder(this.visibleReports());
     const prevId = adjacentBattleReportId(orderedIds, this.selectedReportId, "prev");
@@ -740,6 +750,25 @@ export class BattleReportPanel {
     }
     this.detailLoading = false;
     this.renderList();
+    if (this.focusDetailNavAfterRender) {
+      this.focusDetailNavAfterRender = false;
+      this.focusDetailNavBar();
+    }
+  }
+
+  private focusDetailNavBar(): void {
+    const detailEl = this.panel.querySelector<HTMLElement>('[data-role="report-detail"]');
+    const nav = detailEl?.querySelector<HTMLElement>(".battle-report-detail-nav");
+    if (!nav) return;
+    const enabled = nav.querySelector<HTMLButtonElement>(
+      "button[data-action='nav-next-report']:not(:disabled), button[data-action='nav-prev-report']:not(:disabled)",
+    );
+    if (enabled) {
+      enabled.focus();
+      return;
+    }
+    nav.tabIndex = -1;
+    nav.focus();
   }
 
   private onClick(ev: Event): void {
@@ -792,20 +821,29 @@ export class BattleReportPanel {
   ): Promise<void> {
     const orderedIds = battleReportIdsInListOrder(this.visibleReports());
     const target = adjacentBattleReportId(orderedIds, this.selectedReportId, direction);
-    if (target != null) await this.openReport(target, { preserveRoundNav: true });
+    if (target == null) return;
+    this.focusDetailNavAfterRender = true;
+    await this.openReport(target, { preserveRoundNav: true });
   }
 
-  private onKeyDown(ev: KeyboardEvent): void {
-    if (!this.isOpen() || this.detailLoading || !this.selectedReportId) return;
-    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+  private shouldHandleAdjacentNavKey(ev: KeyboardEvent): boolean {
+    if (!this.isOpen() || this.detailLoading || !this.selectedReportId) return false;
+    if (!isBattleReportAdjNavKeyboardEnabled(this.panel)) return false;
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return false;
     const target = ev.target as HTMLElement | null;
     if (
       target &&
-      (target.closest("input, textarea, select") ||
-        target.isContentEditable)
+      (target.closest("input, textarea, select") || target.isContentEditable)
     ) {
-      return;
+      return false;
     }
+    if (target?.closest('[data-role="report-detail"]')) return true;
+    if (ev.altKey && target?.closest(".battle-report-panel")) return true;
+    return false;
+  }
+
+  private onKeyDown(ev: KeyboardEvent): void {
+    if (!this.shouldHandleAdjacentNavKey(ev)) return;
     ev.preventDefault();
     void this.navigateAdjacentReport(ev.key === "ArrowLeft" ? "prev" : "next");
   }
