@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-032）
+# H5 客户端（CLIENT-001 ~ CLIENT-036+）
 
 ## CLIENT-032 manifest 美术接线
 
@@ -80,6 +80,21 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **排行 / 军团 / 聊天扫读** | [手动验收（社交扫读 CLIENT-030）](#手动验收社交扫读-client-030)（[#230](https://github.com/anitaguptaoffice/sanguo-slg/issues/230) / [#236](https://github.com/anitaguptaoffice/sanguo-slg/pull/236)） |
 | **将领详情与招募池对比** | [手动验收（将领招募对比 CLIENT-031）](#手动验收将领招募对比-client-031)（[#231](https://github.com/anitaguptaoffice/sanguo-slg/issues/231) / [#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)） |
 | **manifest HUD / 面板接线** | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线)（[#232](https://github.com/anitaguptaoffice/sanguo-slg/issues/232) / [#240](https://github.com/anitaguptaoffice/sanguo-slg/pull/240)） |
+| **军事面板运行时三修**（wave:15 hotfix，非 wave:16 卡） | **CLIENT-033**（[#243](https://github.com/anitaguptaoffice/sanguo-slg/issues/243) / [#244](https://github.com/anitaguptaoffice/sanguo-slg/pull/244) `b320b4de`）：字色对比度、募兵/出征主按钮四态、1280 窄屏 HUD；证据见 `docs/art/samples/client-033/` |
+
+## Wave 16 战报邮件闭环与军事反馈（M4 出口 / INTG-013）
+
+在 `make dev` 下联调的最短人工路径（与 `tools/smoke/README.md`、**INTG-013** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**（仅建造队列，见 wave:14 **DOM-003**）；**永不合并** art hold PR #77/#82/#108/#100/#126。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **战报回合详情 + 行军结束深链** | [手动验收（战报详情 CLIENT-034）](#手动验收战报详情回合表与行军深链-client-034)（[#246](https://github.com/anitaguptaoffice/sanguo-slg/issues/246) / [#254](https://github.com/anitaguptaoffice/sanguo-slg/pull/254)） | 已合 |
+| **邮件附件领取 + 未领高亮** | [手动验收（邮件附件领取 CLIENT-035）](#手动验收邮件附件领取-client-035)（[#247](https://github.com/anitaguptaoffice/sanguo-slg/issues/247) / [#253](https://github.com/anitaguptaoffice/sanguo-slg/pull/253)）；基础收件箱仍见 [CLIENT-017](#手动验收邮件收件箱client-017) | 已合 |
+| **军事 panel manifest**（`ui.panel.military.v1`） | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)（[#248](https://github.com/anitaguptaoffice/sanguo-slg/issues/248) / [#255](https://github.com/anitaguptaoffice/sanguo-slg/pull/255)）；募兵主按钮样式见 **CLIENT-033** hotfix | 已合 |
+| **小地图比例尺 / 多行军扫读** | [手动验收（世界地图 CLIENT-028）](#手动验收世界地图行军标注-client-028) 基础上 **CLIENT-037** 加深（[#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) / PR [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256)） | **进行中** |
+| **HUD 角标点击深链** | [手动验收（HUD 待办徽章 CLIENT-027）](#手动验收hud-待办徽章-client-027) 基础上 **CLIENT-038**（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / PR [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258)） | **进行中** |
+
+并行运行时修：[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) **CLIENT-039**（1280 顶栏 canvas 与 DOM 叠字）在 wave:16 标签下跟进，**不**替代 CLIENT-033。
 
 ## 网关地址
 
@@ -293,6 +308,32 @@ cd client && npm install && npm run dev
 4. 断网或 mock 失败详情：应出现 **重试加载详情**；列表失败仍保留 **重试加载列表** 与筛选条。
 5. 完成一次行军到达后点 HUD **行军结束，查看战报**：战报面板打开、列表刷新、**最近战报** 行高亮且详情已加载（若 hint 与列表首条不一致则以 hint 为准）。
 6. 单测：`battleReportRounds.test.ts`、`battleReportDeepLink.test.ts`、`BattleReportPanel.test.ts`。
+
+### 手动验收（邮件附件领取 CLIENT-035）
+
+在 [CLIENT-017](#手动验收邮件收件箱client-017) 基础上验收 **未领附件高亮** 与领取后与 **CLIENT-027** HUD 角标一致。
+
+1. `make dev` 或 GM `send-mail` 发一封带附件且未领取的邮件（见 CLIENT-017 §4.5）。
+2. 底栏 **「邮件」** 角标与列表行 **「未领取」** 角标一致；已读但未领的行仍高亮 **「领取附件」**。
+3. 点击 **领取附件**：`ClaimPlayerMailAttachments` 成功后刷新列表、背包与顶栏五资源；状态栏展示道具 id + 数量摘要（与 `heroMailState` 合并逻辑一致）。
+4. 领取失败时面板内显示 gateway `msg`，不静默；重复领取显示明确错误。
+5. 单测：`heroMailState.test.ts`、`HeroMailPanels.test.ts`。
+
+### 手动验收（军事 manifest CLIENT-036）
+
+`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）；非军事面板仍用 `ui.panel.default.v1`（CLIENT-032）。`data-art-skin="off"` 可跳过 nine-slice。
+
+1. `make dev` 打开 **「军事」** / **「行军」** / **「队列」**：面板根应出现军事九宫格背景（与 `docs/art/samples/client-033/` 1600×900 样张一致）。
+2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
+3. 单测：`artPanelSkin.test.ts`；全量 `cd client && npm test`。
+
+### 手动验收（小地图扫读 CLIENT-037）— 进行中
+
+PR [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) 合入后在本节补全：在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上验收 **比例尺文案**、**marching/returning 区分样式**、小地图 **折叠 toggle**（`sessionStorage`）。合并前以 CLIENT-028 步骤为准。
+
+### 手动验收（HUD 角标深链 CLIENT-038）— 进行中
+
+PR [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) 合入后在本节补全：在 [CLIENT-027](#手动验收hud-待办徽章-client-027) 基础上验收底栏 **邮件 / 日常 / 战报** 角标 **可点击** 打开对应面板并定位首条未读/可领奖/新战报。合并前角标仍为 `pointer-events: none`。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
