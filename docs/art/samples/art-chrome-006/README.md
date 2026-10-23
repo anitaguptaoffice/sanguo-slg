@@ -17,7 +17,7 @@ Legacy PNG (`*-dpr*-full.png`) 保留作历史对照，美术 connector 请取 J
 ## Frozen checklist (`states/`)
 
 - `ui.button.toolbar.v1-{normal,hover,pressed,disabled}.jpg`
-- `server-select-selected-enter-enabled.jpg`, `server-select-enter-disabled-failure.jpg`
+- `server-select-{1600x900,1280x720}-selected-enter-enabled.jpg`, `server-select-*-enter-disabled-failure.jpg`（全 layout 帧）
 - `building-sidebar-{upgradable,not-upgradable,error}.jpg` — 建筑侧栏 `ui.panel.default.v1`
 - `military-panel-ui.panel.military.v1.jpg` — 军事表单 `ui.panel.military.v1`
 

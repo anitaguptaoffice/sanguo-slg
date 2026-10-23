@@ -1,3 +1,5 @@
+import { skinPrimaryButtons } from "@/engine/artButtonSkin";
+import { skinDefaultPanel } from "@/engine/artPanelSkin";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import { formatServerLine, parseGameServerInfo, type GameServerRow } from "@/net/socialFormat";
@@ -22,11 +24,13 @@ export class ServerSelectScene implements Scene {
       <p class="server-select-hint">账号 ${DEFAULT_LOGIN} · 选服后进入主城</p>
       <ul class="server-list" data-role="server-list"></ul>
       <button type="button" data-action="refresh-servers">刷新列表</button>
-      <button type="button" data-action="enter-game" disabled>进入游戏</button>
+      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入游戏</button>
       <p class="server-select-status" data-role="status"></p>
     `;
     this.panel.classList.add("layout-overlay-center");
     ctx.layoutFrame.appendChild(this.panel);
+    skinDefaultPanel(this.panel, ctx.assets, 560, 360);
+    skinPrimaryButtons(this.panel, ctx.assets);
     this.panel.addEventListener("click", (ev) => this.onClick(ev, ctx));
     this.hud.textContent = "连接网关…";
     try {

@@ -96,6 +96,10 @@ async function measureHitProof(page) {
       ) || "1",
     );
     const scrollRect = scroll?.getBoundingClientRect() ?? null;
+    const toolbarEl = document.querySelector(".main-city-toolbar");
+    const toolbarRect = toolbarEl?.getBoundingClientRect() ?? null;
+    const layoutFrame = document.getElementById("layout-frame");
+    const layoutRect = layoutFrame?.getBoundingClientRect() ?? null;
     const scrollMetrics = scroll
       ? {
           scrollWidth: scroll.scrollWidth,
@@ -131,7 +135,7 @@ async function measureHitProof(page) {
       const br = btn.getBoundingClientRect();
       const wrap = btn.closest(".toolbar-btn-hit");
       const wr = wrap?.getBoundingClientRect();
-      const visible =
+      let visible =
         scrollRect && br
           ? intersect(
               { left: br.left, top: br.top, right: br.right, bottom: br.bottom },
@@ -143,6 +147,28 @@ async function measureHitProof(page) {
               },
             )
           : null;
+      if (visible && toolbarRect) {
+        visible = intersect(
+          { left: visible.left, top: visible.top, right: visible.right, bottom: visible.bottom },
+          {
+            left: toolbarRect.left,
+            top: toolbarRect.top,
+            right: toolbarRect.right,
+            bottom: toolbarRect.bottom,
+          },
+        );
+      }
+      if (visible && layoutRect) {
+        visible = intersect(
+          { left: visible.left, top: visible.top, right: visible.right, bottom: visible.bottom },
+          {
+            left: layoutRect.left,
+            top: layoutRect.top,
+            right: layoutRect.right,
+            bottom: layoutRect.bottom,
+          },
+        );
+      }
       const vis = visible && visible.width > 0 && visible.height > 0 ? visible : br;
       const cx = vis.left + vis.width / 2;
       const cy = vis.top + vis.height / 2;
@@ -172,8 +198,12 @@ async function measureHitProof(page) {
           ? { left: wr.left, top: wr.top, width: wr.width, height: wr.height }
           : null,
         visibleIntersectionWithScroll: visible,
-        screenCssEffective: { width: br.width, height: br.height },
-        meetsMin44ScreenCss: br.width >= 44 && br.height >= 44,
+        screenCssEffective: {
+          width: visible?.width ?? br.width,
+          height: visible?.height ?? br.height,
+        },
+        meetsMin44ScreenCss:
+          (visible?.width ?? 0) >= 44 && (visible?.height ?? 0) >= 44,
         elementFromPoint,
         allProbesHitButton: elementFromPoint.every((p) => p.hitsButton),
       };
@@ -271,28 +301,41 @@ async function captureToolbarButtonStates(browser, appPort) {
 }
 
 async function captureServerSelectStates(browser, appPort) {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
-  const page = await context.newPage();
-  await page.goto(`http://127.0.0.1:${appPort}/`);
-  await page.waitForSelector(".server-list li", { timeout: 15000 });
-  await page.locator(".server-list li").first().click();
-  await page.waitForTimeout(200);
-  const panel = await page.locator(".server-select-panel").boundingBox();
-  if (!panel) throw new Error("server-select-panel missing");
-  await writeJpegUnder1Mb(page, path.join(statesDir, "server-select-selected-enter-enabled.jpg"), {
-    clip: panel,
-  });
-  await page.evaluate(() => {
-    const enter = document.querySelector('[data-action="enter-game"]');
-    if (enter instanceof HTMLButtonElement) enter.disabled = true;
-    const status = document.querySelector('[data-role="status"]');
-    if (status) status.textContent = "进服失败: 模拟网关拒绝（证据态）";
-  });
-  await page.waitForTimeout(100);
-  await writeJpegUnder1Mb(page, path.join(statesDir, "server-select-enter-disabled-failure.jpg"), {
-    clip: panel,
-  });
-  await context.close();
+  const shots = {};
+  for (const { w, h, tag } of [
+    { w: 1600, h: 900, tag: "1600x900" },
+    { w: 1280, h: 720, tag: "1280x720" },
+  ]) {
+    const context = await browser.newContext({ viewport: { width: w, height: h } });
+    const page = await context.newPage();
+    await page.goto(`http://127.0.0.1:${appPort}/`);
+    await page.waitForSelector(".server-list li", { timeout: 15000 });
+    await page.waitForSelector(".server-select-panel", { timeout: 10000 });
+    await page.locator(".server-list li").first().click();
+    await page.waitForTimeout(200);
+    const frame = await layoutFrameClip(page);
+    const enabledMeta = await writeJpegUnder1Mb(
+      page,
+      path.join(statesDir, `server-select-${tag}-selected-enter-enabled.jpg`),
+      { clip: frame },
+    );
+    shots[`${tag}_enabled`] = enabledMeta;
+    await page.evaluate(() => {
+      const enter = document.querySelector('[data-action="enter-game"]');
+      if (enter instanceof HTMLButtonElement) enter.disabled = true;
+      const status = document.querySelector('[data-role="status"]');
+      if (status) status.textContent = "进服失败: 模拟网关拒绝（证据态，脚本强制）";
+    });
+    await page.waitForTimeout(100);
+    const disabledMeta = await writeJpegUnder1Mb(
+      page,
+      path.join(statesDir, `server-select-${tag}-enter-disabled-failure.jpg`),
+      { clip: frame },
+    );
+    shots[`${tag}_disabled`] = disabledMeta;
+    await context.close();
+  }
+  return shots;
 }
 
 async function captureBuildingAndMilitaryStates(browser, appPort) {
@@ -352,25 +395,79 @@ async function clickProofLastToolbar(page) {
     scroll?.scrollTo({ left: scroll.scrollWidth, behavior: "instant" });
   });
   await page.waitForTimeout(120);
-  const last = page.locator(".toolbar-scroll-inner button").last();
-  const box = await last.boundingBox();
-  if (!box) return { ok: false, reason: "no box" };
-  const cx = box.x + box.width / 2;
-  const cy = box.y + box.height / 2;
-  const before = await page.evaluate(({ x, y }) => {
-    const el = document.elementFromPoint(x, y);
+  const probeData = await page.evaluate(() => {
+    const scroll = document.querySelector('[data-role="toolbar-scroll"]');
     const buttons = document.querySelectorAll(".toolbar-scroll-inner button");
     const btn = buttons[buttons.length - 1];
+    if (!(btn instanceof HTMLButtonElement)) return null;
+    const br = btn.getBoundingClientRect();
+    const scrollRect = scroll?.getBoundingClientRect();
+    const toolbarRect = document.querySelector(".main-city-toolbar")?.getBoundingClientRect();
+    function intersect(a, b) {
+      const left = Math.max(a.left, b.left);
+      const top = Math.max(a.top, b.top);
+      const right = Math.min(a.right, b.right);
+      const bottom = Math.min(a.bottom, b.bottom);
+      return {
+        left,
+        top,
+        width: Math.max(0, right - left),
+        height: Math.max(0, bottom - top),
+      };
+    }
+    let vis = scrollRect
+      ? intersect(
+          { left: br.left, top: br.top, right: br.right, bottom: br.bottom },
+          {
+            left: scrollRect.left,
+            top: scrollRect.top,
+            right: scrollRect.right,
+            bottom: scrollRect.bottom,
+          },
+        )
+      : { left: br.left, top: br.top, width: br.width, height: br.height };
+    if (toolbarRect) {
+      vis = intersect(
+        { left: vis.left, top: vis.top, right: vis.left + vis.width, bottom: vis.top + vis.height },
+        {
+          left: toolbarRect.left,
+          top: toolbarRect.top,
+          right: toolbarRect.right,
+          bottom: toolbarRect.bottom,
+        },
+      );
+    }
+    const inset = 3;
+    const points = [
+      { name: "center", x: vis.left + vis.width / 2, y: vis.top + vis.height / 2 },
+      { name: "bottomLeft", x: vis.left + inset, y: vis.top + vis.height - inset },
+      { name: "bottomRight", x: vis.left + vis.width - inset, y: vis.top + vis.height - inset },
+    ];
+    const elementFromPoint = points.map((p) => {
+      const el = document.elementFromPoint(p.x, p.y);
+      return {
+        ...p,
+        hitsButton: !!el && (el === btn || btn.contains(el)),
+        elementTag: el?.tagName ?? null,
+      };
+    });
     return {
-      tag: el?.tagName ?? null,
-      hitsLastButton: !!el && !!btn && (el === btn || btn.contains(el)),
-      label: btn?.textContent?.trim() ?? "",
+      label: btn.textContent?.trim() ?? "",
+      visibleIntersection: vis,
+      meetsMin44Visible: vis.width >= 44 && vis.height >= 44,
+      elementFromPoint,
+      clickPoint: points[0],
     };
-  }, { x: cx, y: cy });
-  await page.mouse.click(cx, cy);
+  });
+  if (!probeData) return { ok: false, reason: "no last button" };
+  await page.mouse.click(probeData.clickPoint.x, probeData.clickPoint.y);
   await page.waitForTimeout(200);
   const queueOpen = await page.locator('[data-center-panel="queue"]').isVisible().catch(() => false);
-  return { clickPoint: { x: cx, y: cy }, elementFromPointBeforeClick: before, queuePanelVisibleAfter: queueOpen };
+  return {
+    ok: probeData.meetsMin44Visible && probeData.elementFromPoint.every((p) => p.hitsButton),
+    ...probeData,
+    queuePanelVisibleAfter: queueOpen,
+  };
 }
 
 async function main() {
@@ -392,7 +489,7 @@ async function main() {
     const appPort = 16206;
     const viewportEvidence = await captureViewportJpegs(browser, appPort);
     const toolbarStates = await captureToolbarButtonStates(browser, appPort);
-    await captureServerSelectStates(browser, appPort);
+    const serverSelectEvidence = await captureServerSelectStates(browser, appPort);
     await captureBuildingAndMilitaryStates(browser, appPort);
 
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } });
@@ -411,9 +508,11 @@ async function main() {
       buildingPanelSkin: "ui.panel.default.v1 via skinDefaultPanel (380×300 layout min)",
       militaryPanelSkin: "ui.panel.military.v1 via skinMilitaryPanel (420×320 layout min)",
       toolbarButtonStates: toolbarStates,
+      serverSelectViewports: serverSelectEvidence,
       notes: [
         "elementFromPoint probes must hit the <button>, not only .toolbar-btn-hit wrapper padding.",
-        "DOM toolbar buttons stay 96×44 CSS px; probes sample the scroll-clipped visible intersection.",
+        "DOM toolbar buttons stay 96×44 CSS px; meetsMin44ScreenCss uses scroll∩toolbar visible intersection.",
+        "server-select disabled/failure JPEG uses script-forced disabled + status text for display proof only.",
       ],
     };
     await writeFile(path.join(outDir, "hit-proof.json"), `${JSON.stringify(hitProof, null, 2)}\n`);
@@ -449,7 +548,7 @@ Legacy PNG (\`*-dpr*-full.png\`) 保留作历史对照，美术 connector 请取
 ## Frozen checklist (\`states/\`)
 
 - \`ui.button.toolbar.v1-{normal,hover,pressed,disabled}.jpg\`
-- \`server-select-selected-enter-enabled.jpg\`, \`server-select-enter-disabled-failure.jpg\`
+- \`server-select-{1600x900,1280x720}-selected-enter-enabled.jpg\`, \`server-select-*-enter-disabled-failure.jpg\`（全 layout 帧）
 - \`building-sidebar-{upgradable,not-upgradable,error}.jpg\` — 建筑侧栏 \`ui.panel.default.v1\`
 - \`military-panel-ui.panel.military.v1.jpg\` — 军事表单 \`ui.panel.military.v1\`
 

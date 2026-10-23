@@ -605,6 +605,7 @@ export class MainCityScene implements Scene {
     skinToolbarButtons(this.toolbar, this.assets);
     skinPrimaryButtons(this.militaryPanel, this.assets);
     skinDefaultPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
+    skinPrimaryButtons(this.buildingPanel.getRoot(), this.assets);
     skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
     skinMarchIntelPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinBattleReportPanel(this.battleReports.getRoot(), this.assets, 520, 360);
