@@ -23,6 +23,16 @@ export type GatewayPort = {
   createCity(serverId: number, name: string, x: number, y: number): Promise<unknown>;
   getCityState(cityId: number): Promise<unknown>;
   startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number): Promise<unknown>;
+  recruitTroop(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
+  startMarch(
+    cityId: number,
+    toX: number,
+    toY: number,
+    purpose: number,
+    troops: { unit_cfg_id: number; count: number }[],
+  ): Promise<unknown>;
+  listBattleReports(limit?: number, offset?: number): Promise<unknown>;
+  getBattleReport(reportId: number): Promise<unknown>;
   getSessionId(): string;
   close(): void;
 };
@@ -99,6 +109,56 @@ export class GatewayClient implements GatewayPort {
       "StartBuildingUpgradeRequest",
       { city_id: cityId, slot_key: slotKey, building_cfg_id: buildingCfgId },
       StartBuildingUpgradeResponse,
+      true,
+    );
+  }
+
+  async recruitTroop(cityId: number, unitCfgId: number, count: number) {
+    const { RecruitTroopResponse } = getTypes();
+    return this.rpc(
+      Routes.RecruitTroop,
+      "RecruitTroopRequest",
+      { city_id: cityId, unit_cfg_id: unitCfgId, count },
+      RecruitTroopResponse,
+      true,
+    );
+  }
+
+  async startMarch(
+    cityId: number,
+    toX: number,
+    toY: number,
+    purpose: number,
+    troops: { unit_cfg_id: number; count: number }[],
+  ) {
+    const { StartMarchResponse } = getTypes();
+    return this.rpc(
+      Routes.StartMarch,
+      "StartMarchRequest",
+      { city_id: cityId, to_x: toX, to_y: toY, purpose, troops },
+      StartMarchResponse,
+      true,
+    );
+  }
+
+  async listBattleReports(limit = 20, offset = 0) {
+    const { ListBattleReportsResponse } = getTypes();
+    return this.rpc(
+      Routes.ListBattleReports,
+      "ListBattleReportsRequest",
+      { limit, offset },
+      ListBattleReportsResponse,
+      true,
+    );
+  }
+
+  async getBattleReport(reportId: number) {
+    const { GetBattleReportResponse } = getTypes();
+    return this.rpc(
+      Routes.GetBattleReport,
+      "GetBattleReportRequest",
+      { report_id: reportId },
+      GetBattleReportResponse,
       true,
     );
   }

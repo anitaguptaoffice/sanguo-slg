@@ -1,0 +1,115 @@
+/** 兵种配置 ID → 展示名（与 spec/data cfg_unit 一致）。 */
+export const UNIT_LABEL: Record<number, string> = {
+  1: "步兵",
+  2: "骑兵",
+  3: "弓兵",
+  4: "器械",
+};
+
+export type CityTroopStack = {
+  unit_cfg_id?: number;
+  count?: number;
+  wounded?: number;
+};
+
+export type MarchSummary = {
+  march_id?: number;
+  phase?: number;
+  to_x?: number;
+  to_y?: number;
+  depart_at_ms?: number;
+  arrive_at_ms?: number;
+  purpose?: number;
+};
+
+export type BattleReportSummary = {
+  report_id?: number;
+  location_x?: number;
+  location_y?: number;
+  outcome?: number;
+  created_at_ms?: number;
+};
+
+const MARCH_PHASE_LABEL: Record<number, string> = {
+  0: "未知",
+  1: "待发",
+  2: "行军中",
+  3: "已到达",
+  4: "撤回中",
+};
+
+const OUTCOME_LABEL: Record<number, string> = {
+  1: "攻胜",
+  2: "守胜",
+  3: "平局",
+};
+
+export function unitLabel(unitCfgId: number): string {
+  return UNIT_LABEL[unitCfgId] ?? `兵种#${unitCfgId}`;
+}
+
+export function formatTroopStacks(stacks: CityTroopStack[] | undefined): string {
+  if (!stacks?.length) return "无";
+  return stacks
+    .filter((s) => (s.count ?? 0) > 0)
+    .map((s) => `${unitLabel(s.unit_cfg_id ?? 0)}×${s.count ?? 0}`)
+    .join("、");
+}
+
+export function formatMarchPhase(phase: number | undefined): string {
+  return MARCH_PHASE_LABEL[phase ?? 0] ?? `阶段${phase}`;
+}
+
+export function formatTimeMs(ms: number | undefined): string {
+  if (!ms) return "—";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("zh-CN", { hour12: false });
+}
+
+export function formatMarchHint(march: MarchSummary | undefined): string {
+  if (!march?.march_id) return "";
+  const dest = `(${march.to_x ?? "?"},${march.to_y ?? "?"})`;
+  const phase = formatMarchPhase(march.phase);
+  const arrive = formatTimeMs(march.arrive_at_ms);
+  return `行军 #${march.march_id} → ${dest} · ${phase} · 预计到达 ${arrive}`;
+}
+
+export function formatBattleOutcome(outcome: number | undefined): string {
+  return OUTCOME_LABEL[outcome ?? 0] ?? `结果${outcome}`;
+}
+
+export function formatReportLine(r: BattleReportSummary): string {
+  const when = formatTimeMs(r.created_at_ms);
+  const loc = `(${r.location_x ?? "?"},${r.location_y ?? "?"})`;
+  return `#${r.report_id ?? "?"} ${loc} ${formatBattleOutcome(r.outcome)} · ${when}`;
+}
+
+/** 从城内兵力中选主兵种用于出征（优先步兵，取可用数量上限）。 */
+export function pickMarchTroops(
+  cityTroops: CityTroopStack[],
+  unitCfgId: number,
+  desiredCount: number,
+): CityTroopStack[] {
+  const stack = cityTroops.find((t) => t.unit_cfg_id === unitCfgId);
+  const available = stack?.count ?? 0;
+  const count = Math.min(Math.max(desiredCount, 0), available);
+  if (count <= 0) return [];
+  return [{ unit_cfg_id: unitCfgId, count }];
+}
+
+/** 用服务端返回的单兵种或 city_troops 快照合并进本地列表。 */
+export function mergeCityTroops(
+  current: CityTroopStack[],
+  updates: CityTroopStack[],
+): CityTroopStack[] {
+  const map = new Map<number, CityTroopStack>();
+  for (const t of current) {
+    if (t.unit_cfg_id != null) map.set(t.unit_cfg_id, { ...t });
+  }
+  for (const u of updates) {
+    if (u.unit_cfg_id == null) continue;
+    map.set(u.unit_cfg_id, { ...map.get(u.unit_cfg_id), ...u });
+  }
+  return [...map.values()].filter((t) => (t.count ?? 0) > 0 || (t.wounded ?? 0) > 0);
+}

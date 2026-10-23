@@ -24,12 +24,19 @@ export type PlayerProfile = {
   power?: number;
 };
 
+export type CityTroopStack = {
+  unit_cfg_id?: number;
+  count?: number;
+  wounded?: number;
+};
+
 export type MainCitySession = {
   player: PlayerProfile;
   wallet: ResourceWallet;
   cityId: number;
   cityName: string;
   buildings: CityBuilding[];
+  cityTroops: CityTroopStack[];
 };
 
 type LoginResult = {
@@ -91,5 +98,6 @@ export async function bootstrapMainCity(
     cityId: city.city_id,
     cityName: city.name ?? "主城",
     buildings: state.buildings ?? [],
+    cityTroops: [],
   };
 }
