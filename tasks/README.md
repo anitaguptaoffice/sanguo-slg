@@ -48,4 +48,4 @@ status:review   ──合并────▶  status:done
 |---|---|---|
 | 1 | 规格 + 骨架 + 最高风险原型 | SPEC-001~004, PLAT-001~003, MIL-001, CLIENT-001 |
 | 2 | 各业务域并行 | ACC-001, WORLD-001, DOM-001, MIL-002 |
-| 3 | 内容与运营 | 待排 |
+| 3 | M1 串联 + 将领/道具/战报 | INTG-001, HERO-001, CONTENT-001, MIL-003, CLIENT-002 |

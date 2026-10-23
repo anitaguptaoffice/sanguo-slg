@@ -1,0 +1,76 @@
+{
+  "bag_max_distinct_items": 32,
+  "items": [
+    {
+      "item_cfg_id": 2001,
+      "code": "food_bundle_s",
+      "name": "粮食袋（小）",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "grants": {
+          "food": 1000
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2002,
+      "code": "wood_bundle_s",
+      "name": "木材捆（小）",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "grants": {
+          "wood": 1000
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2003,
+      "code": "speedup_5m",
+      "name": "加速令（5分钟）",
+      "item_type": 2,
+      "max_stack": 999,
+      "meta": {
+        "speedup_sec": 300,
+        "applies_to": [
+          "build",
+          "research"
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2004,
+      "code": "recruit_scroll",
+      "name": "招贤令",
+      "item_type": 3,
+      "max_stack": 10,
+      "meta": {
+        "hero_pool": "standard",
+        "draws": 1
+      }
+    },
+    {
+      "item_cfg_id": 2005,
+      "code": "infantry_token",
+      "name": "步兵训练令",
+      "item_type": 4,
+      "max_stack": 50,
+      "meta": {
+        "unit_code": "infantry",
+        "count": 100
+      }
+    },
+    {
+      "item_cfg_id": 2006,
+      "code": "cavalry_token",
+      "name": "骑兵训练令",
+      "item_type": 4,
+      "max_stack": 50,
+      "meta": {
+        "unit_code": "cavalry",
+        "count": 50
+      }
+    }
+  ]
+}

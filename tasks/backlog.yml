@@ -218,3 +218,85 @@
     - 连接网关、收发 proto 消息
     - 登录 → 主城界面跑通（占位美术）
   body: 先用占位资源跑通链路，美术后续替换。
+
+- id: INTG-001
+  title: 开服串联登录主城建筑资源
+  wave: 3
+  domain: platform
+  depends_on: [ACC-001, WORLD-001, DOM-001, PLAT-002]
+  size: L
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, internal/platform/**]
+  out_of_scope: [internal/account/**, internal/world/**, internal/domestic/**, internal/military/**, client/**, spec/**]
+  acceptance:
+    - make dev 可起全栈，客户端或脚本能完成：注册/登录 → 建城 → 升级建筑 → 资源随时间增加
+    - 网关路由到 account/world/domestic 处理函数（可薄封装，不改各域核心逻辑目录外的业务算法）
+    - 有集成测试或可重复的 smoke 脚本说明
+  body: |
+    M1 出口关键路径。把已合并的账号、地图、内政接到 cmd/server 与网关路由上，形成可玩闭环。
+    允许在 cmd、internal/api、internal/platform 做装配与路由；禁止改写各业务域核心算法目录（可 import）。
+    资源结算、建城规则以已有 domestic/world 实现为准。
+
+- id: HERO-001
+  title: 将领招募与基础属性
+  wave: 3
+  domain: hero
+  depends_on: [SPEC-001, SPEC-004]
+  size: M
+  owner_dir: internal/hero
+  scope: [internal/hero/**]
+  out_of_scope: [internal/military/**, spec/**]
+  acceptance:
+    - 招募扣资源/道具（按 seed 配置），写入将领实例
+    - 基础属性计算（等级、成长）有单测
+    - 忠诚度字段可读写，含上下限
+  body: |
+    将领域骨架。读 spec/db 与 seed，不改 spec。先内存或 PG store 任选，需可测。
+
+- id: CONTENT-001
+  title: 道具与背包基础
+  wave: 3
+  domain: content
+  depends_on: [SPEC-001, SPEC-004]
+  size: M
+  owner_dir: internal/content
+  scope: [internal/content/**]
+  out_of_scope: [internal/domestic/**, spec/**]
+  acceptance:
+    - 背包增删改查、堆叠规则、容量上限
+    - 使用一类消耗品（如加速或资源包）有单测
+    - 配置来自 seed，不硬编码数值表
+  body: |
+    内容域起步：道具定义 + 玩家背包。不接商城支付。不改 spec。
+
+- id: MIL-003
+  title: 战报存储与查询
+  wave: 3
+  domain: military
+  depends_on: [MIL-001, SPEC-001]
+  size: M
+  owner_dir: internal/military
+  scope: [internal/military/report/**]
+  out_of_scope: [internal/military/battle/**, internal/military/march/**, spec/**]
+  acceptance:
+    - 战斗引擎输出可落库为战报
+    - 按战报 id / 玩家 id 查询
+    - 列表分页，单测覆盖写入与查询
+  body: |
+    在 internal/military/report 实现战报持久化与查询。可调用 battle 包类型，禁止修改 battle 与 march 目录。
+
+- id: CLIENT-002
+  title: 主城界面接真实协议
+  wave: 3
+  domain: client
+  depends_on: [CLIENT-001, INTG-001]
+  size: L
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - 登录后进入主城，展示建筑与资源（占位美术可保留）
+    - 发起建造/升级请求并刷新状态
+    - 相对 mock 网关或真实 make dev 有联调说明
+  body: |
+    依赖开服串联完成后，把客户端从 mock 切到真实 proto 流程。
