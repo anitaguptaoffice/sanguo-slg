@@ -16,6 +16,7 @@ import {
   applyMailClaimResult,
   formatHeroLine,
   formatMailClaimGrantedSummary,
+  filterHeroCultivationBagItemIds,
   formatRecruitSuccessStatus,
   heroListLines,
   mergeRecruitTemplateOwnership,
@@ -84,6 +85,7 @@ export class HeroMailPanels {
     private readonly onDailyRecruitLoop?: () => void | Promise<void>,
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
     private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
+    private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
   ) {}
 
   attach(): void {
@@ -132,6 +134,12 @@ export class HeroMailPanels {
     if (!template) return "";
     const { wallet, bag } = this.sessionEconomy();
     return formatRecruitAffordabilitySummaryMarkup(template, wallet, bag);
+  }
+
+  private recruitTemplateForHeroDetail(): RecruitTemplatePreview | undefined {
+    const tplId = this.heroDetail?.template_cfg_id;
+    if (!tplId) return undefined;
+    return this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === tplId);
   }
 
   getMailRoot(): HTMLElement {
@@ -320,7 +328,11 @@ export class HeroMailPanels {
     }
     if (detailEl) {
       detailEl.innerHTML = this.selectedHeroId
-        ? renderHeroDetailMarkup(this.heroDetail, this.recruitAffordSummaryForHeroDetail())
+        ? renderHeroDetailMarkup(
+            this.heroDetail,
+            this.recruitAffordSummaryForHeroDetail(),
+            this.recruitTemplateForHeroDetail(),
+          )
         : renderHeroDetailMarkup(null);
     }
   }
@@ -837,6 +849,40 @@ export class HeroMailPanels {
     if (a === "refresh-heroes") void this.refreshHeroes();
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "recruit-hero") void this.recruitHero();
+    if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
+    if (a === "hero-related-items") void this.openRelatedCultivationItems();
+  }
+
+  private async openRecruitForCurrentHero(): Promise<void> {
+    const tplId = this.heroDetail?.template_cfg_id;
+    if (!tplId) {
+      this.onStatus("请先点选将领加载详情");
+      return;
+    }
+    if (!this.recruitTemplates.length) await this.refreshRecruitTemplates();
+    this.applyTemplateSelection(tplId);
+    const anchor = this.heroPanel.querySelector('[data-field="template-select"]');
+    anchor?.scrollIntoView?.({ block: "nearest" });
+    this.onStatus(`招募区已预选模板 #${tplId}`);
+  }
+
+  private async openRelatedCultivationItems(): Promise<void> {
+    const sid = this.serverId();
+    let items = this.sessionEconomy().bag;
+    try {
+      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
+        items?: { item_cfg_id?: number; quantity?: number }[];
+      };
+      items = bagFromListPlayerBagResponse(bagRes.items);
+    } catch {
+      /* 使用会话背包快照 */
+    }
+    const ids = filterHeroCultivationBagItemIds(items);
+    if (this.onOpenHeroCultivationBag) {
+      this.onOpenHeroCultivationBag(ids);
+      return;
+    }
+    this.onStatus(ids.length ? `养成道具 item_cfg_id：${ids.join("、")}` : "背包暂无养成消耗品（将魂碎晶等）");
   }
 
   private onMailClick(ev: Event): void {

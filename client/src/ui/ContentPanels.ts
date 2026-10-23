@@ -56,6 +56,7 @@ export class ContentPanels {
   private selectedItemId = 2001;
   private selectedOfferId = 1001;
   private bagHighlightItemId = 0;
+  private bagHighlightItemIds = new Set<number>();
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
 
@@ -104,6 +105,7 @@ export class ContentPanels {
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
   openBagHighlightItem(itemCfgId: number): void {
+    this.bagHighlightItemIds = new Set(itemCfgId > 0 ? [itemCfgId] : []);
     this.bagHighlightItemId = itemCfgId;
     this.selectedItemId = itemCfgId;
     this.ensureBagSelectOption(itemCfgId);
@@ -113,6 +115,28 @@ export class ContentPanels {
     const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
     if (hint) {
       hint.textContent = `筛选高亮 item_cfg_id=${itemCfgId}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`;
+    }
+    void this.refreshBag();
+  }
+
+  /** 将领养成互链：高亮多个养成消耗品（ListPlayerBag 过滤结果）。 */
+  openBagHighlightItems(itemCfgIds: number[]): void {
+    const ids = itemCfgIds.filter((id) => id > 0);
+    this.bagHighlightItemIds = new Set(ids);
+    const first = ids[0] ?? 0;
+    this.bagHighlightItemId = first;
+    if (first) {
+      this.selectedItemId = first;
+      this.ensureBagSelectOption(first);
+      const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
+      if (sel) sel.value = String(first);
+    }
+    this.bagPanel.classList.remove("hidden");
+    const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
+    if (hint) {
+      hint.textContent = ids.length
+        ? `将领养成高亮 item_cfg_id=${ids.join("、")}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`
+        : "暂无养成消耗品；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。";
     }
     void this.refreshBag();
   }
@@ -249,7 +273,11 @@ export class ContentPanels {
       li.appendChild(idSpan);
       li.appendChild(nameSpan);
       li.appendChild(qtySpan);
-      if (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId) {
+      if (
+        row.item_cfg_id &&
+        (this.bagHighlightItemIds.has(row.item_cfg_id) ||
+          (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId))
+      ) {
         li.classList.add("item-highlight");
       }
       ul.appendChild(li);
