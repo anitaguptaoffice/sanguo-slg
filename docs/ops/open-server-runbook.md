@@ -1,13 +1,13 @@
 # 开服运营最小流程（OPS-OPEN-001）
 
-面向 **dev / staging** 环境的手动开服与值班检查。依赖已合并的 **PLAT-004**（选服列表、`server_id` 会话）、**GM-001**（`cmd/gm` 与 HTTP `/gm/*`）、**GM-002**（禁言写入 PG，聊天路径校验）。
+面向 **dev / staging** 环境的手动开服与值班检查。依赖已合并的 **PLAT-004**（选服列表、`server_id` 会话）、**GM-001**（`cmd/gm` 与 HTTP `/gm/*`）、**GM-002**（禁言写入 PG，聊天路径校验）、**MAIL-001**（`cmd/gm send-mail` → `player_mail`）。
 
 ## 范围与非目标
 
 | 在范围内 | 非目标（本仓库 v1 不做） |
 |---|---|
 | 确认依赖健康、选服数据、玩家能进服 | 完整运营后台 UI |
-| GM 查号 / 发奖 / 禁言（CLI 或 HTTP） | 活动配置台、可视化排期 |
+| GM 查号 / 发奖 / 禁言 / 踢人 / 发邮件（CLI；查号/发奖/禁言/踢人亦可 HTTP） | 活动配置台、`cfg_act*` 灌入、可视化排期 |
 | 可重复的 markdown 检查清单 | 支付、跨服、赛季运营 |
 
 ## 环境约定
@@ -99,7 +99,7 @@ psql "$DATABASE_URL" -c \
 - [ ] **HTTP 健康**：`curl -sf http://127.0.0.1:8080/healthz` → `{"status":"ok"}`
 - [ ] **WebSocket 可达**：跑通 `TestM3SocialSmokePath` 或客户端选服页「刷新列表」无报错
 - [ ] **GM 子进程接线**（可选）：  
-  `DATABASE_URL=... REDIS_ADDR=... go run ./cmd/gm` → 输出 `gm ready` 与 `lookup|grant|kick|mute` 提示
+  `DATABASE_URL=... REDIS_ADDR=... go run ./cmd/gm` → 输出 `gm ready` 与 `lookup|grant|kick|mute|send-mail` 提示
 
 ### Metrics（PLAT-003，按部署启用）
 
@@ -111,9 +111,11 @@ psql "$DATABASE_URL" -c \
 
 ---
 
-## 4. GM 运营检查清单（GM-001 / GM-002）
+## 4. GM 运营检查清单（GM-001 / GM-002 / MAIL-001）
 
 前置：至少一名玩家已在目标 `server_id` 创角（客户端进服或 `TestM3SocialSmokePath` / `TestM4ContentSmokePath`）。
+
+**非目标（GM-003）**：本仓库 v1 **不提供**活动配置台、排期 UI，也不向 `spec/data` 灌入 `cfg_act*`。运营动作限于 `cmd/gm`（及已挂载的 HTTP `/gm/lookup|grant|kick|mute`）；**发邮件仅 CLI**（`send-mail`），与 `cmd/gm/main.go` usage 一致。
 
 环境变量（staging 建议全开）：
 
@@ -223,9 +225,78 @@ curl -sS -X POST http://127.0.0.1:8080/gm/mute \
   }'
 ```
 
-### 4.4 参考命令（非开服必测）
+### 4.4 踢人（kick）
 
-`kick` 会踢网关会话并吊销 DB session（`gm kick --server-id=1 --player-id=...`）。开服最小清单 **不强制** 踢人，值班按工单使用。
+会踢网关会话并吊销 DB session（需游戏进程挂载 GM 会话注册表时 `session_terminated` 才为 true）。开服冒烟 **可选**；值班按工单勾选。
+
+- [ ] CLI：
+
+```bash
+./bin/gm kick \
+  --server-id=1 \
+  --player-id=<player_id> \
+  --operator-id=ops-check \
+  --reason='OPS-OPEN-001 kick smoke' \
+  --ticket-id=OPS-150
+```
+
+- [ ] HTTP（`make dev` 运行中）：
+
+```bash
+curl -sS -X POST http://127.0.0.1:8080/gm/kick \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "server_id": 1,
+    "player_id": <player_id>,
+    "audit": {"OperatorID": "ops-check", "Reason": "OPS-OPEN-001 kick"}
+  }'
+```
+
+### 4.5 发邮件（send-mail，MAIL-001）
+
+仅 **CLI**（无 `/gm/send-mail` HTTP）。参数与 `cmd/gm` 一致：`--title` 必填；`--body` 可选；`--mail-type` 默认 `2`（奖励邮件，`1`=系统、`3`=公告）；附件用 `--rewards-json`（`content.RewardPackage`）或 `--food` / `--gold` 快捷字段；**纯文本无附件**时可省略奖励字段。
+
+- [ ] **纯文本**（无附件，系统邮件示例）：
+
+```bash
+./bin/gm send-mail \
+  --server-id=1 \
+  --player-id=<player_id> \
+  --title='开服公告' \
+  --body='欢迎进入 Dev-1，本邮件无附件。' \
+  --mail-type=1 \
+  --operator-id=ops-check \
+  --reason='OPS-OPEN-001 send-mail text' \
+  --ticket-id=OPS-150
+```
+
+- [ ] **带附件**（奖励邮件，`--rewards-json` 与冒烟一致）：
+
+```bash
+./bin/gm send-mail \
+  --server-id=1 \
+  --player-id=<player_id> \
+  --title='维护补偿' \
+  --body='请在游戏内领取附件。' \
+  --mail-type=2 \
+  --rewards-json='{"items":[{"item_cfg_id":2003,"qty":1}],"resources":{"food":500}}' \
+  --operator-id=ops-check \
+  --reason='OPS-OPEN-001 send-mail reward' \
+  --ticket-id=OPS-150
+```
+
+- [ ] 或使用资源快捷字段：`--food=1000`（与 `grant` 相同 schema 约束）
+
+- [ ] 输出 JSON 中 `mail.mail_id`、`mail.status` 合理；玩家侧可用网关 `content.v1.ListPlayerMail` 核对（完整「发信 → 领取」链见 wave:10 **INTG-007**）
+
+与 `tools/smoke/README.md` 等价的一行示例：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go run ./cmd/gm send-mail \
+  --server-id=1 --player-id=<player_id> --title=smoke --body=test \
+  --rewards-json='{"items":[{"item_cfg_id":2001,"qty":1}]}' \
+  --operator-id=dev --reason=smoke
+```
 
 ---
 
@@ -236,7 +307,7 @@ flowchart TD
   A[make dev-up / 确认 PG+Redis] --> B[部署或 make dev]
   B --> C[/healthz + 选服列表/]
   C --> D[客户端或 M3 冒烟进服]
-  D --> E[GM lookup → grant → mute 勾选]
+  D --> E[GM lookup → grant → mute → send-mail 勾选]
   E --> F[对外公告 / 监控 N/A 或 metrics]
 ```
 
@@ -248,6 +319,6 @@ flowchart TD
 |---|---|
 | [tools/smoke/README.md](../../tools/smoke/README.md) | M3/M4 冒烟命令 |
 | [deploy/README.md](../deploy/README.md) | Prometheus / Grafana |
-| `tasks/backlog.yml` | PLAT-004、GM-001、GM-002 验收条目 |
+| `tasks/backlog.yml` | PLAT-004、GM-001、GM-002、MAIL-001、GM-003 验收条目 |
 | `cmd/gm/main.go` | CLI 子命令与 `--help` |
 | `spec/proto/sanguo/gm/v1/` | GM 协议契约 |
