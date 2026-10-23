@@ -266,19 +266,21 @@ H5 人工验收与 **INTG-015** 网关冒烟对齐，见 [client/README.md](../c
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| （待 sync） | CLIENT-055 | 待开工 | — |
 | （待 sync） | CLIENT-056 | 待开工 | — |
 | （待 sync） | CLIENT-057 | 待开工 | — |
 | （待 sync） | CLIENT-058 | 待开工 | — |
 | （待 sync） | CLIENT-059 | 待开工 | — |
 | （待 sync） | CLIENT-060 | 待开工 | — |
 | （待 sync） | CLIENT-061 | 待开工 | — |
+| （待 sync） | CLIENT-062 | 待开工 | — |
 | （待 sync） | INTG-016 | 待开工 | — |
 | （待 sync） | DOCS-EXIT-011 | 阻塞（`blocked_until: INTG-016`） | — |
 
-**并行建议**：CLIENT-055～061 与 INTG-016 可并行；DOCS-EXIT-011 在 INTG-016 合并后放开。CLIENT-057/060 与军事/世界 UI 同域，建议不同 PR 避免冲突。
+**并行建议**：CLIENT-056～062 与 INTG-016 可并行；DOCS-EXIT-011 在 INTG-016 合并后放开。CLIENT-058/061 与军事/世界 UI 同域，建议不同 PR 避免冲突。
 
-**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；合并 art hold/VERIFY；**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287)）——**非** wave:19 backlog 实现卡（实现卡从 **CLIENT-055** 起，与 CLIENT-054 编号无关）。
+**wave:18 美术轨（非 wave:19 backlog 实现卡）**：**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）**已完成**；**CLIENT-055**（[#303](https://github.com/anitaguptaoffice/sanguo-slg/issues/303)）四面板 FAIL **余项** hotfix（wave:18 art，实现中）——与 wave:19 实现卡 **CLIENT-056** 起编号无关。
+
+**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；合并 art hold/VERIFY。
 
 ## 不做
 

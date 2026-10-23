@@ -11,7 +11,7 @@
 # wave:16「H5 战报邮件闭环与军事反馈加深」：战报详情回合可读、邮件领取反馈、军事 manifest 接线、小地图扫读、HUD 深链；INTG-013 冒烟；仍 DATA-002，无 CancelMarch（军事对比度 hotfix 见 CLIENT-033，不纳入本波卡）。
 # wave:17「H5 世界出征互链与复盘导航」：小地图选点出征、战报坐标复盘高亮、军事目标记忆、日常战备与战报联动、社交排行手动刷新；INTG-014 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-040 全页证据为 wave:16 美术轨，不纳入本波）。
 # wave:18「H5 出征反馈与面板可读加深」：军情 ETA/密度、出征表单校验、战报分页筛选、邮件领取同步、HUD 资源脉冲、队列↔日常互链、社交空错态；INTG-015 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-046 中心四面板证据为独立美术轨 Issue #277，非本波实现卡，实现卡从 CLIENT-047 起）。
-# wave:19「H5 可玩加深」：将领/背包/商城对比与购买校验、小地图/世界地图行军标注、队列与资源产出可读、邮件战报日常互链、1280 manifest 巩固；INTG-016 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-054 中心四面板 FAIL 跟进已合，非本波实现卡，实现卡从 CLIENT-055 起）。
+# wave:19「H5 可玩加深」：将领/背包/商城对比与购买校验、小地图/世界地图行军标注、队列与资源产出可读、邮件战报日常互链、1280 manifest 巩固；INTG-016 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-054 已合、CLIENT-055 #303 为 wave:18 美术 FAIL 余项 hotfix，均非本波实现卡，实现卡从 CLIENT-056 起）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -2505,7 +2505,7 @@
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR。
 
-- id: CLIENT-055
+- id: CLIENT-056
   title: 将领详情与招募模板钱包可负担对比
   wave: 19
   domain: client
@@ -2523,9 +2523,9 @@
   body: |
     wave:18 已加深出征校验与资源脉冲；本卡补 **将领养成可读闭环**，只读 GetCityState/背包会话，无新 hero RPC。
 
-    仅 client/**。与 CLIENT-056/057/058/059/060/061 并行（‖）。禁止 DATA-003 / cfg_act* / 新商城 SKU。
+    仅 client/**。与 CLIENT-057/058/059/060/061/062 并行（‖）。禁止 DATA-003 / cfg_act* / 新商城 SKU。
 
-- id: CLIENT-056
+- id: CLIENT-057
   title: 商城购买与背包使用客户端校验内联反馈
   wave: 19
   domain: client
@@ -2543,9 +2543,9 @@
   body: |
     CLIENT-010 已有 offer 行与背包列表；本卡对齐 **出征校验 UX** 到经济面板，契约冻结。
 
-    仅 client/**。与 CLIENT-055/057～061 并行（‖）。不做花钱类新道具 cfg。
+    仅 client/**。与 CLIENT-056/058～062 并行（‖）。不做花钱类新道具 cfg。
 
-- id: CLIENT-057
+- id: CLIENT-058
   title: 小地图行军目的点 ETA 角标与图例
   wave: 19
   domain: client
@@ -2563,9 +2563,9 @@
   body: |
     wave:17/18 已打通选点与军情 ETA 列表；本卡补 **地图扫读层**，仅 DOM/Canvas 标注，无新 military RPC。
 
-    仅 client/**。与 CLIENT-055/056/058～061 并行（‖）。
+    仅 client/**。与 CLIENT-056/057/059～062 并行（‖）。
 
-- id: CLIENT-058
+- id: CLIENT-059
   title: 建造募兵队列总览与资源产出速率摘要
   wave: 19
   domain: client
@@ -2583,9 +2583,9 @@
   body: |
     wave:14/18 队列与日常已可读；本卡补 **一眼总览**，降低多队列时来回切换成本。
 
-    仅 client/**。与 CLIENT-055～057/059～061 并行（‖）。
+    仅 client/**。与 CLIENT-056～058/060～062 并行（‖）。
 
-- id: CLIENT-059
+- id: CLIENT-060
   title: 邮件战报日常三角深链与来源标签
   wave: 19
   domain: client
@@ -2603,9 +2603,9 @@
   body: |
     wave:16～18 已加深战报/邮件/日常各自面板；本卡补 **跨面板导航边角**，契约冻结。
 
-    仅 client/**。与 CLIENT-055～058/060/061 并行（‖）。
+    仅 client/**。与 CLIENT-056～059/061/062 并行（‖）。
 
-- id: CLIENT-060
+- id: CLIENT-061
   title: 世界城池列表与军情行双向高亮
   wave: 19
   domain: client
@@ -2623,9 +2623,9 @@
   body: |
     wave:17 世界列表与军情已并存；本卡补 **列表↔列表** 联动，无 CancelMarch。
 
-    仅 client/**。与 CLIENT-055～059/061 并行（‖）。
+    仅 client/**。与 CLIENT-056～060/062 并行（‖）。
 
-- id: CLIENT-061
+- id: CLIENT-062
   title: 窄屏1280 将领背包队列 manifest 与滚动巩固
   wave: 19
   domain: client
@@ -2637,13 +2637,13 @@
   out_of_scope: [internal/**, spec/**, tools/**]
   acceptance:
     - layoutViewport 1280×720（或项目既定窄屏断点）下将领/背包/队列三面板：`ui.panel.hero.v1` / `ui.panel.bag.v1` / `ui.panel.queue.v1`（或 README 已登记等价 id）背景与 CLIENT-032 军事 manifest 同级接线；长列表 `overflow-y:auto` 不遮挡底栏
-    - 与 CLIENT-039 顶栏、CLIENT-054 纸底字色修 **并存**（不重复改 art 证据脚本）；1600 基线不退化
+    - 与 CLIENT-039 顶栏、CLIENT-054/CLIENT-055（[#303](https://github.com/anitaguptaoffice/sanguo-slg/issues/303)）纸底与四面板美术修 **并存**（不重复改 art 证据脚本）；1600 基线不退化
     - 单测覆盖窄屏 class 切换纯函数（若已有 layoutViewport helper 则扩展）；npm test 绿
     - client/README.md 增补 1280 三面板验收 bullet
   body: |
-    CLIENT-054 已修中心四面板美术 FAIL；本卡收敛 **运行时 manifest + 布局**，不合并 #77/#82/#108 art hold。
+    CLIENT-054/055 为 wave:18 美术轨（054 已合、055 #303 余项 hotfix）；本卡收敛 **运行时 manifest + 布局**，不合并 #77/#82/#108 art hold。
 
-    仅 client/**。与 CLIENT-055～060 并行（‖）。禁止合并 art hold/VERIFY PR。
+    仅 client/**。与 CLIENT-056～061 并行（‖）。禁止合并 art hold/VERIFY PR。
 
 - id: INTG-016
   title: wave:19 网关路径冒烟（将领详情+邮件分页+城池队列字段）
@@ -2666,13 +2666,13 @@
 
     **本波仍不做** CancelMarch / 行军与募兵加速 RPC。
 
-    CLIENT-055～061 非硬依赖。与 CLIENT 卡并行（‖）。
+    CLIENT-056～062 非硬依赖。与 CLIENT 卡并行（‖）。
 
 - id: DOCS-EXIT-011
   title: wave:19 H5 可玩加深文档收口
   wave: 19
   domain: platform
-  depends_on: [INTG-016, CLIENT-055, CLIENT-057]
+  depends_on: [INTG-016, CLIENT-056, CLIENT-058]
   blocked_until: [INTG-016]
   sync_status: blocked
   size: S
@@ -2683,7 +2683,7 @@
     - "ROADMAP：Wave 19 标为已完成并链 Issue/PR；Wave 18 保持已完成（含 DOCS-EXIT-010 #302 b63ed954）"
     - M4/H5 出口描述含「将领招募对比 + 商城/背包校验 + 小地图 ETA + 队列资源总览 + 邮件战报日常互链 + 世界军情高亮 + 1280 manifest」路径（指向 client/README）
     - tasks/README.md wave:19 进度表与 Issue 一致
-    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out；注明 **CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）为美术轨、非 wave:19 backlog 实现卡
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out；注明 **CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）已合美术轨、**CLIENT-055**（[#303](https://github.com/anitaguptaoffice/sanguo-slg/issues/303)）wave:18 四面板 FAIL 余项 hotfix——均非 wave:19 backlog 实现卡
   body: |
     文档 only。INTG-016 合并后编排者将本卡改为 ready。
 
