@@ -23,12 +23,27 @@ type Service struct {
 	Items   map[int32]RecruitItemSpec
 	Store   Store
 	RNG     *rand.Rand
+	clock   func() time.Time
 }
 
 func NewService() *Service {
 	return &Service{
 		Catalog: DefaultCatalog(), Items: DefaultRecruitItems(),
-		Store: NewMemStore(), RNG: rand.New(rand.NewSource(1)),
+		Store: NewMemStore(), RNG: rand.New(rand.NewSource(1)), clock: time.Now,
+	}
+}
+
+func (s *Service) now() time.Time {
+	if s.clock != nil {
+		return s.clock()
+	}
+	return time.Now()
+}
+
+// SetClock overrides time for tests.
+func (s *Service) SetClock(fn func() time.Time) {
+	if fn != nil {
+		s.clock = fn
 	}
 }
 

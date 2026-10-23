@@ -40,6 +40,7 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 	}
 	s.mailSvc = mail.NewService(mailStore, contentSvc, s.log)
 	s.gm = NewGmService(s.log, s.players.Pool, s.sessions, contentSvc)
+	s.wireHeroService(s.players.Pool)
 
 	s.m4.Register(RouteListPlayerQuests, s.handleListPlayerQuests)
 	s.m4.Register(RouteAcceptQuest, s.handleAcceptQuest)
@@ -53,6 +54,9 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 	s.m4.Register(RouteListPlayerMail, s.handleListPlayerMail)
 	s.m4.Register(RouteMarkPlayerMailRead, s.handleMarkPlayerMailRead)
 	s.m4.Register(RouteClaimPlayerMailAttachments, s.handleClaimPlayerMailAttachments)
+	for route, h := range heroGatewayHandlers(s) {
+		s.m4.Register(route, h)
+	}
 	return nil
 }
 

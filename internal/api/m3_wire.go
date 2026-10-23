@@ -23,6 +23,8 @@ func (s *Server) wireM3(pool *pgxpool.Pool) {
 	guild.RegisterM3Chat(s.m3, coord, chatSessionBridge{resolver})
 	guild.RegisterM3(s.m3, guildSvc, guildSessionBridge{resolver})
 
+	s.wireHeroService(pool)
+
 	s.rankSvc = rank.NewService(rank.NewPGStore(pool), newPGRankSource(pool))
 	s.rankSch = rank.NewScheduler(s.rankSvc, rank.DefaultRefreshInterval)
 	s.rankSch.Configure([]int32{defaultServerID}, []rank.RankType{rank.RankPlayerPower, rank.RankPlayerResource})
