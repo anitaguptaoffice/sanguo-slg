@@ -34,6 +34,18 @@ type SpeedupEffect struct {
 	AppliesTo []string
 }
 
+// RecruitEffect is returned when using item_type 3 (recruit scroll).
+type RecruitEffect struct {
+	HeroPool string
+	Draws    int32
+}
+
+// TrainTroopEffect is returned when using item_type 4 (train token).
+type TrainTroopEffect struct {
+	UnitCode string
+	Count    int64
+}
+
 // PlayerRef identifies a player bag within a game server shard.
 type PlayerRef struct {
 	ServerID int32

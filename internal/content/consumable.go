@@ -10,6 +10,8 @@ type UseResult struct {
 	Remaining int32
 	Grants    *ResourceGrants
 	Speedup   *SpeedupEffect
+	Recruit   *RecruitEffect
+	Train     *TrainTroopEffect
 }
 
 // Use consumes count units of a consumable item and returns its effect.
@@ -32,6 +34,9 @@ func (s *Service) Use(p PlayerRef, itemCfgID int32, count int32) (UseResult, err
 		if err != nil {
 			return UseResult{}, err
 		}
+		s.mu.Lock()
+		s.creditWallet(p, resourceWalletFromGrants(grants))
+		s.mu.Unlock()
 		return UseResult{ItemCfgID: itemCfgID, Remaining: rem, Grants: &grants}, nil
 	case ItemTypeSpeedup:
 		effect, err := parseSpeedup(def, count)
@@ -43,9 +48,61 @@ func (s *Service) Use(p PlayerRef, itemCfgID int32, count int32) (UseResult, err
 			return UseResult{}, err
 		}
 		return UseResult{ItemCfgID: itemCfgID, Remaining: rem, Speedup: &effect}, nil
+	case ItemTypeRecruit:
+		effect, err := parseRecruit(def, count)
+		if err != nil {
+			return UseResult{}, err
+		}
+		rem, err := s.Remove(p, itemCfgID, count)
+		if err != nil {
+			return UseResult{}, err
+		}
+		return UseResult{ItemCfgID: itemCfgID, Remaining: rem, Recruit: &effect}, nil
+	case ItemTypeTrainTroop:
+		effect, err := parseTrainTroop(def, count)
+		if err != nil {
+			return UseResult{}, err
+		}
+		rem, err := s.Remove(p, itemCfgID, count)
+		if err != nil {
+			return UseResult{}, err
+		}
+		return UseResult{ItemCfgID: itemCfgID, Remaining: rem, Train: &effect}, nil
 	default:
 		return UseResult{}, ErrNotConsumable
 	}
+}
+
+func resourceWalletFromGrants(g ResourceGrants) ResourceWallet {
+	return ResourceWallet{Food: g.Food, Wood: g.Wood, Iron: g.Iron, Stone: g.Stone}
+}
+
+func parseRecruit(def ItemDef, count int32) (RecruitEffect, error) {
+	pool, _ := def.Meta["hero_pool"].(string)
+	if pool == "" {
+		return RecruitEffect{}, fmt.Errorf("content: item %d missing meta.hero_pool", def.ID)
+	}
+	draws := int32(1)
+	if raw, ok := def.Meta["draws"]; ok {
+		n, err := asInt64(raw)
+		if err != nil {
+			return RecruitEffect{}, fmt.Errorf("content: item %d draws: %w", def.ID, err)
+		}
+		draws = int32(n)
+	}
+	return RecruitEffect{HeroPool: pool, Draws: draws * count}, nil
+}
+
+func parseTrainTroop(def ItemDef, count int32) (TrainTroopEffect, error) {
+	code, _ := def.Meta["unit_code"].(string)
+	if code == "" {
+		return TrainTroopEffect{}, fmt.Errorf("content: item %d missing meta.unit_code", def.ID)
+	}
+	per, err := asInt64(def.Meta["count"])
+	if err != nil {
+		return TrainTroopEffect{}, fmt.Errorf("content: item %d count: %w", def.ID, err)
+	}
+	return TrainTroopEffect{UnitCode: code, Count: per * int64(count)}, nil
 }
 
 func parseResourceGrants(def ItemDef, count int32) (ResourceGrants, error) {

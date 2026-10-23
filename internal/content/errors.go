@@ -10,4 +10,5 @@ var (
 	ErrInsufficientItems = errors.New("content: insufficient item quantity")
 	ErrNotConsumable     = errors.New("content: item is not consumable")
 	ErrUnsupportedUse    = errors.New("content: consumable use not supported for item type")
+	ErrInvalidReward     = errors.New("content: invalid reward package")
 )
