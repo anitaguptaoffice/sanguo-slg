@@ -63,7 +63,7 @@ status:review   ──合并────▶  status:done
 | 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 ([#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)/[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)) |
 | 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`) |
 | 15 | H5 世界地图与面板密度（**已完成**，见 ROADMAP Wave 15） | CLIENT-028–032 ([#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)–[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)、[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`), INTG-012 ([#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)), DOCS-EXIT-007 ([#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234)/[#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242)) |
-| 16 | H5 战报邮件闭环与军事反馈加深（**进行中**，见 ROADMAP Wave 16） | CLIENT-034–036 / INTG-013 已合；CLIENT-037–038、DOCS-EXIT-008 进行中（[#245](https://github.com/anitaguptaoffice/sanguo-slg/pull/245) `a3a80aec`） |
+| 16 | H5 战报邮件闭环与军事反馈加深（**已完成**，见 ROADMAP Wave 16；**DOCS-EXIT-008** 文档收口 PR [#261](https://github.com/anitaguptaoffice/sanguo-slg/pull/261) 进行中） | CLIENT-034–039、INTG-013（[#245](https://github.com/anitaguptaoffice/sanguo-slg/pull/245) `a3a80aec`） |
 
 ### Wave 9 进度（已完成）
 
@@ -157,10 +157,10 @@ status:review   ──合并────▶  status:done
 | [#246](https://github.com/anitaguptaoffice/sanguo-slg/issues/246) | CLIENT-034 | `status:done`（[#254](https://github.com/anitaguptaoffice/sanguo-slg/pull/254) `37259743`） |
 | [#247](https://github.com/anitaguptaoffice/sanguo-slg/issues/247) | CLIENT-035 | `status:done`（[#253](https://github.com/anitaguptaoffice/sanguo-slg/pull/253) `5c505354`） |
 | [#248](https://github.com/anitaguptaoffice/sanguo-slg/issues/248) | CLIENT-036 | `status:done`（[#255](https://github.com/anitaguptaoffice/sanguo-slg/pull/255) `fed5e5bf`） |
-| [#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) | CLIENT-037 | `status:in-progress`（PR [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256)） |
-| [#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) | CLIENT-038 | `status:in-progress`（PR [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258)） |
+| [#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) | CLIENT-037 | `status:done`（[#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) `5a4bb4af`） |
+| [#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) | CLIENT-038 | `status:done`（[#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`） |
 | [#251](https://github.com/anitaguptaoffice/sanguo-slg/issues/251) | INTG-013 | `status:done`（[#257](https://github.com/anitaguptaoffice/sanguo-slg/pull/257) `14dad6da`） |
-| [#252](https://github.com/anitaguptaoffice/sanguo-slg/issues/252) | DOCS-EXIT-008 | `status:in-progress` — 文档收口 |
-| [#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) | CLIENT-039 | `status:in-progress` — 1280 HUD 叠字运行时修（并行，非 wave:16 backlog 主卡） |
+| [#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) | CLIENT-039 | `status:done`（[#260](https://github.com/anitaguptaoffice/sanguo-slg/pull/260) `9e98a28b`） |
+| [#252](https://github.com/anitaguptaoffice/sanguo-slg/issues/252) | DOCS-EXIT-008 | `status:in-progress` — PR [#261](https://github.com/anitaguptaoffice/sanguo-slg/pull/261) 文档收口 |
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 16」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；**永不合并** art hold PR #77/#82/#108/#100/#126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；wave:15 hotfix **CLIENT-033**（[#243](https://github.com/anitaguptaoffice/sanguo-slg/issues/243) / [#244](https://github.com/anitaguptaoffice/sanguo-slg/pull/244) `b320b4de`）军事对比度/按钮/HUD（不重复进 wave:16 卡）。

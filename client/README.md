@@ -91,10 +91,9 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **战报回合详情 + 行军结束深链** | [手动验收（战报详情 CLIENT-034）](#手动验收战报详情回合表与行军深链-client-034)（[#246](https://github.com/anitaguptaoffice/sanguo-slg/issues/246) / [#254](https://github.com/anitaguptaoffice/sanguo-slg/pull/254)） | 已合 |
 | **邮件附件领取 + 未领高亮** | [手动验收（邮件附件领取 CLIENT-035）](#手动验收邮件附件领取-client-035)（[#247](https://github.com/anitaguptaoffice/sanguo-slg/issues/247) / [#253](https://github.com/anitaguptaoffice/sanguo-slg/pull/253)）；基础收件箱仍见 [CLIENT-017](#手动验收邮件收件箱client-017) | 已合 |
 | **军事 panel manifest**（`ui.panel.military.v1`） | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)（[#248](https://github.com/anitaguptaoffice/sanguo-slg/issues/248) / [#255](https://github.com/anitaguptaoffice/sanguo-slg/pull/255)）；募兵主按钮样式见 **CLIENT-033** hotfix | 已合 |
-| **小地图比例尺 / 多行军扫读** | [手动验收（世界地图 CLIENT-028）](#手动验收世界地图行军标注-client-028) 基础上 **CLIENT-037** 加深（[#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) / PR [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256)） | **进行中** |
-| **HUD 角标点击深链** | [手动验收（HUD 待办徽章 CLIENT-027）](#手动验收hud-待办徽章-client-027) 基础上 **CLIENT-038**（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / PR [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258)） | **进行中** |
-
-并行运行时修：[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) **CLIENT-039**（1280 顶栏 canvas 与 DOM 叠字）在 wave:16 标签下跟进，**不**替代 CLIENT-033。
+| **小地图比例尺 / 多行军扫读** | [手动验收（小地图 CLIENT-037）](#手动验收小地图比例尺与多行军-client-037)（[#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) / [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) `5a4bb4af`） | 已合 |
+| **HUD 角标点击深链** | [手动验收（HUD 角标深链 CLIENT-038）](#手动验收hud-角标深链-client-038)（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`） | 已合 |
+| **1280 顶栏 canvas/DOM 叠字** | [手动验收（1280 顶栏 HUD CLIENT-039）](#手动验收1280-顶栏-hud-client-039)（[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) / [#260](https://github.com/anitaguptaoffice/sanguo-slg/pull/260) `9e98a28b`）；**不**替代 **CLIENT-033** hotfix | 已合 |
 
 ## 网关地址
 
@@ -327,13 +326,24 @@ cd client && npm install && npm run dev
 2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
 3. 单测：`artPanelSkin.test.ts`；全量 `cd client && npm test`。
 
-### 手动验收（小地图扫读 CLIENT-037）— 进行中
+### 手动验收（HUD 角标深链 CLIENT-038）
 
-PR [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) 合入后在本节补全：在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上验收 **比例尺文案**、**marching/returning 区分样式**、小地图 **折叠 toggle**（`sessionStorage`）。合并前以 CLIENT-028 步骤为准。
+在 [CLIENT-027](#手动验收hud-待办徽章-client-027) 角标计数基础上：`toolbarBadge` 有计数时角标带 `toolbar-badge--deeplink`，**点击角标**（非按钮正文）深链，复用 `HudTodoBadgePoll` 快照、**不**额外 RPC。
 
-### 手动验收（HUD 角标深链 CLIENT-038）— 进行中
+1. `make dev` 或 mock：有未读邮件时 **点击「邮件」角标** → 打开邮件面板、`filter=未读`、选中 `firstUnreadMailId` 对应行。
+2. chain 400 有待办时 **点击「日常」角标** → 打开日常面板并高亮 `firstDailyTodoCfgId`（可领奖优先于可接取，与角标计数一致）。
+3. 有新战报未读时 **点击「战报」角标** → 打开战报列表并 `openPanelWithDeepLink(firstUnreadBattleReportId)`；与 CLIENT-025 行军结束链接行为一致。
+4. 角标为 0 时无深链样式；点击按钮正文仍仅 toggle 面板（与 wave:14 相同）。
+5. 单测：`toolbarBadge.test.ts`、`hudTodoBadge.test.ts`、`DailyQuestPanels.test.ts` / `HeroMailPanels.test.ts` 深链用例。
 
-PR [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) 合入后在本节补全：在 [CLIENT-027](#手动验收hud-待办徽章-client-027) 基础上验收底栏 **邮件 / 日常 / 战报** 角标 **可点击** 打开对应面板并定位首条未读/可领奖/新战报。合并前角标仍为 `pointer-events: none`。
+### 手动验收（1280 顶栏 HUD CLIENT-039）
+
+顶栏五资源 **仅 DOM**（`#hud` + `appendHudResourceStrip`）；canvas 顶栏带只绘不透明背板，**不再**在 canvas 重复粮木铁石图标/数值，避免 1280×720 与 DOM 叠字。证据与截图见 [`docs/art/samples/client-039/`](../docs/art/samples/client-039/README.md)。
+
+1. 视口 **1280×720**，`make dev` 进主城并打开 **「军事」** 面板：顶栏资源条应清晰可读、无双重描边/叠字；主城/建筑等级文案仍在 `#hud` 内。
+2. 视口 **1600×900**：行为与 CLIENT-011 / CLIENT-032 一致（manifest 图标 + 数值）。
+3. 可选复现截图：`cd client && node scripts/capture-client-039-evidence.mjs`。
+4. 军事字色/募兵四态仍以 **CLIENT-033** 样张为准（`docs/art/samples/client-033/`）。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
@@ -427,7 +437,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（HUD 待办徽章，CLIENT-027）
 
-底栏 **邮件 / 日常 / 战报** 右上角数字角标（`pointer-events: none`，不挡按钮点击）；轮询间隔与 CLIENT-018 `CityStatePoll` 同档（面板打开 5s / 关闭 30s），各来源请求单飞。
+底栏 **邮件 / 日常 / 战报** 右上角数字角标；有计数时可 **角标深链**（**CLIENT-038**），按钮正文点击仍 toggle 面板。轮询间隔与 CLIENT-018 `CityStatePoll` 同档（面板打开 5s / 关闭 30s），各来源请求单飞。
 
 1. `make dev` 或 mock 进主城：有未读邮件时 **「邮件」** 角标为 `ListPlayerMail` 未读 `total_count`；chain 400 存在 **可接(1)** 或 **可领奖(3)** 日常时 **「日常」** 角标为对应条数；新战报相对上次打开战报面板为 **「战报」** 角标（CLIENT-025 `BattleReportUnreadSession`）。
 2. 点开对应面板后该入口角标立即清零；关闭面板后随轮询恢复（邮件未读、日常待办、战报未读各自独立）。
