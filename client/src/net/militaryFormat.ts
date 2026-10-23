@@ -15,6 +15,8 @@ export type CityTroopStack = {
 export type MarchSummary = {
   march_id?: number;
   phase?: number;
+  from_x?: number;
+  from_y?: number;
   to_x?: number;
   to_y?: number;
   depart_at_ms?: number;
@@ -41,6 +43,15 @@ const MARCH_PHASE_LABEL: Record<number, string> = {
   4: "撤回中",
 };
 
+const MARCH_PURPOSE_LABEL: Record<number, string> = {
+  1: "攻击",
+  2: "增援",
+  3: "采集",
+};
+
+/** 行军列表面板打开时的默认轮询间隔（毫秒）。 */
+export const MARCH_LIST_POLL_MS = 5000;
+
 const OUTCOME_LABEL: Record<number, string> = {
   1: "攻胜",
   2: "守胜",
@@ -61,6 +72,44 @@ export function formatTroopStacks(stacks: CityTroopStack[] | undefined): string 
 
 export function formatMarchPhase(phase: number | undefined): string {
   return MARCH_PHASE_LABEL[phase ?? 0] ?? `阶段${phase}`;
+}
+
+export function formatMarchPurpose(purpose: number | undefined): string {
+  return MARCH_PURPOSE_LABEL[purpose ?? 0] ?? `目的${purpose ?? "?"}`;
+}
+
+export function formatMarchCoordPair(
+  fromX: number | undefined,
+  fromY: number | undefined,
+  toX: number | undefined,
+  toY: number | undefined,
+): string {
+  const from = `(${fromX ?? "?"},${fromY ?? "?"})`;
+  const to = `(${toX ?? "?"},${toY ?? "?"})`;
+  return `${from} → ${to}`;
+}
+
+export function formatMarchLine(m: MarchSummary): string {
+  const id = m.march_id ?? "?";
+  const purpose = formatMarchPurpose(m.purpose);
+  const phase = formatMarchPhase(m.phase);
+  const route = formatMarchCoordPair(m.from_x, m.from_y, m.to_x, m.to_y);
+  const depart = formatTimeMs(m.depart_at_ms);
+  const arrive = formatTimeMs(m.arrive_at_ms);
+  return `#${id} ${purpose} · ${phase} · ${route} · 出发 ${depart} · 到达 ${arrive}`;
+}
+
+export function marchListLines(marches: MarchSummary[]): string[] {
+  if (!marches.length) return ["（暂无行军，出征后在此查看进度）"];
+  return marches.map(formatMarchLine);
+}
+
+/** 是否仍需轮询刷新（进行中阶段）。 */
+export function marchNeedsPoll(marches: MarchSummary[]): boolean {
+  return marches.some((m) => {
+    const p = m.phase ?? 0;
+    return p === 1 || p === 2 || p === 4;
+  });
 }
 
 export function formatTimeMs(ms: number | undefined): string {

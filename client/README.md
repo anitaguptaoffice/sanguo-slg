@@ -118,13 +118,29 @@ make dev
 cd client && npm install && npm run dev
 ```
 
-### 手动验收（募兵 → 行军 → 战报，CLIENT-012）
+### 手动验收（募兵 → 行军 → 战报，CLIENT-012 / CLIENT-013）
 
 1. 登录进入主城后，点 **「军事」** 打开面板。
 2. **募兵**：选兵种（默认步兵）、数量（如 50），点「募兵」。HUD 会显示扣费后的资源；若返回 `queue_id` / `finish_at_ms`，需等到完成时间后再出征（服务端调度器在 `make dev` 中自动推进）。
-3. **出征**：目标默认 **(5,5)**（M2 驻点），调整出征步兵数量后点「出征攻击」。状态栏与画布会显示行军阶段与预计到达时间。
-4. 等待行军到达并完成战斗后（真实环境取决于距离与调度），点底栏 **「战报」** → **「刷新列表」**，点击某条战报查看回合/伤亡摘要（字段以服务端为准）。
-5. 内政仍可用：**「升级农田」「刷新状态」**。
+3. **出征**：目标默认 **(5,5)**（M2 驻点），调整出征步兵数量后点「出征攻击」。状态栏与军事面板会显示最近一次行军摘要。
+4. 点底栏 **「行军」** → **「刷新列表」**（或等待约 5s 自动刷新）：列表调用 `military.v1.ListMarches`，每行展示目的、阶段、起终点坐标、出发/到达时间。出征成功后若面板已打开会自动刷新。
+5. 等待行军到达并完成战斗后（真实环境取决于距离与调度），点 **「战报」** → **「刷新列表」**，点击某条战报查看回合/伤亡摘要（字段以服务端为准）。
+6. 面板落在 1600×900 外框内可滚动；内政仍可用：**「升级农田」「刷新状态」**。
+
+`make dev` 真实网关：
+
+```bash
+# 仓库根
+make dev
+cd client && npm install && npm run dev
+```
+
+mock 网关（含 ListMarches 桩，出征后列表可见）：
+
+```bash
+cd client && npm run mock:gateway
+VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
+```
 
 ## 仅 mock 网关
 
@@ -141,13 +157,13 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板解析/空列表、邮件领取）/ `HeroMailPanels` 与 `StartMarchRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板解析/空列表、邮件领取）/ `HeroMailPanels` 与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
 - `src/engine/` — `GameApp`、`layoutViewport`、`mainCitySlots`、场景管理、`AssetLoader`（art v1 manifest）
 - `src/net/` — `GatewayClient`、`bootstrapSession`、`militaryFormat`、proto 加载
 - `src/scenes/` — 选服、主城（军事 + M3 社交面板）
-- `src/ui/` — 聊天/军团/排行、任务/日常/战报、背包/商城/将领/邮件 DOM 面板
+- `src/ui/` — 聊天/军团/排行、任务/日常/战报/行军、背包/商城/将领/邮件 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock

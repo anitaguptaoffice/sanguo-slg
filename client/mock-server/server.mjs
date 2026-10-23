@@ -60,6 +60,7 @@ function sessionState() {
     troops: { 1: 0 },
     cityId: 501,
     nextMarchId: 1,
+    marches: [],
     nextReportId: 9001,
     reports: [],
     chatMessages: [],
@@ -342,21 +343,43 @@ wss.on("connection", (ws) => {
           state.troops[t.unit_cfg_id] = Math.max(0, (state.troops[t.unit_cfg_id] ?? 0) - t.count);
         }
         const now = Date.now();
+        const march = {
+          march_id: state.nextMarchId++,
+          origin_city_id: req.city_id,
+          from_x: 0,
+          from_y: 0,
+          to_x: req.to_x,
+          to_y: req.to_y,
+          purpose: req.purpose,
+          phase: 2,
+          depart_at_ms: now,
+          arrive_at_ms: now + 120_000,
+          troops: req.troops,
+        };
+        state.marches.unshift(march);
         replyOk(ws, cp.trace_id, T("sanguo.military.v1.StartMarchResponse"), {
-          march: {
-            march_id: state.nextMarchId++,
-            to_x: req.to_x,
-            to_y: req.to_y,
-            purpose: req.purpose,
-            phase: 2,
-            depart_at_ms: now,
-            arrive_at_ms: now + 120_000,
-            troops: req.troops,
-          },
+          march,
           city_troops: Object.entries(state.troops).map(([id, count]) => ({
             unit_cfg_id: Number(id),
             count,
           })),
+        });
+        return;
+      }
+
+      if (route === "military.v1.ListMarches") {
+        const req = T("sanguo.military.v1.ListMarchesRequest").decode(cp.payload);
+        let marches = state.marches ?? [];
+        if (req.city_id) {
+          marches = marches.filter((m) => m.origin_city_id === req.city_id);
+        }
+        const total = marches.length;
+        const offset = req.offset ?? 0;
+        const limit = req.limit > 0 ? req.limit : 20;
+        const slice = marches.slice(offset, offset + limit);
+        replyOk(ws, cp.trace_id, T("sanguo.military.v1.ListMarchesResponse"), {
+          marches: slice,
+          total,
         });
         return;
       }
