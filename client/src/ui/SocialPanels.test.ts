@@ -151,7 +151,11 @@ describe("SocialPanels rank", () => {
     await flushPromises();
     const status = mount.querySelector('[data-role="rank-refresh-status"]');
     expect(status?.textContent).toContain("刷新失败");
+    expect(status?.textContent).toContain("[500]");
     expect(status?.textContent).toContain("timeout");
+    expect(mount.querySelector('[data-role="rank-refresh-retry"]')?.classList.contains("hidden")).toBe(
+      false,
+    );
     expect(status?.classList.contains("social-refresh-error")).toBe(true);
   });
 });
@@ -262,6 +266,9 @@ describe("SocialPanels chat & guild", () => {
     await flushPromises();
     const summary = mount.querySelector('[data-role="guild-summary"]');
     expect(summary?.textContent).toContain("虎贲营 (#7001)");
+    expect(mount.querySelector('[data-role="guild-refresh-status-text"]')?.textContent).toContain(
+      "上次更新",
+    );
 
     panels.toggleChat();
     const channel = mount.querySelector('[data-field="channel"]') as HTMLSelectElement;
@@ -289,7 +296,12 @@ describe("SocialPanels chat & guild", () => {
     await flushPromises();
     mount.querySelector('[data-action="refresh-members"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    expect(mount.querySelector('[data-role="guild-refresh-status"]')?.textContent).toContain("刷新失败：gateway down");
+    expect(mount.querySelector('[data-role="guild-refresh-status-text"]')?.textContent).toContain(
+      "刷新失败：gateway down",
+    );
+    expect(mount.querySelector('[data-role="guild-refresh-retry"]')?.classList.contains("hidden")).toBe(
+      false,
+    );
     expect(mount.querySelector(".guild-members .social-list-empty")?.textContent).toContain("请点「刷新」重试");
   });
 });
