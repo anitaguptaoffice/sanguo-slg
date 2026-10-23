@@ -14,6 +14,7 @@ import {
   gatewayErrorMessage,
 } from "@/net/contentFeedback";
 import {
+  formatPanelGatewayErrorFromUnknown,
   setBagFormErrorDisplay,
   setShopFormErrorDisplay,
   validatePurchaseShopOffer,
@@ -399,7 +400,7 @@ export class ContentPanels {
       this.setBagFeedback(summary);
       this.onStatus(summary);
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
+      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
       setBagFormErrorDisplay(this.bagPanel, msg);
       this.setBagFeedback(null);
       this.onStatus(msg);
@@ -463,7 +464,7 @@ export class ContentPanels {
       await this.refreshShop();
       this.onStatus(feedback);
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
+      const msg = formatPanelGatewayErrorFromUnknown("shop", e);
       setShopFormErrorDisplay(this.shopPanel, msg);
       this.setShopFeedback(null);
       this.onStatus(msg);

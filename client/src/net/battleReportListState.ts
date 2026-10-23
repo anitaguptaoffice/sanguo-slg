@@ -1,8 +1,15 @@
-import type { BattleReportOutcomeFilter } from "@/net/militaryFormat";
+import type {
+  BattleReportOutcomeFilter,
+  BattleReportTimeWindowFilter,
+} from "@/net/militaryFormat";
 
 /** sessionStorage：战报列表 outcome 筛选（CLIENT-049，仅客户端，不传 ListBattleReports）。 */
 export const BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY =
   "rxsg.client.battleReport.outcomeFilter";
+
+/** sessionStorage：战报列表时间窗筛选（CLIENT-065，与 outcome 键分离）。 */
+export const BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY =
+  "rxsg.client.battleReport.timeWindowFilter";
 
 export const BATTLE_REPORT_LOAD_MORE_LABEL = "加载更多";
 
@@ -45,6 +52,49 @@ export function writeBattleReportOutcomeFilterSession(
 ): void {
   try {
     storage?.setItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY, filter);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+const TIME_WINDOW_FILTER_VALUES: readonly BattleReportTimeWindowFilter[] = [
+  "all",
+  "today",
+  "last7d",
+];
+
+export function parseBattleReportTimeWindowFilterSessionValue(
+  raw: string | null | undefined,
+): BattleReportTimeWindowFilter | null {
+  if (raw == null || raw === "") return null;
+  if ((TIME_WINDOW_FILTER_VALUES as readonly string[]).includes(raw)) {
+    return raw as BattleReportTimeWindowFilter;
+  }
+  return null;
+}
+
+export function readBattleReportTimeWindowFilterSession(
+  storage: Pick<Storage, "getItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): BattleReportTimeWindowFilter | null {
+  try {
+    return parseBattleReportTimeWindowFilterSessionValue(
+      storage?.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY) ?? null,
+    );
+  } catch {
+    return null;
+  }
+}
+
+export function writeBattleReportTimeWindowFilterSession(
+  filter: BattleReportTimeWindowFilter,
+  storage: Pick<Storage, "setItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): void {
+  try {
+    storage?.setItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY, filter);
   } catch {
     /* quota / private mode */
   }

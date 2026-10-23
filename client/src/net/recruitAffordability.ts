@@ -1,4 +1,5 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
+import { setPanelFormErrorDisplay } from "@/net/contentFormValidation";
 import { bagStackQuantity, type BagStack } from "@/net/bagState";
 import { itemLabel } from "@/net/contentFormat";
 import { formatResourceAmount, WALLET_RESOURCE_KEYS } from "@/net/hudFormat";
@@ -152,13 +153,5 @@ export function setRecruitAffordabilityErrorDisplay(
   panelRoot: ParentNode | null | undefined,
   message: string | null,
 ): void {
-  const el = panelRoot?.querySelector('[data-role="recruit-form-error"]');
-  if (!el) return;
-  if (message?.trim()) {
-    el.textContent = message;
-    el.classList.remove("hidden");
-  } else {
-    el.textContent = "";
-    el.classList.add("hidden");
-  }
+  setPanelFormErrorDisplay(panelRoot, "recruit", message);
 }

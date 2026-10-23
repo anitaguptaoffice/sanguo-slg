@@ -5,6 +5,12 @@ import {
   dailyObjectiveKindForQuest,
   dailyQuestNeedsNextStep,
 } from "@/net/dailyQuestObjective";
+import {
+  activeBuildingUpgrades,
+  isRecruitQueueActive,
+  type RecruitQueueEntry,
+} from "@/net/queueState";
+import { unitLabel } from "@/net/militaryFormat";
 
 /** DATA-002 `cfg_building.building_cfg_id` → 主城 `slot_key`。 */
 export const BUILDING_CFG_TO_SLOT_KEY: Record<number, string> = {
@@ -54,6 +60,62 @@ export function resolveBuildLevelQuestTarget(q: QuestRow): BuildLevelQuestTarget
 export function isBuildLevelDailyNeedingProgress(q: QuestRow | null | undefined): boolean {
   if (!q || !dailyQuestNeedsNextStep(q)) return false;
   return dailyObjectiveKindForQuest(q) === "build_level";
+}
+
+export function isTrainDailyNeedingProgress(q: QuestRow | null | undefined): boolean {
+  if (!q || !dailyQuestNeedsNextStep(q)) return false;
+  return dailyObjectiveKindForQuest(q) === "train_troops";
+}
+
+/** 队列建造行：匹配日常只读进度（chain 400 快照，不新 RPC）。 */
+export function formatLinkedDailyQuestProgressSummary(q: QuestRow): string | null {
+  const target = q.progress_target ?? 0;
+  if (target <= 0) return null;
+  return `日课 ${q.progress_current ?? 0}/${target}`;
+}
+
+export type NearestQueueSnapshot =
+  | { kind: "build"; finishAtMs: number; building: CityBuilding }
+  | { kind: "recruit"; finishAtMs: number; recruit: RecruitQueueEntry };
+
+/** 建造+募兵进行中项里最早到期的一条（与 QueuePanels 顶栏口径一致）。 */
+export function pickNearestActiveQueueEntry(
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[] | undefined,
+  nowMs = Date.now(),
+): NearestQueueSnapshot | null {
+  let best: NearestQueueSnapshot | null = null;
+  for (const b of activeBuildingUpgrades(buildings, nowMs)) {
+    const t = b.upgrade_finish_at_ms ?? 0;
+    if (t <= nowMs) continue;
+    if (!best || t < best.finishAtMs) best = { kind: "build", finishAtMs: t, building: b };
+  }
+  for (const r of recruits ?? []) {
+    if (!isRecruitQueueActive(r, nowMs)) continue;
+    if (!best || r.finish_at_ms < best.finishAtMs) {
+      best = { kind: "recruit", finishAtMs: r.finish_at_ms, recruit: r };
+    }
+  }
+  return best;
+}
+
+export function formatNearestQueueCountdownHint(
+  snapshot: NearestQueueSnapshot,
+  slotLabels: Record<string, string>,
+  nowMs = Date.now(),
+): string {
+  if (snapshot.kind === "build") {
+    const building = snapshot.building;
+    const key = building.slot_key ?? BUILDING_CFG_TO_SLOT_KEY[resolveBuildingCfgId(building)] ?? "?";
+    const name = slotLabels[key] ?? key;
+    const targetLv = (building.level ?? 0) + 1;
+    const rem = formatUpgradeRemaining(building.upgrade_finish_at_ms, nowMs);
+    return `队列：${name} → Lv${targetLv} · 剩余 ${rem ?? "—"}`;
+  }
+  const r = snapshot.recruit;
+  const rem = formatUpgradeRemaining(r.finish_at_ms, nowMs);
+  const unit = unitLabel(r.unit_cfg_id);
+  return `队列：${unit}×${r.count} · 剩余 ${rem ?? "—"}`;
 }
 
 export function isBuildingUpgradeActive(building: CityBuilding, nowMs = Date.now()): boolean {
@@ -108,9 +170,29 @@ export function formatBuildQueueCountdownForQuest(
 ): string | null {
   const building = findActiveUpgradeForBuildQuest(quest, buildings, nowMs);
   if (!building) return null;
-  const key = building.slot_key ?? BUILDING_CFG_TO_SLOT_KEY[resolveBuildingCfgId(building)] ?? "?";
-  const name = slotLabels[key] ?? key;
-  const targetLv = (building.level ?? 0) + 1;
-  const rem = formatUpgradeRemaining(building.upgrade_finish_at_ms, nowMs);
-  return `队列：${name} → Lv${targetLv} · 剩余 ${rem ?? "—"}`;
+  return formatNearestQueueCountdownHint(
+    { kind: "build", finishAtMs: building.upgrade_finish_at_ms ?? 0, building },
+    slotLabels,
+    nowMs,
+  );
+}
+
+/** 建造/练兵日常行：匹配升级或最近到期募兵/建造倒计时（与 QueuePanels 同源快照）。 */
+export function formatDailyQuestQueueInlineHint(
+  quest: QuestRow,
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[] | undefined,
+  slotLabels: Record<string, string>,
+  nowMs = Date.now(),
+): string | null {
+  if (isBuildLevelDailyNeedingProgress(quest)) {
+    const matched = formatBuildQueueCountdownForQuest(quest, buildings, slotLabels, nowMs);
+    if (matched) return matched;
+  }
+  if (!isBuildLevelDailyNeedingProgress(quest) && !isTrainDailyNeedingProgress(quest)) {
+    return null;
+  }
+  const nearest = pickNearestActiveQueueEntry(buildings, recruits, nowMs);
+  if (!nearest) return null;
+  return formatNearestQueueCountdownHint(nearest, slotLabels, nowMs);
 }

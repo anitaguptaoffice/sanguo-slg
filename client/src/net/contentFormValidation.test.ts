@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatPanelGatewayError,
+  formatPanelGatewayErrorFromUnknown,
   setBagFormErrorDisplay,
+  setPanelFormErrorDisplay,
   setShopFormErrorDisplay,
   validatePurchaseShopOffer,
   validateUseConsumable,
@@ -80,7 +83,52 @@ describe("validateUseConsumable", () => {
   });
 });
 
+describe("formatPanelGatewayError", () => {
+  it("maps shop insufficient funds with trailing code", () => {
+    expect(formatPanelGatewayError("shop", 64003, "余额不足")).toBe("余额不足 [64003]");
+  });
+
+  it("maps shop sold out and purchase limit", () => {
+    expect(formatPanelGatewayError("shop", 64004, "已售罄")).toBe("已售罄 [64004]");
+    expect(formatPanelGatewayError("shop", 64005, "超过限购次数")).toBe("超过限购次数 [64005]");
+  });
+
+  it("appends server detail when hint and message differ", () => {
+    expect(formatPanelGatewayError("shop", 64004, "sold out")).toBe("已售罄：sold out [64004]");
+  });
+
+  it("maps recruit item shortage from common code", () => {
+    expect(formatPanelGatewayError("recruit", 10001, "道具不足")).toBe("道具不足 [10001]");
+  });
+
+  it("maps march troop and param errors", () => {
+    expect(formatPanelGatewayError("march", 50006, "城内兵力不足")).toBe("城内兵力不足 [50006]");
+    expect(formatPanelGatewayError("march", 50005, "出征参数无效")).toBe("出征参数无效 [50005]");
+  });
+
+  it("falls back to server message when code is unknown", () => {
+    expect(formatPanelGatewayError("bag", 99999, "自定义错误")).toBe("自定义错误 [99999]");
+  });
+
+  it("formats from Error with code via helper", () => {
+    const err = Object.assign(new Error("余额不足"), { code: 64003 });
+    expect(formatPanelGatewayErrorFromUnknown("shop", err)).toBe("余额不足 [64003]");
+  });
+});
+
 describe("content form error display", () => {
+  it("routes all panel domains through setPanelFormErrorDisplay", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <p data-role="recruit-form-error" class="hidden"></p>
+      <p data-role="march-form-error" class="hidden"></p>
+    `;
+    setPanelFormErrorDisplay(root, "recruit", "粮食不足");
+    setPanelFormErrorDisplay(root, "march", "坐标无效");
+    expect(root.querySelector('[data-role="recruit-form-error"]')?.textContent).toBe("粮食不足");
+    expect(root.querySelector('[data-role="march-form-error"]')?.textContent).toBe("坐标无效");
+  });
+
   it("shows and clears shop-form-error element", () => {
     const root = document.createElement("div");
     root.innerHTML = `<p class="shop-form-error hidden" data-role="shop-form-error"></p>`;

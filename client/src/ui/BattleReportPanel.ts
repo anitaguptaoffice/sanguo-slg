@@ -10,7 +10,9 @@ import {
 import {
   battleReportOutcomeChipClass,
   battleReportOutcomeChipLabel,
+  countBattleReportsByOutcome,
   filterBattleReportsByOutcome,
+  filterBattleReportsByTimeWindow,
   formatBattleReportDetail,
   formatBattleReportFoeWithoutCoord,
   formatReportCoord,
@@ -18,13 +20,16 @@ import {
   type BattleReportDetailView,
   type BattleReportOutcomeFilter,
   type BattleReportSummary,
+  type BattleReportTimeWindowFilter,
 } from "@/net/militaryFormat";
 import {
   BATTLE_REPORT_LOAD_MORE_LABEL,
   battleReportAllLoadedLabel,
   hasMoreBattleReports,
   readBattleReportOutcomeFilterSession,
+  readBattleReportTimeWindowFilterSession,
   writeBattleReportOutcomeFilterSession,
+  writeBattleReportTimeWindowFilterSession,
 } from "@/net/battleReportListState";
 import {
   BATTLE_REPORT_FILTER_EMPTY_TEXT,
@@ -63,6 +68,7 @@ export class BattleReportPanel {
   private reports: BattleReportSummary[] = [];
   private total = 0;
   private outcomeFilter: BattleReportOutcomeFilter = "all";
+  private timeWindowFilter: BattleReportTimeWindowFilter = "all";
   private selectedReportId = 0;
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
@@ -84,9 +90,12 @@ export class BattleReportPanel {
   attach(): void {
     const savedFilter = readBattleReportOutcomeFilterSession();
     if (savedFilter) this.outcomeFilter = savedFilter;
+    const savedTimeWindow = readBattleReportTimeWindowFilterSession();
+    if (savedTimeWindow) this.timeWindowFilter = savedTimeWindow;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.panel.addEventListener("change", (ev) => this.onChange(ev));
   }
 
   detach(): void {
@@ -143,7 +152,16 @@ export class BattleReportPanel {
         <button type="button" data-action="filter-outcome" data-filter="win">胜</button>
         <button type="button" data-action="filter-outcome" data-filter="loss">负</button>
         <button type="button" data-action="filter-outcome" data-filter="draw">平</button>
+        <label class="battle-report-time-window">
+          时间：
+          <select data-action="filter-time-window" aria-label="战报时间范围">
+            <option value="all">全部</option>
+            <option value="today">今日</option>
+            <option value="last7d">近7日</option>
+          </select>
+        </label>
       </div>
+      <div class="battle-report-outcome-summary" data-role="report-outcome-summary" aria-label="当前时间范围胜负统计" hidden></div>
       <button type="button" data-action="refresh-reports">刷新列表</button>
       <button type="button" data-action="load-more-reports" data-role="load-more" hidden>${BATTLE_REPORT_LOAD_MORE_LABEL}</button>
       <button type="button" data-action="retry-list" data-role="retry-list" hidden>重试加载列表</button>
@@ -156,8 +174,13 @@ export class BattleReportPanel {
     return el;
   }
 
-  private visibleReports(): BattleReportSummary[] {
-    return filterBattleReportsByOutcome(this.reports, this.outcomeFilter);
+  private timeWindowFilteredReports(nowMs = Date.now()): BattleReportSummary[] {
+    return filterBattleReportsByTimeWindow(this.reports, this.timeWindowFilter, nowMs);
+  }
+
+  private visibleReports(nowMs = Date.now()): BattleReportSummary[] {
+    const byTime = this.timeWindowFilteredReports(nowMs);
+    return filterBattleReportsByOutcome(byTime, this.outcomeFilter);
   }
 
   private updateFilterButtons(): void {
@@ -166,6 +189,34 @@ export class BattleReportPanel {
     )) {
       const f = btn.getAttribute("data-filter") as BattleReportOutcomeFilter;
       btn.classList.toggle("active", f === this.outcomeFilter);
+    }
+    const timeSelect = this.panel.querySelector<HTMLSelectElement>(
+      '[data-action="filter-time-window"]',
+    );
+    if (timeSelect) timeSelect.value = this.timeWindowFilter;
+  }
+
+  private renderOutcomeSummary(): void {
+    const summaryEl = this.panel.querySelector('[data-role="report-outcome-summary"]');
+    if (!summaryEl) return;
+    summaryEl.innerHTML = "";
+    if (this.listLoading || this.listError || !this.reports.length) {
+      (summaryEl as HTMLElement).hidden = true;
+      return;
+    }
+    const counts = countBattleReportsByOutcome(this.timeWindowFilteredReports());
+    const chips: { label: string; count: number; className: string }[] = [
+      { label: "胜", count: counts.win, className: "outcome-attacker-win" },
+      { label: "负", count: counts.loss, className: "outcome-defender-win" },
+      { label: "平", count: counts.draw, className: "outcome-draw" },
+    ];
+    (summaryEl as HTMLElement).hidden = false;
+    for (const chip of chips) {
+      const span = document.createElement("span");
+      span.className = `battle-outcome-chip battle-report-summary-chip ${chip.className}`;
+      span.setAttribute("aria-readonly", "true");
+      span.textContent = `${chip.label} ${chip.count}`;
+      summaryEl.appendChild(span);
     }
   }
 
@@ -177,6 +228,7 @@ export class BattleReportPanel {
     if (!ul) return;
 
     this.updateFilterButtons();
+    this.renderOutcomeSummary();
 
     if (statusEl) {
       if (this.listLoading) {
@@ -460,6 +512,13 @@ export class BattleReportPanel {
     this.renderList();
   }
 
+  private setTimeWindowFilter(filter: BattleReportTimeWindowFilter): void {
+    if (this.timeWindowFilter === filter) return;
+    this.timeWindowFilter = filter;
+    writeBattleReportTimeWindowFilterSession(filter);
+    this.renderList();
+  }
+
   private async openReport(reportId: number): Promise<void> {
     if (reportId !== this.selectedReportId) this.clearMapReplay();
     this.selectedReportId = reportId;
@@ -498,6 +557,17 @@ export class BattleReportPanel {
     }
     this.detailLoading = false;
     this.renderList();
+  }
+
+  private onChange(ev: Event): void {
+    const select = (ev.target as HTMLElement).closest(
+      'select[data-action="filter-time-window"]',
+    ) as HTMLSelectElement | null;
+    if (!select) return;
+    const value = select.value as BattleReportTimeWindowFilter;
+    if (value === "all" || value === "today" || value === "last7d") {
+      this.setTimeWindowFilter(value);
+    }
   }
 
   private onClick(ev: Event): void {

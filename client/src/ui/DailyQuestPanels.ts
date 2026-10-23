@@ -1,8 +1,6 @@
 import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
-import {
-  formatBuildQueueCountdownForQuest,
-  isBuildLevelDailyNeedingProgress,
-} from "@/net/dailyQuestQueueMatch";
+import { formatDailyQuestQueueInlineHint } from "@/net/dailyQuestQueueMatch";
+import type { RecruitQueueEntry } from "@/net/queueState";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
@@ -54,6 +52,7 @@ export class DailyQuestPanels {
     private readonly onOpenMailPanel?: () => void,
     private readonly getQueueBuildings?: () => CityBuilding[] | undefined,
     private readonly queueSlotLabels?: Record<string, string>,
+    private readonly getQueueRecruits?: () => RecruitQueueEntry[] | undefined,
   ) {}
 
   attach(): void {
@@ -157,14 +156,19 @@ export class DailyQuestPanels {
       const now = Date.now();
       const slotLabels = this.queueSlotLabels ?? {};
       const buildings = this.getQueueBuildings?.();
+      const recruits = this.getQueueRecruits?.();
       for (const q of this.rows) {
         const li = document.createElement("li");
         const id = q.quest_cfg_id ?? 0;
         let line = formatDailyQuestLine(q);
-        if (isBuildLevelDailyNeedingProgress(q) && buildings) {
-          const queueHint = formatBuildQueueCountdownForQuest(q, buildings, slotLabels, now);
-          if (queueHint) line = `${line} · ${queueHint}`;
-        }
+        const queueHint = formatDailyQuestQueueInlineHint(
+          q,
+          buildings,
+          recruits,
+          slotLabels,
+          now,
+        );
+        if (queueHint) line = `${line} · ${queueHint}`;
         const main = document.createElement("span");
         main.className = "daily-quest-row-main";
         main.textContent = line;
