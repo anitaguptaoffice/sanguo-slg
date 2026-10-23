@@ -1,0 +1,79 @@
+{
+  "evidenceCommitSha": "665b20fa85aeb7d6270713e8b2a64bd6d64686ce",
+  "capturedAt": "2026-10-23T14:30:31.215Z",
+  "fourBuildingsCropLayout": {
+    "x": 240,
+    "y": 300,
+    "width": 1200,
+    "height": 420
+  },
+  "note": "fourBuildingsCropCss is document viewport coords; identical layout crop at DPR1/DPR2 on 1600×900 CSS viewport",
+  "dpr1": {
+    "devicePixelRatio": 1,
+    "cssViewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "layoutFrameCss": {
+      "width": 1600,
+      "height": 900,
+      "left": 0,
+      "top": 0
+    },
+    "canvasBacking": {
+      "width": 1600,
+      "height": 900
+    },
+    "canvasCss": {
+      "width": 1600,
+      "height": 900
+    },
+    "playwrightDeviceScaleFactor": 1,
+    "fourBuildingsCropLayout": {
+      "x": 240,
+      "y": 300,
+      "width": 1200,
+      "height": 420
+    },
+    "fourBuildingsCropCss": {
+      "x": 240,
+      "y": 300,
+      "width": 1200,
+      "height": 420
+    }
+  },
+  "dpr2": {
+    "devicePixelRatio": 2,
+    "cssViewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "layoutFrameCss": {
+      "width": 1600,
+      "height": 900,
+      "left": 0,
+      "top": 0
+    },
+    "canvasBacking": {
+      "width": 3200,
+      "height": 1800
+    },
+    "canvasCss": {
+      "width": 1600,
+      "height": 900
+    },
+    "playwrightDeviceScaleFactor": 2,
+    "fourBuildingsCropLayout": {
+      "x": 240,
+      "y": 300,
+      "width": 1200,
+      "height": 420
+    },
+    "fourBuildingsCropCss": {
+      "x": 240,
+      "y": 300,
+      "width": 1200,
+      "height": 420
+    }
+  }
+}
