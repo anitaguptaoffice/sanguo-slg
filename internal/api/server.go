@@ -13,11 +13,11 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -44,6 +44,7 @@ type Server struct {
 	sessions   *SessionRegistry
 	gm         *GmService
 	shard      *shard.Handlers
+<<<<<<< HEAD
 	m3            *assembly.M3
 	m4            *assembly.M4
 	rankSvc       *rank.Service
@@ -51,6 +52,15 @@ type Server struct {
 	questSvc      *quest.Service
 	shopSvc       *shop.Service
 	contentSvc    *content.Service
+=======
+	m3           *assembly.M3
+	m4           *assembly.M4
+	rankSvc      *rank.Service
+	rankSch      *rank.Scheduler
+	questSvc     *quest.Service
+	shopSvc    *shop.Service
+	contentSvc *content.Service
+>>>>>>> c19a330 (INTG-004: 恢复 INTG-003 M3/排行接线)
 	questChainIDs []int32
 	cities        map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord
