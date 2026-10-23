@@ -214,4 +214,5 @@ describe("skinNineSlicePanel", () => {
       military: PANEL_ASSET_MILITARY,
     });
   });
+
 });

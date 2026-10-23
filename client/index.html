@@ -616,7 +616,7 @@
         outline-offset: 2px;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-detail-nav button:focus-visible {
         scroll-margin-bottom: 64px;
@@ -842,6 +842,46 @@
         min-height: 44px;
         padding: 6px 10px;
         box-sizing: border-box;
+      }
+      /* CLIENT-127: mail/daily/march/battle-report filter bars — scroll/wrap without clipping focus ring */
+      .panel-filter-chip-bar {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: auto;
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        padding: 4px 2px;
+        scroll-padding-inline: 4px;
+      }
+      .panel-filter-chip-bar button,
+      .panel-filter-chip-bar select,
+      .panel-filter-chip-bar label {
+        flex-shrink: 0;
+      }
+      .panel-filter-chip-bar .mail-filter-btn,
+      .panel-filter-chip-bar .daily-quest-filter-btn,
+      .panel-filter-chip-bar button[data-action="filter-outcome"],
+      .panel-filter-chip-bar button.art-filter-chip {
+        min-width: 44px;
+        min-height: 44px;
+        scroll-margin: 4px;
+      }
+      .panel-filter-chip-bar button:focus-visible,
+      .panel-filter-chip-bar button.art-filter-chip:focus-visible {
+        outline: 2px solid #c9a227;
+        outline-offset: 2px;
+      }
+      .mail-list li [data-ui-filter-badge],
+      .daily-quest-list li [data-ui-filter-badge],
+      .march-list li [data-ui-filter-badge],
+      .battle-report-list li [data-ui-filter-badge],
+      .mail-list li .art-filter-badge-count,
+      .daily-quest-list li .art-filter-badge-count,
+      .march-list li .art-filter-badge-count,
+      .battle-report-list li .art-filter-badge-count {
+        flex-shrink: 0;
+        max-width: 100%;
       }
       .art-filter-row.art-filter-row--skinned {
         border-radius: 4px;
@@ -1574,7 +1614,15 @@
         overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .panel-filter-chip-bar {
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li [data-ui-filter-row] {
+        overflow-x: hidden;
       }
       #layout-frame.layout-narrow .building-panel[data-center-panel="building"] h3,
       #layout-frame.layout-narrow .building-panel[data-center-panel="building"] .building-upgrade-preview,
@@ -1634,7 +1682,36 @@
         overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-filter-chip-bar {
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li [data-ui-filter-row] {
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .panel-scroll-body {
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .panel-filter-chip-bar {
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li [data-ui-filter-row],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li .art-filter-badge-count {
+        max-width: 100%;
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-filter-chip-bar {
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li [data-ui-filter-row],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .art-filter-badge-dot {
+        max-width: 100%;
+        flex-shrink: 0;
       }
       #layout-frame.layout-narrow .main-city-toolbar button {
         min-width: 0;

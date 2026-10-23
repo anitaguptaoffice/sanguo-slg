@@ -967,6 +967,15 @@ cd client && npm install && npm run dev
 4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；四面板 manifest 与 **CLIENT-062/095/070** 表现不退化。
 5. 单测：`artPanelSkin.test.ts`（CLIENT-119 manifest 映射）、`contentPanelScroll.test.ts`（`bag` / `shop` / `hero` / `military`）、`layoutViewport.test.ts`（CLIENT-119 注册表）、`ContentPanels` / `HeroMailPanels` / `mainCityMilitaryPanelDom.test.ts`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
+### 手动验收（1280 邮件/日常/军情/战报筛选列表 CLIENT-127）
+
+`#layout-frame.layout-narrow` 下 **邮件** / **日常** / **军情（行军）** / **战报** 四面板：`filterListNarrowManifest` 注册 `data-center-panel` id 与面板纸底 manifest（`ui.panel.default.v1` / `ui.panel.daily.v1` / `ui.panel.march.v1` / `ui.panel.battle-report.v1`）；筛选条根节点带 **`.panel-filter-chip-bar`**（横向 **滚动/换行**、`overflow-y: visible`，`:focus-visible` 金环不被裁切；chip **≥44×44** 命中，含 `data-ui-filter-chip` 与既有文字 chip）。`MainCityScene` 在九宫挂载后先 **`remountPanelFilterChips`**（CLIENT-121），再 **`mountFilterListPanelSkins`** 接线行/角标（`data-art-skin="off"` 跳过皮肤）。**软依赖** CLIENT-122～126：合入后为列表行/角标补 `data-ui-filter-row` / `data-ui-filter-badge` 即可消费同一挂载，本卡 CSS 已预留行/角标 **无横向溢出** 规则。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **邮件**、**日常**、**军情**、**战报**；筛选条可横向滚动或换行，Tab 聚焦 chip 时金环完整可见。
+2. 长列表在 `.panel-scroll-body` 内 **`overflow-y: auto`**；`padding-bottom: 64px` 避免末行被底栏 **56px** 工具条遮挡；行九宫与 **badge.dot/count**（CLIENT-126）在窄屏无横向溢出。
+3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；四面板 manifest 与 **CLIENT-070/086/111** 表现不退化。
+4. 单测：`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-127 注册表）、`artPanelSkin.test.ts`（CLIENT-127 映射）、`HeroMailPanels` / `DailyQuestPanels` / `MarchListPanel` / `BattleReportPanel`（`.panel-filter-chip-bar`）；`cd client && npm test` 绿。
+
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
 `contentFeedback.ts` 解析 `UseConsumable` / `PurchaseShopOffer` 响应；背包/商城面板内 `panel-feedback` 与顶栏状态栏同步文案。使用资源包(2001) 成功后 **CLIENT-018** 顶栏仍可出现 `+粮…` 短时摘要（`patchSession` + `formatWalletGainBrief`）。

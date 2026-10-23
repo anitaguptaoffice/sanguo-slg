@@ -41,6 +41,7 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-action="mail-filter-all"][data-ui-filter-chip]')).toBeTruthy();
     expect(mount.querySelector('[data-action="mail-filter-unread"][data-ui-filter-chip]')).toBeTruthy();
     expect(mount.querySelector('[data-role="mail-filter-bar"]')).toBeTruthy();
+    expect(mount.querySelector(".mail-inbox-toolbar.panel-filter-chip-bar")).toBeTruthy();
   });
 
   it("mail panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {

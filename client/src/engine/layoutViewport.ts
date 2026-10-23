@@ -110,3 +110,9 @@ export const CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS = [
 
 export type Client119NarrowManifestCenterPanelId =
   (typeof CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS)[number];
+
+/** CLIENT-127: mail / daily / march / battle-report filter-list manifest at 1280×720. */
+export {
+  CLIENT_127_NARROW_FILTER_LIST_CENTER_PANEL_IDS as CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client127NarrowFilterListCenterPanelId as Client127NarrowManifestCenterPanelId,
+} from "@/engine/filterListNarrowManifest";

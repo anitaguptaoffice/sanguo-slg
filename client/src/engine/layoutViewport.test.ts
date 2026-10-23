@@ -13,6 +13,7 @@ import {
   syncLayoutViewportRootClass,
   CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
 import {
@@ -148,6 +149,20 @@ describe("narrow layout root class", () => {
       "military",
     ]);
     for (const id of CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+  });
+
+  it("CLIENT-127 mail daily march battle-report filter-list manifest at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "mail",
+      "daily",
+      "march",
+      "battle-report",
+    ]);
+    for (const id of CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS) {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
   });

@@ -475,7 +475,7 @@ export class HeroMailPanels {
     el.innerHTML = `
       <h3>邮件</h3>
       <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
-      <div class="mail-inbox-toolbar mail-filter-bar" data-role="mail-filter-bar" role="group" aria-label="邮件筛选">
+      <div class="mail-inbox-toolbar mail-filter-bar panel-filter-chip-bar" data-role="mail-filter-bar" role="group" aria-label="邮件筛选">
         <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-all" aria-pressed="true">
           <span data-role="mail-filter-all-label" class="art-filter-chip-label">全部</span>
           <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-all-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
