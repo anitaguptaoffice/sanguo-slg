@@ -369,6 +369,16 @@ cd client && npm install && npm run dev
 4. 打开战报面板后未读角标清零；再次产生新战报时角标恢复。
 5. 单测：`marchArrival.test.ts`、`marchArrivalPoll.test.ts`、`battleReportUnread.test.ts`、`BattleReportPanel.test.ts`。
 
+### 手动验收（行军列表 ETA 与军情密度 CLIENT-047）
+
+`MarchListPanel` 列表行 **主行**（`#id · 目的 · 阶段 · 坐标`）+ **次行**（出发/到达绝对时刻 + `formatMarchRemainingMs` 相对 ETA）。多条行军时 `march-list-compact` 收紧行高；空列表仍用 `march-list-empty`（不退化 **CLIENT-029** 空态）。面板打开且 `marchNeedsPoll` 时：**每 5s** `ListMarches` 刷新列表，**每 1s** 仅更新次行剩余文案（不额外 RPC）；与 **CLIENT-025** `MarchArrivalPoll` 并存。
+
+1. `make dev` 出征至少一条 **行军中** 行军，打开底栏 **「行军」**。
+2. 主行含目的/阶段/坐标；次行含出发/到达时刻与 **剩余 Nm** 或 **即将到达**（待发/已到达显示阶段文案）。
+3. 保持面板打开观察约 10s：剩余文案每秒变化，网络面板无额外 `ListMarches`（仅 5s 轮询一次）。
+4. 同时等待行军到达：HUD **行军结束，查看战报** 仍出现（CLIENT-025）。
+5. 单测：`militaryFormat.test.ts`（`formatMarchRemainingMs`）、`MarchListPanel.test.ts`、`panelDensity.test.ts`。
+
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
 `GetBattleReport` 成功后，详情区顶部仍保留 `formatBattleReportDetail` 文字摘要；下方为结构化 **回合表**（回合号、攻/守行动摘要、双方剩余兵力 map）。回合数 **> 8** 时表格默认折叠，点 **「展开全部回合」** 显示全部行。列表/详情加载失败仍可用 **重试** 按钮（不退化 **CLIENT-029** 列表密度）。行军结束 HUD 链接（**CLIENT-025**）点击后调用 `openPanelWithDeepLink`：刷新 `ListBattleReports` 后选中 `MarchEndBattleReportHint` 或最近 `report_id` 并自动 `GetBattleReport`。

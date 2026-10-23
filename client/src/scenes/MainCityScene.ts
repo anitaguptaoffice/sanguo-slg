@@ -42,8 +42,10 @@ import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import { MARCH_ARRIVAL_STATUS_TOAST } from "@/net/marchArrival";
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
+import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
+import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
@@ -80,6 +82,7 @@ import {
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
+import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
   hall: "城主府",
@@ -229,6 +232,7 @@ export class MainCityScene implements Scene {
       </div>
       <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
       <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
+      <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
       <p class="military-march" data-role="march"></p>
     `;
@@ -789,15 +793,26 @@ export class MainCityScene implements Scene {
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
   }
 
-  private applyCityStatePoll(state: { wallet?: ResourceWallet; buildings?: CityBuilding[] }): void {
+  private applyCityStateFromFetch(state: {
+    wallet?: ResourceWallet;
+    buildings?: CityBuilding[];
+  }): void {
     if (!this.session) return;
+    const beforeWallet = this.session.wallet;
+    const afterWallet = state.wallet ?? this.session.wallet;
+    const pulseKeys = walletResourcePulseKeys(beforeWallet, afterWallet);
     this.patchSession(
       {
-        wallet: state.wallet ?? this.session.wallet,
+        wallet: afterWallet,
         buildings: state.buildings ?? this.session.buildings,
       },
       { flashWalletGain: false },
     );
+    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
+  }
+
+  private applyCityStatePoll(state: { wallet?: ResourceWallet; buildings?: CityBuilding[] }): void {
+    this.applyCityStateFromFetch(state);
   }
 
   private renderHud(): void {
@@ -883,13 +898,10 @@ export class MainCityScene implements Scene {
         buildings?: CityBuilding[];
       } | null;
       if (state) {
-        this.patchSession(
-          {
-            wallet: state.wallet ?? this.session.wallet,
-            buildings: state.buildings ?? [],
-          },
-          { flashWalletGain: false },
-        );
+        this.applyCityStateFromFetch({
+          wallet: state.wallet,
+          buildings: state.buildings ?? [],
+        });
       }
       await this.syncSessionCityCoords();
       await this.refreshMinimapMarches();
@@ -958,14 +970,21 @@ export class MainCityScene implements Scene {
 
   private async startMarch(): Promise<void> {
     if (!this.session) return;
-    const toX = Number((this.field("to-x") as HTMLInputElement)?.value ?? DEFAULT_MARCH_TARGET.x);
-    const toY = Number((this.field("to-y") as HTMLInputElement)?.value ?? DEFAULT_MARCH_TARGET.y);
-    const marchCount = Number((this.field("march-count") as HTMLInputElement)?.value ?? 1);
-    if (marchCount <= 0) {
-      this.status = "出征数量须大于 0";
+    const validated = validateMarchForm({
+      toXRaw: (this.field("to-x") as HTMLInputElement)?.value ?? "",
+      toYRaw: (this.field("to-y") as HTMLInputElement)?.value ?? "",
+      marchCountRaw: (this.field("march-count") as HTMLInputElement)?.value ?? "",
+      cityX: this.session.cityX,
+      cityY: this.session.cityY,
+      cityTroops: this.session.cityTroops,
+    });
+    if (!validated.ok) {
+      setMarchFormErrorDisplay(this.militaryPanel, validated.message);
       this.renderHud();
       return;
     }
+    const { toX, toY, marchCount } = validated;
+    setMarchFormErrorDisplay(this.militaryPanel, null);
     const troops = [{ unit_cfg_id: 1, count: marchCount }];
     this.status = `向 (${toX},${toY}) 出征…`;
     this.renderHud();
@@ -987,13 +1006,16 @@ export class MainCityScene implements Scene {
         })));
       }
       writeMarchTargetSession(toX, toY);
+      setMarchFormErrorDisplay(this.militaryPanel, null);
       this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
       setMarchTargetFieldHighlight(this.militaryPanel, false);
       this.marchArrivalPoll.trackMarch(this.lastMarch?.march_id, this.lastMarch ?? undefined);
       this.marchList.notifyMarchStarted();
       void this.refreshMinimapMarches();
     } catch (e) {
-      this.status = (e as Error).message;
+      const msg = gatewayErrorMessage(e);
+      setMarchFormErrorDisplay(this.militaryPanel, msg);
+      this.status = msg;
     }
     this.renderHud();
     this.syncMilitaryPanel();

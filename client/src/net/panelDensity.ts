@@ -96,3 +96,16 @@ export function battleReportListErrorClass(): string {
 export function battleReportFilterEmptyClass(): string {
   return "battle-report-filter-empty";
 }
+
+export function marchListEmptyMessage(): string {
+  return "（暂无行军，出征后在此查看进度）";
+}
+
+export function marchListEmptyClass(): string {
+  return "march-list-empty";
+}
+
+/** 多行军时列表容器 class（紧凑行高，空态行不使用）。 */
+export function marchListCompactClass(): string {
+  return "march-list-compact";
+}
