@@ -43,12 +43,12 @@
 
 - [x] 任务系统（QUEST-001）+ wave:7 DATA-001 核心子集 — **INTG-005** / wave:9 **INTG-006** 复跑
 - [x] 道具与商城（CONTENT-002、SHOP-001、ECON-001 真扣费）
-- [ ] 活动与运营后台（**GM-001** + wave:10 **GM-003** 收口）— 见下方脚注；完整活动后台仍待 **DOCS-EXIT-002** 最终勾选
+- [x] 活动与运营后台（**GM-001** + wave:10 **GM-003** [#154](https://github.com/anitaguptaoffice/sanguo-slg/pull/154)）— v1 运营能力已按脚注验收；**residual**：活动配置台、可视化排期、`cfg_act*` 仍 **out of core subset**（无第三批 DATA-003 扩量）
 
   > **v1 运营口径（GM-003）**：**GM CLI/HTTP**（`cmd/gm`：`lookup` / `grant` / `kick` / `mute` / `send-mail`；HTTP 仅 `POST /gm/lookup|grant|kick|mute`）+ **邮件运营**（`send-mail` → `player_mail`，验收见 [开服运营最小流程](ops/open-server-runbook.md) §4）。**非目标**：活动配置台、可视化排期、`cfg_act*` 灌入——仍 **out of core subset**。
 - [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
-出口：`INTG-005`（#125）+ **CLIENT-006**（#121）已合；wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）已 deepening 养成/邮件/横屏。wave:10 加深客户端面板、日常任务、GM 文档与 **INTG-007** 冒烟。
+出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟——H5 端将领/邮件/日常可玩。里程碑文档 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -91,20 +91,18 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 | [#132](https://github.com/anitaguptaoffice/sanguo-slg/issues/132) | HERO-002 | 已完成 | #139 |
 | [#133](https://github.com/anitaguptaoffice/sanguo-slg/issues/133) | INTG-006 | 已完成 | #138 |
 
-## Wave 10 M4 玩法加深（客户端 + 日常 + GM 收口）
+## Wave 10 M4 玩法加深（客户端 + 日常 + GM 收口）— **已完成**
 
-**策略**：在 wave:9 DATA-002 子集上加深可玩性；**不**开 DATA-003 / 不灌 `cfg_act*`。美术轨（#140/#144/#108/#141/#145）并行，不阻塞本波。
+**策略**：在 wave:9 DATA-002 子集上加深可玩性；**不**开 DATA-003 / 不灌 `cfg_act*`。波次 backlog 规划 [#146](https://github.com/anitaguptaoffice/sanguo-slg/pull/146)；美术轨（#140/#144/#108/#141/#145）并行，不阻塞本波。
 
-| Issue | 任务 | 状态 | 说明 |
+| Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| TBD | CLIENT-008 | `status:ready` | 将领/邮件最小面板（仅 `client/**`） |
-| TBD | HERO-003 | `status:ready` | 招募模板列表与消耗预览 |
-| TBD | QUEST-002 | `status:ready` | 日常任务 chain 400 + 日切 + 最小进度挂钩 |
-| [#150](https://github.com/anitaguptaoffice/sanguo-slg/issues/150) | GM-003 | 进行中 | runbook `send-mail` + lookup/grant/mute/kick 验收清单（`docs/ops/**`） |
-| TBD | INTG-007 | `status:blocked` | 邮件+将领+日常冒烟（`blocked_until: QUEST-002`） |
-| TBD | DOCS-EXIT-002 | `status:blocked` | wave:10 与 M4 最终勾选（`blocked_until: INTG-007`） |
-
-**并行建议**：CLIENT-008 ‖ HERO-003 ‖ QUEST-002 ‖ GM-003 先开；QUEST-002 合并后放开 INTG-007；INTG-007 + CLIENT-008 合并后 DOCS-EXIT-002。
+| [#147](https://github.com/anitaguptaoffice/sanguo-slg/issues/147) | CLIENT-008 | 已完成 | [#156](https://github.com/anitaguptaoffice/sanguo-slg/pull/156) |
+| [#148](https://github.com/anitaguptaoffice/sanguo-slg/issues/148) | HERO-003 | 已完成 | [#158](https://github.com/anitaguptaoffice/sanguo-slg/pull/158) |
+| [#149](https://github.com/anitaguptaoffice/sanguo-slg/issues/149) | QUEST-002 | 已完成 | [#157](https://github.com/anitaguptaoffice/sanguo-slg/pull/157) |
+| [#150](https://github.com/anitaguptaoffice/sanguo-slg/issues/150) | GM-003 | 已完成 | [#154](https://github.com/anitaguptaoffice/sanguo-slg/pull/154) |
+| [#151](https://github.com/anitaguptaoffice/sanguo-slg/issues/151) | INTG-007 | 已完成 | [#159](https://github.com/anitaguptaoffice/sanguo-slg/pull/159) |
+| [#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152) | DOCS-EXIT-002 | 已完成 | [#160](https://github.com/anitaguptaoffice/sanguo-slg/pull/160) |
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145；全量 legacy 活动 cfg；第三批核心子集扩量（无单独编排授权）。
 
