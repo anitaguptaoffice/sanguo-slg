@@ -79,11 +79,13 @@ type QuestCfg struct {
 
 // Objective is one entry from cfg_quest.objectives JSON.
 type Objective struct {
-	Type            string
-	BuildingCfgID   int32
-	Level           int32
-	Count           int32
-	Resource        string
+	Type          string `json:"type"`
+	BuildingCfgID int32  `json:"building_cfg_id"`
+	Level         int32  `json:"level"`
+	Count         int32  `json:"count"`
+	Resource      string `json:"resource"`
+	UnitCode      string `json:"unit_code"`
+	ItemCode      string `json:"item_code"`
 }
 
 // ProgressCounter is stored in player_quest.progress JSON.

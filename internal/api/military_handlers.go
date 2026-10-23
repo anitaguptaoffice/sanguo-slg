@@ -71,6 +71,7 @@ func (s *Server) handleRecruitTroop(ctx context.Context, pkt *commonv1.ClientPac
 	if err != nil {
 		return nil, err
 	}
+	s.questAfterTrainTroops(ctx, pc.ServerID, pc.PlayerID, req.GetUnitCfgId(), req.GetCount())
 	return okResp(pkt.GetTraceId(), data), nil
 }
 

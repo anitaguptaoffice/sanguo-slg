@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
-	_, errPkt := s.playerCtx(ctx, pkt)
+	pc, errPkt := s.playerCtx(ctx, pkt)
 	if errPkt != nil {
 		return errPkt, nil
 	}
@@ -57,6 +57,9 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 	if err != nil {
 		return nil, err
 	}
+	if city := s.cities[req.GetCityId()]; city != nil {
+		s.questFlushBuildCompletions(ctx, pc.ServerID, city.PlayerID, city)
+	}
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
@@ -74,6 +77,7 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
 	s.accrueCityWithQuest(ctx, pc.ServerID, city, domestic.DefaultCatalog(), s.now())
+	s.questFlushBuildCompletions(ctx, pc.ServerID, city.PlayerID, city)
 	buildings := make([]*apicommon.CityBuilding, 0, len(city.Buildings))
 	for slot, inst := range city.Buildings {
 		buildings = append(buildings, &apicommon.CityBuilding{
