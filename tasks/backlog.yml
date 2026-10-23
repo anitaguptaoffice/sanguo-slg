@@ -9,6 +9,7 @@
 # wave:14「H5 日常与队列闭环」：加速符真实缩短建造队列、日常 train/build/战备引导、行军→战报反馈与 HUD 待办；仍 DATA-002，无 CancelMarch。
 # wave:15「H5 世界地图与面板密度」：世界地图/行军只读 UX、邮件战报背包空态与密度、社交排行可读性、将领招募小 UX、manifest 美术接线；INTG-012 冒烟；仍 DATA-002，无 CancelMarch。
 # wave:16「H5 战报邮件闭环与军事反馈加深」：战报详情回合可读、邮件领取反馈、军事 manifest 接线、小地图扫读、HUD 深链；INTG-013 冒烟；仍 DATA-002，无 CancelMarch（军事对比度 hotfix 见 CLIENT-033，不纳入本波卡）。
+# wave:17「H5 世界出征互链与复盘导航」：小地图选点出征、战报坐标复盘高亮、军事目标记忆、日常战备与战报联动、社交排行手动刷新；INTG-014 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-040 全页证据为 wave:16 美术轨，不纳入本波）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -2037,7 +2038,7 @@
   wave: 16
   domain: client
   depends_on: [CLIENT-016, CLIENT-025, CLIENT-029]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -2057,7 +2058,7 @@
   wave: 16
   domain: client
   depends_on: [CLIENT-017, CLIENT-027, CLIENT-029]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -2077,7 +2078,7 @@
   wave: 16
   domain: client
   depends_on: [CLIENT-032, CLIENT-013, CLIENT-019]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -2097,7 +2098,7 @@
   wave: 16
   domain: client
   depends_on: [CLIENT-028]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -2117,7 +2118,7 @@
   wave: 16
   domain: client
   depends_on: [CLIENT-027, CLIENT-024]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -2137,7 +2138,7 @@
   wave: 16
   domain: platform
   depends_on: [INTG-012]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -2160,7 +2161,7 @@
   domain: platform
   depends_on: [INTG-013, CLIENT-034, CLIENT-035]
   blocked_until: [INTG-013]
-  sync_status: blocked
+  sync_status: done
   size: S
   owner_dir: docs
   scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
@@ -2172,5 +2173,149 @@
     - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out；注明 CLIENT-033 为 wave:15 军事 hotfix
   body: |
     文档 only。INTG-013 合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR。
+
+- id: CLIENT-041
+  title: 小地图点击反算坐标填入出征目标
+  wave: 17
+  domain: client
+  depends_on: [CLIENT-037, CLIENT-015]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 小地图画布区单击（非折叠 toggle、非已有行军目的点 hit）将 layout 坐标反算为世界格点 (wx, wy)，写入军事出征表单 to_x/to_y（与 CLIENT-015 世界列表填入共用同一表单状态）
+    - 状态栏展示「已选出征目标 (x,y)」；反算结果 clamp 在 0..499（WORLD_MAP_EDGE）；非法点击不修改表单
+    - 保留 CLIENT-037 行为：点击行军目的点仍选中 ListMarches 行并打开军事面板，优先于反算填点
+    - 单测覆盖 layout→world 反算与 clamp 纯函数；npm test 绿；client/README.md 增补小地图选点出征步骤
+  body: |
+    wave:16 小地图已支持多行军目的点选中；本卡补齐 **空白区域选出征坐标**，仍只读、无新 world/military RPC。
+
+    仅 client/**。与 CLIENT-042/044/045 并行（‖）。禁止 DATA-003 / cfg_act*。
+
+- id: CLIENT-042
+  title: 战报坐标摘要与小地图复盘高亮
+  wave: 17
+  domain: client
+  depends_on: [CLIENT-034, CLIENT-037, CLIENT-028]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 战报列表行与详情顶栏突出展示 `formatReportCoord` / `formatBattleReportFoeSummary`（与 CLIENT-034 回合表并存，不退化密度 class）
+    - 详情区提供「在地图查看」：解析战报 summary 中守方/战场坐标（现有 API 字段，不扩 proto），在小地图绘制临时高亮标记并自动 pan/zoom 纳入视野（复用 worldMinimap bounds 逻辑）
+    - 关闭战报面板或切换选中 report 时清除临时高亮；折叠小地图时仍可通过状态栏提示坐标
+    - 单测覆盖从战报 summary 提取复盘坐标纯函数；npm test 绿
+  body: |
+    CLIENT-034 已加深回合表与行军结束→战报深链；本卡补 **战报→小地图** 反向导航，契约冻结（只读已有字段）。
+
+    仅 client/**。与 CLIENT-041/044/045 并行（‖）。
+
+- id: CLIENT-043
+  title: 军事出征表单目标记忆与小地图同步
+  wave: 17
+  domain: client
+  depends_on: [CLIENT-013, CLIENT-041]
+  blocked_until: [CLIENT-041]
+  sync_status: blocked
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - StartMarch 成功后将会话内最近 to_x/to_y 写入 sessionStorage（固定键名，单测覆盖）；表单初始加载时预填上次目标（可一键清除）
+    - 提供「从小地图选点」提示：当 CLIENT-041 写入坐标后军事面板打开时高亮 to_x/to_y 输入框摘要
+    - 世界城池列表（CLIENT-015）选城填坐标与记忆值冲突时以**最后一次用户操作**为准，状态栏说明
+    - npm test 绿；client/README.md 增补目标记忆步骤
+  body: |
+    依赖 CLIENT-041 小地图选点。编排者在 CLIENT-041 合并后将本卡 sync_status 改为 ready。
+
+    仅 client/**。不做 CancelMarch / 募兵加速。
+
+- id: CLIENT-044
+  title: 日常战备与战报未读联动横幅
+  wave: 17
+  domain: client
+  depends_on: [CLIENT-024, CLIENT-025, CLIENT-035]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 日常面板（chain 400）顶部：若存在 CLIENT-025 战报未读计数 >0，展示只读横幅「有未读战报，点击查看」并可点击打开战报面板（清零逻辑与 CLIENT-025 一致）
+    - daily_march_1（1033）进行中时，列表行或详情保留 CLIENT-024「下一步」至背包 2020，并在行内展示战备 objective 标签
+    - 邮件未领附件（CLIENT-035 高亮规则）与日常横幅并存时不互相遮挡；不新增 quest RPC
+    - 单测覆盖横幅显示条件纯函数；npm test 绿
+  body: |
+    汇总 wave:14/16 军事与日常交叉反馈，降低「打完仗不知道看哪」成本。
+
+    仅 client/**。与 CLIENT-041/042/045 并行（‖）。
+
+- id: CLIENT-045
+  title: 排行与聊天面板手动刷新与陈旧提示
+  wave: 17
+  domain: client
+  depends_on: [CLIENT-030, CLIENT-021, CLIENT-022]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 排行双榜与聊天（世界/私聊/军团）面板各增加「刷新」按钮：触发既有列表 RPC，展示 `上次更新` 本地时间戳
+    - 刷新 in-flight 时按钮禁用，与 CLIENT-018 GetCityState 单飞策略不嵌套死锁（聊天/排行独立单飞 helper 或复用现有 gateway 调用）
+    - 空列表仍走 CLIENT-029/030 密度文案；刷新失败展示 gateway msg
+    - 单测覆盖时间戳格式化；npm test 绿；client/README.md 增补社交刷新步骤
+  body: |
+    CLIENT-030 已提升扫读密度；本卡补 **玩家主动拉新**，不改 rank/chat 域。
+
+    仅 client/**。与 CLIENT-041/042/044 并行（‖）。
+
+- id: INTG-014
+  title: wave:17 网关路径冒烟（战报坐标+行军目的点）
+  wave: 17
+  domain: platform
+  depends_on: [INTG-013]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-013 全量断言（GetBattleReport rounds、ClaimPlayerMailAttachments、INTG-012 邮件已读与 INTG-011 建造加速/日常 claim）
+    - 主路径：StartMarch 后 ListMarches 首条含合法 to_x/to_y（打印 march_id 与坐标）；GetBattleReport 首条 summary 含可解析守方/战场坐标字段（字段名以 handler 返回为准，dev 无战报则 skip 并打印 hint）
+    - 可选：同一用例内 RecruitTroop 后 ListMarches 仍为空或仅含新 march（失败不阻塞，README 注明）
+    - tools/smoke/README.md 更新 wave:17 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE17-RUN。后端-only，为 wave:17 客户端坐标互链提供网关字段断言；不跑 H5。
+
+    **本波仍不做** CancelMarch / 行军与募兵加速 RPC。
+
+    CLIENT-041～045 非硬依赖。与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-009
+  title: wave:17 H5 世界出征互链与复盘导航文档收口
+  wave: 17
+  domain: platform
+  depends_on: [INTG-014, CLIENT-041, CLIENT-042]
+  blocked_until: [INTG-014]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - ROADMAP：Wave 17 标为已完成并链 Issue/PR；Wave 16 保持已完成（含 DOCS-EXIT-008 #261）
+    - M4/H5 出口描述含「小地图选点出征 + 战报坐标复盘 + 军事目标记忆 + 日常战报横幅 + 社交刷新」路径（指向 client/README）
+    - tasks/README.md wave:17 进度表与 Issue 一致
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out；注明 CLIENT-040 为 wave:16 美术证据轨、非本波实现卡
+  body: |
+    文档 only。INTG-014 合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR。
