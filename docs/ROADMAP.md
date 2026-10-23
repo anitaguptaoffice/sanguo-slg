@@ -155,7 +155,7 @@ H5 人工验收与 INTG-009 路径对齐，见 [client/README.md](../client/READ
 | [#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) | CLIENT-022 | 已完成 | [#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205) |
 | [#200](https://github.com/anitaguptaoffice/sanguo-slg/issues/200) | CLIENT-023 | 已完成 | [#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208) |
 | [#201](https://github.com/anitaguptaoffice/sanguo-slg/issues/201) | INTG-010 | 已完成 | [#203](https://github.com/anitaguptaoffice/sanguo-slg/pull/203) |
-| [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | 已完成 | （本 PR） |
+| [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | 已完成 | [#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209) |
 
 H5 人工验收与 INTG-010 路径对齐，见 [client/README.md](../client/README.md#wave-13-闭环加深m4-出口--intg-010)（**队列倒计时 + 背包/商城反馈 + 双榜 + 社交可读 + 招募日常闭环**）。
 
