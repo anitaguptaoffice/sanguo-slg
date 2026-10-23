@@ -45,3 +45,39 @@ func TestDomesticCore(t *testing.T) {
 		t.Fatal("scheduler queue")
 	}
 }
+
+func TestApplyBuildSpeedupShortensActiveJob(t *testing.T) {
+	clock := time.Unix(1_700_000_000, 0)
+	now := func() time.Time { return clock }
+	h := NewHub(now)
+	c := &CityState{
+		ID: 1, LastSettleAt: clock, Wallet: Resources{1e4, 1e4, 1e4, 1e4},
+		Buildings: map[string]*BuildingInstance{"hall": {1, 3}, "farm": {2, 1}},
+	}
+	h.RegisterCity(c)
+	res, err := h.StartBuildingUpgrade(1, "farm", 2)
+	if err != nil || !res.InProgress {
+		t.Fatal("start build")
+	}
+	before := res.FinishAt
+	applied := h.ApplyBuildSpeedup(1, 30)
+	if applied != 30 {
+		t.Fatalf("applied=%d", applied)
+	}
+	var job *BuildJob
+	for _, j := range c.BuildJobs {
+		if j.Status == QueueActive && j.Slot == "farm" {
+			job = j
+		}
+	}
+	if job == nil {
+		t.Fatal("missing active job")
+	}
+	want := before.Add(-30 * time.Second)
+	if job.FinishAt != want {
+		t.Fatalf("finish=%v want=%v", job.FinishAt, want)
+	}
+	if job.FinishAt.Before(clock) {
+		t.Fatal("finish before now")
+	}
+}

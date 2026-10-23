@@ -7,6 +7,7 @@ import (
 
 	contentv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/content/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 )
 
@@ -73,6 +74,9 @@ func (s *Server) handleUseConsumable(ctx context.Context, pkt *commonv1.ClientPa
 	if err != nil {
 		return contentErr(pkt.GetTraceId(), err), nil
 	}
+	if res.Speedup != nil && speedupAppliesToBuild(res.Speedup.AppliesTo) {
+		s.applyDomesticBuildSpeedup(pc.PlayerID, res.Speedup.Seconds)
+	}
 	summary, speedup := consumableEffectSummary(res)
 	data, err := marshal(&contentv1.UseConsumableResponse{
 		ItemCfgId:      res.ItemCfgID,
@@ -88,6 +92,37 @@ func (s *Server) handleUseConsumable(ctx context.Context, pkt *commonv1.ClientPa
 		s.questAfterUseItem(ctx, pc.ServerID, pc.PlayerID, code, count)
 	}
 	return okResp(pkt.GetTraceId(), data), nil
+}
+
+func speedupAppliesToBuild(appliesTo []string) bool {
+	for _, a := range appliesTo {
+		if a == "build" {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) applyDomesticBuildSpeedup(playerID int64, sec int64) {
+	if s.domestic == nil || sec <= 0 {
+		return
+	}
+	var fallback int64
+	for cityID, city := range s.cities {
+		if city.PlayerID != playerID {
+			continue
+		}
+		if fallback == 0 {
+			fallback = cityID
+		}
+		if domestic.HasPendingBuildJob(city) {
+			s.domestic.ApplyBuildSpeedup(cityID, sec)
+			return
+		}
+	}
+	if fallback != 0 {
+		s.domestic.ApplyBuildSpeedup(fallback, sec)
+	}
 }
 
 func consumableEffectSummary(res content.UseResult) (string, int64) {
@@ -113,7 +148,7 @@ func consumableEffectSummary(res content.UseResult) (string, int64) {
 	}
 	if res.Speedup != nil {
 		sec := res.Speedup.Seconds
-		return fmt.Sprintf("加速 %d 秒（占位）", sec), sec
+		return fmt.Sprintf("加速 %d 秒", sec), sec
 	}
 	if res.Recruit != nil {
 		return fmt.Sprintf("招募池 %s ×%d（占位）", res.Recruit.HeroPool, res.Recruit.Draws), 0
