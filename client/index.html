@@ -408,6 +408,16 @@
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
       }
       .battle-report-detail-nav button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .battle-report-detail-nav button:focus-visible {
+        outline: 2px solid #c9a227;
+        outline-offset: 2px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-detail-nav button:focus-visible {
+        scroll-margin-bottom: 64px;
+      }
       .battle-report-detail-head {
         display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
         margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #4a3f35;
