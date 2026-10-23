@@ -1,7 +1,10 @@
 import type { MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
-  applyMarchTargetToForm,
+  applyMarchTargetAndRemember,
+  marchTargetStatusMessage,
+} from "@/net/marchTargetMemory";
+import {
   citiesFromListPlayerCitiesResponse,
   formatPlayerCityLine,
   isCurrentMainCity,
@@ -110,10 +113,12 @@ export class WorldPanels {
       this.onStatus("该城池无有效坐标");
       return;
     }
-    const filled = applyMarchTargetToForm(this.marchTarget.marchFormRoot, x, y);
+    const filled = applyMarchTargetAndRemember(this.marchTarget.marchFormRoot, x, y, {
+      source: "world_city",
+    });
     if (filled) {
       this.marchTarget.onFilled?.(x, y);
-      this.onStatus(`已填入出征目标 (${x},${y})`);
+      this.onStatus(marchTargetStatusMessage("world_city", x, y));
     } else {
       this.onStatus(`坐标 (${x},${y})（出征表单未就绪，仅展示）`);
     }

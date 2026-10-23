@@ -48,7 +48,15 @@ import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
-import { applyMarchTargetToForm } from "@/net/worldFormat";
+import {
+  DEFAULT_MARCH_TARGET,
+  applyMarchTargetAndRemember,
+  clearMarchTargetFromForm,
+  marchTargetStatusMessage,
+  restoreMarchTargetToForm,
+  setMarchTargetFieldHighlight,
+  writeMarchTargetSession,
+} from "@/net/marchTargetMemory";
 import {
   DEFAULT_MINIMAP_VIEW,
   MINIMAP_LAYOUT_RECT,
@@ -83,7 +91,6 @@ const SLOT_LABEL: Record<string, string> = {
   wall: "城墙",
 };
 
-const DEFAULT_MARCH_TARGET = { x: 5, y: 5 };
 const PURPOSE_ATTACK = 1;
 const WALLET_GAIN_FLASH_MS = 2800;
 const MINIMAP_MARCH_REFRESH_S = 5;
@@ -215,8 +222,12 @@ export class MainCityScene implements Scene {
       <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
       <hr />
-      <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
-      <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
+      <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
+      <div class="march-target-fields" data-role="march-target-fields">
+        <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
+        <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
+      </div>
+      <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
       <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
       <p class="military-march" data-role="march"></p>
@@ -318,7 +329,7 @@ export class MainCityScene implements Scene {
         marchFormRoot: this.militaryPanel,
         onFilled: (x, y) => {
           this.militaryPanel.classList.remove("hidden");
-          this.status = `出征目标已设为 (${x},${y})`;
+          setMarchTargetFieldHighlight(this.militaryPanel, false);
           this.renderHud();
           this.syncMilitaryPanel();
         },
@@ -365,6 +376,7 @@ export class MainCityScene implements Scene {
     this.canvas.addEventListener("pointerup", this.onCanvasPointerBound);
     this.canvas.addEventListener("pointercancel", this.onCanvasPointerBound);
     this.hud.addEventListener("click", this.onHudClickBound);
+    restoreMarchTargetToForm(this.militaryPanel);
     this.syncMilitaryPanel();
     void this.hudTodoBadgePoll.pollOnce();
     void this.refreshMinimapMarches();
@@ -520,6 +532,12 @@ export class MainCityScene implements Scene {
     const action = btn.getAttribute("data-action");
     if (action === "recruit") void this.recruit();
     if (action === "march") void this.startMarch();
+    if (action === "clear-march-target") {
+      clearMarchTargetFromForm(this.militaryPanel);
+      this.status = "已清除出征目标记忆，表单恢复默认坐标";
+      this.renderHud();
+      this.syncMilitaryPanel();
+    }
   }
 
   private field(name: string): HTMLInputElement | HTMLSelectElement | null {
@@ -529,11 +547,19 @@ export class MainCityScene implements Scene {
   private syncMilitaryPanel(): void {
     const troopsEl = this.militaryPanel.querySelector('[data-role="troops"]');
     const marchEl = this.militaryPanel.querySelector('[data-role="march"]');
+    const hintEl = this.militaryPanel.querySelector('[data-role="march-target-hint"]');
     if (troopsEl) {
       troopsEl.textContent = `城内兵力：${formatTroopStacks(this.session?.cityTroops)}`;
     }
     if (marchEl) {
       marchEl.textContent = this.lastMarch ? formatMarchHint(this.lastMarch) : "暂无行军";
+    }
+    if (hintEl) {
+      const fields = this.militaryPanel.querySelector('[data-role="march-target-fields"]');
+      const highlighted = fields?.classList.contains("march-target-field-highlight");
+      hintEl.textContent = highlighted
+        ? "小地图选点已填入下方目标坐标（高亮）；与世界城池点选冲突时以最后一次操作为准。"
+        : "出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。";
     }
   }
 
@@ -698,9 +724,15 @@ export class MainCityScene implements Scene {
       this.minimapView,
     );
     if (!world) return;
-    if (!applyMarchTargetToForm(this.militaryPanel, world.wx, world.wy)) return;
+    if (
+      !applyMarchTargetAndRemember(this.militaryPanel, world.wx, world.wy, {
+        source: "minimap",
+      })
+    ) {
+      return;
+    }
     this.militaryPanel.classList.remove("hidden");
-    this.status = `已选出征目标 (${world.wx},${world.wy})`;
+    this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
     this.syncMilitaryPanel();
   }
@@ -951,7 +983,9 @@ export class MainCityScene implements Scene {
           count: 0,
         })));
       }
+      writeMarchTargetSession(toX, toY);
       this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
+      setMarchTargetFieldHighlight(this.militaryPanel, false);
       this.marchArrivalPoll.trackMarch(this.lastMarch?.march_id, this.lastMarch ?? undefined);
       this.marchList.notifyMarchStarted();
       void this.refreshMinimapMarches();
