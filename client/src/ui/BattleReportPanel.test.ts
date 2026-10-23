@@ -590,6 +590,34 @@ describe("BattleReportPanel", () => {
     expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBeNull();
   });
 
+  it("openListFilteredByGrid applies location filter (CLIENT-108)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, location_x: 5, location_y: 5, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, location_x: 9, location_y: 9, outcome: 1, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        summary: { report_id: 1, location_x: 5, location_y: 5, outcome: 1 },
+        detail: {},
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    await panel.openListFilteredByGrid(5, 5, 1);
+    expect(panel.getLocationFilter()).toEqual({ x: 5, y: 5 });
+    const ul = mount.querySelector('[data-role="report-list"]');
+    expect(ul?.textContent).toContain("(5,5)");
+    expect(ul?.textContent).not.toContain("(9,9)");
+    mount.querySelector('[data-action="clear-location-filter"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(panel.getLocationFilter()).toBeNull();
+  });
+
   it("shows filter-empty placeholder while keeping filter bar", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
