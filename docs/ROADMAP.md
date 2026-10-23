@@ -124,6 +124,25 @@ H5 人工验收与 INTG-008 路径对齐，见 [client/README.md](../client/READ
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。
 
+## Wave 12 H5 可玩加深（进行中）
+
+**策略**：在 **DATA-002** 子集与 wave:11 H5 日常/招募/战报环上，加深**行军**、**将领详情**、**邮件**、**战报可读性**与 **HUD 反馈**；网关 **INTG-009** 复跑 `tools/smoke`。**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。波次 backlog 规划 PR（`feat/wave-12-backlog`，合并后由编排者 `tasks_sync` 建 Issue）。
+
+| 任务 | 域 | 规模 | 说明 |
+|---|---|---|---|
+| CLIENT-013 | client | M | ListMarches 行军列表与出征后反馈 |
+| CLIENT-014 | client | M | GetHeroDetail 将领详情与列表可读性 |
+| CLIENT-015 | client | S | ListPlayerCities 坐标 → 出征目标填入 |
+| CLIENT-016 | client | S | 战报 outcome 客户端筛选与详情摘要 |
+| CLIENT-017 | client | M | 邮件收件箱 ListPlayerMail / 领附件 |
+| CLIENT-018 | client | S | HUD 资源变动提示与 GetCityState 轮询节流 |
+| INTG-009 | platform | M | wave:12 网关冒烟（行军 + 邮件 + 可选日常 train/build） |
+| DOCS-EXIT-004 | platform | S | 波次文档收口（待 INTG-009） |
+
+并行关系：CLIENT-013～018 与 INTG-009 可并行（‖）；CLIENT-015 软依赖 CLIENT-013 出征表单；DOCS-EXIT-004 待 INTG-009 合并后改 `ready`。
+
+**明确不做**：合并或复制 art hold PR（同 wave:11 列表）；全屏大地图 / 新建筑类型 / 改 `spec/proto` 冻结契约（战报筛选仅客户端）。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。

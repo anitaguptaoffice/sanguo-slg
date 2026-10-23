@@ -1276,7 +1276,7 @@
   wave: 11
   domain: client
   depends_on: [CLIENT-008, QUEST-002]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1299,7 +1299,7 @@
   wave: 11
   domain: client
   depends_on: [CLIENT-008, HERO-003]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1322,7 +1322,7 @@
   wave: 11
   domain: content
   depends_on: [QUEST-002]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: internal/quest
   scope:
@@ -1349,7 +1349,7 @@
   wave: 11
   domain: client
   depends_on: [CLIENT-007]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1370,7 +1370,7 @@
   wave: 11
   domain: client
   depends_on: [CLIENT-003, CLIENT-007]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1390,7 +1390,7 @@
   wave: 11
   domain: platform
   depends_on: [INTG-007, QUEST-002, HERO-003]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -1413,8 +1413,7 @@
   wave: 11
   domain: platform
   depends_on: [INTG-008, CLIENT-009, CLIENT-010]
-  blocked_until: [INTG-008]
-  sync_status: blocked
+  sync_status: done
   size: S
   owner_dir: docs
   scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
@@ -1428,3 +1427,169 @@
     文档 only。INTG-008 合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108 等 art hold PR。
+
+- id: CLIENT-013
+  title: 行军列表与出征反馈（ListMarches）
+  wave: 12
+  domain: client
+  depends_on: [CLIENT-003, CLIENT-007]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - GatewayClient / loadProto 接线 `military.v1.ListMarches`（字段与 internal/api/proto 一致，不改 spec/proto）
+    - 军事或底栏提供「行军」入口：列表展示 purpose、phase、起终点坐标、depart/arrive 时间摘要；空列表与错误有文案
+    - StartMarch 成功后刷新行军列表；进行中行军 phase 变化时轮询或事件刷新（间隔可配置，默认 ≤5s，离开面板停止）
+    - 横屏 1600×900 外框内可滚动；募兵/出征表单行为不退化
+    - npm test 绿；client/README.md 增补 ListMarches 手动步骤（make dev）
+  body: |
+    wave:11 已有战报独立入口（CLIENT-012），但协议已定义的 ListMarches 未接 H5。加深军事可玩闭环，不扩新兵种/地图块类型。
+
+    仅 client/**；mock-server 可选补 ListMarches 桩。
+
+    与 CLIENT-014、CLIENT-015、CLIENT-016、CLIENT-017、CLIENT-018 并行（‖）。禁止 DATA-003 / cfg_act*。
+
+- id: CLIENT-014
+  title: 将领详情与已招募列表可读性（GetHeroDetail）
+  wave: 12
+  domain: client
+  depends_on: [CLIENT-010]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 接线 `hero.v1.GetHeroDetail`；将领面板在 ListPlayerHeroes 基础上支持选中将领 → 展示 template_name、rarity、四维属性、忠诚度区间
+    - 列表行展示 level + loyalty；详情区说明养成道具入口在背包「使用」流程（链到既有 UseConsumable UI，不新增 hero 专用 RPC）
+    - 单测覆盖 GetHeroDetail 响应解析与空 hero_id 错误态；npm test 绿
+    - client/README.md 增补将领详情手动验收
+  body: |
+    HERO-002/003 后端与 CLIENT-010 招募模板已合；GetHeroDetail 仍未在 H5 暴露。用既有 HERO/CONTENT 协议加深可读路径，不开装备槽或新道具 cfg。
+
+    仅 client/**。与 CLIENT-013 等并行（‖）。
+
+- id: CLIENT-015
+  title: 世界城池坐标与出征目标填入
+  wave: 12
+  domain: client
+  depends_on: [CLIENT-007, CLIENT-013]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - HUD 或底栏「世界」入口：调用 `world.v1.ListPlayerCities`，展示城池名与坐标 (x,y)（来自 PlayerCitySummary）
+    - 选中城池可将坐标填入军事出征 to_x/to_y（与 CLIENT-013 出征表单联动）；当前城标注「主城」
+    - 不实现全屏大地图瓦片；不新增 world 路由或建筑类型
+    - 单测可覆盖坐标格式化；npm test 绿
+  body: |
+    提升城外/出征目标可读性，复用 WORLD-001 已有 ListPlayerCities。依赖 CLIENT-013 出征表单字段；若 CLIENT-013 未合可先只读展示坐标。
+
+    仅 client/**。与 CLIENT-016 并行（‖）。
+
+- id: CLIENT-016
+  title: 战报筛选与详情摘要可读性
+  wave: 12
+  domain: client
+  depends_on: [CLIENT-012]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 战报面板增加客户端筛选：全部 / 胜 / 负 / 平（基于 BattleReportSummary.outcome，不改 ListBattleReports 请求参数）
+    - GetBattleReport 详情区展示回合数、攻/守伤亡 map 摘要、result 文案；长列表可折叠
+    - 列表分页或「加载更多」使用既有 limit/offset；失败重试文案明确
+    - 单测覆盖 outcome 筛选逻辑；npm test 绿
+  body: |
+    CLIENT-012 已独立战报入口；本卡加深结果可读性。契约冻结：筛选仅客户端，不扩 military.v1 过滤字段。
+
+    仅 client/**。与 CLIENT-013 并行（‖）。
+
+- id: CLIENT-017
+  title: 邮件收件箱 H5 最小面板
+  wave: 12
+  domain: client
+  depends_on: [CLIENT-008, MAIL-001]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 接线 `content.v1.ListPlayerMail`、`MarkMailRead`、`ClaimMailAttachments`（与 internal/api/mail_handlers.go 一致）
+    - 底栏或 HUD「邮件」入口：未读/全部切换、列表标题与摘要、点开标记已读、有附件时一键领取并刷新背包/钱包
+    - 空收件箱与领取失败有明确文案；1600×900 布局不溢出
+    - npm test 绿；client/README.md 增补邮件手动步骤（可配合 cmd/gm send-mail）
+  body: |
+    MAIL-001 与 INTG-007 网关冒烟已合，H5 仍无邮件 UI。仅 client/** + client/proto 薄消息。
+
+    与 CLIENT-014 并行（‖）。禁止新邮件类型 cfg 或活动附件模板扩量。
+
+- id: CLIENT-018
+  title: HUD 资源变动提示与面板轮询节流
+  wave: 12
+  domain: client
+  depends_on: [CLIENT-011]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 任务领奖、邮件领附件、商城购买、RecruitHero 等成功路径后，若 wallet 字段增加则在 HUD 显示短时「+粮/+木…」摘要（不阻塞操作）
+    - GetCityState 轮询合并为单飞（in-flight 去重）且面板不可见时降频或暂停；回归测试 layoutViewport 1600×900 与 1280×720
+    - 不迁移渲染引擎、不引入新资源类型；npm test 绿
+  body: |
+    工程硬度 + 采集/消费反馈，承接 CLIENT-011 资源条。可选轻量 requestAnimationFrame 节流，保持默认横屏基线。
+
+    仅 client/**。与 INTG-009 无硬依赖，可并行（‖）。
+
+- id: INTG-009
+  title: wave:12 网关路径冒烟（行军+邮件+日常加深）
+  wave: 12
+  domain: platform
+  depends_on: [INTG-008, QUEST-003]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/hero/**, internal/content/mail/**, client/**, spec/**]
+  acceptance:
+    - 扩展 INTG-008：StartMarch 最小一步（合法坐标与兵力）→ ListMarches 含该 march_id；失败打印 purpose/phase
+    - ListPlayerMail 在 GM send-mail 后非空（与 INTG-007 一致，本波改为 wave:12 主路径断言）
+    - 日常链 400 可选第二条：daily_train_1 或 daily_build_1 经 QUEST-003 挂钩推进后 claim（失败不阻塞主路径，README 注明）
+    - 保留 INTG-008 招募模板/日常 collect/商城/重启断言；tools/smoke/README.md 更新 -run 正则与 wave:12 段
+    - CI -short 跳过长测
+  body: |
+    INTG-WAVE12-RUN。后端-only，覆盖 wave:12 军事与邮件网关契约；不跑 H5 浏览器。
+
+    CLIENT-013～018 非硬依赖。QUEST-003 已合，实现者应补可选日常步骤。
+
+    与全部 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-004
+  title: wave:12 可玩加深与文档收口
+  wave: 12
+  domain: platform
+  depends_on: [INTG-009, CLIENT-013, CLIENT-014]
+  blocked_until: [INTG-009]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - ROADMAP：Wave 12 标为已完成并链 Issue/PR；Wave 11 保持已完成
+    - M4/H5 出口描述含「行军列表 + 将领详情 + 邮件 + 战报筛选」可玩路径（指向 client/README 小节）
+    - tasks/README.md wave:12 进度表与 Issue 一致
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；art hold PR 列表与 wave:11 一致
+  body: |
+    文档 only。INTG-009 合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155 等 art hold PR。
