@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  appendMailWorldCoordStatusHint,
   dailyQuestCrossLinkTags,
+  mailPlainTextHasWorldCoord,
   parseBattleReportIdFromMailText,
   parseMailIdFromBattleReportContext,
+  resolveBattleReportDailyLinks,
   resolveBattleReportMailLink,
   resolveMailBattleReportLink,
 } from "@/net/mailBattleCrossLink";
@@ -12,6 +15,33 @@ describe("mailBattleCrossLink", () => {
     expect(parseBattleReportIdFromMailText("战报通知", "结算 report_id=42")).toBe(42);
     expect(parseBattleReportIdFromMailText("战报#9", "")).toBe(9);
     expect(parseBattleReportIdFromMailText("系统", "请查看战报：12")).toBe(12);
+    expect(parseBattleReportIdFromMailText("GM", "详见 #report 55")).toBe(55);
+    expect(parseBattleReportIdFromMailText("GM", "#report66")).toBe(66);
+    expect(parseBattleReportIdFromMailText("通知", "「战报」88 已归档")).toBe(88);
+    expect(parseBattleReportIdFromMailText("全角", "战报１５")).toBe(15);
+  });
+
+  it("detects world coords in plain mail text", () => {
+    expect(mailPlainTextHasWorldCoord("侦察", "目标格点 (12,34) 请查看")).toBe(true);
+    expect(mailPlainTextHasWorldCoord("坐标", "战场坐标（60，60）")).toBe(true);
+    expect(mailPlainTextHasWorldCoord("无", "report_id=1")).toBe(false);
+    expect(mailPlainTextHasWorldCoord("越界", "(500,1)")).toBe(false);
+    expect(appendMailWorldCoordStatusHint("邮件 1/1 封")).toContain("可在世界面板查看");
+  });
+
+  it("resolveBattleReportDailyLinks for win/loss with in-progress dailies", () => {
+    expect(resolveBattleReportDailyLinks(3, [])).toEqual([]);
+    expect(
+      resolveBattleReportDailyLinks(1, [
+        { quest_cfg_id: 1033, quest_code: "daily_march_1", chain_id: 400, state: 2 },
+      ]),
+    ).toEqual([{ questCfgId: 1033, label: "相关日常" }]);
+    expect(
+      resolveBattleReportDailyLinks(2, [
+        { quest_cfg_id: 1032, quest_code: "daily_build_1", chain_id: 400, state: 2 },
+        { quest_cfg_id: 1033, quest_code: "daily_march_1", chain_id: 400, state: 3 },
+      ]),
+    ).toEqual([{ questCfgId: 1032, label: "相关日常" }]);
   });
 
   it("resolveMailBattleReportLink shows on keyword without id", () => {

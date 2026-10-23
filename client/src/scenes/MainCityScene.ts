@@ -332,6 +332,16 @@ export class MainCityScene implements Scene {
           this.heroMail.openAndHighlightMail(mailId);
           this.renderHud();
         },
+        getDailyChainRows: () => {
+          const fromPanel = this.dailyQuest.getRowsSnapshot();
+          if (fromPanel.length) return fromPanel;
+          return this.hudTodoBadgePoll.getDeepLinkSnapshot().dailyChainRows;
+        },
+        onOpenRelatedDaily: (questCfgId) => {
+          this.dailyQuest.openAndFocusQuest(questCfgId);
+          this.status = "已打开「日常」并定位对应日课（只读，不自动领奖）";
+          this.renderHud();
+        },
       },
     );
     this.battleReports.attach();
