@@ -13,6 +13,15 @@ import {
   marchListEmptyMessage,
 } from "@/net/panelDensity";
 import {
+  clearMarchHighlightSession,
+  MARCH_ROW_RECENT_CLASS,
+  readMarchHighlightSession,
+  remainingMarchHighlightMs,
+  resolveMarchHighlightOnRowSelect,
+  type MarchHighlightState,
+  writeMarchHighlightSession,
+} from "@/net/marchHighlight";
+import {
   filterMarchesByDestination,
   MARCH_LIST_ROW_DEST_MATCH_CLASS,
   type MarchDestFilterMode,
@@ -42,6 +51,8 @@ export class MarchListPanel {
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
   private manualDestFilter: { x: number; y: number } | null = null;
+  private highlightState: MarchHighlightState | null = null;
+  private highlightExpiryTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -188,6 +199,7 @@ export class MarchListPanel {
 
   detach(): void {
     this.stopPoll();
+    this.clearHighlightExpiryTimer();
     this.panel?.remove();
   }
 
@@ -205,10 +217,22 @@ export class MarchListPanel {
     }
   }
 
-  /** 出征成功后由主城场景调用，面板打开时立即刷新列表。 */
-  notifyMarchStarted(): void {
+  /** 出征成功后由主城场景调用：记住高亮 march_id，面板打开时立即刷新列表。 */
+  notifyMarchStarted(marchId?: number | null): void {
+    if (marchId != null && marchId > 0) {
+      this.setRecentMarchHighlight(marchId);
+    }
     if (!this.isOpen()) return;
     void this.refreshList();
+  }
+
+  /** 写入 session 高亮并调度 TTL 清除（CLIENT-080）。 */
+  setRecentMarchHighlight(marchId: number): void {
+    const now = this.nowMs();
+    writeMarchHighlightSession(marchId, now);
+    this.highlightState = { march_id: marchId, highlighted_at_ms: now };
+    this.scheduleHighlightExpiry();
+    if (this.isOpen()) this.renderList();
   }
 
   private buildPanel(): HTMLElement {
@@ -325,6 +349,13 @@ export class MarchListPanel {
       if (filter != null) {
         li.classList.add(MARCH_LIST_ROW_DEST_MATCH_CLASS);
       }
+      if (
+        m.march_id != null &&
+        this.highlightState &&
+        m.march_id === this.highlightState.march_id
+      ) {
+        li.classList.add(MARCH_ROW_RECENT_CLASS);
+      }
       ul.appendChild(li);
     }
   }
@@ -342,6 +373,17 @@ export class MarchListPanel {
   }
 
   private setSelectedMarchId(marchId: number | null): void {
+    const nextHighlight = resolveMarchHighlightOnRowSelect(
+      marchId,
+      this.highlightState,
+      this.nowMs(),
+    );
+    if (nextHighlight !== this.highlightState) {
+      if (nextHighlight == null) clearMarchHighlightSession();
+      this.highlightState = nextHighlight;
+      this.clearHighlightExpiryTimer();
+      if (nextHighlight) this.scheduleHighlightExpiry();
+    }
     this.selectedMarchId = marchId;
     this.renderList();
     const march = marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null;
@@ -373,8 +415,39 @@ export class MarchListPanel {
       this.selectedMarchId = null;
       this.onSelectionChange?.(null);
     }
+    this.syncHighlightFromSession();
     this.onMarchesUpdated?.(this.marches);
     this.renderList();
+  }
+
+  private syncHighlightFromSession(): void {
+    this.highlightState = readMarchHighlightSession(this.nowMs());
+    this.clearHighlightExpiryTimer();
+    if (this.highlightState) this.scheduleHighlightExpiry();
+  }
+
+  private scheduleHighlightExpiry(): void {
+    this.clearHighlightExpiryTimer();
+    if (!this.highlightState) return;
+    const delay = remainingMarchHighlightMs(this.highlightState, this.nowMs());
+    if (delay <= 0) {
+      this.highlightState = null;
+      clearMarchHighlightSession();
+      return;
+    }
+    this.highlightExpiryTimer = setTimeout(() => {
+      this.highlightExpiryTimer = null;
+      this.highlightState = readMarchHighlightSession(this.nowMs());
+      if (!this.highlightState) clearMarchHighlightSession();
+      this.renderList();
+    }, delay);
+  }
+
+  private clearHighlightExpiryTimer(): void {
+    if (this.highlightExpiryTimer) {
+      clearTimeout(this.highlightExpiryTimer);
+      this.highlightExpiryTimer = null;
+    }
   }
 
   private syncPollTimers(): void {

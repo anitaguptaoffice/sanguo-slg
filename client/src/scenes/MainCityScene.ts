@@ -68,6 +68,10 @@ import {
   shouldSkipRepeatCenterTodoScroll,
   type HudCenterTodoCounts,
 } from "@/net/hudCenterTodo";
+import {
+  formatMarchDepartedStatusToast,
+  syncMarchSubmitButton,
+} from "@/net/marchSubmitFeedback";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
@@ -136,6 +140,7 @@ export class MainCityScene implements Scene {
   private gateway!: SceneContext["gateway"];
   private status = "";
   private lastMarch: MarchSummary | null = null;
+  private marchSubmitInflight = false;
   private social!: SocialPanels;
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
@@ -772,6 +777,7 @@ export class MainCityScene implements Scene {
         ? "小地图选点已填入下方目标坐标（高亮）；与世界城池点选冲突时以最后一次操作为准。"
         : "出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。";
     }
+    syncMarchSubmitButton(this.militaryPanel, this.marchSubmitInflight);
   }
 
   private minimapBoundsExtra(): MinimapWorldPoint[] {
@@ -1358,7 +1364,8 @@ export class MainCityScene implements Scene {
     const { toX, toY, marchCount } = validated;
     setMarchFormErrorDisplay(this.militaryPanel, null);
     const troops = [{ unit_cfg_id: 1, count: marchCount }];
-    this.status = `向 (${toX},${toY}) 出征…`;
+    this.marchSubmitInflight = true;
+    this.syncMilitaryPanel();
     this.renderHud();
     try {
       const res = (await this.gateway.startMarch(
@@ -1379,15 +1386,17 @@ export class MainCityScene implements Scene {
       }
       writeMarchTargetSession(toX, toY);
       setMarchFormErrorDisplay(this.militaryPanel, null);
-      this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
+      this.status = formatMarchDepartedStatusToast(toX, toY);
       setMarchTargetFieldHighlight(this.militaryPanel, false);
       this.marchArrivalPoll.trackMarch(this.lastMarch?.march_id, this.lastMarch ?? undefined);
-      this.marchList.notifyMarchStarted();
+      this.marchList.notifyMarchStarted(this.lastMarch?.march_id);
       void this.refreshMinimapMarches();
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("march", e);
       setMarchFormErrorDisplay(this.militaryPanel, msg);
       this.status = msg;
+    } finally {
+      this.marchSubmitInflight = false;
     }
     this.renderHud();
     this.syncMilitaryPanel();

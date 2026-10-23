@@ -128,6 +128,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 |---|---|---|
 | **军情 ETA 与列表密度** | [手动验收（行军列表 ETA CLIENT-047）](#手动验收行军列表-eta-与军情密度-client-047)（[#283](https://github.com/anitaguptaoffice/sanguo-slg/issues/283) / [#294](https://github.com/anitaguptaoffice/sanguo-slg/pull/294) `e2e4c367`） | 已合 |
 | **出征表单格点/兵力校验** | [手动验收（出征表单校验 CLIENT-048）](#手动验收出征表单格点与兵力校验-client-048)（[#284](https://github.com/anitaguptaoffice/sanguo-slg/issues/284) / [#293](https://github.com/anitaguptaoffice/sanguo-slg/pull/293) `0e460f7b`） | 已合 |
+| **出征提交反馈与新行军高亮**（**CLIENT-080**，[#390](https://github.com/anitaguptaoffice/sanguo-slg/issues/390)） | 军事 **出征攻击**：请求中按钮 disabled +「出征中…」；成功顶栏 **已出征 (x,y)**；失败 **march-form-error** 走 `gatewayErrorMessage`。底栏 **行军** 列表最近成功 `march_id` 行 `march-row-recent`（`sessionStorage` `march-highlight-id`，选其他行或 60s 清除） | 本 PR |
 | **战报加载更多与筛选记忆** | [手动验收（战报分页 CLIENT-049）](#手动验收战报加载更多与筛选记忆-client-049)（[#285](https://github.com/anitaguptaoffice/sanguo-slg/issues/285) / [#297](https://github.com/anitaguptaoffice/sanguo-slg/pull/297) `17a41ff2`） | 已合 |
 | **邮件领取与 HUD 角标同步** | [手动验收（邮件领取 HUD 同步 CLIENT-050）](#手动验收邮件领取-hud-同步-client-050)（[#286](https://github.com/anitaguptaoffice/sanguo-slg/issues/286) / [#299](https://github.com/anitaguptaoffice/sanguo-slg/pull/299) `b40c01f7`） | 已合 |
 | **HUD 资源变动脉冲** | [手动验收（HUD 资源脉冲 CLIENT-051）](#手动验收hud-资源变动脉冲-client-051)（[#288](https://github.com/anitaguptaoffice/sanguo-slg/issues/288) / [#295](https://github.com/anitaguptaoffice/sanguo-slg/pull/295) `504a91ef`） | 已合 |
