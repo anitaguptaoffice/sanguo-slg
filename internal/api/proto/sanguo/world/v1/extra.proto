@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package sanguo.world.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1;worldv1";
+
+// route: world.v1.CreateCity
+message CreateCityRequest {
+  int32 server_id = 1;
+  string name = 2;
+  int32 x = 3;
+  int32 y = 4;
+}
+
+message CreateCityResponse {
+  sanguo.common.v1.PlayerCitySummary city = 1;
+}

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/config"
@@ -53,7 +55,7 @@ func (a *App) Close() {
 	}
 }
 
-// Handler returns the root HTTP handler (health checks only for now).
+// Handler returns the root HTTP handler (health checks only).
 func Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", healthz)
@@ -65,9 +67,17 @@ func healthz(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
-// ServeHTTP starts a minimal health server until the context is cancelled.
+// ServeHTTP starts the game HTTP server (health + WebSocket gateway).
 func (a *App) ServeHTTP(ctx context.Context) error {
-	srv := &http.Server{Addr: a.Config.HTTPAddr, Handler: Handler()}
+	root, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	if err := a.PrepareGame(ctx, root); err != nil {
+		return err
+	}
+	apiSrv := a.NewAPIServer(ctx)
+	srv := &http.Server{Addr: a.Config.HTTPAddr, Handler: a.HTTPHandler(ctx, apiSrv)}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -75,10 +85,28 @@ func (a *App) ServeHTTP(ctx context.Context) error {
 		_ = srv.Shutdown(shutdownCtx)
 	}()
 
-	a.Log.Info("server listening", "addr", a.Config.HTTPAddr)
-	err := srv.ListenAndServe()
+	a.Log.Info("server listening", "addr", a.Config.HTTPAddr, "ws", "/ws")
+	err = srv.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		return err
 	}
 	return nil
+}
+
+// RepoRoot finds the module root for migrations when tests run from subpackages.
+func RepoRoot() string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "."
+	}
+	for {
+		if _, err := os.Stat(filepath.Join(wd, "go.mod")); err == nil {
+			return wd
+		}
+		parent := filepath.Dir(wd)
+		if parent == wd {
+			return "."
+		}
+		wd = parent
+	}
 }
