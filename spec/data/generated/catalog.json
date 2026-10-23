@@ -1,0 +1,434 @@
+{
+  "bag_max_distinct_items": 38,
+  "items": [
+    {
+      "item_cfg_id": 2001,
+      "code": "food_bundle_s",
+      "name": "谷袋·初备",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "一袋新收的谷物，可充实仓廪。",
+        "grants": {
+          "food": 1000
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2002,
+      "code": "wood_bundle_s",
+      "name": "木料捆·初备",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "伐场新料，可解营造之急。",
+        "grants": {
+          "wood": 1000
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2003,
+      "code": "speedup_5m",
+      "name": "急工符·五刻",
+      "item_type": 2,
+      "max_stack": 999,
+      "meta": {
+        "description": "催动民夫，缩短营造五刻。",
+        "speedup_sec": 300,
+        "applies_to": [
+          "build",
+          "research"
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2004,
+      "code": "recruit_scroll",
+      "name": "贤士名册",
+      "item_type": 3,
+      "max_stack": 10,
+      "meta": {
+        "description": "开启标准招募池一次。",
+        "hero_pool": "standard",
+        "draws": 1
+      }
+    },
+    {
+      "item_cfg_id": 2005,
+      "code": "infantry_token",
+      "name": "步卒教范牌",
+      "item_type": 4,
+      "max_stack": 50,
+      "meta": {
+        "description": "征召百名步卒入列。",
+        "unit_code": "infantry",
+        "count": 100
+      }
+    },
+    {
+      "item_cfg_id": 2006,
+      "code": "cavalry_token",
+      "name": "骑营调令",
+      "item_type": 4,
+      "max_stack": 50,
+      "meta": {
+        "description": "五十骑出营待命。",
+        "unit_code": "cavalry",
+        "count": 50
+      }
+    },
+    {
+      "item_cfg_id": 2007,
+      "code": "food_bundle_m",
+      "name": "谷袋·常备",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "成捆粮秣，适合中期补给。",
+        "grants": {
+          "food": 5000
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2008,
+      "code": "wood_bundle_m",
+      "name": "木料捆·常备",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "规整梁木，支撑城防扩建。",
+        "grants": {
+          "wood": 5000
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2009,
+      "code": "iron_bundle_s",
+      "name": "铁砂箱·初备",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "冶炼粗铁，供锻造之用。",
+        "grants": {
+          "iron": 800
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2010,
+      "code": "silver_pouch_s",
+      "name": "银铤袋·薄",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "官府铸造的流通银铤。",
+        "grants": {
+          "silver": 200
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2011,
+      "code": "speedup_15m",
+      "name": "急工符·一刻钟",
+      "item_type": 2,
+      "max_stack": 999,
+      "meta": {
+        "description": "一炷香内完工的奇符。",
+        "speedup_sec": 900,
+        "applies_to": [
+          "build"
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2012,
+      "code": "recruit_scroll_rare",
+      "name": "锦绣名册",
+      "item_type": 3,
+      "max_stack": 5,
+      "meta": {
+        "description": "偏向高稀有将领的招募。",
+        "hero_pool": "elite",
+        "draws": 1
+      }
+    },
+    {
+      "item_cfg_id": 2013,
+      "code": "archer_token",
+      "name": "弓手集训牌",
+      "item_type": 4,
+      "max_stack": 50,
+      "meta": {
+        "description": "八十名弓手完成集训。",
+        "unit_code": "archer",
+        "count": 80
+      }
+    },
+    {
+      "item_cfg_id": 2014,
+      "code": "siege_token",
+      "name": "攻城器零件箱",
+      "item_type": 4,
+      "max_stack": 20,
+      "meta": {
+        "description": "组装十具攻城器械。",
+        "unit_code": "siege",
+        "count": 10
+      }
+    },
+    {
+      "item_cfg_id": 2015,
+      "code": "supply_chest_green",
+      "name": "青木补给箱",
+      "item_type": 1,
+      "max_stack": 20,
+      "meta": {
+        "description": "开启后随机获得基础资源。",
+        "reward_pack_id": "pack_supply_green",
+        "box_contents": [
+          {
+            "weight": 50,
+            "resources": {
+              "food": 800
+            }
+          },
+          {
+            "weight": 30,
+            "resources": {
+              "wood": 600
+            }
+          },
+          {
+            "weight": 20,
+            "resources": {
+              "iron": 400
+            }
+          }
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2016,
+      "code": "supply_chest_blue",
+      "name": "蓝纹军需箱",
+      "item_type": 1,
+      "max_stack": 10,
+      "meta": {
+        "description": "军需官签发的进阶补给。",
+        "reward_pack_id": "pack_supply_blue",
+        "box_contents": [
+          {
+            "weight": 40,
+            "resources": {
+              "food": 2000
+            }
+          },
+          {
+            "weight": 35,
+            "resources": {
+              "wood": 1500
+            }
+          },
+          {
+            "weight": 25,
+            "items": [
+              {
+                "item_code": "speedup_5m",
+                "qty": 2
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2017,
+      "code": "hero_shard_common",
+      "name": "将魂碎晶·凡",
+      "item_type": 1,
+      "max_stack": 999,
+      "meta": {
+        "description": "累积可兑换将领经验（占位）。",
+        "grants": {
+          "hero_exp": 50
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2018,
+      "code": "wall_stone_kit",
+      "name": "城防石料包",
+      "item_type": 1,
+      "max_stack": 30,
+      "meta": {
+        "description": "用于城墙修缮的条石。",
+        "grants": {
+          "wood": 500,
+          "iron": 300
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2019,
+      "code": "banquet_ticket",
+      "name": "庆功宴帖",
+      "item_type": 1,
+      "max_stack": 5,
+      "meta": {
+        "description": "提升士气的小宴（占位效果）。",
+        "grants": {
+          "silver": 50
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2020,
+      "code": "march_ration",
+      "name": "行军干粮",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "缩短一次出征准备时间（占位）。",
+        "grants": {
+          "food": 300
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2021,
+      "code": "tax_warrant",
+      "name": "税赋凭证",
+      "item_type": 1,
+      "max_stack": 20,
+      "meta": {
+        "description": "兑换少量银铤。",
+        "grants": {
+          "silver": 100
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2022,
+      "code": "drill_manual",
+      "name": "操典抄本",
+      "item_type": 1,
+      "max_stack": 10,
+      "meta": {
+        "description": "研读后可得训练加成（占位）。",
+        "grants": {
+          "silver": 30
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2023,
+      "code": "envoy_gift",
+      "name": "使节赠礼",
+      "item_type": 1,
+      "max_stack": 10,
+      "meta": {
+        "description": "外交场合使用的礼单。",
+        "grants": {
+          "wood": 400,
+          "food": 400
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2024,
+      "code": "forge_coal",
+      "name": "锻炉炭包",
+      "item_type": 1,
+      "max_stack": 50,
+      "meta": {
+        "description": "提高冶炼效率的燃料。",
+        "grants": {
+          "iron": 600
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2025,
+      "code": "herb_pouch",
+      "name": "伤药囊",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "救治伤兵的基础药材。",
+        "grants": {
+          "food": 200
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2026,
+      "code": "map_fragment",
+      "name": "舆图残页",
+      "item_type": 1,
+      "max_stack": 30,
+      "meta": {
+        "description": "拼凑后可解锁侦察（占位）。",
+        "grants": {
+          "silver": 80
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2027,
+      "code": "banner_emblem",
+      "name": "军旗徽记",
+      "item_type": 1,
+      "max_stack": 5,
+      "meta": {
+        "description": "提升编队识别度的饰物。",
+        "grants": {
+          "silver": 150
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2028,
+      "code": "treaty_scroll",
+      "name": "盟约抄本",
+      "item_type": 1,
+      "max_stack": 3,
+      "meta": {
+        "description": "记录同盟条款的卷轴。",
+        "grants": {
+          "wood": 300
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2029,
+      "code": "merit_medal",
+      "name": "功勋铜牌",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "兑换功勋点（占位）。",
+        "grants": {
+          "silver": 40
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2030,
+      "code": "lantern_festival",
+      "name": "祈福灯",
+      "item_type": 1,
+      "max_stack": 20,
+      "meta": {
+        "description": "节庆道具，换少量资源。",
+        "grants": {
+          "food": 500,
+          "wood": 500
+        }
+      }
+    }
+  ]
+}
