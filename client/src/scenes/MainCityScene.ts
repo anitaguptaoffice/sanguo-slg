@@ -466,6 +466,7 @@ export class MainCityScene implements Scene {
           this.status = message;
           this.renderHud();
         },
+        onOpenReplayWorldTile: (summary) => this.openWorldTileFromBattleReport(summary),
       },
     );
     this.battleReports.attach();
@@ -1008,6 +1009,20 @@ export class MainCityScene implements Scene {
     this.status = this.minimapCollapsed
       ? formatBattleReportReplayStatusCollapsed(coord)
       : formatBattleReportReplayStatusExpanded(coord);
+    this.renderHud();
+  }
+
+  private openWorldTileFromBattleReport(summary: BattleReportSummary): void {
+    const coord = extractBattleReportReplayCoord(summary);
+    if (!coord) {
+      this.status = "战报缺少有效战场坐标";
+      this.renderHud();
+      return;
+    }
+    this.world.openPanel();
+    this.world.selectGridAt(coord.wx, coord.wy);
+    this.focusMinimapOnWorldGrid(coord.wx, coord.wy);
+    this.status = `已打开世界格点信息 (${coord.wx},${coord.wy})`;
     this.renderHud();
   }
 

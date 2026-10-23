@@ -68,6 +68,10 @@ import {
 } from "@/net/mailBattleCrossLink";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
+import {
+  battleReportReplayGridLinkLabel,
+  battleReportWorldTileGrid,
+} from "@/ui/worldTileInfoFromBattleReport";
 
 const PAGE_LIMIT = 20;
 
@@ -89,6 +93,8 @@ export type BattleReportPanelOptions = {
   onOpenBattleReportHero?: (heroId: number) => void;
   onOpenBattleReportRank?: (playerId: number) => void;
   onBattleReportReadonlyHint?: (message: string) => void;
+  /** 列表行「复盘格点」：打开世界格点信息卡（CLIENT-109 / CLIENT-108）。 */
+  onOpenReplayWorldTile?: (summary: BattleReportSummary) => void;
 };
 
 export class BattleReportPanel {
@@ -436,6 +442,15 @@ export class BattleReportPanel {
       body.appendChild(coord);
       body.appendChild(foe);
       body.appendChild(when);
+      const grid = battleReportWorldTileGrid(r);
+      if (grid) {
+        const replayBtn = document.createElement("button");
+        replayBtn.type = "button";
+        replayBtn.className = "battle-report-replay-grid-btn";
+        replayBtn.setAttribute("data-action", "open-replay-world-tile");
+        replayBtn.textContent = battleReportReplayGridLinkLabel(grid.x, grid.y);
+        body.appendChild(replayBtn);
+      }
       li.appendChild(chip);
       li.appendChild(body);
       const id = r.report_id ?? 0;
@@ -897,6 +912,20 @@ export class BattleReportPanel {
     );
     if (clearLocBtn) {
       this.clearLocationFilter();
+      return;
+    }
+
+    const replayTileBtn = (ev.target as HTMLElement).closest(
+      '[data-action="open-replay-world-tile"]',
+    );
+    if (replayTileBtn) {
+      ev.stopPropagation();
+      const row = replayTileBtn.closest("li[data-report-id]");
+      const id = Number(row?.getAttribute("data-report-id"));
+      if (id) {
+        const summary = this.reports.find((r) => r.report_id === id);
+        if (summary) this.panelOpts?.onOpenReplayWorldTile?.(summary);
+      }
       return;
     }
 

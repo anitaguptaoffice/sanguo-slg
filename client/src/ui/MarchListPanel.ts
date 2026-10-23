@@ -30,6 +30,13 @@ import {
   syncMinimapMarchFocusSession,
 } from "@/net/minimapMarchFocus";
 import {
+  applyMilitaryListClientFilters,
+  militaryListPhaseFilterLabel,
+  readMilitaryListFilterSession,
+  type MilitaryListFilterV1,
+  writeMilitaryListFilterSession,
+} from "@/net/militaryListFilter";
+import {
   filterMarchesByDestination,
   MARCH_LIST_ROW_DEST_MATCH_CLASS,
   type MarchDestFilterMode,
@@ -66,6 +73,7 @@ export class MarchListPanel {
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
   private manualDestFilter: { x: number; y: number } | null = null;
+  private listFilter: MilitaryListFilterV1 = readMilitaryListFilterSession();
   private highlightState: MarchHighlightState | null = null;
   private highlightExpiryTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -218,9 +226,11 @@ export class MarchListPanel {
   }
 
   attach(): void {
+    this.listFilter = readMilitaryListFilterSession();
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.panel.addEventListener("change", (ev) => this.onFilterChange(ev));
     this.renderFilterControls();
   }
 
@@ -281,6 +291,27 @@ export class MarchListPanel {
           <button type="button" data-action="apply-march-dest-filter">应用</button>
         </span>
       </fieldset>
+      <fieldset class="march-list-filter" data-role="march-list-filter">
+        <legend>阶段与排序</legend>
+        <label>
+          阶段
+          <select data-action="march-phase-filter" aria-label="军情阶段筛选">
+            <option value="all">全部</option>
+            <option value="pending">待发</option>
+            <option value="outbound">行军中</option>
+            <option value="stationed">驻扎</option>
+            <option value="return">返回</option>
+          </select>
+        </label>
+        <label>
+          排序
+          <select data-action="march-eta-sort" aria-label="军情 ETA 排序">
+            <option value="default">默认顺序</option>
+            <option value="eta_asc">ETA 升序</option>
+            <option value="eta_desc">ETA 降序</option>
+          </select>
+        </label>
+      </fieldset>
       <button type="button" data-action="refresh-marches">刷新列表</button>
       <p class="report-panel-status" data-role="march-list-status"></p>
       <div class="panel-scroll-body" data-role="march-scroll">
@@ -291,6 +322,18 @@ export class MarchListPanel {
   }
 
   private renderFilterControls(): void {
+    const listFilterRoot = this.panel?.querySelector('[data-role="march-list-filter"]');
+    if (listFilterRoot) {
+      const phaseSelect = listFilterRoot.querySelector(
+        '[data-action="march-phase-filter"]',
+      ) as HTMLSelectElement | null;
+      const sortSelect = listFilterRoot.querySelector(
+        '[data-action="march-eta-sort"]',
+      ) as HTMLSelectElement | null;
+      if (phaseSelect) phaseSelect.value = this.listFilter.phase;
+      if (sortSelect) sortSelect.value = this.listFilter.etaSort;
+    }
+
     const fieldset = this.panel?.querySelector('[data-role="march-dest-filter"]');
     if (!fieldset) return;
     const mode = this.destFilterMode;
@@ -320,10 +363,12 @@ export class MarchListPanel {
     if (this.listError) return;
 
     const filter = this.resolveDestFilter();
-    const visible =
+    const destFiltered =
       filter != null
         ? filterMarchesByDestination(this.marches, filter.x, filter.y)
         : this.marches;
+    const now = this.nowMs();
+    const visible = applyMilitaryListClientFilters(destFiltered, this.listFilter, now);
 
     if (this.destFilterMode === "world" && filter == null && this.marches.length) {
       const li = document.createElement("li");
@@ -336,7 +381,22 @@ export class MarchListPanel {
     if (filter != null && !visible.length && this.marches.length) {
       const li = document.createElement("li");
       li.className = marchListEmptyClass();
-      li.textContent = `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中）`;
+      const phaseLabel = militaryListPhaseFilterLabel(this.listFilter.phase);
+      const phaseHint =
+        this.listFilter.phase !== "all" ? `，阶段「${phaseLabel}」无匹配` : "";
+      li.textContent = `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中${phaseHint}）`;
+      ul.appendChild(li);
+      return;
+    }
+
+    if (
+      destFiltered.length > 0 &&
+      !visible.length &&
+      this.listFilter.phase !== "all"
+    ) {
+      const li = document.createElement("li");
+      li.className = marchListEmptyClass();
+      li.textContent = `阶段「${militaryListPhaseFilterLabel(this.listFilter.phase)}」暂无匹配行军（共 ${destFiltered.length} 条）`;
       ul.appendChild(li);
       return;
     }
@@ -353,7 +413,6 @@ export class MarchListPanel {
       ul.classList.add(marchListCompactClass());
     }
 
-    const now = this.nowMs();
     for (const m of visible) {
       const li = document.createElement("li");
       const body = document.createElement("div");
@@ -586,6 +645,36 @@ export class MarchListPanel {
       this.listPollTimer = null;
     }
     this.stopRemainingTick();
+  }
+
+  private setListFilter(next: MilitaryListFilterV1): void {
+    if (
+      next.phase === this.listFilter.phase &&
+      next.etaSort === this.listFilter.etaSort
+    ) {
+      return;
+    }
+    this.listFilter = next;
+    writeMilitaryListFilterSession(next);
+    this.renderFilterControls();
+    this.renderList();
+  }
+
+  private onFilterChange(ev: Event): void {
+    const target = ev.target as HTMLElement;
+    const phaseSelect = target.closest('[data-action="march-phase-filter"]');
+    const sortSelect = target.closest('[data-action="march-eta-sort"]');
+    if (!phaseSelect && !sortSelect) return;
+    const root = this.panel.querySelector('[data-role="march-list-filter"]');
+    const phaseEl = root?.querySelector(
+      '[data-action="march-phase-filter"]',
+    ) as HTMLSelectElement | null;
+    const sortEl = root?.querySelector(
+      '[data-action="march-eta-sort"]',
+    ) as HTMLSelectElement | null;
+    const phase = (phaseEl?.value ?? this.listFilter.phase) as MilitaryListFilterV1["phase"];
+    const etaSort = (sortEl?.value ?? this.listFilter.etaSort) as MilitaryListFilterV1["etaSort"];
+    this.setListFilter({ phase, etaSort });
   }
 
   private onClick(ev: Event): void {
