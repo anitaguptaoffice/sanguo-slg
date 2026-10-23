@@ -98,6 +98,16 @@ import {
   walletBuildDeductPulseKeys,
 } from "@/net/buildSubmitFeedback";
 import {
+  formatRecruitTroopSuccess,
+  queueRecruitRowDomId,
+  recruitTroopSubmitStateMachine,
+  scheduleRecruitRowPulse,
+  syncMilitaryRecruitQueueList,
+  syncRecruitTroopSubmitButton,
+  type RecruitTroopSubmitState,
+  walletRecruitTroopDeductPulseKeys,
+} from "@/net/recruitTroopSubmitFeedback";
+import {
   formatMarchDepartedStatusToast,
   marchSubmitStateMachine,
   type MarchSubmitState,
@@ -178,6 +188,7 @@ export class MainCityScene implements Scene {
   private lastMarch: MarchSummary | null = null;
   private marchSubmitState: MarchSubmitState = "idle";
   private buildSubmitState: BuildSubmitState = "idle";
+  private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
   private intelRemarchTroopsLine: string | null = null;
   private suppressMarchTargetHighlightClear = false;
   private social!: SocialPanels;
@@ -318,6 +329,7 @@ export class MainCityScene implements Scene {
         <p class="troop-recruit-preview" data-role="troop-recruit-preview"></p>
         <p class="march-form-error hidden" data-role="troop-recruit-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
+        <ul class="queue-list military-recruit-queue hidden" data-role="military-recruit-queue-list"></ul>
         <hr />
         <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
         <div class="march-target-fields" data-role="march-target-fields">
@@ -949,7 +961,16 @@ export class MainCityScene implements Scene {
       lastTroopsEl.classList.toggle("hidden", !line);
     }
     syncMarchSubmitButton(this.militaryPanel, this.marchSubmitState);
-    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    const recruitPreview = syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    syncRecruitTroopSubmitButton(
+      this.militaryPanel,
+      this.recruitTroopSubmitState,
+      recruitPreview?.canAfford ?? false,
+    );
+    syncMilitaryRecruitQueueList(
+      this.militaryPanel,
+      this.queuePanels?.getRecruitQueueSnapshot() ?? [],
+    );
     const summary = formatMarchFormSummary(
       readMarchFormSnapshot(this.militaryPanel, {
         cityX: this.session?.cityX,
@@ -964,7 +985,10 @@ export class MainCityScene implements Scene {
   private onMilitaryRecruitFieldChange(ev: Event): void {
     const t = ev.target as HTMLElement;
     if (!t.matches('[data-field="unit"], [data-field="recruit-count"]')) return;
-    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    this.recruitTroopSubmitState = recruitTroopSubmitStateMachine(this.recruitTroopSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    this.syncMilitaryPanel();
   }
 
   private minimapBoundsExtra(): MinimapWorldPoint[] {
@@ -1671,9 +1695,14 @@ export class MainCityScene implements Scene {
     }
     const unitCfgId = preview.troopCfgId;
     const count = preview.qty;
+    const walletBefore = this.session.wallet;
     setTroopRecruitFormError(this.militaryPanel, null);
-    this.status = `募兵 ${unitLabel(unitCfgId)}×${count}…`;
+    this.recruitTroopSubmitState = recruitTroopSubmitStateMachine(this.recruitTroopSubmitState, {
+      type: "SUBMIT",
+    });
+    this.syncMilitaryPanel();
     this.renderHud();
+    let pulseQueueId: number | null = null;
     try {
       const res = (await this.gateway.recruitTroop(this.session.cityId, unitCfgId, count)) as {
         wallet?: ResourceWallet;
@@ -1682,22 +1711,41 @@ export class MainCityScene implements Scene {
         finish_at_ms?: number;
       };
       if (res.wallet) this.session.wallet = res.wallet;
+      const pulseKeys = walletRecruitTroopDeductPulseKeys(
+        walletBefore,
+        this.session.wallet,
+        preview.cost,
+      );
+      if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
       if (res.troop) {
         this.session.cityTroops = mergeCityTroops(this.session.cityTroops, [res.troop]);
       }
       const queued = recruitEntryFromResponse(res, unitCfgId, count);
       this.queuePanels.addRecruitEntry(queued);
-      const finish = res.finish_at_ms ? formatTimeMs(res.finish_at_ms) : "已完成";
-      this.status = res.queue_id
-        ? `募兵排队 #${res.queue_id}，预计 ${finish}（见「队列」面板）`
-        : `募兵完成，${unitLabel(unitCfgId)} 当前 ${res.troop?.count ?? "?"}`;
+      this.recruitTroopSubmitState = recruitTroopSubmitStateMachine(this.recruitTroopSubmitState, {
+        type: "SUCCESS",
+      });
+      this.status = formatRecruitTroopSuccess(unitCfgId, count, res);
+      if (queued) {
+        pulseQueueId = queued.queue_id;
+        this.queuePanels.pulseRecruitRow(queued.queue_id);
+      }
     } catch (e) {
-      const msg = formatPanelGatewayErrorFromUnknown("march", e);
+      const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      this.recruitTroopSubmitState = recruitTroopSubmitStateMachine(this.recruitTroopSubmitState, {
+        type: "FAIL",
+      });
       setTroopRecruitFormError(this.militaryPanel, msg);
       this.status = msg;
     }
     this.renderHud();
     this.syncMilitaryPanel();
+    if (pulseQueueId != null) {
+      const milRow = this.militaryPanel.querySelector(
+        `#${CSS.escape(queueRecruitRowDomId(pulseQueueId))}`,
+      );
+      scheduleRecruitRowPulse(milRow instanceof HTMLElement ? milRow : null);
+    }
   }
 
   private async startMarch(): Promise<void> {

@@ -6,6 +6,10 @@ import {
   QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS,
   scheduleQueueBuildCompletePulse,
 } from "@/net/buildQueueComplete";
+import {
+  queueRecruitRowDomId,
+  scheduleRecruitRowPulse,
+} from "@/net/recruitTroopSubmitFeedback";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
@@ -191,6 +195,12 @@ export class QueuePanels {
     if (this.isOpen()) this.render();
   }
 
+  /** CLIENT-117：募兵提交成功后队列募兵行 3s 脉冲。 */
+  pulseRecruitRow(queueId: number): void {
+    const id = queueRecruitRowDomId(queueId);
+    scheduleRecruitRowPulse(this.panel.querySelector(`#${CSS.escape(id)}`));
+  }
+
   /** 日常面板只读募兵队列快照（与 render 同源，不新 RPC）。 */
   getRecruitQueueSnapshot(): RecruitQueueEntry[] {
     const now = Date.now();
@@ -359,9 +369,12 @@ export class QueuePanels {
       buildUl.appendChild(li);
     }
 
-    for (const text of recruitLines) {
+    for (const entry of this.recruits) {
+      const text = formatRecruitQueueLine(entry, now);
       const li = document.createElement("li");
       li.className = "queue-list-row";
+      li.id = queueRecruitRowDomId(entry.queue_id);
+      li.dataset.queueId = String(entry.queue_id);
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);

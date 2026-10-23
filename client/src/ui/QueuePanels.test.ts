@@ -3,6 +3,7 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS } from "@/net/buildQueueComplete";
+import { queueRecruitRowDomId, RECRUIT_ROW_PULSE_CLASS } from "@/net/recruitTroopSubmitFeedback";
 import {
   BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID,
   QUEUE_BUILD_ROW_SELECTED_CLASS,
@@ -83,6 +84,20 @@ describe("QueuePanels", () => {
     const row = mount.querySelector('li[data-slot-key="farm"]');
     expect(row?.classList.contains("queue-build-complete-pulse")).toBe(true);
     expect(row?.textContent).toContain("Lv3");
+  });
+
+  it("pulseRecruitRow adds recruit-row-pulse on queue recruit line", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, {}, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.toggle();
+    panel.addRecruitEntry({ queue_id: 3, unit_cfg_id: 1, count: 10, finish_at_ms: now + 90_000 });
+    panel.pulseRecruitRow(3);
+    const row = mount.querySelector(`#${queueRecruitRowDomId(3)}`);
+    expect(row?.classList.contains(RECRUIT_ROW_PULSE_CLASS)).toBe(true);
   });
 
   it("shows upgrade and recruit rows when open", () => {
