@@ -4,6 +4,7 @@ import {
   formatChatDayGroupTitle,
   formatChatLogLine,
   formatGuildMemberLine,
+  formatGuildMentionDraft,
   formatGuildSummaryText,
   formatServerLine,
   formatSocialGatewayError,
@@ -55,6 +56,12 @@ describe("socialFormat", () => {
     expect(line).toContain("演示君主 (#10001)");
     expect(line).toContain("hello");
     expect(chatChannelLabel(3)).toBe("军团");
+  });
+
+  it("formats guild mention draft for chat input", () => {
+    expect(formatGuildMentionDraft("虎贲甲")).toBe("@虎贲甲 ");
+    expect(formatGuildMentionDraft("  ")).toBe("@? ");
+    expect(formatGuildMentionDraft("")).toBe("@? ");
   });
 
   it("formats guild summary and member rows", () => {
