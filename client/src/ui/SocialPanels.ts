@@ -10,17 +10,16 @@ import {
   viewerScoreFallback,
   type LeaderboardPagePayload,
 } from "@/net/leaderboardFormat";
-import { guildRoleLabel } from "@/net/socialFormat";
-
-const CH_WORLD = 1;
-const CH_PRIVATE = 2;
-const CH_GUILD = 3;
-
-type ChatLine = {
-  sender_display_name?: string;
-  content?: string;
-  sent_at_ms?: number;
-};
+import {
+  CHAT_CHANNEL_GUILD,
+  CHAT_CHANNEL_PRIVATE,
+  CHAT_CHANNEL_WORLD,
+  formatChatLogLine,
+  formatGuildMemberLine,
+  formatGuildSummaryText,
+  formatSocialGatewayError,
+  type ChatMessageRow,
+} from "@/net/socialFormat";
 
 export class SocialPanels {
   private chatPanel!: HTMLElement;
@@ -64,6 +63,7 @@ export class SocialPanels {
 
   toggleGuild(): void {
     this.guildPanel.classList.toggle("hidden");
+    if (!this.guildPanel.classList.contains("hidden")) this.syncGuildSummary();
   }
 
   toggleRank(): void {
@@ -78,39 +78,39 @@ export class SocialPanels {
 
   private selectedChatChannel(): number {
     return Number(
-      (this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement)?.value ?? CH_WORLD,
+      (this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement)?.value ?? CHAT_CHANNEL_WORLD,
     );
   }
 
   private syncChatChannelUi(ch: number): void {
-    this.chatPanel.querySelector(".private-target")?.classList.toggle("hidden", ch !== CH_PRIVATE);
-    this.chatPanel.querySelector('[data-role="guild-chat-hint"]')?.classList.toggle("hidden", ch !== CH_GUILD);
+    this.chatPanel.querySelector(".private-target")?.classList.toggle("hidden", ch !== CHAT_CHANNEL_PRIVATE);
+    this.chatPanel.querySelector('[data-role="guild-chat-hint"]')?.classList.toggle("hidden", ch !== CHAT_CHANNEL_GUILD);
   }
 
   private chatListOpts(ch: number): { peerPlayerId?: number; guildId?: number } {
-    if (ch === CH_PRIVATE) {
+    if (ch === CHAT_CHANNEL_PRIVATE) {
       const peer = Number((this.chatPanel.querySelector('[data-field="peer-id"]') as HTMLInputElement)?.value ?? 0);
       return { peerPlayerId: peer };
     }
-    if (ch === CH_GUILD) {
+    if (ch === CHAT_CHANNEL_GUILD) {
       return { guildId: this.guildId };
     }
     return {};
   }
 
   private chatSendOpts(ch: number): { recipientPlayerId?: number; guildId?: number } {
-    if (ch === CH_PRIVATE) {
+    if (ch === CHAT_CHANNEL_PRIVATE) {
       const peer = Number((this.chatPanel.querySelector('[data-field="peer-id"]') as HTMLInputElement)?.value ?? 0);
       return { recipientPlayerId: peer };
     }
-    if (ch === CH_GUILD) {
+    if (ch === CHAT_CHANNEL_GUILD) {
       return { guildId: this.guildId };
     }
     return {};
   }
 
   private ensureGuildChatReady(ch: number): boolean {
-    if (ch !== CH_GUILD) return true;
+    if (ch !== CHAT_CHANNEL_GUILD) return true;
     if (this.guildId > 0) return true;
     this.onStatus("军团频道需要先创建或加入军团");
     return false;
@@ -192,23 +192,22 @@ export class SocialPanels {
       const res = (await this.gateway.listChatMessages(sid, ch, {
         ...this.chatListOpts(ch),
         limit: 30,
-      })) as { messages?: ChatLine[] };
+      })) as { messages?: ChatMessageRow[] };
       this.renderChatLog(res.messages ?? []);
       this.onStatus("聊天已刷新");
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(formatSocialGatewayError(e));
     }
   }
 
-  private renderChatLog(messages: ChatLine[]): void {
+  private renderChatLog(messages: ChatMessageRow[]): void {
     const ul = this.chatPanel.querySelector('[data-role="chat-log"]');
     if (!ul) return;
     ul.innerHTML = "";
     const sorted = [...messages].sort((a, b) => (a.sent_at_ms ?? 0) - (b.sent_at_ms ?? 0));
     for (const m of sorted) {
       const li = document.createElement("li");
-      const who = m.sender_display_name ?? "未知";
-      li.textContent = `${who}: ${m.content ?? ""}`;
+      li.textContent = formatChatLogLine(m);
       ul.appendChild(li);
     }
   }
@@ -229,7 +228,7 @@ export class SocialPanels {
       await this.refreshChat();
       this.onStatus("已发送");
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(formatSocialGatewayError(e));
     }
   }
 
@@ -251,7 +250,7 @@ export class SocialPanels {
       await this.refreshMembers();
       this.onStatus(`已创建「${this.guildName}」`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(formatSocialGatewayError(e));
     }
   }
 
@@ -273,17 +272,13 @@ export class SocialPanels {
       await this.refreshMembers();
       this.onStatus(`已加入「${this.guildName}」`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(formatSocialGatewayError(e));
     }
   }
 
   private syncGuildSummary(): void {
     const p = this.guildPanel.querySelector('[data-role="guild-summary"]');
-    if (p) {
-      p.textContent = this.guildId
-        ? `当前军团：${this.guildName} (#${this.guildId})`
-        : "尚未加入军团";
-    }
+    if (p) p.textContent = formatGuildSummaryText(this.guildId, this.guildName);
   }
 
   private async refreshMembers(): Promise<void> {
@@ -296,7 +291,7 @@ export class SocialPanels {
     try {
       const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
         guild?: { name?: string };
-        members?: { display_name?: string; role?: number; power?: number }[];
+        members?: { display_name?: string; role?: number; power?: number; joined_at_ms?: number }[];
       };
       if (res.guild?.name) this.guildName = res.guild.name;
       this.syncGuildSummary();
@@ -305,13 +300,13 @@ export class SocialPanels {
         ul.innerHTML = "";
         for (const m of res.members ?? []) {
           const li = document.createElement("li");
-          li.textContent = `${m.display_name ?? "?"} · ${guildRoleLabel(m.role)} · 战力 ${m.power ?? 0}`;
+          li.textContent = formatGuildMemberLine(m);
           ul.appendChild(li);
         }
       }
       this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(formatSocialGatewayError(e));
     }
   }
 
@@ -358,7 +353,7 @@ export class SocialPanels {
       this.renderLeaderboardPage(res, boardType);
       this.onStatus("排行榜已刷新");
     } catch (e) {
-      this.onStatus((e as Error).message);
+      this.onStatus(formatSocialGatewayError(e));
     }
   }
 

@@ -65,6 +65,7 @@ function sessionState() {
     reports: [],
     chatMessages: [],
     nextChatId: 1,
+    chatMutedUntilMs: 0,
     guild: null,
     nextGuildId: 7001,
     rankEntries: [
@@ -220,6 +221,31 @@ wss.on("connection", (ws) => {
 
       if (route === "chat.v1.SendChatMessage") {
         const req = T("sanguo.chat.v1.SendChatMessageRequest").decode(cp.payload);
+        if (req.content === "__mock_mute__") {
+          state.chatMutedUntilMs = Date.now() + 5 * 60 * 1000;
+          const msg = {
+            message_id: state.nextChatId++,
+            server_id: req.server_id,
+            channel: req.channel,
+            sender_player_id: 10001,
+            sender_display_name: "演示君主",
+            recipient_player_id: req.recipient_player_id,
+            guild_id: req.guild_id,
+            content: "（mock：已模拟禁言 5 分钟，再发消息将返回 code=61006）",
+            sent_at_ms: Date.now(),
+          };
+          state.chatMessages.push(msg);
+          replyOk(ws, cp.trace_id, T("sanguo.chat.v1.SendChatMessageResponse"), { message: msg });
+          return;
+        }
+        if (state.chatMutedUntilMs > Date.now()) {
+          reply(ws, cp.trace_id, 61006, "player muted");
+          return;
+        }
+        if (req.channel === 3 && (!state.guild || req.guild_id !== state.guild.guild_id)) {
+          reply(ws, cp.trace_id, 61005, "chat: guild required");
+          return;
+        }
         const msg = {
           message_id: state.nextChatId++,
           server_id: req.server_id,
@@ -256,6 +282,10 @@ wss.on("connection", (ws) => {
 
       if (route === "guild.v1.CreateGuild") {
         const req = T("sanguo.guild.v1.CreateGuildRequest").decode(cp.payload);
+        if (state.guild) {
+          reply(ws, cp.trace_id, 60002, "already in a guild");
+          return;
+        }
         state.guild = {
           guild_id: state.nextGuildId++,
           server_id: req.server_id,

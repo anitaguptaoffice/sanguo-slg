@@ -71,13 +71,24 @@ cd client && npm install && npm run dev
 4. 视口 **400×900**（窄屏）：左右贴边、上下 letterbox；点击农田槽位仍可触发升级（hit 区域随 `uiScale` 缩放）。
 5. 选服界面面板居中落在舞台区域内（顶底各留 56px 带）。
 
-### 手动验收（M3：选服 / 聊天 / 军团 / 排行）
+### 手动验收（M3：选服 / 聊天 / 军团 / 排行，CLIENT-022）
 
 1. 连接 `make dev` 后打开 H5，选服列表应出现至少 `S1`（dev 服 1）。
-2. 进入主城后点 **「聊天」**：世界频道发一条消息并点「刷新」应能看到记录；私聊需填对方 `player_id`；**军团**频道需先在「军团」面板创建/加入军团，再选「军团」频道收发（`chat.v1` + `guild_id`，WIRE-001 真实网关与 mock 均支持）。
-3. 点 **「军团」**：输入名称「创建军团」，或填已有 `guild_id` 加入，再「刷新成员」。
+2. 进入主城后点 **「聊天」**：
+   - 列表行应含 **频道**（世界/私聊/军团）、**本地时间**（`sent_at_ms`）、**发送者 display_name 与 player_id**、正文。
+   - 世界频道发一条消息并点「刷新」应能看到记录；私聊需填对方 `player_id`。
+   - **军团**频道需先在「军团」面板创建/加入军团；未入团时客户端拦截发送，状态栏提示需先入团；服务端可能返回 `61005`/`61001`，状态栏显示中文摘要 + `code`。
+   - 真实服可用 `cmd/gm mute` 测禁言；mock 网关在世界频道发送内容 **`__mock_mute__`** 可模拟 5 分钟禁言，再次发送应看到 **已被禁言 (code=61006)**。
+3. 点 **「军团」**：创建或加入后顶栏 **`guild-summary`** 应持久显示 `guild_id` 与名称（同一会话内切换面板不丢失）；「刷新成员」列表行含 **职务**（`guildRoleLabel`）与 **加入时间**（若 API 返回 `joined_at_ms`）。加入不存在的军团时状态栏应可读（如 `军团不存在 (code=60001)`）。
 4. 点 **「排行」**：「刷新战力榜」应列出榜单，并显示 **我的名次**（未上榜时显示战力与「未上榜」）。
 5. M2 军事/内政仍可用：**「军事」**、**「升级农田」** 等。
+
+mock 网关（军团频道 + 禁言桩）：
+
+```bash
+cd client && npm run mock:gateway
+VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
+```
 
 ### 手动验收（M4：任务 / 背包 / 商城，对齐 INTG-004）
 
@@ -236,7 +247,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天行格式、军团摘要、禁言错误可读）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
