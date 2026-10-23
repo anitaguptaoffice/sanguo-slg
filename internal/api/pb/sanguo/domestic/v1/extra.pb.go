@@ -7,7 +7,7 @@
 package domesticv1
 
 import (
-	v1 "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/common/v1"
+	v1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
