@@ -1,0 +1,104 @@
+syntax = "proto3";
+
+package sanguo.gm.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/gm/v1;gmv1";
+
+// GM 操作审计字段（写入操作日志，请求必填）。
+message GmAuditContext {
+  // 运营账号或工号。
+  string operator_id = 1;
+  // 运营展示名。
+  string operator_name = 2;
+  // 操作原因/备注（工单说明）。
+  string reason = 3;
+  // 外部工单或审批单号。
+  string ticket_id = 4;
+  // 客户端发起时间（Unix 毫秒），服务端可校验时钟偏移。
+  int64 requested_at_ms = 5;
+}
+
+// GM 操作结果公共字段。
+message GmOperationResult {
+  // 服务端生成的审计日志 ID（UUID 或雪花 ID 字符串）。
+  string audit_log_id = 1;
+  // 实际执行完成时间（Unix 毫秒）。
+  int64 executed_at_ms = 2;
+  GmAuditContext audit = 3;
+}
+
+// 查号结果：账号 + 角色摘要。
+message GmPlayerLookup {
+  int64 account_id = 1;
+  string account_login = 2;
+  bool account_banned = 3;
+  sanguo.common.v1.PlayerProfile profile = 4;
+  sanguo.common.v1.ResourceWallet wallet = 5;
+  // 是否在线（网关会话存在）。
+  bool online = 6;
+  // 聊天禁言截止时间（Unix 毫秒）；0 表示未禁言。
+  int64 chat_muted_until_ms = 7;
+}
+
+// route: gm.v1.LookupPlayer
+// 按角色 ID 或账号名查询基础信息（须带 server_id 定位角色）。
+message LookupPlayerRequest {
+  GmAuditContext audit = 1;
+  int32 server_id = 2;
+  // 与 account_login 二选一或同时填以交叉校验。
+  int64 player_id = 3;
+  string account_login = 4;
+}
+
+message LookupPlayerResponse {
+  GmOperationResult result = 1;
+  GmPlayerLookup player = 2;
+}
+
+// route: gm.v1.GrantReward
+// 向指定角色发放奖励（走 content 发奖钩子，须幂等键防重复）。
+message GrantRewardRequest {
+  GmAuditContext audit = 1;
+  int32 server_id = 2;
+  int64 player_id = 3;
+  sanguo.common.v1.RewardBundle rewards = 4;
+  // 幂等键：同键重复请求返回相同结果，不重复发货。
+  string idempotency_key = 5;
+}
+
+message GrantRewardResponse {
+  GmOperationResult result = 1;
+  sanguo.common.v1.RewardBundle granted_rewards = 2;
+}
+
+// route: gm.v1.MutePlayer
+// 禁言：对接聊天域，设置截止时间。
+message MutePlayerRequest {
+  GmAuditContext audit = 1;
+  int32 server_id = 2;
+  int64 player_id = 3;
+  // 禁言截止（Unix 毫秒）；0 表示解除禁言。
+  int64 mute_until_ms = 4;
+}
+
+message MutePlayerResponse {
+  GmOperationResult result = 1;
+  int64 chat_muted_until_ms = 2;
+}
+
+// route: gm.v1.KickPlayer
+// 踢下线：断开网关会话，可选禁止立即重连时长。
+message KickPlayerRequest {
+  GmAuditContext audit = 1;
+  int32 server_id = 2;
+  int64 player_id = 3;
+  // 禁止重连截止（Unix 毫秒）；0 表示仅踢当前连接。
+  int64 reconnect_blocked_until_ms = 4;
+}
+
+message KickPlayerResponse {
+  GmOperationResult result = 1;
+  bool session_terminated = 2;
+}

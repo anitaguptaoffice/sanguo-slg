@@ -120,4 +120,46 @@ enum ErrorCode {
   RANK_INVALID_TYPE = 62001;
   // 分页参数非法（page/page_size）。
   RANK_INVALID_PAGE = 62002;
+
+  // --- 任务 63000–63999 ---
+  // 任务配置不存在或未开放。
+  QUEST_NOT_FOUND = 63001;
+  // 前置任务或链未满足。
+  QUEST_PREREQUISITE_NOT_MET = 63002;
+  // 任务已接取或状态不允许重复接取。
+  QUEST_ALREADY_ACCEPTED = 63003;
+  // 任务未在进行中（无法上报进度）。
+  QUEST_NOT_IN_PROGRESS = 63004;
+  // 进度上报非法或超出目标。
+  QUEST_PROGRESS_INVALID = 63005;
+  // 任务不可领奖（未达成或已领）。
+  QUEST_NOT_CLAIMABLE = 63006;
+  // 任务已完成。
+  QUEST_ALREADY_COMPLETED = 63007;
+  // 任务链未解锁。
+  QUEST_CHAIN_LOCKED = 63008;
+
+  // --- 商城 64000–64999 ---
+  // 货架不存在或未开放。
+  SHOP_SHELF_NOT_FOUND = 64001;
+  // 商品 offer 不存在或已下架。
+  SHOP_OFFER_NOT_FOUND = 64002;
+  // 货币或道具不足。
+  SHOP_INSUFFICIENT_FUNDS = 64003;
+  // 库存不足或已售罄。
+  SHOP_SOLD_OUT = 64004;
+  // 超过限购次数。
+  SHOP_PURCHASE_LIMIT = 64005;
+  // 购买数量非法。
+  SHOP_INVALID_QUANTITY = 64006;
+
+  // --- GM 65000–65999 ---
+  // 运营鉴权失败或权限不足。
+  GM_UNAUTHORIZED = 65001;
+  // 目标玩家或账号不存在。
+  GM_PLAYER_NOT_FOUND = 65002;
+  // 审计字段缺失或非法。
+  GM_INVALID_AUDIT = 65003;
+  // 操作执行失败（内部错误或下游拒绝）。
+  GM_OPERATION_FAILED = 65004;
 }
