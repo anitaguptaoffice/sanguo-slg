@@ -179,6 +179,20 @@ H5 人工验收与 INTG-011 路径对齐，见 [client/README.md](../client/READ
 
 **明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权；行军 **取消/加速**（`CancelMarch` 等，需未来 contract 卡，当前 `military.v1` 无 RPC）；募兵队列 **加速**（本波仅建造队列对接 DOM-003）。
 
+## Wave 15 H5 世界地图与面板密度 — **规划中**
+
+**策略**：在 wave:14 **日常/队列/HUD 待办** 闭环之上，加深 **世界地图行军只读标注**、**邮件/战报/背包** 空态与列表密度、**排行/军团/聊天** 扫读、**将领招募** 小 UX，以及 **manifest 已落地样件**（#218）的 HUD/面板接线；网关 **INTG-012** 复跑 smoke。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| （待 sync） | CLIENT-028～032 | 待开工 | — |
+| （待 sync） | INTG-012 | 待开工 | — |
+| （待 sync） | DOCS-EXIT-007 | 阻塞（`blocked_until: INTG-012`） | — |
+
+波次 backlog 规划见 [#226](https://github.com/anitaguptaoffice/sanguo-slg/pull/226)（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync`）。
+
+**并行建议**：CLIENT-028～032 与 INTG-012 可并行；DOCS-EXIT-007 在 INTG-012 后收口。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。
