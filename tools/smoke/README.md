@@ -2,7 +2,29 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 20 网关冒烟（INTG-017，推荐）
+
+在 INTG-016 全量断言之上强制验收 **战报时间/胜负**：`military.v1.ListBattleReports` `limit≥1` 时首条 summary 含 `created_at_ms` 与 `outcome`（日志打印两字段；dev 无战报则 **skip** 并打印 hint）；**城池产出速率**：`domestic.v1.GetCityState` 打印 `production_rates` 粮/木/铁/石 `+/h`（全 `0` 时注明 dev 空城或无产出建筑）；**军情目的格点**：`StartMarch` 后 `ListMarches` 首条 `to_x`/`to_y` 与冒烟请求一致（打印 `march_id` 与格点，供 CLIENT-069 筛选对照）。保留 INTG-015 行军 ETA、战报分页、INTG-014 坐标/rounds 与进程重启持久化等 INTG-016 路径。
+
+**本波仍不做** `CancelMarch`/行军加速——`military.v1` 契约未定义对应 RPC。
+
+**可选**：`RecruitTroop` 后 `ListMarches` 仍为空或仅含本次 `StartMarch` 的 `march_id`；**失败不阻塞主路径**（见测试内 `smokeINTG014RecruitTroopListMarchesOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG017Wave20SmokePath' -count=1 -v
+```
+
+与 INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG017Wave20SmokePath|TestINTG016Wave19SmokePath|TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-017:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 19 网关冒烟（INTG-016，推荐）
 
