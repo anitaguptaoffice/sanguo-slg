@@ -24,6 +24,8 @@ export type MarchSummary = {
   depart_at_ms?: number;
   arrive_at_ms?: number;
   purpose?: number;
+  /** 可选：服务端或 mock 在到达后回填，用于战报深链（CLIENT-025/085）。 */
+  report_id?: number;
 };
 
 export type BattleReportSummary = {
@@ -43,6 +45,22 @@ const MARCH_PHASE_LABEL: Record<number, string> = {
   2: "行军中",
   3: "已到达",
   4: "撤回中",
+};
+
+/** 军情列表 phase chip 文案（扫读口径：去程/驻扎/返回，与 formatMarchPhase 长文案并存）。 */
+const MARCH_PHASE_CHIP_LABEL: Record<number, string> = {
+  0: "未知",
+  1: "待发",
+  2: "去程",
+  3: "驻扎",
+  4: "返回",
+};
+
+const MARCH_PHASE_CHIP_CLASS: Record<number, string> = {
+  1: "march-phase-chip-pending",
+  2: "march-phase-chip-outbound",
+  3: "march-phase-chip-stationed",
+  4: "march-phase-chip-return",
 };
 
 const MARCH_PURPOSE_LABEL: Record<number, string> = {
@@ -178,6 +196,15 @@ export function formatMarchPhase(phase: number | undefined): string {
   return MARCH_PHASE_LABEL[phase ?? 0] ?? `阶段${phase}`;
 }
 
+export function marchPhaseChipLabel(phase: number | undefined): string {
+  return MARCH_PHASE_CHIP_LABEL[phase ?? 0] ?? `阶段${phase}`;
+}
+
+export function marchPhaseChipClass(phase: number | undefined): string {
+  const p = phase ?? 0;
+  return MARCH_PHASE_CHIP_CLASS[p] ?? "march-phase-chip-unknown";
+}
+
 export function formatMarchPurpose(purpose: number | undefined): string {
   return MARCH_PURPOSE_LABEL[purpose ?? 0] ?? `目的${purpose ?? "?"}`;
 }
@@ -199,13 +226,12 @@ export function formatMarchLine(m: MarchSummary): string {
   return `${primary} · ${meta}`;
 }
 
-/** 行军列表主行：#id · 目的 · 阶段 · 坐标。 */
+/** 行军列表主行：#id · 目的 · 坐标（阶段由列表行 chip 展示）。 */
 export function formatMarchRowPrimaryLine(m: MarchSummary): string {
   const id = m.march_id ?? "?";
   const purpose = formatMarchPurpose(m.purpose);
-  const phase = formatMarchPhase(m.phase);
   const route = formatMarchCoordPair(m.from_x, m.from_y, m.to_x, m.to_y);
-  return `#${id} · ${purpose} · ${phase} · ${route}`;
+  return `#${id} · ${purpose} · ${route}`;
 }
 
 /**

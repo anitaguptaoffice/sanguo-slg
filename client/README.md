@@ -449,23 +449,32 @@ cd client && npm install && npm run dev
 
 ### 手动验收（行军到达与战报未读 CLIENT-025）
 
-`MarchArrivalPoll` 轮询 `ListMarches`：出征后跟踪 `march_id`；行军阶段 **marching(2)→arrived(3)/returning(4)** 或列表中该行消失时，顶栏状态栏出现可点链接 **「行军结束，查看战报」**（`MARCH_ARRIVAL_STATUS_TOAST`）。`BattleReportUnreadSession` 记录上次打开战报面板时的 `report_id` 上界，刷新列表后新增战报计入未读（与 **CLIENT-027** 底栏角标联动）。
+`MarchArrivalPoll` 轮询 `ListMarches`：出征后跟踪 `march_id`；行军阶段 **marching(2)→arrived(3)/returning(4)** 或列表中该行消失时，顶栏状态栏出现 **「行军 #id 已到达 (x,y)」** 文案与可点 **「查看战报」**（`MARCH_ARRIVAL_VIEW_REPORT_LABEL`；列表项带 `report_id` 时深链该战报）。`sessionStorage` 键 `rxsg.client.marchPhaseReminder.ids` 记录本会话已提醒的 `march_id`，避免重复 toast（**CLIENT-085**）。`BattleReportUnreadSession` 记录上次打开战报面板时的 `report_id` 上界，刷新列表后新增战报计入未读（与 **CLIENT-027** 底栏角标联动）。
 
 1. `make dev` 完成 [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013) 步骤 2–3，保持主城场景（无需一直打开「行军」面板）。
-2. 等待行军到达并完成战斗（距离与调度决定耗时；可缩短目标距离）。到达时状态栏应出现 **行军结束，查看战报** 链接。
-3. 点击链接应打开底栏 **「战报」** 面板并触发列表刷新；未打开前底栏 **「战报」** 可出现未读角标（见 [CLIENT-027](#手动验收hud-待办徽章-client-027)）。
-4. 打开战报面板后未读角标清零；再次产生新战报时角标恢复。
-5. 单测：`marchArrival.test.ts`、`marchArrivalPoll.test.ts`、`battleReportUnread.test.ts`、`BattleReportPanel.test.ts`。
+2. 等待行军到达并完成战斗（距离与调度决定耗时；可缩短目标距离）。到达时状态栏应出现 **行军 #… 已到达 (x,y)** 与 **查看战报** 按钮。
+3. 点击 **查看战报** 应打开底栏 **「战报」** 面板并触发列表刷新；未打开前底栏 **「战报」** 可出现未读角标（见 [CLIENT-027](#手动验收hud-待办徽章-client-027)）。
+4. 打开战报面板后未读角标清零；再次产生新战报时角标恢复；同一 `march_id` 在本会话内不应重复弹出到达 toast。
+5. 单测：`marchArrival.test.ts`、`marchArrivalReminder.test.ts`、`marchArrivalPoll.test.ts`、`marchPhaseReminderSession.test.ts`、`battleReportUnread.test.ts`、`BattleReportPanel.test.ts`。
+
+### 手动验收（军情阶段提醒与列表 chips CLIENT-085）
+
+在 **CLIENT-025** 到达提示与 **CLIENT-047** 军情密度之上：`MarchListPanel` 每次 `ListMarches` 刷新会与上一快照对比 `phase`，**行军中→驻扎/返回** 时与后台 `MarchArrivalPoll` 共用同一套提醒与 `sessionStorage` 去重。列表主行左侧展示 phase **chips**（`marchPhaseChipLabel`：**去程/驻扎/返回** 等），主行文案为 `#id · 目的 · 坐标`（阶段不再挤在主行字符串里）；格点筛选与小地图联动行为不退化 **CLIENT-069**。
+
+1. `make dev` 出征一条行军，打开 **「行军」** 面板：行进行中应看到 **去程** chip 与坐标。
+2. 保持面板打开或仅留在主城，待 `phase` 变为 **驻扎** 或 **返回**：HUD 出现一次性到达 toast（含格点）与 **查看战报**；chip 同步变为 **驻扎** 或 **返回**。
+3. 再次 **刷新列表** 或等待下一轮轮询：同一 `march_id` 不应重复 toast（可开 DevTools → Application → Session Storage 查看 `rxsg.client.marchPhaseReminder.ids`）。
+4. 单测：`marchArrivalReminder.test.ts`、`marchPhaseReminderSession.test.ts`、`MarchListPanel.test.ts`（chips 与 `onMarchArrivalReminders`）。
 
 ### 手动验收（行军列表 ETA 与军情密度 CLIENT-047）
 
-`MarchListPanel` 列表行 **主行**（`#id · 目的 · 阶段 · 坐标`）+ **次行**（出发/到达绝对时刻 + `formatMarchRemainingMs` 相对 ETA）。多条行军时 `march-list-compact` 收紧行高；空列表仍用 `march-list-empty`（不退化 **CLIENT-029** 空态）。面板打开且 `marchNeedsPoll` 时：**每 5s** `ListMarches` 刷新列表，**每 1s** 仅更新次行剩余文案（不额外 RPC）；与 **CLIENT-025** `MarchArrivalPoll` 并存。
+`MarchListPanel` 列表行 **主行**（phase chip + `#id · 目的 · 坐标`）+ **次行**（出发/到达绝对时刻 + `formatMarchRemainingMs` 相对 ETA）。多条行军时 `march-list-compact` 收紧行高；空列表仍用 `march-list-empty`（不退化 **CLIENT-029** 空态）。面板打开且 `marchNeedsPoll` 时：**每 5s** `ListMarches` 刷新列表，**每 1s** 仅更新次行剩余文案（不额外 RPC）；与 **CLIENT-025/085** 到达 toast 并存。
 
 1. `make dev` 出征至少一条 **行军中** 行军，打开底栏 **「行军」**。
-2. 主行含目的/阶段/坐标；次行含出发/到达时刻与 **剩余 Nm** 或 **即将到达**（待发/已到达显示阶段文案）。
+2. 主行含 **去程** chip、目的与坐标；次行含出发/到达时刻与 **剩余 Nm** 或 **即将到达**（待发/已到达显示阶段文案）。
 3. 保持面板打开观察约 10s：剩余文案每秒变化，网络面板无额外 `ListMarches`（仅 5s 轮询一次）。
-4. 同时等待行军到达：HUD **行军结束，查看战报** 仍出现（CLIENT-025）。
-5. 单测：`militaryFormat.test.ts`（`formatMarchRemainingMs`）、`MarchListPanel.test.ts`、`panelDensity.test.ts`。
+4. 同时等待行军到达：HUD **行军 #id 已到达** 与 **查看战报** 仍出现（CLIENT-025/085）。
+5. 单测：`militaryFormat.test.ts`（`formatMarchRemainingMs`、`marchPhaseChipLabel`）、`MarchListPanel.test.ts`、`panelDensity.test.ts`。
 
 ### 手动验收（出征表单格点与兵力校验 CLIENT-048）
 

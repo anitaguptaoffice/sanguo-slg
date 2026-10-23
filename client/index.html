@@ -62,10 +62,16 @@
       #hud .hud-wallet-gain {
         color: #9fd89f; font-weight: 600; flex-shrink: 0;
       }
+      #hud .hud-march-arrival-toast {
+        display: inline-flex; align-items: center; gap: 8px;
+        flex-shrink: 0; color: #e8d9a8;
+      }
+      #hud .hud-march-arrival-msg { font-weight: 600; }
       #hud .hud-march-report-toast {
         pointer-events: auto; cursor: pointer;
         color: #e8c547; font-weight: 600; flex-shrink: 0;
         text-decoration: underline; text-underline-offset: 2px;
+        background: none; border: none; padding: 0; font: inherit;
       }
       #hud .hud-center-todo-badge {
         flex-shrink: 0;
@@ -82,6 +88,20 @@
         line-height: 1.2;
         cursor: pointer;
       }
+      .march-row-primary .march-phase-chip {
+        display: inline-block;
+        margin-right: 6px;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        vertical-align: middle;
+      }
+      .march-phase-chip-outbound { background: #3a4a62; color: #9ec5ff; }
+      .march-phase-chip-stationed { background: #3d4a30; color: #b8d89f; }
+      .march-phase-chip-return { background: #4a3d30; color: #e8c090; }
+      .march-phase-chip-pending { background: #3d3830; color: #c9b88a; }
+      .march-phase-chip-unknown { background: #333; color: #aaa; }
       #hud .hud-center-todo-count {
         min-width: 14px;
         padding: 0 4px;

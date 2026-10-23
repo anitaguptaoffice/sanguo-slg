@@ -61,7 +61,8 @@ describe("MarchListPanel", () => {
 
     const row = mount.querySelector(".march-list li[data-march-id]");
     expect(row?.querySelector(".march-row-primary")?.textContent).toContain("攻击");
-    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("行军中");
+    expect(row?.querySelector('[data-role="march-phase-chip"]')?.textContent).toBe("去程");
+    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("攻击");
     expect(row?.querySelector(".march-row-primary")?.textContent).toContain("(1,2)");
     expect(row?.querySelector(".march-row-meta")?.textContent).toContain("出发");
     expect(row?.querySelector(".march-row-meta")?.textContent).toMatch(/剩余|即将到达/);
@@ -225,6 +226,37 @@ describe("MarchListPanel", () => {
       mount.querySelector('.march-list li[data-march-id="11"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
     ).toBe(false);
     expect(sessionStorage.getItem(MARCH_HIGHLIGHT_SESSION_KEY)).toBeNull();
+  });
+
+  it("fires onMarchArrivalReminders when phase changes on refresh", async () => {
+    const gateway = {
+      listMarches: vi
+        .fn()
+        .mockResolvedValueOnce({
+          marches: [{ march_id: 5, phase: 2, to_x: 3, to_y: 4 }],
+          total: 1,
+        })
+        .mockResolvedValueOnce({
+          marches: [{ march_id: 5, phase: 3, to_x: 3, to_y: 4, report_id: 9 }],
+          total: 1,
+        }),
+    };
+    const onMarchArrivalReminders = vi.fn();
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      onMarchArrivalReminders,
+      pollIntervalMs: 60_000,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    await panel.getRoot().querySelector<HTMLButtonElement>('[data-action="refresh-marches"]')!.click();
+    await vi.waitFor(() => expect(onMarchArrivalReminders).toHaveBeenCalled());
+    expect(onMarchArrivalReminders.mock.calls[0][0][0]).toMatchObject({
+      marchId: 5,
+      toX: 3,
+      toY: 4,
+      reportId: 9,
+    });
   });
 
   it("shows error when listMarches fails", async () => {

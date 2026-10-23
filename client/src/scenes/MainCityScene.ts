@@ -53,7 +53,11 @@ import {
 } from "@/net/battleReportReplayCoord";
 import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
-import { MARCH_ARRIVAL_STATUS_TOAST } from "@/net/marchArrival";
+import {
+  formatMarchArrivedStatusMessage,
+  MARCH_ARRIVAL_VIEW_REPORT_LABEL,
+  type MarchArrivalReminder,
+} from "@/net/marchArrival";
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
@@ -165,7 +169,7 @@ export class MainCityScene implements Scene {
   private marchArrivalPoll!: MarchArrivalPoll;
   private readonly battleReportUnread = new BattleReportUnreadSession();
   private readonly marchEndReportHint = new MarchEndBattleReportHint();
-  private marchReportToastActive = false;
+  private marchArrivalHudReminder: MarchArrivalReminder | null = null;
   private walletGainBrief: string | null = null;
   private walletGainUntilMs = 0;
   private layoutFrame!: HTMLElement;
@@ -226,12 +230,7 @@ export class MainCityScene implements Scene {
         };
         return res.marches ?? [];
       },
-      onCompletions: () => {
-        this.marchReportToastActive = true;
-        this.renderHud();
-        void this.hudTodoBadgePoll.pollOnce();
-        void this.seedMarchEndBattleReportHint();
-      },
+      onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
     });
     this.renderHud();
     this.toolbar = document.createElement("div");
@@ -403,6 +402,7 @@ export class MainCityScene implements Scene {
           this.minimapMarches = marches;
           this.world?.refreshMarchDestCounts();
         },
+        onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
         onSelectionChange: (march) => {
           if (march) {
             const tx = march.to_x;
@@ -642,7 +642,7 @@ export class MainCityScene implements Scene {
   }
 
   private openBattleReportsFromDailyBanner(): void {
-    this.marchReportToastActive = false;
+    this.marchArrivalHudReminder = null;
     const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
     void this.battleReports
       .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
@@ -697,7 +697,7 @@ export class MainCityScene implements Scene {
         return;
       }
       if (action === "toggle-reports" && snap.battleReportUnread > 0) {
-        this.marchReportToastActive = false;
+        this.marchArrivalHudReminder = null;
         void this.battleReports
           .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
           .then(() => this.renderHud());
@@ -718,7 +718,7 @@ export class MainCityScene implements Scene {
       this.syncMilitaryPanel();
     }
     if (action === "toggle-reports") {
-      this.marchReportToastActive = false;
+      this.marchArrivalHudReminder = null;
       this.battleReports.toggle();
     }
     if (action === "toggle-marches") this.marchList.toggle();
@@ -1135,15 +1135,39 @@ export class MainCityScene implements Scene {
       span.textContent = text;
       this.hud.appendChild(span);
     }
-    if (this.marchReportToastActive) {
-      const toast = document.createElement("span");
-      toast.className = "hud-group hud-march-report-toast";
-      toast.textContent = MARCH_ARRIVAL_STATUS_TOAST;
-      toast.setAttribute("data-action", "open-march-reports");
-      toast.setAttribute("role", "button");
-      toast.setAttribute("title", "打开战报列表");
-      this.hud.appendChild(toast);
+    if (this.marchArrivalHudReminder) {
+      const wrap = document.createElement("span");
+      wrap.className = "hud-group hud-march-arrival-toast";
+      const msg = document.createElement("span");
+      msg.className = "hud-march-arrival-msg";
+      msg.textContent = formatMarchArrivedStatusMessage(
+        this.marchArrivalHudReminder.marchId,
+        this.marchArrivalHudReminder.toX,
+        this.marchArrivalHudReminder.toY,
+      );
+      wrap.appendChild(msg);
+      const link = document.createElement("button");
+      link.type = "button";
+      link.className = "hud-march-report-toast";
+      link.textContent = MARCH_ARRIVAL_VIEW_REPORT_LABEL;
+      link.setAttribute("data-action", "open-march-reports");
+      link.setAttribute("title", "打开战报列表");
+      wrap.appendChild(link);
+      this.hud.appendChild(wrap);
     }
+  }
+
+  private applyMarchArrivalHudReminders(reminders: MarchArrivalReminder[]): void {
+    if (!reminders.length) return;
+    const last = reminders[reminders.length - 1]!;
+    this.marchArrivalHudReminder = last;
+    if (last.reportId) {
+      this.marchEndReportHint.setReportId(last.reportId);
+    } else {
+      void this.seedMarchEndBattleReportHint();
+    }
+    this.renderHud();
+    void this.hudTodoBadgePoll.pollOnce();
   }
 
   private onHudClick(ev: Event): void {
@@ -1154,8 +1178,10 @@ export class MainCityScene implements Scene {
     }
     const el = (ev.target as HTMLElement).closest('[data-action="open-march-reports"]');
     if (!el) return;
-    this.marchReportToastActive = false;
-    const hint = this.marchEndReportHint.consume();
+    const reportHint =
+      this.marchArrivalHudReminder?.reportId ?? this.marchEndReportHint.peek();
+    this.marchArrivalHudReminder = null;
+    const hint = reportHint ?? this.marchEndReportHint.consume();
     void this.battleReports.openPanelWithDeepLink(hint).then(() => this.renderHud());
     this.renderHud();
   }
