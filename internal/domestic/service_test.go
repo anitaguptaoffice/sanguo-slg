@@ -29,7 +29,9 @@ func TestDomesticCore(t *testing.T) {
 	if err != nil || !res.InProgress {
 		t.Fatal("build")
 	}
-	h.StartBuildingUpgrade(1, "lumber", 3)
+	if _, err := h.StartBuildingUpgrade(1, "lumber", 3); err != nil {
+		t.Fatal(err)
+	}
 	clock = res.FinishAt
 	if h.Tick() != 1 || c.Buildings["farm"].Level != 2 {
 		t.Fatal("farm")
