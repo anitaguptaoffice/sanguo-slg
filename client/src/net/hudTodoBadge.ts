@@ -8,8 +8,12 @@ export const DAILY_QUEST_STATE_ACCEPTABLE = 1;
 export const DAILY_QUEST_STATE_CLAIMABLE = 3;
 
 export type HudTodoBadgeCounts = {
+  /** CLIENT-107：底栏邮件角标（未读∪未领附件去重） */
   mailUnread: number;
+  /** CLIENT-107：底栏日常角标（可领取 state=3） */
   dailyTodo: number;
+  /** CLIENT-107：底栏队列角标（建造进行中槽位） */
+  queueBuilding: number;
   battleReportUnread: number;
 };
 
@@ -32,16 +36,22 @@ export function formatHudBadgeCount(count: number): string {
 export function aggregateHudTodoCounts(parts: {
   mailUnread?: number;
   dailyTodo?: number;
+  queueBuilding?: number;
   battleReportUnread?: number;
 }): HudTodoBadgeCounts {
   return {
     mailUnread: Math.max(0, parts.mailUnread ?? 0),
     dailyTodo: Math.max(0, parts.dailyTodo ?? 0),
+    queueBuilding: Math.max(0, parts.queueBuilding ?? 0),
     battleReportUnread: Math.max(0, parts.battleReportUnread ?? 0),
   };
 }
 
 export type HudTodoDeepLinkSnapshot = HudTodoBadgeCounts & {
+  /** ListPlayerMail unread 筛选 total_count（原始未读条数）。 */
+  mailUnreadTotal: number;
+  /** ListPlayerMail filter=all 首屏，供 CLIENT-107 邮件角标与 CLIENT-077 可领推导。 */
+  mailClaimablePage: MailRow[];
   firstUnreadMailId: number;
   firstDailyTodoCfgId: number;
   firstUnreadBattleReportId: number;
@@ -57,7 +67,10 @@ export type HudTodoDeepLinkSnapshot = HudTodoBadgeCounts & {
 export const EMPTY_HUD_TODO_DEEP_LINK: HudTodoDeepLinkSnapshot = {
   mailUnread: 0,
   dailyTodo: 0,
+  queueBuilding: 0,
   battleReportUnread: 0,
+  mailUnreadTotal: 0,
+  mailClaimablePage: [],
   firstUnreadMailId: 0,
   firstDailyTodoCfgId: 0,
   firstUnreadBattleReportId: 0,

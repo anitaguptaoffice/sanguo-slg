@@ -97,6 +97,7 @@ import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
+import { buildHudCenterTodoCounts } from "@/net/hudTodoBadges";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import {
@@ -238,11 +239,14 @@ export class MainCityScene implements Scene {
         this.session?.player?.server_id ??
         0,
       getCityId: () => this.session?.cityId ?? null,
+      getBuildings: () => this.session?.buildings,
+      getBuildCompleteCount: () => this.buildCompleteTodos.pendingCount(),
       battleReportUnread: this.battleReportUnread,
       isPanelVisible: () => this.isAnyPanelVisible(),
       isMailSuppressed: () => this.heroMail?.isMailOpen() ?? false,
       isDailySuppressed: () => this.dailyQuest?.isOpen() ?? false,
       isReportsSuppressed: () => this.battleReports?.isOpen() ?? false,
+      isQueueSuppressed: () => this.queuePanels?.isOpen() ?? false,
       onCounts: (counts) => this.applyHudTodoBadgeCounts(counts),
     });
     this.marchArrivalPoll = new MarchArrivalPoll({
@@ -277,7 +281,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-hero">将领</button>
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn"><span class="toolbar-btn-label">邮件</span></button>
       <button type="button" data-action="toggle-world">世界</button>
-      <button type="button" data-action="toggle-queue">队列</button>
+      <button type="button" data-action="toggle-queue" data-role="queue-toolbar-btn"><span class="toolbar-btn-label">队列</span></button>
       </div>
       </div>
     `;
@@ -384,8 +388,8 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
-      (count) => {
-        if (!this.heroMail?.isMailOpen()) this.updateMailToolbarBadge(count);
+      () => {
+        if (!this.heroMail?.isMailOpen()) this.hudTodoBadgePoll.recomputeToolbarCounts();
       },
       this.cityStateFetch,
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
@@ -788,7 +792,8 @@ export class MainCityScene implements Scene {
         return;
       }
       if (action === "toggle-daily" && snap.dailyTodo > 0) {
-        this.dailyQuest.openFromTodoBadge(snap.firstDailyTodoCfgId);
+        const cfgId = snap.firstClaimableDailyCfgId || snap.firstDailyTodoCfgId;
+        this.dailyQuest.openFromTodoBadge(cfgId);
         this.updateDailyToolbarBadge(0);
         return;
       }
@@ -835,7 +840,11 @@ export class MainCityScene implements Scene {
       if (!this.heroMail.isMailOpen()) void this.hudTodoBadgePoll.pollOnce();
     }
     if (action === "toggle-world") this.world.toggle();
-    if (action === "toggle-queue") this.queuePanels.toggle();
+    if (action === "toggle-queue") {
+      this.queuePanels.toggle();
+      if (this.queuePanels.isOpen()) this.updateQueueToolbarBadge(0);
+      else this.hudTodoBadgePoll.recomputeToolbarCounts();
+    }
   }
 
   private onMilitaryClick(ev: Event): void {
@@ -1238,6 +1247,8 @@ export class MainCityScene implements Scene {
     if (state.buildings) {
       this.buildCompleteTodos.onCityBuildings(state.buildings);
       this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
+      this.hudTodoBadgePoll?.recomputeToolbarCounts();
+      this.renderHud();
     }
     const beforeWallet = this.session.wallet;
     const afterWallet = state.wallet ?? this.session.wallet;
@@ -1344,11 +1355,11 @@ export class MainCityScene implements Scene {
 
   private centerTodoCountsFromSnapshot(): HudCenterTodoCounts {
     const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    return {
-      mailClaimable: snap.mailClaimable,
-      dailyClaimable: snap.dailyClaimable,
-      buildComplete: this.buildCompleteTodos.pendingCount(),
-    };
+    return buildHudCenterTodoCounts({
+      mailClaimablePage: snap.mailClaimablePage,
+      dailyRows: snap.dailyChainRows,
+      buildCompleteCount: this.buildCompleteTodos.pendingCount(),
+    });
   }
 
   private appendHudCenterTodoBadge(): void {
@@ -1486,9 +1497,13 @@ export class MainCityScene implements Scene {
     } else {
       this.dailyQuest.syncBattleReportUnreadBanner();
     }
+    if (!this.queuePanels?.isOpen()) {
+      this.updateQueueToolbarBadge(counts.queueBuilding);
+    }
     if (!this.battleReports?.isOpen()) {
       this.updateReportsToolbarBadge(counts.battleReportUnread);
     }
+    this.renderHud();
   }
 
   private async refreshState(): Promise<void> {
@@ -1758,7 +1773,7 @@ export class MainCityScene implements Scene {
     setToolbarBadge(
       btn,
       unreadCount,
-      unreadCount > 0 ? `${label} · ${unreadCount} 封未读` : "收件箱",
+      unreadCount > 0 ? `${label} · ${unreadCount} 项待处理（未读/未领）` : "收件箱",
     );
   }
 
@@ -1768,7 +1783,17 @@ export class MainCityScene implements Scene {
     setToolbarBadge(
       btn,
       todoCount,
-      todoCount > 0 ? `${label} · ${todoCount} 项可接/可领` : "日常任务",
+      todoCount > 0 ? `${label} · ${todoCount} 项可领取` : "日常任务",
+    );
+  }
+
+  private updateQueueToolbarBadge(inProgressCount: number): void {
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="queue-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "队列";
+    setToolbarBadge(
+      btn,
+      inProgressCount,
+      inProgressCount > 0 ? `${label} · ${inProgressCount} 槽建造中` : "内政/募兵队列",
     );
   }
 
