@@ -340,6 +340,15 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 1. **刷新** 将领列表：loading + 成功后 `hero-list-refresh-pulse` 短暂高亮；失败走 **CLIENT-067**。
 2. 关闭再开将领面板：`sessionStorage` **`hero-detail-selected-id`** 恢复上次行并滚入视；与 **CLIENT-098** 成功深链写入一致。
 
+### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
+
+在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
+
+1. 点选将领后详情区 **使用养成道具**：仍走 `content.v1.UseConsumable`×1（优先将魂碎晶 2017）；往返中按钮 **disabled** 且 **使用中…**。
+2. 成功：再拉 `GetHeroDetail`，行内展示等级/忠诚变化摘要，详情头 `hero-detail-stat-pulse` 短暂高亮；**CLIENT-072** 进度条与 Δ 列不退化。
+3. 背包无养成消耗品时按钮 **disabled**，`hero-cultivation-disabled-reason` 中文可读；网关失败走 `hero-cultivation-form-error`（**CLIENT-067** 口径）。
+4. 单测：`heroDetailCultivationUse.test.ts`、`useConsumableSubmitFeedback.test.ts`、`HeroMailPanels.test.ts`。
+
 ### 手动验收（战报攻守摘要与排行互链 CLIENT-100）
 
 在 [CLIENT-034](#手动验收战报详情回合表与行军深链-client-034) / [CLIENT-083](#手动验收战报上一封下一封与胜负-streak-client-083) / [CLIENT-094](#手动验收战报相邻导航键盘与焦点环-client-094) 基础上：
