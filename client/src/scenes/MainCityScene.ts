@@ -292,7 +292,8 @@ export class MainCityScene implements Scene {
     );
     this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
-    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
+    skinPrimaryButtons(this.militaryPanel, this.assets);
+    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320, "ui.panel.military.v1");
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
