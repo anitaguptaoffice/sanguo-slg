@@ -4,6 +4,7 @@ import {
   formatResourceAmount,
   formatResourceHudGroup,
   formatResourceProductionRatesBrief,
+  formatResourceSweepLine,
   formatUpgradeRemaining,
   formatUpgradeSummary,
   formatWalletGainBrief,
@@ -28,6 +29,14 @@ describe("hudFormat", () => {
     expect(formatResourceProductionRatesBrief(undefined)).toBeNull();
     expect(formatResourceProductionRatesBrief({ food: 120, wood: 100, iron: 0, stone: 50 })).toBe(
       "粮+120/h · 木+100/h · 铁+0/h · 石+50/h",
+    );
+  });
+
+  it("formats resource sweep line with balances and optional rates", () => {
+    const wallet = { food: 100, wood: 2000, iron: 0, stone: 50 };
+    expect(formatResourceSweepLine(undefined, wallet)).toBe("粮 100 · 木 2,000 · 铁 0 · 石 50");
+    expect(formatResourceSweepLine({ food: 120, wood: 100, iron: 40, stone: 80 }, wallet)).toBe(
+      "粮 100 +120/h · 木 2,000 +100/h · 铁 0 +40/h · 石 50 +80/h",
     );
   });
 
