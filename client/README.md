@@ -332,6 +332,17 @@ cd client && npm install && npm run dev
 5. 完成一次行军到达后点 HUD **行军结束，查看战报**：战报面板打开、列表刷新、**最近战报** 行高亮且详情已加载（若 hint 与列表首条不一致则以 hint 为准）。
 6. 单测：`battleReportRounds.test.ts`、`battleReportDeepLink.test.ts`、`BattleReportPanel.test.ts`。
 
+### 手动验收（战报坐标与小地图复盘 CLIENT-042）
+
+战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情顶栏同样展示坐标与 **「在地图查看」**。点击后读取 summary 既有 `location_x/y`（不扩 proto），主城舞台小地图绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野；关闭战报面板或切换选中战报时清除高亮。小地图折叠时状态栏仍提示坐标。
+
+1. `make dev` 产生至少一条带 `location_x/y` 的战报（见募兵 → 行军）。
+2. 底栏 **「战报」** → 列表行应见金色 **坐标(...)** 行；点开详情顶栏有坐标与 **在地图查看**。
+3. 点击 **在地图查看**：展开小地图时应出现 **战报** 标记与橙红高亮圈，视野自动对准该格点。
+4. 折叠小地图后再次点击 **在地图查看**：状态栏应提示坐标与「展开小地图可查看高亮」。
+5. 关闭战报面板或点另一条战报：小地图临时高亮应消失。
+6. 单测：`battleReportReplayCoord.test.ts`、`worldMinimap.test.ts`、`BattleReportPanel.test.ts`。
+
 ### 手动验收（邮件附件领取 CLIENT-035）
 
 在 [CLIENT-017](#手动验收邮件收件箱client-017) 基础上验收 **未领附件高亮** 与领取后与 **CLIENT-027** HUD 角标一致。
@@ -493,7 +504,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`worldMinimap`（小地图缩放/行军高亮/比例尺/折叠 sessionStorage/多行军描边）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

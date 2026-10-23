@@ -22,6 +22,7 @@ export function drawWorldMinimap(
     view: MinimapView;
     rect?: MinimapLayoutRect;
     collapsed?: boolean;
+    battleReportReplay?: { wx: number; wy: number } | null;
   },
 ): void {
   const collapsed = opts.collapsed ?? false;
@@ -35,11 +36,13 @@ export function drawWorldMinimap(
     opts.selectedMarchId != null
       ? opts.marches.find((m) => m.march_id === opts.selectedMarchId)
       : null;
+  const replayExtra = opts.battleReportReplay ? [opts.battleReportReplay] : [];
   const bounds = computeMinimapWorldBounds(
     opts.ownCityX,
     opts.ownCityY,
     opts.marches,
     selected,
+    replayExtra,
   );
 
   c2d.save();
@@ -126,6 +129,23 @@ export function drawWorldMinimap(
     c2d.fillStyle = "#f0c674";
     c2d.font = "12px system-ui";
     c2d.fillText(caption, rect.x + 8, rect.y + rect.h - 28);
+  }
+
+  const replay = opts.battleReportReplay;
+  if (replay) {
+    const p = worldToMinimapLayout(replay.wx, replay.wy, bounds, rect, opts.view);
+    c2d.beginPath();
+    c2d.strokeStyle = "#ff8a65";
+    c2d.lineWidth = 3;
+    c2d.arc(p.x, p.y, 11, 0, Math.PI * 2);
+    c2d.stroke();
+    c2d.beginPath();
+    c2d.fillStyle = "#ff6b6b";
+    c2d.arc(p.x, p.y, 6, 0, Math.PI * 2);
+    c2d.fill();
+    c2d.fillStyle = "#ffe0d6";
+    c2d.font = "11px system-ui";
+    c2d.fillText("战报", rect.x + 8, rect.y + rect.h - 12);
   }
 
   c2d.restore();

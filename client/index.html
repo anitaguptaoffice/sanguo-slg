@@ -179,8 +179,18 @@
       .battle-outcome-chip.outcome-draw { background: #3a3a30; color: #c9b896; }
       .battle-outcome-chip.outcome-unknown { background: #2a221c; color: #b8a88a; }
       .battle-report-row-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .battle-report-row-coord {
+        font-size: 13px; font-weight: 700; color: #f0c674; letter-spacing: 0.02em;
+      }
       .battle-report-row-foe { font-size: 12px; line-height: 1.35; }
       .battle-report-row-time { font-size: 11px; color: #b8a88a; }
+      .battle-report-detail-head {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #4a3f35;
+      }
+      .battle-report-detail-coord { font-size: 14px; font-weight: 700; color: #f0c674; }
+      .battle-report-detail-foe { font-size: 12px; color: #e8dcc8; flex: 1; min-width: 120px; }
+      .battle-report-detail-head button[data-action="view-on-map"] { font-size: 12px; }
       .battle-report-list li.selected { outline: 2px solid #c9a227; }
       .battle-report-list li[data-report-id] { cursor: pointer; }
       .battle-report-list li[data-report-id]:hover { background: #3d3028; }

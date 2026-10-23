@@ -181,14 +181,21 @@ export function battleReportListLines(reports: BattleReportSummary[]): string[] 
   return reports.map(formatReportLine);
 }
 
-/** 战报列表行：对手/守方摘要（无新 proto 字段时的可读拼接）。 */
-export function formatBattleReportFoeSummary(r: BattleReportSummary): string {
+/** 战报列表行：守方/对手标签（不含坐标，坐标单独突出展示）。 */
+export function formatBattleReportFoeWithoutCoord(r: BattleReportSummary): string {
   const parts: string[] = [];
   if (r.defender_player_id) parts.push(`守方玩家#${r.defender_player_id}`);
   if (r.defender_city_id) parts.push(`城池#${r.defender_city_id}`);
-  const hasCoord = r.location_x != null || r.location_y != null;
-  if (hasCoord) parts.push(formatReportCoord(r));
   return parts.length ? parts.join(" · ") : "对手信息未记录";
+}
+
+/** 战报列表行：对手/守方摘要（无新 proto 字段时的可读拼接）。 */
+export function formatBattleReportFoeSummary(r: BattleReportSummary): string {
+  const foe = formatBattleReportFoeWithoutCoord(r);
+  const hasCoord = r.location_x != null || r.location_y != null;
+  if (!hasCoord) return foe;
+  if (foe === "对手信息未记录") return formatReportCoord(r);
+  return `${foe} · ${formatReportCoord(r)}`;
 }
 
 const OUTCOME_CHIP_CLASS: Record<number, string> = {

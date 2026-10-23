@@ -63,11 +63,14 @@ export function collectMinimapDestMarkers(marches: MarchSummary[]): MinimapMarke
   return out;
 }
 
+export type MinimapWorldPoint = { wx: number; wy: number };
+
 export function computeMinimapWorldBounds(
   ownCityX: number | undefined,
   ownCityY: number | undefined,
   marches: MarchSummary[],
   selected: MarchSummary | null | undefined,
+  extraPoints: MinimapWorldPoint[] = [],
 ): WorldBounds {
   let minX = 0;
   let minY = 0;
@@ -98,6 +101,9 @@ export function computeMinimapWorldBounds(
   if (selected) {
     consider(selected.from_x, selected.from_y);
     consider(selected.to_x, selected.to_y);
+  }
+  for (const p of extraPoints) {
+    consider(p.wx, p.wy);
   }
 
   if (!hasPoint) {
@@ -348,6 +354,45 @@ export function minimapPhaseCaption(phase: number | undefined): string {
 
 export function clampMinimapZoom(zoom: number): number {
   return Math.min(6, Math.max(1, zoom));
+}
+
+const REPLAY_FOCUS_PAD_WORLD = 14;
+
+/** 将视野 pan/zoom 到纳入指定世界点（战报复盘等小地图导航）。 */
+export function computeMinimapViewFramingPoints(
+  bounds: WorldBounds,
+  points: MinimapWorldPoint[],
+  minZoom = 1.5,
+): MinimapView {
+  if (!points.length) return { ...DEFAULT_MINIMAP_VIEW };
+  let minX = points[0].wx;
+  let maxX = points[0].wx;
+  let minY = points[0].wy;
+  let maxY = points[0].wy;
+  for (const p of points) {
+    minX = Math.min(minX, p.wx);
+    maxX = Math.max(maxX, p.wx);
+    minY = Math.min(minY, p.wy);
+    maxY = Math.max(maxY, p.wy);
+  }
+  minX -= REPLAY_FOCUS_PAD_WORLD;
+  maxX += REPLAY_FOCUS_PAD_WORLD;
+  minY -= REPLAY_FOCUS_PAD_WORLD;
+  maxY += REPLAY_FOCUS_PAD_WORLD;
+  const focusSpan = boundsSpan({ minX, minY, maxX, maxY });
+  const baseSpan = boundsSpan(bounds);
+  const zoomW = baseSpan.w / Math.max(1, focusSpan.w);
+  const zoomH = baseSpan.h / Math.max(1, focusSpan.h);
+  const zoom = clampMinimapZoom(Math.max(minZoom, zoomW, zoomH));
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const baseCx = (bounds.minX + bounds.maxX) / 2;
+  const baseCy = (bounds.minY + bounds.maxY) / 2;
+  return {
+    zoom,
+    panWx: cx - baseCx,
+    panWy: cy - baseCy,
+  };
 }
 
 /** 滚轮缩放：以指针下世界点为锚。 */
