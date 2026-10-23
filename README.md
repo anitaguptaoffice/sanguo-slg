@@ -66,6 +66,7 @@ GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM3SocialSmokePath -count=1 
 |---|---|
 | `docs/ARCHITECTURE.md` | 系统架构与域划分 |
 | `docs/ROADMAP.md` | 阶段计划 |
+| `docs/art/` | 横屏布局草案、主城槽位、美术 manifest schema（**DRAFT**） |
 | `spec/rules/` | 玩法规则 |
 | `spec/proto/` | 通信协议 |
 | `spec/db/` | 数据模型 |
