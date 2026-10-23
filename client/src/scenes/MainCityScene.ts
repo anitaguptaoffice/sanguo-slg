@@ -107,6 +107,7 @@ import {
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
+import { MainCityBuildingPanel } from "@/ui/MainCityBuildingPanel";
 import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
@@ -144,6 +145,7 @@ export class MainCityScene implements Scene {
   private world!: WorldPanels;
   private queuePanels!: QueuePanels;
   private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
+  private buildingPanel!: MainCityBuildingPanel;
   private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
@@ -516,8 +518,17 @@ export class MainCityScene implements Scene {
       skinCenterPrimary,
     );
     this.queuePanels.attach();
+    this.buildingPanel = new MainCityBuildingPanel(
+      parent,
+      SLOT_LABEL,
+      () => this.session,
+      (slotKey, buildingCfgId) => void this.startBuildingUpgrade(slotKey, buildingCfgId),
+      (root) => skinMilitaryPanel(root, this.assets, 380, 300),
+    );
+    this.buildingPanel.attach();
     skinPrimaryButtons(this.toolbar, this.assets, "button");
     skinPrimaryButtons(this.militaryPanel, this.assets);
+    skinMilitaryPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
     skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
     skinMilitaryPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
@@ -614,6 +625,7 @@ export class MainCityScene implements Scene {
     this.dailyQuest?.detach();
     this.world?.detach();
     this.queuePanels?.detach();
+    this.buildingPanel?.detach();
     this.slotUpgradeOverlay?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
@@ -687,7 +699,11 @@ export class MainCityScene implements Scene {
         return;
       }
     }
-    if (action === "upgrade-farm") void this.upgradeFarm();
+    if (action === "upgrade-farm") {
+      this.buildingPanel.selectSlot("farm");
+      this.status = "建造：农田";
+      this.renderHud();
+    }
     if (action === "refresh") void this.refreshState();
     if (action === "toggle-military") {
       this.militaryPanel.classList.toggle("hidden");
@@ -929,11 +945,9 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    if (top.slot_key === "farm") void this.upgradeFarm();
-    else {
-      this.status = `选中 ${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
-      this.renderHud();
-    }
+    this.buildingPanel.selectSlot(top.slot_key);
+    this.status = `建造：${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
+    this.renderHud();
   }
 
   private pointInRect(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): boolean {
@@ -1038,9 +1052,13 @@ export class MainCityScene implements Scene {
     if (patch.wallet !== undefined || patch.bag !== undefined) {
       this.heroMail?.refreshRecruitAffordability();
     }
+    if (patch.wallet !== undefined || patch.buildings !== undefined) {
+      this.buildingPanel?.sync();
+    }
   }
 
   private isAnyPanelVisible(): boolean {
+    if (this.buildingPanel?.isOpen()) return true;
     if (!this.militaryPanel.classList.contains("hidden")) return true;
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
   }
@@ -1261,27 +1279,34 @@ export class MainCityScene implements Scene {
     this.syncMilitaryPanel();
   }
 
-  private async upgradeFarm(): Promise<void> {
+  private async startBuildingUpgrade(slotKey: string, buildingCfgId: number): Promise<void> {
     if (!this.session) return;
-    const farm = this.session.buildings.find((b) => b.slot_key === "farm");
-    const cfgId = farm?.building_cfg_id ?? 2;
-    this.status = "升级请求中…";
+    const label = SLOT_LABEL[slotKey] ?? slotKey;
+    this.status = `${label} 升级请求中…`;
+    this.buildingPanel.setFormError(null);
     this.renderHud();
     try {
-      const res = (await this.gateway.startBuildingUpgrade(this.session.cityId, "farm", cfgId)) as {
+      const res = (await this.gateway.startBuildingUpgrade(
+        this.session.cityId,
+        slotKey,
+        buildingCfgId,
+      )) as {
         wallet?: ResourceWallet;
         building?: CityBuilding;
       };
       if (res.wallet) this.session.wallet = res.wallet;
       if (res.building) {
-        const idx = this.session.buildings.findIndex((b) => b.slot_key === "farm");
+        const idx = this.session.buildings.findIndex((b) => b.slot_key === slotKey);
         if (idx >= 0) this.session.buildings[idx] = res.building;
         else this.session.buildings.push(res.building);
       }
       await this.refreshState();
-      this.status = "农田已排队升级";
+      this.status = `${label} 已排队升级`;
+      this.buildingPanel.sync();
     } catch (e) {
-      this.status = (e as Error).message;
+      const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      this.buildingPanel.setFormError(msg);
+      this.status = msg;
     }
     this.renderHud();
   }

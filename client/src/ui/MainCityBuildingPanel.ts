@@ -1,0 +1,144 @@
+import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import { buildingBySlot } from "@/net/hudFormat";
+import { previewUpgradeCost } from "@/net/previewUpgradeCost";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+
+export type MainCityBuildingPanelReskin = (root: HTMLElement) => void;
+
+export class MainCityBuildingPanel {
+  private panel!: HTMLElement;
+  private selectedSlotKey: string | null = null;
+
+  constructor(
+    private readonly mount: HTMLElement,
+    private readonly slotLabels: Record<string, string>,
+    private readonly getSession: () => MainCitySession | null,
+    private readonly onUpgrade: (slotKey: string, buildingCfgId: number) => void,
+    private readonly reskin?: MainCityBuildingPanelReskin,
+  ) {}
+
+  attach(): void {
+    this.panel = document.createElement("div");
+    this.panel.className = "building-panel hidden";
+    this.panel.dataset.centerPanel = "building";
+    this.panel.innerHTML = `
+      <h3 data-role="build-title">建造</h3>
+      <div class="panel-scroll-body">
+        <p class="building-level-line" data-role="build-level"></p>
+        <p class="building-upgrade-preview" data-role="build-preview"></p>
+        <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" disabled>
+          升级
+        </button>
+      </div>
+    `;
+    this.mount.appendChild(this.panel);
+    this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.reskin?.(this.panel);
+  }
+
+  detach(): void {
+    this.panel?.remove();
+  }
+
+  getRoot(): HTMLElement {
+    return this.panel;
+  }
+
+  isOpen(): boolean {
+    return !!this.panel && !this.panel.classList.contains("hidden");
+  }
+
+  close(): void {
+    this.panel?.classList.add("hidden");
+    this.selectedSlotKey = null;
+  }
+
+  selectSlot(slotKey: string): void {
+    this.selectedSlotKey = slotKey.trim() || null;
+    this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
+    this.render();
+    resetCenterPanelViewportScroll(this.panel);
+  }
+
+  sync(): void {
+    if (!this.isOpen() || !this.selectedSlotKey) return;
+    this.render();
+  }
+
+  setFormError(message: string | null): void {
+    const el = this.panel?.querySelector('[data-role="build-form-error"]');
+    if (!el) return;
+    if (message?.trim()) {
+      el.textContent = message;
+      el.classList.remove("hidden");
+    } else {
+      el.textContent = "";
+      el.classList.add("hidden");
+    }
+  }
+
+  private buildingForSlot(slotKey: string): CityBuilding | undefined {
+    return buildingBySlot(this.getSession()?.buildings, slotKey);
+  }
+
+  private wallet(): ResourceWallet | undefined {
+    return this.getSession()?.wallet;
+  }
+
+  render(): void {
+    if (!this.panel) return;
+    const slotKey = this.selectedSlotKey;
+    const titleEl = this.panel.querySelector('[data-role="build-title"]');
+    const levelEl = this.panel.querySelector('[data-role="build-level"]');
+    const previewEl = this.panel.querySelector('[data-role="build-preview"]');
+    const btn = this.panel.querySelector<HTMLButtonElement>('[data-action="confirm-upgrade"]');
+    if (!slotKey || !titleEl || !levelEl || !previewEl || !btn) return;
+
+    const label = this.slotLabels[slotKey] ?? slotKey;
+    titleEl.textContent = label;
+    const building = this.buildingForSlot(slotKey);
+    const level = building?.level ?? 0;
+    const now = Date.now();
+    const upgrading = (building?.upgrade_finish_at_ms ?? 0) > now;
+
+    levelEl.textContent = level > 0 ? `当前 Lv${level}` : "未建造";
+
+    if (upgrading) {
+      previewEl.textContent = "升级进行中，见「队列」面板";
+      btn.disabled = true;
+      this.setFormError(null);
+      return;
+    }
+
+    const preview = previewUpgradeCost(slotKey, level, this.wallet());
+    if (!preview) {
+      previewEl.textContent = "暂无升级配置";
+      btn.disabled = true;
+      this.setFormError(null);
+      return;
+    }
+
+    previewEl.textContent = preview.summaryLine;
+    btn.disabled = !preview.canAfford;
+    this.setFormError(preview.insufficientHint);
+  }
+
+  private onClick(ev: Event): void {
+    const btn = (ev.target as HTMLElement).closest("button");
+    if (!btn || btn.getAttribute("data-action") !== "confirm-upgrade") return;
+    const slotKey = this.selectedSlotKey;
+    if (!slotKey || btn.disabled) return;
+    const building = this.buildingForSlot(slotKey);
+    const level = building?.level ?? 0;
+    const preview = previewUpgradeCost(slotKey, level, this.wallet());
+    if (!preview?.canAfford) {
+      this.setFormError(preview?.insufficientHint ?? "资源不足");
+      this.render();
+      return;
+    }
+    this.setFormError(null);
+    this.onUpgrade(slotKey, preview.buildingCfgId);
+  }
+}
