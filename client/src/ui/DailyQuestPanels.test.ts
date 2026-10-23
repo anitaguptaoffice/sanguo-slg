@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
+import { DAILY_QUEST_FILTER_SESSION_KEY } from "@/net/dailyQuestListFilter";
 import { DAILY_QUEST_CHAIN_ID } from "@/net/dailyQuestState";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 
@@ -326,6 +327,65 @@ describe("DailyQuestPanels", () => {
     expect(tag?.textContent).toBe("邮件");
     tag?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(onOpenMail).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters dailies by state and persists filter in sessionStorage", async () => {
+    const storage = {
+      data: {} as Record<string, string>,
+      getItem(k: string) {
+        return this.data[k] ?? null;
+      },
+      setItem(k: string, v: string) {
+        this.data[k] = v;
+      },
+      removeItem(k: string) {
+        delete this.data[k];
+      },
+      clear() {
+        this.data = {};
+      },
+      key: () => null,
+      length: 0,
+    };
+    vi.stubGlobal("sessionStorage", storage);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          { quest_cfg_id: 1010, chain_id: 400, state: 2, quest_code: "daily_train_1" },
+          { quest_cfg_id: 1012, chain_id: 400, state: 4, quest_code: "daily_food_1" },
+          { quest_cfg_id: 1013, chain_id: 400, state: 3, quest_code: "daily_wood_1" },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const summary = mount.querySelector('[data-role="daily-state-summary"]');
+    expect(summary?.textContent).toContain("进行中 1");
+    expect(summary?.textContent).toContain("可领取 1");
+    const rows = () =>
+      Array.from(mount.querySelectorAll("li[data-quest-cfg-id]")).map((el) =>
+        el.getAttribute("data-quest-cfg-id"),
+      );
+    expect(rows()).toEqual(["1010", "1013", "1012"]);
+    mount
+      .querySelector('[data-action="daily-filter"][data-filter="claimable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(rows()).toEqual(["1013"]);
+    expect(storage.data[DAILY_QUEST_FILTER_SESSION_KEY]).toBe("claimable");
+    vi.unstubAllGlobals();
   });
 
   it("openFromTodoBadge highlights first acceptable daily", async () => {

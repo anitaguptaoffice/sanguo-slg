@@ -23,8 +23,12 @@ import {
   mergeRecruitTemplateOwnership,
   parseRecruitTemplates,
   recruitTemplateListLines,
+  compareHeroDetailToTemplate,
+  filterHeroCultivationBagItemIds,
+  formatHeroAttributeDelta,
   renderHeroDetailMarkup,
   requireHeroIdForDetail,
+  resolveHeroDetailUpgradeProgress,
   upsertMailRow,
 } from "@/net/heroMailState";
 
@@ -231,9 +235,12 @@ describe("heroMailState", () => {
     const html = renderHeroDetailMarkup({
       hero_id: 3,
       template_name: "玄德",
+      template_cfg_id: 1001,
       level: 5,
       rarity: 5,
       loyalty: 80,
+      loyalty_min: 0,
+      loyalty_max: 100,
       attributes: { force: 60, intel: 70, politics: 50, command: 90 },
     });
     expect(html).toContain("hero-detail-name");
@@ -242,5 +249,49 @@ describe("heroMailState", () => {
     expect(html).toContain("hero-attr-table");
     expect(html).toContain('style="width:90%"');
     expect(html).toContain("统率");
+    expect(html).toContain("hero-upgrade-progress");
+    expect(html).toContain("hero-goto-recruit");
+    expect(html).toContain("hero-attr-delta-pos");
+    expect(html).toContain("+12");
+  });
+
+  it("compareHeroDetailToTemplate computes four-attribute deltas", () => {
+    const { rows, hasBaseline } = compareHeroDetailToTemplate(
+      {
+        hero_id: 1,
+        template_cfg_id: 1001,
+        attributes: { force: 75, intel: 75, politics: 90, command: 80 },
+      },
+      { template_cfg_id: 1001 },
+    );
+    expect(hasBaseline).toBe(true);
+    expect(rows.find((r) => r.key === "force")?.delta).toBe(3);
+    expect(rows.find((r) => r.key === "politics")?.delta).toBe(2);
+    expect(formatHeroAttributeDelta(-2)).toBe("-2");
+    expect(formatHeroAttributeDelta(0)).toBe("0");
+  });
+
+  it("resolveHeroDetailUpgradeProgress prefers exp then loyalty bars", () => {
+    const withExp = resolveHeroDetailUpgradeProgress({
+      hero_id: 1,
+      level: 3,
+      exp_current: 40,
+      exp_to_next: 100,
+      loyalty: 50,
+      loyalty_min: 0,
+      loyalty_max: 100,
+    });
+    expect(withExp.mode).toBe("bars");
+    if (withExp.mode === "bars") {
+      expect(withExp.bars.map((b) => b.kind)).toEqual(["level_exp", "loyalty"]);
+    }
+    const fallback = resolveHeroDetailUpgradeProgress({ hero_id: 1, level: 2, loyalty: 88 });
+    expect(fallback).toEqual({ mode: "fallback", summary: "Lv2 · 忠诚 88" });
+  });
+
+  it("filterHeroCultivationBagItemIds keeps known consumables with qty", () => {
+    expect(filterHeroCultivationBagItemIds([{ item_cfg_id: 2017, quantity: 2 }, { item_cfg_id: 2001, quantity: 5 }])).toEqual([
+      2017,
+    ]);
   });
 });
