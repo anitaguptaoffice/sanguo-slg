@@ -33,6 +33,24 @@ export type GatewayPort = {
   ): Promise<unknown>;
   listBattleReports(limit?: number, offset?: number): Promise<unknown>;
   getBattleReport(reportId: number): Promise<unknown>;
+  listGameServers(page?: number, pageSize?: number): Promise<unknown>;
+  enterGameServer(serverId: number): Promise<unknown>;
+  sendChatMessage(
+    serverId: number,
+    channel: number,
+    content: string,
+    opts?: { recipientPlayerId?: number; guildId?: number },
+  ): Promise<unknown>;
+  listChatMessages(
+    serverId: number,
+    channel: number,
+    opts?: { peerPlayerId?: number; guildId?: number; limit?: number },
+  ): Promise<unknown>;
+  createGuild(serverId: number, name: string): Promise<unknown>;
+  joinGuild(serverId: number, guildId: number): Promise<unknown>;
+  listGuildMembers(serverId: number, guildId: number, page?: number): Promise<unknown>;
+  getLeaderboard(serverId: number, type: number, page?: number, pageSize?: number): Promise<unknown>;
+  getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
 };
@@ -40,6 +58,7 @@ export type GatewayPort = {
 export class GatewayClient implements GatewayPort {
   private ws: WebSocket | null = null;
   private sessionId = "";
+  private boundServerId = 0;
 
   constructor(private readonly url = GATEWAY_WS_URL) {}
 
@@ -63,6 +82,10 @@ export class GatewayClient implements GatewayPort {
     return this.sessionId;
   }
 
+  getBoundServerId(): number {
+    return this.boundServerId;
+  }
+
   async register(loginName: string, password: string) {
     const { RegisterResponse } = getTypes();
     return this.rpc(Routes.Register, "RegisterRequest", { login_name: loginName, password }, RegisterResponse, false);
@@ -78,7 +101,122 @@ export class GatewayClient implements GatewayPort {
       false,
     )) as { session_id: string };
     this.sessionId = data.session_id;
+    this.boundServerId = serverId;
     return data;
+  }
+
+  async listGameServers(page = 1, pageSize = 20) {
+    const { ListGameServersResponse } = getTypes();
+    const withSession = this.sessionId !== "";
+    return this.rpc(
+      Routes.ListGameServers,
+      "ListGameServersRequest",
+      { page, page_size: pageSize },
+      ListGameServersResponse,
+      withSession,
+    );
+  }
+
+  async enterGameServer(serverId: number) {
+    const { EnterGameServerResponse } = getTypes();
+    const data = (await this.rpc(
+      Routes.EnterGameServer,
+      "EnterGameServerRequest",
+      { server_id: serverId },
+      EnterGameServerResponse,
+      true,
+    )) as { session_id?: string; server_id?: number };
+    if (data.session_id) this.sessionId = data.session_id;
+    this.boundServerId = data.server_id ?? serverId;
+    return data;
+  }
+
+  async sendChatMessage(
+    serverId: number,
+    channel: number,
+    content: string,
+    opts: { recipientPlayerId?: number; guildId?: number } = {},
+  ) {
+    const { SendChatMessageResponse } = getTypes();
+    return this.rpc(
+      Routes.SendChatMessage,
+      "SendChatMessageRequest",
+      {
+        server_id: serverId,
+        channel,
+        content,
+        recipient_player_id: opts.recipientPlayerId ?? 0,
+        guild_id: opts.guildId ?? 0,
+      },
+      SendChatMessageResponse,
+      true,
+    );
+  }
+
+  async listChatMessages(
+    serverId: number,
+    channel: number,
+    opts: { peerPlayerId?: number; guildId?: number; limit?: number } = {},
+  ) {
+    const { ListChatMessagesResponse } = getTypes();
+    return this.rpc(
+      Routes.ListChatMessages,
+      "ListChatMessagesRequest",
+      {
+        server_id: serverId,
+        channel,
+        peer_player_id: opts.peerPlayerId ?? 0,
+        guild_id: opts.guildId ?? 0,
+        before_message_id: 0,
+        limit: opts.limit ?? 30,
+      },
+      ListChatMessagesResponse,
+      true,
+    );
+  }
+
+  async createGuild(serverId: number, name: string) {
+    const { CreateGuildResponse } = getTypes();
+    return this.rpc(
+      Routes.CreateGuild,
+      "CreateGuildRequest",
+      { server_id: serverId, name },
+      CreateGuildResponse,
+      true,
+    );
+  }
+
+  async joinGuild(serverId: number, guildId: number) {
+    const { JoinGuildResponse } = getTypes();
+    return this.rpc(
+      Routes.JoinGuild,
+      "JoinGuildRequest",
+      { server_id: serverId, guild_id: guildId },
+      JoinGuildResponse,
+      true,
+    );
+  }
+
+  async listGuildMembers(serverId: number, guildId: number, page = 1) {
+    const { ListGuildMembersResponse } = getTypes();
+    return this.rpc(
+      Routes.ListGuildMembers,
+      "ListGuildMembersRequest",
+      { server_id: serverId, guild_id: guildId, page, page_size: 50 },
+      ListGuildMembersResponse,
+      true,
+    );
+  }
+
+  async getLeaderboard(serverId: number, type: number, page = 1, pageSize = 20) {
+    const { GetLeaderboardResponse } = getTypes();
+    return this.rpc(
+      Routes.GetLeaderboard,
+      "GetLeaderboardRequest",
+      { server_id: serverId, type, page, page_size: pageSize },
+      GetLeaderboardResponse,
+      true,
+    );
   }
 
   async listPlayerCities() {
@@ -181,6 +319,7 @@ export class GatewayClient implements GatewayPort {
         payload,
         trace_id: traceId,
         session_id: withSession ? this.sessionId : "",
+        server_id: withSession ? this.boundServerId : 0,
       }),
     ).finish();
     const reply = await this.sendAndWait(packet, traceId);
@@ -218,5 +357,6 @@ export class GatewayClient implements GatewayPort {
     this.ws?.close();
     this.ws = null;
     this.sessionId = "";
+    this.boundServerId = 0;
   }
 }

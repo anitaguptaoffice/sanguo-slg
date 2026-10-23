@@ -1,7 +1,7 @@
 import { AssetLoader } from "@/engine/AssetLoader";
 import { SceneManager } from "@/engine/SceneManager";
 import { GatewayClient } from "@/net/GatewayClient";
-import { LoginScene } from "@/scenes/LoginScene";
+import { ServerSelectScene } from "@/scenes/ServerSelectScene";
 import { MainCityScene } from "@/scenes/MainCityScene";
 
 export class GameApp {
@@ -15,7 +15,7 @@ export class GameApp {
     private readonly canvas: HTMLCanvasElement,
     private readonly hud: HTMLElement,
   ) {
-    this.scenes.register(new LoginScene());
+    this.scenes.register(new ServerSelectScene());
     this.scenes.register(new MainCityScene());
   }
 
@@ -29,7 +29,7 @@ export class GameApp {
       assets: this.assets,
       switchScene: async (_n: string, _d?: unknown) => {},
     };
-    await this.scenes.switch("login", ctx);
+    await this.scenes.switch("serverSelect", ctx);
     this.last = performance.now();
     const loop = (now: number) => {
       const dt = (now - this.last) / 1000;

@@ -1,8 +1,8 @@
-# H5 客户端（CLIENT-001 / CLIENT-002 / CLIENT-003）
+# H5 客户端（CLIENT-001 ~ CLIENT-004）
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
 
-**注册/登录 → 拉城/建城 → 主城建筑与资源 → 建造/升级 → 募兵 → 出征 → 战报列表/详情**
+**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事）→ 世界/私聊 → 军团 → 战力排行**
 
 ## 网关地址
 
@@ -25,7 +25,15 @@ cd client && npm install && npm run dev
 # 浏览器 http://localhost:5173
 ```
 
-默认账号：`demo` / `demo123`，`server_id=1`。
+默认账号：`demo` / `demo123`。启动后先在 **选服界面** 点选服务器再「进入游戏」。
+
+### 手动验收（M3：选服 / 聊天 / 军团 / 排行）
+
+1. 连接 `make dev` 后打开 H5，选服列表应出现至少 `S1`（dev 服 1）。
+2. 进入主城后点 **「聊天」**：世界频道发一条消息并点「刷新」应能看到记录；私聊需填对方 `player_id`。
+3. 点 **「军团」**：输入名称「创建军团」，或填已有 `guild_id` 加入，再「刷新成员」。
+4. 点 **「排行」**：「刷新战力榜」应列出榜单，并显示 **我的名次**（未上榜时显示战力与「未上榜」）。
+5. M2 军事/内政仍可用：**「军事」**、**「升级农田」** 等。
 
 ### 手动验收（募兵 → 行军 → 战报）
 
@@ -37,14 +45,12 @@ cd client && npm install && npm run dev
 
 ## 仅 mock 网关
 
-`mock-server` 实现 `Login` 与军事路由的**即时**桩（募兵无队列、战报需自行在 mock 里预置或仅测 UI 编码）。适合离线看军事面板布局。
+`mock-server` 实现 `Login`、**选服/进服**、**聊天/军团/排行** 与军事路由的**即时**桩（募兵无队列）。另含最简建城/内政桩以便进主城；完整内政请连 `make dev`。
 
 ```bash
 cd client && npm run mock:gateway   # ws://127.0.0.1:19090/ws
 VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 ```
-
-mock **不**实现建城/升级；完整内政请连 `make dev`。
 
 ## 验证
 
@@ -58,6 +64,7 @@ cd client && npm test && npm run build
 
 - `src/engine/` — `GameApp`、场景管理、占位 `AssetLoader`
 - `src/net/` — `GatewayClient`、`bootstrapSession`、`militaryFormat`、proto 加载
-- `src/scenes/` — 登录、主城（含军事面板）
+- `src/scenes/` — 选服、主城（军事 + M3 社交面板）
+- `src/ui/` — 聊天/军团/排行 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock
