@@ -446,20 +446,20 @@ H5 人工验收与 **INTG-023** 网关冒烟对齐，见 [client/README.md](../c
 
 ## Wave 27 H5 筛选列表·邮件日常军情战报可读加深 — **规划中**
 
-**策略**：在 wave:26 **背包/商城/将领/出征募兵提交脉冲 / ART-TOOLBAR-ICONS-007 / 1280 经济军事 manifest** 收口后，**轮转**加深尚未同题堆叠的 **ART-UI-FILTER-008 工程挂载与运行时接线**（对照 ART-TOOLBAR **#482** `f1a3888a`；Draft [**#506**](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) 只读、**永不合并** #506/#481/#444/#108/#100/#77/#82）、**邮件/日常/军情/战报筛选 chip + 列表行九宫 + badge.dot/count 可读**（契约 **9** asset id / **18** PNG；count 固定 **20×16** 文案 **1–9/9+**；chip 命中 **≥44px** 工程补）、**1280 筛选条不裁切与列表滚动不挡底栏**；网关 **INTG-024** 复跑 smoke（保留 INTG-023，按本波客户端轻量扩展邮件未读/附件、日常可领、军情 phase、战报 outcome 摘要）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划 PR 合入后由 `tasks_sync` 创建 Issue；main tip 参考 `6c9d66cd`（#507 DOCS-EXIT-018）。
+**策略**：在 wave:26 **背包/商城/将领/出征募兵提交脉冲 / ART-TOOLBAR-ICONS-007 / 1280 经济军事 manifest** 收口后，**轮转**加深尚未同题堆叠的 **ART-UI-FILTER-008 工程挂载与运行时接线**（对照 ART-TOOLBAR **#482** `f1a3888a`；Draft [**#506**](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) 只读、**永不合并** #506/#481/#444/#108/#100/#77/#82）、**邮件/日常/军情/战报筛选 chip + 列表行九宫 + badge.dot/count 可读**（契约 **9** asset id / **18** PNG；count 固定 **20×16** 文案 **1–9/9+**；chip 命中 **≥44px** 工程补）、**1280 筛选条不裁切与列表滚动不挡底栏**；网关 **INTG-024** 复跑 smoke（保留 INTG-023，按本波客户端轻量扩展邮件未读/附件、日常可领、军情 phase、战报 outcome 摘要）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog [#508](https://github.com/anitaguptaoffice/sanguo-slg/pull/508)（`ffd8bb51`）合入后由 `tasks_sync` 创建 Issue（[Actions 全量 sync](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/40041007668)）。
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| _待 sync_ | CLIENT-120 | 待 sync | ART-UI-FILTER-008 工程挂载 |
-| _待 sync_ | CLIENT-121 | 待 sync | chip 运行时 + ≥44px |
-| _待 sync_ | CLIENT-122 | 待 sync | 邮件筛选/行/角标 |
-| _待 sync_ | CLIENT-123 | 待 sync | 日常筛选/行/角标 |
-| _待 sync_ | CLIENT-124 | 待 sync | 军情筛选/行 |
-| _待 sync_ | CLIENT-125 | 待 sync | 战报筛选/行 |
-| _待 sync_ | CLIENT-126 | 待 sync | badge.dot/count 统一 |
-| _待 sync_ | CLIENT-127 | 待 sync | 1280 筛选列表 manifest |
-| _待 sync_ | INTG-024 | 待 sync | 网关冒烟 |
-| _待 sync_ | DOCS-EXIT-019 | blocked | 文档收口 |
+| [#510](https://github.com/anitaguptaoffice/sanguo-slg/issues/510) | CLIENT-120 | 规划中 | ART-UI-FILTER-008 工程挂载 |
+| [#511](https://github.com/anitaguptaoffice/sanguo-slg/issues/511) | CLIENT-121 | 规划中 | chip 运行时 + ≥44px |
+| [#512](https://github.com/anitaguptaoffice/sanguo-slg/issues/512) | CLIENT-122 | 规划中 | 邮件筛选/行/角标 |
+| [#513](https://github.com/anitaguptaoffice/sanguo-slg/issues/513) | CLIENT-123 | 规划中 | 日常筛选/行/角标 |
+| [#514](https://github.com/anitaguptaoffice/sanguo-slg/issues/514) | CLIENT-124 | 规划中 | 军情筛选/行 |
+| [#515](https://github.com/anitaguptaoffice/sanguo-slg/issues/515) | CLIENT-125 | 规划中 | 战报筛选/行 |
+| [#516](https://github.com/anitaguptaoffice/sanguo-slg/issues/516) | CLIENT-126 | 规划中 | badge.dot/count 统一 |
+| [#517](https://github.com/anitaguptaoffice/sanguo-slg/issues/517) | CLIENT-127 | 规划中 | 1280 筛选列表 manifest |
+| [#518](https://github.com/anitaguptaoffice/sanguo-slg/issues/518) | INTG-024 | 规划中 | 网关冒烟 |
+| [#519](https://github.com/anitaguptaoffice/sanguo-slg/issues/519) | DOCS-EXIT-019 | 待依赖 | 文档收口 |
 
 **wave:19 美术轨旁路（非 wave:27 backlog 实现卡，不阻塞本波收口）**：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:27 backlog 实现卡）。wave:27 实现卡 **CLIENT-120～127**，**勿占用 CLIENT-064**。
 
