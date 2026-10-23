@@ -423,6 +423,17 @@ cd client && npm install && npm run dev
 6. 军事面板仍仅有出征表单（**无** 取消行军/加速按钮）；[世界坐标 CLIENT-015](#手动验收世界坐标-client-015) 填入出征目标流程不退化。
 7. 单测：`worldMinimap.test.ts`、`MarchListPanel` 选中用例；`cd client && npm test`。
 
+### 手动验收（小地图与军情互选 CLIENT-090）
+
+在 [CLIENT-028](#手动验收世界地图行军标注-client-028)、[CLIENT-080](#手动验收军情阶段提醒与列表-chips-client-085) 与 [CLIENT-069](#手动验收军情格点筛选-client-069) 基础上，小地图目的点与 **行军** 列表 **双向同步**（纯客户端，无新 military RPC）：
+
+1. **军情 → 小地图**：底栏 **「行军」** 点击一行，该行应带 `march-list-row-selected` 轮廓；小地图 **目的格** 与该行 `to_x/to_y` 加亮（`drawWorldMinimap` 的 `selectedMarchId` 标注层），连线加粗（CLIENT-037）。
+2. **小地图 → 军情**：展开小地图，点击 **行军目的点**（非空白）：应打开/聚焦 **行军** 面板并选中对应 `march_id` 行（同格多条时仍为 **首条**，CLIENT-037）；空白单击仍只填出征坐标（CLIENT-041），ETA 角标不退化（CLIENT-058）。
+3. **sessionStorage**：`minimap-march-focus-id` 记录当前互选 `march_id`；`march-highlight-id`（CLIENT-080 新出征扫读）独立并存、互不清除——规则见 `minimapMarchFocus.ts` 与 `minimapMarchFocus.test.ts`。
+4. 刷新页面后，小地图拉取 `ListMarches` 后应恢复上次互选行军的高亮（面板可未打开）。
+5. **格点筛选**（世界选中格 / 手动坐标）与上述互选并存，筛选仍只过滤列表行、不改网关请求。
+6. `cd client && npm test` 含 `minimapMarchFocus.test.ts` 与 `MarchListPanel` 焦点恢复用例。
+
 ### 手动验收（小地图比例尺与多行军 CLIENT-037）
 
 在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上：
