@@ -31,7 +31,7 @@ func smokeStep(t *testing.T, name string) {
 	t.Logf("smoke step: %s (server_id=1)", name)
 }
 
-// TestM4ContentSmokePath: 接任务 → 推进 → 领奖入背包 → 商城购买 → GM 发奖（INTG-004）。
+// TestM4ContentSmokePath: 接任务 → 推进 → 领奖入背包 → 商城购买 → GM 发奖（INTG-004 / DATA-002 cfg 子集）。
 func TestM4ContentSmokePath(t *testing.T) {
 	pool := openDB(t)
 	ctx := context.Background()
@@ -42,6 +42,7 @@ func TestM4ContentSmokePath(t *testing.T) {
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
+	applyData002CoreSubsetSeeds(t, ctx, pool)
 	store := world.NewPGStore(pool)
 	if err := world.InitServerMap(ctx, store, 1); err != nil {
 		t.Fatal(err)

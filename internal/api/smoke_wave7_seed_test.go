@@ -10,8 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// DATA-001 core subset SQL (spec/data/generated). Order respects cfg_item before shop offers.
-var wave7SeedFiles = []string{
+// DATA-002 core subset SQL (spec/data/generated). Order respects cfg_item before shop offers.
+var data002SeedFiles = []string{
 	"cfg_item.sql",
 	"cfg_quest.sql",
 	"cfg_shop.sql",
@@ -21,10 +21,10 @@ var wave7SeedFiles = []string{
 	"cfg_unit.sql",
 }
 
-func applyWave7CoreSubsetSeeds(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+func applyData002CoreSubsetSeeds(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	t.Helper()
 	root := filepath.Join(runtime.RepoRoot(), "spec", "data", "generated")
-	for _, name := range wave7SeedFiles {
+	for _, name := range data002SeedFiles {
 		body, err := os.ReadFile(filepath.Join(root, name))
 		if err != nil {
 			t.Fatalf("read seed %s: %v", name, err)

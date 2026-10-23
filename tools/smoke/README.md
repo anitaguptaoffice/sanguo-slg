@@ -2,30 +2,52 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-006 / INTG-005 长测（含进程重启模拟）。
 
-## Wave7 对齐复跑（INTG-005，推荐）
+## DATA-002 对齐复跑（INTG-006，推荐）
 
-DATA-001 核心子集 cfg + 商城真扣 `player_wallet` + 任务/背包/限购/禁言 PG 持久化，并在同一用例内模拟进程重启后复验 M3 选服/排行子集。
+DATA-002 扩量后的 `spec/data/generated/*.sql` 核心子集 + 商城真扣 `player_wallet` + 任务/背包/限购/禁言 PG 持久化，并在同一用例内模拟进程重启后复验 M3 选服/排行子集。行数上限见 `spec/data/CORE_SUBSET.md`。
 
 ```bash
 make dev-up
 export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
-GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestINTG005Wave7SmokePath -count=1 -v
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+仅跑完整重启冒烟（与 INTG-005 别名等价）：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG006Data002SmokePath|TestINTG005Wave7SmokePath' -count=1 -v
 ```
 
 覆盖：
 
-1. 灌入 `spec/data/generated/*.sql`（DATA-001 子集）
-2. M4：任务 1001 → 领奖 → 商城 offer 1001 真扣费 → GM 发奖 → GM 禁言
+1. 灌入 `spec/data/generated/*.sql`（DATA-002 子集：`cfg_item` → `cfg_quest` → `cfg_shop*` → `cfg_hero_template` → `cfg_unit`）
+2. M4：`quest_cfg_id=1001` → 领奖 `item_cfg_id=2001` → `offer_cfg_id=1001` 真扣费 → GM 发 `item_cfg_id=2003` → GM 禁言
 3. 关闭网关、新建 `api.Server` 与 PG 连接池，登录后校验任务/背包/钱包/限购/禁言与重启前一致
 4. M3 子集：选服列表 → 进服 → 战力榜刷新与查询（rank PG，非 RANK-002 深度验收）
+5. 可选：`content.v1.ListPlayerMail`（MAIL-001 网关接线；失败不阻塞主路径）
 
-步骤日志带 `smoke step:` 与 `server_id=1`。跳过短测：
+失败时测试会打印 `DATA-002 cfg:` 行（固定 quest/offer/item id）便于对照 `spec/data/CORE_SUBSET.md`。
+
+跳过短测（本地或 CI 快速编译路径）：
 
 ```bash
 GOTOOLCHAIN=go1.23.0 go test -short ./internal/api -count=1
 ```
+
+可选 GM 发信（MAIL-001，`cmd/gm`）：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go run ./cmd/gm send-mail \
+  --server-id=1 --player-id=<id> --title=smoke --body=test \
+  --rewards-json='{"items":[{"item_cfg_id":2001,"qty":1}]}' \
+  --operator-id=dev --reason=smoke
+```
+
+## Wave7 对齐复跑（INTG-005 别名）
+
+与 **INTG-006** 相同路径；保留 `TestINTG005Wave7SmokePath` 供旧脚本兼容。新文档请以 INTG-006 为准。
 
 ## M2 战斗闭环（INTG-002）
 
@@ -51,7 +73,7 @@ GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM3SocialSmokePath -count=1 
 
 ## M4 内容闭环（INTG-004）
 
-任务 → 背包 → 商城 → GM 发奖。
+任务 → 背包 → 商城 → GM 发奖（灌 DATA-002 子集 cfg，与 INTG-006 主路径前半一致，无进程重启）。
 
 ```bash
 make dev-up
@@ -59,7 +81,7 @@ export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disa
 GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM4ContentSmokePath -count=1 -v
 ```
 
-步骤输出带 `smoke step:` 前缀与 `server_id=1`，失败时可对照日志定位。
+步骤输出带 `smoke step:` 前缀与 `server_id=1`，失败时可对照日志与 INTG-006 的 cfg id 提示。
 
 覆盖路径：
 
@@ -69,7 +91,7 @@ GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM4ContentSmokePath -count=1
 4. `GmService.GrantReward` 补发道具 2003 并校验背包
 5. `content.v1.ListPlayerBag` / `UseConsumable` 网关校验
 
-任务 / 商城配置默认使用内置 dev catalog；若 `cfg_quest` 表已有数据则优先读库（与 DATA-001 生成物一致时可先跑 INTG-005 灌数）。
+任务配置优先读 PG `cfg_quest`（DATA-002 灌数后）；商城 offer 仍走装配层 dev catalog（与 `offer_cfg_id=1001` 对齐）。
 
 可选 HTTP GM（`make dev` 启动后）：
 
