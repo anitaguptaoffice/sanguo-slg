@@ -158,10 +158,7 @@ describe("HeroMailPanels", () => {
         ],
         total_count: 1,
       })
-      .mockResolvedValue({
-        mails: [{ mail_id: 7, title: "奖", status: 2, body: "正文" }],
-        total_count: 0,
-      });
+      .mockResolvedValue({ mails: [], total_count: 0 });
     const gateway: GatewayPort = {
       listPlayerMail,
       listPlayerBag: vi.fn().mockResolvedValue({
@@ -194,7 +191,13 @@ describe("HeroMailPanels", () => {
     await flushPromises();
     expect(gateway.claimPlayerMailAttachments).toHaveBeenCalledWith(1, 7);
     expect(gateway.listPlayerBag).toHaveBeenCalledWith(1);
-    expect(listPlayerMail.mock.calls.length).toBeGreaterThanOrEqual(2);
+    const unreadCalls = listPlayerMail.mock.calls.filter(
+      (c) => (c[1] as { pageSize?: number })?.pageSize === 1,
+    );
+    expect(unreadCalls.length).toBeGreaterThanOrEqual(1);
+    expect(listPlayerMail.mock.calls.some((c) => (c[1] as { pageSize?: number })?.pageSize === 50)).toBe(
+      true,
+    );
     expect(patched?.bag).toEqual([{ item_cfg_id: 2001, quantity: 2 }]);
     expect(session.wallet?.gold).toBe(50);
     expect(statuses.some((s) => s.includes("领取成功") && s.includes("谷袋"))).toBe(true);
@@ -231,6 +234,7 @@ describe("HeroMailPanels", () => {
   it("syncUnreadBadge count drops after claim refresh", async () => {
     const mount = document.createElement("div");
     const badgeCalls: number[] = [];
+    const hudSnaps: { count: number; firstId: number }[] = [];
     const listPlayerMail = vi
       .fn()
       .mockResolvedValueOnce({
@@ -245,7 +249,7 @@ describe("HeroMailPanels", () => {
         total_count: 2,
       })
       .mockResolvedValue({
-        mails: [{ mail_id: 11, title: "未读奖", status: 2 }],
+        mails: [{ mail_id: 12, status: 0 }],
         total_count: 1,
       });
     const gateway: GatewayPort = {
@@ -264,6 +268,9 @@ describe("HeroMailPanels", () => {
       () => {},
       () => {},
       (n) => badgeCalls.push(n),
+      undefined,
+      undefined,
+      (snap) => hudSnaps.push(snap),
     );
     panels.attach();
     panels.toggleMail();
@@ -271,9 +278,49 @@ describe("HeroMailPanels", () => {
     badgeCalls.length = 0;
     mount.querySelector('[data-action="claim-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
+    expect(mount.querySelector(".mail-unclaimed-badge")).toBeNull();
+    expect(hudSnaps.at(-1)).toEqual({ count: 1, firstId: 12 });
     panels.toggleMail();
     await panels.syncUnreadBadge();
     expect(badgeCalls.at(-1)).toBe(1);
+  });
+
+  it("disables claim button while claim RPC is in flight", async () => {
+    const mount = document.createElement("div");
+    let resolveClaim!: (v: unknown) => void;
+    const claimPlayerMailAttachments = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveClaim = resolve;
+        }),
+    );
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [
+          {
+            mail_id: 5,
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+        ],
+        total_count: 1,
+      }),
+      claimPlayerMailAttachments,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    mount.querySelector("li[data-mail-id='5']")?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const claimBtn = mount.querySelector('[data-action="claim-mail"]') as HTMLButtonElement;
+    claimBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(claimBtn.disabled).toBe(true);
+    resolveClaim({ mail: { mail_id: 5, status: 2 }, granted: { items: [] } });
+    await flushPromises();
+    expect(claimBtn.disabled).toBe(false);
   });
 
   it("claim failure surfaces gateway message", async () => {

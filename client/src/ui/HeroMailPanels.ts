@@ -44,7 +44,7 @@ import {
   mailRowMetaLine,
   mailRowTitleLine,
 } from "@/net/panelDensity";
-import { pickFirstUnreadMailId } from "@/net/hudTodoBadge";
+import { mailUnreadSnapshotFromListResponse, pickFirstUnreadMailId } from "@/net/hudTodoBadge";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -60,6 +60,7 @@ export class HeroMailPanels {
   private selectedTemplateId = 0;
   private recruitItemId = 0;
   private recruitPool = "standard";
+  private claimMailInflight = 0;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -70,6 +71,7 @@ export class HeroMailPanels {
     private onUnreadCount?: (count: number) => void,
     private readonly cityStateFetch?: CityStateFetch,
     private readonly onDailyRecruitLoop?: () => void | Promise<void>,
+    private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
   ) {}
 
   attach(): void {
@@ -138,18 +140,29 @@ export class HeroMailPanels {
       this.onUnreadCount?.(0);
       return;
     }
+    if (!this.onUnreadCount) return;
+    const snap = await this.pullMailUnreadSnapshot();
+    this.onUnreadCount(snap.count);
+  }
+
+  private async pullMailUnreadSnapshot(): Promise<{ count: number; firstId: number }> {
     const sid = this.serverId();
-    if (!sid || !this.onUnreadCount) return;
+    if (!sid) return { count: 0, firstId: 0 };
     try {
       const res = (await this.gateway.listPlayerMail(sid, {
         filter: MAIL_INBOX_FILTER_UNREAD,
         pageSize: 1,
         pageOffset: 0,
-      })) as { total_count?: number };
-      this.onUnreadCount(res.total_count ?? 0);
+      })) as { mails?: MailRow[]; total_count?: number };
+      return mailUnreadSnapshotFromListResponse(res);
     } catch {
-      this.onUnreadCount(0);
+      return { count: 0, firstId: 0 };
     }
+  }
+
+  private applyMailUnreadHud(snap: { count: number; firstId: number }): void {
+    this.onMailHudSnapshot?.(snap);
+    this.onUnreadCount?.(this.isMailOpen() ? 0 : snap.count);
   }
 
   private serverId(): number {
@@ -363,6 +376,9 @@ export class HeroMailPanels {
       const show = sel && mailHasUnclaimedAttachments(sel);
       claimBtn.classList.toggle("hidden", !show);
       claimBtn.classList.toggle("mail-claim-highlight", !!(show && sel && !mailIsUnread(sel)));
+      if (claimBtn instanceof HTMLButtonElement) {
+        claimBtn.disabled = this.claimMailInflight > 0 && this.claimMailInflight === this.selectedMailId;
+      }
     }
   }
 
@@ -599,7 +615,10 @@ export class HeroMailPanels {
       this.onStatus("请选择邮件");
       return;
     }
+    if (this.claimMailInflight) return;
     this.mailListError = "";
+    this.claimMailInflight = mailId;
+    this.renderMailList();
     this.onStatus(`领取附件 #${mailId}…`);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
@@ -614,25 +633,41 @@ export class HeroMailPanels {
       const session = this.getSession();
       if (session) {
         const patch = applyMailClaimResult(this.mails, mailId, res, session);
-        this.mails = patch.mails;
+        this.applyMailsAfterClaim(patch.mails, mailId);
         this.onSessionPatch({ bag: patch.bag, wallet: patch.wallet });
       } else if (res.mail) {
-        this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
+        this.applyMailsAfterClaim(
+          this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail, has_unclaimed_attachments: false } : m)),
+          mailId,
+        );
       }
+      this.renderMailList();
       await this.syncBagFromServer();
-      await this.refreshMail();
+      const snap = await this.pullMailUnreadSnapshot();
+      this.applyMailUnreadHud(snap);
       const summary = formatMailClaimGrantedSummary(res.granted);
       this.onStatus(`领取成功：${summary}`);
-      void this.syncUnreadBadge();
     } catch (e) {
       const msg = gatewayErrorMessage(e);
+      this.mailListError = msg;
       this.onStatus(msg);
-      const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
-      if (statusEl) {
-        statusEl.textContent = msg;
-        statusEl.classList.add("is-error");
-      }
+    } finally {
+      this.claimMailInflight = 0;
+      this.renderMailList();
     }
+  }
+
+  /** 领取后局部更新列表行；未读筛选下已读/已领行移出当前页。 */
+  private applyMailsAfterClaim(nextMails: MailRow[], mailId: number): void {
+    const updated = nextMails.find((m) => m.mail_id === mailId);
+    if (this.mailFilter === MAIL_INBOX_FILTER_UNREAD && updated && !mailIsUnread(updated)) {
+      this.mails = nextMails.filter((m) => m.mail_id !== mailId);
+      if (!this.mails.some((m) => m.mail_id === this.selectedMailId)) {
+        this.selectedMailId = this.mails[0]?.mail_id ?? 0;
+      }
+      return;
+    }
+    this.mails = nextMails;
   }
 
   private onHeroChange(ev: Event): void {

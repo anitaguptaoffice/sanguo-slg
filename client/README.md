@@ -412,6 +412,14 @@ cd client && npm install && npm run dev
 4. 领取失败时面板内显示 gateway `msg`，不静默；重复领取显示明确错误。
 5. 单测：`heroMailState.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（邮件领取 HUD 同步 CLIENT-050）
+
+在 CLIENT-035 领取闭环基础上：**领取附件** 后列表行「未领取」标记应立即消失（无需关面板再开）；关面板后底栏未读角标与 `ListPlayerMail` 未读 `total_count` 一致。领取进行中「领取附件」按钮应禁用；失败保留高亮并显示 gateway 文案。
+
+1. `make dev`：未读带附件邮件 → 打开邮件 → 领取成功 → 同行角标消失，关面板后角标递减。
+2. 模拟领取失败：面板内 `mail-status` 显示错误，仍可再次领取。
+3. 单测：`hudTodoBadge.test.ts`（`mailUnreadSnapshotFromListResponse`）、`hudTodoBadgePoll.test.ts`、`HeroMailPanels.test.ts` 领取/HUD 用例。
+
 ### 手动验收（军事 manifest CLIENT-036）
 
 `artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）；非军事面板仍用 `ui.panel.default.v1`（CLIENT-032）。`data-art-skin="off"` 可跳过 nine-slice。

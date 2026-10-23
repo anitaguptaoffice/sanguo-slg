@@ -68,6 +68,20 @@ export function pickFirstUnreadMailId(mails: MailRow[]): number {
   return 0;
 }
 
+export type MailUnreadSnapshot = { count: number; firstId: number };
+
+/** 与 HudTodoBadgePoll / 底栏角标共用：ListPlayerMail unread 分页首屏快照。 */
+export function mailUnreadSnapshotFromListResponse(res: {
+  mails?: MailRow[];
+  total_count?: number;
+}): MailUnreadSnapshot {
+  const mails = res.mails ?? [];
+  return {
+    count: res.total_count ?? 0,
+    firstId: pickFirstUnreadMailId(mails),
+  };
+}
+
 /** chain 400 列表顺序下首条可接取或可领奖。 */
 export function pickFirstDailyTodoQuestCfgId(rows: DailyQuestRow[]): number {
   for (const q of rows) {

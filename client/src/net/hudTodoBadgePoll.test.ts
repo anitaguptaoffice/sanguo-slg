@@ -88,4 +88,33 @@ describe("HudTodoBadgePoll", () => {
     expect(snap.dailyChainRows).toHaveLength(2);
     expect(snap.dailyChainRows[0]?.quest_cfg_id).toBe(100);
   });
+
+  it("applyMailUnreadSnapshot patches deep link while mail panel suppressed", async () => {
+    const gateway = {
+      listPlayerMail: vi.fn(),
+      listPlayerQuests: vi.fn().mockResolvedValue({ quests: [] }),
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [] }),
+    };
+    const unread = new BattleReportUnreadSession();
+    let counts = { mailUnread: 9, dailyTodo: 0, battleReportUnread: 0 };
+    const poll = new HudTodoBadgePoll({
+      gateway: gateway as never,
+      getServerId: () => 1,
+      getCityId: () => 9,
+      battleReportUnread: unread,
+      isPanelVisible: () => false,
+      isMailSuppressed: () => true,
+      isDailySuppressed: () => false,
+      isReportsSuppressed: () => false,
+      onCounts: (c) => {
+        counts = c;
+      },
+    });
+    poll.applyMailUnreadSnapshot(2, 77);
+    expect(poll.getDeepLinkSnapshot().mailUnread).toBe(2);
+    expect(poll.getDeepLinkSnapshot().firstUnreadMailId).toBe(77);
+    expect(counts.mailUnread).toBe(9);
+    poll.applyMailUnreadSnapshot(1, 0);
+    expect(poll.getDeepLinkSnapshot().mailUnread).toBe(1);
+  });
 });

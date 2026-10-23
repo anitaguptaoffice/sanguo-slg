@@ -449,7 +449,10 @@ export function applyMailClaimResult(
   const wallet = res.wallet_after
     ? { ...res.wallet_after }
     : mergeWallet(session.wallet ?? {}, res.granted?.resources);
-  const mailPatch = res.mail ?? { mail_id: mailId, status: 2, claimed_at_ms: Date.now() };
+  const mailPatch = {
+    ...(res.mail ?? { mail_id: mailId, status: MAIL_STATUS_CLAIMED, claimed_at_ms: Date.now() }),
+    has_unclaimed_attachments: false,
+  };
   return {
     bag,
     wallet,
