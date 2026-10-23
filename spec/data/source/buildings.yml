@@ -1,0 +1,8 @@
+buildings:
+  - { building_cfg_id: 1, code: main_hall, name: 官府, category: core }
+  - { building_cfg_id: 2, code: farm, name: 农田, category: production }
+  - { building_cfg_id: 3, code: lumber, name: 伐木场, category: production }
+  - { building_cfg_id: 4, code: quarry, name: 采石场, category: production }
+  - { building_cfg_id: 5, code: iron, name: 铁矿, category: production }
+  - { building_cfg_id: 6, code: barracks, name: 兵营, category: military }
+  - { building_cfg_id: 7, code: wall, name: 城墙, category: defense }
