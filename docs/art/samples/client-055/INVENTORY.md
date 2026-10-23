@@ -2,7 +2,7 @@
 
 CLIENT-054 美术 FAIL 余项：primary 160×48 完整接线、纸底漏网字色、代表截图/按钮 bounding box 重拍。
 
-| 证据 tip SHA | `c36ae664a7b85ffacd22528a67c36a0850c612ae` |
+| 证据 tip SHA | `99cae548ad236a5c1f35452b38b62f09db07f074` |
 |---|---|
 
 | 路径 | 字节 | 视口 | 面板 | 状态 | 备注 |
