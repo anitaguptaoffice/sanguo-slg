@@ -28,8 +28,20 @@ export function applyUseResult(bag: BagStack[], itemCfgId: number, remaining: nu
 
 export function stacksFromList(items: BagStack[]): BagStack[] {
   return [...items]
-    .filter((s) => (s.quantity ?? 0) > 0)
+    .filter((s) => (s.item_cfg_id ?? 0) > 0 && (s.quantity ?? 0) > 0)
     .sort((a, b) => a.item_cfg_id - b.item_cfg_id);
+}
+
+/** 将 content.v1.ListPlayerBag 的 items 转为会话背包（全量替换，非增量合并）。 */
+export function bagFromListPlayerBagResponse(
+  items: { item_cfg_id?: number; quantity?: number }[] | undefined,
+): BagStack[] {
+  return stacksFromList(
+    (items ?? []).map((r) => ({
+      item_cfg_id: r.item_cfg_id ?? 0,
+      quantity: r.quantity ?? 0,
+    })),
+  );
 }
 
 function addStack(bag: BagStack[], itemCfgId: number, delta: number): BagStack[] {

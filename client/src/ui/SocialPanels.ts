@@ -4,6 +4,7 @@ import { guildRoleLabel, leaderboardTypeLabel } from "@/net/socialFormat";
 
 const CH_WORLD = 1;
 const CH_PRIVATE = 2;
+const CH_GUILD = 3;
 const LB_PLAYER_POWER = 1;
 
 type ChatLine = {
@@ -63,6 +64,46 @@ export class SocialPanels {
     return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
   }
 
+  private selectedChatChannel(): number {
+    return Number(
+      (this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement)?.value ?? CH_WORLD,
+    );
+  }
+
+  private syncChatChannelUi(ch: number): void {
+    this.chatPanel.querySelector(".private-target")?.classList.toggle("hidden", ch !== CH_PRIVATE);
+    this.chatPanel.querySelector('[data-role="guild-chat-hint"]')?.classList.toggle("hidden", ch !== CH_GUILD);
+  }
+
+  private chatListOpts(ch: number): { peerPlayerId?: number; guildId?: number } {
+    if (ch === CH_PRIVATE) {
+      const peer = Number((this.chatPanel.querySelector('[data-field="peer-id"]') as HTMLInputElement)?.value ?? 0);
+      return { peerPlayerId: peer };
+    }
+    if (ch === CH_GUILD) {
+      return { guildId: this.guildId };
+    }
+    return {};
+  }
+
+  private chatSendOpts(ch: number): { recipientPlayerId?: number; guildId?: number } {
+    if (ch === CH_PRIVATE) {
+      const peer = Number((this.chatPanel.querySelector('[data-field="peer-id"]') as HTMLInputElement)?.value ?? 0);
+      return { recipientPlayerId: peer };
+    }
+    if (ch === CH_GUILD) {
+      return { guildId: this.guildId };
+    }
+    return {};
+  }
+
+  private ensureGuildChatReady(ch: number): boolean {
+    if (ch !== CH_GUILD) return true;
+    if (this.guildId > 0) return true;
+    this.onStatus("军团频道需要先创建或加入军团");
+    return false;
+  }
+
   private buildChatPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "social-panel hidden";
@@ -72,19 +113,20 @@ export class SocialPanels {
         <select data-field="channel">
           <option value="1">世界</option>
           <option value="2">私聊</option>
+          <option value="3">军团</option>
         </select>
       </label>
       <label class="private-target hidden">对方玩家 ID
         <input type="number" data-field="peer-id" min="1" value="10002" />
       </label>
+      <p class="guild-chat-hint hidden" data-role="guild-chat-hint">军团频道需先在「军团」面板创建或加入军团（chat.v1 + guild_id）。</p>
       <ul class="chat-log" data-role="chat-log"></ul>
       <label>内容 <input type="text" data-field="chat-content" maxlength="120" placeholder="输入消息" /></label>
       <button type="button" data-action="send-chat">发送</button>
       <button type="button" data-action="refresh-chat">刷新</button>
     `;
     el.querySelector('[data-field="channel"]')?.addEventListener("change", (ev) => {
-      const ch = Number((ev.target as HTMLSelectElement).value);
-      el.querySelector(".private-target")?.classList.toggle("hidden", ch !== CH_PRIVATE);
+      this.syncChatChannelUi(Number((ev.target as HTMLSelectElement).value));
     });
     return el;
   }
@@ -119,13 +161,13 @@ export class SocialPanels {
 
   private async refreshChat(): Promise<void> {
     const sid = this.serverId();
-    const ch = Number((this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement)?.value ?? CH_WORLD);
-    const peer = Number((this.chatPanel.querySelector('[data-field="peer-id"]') as HTMLInputElement)?.value ?? 0);
+    const ch = this.selectedChatChannel();
+    if (!this.ensureGuildChatReady(ch)) return;
     this.onStatus("拉取聊天…");
     try {
       const res = (await this.gateway.listChatMessages(sid, ch, {
-        peerPlayerId: ch === CH_PRIVATE ? peer : undefined,
-        guildId: this.guildId || undefined,
+        ...this.chatListOpts(ch),
+        limit: 30,
       })) as { messages?: ChatLine[] };
       this.renderChatLog(res.messages ?? []);
       this.onStatus("聊天已刷新");
@@ -149,19 +191,16 @@ export class SocialPanels {
 
   private async sendChat(): Promise<void> {
     const sid = this.serverId();
-    const ch = Number((this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement)?.value ?? CH_WORLD);
+    const ch = this.selectedChatChannel();
     const content = (this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement)?.value?.trim();
     if (!content) {
       this.onStatus("消息不能为空");
       return;
     }
-    const peer = Number((this.chatPanel.querySelector('[data-field="peer-id"]') as HTMLInputElement)?.value ?? 0);
+    if (!this.ensureGuildChatReady(ch)) return;
     this.onStatus("发送中…");
     try {
-      await this.gateway.sendChatMessage(sid, ch, content, {
-        recipientPlayerId: ch === CH_PRIVATE ? peer : undefined,
-        guildId: ch === 3 ? this.guildId : undefined,
-      });
+      await this.gateway.sendChatMessage(sid, ch, content, this.chatSendOpts(ch));
       (this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement).value = "";
       await this.refreshChat();
       this.onStatus("已发送");

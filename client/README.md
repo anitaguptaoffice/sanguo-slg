@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-005）
+# H5 客户端（CLIENT-001 ~ CLIENT-006）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -32,7 +32,7 @@ cd client && npm install && npm run dev
 ### 手动验收（M3：选服 / 聊天 / 军团 / 排行）
 
 1. 连接 `make dev` 后打开 H5，选服列表应出现至少 `S1`（dev 服 1）。
-2. 进入主城后点 **「聊天」**：世界频道发一条消息并点「刷新」应能看到记录；私聊需填对方 `player_id`。
+2. 进入主城后点 **「聊天」**：世界频道发一条消息并点「刷新」应能看到记录；私聊需填对方 `player_id`；**军团**频道需先在「军团」面板创建/加入军团，再选「军团」频道收发（`chat.v1` + `guild_id`，WIRE-001 真实网关与 mock 均支持）。
 3. 点 **「军团」**：输入名称「创建军团」，或填已有 `guild_id` 加入，再「刷新成员」。
 4. 点 **「排行」**：「刷新战力榜」应列出榜单，并显示 **我的名次**（未上榜时显示战力与「未上榜」）。
 5. M2 军事/内政仍可用：**「军事」**、**「升级农田」** 等。
@@ -44,7 +44,7 @@ cd client && npm install && npm run dev
 1. `make dev` 启动后进入主城，HUD 显示 **币**（`player_wallet.gold`，商城银币价映射到 gold 字段）。
 2. **任务**：打开「任务」→「接取」→「上报进度(绝对值2)」→「领奖」。背包应出现谷袋·初备（2001）；HUD 粮/币随奖励变化。
 3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时状态栏显示服务端错误；成功时 HUD **币** 减少且背包数量增加（`wallet_after` 真扣费，无 spent overlay）。
-4. **背包**：「刷新背包」在 mock 网关会拉全量；连真实网关时若 `content.v1.ListPlayerBag` 未接线，仍显示本会话内领奖/购买累计。「使用道具」对资源包(2001)/加速符(2003) 在 mock 上可验证 CONTENT-002 效果摘要。
+4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag` 拉服务端持久化全量并覆盖会话背包展示；「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）。资源包(2001)/加速符(2003) 使用成功后 HUD 粮/币或状态栏效果摘要应更新。
 
 ```bash
 # 仓库根
@@ -62,7 +62,7 @@ cd client && npm install && npm run dev
 
 ## 仅 mock 网关
 
-`mock-server` 实现 `Login`、**选服/进服**、**聊天/军团/排行** 与军事路由的**即时**桩（募兵无队列）。另含最简建城/内政桩以便进主城；完整内政请连 `make dev`。
+`mock-server` 实现 `Login`、**选服/进服**、**聊天（含军团频道）/军团/排行**、**quest/shop/content.v1 背包** 与军事路由的**即时**桩（募兵无队列）。另含最简建城/内政桩以便进主城；完整内政与持久化请连 `make dev`。
 
 ```bash
 cd client && npm run mock:gateway   # ws://127.0.0.1:19090/ws
@@ -75,7 +75,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `militaryFormat` 辅助函数与 `StartMarchRequest` proto 编解码。
+单测包含 `militaryFormat`、`bagState`（网关背包合并）与 `StartMarchRequest` proto 编解码。
 
 ## 目录
 
