@@ -4,11 +4,15 @@ import {
   type RecruitHeroResult,
   type RecruitTemplatePreview,
 } from "@/net/heroMailState";
+import { scrollHeroListRowIntoView } from "@/net/heroListRefreshFeedback";
 
 /** 招募主按钮默认文案（CLIENT-098）。 */
 export const RECRUIT_SUBMIT_DEFAULT_LABEL = "招募";
-/** RecruitHero 网关往返期间主按钮文案。 */
-export const RECRUIT_SUBMIT_INFLIGHT_LABEL = "提交中…";
+/** RecruitHero 网关往返期间主按钮文案（CLIENT-114 巩固）。 */
+export const RECRUIT_SUBMIT_INFLIGHT_LABEL = "招募中…";
+export const HERO_ROW_RECRUITED_PULSE_CLASS = "hero-row-recruited-pulse";
+/** 招募成功行脉冲时长（≤2s，与 hero-list-refresh-pulse 并存）。 */
+export const HERO_ROW_RECRUITED_PULSE_MS = 1200;
 export const RECRUIT_OPEN_DETAIL_LABEL = "打开详情";
 
 export type RecruitSubmitPhase = "idle" | "inflight" | "success" | "error";
@@ -34,6 +38,28 @@ export function recruitSubmitButtonDisabled(phase: RecruitSubmitPhase, canAfford
 
 export function recruitSubmitButtonLabel(phase: RecruitSubmitPhase): string {
   return phase === "inflight" ? RECRUIT_SUBMIT_INFLIGHT_LABEL : RECRUIT_SUBMIT_DEFAULT_LABEL;
+}
+
+export function scheduleHeroRecruitRowPulse(row: HTMLElement | null | undefined): void {
+  if (!row) return;
+  row.classList.remove(HERO_ROW_RECRUITED_PULSE_CLASS);
+  void row.offsetWidth;
+  row.classList.add(HERO_ROW_RECRUITED_PULSE_CLASS);
+  window.setTimeout(
+    () => row.classList.remove(HERO_ROW_RECRUITED_PULSE_CLASS),
+    HERO_ROW_RECRUITED_PULSE_MS,
+  );
+}
+
+/** ListPlayerHeroes 刷新后滚入视并脉冲新招募行（CLIENT-114）。 */
+export function focusRecruitedHeroListRow(
+  panel: ParentNode | null | undefined,
+  heroId: number,
+): void {
+  if (heroId <= 0) return;
+  scrollHeroListRowIntoView(panel, heroId);
+  const row = panel?.querySelector<HTMLElement>(`li[data-hero-id="${heroId}"]`);
+  scheduleHeroRecruitRowPulse(row);
 }
 
 /** 将领面板招募主按钮 disabled / 文案（`data-action="recruit-hero"`）。 */
