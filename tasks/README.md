@@ -60,7 +60,7 @@ status:review   ──合并────▶  status:done
 | 10 | M4 玩法加深（**已完成**，见 ROADMAP Wave 10） | CLIENT-008 (#156), HERO-003 (#158), QUEST-002 (#157), GM-003 (#154), INTG-007 (#159), DOCS-EXIT-002 (#160) |
 | 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
 | 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
-| 13 | H5 闭环加深（**进行中**，见 ROADMAP Wave 13） | CLIENT-019–023, INTG-010, DOCS-EXIT-005（Issue 待 sync） |
+| 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 (#202) |
 
 ### Wave 9 进度（已完成）
 
@@ -109,16 +109,16 @@ status:review   ──合并────▶  status:done
 | [#184](https://github.com/anitaguptaoffice/sanguo-slg/issues/184) | INTG-009 | `status:done`（[#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192)） |
 | [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | `status:done`（[#194](https://github.com/anitaguptaoffice/sanguo-slg/pull/194)） |
 
-### Wave 13 进度（待 `tasks_sync`，backlog 已入 main 前仅 YAML）
+### Wave 13 进度（与 GitHub `wave:13` 标签同步，2026-10-23）
 
-| ID | 状态 | 说明 |
+| Issue | ID | 状态 |
 |---|---|---|
-| CLIENT-019 | 待 sync → `status:ready` | 内政/募兵队列倒计时 |
-| CLIENT-020 | 待 sync → `status:ready` | 背包使用 + 商城购买反馈 |
-| CLIENT-021 | 待 sync → `status:ready` | 排行双榜只读 |
-| CLIENT-022 | 待 sync → `status:ready` | 军团/聊天可读联调 |
-| CLIENT-023 | 待 sync → `status:ready` | 招募与日常闭环 |
-| INTG-010 | 待 sync → `status:ready` | wave:13 网关冒烟 |
-| DOCS-EXIT-005 | 待 sync → `status:blocked` | 依赖 INTG-010；`blocked_until` 在 backlog |
+| [#196](https://github.com/anitaguptaoffice/sanguo-slg/issues/196) | CLIENT-019 | `status:done`（[#206](https://github.com/anitaguptaoffice/sanguo-slg/pull/206)） |
+| [#197](https://github.com/anitaguptaoffice/sanguo-slg/issues/197) | CLIENT-020 | `status:done`（[#204](https://github.com/anitaguptaoffice/sanguo-slg/pull/204)） |
+| [#198](https://github.com/anitaguptaoffice/sanguo-slg/issues/198) | CLIENT-021 | `status:done`（[#207](https://github.com/anitaguptaoffice/sanguo-slg/pull/207)） |
+| [#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) | CLIENT-022 | `status:done`（[#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205)） |
+| [#200](https://github.com/anitaguptaoffice/sanguo-slg/issues/200) | CLIENT-023 | `status:done`（[#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208)） |
+| [#201](https://github.com/anitaguptaoffice/sanguo-slg/issues/201) | INTG-010 | `status:done`（[#203](https://github.com/anitaguptaoffice/sanguo-slg/pull/203)） |
+| [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | `status:review`（本卡） |
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11 / Wave 12 / Wave 13」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。

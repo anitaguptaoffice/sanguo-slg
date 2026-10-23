@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-020）
+# H5 客户端（CLIENT-001 ~ CLIENT-023）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -30,11 +30,17 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **战报筛选**（outcome 客户端筛选 + 详情摘要） | [手动验收（战报筛选 CLIENT-016）](#手动验收战报筛选-client-016) |
 | **HUD 资源变动提示** | [手动验收（HUD 资源变动，CLIENT-018）](#手动验收hud-资源变动-client-018)（[#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) / [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191)） |
 
-## Wave 13 可玩加深（H5 loop）
+## Wave 13 闭环加深（M4 出口 / INTG-010）
+
+在 `make dev` 下联调的最短人工路径（与 `tools/smoke/README.md`、**INTG-010** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC，需未来 contract 卡）。
 
 | 能力 | 验收小节 |
 |---|---|
-| **背包使用 / 商城购买可读反馈** | [手动验收（背包与商城反馈，CLIENT-020）](#手动验收背包与商城反馈-client-020)（[#197](https://github.com/anitaguptaoffice/sanguo-slg/issues/197)） |
+| **内政/募兵队列倒计时** | [手动验收（队列 CLIENT-019）](#手动验收队列-client-019)（[#196](https://github.com/anitaguptaoffice/sanguo-slg/issues/196) / [#206](https://github.com/anitaguptaoffice/sanguo-slg/pull/206)） |
+| **背包使用 / 商城购买可读反馈** | [手动验收（背包与商城反馈，CLIENT-020）](#手动验收背包与商城反馈-client-020)（[#197](https://github.com/anitaguptaoffice/sanguo-slg/issues/197) / [#204](https://github.com/anitaguptaoffice/sanguo-slg/pull/204)） |
+| **排行双榜只读**（战力 / 资源总量 + 快照元数据） | [手动验收（排行双榜 CLIENT-021）](#手动验收排行双榜-client-021)（[#198](https://github.com/anitaguptaoffice/sanguo-slg/issues/198) / [#207](https://github.com/anitaguptaoffice/sanguo-slg/pull/207)） |
+| **军团 / 聊天可读联调** | [手动验收（M3：选服 / 聊天 / 军团 / 排行，CLIENT-022）](#手动验收m3选服--聊天--军团--排行client-022)（[#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) / [#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205)） |
+| **招募成功 ↔ 日常将领任务闭环** | [手动验收（M4：将领，CLIENT-008）](#手动验收m4将领client-008) 步骤 3（**CLIENT-023**，[#200](https://github.com/anitaguptaoffice/sanguo-slg/issues/200) / [#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208)） |
 
 ## 网关地址
 
@@ -80,7 +86,7 @@ cd client && npm install && npm run dev
    - **军团**频道需先在「军团」面板创建/加入军团；未入团时客户端拦截发送，状态栏提示需先入团；服务端可能返回 `61005`/`61001`，状态栏显示中文摘要 + `code`。
    - 真实服可用 `cmd/gm mute` 测禁言；mock 网关在世界频道发送内容 **`__mock_mute__`** 可模拟 5 分钟禁言，再次发送应看到 **已被禁言 (code=61006)**。
 3. 点 **「军团」**：创建或加入后顶栏 **`guild-summary`** 应持久显示 `guild_id` 与名称（同一会话内切换面板不丢失）；「刷新成员」列表行含 **职务**（`guildRoleLabel`）与 **加入时间**（若 API 返回 `joined_at_ms`）。加入不存在的军团时状态栏应可读（如 `军团不存在 (code=60001)`）。
-4. 点 **「排行」**：「刷新战力榜」应列出榜单，并显示 **我的名次**（未上榜时显示战力与「未上榜」）。
+4. 点 **「排行」**：双榜与快照元数据见 [CLIENT-021](#手动验收排行双榜-client-021)；本小节侧重军团/聊天可读（CLIENT-022）。
 5. M2 军事/内政仍可用：**「军事」**、**「升级农田」** 等。
 
 mock 网关（军团频道 + 禁言桩）：
@@ -231,6 +237,16 @@ mock 网关（含 ListMarches 桩，出征后列表可见）：
 cd client && npm run mock:gateway
 VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 ```
+
+### 手动验收（排行双榜 CLIENT-021）
+
+与 `rank.v1.GetLeaderboard` 网关一致（`make dev` 真实 PG；mock 网关返回固定条目）。
+
+1. 进入主城后点 **「排行」** → 榜单类型下拉应含 **战力榜**、**资源总量榜**（`LB_PLAYER_POWER` / `LB_PLAYER_RESOURCE`）。
+2. 切换类型后点 **「刷新榜单」**：列表行格式为 `名次. 显示名 · 分数`；面板顶部或摘要区展示 **我的名次**（`my_rank` / `my_score`），未上榜时文案含「未上榜」与当前战力或资源总量。
+3. 若网关返回 `snapshot_version` / `snapshot_refreshed_at_ms`（及可选 `batch_id`），面板应展示 **快照批次/刷新时间** 摘要（`formatLeaderboardSnapshotMeta`），便于对照 Scheduler 刷新。
+4. 打开排行面板时应自动拉取当前所选类型（无需先手动刷新）；失败时状态栏显示可读错误，可重试。
+5. 单测：`leaderboardFormat.test.ts`、`SocialPanels.test.ts`（战力榜打开即拉取）。
 
 ### 手动验收（队列 CLIENT-019）
 
