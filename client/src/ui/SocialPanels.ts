@@ -15,6 +15,7 @@ import {
   CHAT_CHANNEL_WORLD,
   chatChannelLabel,
   formatGuildMemberLine,
+  formatGuildMentionDraft,
   formatGuildSummaryText,
   formatSenderLabel,
   formatSocialChatEmptyMessage,
@@ -391,8 +392,33 @@ export class SocialPanels {
     }
     for (const m of sortGuildMembers(members)) {
       const li = document.createElement("li");
-      li.textContent = formatGuildMemberLine(m);
+      li.className = "guild-member-row";
+      const line = document.createElement("span");
+      line.className = "guild-member-line";
+      line.textContent = formatGuildMemberLine(m);
+      const mention = document.createElement("button");
+      mention.type = "button";
+      mention.className = "guild-member-mention";
+      mention.setAttribute("data-action", "guild-mention");
+      mention.setAttribute("data-display-name", m.display_name ?? "");
+      mention.textContent = "提到";
+      li.append(line, mention);
       ul.appendChild(li);
+    }
+  }
+
+  /** 打开聊天面板、切到军团频道并填入 @ 草稿（不发送、不额外 RPC）。 */
+  private openChatWithGuildMentionDraft(displayName: string): void {
+    this.guildPanel.classList.add("hidden");
+    this.rankPanel.classList.add("hidden");
+    this.chatPanel.classList.remove("hidden");
+    const channel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement;
+    if (channel) channel.value = String(CHAT_CHANNEL_GUILD);
+    this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
+    const input = this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement;
+    if (input) {
+      input.value = formatGuildMentionDraft(displayName);
+      input.focus();
     }
   }
 
@@ -625,6 +651,10 @@ export class SocialPanels {
     if (a === "create-guild") void this.createGuild();
     if (a === "join-guild") void this.joinGuild();
     if (a === "refresh-members" || a === "retry-refresh-members") void this.refreshMembers();
+    if (a === "guild-mention") {
+      const name = btn.getAttribute("data-display-name") ?? "";
+      this.openChatWithGuildMentionDraft(name);
+    }
   }
 
   private onRankClick(ev: Event): void {

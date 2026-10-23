@@ -2,7 +2,7 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import {
   formatResourceAmount,
-  formatResourceProductionRatesBrief,
+  formatResourceSweepLine,
   WALLET_RESOURCE_KEYS,
 } from "@/net/hudFormat";
 
@@ -27,6 +27,7 @@ export function appendHudResourceStrip(
   hud: HTMLElement,
   wallet: ResourceWallet | undefined,
   assets: AssetLoader,
+  productionRates?: ResourceWallet,
 ): void {
   const group = document.createElement("span");
   group.className = "hud-group hud-resource-strip";
@@ -58,30 +59,49 @@ export function appendHudResourceStrip(
   }
 
   hud.appendChild(group);
+  wireHudResourceSweep(group, productionRates, wallet);
 }
 
-/** 资源条次行或 tooltip：产出速率只读摘要（CLIENT-059）。 */
-export function appendHudProductionRatesLine(
-  hud: HTMLElement,
+/** 资源区 hover/focus/展开扫读条：余量 + 产出（CLIENT-081）；不常驻占顶栏第二行。 */
+export function wireHudResourceSweep(
+  strip: HTMLElement,
   productionRates: ResourceWallet | undefined,
+  wallet: ResourceWallet | undefined,
 ): void {
-  const brief = formatResourceProductionRatesBrief(productionRates);
-  const strip = hud.querySelector('[data-role="hud-resources"]');
-  if (strip) {
-    strip.setAttribute("title", brief ?? "");
+  const line = formatResourceSweepLine(productionRates, wallet);
+  strip.tabIndex = 0;
+  strip.setAttribute("role", "button");
+  strip.setAttribute("aria-expanded", strip.classList.contains("hud-resource-expanded") ? "true" : "false");
+  strip.setAttribute("title", line);
+  strip.setAttribute("aria-label", `主城资源，${line}`);
+
+  let sweep = strip.querySelector('[data-role="hud-resource-sweep"]');
+  if (!sweep) {
+    sweep = document.createElement("span");
+    sweep.className = "hud-resource-sweep";
+    sweep.dataset.role = "hud-resource-sweep";
+    strip.appendChild(sweep);
   }
-  const existing = hud.querySelector('[data-role="hud-production-rates"]');
-  if (existing) existing.remove();
-  if (!brief) return;
-  const line = document.createElement("span");
-  line.className = "hud-group hud-production-rates";
-  line.dataset.role = "hud-production-rates";
-  line.textContent = brief;
-  line.setAttribute("title", "城池资源净产出（/小时）");
-  const anchor = strip ?? hud.firstChild;
-  if (anchor?.nextSibling) {
-    hud.insertBefore(line, anchor.nextSibling);
-  } else {
-    hud.appendChild(line);
-  }
+  sweep.textContent = line;
+
+  if (strip.dataset.sweepWired === "1") return;
+  strip.dataset.sweepWired = "1";
+
+  strip.addEventListener("click", () => {
+    strip.classList.toggle("hud-resource-expanded");
+    strip.setAttribute(
+      "aria-expanded",
+      strip.classList.contains("hud-resource-expanded") ? "true" : "false",
+    );
+  });
+
+  strip.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    ev.preventDefault();
+    strip.classList.toggle("hud-resource-expanded");
+    strip.setAttribute(
+      "aria-expanded",
+      strip.classList.contains("hud-resource-expanded") ? "true" : "false",
+    );
+  });
 }
