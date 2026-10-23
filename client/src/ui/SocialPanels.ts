@@ -36,6 +36,7 @@ import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelRefreshMeta } from "@/net/socialRefreshFormat";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 export class SocialPanels {
   private chatPanel!: HTMLElement;
@@ -85,12 +86,16 @@ export class SocialPanels {
 
   toggleChat(): void {
     this.chatPanel.classList.toggle("hidden");
-    if (!this.chatPanel.classList.contains("hidden")) void this.refreshChat();
+    if (!this.chatPanel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.chatPanel);
+      void this.refreshChat();
+    }
   }
 
   toggleGuild(): void {
     this.guildPanel.classList.toggle("hidden");
     if (!this.guildPanel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.guildPanel);
       this.syncGuildSummary();
       this.renderGuildMembersList([]);
     }
@@ -101,6 +106,7 @@ export class SocialPanels {
     this.chatPanel.classList.add("hidden");
     this.rankPanel.classList.add("hidden");
     this.guildPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.guildPanel);
     this.syncGuildSummary();
     this.renderGuildMembersList([]);
   }
@@ -112,6 +118,14 @@ export class SocialPanels {
 
   getRankRoot(): HTMLElement {
     return this.rankPanel;
+  }
+
+  getGuildRoot(): HTMLElement {
+    return this.guildPanel;
+  }
+
+  getChatRoot(): HTMLElement {
+    return this.chatPanel;
   }
 
   private serverId(): number {
@@ -162,6 +176,7 @@ export class SocialPanels {
   private buildChatPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "social-panel hidden";
+    el.dataset.centerPanel = "chat";
     el.innerHTML = `
       <h3>聊天</h3>
       <label>频道
@@ -175,7 +190,9 @@ export class SocialPanels {
         <input type="number" data-field="peer-id" min="1" value="10002" />
       </label>
       <p class="guild-chat-hint hidden" data-role="guild-chat-hint">军团频道需先在「军团」面板创建或加入军团（chat.v1 + guild_id）。</p>
-      <ul class="chat-log" data-role="chat-log"></ul>
+      <div class="panel-scroll-body" data-role="chat-scroll">
+        <ul class="chat-log" data-role="chat-log"></ul>
+      </div>
       <label>内容 <input type="text" data-field="chat-content" maxlength="120" placeholder="输入消息" /></label>
       <button type="button" data-action="send-chat">发送</button>
       <button type="button" data-action="refresh-chat">刷新</button>
@@ -196,6 +213,7 @@ export class SocialPanels {
   private buildGuildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "social-panel hidden";
+    el.dataset.centerPanel = "guild";
     el.innerHTML = `
       <h3>军团</h3>
       <p data-role="guild-summary">尚未加入军团</p>
@@ -209,7 +227,9 @@ export class SocialPanels {
         <span class="social-refresh-spinner" data-role="guild-refresh-spinner" hidden></span>
         <span data-role="guild-refresh-status-text"></span>
       </p>
-      <ul class="guild-members" data-role="guild-members"></ul>
+      <div class="panel-scroll-body" data-role="guild-scroll">
+        <ul class="guild-members" data-role="guild-members"></ul>
+      </div>
     `;
     return el;
   }
@@ -412,6 +432,7 @@ export class SocialPanels {
     this.guildPanel.classList.add("hidden");
     this.rankPanel.classList.add("hidden");
     this.chatPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.chatPanel);
     const channel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement;
     if (channel) channel.value = String(CHAT_CHANNEL_GUILD);
     this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
