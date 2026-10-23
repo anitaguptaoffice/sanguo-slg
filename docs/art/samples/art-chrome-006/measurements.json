@@ -1,232 +1,1351 @@
 {
   "asset_source_sha": "85a2dec4c12805ffc6cafef5b9871b1c4a5b0ec2",
-  "captured_at": "2026-10-23T21:31:58.892Z",
+  "captured_at": "2026-10-23T22:05:56.401Z",
+  "primary_evidence": "hit-proof.json + JPEG viewports",
   "viewports": {
-    "1600x900_dpr1": {
+    "maincity-1600x900-full.jpg": {
       "uiScale": 1,
       "buttonCount": 16,
       "scrollMetrics": {
         "scrollWidth": 1638,
         "clientWidth": 1585,
-        "maxScrollLeft": 53
+        "maxScrollLeft": 53,
+        "rect": {
+          "left": 0,
+          "top": 850,
+          "width": 1600,
+          "height": 44
+        }
       },
-      "scrolledToEnd": true,
-      "lastEntryReachableAfterScroll": true,
-      "hitRects": [
+      "samples": [
         {
           "index": 0,
           "label": "升级农田",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 6,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 6,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 6,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 102,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 54,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 9,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 99,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 9,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 99,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 1,
           "label": "刷新状态",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 108,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 108,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 108,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 204,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 156,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 111,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 201,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 111,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 201,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 2,
           "label": "军事",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 210,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 210,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 210,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 306,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 258,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 213,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 303,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 213,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 303,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 14,
           "label": "世界",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 1434,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 1434,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 1434,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 1530,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 1482,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 1437,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 1527,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 1437,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 1527,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 15,
           "label": "队列",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 1536,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 1536,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 1536,
+            "top": 850,
+            "width": 64,
+            "height": 44,
+            "right": 1600,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 64,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 1568,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 1539,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 1597,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 1539,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 1597,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         }
       ],
-      "minHitHeightCss": 44
+      "lastToolbarButtonAfterScroll": {
+        "label": "队列",
+        "buttonRect": {
+          "left": 1498,
+          "top": 850,
+          "width": 96,
+          "height": 44
+        },
+        "hitWrapRect": {
+          "left": 1498,
+          "top": 850,
+          "width": 96,
+          "height": 44
+        },
+        "visibleIntersectionWithScroll": {
+          "left": 1498,
+          "top": 850,
+          "width": 96,
+          "height": 44,
+          "right": 1594,
+          "bottom": 894
+        },
+        "screenCssEffective": {
+          "width": 96,
+          "height": 44
+        },
+        "meetsMin44ScreenCss": true,
+        "elementFromPoint": [
+          {
+            "name": "center",
+            "x": 1546,
+            "y": 872,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "topLeft",
+            "x": 1501,
+            "y": 853,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "topRight",
+            "x": 1591,
+            "y": 853,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "bottomLeft",
+            "x": 1501,
+            "y": 891,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "bottomRight",
+            "x": 1591,
+            "y": 891,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          }
+        ],
+        "allProbesHitButton": true
+      }
     },
-    "1600x900_dpr2": {
+    "maincity-3200x1800-full.jpg": {
       "uiScale": 1,
       "buttonCount": 16,
       "scrollMetrics": {
         "scrollWidth": 1638,
         "clientWidth": 1585,
-        "maxScrollLeft": 53
+        "maxScrollLeft": 53,
+        "rect": {
+          "left": 0,
+          "top": 850,
+          "width": 1600,
+          "height": 44
+        }
       },
-      "scrolledToEnd": true,
-      "lastEntryReachableAfterScroll": true,
-      "hitRects": [
+      "samples": [
         {
           "index": 0,
           "label": "升级农田",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 6,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 6,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 6,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 102,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 54,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 9,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 99,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 9,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 99,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 1,
           "label": "刷新状态",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 108,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 108,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 108,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 204,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 156,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 111,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 201,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 111,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 201,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 2,
           "label": "军事",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 210,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 210,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 210,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 306,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 258,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 213,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 303,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 213,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 303,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 14,
           "label": "世界",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 1434,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 1434,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 1434,
+            "top": 850,
+            "width": 96,
+            "height": 44,
+            "right": 1530,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 1482,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 1437,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 1527,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 1437,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 1527,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 15,
           "label": "队列",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 1536,
+            "top": 850,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 44
-          }
+          "hitWrapRect": {
+            "left": 1536,
+            "top": 850,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 1536,
+            "top": 850,
+            "width": 64,
+            "height": 44,
+            "right": 1600,
+            "bottom": 894
+          },
+          "screenCssEffective": {
+            "width": 64,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 1568,
+              "y": 872,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 1539,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 1597,
+              "y": 853,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 1539,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 1597,
+              "y": 891,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         }
       ],
-      "minHitHeightCss": 44
+      "lastToolbarButtonAfterScroll": {
+        "label": "队列",
+        "buttonRect": {
+          "left": 1498,
+          "top": 850,
+          "width": 96,
+          "height": 44
+        },
+        "hitWrapRect": {
+          "left": 1498,
+          "top": 850,
+          "width": 96,
+          "height": 44
+        },
+        "visibleIntersectionWithScroll": {
+          "left": 1498,
+          "top": 850,
+          "width": 96,
+          "height": 44,
+          "right": 1594,
+          "bottom": 894
+        },
+        "screenCssEffective": {
+          "width": 96,
+          "height": 44
+        },
+        "meetsMin44ScreenCss": true,
+        "elementFromPoint": [
+          {
+            "name": "center",
+            "x": 1546,
+            "y": 872,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "topLeft",
+            "x": 1501,
+            "y": 853,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "topRight",
+            "x": 1591,
+            "y": 853,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "bottomLeft",
+            "x": 1501,
+            "y": 891,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "bottomRight",
+            "x": 1591,
+            "y": 891,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          }
+        ],
+        "allProbesHitButton": true
+      }
     },
-    "1280x720_dpr1": {
+    "maincity-1280x720-full.jpg": {
       "uiScale": 0.8,
       "buttonCount": 16,
       "scrollMetrics": {
         "scrollWidth": 1638,
         "clientWidth": 1265,
-        "maxScrollLeft": 373
+        "maxScrollLeft": 373,
+        "rect": {
+          "left": 0,
+          "top": 675.59375,
+          "width": 1280,
+          "height": 44
+        }
       },
-      "scrolledToEnd": true,
-      "lastEntryReachableAfterScroll": true,
-      "hitRects": [
+      "samples": [
         {
           "index": 0,
           "label": "升级农田",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 6,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 55
-          }
+          "hitWrapRect": {
+            "left": 6,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 6,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44,
+            "right": 102,
+            "bottom": 719.59375
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 54,
+              "y": 697.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 9,
+              "y": 678.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 99,
+              "y": 678.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 9,
+              "y": 716.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 99,
+              "y": 716.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 1,
           "label": "刷新状态",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 108,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 55
-          }
+          "hitWrapRect": {
+            "left": 108,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 108,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44,
+            "right": 204,
+            "bottom": 719.59375
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 156,
+              "y": 697.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 111,
+              "y": 678.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 201,
+              "y": 678.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 111,
+              "y": 716.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 201,
+              "y": 716.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 2,
           "label": "军事",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 210,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 55
-          }
+          "hitWrapRect": {
+            "left": 210,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 210,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44,
+            "right": 306,
+            "bottom": 719.59375
+          },
+          "screenCssEffective": {
+            "width": 96,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": true,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 258,
+              "y": 697.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topLeft",
+              "x": 213,
+              "y": 678.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "topRight",
+              "x": 303,
+              "y": 678.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomLeft",
+              "x": 213,
+              "y": 716.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            },
+            {
+              "name": "bottomRight",
+              "x": 303,
+              "y": 716.59375,
+              "elementTag": "BUTTON",
+              "elementClass": "toolbar-chrome-btn",
+              "hitsButton": true
+            }
+          ],
+          "allProbesHitButton": true
         },
         {
           "index": 14,
           "label": "世界",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 1434,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 55
-          }
+          "hitWrapRect": {
+            "left": 1434,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 1434,
+            "top": 675.59375,
+            "width": 0,
+            "height": 44,
+            "right": 1280,
+            "bottom": 719.59375
+          },
+          "screenCssEffective": {
+            "width": 0,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": false,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 1482,
+              "y": 697.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "topLeft",
+              "x": 1437,
+              "y": 678.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "topRight",
+              "x": 1527,
+              "y": 678.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "bottomLeft",
+              "x": 1437,
+              "y": 716.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "bottomRight",
+              "x": 1527,
+              "y": 716.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            }
+          ],
+          "allProbesHitButton": false
         },
         {
           "index": 15,
           "label": "队列",
-          "buttonCss": {
-            "w": 96,
-            "h": 44
+          "buttonRect": {
+            "left": 1536,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
           },
-          "hitWrapCss": {
-            "w": 96,
-            "h": 55
-          }
+          "hitWrapRect": {
+            "left": 1536,
+            "top": 675.59375,
+            "width": 96,
+            "height": 44
+          },
+          "visibleIntersectionWithScroll": {
+            "left": 1536,
+            "top": 675.59375,
+            "width": 0,
+            "height": 44,
+            "right": 1280,
+            "bottom": 719.59375
+          },
+          "screenCssEffective": {
+            "width": 0,
+            "height": 44
+          },
+          "meetsMin44ScreenCss": false,
+          "elementFromPoint": [
+            {
+              "name": "center",
+              "x": 1584,
+              "y": 697.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "topLeft",
+              "x": 1539,
+              "y": 678.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "topRight",
+              "x": 1629,
+              "y": 678.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "bottomLeft",
+              "x": 1539,
+              "y": 716.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            },
+            {
+              "name": "bottomRight",
+              "x": 1629,
+              "y": 716.59375,
+              "elementTag": null,
+              "elementClass": null,
+              "hitsButton": false
+            }
+          ],
+          "allProbesHitButton": false
         }
       ],
-      "minHitHeightCss": 55
+      "lastToolbarButtonAfterScroll": {
+        "label": "队列",
+        "buttonRect": {
+          "left": 1178,
+          "top": 675.59375,
+          "width": 96,
+          "height": 44
+        },
+        "hitWrapRect": {
+          "left": 1178,
+          "top": 675.59375,
+          "width": 96,
+          "height": 44
+        },
+        "visibleIntersectionWithScroll": {
+          "left": 1178,
+          "top": 675.59375,
+          "width": 96,
+          "height": 44,
+          "right": 1274,
+          "bottom": 719.59375
+        },
+        "screenCssEffective": {
+          "width": 96,
+          "height": 44
+        },
+        "meetsMin44ScreenCss": true,
+        "elementFromPoint": [
+          {
+            "name": "center",
+            "x": 1226,
+            "y": 697.59375,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "topLeft",
+            "x": 1181,
+            "y": 678.59375,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "topRight",
+            "x": 1271,
+            "y": 678.59375,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "bottomLeft",
+            "x": 1181,
+            "y": 716.59375,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          },
+          {
+            "name": "bottomRight",
+            "x": 1271,
+            "y": 716.59375,
+            "elementTag": "BUTTON",
+            "elementClass": "toolbar-chrome-btn",
+            "hitsButton": true
+          }
+        ],
+        "allProbesHitButton": true
+      }
     }
-  },
-  "notes": [
-    "Bottom toolbar uses horizontal scroll; scrollMetrics.maxScrollLeft > 0 at 1280 when buttons overflow.",
-    "Hit wrap min-height uses calc(44px / var(--ui-scale)); expect minHitHeightCss >= 44 at 1280."
-  ]
+  }
 }

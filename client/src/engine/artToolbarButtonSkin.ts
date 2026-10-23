@@ -10,7 +10,8 @@ function applyToolbarButtonSkin(btn: HTMLButtonElement, assets: AssetLoader, sta
   if (!pack) return;
   const meta = assets.getArtMeta(TOOLBAR_BTN_ASSET);
   const w = meta?.display_size.w ?? 96;
-  const h = meta?.display_size.h ?? 44;
+  const artH = meta?.display_size.h ?? 44;
+  const h = artH;
   btn.style.backgroundImage = `url(${pack.img.src})`;
   btn.style.backgroundSize = `${w}px ${h}px`;
   btn.style.backgroundRepeat = "no-repeat";

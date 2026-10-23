@@ -23,11 +23,18 @@ describe("artChromeSkin", () => {
     expect(hud.style.backgroundImage).toContain("url(");
   });
 
-  it("wraps toolbar buttons for hit slop", () => {
+  it("wraps toolbar buttons and forwards wrapper clicks to the button", () => {
     const root = document.createElement("div");
     root.innerHTML = `<div class="toolbar-scroll-inner"><button type="button">A</button></div>`;
+    const btn = root.querySelector("button")!;
+    let clicked = false;
+    btn.addEventListener("click", () => {
+      clicked = true;
+    });
     wrapToolbarButtonsForHit(root);
     const hit = root.querySelector(".toolbar-btn-hit");
     expect(hit?.querySelector("button")).toBeTruthy();
+    hit?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(clicked).toBe(true);
   });
 });
