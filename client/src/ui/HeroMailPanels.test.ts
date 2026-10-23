@@ -667,10 +667,76 @@ describe("HeroMailPanels", () => {
     await flushPromises();
     mount.querySelector('[data-action="mail-filter-unread"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    expect(listPlayerMail).toHaveBeenLastCalledWith(1, {
+    expect(listPlayerMail).toHaveBeenCalledWith(1, {
       filter: MAIL_INBOX_FILTER_UNREAD,
       pageSize: 50,
     });
+  });
+
+  it("inbox filter tabs show unread and attachment counts from snapshot", async () => {
+    const mount = document.createElement("div");
+    const listPlayerMail = vi
+      .fn()
+      .mockResolvedValueOnce({
+        mails: [
+          {
+            mail_id: 1,
+            status: 0,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+          { mail_id: 2, status: 0 },
+        ],
+        total_count: 2,
+      })
+      .mockResolvedValue({ mails: [], total_count: 0 });
+    const gateway: GatewayPort = {
+      listPlayerMail,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    const unreadBtn = mount.querySelector('[data-action="mail-filter-unread"]');
+    expect(unreadBtn?.textContent).toBe("未读 2");
+    const attachBadge = mount.querySelector('[data-role="mail-filter-attach-badge"]');
+    expect(attachBadge?.textContent).toBe("附件 1");
+  });
+
+  it("tab attachment badge drops immediately after claim", async () => {
+    const mount = document.createElement("div");
+    const listPlayerMail = vi
+      .fn()
+      .mockResolvedValueOnce({
+        mails: [
+          {
+            mail_id: 5,
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+        ],
+        total_count: 1,
+      })
+      .mockResolvedValue({ mails: [{ mail_id: 5, status: 2 }], total_count: 0 });
+    const gateway: GatewayPort = {
+      listPlayerMail,
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      claimPlayerMailAttachments: vi.fn().mockResolvedValue({
+        mail: { mail_id: 5, status: 2, has_unclaimed_attachments: false },
+        granted: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    expect(mount.querySelector('[data-role="mail-filter-attach-badge"]')?.textContent).toBe("附件 1");
+    mount.querySelector('[data-action="claim-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const badge = mount.querySelector('[data-role="mail-filter-attach-badge"]');
+    expect(badge?.textContent).toBe("");
+    expect(badge?.classList.contains("hidden")).toBe(true);
   });
 
   it("syncUnreadBadge reports total_count to callback", async () => {

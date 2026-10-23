@@ -7,7 +7,9 @@ import {
   formatRecruitTemplateLine,
   heroListLines,
   InvalidHeroDetailRequestError,
+  countMailUnreadAndUnclaimed,
   countMailsWithUnclaimedAttachments,
+  mailIsUnreadForInboxCount,
   formatMailClaimGrantedSummary,
   mailCanClaimAttachments,
   mailHasUnclaimedAttachments,
@@ -88,6 +90,18 @@ describe("heroMailState", () => {
     expect(mailCanClaimAttachments({ mail_id: 1, status: 2, attachments: { items: [{ item_cfg_id: 1 }] } })).toBe(
       false,
     );
+  });
+
+  it("countMailUnreadAndUnclaimed from inbox snapshot", () => {
+    expect(
+      countMailUnreadAndUnclaimed([
+        { mail_id: 1, status: 0, attachments: { items: [{ item_cfg_id: 1, quantity: 1 }] } },
+        { mail_id: 2, status: 2, read_at_ms: 100, attachments: { items: [{ item_cfg_id: 2 }] } },
+        { mail_id: 3, status: 1, attachments: { items: [{ item_cfg_id: 3 }] } },
+      ]),
+    ).toEqual({ unread: 1, unclaimed: 2 });
+    expect(mailIsUnreadForInboxCount({ mail_id: 9, status: 0, read_at_ms: 1 })).toBe(false);
+    expect(mailIsUnreadForInboxCount({ mail_id: 9, status: 0 })).toBe(true);
   });
 
   it("mailHasUnclaimedAttachments prefers API flag and counts rows", () => {
