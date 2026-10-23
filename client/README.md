@@ -68,6 +68,18 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **行军结束 → 战报提示**（到达 toast + 战报未读） | [手动验收（行军到达与战报未读 CLIENT-025）](#手动验收行军到达与战报未读-client-025)（[#213](https://github.com/anitaguptaoffice/sanguo-slg/issues/213) / [#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)） |
 | **HUD 待办徽章**（邮件 / 日常 / 战报底栏角标） | [手动验收（HUD 待办徽章，CLIENT-027）](#手动验收hud-待办徽章-client-027)（[#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) / [#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)） |
 
+## Wave 15 世界地图与面板密度（M4 出口 / INTG-012）
+
+在 `make dev` 下联调的最短人工路径（与 `tools/smoke/README.md`、**INTG-012** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**（仅建造队列，见 wave:14 **DOM-003**）。
+
+| 能力 | 验收小节 |
+|---|---|
+| **世界地图行军只读标注**（小地图 ↔ `ListMarches` 联动） | [手动验收（世界地图行军标注 CLIENT-028）](#手动验收世界地图行军标注-client-028)（[#228](https://github.com/anitaguptaoffice/sanguo-slg/issues/228) / [#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)） |
+| **邮件 / 战报 / 背包密度**（空态、两行摘要、筛选空文案） | [手动验收（邮件战报背包密度 CLIENT-029）](#手动验收邮件战报背包密度-client-029)（[#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229)；代码 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 合入中） |
+| **排行 / 军团 / 聊天扫读** | [手动验收（社交扫读 CLIENT-030）](#手动验收社交扫读-client-030)（[#230](https://github.com/anitaguptaoffice/sanguo-slg/issues/230) / [#236](https://github.com/anitaguptaoffice/sanguo-slg/pull/236)） |
+| **将领详情与招募池对比** | [手动验收（将领招募对比 CLIENT-031）](#手动验收将领招募对比-client-031)（[#231](https://github.com/anitaguptaoffice/sanguo-slg/issues/231) / [#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)） |
+| **manifest HUD / 面板接线** | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线)（[#232](https://github.com/anitaguptaoffice/sanguo-slg/issues/232) / [#240](https://github.com/anitaguptaoffice/sanguo-slg/pull/240)） |
+
 ## 网关地址
 
 | 环境 | 变量 / 地址 |
@@ -112,7 +124,7 @@ cd client && npm install && npm run dev
    - **军团**频道需先在「军团」面板创建/加入军团；未入团时客户端拦截发送，状态栏提示需先入团；服务端可能返回 `61005`/`61001`，状态栏显示中文摘要 + `code`。
    - 真实服可用 `cmd/gm mute` 测禁言；mock 网关在世界频道发送内容 **`__mock_mute__`** 可模拟 5 分钟禁言，再次发送应看到 **已被禁言 (code=61006)**。
 3. 点 **「军团」**：创建或加入后顶栏 **`guild-summary`** 应持久显示 `guild_id` 与名称（同一会话内切换面板不丢失）；「刷新成员」列表行含 **职务**（`guildRoleLabel`）与 **加入时间**（若 API 返回 `joined_at_ms`）。加入不存在的军团时状态栏应可读（如 `军团不存在 (code=60001)`）。
-4. 点 **「排行」**：双榜与快照元数据见 [CLIENT-021](#手动验收排行双榜-client-021)；本小节侧重军团/聊天可读（CLIENT-022）。
+4. 点 **「排行」**：双榜与快照元数据见 [CLIENT-021](#手动验收排行双榜-client-021)；扫读加深见 [CLIENT-030](#手动验收社交扫读-client-030)。本小节侧重军团/聊天可读（CLIENT-022）。
 5. M2 军事/内政仍可用：**「军事」**、**「升级农田」** 等。
 
 mock 网关（军团频道 + 禁言桩）：
@@ -162,7 +174,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 在 CLIENT-008 将领面板基础上，验收 `hero.v1.GetHeroDetail` 与列表可读性（`make dev` 或 mock 网关均可）。
 
 1. 点 **「将领」** →「刷新列表」。每行应含 **Lv** 与 **忠诚** 数值（来自 `ListPlayerHeroes`）。
-2. 点击某一将领行：详情区展示 **template_name**、**稀有度**、四维属性（武/智/政/统）、**忠诚度及 loyalty_min~loyalty_max 区间**。
+2. 点击某一将领行：详情区展示 **template_name**、**稀有度**、**Lv** 与四维属性（武/智/政/统，CLIENT-031 表格 + 进度条）、**忠诚度及 loyalty_min~loyalty_max 区间**。
 3. 详情区末尾应提示：养成道具请走底栏 **「背包」** → **「使用道具」**（`content.v1.UseConsumable`），无将领专用 RPC。
 4. 未选将领或 `hero_id=0` 时不应发起 GetHeroDetail；状态栏应提示 hero_id 无效（客户端拦截）。
 
@@ -184,7 +196,7 @@ mock 预置将领时可用 `VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run 
 2. 打开邮件面板 → **全部 / 未读** 切换列表；每行展示**标题 + 摘要**（正文截断或附件提示）。
 3. **点开**一封未读邮件 → 自动调用 `MarkPlayerMailRead`；在「未读」筛选下该封应从列表消失。
 4. 带附件邮件显示 **「领取附件」** → 成功后 HUD 五资源与背包摘要更新（`wallet_after` / `bag_items`）；重复领取或失败时面板内显示明确错误文案。
-5. 空收件箱显示「收件箱为空…」；未读筛选无信时显示「暂无未读邮件」。
+5. 空收件箱：合入 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 后为「暂无邮件，完成日常…」引导；合入前为「收件箱为空…」。未读筛选无信时显示「暂无未读邮件」。
 6. 视口 **1600×900**：面板落在顶底 56px 带之间，列表与正文区可滚动、不撑破外框。
 
 **GM 发信（真实 PG）** — 参数见 [`docs/ops/open-server-runbook.md`](../docs/ops/open-server-runbook.md) §4.5：
@@ -323,6 +335,35 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 5. 成功后自动 **GetCityState**：队列行剩余时间应缩短（`upgrade_finish_at_ms` 前移，依赖服务端 DOM-003）；背包 2003 数量减 1。可对比使用前后面板倒计时或完成时刻。
 6. 募兵行 **无** 加速按钮（本卡仅建造队列）。单测：`QueuePanels.test.ts`、`bagState`（`bagStackQuantity`）。
 
+### 手动验收（邮件战报背包密度，CLIENT-029）
+
+> **合入状态**：面板密度实现跟踪 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238)；合入前 `main` 仍以 [CLIENT-017](#手动验收邮件收件箱client-017) / [CLIENT-016](#手动验收战报筛选-client-016) / [CLIENT-020](#手动验收背包与商城反馈-client-020) 为准。合入后验收 `panelDensity.ts`。
+
+`panelDensity.ts` / `militaryFormat` 战报行辅助；邮件未读行 class `unread` 与 CLIENT-027 角标同色（`#c9a227`）。
+
+1. `make dev` 或 mock 进主城。**邮件**：空收件箱显示「暂无邮件，完成日常…」；有信时每行两行（标题+时间 / 附件或已读角标），未读行左侧金条背景；底栏未读角标与 CLIENT-027 一致。
+2. **战报**：列表加载失败时状态栏与列表内「重试」提示，与真空列表「暂无战报…」区分；有数据时行首 outcome 色块 + 对手摘要 + 时间；筛选无结果时保留筛选条且列表提示「无匹配战报」。
+3. **背包**：空列表引导「商城」「日常」；道具行 `item_cfg_id` 与数量列对齐；使用失败时金色反馈在列表**下方**，不遮挡道具行。
+4. 单测：`panelDensity.test.ts`、`BattleReportPanel.test.ts`、`HeroMailPanels.test.ts`；全量 `cd client && npm test`。
+
+### 手动验收（社交扫读 CLIENT-030）
+
+在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
+
+1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。
+2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`）；行内 `player_id` 截断展示，含加入时间摘要。
+3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
+4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。
+
+### 手动验收（将领招募对比 CLIENT-031）
+
+在 [CLIENT-014](#手动验收将领详情-client-014) / [CLIENT-008](#手动验收m4将领client-008) 基础上验收招募池对比与扣费明细。
+
+1. 点 **「将领」** → 刷新列表 → 点选将领：详情区 **Lv** 与模板名同屏，四维为表格 + 进度条（武力/智力/政治/统率）。
+2. **刷新招募模板**：列表/下拉对 `already_owned` 或已有同 `template_cfg_id` 将领的行展示 **「已招募」**（`recruit-owned` 样式）。
+3. 选中模板：预览区 **扣费明细** 为 `formatRecruitDeductSummary`，与招募成功状态栏扣费文案一致。
+4. 招募成功后的 **CLIENT-023** 日常跟进提示路径不变。单测：`heroMailState.test.ts`、`HeroMailPanels.test.ts`。
+
 ### 手动验收（HUD 待办徽章，CLIENT-027）
 
 底栏 **邮件 / 日常 / 战报** 右上角数字角标（`pointer-events: none`，不挡按钮点击）；轮询间隔与 CLIENT-018 `CityStatePoll` 同档（面板打开 5s / 关闭 30s），各来源请求单飞。
@@ -347,7 +388,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天行格式、军团摘要、禁言错误可读）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`worldMinimap`（小地图缩放/行军高亮）、`panelDensity`（邮件/战报/背包空态与未读 class，[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 合入后）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
