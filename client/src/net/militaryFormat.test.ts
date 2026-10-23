@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   battleReportListLines,
   formatMarchHint,
+  formatMarchLine,
   formatReportLine,
+  marchListLines,
+  marchNeedsPoll,
   pickMarchTroops,
   unitLabel,
 } from "@/net/militaryFormat";
@@ -39,6 +42,22 @@ describe("militaryFormat", () => {
       }),
     ).toContain("坐标(3,4)");
     expect(battleReportListLines([])[0]).toContain("暂无战报");
+    expect(
+      formatMarchLine({
+        march_id: 2,
+        purpose: 1,
+        phase: 2,
+        from_x: 0,
+        from_y: 0,
+        to_x: 5,
+        to_y: 5,
+        depart_at_ms: Date.UTC(2024, 0, 1, 8, 0, 0),
+        arrive_at_ms: Date.UTC(2024, 0, 1, 9, 0, 0),
+      }),
+    ).toContain("攻击");
+    expect(marchListLines([])[0]).toContain("暂无行军");
+    expect(marchNeedsPoll([{ phase: 3 }])).toBe(false);
+    expect(marchNeedsPoll([{ phase: 2 }])).toBe(true);
   });
 
   it("pickMarchTroops caps by available count", () => {
@@ -53,6 +72,14 @@ describe("militaryFormat", () => {
 });
 
 describe("military proto encode/decode", () => {
+  it("round-trips ListMarchesRequest", () => {
+    const { ListMarchesRequest } = getTypes();
+    const msg = ListMarchesRequest.create({ city_id: 501, limit: 20, offset: 0 });
+    const decoded = ListMarchesRequest.decode(ListMarchesRequest.encode(msg).finish());
+    expect(Number(decoded.city_id)).toBe(501);
+    expect(decoded.limit).toBe(20);
+  });
+
   it("round-trips StartMarchRequest", () => {
     const { StartMarchRequest } = getTypes();
     const msg = StartMarchRequest.create({

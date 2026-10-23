@@ -23,6 +23,7 @@ function mockGateway(overrides: Partial<GatewayPort> = {}): GatewayPort {
     startBuildingUpgrade: vi.fn(),
     recruitTroop: vi.fn(),
     startMarch: vi.fn(),
+    listMarches: vi.fn(),
     listBattleReports: vi.fn(),
     getBattleReport: vi.fn(),
     listGameServers: vi.fn(),

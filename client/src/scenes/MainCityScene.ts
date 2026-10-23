@@ -16,6 +16,7 @@ import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
+import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
 import {
@@ -61,6 +62,7 @@ export class MainCityScene implements Scene {
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
   private battleReports!: BattleReportPanel;
+  private marchList!: MarchListPanel;
   private dailyQuest!: DailyQuestPanels;
   private world!: WorldPanels;
   private assets!: AssetLoader;
@@ -85,6 +87,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
       <button type="button" data-action="toggle-reports">战报</button>
+      <button type="button" data-action="toggle-marches">行军</button>
       <button type="button" data-action="toggle-chat">聊天</button>
       <button type="button" data-action="toggle-guild">军团</button>
       <button type="button" data-action="toggle-rank">排行</button>
@@ -166,6 +169,16 @@ export class MainCityScene implements Scene {
       this.renderHud();
     });
     this.battleReports.attach();
+    this.marchList = new MarchListPanel(
+      parent,
+      this.gateway,
+      () => this.session?.cityId,
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+    );
+    this.marchList.attach();
     this.dailyQuest = new DailyQuestPanels(
       parent,
       this.gateway,
@@ -226,6 +239,7 @@ export class MainCityScene implements Scene {
     this.content?.detach();
     this.heroMail?.detach();
     this.battleReports?.detach();
+    this.marchList?.detach();
     this.dailyQuest?.detach();
     this.world?.detach();
     this.toolbar?.remove();
@@ -243,6 +257,7 @@ export class MainCityScene implements Scene {
       this.syncMilitaryPanel();
     }
     if (action === "toggle-reports") this.battleReports.toggle();
+    if (action === "toggle-marches") this.marchList.toggle();
     if (action === "toggle-chat") this.social.toggleChat();
     if (action === "toggle-guild") this.social.toggleGuild();
     if (action === "toggle-rank") this.social.toggleRank();
@@ -428,6 +443,7 @@ export class MainCityScene implements Scene {
         })));
       }
       this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
+      this.marchList.notifyMarchStarted();
     } catch (e) {
       this.status = (e as Error).message;
     }
