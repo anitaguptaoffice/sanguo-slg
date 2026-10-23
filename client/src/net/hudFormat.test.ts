@@ -3,6 +3,7 @@ import {
   formatKeyBuildingHudLine,
   formatResourceAmount,
   formatResourceHudGroup,
+  formatResourceProductionRatesBrief,
   formatUpgradeRemaining,
   formatUpgradeSummary,
   formatWalletGainBrief,
@@ -21,6 +22,13 @@ describe("hudFormat", () => {
     expect(walletResourceIncreases({ food: 100 }, { food: 250, wood: 10 })).toEqual({ food: 150, wood: 10 });
     expect(formatWalletGainBrief({ food: 100 }, { food: 100 })).toBeNull();
     expect(formatWalletGainBrief({ food: 100 }, { food: 1150, gold: 5 })).toBe("+粮1,050 +币5");
+  });
+
+  it("formats production rates brief for HUD", () => {
+    expect(formatResourceProductionRatesBrief(undefined)).toBeNull();
+    expect(formatResourceProductionRatesBrief({ food: 120, wood: 100, iron: 0, stone: 50 })).toBe(
+      "粮+120/h · 木+100/h · 铁+0/h · 石+50/h",
+    );
   });
 
   it("groups HUD wallet resources", () => {

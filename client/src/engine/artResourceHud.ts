@@ -1,6 +1,10 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import type { ResourceWallet } from "@/net/bootstrapSession";
-import { formatResourceAmount, WALLET_RESOURCE_KEYS } from "@/net/hudFormat";
+import {
+  formatResourceAmount,
+  formatResourceProductionRatesBrief,
+  WALLET_RESOURCE_KEYS,
+} from "@/net/hudFormat";
 
 /** Manifest PNG ids wired on CLIENT-032 (#218 main-tree); gold has no icon asset. */
 export const HUD_RESOURCE_ICON_ASSET_IDS: Partial<Record<keyof ResourceWallet, string>> = {
@@ -54,4 +58,30 @@ export function appendHudResourceStrip(
   }
 
   hud.appendChild(group);
+}
+
+/** 资源条次行或 tooltip：产出速率只读摘要（CLIENT-059）。 */
+export function appendHudProductionRatesLine(
+  hud: HTMLElement,
+  productionRates: ResourceWallet | undefined,
+): void {
+  const brief = formatResourceProductionRatesBrief(productionRates);
+  const strip = hud.querySelector('[data-role="hud-resources"]');
+  if (strip) {
+    strip.setAttribute("title", brief ?? "");
+  }
+  const existing = hud.querySelector('[data-role="hud-production-rates"]');
+  if (existing) existing.remove();
+  if (!brief) return;
+  const line = document.createElement("span");
+  line.className = "hud-group hud-production-rates";
+  line.dataset.role = "hud-production-rates";
+  line.textContent = brief;
+  line.setAttribute("title", "城池资源净产出（/小时）");
+  const anchor = strip ?? hud.firstChild;
+  if (anchor?.nextSibling) {
+    hud.insertBefore(line, anchor.nextSibling);
+  } else {
+    hud.appendChild(line);
+  }
 }

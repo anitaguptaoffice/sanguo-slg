@@ -32,6 +32,9 @@ describe("QueuePanels", () => {
     const text = mount.textContent ?? "";
     expect(text).toContain("农田");
     expect(text).toContain("步兵×12");
+    expect(text).toContain("建造 1");
+    expect(text).toContain("募兵 1");
+    expect(text).toMatch(/最近 剩/);
   });
 
   it("offers speedup button on build rows and disables without item", () => {

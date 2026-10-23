@@ -34,6 +34,10 @@ function loadRoot() {
     }
   }
   root.resolveAll();
+  const cityState = root.lookupType("sanguo.domestic.v1.GetCityStateResponse");
+  if (!cityState.fields.production_rates) {
+    cityState.add(new protobuf.Field("production_rates", 3, "sanguo.common.v1.ResourceWallet"));
+  }
   return root;
 }
 
@@ -387,6 +391,7 @@ wss.on("connection", (ws) => {
         replyOk(ws, cp.trace_id, T("sanguo.domestic.v1.GetCityStateResponse"), {
           wallet: state.wallet,
           buildings: state.buildings ?? [{ slot_key: "farm", building_cfg_id: 2, level: 1 }],
+          production_rates: state.productionRates ?? { food: 120, wood: 100, iron: 40, stone: 80 },
         });
         return;
       }
