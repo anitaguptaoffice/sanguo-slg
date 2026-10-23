@@ -226,7 +226,29 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:22 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:22 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-014**（[#399](https://github.com/anitaguptaoffice/sanguo-slg/issues/399)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 22」。
+波次总览与 **DOCS-EXIT-014**（[#399](https://github.com/anitaguptaoffice/sanguo-slg/issues/399) / [#410](https://github.com/anitaguptaoffice/sanguo-slg/pull/410) `23a6f0ed`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 22」。**wave:23** 后勤互链与全链路反馈加深见下文 [Wave 23](#wave-23-后勤互链与全链路反馈加深m4-出口--intg-020)。
+
+## Wave 23 后勤互链与全链路反馈加深（M4 出口 / INTG-020）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-020** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**；**永不合并** art hold PR #77/#82/#108/#100/#126。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **募兵下一批消耗只读预览** | [手动验收（募兵消耗预览 CLIENT-088）](#手动验收募兵消耗预览-client-088)（[#412](https://github.com/anitaguptaoffice/sanguo-slg/issues/412) / [#423](https://github.com/anitaguptaoffice/sanguo-slg/pull/423) `d60d8345`） | 已合 |
+| **出征 ETA 与兵力汇总条** | [出征表单校验 CLIENT-048](#手动验收出征表单格点与兵力校验-client-048) 内 **march-form-summary**（**CLIENT-089**，[#413](https://github.com/anitaguptaoffice/sanguo-slg/issues/413) / [#429](https://github.com/anitaguptaoffice/sanguo-slg/pull/429) `b610caab`） | 已合 |
+| **小地图与军情高亮互选** | [手动验收（小地图与军情互选 CLIENT-090）](#手动验收小地图与军情互选-client-090)（[#414](https://github.com/anitaguptaoffice/sanguo-slg/issues/414) / [#430](https://github.com/anitaguptaoffice/sanguo-slg/pull/430) `358f88aa`） | 已合 |
+| **日常可领取首条定位与领奖脉冲** | [手动验收（日常可领取定位 CLIENT-091）](#手动验收日常可领取定位-client-091)（[#415](https://github.com/anitaguptaoffice/sanguo-slg/issues/415) / [#426](https://github.com/anitaguptaoffice/sanguo-slg/pull/426) `f3523e87`） | 已合 |
+| **商城/背包购买缺口对比** | [手动验收（背包与商城反馈 CLIENT-020）](#手动验收背包与商城反馈-client-020) 第 7 步 **CLIENT-092**（[#416](https://github.com/anitaguptaoffice/sanguo-slg/issues/416) / [#427](https://github.com/anitaguptaoffice/sanguo-slg/pull/427) `6394ddfb`） | 已合 |
+| **军情行再出征预填** | [手动验收（军情再出征预填 CLIENT-093）](#手动验收军情再出征预填-client-093)（[#417](https://github.com/anitaguptaoffice/sanguo-slg/issues/417) / [#425](https://github.com/anitaguptaoffice/sanguo-slg/pull/425) `62dd6def`） | 已合 |
+| **战报相邻导航键盘与焦点环** | [手动验收（战报相邻导航键盘与焦点环 CLIENT-094）](#手动验收战报相邻导航键盘与焦点环-client-094)（[#418](https://github.com/anitaguptaoffice/sanguo-slg/issues/418) / [#428](https://github.com/anitaguptaoffice/sanguo-slg/pull/428) `f8152b2d`） | 已合 |
+| **1280 背包/商城/军团 manifest** | [手动验收（1280 背包/商城/军团聊天 CLIENT-095）](#手动验收1280-背包商城军团聊天-client-095)（[#419](https://github.com/anitaguptaoffice/sanguo-slg/issues/419) / [#431](https://github.com/anitaguptaoffice/sanguo-slg/pull/431) `7d19874f`） | 已合 |
+| **网关冒烟**（商城价 + 邮件未领附件 + 建筑 level） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 23** / `TestINTG020Wave23SmokePath`（[#420](https://github.com/anitaguptaoffice/sanguo-slg/issues/420) / [#424](https://github.com/anitaguptaoffice/sanguo-slg/pull/424) `d27e863e`） | 已合 |
+
+**推荐串联**（在 [Wave 22](#wave-22-出征执行反馈与主城经济扫读m4-出口--intg-019) 出征反馈/HUD 经济扫读基础上）：**军事** 募兵消耗预览（**CLIENT-088**）→ 出征 **汇总条**（**CLIENT-089**）→ **小地图↔军情** 互选（**CLIENT-090**）→ **日常** 可领取定位与领奖脉冲（**CLIENT-091**）→ **商城/背包** 缺口对比（**CLIENT-092**）→ 军情 **再出征** 预填（**CLIENT-093**）→ **战报** 键盘相邻导航（**CLIENT-094**）→ 视口 **1280×720** 背包/商城/军团 manifest（**CLIENT-095**）；网关字段见 `tools/smoke/README.md` **INTG-020**。
+
+**wave:19 美术轨旁路**（**非** wave:23 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:23 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-015**（[#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) / [#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 23」。
 
 ## 网关地址
 
@@ -434,6 +456,14 @@ cd client && npm install && npm run dev
 5. **格点筛选**（世界选中格 / 手动坐标）与上述互选并存，筛选仍只过滤列表行、不改网关请求。
 6. `cd client && npm test` 含 `minimapMarchFocus.test.ts` 与 `MarchListPanel` 焦点恢复用例。
 
+### 手动验收（军情再出征预填 CLIENT-093）
+
+军情列表每行 **再出征**（`march-row-remarch-btn`）打开 **军事** 面板并预填该行 `to_x/to_y`（`applyMarchIntelRemarchPrefill` + **CLIENT-043** session）；军事表单区只读 **上次兵力** 摘要（`ListMarches` 快照 `troops`，`formatMarchIntelLastTroopsSummary`）。预填后 **CLIENT-089** `march-form-summary` 即时刷新；**CLIENT-080** `march-highlight-id` 不因点再出征而清除（用户手改目标才清）。**CLIENT-090** 小地图互选与 **CLIENT-061** 世界高亮不退化；无 `CancelMarch`。
+
+1. `make dev` 至少完成一次出征 → 底栏 **行军** 列表某行点 **再出征** → **军事** 面板目的坐标与摘要应与该行一致。
+2. 改 `to_x`/`to_y` 后高亮行应清除；再出征不自动 `StartMarch`。
+3. 单测：`marchIntelRemarch.test.ts`、`MarchListPanel.test.ts`。
+
 ### 手动验收（小地图比例尺与多行军 CLIENT-037）
 
 在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上：
@@ -554,6 +584,14 @@ cd client && npm install && npm run dev
 1. `make dev` 打开 **军事** → 切换兵种/数量，预览行应含消耗与 `耗时 m:ss`。
 2. 故意保留资源不足 → **募兵** 禁用 + 缺少提示；补足资源后按钮可点且不发 RPC 直至点击。
 3. 单测：`previewRecruitCost.test.ts`、`troopRecruitForm.test.ts`。
+
+### 手动验收（日常可领取定位 CLIENT-091）
+
+日常面板筛选 **可领取** 时出现 **定位首条**（`daily-locate-first`）：滚动至 `pickFirstClaimableDailyQuestCfgIdForFilter` 首行并加 `daily-quest-claimable` 高亮；与 **CLIENT-077** HUD 待办深链（`center-claimable`）并存。**领奖** 成功该行短暂 `quest-claim-pulse` + **CLIENT-051** 资源脉冲；失败 **CLIENT-067** 口径。**CLIENT-075** 筛选记忆与 **CLIENT-044** 战报横幅不退化。
+
+1. `make dev` 使 chain 400 至少一条 `state=3` → **日常** → **可领取** → **定位首条** 应滚到首条可领行。
+2. **领奖** 后观察脉冲与 HUD；刷新页面筛选记忆仍恢复。
+3. 单测：`dailyQuestListFilter.test.ts`、`DailyQuestPanels.test.ts`。
 
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
