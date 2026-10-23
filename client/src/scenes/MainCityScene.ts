@@ -87,12 +87,14 @@ import {
   type MinimapView,
 } from "@/ui/worldMinimap";
 import {
+  buildingBySlot,
   formatKeyBuildingHudLine,
   formatSlotBuildingCaption,
   formatWalletGainBrief,
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
+import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
 import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
@@ -129,6 +131,8 @@ export class MainCityScene implements Scene {
   private dailyQuest!: DailyQuestPanels;
   private world!: WorldPanels;
   private queuePanels!: QueuePanels;
+  private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
+  private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -252,6 +256,8 @@ export class MainCityScene implements Scene {
       <p class="military-march" data-role="march"></p>
     `;
     const parent = ctx.layoutFrame;
+    this.slotUpgradeOverlay = new MainCitySlotUpgradeOverlay(parent);
+    this.slotUpgradeOverlay.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
     this.social = new SocialPanels(
@@ -475,6 +481,7 @@ export class MainCityScene implements Scene {
     this.syncMilitaryPanel();
     void this.hudTodoBadgePoll.pollOnce();
     void this.refreshMinimapMarches();
+    this.syncSlotUpgradeOverlay();
   }
 
   update(dt: number): void {
@@ -500,12 +507,19 @@ export class MainCityScene implements Scene {
     }
     if (hasActiveBuildingUpgrade(this.session.buildings)) {
       this.hudRefreshAccum += dt;
+      this.slotOverlayRefreshAccum += dt;
       if (this.hudRefreshAccum >= 1) {
         this.hudRefreshAccum = 0;
         this.renderHud();
       }
+      if (this.slotOverlayRefreshAccum >= 1) {
+        this.slotOverlayRefreshAccum = 0;
+        this.syncSlotUpgradeOverlay();
+      }
     } else {
       this.hudRefreshAccum = 0;
+      this.slotOverlayRefreshAccum = 0;
+      this.syncSlotUpgradeOverlay();
     }
     if (this.walletGainBrief && Date.now() > this.walletGainUntilMs) {
       this.walletGainBrief = null;
@@ -531,6 +545,7 @@ export class MainCityScene implements Scene {
     this.dailyQuest?.detach();
     this.world?.detach();
     this.queuePanels?.detach();
+    this.slotUpgradeOverlay?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -811,6 +826,15 @@ export class MainCityScene implements Scene {
     const top = hits[0];
     if (!top) return;
     this.hitDebug = top.slot_key;
+    const building = buildingBySlot(this.session?.buildings, top.slot_key);
+    const now = Date.now();
+    if ((building?.upgrade_finish_at_ms ?? 0) > now) {
+      this.queuePanels.openAndHighlightBuildSlot(top.slot_key);
+      const label = SLOT_LABEL[top.slot_key] ?? top.slot_key;
+      this.status = `队列：${label} 升级进行中`;
+      this.renderHud();
+      return;
+    }
     if (top.slot_key === "farm") void this.upgradeFarm();
     else {
       this.status = `选中 ${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
@@ -925,6 +949,10 @@ export class MainCityScene implements Scene {
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
   }
 
+  private syncSlotUpgradeOverlay(): void {
+    this.slotUpgradeOverlay?.sync(this.session?.buildings, Date.now());
+  }
+
   private applyCityStateFromFetch(state: {
     wallet?: ResourceWallet;
     buildings?: CityBuilding[];
@@ -943,6 +971,7 @@ export class MainCityScene implements Scene {
       { flashWalletGain: false },
     );
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
+    this.syncSlotUpgradeOverlay();
   }
 
   private applyCityStatePoll(state: {
@@ -1246,11 +1275,6 @@ export class MainCityScene implements Scene {
       c2d.font = "13px system-ui";
       if (!KEY_BUILDING_SLOTS.has(slot.slot_key)) {
         c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
-      }
-      if (caption.upgradeLine) {
-        c2d.fillStyle = "#f0c674";
-        c2d.font = "12px system-ui";
-        c2d.fillText(caption.upgradeLine, display.x + display.w - 88, display.y + 20);
       }
     }
   }

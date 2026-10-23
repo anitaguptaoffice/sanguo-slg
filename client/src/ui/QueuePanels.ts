@@ -5,6 +5,7 @@ import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/con
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import { findBuildDailyQuestForBuilding } from "@/net/dailyQuestQueueMatch";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
+import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -17,6 +18,9 @@ import {
 } from "@/net/queueState";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
+
+/** 建造队列行选中高亮（与日常/邮件列表 `selected` 口径一致）。 */
+export const QUEUE_BUILD_ROW_SELECTED_CLASS = "selected";
 
 export type QueuePanelReskin = (root: HTMLElement) => void;
 
@@ -32,6 +36,7 @@ export class QueuePanels {
   private tickAccum = 0;
   private speedupBusy = false;
   private readonly completedRecruitIds = new Set<number>();
+  private highlightedBuildSlotKey: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -85,6 +90,24 @@ export class QueuePanels {
     this.tickAccum = 0;
     this.render();
     resetQueuePanelViewportScroll(this.panel);
+  }
+
+  /** 打开队列并高亮指定槽位的建造行（主城画布深链）。 */
+  openAndHighlightBuildSlot(slotKey: string): void {
+    this.highlightedBuildSlotKey = slotKey.trim() || null;
+    this.panel.classList.remove("hidden");
+    this.tickAccum = 0;
+    this.render();
+    resetQueuePanelViewportScroll(this.panel);
+    const rowId = queueBuildRowDomId(slotKey);
+    const row = this.panel.querySelector(`#${CSS.escape(rowId)}`);
+    if (row && typeof row.scrollIntoView === "function") {
+      row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }
+
+  clearBuildSlotHighlight(): void {
+    this.highlightedBuildSlotKey = null;
   }
 
   addRecruitEntry(entry: RecruitQueueEntry | null): void {
@@ -180,7 +203,13 @@ export class QueuePanels {
     for (const b of buildRows) {
       const text = formatBuildingUpgradeQueueLine(b, this.slotLabels, now);
       const li = document.createElement("li");
+      const slotKey = b.slot_key ?? "?";
       li.className = "queue-list-row";
+      li.id = queueBuildRowDomId(slotKey);
+      li.dataset.slotKey = slotKey;
+      if (this.highlightedBuildSlotKey && slotKey === this.highlightedBuildSlotKey) {
+        li.classList.add(QUEUE_BUILD_ROW_SELECTED_CLASS);
+      }
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);

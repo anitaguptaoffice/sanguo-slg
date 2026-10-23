@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
+import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import {
   BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID,
+  QUEUE_BUILD_ROW_SELECTED_CLASS,
   QUEUE_DAILY_NEXT_BUTTON_LABEL,
   QueuePanels,
 } from "@/ui/QueuePanels";
@@ -19,6 +21,24 @@ const baseSession = (): MainCitySession => ({
 });
 
 describe("QueuePanels", () => {
+  it("highlights build row when opened from main city slot deep link", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [
+      { slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 },
+      { slot_key: "hall", level: 1, upgrade_finish_at_ms: now + 60_000 },
+    ];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田", hall: "城主府" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.openAndHighlightBuildSlot("farm");
+    const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
+    expect(row?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(true);
+    const hallRow = mount.querySelector(`#${queueBuildRowDomId("hall")}`);
+    expect(hallRow?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(false);
+  });
+
   it("shows upgrade and recruit rows when open", () => {
     const mount = document.createElement("div");
     const now = Date.now();
