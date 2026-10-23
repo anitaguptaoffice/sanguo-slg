@@ -22,6 +22,7 @@ import {
   skinBattleReportPanel,
   skinChatPanel,
   skinDailyPanel,
+  skinDefaultPanel,
   skinGuildPanel,
   skinHeroPanel,
   skinMailPanel,
@@ -75,6 +76,14 @@ describe("skinNineSlicePanel", () => {
     skinMilitaryPanel(el, assets);
     expect(assets.getArtMeta).toHaveBeenCalledWith(PANEL_ASSET_MILITARY);
     expect(el.style.borderImageSource).toContain("url(");
+  });
+
+  it("skinDefaultPanel uses default panel asset", () => {
+    const el = document.createElement("div");
+    const assets = mockAssets();
+    skinDefaultPanel(el, assets, 380, 300);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_DEFAULT);
+    expect(el.style.minWidth).toBe("380px");
   });
 
   it("lists CLIENT-062 center panel manifest ids", () => {

@@ -7,6 +7,7 @@ import {
   skinBattleReportPanel,
   skinChatPanel,
   skinDailyPanel,
+  skinDefaultPanel,
   skinGuildPanel,
   skinHeroPanel,
   skinMailPanel,
@@ -558,13 +559,13 @@ export class MainCityScene implements Scene {
       SLOT_LABEL,
       () => this.session,
       (slotKey, buildingCfgId) => void this.startBuildingUpgrade(slotKey, buildingCfgId),
-      (root) => skinMilitaryPanel(root, this.assets, 380, 300),
+      (root) => skinDefaultPanel(root, this.assets, 380, 300),
     );
     this.buildingPanel.attach();
     skinToolbarBar(this.toolbar, this.assets);
     skinToolbarButtons(this.toolbar, this.assets);
     skinPrimaryButtons(this.militaryPanel, this.assets);
-    skinMilitaryPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
+    skinDefaultPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
     skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
     skinMarchIntelPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinBattleReportPanel(this.battleReports.getRoot(), this.assets, 520, 360);

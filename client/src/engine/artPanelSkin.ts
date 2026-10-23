@@ -116,6 +116,16 @@ export function skinQueuePanel(
   skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_QUEUE);
 }
 
+/** Left building sidebar and other roots on `ui.panel.default.v1` (ART-CHROME-006 freeze). */
+export function skinDefaultPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 480,
+  logicalH = 300,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DEFAULT);
+}
+
 export function skinMailPanel(
   el: HTMLElement,
   assets: AssetLoader,
