@@ -156,6 +156,14 @@ export function formatMarchRemainingMs(nowMs: number, arrive_at_ms: number | und
   return `剩余 ${minutes}m`;
 }
 
+/** 小地图角标用：与 {@link formatMarchRemainingMs} 同一时刻差口径，仅保留分钟数字或「即将」。 */
+export function formatMarchRemainingMsAbbrev(nowMs: number, arrive_at_ms: number | undefined): string {
+  if (!arrive_at_ms) return "即将";
+  const remaining = arrive_at_ms - nowMs;
+  if (remaining <= MARCH_REMAINING_SOON_MS) return "即将";
+  return String(Math.ceil(remaining / 60_000));
+}
+
 /** 行军列表次行：出发/到达绝对时刻 + 剩余时间或阶段文案。 */
 export function formatMarchRowMetaLine(m: MarchSummary, nowMs: number): string {
   const depart = formatTimeMs(m.depart_at_ms);

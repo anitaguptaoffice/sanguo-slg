@@ -1,12 +1,17 @@
 import type { MarchSummary } from "@/net/militaryFormat";
 import {
   MINIMAP_COLLAPSED_CHROME_RECT,
+  MINIMAP_DEST_ETA_LEGEND,
   MINIMAP_LAYOUT_RECT,
   type MinimapLayoutRect,
   type MinimapView,
+  clampMinimapEtaLabelLayout,
   computeMinimapScaleBar,
   computeMinimapWorldBounds,
+  findFirstMarchByDest,
   marchHasRouteOnMinimap,
+  minimapDestEtaBadgeLabel,
+  minimapDestShowsEtaBadge,
   minimapMarchRouteStroke,
   minimapPhaseCaption,
   worldToMinimapLayout,
@@ -23,6 +28,7 @@ export function drawWorldMinimap(
     rect?: MinimapLayoutRect;
     collapsed?: boolean;
     battleReportReplay?: { wx: number; wy: number } | null;
+    nowMs?: number;
   },
 ): void {
   const collapsed = opts.collapsed ?? false;
@@ -32,6 +38,7 @@ export function drawWorldMinimap(
   }
 
   const rect = opts.rect ?? MINIMAP_LAYOUT_RECT;
+  const nowMs = opts.nowMs ?? Date.now();
   const selected =
     opts.selectedMarchId != null
       ? opts.marches.find((m) => m.march_id === opts.selectedMarchId)
@@ -55,6 +62,9 @@ export function drawWorldMinimap(
   c2d.fillStyle = "rgba(245, 230, 200, 0.85)";
   c2d.font = "11px system-ui";
   c2d.fillText("世界（只读）", rect.x + 8, rect.y + 16);
+  c2d.fillStyle = "rgba(245, 230, 200, 0.55)";
+  c2d.font = "9px system-ui";
+  c2d.fillText(MINIMAP_DEST_ETA_LEGEND, rect.x + 8, rect.y + 30);
   drawMinimapCollapseGlyph(c2d, rect.x + rect.w - 22, rect.y + 6);
 
   const scale = computeMinimapScaleBar(bounds, rect, opts.view);
@@ -107,6 +117,7 @@ export function drawWorldMinimap(
   }
 
   const destSeen = new Set<string>();
+  c2d.font = "10px system-ui";
   for (const m of opts.marches) {
     const wx = m.to_x;
     const wy = m.to_y;
@@ -116,6 +127,16 @@ export function drawWorldMinimap(
     destSeen.add(key);
     const isSel = selected && selected.to_x === wx && selected.to_y === wy;
     drawDot(wx, wy, isSel ? "#f0c674" : "#c97b63", isSel ? 7 : 5);
+    const marchForBadge = findFirstMarchByDest(opts.marches, wx, wy);
+    if (marchForBadge && minimapDestShowsEtaBadge(marchForBadge)) {
+      const label = minimapDestEtaBadgeLabel(marchForBadge, nowMs);
+      const p = worldToMinimapLayout(wx, wy, bounds, rect, opts.view);
+      const metrics = c2d.measureText(label);
+      const textH = 10;
+      const pos = clampMinimapEtaLabelLayout(p.x, p.y, metrics.width, textH, rect);
+      c2d.fillStyle = isSel ? "#f0c674" : "rgba(245, 230, 200, 0.88)";
+      c2d.fillText(label, pos.x, pos.y + textH - 2);
+    }
   }
 
   if (selected) {
@@ -125,7 +146,7 @@ export function drawWorldMinimap(
     if (selected.to_x != null && selected.to_y != null) {
       drawDot(selected.to_x, selected.to_y, "#f0c674", 7);
     }
-    const caption = minimapPhaseCaption(selected.phase);
+    const caption = minimapPhaseCaption(selected, nowMs);
     c2d.fillStyle = "#f0c674";
     c2d.font = "12px system-ui";
     c2d.fillText(caption, rect.x + 8, rect.y + rect.h - 28);
