@@ -596,6 +596,109 @@ describe("BattleReportPanel", () => {
     expect(mount.querySelector(".battle-report-filters")).toBeTruthy();
   });
 
+  it("shows streak chip alongside outcome summary", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 3, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, outcome: 1, created_at_ms: 0 },
+          { report_id: 1, outcome: 2, created_at_ms: 0 },
+        ],
+        total: 3,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const summary = mount.querySelector('[data-role="report-outcome-summary"]');
+    expect(summary?.textContent).toContain("胜 2");
+    expect(summary?.querySelector(".battle-report-streak-chip")?.textContent).toBe("连胜 2");
+  });
+
+  it("navigates prev/next within filtered list and preserves round highlight", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 10, outcome: 1, created_at_ms: 0 },
+          { report_id: 8, outcome: 2, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: 1 },
+            detail: {
+              result: "attacker_win",
+              rounds: [{ round: 1 }, { round: 2 }],
+            },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    mount.querySelector('[data-action="jump-round"][data-round="2"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    const nextBtn = mount.querySelector('[data-action="nav-next-report"]') as HTMLButtonElement;
+    expect(nextBtn.disabled).toBe(false);
+    nextBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(8);
+    const row = mount.querySelector(`#${battleReportRoundRowDomId(2)}`);
+    expect(row?.classList.contains("battle-report-round-row-highlight")).toBe(true);
+    const prevBtn = mount.querySelector('[data-action="nav-prev-report"]') as HTMLButtonElement;
+    prevBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(10);
+  });
+
+  it("navigates with arrow keys when panel focused", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, outcome: 1, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: 1 },
+            detail: { result: "attacker_win", rounds: [] },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="1"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const contentPanel = mount.querySelector(".content-panel") as HTMLElement;
+    contentPanel.focus();
+    contentPanel.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+    );
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
+  });
+
   it("shows list load failure in panel and list hint", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

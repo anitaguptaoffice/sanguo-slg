@@ -27,6 +27,11 @@ const SLOT_KEY_TO_BUILDING_CFG: Record<string, number> = Object.fromEntries(
   Object.entries(BUILDING_CFG_TO_SLOT_KEY).map(([id, slot]) => [slot, Number(id)]),
 );
 
+/** 主城 `slot_key` → DATA-002 `building_cfg_id`（与 BUILDING_CFG_TO_SLOT_KEY 互逆）。 */
+export function buildingCfgIdForSlot(slotKey: string): number {
+  return SLOT_KEY_TO_BUILDING_CFG[slotKey.trim()] ?? 0;
+}
+
 export type BuildLevelQuestTarget = {
   buildingCfgId: number;
   level: number;
