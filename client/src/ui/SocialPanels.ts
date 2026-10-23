@@ -22,6 +22,10 @@ import {
   chatChannelLabel,
   formatGuildMemberLine,
   formatGuildMentionDraft,
+  groupGuildMembersByRole,
+  guildRoleChipClass,
+  guildRoleGroupDefaultExpanded,
+  guildRoleLabel,
   formatGuildSummaryText,
   formatSenderLabel,
   formatSocialChatEmptyMessage,
@@ -35,8 +39,8 @@ import {
   socialChatEmptyListClass,
   socialGuildMembersEmptyListClass,
   socialRankEmptyRowClass,
-  sortGuildMembers,
   type ChatMessageRow,
+  type GuildMemberRow,
 } from "@/net/socialFormat";
 import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
@@ -60,6 +64,8 @@ export class SocialPanels {
   };
   private chatListError = "";
   private guildListError = "";
+  private guildMembersCache: GuildMemberRow[] = [];
+  private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
 
   constructor(
@@ -394,19 +400,18 @@ export class SocialPanels {
     }
   }
 
-  private renderGuildMembersList(
-    members: {
-      player_id?: number;
-      display_name?: string;
-      role?: number;
-      power?: number;
-      joined_at_ms?: number;
-    }[],
-  ): void {
+  private isGuildRoleGroupExpanded(roleKey: number): boolean {
+    const stored = this.guildRoleGroupExpanded.get(roleKey);
+    if (stored !== undefined) return stored;
+    return guildRoleGroupDefaultExpanded(roleKey);
+  }
+
+  private renderGuildMembersList(members: GuildMemberRow[]): void {
     const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
     if (!ul) return;
     ul.innerHTML = "";
     if (!this.guildId) {
+      this.guildMembersCache = [];
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
       li.textContent = `${formatSocialGuildNotJoinedReadonlyMessage()}可在本面板下方创建或加入军团。`;
@@ -414,6 +419,7 @@ export class SocialPanels {
       return;
     }
     if (!members.length) {
+      this.guildMembersCache = [];
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
       li.textContent = this.guildListError
@@ -422,21 +428,46 @@ export class SocialPanels {
       ul.appendChild(li);
       return;
     }
-    for (const m of sortGuildMembers(members)) {
-      const li = document.createElement("li");
-      li.className = "guild-member-row";
-      const line = document.createElement("span");
-      line.className = "guild-member-line";
-      line.textContent = formatGuildMemberLine(m);
-      const mention = document.createElement("button");
-      mention.type = "button";
-      mention.className = "guild-member-mention";
-      mention.setAttribute("data-action", "guild-mention");
-      mention.setAttribute("data-display-name", m.display_name ?? "");
-      mention.textContent = "提到";
-      li.append(line, mention);
-      ul.appendChild(li);
+    this.guildMembersCache = members;
+    for (const group of groupGuildMembersByRole(members)) {
+      const expanded = this.isGuildRoleGroupExpanded(group.roleKey);
+      const head = document.createElement("li");
+      head.className = "guild-role-group-header";
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "guild-role-group-toggle";
+      toggle.setAttribute("data-action", "toggle-guild-role-group");
+      toggle.setAttribute("data-role-key", String(group.roleKey));
+      toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+      toggle.textContent = `${expanded ? "▼" : "▶"} ${group.label}（${group.members.length}）`;
+      head.appendChild(toggle);
+      ul.appendChild(head);
+      if (!expanded) continue;
+      for (const m of group.members) {
+        ul.appendChild(this.buildGuildMemberRow(m));
+      }
     }
+  }
+
+  private buildGuildMemberRow(m: GuildMemberRow): HTMLLIElement {
+    const li = document.createElement("li");
+    li.className = "guild-member-row";
+    li.setAttribute("data-guild-role-key", String(m.role ?? 0));
+    const chip = document.createElement("span");
+    chip.className = guildRoleChipClass(m.role);
+    chip.setAttribute("data-role", "guild-role-chip");
+    chip.textContent = guildRoleLabel(m.role);
+    const line = document.createElement("span");
+    line.className = "guild-member-line";
+    line.textContent = formatGuildMemberLine(m, { includeRoleLabel: false });
+    const mention = document.createElement("button");
+    mention.type = "button";
+    mention.className = "guild-member-mention";
+    mention.setAttribute("data-action", "guild-mention");
+    mention.setAttribute("data-display-name", m.display_name ?? "");
+    mention.textContent = "提到";
+    li.append(chip, line, mention);
+    return li;
   }
 
   /** 打开聊天面板、切到军团频道并填入 @ 草稿（不发送、不额外 RPC）。 */
@@ -727,6 +758,13 @@ export class SocialPanels {
     if (a === "guild-mention") {
       const name = btn.getAttribute("data-display-name") ?? "";
       this.openChatWithGuildMentionDraft(name);
+    }
+    if (a === "toggle-guild-role-group") {
+      const roleKey = Number(btn.getAttribute("data-role-key"));
+      if (!Number.isFinite(roleKey)) return;
+      const next = !this.isGuildRoleGroupExpanded(roleKey);
+      this.guildRoleGroupExpanded.set(roleKey, next);
+      this.renderGuildMembersList(this.guildMembersCache);
     }
   }
 

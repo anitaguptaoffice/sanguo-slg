@@ -129,6 +129,48 @@ export function sortGuildMembers<T extends GuildMemberRow>(members: T[]): T[] {
   });
 }
 
+export type GuildMembersByRoleGroup<T extends GuildMemberRow = GuildMemberRow> = {
+  roleKey: number;
+  label: string;
+  members: T[];
+};
+
+/** 按职务分组（组内已按 sortGuildMembers 排序）；空输入返回空数组。 */
+export function groupGuildMembersByRole<T extends GuildMemberRow>(members: T[]): GuildMembersByRoleGroup<T>[] {
+  const sorted = sortGuildMembers(members);
+  const groups: GuildMembersByRoleGroup<T>[] = [];
+  for (const m of sorted) {
+    const roleKey = guildRoleSortKey(m.role);
+    const last = groups[groups.length - 1];
+    if (last && last.roleKey === roleKey) {
+      last.members.push(m);
+    } else {
+      groups.push({ roleKey, label: guildRoleLabel(m.role), members: [m] });
+    }
+  }
+  return groups;
+}
+
+/** 职务分组折叠默认：仅团长组展开（CLIENT-101）。 */
+export function guildRoleGroupDefaultExpanded(roleKey: number): boolean {
+  return roleKey === 1;
+}
+
+/** 成员行职务 chip 的 class（与 march-phase-chip 密度对齐）。 */
+export function guildRoleChipClass(role?: number): string {
+  const base = "guild-role-chip";
+  switch (role) {
+    case 1:
+      return `${base} guild-role-chip-leader`;
+    case 2:
+      return `${base} guild-role-chip-officer`;
+    case 3:
+      return `${base} guild-role-chip-member`;
+    default:
+      return `${base} guild-role-chip-unknown`;
+  }
+}
+
 /** 本地日历日键（YYYY-MM-DD），用于聊天分组。 */
 export function localCalendarDayKey(ms: number): string {
   const d = new Date(ms);
@@ -194,11 +236,15 @@ export function formatGuildMentionDraft(displayName: string): string {
   return `@${name} `;
 }
 
-export function formatGuildMemberLine(member: GuildMemberRow): string {
+export function formatGuildMemberLine(member: GuildMemberRow, opts?: { includeRoleLabel?: boolean }): string {
   const name = member.display_name ?? "?";
   const who =
     member.player_id && member.player_id > 0 ? `${name} ${truncatePlayerId(member.player_id)}` : name;
-  const parts = [who, guildRoleLabel(member.role), `战力 ${member.power ?? 0}`];
+  const parts = [who];
+  if (opts?.includeRoleLabel !== false) {
+    parts.push(guildRoleLabel(member.role));
+  }
+  parts.push(`战力 ${member.power ?? 0}`);
   if (member.joined_at_ms) {
     parts.push(`加入 ${formatTimeMs(member.joined_at_ms)}`);
   }
