@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# SPEC-001 / SPEC-005: 对 spec/db 下 DDL 做 PostgreSQL 语法校验（同一 schema 内按序执行）
+# SPEC-001 / SPEC-005 / SPEC-006: 对 spec/db 下 DDL 做 PostgreSQL 语法校验（同一 schema 内按序执行）
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-FILES=("$ROOT"/00*.sql "$ROOT"/m3_*.sql)
+FILES=("$ROOT"/00*.sql "$ROOT"/m3_*.sql "$ROOT"/m4_*.sql)
 SCHEMA=spec_db_validate
 
 run_psql() {
