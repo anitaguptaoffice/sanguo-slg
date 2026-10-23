@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { MARCH_HIGHLIGHT_SESSION_KEY, MARCH_ROW_RECENT_CLASS } from "@/net/marchHighlight";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 
 describe("MarchListPanel", () => {
@@ -10,6 +11,7 @@ describe("MarchListPanel", () => {
   });
 
   afterEach(() => {
+    sessionStorage.clear();
     mount.remove();
   });
 
@@ -202,6 +204,34 @@ describe("MarchListPanel", () => {
     panel.openIntelViewForGrid(60, 60);
     expect(panel.getDestFilterMode()).toBe("world");
     expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+  });
+
+  it("applies march-row-recent for highlighted march and clears on other row select", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          { march_id: 11, phase: 2, to_x: 1, to_y: 1 },
+          { march_id: 22, phase: 2, to_x: 2, to_y: 2 },
+        ],
+        total: 2,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.setRecentMarchHighlight(11);
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+
+    expect(
+      mount.querySelector('.march-list li[data-march-id="11"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
+    ).toBe(true);
+    const other = mount.querySelector('.march-list li[data-march-id="22"]') as HTMLElement;
+    other.click();
+    expect(panel.getSelectedMarchId()).toBe(22);
+    expect(
+      mount.querySelector('.march-list li[data-march-id="11"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
+    ).toBe(false);
+    expect(sessionStorage.getItem(MARCH_HIGHLIGHT_SESSION_KEY)).toBeNull();
   });
 
   it("shows error when listMarches fails", async () => {
