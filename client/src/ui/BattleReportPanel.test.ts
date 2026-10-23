@@ -62,8 +62,67 @@ describe("BattleReportPanel", () => {
     );
     await flushPromises();
     expect(gateway.getBattleReport).toHaveBeenCalledWith(2);
-    const pre = mount.querySelector('[data-role="report-detail"]');
-    expect(pre?.textContent).toContain("守方获胜");
+    const detail = mount.querySelector('[data-role="report-detail"]');
+    expect(detail?.textContent).toContain("守方获胜");
+    expect(detail?.querySelector(".battle-report-rounds-table")).toBeTruthy();
+  });
+
+  it("opens deep link with latest report after list refresh", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 10, outcome: 1, created_at_ms: 0 },
+          { report_id: 8, outcome: 2, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary: { report_id: 10, outcome: 1 },
+          detail: { result: "attacker_win", rounds: [{ round: 1 }] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    await panel.openPanelWithDeepLink(8);
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenCalledWith(8);
+    expect(mount.querySelector('li[data-report-id="8"]')?.classList.contains("selected")).toBe(
+      true,
+    );
+  });
+
+  it("collapses long round tables until expand", async () => {
+    const mount = document.createElement("div");
+    const rounds = Array.from({ length: 10 }, (_, i) => ({ round: i + 1 }));
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [{ report_id: 1, outcome: 1, created_at_ms: 0 }],
+        total: 1,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary: { report_id: 1, outcome: 1 },
+          detail: { result: "attacker_win", rounds },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="1"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const detail = mount.querySelector('[data-role="report-detail"]');
+    expect(detail?.querySelector(".battle-report-rounds-table tbody tr")).toBeFalsy();
+    const expand = mount.querySelector('[data-action="expand-rounds"]') as HTMLElement;
+    expect(expand?.textContent).toContain("展开全部回合");
+    expand.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(detail?.querySelectorAll(".battle-report-rounds-table tbody tr").length).toBe(10);
   });
 
   it("filters list by outcome without changing listBattleReports args", async () => {
