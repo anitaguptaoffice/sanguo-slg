@@ -25,9 +25,11 @@ describe("SceneManager", () => {
     mgr.register(b);
     const canvas = document.createElement("canvas");
     const hud = document.createElement("div");
+    const layoutFrame = document.createElement("div");
     const ctx = {
       canvas,
       hud,
+      layoutFrame,
       gateway: {
         connect: async () => {},
         register: async () => ({}),

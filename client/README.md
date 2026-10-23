@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-006）
+# H5 客户端（CLIENT-001 ~ CLIENT-007）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -28,6 +28,16 @@ cd client && npm install && npm run dev
 ```
 
 默认账号：`demo` / `demo123`。启动后先在 **选服界面** 点选服务器再「进入游戏」。
+
+布局基线见仓库根 [`docs/art/layout-landscape.md`](../docs/art/layout-landscape.md)（**1600×900** 外框、舞台 **1600×788**、HUD/底栏各 **56px**）。实现入口：`src/engine/layoutViewport.ts`、`src/engine/mainCitySlots.ts`、`GameApp` 全屏 letterbox。
+
+### 手动验收（横屏布局 CLIENT-007）
+
+1. `cd client && npm run dev`，浏览器打开 H5；窗口可任意比例，页面背景为 `#1a1410`，中间为等比缩放的 **16:9 游戏外框**（非 16:9 时出现上下或左右黑边）。
+2. 开发者工具将视口设为 **1600×900**：画布外框应贴满窗口；主城 **HUD** 占顶栏 56px（`#hud` 叠在画布上缘），**底栏** 按钮行占底部 56px（`.layout-toolbar`），中间为舞台。
+3. 视口 **1280×720**：外框缩放至 1280×720（`uiScale=0.8`，见 `layoutViewport.test.ts`）；`mc.bg.plateau.v1` 仍铺满舞台 y∈[56,844)，`hall`/`farm` 样件与槽位对齐（可对照 `docs/art/maincity-slots.md`）。
+4. 视口 **400×900**（窄屏）：左右贴边、上下 letterbox；点击农田槽位仍可触发升级（hit 区域随 `uiScale` 缩放）。
+5. 选服界面面板居中落在舞台区域内（顶底各留 56px 带）。
 
 ### 手动验收（M3：选服 / 聊天 / 军团 / 排行）
 
@@ -75,11 +85,11 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `militaryFormat`、`bagState`（网关背包合并）与 `StartMarchRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）与 `StartMarchRequest` proto 编解码。
 
 ## 目录
 
-- `src/engine/` — `GameApp`、场景管理、占位 `AssetLoader`
+- `src/engine/` — `GameApp`、`layoutViewport`、`mainCitySlots`、场景管理、`AssetLoader`（art v1 manifest）
 - `src/net/` — `GatewayClient`、`bootstrapSession`、`militaryFormat`、proto 加载
 - `src/scenes/` — 选服、主城（军事 + M3 社交面板）
 - `src/ui/` — 聊天/军团/排行与任务/背包/商城 DOM 面板

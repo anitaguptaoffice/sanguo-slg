@@ -1,5 +1,5 @@
 import { AssetLoader } from "@/engine/AssetLoader";
-import { computeLayoutViewport } from "@/engine/layoutViewport";
+import { applyLayoutFrameStyles, computeLayoutViewport } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME } from "@/engine/mainCitySlots";
 import { SceneManager } from "@/engine/SceneManager";
 import { GatewayClient } from "@/net/GatewayClient";
@@ -16,6 +16,8 @@ export class GameApp {
   private resizeObserver: ResizeObserver | null = null;
 
   constructor(
+    private readonly viewportRoot: HTMLElement,
+    private readonly layoutFrame: HTMLElement,
     private readonly canvas: HTMLCanvasElement,
     private readonly hud: HTMLElement,
   ) {
@@ -28,26 +30,31 @@ export class GameApp {
   }
 
   private syncCanvasSize(): void {
-    const rect = this.canvas.getBoundingClientRect();
+    const rect = this.viewportRoot.getBoundingClientRect();
+    this.viewport = computeLayoutViewport(rect.width, rect.height);
+    applyLayoutFrameStyles(this.layoutFrame, this.viewport);
+
     const dpr = window.devicePixelRatio || 1;
-    const w = Math.max(1, Math.floor(rect.width * dpr));
-    const h = Math.max(1, Math.floor(rect.height * dpr));
+    const frameRect = this.layoutFrame.getBoundingClientRect();
+    const w = Math.max(1, Math.floor(frameRect.width * dpr));
+    const h = Math.max(1, Math.floor(frameRect.height * dpr));
     if (this.canvas.width !== w || this.canvas.height !== h) {
       this.canvas.width = w;
       this.canvas.height = h;
     }
-    this.viewport = computeLayoutViewport(rect.width, rect.height);
+    this.viewport = computeLayoutViewport(frameRect.width, frameRect.height);
   }
 
   async start(): Promise<void> {
     this.hud.textContent = "加载资源…";
     this.syncCanvasSize();
     this.resizeObserver = new ResizeObserver(() => this.syncCanvasSize());
-    this.resizeObserver.observe(this.canvas);
+    this.resizeObserver.observe(this.viewportRoot);
     await this.assets.loadAll(window.devicePixelRatio || 1);
     const ctx = {
       canvas: this.canvas,
       hud: this.hud,
+      layoutFrame: this.layoutFrame,
       gateway: this.gateway,
       assets: this.assets,
       getViewport: () => this.viewport,

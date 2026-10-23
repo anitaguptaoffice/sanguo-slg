@@ -71,6 +71,9 @@ export const MAIN_CITY_SLOTS: MainCitySlotDef[] = [
 ];
 
 export const LAYOUT_FRAME = { w: 1600, h: 900 };
-export const STAGE_TOP_Y = 56;
+export const HUD_HEIGHT = 56;
+export const STAGE_TOP_Y = HUD_HEIGHT;
 export const STAGE_HEIGHT = 788;
-export const TOOLBAR_TOP_Y = 844;
+export const TOOLBAR_HEIGHT = 56;
+export const TOOLBAR_TOP_Y = LAYOUT_FRAME.h - TOOLBAR_HEIGHT;
+export const MIN_CONTENT_VIEWPORT = { w: 1280, h: 720 };

@@ -1,4 +1,6 @@
-import { LAYOUT_FRAME } from "@/engine/mainCitySlots";
+import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
+
+export { MIN_CONTENT_VIEWPORT };
 
 export type LayoutViewport = {
   uiScale: number;
@@ -47,4 +49,26 @@ export function canvasToLayout(
     x: (canvasX - vp.offsetX) / vp.uiScale,
     y: (canvasY - vp.offsetY) / vp.uiScale,
   };
+}
+
+/** CSS size of the scaled 1600×900 layout frame (letterbox content box). */
+export function layoutFrameCssSize(vp: LayoutViewport): { width: number; height: number } {
+  return {
+    width: LAYOUT_FRAME.w * vp.uiScale,
+    height: LAYOUT_FRAME.h * vp.uiScale,
+  };
+}
+
+/** Position the DOM layout frame inside a full-viewport root (offsets from letterboxing). */
+export function applyLayoutFrameStyles(frame: HTMLElement, vp: LayoutViewport): void {
+  const { width, height } = layoutFrameCssSize(vp);
+  frame.style.width = `${width}px`;
+  frame.style.height = `${height}px`;
+  frame.style.left = `${vp.offsetX}px`;
+  frame.style.top = `${vp.offsetY}px`;
+}
+
+/** Minimum uiScale so a layout-space hit box of `layoutPx` stays ≥ `minCssPx` on screen. */
+export function minUiScaleForHitSize(layoutPx: number, minCssPx = 44): number {
+  return minCssPx / layoutPx;
 }
