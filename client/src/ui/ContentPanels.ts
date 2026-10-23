@@ -40,6 +40,13 @@ import {
   type ShopOfferClientCategory,
 } from "@/net/shopOfferCategory";
 import {
+  formatShopPurchaseSuccess,
+  purchaseSubmitStateMachine,
+  syncShopPurchaseSubmitButton,
+  walletShopPurchaseDeductPulseKeys,
+  type PurchaseSubmitState,
+} from "@/net/purchaseSubmitFeedback";
+import {
   applyWalletGapBar,
   consumableUseWalletNeed,
 } from "@/net/walletGap";
@@ -89,6 +96,7 @@ export class ContentPanels {
   private useConsumableSubmitState: UseConsumableSubmitState = "idle";
   /** CLIENT-079：当前选中道具的批量格勾选（0-based 格序号）。 */
   private bagBatchCheckedSlots = new Set<number>();
+  private shopPurchaseSubmitState: PurchaseSubmitState = "idle";
 
   constructor(
     private readonly mount: HTMLElement,
@@ -96,6 +104,7 @@ export class ContentPanels {
     private getSession: () => MainCitySession | null,
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
+    private readonly onShopMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
   ) {}
 
   attach(): void {
@@ -225,6 +234,26 @@ export class ContentPanels {
       offer?.price_resources,
       this.sessionWallet(),
       { multiplier: 1 },
+    );
+    this.syncShopPurchaseSubmit();
+  }
+
+  private shopPurchaseCanAfford(): boolean {
+    const purchaseCount = 1;
+    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    return validatePurchaseShopOffer({
+      offer,
+      offerId: this.selectedOfferId,
+      purchaseCount,
+      wallet: this.getSession()?.wallet,
+    }).ok;
+  }
+
+  private syncShopPurchaseSubmit(): void {
+    syncShopPurchaseSubmitButton(
+      this.shopPanel,
+      this.shopPurchaseSubmitState,
+      this.shopPurchaseCanAfford(),
     );
   }
 
@@ -699,11 +728,13 @@ export class ContentPanels {
   }
 
   private async buyOffer(): Promise<void> {
+    if (this.shopPurchaseSubmitState === "submitting") return;
     const sid = this.serverId();
     const offerId = this.selectedOfferId;
     const purchaseCount = 1;
     const offer = this.shopOffers.find((o) => o.offer_id === offerId);
     const session = this.getSession();
+    const walletBefore = session?.wallet;
     const validated = validatePurchaseShopOffer({
       offer,
       offerId,
@@ -713,10 +744,14 @@ export class ContentPanels {
     if (!validated.ok) {
       setShopFormErrorDisplay(this.shopPanel, validated.message);
       this.onStatus(validated.message);
+      this.syncShopPurchaseSubmit();
       return;
     }
     setShopFormErrorDisplay(this.shopPanel, null);
-    this.onStatus(`购买 offer ${offerId}…`);
+    this.shopPurchaseSubmitState = purchaseSubmitStateMachine(this.shopPurchaseSubmitState, {
+      type: "SUBMIT",
+    });
+    this.syncShopPurchaseSubmit();
     this.setShopFeedback(null);
     try {
       const res = (await this.gateway.purchaseShopOffer(sid, offerId, purchaseCount)) as {
@@ -724,28 +759,49 @@ export class ContentPanels {
         wallet_after?: ResourceWallet;
         offer?: ShopOffer;
       };
-      const session = this.getSession();
-      if (session) {
-        const bag = mergeRewardBundle(session.bag, res.granted_items);
-        const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
+      const sessionAfter = this.getSession();
+      const walletAfter = res.wallet_after
+        ? { ...res.wallet_after }
+        : sessionAfter?.wallet;
+      if (sessionAfter) {
+        const bag = mergeRewardBundle(sessionAfter.bag, res.granted_items);
+        const wallet = walletAfter ?? sessionAfter.wallet;
         this.onSessionPatch({ bag, wallet });
+        this.renderBagList();
       }
+      const pulseKeys = walletShopPurchaseDeductPulseKeys(
+        walletBefore,
+        walletAfter,
+        offer?.price_resources,
+        purchaseCount,
+      );
+      if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
       const granted = res.granted_items?.items?.[0];
       const grantedQty = (granted?.quantity ?? 1) * purchaseCount;
-      const feedback = formatShopPurchaseFeedback(purchaseCount, res.wallet_after, {
+      const panelLine = formatShopPurchaseFeedback(purchaseCount, res.wallet_after, {
         itemCfgId: granted?.item_cfg_id,
         grantedQty,
       });
+      const toast = formatShopPurchaseSuccess(offerId);
       setShopFormErrorDisplay(this.shopPanel, null);
       this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
-      this.setShopFeedback(feedback);
+      this.setShopFeedback(panelLine);
+      this.shopPurchaseSubmitState = purchaseSubmitStateMachine(this.shopPurchaseSubmitState, {
+        type: "SUCCESS",
+      });
       await this.refreshShop();
-      this.onStatus(feedback);
+      this.onStatus(toast);
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("shop", e);
       setShopFormErrorDisplay(this.shopPanel, msg);
       this.setShopFeedback(null);
       this.onStatus(msg);
+      this.shopPurchaseSubmitState = purchaseSubmitStateMachine(this.shopPurchaseSubmitState, {
+        type: "FAIL",
+      });
+    } finally {
+      this.syncShopPurchaseSubmit();
+      this.syncShopWalletGap();
     }
   }
 
