@@ -26,7 +26,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 |---|---|
 | **行军列表**（`ListMarches`、出征后反馈） | [手动验收（募兵 → 行军 → 战报，CLIENT-012 / CLIENT-013）](#手动验收募兵--行军--战报client-012--client-013) 步骤 3–4；世界坐标填入出征见 **CLIENT-015**（[#180](https://github.com/anitaguptaoffice/sanguo-slg/issues/180) / [#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186)） |
 | **将领详情**（`GetHeroDetail`、列表可读性） | [手动验收（将领详情 CLIENT-014）](#手动验收将领详情-client-014) |
-| **邮件**（收件箱 / 已读 / 领附件） | [手动验收（M4：将领 / 邮件，CLIENT-008）](#手动验收m4将领--邮件client-008) 步骤 4–5；**CLIENT-017**（[#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182)）加深底栏邮件面板 |
+| **邮件**（收件箱 / 已读 / 领附件） | [手动验收（邮件收件箱，CLIENT-017）](#手动验收邮件收件箱client-017)（[#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) / [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190)）；招募相关仍见 [手动验收（M4：将领，CLIENT-008）](#手动验收m4将领client-008) |
 | **战报筛选**（outcome 客户端筛选 + 详情摘要） | [手动验收（战报筛选 CLIENT-016）](#手动验收战报筛选-client-016) |
 | **HUD 资源变动提示**（可选） | **CLIENT-018**（[#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183)）：领奖/购买/招募成功后顶栏短时「+粮/+木…」摘要 |
 
