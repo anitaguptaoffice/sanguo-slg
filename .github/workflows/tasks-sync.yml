@@ -1,0 +1,37 @@
+name: Tasks sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tasks/backlog.yml
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  sync:
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'wave:18 tasks_sync'))
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install pyyaml
+      - name: Sync backlog issues
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            python3 tools/tasks_sync.py --wave=18
+          else
+            python3 tools/tasks_sync.py
+          fi

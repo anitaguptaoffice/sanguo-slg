@@ -1,15 +1,22 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
-  formatMarchLine,
-  marchListLines,
+  formatMarchRowMetaLine,
+  formatMarchRowPrimaryLine,
   marchNeedsPoll,
   MARCH_LIST_POLL_MS,
+  MARCH_LIST_REMAINING_TICK_MS,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import {
+  marchListCompactClass,
+  marchListEmptyClass,
+  marchListEmptyMessage,
+} from "@/net/panelDensity";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
   pollIntervalMs?: number;
+  nowMs?: () => number;
   onMarchesUpdated?: (marches: MarchSummary[]) => void;
   onSelectionChange?: (march: MarchSummary | null) => void;
 };
@@ -18,8 +25,10 @@ export class MarchListPanel {
   private panel!: HTMLElement;
   private marches: MarchSummary[] = [];
   private listError = "";
-  private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private listPollTimer: ReturnType<typeof setInterval> | null = null;
+  private remainingTickTimer: ReturnType<typeof setInterval> | null = null;
   private readonly pollIntervalMs: number;
+  private readonly nowMs: () => number;
   private readonly onMarchesUpdated?: (marches: MarchSummary[]) => void;
   private readonly onSelectionChange?: (march: MarchSummary | null) => void;
   private selectedMarchId: number | null = null;
@@ -32,6 +41,7 @@ export class MarchListPanel {
     options?: MarchListPanelOptions,
   ) {
     this.pollIntervalMs = options?.pollIntervalMs ?? MARCH_LIST_POLL_MS;
+    this.nowMs = options?.nowMs ?? (() => Date.now());
     this.onMarchesUpdated = options?.onMarchesUpdated;
     this.onSelectionChange = options?.onSelectionChange;
   }
@@ -115,7 +125,7 @@ export class MarchListPanel {
     el.className = "content-panel hidden";
     el.innerHTML = `
       <h3>行军</h3>
-      <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军。</p>
+      <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
       <button type="button" data-action="refresh-marches">刷新列表</button>
       <p class="report-panel-status" data-role="march-list-status"></p>
       <ul class="march-list" data-role="march-list"></ul>
@@ -131,21 +141,40 @@ export class MarchListPanel {
     if (statusEl) statusEl.textContent = this.listError;
 
     ul.innerHTML = "";
+    ul.classList.remove(marchListCompactClass());
+
     if (this.listError) return;
 
-    const lines = marchListLines(this.marches);
     if (!this.marches.length) {
       const li = document.createElement("li");
-      li.textContent = lines[0];
+      li.className = marchListEmptyClass();
+      li.textContent = marchListEmptyMessage();
       ul.appendChild(li);
       return;
     }
 
+    if (this.marches.length >= 2) {
+      ul.classList.add(marchListCompactClass());
+    }
+
+    const now = this.nowMs();
     for (const m of this.marches) {
       const li = document.createElement("li");
-      li.textContent = formatMarchLine(m);
+      const body = document.createElement("div");
+      body.className = "march-row-body";
+      const primary = document.createElement("span");
+      primary.className = "march-row-primary";
+      primary.textContent = formatMarchRowPrimaryLine(m);
+      const meta = document.createElement("span");
+      meta.className = "march-row-meta";
+      meta.setAttribute("data-role", "march-row-meta");
+      meta.textContent = formatMarchRowMetaLine(m, now);
+      body.appendChild(primary);
+      body.appendChild(meta);
+      li.appendChild(body);
       if (m.march_id != null) {
         li.setAttribute("data-march-id", String(m.march_id));
+        meta.setAttribute("data-march-id", String(m.march_id));
         li.setAttribute("role", "button");
         li.tabIndex = 0;
       }
@@ -153,6 +182,18 @@ export class MarchListPanel {
         li.classList.add("march-list-row-selected");
       }
       ul.appendChild(li);
+    }
+  }
+
+  private updateRemainingLabels(): void {
+    const now = this.nowMs();
+    const nodes = this.panel.querySelectorAll<HTMLElement>('[data-role="march-row-meta"]');
+    for (const el of nodes) {
+      const id = Number(el.getAttribute("data-march-id"));
+      if (Number.isNaN(id)) continue;
+      const m = this.marches.find((row) => row.march_id === id);
+      if (!m) continue;
+      el.textContent = formatMarchRowMetaLine(m, now);
     }
   }
 
@@ -174,15 +215,12 @@ export class MarchListPanel {
       };
       this.marches = res.marches ?? [];
       this.onStatus(`行军 ${this.marches.length}/${res.total ?? 0} 条`);
-      if (this.isOpen() && !marchNeedsPoll(this.marches)) {
-        this.stopPoll();
-      } else if (this.isOpen() && marchNeedsPoll(this.marches) && !this.pollTimer) {
-        this.startPoll();
-      }
+      this.syncPollTimers();
     } catch (e) {
       this.marches = [];
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
+      this.stopPoll();
     }
     if (
       this.selectedMarchId != null &&
@@ -195,9 +233,30 @@ export class MarchListPanel {
     this.renderList();
   }
 
+  private syncPollTimers(): void {
+    if (!this.isOpen()) {
+      this.stopPoll();
+      return;
+    }
+    if (!marchNeedsPoll(this.marches)) {
+      this.stopPoll();
+      return;
+    }
+    if (!this.listPollTimer) this.startListPoll();
+    if (!this.remainingTickTimer) this.startRemainingTick();
+  }
+
   private startPoll(): void {
-    if (this.pollTimer) return;
-    this.pollTimer = setInterval(() => {
+    if (!this.isOpen()) return;
+    if (marchNeedsPoll(this.marches)) {
+      if (!this.listPollTimer) this.startListPoll();
+      if (!this.remainingTickTimer) this.startRemainingTick();
+    }
+  }
+
+  private startListPoll(): void {
+    if (this.listPollTimer) return;
+    this.listPollTimer = setInterval(() => {
       if (!this.isOpen()) {
         this.stopPoll();
         return;
@@ -206,11 +265,34 @@ export class MarchListPanel {
     }, this.pollIntervalMs);
   }
 
-  private stopPoll(): void {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-      this.pollTimer = null;
+  private startRemainingTick(): void {
+    if (this.remainingTickTimer) return;
+    this.remainingTickTimer = setInterval(() => {
+      if (!this.isOpen()) {
+        this.stopPoll();
+        return;
+      }
+      if (!marchNeedsPoll(this.marches)) {
+        this.stopRemainingTick();
+        return;
+      }
+      this.updateRemainingLabels();
+    }, MARCH_LIST_REMAINING_TICK_MS);
+  }
+
+  private stopRemainingTick(): void {
+    if (this.remainingTickTimer) {
+      clearInterval(this.remainingTickTimer);
+      this.remainingTickTimer = null;
     }
+  }
+
+  private stopPoll(): void {
+    if (this.listPollTimer) {
+      clearInterval(this.listPollTimer);
+      this.listPollTimer = null;
+    }
+    this.stopRemainingTick();
   }
 
   private onClick(ev: Event): void {

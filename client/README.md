@@ -66,7 +66,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 |---|---|
 | **建造加速真实生效**（道具 2003 → domestic `upgrade_finish_at_ms`） | [手动验收（队列加速 CLIENT-026）](#手动验收队列加速-client-026)（[#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214) / [#222](https://github.com/anitaguptaoffice/sanguo-slg/pull/222)；服务端 **DOM-003** [#211](https://github.com/anitaguptaoffice/sanguo-slg/issues/211) / [#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)） |
 | **多类型日常引导**（chain 400 练兵/建造/战备） | [手动验收（日常练兵/建造/战备 CLIENT-024）](#手动验收日常练兵建造战备-client-024)（[#212](https://github.com/anitaguptaoffice/sanguo-slg/issues/212) / [#220](https://github.com/anitaguptaoffice/sanguo-slg/pull/220)） |
-| **日常战报未读横幅**（chain 400 顶栏联动） | [手动验收（日常战备与战报横幅 CLIENT-044）](#手动验收日常战备与战报横幅-client-044)（[#268](https://github.com/anitaguptaoffice/sanguo-slg/issues/268)） |
+| **日常战报未读横幅**（chain 400 顶栏联动，wave:17 **CLIENT-044**） | [手动验收（日常战备与战报横幅 CLIENT-044）](#手动验收日常战备与战报横幅-client-044)（[#268](https://github.com/anitaguptaoffice/sanguo-slg/issues/268) / [#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272) `d437076a`）；wave:17 总表见 [Wave 17](#wave-17-世界出征互链与复盘导航m4-出口--intg-014) |
 | **行军结束 → 战报提示**（到达 toast + 战报未读） | [手动验收（行军到达与战报未读 CLIENT-025）](#手动验收行军到达与战报未读-client-025)（[#213](https://github.com/anitaguptaoffice/sanguo-slg/issues/213) / [#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)） |
 | **HUD 待办徽章**（邮件 / 日常 / 战报底栏角标） | [手动验收（HUD 待办徽章，CLIENT-027）](#手动验收hud-待办徽章-client-027)（[#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) / [#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)） |
 
@@ -97,6 +97,25 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **小地图选点出征** | [手动验收（小地图选点 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265)） | 本 PR |
 | **HUD 角标点击深链** | [手动验收（HUD 角标深链 CLIENT-038）](#手动验收hud-角标深链-client-038)（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`） | 已合 |
 | **1280 顶栏 canvas/DOM 叠字** | [手动验收（1280 顶栏 HUD CLIENT-039）](#手动验收1280-顶栏-hud-client-039)（[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) / [#260](https://github.com/anitaguptaoffice/sanguo-slg/pull/260) `9e98a28b`）；**不**替代 **CLIENT-033** hotfix | 已合 |
+
+**wave:16 美术轨**（非 wave:17 实现卡）：**CLIENT-040**（[#262](https://github.com/anitaguptaoffice/sanguo-slg/issues/262) / [#263](https://github.com/anitaguptaoffice/sanguo-slg/pull/263) `a4add478`）1280 军事全页 `<1MB` 证据，见 [`docs/art/samples/client-040/`](../docs/art/samples/client-040/README.md)。
+
+## Wave 17 世界出征互链与复盘导航（M4 出口 / INTG-014）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-014** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**（仅建造队列，见 wave:14 **DOM-003**）；**永不合并** art hold PR #77/#82/#108/#100/#126；**CLIENT-040** 为 wave:16 美术证据轨、**非**本波实现卡。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **小地图选点 → 出征 to_x/to_y** | [手动验收（小地图选点出征 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265) / [#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) `12a8850f`） | 已合 |
+| **战报坐标摘要 → 小地图复盘高亮** | [手动验收（战报坐标与小地图复盘 CLIENT-042）](#手动验收战报坐标与小地图复盘-client-042)（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`） | 已合 |
+| **军事出征目标记忆**（`sessionStorage`） | [手动验收（出征目标记忆 CLIENT-043）](#手动验收出征目标记忆-client-043)（[#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267) / [#279](https://github.com/anitaguptaoffice/sanguo-slg/pull/279) `66e5578a`） | 已合 |
+| **日常战备与战报未读横幅** | [手动验收（日常战备与战报横幅 CLIENT-044）](#手动验收日常战备与战报横幅-client-044)（[#268](https://github.com/anitaguptaoffice/sanguo-slg/issues/268) / [#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272) `d437076a`） | 已合 |
+| **排行 / 聊天手动刷新与上次更新** | [手动验收（社交刷新 CLIENT-045）](#手动验收社交刷新-client-045)（[#269](https://github.com/anitaguptaoffice/sanguo-slg/issues/269) / [#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273) `5a3ae507`） | 已合 |
+| **网关冒烟**（行军目的点 + 战报坐标） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 17** / `TestINTG014Wave17SmokePath`（[#270](https://github.com/anitaguptaoffice/sanguo-slg/issues/270) / [#274](https://github.com/anitaguptaoffice/sanguo-slg/pull/274) `90fb5356`） | 已合 |
+
+**推荐串联**：小地图空白区选点（**CLIENT-041**，写入并记住 `to_x/to_y`）→ **军事** 出征（[CLIENT-015](#手动验收世界坐标-client-015) / [CLIENT-013](#手动验收募兵--行军--战报client-012--client-013)；**CLIENT-043** 会话预填/清除）→ 战报 **在地图查看** 复盘（**CLIENT-042**）→ **日常** 顶栏战报横幅（**CLIENT-044**）→ **排行/聊天** **刷新**（**CLIENT-045**）；网关字段见 `tools/smoke/README.md` **INTG-014**（`TestINTG014Wave17SmokePath`）。
+
+**wave:18** 可玩加深规划（军情 ETA、出征校验、战报分页、邮件/HUD 同步等）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 18」；详细验收小节由 **DOCS-EXIT-010** 收口。**CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277)）为美术证据轨，非 wave:18 实现卡。
 
 ## 网关地址
 
@@ -197,6 +216,24 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 4. **daily_march_1**（1033）进行中：列表行标签为 **`[战备]`**；**「前往下一步」** 仍打开背包并高亮 **2020**（CLIENT-024）。
 5. 同时存在未领附件邮件时：邮件面板 **「领取附件」** 高亮与日常横幅可同时存在，各自面板内展示。
 6. 单测：`dailyQuestBattleReportBanner.test.ts`、`DailyQuestPanels.test.ts`；全量 `cd client && npm test`。
+
+### 手动验收（小地图选点出征 CLIENT-041）
+
+在 [CLIENT-037 小地图](#手动验收小地图比例尺与多行军-client-037) 与 [CLIENT-015 世界坐标出征](#手动验收世界坐标-client-015) 之上：小地图 **空白区域** 单击经 `minimapLayoutToWorld` 反算世界格点并写入军事出征 **to_x/to_y**（`applyMarchTargetToForm`）；点击已有 **行军目的点** 仍走 `findMarchIdForMinimapDestClick` 选中 `ListMarches` 行（CLIENT-037 行为不变）。
+
+1. `make dev` 进主城，展开小地图；在 **非目的点**、非折叠 toggle 区域单击，状态栏应提示 **已选出征目标 (x,y)**，**军事** 面板自动展开且 `to_x`/`to_y` 与之一致（`clampWorldMapCoord`，0..499）。
+2. 用该坐标完成 [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)；`ListMarches` 目的点与小地图标记一致（INTG-014 断言 `to_x`/`to_y`）。
+3. 点击小地图上 **已有行军目的点**：应高亮对应列表行并打开军事面板，**不**误写表单坐标。
+4. 单测：`worldMinimap.test.ts`（`minimapLayoutToWorld` / `clampWorldMapCoord`）；全量 `cd client && npm test`。
+
+### 手动验收（社交刷新 CLIENT-045）
+
+在 [CLIENT-030 社交扫读](#手动验收社交扫读-client-030) 与 [CLIENT-021 双榜](#手动验收排行双榜-client-021) 之上：**排行** 面板 **刷新排行榜**、**聊天** 面板 **刷新** 触发既有列表 RPC；成功后在 `social-refresh-status` 展示 `formatSocialPanelLastUpdated`（**上次更新：…**），in-flight 时按钮 `disabled`（`chatListInflight` / `rankListInflight` 单飞，与 CLIENT-018 `GetCityState` 不嵌套）。
+
+1. `make dev` 打开 **排行**，切换战力/资源榜后点 **刷新排行榜**：列表更新且出现 **上次更新** 行；刷新过程中按钮不可点。
+2. **聊天**（世界/私聊/军团）点 **刷新**：`ListChatMessages` 成功后同样展示时间戳；空列表仍用 CLIENT-029/030 密度文案。
+3. 断网或网关错误：状态行显示 **刷新失败：…**（`formatSocialPanelRefreshError`），状态栏同步 gateway 摘要。
+4. 单测：`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（将领详情 CLIENT-014）
 
@@ -303,7 +340,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（出征目标记忆 CLIENT-043）
 
-与 [CLIENT-015](#手动验收世界坐标-client-015)（世界城池点选）及 [CLIENT-041](#手动验收小地图选点出征-client-041)（小地图空白单击）共用军事面板 `to_x` / `to_y`：
+（[#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267) / [#279](https://github.com/anitaguptaoffice/sanguo-slg/pull/279) `66e5578a`）。与 [CLIENT-015](#手动验收世界坐标-client-015)（世界城池点选）及 [CLIENT-041](#手动验收小地图选点出征-client-041)（小地图空白单击）共用军事面板 `to_x` / `to_y`（`marchTargetMemory` / `applyMarchTargetAndRemember`）：
 
 1. **会话记忆**：`sessionStorage` 键 `rxsg.client.marchTarget.last`（JSON `{x,y}`）。`StartMarch` 成功后写入；小地图空白选点或世界城池点选也会立即覆盖该键。
 2. **刷新预填**：刷新页面进入主城后，军事面板应自动预填上次记住的坐标（无记忆时仍为默认 5,5）。
@@ -332,6 +369,16 @@ cd client && npm install && npm run dev
 4. 打开战报面板后未读角标清零；再次产生新战报时角标恢复。
 5. 单测：`marchArrival.test.ts`、`marchArrivalPoll.test.ts`、`battleReportUnread.test.ts`、`BattleReportPanel.test.ts`。
 
+### 手动验收（行军列表 ETA 与军情密度 CLIENT-047）
+
+`MarchListPanel` 列表行 **主行**（`#id · 目的 · 阶段 · 坐标`）+ **次行**（出发/到达绝对时刻 + `formatMarchRemainingMs` 相对 ETA）。多条行军时 `march-list-compact` 收紧行高；空列表仍用 `march-list-empty`（不退化 **CLIENT-029** 空态）。面板打开且 `marchNeedsPoll` 时：**每 5s** `ListMarches` 刷新列表，**每 1s** 仅更新次行剩余文案（不额外 RPC）；与 **CLIENT-025** `MarchArrivalPoll` 并存。
+
+1. `make dev` 出征至少一条 **行军中** 行军，打开底栏 **「行军」**。
+2. 主行含目的/阶段/坐标；次行含出发/到达时刻与 **剩余 Nm** 或 **即将到达**（待发/已到达显示阶段文案）。
+3. 保持面板打开观察约 10s：剩余文案每秒变化，网络面板无额外 `ListMarches`（仅 5s 轮询一次）。
+4. 同时等待行军到达：HUD **行军结束，查看战报** 仍出现（CLIENT-025）。
+5. 单测：`militaryFormat.test.ts`（`formatMarchRemainingMs`）、`MarchListPanel.test.ts`、`panelDensity.test.ts`。
+
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
 `GetBattleReport` 成功后，详情区顶部仍保留 `formatBattleReportDetail` 文字摘要；下方为结构化 **回合表**（回合号、攻/守行动摘要、双方剩余兵力 map）。回合数 **> 8** 时表格默认折叠，点 **「展开全部回合」** 显示全部行。列表/详情加载失败仍可用 **重试** 按钮（不退化 **CLIENT-029** 列表密度）。行军结束 HUD 链接（**CLIENT-025**）点击后调用 `openPanelWithDeepLink`：刷新 `ListBattleReports` 后选中 `MarchEndBattleReportHint` 或最近 `report_id` 并自动 `GetBattleReport`。
@@ -345,7 +392,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（战报坐标与小地图复盘 CLIENT-042）
 
-战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情顶栏同样展示坐标与 **「在地图查看」**。点击后读取 summary 既有 `location_x/y`（不扩 proto），主城舞台小地图绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野；关闭战报面板或切换选中战报时清除高亮。小地图折叠时状态栏仍提示坐标。
+（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`）。战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情顶栏同样展示坐标与 **「在地图查看」**。点击后经 `extractBattleReportReplayCoord` 读取 summary 既有 `location_x/y`（不扩 proto），主城舞台小地图绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野；关闭战报面板或切换选中战报时清除高亮。小地图折叠时状态栏仍提示坐标。
 
 1. `make dev` 产生至少一条带 `location_x/y` 的战报（见募兵 → 行军）。
 2. 底栏 **「战报」** → 列表行应见金色 **坐标(...)** 行；点开详情顶栏有坐标与 **在地图查看**。

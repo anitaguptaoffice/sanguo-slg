@@ -52,6 +52,12 @@ const MARCH_PURPOSE_LABEL: Record<number, string> = {
 /** 行军列表面板打开时的默认轮询间隔（毫秒）。 */
 export const MARCH_LIST_POLL_MS = 5000;
 
+/** 面板打开时仅重绘剩余时间文案的间隔（毫秒）；不触发 ListMarches。 */
+export const MARCH_LIST_REMAINING_TICK_MS = 1000;
+
+/** 剩余时间低于该阈值时展示「即将到达」。 */
+export const MARCH_REMAINING_SOON_MS = 60_000;
+
 const OUTCOME_LABEL: Record<number, string> = {
   1: "攻胜",
   2: "守胜",
@@ -124,13 +130,42 @@ export function formatMarchCoordPair(
 }
 
 export function formatMarchLine(m: MarchSummary): string {
+  const primary = formatMarchRowPrimaryLine(m);
+  const meta = formatMarchRowMetaLine(m, Date.now());
+  return `${primary} · ${meta}`;
+}
+
+/** 行军列表主行：#id · 目的 · 阶段 · 坐标。 */
+export function formatMarchRowPrimaryLine(m: MarchSummary): string {
   const id = m.march_id ?? "?";
   const purpose = formatMarchPurpose(m.purpose);
   const phase = formatMarchPhase(m.phase);
   const route = formatMarchCoordPair(m.from_x, m.from_y, m.to_x, m.to_y);
+  return `#${id} · ${purpose} · ${phase} · ${route}`;
+}
+
+/**
+ * 相对到达 ETA（仅依据时刻差）。
+ * 行军中/撤回中由 {@link formatMarchRowMetaLine} 拼接；待发/已到达等仍用 {@link formatMarchPhase}。
+ */
+export function formatMarchRemainingMs(nowMs: number, arrive_at_ms: number | undefined): string {
+  if (!arrive_at_ms) return "即将到达";
+  const remaining = arrive_at_ms - nowMs;
+  if (remaining <= MARCH_REMAINING_SOON_MS) return "即将到达";
+  const minutes = Math.ceil(remaining / 60_000);
+  return `剩余 ${minutes}m`;
+}
+
+/** 行军列表次行：出发/到达绝对时刻 + 剩余时间或阶段文案。 */
+export function formatMarchRowMetaLine(m: MarchSummary, nowMs: number): string {
   const depart = formatTimeMs(m.depart_at_ms);
   const arrive = formatTimeMs(m.arrive_at_ms);
-  return `#${id} ${purpose} · ${phase} · ${route} · 出发 ${depart} · 到达 ${arrive}`;
+  const timing = `出发 ${depart} · 到达 ${arrive}`;
+  const phase = m.phase ?? 0;
+  if (phase === 2 || phase === 4) {
+    return `${timing} · ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+  }
+  return `${timing} · ${formatMarchPhase(m.phase)}`;
 }
 
 export function marchListLines(marches: MarchSummary[]): string[] {

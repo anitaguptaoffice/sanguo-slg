@@ -332,8 +332,9 @@ export class HeroMailPanels {
           li.setAttribute("data-mail-id", String(m.mail_id));
           if (m.mail_id === this.selectedMailId) li.classList.add("selected");
         }
-        const unreadClass = mailListRowClassName(m);
-        if (unreadClass) li.classList.add(unreadClass);
+        for (const cls of mailListRowClassName(m).split(/\s+/).filter(Boolean)) {
+          li.classList.add(cls);
+        }
         const titleSpan = document.createElement("span");
         titleSpan.className = "mail-row-title";
         titleSpan.textContent = mailRowTitleLine(m);

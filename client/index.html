@@ -50,6 +50,13 @@
       #hud .hud-resource-icon {
         display: block; width: 18px; height: 18px; object-fit: contain;
       }
+      @keyframes hud-resource-pulse {
+        0%, 100% { transform: scale(1); filter: none; }
+        45% { transform: scale(1.12); filter: drop-shadow(0 0 5px rgba(159, 216, 159, 0.95)); }
+      }
+      #hud .hud-resource-item.resource-pulse {
+        animation: hud-resource-pulse 1.2s ease-out 1;
+      }
       .layout-toolbar {
         position: absolute; left: 0; right: 0; bottom: 0;
         height: calc(56 / 900 * 100%); z-index: 3;
@@ -101,6 +108,11 @@
         background: rgba(201, 162, 39, 0.12);
       }
       .military-panel .march-target-hint { margin: 4px 0 6px; font-size: 12px; color: #6b4f1a; }
+      .military-panel .march-form-error {
+        margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
+        color: #8b1a1a; background: rgba(139, 26, 26, 0.1); border-radius: 4px;
+      }
+      .military-panel .march-form-error.hidden { display: none; }
       .military-panel button[data-action="clear-march-target"] {
         margin: 4px 0 8px; font-size: 12px;
       }
@@ -202,6 +214,13 @@
       .battle-report-list li.selected { outline: 2px solid #c9a227; }
       .battle-report-list li[data-report-id] { cursor: pointer; }
       .battle-report-list li[data-report-id]:hover { background: #3d3028; }
+      .march-list li.march-list-empty { cursor: default; color: #b8a88a; }
+      .march-row-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .march-row-primary { font-size: 13px; line-height: 1.35; }
+      .march-row-meta { font-size: 11px; color: #b8a88a; line-height: 1.35; }
+      .march-list.march-list-compact .march-row-primary { font-size: 12px; }
+      .march-list.march-list-compact .march-row-meta { font-size: 10px; }
+      .march-list.march-list-compact li { padding: 6px 8px; }
       .march-list li[data-march-id] { cursor: pointer; }
       .march-list li[data-march-id]:hover { background: #3d3028; }
       .march-list li.march-list-row-selected { outline: 2px solid #c9a227; }
