@@ -120,6 +120,17 @@ mock 网关（chain 400 默认列出 1012）：
 VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 ```
 
+### 手动验收（日常练兵/建造/战备 CLIENT-024）
+
+与 DATA-002 / QUEST-003 一致：`daily_train_1`（`quest_cfg_id=1014`）、`daily_build_1`（`1032`）、`daily_march_1`（`1033`，`use_item` + `march_ration` → `item_cfg_id=2020`）。chain 400 **无**手填 `ReportQuestProgress`。
+
+1. `make dev` 进入主城，君主等级满足对应日常解锁（dev 账号通常已够）。
+2. 底栏 **「日常」** → **刷新列表**。每行应带 objective 标签（如 `[练兵]`、`[建造]`、`[使用道具]`）+ cfg code + `current/target` 进度（与 ListPlayerQuests 一致）。
+3. **daily_train_1**：接取且进行中 → 详情/「下一步」提示募兵 → 点 **「前往下一步」** 应打开 **「队列」** 与 **「军事」**；完成募兵后进度由服务端推进 → **领奖**，顶栏 CLIENT-018 `+…` 飘字与 HUD 更新。
+4. **daily_build_1**：接取且进行中 → **「前往下一步」** 打开 **「队列」**；对农田等发起升级并完成队列后进度达标 → 领奖。
+5. **daily_march_1**：接取且进行中 → **「前往下一步」** 打开 **「背包」** 并高亮 **2020 远征干粮** → **使用道具** 成功后日常进度推进 → 领奖。
+6. 单测：`dailyQuestObjective.test.ts`；全量 `cd client && npm test`。
+
 ### 手动验收（将领详情 CLIENT-014）
 
 在 CLIENT-008 将领面板基础上，验收 `hero.v1.GetHeroDetail` 与列表可读性（`make dev` 或 mock 网关均可）。
@@ -270,7 +281,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`queueState` / `QueuePanels`（内政升级与募兵队列行）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天行格式、军团摘要、禁言错误可读）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`queueState` / `QueuePanels`（内政升级与募兵队列行）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天行格式、军团摘要、禁言错误可读）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

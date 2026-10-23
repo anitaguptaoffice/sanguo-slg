@@ -45,8 +45,55 @@ describe("DailyQuestPanels", () => {
       includeCompleted: true,
     });
     const ul = mount.querySelector('[data-role="daily-list"]');
+    expect(ul?.textContent).toContain("[采集]");
     expect(ul?.textContent).toContain("daily_food_1");
     expect(mount.querySelector('[data-action="report-quest"]')).toBeNull();
+    const nextBtn = mount.querySelector('[data-action="daily-go-next"]') as HTMLButtonElement;
+    expect(nextBtn?.hidden).toBe(true);
+  });
+
+  it("shows next-step navigation for in-progress train daily", async () => {
+    const mount = document.createElement("div");
+    const onNavigate = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1014,
+            quest_code: "daily_train_1",
+            state: 2,
+            progress_current: 5,
+            progress_target: 50,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      onNavigate,
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const nextBtn = mount.querySelector('[data-action="daily-go-next"]') as HTMLButtonElement;
+    expect(nextBtn?.hidden).toBe(false);
+    nextBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onNavigate).toHaveBeenCalledWith({ kind: "train_troops" });
   });
 
   it("claim merges session and refreshes economy", async () => {

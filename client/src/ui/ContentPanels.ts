@@ -43,6 +43,7 @@ export class ContentPanels {
   private selectedQuestId = 1001;
   private selectedItemId = 2001;
   private selectedOfferId = 1001;
+  private bagHighlightItemId = 0;
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
 
@@ -83,6 +84,21 @@ export class ContentPanels {
   toggleBag(): void {
     this.bagPanel.classList.toggle("hidden");
     if (!this.bagPanel.classList.contains("hidden")) void this.refreshBag();
+  }
+
+  /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
+  openBagHighlightItem(itemCfgId: number): void {
+    this.bagHighlightItemId = itemCfgId;
+    this.selectedItemId = itemCfgId;
+    this.ensureBagSelectOption(itemCfgId);
+    const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
+    if (sel) sel.value = String(itemCfgId);
+    this.bagPanel.classList.remove("hidden");
+    const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
+    if (hint) {
+      hint.textContent = `筛选高亮 item_cfg_id=${itemCfgId}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`;
+    }
+    void this.refreshBag();
   }
 
   toggleShop(): void {
@@ -152,6 +168,7 @@ export class ContentPanels {
         <select data-field="item-id">
           <option value="2001">2001 谷袋·初备</option>
           <option value="2003">2003 急工符·五刻</option>
+          <option value="2020">2020 远征干粮</option>
         </select>
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
@@ -198,6 +215,9 @@ export class ContentPanels {
     for (const row of bag) {
       const li = document.createElement("li");
       li.textContent = `${row.item_cfg_id} ${itemLabel(row.item_cfg_id)} × ${row.quantity}`;
+      if (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId) {
+        li.classList.add("item-highlight");
+      }
       ul.appendChild(li);
     }
     if (!bag.length) {
@@ -424,6 +444,17 @@ export class ContentPanels {
     const a = btn.getAttribute("data-action");
     if (a === "refresh-bag") void this.refreshBag();
     if (a === "use-item") void this.useItem();
+  }
+
+  private ensureBagSelectOption(itemCfgId: number): void {
+    const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
+    if (!sel) return;
+    const exists = [...sel.options].some((o) => Number(o.value) === itemCfgId);
+    if (exists) return;
+    const opt = document.createElement("option");
+    opt.value = String(itemCfgId);
+    opt.textContent = `${itemCfgId} ${itemLabel(itemCfgId)}`;
+    sel.appendChild(opt);
   }
 
   private onShopClick(ev: Event): void {
