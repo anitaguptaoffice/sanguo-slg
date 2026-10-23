@@ -56,6 +56,13 @@ export const CLIENT_103_PANEL_ASSET_BY_CENTER_ID: Record<"rank" | "hero" | "dail
   daily: PANEL_ASSET_DAILY,
 };
 
+/** CLIENT-111 narrow manifest roots: 主城建造侧栏 / 邮件 / 队列（与 CLIENT-086/103 同级工程接线）。 */
+export const CLIENT_111_PANEL_ASSET_BY_CENTER_ID: Record<"building" | "mail" | "queue", string> = {
+  building: PANEL_ASSET_DEFAULT,
+  mail: PANEL_ASSET_DEFAULT,
+  queue: PANEL_ASSET_QUEUE,
+};
+
 /** Stretch a nine_slice panel asset as CSS border-image (24px logical slice by default). */
 export function skinNineSlicePanel(
   el: HTMLElement,

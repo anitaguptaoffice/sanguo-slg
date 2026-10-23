@@ -93,3 +93,9 @@ export function layoutViewportRootClass(vp: LayoutViewport): string {
 export function syncLayoutViewportRootClass(root: HTMLElement, vp: LayoutViewport): void {
   root.classList.toggle(NARROW_LAYOUT_ROOT_CLASS, isNarrowLayoutViewport(vp));
 }
+
+/** CLIENT-111: center-panel ids wired for 1280 manifest + scroll consolidation (主城侧栏/邮件/队列). */
+export const CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS = ["building", "mail", "queue"] as const;
+
+export type Client111NarrowManifestCenterPanelId =
+  (typeof CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS)[number];
