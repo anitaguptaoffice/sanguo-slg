@@ -253,7 +253,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 1. `make dev` 打开 **排行**，切换战力/资源榜后点 **刷新排行榜**：列表更新且出现 **上次更新** 行；刷新过程中按钮不可点。
 2. **聊天**（世界/私聊/军团）点 **刷新**：`ListChatMessages` 成功后同样展示时间戳；空列表仍用 CLIENT-029/030 密度文案。
 3. 断网或网关错误：状态行显示 **刷新失败：…**（`formatSocialPanelRefreshError`），状态栏同步 gateway 摘要。
-4. 单测：`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
+4. **CLIENT-076**：排行/军团/聊天三面板刷新共用 `formatPanelRefreshMeta`（in-flight **刷新中…** + spinner、成功 **上次更新**、失败 **`[code]`** + **重试**）；单测：`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（将领详情 CLIENT-014）
 
