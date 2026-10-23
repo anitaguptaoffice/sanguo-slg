@@ -15,12 +15,12 @@ func (s *Server) wireM3(pool *pgxpool.Pool) {
 		return
 	}
 	resolver := &m3Sessions{sessions: s.sessions, players: s.players}
-	chatSvc := chat.NewService(chat.NewPGStore(pool), s.players)
+	chatStore := guild.WrapChatStore(chat.NewPGStore(pool))
+	chatSvc := chat.NewService(chatStore, s.players)
 	guildSvc := guild.NewService(guild.NewPGStore(pool), s.players)
+	coord := guild.NewChatCoordinator(guildSvc, chatSvc, chatStore, s.players)
 
-	for route, h := range chat.GatewayHandlers(chatSvc, chatSessionBridge{resolver}) {
-		s.m3.Register(route, h)
-	}
+	guild.RegisterM3Chat(s.m3, coord, chatSessionBridge{resolver})
 	guild.RegisterM3(s.m3, guildSvc, guildSessionBridge{resolver})
 
 	s.rankSvc = rank.NewService(rank.NewPGStore(pool), newPGRankSource(pool))
