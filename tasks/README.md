@@ -15,7 +15,7 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1–10，第几波开工（wave:7 对齐、wave:8 M3/M4 出口加固、wave:9 核心子集第二批、wave:10 M4 加深，见 `docs/ROADMAP.md`） |
+| `wave` | 是 | 1–11，第几波开工（wave:7–11 见 `docs/ROADMAP.md`） |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
 | `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked` |
@@ -58,6 +58,7 @@ status:review   ──合并────▶  status:done
 | 8 | M3/M4 出口加固（**已完成**，见 ROADMAP Wave 8） | INTG-005 (#125), CLIENT-006 (#121), RANK-002 (#122), LOAD-001 (#123), OPS-OPEN-001 (#120), TELEMETRY-001 (#124) |
 | 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**已完成**） | 见下表 |
 | 10 | M4 玩法加深（**已完成**，见 ROADMAP Wave 10） | CLIENT-008 (#156), HERO-003 (#158), QUEST-002 (#157), GM-003 (#154), INTG-007 (#159), DOCS-EXIT-002 (#160) |
+| 11 | H5 日常可玩环（**进行中**，见 ROADMAP Wave 11） | CLIENT-009～012, QUEST-003, INTG-008, DOCS-EXIT-003（Issue 待 sync） |
 
 ### Wave 9 进度（已完成）
 
@@ -79,6 +80,18 @@ status:review   ──合并────▶  status:done
 | [#149](https://github.com/anitaguptaoffice/sanguo-slg/issues/149) | QUEST-002 | `status:done`（[#157](https://github.com/anitaguptaoffice/sanguo-slg/pull/157)） |
 | [#150](https://github.com/anitaguptaoffice/sanguo-slg/issues/150) | GM-003 | `status:done`（[#154](https://github.com/anitaguptaoffice/sanguo-slg/pull/154)） |
 | [#151](https://github.com/anitaguptaoffice/sanguo-slg/issues/151) | INTG-007 | `status:done`（[#159](https://github.com/anitaguptaoffice/sanguo-slg/pull/159)） |
-| [#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152) | DOCS-EXIT-002 | `status:review`（[#160](https://github.com/anitaguptaoffice/sanguo-slg/pull/160)） |
+| [#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152) | DOCS-EXIT-002 | `status:done`（[#160](https://github.com/anitaguptaoffice/sanguo-slg/pull/160)） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10」一节；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
+### Wave 11 进度（待 `tasks_sync`）
+
+| ID | 典型状态 | 说明 |
+|---|---|---|
+| CLIENT-009 | `status:ready` | 日常 chain 400 面板 |
+| CLIENT-010 | `status:ready` | 招募模板 + 背包/商城可读性 |
+| QUEST-003 | `status:ready` | 日常事件挂钩加深 |
+| CLIENT-011 | `status:ready` | HUD / 建筑等级 |
+| CLIENT-012 | `status:ready` | 战报独立入口 |
+| INTG-008 | `status:ready` | 网关冒烟复跑 |
+| DOCS-EXIT-003 | `status:blocked` | 待 INTG-008 |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。

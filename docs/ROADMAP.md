@@ -106,6 +106,22 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145；全量 legacy 活动 cfg；第三批核心子集扩量（无单独编排授权）。
 
+## Wave 11 H5 日常可玩环（进行中）
+
+**策略**：在既有 **DATA-002** 子集与 wave:10 后端（QUEST-002 / HERO-003）上，补齐 H5 **日常任务 UI**、**招募模板预览**、内政/战报可读性与冒烟复跑；**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。引擎仍为 Vite + TS + Canvas2D/DOM。
+
+| 任务 | 说明 | 并行 |
+|---|---|---|
+| CLIENT-009 | 日常面板（chain 400 接取/领奖，无手填上报） | ‖ |
+| CLIENT-010 | ListRecruitTemplates + 背包/商城信息密度 | ‖ |
+| QUEST-003 | 日常挂钩：练兵/建造/用道具（api 薄挂钩） | ‖ |
+| CLIENT-011 | HUD 资源条与建筑等级可读性 | ‖ |
+| CLIENT-012 | 战报独立入口（List/Get 已有 RPC） | ‖ |
+| INTG-008 | 扩展 INTG-007 网关冒烟（日常 + 招募模板） | ‖（软依赖 QUEST-003 可选步骤） |
+| DOCS-EXIT-003 | wave:11 文档收口 | 待 INTG-008（`blocked_until`） |
+
+编排者在 backlog 合并后 `tasks_sync` 创建 Issue 并打 `wave:11` 标签。CLIENT 五卡与 QUEST-003、INTG-008 可并行；DOCS-EXIT-003 在 INTG-008 合并后放开。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。
