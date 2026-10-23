@@ -57,7 +57,7 @@ func runINTG014Wave17Smoke(t *testing.T) {
 
 	baseSnap := runData002M4Steps(t, ctx, c, apiSrv, pool, sid, playerID)
 	ext := runINTG008DeepenSteps(t, ctx, c, apiSrv, pool, sid, playerID, baseSnap)
-	marchID, cityID, wantToX, wantToY := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
+	marchID, cityID, wantToX, wantToY, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
 	smokeINTG014ListMarchesDestinationGateway(t, c, sid, cityID, marchID, wantToX, wantToY)
 	reportID := smokeINTG012ListBattleReportsGateway(t, c, sid, playerID)
 	smokeINTG014GetBattleReportGateway(t, c, sid, playerID, reportID)
