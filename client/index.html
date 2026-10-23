@@ -851,6 +851,24 @@
       .social-panel input, .social-panel select {
         margin-left: 6px; padding: 4px 6px; background: #1a1410; color: #f5e6c8; border: 1px solid #5c4a32;
       }
+      .chat-channel-tabs {
+        display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px;
+      }
+      .chat-channel-tab {
+        position: relative; padding: 4px 10px; font-size: 12px;
+        background: #1a1410; color: #e8dcc8; border: 1px solid #5c4a32; border-radius: 4px; cursor: pointer;
+      }
+      .chat-channel-tab.active { outline: 2px solid #c9a227; }
+      .chat-channel-tab-badge {
+        display: inline-block; min-width: 1.1em; margin-left: 4px; padding: 0 4px;
+        font-size: 10px; line-height: 1.35; text-align: center; color: #fff;
+        background: #b33; border-radius: 8px; vertical-align: middle;
+      }
+      .chat-channel-tab-badge.hidden { display: none; }
+      .guild-chat-entry {
+        margin: 4px 0 8px; padding: 4px 10px; font-size: 12px;
+        background: #1a1410; color: #e8dcc8; border: 1px solid #5c4a32; border-radius: 4px; cursor: pointer;
+      }
       .chat-log, .guild-members { margin: 8px 0; padding-left: 0; max-height: 160px; overflow: auto; list-style: none; }
       .chat-log li.chat-day-header {
         position: sticky; top: 0; z-index: 1;
