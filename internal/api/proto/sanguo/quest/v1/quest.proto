@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package sanguo.quest.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1;questv1";
+
+// 玩家任务状态（与 player_quest.state 对齐：0 未接 / 1 进行 / 2 可领 / 3 完成）。
+enum PlayerQuestState {
+  PLAYER_QUEST_STATE_UNSPECIFIED = 0;
+  PLAYER_QUEST_STATE_AVAILABLE = 1;
+  PLAYER_QUEST_STATE_IN_PROGRESS = 2;
+  PLAYER_QUEST_STATE_CLAIMABLE = 3;
+  PLAYER_QUEST_STATE_COMPLETED = 4;
+}
+
+enum QuestChainState {
+  QUEST_CHAIN_STATE_UNSPECIFIED = 0;
+  QUEST_CHAIN_STATE_LOCKED = 1;
+  QUEST_CHAIN_STATE_IN_PROGRESS = 2;
+  QUEST_CHAIN_STATE_COMPLETED = 3;
+}
+
+message PlayerQuestProgress {
+  int32 quest_cfg_id = 1;
+  string quest_code = 2;
+  int32 chain_id = 3;
+  int32 chain_order = 4;
+  int32 prev_quest_cfg_id = 5;
+  int32 next_quest_cfg_id = 6;
+  PlayerQuestState state = 7;
+  int32 progress_current = 8;
+  int32 progress_target = 9;
+  int64 accepted_at_ms = 10;
+  int64 updated_at_ms = 11;
+  sanguo.common.v1.RewardBundle reward_preview = 12;
+}
+
+message QuestChainStatus {
+  int32 chain_id = 1;
+  string chain_name = 2;
+  QuestChainState chain_state = 3;
+  int32 total_quest_count = 4;
+  int32 completed_quest_count = 5;
+  int32 active_quest_cfg_id = 6;
+  int32 next_available_quest_cfg_id = 7;
+}
+
+// route: quest.v1.ListPlayerQuests
+message ListPlayerQuestsRequest {
+  int32 server_id = 1;
+  int32 chain_id = 2;
+  bool include_completed = 3;
+}
+
+message ListPlayerQuestsResponse {
+  repeated PlayerQuestProgress quests = 1;
+  repeated QuestChainStatus chains = 2;
+}
+
+// route: quest.v1.AcceptQuest
+message AcceptQuestRequest {
+  int32 server_id = 1;
+  int32 quest_cfg_id = 2;
+}
+
+message AcceptQuestResponse {
+  PlayerQuestProgress quest = 1;
+  QuestChainStatus chain = 2;
+}
+
+// route: quest.v1.ReportQuestProgress
+message ReportQuestProgressRequest {
+  int32 server_id = 1;
+  int32 quest_cfg_id = 2;
+  bool absolute = 3;
+  int32 progress_value = 4;
+  string event_type = 5;
+}
+
+message ReportQuestProgressResponse {
+  PlayerQuestProgress quest = 1;
+  QuestChainStatus chain = 2;
+}
+
+// route: quest.v1.ClaimQuestReward
+message ClaimQuestRewardRequest {
+  int32 server_id = 1;
+  int32 quest_cfg_id = 2;
+}
+
+message ClaimQuestRewardResponse {
+  PlayerQuestProgress quest = 1;
+  QuestChainStatus chain = 2;
+  sanguo.common.v1.RewardBundle granted_rewards = 3;
+}
+
+// route: quest.v1.GetQuestChainStatus
+message GetQuestChainStatusRequest {
+  int32 server_id = 1;
+  int32 chain_id = 2;
+}
+
+message GetQuestChainStatusResponse {
+  QuestChainStatus chain = 1;
+  repeated PlayerQuestProgress chain_quests = 2;
+}

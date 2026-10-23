@@ -7,14 +7,17 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -40,11 +43,16 @@ type Server struct {
 	reports    *report.Service
 	sessions   *SessionRegistry
 	gm         *GmService
-	shard      *shard.Handlers
-	m3         *assembly.M3
-	rankSvc    *rank.Service
-	rankSch    *rank.Scheduler
-	cities     map[int64]*domestic.CityState
+	shard         *shard.Handlers
+	m3            *assembly.M3
+	m4            *assembly.M4
+	rankSvc       *rank.Service
+	rankSch       *rank.Scheduler
+	questSvc      *quest.Service
+	shopSvc       *shop.Service
+	contentSvc    *content.Service
+	questChainIDs []int32
+	cities        map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord
 	nextArmyID int64
 	now        clockFunc
@@ -77,6 +85,7 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 		military:   militaryHub,
 		sessions:   NewSessionRegistry(),
 		m3:         assembly.NewM3(),
+		m4:         assembly.NewM4(),
 		cities:     make(map[int64]*domestic.CityState),
 		cityCoords: make(map[int64]cityCoord),
 		now:        time.Now,
@@ -137,6 +146,9 @@ func (s *Server) GatewayRouter() *gateway.Router {
 		handlers[route] = h
 	}
 	for route, h := range s.m3.GatewayHandlers() {
+		handlers[route] = h
+	}
+	for route, h := range s.m4.GatewayHandlers() {
 		handlers[route] = h
 	}
 	return gateway.NewRouter(handlers)
