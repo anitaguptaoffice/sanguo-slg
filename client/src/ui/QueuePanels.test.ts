@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
+import { QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS } from "@/net/buildQueueComplete";
 import {
   BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID,
   QUEUE_BUILD_ROW_SELECTED_CLASS,
@@ -38,6 +39,50 @@ describe("QueuePanels", () => {
     expect(row?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(true);
     const hallRow = mount.querySelector(`#${queueBuildRowDomId("hall")}`);
     expect(hallRow?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(false);
+    expect(row?.classList.contains(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
+  });
+
+  it("clicking build queue row highlights slot via openAndHighlightBuildSlot", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onHighlight = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      onHighlight,
+    );
+    panel.attach();
+    panel.toggle();
+    const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`) as HTMLElement;
+    row.click();
+    expect(onHighlight).toHaveBeenCalledWith("farm");
+  });
+
+  it("notifyBuildJustCompleted adds pulse class on complete todo row", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 3, upgrade_finish_at_ms: 0 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.setBuildCompleteTodoSlots(["farm"]);
+    panel.toggle();
+    panel.notifyBuildJustCompleted(["farm"]);
+    const row = mount.querySelector('li[data-slot-key="farm"]');
+    expect(row?.classList.contains("queue-build-complete-pulse")).toBe(true);
+    expect(row?.textContent).toContain("Lv3");
   });
 
   it("shows upgrade and recruit rows when open", () => {

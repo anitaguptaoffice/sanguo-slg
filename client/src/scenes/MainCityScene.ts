@@ -82,6 +82,7 @@ import {
   buildMarchIntelRemarchPrefill,
 } from "@/net/marchIntelRemarch";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
+import { detectBuildJustCompleted } from "@/net/buildQueueComplete";
 import {
   formatHudCenterTodoBadge,
   hudCenterTodoTitle,
@@ -599,6 +600,7 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       skinCenterPrimary,
+      (slotKey) => this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey),
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -1113,6 +1115,7 @@ export class MainCityScene implements Scene {
       return;
     }
     this.resetBuildSubmitState();
+    this.queuePanels.clearBuildSlotHighlight();
     this.buildingPanel.selectSlot(top.slot_key);
     this.status = `建造：${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
     this.renderHud();
@@ -1246,8 +1249,12 @@ export class MainCityScene implements Scene {
     production_rates?: ResourceWallet;
   }): void {
     if (!this.session) return;
+    const prevBuildings = this.session.buildings;
+    const nowMs = Date.now();
+    let justCompleted: string[] = [];
     if (state.buildings) {
-      this.buildCompleteTodos.onCityBuildings(state.buildings);
+      justCompleted = detectBuildJustCompleted(prevBuildings, state.buildings, nowMs);
+      this.buildCompleteTodos.onCityBuildings(state.buildings, nowMs);
       this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
     }
     const beforeWallet = this.session.wallet;
@@ -1262,7 +1269,13 @@ export class MainCityScene implements Scene {
       { flashWalletGain: false },
     );
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
+    if (justCompleted.length) {
+      this.queuePanels?.notifyBuildJustCompleted(justCompleted);
+    }
     this.syncSlotUpgradeOverlay();
+    this.slotUpgradeOverlay?.setMutualHighlightSlot(
+      this.queuePanels?.getHighlightedBuildSlotKey() ?? null,
+    );
   }
 
   private applyCityStatePoll(state: {
