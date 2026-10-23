@@ -1,3 +1,4 @@
+import { setFilterChipLabel, syncFilterChipAria } from "@/engine/artFilterChipRuntime";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
@@ -442,9 +443,12 @@ export class HeroMailPanels {
     el.innerHTML = `
       <h3>邮件</h3>
       <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
-      <div class="mail-inbox-toolbar">
-        <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full selected" data-action="mail-filter-all">全部</button>
-        <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full" data-action="mail-filter-unread">未读</button>
+      <div class="mail-inbox-toolbar" role="group" aria-label="邮件筛选">
+        <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-all" aria-pressed="true">
+          <span data-role="mail-filter-all-label" class="art-filter-chip-label">全部</span>
+          <span class="mail-filter-badge hidden" data-role="mail-filter-attach-badge" hidden></span>
+        </button>
+        <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-unread" aria-pressed="false">未读</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
@@ -608,35 +612,27 @@ export class HeroMailPanels {
   }
 
   private setMailFilterButtons(): void {
-    const allBtn = this.mailPanel.querySelector('[data-action="mail-filter-all"]');
-    const unreadBtn = this.mailPanel.querySelector('[data-action="mail-filter-unread"]');
-    allBtn?.classList.toggle("selected", this.mailFilter === MAIL_INBOX_FILTER_ALL);
-    unreadBtn?.classList.toggle("selected", this.mailFilter === MAIL_INBOX_FILTER_UNREAD);
+    const allBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-all"]');
+    const unreadBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-unread"]');
+    const chips = [allBtn, unreadBtn].filter((b): b is HTMLButtonElement => b != null);
+    syncFilterChipAria(chips, (btn) => {
+      if (btn.dataset.action === "mail-filter-all") return this.mailFilter === MAIL_INBOX_FILTER_ALL;
+      if (btn.dataset.action === "mail-filter-unread") return this.mailFilter === MAIL_INBOX_FILTER_UNREAD;
+      return false;
+    });
     const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
     const unreadForTab = Math.max(this.mailUnreadTotal, derived.unread);
     if (unreadBtn) {
-      unreadBtn.textContent = formatMailInboxUnreadTabLabel(unreadForTab);
+      setFilterChipLabel(unreadBtn, formatMailInboxUnreadTabLabel(unreadForTab));
     }
-    const attachBadge = allBtn?.querySelector('[data-role="mail-filter-attach-badge"]');
     const attachLabel = formatMailInboxAllTabAttachmentBadge(derived.unclaimed);
     if (allBtn) {
-      const base = allBtn.querySelector('[data-role="mail-filter-all-label"]');
-      if (!base) {
-        allBtn.textContent = "";
-        const span = document.createElement("span");
-        span.setAttribute("data-role", "mail-filter-all-label");
-        span.textContent = "全部";
-        allBtn.appendChild(span);
-        const badge = document.createElement("span");
-        badge.className = "mail-filter-badge";
-        badge.setAttribute("data-role", "mail-filter-attach-badge");
-        allBtn.appendChild(badge);
-      }
-      const badgeEl =
-        allBtn.querySelector('[data-role="mail-filter-attach-badge"]') ?? attachBadge;
+      const badgeEl = allBtn.querySelector<HTMLElement>('[data-role="mail-filter-attach-badge"]');
       if (badgeEl) {
         badgeEl.textContent = attachLabel;
-        badgeEl.classList.toggle("hidden", !attachLabel);
+        const show = Boolean(attachLabel);
+        badgeEl.classList.toggle("hidden", !show);
+        badgeEl.hidden = !show;
       }
     }
   }

@@ -2,6 +2,7 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
 import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
+import { remountPanelFilterChips } from "@/engine/artFilterChipRuntime";
 import { mountToolbarIcons } from "@/engine/artToolbarIconSkin";
 import {
   skinBagPanel,
@@ -658,6 +659,9 @@ export class MainCityScene implements Scene {
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
+    remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
+    remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
+    remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
     skinWorldPanel(this.world.getRoot(), this.assets, 520, 320);
     skinRankPanel(this.social.getRankRoot(), this.assets, 520, 320);
     skinGuildPanel(this.social.getGuildRoot(), this.assets, 520, 320);

@@ -19,6 +19,7 @@ import {
 } from "@/net/dailyQuestState";
 import { centerTodoScrollTargetId, pickFirstClaimableDailyQuestCfgId } from "@/net/hudCenterTodo";
 import { pickFirstDailyTodoQuestCfgId } from "@/net/hudTodoBadge";
+import { syncFilterChipAria } from "@/engine/artFilterChipRuntime";
 import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
 import {
   formatDailyQuestNextStepHint,
@@ -173,11 +174,11 @@ export class DailyQuestPanels {
       </div>
       <p class="daily-form-error hidden" data-role="daily-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="daily-scroll">
-        <div class="daily-quest-filters" data-role="daily-filters">
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="all">全部</button>
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="in_progress">进行中</button>
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="claimable">可领取</button>
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="completed">已完成</button>
+        <div class="daily-quest-filters" data-role="daily-filters" role="group" aria-label="日常筛选">
+          <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="all" aria-pressed="true">全部</button>
+          <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="in_progress" aria-pressed="false">进行中</button>
+          <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="claimable" aria-pressed="false">可领取</button>
+          <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="completed" aria-pressed="false">已完成</button>
           <button type="button" class="daily-quest-filter-btn daily-quest-locate-first hidden" data-action="daily-locate-first" hidden>定位首条</button>
         </div>
         <div class="daily-quest-state-summary" data-role="daily-state-summary" hidden></div>
@@ -195,12 +196,13 @@ export class DailyQuestPanels {
   }
 
   private updateFilterButtons(): void {
-    for (const btn of Array.from(
+    const chips = Array.from(
       this.panel.querySelectorAll<HTMLButtonElement>('[data-action="daily-filter"]'),
-    )) {
+    );
+    syncFilterChipAria(chips, (btn) => {
       const f = btn.getAttribute("data-filter") as DailyQuestListFilter;
-      btn.classList.toggle("active", f === this.listFilter);
-    }
+      return f === this.listFilter;
+    });
     const locateBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="daily-locate-first"]');
     const showLocate =
       this.listFilter === "claimable" && pickFirstClaimableDailyQuestCfgIdForFilter(this.rows) > 0;

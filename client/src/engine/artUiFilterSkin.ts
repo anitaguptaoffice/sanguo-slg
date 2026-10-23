@@ -95,7 +95,11 @@ function applyNineSliceRowSkin(el: HTMLElement, assets: AssetLoader, assetId: st
 }
 
 function chipVisualState(btn: HTMLButtonElement): FilterChipVisualState {
-  if (btn.classList.contains("selected") || btn.getAttribute("aria-pressed") === "true") {
+  if (
+    btn.classList.contains("selected") ||
+    btn.getAttribute("aria-pressed") === "true" ||
+    btn.getAttribute("aria-current") === "true"
+  ) {
     return "selected";
   }
   if (btn.disabled) return "normal";
@@ -113,6 +117,13 @@ function ensureChipStructure(btn: HTMLButtonElement): HTMLSpanElement {
     btn.prepend(sprite);
   }
   let label = btn.querySelector<HTMLSpanElement>(".art-filter-chip-label");
+  if (!label) {
+    const roleLabel = btn.querySelector<HTMLSpanElement>("[data-role='mail-filter-all-label']");
+    if (roleLabel) {
+      roleLabel.classList.add("art-filter-chip-label");
+      label = roleLabel;
+    }
+  }
   if (!label) {
     const text = (btn.textContent ?? "").trim();
     for (const node of Array.from(btn.childNodes)) {
@@ -249,9 +260,20 @@ export function mountFilterBadgeDot(el: HTMLElement, assets: AssetLoader): void 
 }
 
 export function mountFilterBadgeCount(el: HTMLElement, assets: AssetLoader, count: number): void {
+  const formatted = formatFilterBadgeCount(count);
+  if (!formatted) {
+    el.hidden = true;
+    el.classList.add("hidden");
+    el.textContent = "";
+    el.classList.remove("art-filter-badge-count", "art-filter-badge-count--skinned");
+    el.querySelector(".art-filter-badge-count-sprite")?.remove();
+    return;
+  }
+  el.hidden = false;
+  el.classList.remove("hidden");
   if (artSkinOff(el)) {
     el.classList.remove("art-filter-badge-count", "art-filter-badge-count--skinned");
-    el.textContent = formatFilterBadgeCount(count);
+    el.textContent = formatted;
     return;
   }
   const pack = assets.getImageForAsset(BADGE_COUNT_ASSET_ID);
@@ -269,7 +291,7 @@ export function mountFilterBadgeCount(el: HTMLElement, assets: AssetLoader, coun
   }
   const label = sprite.querySelector<HTMLSpanElement>(".art-filter-badge-count-label");
   sprite.style.backgroundImage = `url(${pack.img.src})`;
-  if (label) label.textContent = formatFilterBadgeCount(count);
+  if (label) label.textContent = formatted;
 }
 
 export function mountFilterBadges(

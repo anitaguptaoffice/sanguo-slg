@@ -137,6 +137,16 @@ describe("mountFilterChip", () => {
     const sprite = btn.querySelector<HTMLElement>(".art-filter-chip-sprite");
     expect(sprite?.dataset.filterChipState).toBe("selected");
   });
+
+  it("uses selected asset when aria-current", () => {
+    const btn = document.createElement("button");
+    btn.dataset.uiFilterChip = "";
+    btn.setAttribute("aria-current", "true");
+    btn.textContent = "筛选";
+    mountFilterChip(btn, mockAssets());
+    const sprite = btn.querySelector<HTMLElement>(".art-filter-chip-sprite");
+    expect(sprite?.dataset.filterChipState).toBe("selected");
+  });
 });
 
 describe("mountFilterRow", () => {
@@ -178,6 +188,15 @@ describe("mountFilterUiSkins", () => {
       <button type="button" data-ui-filter-chip>B</button>`;
     mountFilterChips(root, mockAssets());
     expect(root.querySelectorAll(".art-filter-chip--skinned")).toHaveLength(2);
+  });
+
+  it("mountFilterBadgeCount hides entire node when count is 0", () => {
+    const count = document.createElement("span");
+    count.dataset.uiFilterBadge = "count";
+    mountFilterBadgeCount(count, mockAssets(), 0);
+    expect(count.hidden).toBe(true);
+    expect(count.classList.contains("hidden")).toBe(true);
+    expect(count.querySelector(".art-filter-badge-count-sprite")).toBeNull();
   });
 
   it("mountFilterBadgeDot and mountFilterBadgeCount respect art-skin off ancestor", () => {
