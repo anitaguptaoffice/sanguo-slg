@@ -1,6 +1,6 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
-import { PANEL_ASSET_MILITARY, skinNineSlicePanel } from "@/engine/artPanelSkin";
+import { PANEL_ASSET_MILITARY, skinMilitaryPanel, skinNineSlicePanel } from "@/engine/artPanelSkin";
 import { appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
@@ -325,6 +325,8 @@ export class MainCityScene implements Scene {
     skinPrimaryButtons(this.toolbar, this.assets, "button");
     skinPrimaryButtons(this.militaryPanel, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320, PANEL_ASSET_MILITARY);
+    skinMilitaryPanel(this.marchList.getRoot(), this.assets, 520, 320);
+    skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
     for (const panel of [
       this.queuePanels.getRoot(),
       this.heroMail.getMailRoot(),

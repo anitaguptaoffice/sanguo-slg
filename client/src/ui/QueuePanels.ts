@@ -19,6 +19,7 @@ const SPEEDUP_BUTTON_LABEL = "使用短促工符";
 
 export class QueuePanels {
   private panel!: HTMLElement;
+  private militarySection!: HTMLElement;
   private recruits: RecruitQueueEntry[] = [];
   private tickAccum = 0;
   private speedupBusy = false;
@@ -50,6 +51,10 @@ export class QueuePanels {
 
   getRoot(): HTMLElement {
     return this.panel;
+  }
+
+  getMilitarySectionRoot(): HTMLElement {
+    return this.militarySection;
   }
 
   toggle(): void {
@@ -92,9 +97,14 @@ export class QueuePanels {
       <h3>队列</h3>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <button type="button" data-action="refresh-queue">刷新内政</button>
-      <ul class="queue-list" data-role="queue-list"></ul>
+      <ul class="queue-list" data-role="queue-build-list"></ul>
+      <div class="queue-military-section hidden" data-role="queue-military-section">
+        <p class="queue-military-heading">募兵队列</p>
+        <ul class="queue-list" data-role="queue-recruit-list"></ul>
+      </div>
       <p class="queue-panel-status" data-role="queue-status"></p>
     `;
+    this.militarySection = el.querySelector('[data-role="queue-military-section"]') as HTMLElement;
     return el;
   }
 
@@ -114,48 +124,60 @@ export class QueuePanels {
   }
 
   private render(): void {
-    const ul = this.panel.querySelector('[data-role="queue-list"]');
-    if (!ul) return;
+    const buildUl = this.panel.querySelector('[data-role="queue-build-list"]');
+    const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
+    if (!buildUl || !recruitUl) return;
     const now = Date.now();
     this.recruits = pruneFinishedRecruits(this.recruits, now);
     const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy;
-    const lines: string[] = [];
     const buildRows = activeBuildingUpgrades(this.buildings(), now);
-    for (const b of buildRows) {
-      lines.push(formatBuildingUpgradeQueueLine(b, this.slotLabels, now));
-    }
-    for (const r of this.recruits) {
-      lines.push(formatRecruitQueueLine(r, now));
-    }
-    ul.innerHTML = "";
-    if (!lines.length) {
+    const recruitLines = this.recruits.map((r) => formatRecruitQueueLine(r, now));
+
+    buildUl.innerHTML = "";
+    recruitUl.innerHTML = "";
+    this.militarySection.classList.toggle("hidden", recruitLines.length === 0);
+
+    if (!buildRows.length && !recruitLines.length) {
       const li = document.createElement("li");
       li.textContent = "（当前无排队中的升级或募兵）";
-      ul.appendChild(li);
+      buildUl.appendChild(li);
       return;
     }
-    let buildIdx = 0;
-    for (const text of lines) {
+
+    if (!buildRows.length) {
+      const li = document.createElement("li");
+      li.textContent = "（当前无排队中的内政升级）";
+      buildUl.appendChild(li);
+    }
+
+    for (const b of buildRows) {
+      const text = formatBuildingUpgradeQueueLine(b, this.slotLabels, now);
       const li = document.createElement("li");
       li.className = "queue-list-row";
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
-      if (buildIdx < buildRows.length) {
-        buildIdx += 1;
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.setAttribute("data-action", "speedup-build");
-        btn.textContent = SPEEDUP_BUTTON_LABEL;
-        if (!speedupEnabled) {
-          btn.disabled = true;
-          if (buildRows.length > 0 && bagStackQuantity(this.getSession()?.bag ?? [], BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID) < 1) {
-            btn.title = "背包中无短促工符（道具 2003）";
-          }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("data-action", "speedup-build");
+      btn.textContent = SPEEDUP_BUTTON_LABEL;
+      if (!speedupEnabled) {
+        btn.disabled = true;
+        if (bagStackQuantity(this.getSession()?.bag ?? [], BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID) < 1) {
+          btn.title = "背包中无短促工符（道具 2003）";
         }
-        li.appendChild(btn);
       }
-      ul.appendChild(li);
+      li.appendChild(btn);
+      buildUl.appendChild(li);
+    }
+
+    for (const text of recruitLines) {
+      const li = document.createElement("li");
+      li.className = "queue-list-row";
+      const span = document.createElement("span");
+      span.textContent = text;
+      li.appendChild(span);
+      recruitUl.appendChild(li);
     }
   }
 
