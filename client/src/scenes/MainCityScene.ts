@@ -444,7 +444,9 @@ export class MainCityScene implements Scene {
       }
       if (action === "toggle-reports" && snap.battleReportUnread > 0) {
         this.marchReportToastActive = false;
-        this.battleReports.openPanel();
+        void this.battleReports
+          .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
+          .then(() => this.renderHud());
         return;
       }
     }
