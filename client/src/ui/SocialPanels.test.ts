@@ -49,6 +49,7 @@ describe("SocialPanels rank", () => {
     expect(getLeaderboard).toHaveBeenCalledWith(1, LB_PLAYER_POWER, 1, 20);
     expect(mount.querySelector('[data-role="viewer-rank"]')?.textContent).toContain("第 2 名");
     expect(mount.querySelector('[data-role="rank-snapshot"]')?.textContent).toContain("快照批次");
+    expect(mount.querySelector('[data-role="rank-refresh-status"]')?.textContent).toContain("上次更新");
   });
 
   it("switches to resource board and shows empty list", async () => {
@@ -82,6 +83,49 @@ describe("SocialPanels rank", () => {
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("（空榜）");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("种子");
   });
+
+  it("disables rank refresh while in-flight and dedupes double click", async () => {
+    const mount = document.createElement("div");
+    let resolve!: (v: object) => void;
+    const getLeaderboard = vi.fn().mockImplementation(
+      () =>
+        new Promise((r) => {
+          resolve = r;
+        }),
+    );
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    const btn = mount.querySelector('[data-action="refresh-rank"]') as HTMLButtonElement;
+    btn?.dispatchEvent(new Event("click", { bubbles: true }));
+    btn?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(getLeaderboard).toHaveBeenCalledTimes(1);
+    expect(btn.disabled).toBe(true);
+    resolve({ entries: [], my_rank: 0, my_score: 0 });
+    await flushPromises();
+    expect(btn.disabled).toBe(false);
+  });
+
+  it("shows rank refresh error in panel", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      getLeaderboard: vi.fn().mockRejectedValue(Object.assign(new Error("timeout"), { code: 500 })),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const status = mount.querySelector('[data-role="rank-refresh-status"]');
+    expect(status?.textContent).toContain("刷新失败");
+    expect(status?.textContent).toContain("timeout");
+    expect(status?.classList.contains("social-refresh-error")).toBe(true);
+  });
 });
 
 describe("SocialPanels chat & guild", () => {
@@ -109,6 +153,7 @@ describe("SocialPanels chat & guild", () => {
     expect(log?.textContent).toContain("[世界]");
     expect(log?.textContent).toContain("(#10001)");
     expect(log?.textContent).toContain("测试");
+    expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("上次更新");
   });
 
   it("blocks guild channel send without membership", async () => {

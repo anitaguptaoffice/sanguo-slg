@@ -24,6 +24,11 @@ import {
   type ChatMessageRow,
 } from "@/net/socialFormat";
 import { formatTimeMs } from "@/net/militaryFormat";
+import { SocialPanelInflight } from "@/net/socialPanelInflight";
+import {
+  formatSocialPanelLastUpdated,
+  formatSocialPanelRefreshError,
+} from "@/net/socialRefreshFormat";
 
 export class SocialPanels {
   private chatPanel!: HTMLElement;
@@ -31,6 +36,10 @@ export class SocialPanels {
   private rankPanel!: HTMLElement;
   private guildId = 0;
   private guildName = "";
+  private readonly chatListInflight = new SocialPanelInflight<void>();
+  private readonly rankListInflight = new SocialPanelInflight<void>();
+  private chatLastUpdatedMs = 0;
+  private rankLastUpdatedMs = 0;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -140,6 +149,7 @@ export class SocialPanels {
       <label>内容 <input type="text" data-field="chat-content" maxlength="120" placeholder="输入消息" /></label>
       <button type="button" data-action="send-chat">发送</button>
       <button type="button" data-action="refresh-chat">刷新</button>
+      <p class="social-refresh-status" data-role="chat-refresh-status" hidden></p>
     `;
     el.querySelector('[data-field="channel"]')?.addEventListener("change", (ev) => {
       this.syncChatChannelUi(Number((ev.target as HTMLSelectElement).value));
@@ -180,6 +190,7 @@ export class SocialPanels {
         </select>
       </label>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
+      <p class="social-refresh-status" data-role="rank-refresh-status" hidden></p>
       <div class="rank-board" data-role="rank-board">
         <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
         <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
@@ -196,21 +207,71 @@ export class SocialPanels {
     return el;
   }
 
+  private syncChatRefreshUi(opts: { busy: boolean; lastUpdatedMs?: number; error?: string | null }): void {
+    const btn = this.chatPanel.querySelector<HTMLButtonElement>('[data-action="refresh-chat"]');
+    if (btn) btn.disabled = opts.busy;
+    const status = this.chatPanel.querySelector('[data-role="chat-refresh-status"]');
+    if (!status) return;
+    if (opts.lastUpdatedMs) this.chatLastUpdatedMs = opts.lastUpdatedMs;
+    if (opts.error) {
+      status.textContent = formatSocialPanelRefreshError(opts.error);
+      status.classList.add("social-refresh-error");
+      status.hidden = false;
+      return;
+    }
+    status.classList.remove("social-refresh-error");
+    if (this.chatLastUpdatedMs > 0) {
+      status.textContent = formatSocialPanelLastUpdated(this.chatLastUpdatedMs);
+      status.hidden = false;
+    } else if (!opts.busy) {
+      status.textContent = "";
+      status.hidden = true;
+    }
+  }
+
+  private syncRankRefreshUi(opts: { busy: boolean; lastUpdatedMs?: number; error?: string | null }): void {
+    const btn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="refresh-rank"]');
+    if (btn) btn.disabled = opts.busy;
+    const status = this.rankPanel.querySelector('[data-role="rank-refresh-status"]');
+    if (!status) return;
+    if (opts.lastUpdatedMs) this.rankLastUpdatedMs = opts.lastUpdatedMs;
+    if (opts.error) {
+      status.textContent = formatSocialPanelRefreshError(opts.error);
+      status.classList.add("social-refresh-error");
+      status.hidden = false;
+      return;
+    }
+    status.classList.remove("social-refresh-error");
+    if (this.rankLastUpdatedMs > 0) {
+      status.textContent = formatSocialPanelLastUpdated(this.rankLastUpdatedMs);
+      status.hidden = false;
+    } else if (!opts.busy) {
+      status.textContent = "";
+      status.hidden = true;
+    }
+  }
+
   private async refreshChat(): Promise<void> {
     const sid = this.serverId();
     const ch = this.selectedChatChannel();
     if (!this.ensureGuildChatReady(ch)) return;
-    this.onStatus("拉取聊天…");
-    try {
-      const res = (await this.gateway.listChatMessages(sid, ch, {
-        ...this.chatListOpts(ch),
-        limit: 30,
-      })) as { messages?: ChatMessageRow[] };
-      this.renderChatLog(res.messages ?? []);
-      this.onStatus("聊天已刷新");
-    } catch (e) {
-      this.onStatus(formatSocialGatewayError(e));
-    }
+    return this.chatListInflight.run(async () => {
+      this.syncChatRefreshUi({ busy: true });
+      this.onStatus("拉取聊天…");
+      try {
+        const res = (await this.gateway.listChatMessages(sid, ch, {
+          ...this.chatListOpts(ch),
+          limit: 30,
+        })) as { messages?: ChatMessageRow[] };
+        this.renderChatLog(res.messages ?? []);
+        this.syncChatRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null });
+        this.onStatus("聊天已刷新");
+      } catch (e) {
+        const msg = formatSocialGatewayError(e);
+        this.syncChatRefreshUi({ busy: false, error: msg });
+        this.onStatus(msg);
+      }
+    });
   }
 
   private renderChatLog(messages: ChatMessageRow[]): void {
@@ -395,14 +456,20 @@ export class SocialPanels {
   private async refreshRank(): Promise<void> {
     const sid = this.serverId();
     const boardType = this.selectedLeaderboardType();
-    this.onStatus("拉取排行榜…");
-    try {
-      const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
-      this.renderLeaderboardPage(res, boardType);
-      this.onStatus("排行榜已刷新");
-    } catch (e) {
-      this.onStatus(formatSocialGatewayError(e));
-    }
+    return this.rankListInflight.run(async () => {
+      this.syncRankRefreshUi({ busy: true });
+      this.onStatus("拉取排行榜…");
+      try {
+        const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+        this.renderLeaderboardPage(res, boardType);
+        this.syncRankRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null });
+        this.onStatus("排行榜已刷新");
+      } catch (e) {
+        const msg = formatSocialGatewayError(e);
+        this.syncRankRefreshUi({ busy: false, error: msg });
+        this.onStatus(msg);
+      }
+    });
   }
 
   private onChatClick(ev: Event): void {
