@@ -78,12 +78,18 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	}
 	s.accrueCityWithQuest(ctx, pc.ServerID, city, domestic.DefaultCatalog(), s.now())
 	s.questFlushBuildCompletions(ctx, pc.ServerID, city.PlayerID, city)
+	finishBySlot := domestic.ActiveUpgradeFinishBySlot(city)
 	buildings := make([]*apicommon.CityBuilding, 0, len(city.Buildings))
 	for slot, inst := range city.Buildings {
+		finishMS := int64(0)
+		if t, ok := finishBySlot[slot]; ok {
+			finishMS = t.UnixMilli()
+		}
 		buildings = append(buildings, &apicommon.CityBuilding{
-			SlotKey:       slot,
-			BuildingCfgId: inst.CfgID,
-			Level:         inst.Level,
+			SlotKey:             slot,
+			BuildingCfgId:       inst.CfgID,
+			Level:               inst.Level,
+			UpgradeFinishAtMs:   finishMS,
 		})
 	}
 	data, err := marshal(&domesticv1.GetCityStateResponse{

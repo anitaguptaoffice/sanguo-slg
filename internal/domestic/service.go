@@ -432,6 +432,120 @@ func (h *Hub) onDone(cityID, jobID int64) {
 	}
 	h.persistCity(cityID)
 }
+// HasPendingBuildJob reports whether the city has a waiting or active build queue entry.
+func HasPendingBuildJob(c *CityState) bool {
+	return pickBuildSpeedupTarget(c) != nil
+}
+
+// ActiveUpgradeFinishBySlot maps slot_key to finish time for active build jobs.
+func ActiveUpgradeFinishBySlot(c *CityState) map[string]time.Time {
+	return activeFinishBySlot(c)
+}
+
+func pickBuildSpeedupTarget(c *CityState) *BuildJob {
+	for _, j := range c.BuildJobs {
+		if j.Status == QueueActive {
+			return j
+		}
+	}
+	var earliest *BuildJob
+	for _, j := range c.BuildJobs {
+		if j.Status != QueueWaiting {
+			continue
+		}
+		if earliest == nil || j.FinishAt.Before(earliest.FinishAt) {
+			earliest = j
+		}
+	}
+	return earliest
+}
+
+type buildSpeedupOutcome struct {
+	AppliedSec   int64
+	JobID        int64
+	CompleteNow  bool
+	ScheduleAt   time.Time
+	Schedule     bool
+}
+
+func speedupBuildJob(c *CityState, now time.Time, sec int64) buildSpeedupOutcome {
+	job := pickBuildSpeedupTarget(c)
+	if job == nil || sec <= 0 {
+		return buildSpeedupOutcome{}
+	}
+	remaining := job.FinishAt.Sub(now)
+	if remaining < 0 {
+		remaining = 0
+	}
+	applied := sec
+	maxSec := int64(remaining / time.Second)
+	if maxSec == 0 && remaining > 0 {
+		maxSec = 1
+	}
+	if applied > maxSec {
+		applied = maxSec
+	}
+	if applied <= 0 {
+		return buildSpeedupOutcome{JobID: job.ID}
+	}
+	delta := time.Duration(applied) * time.Second
+	oldFinish := job.FinishAt
+	job.FinishAt = job.FinishAt.Add(-delta)
+	if job.FinishAt.Before(now) {
+		job.FinishAt = now
+	}
+	shift := oldFinish.Sub(job.FinishAt)
+	for _, j := range c.BuildJobs {
+		if j.Status == QueueDone || j == job {
+			continue
+		}
+		if !j.FinishAt.Before(oldFinish) {
+			j.FinishAt = j.FinishAt.Add(-shift)
+			if j.FinishAt.Before(now) {
+				j.FinishAt = now
+			}
+		}
+	}
+	out := buildSpeedupOutcome{AppliedSec: applied, JobID: job.ID}
+	if job.Status == QueueActive {
+		if !job.FinishAt.After(now) {
+			out.CompleteNow = true
+		} else {
+			out.Schedule = true
+			out.ScheduleAt = job.FinishAt
+		}
+	}
+	return out
+}
+
+// ApplyBuildSpeedup shortens the active (or earliest waiting) build job by up to sec seconds.
+// Returns seconds actually applied (0 if no pending build job).
+func (h *Hub) ApplyBuildSpeedup(cityID int64, sec int64) int64 {
+	if sec <= 0 {
+		return 0
+	}
+	h.mu.Lock()
+	city := h.cities[cityID]
+	if city == nil {
+		h.mu.Unlock()
+		return 0
+	}
+	now := h.now()
+	settleProduction(city, h.cat, now)
+	out := speedupBuildJob(city, now, sec)
+	h.mu.Unlock()
+	if out.AppliedSec <= 0 {
+		return 0
+	}
+	if out.CompleteNow {
+		h.onDone(cityID, out.JobID)
+	} else if out.Schedule {
+		h.sched.add(out.ScheduleAt, func() { h.onDone(cityID, out.JobID) })
+	}
+	h.persistCity(cityID)
+	return out.AppliedSec
+}
+
 func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (UpgradeResult, error) {
 	h.mu.Lock()
 	city := h.cities[cityID]
