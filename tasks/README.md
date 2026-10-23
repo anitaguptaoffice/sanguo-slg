@@ -15,7 +15,7 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1–11，第几波开工（wave:7–11 见 `docs/ROADMAP.md`） |
+| `wave` | 是 | 1–12，第几波开工（wave:7–12 见 `docs/ROADMAP.md`） |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
 | `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked` |
@@ -59,6 +59,7 @@ status:review   ──合并────▶  status:done
 | 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**已完成**） | 见下表 |
 | 10 | M4 玩法加深（**已完成**，见 ROADMAP Wave 10） | CLIENT-008 (#156), HERO-003 (#158), QUEST-002 (#157), GM-003 (#154), INTG-007 (#159), DOCS-EXIT-002 (#160) |
 | 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
+| 12 | H5 可玩加深（**进行中**，见 ROADMAP Wave 12） | CLIENT-013–018, INTG-009, DOCS-EXIT-004（backlog 合并后 `tasks_sync`） |
 
 ### Wave 9 进度（已完成）
 
@@ -92,6 +93,19 @@ status:review   ──合并────▶  status:done
 | [#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) | CLIENT-011 | `status:done`（[#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172)） |
 | [#166](https://github.com/anitaguptaoffice/sanguo-slg/issues/166) | CLIENT-012 | `status:done`（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)） |
 | [#167](https://github.com/anitaguptaoffice/sanguo-slg/issues/167) | INTG-008 | `status:done`（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)） |
-| [#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168) | DOCS-EXIT-003 | `status:review`（本卡） |
+| [#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168) | DOCS-EXIT-003 | `status:done`（[#175](https://github.com/anitaguptaoffice/sanguo-slg/pull/175)） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
+### Wave 12 进度（待 backlog PR 合并后 sync）
+
+| ID | 状态 | 说明 |
+|---|---|---|
+| CLIENT-013 | 待 Issue | 行军 ListMarches |
+| CLIENT-014 | 待 Issue | 将领 GetHeroDetail |
+| CLIENT-015 | 待 Issue | 世界坐标 → 出征目标 |
+| CLIENT-016 | 待 Issue | 战报筛选与详情 |
+| CLIENT-017 | 待 Issue | 邮件收件箱 H5 |
+| CLIENT-018 | 待 Issue | HUD 资源变动与轮询节流 |
+| INTG-009 | 待 Issue | wave:12 网关冒烟 |
+| DOCS-EXIT-004 | 待 INTG-009 | 文档收口（YAML `blocked_until`） |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11 / Wave 12」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
