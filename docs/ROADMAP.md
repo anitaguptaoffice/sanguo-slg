@@ -102,7 +102,7 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 | [#149](https://github.com/anitaguptaoffice/sanguo-slg/issues/149) | QUEST-002 | 已完成 | [#157](https://github.com/anitaguptaoffice/sanguo-slg/pull/157) |
 | [#150](https://github.com/anitaguptaoffice/sanguo-slg/issues/150) | GM-003 | 已完成 | [#154](https://github.com/anitaguptaoffice/sanguo-slg/pull/154) |
 | [#151](https://github.com/anitaguptaoffice/sanguo-slg/issues/151) | INTG-007 | 已完成 | [#159](https://github.com/anitaguptaoffice/sanguo-slg/pull/159) |
-| [#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152) | DOCS-EXIT-002 | 已完成 | 本卡 PR |
+| [#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152) | DOCS-EXIT-002 | 已完成 | [#160](https://github.com/anitaguptaoffice/sanguo-slg/pull/160) |
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145；全量 legacy 活动 cfg；第三批核心子集扩量（无单独编排授权）。
 
