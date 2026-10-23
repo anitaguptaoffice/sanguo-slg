@@ -440,8 +440,10 @@ export class MainCityScene implements Scene {
       (keys) => {
         if (keys.length) scheduleHudResourcePulse(this.hud, keys);
       },
+      this.assets,
     );
     this.heroMail.attach();
+    this.heroMail.mountMailFilterSkins(this.assets);
     this.battleReports = new BattleReportPanel(
       parent,
       this.gateway,
