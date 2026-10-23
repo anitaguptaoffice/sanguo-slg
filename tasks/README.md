@@ -15,7 +15,7 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1–9，第几波开工（wave:7 对齐、wave:8 M3/M4 出口加固、wave:9 核心子集第二批，见 `docs/ROADMAP.md`） |
+| `wave` | 是 | 1–10，第几波开工（wave:7 对齐、wave:8 M3/M4 出口加固、wave:9 核心子集第二批、wave:10 M4 加深，见 `docs/ROADMAP.md`） |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
 | `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked` |
@@ -56,17 +56,29 @@ status:review   ──合并────▶  status:done
 | 6 | M4 内容 | CONTRACT-003, SPEC-006, QUEST-001, CONTENT-002, SHOP-001, GM-001, INTG-004, CLIENT-005 |
 | 7 | 对齐：核心 cfg 子集 | SPEC-ALIGN-001, DATA-001, PERSIST-001~003, ECON-001, GM-002, RULES-ALIGN-001；复跑 INTG-004 / CLIENT-005 |
 | 8 | M3/M4 出口加固（**已完成**，见 ROADMAP Wave 8） | INTG-005 (#125), CLIENT-006 (#121), RANK-002 (#122), LOAD-001 (#123), OPS-OPEN-001 (#120), TELEMETRY-001 (#124) |
-| 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**进行中**） | 见下表 |
+| 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**已完成**） | 见下表 |
+| 10 | M4 玩法加深（**进行中**） | 见下表 |
 
-### Wave 9 进度（Issue 标签为准）
+### Wave 9 进度（已完成）
 
-| Issue | ID | 典型状态（2026-10-23） |
+| Issue | ID | 状态 |
 |---|---|---|
-| [#128](https://github.com/anitaguptaoffice/sanguo-slg/issues/128) | DATA-002 | `status:in-progress` |
-| [#129](https://github.com/anitaguptaoffice/sanguo-slg/issues/129) | CLIENT-007 | `status:in-progress` |
-| [#130](https://github.com/anitaguptaoffice/sanguo-slg/issues/130) | MAIL-001 | `status:in-progress` |
-| [#131](https://github.com/anitaguptaoffice/sanguo-slg/issues/131) | DOCS-EXIT-001 | `status:in-progress` |
-| [#132](https://github.com/anitaguptaoffice/sanguo-slg/issues/132) | HERO-002 | `status:blocked`（`blocked_until: DATA-002`） |
-| [#133](https://github.com/anitaguptaoffice/sanguo-slg/issues/133) | INTG-006 | `status:blocked`（`blocked_until: DATA-002`） |
+| [#128](https://github.com/anitaguptaoffice/sanguo-slg/issues/128) | DATA-002 | `status:done`（#137） |
+| [#129](https://github.com/anitaguptaoffice/sanguo-slg/issues/129) | CLIENT-007 | `status:done`（#135） |
+| [#130](https://github.com/anitaguptaoffice/sanguo-slg/issues/130) | MAIL-001 | `status:done`（#136） |
+| [#131](https://github.com/anitaguptaoffice/sanguo-slg/issues/131) | DOCS-EXIT-001 | `status:done`（#134） |
+| [#132](https://github.com/anitaguptaoffice/sanguo-slg/issues/132) | HERO-002 | `status:done`（#139） |
+| [#133](https://github.com/anitaguptaoffice/sanguo-slg/issues/133) | INTG-006 | `status:done`（#138） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 9」一节；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
+### Wave 10 进度（Issue 标签为准；`tasks_sync` 后更新 Issue 号）
+
+| Issue | ID | 典型状态 |
+|---|---|---|
+| TBD | CLIENT-008 | `status:ready` |
+| TBD | HERO-003 | `status:ready` |
+| TBD | QUEST-002 | `status:ready` |
+| TBD | GM-003 | `status:ready` |
+| TBD | INTG-007 | `status:blocked`（`blocked_until: QUEST-002`） |
+| TBD | DOCS-EXIT-002 | `status:blocked`（`blocked_until: INTG-007`） |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10」一节；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
