@@ -158,6 +158,8 @@ export class MainCityScene implements Scene {
   private minimapPanStartLayout: { x: number; y: number } | null = null;
   private minimapCollapsed = readMinimapCollapsedFromSession();
   private minimapBattleReportReplay: MinimapWorldPoint | null = null;
+  /** 世界信息卡选中格（小地图高亮与视野纳入，CLIENT-073）。 */
+  private minimapFocusGrid: MinimapWorldPoint | null = null;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
   private minimapEtaTickAccum = 0;
@@ -438,6 +440,11 @@ export class MainCityScene implements Scene {
       {
         onGridSelectionChange: (grid) => {
           this.marchList.syncWorldGridSelection(grid);
+          if (grid) {
+            this.focusMinimapOnWorldGrid(grid.x, grid.y);
+          } else {
+            this.clearMinimapWorldGridFocus();
+          }
         },
         getMarchesSnapshot: () => {
           const fromPanel = this.marchList.getMarches();
@@ -450,6 +457,11 @@ export class MainCityScene implements Scene {
           } else {
             this.status = `格点 (${grid.x},${grid.y}) 暂无进行中行军`;
           }
+          this.renderHud();
+        },
+        onViewMarchesAtGrid: (grid) => {
+          this.marchList.openIntelViewForGrid(grid.x, grid.y);
+          this.status = `军情：已筛选目的格 (${grid.x},${grid.y})`;
           this.renderHud();
         },
       },
@@ -718,7 +730,10 @@ export class MainCityScene implements Scene {
   }
 
   private minimapBoundsExtra(): MinimapWorldPoint[] {
-    return this.minimapBattleReportReplay ? [this.minimapBattleReportReplay] : [];
+    const out: MinimapWorldPoint[] = [];
+    if (this.minimapBattleReportReplay) out.push(this.minimapBattleReportReplay);
+    if (this.minimapFocusGrid) out.push(this.minimapFocusGrid);
+    return out;
   }
 
   private currentMinimapWorldBounds() {
@@ -737,6 +752,17 @@ export class MainCityScene implements Scene {
     if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
     const bounds = this.currentMinimapWorldBounds();
     this.minimapView = computeMinimapViewFramingPoints(bounds, [{ wx: tx, wy: ty }]);
+  }
+
+  private focusMinimapOnWorldGrid(x: number, y: number): void {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    this.minimapFocusGrid = { wx: x, wy: y };
+    const bounds = this.currentMinimapWorldBounds();
+    this.minimapView = computeMinimapViewFramingPoints(bounds, [{ wx: x, wy: y }]);
+  }
+
+  private clearMinimapWorldGridFocus(): void {
+    this.minimapFocusGrid = null;
   }
 
   private focusMinimapOnBattleReport(summary: BattleReportSummary): void {
@@ -927,6 +953,7 @@ export class MainCityScene implements Scene {
     ) {
       return;
     }
+    this.world?.selectGridAt(world.wx, world.wy);
     this.militaryPanel.classList.remove("hidden");
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
@@ -1265,6 +1292,7 @@ export class MainCityScene implements Scene {
       ownCityY: this.session?.cityY,
       marches: this.minimapMarches,
       selectedMarchId: this.marchList?.getSelectedMarchId(),
+      focusGrid: this.minimapFocusGrid,
       view: this.minimapView,
       collapsed: this.minimapCollapsed,
       battleReportReplay: this.minimapBattleReportReplay,

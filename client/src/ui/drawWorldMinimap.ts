@@ -28,6 +28,8 @@ export function drawWorldMinimap(
     rect?: MinimapLayoutRect;
     collapsed?: boolean;
     battleReportReplay?: { wx: number; wy: number } | null;
+    /** 世界信息卡选中格（与军情选中目的格区分，CLIENT-073）。 */
+    focusGrid?: { wx: number; wy: number } | null;
     nowMs?: number;
   },
 ): void {
@@ -44,13 +46,15 @@ export function drawWorldMinimap(
       ? opts.marches.find((m) => m.march_id === opts.selectedMarchId)
       : null;
   const replayExtra = opts.battleReportReplay ? [opts.battleReportReplay] : [];
+  const focusExtra = opts.focusGrid ? [opts.focusGrid] : [];
   const bounds = computeMinimapWorldBounds(
     opts.ownCityX,
     opts.ownCityY,
     opts.marches,
     selected,
-    replayExtra,
+    [...replayExtra, ...focusExtra],
   );
+  const focus = opts.focusGrid;
 
   c2d.save();
   c2d.fillStyle = "rgba(12, 10, 8, 0.72)";
@@ -125,7 +129,10 @@ export function drawWorldMinimap(
     const key = `${wx},${wy}`;
     if (destSeen.has(key)) continue;
     destSeen.add(key);
-    const isSel = selected && selected.to_x === wx && selected.to_y === wy;
+    const matchesFocus =
+      focus != null && focus.wx === wx && focus.wy === wy;
+    const isSel =
+      (selected && selected.to_x === wx && selected.to_y === wy) || matchesFocus;
     drawDot(wx, wy, isSel ? "#f0c674" : "#c97b63", isSel ? 7 : 5);
     const marchForBadge = findFirstMarchByDest(opts.marches, wx, wy);
     if (marchForBadge && minimapDestShowsEtaBadge(marchForBadge)) {
@@ -150,6 +157,19 @@ export function drawWorldMinimap(
     c2d.fillStyle = "#f0c674";
     c2d.font = "12px system-ui";
     c2d.fillText(caption, rect.x + 8, rect.y + rect.h - 28);
+  }
+
+  if (focus && (focus.wx != null || focus.wy != null)) {
+    const p = worldToMinimapLayout(focus.wx, focus.wy, bounds, rect, opts.view);
+    const selectedAtFocus =
+      selected?.to_x === focus.wx && selected?.to_y === focus.wy;
+    if (!selectedAtFocus) {
+      c2d.beginPath();
+      c2d.strokeStyle = "#c9a227";
+      c2d.lineWidth = 2;
+      c2d.arc(p.x, p.y, 10, 0, Math.PI * 2);
+      c2d.stroke();
+    }
   }
 
   const replay = opts.battleReportReplay;
