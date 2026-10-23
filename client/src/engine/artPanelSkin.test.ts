@@ -6,7 +6,9 @@ import {
   CLIENT_078_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_086_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_095_PANEL_ASSET_BY_CENTER_ID,
+  CLIENT_103_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
+  PANEL_ASSET_DAILY,
   PANEL_ASSET_BATTLE_REPORT,
   PANEL_ASSET_CHAT,
   PANEL_ASSET_GUILD,
@@ -98,21 +100,25 @@ describe("skinNineSlicePanel", () => {
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_QUEUE);
   });
 
-  it("CLIENT-070 maps military mail daily roots to manifest ids", () => {
+  it("CLIENT-070 maps military mail roots to manifest ids", () => {
     expect(CLIENT_070_PANEL_ASSET_BY_CENTER_ID).toEqual({
       military: PANEL_ASSET_MILITARY,
       mail: PANEL_ASSET_DEFAULT,
-      daily: PANEL_ASSET_DEFAULT,
     });
   });
 
-  it("skinMailPanel and skinDailyPanel use default panel asset", () => {
+  it("skinMailPanel uses default panel asset", () => {
     const assets = mockAssets();
     const mail = document.createElement("div");
-    const daily = document.createElement("div");
     skinMailPanel(mail, assets);
-    skinDailyPanel(daily, assets);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_DEFAULT);
+  });
+
+  it("skinDailyPanel uses dedicated daily panel asset (CLIENT-103)", () => {
+    const assets = mockAssets();
+    const daily = document.createElement("div");
+    skinDailyPanel(daily, assets);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_DAILY);
   });
 
   it("CLIENT-078 maps hero world rank roots to manifest ids", () => {
@@ -170,5 +176,14 @@ describe("skinNineSlicePanel", () => {
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_SHOP);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_GUILD);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_CHAT);
+  });
+
+  it("CLIENT-103 maps rank hero daily roots to manifest ids", () => {
+    expect(CLIENT_103_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      rank: PANEL_ASSET_RANK,
+      hero: PANEL_ASSET_HERO,
+      daily: PANEL_ASSET_DAILY,
+    });
+    expect(CLIENT_095_PANEL_ASSET_BY_CENTER_ID.bag).toBe(PANEL_ASSET_BAG);
   });
 });

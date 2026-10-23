@@ -5,7 +5,7 @@ import {
   resetCenterPanelViewportScroll,
 } from "@/ui/contentPanelScroll";
 
-describe("contentPanelScroll (CLIENT-070 + CLIENT-078 + CLIENT-095)", () => {
+describe("contentPanelScroll (CLIENT-070 + CLIENT-078 + CLIENT-095 + CLIENT-103)", () => {
   it("lists narrow-scroll center panel ids including military mail daily world rank", () => {
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("military");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("mail");

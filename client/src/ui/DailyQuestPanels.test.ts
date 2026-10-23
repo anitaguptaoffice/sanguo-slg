@@ -18,6 +18,17 @@ describe("DailyQuestPanels", () => {
     expect(mount.querySelector('[data-center-panel="daily"] .panel-scroll-body')).toBeTruthy();
   });
 
+  it("daily panel keeps claim actions outside scroll body (CLIENT-103)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new DailyQuestPanels(mount, gateway, () => null, () => {}, () => {});
+    panels.attach();
+    const scroll = mount.querySelector('[data-center-panel="daily"] .panel-scroll-body');
+    expect(scroll?.querySelector('[data-action="daily-locate-first"]')).toBeTruthy();
+    expect(scroll?.querySelector('[data-role="daily-list"]')).toBeTruthy();
+    expect(mount.querySelector('[data-action="claim-daily"]')?.closest(".panel-scroll-body")).toBeNull();
+  });
+
   it("lists dailies with chain_id 400", async () => {
     const mount = document.createElement("div");
     const listPlayerQuests = vi.fn().mockResolvedValue({

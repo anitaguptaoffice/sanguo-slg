@@ -45,6 +45,17 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector('[data-center-panel="rank"] .panel-scroll-body')).toBeTruthy();
   });
 
+  it("rank dual-board controls stay outside scroll body (CLIENT-103)", () => {
+    const mount = document.createElement("div");
+    const panels = new SocialPanels(mount, minimalGateway(), () => baseSession(), () => {});
+    panels.attach();
+    const scroll = mount.querySelector('[data-center-panel="rank"] .panel-scroll-body');
+    expect(scroll?.querySelector('[data-role="rank-list"]')).toBeTruthy();
+    expect(scroll?.querySelector('[data-role="viewer-rank"]')).toBeTruthy();
+    expect(mount.querySelector('[data-field="rank-type"]')?.closest(".panel-scroll-body")).toBeNull();
+    expect(mount.querySelector('[data-action="refresh-rank"]')?.closest(".panel-scroll-body")).toBeNull();
+  });
+
   it("fetches power leaderboard on open", async () => {
     const mount = document.createElement("div");
     const getLeaderboard = vi.fn().mockResolvedValue({

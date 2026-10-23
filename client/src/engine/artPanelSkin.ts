@@ -12,6 +12,7 @@ export const PANEL_ASSET_BATTLE_REPORT = "ui.panel.battle-report.v1";
 export const PANEL_ASSET_SHOP = "ui.panel.shop.v1";
 export const PANEL_ASSET_GUILD = "ui.panel.guild.v1";
 export const PANEL_ASSET_CHAT = "ui.panel.chat.v1";
+export const PANEL_ASSET_DAILY = "ui.panel.daily.v1";
 
 /** CLIENT-062 center panels wired like CLIENT-032 military manifest ids. */
 export const CLIENT_062_CENTER_PANEL_ASSET_IDS = [
@@ -20,14 +21,10 @@ export const CLIENT_062_CENTER_PANEL_ASSET_IDS = [
   PANEL_ASSET_QUEUE,
 ] as const;
 
-/** CLIENT-070 narrow manifest roots: military + mail/daily on default panel skin. */
-export const CLIENT_070_PANEL_ASSET_BY_CENTER_ID: Record<
-  "military" | "mail" | "daily",
-  string
-> = {
+/** CLIENT-070 narrow manifest roots: military + mail on default panel skin. */
+export const CLIENT_070_PANEL_ASSET_BY_CENTER_ID: Record<"military" | "mail", string> = {
   military: PANEL_ASSET_MILITARY,
   mail: PANEL_ASSET_DEFAULT,
-  daily: PANEL_ASSET_DEFAULT,
 };
 
 /** CLIENT-078 narrow manifest roots: hero / world / rank scan panels. */
@@ -51,6 +48,13 @@ export const CLIENT_095_PANEL_ASSET_BY_CENTER_ID: Record<"bag" | "shop" | "guild
     guild: PANEL_ASSET_GUILD,
     chat: PANEL_ASSET_CHAT,
   };
+
+/** CLIENT-103 narrow manifest roots: 双榜 / 将领 / 日常（工程接线与 CLIENT-095 同级）。 */
+export const CLIENT_103_PANEL_ASSET_BY_CENTER_ID: Record<"rank" | "hero" | "daily", string> = {
+  rank: PANEL_ASSET_RANK,
+  hero: PANEL_ASSET_HERO,
+  daily: PANEL_ASSET_DAILY,
+};
 
 /** Stretch a nine_slice panel asset as CSS border-image (24px logical slice by default). */
 export function skinNineSlicePanel(
@@ -131,7 +135,7 @@ export function skinDailyPanel(
   logicalW = 520,
   logicalH = 320,
 ): void {
-  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DEFAULT);
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DAILY);
 }
 
 export function skinWorldPanel(
