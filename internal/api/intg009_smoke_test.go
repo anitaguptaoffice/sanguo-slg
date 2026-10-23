@@ -74,7 +74,7 @@ func runINTG009Wave12Smoke(t *testing.T) {
 
 	baseSnap := runData002M4Steps(t, ctx, c, apiSrv, pool, sid, playerID)
 	ext := runINTG008DeepenSteps(t, ctx, c, apiSrv, pool, sid, playerID, baseSnap)
-	marchID, _, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
+	marchID, _, _, _, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
 	smokeQuest003TrainOrBuildOptional(t, ctx, c, apiSrv, pool, sid, playerID)
 
 	ts.Close()
@@ -100,7 +100,7 @@ func smokeValidWorldTileCoord(v int32) bool {
 }
 
 // smokeStartMarchListMarchesGateway starts a march and asserts ListMarches contains it with destination coords.
-func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) (marchID int64, cityID int64, toX int32, toY int32) {
+func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) (marchID int64, cityID int64, toX int32, toY int32, departAtMs int64, arriveAtMs int64) {
 	t.Helper()
 	cityX := int32(12 + (playerID % 20))
 	cityY := int32(14 + (playerID % 18))
@@ -142,11 +142,14 @@ func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *
 	if err := proto.Unmarshal(marchResp.Data, &marchOut); err != nil {
 		intg009Failf(t, "decode start march", "err=%v", err)
 	}
-	marchID = marchOut.GetMarch().GetMarchId()
+	march := marchOut.GetMarch()
+	marchID = march.GetMarchId()
 	if marchID == 0 {
-		phase := marchOut.GetMarch().GetPhase()
+		phase := march.GetPhase()
 		intg009Failf(t, "start march", "missing march_id purpose=%d phase=%v", marchPurpose, phase)
 	}
+	departAtMs = march.GetDepartAtMs()
+	arriveAtMs = march.GetArriveAtMs()
 
 	smokeStep(t, "MIL: gateway ListMarches contains march_id")
 	listResp := mustSend(t, c, &commonv1.ClientPacket{
@@ -175,11 +178,11 @@ func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *
 				intg009Failf(t, "list marches destination", "march_id=%d want=(%d,%d) got=(%d,%d)", marchID, toX, toY, row.GetToX(), row.GetToY())
 			}
 			t.Logf("MIL: ListMarches ok march_id=%d to_x=%d to_y=%d", marchID, row.GetToX(), row.GetToY())
-			return marchID, cityID, toX, toY
+			return marchID, cityID, toX, toY, departAtMs, arriveAtMs
 		}
 	}
 	intg009Failf(t, "list marches", "march_id=%d not in list total=%d purpose=%d", marchID, listOut.GetTotal(), marchPurpose)
-	return marchID, cityID, toX, toY
+	return marchID, cityID, toX, toY, departAtMs, arriveAtMs
 }
 
 // smokeQuest003TrainOrBuildOptional advances daily_train_1 or daily_build_1 when QUEST-003 hooks are live; never fails the main path.
