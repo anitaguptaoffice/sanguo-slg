@@ -7,16 +7,19 @@ H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约
 | 路径 | 域 | 主要 route |
 |------|-----|---------|
 | `sanguo/common/v1/` | 公共 | 帧封装、`ErrorCode`、共享 DTO |
-| `sanguo/account/v1/` | 账号 | `Login`、`Register`、`RefreshSession` |
+| `sanguo/account/v1/` | 账号 | `Login`、`Register`、`RefreshSession`、`ListGameServers`、`EnterGameServer` |
 | `sanguo/world/v1/` | 世界 | `ListPlayerCities`、`CreateCity` |
 | `sanguo/domestic/v1/` | 内政 | `StartBuildingUpgrade`、`GetCityState` |
 | `sanguo/military/v1/` | 军事 | `RecruitTroop`、`StartMarch`、`ListMarches`、`GetBattleReport`、`ListBattleReports` |
+| `sanguo/guild/v1/` | 军团 | `CreateGuild`、`JoinGuild`、`LeaveGuild`、`ListGuildMembers` |
+| `sanguo/chat/v1/` | 聊天 | `SendChatMessage`、`ListChatMessages` |
+| `sanguo/rank/v1/` | 排行 | `GetLeaderboard` |
 
 ## WebSocket 约定
 
 1. 一帧一条 `ClientPacket`（上行）；服务端回一条 `ServerPacket`（下行）。
 2. `ClientPacket.route` 与请求消息类型一一对应，命名：`<domain>.v1.<Method>`，例如 `account.v1.Login`。
-3. `ClientPacket.payload` 为对应 `*Request` 的 protobuf 序列化；鉴权会话放在 `session_id`（登录接口除外）。
+3. `ClientPacket.payload` 为对应 `*Request` 的 protobuf 序列化；鉴权会话放在 `session_id`（登录接口除外）。进服后 `server_id` 与账号会话绑定，后续请求应携带并与服务端校验一致。
 4. 统一响应包 **`ServerPacket`**：`code` / `msg` / `data`。
    - `code == 0` 表示成功；`data` 为对应 `*Response` 的序列化。
    - `code != 0` 时 `data` 通常为空，`msg` 为可读说明；数值与 `ErrorCode` 枚举一致。
@@ -32,6 +35,9 @@ H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约
 | `30000–30999` | 世界 `world` |
 | `40000–40999` | 内政 `domestic` |
 | `50000–50999` | 军事 `military` |
+| `60000–60999` | 军团 `guild` |
+| `61000–61999` | 聊天 `chat` |
+| `62000–62999` | 排行 `rank` |
 
 新增错误在对应域 proto 内扩展枚举值，并保持数值落在上表区间内。
 

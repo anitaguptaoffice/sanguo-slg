@@ -52,3 +52,31 @@ message RefreshSessionResponse {
   // 新的过期时间（Unix 毫秒）。
   int64 session_expires_at_ms = 2;
 }
+
+// route: account.v1.ListGameServers
+// 拉取可选游戏服列表（登录前仅需账号凭证时由实现决定是否要求 session）。
+message ListGameServersRequest {
+  // 页码，从 1 开始；0 表示默认第一页。
+  int32 page = 1;
+  // 每页条数；0 表示服务端默认（建议 ≤50）。
+  int32 page_size = 2;
+}
+
+message ListGameServersResponse {
+  repeated sanguo.common.v1.GameServerInfo servers = 1;
+  int32 total_count = 2;
+}
+
+// route: account.v1.EnterGameServer
+// 已认证账号进入指定游戏服，绑定会话 server_id 并返回角色快照（无角色时由实现创角或返回 ACCOUNT_NO_PLAYER）。
+message EnterGameServerRequest {
+  int32 server_id = 1;
+}
+
+message EnterGameServerResponse {
+  string session_id = 1;
+  int32 server_id = 2;
+  sanguo.common.v1.PlayerProfile player = 3;
+  sanguo.common.v1.ResourceWallet wallet = 4;
+  int64 session_expires_at_ms = 5;
+}

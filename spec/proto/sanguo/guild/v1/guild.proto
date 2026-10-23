@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package sanguo.guild.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/guild/v1;guildv1";
+
+// 军团成员职务（与 guild_member.role 对齐）。
+enum GuildMemberRole {
+  GUILD_MEMBER_ROLE_UNSPECIFIED = 0;
+  // 团长。
+  GUILD_MEMBER_ROLE_LEADER = 1;
+  // 官员。
+  GUILD_MEMBER_ROLE_OFFICER = 2;
+  // 普通成员。
+  GUILD_MEMBER_ROLE_MEMBER = 3;
+}
+
+// 军团摘要，对应 guild 表对外视图。
+message GuildSummary {
+  int64 guild_id = 1;
+  int32 server_id = 2;
+  string name = 3;
+  int64 leader_player_id = 4;
+  int32 member_count = 5;
+  int32 member_limit = 6;
+  int64 created_at_ms = 7;
+}
+
+// 军团成员一行，对应 guild_member + player 展示字段。
+message GuildMember {
+  int64 player_id = 1;
+  string display_name = 2;
+  GuildMemberRole role = 3;
+  int64 joined_at_ms = 4;
+  int64 power = 5;
+}
+
+// route: guild.v1.CreateGuild
+// 在当前游戏服创建军团；创建者成为团长。
+message CreateGuildRequest {
+  // 须与 ClientPacket.server_id / 会话绑定一致。
+  int32 server_id = 1;
+  // 军团名称。
+  string name = 2;
+}
+
+message CreateGuildResponse {
+  GuildSummary guild = 1;
+}
+
+// route: guild.v1.JoinGuild
+// 加入指定军团（须同 server_id）。
+message JoinGuildRequest {
+  int32 server_id = 1;
+  int64 guild_id = 2;
+}
+
+message JoinGuildResponse {
+  GuildSummary guild = 1;
+}
+
+// route: guild.v1.LeaveGuild
+// 退出当前军团；团长须先转让或解散。
+message LeaveGuildRequest {
+  int32 server_id = 1;
+}
+
+message LeaveGuildResponse {}
+
+// route: guild.v1.ListGuildMembers
+// 分页拉取军团成员列表。
+message ListGuildMembersRequest {
+  int32 server_id = 1;
+  int64 guild_id = 2;
+  // 页码，从 1 开始；0 为默认第一页。
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message ListGuildMembersResponse {
+  GuildSummary guild = 1;
+  repeated GuildMember members = 2;
+  int32 total_count = 3;
+}
