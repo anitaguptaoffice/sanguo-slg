@@ -21,6 +21,14 @@ function sessionBase(): MainCitySession {
 }
 
 describe("HeroMailPanels", () => {
+  it("mail panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-center-panel="mail"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("renders empty mail list after refresh", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
@@ -146,6 +154,99 @@ describe("HeroMailPanels", () => {
     mount.querySelector('li[data-template-id="1002"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(preview?.textContent).toContain("云长");
+  });
+
+  it("hero-goto-recruit preselects matching template_cfg_id", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          { template_cfg_id: 1001, template_name: "玄德" },
+          { template_cfg_id: 1002, template_name: "云长" },
+        ],
+        total_count: 2,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1002, level: 1, loyalty: 90 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1002,
+        template_name: "云长",
+        level: 1,
+        loyalty: 90,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        attributes: { force: 95, intel: 62, politics: 55, command: 82 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount
+      .querySelector('[data-action="hero-goto-recruit"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const sel = mount.querySelector('[data-field="template-select"]') as HTMLSelectElement;
+    expect(sel?.value).toBe("1002");
+    expect(mount.querySelector('li[data-template-id="1002"]')?.classList.contains("selected")).toBe(true);
+  });
+
+  it("hero-related-items opens bag highlight via callback", async () => {
+    const mount = document.createElement("div");
+    const onBag = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 1, template_cfg_id: 1001, level: 1, loyalty: 100 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 1,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 1,
+        loyalty: 100,
+        attributes: { force: 72, intel: 75, politics: 88, command: 78 },
+      }),
+      listPlayerBag: vi.fn().mockResolvedValue({
+        items: [{ item_cfg_id: 2017, quantity: 3 }, { item_cfg_id: 2001, quantity: 1 }],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onBag,
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="1"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount
+      .querySelector('[data-action="hero-related-items"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.listPlayerBag).toHaveBeenCalled();
+    expect(onBag).toHaveBeenCalledWith([2017]);
   });
 
   it("hero detail shows same recruit affordability summary as template list", async () => {
@@ -563,6 +664,63 @@ describe("HeroMailPanels", () => {
     expect(selected).toBeTruthy();
     expect(onDaily).toHaveBeenCalled();
     expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
+  });
+
+  it("appends world panel hint when mail body has coordinates", async () => {
+    const mount = document.createElement("div");
+    const statuses: string[] = [];
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [{ mail_id: 2, title: "侦察", status: 1, body: "目标 (20,30)" }],
+        total_count: 1,
+      }),
+      markPlayerMailRead: vi.fn(),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      (s) => statuses.push(s),
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    expect(statuses.some((s) => s.includes("可在世界面板查看"))).toBe(true);
+  });
+
+  it("shows 查看战报 when mail body has report_id and opens deep link", async () => {
+    const mount = document.createElement("div");
+    const onOpenBattleReport = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [{ mail_id: 5, title: "战报", status: 1, body: "report_id=77" }],
+        total_count: 1,
+      }),
+      markPlayerMailRead: vi.fn(),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onOpenBattleReport,
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    const btn = mount.querySelector('[data-action="mail-open-battle-report"]') as HTMLButtonElement;
+    expect(btn?.hidden).toBe(false);
+    expect(btn?.dataset.reportId).toBe("77");
+    btn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenBattleReport).toHaveBeenCalledWith(77);
   });
 
   it("openFromTodoBadge selects first unread with unread filter", async () => {

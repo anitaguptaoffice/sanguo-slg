@@ -13,6 +13,13 @@ import {
   formatUseConsumableEffectSummary,
   gatewayErrorMessage,
 } from "@/net/contentFeedback";
+import {
+  formatPanelGatewayErrorFromUnknown,
+  setBagFormErrorDisplay,
+  setShopFormErrorDisplay,
+  validatePurchaseShopOffer,
+  validateUseConsumable,
+} from "@/net/contentFormValidation";
 import { formatQuestLine, formatWalletPrice, itemLabel } from "@/net/contentFormat";
 import {
   bagEmptyListClass,
@@ -49,6 +56,7 @@ export class ContentPanels {
   private selectedItemId = 2001;
   private selectedOfferId = 1001;
   private bagHighlightItemId = 0;
+  private bagHighlightItemIds = new Set<number>();
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
 
@@ -97,6 +105,7 @@ export class ContentPanels {
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
   openBagHighlightItem(itemCfgId: number): void {
+    this.bagHighlightItemIds = new Set(itemCfgId > 0 ? [itemCfgId] : []);
     this.bagHighlightItemId = itemCfgId;
     this.selectedItemId = itemCfgId;
     this.ensureBagSelectOption(itemCfgId);
@@ -106,6 +115,28 @@ export class ContentPanels {
     const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
     if (hint) {
       hint.textContent = `筛选高亮 item_cfg_id=${itemCfgId}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`;
+    }
+    void this.refreshBag();
+  }
+
+  /** 将领养成互链：高亮多个养成消耗品（ListPlayerBag 过滤结果）。 */
+  openBagHighlightItems(itemCfgIds: number[]): void {
+    const ids = itemCfgIds.filter((id) => id > 0);
+    this.bagHighlightItemIds = new Set(ids);
+    const first = ids[0] ?? 0;
+    this.bagHighlightItemId = first;
+    if (first) {
+      this.selectedItemId = first;
+      this.ensureBagSelectOption(first);
+      const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
+      if (sel) sel.value = String(first);
+    }
+    this.bagPanel.classList.remove("hidden");
+    const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
+    if (hint) {
+      hint.textContent = ids.length
+        ? `将领养成高亮 item_cfg_id=${ids.join("、")}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`
+        : "暂无养成消耗品；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。";
     }
     void this.refreshBag();
   }
@@ -181,6 +212,7 @@ export class ContentPanels {
         </select>
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
+      <p class="bag-form-error hidden" data-role="bag-form-error" role="alert"></p>
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-bag">刷新背包</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item">使用道具</button>
@@ -202,6 +234,7 @@ export class ContentPanels {
       <label>商品 offer
         <select data-field="offer-id"></select>
       </label>
+      <p class="shop-form-error hidden" data-role="shop-form-error" role="alert"></p>
       <button type="button" data-action="buy-offer">购买×1</button>
       <ul class="shop-list" data-role="shop-list"></ul>
     `;
@@ -240,7 +273,11 @@ export class ContentPanels {
       li.appendChild(idSpan);
       li.appendChild(nameSpan);
       li.appendChild(qtySpan);
-      if (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId) {
+      if (
+        row.item_cfg_id &&
+        (this.bagHighlightItemIds.has(row.item_cfg_id) ||
+          (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId))
+      ) {
         li.classList.add("item-highlight");
       }
       ul.appendChild(li);
@@ -359,6 +396,17 @@ export class ContentPanels {
     const sid = this.serverId();
     const count = Number((this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1);
     const itemId = this.selectedItemId;
+    const validated = validateUseConsumable({
+      itemCfgId: itemId,
+      count,
+      bag: this.getSession()?.bag ?? [],
+    });
+    if (!validated.ok) {
+      setBagFormErrorDisplay(this.bagPanel, validated.message);
+      this.onStatus(validated.message);
+      return;
+    }
+    setBagFormErrorDisplay(this.bagPanel, null);
     this.onStatus(`使用 ${itemLabel(itemId)}×${count}…`);
     this.setBagFeedback(null);
     try {
@@ -375,12 +423,14 @@ export class ContentPanels {
         const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
         this.onSessionPatch({ bag, wallet });
       }
+      setBagFormErrorDisplay(this.bagPanel, null);
       const summary = formatUseConsumableEffectSummary(itemId, res, walletBefore, res.wallet_after);
       this.setBagFeedback(summary);
       this.onStatus(summary);
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
-      this.setBagFeedback(msg);
+      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+      setBagFormErrorDisplay(this.bagPanel, msg);
+      this.setBagFeedback(null);
       this.onStatus(msg);
     }
   }
@@ -401,9 +451,23 @@ export class ContentPanels {
   private async buyOffer(): Promise<void> {
     const sid = this.serverId();
     const offerId = this.selectedOfferId;
+    const purchaseCount = 1;
+    const offer = this.shopOffers.find((o) => o.offer_id === offerId);
+    const session = this.getSession();
+    const validated = validatePurchaseShopOffer({
+      offer,
+      offerId,
+      purchaseCount,
+      wallet: session?.wallet,
+    });
+    if (!validated.ok) {
+      setShopFormErrorDisplay(this.shopPanel, validated.message);
+      this.onStatus(validated.message);
+      return;
+    }
+    setShopFormErrorDisplay(this.shopPanel, null);
     this.onStatus(`购买 offer ${offerId}…`);
     this.setShopFeedback(null);
-    const purchaseCount = 1;
     try {
       const res = (await this.gateway.purchaseShopOffer(sid, offerId, purchaseCount)) as {
         granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] };
@@ -422,13 +486,15 @@ export class ContentPanels {
         itemCfgId: granted?.item_cfg_id,
         grantedQty,
       });
+      setShopFormErrorDisplay(this.shopPanel, null);
       this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
       this.setShopFeedback(feedback);
       await this.refreshShop();
       this.onStatus(feedback);
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
-      this.setShopFeedback(msg);
+      const msg = formatPanelGatewayErrorFromUnknown("shop", e);
+      setShopFormErrorDisplay(this.shopPanel, msg);
+      this.setShopFeedback(null);
       this.onStatus(msg);
     }
   }

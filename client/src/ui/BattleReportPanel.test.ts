@@ -1,5 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY } from "@/net/battleReportListState";
+import {
+  BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY,
+  BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY,
+} from "@/net/battleReportListState";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
@@ -99,6 +102,65 @@ describe("BattleReportPanel", () => {
     expect(detail?.querySelector(".battle-report-rounds-table")).toBeTruthy();
     expect(detail?.querySelector(".battle-report-detail-coord")?.textContent).toContain("坐标(8,9)");
     expect(detail?.querySelector('[data-action="view-on-map"]')).toBeTruthy();
+  });
+
+  it("shows 相关日常 when outcome win/loss and daily march in progress", async () => {
+    const mount = document.createElement("div");
+    const summary = { report_id: 6, outcome: 1, created_at_ms: 0 };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { result: "attacker_win", rounds: [{ round: 1 }] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const onOpenRelatedDaily = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      getDailyChainRows: () => [
+        { quest_cfg_id: 1033, quest_code: "daily_march_1", chain_id: 400, state: 2 },
+      ],
+      onOpenRelatedDaily,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="6"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const dailyBtn = mount.querySelector('[data-action="open-related-daily"]') as HTMLButtonElement;
+    expect(dailyBtn?.textContent).toBe("相关日常");
+    dailyBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenRelatedDaily).toHaveBeenCalledWith(1033);
+  });
+
+  it("shows 相关邮件 when detail has mail source hint", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 4,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { result: "attacker_win mail_id=6002", rounds: [{ round: 1 }] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const onOpenRelatedMail = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, { onOpenRelatedMail });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="4"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const mailBtn = mount.querySelector('[data-action="open-related-mail"]') as HTMLButtonElement;
+    expect(mailBtn?.textContent).toBe("相关邮件");
+    mailBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenRelatedMail).toHaveBeenCalledWith(6002);
   });
 
   it("invokes onViewOnMap when clicking 在地图查看", async () => {
@@ -369,6 +431,81 @@ describe("BattleReportPanel", () => {
     await flushPromises();
     expect(unread.countUnread([{ report_id: 5 }, { report_id: 6 }])).toBe(1);
     expect(badge).toBe(0);
+  });
+
+  it("filters list by time window and shows outcome summary chips", async () => {
+    const now = Date.UTC(2024, 5, 10, 12, 0, 0);
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, outcome: 1, created_at_ms: Date.UTC(2024, 5, 10, 8, 0, 0) },
+          { report_id: 2, outcome: 2, created_at_ms: Date.UTC(2024, 5, 9, 8, 0, 0) },
+          { report_id: 3, outcome: 3, created_at_ms: Date.UTC(2024, 5, 1, 8, 0, 0) },
+        ],
+        total: 3,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const summary = mount.querySelector('[data-role="report-outcome-summary"]');
+    expect(summary?.textContent).toContain("胜 1");
+    expect(summary?.textContent).toContain("负 1");
+    expect(summary?.textContent).toContain("平 1");
+    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
+    select.value = "today";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
+    expect(mount.querySelector('li[data-report-id="1"]')).toBeTruthy();
+    expect(summary?.textContent).toContain("胜 1");
+    expect(summary?.textContent).toContain("负 0");
+    vi.mocked(Date.now).mockRestore();
+  });
+
+  it("restores time window filter from sessionStorage on attach", async () => {
+    storage.setItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY, "last7d");
+    const now = Date.UTC(2024, 5, 10, 12, 0, 0);
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, outcome: 1, created_at_ms: Date.UTC(2024, 5, 10, 8, 0, 0) },
+          { report_id: 2, outcome: 2, created_at_ms: Date.UTC(2024, 5, 1, 8, 0, 0) },
+        ],
+        total: 2,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
+    expect(select.value).toBe("last7d");
+    expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
+    vi.mocked(Date.now).mockRestore();
+  });
+
+  it("persists time window filter separately from outcome filter", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [{ report_id: 1, outcome: 1, created_at_ms: 0 }],
+        total: 1,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
+    select.value = "today";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("today");
+    expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBeNull();
   });
 
   it("shows filter-empty placeholder while keeping filter bar", async () => {

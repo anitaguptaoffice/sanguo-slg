@@ -82,7 +82,15 @@ async function shotPanelElement(page, which, filePath, quality = 86) {
     el.scrollLeft = 0;
   });
   await page.waitForTimeout(120);
-  await panel.screenshot({ path: filePath, type: "jpeg", quality });
+  const box = await panel.boundingBox();
+  if (!box) throw new Error(`panel box missing: ${which}`);
+  // CLIENT-063: element.screenshot drops border-image top under overflow:auto; clip viewport instead.
+  await page.screenshot({
+    path: filePath,
+    clip: { x: box.x, y: box.y, width: box.width, height: box.height },
+    type: "jpeg",
+    quality,
+  });
   const { size } = await stat(filePath);
   if (size >= 1_000_000) {
     throw new Error(`${path.basename(filePath)} is ${size} bytes (must be <1MB)`);

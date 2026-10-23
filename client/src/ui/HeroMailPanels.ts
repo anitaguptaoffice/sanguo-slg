@@ -1,5 +1,6 @@
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
+import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
@@ -15,6 +16,7 @@ import {
   applyMailClaimResult,
   formatHeroLine,
   formatMailClaimGrantedSummary,
+  filterHeroCultivationBagItemIds,
   formatRecruitSuccessStatus,
   heroListLines,
   mergeRecruitTemplateOwnership,
@@ -43,6 +45,12 @@ import {
   mailRowTitleLine,
 } from "@/net/panelDensity";
 import { mailUnreadSnapshotFromListResponse, pickFirstUnreadMailId } from "@/net/hudTodoBadge";
+import {
+  appendMailWorldCoordStatusHint,
+  mailPlainTextHasWorldCoord,
+  resolveMailBattleReportLink,
+} from "@/net/mailBattleCrossLink";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -76,6 +84,8 @@ export class HeroMailPanels {
     private readonly cityStateFetch?: CityStateFetch,
     private readonly onDailyRecruitLoop?: () => void | Promise<void>,
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
+    private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
+    private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
   ) {}
 
   attach(): void {
@@ -105,6 +115,14 @@ export class HeroMailPanels {
     return { wallet: session?.wallet ?? {}, bag: session?.bag ?? [] };
   }
 
+  private withMailWorldCoordHint(baseStatus: string, mail: MailRow | null): string {
+    if (!mail) return baseStatus;
+    if (mailPlainTextHasWorldCoord(mailTitle(mail), mail.body ?? "")) {
+      return appendMailWorldCoordStatusHint(baseStatus);
+    }
+    return baseStatus;
+  }
+
   private selectedRecruitTemplateRow(): RecruitTemplatePreview | undefined {
     return this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === this.selectedTemplateId);
   }
@@ -118,8 +136,18 @@ export class HeroMailPanels {
     return formatRecruitAffordabilitySummaryMarkup(template, wallet, bag);
   }
 
+  private recruitTemplateForHeroDetail(): RecruitTemplatePreview | undefined {
+    const tplId = this.heroDetail?.template_cfg_id;
+    if (!tplId) return undefined;
+    return this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === tplId);
+  }
+
   getMailRoot(): HTMLElement {
     return this.mailPanel;
+  }
+
+  getHeroRoot(): HTMLElement {
+    return this.heroPanel;
   }
 
   toggleHero(): void {
@@ -137,14 +165,42 @@ export class HeroMailPanels {
   toggleMail(): void {
     this.mailPanel.classList.toggle("hidden");
     if (!this.mailPanel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.mailPanel);
       this.onUnreadCount?.(0);
       void this.refreshMail();
     } else void this.syncUnreadBadge();
   }
 
-  /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照，不再单独查未读）。 */
+  /** 仅打开邮件面板（不 toggle 关闭）。 */
+  openMailPanel(): void {
+    if (this.isMailOpen()) return;
+    this.mailPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.mailPanel);
+    this.onUnreadCount?.(0);
+    void this.refreshMail();
+  }
+
+  /** 战报深链：打开收件箱并高亮指定邮件（不自动领取附件）。 */
+  openAndHighlightMail(mailId: number): void {
+    this.mailPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.mailPanel);
+    this.onUnreadCount?.(0);
+    this.mailFilter = MAIL_INBOX_FILTER_ALL;
+    if (mailId > 0) this.selectedMailId = mailId;
+    void this.refreshMail().then(() => this.focusHighlightedMail(mailId));
+  }
+
+  private async focusHighlightedMail(mailId: number): Promise<void> {
+    if (mailId <= 0 || !this.mails.some((m) => m.mail_id === mailId)) return;
+    await this.openMail(mailId);
+    const row = this.mailPanel.querySelector(`li[data-mail-id="${mailId}"]`);
+    row?.scrollIntoView?.({ block: "nearest" });
+  }
+
+  /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照）。 */
   openFromTodoBadge(preferredMailId = 0): void {
     this.mailPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
@@ -202,6 +258,7 @@ export class HeroMailPanels {
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.dataset.centerPanel = "hero";
     el.innerHTML = `
       <h3>将领</h3>
       <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
@@ -213,9 +270,11 @@ export class HeroMailPanels {
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
       <button type="button" data-action="recruit-hero">招募</button>
       <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
-      <ul class="template-list" data-role="template-list"></ul>
-      <ul class="hero-list" data-role="hero-list"></ul>
-      <div class="hero-detail" data-role="hero-detail"></div>
+      <div class="panel-scroll-body" data-role="hero-scroll">
+        <ul class="template-list" data-role="template-list"></ul>
+        <ul class="hero-list" data-role="hero-list"></ul>
+        <div class="hero-detail" data-role="hero-detail"></div>
+      </div>
     `;
     return el;
   }
@@ -233,11 +292,14 @@ export class HeroMailPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
       </div>
       <p class="mail-inbox-status" data-role="mail-status"></p>
-      <ul class="mail-list" data-role="mail-list"></ul>
-      <div class="mail-detail hidden" data-role="mail-detail">
-        <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
-        <pre class="mail-body" data-role="mail-body"></pre>
-        <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
+      <div class="panel-scroll-body" data-role="mail-scroll">
+        <ul class="mail-list" data-role="mail-list"></ul>
+        <div class="mail-detail hidden" data-role="mail-detail">
+          <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
+          <pre class="mail-body" data-role="mail-body"></pre>
+          <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
+          <button type="button" class="art-btn-primary art-btn-primary-full hidden mail-cross-link-btn" data-action="mail-open-battle-report">查看战报</button>
+        </div>
       </div>
     `;
     return el;
@@ -266,7 +328,11 @@ export class HeroMailPanels {
     }
     if (detailEl) {
       detailEl.innerHTML = this.selectedHeroId
-        ? renderHeroDetailMarkup(this.heroDetail, this.recruitAffordSummaryForHeroDetail())
+        ? renderHeroDetailMarkup(
+            this.heroDetail,
+            this.recruitAffordSummaryForHeroDetail(),
+            this.recruitTemplateForHeroDetail(),
+          )
         : renderHeroDetailMarkup(null);
     }
   }
@@ -382,6 +448,9 @@ export class HeroMailPanels {
     const titleEl = this.mailPanel.querySelector('[data-role="mail-detail-title"]');
     const body = this.mailPanel.querySelector('[data-role="mail-body"]');
     const claimBtn = this.mailPanel.querySelector('[data-action="claim-mail"]');
+    const battleBtn = this.mailPanel.querySelector(
+      '[data-action="mail-open-battle-report"]',
+    ) as HTMLButtonElement | null;
     if (!ul) return;
     this.setMailFilterButtons();
     ul.innerHTML = "";
@@ -437,6 +506,15 @@ export class HeroMailPanels {
       if (claimBtn instanceof HTMLButtonElement) {
         claimBtn.disabled = this.claimMailInflight > 0 && this.claimMailInflight === this.selectedMailId;
       }
+    }
+    if (battleBtn) {
+      const link = sel
+        ? resolveMailBattleReportLink(mailTitle(sel), sel.body ?? "")
+        : { show: false, reportId: null };
+      const showBattle = link.show && !!this.onOpenBattleReport;
+      battleBtn.classList.toggle("hidden", !showBattle);
+      if (link.reportId != null) battleBtn.dataset.reportId = String(link.reportId);
+      else battleBtn.removeAttribute("data-report-id");
     }
   }
 
@@ -585,10 +663,9 @@ export class HeroMailPanels {
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
       this.onStatus(status);
     } catch (e) {
-      const err = e as Error & { code?: number };
-      const msg = err.code ? `招募失败(code=${err.code})：${err.message}` : err.message;
+      const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.onStatus(msg);
-      setRecruitAffordabilityErrorDisplay(this.heroPanel, err.message);
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, msg);
     }
   }
 
@@ -620,7 +697,9 @@ export class HeroMailPanels {
       this.renderMailList();
       const total = res.total_count ?? this.mails.length;
       const filterLabel = this.mailFilter === MAIL_INBOX_FILTER_UNREAD ? "未读" : "全部";
-      this.onStatus(`邮件（${filterLabel}）${this.mails.length}/${total} 封`);
+      const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
+      const baseStatus = `邮件（${filterLabel}）${this.mails.length}/${total} 封`;
+      this.onStatus(this.withMailWorldCoordHint(baseStatus, sel));
       if (this.isMailOpen()) this.onUnreadCount?.(0);
       else void this.syncUnreadBadge();
     } catch (e) {
@@ -658,6 +737,10 @@ export class HeroMailPanels {
   private async openMail(mailId: number): Promise<void> {
     this.selectedMailId = mailId;
     this.renderMailList();
+    const sel = this.mails.find((m) => m.mail_id === mailId) ?? null;
+    if (sel && mailPlainTextHasWorldCoord(mailTitle(sel), sel.body ?? "")) {
+      this.onStatus(appendMailWorldCoordStatusHint("已打开邮件"));
+    }
     await this.markMailRead(mailId);
   }
 
@@ -766,6 +849,40 @@ export class HeroMailPanels {
     if (a === "refresh-heroes") void this.refreshHeroes();
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "recruit-hero") void this.recruitHero();
+    if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
+    if (a === "hero-related-items") void this.openRelatedCultivationItems();
+  }
+
+  private async openRecruitForCurrentHero(): Promise<void> {
+    const tplId = this.heroDetail?.template_cfg_id;
+    if (!tplId) {
+      this.onStatus("请先点选将领加载详情");
+      return;
+    }
+    if (!this.recruitTemplates.length) await this.refreshRecruitTemplates();
+    this.applyTemplateSelection(tplId);
+    const anchor = this.heroPanel.querySelector('[data-field="template-select"]');
+    anchor?.scrollIntoView?.({ block: "nearest" });
+    this.onStatus(`招募区已预选模板 #${tplId}`);
+  }
+
+  private async openRelatedCultivationItems(): Promise<void> {
+    const sid = this.serverId();
+    let items = this.sessionEconomy().bag;
+    try {
+      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
+        items?: { item_cfg_id?: number; quantity?: number }[];
+      };
+      items = bagFromListPlayerBagResponse(bagRes.items);
+    } catch {
+      /* 使用会话背包快照 */
+    }
+    const ids = filterHeroCultivationBagItemIds(items);
+    if (this.onOpenHeroCultivationBag) {
+      this.onOpenHeroCultivationBag(ids);
+      return;
+    }
+    this.onStatus(ids.length ? `养成道具 item_cfg_id：${ids.join("、")}` : "背包暂无养成消耗品（将魂碎晶等）");
   }
 
   private onMailClick(ev: Event): void {
@@ -788,5 +905,10 @@ export class HeroMailPanels {
       void this.refreshMail();
     }
     if (a === "claim-mail") void this.claimMail();
+    if (a === "mail-open-battle-report") {
+      const reportRaw = btn.dataset.reportId;
+      const reportId = reportRaw ? Number(reportRaw) : 0;
+      void this.onOpenBattleReport?.(reportId > 0 ? reportId : null);
+    }
   }
 }

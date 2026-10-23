@@ -55,4 +55,99 @@ describe("WorldPanels", () => {
     expect((form.querySelector('[data-field="to-y"]') as HTMLInputElement).value).toBe("20");
     expect(filled).toEqual({ x: 10, y: 20 });
   });
+
+  it("highlights march destination and filters via grid selection callback", async () => {
+    const mount = document.createElement("div");
+    const form = document.createElement("div");
+    form.innerHTML = `<input data-field="to-x" /><input data-field="to-y" />`;
+    let gridSel: { x: number; y: number } | null = null;
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({
+        cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true }],
+      }),
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "主城",
+      player: {},
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => session,
+      { marchFormRoot: form },
+      () => {},
+      {
+        onGridSelectionChange: (g) => {
+          gridSel = g;
+        },
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+
+    panels.setMarchDestHighlight({ x: 12, y: 34 });
+    const coordRow = mount.querySelector(".world-city-coord-only");
+    expect(coordRow?.textContent).toContain("(12,34)");
+
+    mount.querySelector('li[data-city-id="1"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(gridSel).toEqual({ x: 60, y: 60 });
+    const selectedRow = mount.querySelector('li[data-city-id="1"]');
+    expect(selectedRow?.classList.contains("world-city-row-selected")).toBe(true);
+
+    selectedRow?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(gridSel).toBeNull();
+  });
+
+  it("shows march dest count and deep-links to first march on count click", async () => {
+    const mount = document.createElement("div");
+    const form = document.createElement("div");
+    form.innerHTML = `<input data-field="to-x" /><input data-field="to-y" />`;
+    let marchGrid: { x: number; y: number } | null = null;
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({
+        cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true }],
+      }),
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "主城",
+      player: {},
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => session,
+      { marchFormRoot: form },
+      () => {},
+      {
+        getMarchesSnapshot: () => [
+          { march_id: 9, to_x: 60, to_y: 60 },
+          { march_id: 10, to_x: 60, to_y: 60 },
+        ],
+        onMarchCountClick: (g) => {
+          marchGrid = g;
+        },
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+
+    const countBtn = mount.querySelector(".world-city-row-march-count") as HTMLButtonElement;
+    expect(countBtn?.textContent).toContain("指向此格的行军 2 条");
+    countBtn?.click();
+    expect(marchGrid).toEqual({ x: 60, y: 60 });
+  });
 });

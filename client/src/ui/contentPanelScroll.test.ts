@@ -1,0 +1,31 @@
+import { describe, expect, it } from "vitest";
+import {
+  NARROW_SCROLL_CENTER_PANEL_IDS,
+  panelScrollBody,
+  resetCenterPanelViewportScroll,
+} from "@/ui/contentPanelScroll";
+
+describe("contentPanelScroll (CLIENT-070)", () => {
+  it("lists narrow-scroll center panel ids including military mail daily", () => {
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("military");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("mail");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("daily");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("hero");
+  });
+
+  it("resets scroll on panel-scroll-body when present", () => {
+    const panel = document.createElement("div");
+    const body = document.createElement("div");
+    body.className = "panel-scroll-body";
+    body.scrollTop = 90;
+    panel.appendChild(body);
+    resetCenterPanelViewportScroll(panel);
+    expect(body.scrollTop).toBe(0);
+  });
+
+  it("panelScrollBody finds nested scroll region", () => {
+    const panel = document.createElement("div");
+    panel.innerHTML = `<div class="panel-scroll-body" data-role="mail-scroll"></div>`;
+    expect(panelScrollBody(panel)?.dataset.role).toBe("mail-scroll");
+  });
+});

@@ -2,6 +2,26 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 
 export const PANEL_ASSET_DEFAULT = "ui.panel.default.v1";
 export const PANEL_ASSET_MILITARY = "ui.panel.military.v1";
+export const PANEL_ASSET_HERO = "ui.panel.hero.v1";
+export const PANEL_ASSET_BAG = "ui.panel.bag.v1";
+export const PANEL_ASSET_QUEUE = "ui.panel.queue.v1";
+
+/** CLIENT-062 center panels wired like CLIENT-032 military manifest ids. */
+export const CLIENT_062_CENTER_PANEL_ASSET_IDS = [
+  PANEL_ASSET_HERO,
+  PANEL_ASSET_BAG,
+  PANEL_ASSET_QUEUE,
+] as const;
+
+/** CLIENT-070 narrow manifest roots: military + mail/daily on default panel skin. */
+export const CLIENT_070_PANEL_ASSET_BY_CENTER_ID: Record<
+  "military" | "mail" | "daily",
+  string
+> = {
+  military: PANEL_ASSET_MILITARY,
+  mail: PANEL_ASSET_DEFAULT,
+  daily: PANEL_ASSET_DEFAULT,
+};
 
 /** Stretch a nine_slice panel asset as CSS border-image (24px logical slice by default). */
 export function skinNineSlicePanel(
@@ -38,4 +58,49 @@ export function skinMilitaryPanel(
   logicalH = 320,
 ): void {
   skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_MILITARY);
+}
+
+export function skinHeroPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_HERO);
+}
+
+export function skinBagPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_BAG);
+}
+
+export function skinQueuePanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_QUEUE);
+}
+
+export function skinMailPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DEFAULT);
+}
+
+export function skinDailyPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DEFAULT);
 }

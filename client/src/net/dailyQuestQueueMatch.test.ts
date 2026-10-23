@@ -4,6 +4,9 @@ import {
   findActiveUpgradeForBuildQuest,
   findBuildDailyQuestForBuilding,
   formatBuildQueueCountdownForQuest,
+  formatDailyQuestQueueInlineHint,
+  formatLinkedDailyQuestProgressSummary,
+  pickNearestActiveQueueEntry,
   resolveBuildLevelQuestTarget,
 } from "@/net/dailyQuestQueueMatch";
 
@@ -62,5 +65,28 @@ describe("dailyQuestQueueMatch", () => {
     const summary = formatBuildQueueCountdownForQuest(quest, [building], { farm: "农田" }, now);
     expect(summary).toContain("队列：农田");
     expect(summary).toContain("Lv2");
+  });
+
+  it("formats linked daily progress for queue build row", () => {
+    expect(
+      formatLinkedDailyQuestProgressSummary({
+        quest_cfg_id: 1032,
+        progress_current: 1,
+        progress_target: 2,
+      }),
+    ).toBe("日课 1/2");
+  });
+
+  it("picks nearest recruit when train daily and build finishes later", () => {
+    const buildings = [
+      { slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 200_000 },
+    ];
+    const recruits = [{ queue_id: 1, unit_cfg_id: 1, count: 20, finish_at_ms: now + 50_000 }];
+    const nearest = pickNearestActiveQueueEntry(buildings, recruits, now);
+    expect(nearest?.kind).toBe("recruit");
+    const trainQuest = { quest_cfg_id: 1014, quest_code: "daily_train_1", state: 2 };
+    const hint = formatDailyQuestQueueInlineHint(trainQuest, buildings, recruits, {}, now);
+    expect(hint).toContain("步兵");
+    expect(hint).toContain("×20");
   });
 });

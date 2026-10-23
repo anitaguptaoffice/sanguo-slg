@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
+import { DAILY_QUEST_FILTER_SESSION_KEY } from "@/net/dailyQuestListFilter";
 import { DAILY_QUEST_CHAIN_ID } from "@/net/dailyQuestState";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 
@@ -9,6 +10,14 @@ function flushPromises(): Promise<void> {
 }
 
 describe("DailyQuestPanels", () => {
+  it("daily panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new DailyQuestPanels(mount, gateway, () => null, () => {}, () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-center-panel="daily"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("lists dailies with chain_id 400", async () => {
     const mount = document.createElement("div");
     const listPlayerQuests = vi.fn().mockResolvedValue({
@@ -94,6 +103,55 @@ describe("DailyQuestPanels", () => {
     expect(nextBtn?.hidden).toBe(false);
     nextBtn?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(onNavigate).toHaveBeenCalledWith({ kind: "train_troops" });
+  });
+
+  it("shows nearest recruit countdown on train daily row", async () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1014,
+            quest_code: "daily_train_1",
+            state: 2,
+            progress_current: 5,
+            progress_target: 50,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      () => session.buildings,
+      {},
+      () => [{ queue_id: 2, unit_cfg_id: 1, count: 8, finish_at_ms: now + 45_000 }],
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const row = mount.querySelector('li[data-quest-cfg-id="1014"]');
+    expect(row?.textContent).toContain("队列：");
+    expect(row?.textContent).toContain("×8");
   });
 
   it("claim merges session and refreshes economy", async () => {
@@ -225,10 +283,109 @@ describe("DailyQuestPanels", () => {
     await flushPromises();
     const ul = mount.querySelector('[data-role="daily-list"]');
     expect(ul?.textContent).toContain("[战备]");
+    expect(ul?.querySelector('[data-action="daily-cross-battle-report"]')?.textContent).toBe("战报");
     const nextBtn = mount.querySelector('[data-action="daily-go-next"]') as HTMLButtonElement;
     expect(nextBtn?.hidden).toBe(false);
     nextBtn?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(onNavigate).toHaveBeenCalledWith({ kind: "use_item", itemCfgId: 2020 });
+  });
+
+  it("daily_build_1 shows mail cross-link tag", async () => {
+    const mount = document.createElement("div");
+    const onOpenMail = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [{ quest_cfg_id: 1032, quest_code: "daily_build_1", state: 2 }],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onOpenMail,
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const tag = mount.querySelector('[data-action="daily-cross-mail"]') as HTMLButtonElement;
+    expect(tag?.textContent).toBe("邮件");
+    tag?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenMail).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters dailies by state and persists filter in sessionStorage", async () => {
+    const storage = {
+      data: {} as Record<string, string>,
+      getItem(k: string) {
+        return this.data[k] ?? null;
+      },
+      setItem(k: string, v: string) {
+        this.data[k] = v;
+      },
+      removeItem(k: string) {
+        delete this.data[k];
+      },
+      clear() {
+        this.data = {};
+      },
+      key: () => null,
+      length: 0,
+    };
+    vi.stubGlobal("sessionStorage", storage);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          { quest_cfg_id: 1010, chain_id: 400, state: 2, quest_code: "daily_train_1" },
+          { quest_cfg_id: 1012, chain_id: 400, state: 4, quest_code: "daily_food_1" },
+          { quest_cfg_id: 1013, chain_id: 400, state: 3, quest_code: "daily_wood_1" },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const summary = mount.querySelector('[data-role="daily-state-summary"]');
+    expect(summary?.textContent).toContain("进行中 1");
+    expect(summary?.textContent).toContain("可领取 1");
+    const rows = () =>
+      Array.from(mount.querySelectorAll("li[data-quest-cfg-id]")).map((el) =>
+        el.getAttribute("data-quest-cfg-id"),
+      );
+    expect(rows()).toEqual(["1010", "1013", "1012"]);
+    mount
+      .querySelector('[data-action="daily-filter"][data-filter="claimable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(rows()).toEqual(["1013"]);
+    expect(storage.data[DAILY_QUEST_FILTER_SESSION_KEY]).toBe("claimable");
+    vi.unstubAllGlobals();
   });
 
   it("openFromTodoBadge highlights first acceptable daily", async () => {

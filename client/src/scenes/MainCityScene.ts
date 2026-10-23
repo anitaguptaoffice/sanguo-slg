@@ -1,6 +1,14 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
-import { PANEL_ASSET_MILITARY, skinMilitaryPanel, skinNineSlicePanel } from "@/engine/artPanelSkin";
+import {
+  skinBagPanel,
+  skinDailyPanel,
+  skinHeroPanel,
+  skinMailPanel,
+  skinMilitaryPanel,
+  skinQueuePanel,
+} from "@/engine/artPanelSkin";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { appendHudProductionRatesLine, appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
@@ -20,6 +28,7 @@ import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { appendManhattanToStatus } from "@/ui/marchWorldListLink";
 import { QueuePanels } from "@/ui/QueuePanels";
 import type { DailyQuestNavAction } from "@/net/dailyQuestObjective";
 import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
@@ -47,6 +56,7 @@ import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
+import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
@@ -79,12 +89,14 @@ import {
   type MinimapView,
 } from "@/ui/worldMinimap";
 import {
+  buildingBySlot,
   formatKeyBuildingHudLine,
   formatSlotBuildingCaption,
   formatWalletGainBrief,
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
+import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
 import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
@@ -121,6 +133,8 @@ export class MainCityScene implements Scene {
   private dailyQuest!: DailyQuestPanels;
   private world!: WorldPanels;
   private queuePanels!: QueuePanels;
+  private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
+  private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -218,32 +232,37 @@ export class MainCityScene implements Scene {
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
+    this.militaryPanel.dataset.centerPanel = "military";
     this.militaryPanel.innerHTML = `
       <h3>军事</h3>
       <p class="military-troops" data-role="troops"></p>
-      <label>募兵兵种
-        <select data-field="unit">
-          <option value="1">步兵</option>
-          <option value="2">骑兵</option>
-          <option value="3">弓兵</option>
-          <option value="4">器械</option>
-        </select>
-      </label>
-      <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
-      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
-      <hr />
-      <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
-      <div class="march-target-fields" data-role="march-target-fields">
-        <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
-        <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
+      <div class="panel-scroll-body" data-role="military-scroll">
+        <label>募兵兵种
+          <select data-field="unit">
+            <option value="1">步兵</option>
+            <option value="2">骑兵</option>
+            <option value="3">弓兵</option>
+            <option value="4">器械</option>
+          </select>
+        </label>
+        <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
+        <hr />
+        <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
+        <div class="march-target-fields" data-role="march-target-fields">
+          <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
+          <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
+        </div>
+        <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
+        <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
+        <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
+        <p class="military-march" data-role="march"></p>
       </div>
-      <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
-      <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
-      <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
-      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
-      <p class="military-march" data-role="march"></p>
     `;
     const parent = ctx.layoutFrame;
+    this.slotUpgradeOverlay = new MainCitySlotUpgradeOverlay(parent);
+    this.slotUpgradeOverlay.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
     this.social = new SocialPanels(
@@ -280,8 +299,10 @@ export class MainCityScene implements Scene {
       (action) => this.navigateDailyQuest(action),
       () => this.hudTodoBadgePoll.getDeepLinkSnapshot().battleReportUnread,
       () => this.openBattleReportsFromDailyBanner(),
+      () => this.openMailPanelFromDailyCrossLink(),
       () => this.session?.buildings,
       SLOT_LABEL,
+      () => this.queuePanels?.getRecruitQueueSnapshot() ?? [],
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
@@ -299,6 +320,19 @@ export class MainCityScene implements Scene {
       this.cityStateFetch,
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
       (snap) => this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId),
+      (reportId) => {
+        this.marchReportToastActive = false;
+        void this.battleReports
+          .openPanelWithDeepLink(reportId ?? undefined)
+          .then(() => this.renderHud());
+      },
+      (itemCfgIds) => {
+        this.content.openBagHighlightItems(itemCfgIds);
+        this.status = itemCfgIds.length
+          ? `背包已高亮养成道具 ${itemCfgIds.join("、")}，请「使用道具」`
+          : "背包暂无养成消耗品（将魂碎晶等）";
+        this.renderHud();
+      },
     );
     this.heroMail.attach();
     this.battleReports = new BattleReportPanel(
@@ -313,6 +347,20 @@ export class MainCityScene implements Scene {
         onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
         onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
         onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
+        onOpenRelatedMail: (mailId) => {
+          this.heroMail.openAndHighlightMail(mailId);
+          this.renderHud();
+        },
+        getDailyChainRows: () => {
+          const fromPanel = this.dailyQuest.getRowsSnapshot();
+          if (fromPanel.length) return fromPanel;
+          return this.hudTodoBadgePoll.getDeepLinkSnapshot().dailyChainRows;
+        },
+        onOpenRelatedDaily: (questCfgId) => {
+          this.dailyQuest.openAndFocusQuest(questCfgId);
+          this.status = "已打开「日常」并定位对应日课（只读，不自动领奖）";
+          this.renderHud();
+        },
       },
     );
     this.battleReports.attach();
@@ -326,16 +374,43 @@ export class MainCityScene implements Scene {
       },
       {
         nowMs: () => this.marchClockMs,
+        getWorldSelectedGrid: () => this.world?.getSelectedGrid() ?? null,
         onMarchesUpdated: (marches) => {
           this.minimapMarches = marches;
+          this.world?.refreshMarchDestCounts();
         },
         onSelectionChange: (march) => {
           if (march) {
-            this.status = this.minimapCollapsed
-              ? formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs)
-              : `小地图联动：行军 #${march.march_id ?? "?"}`;
-            this.renderHud();
+            const tx = march.to_x;
+            const ty = march.to_y;
+            if (Number.isFinite(tx) && Number.isFinite(ty)) {
+              this.world.setMarchDestHighlight({ x: tx, y: ty });
+              this.focusMinimapOnMarchDestination(march);
+            } else {
+              this.world.setMarchDestHighlight(null);
+            }
+            let base: string;
+            if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
+              base = `军情联动：行军 #${march.march_id ?? "?"}（无目的坐标）`;
+            } else if (this.minimapCollapsed) {
+              base = formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs);
+            } else {
+              base = `小地图联动：行军 #${march.march_id ?? "?"}`;
+            }
+            this.status =
+              Number.isFinite(tx) && Number.isFinite(ty)
+                ? appendManhattanToStatus(
+                    base,
+                    this.session?.cityX,
+                    this.session?.cityY,
+                    tx,
+                    ty,
+                  )
+                : base;
+          } else {
+            this.world.setMarchDestHighlight(null);
           }
+          this.renderHud();
         },
       },
     );
@@ -354,8 +429,36 @@ export class MainCityScene implements Scene {
         },
       },
       (msg) => {
-        this.status = msg;
+        const grid = this.world.getSelectedGrid();
+        this.status =
+          grid != null
+            ? appendManhattanToStatus(
+                msg,
+                this.session?.cityX,
+                this.session?.cityY,
+                grid.x,
+                grid.y,
+              )
+            : msg;
         this.renderHud();
+      },
+      {
+        onGridSelectionChange: (grid) => {
+          this.marchList.syncWorldGridSelection(grid);
+        },
+        getMarchesSnapshot: () => {
+          const fromPanel = this.marchList.getMarches();
+          return fromPanel.length ? fromPanel : this.minimapMarches;
+        },
+        onMarchCountClick: (grid) => {
+          const opened = this.marchList.selectMarchByDest(grid.x, grid.y);
+          if (opened) {
+            this.status = `军情：已选中指向 (${grid.x},${grid.y}) 的首条行军`;
+          } else {
+            this.status = `格点 (${grid.x},${grid.y}) 暂无进行中行军`;
+          }
+          this.renderHud();
+        },
       },
     );
     this.world.attach();
@@ -388,18 +491,19 @@ export class MainCityScene implements Scene {
     this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets, "button");
     skinPrimaryButtons(this.militaryPanel, this.assets);
-    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320, PANEL_ASSET_MILITARY);
+    skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
     skinMilitaryPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
-    for (const panel of [
-      this.queuePanels.getRoot(),
-      this.heroMail.getMailRoot(),
-      this.content.getBagRoot(),
-      this.dailyQuest.getRoot(),
-    ]) {
-      skinNineSlicePanel(panel, this.assets, 520, 320);
-      skinCenterPrimary(panel);
-    }
+    skinHeroPanel(this.heroMail.getHeroRoot(), this.assets, 520, 320);
+    skinBagPanel(this.content.getBagRoot(), this.assets, 520, 320);
+    skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
+    skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
+    skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
+    skinCenterPrimary(this.heroMail.getHeroRoot());
+    skinCenterPrimary(this.content.getBagRoot());
+    skinCenterPrimary(this.queuePanels.getRoot());
+    skinCenterPrimary(this.heroMail.getMailRoot());
+    skinCenterPrimary(this.dailyQuest.getRoot());
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
@@ -412,6 +516,7 @@ export class MainCityScene implements Scene {
     this.syncMilitaryPanel();
     void this.hudTodoBadgePoll.pollOnce();
     void this.refreshMinimapMarches();
+    this.syncSlotUpgradeOverlay();
   }
 
   update(dt: number): void {
@@ -437,12 +542,19 @@ export class MainCityScene implements Scene {
     }
     if (hasActiveBuildingUpgrade(this.session.buildings)) {
       this.hudRefreshAccum += dt;
+      this.slotOverlayRefreshAccum += dt;
       if (this.hudRefreshAccum >= 1) {
         this.hudRefreshAccum = 0;
         this.renderHud();
       }
+      if (this.slotOverlayRefreshAccum >= 1) {
+        this.slotOverlayRefreshAccum = 0;
+        this.syncSlotUpgradeOverlay();
+      }
     } else {
       this.hudRefreshAccum = 0;
+      this.slotOverlayRefreshAccum = 0;
+      this.syncSlotUpgradeOverlay();
     }
     if (this.walletGainBrief && Date.now() > this.walletGainUntilMs) {
       this.walletGainBrief = null;
@@ -468,8 +580,14 @@ export class MainCityScene implements Scene {
     this.dailyQuest?.detach();
     this.world?.detach();
     this.queuePanels?.detach();
+    this.slotUpgradeOverlay?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
+  }
+
+  private openMailPanelFromDailyCrossLink(): void {
+    this.heroMail.openMailPanel();
+    this.renderHud();
   }
 
   private openBattleReportsFromDailyBanner(): void {
@@ -539,6 +657,9 @@ export class MainCityScene implements Scene {
     if (action === "refresh") void this.refreshState();
     if (action === "toggle-military") {
       this.militaryPanel.classList.toggle("hidden");
+      if (!this.militaryPanel.classList.contains("hidden")) {
+        resetCenterPanelViewportScroll(this.militaryPanel);
+      }
       this.syncMilitaryPanel();
     }
     if (action === "toggle-reports") {
@@ -615,6 +736,14 @@ export class MainCityScene implements Scene {
       this.marchList?.getSelectedMarch(),
       this.minimapBoundsExtra(),
     );
+  }
+
+  private focusMinimapOnMarchDestination(march: MarchSummary): void {
+    const tx = march.to_x;
+    const ty = march.to_y;
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+    const bounds = this.currentMinimapWorldBounds();
+    this.minimapView = computeMinimapViewFramingPoints(bounds, [{ wx: tx, wy: ty }]);
   }
 
   private focusMinimapOnBattleReport(summary: BattleReportSummary): void {
@@ -743,6 +872,15 @@ export class MainCityScene implements Scene {
     const top = hits[0];
     if (!top) return;
     this.hitDebug = top.slot_key;
+    const building = buildingBySlot(this.session?.buildings, top.slot_key);
+    const now = Date.now();
+    if ((building?.upgrade_finish_at_ms ?? 0) > now) {
+      this.queuePanels.openAndHighlightBuildSlot(top.slot_key);
+      const label = SLOT_LABEL[top.slot_key] ?? top.slot_key;
+      this.status = `队列：${label} 升级进行中`;
+      this.renderHud();
+      return;
+    }
     if (top.slot_key === "farm") void this.upgradeFarm();
     else {
       this.status = `选中 ${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
@@ -758,7 +896,19 @@ export class MainCityScene implements Scene {
     if (!this.minimapCollapsed) return;
     const selected = this.marchList?.getSelectedMarch();
     if (!selected) return;
-    this.status = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    const base = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    const tx = selected.to_x;
+    const ty = selected.to_y;
+    this.status =
+      Number.isFinite(tx) && Number.isFinite(ty)
+        ? appendManhattanToStatus(
+            base,
+            this.session?.cityX,
+            this.session?.cityY,
+            tx,
+            ty,
+          )
+        : base;
     this.renderHud();
   }
 
@@ -798,6 +948,7 @@ export class MainCityScene implements Scene {
         marches?: MarchSummary[];
       };
       this.minimapMarches = res.marches ?? [];
+      this.world?.refreshMarchDestCounts();
     } catch {
       /* 小地图只读：失败时保留上次数据 */
     }
@@ -822,6 +973,8 @@ export class MainCityScene implements Scene {
   private patchSession(patch: Partial<MainCitySession>, opts?: { flashWalletGain?: boolean }): void {
     if (!this.session) return;
     const beforeWallet = this.session.wallet;
+    const pulseKeys =
+      patch.wallet !== undefined ? walletResourcePulseKeys(beforeWallet, patch.wallet) : [];
     Object.assign(this.session, patch);
     const flash = opts?.flashWalletGain !== false;
     if (flash && patch.wallet !== undefined) {
@@ -832,6 +985,7 @@ export class MainCityScene implements Scene {
       }
     }
     this.renderHud();
+    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
     if (patch.wallet !== undefined || patch.bag !== undefined) {
       this.heroMail?.refreshRecruitAffordability();
     }
@@ -840,6 +994,10 @@ export class MainCityScene implements Scene {
   private isAnyPanelVisible(): boolean {
     if (!this.militaryPanel.classList.contains("hidden")) return true;
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
+  }
+
+  private syncSlotUpgradeOverlay(): void {
+    this.slotUpgradeOverlay?.sync(this.session?.buildings, Date.now());
   }
 
   private applyCityStateFromFetch(state: {
@@ -860,6 +1018,7 @@ export class MainCityScene implements Scene {
       { flashWalletGain: false },
     );
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
+    this.syncSlotUpgradeOverlay();
   }
 
   private applyCityStatePoll(state: {
@@ -1071,7 +1230,7 @@ export class MainCityScene implements Scene {
       this.marchList.notifyMarchStarted();
       void this.refreshMinimapMarches();
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
+      const msg = formatPanelGatewayErrorFromUnknown("march", e);
       setMarchFormErrorDisplay(this.militaryPanel, msg);
       this.status = msg;
     }
@@ -1163,11 +1322,6 @@ export class MainCityScene implements Scene {
       c2d.font = "13px system-ui";
       if (!KEY_BUILDING_SLOTS.has(slot.slot_key)) {
         c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
-      }
-      if (caption.upgradeLine) {
-        c2d.fillStyle = "#f0c674";
-        c2d.font = "12px system-ui";
-        c2d.fillText(caption.upgradeLine, display.x + display.w - 88, display.y + 20);
       }
     }
   }

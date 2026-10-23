@@ -3,7 +3,12 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagStackQuantity } from "@/net/bagState";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
-import { findBuildDailyQuestForBuilding } from "@/net/dailyQuestQueueMatch";
+import {
+  findBuildDailyQuestForBuilding,
+  formatLinkedDailyQuestProgressSummary,
+} from "@/net/dailyQuestQueueMatch";
+import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
+import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -16,6 +21,9 @@ import {
 } from "@/net/queueState";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
+
+/** 建造队列行选中高亮（与日常/邮件列表 `selected` 口径一致）。 */
+export const QUEUE_BUILD_ROW_SELECTED_CLASS = "selected";
 
 export type QueuePanelReskin = (root: HTMLElement) => void;
 
@@ -31,6 +39,7 @@ export class QueuePanels {
   private tickAccum = 0;
   private speedupBusy = false;
   private readonly completedRecruitIds = new Set<number>();
+  private highlightedBuildSlotKey: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -70,22 +79,50 @@ export class QueuePanels {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (this.isOpen()) {
+      resetQueuePanelViewportScroll(this.panel);
       this.tickAccum = 0;
       this.render();
+      resetQueuePanelViewportScroll(this.panel);
     }
   }
 
   /** 打开队列面板（日常练兵/建造引导）。 */
   open(): void {
     this.panel.classList.remove("hidden");
+    resetQueuePanelViewportScroll(this.panel);
     this.tickAccum = 0;
     this.render();
+    resetQueuePanelViewportScroll(this.panel);
+  }
+
+  /** 打开队列并高亮指定槽位的建造行（主城画布深链）。 */
+  openAndHighlightBuildSlot(slotKey: string): void {
+    this.highlightedBuildSlotKey = slotKey.trim() || null;
+    this.panel.classList.remove("hidden");
+    this.tickAccum = 0;
+    this.render();
+    resetQueuePanelViewportScroll(this.panel);
+    const rowId = queueBuildRowDomId(slotKey);
+    const row = this.panel.querySelector(`#${CSS.escape(rowId)}`);
+    if (row && typeof row.scrollIntoView === "function") {
+      row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }
+
+  clearBuildSlotHighlight(): void {
+    this.highlightedBuildSlotKey = null;
   }
 
   addRecruitEntry(entry: RecruitQueueEntry | null): void {
     if (!entry) return;
     this.recruits = mergeRecruitQueue(this.recruits, entry);
     if (this.isOpen()) this.render();
+  }
+
+  /** 日常面板只读募兵队列快照（与 render 同源，不新 RPC）。 */
+  getRecruitQueueSnapshot(): RecruitQueueEntry[] {
+    const now = Date.now();
+    return pruneFinishedRecruits(this.recruits, now).filter((e) => isRecruitQueueActive(e, now));
   }
 
   tick(dt: number): void {
@@ -111,10 +148,12 @@ export class QueuePanels {
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-queue">刷新内政</button>
       </div>
-      <ul class="queue-list" data-role="queue-build-list"></ul>
-      <div class="queue-military-section hidden" data-role="queue-military-section">
-        <p class="queue-military-heading">募兵队列</p>
-        <ul class="queue-list" data-role="queue-recruit-list"></ul>
+      <div class="panel-scroll-body" data-role="queue-scroll">
+        <ul class="queue-list" data-role="queue-build-list"></ul>
+        <div class="queue-military-section hidden" data-role="queue-military-section">
+          <p class="queue-military-heading">募兵队列</p>
+          <ul class="queue-list" data-role="queue-recruit-list"></ul>
+        </div>
       </div>
       <p class="queue-panel-status" data-role="queue-status"></p>
     `;
@@ -173,11 +212,26 @@ export class QueuePanels {
     for (const b of buildRows) {
       const text = formatBuildingUpgradeQueueLine(b, this.slotLabels, now);
       const li = document.createElement("li");
+      const slotKey = b.slot_key ?? "?";
       li.className = "queue-list-row";
+      li.id = queueBuildRowDomId(slotKey);
+      li.dataset.slotKey = slotKey;
+      if (this.highlightedBuildSlotKey && slotKey === this.highlightedBuildSlotKey) {
+        li.classList.add(QUEUE_BUILD_ROW_SELECTED_CLASS);
+      }
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
       const linkedQuest = findBuildDailyQuestForBuilding(b, dailyRows, now);
+      if (linkedQuest) {
+        const progressSummary = formatLinkedDailyQuestProgressSummary(linkedQuest);
+        if (progressSummary) {
+          const prog = document.createElement("span");
+          prog.className = "queue-daily-progress";
+          prog.textContent = progressSummary;
+          li.appendChild(prog);
+        }
+      }
       if (linkedQuest && this.onOpenDailyBuildQuest) {
         const cfgId = linkedQuest.quest_cfg_id ?? 0;
         const dailyBtn = document.createElement("button");

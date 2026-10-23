@@ -1,3 +1,4 @@
+import { setPanelFormErrorDisplay } from "@/net/contentFormValidation";
 import type { CityTroopStack } from "@/net/militaryFormat";
 import { WORLD_MAP_EDGE } from "@/ui/worldMinimap";
 
@@ -108,13 +109,5 @@ export function validateMarchForm(input: MarchFormValidationInput): MarchFormVal
 
 /** 军事面板 `data-role="march-form-error"` 内联错误区。 */
 export function setMarchFormErrorDisplay(formRoot: ParentNode | null | undefined, message: string | null): void {
-  const el = formRoot?.querySelector('[data-role="march-form-error"]');
-  if (!el) return;
-  if (message?.trim()) {
-    el.textContent = message;
-    el.classList.remove("hidden");
-  } else {
-    el.textContent = "";
-    el.classList.add("hidden");
-  }
+  setPanelFormErrorDisplay(formRoot, "march", message);
 }

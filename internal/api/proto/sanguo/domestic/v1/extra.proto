@@ -14,4 +14,6 @@ message GetCityStateRequest {
 message GetCityStateResponse {
   sanguo.common.v1.ResourceWallet wallet = 1;
   repeated sanguo.common.v1.CityBuilding buildings = 2;
+  // CLIENT-059 / INTG-017: per-hour production (food/wood/stone/iron); gateway extension field 3.
+  sanguo.common.v1.ResourceWallet production_rates = 3;
 }

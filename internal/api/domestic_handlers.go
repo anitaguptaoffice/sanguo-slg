@@ -92,9 +92,11 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 			UpgradeFinishAtMs:   finishMS,
 		})
 	}
+	prod := cityProductionRatesPerHour(city, domestic.DefaultCatalog())
 	data, err := marshal(&domesticv1.GetCityStateResponse{
-		Wallet:    walletProto(city.Wallet),
-		Buildings: buildings,
+		Wallet:           walletProto(city.Wallet),
+		Buildings:        buildings,
+		ProductionRates:  walletProto(prod),
 	})
 	if err != nil {
 		return nil, err

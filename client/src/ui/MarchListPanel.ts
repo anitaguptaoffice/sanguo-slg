@@ -12,6 +12,11 @@ import {
   marchListEmptyClass,
   marchListEmptyMessage,
 } from "@/net/panelDensity";
+import {
+  filterMarchesByDestination,
+  MARCH_LIST_ROW_DEST_MATCH_CLASS,
+  type MarchDestFilterMode,
+} from "@/ui/marchWorldListLink";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
@@ -19,6 +24,8 @@ export type MarchListPanelOptions = {
   nowMs?: () => number;
   onMarchesUpdated?: (marches: MarchSummary[]) => void;
   onSelectionChange?: (march: MarchSummary | null) => void;
+  /** CLIENT-061 世界列表当前选中格（「世界选中格」筛选）。 */
+  getWorldSelectedGrid?: () => { x: number; y: number } | null;
 };
 
 export class MarchListPanel {
@@ -31,7 +38,10 @@ export class MarchListPanel {
   private readonly nowMs: () => number;
   private readonly onMarchesUpdated?: (marches: MarchSummary[]) => void;
   private readonly onSelectionChange?: (march: MarchSummary | null) => void;
+  private readonly getWorldSelectedGrid?: () => { x: number; y: number } | null;
   private selectedMarchId: number | null = null;
+  private destFilterMode: MarchDestFilterMode = "all";
+  private manualDestFilter: { x: number; y: number } | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -44,6 +54,7 @@ export class MarchListPanel {
     this.nowMs = options?.nowMs ?? (() => Date.now());
     this.onMarchesUpdated = options?.onMarchesUpdated;
     this.onSelectionChange = options?.onSelectionChange;
+    this.getWorldSelectedGrid = options?.getWorldSelectedGrid;
   }
 
   getRoot(): HTMLElement {
@@ -61,6 +72,55 @@ export class MarchListPanel {
   getSelectedMarch(): MarchSummary | null {
     if (this.selectedMarchId == null) return null;
     return this.marches.find((m) => m.march_id === this.selectedMarchId) ?? null;
+  }
+
+  getDestFilterMode(): MarchDestFilterMode {
+    return this.destFilterMode;
+  }
+
+  getDestFilter(): { x: number; y: number } | null {
+    return this.resolveDestFilter();
+  }
+
+  /** 世界城池列表点选时联动「世界选中格」筛选（客户端快照，无新 RPC）。 */
+  syncWorldGridSelection(grid: { x: number; y: number } | null): void {
+    if (grid != null) {
+      this.destFilterMode = "world";
+    } else if (this.destFilterMode === "world") {
+      this.destFilterMode = "all";
+    }
+    this.renderFilterControls();
+    this.renderList();
+  }
+
+  /** @deprecated 使用 syncWorldGridSelection / setDestFilterMode */
+  setDestFilter(x: number | null, y: number | null): void {
+    if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
+      this.destFilterMode = "all";
+      this.manualDestFilter = null;
+    } else {
+      this.destFilterMode = "manual";
+      this.manualDestFilter = { x, y };
+    }
+    this.renderFilterControls();
+    this.renderList();
+  }
+
+  setDestFilterMode(mode: MarchDestFilterMode): void {
+    this.destFilterMode = mode;
+    if (mode !== "manual") this.manualDestFilter = null;
+    this.renderFilterControls();
+    this.renderList();
+  }
+
+  private resolveDestFilter(): { x: number; y: number } | null {
+    if (this.destFilterMode === "all") return null;
+    if (this.destFilterMode === "world") {
+      const g = this.getWorldSelectedGrid?.() ?? null;
+      if (g == null || !Number.isFinite(g.x) || !Number.isFinite(g.y)) return null;
+      return g;
+    }
+    return this.manualDestFilter;
   }
 
   /** 小地图点击目的点时选中列表首条匹配行军（只读）。 */
@@ -93,6 +153,7 @@ export class MarchListPanel {
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.renderFilterControls();
   }
 
   detach(): void {
@@ -126,11 +187,39 @@ export class MarchListPanel {
     el.innerHTML = `
       <h3>行军</h3>
       <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
+      <fieldset class="march-dest-filter" data-role="march-dest-filter">
+        <legend>目的格点筛选</legend>
+        <label><input type="radio" name="march-dest-filter" value="all" checked /> 全部</label>
+        <label><input type="radio" name="march-dest-filter" value="world" /> 世界选中格</label>
+        <label><input type="radio" name="march-dest-filter" value="manual" /> 手动格点</label>
+        <span class="march-dest-filter-manual hidden" data-role="march-dest-manual">
+          <input type="number" data-field="filter-to-x" placeholder="x" aria-label="筛选目的 x" />
+          <input type="number" data-field="filter-to-y" placeholder="y" aria-label="筛选目的 y" />
+          <button type="button" data-action="apply-march-dest-filter">应用</button>
+        </span>
+      </fieldset>
       <button type="button" data-action="refresh-marches">刷新列表</button>
       <p class="report-panel-status" data-role="march-list-status"></p>
       <ul class="march-list" data-role="march-list"></ul>
     `;
     return el;
+  }
+
+  private renderFilterControls(): void {
+    const fieldset = this.panel?.querySelector('[data-role="march-dest-filter"]');
+    if (!fieldset) return;
+    const mode = this.destFilterMode;
+    for (const input of fieldset.querySelectorAll<HTMLInputElement>('input[name="march-dest-filter"]')) {
+      input.checked = input.value === mode;
+    }
+    const manualWrap = fieldset.querySelector('[data-role="march-dest-manual"]');
+    manualWrap?.classList.toggle("hidden", mode !== "manual");
+    if (this.manualDestFilter) {
+      const xEl = fieldset.querySelector('[data-field="filter-to-x"]') as HTMLInputElement | null;
+      const yEl = fieldset.querySelector('[data-field="filter-to-y"]') as HTMLInputElement | null;
+      if (xEl) xEl.value = String(this.manualDestFilter.x);
+      if (yEl) yEl.value = String(this.manualDestFilter.y);
+    }
   }
 
   private renderList(): void {
@@ -145,7 +234,29 @@ export class MarchListPanel {
 
     if (this.listError) return;
 
-    if (!this.marches.length) {
+    const filter = this.resolveDestFilter();
+    const visible =
+      filter != null
+        ? filterMarchesByDestination(this.marches, filter.x, filter.y)
+        : this.marches;
+
+    if (this.destFilterMode === "world" && filter == null && this.marches.length) {
+      const li = document.createElement("li");
+      li.className = marchListEmptyClass();
+      li.textContent = "请在「世界」面板点选城池格，或切换为「全部」/「手动格点」筛选";
+      ul.appendChild(li);
+      return;
+    }
+
+    if (filter != null && !visible.length && this.marches.length) {
+      const li = document.createElement("li");
+      li.className = marchListEmptyClass();
+      li.textContent = `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中）`;
+      ul.appendChild(li);
+      return;
+    }
+
+    if (!visible.length) {
       const li = document.createElement("li");
       li.className = marchListEmptyClass();
       li.textContent = marchListEmptyMessage();
@@ -153,12 +264,12 @@ export class MarchListPanel {
       return;
     }
 
-    if (this.marches.length >= 2) {
+    if (visible.length >= 2) {
       ul.classList.add(marchListCompactClass());
     }
 
     const now = this.nowMs();
-    for (const m of this.marches) {
+    for (const m of visible) {
       const li = document.createElement("li");
       const body = document.createElement("div");
       body.className = "march-row-body";
@@ -180,6 +291,9 @@ export class MarchListPanel {
       }
       if (m.march_id != null && m.march_id === this.selectedMarchId) {
         li.classList.add("march-list-row-selected");
+      }
+      if (filter != null) {
+        li.classList.add(MARCH_LIST_ROW_DEST_MATCH_CLASS);
       }
       ul.appendChild(li);
     }
@@ -296,16 +410,44 @@ export class MarchListPanel {
   }
 
   private onClick(ev: Event): void {
+    const filterRadio = (ev.target as HTMLElement).closest(
+      'input[name="march-dest-filter"]',
+    ) as HTMLInputElement | null;
+    if (filterRadio) {
+      const mode = filterRadio.value as MarchDestFilterMode;
+      if (mode === "all" || mode === "world" || mode === "manual") {
+        this.setDestFilterMode(mode);
+      }
+      return;
+    }
+
     const row = (ev.target as HTMLElement).closest("li[data-march-id]");
     if (row) {
       const id = Number(row.getAttribute("data-march-id"));
       if (!Number.isNaN(id)) {
-        this.setSelectedMarchId(id);
+        if (id === this.selectedMarchId) {
+          this.setSelectedMarchId(null);
+        } else {
+          this.setSelectedMarchId(id);
+        }
         return;
       }
     }
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     if (btn.getAttribute("data-action") === "refresh-marches") void this.refreshList();
+    if (btn.getAttribute("data-action") === "apply-march-dest-filter") {
+      const root = this.panel.querySelector('[data-role="march-dest-filter"]');
+      const x = Number((root?.querySelector('[data-field="filter-to-x"]') as HTMLInputElement)?.value);
+      const y = Number((root?.querySelector('[data-field="filter-to-y"]') as HTMLInputElement)?.value);
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        this.onStatus("请输入有效的目的格点坐标");
+        return;
+      }
+      this.destFilterMode = "manual";
+      this.manualDestFilter = { x, y };
+      this.renderFilterControls();
+      this.renderList();
+    }
   }
 }
