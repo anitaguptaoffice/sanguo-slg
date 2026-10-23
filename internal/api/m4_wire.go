@@ -29,7 +29,7 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 		questCat = mem
 	}
 	questStore := quest.NewPGStore(s.players.Pool)
-	s.questSvc = quest.NewService(questStore, questCat, quest.NewContentGranter(contentSvc), nil)
+	s.questSvc = quest.NewService(questStore, questCat, quest.NewContentGranter(contentSvc), questPlayerLevelProvider(s.players.Pool))
 	s.questChainIDs = questChainIDsFromCatalog(questCat)
 
 	s.shopSvc = shop.NewService(devShopCatalog(), nil, shop.NewPayments(contentSvc, s.newShopWalletStore()), s.players.Pool)
