@@ -10,6 +10,14 @@ export type LeaderboardEntryRow = {
   entity_id?: number;
   display_name?: string;
   score?: number;
+  /** 可选扩展：资源榜行关联格点/城池（网关快照字段，非新 rank proto）。 */
+  grid_x?: number;
+  grid_y?: number;
+  city_x?: number;
+  city_y?: number;
+  city_name?: string;
+  x?: number;
+  y?: number;
 };
 
 /** GetLeaderboard 响应（proto 字段名；batch_id 为可选扩展） */

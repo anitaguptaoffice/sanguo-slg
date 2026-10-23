@@ -3,6 +3,8 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import { MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
+import { HERO_DETAIL_SELECTED_SESSION_KEY } from "@/net/heroDetailSelectedSession";
+import { HERO_LIST_REFRESH_PULSE_CLASS } from "@/net/heroListRefreshFeedback";
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
@@ -38,6 +40,17 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-center-panel="hero"] .panel-scroll-body')).toBeTruthy();
   });
 
+  it("hero panel scroll body wraps list and detail for narrow layout (CLIENT-103)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    const scroll = mount.querySelector('[data-center-panel="hero"] .panel-scroll-body');
+    expect(scroll?.querySelector('[data-role="hero-list"]')).toBeTruthy();
+    expect(scroll?.querySelector('[data-role="hero-detail"]')).toBeTruthy();
+    expect(mount.querySelector('[data-action="recruit-hero"]')?.closest(".panel-scroll-body")).toBeNull();
+  });
+
   it("renders empty mail list after refresh", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
@@ -70,6 +83,94 @@ describe("HeroMailPanels", () => {
     mount.querySelector("li[data-mail-id='3']")?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(gateway.markPlayerMailRead).toHaveBeenCalledWith(1, 3);
+  });
+
+  it("hero list refresh disables button, pulses on success, and shows CLIENT-067 error on failure", async () => {
+    const mount = document.createElement("div");
+    const err = Object.assign(new Error("网关超时"), { code: 10001 });
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi
+        .fn()
+        .mockResolvedValueOnce({ heroes: [{ hero_id: 2, template_cfg_id: 1001 }], total_count: 1 })
+        .mockResolvedValueOnce({ heroes: [{ hero_id: 2, template_cfg_id: 1001 }], total_count: 1 })
+        .mockRejectedValueOnce(err),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    const refreshBtn = mount.querySelector('[data-action="refresh-heroes"]') as HTMLButtonElement;
+    refreshBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(refreshBtn.disabled).toBe(true);
+    await flushPromises();
+    const list = mount.querySelector('[data-role="hero-list"]')!;
+    expect(list.classList.contains(HERO_LIST_REFRESH_PULSE_CLASS)).toBe(true);
+    refreshBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const errEl = mount.querySelector('[data-role="hero-list-form-error"]');
+    expect(errEl?.textContent).toContain("[10001]");
+    expect(errEl?.classList.contains("hidden")).toBe(false);
+  });
+
+  it("restores sessionStorage hero selection when hero panel reopens", async () => {
+    sessionStorage.setItem(HERO_DETAIL_SELECTED_SESSION_KEY, "8");
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [
+          { hero_id: 8, template_cfg_id: 1001, level: 1, loyalty: 50 },
+          { hero_id: 9, template_cfg_id: 1002, level: 1, loyalty: 50 },
+        ],
+        total_count: 2,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 8,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 1,
+        loyalty: 50,
+        attributes: { force: 1, intel: 1, politics: 1, command: 1 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    panels.toggleHero();
+    panels.toggleHero();
+    await flushPromises();
+    expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 8);
+    expect(mount.querySelector('li[data-hero-id="8"].selected')).toBeTruthy();
+    sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
+  });
+
+  it("persists hero-detail-selected-id when a hero row is clicked", async () => {
+    sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 2,
+        loyalty: 77,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(sessionStorage.getItem(HERO_DETAIL_SELECTED_SESSION_KEY)).toBe("3");
   });
 
   it("loads GetHeroDetail into detail pane when hero row clicked", async () => {
@@ -594,6 +695,109 @@ describe("HeroMailPanels", () => {
     expect(unread).toBe(4);
   });
 
+  it("shows submitting label while RecruitHero is in flight", async () => {
+    const mount = document.createElement("div");
+    let resolveRecruit!: (v: unknown) => void;
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            recruit_cost: { food: 10 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      getCityState: vi.fn().mockResolvedValue({ wallet: { food: 90 } }),
+      getHeroDetail: vi.fn().mockResolvedValue({ hero_id: 1, template_cfg_id: 1001 }),
+      listPlayerQuests: vi.fn().mockResolvedValue({ quests: [] }),
+      recruitHero: vi.fn().mockImplementation(
+        () =>
+          new Promise((r) => {
+            resolveRecruit = r;
+          }),
+      ),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: { food: 100 },
+      buildings: [],
+      cityTroops: [],
+      bag: [{ item_cfg_id: 2004, quantity: 1 }],
+    };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const recruitBtn = mount.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement;
+    recruitBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(recruitBtn.disabled).toBe(true);
+    expect(recruitBtn.textContent).toBe("提交中…");
+    resolveRecruit({
+      hero_id: 1,
+      template_cfg_id: 1001,
+      level: 1,
+      loyalty: 100,
+    });
+    await flushPromises();
+    await flushPromises();
+    expect(recruitBtn.textContent).toBe("招募");
+  });
+
+  it("recruit failure keeps template selection and shows inline error", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            recruit_cost: { food: 10 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+      recruitHero: vi
+        .fn()
+        .mockRejectedValue(Object.assign(new Error("道具不足"), { code: 10001 })),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: { food: 100 },
+      buildings: [],
+      cityTroops: [],
+      bag: [{ item_cfg_id: 2004, quantity: 1 }],
+    };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const sel = mount.querySelector('[data-field="template-select"]') as HTMLSelectElement;
+    expect(sel.value).toBe("1001");
+    mount.querySelector('[data-action="recruit-hero"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+    expect(mount.querySelector('[data-role="recruit-form-error"]')?.textContent).toContain("道具不足");
+    expect(sel.value).toBe("1001");
+    const toast = mount.querySelector('[data-role="recruit-success-toast"]');
+    expect(toast?.classList.contains("hidden")).toBe(true);
+  });
+
   it("recruit success refreshes list, selects new hero, and nudges daily recruit", async () => {
     const mount = document.createElement("div");
     const statuses: string[] = [];
@@ -673,6 +877,13 @@ describe("HeroMailPanels", () => {
     expect(selected).toBeTruthy();
     expect(onDaily).toHaveBeenCalled();
     expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
+    const toast = mount.querySelector('[data-role="recruit-success-toast"]');
+    expect(toast?.classList.contains("hidden")).toBe(false);
+    const detailBtn = mount.querySelector(
+      '[data-action="recruit-open-hero-detail"]',
+    ) as HTMLButtonElement;
+    expect(detailBtn.hidden).toBe(false);
+    expect(detailBtn.getAttribute("data-hero-id")).toBe("99");
   });
 
   it("appends world panel hint when mail body has coordinates", async () => {

@@ -93,6 +93,8 @@ import {
   formatMarchDepartedStatusToast,
   syncMarchSubmitButton,
 } from "@/net/marchSubmitFeedback";
+import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
+import { ChatUnreadTracker } from "@/net/chatUnread";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
@@ -183,6 +185,8 @@ export class MainCityScene implements Scene {
   private cityStateFetch!: CityStateFetch;
   private cityStatePoll!: CityStatePoll;
   private hudTodoBadgePoll!: HudTodoBadgePoll;
+  private readonly chatUnreadTracker = new ChatUnreadTracker();
+  private chatUnreadPoll!: ChatUnreadPoll;
   private readonly buildCompleteTodos = new BuildCompleteTodoTracker();
   private lastCenterTodoScrollKey: string | null = null;
   private marchArrivalPoll!: MarchArrivalPoll;
@@ -263,8 +267,8 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-military">军事</button>
       <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn"><span class="toolbar-btn-label">战报</span></button>
       <button type="button" data-action="toggle-marches">行军</button>
-      <button type="button" data-action="toggle-chat">聊天</button>
-      <button type="button" data-action="toggle-guild">军团</button>
+      <button type="button" data-action="toggle-chat" data-role="chat-toolbar-btn"><span class="toolbar-btn-label">聊天</span></button>
+      <button type="button" data-action="toggle-guild" data-role="guild-toolbar-btn"><span class="toolbar-btn-label">军团</span></button>
       <button type="button" data-action="toggle-rank">排行</button>
       <button type="button" data-action="toggle-quest">任务</button>
       <button type="button" data-action="toggle-daily" data-role="daily-toolbar-btn"><span class="toolbar-btn-label">日常</span></button>
@@ -318,6 +322,7 @@ export class MainCityScene implements Scene {
     this.slotUpgradeOverlay.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
+    this.chatUnreadTracker.onCounts = () => this.applyChatUnreadCounts();
     this.social = new SocialPanels(
       parent,
       this.gateway,
@@ -326,7 +331,19 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
+      this.chatUnreadTracker,
     );
+    this.chatUnreadPoll = new ChatUnreadPoll({
+      gateway: this.gateway,
+      getServerId: () =>
+        this.session?.serverId ??
+        this.gateway.getBoundServerId() ??
+        this.session?.player?.server_id ??
+        0,
+      getGuildId: () => this.social.getGuildId(),
+      tracker: this.chatUnreadTracker,
+      isPanelVisible: () => this.isAnyPanelVisible(),
+    });
     this.social.attach();
     this.content = new ContentPanels(
       parent,
@@ -386,6 +403,9 @@ export class MainCityScene implements Scene {
           : "背包暂无养成消耗品（将魂碎晶等）";
         this.renderHud();
       },
+      (keys) => {
+        if (keys.length) scheduleHudResourcePulse(this.hud, keys);
+      },
     );
     this.heroMail.attach();
     this.battleReports = new BattleReportPanel(
@@ -412,6 +432,24 @@ export class MainCityScene implements Scene {
         onOpenRelatedDaily: (questCfgId) => {
           this.dailyQuest.openAndFocusQuest(questCfgId);
           this.status = "已打开「日常」并定位对应日课（只读，不自动领奖）";
+          this.renderHud();
+        },
+        getBattleReportLinkContext: () => ({
+          viewerPlayerId: this.session?.player?.player_id,
+          viewerHeroes: this.heroMail.getHeroesSnapshot(),
+        }),
+        onOpenBattleReportHero: (heroId) => {
+          this.heroMail.openAndHighlightHero(heroId);
+          this.status = `已打开「将领」详情 #${heroId}（战报互链）`;
+          this.renderHud();
+        },
+        onOpenBattleReportRank: (playerId) => {
+          this.social.openPowerRankHighlightEntity(playerId);
+          this.status = `已打开「排行」并高亮玩家#${playerId}`;
+          this.renderHud();
+        },
+        onBattleReportReadonlyHint: (message) => {
+          this.status = message;
           this.renderHud();
         },
       },
@@ -527,6 +565,7 @@ export class MainCityScene implements Scene {
       },
     );
     this.world.attach();
+    this.wireSocialRankDeepLinks();
     const skinCenterPrimary = (root: HTMLElement) => skinPrimaryButtons(root, this.assets);
     this.queuePanels = new QueuePanels(
       parent,
@@ -611,6 +650,7 @@ export class MainCityScene implements Scene {
     this.syncMilitaryPanel();
     this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
     void this.hudTodoBadgePoll.pollOnce();
+    void this.chatUnreadPoll.pollOnce();
     void this.refreshMinimapMarches();
     this.syncSlotUpgradeOverlay();
   }
@@ -619,6 +659,7 @@ export class MainCityScene implements Scene {
     if (!this.session) return;
     this.cityStatePoll?.tick(dt);
     this.hudTodoBadgePoll?.tick(dt);
+    this.chatUnreadPoll?.tick(dt);
     this.marchArrivalPoll?.tick(dt);
     this.minimapMarchRefreshAccum += dt;
     if (this.minimapMarchRefreshAccum >= MINIMAP_MARCH_REFRESH_S) {
@@ -664,6 +705,7 @@ export class MainCityScene implements Scene {
   leave(): void {
     this.cityStateFetch?.clear();
     this.hudTodoBadgePoll?.reset();
+    this.chatUnreadPoll?.reset();
     this.buildCompleteTodos.reset();
     this.lastCenterTodoScrollKey = null;
     this.marchArrivalPoll?.reset();
@@ -1178,6 +1220,7 @@ export class MainCityScene implements Scene {
   private isAnyPanelVisible(): boolean {
     if (this.buildingPanel?.isOpen()) return true;
     if (!this.militaryPanel.classList.contains("hidden")) return true;
+    if (this.layoutFrame.querySelector(".social-panel:not(.hidden)") !== null) return true;
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
   }
 
@@ -1327,6 +1370,51 @@ export class MainCityScene implements Scene {
     this.hud.appendChild(btn);
   }
 
+  private wireSocialRankDeepLinks(): void {
+    this.social.setRankDeepLinkHandlers({
+      getViewerHeroIds: async () => {
+        const sid = this.session?.serverId ?? this.gateway.getBoundServerId() ?? 0;
+        if (sid <= 0) return [];
+        try {
+          const res = (await this.gateway.listPlayerHeroes(sid)) as {
+            heroes?: { hero_id?: number }[];
+          };
+          return (res.heroes ?? []).map((h) => h.hero_id ?? 0).filter((id) => id > 0);
+        } catch {
+          return [];
+        }
+      },
+      onOpenHeroDetail: (heroId) => {
+        this.openRankHeroDeepLink(heroId);
+      },
+      onOpenWorldAtGrid: (gridX, gridY) => {
+        this.openWorldFromRankDeepLink(gridX, gridY);
+      },
+      onOpenWorldViewer: () => {
+        this.openWorldFromRankDeepLink(this.session?.cityX ?? Number.NaN, this.session?.cityY ?? Number.NaN);
+      },
+    });
+  }
+
+  private openRankHeroDeepLink(heroId: number): void {
+    this.social.getRankRoot().classList.add("hidden");
+    void this.heroMail.openHeroDetailDeepLink(heroId).then(() => this.renderHud());
+  }
+
+  private openWorldFromRankDeepLink(x: number, y: number): void {
+    this.social.getRankRoot().classList.add("hidden");
+    const root = this.world.getRoot();
+    if (root.classList.contains("hidden")) this.world.toggle();
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      this.world.selectGridAt(x, y);
+      this.focusMinimapOnWorldGrid(x, y);
+      this.status = `世界：已定位格点 (${x},${y})（来自排行）`;
+    } else {
+      this.status = "世界：已打开，可在城池列表或格点信息卡扫读";
+    }
+    this.renderHud();
+  }
+
   private openHudCenterTodoDeepLink(): void {
     const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
     const counts = this.centerTodoCountsFromSnapshot();
@@ -1379,6 +1467,13 @@ export class MainCityScene implements Scene {
     } catch {
       // 战报尚未落库时深链回退为刷新后选最近一条
     }
+  }
+
+  private applyChatUnreadCounts(): void {
+    const summary = this.chatUnreadTracker.getSummary(this.social.getGuildId());
+    this.social.syncChatUnreadBadges(summary);
+    this.updateChatToolbarBadge(summary.total);
+    this.updateGuildToolbarBadge(summary.guild);
   }
 
   private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {
@@ -1634,6 +1729,26 @@ export class MainCityScene implements Scene {
         c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
       }
     }
+  }
+
+  private updateChatToolbarBadge(unreadCount: number): void {
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="chat-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "聊天";
+    setToolbarBadge(
+      btn,
+      unreadCount,
+      unreadCount > 0 ? `${label} · ${unreadCount} 条未读` : "世界/军团聊天",
+    );
+  }
+
+  private updateGuildToolbarBadge(unreadCount: number): void {
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="guild-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "军团";
+    setToolbarBadge(
+      btn,
+      unreadCount,
+      unreadCount > 0 ? `${label} · 军团频道 ${unreadCount} 条未读` : "军团",
+    );
   }
 
   private updateMailToolbarBadge(unreadCount: number): void {

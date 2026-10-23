@@ -10,7 +10,8 @@
 | `res.icon.wood.v1` | HUD 顶栏 DOM 木图标 |
 | `res.icon.iron.v1` | HUD 顶栏 DOM 铁图标 |
 | `res.icon.stone.v1` | HUD 顶栏 DOM 石图标 |
-| `ui.panel.default.v1` | 邮件 / 日常面板根 nine-slice（`artPanelSkin.skinNineSlicePanel`） |
+| `ui.panel.default.v1` | 邮件面板根 nine-slice（`artPanelSkin.skinMailPanel`） |
+| `ui.panel.daily.v1` | 日常面板根（`artPanelSkin.skinDailyPanel`，CLIENT-103） |
 | `ui.panel.hero.v1` | 将领面板根（`artPanelSkin.skinHeroPanel`，CLIENT-062） |
 | `ui.panel.bag.v1` | 背包面板根（`artPanelSkin.skinBagPanel`，CLIENT-062） |
 | `ui.panel.queue.v1` | 队列面板根（`artPanelSkin.skinQueuePanel`，CLIENT-062） |
@@ -249,6 +250,21 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 **wave:19 美术轨旁路**（**非** wave:23 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:23 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
 
 波次总览与 **DOCS-EXIT-015**（[#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) / [#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 23」。
+
+## Wave 24 排行将领日常窄屏巩固（M4 出口 / INTG-021）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-021** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**；募兵队列 **加速**；**永不合并** art hold PR #77/#82/#108/#100/#126。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 排行/将领/日常 manifest** | [手动验收（1280 排行将领日常 CLIENT-103）](#手动验收1280-排行将领日常-client-103)（[#441](https://github.com/anitaguptaoffice/sanguo-slg/issues/441)） | 已合 |
+| **聊天未读与社交角标** | [手动验收（聊天未读与社交角标 CLIENT-102）](#手动验收聊天未读与社交角标-client-102)（[#440](https://github.com/anitaguptaoffice/sanguo-slg/issues/440)） | 进行中 |
+
+**推荐串联**（在 [Wave 23](#wave-23-后勤互链与全链路反馈加深m4-出口--intg-020) 背包商城军团 manifest 基础上）：视口 **1280×720** 双榜 / 将领 / 日常 manifest 与滚动巩固（**CLIENT-103**）；与 **CLIENT-096**～**102** 并行。
+
+### 手动验收（聊天未读与社交角标 CLIENT-102）
+
+`ListChatMessages` 快照 + 本地 `localStorage` 键 **`chat-last-read-ts`** 估算世界/军团频道未读（无服务端 read cursor）。底栏 **「聊天」** 角标为两频道之和，**「军团」** 角标与聊天面板 **军团** tab、军团面板 **军团频道** 入口同步；打开频道并 **滚到底** 后该频道未读清零。单测：`chatUnread.test.ts`（`estimateChatUnread`）、`chatUnreadPoll.test.ts`；与 **CLIENT-077** 顶栏待办角标并存。
 
 ## 网关地址
 
@@ -697,7 +713,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（军事 manifest CLIENT-036）
 
-`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；**世界/排行** 用 `ui.panel.world.v1` / `ui.panel.rank.v1`（CLIENT-078）；**邮件/日常** 中心根用 `ui.panel.default.v1`（`skinMailPanel` / `skinDailyPanel`，CLIENT-070 窄屏滚动与 CLIENT-062 同级接线）。`data-art-skin="off"` 可跳过 nine-slice。
+`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；**世界/排行** 用 `ui.panel.world.v1` / `ui.panel.rank.v1`（CLIENT-078）；**邮件** 用 `ui.panel.default.v1`（`skinMailPanel`，CLIENT-070）；**日常** 用 `ui.panel.daily.v1`（`skinDailyPanel`，CLIENT-103）；**商城/军团/聊天** 用 `ui.panel.shop.v1` / `guild.v1` / `chat.v1`（CLIENT-095）。`data-art-skin="off"` 可跳过 nine-slice。
 
 1. `make dev` 打开 **「军事」** / **「行军」** / **「队列」**：面板根应出现军事九宫格背景（与 `docs/art/samples/client-033/` 1600×900 样张一致）。
 2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
@@ -733,7 +749,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（1280 军事/邮件/日常 CLIENT-070）
 
-`#layout-frame.layout-narrow` 下 **军事**（`data-center-panel="military"` + `ui.panel.military.v1`）、**邮件**、**日常** 根节点 nine-slice 与 CLIENT-062 将领/背包/队列同级；邮件/日常仍用 `ui.panel.default.v1`（`skinMailPanel` / `skinDailyPanel`）。募兵/出征主按钮 hit 区与 **CLIENT-033** hotfix **并存**；`data-art-skin="off"` 可跳过纸底。
+`#layout-frame.layout-narrow` 下 **军事**（`data-center-panel="military"` + `ui.panel.military.v1`）、**邮件** 根节点 nine-slice 与 CLIENT-062 将领/背包/队列同级；邮件仍用 `ui.panel.default.v1`（`skinMailPanel`）；日常见 **CLIENT-103** `ui.panel.daily.v1`。募兵/出征主按钮 hit 区与 **CLIENT-033** hotfix **并存**；`data-art-skin="off"` 可跳过纸底。
 
 1. 视口 **1280×720**，`make dev` 进主城：依次打开 **军事**、**邮件**、**日常**；面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
 2. 军事表单在 `.panel-scroll-body` 内滚动，**募兵** / **出征攻击** 主按钮可滚至可见且可点；邮件长列表与详情（含 **领取附件**）、日常任务列表与 **前往下一步** 在 `layout-narrow` 下 **`overflow-y: auto`**，底栏 56px 工具条不遮挡末行操作。
@@ -768,6 +784,16 @@ cd client && npm install && npm run dev
 3. **CLIENT-092** 缺口条（`bag-wallet-gap` / `shop-wallet-gap`）与 **CLIENT-084** 军团 **提到** 按钮在窄屏 **无横向溢出**（`wallet-gap-line` `overflow-wrap` + 成员行 `flex-wrap`）。
 4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；四面板 manifest 与 **CLIENT-062/079/084** 表现不退化。
 5. 单测：`artPanelSkin.test.ts`（CLIENT-095 manifest 映射）、`contentPanelScroll.test.ts`（`shop` / `guild` / `chat` id）、`layoutViewport.test.ts`（窄屏注册表）、`ContentPanels` / `SocialPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
+
+### 手动验收（1280 排行将领日常 CLIENT-103）
+
+`#layout-frame.layout-narrow` 下 **排行**（`data-center-panel="rank"` + **`ui.panel.rank.v1`**）、**将领**（`data-center-panel="hero"` + **`ui.panel.hero.v1`**）、**日常**（`data-center-panel="daily"` + **`ui.panel.daily.v1`**）根节点 nine-slice 与 CLIENT-095/078 同级；`skinRankPanel` / `skinHeroPanel` / `skinDailyPanel` 接线。`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **排行**、**将领**、**日常**；面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 双榜切换与排行表、将领列表/详情、日常任务长表在 `.panel-scroll-body` 内 **`overflow-y: auto`** 滚动；底栏 56px 工具条不遮挡 **刷新排行榜** / **招募** / **领奖** / **定位首条**（CLIENT-091）。
+3. **CLIENT-096** `rank-viewer-bar` 钉选行、**CLIENT-091** 可领取 **定位首条**、**CLIENT-102** 底栏 `toolbar-badge` 在窄屏 **无横向溢出**（`overflow-wrap` / `flex-wrap`）。
+4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-078/091** 表现不退化。
+5. 单测：`artPanelSkin.test.ts`（CLIENT-103 manifest 映射）、`contentPanelScroll.test.ts`（`rank` / `hero` / `daily` id）、`layoutViewport.test.ts`（窄屏注册表）、`SocialPanels` / `HeroMailPanels` / `DailyQuestPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
@@ -849,7 +875,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
 
-1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。
+1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。**CLIENT-097**：点击榜单行 — 战力榜己方行打开将领详情（`GetHeroDetail`），他人行状态栏提示只读；资源榜有格点字段时打开世界信息卡，否则只读摘要弹层。
 2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行职务 chip + `player_id` 截断与加入时间摘要（CLIENT-101）。
 3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
 4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。

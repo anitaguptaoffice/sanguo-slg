@@ -17,7 +17,6 @@ import {
   formatHeroLine,
   formatMailClaimGrantedSummary,
   filterHeroCultivationBagItemIds,
-  formatRecruitSuccessStatus,
   heroListLines,
   mergeRecruitTemplateOwnership,
   parseGetHeroDetailResponse,
@@ -64,6 +63,24 @@ import {
   recruitAffordabilityForTemplate,
   setRecruitAffordabilityErrorDisplay,
 } from "@/net/recruitAffordability";
+import {
+  buildRecruitSuccessFeedback,
+  resolveRecruitSubmitPhase,
+  setRecruitSuccessToastDisplay,
+  syncRecruitSubmitButton,
+  walletMaterialDeductPulseKeys,
+} from "@/net/recruitSubmitFeedback";
+import {
+  pickRestoredHeroId,
+  readHeroDetailSelectedSession,
+  writeHeroDetailSelectedSession,
+} from "@/net/heroDetailSelectedSession";
+import {
+  scheduleHeroListRefreshPulse,
+  scrollHeroListRowIntoView,
+  setHeroListFormErrorDisplay,
+  syncHeroListRefreshButton,
+} from "@/net/heroListRefreshFeedback";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -81,6 +98,10 @@ export class HeroMailPanels {
   private recruitPool = "standard";
   private claimMailInflight = 0;
   private mailBatchSelected = new Set<number>();
+  private recruitHeroInflight = false;
+  private recruitLastError: string | null = null;
+  private recruitLastSuccessHeroId: number | null = null;
+  private heroesRefreshInflight = false;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -94,6 +115,7 @@ export class HeroMailPanels {
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
     private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
     private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
+    private readonly onRecruitMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
   ) {}
 
   attach(): void {
@@ -196,8 +218,26 @@ export class HeroMailPanels {
     this.heroPanel.classList.toggle("hidden");
     if (!this.heroPanel.classList.contains("hidden")) {
       void this.refreshRecruitTemplates();
-      void this.refreshHeroes();
+      void this.refreshHeroes({ restoreSelection: true });
     }
+  }
+
+  /** CLIENT-097：排行深链 — 打开将领面板并 GetHeroDetail（只读）。 */
+  async openHeroDetailDeepLink(heroId: number): Promise<void> {
+    this.mailPanel.classList.add("hidden");
+    this.heroPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.heroPanel);
+    if (!this.heroes.length) await this.refreshHeroes();
+    let id = heroId;
+    if (id <= 0) {
+      id = this.heroes.find((h) => (h.hero_id ?? 0) > 0)?.hero_id ?? 0;
+    }
+    if (id <= 0) {
+      this.renderHeroList();
+      this.onStatus("暂无将领可查看");
+      return;
+    }
+    await this.loadHeroDetail(id);
   }
 
   isMailOpen(): boolean {
@@ -230,6 +270,25 @@ export class HeroMailPanels {
     this.mailFilter = MAIL_INBOX_FILTER_ALL;
     if (mailId > 0) this.selectedMailId = mailId;
     void this.refreshMail().then(() => this.focusHighlightedMail(mailId));
+  }
+
+  /** 战报深链：打开将领面板并加载详情（CLIENT-100）。 */
+  openAndHighlightHero(heroId: number): void {
+    if (!heroId) return;
+    this.heroPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.heroPanel);
+    this.selectedHeroId = heroId;
+    void this.refreshHeroes().then(() => {
+      void this.loadHeroDetail(heroId).then(() => {
+        const row = this.heroPanel.querySelector(`li[data-hero-id="${heroId}"]`);
+        row?.scrollIntoView?.({ block: "nearest" });
+      });
+    });
+  }
+
+  /** 将领列表快照（战报互链等只读用途，不发 RPC）。 */
+  getHeroesSnapshot(): HeroSummary[] {
+    return [...this.heroes];
   }
 
   private async focusHighlightedMail(mailId: number): Promise<void> {
@@ -331,12 +390,17 @@ export class HeroMailPanels {
       <h3>将领</h3>
       <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
       <button type="button" data-action="refresh-heroes">刷新列表</button>
+      <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <button type="button" data-action="refresh-templates">刷新招募模板</button>
       <label>招募模板
         <select data-field="template-select"><option value="">（先刷新模板）</option></select>
       </label>
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
       <button type="button" data-action="recruit-hero">招募</button>
+      <p class="recruit-success-toast hidden" data-role="recruit-success-toast" role="status">
+        <span data-role="recruit-success-msg"></span>
+        <button type="button" class="hidden" data-action="recruit-open-hero-detail">打开详情</button>
+      </p>
       <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
@@ -491,18 +555,27 @@ export class HeroMailPanels {
     this.renderHeroList();
   }
 
+  private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
+    return resolveRecruitSubmitPhase({
+      inflight: this.recruitHeroInflight,
+      lastError: this.recruitLastError,
+      lastSuccessHeroId: this.recruitLastSuccessHeroId,
+    });
+  }
+
   private syncRecruitButtonState(templateRow: RecruitTemplatePreview | undefined): void {
-    const btn = this.heroPanel.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement | null;
-    if (!btn) return;
     if (!templateRow) {
-      btn.disabled = true;
+      syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
       return;
     }
     const { wallet, bag } = this.sessionEconomy();
     const afford = compareRecruitAffordability(wallet, templateRow, bag);
-    btn.disabled = !afford.canAfford;
-    setRecruitAffordabilityErrorDisplay(this.heroPanel, afford.insufficientReason);
+    syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), afford.canAfford);
+    if (!this.recruitHeroInflight) {
+      const inlineError = this.recruitLastError?.trim() || afford.insufficientReason || null;
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, inlineError);
+    }
   }
 
   private setMailFilterButtons(): void {
@@ -608,7 +681,14 @@ export class HeroMailPanels {
     }
   }
 
-  private async refreshHeroes(): Promise<void> {
+  private async refreshHeroes(opts?: {
+    restoreSelection?: boolean;
+    pulseOnSuccess?: boolean;
+  }): Promise<void> {
+    if (this.heroesRefreshInflight) return;
+    this.heroesRefreshInflight = true;
+    syncHeroListRefreshButton(this.heroPanel, true);
+    setHeroListFormErrorDisplay(this.heroPanel, null);
     const sid = this.serverId();
     this.onStatus("拉取将领…");
     try {
@@ -617,17 +697,43 @@ export class HeroMailPanels {
         total_count?: number;
       };
       this.heroes = res.heroes ?? [];
+      if (opts?.restoreSelection) {
+        const stored = readHeroDetailSelectedSession();
+        const pick = pickRestoredHeroId(this.heroes, stored);
+        if (pick) this.selectedHeroId = pick;
+      } else if (
+        this.selectedHeroId > 0 &&
+        !this.heroes.some((h) => h.hero_id === this.selectedHeroId)
+      ) {
+        this.selectedHeroId = 0;
+        this.heroDetail = null;
+      }
       this.renderHeroList();
       this.renderTemplateList();
+      if (opts?.restoreSelection && this.selectedHeroId > 0) {
+        await this.loadHeroDetail(this.selectedHeroId);
+        scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+      }
+      if (opts?.pulseOnSuccess) {
+        scheduleHeroListRefreshPulse(
+          this.heroPanel.querySelector('[data-role="hero-list"]') as HTMLElement | null,
+        );
+      }
       this.onStatus(`将领 ${this.heroes.length}/${res.total_count ?? this.heroes.length} 名`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      setHeroListFormErrorDisplay(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.heroesRefreshInflight = false;
+      syncHeroListRefreshButton(this.heroPanel, false);
     }
   }
 
   private async loadHeroDetail(heroId: number): Promise<void> {
     const sid = this.serverId();
     this.selectedHeroId = heroId;
+    writeHeroDetailSelectedSession(heroId);
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
@@ -701,6 +807,7 @@ export class HeroMailPanels {
   }
 
   private async recruitHero(): Promise<void> {
+    if (this.recruitHeroInflight) return;
     const sid = this.serverId();
     const tpl = this.selectedTemplateId;
     const itemId = this.recruitItemId;
@@ -709,6 +816,7 @@ export class HeroMailPanels {
       this.onStatus("请先刷新并选择招募模板");
       return;
     }
+    const walletBefore = this.sessionEconomy().wallet;
     const { wallet, bag } = this.sessionEconomy();
     const afford = compareRecruitAffordability(wallet, templateRow ?? {}, bag);
     if (!afford.canAfford) {
@@ -717,12 +825,16 @@ export class HeroMailPanels {
       return;
     }
     setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
+    setRecruitSuccessToastDisplay(this.heroPanel, null);
     let dailyBefore: DailyQuestRow | null = null;
     try {
       dailyBefore = await this.fetchDailyRecruitRow();
     } catch {
       /* 日常列表失败不阻断招募 */
     }
+    this.recruitHeroInflight = true;
+    this.recruitLastError = null;
+    this.syncRecruitButtonState(templateRow);
     this.onStatus(`招募模板 ${tpl}…`);
     try {
       const res = (await this.gateway.recruitHero(sid, tpl, {
@@ -735,12 +847,20 @@ export class HeroMailPanels {
         loyalty?: number;
       };
       await this.syncEconomyAfterRecruit();
+      const walletAfter = this.sessionEconomy().wallet;
+      const pulseKeys = walletMaterialDeductPulseKeys(
+        walletBefore,
+        walletAfter,
+        templateRow?.recruit_cost,
+      );
+      if (pulseKeys.length) this.onRecruitMaterialPulse?.(pulseKeys);
       await this.refreshHeroes();
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
         await this.loadHeroDetail(res.hero_id);
       }
-      let status = formatRecruitSuccessStatus(res, templateRow);
+      const feedback = buildRecruitSuccessFeedback(res, templateRow);
+      let status = feedback.statusText;
       try {
         const dailyAfter = await this.fetchDailyRecruitRow();
         if (shouldPromptDailyRecruitAfterRecruit(dailyBefore, dailyAfter)) {
@@ -750,12 +870,21 @@ export class HeroMailPanels {
       } catch {
         /* 忽略日常刷新失败 */
       }
+      this.recruitLastSuccessHeroId = res.hero_id ?? null;
+      this.recruitLastError = null;
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
+      setRecruitSuccessToastDisplay(this.heroPanel, { ...feedback, statusText: status });
       this.onStatus(status);
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      this.recruitLastError = msg;
+      this.recruitLastSuccessHeroId = null;
+      setRecruitSuccessToastDisplay(this.heroPanel, null);
       this.onStatus(msg);
       setRecruitAffordabilityErrorDisplay(this.heroPanel, msg);
+    } finally {
+      this.recruitHeroInflight = false;
+      this.syncRecruitButtonState(this.selectedRecruitTemplateRow());
     }
   }
 
@@ -998,9 +1127,14 @@ export class HeroMailPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-heroes") void this.refreshHeroes();
+    if (a === "refresh-heroes") void this.refreshHeroes({ pulseOnSuccess: true });
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "recruit-hero") void this.recruitHero();
+    if (a === "recruit-open-hero-detail") {
+      const heroId = Number(btn.getAttribute("data-hero-id"));
+      if (heroId > 0) void this.loadHeroDetail(heroId);
+      return;
+    }
     if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
     if (a === "hero-related-items") void this.openRelatedCultivationItems();
   }
