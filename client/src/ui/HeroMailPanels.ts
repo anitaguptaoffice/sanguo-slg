@@ -242,6 +242,25 @@ export class HeroMailPanels {
     void this.refreshMail().then(() => this.focusHighlightedMail(mailId));
   }
 
+  /** 战报深链：打开将领面板并加载详情（CLIENT-100）。 */
+  openAndHighlightHero(heroId: number): void {
+    if (!heroId) return;
+    this.heroPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.heroPanel);
+    this.selectedHeroId = heroId;
+    void this.refreshHeroes().then(() => {
+      void this.loadHeroDetail(heroId).then(() => {
+        const row = this.heroPanel.querySelector(`li[data-hero-id="${heroId}"]`);
+        row?.scrollIntoView?.({ block: "nearest" });
+      });
+    });
+  }
+
+  /** 将领列表快照（战报互链等只读用途，不发 RPC）。 */
+  getHeroesSnapshot(): HeroSummary[] {
+    return [...this.heroes];
+  }
+
   private async focusHighlightedMail(mailId: number): Promise<void> {
     if (mailId <= 0 || !this.mails.some((m) => m.mail_id === mailId)) return;
     await this.openMail(mailId);
