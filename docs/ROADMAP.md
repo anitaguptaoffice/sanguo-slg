@@ -423,20 +423,20 @@ H5 人工验收与 **INTG-022** 网关冒烟对齐，见 [client/README.md](../c
 
 ## Wave 26 H5 背包商城·招募养成·出征募兵反馈加深 — **规划中**
 
-**策略**：在 wave:25 **主城建造/队列互跳 / 邮件 HUD 待办 / 世界读图 / 军情战报筛选 / ART-CHROME-006 / 1280 主城邮件队列 manifest** 收口后，**轮转**加深尚未同题堆叠的 **背包/商城购买与消耗提交脉冲**、**将领招募与养成道具可读执行**、**出征/募兵提交反馈巩固**、**ART-TOOLBAR-ICONS-007 底栏四态运行时接线**（工程挂载 [#482](https://github.com/anitaguptaoffice/sanguo-slg/pull/482) `f1a3888a`；**不**合并 [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) Draft）与 **1280 背包/商城/招募/军事 manifest**；网关 **INTG-023** 复跑 smoke（`ListPlayerBag` 堆叠 + 可选 `PurchaseShopOffer` + `GetHeroDetail` level/loyalty + optional `RecruitTroop` + `ListMarches` phase）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync`）。
+**策略**：在 wave:25 **主城建造/队列互跳 / 邮件 HUD 待办 / 世界读图 / 军情战报筛选 / ART-CHROME-006 / 1280 主城邮件队列 manifest** 收口后，**轮转**加深尚未同题堆叠的 **背包/商城购买与消耗提交脉冲**、**将领招募与养成道具可读执行**、**出征/募兵提交反馈巩固**、**ART-TOOLBAR-ICONS-007 底栏四态运行时接线**（工程挂载 [#482](https://github.com/anitaguptaoffice/sanguo-slg/pull/482) `f1a3888a`；**不**合并 [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) Draft）与 **1280 背包/商城/招募/军事 manifest**；网关 **INTG-023** 复跑 smoke（`ListPlayerBag` 堆叠 + 可选 `PurchaseShopOffer` + `GetHeroDetail` level/loyalty + optional `RecruitTroop` + `ListMarches` phase）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划 [#484](https://github.com/anitaguptaoffice/sanguo-slg/pull/484)（`90cef893`）；Issue 映射随 `tasks_sync`（#486–#495）。
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| （待 sync） | CLIENT-112 | 待开工 | — |
-| （待 sync） | CLIENT-113 | 待开工 | — |
-| （待 sync） | CLIENT-114 | 待开工 | — |
-| （待 sync） | CLIENT-115 | 待开工 | — |
-| （待 sync） | CLIENT-116 | 待开工 | — |
-| （待 sync） | CLIENT-117 | 待开工 | — |
-| （待 sync） | CLIENT-118 | 待开工 | — |
-| （待 sync） | CLIENT-119 | 待开工 | — |
-| （待 sync） | INTG-023 | 待开工 | — |
-| （待 sync） | DOCS-EXIT-018 | 阻塞（`blocked_until: INTG-023` + 本波全部 CLIENT） | — |
+| [#486](https://github.com/anitaguptaoffice/sanguo-slg/issues/486) | CLIENT-112 | 规划中 | — |
+| [#487](https://github.com/anitaguptaoffice/sanguo-slg/issues/487) | CLIENT-113 | 规划中 | — |
+| [#488](https://github.com/anitaguptaoffice/sanguo-slg/issues/488) | CLIENT-114 | 规划中 | — |
+| [#489](https://github.com/anitaguptaoffice/sanguo-slg/issues/489) | CLIENT-115 | 规划中 | — |
+| [#490](https://github.com/anitaguptaoffice/sanguo-slg/issues/490) | CLIENT-116 | 规划中 | — |
+| [#491](https://github.com/anitaguptaoffice/sanguo-slg/issues/491) | CLIENT-117 | 规划中 | — |
+| [#492](https://github.com/anitaguptaoffice/sanguo-slg/issues/492) | CLIENT-118 | 规划中 | — |
+| [#493](https://github.com/anitaguptaoffice/sanguo-slg/issues/493) | CLIENT-119 | 规划中 | — |
+| [#494](https://github.com/anitaguptaoffice/sanguo-slg/issues/494) | INTG-023 | 规划中 | — |
+| [#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) | DOCS-EXIT-018 | 待依赖 | — |
 
 **并行建议**：CLIENT-112～119 与 INTG-023 可并行；DOCS-EXIT-018 在 INTG-023 与本波 CLIENT-112～119 全部合并后放开。CLIENT-112/113 与经济面板同域、CLIENT-114/115 与将领面板同域、CLIENT-116/117 与军事面板同域、CLIENT-118 与 HUD chrome 同域、CLIENT-119 与多面板 manifest 同域，建议不同 PR 避免冲突。
 
