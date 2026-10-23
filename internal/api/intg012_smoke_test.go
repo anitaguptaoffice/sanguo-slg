@@ -62,7 +62,7 @@ func runINTG012Wave15Smoke(t *testing.T) {
 	baseSnap := runData002M4Steps(t, ctx, c, apiSrv, pool, sid, playerID)
 	ext := runINTG008DeepenSteps(t, ctx, c, apiSrv, pool, sid, playerID, baseSnap)
 	marchID := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
-	smokeINTG012ListBattleReportsGateway(t, c, sid, playerID)
+	_ = smokeINTG012ListBattleReportsGateway(t, c, sid, playerID)
 
 	speedupUsed := smokeINTG011BuildSpeedupGateway(t, ctx, c, apiSrv, sid, playerID)
 	smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
@@ -181,7 +181,8 @@ func smokeINTG012MailIsRead(m *contentv1.PlayerMail) bool {
 }
 
 // smokeINTG012ListBattleReportsGateway lists battle reports after march; empty dev inbox logs a hint only.
-func smokeINTG012ListBattleReportsGateway(t *testing.T, c *websocket.Conn, sid string, playerID int64) {
+// Returns the first report_id when present, else 0 (INTG-013 may call GetBattleReport on it).
+func smokeINTG012ListBattleReportsGateway(t *testing.T, c *websocket.Conn, sid string, playerID int64) int64 {
 	t.Helper()
 	const limit = 10
 	smokeStep(t, fmt.Sprintf("INTG-012 MIL: gateway ListBattleReports limit=%d after StartMarch+ListMarches", limit))
@@ -198,7 +199,7 @@ func smokeINTG012ListBattleReportsGateway(t *testing.T, c *websocket.Conn, sid s
 	}
 	if out.GetTotal() < 1 || len(out.GetReports()) == 0 {
 		t.Logf("INTG-012: dev empty battle reports player_id=%d total=%d (march may still be in transit; advance clock or wait arrive — see tools/smoke/README.md)", playerID, out.GetTotal())
-		return
+		return 0
 	}
 	for i, row := range out.GetReports() {
 		if row.GetReportId() == 0 {
@@ -211,7 +212,9 @@ func smokeINTG012ListBattleReportsGateway(t *testing.T, c *websocket.Conn, sid s
 			intg012Failf(t, "battle report shape", "report_id=%d outcome=%d", row.GetReportId(), row.GetOutcome())
 		}
 	}
-	t.Logf("INTG-012: ListBattleReports ok player_id=%d total=%d first_report_id=%d", playerID, out.GetTotal(), out.GetReports()[0].GetReportId())
+	firstID := out.GetReports()[0].GetReportId()
+	t.Logf("INTG-012: ListBattleReports ok player_id=%d total=%d first_report_id=%d", playerID, out.GetTotal(), firstID)
+	return firstID
 }
 
 func intg012Failf(t *testing.T, step string, format string, args ...any) {
