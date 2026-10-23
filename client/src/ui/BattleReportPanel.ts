@@ -1,15 +1,25 @@
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
-  battleReportListLines,
+  battleReportOutcomeChipClass,
+  battleReportOutcomeChipLabel,
   filterBattleReportsByOutcome,
   formatBattleReportDetail,
+  formatBattleReportFoeSummary,
   formatBattleRoundLine,
-  formatReportLine,
+  formatTimeMs,
   type BattleReportDetailView,
   type BattleReportOutcomeFilter,
   type BattleReportSummary,
 } from "@/net/militaryFormat";
+import {
+  BATTLE_REPORT_FILTER_EMPTY_TEXT,
+  battleReportFilterEmptyClass,
+  battleReportListEmptyClass,
+  battleReportListEmptyMessage,
+  battleReportListErrorClass,
+  battleReportListErrorListHint,
+} from "@/net/panelDensity";
 
 const PAGE_LIMIT = 20;
 
@@ -140,7 +150,16 @@ export class BattleReportPanel {
     }
 
     ul.innerHTML = "";
-    if (this.listError || this.listLoading) {
+    if (this.listLoading) {
+      this.renderDetail();
+      return;
+    }
+
+    if (this.listError) {
+      const li = document.createElement("li");
+      li.className = battleReportListErrorClass();
+      li.textContent = battleReportListErrorListHint();
+      ul.appendChild(li);
       this.renderDetail();
       return;
     }
@@ -148,7 +167,8 @@ export class BattleReportPanel {
     const filtered = this.visibleReports();
     if (!this.reports.length) {
       const li = document.createElement("li");
-      li.textContent = battleReportListLines([])[0];
+      li.className = battleReportListEmptyClass();
+      li.textContent = battleReportListEmptyMessage();
       ul.appendChild(li);
       this.renderDetail();
       return;
@@ -156,7 +176,8 @@ export class BattleReportPanel {
 
     if (!filtered.length) {
       const li = document.createElement("li");
-      li.textContent = "（当前筛选下暂无战报，可切换「全部」或加载更多）";
+      li.className = battleReportFilterEmptyClass();
+      li.textContent = BATTLE_REPORT_FILTER_EMPTY_TEXT;
       ul.appendChild(li);
       this.renderDetail();
       return;
@@ -164,11 +185,24 @@ export class BattleReportPanel {
 
     for (const r of filtered) {
       const li = document.createElement("li");
-      li.textContent = formatReportLine(r);
+      const chip = document.createElement("span");
+      chip.className = `battle-outcome-chip ${battleReportOutcomeChipClass(r.outcome)}`;
+      chip.textContent = battleReportOutcomeChipLabel(r.outcome);
+      const body = document.createElement("span");
+      body.className = "battle-report-row-body";
+      const foe = document.createElement("span");
+      foe.className = "battle-report-row-foe";
+      foe.textContent = formatBattleReportFoeSummary(r);
+      const when = document.createElement("span");
+      when.className = "battle-report-row-time";
+      when.textContent = formatTimeMs(r.created_at_ms);
+      body.appendChild(foe);
+      body.appendChild(when);
+      li.appendChild(chip);
+      li.appendChild(body);
       const id = r.report_id ?? 0;
       if (id) {
         li.setAttribute("data-report-id", String(id));
-        li.style.cursor = "pointer";
         if (id === this.selectedReportId) li.classList.add("selected");
       }
       ul.appendChild(li);

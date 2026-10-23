@@ -28,7 +28,7 @@ import {
 describe("heroMailState", () => {
   it("shows empty placeholders", () => {
     expect(heroListLines([])).toEqual(["（尚无将领，可尝试招募）"]);
-    expect(mailListLines([])[0]).toContain("收件箱为空");
+    expect(mailListLines([])[0]).toContain("暂无邮件");
   });
 
   it("formats hero and mail lines", () => {

@@ -33,7 +33,7 @@ describe("HeroMailPanels", () => {
     mount.querySelector('[data-action="refresh-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     const ul = mount.querySelector('[data-role="mail-list"]');
-    expect(ul?.textContent).toContain("收件箱为空");
+    expect(ul?.textContent).toContain("暂无邮件");
   });
 
   it("opening unread mail calls MarkPlayerMailRead", async () => {
