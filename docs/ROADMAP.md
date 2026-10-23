@@ -161,6 +161,26 @@ H5 人工验收与 INTG-010 路径对齐，见 [client/README.md](../client/READ
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权；行军 **取消/加速**（`CancelMarch` 等，需未来 contract 卡，当前 `military.v1` 无 RPC）。
 
+## Wave 14 H5 日常与队列闭环 — **进行中**
+
+**策略**：在 wave:13 **队列/经济/社交/招募日常** 之上，让 **建造加速符（2003）真实缩短 domestic 队列**、加深 **chain 400 练兵/建造/战备日常引导**、**行军结束→战报** 提示与 **HUD 待办徽章**；网关 **INTG-011** 复跑 smoke。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速（无 RPC）。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| （待 sync） | DOM-003 | 待开工 | — |
+| （待 sync） | CLIENT-024 | 待开工 | — |
+| （待 sync） | CLIENT-025 | 待开工 | — |
+| （待 sync） | CLIENT-026 | 阻塞（`blocked_until: DOM-003`） | — |
+| （待 sync） | CLIENT-027 | 阻塞（`blocked_until: CLIENT-025`） | — |
+| （待 sync） | INTG-011 | 阻塞（`blocked_until: DOM-003`） | — |
+| （待 sync） | DOCS-EXIT-006 | 阻塞（`blocked_until: INTG-011`） | — |
+
+波次 backlog 规划见 wave:14 backlog PR（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync`）。
+
+**并行建议**：DOM-003 与 CLIENT-024/025 可并行；CLIENT-026 / INTG-011 在 DOM-003 合并后放开；CLIENT-027 在 CLIENT-025 合并后放开；DOCS-EXIT-006 在 INTG-011 后收口。
+
+**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。

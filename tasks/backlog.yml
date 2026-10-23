@@ -6,6 +6,7 @@
 # wave:8「M3/M4 出口加固」：在 wave7 与 WIRE-001 / CLIENT-ART-INTG 合并后验收 ROADMAP 仍开着的缺口。
 # wave:11「H5 日常环」：在 DATA-002 子集上加深客户端可玩路径，不开 DATA-003 / cfg_act*。
 # wave:13「H5 闭环加深」：队列/经济/社交只读 UI + INTG-010 冒烟；仍 core-subset-first，无 CancelMarch（契约未定义）。
+# wave:14「H5 日常与队列闭环」：加速符真实缩短建造队列、日常 train/build/战备引导、行军→战报反馈与 HUD 待办；仍 DATA-002，无 CancelMarch。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -1599,7 +1600,7 @@
   wave: 13
   domain: client
   depends_on: [CLIENT-011, CLIENT-003, CLIENT-018]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1621,7 +1622,7 @@
   wave: 13
   domain: client
   depends_on: [CLIENT-010, CLIENT-018]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1641,7 +1642,7 @@
   wave: 13
   domain: client
   depends_on: [CLIENT-004, CLIENT-006]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1661,7 +1662,7 @@
   wave: 13
   domain: client
   depends_on: [CLIENT-006, CLIENT-004]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1681,7 +1682,7 @@
   wave: 13
   domain: client
   depends_on: [CLIENT-014, CLIENT-009, CLIENT-010]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1701,7 +1702,7 @@
   wave: 13
   domain: platform
   depends_on: [INTG-009]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -1724,8 +1725,8 @@
   wave: 13
   domain: platform
   depends_on: [INTG-010, CLIENT-019, CLIENT-020]
-  blocked_until: [INTG-010]
-  sync_status: blocked
+  blocked_until: []
+  sync_status: done
   size: S
   owner_dir: docs
   scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
@@ -1737,5 +1738,156 @@
     - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；行军取消/加速仍 out（无 RPC）
   body: |
     文档 only。INTG-010 合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR。
+
+- id: DOM-003
+  title: 建造队列加速符对接 domestic finish_at
+  wave: 14
+  domain: domestic
+  depends_on: [DOM-002, CONTENT-002]
+  sync_status: ready
+  size: M
+  owner_dir: internal/domestic
+  scope:
+    - internal/domestic/**
+    - internal/api/content_handlers.go
+    - internal/api/domestic_handlers.go
+    - internal/api/domestic_handlers_test.go
+  out_of_scope: [internal/military/**, internal/shop/**, client/**, spec/**]
+  acceptance:
+    - "UseConsumable 对 item_type=2（如 speedup_5m / item_cfg_id=2003）在玩家有进行中建造队列时，将当前 active 或最早到期的 build job FinishAt 向前缩短 min(speedup_sec, 剩余秒数)，并同步 GetCityState 中对应 upgrade_finish_at_ms"
+    - 无进行中建造时仍返回成功消耗与 speedup_seconds（与现网占位一致），单测注明不报错
+    - 幂等：同一道具一次请求只缩短一次；扣道具仍走 content 包
+    - api 仅在 content_handlers 成功 Use 后薄调用 domestic.Hub；不改募兵队列、不改 spec/proto
+    - 单测覆盖：排队升级 → Use speedup → FinishAt 减少且不低于 now
+  body: |
+    wave:13 客户端已展示加速符文案，但 domestic 未消费 speedup。本卡让 DATA-002 已有 2003 对建造队列产生真实反馈。
+
+    禁止扩 item 行数；募兵加速留待未来 contract+军事卡。与 CLIENT-026 并行开工前 CLIENT 可先做 UI 占位。
+
+- id: CLIENT-024
+  title: 日常练兵/建造/战备任务引导（chain 400 多类型）
+  wave: 14
+  domain: client
+  depends_on: [CLIENT-009, CLIENT-019, CLIENT-020]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 日常列表行展示 objective 类型标签（采集/招募/练兵/建造/使用道具）与 cfg code；进度 current/target 与 QUEST-003 挂钩一致
+    - 选中未完成日常时展示「下一步」提示：train_troops → 打开队列/军事募兵；build_level → 打开主城升级；use_item（march_ration）→ 背包筛选并高亮 item_cfg_id=2020（或 DATA-002 映射）
+    - 不暴露 ReportQuestProgress 给 chain 400；领奖后刷新 HUD 与 CLIENT-018 飘字
+    - 单测覆盖 objective 标签映射；npm test 绿；client/README.md 增补 daily_train_1 / daily_build_1 / daily_march_1 手动步骤
+  body: |
+    QUEST-003 已在服务端推进 train/build/use_item；H5 仍偏 food/recruit。加深 wave:11/13 日常环可读与导航。
+
+    仅 client/**。与 CLIENT-025～027、DOM-003 并行（‖）。禁止 DATA-003 / cfg_act*。
+
+- id: CLIENT-025
+  title: 行军到达与战报未读提示
+  wave: 14
+  domain: client
+  depends_on: [CLIENT-013, CLIENT-012]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - ListMarches 轮询检测 phase 从 marching→arrived/returning 或行军列表项消失且最近有 StartMarch：状态栏提示「行军结束，查看战报」
+    - 底栏「战报」入口显示未读计数（本地 session：自上次打开战报面板以来新增的 report_id）；打开面板清零
+    - 提示可点击跳转战报列表；募兵/出征表单不退化
+    - 单测覆盖 phase 变化检测与未读计数；npm test 绿
+  body: |
+    wave:12 行军列表与战报筛选已合；本卡连接军事闭环反馈，不新 RPC、不做 CancelMarch。
+
+    仅 client/**。与 CLIENT-024 等并行（‖）。
+
+- id: CLIENT-026
+  title: 队列面板建造加速符使用
+  wave: 14
+  domain: client
+  depends_on: [CLIENT-019, CLIENT-020, DOM-003]
+  blocked_until: [DOM-003]
+  sync_status: blocked
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 队列面板对进行中建造行提供「使用短促工符」：调用 UseConsumable item_cfg_id=2003（数量 1），展示返回 effect_summary / speedup_seconds
+    - 成功后刷新 GetCityState 与队列剩余时间（upgrade_finish_at_ms 应缩短，依赖 DOM-003）
+    - 无建造进行中或道具不足时按钮禁用或展示错误 msg；不扩新道具 cfg
+    - npm test 绿；client/README.md 增补队列加速手动验收
+  body: |
+    依赖 DOM-003 服务端真实缩短 finish_at。编排者在 DOM-003 合并后将本卡 sync_status 改为 ready。
+
+    仅 client/**。募兵队列加速仍 out of scope。
+
+- id: CLIENT-027
+  title: HUD 待办徽章（邮件/日常/战报）
+  wave: 14
+  domain: client
+  depends_on: [CLIENT-017, CLIENT-009, CLIENT-025]
+  blocked_until: [CLIENT-025]
+  sync_status: blocked
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 底栏图标角标：邮件未读数（ListPlayerMail unread）；日常可领/可接数量（chain_id=400 状态为可领奖或可接取）；战报未读（复用 CLIENT-025 计数器）
+    - 面板打开对应入口时清除该来源角标；轮询与 CLIENT-018 单飞/降频策略不冲突
+    - 1600×900 横屏下角标不遮挡点击；单测覆盖聚合逻辑；npm test 绿
+  body: |
+    汇总 wave:13 多面板反馈，降低「不知道下一步」成本。CLIENT-025 合入后编排者放开本卡。
+
+    仅 client/**。与 CLIENT-024 并行（‖）。
+
+- id: INTG-011
+  title: wave:14 网关路径冒烟（建造加速+日常加深）
+  wave: 14
+  domain: platform
+  depends_on: [INTG-010, DOM-003, QUEST-003]
+  blocked_until: [DOM-003]
+  sync_status: blocked
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/domestic/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-010 全量断言（双榜/UseConsumable 2001/行军/邮件/商城/重启）
+    - 主路径：城池有进行中建造 → 网关 UseConsumable 2003 → GetCityState 对应槽位 upgrade_finish_at_ms 严格减小（打印 slot_key 与 delta_ms）
+    - 主路径：daily_train_1（1014）或 daily_build_1（1032）接取 → 经 RecruitTroop 或建造完成挂钩推进 → claim；失败打印 quest_cfg_id
+    - 可选：UseConsumable march_ration（2020）推进 daily_march_1（1033）后 claim（失败不阻塞，README 注明）
+    - tools/smoke/README.md 更新 wave:14 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE14-RUN。后端-only；覆盖 DOM-003 与 QUEST-003 日常加深，不跑 H5。
+
+    **本波仍不做** CancelMarch / 行军加速 RPC。
+
+    CLIENT-024～027 非硬依赖。DOM-003 合并后编排者将本卡改为 ready。
+
+- id: DOCS-EXIT-006
+  title: wave:14 H5 日常与队列闭环文档收口
+  wave: 14
+  domain: platform
+  depends_on: [INTG-011, CLIENT-024, DOM-003]
+  blocked_until: [INTG-011]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - ROADMAP：Wave 14 标为已完成并链 Issue/PR；Wave 13 保持已完成
+    - M4/H5 出口描述含「建造加速真实生效 + 多类型日常引导 + 行军战报提示 + HUD 待办徽章」路径（指向 client/README）
+    - tasks/README.md wave:14 进度表与 Issue 一致
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out
+  body: |
+    文档 only。INTG-011 合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR。

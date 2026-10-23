@@ -15,7 +15,7 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1–13，第几波开工（wave:7–13 见 `docs/ROADMAP.md`） |
+| `wave` | 是 | 波次编号（wave:7+ 见 `docs/ROADMAP.md`） |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
 | `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked` |
@@ -60,7 +60,8 @@ status:review   ──合并────▶  status:done
 | 10 | M4 玩法加深（**已完成**，见 ROADMAP Wave 10） | CLIENT-008 (#156), HERO-003 (#158), QUEST-002 (#157), GM-003 (#154), INTG-007 (#159), DOCS-EXIT-002 (#160) |
 | 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
 | 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
-| 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 (#202) |
+| 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 ([#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)/[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)) |
+| 14 | H5 日常与队列闭环（**进行中**，见 ROADMAP Wave 14） | DOM-003, CLIENT-024–027, INTG-011, DOCS-EXIT-006（Issue 待 sync） |
 
 ### Wave 9 进度（已完成）
 
@@ -119,6 +120,18 @@ status:review   ──合并────▶  status:done
 | [#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) | CLIENT-022 | `status:done`（[#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205)） |
 | [#200](https://github.com/anitaguptaoffice/sanguo-slg/issues/200) | CLIENT-023 | `status:done`（[#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208)） |
 | [#201](https://github.com/anitaguptaoffice/sanguo-slg/issues/201) | INTG-010 | `status:done`（[#203](https://github.com/anitaguptaoffice/sanguo-slg/pull/203)） |
-| [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | `status:review`（本卡） |
+| [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | `status:done`（[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11 / Wave 12 / Wave 13」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
+### Wave 14 进度（规划 PR，Issue 待 sync）
+
+| ID | 状态 | 说明 |
+|---|---|---|
+| DOM-003 | 待 sync → `status:ready` | 建造队列加速符对接 domestic |
+| CLIENT-024 | 待 sync → `status:ready` | chain 400 多类型日常引导 |
+| CLIENT-025 | 待 sync → `status:ready` | 行军到达与战报未读 |
+| CLIENT-026 | 待 sync → `status:blocked` | `blocked_until: DOM-003` |
+| CLIENT-027 | 待 sync → `status:blocked` | `blocked_until: CLIENT-025` |
+| INTG-011 | 待 sync → `status:blocked` | `blocked_until: DOM-003` |
+| DOCS-EXIT-006 | 待 sync → `status:blocked` | `blocked_until: INTG-011` |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 13 / Wave 14」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
