@@ -33,7 +33,7 @@ func (p *PGStore) SaveCity(ctx context.Context, sid int32, c *CityState, cat map
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	_, err = tx.Exec(ctx, `
 		INSERT INTO player_wallet (server_id, player_id, food, wood, iron, stone, gold, updated_at)
