@@ -28,4 +28,15 @@ PostgreSQL 16+。**分片键 `server_id`**：账号中心与 `cfg_*` 全局表�
 ./spec/db/validate.sh
 ```
 
-在独立 schema 中执行各 `00*.sql`；优先本机 `psql`，否则 `sudo -u postgres psql`，再否则 Docker `postgres:16-alpine`。
+在独立 schema 中按序执行 `00*.sql` 与 `m3_*.sql`（M3 社交/选服，SPEC-005）；优先本机 `psql`，否则 `sudo -u postgres psql`，再否则 Docker `postgres:16-alpine`。
+
+## M3 扩展（SPEC-005）
+
+| 文件 | 内容 |
+|------|------|
+| `m3_001_server_list.sql` | `game_server` 选服字段与列表索引 |
+| `m3_002_guild.sql` | 军团与成员 |
+| `m3_003_chat.sql` | 频道、私聊对、消息 |
+| `m3_004_rank.sql` | 榜单批次与条目 |
+
+M4 及以后里程碑使用独立 `m4_*.sql` 等前缀，避免与并行 DDL 冲突。
