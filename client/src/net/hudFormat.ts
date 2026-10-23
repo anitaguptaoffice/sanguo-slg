@@ -77,6 +77,32 @@ export function formatResourceProductionRatesBrief(rates: ResourceWallet | undef
     .join(" · ");
 }
 
+function productionRatesAvailable(rates: ResourceWallet | undefined): boolean {
+  if (!rates) return false;
+  return PRODUCTION_RATE_KEYS.some(({ key }) => rates[key] !== undefined && rates[key] !== null);
+}
+
+/**
+ * HUD 资源扫读条：粮/木/铁/石余量；有 production_rates 时附带 +/h（CLIENT-081）。
+ * 缺产出字段时降级为仅余量，不占顶栏固定次行。
+ */
+export function formatResourceSweepLine(
+  rates: ResourceWallet | undefined,
+  wallet: ResourceWallet | undefined,
+): string {
+  const w = wallet ?? {};
+  const withRates = productionRatesAvailable(rates);
+  return PRODUCTION_RATE_KEYS
+    .map(({ key, label }) => {
+      const bal = formatResourceAmount(w[key]);
+      if (withRates) {
+        return `${label} ${bal} +${formatResourceAmount(rates![key] ?? 0)}/h`;
+      }
+      return `${label} ${bal}`;
+    })
+    .join(" · ");
+}
+
 export function formatUpgradeRemaining(finishAtMs: number | undefined, nowMs = Date.now()): string | null {
   if (!finishAtMs || finishAtMs <= nowMs) return null;
   const sec = Math.max(0, Math.ceil((finishAtMs - nowMs) / 1000));

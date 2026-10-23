@@ -647,7 +647,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（队列 CLIENT-019）
 
-队列面板顶栏（**CLIENT-059**）汇总进行中建造/募兵条数与 `formatBuildQueueCountdown` 最近倒计时；顶栏资源条次行展示 `GetCityState.production_rates`（粮/木/铁/石 +/h，只读）。
+队列面板顶栏（**CLIENT-059**）汇总进行中建造/募兵条数与 `formatBuildQueueCountdown` 最近倒计时；顶栏资源条 hover/focus/点击展开时通过 `formatResourceSweepLine` 扫读余量与 `production_rates`（缺字段则仅余量），不占固定次行（**CLIENT-081**）。
 
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。

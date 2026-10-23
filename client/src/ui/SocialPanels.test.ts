@@ -287,6 +287,48 @@ describe("SocialPanels chat & guild", () => {
     expect(statuses.some((s) => s.includes("禁言") && s.includes("61006"))).toBe(true);
   });
 
+  it("fills guild chat draft and opens chat panel when mentioning a member", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      createGuild: vi.fn().mockResolvedValue({ guild: { guild_id: 7001, name: "虎贲营" } }),
+      listGuildMembers: vi.fn().mockResolvedValue({
+        guild: { name: "虎贲营" },
+        members: [
+          { display_name: "副官乙", role: 2, power: 9000, player_id: 10002 },
+          { display_name: "演示君主", role: 1, power: 12800, player_id: 10001 },
+        ],
+      }),
+      sendChatMessage: vi.fn(),
+      listChatMessages: vi.fn().mockResolvedValue({ messages: [] }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
+    mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const mentionBtn = mount.querySelector(
+      '[data-action="guild-mention"][data-display-name="副官乙"]',
+    ) as HTMLButtonElement;
+    expect(mentionBtn?.textContent).toBe("提到");
+    mentionBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    const chatPanel = mount.querySelector(".social-panel:not(.hidden)");
+    expect(chatPanel?.querySelector("h3")?.textContent).toBe("聊天");
+    const channel = mount.querySelector('[data-field="channel"]') as HTMLSelectElement;
+    expect(channel.value).toBe("3");
+    const content = mount.querySelector('[data-field="chat-content"]') as HTMLInputElement;
+    expect(content.value).toBe("@副官乙 ");
+    expect(gateway.sendChatMessage).not.toHaveBeenCalled();
+  });
+
+  it("does not show mention buttons before joining a guild", () => {
+    const mount = document.createElement("div");
+    const panels = new SocialPanels(mount, minimalGateway(), () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    expect(mount.querySelector('[data-action="guild-mention"]')).toBeNull();
+  });
+
   it("shows guild member refresh error via formatSocialPanelRefreshError", async () => {
     const mount = document.createElement("div");
     const gateway = minimalGateway({

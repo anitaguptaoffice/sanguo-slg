@@ -11,7 +11,7 @@ import {
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
-import { appendHudProductionRatesLine, appendHudResourceStrip } from "@/engine/artResourceHud";
+import { appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
   LAYOUT_FRAME,
@@ -1120,8 +1120,7 @@ export class MainCityScene implements Scene {
     if (this.status) groups.push(this.status);
 
     this.hud.replaceChildren();
-    appendHudResourceStrip(this.hud, s?.wallet, this.assets);
-    appendHudProductionRatesLine(this.hud, s?.productionRates);
+    appendHudResourceStrip(this.hud, s?.wallet, this.assets, s?.productionRates);
     this.appendHudCenterTodoBadge();
     for (const text of groups) {
       const span = document.createElement("span");
