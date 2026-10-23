@@ -202,6 +202,13 @@
       .battle-report-list li.selected { outline: 2px solid #c9a227; }
       .battle-report-list li[data-report-id] { cursor: pointer; }
       .battle-report-list li[data-report-id]:hover { background: #3d3028; }
+      .march-list li.march-list-empty { cursor: default; color: #b8a88a; }
+      .march-row-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+      .march-row-primary { font-size: 13px; line-height: 1.35; }
+      .march-row-meta { font-size: 11px; color: #b8a88a; line-height: 1.35; }
+      .march-list.march-list-compact .march-row-primary { font-size: 12px; }
+      .march-list.march-list-compact .march-row-meta { font-size: 10px; }
+      .march-list.march-list-compact li { padding: 6px 8px; }
       .march-list li[data-march-id] { cursor: pointer; }
       .march-list li[data-march-id]:hover { background: #3d3028; }
       .march-list li.march-list-row-selected { outline: 2px solid #c9a227; }

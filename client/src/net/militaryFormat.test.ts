@@ -7,6 +7,9 @@ import {
   formatCasualtyMap,
   formatMarchHint,
   formatMarchLine,
+  formatMarchRemainingMs,
+  formatMarchRowMetaLine,
+  formatMarchRowPrimaryLine,
   formatReportLine,
   marchListLines,
   marchNeedsPoll,
@@ -62,6 +65,35 @@ describe("militaryFormat", () => {
     expect(marchListLines([])[0]).toContain("暂无行军");
     expect(marchNeedsPoll([{ phase: 3 }])).toBe(false);
     expect(marchNeedsPoll([{ phase: 2 }])).toBe(true);
+  });
+
+  it("formats march remaining ETA and two-line row helpers", () => {
+    const now = Date.UTC(2024, 0, 1, 8, 30, 0);
+    const arriveFar = Date.UTC(2024, 0, 1, 9, 0, 0);
+    expect(formatMarchRemainingMs(now, arriveFar)).toBe("剩余 30m");
+    expect(formatMarchRemainingMs(now, now + 30_000)).toBe("即将到达");
+    expect(formatMarchRemainingMs(now, now)).toBe("即将到达");
+
+    const marching = {
+      march_id: 2,
+      purpose: 1,
+      phase: 2,
+      from_x: 0,
+      from_y: 0,
+      to_x: 5,
+      to_y: 5,
+      depart_at_ms: Date.UTC(2024, 0, 1, 8, 0, 0),
+      arrive_at_ms: arriveFar,
+    };
+    expect(formatMarchRowPrimaryLine(marching)).toContain("#2 · 攻击 · 行军中");
+    expect(formatMarchRowMetaLine(marching, now)).toContain("剩余 30m");
+
+    const arrived = { ...marching, phase: 3 };
+    expect(formatMarchRowMetaLine(arrived, now)).toContain("已到达");
+    expect(formatMarchRowMetaLine(arrived, now)).not.toContain("剩余");
+
+    const pending = { ...marching, phase: 1 };
+    expect(formatMarchRowMetaLine(pending, now)).toContain("待发");
   });
 
   it("filters battle reports by outcome client-side", () => {
