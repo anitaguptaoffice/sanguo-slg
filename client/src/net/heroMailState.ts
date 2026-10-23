@@ -330,6 +330,7 @@ export function renderHeroDetailMarkup(
   d: HeroDetail | null | undefined,
   recruitAffordSummaryHtml = "",
   templatePreview?: RecruitTemplatePreview | null,
+  cultivationUseHtml = "",
 ): string {
   if (!d?.hero_id) {
     return '<p class="hero-detail-empty">点选将领查看详情</p>';
@@ -369,7 +370,7 @@ export function renderHeroDetailMarkup(
     <button type="button" data-action="hero-related-items">相关道具</button>
   </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${progress}${recruitAffordSummaryHtml}${table}${links}${hint}`;
+  return `${head}${progress}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

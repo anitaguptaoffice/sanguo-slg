@@ -5,6 +5,8 @@ import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import { MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
 import { HERO_DETAIL_SELECTED_SESSION_KEY } from "@/net/heroDetailSelectedSession";
 import { HERO_LIST_REFRESH_PULSE_CLASS } from "@/net/heroListRefreshFeedback";
+import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
+import { USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL } from "@/net/useConsumableSubmitFeedback";
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
@@ -216,6 +218,95 @@ describe("HeroMailPanels", () => {
     expect(detail?.querySelector(".hero-detail-level")?.textContent).toContain("Lv2");
     expect(detail?.querySelector(".hero-attr-table")).toBeTruthy();
     expect(detail?.textContent).toContain("UseConsumable");
+  });
+
+  it("hero detail cultivation use shows inflight label, refreshes detail, and pulses on success", async () => {
+    const mount = document.createElement("div");
+    let loyalty = 70;
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockImplementation(async () => ({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        rarity: 5,
+        level: 2,
+        loyalty,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      })),
+      useConsumable: vi.fn().mockImplementation(async () => {
+        loyalty = 85;
+        return { remaining: 1, effect_summary: "忠诚提升" };
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [{ item_cfg_id: 2017, quantity: 2 }],
+    };
+    const onStatus = vi.fn();
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, onStatus);
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const useBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-use-cultivation-item"]');
+    expect(useBtn?.disabled).toBe(false);
+    useBtn?.click();
+    expect(useBtn?.textContent).toBe(USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL);
+    await flushPromises();
+    expect(gateway.useConsumable).toHaveBeenCalledWith(1, 2017, 1);
+    expect(gateway.getHeroDetail).toHaveBeenCalled();
+    expect(gateway.getHeroDetail.mock.calls.filter((c) => c[1] === 3).length).toBeGreaterThanOrEqual(2);
+    const detail = mount.querySelector('[data-role="hero-detail"]');
+    expect(detail?.querySelector(".hero-detail-head")?.classList.contains(HERO_DETAIL_STAT_PULSE_CLASS)).toBe(
+      true,
+    );
+    expect(mount.querySelector('[data-role="hero-cultivation-success"]')?.textContent).toContain("忠诚 70→85");
+    expect(onStatus).toHaveBeenCalled();
+  });
+
+  it("disables hero cultivation use when bag lacks consumables", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 2,
+        loyalty: 77,
+        attributes: { force: 1, intel: 1, politics: 1, command: 1 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const useBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-use-cultivation-item"]');
+    expect(useBtn?.disabled).toBe(true);
+    expect(mount.querySelector('[data-role="hero-cultivation-disabled-reason"]')?.textContent).toContain(
+      "养成消耗品",
+    );
   });
 
   it("marks owned recruit template and shows affordability preview on selection", async () => {
