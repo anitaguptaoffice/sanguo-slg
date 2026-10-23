@@ -38,6 +38,7 @@ type Server struct {
 	military   *march.Hub
 	reports    *report.Service
 	sessions   *SessionRegistry
+	gm         *GmService
 	shard      *shard.Handlers
 	m3         *assembly.M3
 	cities     map[int64]*domestic.CityState
@@ -49,6 +50,14 @@ type Server struct {
 // AccountService exposes the account domain service for gateway session validation.
 func (s *Server) AccountService() *account.Service {
 	return s.account
+}
+
+// Gm returns the GM operator service sharing this server's session registry.
+func (s *Server) Gm() *GmService {
+	if s.gm == nil {
+		s.gm = NewGmService(s.log, s.players.Pool, s.sessions, nil)
+	}
+	return s.gm
 }
 
 // NewServer builds cross-domain handlers.

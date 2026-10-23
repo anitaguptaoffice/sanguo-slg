@@ -37,3 +37,30 @@ func (r *SessionRegistry) Get(sessionID string) (PlayerContext, bool) {
 	r.mu.RUnlock()
 	return pc, ok
 }
+
+func (r *SessionRegistry) Remove(sessionID string) {
+	if sessionID == "" {
+		return
+	}
+	r.mu.Lock()
+	delete(r.byID, sessionID)
+	r.mu.Unlock()
+}
+
+// SessionIDsForPlayer lists gateway session IDs bound to a shard player.
+func (r *SessionRegistry) SessionIDsForPlayer(serverID int32, playerID int64) []string {
+	r.mu.RLock()
+	var out []string
+	for sid, pc := range r.byID {
+		if pc.ServerID == serverID && pc.PlayerID == playerID {
+			out = append(out, sid)
+		}
+	}
+	r.mu.RUnlock()
+	return out
+}
+
+// IsPlayerOnline reports whether any session is bound to the player on the shard.
+func (r *SessionRegistry) IsPlayerOnline(serverID int32, playerID int64) bool {
+	return len(r.SessionIDsForPlayer(serverID, playerID)) > 0
+}
