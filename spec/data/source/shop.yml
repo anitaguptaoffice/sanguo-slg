@@ -1,15 +1,123 @@
-# M4 商城示例（SHOP-001 / INTG-004 参照）
+# Wave7 商城（SHOP-001 / INTG-004）
 shops:
   - code: resource_shop
-    name: 资源商店
+    name: 州府物资行
     unlock_level: 1
     shelves:
       - code: daily
-        name: 每日特惠
+        name: 每日平价
+        sort_order: 1
         offers:
           - code: food_bundle_daily
             item_code: food_bundle_s
             item_count: 1
-            price:
-              resources: { silver: 10 }
+            price: { resources: { silver: 10 } }
             per_player_daily_limit: 3
+          - code: wood_bundle_daily
+            item_code: wood_bundle_s
+            item_count: 1
+            price: { resources: { silver: 10 } }
+            per_player_daily_limit: 3
+          - code: speedup_daily
+            item_code: speedup_5m
+            item_count: 1
+            price: { resources: { silver: 30 } }
+            per_player_daily_limit: 2
+      - code: staple
+        name: 常备货架
+        sort_order: 2
+        offers:
+          - code: food_bundle_m_offer
+            item_code: food_bundle_m
+            item_count: 1
+            price: { resources: { silver: 45 } }
+          - code: wood_bundle_m_offer
+            item_code: wood_bundle_m
+            item_count: 1
+            price: { resources: { silver: 45 } }
+          - code: iron_bundle_offer
+            item_code: iron_bundle_s
+            item_count: 1
+            price: { resources: { silver: 50, wood: 200 } }
+  - code: military_shop
+    name: 军营补给处
+    unlock_level: 5
+    shelves:
+      - code: drill
+        name: 操练物资
+        sort_order: 1
+        offers:
+          - code: infantry_token_offer
+            item_code: infantry_token
+            item_count: 1
+            price: { resources: { food: 800, silver: 20 } }
+            per_player_daily_limit: 5
+          - code: cavalry_token_offer
+            item_code: cavalry_token
+            item_count: 1
+            price: { resources: { food: 1200, silver: 35 } }
+            per_player_daily_limit: 3
+          - code: archer_token_offer
+            item_code: archer_token
+            item_count: 1
+            price: { resources: { wood: 600, silver: 30 } }
+            per_player_daily_limit: 3
+      - code: recruit
+        name: 招募柜台
+        sort_order: 2
+        offers:
+          - code: recruit_scroll_offer
+            item_code: recruit_scroll
+            item_count: 1
+            price: { resources: { silver: 80 } }
+            per_player_total_limit: 10
+          - code: recruit_scroll_rare_offer
+            item_code: recruit_scroll_rare
+            item_count: 1
+            price: { resources: { silver: 200 } }
+            per_player_total_limit: 2
+  - code: treasury_shop
+    name: 府库兑换
+    unlock_level: 8
+    shelves:
+      - code: chest
+        name: 军需箱柜
+        sort_order: 1
+        offers:
+          - code: green_chest_offer
+            item_code: supply_chest_green
+            item_count: 1
+            price: { resources: { silver: 60 } }
+            per_player_daily_limit: 2
+          - code: blue_chest_offer
+            item_code: supply_chest_blue
+            item_count: 1
+            price: { resources: { silver: 150 } }
+            per_player_daily_limit: 1
+          - code: wall_kit_offer
+            item_code: wall_stone_kit
+            item_count: 1
+            price: { resources: { wood: 400, iron: 200 } }
+  - code: honor_shop
+    name: 功勋兑奖处
+    unlock_level: 10
+    meta: { currency_hint: merit }
+    shelves:
+      - code: merit
+        name: 功勋兑换
+        sort_order: 1
+        offers:
+          - code: merit_medal_trade
+            item_code: merit_medal
+            item_count: 5
+            price: { resources: { silver: 100 } }
+            per_player_daily_limit: 1
+          - code: banner_offer
+            item_code: banner_emblem
+            item_count: 1
+            price: { resources: { silver: 250 } }
+            per_player_total_limit: 3
+          - code: banquet_offer
+            item_code: banquet_ticket
+            item_count: 1
+            price: { resources: { food: 1000, wood: 1000 } }
