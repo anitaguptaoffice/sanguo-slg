@@ -82,14 +82,24 @@ export class HeroMailPanels {
     }
   }
 
+  isMailOpen(): boolean {
+    return this.mailPanel != null && !this.mailPanel.classList.contains("hidden");
+  }
+
   toggleMail(): void {
     this.mailPanel.classList.toggle("hidden");
-    if (!this.mailPanel.classList.contains("hidden")) void this.refreshMail();
-    else void this.syncUnreadBadge();
+    if (!this.mailPanel.classList.contains("hidden")) {
+      this.onUnreadCount?.(0);
+      void this.refreshMail();
+    } else void this.syncUnreadBadge();
   }
 
   /** 底栏角标：拉取未读 total_count（与列表 filter 无关）。 */
   async syncUnreadBadge(): Promise<void> {
+    if (this.isMailOpen()) {
+      this.onUnreadCount?.(0);
+      return;
+    }
     const sid = this.serverId();
     if (!sid || !this.onUnreadCount) return;
     try {
@@ -456,7 +466,8 @@ export class HeroMailPanels {
       const total = res.total_count ?? this.mails.length;
       const filterLabel = this.mailFilter === MAIL_INBOX_FILTER_UNREAD ? "未读" : "全部";
       this.onStatus(`邮件（${filterLabel}）${this.mails.length}/${total} 封`);
-      void this.syncUnreadBadge();
+      if (this.isMailOpen()) this.onUnreadCount?.(0);
+      else void this.syncUnreadBadge();
     } catch (e) {
       this.mailListError = (e as Error).message || "加载收件箱失败，请稍后重试";
       this.mails = [];

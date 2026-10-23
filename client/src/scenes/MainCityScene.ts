@@ -36,6 +36,9 @@ import { MARCH_ARRIVAL_STATUS_TOAST } from "@/net/marchArrival";
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
+import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
+import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
+import { setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import {
   formatKeyBuildingHudLine,
   formatResourceAmount,
@@ -84,6 +87,7 @@ export class MainCityScene implements Scene {
   private hudRefreshAccum = 0;
   private cityStateFetch!: CityStateFetch;
   private cityStatePoll!: CityStatePoll;
+  private hudTodoBadgePoll!: HudTodoBadgePoll;
   private marchArrivalPoll!: MarchArrivalPoll;
   private readonly battleReportUnread = new BattleReportUnreadSession();
   private marchReportToastActive = false;
@@ -107,6 +111,21 @@ export class MainCityScene implements Scene {
       isPanelVisible: () => this.isAnyPanelVisible(),
       onState: (state) => this.applyCityStatePoll(state),
     });
+    this.hudTodoBadgePoll = new HudTodoBadgePoll({
+      gateway: this.gateway,
+      getServerId: () =>
+        this.session?.serverId ??
+        this.gateway.getBoundServerId() ??
+        this.session?.player?.server_id ??
+        0,
+      getCityId: () => this.session?.cityId ?? null,
+      battleReportUnread: this.battleReportUnread,
+      isPanelVisible: () => this.isAnyPanelVisible(),
+      isMailSuppressed: () => this.heroMail?.isMailOpen() ?? false,
+      isDailySuppressed: () => this.dailyQuest?.isOpen() ?? false,
+      isReportsSuppressed: () => this.battleReports?.isOpen() ?? false,
+      onCounts: (counts) => this.applyHudTodoBadgeCounts(counts),
+    });
     this.marchArrivalPoll = new MarchArrivalPoll({
       getCityId: () => this.session?.cityId,
       listMarches: async (cityId) => {
@@ -118,7 +137,7 @@ export class MainCityScene implements Scene {
       onCompletions: () => {
         this.marchReportToastActive = true;
         this.renderHud();
-        void this.syncBattleReportUnreadBadge();
+        void this.hudTodoBadgePoll.pollOnce();
       },
     });
     this.renderHud();
@@ -128,17 +147,17 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
-      <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn">战报</button>
+      <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn"><span class="toolbar-btn-label">战报</span></button>
       <button type="button" data-action="toggle-marches">行军</button>
       <button type="button" data-action="toggle-chat">聊天</button>
       <button type="button" data-action="toggle-guild">军团</button>
       <button type="button" data-action="toggle-rank">排行</button>
       <button type="button" data-action="toggle-quest">任务</button>
-      <button type="button" data-action="toggle-daily">日常</button>
+      <button type="button" data-action="toggle-daily" data-role="daily-toolbar-btn"><span class="toolbar-btn-label">日常</span></button>
       <button type="button" data-action="toggle-bag">背包</button>
       <button type="button" data-action="toggle-shop">商城</button>
       <button type="button" data-action="toggle-hero">将领</button>
-      <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn">邮件</button>
+      <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn"><span class="toolbar-btn-label">邮件</span></button>
       <button type="button" data-action="toggle-world">世界</button>
       <button type="button" data-action="toggle-queue">队列</button>
     `;
@@ -215,7 +234,6 @@ export class MainCityScene implements Scene {
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
     );
     this.heroMail.attach();
-    void this.heroMail.syncUnreadBadge();
     this.battleReports = new BattleReportPanel(
       parent,
       this.gateway,
@@ -280,11 +298,13 @@ export class MainCityScene implements Scene {
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
     this.hud.addEventListener("click", this.onHudClickBound);
     this.syncMilitaryPanel();
+    void this.hudTodoBadgePoll.pollOnce();
   }
 
   update(dt: number): void {
     if (!this.session) return;
     this.cityStatePoll?.tick(dt);
+    this.hudTodoBadgePoll?.tick(dt);
     this.marchArrivalPoll?.tick(dt);
     if (this.queuePanels?.isOpen()) {
       this.queuePanels.tick(dt);
@@ -306,6 +326,7 @@ export class MainCityScene implements Scene {
 
   leave(): void {
     this.cityStateFetch?.clear();
+    this.hudTodoBadgePoll?.reset();
     this.marchArrivalPoll?.reset();
     this.hud?.removeEventListener("click", this.onHudClickBound);
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
@@ -369,11 +390,18 @@ export class MainCityScene implements Scene {
     if (action === "toggle-guild") this.social.toggleGuild();
     if (action === "toggle-rank") this.social.toggleRank();
     if (action === "toggle-quest") this.content.toggleQuest();
-    if (action === "toggle-daily") this.dailyQuest.toggle();
+    if (action === "toggle-daily") {
+      this.dailyQuest.toggle();
+      if (this.dailyQuest.isOpen()) this.updateDailyToolbarBadge(0);
+      else void this.hudTodoBadgePoll.pollOnce();
+    }
     if (action === "toggle-bag") this.content.toggleBag();
     if (action === "toggle-shop") this.content.toggleShop();
     if (action === "toggle-hero") this.heroMail.toggleHero();
-    if (action === "toggle-mail") this.heroMail.toggleMail();
+    if (action === "toggle-mail") {
+      this.heroMail.toggleMail();
+      if (!this.heroMail.isMailOpen()) void this.hudTodoBadgePoll.pollOnce();
+    }
     if (action === "toggle-world") this.world.toggle();
     if (action === "toggle-queue") this.queuePanels.toggle();
   }
@@ -501,15 +529,15 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
-  private async syncBattleReportUnreadBadge(): Promise<void> {
-    try {
-      const res = (await this.gateway.listBattleReports(20, 0)) as {
-        reports?: { report_id?: number }[];
-      };
-      const count = this.battleReportUnread.countUnread(res.reports ?? []);
-      this.updateReportsToolbarBadge(count);
-    } catch {
-      // 未读角标失败时静默，避免覆盖军事状态栏
+  private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {
+    if (!this.heroMail?.isMailOpen()) {
+      this.updateMailToolbarBadge(counts.mailUnread);
+    }
+    if (!this.dailyQuest?.isOpen()) {
+      this.updateDailyToolbarBadge(counts.dailyTodo);
+    }
+    if (!this.battleReports?.isOpen()) {
+      this.updateReportsToolbarBadge(counts.battleReportUnread);
     }
   }
 
@@ -733,16 +761,32 @@ export class MainCityScene implements Scene {
   }
 
   private updateMailToolbarBadge(unreadCount: number): void {
-    const btn = this.toolbar?.querySelector('[data-role="mail-toolbar-btn"]');
-    if (!btn) return;
-    btn.textContent = unreadCount > 0 ? `邮件(${unreadCount})` : "邮件";
-    btn.setAttribute("title", unreadCount > 0 ? `${unreadCount} 封未读` : "收件箱");
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="mail-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "邮件";
+    setToolbarBadge(
+      btn,
+      unreadCount,
+      unreadCount > 0 ? `${label} · ${unreadCount} 封未读` : "收件箱",
+    );
+  }
+
+  private updateDailyToolbarBadge(todoCount: number): void {
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="daily-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "日常";
+    setToolbarBadge(
+      btn,
+      todoCount,
+      todoCount > 0 ? `${label} · ${todoCount} 项可接/可领` : "日常任务",
+    );
   }
 
   private updateReportsToolbarBadge(unreadCount: number): void {
-    const btn = this.toolbar?.querySelector('[data-role="reports-toolbar-btn"]');
-    if (!btn) return;
-    btn.textContent = unreadCount > 0 ? `战报(${unreadCount})` : "战报";
-    btn.setAttribute("title", unreadCount > 0 ? `${unreadCount} 条新战报` : "战报列表");
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="reports-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "战报";
+    setToolbarBadge(
+      btn,
+      unreadCount,
+      unreadCount > 0 ? `${label} · ${unreadCount} 条新战报` : "战报列表",
+    );
   }
 }
