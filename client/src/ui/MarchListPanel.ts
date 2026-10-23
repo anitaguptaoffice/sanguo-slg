@@ -1,8 +1,11 @@
 import type { GatewayPort } from "@/net/GatewayClient";
+import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
 import {
   formatMarchRowMetaLine,
   formatMarchRowPrimaryLine,
   marchNeedsPoll,
+  marchPhaseChipClass,
+  marchPhaseChipLabel,
   MARCH_LIST_POLL_MS,
   MARCH_LIST_REMAINING_TICK_MS,
   type MarchSummary,
@@ -36,6 +39,7 @@ export type MarchListPanelOptions = {
   onSelectionChange?: (march: MarchSummary | null) => void;
   /** CLIENT-061 世界列表当前选中格（「世界选中格」筛选）。 */
   getWorldSelectedGrid?: () => { x: number; y: number } | null;
+  onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
 };
 
 export class MarchListPanel {
@@ -49,6 +53,8 @@ export class MarchListPanel {
   private readonly onMarchesUpdated?: (marches: MarchSummary[]) => void;
   private readonly onSelectionChange?: (march: MarchSummary | null) => void;
   private readonly getWorldSelectedGrid?: () => { x: number; y: number } | null;
+  private readonly onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
+  private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
   private manualDestFilter: { x: number; y: number } | null = null;
@@ -67,6 +73,7 @@ export class MarchListPanel {
     this.onMarchesUpdated = options?.onMarchesUpdated;
     this.onSelectionChange = options?.onSelectionChange;
     this.getWorldSelectedGrid = options?.getWorldSelectedGrid;
+    this.onMarchArrivalReminders = options?.onMarchArrivalReminders;
   }
 
   getRoot(): HTMLElement {
@@ -335,7 +342,12 @@ export class MarchListPanel {
       body.className = "march-row-body";
       const primary = document.createElement("span");
       primary.className = "march-row-primary";
-      primary.textContent = formatMarchRowPrimaryLine(m);
+      const chip = document.createElement("span");
+      chip.className = `march-phase-chip ${marchPhaseChipClass(m.phase)}`;
+      chip.setAttribute("data-role", "march-phase-chip");
+      chip.textContent = marchPhaseChipLabel(m.phase);
+      primary.appendChild(chip);
+      primary.appendChild(document.createTextNode(formatMarchRowPrimaryLine(m)));
       const meta = document.createElement("span");
       meta.className = "march-row-meta";
       meta.setAttribute("data-role", "march-row-meta");
@@ -400,16 +412,22 @@ export class MarchListPanel {
     this.listError = "";
     this.onStatus("拉取行军…");
     const cityId = this.getCityId();
+    const prevSnapshot = this.lastListSnapshot;
     try {
       const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
         marches?: MarchSummary[];
         total?: number;
       };
-      this.marches = res.marches ?? [];
+      const nextMarches = res.marches ?? [];
+      const reminders = detectNewMarchArrivalReminders(prevSnapshot, nextMarches, new Set());
+      if (reminders.length) this.onMarchArrivalReminders?.(reminders);
+      this.marches = nextMarches;
+      this.lastListSnapshot = nextMarches.map((m) => ({ ...m }));
       this.onStatus(`行军 ${this.marches.length}/${res.total ?? 0} 条`);
       this.syncPollTimers();
     } catch (e) {
       this.marches = [];
+      this.lastListSnapshot = [];
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
       this.stopPoll();

@@ -1,10 +1,14 @@
-import { detectMarchCompletions, type MarchCompletionEvent } from "@/net/marchArrival";
+import {
+  detectMarchCompletions,
+  detectNewMarchArrivalReminders,
+  type MarchArrivalReminder,
+} from "@/net/marchArrival";
 import { marchNeedsPoll, MARCH_LIST_POLL_MS, type MarchSummary } from "@/net/militaryFormat";
 
 export type MarchArrivalPollOptions = {
   listMarches: (cityId: number | undefined) => Promise<MarchSummary[]>;
   getCityId: () => number | undefined;
-  onCompletions: (events: MarchCompletionEvent[]) => void;
+  onCompletions: (reminders: MarchArrivalReminder[]) => void;
   pollIntervalMs?: number;
 };
 
@@ -53,12 +57,13 @@ export class MarchArrivalPoll {
     } catch {
       return;
     }
-    const events = detectMarchCompletions(this.lastMarches, next, this.pendingIds);
-    for (const ev of events) {
+    const prev = this.lastMarches;
+    const reminders = detectNewMarchArrivalReminders(prev, next, this.pendingIds);
+    for (const ev of detectMarchCompletions(prev, next, this.pendingIds)) {
       this.pendingIds.delete(ev.marchId);
     }
     this.lastMarches = next;
-    if (events.length) this.opts.onCompletions(events);
+    if (reminders.length) this.opts.onCompletions(reminders);
   }
 }
 

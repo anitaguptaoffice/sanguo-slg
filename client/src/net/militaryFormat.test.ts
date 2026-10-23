@@ -18,6 +18,7 @@ import {
   marchListLines,
   marchNeedsPoll,
   pickMarchTroops,
+  marchPhaseChipLabel,
   unitLabel,
 } from "@/net/militaryFormat";
 import { getTypes } from "@/net/loadProto";
@@ -91,7 +92,11 @@ describe("militaryFormat", () => {
       depart_at_ms: Date.UTC(2024, 0, 1, 8, 0, 0),
       arrive_at_ms: arriveFar,
     };
-    expect(formatMarchRowPrimaryLine(marching)).toContain("#2 · 攻击 · 行军中");
+    expect(formatMarchRowPrimaryLine(marching)).toContain("#2 · 攻击 ·");
+    expect(formatMarchRowPrimaryLine(marching)).not.toContain("行军中");
+    expect(marchPhaseChipLabel(2)).toBe("去程");
+    expect(marchPhaseChipLabel(3)).toBe("驻扎");
+    expect(marchPhaseChipLabel(4)).toBe("返回");
     expect(formatMarchRowMetaLine(marching, now)).toContain("剩余 30m");
 
     const arrived = { ...marching, phase: 3 };
