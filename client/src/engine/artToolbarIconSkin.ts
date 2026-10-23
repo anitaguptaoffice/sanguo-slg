@@ -44,6 +44,22 @@ export const TOOLBAR_ICON_BY_ACTION: Record<string, { assetId: string; label: st
   },
 };
 
+export type ToolbarIconBtnState = "normal" | "hover" | "pressed" | "disabled";
+
+/** Resolve manifest sprite for toolbar icon state (button_states when present, else variants). */
+export function resolveToolbarIconPack(
+  assets: AssetLoader,
+  assetId: string,
+  state: ToolbarIconBtnState,
+): { img: HTMLImageElement; scale: 1 | 2 } | undefined {
+  const fromStates = assets.getButtonImage(assetId, state);
+  if (fromStates) return fromStates;
+  if (state === "disabled") {
+    return assets.getButtonImage(assetId, "normal") ?? assets.getImageForAsset(assetId);
+  }
+  return assets.getImageForAsset(assetId);
+}
+
 function ensureIconButtonStructure(btn: HTMLButtonElement, label: string): {
   icon: HTMLImageElement;
   labelEl: HTMLSpanElement;
@@ -73,12 +89,24 @@ function ensureIconButtonStructure(btn: HTMLButtonElement, label: string): {
   return { icon, labelEl };
 }
 
-function applyToolbarIcon(btn: HTMLButtonElement, assets: AssetLoader, assetId: string): void {
-  const pack = assets.getImageForAsset(assetId);
+function currentToolbarIconState(btn: HTMLButtonElement): ToolbarIconBtnState {
+  if (btn.disabled) return "disabled";
+  if (btn.matches(":active")) return "pressed";
+  if (btn.matches(":hover")) return "hover";
+  return "normal";
+}
+
+function applyToolbarIcon(
+  btn: HTMLButtonElement,
+  assets: AssetLoader,
+  assetId: string,
+  state: ToolbarIconBtnState,
+): void {
+  const pack = resolveToolbarIconPack(assets, assetId, state);
   if (!pack) return;
-  const meta = pack.meta;
-  const w = meta.display_size?.w ?? 32;
-  const h = meta.display_size?.h ?? 32;
+  const meta = assets.getArtMeta(assetId);
+  const w = meta?.display_size?.w ?? 32;
+  const h = meta?.display_size?.h ?? 32;
   const icon = btn.querySelector<HTMLImageElement>(".toolbar-btn-icon");
   if (!icon) return;
   icon.src = pack.img.src;
@@ -86,6 +114,32 @@ function applyToolbarIcon(btn: HTMLButtonElement, assets: AssetLoader, assetId: 
   icon.height = h;
   icon.style.width = `${w}px`;
   icon.style.height = `${h}px`;
+  icon.dataset.toolbarIconState = state;
+  btn.classList.toggle("toolbar-chrome-btn--disabled-icon", btn.disabled || state === "disabled");
+}
+
+function wireToolbarIconStates(btn: HTMLButtonElement, assets: AssetLoader, assetId: string): void {
+  if (btn.dataset.toolbarIconWired === "1") return;
+  btn.dataset.toolbarIconWired = "1";
+  const set = (state: ToolbarIconBtnState) => applyToolbarIcon(btn, assets, assetId, state);
+  set(currentToolbarIconState(btn));
+  btn.addEventListener("mouseenter", () => {
+    if (!btn.disabled) set("hover");
+  });
+  btn.addEventListener("mouseleave", () => {
+    if (!btn.disabled) set("normal");
+  });
+  btn.addEventListener("mousedown", () => {
+    if (!btn.disabled) set("pressed");
+  });
+  btn.addEventListener("mouseup", () => {
+    if (!btn.disabled) set(btn.matches(":hover") ? "hover" : "normal");
+  });
+  const obs = new MutationObserver(() => {
+    if (btn.disabled) set("disabled");
+    else set(currentToolbarIconState(btn));
+  });
+  obs.observe(btn, { attributes: true, attributeFilter: ["disabled"] });
 }
 
 /** Place manifest toolbar icons + two-character labels; button chrome remains the hit target. */
@@ -100,8 +154,14 @@ export function mountToolbarIcons(
     if (!action) continue;
     const spec = TOOLBAR_ICON_BY_ACTION[action];
     if (!spec) continue;
+    if (btn.dataset.artSkin === "off") {
+      btn.querySelector(".toolbar-btn-icon")?.remove();
+      btn.classList.remove("toolbar-chrome-btn--with-icon", "toolbar-chrome-btn--disabled-icon");
+      delete btn.dataset.toolbarIconMounted;
+      continue;
+    }
     if (btn.dataset.toolbarIconMounted === "1") {
-      applyToolbarIcon(btn, assets, spec.assetId);
+      applyToolbarIcon(btn, assets, spec.assetId, currentToolbarIconState(btn));
       continue;
     }
     btn.dataset.toolbarIconMounted = "1";
@@ -110,11 +170,6 @@ export function mountToolbarIcons(
     labelEl.textContent = spec.label;
     btn.setAttribute("aria-label", spec.title);
     if (!btn.getAttribute("title")) btn.setAttribute("title", spec.title);
-    applyToolbarIcon(btn, assets, spec.assetId);
-    const obs = new MutationObserver(() => {
-      btn.classList.toggle("toolbar-chrome-btn--disabled-icon", btn.disabled);
-    });
-    obs.observe(btn, { attributes: true, attributeFilter: ["disabled"] });
-    btn.classList.toggle("toolbar-chrome-btn--disabled-icon", btn.disabled);
+    wireToolbarIconStates(btn, assets, spec.assetId);
   }
 }

@@ -26,6 +26,10 @@
 
 在 **#452/#456** 已接线 `ui.panel.default.v1` 选服弹层与 `ui.hud.bar.v1` / `ui.toolbar.bar.v1` chrome 前提下：**选服** 顶栏触发钮打开 `role=dialog` 弹层，**Esc** 关闭并在关闭后焦点回到触发钮；弹层内 **Tab** 焦点循环与 `:focus-visible` 金环。主城底栏各 `toggle-*` 按钮 **`aria-expanded`** 与对应中心/侧栏面板打开态同步；**1280×720** `layout-narrow` 下工具栏标签与 **CLIENT-107** 角标溢出省略，完整计数见按钮 **`title`**。美术证据只读：`docs/art/samples/art-chrome-006/`。单测：`overlayFocusTrap.test.ts`、`toolbarAriaExpanded.test.ts`、`ServerSelectScene.test.ts`。
 
+### ART-TOOLBAR-ICONS-007 运行时 UX（CLIENT-118）
+
+在 **#482** `artToolbarIconSkin` 工程挂载前提下：底栏八个 `toggle-*`（军事/邮件/队列/背包/日常/世界/将领/商城）在 `ui.button.toolbar.v1` chrome 内挂 **`ui.icon.toolbar.*.v1`** 32px 图标 + 两字标签；`mountToolbarIcons` 对 **normal/hover/pressed/disabled** 走 `getButtonImage`（manifest `button_states` 就绪时）或 **variants** 回退，并与 chrome 同步指针态。按钮设 **`data-art-skin="off"`** 时跳过图标、保留文字标签。**1280×720** 底栏横向滚动时图标与 **CLIENT-107** 角标不被 `overflow` 裁切，标签省略、完整文案见 **`title`**；**`aria-expanded`** 仍由 **CLIENT-110** `syncToolbarAriaExpanded` 维护。美术证据只读：`docs/art/samples/art-toolbar-icons-007/`。单测：`artToolbarIconSkin.test.ts`。
+
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
