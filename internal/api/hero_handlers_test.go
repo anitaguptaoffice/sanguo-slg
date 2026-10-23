@@ -70,6 +70,31 @@ func TestHeroGatewayRecruitAndList(t *testing.T) {
 	}
 }
 
+func TestHeroGatewayListRecruitTemplates(t *testing.T) {
+	ctx := context.Background()
+	s := &Server{sessions: NewSessionRegistry(), heroSvc: hero.NewService()}
+	s.sessions.Bind("sess-tpl", PlayerContext{ServerID: 1, PlayerID: 11})
+
+	resp, err := s.handleListRecruitTemplates(ctx, &commonv1.ClientPacket{
+		TraceId: "t-tpl", SessionId: "sess-tpl", ServerId: 1,
+		Payload: mustProto(&herov1.ListRecruitTemplatesRequest{ServerId: 1, PageSize: 5}),
+	})
+	if err != nil || resp.Code != 0 {
+		t.Fatalf("list templates: err=%v resp=%+v", err, resp)
+	}
+	var out herov1.ListRecruitTemplatesResponse
+	if err := proto.Unmarshal(resp.Data, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.GetTotalCount() < 20 || len(out.GetTemplates()) != 5 {
+		t.Fatalf("total=%d len=%d", out.GetTotalCount(), len(out.GetTemplates()))
+	}
+	first := out.GetTemplates()[0]
+	if first.GetRecruitCost().GetFood() != 5000 || first.GetRecruitItem().GetItemCfgId() != hero.RecruitScrollID {
+		t.Fatalf("preview %+v", first)
+	}
+}
+
 func TestHeroGatewayRecruitInsufficientItem(t *testing.T) {
 	ctx := context.Background()
 	cat, err := content.EmbeddedCatalog()
