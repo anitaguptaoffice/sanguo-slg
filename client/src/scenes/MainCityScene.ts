@@ -15,14 +15,13 @@ import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } fr
 import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
+import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import {
   formatMarchHint,
-  formatReportLine,
   formatTimeMs,
   formatTroopStacks,
   mergeCityTroops,
   unitLabel,
-  type BattleReportSummary,
   type MarchSummary,
 } from "@/net/militaryFormat";
 
@@ -45,15 +44,13 @@ export class MainCityScene implements Scene {
   private hud!: HTMLElement;
   private toolbar!: HTMLElement;
   private militaryPanel!: HTMLElement;
-  private reportDetail!: HTMLElement;
   private gateway!: SceneContext["gateway"];
   private status = "";
   private lastMarch: MarchSummary | null = null;
-  private reportLines: BattleReportSummary[] = [];
-  private selectedReportText = "";
   private social!: SocialPanels;
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
+  private battleReports!: BattleReportPanel;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -74,6 +71,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
+      <button type="button" data-action="toggle-reports">战报</button>
       <button type="button" data-action="toggle-chat">聊天</button>
       <button type="button" data-action="toggle-guild">军团</button>
       <button type="button" data-action="toggle-rank">排行</button>
@@ -104,12 +102,7 @@ export class MainCityScene implements Scene {
       <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
       <button type="button" data-action="march">出征攻击</button>
       <p class="military-march" data-role="march"></p>
-      <hr />
-      <button type="button" data-action="list-reports">刷新战报列表</button>
-      <ul class="report-list" data-role="report-list"></ul>
-      <pre class="report-detail" data-role="report-detail"></pre>
     `;
-    this.reportDetail = this.militaryPanel.querySelector('[data-role="report-detail"]') as HTMLElement;
     const parent = ctx.layoutFrame;
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
@@ -153,6 +146,11 @@ export class MainCityScene implements Scene {
       },
     );
     this.heroMail.attach();
+    this.battleReports = new BattleReportPanel(parent, this.gateway, (msg) => {
+      this.status = msg;
+      this.renderHud();
+    });
+    this.battleReports.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
@@ -166,6 +164,7 @@ export class MainCityScene implements Scene {
     this.social?.detach();
     this.content?.detach();
     this.heroMail?.detach();
+    this.battleReports?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -180,6 +179,7 @@ export class MainCityScene implements Scene {
       this.militaryPanel.classList.toggle("hidden");
       this.syncMilitaryPanel();
     }
+    if (action === "toggle-reports") this.battleReports.toggle();
     if (action === "toggle-chat") this.social.toggleChat();
     if (action === "toggle-guild") this.social.toggleGuild();
     if (action === "toggle-rank") this.social.toggleRank();
@@ -192,17 +192,10 @@ export class MainCityScene implements Scene {
 
   private onMilitaryClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
-    const li = (ev.target as HTMLElement).closest("li[data-report-id]");
-    if (li) {
-      const id = Number(li.getAttribute("data-report-id"));
-      if (id) void this.openReport(id);
-      return;
-    }
     if (!btn) return;
     const action = btn.getAttribute("data-action");
     if (action === "recruit") void this.recruit();
     if (action === "march") void this.startMarch();
-    if (action === "list-reports") void this.loadReports();
   }
 
   private field(name: string): HTMLInputElement | HTMLSelectElement | null {
@@ -217,20 +210,6 @@ export class MainCityScene implements Scene {
     }
     if (marchEl) {
       marchEl.textContent = this.lastMarch ? formatMarchHint(this.lastMarch) : "暂无行军";
-    }
-    this.renderReportList();
-    if (this.reportDetail) this.reportDetail.textContent = this.selectedReportText;
-  }
-
-  private renderReportList(): void {
-    const ul = this.militaryPanel.querySelector('[data-role="report-list"]');
-    if (!ul) return;
-    ul.innerHTML = "";
-    for (const r of this.reportLines) {
-      const li = document.createElement("li");
-      li.setAttribute("data-report-id", String(r.report_id ?? 0));
-      li.textContent = formatReportLine(r);
-      ul.appendChild(li);
     }
   }
 
@@ -376,58 +355,6 @@ export class MainCityScene implements Scene {
       this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
     } catch (e) {
       this.status = (e as Error).message;
-    }
-    this.renderHud();
-    this.syncMilitaryPanel();
-  }
-
-  private async loadReports(): Promise<void> {
-    this.status = "拉取战报…";
-    this.renderHud();
-    try {
-      const res = (await this.gateway.listBattleReports(20, 0)) as {
-        reports?: BattleReportSummary[];
-        total?: number;
-      };
-      this.reportLines = res.reports ?? [];
-      this.status = `战报 ${this.reportLines.length}/${res.total ?? 0} 条`;
-      this.selectedReportText = "";
-    } catch (e) {
-      this.status = (e as Error).message;
-    }
-    this.renderHud();
-    this.syncMilitaryPanel();
-  }
-
-  private async openReport(reportId: number): Promise<void> {
-    this.status = `战报 #${reportId}…`;
-    this.renderHud();
-    try {
-      const res = (await this.gateway.getBattleReport(reportId)) as {
-        report?: {
-          summary?: BattleReportSummary;
-          detail?: {
-            result?: string;
-            rounds?: { round?: number }[];
-            attacker_casualties?: Record<string, number>;
-            defender_casualties?: Record<string, number>;
-          };
-        };
-      };
-      const sum = res.report?.summary;
-      const det = res.report?.detail;
-      const rounds = det?.rounds?.length ?? 0;
-      this.selectedReportText =
-        `${sum ? formatReportLine(sum) : `#${reportId}`}\n` +
-        `结果：${det?.result ?? "—"}\n` +
-        `回合数：${rounds}\n` +
-        `攻方伤亡：${JSON.stringify(det?.attacker_casualties ?? {})}\n` +
-        `守方伤亡：${JSON.stringify(det?.defender_casualties ?? {})}\n` +
-        `（明细字段随服务端 battle 输出；占位展示）`;
-      this.status = "战报已加载";
-    } catch (e) {
-      this.status = (e as Error).message;
-      this.selectedReportText = "";
     }
     this.renderHud();
     this.syncMilitaryPanel();

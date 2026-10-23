@@ -4,7 +4,7 @@
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
 
-**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/任务/背包/商城/将领/邮件）→ 世界/私聊 → 军团 → 战力排行**
+**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/战报/任务/背包/商城/将领/邮件）→ 世界/私聊 → 军团 → 战力排行**
 
 ## 网关地址
 
@@ -83,7 +83,7 @@ cd client && npm install && npm run dev
 1. 登录进入主城后，点 **「军事」** 打开面板。
 2. **募兵**：选兵种（默认步兵）、数量（如 50），点「募兵」。HUD 会显示扣费后的资源；若返回 `queue_id` / `finish_at_ms`，需等到完成时间后再出征（服务端调度器在 `make dev` 中自动推进）。
 3. **出征**：目标默认 **(5,5)**（M2 驻点），调整出征步兵数量后点「出征攻击」。状态栏与画布会显示行军阶段与预计到达时间。
-4. 等待行军到达并完成战斗后（真实环境取决于距离与调度），点 **「刷新战报列表」**，点击某条战报查看回合/伤亡摘要（字段以服务端为准）。
+4. 等待行军到达并完成战斗后（真实环境取决于距离与调度），点底栏 **「战报」** → **「刷新列表」**，点击某条战报查看回合/伤亡摘要（字段以服务端为准）。
 5. 内政仍可用：**「升级农田」「刷新状态」**。
 
 ## 仅 mock 网关
@@ -101,7 +101,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`heroMailState` / `HeroMailPanels`（空邮件、领取成功）与 `StartMarchRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel`（空列表/加载失败/列表行）、`heroMailState` / `HeroMailPanels`（空邮件、领取成功）与 `StartMarchRequest` proto 编解码。
 
 ## 目录
 
