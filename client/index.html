@@ -245,6 +245,10 @@
         margin: 0 0 6px; font-size: 12px; color: #8b3a18; line-height: 1.4;
       }
       .military-panel .march-form-summary-warn.hidden { display: none; }
+      .military-panel .march-intel-last-troops {
+        margin: 0 0 6px; font-size: 12px; color: #6b4f1a;
+      }
+      .military-panel .march-intel-last-troops.hidden { display: none; }
       .military-panel .march-form-error {
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
         color: #8b1a1a; background: rgba(139, 26, 26, 0.1); border-radius: 4px;
@@ -504,7 +508,14 @@
         background: rgba(201, 162, 39, 0.12);
       }
       .march-list.march-list-compact li { padding: 6px 8px; }
-      .march-list li[data-march-id] { cursor: pointer; }
+      .march-list li[data-march-id] {
+        cursor: pointer; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+      }
+      .march-row-remarch-btn {
+        flex-shrink: 0; font-size: 11px; padding: 4px 8px; cursor: pointer;
+        background: #2a2218; color: #f5e6c8; border: 1px solid #5c4a32; border-radius: 4px;
+      }
+      .march-row-remarch-btn:hover { background: #3d3028; }
       .march-list li[data-march-id]:hover { background: #3d3028; }
       .march-list li.march-list-row-selected { outline: 2px solid #c9a227; }
       .march-dest-filter {

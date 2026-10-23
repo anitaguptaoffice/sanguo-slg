@@ -313,6 +313,37 @@ describe("MarchListPanel", () => {
     });
   });
 
+  it("remarch button opens military prefill without selecting row", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 7,
+            phase: 2,
+            to_x: 12,
+            to_y: 13,
+            troops: [{ unit_cfg_id: 1, count: 80 }],
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const onRemarchFromRow = vi.fn();
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      onRemarchFromRow,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelector(".march-row-remarch-btn")).toBeTruthy());
+
+    const btn = mount.querySelector(".march-row-remarch-btn") as HTMLButtonElement;
+    btn.click();
+    expect(onRemarchFromRow).toHaveBeenCalledWith(
+      expect.objectContaining({ march_id: 7, to_x: 12, to_y: 13 }),
+    );
+    expect(panel.getSelectedMarchId()).toBeNull();
+  });
+
   it("shows error when listMarches fails", async () => {
     const gateway = {
       listMarches: vi.fn().mockRejectedValue(new Error("网关超时")),
