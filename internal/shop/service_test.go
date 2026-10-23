@@ -1,38 +1,59 @@
 package shop
 
 import (
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 )
 
-func testShop(t *testing.T) (*Service, *content.Service) {
+type stubWallet struct {
+	balances map[content.PlayerRef]content.ResourceWallet
+}
+
+func (s *stubWallet) Spend(_ context.Context, player content.PlayerRef, cost content.ResourceWallet) (content.ResourceWallet, error) {
+	have := s.balances[player]
+	if have.Food < cost.Food || have.Wood < cost.Wood || have.Iron < cost.Iron ||
+		have.Stone < cost.Stone || have.Gold < cost.Gold {
+		return have, ErrInsufficientBalance
+	}
+	after := content.ResourceWallet{
+		Food: have.Food - cost.Food, Wood: have.Wood - cost.Wood, Iron: have.Iron - cost.Iron,
+		Stone: have.Stone - cost.Stone, Gold: have.Gold - cost.Gold,
+	}
+	s.balances[player] = after
+	return after, nil
+}
+
+func (s *stubWallet) seed(player content.PlayerRef, w content.ResourceWallet) {
+	s.balances[player] = w
+}
+
+func testShop(t *testing.T) (*Service, *stubWallet) {
 	cat, err := content.EmbeddedCatalog()
 	if err != nil {
 		t.Fatal(err)
 	}
 	contentSvc := content.NewService(cat)
+	wallet := &stubWallet{balances: make(map[content.PlayerRef]content.ResourceWallet)}
 	daily := int32(3)
 	shopCat := Catalog{Version: 1, Offers: []CatalogEntry{{
 		OfferID: 1001, ShelfID: 1, ShelfName: "每日特惠", ItemCfgID: 2001, QuantityPerPurchase: 1,
 		Price: content.RewardPackage{Resources: map[string]int64{"gold": 10}}, DailyLimit: &daily,
 	}}}
-	return NewService(shopCat, NewMemStore(), NewPayments(contentSvc), nil), contentSvc
+	return NewService(shopCat, NewMemStore(), NewPayments(contentSvc, wallet), nil), wallet
 }
 
 func TestPurchaseSuccessDebitsAndGrants(t *testing.T) {
-	svc, contentSvc := testShop(t)
+	svc, wallet := testShop(t)
 	p := content.PlayerRef{ServerID: 1, PlayerID: 42}
-	_, err := contentSvc.Grant(p, content.RewardPackage{Resources: map[string]int64{"gold": 100}}, "")
-	if err != nil {
-		t.Fatal(err)
+	wallet.seed(p, content.ResourceWallet{Gold: 100})
+	_, _, got, err := svc.Purchase(1, 42, 1001, 1)
+	if err != nil || got.Gold != 90 {
+		t.Fatalf("err=%v wallet=%+v", err, got)
 	}
-	_, _, wallet, err := svc.Purchase(1, 42, 1001, 1)
-	if err != nil || wallet.Gold != 90 {
-		t.Fatalf("err=%v wallet=%+v", err, wallet)
-	}
-	qty, _ := contentSvc.Get(p, 2001)
+	qty, _ := svc.payments.svc.Get(p, 2001)
 	if qty != 1 {
 		t.Fatalf("qty %d", qty)
 	}
@@ -47,9 +68,9 @@ func TestPurchaseInsufficientBalance(t *testing.T) {
 }
 
 func TestPurchaseLimitExceeded(t *testing.T) {
-	svc, contentSvc := testShop(t)
+	svc, wallet := testShop(t)
 	p := content.PlayerRef{ServerID: 1, PlayerID: 99}
-	_, _ = contentSvc.Grant(p, content.RewardPackage{Resources: map[string]int64{"gold": 1000}}, "")
+	wallet.seed(p, content.ResourceWallet{Gold: 1000})
 	for i := 0; i < 3; i++ {
 		if _, _, _, err := svc.Purchase(1, 99, 1001, 1); err != nil {
 			t.Fatalf("buy %d: %v", i, err)
@@ -57,5 +78,18 @@ func TestPurchaseLimitExceeded(t *testing.T) {
 	}
 	if _, _, _, err := svc.Purchase(1, 99, 1001, 1); !errors.Is(err, ErrPurchaseLimitExceeded) {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestPurchaseInsufficientBalanceDoesNotConsumeLimit(t *testing.T) {
+	svc, wallet := testShop(t)
+	p := content.PlayerRef{ServerID: 1, PlayerID: 50}
+	wallet.seed(p, content.ResourceWallet{Gold: 5})
+	if _, _, _, err := svc.Purchase(1, 50, 1001, 1); !errors.Is(err, ErrInsufficientBalance) {
+		t.Fatalf("got %v", err)
+	}
+	wallet.seed(p, content.ResourceWallet{Gold: 100})
+	if _, _, _, err := svc.Purchase(1, 50, 1001, 1); err != nil {
+		t.Fatalf("retry after funding: %v", err)
 	}
 }

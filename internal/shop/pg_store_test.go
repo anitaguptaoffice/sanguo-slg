@@ -77,17 +77,16 @@ func TestServicePurchaseLimitWithPGStore(t *testing.T) {
 		Price: content.RewardPackage{Resources: map[string]int64{"gold": 1}},
 		DailyLimit: &daily, ServerStockLimit: &stock,
 	}}}
-	svc := NewService(shopCat, nil, NewPayments(contentSvc), pool)
+	wallet := &stubWallet{balances: make(map[content.PlayerRef]content.ResourceWallet)}
 	p := content.PlayerRef{ServerID: 1, PlayerID: 55}
-	if _, err := contentSvc.Grant(p, content.RewardPackage{Resources: map[string]int64{"gold": 100}}, ""); err != nil {
-		t.Fatal(err)
-	}
+	wallet.seed(p, content.ResourceWallet{Gold: 100})
+	svc := NewService(shopCat, nil, NewPayments(contentSvc, wallet), pool)
 	for i := 0; i < 2; i++ {
 		if _, _, _, err := svc.Purchase(1, 55, 7001, 1); err != nil {
 			t.Fatalf("buy %d: %v", i, err)
 		}
 	}
-	svc2 := NewService(shopCat, nil, NewPayments(contentSvc), pool)
+	svc2 := NewService(shopCat, nil, NewPayments(contentSvc, wallet), pool)
 	if _, _, _, err := svc2.Purchase(1, 55, 7001, 1); err != ErrPurchaseLimitExceeded {
 		t.Fatalf("expected limit, got %v", err)
 	}
