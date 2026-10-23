@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>三国 SLG · H5 骨架</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; }
+      body { font-family: system-ui, sans-serif; background: #1a1410; color: #f5e6c8; }
+      #game { display: block; width: 100%; max-width: 480px; margin: 0 auto; aspect-ratio: 9/16; background: #2d241c; }
+      #hud { max-width: 480px; margin: 0 auto; padding: 8px 12px; font-size: 13px; color: #c9b896; }
+    </style>
+  </head>
+  <body>
+    <canvas id="game" width="360" height="640"></canvas>
+    <div id="hud">初始化中…</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
