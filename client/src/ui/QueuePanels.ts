@@ -16,6 +16,8 @@ import {
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
+export type QueuePanelReskin = (root: HTMLElement) => void;
+
 /** 建造队列加速符（与 DATA-001 / content catalog item_cfg_id 2003 一致，勿新增 cfg）。 */
 export const BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID = 2003;
 
@@ -39,6 +41,7 @@ export class QueuePanels {
     private readonly onMilitarySync: () => void,
     private readonly getDailyChainRows?: () => DailyQuestRow[],
     private readonly onOpenDailyBuildQuest?: (questCfgId: number) => void,
+    private readonly reskinPrimary?: QueuePanelReskin,
   ) {}
 
   attach(): void {
@@ -102,7 +105,9 @@ export class QueuePanels {
     el.innerHTML = `
       <h3>队列</h3>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
-      <button type="button" data-action="refresh-queue">刷新内政</button>
+      <div class="content-panel-actions">
+        <button type="button" class="art-btn-primary" data-action="refresh-queue">刷新内政</button>
+      </div>
       <ul class="queue-list" data-role="queue-build-list"></ul>
       <div class="queue-military-section hidden" data-role="queue-military-section">
         <p class="queue-military-heading">募兵队列</p>
@@ -177,6 +182,7 @@ export class QueuePanels {
       }
       const btn = document.createElement("button");
       btn.type = "button";
+      btn.className = "art-btn-primary";
       btn.setAttribute("data-action", "speedup-build");
       btn.textContent = SPEEDUP_BUTTON_LABEL;
       if (!speedupEnabled) {
@@ -197,6 +203,7 @@ export class QueuePanels {
       li.appendChild(span);
       recruitUl.appendChild(li);
     }
+    this.reskinPrimary?.(this.panel);
   }
 
   private setPanelStatus(msg: string): void {

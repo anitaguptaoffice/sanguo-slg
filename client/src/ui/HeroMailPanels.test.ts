@@ -204,6 +204,35 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector(".mail-unclaimed-badge")).toBeNull();
   });
 
+  it("mail without attachments hides claim button", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [
+          {
+            mail_id: 6200,
+            title: "已读无附件",
+            body: "无附件正文",
+            status: 1,
+          },
+        ],
+        total_count: 1,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    mount.querySelector('.mail-list [data-mail-id="6200"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const claimBtn = mount.querySelector('[data-action="claim-mail"]') as HTMLElement | null;
+    expect(claimBtn?.classList.contains("hidden")).toBe(true);
+    expect(claimBtn?.offsetParent).toBeNull();
+  });
+
   it("read mail with unclaimed attachments shows badge and highlighted claim button", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

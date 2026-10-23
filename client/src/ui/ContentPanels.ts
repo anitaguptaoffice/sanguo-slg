@@ -180,8 +180,10 @@ export class ContentPanels {
         </select>
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
-      <button type="button" data-action="refresh-bag">刷新背包</button>
-      <button type="button" data-action="use-item">使用道具</button>
+      <div class="content-panel-actions">
+        <button type="button" data-action="refresh-bag">刷新背包</button>
+        <button type="button" class="art-btn-primary" data-action="use-item">使用道具</button>
+      </div>
       <ul class="bag-list" data-role="bag-list"></ul>
       <p class="panel-feedback bag-panel-feedback" data-role="bag-feedback" hidden></p>
     `;
