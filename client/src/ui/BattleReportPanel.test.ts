@@ -104,6 +104,36 @@ describe("BattleReportPanel", () => {
     expect(detail?.querySelector('[data-action="view-on-map"]')).toBeTruthy();
   });
 
+  it("shows 相关日常 when outcome win/loss and daily march in progress", async () => {
+    const mount = document.createElement("div");
+    const summary = { report_id: 6, outcome: 1, created_at_ms: 0 };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { result: "attacker_win", rounds: [{ round: 1 }] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const onOpenRelatedDaily = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      getDailyChainRows: () => [
+        { quest_cfg_id: 1033, quest_code: "daily_march_1", chain_id: 400, state: 2 },
+      ],
+      onOpenRelatedDaily,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="6"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const dailyBtn = mount.querySelector('[data-action="open-related-daily"]') as HTMLButtonElement;
+    expect(dailyBtn?.textContent).toBe("相关日常");
+    dailyBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenRelatedDaily).toHaveBeenCalledWith(1033);
+  });
+
   it("shows 相关邮件 when detail has mail source hint", async () => {
     const mount = document.createElement("div");
     const summary = {

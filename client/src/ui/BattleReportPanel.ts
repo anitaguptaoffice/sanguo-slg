@@ -39,7 +39,11 @@ import {
   battleReportListErrorClass,
   battleReportListErrorListHint,
 } from "@/net/panelDensity";
-import { resolveBattleReportMailLink } from "@/net/mailBattleCrossLink";
+import {
+  resolveBattleReportDailyLinks,
+  resolveBattleReportMailLink,
+} from "@/net/mailBattleCrossLink";
+import type { DailyQuestRow } from "@/net/dailyQuestState";
 
 const PAGE_LIMIT = 20;
 
@@ -52,6 +56,10 @@ export type BattleReportPanelOptions = {
   onClearMapReplay?: () => void;
   /** 详情「相关邮件」：只读高亮邮件行，不自动领取。 */
   onOpenRelatedMail?: (mailId: number) => void;
+  /** chain 400 快照（与队列/战报角标同源，不额外 RPC）。 */
+  getDailyChainRows?: () => DailyQuestRow[];
+  /** 详情「相关日常」：打开日常面板并滚到 cfg 行，不自动领奖。 */
+  onOpenRelatedDaily?: (questCfgId: number) => void;
 };
 
 export class BattleReportPanel {
@@ -432,6 +440,20 @@ export class BattleReportPanel {
       mailBtn.textContent = "相关邮件";
       detailEl.appendChild(mailBtn);
     }
+
+    const dailyRows = this.panelOpts?.getDailyChainRows?.() ?? [];
+    const dailyLinks = resolveBattleReportDailyLinks(summary?.outcome, dailyRows);
+    if (dailyLinks.length && this.panelOpts?.onOpenRelatedDaily) {
+      for (const link of dailyLinks) {
+        const dailyBtn = document.createElement("button");
+        dailyBtn.type = "button";
+        dailyBtn.className = "battle-report-daily-link-btn";
+        dailyBtn.setAttribute("data-action", "open-related-daily");
+        dailyBtn.dataset.questCfgId = String(link.questCfgId);
+        dailyBtn.textContent = link.label;
+        detailEl.appendChild(dailyBtn);
+      }
+    }
   }
 
   private async refreshList(): Promise<void> {
@@ -581,6 +603,9 @@ export class BattleReportPanel {
     } else if (action === "open-related-mail") {
       const mailId = Number(btn.dataset.mailId) || 0;
       if (mailId > 0) this.panelOpts?.onOpenRelatedMail?.(mailId);
+    } else if (action === "open-related-daily") {
+      const questCfgId = Number(btn.dataset.questCfgId) || 0;
+      if (questCfgId > 0) this.panelOpts?.onOpenRelatedDaily?.(questCfgId);
     }
   }
 }

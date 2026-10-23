@@ -44,7 +44,11 @@ import {
   mailRowTitleLine,
 } from "@/net/panelDensity";
 import { mailUnreadSnapshotFromListResponse, pickFirstUnreadMailId } from "@/net/hudTodoBadge";
-import { resolveMailBattleReportLink } from "@/net/mailBattleCrossLink";
+import {
+  appendMailWorldCoordStatusHint,
+  mailPlainTextHasWorldCoord,
+  resolveMailBattleReportLink,
+} from "@/net/mailBattleCrossLink";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -106,6 +110,14 @@ export class HeroMailPanels {
   private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
     const session = this.getSession();
     return { wallet: session?.wallet ?? {}, bag: session?.bag ?? [] };
+  }
+
+  private withMailWorldCoordHint(baseStatus: string, mail: MailRow | null): string {
+    if (!mail) return baseStatus;
+    if (mailPlainTextHasWorldCoord(mailTitle(mail), mail.body ?? "")) {
+      return appendMailWorldCoordStatusHint(baseStatus);
+    }
+    return baseStatus;
   }
 
   private selectedRecruitTemplateRow(): RecruitTemplatePreview | undefined {
@@ -666,7 +678,9 @@ export class HeroMailPanels {
       this.renderMailList();
       const total = res.total_count ?? this.mails.length;
       const filterLabel = this.mailFilter === MAIL_INBOX_FILTER_UNREAD ? "未读" : "全部";
-      this.onStatus(`邮件（${filterLabel}）${this.mails.length}/${total} 封`);
+      const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
+      const baseStatus = `邮件（${filterLabel}）${this.mails.length}/${total} 封`;
+      this.onStatus(this.withMailWorldCoordHint(baseStatus, sel));
       if (this.isMailOpen()) this.onUnreadCount?.(0);
       else void this.syncUnreadBadge();
     } catch (e) {
@@ -704,6 +718,10 @@ export class HeroMailPanels {
   private async openMail(mailId: number): Promise<void> {
     this.selectedMailId = mailId;
     this.renderMailList();
+    const sel = this.mails.find((m) => m.mail_id === mailId) ?? null;
+    if (sel && mailPlainTextHasWorldCoord(mailTitle(sel), sel.body ?? "")) {
+      this.onStatus(appendMailWorldCoordStatusHint("已打开邮件"));
+    }
     await this.markMailRead(mailId);
   }
 
