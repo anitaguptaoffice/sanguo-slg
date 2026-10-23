@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	chatv1 "github.com/anitaguptaoffice/sanguo-slg/internal/chat/pb/sanguo/chat/v1"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
@@ -35,6 +36,32 @@ func TestGatewaySendUnauthorized(t *testing.T) {
 	}
 	if resp.Code != int32(commonv1.ErrorCode_COMMON_UNAUTHORIZED) {
 		t.Fatalf("code=%d", resp.Code)
+	}
+}
+
+func TestGatewaySendPlayerMutedCode(t *testing.T) {
+	store := NewMemStore()
+	until := time.Now().Add(time.Hour).UnixMilli()
+	if err := store.SetMutedUntilMS(context.Background(), 1, 1, until); err != nil {
+		t.Fatal(err)
+	}
+	svc := NewService(store, stubPlayers{})
+	sessions := mapSessions{actors: map[string]Actor{
+		"s1": {ServerID: 1, PlayerID: 1, DisplayName: "A"},
+	}}
+	h := GatewayHandlers(svc, sessions)[RouteSendChatMessage]
+	payload, _ := proto.Marshal(&chatv1.SendChatMessageRequest{
+		Channel: chatv1.ChatChannel_CHAT_CHANNEL_WORLD,
+		Content: "muted",
+	})
+	resp, err := h(context.Background(), &commonv1.ClientPacket{
+		Route: RouteSendChatMessage, TraceId: "t", SessionId: "s1", Payload: payload,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.Code != int32(errCodeChatPlayerMuted) {
+		t.Fatalf("code=%d msg=%s", resp.Code, resp.Msg)
 	}
 }
 

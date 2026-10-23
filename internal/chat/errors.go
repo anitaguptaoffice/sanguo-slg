@@ -14,4 +14,5 @@ var (
 	ErrRecipientNotFound     = errors.New("chat: recipient not found")
 	ErrCannotMessageSelf     = errors.New("chat: cannot message self")
 	ErrGuildNotSupported     = errors.New("chat: guild channel not supported yet")
+	ErrPlayerMuted           = errors.New("chat: player muted")
 )

@@ -151,6 +151,23 @@ func TestRateLimit(t *testing.T) {
 	}
 }
 
+func TestMutedPlayerCannotSend(t *testing.T) {
+	store := NewMemStore()
+	until := time.Now().Add(time.Hour).UnixMilli()
+	if err := store.SetMutedUntilMS(context.Background(), 1, 10, until); err != nil {
+		t.Fatal(err)
+	}
+	svc := NewService(store, stubPlayers{})
+	actor := Actor{ServerID: 1, PlayerID: 10, DisplayName: "muted"}
+	_, err := svc.Send(context.Background(), actor, &chatv1.SendChatMessageRequest{
+		Channel: chatv1.ChatChannel_CHAT_CHANNEL_WORLD,
+		Content: "nope",
+	})
+	if !errors.Is(err, ErrPlayerMuted) {
+		t.Fatalf("err=%v", err)
+	}
+}
+
 func TestWorldBroadcastHook(t *testing.T) {
 	store := NewMemStore()
 	svc := NewService(store, stubPlayers{})

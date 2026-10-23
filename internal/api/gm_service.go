@@ -7,28 +7,22 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/anitaguptaoffice/sanguo-slg/internal/chat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// GmService implements GM-001 operations (lookup, grant, mute stub, kick).
+// GmService implements GM-001 operations (lookup, grant, mute, kick).
 type GmService struct {
-	log       *slog.Logger
-	pool      *pgxpool.Pool
-	sessions  *SessionRegistry
-	content   *content.Service
-	now       func() time.Time
-	mu        sync.Mutex
-	muteUntil map[playerShardKey]int64
-}
-
-type playerShardKey struct {
-	ServerID int32
-	PlayerID int64
+	log      *slog.Logger
+	pool     *pgxpool.Pool
+	sessions *SessionRegistry
+	content  *content.Service
+	chatMute *chat.PGStore
+	now      func() time.Time
 }
 
 // NewGmService wires dependencies. sessions may be nil when running standalone CLI.
@@ -41,12 +35,12 @@ func NewGmService(log *slog.Logger, pool *pgxpool.Pool, sessions *SessionRegistr
 		contentSvc = content.NewService(cat)
 	}
 	return &GmService{
-		log:       log,
-		pool:      pool,
-		sessions:  sessions,
-		content:   contentSvc,
-		now:       time.Now,
-		muteUntil: make(map[playerShardKey]int64),
+		log:      log,
+		pool:     pool,
+		sessions: sessions,
+		content:  contentSvc,
+		chatMute: chat.NewPGStore(pool),
+		now:      time.Now,
 	}
 }
 
@@ -77,9 +71,11 @@ func (g *GmService) LookupPlayer(ctx context.Context, token string, audit GmAudi
 	if g.sessions != nil {
 		info.Online = g.sessions.IsPlayerOnline(serverID, row.PlayerID)
 	}
-	g.mu.Lock()
-	info.ChatMutedUntilMS = g.muteUntil[playerShardKey{ServerID: serverID, PlayerID: row.PlayerID}]
-	g.mu.Unlock()
+	mutedUntil, err := g.chatMute.MutedUntilMS(ctx, serverID, row.PlayerID)
+	if err != nil {
+		return GmOpResult{}, GmPlayerInfo{}, err
+	}
+	info.ChatMutedUntilMS = mutedUntil
 	logGmOp(g.log, "LookupPlayer", res, "server_id", serverID, "player_id", row.PlayerID)
 	return res, info, nil
 }
@@ -155,14 +151,20 @@ func (g *GmService) GrantReward(ctx context.Context, token string, audit GmAudit
 	return op, grantRes, nil
 }
 
-// MutePlayer stores mute deadline in-process (chat domain will replace with persistent store).
-func (g *GmService) MutePlayer(_ context.Context, token string, audit GmAudit, serverID int32, playerID int64, muteUntilMS int64) (GmOpResult, int64, error) {
+// MutePlayer persists chat mute deadline in chat_player_mute (PG).
+func (g *GmService) MutePlayer(ctx context.Context, token string, audit GmAudit, serverID int32, playerID int64, muteUntilMS int64) (GmOpResult, int64, error) {
 	if err := AuthorizeGm(token, audit); err != nil {
 		return GmOpResult{}, 0, err
 	}
-	g.mu.Lock()
-	g.muteUntil[playerShardKey{ServerID: serverID, PlayerID: playerID}] = muteUntilMS
-	g.mu.Unlock()
+	if _, err := lookupPlayerRow(ctx, g.pool, serverID, playerID, ""); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return GmOpResult{}, 0, fmt.Errorf("gm: player not found")
+		}
+		return GmOpResult{}, 0, err
+	}
+	if err := g.chatMute.SetMutedUntilMS(ctx, serverID, playerID, muteUntilMS); err != nil {
+		return GmOpResult{}, 0, err
+	}
 	op := newGmOpResult(audit, g.now())
 	logGmOp(g.log, "MutePlayer", op, "mute_until_ms", muteUntilMS)
 	return op, muteUntilMS, nil
