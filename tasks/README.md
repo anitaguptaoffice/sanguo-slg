@@ -62,7 +62,7 @@ status:review   ──合并────▶  status:done
 | 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
 | 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 ([#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)/[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)) |
 | 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`) |
-| 15 | H5 世界地图与面板密度（**已完成**，见 ROADMAP Wave 15） | CLIENT-028–032 ([#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)–[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)；[#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229) 跟踪 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238)), INTG-012 ([#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)), DOCS-EXIT-007 ([#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234)) |
+| 15 | H5 世界地图与面板密度（**已完成**，见 ROADMAP Wave 15） | CLIENT-028–032 ([#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)–[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)、[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`), INTG-012 ([#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)), DOCS-EXIT-007 ([#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234)/[#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242)) |
 
 ### Wave 9 进度（已完成）
 
@@ -140,7 +140,7 @@ status:review   ──合并────▶  status:done
 | Issue | ID | 状态 |
 |---|---|---|
 | [#228](https://github.com/anitaguptaoffice/sanguo-slg/issues/228) | CLIENT-028 | `status:done`（[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241) `dbee7a40`） |
-| [#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229) | CLIENT-029 | `status:review`（[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 合入中） |
+| [#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229) | CLIENT-029 | `status:done`（[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`） |
 | [#230](https://github.com/anitaguptaoffice/sanguo-slg/issues/230) | CLIENT-030 | `status:done`（[#236](https://github.com/anitaguptaoffice/sanguo-slg/pull/236) `e3019f34`） |
 | [#231](https://github.com/anitaguptaoffice/sanguo-slg/issues/231) | CLIENT-031 | `status:done`（[#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235) `58a95775`） |
 | [#232](https://github.com/anitaguptaoffice/sanguo-slg/issues/232) | CLIENT-032 | `status:done`（[#240](https://github.com/anitaguptaoffice/sanguo-slg/pull/240) `1825858d`） |

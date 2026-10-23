@@ -75,7 +75,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | 能力 | 验收小节 |
 |---|---|
 | **世界地图行军只读标注**（小地图 ↔ `ListMarches` 联动） | [手动验收（世界地图行军标注 CLIENT-028）](#手动验收世界地图行军标注-client-028)（[#228](https://github.com/anitaguptaoffice/sanguo-slg/issues/228) / [#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)） |
-| **邮件 / 战报 / 背包密度**（空态、两行摘要、筛选空文案） | [手动验收（邮件战报背包密度 CLIENT-029）](#手动验收邮件战报背包密度-client-029)（[#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229)；代码 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 合入中） |
+| **邮件 / 战报 / 背包密度**（空态、两行摘要、筛选空文案） | [手动验收（邮件战报背包密度 CLIENT-029）](#手动验收邮件战报背包密度-client-029)（[#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229) / [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238)） |
 | **排行 / 军团 / 聊天扫读** | [手动验收（社交扫读 CLIENT-030）](#手动验收社交扫读-client-030)（[#230](https://github.com/anitaguptaoffice/sanguo-slg/issues/230) / [#236](https://github.com/anitaguptaoffice/sanguo-slg/pull/236)） |
 | **将领详情与招募池对比** | [手动验收（将领招募对比 CLIENT-031）](#手动验收将领招募对比-client-031)（[#231](https://github.com/anitaguptaoffice/sanguo-slg/issues/231) / [#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)） |
 | **manifest HUD / 面板接线** | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线)（[#232](https://github.com/anitaguptaoffice/sanguo-slg/issues/232) / [#240](https://github.com/anitaguptaoffice/sanguo-slg/pull/240)） |
@@ -196,7 +196,7 @@ mock 预置将领时可用 `VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run 
 2. 打开邮件面板 → **全部 / 未读** 切换列表；每行展示**标题 + 摘要**（正文截断或附件提示）。
 3. **点开**一封未读邮件 → 自动调用 `MarkPlayerMailRead`；在「未读」筛选下该封应从列表消失。
 4. 带附件邮件显示 **「领取附件」** → 成功后 HUD 五资源与背包摘要更新（`wallet_after` / `bag_items`）；重复领取或失败时面板内显示明确错误文案。
-5. 空收件箱：合入 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 后为「暂无邮件，完成日常…」引导；合入前为「收件箱为空…」。未读筛选无信时显示「暂无未读邮件」。
+5. 空收件箱显示「暂无邮件，完成日常…」；未读筛选无信时显示「暂无未读邮件」。
 6. 视口 **1600×900**：面板落在顶底 56px 带之间，列表与正文区可滚动、不撑破外框。
 
 **GM 发信（真实 PG）** — 参数见 [`docs/ops/open-server-runbook.md`](../docs/ops/open-server-runbook.md) §4.5：
@@ -337,8 +337,6 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（邮件战报背包密度，CLIENT-029）
 
-> **合入状态**：面板密度实现跟踪 [#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238)；合入前 `main` 仍以 [CLIENT-017](#手动验收邮件收件箱client-017) / [CLIENT-016](#手动验收战报筛选-client-016) / [CLIENT-020](#手动验收背包与商城反馈-client-020) 为准。合入后验收 `panelDensity.ts`。
-
 `panelDensity.ts` / `militaryFormat` 战报行辅助；邮件未读行 class `unread` 与 CLIENT-027 角标同色（`#c9a227`）。
 
 1. `make dev` 或 mock 进主城。**邮件**：空收件箱显示「暂无邮件，完成日常…」；有信时每行两行（标题+时间 / 附件或已读角标），未读行左侧金条背景；底栏未读角标与 CLIENT-027 一致。
@@ -388,7 +386,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`worldMinimap`（小地图缩放/行军高亮）、`panelDensity`（邮件/战报/背包空态与未读 class，[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) 合入后）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`worldMinimap`（小地图缩放/行军高亮）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

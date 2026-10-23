@@ -372,7 +372,7 @@ export function mailEmptyInboxMessage(filter: number): string {
   if (filter === MAIL_INBOX_FILTER_UNREAD) {
     return "暂无未读邮件";
   }
-  return "收件箱为空，可用 GM send-mail 发信后点「刷新」";
+  return "暂无邮件，完成日常或等待系统发放；GM 发信后点「刷新」";
 }
 
 export function mailListLines(mails: MailRow[]): string[] {
