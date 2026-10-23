@@ -122,6 +122,9 @@ func ProgressTargetFor(objs []Objective) int32 {
 	if o.Count > 0 {
 		return o.Count
 	}
+	if o.Type == "build_level" {
+		return 1
+	}
 	if o.Level > 0 {
 		return o.Level
 	}

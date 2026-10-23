@@ -84,6 +84,9 @@ func (s *Server) handleUseConsumable(ctx context.Context, pkt *commonv1.ClientPa
 	if err != nil {
 		return nil, err
 	}
+	if code := itemCodeByCfgID(res.ItemCfgID); code != "" {
+		s.questAfterUseItem(ctx, pc.ServerID, pc.PlayerID, code, count)
+	}
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
