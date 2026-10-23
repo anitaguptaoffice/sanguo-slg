@@ -8,6 +8,7 @@ import {
   LB_PLAYER_RESOURCE,
   selectedLeaderboardTypeFromValue,
   viewerScoreFallback,
+  type LeaderboardEntryRow,
   type LeaderboardPagePayload,
 } from "@/net/leaderboardFormat";
 import { leaderboardRowDomId } from "@/net/battleReportSideLink";
@@ -48,6 +49,18 @@ import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelRefreshMeta } from "@/net/socialRefreshFormat";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import {
+  formatRankReadonlySummary,
+  resolveRankRowDeepLink,
+  type RankRowDeepLink,
+} from "@/net/rankRowDeepLink";
+
+export type SocialRankDeepLinkHandlers = {
+  getViewerHeroIds?: () => Promise<number[]>;
+  onOpenHeroDetail?: (heroId: number) => void | Promise<void>;
+  onOpenWorldAtGrid?: (gridX: number, gridY: number) => void;
+  onOpenWorldViewer?: () => void;
+};
 
 export class SocialPanels {
   private chatPanel!: HTMLElement;
@@ -69,6 +82,7 @@ export class SocialPanels {
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
   private rankHighlightEntityId = 0;
+  private rankDeepLink: SocialRankDeepLinkHandlers = {};
 
   constructor(
     private readonly mount: HTMLElement,
@@ -76,6 +90,10 @@ export class SocialPanels {
     private getSession: () => MainCitySession | null,
     private onStatus: (msg: string) => void,
   ) {}
+
+  setRankDeepLinkHandlers(handlers: SocialRankDeepLinkHandlers): void {
+    this.rankDeepLink = { ...handlers };
+  }
 
   attach(): void {
     this.chatPanel = this.buildChatPanel();
@@ -305,6 +323,15 @@ export class SocialPanels {
             <div class="rank-last-refresh-line hidden" data-role="rank-last-refresh" aria-label="上次刷新"></div>
           </div>
           <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
+          <aside
+            class="rank-entry-summary hidden"
+            data-role="rank-entry-summary"
+            aria-live="polite"
+          >
+            <h4>排行摘要</h4>
+            <p data-role="rank-entry-summary-text"></p>
+            <button type="button" data-action="dismiss-rank-summary">关闭</button>
+          </aside>
           <div class="rank-table-scroll">
             <table class="rank-table">
               <thead class="rank-table-head">
@@ -711,11 +738,14 @@ export class SocialPanels {
           tbody.appendChild(tr);
         }
       } else {
-        for (const e of entries) {
+        entries.forEach((e, index) => {
           const tr = document.createElement("tr");
+          tr.className = "rank-data-row";
+          tr.setAttribute("data-rank-entry-index", String(index));
           const entityId = e.entity_id ?? 0;
           if (entityId > 0) {
             tr.id = leaderboardRowDomId(entityId);
+            tr.setAttribute("data-entity-id", String(entityId));
             tr.dataset.entityId = String(entityId);
           }
           if (entityId > 0 && entityId === this.rankHighlightEntityId) {
@@ -726,9 +756,85 @@ export class SocialPanels {
             e.display_name?.trim() || (e.entity_id ? `玩家#${e.entity_id}` : "?");
           tr.innerHTML = `<td class="rank-col-rank">${rank}</td><td class="rank-col-name">${name}</td><td class="rank-col-score">${e.score ?? 0}</td>`;
           tbody.appendChild(tr);
-        }
+        });
       }
     }
+    this.hideRankEntrySummary();
+  }
+
+  private hideRankEntrySummary(): void {
+    const box = this.rankPanel.querySelector('[data-role="rank-entry-summary"]');
+    box?.classList.add("hidden");
+  }
+
+  private showRankEntrySummary(boardType: number, entry: LeaderboardEntryRow): void {
+    const box = this.rankPanel.querySelector('[data-role="rank-entry-summary"]');
+    const text = this.rankPanel.querySelector('[data-role="rank-entry-summary-text"]');
+    if (!box || !text) return;
+    text.textContent = formatRankReadonlySummary(boardType, entry);
+    box.classList.remove("hidden");
+  }
+
+  private viewerPlayerId(): number {
+    const s = this.getSession();
+    return s?.player?.player_id ?? 0;
+  }
+
+  private rankEntryFromRow(tr: HTMLElement): LeaderboardEntryRow | null {
+    const index = Number(tr.getAttribute("data-rank-entry-index"));
+    if (!Number.isFinite(index) || index < 0) return null;
+    const boardType = this.selectedLeaderboardType();
+    const page = this.rankSnapshotByType.get(boardType);
+    const entry = page?.entries?.[index];
+    return entry ?? null;
+  }
+
+  private async dispatchRankRowDeepLink(link: RankRowDeepLink, entry: LeaderboardEntryRow): Promise<void> {
+    const boardType = this.selectedLeaderboardType();
+    switch (link.kind) {
+      case "hero": {
+        const handler = this.rankDeepLink.onOpenHeroDetail;
+        if (!handler) {
+          this.onStatus("将领面板未就绪");
+          return;
+        }
+        let heroId = link.heroId;
+        if (heroId <= 0) {
+          const ids = await this.rankDeepLink.getViewerHeroIds?.();
+          heroId = ids?.find((id) => id > 0) ?? 0;
+        }
+        await handler(heroId);
+        return;
+      }
+      case "world-grid": {
+        this.rankDeepLink.onOpenWorldAtGrid?.(link.gridX, link.gridY);
+        return;
+      }
+      case "world-viewer": {
+        this.rankDeepLink.onOpenWorldViewer?.();
+        return;
+      }
+      case "summary": {
+        this.showRankEntrySummary(boardType, entry);
+        return;
+      }
+      case "toast": {
+        this.onStatus(link.message);
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
+  private async onRankRowActivate(tr: HTMLElement): Promise<void> {
+    const entry = this.rankEntryFromRow(tr);
+    if (!entry) return;
+    const boardType = this.selectedLeaderboardType();
+    const viewerId = this.viewerPlayerId();
+    const heroIds = await this.rankDeepLink.getViewerHeroIds?.();
+    const link = resolveRankRowDeepLink(boardType, entry, viewerId, heroIds ?? []);
+    await this.dispatchRankRowDeepLink(link, entry);
   }
 
   private async refreshRank(): Promise<void> {
@@ -803,9 +909,15 @@ export class SocialPanels {
   }
 
   private onRankClick(ev: Event): void {
+    const row = (ev.target as HTMLElement).closest("tr.rank-data-row");
+    if (row) {
+      void this.onRankRowActivate(row as HTMLElement);
+      return;
+    }
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-rank" || a === "retry-refresh-rank") void this.refreshRank();
+    if (a === "dismiss-rank-summary") this.hideRankEntrySummary();
   }
 }
