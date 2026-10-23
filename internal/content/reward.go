@@ -1,6 +1,7 @@
 package content
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 )
@@ -88,14 +89,14 @@ func resourceDeltaFromMap(m map[string]int64) (ResourceWallet, error) {
 // Grant applies a reward package to the player's wallet and bag.
 // When idempotencyKey is non-empty, a repeat call returns the first result with Duplicate=true.
 func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (GrantResult, error) {
+	ctx := context.Background()
 	if idempotencyKey != "" {
-		s.mu.RLock()
-		rec, ok := s.idempotency[idempotencyKeyFor(p.ServerID, idempotencyKey)]
-		s.mu.RUnlock()
-		if ok {
-			out := rec.result
-			out.Duplicate = true
-			return out, nil
+		dup, err := s.lookupIdempotentGrant(ctx, p, idempotencyKey)
+		if err != nil {
+			return GrantResult{}, err
+		}
+		if dup != nil {
+			return *dup, nil
 		}
 	}
 
@@ -130,16 +131,69 @@ func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (
 		s.creditWallet(p, delta)
 	}
 
-	grantID := s.nextGrantID(p.ServerID)
+	grantID, err := s.allocateGrantID(ctx, p.ServerID)
+	if err != nil {
+		return GrantResult{}, err
+	}
 	res := GrantResult{
 		GrantID: grantID,
 		Wallet:  s.walletFor(p),
 		Bag:     s.listUnlocked(p),
 	}
 	if idempotencyKey != "" {
-		s.idempotency[idempotencyKeyFor(p.ServerID, idempotencyKey)] = idemRecord{grantID: grantID, result: res}
+		key := idempotencyKeyFor(p.ServerID, idempotencyKey)
+		s.idempotency[key] = idemRecord{grantID: grantID, result: res}
+		if s.store != nil {
+			job := GrantJob{
+				ServerID:       p.ServerID,
+				PlayerID:       p.PlayerID,
+				Rewards:        pkg,
+				IdempotencyKey: idempotencyKey,
+			}
+			if err := s.store.RecordSuccessfulGrant(ctx, job, grantID); err != nil {
+				return GrantResult{}, err
+			}
+		}
 	}
 	return res, nil
+}
+
+func (s *Service) lookupIdempotentGrant(ctx context.Context, p PlayerRef, idempotencyKey string) (*GrantResult, error) {
+	key := idempotencyKeyFor(p.ServerID, idempotencyKey)
+	s.mu.RLock()
+	rec, ok := s.idempotency[key]
+	s.mu.RUnlock()
+	if ok {
+		out := rec.result
+		out.Duplicate = true
+		return &out, nil
+	}
+	if s.store == nil {
+		return nil, nil
+	}
+	grantID, found, err := s.store.FindSuccessfulGrant(ctx, p.ServerID, idempotencyKey)
+	if err != nil || !found {
+		return nil, err
+	}
+	if err := s.LoadPlayer(ctx, p); err != nil {
+		return nil, err
+	}
+	s.mu.RLock()
+	out := GrantResult{
+		GrantID:   grantID,
+		Duplicate: true,
+		Wallet:    s.walletFor(p),
+		Bag:       s.listUnlocked(p),
+	}
+	s.mu.RUnlock()
+	return &out, nil
+}
+
+func (s *Service) allocateGrantID(ctx context.Context, serverID int32) (int64, error) {
+	if s.store != nil {
+		return s.store.NextGrantID(ctx, serverID)
+	}
+	return s.nextGrantID(serverID), nil
 }
 
 func (s *Service) nextGrantID(serverID int32) int64 {

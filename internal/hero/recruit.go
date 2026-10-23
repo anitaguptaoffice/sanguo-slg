@@ -21,7 +21,7 @@ type RecruitResult struct {
 type Service struct {
 	Catalog map[int32]Template
 	Items   map[int32]RecruitItemSpec
-	Store   *MemStore
+	Store   Store
 	RNG     *rand.Rand
 }
 
@@ -29,6 +29,13 @@ func NewService() *Service {
 	return &Service{
 		Catalog: DefaultCatalog(), Items: DefaultRecruitItems(),
 		Store: NewMemStore(), RNG: rand.New(rand.NewSource(1)),
+	}
+}
+
+// UseStore switches persistence to PostgreSQL (MemStore when nil).
+func (s *Service) UseStore(store Store) {
+	if store != nil {
+		s.Store = store
 	}
 }
 

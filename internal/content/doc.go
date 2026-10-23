@@ -5,4 +5,5 @@
 //
 // Reward grants use the JSON schema in spec/rules/content.md (Service.Grant,
 // ParseRewardJSON, ProcessGrant for reward_grant_queue sync consumption).
+// Service.UseStore persists player_item and grant idempotency via PGStore.
 package content
