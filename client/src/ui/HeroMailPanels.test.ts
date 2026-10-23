@@ -565,6 +565,30 @@ describe("HeroMailPanels", () => {
     expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
   });
 
+  it("appends world panel hint when mail body has coordinates", async () => {
+    const mount = document.createElement("div");
+    const statuses: string[] = [];
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [{ mail_id: 2, title: "侦察", status: 1, body: "目标 (20,30)" }],
+        total_count: 1,
+      }),
+      markPlayerMailRead: vi.fn(),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      (s) => statuses.push(s),
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    expect(statuses.some((s) => s.includes("可在世界面板查看"))).toBe(true);
+  });
+
   it("shows 查看战报 when mail body has report_id and opens deep link", async () => {
     const mount = document.createElement("div");
     const onOpenBattleReport = vi.fn();
