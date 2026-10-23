@@ -16,9 +16,12 @@ func newBag() *Bag {
 
 // Service provides bag CRUD and consumable use against a seed-backed catalog.
 type Service struct {
-	mu      sync.RWMutex
-	catalog *Catalog
-	bags    map[PlayerRef]*Bag
+	mu          sync.RWMutex
+	catalog     *Catalog
+	bags        map[PlayerRef]*Bag
+	wallets     map[PlayerRef]ResourceWallet
+	idempotency map[string]idemRecord
+	grantSeq    map[int32]int64
 }
 
 func NewService(cat *Catalog) *Service {
@@ -26,8 +29,11 @@ func NewService(cat *Catalog) *Service {
 		panic("content: catalog is required")
 	}
 	return &Service{
-		catalog: cat,
-		bags:    make(map[PlayerRef]*Bag),
+		catalog:     cat,
+		bags:        make(map[PlayerRef]*Bag),
+		wallets:     make(map[PlayerRef]ResourceWallet),
+		idempotency: make(map[string]idemRecord),
+		grantSeq:    make(map[int32]int64),
 	}
 }
 
@@ -85,6 +91,12 @@ func (s *Service) distinctCount(b *Bag, ignoreID int32) int {
 
 // Add increases stack quantity, enforcing max_stack and distinct-item capacity.
 func (s *Service) Add(p PlayerRef, itemCfgID int32, delta int32) (int32, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.addUnlocked(p, itemCfgID, delta)
+}
+
+func (s *Service) addUnlocked(p PlayerRef, itemCfgID int32, delta int32) (int32, error) {
 	if delta <= 0 {
 		return 0, ErrInvalidQuantity
 	}
@@ -92,8 +104,6 @@ func (s *Service) Add(p PlayerRef, itemCfgID int32, delta int32) (int32, error) 
 	if err != nil {
 		return 0, err
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	b := s.bagFor(p)
 	cur := b.Stacks[itemCfgID]
 	if cur == 0 && s.distinctCount(b, itemCfgID) >= int(s.catalog.BagMaxDistinctItems) {
@@ -105,6 +115,18 @@ func (s *Service) Add(p PlayerRef, itemCfgID int32, delta int32) (int32, error) 
 	}
 	b.Stacks[itemCfgID] = next
 	return next, nil
+}
+
+func (s *Service) listUnlocked(p PlayerRef) []Stack {
+	b := s.bagFor(p)
+	out := make([]Stack, 0, len(b.Stacks))
+	for id, qty := range b.Stacks {
+		if qty > 0 {
+			out = append(out, Stack{ItemCfgID: id, Quantity: qty})
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ItemCfgID < out[j].ItemCfgID })
+	return out
 }
 
 // Set sets absolute quantity (0 removes the stack). Used for admin/sync CRUD.
