@@ -1,5 +1,5 @@
 import type { MainCitySession } from "@/net/bootstrapSession";
-import { leaderboardTypeLabel } from "@/net/socialFormat";
+import { formatSocialRankEmptyMessage, leaderboardTypeLabel } from "@/net/socialFormat";
 
 /** 与 sanguo.rank.v1.LeaderboardType / rank_gateway 一致 */
 export const LB_PLAYER_POWER = 1;
@@ -41,9 +41,9 @@ export function formatLeaderboardEntryLine(entry: LeaderboardEntryRow): string {
   return `${rank}. ${name} · ${entry.score ?? 0}`;
 }
 
-/** 空榜占位与 dev 无种子提示（CLIENT-030）。 */
+/** 空榜占位与 dev 无种子提示（CLIENT-030 / CLIENT-053 统一 socialFormat）。 */
 export function formatLeaderboardEmptyHint(): string {
-  return "（空榜）dev 环境可能未写入排行种子，可对照 Scheduler / smoke 造数。";
+  return formatSocialRankEmptyMessage();
 }
 
 /** 当前查看者名次/分数（proto: my_rank / my_score） */

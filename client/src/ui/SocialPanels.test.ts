@@ -81,7 +81,35 @@ describe("SocialPanels rank", () => {
     expect(getLeaderboard).toHaveBeenLastCalledWith(1, LB_PLAYER_RESOURCE, 1, 20);
     expect(mount.querySelector('[data-role="viewer-rank"]')?.textContent).toContain("未上榜");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("（空榜）");
+    expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("刷新排行榜");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("种子");
+  });
+
+  it("keeps last rank snapshot on refresh failure and marks stale", async () => {
+    const mount = document.createElement("div");
+    const getLeaderboard = vi
+      .fn()
+      .mockResolvedValueOnce({
+        entries: [{ rank: 1, display_name: "甲", score: 100 }],
+        my_rank: 1,
+        my_score: 100,
+      })
+      .mockRejectedValueOnce(Object.assign(new Error("timeout"), { code: 500 }));
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("甲");
+    mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("甲");
+    const status = mount.querySelector('[data-role="rank-refresh-status"]');
+    expect(status?.textContent).toContain("刷新失败");
+    expect(status?.textContent).toContain("数据可能已过期");
   });
 
   it("disables rank refresh while in-flight and dedupes double click", async () => {
@@ -156,6 +184,41 @@ describe("SocialPanels chat & guild", () => {
     expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("上次更新");
   });
 
+  it("shows guild-not-joined readonly chat empty with navigate to guild panel", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      listChatMessages: vi.fn().mockResolvedValue({ messages: [] }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleChat();
+    await flushPromises();
+    vi.mocked(gateway.listChatMessages!).mockClear();
+    const channel = mount.querySelector('[data-field="channel"]') as HTMLSelectElement;
+    channel.value = "3";
+    channel.dispatchEvent(new Event("change", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.listChatMessages).not.toHaveBeenCalled();
+    const log = mount.querySelector('[data-role="chat-log"]');
+    expect(log?.querySelector(".social-list-empty")?.textContent).toContain("尚未加入军团");
+    mount.querySelector('[data-action="navigate-guild-panel"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(mount.querySelector(".social-panel.hidden h3")?.textContent).not.toBe("军团");
+    expect(mount.querySelectorAll(".social-panel:not(.hidden) h3")[0]?.textContent).toBe("军团");
+  });
+
+  it("shows chat empty copy and list refresh hint on load error", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      listChatMessages: vi.fn().mockRejectedValue(new Error("network")),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleChat();
+    await flushPromises();
+    expect(mount.querySelector('[data-role="chat-log"] .social-list-empty')?.textContent).toContain("请点「刷新」重试");
+    expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("刷新失败");
+  });
+
   it("blocks guild channel send without membership", async () => {
     const mount = document.createElement("div");
     const statuses: string[] = [];
@@ -207,5 +270,26 @@ describe("SocialPanels chat & guild", () => {
     mount.querySelector('[data-action="send-chat"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(statuses.some((s) => s.includes("禁言") && s.includes("61006"))).toBe(true);
+  });
+
+  it("shows guild member refresh error via formatSocialPanelRefreshError", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      createGuild: vi.fn().mockResolvedValue({ guild: { guild_id: 7001, name: "虎贲营" } }),
+      listGuildMembers: vi
+        .fn()
+        .mockResolvedValueOnce({ guild: { name: "虎贲营" }, members: [] })
+        .mockRejectedValueOnce(new Error("gateway down")),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
+    mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-members"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelector('[data-role="guild-refresh-status"]')?.textContent).toContain("刷新失败：gateway down");
+    expect(mount.querySelector(".guild-members .social-list-empty")?.textContent).toContain("请点「刷新」重试");
   });
 });
