@@ -34,6 +34,7 @@ import {
   battleReportListErrorClass,
   battleReportListErrorListHint,
 } from "@/net/panelDensity";
+import { resolveBattleReportMailLink } from "@/net/mailBattleCrossLink";
 
 const PAGE_LIMIT = 20;
 
@@ -44,6 +45,8 @@ export type BattleReportPanelOptions = {
   onViewOnMap?: (summary: BattleReportSummary) => void;
   /** 关闭面板、切换战报或取消复盘时清除小地图临时标记。 */
   onClearMapReplay?: () => void;
+  /** 详情「相关邮件」：只读高亮邮件行，不自动领取。 */
+  onOpenRelatedMail?: (mailId: number) => void;
 };
 
 export class BattleReportPanel {
@@ -56,6 +59,7 @@ export class BattleReportPanel {
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
   private detailSummary: BattleReportSummary | undefined;
+  private detailResult = "";
   private roundsTableExpanded = false;
   private listError = "";
   private detailError = "";
@@ -361,6 +365,21 @@ export class BattleReportPanel {
 
       detailEl.appendChild(wrap);
     }
+
+    const mailLink = resolveBattleReportMailLink(
+      this.detailSummary,
+      this.detailText,
+      this.detailResult,
+    );
+    if (mailLink.show && mailLink.mailId && this.panelOpts?.onOpenRelatedMail) {
+      const mailBtn = document.createElement("button");
+      mailBtn.type = "button";
+      mailBtn.className = "battle-report-mail-link-btn";
+      mailBtn.setAttribute("data-action", "open-related-mail");
+      mailBtn.dataset.mailId = String(mailLink.mailId);
+      mailBtn.textContent = "相关邮件";
+      detailEl.appendChild(mailBtn);
+    }
   }
 
   private async refreshList(): Promise<void> {
@@ -426,6 +445,7 @@ export class BattleReportPanel {
     this.detailText = "";
     this.detailRounds = [];
     this.detailSummary = undefined;
+    this.detailResult = "";
     this.roundsTableExpanded = false;
     this.detailLoading = true;
     this.onStatus(`战报 #${reportId}…`);
@@ -438,6 +458,7 @@ export class BattleReportPanel {
         };
       };
       this.detailSummary = res.report?.summary;
+      this.detailResult = res.report?.detail?.result ?? "";
       this.detailText = formatBattleReportDetail(
         reportId,
         res.report?.summary,
@@ -450,6 +471,7 @@ export class BattleReportPanel {
       this.detailText = "";
       this.detailRounds = [];
       this.detailSummary = undefined;
+      this.detailResult = "";
       this.onStatus(this.detailError);
     }
     this.detailLoading = false;
@@ -486,6 +508,9 @@ export class BattleReportPanel {
       this.renderDetail();
     } else if (action === "view-on-map" && this.detailSummary) {
       this.panelOpts?.onViewOnMap?.(this.detailSummary);
+    } else if (action === "open-related-mail") {
+      const mailId = Number(btn.dataset.mailId) || 0;
+      if (mailId > 0) this.panelOpts?.onOpenRelatedMail?.(mailId);
     }
   }
 }

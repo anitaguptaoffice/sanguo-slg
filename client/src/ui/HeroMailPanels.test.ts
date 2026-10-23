@@ -565,6 +565,39 @@ describe("HeroMailPanels", () => {
     expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
   });
 
+  it("shows 查看战报 when mail body has report_id and opens deep link", async () => {
+    const mount = document.createElement("div");
+    const onOpenBattleReport = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [{ mail_id: 5, title: "战报", status: 1, body: "report_id=77" }],
+        total_count: 1,
+      }),
+      markPlayerMailRead: vi.fn(),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onOpenBattleReport,
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    const btn = mount.querySelector('[data-action="mail-open-battle-report"]') as HTMLButtonElement;
+    expect(btn?.hidden).toBe(false);
+    expect(btn?.dataset.reportId).toBe("77");
+    btn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenBattleReport).toHaveBeenCalledWith(77);
+  });
+
   it("openFromTodoBadge selects first unread with unread filter", async () => {
     const mount = document.createElement("div");
     const listPlayerMail = vi.fn().mockResolvedValue({
