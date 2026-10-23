@@ -733,6 +733,107 @@
           "path": "textures/2x/ui/panel_military.png"
         }
       ]
+    },
+    {
+      "id": "ui.hud.bar.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 1600,
+        "h": 56
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/hud_bar.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/hud_bar.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.toolbar.bar.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 1600,
+        "h": 56
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/toolbar_bar.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/toolbar_bar.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.button.toolbar.v1",
+      "kind": "button",
+      "display_size": {
+        "w": 96,
+        "h": 44
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "button_states": {
+        "normal": [
+          {
+            "scale": 1,
+            "path": "textures/1x/ui/button_toolbar_normal.png"
+          },
+          {
+            "scale": 2,
+            "path": "textures/2x/ui/button_toolbar_normal.png"
+          }
+        ],
+        "hover": [
+          {
+            "scale": 1,
+            "path": "textures/1x/ui/button_toolbar_hover.png"
+          },
+          {
+            "scale": 2,
+            "path": "textures/2x/ui/button_toolbar_hover.png"
+          }
+        ],
+        "pressed": [
+          {
+            "scale": 1,
+            "path": "textures/1x/ui/button_toolbar_pressed.png"
+          },
+          {
+            "scale": 2,
+            "path": "textures/2x/ui/button_toolbar_pressed.png"
+          }
+        ],
+        "disabled": [
+          {
+            "scale": 1,
+            "path": "textures/1x/ui/button_toolbar_disabled.png"
+          },
+          {
+            "scale": 2,
+            "path": "textures/2x/ui/button_toolbar_disabled.png"
+          }
+        ]
+      }
     }
   ]
 }
