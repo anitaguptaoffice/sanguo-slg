@@ -48,6 +48,14 @@ import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelRefreshMeta } from "@/net/socialRefreshFormat";
+import {
+  chatChannelStorageKey,
+  type ChatUnreadSummary,
+  type ChatUnreadTracker,
+  isElementScrolledToBottom,
+  maxChatMessageSentAtMs,
+} from "@/net/chatUnread";
+import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
   formatRankReadonlySummary,
@@ -83,12 +91,14 @@ export class SocialPanels {
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
   private rankHighlightEntityId = 0;
   private rankDeepLink: SocialRankDeepLinkHandlers = {};
+  private lastRenderedChatMessages: ChatMessageRow[] = [];
 
   constructor(
     private readonly mount: HTMLElement,
     private readonly gateway: GatewayPort,
     private getSession: () => MainCitySession | null,
     private onStatus: (msg: string) => void,
+    private readonly chatUnreadTracker: ChatUnreadTracker | null = null,
   ) {}
 
   setRankDeepLinkHandlers(handlers: SocialRankDeepLinkHandlers): void {
@@ -187,6 +197,32 @@ export class SocialPanels {
     return this.chatPanel;
   }
 
+  getGuildId(): number {
+    return this.guildId;
+  }
+
+  isChatOpen(): boolean {
+    return !!this.chatPanel && !this.chatPanel.classList.contains("hidden");
+  }
+
+  isGuildOpen(): boolean {
+    return !!this.guildPanel && !this.guildPanel.classList.contains("hidden");
+  }
+
+  /** HUD / 军团面板 tab 角标与底栏同步（CLIENT-102）。 */
+  syncChatUnreadBadges(summary: ChatUnreadSummary): void {
+    this.setChatTabBadge(CHAT_CHANNEL_WORLD, summary.world);
+    this.setChatTabBadge(CHAT_CHANNEL_GUILD, summary.guild);
+    const guildBadge = this.guildPanel?.querySelector<HTMLElement>(
+      '[data-role="guild-chat-entry-badge"]',
+    );
+    if (guildBadge) {
+      const text = formatHudBadgeCount(summary.guild);
+      guildBadge.textContent = text;
+      guildBadge.classList.toggle("hidden", !text);
+    }
+  }
+
   private serverId(): number {
     const s = this.getSession();
     return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
@@ -201,6 +237,56 @@ export class SocialPanels {
   private syncChatChannelUi(ch: number): void {
     this.chatPanel.querySelector(".private-target")?.classList.toggle("hidden", ch !== CHAT_CHANNEL_PRIVATE);
     this.chatPanel.querySelector('[data-role="guild-chat-hint"]')?.classList.toggle("hidden", ch !== CHAT_CHANNEL_GUILD);
+  }
+
+  private syncChatChannelTabUi(ch: number): void {
+    const tabs = this.chatPanel.querySelectorAll<HTMLButtonElement>("[data-action='pick-chat-channel']");
+    for (const tab of tabs) {
+      const tabCh = Number(tab.getAttribute("data-chat-channel") ?? 0);
+      const active = tabCh === ch;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    }
+  }
+
+  private setChatTabBadge(channel: number, count: number): void {
+    const badge = this.chatPanel?.querySelector<HTMLElement>(`[data-role="chat-tab-badge-${channel}"]`);
+    if (!badge) return;
+    const text = formatHudBadgeCount(count);
+    badge.textContent = text;
+    badge.classList.toggle("hidden", !text);
+  }
+
+  private pushChatSnapshot(channel: number, messages: ChatMessageRow[]): void {
+    if (!this.chatUnreadTracker) return;
+    if (channel !== CHAT_CHANNEL_WORLD && channel !== CHAT_CHANNEL_GUILD) return;
+    const guildId = channel === CHAT_CHANNEL_GUILD ? this.guildId : 0;
+    const key = chatChannelStorageKey(channel, guildId);
+    this.chatUnreadTracker.replaceSnapshot({ key, channel, messages });
+  }
+
+  private maybeMarkChatChannelRead(): void {
+    if (!this.chatUnreadTracker || this.chatPanel.classList.contains("hidden")) return;
+    const ch = this.selectedChatChannel();
+    if (ch !== CHAT_CHANNEL_WORLD && ch !== CHAT_CHANNEL_GUILD) return;
+    const scroll = this.chatPanel.querySelector('[data-role="chat-scroll"]') as HTMLElement | null;
+    if (!scroll || !isElementScrolledToBottom(scroll)) return;
+    const guildId = ch === CHAT_CHANNEL_GUILD ? this.guildId : 0;
+    const key = chatChannelStorageKey(ch, guildId);
+    const through = maxChatMessageSentAtMs(this.lastRenderedChatMessages);
+    if (through > 0) this.chatUnreadTracker.markChannelRead(key, through);
+  }
+
+  private openGuildChatChannel(): void {
+    this.rankPanel.classList.add("hidden");
+    this.guildPanel.classList.add("hidden");
+    this.chatPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.chatPanel);
+    const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
+    if (sel) sel.value = String(CHAT_CHANNEL_GUILD);
+    this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
+    this.syncChatChannelTabUi(CHAT_CHANNEL_GUILD);
+    void this.refreshChat();
   }
 
   private chatListOpts(ch: number): { peerPlayerId?: number; guildId?: number } {
@@ -238,7 +324,12 @@ export class SocialPanels {
     el.dataset.centerPanel = "chat";
     el.innerHTML = `
       <h3>聊天</h3>
-      <label>频道
+      <div class="chat-channel-tabs" data-role="chat-channel-tabs" role="tablist" aria-label="聊天频道">
+        <button type="button" class="chat-channel-tab active" data-action="pick-chat-channel" data-chat-channel="1" role="tab" aria-selected="true">世界<span class="chat-channel-tab-badge hidden" data-role="chat-tab-badge-1"></span></button>
+        <button type="button" class="chat-channel-tab" data-action="pick-chat-channel" data-chat-channel="2" role="tab" aria-selected="false">私聊</button>
+        <button type="button" class="chat-channel-tab" data-action="pick-chat-channel" data-chat-channel="3" role="tab" aria-selected="false">军团<span class="chat-channel-tab-badge hidden" data-role="chat-tab-badge-3"></span></button>
+      </div>
+      <label class="chat-channel-select-label">频道
         <select data-field="channel">
           <option value="1">世界</option>
           <option value="2">私聊</option>
@@ -264,8 +355,14 @@ export class SocialPanels {
     el.querySelector('[data-field="channel"]')?.addEventListener("change", (ev) => {
       const ch = Number((ev.target as HTMLSelectElement).value);
       this.syncChatChannelUi(ch);
+      this.syncChatChannelTabUi(ch);
       if (!el.classList.contains("hidden")) void this.refreshChat();
     });
+    el.querySelector('[data-role="chat-scroll"]')?.addEventListener(
+      "scroll",
+      () => this.maybeMarkChatChannelRead(),
+      { passive: true },
+    );
     return el;
   }
 
@@ -275,6 +372,7 @@ export class SocialPanels {
     el.dataset.centerPanel = "guild";
     el.innerHTML = `
       <h3>军团</h3>
+      <button type="button" class="guild-chat-entry" data-action="open-guild-chat-channel">军团频道<span class="chat-channel-tab-badge hidden" data-role="guild-chat-entry-badge" aria-hidden="true"></span></button>
       <p data-role="guild-summary">尚未加入军团</p>
       <label>军团名称 <input type="text" data-field="guild-name" placeholder="新建军团名" /></label>
       <button type="button" data-action="create-guild">创建军团</button>
@@ -394,7 +492,9 @@ export class SocialPanels {
           limit: 30,
         })) as { messages?: ChatMessageRow[] };
         this.chatListError = "";
-        this.renderChatLog(res.messages ?? [], ch);
+        const messages = res.messages ?? [];
+        this.renderChatLog(messages, ch);
+        this.pushChatSnapshot(ch, messages);
         this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", {
           busy: false,
           lastUpdatedMs: Date.now(),
@@ -417,6 +517,7 @@ export class SocialPanels {
   private renderChatLog(messages: ChatMessageRow[], channel = this.selectedChatChannel()): void {
     const ul = this.chatPanel.querySelector('[data-role="chat-log"]');
     if (!ul) return;
+    this.lastRenderedChatMessages = messages;
     ul.innerHTML = "";
     if (channel === CHAT_CHANNEL_GUILD && this.guildId <= 0) {
       const li = document.createElement("li");
@@ -451,6 +552,7 @@ export class SocialPanels {
         ul.appendChild(this.buildChatMessageRow(m));
       }
     }
+    queueMicrotask(() => this.maybeMarkChatChannelRead());
   }
 
   private isGuildRoleGroupExpanded(roleKey: number): boolean {
@@ -532,6 +634,7 @@ export class SocialPanels {
     const channel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement;
     if (channel) channel.value = String(CHAT_CHANNEL_GUILD);
     this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
+    this.syncChatChannelTabUi(CHAT_CHANNEL_GUILD);
     const input = this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement;
     if (input) {
       input.value = formatGuildMentionDraft(displayName);
@@ -886,6 +989,18 @@ export class SocialPanels {
     if (a === "send-chat") void this.sendChat();
     if (a === "refresh-chat" || a === "retry-refresh-chat") void this.refreshChat();
     if (a === "navigate-guild-panel") this.openGuildPanel();
+    if (a === "pick-chat-channel") {
+      const ch = Number(btn.getAttribute("data-chat-channel") ?? CHAT_CHANNEL_WORLD);
+      const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
+      if (sel) {
+        sel.value = String(ch);
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+      } else {
+        this.syncChatChannelUi(ch);
+        this.syncChatChannelTabUi(ch);
+        if (!this.chatPanel.classList.contains("hidden")) void this.refreshChat();
+      }
+    }
   }
 
   private onGuildClick(ev: Event): void {
@@ -906,6 +1021,7 @@ export class SocialPanels {
       this.guildRoleGroupExpanded.set(roleKey, next);
       this.renderGuildMembersList(this.guildMembersCache);
     }
+    if (a === "open-guild-chat-channel") this.openGuildChatChannel();
   }
 
   private onRankClick(ev: Event): void {

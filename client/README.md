@@ -257,9 +257,14 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 排行/将领/日常 manifest** | [手动验收（1280 排行将领日常 CLIENT-103）](#手动验收1280-排行将领日常-client-103)（[#441](https://github.com/anitaguptaoffice/sanguo-slg/issues/441)） | 进行中 |
+| **1280 排行/将领/日常 manifest** | [手动验收（1280 排行将领日常 CLIENT-103）](#手动验收1280-排行将领日常-client-103)（[#441](https://github.com/anitaguptaoffice/sanguo-slg/issues/441)） | 已合 |
+| **聊天未读与社交角标** | [手动验收（聊天未读与社交角标 CLIENT-102）](#手动验收聊天未读与社交角标-client-102)（[#440](https://github.com/anitaguptaoffice/sanguo-slg/issues/440)） | 进行中 |
 
 **推荐串联**（在 [Wave 23](#wave-23-后勤互链与全链路反馈加深m4-出口--intg-020) 背包商城军团 manifest 基础上）：视口 **1280×720** 双榜 / 将领 / 日常 manifest 与滚动巩固（**CLIENT-103**）；与 **CLIENT-096**～**102** 并行。
+
+### 手动验收（聊天未读与社交角标 CLIENT-102）
+
+`ListChatMessages` 快照 + 本地 `localStorage` 键 **`chat-last-read-ts`** 估算世界/军团频道未读（无服务端 read cursor）。底栏 **「聊天」** 角标为两频道之和，**「军团」** 角标与聊天面板 **军团** tab、军团面板 **军团频道** 入口同步；打开频道并 **滚到底** 后该频道未读清零。单测：`chatUnread.test.ts`（`estimateChatUnread`）、`chatUnreadPoll.test.ts`；与 **CLIENT-077** 顶栏待办角标并存。
 
 ## 网关地址
 
