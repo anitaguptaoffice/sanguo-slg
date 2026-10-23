@@ -5,6 +5,7 @@
 # wave:7「对齐波次」策略：核心 cfg 子集可玩优先（见 docs/ROADMAP.md）。
 # wave:8「M3/M4 出口加固」：在 wave7 与 WIRE-001 / CLIENT-ART-INTG 合并后验收 ROADMAP 仍开着的缺口。
 # wave:11「H5 日常环」：在 DATA-002 子集上加深客户端可玩路径，不开 DATA-003 / cfg_act*。
+# wave:13「H5 闭环加深」：队列/经济/社交只读 UI + INTG-010 冒烟；仍 core-subset-first，无 CancelMarch（契约未定义）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -1433,7 +1434,7 @@
   wave: 12
   domain: client
   depends_on: [CLIENT-003, CLIENT-007]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1456,7 +1457,7 @@
   wave: 12
   domain: client
   depends_on: [CLIENT-010]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1476,7 +1477,7 @@
   wave: 12
   domain: client
   depends_on: [CLIENT-007, CLIENT-013]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1496,7 +1497,7 @@
   wave: 12
   domain: client
   depends_on: [CLIENT-012]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1516,7 +1517,7 @@
   wave: 12
   domain: client
   depends_on: [CLIENT-008, MAIL-001]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -1536,7 +1537,7 @@
   wave: 12
   domain: client
   depends_on: [CLIENT-011]
-  sync_status: ready
+  sync_status: done
   size: S
   owner_dir: client
   scope: [client/**]
@@ -1555,7 +1556,7 @@
   wave: 12
   domain: platform
   depends_on: [INTG-008, QUEST-003]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -1578,8 +1579,7 @@
   wave: 12
   domain: platform
   depends_on: [INTG-009, CLIENT-013, CLIENT-014]
-  blocked_until: [INTG-009]
-  sync_status: blocked
+  sync_status: done
   size: S
   owner_dir: docs
   scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
@@ -1593,3 +1593,149 @@
     文档 only。INTG-009 合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155 等 art hold PR。
+
+- id: CLIENT-019
+  title: 内政升级与募兵队列倒计时面板
+  wave: 13
+  domain: client
+  depends_on: [CLIENT-011, CLIENT-003, CLIENT-018]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 底栏或 HUD「队列」入口：汇总 `GetCityState.buildings` 中 `upgrade_finish_at_ms > now` 的槽位，展示 slot_key、目标等级、剩余时间（复用 `hudFormat.formatUpgradeRemaining`，1s  tick，面板关闭时停止）
+    - 募兵：`RecruitTroop` 返回 `queue_id`/`finish_at_ms` 时在队列列表展示兵种/数量/完成时间；完成后提示刷新军事兵力（可触发 `GetCityState` 或军事面板刷新）
+    - 不新增 domestic/military RPC；不扩建筑类型或新兵种 cfg
+    - 横屏 1600×900 可滚动；npm test 绿；client/README.md 增补队列手动验收
+  body: |
+    wave:12 CLIENT-011 仅在槽位标签显示升级摘要；本卡集中展示内政+募兵排队，加深「等建造/等练兵」反馈。
+
+    仅 client/**。与 CLIENT-020～023 并行（‖）。禁止 DATA-003 / cfg_act*。
+
+    参照：`internal/api/domestic_handlers.go`（GetCityState）、`military.v1.RecruitTroop` 响应字段。
+
+- id: CLIENT-020
+  title: 背包使用消耗品与商城购买可读反馈
+  wave: 13
+  domain: client
+  depends_on: [CLIENT-010, CLIENT-018]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 背包：`UseConsumable` 成功后在面板与状态栏展示效果摘要（资源包粮/木等增量、加速符文案）；失败展示稳定 `code`/`msg`；仅 DATA-002 已有 `item_cfg_id`（如 2001/2003），不新增道具行
+    - 商城：购买成功后行内展示「已购 +N」与 `wallet_after` 对照 HUD；限购/售罄态与 CLIENT-010 一致；余额不足错误不吞掉
+    - 使用/购买后与 CLIENT-018 HUD 飘字联动（若已实现则回归不退化）
+    - 单测覆盖效果解析辅助函数；npm test 绿；client/README.md 增补背包/商城反馈步骤
+  body: |
+    ECON-001 已真扣费；本卡纯 UI+联调加深，不接支付渠道、不扩商城 SKU。
+
+    仅 client/**。与 CLIENT-019、CLIENT-021 并行（‖）。
+
+- id: CLIENT-021
+  title: 排行榜只读面板（双榜与快照元数据）
+  wave: 13
+  domain: client
+  depends_on: [CLIENT-004, CLIENT-006]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 排行面板支持切换 `rank.v1.GetLeaderboard`：战力榜与资源总量榜（LeaderboardType 与 internal/api/rank_gateway.go 一致）
+    - 列表展示名次、玩家展示名/ID、分数；`viewer_rank`/`viewer_score` 区域文案明确（未上榜时说明）
+    - 若响应含 `batch_id` 或刷新时间字段则展示「快照批次」摘要（只读，不触发服务端 Refresh）
+    - 单测覆盖 type 切换与空榜；npm test 绿
+  body: |
+    CLIENT-004 仅有战力榜按钮；RANK-002 后端双榜已就绪。只读查询，不改 rank 域。
+
+    仅 client/**。与 CLIENT-022 并行（‖）。
+
+- id: CLIENT-022
+  title: 军团与聊天面板可读联调加深
+  wave: 13
+  domain: client
+  depends_on: [CLIENT-006, CLIENT-004]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 聊天列表行含频道、发送者 display_name/player_id、本地格式时间（`sent_at_ms`）；世界/私聊/军团三频道行为与 WIRE-001 一致
+    - 军团：创建/加入后 `guild-summary` 持久会话内展示 guild_id/名称；成员列表展示 `guildRoleLabel` 职务与加入时间（若 API 返回）
+    - 军团频道发送前校验已入团；错误码（禁言等）在状态栏可读
+    - mock 网关与 `make dev` 均可验收；npm test 绿；client/README.md 更新 M3 社交步骤
+  body: |
+    CLIENT-006 已挂真实路由；本卡提升信息密度与边界提示，不新加 chat/guild proto。
+
+    仅 client/**。与 CLIENT-021、CLIENT-023 并行（‖）。
+
+- id: CLIENT-023
+  title: 招募成功与日常将领任务闭环反馈
+  wave: 13
+  domain: client
+  depends_on: [CLIENT-014, CLIENT-009, CLIENT-010]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "RecruitHero 成功后自动刷新将领列表并选中新 hero_id；状态栏展示模板名与扣费摘要"
+    - "引导玩家查看日常：若 daily_recruit_1（cfg 1013）进行中，招募成功后提示打开「日常」面板并刷新 chain_id=400 列表（进度由 QUEST-002/003 服务端推进）"
+    - 不新增招募池 SKU；模板仍来自 ListRecruitTemplates
+    - 单测覆盖招募成功后的列表选中逻辑；npm test 绿
+  body: |
+    加深 wave:10/11 将领+日常交叉路径，非新 HERO RPC。
+
+    仅 client/**。与 CLIENT-019～022 并行（‖）。
+
+- id: INTG-010
+  title: wave:13 网关路径冒烟（经济+社交+队列相关 RPC）
+  wave: 13
+  domain: platform
+  depends_on: [INTG-009]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/hero/**, internal/chat/**, internal/rank/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-009 全量断言（行军/邮件/日常/商城/重启）
+    - 新增主路径：`rank.v1.GetLeaderboard` 战力榜与资源榜各一次，`viewer_player_id` 与条目非空或文档说明 dev 空榜
+    - 新增主路径：`content.v1.UseConsumable` 对 DATA-002 已有消耗品（如 2001）成功或预期失败时打印 `item_cfg_id`
+    - 可选：`chat.v1` 世界频道发收一条 + `guild.v1` 创建军团（失败不阻塞，README 注明）
+    - tools/smoke/README.md 更新 wave:13 段与 `go test -run` 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE13-RUN。后端-only，覆盖 wave:13 经济/社交网关；不跑 H5。
+
+    **本波不做** `CancelMarch`/行军加速——`spec/proto` military.v1 未定义，需单独 contract+军事卡（wave:13 不开）。
+
+    CLIENT-019～023 非硬依赖。与全部 CLIENT 并行（‖）。
+
+- id: DOCS-EXIT-005
+  title: wave:13 H5 闭环加深与文档收口
+  wave: 13
+  domain: platform
+  depends_on: [INTG-010, CLIENT-019, CLIENT-020]
+  blocked_until: [INTG-010]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - ROADMAP：Wave 13 标为已完成并链 Issue/PR；Wave 12 保持已完成
+    - M4/H5 出口描述含「队列倒计时 + 背包/商城反馈 + 双榜 + 社交可读 + 招募日常闭环」路径（指向 client/README）
+    - tasks/README.md wave:13 进度表与 Issue 一致
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；行军取消/加速仍 out（无 RPC）
+  body: |
+    文档 only。INTG-010 合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR。

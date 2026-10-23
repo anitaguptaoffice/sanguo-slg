@@ -15,7 +15,7 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1–12，第几波开工（wave:7–12 见 `docs/ROADMAP.md`） |
+| `wave` | 是 | 1–13，第几波开工（wave:7–13 见 `docs/ROADMAP.md`） |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
 | `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked` |
@@ -59,7 +59,8 @@ status:review   ──合并────▶  status:done
 | 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**已完成**） | 见下表 |
 | 10 | M4 玩法加深（**已完成**，见 ROADMAP Wave 10） | CLIENT-008 (#156), HERO-003 (#158), QUEST-002 (#157), GM-003 (#154), INTG-007 (#159), DOCS-EXIT-002 (#160) |
 | 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
-| 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#185) |
+| 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
+| 13 | H5 闭环加深（**进行中**，见 ROADMAP Wave 13） | CLIENT-019–023, INTG-010, DOCS-EXIT-005（Issue 待 sync） |
 
 ### Wave 9 进度（已完成）
 
@@ -106,6 +107,18 @@ status:review   ──合并────▶  status:done
 | [#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) | CLIENT-017 | `status:done`（[#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190)） |
 | [#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) | CLIENT-018 | `status:done`（[#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191)） |
 | [#184](https://github.com/anitaguptaoffice/sanguo-slg/issues/184) | INTG-009 | `status:done`（[#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192)） |
-| [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | `status:review`（本卡） |
+| [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | `status:done`（[#194](https://github.com/anitaguptaoffice/sanguo-slg/pull/194)） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11 / Wave 12」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
+### Wave 13 进度（待 `tasks_sync`，backlog 已入 main 前仅 YAML）
+
+| ID | 状态 | 说明 |
+|---|---|---|
+| CLIENT-019 | 待 sync → `status:ready` | 内政/募兵队列倒计时 |
+| CLIENT-020 | 待 sync → `status:ready` | 背包使用 + 商城购买反馈 |
+| CLIENT-021 | 待 sync → `status:ready` | 排行双榜只读 |
+| CLIENT-022 | 待 sync → `status:ready` | 军团/聊天可读联调 |
+| CLIENT-023 | 待 sync → `status:ready` | 招募与日常闭环 |
+| INTG-010 | 待 sync → `status:ready` | wave:13 网关冒烟 |
+| DOCS-EXIT-005 | 待 sync → `status:blocked` | 依赖 INTG-010；`blocked_until` 在 backlog |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 10 / Wave 11 / Wave 12 / Wave 13」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。

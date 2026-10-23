@@ -137,11 +137,31 @@ H5 人工验收与 INTG-008 路径对齐，见 [client/README.md](../client/READ
 | [#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) | CLIENT-017 | 已完成 | [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190) |
 | [#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) | CLIENT-018 | 已完成 | [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191) |
 | [#184](https://github.com/anitaguptaoffice/sanguo-slg/issues/184) | INTG-009 | 已完成 | [#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192) |
-| [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | 审阅中 | （本 PR） |
+| [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | 已完成 | [#194](https://github.com/anitaguptaoffice/sanguo-slg/pull/194) |
 
 H5 人工验收与 INTG-009 路径对齐，见 [client/README.md](../client/README.md#wave-12-可玩加深m4-出口--intg-009)（**行军列表 + 将领详情 + 邮件 + 战报筛选**）。
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。全屏大地图 / 新建筑类型 / 改 `spec/proto` 冻结契约（战报筛选仅客户端）。
+
+## Wave 13 H5 闭环加深 — **进行中**
+
+**策略**：在 wave:12 **行军/将领/邮件/战报/HUD** 之上，补齐 **内政与募兵队列可读**、**背包/商城消费反馈**、**双榜只读**、**军团/聊天信息密度**与 **招募↔日常闭环**；网关 **INTG-010** 复跑 smoke。**仍**在 DATA-002 子集；**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。**不**做行军取消/加速（`military.v1` 无对应 RPC，本波不开 contract）。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| （待 sync） | CLIENT-019 | 待开工 | — |
+| （待 sync） | CLIENT-020 | 待开工 | — |
+| （待 sync） | CLIENT-021 | 待开工 | — |
+| （待 sync） | CLIENT-022 | 待开工 | — |
+| （待 sync） | CLIENT-023 | 待开工 | — |
+| （待 sync） | INTG-010 | 待开工 | — |
+| （待 sync） | DOCS-EXIT-005 | 阻塞（等 INTG-010） | — |
+
+波次 backlog 规划见本仓库 `feat/wave-13-backlog` PR（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync` / 手工建 Issue）。
+
+**并行建议**：CLIENT-019～023 可全开；INTG-010 与 CLIENT 并行；DOCS-EXIT-005 在 INTG-010 合并后放开。
+
+**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军加速（需未来 contract 卡）。
 
 ## 不做
 
