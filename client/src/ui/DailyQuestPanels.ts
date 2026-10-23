@@ -1,4 +1,8 @@
-import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import {
+  formatBuildQueueCountdownForQuest,
+  isBuildLevelDailyNeedingProgress,
+} from "@/net/dailyQuestQueueMatch";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
@@ -46,6 +50,8 @@ export class DailyQuestPanels {
     private readonly onNavigate?: (action: DailyQuestNavAction) => void,
     private readonly getBattleReportUnread?: () => number,
     private readonly onOpenBattleReports?: () => void,
+    private readonly getQueueBuildings?: () => CityBuilding[] | undefined,
+    private readonly queueSlotLabels?: Record<string, string>,
   ) {}
 
   attach(): void {
@@ -64,6 +70,20 @@ export class DailyQuestPanels {
 
   getRoot(): HTMLElement {
     return this.panel;
+  }
+
+  /** 队列↔日常互链：只读当前列表快照（不额外 RPC）。 */
+  getRowsSnapshot(): DailyQuestRow[] {
+    return this.rows.slice();
+  }
+
+  /** 队列面板深链：打开日常并滚动到指定 quest 行。 */
+  openAndFocusQuest(questCfgId: number): void {
+    this.panel.classList.remove("hidden");
+    void this.refreshList(questCfgId).then(() => {
+      const row = this.panel.querySelector(`li[data-quest-cfg-id="${questCfgId}"]`);
+      row?.scrollIntoView?.({ block: "nearest" });
+    });
   }
 
   toggle(): void {
@@ -129,10 +149,18 @@ export class DailyQuestPanels {
       li.textContent = "（暂无日常任务，请刷新或提升君主等级）";
       ul.appendChild(li);
     } else {
+      const now = Date.now();
+      const slotLabels = this.queueSlotLabels ?? {};
+      const buildings = this.getQueueBuildings?.();
       for (const q of this.rows) {
         const li = document.createElement("li");
         const id = q.quest_cfg_id ?? 0;
-        li.textContent = formatDailyQuestLine(q);
+        let line = formatDailyQuestLine(q);
+        if (isBuildLevelDailyNeedingProgress(q) && buildings) {
+          const queueHint = formatBuildQueueCountdownForQuest(q, buildings, slotLabels, now);
+          if (queueHint) line = `${line} · ${queueHint}`;
+        }
+        li.textContent = line;
         if (id) {
           li.setAttribute("data-quest-cfg-id", String(id));
           if (id === this.selectedCfgId) li.classList.add("selected");

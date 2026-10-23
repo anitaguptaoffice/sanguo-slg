@@ -2,6 +2,8 @@ import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagStackQuantity } from "@/net/bagState";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
+import type { DailyQuestRow } from "@/net/dailyQuestState";
+import { findBuildDailyQuestForBuilding } from "@/net/dailyQuestQueueMatch";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -11,6 +13,8 @@ import {
   pruneFinishedRecruits,
   type RecruitQueueEntry,
 } from "@/net/queueState";
+
+export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
 /** 建造队列加速符（与 DATA-001 / content catalog item_cfg_id 2003 一致，勿新增 cfg）。 */
 export const BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID = 2003;
@@ -33,6 +37,8 @@ export class QueuePanels {
     private readonly onStatus: (msg: string) => void,
     private readonly onAfterCityRefresh: () => void,
     private readonly onMilitarySync: () => void,
+    private readonly getDailyChainRows?: () => DailyQuestRow[],
+    private readonly onOpenDailyBuildQuest?: (questCfgId: number) => void,
   ) {}
 
   attach(): void {
@@ -150,6 +156,8 @@ export class QueuePanels {
       buildUl.appendChild(li);
     }
 
+    const dailyRows = this.getDailyChainRows?.() ?? [];
+
     for (const b of buildRows) {
       const text = formatBuildingUpgradeQueueLine(b, this.slotLabels, now);
       const li = document.createElement("li");
@@ -157,6 +165,16 @@ export class QueuePanels {
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
+      const linkedQuest = findBuildDailyQuestForBuilding(b, dailyRows, now);
+      if (linkedQuest && this.onOpenDailyBuildQuest) {
+        const cfgId = linkedQuest.quest_cfg_id ?? 0;
+        const dailyBtn = document.createElement("button");
+        dailyBtn.type = "button";
+        dailyBtn.setAttribute("data-action", "daily-build-next");
+        if (cfgId > 0) dailyBtn.setAttribute("data-quest-cfg-id", String(cfgId));
+        dailyBtn.textContent = QUEUE_DAILY_NEXT_BUTTON_LABEL;
+        li.appendChild(dailyBtn);
+      }
       const btn = document.createElement("button");
       btn.type = "button";
       btn.setAttribute("data-action", "speedup-build");
@@ -264,6 +282,11 @@ export class QueuePanels {
       void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
     } else if (action === "speedup-build") {
       void this.useBuildSpeedup();
+    } else if (action === "daily-build-next") {
+      const cfgId = Number(btn.getAttribute("data-quest-cfg-id")) || 0;
+      if (cfgId > 0 && this.onOpenDailyBuildQuest) {
+        this.onOpenDailyBuildQuest(cfgId);
+      }
     }
   }
 }
