@@ -122,8 +122,12 @@
       .military-panel {
         position: absolute; right: 0; top: calc(56 / 900 * 100%); bottom: calc(56 / 900 * 100%);
         width: min(420px, 42%); margin: 0; padding: 12px 16px; font-size: 13px;
-        background: transparent; border-radius: 0; overflow: auto; z-index: 5;
+        background: transparent; border-radius: 0; overflow: hidden; z-index: 5;
         color: #3d2e1f;
+        display: flex; flex-direction: column;
+      }
+      .military-panel .panel-scroll-body {
+        flex: 1 1 auto; min-height: 0; overflow-y: auto; margin-top: 4px;
       }
       .military-panel.hidden { display: none; }
       .military-panel h3 { margin-bottom: 8px; font-size: 15px; color: #2a1f14; font-weight: 700; }
@@ -533,12 +537,20 @@
       .main-city-toolbar button { min-width: 72px; flex: 1 1 30%; }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"],
-      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] {
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
-      #layout-frame.layout-narrow .content-panel .panel-scroll-body {
+      #layout-frame.layout-narrow .military-panel[data-center-panel="military"] {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel .panel-scroll-body,
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
@@ -566,6 +578,24 @@
         flex-shrink: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-panel-feedback {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-status {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .content-panel-actions {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .military-panel .military-troops {
         flex-shrink: 0;
       }
     </style>

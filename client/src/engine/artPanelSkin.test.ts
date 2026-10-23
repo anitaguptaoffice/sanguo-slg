@@ -2,12 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   CLIENT_062_CENTER_PANEL_ASSET_IDS,
+  CLIENT_070_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
+  PANEL_ASSET_DEFAULT,
   PANEL_ASSET_HERO,
   PANEL_ASSET_MILITARY,
   PANEL_ASSET_QUEUE,
   skinBagPanel,
+  skinDailyPanel,
   skinHeroPanel,
+  skinMailPanel,
   skinMilitaryPanel,
   skinNineSlicePanel,
   skinQueuePanel,
@@ -75,5 +79,22 @@ describe("skinNineSlicePanel", () => {
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_HERO);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_BAG);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_QUEUE);
+  });
+
+  it("CLIENT-070 maps military mail daily roots to manifest ids", () => {
+    expect(CLIENT_070_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      military: PANEL_ASSET_MILITARY,
+      mail: PANEL_ASSET_DEFAULT,
+      daily: PANEL_ASSET_DEFAULT,
+    });
+  });
+
+  it("skinMailPanel and skinDailyPanel use default panel asset", () => {
+    const assets = mockAssets();
+    const mail = document.createElement("div");
+    const daily = document.createElement("div");
+    skinMailPanel(mail, assets);
+    skinDailyPanel(daily, assets);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_DEFAULT);
   });
 });

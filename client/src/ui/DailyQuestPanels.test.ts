@@ -9,6 +9,14 @@ function flushPromises(): Promise<void> {
 }
 
 describe("DailyQuestPanels", () => {
+  it("daily panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new DailyQuestPanels(mount, gateway, () => null, () => {}, () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-center-panel="daily"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("lists dailies with chain_id 400", async () => {
     const mount = document.createElement("div");
     const listPlayerQuests = vi.fn().mockResolvedValue({
