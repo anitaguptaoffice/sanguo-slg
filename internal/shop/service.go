@@ -111,7 +111,7 @@ func (s *Service) Purchase(serverID int32, playerID int64, offerID int32, count 
 		}
 	}
 	player := content.PlayerRef{ServerID: serverID, PlayerID: playerID}
-	walletAfter, err := s.payments.spendResources(player, scaleWallet(priceWallet(entry.Price), count))
+	walletAfter, err := s.payments.spendResources(ctx, player, scaleWallet(priceWallet(entry.Price), count))
 	if err != nil {
 		return Offer{}, nil, content.ResourceWallet{}, err
 	}

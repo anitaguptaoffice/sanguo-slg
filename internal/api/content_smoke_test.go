@@ -116,8 +116,10 @@ func TestM4ContentSmokePath(t *testing.T) {
 		t.Fatalf("bag after claim: qty=%d err=%v", qty, err)
 	}
 
-	smokeStep(t, "grant gold for shop")
-	_, err = apiSrv.ContentService().Grant(p, content.RewardPackage{Resources: map[string]int64{"gold": 100}}, "smoke-shop-seed")
+	smokeStep(t, "seed player_wallet gold for shop")
+	_, err = pool.Exec(ctx, `
+		UPDATE player_wallet SET gold = gold + 100
+		WHERE server_id = 1 AND player_id = $1`, playerID)
 	if err != nil {
 		t.Fatal(err)
 	}

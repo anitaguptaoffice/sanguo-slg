@@ -28,7 +28,7 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 	s.questSvc = quest.NewService(questStore, questCat, quest.NewContentGranter(contentSvc), nil)
 	s.questChainIDs = questChainIDsFromCatalog(questCat)
 
-	s.shopSvc = shop.NewService(devShopCatalog(), nil, shop.NewPayments(contentSvc), s.players.Pool)
+	s.shopSvc = shop.NewService(devShopCatalog(), nil, shop.NewPayments(contentSvc, s.newShopWalletStore()), s.players.Pool)
 	s.contentSvc = contentSvc
 	s.gm = NewGmService(s.log, s.players.Pool, s.sessions, contentSvc)
 
