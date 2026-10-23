@@ -1,5 +1,6 @@
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import { SocialPanels } from "@/ui/SocialPanels";
 import {
   formatMarchHint,
   formatReportLine,
@@ -36,6 +37,7 @@ export class MainCityScene implements Scene {
   private lastMarch: MarchSummary | null = null;
   private reportLines: BattleReportSummary[] = [];
   private selectedReportText = "";
+  private social!: SocialPanels;
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.session = (data as MainCitySession) ?? null;
@@ -48,6 +50,9 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
+      <button type="button" data-action="toggle-chat">聊天</button>
+      <button type="button" data-action="toggle-guild">军团</button>
+      <button type="button" data-action="toggle-rank">排行</button>
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
@@ -79,12 +84,23 @@ export class MainCityScene implements Scene {
     const parent = ctx.canvas.parentElement;
     parent?.appendChild(this.toolbar);
     parent?.appendChild(this.militaryPanel);
+    this.social = new SocialPanels(
+      parent ?? this.hud,
+      this.gateway,
+      () => this.session,
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+    );
+    this.social.attach();
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.syncMilitaryPanel();
   }
 
   leave(): void {
+    this.social?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -99,6 +115,9 @@ export class MainCityScene implements Scene {
       this.militaryPanel.classList.toggle("hidden");
       this.syncMilitaryPanel();
     }
+    if (action === "toggle-chat") this.social.toggleChat();
+    if (action === "toggle-guild") this.social.toggleGuild();
+    if (action === "toggle-rank") this.social.toggleRank();
   }
 
   private onMilitaryClick(ev: Event): void {
@@ -359,7 +378,7 @@ export class MainCityScene implements Scene {
     c2d.fillRect(w - 56, 40, 40, 40);
     c2d.fillStyle = "#1a1410";
     c2d.font = "11px system-ui";
-    c2d.fillText("M2", w - 50, 66);
+    c2d.fillText("M3", w - 50, 66);
     c2d.fillText("(5,5)", w - 54, 78);
   }
 }

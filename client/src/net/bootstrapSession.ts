@@ -31,6 +31,7 @@ export type CityTroopStack = {
 };
 
 export type MainCitySession = {
+  serverId: number;
   player: PlayerProfile;
   wallet: ResourceWallet;
   cityId: number;
@@ -77,6 +78,8 @@ export async function bootstrapMainCity(
     }
   }
 
+  await gateway.enterGameServer(serverId);
+
   const list = (await gateway.listPlayerCities()) as { cities?: CitySummary[] };
   let city = list.cities?.find((c) => c.is_capital) ?? list.cities?.[0];
   if (!city?.city_id) {
@@ -93,6 +96,7 @@ export async function bootstrapMainCity(
   };
 
   return {
+    serverId,
     player: login.player ?? {},
     wallet: state.wallet ?? login.wallet ?? {},
     cityId: city.city_id,

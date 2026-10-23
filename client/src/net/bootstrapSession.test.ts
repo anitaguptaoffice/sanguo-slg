@@ -25,6 +25,15 @@ function mockGateway(overrides: Partial<GatewayPort> = {}): GatewayPort {
     startMarch: vi.fn(),
     listBattleReports: vi.fn(),
     getBattleReport: vi.fn(),
+    listGameServers: vi.fn(),
+    enterGameServer: vi.fn().mockResolvedValue({ server_id: 1 }),
+    sendChatMessage: vi.fn(),
+    listChatMessages: vi.fn(),
+    createGuild: vi.fn(),
+    joinGuild: vi.fn(),
+    listGuildMembers: vi.fn(),
+    getLeaderboard: vi.fn(),
+    getBoundServerId: () => 1,
     getSessionId: () => "sid",
     close: vi.fn(),
     ...overrides,
@@ -36,7 +45,9 @@ describe("bootstrapMainCity", () => {
     const gw = mockGateway();
     const session = await bootstrapMainCity(gw, "u1", "p1", 1);
     expect(gw.createCity).toHaveBeenCalledWith(1, "主城", 60, 60);
+    expect(gw.enterGameServer).toHaveBeenCalledWith(1);
     expect(session.cityId).toBe(42);
+    expect(session.serverId).toBe(1);
     expect(session.buildings).toHaveLength(1);
   });
 

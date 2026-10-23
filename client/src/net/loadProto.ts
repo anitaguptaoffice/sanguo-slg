@@ -25,6 +25,14 @@ export function getProtoRoot(): protobuf.Root {
 export const Routes = {
   Register: "account.v1.Register",
   Login: "account.v1.Login",
+  ListGameServers: "account.v1.ListGameServers",
+  EnterGameServer: "account.v1.EnterGameServer",
+  SendChatMessage: "chat.v1.SendChatMessage",
+  ListChatMessages: "chat.v1.ListChatMessages",
+  CreateGuild: "guild.v1.CreateGuild",
+  JoinGuild: "guild.v1.JoinGuild",
+  ListGuildMembers: "guild.v1.ListGuildMembers",
+  GetLeaderboard: "rank.v1.GetLeaderboard",
   CreateCity: "world.v1.CreateCity",
   ListPlayerCities: "world.v1.ListPlayerCities",
   GetCityState: "domestic.v1.GetCityState",
@@ -47,6 +55,22 @@ export type ProtoTypes = {
   RegisterResponse: protobuf.Type;
   LoginRequest: protobuf.Type;
   LoginResponse: protobuf.Type;
+  ListGameServersRequest: protobuf.Type;
+  ListGameServersResponse: protobuf.Type;
+  EnterGameServerRequest: protobuf.Type;
+  EnterGameServerResponse: protobuf.Type;
+  SendChatMessageRequest: protobuf.Type;
+  SendChatMessageResponse: protobuf.Type;
+  ListChatMessagesRequest: protobuf.Type;
+  ListChatMessagesResponse: protobuf.Type;
+  CreateGuildRequest: protobuf.Type;
+  CreateGuildResponse: protobuf.Type;
+  JoinGuildRequest: protobuf.Type;
+  JoinGuildResponse: protobuf.Type;
+  ListGuildMembersRequest: protobuf.Type;
+  ListGuildMembersResponse: protobuf.Type;
+  GetLeaderboardRequest: protobuf.Type;
+  GetLeaderboardResponse: protobuf.Type;
   CreateCityRequest: protobuf.Type;
   CreateCityResponse: protobuf.Type;
   ListPlayerCitiesRequest: protobuf.Type;
@@ -74,6 +98,22 @@ export function getTypes(): ProtoTypes {
     RegisterResponse: r.lookupType("sanguo.account.v1.RegisterResponse"),
     LoginRequest: r.lookupType("sanguo.account.v1.LoginRequest"),
     LoginResponse: r.lookupType("sanguo.account.v1.LoginResponse"),
+    ListGameServersRequest: r.lookupType("sanguo.account.v1.ListGameServersRequest"),
+    ListGameServersResponse: r.lookupType("sanguo.account.v1.ListGameServersResponse"),
+    EnterGameServerRequest: r.lookupType("sanguo.account.v1.EnterGameServerRequest"),
+    EnterGameServerResponse: r.lookupType("sanguo.account.v1.EnterGameServerResponse"),
+    SendChatMessageRequest: r.lookupType("sanguo.chat.v1.SendChatMessageRequest"),
+    SendChatMessageResponse: r.lookupType("sanguo.chat.v1.SendChatMessageResponse"),
+    ListChatMessagesRequest: r.lookupType("sanguo.chat.v1.ListChatMessagesRequest"),
+    ListChatMessagesResponse: r.lookupType("sanguo.chat.v1.ListChatMessagesResponse"),
+    CreateGuildRequest: r.lookupType("sanguo.guild.v1.CreateGuildRequest"),
+    CreateGuildResponse: r.lookupType("sanguo.guild.v1.CreateGuildResponse"),
+    JoinGuildRequest: r.lookupType("sanguo.guild.v1.JoinGuildRequest"),
+    JoinGuildResponse: r.lookupType("sanguo.guild.v1.JoinGuildResponse"),
+    ListGuildMembersRequest: r.lookupType("sanguo.guild.v1.ListGuildMembersRequest"),
+    ListGuildMembersResponse: r.lookupType("sanguo.guild.v1.ListGuildMembersResponse"),
+    GetLeaderboardRequest: r.lookupType("sanguo.rank.v1.GetLeaderboardRequest"),
+    GetLeaderboardResponse: r.lookupType("sanguo.rank.v1.GetLeaderboardResponse"),
     CreateCityRequest: r.lookupType("sanguo.world.v1.CreateCityRequest"),
     CreateCityResponse: r.lookupType("sanguo.world.v1.CreateCityResponse"),
     ListPlayerCitiesRequest: r.lookupType("sanguo.world.v1.ListPlayerCitiesRequest"),
