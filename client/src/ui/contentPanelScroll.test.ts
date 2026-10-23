@@ -13,6 +13,8 @@ describe("contentPanelScroll (CLIENT-070 + CLIENT-078)", () => {
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("hero");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("world");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("rank");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("march");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("battle-report");
   });
 
   it("resets scroll on panel-scroll-body when present", () => {

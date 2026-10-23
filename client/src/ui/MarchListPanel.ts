@@ -17,6 +17,7 @@ import {
   MARCH_LIST_ROW_DEST_MATCH_CLASS,
   type MarchDestFilterMode,
 } from "@/ui/marchWorldListLink";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
@@ -146,6 +147,7 @@ export class MarchListPanel {
     this.renderFilterControls();
     if (!this.isOpen()) {
       this.panel.classList.remove("hidden");
+      resetCenterPanelViewportScroll(this.panel);
       void this.refreshList();
       this.startPoll();
     } else {
@@ -198,6 +200,7 @@ export class MarchListPanel {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (this.isOpen()) {
+      resetCenterPanelViewportScroll(this.panel);
       void this.refreshList();
       this.startPoll();
     } else {
@@ -213,7 +216,8 @@ export class MarchListPanel {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel hidden march-intel-panel";
+    el.dataset.centerPanel = "march";
     el.innerHTML = `
       <h3>行军</h3>
       <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
@@ -230,7 +234,9 @@ export class MarchListPanel {
       </fieldset>
       <button type="button" data-action="refresh-marches">刷新列表</button>
       <p class="report-panel-status" data-role="march-list-status"></p>
-      <ul class="march-list" data-role="march-list"></ul>
+      <div class="panel-scroll-body" data-role="march-scroll">
+        <ul class="march-list" data-role="march-list"></ul>
+      </div>
     `;
     return el;
   }

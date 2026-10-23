@@ -714,7 +714,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"],
-      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] {
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -769,8 +771,52 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list {
         max-height: none;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-list-row {
+        display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-list-row > span {
+        flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-hint,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .content-panel-actions {
+        flex-shrink: 0;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-status {
         flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] [data-role="march-hint"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-dest-filter,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] button[data-action="refresh-marches"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] [data-role="march-list-status"] {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list {
+        max-height: none; overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li {
+        min-width: 0; max-width: 100%; box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.march-list-row-selected,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.march-list-row-dest-match {
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-filters,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-outcome-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] button[data-action="refresh-reports"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] [data-role="load-more"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] [data-role="retry-list"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] [data-role="report-list-status"] {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list {
+        max-height: none; overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .report-detail {
+        max-height: none; overflow-x: auto; overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li {
+        min-width: 0; max-width: 100%; box-sizing: border-box;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-panel-feedback {
         flex-shrink: 0;

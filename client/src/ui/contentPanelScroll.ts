@@ -13,6 +13,8 @@ export const NARROW_SCROLL_CENTER_PANEL_IDS = [
   "daily",
   "world",
   "rank",
+  "march",
+  "battle-report",
 ] as const;
 
 export type NarrowScrollCenterPanelId = (typeof NARROW_SCROLL_CENTER_PANEL_IDS)[number];
