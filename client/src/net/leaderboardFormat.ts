@@ -47,6 +47,19 @@ export function formatLeaderboardEmptyHint(): string {
 }
 
 /** 当前查看者名次/分数（proto: my_rank / my_score） */
+/** 列表钉选行文案（CLIENT-096）；未上榜时返回 null。 */
+export function formatMyRankPinLine(
+  myRank: number | undefined,
+  myScore: number | undefined,
+  boardKind: number,
+): string | null {
+  const rank = myRank ?? 0;
+  if (rank <= 0) return null;
+  const scoreLabel = leaderboardScoreLabel(boardKind);
+  const score = myScore ?? 0;
+  return `我的排名 #${rank} · ${scoreLabel} ${score}`;
+}
+
 export function formatViewerRankSummary(
   type: number,
   viewerRank?: number,

@@ -2,6 +2,7 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
   formatLeaderboardSnapshotMeta,
+  formatMyRankPinLine,
   formatViewerRankSummary,
   LB_PLAYER_POWER,
   LB_PLAYER_RESOURCE,
@@ -9,6 +10,11 @@ import {
   viewerScoreFallback,
   type LeaderboardPagePayload,
 } from "@/net/leaderboardFormat";
+import {
+  formatRankLastRefreshLine,
+  readRankLastRefreshMs,
+  writeRankLastRefreshMs,
+} from "@/net/rankLastRefreshSession";
 import {
   CHAT_CHANNEL_GUILD,
   CHAT_CHANNEL_PRIVATE,
@@ -113,7 +119,10 @@ export class SocialPanels {
 
   toggleRank(): void {
     this.rankPanel.classList.toggle("hidden");
-    if (!this.rankPanel.classList.contains("hidden")) void this.refreshRank();
+    if (!this.rankPanel.classList.contains("hidden")) {
+      this.hydrateRankRefreshClockFromSession();
+      void this.refreshRank();
+    }
   }
 
   getRankRoot(): HTMLElement {
@@ -259,7 +268,10 @@ export class SocialPanels {
       </p>
       <div class="panel-scroll-body" data-role="rank-scroll">
         <div class="rank-board" data-role="rank-board">
-          <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
+          <div class="rank-viewer-bar" aria-label="我的名次与刷新时间">
+            <div data-role="viewer-rank">我的名次：—</div>
+            <div class="rank-last-refresh-line hidden" data-role="rank-last-refresh" aria-label="上次刷新"></div>
+          </div>
           <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
           <div class="rank-table-scroll">
             <table class="rank-table">
@@ -575,6 +587,25 @@ export class SocialPanels {
     });
   }
 
+  private hydrateRankRefreshClockFromSession(): void {
+    const boardType = this.selectedLeaderboardType();
+    const fromSession = readRankLastRefreshMs(boardType);
+    if (fromSession > 0) {
+      this.refreshClock.rank.lastUpdatedMs = fromSession;
+      this.syncRankLastRefreshBar(boardType);
+      this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: false });
+    }
+  }
+
+  private syncRankLastRefreshBar(boardType: number): void {
+    const el = this.rankPanel.querySelector('[data-role="rank-last-refresh"]');
+    if (!el) return;
+    const atMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
+    const line = formatRankLastRefreshLine(atMs);
+    el.textContent = line;
+    el.classList.toggle("hidden", !line);
+  }
+
   renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
     const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
     if (myEl) {
@@ -585,6 +616,7 @@ export class SocialPanels {
         viewerScoreFallback(this.getSession(), boardType),
       );
     }
+    this.syncRankLastRefreshBar(boardType);
     const snapEl = this.rankPanel.querySelector('[data-role="rank-snapshot"]');
     if (snapEl) {
       const meta = formatLeaderboardSnapshotMeta(res);
@@ -594,15 +626,33 @@ export class SocialPanels {
     const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
     if (tbody) {
       tbody.innerHTML = "";
-      const entries = res.entries ?? [];
-      if (entries.length === 0) {
+      const fallbackScore = viewerScoreFallback(this.getSession(), boardType);
+      const pinLine = formatMyRankPinLine(
+        res.my_rank,
+        res.my_score ?? fallbackScore,
+        boardType,
+      );
+      if (pinLine) {
         const tr = document.createElement("tr");
-        tr.className = socialRankEmptyRowClass();
+        tr.className = "rank-pin-row";
+        tr.setAttribute("aria-label", "我的排名钉选");
         const td = document.createElement("td");
         td.colSpan = 3;
-        td.textContent = formatSocialRankEmptyMessage();
+        td.textContent = pinLine;
         tr.appendChild(td);
         tbody.appendChild(tr);
+      }
+      const entries = res.entries ?? [];
+      if (entries.length === 0) {
+        if (!pinLine) {
+          const tr = document.createElement("tr");
+          tr.className = socialRankEmptyRowClass();
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.textContent = formatSocialRankEmptyMessage();
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
       } else {
         for (const e of entries) {
           const tr = document.createElement("tr");
@@ -625,10 +675,12 @@ export class SocialPanels {
       try {
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
         this.rankSnapshotByType.set(boardType, res);
+        const refreshedAt = Date.now();
+        writeRankLastRefreshMs(boardType, refreshedAt);
         this.renderLeaderboardPage(res, boardType);
         this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
           busy: false,
-          lastUpdatedMs: Date.now(),
+          lastUpdatedMs: refreshedAt,
           error: null,
           stale: false,
         });
