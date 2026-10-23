@@ -68,6 +68,11 @@ import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
+import {
+  formatMarchFormSummary,
+  readMarchFormSnapshot,
+  setMarchFormSummaryDisplay,
+} from "@/net/marchFormSummary";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
@@ -286,6 +291,8 @@ export class MainCityScene implements Scene {
         </div>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
+        <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
+        <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
@@ -569,7 +576,10 @@ export class MainCityScene implements Scene {
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));
-    this.militaryPanel.addEventListener("input", (ev) => this.onMilitaryRecruitFieldChange(ev));
+    this.militaryPanel.addEventListener("input", (ev) => {
+      this.onMilitaryRecruitFieldChange(ev);
+      this.syncMilitaryPanel();
+    });
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
     this.canvas.addEventListener("wheel", this.onCanvasWheelBound, { passive: false });
     this.canvas.addEventListener("pointermove", this.onCanvasPointerBound);
@@ -600,6 +610,9 @@ export class MainCityScene implements Scene {
       if (marchNeedsPoll(this.minimapMarches)) {
         this.marchClockMs = Date.now();
         this.syncMinimapCollapsedMarchStatus();
+      }
+      if (!this.militaryPanel.classList.contains("hidden")) {
+        this.syncMilitaryPanel();
       }
     }
     if (this.queuePanels?.isOpen()) {
@@ -796,6 +809,15 @@ export class MainCityScene implements Scene {
     }
     syncMarchSubmitButton(this.militaryPanel, this.marchSubmitInflight);
     syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    const summary = formatMarchFormSummary(
+      readMarchFormSnapshot(this.militaryPanel, {
+        cityX: this.session?.cityX,
+        cityY: this.session?.cityY,
+        wallet: this.session?.wallet,
+      }),
+      this.marchClockMs,
+    );
+    setMarchFormSummaryDisplay(this.militaryPanel, summary);
   }
 
   private onMilitaryRecruitFieldChange(ev: Event): void {
