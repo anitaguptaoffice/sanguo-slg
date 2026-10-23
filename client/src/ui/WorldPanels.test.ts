@@ -104,4 +104,50 @@ describe("WorldPanels", () => {
     selectedRow?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(gridSel).toBeNull();
   });
+
+  it("shows march dest count and deep-links to first march on count click", async () => {
+    const mount = document.createElement("div");
+    const form = document.createElement("div");
+    form.innerHTML = `<input data-field="to-x" /><input data-field="to-y" />`;
+    let marchGrid: { x: number; y: number } | null = null;
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({
+        cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true }],
+      }),
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "主城",
+      player: {},
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => session,
+      { marchFormRoot: form },
+      () => {},
+      {
+        getMarchesSnapshot: () => [
+          { march_id: 9, to_x: 60, to_y: 60 },
+          { march_id: 10, to_x: 60, to_y: 60 },
+        ],
+        onMarchCountClick: (g) => {
+          marchGrid = g;
+        },
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+
+    const countBtn = mount.querySelector(".world-city-row-march-count") as HTMLButtonElement;
+    expect(countBtn?.textContent).toContain("指向此格的行军 2 条");
+    countBtn?.click();
+    expect(marchGrid).toEqual({ x: 60, y: 60 });
+  });
 });

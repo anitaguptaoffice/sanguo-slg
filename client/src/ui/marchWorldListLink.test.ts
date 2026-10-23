@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   appendManhattanToStatus,
+  countMarchesToDestination,
   filterMarchesByDestination,
+  findFirstMarchIdAtDestination,
+  formatWorldCityMarchDestCount,
   gridCellsMatch,
   manhattanGridDistance,
   marchDestinationMatchesGrid,
@@ -33,5 +36,18 @@ describe("marchWorldListLink", () => {
   it("appendManhattanToStatus keeps base when coords missing", () => {
     expect(appendManhattanToStatus("出征目标 (1,2)", 60, 60, 1, 2)).toContain("距主城曼哈顿");
     expect(appendManhattanToStatus("仅文案", undefined, 60, 1, 2)).toBe("仅文案");
+  });
+
+  it("countMarchesToDestination and formatWorldCityMarchDestCount", () => {
+    const marches = [
+      { march_id: 1, to_x: 10, to_y: 20 },
+      { march_id: 2, to_x: 10, to_y: 20 },
+      { march_id: 3, to_x: 1, to_y: 1 },
+    ];
+    expect(countMarchesToDestination(marches, 10, 20)).toBe(2);
+    expect(formatWorldCityMarchDestCount(2)).toBe("指向此格的行军 2 条");
+    expect(formatWorldCityMarchDestCount(0)).toBeNull();
+    expect(findFirstMarchIdAtDestination(marches, 10, 20)).toBe(1);
+    expect(findFirstMarchIdAtDestination(marches, 99, 99)).toBeNull();
   });
 });

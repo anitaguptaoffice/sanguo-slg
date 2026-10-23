@@ -363,8 +363,10 @@ export class MainCityScene implements Scene {
       },
       {
         nowMs: () => this.marchClockMs,
+        getWorldSelectedGrid: () => this.world?.getSelectedGrid() ?? null,
         onMarchesUpdated: (marches) => {
           this.minimapMarches = marches;
+          this.world?.refreshMarchDestCounts();
         },
         onSelectionChange: (march) => {
           if (march) {
@@ -372,6 +374,7 @@ export class MainCityScene implements Scene {
             const ty = march.to_y;
             if (Number.isFinite(tx) && Number.isFinite(ty)) {
               this.world.setMarchDestHighlight({ x: tx, y: ty });
+              this.focusMinimapOnMarchDestination(march);
             } else {
               this.world.setMarchDestHighlight(null);
             }
@@ -430,11 +433,20 @@ export class MainCityScene implements Scene {
       },
       {
         onGridSelectionChange: (grid) => {
-          if (grid) {
-            this.marchList.setDestFilter(grid.x, grid.y);
+          this.marchList.syncWorldGridSelection(grid);
+        },
+        getMarchesSnapshot: () => {
+          const fromPanel = this.marchList.getMarches();
+          return fromPanel.length ? fromPanel : this.minimapMarches;
+        },
+        onMarchCountClick: (grid) => {
+          const opened = this.marchList.selectMarchByDest(grid.x, grid.y);
+          if (opened) {
+            this.status = `军情：已选中指向 (${grid.x},${grid.y}) 的首条行军`;
           } else {
-            this.marchList.setDestFilter(null, null);
+            this.status = `格点 (${grid.x},${grid.y}) 暂无进行中行军`;
           }
+          this.renderHud();
         },
       },
     );
@@ -712,6 +724,14 @@ export class MainCityScene implements Scene {
     );
   }
 
+  private focusMinimapOnMarchDestination(march: MarchSummary): void {
+    const tx = march.to_x;
+    const ty = march.to_y;
+    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+    const bounds = this.currentMinimapWorldBounds();
+    this.minimapView = computeMinimapViewFramingPoints(bounds, [{ wx: tx, wy: ty }]);
+  }
+
   private focusMinimapOnBattleReport(summary: BattleReportSummary): void {
     const coord = extractBattleReportReplayCoord(summary);
     if (!coord) {
@@ -914,6 +934,7 @@ export class MainCityScene implements Scene {
         marches?: MarchSummary[];
       };
       this.minimapMarches = res.marches ?? [];
+      this.world?.refreshMarchDestCounts();
     } catch {
       /* 小地图只读：失败时保留上次数据 */
     }

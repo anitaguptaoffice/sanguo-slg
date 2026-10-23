@@ -139,10 +139,36 @@ describe("MarchListPanel", () => {
     await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
 
     panel.setDestFilter(10, 20);
+    expect(panel.getDestFilterMode()).toBe("manual");
     expect(mount.querySelectorAll(".march-list li").length).toBe(1);
     expect(mount.querySelector('.march-list li[data-march-id="1"]')).toBeTruthy();
     expect(mount.querySelector(".march-list-row-dest-match")).toBeTruthy();
     expect(gateway.listMarches).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters by world selected grid without extra RPC", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          { march_id: 1, phase: 2, to_x: 60, to_y: 60 },
+          { march_id: 2, phase: 2, to_x: 1, to_y: 1 },
+        ],
+        total: 2,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      getWorldSelectedGrid: () => ({ x: 60, y: 60 }),
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+
+    panel.setDestFilterMode("world");
+    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(gateway.listMarches).toHaveBeenCalledTimes(1);
+
+    panel.setDestFilterMode("all");
+    expect(mount.querySelectorAll(".march-list li").length).toBe(2);
   });
 
   it("shows error when listMarches fails", async () => {
