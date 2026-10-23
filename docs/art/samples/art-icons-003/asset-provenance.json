@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "batch": "ART-ICONS-003",
+  "description": "木/铁/石 HUD 图标追溯元数据（不含 PNG；交付见 feat/ART-ICONS-003-hud-resources / PR #144）",
+  "assets": {
+    "res.icon.wood.v1": {
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "02399f6fe5bc72fd0f4fe9ce4791f08798f6c178"
+    },
+    "res.icon.iron.v1": {
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "02399f6fe5bc72fd0f4fe9ce4791f08798f6c178"
+    },
+    "res.icon.stone.v1": {
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "02399f6fe5bc72fd0f4fe9ce4791f08798f6c178"
+    }
+  }
+}
