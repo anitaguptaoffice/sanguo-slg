@@ -15,7 +15,7 @@ import yaml
 
 LABELS = {
     "domain": ["spec", "platform", "account", "world", "domestic", "military", "hero", "content", "client", "tools"],
-    "wave": ["1", "2", "3", "4", "5", "6", "7"],
+    "wave": ["1", "2", "3", "4", "5", "6", "7", "8"],
     "size": ["S", "M", "L"],
 }
 STATUS = ["status:ready", "status:blocked", "status:in-progress", "status:review", "status:done"]
@@ -66,7 +66,13 @@ def render_body(card):
 
 
 def labels_for(card):
-    status = "status:ready" if not card.get("depends_on") else "status:blocked"
+    sync = card.get("sync_status")
+    if sync in ("ready", "blocked"):
+        status = f"status:{sync}"
+    elif card.get("blocked_until") or card.get("depends_on"):
+        status = "status:blocked"
+    else:
+        status = "status:ready"
     return [
         "type:task",
         f"domain:{card['domain']}",

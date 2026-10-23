@@ -15,10 +15,11 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1–7，第几波开工（wave:7 为对齐波次，见 `docs/ROADMAP.md`） |
+| `wave` | 是 | 1–8，第几波开工（wave:7 对齐、wave:8 M3/M4 出口加固，见 `docs/ROADMAP.md`） |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
-| `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked`（同步脚本未解析时由人工看 YAML） |
+| `blocked_until` | 否 | 与 `depends_on` 并行的编排用：所列卡合并前本卡保持 `status:blocked` |
+| `sync_status` | 否 | 可选 `ready` / `blocked`：覆盖 `tasks_sync.py` 默认标签（wave:8 依赖已合并时用 `ready`） |
 | `size` | 是 | S（半天）/ M（1 天）/ L（2 天以上，建议再拆） |
 | `owner_dir` | 是 | 允许修改的目录，CI 据此做越界检查 |
 | `scope` | 否 | 允许修改的文件 glob |
@@ -54,3 +55,4 @@ status:review   ──合并────▶  status:done
 | 5 | M3 多人 | CONTRACT-002, SPEC-005, PLAT-004, CHAT-001, RANK-001, GUILD-001/002, INTG-003, CLIENT-004 |
 | 6 | M4 内容 | CONTRACT-003, SPEC-006, QUEST-001, CONTENT-002, SHOP-001, GM-001, INTG-004, CLIENT-005 |
 | 7 | 对齐：核心 cfg 子集 | SPEC-ALIGN-001, DATA-001, PERSIST-001~003, ECON-001, GM-002, RULES-ALIGN-001；复跑 INTG-004 / CLIENT-005 |
+| 8 | M3/M4 出口加固 | INTG-005, CLIENT-006, RANK-002, LOAD-001, OPS-OPEN-001, TELEMETRY-001 |
