@@ -36,6 +36,8 @@ export function skinPrimaryButtons(
   const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>(selector));
   for (const btn of buttons) {
     if (btn.dataset.artSkin === "off") continue;
+    if (btn.dataset.artSkinned === "1") continue;
+    btn.dataset.artSkinned = "1";
     const set = (state: BtnState) => applyButtonSkin(btn, assets, state);
     set("normal");
     btn.addEventListener("mouseenter", () => {

@@ -53,6 +53,7 @@ function applyEvidencePreset(state, preset) {
   state.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1 }];
   state.dailyQuestsSuppressed = false;
   state.evidenceRecruitQueued = false;
+  state.mailListFails = false;
 
   if (preset === "queue-empty" || preset === "default") {
     return;
@@ -140,6 +141,10 @@ function applyEvidencePreset(state, preset) {
         created_at_ms: now - 60_000,
       },
     ];
+    return;
+  }
+  if (preset === "mail-list-error") {
+    state.mailListFails = true;
     return;
   }
   if (preset === "daily-empty") {
@@ -253,6 +258,7 @@ function sessionState() {
       },
     ],
     nextMailId: 6002,
+    mailListFails: false,
   };
   applyEvidencePreset(state, evidencePreset);
   return state;
@@ -860,6 +866,10 @@ wss.on("connection", (ws) => {
       }
 
       if (route === "content.v1.ListPlayerMail") {
+        if (state.mailListFails) {
+          reply(ws, cp.trace_id, 40010, "收件箱暂不可用（mock 错误态）");
+          return;
+        }
         const req = T("sanguo.content.v1.ListPlayerMailRequest").decode(cp.payload);
         let mails = state.mails;
         const filter = req.filter ?? 0;
