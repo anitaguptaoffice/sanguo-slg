@@ -258,7 +258,7 @@ H5 人工验收与 **INTG-015** 网关冒烟对齐，见 [client/README.md](../c
 
 **明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；**CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) / [#280](https://github.com/anitaguptaoffice/sanguo-slg/pull/280) `722256c2`）中心四面板美术证据轨——**非** wave:18 backlog 实现卡，与 **CLIENT-047** 起编号无关。
 
-**wave:18 美术轨旁路（非 backlog 实现卡）**：**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300)）为 **CLIENT-046** 证据 FAIL 跟进修（纸底字色 + primary 接线 + 证据纠错），PR **开放**时记「跟进中」，不阻塞本波文档收口。
+**wave:18 美术轨旁路（非 backlog 实现卡）**：**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）**已完成**——**CLIENT-046** 证据 FAIL 跟进修（纸底字色 + `ui.button.primary.v1` 接线 + 证据纠错），见 [`docs/art/samples/client-054/`](art/samples/client-054/README.md)。
 
 ## 不做
 

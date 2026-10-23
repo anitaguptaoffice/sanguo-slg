@@ -115,7 +115,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **推荐串联**：小地图空白区选点（**CLIENT-041**，写入并记住 `to_x/to_y`）→ **军事** 出征（[CLIENT-015](#手动验收世界坐标-client-015) / [CLIENT-013](#手动验收募兵--行军--战报client-012--client-013)；**CLIENT-043** 会话预填/清除）→ 战报 **在地图查看** 复盘（**CLIENT-042**）→ **日常** 顶栏战报横幅（**CLIENT-044**）→ **排行/聊天** **刷新**（**CLIENT-045**）；网关字段见 `tools/smoke/README.md` **INTG-014**（`TestINTG014Wave17SmokePath`）。
 
-**wave:18** 出征反馈与面板可读加深见下文 [Wave 18](#wave-18-出征反馈与面板可读加深m4-出口--intg-015)。**CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) / [#280](https://github.com/anitaguptaoffice/sanguo-slg/pull/280)）为美术证据轨，**非** wave:18 backlog 实现卡；**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300)）为 046 FAIL 跟进修（PR 开放时跟进中）。
+**wave:18** 出征反馈与面板可读加深见下文 [Wave 18](#wave-18-出征反馈与面板可读加深m4-出口--intg-015)。**CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) / [#280](https://github.com/anitaguptaoffice/sanguo-slg/pull/280)）为美术证据轨，**非** wave:18 backlog 实现卡；**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）046 FAIL 跟进修已合，证据见 [`docs/art/samples/client-054/`](../docs/art/samples/client-054/README.md)。
 
 ## Wave 18 出征反馈与面板可读加深（M4 出口 / INTG-015）
 
