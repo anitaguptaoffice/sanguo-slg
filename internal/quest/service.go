@@ -49,9 +49,6 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 	if err := s.checkPrerequisite(ctx, actor, cfg); err != nil {
 		return PlayerQuestProgress{}, QuestChainStatus{}, err
 	}
-	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
-	}
 	if has {
 		switch row.State {
 		case StateInProgress, StateClaimable:
@@ -61,7 +58,7 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 				return PlayerQuestProgress{}, QuestChainStatus{}, ErrAlreadyCompleted
 			}
 		case StateUnaccepted:
-			has = false
+			// Prior-day daily reset left a row; fall through to fresh accept.
 		}
 	}
 	now := s.now()
