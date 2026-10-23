@@ -832,6 +832,9 @@ export class MainCityScene implements Scene {
       }
     }
     this.renderHud();
+    if (patch.wallet !== undefined || patch.bag !== undefined) {
+      this.heroMail?.refreshRecruitAffordability();
+    }
   }
 
   private isAnyPanelVisible(): boolean {
