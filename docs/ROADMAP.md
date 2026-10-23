@@ -135,7 +135,7 @@ H5 人工验收与 INTG-008 路径对齐，见 [client/README.md](../client/READ
 | [#180](https://github.com/anitaguptaoffice/sanguo-slg/issues/180) | CLIENT-015 | 已完成 | [#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186) |
 | [#181](https://github.com/anitaguptaoffice/sanguo-slg/issues/181) | CLIENT-016 | 已完成 | [#189](https://github.com/anitaguptaoffice/sanguo-slg/pull/189) |
 | [#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) | CLIENT-017 | 已完成 | [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190) |
-| [#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) | CLIENT-018 | 审阅中 | [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191) |
+| [#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) | CLIENT-018 | 已完成 | [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191) |
 | [#184](https://github.com/anitaguptaoffice/sanguo-slg/issues/184) | INTG-009 | 已完成 | [#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192) |
 | [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | 审阅中 | （本 PR） |
 
