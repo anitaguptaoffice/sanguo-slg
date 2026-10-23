@@ -867,6 +867,190 @@
           }
         ]
       }
+    },
+    {
+      "id": "ui.icon.toolbar.military.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_military.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_military.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.mail.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_mail.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_mail.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.queue.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_queue.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_queue.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.bag.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_bag.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_bag.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.daily.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_daily.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_daily.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.world.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_world.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_world.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.hero.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_hero.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_hero.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.shop.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_shop.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_shop.png"
+        }
+      ]
     }
   ]
 }
