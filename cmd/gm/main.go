@@ -10,6 +10,7 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content/mail"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 )
 
@@ -21,7 +22,7 @@ func main() {
 	}
 	cmd := os.Args[1]
 	switch cmd {
-	case "lookup", "grant", "kick", "mute":
+	case "lookup", "grant", "kick", "mute", "send-mail":
 	case "help", "-h", "--help":
 		usage()
 		return
@@ -47,6 +48,9 @@ func main() {
 	idem := fs.String("idempotency-key", "", "grant idempotency key")
 	rewardsJSON := fs.String("rewards-json", "", "grant rewards JSON (content.RewardPackage schema)")
 	muteUntil := fs.Int64("mute-until-ms", 0, "mute deadline unix ms (0=unmute)")
+	title := fs.String("title", "", "mail title (send-mail)")
+	body := fs.String("body", "", "mail body (send-mail)")
+	mailType := fs.Int("mail-type", int(mail.TypeReward), "mail type: 1=system 2=reward 3=announcement")
 	food := fs.Int64("food", 0, "grant food (shortcut)")
 	gold := fs.Int64("gold", 0, "grant gold (shortcut)")
 	_ = fs.Parse(os.Args[2:])
@@ -83,6 +87,29 @@ func main() {
 		}
 		res, until, err := gm.MutePlayer(ctx, token, audit, int32(*serverID), *playerID, *muteUntil)
 		exitJSON(err, map[string]any{"result": res, "chat_muted_until_ms": until})
+	case "send-mail":
+		if *playerID == 0 {
+			fatal("send-mail requires --player-id")
+		}
+		if strings.TrimSpace(*title) == "" {
+			fatal("send-mail requires --title")
+		}
+		pkg, err := parseRewards(*rewardsJSON, *food, *gold)
+		if err != nil && strings.TrimSpace(*rewardsJSON) == "" && *food == 0 && *gold == 0 {
+			pkg = content.RewardPackage{}
+			err = nil
+		}
+		if err != nil {
+			fatal(err.Error())
+		}
+		if _, _, err := gm.LookupPlayer(ctx, token, audit, int32(*serverID), *playerID, ""); err != nil {
+			exitJSON(err, nil)
+		}
+		mailSvc := mail.NewService(mail.NewPGStore(app.DB), nil, app.Log)
+		row, err := mailSvc.Send(ctx, int32(*serverID), *playerID, int16(*mailType), *title, *body, pkg, mail.SendAudit{
+			OperatorID: audit.OperatorID, OperatorName: audit.OperatorName, Reason: audit.Reason, TicketID: audit.TicketID,
+		})
+		exitJSON(err, map[string]any{"mail": row})
 	}
 }
 
@@ -164,7 +191,7 @@ func smokeBoot(ctx context.Context) {
 	}
 	defer app.Close()
 	app.Log.Info("gm ready", "postgres", app.Config.DatabaseURL, "redis", app.Config.RedisAddr)
-	fmt.Println("sanguo-slg gm: platform wiring ok; subcommands lookup|grant|kick|mute")
+	fmt.Println("sanguo-slg gm: platform wiring ok; subcommands lookup|grant|kick|mute|send-mail")
 }
 
 func usage() {
@@ -175,6 +202,7 @@ Usage:
   gm grant  --server-id=1 --player-id=ID --idempotency-key=KEY --food=1000 --operator-id=... --reason=...
   gm kick   --server-id=1 --player-id=ID --operator-id=... --reason=...
   gm mute   --server-id=1 --player-id=ID [--mute-until-ms=MS] --operator-id=... --reason=...
+  gm send-mail --server-id=1 --player-id=ID --title=T --body=B [--mail-type=2] [--rewards-json=...] --operator-id=... --reason=...
 
 Auth: set GM_TOKEN and pass --token (or env). Optional GM_OPERATOR_WHITELIST=op1,op2.
 
