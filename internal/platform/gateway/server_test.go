@@ -62,7 +62,7 @@ func TestHandshakeAndPing(t *testing.T) {
 	wsURL, closeFn := startTestServer(t, gateway.AccessControl{}, gateway.AllowAllSessions{})
 	defer closeFn()
 	c := dialWS(t, wsURL)
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	resp := sendPacket(t, c, &commonv1.ClientPacket{Route: gateway.RoutePing, TraceId: "t1"})
 	if resp.Code != 0 || resp.TraceId != "t1" {
@@ -74,7 +74,7 @@ func TestAuthRequired(t *testing.T) {
 	wsURL, closeFn := startTestServer(t, gateway.AccessControl{}, gateway.MapSessions{IDs: map[string]struct{}{"sess-1": {}}})
 	defer closeFn()
 	c := dialWS(t, wsURL)
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	resp := sendPacket(t, c, &commonv1.ClientPacket{
 		Route:   "world.v1.ListPlayerCities",
@@ -124,12 +124,16 @@ func TestReconnectReplacesSession(t *testing.T) {
 		TraceId:   "b",
 	})
 
-	c1.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+	if err := c1.SetReadDeadline(time.Now().Add(500 * time.Millisecond)); err != nil {
+		t.Fatal(err)
+	}
 	_, _, err := c1.ReadMessage()
 	if err == nil {
 		t.Fatal("expected first connection to be closed after reconnect")
 	}
-	c2.Close()
+	if err := c2.Close(); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestRateLimit(t *testing.T) {
@@ -141,7 +145,7 @@ func TestRateLimit(t *testing.T) {
 	defer ts.Close()
 	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http")
 	c := dialWS(t, wsURL)
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	var limited bool
 	for i := 0; i < 50; i++ {
