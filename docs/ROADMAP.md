@@ -48,7 +48,7 @@
   > **v1 运营口径（GM-003）**：**GM CLI/HTTP**（`cmd/gm`：`lookup` / `grant` / `kick` / `mute` / `send-mail`；HTTP 仅 `POST /gm/lookup|grant|kick|mute`）+ **邮件运营**（`send-mail` → `player_mail`，验收见 [开服运营最小流程](ops/open-server-runbook.md) §4）。**非目标**：活动配置台、可视化排期、`cfg_act*` 灌入——仍 **out of core subset**。
 - [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
-出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟——H5 端将领/邮件/日常可玩。里程碑文档 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）。
+出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟；wave:11 **CLIENT-009**（[#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169)）日常 UI、**CLIENT-010**（[#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171)）招募模板与背包/商城可读性、**CLIENT-012**（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)）战报底栏入口，**QUEST-003**（[#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173)）日常挂钩与 **INTG-008**（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)）冒烟——H5 **日常 + 招募模板预览 + 战报** 最短可玩路径见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)。里程碑 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）、**DOCS-EXIT-003**（[#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168)）。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -106,21 +106,23 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145；全量 legacy 活动 cfg；第三批核心子集扩量（无单独编排授权）。
 
-## Wave 11 H5 日常可玩环（进行中）
+## Wave 11 H5 日常可玩环 — **已完成**
 
-**策略**：在既有 **DATA-002** 子集与 wave:10 后端（QUEST-002 / HERO-003）上，补齐 H5 **日常任务 UI**、**招募模板预览**、内政/战报可读性与冒烟复跑；**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。引擎仍为 Vite + TS + Canvas2D/DOM。
+**策略**：在 **DATA-002** 子集与 wave:10 后端（QUEST-002 / HERO-003）上补齐 H5 **日常任务 UI**、**招募模板预览**、战报独立入口与网关冒烟；**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。波次 backlog 规划 [#161](https://github.com/anitaguptaoffice/sanguo-slg/pull/161)。
 
-| 任务 | 说明 | 并行 |
-|---|---|---|
-| CLIENT-009 | 日常面板（chain 400 接取/领奖，无手填上报） | ‖ |
-| CLIENT-010 | ListRecruitTemplates + 背包/商城信息密度 | ‖ |
-| QUEST-003 | 日常挂钩：练兵/建造/用道具（api 薄挂钩） | ‖ |
-| CLIENT-011 | HUD 资源条与建筑等级可读性 | ‖ |
-| CLIENT-012 | 战报独立入口（List/Get 已有 RPC） | ‖ |
-| INTG-008 | 扩展 INTG-007 网关冒烟（日常 + 招募模板） | ‖（软依赖 QUEST-003 可选步骤） |
-| DOCS-EXIT-003 | wave:11 文档收口 | 待 INTG-008（`blocked_until`） |
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| [#162](https://github.com/anitaguptaoffice/sanguo-slg/issues/162) | CLIENT-009 | 已完成 | [#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169) |
+| [#163](https://github.com/anitaguptaoffice/sanguo-slg/issues/163) | CLIENT-010 | 已完成 | [#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171) |
+| [#164](https://github.com/anitaguptaoffice/sanguo-slg/issues/164) | QUEST-003 | 已完成 | [#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173) |
+| [#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) | CLIENT-011 | 已完成 | [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172) |
+| [#166](https://github.com/anitaguptaoffice/sanguo-slg/issues/166) | CLIENT-012 | 已完成 | [#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170) |
+| [#167](https://github.com/anitaguptaoffice/sanguo-slg/issues/167) | INTG-008 | 已完成 | [#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174) |
+| [#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168) | DOCS-EXIT-003 | 已完成 | [#175](https://github.com/anitaguptaoffice/sanguo-slg/pull/175) |
 
-编排者在 backlog 合并后 `tasks_sync` 创建 Issue 并打 `wave:11` 标签。CLIENT 五卡与 QUEST-003、INTG-008 可并行；DOCS-EXIT-003 在 INTG-008 合并后放开。
+H5 人工验收与 INTG-008 路径对齐，见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)。
+
+**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。
 
 ## 不做
 
