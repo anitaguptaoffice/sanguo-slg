@@ -96,25 +96,21 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	}
 	accrue(dom, domestic.DefaultCatalog(), s.now())
 	mc := s.ensureMilitaryCity(dom)
-	if err := deductMarchTroops(mc, stacks); err != nil {
-		if errors.Is(err, errInsufficientTroops) {
-			return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50006), "insufficient troops"), nil
-		}
-		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), err.Error()), nil
-	}
 	coord, ok := s.cityCoords[req.GetCityId()]
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
 	}
 	s.nextArmyID++
 	order, err := s.military.CreateMarch(march.StartMarchRequest{
-		ArmyID:  s.nextArmyID,
-		FromX:   coord.x,
-		FromY:   coord.y,
-		ToX:     int(req.GetToX()),
-		ToY:     int(req.GetToY()),
-		Purpose: int16(req.GetPurpose()),
-		Troops:  stacks,
+		ArmyID:       s.nextArmyID,
+		OriginCityID: req.GetCityId(),
+		PlayerID:     pc.PlayerID,
+		FromX:        coord.x,
+		FromY:        coord.y,
+		ToX:          int(req.GetToX()),
+		ToY:          int(req.GetToY()),
+		Purpose:      int16(req.GetPurpose()),
+		Troops:       stacks,
 	})
 	if err != nil {
 		return s.mapMarchCreateErr(pkt.GetTraceId(), err), nil
@@ -127,26 +123,6 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		return nil, err
 	}
 	return okResp(pkt.GetTraceId(), data), nil
-}
-
-var errInsufficientTroops = errors.New("insufficient troops")
-
-func deductMarchTroops(c *march.CityState, stacks []march.TroopStack) error {
-	if len(stacks) == 0 {
-		return march.ErrNoTroopsToMarch
-	}
-	for _, st := range stacks {
-		if st.Count <= 0 {
-			return march.ErrInvalidCount
-		}
-		if c.Troops == nil || c.Troops[st.UnitCfgID] < st.Count {
-			return errInsufficientTroops
-		}
-	}
-	for _, st := range stacks {
-		c.Troops[st.UnitCfgID] -= st.Count
-	}
-	return nil
 }
 
 func parseMarchTroops(trace string, in []*apicommon.CityTroopStack) ([]march.TroopStack, *commonv1.ServerPacket) {
@@ -182,6 +158,10 @@ func (s *Server) mapMarchCreateErr(trace string, err error) *commonv1.ServerPack
 	switch {
 	case errors.Is(err, march.ErrNoTroopsToMarch), errors.Is(err, march.ErrInvalidMarch):
 		return errResp(trace, commonv1.ErrorCode(50005), err.Error())
+	case errors.Is(err, march.ErrInsufficientTroops):
+		return errResp(trace, commonv1.ErrorCode(50006), "insufficient troops")
+	case errors.Is(err, march.ErrCityNotFound):
+		return errResp(trace, commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found")
 	default:
 		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
 	}

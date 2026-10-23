@@ -51,7 +51,9 @@ func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	hub := domestic.NewHub(time.Now)
 	hub.UseStore(domestic.NewPGStore(a.DB), defaultShardID, 30*time.Second)
 	militaryHub := march.NewHub(time.Now)
+	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub)
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
+	srv.AttachBattleReports(reportSvc)
 	go srv.RunDomesticScheduler(ctx)
 	go srv.RunMilitaryScheduler(ctx)
 	return srv
