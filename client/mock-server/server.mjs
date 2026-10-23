@@ -45,7 +45,168 @@ const ServerPacket = T("sanguo.common.v1.ServerPacket");
 
 const PORT = Number(process.env.MOCK_GATEWAY_PORT || 19090);
 
-const server = http.createServer((_req, res) => {
+/** CLIENT-046 evidence harness: preset applied to each new WebSocket session. */
+let evidencePreset = process.env.MOCK_EVIDENCE_PRESET || "default";
+
+function applyEvidencePreset(state, preset) {
+  const now = Date.now();
+  state.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1 }];
+  state.dailyQuestsSuppressed = false;
+  state.evidenceRecruitQueued = false;
+
+  if (preset === "queue-empty" || preset === "default") {
+    return;
+  }
+  if (preset === "queue-build") {
+    state.buildings = [
+      { slot_key: "farm", building_cfg_id: 2, level: 2, upgrade_finish_at_ms: now + 3_600_000 },
+      { slot_key: "hall", building_cfg_id: 1, level: 3, upgrade_finish_at_ms: now + 7_200_000 },
+    ];
+    state.bag = { ...state.bag, 2003: 2 };
+    return;
+  }
+  if (preset === "queue-recruit") {
+    state.evidenceRecruitQueued = true;
+    return;
+  }
+  if (preset === "queue-full") {
+    state.buildings = [
+      { slot_key: "farm", building_cfg_id: 2, level: 2, upgrade_finish_at_ms: now + 3_600_000 },
+    ];
+    state.evidenceRecruitQueued = true;
+    state.bag = { ...state.bag, 2003: 1 };
+    return;
+  }
+  if (preset === "mail-empty") {
+    state.mails = [];
+    return;
+  }
+  if (preset === "mail-empty-unread") {
+    state.mails = [
+      {
+        mail_id: 6100,
+        mail_type: 1,
+        title: "已读通知",
+        body: "无未读邮件时的「未读」筛选空态。",
+        status: 1,
+        read_at_ms: now - 60_000,
+        created_at_ms: now - 120_000,
+      },
+    ];
+    return;
+  }
+  if (preset === "mail-unread-multi") {
+    state.mails = [
+      {
+        mail_id: 6001,
+        mail_type: 1,
+        title: "欢迎奖励",
+        body: "mock 网关演示邮件，可领取谷袋。",
+        status: 0,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+        created_at_ms: now - 30_000,
+      },
+      {
+        mail_id: 6002,
+        mail_type: 2,
+        title: "系统公告",
+        body: "第二条未读，无附件。",
+        status: 0,
+        created_at_ms: now - 10_000,
+      },
+      {
+        mail_id: 6003,
+        mail_type: 1,
+        title: "已领取样本",
+        body: "附件已领，用于对比领取按钮隐藏。",
+        status: 2,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+        claimed_at_ms: now - 5_000,
+        created_at_ms: now - 90_000,
+      },
+    ];
+    state.nextMailId = 6004;
+    return;
+  }
+  if (preset === "mail-read-no-claim") {
+    state.mails = [
+      {
+        mail_id: 6200,
+        mail_type: 2,
+        title: "已读无附件",
+        body: "选中后不应显示领取附件按钮。",
+        status: 1,
+        read_at_ms: now - 1_000,
+        created_at_ms: now - 60_000,
+      },
+    ];
+    return;
+  }
+  if (preset === "daily-empty") {
+    state.dailyQuestsSuppressed = true;
+    state.quests = {};
+    return;
+  }
+  if (preset === "daily-claimable") {
+    state.quests[1012] = {
+      quest_cfg_id: 1012,
+      quest_code: "daily_food_1",
+      chain_id: 400,
+      state: 3,
+      progress_current: 5000,
+      progress_target: 5000,
+    };
+    return;
+  }
+  if (preset === "daily-claimed") {
+    state.quests[1012] = {
+      quest_cfg_id: 1012,
+      quest_code: "daily_food_1",
+      chain_id: 400,
+      state: 4,
+      progress_current: 5000,
+      progress_target: 5000,
+    };
+    return;
+  }
+  if (preset === "bag-empty") {
+    state.bag = {};
+    return;
+  }
+  if (preset === "bag-stacks") {
+    state.bag = { 2001: 5, 2003: 2, 2020: 1 };
+    return;
+  }
+  if (preset === "bag-use-fail") {
+    state.bag = { 2001: 1 };
+    return;
+  }
+}
+
+const server = http.createServer((req, res) => {
+  if (req.method === "POST" && req.url === "/_evidence/preset") {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk;
+    });
+    req.on("end", () => {
+      try {
+        const parsed = JSON.parse(body || "{}");
+        if (typeof parsed.preset === "string") evidencePreset = parsed.preset;
+        res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: true, preset: evidencePreset }));
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: false, error: "invalid json" }));
+      }
+    });
+    return;
+  }
+  if (req.method === "GET" && req.url === "/_evidence/preset") {
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ preset: evidencePreset }));
+    return;
+  }
   res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
   res.end("sanguo mock gateway (WebSocket /ws)\n");
 });
@@ -53,12 +214,15 @@ const server = http.createServer((_req, res) => {
 const wss = new WebSocketServer({ server, path: "/ws" });
 
 function sessionState() {
-  return {
+  const state = {
     serverId: 1,
     sessionId: "",
     wallet: { food: 5000, wood: 3200, iron: 800, stone: 600, gold: 120 },
     troops: { 1: 0 },
     cityId: 501,
+    buildings: [{ slot_key: "farm", building_cfg_id: 2, level: 1 }],
+    dailyQuestsSuppressed: false,
+    evidenceRecruitQueued: false,
     nextMarchId: 1,
     marches: [],
     nextReportId: 9001,
@@ -90,6 +254,8 @@ function sessionState() {
     ],
     nextMailId: 6002,
   };
+  applyEvidencePreset(state, evidencePreset);
+  return state;
 }
 
 function bagList(state) {
@@ -214,7 +380,7 @@ wss.on("connection", (ws) => {
       if (route === "domestic.v1.GetCityState") {
         replyOk(ws, cp.trace_id, T("sanguo.domestic.v1.GetCityStateResponse"), {
           wallet: state.wallet,
-          buildings: [{ slot_key: "farm", building_cfg_id: 2, level: 1 }],
+          buildings: state.buildings ?? [{ slot_key: "farm", building_cfg_id: 2, level: 1 }],
         });
         return;
       }
@@ -365,6 +531,17 @@ wss.on("connection", (ws) => {
         const req = T("sanguo.military.v1.RecruitTroopRequest").decode(cp.payload);
         const cost = 10 * req.count;
         state.wallet.food = Math.max(0, state.wallet.food - cost);
+        if (state.evidenceRecruitQueued) {
+          const finishAt = Date.now() + 180_000;
+          const queueId = 9101;
+          replyOk(ws, cp.trace_id, T("sanguo.military.v1.RecruitTroopResponse"), {
+            troop: { unit_cfg_id: req.unit_cfg_id, count: state.troops[req.unit_cfg_id] ?? 0 },
+            wallet: state.wallet,
+            queue_id: queueId,
+            finish_at_ms: finishAt,
+          });
+          return;
+        }
         state.troops[req.unit_cfg_id] = (state.troops[req.unit_cfg_id] ?? 0) + req.count;
         replyOk(ws, cp.trace_id, T("sanguo.military.v1.RecruitTroopResponse"), {
           troop: { unit_cfg_id: req.unit_cfg_id, count: state.troops[req.unit_cfg_id] },
@@ -454,6 +631,10 @@ wss.on("connection", (ws) => {
           (q) => !chainFilter || (q.chain_id ?? 0) === chainFilter,
         );
         const defaults = [];
+        if (!rows.length && chainFilter === 400 && state.dailyQuestsSuppressed) {
+          replyOk(ws, cp.trace_id, T("sanguo.quest.v1.ListPlayerQuestsResponse"), { quests: [] });
+          return;
+        }
         if (!rows.length) {
           if (chainFilter === 400) {
             defaults.push({
