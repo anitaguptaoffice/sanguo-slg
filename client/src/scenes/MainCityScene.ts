@@ -1,6 +1,13 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
-import { PANEL_ASSET_MILITARY, skinMilitaryPanel, skinNineSlicePanel } from "@/engine/artPanelSkin";
+import {
+  PANEL_ASSET_MILITARY,
+  skinBagPanel,
+  skinHeroPanel,
+  skinMilitaryPanel,
+  skinNineSlicePanel,
+  skinQueuePanel,
+} from "@/engine/artPanelSkin";
 import { appendHudProductionRatesLine, appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
@@ -446,12 +453,13 @@ export class MainCityScene implements Scene {
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320, PANEL_ASSET_MILITARY);
     skinMilitaryPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
-    for (const panel of [
-      this.queuePanels.getRoot(),
-      this.heroMail.getMailRoot(),
-      this.content.getBagRoot(),
-      this.dailyQuest.getRoot(),
-    ]) {
+    skinHeroPanel(this.heroMail.getHeroRoot(), this.assets, 520, 320);
+    skinBagPanel(this.content.getBagRoot(), this.assets, 520, 320);
+    skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
+    skinCenterPrimary(this.heroMail.getHeroRoot());
+    skinCenterPrimary(this.content.getBagRoot());
+    skinCenterPrimary(this.queuePanels.getRoot());
+    for (const panel of [this.heroMail.getMailRoot(), this.dailyQuest.getRoot()]) {
       skinNineSlicePanel(panel, this.assets, 520, 320);
       skinCenterPrimary(panel);
     }

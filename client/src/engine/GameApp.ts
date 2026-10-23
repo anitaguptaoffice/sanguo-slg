@@ -1,5 +1,9 @@
 import { AssetLoader } from "@/engine/AssetLoader";
-import { applyLayoutFrameStyles, computeLayoutViewport } from "@/engine/layoutViewport";
+import {
+  applyLayoutFrameStyles,
+  computeLayoutViewport,
+  syncLayoutViewportRootClass,
+} from "@/engine/layoutViewport";
 import { LAYOUT_FRAME } from "@/engine/mainCitySlots";
 import { SceneManager } from "@/engine/SceneManager";
 import { GatewayClient } from "@/net/GatewayClient";
@@ -33,6 +37,7 @@ export class GameApp {
     const rect = this.viewportRoot.getBoundingClientRect();
     this.viewport = computeLayoutViewport(rect.width, rect.height);
     applyLayoutFrameStyles(this.layoutFrame, this.viewport);
+    syncLayoutViewportRootClass(this.layoutFrame, this.viewport);
 
     const dpr = window.devicePixelRatio || 1;
     const frameRect = this.layoutFrame.getBoundingClientRect();

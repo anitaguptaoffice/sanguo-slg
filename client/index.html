@@ -498,6 +498,43 @@
       .social-refresh-status.social-refresh-stale { color: #e8a87c; }
       .main-city-toolbar { flex-wrap: wrap; }
       .main-city-toolbar button { min-width: 72px; flex: 1 1 30%; }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel .panel-scroll-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        margin: 4px 0 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .template-list,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list {
+        max-height: none;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-status {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-panel-feedback {
+        flex-shrink: 0;
+      }
     </style>
   </head>
   <body>

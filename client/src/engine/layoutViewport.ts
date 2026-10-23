@@ -73,3 +73,22 @@ export function applyLayoutFrameStyles(frame: HTMLElement, vp: LayoutViewport): 
 export function minUiScaleForHitSize(layoutPx: number, minCssPx = 44): number {
   return minCssPx / layoutPx;
 }
+
+/** Applied to `#layout-frame` when content fits at or below MIN_CONTENT_VIEWPORT (1280×720). */
+export const NARROW_LAYOUT_ROOT_CLASS = "layout-narrow";
+
+const NARROW_UI_SCALE = MIN_CONTENT_VIEWPORT.w / LAYOUT_FRAME.w;
+
+/** Letterboxed frame at or below the 1280×720 minimum content box (uiScale ≤ 0.8). */
+export function isNarrowLayoutViewport(vp: LayoutViewport): boolean {
+  return vp.uiScale <= NARROW_UI_SCALE + 1e-6;
+}
+
+/** Root class for narrow layout; empty string at 1600×900 baseline and wider. */
+export function layoutViewportRootClass(vp: LayoutViewport): string {
+  return isNarrowLayoutViewport(vp) ? NARROW_LAYOUT_ROOT_CLASS : "";
+}
+
+export function syncLayoutViewportRootClass(root: HTMLElement, vp: LayoutViewport): void {
+  root.classList.toggle(NARROW_LAYOUT_ROOT_CLASS, isNarrowLayoutViewport(vp));
+}

@@ -3,9 +3,13 @@ import {
   applyLayoutTransform,
   canvasToLayout,
   computeLayoutViewport,
+  isNarrowLayoutViewport,
   layoutFrameCssSize,
   layoutToCanvas,
+  layoutViewportRootClass,
   minUiScaleForHitSize,
+  NARROW_LAYOUT_ROOT_CLASS,
+  syncLayoutViewportRootClass,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
 
@@ -68,5 +72,27 @@ describe("applyLayoutTransform", () => {
 describe("minUiScaleForHitSize", () => {
   it("requires scale ≥ 44/220 for a 220px-wide hit rect", () => {
     expect(minUiScaleForHitSize(220)).toBeCloseTo(0.2, 5);
+  });
+});
+
+describe("narrow layout root class", () => {
+  it("enables layout-narrow at 1280×720 minimum content viewport", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(layoutViewportRootClass(vp)).toBe(NARROW_LAYOUT_ROOT_CLASS);
+  });
+
+  it("keeps 1600×900 baseline without narrow class", () => {
+    const vp = computeLayoutViewport(1600, 900);
+    expect(isNarrowLayoutViewport(vp)).toBe(false);
+    expect(layoutViewportRootClass(vp)).toBe("");
+  });
+
+  it("syncLayoutViewportRootClass toggles on #layout-frame", () => {
+    const root = document.createElement("div");
+    syncLayoutViewportRootClass(root, computeLayoutViewport(1280, 720));
+    expect(root.classList.contains(NARROW_LAYOUT_ROOT_CLASS)).toBe(true);
+    syncLayoutViewportRootClass(root, computeLayoutViewport(1600, 900));
+    expect(root.classList.contains(NARROW_LAYOUT_ROOT_CLASS)).toBe(false);
   });
 });
