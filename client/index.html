@@ -792,6 +792,13 @@
       .hero-list.hero-list-refresh-pulse {
         animation: hero-list-refresh-pulse-keyframes 1.2s ease-out 1;
       }
+      @keyframes hero-row-recruited-pulse-keyframes {
+        0%, 100% { box-shadow: none; background: #1a1410; }
+        50% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.75); background: #1e2418; }
+      }
+      .hero-list li.hero-row-recruited-pulse {
+        animation: hero-row-recruited-pulse-keyframes 1.2s ease-out 1;
+      }
       .daily-quest-state-summary {
         display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; font-size: 12px;
       }
@@ -886,6 +893,14 @@
         cursor: default; color: #4a3828; font-family: inherit; font-size: 12px; line-height: 1.4;
       }
       .bag-list li.item-highlight { outline: 2px solid #c9a227; background: #3d3028; }
+      @keyframes bag-row-used-pulse-keyframes {
+        0%, 100% { box-shadow: none; background: #1a1410; }
+        35% { box-shadow: 0 0 14px rgba(201, 162, 39, 0.8); background: #2a2418; }
+        70% { box-shadow: 0 0 8px rgba(201, 162, 39, 0.45); background: #221c16; }
+      }
+      .bag-list li.bag-row-used-pulse {
+        animation: bag-row-used-pulse-keyframes 3s ease-out 1;
+      }
       .bag-panel-feedback { margin-top: 8px; }
       .daily-quest-detail {
         margin-top: 8px; padding: 8px; max-height: 80px; overflow: auto;
