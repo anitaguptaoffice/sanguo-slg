@@ -102,4 +102,30 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 	if mc.Troops[1] != 30 {
 		t.Fatalf("troops left %d", mc.Troops[1])
 	}
+
+	listPkt := &commonv1.ClientPacket{
+		Route:     api.RouteListMarches,
+		TraceId:   "list",
+		SessionId: sid,
+		Payload: mustMarshal(&militaryv1.ListMarchesRequest{CityId: cityID}),
+	}
+	listResp := router.Dispatch(ctx, listPkt)
+	if listResp.Code != 0 {
+		t.Fatalf("list marches: code=%d msg=%s", listResp.Code, listResp.Msg)
+	}
+	var listOut militaryv1.ListMarchesResponse
+	if err := proto.Unmarshal(listResp.Data, &listOut); err != nil {
+		t.Fatal(err)
+	}
+	wantID := marchOut.GetMarch().GetMarchId()
+	var found bool
+	for _, m := range listOut.GetMarches() {
+		if m.GetMarchId() == wantID {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Fatalf("list marches missing march_id=%d total=%d", wantID, listOut.GetTotal())
+	}
 }

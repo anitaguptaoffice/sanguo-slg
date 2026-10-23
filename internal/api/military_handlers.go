@@ -14,6 +14,7 @@ import (
 const (
 	RouteRecruitTroop = "military.v1.RecruitTroop"
 	RouteStartMarch   = "military.v1.StartMarch"
+	RouteListMarches  = "military.v1.ListMarches"
 )
 
 func (s *Server) handleRecruitTroop(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -116,10 +117,39 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if err != nil {
 		return s.mapMarchCreateErr(pkt.GetTraceId(), err), nil
 	}
+	s.recordPlayerMarch(pc.PlayerID, req.GetCityId(), order.ID, stacks)
 	data, err := marshal(&militaryv1.StartMarchResponse{
 		March:      marchSummaryProto(req.GetCityId(), order, stacks),
 		CityTroops: troopStacksProto(mc.Troops, stacks),
 	})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
+func (s *Server) handleListMarches(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	var req militaryv1.ListMarchesRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if req.GetCityId() != 0 && !s.ownsCity(ctx, pc, req.GetCityId()) {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	refs, total := s.listPlayerMarches(pc.PlayerID, req.GetCityId(), req.GetLimit(), req.GetOffset())
+	out := make([]*militaryv1.MarchSummary, 0, len(refs))
+	for _, ref := range refs {
+		order := s.military.March(ref.marchID)
+		if order == nil {
+			continue
+		}
+		out = append(out, marchSummaryProto(ref.cityID, order, ref.troops))
+	}
+	data, err := marshal(&militaryv1.ListMarchesResponse{Marches: out, Total: total})
 	if err != nil {
 		return nil, err
 	}
