@@ -184,4 +184,81 @@ describe("HeroMailPanels", () => {
     await panels.syncUnreadBadge();
     expect(unread).toBe(4);
   });
+
+  it("recruit success refreshes list, selects new hero, and nudges daily recruit", async () => {
+    const mount = document.createElement("div");
+    const statuses: string[] = [];
+    const onDaily = vi.fn().mockResolvedValue(undefined);
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            template_name: "玄德府君",
+            recruit_cost: { food: 100 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi
+        .fn()
+        .mockResolvedValueOnce({ heroes: [], total_count: 0 })
+        .mockResolvedValueOnce({
+          heroes: [{ hero_id: 99, template_cfg_id: 1001, level: 1, loyalty: 100 }],
+          total_count: 1,
+        }),
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [{ quest_cfg_id: 1015, quest_code: "daily_recruit_1", state: 2 }],
+      }),
+      recruitHero: vi.fn().mockResolvedValue({
+        hero_id: 99,
+        template_cfg_id: 1001,
+        level: 1,
+        loyalty: 100,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 99,
+        template_cfg_id: 1001,
+        template_name: "玄德府君",
+        level: 1,
+        loyalty: 100,
+      }),
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      getCityState: vi.fn().mockResolvedValue({ wallet: { food: 900 } }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: { food: 1000 },
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      (msg) => statuses.push(msg),
+      undefined,
+      undefined,
+      onDaily,
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="recruit-hero"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+    expect(gateway.recruitHero).toHaveBeenCalled();
+    expect(gateway.listPlayerHeroes).toHaveBeenCalledTimes(2);
+    expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 99);
+    const selected = mount.querySelector('li[data-hero-id="99"].selected');
+    expect(selected).toBeTruthy();
+    expect(onDaily).toHaveBeenCalled();
+    expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
+  });
 });

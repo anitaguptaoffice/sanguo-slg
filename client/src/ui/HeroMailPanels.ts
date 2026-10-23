@@ -1,10 +1,20 @@
-import type { MainCitySession } from "@/net/bootstrapSession";
+import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
+import { bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
+import {
+  DAILY_QUEST_CHAIN_ID,
+  dailyQuestsFromListResponse,
+  findDailyRecruitQuest,
+  formatRecruitDailyFollowUpHint,
+  shouldPromptDailyRecruitAfterRecruit,
+  type DailyQuestRow,
+} from "@/net/dailyQuestState";
 import {
   applyMailClaimResult,
   formatHeroDetail,
   formatHeroLine,
+  formatRecruitSuccessStatus,
   formatRecruitTemplateLine,
   heroListLines,
   MAIL_INBOX_FILTER_ALL,
@@ -46,6 +56,7 @@ export class HeroMailPanels {
     private onStatus: (msg: string) => void,
     private onUnreadCount?: (count: number) => void,
     private readonly cityStateFetch?: CityStateFetch,
+    private readonly onDailyRecruitLoop?: () => void | Promise<void>,
   ) {}
 
   attach(): void {
@@ -156,6 +167,7 @@ export class HeroMailPanels {
         if (h.hero_id) {
           li.setAttribute("data-hero-id", String(h.hero_id));
           li.style.cursor = "pointer";
+          if (h.hero_id === this.selectedHeroId) li.classList.add("selected");
         }
         ul.appendChild(li);
       }
@@ -332,13 +344,58 @@ export class HeroMailPanels {
     }
   }
 
+  private async fetchDailyRecruitRow(): Promise<DailyQuestRow | null> {
+    const sid = this.serverId();
+    const res = await this.gateway.listPlayerQuests(sid, {
+      chainId: DAILY_QUEST_CHAIN_ID,
+      includeCompleted: true,
+    });
+    const rows = dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] });
+    return findDailyRecruitQuest(rows);
+  }
+
+  private async syncEconomyAfterRecruit(): Promise<void> {
+    const session = this.getSession();
+    if (!session) return;
+    let bag: BagStack[] = session.bag;
+    let wallet: ResourceWallet = session.wallet;
+    const sid = this.serverId();
+    try {
+      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
+        items?: { item_cfg_id?: number; quantity?: number }[];
+      };
+      bag = bagFromListPlayerBagResponse(bagRes.items);
+    } catch {
+      /* 保留会话背包 */
+    }
+    if (this.cityStateFetch) {
+      const state = await this.cityStateFetch.fetch();
+      if (state?.wallet) wallet = state.wallet;
+    } else {
+      try {
+        const state = (await this.gateway.getCityState(session.cityId)) as { wallet?: ResourceWallet };
+        if (state.wallet) wallet = state.wallet;
+      } catch {
+        /* 保留会话钱包 */
+      }
+    }
+    this.onSessionPatch({ bag, wallet });
+  }
+
   private async recruitHero(): Promise<void> {
     const sid = this.serverId();
     const tpl = this.selectedTemplateId;
     const itemId = this.recruitItemId;
+    const templateRow = this.recruitTemplates.find((t) => t.template_cfg_id === tpl);
     if (!tpl) {
       this.onStatus("请先刷新并选择招募模板");
       return;
+    }
+    let dailyBefore: DailyQuestRow | null = null;
+    try {
+      dailyBefore = await this.fetchDailyRecruitRow();
+    } catch {
+      /* 日常列表失败不阻断招募 */
     }
     this.onStatus(`招募模板 ${tpl}…`);
     try {
@@ -351,18 +408,23 @@ export class HeroMailPanels {
         level?: number;
         loyalty?: number;
       };
+      await this.syncEconomyAfterRecruit();
       await this.refreshHeroes();
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
         await this.loadHeroDetail(res.hero_id);
       }
-      if (this.cityStateFetch) {
-        const state = await this.cityStateFetch.fetch();
-        if (state?.wallet) this.onSessionPatch({ wallet: state.wallet });
+      let status = formatRecruitSuccessStatus(res, templateRow);
+      try {
+        const dailyAfter = await this.fetchDailyRecruitRow();
+        if (shouldPromptDailyRecruitAfterRecruit(dailyBefore, dailyAfter)) {
+          await this.onDailyRecruitLoop?.();
+          status = `${status} · ${formatRecruitDailyFollowUpHint()}`;
+        }
+      } catch {
+        /* 忽略日常刷新失败 */
       }
-      this.onStatus(
-        `招募成功 #${res.hero_id ?? "?"} ${res.template_cfg_id ?? tpl} Lv${res.level ?? 1} 忠诚${res.loyalty ?? 0}`,
-      );
+      this.onStatus(status);
     } catch (e) {
       const err = e as Error & { code?: number };
       this.onStatus(err.code ? `招募失败(code=${err.code})：${err.message}` : err.message);

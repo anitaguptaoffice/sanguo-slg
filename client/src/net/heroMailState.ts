@@ -204,6 +204,34 @@ export function recruitTemplateListLines(templates: RecruitTemplatePreview[]): s
   return templates.map(formatRecruitTemplateLine);
 }
 
+export type RecruitHeroResult = {
+  hero_id?: number;
+  template_cfg_id?: number;
+  level?: number;
+  loyalty?: number;
+};
+
+export function formatRecruitDeductSummary(template: RecruitTemplatePreview | undefined): string {
+  if (!template) return "无消耗记录";
+  const cost = formatWalletPrice(template.recruit_cost ?? {});
+  const item = template.recruit_item;
+  const itemPart = item?.item_cfg_id
+    ? `${itemLabel(item.item_cfg_id)}×${item.quantity ?? 1}`
+    : "";
+  const parts = [cost, itemPart].filter(Boolean);
+  return parts.length ? parts.join(" + ") : "无资源/道具消耗";
+}
+
+export function formatRecruitSuccessStatus(
+  res: RecruitHeroResult,
+  template: RecruitTemplatePreview | undefined,
+): string {
+  const tplId = res.template_cfg_id ?? template?.template_cfg_id;
+  const name = template?.template_name?.trim() || heroTemplateLabel(tplId);
+  const deduct = formatRecruitDeductSummary(template);
+  return `招募成功：${name} #${res.hero_id ?? "?"} Lv${res.level ?? 1} · 已扣 ${deduct}`;
+}
+
 export function pickRecruitSelection(
   templates: RecruitTemplatePreview[],
   preferredTemplateId?: number,

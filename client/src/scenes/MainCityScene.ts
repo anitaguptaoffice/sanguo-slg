@@ -19,6 +19,7 @@ import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
 import {
   formatMarchHint,
   formatTimeMs,
@@ -161,6 +162,18 @@ export class MainCityScene implements Scene {
       },
     );
     this.content.attach();
+    this.dailyQuest = new DailyQuestPanels(
+      parent,
+      this.gateway,
+      () => this.session,
+      (patch) => this.patchSession(patch),
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+      this.cityStateFetch,
+    );
+    this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
       parent,
       this.gateway,
@@ -172,6 +185,7 @@ export class MainCityScene implements Scene {
       },
       (count) => this.updateMailToolbarBadge(count),
       this.cityStateFetch,
+      () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
     );
     this.heroMail.attach();
     void this.heroMail.syncUnreadBadge();
@@ -190,18 +204,6 @@ export class MainCityScene implements Scene {
       },
     );
     this.marchList.attach();
-    this.dailyQuest = new DailyQuestPanels(
-      parent,
-      this.gateway,
-      () => this.session,
-      (patch) => this.patchSession(patch),
-      (msg) => {
-        this.status = msg;
-        this.renderHud();
-      },
-      this.cityStateFetch,
-    );
-    this.dailyQuest.attach();
     this.world = new WorldPanels(
       parent,
       this.gateway,
