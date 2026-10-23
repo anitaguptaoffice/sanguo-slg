@@ -1,11 +1,20 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
-import { guildRoleLabel, leaderboardTypeLabel } from "@/net/socialFormat";
+import {
+  formatLeaderboardEntryLine,
+  formatLeaderboardSnapshotMeta,
+  formatViewerRankSummary,
+  LB_PLAYER_POWER,
+  LB_PLAYER_RESOURCE,
+  selectedLeaderboardTypeFromValue,
+  viewerScoreFallback,
+  type LeaderboardPagePayload,
+} from "@/net/leaderboardFormat";
+import { guildRoleLabel } from "@/net/socialFormat";
 
 const CH_WORLD = 1;
 const CH_PRIVATE = 2;
 const CH_GUILD = 3;
-const LB_PLAYER_POWER = 1;
 
 type ChatLine = {
   sender_display_name?: string;
@@ -37,6 +46,9 @@ export class SocialPanels {
     this.chatPanel.addEventListener("click", (ev) => this.onChatClick(ev));
     this.guildPanel.addEventListener("click", (ev) => this.onGuildClick(ev));
     this.rankPanel.addEventListener("click", (ev) => this.onRankClick(ev));
+    this.rankPanel.querySelector('[data-field="rank-type"]')?.addEventListener("change", () => {
+      if (!this.rankPanel.classList.contains("hidden")) void this.refreshRank();
+    });
   }
 
   detach(): void {
@@ -147,13 +159,25 @@ export class SocialPanels {
     return el;
   }
 
+  selectedLeaderboardType(): number {
+    const raw = (this.rankPanel.querySelector('[data-field="rank-type"]') as HTMLSelectElement)?.value ?? LB_PLAYER_POWER;
+    return selectedLeaderboardTypeFromValue(raw);
+  }
+
   private buildRankPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "social-panel hidden";
     el.innerHTML = `
       <h3>排行榜</h3>
-      <p data-role="my-rank">我的名次：—</p>
-      <button type="button" data-action="refresh-rank">刷新战力榜</button>
+      <label>榜单
+        <select data-field="rank-type">
+          <option value="${LB_PLAYER_POWER}">玩家战力</option>
+          <option value="${LB_PLAYER_RESOURCE}">玩家资源总量</option>
+        </select>
+      </label>
+      <p data-role="viewer-rank">我的名次：—</p>
+      <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
+      <button type="button" data-action="refresh-rank">刷新排行榜</button>
       <ol class="rank-list" data-role="rank-list"></ol>
     `;
     return el;
@@ -291,32 +315,47 @@ export class SocialPanels {
     }
   }
 
-  private async refreshRank(): Promise<void> {
-    const sid = this.serverId();
-    this.onStatus("拉取排行榜…");
-    try {
-      const res = (await this.gateway.getLeaderboard(sid, LB_PLAYER_POWER, 1, 20)) as {
-        entries?: { rank?: number; display_name?: string; score?: number }[];
-        my_rank?: number;
-        my_score?: number;
-      };
-      const myEl = this.rankPanel.querySelector('[data-role="my-rank"]');
-      if (myEl) {
-        const me = this.getSession()?.player;
-        myEl.textContent =
-          res.my_rank && res.my_rank > 0
-            ? `我的名次：第 ${res.my_rank} 名 · 战力 ${res.my_score ?? me?.power ?? 0}（${leaderboardTypeLabel(LB_PLAYER_POWER)}）`
-            : `未上榜 · 战力 ${res.my_score ?? me?.power ?? 0}`;
-      }
-      const ol = this.rankPanel.querySelector('[data-role="rank-list"]');
-      if (ol) {
-        ol.innerHTML = "";
-        for (const e of res.entries ?? []) {
+  renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
+    const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
+    if (myEl) {
+      myEl.textContent = formatViewerRankSummary(
+        boardType,
+        res.my_rank,
+        res.my_score,
+        viewerScoreFallback(this.getSession(), boardType),
+      );
+    }
+    const snapEl = this.rankPanel.querySelector('[data-role="rank-snapshot"]');
+    if (snapEl) {
+      const meta = formatLeaderboardSnapshotMeta(res);
+      snapEl.textContent = meta ?? "";
+      snapEl.classList.toggle("hidden", !meta);
+    }
+    const ol = this.rankPanel.querySelector('[data-role="rank-list"]');
+    if (ol) {
+      ol.innerHTML = "";
+      const entries = res.entries ?? [];
+      if (entries.length === 0) {
+        const li = document.createElement("li");
+        li.textContent = "（空榜）";
+        ol.appendChild(li);
+      } else {
+        for (const e of entries) {
           const li = document.createElement("li");
-          li.textContent = `${e.rank ?? "?"}. ${e.display_name ?? "?"} · ${e.score ?? 0}`;
+          li.textContent = formatLeaderboardEntryLine(e);
           ol.appendChild(li);
         }
       }
+    }
+  }
+
+  private async refreshRank(): Promise<void> {
+    const sid = this.serverId();
+    const boardType = this.selectedLeaderboardType();
+    this.onStatus("拉取排行榜…");
+    try {
+      const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+      this.renderLeaderboardPage(res, boardType);
       this.onStatus("排行榜已刷新");
     } catch (e) {
       this.onStatus((e as Error).message);
