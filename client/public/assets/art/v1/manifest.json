@@ -284,6 +284,105 @@
       ]
     },
     {
+      "id": "ui.panel.hero.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 320,
+        "h": 200
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "nine_slice": {
+        "left": 24,
+        "top": 24,
+        "right": 24,
+        "bottom": 24
+      },
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/panel_default.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/panel_default.png"
+        }
+      ],
+      "tags": [
+        "client-062",
+        "center-panel"
+      ]
+    },
+    {
+      "id": "ui.panel.bag.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 320,
+        "h": 200
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "nine_slice": {
+        "left": 24,
+        "top": 24,
+        "right": 24,
+        "bottom": 24
+      },
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/panel_default.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/panel_default.png"
+        }
+      ],
+      "tags": [
+        "client-062",
+        "center-panel"
+      ]
+    },
+    {
+      "id": "ui.panel.queue.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 320,
+        "h": 200
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "nine_slice": {
+        "left": 24,
+        "top": 24,
+        "right": 24,
+        "bottom": 24
+      },
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/panel_default.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/panel_default.png"
+        }
+      ],
+      "tags": [
+        "client-062",
+        "center-panel"
+      ]
+    },
+    {
       "id": "res.icon.food.v1",
       "kind": "icon",
       "display_size": {
