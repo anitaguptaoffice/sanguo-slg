@@ -15,7 +15,7 @@ import yaml
 
 LABELS = {
     "domain": ["spec", "platform", "account", "world", "domestic", "military", "hero", "content", "client", "tools"],
-    "wave": ["1", "2", "3"],
+    "wave": ["1", "2", "3", "4"],
     "size": ["S", "M", "L"],
 }
 STATUS = ["status:ready", "status:blocked", "status:in-progress", "status:review", "status:done"]
