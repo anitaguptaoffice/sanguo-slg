@@ -209,9 +209,39 @@
       .social-panel input, .social-panel select {
         margin-left: 6px; padding: 4px 6px; background: #1a1410; color: #f5e6c8; border: 1px solid #5c4a32;
       }
-      .chat-log, .guild-members, .rank-list { margin: 8px 0; padding-left: 18px; max-height: 140px; overflow: auto; }
-      .chat-log { list-style: none; padding-left: 0; }
-      .chat-log li { padding: 4px 0; border-bottom: 1px solid #3d3028; }
+      .chat-log, .guild-members { margin: 8px 0; padding-left: 0; max-height: 160px; overflow: auto; list-style: none; }
+      .chat-log li.chat-day-header {
+        position: sticky; top: 0; z-index: 1;
+        padding: 6px 4px 4px; margin: 4px 0 2px;
+        font-size: 11px; font-weight: 600; color: #c9b896;
+        background: #2a221c; border-bottom: 1px solid #5c4a32;
+      }
+      .chat-log li.chat-msg { padding: 4px 0; border-bottom: 1px solid #3d3028; line-height: 1.45; }
+      .chat-log li.chat-msg-world {
+        padding: 2px 0; font-size: 12px; line-height: 1.35;
+      }
+      .chat-log .chat-sender { white-space: normal; word-break: break-word; }
+      .rank-board { margin-top: 8px; }
+      .rank-viewer-bar {
+        position: sticky; top: 0; z-index: 2;
+        padding: 8px 10px; margin-bottom: 6px;
+        background: #1a1410; border: 1px solid #5c4a32; border-radius: 6px;
+        font-size: 12px; line-height: 1.4; color: #f0c674;
+      }
+      .rank-snapshot-meta { font-size: 11px; color: #b8a88a; margin: 0 0 6px; }
+      .rank-table-scroll { max-height: min(200px, 32vh); overflow: auto; border-radius: 4px; }
+      .rank-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      .rank-table-head th {
+        position: sticky; top: 0; z-index: 1;
+        padding: 6px 8px; text-align: left; font-weight: 600;
+        background: #3d3028; color: #f5e6c8; border-bottom: 1px solid #5c4a32;
+      }
+      .rank-table td { padding: 6px 8px; border-bottom: 1px solid #3d3028; }
+      .rank-table tr.rank-empty-row td { color: #b8a88a; font-size: 11px; line-height: 1.45; }
+      .rank-col-rank { width: 3em; color: #c9a227; }
+      .rank-col-score { text-align: right; white-space: nowrap; }
+      .guild-members { padding-left: 0; max-height: 140px; overflow: auto; list-style: none; }
+      .guild-members li { padding: 6px 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; font-size: 12px; }
       .main-city-toolbar { flex-wrap: wrap; }
       .main-city-toolbar button { min-width: 72px; flex: 1 1 30%; }
     </style>

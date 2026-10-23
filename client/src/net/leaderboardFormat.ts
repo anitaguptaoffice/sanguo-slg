@@ -41,6 +41,11 @@ export function formatLeaderboardEntryLine(entry: LeaderboardEntryRow): string {
   return `${rank}. ${name} · ${entry.score ?? 0}`;
 }
 
+/** 空榜占位与 dev 无种子提示（CLIENT-030）。 */
+export function formatLeaderboardEmptyHint(): string {
+  return "（空榜）dev 环境可能未写入排行种子，可对照 Scheduler / smoke 造数。";
+}
+
 /** 当前查看者名次/分数（proto: my_rank / my_score） */
 export function formatViewerRankSummary(
   type: number,

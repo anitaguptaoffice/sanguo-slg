@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatLeaderboardEmptyHint,
   formatLeaderboardEntryLine,
   formatLeaderboardSnapshotMeta,
   formatViewerRankSummary,
@@ -34,6 +35,11 @@ describe("leaderboardFormat", () => {
     );
     expect(formatLeaderboardSnapshotMeta({ snapshot_version: 3 }, at)).toContain("快照批次 #3");
     expect(formatLeaderboardSnapshotMeta({})).toBeNull();
+  });
+
+  it("explains empty leaderboard for dev", () => {
+    expect(formatLeaderboardEmptyHint()).toContain("（空榜）");
+    expect(formatLeaderboardEmptyHint()).toContain("种子");
   });
 
   it("maps type selector values", () => {
