@@ -1032,6 +1032,7 @@ export class MainCityScene implements Scene {
         marches?: MarchSummary[];
       };
       this.minimapMarches = res.marches ?? [];
+      this.marchList?.syncMinimapMarchFocusFromSnapshot(this.minimapMarches);
       this.world?.refreshMarchDestCounts();
     } catch {
       /* 小地图只读：失败时保留上次数据 */
