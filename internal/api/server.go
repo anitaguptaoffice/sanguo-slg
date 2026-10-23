@@ -14,6 +14,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -41,6 +42,8 @@ type Server struct {
 	gm         *GmService
 	shard      *shard.Handlers
 	m3         *assembly.M3
+	rankSvc    *rank.Service
+	rankSch    *rank.Scheduler
 	cities     map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord
 	nextArmyID int64
@@ -80,6 +83,7 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 	}
 	shardStore := &shard.Store{Pool: pool}
 	srv.shard = shard.NewHandlers(shardStore, srv.account, srv)
+	srv.wireM3(pool)
 	return srv
 }
 

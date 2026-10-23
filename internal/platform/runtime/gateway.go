@@ -56,5 +56,6 @@ func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	srv.AttachBattleReports(reportSvc)
 	go srv.RunDomesticScheduler(ctx)
 	go srv.RunMilitaryScheduler(ctx)
+	go srv.RunRankScheduler(ctx)
 	return srv
 }
