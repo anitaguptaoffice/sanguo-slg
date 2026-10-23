@@ -32,7 +32,7 @@
 
 ## M3 多人（4–6 周）
 
-- [ ] 分服与开服流程（wave:5 PLAT-004 等）— 网关选服与 `ServerSelectScene` 已冒烟；**wave:8 OPS-OPEN-001** 验收开服运营清单
+- [ ] 分服与开服流程（wave:5 PLAT-004 等）— 网关选服与 `ServerSelectScene` 已冒烟；**[开服运营最小流程](ops/open-server-runbook.md)**（wave:8 OPS-OPEN-001）供 dev/staging 手测与值班勾选
 - [x] 军团、聊天（GUILD-001/002、CHAT-001、WIRE-001）— 域服务 + H5 面板已联调
 - [ ] 排行与榜单 — RANK-001 冒烟通过；**wave:8 RANK-002** 双榜与刷新策略加深验收
 - [ ] 3000 并发压测 — **wave:8 LOAD-001** 可重复脚本 + `docs/load/PLAT-002-baseline.md`
