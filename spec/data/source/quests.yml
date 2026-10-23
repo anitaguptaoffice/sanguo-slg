@@ -1,0 +1,22 @@
+# M4 任务链示例（INTG-004 / QUEST-001 参照；导入管线可后续接入 generate_seeds）
+quests:
+  - code: tutorial_build_hall
+    quest_type: 1
+    chain_id: 100
+    sort_in_chain: 1
+    unlock_level: 1
+    objectives:
+      - { type: build_level, building_cfg_id: 1, level: 2 }
+    rewards:
+      resources: { food: 500 }
+      items: [{ item_cfg_id: 2001, qty: 1 }]
+  - code: tutorial_recruit
+    quest_type: 1
+    chain_id: 100
+    prev_quest_code: tutorial_build_hall
+    sort_in_chain: 2
+    unlock_level: 1
+    objectives:
+      - { type: recruit_hero, count: 1 }
+    rewards:
+      items: [{ item_cfg_id: 2004, qty: 1 }]

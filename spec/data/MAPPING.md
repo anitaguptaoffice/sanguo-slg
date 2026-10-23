@@ -45,3 +45,12 @@
 → `cfg_building.json`
 
 调参：改 `params.yml` 或 `source/*.yml` 后重跑生成器。
+
+## M4 配置源（SPEC-006，手工/后续管线）
+
+| 源文件 | 目标 DDL | 说明 |
+|--------|----------|------|
+| `source/quests.yml` | `cfg_quest` | `prev_quest_code` 发布时解析为 `prev_quest_cfg_id`；`rewards`/`objectives` 直写 JSONB |
+| `source/shop.yml` | `cfg_shop` / `cfg_shop_shelf` / `cfg_shop_offer` | `item_code` 解析为 `item_cfg_id`；`price` 与 `spec/rules/content.md` 一致 |
+
+冒烟与集成测试可据此插入最小种子；生成 SQL 脚本待 CONTENT 管线扩展。

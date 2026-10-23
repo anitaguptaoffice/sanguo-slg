@@ -28,7 +28,7 @@ PostgreSQL 16+。**分片键 `server_id`**：账号中心与 `cfg_*` 全局表�
 ./spec/db/validate.sh
 ```
 
-在独立 schema 中按序执行 `00*.sql` 与 `m3_*.sql`（M3 社交/选服，SPEC-005）；优先本机 `psql`，否则 `sudo -u postgres psql`，再否则 Docker `postgres:16-alpine`。
+在独立 schema 中按序执行 `00*.sql`、`m3_*.sql`（M3）、`m4_*.sql`（M4）；优先本机 `psql`，否则 `sudo -u postgres psql`，再否则 Docker `postgres:16-alpine`。
 
 ## M3 扩展（SPEC-005）
 
@@ -40,3 +40,13 @@ PostgreSQL 16+。**分片键 `server_id`**：账号中心与 `cfg_*` 全局表�
 | `m3_004_rank.sql` | 榜单批次与条目 |
 
 M4 及以后里程碑使用独立 `m4_*.sql` 等前缀，避免与并行 DDL 冲突。
+
+## M4 扩展（SPEC-006）
+
+| 文件 | 内容 |
+|------|------|
+| `m4_001_quest.sql` | `cfg_quest` 链式前置、`player_quest` 时间戳 |
+| `m4_002_shop.sql` | 商城、货架、商品、购买与限购计数 |
+| `m4_003_mail_reward.sql` | 邮件、待发奖队列 |
+
+逻辑引用：`cfg_shop_offer.item_cfg_id` → `cfg_item`；发奖 JSON 与 `cfg_quest.rewards` / `player_mail.attachments` 同 schema（见 `spec/rules/content.md`）。

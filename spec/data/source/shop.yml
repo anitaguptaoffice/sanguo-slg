@@ -1,0 +1,15 @@
+# M4 商城示例（SHOP-001 / INTG-004 参照）
+shops:
+  - code: resource_shop
+    name: 资源商店
+    unlock_level: 1
+    shelves:
+      - code: daily
+        name: 每日特惠
+        offers:
+          - code: food_bundle_daily
+            item_code: food_bundle_s
+            item_count: 1
+            price:
+              resources: { silver: 10 }
+            per_player_daily_limit: 3
