@@ -146,3 +146,10 @@ export function dailyQuestListEmptyMessage(filter: DailyQuestListFilter): string
   }
   return `（当前「${dailyQuestListFilterLabel(filter)}」筛选无匹配日常）`;
 }
+
+/** 「可领取」筛选结果中的首条 quest_cfg_id（CLIENT-091 定位首条）。 */
+export function pickFirstClaimableDailyQuestCfgIdForFilter(rows: DailyQuestRow[]): number {
+  const list = dailyQuestRowsForList(rows, "claimable");
+  const id = list[0]?.quest_cfg_id ?? 0;
+  return id > 0 ? id : 0;
+}
