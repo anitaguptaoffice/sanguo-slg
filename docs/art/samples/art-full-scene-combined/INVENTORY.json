@@ -1,0 +1,378 @@
+{
+  "generatedAt": "2026-10-23T15:45:46.061Z",
+  "stable_asset_ids": 14,
+  "png_paths": 34,
+  "manifest_asset_ids": [
+    "mc.bg.plateau.v1",
+    "mc.building.wall.v1",
+    "mc.building.hall.v1",
+    "mc.building.farm.v1",
+    "mc.building.lumber.v1",
+    "mc.building.quarry.v1",
+    "mc.building.iron.v1",
+    "mc.building.barracks.v1",
+    "ui.button.primary.v1",
+    "ui.panel.default.v1",
+    "res.icon.food.v1",
+    "res.icon.wood.v1",
+    "res.icon.stone.v1",
+    "res.icon.iron.v1"
+  ],
+  "items": [
+    {
+      "asset_id": "mc.bg.plateau.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/bg_plateau.png",
+      "provenance_pr": "#126",
+      "provenance_commit": "d05d68d6d007f66963ebea16eca71bb9da736abc",
+      "bytes": 3095893,
+      "sha256": "a7bc27b0418af2b368f61438b3b988f107b07905b85115e6e4f22daab4b78510",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.bg.plateau.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/bg_plateau.png",
+      "provenance_pr": "#126",
+      "provenance_commit": "d05d68d6d007f66963ebea16eca71bb9da736abc",
+      "bytes": 11463861,
+      "sha256": "c98e73a5186b9bb0f155aeba39888f13ce9c8cb4a28867c859a3cf98f07e3952",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.wall.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/wall.png",
+      "provenance_pr": "#153/#155",
+      "provenance_commit": "0d9ea5bc54fb6e61a7df84247d302e435db838f5",
+      "bytes": 95850,
+      "sha256": "4c87b13dffb241ae22b3a856c9a269b8e1ce30668f2e90c141f383650395e441",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.wall.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/wall.png",
+      "provenance_pr": "#153/#155",
+      "provenance_commit": "0d9ea5bc54fb6e61a7df84247d302e435db838f5",
+      "bytes": 323284,
+      "sha256": "39d7ae532e49df354ecee195020a597ea3f0996635babc9eaf4f7b96f28e47ba",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.hall.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/hall.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 124460,
+      "sha256": "f8179f42117f05650b701d8a7d354ec16a1272fcd7b1d76c80e5bf4f7d6bf3ea",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.hall.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/hall.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 433063,
+      "sha256": "6e25878e9743783ff252c0d1ff213d4ed71743636f76e858e31180ec70cd7d7b",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.farm.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/farm.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 40530,
+      "sha256": "22f7637a6d748354be4747fc54b011d9012f197fc221080ad86b5e56fa5c107e",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.farm.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/farm.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 139490,
+      "sha256": "ef769cb7675ee09654ccf4655f681506fa5eb11c7c7c46dd6c30e6ac73fb7c26",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.lumber.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/lumber.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 50829,
+      "sha256": "963fb89f9aa29e415575023fa89ae4346ab013313afdee34a8dc94aaedbaeae4",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.lumber.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/lumber.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 172089,
+      "sha256": "c56cf2ca1947602a6a136442c75e25cfeb6c5f051e1c8a6e4c6ad5794ed2c527",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.quarry.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/quarry.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 52799,
+      "sha256": "ff080275a2f3beb0144317636564895bd30827ff0e8b25c1a4c7527cf6482b14",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.quarry.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/quarry.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 179601,
+      "sha256": "f15a1f42ac276b102b7c64c7da764b15653c3b6d3b3ee3925204c7121bbc4518",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.iron.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/iron.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 49561,
+      "sha256": "3e3e662b63d08ab7c2296dcbd9a45f78317cf193e4ff1b8fe85cf7bb4d2527fe",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.iron.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/iron.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 170965,
+      "sha256": "9dc35b86ef265d32d2236cdeaaa93a12ffbc41fd77c82d5e5fef312e5855d5ea",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.barracks.v1",
+      "scale": 1,
+      "path": "textures/1x/maincity/barracks.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 66216,
+      "sha256": "f56b70fd841a312eb321de37b6cafea2762498442441c9273115a91e3e0eed6f",
+      "exists": true
+    },
+    {
+      "asset_id": "mc.building.barracks.v1",
+      "scale": 2,
+      "path": "textures/2x/maincity/barracks.png",
+      "provenance_pr": "#140",
+      "provenance_commit": "5a2d3ef09949341425754f5578dae5c08db7c9b3",
+      "bytes": 226671,
+      "sha256": "b411c0fd0f701c36482f71920aa95a7c9e76ad0546959cb690a16c93c6d19666",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@normal",
+      "scale": 1,
+      "path": "textures/1x/ui/btn_primary_normal.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 2024,
+      "sha256": "dbdaad5f913959d292e3d0c68c12c92faedc824177fa0bcfa925c169699a300a",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@normal",
+      "scale": 2,
+      "path": "textures/2x/ui/btn_primary_normal.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 4349,
+      "sha256": "6698b9603c25106a9620c0fee03b6f671555068ea63d748b0458a285665484fd",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@hover",
+      "scale": 1,
+      "path": "textures/1x/ui/btn_primary_hover.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 2069,
+      "sha256": "553c0d9b08d1aab9df41101aaab2f6126e3c5bc83018df64d314c0348c29af1b",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@hover",
+      "scale": 2,
+      "path": "textures/2x/ui/btn_primary_hover.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 4514,
+      "sha256": "1f675dfd0890473da2db91a6baa6780a4a6cc1a88d1e8b05b5839bf8a75d4250",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@pressed",
+      "scale": 1,
+      "path": "textures/1x/ui/btn_primary_pressed.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 1964,
+      "sha256": "bdeb6f65a93c3e92b9cd7e6005ffb62bf432c50673d6060962978d0545c544ce",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@pressed",
+      "scale": 2,
+      "path": "textures/2x/ui/btn_primary_pressed.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 4172,
+      "sha256": "7a586204a75bb698658eb27df1d58315504c22cdc13a0067afbdcc53306175bb",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@disabled",
+      "scale": 1,
+      "path": "textures/1x/ui/btn_primary_disabled.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 1909,
+      "sha256": "e07434eec452e02776f8729cb36bc3c22def28062678f9788a63774cc8cb963a",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.button.primary.v1@disabled",
+      "scale": 2,
+      "path": "textures/2x/ui/btn_primary_disabled.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 4145,
+      "sha256": "3accecaf0566f7d3fa718f230de5897f13376307bbf11b700fd5af5561c0370f",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.panel.default.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/panel_default.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 3659,
+      "sha256": "a5209b4987159961d8e75615be4a70f56cca68e2f6a006843ccdb1f73ee55020",
+      "exists": true
+    },
+    {
+      "asset_id": "ui.panel.default.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/panel_default.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 8541,
+      "sha256": "d15ba24ecb5369839ed0cf8dfb9dc04bf3f19d4a38c00e6caf1028afbb6842e7",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.food.v1",
+      "scale": 1,
+      "path": "textures/1x/icons/food.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 1841,
+      "sha256": "b23b7c41e22f1e766bae8237db6302441f666da6a688c8543856b0fab6ddd347",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.food.v1",
+      "scale": 2,
+      "path": "textures/2x/icons/food.png",
+      "provenance_pr": "#108",
+      "provenance_commit": "54394ad49bad4356eb905d3686ca14ac40548282",
+      "bytes": 5521,
+      "sha256": "6fb4de66c1a619078ad5eacbb67617b34036c73d1d65de37184623483f474be7",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.wood.v1",
+      "scale": 1,
+      "path": "textures/1x/icons/wood.png",
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "feat/ART-ICONS-003-hud-resources",
+      "bytes": 1886,
+      "sha256": "bbaecb1ba9b17459c34414179b12e6a285fb27796d897700f7d84baacb8da80b",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.wood.v1",
+      "scale": 2,
+      "path": "textures/2x/icons/wood.png",
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "feat/ART-ICONS-003-hud-resources",
+      "bytes": 5575,
+      "sha256": "280b95bd0530594d5cd113a6e19f8fa7840321864031fc6092fbc62e0f4ded9d",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.stone.v1",
+      "scale": 1,
+      "path": "textures/1x/icons/stone.png",
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "feat/ART-ICONS-003-hud-resources",
+      "bytes": 1767,
+      "sha256": "d05ac7be7b52a03cbc915ef01dff954b99726d842531ec26aab85d01d3125844",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.stone.v1",
+      "scale": 2,
+      "path": "textures/2x/icons/stone.png",
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "feat/ART-ICONS-003-hud-resources",
+      "bytes": 5102,
+      "sha256": "1562ca69893697f3b208deb757a219eee90c69dfab34d84e94395b30760ad814",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.iron.v1",
+      "scale": 1,
+      "path": "textures/1x/icons/iron.png",
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "feat/ART-ICONS-003-hud-resources",
+      "bytes": 1643,
+      "sha256": "f0f3461dbf6ac79ee4e60c9b890f84198905df6282cd2796570fee09f924db6d",
+      "exists": true
+    },
+    {
+      "asset_id": "res.icon.iron.v1",
+      "scale": 2,
+      "path": "textures/2x/icons/iron.png",
+      "provenance_pr": "#144/#145",
+      "provenance_commit": "feat/ART-ICONS-003-hud-resources",
+      "bytes": 4639,
+      "sha256": "f3616dec93fb61ff51273b2fd52b5a9568b39a77d14543ec4783a106b6a5290a",
+      "exists": true
+    }
+  ],
+  "integrity": {
+    "missing_paths": 0,
+    "pass": true
+  },
+  "release_package_exclusion": {
+    "note": "Production dist must not ship QA docs, reference trees, or static preview bundles from art hold PRs.",
+    "checked_dist_file_count": 40,
+    "violations": [],
+    "pass": true
+  },
+  "runtime_fixes": {
+    "layoutViewport": "applyLayoutTransform uses transform() — from VERIFY #145/#141/#155 (e3a204ef lineage)",
+    "hud": "DOM hud-main-city right-align; canvas draws res.icon.* row — from VERIFY #145",
+    "wall_slot": "mc.building.wall.v1 on wall slot — from VERIFY #155"
+  }
+}

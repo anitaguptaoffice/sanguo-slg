@@ -32,6 +32,30 @@
       ]
     },
     {
+      "id": "mc.building.wall.v1",
+      "kind": "sprite",
+      "slot_key": "wall",
+      "display_size": {
+        "w": 640,
+        "h": 120
+      },
+      "anchor": {
+        "x": 320,
+        "y": 120
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/wall.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/wall.png"
+        }
+      ]
+    },
+    {
       "id": "mc.building.hall.v1",
       "kind": "sprite",
       "slot_key": "hall",
@@ -76,6 +100,102 @@
         {
           "scale": 2,
           "path": "textures/2x/maincity/farm.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.lumber.v1",
+      "kind": "sprite",
+      "slot_key": "lumber",
+      "display_size": {
+        "w": 200,
+        "h": 160
+      },
+      "anchor": {
+        "x": 100,
+        "y": 160
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/lumber.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/lumber.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.quarry.v1",
+      "kind": "sprite",
+      "slot_key": "quarry",
+      "display_size": {
+        "w": 200,
+        "h": 160
+      },
+      "anchor": {
+        "x": 100,
+        "y": 160
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/quarry.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/quarry.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.iron.v1",
+      "kind": "sprite",
+      "slot_key": "iron",
+      "display_size": {
+        "w": 200,
+        "h": 160
+      },
+      "anchor": {
+        "x": 100,
+        "y": 160
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/iron.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/iron.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.barracks.v1",
+      "kind": "sprite",
+      "slot_key": "barracks",
+      "display_size": {
+        "w": 220,
+        "h": 180
+      },
+      "anchor": {
+        "x": 110,
+        "y": 180
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/barracks.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/barracks.png"
         }
       ]
     },
@@ -183,6 +303,75 @@
         {
           "scale": 2,
           "path": "textures/2x/icons/food.png"
+        }
+      ]
+    },
+    {
+      "id": "res.icon.wood.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/wood.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/wood.png"
+        }
+      ]
+    },
+    {
+      "id": "res.icon.stone.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/stone.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/stone.png"
+        }
+      ]
+    },
+    {
+      "id": "res.icon.iron.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 16,
+        "y": 16
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/icons/iron.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/icons/iron.png"
         }
       ]
     }
