@@ -3,6 +3,7 @@ import { skinDefaultPanel } from "@/engine/artPanelSkin";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import { formatServerLine, parseGameServerInfo, type GameServerRow } from "@/net/socialFormat";
+import { createOverlayFocusTrap, type OverlayFocusTrap } from "@/ui/overlayFocusTrap";
 
 const DEFAULT_LOGIN = "demo";
 const DEFAULT_PASSWORD = "demo123";
@@ -14,13 +15,21 @@ export class ServerSelectScene implements Scene {
   private servers: GameServerRow[] = [];
   private selectedId = 0;
   private status = "";
+  private hudStatusEl: HTMLElement | null = null;
+  private triggerBtn: HTMLButtonElement | null = null;
+  private focusTrap: OverlayFocusTrap | null = null;
 
   async enter(ctx: SceneContext): Promise<void> {
     this.hud = ctx.hud;
+    this.mountHudChrome();
     this.panel = document.createElement("div");
     this.panel.className = "server-select-panel";
+    this.panel.id = "server-select-overlay";
+    this.panel.setAttribute("role", "dialog");
+    this.panel.setAttribute("aria-modal", "true");
+    this.panel.setAttribute("aria-labelledby", "server-select-title");
     this.panel.innerHTML = `
-      <h2>选择游戏服</h2>
+      <h2 id="server-select-title">选择游戏服</h2>
       <p class="server-select-hint">账号 ${DEFAULT_LOGIN} · 选服后进入主城</p>
       <ul class="server-list" data-role="server-list"></ul>
       <button type="button" data-action="refresh-servers">刷新列表</button>
@@ -32,7 +41,16 @@ export class ServerSelectScene implements Scene {
     skinDefaultPanel(this.panel, ctx.assets, 560, 360);
     skinPrimaryButtons(this.panel, ctx.assets);
     this.panel.addEventListener("click", (ev) => this.onClick(ev, ctx));
-    this.hud.textContent = "连接网关…";
+    this.triggerBtn = this.hud.querySelector<HTMLButtonElement>('[data-role="server-select-trigger"]');
+    this.focusTrap = createOverlayFocusTrap({
+      root: this.panel,
+      trigger: this.triggerBtn,
+      onClose: () => this.syncHudTriggerExpanded(),
+    });
+    this.triggerBtn?.addEventListener("click", () => this.togglePanel());
+    this.focusTrap.open();
+    this.syncHudTriggerExpanded();
+    this.setHudStatus("连接网关…");
     try {
       await ctx.gateway.connect();
       await this.loadServers(ctx.gateway);
@@ -43,7 +61,35 @@ export class ServerSelectScene implements Scene {
   }
 
   leave(): void {
+    this.focusTrap?.dispose();
+    this.focusTrap = null;
     this.panel?.remove();
+  }
+
+  private mountHudChrome(): void {
+    this.hud.innerHTML = `
+      <button type="button" class="hud-server-select-trigger" data-role="server-select-trigger"
+        aria-controls="server-select-overlay" aria-expanded="false">选服</button>
+      <span class="hud-server-select-status" data-role="server-select-hud-status"></span>
+    `;
+    this.hudStatusEl = this.hud.querySelector('[data-role="server-select-hud-status"]');
+  }
+
+  private setHudStatus(text: string): void {
+    if (this.hudStatusEl) this.hudStatusEl.textContent = text;
+    else this.hud.textContent = text;
+  }
+
+  private syncHudTriggerExpanded(): void {
+    const open = this.focusTrap?.isActive() ?? !this.panel?.classList.contains("hidden");
+    this.triggerBtn?.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  private togglePanel(): void {
+    if (!this.focusTrap) return;
+    if (this.focusTrap.isActive()) this.focusTrap.close();
+    else this.focusTrap.open();
+    this.syncHudTriggerExpanded();
   }
 
   private async loadServers(gateway: SceneContext["gateway"]): Promise<void> {
@@ -85,7 +131,7 @@ export class ServerSelectScene implements Scene {
     if (enterBtn) enterBtn.disabled = !this.selectedId;
     const hudBusy =
       /^(连接|拉取|进入服)/.test(this.status) || this.status.includes("失败");
-    this.hud.textContent = hudBusy ? this.status : "请选择游戏服";
+    this.setHudStatus(hudBusy ? this.status : "请选择游戏服");
   }
 
   private onClick(ev: Event, ctx: SceneContext): void {

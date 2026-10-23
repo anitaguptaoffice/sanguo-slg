@@ -107,6 +107,7 @@ import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { buildHudCenterTodoCounts } from "@/net/hudTodoBadges";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
+import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import {
   DEFAULT_MARCH_TARGET,
@@ -1352,6 +1353,33 @@ export class MainCityScene implements Scene {
       wrap.appendChild(link);
       this.hud.appendChild(wrap);
     }
+    this.syncToolbarChromeA11y();
+  }
+
+  private panelRootOpen(el: HTMLElement | null | undefined): boolean {
+    return !!el && !el.classList.contains("hidden");
+  }
+
+  private syncToolbarChromeA11y(): void {
+    if (!this.toolbar) return;
+    syncToolbarAriaExpanded(this.toolbar, {
+      military: this.panelRootOpen(this.militaryPanel),
+      reports: this.battleReports?.isOpen() ?? false,
+      marches: this.marchList?.isOpen() ?? false,
+      chat: this.social?.isChatOpen() ?? false,
+      guild: this.social?.isGuildOpen() ?? false,
+      rank: this.panelRootOpen(this.social?.getRankRoot()),
+      quest: this.panelRootOpen(
+        this.layoutFrame?.querySelector<HTMLElement>('.content-panel[data-center-panel="quest"]'),
+      ),
+      daily: this.dailyQuest?.isOpen() ?? false,
+      bag: this.panelRootOpen(this.content?.getBagRoot()),
+      shop: this.panelRootOpen(this.content?.getShopRoot()),
+      hero: this.panelRootOpen(this.heroMail?.getHeroRoot()),
+      mail: this.heroMail?.isMailOpen() ?? false,
+      world: this.panelRootOpen(this.world?.getRoot()),
+      queue: this.queuePanels?.isOpen() ?? false,
+    });
   }
 
   private applyMarchArrivalHudReminders(reminders: MarchArrivalReminder[]): void {
