@@ -31,7 +31,7 @@
 | 随机名库 | `mem_cfg_*name*` | 运行时生成，非 seed |
 | 成就全量 | `cfg_achivement*` | 第二批内容向 |
 
-**扩量触发条件（第二批）**：INTG-004 + CLIENT-005 在核心子集下冒烟通过后，且编排者在 backlog 新增 `DATA-002` 或等价卡。
+**扩量触发条件（第二批）**：INTG-004 + CLIENT-005 冒烟通过后，且 INTG-005 + CLIENT-006 已合；编排者在 backlog 开 **DATA-002**（wave:9）后由实现卡更新上表行数上限。
 
 ## 与 SPEC-004 / SPEC-006 的关系
 
