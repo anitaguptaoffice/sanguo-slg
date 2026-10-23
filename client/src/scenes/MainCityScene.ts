@@ -17,6 +17,7 @@ import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
+import { WorldPanels } from "@/ui/WorldPanels";
 import {
   formatMarchHint,
   formatTimeMs,
@@ -61,6 +62,7 @@ export class MainCityScene implements Scene {
   private heroMail!: HeroMailPanels;
   private battleReports!: BattleReportPanel;
   private dailyQuest!: DailyQuestPanels;
+  private world!: WorldPanels;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -92,6 +94,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-shop">商城</button>
       <button type="button" data-action="toggle-hero">将领</button>
       <button type="button" data-action="toggle-mail">邮件</button>
+      <button type="button" data-action="toggle-world">世界</button>
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
@@ -178,6 +181,25 @@ export class MainCityScene implements Scene {
       },
     );
     this.dailyQuest.attach();
+    this.world = new WorldPanels(
+      parent,
+      this.gateway,
+      () => this.session,
+      {
+        marchFormRoot: this.militaryPanel,
+        onFilled: (x, y) => {
+          this.militaryPanel.classList.remove("hidden");
+          this.status = `出征目标已设为 (${x},${y})`;
+          this.renderHud();
+          this.syncMilitaryPanel();
+        },
+      },
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+    );
+    this.world.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
@@ -205,6 +227,7 @@ export class MainCityScene implements Scene {
     this.heroMail?.detach();
     this.battleReports?.detach();
     this.dailyQuest?.detach();
+    this.world?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -229,6 +252,7 @@ export class MainCityScene implements Scene {
     if (action === "toggle-shop") this.content.toggleShop();
     if (action === "toggle-hero") this.heroMail.toggleHero();
     if (action === "toggle-mail") this.heroMail.toggleMail();
+    if (action === "toggle-world") this.world.toggle();
   }
 
   private onMilitaryClick(ev: Event): void {
