@@ -61,7 +61,7 @@ status:review   ──合并────▶  status:done
 | 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
 | 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
 | 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 ([#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)/[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)) |
-| 14 | H5 日常与队列闭环（**进行中**，见 ROADMAP Wave 14） | DOM-003, CLIENT-024–027, INTG-011, DOCS-EXIT-006（Issue 待 sync） |
+| 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217)) |
 
 ### Wave 9 进度（已完成）
 
@@ -122,16 +122,16 @@ status:review   ──合并────▶  status:done
 | [#201](https://github.com/anitaguptaoffice/sanguo-slg/issues/201) | INTG-010 | `status:done`（[#203](https://github.com/anitaguptaoffice/sanguo-slg/pull/203)） |
 | [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | `status:done`（[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)） |
 
-### Wave 14 进度（规划 PR，Issue 待 sync）
+### Wave 14 进度（与 GitHub `wave:14` 标签同步，2026-10-23）
 
-| ID | 状态 | 说明 |
+| Issue | ID | 状态 |
 |---|---|---|
-| DOM-003 | 待 sync → `status:ready` | 建造队列加速符对接 domestic |
-| CLIENT-024 | 待 sync → `status:ready` | chain 400 多类型日常引导 |
-| CLIENT-025 | 待 sync → `status:ready` | 行军到达与战报未读 |
-| CLIENT-026 | 待 sync → `status:blocked` | `blocked_until: DOM-003` |
-| CLIENT-027 | 待 sync → `status:blocked` | `blocked_until: CLIENT-025` |
-| INTG-011 | 待 sync → `status:blocked` | `blocked_until: DOM-003` |
-| DOCS-EXIT-006 | 待 sync → `status:blocked` | `blocked_until: INTG-011` |
+| [#211](https://github.com/anitaguptaoffice/sanguo-slg/issues/211) | DOM-003 | `status:done`（[#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221) `d99004b7`） |
+| [#212](https://github.com/anitaguptaoffice/sanguo-slg/issues/212) | CLIENT-024 | `status:done`（[#220](https://github.com/anitaguptaoffice/sanguo-slg/pull/220) `64bc77cb`） |
+| [#213](https://github.com/anitaguptaoffice/sanguo-slg/issues/213) | CLIENT-025 | `status:done`（[#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219) `67721178`） |
+| [#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214) | CLIENT-026 | `status:done`（[#222](https://github.com/anitaguptaoffice/sanguo-slg/pull/222) `0e0cef67`） |
+| [#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) | CLIENT-027 | `status:done`（[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224) `95aac888`） |
+| [#216](https://github.com/anitaguptaoffice/sanguo-slg/issues/216) | INTG-011 | `status:done`（[#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223) `ad6ddc8e`） |
+| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | `status:review`（[#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225)） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 13 / Wave 14」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 14」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速。

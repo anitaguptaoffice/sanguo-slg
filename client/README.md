@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-023）
+# H5 客户端（CLIENT-001 ~ CLIENT-027）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -42,6 +42,17 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **排行双榜只读**（战力 / 资源总量 + 快照元数据） | [手动验收（排行双榜 CLIENT-021）](#手动验收排行双榜-client-021)（[#198](https://github.com/anitaguptaoffice/sanguo-slg/issues/198) / [#207](https://github.com/anitaguptaoffice/sanguo-slg/pull/207)） |
 | **军团 / 聊天可读联调** | [手动验收（M3：选服 / 聊天 / 军团 / 排行，CLIENT-022）](#手动验收m3选服--聊天--军团--排行client-022)（[#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) / [#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205)） |
 | **招募成功 ↔ 日常将领任务闭环** | [手动验收（M4：将领，CLIENT-008）](#手动验收m4将领client-008) 步骤 3（**CLIENT-023**，[#200](https://github.com/anitaguptaoffice/sanguo-slg/issues/200) / [#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208)） |
+
+## Wave 14 日常与队列闭环（M4 出口 / INTG-011）
+
+在 `make dev` 下联调的最短人工路径（与 `tools/smoke/README.md`、**INTG-011** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC，需未来 contract 卡）；募兵队列 **加速**（本波仅建造队列，见 **DOM-003** / **CLIENT-026**）。
+
+| 能力 | 验收小节 |
+|---|---|
+| **建造加速真实生效**（道具 2003 → domestic `upgrade_finish_at_ms`） | [手动验收（队列加速 CLIENT-026）](#手动验收队列加速-client-026)（[#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214) / [#222](https://github.com/anitaguptaoffice/sanguo-slg/pull/222)；服务端 **DOM-003** [#211](https://github.com/anitaguptaoffice/sanguo-slg/issues/211) / [#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)） |
+| **多类型日常引导**（chain 400 练兵/建造/战备） | [手动验收（日常练兵/建造/战备 CLIENT-024）](#手动验收日常练兵建造战备-client-024)（[#212](https://github.com/anitaguptaoffice/sanguo-slg/issues/212) / [#220](https://github.com/anitaguptaoffice/sanguo-slg/pull/220)） |
+| **行军结束 → 战报提示**（到达 toast + 战报未读） | [手动验收（行军到达与战报未读 CLIENT-025）](#手动验收行军到达与战报未读-client-025)（[#213](https://github.com/anitaguptaoffice/sanguo-slg/issues/213) / [#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)） |
+| **HUD 待办徽章**（邮件 / 日常 / 战报底栏角标） | [手动验收（HUD 待办徽章，CLIENT-027）](#手动验收hud-待办徽章-client-027)（[#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) / [#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)） |
 
 ## 网关地址
 
@@ -212,6 +223,16 @@ cd client && npm install && npm run dev
 3. 点击某条战报：详情区展示 **回合数**、攻/守 **伤亡 map 摘要** 与 **result** 文案；字段以服务端为准。
 4. 若列表超过一页，使用 **加载更多**（`limit`/`offset`）或既有分页；失败时状态栏文案可重试。
 5. 视口 **1600×900**：筛选行与列表落在顶底 56px 带之间、可滚动。
+
+### 手动验收（行军到达与战报未读 CLIENT-025）
+
+`MarchArrivalPoll` 轮询 `ListMarches`：出征后跟踪 `march_id`；行军阶段 **marching(2)→arrived(3)/returning(4)** 或列表中该行消失时，顶栏状态栏出现可点链接 **「行军结束，查看战报」**（`MARCH_ARRIVAL_STATUS_TOAST`）。`BattleReportUnreadSession` 记录上次打开战报面板时的 `report_id` 上界，刷新列表后新增战报计入未读（与 **CLIENT-027** 底栏角标联动）。
+
+1. `make dev` 完成 [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013) 步骤 2–3，保持主城场景（无需一直打开「行军」面板）。
+2. 等待行军到达并完成战斗（距离与调度决定耗时；可缩短目标距离）。到达时状态栏应出现 **行军结束，查看战报** 链接。
+3. 点击链接应打开底栏 **「战报」** 面板并触发列表刷新；未打开前底栏 **「战报」** 可出现未读角标（见 [CLIENT-027](#手动验收hud-待办徽章-client-027)）。
+4. 打开战报面板后未读角标清零；再次产生新战报时角标恢复。
+5. 单测：`marchArrival.test.ts`、`marchArrivalPoll.test.ts`、`battleReportUnread.test.ts`、`BattleReportPanel.test.ts`。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
