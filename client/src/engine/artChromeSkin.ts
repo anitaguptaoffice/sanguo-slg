@@ -52,7 +52,7 @@ export function clearToolbarBarChrome(el: HTMLElement): void {
   el.style.backgroundColor = "";
 }
 
-/** Wrap each toolbar button for expanded hit slop without changing 96×44 art draw. */
+/** Wrap each toolbar button; wrapper matches 44px button box (hit tests target the button, not padding). */
 export function wrapToolbarButtonsForHit(root: HTMLElement): void {
   const scroll = root.querySelector(".toolbar-scroll-inner");
   if (!scroll) return;
@@ -63,5 +63,11 @@ export function wrapToolbarButtonsForHit(root: HTMLElement): void {
     wrap.className = "toolbar-btn-hit";
     btn.parentElement?.insertBefore(wrap, btn);
     wrap.appendChild(btn);
+    wrap.addEventListener("click", (ev) => {
+      if (ev.target === wrap) {
+        ev.preventDefault();
+        btn.click();
+      }
+    });
   }
 }
