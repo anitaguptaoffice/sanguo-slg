@@ -1,6 +1,7 @@
 import { LAYOUT_FRAME, MAIN_CITY_SLOTS, type MainCitySlotDef } from "@/engine/mainCitySlots";
 import type { CityBuilding } from "@/net/bootstrapSession";
 import { buildingBySlot } from "@/net/hudFormat";
+import { QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS } from "@/net/buildQueueComplete";
 import {
   formatUpgradeRemainingAbbrev,
   syncUpgradeProgressAnchor,
@@ -14,8 +15,20 @@ const TAG_CLASS = "main-city-slot-upgrade-tag";
 export class MainCitySlotUpgradeOverlay {
   private layer!: HTMLElement;
   private readonly anchors = new Map<string, UpgradeProgressAnchor>();
+  private mutualHighlightSlotKey: string | null = null;
 
   constructor(private readonly mount: HTMLElement) {}
+
+  setMutualHighlightSlot(slotKey: string | null): void {
+    this.mutualHighlightSlotKey = slotKey?.trim() || null;
+    this.layer?.querySelectorAll(`.${TAG_CLASS}`).forEach((el) => {
+      const key = (el as HTMLElement).dataset.slotKey ?? "";
+      el.classList.toggle(
+        QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS,
+        !!this.mutualHighlightSlotKey && key === this.mutualHighlightSlotKey,
+      );
+    });
+  }
 
   attach(): void {
     this.layer = document.createElement("div");
@@ -61,11 +74,18 @@ export class MainCitySlotUpgradeOverlay {
       const ratio = upgradeProgressRatio(anchor, nowMs);
       this.layer.appendChild(this.buildTag(slot, abbrev, ratio));
     }
+    this.setMutualHighlightSlot(this.mutualHighlightSlotKey);
   }
 
   private buildTag(slot: MainCitySlotDef, abbrev: string, ratio: number): HTMLElement {
     const el = document.createElement("div");
     el.className = TAG_CLASS;
+    if (
+      this.mutualHighlightSlotKey &&
+      slot.slot_key === this.mutualHighlightSlotKey
+    ) {
+      el.classList.add(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+    }
     el.dataset.slotKey = slot.slot_key;
     const { display } = slot;
     el.style.left = `${(display.x / LAYOUT_FRAME.w) * 100}%`;
