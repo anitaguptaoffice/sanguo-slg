@@ -37,6 +37,9 @@ export type MainCitySession = {
   wallet: ResourceWallet;
   cityId: number;
   cityName: string;
+  /** 世界格点坐标（ListPlayerCities / CreateCity）。 */
+  cityX?: number;
+  cityY?: number;
   buildings: CityBuilding[];
   cityTroops: CityTroopStack[];
   bag: BagStack[];
@@ -50,6 +53,8 @@ type LoginResult = {
 type CitySummary = {
   city_id?: number;
   name?: string;
+  x?: number;
+  y?: number;
   is_capital?: boolean;
 };
 
@@ -103,6 +108,8 @@ export async function bootstrapMainCity(
     wallet: state.wallet ?? login.wallet ?? {},
     cityId: city.city_id,
     cityName: city.name ?? "主城",
+    cityX: city.x ?? 60,
+    cityY: city.y ?? 60,
     buildings: state.buildings ?? [],
     cityTroops: [],
     bag: [],

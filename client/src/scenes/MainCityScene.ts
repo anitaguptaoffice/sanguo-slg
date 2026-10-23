@@ -39,6 +39,16 @@ import { CityStatePoll } from "@/net/cityStatePoll";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
+import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
+import {
+  DEFAULT_MINIMAP_VIEW,
+  applyMinimapPan,
+  applyMinimapWheelZoom,
+  computeMinimapWorldBounds,
+  findMarchIdForMinimapDestClick,
+  layoutPointInMinimap,
+  type MinimapView,
+} from "@/ui/worldMinimap";
 import {
   formatKeyBuildingHudLine,
   formatResourceAmount,
@@ -62,6 +72,7 @@ const SLOT_LABEL: Record<string, string> = {
 const DEFAULT_MARCH_TARGET = { x: 5, y: 5 };
 const PURPOSE_ATTACK = 1;
 const WALLET_GAIN_FLASH_MS = 2800;
+const MINIMAP_MARCH_REFRESH_S = 5;
 
 export class MainCityScene implements Scene {
   readonly name = "mainCity";
@@ -94,7 +105,13 @@ export class MainCityScene implements Scene {
   private walletGainBrief: string | null = null;
   private walletGainUntilMs = 0;
   private layoutFrame!: HTMLElement;
+  private minimapMarches: MarchSummary[] = [];
+  private minimapView: MinimapView = { ...DEFAULT_MINIMAP_VIEW };
+  private minimapMarchRefreshAccum = 0;
+  private minimapPanPointerId: number | null = null;
+  private minimapPanLastLayout: { x: number; y: number } | null = null;
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
+  private readonly onCanvasWheelBound = (ev: WheelEvent) => this.onCanvasWheel(ev);
   private readonly onHudClickBound = (ev: Event) => this.onHudClick(ev);
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
@@ -255,6 +272,17 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
+      {
+        onMarchesUpdated: (marches) => {
+          this.minimapMarches = marches;
+        },
+        onSelectionChange: (march) => {
+          if (march) {
+            this.status = `小地图联动：行军 #${march.march_id ?? "?"}`;
+            this.renderHud();
+          }
+        },
+      },
     );
     this.marchList.attach();
     this.world = new WorldPanels(
@@ -296,9 +324,14 @@ export class MainCityScene implements Scene {
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
+    this.canvas.addEventListener("wheel", this.onCanvasWheelBound, { passive: false });
+    this.canvas.addEventListener("pointermove", this.onCanvasPointerBound);
+    this.canvas.addEventListener("pointerup", this.onCanvasPointerBound);
+    this.canvas.addEventListener("pointercancel", this.onCanvasPointerBound);
     this.hud.addEventListener("click", this.onHudClickBound);
     this.syncMilitaryPanel();
     void this.hudTodoBadgePoll.pollOnce();
+    void this.refreshMinimapMarches();
   }
 
   update(dt: number): void {
@@ -306,6 +339,11 @@ export class MainCityScene implements Scene {
     this.cityStatePoll?.tick(dt);
     this.hudTodoBadgePoll?.tick(dt);
     this.marchArrivalPoll?.tick(dt);
+    this.minimapMarchRefreshAccum += dt;
+    if (this.minimapMarchRefreshAccum >= MINIMAP_MARCH_REFRESH_S) {
+      this.minimapMarchRefreshAccum = 0;
+      void this.refreshMinimapMarches();
+    }
     if (this.queuePanels?.isOpen()) {
       this.queuePanels.tick(dt);
     }
@@ -330,6 +368,10 @@ export class MainCityScene implements Scene {
     this.marchArrivalPoll?.reset();
     this.hud?.removeEventListener("click", this.onHudClickBound);
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
+    this.canvas?.removeEventListener("wheel", this.onCanvasWheelBound);
+    this.canvas?.removeEventListener("pointermove", this.onCanvasPointerBound);
+    this.canvas?.removeEventListener("pointerup", this.onCanvasPointerBound);
+    this.canvas?.removeEventListener("pointercancel", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
     this.heroMail?.detach();
@@ -429,11 +471,84 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private onCanvasPointer(ev: PointerEvent): void {
+  private layoutFromPointerEvent(ev: PointerEvent): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
     const cssX = ev.clientX - rect.left;
     const cssY = ev.clientY - rect.top;
-    const layout = canvasToLayout(cssX, cssY, this.getViewport());
+    return canvasToLayout(cssX, cssY, this.getViewport());
+  }
+
+  private onCanvasWheel(ev: WheelEvent): void {
+    const layout = this.layoutFromPointerEvent(ev);
+    if (!layoutPointInMinimap(layout.x, layout.y)) return;
+    ev.preventDefault();
+    const bounds = computeMinimapWorldBounds(
+      this.session?.cityX,
+      this.session?.cityY,
+      this.minimapMarches,
+      this.marchList?.getSelectedMarch(),
+    );
+    this.minimapView = applyMinimapWheelZoom(
+      this.minimapView,
+      bounds,
+      layout.x,
+      layout.y,
+      ev.deltaY,
+    );
+  }
+
+  private onCanvasPointer(ev: PointerEvent): void {
+    const layout = this.layoutFromPointerEvent(ev);
+
+    if (ev.type === "pointermove" && this.minimapPanPointerId === ev.pointerId && this.minimapPanLastLayout) {
+      const dx = layout.x - this.minimapPanLastLayout.x;
+      const dy = layout.y - this.minimapPanLastLayout.y;
+      const bounds = computeMinimapWorldBounds(
+        this.session?.cityX,
+        this.session?.cityY,
+        this.minimapMarches,
+        this.marchList?.getSelectedMarch(),
+      );
+      this.minimapView = applyMinimapPan(this.minimapView, bounds, dx, dy);
+      this.minimapPanLastLayout = layout;
+      return;
+    }
+
+    if (ev.type === "pointerup" || ev.type === "pointercancel") {
+      if (this.minimapPanPointerId === ev.pointerId) {
+        this.minimapPanPointerId = null;
+        this.minimapPanLastLayout = null;
+      }
+      return;
+    }
+
+    if (ev.type !== "pointerdown") return;
+
+    if (layoutPointInMinimap(layout.x, layout.y)) {
+      const marchId = findMarchIdForMinimapDestClick(
+        layout.x,
+        layout.y,
+        this.minimapMarches,
+        this.session?.cityX,
+        this.session?.cityY,
+        this.minimapView,
+      );
+      if (marchId != null) {
+        this.marchList.selectMarchById(marchId, { openPanel: true });
+        this.status = `小地图选中行军 #${marchId}`;
+        this.renderHud();
+        return;
+      }
+      this.minimapPanPointerId = ev.pointerId;
+      this.minimapPanLastLayout = layout;
+      try {
+        this.canvas.setPointerCapture(ev.pointerId);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
+
     const hits = [...MAIN_CITY_SLOTS]
       .sort((a, b) => b.z - a.z)
       .filter((slot) => this.pointInRect(layout, slot.hit));
@@ -449,6 +564,35 @@ export class MainCityScene implements Scene {
 
   private pointInRect(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): boolean {
     return p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
+  }
+
+  private async refreshMinimapMarches(): Promise<void> {
+    const cityId = this.session?.cityId;
+    if (!cityId) return;
+    try {
+      const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
+        marches?: MarchSummary[];
+      };
+      this.minimapMarches = res.marches ?? [];
+    } catch {
+      /* 小地图只读：失败时保留上次数据 */
+    }
+  }
+
+  private async syncSessionCityCoords(): Promise<void> {
+    if (!this.session) return;
+    try {
+      const list = (await this.gateway.listPlayerCities()) as {
+        cities?: { city_id?: number; x?: number; y?: number }[];
+      };
+      const city = list.cities?.find((c) => c.city_id === this.session?.cityId);
+      if (city) {
+        this.session.cityX = city.x ?? this.session.cityX;
+        this.session.cityY = city.y ?? this.session.cityY;
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   private patchSession(patch: Partial<MainCitySession>, opts?: { flashWalletGain?: boolean }): void {
@@ -559,6 +703,8 @@ export class MainCityScene implements Scene {
           { flashWalletGain: false },
         );
       }
+      await this.syncSessionCityCoords();
+      await this.refreshMinimapMarches();
       this.status = "已刷新";
     } catch (e) {
       this.status = (e as Error).message;
@@ -655,6 +801,7 @@ export class MainCityScene implements Scene {
       this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
       this.marchArrivalPoll.trackMarch(this.lastMarch?.march_id, this.lastMarch ?? undefined);
       this.marchList.notifyMarchStarted();
+      void this.refreshMinimapMarches();
     } catch (e) {
       this.status = (e as Error).message;
     }
@@ -706,6 +853,14 @@ export class MainCityScene implements Scene {
       c2d.fillText(text, hudX + 40, 34);
       hudX += 120;
     }
+
+    drawWorldMinimap(c2d, {
+      ownCityX: this.session?.cityX,
+      ownCityY: this.session?.cityY,
+      marches: this.minimapMarches,
+      selectedMarchId: this.marchList?.getSelectedMarchId(),
+      view: this.minimapView,
+    });
 
     c2d.restore();
   }

@@ -63,6 +63,28 @@ describe("MarchListPanel", () => {
     expect(text).toContain("(5,5)");
   });
 
+  it("selects march row and highlights on click", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          { march_id: 3, phase: 2, to_x: 8, to_y: 9 },
+          { march_id: 4, phase: 3, to_x: 1, to_y: 1 },
+        ],
+        total: 2,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+
+    const first = mount.querySelector('.march-list li[data-march-id="3"]') as HTMLElement;
+    first.click();
+    expect(panel.getSelectedMarchId()).toBe(3);
+    const selected = mount.querySelector(".march-list li.march-list-row-selected");
+    expect(selected?.getAttribute("data-march-id")).toBe("3");
+  });
+
   it("shows error when listMarches fails", async () => {
     const gateway = {
       listMarches: vi.fn().mockRejectedValue(new Error("网关超时")),

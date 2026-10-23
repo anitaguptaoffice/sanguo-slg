@@ -6,9 +6,12 @@ import {
   MARCH_LIST_POLL_MS,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
   pollIntervalMs?: number;
+  onMarchesUpdated?: (marches: MarchSummary[]) => void;
+  onSelectionChange?: (march: MarchSummary | null) => void;
 };
 
 export class MarchListPanel {
@@ -17,6 +20,9 @@ export class MarchListPanel {
   private listError = "";
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private readonly pollIntervalMs: number;
+  private readonly onMarchesUpdated?: (marches: MarchSummary[]) => void;
+  private readonly onSelectionChange?: (march: MarchSummary | null) => void;
+  private selectedMarchId: number | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -26,6 +32,47 @@ export class MarchListPanel {
     options?: MarchListPanelOptions,
   ) {
     this.pollIntervalMs = options?.pollIntervalMs ?? MARCH_LIST_POLL_MS;
+    this.onMarchesUpdated = options?.onMarchesUpdated;
+    this.onSelectionChange = options?.onSelectionChange;
+  }
+
+  getMarches(): MarchSummary[] {
+    return this.marches;
+  }
+
+  getSelectedMarchId(): number | null {
+    return this.selectedMarchId;
+  }
+
+  getSelectedMarch(): MarchSummary | null {
+    if (this.selectedMarchId == null) return null;
+    return this.marches.find((m) => m.march_id === this.selectedMarchId) ?? null;
+  }
+
+  /** 小地图点击目的点时选中列表首条匹配行军（只读）。 */
+  selectMarchByDest(destX: number, destY: number): boolean {
+    const match = findFirstMarchByDest(this.marches, destX, destY);
+    if (!match?.march_id) return false;
+    this.setSelectedMarchId(match.march_id);
+    if (!this.isOpen()) {
+      this.panel.classList.remove("hidden");
+      void this.refreshList();
+      this.startPoll();
+    }
+    return true;
+  }
+
+  selectMarchById(marchId: number | null, opts?: { openPanel?: boolean }): void {
+    if (opts?.openPanel && marchId != null && !this.isOpen()) {
+      this.selectedMarchId = marchId;
+      this.panel.classList.remove("hidden");
+      void this.refreshList();
+      this.startPoll();
+      const march = this.marches.find((m) => m.march_id === marchId) ?? null;
+      this.onSelectionChange?.(march);
+      return;
+    }
+    this.setSelectedMarchId(marchId);
   }
 
   attach(): void {
@@ -93,8 +140,23 @@ export class MarchListPanel {
     for (const m of this.marches) {
       const li = document.createElement("li");
       li.textContent = formatMarchLine(m);
+      if (m.march_id != null) {
+        li.setAttribute("data-march-id", String(m.march_id));
+        li.setAttribute("role", "button");
+        li.tabIndex = 0;
+      }
+      if (m.march_id != null && m.march_id === this.selectedMarchId) {
+        li.classList.add("march-list-row-selected");
+      }
       ul.appendChild(li);
     }
+  }
+
+  private setSelectedMarchId(marchId: number | null): void {
+    this.selectedMarchId = marchId;
+    this.renderList();
+    const march = marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null;
+    this.onSelectionChange?.(march);
   }
 
   private async refreshList(): Promise<void> {
@@ -118,6 +180,14 @@ export class MarchListPanel {
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
     }
+    if (
+      this.selectedMarchId != null &&
+      !this.marches.some((m) => m.march_id === this.selectedMarchId)
+    ) {
+      this.selectedMarchId = null;
+      this.onSelectionChange?.(null);
+    }
+    this.onMarchesUpdated?.(this.marches);
     this.renderList();
   }
 
@@ -140,6 +210,14 @@ export class MarchListPanel {
   }
 
   private onClick(ev: Event): void {
+    const row = (ev.target as HTMLElement).closest("li[data-march-id]");
+    if (row) {
+      const id = Number(row.getAttribute("data-march-id"));
+      if (!Number.isNaN(id)) {
+        this.setSelectedMarchId(id);
+        return;
+      }
+    }
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     if (btn.getAttribute("data-action") === "refresh-marches") void this.refreshList();
