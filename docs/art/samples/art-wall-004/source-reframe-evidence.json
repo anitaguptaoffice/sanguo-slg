@@ -1,0 +1,33 @@
+{
+  "status": "approved_and_executed",
+  "proposed_rect": [
+    0,
+    200,
+    1983,
+    572
+  ],
+  "source_size": [
+    1983,
+    793
+  ],
+  "all_alpha_bbox": [
+    0,
+    33,
+    1983,
+    743
+  ],
+  "alpha_gt16_bbox": [
+    1,
+    239,
+    1983,
+    532
+  ],
+  "discarded_nonzero_pixels": 139,
+  "discarded_max_alpha": 1,
+  "discarded_alpha_sum": 139,
+  "approval_comments": [
+    "6366375896",
+    "6366377676",
+    "6366380228"
+  ]
+}

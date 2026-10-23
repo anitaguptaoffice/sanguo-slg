@@ -185,6 +185,30 @@
           "path": "textures/2x/icons/food.png"
         }
       ]
+    },
+    {
+      "id": "mc.building.wall.v1",
+      "kind": "sprite",
+      "slot_key": "wall",
+      "display_size": {
+        "w": 640,
+        "h": 120
+      },
+      "anchor": {
+        "x": 320,
+        "y": 120
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/wall.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/wall.png"
+        }
+      ]
     }
   ]
 }

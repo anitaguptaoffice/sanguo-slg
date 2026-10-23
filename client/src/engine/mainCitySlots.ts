@@ -17,6 +17,7 @@ export const MAIN_CITY_SLOTS: MainCitySlotDef[] = [
     ground_anchor: { x: 320, y: 120 },
     z: 10,
     hit: { x: 480, y: 200, w: 640, h: 140 },
+    asset_id: "mc.building.wall.v1",
   },
   {
     slot_key: "iron",
