@@ -14,6 +14,17 @@ message ServerShard {
   int32 status = 3;
 }
 
+// 选服列表项：在 ServerShard 基础上附带开服时间与账号在该服的角色情况。
+message GameServerInfo {
+  ServerShard shard = 1;
+  // 开服时间（Unix 毫秒）；未开服为 0。
+  int64 opened_at_ms = 2;
+  // 在线人数近似值（选服 UI 展示）。
+  int32 online_count = 3;
+  // 当前登录账号在该服是否已有角色。
+  bool has_player = 4;
+}
+
 // 玩家角色摘要，对应 player 表字段子集。
 message PlayerProfile {
   // 分服 ID。

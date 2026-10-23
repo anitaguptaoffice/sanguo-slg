@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package sanguo.rank.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/rank/v1;rankv1";
+
+// 排行榜类型（与 rank_snapshot.board_type 对齐）。
+enum LeaderboardType {
+  LEADERBOARD_TYPE_UNSPECIFIED = 0;
+  // 玩家战力榜。
+  LEADERBOARD_TYPE_PLAYER_POWER = 1;
+  // 玩家资源总量榜。
+  LEADERBOARD_TYPE_PLAYER_RESOURCE = 2;
+  // 军团战力榜。
+  LEADERBOARD_TYPE_GUILD_POWER = 3;
+}
+
+// 榜单一行。
+message LeaderboardEntry {
+  // 名次，从 1 开始。
+  int32 rank = 1;
+  // 主体 ID：玩家榜为 player_id，军团榜为 guild_id。
+  int64 entity_id = 2;
+  string display_name = 3;
+  int64 score = 4;
+  // 玩家榜可选展示所属军团名。
+  string guild_name = 5;
+}
+
+// route: rank.v1.GetLeaderboard
+// 分页查询指定服、指定类型的排行榜快照。
+message GetLeaderboardRequest {
+  int32 server_id = 1;
+  LeaderboardType type = 2;
+  // 页码，从 1 开始；0 为默认第一页。
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message GetLeaderboardResponse {
+  LeaderboardType type = 1;
+  repeated LeaderboardEntry entries = 2;
+  int32 total_count = 3;
+  // 当前玩家（或所属军团）名次；未上榜为 0。
+  int32 my_rank = 4;
+  int64 my_score = 5;
+  // 快照单调递增版本，对应 rank_snapshot 批次。
+  int64 snapshot_version = 6;
+  // 快照刷新完成时间（Unix 毫秒）。
+  int64 snapshot_refreshed_at_ms = 7;
+}

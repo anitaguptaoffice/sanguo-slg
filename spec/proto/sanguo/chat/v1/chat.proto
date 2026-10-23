@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package sanguo.chat.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/chat/v1;chatv1";
+
+// 聊天频道类型（世界 / 私聊 / 军团）。
+enum ChatChannel {
+  CHAT_CHANNEL_UNSPECIFIED = 0;
+  CHAT_CHANNEL_WORLD = 1;
+  CHAT_CHANNEL_PRIVATE = 2;
+  CHAT_CHANNEL_GUILD = 3;
+}
+
+// 单条聊天消息，对应 chat_message 或等价存储。
+message ChatMessage {
+  int64 message_id = 1;
+  int32 server_id = 2;
+  ChatChannel channel = 3;
+  int64 sender_player_id = 4;
+  string sender_display_name = 5;
+  // 私聊收件人；非私聊为 0。
+  int64 recipient_player_id = 6;
+  // 军团频道所属军团；非军团为 0。
+  int64 guild_id = 7;
+  string content = 8;
+  int64 sent_at_ms = 9;
+}
+
+// 发送限制配置（服务端下发，客户端用于展示与本地校验）。
+message ChatSendLimits {
+  // 单条消息最大字符数（UTF-8 长度由实现定义）。
+  int32 max_content_length = 1;
+  // 同频道最小发送间隔（毫秒）。
+  int32 min_interval_ms = 2;
+  // 滑动窗口内最大条数（如每分钟）。
+  int32 max_messages_per_window = 3;
+  // 窗口长度（毫秒），与 max_messages_per_window 配合。
+  int32 window_ms = 4;
+}
+
+// route: chat.v1.SendChatMessage
+// 在世界 / 私聊 / 军团频道发送消息。
+message SendChatMessageRequest {
+  int32 server_id = 1;
+  ChatChannel channel = 2;
+  string content = 3;
+  // 私聊必填：目标玩家 ID。
+  int64 recipient_player_id = 4;
+  // 军团频道必填：军团 ID（须为当前玩家所属军团）。
+  int64 guild_id = 5;
+}
+
+message SendChatMessageResponse {
+  ChatMessage message = 1;
+  ChatSendLimits limits = 2;
+  // 当前窗口内剩余可发条数（限流提示）。
+  int32 remaining_in_window = 3;
+  // 下次允许发送时间（Unix 毫秒）；0 表示立即可发。
+  int64 next_allowed_at_ms = 4;
+}
+
+// route: chat.v1.ListChatMessages
+// 拉取频道最近消息（世界广播、私聊会话、军团频道）。
+message ListChatMessagesRequest {
+  int32 server_id = 1;
+  ChatChannel channel = 2;
+  // 军团频道：军团 ID。
+  int64 guild_id = 3;
+  // 私聊：对端玩家 ID（与当前玩家构成会话）。
+  int64 peer_player_id = 4;
+  // 游标：返回 id 小于该值的更早消息；0 表示从最新一页开始。
+  int64 before_message_id = 5;
+  // 条数上限；0 表示服务端默认。
+  int32 limit = 6;
+}
+
+message ListChatMessagesResponse {
+  repeated ChatMessage messages = 1;
+  ChatSendLimits limits = 2;
+}

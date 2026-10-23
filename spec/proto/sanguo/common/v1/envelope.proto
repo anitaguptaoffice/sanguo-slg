@@ -14,6 +14,8 @@ message ClientPacket {
   string trace_id = 3;
   // 登录后携带：account_session.session_id（UUID 字符串）；Login 请求可留空。
   string session_id = 4;
+  // 当前会话绑定的游戏服 ID；Login/EnterGameServer 成功后应与服务端会话一致，供网关校验。
+  int32 server_id = 5;
 }
 
 // WebSocket 下行：统一响应包 code / msg / data。
@@ -82,4 +84,40 @@ enum ErrorCode {
   MILITARY_INSUFFICIENT_TROOPS = 50006;
   // 战报不存在或当前玩家无权查看。
   MILITARY_BATTLE_REPORT_NOT_FOUND = 50007;
+
+  // --- 军团 60000–60999 ---
+  // 军团不存在或不属于当前服。
+  GUILD_NOT_FOUND = 60001;
+  // 玩家已在其他军团（或重复加入）。
+  GUILD_ALREADY_MEMBER = 60002;
+  // 玩家不在目标军团。
+  GUILD_NOT_MEMBER = 60003;
+  // 军团名称非法（长度/敏感词等）。
+  GUILD_NAME_INVALID = 60004;
+  // 军团名称已被占用。
+  GUILD_NAME_TAKEN = 60005;
+  // 军团人数已满。
+  GUILD_FULL = 60006;
+  // 职务或权限不足。
+  GUILD_PERMISSION_DENIED = 60007;
+  // 团长须转让或解散后才能退出。
+  GUILD_LEADER_CANNOT_LEAVE = 60008;
+
+  // --- 聊天 61000–61999 ---
+  // 频道不可用或玩家无权发言（如未加入军团）。
+  CHAT_CHANNEL_FORBIDDEN = 61001;
+  // 消息内容超长。
+  CHAT_CONTENT_TOO_LONG = 61002;
+  // 发送过于频繁（冷却或窗口配额）。
+  CHAT_RATE_LIMITED = 61003;
+  // 私聊目标玩家不存在或不在本服。
+  CHAT_RECIPIENT_NOT_FOUND = 61004;
+  // 军团频道缺少 guild_id 或玩家非成员。
+  CHAT_GUILD_REQUIRED = 61005;
+
+  // --- 排行 62000–62999 ---
+  // 榜单类型未知或未开放。
+  RANK_INVALID_TYPE = 62001;
+  // 分页参数非法（page/page_size）。
+  RANK_INVALID_PAGE = 62002;
 }
