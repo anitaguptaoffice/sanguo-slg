@@ -61,7 +61,8 @@ status:review   ──合并────▶  status:done
 | 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
 | 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
 | 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 ([#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)/[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)) |
-| 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217)) |
+| 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`) |
+| 15 | H5 世界地图与面板密度（**规划中**，见 ROADMAP Wave 15） | CLIENT-028–032, INTG-012, DOCS-EXIT-007（Issue 待 sync，backlog [#226](https://github.com/anitaguptaoffice/sanguo-slg/pull/226)） |
 
 ### Wave 9 进度（已完成）
 
@@ -132,6 +133,18 @@ status:review   ──合并────▶  status:done
 | [#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214) | CLIENT-026 | `status:done`（[#222](https://github.com/anitaguptaoffice/sanguo-slg/pull/222) `0e0cef67`） |
 | [#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) | CLIENT-027 | `status:done`（[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224) `95aac888`） |
 | [#216](https://github.com/anitaguptaoffice/sanguo-slg/issues/216) | INTG-011 | `status:done`（[#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223) `ad6ddc8e`） |
-| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | `status:review`（[#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225)） |
+| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | `status:done`（[#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 14」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速。
+### Wave 15 进度（规划 PR [#226](https://github.com/anitaguptaoffice/sanguo-slg/pull/226)，Issue 待 sync）
+
+| ID | 状态 | 说明 |
+|---|---|---|
+| CLIENT-028 | 待 sync → `status:ready` | 世界地图行军只读标注 |
+| CLIENT-029 | 待 sync → `status:ready` | 邮件战报背包空态与密度 |
+| CLIENT-030 | 待 sync → `status:ready` | 排行军团聊天可读性第二步 |
+| CLIENT-031 | 待 sync → `status:ready` | 将领详情与招募池对比 |
+| CLIENT-032 | 待 sync → `status:ready` | manifest 图标与面板接线 |
+| INTG-012 | 待 sync → `status:ready` | 邮件已读 + 战报列表冒烟 |
+| DOCS-EXIT-007 | 待 sync → `status:blocked` | `blocked_until: INTG-012` |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 14 / Wave 15」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速。
