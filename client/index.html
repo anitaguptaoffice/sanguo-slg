@@ -839,6 +839,16 @@
         white-space: nowrap;
         pointer-events: none;
       }
+      button.art-filter-chip:focus-visible {
+        outline: 2px solid #c9a227;
+        outline-offset: 2px;
+      }
+      button.art-filter-chip[data-ui-filter-chip]:not(.art-filter-chip--skinned) {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 6px 10px;
+        box-sizing: border-box;
+      }
       .art-filter-row.art-filter-row--skinned {
         border-radius: 4px;
         min-height: 40px;
