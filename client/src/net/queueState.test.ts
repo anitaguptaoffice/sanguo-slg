@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   activeBuildingUpgrades,
+  formatBuildQueueCountdown,
   formatBuildingUpgradeQueueLine,
+  formatQueuePanelOverviewBar,
   formatRecruitQueueLine,
   isQueuedRecruitResponse,
   mergeRecruitQueue,
+  nearestQueueFinishAtMs,
   queuePanelHasCountdown,
   recruitEntryFromResponse,
 } from "@/net/queueState";
@@ -53,6 +56,20 @@ describe("queueState", () => {
     expect(rec).toContain("[募兵] 步兵×30");
     expect(rec).toContain("#7");
     expect(rec).toContain("剩 1:30");
+  });
+
+  it("formatBuildQueueCountdown and queue overview bar", () => {
+    const recruits = [{ queue_id: 1, unit_cfg_id: 1, count: 10, finish_at_ms: now + 90_000 }];
+    const buildings = [
+      { slot_key: "hall", level: 1, upgrade_finish_at_ms: now + 60_000 },
+      { slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 },
+    ];
+    expect(nearestQueueFinishAtMs(buildings, recruits, now)).toBe(now + 60_000);
+    expect(formatBuildQueueCountdown(now + 90_000, now)).toBe("最近 剩 1:30");
+    expect(formatQueuePanelOverviewBar(buildings, recruits, now)).toBe(
+      "建造 2 · 募兵 1 · 最近 剩 1:00",
+    );
+    expect(formatQueuePanelOverviewBar([], [], now)).toBe("建造 0 · 募兵 0");
   });
 
   it("mergeRecruitQueue and queuePanelHasCountdown", () => {

@@ -1,7 +1,7 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { PANEL_ASSET_MILITARY, skinMilitaryPanel, skinNineSlicePanel } from "@/engine/artPanelSkin";
-import { appendHudResourceStrip } from "@/engine/artResourceHud";
+import { appendHudProductionRatesLine, appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
   LAYOUT_FRAME,
@@ -861,6 +861,7 @@ export class MainCityScene implements Scene {
   private applyCityStateFromFetch(state: {
     wallet?: ResourceWallet;
     buildings?: CityBuilding[];
+    production_rates?: ResourceWallet;
   }): void {
     if (!this.session) return;
     const beforeWallet = this.session.wallet;
@@ -870,13 +871,18 @@ export class MainCityScene implements Scene {
       {
         wallet: afterWallet,
         buildings: state.buildings ?? this.session.buildings,
+        productionRates: state.production_rates ?? this.session.productionRates,
       },
       { flashWalletGain: false },
     );
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
   }
 
-  private applyCityStatePoll(state: { wallet?: ResourceWallet; buildings?: CityBuilding[] }): void {
+  private applyCityStatePoll(state: {
+    wallet?: ResourceWallet;
+    buildings?: CityBuilding[];
+    production_rates?: ResourceWallet;
+  }): void {
     this.applyCityStateFromFetch(state);
   }
 
@@ -901,6 +907,7 @@ export class MainCityScene implements Scene {
 
     this.hud.replaceChildren();
     appendHudResourceStrip(this.hud, s?.wallet, this.assets);
+    appendHudProductionRatesLine(this.hud, s?.productionRates);
     for (const text of groups) {
       const span = document.createElement("span");
       span.className =
@@ -961,11 +968,13 @@ export class MainCityScene implements Scene {
       const state = (await this.cityStateFetch.fetch()) as {
         wallet?: ResourceWallet;
         buildings?: CityBuilding[];
+        production_rates?: ResourceWallet;
       } | null;
       if (state) {
         this.applyCityStateFromFetch({
           wallet: state.wallet,
           buildings: state.buildings ?? [],
+          production_rates: state.production_rates,
         });
       }
       await this.syncSessionCityCoords();
