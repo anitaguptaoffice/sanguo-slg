@@ -48,7 +48,10 @@ import {
   applyMinimapWheelZoom,
   computeMinimapWorldBounds,
   findMarchIdForMinimapDestClick,
-  layoutPointInMinimap,
+  layoutPointInMinimapMap,
+  layoutPointInMinimapToggle,
+  readMinimapCollapsedFromSession,
+  writeMinimapCollapsedToSession,
   type MinimapView,
 } from "@/ui/worldMinimap";
 import {
@@ -112,6 +115,7 @@ export class MainCityScene implements Scene {
   private minimapMarchRefreshAccum = 0;
   private minimapPanPointerId: number | null = null;
   private minimapPanLastLayout: { x: number; y: number } | null = null;
+  private minimapCollapsed = readMinimapCollapsedFromSession();
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
   private readonly onCanvasWheelBound = (ev: WheelEvent) => this.onCanvasWheel(ev);
   private readonly onHudClickBound = (ev: Event) => this.onHudClick(ev);
@@ -494,7 +498,7 @@ export class MainCityScene implements Scene {
 
   private onCanvasWheel(ev: WheelEvent): void {
     const layout = this.layoutFromPointerEvent(ev);
-    if (!layoutPointInMinimap(layout.x, layout.y)) return;
+    if (!layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)) return;
     ev.preventDefault();
     const bounds = computeMinimapWorldBounds(
       this.session?.cityX,
@@ -538,7 +542,15 @@ export class MainCityScene implements Scene {
 
     if (ev.type !== "pointerdown") return;
 
-    if (layoutPointInMinimap(layout.x, layout.y)) {
+    if (layoutPointInMinimapToggle(layout.x, layout.y, this.minimapCollapsed)) {
+      this.minimapCollapsed = !this.minimapCollapsed;
+      writeMinimapCollapsedToSession(this.minimapCollapsed);
+      this.status = this.minimapCollapsed ? "小地图已折叠" : "小地图已展开";
+      this.renderHud();
+      return;
+    }
+
+    if (layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)) {
       const marchId = findMarchIdForMinimapDestClick(
         layout.x,
         layout.y,
@@ -888,6 +900,7 @@ export class MainCityScene implements Scene {
       marches: this.minimapMarches,
       selectedMarchId: this.marchList?.getSelectedMarchId(),
       view: this.minimapView,
+      collapsed: this.minimapCollapsed,
     });
 
     c2d.restore();
