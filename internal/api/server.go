@@ -10,6 +10,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content/mail"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
@@ -54,6 +55,7 @@ type Server struct {
 	shopSvc       *shop.Service
 	contentSvc    *content.Service
 	mailSvc       *mail.Service
+	heroSvc       *hero.Service
 	questChainIDs []int32
 	cities        map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord

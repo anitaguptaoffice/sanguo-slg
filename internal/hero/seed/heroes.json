@@ -1,0 +1,924 @@
+{
+  "heroes": [
+    {
+      "template_cfg_id": 1001,
+      "code": "xuan_de_lord",
+      "name": "玄德府君",
+      "rarity": 5,
+      "pool": "standard",
+      "base_stats": {
+        "force": 72,
+        "intel": 75,
+        "politics": 88,
+        "command": 78
+      },
+      "recruit_cost": {
+        "food": 5000,
+        "wood": 5000,
+        "stone": 3000,
+        "iron": 2000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1002,
+      "code": "green_dragon",
+      "name": "青龙偃月帅",
+      "rarity": 5,
+      "pool": "elite",
+      "base_stats": {
+        "force": 95,
+        "intel": 62,
+        "politics": 55,
+        "command": 82
+      },
+      "recruit_cost": {
+        "food": 5000,
+        "wood": 5000,
+        "stone": 3000,
+        "iron": 2000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1003,
+      "code": "thunder_spear",
+      "name": "雷矛先锋",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 92,
+        "intel": 45,
+        "politics": 40,
+        "command": 75
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1004,
+      "code": "silver_rider",
+      "name": "银甲骑将",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 88,
+        "intel": 70,
+        "politics": 58,
+        "command": 85
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1005,
+      "code": "sun_archer",
+      "name": "落日神弓",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 90,
+        "intel": 68,
+        "politics": 52,
+        "command": 80
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1006,
+      "code": "wind_cavalry",
+      "name": "疾风铁骑",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 91,
+        "intel": 55,
+        "politics": 48,
+        "command": 79
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1007,
+      "code": "jade_strategist",
+      "name": "碧玉谋臣",
+      "rarity": 5,
+      "pool": "standard",
+      "base_stats": {
+        "force": 48,
+        "intel": 96,
+        "politics": 90,
+        "command": 70
+      },
+      "recruit_cost": {
+        "food": 5000,
+        "wood": 5000,
+        "stone": 3000,
+        "iron": 2000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1008,
+      "code": "fire_general",
+      "name": "赤焰都督",
+      "rarity": 5,
+      "pool": "elite",
+      "base_stats": {
+        "force": 89,
+        "intel": 78,
+        "politics": 60,
+        "command": 92
+      },
+      "recruit_cost": {
+        "food": 5000,
+        "wood": 5000,
+        "stone": 3000,
+        "iron": 2000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1009,
+      "code": "north_wall",
+      "name": "北境柱石",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 86,
+        "intel": 72,
+        "politics": 65,
+        "command": 84
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1010,
+      "code": "river_sage",
+      "name": "江左智囊",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 52,
+        "intel": 91,
+        "politics": 82,
+        "command": 68
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1011,
+      "code": "stone_fort",
+      "name": "坚城守御",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 78,
+        "intel": 60,
+        "politics": 70,
+        "command": 76
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1012,
+      "code": "dawn_marshal",
+      "name": "破晓元帅",
+      "rarity": 5,
+      "pool": "standard",
+      "base_stats": {
+        "force": 93,
+        "intel": 74,
+        "politics": 62,
+        "command": 94
+      },
+      "recruit_cost": {
+        "food": 5000,
+        "wood": 5000,
+        "stone": 3000,
+        "iron": 2000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1013,
+      "code": "ink_advisor",
+      "name": "墨香学士",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 40,
+        "intel": 85,
+        "politics": 88,
+        "command": 55
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1014,
+      "code": "bamboo_guard",
+      "name": "青竹卫尉",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 82,
+        "intel": 58,
+        "politics": 50,
+        "command": 72
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1015,
+      "code": "frost_blade",
+      "name": "寒霜剑侍",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 84,
+        "intel": 64,
+        "politics": 45,
+        "command": 74
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1016,
+      "code": "gold_envoy",
+      "name": "金印使节",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 55,
+        "intel": 80,
+        "politics": 92,
+        "command": 60
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1017,
+      "code": "crane_healer",
+      "name": "白鹤医官",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 35,
+        "intel": 88,
+        "politics": 75,
+        "command": 48
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1018,
+      "code": "bronze_smith",
+      "name": "青铜匠师",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 60,
+        "intel": 70,
+        "politics": 55,
+        "command": 50
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1019,
+      "code": "reed_scout",
+      "name": "芦荡斥候",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 65,
+        "intel": 68,
+        "politics": 40,
+        "command": 62
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1020,
+      "code": "plum_hermit",
+      "name": "梅岭隐士",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 50,
+        "intel": 82,
+        "politics": 60,
+        "command": 52
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1021,
+      "code": "azure_phalanx",
+      "name": "青岚方阵",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 65,
+        "intel": 50,
+        "politics": 45,
+        "command": 55
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1022,
+      "code": "ember_duelist",
+      "name": "烬锋斗士",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 68,
+        "intel": 55,
+        "politics": 52,
+        "command": 59
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1023,
+      "code": "mist_ranger",
+      "name": "雾林游侠",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 71,
+        "intel": 60,
+        "politics": 59,
+        "command": 63
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1024,
+      "code": "coral_admiral",
+      "name": "珊瑚水师",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 74,
+        "intel": 65,
+        "politics": 66,
+        "command": 67
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1025,
+      "code": "sand_pillar",
+      "name": "沙洲柱将",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 77,
+        "intel": 70,
+        "politics": 73,
+        "command": 71
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1026,
+      "code": "iron_bard",
+      "name": "铁弦乐士",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 80,
+        "intel": 75,
+        "politics": 80,
+        "command": 75
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1027,
+      "code": "lotus_healer",
+      "name": "莲塘医女",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 83,
+        "intel": 80,
+        "politics": 47,
+        "command": 79
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1028,
+      "code": "copper_quarter",
+      "name": "铜衡督粮",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 86,
+        "intel": 85,
+        "politics": 54,
+        "command": 83
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1029,
+      "code": "jade_sentinel",
+      "name": "玉门哨帅",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 89,
+        "intel": 90,
+        "politics": 61,
+        "command": 87
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1030,
+      "code": "storm_lancer",
+      "name": "惊雷枪骑",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 92,
+        "intel": 50,
+        "politics": 68,
+        "command": 91
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1031,
+      "code": "pine_sage",
+      "name": "松岭谋士",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 95,
+        "intel": 55,
+        "politics": 75,
+        "command": 57
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1032,
+      "code": "reed_admiral",
+      "name": "苇泽舟帅",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 95,
+        "intel": 60,
+        "politics": 82,
+        "command": 61
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1033,
+      "code": "granite_warden",
+      "name": "磐石戍将",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 95,
+        "intel": 65,
+        "politics": 49,
+        "command": 65
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1034,
+      "code": "silk_diplomat",
+      "name": "锦帛行卿",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 95,
+        "intel": 70,
+        "politics": 56,
+        "command": 69
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1035,
+      "code": "amber_alchemist",
+      "name": "琥珀丹师",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 67,
+        "intel": 75,
+        "politics": 63,
+        "command": 73
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1036,
+      "code": "obsidian_scout",
+      "name": "玄羽探子",
+      "rarity": 2,
+      "pool": "standard",
+      "base_stats": {
+        "force": 70,
+        "intel": 80,
+        "politics": 70,
+        "command": 77
+      },
+      "recruit_cost": {
+        "food": 1000,
+        "wood": 1000,
+        "stone": 500,
+        "iron": 300
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1037,
+      "code": "harbor_master",
+      "name": "津渡监官",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 73,
+        "intel": 85,
+        "politics": 77,
+        "command": 81
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1038,
+      "code": "field_engineer",
+      "name": "野营匠首",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 76,
+        "intel": 90,
+        "politics": 84,
+        "command": 85
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1039,
+      "code": "dawn_archer",
+      "name": "晨曦弓监",
+      "rarity": 3,
+      "pool": "standard",
+      "base_stats": {
+        "force": 79,
+        "intel": 50,
+        "politics": 51,
+        "command": 89
+      },
+      "recruit_cost": {
+        "food": 2000,
+        "wood": 2000,
+        "stone": 1000,
+        "iron": 500
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    },
+    {
+      "template_cfg_id": 1040,
+      "code": "night_captain",
+      "name": "夜巡都尉",
+      "rarity": 4,
+      "pool": "standard",
+      "base_stats": {
+        "force": 82,
+        "intel": 55,
+        "politics": 58,
+        "command": 55
+      },
+      "recruit_cost": {
+        "food": 3000,
+        "wood": 3000,
+        "stone": 2000,
+        "iron": 1000
+      },
+      "recruit_item": {
+        "item_cfg_id": 2004,
+        "quantity": 1
+      }
+    }
+  ]
+}
