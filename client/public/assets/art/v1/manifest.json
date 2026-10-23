@@ -185,6 +185,102 @@
           "path": "textures/2x/icons/food.png"
         }
       ]
+    },
+    {
+      "id": "mc.building.lumber.v1",
+      "kind": "sprite",
+      "slot_key": "lumber",
+      "display_size": {
+        "w": 200,
+        "h": 160
+      },
+      "anchor": {
+        "x": 100,
+        "y": 160
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/lumber.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/lumber.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.quarry.v1",
+      "kind": "sprite",
+      "slot_key": "quarry",
+      "display_size": {
+        "w": 200,
+        "h": 160
+      },
+      "anchor": {
+        "x": 100,
+        "y": 160
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/quarry.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/quarry.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.iron.v1",
+      "kind": "sprite",
+      "slot_key": "iron",
+      "display_size": {
+        "w": 200,
+        "h": 160
+      },
+      "anchor": {
+        "x": 100,
+        "y": 160
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/iron.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/iron.png"
+        }
+      ]
+    },
+    {
+      "id": "mc.building.barracks.v1",
+      "kind": "sprite",
+      "slot_key": "barracks",
+      "display_size": {
+        "w": 220,
+        "h": 180
+      },
+      "anchor": {
+        "x": 110,
+        "y": 180
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/maincity/barracks.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/maincity/barracks.png"
+        }
+      ]
     }
   ]
 }
