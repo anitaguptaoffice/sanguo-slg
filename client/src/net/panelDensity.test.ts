@@ -13,6 +13,8 @@ import {
   mailListRowClassName,
   mailRowMetaLine,
   mailRowTitleLine,
+  marchListEmptyClass,
+  marchListEmptyMessage,
 } from "@/net/panelDensity";
 import {
   battleReportOutcomeChipClass,
@@ -58,6 +60,11 @@ describe("panelDensity", () => {
     const row = formatBagStackRowLabel({ item_cfg_id: 2001, quantity: 12 });
     expect(row.name).toContain("谷袋");
     expect(row.qtyCell.trim()).toBe("12");
+  });
+
+  it("march list empty copy", () => {
+    expect(marchListEmptyMessage()).toContain("暂无行军");
+    expect(marchListEmptyClass()).toBe("march-list-empty");
   });
 
   it("battle empty and filter copy", () => {
