@@ -206,7 +206,7 @@ export class HeroMailPanels {
       <div class="mail-detail hidden" data-role="mail-detail">
         <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
         <pre class="mail-body" data-role="mail-body"></pre>
-        <button type="button" class="hidden" data-action="claim-mail">领取附件</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
       </div>
     `;
     return el;

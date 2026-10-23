@@ -349,6 +349,7 @@ export class MainCityScene implements Scene {
       },
     );
     this.world.attach();
+    const skinCenterPrimary = (root: HTMLElement) => skinPrimaryButtons(root, this.assets);
     this.queuePanels = new QueuePanels(
       parent,
       this.gateway,
@@ -372,6 +373,7 @@ export class MainCityScene implements Scene {
         this.status = "已打开「日常」并定位对应建造日课";
         this.renderHud();
       },
+      skinCenterPrimary,
     );
     this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets, "button");
@@ -386,6 +388,7 @@ export class MainCityScene implements Scene {
       this.dailyQuest.getRoot(),
     ]) {
       skinNineSlicePanel(panel, this.assets, 520, 320);
+      skinCenterPrimary(panel);
     }
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
