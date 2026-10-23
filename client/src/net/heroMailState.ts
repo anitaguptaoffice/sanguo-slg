@@ -35,13 +35,32 @@ export type HeroSummary = {
   loyalty?: number;
 };
 
+export type HeroAttributes = {
+  force?: number;
+  intel?: number;
+  politics?: number;
+  command?: number;
+};
+
+export type HeroAttributeKey = keyof HeroAttributes;
+
+/** 与 hero.v1.HeroAttributes 字段一一对应（验收口径：攻/防/统等展示为武/智/政/统）。 */
+export const HERO_ATTRIBUTE_ROWS: { key: HeroAttributeKey; label: string }[] = [
+  { key: "force", label: "武力" },
+  { key: "intel", label: "智力" },
+  { key: "politics", label: "政治" },
+  { key: "command", label: "统率" },
+];
+
+export const HERO_ATTR_BAR_CAP = 100;
+
 export type HeroDetail = HeroSummary & {
   template_name?: string;
   template_code?: string;
   rarity?: number;
   loyalty_min?: number;
   loyalty_max?: number;
-  attributes?: { force?: number; intel?: number; politics?: number; command?: number };
+  attributes?: HeroAttributes;
 };
 
 export type RecruitTemplatePreview = {
@@ -159,6 +178,39 @@ export function formatHeroDetail(d: HeroDetail): string {
   );
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** 将领详情区：模板名与等级同屏 + 属性表/条形（纯函数，便于单测）。 */
+export function renderHeroDetailMarkup(d: HeroDetail | null | undefined): string {
+  if (!d?.hero_id) {
+    return '<p class="hero-detail-empty">点选将领查看详情</p>';
+  }
+  const name = escapeHtml(d.template_name || heroTemplateLabel(d.template_cfg_id));
+  const level = d.level ?? 1;
+  const rarity = d.rarity ?? "?";
+  const loyalty = d.loyalty ?? 0;
+  const loyaltyRange =
+    d.loyalty_min != null
+      ? ` · 忠诚 ${loyalty}（${d.loyalty_min}~${d.loyalty_max ?? loyalty}）`
+      : ` · 忠诚 ${loyalty}`;
+  const head = `<header class="hero-detail-head"><span class="hero-detail-name">${name}</span><span class="hero-detail-level">Lv${level}</span><span class="hero-detail-meta">稀有${rarity}${loyaltyRange}</span></header>`;
+  const attrs = d.attributes;
+  const rows = HERO_ATTRIBUTE_ROWS.map(({ key, label }) => {
+    const val = attrs?.[key] ?? 0;
+    const pct = heroAttributeBarPercent(val);
+    return `<tr><th scope="row">${escapeHtml(label)}</th><td class="hero-attr-val">${val}</td><td class="hero-attr-bar"><span class="hero-attr-bar-fill" style="width:${pct}%"></span></td></tr>`;
+  }).join("");
+  const table = `<table class="hero-attr-table" aria-label="基础属性"><tbody>${rows}</tbody></table>`;
+  const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
+  return `${head}${table}${hint}`;
+}
+
 export function formatMailLine(m: MailRow): string {
   const att = m.attachments;
   let attachHint = "";
@@ -188,6 +240,42 @@ export function parseRecruitTemplates(res: {
   return { templates, totalCount };
 }
 
+export function heroOwnedTemplateIds(heroes: HeroSummary[]): Set<number> {
+  const ids = new Set<number>();
+  for (const h of heroes) {
+    const id = h.template_cfg_id;
+    if (id != null && id > 0) ids.add(id);
+  }
+  return ids;
+}
+
+/** 已招募：API already_owned 或玩家将领列表含同 template_cfg_id。 */
+export function isRecruitTemplateOwned(
+  template: RecruitTemplatePreview,
+  ownedTemplateIds: ReadonlySet<number>,
+): boolean {
+  if (template.already_owned) return true;
+  const id = template.template_cfg_id;
+  return id != null && id > 0 && ownedTemplateIds.has(id);
+}
+
+export function mergeRecruitTemplateOwnership(
+  templates: RecruitTemplatePreview[],
+  heroes: HeroSummary[],
+): RecruitTemplatePreview[] {
+  const owned = heroOwnedTemplateIds(heroes);
+  return templates.map((t) => ({
+    ...t,
+    already_owned: isRecruitTemplateOwned(t, owned),
+  }));
+}
+
+export function heroAttributeBarPercent(value: number | undefined, cap = HERO_ATTR_BAR_CAP): number {
+  const v = value ?? 0;
+  if (!Number.isFinite(cap) || cap <= 0) return 0;
+  return Math.min(100, Math.max(0, Math.round((v / cap) * 100)));
+}
+
 export function formatRecruitTemplateLine(t: RecruitTemplatePreview): string {
   const name = t.template_name?.trim() || heroTemplateLabel(t.template_cfg_id);
   const cost = formatWalletPrice(t.recruit_cost ?? {});
@@ -195,7 +283,7 @@ export function formatRecruitTemplateLine(t: RecruitTemplatePreview): string {
   const itemPart = item?.item_cfg_id
     ? `${itemLabel(item.item_cfg_id)}×${item.quantity ?? 1}`
     : "无道具消耗";
-  const owned = t.already_owned ? " · 已拥有" : "";
+  const owned = t.already_owned ? " · 已招募" : "";
   return `#${t.template_cfg_id ?? "?"} ${name} · 稀有${t.rarity ?? "?"} · ${cost || "无资源"} + ${itemPart}${owned}`;
 }
 

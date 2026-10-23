@@ -184,9 +184,29 @@
         background: #1a1410; border-radius: 4px; font-size: 12px; white-space: pre-wrap;
       }
       .hero-detail, .mail-body {
-        margin-top: 8px; padding: 8px; max-height: 100px; overflow: auto;
-        background: #1a1410; border-radius: 4px; font-size: 12px; white-space: pre-wrap;
+        margin-top: 8px; padding: 8px; max-height: 160px; overflow: auto;
+        background: #1a1410; border-radius: 4px; font-size: 12px;
       }
+      .hero-detail-empty { color: #b8a88a; margin: 0; }
+      .hero-detail-head {
+        display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin-bottom: 8px;
+      }
+      .hero-detail-name { font-size: 14px; font-weight: 600; color: #f5e6c8; }
+      .hero-detail-level { font-size: 13px; color: #c9a227; }
+      .hero-detail-meta { font-size: 11px; color: #b8a88a; flex: 1 1 100%; }
+      .hero-attr-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+      .hero-attr-table th { text-align: left; font-weight: 500; color: #c9b896; padding: 2px 6px 2px 0; width: 3em; }
+      .hero-attr-val { width: 2.5em; text-align: right; padding: 2px 4px; color: #f5e6c8; }
+      .hero-attr-bar { padding: 2px 0; }
+      .hero-attr-bar span.hero-attr-bar-fill {
+        display: block; height: 6px; border-radius: 3px;
+        background: linear-gradient(90deg, #6a9fd8, #4a7fb8); min-width: 2px;
+      }
+      .hero-detail-hint { margin: 8px 0 0; font-size: 11px; color: #b8a88a; line-height: 1.4; }
+      .template-list li.recruit-owned { color: #a8c4a0; }
+      .template-list li.selected { outline: 2px solid #c9a227; }
+      .recruit-cost-preview { font-size: 12px; color: #e8dcc8; min-height: 1.2em; }
+      .mail-body { white-space: pre-wrap; }
       .mail-inbox-panel .mail-inbox-toolbar {
         display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px;
       }

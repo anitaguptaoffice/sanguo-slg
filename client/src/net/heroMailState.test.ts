@@ -13,9 +13,14 @@ import {
   mailListSummary,
   MAIL_INBOX_FILTER_UNREAD,
   parseGetHeroDetailResponse,
+  formatRecruitDeductSummary,
   formatRecruitSuccessStatus,
+  heroOwnedTemplateIds,
+  isRecruitTemplateOwned,
+  mergeRecruitTemplateOwnership,
   parseRecruitTemplates,
   recruitTemplateListLines,
+  renderHeroDetailMarkup,
   requireHeroIdForDetail,
   upsertMailRow,
 } from "@/net/heroMailState";
@@ -137,9 +142,56 @@ describe("heroMailState", () => {
       rarity: 5,
       recruit_cost: { food: 5000 },
       recruit_item: { item_cfg_id: 2004, quantity: 1 },
+      already_owned: true,
     });
     expect(line).toContain("1001");
     expect(line).toContain("贤士名册");
     expect(line).toContain("粮");
+    expect(line).toContain("已招募");
+  });
+
+  it("isRecruitTemplateOwned merges API flag and hero roster", () => {
+    const owned = heroOwnedTemplateIds([{ hero_id: 1, template_cfg_id: 1002 }]);
+    expect(isRecruitTemplateOwned({ template_cfg_id: 1001 }, owned)).toBe(false);
+    expect(isRecruitTemplateOwned({ template_cfg_id: 1002 }, owned)).toBe(true);
+    expect(isRecruitTemplateOwned({ template_cfg_id: 1003, already_owned: true }, owned)).toBe(true);
+    const merged = mergeRecruitTemplateOwnership(
+      [{ template_cfg_id: 1001 }, { template_cfg_id: 1002 }],
+      [{ template_cfg_id: 1002 }],
+    );
+    expect(merged[0].already_owned).toBe(false);
+    expect(merged[1].already_owned).toBe(true);
+  });
+
+  it("formatRecruitDeductSummary matches recruit success deduct line", () => {
+    const tpl = {
+      template_cfg_id: 1001,
+      recruit_cost: { food: 5000, wood: 200 },
+      recruit_item: { item_cfg_id: 2004, quantity: 2 },
+    };
+    const summary = formatRecruitDeductSummary(tpl);
+    expect(summary).toContain("粮");
+    expect(summary).toContain("木");
+    expect(summary).toContain("贤士名册");
+    expect(summary).toContain("×2");
+    const status = formatRecruitSuccessStatus({ hero_id: 1, template_cfg_id: 1001 }, tpl);
+    expect(status).toContain(summary);
+  });
+
+  it("renderHeroDetailMarkup shows name level and attribute bars", () => {
+    const html = renderHeroDetailMarkup({
+      hero_id: 3,
+      template_name: "玄德",
+      level: 5,
+      rarity: 5,
+      loyalty: 80,
+      attributes: { force: 60, intel: 70, politics: 50, command: 90 },
+    });
+    expect(html).toContain("hero-detail-name");
+    expect(html).toContain("玄德");
+    expect(html).toContain("Lv5");
+    expect(html).toContain("hero-attr-table");
+    expect(html).toContain('style="width:90%"');
+    expect(html).toContain("统率");
   });
 });

@@ -93,9 +93,51 @@ describe("HeroMailPanels", () => {
     row?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 3);
-    const pre = mount.querySelector('[data-role="hero-detail"]');
-    expect(pre?.textContent).toContain("玄德");
-    expect(pre?.textContent).toContain("UseConsumable");
+    const detail = mount.querySelector('[data-role="hero-detail"]');
+    expect(detail?.querySelector(".hero-detail-name")?.textContent).toContain("玄德");
+    expect(detail?.querySelector(".hero-detail-level")?.textContent).toContain("Lv2");
+    expect(detail?.querySelector(".hero-attr-table")).toBeTruthy();
+    expect(detail?.textContent).toContain("UseConsumable");
+  });
+
+  it("marks owned recruit template and shows deduct preview on selection", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            template_name: "玄德",
+            recruit_cost: { food: 100 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+          },
+          { template_cfg_id: 1002, template_name: "云长", rarity: 5 },
+        ],
+        total_count: 2,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 1, template_cfg_id: 1001, level: 1, loyalty: 100 }],
+        total_count: 1,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const ownedLi = mount.querySelector('li[data-template-id="1001"]');
+    expect(ownedLi?.textContent).toContain("已招募");
+    expect(ownedLi?.classList.contains("recruit-owned")).toBe(true);
+    const preview = mount.querySelector('[data-role="recruit-preview"]');
+    expect(preview?.textContent).toContain("扣费明细");
+    expect(preview?.textContent).toContain("粮");
+    mount.querySelector('li[data-template-id="1002"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(preview?.textContent).toContain("扣费明细");
   });
 
   it("claim success updates session bag via patch", async () => {
