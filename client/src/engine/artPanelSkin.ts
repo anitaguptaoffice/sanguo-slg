@@ -63,6 +63,17 @@ export const CLIENT_111_PANEL_ASSET_BY_CENTER_ID: Record<"building" | "mail" | "
   queue: PANEL_ASSET_QUEUE,
 };
 
+/** CLIENT-119 narrow manifest roots: 背包 / 商城 / 将领招募 / 军事出征（与 CLIENT-095/086 同级工程接线）。 */
+export const CLIENT_119_PANEL_ASSET_BY_CENTER_ID: Record<
+  "bag" | "shop" | "hero" | "military",
+  string
+> = {
+  bag: PANEL_ASSET_BAG,
+  shop: PANEL_ASSET_SHOP,
+  hero: PANEL_ASSET_HERO,
+  military: PANEL_ASSET_MILITARY,
+};
+
 /** Stretch a nine_slice panel asset as CSS border-image (24px logical slice by default). */
 export function skinNineSlicePanel(
   el: HTMLElement,

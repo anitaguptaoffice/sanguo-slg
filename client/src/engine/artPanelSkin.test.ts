@@ -8,6 +8,7 @@ import {
   CLIENT_095_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_103_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_111_PANEL_ASSET_BY_CENTER_ID,
+  CLIENT_119_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
   PANEL_ASSET_DAILY,
   PANEL_ASSET_BATTLE_REPORT,
@@ -202,6 +203,15 @@ describe("skinNineSlicePanel", () => {
       building: PANEL_ASSET_DEFAULT,
       mail: PANEL_ASSET_DEFAULT,
       queue: PANEL_ASSET_QUEUE,
+    });
+  });
+
+  it("CLIENT-119 maps bag shop hero military roots to manifest ids", () => {
+    expect(CLIENT_119_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      bag: PANEL_ASSET_BAG,
+      shop: PANEL_ASSET_SHOP,
+      hero: PANEL_ASSET_HERO,
+      military: PANEL_ASSET_MILITARY,
     });
   });
 });

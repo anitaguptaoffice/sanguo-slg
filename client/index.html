@@ -821,7 +821,8 @@
         0%, 100% { box-shadow: none; background: #1a1410; }
         50% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.75); background: #1e2418; }
       }
-      .hero-list li.hero-row-recruited-pulse {
+      .hero-list li.hero-row-recruited-pulse,
+      .template-list li.hero-row-recruited-pulse {
         animation: hero-row-recruited-pulse-keyframes 1.2s ease-out 1;
       }
       @keyframes hero-detail-stat-pulse-keyframes {
@@ -837,6 +838,14 @@
       .hero-cultivation-item-hint { margin: 4px 0 0; font-size: 10px; color: #b8a88a; }
       .hero-cultivation-success { margin: 6px 0 0; font-size: 11px; color: #c9a227; line-height: 1.4; }
       .hero-cultivation-success.hidden { display: none; }
+      @keyframes recruit-row-pulse-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+        50% { box-shadow: inset 0 0 0 2px #c9a227; }
+      }
+      .military-panel .recruit-row-pulse,
+      .queue-list li.recruit-row-pulse {
+        animation: recruit-row-pulse-keyframes 3s ease-out 1;
+      }
       .daily-quest-state-summary {
         display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; font-size: 12px;
       }
@@ -1234,6 +1243,26 @@
         flex-wrap: wrap;
         min-width: 0;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-success-toast,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="hero-list-form-error"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="recruit-form-error"] {
+        flex-shrink: 0;
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .template-list li,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list.hero-list-refresh-pulse {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] button[data-action="refresh-world"] {
@@ -1336,6 +1365,16 @@
         max-height: none;
         overflow: visible;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-stack-row,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-row-used-pulse {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-category-tabs,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="refresh-shop"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="buy-offer"],
@@ -1348,6 +1387,15 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list {
         max-height: none;
         overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
+        padding-bottom: 12px;
       }
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-summary"],
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] label,
@@ -1486,6 +1534,42 @@
       }
       #layout-frame.layout-narrow .military-panel .military-troops {
         flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .military-panel[data-center-panel="military"] h3,
+      #layout-frame.layout-narrow .military-panel .march-target-hint,
+      #layout-frame.layout-narrow .military-panel .march-form-summary,
+      #layout-frame.layout-narrow .military-panel .march-form-summary-warn,
+      #layout-frame.layout-narrow .military-panel .march-form-error,
+      #layout-frame.layout-narrow .military-panel .troop-recruit-preview {
+        flex-shrink: 0;
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .military-panel .march-target-fields,
+      #layout-frame.layout-narrow .military-panel .march-intel-last-troops {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body {
+        padding-bottom: 12px;
+      }
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body label,
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body button[data-action="recruit"],
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body button.art-btn-primary {
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar button.toolbar-chrome-btn--with-icon {
+        flex: 0 0 auto;
+        min-width: 0;
+        max-width: 96px;
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar .toolbar-scroll-inner {
+        max-width: 100%;
       }
     </style>
   </head>
