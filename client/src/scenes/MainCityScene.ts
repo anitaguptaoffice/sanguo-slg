@@ -32,6 +32,7 @@ import {
   unitLabel,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import { MARCH_ARRIVAL_STATUS_TOAST } from "@/net/marchArrival";
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
@@ -101,6 +102,7 @@ export class MainCityScene implements Scene {
   private hudTodoBadgePoll!: HudTodoBadgePoll;
   private marchArrivalPoll!: MarchArrivalPoll;
   private readonly battleReportUnread = new BattleReportUnreadSession();
+  private readonly marchEndReportHint = new MarchEndBattleReportHint();
   private marchReportToastActive = false;
   private walletGainBrief: string | null = null;
   private walletGainUntilMs = 0;
@@ -155,6 +157,7 @@ export class MainCityScene implements Scene {
         this.marchReportToastActive = true;
         this.renderHud();
         void this.hudTodoBadgePoll.pollOnce();
+        void this.seedMarchEndBattleReportHint();
       },
     });
     this.renderHud();
@@ -678,8 +681,20 @@ export class MainCityScene implements Scene {
     const el = (ev.target as HTMLElement).closest('[data-action="open-march-reports"]');
     if (!el) return;
     this.marchReportToastActive = false;
-    this.battleReports.openPanel();
+    const hint = this.marchEndReportHint.consume();
+    void this.battleReports.openPanelWithDeepLink(hint).then(() => this.renderHud());
     this.renderHud();
+  }
+
+  private async seedMarchEndBattleReportHint(): Promise<void> {
+    try {
+      const res = (await this.gateway.listBattleReports(10, 0)) as {
+        reports?: { report_id?: number }[];
+      };
+      this.marchEndReportHint.setFromReports(res.reports ?? []);
+    } catch {
+      // 战报尚未落库时深链回退为刷新后选最近一条
+    }
   }
 
   private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {

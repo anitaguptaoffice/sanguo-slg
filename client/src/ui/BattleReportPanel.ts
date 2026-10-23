@@ -1,12 +1,18 @@
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
+import { selectDeepLinkBattleReportId } from "@/net/battleReportDeepLink";
+import {
+  BATTLE_REPORT_ROUNDS_EXPAND_LABEL,
+  buildBattleRoundTableRows,
+  shouldCollapseBattleRounds,
+  visibleBattleRoundTableRows,
+} from "@/net/battleReportRounds";
 import {
   battleReportOutcomeChipClass,
   battleReportOutcomeChipLabel,
   filterBattleReportsByOutcome,
   formatBattleReportDetail,
   formatBattleReportFoeSummary,
-  formatBattleRoundLine,
   formatTimeMs,
   type BattleReportDetailView,
   type BattleReportOutcomeFilter,
@@ -37,6 +43,7 @@ export class BattleReportPanel {
   private selectedReportId = 0;
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
+  private roundsTableExpanded = false;
   private listError = "";
   private detailError = "";
   private listLoading = false;
@@ -73,6 +80,16 @@ export class BattleReportPanel {
   openPanel(): void {
     this.panel.classList.remove("hidden");
     void this.openAndSyncUnread();
+  }
+
+  /** 行军结束深链：刷新列表后选中 hint 或最近战报并加载详情。 */
+  async openPanelWithDeepLink(hintReportId?: number | null): Promise<void> {
+    this.panel.classList.remove("hidden");
+    await this.refreshList();
+    this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
+    this.panelOpts?.onUnreadChange?.(0);
+    const reportId = selectDeepLinkBattleReportId(this.reports, hintReportId);
+    if (reportId > 0) await this.openReport(reportId);
   }
 
   private async openAndSyncUnread(): Promise<void> {
@@ -240,17 +257,55 @@ export class BattleReportPanel {
     pre.textContent = this.detailText;
     detailEl.appendChild(pre);
 
-    const rounds = this.detailRounds ?? [];
-    if (rounds.length > 0) {
-      const details = document.createElement("details");
-      details.className = "report-rounds-collapse";
-      const summary = document.createElement("summary");
-      summary.textContent = `回合明细（${rounds.length} 回合，点击展开）`;
-      details.appendChild(summary);
-      const roundPre = document.createElement("pre");
-      roundPre.textContent = rounds.map((r) => formatBattleRoundLine(r)).join("\n");
-      details.appendChild(roundPre);
-      detailEl.appendChild(details);
+    const roundRows = buildBattleRoundTableRows(this.detailRounds);
+    if (roundRows.length > 0) {
+      const wrap = document.createElement("div");
+      wrap.className = "report-rounds-table-wrap";
+
+      const table = document.createElement("table");
+      table.className = "battle-report-rounds-table";
+      table.setAttribute("aria-label", "战斗回合明细");
+      const thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr>
+          <th scope="col">回合</th>
+          <th scope="col">攻方行动</th>
+          <th scope="col">守方行动</th>
+          <th scope="col">攻方剩余</th>
+          <th scope="col">守方剩余</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      const visible = visibleBattleRoundTableRows(roundRows, this.roundsTableExpanded);
+      for (const row of visible) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row.round}</td>
+          <td>${row.attackerAction}</td>
+          <td>${row.defenderAction}</td>
+          <td>${row.attackerRemaining}</td>
+          <td>${row.defenderRemaining}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+      wrap.appendChild(table);
+
+      if (shouldCollapseBattleRounds(roundRows.length) && !this.roundsTableExpanded) {
+        const hint = document.createElement("p");
+        hint.className = "report-rounds-collapsed-hint";
+        hint.textContent = `共 ${roundRows.length} 回合，默认折叠显示。`;
+        wrap.appendChild(hint);
+        const expandBtn = document.createElement("button");
+        expandBtn.type = "button";
+        expandBtn.setAttribute("data-action", "expand-rounds");
+        expandBtn.textContent = BATTLE_REPORT_ROUNDS_EXPAND_LABEL;
+        wrap.appendChild(expandBtn);
+      }
+
+      detailEl.appendChild(wrap);
     }
   }
 
@@ -314,6 +369,7 @@ export class BattleReportPanel {
     this.detailError = "";
     this.detailText = "";
     this.detailRounds = [];
+    this.roundsTableExpanded = false;
     this.detailLoading = true;
     this.onStatus(`战报 #${reportId}…`);
     this.renderList();
@@ -366,6 +422,9 @@ export class BattleReportPanel {
     else if (action === "retry-list") void this.refreshList();
     else if (action === "retry-detail" && this.selectedReportId) {
       void this.openReport(this.selectedReportId);
+    } else if (action === "expand-rounds") {
+      this.roundsTableExpanded = true;
+      this.renderDetail();
     }
   }
 }

@@ -272,6 +272,17 @@ cd client && npm install && npm run dev
 4. 打开战报面板后未读角标清零；再次产生新战报时角标恢复。
 5. 单测：`marchArrival.test.ts`、`marchArrivalPoll.test.ts`、`battleReportUnread.test.ts`、`BattleReportPanel.test.ts`。
 
+### 手动验收（战报详情回合表与行军深链 CLIENT-034）
+
+`GetBattleReport` 成功后，详情区顶部仍保留 `formatBattleReportDetail` 文字摘要；下方为结构化 **回合表**（回合号、攻/守行动摘要、双方剩余兵力 map）。回合数 **> 8** 时表格默认折叠，点 **「展开全部回合」** 显示全部行。列表/详情加载失败仍可用 **重试** 按钮（不退化 **CLIENT-029** 列表密度）。行军结束 HUD 链接（**CLIENT-025**）点击后调用 `openPanelWithDeepLink`：刷新 `ListBattleReports` 后选中 `MarchEndBattleReportHint` 或最近 `report_id` 并自动 `GetBattleReport`。
+
+1. `make dev` 产生至少一场带多回合明细的战报（见上文募兵 → 行军）。
+2. 底栏 **「战报」** → 点击一条记录：详情 `pre` 摘要含结果/伤亡；下方表格列头为 **回合 / 攻方行动 / 守方行动 / 攻方剩余 / 守方剩余**。
+3. 若服务端返回 **> 8** 回合：初始无表格行，显示折叠提示与 **展开全部回合**；点击后展示全部行。
+4. 断网或 mock 失败详情：应出现 **重试加载详情**；列表失败仍保留 **重试加载列表** 与筛选条。
+5. 完成一次行军到达后点 HUD **行军结束，查看战报**：战报面板打开、列表刷新、**最近战报** 行高亮且详情已加载（若 hint 与列表首条不一致则以 hint 为准）。
+6. 单测：`battleReportRounds.test.ts`、`battleReportDeepLink.test.ts`、`BattleReportPanel.test.ts`。
+
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
 `contentFeedback.ts` 解析 `UseConsumable` / `PurchaseShopOffer` 响应；背包/商城面板内 `panel-feedback` 与顶栏状态栏同步文案。使用资源包(2001) 成功后 **CLIENT-018** 顶栏仍可出现 `+粮…` 短时摘要（`patchSession` + `formatWalletGainBrief`）。
