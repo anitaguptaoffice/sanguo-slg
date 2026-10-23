@@ -2,7 +2,29 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 22 网关冒烟（INTG-019，推荐）
+
+在 INTG-018 全量断言之上强制验收 **城池资源余量**：`domestic.v1.GetCityState` 打印 `wallet`（粮/木/铁/石余量，日志前缀 `resources`）与 `production_rates` **同一行**（供 CLIENT-081/082 HUD 扫读对照）；**行军阶段**：`StartMarch` 后 `military.v1.ListMarches` 首条打印 `phase`（枚举名或 `phase_num`）与 `march_id`（供 CLIENT-080/085 军情阶段提醒）；**军团成员**：`guild.v1.ListGuildMembers` 打印 `members` 条数（玩家未入军团则 **skip** 并打印 hint「join guild」——可选 `CreateGuild` 在 INTG-010 社交路径中已尝试）。保留 INTG-018 将领养成/战报 rounds/日常进度/城池格点与进程重启持久化等路径。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速——`military.v1` 契约未定义对应 RPC。
+
+**可选**：`RecruitTroop` 后 `ListMarches` 仍为空或仅含本次 `StartMarch` 的 `march_id`；**失败不阻塞主路径**（见测试内 `smokeINTG014RecruitTroopListMarchesOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG019Wave22SmokePath' -count=1 -v
+```
+
+与 INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG019Wave22SmokePath|TestINTG018Wave21SmokePath|TestINTG017Wave20SmokePath|TestINTG016Wave19SmokePath|TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-019:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 21 网关冒烟（INTG-018，推荐）
 
