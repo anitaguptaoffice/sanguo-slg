@@ -9,6 +9,7 @@ import (
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
@@ -33,6 +34,7 @@ type Server struct {
 	world    *world.Service
 	domestic   *domestic.Hub
 	military   *march.Hub
+	reports    *report.Service
 	sessions   *SessionRegistry
 	cities     map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord
@@ -71,6 +73,11 @@ func (s *Server) SetClock(now clockFunc) {
 	}
 }
 
+// AttachBattleReports enables Get/List battle report gateway routes.
+func (s *Server) AttachBattleReports(svc *report.Service) {
+	s.reports = svc
+}
+
 // GatewayRouter returns a merged route table for the platform gateway.
 func (s *Server) GatewayRouter() *gateway.Router {
 	handlers := map[string]gateway.RouteHandler{}
@@ -87,6 +94,8 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteRecruitTroop] = s.handleRecruitTroop
 	handlers[RouteStartMarch] = s.handleStartMarch
+	handlers[RouteGetBattleReport] = s.handleGetBattleReport
+	handlers[RouteListBattleReports] = s.handleListBattleReports
 	return gateway.NewRouter(handlers)
 }
 
