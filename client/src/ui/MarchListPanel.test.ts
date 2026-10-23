@@ -15,6 +15,13 @@ describe("MarchListPanel", () => {
     mount.remove();
   });
 
+  it("march intel panel has center-panel id and panel-scroll-body (CLIENT-086)", () => {
+    const panel = new MarchListPanel(mount, { listMarches: vi.fn() } as never, () => 1, () => {});
+    panel.attach();
+    expect(mount.querySelector('[data-center-panel="march"]')).toBeTruthy();
+    expect(mount.querySelector('[data-center-panel="march"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("shows empty list hint and calls listMarches on open", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({ marches: [], total: 0 }),
