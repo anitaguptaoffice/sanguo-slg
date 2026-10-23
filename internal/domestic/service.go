@@ -1,6 +1,7 @@
 package domestic
 
 import (
+	"context"
 	"errors"
 	"math"
 	"sort"
@@ -76,6 +77,7 @@ type BuildJob struct {
 }
 type CityState struct {
 	ID           int64
+	PlayerID     int64
 	Wallet       Resources
 	LastSettleAt time.Time
 	Buildings    map[string]*BuildingInstance
@@ -308,11 +310,15 @@ func (s *scheduler) poll(now time.Time) int {
 }
 
 type Hub struct {
-	mu     sync.Mutex
-	sched  scheduler
-	cat    map[int32]BuildingSpec
-	cities map[int64]*CityState
-	now    func() time.Time
+	mu         sync.Mutex
+	sched      scheduler
+	cat        map[int32]BuildingSpec
+	cities     map[int64]*CityState
+	now        func() time.Time
+	store      *PGStore
+	serverID   int32
+	flushEvery time.Duration
+	lastFlush  time.Time
 }
 
 func NewHub(now func() time.Time) *Hub {
@@ -321,8 +327,25 @@ func NewHub(now func() time.Time) *Hub {
 	}
 	return &Hub{cat: DefaultCatalog(), cities: make(map[int64]*CityState), now: now}
 }
+
+// UseStore enables PostgreSQL snapshots (optional). flushEvery<=0 defaults to 30s.
+func (h *Hub) UseStore(store *PGStore, serverID int32, flushEvery time.Duration) {
+	h.store = store
+	h.serverID = serverID
+	if flushEvery <= 0 {
+		flushEvery = 30 * time.Second
+	}
+	h.flushEvery = flushEvery
+}
+
 func (h *Hub) RegisterCity(c *CityState) {
 	h.mu.Lock()
+	h.registerCityLocked(c)
+	h.mu.Unlock()
+	h.persistCity(c.ID)
+}
+
+func (h *Hub) registerCityLocked(c *CityState) {
 	if c.Buildings == nil {
 		c.Buildings = make(map[string]*BuildingInstance)
 	}
@@ -330,7 +353,68 @@ func (h *Hub) RegisterCity(c *CityState) {
 		c.LastSettleAt = h.now()
 	}
 	h.cities[c.ID] = c
+	h.rescheduleJobsLocked(c.ID, c)
+}
+
+// LoadCity loads state from PG and registers the city (re-schedules active build jobs).
+func (h *Hub) LoadCity(ctx context.Context, cityID, playerID int64) (*CityState, error) {
+	if h.store == nil {
+		return nil, errors.New("domestic: persistence not configured")
+	}
+	c, err := h.store.LoadCity(ctx, h.serverID, cityID, playerID)
+	if err != nil {
+		return nil, err
+	}
+	h.mu.Lock()
+	h.registerCityLocked(c)
 	h.mu.Unlock()
+	return c, nil
+}
+
+func (h *Hub) rescheduleJobsLocked(cityID int64, c *CityState) {
+	for _, j := range c.BuildJobs {
+		if j.Status == QueueActive {
+			h.sched.add(j.FinishAt, func() { h.onDone(cityID, j.ID) })
+		}
+	}
+}
+
+func (h *Hub) persistCity(cityID int64) {
+	if h.store == nil {
+		return
+	}
+	h.mu.Lock()
+	c := h.cities[cityID]
+	if c == nil || c.PlayerID == 0 {
+		h.mu.Unlock()
+		return
+	}
+	now := h.now()
+	settleProduction(c, h.cat, now)
+	h.mu.Unlock()
+	_ = h.store.SaveCity(context.Background(), h.serverID, c, h.cat, now)
+}
+
+func (h *Hub) maybeFlushAll() {
+	if h.store == nil || h.flushEvery <= 0 {
+		return
+	}
+	now := h.now()
+	if !h.lastFlush.IsZero() && now.Sub(h.lastFlush) < h.flushEvery {
+		return
+	}
+	h.lastFlush = now
+	h.mu.Lock()
+	ids := make([]int64, 0, len(h.cities))
+	for id, c := range h.cities {
+		if c.PlayerID != 0 {
+			ids = append(ids, id)
+		}
+	}
+	h.mu.Unlock()
+	for _, id := range ids {
+		h.persistCity(id)
+	}
 }
 func (h *Hub) onDone(cityID, jobID int64) {
 	h.mu.Lock()
@@ -346,6 +430,7 @@ func (h *Hub) onDone(cityID, jobID int64) {
 	if next != nil {
 		h.sched.add(next.FinishAt, func() { h.onDone(cityID, next.ID) })
 	}
+	h.persistCity(cityID)
 }
 func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (UpgradeResult, error) {
 	h.mu.Lock()
@@ -366,4 +451,8 @@ func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (Upgr
 	}
 	return res, nil
 }
-func (h *Hub) Tick() int { return h.sched.poll(h.now()) }
+func (h *Hub) Tick() int {
+	n := h.sched.poll(h.now())
+	h.maybeFlushAll()
+	return n
+}
