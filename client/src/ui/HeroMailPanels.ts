@@ -237,8 +237,8 @@ export class HeroMailPanels {
     this.selectedHeroId = heroId;
     this.onStatus(`将领详情 #${heroId}…`);
     try {
-      const res = (await this.gateway.getHeroDetail(sid, heroId)) as HeroDetail;
-      this.detailText = formatHeroDetail(res);
+      const res = await this.gateway.getHeroDetail(sid, heroId);
+      this.detailText = formatHeroDetail(res as HeroDetail);
       this.renderHeroList();
       this.onStatus("详情已加载");
     } catch (e) {

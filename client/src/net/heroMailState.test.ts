@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   applyMailClaimResult,
+  formatHeroDetail,
   formatHeroLine,
   formatMailLine,
   formatRecruitTemplateLine,
   heroListLines,
+  InvalidHeroDetailRequestError,
   mailListLines,
+  parseGetHeroDetailResponse,
   parseRecruitTemplates,
   recruitTemplateListLines,
+  requireHeroIdForDetail,
   upsertMailRow,
 } from "@/net/heroMailState";
 
@@ -19,7 +23,39 @@ describe("heroMailState", () => {
 
   it("formats hero and mail lines", () => {
     expect(formatHeroLine({ hero_id: 9, template_cfg_id: 1001, level: 3, loyalty: 88 })).toContain("刘备");
+    expect(formatHeroLine({ hero_id: 9, template_cfg_id: 1001, level: 3, loyalty: 88 })).toContain("Lv3");
+    expect(formatHeroLine({ hero_id: 9, template_cfg_id: 1001, level: 3, loyalty: 88 })).toContain("忠诚 88");
     expect(formatMailLine({ mail_id: 1, title: "奖", status: 0 })).toContain("未读");
+  });
+
+  it("parseGetHeroDetailResponse maps gateway fields", () => {
+    const detail = parseGetHeroDetailResponse({
+      hero_id: 42,
+      template_cfg_id: 1002,
+      template_name: "云长",
+      template_code: "guan_yu",
+      rarity: 5,
+      level: 7,
+      loyalty: 90,
+      loyalty_min: 0,
+      loyalty_max: 100,
+      attributes: { force: 95, intel: 75, politics: 60, command: 88 },
+    });
+    expect(detail.template_name).toBe("云长");
+    expect(detail.rarity).toBe(5);
+    expect(detail.attributes?.force).toBe(95);
+    const text = formatHeroDetail(detail);
+    expect(text).toContain("云长");
+    expect(text).toContain("武95");
+    expect(text).toContain("区间 0~100");
+    expect(text).toContain("UseConsumable");
+  });
+
+  it("requireHeroIdForDetail rejects empty hero_id", () => {
+    expect(() => requireHeroIdForDetail(0)).toThrow(InvalidHeroDetailRequestError);
+    expect(() => requireHeroIdForDetail(-1)).toThrow(/hero_id/);
+    expect(() => requireHeroIdForDetail(Number.NaN)).toThrow(InvalidHeroDetailRequestError);
+    expect(() => requireHeroIdForDetail(1)).not.toThrow();
   });
 
   it("applyMailClaimResult merges wallet and marks mail claimed", () => {
