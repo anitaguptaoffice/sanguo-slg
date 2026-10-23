@@ -30,6 +30,9 @@ import {
   unitLabel,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import { BattleReportUnreadSession } from "@/net/battleReportUnread";
+import { MARCH_ARRIVAL_STATUS_TOAST } from "@/net/marchArrival";
+import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import {
@@ -80,10 +83,14 @@ export class MainCityScene implements Scene {
   private hudRefreshAccum = 0;
   private cityStateFetch!: CityStateFetch;
   private cityStatePoll!: CityStatePoll;
+  private marchArrivalPoll!: MarchArrivalPoll;
+  private readonly battleReportUnread = new BattleReportUnreadSession();
+  private marchReportToastActive = false;
   private walletGainBrief: string | null = null;
   private walletGainUntilMs = 0;
   private layoutFrame!: HTMLElement;
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
+  private readonly onHudClickBound = (ev: Event) => this.onHudClick(ev);
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.assets = ctx.assets;
@@ -99,6 +106,20 @@ export class MainCityScene implements Scene {
       isPanelVisible: () => this.isAnyPanelVisible(),
       onState: (state) => this.applyCityStatePoll(state),
     });
+    this.marchArrivalPoll = new MarchArrivalPoll({
+      getCityId: () => this.session?.cityId,
+      listMarches: async (cityId) => {
+        const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
+          marches?: MarchSummary[];
+        };
+        return res.marches ?? [];
+      },
+      onCompletions: () => {
+        this.marchReportToastActive = true;
+        this.renderHud();
+        void this.syncBattleReportUnreadBadge();
+      },
+    });
     this.renderHud();
     this.toolbar = document.createElement("div");
     this.toolbar.className = "main-city-toolbar layout-toolbar";
@@ -106,7 +127,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
-      <button type="button" data-action="toggle-reports">战报</button>
+      <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn">战报</button>
       <button type="button" data-action="toggle-marches">行军</button>
       <button type="button" data-action="toggle-chat">聊天</button>
       <button type="button" data-action="toggle-guild">军团</button>
@@ -193,10 +214,18 @@ export class MainCityScene implements Scene {
     );
     this.heroMail.attach();
     void this.heroMail.syncUnreadBadge();
-    this.battleReports = new BattleReportPanel(parent, this.gateway, (msg) => {
-      this.status = msg;
-      this.renderHud();
-    });
+    this.battleReports = new BattleReportPanel(
+      parent,
+      this.gateway,
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+      {
+        unreadSession: this.battleReportUnread,
+        onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
+      },
+    );
     this.battleReports.attach();
     this.marchList = new MarchListPanel(
       parent,
@@ -247,12 +276,14 @@ export class MainCityScene implements Scene {
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
+    this.hud.addEventListener("click", this.onHudClickBound);
     this.syncMilitaryPanel();
   }
 
   update(dt: number): void {
     if (!this.session) return;
     this.cityStatePoll?.tick(dt);
+    this.marchArrivalPoll?.tick(dt);
     if (this.queuePanels?.isOpen()) {
       this.queuePanels.tick(dt);
     }
@@ -273,6 +304,8 @@ export class MainCityScene implements Scene {
 
   leave(): void {
     this.cityStateFetch?.clear();
+    this.marchArrivalPoll?.reset();
+    this.hud?.removeEventListener("click", this.onHudClickBound);
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
@@ -296,7 +329,10 @@ export class MainCityScene implements Scene {
       this.militaryPanel.classList.toggle("hidden");
       this.syncMilitaryPanel();
     }
-    if (action === "toggle-reports") this.battleReports.toggle();
+    if (action === "toggle-reports") {
+      this.marchReportToastActive = false;
+      this.battleReports.toggle();
+    }
     if (action === "toggle-marches") this.marchList.toggle();
     if (action === "toggle-chat") this.social.toggleChat();
     if (action === "toggle-guild") this.social.toggleGuild();
@@ -415,6 +451,35 @@ export class MainCityScene implements Scene {
       span.textContent = text;
       this.hud.appendChild(span);
     }
+    if (this.marchReportToastActive) {
+      const toast = document.createElement("span");
+      toast.className = "hud-group hud-march-report-toast";
+      toast.textContent = MARCH_ARRIVAL_STATUS_TOAST;
+      toast.setAttribute("data-action", "open-march-reports");
+      toast.setAttribute("role", "button");
+      toast.setAttribute("title", "打开战报列表");
+      this.hud.appendChild(toast);
+    }
+  }
+
+  private onHudClick(ev: Event): void {
+    const el = (ev.target as HTMLElement).closest('[data-action="open-march-reports"]');
+    if (!el) return;
+    this.marchReportToastActive = false;
+    this.battleReports.openPanel();
+    this.renderHud();
+  }
+
+  private async syncBattleReportUnreadBadge(): Promise<void> {
+    try {
+      const res = (await this.gateway.listBattleReports(20, 0)) as {
+        reports?: { report_id?: number }[];
+      };
+      const count = this.battleReportUnread.countUnread(res.reports ?? []);
+      this.updateReportsToolbarBadge(count);
+    } catch {
+      // 未读角标失败时静默，避免覆盖军事状态栏
+    }
   }
 
   private async refreshState(): Promise<void> {
@@ -529,6 +594,7 @@ export class MainCityScene implements Scene {
         })));
       }
       this.status = formatMarchHint(this.lastMarch ?? undefined) || "行军已出发";
+      this.marchArrivalPoll.trackMarch(this.lastMarch?.march_id, this.lastMarch ?? undefined);
       this.marchList.notifyMarchStarted();
     } catch (e) {
       this.status = (e as Error).message;
@@ -640,5 +706,12 @@ export class MainCityScene implements Scene {
     if (!btn) return;
     btn.textContent = unreadCount > 0 ? `邮件(${unreadCount})` : "邮件";
     btn.setAttribute("title", unreadCount > 0 ? `${unreadCount} 封未读` : "收件箱");
+  }
+
+  private updateReportsToolbarBadge(unreadCount: number): void {
+    const btn = this.toolbar?.querySelector('[data-role="reports-toolbar-btn"]');
+    if (!btn) return;
+    btn.textContent = unreadCount > 0 ? `战报(${unreadCount})` : "战报";
+    btn.setAttribute("title", unreadCount > 0 ? `${unreadCount} 条新战报` : "战报列表");
   }
 }
