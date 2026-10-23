@@ -17,8 +17,20 @@
 | `BandServer/` | 军团（联盟）服务 | 社交玩法参照 |
 | `swf/` `BloodWar.swf` | 原版 Flash 客户端 | 界面流程、交互顺序参照 |
 | `db/schema.sql` | 483 张表的结构（无数据） | 字段语义、关系参照 |
+| `db/bloodwar.sql.gz` | 全量数据，69 MB → 压缩后 5.3 MB | 数值、任务、道具、名将等全部内容 |
+| `db/TABLES.md` | 483 张表的行数与列数清单 | 快速定位表 |
 
 美术资源在 `reference/art/`（另一个 PR）。
+
+### 全量数据怎么用
+
+```bash
+gunzip -c reference/legacy/db/bloodwar.sql.gz | \
+  docker exec -i rxsg-db mysql -uroot -p123456 bloodwar
+```
+
+数据里包含任务描述、名将列传、道具说明等文案，只作规则与数值参考，
+新项目的文案需重新撰写。
 
 ## 怎么用
 
