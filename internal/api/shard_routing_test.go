@@ -107,11 +107,11 @@ func TestListGameServersAndServerIDBinding(t *testing.T) {
 		SessionId: sid,
 		ServerId:  1,
 	})
-	if m3.Code != int32(commonv1.ErrorCode_COMMON_UNAVAILABLE) {
-		t.Fatalf("expected m3 assembly stub, got %+v", m3)
+	if m3.Code == int32(commonv1.ErrorCode_COMMON_UNAVAILABLE) {
+		t.Fatalf("expected wired M3 chat handler, got assembly stub: %+v", m3)
 	}
-	if m3.Msg == "" || !strings.Contains(m3.Msg, "chat.v1.SendChatMessage") {
-		t.Fatalf("unexpected stub msg: %q", m3.Msg)
+	if m3.Code != int32(commonv1.ErrorCode_COMMON_INVALID_PACKET) {
+		t.Fatalf("expected invalid payload for empty chat body, got %+v", m3)
 	}
 
 	enter := mustSend(t, c, &commonv1.ClientPacket{

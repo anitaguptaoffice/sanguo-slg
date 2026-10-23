@@ -46,13 +46,16 @@ gh issue list --label status:ready --label wave:1
 
 领卡 → 建 worktree → 提交 PR。完整流程见 `AGENTS.md`，任务卡规则见 `tasks/README.md`。
 
-## M2 冒烟（战斗闭环）
+## 冒烟（M2 / M3）
 
-本地库就绪后（`make dev-up`），可跑网关集成测验证募兵→行军→战报查询：
+本地库就绪后（`make dev-up`），可跑网关集成测：
 
 ```bash
 export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+# M2 战斗闭环
 GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM2BattleReportSmokePath -count=1 -v
+# M3 选服、聊天、军团、排行
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM3SocialSmokePath -count=1 -v
 ```
 
 说明与限制见 `tools/smoke/README.md`。
