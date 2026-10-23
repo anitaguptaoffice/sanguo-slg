@@ -15,6 +15,11 @@ import {
   pickDefaultDailyQuest,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
+import {
+  formatDailyQuestNextStepHint,
+  resolveDailyQuestNavAction,
+  type DailyQuestNavAction,
+} from "@/net/dailyQuestObjective";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -33,6 +38,7 @@ export class DailyQuestPanels {
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
     private readonly cityStateFetch?: CityStateFetch,
+    private readonly onNavigate?: (action: DailyQuestNavAction) => void,
   ) {}
 
   attach(): void {
@@ -70,6 +76,8 @@ export class DailyQuestPanels {
       <button type="button" data-action="accept-daily">接取</button>
       <button type="button" data-action="claim-daily">领奖</button>
       <ul class="daily-quest-list" data-role="daily-list"></ul>
+      <p class="daily-quest-next" data-role="daily-next" hidden></p>
+      <button type="button" data-action="daily-go-next" hidden>前往下一步</button>
       <pre class="daily-quest-detail" data-role="daily-detail"></pre>
     `;
     return el;
@@ -98,6 +106,32 @@ export class DailyQuestPanels {
     }
     const selected = this.rows.find((r) => r.quest_cfg_id === this.selectedCfgId) ?? null;
     if (pre) pre.textContent = formatDailyQuestDetail(selected);
+    this.renderNextStep(selected);
+  }
+
+  private renderNextStep(selected: DailyQuestRow | null): void {
+    const hintEl = this.panel.querySelector('[data-role="daily-next"]') as HTMLElement | null;
+    const btn = this.panel.querySelector('[data-action="daily-go-next"]') as HTMLButtonElement | null;
+    const nav = selected ? resolveDailyQuestNavAction(selected) : null;
+    const show = !!nav && !!this.onNavigate;
+    if (hintEl) {
+      hintEl.hidden = !show;
+      hintEl.textContent = nav ? formatDailyQuestNextStepHint(nav) : "";
+    }
+    if (btn) {
+      btn.hidden = !show;
+      btn.disabled = !show;
+    }
+  }
+
+  private goNextStep(): void {
+    const selected = this.rows.find((r) => r.quest_cfg_id === this.selectedCfgId) ?? null;
+    const nav = selected ? resolveDailyQuestNavAction(selected) : null;
+    if (!nav || !this.onNavigate) {
+      this.onStatus("当前日常无需导航或无可前往步骤");
+      return;
+    }
+    this.onNavigate(nav);
   }
 
   private async refreshList(focusCfgId?: number): Promise<void> {
@@ -202,5 +236,6 @@ export class DailyQuestPanels {
     if (a === "refresh-daily") void this.refreshList();
     if (a === "accept-daily") void this.acceptDaily();
     if (a === "claim-daily") void this.claimDaily();
+    if (a === "daily-go-next") this.goNextStep();
   }
 }

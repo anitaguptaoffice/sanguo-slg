@@ -25,6 +25,7 @@ describe("dailyQuestState", () => {
       progress_current: 1200,
       progress_target: 5000,
     });
+    expect(line).toContain("[采集]");
     expect(line).toContain("daily_food_1");
     expect(line).toContain("1200/5000");
     expect(line).toContain("进行中");

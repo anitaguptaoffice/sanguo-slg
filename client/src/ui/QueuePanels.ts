@@ -48,6 +48,13 @@ export class QueuePanels {
     }
   }
 
+  /** 打开队列面板（日常练兵/建造引导）。 */
+  open(): void {
+    this.panel.classList.remove("hidden");
+    this.tickAccum = 0;
+    this.render();
+  }
+
   addRecruitEntry(entry: RecruitQueueEntry | null): void {
     if (!entry) return;
     this.recruits = mergeRecruitQueue(this.recruits, entry);

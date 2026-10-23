@@ -6,6 +6,7 @@ const ITEM_LABEL: Record<number, string> = {
   2004: "贤士名册",
   2005: "步卒教范牌",
   2006: "骑营调令",
+  2020: "远征干粮",
 };
 
 const QUEST_STATE_LABEL: Record<number, string> = {

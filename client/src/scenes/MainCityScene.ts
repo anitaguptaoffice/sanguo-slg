@@ -20,6 +20,7 @@ import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
 import { QueuePanels } from "@/ui/QueuePanels";
+import type { DailyQuestNavAction } from "@/net/dailyQuestObjective";
 import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
 import { recruitEntryFromResponse } from "@/net/queueState";
 import {
@@ -197,6 +198,7 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       this.cityStateFetch,
+      (action) => this.navigateDailyQuest(action),
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
@@ -317,6 +319,35 @@ export class MainCityScene implements Scene {
     this.queuePanels?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
+  }
+
+  private navigateDailyQuest(action: DailyQuestNavAction): void {
+    switch (action.kind) {
+      case "train_troops":
+        this.queuePanels.open();
+        this.militaryPanel.classList.remove("hidden");
+        this.syncMilitaryPanel();
+        this.status = "已打开「队列」与「军事」募兵（练兵日常 QUEST-003）";
+        break;
+      case "build_level":
+        this.queuePanels.open();
+        this.status = "已打开「队列」；点选主城建筑或「升级农田」完成建造日常";
+        break;
+      case "use_item":
+        this.content.openBagHighlightItem(action.itemCfgId);
+        this.status = `背包已高亮 item_cfg_id=${action.itemCfgId}，请「使用道具」`;
+        break;
+      case "recruit_hero":
+        this.heroMail.toggleHero();
+        this.status = "已打开「将领」招募（访贤日常）";
+        break;
+      case "collect_resource":
+        this.status = "资源采集日常由服务端自动累计，可点「刷新状态」查看 HUD";
+        break;
+      default:
+        break;
+    }
+    this.renderHud();
   }
 
   private onToolbarClick(ev: Event): void {

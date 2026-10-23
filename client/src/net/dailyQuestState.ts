@@ -1,4 +1,8 @@
-import { formatQuestLine, questStateLabel, type QuestRow } from "@/net/contentFormat";
+import type { QuestRow } from "@/net/contentFormat";
+import {
+  formatDailyQuestDetailWithGuidance,
+  formatDailyQuestLineWithObjective,
+} from "@/net/dailyQuestObjective";
 
 /** DATA-002 日常链（quest_type=2）。 */
 export const DAILY_QUEST_CHAIN_ID = 400;
@@ -18,18 +22,11 @@ export function dailyQuestsFromListResponse(res: { quests?: DailyQuestRow[] }): 
 }
 
 export function formatDailyQuestLine(q: DailyQuestRow): string {
-  return formatQuestLine(q);
+  return formatDailyQuestLineWithObjective(q);
 }
 
 export function formatDailyQuestDetail(q: DailyQuestRow | null): string {
-  if (!q) return "（未选中）";
-  const id = q.quest_cfg_id ?? "?";
-  const code = q.quest_code ?? "—";
-  const prog =
-    q.progress_target && q.progress_target > 0
-      ? `${q.progress_current ?? 0} / ${q.progress_target}`
-      : String(q.progress_current ?? 0);
-  return `#${id} · ${code}\n状态：${questStateLabel(q.state)}\n进度：${prog}`;
+  return formatDailyQuestDetailWithGuidance(q);
 }
 
 export function pickDefaultDailyQuest(rows: DailyQuestRow[]): DailyQuestRow | null {
