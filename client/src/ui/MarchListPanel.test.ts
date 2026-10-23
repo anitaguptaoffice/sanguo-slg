@@ -26,6 +26,7 @@ describe("MarchListPanel", () => {
     });
 
     const li = mount.querySelector(".march-list li");
+    expect(li?.classList.contains("march-list-empty")).toBe(true);
     expect(li?.textContent).toContain("暂无行军");
   });
 
@@ -56,11 +57,48 @@ describe("MarchListPanel", () => {
       expect(mount.querySelectorAll(".march-list li").length).toBe(1);
     });
 
-    const text = mount.querySelector(".march-list li")?.textContent ?? "";
-    expect(text).toContain("攻击");
-    expect(text).toContain("行军中");
-    expect(text).toContain("(1,2)");
-    expect(text).toContain("(5,5)");
+    const row = mount.querySelector(".march-list li[data-march-id]");
+    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("攻击");
+    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("行军中");
+    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("(1,2)");
+    expect(row?.querySelector(".march-row-meta")?.textContent).toContain("出发");
+    expect(row?.querySelector(".march-row-meta")?.textContent).toMatch(/剩余|即将到达/);
+  });
+
+  it("ticks remaining labels without extra listMarches RPC", async () => {
+    vi.useFakeTimers();
+    let nowMs = Date.UTC(2024, 0, 1, 8, 0, 0);
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 1,
+            phase: 2,
+            purpose: 1,
+            depart_at_ms: nowMs,
+            arrive_at_ms: nowMs + 120_000,
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      pollIntervalMs: 60_000,
+      nowMs: () => nowMs,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+
+    const meta = () => mount.querySelector(".march-row-meta")?.textContent ?? "";
+    expect(meta()).toContain("剩余 2m");
+
+    nowMs += 70_000;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(meta()).toContain("即将到达");
+    expect(gateway.listMarches).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
   });
 
   it("selects march row and highlights on click", async () => {

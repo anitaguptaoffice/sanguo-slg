@@ -31,6 +31,7 @@ export function appendHudResourceStrip(
   for (const { key, label } of WALLET_RESOURCE_KEYS) {
     const item = document.createElement("span");
     item.className = "hud-resource-item";
+    item.dataset.resource = key;
     const amount = formatResourceAmount(wallet?.[key]);
     const assetId = HUD_RESOURCE_ICON_ASSET_IDS[key];
     const pack = assetId ? assets.getImageForAsset(assetId) : undefined;
