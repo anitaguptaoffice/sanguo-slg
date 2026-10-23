@@ -29,6 +29,7 @@ import {
   DAILY_BATTLE_REPORT_BANNER_TEXT,
   shouldShowDailyBattleReportBanner,
 } from "@/net/dailyQuestBattleReportBanner";
+import { dailyQuestCrossLinkTags } from "@/net/mailBattleCrossLink";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -50,6 +51,7 @@ export class DailyQuestPanels {
     private readonly onNavigate?: (action: DailyQuestNavAction) => void,
     private readonly getBattleReportUnread?: () => number,
     private readonly onOpenBattleReports?: () => void,
+    private readonly onOpenMailPanel?: () => void,
     private readonly getQueueBuildings?: () => CityBuilding[] | undefined,
     private readonly queueSlotLabels?: Record<string, string>,
   ) {}
@@ -163,7 +165,19 @@ export class DailyQuestPanels {
           const queueHint = formatBuildQueueCountdownForQuest(q, buildings, slotLabels, now);
           if (queueHint) line = `${line} · ${queueHint}`;
         }
-        li.textContent = line;
+        const main = document.createElement("span");
+        main.className = "daily-quest-row-main";
+        main.textContent = line;
+        li.appendChild(main);
+        for (const tag of dailyQuestCrossLinkTags(q)) {
+          const tagBtn = document.createElement("button");
+          tagBtn.type = "button";
+          tagBtn.className = "daily-cross-link-tag";
+          tagBtn.setAttribute("data-action", tag.action);
+          tagBtn.textContent = tag.label;
+          tagBtn.title = tag.action === "daily-cross-battle-report" ? "打开战报面板" : "打开邮件面板";
+          li.appendChild(tagBtn);
+        }
         if (id) {
           li.setAttribute("data-quest-cfg-id", String(id));
           if (id === this.selectedCfgId) li.classList.add("selected");
@@ -309,6 +323,28 @@ export class DailyQuestPanels {
   }
 
   private onClick(ev: Event): void {
+    const crossBtn = (ev.target as HTMLElement).closest(
+      "button[data-action='daily-cross-battle-report'], button[data-action='daily-cross-mail']",
+    );
+    if (crossBtn) {
+      const a = crossBtn.getAttribute("data-action");
+      if (a === "daily-cross-battle-report") {
+        if (!this.onOpenBattleReports) {
+          this.onStatus("战报面板未配置");
+          return;
+        }
+        this.onOpenBattleReports();
+        return;
+      }
+      if (a === "daily-cross-mail") {
+        if (!this.onOpenMailPanel) {
+          this.onStatus("邮件面板未配置");
+          return;
+        }
+        this.onOpenMailPanel();
+        return;
+      }
+    }
     const li = (ev.target as HTMLElement).closest("li[data-quest-cfg-id]");
     if (li) {
       this.selectedCfgId = Number(li.getAttribute("data-quest-cfg-id")) || 0;
