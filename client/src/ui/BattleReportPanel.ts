@@ -239,10 +239,10 @@ export class BattleReportPanel {
       <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
       <div class="battle-report-filters" role="group" aria-label="战报结果筛选">
         <span>筛选：</span>
-        <button type="button" data-action="filter-outcome" data-filter="all" class="active">全部</button>
-        <button type="button" data-action="filter-outcome" data-filter="win">胜</button>
-        <button type="button" data-action="filter-outcome" data-filter="loss">负</button>
-        <button type="button" data-action="filter-outcome" data-filter="draw">平</button>
+        <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="all" class="active" aria-pressed="true">全部</button>
+        <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="win" aria-pressed="false">胜</button>
+        <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="loss" aria-pressed="false">负</button>
+        <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="draw" aria-pressed="false">平</button>
         <label class="battle-report-time-window">
           时间：
           <select data-action="filter-time-window" aria-label="战报时间范围">
@@ -300,11 +300,17 @@ export class BattleReportPanel {
   }
 
   private updateFilterButtons(): void {
-    for (const btn of Array.from(
+    const chips = Array.from(
       this.panel.querySelectorAll<HTMLButtonElement>('[data-action="filter-outcome"]'),
-    )) {
+    );
+    for (const btn of chips) {
       const f = btn.getAttribute("data-filter") as BattleReportOutcomeFilter;
-      btn.classList.toggle("active", f === this.outcomeFilter);
+      const selected = f === this.outcomeFilter;
+      btn.classList.toggle("active", selected);
+      btn.classList.toggle("selected", selected);
+      btn.setAttribute("aria-pressed", selected ? "true" : "false");
+      if (selected) btn.setAttribute("aria-current", "true");
+      else btn.removeAttribute("aria-current");
     }
     const timeSelect = this.panel.querySelector<HTMLSelectElement>(
       '[data-action="filter-time-window"]',
