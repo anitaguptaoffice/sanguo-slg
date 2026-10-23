@@ -123,6 +123,36 @@ export class MarchListPanel {
     return this.manualDestFilter;
   }
 
+  /** 打开军情面板并按目的格筛选（复用 CLIENT-069 客户端快照过滤）。 */
+  openIntelViewForGrid(
+    destX: number,
+    destY: number,
+    opts?: { preferWorldSelection?: boolean },
+  ): void {
+    if (!Number.isFinite(destX) || !Number.isFinite(destY)) return;
+    const worldGrid = this.getWorldSelectedGrid?.() ?? null;
+    const useWorld =
+      opts?.preferWorldSelection !== false &&
+      worldGrid != null &&
+      worldGrid.x === destX &&
+      worldGrid.y === destY;
+    if (useWorld) {
+      this.destFilterMode = "world";
+      this.manualDestFilter = null;
+    } else {
+      this.destFilterMode = "manual";
+      this.manualDestFilter = { x: destX, y: destY };
+    }
+    this.renderFilterControls();
+    if (!this.isOpen()) {
+      this.panel.classList.remove("hidden");
+      void this.refreshList();
+      this.startPoll();
+    } else {
+      this.renderList();
+    }
+  }
+
   /** 小地图点击目的点时选中列表首条匹配行军（只读）。 */
   selectMarchByDest(destX: number, destY: number): boolean {
     const match = findFirstMarchByDest(this.marches, destX, destY);
