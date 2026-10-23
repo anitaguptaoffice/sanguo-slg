@@ -96,13 +96,22 @@ describe("QueuePanels", () => {
       () => {},
       () => {},
       () => {},
-      () => [{ quest_cfg_id: 1032, quest_code: "daily_build_1", state: 2 }],
+      () => [
+        {
+          quest_cfg_id: 1032,
+          quest_code: "daily_build_1",
+          state: 2,
+          progress_current: 0,
+          progress_target: 1,
+        },
+      ],
       onOpenDaily,
     );
     panel.attach();
     panel.toggle();
     const dailyBtn = mount.querySelector('[data-action="daily-build-next"]') as HTMLButtonElement;
     expect(dailyBtn?.textContent).toBe(QUEUE_DAILY_NEXT_BUTTON_LABEL);
+    expect(mount.querySelector(".queue-daily-progress")?.textContent).toMatch(/日课/);
     dailyBtn.click();
     expect(onOpenDaily).toHaveBeenCalledWith(1032);
   });

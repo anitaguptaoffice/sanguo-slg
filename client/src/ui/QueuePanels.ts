@@ -3,7 +3,10 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagStackQuantity } from "@/net/bagState";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
-import { findBuildDailyQuestForBuilding } from "@/net/dailyQuestQueueMatch";
+import {
+  findBuildDailyQuestForBuilding,
+  formatLinkedDailyQuestProgressSummary,
+} from "@/net/dailyQuestQueueMatch";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import {
@@ -116,6 +119,12 @@ export class QueuePanels {
     if (this.isOpen()) this.render();
   }
 
+  /** 日常面板只读募兵队列快照（与 render 同源，不新 RPC）。 */
+  getRecruitQueueSnapshot(): RecruitQueueEntry[] {
+    const now = Date.now();
+    return pruneFinishedRecruits(this.recruits, now).filter((e) => isRecruitQueueActive(e, now));
+  }
+
   tick(dt: number): void {
     if (!this.isOpen()) {
       this.tickAccum = 0;
@@ -214,6 +223,15 @@ export class QueuePanels {
       span.textContent = text;
       li.appendChild(span);
       const linkedQuest = findBuildDailyQuestForBuilding(b, dailyRows, now);
+      if (linkedQuest) {
+        const progressSummary = formatLinkedDailyQuestProgressSummary(linkedQuest);
+        if (progressSummary) {
+          const prog = document.createElement("span");
+          prog.className = "queue-daily-progress";
+          prog.textContent = progressSummary;
+          li.appendChild(prog);
+        }
+      }
       if (linkedQuest && this.onOpenDailyBuildQuest) {
         const cfgId = linkedQuest.quest_cfg_id ?? 0;
         const dailyBtn = document.createElement("button");

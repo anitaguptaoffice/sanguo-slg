@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   battleReportListLines,
   battleReportMatchesOutcomeFilter,
+  battleReportMatchesTimeWindowFilter,
+  countBattleReportsByOutcome,
   filterBattleReportsByOutcome,
+  filterBattleReportsByTimeWindow,
   formatBattleReportDetail,
   formatCasualtyMap,
   formatMarchHint,
@@ -112,6 +115,33 @@ describe("militaryFormat", () => {
     expect(filterBattleReportsByOutcome(reports, "draw").map((r) => r.report_id)).toEqual([3]);
     expect(battleReportMatchesOutcomeFilter({ outcome: 2 }, "loss")).toBe(true);
     expect(battleReportMatchesOutcomeFilter({ outcome: 2 }, "win")).toBe(false);
+  });
+
+  it("filters battle reports by local time window", () => {
+    const now = Date.UTC(2024, 5, 10, 15, 0, 0);
+    const todayMorning = Date.UTC(2024, 5, 10, 8, 0, 0);
+    const yesterday = Date.UTC(2024, 5, 9, 12, 0, 0);
+    const eightDaysAgo = Date.UTC(2024, 5, 2, 12, 0, 0);
+    const reports = [
+      { report_id: 1, created_at_ms: todayMorning, outcome: 1 },
+      { report_id: 2, created_at_ms: yesterday, outcome: 2 },
+      { report_id: 3, created_at_ms: eightDaysAgo, outcome: 3 },
+      { report_id: 4, created_at_ms: 0, outcome: 1 },
+    ];
+    expect(filterBattleReportsByTimeWindow(reports, "all", now).map((r) => r.report_id)).toEqual([
+      1, 2, 3, 4,
+    ]);
+    expect(filterBattleReportsByTimeWindow(reports, "today", now).map((r) => r.report_id)).toEqual([
+      1,
+    ]);
+    expect(filterBattleReportsByTimeWindow(reports, "last7d", now).map((r) => r.report_id)).toEqual(
+      [1, 2],
+    );
+    expect(battleReportMatchesTimeWindowFilter({ created_at_ms: yesterday }, "today", now)).toBe(
+      false,
+    );
+    const byTime = filterBattleReportsByTimeWindow(reports, "last7d", now);
+    expect(countBattleReportsByOutcome(byTime)).toEqual({ win: 1, loss: 1, draw: 0 });
   });
 
   it("formats battle report detail summary", () => {

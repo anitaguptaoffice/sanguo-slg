@@ -55,6 +55,7 @@ import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
+import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
@@ -297,6 +298,7 @@ export class MainCityScene implements Scene {
       () => this.openMailPanelFromDailyCrossLink(),
       () => this.session?.buildings,
       SLOT_LABEL,
+      () => this.queuePanels?.getRecruitQueueSnapshot() ?? [],
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
@@ -1183,7 +1185,7 @@ export class MainCityScene implements Scene {
       this.marchList.notifyMarchStarted();
       void this.refreshMinimapMarches();
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
+      const msg = formatPanelGatewayErrorFromUnknown("march", e);
       setMarchFormErrorDisplay(this.militaryPanel, msg);
       this.status = msg;
     }

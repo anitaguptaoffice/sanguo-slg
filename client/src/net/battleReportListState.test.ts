@@ -1,11 +1,15 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY,
+  BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY,
   battleReportAllLoadedLabel,
   hasMoreBattleReports,
   parseBattleReportOutcomeFilterSessionValue,
+  parseBattleReportTimeWindowFilterSessionValue,
   readBattleReportOutcomeFilterSession,
+  readBattleReportTimeWindowFilterSession,
   writeBattleReportOutcomeFilterSession,
+  writeBattleReportTimeWindowFilterSession,
 } from "@/net/battleReportListState";
 
 function mockStorage(): Storage {
@@ -57,5 +61,20 @@ describe("battleReportListState", () => {
     expect(parseBattleReportOutcomeFilterSessionValue("")).toBeNull();
     expect(parseBattleReportOutcomeFilterSessionValue("victory")).toBeNull();
     expect(parseBattleReportOutcomeFilterSessionValue("draw")).toBe("draw");
+  });
+
+  it("persists time window filter in separate sessionStorage key", () => {
+    writeBattleReportTimeWindowFilterSession("today", storage);
+    expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("today");
+    expect(readBattleReportTimeWindowFilterSession(storage)).toBe("today");
+    writeBattleReportOutcomeFilterSession("win", storage);
+    expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBe("win");
+    expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("today");
+  });
+
+  it("parseBattleReportTimeWindowFilterSessionValue rejects unknown values", () => {
+    expect(parseBattleReportTimeWindowFilterSessionValue(null)).toBeNull();
+    expect(parseBattleReportTimeWindowFilterSessionValue("week")).toBeNull();
+    expect(parseBattleReportTimeWindowFilterSessionValue("last7d")).toBe("last7d");
   });
 });
