@@ -46,7 +46,7 @@
 - [ ] 活动与运营后台（GM-001）— `cmd/gm` 已有；完整活动 cfg 仍不纳入核心子集
 - [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
-出口：`INTG-005` + **CLIENT-006** 已合；wave:9 扩量后 **INTG-006** + **CLIENT-007**（横屏基线）+ **HERO-002** / **MAIL-001** 加深养成与邮件。里程碑收口文档：**DOCS-EXIT-001**。
+出口：`INTG-005`（#125）+ **CLIENT-006**（#121）已合；wave:9 扩量后 **INTG-006** + **CLIENT-007**（横屏基线）+ **HERO-002** / **MAIL-001** 加深养成与邮件。里程碑收口文档：**DOCS-EXIT-001**（#131，进行中）。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -80,16 +80,18 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 
 **触发**：INTG-005 + CLIENT-006 已合，编排者授权开 **DATA-002**（见 `spec/data/CORE_SUBSET.md` 扩量条款）。参照物 PR #77 / #82 / #100 / #108 **只读**，禁止合并或复制进主树。
 
-| 可并行 | 任务 | 说明 |
-|---|---|---|
-| ‖ | DATA-002 | 核心 cfg 上限约 +50%，文案重写，更新 source + generated |
-| ‖ | CLIENT-007 | 横屏 1600×900 外框 / 舞台 788 / HUD 落地（仅 `client/**`） |
-| ‖ | MAIL-001 | `player_mail` 最小收件箱 + GM 发邮件（DDL 已有） |
-| ‖ | DOCS-EXIT-001 | M3/M4 里程碑出口文档收口（`docs/ROADMAP.md` 等） |
-| DATA-002 后 ‖ | HERO-002 | 将领招募/列表/详情加深，对接 hero 域 + DATA-002 模板 |
-| DATA-002 后 ‖ | INTG-006 | 扩量子集下复跑 INTG-005 路径，更新 `tools/smoke` |
+**进度**（与 GitHub `wave:9` 标签同步；INTG-006 合入后编排者可能再补一轮 M3/M4 勾选）：
 
-依赖：HERO-002、INTG-006 在 DATA-002 合并后由编排者 `tasks_sync` 或手工改为 `status:ready`（YAML `blocked_until: [DATA-002]`）。
+| Issue | 任务 | 状态 | 说明 |
+|---|---|---|---|
+| [#128](https://github.com/anitaguptaoffice/sanguo-slg/issues/128) | DATA-002 | 进行中 | 核心 cfg 上限约 +50%，文案重写，更新 source + generated |
+| [#129](https://github.com/anitaguptaoffice/sanguo-slg/issues/129) | CLIENT-007 | 进行中 | 横屏 1600×900 外框 / 舞台 788 / HUD（仅 `client/**`） |
+| [#130](https://github.com/anitaguptaoffice/sanguo-slg/issues/130) | MAIL-001 | 进行中 | `player_mail` 最小收件箱 + GM 发邮件（DDL 已有） |
+| [#131](https://github.com/anitaguptaoffice/sanguo-slg/issues/131) | DOCS-EXIT-001 | 进行中 | 本卡：M3/M4 出口与 wave:9 进度文档收口 |
+| [#132](https://github.com/anitaguptaoffice/sanguo-slg/issues/132) | HERO-002 | 待 DATA-002（`status:blocked`） | 将领招募/列表/详情加深，对接 hero 域 + DATA-002 模板 |
+| [#133](https://github.com/anitaguptaoffice/sanguo-slg/issues/133) | INTG-006 | 待 DATA-002（`status:blocked`） | 扩量子集下复跑 INTG-005 路径，更新 `tools/smoke` |
+
+并行关系：DATA-002、CLIENT-007、MAIL-001、DOCS-EXIT-001 可并行（‖）。HERO-002、INTG-006 在 DATA-002 合并后由编排者 `tasks_sync` 或手工改为 `status:ready`（YAML `blocked_until: [DATA-002]`）。
 
 ## 不做
 

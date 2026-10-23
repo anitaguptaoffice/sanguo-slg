@@ -55,5 +55,18 @@ status:review   ──合并────▶  status:done
 | 5 | M3 多人 | CONTRACT-002, SPEC-005, PLAT-004, CHAT-001, RANK-001, GUILD-001/002, INTG-003, CLIENT-004 |
 | 6 | M4 内容 | CONTRACT-003, SPEC-006, QUEST-001, CONTENT-002, SHOP-001, GM-001, INTG-004, CLIENT-005 |
 | 7 | 对齐：核心 cfg 子集 | SPEC-ALIGN-001, DATA-001, PERSIST-001~003, ECON-001, GM-002, RULES-ALIGN-001；复跑 INTG-004 / CLIENT-005 |
-| 8 | M3/M4 出口加固 | INTG-005, CLIENT-006, RANK-002, LOAD-001, OPS-OPEN-001, TELEMETRY-001 |
-| 9 | 核心 cfg 第二批 + 养成/邮件/横屏 | DATA-002, HERO-002, CLIENT-007, MAIL-001, INTG-006, DOCS-EXIT-001 |
+| 8 | M3/M4 出口加固（**已完成**，见 ROADMAP Wave 8） | INTG-005 (#125), CLIENT-006 (#121), RANK-002 (#122), LOAD-001 (#123), OPS-OPEN-001 (#120), TELEMETRY-001 (#124) |
+| 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**进行中**） | 见下表 |
+
+### Wave 9 进度（Issue 标签为准）
+
+| Issue | ID | 典型状态（2026-10-23） |
+|---|---|---|
+| [#128](https://github.com/anitaguptaoffice/sanguo-slg/issues/128) | DATA-002 | `status:in-progress` |
+| [#129](https://github.com/anitaguptaoffice/sanguo-slg/issues/129) | CLIENT-007 | `status:in-progress` |
+| [#130](https://github.com/anitaguptaoffice/sanguo-slg/issues/130) | MAIL-001 | `status:in-progress` |
+| [#131](https://github.com/anitaguptaoffice/sanguo-slg/issues/131) | DOCS-EXIT-001 | `status:in-progress` |
+| [#132](https://github.com/anitaguptaoffice/sanguo-slg/issues/132) | HERO-002 | `status:blocked`（`blocked_until: DATA-002`） |
+| [#133](https://github.com/anitaguptaoffice/sanguo-slg/issues/133) | INTG-006 | `status:blocked`（`blocked_until: DATA-002`） |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 9」一节；`backlog.yml` 为任务真源，本表仅便于对照 Issue。
