@@ -4,6 +4,7 @@ import type { GatewayPort } from "@/net/GatewayClient";
 export type CityStateSnapshot = {
   wallet?: ResourceWallet;
   buildings?: CityBuilding[];
+  production_rates?: ResourceWallet;
 };
 
 /** GetCityState 单飞：同一 city 在 in-flight 期间复用同一 Promise。 */

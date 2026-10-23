@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AssetLoader } from "@/engine/AssetLoader";
-import { appendHudResourceStrip, CLIENT_032_WIRED_ASSET_IDS } from "@/engine/artResourceHud";
+import {
+  appendHudProductionRatesLine,
+  appendHudResourceStrip,
+  CLIENT_032_WIRED_ASSET_IDS,
+} from "@/engine/artResourceHud";
 
 describe("appendHudResourceStrip", () => {
   it("lists CLIENT-032 wired manifest asset ids", () => {
@@ -27,6 +31,17 @@ describe("appendHudResourceStrip", () => {
     expect(strip?.querySelectorAll("img.hud-resource-icon").length).toBe(4);
     expect(strip?.textContent).toContain("9");
     expect(strip?.textContent).toMatch(/币/);
+  });
+
+  it("appends production rates secondary line and strip tooltip", () => {
+    const hud = document.createElement("div");
+    const assets = { getImageForAsset: vi.fn(() => undefined) } as unknown as AssetLoader;
+    appendHudResourceStrip(hud, { food: 1 }, assets);
+    appendHudProductionRatesLine(hud, { food: 120, wood: 100, iron: 40, stone: 80 });
+    const line = hud.querySelector('[data-role="hud-production-rates"]');
+    expect(line?.textContent).toContain("粮+120/h");
+    const strip = hud.querySelector('[data-role="hud-resources"]');
+    expect(strip?.getAttribute("title")).toContain("粮+120/h");
   });
 
   it("falls back to label text when icons missing", () => {

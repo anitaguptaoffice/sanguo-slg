@@ -34,6 +34,9 @@ export const WALLET_RESOURCE_KEYS: { key: keyof ResourceWallet; label: string }[
 
 const RESOURCE_KEYS = WALLET_RESOURCE_KEYS;
 
+/** HUD 产出速率行：粮/木/铁/石（不含币），只读 +/h 摘要。 */
+const PRODUCTION_RATE_KEYS = WALLET_RESOURCE_KEYS.filter(({ key }) => key !== "gold");
+
 /** 比较前后钱包，返回各资源增量（仅大于 0 的字段）。 */
 export function walletResourceIncreases(
   before: ResourceWallet | undefined,
@@ -62,6 +65,16 @@ export function formatWalletGainBrief(
 export function formatResourceHudGroup(wallet: ResourceWallet | undefined): string {
   const w = wallet ?? {};
   return RESOURCE_KEYS.map(({ key, label }) => `${label} ${formatResourceAmount(w[key])}`).join(" · ");
+}
+
+/** GetCityState.production_rates 只读摘要，如「粮+120/h · 木+100/h」；字段全缺时 null。 */
+export function formatResourceProductionRatesBrief(rates: ResourceWallet | undefined): string | null {
+  if (!rates) return null;
+  const hasAny = PRODUCTION_RATE_KEYS.some(({ key }) => rates[key] !== undefined && rates[key] !== null);
+  if (!hasAny) return null;
+  return PRODUCTION_RATE_KEYS
+    .map(({ key, label }) => `${label}+${formatResourceAmount(rates[key] ?? 0)}/h`)
+    .join(" · ");
 }
 
 export function formatUpgradeRemaining(finishAtMs: number | undefined, nowMs = Date.now()): string | null {
