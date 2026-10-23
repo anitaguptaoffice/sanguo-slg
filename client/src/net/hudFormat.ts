@@ -24,13 +24,40 @@ export function formatResourceAmount(value: number | undefined): string {
   return sign + Math.round(abs).toLocaleString("zh-CN");
 }
 
-const RESOURCE_KEYS: { key: keyof ResourceWallet; label: string }[] = [
+export const WALLET_RESOURCE_KEYS: { key: keyof ResourceWallet; label: string }[] = [
   { key: "food", label: "粮" },
   { key: "wood", label: "木" },
   { key: "iron", label: "铁" },
   { key: "stone", label: "石" },
   { key: "gold", label: "币" },
 ];
+
+const RESOURCE_KEYS = WALLET_RESOURCE_KEYS;
+
+/** 比较前后钱包，返回各资源增量（仅大于 0 的字段）。 */
+export function walletResourceIncreases(
+  before: ResourceWallet | undefined,
+  after: ResourceWallet | undefined,
+): Partial<ResourceWallet> {
+  const out: Partial<ResourceWallet> = {};
+  for (const { key } of WALLET_RESOURCE_KEYS) {
+    const delta = (after?.[key] ?? 0) - (before?.[key] ?? 0);
+    if (delta > 0) out[key] = delta;
+  }
+  return out;
+}
+
+/** HUD 短时资源增加摘要，如「+粮100 +木50」；无增加时返回 null。 */
+export function formatWalletGainBrief(
+  before: ResourceWallet | undefined,
+  after: ResourceWallet | undefined,
+): string | null {
+  const inc = walletResourceIncreases(before, after);
+  const parts = WALLET_RESOURCE_KEYS
+    .filter(({ key }) => (inc[key] ?? 0) > 0)
+    .map(({ key, label }) => `+${label}${formatResourceAmount(inc[key])}`);
+  return parts.length ? parts.join(" ") : null;
+}
 
 export function formatResourceHudGroup(wallet: ResourceWallet | undefined): string {
   const w = wallet ?? {};

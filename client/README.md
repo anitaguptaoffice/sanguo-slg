@@ -16,6 +16,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **招募模板预览**（将领面板 + 背包/商城可读性） | [手动验收（M4：将领 / 邮件，CLIENT-008）](#手动验收m4将领--邮件client-008) 步骤 2；背包/商城行文案见 **CLIENT-010**（#171） |
 | **战报入口**（底栏独立面板） | [手动验收（募兵 → 行军 → 战报）](#手动验收募兵--行军--战报) 步骤 4（**CLIENT-012**，#170） |
 | **HUD 资源条与建筑等级** | **CLIENT-011**（[#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) / [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172)）：顶栏粮/木/铁/石/币与画布槽位等级见 [横屏布局 CLIENT-007](#手动验收横屏布局-client-007) 与上文 `hudFormat` 说明 |
+| **HUD 资源增加摘要** | **CLIENT-018**：任务/邮件领奖、商城购买、招募后若钱包增加，顶栏短时显示 `+粮/+木…`（`formatWalletGainBrief`）；`GetCityState` 经 `CityStateFetch` 单飞轮询，面板关闭时 30s、打开时 5s |
 
 ## 网关地址
 
@@ -178,7 +179,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

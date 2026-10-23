@@ -1,4 +1,5 @@
 import type { MainCitySession } from "@/net/bootstrapSession";
+import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
   applyMailClaimResult,
@@ -44,6 +45,7 @@ export class HeroMailPanels {
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
     private onUnreadCount?: (count: number) => void,
+    private readonly cityStateFetch?: CityStateFetch,
   ) {}
 
   attach(): void {
@@ -353,6 +355,10 @@ export class HeroMailPanels {
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
         await this.loadHeroDetail(res.hero_id);
+      }
+      if (this.cityStateFetch) {
+        const state = await this.cityStateFetch.fetch();
+        if (state?.wallet) this.onSessionPatch({ wallet: state.wallet });
       }
       this.onStatus(
         `招募成功 #${res.hero_id ?? "?"} ${res.template_cfg_id ?? tpl} Lv${res.level ?? 1} 忠诚${res.loyalty ?? 0}`,
