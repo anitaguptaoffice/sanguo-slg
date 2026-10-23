@@ -2,6 +2,7 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
 import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
+import { mountToolbarIcons } from "@/engine/artToolbarIconSkin";
 import {
   skinBagPanel,
   skinBattleReportPanel,
@@ -278,20 +279,20 @@ export class MainCityScene implements Scene {
       <div class="toolbar-scroll-inner">
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
-      <button type="button" data-action="toggle-military">军事</button>
+      <button type="button" data-action="toggle-military" title="军事"><span class="toolbar-btn-label">军事</span></button>
       <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn"><span class="toolbar-btn-label">战报</span></button>
       <button type="button" data-action="toggle-marches">行军</button>
       <button type="button" data-action="toggle-chat" data-role="chat-toolbar-btn"><span class="toolbar-btn-label">聊天</span></button>
       <button type="button" data-action="toggle-guild" data-role="guild-toolbar-btn"><span class="toolbar-btn-label">军团</span></button>
       <button type="button" data-action="toggle-rank">排行</button>
       <button type="button" data-action="toggle-quest">任务</button>
-      <button type="button" data-action="toggle-daily" data-role="daily-toolbar-btn"><span class="toolbar-btn-label">日常</span></button>
-      <button type="button" data-action="toggle-bag">背包</button>
-      <button type="button" data-action="toggle-shop">商城</button>
-      <button type="button" data-action="toggle-hero">将领</button>
-      <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn"><span class="toolbar-btn-label">邮件</span></button>
-      <button type="button" data-action="toggle-world">世界</button>
-      <button type="button" data-action="toggle-queue" data-role="queue-toolbar-btn"><span class="toolbar-btn-label">队列</span></button>
+      <button type="button" data-action="toggle-daily" data-role="daily-toolbar-btn" title="日常"><span class="toolbar-btn-label">日常</span></button>
+      <button type="button" data-action="toggle-bag" title="背包"><span class="toolbar-btn-label">背包</span></button>
+      <button type="button" data-action="toggle-shop" title="商城"><span class="toolbar-btn-label">商城</span></button>
+      <button type="button" data-action="toggle-hero" title="将领"><span class="toolbar-btn-label">将领</span></button>
+      <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn" title="邮件"><span class="toolbar-btn-label">邮件</span></button>
+      <button type="button" data-action="toggle-world" title="世界"><span class="toolbar-btn-label">世界</span></button>
+      <button type="button" data-action="toggle-queue" data-role="queue-toolbar-btn" title="队列"><span class="toolbar-btn-label">队列</span></button>
       </div>
       </div>
     `;
@@ -626,6 +627,7 @@ export class MainCityScene implements Scene {
     this.buildingPanel.attach();
     skinToolbarBar(this.toolbar, this.assets);
     skinToolbarButtons(this.toolbar, this.assets);
+    mountToolbarIcons(this.toolbar, this.assets);
     skinPrimaryButtons(this.militaryPanel, this.assets);
     skinDefaultPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
     skinPrimaryButtons(this.buildingPanel.getRoot(), this.assets);

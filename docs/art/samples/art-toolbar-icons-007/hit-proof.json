@@ -1,0 +1,658 @@
+{
+  "art_asset_source_sha": "9f06e380f7eb42492951c98b4cbb602c6ab390d1",
+  "captured_at": "2026-10-23T22:38:39.628Z",
+  "label_mapping": {
+    "military": "军事",
+    "mail": "邮件",
+    "queue": "队列",
+    "bag": "背包",
+    "daily": "日常",
+    "world": "世界",
+    "hero": "将领",
+    "shop": "商城"
+  },
+  "asset_ids": [
+    "ui.icon.toolbar.military.v1",
+    "ui.icon.toolbar.mail.v1",
+    "ui.icon.toolbar.queue.v1",
+    "ui.icon.toolbar.bag.v1",
+    "ui.icon.toolbar.daily.v1",
+    "ui.icon.toolbar.world.v1",
+    "ui.icon.toolbar.hero.v1",
+    "ui.icon.toolbar.shop.v1"
+  ],
+  "viewports": {
+    "maincity-1600x900-full.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 651828
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0,
+          "maxScrollLeft": 53
+        },
+        "iconButtons": [
+          {
+            "action": "toggle-military",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军事",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_military.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 210,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-mail",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "邮件",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_mail.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1332,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-queue",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "队列",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_queue.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1536,
+              "top": 850,
+              "width": 64,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-bag",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "背包",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_bag.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1026,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-daily",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "日常",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_daily.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 924,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-world",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "世界",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_world.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1434,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-hero",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "将领",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_hero.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1230,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-shop",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "商城",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_shop.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1128,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          }
+        ]
+      }
+    },
+    "maincity-3200x1800-full.jpg": {
+      "jpeg": {
+        "quality": 58,
+        "bytes": 996958
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0,
+          "maxScrollLeft": 53
+        },
+        "iconButtons": [
+          {
+            "action": "toggle-military",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军事",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_military.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 210,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-mail",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "邮件",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_mail.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1332,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-queue",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "队列",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_queue.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1536,
+              "top": 850,
+              "width": 64,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-bag",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "背包",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_bag.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1026,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-daily",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "日常",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_daily.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 924,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-world",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "世界",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_world.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1434,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-hero",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "将领",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_hero.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1230,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-shop",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "商城",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/2x/ui/icon_toolbar_shop.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1128,
+              "top": 850,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          }
+        ]
+      }
+    },
+    "maincity-1280x720-toolbar-scrolled.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 395031
+      },
+      "mount": {
+        "uiScale": 0.8,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1265,
+          "scrollLeft": 358,
+          "maxScrollLeft": 373
+        },
+        "iconButtons": [
+          {
+            "action": "toggle-military",
+            "onScreen": false,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军事",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_military.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 0,
+              "top": 675.59375,
+              "width": 0,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": false
+          },
+          {
+            "action": "toggle-mail",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "邮件",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_mail.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 974,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-queue",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "队列",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_queue.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1178,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-bag",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "背包",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_bag.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 668,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-daily",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "日常",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_daily.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 566,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-world",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "世界",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_world.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 1076,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-hero",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "将领",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_hero.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 872,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          },
+          {
+            "action": "toggle-shop",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "商城",
+            "iconSrc": "http://127.0.0.1:16207/assets/art/v1/textures/1x/ui/icon_toolbar_shop.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "visibleIntersection": {
+              "left": 770,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "iconOverlapsLabel": false,
+            "elementFromPointHitsButton": true
+          }
+        ]
+      }
+    }
+  },
+  "notes": [
+    "Icons mounted inside ui.button.toolbar.v1 chrome; .toolbar-btn-hit remains expanded hit slop.",
+    "1280 shot taken after scrollLeft=max so queue/world/hero/shop icons are visible.",
+    "Did not merge art Draft PR #481 or board PR #108."
+  ]
+}
