@@ -11,6 +11,7 @@
 # wave:16「H5 战报邮件闭环与军事反馈加深」：战报详情回合可读、邮件领取反馈、军事 manifest 接线、小地图扫读、HUD 深链；INTG-013 冒烟；仍 DATA-002，无 CancelMarch（军事对比度 hotfix 见 CLIENT-033，不纳入本波卡）。
 # wave:17「H5 世界出征互链与复盘导航」：小地图选点出征、战报坐标复盘高亮、军事目标记忆、日常战备与战报联动、社交排行手动刷新；INTG-014 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-040 全页证据为 wave:16 美术轨，不纳入本波）。
 # wave:18「H5 出征反馈与面板可读加深」：军情 ETA/密度、出征表单校验、战报分页筛选、邮件领取同步、HUD 资源脉冲、队列↔日常互链、社交空错态；INTG-015 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-046 中心四面板证据为独立美术轨 Issue #277，非本波实现卡，实现卡从 CLIENT-047 起）。
+# wave:19「H5 可玩加深」：将领/背包/商城对比与购买校验、小地图/世界地图行军标注、队列与资源产出可读、邮件战报日常互链、1280 manifest 巩固；INTG-016 冒烟；仍 DATA-002，无 CancelMarch（CLIENT-054 已合、CLIENT-055 #303 为 wave:18 美术 FAIL 余项 hotfix，均非本波实现卡，实现卡从 CLIENT-056 起）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -2501,5 +2502,189 @@
     - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out；注明 **CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277)）为美术证据轨、非 wave:18 backlog 实现卡
   body: |
     文档 only。INTG-015 合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR。
+
+- id: CLIENT-056
+  title: 将领详情与招募模板钱包可负担对比
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-014, CLIENT-010, CLIENT-051]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "新增纯函数 compareRecruitAffordability(wallet, templateCost)（及单测）：对粮/木/铁/石/币与道具 qty 逐项标 ✓/不足，不发起 RecruitHero"
+    - ListRecruitTemplates 列表行与 GetHeroDetail 详情区共用同一对比摘要（主行模板名+稀有度，次行消耗 vs 当前 HUD 钱包快照）
+    - 不足时招募按钮禁用并 march-form-error 同级区域展示中文原因；gateway RecruitHero 失败仍展示 err.message
+    - npm test 绿；client/README.md 增补招募对比步骤（DOCS-EXIT-011 前可写简要 bullet）
+  body: |
+    wave:18 已加深出征校验与资源脉冲；本卡补 **将领养成可读闭环**，只读 GetCityState/背包会话，无新 hero RPC。
+
+    仅 client/**。与 CLIENT-057/058/059/060/061/062 并行（‖）。禁止 DATA-003 / cfg_act* / 新商城 SKU。
+
+- id: CLIENT-057
+  title: 商城购买与背包使用客户端校验内联反馈
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-010, CLIENT-048, CLIENT-051]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - PurchaseShopOffer 前校验：金币不足、sold_out、purchase_count 超限在商城面板 shop-form-error 区展示中文原因，不发起 RPC（单测覆盖校验纯函数）
+    - UseConsumable 前校验：数量为 0、item_cfg_id 不在背包快照时内联提示；成功/失败清除或保留错误区与 CLIENT-048 军事面板口径一致
+    - 购买成功触发 CLIENT-051 resource-pulse（已有逻辑不退化）；不引导不可逆 SKU 扩量
+    - npm test 绿
+  body: |
+    CLIENT-010 已有 offer 行与背包列表；本卡对齐 **出征校验 UX** 到经济面板，契约冻结。
+
+    仅 client/**。与 CLIENT-056/058～062 并行（‖）。不做花钱类新道具 cfg。
+
+- id: CLIENT-058
+  title: 小地图行军目的点 ETA 角标与图例
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-047, CLIENT-037, CLIENT-041]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 小地图每个行军目的点旁展示 `formatMarchRemainingMs` 缩写（行军中）或阶段简写（待发/已到达）；与 CLIENT-047 军情列表数值一致（同一 nowMs 源）
+    - 展开小地图时图例区说明「点=目的格 · 数字=剩余时间」；折叠时选中行军仍可在状态栏复述 ETA
+    - 保留 CLIENT-037 点击目的点选中军情行、CLIENT-041 空白区填出征坐标；**不**新增 CancelMarch / 撤回交互
+    - 单测覆盖「是否展示 ETA 角标」与 clamp；npm test 绿
+  body: |
+    wave:17/18 已打通选点与军情 ETA 列表；本卡补 **地图扫读层**，仅 DOM/Canvas 标注，无新 military RPC。
+
+    仅 client/**。与 CLIENT-056/057/059～062 并行（‖）。
+
+- id: CLIENT-059
+  title: 建造募兵队列总览与资源产出速率摘要
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-019, CLIENT-011, CLIENT-026, CLIENT-052]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 队列面板顶栏：进行中建造+募兵条数、最近一条 `formatBuildQueueCountdown` 摘要（纯函数+单测）
+    - HUD 资源条次行（或 tooltip）展示 GetCityState 已有产出速率字段只读摘要（粮/木/铁/石 +/h），无新 domestic RPC
+    - 与 CLIENT-052 日常互链按钮并存；DOM-003 加速符逻辑不变；募兵 **加速**仍 out
+    - npm test 绿；client/README.md 可增补队列总览一句
+  body: |
+    wave:14/18 队列与日常已可读；本卡补 **一眼总览**，降低多队列时来回切换成本。
+
+    仅 client/**。与 CLIENT-056～058/060～062 并行（‖）。
+
+- id: CLIENT-060
+  title: 邮件战报日常三角深链与来源标签
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-034, CLIENT-017, CLIENT-044, CLIENT-049]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 邮件详情：标题/正文含战报 report_id 或「战报」关键字时展示「查看战报」按钮，打开战报面板并选中对应行（客户端解析，不扩 mail proto）
+    - 战报详情：若 summary 含邮件来源 hint（现有字段或固定文案模式）展示「相关邮件」跳转邮件面板（只读高亮，不自动领取）
+    - 日常 chain 400 行：daily_march_1 / daily_build_1 展示链至战报/邮件的只读标签（与 CLIENT-044 横幅并存）
+    - 单测覆盖 report_id/邮件互链解析纯函数；npm test 绿
+  body: |
+    wave:16～18 已加深战报/邮件/日常各自面板；本卡补 **跨面板导航边角**，契约冻结。
+
+    仅 client/**。与 CLIENT-056～059/061/062 并行（‖）。
+
+- id: CLIENT-061
+  title: 世界城池列表与军情行双向高亮
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-015, CLIENT-013, CLIENT-047]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - MarchListPanel 选中行军时，世界城池列表（CLIENT-015）高亮 to_x/to_y 匹配格（无主城则仅坐标行高亮）；取消选中清除高亮
+    - 世界列表选中城池时，军情列表筛选/高亮「目的点为该格」的行（客户端过滤 ListMarches 快照，不新 RPC）
+    - 状态栏展示格点距离摘要（曼哈顿距，复用已有 city_x/city_y）；与 CLIENT-043 目标记忆并存
+    - 单测覆盖格点匹配与距离纯函数；npm test 绿
+  body: |
+    wave:17 世界列表与军情已并存；本卡补 **列表↔列表** 联动，无 CancelMarch。
+
+    仅 client/**。与 CLIENT-056～060/062 并行（‖）。
+
+- id: CLIENT-062
+  title: 窄屏1280 将领背包队列 manifest 与滚动巩固
+  wave: 19
+  domain: client
+  depends_on: [CLIENT-032, CLIENT-039, CLIENT-007]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - layoutViewport 1280×720（或项目既定窄屏断点）下将领/背包/队列三面板：`ui.panel.hero.v1` / `ui.panel.bag.v1` / `ui.panel.queue.v1`（或 README 已登记等价 id）背景与 CLIENT-032 军事 manifest 同级接线；长列表 `overflow-y:auto` 不遮挡底栏
+    - 与 CLIENT-039 顶栏、CLIENT-054/CLIENT-055（[#303](https://github.com/anitaguptaoffice/sanguo-slg/issues/303)）纸底与四面板美术修 **并存**（不重复改 art 证据脚本）；1600 基线不退化
+    - 单测覆盖窄屏 class 切换纯函数（若已有 layoutViewport helper 则扩展）；npm test 绿
+    - client/README.md 增补 1280 三面板验收 bullet
+  body: |
+    CLIENT-054/055 为 wave:18 美术轨（054 已合、055 #303 余项 hotfix）；本卡收敛 **运行时 manifest + 布局**，不合并 #77/#82/#108 art hold。
+
+    仅 client/**。与 CLIENT-056～061 并行（‖）。禁止合并 art hold/VERIFY PR。
+
+- id: INTG-016
+  title: wave:19 网关路径冒烟（将领详情+邮件分页+城池队列字段）
+  wave: 19
+  domain: platform
+  depends_on: [INTG-015]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-015 全量断言（行军时刻、战报分页、INTG-014 坐标、INTG-013 邮件领取、INTG-012 已读、INTG-011 建造加速/日常 claim 等）
+    - "主路径：ListPlayerHeroes 非空后取首 hero_id → GetHeroDetail 成功（打印 template_cfg_id 与四维属性）"
+    - "主路径：ListPlayerMail page_size=5 page_offset=0 成功（打印 total_count 与条数）；page_offset=首页条数 第二次调用不报错"
+    - "主路径：GetCityState 打印 buildings 条数与首条 upgrade_finish_at_ms（或等价完成时间字段，0 表示空闲）"
+    - tools/smoke/README.md 更新 wave:19 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE19-RUN。为 wave:19 客户端将领对比/邮件互链/队列总览提供网关字段断言；不跑 H5。
+
+    **本波仍不做** CancelMarch / 行军与募兵加速 RPC。
+
+    CLIENT-056～062 非硬依赖。与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-011
+  title: wave:19 H5 可玩加深文档收口
+  wave: 19
+  domain: platform
+  depends_on: [INTG-016, CLIENT-056, CLIENT-058]
+  blocked_until: [INTG-016]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - "ROADMAP：Wave 19 标为已完成并链 Issue/PR；Wave 18 保持已完成（含 DOCS-EXIT-010 #302 b63ed954）"
+    - M4/H5 出口描述含「将领招募对比 + 商城/背包校验 + 小地图 ETA + 队列资源总览 + 邮件战报日常互链 + 世界军情高亮 + 1280 manifest」路径（指向 client/README）
+    - tasks/README.md wave:19 进度表与 Issue 一致
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速仍 out；注明 **CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）已合美术轨、**CLIENT-055**（[#303](https://github.com/anitaguptaoffice/sanguo-slg/issues/303)）wave:18 四面板 FAIL 余项 hotfix——均非 wave:19 backlog 实现卡
+  body: |
+    文档 only。INTG-016 合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR。
