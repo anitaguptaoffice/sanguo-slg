@@ -2,7 +2,7 @@
 
 皮肤：`ui.panel.default.v1` + `ui.button.primary.v1`（与军事 `ui.panel.military.v1` 无关）。**不**将 CLIENT-040 军事 PASS 扩展为本目录四面板。
 
-| 证据 tip SHA | `c6f422ade35eac19adb5d29cd6ee0870f96a3755` |
+| 证据 tip SHA | `305036dfbd5d287cc3b92f6c920d738e2348289b` |
 |---|---|
 
 | 路径 | 字节 | 视口 | 面板 | 状态 |
