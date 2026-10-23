@@ -42,6 +42,10 @@
         background: linear-gradient(90deg, #c9a227, #f0c674);
         width: 0;
       }
+      .main-city-slot-upgrade-tag.queue-build-slot-mutual-highlight {
+        outline: 2px solid #f0c674;
+        box-shadow: 0 0 6px rgba(201, 162, 39, 0.55);
+      }
       #hud {
         position: absolute; left: 0; top: 0; width: 100%;
         height: calc(56 / 900 * 100%); min-height: calc(56 / 900 * 100%); max-height: calc(56 / 900 * 100%);
@@ -684,6 +688,19 @@
         font-size: 12px; line-height: 1.35;
       }
       .queue-list li.queue-list-row.selected { outline: 2px solid #c9a227; }
+      .queue-list li.queue-list-row.queue-build-slot-mutual-highlight.selected {
+        outline-width: 2px;
+        box-shadow: 0 0 6px rgba(201, 162, 39, 0.45);
+      }
+      .queue-list li.queue-list-row { cursor: pointer; }
+      .queue-list li.queue-list-row button { cursor: pointer; }
+      @keyframes queue-build-complete-pulse-keyframes {
+        0%, 100% { background: #1a1410; }
+        35% { background: #3d3028; box-shadow: inset 0 0 0 2px #c9a227; }
+      }
+      .queue-list li.queue-build-complete-pulse {
+        animation: queue-build-complete-pulse-keyframes 3s ease-out 1;
+      }
       .queue-panel-overview {
         font-size: 13px;
         font-weight: 600;

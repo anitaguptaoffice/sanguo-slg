@@ -1009,6 +1009,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 2. 点击该升级中槽位：应打开 **队列** 面板，对应建造行 `selected` 并滚入视口（id `queue-build-row-<slot_key>`）。
 3. **CLIENT-059** HUD 产出速率次行与 **CLIENT-026** 建造加速符逻辑不退化。单测：`mainCitySlotUpgrade.test.ts`、`QueuePanels.test.ts`。
 
+### 手动验收（建造队列完成脉冲 CLIENT-105）
+
+`GetCityState` 轮询/推送后，`detectBuildJustCompleted` 检测槽位 `upgrade_finish_at_ms` 由进行中→空闲：对应队列行 **3s** `queue-build-complete-pulse` 并展示最新 **Lv** 文案。队列建造行点击仍 `openAndHighlightBuildSlot`；与画布升级标签 **互高亮**（`queue-build-slot-mutual-highlight`）直至点选其他槽位或关闭互选。与 **CLIENT-052** 日常互链、**CLIENT-026** 加速符并存；募兵加速仍 **out**。
+
+1. mock/dev：令一槽升级在轮询瞬间完成 → 队列行应脉冲且等级文案更新。
+2. 升级中槽位与队列行互点：画布标签与队列行应同步高亮；点选非升级槽位后互高亮清除。
+3. 单测：`buildQueueComplete.test.ts`、`QueuePanels.test.ts`。
+
 ### 手动验收（邮件战报日常深链 CLIENT-068）
 
 在 **CLIENT-060** 三角深链主干上，`mailBattleCrossLink` 扩展邮件正文 `#report` / 「战报」+数字等模式；战报详情胜/负且 chain 400 `daily_march_1` / `daily_build_1` **进行中** 时展示 **相关日常** 按钮（打开日常并 `scrollIntoView`，不自动领奖）；邮件含世界坐标时状态栏提示可在世界面板查看。
