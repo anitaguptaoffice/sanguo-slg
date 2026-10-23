@@ -4,8 +4,11 @@ import {
   DEFAULT_DAILY_QUEST_CFG_ID,
   dailyQuestsFromListResponse,
   formatDailyQuestDetail,
+  DAILY_RECRUIT_QUEST_CFG_ID,
+  findDailyRecruitQuest,
   formatDailyQuestLine,
   pickDefaultDailyQuest,
+  shouldPromptDailyRecruitAfterRecruit,
 } from "@/net/dailyQuestState";
 
 describe("dailyQuestState", () => {
@@ -25,6 +28,17 @@ describe("dailyQuestState", () => {
     expect(line).toContain("daily_food_1");
     expect(line).toContain("1200/5000");
     expect(line).toContain("进行中");
+  });
+
+  it("finds daily_recruit_1 and prompts after recruit when in progress", () => {
+    const rows = [
+      { quest_cfg_id: 1015, quest_code: "daily_recruit_1", state: 2 },
+      { quest_cfg_id: 1012, quest_code: "daily_food_1", state: 1 },
+    ];
+    const recruit = findDailyRecruitQuest(rows);
+    expect(recruit?.quest_cfg_id).toBe(DAILY_RECRUIT_QUEST_CFG_ID);
+    expect(shouldPromptDailyRecruitAfterRecruit(recruit, { ...recruit!, state: 3 })).toBe(true);
+    expect(shouldPromptDailyRecruitAfterRecruit(null, { quest_cfg_id: 1012, state: 1 })).toBe(false);
   });
 
   it("parses list response and picks default cfg", () => {

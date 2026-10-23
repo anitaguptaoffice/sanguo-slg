@@ -13,6 +13,7 @@ import {
   mailListSummary,
   MAIL_INBOX_FILTER_UNREAD,
   parseGetHeroDetailResponse,
+  formatRecruitSuccessStatus,
   parseRecruitTemplates,
   recruitTemplateListLines,
   requireHeroIdForDetail,
@@ -110,6 +111,22 @@ describe("heroMailState", () => {
     expect(templates).toHaveLength(1);
     expect(templates[0].template_cfg_id).toBe(1001);
     expect(totalCount).toBe(2);
+  });
+
+  it("formatRecruitSuccessStatus includes template name and deduct summary", () => {
+    const msg = formatRecruitSuccessStatus(
+      { hero_id: 42, template_cfg_id: 1001, level: 1, loyalty: 100 },
+      {
+        template_cfg_id: 1001,
+        template_name: "玄德府君",
+        recruit_cost: { food: 5000 },
+        recruit_item: { item_cfg_id: 2004, quantity: 1 },
+      },
+    );
+    expect(msg).toContain("玄德府君");
+    expect(msg).toContain("#42");
+    expect(msg).toContain("贤士名册");
+    expect(msg).toContain("粮");
   });
 
   it("recruitTemplateListLines handles empty list", () => {
