@@ -106,14 +106,14 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **小地图选点 → 出征 to_x/to_y** | [手动验收（小地图选点出征 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265)；PR [#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275)） | 进行中 |
+| **小地图选点 → 出征 to_x/to_y** | [手动验收（小地图选点出征 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265) / [#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) `12a8850f`） | 已合 |
 | **战报坐标摘要 → 小地图复盘高亮** | [手动验收（战报坐标复盘 CLIENT-042）](#手动验收战报坐标复盘-client-042)（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266)；PR [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276)） | 进行中 |
-| **军事出征目标记忆**（`sessionStorage`） | [手动验收（出征目标记忆 CLIENT-043）](#手动验收出征目标记忆-client-043)（[#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267)；`blocked_until: CLIENT-041`） | 阻塞 |
+| **军事出征目标记忆**（`sessionStorage`） | [手动验收（出征目标记忆 CLIENT-043）](#手动验收出征目标记忆-client-043)（[#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267)） | 进行中 |
 | **日常战备与战报未读横幅** | [手动验收（日常战备与战报横幅 CLIENT-044）](#手动验收日常战备与战报横幅-client-044)（[#268](https://github.com/anitaguptaoffice/sanguo-slg/issues/268) / [#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272) `d437076a`） | 已合 |
-| **排行 / 聊天手动刷新与上次更新** | [手动验收（社交刷新 CLIENT-045）](#手动验收社交刷新-client-045)（[#269](https://github.com/anitaguptaoffice/sanguo-slg/issues/269)；PR [#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273)） | 进行中 |
+| **排行 / 聊天手动刷新与上次更新** | [手动验收（社交刷新 CLIENT-045）](#手动验收社交刷新-client-045)（[#269](https://github.com/anitaguptaoffice/sanguo-slg/issues/269) / [#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273) `5a3ae507`） | 已合 |
 | **网关冒烟**（行军目的点 + 战报坐标） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 17** / `TestINTG014Wave17SmokePath`（[#270](https://github.com/anitaguptaoffice/sanguo-slg/issues/270) / [#274](https://github.com/anitaguptaoffice/sanguo-slg/pull/274) `90fb5356`） | 已合 |
 
-**推荐串联**（实现卡齐后）：小地图空白区选点 → **军事** 表单确认 `to_x/to_y` 出征（[CLIENT-015](#手动验收世界坐标-client-015) / [CLIENT-013](#手动验收募兵--行军--战报client-012--client-013)）→ 战报列表/详情看坐标 → **在地图查看** 小地图高亮（CLIENT-042）→ **日常** 顶栏战报横幅（CLIENT-044）→ **排行/聊天** 点 **刷新**（CLIENT-045）。
+**推荐串联**（**CLIENT-042/043** 合入后补「战报→小地图复盘 / 目标记忆」段）：小地图空白区选点（**CLIENT-041**）→ **军事** 表单确认 `to_x/to_y` 出征（[CLIENT-015](#手动验收世界坐标-client-015) / [CLIENT-013](#手动验收募兵--行军--战报client-012--client-013)）→ **日常** 顶栏战报横幅（**CLIENT-044**）→ **排行/聊天** 点 **刷新**（**CLIENT-045**）；网关字段见 `tools/smoke/README.md` **INTG-014**。
 
 ## 网关地址
 
@@ -217,39 +217,29 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（小地图选点出征 CLIENT-041）
 
-在 [CLIENT-037 小地图](#手动验收小地图比例尺与多行军-client-037) 与 [CLIENT-015 世界坐标出征](#手动验收世界坐标-client-015) 之上：小地图 **空白区域** 单击反算世界格点并写入军事出征 **to_x/to_y**（与列表选城共用表单）；点击已有 **行军目的点** 仍优先选中 `ListMarches` 行（CLIENT-037 行为不变）。**PR [#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) 合并前本段为规划验收。**
+在 [CLIENT-037 小地图](#手动验收小地图比例尺与多行军-client-037) 与 [CLIENT-015 世界坐标出征](#手动验收世界坐标-client-015) 之上：小地图 **空白区域** 单击经 `minimapLayoutToWorld` 反算世界格点并写入军事出征 **to_x/to_y**（`applyMarchTargetToForm`）；点击已有 **行军目的点** 仍走 `findMarchIdForMinimapDestClick` 选中 `ListMarches` 行（CLIENT-037 行为不变）。
 
-1. `make dev` 进主城，展开小地图；在 **非目的点** 区域单击，状态栏应提示 **已选出征目标 (x,y)**，**军事** 面板 `to_x`/`to_y` 与之一致（0..499 clamp）。
-2. 用该坐标完成 [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)；`ListMarches` 目的点与小地图标记一致。
-3. 点击小地图上 **已有行军目的点**：应高亮对应列表行并打开军事面板，**不**覆盖表单为误点反算坐标。
-4. 单测（合并后）：`worldMinimap` layout→world 反算与 clamp；`cd client && npm test`。
+1. `make dev` 进主城，展开小地图；在 **非目的点**、非折叠 toggle 区域单击，状态栏应提示 **已选出征目标 (x,y)**，**军事** 面板自动展开且 `to_x`/`to_y` 与之一致（`clampWorldMapCoord`，0..499）。
+2. 用该坐标完成 [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)；`ListMarches` 目的点与小地图标记一致（INTG-014 断言 `to_x`/`to_y`）。
+3. 点击小地图上 **已有行军目的点**：应高亮对应列表行并打开军事面板，**不**误写表单坐标。
+4. 单测：`worldMinimap.test.ts`（`minimapLayoutToWorld` / `clampWorldMapCoord`）；全量 `cd client && npm test`。
 
 ### 手动验收（战报坐标复盘 CLIENT-042）
 
-在 [CLIENT-034 战报详情](#手动验收战报详情回合表与行军深链-client-034) 与 [CLIENT-037 小地图](#手动验收小地图比例尺与多行军-client-037) 之上：列表/详情突出坐标摘要，详情提供 **在地图查看** 在小地图绘制临时高亮并 pan/zoom。**PR [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) 合并前本段为规划验收。**
-
-1. `make dev` 产生战报后打开 **战报** 面板：列表行与详情顶栏应含坐标/对手摘要（`formatReportCoord` / `formatBattleReportFoeSummary`，不退化 CLIENT-029 密度 class）。
-2. 详情点 **在地图查看**：小地图出现临时标记并纳入视野；关闭战报或切换 report 后清除高亮。
-3. 小地图折叠时状态栏仍可读坐标 hint。
-4. 单测（合并后）：战报 summary 坐标提取纯函数；`battleReportDeepLink` / `BattleReportPanel` 相关用例。
+（待 [#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / PR [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) 合入后补全。）
 
 ### 手动验收（出征目标记忆 CLIENT-043）
 
-依赖 **CLIENT-041** 小地图选点。**`blocked_until: CLIENT-041`**；PR 未开前本段为规划验收。
-
-1. `StartMarch` 成功后再次打开 **军事** 表单：`to_x`/`to_y` 应预填会话内最近一次目标（`sessionStorage` 固定键）；提供 **清除** 恢复空。
-2. 自 CLIENT-041 选点后打开军事面板：to 坐标输入区应有 **从小地图选点** 类提示/高亮摘要。
-3. [CLIENT-015](#手动验收世界坐标-client-015) 列表选城与记忆值冲突时，以 **最后一次用户操作** 为准，状态栏说明。
-4. 单测（合并后）：sessionStorage 读写与冲突策略。
+（待 [#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267) 合入后补全。）
 
 ### 手动验收（社交刷新 CLIENT-045）
 
-在 [CLIENT-030 社交扫读](#手动验收社交扫读-client-030) 与 [CLIENT-021 双榜](#手动验收排行双榜-client-021) 之上：排行双榜与聊天（世界/私聊/军团）各增 **刷新** 与 **上次更新** 本地时间戳。**PR [#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273) 合并前本段为规划验收。**
+在 [CLIENT-030 社交扫读](#手动验收社交扫读-client-030) 与 [CLIENT-021 双榜](#手动验收排行双榜-client-021) 之上：**排行** 面板 **刷新排行榜**、**聊天** 面板 **刷新** 触发既有列表 RPC；成功后在 `social-refresh-status` 展示 `formatSocialPanelLastUpdated`（**上次更新：…**），in-flight 时按钮 `disabled`（`chatListInflight` / `rankListInflight` 单飞，与 CLIENT-018 `GetCityState` 不嵌套）。
 
-1. `make dev` 打开 **排行**：点 **刷新** 应重拉双榜 RPC，展示 **上次更新** 时间；in-flight 时按钮禁用。
-2. **聊天** 各频道同样 **刷新** + 时间戳；空列表仍用 CLIENT-029/030 密度文案。
-3. 刷新失败展示 gateway `msg`；与 CLIENT-018 `GetCityState` 单飞 **不**嵌套死锁（排行/聊天独立单飞）。
-4. 单测（合并后）：时间戳格式化；`socialFormat` / `SocialPanels` 刷新用例。
+1. `make dev` 打开 **排行**，切换战力/资源榜后点 **刷新排行榜**：列表更新且出现 **上次更新** 行；刷新过程中按钮不可点。
+2. **聊天**（世界/私聊/军团）点 **刷新**：`ListChatMessages` 成功后同样展示时间戳；空列表仍用 CLIENT-029/030 密度文案。
+3. 断网或网关错误：状态行显示 **刷新失败：…**（`formatSocialPanelRefreshError`），状态栏同步 gateway 摘要。
+4. 单测：`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（将领详情 CLIENT-014）
 
