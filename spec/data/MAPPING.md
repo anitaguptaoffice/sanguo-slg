@@ -1,4 +1,4 @@
-# SPEC-004 / DATA-001 字段映射
+# SPEC-004 / DATA-001 / DATA-002 字段映射
 
 | 命令 | 作用 |
 |------|------|
@@ -7,6 +7,16 @@
 | `python3 tools/data/test_generate_seeds.py` | 幂等、check、CORE_SUBSET 上限 |
 
 行数上限见 [CORE_SUBSET.md](./CORE_SUBSET.md)；生成器在超限时失败退出。
+
+## DATA-002（第二批扩量）
+
+| 项 | 说明 |
+|----|------|
+| 触发 | INTG-005 + CLIENT-006 冒烟通过后，编排者开 DATA-002；上限见 CORE_SUBSET「DATA-002 默认」表 |
+| 源数据 | `tools/data/render_data002_sources.py` 可重跑以渲染 `spec/data/source/{items,heroes,quests,shop}.yml`（文案手编，非 legacy 拷贝） |
+| 稳定 id | `items.yml` 前 6 项顺序不变（`item_cfg_id` 2001–2006）；`quests.yml` 首条仍为 `tutorial_build_hall`（`quest_cfg_id` 1001） |
+| 校验 | `SUBSET_LIMITS` 与 CORE_SUBSET 一致；`validate_core_subset` 统计 quests / objectives / items / heroes / shops / offers / reward_rows |
+| 展示字段 | 任务 `title`、`summary` → `rewards.display`；道具 `meta.description`；将领 `base_stats.tagline`；商城 `shops[].name` 与 `shelves[].name` |
 
 ## cfg_unit（`params.yml → combat.troops`）
 

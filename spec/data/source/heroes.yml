@@ -1,22 +1,362 @@
-# Wave7 将领模板（文案重写；不含玩家实例）
+# DATA-002 将领模板（文案重写；不含玩家实例）
 heroes:
-  - { code: xuan_de_lord, name: 玄德府君, rarity: 5, base_stats: { force: 72, intel: 75, politics: 88, command: 78, tagline: 以仁政安抚百姓，重整州县秩序。 } }
-  - { code: green_dragon, name: 青龙偃月帅, rarity: 5, base_stats: { force: 95, intel: 62, politics: 55, command: 82, tagline: 长刀所向，先登破阵。 } }
-  - { code: thunder_spear, name: 雷矛先锋, rarity: 4, base_stats: { force: 92, intel: 45, politics: 40, command: 75, tagline: 声如雷霆，冲锋不退。 } }
-  - { code: silver_rider, name: 银甲骑将, rarity: 4, base_stats: { force: 88, intel: 70, politics: 58, command: 85, tagline: 七进七出，护主周全。 } }
-  - { code: sun_archer, name: 落日神弓, rarity: 4, base_stats: { force: 90, intel: 68, politics: 52, command: 80, tagline: 百步穿杨，镇守要道。 } }
-  - { code: wind_cavalry, name: 疾风铁骑, rarity: 4, base_stats: { force: 91, intel: 55, politics: 48, command: 79, tagline: 西凉铁骑，奔袭如风。 } }
-  - { code: jade_strategist, name: 碧玉谋臣, rarity: 5, base_stats: { force: 48, intel: 96, politics: 90, command: 70, tagline: 运筹帷幄，决胜千里。 } }
-  - { code: fire_general, name: 赤焰都督, rarity: 5, base_stats: { force: 89, intel: 78, politics: 60, command: 92, tagline: 火烧连营，克敌先机。 } }
-  - { code: north_wall, name: 北境柱石, rarity: 4, base_stats: { force: 86, intel: 72, politics: 65, command: 84, tagline: 固守边塞，御敌于外。 } }
-  - { code: river_sage, name: 江左智囊, rarity: 4, base_stats: { force: 52, intel: 91, politics: 82, command: 68, tagline: 联吴抗曹，以弱胜强。 } }
-  - { code: stone_fort, name: 坚城守御, rarity: 3, base_stats: { force: 78, intel: 60, politics: 70, command: 76, tagline: 深沟高垒，令敌难越。 } }
-  - { code: dawn_marshal, name: 破晓元帅, rarity: 5, base_stats: { force: 93, intel: 74, politics: 62, command: 94, tagline: 统御三军，开疆拓土。 } }
-  - { code: ink_advisor, name: 墨香学士, rarity: 3, base_stats: { force: 40, intel: 85, politics: 88, command: 55, tagline: 典章律令，教化士民。 } }
-  - { code: bamboo_guard, name: 青竹卫尉, rarity: 3, base_stats: { force: 82, intel: 58, politics: 50, command: 72, tagline: 护卫宫阙，肃清宵小。 } }
-  - { code: frost_blade, name: 寒霜剑侍, rarity: 3, base_stats: { force: 84, intel: 64, politics: 45, command: 74, tagline: 剑出如霜，斩尽来犯。 } }
-  - { code: gold_envoy, name: 金印使节, rarity: 3, base_stats: { force: 55, intel: 80, politics: 92, command: 60, tagline: 游说诸侯，缔结盟约。 } }
-  - { code: crane_healer, name: 白鹤医官, rarity: 2, base_stats: { force: 35, intel: 88, politics: 75, command: 48, tagline: 疗伤济世，稳军心。 } }
-  - { code: bronze_smith, name: 青铜匠师, rarity: 2, base_stats: { force: 60, intel: 70, politics: 55, command: 50, tagline: 锻造兵戈，补给前线。 } }
-  - { code: reed_scout, name: 芦荡斥候, rarity: 2, base_stats: { force: 65, intel: 68, politics: 40, command: 62, tagline: 探查敌情，回报迅捷。 } }
-  - { code: plum_hermit, name: 梅岭隐士, rarity: 2, base_stats: { force: 50, intel: 82, politics: 60, command: 52, tagline: 避世研兵，偶献奇策。 } }
+- code: xuan_de_lord
+  name: 玄德府君
+  rarity: 5
+  base_stats:
+    force: 72
+    intel: 75
+    politics: 88
+    command: 78
+    tagline: 以仁政安抚百姓，重整州县秩序。
+- code: green_dragon
+  name: 青龙偃月帅
+  rarity: 5
+  base_stats:
+    force: 95
+    intel: 62
+    politics: 55
+    command: 82
+    tagline: 长刀所向，先登破阵。
+- code: thunder_spear
+  name: 雷矛先锋
+  rarity: 4
+  base_stats:
+    force: 92
+    intel: 45
+    politics: 40
+    command: 75
+    tagline: 声如雷霆，冲锋不退。
+- code: silver_rider
+  name: 银甲骑将
+  rarity: 4
+  base_stats:
+    force: 88
+    intel: 70
+    politics: 58
+    command: 85
+    tagline: 七进七出，护主周全。
+- code: sun_archer
+  name: 落日神弓
+  rarity: 4
+  base_stats:
+    force: 90
+    intel: 68
+    politics: 52
+    command: 80
+    tagline: 百步穿杨，镇守要道。
+- code: wind_cavalry
+  name: 疾风铁骑
+  rarity: 4
+  base_stats:
+    force: 91
+    intel: 55
+    politics: 48
+    command: 79
+    tagline: 西凉铁骑，奔袭如风。
+- code: jade_strategist
+  name: 碧玉谋臣
+  rarity: 5
+  base_stats:
+    force: 48
+    intel: 96
+    politics: 90
+    command: 70
+    tagline: 运筹帷幄，决胜千里。
+- code: fire_general
+  name: 赤焰都督
+  rarity: 5
+  base_stats:
+    force: 89
+    intel: 78
+    politics: 60
+    command: 92
+    tagline: 火烧连营，克敌先机。
+- code: north_wall
+  name: 北境柱石
+  rarity: 4
+  base_stats:
+    force: 86
+    intel: 72
+    politics: 65
+    command: 84
+    tagline: 固守边塞，御敌于外。
+- code: river_sage
+  name: 江左智囊
+  rarity: 4
+  base_stats:
+    force: 52
+    intel: 91
+    politics: 82
+    command: 68
+    tagline: 善借地利，以弱胜强。
+- code: stone_fort
+  name: 坚城守御
+  rarity: 3
+  base_stats:
+    force: 78
+    intel: 60
+    politics: 70
+    command: 76
+    tagline: 深沟高垒，令敌难越。
+- code: dawn_marshal
+  name: 破晓元帅
+  rarity: 5
+  base_stats:
+    force: 93
+    intel: 74
+    politics: 62
+    command: 94
+    tagline: 统御三军，开疆拓土。
+- code: ink_advisor
+  name: 墨香学士
+  rarity: 3
+  base_stats:
+    force: 40
+    intel: 85
+    politics: 88
+    command: 55
+    tagline: 典章律令，教化士民。
+- code: bamboo_guard
+  name: 青竹卫尉
+  rarity: 3
+  base_stats:
+    force: 82
+    intel: 58
+    politics: 50
+    command: 72
+    tagline: 护卫宫阙，肃清宵小。
+- code: frost_blade
+  name: 寒霜剑侍
+  rarity: 3
+  base_stats:
+    force: 84
+    intel: 64
+    politics: 45
+    command: 74
+    tagline: 剑出如霜，斩尽来犯。
+- code: gold_envoy
+  name: 金印使节
+  rarity: 3
+  base_stats:
+    force: 55
+    intel: 80
+    politics: 92
+    command: 60
+    tagline: 游说诸侯，缔结盟约。
+- code: crane_healer
+  name: 白鹤医官
+  rarity: 2
+  base_stats:
+    force: 35
+    intel: 88
+    politics: 75
+    command: 48
+    tagline: 疗伤济世，稳军心。
+- code: bronze_smith
+  name: 青铜匠师
+  rarity: 2
+  base_stats:
+    force: 60
+    intel: 70
+    politics: 55
+    command: 50
+    tagline: 锻造兵戈，补给前线。
+- code: reed_scout
+  name: 芦荡斥候
+  rarity: 2
+  base_stats:
+    force: 65
+    intel: 68
+    politics: 40
+    command: 62
+    tagline: 探查敌情，回报迅捷。
+- code: plum_hermit
+  name: 梅岭隐士
+  rarity: 2
+  base_stats:
+    force: 50
+    intel: 82
+    politics: 60
+    command: 52
+    tagline: 避世研兵，偶献奇策。
+- code: azure_phalanx
+  name: 青岚方阵
+  rarity: 4
+  base_stats:
+    force: 65
+    intel: 50
+    politics: 45
+    command: 55
+    tagline: 列阵如墙，稳步推进。
+- code: ember_duelist
+  name: 烬锋斗士
+  rarity: 3
+  base_stats:
+    force: 68
+    intel: 55
+    politics: 52
+    command: 59
+    tagline: 近身缠斗，以快制慢。
+- code: mist_ranger
+  name: 雾林游侠
+  rarity: 3
+  base_stats:
+    force: 71
+    intel: 60
+    politics: 59
+    command: 63
+    tagline: 借林隐匿，奇袭粮道。
+- code: coral_admiral
+  name: 珊瑚水师
+  rarity: 4
+  base_stats:
+    force: 74
+    intel: 65
+    politics: 66
+    command: 67
+    tagline: 熟谙潮汐，控扼津渡。
+- code: sand_pillar
+  name: 沙洲柱将
+  rarity: 3
+  base_stats:
+    force: 77
+    intel: 70
+    politics: 73
+    command: 71
+    tagline: 据险守渡，拖垮来犯。
+- code: iron_bard
+  name: 铁弦乐士
+  rarity: 2
+  base_stats:
+    force: 80
+    intel: 75
+    politics: 80
+    command: 75
+    tagline: 军歌振气，稳阵脚。
+- code: lotus_healer
+  name: 莲塘医女
+  rarity: 2
+  base_stats:
+    force: 83
+    intel: 80
+    politics: 47
+    command: 79
+    tagline: 清创敷药，减员损。
+- code: copper_quarter
+  name: 铜衡督粮
+  rarity: 3
+  base_stats:
+    force: 86
+    intel: 85
+    politics: 54
+    command: 83
+    tagline: 精算粮秣，省耗十之一。
+- code: jade_sentinel
+  name: 玉门哨帅
+  rarity: 4
+  base_stats:
+    force: 89
+    intel: 90
+    politics: 61
+    command: 87
+    tagline: 夜巡关隘，不漏烽火。
+- code: storm_lancer
+  name: 惊雷枪骑
+  rarity: 4
+  base_stats:
+    force: 92
+    intel: 50
+    politics: 68
+    command: 91
+    tagline: 枪出如电，破阵一线。
+- code: pine_sage
+  name: 松岭谋士
+  rarity: 3
+  base_stats:
+    force: 95
+    intel: 55
+    politics: 75
+    command: 57
+    tagline: 善用地形，诱敌深入。
+- code: reed_admiral
+  name: 苇泽舟帅
+  rarity: 3
+  base_stats:
+    force: 95
+    intel: 60
+    politics: 82
+    command: 61
+    tagline: 浅水伏击，断敌舟楫。
+- code: granite_warden
+  name: 磐石戍将
+  rarity: 4
+  base_stats:
+    force: 95
+    intel: 65
+    politics: 49
+    command: 65
+    tagline: 身先士卒，稳守城楼。
+- code: silk_diplomat
+  name: 锦帛行卿
+  rarity: 3
+  base_stats:
+    force: 95
+    intel: 70
+    politics: 56
+    command: 69
+    tagline: 舌锋如剑，化战为盟。
+- code: amber_alchemist
+  name: 琥珀丹师
+  rarity: 2
+  base_stats:
+    force: 67
+    intel: 75
+    politics: 63
+    command: 73
+    tagline: 调制伤药，略通火攻。
+- code: obsidian_scout
+  name: 玄羽探子
+  rarity: 2
+  base_stats:
+    force: 70
+    intel: 80
+    politics: 70
+    command: 77
+    tagline: 潜行百里，回报如飞。
+- code: harbor_master
+  name: 津渡监官
+  rarity: 3
+  base_stats:
+    force: 73
+    intel: 85
+    politics: 77
+    command: 81
+    tagline: 调度舟楫，通商饷。
+- code: field_engineer
+  name: 野营匠首
+  rarity: 3
+  base_stats:
+    force: 76
+    intel: 90
+    politics: 84
+    command: 85
+    tagline: 立寨开壕，速成营垒。
+- code: dawn_archer
+  name: 晨曦弓监
+  rarity: 3
+  base_stats:
+    force: 79
+    intel: 50
+    politics: 51
+    command: 89
+    tagline: 晨射百步，教众卒。
+- code: night_captain
+  name: 夜巡都尉
+  rarity: 4
+  base_stats:
+    force: 82
+    intel: 55
+    politics: 58
+    command: 55
+    tagline: 暗哨连环，御偷袭。

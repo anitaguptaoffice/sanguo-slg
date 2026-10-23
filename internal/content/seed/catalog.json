@@ -1,14 +1,14 @@
 {
-  "bag_max_distinct_items": 38,
+  "bag_max_distinct_items": 57,
   "items": [
     {
       "item_cfg_id": 2001,
       "code": "food_bundle_s",
-      "name": "谷袋·初备",
+      "name": "新禾粮包",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
-        "description": "一袋新收的谷物，可充实仓廪。",
+        "description": "仓吏封装的初熟谷物，可立刻充实粮栈。",
         "grants": {
           "food": 1000
         }
@@ -17,11 +17,11 @@
     {
       "item_cfg_id": 2002,
       "code": "wood_bundle_s",
-      "name": "木料捆·初备",
+      "name": "新伐木捆",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
-        "description": "伐场新料，可解营造之急。",
+        "description": "林场刚运的梁料，解一城营造之急。",
         "grants": {
           "wood": 1000
         }
@@ -30,11 +30,11 @@
     {
       "item_cfg_id": 2003,
       "code": "speedup_5m",
-      "name": "急工符·五刻",
+      "name": "短促工符",
       "item_type": 2,
       "max_stack": 999,
       "meta": {
-        "description": "催动民夫，缩短营造五刻。",
+        "description": "催工五刻，适用于建造或研究队列。",
         "speedup_sec": 300,
         "applies_to": [
           "build",
@@ -45,7 +45,7 @@
     {
       "item_cfg_id": 2004,
       "code": "recruit_scroll",
-      "name": "贤士名册",
+      "name": "访贤简帖",
       "item_type": 3,
       "max_stack": 10,
       "meta": {
@@ -57,11 +57,11 @@
     {
       "item_cfg_id": 2005,
       "code": "infantry_token",
-      "name": "步卒教范牌",
+      "name": "步阵教令",
       "item_type": 4,
       "max_stack": 50,
       "meta": {
-        "description": "征召百名步卒入列。",
+        "description": "征召百名步兵列入城防。",
         "unit_code": "infantry",
         "count": 100
       }
@@ -69,11 +69,11 @@
     {
       "item_cfg_id": 2006,
       "code": "cavalry_token",
-      "name": "骑营调令",
+      "name": "骑队调符",
       "item_type": 4,
       "max_stack": 50,
       "meta": {
-        "description": "五十骑出营待命。",
+        "description": "五十骑出营听令。",
         "unit_code": "cavalry",
         "count": 50
       }
@@ -81,11 +81,11 @@
     {
       "item_cfg_id": 2007,
       "code": "food_bundle_m",
-      "name": "谷袋·常备",
+      "name": "常备粮垛",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
-        "description": "成捆粮秣，适合中期补给。",
+        "description": "中期行军常用的成捆粮秣。",
         "grants": {
           "food": 5000
         }
@@ -94,11 +94,11 @@
     {
       "item_cfg_id": 2008,
       "code": "wood_bundle_m",
-      "name": "木料捆·常备",
+      "name": "常备木料",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
-        "description": "规整梁木，支撑城防扩建。",
+        "description": "规整梁木，支撑城防与工坊。",
         "grants": {
           "wood": 5000
         }
@@ -107,11 +107,11 @@
     {
       "item_cfg_id": 2009,
       "code": "iron_bundle_s",
-      "name": "铁砂箱·初备",
+      "name": "粗炼铁箱",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
-        "description": "冶炼粗铁，供锻造之用。",
+        "description": "冶坊粗炼铁砂，供锻造与加固。",
         "grants": {
           "iron": 800
         }
@@ -120,11 +120,11 @@
     {
       "item_cfg_id": 2010,
       "code": "silver_pouch_s",
-      "name": "银铤袋·薄",
+      "name": "薄银袋",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
-        "description": "官府铸造的流通银铤。",
+        "description": "官府铸造的小额流通银铤。",
         "grants": {
           "silver": 200
         }
@@ -133,11 +133,11 @@
     {
       "item_cfg_id": 2011,
       "code": "speedup_15m",
-      "name": "急工符·一刻钟",
+      "name": "中程工符",
       "item_type": 2,
       "max_stack": 999,
       "meta": {
-        "description": "一炷香内完工的奇符。",
+        "description": "一炷香内完工的催造符。",
         "speedup_sec": 900,
         "applies_to": [
           "build"
@@ -147,7 +147,7 @@
     {
       "item_cfg_id": 2012,
       "code": "recruit_scroll_rare",
-      "name": "锦绣名册",
+      "name": "锦绣访贤帖",
       "item_type": 3,
       "max_stack": 5,
       "meta": {
@@ -159,7 +159,7 @@
     {
       "item_cfg_id": 2013,
       "code": "archer_token",
-      "name": "弓手集训牌",
+      "name": "弓队集训牌",
       "item_type": 4,
       "max_stack": 50,
       "meta": {
@@ -171,7 +171,7 @@
     {
       "item_cfg_id": 2014,
       "code": "siege_token",
-      "name": "攻城器零件箱",
+      "name": "攻城组件箱",
       "item_type": 4,
       "max_stack": 20,
       "meta": {
@@ -183,7 +183,7 @@
     {
       "item_cfg_id": 2015,
       "code": "supply_chest_green",
-      "name": "青木补给箱",
+      "name": "青纹补给匣",
       "item_type": 1,
       "max_stack": 20,
       "meta": {
@@ -214,7 +214,7 @@
     {
       "item_cfg_id": 2016,
       "code": "supply_chest_blue",
-      "name": "蓝纹军需箱",
+      "name": "蓝纹军需匣",
       "item_type": 1,
       "max_stack": 10,
       "meta": {
@@ -248,7 +248,7 @@
     {
       "item_cfg_id": 2017,
       "code": "hero_shard_common",
-      "name": "将魂碎晶·凡",
+      "name": "将魂碎晶",
       "item_type": 1,
       "max_stack": 999,
       "meta": {
@@ -261,11 +261,11 @@
     {
       "item_cfg_id": 2018,
       "code": "wall_stone_kit",
-      "name": "城防石料包",
+      "name": "城防条石包",
       "item_type": 1,
       "max_stack": 30,
       "meta": {
-        "description": "用于城墙修缮的条石。",
+        "description": "用于城墙修缮的条石与砂浆。",
         "grants": {
           "wood": 500,
           "iron": 300
@@ -275,11 +275,11 @@
     {
       "item_cfg_id": 2019,
       "code": "banquet_ticket",
-      "name": "庆功宴帖",
+      "name": "庆功席帖",
       "item_type": 1,
       "max_stack": 5,
       "meta": {
-        "description": "提升士气的小宴（占位效果）。",
+        "description": "举办小宴提振士气（占位）。",
         "grants": {
           "silver": 50
         }
@@ -288,7 +288,7 @@
     {
       "item_cfg_id": 2020,
       "code": "march_ration",
-      "name": "行军干粮",
+      "name": "远征干粮",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
@@ -301,11 +301,11 @@
     {
       "item_cfg_id": 2021,
       "code": "tax_warrant",
-      "name": "税赋凭证",
+      "name": "赋税凭条",
       "item_type": 1,
       "max_stack": 20,
       "meta": {
-        "description": "兑换少量银铤。",
+        "description": "向府库兑换少量银铤。",
         "grants": {
           "silver": 100
         }
@@ -314,7 +314,7 @@
     {
       "item_cfg_id": 2022,
       "code": "drill_manual",
-      "name": "操典抄本",
+      "name": "操典摘抄",
       "item_type": 1,
       "max_stack": 10,
       "meta": {
@@ -327,7 +327,7 @@
     {
       "item_cfg_id": 2023,
       "code": "envoy_gift",
-      "name": "使节赠礼",
+      "name": "使节礼单",
       "item_type": 1,
       "max_stack": 10,
       "meta": {
@@ -341,7 +341,7 @@
     {
       "item_cfg_id": 2024,
       "code": "forge_coal",
-      "name": "锻炉炭包",
+      "name": "锻炉炭束",
       "item_type": 1,
       "max_stack": 50,
       "meta": {
@@ -354,7 +354,7 @@
     {
       "item_cfg_id": 2025,
       "code": "herb_pouch",
-      "name": "伤药囊",
+      "name": "伤兵药囊",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
@@ -367,7 +367,7 @@
     {
       "item_cfg_id": 2026,
       "code": "map_fragment",
-      "name": "舆图残页",
+      "name": "舆图残卷",
       "item_type": 1,
       "max_stack": 30,
       "meta": {
@@ -380,7 +380,7 @@
     {
       "item_cfg_id": 2027,
       "code": "banner_emblem",
-      "name": "军旗徽记",
+      "name": "军旗纹章",
       "item_type": 1,
       "max_stack": 5,
       "meta": {
@@ -393,7 +393,7 @@
     {
       "item_cfg_id": 2028,
       "code": "treaty_scroll",
-      "name": "盟约抄本",
+      "name": "盟约抄件",
       "item_type": 1,
       "max_stack": 3,
       "meta": {
@@ -406,7 +406,7 @@
     {
       "item_cfg_id": 2029,
       "code": "merit_medal",
-      "name": "功勋铜牌",
+      "name": "功勋铜章",
       "item_type": 1,
       "max_stack": 99,
       "meta": {
@@ -419,7 +419,7 @@
     {
       "item_cfg_id": 2030,
       "code": "lantern_festival",
-      "name": "祈福灯",
+      "name": "祈福灯盏",
       "item_type": 1,
       "max_stack": 20,
       "meta": {
@@ -427,6 +427,254 @@
         "grants": {
           "food": 500,
           "wood": 500
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2031,
+      "code": "grain_satchel",
+      "name": "粮栈转运袋",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "粮栈转运袋：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "food": 2500
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2032,
+      "code": "timber_crate",
+      "name": "梁木货箱",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "梁木货箱：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "wood": 2500
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2033,
+      "code": "ore_crate",
+      "name": "矿砂货箱",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "矿砂货箱：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "iron": 1200
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2034,
+      "code": "coin_roll",
+      "name": "银铤卷",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "银铤卷：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "silver": 350
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2035,
+      "code": "speedup_30m",
+      "name": "长程工符",
+      "item_type": 2,
+      "max_stack": 999,
+      "meta": {
+        "description": "长程工符：写入工符时长，可缩短建造或研究队列。",
+        "speedup_sec": 1800,
+        "applies_to": [
+          "build",
+          "research"
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2036,
+      "code": "speedup_60m",
+      "name": "整日工符",
+      "item_type": 2,
+      "max_stack": 999,
+      "meta": {
+        "description": "整日工符：写入工符时长，可缩短建造或研究队列。",
+        "speedup_sec": 3600,
+        "applies_to": [
+          "build"
+        ]
+      }
+    },
+    {
+      "item_cfg_id": 2037,
+      "code": "recruit_scroll_plus",
+      "name": "广纳贤帖",
+      "item_type": 3,
+      "max_stack": 5,
+      "meta": {
+        "description": "广纳贤帖：持帖可开启对应招募池。",
+        "hero_pool": "standard",
+        "draws": 2
+      }
+    },
+    {
+      "item_cfg_id": 2038,
+      "code": "infantry_token_l",
+      "name": "步阵大教令",
+      "item_type": 4,
+      "max_stack": 30,
+      "meta": {
+        "description": "步阵大教令：一次性征训令，按元数据发放兵种。",
+        "unit_code": "infantry",
+        "count": 250
+      }
+    },
+    {
+      "item_cfg_id": 2039,
+      "code": "cavalry_token_l",
+      "name": "骑队大调符",
+      "item_type": 4,
+      "max_stack": 30,
+      "meta": {
+        "description": "骑队大调符：一次性征训令，按元数据发放兵种。",
+        "unit_code": "cavalry",
+        "count": 120
+      }
+    },
+    {
+      "item_cfg_id": 2040,
+      "code": "archer_token_l",
+      "name": "弓队大集训牌",
+      "item_type": 4,
+      "max_stack": 30,
+      "meta": {
+        "description": "弓队大集训牌：一次性征训令，按元数据发放兵种。",
+        "unit_code": "archer",
+        "count": 150
+      }
+    },
+    {
+      "item_cfg_id": 2041,
+      "code": "siege_token_l",
+      "name": "重型攻城组件",
+      "item_type": 4,
+      "max_stack": 30,
+      "meta": {
+        "description": "重型攻城组件：一次性征训令，按元数据发放兵种。",
+        "unit_code": "siege",
+        "count": 25
+      }
+    },
+    {
+      "item_cfg_id": 2042,
+      "code": "ration_field",
+      "name": "野战粮包",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "野战粮包：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "food": 800
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2043,
+      "code": "timber_wedge",
+      "name": "楔木加固包",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "楔木加固包：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "wood": 700
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2044,
+      "code": "ingot_bundle",
+      "name": "铁锭捆",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "铁锭捆：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "iron": 900
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2045,
+      "code": "well_repair_kit",
+      "name": "井渠修缮包",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "井渠修缮包：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "food": 600,
+          "wood": 200
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2046,
+      "code": "road_gravel",
+      "name": "道桥碎石",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "道桥碎石：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "wood": 450,
+          "iron": 150
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2047,
+      "code": "signal_flare",
+      "name": "烽烟信号弹",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "烽烟信号弹：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "silver": 45
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2048,
+      "code": "shield_blank",
+      "name": "盾胚料",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "盾胚料：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "iron": 200,
+          "wood": 150
+        }
+      }
+    },
+    {
+      "item_cfg_id": 2049,
+      "code": "catapult_rope",
+      "name": "弩车缆绳",
+      "item_type": 1,
+      "max_stack": 99,
+      "meta": {
+        "description": "弩车缆绳：城务与军备常用物资，开箱即用。",
+        "grants": {
+          "wood": 400
         }
       }
     }
