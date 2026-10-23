@@ -322,6 +322,23 @@ export function formatMarchRowMetaLine(m: MarchSummary, nowMs: number): string {
   return `${timing} · ${formatMarchPhase(m.phase)}`;
 }
 
+/** DOM `data-role`：军情新高亮行行内 ETA 扫读（CLIENT-116）。 */
+export const MARCH_ROW_RECENT_ETA_ROLE = "march-row-recent-eta";
+
+/**
+ * 新高亮行军行行内 ETA 摘要（与 CLIENT-089 / CLIENT-047 {@link formatMarchRemainingMs} 同源）。
+ * 用于 `march-row-recent` 行的只读前缀，完整时刻仍见 {@link formatMarchRowMetaLine}。
+ */
+export function formatMarchRowRecentEtaBrief(m: MarchSummary, nowMs: number): string | null {
+  const phase = m.phase ?? 0;
+  if (phase === 2 || phase === 4) {
+    return `ETA ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+  }
+  const phaseLabel = formatMarchPhase(phase);
+  if (!phaseLabel) return null;
+  return `ETA ${phaseLabel}`;
+}
+
 export function marchListLines(marches: MarchSummary[]): string[] {
   if (!marches.length) return ["（暂无行军，出征后在此查看进度）"];
   return marches.map(formatMarchLine);

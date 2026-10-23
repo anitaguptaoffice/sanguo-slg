@@ -255,6 +255,36 @@ describe("MarchListPanel", () => {
     expect(mount.querySelectorAll(".march-list li").length).toBe(1);
   });
 
+  it("notifyMarchStarted opens panel and shows recent ETA inline (CLIENT-116)", async () => {
+    const arriveAt = Date.now() + 30 * 60_000;
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 99,
+            phase: 2,
+            to_x: 3,
+            to_y: 4,
+            arrive_at_ms: arriveAt,
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    expect(panel.isOpen()).toBe(false);
+    panel.notifyMarchStarted(99);
+    expect(panel.isOpen()).toBe(true);
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalled());
+    expect(panel.getSelectedMarchId()).toBe(99);
+    const eta = mount.querySelector('[data-role="march-row-recent-eta"]');
+    expect(eta?.textContent).toMatch(/^ETA /);
+    expect(
+      mount.querySelector('.march-list li[data-march-id="99"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
+    ).toBe(true);
+  });
+
   it("applies march-row-recent for highlighted march and clears on other row select", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({

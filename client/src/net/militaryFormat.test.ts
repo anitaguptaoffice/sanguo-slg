@@ -16,6 +16,7 @@ import {
   formatMarchRemainingMsAbbrev,
   formatMarchRowMetaLine,
   formatMarchRowPrimaryLine,
+  formatMarchRowRecentEtaBrief,
   formatReportLine,
   marchListLines,
   marchNeedsPoll,
@@ -107,6 +108,8 @@ describe("militaryFormat", () => {
 
     const pending = { ...marching, phase: 1 };
     expect(formatMarchRowMetaLine(pending, now)).toContain("待发");
+    expect(formatMarchRowRecentEtaBrief(marching, now)).toBe("ETA 剩余 30m");
+    expect(formatMarchRowRecentEtaBrief(pending, now)).toBe("ETA 待发");
   });
 
   it("filters battle reports by outcome client-side", () => {

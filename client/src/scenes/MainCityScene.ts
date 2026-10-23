@@ -99,6 +99,8 @@ import {
 } from "@/net/buildSubmitFeedback";
 import {
   formatMarchDepartedStatusToast,
+  marchSubmitStateMachine,
+  type MarchSubmitState,
   syncMarchSubmitButton,
 } from "@/net/marchSubmitFeedback";
 import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
@@ -174,7 +176,7 @@ export class MainCityScene implements Scene {
   private gateway!: SceneContext["gateway"];
   private status = "";
   private lastMarch: MarchSummary | null = null;
-  private marchSubmitInflight = false;
+  private marchSubmitState: MarchSubmitState = "idle";
   private buildSubmitState: BuildSubmitState = "idle";
   private intelRemarchTroopsLine: string | null = null;
   private suppressMarchTargetHighlightClear = false;
@@ -946,7 +948,7 @@ export class MainCityScene implements Scene {
       lastTroopsEl.textContent = line ?? "";
       lastTroopsEl.classList.toggle("hidden", !line);
     }
-    syncMarchSubmitButton(this.militaryPanel, this.marchSubmitInflight);
+    syncMarchSubmitButton(this.militaryPanel, this.marchSubmitState);
     syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
     const summary = formatMarchFormSummary(
       readMarchFormSnapshot(this.militaryPanel, {
@@ -1716,7 +1718,7 @@ export class MainCityScene implements Scene {
     const { toX, toY, marchCount } = validated;
     setMarchFormErrorDisplay(this.militaryPanel, null);
     const troops = [{ unit_cfg_id: 1, count: marchCount }];
-    this.marchSubmitInflight = true;
+    this.marchSubmitState = marchSubmitStateMachine(this.marchSubmitState, { type: "SUBMIT" });
     this.syncMilitaryPanel();
     this.renderHud();
     try {
@@ -1748,7 +1750,7 @@ export class MainCityScene implements Scene {
       setMarchFormErrorDisplay(this.militaryPanel, msg);
       this.status = msg;
     } finally {
-      this.marchSubmitInflight = false;
+      this.marchSubmitState = marchSubmitStateMachine(this.marchSubmitState, { type: "SETTLE" });
     }
     this.renderHud();
     this.syncMilitaryPanel();

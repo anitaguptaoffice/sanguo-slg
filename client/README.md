@@ -667,9 +667,11 @@ cd client && npm install && npm run dev
 
 军事面板 **出征攻击**：`StartMarch` 发出后按钮 **disabled** 且文案 **出征中…**（`marchSubmitFeedback`）；成功顶栏 toast **已出征 (x,y)**，失败在 **march-form-error** 展示 `gatewayErrorMessage`（**CLIENT-067** 口径）。成功后底栏 **行军** 列表对应 `march_id` 行附加 `march-row-recent`（`sessionStorage` 键 `march-highlight-id`，选其他行或 **60s** 清除）。**CLIENT-048** 校验与 **CLIENT-047** ETA 不退化。
 
-1. `make dev` 合法出征一次 → 观察按钮态与顶栏 toast → 打开 **行军** 列表确认高亮行。
+**wave:26 巩固（CLIENT-116）**：在 wave:22 **CLIENT-080** 行为之上，出征成功会 **自动打开行军面板** 并滚动到新行；该行展示行内 **`march-row-recent-eta`**（与 **CLIENT-089** `march-form-summary` / **CLIENT-047** `formatMarchRemainingMs` 同源 ETA 摘要），次行仍保留完整出发/到达时刻；**CLIENT-109** 阶段/排序筛选记忆与 **CLIENT-025** 到达战报提示链不退化。`marchSubmitStateMachine` + 高亮 TTL 纯函数见 `marchSubmitFeedback.test.ts` / `marchHighlight.test.ts`。
+
+1. `make dev` 合法出征一次 → 观察按钮 **出征中…** 与顶栏 toast → **行军** 面板应自动展开且新行带金色 ETA 前缀与高亮框。
 2. 故意网关失败（断网或非法兵力）→ 表单内错误文案，按钮恢复可点。
-3. 单测：`marchHighlight.test.ts`、`marchSubmitFeedback.test.ts`、`MarchListPanel.test.ts`。
+3. 单测：`marchHighlight.test.ts`、`marchSubmitFeedback.test.ts`、`marchFormSummary.test.ts`、`MarchListPanel.test.ts`。
 
 ### 手动验收（HUD 资源扫读 CLIENT-081）
 
