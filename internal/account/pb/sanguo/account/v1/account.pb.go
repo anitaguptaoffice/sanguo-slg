@@ -159,6 +159,429 @@ func (x *LoginResponse) GetSessionExpiresAtMs() int64 {
 	return 0
 }
 
+// route: account.v1.Register
+// 注册全局账号（与游戏服无关）。
+type RegisterRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 登录名，对应 account.login_name。
+	LoginName string `protobuf:"bytes,1,opt,name=login_name,json=loginName,proto3" json:"login_name,omitempty"`
+	// 明文密码（仅 TLS/WebSocket 加密链路上传输，服务端校验 password_hash）。
+	Password      string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterRequest) Reset() {
+	*x = RegisterRequest{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterRequest) ProtoMessage() {}
+
+func (x *RegisterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterRequest.ProtoReflect.Descriptor instead.
+func (*RegisterRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *RegisterRequest) GetLoginName() string {
+	if x != nil {
+		return x.LoginName
+	}
+	return ""
+}
+
+func (x *RegisterRequest) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type RegisterResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 新账号 ID，对应 account.account_id。
+	AccountId     int64 `protobuf:"varint,1,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RegisterResponse) Reset() {
+	*x = RegisterResponse{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RegisterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RegisterResponse) ProtoMessage() {}
+
+func (x *RegisterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RegisterResponse.ProtoReflect.Descriptor instead.
+func (*RegisterResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *RegisterResponse) GetAccountId() int64 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
+// route: account.v1.RefreshSession
+// 续期当前会话；ClientPacket.session_id 须为有效会话。
+type RefreshSessionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshSessionRequest) Reset() {
+	*x = RefreshSessionRequest{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshSessionRequest) ProtoMessage() {}
+
+func (x *RefreshSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshSessionRequest.ProtoReflect.Descriptor instead.
+func (*RefreshSessionRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{4}
+}
+
+type RefreshSessionResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 续期后的会话 ID（通常与请求一致）。
+	SessionId string `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	// 新的过期时间（Unix 毫秒）。
+	SessionExpiresAtMs int64 `protobuf:"varint,2,opt,name=session_expires_at_ms,json=sessionExpiresAtMs,proto3" json:"session_expires_at_ms,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *RefreshSessionResponse) Reset() {
+	*x = RefreshSessionResponse{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshSessionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshSessionResponse) ProtoMessage() {}
+
+func (x *RefreshSessionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshSessionResponse.ProtoReflect.Descriptor instead.
+func (*RefreshSessionResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *RefreshSessionResponse) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *RefreshSessionResponse) GetSessionExpiresAtMs() int64 {
+	if x != nil {
+		return x.SessionExpiresAtMs
+	}
+	return 0
+}
+
+// route: account.v1.ListGameServers
+// 拉取可选游戏服列表（登录前仅需账号凭证时由实现决定是否要求 session）。
+type ListGameServersRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// 页码，从 1 开始；0 表示默认第一页。
+	Page int32 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
+	// 每页条数；0 表示服务端默认（建议 ≤50）。
+	PageSize      int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListGameServersRequest) Reset() {
+	*x = ListGameServersRequest{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListGameServersRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListGameServersRequest) ProtoMessage() {}
+
+func (x *ListGameServersRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListGameServersRequest.ProtoReflect.Descriptor instead.
+func (*ListGameServersRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ListGameServersRequest) GetPage() int32 {
+	if x != nil {
+		return x.Page
+	}
+	return 0
+}
+
+func (x *ListGameServersRequest) GetPageSize() int32 {
+	if x != nil {
+		return x.PageSize
+	}
+	return 0
+}
+
+type ListGameServersResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Servers       []*v1.GameServerInfo   `protobuf:"bytes,1,rep,name=servers,proto3" json:"servers,omitempty"`
+	TotalCount    int32                  `protobuf:"varint,2,opt,name=total_count,json=totalCount,proto3" json:"total_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListGameServersResponse) Reset() {
+	*x = ListGameServersResponse{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListGameServersResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListGameServersResponse) ProtoMessage() {}
+
+func (x *ListGameServersResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListGameServersResponse.ProtoReflect.Descriptor instead.
+func (*ListGameServersResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ListGameServersResponse) GetServers() []*v1.GameServerInfo {
+	if x != nil {
+		return x.Servers
+	}
+	return nil
+}
+
+func (x *ListGameServersResponse) GetTotalCount() int32 {
+	if x != nil {
+		return x.TotalCount
+	}
+	return 0
+}
+
+// route: account.v1.EnterGameServer
+// 已认证账号进入指定游戏服，绑定会话 server_id 并返回角色快照（无角色时由实现创角或返回 ACCOUNT_NO_PLAYER）。
+type EnterGameServerRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EnterGameServerRequest) Reset() {
+	*x = EnterGameServerRequest{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnterGameServerRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnterGameServerRequest) ProtoMessage() {}
+
+func (x *EnterGameServerRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnterGameServerRequest.ProtoReflect.Descriptor instead.
+func (*EnterGameServerRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *EnterGameServerRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+type EnterGameServerResponse struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	SessionId          string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	ServerId           int32                  `protobuf:"varint,2,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	Player             *v1.PlayerProfile      `protobuf:"bytes,3,opt,name=player,proto3" json:"player,omitempty"`
+	Wallet             *v1.ResourceWallet     `protobuf:"bytes,4,opt,name=wallet,proto3" json:"wallet,omitempty"`
+	SessionExpiresAtMs int64                  `protobuf:"varint,5,opt,name=session_expires_at_ms,json=sessionExpiresAtMs,proto3" json:"session_expires_at_ms,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *EnterGameServerResponse) Reset() {
+	*x = EnterGameServerResponse{}
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EnterGameServerResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EnterGameServerResponse) ProtoMessage() {}
+
+func (x *EnterGameServerResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_account_v1_account_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EnterGameServerResponse.ProtoReflect.Descriptor instead.
+func (*EnterGameServerResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_account_v1_account_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *EnterGameServerResponse) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *EnterGameServerResponse) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *EnterGameServerResponse) GetPlayer() *v1.PlayerProfile {
+	if x != nil {
+		return x.Player
+	}
+	return nil
+}
+
+func (x *EnterGameServerResponse) GetWallet() *v1.ResourceWallet {
+	if x != nil {
+		return x.Wallet
+	}
+	return nil
+}
+
+func (x *EnterGameServerResponse) GetSessionExpiresAtMs() int64 {
+	if x != nil {
+		return x.SessionExpiresAtMs
+	}
+	return 0
+}
+
 var File_sanguo_account_v1_account_proto protoreflect.FileDescriptor
 
 var file_sanguo_account_v1_account_proto_rawDesc = string([]byte{
@@ -187,12 +610,60 @@ var file_sanguo_account_v1_account_proto_rawDesc = string([]byte{
 	0x0a, 0x15, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65,
 	0x73, 0x5f, 0x61, 0x74, 0x5f, 0x6d, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x12, 0x73,
 	0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x73, 0x41, 0x74, 0x4d,
-	0x73, 0x42, 0x4b, 0x5a, 0x49, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x61, 0x6e, 0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65,
-	0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x67, 0x65, 0x6e, 0x2f,
-	0x67, 0x6f, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x2f, 0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x76, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x22, 0x4c, 0x0a, 0x0f, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x5f, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x4e,
+	0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22,
+	0x31, 0x0a, 0x10, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x49, 0x64, 0x22, 0x17, 0x0a, 0x15, 0x52, 0x65, 0x66, 0x72, 0x65, 0x73, 0x68, 0x53, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x6a, 0x0a, 0x16, 0x52,
+	0x65, 0x66, 0x72, 0x65, 0x73, 0x68, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x65, 0x73, 0x73, 0x69,
+	0x6f, 0x6e, 0x49, 0x64, 0x12, 0x31, 0x0a, 0x15, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f,
+	0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x73, 0x5f, 0x61, 0x74, 0x5f, 0x6d, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x12, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x45, 0x78, 0x70, 0x69,
+	0x72, 0x65, 0x73, 0x41, 0x74, 0x4d, 0x73, 0x22, 0x49, 0x0a, 0x16, 0x4c, 0x69, 0x73, 0x74, 0x47,
+	0x61, 0x6d, 0x65, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x67, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x04, 0x70, 0x61, 0x67, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x70, 0x61, 0x67, 0x65, 0x5f, 0x73, 0x69,
+	0x7a, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x70, 0x61, 0x67, 0x65, 0x53, 0x69,
+	0x7a, 0x65, 0x22, 0x76, 0x0a, 0x17, 0x4c, 0x69, 0x73, 0x74, 0x47, 0x61, 0x6d, 0x65, 0x53, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3a, 0x0a,
+	0x07, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20,
+	0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76,
+	0x31, 0x2e, 0x47, 0x61, 0x6d, 0x65, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x6e, 0x66, 0x6f,
+	0x52, 0x07, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x73, 0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x6f, 0x74,
+	0x61, 0x6c, 0x5f, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a,
+	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x35, 0x0a, 0x16, 0x45, 0x6e,
+	0x74, 0x65, 0x72, 0x47, 0x61, 0x6d, 0x65, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49,
+	0x64, 0x22, 0xfb, 0x01, 0x0a, 0x17, 0x45, 0x6e, 0x74, 0x65, 0x72, 0x47, 0x61, 0x6d, 0x65, 0x53,
+	0x65, 0x72, 0x76, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a,
+	0x0a, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x09, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x64, 0x12, 0x1b, 0x0a, 0x09,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x37, 0x0a, 0x06, 0x70, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x73, 0x61, 0x6e, 0x67,
+	0x75, 0x6f, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x52, 0x06, 0x70, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x12, 0x38, 0x0a, 0x06, 0x77, 0x61, 0x6c, 0x6c, 0x65, 0x74, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x20, 0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x63, 0x6f, 0x6d, 0x6d,
+	0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x57, 0x61,
+	0x6c, 0x6c, 0x65, 0x74, 0x52, 0x06, 0x77, 0x61, 0x6c, 0x6c, 0x65, 0x74, 0x12, 0x31, 0x0a, 0x15,
+	0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x73, 0x5f,
+	0x61, 0x74, 0x5f, 0x6d, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x12, 0x73, 0x65, 0x73,
+	0x73, 0x69, 0x6f, 0x6e, 0x45, 0x78, 0x70, 0x69, 0x72, 0x65, 0x73, 0x41, 0x74, 0x4d, 0x73, 0x42,
+	0x4b, 0x5a, 0x49, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e,
+	0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65, 0x2f, 0x73,
+	0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x67, 0x6f,
+	0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x2f,
+	0x76, 0x31, 0x3b, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -207,21 +678,33 @@ func file_sanguo_account_v1_account_proto_rawDescGZIP() []byte {
 	return file_sanguo_account_v1_account_proto_rawDescData
 }
 
-var file_sanguo_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_sanguo_account_v1_account_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_sanguo_account_v1_account_proto_goTypes = []any{
-	(*LoginRequest)(nil),      // 0: sanguo.account.v1.LoginRequest
-	(*LoginResponse)(nil),     // 1: sanguo.account.v1.LoginResponse
-	(*v1.PlayerProfile)(nil),  // 2: sanguo.common.v1.PlayerProfile
-	(*v1.ResourceWallet)(nil), // 3: sanguo.common.v1.ResourceWallet
+	(*LoginRequest)(nil),            // 0: sanguo.account.v1.LoginRequest
+	(*LoginResponse)(nil),           // 1: sanguo.account.v1.LoginResponse
+	(*RegisterRequest)(nil),         // 2: sanguo.account.v1.RegisterRequest
+	(*RegisterResponse)(nil),        // 3: sanguo.account.v1.RegisterResponse
+	(*RefreshSessionRequest)(nil),   // 4: sanguo.account.v1.RefreshSessionRequest
+	(*RefreshSessionResponse)(nil),  // 5: sanguo.account.v1.RefreshSessionResponse
+	(*ListGameServersRequest)(nil),  // 6: sanguo.account.v1.ListGameServersRequest
+	(*ListGameServersResponse)(nil), // 7: sanguo.account.v1.ListGameServersResponse
+	(*EnterGameServerRequest)(nil),  // 8: sanguo.account.v1.EnterGameServerRequest
+	(*EnterGameServerResponse)(nil), // 9: sanguo.account.v1.EnterGameServerResponse
+	(*v1.PlayerProfile)(nil),        // 10: sanguo.common.v1.PlayerProfile
+	(*v1.ResourceWallet)(nil),       // 11: sanguo.common.v1.ResourceWallet
+	(*v1.GameServerInfo)(nil),       // 12: sanguo.common.v1.GameServerInfo
 }
 var file_sanguo_account_v1_account_proto_depIdxs = []int32{
-	2, // 0: sanguo.account.v1.LoginResponse.player:type_name -> sanguo.common.v1.PlayerProfile
-	3, // 1: sanguo.account.v1.LoginResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	10, // 0: sanguo.account.v1.LoginResponse.player:type_name -> sanguo.common.v1.PlayerProfile
+	11, // 1: sanguo.account.v1.LoginResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
+	12, // 2: sanguo.account.v1.ListGameServersResponse.servers:type_name -> sanguo.common.v1.GameServerInfo
+	10, // 3: sanguo.account.v1.EnterGameServerResponse.player:type_name -> sanguo.common.v1.PlayerProfile
+	11, // 4: sanguo.account.v1.EnterGameServerResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
+	5,  // [5:5] is the sub-list for method output_type
+	5,  // [5:5] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_account_v1_account_proto_init() }
@@ -235,7 +718,7 @@ func file_sanguo_account_v1_account_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_account_v1_account_proto_rawDesc), len(file_sanguo_account_v1_account_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
