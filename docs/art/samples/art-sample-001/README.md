@@ -1,5 +1,13 @@
 # ART-SAMPLE-001 — GitHub 联调样件（非生产验收）
 
+## 当前背景修订（待工程复验）
+
+背景 1×/2× 已更新为六块重新生成后降采样拼接的 HD 候选，不再使用旧整图放大占位；不是单次原生出图。尺寸、ID、manifest 均不变。详见 [HD-BACKGROUND-REVISION.md](HD-BACKGROUND-REVISION.md) 与 provenance。新背景尚未进行引擎 DPR2/最终艺术验收。
+
+#112 已记录初版工程接入结果；下方及 `preview.png` 是初始样件历史说明，旧背景占位、体积和未测试状态仅适用于当时版本。QA.json 保留初始报告并追加 current_background_revision。
+
+## 以下为初版交接记录（保留）
+
 ## 状态 / 依赖
 - 样件契约：PR #100，`645b48886335ab6f9232443dd8cec26f41ba261f`；该 PR 未合并，接口/schema 仍为 DRAFT。此提交基于 main，不引入 #100、#77、#82 的提交。
 - **艺术验收 BLOCKED**：2×背景为 **UPSCALED PLACEHOLDER**。原生仅 1786×881，放大至 3200×1576；不是新增高密度细节。不得宣称 18 张全部生产就绪。

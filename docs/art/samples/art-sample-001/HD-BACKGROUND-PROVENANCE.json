@@ -1,0 +1,233 @@
+{
+  "output": "background_hd_3200x1576.png",
+  "output_size": [
+    3200,
+    1576
+  ],
+  "output_sha256": "ae48bfb26375d1a820012e54cd9fc16516478a0ce2ea2039943b51d34b981935",
+  "source_base_used_for_output_pixels": false,
+  "generated_output_upsampling": false,
+  "method": "downsample-only tile normalization; dynamic-programming minimum-error seams; 20px smoothstep feather",
+  "tiles": [
+    {
+      "tile": 0,
+      "path": "exec-5b6eb0ec-194f-422c-a1f0-13493d6b953c.png",
+      "sha256": "aa9368575b512a660ab3d063aaa5f09fe6b134eb2e63a9ead519e305b023892f",
+      "generated_size": [
+        1448,
+        1086
+      ],
+      "placed_size": [
+        1200,
+        900
+      ],
+      "scale": [
+        0.8287292817679558,
+        0.8287292817679558
+      ],
+      "aspect_ratio_change": 1.0,
+      "target_bounds": [
+        0,
+        0,
+        1200,
+        900
+      ]
+    },
+    {
+      "tile": 1,
+      "path": "exec-5e110ca9-b17c-4a14-8e1b-e3696f956362.png",
+      "sha256": "a7f0bb43563db1c3cacb93999a20248b7157fb6b1f77570ead47a85f04e855f7",
+      "generated_size": [
+        1448,
+        1086
+      ],
+      "placed_size": [
+        1200,
+        900
+      ],
+      "scale": [
+        0.8287292817679558,
+        0.8287292817679558
+      ],
+      "aspect_ratio_change": 1.0,
+      "target_bounds": [
+        1000,
+        0,
+        2200,
+        900
+      ]
+    },
+    {
+      "tile": 2,
+      "path": "exec-81c2c046-7897-4978-bd71-89d2422d0ef3.png",
+      "sha256": "1f4f40e6ae56ae5873646ce917819435526a0c8e22037ba1975e5ee0bdd2d15f",
+      "generated_size": [
+        1448,
+        1086
+      ],
+      "placed_size": [
+        1200,
+        900
+      ],
+      "scale": [
+        0.8287292817679558,
+        0.8287292817679558
+      ],
+      "aspect_ratio_change": 1.0,
+      "target_bounds": [
+        2000,
+        0,
+        3200,
+        900
+      ]
+    },
+    {
+      "tile": 3,
+      "path": "exec-8b2571ad-7f9c-466c-a822-d48037b2b02b.png",
+      "sha256": "8895b1a3f7706bbdc5bfdc2abf5b3a5aefd55390f79c6415b0525acc6a447abf",
+      "generated_size": [
+        1448,
+        1086
+      ],
+      "placed_size": [
+        1200,
+        900
+      ],
+      "scale": [
+        0.8287292817679558,
+        0.8287292817679558
+      ],
+      "aspect_ratio_change": 1.0,
+      "target_bounds": [
+        0,
+        676,
+        1200,
+        1576
+      ]
+    },
+    {
+      "tile": 4,
+      "path": "exec-28a11c23-5e97-4c1d-9879-6cfc5f73dc53.png",
+      "sha256": "f9478c48f99eaa274271e1a348123072551926084c863f5adb0d83beacf8b2bc",
+      "generated_size": [
+        1448,
+        1086
+      ],
+      "placed_size": [
+        1200,
+        900
+      ],
+      "scale": [
+        0.8287292817679558,
+        0.8287292817679558
+      ],
+      "aspect_ratio_change": 1.0,
+      "target_bounds": [
+        1000,
+        676,
+        2200,
+        1576
+      ]
+    },
+    {
+      "tile": 5,
+      "path": "exec-da4569bc-4c50-4e49-b32a-e73fcfc57445.png",
+      "sha256": "274448040101eb4ada883fde3eced4175afeb2ea0c28ba6fc2a8e642ee69c7c8",
+      "generated_size": [
+        1448,
+        1086
+      ],
+      "placed_size": [
+        1200,
+        900
+      ],
+      "scale": [
+        0.8287292817679558,
+        0.8287292817679558
+      ],
+      "aspect_ratio_change": 1.0,
+      "target_bounds": [
+        2000,
+        676,
+        3200,
+        1576
+      ]
+    }
+  ],
+  "seams": [
+    {
+      "join": "row0_x1000",
+      "overlap": 200,
+      "preblend_overlap_rgb_rmse": 21.92116355895996,
+      "seam_min": 12,
+      "seam_max": 181,
+      "feather_width": 20
+    },
+    {
+      "join": "row0_x2000",
+      "overlap": 200,
+      "preblend_overlap_rgb_rmse": 22.91860848338779,
+      "seam_min": 29,
+      "seam_max": 144,
+      "feather_width": 20
+    },
+    {
+      "join": "row1_x1000",
+      "overlap": 200,
+      "preblend_overlap_rgb_rmse": 21.123136520385742,
+      "seam_min": 21,
+      "seam_max": 164,
+      "feather_width": 20
+    },
+    {
+      "join": "row1_x2000",
+      "overlap": 200,
+      "preblend_overlap_rgb_rmse": 23.991810099528795,
+      "seam_min": 40,
+      "seam_max": 179,
+      "feather_width": 20
+    },
+    {
+      "join": "y676",
+      "overlap": 224,
+      "preblend_overlap_rgb_rmse": 20.866354623230308,
+      "seam_min": 12,
+      "seam_max": 211,
+      "feather_width": 20
+    }
+  ],
+  "runtime_exports": [
+    {
+      "path": "client/public/assets/art/v1/textures/1x/maincity/bg_plateau.png",
+      "size": [
+        1600,
+        788
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        255,
+        255
+      ],
+      "sha256": "a7bc27b0418af2b368f61438b3b988f107b07905b85115e6e4f22daab4b78510",
+      "bytes": 3095893,
+      "upscaled": false
+    },
+    {
+      "path": "client/public/assets/art/v1/textures/2x/maincity/bg_plateau.png",
+      "size": [
+        3200,
+        1576
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        255,
+        255
+      ],
+      "sha256": "c98e73a5186b9bb0f155aeba39888f13ce9c8cb4a28867c859a3cf98f07e3952",
+      "bytes": 11463861,
+      "upscaled": false
+    }
+  ],
+  "acceptance": "PENDING_ENGINE_DPR2_AND_ART_REVIEW",
+  "source_files_in_repository": false
+}
