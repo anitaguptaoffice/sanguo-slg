@@ -115,10 +115,10 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 | [#162](https://github.com/anitaguptaoffice/sanguo-slg/issues/162) | CLIENT-009 | 已完成 | [#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169) |
 | [#163](https://github.com/anitaguptaoffice/sanguo-slg/issues/163) | CLIENT-010 | 已完成 | [#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171) |
 | [#164](https://github.com/anitaguptaoffice/sanguo-slg/issues/164) | QUEST-003 | 已完成 | [#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173) |
-| [#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) | CLIENT-011 | 进行中 | PR [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172) 待合（HUD/建筑等级可读性，不阻塞本波出口文档） |
+| [#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) | CLIENT-011 | 已完成 | [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172) |
 | [#166](https://github.com/anitaguptaoffice/sanguo-slg/issues/166) | CLIENT-012 | 已完成 | [#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170) |
 | [#167](https://github.com/anitaguptaoffice/sanguo-slg/issues/167) | INTG-008 | 已完成 | [#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174) |
-| [#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168) | DOCS-EXIT-003 | 已完成 | 本卡 PR |
+| [#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168) | DOCS-EXIT-003 | 已完成 | [#175](https://github.com/anitaguptaoffice/sanguo-slg/pull/175) |
 
 H5 人工验收与 INTG-008 路径对齐，见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)。
 

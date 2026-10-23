@@ -58,7 +58,7 @@ status:review   ──合并────▶  status:done
 | 8 | M3/M4 出口加固（**已完成**，见 ROADMAP Wave 8） | INTG-005 (#125), CLIENT-006 (#121), RANK-002 (#122), LOAD-001 (#123), OPS-OPEN-001 (#120), TELEMETRY-001 (#124) |
 | 9 | 核心 cfg 第二批 + 养成/邮件/横屏（**已完成**） | 见下表 |
 | 10 | M4 玩法加深（**已完成**，见 ROADMAP Wave 10） | CLIENT-008 (#156), HERO-003 (#158), QUEST-002 (#157), GM-003 (#154), INTG-007 (#159), DOCS-EXIT-002 (#160) |
-| 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009 (#169)～012 (#170), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168)；CLIENT-011 [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172) 待合 |
+| 11 | H5 日常可玩环（**已完成**，见 ROADMAP Wave 11） | CLIENT-009–012 (#169–#172), QUEST-003 (#173), INTG-008 (#174), DOCS-EXIT-003 (#168/#175) |
 
 ### Wave 9 进度（已完成）
 
@@ -89,7 +89,7 @@ status:review   ──合并────▶  status:done
 | [#162](https://github.com/anitaguptaoffice/sanguo-slg/issues/162) | CLIENT-009 | `status:done`（[#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169)） |
 | [#163](https://github.com/anitaguptaoffice/sanguo-slg/issues/163) | CLIENT-010 | `status:done`（[#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171)） |
 | [#164](https://github.com/anitaguptaoffice/sanguo-slg/issues/164) | QUEST-003 | `status:done`（[#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173)） |
-| [#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) | CLIENT-011 | `status:in-progress`（PR [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172) 待合） |
+| [#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) | CLIENT-011 | `status:done`（[#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172)） |
 | [#166](https://github.com/anitaguptaoffice/sanguo-slg/issues/166) | CLIENT-012 | `status:done`（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)） |
 | [#167](https://github.com/anitaguptaoffice/sanguo-slg/issues/167) | INTG-008 | `status:done`（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)） |
 | [#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168) | DOCS-EXIT-003 | `status:review`（本卡） |
