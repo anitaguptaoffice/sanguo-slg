@@ -11,6 +11,13 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "spec/data/source"
 
 
+def _inline_yaml_line(prefix: str, obj: dict) -> str:
+    body = yaml.dump(
+        obj, default_flow_style=True, allow_unicode=True, sort_keys=False, width=10000
+    ).strip()
+    return f"{prefix}{body}\n"
+
+
 def dump(path: Path, doc: dict) -> None:
     header = {
         "items": "# DATA-002 道具定义（名称/描述在 meta.description；前 6 项顺序锁定 item_cfg_id 2001–2006）\n",
@@ -19,9 +26,20 @@ def dump(path: Path, doc: dict) -> None:
         "shop": "# DATA-002 商城（SHOP-001 / INTG-005 扩展货架）\n",
     }
     key = path.stem
-    text = header.get(key, "") + yaml.dump(
-        doc, allow_unicode=True, sort_keys=False, width=120
-    )
+    if key == "items":
+        lines = [header["items"], "items:\n"]
+        for it in doc["items"]:
+            lines.append(_inline_yaml_line("  - ", it))
+        text = "".join(lines)
+    elif key == "heroes":
+        lines = [header["heroes"], "heroes:\n"]
+        for h in doc["heroes"]:
+            lines.append(_inline_yaml_line("  - ", h))
+        text = "".join(lines)
+    else:
+        text = header.get(key, "") + yaml.dump(
+            doc, allow_unicode=True, sort_keys=False, width=120
+        )
     path.write_text(text, encoding="utf-8")
 
 
