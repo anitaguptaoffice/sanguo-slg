@@ -92,15 +92,27 @@
         font-variant-numeric: tabular-nums;
         text-align: center;
       }
-      #hud .hud-production-rates {
-        display: block;
-        width: 100%;
+      #hud .hud-resource-strip {
+        position: relative;
+        display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 0 0 auto;
+        pointer-events: auto; cursor: default; outline: none;
+      }
+      #hud .hud-resource-strip:focus-visible {
+        box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.55); border-radius: 4px;
+      }
+      #hud .hud-resource-sweep {
+        display: none;
+        flex: 1 1 100%;
         font-size: 11px;
         color: #8a7a5c;
-        margin-top: 2px;
+        line-height: 1.35;
+        white-space: normal;
+        padding-top: 2px;
       }
-      #hud .hud-resource-strip {
-        display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+      #hud .hud-resource-strip:hover .hud-resource-sweep,
+      #hud .hud-resource-strip:focus-within .hud-resource-sweep,
+      #hud .hud-resource-strip.hud-resource-expanded .hud-resource-sweep {
+        display: block;
       }
       #hud .hud-resource-amount { font-variant-numeric: tabular-nums; }
       #hud .hud-resource-item {

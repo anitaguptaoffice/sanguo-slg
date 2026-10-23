@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
-  appendHudProductionRatesLine,
   appendHudResourceStrip,
   CLIENT_032_WIRED_ASSET_IDS,
+  wireHudResourceSweep,
 } from "@/engine/artResourceHud";
 
 describe("appendHudResourceStrip", () => {
@@ -33,15 +33,24 @@ describe("appendHudResourceStrip", () => {
     expect(strip?.textContent).toMatch(/币/);
   });
 
-  it("appends production rates secondary line and strip tooltip", () => {
+  it("wires resource sweep on hover/focus and omits permanent production row", () => {
     const hud = document.createElement("div");
     const assets = { getImageForAsset: vi.fn(() => undefined) } as unknown as AssetLoader;
-    appendHudResourceStrip(hud, { food: 1 }, assets);
-    appendHudProductionRatesLine(hud, { food: 120, wood: 100, iron: 40, stone: 80 });
-    const line = hud.querySelector('[data-role="hud-production-rates"]');
-    expect(line?.textContent).toContain("粮+120/h");
-    const strip = hud.querySelector('[data-role="hud-resources"]');
-    expect(strip?.getAttribute("title")).toContain("粮+120/h");
+    appendHudResourceStrip(hud, { food: 100, wood: 2000 }, assets, { food: 120, wood: 100, iron: 40, stone: 80 });
+    expect(hud.querySelector('[data-role="hud-production-rates"]')).toBeNull();
+    const strip = hud.querySelector('[data-role="hud-resources"]') as HTMLElement;
+    const sweep = strip.querySelector('[data-role="hud-resource-sweep"]');
+    expect(sweep?.textContent).toContain("粮 100 +120/h");
+    expect(strip.getAttribute("title")).toContain("木 2,000 +100/h");
+    expect(strip.tabIndex).toBe(0);
+  });
+
+  it("degrades sweep to balances when production_rates missing", () => {
+    const strip = document.createElement("span");
+    wireHudResourceSweep(strip, undefined, { food: 50, wood: 1 });
+    expect(strip.querySelector('[data-role="hud-resource-sweep"]')?.textContent).toBe(
+      "粮 50 · 木 1 · 铁 0 · 石 0",
+    );
   });
 
   it("falls back to label text when icons missing", () => {
