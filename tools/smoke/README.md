@@ -2,7 +2,27 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 12 网关冒烟（INTG-009，推荐）
+
+在 INTG-008 路径上强制验收 **军事网关** `StartMarch`（合法坐标与兵力）→ `ListMarches` 含对应 `march_id`（失败打印 purpose/phase）；**MAIL-001** `ListPlayerMail` 在 GM send-mail 后非空（与 INTG-007 一致，本波为主路径断言）。保留招募模板、日常 collect/recruit、商城、重启与 M3 子集断言。
+
+**QUEST-003 可选**：`daily_train_1`（`quest_cfg_id=1014`）经 `RecruitTroop` + `train_troops` 挂钩推进后领奖，或 `daily_build_1`（`quest_cfg_id=1032`）经建造挂钩后领奖；**失败不阻塞主路径**（见测试内 `smokeQuest003TrainOrBuildOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG009Wave12SmokePath' -count=1 -v
+```
+
+与 INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:`、`INTG-008:` 与 `INTG-009:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 11 网关冒烟（INTG-008，推荐）
 

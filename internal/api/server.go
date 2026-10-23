@@ -58,8 +58,9 @@ type Server struct {
 	heroSvc       *hero.Service
 	questChainIDs []int32
 	cities        map[int64]*domestic.CityState
-	cityCoords map[int64]cityCoord
-	nextArmyID int64
+	cityCoords    map[int64]cityCoord
+	playerMarches map[int64][]playerMarchRef
+	nextArmyID    int64
 	now        clockFunc
 }
 
@@ -145,6 +146,7 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteRecruitTroop] = s.handleRecruitTroop
 	handlers[RouteStartMarch] = s.handleStartMarch
+	handlers[RouteListMarches] = s.handleListMarches
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)
 	handlers[RouteListBattleReports] = s.handleListBattleReports
 	for route, h := range s.shard.GatewayHandlers() {

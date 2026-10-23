@@ -42,3 +42,23 @@ func (s *Server) RegisterCityForTest(cityID int64, c *domestic.CityState, x, y i
 func (s *Server) BindSessionForTest(sessionID string, pc PlayerContext) {
 	s.sessions.Bind(sessionID, pc)
 }
+
+// SeedCityTroopsForTest sets in-city troop counts for gateway smoke tests (api_test).
+func (s *Server) SeedCityTroopsForTest(cityID int64, unitCfgID, count int32) {
+	mc := s.military.City(cityID)
+	if mc == nil {
+		dom := s.cities[cityID]
+		if dom == nil {
+			return
+		}
+		s.ensureMilitaryCity(dom)
+		mc = s.military.City(cityID)
+	}
+	if mc == nil {
+		return
+	}
+	if mc.Troops == nil {
+		mc.Troops = make(map[int32]int32)
+	}
+	mc.Troops[unitCfgID] = count
+}
