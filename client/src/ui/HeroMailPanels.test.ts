@@ -1,8 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import { MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
+import {
+  MAIL_INBOX_FILTER_SESSION_KEY,
+  readMailInboxFilterSession,
+} from "@/net/mailInboxFilter";
 import { HERO_DETAIL_SELECTED_SESSION_KEY } from "@/net/heroDetailSelectedSession";
 import { HERO_LIST_REFRESH_PULSE_CLASS } from "@/net/heroListRefreshFeedback";
 import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
@@ -25,6 +29,20 @@ function sessionBase(): MainCitySession {
 }
 
 describe("HeroMailPanels", () => {
+  beforeEach(() => {
+    sessionStorage.removeItem(MAIL_INBOX_FILTER_SESSION_KEY);
+  });
+
+  it("mail filter toolbar exposes ART-UI-FILTER chip hooks (CLIENT-122)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-action="mail-filter-all"][data-ui-filter-chip]')).toBeTruthy();
+    expect(mount.querySelector('[data-action="mail-filter-unread"][data-ui-filter-chip]')).toBeTruthy();
+    expect(mount.querySelector('[data-role="mail-filter-bar"]')).toBeTruthy();
+  });
+
   it("mail panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {
     const mount = document.createElement("div");
     const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
@@ -559,7 +577,7 @@ describe("HeroMailPanels", () => {
     expect(patched?.bag).toEqual([{ item_cfg_id: 2001, quantity: 2 }]);
     expect(session.wallet?.gold).toBe(50);
     expect(statuses.some((s) => s.includes("领取成功") && s.includes("谷袋"))).toBe(true);
-    expect(mount.querySelector(".mail-unclaimed-badge")).toBeNull();
+    expect(mount.querySelector(".mail-row-count-badge")).toBeNull();
   });
 
   it("mail without attachments hides claim button", async () => {
@@ -612,7 +630,8 @@ describe("HeroMailPanels", () => {
     panels.attach();
     panels.toggleMail();
     await flushPromises();
-    expect(mount.querySelector(".mail-unclaimed-badge")?.textContent).toBe("未领取");
+    const rowCount = mount.querySelector('.mail-list [data-mail-id="9"] [data-ui-filter-badge="count"]');
+    expect(rowCount?.getAttribute("data-filter-badge-count")).toBe("1");
     const claimBtn = mount.querySelector('[data-action="claim-mail"]');
     expect(claimBtn?.classList.contains("hidden")).toBe(false);
     expect(claimBtn?.classList.contains("mail-claim-highlight")).toBe(true);
@@ -665,7 +684,7 @@ describe("HeroMailPanels", () => {
     badgeCalls.length = 0;
     mount.querySelector('[data-action="claim-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    expect(mount.querySelector(".mail-unclaimed-badge")).toBeNull();
+    expect(mount.querySelector(".mail-row-count-badge")).toBeNull();
     expect(hudSnaps.at(-1)).toEqual({ count: 1, firstId: 12 });
     panels.toggleMail();
     await panels.syncUnreadBadge();
@@ -789,9 +808,13 @@ describe("HeroMailPanels", () => {
     panels.toggleMail();
     await flushPromises();
     const unreadBtn = mount.querySelector('[data-action="mail-filter-unread"]');
-    expect(unreadBtn?.textContent).toBe("未读 2");
-    const attachBadge = mount.querySelector('[data-role="mail-filter-attach-badge"]');
-    expect(attachBadge?.textContent).toBe("附件 1");
+    expect(unreadBtn?.querySelector(".art-filter-chip-label")?.textContent).toBe("未读");
+    const unreadCount = mount.querySelector('[data-role="mail-filter-unread-count"]');
+    expect(unreadCount?.getAttribute("data-filter-badge-count")).toBe("2");
+    expect(unreadCount?.textContent).toBe("2");
+    const attachBadge = mount.querySelector('[data-role="mail-filter-all-count"]');
+    expect(attachBadge?.getAttribute("data-filter-badge-count")).toBe("1");
+    expect(attachBadge?.textContent).toBe("1");
   });
 
   it("tab attachment badge drops immediately after claim", async () => {
@@ -822,12 +845,38 @@ describe("HeroMailPanels", () => {
     panels.attach();
     panels.toggleMail();
     await flushPromises();
-    expect(mount.querySelector('[data-role="mail-filter-attach-badge"]')?.textContent).toBe("附件 1");
+    expect(mount.querySelector('[data-role="mail-filter-all-count"]')?.textContent).toBe("1");
     mount.querySelector('[data-action="claim-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    const badge = mount.querySelector('[data-role="mail-filter-attach-badge"]');
+    const badge = mount.querySelector('[data-role="mail-filter-all-count"]');
     expect(badge?.textContent).toBe("");
     expect(badge?.classList.contains("hidden")).toBe(true);
+  });
+
+  it("persists inbox filter in sessionStorage (CLIENT-122)", async () => {
+    const mount = document.createElement("div");
+    const storage = new Map<string, string>();
+    vi.stubGlobal("sessionStorage", {
+      getItem: (k: string) => storage.get(k) ?? null,
+      setItem: (k: string, v: string) => storage.set(k, v),
+      removeItem: (k: string) => storage.delete(k),
+      clear: () => storage.clear(),
+    });
+    const listPlayerMail = vi.fn().mockResolvedValue({ mails: [], total_count: 0 });
+    const gateway: GatewayPort = { listPlayerMail, getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    mount.querySelector('[data-action="mail-filter-unread"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(storage.get(MAIL_INBOX_FILTER_SESSION_KEY)).toBe(String(MAIL_INBOX_FILTER_UNREAD));
+    panels.detach();
+    const mount2 = document.createElement("div");
+    const panels2 = new HeroMailPanels(mount2, gateway, () => sessionBase(), () => {}, () => {});
+    panels2.attach();
+    expect(readMailInboxFilterSession()).toBe(MAIL_INBOX_FILTER_UNREAD);
+    vi.unstubAllGlobals();
   });
 
   it("syncUnreadBadge reports total_count to callback", async () => {

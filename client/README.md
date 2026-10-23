@@ -32,7 +32,9 @@
 
 ### ART-UI-FILTER-008 工程挂载（列表筛选 chrome）
 
-从 Draft **#506** @ `38451735` 只读 cherry-pick **9** manifest id / **18** PNG（chip 四态、row 三态 nine-slice、`badge.dot` / `badge.count`）；**不合** #506 / #108 / #77 / #82。运行时薄封装 **`artUiFilterSkin`**：`mountFilterUiSkins` 对 `data-ui-filter-chip` / `data-ui-filter-row` / `data-ui-filter-badge` 接线；chip 精灵 **72×32**、**命中区 CSS ≥44×44**；计数角标 **20×16** 文案 **1–9 / 9+**（`formatFilterBadgeCount`）。**`data-art-skin="off"`** 跳过皮肤。完整面板筛选 UX 留给后续 CLIENT 卡；本挂载供 wave 面板接线。证据：`docs/art/samples/art-ui-filter-008/`（`manifest-index.json`、`hit-proof.json`）。单测：`artUiFilterSkin.test.ts`。
+从 Draft **#506** @ `38451735` 只读 cherry-pick **9** manifest id / **18** PNG（chip 四态、row 三态 nine-slice、`badge.dot` / `badge.count`）；**不合** #506 / #108 / #77 / #82。运行时薄封装 **`artUiFilterSkin`**：`mountFilterUiSkins` 对 `data-ui-filter-chip` / `data-ui-filter-row` / `data-ui-filter-badge` 接线；chip 精灵 **72×32**、**命中区 CSS ≥44×44**；计数角标 **20×16** 文案 **1–9 / 9+**（`formatFilterBadgeCount`）。**`data-art-skin="off"`** 跳过皮肤。证据：`docs/art/samples/art-ui-filter-008/`（`manifest-index.json`、`hit-proof.json`）。单测：`artUiFilterSkin.test.ts`。
+
+**CLIENT-122（邮件面板）**：在 **CLIENT-121** `artFilterChipRuntime` / `remountPanelFilterChips` 之上，收件箱 **全部 / 未读** 筛选条接 `data-ui-filter-chip` + `badge.count`（count=0 整节点 `hidden`）；`mail-inbox-filter-v1` 记忆 filter（与 **CLIENT-106** 角标推导并存）。列表行 `data-ui-filter-row` + 未读 **dot** / 未领附件 **count**（`formatMailFilterChips` / `formatMailRowCountBadge`）。`HeroMailPanels.mountMailFilterSkins(assets)` 与 `MainCityScene` 全局 `remountPanelFilterChips` 并存。
 
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
