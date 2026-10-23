@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   battleReportListLines,
+  battleReportMatchesOutcomeFilter,
+  filterBattleReportsByOutcome,
+  formatBattleReportDetail,
+  formatCasualtyMap,
   formatMarchHint,
   formatMarchLine,
   formatReportLine,
@@ -58,6 +62,35 @@ describe("militaryFormat", () => {
     expect(marchListLines([])[0]).toContain("暂无行军");
     expect(marchNeedsPoll([{ phase: 3 }])).toBe(false);
     expect(marchNeedsPoll([{ phase: 2 }])).toBe(true);
+  });
+
+  it("filters battle reports by outcome client-side", () => {
+    const reports = [
+      { report_id: 1, outcome: 1 },
+      { report_id: 2, outcome: 2 },
+      { report_id: 3, outcome: 3 },
+      { report_id: 4, outcome: 1 },
+    ];
+    expect(filterBattleReportsByOutcome(reports, "all")).toHaveLength(4);
+    expect(filterBattleReportsByOutcome(reports, "win").map((r) => r.report_id)).toEqual([1, 4]);
+    expect(filterBattleReportsByOutcome(reports, "loss").map((r) => r.report_id)).toEqual([2]);
+    expect(filterBattleReportsByOutcome(reports, "draw").map((r) => r.report_id)).toEqual([3]);
+    expect(battleReportMatchesOutcomeFilter({ outcome: 2 }, "loss")).toBe(true);
+    expect(battleReportMatchesOutcomeFilter({ outcome: 2 }, "win")).toBe(false);
+  });
+
+  it("formats battle report detail summary", () => {
+    const text = formatBattleReportDetail(9, { report_id: 9, outcome: 1 }, {
+      result: "attacker_win",
+      rounds: [{ round: 1 }, { round: 2 }],
+      attacker_casualties: { infantry: 10 },
+      defender_casualties: { cavalry: 5 },
+    });
+    expect(text).toContain("攻方获胜");
+    expect(text).toContain("回合数：2");
+    expect(text).toContain("步兵 10");
+    expect(text).toContain("骑兵 5");
+    expect(formatCasualtyMap({})).toBe("无");
   });
 
   it("pickMarchTroops caps by available count", () => {

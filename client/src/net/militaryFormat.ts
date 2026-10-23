@@ -58,6 +58,40 @@ const OUTCOME_LABEL: Record<number, string> = {
   3: "平局",
 };
 
+/** 战报列表客户端筛选（不传给 ListBattleReports）。胜=攻胜(1)、负=守胜(2)、平=平局(3)。 */
+export type BattleReportOutcomeFilter = "all" | "win" | "loss" | "draw";
+
+const TROOP_CODE_LABEL: Record<string, string> = {
+  infantry: "步兵",
+  cavalry: "骑兵",
+  archer: "弓兵",
+  siege: "器械",
+};
+
+const BATTLE_RESULT_LABEL: Record<string, string> = {
+  attacker_win: "攻方获胜",
+  defender_win: "守方获胜",
+};
+
+export function battleReportMatchesOutcomeFilter(
+  report: BattleReportSummary,
+  filter: BattleReportOutcomeFilter,
+): boolean {
+  if (filter === "all") return true;
+  const outcome = report.outcome ?? 0;
+  if (filter === "win") return outcome === 1;
+  if (filter === "loss") return outcome === 2;
+  if (filter === "draw") return outcome === 3;
+  return true;
+}
+
+export function filterBattleReportsByOutcome(
+  reports: BattleReportSummary[],
+  filter: BattleReportOutcomeFilter,
+): BattleReportSummary[] {
+  return reports.filter((r) => battleReportMatchesOutcomeFilter(r, filter));
+}
+
 export function unitLabel(unitCfgId: number): string {
   return UNIT_LABEL[unitCfgId] ?? `兵种#${unitCfgId}`;
 }
@@ -147,24 +181,56 @@ export function battleReportListLines(reports: BattleReportSummary[]): string[] 
   return reports.map(formatReportLine);
 }
 
+export function formatCasualtyMap(casualties: Record<string, number> | undefined): string {
+  if (!casualties) return "无";
+  const parts = Object.entries(casualties)
+    .filter(([, n]) => (n ?? 0) > 0)
+    .map(([code, n]) => `${TROOP_CODE_LABEL[code] ?? code} ${n}`);
+  return parts.length ? parts.join("、") : "无";
+}
+
+export function formatBattleResultText(result: string | undefined): string {
+  if (!result) return "—";
+  return BATTLE_RESULT_LABEL[result] ?? result;
+}
+
+export type BattleReportDetailView = {
+  result?: string;
+  rounds?: {
+    round?: number;
+    attacker_troops?: Record<string, number>;
+    defender_troops?: Record<string, number>;
+    attacker_to_def_hp?: number;
+    defender_to_att_hp?: number;
+  }[];
+  attacker_casualties?: Record<string, number>;
+  defender_casualties?: Record<string, number>;
+};
+
+export type BattleRoundView = NonNullable<BattleReportDetailView["rounds"]>[number];
+
+export function formatBattleRoundLine(round: BattleRoundView | undefined): string {
+  if (!round) return "";
+  const n = round.round ?? "?";
+  const att = formatCasualtyMap(round.attacker_troops);
+  const def = formatCasualtyMap(round.defender_troops);
+  const dmg = `伤害 攻→守 ${round.attacker_to_def_hp ?? 0} / 守→攻 ${round.defender_to_att_hp ?? 0}`;
+  return `第 ${n} 回合 · 攻 ${att} · 守 ${def} · ${dmg}`;
+}
+
 export function formatBattleReportDetail(
   reportId: number,
   summary: BattleReportSummary | undefined,
-  detail: {
-    result?: string;
-    rounds?: { round?: number }[];
-    attacker_casualties?: Record<string, number>;
-    defender_casualties?: Record<string, number>;
-  } | undefined,
+  detail: BattleReportDetailView | undefined,
 ): string {
-  const rounds = detail?.rounds?.length ?? 0;
+  const roundCount = detail?.rounds?.length ?? 0;
+  const head = summary ? formatReportLine(summary) : `#${reportId}`;
   return (
-    `${summary ? formatReportLine(summary) : `#${reportId}`}\n` +
-    `结果：${detail?.result ?? "—"}\n` +
-    `回合数：${rounds}\n` +
-    `攻方伤亡：${JSON.stringify(detail?.attacker_casualties ?? {})}\n` +
-    `守方伤亡：${JSON.stringify(detail?.defender_casualties ?? {})}\n` +
-    `（明细字段随服务端 battle 输出；占位展示）`
+    `${head}\n` +
+    `结果：${formatBattleResultText(detail?.result)}\n` +
+    `回合数：${roundCount}\n` +
+    `攻方伤亡：${formatCasualtyMap(detail?.attacker_casualties)}\n` +
+    `守方伤亡：${formatCasualtyMap(detail?.defender_casualties)}`
   );
 }
 
