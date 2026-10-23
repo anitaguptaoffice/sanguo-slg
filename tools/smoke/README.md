@@ -2,7 +2,29 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 18 网关冒烟（INTG-015，推荐）
+
+在 INTG-014 全量断言之上强制验收 **行军 ETA**：`StartMarch` 响应 `march` 含 `depart_at_ms`/`arrive_at_ms` 且 `arrive_at_ms > depart_at_ms`（日志打印 `march_id` 与两时间戳）；`ListMarches` 首条目的点坐标与 INTG-014 一致。**战报分页**：`ListBattleReports` `limit=5` `offset=0` 成功（打印条数）；`offset=首页条数` 第二次调用返回空或更短列表且不报错（dev 无战报时与 INTG-012 一致 **skip** 并打印 hint）。保留 GetBattleReport 坐标/rounds、ClaimPlayerMailAttachments、邮件已读、建造加速与日常 claim、双榜/UseConsumable 2001/社交可选与进程重启持久化。
+
+**本波仍不做** `CancelMarch`/行军加速——`military.v1` 契约未定义对应 RPC。
+
+**可选**：`RecruitTroop` 后 `ListMarches` 仍为空或仅含本次 `StartMarch` 的 `march_id`；**失败不阻塞主路径**（见测试内 `smokeINTG014RecruitTroopListMarchesOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG015Wave18SmokePath' -count=1 -v
+```
+
+与 INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-015:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 17 网关冒烟（INTG-014，推荐）
 

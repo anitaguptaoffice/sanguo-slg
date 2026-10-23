@@ -394,6 +394,15 @@
       .rank-col-score { text-align: right; white-space: nowrap; }
       .guild-members { padding-left: 0; max-height: 140px; overflow: auto; list-style: none; }
       .guild-members li { padding: 6px 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; font-size: 12px; }
+      .chat-log li.social-list-empty,
+      .guild-members li.social-list-empty {
+        cursor: default; color: #b8a88a; font-size: 12px; line-height: 1.45; background: transparent;
+      }
+      .social-guild-nav {
+        margin-top: 6px; padding: 4px 10px; font-size: 12px;
+        background: #3d3028; color: #f5e6c8; border: 1px solid #5c4a32; border-radius: 4px; cursor: pointer;
+      }
+      .social-refresh-status.social-refresh-stale { color: #e8a87c; }
       .main-city-toolbar { flex-wrap: wrap; }
       .main-city-toolbar button { min-width: 72px; flex: 1 1 30%; }
     </style>

@@ -236,3 +236,52 @@ export function leaderboardTypeLabel(type?: number): string {
       return "排行榜";
   }
 }
+
+/** 社交面板空列表行 class（排行/军团/聊天统一密度，CLIENT-053）。 */
+export const SOCIAL_LIST_EMPTY_CLASS = "social-list-empty";
+
+export function socialChatEmptyListClass(): string {
+  return SOCIAL_LIST_EMPTY_CLASS;
+}
+
+export function socialGuildMembersEmptyListClass(): string {
+  return SOCIAL_LIST_EMPTY_CLASS;
+}
+
+export function socialRankEmptyRowClass(): string {
+  return "rank-empty-row";
+}
+
+/** 聊天真空列表（与 CLIENT-045「刷新」按钮并存）。 */
+export function formatSocialChatEmptyMessage(): string {
+  return "暂无消息，请点「刷新」拉取记录，或通过下方输入框发送";
+}
+
+/** 已入团但成员列表为空。 */
+export function formatSocialGuildMembersEmptyMessage(): string {
+  return "暂无成员，请点「刷新成员」同步列表";
+}
+
+/** 排行双榜空榜（含 dev 无种子提示与刷新引导）。 */
+export function formatSocialRankEmptyMessage(): string {
+  return "（空榜）暂无上榜数据，请点「刷新排行榜」拉取；dev 环境可能未写入排行种子，可对照 Scheduler / smoke 造数。";
+}
+
+/** 列表加载失败时行内摘要（状态栏仍用 formatSocialPanelRefreshError）。 */
+export function formatSocialPanelListRefreshHint(): string {
+  return "请点「刷新」重试";
+}
+
+/** 刷新失败但仍展示上次成功快照时的标注。 */
+export function formatSocialPanelStaleDataLabel(): string {
+  return "数据可能已过期";
+}
+
+/** 未加入军团时的只读说明。 */
+export function formatSocialGuildNotJoinedReadonlyMessage(): string {
+  return "尚未加入军团，军团频道与成员列表不可用。";
+}
+
+export function formatSocialGuildTabNavigateLabel(): string {
+  return "前往军团";
+}

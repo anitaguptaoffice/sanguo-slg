@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
-import { BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID, QueuePanels } from "@/ui/QueuePanels";
+import {
+  BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID,
+  QUEUE_DAILY_NEXT_BUTTON_LABEL,
+  QueuePanels,
+} from "@/ui/QueuePanels";
 
 const baseSession = (): MainCitySession => ({
   serverId: 1,
@@ -52,6 +56,32 @@ describe("QueuePanels", () => {
     panel.toggle();
     const btn2 = mount.querySelector('[data-action="speedup-build"]') as HTMLButtonElement;
     expect(btn2.disabled).toBe(false);
+  });
+
+  it("shows daily next link on build row when daily_build_1 matches farm upgrade", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onOpenDaily = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      () => [{ quest_cfg_id: 1032, quest_code: "daily_build_1", state: 2 }],
+      onOpenDaily,
+    );
+    panel.attach();
+    panel.toggle();
+    const dailyBtn = mount.querySelector('[data-action="daily-build-next"]') as HTMLButtonElement;
+    expect(dailyBtn?.textContent).toBe(QUEUE_DAILY_NEXT_BUTTON_LABEL);
+    dailyBtn.click();
+    expect(onOpenDaily).toHaveBeenCalledWith(1032);
   });
 
   it("calls UseConsumable and refreshes city state on success", async () => {

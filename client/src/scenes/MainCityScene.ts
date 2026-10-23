@@ -273,6 +273,8 @@ export class MainCityScene implements Scene {
       (action) => this.navigateDailyQuest(action),
       () => this.hudTodoBadgePoll.getDeepLinkSnapshot().battleReportUnread,
       () => this.openBattleReportsFromDailyBanner(),
+      () => this.session?.buildings,
+      SLOT_LABEL,
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
@@ -360,6 +362,16 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       () => this.syncMilitaryPanel(),
+      () => {
+        const fromPanel = this.dailyQuest.getRowsSnapshot();
+        if (fromPanel.length) return fromPanel;
+        return this.hudTodoBadgePoll.getDeepLinkSnapshot().dailyChainRows;
+      },
+      (questCfgId) => {
+        this.dailyQuest.openAndFocusQuest(questCfgId);
+        this.status = "已打开「日常」并定位对应建造日课";
+        this.renderHud();
+      },
     );
     this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets, "button");

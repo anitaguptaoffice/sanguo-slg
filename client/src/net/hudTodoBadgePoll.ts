@@ -37,7 +37,8 @@ export class HudTodoBadgePoll {
   private readonly fastSec: number;
   private readonly slowSec: number;
   private mailInflight: Promise<{ count: number; firstId: number }> | null = null;
-  private dailyInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private dailyInflight: Promise<{ count: number; firstId: number; rows: DailyQuestRow[] }> | null =
+    null;
   private reportsInflight: Promise<{ count: number; firstId: number }> | null = null;
   private deepLink: HudTodoDeepLinkSnapshot = { ...EMPTY_HUD_TODO_DEEP_LINK };
 
@@ -92,7 +93,7 @@ export class HudTodoBadgePoll {
         ? { count: 0, firstId: 0 }
         : this.fetchMailSnapshot(),
       this.opts.isDailySuppressed()
-        ? { count: 0, firstId: 0 }
+        ? { count: 0, firstId: 0, rows: [] }
         : this.fetchDailySnapshot(),
       this.opts.isReportsSuppressed()
         ? { count: 0, firstId: 0 }
@@ -107,6 +108,7 @@ export class HudTodoBadgePoll {
       firstUnreadMailId: mail.firstId,
       firstDailyTodoCfgId: daily.firstId,
       firstUnreadBattleReportId: reports.firstId,
+      dailyChainRows: daily.rows,
     };
     this.opts.onCounts(this.deepLink);
   }
@@ -129,10 +131,14 @@ export class HudTodoBadgePoll {
     return p;
   }
 
-  private fetchDailySnapshot(): Promise<{ count: number; firstId: number }> {
+  private fetchDailySnapshot(): Promise<{
+    count: number;
+    firstId: number;
+    rows: DailyQuestRow[];
+  }> {
     if (this.dailyInflight) return this.dailyInflight;
     const sid = this.opts.getServerId();
-    if (!sid) return Promise.resolve({ count: 0, firstId: 0 });
+    if (!sid) return Promise.resolve({ count: 0, firstId: 0, rows: [] });
     const p = this.opts.gateway
       .listPlayerQuests(sid, { chainId: DAILY_QUEST_CHAIN_ID, includeCompleted: true })
       .then((res) => {
@@ -140,9 +146,10 @@ export class HudTodoBadgePoll {
         return {
           count: countDailyTodoQuests(rows),
           firstId: pickFirstDailyTodoQuestCfgId(rows),
+          rows,
         };
       })
-      .catch(() => ({ count: 0, firstId: 0 }))
+      .catch(() => ({ count: 0, firstId: 0, rows: [] }))
       .finally(() => {
         if (this.dailyInflight === p) this.dailyInflight = null;
       });

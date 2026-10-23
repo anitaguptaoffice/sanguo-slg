@@ -203,8 +203,9 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 2. 底栏 **「日常」** → **刷新列表**。每行应带 objective 标签（如 `[练兵]`、`[建造]`、`[战备]`）+ cfg code + `current/target` 进度（与 ListPlayerQuests 一致）。
 3. **daily_train_1**：接取且进行中 → 详情/「下一步」提示募兵 → 点 **「前往下一步」** 应打开 **「队列」** 与 **「军事」**；完成募兵后进度由服务端推进 → **领奖**，顶栏 CLIENT-018 `+…` 飘字与 HUD 更新。
 4. **daily_build_1**：接取且进行中 → **「前往下一步」** 打开 **「队列」**；对农田等发起升级并完成队列后进度达标 → 领奖。
-5. **daily_march_1**：接取且进行中 → **「前往下一步」** 打开 **「背包」** 并高亮 **2020 远征干粮** → **使用道具** 成功后日常进度推进 → 领奖。
-6. 单测：`dailyQuestObjective.test.ts`；全量 `cd client && npm test`。
+5. **CLIENT-052 队列↔日常互链**：`daily_build_1` 进行中且农田（`building_cfg_id=2`）正在升级 → **「队列」** 对应建造行出现 **「日常：下一步」**，点击打开 **「日常」** 并滚到 1032 行；日常列表该行附带 **队列：农田 → Lv… · 剩余 …** 只读摘要（与队列面板同一 `GetCityState` 快照，不新 RPC）。加速符 **DOM-003** 逻辑不变。
+6. **daily_march_1**：接取且进行中 → **「前往下一步」** 打开 **「背包」** 并高亮 **2020 远征干粮** → **使用道具** 成功后日常进度推进 → 领奖。
+7. 单测：`dailyQuestObjective.test.ts`、`dailyQuestQueueMatch.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（日常战备与战报横幅 CLIENT-044）
 
@@ -536,6 +537,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 断网或 mock 失败：面板内红色 **刷新失败：…** 文案（网关 `formatSocialGatewayError`），状态栏同步；修复后再次刷新应恢复时间戳。
 4. **「聊天」** 各频道（世界/私聊/军团）同理：**刷新** 按钮 + **上次更新**；发送成功后自动刷新也应更新时间戳。
 5. 单测：`socialRefreshFormat.test.ts`、`socialPanelInflight.test.ts`、`SocialPanels.test.ts`（时间戳、in-flight 禁用、失败文案）。
+
+### 手动验收（社交空态与错误文案 CLIENT-053）
+
+排行/军团/聊天空列表与刷新失败文案统一走 `socialFormat` + `formatSocialPanelRefreshError`（与 CLIENT-045 刷新按钮并存）。
+
+1. **排行**：空榜行含「刷新排行榜」引导；刷新失败且曾有成功数据时表格保留上次快照，状态栏 **刷新失败** 并标注 **数据可能已过期**。
+2. **聊天**：无消息时列表空态含「刷新」引导；军团频道未入团为只读说明 + **前往军团**（不新 RPC）。
+3. **军团**：未入团成员区只读说明；已入团无成员或刷新失败时列表空态与面板内 **刷新失败：…** 一致。
+4. 单测：`socialFormat.test.ts`（空态 key）、`SocialPanels.test.ts`（陈旧快照、军团跳转、列表重试提示）。
 
 ### 手动验收（将领招募对比 CLIENT-031）
 

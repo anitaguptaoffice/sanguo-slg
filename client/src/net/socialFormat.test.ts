@@ -14,6 +14,16 @@ import {
   serverStatusLabel,
   sortGuildMembers,
   truncatePlayerId,
+  SOCIAL_LIST_EMPTY_CLASS,
+  formatSocialChatEmptyMessage,
+  formatSocialGuildMembersEmptyMessage,
+  formatSocialGuildNotJoinedReadonlyMessage,
+  formatSocialPanelListRefreshHint,
+  formatSocialPanelStaleDataLabel,
+  formatSocialRankEmptyMessage,
+  socialChatEmptyListClass,
+  socialGuildMembersEmptyListClass,
+  socialRankEmptyRowClass,
 } from "@/net/socialFormat";
 
 describe("socialFormat", () => {
@@ -95,6 +105,19 @@ describe("socialFormat", () => {
     expect(groups[1].messages).toHaveLength(2);
     const todayKey = localCalendarDayKey(todayMorning);
     expect(formatChatDayGroupTitle(todayKey, now)).toBe("今日");
+  });
+
+  it("exposes unified social panel empty keys and copy (CLIENT-053)", () => {
+    expect(socialChatEmptyListClass()).toBe(SOCIAL_LIST_EMPTY_CLASS);
+    expect(socialGuildMembersEmptyListClass()).toBe(SOCIAL_LIST_EMPTY_CLASS);
+    expect(socialRankEmptyRowClass()).toBe("rank-empty-row");
+    expect(formatSocialChatEmptyMessage()).toContain("刷新");
+    expect(formatSocialGuildMembersEmptyMessage()).toContain("刷新成员");
+    expect(formatSocialRankEmptyMessage()).toContain("刷新排行榜");
+    expect(formatSocialRankEmptyMessage()).toContain("种子");
+    expect(formatSocialGuildNotJoinedReadonlyMessage()).toContain("尚未加入军团");
+    expect(formatSocialPanelListRefreshHint()).toBe("请点「刷新」重试");
+    expect(formatSocialPanelStaleDataLabel()).toBe("数据可能已过期");
   });
 
   it("maps social gateway error codes to readable hints", () => {
