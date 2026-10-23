@@ -1,6 +1,7 @@
 package content
 
 import (
+	"context"
 	"sort"
 	"sync"
 )
@@ -22,6 +23,7 @@ type Service struct {
 	wallets     map[PlayerRef]ResourceWallet
 	idempotency map[string]idemRecord
 	grantSeq    map[int32]int64
+	store       Store
 }
 
 func NewService(cat *Catalog) *Service {
@@ -35,6 +37,37 @@ func NewService(cat *Catalog) *Service {
 		idempotency: make(map[string]idemRecord),
 		grantSeq:    make(map[int32]int64),
 	}
+}
+
+// UseStore enables PostgreSQL persistence for bags and grant idempotency.
+func (s *Service) UseStore(store Store) {
+	s.store = store
+}
+
+// LoadPlayer hydrates the in-memory bag from PostgreSQL (no-op without a store).
+func (s *Service) LoadPlayer(ctx context.Context, p PlayerRef) error {
+	if s.store == nil {
+		return nil
+	}
+	stacks, err := s.store.LoadBag(ctx, p)
+	if err != nil {
+		return err
+	}
+	s.mu.Lock()
+	b := newBag()
+	for _, st := range stacks {
+		b.Stacks[st.ItemCfgID] = st.Quantity
+	}
+	s.bags[p] = b
+	s.mu.Unlock()
+	return nil
+}
+
+func (s *Service) persistStack(ctx context.Context, p PlayerRef, itemCfgID int32, qty int32) error {
+	if s.store == nil {
+		return nil
+	}
+	return s.store.SaveStack(ctx, p, itemCfgID, qty)
 }
 
 func (s *Service) bagFor(p PlayerRef) *Bag {
@@ -114,6 +147,9 @@ func (s *Service) addUnlocked(p PlayerRef, itemCfgID int32, delta int32) (int32,
 		return 0, ErrStackLimit
 	}
 	b.Stacks[itemCfgID] = next
+	if err := s.persistStack(context.Background(), p, itemCfgID, next); err != nil {
+		return 0, err
+	}
 	return next, nil
 }
 
@@ -146,12 +182,18 @@ func (s *Service) Set(p PlayerRef, itemCfgID int32, qty int32) error {
 	b := s.bagFor(p)
 	if qty == 0 {
 		delete(b.Stacks, itemCfgID)
+		if err := s.persistStack(context.Background(), p, itemCfgID, 0); err != nil {
+			return err
+		}
 		return nil
 	}
 	if b.Stacks[itemCfgID] == 0 && s.distinctCount(b, itemCfgID) >= int(s.catalog.BagMaxDistinctItems) {
 		return ErrBagFull
 	}
 	b.Stacks[itemCfgID] = qty
+	if err := s.persistStack(context.Background(), p, itemCfgID, qty); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -175,6 +217,9 @@ func (s *Service) Remove(p PlayerRef, itemCfgID int32, delta int32) (int32, erro
 		delete(b.Stacks, itemCfgID)
 	} else {
 		b.Stacks[itemCfgID] = next
+	}
+	if err := s.persistStack(context.Background(), p, itemCfgID, next); err != nil {
+		return 0, err
 	}
 	return next, nil
 }
