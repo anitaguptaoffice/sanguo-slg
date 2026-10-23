@@ -416,3 +416,308 @@
   body: |
     仅 client/**。在 MainCityScene 扩展或新增 MilitaryScene，复用 GatewayClient 与 bootstrapSession。
     依赖 INTG-002 后端闭环就绪后再切真实路由，开发期可用 mock-server 对齐消息形状。
+- id: CONTRACT-002
+  title: M3 协议：分服选服、军团、聊天、排行
+  wave: 5
+  domain: spec
+  depends_on: [CONTRACT-001]
+  size: M
+  owner_dir: spec/proto
+  scope: [spec/proto/**]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/db/**]
+  acceptance:
+    - 分服：选服列表、进入游戏服、server_id 贯穿请求上下文
+    - 军团：创建/加入/退出/成员列表与基础错误码
+    - 聊天：世界频道、私聊、军团频道消息结构与发送限制字段
+    - 排行：榜单类型、分页查询、快照版本或刷新时间字段
+    - protoc 生成通过；PR 标题以 contract: 开头
+  body: |
+    M3 多人玩法协议扩展，仅改 spec/proto。消费者为网关与各 internal 域。
+    依赖 CONTRACT-001（M2 协议基线）；若 CONTRACT-001 未合并，可先对照 SPEC-002 起草，合并前须与 CONTRACT-001 对齐。
+    独立 PR，标题必须以 `contract:` 开头。
+
+- id: SPEC-005
+  title: M3 DDL：分服列表、军团、聊天、排行快照
+  wave: 5
+  domain: spec
+  depends_on: [SPEC-001]
+  size: M
+  owner_dir: spec/db
+  scope: [spec/db/**, spec/rules/**]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/proto/**]
+  acceptance:
+    - game_server（或等价）表扩展：选服列表所需字段与索引
+    - guild、guild_member 表：主键、server_id、成员角色/权限字段
+    - chat_message 或频道+消息表：世界/私聊/军团频道可区分
+    - rank_snapshot（或等价）：榜单类型、排行条目、刷新批次
+    - DDL 通过 psql 语法校验；规则文档说明分服与单服写边界
+  body: |
+    M3 数据模型与必要规则说明。表结构从零扩展，与 SPEC-001 分服字段一致。
+    聊天可先单服 PG 模型；排行快照支持定时刷新写入。
+
+- id: PLAT-004
+  title: 分服路由：选服列表与会话绑 server_id
+  wave: 5
+  domain: platform
+  depends_on: [CONTRACT-002, SPEC-005, ACC-001, PLAT-002]
+  size: L
+  owner_dir: internal/platform
+  scope: [internal/platform/**, internal/api/**, cmd/**]
+  out_of_scope: [internal/chat/**, internal/rank/**, internal/guild/**, internal/account/**, client/**, spec/**]
+  acceptance:
+    - 选服列表 API/消息：可读服务器列表与状态
+    - 登录或进服后会话绑定 server_id，后续请求带服上下文
+    - 文档或代码注释说明单服写边界（账号全局、角色/玩法按 server_id）
+    - 网关路由能把 M3 消息派发到装配层，不实现聊天/军团业务逻辑
+    - 集成测试或单测覆盖选服与 server_id 绑定
+  body: |
+    平台装配：分服路由与 server_id 上下文，衔接 ACC-001 与网关。
+    允许改 cmd/**、internal/api/** 做路由注册；禁止改写 account 域核心目录。
+    CHAT-001、RANK-001、GUILD-001 可在本卡合并后并行开工（均依赖本卡 + 契约）。
+
+- id: CHAT-001
+  title: 世界/私聊最小频道
+  wave: 5
+  domain: platform
+  depends_on: [CONTRACT-002, PLAT-002]
+  size: M
+  owner_dir: internal/chat
+  scope: [internal/chat/**]
+  out_of_scope: [internal/guild/**, client/**, spec/**]
+  acceptance:
+    - 世界频道：同 server_id 内广播或拉取最近消息
+    - 私聊：点对点发送与收件箱查询
+    - 存储可先单服内存或 PG，与 SPEC-005 模型一致或可迁移
+    - 单测覆盖发送、鉴权（仅本服玩家）、基础限流或长度校验
+  body: |
+    聊天域起步，先不实现军团频道（由 GUILD-002 挂接）。
+    可与 RANK-001、GUILD-001 在 PLAT-004 就绪后并行（‖）。
+
+- id: RANK-001
+  title: 战力或资源排行榜定时刷新与查询
+  wave: 5
+  domain: content
+  depends_on: [CONTRACT-002, SPEC-005]
+  size: M
+  owner_dir: internal/rank
+  scope: [internal/rank/**]
+  out_of_scope: [internal/guild/**, internal/chat/**, client/**, spec/**]
+  acceptance:
+    - 至少一种榜单（战力或资源总量）按 server_id 排名
+    - 定时任务或调度器刷新快照，写入 rank 存储
+    - 查询接口：分页、榜单类型、玩家自身名次
+    - 单测覆盖排序逻辑与快照写入
+  body: |
+    排行域：读玩法数据聚合后写快照，不直接改他域表。
+    可与 CHAT-001、GUILD-001 在 PLAT-004 后并行（‖）。
+
+- id: GUILD-001
+  title: 军团创建、加入、退出与成员列表
+  wave: 5
+  domain: content
+  depends_on: [CONTRACT-002, SPEC-005, PLAT-004]
+  size: L
+  owner_dir: internal/guild
+  scope: [internal/guild/**]
+  out_of_scope: [internal/chat/**, client/**, spec/**]
+  acceptance:
+    - 创建军团：名称校验、server_id 隔离、创建者任团长
+    - 加入/退出：人数上限、重复加入拒绝
+    - 成员列表：角色、加入时间、基础职务字段
+    - 单测覆盖状态机与 server_id 隔离
+  body: |
+    军团核心 CRUD，不含军团频道（GUILD-002）。
+    依赖分服上下文（PLAT-004）。可与 CHAT-001、RANK-001 并行（‖）。
+
+- id: GUILD-002
+  title: 军团频道挂接聊天与简单管理权限
+  wave: 5
+  domain: content
+  depends_on: [GUILD-001, CHAT-001]
+  size: M
+  owner_dir: internal/guild
+  scope: [internal/guild/**]
+  out_of_scope: [internal/chat/**, client/**, spec/**]
+  acceptance:
+    - 军团成员可进入军团频道收发消息（通过 chat 包/接口，不复制聊天实现）
+    - 团长/官员可踢出成员或改职务（最小权限集）
+    - 非成员无法读写信道
+    - 单测覆盖权限与挂接逻辑；若仅 import internal/chat，在 PR 说明边界
+  body: |
+    在 guild 域编排军团频道，聊天存储与投递复用 CHAT-001。
+    允许 internal/guild 调用 chat 公开 API；禁止修改 internal/chat/**（需改聊天行为时另开 CHAT 卡）。
+
+- id: INTG-003
+  title: 多人冒烟：选服、聊天、入团、上榜
+  wave: 5
+  domain: platform
+  depends_on: [PLAT-004, CHAT-001, RANK-001, GUILD-001]
+  size: L
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/chat/**, internal/rank/**, internal/guild/**, internal/account/**, client/**, spec/**]
+  acceptance:
+    - smoke 脚本或集成测试：选服 → 登录进服 → 世界聊天一条 → 创建/加入军团 → 触发排行刷新并查询上榜
+    - make dev 或文档说明一键执行方式
+    - 失败时输出可定位的步骤与 server_id
+  body: |
+    M3 出口关键路径装配与冒烟，不改各业务域核心目录（可 import）。
+    GUILD-002、CLIENT-004 可后续接在同一环境验证。
+
+- id: CLIENT-004
+  title: 选服、聊天、军团、排行最小 UI
+  wave: 5
+  domain: client
+  depends_on: [CLIENT-003, INTG-003, CONTRACT-002]
+  size: L
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - 选服界面：列表展示与进入游戏服
+    - 聊天：世界/私聊最小面板，能发收消息
+    - 军团：创建/加入与成员列表展示
+    - 排行：至少一个榜单列表与自身名次
+    - 联调说明：依赖 INTG-003 后端或 make dev
+  body: |
+    M3 客户端最小闭环 UI，占位美术可保留。
+    依赖 CLIENT-003（M2 客户端基线）与 INTG-003 后端就绪。
+
+- id: CONTRACT-003
+  title: M4 协议：任务、商城、GM
+  wave: 6
+  domain: spec
+  depends_on: [CONTRACT-002]
+  size: M
+  owner_dir: spec/proto
+  scope: [spec/proto/**]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/db/**]
+  acceptance:
+    - 任务：接取、进度上报、领奖、任务链状态
+    - 商城：货架列表、购买请求、库存与限购字段
+    - GM：查号、发奖、禁言或踢下线最小指令集与审计字段
+    - protoc 生成通过；PR 标题以 contract: 开头
+  body: |
+    M4 内容向协议扩展，仅 spec/proto。
+    独立 PR，标题必须以 `contract:` 开头。
+
+- id: SPEC-006
+  title: M4 DDL：任务链、商城、邮件与发奖规则
+  wave: 6
+  domain: spec
+  depends_on: [SPEC-001, CONTENT-001]
+  size: M
+  owner_dir: spec/db
+  scope: [spec/db/**, spec/rules/**, spec/data/**]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/proto/**]
+  acceptance:
+    - 任务定义与玩家任务进度表（支持链式前置）
+    - 商城商品、货架、购买记录表
+    - 邮件或待发奖队列表与发奖规则说明
+    - 扩展 content 域道具表注释与索引（若需）
+    - DDL 通过 psql 语法校验
+  body: |
+    M4 数据与规则，扩展现有 content 相关模型，与 CONTENT-001 背包模型对齐。
+
+- id: QUEST-001
+  title: 任务接取、进度与领奖
+  wave: 6
+  domain: content
+  depends_on: [CONTRACT-003, SPEC-006, CONTENT-001]
+  size: L
+  owner_dir: internal/quest
+  scope: [internal/quest/**]
+  out_of_scope: [internal/content/**, client/**, spec/**]
+  acceptance:
+    - 接取任务：前置与重复接取规则
+    - 进度更新：事件或 RPC 驱动，持久化进度
+    - 领奖：发放奖励走 content 发奖钩子（接口约定，不直改 content 目录）
+    - 单测覆盖链式任务与领奖
+  body: |
+    任务域新目录 internal/quest。奖励发放通过 CONTENT-002 提供的钩子或 API，避免跨域改文件。
+
+- id: CONTENT-002
+  title: 道具使用效果扩展与发奖钩子
+  wave: 6
+  domain: content
+  depends_on: [CONTENT-001, SPEC-006]
+  size: M
+  owner_dir: internal/content
+  scope: [internal/content/**]
+  out_of_scope: [internal/quest/**, internal/shop/**, client/**, spec/**]
+  acceptance:
+    - 扩展至少两类道具使用效果（与 SPEC-006 配置一致）
+    - 提供发奖入口：按奖励包 id 或列表写入背包，幂等键可选
+    - 单测覆盖效果与发奖
+  body: |
+    内容域扩展，供 QUEST-001、SHOP-001、GM-001 调用。
+    SHOP-001 可与本卡部分并行，但购买发货依赖发奖钩子就绪。
+
+- id: SHOP-001
+  title: 商城货架与资源道具购买（无支付）
+  wave: 6
+  domain: content
+  depends_on: [CONTRACT-003, CONTENT-002]
+  size: M
+  owner_dir: internal/shop
+  scope: [internal/shop/**]
+  out_of_scope: [internal/content/**, client/**, spec/**]
+  acceptance:
+    - 货架列表：商品、价格（游戏内资源/道具）、限购
+    - 购买：扣资源/道具、通过发奖钩子发货
+    - 无真实支付渠道
+    - 单测覆盖购买成功、余额不足、限购
+  body: |
+    商城域 internal/shop。扣费与发货编排，物品逻辑依赖 CONTENT-002。
+
+- id: GM-001
+  title: 运营最小能力：查号、发奖、禁言或踢下线
+  wave: 6
+  domain: platform
+  depends_on: [PLAT-003, ACC-001]
+  size: M
+  owner_dir: cmd/gm
+  scope: [cmd/gm/**, internal/api/**]
+  out_of_scope: [internal/account/**, client/**, spec/**]
+  acceptance:
+    - 查号：按账号/角色 id 查询基础信息与 server_id
+    - 发奖：调用 content 发奖钩子，有操作日志
+    - 禁言或踢下线：对接聊天或网关会话（最小一种）
+    - 本地或 staging 可执行；权限校验（运营 token 或白名单）
+  body: |
+    运营工具：优先 cmd/gm 子命令，必要时薄 HTTP 在 internal/api。
+    不实现完整 GM 后台 UI。
+
+- id: INTG-004
+  title: 内容冒烟：任务、背包、商城、GM 发奖
+  wave: 6
+  domain: platform
+  depends_on: [QUEST-001, SHOP-001, CONTENT-002]
+  size: L
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/shop/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - smoke：接任务 → 推进度 → 领奖入背包 → 商城购买 → GM 发奖再验背包
+    - 脚本可重复执行，依赖 seed/SPEC-006 数据说明
+    - 与 INTG-003 风格一致的步骤输出
+  body: |
+    M4 出口关键路径。装配与冒烟 only，业务逻辑留在各域。
+    GM-001 可选并行验证，但本卡验收不强制 GM 步骤。
+
+- id: CLIENT-005
+  title: 任务、背包、商城最小 UI
+  wave: 6
+  domain: client
+  depends_on: [CLIENT-004, INTG-004, CONTRACT-003]
+  size: L
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - 任务列表与领奖流程 UI
+    - 背包展示与使用道具（接 CONTENT-002 效果）
+    - 商城货架与购买反馈
+    - 联调 INTG-004 或 make dev 说明
+  body: |
+    M4 客户端最小 UI。若 CLIENT-004 未合并，可暂基于 CLIENT-003 联调（编排者协调）。
