@@ -120,9 +120,20 @@ async function measureIconMount(page) {
       return {
         left,
         top,
+        right,
+        bottom,
         width: Math.max(0, right - left),
         height: Math.max(0, bottom - top),
       };
+    }
+    function rectFullyInside(inner, outer, eps = 0.5) {
+      if (!inner || !outer) return false;
+      return (
+        inner.left >= outer.left - eps &&
+        inner.top >= outer.top - eps &&
+        inner.right <= outer.right + eps &&
+        inner.bottom <= outer.bottom + eps
+      );
     }
     const scrollRect = scroll?.getBoundingClientRect();
     const toolbarRect = document.querySelector(".main-city-toolbar")?.getBoundingClientRect();
@@ -169,18 +180,38 @@ async function measureIconMount(page) {
               labelRect.right <= iconRect.left + 0.5
             )
           : null;
+      const btnBox = { left: br.left, top: br.top, right: br.right, bottom: br.bottom };
+      const visBox = {
+        left: vis.left,
+        top: vis.top,
+        right: vis.left + vis.width,
+        bottom: vis.top + vis.height,
+      };
+      const iconInsideButton = iconRect ? rectFullyInside(iconRect, btnBox) : false;
+      const labelInsideButton = labelRect ? rectFullyInside(labelRect, btnBox) : false;
+      const iconInsideVisible =
+        iconRect && vis.width > 0 && vis.height > 0 ? rectFullyInside(iconRect, visBox) : !iconRect;
+      const labelInsideVisible =
+        labelRect && vis.width > 0 && vis.height > 0 ? rectFullyInside(labelRect, visBox) : !labelRect;
       const onScreen = vis.width >= 8 && vis.height >= 8;
+      const buttonFullyVisible =
+        vis.width >= br.width - 0.5 && vis.height >= br.height - 0.5;
       const center = { x: br.left + br.width / 2, y: br.top + br.height / 2 };
       const el = onScreen ? document.elementFromPoint(center.x, center.y) : null;
       const hitsButton = !!(el && (el === btn || btn.contains(el)));
       const wrapMinCss = wr ? Math.min(wr.width, wr.height) : 0;
+      const layoutOk =
+        iconInsideButton &&
+        labelInsideButton &&
+        (!buttonFullyVisible || (iconInsideVisible && labelInsideVisible)) &&
+        overlap === false;
       const structuralOk =
         !!icon?.src &&
         (label?.textContent?.trim()?.length ?? 0) === 2 &&
         br.width >= 44 * uiScale - 0.5 &&
         br.height >= 44 * uiScale - 0.5 &&
         wrapMinCss >= 44 - 0.5 &&
-        overlap === false;
+        layoutOk;
       return {
         action,
         onScreen,
@@ -190,8 +221,13 @@ async function measureIconMount(page) {
         iconSrc: icon?.src ?? null,
         buttonCss: { w: br.width, h: br.height },
         hitWrapCss: wr ? { w: wr.width, h: wr.height } : null,
-        visibleIntersection: vis,
+        visibleIntersection: { left: vis.left, top: vis.top, width: vis.width, height: vis.height },
+        buttonFullyVisible,
         iconOverlapsLabel: overlap,
+        iconInsideButton,
+        labelInsideButton,
+        iconInsideVisibleRegion: iconInsideVisible,
+        labelInsideVisibleRegion: labelInsideVisible,
         elementFromPointHitsButton: hitsButton,
       };
     });
@@ -306,7 +342,10 @@ async function main() {
       viewports,
       notes: [
         "Icons mounted inside ui.button.toolbar.v1 chrome; .toolbar-btn-hit remains expanded hit slop.",
+        "Horizontal row: 32px icon + 4px gap + ~28px two-char label, vertically centered in 96×44.",
+        "hit-proof requires label/icon bounding rects inside button and inside visible scroll/toolbar crop.",
         "1280 shot taken after scrollLeft=max so queue/world/hero/shop icons are visible.",
+        "Layout fix for art review https://github.com/anitaguptaoffice/sanguo-slg/pull/108#issuecomment-6376204272",
         "Did not merge art Draft PR #481 or board PR #108.",
       ],
     };
@@ -333,7 +372,7 @@ Art assets cherry-picked from Draft PR #481 @ \`${ART_ASSET_SHA.slice(0, 7)}\` (
 
 ## Hit / mount proof
 
-\`hit-proof.json\` — per-action icon src, 2-char labels, ≥44 CSS hit wrap, no icon/label overlap.
+\`hit-proof.json\` — per-action icon src, 2-char labels, ≥44 CSS hit wrap, icon+label inside button & visible crop, no icon/label overlap.
 
 Regenerate: \`cd client && node scripts/capture-art-toolbar-icons-007-evidence.mjs\`
 `,
