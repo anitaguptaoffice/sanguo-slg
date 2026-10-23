@@ -23,6 +23,7 @@ import {
   WORLD_CITY_ROW_MARCH_DEST_CLASS,
   WORLD_CITY_ROW_SELECTED_CLASS,
 } from "@/ui/marchWorldListLink";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { formatWorldTileInfoCard } from "@/ui/worldTileInfoCard";
 
 export type MarchTargetSink = {
@@ -75,6 +76,14 @@ export class WorldPanels {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (!this.panel.classList.contains("hidden")) void this.refreshList();
+  }
+
+  /** CLIENT-108/109：外部深链打开世界面板（不关闭已打开状态）。 */
+  openPanel(): void {
+    if (!this.panel.classList.contains("hidden")) return;
+    this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
+    void this.refreshList();
   }
 
   getRoot(): HTMLElement {

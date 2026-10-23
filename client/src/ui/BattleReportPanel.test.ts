@@ -473,6 +473,43 @@ describe("BattleReportPanel", () => {
     expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
   });
 
+  it("open-replay-world-tile on list row invokes callback without selecting report", async () => {
+    const mount = document.createElement("div");
+    const onOpenReplayWorldTile = vi.fn();
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          {
+            report_id: 9,
+            outcome: 1,
+            location_x: 40,
+            location_y: 41,
+            created_at_ms: 0,
+          },
+        ],
+        total: 1,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      onOpenReplayWorldTile,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const btn = mount.querySelector(
+      '[data-action="open-replay-world-tile"]',
+    ) as HTMLButtonElement;
+    expect(btn?.textContent).toContain("40");
+    btn.click();
+    expect(onOpenReplayWorldTile).toHaveBeenCalledWith(
+      expect.objectContaining({ report_id: 9, location_x: 40, location_y: 41 }),
+    );
+    expect(mount.querySelector('li[data-report-id="9"]')?.classList.contains("selected")).toBe(
+      false,
+    );
+    expect(mount.querySelector('[data-role="report-detail"]')?.textContent).toBe("");
+  });
+
   it("persists outcome filter when user changes filter", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

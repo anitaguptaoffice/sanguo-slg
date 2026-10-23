@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { MARCH_HIGHLIGHT_SESSION_KEY, MARCH_ROW_RECENT_CLASS } from "@/net/marchHighlight";
+import { MILITARY_LIST_FILTER_SESSION_KEY } from "@/net/militaryListFilter";
 import { MINIMAP_MARCH_FOCUS_SESSION_KEY } from "@/net/minimapMarchFocus";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 
@@ -342,6 +343,31 @@ describe("MarchListPanel", () => {
       expect.objectContaining({ march_id: 7, to_x: 12, to_y: 13 }),
     );
     expect(panel.getSelectedMarchId()).toBeNull();
+  });
+
+  it("filters by phase and persists military-list-filter-v1 (CLIENT-109)", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          { march_id: 1, phase: 2, to_x: 1, to_y: 1 },
+          { march_id: 2, phase: 4, to_x: 2, to_y: 2 },
+        ],
+        total: 2,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+
+    const phaseSelect = mount.querySelector(
+      '[data-action="march-phase-filter"]',
+    ) as HTMLSelectElement;
+    phaseSelect.value = "return";
+    phaseSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(mount.querySelector('.march-list li[data-march-id="2"]')).toBeTruthy();
+    expect(sessionStorage.getItem(MILITARY_LIST_FILTER_SESSION_KEY)).toContain('"return"');
   });
 
   it("shows error when listMarches fails", async () => {

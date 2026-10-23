@@ -653,6 +653,18 @@
       .march-dest-filter-manual { display: inline-flex; gap: 4px; align-items: center; }
       .march-dest-filter-manual.hidden { display: none; }
       .march-dest-filter-manual input[type="number"] { width: 4.5em; }
+      .march-list-filter {
+        margin: 8px 0; font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+        border: 1px solid #3a4a58; border-radius: 4px; padding: 6px 8px;
+      }
+      .march-list-filter legend { font-size: 11px; color: #b8a88a; padding: 0 4px; }
+      .march-list-filter label { display: inline-flex; gap: 4px; align-items: center; color: #c9d4de; }
+      .march-list-filter select { font-size: 12px; }
+      .battle-report-replay-grid-btn {
+        font-size: 11px; margin-left: 6px; padding: 2px 6px; cursor: pointer;
+        background: #2a3a48; border: 1px solid #4a6a88; color: #c9e4ff; border-radius: 3px;
+      }
+      .battle-report-replay-grid-btn:hover { background: #354858; }
       .battle-report-filters { margin: 8px 0; font-size: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
       .battle-report-filters button.active { outline: 2px solid #c9a227; }
       .battle-report-time-window select { font-size: 12px; margin-left: 4px; }
@@ -1192,6 +1204,7 @@
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] [data-role="march-hint"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-dest-filter,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list-filter,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] button[data-action="refresh-marches"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] [data-role="march-list-status"] {
         flex-shrink: 0;

@@ -50,10 +50,17 @@ describe("battleReportListState", () => {
     expect(battleReportAllLoadedLabel(12.9)).toBe("已加载全部 12 条");
   });
 
-  it("persists outcome filter in sessionStorage", () => {
+  it("persists outcome filter in sessionStorage battle-report-outcome-filter-v1", () => {
     writeBattleReportOutcomeFilterSession("win", storage);
     expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBe("win");
     expect(readBattleReportOutcomeFilterSession(storage)).toBe("win");
+  });
+
+  it("migrates legacy rxsg outcome filter key on read", () => {
+    storage.setItem("rxsg.client.battleReport.outcomeFilter", "loss");
+    expect(readBattleReportOutcomeFilterSession(storage)).toBe("loss");
+    expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBe("loss");
+    expect(storage.getItem("rxsg.client.battleReport.outcomeFilter")).toBeNull();
   });
 
   it("parseBattleReportOutcomeFilterSessionValue rejects unknown values", () => {
