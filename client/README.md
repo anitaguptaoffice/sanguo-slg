@@ -1,10 +1,10 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-004）
+# H5 客户端（CLIENT-001 ~ CLIENT-005）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
 
-**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事）→ 世界/私聊 → 军团 → 战力排行**
+**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/任务/背包/商城）→ 世界/私聊 → 军团 → 战力排行**
 
 ## 网关地址
 
@@ -37,6 +37,21 @@ cd client && npm install && npm run dev
 4. 点 **「排行」**：「刷新战力榜」应列出榜单，并显示 **我的名次**（未上榜时显示战力与「未上榜」）。
 5. M2 军事/内政仍可用：**「军事」**、**「升级农田」** 等。
 
+### 手动验收（M4：任务 / 背包 / 商城，对齐 INTG-004）
+
+与 `tools/smoke/README.md` 中 `TestM4ContentSmokePath` 同路径（教程任务 1001、商城 offer 1001、道具 2001）。
+
+1. `make dev` 启动后进入主城，HUD 显示 **币**（`player_wallet.gold`，商城银币价映射到 gold 字段）。
+2. **任务**：打开「任务」→「接取」→「上报进度(绝对值2)」→「领奖」。背包应出现谷袋·初备（2001）；HUD 粮/币随奖励变化。
+3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时状态栏显示服务端错误；成功时 HUD **币** 减少且背包数量增加（`wallet_after` 真扣费，无 spent overlay）。
+4. **背包**：「刷新背包」在 mock 网关会拉全量；连真实网关时若 `content.v1.ListPlayerBag` 未接线，仍显示本会话内领奖/购买累计。「使用道具」对资源包(2001)/加速符(2003) 在 mock 上可验证 CONTENT-002 效果摘要。
+
+```bash
+# 仓库根
+make dev
+cd client && npm install && npm run dev
+```
+
 ### 手动验收（募兵 → 行军 → 战报）
 
 1. 登录进入主城后，点 **「军事」** 打开面板。
@@ -67,6 +82,6 @@ cd client && npm test && npm run build
 - `src/engine/` — `GameApp`、场景管理、占位 `AssetLoader`
 - `src/net/` — `GatewayClient`、`bootstrapSession`、`militaryFormat`、proto 加载
 - `src/scenes/` — 选服、主城（军事 + M3 社交面板）
-- `src/ui/` — 聊天/军团/排行 DOM 面板
+- `src/ui/` — 聊天/军团/排行与任务/背包/商城 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock

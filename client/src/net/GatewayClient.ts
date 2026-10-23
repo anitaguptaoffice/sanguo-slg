@@ -50,6 +50,19 @@ export type GatewayPort = {
   joinGuild(serverId: number, guildId: number): Promise<unknown>;
   listGuildMembers(serverId: number, guildId: number, page?: number): Promise<unknown>;
   getLeaderboard(serverId: number, type: number, page?: number, pageSize?: number): Promise<unknown>;
+  listPlayerQuests(serverId: number, opts?: { chainId?: number; includeCompleted?: boolean }): Promise<unknown>;
+  acceptQuest(serverId: number, questCfgId: number): Promise<unknown>;
+  reportQuestProgress(
+    serverId: number,
+    questCfgId: number,
+    absolute: boolean,
+    progressValue: number,
+  ): Promise<unknown>;
+  claimQuestReward(serverId: number, questCfgId: number): Promise<unknown>;
+  listShopShelf(serverId: number, shelfId?: number): Promise<unknown>;
+  purchaseShopOffer(serverId: number, offerId: number, purchaseCount?: number): Promise<unknown>;
+  listPlayerBag(serverId: number): Promise<unknown>;
+  useConsumable(serverId: number, itemCfgId: number, count: number): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
@@ -297,6 +310,112 @@ export class GatewayClient implements GatewayPort {
       "GetBattleReportRequest",
       { report_id: reportId },
       GetBattleReportResponse,
+      true,
+    );
+  }
+
+  async listPlayerQuests(serverId: number, opts: { chainId?: number; includeCompleted?: boolean } = {}) {
+    const { ListPlayerQuestsResponse } = getTypes();
+    return this.rpc(
+      Routes.ListPlayerQuests,
+      "ListPlayerQuestsRequest",
+      {
+        server_id: serverId,
+        chain_id: opts.chainId ?? 0,
+        include_completed: opts.includeCompleted ?? true,
+      },
+      ListPlayerQuestsResponse,
+      true,
+    );
+  }
+
+  async acceptQuest(serverId: number, questCfgId: number) {
+    const { AcceptQuestResponse } = getTypes();
+    return this.rpc(
+      Routes.AcceptQuest,
+      "AcceptQuestRequest",
+      { server_id: serverId, quest_cfg_id: questCfgId },
+      AcceptQuestResponse,
+      true,
+    );
+  }
+
+  async reportQuestProgress(
+    serverId: number,
+    questCfgId: number,
+    absolute: boolean,
+    progressValue: number,
+  ) {
+    const { ReportQuestProgressResponse } = getTypes();
+    return this.rpc(
+      Routes.ReportQuestProgress,
+      "ReportQuestProgressRequest",
+      {
+        server_id: serverId,
+        quest_cfg_id: questCfgId,
+        absolute,
+        progress_value: progressValue,
+      },
+      ReportQuestProgressResponse,
+      true,
+    );
+  }
+
+  async claimQuestReward(serverId: number, questCfgId: number) {
+    const { ClaimQuestRewardResponse } = getTypes();
+    return this.rpc(
+      Routes.ClaimQuestReward,
+      "ClaimQuestRewardRequest",
+      { server_id: serverId, quest_cfg_id: questCfgId },
+      ClaimQuestRewardResponse,
+      true,
+    );
+  }
+
+  async listShopShelf(serverId: number, shelfId = 0) {
+    const { ListShopShelfResponse } = getTypes();
+    return this.rpc(
+      Routes.ListShopShelf,
+      "ListShopShelfRequest",
+      { server_id: serverId, shelf_id: shelfId },
+      ListShopShelfResponse,
+      true,
+    );
+  }
+
+  async purchaseShopOffer(serverId: number, offerId: number, purchaseCount = 1) {
+    const { PurchaseShopOfferResponse } = getTypes();
+    return this.rpc(
+      Routes.PurchaseShopOffer,
+      "PurchaseShopOfferRequest",
+      {
+        server_id: serverId,
+        offer_id: offerId,
+        purchase_count: purchaseCount,
+      },
+      PurchaseShopOfferResponse,
+      true,
+    );
+  }
+
+  async listPlayerBag(serverId: number) {
+    const { ListPlayerBagResponse } = getTypes();
+    return this.rpc(
+      Routes.ListPlayerBag,
+      "ListPlayerBagRequest",
+      { server_id: serverId },
+      ListPlayerBagResponse,
+      true,
+    );
+  }
+
+  async useConsumable(serverId: number, itemCfgId: number, count: number) {
+    const { UseConsumableResponse } = getTypes();
+    return this.rpc(
+      Routes.UseConsumable,
+      "UseConsumableRequest",
+      { server_id: serverId, item_cfg_id: itemCfgId, count },
+      UseConsumableResponse,
       true,
     );
   }
