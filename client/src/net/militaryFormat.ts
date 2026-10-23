@@ -177,8 +177,33 @@ export function formatReportLine(r: BattleReportSummary): string {
 }
 
 export function battleReportListLines(reports: BattleReportSummary[]): string[] {
-  if (!reports.length) return ["（暂无战报，出征结算后可在此查看）"];
+  if (!reports.length) return ["暂无战报，出征结算后可在此查看"];
   return reports.map(formatReportLine);
+}
+
+/** 战报列表行：对手/守方摘要（无新 proto 字段时的可读拼接）。 */
+export function formatBattleReportFoeSummary(r: BattleReportSummary): string {
+  const parts: string[] = [];
+  if (r.defender_player_id) parts.push(`守方玩家#${r.defender_player_id}`);
+  if (r.defender_city_id) parts.push(`城池#${r.defender_city_id}`);
+  const hasCoord = r.location_x != null || r.location_y != null;
+  if (hasCoord) parts.push(formatReportCoord(r));
+  return parts.length ? parts.join(" · ") : "对手信息未记录";
+}
+
+const OUTCOME_CHIP_CLASS: Record<number, string> = {
+  1: "outcome-attacker-win",
+  2: "outcome-defender-win",
+  3: "outcome-draw",
+};
+
+export function battleReportOutcomeChipClass(outcome: number | undefined): string {
+  const key = outcome ?? 0;
+  return OUTCOME_CHIP_CLASS[key] ?? "outcome-unknown";
+}
+
+export function battleReportOutcomeChipLabel(outcome: number | undefined): string {
+  return formatBattleOutcome(outcome);
 }
 
 export function formatCasualtyMap(casualties: Record<string, number> | undefined): string {

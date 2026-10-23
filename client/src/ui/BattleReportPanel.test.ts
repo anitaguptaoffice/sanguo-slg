@@ -55,7 +55,7 @@ describe("BattleReportPanel", () => {
     panel.toggle();
     await flushPromises();
     const ul = mount.querySelector('[data-role="report-list"]');
-    expect(ul?.textContent).toContain("守胜");
+    expect(ul?.querySelector(".battle-outcome-chip")?.textContent).toContain("守胜");
     expect(ul?.textContent).toContain("坐标(8,9)");
     mount.querySelector('li[data-report-id="2"]')?.dispatchEvent(
       new Event("click", { bubbles: true }),
@@ -116,9 +116,9 @@ describe("BattleReportPanel", () => {
     loadMore.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(gateway.listBattleReports).toHaveBeenLastCalledWith(20, 1);
-    const ul = mount.querySelector('[data-role="report-list"]');
-    expect(ul?.textContent).toContain("#1");
-    expect(ul?.textContent).toContain("#2");
+    expect(mount.querySelectorAll("li[data-report-id]").length).toBe(2);
+    expect(mount.querySelector('li[data-report-id="1"]')).toBeTruthy();
+    expect(mount.querySelector('li[data-report-id="2"]')).toBeTruthy();
   });
 
   it("clears unread session when panel opens", async () => {
@@ -145,7 +145,27 @@ describe("BattleReportPanel", () => {
     expect(badge).toBe(0);
   });
 
-  it("shows list load failure in panel", async () => {
+  it("shows filter-empty placeholder while keeping filter bar", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [{ report_id: 1, location_x: 1, location_y: 1, outcome: 2, created_at_ms: 0 }],
+        total: 1,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('button[data-filter="win"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    const ul = mount.querySelector('[data-role="report-list"]');
+    expect(ul?.textContent).toContain("无匹配战报");
+    expect(mount.querySelector(".battle-report-filters")).toBeTruthy();
+  });
+
+  it("shows list load failure in panel and list hint", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
       listBattleReports: vi.fn().mockRejectedValue(new Error("网关超时")),
@@ -157,5 +177,8 @@ describe("BattleReportPanel", () => {
     const status = mount.querySelector('[data-role="report-list-status"]');
     expect(status?.textContent).toContain("列表加载失败");
     expect(status?.textContent).toContain("网关超时");
+    const ul = mount.querySelector('[data-role="report-list"]');
+    expect(ul?.textContent).toContain("重试");
+    expect(mount.querySelector(".battle-report-empty.is-error")).toBeTruthy();
   });
 });

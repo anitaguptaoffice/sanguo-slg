@@ -14,6 +14,11 @@ import {
   gatewayErrorMessage,
 } from "@/net/contentFeedback";
 import { formatQuestLine, formatWalletPrice, itemLabel } from "@/net/contentFormat";
+import {
+  bagEmptyListClass,
+  bagEmptyListMessage,
+  formatBagStackRowLabel,
+} from "@/net/panelDensity";
 
 type QuestProgress = {
   quest_cfg_id?: number;
@@ -167,7 +172,6 @@ export class ContentPanels {
     el.innerHTML = `
       <h3>背包</h3>
       <p data-role="bag-hint">「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量；领奖/购买仍会先合并到本会话。</p>
-      <p class="panel-feedback" data-role="bag-feedback" hidden></p>
       <label>道具
         <select data-field="item-id">
           <option value="2001">2001 谷袋·初备</option>
@@ -179,6 +183,7 @@ export class ContentPanels {
       <button type="button" data-action="refresh-bag">刷新背包</button>
       <button type="button" data-action="use-item">使用道具</button>
       <ul class="bag-list" data-role="bag-list"></ul>
+      <p class="panel-feedback bag-panel-feedback" data-role="bag-feedback" hidden></p>
     `;
     return el;
   }
@@ -218,7 +223,20 @@ export class ContentPanels {
     const bag = this.getSession()?.bag ?? [];
     for (const row of bag) {
       const li = document.createElement("li");
-      li.textContent = `${row.item_cfg_id} ${itemLabel(row.item_cfg_id)} × ${row.quantity}`;
+      li.className = "bag-stack-row";
+      const { idCell, name, qtyCell } = formatBagStackRowLabel(row);
+      const idSpan = document.createElement("span");
+      idSpan.className = "bag-stack-id";
+      idSpan.textContent = idCell;
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "bag-stack-name";
+      nameSpan.textContent = name;
+      const qtySpan = document.createElement("span");
+      qtySpan.className = "bag-stack-qty";
+      qtySpan.textContent = `×${qtyCell.trim()}`;
+      li.appendChild(idSpan);
+      li.appendChild(nameSpan);
+      li.appendChild(qtySpan);
       if (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId) {
         li.classList.add("item-highlight");
       }
@@ -226,7 +244,8 @@ export class ContentPanels {
     }
     if (!bag.length) {
       const li = document.createElement("li");
-      li.textContent = "（空）";
+      li.className = bagEmptyListClass();
+      li.textContent = bagEmptyListMessage();
       ul.appendChild(li);
     }
   }

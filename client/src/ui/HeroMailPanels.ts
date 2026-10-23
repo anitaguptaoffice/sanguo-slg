@@ -25,7 +25,6 @@ import {
   mailCanClaimAttachments,
   mailEmptyInboxMessage,
   mailIsUnread,
-  mailListSummary,
   mailTitle,
   parseRecruitTemplates,
   pickRecruitSelection,
@@ -35,6 +34,13 @@ import {
   type MailRow,
   type RecruitTemplatePreview,
 } from "@/net/heroMailState";
+import {
+  mailInboxEmptyListClass,
+  mailInboxLoadErrorListHint,
+  mailListRowClassName,
+  mailRowMetaLine,
+  mailRowTitleLine,
+} from "@/net/panelDensity";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -289,9 +295,9 @@ export class HeroMailPanels {
     }
     if (!this.mails.length) {
       const li = document.createElement("li");
-      li.className = "mail-empty";
+      li.className = mailInboxEmptyListClass();
       li.textContent = this.mailListError
-        ? "请点「刷新」重试"
+        ? mailInboxLoadErrorListHint()
         : mailEmptyInboxMessage(this.mailFilter);
       ul.appendChild(li);
     } else {
@@ -300,14 +306,16 @@ export class HeroMailPanels {
         if (m.mail_id) {
           li.setAttribute("data-mail-id", String(m.mail_id));
           if (m.mail_id === this.selectedMailId) li.classList.add("selected");
-          if (mailIsUnread(m)) li.classList.add("unread");
         }
+        const unreadClass = mailListRowClassName(m);
+        if (unreadClass) li.classList.add(unreadClass);
         const titleSpan = document.createElement("span");
         titleSpan.className = "mail-row-title";
-        titleSpan.textContent = mailTitle(m);
+        titleSpan.textContent = mailRowTitleLine(m);
         const summarySpan = document.createElement("span");
         summarySpan.className = "mail-row-summary";
-        summarySpan.textContent = mailListSummary(m);
+        summarySpan.textContent = mailRowMetaLine(m);
+        if (mailCanClaimAttachments(m)) summarySpan.classList.add("mail-row-meta-attach");
         li.appendChild(titleSpan);
         li.appendChild(summarySpan);
         ul.appendChild(li);
