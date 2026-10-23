@@ -74,6 +74,10 @@ export class HeroMailPanels {
     this.mailPanel?.remove();
   }
 
+  getMailRoot(): HTMLElement {
+    return this.mailPanel;
+  }
+
   toggleHero(): void {
     this.heroPanel.classList.toggle("hidden");
     if (!this.heroPanel.classList.contains("hidden")) {

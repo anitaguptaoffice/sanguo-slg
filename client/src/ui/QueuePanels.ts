@@ -48,6 +48,10 @@ export class QueuePanels {
     return !!this.panel && !this.panel.classList.contains("hidden");
   }
 
+  getRoot(): HTMLElement {
+    return this.panel;
+  }
+
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (this.isOpen()) {

@@ -86,6 +86,10 @@ export class ContentPanels {
     if (!this.bagPanel.classList.contains("hidden")) void this.refreshBag();
   }
 
+  getBagRoot(): HTMLElement {
+    return this.bagPanel;
+  }
+
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
   openBagHighlightItem(itemCfgId: number): void {
     this.bagHighlightItemId = itemCfgId;

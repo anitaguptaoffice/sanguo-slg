@@ -55,6 +55,10 @@ export class DailyQuestPanels {
     return this.panel != null && !this.panel.classList.contains("hidden");
   }
 
+  getRoot(): HTMLElement {
+    return this.panel;
+  }
+
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (!this.panel.classList.contains("hidden")) void this.refreshList();
