@@ -1010,3 +1010,134 @@
     ROADMAP M4「数据埋点」最小闭环。优先复用 PLAT-003 结构化日志与 trace_id；新增代码集中在 obs + 列出的 api 挂钩文件。
 
     与 LOAD-001、RANK-002 等并行（‖）。若需新 Prometheus 指标名，保持 `sanguo_` 前缀与 obs 现有风格一致。
+
+- id: DATA-002
+  title: 核心 cfg 第二批扩量（文案全量重写）
+  wave: 9
+  domain: spec
+  depends_on: [DATA-001, INTG-005, CLIENT-006]
+  sync_status: ready
+  size: L
+  owner_dir: tools/data
+  scope: [tools/data/**, spec/data/**]
+  out_of_scope: [internal/**, cmd/**, client/**, reference/**]
+  acceptance:
+    - "更新 spec/data/CORE_SUBSET.md：在 wave7 默认上限基础上约 +50%（建议新上限——任务≤120、goal≤180、道具≤180、将领模板≤90、商城入口≤18、可购条目≤120、奖励行≤90），同一 PR 写明扩量理由"
+    - 按新上限从 legacy cfg 只读抽样或手编，更新 spec/data/source/*.yml 与 generated（JSON/SQL）；行数不超过 CORE_SUBSET.md
+    - 任务/道具/将领/商城名称与描述全部重写，PR 自检无照搬 legacy 长句
+    - python3 tools/data 生成命令可重复执行且幂等；MAPPING.md 补充 DATA-002 字段说明
+    - 仍不纳入 CORE_SUBSET「不纳入」表（活动/排行奖励/禁名等）；不复制 PHP、不提交 bloodwar dump
+  body: |
+    编排者已在 INTG-005 + CLIENT-006 合并后授权第二批扩量（core-subset-first）。
+
+    只读参照：reference worktree（#82）、TABLES.md；禁止合并 #77/#82/#100/#108。
+
+    与 CLIENT-007、MAIL-001、DOCS-EXIT-001 并行（‖）。HERO-002、INTG-006 依赖本卡数据。
+
+- id: HERO-002
+  title: 将领招募/列表/详情最小加深
+  wave: 9
+  domain: hero
+  depends_on: [HERO-001, PERSIST-002, DATA-002]
+  blocked_until: [DATA-002]
+  sync_status: blocked
+  size: M
+  owner_dir: internal/hero
+  scope: [internal/hero/**, internal/api/hero_handlers.go, internal/api/hero_gateway.go, internal/api/server.go, internal/api/m3_wire.go, internal/api/m4_wire.go]
+  out_of_scope: [internal/military/battle/**, internal/military/march/**, client/**, spec/**]
+  acceptance:
+    - ListPlayerHeroes：按 server_id + player_id 分页或全量列表，字段含 template_cfg_id、level、loyalty（与 PG store 一致）
+    - GetHeroDetail：单将领详情（属性、忠诚度上下限、模板名来自 DATA-002 cfg_hero_template）
+    - Recruit：扣招募道具/资源（与 HERO-001、DATA-002 模板 id 对齐），写入 PG，单测覆盖成功与道具不足
+    - 网关注册 hero 路由（若尚无 spec/proto，可在 internal/api/proto 薄消息 + 生成，或独立 contract PR——本卡 scope 不含 spec/proto 时须 PR 说明契约跟进）
+    - 禁止改战斗演算；跨域仅 api 薄挂钩与 hero 包
+  body: |
+    相对 HERO-001 加深玩家可见路径，配置以 DATA-002 模板为准。
+
+    DATA-002 合并前保持 blocked；合并后编排者改 sync_status 或 Issue 标签为 ready。
+
+    可选薄 client 面板另开 CLIENT 子卡，本卡不强制改 client/**。
+
+- id: CLIENT-007
+  title: 横屏设计基准落地（1600×900 外框 / 舞台 / HUD）
+  wave: 9
+  domain: client
+  depends_on: [CLIENT-006]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 布局外框 1600×900、主城舞台 1600×788（y∈[56,844)）、HUD 高 56px、底栏 56px，与 docs/art/layout-landscape.md 一致
+    - layoutViewport / GameApp 默认横屏基线：uiScale = min(vw/1600, vh/900)，窄屏 letterbox；最小内容视口 1280×720 行为有单测或文档化样例
+    - 主城场景在横屏基线下槽位与背景对齐（可沿用 client/public/assets/art/v1 样件）；占位 UI 可保留
+    - 可只读参照 PR #100@645b488 的 schema/文档思路，禁止 merge #100/#108 或复制其美术进库
+    - client/README.md 更新横屏验收步骤；npm test 绿
+  body: |
+    CLIENT-LANDSCAPE。工程内已有 layoutViewport、art v1 样件与 docs/art/*；本卡收敛为默认游玩布局。
+
+    与 DATA-002、MAIL-001 并行（‖）。仅 client/**。
+
+- id: MAIL-001
+  title: 邮件收件箱查询与 GM 发邮件（最小可用）
+  wave: 9
+  domain: content
+  depends_on: [SPEC-006, CONTENT-002, GM-001]
+  sync_status: ready
+  size: M
+  owner_dir: internal/content
+  scope: [internal/content/mail/**, internal/api/mail_handlers.go, internal/api/server.go, internal/api/m4_wire.go, cmd/gm/**]
+  out_of_scope: [internal/quest/**, internal/shop/**, client/**, spec/**]
+  acceptance:
+    - 实现 PG store：player_mail 按 server_id + player_id 查询未读/已读列表（分页），标记已读；attachments 解析复用 content.RewardPackage schema
+    - 领取附件：走 CONTENT-002 发奖钩子，幂等键 mail:{server}:{mail_id}；领后状态更新
+    - GM 发邮件：cmd/gm 子命令或扩展现有 GM HTTP，写入 player_mail（系统/奖励类型），有审计日志字段
+    - 单测覆盖：发信 → 列表 → 领附件入背包（MemStore 或 PG 测库）
+    - 若需玩家侧 proto，优先独立 contract PR；本卡可用 internal/api/proto 薄消息并在 PR 说明
+  body: |
+    DDL 已存在：spec/db/m4_003_mail_reward.sql（player_mail、reward_grant_queue）。
+
+    与 DATA-002、CLIENT-007 并行（‖）。不实现邮件 UI（可后续 CLIENT 卡）。
+
+- id: INTG-006
+  title: DATA-002 后复跑 M3/M4 冒烟（扩展 INTG-005）
+  wave: 9
+  domain: platform
+  depends_on: [DATA-002, INTG-005]
+  blocked_until: [DATA-002]
+  sync_status: blocked
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/shop/**, internal/content/**, internal/hero/**, internal/chat/**, internal/rank/**, client/**, spec/**]
+  acceptance:
+    - 在 DATA-002 更新后的 cfg 子集下复跑 TestM4ContentSmokePath / INTG-005 等价路径（任务→背包→商城真扣费→GM 发奖），失败时打印 cfg id 便于对照 CORE_SUBSET.md
+    - 保留 INTG-005 进程重启恢复断言；必要时拆 -short 与完整测
+    - M3 子集（选服 + 排行）仍通过；不重复 RANK-002 深度用例
+    - tools/smoke/README.md 更新 DATA-002 段与 go test -run 正则；CI -short skip 长测
+    - 可选：冒烟夹带 HERO-002 / MAIL-001 最小步骤（若已合并），失败不阻塞本卡主路径
+  body: |
+    INTG-WAVE9-RERUN。仅测试与 smoke 文档，不重写域逻辑。
+
+    DATA-002 合并后编排者放开本卡。参照 internal/api/intg005_smoke_test.go。
+
+- id: DOCS-EXIT-001
+  title: M3/M4 里程碑出口文档收口
+  wave: 9
+  domain: platform
+  depends_on: []
+  sync_status: ready
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - docs/ROADMAP.md：Wave 8 标为已完成；M3/M4 各出口项勾选状态与已合 PR/任务 id 一致（INTG-005、LOAD-001、TELEMETRY-001 等）
+    - 新增或维护 Wave 9 进度表：DATA-002 / HERO-002 / CLIENT-007 / MAIL-001 / INTG-006 完成时更新说明
+    - 写明 v1.0 仍不做的范围（跨服战等）无变更
+    - tasks/README.md 波次表与 wave:9 一致（若 backlog 编排者已改，本卡只做交叉核对）
+  body: |
+    文档 only。可在 wave:9 其他卡并行开工；建议在 INTG-006 合并后做最终勾选。
+
+    禁止修改 tasks/backlog.yml（契约由编排者 PR 维护）。禁止合并 #77/#82/#100/#108。

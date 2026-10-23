@@ -32,21 +32,21 @@
 
 ## M3 多人（4–6 周）
 
-- [ ] 分服与开服流程（wave:5 PLAT-004 等）— 网关选服与 `ServerSelectScene` 已冒烟；**[开服运营最小流程](ops/open-server-runbook.md)**（wave:8 OPS-OPEN-001）供 dev/staging 手测与值班勾选
+- [x] 分服与开服流程（PLAT-004 + **OPS-OPEN-001**）— 选服冒烟 + **[开服运营最小流程](ops/open-server-runbook.md)** 可执行清单
 - [x] 军团、聊天（GUILD-001/002、CHAT-001、WIRE-001）— 域服务 + H5 面板已联调
-- [ ] 排行与榜单 — RANK-001 冒烟通过；**wave:8 RANK-002** 双榜与刷新策略加深验收
-- [ ] 3000 并发压测 — **wave:8 LOAD-001** 可重复脚本 + `docs/load/PLAT-002-baseline.md`
+- [x] 排行与榜单（RANK-001 + **RANK-002**）— PG 双榜、刷新 Scheduler 与加深单测已合
+- [x] 3000 并发压测（**LOAD-001**）— `make load-ws` / `docs/load/PLAT-002-baseline.md`
 
-进度参考：`go test ./internal/api -run TestM3SocialSmokePath`（见根 `README.md`）。出口：可小范围对外开放；客户端 `CLIENT-004`（wave:5）；**wave:8 INTG-005** 复跑 M3 子集 + M4 持久化重启。
+进度参考：`go test ./internal/api -run TestM3SocialSmokePath`；完整 M3/M4 重启冒烟见 `tools/smoke/README.md`（**INTG-005**）。客户端 M3：`CLIENT-004`；wave:9 **INTG-006** 在 DATA-002 后复跑扩量子集。
 
 ## M4 内容（持续）
 
-- [x] 任务系统（QUEST-001）+ wave:7 DATA-001 核心子集 — 端到端见 **INTG-005** 复跑
+- [x] 任务系统（QUEST-001）+ wave:7 DATA-001 核心子集 — **INTG-005** / wave:9 **INTG-006** 复跑
 - [x] 道具与商城（CONTENT-002、SHOP-001、ECON-001 真扣费）
-- [ ] 活动与运营后台（GM-001）— `cmd/gm` 已有；开服/运营流程见 **OPS-OPEN-001**
-- [ ] 数据埋点 — **wave:8 TELEMETRY-001**
+- [ ] 活动与运营后台（GM-001）— `cmd/gm` 已有；完整活动 cfg 仍不纳入核心子集
+- [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
-出口：`INTG-004` / **INTG-005** 内容冒烟；`CLIENT-005` + **CLIENT-006**（真实网关背包/使用道具与军团聊天）达 M4 客户端出口。
+出口：`INTG-005` + **CLIENT-006** 已合；wave:9 扩量后 **INTG-006** + **CLIENT-007**（横屏基线）+ **HERO-002** / **MAIL-001** 加深养成与邮件。里程碑收口文档：**DOCS-EXIT-001**。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -63,20 +63,33 @@
 
 与 wave:5/6 关系：`GUILD-002`、`CLIENT-004` 仍为 M3/M4 出口卡；wave7 不替换它们，仅在其后的持久化与数据对齐阶段补充依赖说明。
 
-## Wave 8 M3/M4 出口加固
+## Wave 8 M3/M4 出口加固（已完成）
 
-wave:7、WIRE-001、CLIENT-ART-INTG-001 已合并后，补齐 ROADMAP 仍开放的验收与文档缺口（**core-subset-first** 不变）。
+wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 main（#125 INTG-005、#121 CLIENT-006、#122 RANK-002、#123 LOAD-001、#120 OPS-OPEN-001、#124 TELEMETRY-001）。**core-subset-first** 不变。
 
-| 可并行（status:ready） | 任务 | 说明 |
+| 任务 | 说明 |
+|---|---|
+| INTG-005 | DATA-001 + ECON-001 + PERSIST-* 下复跑 M3 子集与 M4 冒烟，含重启恢复 |
+| CLIENT-006 | `content.v1.ListPlayerBag` / `UseConsumable` 与军团聊天真实网关 |
+| RANK-002 | 双榜 + PG + Scheduler 完整性 |
+| LOAD-001 | 3000 WS 压测与基准报告 |
+| OPS-OPEN-001 | 开服运营 runbook |
+| TELEMETRY-001 | 最小玩法埋点 |
+
+## Wave 9 核心子集第二批（扩量 + 养成/邮件/横屏）
+
+**触发**：INTG-005 + CLIENT-006 已合，编排者授权开 **DATA-002**（见 `spec/data/CORE_SUBSET.md` 扩量条款）。参照物 PR #77 / #82 / #100 / #108 **只读**，禁止合并或复制进主树。
+
+| 可并行 | 任务 | 说明 |
 |---|---|---|
-| ‖ | INTG-005 | DATA-001 + ECON-001 + PERSIST-* 下复跑 M3 子集与 M4 冒烟，含重启恢复；`tools/smoke` 一键命令 |
-| ‖ | CLIENT-006 | 客户端对接 `content.v1.ListPlayerBag` / `UseConsumable` 与 WIRE-001 军团聊天 |
-| ‖ | RANK-002 | 双榜 + PG + Scheduler 完整性（相对 RANK-001 加深） |
-| ‖ | LOAD-001 | 3000 连接压测脚本与 PLAT-002 基准报告 |
-| ‖ | OPS-OPEN-001 | 开服运营 runbook + GM 检查清单（文档 only） |
-| ‖ | TELEMETRY-001 | 登录/建城/战斗/购买/领奖等最小埋点 |
+| ‖ | DATA-002 | 核心 cfg 上限约 +50%，文案重写，更新 source + generated |
+| ‖ | CLIENT-007 | 横屏 1600×900 外框 / 舞台 788 / HUD 落地（仅 `client/**`） |
+| ‖ | MAIL-001 | `player_mail` 最小收件箱 + GM 发邮件（DDL 已有） |
+| ‖ | DOCS-EXIT-001 | M3/M4 里程碑出口文档收口（`docs/ROADMAP.md` 等） |
+| DATA-002 后 ‖ | HERO-002 | 将领招募/列表/详情加深，对接 hero 域 + DATA-002 模板 |
+| DATA-002 后 ‖ | INTG-006 | 扩量子集下复跑 INTG-005 路径，更新 `tools/smoke` |
 
-依赖说明：INTG-005 与 CLIENT-006 建议同迭代联调，但可并行开工；RANK-002 不阻塞 INTG-005 的 M4 路径。
+依赖：HERO-002、INTG-006 在 DATA-002 合并后由编排者 `tasks_sync` 或手工改为 `status:ready`（YAML `blocked_until: [DATA-002]`）。
 
 ## 不做
 
