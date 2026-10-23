@@ -1,0 +1,40 @@
+{
+  "title": "Sanguo Overview",
+  "uid": "sanguo-overview",
+  "timezone": "browser",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP QPS",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sum(rate(sanguo_http_requests_total[1m]))", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP avg latency (s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{
+        "expr": "sum(rate(sanguo_http_request_duration_seconds_sum[5m])) / sum(rate(sanguo_http_request_duration_seconds_count[5m]))",
+        "refId": "A"
+      }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Online",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sanguo_online_connections", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue length",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [{ "expr": "sanguo_queue_length", "refId": "A" }]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}
