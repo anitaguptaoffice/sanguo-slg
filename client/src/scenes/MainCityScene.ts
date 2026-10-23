@@ -369,6 +369,9 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
+      (keys) => {
+        if (keys.length) scheduleHudResourcePulse(this.hud, keys);
+      },
     );
     this.content.attach();
     this.dailyQuest = new DailyQuestPanels(
