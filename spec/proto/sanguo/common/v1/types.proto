@@ -83,3 +83,18 @@ message PlayerCitySummary {
   // 士气 0–100。
   int32 morale = 7;
 }
+
+// 道具奖励一行（与 player_item / cfg_item 对齐）。
+message RewardItem {
+  int32 item_cfg_id = 1;
+  int32 quantity = 2;
+}
+
+// 奖励包：配置表 reward_pack_id 或显式条目，供任务/商城/GM 发奖共用。
+message RewardBundle {
+  // 配置奖励包 ID；仅引用配置时可只填此项。
+  string reward_pack_id = 1;
+  repeated RewardItem items = 2;
+  // 额外资源（与 reward_pack 配置合并时由服务端解析）。
+  ResourceWallet resources = 3;
+}

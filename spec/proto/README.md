@@ -14,6 +14,9 @@ H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约
 | `sanguo/guild/v1/` | 军团 | `CreateGuild`、`JoinGuild`、`LeaveGuild`、`ListGuildMembers` |
 | `sanguo/chat/v1/` | 聊天 | `SendChatMessage`、`ListChatMessages` |
 | `sanguo/rank/v1/` | 排行 | `GetLeaderboard` |
+| `sanguo/quest/v1/` | 任务 | `ListPlayerQuests`、`AcceptQuest`、`ReportQuestProgress`、`ClaimQuestReward`、`GetQuestChainStatus` |
+| `sanguo/shop/v1/` | 商城 | `ListShopShelf`、`PurchaseShopOffer` |
+| `sanguo/gm/v1/` | 运营 GM | `LookupPlayer`、`GrantReward`、`MutePlayer`、`KickPlayer` |
 
 ## WebSocket 约定
 
@@ -38,8 +41,13 @@ H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约
 | `60000–60999` | 军团 `guild` |
 | `61000–61999` | 聊天 `chat` |
 | `62000–62999` | 排行 `rank` |
+| `63000–63999` | 任务 `quest` |
+| `64000–64999` | 商城 `shop` |
+| `65000–65999` | 运营 `gm` |
 
 新增错误在对应域 proto 内扩展枚举值，并保持数值落在上表区间内。
+
+GM 消息可由 `cmd/gm` 或独立 HTTP 入口承载，仍使用相同 `*Request`/`*Response` 形状与 `ErrorCode` 分段；鉴权使用运营 token，不走玩家 `session_id`。
 
 ## 字段命名
 

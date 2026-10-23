@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package sanguo.quest.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/quest/v1;questv1";
+
+// 玩家任务状态（与 player_quest.state 对齐：0 未接 / 1 进行 / 2 可领 / 3 完成）。
+enum PlayerQuestState {
+  PLAYER_QUEST_STATE_UNSPECIFIED = 0;
+  // 可见且可接取（未写入进度或 state=0）。
+  PLAYER_QUEST_STATE_AVAILABLE = 1;
+  // 已接取，进行中（state=1）。
+  PLAYER_QUEST_STATE_IN_PROGRESS = 2;
+  // 目标达成，待领奖（state=2）。
+  PLAYER_QUEST_STATE_CLAIMABLE = 3;
+  // 已领奖完成（state=3）。
+  PLAYER_QUEST_STATE_COMPLETED = 4;
+}
+
+// 任务链整体状态。
+enum QuestChainState {
+  QUEST_CHAIN_STATE_UNSPECIFIED = 0;
+  // 链未解锁（前置链或等级不足）。
+  QUEST_CHAIN_STATE_LOCKED = 1;
+  // 链进行中，尚有未完成节点。
+  QUEST_CHAIN_STATE_IN_PROGRESS = 2;
+  // 链上全部任务已领奖完成。
+  QUEST_CHAIN_STATE_COMPLETED = 3;
+}
+
+// 单任务进度视图（配置 + 玩家进度）。
+message PlayerQuestProgress {
+  int32 quest_cfg_id = 1;
+  // 配置 code，对应 cfg_quest.code。
+  string quest_code = 2;
+  // 所属任务链 ID；非链式任务为 0。
+  int32 chain_id = 3;
+  // 链内序号，从 1 开始。
+  int32 chain_order = 4;
+  // 链内前置任务 cfg_id；无前置为 0。
+  int32 prev_quest_cfg_id = 5;
+  // 链内后置任务 cfg_id；无后续为 0。
+  int32 next_quest_cfg_id = 6;
+  PlayerQuestState state = 7;
+  // 当前进度计数（如击杀数、建造次数）。
+  int32 progress_current = 8;
+  // 目标计数；0 表示由服务端按配置解析。
+  int32 progress_target = 9;
+  // 接取时间（Unix 毫秒）；未接为 0。
+  int64 accepted_at_ms = 10;
+  // 最近更新时间（Unix 毫秒）。
+  int64 updated_at_ms = 11;
+  // 可领奖励预览（来自 cfg_quest.rewards）。
+  sanguo.common.v1.RewardBundle reward_preview = 12;
+}
+
+// 任务链摘要。
+message QuestChainStatus {
+  int32 chain_id = 1;
+  string chain_name = 2;
+  QuestChainState chain_state = 3;
+  // 链内任务总数。
+  int32 total_quest_count = 4;
+  // 已完成（含已领奖）任务数。
+  int32 completed_quest_count = 5;
+  // 当前进行中的任务 cfg_id；无则为 0。
+  int32 active_quest_cfg_id = 6;
+  // 下一可接任务 cfg_id；无则为 0。
+  int32 next_available_quest_cfg_id = 7;
+}
+
+// route: quest.v1.ListPlayerQuests
+// 拉取玩家任务列表（进行中、可领与可选配置可见任务）。
+message ListPlayerQuestsRequest {
+  int32 server_id = 1;
+  // 仅返回指定链；0 表示全部链与独立任务。
+  int32 chain_id = 2;
+  // 是否包含已完成任务。
+  bool include_completed = 3;
+}
+
+message ListPlayerQuestsResponse {
+  repeated PlayerQuestProgress quests = 1;
+  repeated QuestChainStatus chains = 2;
+}
+
+// route: quest.v1.AcceptQuest
+// 接取任务（校验链前置与重复接取规则）。
+message AcceptQuestRequest {
+  int32 server_id = 1;
+  int32 quest_cfg_id = 2;
+}
+
+message AcceptQuestResponse {
+  PlayerQuestProgress quest = 1;
+  QuestChainStatus chain = 2;
+}
+
+// route: quest.v1.ReportQuestProgress
+// 上报任务进度增量或绝对值（客户端可上报类任务；服务端事件驱动时可忽略上行）。
+message ReportQuestProgressRequest {
+  int32 server_id = 1;
+  int32 quest_cfg_id = 2;
+  // true：progress_value 为绝对值；false：为增量。
+  bool absolute = 3;
+  int32 progress_value = 4;
+  // 可选事件类型，供服务端校验来源（如 "build_complete"）。
+  string event_type = 5;
+}
+
+message ReportQuestProgressResponse {
+  PlayerQuestProgress quest = 1;
+  QuestChainStatus chain = 2;
+}
+
+// route: quest.v1.ClaimQuestReward
+// 领取任务奖励（经 content 发奖钩子发货）。
+message ClaimQuestRewardRequest {
+  int32 server_id = 1;
+  int32 quest_cfg_id = 2;
+}
+
+message ClaimQuestRewardResponse {
+  PlayerQuestProgress quest = 1;
+  QuestChainStatus chain = 2;
+  sanguo.common.v1.RewardBundle granted_rewards = 3;
+}
+
+// route: quest.v1.GetQuestChainStatus
+// 查询单条任务链状态（含节点完成情况）。
+message GetQuestChainStatusRequest {
+  int32 server_id = 1;
+  int32 chain_id = 2;
+}
+
+message GetQuestChainStatusResponse {
+  QuestChainStatus chain = 1;
+  repeated PlayerQuestProgress chain_quests = 2;
+}
