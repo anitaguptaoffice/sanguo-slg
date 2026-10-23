@@ -62,7 +62,7 @@ status:review   ──合并────▶  status:done
 | 12 | H5 可玩加深（**已完成**，见 ROADMAP Wave 12） | CLIENT-013–018 (#186–#191), INTG-009 (#192), DOCS-EXIT-004 (#194) |
 | 13 | H5 闭环加深（**已完成**，见 ROADMAP Wave 13） | CLIENT-019–023 (#204–#208), INTG-010 (#203), DOCS-EXIT-005 ([#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)/[#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209)) |
 | 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`) |
-| 15 | H5 世界地图与面板密度（**规划中**，见 ROADMAP Wave 15） | CLIENT-028–032, INTG-012, DOCS-EXIT-007（Issue 待 sync，backlog [#226](https://github.com/anitaguptaoffice/sanguo-slg/pull/226)） |
+| 15 | H5 世界地图与面板密度（**已完成**，见 ROADMAP Wave 15） | CLIENT-028–032 ([#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)–[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)、[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`), INTG-012 ([#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)), DOCS-EXIT-007 ([#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234)/[#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242)) |
 
 ### Wave 9 进度（已完成）
 
@@ -135,16 +135,16 @@ status:review   ──合并────▶  status:done
 | [#216](https://github.com/anitaguptaoffice/sanguo-slg/issues/216) | INTG-011 | `status:done`（[#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223) `ad6ddc8e`） |
 | [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | `status:done`（[#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`） |
 
-### Wave 15 进度（规划 PR [#226](https://github.com/anitaguptaoffice/sanguo-slg/pull/226)，Issue 待 sync）
+### Wave 15 进度（与 GitHub `wave:15` 标签同步，2026-10-23）
 
-| ID | 状态 | 说明 |
+| Issue | ID | 状态 |
 |---|---|---|
-| CLIENT-028 | 待 sync → `status:ready` | 世界地图行军只读标注 |
-| CLIENT-029 | 待 sync → `status:ready` | 邮件战报背包空态与密度 |
-| CLIENT-030 | 待 sync → `status:ready` | 排行军团聊天可读性第二步 |
-| CLIENT-031 | 待 sync → `status:ready` | 将领详情与招募池对比 |
-| CLIENT-032 | 待 sync → `status:ready` | manifest 图标与面板接线 |
-| INTG-012 | 待 sync → `status:ready` | 邮件已读 + 战报列表冒烟 |
-| DOCS-EXIT-007 | 待 sync → `status:blocked` | `blocked_until: INTG-012` |
+| [#228](https://github.com/anitaguptaoffice/sanguo-slg/issues/228) | CLIENT-028 | `status:done`（[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241) `dbee7a40`） |
+| [#229](https://github.com/anitaguptaoffice/sanguo-slg/issues/229) | CLIENT-029 | `status:done`（[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`） |
+| [#230](https://github.com/anitaguptaoffice/sanguo-slg/issues/230) | CLIENT-030 | `status:done`（[#236](https://github.com/anitaguptaoffice/sanguo-slg/pull/236) `e3019f34`） |
+| [#231](https://github.com/anitaguptaoffice/sanguo-slg/issues/231) | CLIENT-031 | `status:done`（[#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235) `58a95775`） |
+| [#232](https://github.com/anitaguptaoffice/sanguo-slg/issues/232) | CLIENT-032 | `status:done`（[#240](https://github.com/anitaguptaoffice/sanguo-slg/pull/240) `1825858d`） |
+| [#233](https://github.com/anitaguptaoffice/sanguo-slg/issues/233) | INTG-012 | `status:done`（[#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237) `7f812896`） |
+| [#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234) | DOCS-EXIT-007 | `status:review`（[#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242)） |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 14 / Wave 15」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速。
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 15」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；art hold / VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)。
