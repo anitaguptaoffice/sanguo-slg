@@ -92,6 +92,8 @@ type MarchOrder struct {
 	DepartAt       time.Time
 	ArriveAt       time.Time
 	ReturnFinishAt time.Time
+	// LastReportID is set when arrival triggers combat (MIL-005).
+	LastReportID int64
 }
 
 // CityState is the in-memory slice used by Hub (persisted copies live in domestic/military tables).
