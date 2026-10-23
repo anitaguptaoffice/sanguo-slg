@@ -471,6 +471,21 @@
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
       }
       .battle-report-detail-nav button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .battle-report-detail-side-summary {
+        margin: 6px 0 8px; padding: 8px; background: #1e1812; border-radius: 4px;
+        border: 1px solid #3d3028;
+      }
+      .battle-report-detail-side-line {
+        margin: 0 0 6px; font-size: 12px; line-height: 1.4; color: #e8dcc8;
+      }
+      .battle-report-detail-side-links {
+        display: flex; flex-wrap: wrap; gap: 6px;
+      }
+      .battle-report-side-link-btn { font-size: 11px; padding: 4px 8px; }
+      .rank-table tbody tr.rank-row-highlight td {
+        background: rgba(201, 162, 39, 0.22);
+        outline: 1px solid #c9a227;
+      }
       .battle-report-detail-nav button:focus-visible {
         outline: 2px solid #c9a227;
         outline-offset: 2px;
@@ -943,10 +958,25 @@
         max-height: none;
         overflow: visible;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="hero-hint"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] button,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-cost-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="recruit-form-error"] {
+        flex-shrink: 0;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail {
         max-height: none;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
         overflow-x: auto;
         overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-head,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-links {
+        flex-wrap: wrap;
+        min-width: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info,
@@ -966,6 +996,17 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table-scroll {
         max-height: none;
         overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-viewer-bar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-snapshot-meta {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-col-name {
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list {
         max-height: none;
@@ -1079,12 +1120,45 @@
         max-height: none;
         overflow: visible;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .content-panel-actions {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-battle-report-banner,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] [data-role="daily-hint"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .content-panel-actions,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-form-error {
         flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-filters,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-state-summary {
+        min-width: 0;
+        max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-filter-btn.daily-quest-locate-first {
+        margin-left: 0;
+        flex: 1 1 8rem;
+        min-width: 0;
+        max-width: 100%;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list {
         max-height: none;
         overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar button {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar .toolbar-badge {
+        max-width: 2.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       #layout-frame.layout-narrow .military-panel .military-troops {
         flex-shrink: 0;

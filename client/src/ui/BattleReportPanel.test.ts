@@ -802,6 +802,60 @@ describe("BattleReportPanel", () => {
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
   });
 
+  it("shows side summary and opens viewer hero from battle link (CLIENT-100)", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 11,
+      attacker_player_id: 42,
+      defender_player_id: 99,
+      attacker_display_name: "我",
+      attacker_hero_id: 5,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { result: "attacker_win", rounds: [{ round: 1 }], attacker_hero_level: 3 },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const onOpenHero = vi.fn();
+    const onReadonly = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      getBattleReportLinkContext: () => ({
+        viewerPlayerId: 42,
+        viewerHeroes: [{ hero_id: 5, level: 1 }],
+      }),
+      onOpenBattleReportHero: onOpenHero,
+      onBattleReportReadonlyHint: onReadonly,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="11"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const detail = mount.querySelector('[data-role="report-detail"]');
+    expect(detail?.querySelector(".battle-report-detail-side-line")?.textContent).toContain("我");
+    expect(detail?.querySelector('[data-action="open-battle-rank"]')).toBeTruthy();
+    (
+      detail?.querySelector(
+        '[data-action="open-battle-hero"][data-side="attacker"]',
+      ) as HTMLButtonElement
+    )?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenHero).toHaveBeenCalledWith(5);
+    (
+      detail?.querySelector(
+        '[data-action="open-battle-hero"][data-side="defender"]',
+      ) as HTMLButtonElement
+    )?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onReadonly).toHaveBeenCalled();
+  });
+
   it("shows list load failure in panel and list hint", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

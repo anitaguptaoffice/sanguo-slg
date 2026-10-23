@@ -39,6 +39,15 @@ export type BattleReportSummary = {
   location_y?: number;
   outcome?: number;
   created_at_ms?: number;
+  /** 可选：网关 JSON 扩展，战报复盘攻守摘要（CLIENT-100）。 */
+  attacker_display_name?: string;
+  defender_display_name?: string;
+  attacker_hero_template_cfg_id?: number;
+  defender_hero_template_cfg_id?: number;
+  attacker_hero_template_name?: string;
+  defender_hero_template_name?: string;
+  attacker_hero_id?: number;
+  defender_hero_id?: number;
 };
 
 const MARCH_PHASE_LABEL: Record<number, string> = {
@@ -363,6 +372,8 @@ export function formatBattleResultText(result: string | undefined): string {
 
 export type BattleReportDetailView = {
   result?: string;
+  attacker_hero_level?: number;
+  defender_hero_level?: number;
   rounds?: {
     round?: number;
     attacker_troops?: Record<string, number>;
