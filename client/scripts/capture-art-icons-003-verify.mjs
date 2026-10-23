@@ -3,7 +3,7 @@
  * Usage: node scripts/capture-art-icons-003-verify.mjs
  */
 import { spawn } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -11,6 +11,9 @@ import { chromium } from "playwright";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientRoot = path.resolve(__dirname, "..");
 const outDir = path.resolve(clientRoot, "../docs/art/samples/art-icons-003/verify-screenshots");
+
+const HUD_CROP_W = 520;
+const HUD_CROP_H = 56;
 
 async function waitForHttp(url, timeoutMs = 30000) {
   const start = Date.now();
@@ -70,12 +73,37 @@ async function probeTextureScales(page, appPort, dpr) {
   }, { dpr, appPort });
 }
 
-async function cropHudJpeg(page, jpegPath) {
-  await page.locator("#game-viewport").screenshot({
+async function readViewportMetadata(page) {
+  return page.evaluate(() => {
+    const root = document.getElementById("game-viewport");
+    const frame = document.getElementById("layout-frame");
+    const canvas = document.getElementById("game");
+    const rootRect = root?.getBoundingClientRect();
+    const frameRect = frame?.getBoundingClientRect();
+    return {
+      devicePixelRatio: window.devicePixelRatio,
+      cssViewport: rootRect ? { width: rootRect.width, height: rootRect.height } : null,
+      layoutFrameCss: frameRect ? { width: frameRect.width, height: frameRect.height, left: frameRect.left, top: frameRect.top } : null,
+      canvasBacking: canvas ? { width: canvas.width, height: canvas.height } : null,
+      canvasCss: frameRect ? { width: frameRect.width, height: frameRect.height } : null,
+    };
+  });
+}
+
+async function screenshotHudCrop(page, jpegPath) {
+  const frame = page.locator("#layout-frame");
+  const box = await frame.boundingBox();
+  if (!box) throw new Error("missing #layout-frame bounding box");
+  await page.screenshot({
     path: jpegPath,
     type: "jpeg",
     quality: 82,
-    clip: { x: 0, y: 0, width: 520, height: 56 },
+    clip: {
+      x: box.x,
+      y: box.y,
+      width: Math.min(HUD_CROP_W, box.width),
+      height: Math.min(HUD_CROP_H, box.height),
+    },
   });
 }
 
@@ -93,6 +121,7 @@ async function main() {
     },
   );
   const dprProbe = {};
+  const viewportMeta = {};
   try {
     await new Promise((r) => setTimeout(r, 2500));
     await waitForHttp(`http://127.0.0.1:${appPort}/`);
@@ -109,18 +138,19 @@ async function main() {
       await enterMainCity(page, appPort);
       await page.waitForTimeout(800);
       const pngPath = path.join(outDir, `${name}.png`);
-      await page.locator("#game-viewport").screenshot({ path: pngPath });
-      await cropHudJpeg(page, path.join(outDir, `${name}-hud-crop.jpg`));
+      await page.locator("#layout-frame").screenshot({ path: pngPath });
+      await screenshotHudCrop(page, path.join(outDir, `${name}-hud-crop.jpg`));
       dprProbe[name] = await probeTextureScales(page, appPort, dpr);
+      viewportMeta[name] = await readViewportMetadata(page);
       await context.close();
     }
     await browser.close();
     const probePath = path.join(outDir, "dpr-probe.json");
-    await import("node:fs/promises").then((fs) =>
-      fs.writeFile(probePath, JSON.stringify(dprProbe, null, 2)),
-    );
+    await writeFile(probePath, JSON.stringify(dprProbe, null, 2));
+    const metaPath = path.join(outDir, "viewport-metadata.json");
+    await writeFile(metaPath, JSON.stringify(viewportMeta, null, 2));
     console.log(`Screenshots written to ${outDir}`);
-    console.log(JSON.stringify(dprProbe, null, 2));
+    console.log(JSON.stringify({ dprProbe, viewportMeta }, null, 2));
   } finally {
     mock.kill("SIGTERM");
     preview.kill("SIGTERM");

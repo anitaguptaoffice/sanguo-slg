@@ -64,6 +64,7 @@ export class MainCityScene implements Scene {
     this.canvas = ctx.canvas;
     this.session = (data as MainCitySession) ?? null;
     this.hud = ctx.hud;
+    this.hud.classList.add("hud-main-city");
     this.gateway = ctx.gateway;
     this.renderHud();
     this.toolbar = document.createElement("div");
@@ -143,6 +144,7 @@ export class MainCityScene implements Scene {
   }
 
   leave(): void {
+    this.hud?.classList.remove("hud-main-city");
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
@@ -240,13 +242,17 @@ export class MainCityScene implements Scene {
     const p = s?.player;
     const troopHint = formatTroopStacks(s?.cityTroops);
     const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
-    this.hud.textContent =
-      `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1} · ` +
-      `粮 ${w.food ?? 0} 木 ${w.wood ?? 0} 铁 ${w.iron ?? 0} 石 ${w.stone ?? 0} 币 ${w.gold ?? 0}` +
-      (troopHint !== "无" ? ` · 兵 ${troopHint}` : "") +
-      (this.hitDebug ? ` · 点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}` : "") +
-      ` · ${dprTag}` +
-      (this.status ? ` · ${this.status}` : "");
+    const head =
+      `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1} · 币 ${w.gold ?? 0}`;
+    const tail = [
+      troopHint !== "无" ? `兵 ${troopHint}` : "",
+      this.hitDebug ? `点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}` : "",
+      dprTag,
+      this.status || "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    this.hud.textContent = tail ? `${head} · ${tail}` : head;
   }
 
   private async refreshState(): Promise<void> {
