@@ -61,6 +61,9 @@ export type HeroDetail = HeroSummary & {
   loyalty_min?: number;
   loyalty_max?: number;
   attributes?: HeroAttributes;
+  /** 网关可选：本级经验进度（无字段时详情区降级为 Lv+忠诚摘要）。 */
+  exp_current?: number;
+  exp_to_next?: number;
 };
 
 export type RecruitTemplatePreview = {
@@ -72,7 +75,46 @@ export type RecruitTemplatePreview = {
   recruit_cost?: ResourceWallet;
   recruit_item?: { item_cfg_id?: number; quantity?: number };
   already_owned?: boolean;
+  /** 可选：模板基准四维（缺省时用核心 template_cfg_id 子集表）。 */
+  base_attributes?: HeroAttributes;
 };
+
+/** 与 internal/hero/seed 核心子集 base_stats 数值对齐（只读对比，非 legacy 文案）。 */
+const HERO_TEMPLATE_BASE_STATS: Record<number, HeroAttributes> = {
+  1001: { force: 72, intel: 75, politics: 88, command: 78 },
+  1002: { force: 95, intel: 62, politics: 55, command: 82 },
+  1003: { force: 92, intel: 45, politics: 40, command: 75 },
+  1004: { force: 88, intel: 70, politics: 58, command: 85 },
+};
+
+/** DATA-001 养成消耗品子集（如 hero_exp），不扩 SKU。 */
+export const HERO_CULTIVATION_CONSUMABLE_CFG_IDS: readonly number[] = [2017];
+
+export type HeroAttributeDeltaRow = {
+  key: HeroAttributeKey;
+  label: string;
+  current: number;
+  baseline: number;
+  delta: number;
+};
+
+export type HeroDetailTemplateCompare = {
+  rows: HeroAttributeDeltaRow[];
+  hasBaseline: boolean;
+};
+
+export type HeroUpgradeProgressBar = {
+  kind: "level_exp" | "loyalty";
+  label: string;
+  current: number;
+  max: number;
+  percent: number;
+  caption: string;
+};
+
+export type HeroDetailUpgradeProgress =
+  | { mode: "bars"; bars: HeroUpgradeProgressBar[] }
+  | { mode: "fallback"; summary: string };
 
 export type MailRow = {
   mail_id?: number;
@@ -146,8 +188,86 @@ export function parseGetHeroDetailResponse(raw: unknown): HeroDetail {
     loyalty: numField(r.loyalty),
     loyalty_min: numField(r.loyalty_min),
     loyalty_max: numField(r.loyalty_max),
+    exp_current: numField(r.exp_current ?? r.level_exp_current ?? r.experience),
+    exp_to_next: numField(r.exp_to_next ?? r.exp_to_next_level ?? r.level_exp_max ?? r.exp_max),
     attributes,
   };
+}
+
+export function heroTemplateBaseStats(templateCfgId: number | undefined): HeroAttributes | undefined {
+  if (!templateCfgId) return undefined;
+  return HERO_TEMPLATE_BASE_STATS[templateCfgId];
+}
+
+/** 纯函数：当前将领四维 vs 模板基准（±N），不发 hero RPC。 */
+export function compareHeroDetailToTemplate(
+  detail: HeroDetail | null | undefined,
+  templatePreview: RecruitTemplatePreview | null | undefined,
+): HeroDetailTemplateCompare {
+  const templateId = templatePreview?.template_cfg_id ?? detail?.template_cfg_id;
+  const baseline =
+    templatePreview?.base_attributes ?? heroTemplateBaseStats(templateId) ?? ({} as HeroAttributes);
+  const hasBaseline = HERO_ATTRIBUTE_ROWS.some(({ key }) => baseline[key] != null);
+  const attrs = detail?.attributes ?? {};
+  const rows = HERO_ATTRIBUTE_ROWS.map(({ key, label }) => {
+    const current = attrs[key] ?? 0;
+    const base = baseline[key] ?? 0;
+    return { key, label, current, baseline: base, delta: current - base };
+  });
+  return { rows, hasBaseline };
+}
+
+export function formatHeroAttributeDelta(delta: number): string {
+  if (delta > 0) return `+${delta}`;
+  if (delta < 0) return String(delta);
+  return "0";
+}
+
+export function resolveHeroDetailUpgradeProgress(detail: HeroDetail): HeroDetailUpgradeProgress {
+  const bars: HeroUpgradeProgressBar[] = [];
+  const expCur = detail.exp_current;
+  const expMax = detail.exp_to_next;
+  if (expCur != null && expMax != null && expMax > 0) {
+    bars.push({
+      kind: "level_exp",
+      label: "等级经验",
+      current: expCur,
+      max: expMax,
+      percent: Math.min(100, Math.max(0, Math.round((expCur / expMax) * 100))),
+      caption: `Lv${detail.level ?? 1} · ${expCur}/${expMax}`,
+    });
+  }
+  const loyalty = detail.loyalty ?? 0;
+  const lmin = detail.loyalty_min;
+  const lmax = detail.loyalty_max;
+  if (lmin != null && lmax != null && lmax > lmin) {
+    bars.push({
+      kind: "loyalty",
+      label: "忠诚",
+      current: loyalty,
+      max: lmax,
+      percent: Math.min(100, Math.max(0, Math.round(((loyalty - lmin) / (lmax - lmin)) * 100))),
+      caption: `${loyalty}/${lmax}`,
+    });
+  }
+  if (!bars.length) {
+    return { mode: "fallback", summary: `Lv${detail.level ?? 1} · 忠诚 ${loyalty}` };
+  }
+  return { mode: "bars", bars };
+}
+
+/** ListPlayerBag 快照中筛出养成相关消耗品 item_cfg_id（qty>0）。 */
+export function filterHeroCultivationBagItemIds(
+  items: { item_cfg_id?: number; quantity?: number }[] | BagStack[],
+): number[] {
+  const allow = new Set(HERO_CULTIVATION_CONSUMABLE_CFG_IDS);
+  const ids: number[] = [];
+  for (const row of items) {
+    const id = row.item_cfg_id ?? 0;
+    const qty = row.quantity ?? 0;
+    if (id > 0 && allow.has(id) && qty > 0) ids.push(id);
+  }
+  return [...new Set(ids)].sort((a, b) => a - b);
 }
 
 function numField(v: unknown): number | undefined {
@@ -188,10 +308,28 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function renderHeroUpgradeProgressMarkup(d: HeroDetail): string {
+  const progress = resolveHeroDetailUpgradeProgress(d);
+  if (progress.mode === "fallback") {
+    return `<p class="hero-upgrade-fallback">${escapeHtml(progress.summary)}</p>`;
+  }
+  const bars = progress.bars
+    .map(
+      (b) =>
+        `<div class="hero-progress-row" data-kind="${b.kind}"><span class="hero-progress-label">${escapeHtml(b.label)}</span>` +
+        `<span class="hero-progress-caption">${escapeHtml(b.caption)}</span>` +
+        `<span class="hero-progress-track" role="progressbar" aria-valuenow="${b.percent}" aria-valuemin="0" aria-valuemax="100">` +
+        `<span class="hero-progress-fill" style="width:${b.percent}%"></span></span></div>`,
+    )
+    .join("");
+  return `<section class="hero-upgrade-progress" aria-label="养成进度">${bars}</section>`;
+}
+
 /** 将领详情区：模板名与等级同屏 + 属性表/条形（纯函数，便于单测）。 */
 export function renderHeroDetailMarkup(
   d: HeroDetail | null | undefined,
   recruitAffordSummaryHtml = "",
+  templatePreview?: RecruitTemplatePreview | null,
 ): string {
   if (!d?.hero_id) {
     return '<p class="hero-detail-empty">点选将领查看详情</p>';
@@ -205,15 +343,33 @@ export function renderHeroDetailMarkup(
       ? ` · 忠诚 ${loyalty}（${d.loyalty_min}~${d.loyalty_max ?? loyalty}）`
       : ` · 忠诚 ${loyalty}`;
   const head = `<header class="hero-detail-head"><span class="hero-detail-name">${name}</span><span class="hero-detail-level">Lv${level}</span><span class="hero-detail-meta">稀有${rarity}${loyaltyRange}</span></header>`;
+  const progress = renderHeroUpgradeProgressMarkup(d);
+  const comparison = compareHeroDetailToTemplate(d, templatePreview ?? null);
+  const deltaByKey = new Map(comparison.rows.map((r) => [r.key, r]));
   const attrs = d.attributes;
   const rows = HERO_ATTRIBUTE_ROWS.map(({ key, label }) => {
     const val = attrs?.[key] ?? 0;
     const pct = heroAttributeBarPercent(val);
-    return `<tr><th scope="row">${escapeHtml(label)}</th><td class="hero-attr-val">${val}</td><td class="hero-attr-bar"><span class="hero-attr-bar-fill" style="width:${pct}%"></span></td></tr>`;
+    const deltaRow = deltaByKey.get(key);
+    const deltaClass =
+      deltaRow && deltaRow.delta > 0
+        ? "hero-attr-delta-pos"
+        : deltaRow && deltaRow.delta < 0
+          ? "hero-attr-delta-neg"
+          : "hero-attr-delta-zero";
+    const deltaCell =
+      comparison.hasBaseline && deltaRow
+        ? `<td class="hero-attr-delta ${deltaClass}">${formatHeroAttributeDelta(deltaRow.delta)}</td>`
+        : "";
+    return `<tr><th scope="row">${escapeHtml(label)}</th><td class="hero-attr-val">${val}</td>${deltaCell}<td class="hero-attr-bar"><span class="hero-attr-bar-fill" style="width:${pct}%"></span></td></tr>`;
   }).join("");
   const table = `<table class="hero-attr-table" aria-label="基础属性"><tbody>${rows}</tbody></table>`;
+  const links = `<div class="hero-detail-links">
+    <button type="button" data-action="hero-goto-recruit">去招募</button>
+    <button type="button" data-action="hero-related-items">相关道具</button>
+  </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${recruitAffordSummaryHtml}${table}${hint}`;
+  return `${head}${progress}${recruitAffordSummaryHtml}${table}${links}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

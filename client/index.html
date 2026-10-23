@@ -370,12 +370,36 @@
       .queue-military-section { margin-top: 10px; }
       .queue-military-section.hidden { display: none; }
       .queue-military-heading { font-size: 13px; margin: 0 0 6px; color: #3d2e1f; font-weight: 600; }
+      .daily-quest-filters {
+        display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; font-size: 12px;
+      }
+      .daily-quest-filter-btn {
+        font-size: 12px; padding: 4px 10px; border-radius: 4px; cursor: pointer;
+        background: #2a221c; color: #e8dcc8; border: 1px solid #4a3f35;
+      }
+      .daily-quest-filter-btn.active { outline: 2px solid #c9a227; }
+      .daily-quest-state-summary {
+        display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; font-size: 12px;
+      }
+      .daily-quest-state-chip {
+        padding: 2px 8px; border-radius: 4px; cursor: default; opacity: 0.95;
+        background: #2a221c; color: #c9b896; border: 1px solid #3d3028;
+      }
+      .daily-quest-state-chip.daily-state-in-progress { color: #b8d4a0; }
+      .daily-quest-state-chip.daily-state-claimable { color: #f0c674; }
+      .daily-quest-state-chip.daily-state-completed { color: #9a8f7a; }
       .daily-quest-list { list-style: none; padding-left: 0; }
       .daily-quest-list li {
         padding: 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; cursor: pointer;
       }
+      .daily-quest-list li.daily-quest-list-empty { cursor: default; color: #b8a88a; font-style: italic; }
+      .daily-quest-list li.daily-quest-row-completed {
+        opacity: 0.72; background: #14100e; padding: 5px 8px;
+      }
       .daily-quest-list li.selected { outline: 2px solid #c9a227; }
       .daily-quest-list li:hover { background: #3d3028; }
+      .daily-quest-list li.daily-quest-list-empty:hover,
+      .daily-quest-list li.daily-quest-row-completed:hover { background: #14100e; }
       .world-city-list { list-style: none; padding-left: 0; }
       .world-city-list li {
         padding: 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; cursor: pointer;
@@ -465,6 +489,19 @@
         background: linear-gradient(90deg, #6a9fd8, #4a7fb8); min-width: 2px;
       }
       .hero-detail-hint { margin: 8px 0 0; font-size: 11px; color: #b8a88a; line-height: 1.4; }
+      .hero-upgrade-progress { margin: 6px 0 8px; }
+      .hero-upgrade-fallback { margin: 6px 0 8px; font-size: 11px; color: #c9b896; }
+      .hero-progress-row { display: grid; grid-template-columns: 3.5em 1fr; gap: 2px 8px; align-items: center; margin-bottom: 4px; font-size: 11px; }
+      .hero-progress-label { color: #c9b896; }
+      .hero-progress-caption { grid-column: 2; color: #b8a88a; font-size: 10px; text-align: right; }
+      .hero-progress-track { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: #2a2218; overflow: hidden; }
+      .hero-progress-fill { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #c9a227, #8b6914); min-width: 2px; }
+      .hero-attr-delta { width: 2.2em; text-align: center; font-size: 10px; padding: 2px 2px; }
+      .hero-attr-delta-pos { color: #7cb87c; }
+      .hero-attr-delta-neg { color: #c97a7a; }
+      .hero-attr-delta-zero { color: #8a8070; }
+      .hero-detail-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+      .hero-detail-links button { font-size: 11px; padding: 4px 8px; }
       .template-list li.recruit-owned { color: #a8c4a0; }
       .template-list li.selected { outline: 2px solid #c9a227; }
       .template-list li .recruit-afford-primary,

@@ -688,6 +688,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 资源或道具不足时 **招募** 按钮禁用，`march-form-error-sibling` 展示中文原因；强行改 DOM 触发仍被客户端拦截。网关 `RecruitHero` 失败时状态栏与错误区与 **CLIENT-067** 一致（`formatPanelGatewayError`，如 `道具不足 [10001]`）。
 4. 单测：`recruitAffordability.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（将领详情养成对比 CLIENT-072）
+
+在 [CLIENT-014](#手动验收将领详情-client-014) / [CLIENT-056](#手动验收将领招募钱包对比-client-056) 基础上：
+
+1. 点选将领：详情区展示 **养成进度条**（有 `exp_*` 时等级经验 + `loyalty_min~max` 忠诚条；缺经验字段时降级为 **Lv·忠诚** 摘要）；列表行 `selected` 与详情 `hero_id` 同步。
+2. 属性表 **Δ 列** 为 `compareHeroDetailToTemplate` 相对模板基准四维 ±N（不发新 hero RPC）。
+3. **去招募**：同面板招募区预选当前 `template_cfg_id`；**相关道具**：`ListPlayerBag` 过滤养成消耗品（如将魂碎晶 2017）并打开背包高亮。
+4. 单测：`heroMailState.test.ts`（对比/进度/背包过滤）、`HeroMailPanels.test.ts`。
+
 ### 手动验收（四类面板统一错误 CLIENT-067）
 
 将领/商城/背包/军事的内联错误区（`recruit-form-error`、`shop-form-error`、`bag-form-error`、`march-form-error`）经 `contentFormValidation.setPanelFormErrorDisplay` 渲染；网关失败统一为 `formatPanelGatewayError` 的中文摘要 + 末尾 `[code]`（如商城 `余额不足 [64003]`），与 CLIENT-056/057 预校验共用同一 DOM 槽位，成功操作后错误区清空。

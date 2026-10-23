@@ -28,6 +28,14 @@ import {
   shouldShowDailyBattleReportBanner,
 } from "@/net/dailyQuestBattleReportBanner";
 import { dailyQuestCrossLinkTags } from "@/net/mailBattleCrossLink";
+import {
+  countDailyQuestsByState,
+  dailyQuestListEmptyMessage,
+  dailyQuestRowsForList,
+  readDailyQuestListFilterSession,
+  type DailyQuestListFilter,
+  writeDailyQuestListFilterSession,
+} from "@/net/dailyQuestListFilter";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type RewardBundle = {
@@ -39,6 +47,7 @@ export class DailyQuestPanels {
   private panel!: HTMLElement;
   private rows: DailyQuestRow[] = [];
   private selectedCfgId = 0;
+  private listFilter: DailyQuestListFilter = "all";
 
   constructor(
     private readonly mount: HTMLElement,
@@ -57,6 +66,7 @@ export class DailyQuestPanels {
   ) {}
 
   attach(): void {
+    this.listFilter = readDailyQuestListFilterSession() ?? "all";
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
@@ -140,6 +150,13 @@ export class DailyQuestPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-daily">领奖</button>
       </div>
       <div class="panel-scroll-body" data-role="daily-scroll">
+        <div class="daily-quest-filters" data-role="daily-filters">
+          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="all">全部</button>
+          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="in_progress">进行中</button>
+          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="claimable">可领取</button>
+          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="completed">已完成</button>
+        </div>
+        <div class="daily-quest-state-summary" data-role="daily-state-summary" hidden></div>
         <ul class="daily-quest-list" data-role="daily-list"></ul>
         <p class="daily-quest-next" data-role="daily-next" hidden></p>
         <button type="button" data-action="daily-go-next" hidden>前往下一步</button>
@@ -149,23 +166,70 @@ export class DailyQuestPanels {
     return el;
   }
 
+  private visibleRows(): DailyQuestRow[] {
+    return dailyQuestRowsForList(this.rows, this.listFilter);
+  }
+
+  private updateFilterButtons(): void {
+    for (const btn of Array.from(
+      this.panel.querySelectorAll<HTMLButtonElement>('[data-action="daily-filter"]'),
+    )) {
+      const f = btn.getAttribute("data-filter") as DailyQuestListFilter;
+      btn.classList.toggle("active", f === this.listFilter);
+    }
+  }
+
+  private renderStateSummary(): void {
+    const summaryEl = this.panel.querySelector('[data-role="daily-state-summary"]') as HTMLElement | null;
+    if (!summaryEl) return;
+    summaryEl.innerHTML = "";
+    const scoped = dailyQuestRowsForList(this.rows, this.listFilter);
+    if (!scoped.length) {
+      summaryEl.hidden = true;
+      return;
+    }
+    const counts = countDailyQuestsByState(scoped);
+    const chips: { label: string; count: number; className: string }[] = [
+      { label: "可接", count: counts.acceptable, className: "daily-state-acceptable" },
+      { label: "进行中", count: counts.inProgress, className: "daily-state-in-progress" },
+      { label: "可领取", count: counts.claimable, className: "daily-state-claimable" },
+      { label: "已完成", count: counts.completed, className: "daily-state-completed" },
+    ];
+    summaryEl.hidden = false;
+    for (const chip of chips) {
+      const span = document.createElement("span");
+      span.className = `daily-quest-state-chip ${chip.className}`;
+      span.setAttribute("aria-readonly", "true");
+      span.textContent = `${chip.label} ${chip.count}`;
+      summaryEl.appendChild(span);
+    }
+  }
+
   private renderList(): void {
     const ul = this.panel.querySelector('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
+    this.updateFilterButtons();
+    this.renderStateSummary();
     ul.innerHTML = "";
-    if (!this.rows.length) {
+    const displayRows = this.visibleRows();
+    if (!displayRows.length) {
       const li = document.createElement("li");
-      li.textContent = "（暂无日常任务，请刷新或提升君主等级）";
+      li.className = "daily-quest-list-empty";
+      li.textContent = this.rows.length
+        ? dailyQuestListEmptyMessage(this.listFilter)
+        : dailyQuestListEmptyMessage("all");
       ul.appendChild(li);
     } else {
       const now = Date.now();
       const slotLabels = this.queueSlotLabels ?? {};
       const buildings = this.getQueueBuildings?.();
       const recruits = this.getQueueRecruits?.();
-      for (const q of this.rows) {
+      for (const q of displayRows) {
         const li = document.createElement("li");
         const id = q.quest_cfg_id ?? 0;
+        const state = q.state ?? 0;
+        if (state === 4) li.classList.add("daily-quest-row-completed");
         let line = formatDailyQuestLine(q);
         const queueHint = formatDailyQuestQueueInlineHint(
           q,
@@ -359,6 +423,16 @@ export class DailyQuestPanels {
     if (li) {
       this.selectedCfgId = Number(li.getAttribute("data-quest-cfg-id")) || 0;
       this.renderList();
+      return;
+    }
+    const filterBtn = (ev.target as HTMLElement).closest('[data-action="daily-filter"]');
+    if (filterBtn) {
+      const f = filterBtn.getAttribute("data-filter") as DailyQuestListFilter | null;
+      if (f && f !== this.listFilter) {
+        this.listFilter = f;
+        writeDailyQuestListFilterSession(f);
+        this.renderList();
+      }
       return;
     }
     const actionEl = (ev.target as HTMLElement).closest("[data-action]");
