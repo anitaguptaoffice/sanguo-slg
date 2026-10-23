@@ -56,7 +56,7 @@ describe("BattleReportPanel", () => {
     await flushPromises();
     const ul = mount.querySelector('[data-role="report-list"]');
     expect(ul?.querySelector(".battle-outcome-chip")?.textContent).toContain("守胜");
-    expect(ul?.textContent).toContain("坐标(8,9)");
+    expect(ul?.querySelector(".battle-report-row-coord")?.textContent).toContain("坐标(8,9)");
     mount.querySelector('li[data-report-id="2"]')?.dispatchEvent(
       new Event("click", { bubbles: true }),
     );
@@ -65,6 +65,74 @@ describe("BattleReportPanel", () => {
     const detail = mount.querySelector('[data-role="report-detail"]');
     expect(detail?.textContent).toContain("守方获胜");
     expect(detail?.querySelector(".battle-report-rounds-table")).toBeTruthy();
+    expect(detail?.querySelector(".battle-report-detail-coord")?.textContent).toContain("坐标(8,9)");
+    expect(detail?.querySelector('[data-action="view-on-map"]')).toBeTruthy();
+  });
+
+  it("invokes onViewOnMap when clicking 在地图查看", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 3,
+      location_x: 4,
+      location_y: 5,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: { summary, detail: { result: "attacker_win", rounds: [] } },
+      }),
+    } as unknown as GatewayPort;
+    const onViewOnMap = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, { onViewOnMap });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="3"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    mount.querySelector('[data-action="view-on-map"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(onViewOnMap).toHaveBeenCalledWith(summary);
+  });
+
+  it("clears map replay when switching selected report", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, location_x: 1, location_y: 1, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, location_x: 2, location_y: 2, outcome: 2, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, location_x: id, location_y: id, outcome: 1 },
+            detail: { result: "attacker_win", rounds: [] },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const onClearMapReplay = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, { onClearMapReplay });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="1"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    onClearMapReplay.mockClear();
+    mount.querySelector('li[data-report-id="2"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(onClearMapReplay).toHaveBeenCalled();
   });
 
   it("opens deep link with latest report after list refresh", async () => {

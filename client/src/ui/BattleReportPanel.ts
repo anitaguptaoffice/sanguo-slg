@@ -12,7 +12,8 @@ import {
   battleReportOutcomeChipLabel,
   filterBattleReportsByOutcome,
   formatBattleReportDetail,
-  formatBattleReportFoeSummary,
+  formatBattleReportFoeWithoutCoord,
+  formatReportCoord,
   formatTimeMs,
   type BattleReportDetailView,
   type BattleReportOutcomeFilter,
@@ -32,6 +33,10 @@ const PAGE_LIMIT = 20;
 export type BattleReportPanelOptions = {
   unreadSession?: BattleReportUnreadSession;
   onUnreadChange?: (count: number) => void;
+  /** 详情「在地图查看」：由场景驱动小地图高亮与 pan/zoom。 */
+  onViewOnMap?: (summary: BattleReportSummary) => void;
+  /** 关闭面板、切换战报或取消复盘时清除小地图临时标记。 */
+  onClearMapReplay?: () => void;
 };
 
 export class BattleReportPanel {
@@ -43,6 +48,7 @@ export class BattleReportPanel {
   private selectedReportId = 0;
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
+  private detailSummary: BattleReportSummary | undefined;
   private roundsTableExpanded = false;
   private listError = "";
   private detailError = "";
@@ -63,7 +69,12 @@ export class BattleReportPanel {
   }
 
   detach(): void {
+    this.clearMapReplay();
     this.panel?.remove();
+  }
+
+  private clearMapReplay(): void {
+    this.panelOpts?.onClearMapReplay?.();
   }
 
   isOpen(): boolean {
@@ -74,6 +85,7 @@ export class BattleReportPanel {
     const wasHidden = this.panel.classList.contains("hidden");
     this.panel.classList.toggle("hidden");
     if (wasHidden && this.isOpen()) void this.openAndSyncUnread();
+    else if (!wasHidden && !this.isOpen()) this.clearMapReplay();
   }
 
   /** 行军结束提示等入口：打开列表并清零未读基线。 */
@@ -207,12 +219,16 @@ export class BattleReportPanel {
       chip.textContent = battleReportOutcomeChipLabel(r.outcome);
       const body = document.createElement("span");
       body.className = "battle-report-row-body";
+      const coord = document.createElement("span");
+      coord.className = "battle-report-row-coord";
+      coord.textContent = formatReportCoord(r);
       const foe = document.createElement("span");
       foe.className = "battle-report-row-foe";
-      foe.textContent = formatBattleReportFoeSummary(r);
+      foe.textContent = formatBattleReportFoeWithoutCoord(r);
       const when = document.createElement("span");
       when.className = "battle-report-row-time";
       when.textContent = formatTimeMs(r.created_at_ms);
+      body.appendChild(coord);
       body.appendChild(foe);
       body.appendChild(when);
       li.appendChild(chip);
@@ -252,6 +268,26 @@ export class BattleReportPanel {
     detailEl.textContent = "";
     if (!this.selectedReportId || this.detailLoading) return;
     if (this.detailError) return;
+
+    const summary = this.detailSummary;
+    if (summary) {
+      const head = document.createElement("div");
+      head.className = "battle-report-detail-head";
+      const coord = document.createElement("span");
+      coord.className = "battle-report-detail-coord";
+      coord.textContent = formatReportCoord(summary);
+      const foe = document.createElement("span");
+      foe.className = "battle-report-detail-foe";
+      foe.textContent = formatBattleReportFoeWithoutCoord(summary);
+      const mapBtn = document.createElement("button");
+      mapBtn.type = "button";
+      mapBtn.setAttribute("data-action", "view-on-map");
+      mapBtn.textContent = "在地图查看";
+      head.appendChild(coord);
+      head.appendChild(foe);
+      head.appendChild(mapBtn);
+      detailEl.appendChild(head);
+    }
 
     const pre = document.createElement("pre");
     pre.textContent = this.detailText;
@@ -365,10 +401,12 @@ export class BattleReportPanel {
   }
 
   private async openReport(reportId: number): Promise<void> {
+    if (reportId !== this.selectedReportId) this.clearMapReplay();
     this.selectedReportId = reportId;
     this.detailError = "";
     this.detailText = "";
     this.detailRounds = [];
+    this.detailSummary = undefined;
     this.roundsTableExpanded = false;
     this.detailLoading = true;
     this.onStatus(`战报 #${reportId}…`);
@@ -380,6 +418,7 @@ export class BattleReportPanel {
           detail?: BattleReportDetailView;
         };
       };
+      this.detailSummary = res.report?.summary;
       this.detailText = formatBattleReportDetail(
         reportId,
         res.report?.summary,
@@ -391,6 +430,7 @@ export class BattleReportPanel {
       this.detailError = `详情加载失败：${(e as Error).message}`;
       this.detailText = "";
       this.detailRounds = [];
+      this.detailSummary = undefined;
       this.onStatus(this.detailError);
     }
     this.detailLoading = false;
@@ -425,6 +465,8 @@ export class BattleReportPanel {
     } else if (action === "expand-rounds") {
       this.roundsTableExpanded = true;
       this.renderDetail();
+    } else if (action === "view-on-map" && this.detailSummary) {
+      this.panelOpts?.onViewOnMap?.(this.detailSummary);
     }
   }
 }

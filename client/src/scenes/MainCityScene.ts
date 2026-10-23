@@ -30,8 +30,14 @@ import {
   formatTroopStacks,
   mergeCityTroops,
   unitLabel,
+  type BattleReportSummary,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import {
+  extractBattleReportReplayCoord,
+  formatBattleReportReplayStatusCollapsed,
+  formatBattleReportReplayStatusExpanded,
+} from "@/net/battleReportReplayCoord";
 import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import { MARCH_ARRIVAL_STATUS_TOAST } from "@/net/marchArrival";
@@ -49,7 +55,9 @@ import {
   applyMinimapPan,
   applyMinimapWheelZoom,
   computeMinimapWorldBounds,
+  computeMinimapViewFramingPoints,
   findMarchIdForMinimapDestClick,
+  type MinimapWorldPoint,
   layoutPointInMinimapMap,
   layoutPointInMinimapToggle,
   minimapLayoutToWorld,
@@ -121,6 +129,7 @@ export class MainCityScene implements Scene {
   private minimapPanLastLayout: { x: number; y: number } | null = null;
   private minimapPanStartLayout: { x: number; y: number } | null = null;
   private minimapCollapsed = readMinimapCollapsedFromSession();
+  private minimapBattleReportReplay: MinimapWorldPoint | null = null;
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
   private readonly onCanvasWheelBound = (ev: WheelEvent) => this.onCanvasWheel(ev);
   private readonly onHudClickBound = (ev: Event) => this.onHudClick(ev);
@@ -275,6 +284,8 @@ export class MainCityScene implements Scene {
       {
         unreadSession: this.battleReportUnread,
         onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
+        onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
+        onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
       },
     );
     this.battleReports.attach();
@@ -526,6 +537,40 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private minimapBoundsExtra(): MinimapWorldPoint[] {
+    return this.minimapBattleReportReplay ? [this.minimapBattleReportReplay] : [];
+  }
+
+  private currentMinimapWorldBounds() {
+    return computeMinimapWorldBounds(
+      this.session?.cityX,
+      this.session?.cityY,
+      this.minimapMarches,
+      this.marchList?.getSelectedMarch(),
+      this.minimapBoundsExtra(),
+    );
+  }
+
+  private focusMinimapOnBattleReport(summary: BattleReportSummary): void {
+    const coord = extractBattleReportReplayCoord(summary);
+    if (!coord) {
+      this.status = "战报缺少有效战场坐标";
+      this.renderHud();
+      return;
+    }
+    this.minimapBattleReportReplay = coord;
+    const bounds = this.currentMinimapWorldBounds();
+    this.minimapView = computeMinimapViewFramingPoints(bounds, [coord]);
+    this.status = this.minimapCollapsed
+      ? formatBattleReportReplayStatusCollapsed(coord)
+      : formatBattleReportReplayStatusExpanded(coord);
+    this.renderHud();
+  }
+
+  private clearBattleReportMinimapReplay(): void {
+    this.minimapBattleReportReplay = null;
+  }
+
   private layoutFromPointerEvent(ev: PointerEvent): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
     const cssX = ev.clientX - rect.left;
@@ -537,12 +582,7 @@ export class MainCityScene implements Scene {
     const layout = this.layoutFromPointerEvent(ev);
     if (!layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)) return;
     ev.preventDefault();
-    const bounds = computeMinimapWorldBounds(
-      this.session?.cityX,
-      this.session?.cityY,
-      this.minimapMarches,
-      this.marchList?.getSelectedMarch(),
-    );
+    const bounds = this.currentMinimapWorldBounds();
     this.minimapView = applyMinimapWheelZoom(
       this.minimapView,
       bounds,
@@ -558,12 +598,7 @@ export class MainCityScene implements Scene {
     if (ev.type === "pointermove" && this.minimapPanPointerId === ev.pointerId && this.minimapPanLastLayout) {
       const dx = layout.x - this.minimapPanLastLayout.x;
       const dy = layout.y - this.minimapPanLastLayout.y;
-      const bounds = computeMinimapWorldBounds(
-        this.session?.cityX,
-        this.session?.cityY,
-        this.minimapMarches,
-        this.marchList?.getSelectedMarch(),
-      );
+      const bounds = this.currentMinimapWorldBounds();
       this.minimapView = applyMinimapPan(this.minimapView, bounds, dx, dy);
       this.minimapPanLastLayout = layout;
       return;
@@ -594,7 +629,13 @@ export class MainCityScene implements Scene {
     if (layoutPointInMinimapToggle(layout.x, layout.y, this.minimapCollapsed)) {
       this.minimapCollapsed = !this.minimapCollapsed;
       writeMinimapCollapsedToSession(this.minimapCollapsed);
-      this.status = this.minimapCollapsed ? "小地图已折叠" : "小地图已展开";
+      if (this.minimapBattleReportReplay) {
+        this.status = this.minimapCollapsed
+          ? formatBattleReportReplayStatusCollapsed(this.minimapBattleReportReplay)
+          : formatBattleReportReplayStatusExpanded(this.minimapBattleReportReplay);
+      } else {
+        this.status = this.minimapCollapsed ? "小地图已折叠" : "小地图已展开";
+      }
       this.renderHud();
       return;
     }
@@ -957,6 +998,7 @@ export class MainCityScene implements Scene {
       selectedMarchId: this.marchList?.getSelectedMarchId(),
       view: this.minimapView,
       collapsed: this.minimapCollapsed,
+      battleReportReplay: this.minimapBattleReportReplay,
     });
 
     c2d.restore();

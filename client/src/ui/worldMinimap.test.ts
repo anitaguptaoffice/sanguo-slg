@@ -8,6 +8,7 @@ import {
   collectMinimapDestMarkers,
   computeMinimapScaleBar,
   computeMinimapWorldBounds,
+  computeMinimapViewFramingPoints,
   findFirstMarchByDest,
   findMarchIdForMinimapDestClick,
   layoutPointInMinimap,
@@ -117,6 +118,19 @@ describe("worldMinimap", () => {
     writeMinimapCollapsedToSession(true, storage);
     expect(storage.getItem(MINIMAP_COLLAPSED_SESSION_KEY)).toBe("1");
     expect(readMinimapCollapsedFromSession(storage)).toBe(true);
+  });
+
+  it("includes extra world points in bounds for battle replay", () => {
+    const bounds = computeMinimapWorldBounds(5, 5, [], null, [{ wx: 200, wy: 180 }]);
+    expect(bounds.minX).toBeLessThanOrEqual(200);
+    expect(bounds.maxX).toBeGreaterThanOrEqual(200);
+  });
+
+  it("frames minimap view on replay coordinates", () => {
+    const bounds = computeMinimapWorldBounds(5, 5, marches, null);
+    const view = computeMinimapViewFramingPoints(bounds, [{ wx: 10, wy: 20 }]);
+    expect(view.zoom).toBeGreaterThan(1);
+    expect(view.panWx).not.toBe(0);
   });
 
   it("collapsed map does not block former minimap slot hits", () => {
