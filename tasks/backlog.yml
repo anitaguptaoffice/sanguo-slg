@@ -4,6 +4,7 @@
 #
 # wave:7「对齐波次」策略：核心 cfg 子集可玩优先（见 docs/ROADMAP.md）。
 # wave:8「M3/M4 出口加固」：在 wave7 与 WIRE-001 / CLIENT-ART-INTG 合并后验收 ROADMAP 仍开着的缺口。
+# wave:11「H5 日常环」：在 DATA-002 子集上加深客户端可玩路径，不开 DATA-003 / cfg_act*。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -1236,8 +1237,7 @@
   wave: 10
   domain: platform
   depends_on: [INTG-006, HERO-002, MAIL-001, QUEST-002]
-  blocked_until: [QUEST-002]
-  sync_status: blocked
+  sync_status: done
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -1258,8 +1258,7 @@
   wave: 10
   domain: platform
   depends_on: [INTG-007, CLIENT-008, GM-003]
-  blocked_until: [INTG-007]
-  sync_status: blocked
+  sync_status: done
   size: S
   owner_dir: docs
   scope: [docs/ROADMAP.md, tasks/README.md]
@@ -1271,3 +1270,161 @@
     - 不写第三批 DATA-003 / cfg_act 扩量
   body: |
     文档 only，在 INTG-007 与 CLIENT-008 合并后做最终勾选。禁止改 backlog.yml（编排者维护）。
+
+- id: CLIENT-009
+  title: 日常任务面板（chain 400 接取/领奖）
+  wave: 11
+  domain: client
+  depends_on: [CLIENT-008, QUEST-002]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 主城底栏或 HUD 提供「日常」入口，与教程「任务」面板分离；横屏 1600×900 基线下不溢出
+    - 列表调用 `quest.v1.ListPlayerQuests`，`chain_id=400`（chain 400），展示进度 current/target、状态文案与 cfg code
+    - 支持选中日常 → 接取 → 领奖；不暴露「上报进度(绝对值)」给日常（依赖服务端 QUEST-002 自动挂钩）
+    - 接取/领奖后刷新 HUD 粮木铁石币与背包摘要（与现有 ContentPanels 会话合并一致）
+    - "npm test 绿；client/README.md 增补日常手动验收（make dev，daily_food_1 cfg 1012）"
+  body: |
+    wave:10 已合 QUEST-002（chain 400 + recruit/collect 挂钩），客户端仍只有教程向任务面板（默认 quest 1001 + 手填上报）。
+
+    仅 client/**：可扩展 `client/proto` 与 `loadProto`/`GatewayClient`（已有 chain_id 参数）。mock-server 可选补 chain 400 桩。
+
+    与 CLIENT-010、QUEST-003、CLIENT-011 并行（‖）。禁止 DATA-003 / cfg_act*。
+
+- id: CLIENT-010
+  title: 招募模板列表与背包/商城可读性
+  wave: 11
+  domain: client
+  depends_on: [CLIENT-008, HERO-003]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 将领面板调用 `hero.v1.ListRecruitTemplates`：下拉或列表展示模板名、稀有度、资源+道具消耗预览（对齐 HERO-003）
+    - 招募使用所选 `template_cfg_id` 与消耗预览中的 `item_cfg_id`（不再硬编码仅 1001/2004）
+    - 背包列表展示 `item_cfg_id` + 已有 `itemLabel` 映射；商城 offer 行展示售罄/限购（`sold_out` / `purchased_count`）若服务端返回
+    - 单测覆盖模板列表解析与空列表；npm test 绿
+    - client/README.md 增补 ListRecruitTemplates 手动步骤
+  body: |
+    HERO-003 已提供 ListRecruitTemplates；CLIENT-008 仍用手填模板 id。背包/商城功能已有但信息密度低。
+
+    在 `client/proto/sanguo/hero/v1/hero.proto` 补消息定义（与 internal/api/proto 字段对齐，不改 spec/）。
+
+    与 CLIENT-009、CLIENT-011 并行（‖）。
+
+- id: QUEST-003
+  title: 日常进度挂钩加深（练兵/建造/用道具）
+  wave: 11
+  domain: content
+  depends_on: [QUEST-002]
+  sync_status: ready
+  size: M
+  owner_dir: internal/quest
+  scope:
+    - internal/quest/**
+    - internal/api/quest_progress_hook.go
+    - internal/api/domestic_handlers.go
+    - internal/api/military_handlers.go
+    - internal/api/content_handlers.go
+  out_of_scope: [internal/shop/**, client/**, spec/**, spec/data/**]
+  acceptance:
+    - 扩展 `ApplyProgressEvent`：`train_troops`（募兵队列完成或即时入队成功按现有 MIL 语义选一并在单测注明）、`build_level`（建筑升级完成）、`use_item`（UseConsumable 成功且 item 匹配 objective）
+    - api 薄挂钩：仅列 scope 内 handler 在成功路径调用 quest hook；不改 shop/活动
+    - 单测：daily_train_1 (1014)、daily_build_1 (1032)、daily_march_1 (1033) 各至少一条 in-progress 推进用例；collect/recruit 行为不退化
+    - 在 internal/quest 或 tools/smoke 注释列出已挂钩事件清单（供 CLIENT-009 / INTG-008 对照）
+  body: |
+    DATA-002 chain 400 含 train/build/use_item 日常，QUEST-002 仅挂钩 recruit_hero 与 collect_resource。
+
+    跨域仅限 internal/api 列出的薄文件。禁止新 cfg 行、禁止 cfg_act*。
+
+    与 CLIENT-009 并行；INTG-008 软依赖本卡（冒烟可先用 collect/recruit 日常）。
+
+- id: CLIENT-011
+  title: 主城建筑等级与资源条可读性
+  wave: 11
+  domain: client
+  depends_on: [CLIENT-007]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - HUD 资源条分组展示（粮/木/铁/石/币），数值千分位或缩写规则与现有风格一致
+    - 画布槽位标签或状态栏显示关键建筑等级（至少农田 farm + 城主府 hall，来自 `GetCityState` buildings）
+    - 升级进行中时显示剩余时间或 finish_at 摘要（若 city state 含队列字段）
+    - layoutViewport / 主城点击升级路径不退化；单测可覆盖格式化辅助函数
+    - client/README.md 一行说明 HUD 建筑等级来源
+  body: |
+    内政后端已有，客户端仅「升级农田」按钮与单行 HUD。加深可玩反馈，不新加建筑类型。
+
+    仅 client/**。与 CLIENT-009、CLIENT-012 并行（‖）。
+
+- id: CLIENT-012
+  title: 战报列表面板（军事入口加深）
+  wave: 11
+  domain: client
+  depends_on: [CLIENT-003, CLIENT-007]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - 底栏独立「战报」入口（可与「军事」并存）：列表 `military.v1.ListBattleReports`，点击加载 `GetBattleReport` 详情
+    - 列表项展示时间、胜负 outcome、对手坐标摘要（复用 `militaryFormat.formatReportLine` 或扩展）
+    - 空列表与加载失败有明确文案；面板在 1600×900 外框内可滚动
+    - 单测覆盖列表渲染；军事募兵/出征面板行为不变
+  body: |
+    战报 RPC 已在 MainCityScene 军事子面板内，新手难发现。抽出或复制为独立 DOM 面板，不改服务端。
+
+    仅 client/**。与 CLIENT-011 并行（‖）。
+
+- id: INTG-008
+  title: wave:11 客户端路径冒烟复跑（日常+招募模板）
+  wave: 11
+  domain: platform
+  depends_on: [INTG-007, QUEST-002, HERO-003]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/hero/**, client/**, spec/**]
+  acceptance:
+    - 扩展 INTG-007：网关 ListRecruitTemplates 非空且含 template_cfg_id=1001 消耗字段
+    - 日常链 400：accept daily_food_1 → 资源/accrue 或 grant 推进 collect → claim；可选第二日常 daily_recruit_1 经 RecruitHero
+    - QUEST-003 合并后可选断言 train/build/use 其一（失败不阻塞主路径，README 注明）
+    - 保留 INTG-007 邮件/商城/重启断言；tools/smoke/README.md 更新 -run 正则与 wave:11 段
+    - CI -short 跳过长测
+  body: |
+    INTG-WAVE11-RUN。后端冒烟，覆盖 wave:11 新玩法的网关契约；不跑 H5 浏览器（CLIENT 卡自带 npm test）。
+
+    CLIENT-009/010/011/012 非硬依赖。QUEST-003 合并后编排者可要求实现者补可选步骤。
+
+    与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-003
+  title: wave:11 H5 可玩环与文档收口
+  wave: 11
+  domain: platform
+  depends_on: [INTG-008, CLIENT-009, CLIENT-010]
+  blocked_until: [INTG-008]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - ROADMAP：Wave 11 标为已完成并链 Issue/PR；Wave 10 保持已完成
+    - M4 出口描述含「日常 UI + 招募模板预览 + 战报入口」可玩路径（指向 client/README 小节）
+    - tasks/README.md wave:11 进度表与 Issue 一致
+    - 明确仍不做 DATA-003 / cfg_act* / 不可逆消费扩量
+  body: |
+    文档 only。INTG-008 合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108 等 art hold PR。
