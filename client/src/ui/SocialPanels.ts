@@ -23,7 +23,6 @@ import {
   formatSocialGuildNotJoinedReadonlyMessage,
   formatSocialGuildTabNavigateLabel,
   formatSocialPanelListRefreshHint,
-  formatSocialPanelStaleDataLabel,
   formatSocialRankEmptyMessage,
   groupChatMessagesByLocalDay,
   socialChatEmptyListClass,
@@ -34,10 +33,8 @@ import {
 } from "@/net/socialFormat";
 import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
-import {
-  formatSocialPanelLastUpdatedLine,
-  formatSocialPanelRefreshError,
-} from "@/net/socialRefreshFormat";
+import { gatewayErrorMessage } from "@/net/contentFeedback";
+import { formatPanelRefreshMeta } from "@/net/socialRefreshFormat";
 
 export class SocialPanels {
   private chatPanel!: HTMLElement;
@@ -47,11 +44,14 @@ export class SocialPanels {
   private guildName = "";
   private readonly chatListInflight = new SocialPanelInflight<void>();
   private readonly rankListInflight = new SocialPanelInflight<void>();
-  private chatLastUpdatedMs = 0;
-  private rankLastUpdatedMs = 0;
+  private readonly guildListInflight = new SocialPanelInflight<void>();
+  private readonly refreshClock = {
+    chat: { lastUpdatedMs: 0, stale: false },
+    rank: { lastUpdatedMs: 0, stale: false },
+    guild: { lastUpdatedMs: 0, stale: false },
+  };
   private chatListError = "";
   private guildListError = "";
-  private rankListStale = false;
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
 
   constructor(
@@ -174,7 +174,11 @@ export class SocialPanels {
       <label>内容 <input type="text" data-field="chat-content" maxlength="120" placeholder="输入消息" /></label>
       <button type="button" data-action="send-chat">发送</button>
       <button type="button" data-action="refresh-chat">刷新</button>
-      <p class="social-refresh-status" data-role="chat-refresh-status" hidden></p>
+      <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-chat" data-role="chat-refresh-retry">重试</button>
+      <p class="social-refresh-status" data-role="chat-refresh-status" hidden aria-live="polite">
+        <span class="social-refresh-spinner" data-role="chat-refresh-spinner" hidden></span>
+        <span data-role="chat-refresh-status-text"></span>
+      </p>
     `;
     el.querySelector('[data-field="channel"]')?.addEventListener("change", (ev) => {
       const ch = Number((ev.target as HTMLSelectElement).value);
@@ -195,7 +199,11 @@ export class SocialPanels {
       <label>军团 ID <input type="number" data-field="join-guild-id" min="1" /></label>
       <button type="button" data-action="join-guild">加入军团</button>
       <button type="button" data-action="refresh-members">刷新成员</button>
-      <p class="social-refresh-status" data-role="guild-refresh-status" hidden></p>
+      <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-members" data-role="guild-refresh-retry">重试</button>
+      <p class="social-refresh-status" data-role="guild-refresh-status" hidden aria-live="polite">
+        <span class="social-refresh-spinner" data-role="guild-refresh-spinner" hidden></span>
+        <span data-role="guild-refresh-status-text"></span>
+      </p>
       <ul class="guild-members" data-role="guild-members"></ul>
     `;
     return el;
@@ -218,7 +226,11 @@ export class SocialPanels {
         </select>
       </label>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
-      <p class="social-refresh-status" data-role="rank-refresh-status" hidden></p>
+      <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
+      <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
+        <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
+        <span data-role="rank-refresh-status-text"></span>
+      </p>
       <div class="rank-board" data-role="rank-board">
         <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
         <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
@@ -235,74 +247,35 @@ export class SocialPanels {
     return el;
   }
 
-  private syncChatRefreshUi(opts: { busy: boolean; lastUpdatedMs?: number; error?: string | null }): void {
-    const btn = this.chatPanel.querySelector<HTMLButtonElement>('[data-action="refresh-chat"]');
-    if (btn) btn.disabled = opts.busy;
-    const status = this.chatPanel.querySelector('[data-role="chat-refresh-status"]');
-    if (!status) return;
-    if (opts.lastUpdatedMs) this.chatLastUpdatedMs = opts.lastUpdatedMs;
-    if (opts.error) {
-      status.textContent = formatSocialPanelRefreshError(opts.error);
-      status.classList.add("social-refresh-error");
-      status.hidden = false;
-      return;
+  private syncPanelRefreshUi(
+    panel: HTMLElement,
+    key: "chat" | "rank" | "guild",
+    refreshAction: string,
+    opts: { busy: boolean; lastUpdatedMs?: number; error?: string | null; stale?: boolean },
+  ): void {
+    const clock = this.refreshClock[key];
+    if (opts.lastUpdatedMs) clock.lastUpdatedMs = opts.lastUpdatedMs;
+    if (opts.stale !== undefined) clock.stale = opts.stale;
+    const refreshBtn = panel.querySelector<HTMLButtonElement>(`[data-action="${refreshAction}"]`);
+    if (refreshBtn) refreshBtn.disabled = opts.busy;
+    const meta = formatPanelRefreshMeta({
+      busy: opts.busy,
+      lastUpdatedMs: clock.lastUpdatedMs,
+      error: opts.error ?? null,
+      stale: clock.stale,
+    });
+    const status = panel.querySelector(`[data-role="${key}-refresh-status"]`);
+    const spinner = panel.querySelector(`[data-role="${key}-refresh-spinner"]`);
+    const text = panel.querySelector(`[data-role="${key}-refresh-status-text"]`);
+    const retry = panel.querySelector(`[data-role="${key}-refresh-retry"]`);
+    if (text) text.textContent = meta.statusText;
+    if (spinner) spinner.hidden = !meta.spinnerVisible;
+    if (status) {
+      status.hidden = meta.statusHidden;
+      status.classList.toggle("social-refresh-error", meta.isError);
+      status.classList.toggle("social-refresh-stale", meta.isStale && !meta.isError);
     }
-    status.classList.remove("social-refresh-error");
-    if (this.chatLastUpdatedMs > 0) {
-      status.textContent = formatSocialPanelLastUpdatedLine(this.chatLastUpdatedMs);
-      status.hidden = false;
-    } else if (!opts.busy) {
-      status.textContent = "";
-      status.hidden = true;
-    }
-  }
-
-  private syncRankRefreshUi(opts: {
-    busy: boolean;
-    lastUpdatedMs?: number;
-    error?: string | null;
-    stale?: boolean;
-  }): void {
-    const btn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="refresh-rank"]');
-    if (btn) btn.disabled = opts.busy;
-    const status = this.rankPanel.querySelector('[data-role="rank-refresh-status"]');
-    if (!status) return;
-    if (opts.lastUpdatedMs) this.rankLastUpdatedMs = opts.lastUpdatedMs;
-    if (opts.stale !== undefined) this.rankListStale = opts.stale;
-    if (opts.error) {
-      let line = formatSocialPanelRefreshError(opts.error);
-      if (this.rankListStale) line += ` · ${formatSocialPanelStaleDataLabel()}`;
-      status.textContent = line;
-      status.classList.add("social-refresh-error");
-      status.hidden = false;
-      return;
-    }
-    status.classList.remove("social-refresh-error");
-    if (this.rankLastUpdatedMs > 0) {
-      status.textContent = formatSocialPanelLastUpdatedLine(this.rankLastUpdatedMs, this.rankListStale);
-      status.hidden = false;
-    } else if (!opts.busy) {
-      status.textContent = "";
-      status.hidden = true;
-    }
-  }
-
-  private syncGuildRefreshUi(opts: { busy: boolean; error?: string | null }): void {
-    const btn = this.guildPanel.querySelector<HTMLButtonElement>('[data-action="refresh-members"]');
-    if (btn) btn.disabled = opts.busy;
-    const status = this.guildPanel.querySelector('[data-role="guild-refresh-status"]');
-    if (!status) return;
-    if (opts.error) {
-      status.textContent = formatSocialPanelRefreshError(opts.error);
-      status.classList.add("social-refresh-error");
-      status.hidden = false;
-      return;
-    }
-    status.classList.remove("social-refresh-error");
-    if (!opts.busy) {
-      status.textContent = "";
-      status.hidden = true;
-    }
+    if (retry) retry.classList.toggle("hidden", !meta.retryVisible);
   }
 
   private async refreshChat(): Promise<void> {
@@ -314,7 +287,7 @@ export class SocialPanels {
       return;
     }
     return this.chatListInflight.run(async () => {
-      this.syncChatRefreshUi({ busy: true });
+      this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", { busy: true });
       this.onStatus("拉取聊天…");
       try {
         const res = (await this.gateway.listChatMessages(sid, ch, {
@@ -323,13 +296,20 @@ export class SocialPanels {
         })) as { messages?: ChatMessageRow[] };
         this.chatListError = "";
         this.renderChatLog(res.messages ?? [], ch);
-        this.syncChatRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null });
+        this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", {
+          busy: false,
+          lastUpdatedMs: Date.now(),
+          error: null,
+        });
         this.onStatus("聊天已刷新");
       } catch (e) {
         const msg = formatSocialGatewayError(e);
         this.chatListError = msg;
         this.renderChatLog([], ch);
-        this.syncChatRefreshUi({ busy: false, error: msg });
+        this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", {
+          busy: false,
+          error: gatewayErrorMessage(e),
+        });
         this.onStatus(msg);
       }
     });
@@ -504,32 +484,41 @@ export class SocialPanels {
       return;
     }
     const sid = this.serverId();
-    this.syncGuildRefreshUi({ busy: true });
-    this.onStatus("拉取成员…");
-    try {
-      const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
-        guild?: { name?: string };
-        members?: {
-          player_id?: number;
-          display_name?: string;
-          role?: number;
-          power?: number;
-          joined_at_ms?: number;
-        }[];
-      };
-      if (res.guild?.name) this.guildName = res.guild.name;
-      this.syncGuildSummary();
-      this.guildListError = "";
-      this.renderGuildMembersList(res.members ?? []);
-      this.syncGuildRefreshUi({ busy: false, error: null });
-      this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
-    } catch (e) {
-      const msg = formatSocialGatewayError(e);
-      this.guildListError = msg;
-      this.renderGuildMembersList([]);
-      this.syncGuildRefreshUi({ busy: false, error: msg });
-      this.onStatus(msg);
-    }
+    return this.guildListInflight.run(async () => {
+      this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", { busy: true });
+      this.onStatus("拉取成员…");
+      try {
+        const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
+          guild?: { name?: string };
+          members?: {
+            player_id?: number;
+            display_name?: string;
+            role?: number;
+            power?: number;
+            joined_at_ms?: number;
+          }[];
+        };
+        if (res.guild?.name) this.guildName = res.guild.name;
+        this.syncGuildSummary();
+        this.guildListError = "";
+        this.renderGuildMembersList(res.members ?? []);
+        this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", {
+          busy: false,
+          lastUpdatedMs: Date.now(),
+          error: null,
+        });
+        this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
+      } catch (e) {
+        const msg = formatSocialGatewayError(e);
+        this.guildListError = msg;
+        this.renderGuildMembersList([]);
+        this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", {
+          busy: false,
+          error: gatewayErrorMessage(e),
+        });
+        this.onStatus(msg);
+      }
+    });
   }
 
   renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
@@ -577,22 +566,36 @@ export class SocialPanels {
     const sid = this.serverId();
     const boardType = this.selectedLeaderboardType();
     return this.rankListInflight.run(async () => {
-      this.syncRankRefreshUi({ busy: true });
+      this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: true });
       this.onStatus("拉取排行榜…");
       try {
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
         this.rankSnapshotByType.set(boardType, res);
         this.renderLeaderboardPage(res, boardType);
-        this.syncRankRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null, stale: false });
+        this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
+          busy: false,
+          lastUpdatedMs: Date.now(),
+          error: null,
+          stale: false,
+        });
         this.onStatus("排行榜已刷新");
       } catch (e) {
         const msg = formatSocialGatewayError(e);
+        const refreshErr = gatewayErrorMessage(e);
         const cached = this.rankSnapshotByType.get(boardType);
         if (cached) {
           this.renderLeaderboardPage(cached, boardType);
-          this.syncRankRefreshUi({ busy: false, error: msg, stale: true });
+          this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
+            busy: false,
+            error: refreshErr,
+            stale: true,
+          });
         } else {
-          this.syncRankRefreshUi({ busy: false, error: msg, stale: false });
+          this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
+            busy: false,
+            error: refreshErr,
+            stale: false,
+          });
         }
         this.onStatus(msg);
       }
@@ -604,7 +607,7 @@ export class SocialPanels {
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "send-chat") void this.sendChat();
-    if (a === "refresh-chat") void this.refreshChat();
+    if (a === "refresh-chat" || a === "retry-refresh-chat") void this.refreshChat();
     if (a === "navigate-guild-panel") this.openGuildPanel();
   }
 
@@ -614,12 +617,13 @@ export class SocialPanels {
     const a = btn.getAttribute("data-action");
     if (a === "create-guild") void this.createGuild();
     if (a === "join-guild") void this.joinGuild();
-    if (a === "refresh-members") void this.refreshMembers();
+    if (a === "refresh-members" || a === "retry-refresh-members") void this.refreshMembers();
   }
 
   private onRankClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
-    if (btn.getAttribute("data-action") === "refresh-rank") void this.refreshRank();
+    const a = btn.getAttribute("data-action");
+    if (a === "refresh-rank" || a === "retry-refresh-rank") void this.refreshRank();
   }
 }
