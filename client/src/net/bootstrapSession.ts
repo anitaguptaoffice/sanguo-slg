@@ -1,5 +1,6 @@
 import { ErrorCode } from "@/net/loadProto";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { BagStack } from "@/net/bagState";
 
 export type ResourceWallet = {
   food?: number;
@@ -38,6 +39,7 @@ export type MainCitySession = {
   cityName: string;
   buildings: CityBuilding[];
   cityTroops: CityTroopStack[];
+  bag: BagStack[];
 };
 
 type LoginResult = {
@@ -103,5 +105,6 @@ export async function bootstrapMainCity(
     cityName: city.name ?? "主城",
     buildings: state.buildings ?? [],
     cityTroops: [],
+    bag: [],
   };
 }

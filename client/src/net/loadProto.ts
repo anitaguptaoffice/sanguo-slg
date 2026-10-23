@@ -8,16 +8,20 @@ function parseProtosInto(r: protobuf.Root, modules: Record<string, string>): voi
   }
 }
 
-/** 从 spec/proto 与 client/proto 加载契约（只读 spec；M1 扩展消息在 client/proto）。 */
+/** 从 spec/proto 与 client/proto 加载契约（只读 spec；M4 背包 RPC 在 client/proto）。 */
 export function getProtoRoot(): protobuf.Root {
   if (root) return root;
   const specModules = import.meta.glob(
     "../../../spec/proto/sanguo/**/*.proto",
     { query: "?raw", import: "default", eager: true },
   ) as Record<string, string>;
+  const clientModules = import.meta.glob(
+    "../../proto/sanguo/content/**/*.proto",
+    { query: "?raw", import: "default", eager: true },
+  ) as Record<string, string>;
   root = new protobuf.Root();
   parseProtosInto(root, specModules);
-  // CONTRACT-001 后 Register/建城/内政等已收编进 spec；client/proto 保留副本供对照，避免重复 parse。
+  parseProtosInto(root, clientModules);
   root.resolveAll();
   return root;
 }
@@ -41,6 +45,14 @@ export const Routes = {
   StartMarch: "military.v1.StartMarch",
   ListBattleReports: "military.v1.ListBattleReports",
   GetBattleReport: "military.v1.GetBattleReport",
+  ListPlayerQuests: "quest.v1.ListPlayerQuests",
+  AcceptQuest: "quest.v1.AcceptQuest",
+  ReportQuestProgress: "quest.v1.ReportQuestProgress",
+  ClaimQuestReward: "quest.v1.ClaimQuestReward",
+  ListShopShelf: "shop.v1.ListShopShelf",
+  PurchaseShopOffer: "shop.v1.PurchaseShopOffer",
+  ListPlayerBag: "content.v1.ListPlayerBag",
+  UseConsumable: "content.v1.UseConsumable",
 } as const;
 
 export const ErrorCode = {
@@ -87,6 +99,22 @@ export type ProtoTypes = {
   ListBattleReportsResponse: protobuf.Type;
   GetBattleReportRequest: protobuf.Type;
   GetBattleReportResponse: protobuf.Type;
+  ListPlayerQuestsRequest: protobuf.Type;
+  ListPlayerQuestsResponse: protobuf.Type;
+  AcceptQuestRequest: protobuf.Type;
+  AcceptQuestResponse: protobuf.Type;
+  ReportQuestProgressRequest: protobuf.Type;
+  ReportQuestProgressResponse: protobuf.Type;
+  ClaimQuestRewardRequest: protobuf.Type;
+  ClaimQuestRewardResponse: protobuf.Type;
+  ListShopShelfRequest: protobuf.Type;
+  ListShopShelfResponse: protobuf.Type;
+  PurchaseShopOfferRequest: protobuf.Type;
+  PurchaseShopOfferResponse: protobuf.Type;
+  ListPlayerBagRequest: protobuf.Type;
+  ListPlayerBagResponse: protobuf.Type;
+  UseConsumableRequest: protobuf.Type;
+  UseConsumableResponse: protobuf.Type;
 };
 
 export function getTypes(): ProtoTypes {
@@ -130,5 +158,21 @@ export function getTypes(): ProtoTypes {
     ListBattleReportsResponse: r.lookupType("sanguo.military.v1.ListBattleReportsResponse"),
     GetBattleReportRequest: r.lookupType("sanguo.military.v1.GetBattleReportRequest"),
     GetBattleReportResponse: r.lookupType("sanguo.military.v1.GetBattleReportResponse"),
+    ListPlayerQuestsRequest: r.lookupType("sanguo.quest.v1.ListPlayerQuestsRequest"),
+    ListPlayerQuestsResponse: r.lookupType("sanguo.quest.v1.ListPlayerQuestsResponse"),
+    AcceptQuestRequest: r.lookupType("sanguo.quest.v1.AcceptQuestRequest"),
+    AcceptQuestResponse: r.lookupType("sanguo.quest.v1.AcceptQuestResponse"),
+    ReportQuestProgressRequest: r.lookupType("sanguo.quest.v1.ReportQuestProgressRequest"),
+    ReportQuestProgressResponse: r.lookupType("sanguo.quest.v1.ReportQuestProgressResponse"),
+    ClaimQuestRewardRequest: r.lookupType("sanguo.quest.v1.ClaimQuestRewardRequest"),
+    ClaimQuestRewardResponse: r.lookupType("sanguo.quest.v1.ClaimQuestRewardResponse"),
+    ListShopShelfRequest: r.lookupType("sanguo.shop.v1.ListShopShelfRequest"),
+    ListShopShelfResponse: r.lookupType("sanguo.shop.v1.ListShopShelfResponse"),
+    PurchaseShopOfferRequest: r.lookupType("sanguo.shop.v1.PurchaseShopOfferRequest"),
+    PurchaseShopOfferResponse: r.lookupType("sanguo.shop.v1.PurchaseShopOfferResponse"),
+    ListPlayerBagRequest: r.lookupType("sanguo.content.v1.ListPlayerBagRequest"),
+    ListPlayerBagResponse: r.lookupType("sanguo.content.v1.ListPlayerBagResponse"),
+    UseConsumableRequest: r.lookupType("sanguo.content.v1.UseConsumableRequest"),
+    UseConsumableResponse: r.lookupType("sanguo.content.v1.UseConsumableResponse"),
   };
 }

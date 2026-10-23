@@ -20,9 +20,15 @@ function loadRoot() {
     "sanguo/chat/v1/chat.proto",
     "sanguo/guild/v1/guild.proto",
     "sanguo/rank/v1/rank.proto",
+    "sanguo/quest/v1/quest.proto",
+    "sanguo/shop/v1/shop.proto",
   ];
   for (const f of files) {
     protobuf.parse(fs.readFileSync(path.join(protoRoot, f), "utf8"), root, { keepCase: true });
+  }
+  const contentExtra = path.resolve(__dirname, "../proto/sanguo/content/v1/extra.proto");
+  if (fs.existsSync(contentExtra)) {
+    protobuf.parse(fs.readFileSync(contentExtra, "utf8"), root, { keepCase: true });
   }
   root.resolveAll();
   return root;
@@ -61,7 +67,41 @@ function sessionState() {
       { rank: 1, entity_id: 10001, display_name: "演示君主", score: 12800 },
       { rank: 2, entity_id: 10002, display_name: "路人甲", score: 9200 },
     ],
+    bag: {},
+    quests: {},
+    shopPurchased: {},
   };
+}
+
+function bagList(state) {
+  return Object.entries(state.bag).map(([id, qty]) => ({
+    item_cfg_id: Number(id),
+    quantity: qty,
+  }));
+}
+
+function addBag(state, itemCfgId, qty) {
+  state.bag[itemCfgId] = (state.bag[itemCfgId] ?? 0) + qty;
+}
+
+function useMockConsumable(state, itemCfgId, count) {
+  const have = state.bag[itemCfgId] ?? 0;
+  if (have < count) throw new Error("道具不足");
+  let effectSummary = "";
+  let speedupSeconds = 0;
+  if (itemCfgId === 2001) {
+    state.wallet.food += 1000 * count;
+    effectSummary = `获得粮食 ${1000 * count}`;
+  } else if (itemCfgId === 2003) {
+    speedupSeconds = 300 * count;
+    effectSummary = `加速 ${speedupSeconds} 秒（占位）`;
+  } else {
+    effectSummary = "已消耗道具";
+  }
+  const remaining = have - count;
+  if (remaining <= 0) delete state.bag[itemCfgId];
+  else state.bag[itemCfgId] = remaining;
+  return { remaining: remaining > 0 ? remaining : 0, effectSummary, speedupSeconds };
 }
 
 wss.on("connection", (ws) => {
@@ -322,6 +362,137 @@ wss.on("connection", (ws) => {
             },
           },
         });
+        return;
+      }
+
+      if (route === "quest.v1.ListPlayerQuests") {
+        const rows = Object.values(state.quests);
+        replyOk(ws, cp.trace_id, T("sanguo.quest.v1.ListPlayerQuestsResponse"), {
+          quests: rows.length ? rows : [
+            {
+              quest_cfg_id: 1001,
+              quest_code: "tutorial_build_hall",
+              chain_id: 100,
+              state: 1,
+              progress_current: 0,
+              progress_target: 2,
+            },
+          ],
+        });
+        return;
+      }
+
+      if (route === "quest.v1.AcceptQuest") {
+        const req = T("sanguo.quest.v1.AcceptQuestRequest").decode(cp.payload);
+        const row = {
+          quest_cfg_id: req.quest_cfg_id,
+          quest_code: "tutorial_build_hall",
+          chain_id: 100,
+          state: 2,
+          progress_current: 0,
+          progress_target: 2,
+        };
+        state.quests[req.quest_cfg_id] = row;
+        replyOk(ws, cp.trace_id, T("sanguo.quest.v1.AcceptQuestResponse"), { quest: row });
+        return;
+      }
+
+      if (route === "quest.v1.ReportQuestProgress") {
+        const req = T("sanguo.quest.v1.ReportQuestProgressRequest").decode(cp.payload);
+        const row = state.quests[req.quest_cfg_id] ?? {
+          quest_cfg_id: req.quest_cfg_id,
+          quest_code: "tutorial_build_hall",
+          state: 2,
+          progress_target: 2,
+        };
+        row.progress_current = req.progress_value;
+        row.state = row.progress_current >= (row.progress_target ?? 2) ? 3 : 2;
+        state.quests[req.quest_cfg_id] = row;
+        replyOk(ws, cp.trace_id, T("sanguo.quest.v1.ReportQuestProgressResponse"), { quest: row });
+        return;
+      }
+
+      if (route === "quest.v1.ClaimQuestReward") {
+        const req = T("sanguo.quest.v1.ClaimQuestRewardRequest").decode(cp.payload);
+        addBag(state, 2001, 1);
+        const row = state.quests[req.quest_cfg_id] ?? { quest_cfg_id: req.quest_cfg_id };
+        row.state = 4;
+        row.progress_current = row.progress_target ?? 2;
+        state.quests[req.quest_cfg_id] = row;
+        replyOk(ws, cp.trace_id, T("sanguo.quest.v1.ClaimQuestRewardResponse"), {
+          quest: row,
+          granted_rewards: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+        });
+        return;
+      }
+
+      if (route === "shop.v1.ListShopShelf") {
+        replyOk(ws, cp.trace_id, T("sanguo.shop.v1.ListShopShelfResponse"), {
+          catalog_version: 1,
+          offers: [
+            {
+              offer_id: 1001,
+              shelf_id: 1,
+              shelf_name: "每日特惠",
+              item_cfg_id: 2001,
+              quantity_per_purchase: 1,
+              price_resources: { gold: 10 },
+              purchase_limit: 3,
+              purchased_count: state.shopPurchased[1001] ?? 0,
+            },
+          ],
+        });
+        return;
+      }
+
+      if (route === "shop.v1.PurchaseShopOffer") {
+        const req = T("sanguo.shop.v1.PurchaseShopOfferRequest").decode(cp.payload);
+        const count = req.purchase_count || 1;
+        const cost = 10 * count;
+        if ((state.wallet.gold ?? 0) < cost) {
+          reply(ws, cp.trace_id, 64003, "余额不足");
+          return;
+        }
+        state.wallet.gold -= cost;
+        addBag(state, 2001, count);
+        state.shopPurchased[req.offer_id] = (state.shopPurchased[req.offer_id] ?? 0) + count;
+        replyOk(ws, cp.trace_id, T("sanguo.shop.v1.PurchaseShopOfferResponse"), {
+          offer: {
+            offer_id: req.offer_id,
+            purchased_count: state.shopPurchased[req.offer_id],
+            price_resources: { gold: 10 },
+          },
+          granted_items: { items: [{ item_cfg_id: 2001, quantity: count }] },
+          wallet_after: state.wallet,
+        });
+        return;
+      }
+
+      if (route === "content.v1.ListPlayerBag") {
+        replyOk(ws, cp.trace_id, T("sanguo.content.v1.ListPlayerBagResponse"), {
+          items: bagList(state),
+        });
+        return;
+      }
+
+      if (route === "content.v1.UseConsumable") {
+        const req = T("sanguo.content.v1.UseConsumableRequest").decode(cp.payload);
+        try {
+          const { remaining, effectSummary, speedupSeconds } = useMockConsumable(
+            state,
+            req.item_cfg_id,
+            req.count || 1,
+          );
+          replyOk(ws, cp.trace_id, T("sanguo.content.v1.UseConsumableResponse"), {
+            item_cfg_id: req.item_cfg_id,
+            remaining,
+            wallet_after: state.wallet,
+            speedup_seconds: speedupSeconds,
+            effect_summary: effectSummary,
+          });
+        } catch (e) {
+          reply(ws, cp.trace_id, 10001, e.message);
+        }
         return;
       }
 

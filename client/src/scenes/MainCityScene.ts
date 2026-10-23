@@ -1,6 +1,7 @@
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { SocialPanels } from "@/ui/SocialPanels";
+import { ContentPanels } from "@/ui/ContentPanels";
 import {
   formatMarchHint,
   formatReportLine,
@@ -38,6 +39,7 @@ export class MainCityScene implements Scene {
   private reportLines: BattleReportSummary[] = [];
   private selectedReportText = "";
   private social!: SocialPanels;
+  private content!: ContentPanels;
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.session = (data as MainCitySession) ?? null;
@@ -53,6 +55,9 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-chat">聊天</button>
       <button type="button" data-action="toggle-guild">军团</button>
       <button type="button" data-action="toggle-rank">排行</button>
+      <button type="button" data-action="toggle-quest">任务</button>
+      <button type="button" data-action="toggle-bag">背包</button>
+      <button type="button" data-action="toggle-shop">商城</button>
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
@@ -94,6 +99,21 @@ export class MainCityScene implements Scene {
       },
     );
     this.social.attach();
+    this.content = new ContentPanels(
+      parent ?? this.hud,
+      this.gateway,
+      () => this.session,
+      (patch) => {
+        if (!this.session) return;
+        Object.assign(this.session, patch);
+        this.renderHud();
+      },
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+    );
+    this.content.attach();
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.syncMilitaryPanel();
@@ -101,6 +121,7 @@ export class MainCityScene implements Scene {
 
   leave(): void {
     this.social?.detach();
+    this.content?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -118,6 +139,9 @@ export class MainCityScene implements Scene {
     if (action === "toggle-chat") this.social.toggleChat();
     if (action === "toggle-guild") this.social.toggleGuild();
     if (action === "toggle-rank") this.social.toggleRank();
+    if (action === "toggle-quest") this.content.toggleQuest();
+    if (action === "toggle-bag") this.content.toggleBag();
+    if (action === "toggle-shop") this.content.toggleShop();
   }
 
   private onMilitaryClick(ev: Event): void {
@@ -171,7 +195,7 @@ export class MainCityScene implements Scene {
     const troopHint = formatTroopStacks(s?.cityTroops);
     this.hud.textContent =
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1} · ` +
-      `粮 ${w.food ?? 0} 木 ${w.wood ?? 0} 铁 ${w.iron ?? 0} 石 ${w.stone ?? 0}` +
+      `粮 ${w.food ?? 0} 木 ${w.wood ?? 0} 铁 ${w.iron ?? 0} 石 ${w.stone ?? 0} 币 ${w.gold ?? 0}` +
       (troopHint !== "无" ? ` · 兵 ${troopHint}` : "") +
       (this.status ? ` · ${this.status}` : "");
   }

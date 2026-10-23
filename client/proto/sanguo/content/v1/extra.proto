@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package sanguo.content.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/client/pb/sanguo/content/v1;contentv1";
+
+// route: content.v1.ListPlayerBag
+message ListPlayerBagRequest {
+  int32 server_id = 1;
+}
+
+message PlayerItemStack {
+  int32 item_cfg_id = 1;
+  int32 quantity = 2;
+}
+
+message ListPlayerBagResponse {
+  repeated PlayerItemStack items = 1;
+}
+
+// route: content.v1.UseConsumable
+message UseConsumableRequest {
+  int32 server_id = 1;
+  int32 item_cfg_id = 2;
+  int32 count = 3;
+}
+
+message UseConsumableResponse {
+  int32 item_cfg_id = 1;
+  int32 remaining = 2;
+  sanguo.common.v1.ResourceWallet wallet_after = 3;
+  int64 speedup_seconds = 4;
+  string effect_summary = 5;
+}
