@@ -193,13 +193,14 @@ export class HeroMailPanels {
   private buildMailPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel mail-inbox-panel hidden";
+    el.dataset.centerPanel = "mail";
     el.innerHTML = `
       <h3>邮件</h3>
       <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
       <div class="mail-inbox-toolbar">
-        <button type="button" class="mail-filter-btn selected" data-action="mail-filter-all">全部</button>
-        <button type="button" class="mail-filter-btn" data-action="mail-filter-unread">未读</button>
-        <button type="button" data-action="refresh-mail">刷新</button>
+        <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full selected" data-action="mail-filter-all">全部</button>
+        <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full" data-action="mail-filter-unread">未读</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
       </div>
       <p class="mail-inbox-status" data-role="mail-status"></p>
       <ul class="mail-list" data-role="mail-list"></ul>

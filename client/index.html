@@ -187,17 +187,33 @@
         margin: 0; padding: 0 12px; border: none; border-radius: 0;
         background-color: transparent; background-repeat: no-repeat; cursor: pointer;
       }
+      .content-panel button.art-btn-primary.art-btn-primary-full {
+        box-sizing: border-box;
+        flex: 0 0 auto;
+        min-width: 160px;
+        width: 160px;
+        min-height: 48px;
+        padding: 4px 8px;
+        line-height: 1.2;
+        white-space: normal;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
       .content-panel .queue-list li,
       .content-panel .daily-quest-list li,
       .content-panel .mail-list li,
       .content-panel .bag-list li.bag-stack-row,
       .content-panel .daily-quest-detail,
       .content-panel .mail-body,
-      .content-panel .mail-detail-title,
       .content-panel .daily-quest-next {
         color: #e8dcc8;
       }
-      .content-panel .mail-detail-title { color: #f5e6c8; }
+      .content-panel .mail-detail-title {
+        color: #2a1f14;
+        font-weight: 700;
+      }
       .content-panel .queue-panel-hint,
       .content-panel .mail-inbox-hint,
       .content-panel [data-role="daily-hint"],
@@ -206,6 +222,7 @@
       }
       .content-panel .queue-panel-status { color: #6b4f1a; }
       .content-panel .mail-inbox-status:not(.is-error) { color: #6b4f1a; }
+      .content-panel .mail-inbox-status.is-error { color: #5c3018; }
       .quest-list, .bag-list, .shop-list, .hero-list, .mail-list, .template-list, .battle-report-list, .march-list, .daily-quest-list, .world-city-list {
         margin: 8px 0; padding-left: 18px; max-height: 160px; overflow: auto;
       }
@@ -320,7 +337,9 @@
       .bag-stack-id { font-variant-numeric: tabular-nums; color: #c9b896; }
       .bag-stack-name { font-family: inherit; }
       .bag-stack-qty { text-align: right; font-variant-numeric: tabular-nums; }
-      .bag-list li.bag-empty { cursor: default; color: #b8a88a; font-family: inherit; font-size: 12px; line-height: 1.4; }
+      .content-panel .bag-list li.bag-empty {
+        cursor: default; color: #4a3828; font-family: inherit; font-size: 12px; line-height: 1.4;
+      }
       .bag-list li.item-highlight { outline: 2px solid #c9a227; background: #3d3028; }
       .bag-panel-feedback { margin-top: 8px; }
       .daily-quest-detail {

@@ -102,11 +102,12 @@ export class QueuePanels {
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.dataset.centerPanel = "queue";
     el.innerHTML = `
       <h3>队列</h3>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
-        <button type="button" class="art-btn-primary" data-action="refresh-queue">刷新内政</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-queue">刷新内政</button>
       </div>
       <ul class="queue-list" data-role="queue-build-list"></ul>
       <div class="queue-military-section hidden" data-role="queue-military-section">
