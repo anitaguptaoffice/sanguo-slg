@@ -76,17 +76,78 @@ export function formatHeroLine(h: HeroSummary): string {
   return `#${h.hero_id ?? "?"} ${name} · Lv${h.level ?? 1} · 忠诚 ${h.loyalty ?? 0}`;
 }
 
+/** 将领养成道具走背包 UseConsumable，详情区展示用（无 hero 专用 RPC）。 */
+export const HERO_DETAIL_TRAINING_HINT =
+  "养成：打开底栏「背包」→「使用道具」调用 content.v1.UseConsumable（忠诚度等效果以服务端为准）。";
+
+export class InvalidHeroDetailRequestError extends Error {
+  constructor(message = "hero_id 无效") {
+    super(message);
+    this.name = "InvalidHeroDetailRequestError";
+  }
+}
+
+/** 客户端校验：空 hero_id 不发 GetHeroDetail。 */
+export function requireHeroIdForDetail(heroId: number): void {
+  if (!Number.isFinite(heroId) || heroId <= 0) {
+    throw new InvalidHeroDetailRequestError("请先选择将领（hero_id 不能为空）");
+  }
+}
+
+/** 将网关 GetHeroDetailResponse 解码结果规范为 HeroDetail。 */
+export function parseGetHeroDetailResponse(raw: unknown): HeroDetail {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const attrsRaw = r.attributes as Record<string, unknown> | null | undefined;
+  const attributes =
+    attrsRaw && typeof attrsRaw === "object"
+      ? {
+          force: numField(attrsRaw.force),
+          intel: numField(attrsRaw.intel),
+          politics: numField(attrsRaw.politics),
+          command: numField(attrsRaw.command),
+        }
+      : undefined;
+  return {
+    hero_id: numField(r.hero_id),
+    template_cfg_id: numField(r.template_cfg_id),
+    template_name: strField(r.template_name),
+    template_code: strField(r.template_code),
+    rarity: numField(r.rarity),
+    level: numField(r.level),
+    loyalty: numField(r.loyalty),
+    loyalty_min: numField(r.loyalty_min),
+    loyalty_max: numField(r.loyalty_max),
+    attributes,
+  };
+}
+
+function numField(v: unknown): number | undefined {
+  if (v == null || v === "") return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
+function strField(v: unknown): string | undefined {
+  if (v == null) return undefined;
+  const s = String(v).trim();
+  return s || undefined;
+}
+
 export function formatHeroDetail(d: HeroDetail): string {
   const name = d.template_name || heroTemplateLabel(d.template_cfg_id);
   const attrs = d.attributes;
   const attrLine = attrs
     ? `武${attrs.force ?? 0} 智${attrs.intel ?? 0} 政${attrs.politics ?? 0} 统${attrs.command ?? 0}`
     : "—";
+  const loyaltyRange =
+    d.loyalty_min != null
+      ? `（区间 ${d.loyalty_min}~${d.loyalty_max ?? d.loyalty ?? 0}）`
+      : "";
   return (
     `${name}（${d.template_code ?? d.template_cfg_id}）\n` +
-    `稀有度 ${d.rarity ?? "?"} · Lv${d.level ?? 1} · 忠诚 ${d.loyalty ?? 0}` +
-    (d.loyalty_min != null ? `（${d.loyalty_min}~${d.loyalty_max ?? d.loyalty ?? 0}）` : "") +
-    `\n属性：${attrLine}`
+    `稀有度 ${d.rarity ?? "?"} · Lv${d.level ?? 1} · 忠诚 ${d.loyalty ?? 0}${loyaltyRange}\n` +
+    `属性：${attrLine}\n` +
+    HERO_DETAIL_TRAINING_HINT
   );
 }
 

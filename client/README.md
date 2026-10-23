@@ -84,11 +84,22 @@ mock 网关（chain 400 默认列出 1012）：
 VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 ```
 
+### 手动验收（将领详情 CLIENT-014）
+
+在 CLIENT-008 将领面板基础上，验收 `hero.v1.GetHeroDetail` 与列表可读性（`make dev` 或 mock 网关均可）。
+
+1. 点 **「将领」** →「刷新列表」。每行应含 **Lv** 与 **忠诚** 数值（来自 `ListPlayerHeroes`）。
+2. 点击某一将领行：详情区展示 **template_name**、**稀有度**、四维属性（武/智/政/统）、**忠诚度及 loyalty_min~loyalty_max 区间**。
+3. 详情区末尾应提示：养成道具请走底栏 **「背包」** → **「使用道具」**（`content.v1.UseConsumable`），无将领专用 RPC。
+4. 未选将领或 `hero_id=0` 时不应发起 GetHeroDetail；状态栏应提示 hero_id 无效（客户端拦截）。
+
+mock 预置将领时可用 `VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev`，招募一名后再点列表验详情。
+
 ### 手动验收（M4：将领 / 邮件，CLIENT-008）
 
 与 `internal/api/hero_handlers.go`、`internal/api/mail_handlers.go` 网关路由一致（`make dev` 真实 PG）。
 
-1. 进入主城后点 **「将领」** →「刷新列表」。新号应为空列表提示；若已有将领，点击列表项加载 `hero.v1.GetHeroDetail` 详情（属性/忠诚）。
+1. 进入主城后点 **「将领」** →「刷新列表」。新号应为空列表提示；若已有将领，点击列表项加载 `hero.v1.GetHeroDetail` 详情（属性/忠诚，见 CLIENT-014）。
 2. **招募模板**：点「刷新招募模板」调用 `hero.v1.ListRecruitTemplates`；下拉或列表行展示模板名、稀有度、资源+道具消耗预览（与 HERO-003 / `make dev` 目录一致）。选择模板后「招募」使用所选 `template_cfg_id` 与预览中的 `item_cfg_id`（及 `pool`），不再手填 1001/2004。
 3. **招募**：成功时列表出现新将领，状态栏显示 `hero_id`；道具/资源不足时显示服务端 `code` 与 `msg`。
 4. 点 **「邮件」** →「刷新收件箱」。可用 `cmd/gm send-mail`（见 `docs/ops`）向当前角色发带附件邮件。

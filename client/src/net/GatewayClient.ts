@@ -1,4 +1,5 @@
 import { GATEWAY_WS_URL } from "@/config";
+import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMailState";
 import { getTypes, Routes } from "@/net/loadProto";
 import type protobuf from "protobufjs";
 
@@ -494,14 +495,16 @@ export class GatewayClient implements GatewayPort {
   }
 
   async getHeroDetail(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
     const { GetHeroDetailResponse } = getTypes();
-    return this.rpc(
+    const raw = await this.rpc(
       Routes.GetHeroDetail,
       "GetHeroDetailRequest",
       { server_id: serverId, hero_id: heroId },
       GetHeroDetailResponse,
       true,
     );
+    return parseGetHeroDetailResponse(raw);
   }
 
   async recruitHero(

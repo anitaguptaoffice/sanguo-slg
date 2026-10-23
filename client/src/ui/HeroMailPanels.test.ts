@@ -32,6 +32,49 @@ describe("HeroMailPanels", () => {
     expect(ul?.textContent).toContain("（空）");
   });
 
+  it("loads GetHeroDetail into detail pane when hero row clicked", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        rarity: 5,
+        level: 2,
+        loyalty: 77,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const row = mount.querySelector('li[data-hero-id="3"]');
+    row?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 3);
+    const pre = mount.querySelector('[data-role="hero-detail"]');
+    expect(pre?.textContent).toContain("玄德");
+    expect(pre?.textContent).toContain("UseConsumable");
+  });
+
   it("claim success updates session bag via patch", async () => {
     const mount = document.createElement("div");
     let patched: Partial<MainCitySession> | null = null;
