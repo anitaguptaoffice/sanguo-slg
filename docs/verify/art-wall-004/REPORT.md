@@ -18,7 +18,7 @@
 - 全舞台（布局帧 JPG，DPR1）：`full-stage-dpr1.jpg`（layout-frame 1600×900 CSS）
 - DPR2 墙裁切（审阅可读，同 CSS 区，自 `dpr2-wall.png` 无损派生；**保留原 PNG**；**未改 `textures/*/maincity/wall.png`**）：`dpr2-wall.jpg`（≈232 KiB）、`dpr2-wall.webp`（≈176 KiB）
 - 机器可读：`viewport-metadata.json`（含 `dpr2WallReviewArtifacts` 与 `evidenceCommitSha`）
-- **审阅固定 SHA（`raw/<sha>/…` 直链）**：`5da849285a788a83a44be4cd93ba66cc5891de67`（含 PNG/JPG/WebP 与 `viewport-metadata.json`）
+- **审阅固定 SHA（`raw/<sha>/…` 直链）**：`7bfd23115c39766fe1a16c9ce759653361a5eb3e`（含 PNG/JPG/WebP 与 `viewport-metadata.json`）
 - **压缩图入树提交**：`89eb6460066bc983199a83d411f577bcb99cade3`（见 `viewport-metadata.json` → `evidenceCommitSha`）
 - 布局/DPR 修复首版截图仍见于 `cf6c8262a3882ce5b73a2b8386e0d697847a2b59`；DPR2 墙专项请以固定 SHA 下 JPG/WebP 复验
 
