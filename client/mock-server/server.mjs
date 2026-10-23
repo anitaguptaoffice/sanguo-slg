@@ -209,6 +209,7 @@ wss.on("connection", (ws) => {
           sender_player_id: 10001,
           sender_display_name: "演示君主",
           recipient_player_id: req.recipient_player_id,
+          guild_id: req.guild_id,
           content: req.content,
           sent_at_ms: Date.now(),
         };
@@ -225,6 +226,9 @@ wss.on("connection", (ws) => {
             return (
               m.recipient_player_id === req.peer_player_id || m.sender_player_id === req.peer_player_id
             );
+          }
+          if (req.channel === 3 && req.guild_id) {
+            return m.guild_id === req.guild_id;
           }
           return true;
         });

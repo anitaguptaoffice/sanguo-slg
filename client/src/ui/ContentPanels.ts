@@ -3,9 +3,9 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import {
   applyUseResult,
   type BagStack,
+  bagFromListPlayerBagResponse,
   mergeRewardBundle,
   mergeWallet,
-  stacksFromList,
 } from "@/net/bagState";
 import { formatQuestLine, formatWalletPrice, itemLabel } from "@/net/contentFormat";
 
@@ -114,7 +114,7 @@ export class ContentPanels {
     el.className = "content-panel hidden";
     el.innerHTML = `
       <h3>背包</h3>
-      <p data-role="bag-hint">道具来自领奖/购买；可刷新拉取（mock / 后续网关）。</p>
+      <p data-role="bag-hint">「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量；领奖/购买仍会先合并到本会话。</p>
       <label>道具
         <select data-field="item-id">
           <option value="2001">2001 谷袋·初备</option>
@@ -266,17 +266,12 @@ export class ContentPanels {
       const res = (await this.gateway.listPlayerBag(sid)) as {
         items?: { item_cfg_id?: number; quantity?: number }[];
       };
-      const stacks = stacksFromList(
-        (res.items ?? []).map((r) => ({
-          item_cfg_id: r.item_cfg_id ?? 0,
-          quantity: r.quantity ?? 0,
-        })),
-      );
+      const stacks = bagFromListPlayerBagResponse(res.items);
       this.patchBag(stacks);
-      this.onStatus(`背包 ${stacks.length} 种道具`);
+      this.onStatus(`背包 ${stacks.length} 种道具（content.v1）`);
     } catch (e) {
       this.renderBagList();
-      this.onStatus(`背包刷新：${(e as Error).message}（仍显示本会话奖励）`);
+      this.onStatus(`背包刷新失败：${(e as Error).message}`);
     }
   }
 
