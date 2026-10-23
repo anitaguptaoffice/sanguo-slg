@@ -148,6 +148,7 @@ func (s *Server) handleRecruitHero(ctx context.Context, pkt *commonv1.ClientPack
 	if err != nil {
 		return heroErr(pkt.GetTraceId(), err), nil
 	}
+	s.questAfterRecruitHero(ctx, pc.ServerID, pc.PlayerID)
 	data, err := marshal(&herov1.RecruitHeroResponse{
 		HeroId: res.Hero.HeroID, TemplateCfgId: res.Hero.TemplateCfgID,
 		Level: res.Hero.Level, Loyalty: int32(res.Hero.Loyalty),

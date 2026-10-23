@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"time"
 
 	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
@@ -62,7 +61,7 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 }
 
 func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
-	_, errPkt := s.playerCtx(ctx, pkt)
+	pc, errPkt := s.playerCtx(ctx, pkt)
 	if errPkt != nil {
 		return errPkt, nil
 	}
@@ -74,7 +73,7 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	if city == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	accrue(city, domestic.DefaultCatalog(), time.Now())
+	s.accrueCityWithQuest(ctx, pc.ServerID, city, domestic.DefaultCatalog(), s.now())
 	buildings := make([]*apicommon.CityBuilding, 0, len(city.Buildings))
 	for slot, inst := range city.Buildings {
 		buildings = append(buildings, &apicommon.CityBuilding{
