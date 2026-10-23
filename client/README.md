@@ -323,7 +323,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:26 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:26 backlog 实现卡）。实现卡 **CLIENT-112** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-018**（[#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 26」。
+波次总览与 **DOCS-EXIT-018**（[#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) / [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 26」。
 
 ### 手动验收（聊天未读与社交角标 CLIENT-102）
 

@@ -436,7 +436,7 @@ H5 人工验收与 **INTG-022** 网关冒烟对齐，见 [client/README.md](../c
 | [#492](https://github.com/anitaguptaoffice/sanguo-slg/issues/492) | CLIENT-118 | 已完成 | [#503](https://github.com/anitaguptaoffice/sanguo-slg/pull/503)（`cabe8f0a`） |
 | [#493](https://github.com/anitaguptaoffice/sanguo-slg/issues/493) | CLIENT-119 | 已完成 | [#502](https://github.com/anitaguptaoffice/sanguo-slg/pull/502)（`a36c1ae6`） |
 | [#494](https://github.com/anitaguptaoffice/sanguo-slg/issues/494) | INTG-023 | 已完成 | [#499](https://github.com/anitaguptaoffice/sanguo-slg/pull/499)（`92a96489`） |
-| [#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) | DOCS-EXIT-018 | 已完成 | （本 PR） |
+| [#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) | DOCS-EXIT-018 | 已完成 | [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507) |
 
 H5 人工验收与 **INTG-023** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-26-h5-背包商城招募养成出征募兵反馈加深m4-出口--intg-023)（**背包/商城消耗提交脉冲 + 将领招募与养成道具执行反馈 + 出征募兵提交巩固 + ART-TOOLBAR-ICONS-007 四态接线 + 1280 背包商城招募军事 manifest**）。
 
