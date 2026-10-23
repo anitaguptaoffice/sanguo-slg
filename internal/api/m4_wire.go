@@ -19,6 +19,9 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 		return err
 	}
 	contentSvc := content.NewService(cat)
+	if s.players.Pool != nil {
+		contentSvc.UseStore(content.NewPGStore(s.players.Pool))
+	}
 
 	questCat := devQuestCatalog()
 	if mem, err := quest.MemCatalogFromPG(ctx, s.players.Pool); err == nil && len(mem.All()) > 0 {
@@ -39,6 +42,8 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 	s.m4.Register(RouteGetQuestChainStatus, s.handleGetQuestChainStatus)
 	s.m4.Register(RouteListShopShelf, s.handleListShopShelf)
 	s.m4.Register(RoutePurchaseShopOffer, s.handlePurchaseShopOffer)
+	s.m4.Register(RouteListPlayerBag, s.handleListPlayerBag)
+	s.m4.Register(RouteUseConsumable, s.handleUseConsumable)
 	return nil
 }
 

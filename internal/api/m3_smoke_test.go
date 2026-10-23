@@ -138,6 +138,44 @@ func TestM3SocialSmokePath(t *testing.T) {
 		fail("create_guild", fmt.Errorf("missing guild_id"))
 	}
 
+	guildChatResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route:     chat.RouteSendChatMessage,
+		TraceId:   "m3-guild-chat",
+		SessionId: sid,
+		ServerId:  serverID,
+		Payload: mustMarshal(&chatv1.SendChatMessageRequest{
+			ServerId: serverID,
+			Channel:  chatv1.ChatChannel_CHAT_CHANNEL_GUILD,
+			GuildId:  guildID,
+			Content:  "legion smoke",
+		}),
+	})
+	if guildChatResp.Code != 0 {
+		fail("send_guild_chat", fmt.Errorf("code=%d msg=%s", guildChatResp.Code, guildChatResp.Msg))
+	}
+	guildListResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route:     chat.RouteListChatMessages,
+		TraceId:   "m3-guild-list",
+		SessionId: sid,
+		ServerId:  serverID,
+		Payload: mustMarshal(&chatv1.ListChatMessagesRequest{
+			ServerId: serverID,
+			Channel:  chatv1.ChatChannel_CHAT_CHANNEL_GUILD,
+			GuildId:  guildID,
+			Limit:    20,
+		}),
+	})
+	if guildListResp.Code != 0 {
+		fail("list_guild_chat", fmt.Errorf("code=%d msg=%s", guildListResp.Code, guildListResp.Msg))
+	}
+	var guildChatList chatv1.ListChatMessagesResponse
+	if err := proto.Unmarshal(guildListResp.Data, &guildChatList); err != nil {
+		fail("list_guild_chat_unmarshal", err)
+	}
+	if len(guildChatList.GetMessages()) != 1 || guildChatList.GetMessages()[0].GetContent() != "legion smoke" {
+		fail("list_guild_chat", fmt.Errorf("messages=%v", guildChatList.GetMessages()))
+	}
+
 	_, err := pool.Exec(ctx, `UPDATE player SET power = 1500 WHERE server_id = $1 AND player_id = $2`, serverID, playerID)
 	if err != nil {
 		fail("set_player_power", err)

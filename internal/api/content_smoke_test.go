@@ -13,6 +13,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
+	contentv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/content/v1"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	shopv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/shop/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
@@ -166,5 +167,43 @@ func TestM4ContentSmokePath(t *testing.T) {
 	speedQty, err := apiSrv.ContentService().Get(p, 2003)
 	if err != nil || speedQty != 1 {
 		t.Fatalf("bag after gm: qty=%d err=%v", speedQty, err)
+	}
+
+	smokeStep(t, "list player bag via gateway")
+	bagListResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route: api.RouteListPlayerBag, TraceId: "m4-bag", SessionId: sid, ServerId: 1,
+		Payload: mustMarshal(&contentv1.ListPlayerBagRequest{ServerId: 1}),
+	})
+	if bagListResp.Code != 0 {
+		t.Fatalf("list bag: code=%d msg=%s", bagListResp.Code, bagListResp.Msg)
+	}
+	var bagList contentv1.ListPlayerBagResponse
+	if err := proto.Unmarshal(bagListResp.Data, &bagList); err != nil {
+		t.Fatal(err)
+	}
+	var qty2001 int32
+	for _, it := range bagList.GetItems() {
+		if it.GetItemCfgId() == 2001 {
+			qty2001 = it.GetQuantity()
+		}
+	}
+	if qty2001 != 2 {
+		t.Fatalf("gateway bag 2001=%d", qty2001)
+	}
+
+	smokeStep(t, "use consumable via gateway")
+	useResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route: api.RouteUseConsumable, TraceId: "m4-use", SessionId: sid, ServerId: 1,
+		Payload: mustMarshal(&contentv1.UseConsumableRequest{ServerId: 1, ItemCfgId: 2003, Count: 1}),
+	})
+	if useResp.Code != 0 {
+		t.Fatalf("use consumable: code=%d msg=%s", useResp.Code, useResp.Msg)
+	}
+	var useOut contentv1.UseConsumableResponse
+	if err := proto.Unmarshal(useResp.Data, &useOut); err != nil {
+		t.Fatal(err)
+	}
+	if useOut.GetRemaining() != 0 || useOut.GetSpeedupSeconds() != 300 {
+		t.Fatalf("use out=%+v", useOut)
 	}
 }
