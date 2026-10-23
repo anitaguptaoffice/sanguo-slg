@@ -64,7 +64,7 @@ status:review   ──合并────▶  status:done
 | 14 | H5 日常与队列闭环（**已完成**，见 ROADMAP Wave 14） | DOM-003 ([#221](https://github.com/anitaguptaoffice/sanguo-slg/pull/221)), CLIENT-024–027 ([#219](https://github.com/anitaguptaoffice/sanguo-slg/pull/219)–[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)), INTG-011 ([#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)), DOCS-EXIT-006 ([#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) `077e4937`) |
 | 15 | H5 世界地图与面板密度（**已完成**，见 ROADMAP Wave 15） | CLIENT-028–032 ([#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)–[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)、[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`), INTG-012 ([#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)), DOCS-EXIT-007 ([#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234)/[#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242)) |
 | 16 | H5 战报邮件闭环与军事反馈加深（**已完成**，见 ROADMAP Wave 16） | CLIENT-034–039、INTG-013、DOCS-EXIT-008（[#245](https://github.com/anitaguptaoffice/sanguo-slg/pull/245) / [#261](https://github.com/anitaguptaoffice/sanguo-slg/pull/261) `58bd03b7`） |
-| 17 | H5 世界出征互链与复盘导航（**进行中**，见 ROADMAP Wave 17） | CLIENT-041 ([#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) `12a8850f`)、CLIENT-044 ([#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272) `d437076a`)、CLIENT-045 ([#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273) `5a3ae507`)、INTG-014 ([#274](https://github.com/anitaguptaoffice/sanguo-slg/pull/274) `90fb5356`)；CLIENT-042 ([#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276))、CLIENT-043 ([#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267)) 进行中；DOCS-EXIT-009 ([#271](https://github.com/anitaguptaoffice/sanguo-slg/issues/271) / [#278](https://github.com/anitaguptaoffice/sanguo-slg/pull/278)) |
+| 17 | H5 世界出征互链与复盘导航（**进行中**，见 ROADMAP Wave 17） | CLIENT-041–045（除 043）、INTG-014 已合（041 `12a8850f`、042 [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`、044 `d437076a`、045 `5a3ae507`、INTG `90fb5356`）；CLIENT-043 ([#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267)) 待合；DOCS-EXIT-009 ([#271](https://github.com/anitaguptaoffice/sanguo-slg/issues/271) / [#278](https://github.com/anitaguptaoffice/sanguo-slg/pull/278)) |
 
 ### Wave 9 进度（已完成）
 
@@ -171,8 +171,8 @@ status:review   ──合并────▶  status:done
 | Issue | ID | 状态 |
 |---|---|---|
 | [#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265) | CLIENT-041 | `status:done`（[#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) `12a8850f`） |
-| [#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) | CLIENT-042 | `status:in-progress`（PR [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276)） |
-| [#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267) | CLIENT-043 | `status:in-progress` |
+| [#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) | CLIENT-042 | `status:done`（[#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`） |
+| [#267](https://github.com/anitaguptaoffice/sanguo-slg/issues/267) | CLIENT-043 | `status:in-progress`（待合） |
 | [#268](https://github.com/anitaguptaoffice/sanguo-slg/issues/268) | CLIENT-044 | `status:done`（[#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272) `d437076a`） |
 | [#269](https://github.com/anitaguptaoffice/sanguo-slg/issues/269) | CLIENT-045 | `status:done`（[#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273) `5a3ae507`） |
 | [#270](https://github.com/anitaguptaoffice/sanguo-slg/issues/270) | INTG-014 | `status:done`（[#274](https://github.com/anitaguptaoffice/sanguo-slg/pull/274) `90fb5356`） |
