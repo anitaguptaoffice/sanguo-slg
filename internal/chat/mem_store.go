@@ -19,6 +19,12 @@ type MemStore struct {
 	privateMeta   map[channelKey]privateKey
 
 	messages map[channelKey][]Message
+	muteMS   map[playerShardKey]int64
+}
+
+type playerShardKey struct {
+	serverID int32
+	playerID int64
 }
 
 type channelKey struct {
@@ -41,6 +47,7 @@ func NewMemStore() *MemStore {
 		privateByPair: make(map[privateKey]int64),
 		privateMeta:   make(map[channelKey]privateKey),
 		messages:      make(map[channelKey][]Message),
+		muteMS:        make(map[playerShardKey]int64),
 	}
 }
 
@@ -124,4 +131,23 @@ func (m *MemStore) ListMessages(_ context.Context, q ListQuery) ([]Message, erro
 		return raw[i].MessageID < raw[j].MessageID
 	})
 	return raw, nil
+}
+
+func (m *MemStore) SetMutedUntilMS(_ context.Context, serverID int32, playerID int64, untilMS int64) error {
+	key := playerShardKey{serverID: serverID, playerID: playerID}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if untilMS <= 0 {
+		delete(m.muteMS, key)
+		return nil
+	}
+	m.muteMS[key] = untilMS
+	return nil
+}
+
+func (m *MemStore) MutedUntilMS(_ context.Context, serverID int32, playerID int64) (int64, error) {
+	key := playerShardKey{serverID: serverID, playerID: playerID}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.muteMS[key], nil
 }

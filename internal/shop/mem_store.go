@@ -1,6 +1,7 @@
 package shop
 
 import (
+	"context"
 	"sync"
 	"time"
 )
@@ -10,6 +11,7 @@ type playerCounter struct {
 	dailyPeriod              time.Time
 }
 
+// MemStore is an in-memory Store for unit tests.
 type MemStore struct {
 	mu       sync.Mutex
 	stock    map[stockKey]int32
@@ -26,13 +28,14 @@ type counterKey struct {
 	offerID  int32
 }
 
+// NewMemStore creates an empty shop limit store (tests only).
 func NewMemStore() *MemStore {
 	return &MemStore{stock: make(map[stockKey]int32), counters: make(map[counterKey]*playerCounter)}
 }
 
-func (s *MemStore) stockRemaining(serverID, offerID, total int32) int32 {
+func (s *MemStore) StockRemaining(_ context.Context, serverID, offerID, total int32) (int32, error) {
 	if total < 0 {
-		return -1
+		return -1, nil
 	}
 	s.mu.Lock()
 	k := stockKey{serverID, offerID}
@@ -41,10 +44,10 @@ func (s *MemStore) stockRemaining(serverID, offerID, total int32) int32 {
 	}
 	rem := s.stock[k]
 	s.mu.Unlock()
-	return rem
+	return rem, nil
 }
 
-func (s *MemStore) takeStock(serverID, offerID, total, qty int32) error {
+func (s *MemStore) TakeStock(_ context.Context, serverID int32, _ int64, offerID, total, qty int32) error {
 	if total < 0 {
 		return nil
 	}
@@ -62,7 +65,7 @@ func (s *MemStore) takeStock(serverID, offerID, total, qty int32) error {
 	return nil
 }
 
-func (s *MemStore) bumpCounter(serverID int32, playerID int64, offerID, qty int32, limit PurchaseLimitType, now time.Time) {
+func (s *MemStore) BumpCounter(_ context.Context, serverID int32, playerID int64, offerID, qty int32, limit PurchaseLimitType, now time.Time) error {
 	s.mu.Lock()
 	pc := s.counterLocked(serverID, playerID, offerID, now)
 	pc.totalBought += qty
@@ -70,9 +73,10 @@ func (s *MemStore) bumpCounter(serverID int32, playerID int64, offerID, qty int3
 		pc.dailyBought += qty
 	}
 	s.mu.Unlock()
+	return nil
 }
 
-func (s *MemStore) purchasedCount(serverID int32, playerID int64, offerID int32, limit PurchaseLimitType, now time.Time) int32 {
+func (s *MemStore) PurchasedCount(_ context.Context, serverID int32, playerID int64, offerID int32, limit PurchaseLimitType, now time.Time) (int32, error) {
 	s.mu.Lock()
 	pc := s.counterLocked(serverID, playerID, offerID, now)
 	var n int32
@@ -83,7 +87,7 @@ func (s *MemStore) purchasedCount(serverID int32, playerID int64, offerID int32,
 		n = pc.totalBought
 	}
 	s.mu.Unlock()
-	return n
+	return n, nil
 }
 
 func (s *MemStore) counterLocked(serverID int32, playerID int64, offerID int32, now time.Time) *playerCounter {

@@ -18,7 +18,7 @@ func testShop(t *testing.T) (*Service, *content.Service) {
 		OfferID: 1001, ShelfID: 1, ShelfName: "每日特惠", ItemCfgID: 2001, QuantityPerPurchase: 1,
 		Price: content.RewardPackage{Resources: map[string]int64{"gold": 10}}, DailyLimit: &daily,
 	}}}
-	return NewService(shopCat, NewMemStore(), NewPayments(contentSvc)), contentSvc
+	return NewService(shopCat, NewMemStore(), NewPayments(contentSvc), nil), contentSvc
 }
 
 func TestPurchaseSuccessDebitsAndGrants(t *testing.T) {
