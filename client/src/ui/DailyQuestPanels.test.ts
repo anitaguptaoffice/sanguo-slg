@@ -154,6 +154,34 @@ describe("DailyQuestPanels", () => {
     expect(row?.textContent).toContain("×8");
   });
 
+  it("claim failure shows CLIENT-067 style daily-form-error", async () => {
+    const mount = document.createElement("div");
+    const err = Object.assign(new Error("奖励已领取"), { code: 40012 });
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [{ quest_cfg_id: 1012, quest_code: "daily_food_1", state: 3 }],
+      }),
+      claimQuestReward: vi.fn().mockRejectedValue(err),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    mount.querySelector('[data-action="claim-daily"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelector('[data-role="daily-form-error"]')?.textContent).toContain("[40012]");
+  });
+
   it("claim merges session and refreshes economy", async () => {
     const mount = document.createElement("div");
     let patched: Partial<MainCitySession> | null = null;
@@ -204,6 +232,8 @@ describe("DailyQuestPanels", () => {
     expect(patched?.bag).toEqual([{ item_cfg_id: 2001, quantity: 3 }]);
     expect(patched?.wallet?.food).toBe(9000);
     expect(patched?.wallet?.gold).toBe(75);
+    const row = mount.querySelector('li[data-quest-cfg-id="1012"]');
+    expect(row?.classList.contains("daily-quest-claimable")).toBe(true);
   });
 
   it("shows battle-report unread banner and opens via callback", async () => {
@@ -385,6 +415,14 @@ describe("DailyQuestPanels", () => {
       ?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(rows()).toEqual(["1013"]);
     expect(storage.data[DAILY_QUEST_FILTER_SESSION_KEY]).toBe("claimable");
+    const locateBtn = mount.querySelector(
+      '[data-action="daily-locate-first"]',
+    ) as HTMLButtonElement;
+    expect(locateBtn?.hidden).toBe(false);
+    locateBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(mount.querySelector('li[data-quest-cfg-id="1013"]')?.classList.contains("selected")).toBe(
+      true,
+    );
     vi.unstubAllGlobals();
   });
 

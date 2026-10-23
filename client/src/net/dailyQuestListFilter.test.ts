@@ -7,6 +7,7 @@ import {
   filterDailyQuestRows,
   orderDailyQuestRowsForDisplay,
   parseDailyQuestListFilterSessionValue,
+  pickFirstClaimableDailyQuestCfgIdForFilter,
   readDailyQuestListFilterSession,
   writeDailyQuestListFilterSession,
 } from "@/net/dailyQuestListFilter";
@@ -76,5 +77,22 @@ describe("dailyQuestListFilter", () => {
       true,
     );
     expect(rows.map((q) => q.quest_cfg_id)).toEqual([21, 20]);
+  });
+
+  it("picks first quest_cfg_id from claimable-filtered list (CLIENT-091)", () => {
+    expect(pickFirstClaimableDailyQuestCfgIdForFilter(sample)).toBe(3);
+    expect(
+      pickFirstClaimableDailyQuestCfgIdForFilter([
+        { quest_cfg_id: 10, state: 2 },
+        { quest_cfg_id: 11, state: 4 },
+      ]),
+    ).toBe(0);
+    expect(
+      pickFirstClaimableDailyQuestCfgIdForFilter([
+        { quest_cfg_id: 20, state: 4 },
+        { quest_cfg_id: 21, state: 3 },
+        { quest_cfg_id: 22, state: 3 },
+      ]),
+    ).toBe(21);
   });
 });
