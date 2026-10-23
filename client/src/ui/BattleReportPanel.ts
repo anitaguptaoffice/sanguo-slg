@@ -6,6 +6,14 @@ import {
   battleReportRoundRowDomId,
   shouldUseBattleReportRoundJumpSelect,
 } from "@/net/battleReportDetailNav";
+import {
+  adjacentBattleReportId,
+  battleReportIdsInListOrder,
+} from "@/net/battleReportListNav";
+import {
+  computeOutcomeStreak,
+  formatBattleReportOutcomeStreakLabel,
+} from "@/net/battleReportOutcomeStreak";
 import { buildBattleReportTroopScan } from "@/net/battleReportDetailSummary";
 import {
   BATTLE_REPORT_ROUNDS_EXPAND_LABEL,
@@ -104,12 +112,17 @@ export class BattleReportPanel {
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("change", (ev) => this.onChange(ev));
+    this.panel.addEventListener("keydown", this.onKeyDownBound);
   }
 
   detach(): void {
     this.clearMapReplay();
-    this.panel?.remove();
+    this.panel?.removeEventListener("keydown", this.onKeyDownBound);
   }
+
+  private readonly onKeyDownBound = (ev: KeyboardEvent): void => {
+    this.onKeyDown(ev);
+  };
 
   private clearMapReplay(): void {
     this.panelOpts?.onClearMapReplay?.();
@@ -151,6 +164,7 @@ export class BattleReportPanel {
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.tabIndex = 0;
     el.innerHTML = `
       <h3>战报</h3>
       <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
@@ -224,6 +238,18 @@ export class BattleReportPanel {
       span.className = `battle-outcome-chip battle-report-summary-chip ${chip.className}`;
       span.setAttribute("aria-readonly", "true");
       span.textContent = `${chip.label} ${chip.count}`;
+      summaryEl.appendChild(span);
+    }
+
+    const streak = computeOutcomeStreak(this.visibleReports());
+    const streakLabel = formatBattleReportOutcomeStreakLabel(streak);
+    if (streakLabel) {
+      const span = document.createElement("span");
+      const streakClass =
+        streak.kind === "win" ? "outcome-attacker-win" : "outcome-defender-win";
+      span.className = `battle-outcome-chip battle-report-streak-chip ${streakClass}`;
+      span.setAttribute("aria-readonly", "true");
+      span.textContent = streakLabel;
       summaryEl.appendChild(span);
     }
   }
@@ -358,6 +384,27 @@ export class BattleReportPanel {
     detailEl.textContent = "";
     if (!this.selectedReportId || this.detailLoading) return;
     if (this.detailError) return;
+
+    const orderedIds = battleReportIdsInListOrder(this.visibleReports());
+    const prevId = adjacentBattleReportId(orderedIds, this.selectedReportId, "prev");
+    const nextId = adjacentBattleReportId(orderedIds, this.selectedReportId, "next");
+    const navBar = document.createElement("div");
+    navBar.className = "battle-report-detail-nav";
+    navBar.setAttribute("role", "navigation");
+    navBar.setAttribute("aria-label", "战报上一封下一封");
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.setAttribute("data-action", "nav-prev-report");
+    prevBtn.textContent = "上一封";
+    prevBtn.disabled = prevId == null;
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.setAttribute("data-action", "nav-next-report");
+    nextBtn.textContent = "下一封";
+    nextBtn.disabled = nextId == null;
+    navBar.appendChild(prevBtn);
+    navBar.appendChild(nextBtn);
+    detailEl.appendChild(navBar);
 
     const summary = this.detailSummary;
     if (summary) {
@@ -621,8 +668,14 @@ export class BattleReportPanel {
     this.renderList();
   }
 
-  private async openReport(reportId: number): Promise<void> {
+  private async openReport(
+    reportId: number,
+    opts?: { preserveRoundNav?: boolean },
+  ): Promise<void> {
     if (reportId !== this.selectedReportId) this.clearMapReplay();
+    const preserveRoundNav = opts?.preserveRoundNav === true;
+    const preservedRound = preserveRoundNav ? this.highlightedRound : 0;
+    const preservedExpanded = preserveRoundNav ? this.roundsTableExpanded : false;
     this.selectedReportId = reportId;
     this.detailError = "";
     this.detailText = "";
@@ -651,6 +704,18 @@ export class BattleReportPanel {
         res.report?.detail,
       );
       this.detailRounds = res.report?.detail?.rounds ?? [];
+      if (preserveRoundNav && preservedRound > 0) {
+        const rows = buildBattleRoundTableRows(this.detailRounds);
+        if (rows.some((r) => r.round === preservedRound)) {
+          this.highlightedRound = preservedRound;
+          if (
+            preservedExpanded ||
+            shouldCollapseBattleRounds(rows.length)
+          ) {
+            this.roundsTableExpanded = true;
+          }
+        }
+      }
       this.onStatus("战报已加载");
     } catch (e) {
       this.detailError = `详情加载失败：${(e as Error).message}`;
@@ -704,7 +769,33 @@ export class BattleReportPanel {
     } else if (action === "jump-round") {
       const round = Number(btn.getAttribute("data-round"));
       if (round > 0) this.jumpToBattleRound(round);
+    } else if (action === "nav-prev-report" || action === "nav-next-report") {
+      const direction = action === "nav-prev-report" ? "prev" : "next";
+      void this.navigateAdjacentReport(direction);
     }
+  }
+
+  private async navigateAdjacentReport(
+    direction: "prev" | "next",
+  ): Promise<void> {
+    const orderedIds = battleReportIdsInListOrder(this.visibleReports());
+    const target = adjacentBattleReportId(orderedIds, this.selectedReportId, direction);
+    if (target != null) await this.openReport(target, { preserveRoundNav: true });
+  }
+
+  private onKeyDown(ev: KeyboardEvent): void {
+    if (!this.isOpen() || this.detailLoading || !this.selectedReportId) return;
+    if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+    const target = ev.target as HTMLElement | null;
+    if (
+      target &&
+      (target.closest("input, textarea, select") ||
+        target.isContentEditable)
+    ) {
+      return;
+    }
+    ev.preventDefault();
+    void this.navigateAdjacentReport(ev.key === "ArrowLeft" ? "prev" : "next");
   }
 
   private onChange(ev: Event): void {
