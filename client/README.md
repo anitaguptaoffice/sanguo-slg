@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-012）
+# H5 客户端（CLIENT-001 ~ CLIENT-018）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -16,7 +16,19 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **招募模板预览**（将领面板 + 背包/商城可读性） | [手动验收（M4：将领 / 邮件，CLIENT-008）](#手动验收m4将领--邮件client-008) 步骤 2；背包/商城行文案见 **CLIENT-010**（#171） |
 | **战报入口**（底栏独立面板） | [手动验收（募兵 → 行军 → 战报）](#手动验收募兵--行军--战报) 步骤 4（**CLIENT-012**，#170） |
 | **HUD 资源条与建筑等级** | **CLIENT-011**（[#165](https://github.com/anitaguptaoffice/sanguo-slg/issues/165) / [#172](https://github.com/anitaguptaoffice/sanguo-slg/pull/172)）：顶栏粮/木/铁/石/币与画布槽位等级见 [横屏布局 CLIENT-007](#手动验收横屏布局-client-007) 与上文 `hudFormat` 说明 |
-| **HUD 资源增加摘要** | **CLIENT-018**：任务/邮件领奖、商城购买、招募后若钱包增加，顶栏短时显示 `+粮/+木…`（`formatWalletGainBrief`）；`GetCityState` 经 `CityStateFetch` 单飞轮询，面板关闭时 30s、打开时 5s |
+| **HUD 资源增加摘要** | [手动验收（HUD 资源变动，CLIENT-018）](#手动验收hud-资源变动-client-018)（[#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) / [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191)） |
+
+## Wave 12 可玩加深（M4 出口 / INTG-009）
+
+在 `make dev` 下联调的最短人工路径（与 `tools/smoke/README.md`、**INTG-009** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量。
+
+| 能力 | 验收小节 |
+|---|---|
+| **行军列表**（`ListMarches`、出征后反馈） | [手动验收（募兵 → 行军 → 战报，CLIENT-012 / CLIENT-013）](#手动验收募兵--行军--战报client-012--client-013) 步骤 3–4；世界坐标填入出征见 **CLIENT-015**（[#180](https://github.com/anitaguptaoffice/sanguo-slg/issues/180) / [#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186)） |
+| **将领详情**（`GetHeroDetail`、列表可读性） | [手动验收（将领详情 CLIENT-014）](#手动验收将领详情-client-014) |
+| **邮件**（收件箱 / 已读 / 领附件） | [手动验收（邮件收件箱，CLIENT-017）](#手动验收邮件收件箱client-017)（[#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) / [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190)）；招募相关仍见 [手动验收（M4：将领，CLIENT-008）](#手动验收m4将领client-008) |
+| **战报筛选**（outcome 客户端筛选 + 详情摘要） | [手动验收（战报筛选 CLIENT-016）](#手动验收战报筛选-client-016) |
+| **HUD 资源变动提示** | [手动验收（HUD 资源变动，CLIENT-018）](#手动验收hud-资源变动-client-018)（[#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) / [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191)） |
 
 ## 网关地址
 
@@ -148,6 +160,34 @@ cd client && npm install && npm run dev
 4. 点底栏 **「行军」** → **「刷新列表」**（或等待约 5s 自动刷新）：列表调用 `military.v1.ListMarches`，每行展示目的、阶段、起终点坐标、出发/到达时间。出征成功后若面板已打开会自动刷新。
 5. 等待行军到达并完成战斗后（真实环境取决于距离与调度），点 **「战报」** → **「刷新列表」**，点击某条战报查看回合/伤亡摘要（字段以服务端为准）。
 6. 面板落在 1600×900 外框内可滚动；内政仍可用：**「升级农田」「刷新状态」**。
+
+### 手动验收（世界坐标 CLIENT-015）
+
+1. 进入主城后点 **「世界」**（或世界城池面板入口，与 `world.v1.ListPlayerCities` 一致）→ **「刷新城池」**。
+2. 列表应展示玩家城池坐标；当前主城行标注 **「主城」**。
+3. 选中一行 → **「填入出征目标」**：军事面板 `to_x` / `to_y` 应更新为该城坐标（与 CLIENT-013 出征表单联动）。
+4. 在 **「军事」** 中调整兵力后 **出征攻击**；底栏 **「行军」** 列表应出现对应目的坐标。
+
+### 手动验收（战报筛选 CLIENT-016）
+
+与 **CLIENT-012** 底栏 **「战报」** 面板一致；筛选仅客户端，不改 `ListBattleReports` 请求参数。
+
+1. `make dev` 下完成至少一次出征并产生战报（见上文募兵 → 行军步骤）。
+2. 点 **「战报」** → **「刷新列表」**。面板顶部应有 **全部 / 胜 / 负 / 平** 筛选（基于 `BattleReportSummary.outcome`）；切换筛选后列表行即时过滤，无需重新拉网关。
+3. 点击某条战报：详情区展示 **回合数**、攻/守 **伤亡 map 摘要** 与 **result** 文案；字段以服务端为准。
+4. 若列表超过一页，使用 **加载更多**（`limit`/`offset`）或既有分页；失败时状态栏文案可重试。
+5. 视口 **1600×900**：筛选行与列表落在顶底 56px 带之间、可滚动。
+
+### 手动验收（HUD 资源变动，CLIENT-018）
+
+承接 **CLIENT-011** 顶栏五资源；`hudFormat.formatWalletGainBrief` 对比领奖/购买前后 `wallet` 字段，在 `#hud` 短时显示 `+粮/+木/+铁/+石/+币` 摘要（约数秒淡出）。`CityStateFetch` 对 `domestic.v1.GetCityState` **单飞去重**；`cityStatePoll` 在主城：有 DOM 面板打开时约 **5s** 轮询刷新 HUD/建筑等级，无面板时约 **30s** 降频。
+
+1. `make dev` 进入主城，记下顶栏粮/币等初值。
+2. **日常领奖**或 **任务领奖**（见 [日常 chain 400](#手动验收日常-chain-400client-009)）：领奖成功后顶栏应出现对应 `+…` 摘要，随后数值与 HUD 一致。
+3. **商城购买**或 **邮件领附件**（见 [CLIENT-017](#手动验收邮件收件箱client-017)）：`wallet_after` 增加时同样出现摘要。
+4. **将领招募**成功且扣费/消耗后若钱包净增（mock 少见），摘要行为一致；纯扣费无 `+` 提示。
+5. 打开 **「任务」** 或 **「邮件」** 面板停留：观察 HUD 仍周期性刷新（5s 档）；关闭所有面板后频率降低（30s 档），浏览器网络面板中 `GetCityState` 无并发重复请求（单飞）。
+6. 视口 **1280×720** 与 **1600×900**：`+粮` 摘要不遮挡底栏 56px 行（见 `layoutViewport` 单测）。
 
 `make dev` 真实网关：
 
