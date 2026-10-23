@@ -92,16 +92,21 @@ type reqKey struct{ method, path, status string }
 
 // Metrics is a minimal Prometheus text registry (no external deps).
 type Metrics struct {
-	mu      sync.Mutex
-	counts  map[reqKey]uint64
-	latency map[string]latAgg // key: method|path
-	online  atomic.Uint64
-	queue   atomic.Uint64
+	mu       sync.Mutex
+	counts   map[reqKey]uint64
+	latency  map[string]latAgg // key: method|path
+	gameplay map[string]uint64 // event name -> count
+	online   atomic.Uint64
+	queue    atomic.Uint64
 }
 
 type latAgg struct{ sum float64; n uint64 }
 
-var defaultMetrics = &Metrics{counts: map[reqKey]uint64{}, latency: map[string]latAgg{}}
+var defaultMetrics = &Metrics{
+	counts:   map[reqKey]uint64{},
+	latency:  map[string]latAgg{},
+	gameplay: map[string]uint64{},
+}
 
 func DefaultMetrics() *Metrics { return defaultMetrics }
 
@@ -157,7 +162,12 @@ func (m *Metrics) text() string {
 		line("sanguo_http_request_duration_seconds_sum", labels, a.sum)
 		line("sanguo_http_request_duration_seconds_count", labels, a.n)
 	}
+	gameplay := map[string]uint64{}
+	for k, v := range m.gameplay {
+		gameplay[k] = v
+	}
 	m.mu.Unlock()
+	writeGameplayMetrics(&b, gameplay)
 	b.WriteString("# HELP sanguo_online_connections Online clients\n# TYPE sanguo_online_connections gauge\n")
 	fmt.Fprintf(&b, "sanguo_online_connections %d\n", m.online.Load())
 	b.WriteString("# HELP sanguo_queue_length Queue depth\n# TYPE sanguo_queue_length gauge\n")

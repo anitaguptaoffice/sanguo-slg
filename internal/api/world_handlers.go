@@ -8,6 +8,7 @@ import (
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 )
 
@@ -78,6 +79,10 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 	if err != nil {
 		return nil, err
 	}
+	obs.EmitGameplayEvent(s.log, pkt.GetTraceId(), obs.EventCreateCity, obs.PlayerRef{
+		ServerID: serverID,
+		PlayerID: pc.PlayerID,
+	})
 	return okResp(pkt.GetTraceId(), data), nil
 }
 

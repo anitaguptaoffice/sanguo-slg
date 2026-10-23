@@ -7,6 +7,7 @@ import (
 	shopv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/shop/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
 )
 
 const (
@@ -66,6 +67,10 @@ func (s *Server) handlePurchaseShopOffer(ctx context.Context, pkt *commonv1.Clie
 	if err != nil {
 		return nil, err
 	}
+	obs.EmitGameplayEvent(s.log, pkt.GetTraceId(), obs.EventShopPurchase, obs.PlayerRef{
+		ServerID: pc.ServerID,
+		PlayerID: pc.PlayerID,
+	})
 	return okResp(pkt.GetTraceId(), data), nil
 }
 

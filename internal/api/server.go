@@ -17,6 +17,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -140,7 +141,7 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteGetCityState] = s.handleGetCityState
 	handlers[RouteRecruitTroop] = s.handleRecruitTroop
 	handlers[RouteStartMarch] = s.handleStartMarch
-	handlers[RouteGetBattleReport] = s.handleGetBattleReport
+	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)
 	handlers[RouteListBattleReports] = s.handleListBattleReports
 	for route, h := range s.shard.GatewayHandlers() {
 		handlers[route] = h
@@ -194,8 +195,33 @@ func (s *Server) wrapLogin(inner gateway.RouteHandler) gateway.RouteHandler {
 		}
 		if respPkt.GetCode() == 0 {
 			s.bindFromLoginResponse(ctx, respPkt, serverID)
+			var resp accountv1.LoginResponse
+			if err := unmarshal(respPkt.GetData(), &resp); err == nil && resp.GetPlayer() != nil {
+				obs.EmitGameplayEvent(s.log, pkt.GetTraceId(), obs.EventLogin, obs.PlayerRef{
+					ServerID: serverID,
+					PlayerID: resp.GetPlayer().GetPlayerId(),
+				})
+			}
 		}
 		return respPkt, nil
+	}
+}
+
+func (s *Server) wrapGameplayOnSuccess(event string, inner gateway.RouteHandler) gateway.RouteHandler {
+	return func(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+		resp, err := inner(ctx, pkt)
+		if err != nil || resp == nil || resp.GetCode() != 0 {
+			return resp, err
+		}
+		pc, ok := s.sessions.Get(pkt.GetSessionId())
+		if !ok {
+			return resp, nil
+		}
+		obs.EmitGameplayEvent(s.log, pkt.GetTraceId(), event, obs.PlayerRef{
+			ServerID: pc.ServerID,
+			PlayerID: pc.PlayerID,
+		})
+		return resp, nil
 	}
 }
 
