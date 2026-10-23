@@ -1,5 +1,6 @@
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
+import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
@@ -631,10 +632,9 @@ export class HeroMailPanels {
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
       this.onStatus(status);
     } catch (e) {
-      const err = e as Error & { code?: number };
-      const msg = err.code ? `招募失败(code=${err.code})：${err.message}` : err.message;
+      const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.onStatus(msg);
-      setRecruitAffordabilityErrorDisplay(this.heroPanel, err.message);
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, msg);
     }
   }
 

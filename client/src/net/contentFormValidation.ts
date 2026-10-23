@@ -96,12 +96,80 @@ export function validateUseConsumable(input: UseConsumableValidationInput): Cont
   return { ok: true };
 }
 
-/** 商城面板 `data-role="shop-form-error"` 内联错误区。 */
-export function setShopFormErrorDisplay(
+/** 招募/商城/背包/军事四类面板内联错误区（CLIENT-067）。 */
+export type PanelFormDomain = "recruit" | "shop" | "bag" | "march";
+
+const PANEL_FORM_ERROR_ROLE: Record<PanelFormDomain, string> = {
+  recruit: "recruit-form-error",
+  shop: "shop-form-error",
+  bag: "bag-form-error",
+  march: "march-form-error",
+};
+
+const COMMON_INVALID_PACKET = 10001;
+const DOMESTIC_INSUFFICIENT_RESOURCE = 40001;
+
+const PANEL_GATEWAY_CODE_HINT: Record<PanelFormDomain, Partial<Record<number, string>>> = {
+  shop: {
+    64001: "货架不存在或未开放",
+    64002: "商品不存在或已下架",
+    64003: "余额不足",
+    64004: "已售罄",
+    64005: "超过限购次数",
+    64006: "购买数量无效",
+  },
+  bag: {
+    [COMMON_INVALID_PACKET]: "请求无效",
+    [DOMESTIC_INSUFFICIENT_RESOURCE]: "资源不足",
+  },
+  recruit: {
+    [COMMON_INVALID_PACKET]: "道具不足",
+    [DOMESTIC_INSUFFICIENT_RESOURCE]: "资源不足",
+  },
+  march: {
+    30001: "城池不存在",
+    50001: "兵种配置无效",
+    50002: "兵力数量无效",
+    50005: "出征参数无效",
+    50006: "城内兵力不足",
+  },
+};
+
+/**
+ * 四类面板网关失败文案：优先域内 code 中文摘要，末尾固定 `[code]`（与预校验区同元素展示）。
+ */
+export function formatPanelGatewayError(
+  domain: PanelFormDomain,
+  code: number | undefined,
+  msg: string,
+): string {
+  const trimmed = msg?.trim() ?? "";
+  if (code === undefined) {
+    return trimmed || "未知错误";
+  }
+  const hinted = PANEL_GATEWAY_CODE_HINT[domain]?.[code];
+  const summary = hinted ?? (trimmed || "操作失败");
+  if (hinted && trimmed && trimmed !== hinted) {
+    return `${summary}：${trimmed} [${code}]`;
+  }
+  return `${summary} [${code}]`;
+}
+
+export function formatPanelGatewayErrorFromUnknown(domain: PanelFormDomain, err: unknown): string {
+  if (err instanceof Error) {
+    const code = (err as Error & { code?: number }).code;
+    return formatPanelGatewayError(domain, code, err.message);
+  }
+  return String(err);
+}
+
+/** 统一内联错误区渲染（`march-form-error` / `shop-form-error` / `bag-form-error` / `recruit-form-error`）。 */
+export function setPanelFormErrorDisplay(
   panelRoot: ParentNode | null | undefined,
+  domain: PanelFormDomain,
   message: string | null,
 ): void {
-  const el = panelRoot?.querySelector('[data-role="shop-form-error"]');
+  const el = panelRoot?.querySelector(`[data-role="${PANEL_FORM_ERROR_ROLE[domain]}"]`);
   if (!el) return;
   if (message?.trim()) {
     el.textContent = message;
@@ -112,18 +180,18 @@ export function setShopFormErrorDisplay(
   }
 }
 
+/** 商城面板 `data-role="shop-form-error"` 内联错误区。 */
+export function setShopFormErrorDisplay(
+  panelRoot: ParentNode | null | undefined,
+  message: string | null,
+): void {
+  setPanelFormErrorDisplay(panelRoot, "shop", message);
+}
+
 /** 背包面板 `data-role="bag-form-error"` 内联错误区。 */
 export function setBagFormErrorDisplay(
   panelRoot: ParentNode | null | undefined,
   message: string | null,
 ): void {
-  const el = panelRoot?.querySelector('[data-role="bag-form-error"]');
-  if (!el) return;
-  if (message?.trim()) {
-    el.textContent = message;
-    el.classList.remove("hidden");
-  } else {
-    el.textContent = "";
-    el.classList.add("hidden");
-  }
+  setPanelFormErrorDisplay(panelRoot, "bag", message);
 }

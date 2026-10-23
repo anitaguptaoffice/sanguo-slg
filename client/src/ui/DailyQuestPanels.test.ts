@@ -96,6 +96,55 @@ describe("DailyQuestPanels", () => {
     expect(onNavigate).toHaveBeenCalledWith({ kind: "train_troops" });
   });
 
+  it("shows nearest recruit countdown on train daily row", async () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1014,
+            quest_code: "daily_train_1",
+            state: 2,
+            progress_current: 5,
+            progress_target: 50,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      () => session.buildings,
+      {},
+      () => [{ queue_id: 2, unit_cfg_id: 1, count: 8, finish_at_ms: now + 45_000 }],
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const row = mount.querySelector('li[data-quest-cfg-id="1014"]');
+    expect(row?.textContent).toContain("队列：");
+    expect(row?.textContent).toContain("×8");
+  });
+
   it("claim merges session and refreshes economy", async () => {
     const mount = document.createElement("div");
     let patched: Partial<MainCitySession> | null = null;

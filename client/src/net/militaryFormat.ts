@@ -1,3 +1,5 @@
+import { localCalendarDayKey } from "@/net/socialFormat";
+
 /** 兵种配置 ID → 展示名（与 spec/data cfg_unit 一致）。 */
 export const UNIT_LABEL: Record<number, string> = {
   1: "步兵",
@@ -96,6 +98,68 @@ export function filterBattleReportsByOutcome(
   filter: BattleReportOutcomeFilter,
 ): BattleReportSummary[] {
   return reports.filter((r) => battleReportMatchesOutcomeFilter(r, filter));
+}
+
+/** 战报列表时间窗（仅客户端过滤，不改 ListBattleReports）。 */
+export type BattleReportTimeWindowFilter = "all" | "today" | "last7d";
+
+export type BattleReportOutcomeCounts = {
+  win: number;
+  loss: number;
+  draw: number;
+};
+
+function battleReportCreatedAtMs(report: BattleReportSummary): number {
+  const ms = report.created_at_ms ?? 0;
+  return Number.isFinite(ms) && ms > 0 ? ms : 0;
+}
+
+/** 近 7 日：含今日在内的连续 7 个本地日历日。 */
+export function battleReportLast7DaysCutoffMs(nowMs: number): number {
+  const start = new Date(nowMs);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - 6);
+  return start.getTime();
+}
+
+export function battleReportMatchesTimeWindowFilter(
+  report: BattleReportSummary,
+  window: BattleReportTimeWindowFilter,
+  nowMs: number,
+): boolean {
+  if (window === "all") return true;
+  const created = battleReportCreatedAtMs(report);
+  if (created <= 0) return false;
+  if (window === "today") {
+    return localCalendarDayKey(created) === localCalendarDayKey(nowMs);
+  }
+  if (window === "last7d") {
+    return created >= battleReportLast7DaysCutoffMs(nowMs);
+  }
+  return true;
+}
+
+export function filterBattleReportsByTimeWindow(
+  reports: BattleReportSummary[],
+  window: BattleReportTimeWindowFilter,
+  nowMs: number,
+): BattleReportSummary[] {
+  return reports.filter((r) => battleReportMatchesTimeWindowFilter(r, window, nowMs));
+}
+
+export function countBattleReportsByOutcome(
+  reports: BattleReportSummary[],
+): BattleReportOutcomeCounts {
+  let win = 0;
+  let loss = 0;
+  let draw = 0;
+  for (const r of reports) {
+    const outcome = r.outcome ?? 0;
+    if (outcome === 1) win += 1;
+    else if (outcome === 2) loss += 1;
+    else if (outcome === 3) draw += 1;
+  }
+  return { win, loss, draw };
 }
 
 export function unitLabel(unitCfgId: number): string {

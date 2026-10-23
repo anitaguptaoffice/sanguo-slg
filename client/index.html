@@ -286,8 +286,13 @@
       .march-list li[data-march-id] { cursor: pointer; }
       .march-list li[data-march-id]:hover { background: #3d3028; }
       .march-list li.march-list-row-selected { outline: 2px solid #c9a227; }
-      .battle-report-filters { margin: 8px 0; font-size: 12px; }
+      .battle-report-filters { margin: 8px 0; font-size: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
       .battle-report-filters button.active { outline: 2px solid #c9a227; }
+      .battle-report-time-window select { font-size: 12px; margin-left: 4px; }
+      .battle-report-outcome-summary {
+        display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; font-size: 12px;
+      }
+      .battle-report-summary-chip { cursor: default; opacity: 0.95; }
       .report-rounds-table-wrap { margin-top: 8px; font-size: 12px; }
       .battle-report-rounds-table {
         width: 100%; border-collapse: collapse; font-size: 11px;
