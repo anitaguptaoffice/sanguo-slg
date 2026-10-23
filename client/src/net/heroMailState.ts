@@ -189,7 +189,10 @@ function escapeHtml(text: string): string {
 }
 
 /** 将领详情区：模板名与等级同屏 + 属性表/条形（纯函数，便于单测）。 */
-export function renderHeroDetailMarkup(d: HeroDetail | null | undefined): string {
+export function renderHeroDetailMarkup(
+  d: HeroDetail | null | undefined,
+  recruitAffordSummaryHtml = "",
+): string {
   if (!d?.hero_id) {
     return '<p class="hero-detail-empty">点选将领查看详情</p>';
   }
@@ -210,7 +213,7 @@ export function renderHeroDetailMarkup(d: HeroDetail | null | undefined): string
   }).join("");
   const table = `<table class="hero-attr-table" aria-label="基础属性"><tbody>${rows}</tbody></table>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${table}${hint}`;
+  return `${head}${recruitAffordSummaryHtml}${table}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

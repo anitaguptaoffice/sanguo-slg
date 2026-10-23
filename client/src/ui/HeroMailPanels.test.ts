@@ -100,7 +100,7 @@ describe("HeroMailPanels", () => {
     expect(detail?.textContent).toContain("UseConsumable");
   });
 
-  it("marks owned recruit template and shows deduct preview on selection", async () => {
+  it("marks owned recruit template and shows affordability preview on selection", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
       listRecruitTemplates: vi.fn().mockResolvedValue({
@@ -121,7 +121,10 @@ describe("HeroMailPanels", () => {
       }),
       getBoundServerId: () => 1,
     } as unknown as GatewayPort;
-    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    const session = sessionBase();
+    session.wallet = { food: 50 };
+    session.bag = [{ item_cfg_id: 2004, quantity: 0 }];
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
     panels.attach();
     panels.toggleHero();
     await flushPromises();
@@ -132,12 +135,65 @@ describe("HeroMailPanels", () => {
     const ownedLi = mount.querySelector('li[data-template-id="1001"]');
     expect(ownedLi?.textContent).toContain("已招募");
     expect(ownedLi?.classList.contains("recruit-owned")).toBe(true);
+    expect(ownedLi?.querySelector(".recruit-afford-secondary")?.textContent).toContain("粮");
     const preview = mount.querySelector('[data-role="recruit-preview"]');
-    expect(preview?.textContent).toContain("扣费明细");
-    expect(preview?.textContent).toContain("粮");
+    expect(preview?.textContent).toContain("玄德");
+    expect(preview?.textContent).toContain("持");
+    const recruitBtn = mount.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement;
+    expect(recruitBtn.disabled).toBe(true);
+    const errEl = mount.querySelector('[data-role="recruit-form-error"]');
+    expect(errEl?.textContent).toContain("不足");
     mount.querySelector('li[data-template-id="1002"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    expect(preview?.textContent).toContain("扣费明细");
+    expect(preview?.textContent).toContain("云长");
+  });
+
+  it("hero detail shows same recruit affordability summary as template list", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            template_name: "玄德",
+            rarity: 4,
+            recruit_cost: { gold: 10 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        rarity: 4,
+        level: 2,
+        loyalty: 77,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session = sessionBase();
+    session.wallet = { gold: 5 };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const listSecondary = mount.querySelector('li[data-template-id="1001"] .recruit-afford-secondary')?.textContent;
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const detailSecondary = mount.querySelector('[data-role="hero-detail"] .recruit-afford-secondary')?.textContent;
+    expect(listSecondary).toBeTruthy();
+    expect(detailSecondary).toBe(listSecondary);
+    expect(detailSecondary).toContain("不足");
   });
 
   it("claim success updates session bag via patch", async () => {
@@ -478,7 +534,7 @@ describe("HeroMailPanels", () => {
       wallet: { food: 1000 },
       buildings: [],
       cityTroops: [],
-      bag: [],
+      bag: [{ item_cfg_id: 2004, quantity: 1 }],
     };
     const panels = new HeroMailPanels(
       mount,
@@ -493,7 +549,11 @@ describe("HeroMailPanels", () => {
     panels.attach();
     panels.toggleHero();
     await flushPromises();
-    mount.querySelector('[data-action="recruit-hero"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const recruitBtn = mount.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement;
+    expect(recruitBtn.disabled).toBe(false);
+    recruitBtn.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     await flushPromises();
     expect(gateway.recruitHero).toHaveBeenCalled();

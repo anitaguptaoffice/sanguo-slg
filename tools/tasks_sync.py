@@ -16,7 +16,7 @@ import yaml
 
 LABELS = {
     "domain": ["spec", "platform", "account", "world", "domestic", "military", "hero", "content", "client", "tools"],
-    "wave": [str(i) for i in range(1, 19)],
+    "wave": [],  # filled from backlog max wave in ensure_labels()
     "size": ["S", "M", "L"],
 }
 STATUS = ["status:ready", "status:blocked", "status:in-progress", "status:review", "status:done"]
@@ -29,8 +29,16 @@ def run(args, check=True):
     return r.stdout.strip()
 
 
-def ensure_labels():
-    for group, values in LABELS.items():
+def wave_label_values(cards):
+    waves = {int(c["wave"]) for c in cards if c.get("wave") is not None}
+    if not waves:
+        return [str(i) for i in range(1, 11)]
+    return [str(i) for i in range(1, max(waves) + 1)]
+
+
+def ensure_labels(cards):
+    label_defs = {**LABELS, "wave": wave_label_values(cards)}
+    for group, values in label_defs.items():
         for v in values:
             run(["gh", "label", "create", f"{group}:{v}", "--force",
                  "--color", "ededed", "--description", f"{group}={v}"], check=False)
@@ -95,7 +103,7 @@ def main():
     only_wave = wave_filter()
     cards = yaml.safe_load(open("tasks/backlog.yml"))
     if not dry:
-        ensure_labels()
+        ensure_labels(cards)
     have = existing_issues() if not dry else {}
     created = updated = 0
 

@@ -28,6 +28,8 @@ import {
   formatMarchHint,
   formatTimeMs,
   formatTroopStacks,
+  marchNeedsPoll,
+  MARCH_LIST_REMAINING_TICK_MS,
   mergeCityTroops,
   unitLabel,
   type BattleReportSummary,
@@ -71,6 +73,7 @@ import {
   layoutPointInMinimapMap,
   layoutPointInMinimapToggle,
   minimapLayoutToWorld,
+  formatMinimapCollapsedSelectedMarchStatus,
   readMinimapCollapsedFromSession,
   writeMinimapCollapsedToSession,
   type MinimapView,
@@ -97,6 +100,7 @@ const SLOT_LABEL: Record<string, string> = {
 const PURPOSE_ATTACK = 1;
 const WALLET_GAIN_FLASH_MS = 2800;
 const MINIMAP_MARCH_REFRESH_S = 5;
+const MINIMAP_ETA_TICK_S = MARCH_LIST_REMAINING_TICK_MS / 1000;
 /** 小地图单击与拖拽区分阈值（layout px）。 */
 const MINIMAP_TAP_MOVE_THRESHOLD = 8;
 
@@ -140,6 +144,9 @@ export class MainCityScene implements Scene {
   private minimapPanStartLayout: { x: number; y: number } | null = null;
   private minimapCollapsed = readMinimapCollapsedFromSession();
   private minimapBattleReportReplay: MinimapWorldPoint | null = null;
+  /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
+  private marchClockMs = Date.now();
+  private minimapEtaTickAccum = 0;
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
   private readonly onCanvasWheelBound = (ev: WheelEvent) => this.onCanvasWheel(ev);
   private readonly onHudClickBound = (ev: Event) => this.onHudClick(ev);
@@ -318,12 +325,15 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       {
+        nowMs: () => this.marchClockMs,
         onMarchesUpdated: (marches) => {
           this.minimapMarches = marches;
         },
         onSelectionChange: (march) => {
           if (march) {
-            this.status = `小地图联动：行军 #${march.march_id ?? "?"}`;
+            this.status = this.minimapCollapsed
+              ? formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs)
+              : `小地图联动：行军 #${march.march_id ?? "?"}`;
             this.renderHud();
           }
         },
@@ -413,6 +423,14 @@ export class MainCityScene implements Scene {
     if (this.minimapMarchRefreshAccum >= MINIMAP_MARCH_REFRESH_S) {
       this.minimapMarchRefreshAccum = 0;
       void this.refreshMinimapMarches();
+    }
+    this.minimapEtaTickAccum += dt;
+    if (this.minimapEtaTickAccum >= MINIMAP_ETA_TICK_S) {
+      this.minimapEtaTickAccum = 0;
+      if (marchNeedsPoll(this.minimapMarches)) {
+        this.marchClockMs = Date.now();
+        this.syncMinimapCollapsedMarchStatus();
+      }
     }
     if (this.queuePanels?.isOpen()) {
       this.queuePanels.tick(dt);
@@ -681,8 +699,13 @@ export class MainCityScene implements Scene {
         this.status = this.minimapCollapsed
           ? formatBattleReportReplayStatusCollapsed(this.minimapBattleReportReplay)
           : formatBattleReportReplayStatusExpanded(this.minimapBattleReportReplay);
+      } else if (this.minimapCollapsed) {
+        const selected = this.marchList?.getSelectedMarch();
+        this.status = selected
+          ? formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs)
+          : "小地图已折叠";
       } else {
-        this.status = this.minimapCollapsed ? "小地图已折叠" : "小地图已展开";
+        this.status = "小地图已展开";
       }
       this.renderHud();
       return;
@@ -729,6 +752,14 @@ export class MainCityScene implements Scene {
 
   private pointInRect(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): boolean {
     return p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
+  }
+
+  private syncMinimapCollapsedMarchStatus(): void {
+    if (!this.minimapCollapsed) return;
+    const selected = this.marchList?.getSelectedMarch();
+    if (!selected) return;
+    this.status = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    this.renderHud();
   }
 
   private applyMinimapMarchTargetPick(layoutX: number, layoutY: number): void {
@@ -801,6 +832,9 @@ export class MainCityScene implements Scene {
       }
     }
     this.renderHud();
+    if (patch.wallet !== undefined || patch.bag !== undefined) {
+      this.heroMail?.refreshRecruitAffordability();
+    }
   }
 
   private isAnyPanelVisible(): boolean {
@@ -1073,6 +1107,7 @@ export class MainCityScene implements Scene {
       view: this.minimapView,
       collapsed: this.minimapCollapsed,
       battleReportReplay: this.minimapBattleReportReplay,
+      nowMs: this.marchClockMs,
     });
 
     c2d.restore();

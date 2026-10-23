@@ -18,6 +18,11 @@ import {
   layoutPointInMinimapToggle,
   marchSelectionMatchesListRow,
   marchShowsDestOnMinimap,
+  clampMinimapEtaLabelLayout,
+  formatMinimapCollapsedSelectedMarchStatus,
+  minimapDestEtaBadgeLabel,
+  minimapDestShowsEtaBadge,
+  minimapMarchPhaseShortLabel,
   minimapMarchRouteStroke,
   readMinimapCollapsedFromSession,
   writeMinimapCollapsedToSession,
@@ -141,5 +146,36 @@ describe("worldMinimap", () => {
     expect(layoutPointInMinimapToggle(MINIMAP_LAYOUT_RECT.x + 4, MINIMAP_LAYOUT_RECT.y + 10, true)).toBe(
       true,
     );
+  });
+
+  it("shows ETA badge labels by march phase with shared remaining math", () => {
+    const now = Date.UTC(2024, 0, 1, 8, 30, 0);
+    const arrive = Date.UTC(2024, 0, 1, 9, 0, 0);
+    const marching = {
+      march_id: 1,
+      phase: 2,
+      to_x: 10,
+      to_y: 20,
+      arrive_at_ms: arrive,
+    };
+    expect(minimapDestShowsEtaBadge(marching)).toBe(true);
+    expect(minimapDestShowsEtaBadge({ phase: 5, to_x: 1, to_y: 1 })).toBe(false);
+    expect(minimapDestEtaBadgeLabel(marching, now)).toBe("30");
+    expect(minimapDestEtaBadgeLabel({ ...marching, phase: 1 }, now)).toBe("待");
+    expect(minimapDestEtaBadgeLabel({ ...marching, phase: 3 }, now)).toBe("达");
+    expect(minimapDestEtaBadgeLabel({ ...marching, phase: 4 }, now)).toBe("30");
+    expect(minimapMarchPhaseShortLabel(1)).toBe("待");
+    expect(formatMinimapCollapsedSelectedMarchStatus(marching, now)).toContain("剩余 30m");
+  });
+
+  it("clamps minimap ETA label layout inside map rect", () => {
+    const rect = MINIMAP_LAYOUT_RECT;
+    const farRight = rect.x + rect.w - 4;
+    const midY = rect.y + rect.h / 2;
+    const pos = clampMinimapEtaLabelLayout(farRight, midY, 40, 10, rect);
+    expect(pos.x).toBeGreaterThanOrEqual(rect.x);
+    expect(pos.x + 40).toBeLessThanOrEqual(rect.x + rect.w);
+    expect(pos.y).toBeGreaterThanOrEqual(rect.y);
+    expect(pos.y + 10).toBeLessThanOrEqual(rect.y + rect.h);
   });
 });

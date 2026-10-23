@@ -8,6 +8,7 @@ import {
   formatMarchHint,
   formatMarchLine,
   formatMarchRemainingMs,
+  formatMarchRemainingMsAbbrev,
   formatMarchRowMetaLine,
   formatMarchRowPrimaryLine,
   formatReportLine,
@@ -73,6 +74,8 @@ describe("militaryFormat", () => {
     expect(formatMarchRemainingMs(now, arriveFar)).toBe("剩余 30m");
     expect(formatMarchRemainingMs(now, now + 30_000)).toBe("即将到达");
     expect(formatMarchRemainingMs(now, now)).toBe("即将到达");
+    expect(formatMarchRemainingMsAbbrev(now, arriveFar)).toBe("30");
+    expect(formatMarchRemainingMsAbbrev(now, now + 30_000)).toBe("即将");
 
     const marching = {
       march_id: 2,
