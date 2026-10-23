@@ -17,6 +17,7 @@
 # wave:22「H5 出征执行反馈与主城经济扫读」：出征提交中/成功反馈与军情新行军高亮、HUD 产出与仓库余量扫读、建造下级消耗只读预览、战报相邻导航与胜负 streak、军团成员→聊天草稿一步、军情阶段变更状态提醒、1280 主城/军情/战报 manifest、邮件附件批量领取反馈；INTG-019 冒烟；仍 DATA-002，无 CancelMarch（实现卡从 CLIENT-080 起）。
 # wave:23「H5 后勤互链与全链路反馈加深」：募兵下一批消耗预览、出征表单 ETA/兵力汇总与余量警示、小地图与军情高亮双向同步、日常可领取首条定位与领取脉冲、商城背包购买缺口对比、军情行打开军事预填目标、战报相邻导航键盘与焦点环、1280 背包商城军团 manifest；INTG-020 冒烟；仍 DATA-002，无 CancelMarch（实现卡从 CLIENT-088 起，勿占用 CLIENT-064）。
 # wave:24「H5 社交排行与将领执行反馈加深」：双榜我的排名钉选与刷新戳记、排行→将领详情深链、将领招募执行反馈、将领列表刷新与详情选中记忆、战报攻守模板摘要与排行互链、军团成员职务分组、聊天未读与 HUD 角标同步、1280 排行将领日常 manifest；INTG-021 冒烟；仍 DATA-002，无 CancelMarch（实现卡从 CLIENT-096 起，勿占用 CLIENT-064）。
+# wave:25「H5 主城队列·邮件日常·世界读图加深」：主城槽位建造/升级提交与队列行互跳反馈、邮件未读/附件与 HUD 待办角标一致、世界格点信息卡加深、军情列表与战报胜负筛选记忆、ART-CHROME-006 选服/HUD chrome 运行时小 UX、1280 主城建造/邮件/队列 manifest；INTG-022 冒烟；仍 DATA-002，无 CancelMarch（实现卡 CLIENT-104～111，勿占用 CLIENT-064）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -3692,3 +3693,208 @@
     文档 only。INTG-021 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR。
+
+- id: CLIENT-104
+  title: 主城槽位建造/升级提交执行反馈与资源脉冲
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-082, CLIENT-066, CLIENT-067, CLIENT-026, CLIENT-051]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "主城槽位 **建造/升级**（既有 `domestic.v1` StartBuild/StartUpgrade 或等价 RPC）：主按钮 **disabled + 提交中** 文案；成功 toast/状态栏 `formatBuildSubmitSuccess(slot_key, targetLevel)` + CLIENT-051 资源脉冲（扣费涉及粮木铁石时）"
+    - "失败：CLIENT-067 inline + 保留槽位选中与 CLIENT-082 消耗预览；不新 domestic RPC / 不扩建筑 SKU"
+    - "CLIENT-066 队列深链入口不退化；纯函数 `buildSubmitStateMachine` + 单测"
+    - npm test 绿；client/README.md 增补建造提交反馈一句（DOCS-EXIT-017 前可写简要）
+  body: |
+    wave:20/22 已加深槽位队列深链与建造消耗预览；wave:24 社交加深后本波轮转 **主城执行瞬间** 可感知反馈，契约冻结。
+
+    仅 client/**。与 CLIENT-105～111 并行（‖）。禁止 DATA-003 / cfg_act*。
+
+- id: CLIENT-105
+  title: 建造队列行完成脉冲与主城槽位双向高亮巩固
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-019, CLIENT-071, CLIENT-066, CLIENT-104, CLIENT-059]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "GetCityState 轮询或推送后：某槽位 `upgrade_finish_at_ms` 由进行中→空闲时，队列行 **完成脉冲** `queue-build-complete-pulse`（3s）并更新等级文案"
+    - "队列行点击仍 `openAndHighlightBuildSlot`；画布升级中槽位 overlay（CLIENT-066）与队列行 **互高亮** 至用户切换焦点"
+    - "CLIENT-052 日常互链与 CLIENT-026 加速符按钮不退化；募兵加速仍 out"
+    - npm test 绿；单测覆盖 `detectBuildJustCompleted(prev, next)` 纯函数
+  body: |
+    wave:14/20 CLIENT-019/071 已补队列倒计时与行内反馈；本卡补 **完成瞬间** 与槽位互跳，无新队列 RPC。
+
+    仅 client/**。与 CLIENT-104/106～111 并行（‖）。
+
+- id: CLIENT-106
+  title: 邮件未读条数与未领附件面板 tab 角标同步
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-017, CLIENT-035, CLIENT-050, CLIENT-087, CLIENT-077]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "基于 `ListPlayerMail` 快照：分别估算 **未读**（`read_at_ms`/筛选等价）与 **未领附件** 条数；收件箱 tab 展示 `未读 N` / `附件 M` 或合并角标规则（README 写明）"
+    - "单封领取附件或 MarkRead 成功后本地快照即时递减；CLIENT-050 HUD 邮件徽章与面板数字一致"
+    - "CLIENT-087 批量领取不退化；不新 mail proto / 不扩附件 SKU"
+    - npm test 绿；单测覆盖 `countMailUnreadAndUnclaimed(mails)` 纯函数
+  body: |
+    wave:16/18/22 已加深邮件领取与 HUD 同步；本卡补 **面板内 tab 角标** 与列表快照一致，纯客户端推导。
+
+    仅 client/**。与 CLIENT-104/105/107～111 并行（‖）。
+
+- id: CLIENT-107
+  title: HUD 邮件/日常/建造队列待办角标单一事实源
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-027, CLIENT-077, CLIENT-091, CLIENT-106, CLIENT-105, CLIENT-102]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "抽出 `hudTodoBadges` 纯模块：汇总 **邮件未读+未领附件**（CLIENT-106）、**日常可领取**（CLIENT-091）、**建造进行中**（`upgrade_finish_at_ms>now` 槽位数）、**聊天未读**（CLIENT-102）——底栏入口与 CLIENT-077 深链共用同一计数"
+    - "领取/建造完成/打开面板清零规则与 README 表一致；CLIENT-102 社交角标并存时不重复计数"
+    - "dev 空邮件/空日常仅展示 0 或隐藏角标，不报错；单测覆盖 badge 聚合纯函数"
+    - npm test 绿；client/README.md 增补 HUD 待办角标对照表 bullet
+  body: |
+    wave:16/21/24 已分散加深 HUD 角标；本波 **主城+邮件+日常** 轮转时统一待办数字，避免各面板各算一套。
+
+    仅 client/**。与 CLIENT-104～106/108～111 并行（‖）。
+
+- id: CLIENT-108
+  title: 世界地图格点城池与资源点只读信息卡加深
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-073, CLIENT-028, CLIENT-061, CLIENT-069, CLIENT-097]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "世界地图/小地图点选格点：信息卡展示 **格点坐标**、城池名/玩家名（`ListPlayerCities` 或行军快照既有字段）、资源点类型只读标签（cfg 映射，不新 world RPC）"
+    - "**打开军情** / **打开战报筛选**（若格点关联最近战报坐标 CLIENT-065）快捷按钮；CLIENT-061 军情高亮联动"
+    - "CLIENT-097 排行深链与世界卡并存；无占领数据时展示 neutral hint"
+    - npm test 绿；单测覆盖 `formatWorldTileInfoCard(tile, cities, marches)` 纯函数
+  body: |
+    wave:15/21 已补世界标注与信息卡；wave:24 排行深链后本卡加深 **地图读图** 复盘入口，契约 `world.v1.ListPlayerCities` 只读。
+
+    仅 client/**。与 CLIENT-104～107/109～111 并行（‖）。
+
+- id: CLIENT-109
+  title: 军情列表与战报胜负筛选记忆及世界复盘互链
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-047, CLIENT-049, CLIENT-065, CLIENT-069, CLIENT-085, CLIENT-090, CLIENT-100, CLIENT-108]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "军情：阶段筛选（全部/行军中/返回等既有 phase 映射）与 ETA 排序；`sessionStorage military-list-filter-v1` 记忆；CLIENT-090 互选与 CLIENT-093 预填不退化"
+    - "战报：`outcome` 胜/负/全部 + `sessionStorage battle-report-outcome-filter-v1` 记忆，与 CLIENT-065 时间窗 AND；CLIENT-094 键盘导航焦点合法"
+    - "战报行 **复盘格点** 打开 CLIENT-108 世界信息卡；无新军事/战报 RPC；无 CancelMarch"
+    - npm test 绿；单测覆盖军情/战报筛选纯函数各一
+  body: |
+    wave:18/20/23/24 已加深军情 ETA、战报分页与攻守互链；本卡合并 **筛选记忆** 与 **世界复盘** 一步，纯客户端。
+
+    仅 client/**。与 CLIENT-104～108/110/111 并行（‖）。
+
+- id: CLIENT-110
+  title: ART-CHROME-006 选服与 HUD chrome 焦点回退小 UX
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-032, CLIENT-038, CLIENT-039, CLIENT-107]
+  sync_status: ready
+  size: S
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**, docs/art/**]
+  acceptance:
+    - "在 **#452/#456** 已接线 `ui.panel.default.v1` / HUD chrome 前提下：选服弹层 **Esc** 关闭、打开时焦点陷阱与 `:focus-visible` 环；关闭后焦点回到触发按钮"
+    - "底栏 HUD 按钮 `aria-expanded` 与面板打开态一致；1280 下 chrome 不遮挡 CLIENT-107 角标（溢出省略+`title`）"
+    - "不合并 #444/#108 art hold；`data-art-skin=off` 行为不变；npm test 绿"
+    - client/README.md 增补 ART-CHROME-006 运行时 UX bullet（指向 `docs/art/samples/art-chrome-006` 证据目录只读）
+  body: |
+    ART-CHROME-006 美术证据与接线已合（#452/#456）；本卡仅 **client/** 运行时无障碍与焦点，不引入新美术资源。
+
+    与 CLIENT-104～109/111 并行（‖）。禁止合并 #77/#82/#108/#444。
+
+- id: CLIENT-111
+  title: 窄屏1280 主城建造/邮件/队列面板 manifest 与滚动巩固
+  wave: 25
+  domain: client
+  depends_on: [CLIENT-086, CLIENT-103, CLIENT-105, CLIENT-106, CLIENT-110]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "layoutViewport 1280×720 下 **主城侧栏/槽位 overlay**、**邮件**、**队列** 面板根 nine-slice 与 CLIENT-086/103 同级；`.panel-scroll-body` 长表不遮挡底栏 56px"
+    - "CLIENT-105 队列完成脉冲、CLIENT-106 邮件 tab 角标、CLIENT-107 HUD 待办在窄屏不横向溢出；1600 基线不退化"
+    - "data-art-skin=off 可跳过；layoutViewport 或面板 root class 单测扩展；npm test 绿"
+    - client/README.md 增补 1280 主城/邮件/队列验收 bullet
+  body: |
+    CLIENT-103 已覆盖排行/将领/日常窄屏 manifest；本卡补齐 **主城建造+邮件+队列** 高频面板，工程接线 only。
+
+    仅 client/**。不合并 #77/#82/#108 art hold。与 CLIENT-104～110 并行（‖）。
+
+- id: INTG-022
+  title: wave:25 网关路径冒烟（建造队列字段+邮件未读+日常可领+格点）
+  wave: 25
+  domain: platform
+  depends_on: [INTG-021]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-021 全量断言（双榜 my_rank、军团 role、可选 RecruitHero、INTG-020 商城/邮件附件/建筑 level、INTG-019 资源/phase 等）
+    - "主路径：`domestic.v1.GetCityState` 打印进行中建造槽位的 `slot_key` + `upgrade_finish_at_ms`（`0` 表示无队列，供 CLIENT-105/107 对照）"
+    - "主路径：`content.v1.ListPlayerMail` 打印 `total_count` 与 **未读**条数（read 筛选等价推导，供 CLIENT-106 对照）"
+    - "主路径：`quest.v1.ListPlayerQuests` `chain_id=400` 打印可领取条数或 `progress_current>=progress_target` 计数（供 CLIENT-107/091 对照）"
+    - "主路径：`world.v1.ListPlayerCities` 打印首条 `x`/`y`/`name`（供 CLIENT-108 信息卡对照）"
+    - tools/smoke/README.md 更新 wave:25 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE25-RUN。为 wave:25 客户端主城队列、邮件角标、日常待办与世界读图提供网关字段断言；不跑 H5。
+
+    **本波仍不做** CancelMarch / 行军与募兵加速 / 主城建造新 RPC。
+
+    CLIENT-104～111 非硬依赖。与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-017
+  title: wave:25 H5 主城队列·邮件日常·世界读图加深文档收口
+  wave: 25
+  domain: platform
+  depends_on: [INTG-022, CLIENT-104, CLIENT-105, CLIENT-106, CLIENT-107, CLIENT-108, CLIENT-109, CLIENT-110, CLIENT-111]
+  blocked_until: [INTG-022, CLIENT-104, CLIENT-105, CLIENT-106, CLIENT-107, CLIENT-108, CLIENT-109, CLIENT-110, CLIENT-111]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - "ROADMAP：Wave 25 标为已完成并链 Issue/PR；Wave 24 保持已完成（含 DOCS-EXIT-016 #457 d1c517db）"
+    - M4/H5 出口描述含「主城建造提交与队列互跳 + 邮件未读附件角标 + HUD 待办一致 + 世界信息卡加深 + 军情战报筛选记忆 + ART-CHROME-006 运行时 UX + 1280 主城邮件队列 manifest」路径（指向 client/README）
+    - tasks/README.md wave:25 进度表与 Issue 一致；CLIENT 实现卡编号自 **CLIENT-104** 起
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速/主城建造新 RPC/战报 proto 扩量仍 out；注明 **CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——非 wave:25 backlog 实现卡
+  body: |
+    文档 only。INTG-022 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177 等 art hold PR 或 VERIFY draft PR / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)。

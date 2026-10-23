@@ -390,13 +390,36 @@ H5 人工验收与 **INTG-020** 网关冒烟对齐，见 [client/README.md](../c
 | [#440](https://github.com/anitaguptaoffice/sanguo-slg/issues/440) | CLIENT-102 | 已完成 | [#455](https://github.com/anitaguptaoffice/sanguo-slg/pull/455)（`da139567`） |
 | [#441](https://github.com/anitaguptaoffice/sanguo-slg/issues/441) | CLIENT-103 | 已完成 | [#449](https://github.com/anitaguptaoffice/sanguo-slg/pull/449)（`62e13a90`） |
 | [#442](https://github.com/anitaguptaoffice/sanguo-slg/issues/442) | INTG-021 | 已完成 | [#447](https://github.com/anitaguptaoffice/sanguo-slg/pull/447)（`9eb18c48`） |
-| [#443](https://github.com/anitaguptaoffice/sanguo-slg/issues/443) | DOCS-EXIT-016 | 已完成 | （本 PR） |
+| [#443](https://github.com/anitaguptaoffice/sanguo-slg/issues/443) | DOCS-EXIT-016 | 已完成 | [#457](https://github.com/anitaguptaoffice/sanguo-slg/pull/457)（`d1c517db`） |
 
 H5 人工验收与 **INTG-021** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-24-h5-社交排行与将领执行反馈加深m4-出口--intg-021)（**双榜钉选 + 排行将领深链 + 招募执行反馈 + 将领列表记忆 + 战报攻守摘要互链 + 军团职务分组 + 聊天未读角标 + 1280 排行将领日常 manifest**）。
 
 **wave:19 美术轨旁路（非 wave:24 backlog 实现卡，不阻塞本波收口）**：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:24 backlog 实现卡）。wave:24 实现卡 **CLIENT-096** 起，**勿占用 CLIENT-064**。
 
 **明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；合并 art hold/VERIFY；**主城建造/募兵新 RPC** 或战报 proto 扩量（本波仅客户端执行反馈与只读深链）。
+
+## Wave 25 H5 主城队列·邮件日常·世界读图加深 — **规划中**
+
+**策略**：在 wave:24 **双榜钉选 / 排行将领深链 / 招募执行反馈 / 将领记忆 / 战报攻守互链 / 军团职务 / 聊天未读角标 / 1280 排行将领日常 manifest** 之上，轮转加深 **主城建造提交与队列行互跳反馈**、**邮件未读/未领附件与 HUD 待办角标一致**、**世界格点只读信息卡**、**军情列表与战报胜负筛选记忆**、**ART-CHROME-006 选服/HUD chrome 运行时小 UX**（#452/#456 已接线，不合并 #444/#108）与 **1280 主城/邮件/队列 manifest**；网关 **INTG-022** 复跑 smoke（`GetCityState` 建造 `upgrade_finish_at_ms` + `ListPlayerMail` 未读 + 日常可领计数 + `ListPlayerCities` 格点）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量。波次 backlog 规划（本 PR，合入后 `tasks_sync` 建 Issue）。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| — | CLIENT-104 | 待 sync | — |
+| — | CLIENT-105 | 待 sync | — |
+| — | CLIENT-106 | 待 sync | — |
+| — | CLIENT-107 | 待 sync | — |
+| — | CLIENT-108 | 待 sync | — |
+| — | CLIENT-109 | 待 sync | — |
+| — | CLIENT-110 | 待 sync | — |
+| — | CLIENT-111 | 待 sync | — |
+| — | INTG-022 | 待 sync | — |
+| — | DOCS-EXIT-017 | 待 sync | — |
+
+H5 人工验收与 **INTG-022** 网关冒烟对齐（合入实现后更新 [client/README.md](../client/README.md)）：**主城建造提交与队列互跳 + 邮件未读附件角标 + HUD 待办一致 + 世界信息卡加深 + 军情战报筛选记忆 + ART-CHROME-006 运行时 UX + 1280 主城邮件队列 manifest**。
+
+**wave:19 美术轨旁路（非 wave:25 backlog 实现卡，不阻塞本波收口）**：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:25 backlog 实现卡）。wave:25 实现卡 **CLIENT-104～111**，**勿占用 CLIENT-064**。
+
+**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；合并 art hold/VERIFY。
 
 ## 不做
 
