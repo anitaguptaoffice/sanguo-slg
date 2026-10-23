@@ -18,7 +18,7 @@
 - 全舞台（布局帧 JPG，DPR1）：`full-stage-dpr1.jpg`（layout-frame 1600×900 CSS）
 - DPR2 墙裁切（审阅可读，同 CSS 区，自 `dpr2-wall.png` 无损派生；**保留原 PNG**；**未改 `textures/*/maincity/wall.png`**）：`dpr2-wall.jpg`（≈232 KiB）、`dpr2-wall.webp`（≈176 KiB）
 - 机器可读：`viewport-metadata.json`（含 `dpr2WallReviewArtifacts` 与 `evidenceCommitSha`）
-- **证据 commit SHA**：见本分支最新 VERIFY 提交（`raw/<full-sha>/docs/verify/art-wall-004/…`；Draft PR 正文同步）
+- **证据 commit SHA**：`89eb6460066bc983199a83d411f577bcb99cade3`（本目录全部截图/压缩审阅图；链接使用 `raw/89eb6460066bc983199a83d411f577bcb99cade3/docs/verify/art-wall-004/…`）
 - 布局/DPR 修复首版截图仍见于 `cf6c8262a3882ce5b73a2b8386e0d697847a2b59`；审阅请以本 SHA 下 JPG/WebP 复验 DPR2 墙专项
 
 ## 验收清单
