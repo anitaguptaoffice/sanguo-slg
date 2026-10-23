@@ -4,7 +4,10 @@ import {
   CLIENT_062_CENTER_PANEL_ASSET_IDS,
   CLIENT_070_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_078_PANEL_ASSET_BY_CENTER_ID,
+  CLIENT_086_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
+  PANEL_ASSET_BATTLE_REPORT,
+  PANEL_ASSET_MARCH,
   PANEL_ASSET_DEFAULT,
   PANEL_ASSET_HERO,
   PANEL_ASSET_MILITARY,
@@ -12,9 +15,11 @@ import {
   PANEL_ASSET_RANK,
   PANEL_ASSET_WORLD,
   skinBagPanel,
+  skinBattleReportPanel,
   skinDailyPanel,
   skinHeroPanel,
   skinMailPanel,
+  skinMarchIntelPanel,
   skinMilitaryPanel,
   skinNineSlicePanel,
   skinQueuePanel,
@@ -119,5 +124,22 @@ describe("skinNineSlicePanel", () => {
     skinRankPanel(rank, assets);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_WORLD);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_RANK);
+  });
+
+  it("CLIENT-086 maps march and battle-report roots to manifest ids", () => {
+    expect(CLIENT_086_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      march: PANEL_ASSET_MARCH,
+      "battle-report": PANEL_ASSET_BATTLE_REPORT,
+    });
+  });
+
+  it("skinMarchIntelPanel and skinBattleReportPanel use dedicated asset ids", () => {
+    const assets = mockAssets();
+    const march = document.createElement("div");
+    const reports = document.createElement("div");
+    skinMarchIntelPanel(march, assets);
+    skinBattleReportPanel(reports, assets);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_MARCH);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_BATTLE_REPORT);
   });
 });

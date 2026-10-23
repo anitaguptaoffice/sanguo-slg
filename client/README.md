@@ -14,7 +14,9 @@
 | `ui.panel.hero.v1` | 将领面板根（`artPanelSkin.skinHeroPanel`，CLIENT-062） |
 | `ui.panel.bag.v1` | 背包面板根（`artPanelSkin.skinBagPanel`，CLIENT-062） |
 | `ui.panel.queue.v1` | 队列面板根（`artPanelSkin.skinQueuePanel`，CLIENT-062） |
-| `ui.panel.military.v1` | 军事表单面板、行军列表、队列募兵区块（`artPanelSkin.skinMilitaryPanel`；募兵/出征主按钮见 CLIENT-033） |
+| `ui.panel.military.v1` | 军事表单面板、队列募兵区块（`artPanelSkin.skinMilitaryPanel`；募兵/出征主按钮见 CLIENT-033） |
+| `ui.panel.world.v1` / `ui.panel.rank.v1` | 世界 / 排行面板根（CLIENT-078） |
+| `ui.panel.march.v1` / `ui.panel.battle-report.v1` | 军情行军列表 / 战报列表+详情根（CLIENT-086） |
 
 图标缺失时 HUD 回退为「粮/木/铁/石/币 + 数值」纯文字（与 CLIENT-011 一致）。面板根节点设 `data-art-skin="off"` 可跳过 nine-slice。
 
@@ -615,6 +617,16 @@ cd client && npm install && npm run dev
 2. 将领详情（`.hero-detail`）与世界格点信息卡（`.world-tile-info`，CLIENT-073）在窄屏下 **无横向溢出**；城池列表与排行表在 `.panel-scroll-body` 内 **`overflow-y: auto`**，底栏 56px 工具条不遮挡 **刷新城池** / **刷新排行榜**。
 3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054/055**、将领 **CLIENT-062** 表现不退化。
 4. 单测：`artPanelSkin.test.ts`（CLIENT-078 manifest 映射）、`contentPanelScroll.test.ts`（`world`/`rank` id）、`HeroMailPanels` / `WorldPanels` / `SocialPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
+
+### 手动验收（1280 军情/战报/主城队列 CLIENT-086）
+
+`#layout-frame.layout-narrow` 下 **军情**（`data-center-panel="march"` + **`ui.panel.march.v1`**）、**战报**（`data-center-panel="battle-report"` + **`ui.panel.battle-report.v1`**）、**队列**（`data-center-panel="queue"` + `ui.panel.queue.v1`，CLIENT-062）根节点 nine-slice 与 CLIENT-078/070 同级；`skinMarchIntelPanel` / `skinBattleReportPanel` / `skinQueuePanel` 接线。`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开底栏 **行军**（军情）、**战报**、**队列**；面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 军情列表（含 CLIENT-080 目的格高亮行）、战报列表与详情、队列建造/募兵长表在 `.panel-scroll-body` 内 **`overflow-y: auto`** 滚动；底栏 56px 工具条不遮挡 **刷新列表** / 详情操作 / CLIENT-083 导航按钮。
+3. 军情选中行与队列建造行（含后续 CLIENT-082 升级消耗预览）在窄屏 **无横向溢出**；画布槽位升级标签（CLIENT-066）不越出槽位区。
+4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054/055**、军情 **CLIENT-069** 筛选表现不退化。
+5. 单测：`artPanelSkin.test.ts`（CLIENT-086 manifest 映射）、`contentPanelScroll.test.ts`（`march` / `battle-report` id）、`MarchListPanel` / `BattleReportPanel`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 

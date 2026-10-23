@@ -44,6 +44,16 @@ describe("BattleReportPanel", () => {
     vi.stubGlobal("sessionStorage", sessionProto);
   });
 
+  it("battle report panel has center-panel id and scroll body for list+detail (CLIENT-086)", () => {
+    const mount = document.createElement("div");
+    const panel = new BattleReportPanel(mount, { listBattleReports: vi.fn() } as never, () => {});
+    panel.attach();
+    expect(mount.querySelector('[data-center-panel="battle-report"]')).toBeTruthy();
+    const scroll = mount.querySelector('[data-center-panel="battle-report"] .panel-scroll-body');
+    expect(scroll?.querySelector('[data-role="report-list"]')).toBeTruthy();
+    expect(scroll?.querySelector('[data-role="report-detail"]')).toBeTruthy();
+  });
+
   it("renders empty list placeholder after refresh", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

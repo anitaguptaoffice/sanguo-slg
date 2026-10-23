@@ -57,6 +57,7 @@ import {
   resolveBattleReportDailyLinks,
   resolveBattleReportMailLink,
 } from "@/net/mailBattleCrossLink";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 
 const PAGE_LIMIT = 20;
@@ -103,6 +104,10 @@ export class BattleReportPanel {
     private readonly panelOpts?: BattleReportPanelOptions,
   ) {}
 
+  getRoot(): HTMLElement {
+    return this.panel;
+  }
+
   attach(): void {
     const savedFilter = readBattleReportOutcomeFilterSession();
     if (savedFilter) this.outcomeFilter = savedFilter;
@@ -135,19 +140,23 @@ export class BattleReportPanel {
   toggle(): void {
     const wasHidden = this.panel.classList.contains("hidden");
     this.panel.classList.toggle("hidden");
-    if (wasHidden && this.isOpen()) void this.openAndSyncUnread();
-    else if (!wasHidden && !this.isOpen()) this.clearMapReplay();
+    if (wasHidden && this.isOpen()) {
+      resetCenterPanelViewportScroll(this.panel);
+      void this.openAndSyncUnread();
+    } else if (!wasHidden && !this.isOpen()) this.clearMapReplay();
   }
 
   /** 行军结束提示等入口：打开列表并清零未读基线。 */
   openPanel(): void {
     this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
     void this.openAndSyncUnread();
   }
 
   /** 行军结束深链：刷新列表后选中 hint 或最近战报并加载详情。 */
   async openPanelWithDeepLink(hintReportId?: number | null): Promise<void> {
     this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
     await this.refreshList();
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
@@ -163,7 +172,8 @@ export class BattleReportPanel {
 
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel hidden battle-report-panel";
+    el.dataset.centerPanel = "battle-report";
     el.tabIndex = 0;
     el.innerHTML = `
       <h3>战报</h3>
@@ -188,10 +198,12 @@ export class BattleReportPanel {
       <button type="button" data-action="load-more-reports" data-role="load-more" hidden>${BATTLE_REPORT_LOAD_MORE_LABEL}</button>
       <button type="button" data-action="retry-list" data-role="retry-list" hidden>重试加载列表</button>
       <p class="report-panel-status" data-role="report-list-status"></p>
-      <ul class="battle-report-list" data-role="report-list"></ul>
-      <p class="report-panel-status" data-role="report-detail-status"></p>
-      <button type="button" data-action="retry-detail" data-role="retry-detail" hidden>重试加载详情</button>
-      <div class="report-detail" data-role="report-detail"></div>
+      <div class="panel-scroll-body" data-role="battle-report-scroll">
+        <ul class="battle-report-list" data-role="report-list"></ul>
+        <p class="report-panel-status" data-role="report-detail-status"></p>
+        <button type="button" data-action="retry-detail" data-role="retry-detail" hidden>重试加载详情</button>
+        <div class="report-detail" data-role="report-detail"></div>
+      </div>
     `;
     return el;
   }
