@@ -15,7 +15,7 @@ python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 |---|---|---|
 | `id` | 是 | `域-序号`，如 `MIL-001`，全局唯一 |
 | `title` | 是 | 一句话，动宾结构 |
-| `wave` | 是 | 1/2/3，第几波开工 |
+| `wave` | 是 | 1/2/3/4，第几波开工 |
 | `domain` | 是 | 归属域，决定标签与目录所有权 |
 | `depends_on` | 是 | 依赖的任务 ID，空数组表示可立即开工 |
 | `size` | 是 | S（半天）/ M（1 天）/ L（2 天以上，建议再拆） |
@@ -49,3 +49,4 @@ status:review   ──合并────▶  status:done
 | 1 | 规格 + 骨架 + 最高风险原型 | SPEC-001~004, PLAT-001~003, MIL-001, CLIENT-001 |
 | 2 | 各业务域并行 | ACC-001, WORLD-001, DOM-001, MIL-002 |
 | 3 | M1 串联 + 将领/道具/战报 | INTG-001, HERO-001, CONTENT-001, MIL-003, CLIENT-002 |
+| 4 | M2 战斗闭环 + 内政落库 | DOM-002, MIL-004, MIL-005, INTG-002, CLIENT-003, CONTRACT-001（可选契约） |

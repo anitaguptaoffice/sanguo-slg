@@ -300,3 +300,119 @@
     - 相对 mock 网关或真实 make dev 有联调说明
   body: |
     依赖开服串联完成后，把客户端从 mock 切到真实 proto 流程。
+
+- id: DOM-002
+  title: 内政城池状态持久化（PostgreSQL）
+  wave: 4
+  domain: domestic
+  depends_on: [DOM-001]
+  size: L
+  owner_dir: internal/domestic
+  scope: [internal/domestic/**]
+  out_of_scope: [internal/world/**, internal/api/**, internal/platform/**, spec/**, client/**]
+  acceptance:
+    - 按 spec/db/003_domestic.sql 实现 Store 接口：加载/保存 player_wallet（或城池级资源快照）、city_building、work_queue（建造队列）
+    - Hub 在 RegisterCity / 升级完成 / 定时刷盘时写 PG；进程重启后能从库恢复城池资源、建筑等级与未完成队列
+    - 资源增量结算逻辑不变（仍走内存 CityState，落库为快照 + 队列行，禁止每秒全量写库）
+    - 单测或集成测覆盖：写入 → 新 Hub 实例加载 → 状态与重启前一致（含排队中的建造任务）
+    - 不修改 spec/db DDL（缺字段先提 contract issue）
+  body: |
+    INTG-001 备注：当前 internal/api 在内存 map 持有 domestic.CityState，domestic.Hub 亦全内存。
+    本卡只在 internal/domestic 增加 PG 持久化层，对外 Hub API 保持兼容；api 层后续卡负责在登录/建城时触发 Load。
+
+    参照：internal/world/persist.go、internal/military/report/pg_store.go 的 pgx 用法；
+    表结构以 spec/db/003_domestic.sql 为准。server_id 默认 dev 服 1。
+
+- id: CONTRACT-001
+  title: M1/M2 扩展消息收编 spec/proto
+  wave: 4
+  domain: spec
+  depends_on: [SPEC-002]
+  size: M
+  owner_dir: spec/proto
+  scope: [spec/proto/**]
+  out_of_scope: [internal/**, client/**, cmd/**]
+  acceptance:
+    - 将 client/proto 与 internal/api/proto 中已联调的扩展消息合并进 spec/proto（至少 domestic.v1.GetCityState、world 相关 extra、military.v1 行军/战报查询等 M2 所需 route）
+    - military.v1 在现有 RecruitTroop 基础上补充 StartMarch、ListMarches（或等价）、GetBattleReport、ListBattleReports 等消息与 route 注释
+    - spec/proto/validate.sh 通过；PR 标题以 contract: 开头，单独 review
+    - PR 正文列出受影响任务卡（MIL-004、CLIENT-003）及生成代码跟进方式
+  body: |
+    独立契约 PR，不夹带业务实现。合并后由各域在后续卡中更新 pb 生成路径或复制流程（见 spec/proto/README.md）。
+    禁止在本 PR 改 internal/** 与 client/**。
+
+- id: MIL-004
+  title: 募兵与行军接入网关与会话
+  wave: 4
+  domain: platform
+  depends_on: [MIL-002, INTG-001, DOM-002, CONTRACT-001]
+  size: L
+  owner_dir: internal/api
+  scope: [internal/api/**, cmd/server/**, internal/platform/runtime/**]
+  out_of_scope: [internal/military/battle/**, internal/domestic/**, internal/world/**, spec/**]
+  acceptance:
+    - 网关可路由 military.v1.RecruitTroop：鉴权会话、扣 domestic 城池资源（经 domestic.Hub，资源已落库）、调用 march.Hub.Recruit
+    - 网关可路由 military.v1.StartMarch（或契约命名）：从城池出兵、创建行军单，march 调度器在 api 进程运行（与 INTG-001 domestic 调度模式一致）
+    - 登录/建城流程为军事 Hub 注册城池快照（兵力、钱包与 domestic 一致或可同步）
+    - 集成测或 handler 单测覆盖募兵扣费 + 行军创建（可 mock 时间推进）
+    - 不修改 internal/military/battle/** 与 march 核心状态机算法（仅 import + 薄封装 handler）
+  body: |
+    装配卡：把 MIL-002 的 march.Hub 接到 cmd/server 与 internal/api，复用 INTG-001 的 GatewayRouter / SessionRegistry 模式。
+    募兵扣费必须走 domestic 持久化后的钱包，避免双写不一致。
+    Proto 以 CONTRACT-001 合并后的 spec/proto 为准；生成物放 internal/api/pb 或既有复制流程。
+
+- id: MIL-005
+  title: 行军到达触发战斗与战报落库
+  wave: 4
+  domain: military
+  depends_on: [MIL-002, MIL-003, MIL-001]
+  size: L
+  owner_dir: internal/military
+  scope: [internal/military/march/**, internal/military/report/**, internal/military/combat/**]
+  out_of_scope: [internal/military/battle/**, internal/api/**, spec/**]
+  acceptance:
+    - 行军到达（march.EventMarchArrive）时组装 battle 输入（攻方部队来自行军单；守方为城池驻防或占位守军），调用 battle 包纯函数，禁止改 battle 目录
+    - 战斗结果经 report.Service 写入 battle_report（PG store），返回 report_id
+    - 攻方胜/负后更新城内兵力或行军状态（最小规则：损失写回 city troop 或行军 Troops，与 spec/rules 战斗结果一致即可）
+    - 单测覆盖：固定种子输入 → 稳定战报 id 与 outcome；到达事件可 Tick 推进
+    - P99 单场战斗仍 < 50ms（沿用 MIL-001 基准）
+  body: |
+    在 march.Hub.onMarchArrive 挂接战斗编排（可新建 internal/military/combat 编排层，内部只调 battle.Engine 与 report.Service）。
+    战报结构使用 battle 输出 + report.SaveParams。不实现完整 PvP 匹配或野外玩家军团的全部规则，M2 最小闭环为「攻城」或「攻固定坐标守军」二选一，在实现前于单测 fixture 写死场景。
+
+- id: INTG-002
+  title: 战斗闭环开服串联冒烟
+  wave: 4
+  domain: platform
+  depends_on: [MIL-004, MIL-005, DOM-002, PLAT-002]
+  size: L
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/battle/**, internal/domestic/**, internal/world/**, internal/account/**, client/**, spec/**]
+  acceptance:
+    - make dev 或 CI 可重复脚本/集成测：注册登录 → 建城 → 升级建筑（可选）→ 募兵 → 发起行军 → 时间推进或等待调度 → 产生战报
+    - 可通过网关查询战报列表/详情（route 以 CONTRACT-001 为准）
+    - 服务重启后：城池资源/建筑仍正确（DOM-002），未完成行军或募兵队列可恢复或文档说明 M2 范围
+    - README 或 tools/smoke 注释写清一键验证命令
+  body: |
+    M2 出口关键路径，平行于 INTG-001。仅做装配、冒烟与测试；不重写各域核心逻辑。
+    依赖 DOM-002 保证募兵扣费与重启不丢城；依赖 MIL-004/005 保证军事链路可用。
+
+- id: CLIENT-003
+  title: 客户端战斗与行军最小表现
+  wave: 4
+  domain: client
+  depends_on: [CLIENT-002, INTG-002, CONTRACT-001]
+  size: L
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - 主城或独立面板可发起募兵（兵种/数量），展示扣费与队列/完成状态
+    - 可发起一次行军（选目标坐标或列表占位），展示进行中行军与到达状态
+    - 可打开战报列表并查看单场战报摘要（回合/损失占位 UI 即可）
+    - 联调说明：对接 make dev 真实网关，proto 与 CONTRACT-001 一致
+    - 占位美术可保留；需有 vitest 或手工步骤文档
+  body: |
+    仅 client/**。在 MainCityScene 扩展或新增 MilitaryScene，复用 GatewayClient 与 bootstrapSession。
+    依赖 INTG-002 后端闭环就绪后再切真实路由，开发期可用 mock-server 对齐消息形状。
