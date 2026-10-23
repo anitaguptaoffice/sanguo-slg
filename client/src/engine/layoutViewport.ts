@@ -67,6 +67,7 @@ export function applyLayoutFrameStyles(frame: HTMLElement, vp: LayoutViewport): 
   frame.style.height = `${height}px`;
   frame.style.left = `${vp.offsetX}px`;
   frame.style.top = `${vp.offsetY}px`;
+  frame.style.setProperty("--ui-scale", String(vp.uiScale));
 }
 
 /** Minimum uiScale so a layout-space hit box of `layoutPx` stays ≥ `minCssPx` on screen. */

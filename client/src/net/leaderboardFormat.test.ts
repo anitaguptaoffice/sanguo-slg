@@ -3,6 +3,7 @@ import {
   formatLeaderboardEmptyHint,
   formatLeaderboardEntryLine,
   formatLeaderboardSnapshotMeta,
+  formatMyRankPinLine,
   formatViewerRankSummary,
   LB_PLAYER_POWER,
   LB_PLAYER_RESOURCE,
@@ -10,6 +11,13 @@ import {
 } from "@/net/leaderboardFormat";
 
 describe("leaderboardFormat", () => {
+  it("formats my rank pin line per board kind", () => {
+    expect(formatMyRankPinLine(2, 90, LB_PLAYER_POWER)).toBe("我的排名 #2 · 战力 90");
+    expect(formatMyRankPinLine(5, 1200, LB_PLAYER_RESOURCE)).toBe("我的排名 #5 · 资源总量 1200");
+    expect(formatMyRankPinLine(0, 100, LB_PLAYER_POWER)).toBeNull();
+    expect(formatMyRankPinLine(undefined, 0, LB_PLAYER_POWER)).toBeNull();
+  });
+
   it("formats viewer rank when on board", () => {
     const text = formatViewerRankSummary(LB_PLAYER_POWER, 3, 9900);
     expect(text).toContain("第 3 名");

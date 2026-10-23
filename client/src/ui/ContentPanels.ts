@@ -38,6 +38,11 @@ import {
   SHOP_CATEGORY_TABS,
   type ShopOfferClientCategory,
 } from "@/net/shopOfferCategory";
+import {
+  applyWalletGapBar,
+  consumableUseWalletNeed,
+} from "@/net/walletGap";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type QuestProgress = {
   quest_cfg_id?: number;
@@ -109,11 +114,18 @@ export class ContentPanels {
 
   toggleBag(): void {
     this.bagPanel.classList.toggle("hidden");
-    if (!this.bagPanel.classList.contains("hidden")) void this.refreshBag();
+    if (!this.bagPanel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.bagPanel);
+      void this.refreshBag();
+    }
   }
 
   getBagRoot(): HTMLElement {
     return this.bagPanel;
+  }
+
+  getShopRoot(): HTMLElement {
+    return this.shopPanel;
   }
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
@@ -125,6 +137,7 @@ export class ContentPanels {
     const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
     if (sel) sel.value = String(itemCfgId);
     this.bagPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.bagPanel);
     const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
     if (hint) {
       hint.textContent = `筛选高亮 item_cfg_id=${itemCfgId}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`;
@@ -145,6 +158,7 @@ export class ContentPanels {
       if (sel) sel.value = String(first);
     }
     this.bagPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.bagPanel);
     const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
     if (hint) {
       hint.textContent = ids.length
@@ -156,7 +170,10 @@ export class ContentPanels {
 
   toggleShop(): void {
     this.shopPanel.classList.toggle("hidden");
-    if (!this.shopPanel.classList.contains("hidden")) void this.refreshShop();
+    if (!this.shopPanel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.shopPanel);
+      void this.refreshShop();
+    }
   }
 
   private serverId(): number {
@@ -167,6 +184,35 @@ export class ContentPanels {
   private patchBag(bag: BagStack[]): void {
     this.onSessionPatch({ bag });
     this.renderBagList();
+    this.syncBagWalletGap();
+  }
+
+  private sessionWallet(): ResourceWallet | undefined {
+    return this.getSession()?.wallet;
+  }
+
+  private syncBagWalletGap(): void {
+    const count = Number(
+      (this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1,
+    );
+    applyWalletGapBar(
+      this.bagPanel,
+      "bag-wallet-gap",
+      consumableUseWalletNeed(this.selectedItemId, count),
+      this.sessionWallet(),
+      { includeZeroNeed: true },
+    );
+  }
+
+  private syncShopWalletGap(): void {
+    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    applyWalletGapBar(
+      this.shopPanel,
+      "shop-wallet-gap",
+      offer?.price_resources,
+      this.sessionWallet(),
+      { multiplier: 1 },
+    );
   }
 
   private setBagFeedback(text: string | null): void {
@@ -225,6 +271,7 @@ export class ContentPanels {
         </select>
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
+      <p class="wallet-gap-line hidden" data-role="bag-wallet-gap" aria-live="polite"></p>
       <p class="bag-form-error hidden" data-role="bag-form-error" role="alert"></p>
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-bag">刷新背包</button>
@@ -232,7 +279,9 @@ export class ContentPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item-batch">批量使用勾选格</button>
       </div>
       <p class="bag-batch-hint" data-role="bag-batch-hint">同道具可多格勾选，逐次调用 UseConsumable×1 并汇总结果。</p>
-      <ul class="bag-list" data-role="bag-list"></ul>
+      <div class="panel-scroll-body" data-role="bag-scroll">
+        <ul class="bag-list" data-role="bag-list"></ul>
+      </div>
       <p class="panel-feedback bag-panel-feedback" data-role="bag-feedback" hidden></p>
     `;
     return el;
@@ -241,6 +290,7 @@ export class ContentPanels {
   private buildShopPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.dataset.centerPanel = "shop";
     el.innerHTML = `
       <h3>商城</h3>
       <p data-role="shop-hint">扣费结果以 wallet_after 为准（ECON-001 真钱包）。</p>
@@ -250,9 +300,12 @@ export class ContentPanels {
       <label>商品 offer
         <select data-field="offer-id"></select>
       </label>
+      <p class="wallet-gap-line hidden" data-role="shop-wallet-gap" aria-live="polite"></p>
       <p class="shop-form-error hidden" data-role="shop-form-error" role="alert"></p>
       <button type="button" data-action="buy-offer">购买×1</button>
-      <ul class="shop-list" data-role="shop-list"></ul>
+      <div class="panel-scroll-body" data-role="shop-scroll">
+        <ul class="shop-list" data-role="shop-list"></ul>
+      </div>
     `;
     return el;
   }
@@ -326,6 +379,7 @@ export class ContentPanels {
       li.textContent = bagEmptyListMessage();
       ul.appendChild(li);
     }
+    this.syncBagWalletGap();
   }
 
   private renderShopCategoryTabs(): void {
@@ -386,6 +440,7 @@ export class ContentPanels {
     if (visible[0]?.offer_id) {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
     }
+    this.syncShopWalletGap();
   }
 
   private async refreshQuests(): Promise<void> {
@@ -628,6 +683,10 @@ export class ContentPanels {
     if (t.getAttribute("data-field") === "item-id") {
       this.selectedItemId = Number((t as HTMLSelectElement).value) || 2001;
       this.renderBagList();
+      this.syncBagWalletGap();
+    }
+    if (t.getAttribute("data-field") === "use-count") {
+      this.syncBagWalletGap();
     }
   }
 
@@ -635,6 +694,7 @@ export class ContentPanels {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "offer-id") {
       this.selectedOfferId = Number((t as HTMLSelectElement).value) || 1001;
+      this.syncShopWalletGap();
     }
   }
 

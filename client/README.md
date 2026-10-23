@@ -17,6 +17,7 @@
 | `ui.panel.military.v1` | 军事表单面板、队列募兵区块（`artPanelSkin.skinMilitaryPanel`；募兵/出征主按钮见 CLIENT-033） |
 | `ui.panel.world.v1` / `ui.panel.rank.v1` | 世界 / 排行面板根（CLIENT-078） |
 | `ui.panel.march.v1` / `ui.panel.battle-report.v1` | 军情行军列表 / 战报列表+详情根（CLIENT-086） |
+| `ui.panel.shop.v1` / `ui.panel.guild.v1` / `ui.panel.chat.v1` | 商城 / 军团 / 聊天面板根（CLIENT-095）；背包仍用 `ui.panel.bag.v1` |
 
 图标缺失时 HUD 回退为「粮/木/铁/石/币 + 数值」纯文字（与 CLIENT-011 一致）。面板根节点设 `data-art-skin="off"` 可跳过 nine-slice。
 
@@ -225,7 +226,29 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:22 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:22 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-014**（[#399](https://github.com/anitaguptaoffice/sanguo-slg/issues/399)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 22」。
+波次总览与 **DOCS-EXIT-014**（[#399](https://github.com/anitaguptaoffice/sanguo-slg/issues/399) / [#410](https://github.com/anitaguptaoffice/sanguo-slg/pull/410) `23a6f0ed`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 22」。**wave:23** 后勤互链与全链路反馈加深见下文 [Wave 23](#wave-23-后勤互链与全链路反馈加深m4-出口--intg-020)。
+
+## Wave 23 后勤互链与全链路反馈加深（M4 出口 / INTG-020）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-020** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**；**永不合并** art hold PR #77/#82/#108/#100/#126。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **募兵下一批消耗只读预览** | [手动验收（募兵消耗预览 CLIENT-088）](#手动验收募兵消耗预览-client-088)（[#412](https://github.com/anitaguptaoffice/sanguo-slg/issues/412) / [#423](https://github.com/anitaguptaoffice/sanguo-slg/pull/423) `d60d8345`） | 已合 |
+| **出征 ETA 与兵力汇总条** | [出征表单校验 CLIENT-048](#手动验收出征表单格点与兵力校验-client-048) 内 **march-form-summary**（**CLIENT-089**，[#413](https://github.com/anitaguptaoffice/sanguo-slg/issues/413) / [#429](https://github.com/anitaguptaoffice/sanguo-slg/pull/429) `b610caab`） | 已合 |
+| **小地图与军情高亮互选** | [手动验收（小地图与军情互选 CLIENT-090）](#手动验收小地图与军情互选-client-090)（[#414](https://github.com/anitaguptaoffice/sanguo-slg/issues/414) / [#430](https://github.com/anitaguptaoffice/sanguo-slg/pull/430) `358f88aa`） | 已合 |
+| **日常可领取首条定位与领奖脉冲** | [手动验收（日常可领取定位 CLIENT-091）](#手动验收日常可领取定位-client-091)（[#415](https://github.com/anitaguptaoffice/sanguo-slg/issues/415) / [#426](https://github.com/anitaguptaoffice/sanguo-slg/pull/426) `f3523e87`） | 已合 |
+| **商城/背包购买缺口对比** | [手动验收（背包与商城反馈 CLIENT-020）](#手动验收背包与商城反馈-client-020) 第 7 步 **CLIENT-092**（[#416](https://github.com/anitaguptaoffice/sanguo-slg/issues/416) / [#427](https://github.com/anitaguptaoffice/sanguo-slg/pull/427) `6394ddfb`） | 已合 |
+| **军情行再出征预填** | [手动验收（军情再出征预填 CLIENT-093）](#手动验收军情再出征预填-client-093)（[#417](https://github.com/anitaguptaoffice/sanguo-slg/issues/417) / [#425](https://github.com/anitaguptaoffice/sanguo-slg/pull/425) `62dd6def`） | 已合 |
+| **战报相邻导航键盘与焦点环** | [手动验收（战报相邻导航键盘与焦点环 CLIENT-094）](#手动验收战报相邻导航键盘与焦点环-client-094)（[#418](https://github.com/anitaguptaoffice/sanguo-slg/issues/418) / [#428](https://github.com/anitaguptaoffice/sanguo-slg/pull/428) `f8152b2d`） | 已合 |
+| **1280 背包/商城/军团 manifest** | [手动验收（1280 背包/商城/军团聊天 CLIENT-095）](#手动验收1280-背包商城军团聊天-client-095)（[#419](https://github.com/anitaguptaoffice/sanguo-slg/issues/419) / [#431](https://github.com/anitaguptaoffice/sanguo-slg/pull/431) `7d19874f`） | 已合 |
+| **网关冒烟**（商城价 + 邮件未领附件 + 建筑 level） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 23** / `TestINTG020Wave23SmokePath`（[#420](https://github.com/anitaguptaoffice/sanguo-slg/issues/420) / [#424](https://github.com/anitaguptaoffice/sanguo-slg/pull/424) `d27e863e`） | 已合 |
+
+**推荐串联**（在 [Wave 22](#wave-22-出征执行反馈与主城经济扫读m4-出口--intg-019) 出征反馈/HUD 经济扫读基础上）：**军事** 募兵消耗预览（**CLIENT-088**）→ 出征 **汇总条**（**CLIENT-089**）→ **小地图↔军情** 互选（**CLIENT-090**）→ **日常** 可领取定位与领奖脉冲（**CLIENT-091**）→ **商城/背包** 缺口对比（**CLIENT-092**）→ 军情 **再出征** 预填（**CLIENT-093**）→ **战报** 键盘相邻导航（**CLIENT-094**）→ 视口 **1280×720** 背包/商城/军团 manifest（**CLIENT-095**）；网关字段见 `tools/smoke/README.md` **INTG-020**。
+
+**wave:19 美术轨旁路**（**非** wave:23 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:23 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-015**（[#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) / [#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 23」。
 
 ## 网关地址
 
@@ -422,6 +445,25 @@ cd client && npm install && npm run dev
 6. 军事面板仍仅有出征表单（**无** 取消行军/加速按钮）；[世界坐标 CLIENT-015](#手动验收世界坐标-client-015) 填入出征目标流程不退化。
 7. 单测：`worldMinimap.test.ts`、`MarchListPanel` 选中用例；`cd client && npm test`。
 
+### 手动验收（小地图与军情互选 CLIENT-090）
+
+在 [CLIENT-028](#手动验收世界地图行军标注-client-028)、[CLIENT-080](#手动验收军情阶段提醒与列表-chips-client-085) 与 [CLIENT-069](#手动验收军情格点筛选-client-069) 基础上，小地图目的点与 **行军** 列表 **双向同步**（纯客户端，无新 military RPC）：
+
+1. **军情 → 小地图**：底栏 **「行军」** 点击一行，该行应带 `march-list-row-selected` 轮廓；小地图 **目的格** 与该行 `to_x/to_y` 加亮（`drawWorldMinimap` 的 `selectedMarchId` 标注层），连线加粗（CLIENT-037）。
+2. **小地图 → 军情**：展开小地图，点击 **行军目的点**（非空白）：应打开/聚焦 **行军** 面板并选中对应 `march_id` 行（同格多条时仍为 **首条**，CLIENT-037）；空白单击仍只填出征坐标（CLIENT-041），ETA 角标不退化（CLIENT-058）。
+3. **sessionStorage**：`minimap-march-focus-id` 记录当前互选 `march_id`；`march-highlight-id`（CLIENT-080 新出征扫读）独立并存、互不清除——规则见 `minimapMarchFocus.ts` 与 `minimapMarchFocus.test.ts`。
+4. 刷新页面后，小地图拉取 `ListMarches` 后应恢复上次互选行军的高亮（面板可未打开）。
+5. **格点筛选**（世界选中格 / 手动坐标）与上述互选并存，筛选仍只过滤列表行、不改网关请求。
+6. `cd client && npm test` 含 `minimapMarchFocus.test.ts` 与 `MarchListPanel` 焦点恢复用例。
+
+### 手动验收（军情再出征预填 CLIENT-093）
+
+军情列表每行 **再出征**（`march-row-remarch-btn`）打开 **军事** 面板并预填该行 `to_x/to_y`（`applyMarchIntelRemarchPrefill` + **CLIENT-043** session）；军事表单区只读 **上次兵力** 摘要（`ListMarches` 快照 `troops`，`formatMarchIntelLastTroopsSummary`）。预填后 **CLIENT-089** `march-form-summary` 即时刷新；**CLIENT-080** `march-highlight-id` 不因点再出征而清除（用户手改目标才清）。**CLIENT-090** 小地图互选与 **CLIENT-061** 世界高亮不退化；无 `CancelMarch`。
+
+1. `make dev` 至少完成一次出征 → 底栏 **行军** 列表某行点 **再出征** → **军事** 面板目的坐标与摘要应与该行一致。
+2. 改 `to_x`/`to_y` 后高亮行应清除；再出征不自动 `StartMarch`。
+3. 单测：`marchIntelRemarch.test.ts`、`MarchListPanel.test.ts`。
+
 ### 手动验收（小地图比例尺与多行军 CLIENT-037）
 
 在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上：
@@ -509,6 +551,8 @@ cd client && npm install && npm run dev
 4. 合法坐标与数量出征成功 → 错误区清空；若网关失败，同区域展示 `err.message`（不只状态栏）。
 5. 与 **CLIENT-041** 选点、**CLIENT-043** 目标记忆并存。单测：`marchFormValidation.test.ts`。
 
+军事面板出征区 **`march-form-summary`**（**CLIENT-089**）：随 `to_x`/`to_y` 与出征步兵输入即时刷新，只读展示目标格点、兵力合计与 `formatMarchRemainingMs` 同源 ETA（由城格 + 表单推算单程耗时，不发 `StartMarch`）；途粮不足时汇总条带 `resource-warn` 且 `march-form-summary-warn` 一行提示，不自动打开商城。单测：`marchFormSummary.test.ts`。
+
 ### 手动验收（出征提交反馈 CLIENT-080）
 
 军事面板 **出征攻击**：`StartMarch` 发出后按钮 **disabled** 且文案 **出征中…**（`marchSubmitFeedback`）；成功顶栏 toast **已出征 (x,y)**，失败在 **march-form-error** 展示 `gatewayErrorMessage`（**CLIENT-067** 口径）。成功后底栏 **行军** 列表对应 `march_id` 行附加 `march-row-recent`（`sessionStorage` 键 `march-highlight-id`，选其他行或 **60s** 清除）。**CLIENT-048** 校验与 **CLIENT-047** ETA 不退化。
@@ -532,6 +576,22 @@ cd client && npm install && npm run dev
 1. `make dev` 点选农田等槽位 → 预览行含下级消耗；故意保留资源不足 → 按钮禁用 + 缺少提示。
 2. 资源充足时仅展示预览，需玩家点 **确认升级** 才发 RPC。
 3. 窄屏下预览行不横向溢出（与 **CLIENT-086** 一并验收）。单测：`previewUpgradeCost.test.ts`。
+
+### 手动验收（募兵消耗预览 CLIENT-088）
+
+军事/队列募兵区（军事面板募兵表单）在选中兵种与数量时展示 **下一批** 粮/木/铁/石消耗与耗时只读摘要（`previewRecruitCost` + `troopRecruitCatalog`，钱包来自 `GetCityState.resources`）；资源不足时 **募兵** disabled 且 inline **缺少：粮 N …**（**CLIENT-067** 口径）。足够时仅预览，需点 **募兵** 才发 `RecruitTroop`。募兵队列 **加速**仍 out；**CLIENT-082** 建造预览与 **DOM-003** 建造加速符不退化。
+
+1. `make dev` 打开 **军事** → 切换兵种/数量，预览行应含消耗与 `耗时 m:ss`。
+2. 故意保留资源不足 → **募兵** 禁用 + 缺少提示；补足资源后按钮可点且不发 RPC 直至点击。
+3. 单测：`previewRecruitCost.test.ts`、`troopRecruitForm.test.ts`。
+
+### 手动验收（日常可领取定位 CLIENT-091）
+
+日常面板筛选 **可领取** 时出现 **定位首条**（`daily-locate-first`）：滚动至 `pickFirstClaimableDailyQuestCfgIdForFilter` 首行并加 `daily-quest-claimable` 高亮；与 **CLIENT-077** HUD 待办深链（`center-claimable`）并存。**领奖** 成功该行短暂 `quest-claim-pulse` + **CLIENT-051** 资源脉冲；失败 **CLIENT-067** 口径。**CLIENT-075** 筛选记忆与 **CLIENT-044** 战报横幅不退化。
+
+1. `make dev` 使 chain 400 至少一条 `state=3` → **日常** → **可领取** → **定位首条** 应滚到首条可领行。
+2. **领奖** 后观察脉冲与 HUD；刷新页面筛选记忆仍恢复。
+3. 单测：`dailyQuestListFilter.test.ts`、`DailyQuestPanels.test.ts`。
 
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
@@ -567,12 +627,24 @@ cd client && npm install && npm run dev
 
 ### 手动验收（战报上一封下一封与胜负 streak CLIENT-083）
 
-详情顶栏 **上一封 / 下一封** 在当前 **时间窗（CLIENT-065）** 与 **outcome 筛选（CLIENT-049）** 后的列表顺序内切换 `report_id`；切换时尽量保留 **回合跳转（CLIENT-074）** 的高亮回合与展开状态（新战报无该回合则重置）。列表顶 **胜负摘要 chips** 旁增加 **连胜 / 连负** streak chip（`computeOutcomeStreak`，基于当前组合筛选后的已加载列表、自最近一场起连续胜/负计数）。**在地图查看（CLIENT-042）** 行为不退化；战报面板获得焦点时可用键盘 **← / →** 触发上一封/下一封（输入框/下拉内不拦截）。
+详情顶栏 **上一封 / 下一封** 在当前 **时间窗（CLIENT-065）** 与 **outcome 筛选（CLIENT-049）** 后的列表顺序内切换 `report_id`；切换时尽量保留 **回合跳转（CLIENT-074）** 的高亮回合与展开状态（新战报无该回合则重置）。列表顶 **胜负摘要 chips** 旁增加 **连胜 / 连负** streak chip（`computeOutcomeStreak`，基于当前组合筛选后的已加载列表、自最近一场起连续胜/负计数）。**在地图查看（CLIENT-042）** 行为不退化。键盘相邻导航与焦点环见 **CLIENT-094**。
 
 1. `make dev` 产生多条胜/负交错的战报；底栏 **「战报」** → 组合时间窗与胜负筛选，确认列表顺序与按钮禁用态（首条无上一封、末条无下一封）。
 2. 打开详情并点回合跳转高亮某一回合 → **下一封** 切到邻战报后高亮回合应尽量保留；点 **在地图查看** 仍驱动小地图高亮。
 3. 列表顶应同时见 **胜/负/平** 计数与 **连胜 N** 或 **连负 N**（最近一场为平局时不显示 streak）。
 4. 单测：`battleReportOutcomeStreak.test.ts`、`battleReportListNav.test.ts`、`BattleReportPanel.test.ts`。
+
+### 手动验收（战报相邻导航键盘与焦点环 CLIENT-094）
+
+详情区 `[data-role="report-detail"]` 为 **`role=region`**，`aria-label` 注明 **← / →** 与 **Alt+← / Alt+→** 切换上一封/下一封（与 **CLIENT-083** 按钮同源 `battleReportListNav`）。**详情区聚焦**时方向键触发相邻战报；在面板其它区域（如筛选条）可用 **Alt+方向键**；**时间窗（CLIENT-065）**、**回合跳转（CLIENT-074）** 与 outcome 筛选不退化。切换战报后焦点回到详情顶栏 **上一封/下一封** 按钮（`:focus-visible` 金环）；**1280×720** `layout-narrow` 下导航按钮 `scroll-margin-bottom` 与 `.panel-scroll-body` 底内边距避免焦点环被底栏 56px 工具条裁切。
+
+在战报面板根 `.battle-report-panel` 设置 **`data-battle-report-adj-nav-keyboard="off"`** 可关闭方向键 / Alt+方向键相邻导航（按钮仍可用）。
+
+1. `make dev` 打开战报详情 → Tab 聚焦详情区或导航按钮 → **← / →** 在筛选后列表内切换；筛选条聚焦时 **Alt+→** 仍可切换。
+2. 点 **下一封** 或键盘切换后焦点应在顶栏导航按钮上；窄屏下 Tab 到导航按钮时金环完整可见、不被底栏遮挡。
+3. 回合跳转下拉/芯片、时间窗下拉仍可操作；方向键在 `select` 内不触发相邻战报。
+4. 根节点 `data-battle-report-adj-nav-keyboard="off"` 后键盘不再切换，**上一封/下一封** 仍可点。
+5. 单测：`battleReportListNav.test.ts`（筛选列表邻接 id）、`BattleReportPanel.test.ts`（region/键盘/焦点/data attr）。
 
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
@@ -687,6 +759,16 @@ cd client && npm install && npm run dev
 4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054/055**、军情 **CLIENT-069** 筛选表现不退化。
 5. 单测：`artPanelSkin.test.ts`（CLIENT-086 manifest 映射）、`contentPanelScroll.test.ts`（`march` / `battle-report` id）、`MarchListPanel` / `BattleReportPanel`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
+### 手动验收（1280 背包/商城/军团聊天 CLIENT-095）
+
+`#layout-frame.layout-narrow` 下 **背包**（`data-center-panel="bag"` + **`ui.panel.bag.v1`**）、**商城**（`data-center-panel="shop"` + **`ui.panel.shop.v1`**）、**军团** / **聊天**（`data-center-panel="guild"` / `"chat"` + **`ui.panel.guild.v1`** / **`ui.panel.chat.v1`**）根节点 nine-slice 与 CLIENT-086/078 同级；`skinBagPanel` / `skinShopPanel` / `skinGuildPanel` / `skinChatPanel` 接线。`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **背包**、**商城**、**军团**、**聊天**；面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 背包道具表、商城货架长表、军团成员表与聊天消息在 `.panel-scroll-body` 内 **`overflow-y: auto`** 滚动；底栏 56px 工具条不遮挡 **使用道具** / **购买×1** / **提到** / **发送**。
+3. **CLIENT-092** 缺口条（`bag-wallet-gap` / `shop-wallet-gap`）与 **CLIENT-084** 军团 **提到** 按钮在窄屏 **无横向溢出**（`wallet-gap-line` `overflow-wrap` + 成员行 `flex-wrap`）。
+4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；四面板 manifest 与 **CLIENT-062/079/084** 表现不退化。
+5. 单测：`artPanelSkin.test.ts`（CLIENT-095 manifest 映射）、`contentPanelScroll.test.ts`（`shop` / `guild` / `chat` id）、`layoutViewport.test.ts`（窄屏注册表）、`ContentPanels` / `SocialPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
+
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
 `contentFeedback.ts` 解析 `UseConsumable` / `PurchaseShopOffer` 响应；背包/商城面板内 `panel-feedback` 与顶栏状态栏同步文案。使用资源包(2001) 成功后 **CLIENT-018** 顶栏仍可出现 `+粮…` 短时摘要（`patchSession` + `formatWalletGainBrief`）。
@@ -697,7 +779,8 @@ cd client && npm install && npm run dev
 4. 故意数量大于库存或 mock 下耗尽道具：失败时面板与状态栏为 `[code] msg`，不静默。
 5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；**CLIENT-057** 起余额不足/售罄/限购在 `shop-form-error` 内联中文提示且不发 RPC；网关失败经 **CLIENT-067** `formatPanelGatewayError`（如 `余额不足 [64003]`）。
 6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。
-7. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`；全量 `cd client && npm test`。
+7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
+8. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
 
@@ -766,8 +849,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
 
-1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。
-2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`）；行内 `player_id` 截断展示，含加入时间摘要。
+1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。
+2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行职务 chip + `player_id` 截断与加入时间摘要（CLIENT-101）。
 3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
 4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。
 

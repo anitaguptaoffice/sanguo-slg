@@ -6,6 +6,10 @@ import {
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { battleReportRoundRowDomId } from "@/net/battleReportDetailNav";
+import {
+  BATTLE_REPORT_ADJ_NAV_KEYBOARD_ATTR,
+  BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
+} from "@/net/battleReportListNav";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
 
 function mockStorage(): Storage {
@@ -673,7 +677,7 @@ describe("BattleReportPanel", () => {
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(10);
   });
 
-  it("navigates with arrow keys when panel focused", async () => {
+  it("exposes detail region aria-label and navigates with arrows when detail focused (CLIENT-094)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
       listBattleReports: vi.fn().mockResolvedValue({
@@ -700,12 +704,101 @@ describe("BattleReportPanel", () => {
       new Event("click", { bubbles: true }),
     );
     await flushPromises();
-    const contentPanel = mount.querySelector(".content-panel") as HTMLElement;
-    contentPanel.focus();
-    contentPanel.dispatchEvent(
+    const detail = mount.querySelector('[data-role="report-detail"]') as HTMLElement;
+    expect(detail.getAttribute("role")).toBe("region");
+    expect(detail.getAttribute("aria-label")).toBe(BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL);
+    let focusedNavAction = "";
+    const nativeFocus = HTMLButtonElement.prototype.focus;
+    const focusSpy = vi
+      .spyOn(HTMLButtonElement.prototype, "focus")
+      .mockImplementation(function (this: HTMLButtonElement) {
+        const action = this.getAttribute("data-action");
+        if (action === "nav-prev-report" || action === "nav-next-report") {
+          focusedNavAction = action;
+        }
+        return nativeFocus.call(this);
+      });
+    detail.focus();
+    detail.dispatchEvent(
       new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
     );
     await flushPromises();
+    focusSpy.mockRestore();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
+    expect(focusedNavAction).toMatch(/^nav-(prev|next)-report$/);
+  });
+
+  it("does not navigate arrows on panel root without detail or Alt (CLIENT-094)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [{ report_id: 1, outcome: 1, created_at_ms: 0 }],
+        total: 1,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary: { report_id: 1, outcome: 1 },
+          detail: { result: "attacker_win", rounds: [] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="1"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const root = mount.querySelector(".battle-report-panel") as HTMLElement;
+    root.focus();
+    root.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports Alt+arrow adjacent nav from filter bar and data attr off disables keys (CLIENT-094)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, outcome: 1, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: 1 },
+            detail: { result: "attacker_win", rounds: [] },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="1"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const filterBtn = mount.querySelector('button[data-filter="all"]') as HTMLButtonElement;
+    filterBtn.focus();
+    filterBtn.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowRight", altKey: true, bubbles: true }),
+    );
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
+
+    const root = mount.querySelector(".battle-report-panel") as HTMLElement;
+    root.setAttribute(BATTLE_REPORT_ADJ_NAV_KEYBOARD_ATTR, "off");
+    filterBtn.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true }),
+    );
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenCalledTimes(2);
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
   });
 

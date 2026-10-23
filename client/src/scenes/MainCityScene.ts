@@ -1,15 +1,20 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
+import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
+import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
 import {
   skinBagPanel,
   skinBattleReportPanel,
+  skinChatPanel,
   skinDailyPanel,
+  skinGuildPanel,
   skinHeroPanel,
   skinMailPanel,
   skinMarchIntelPanel,
   skinMilitaryPanel,
   skinQueuePanel,
   skinRankPanel,
+  skinShopPanel,
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -20,7 +25,6 @@ import {
   MAIN_CITY_SLOTS,
   STAGE_HEIGHT,
   STAGE_TOP_Y,
-  TOOLBAR_TOP_Y,
   type MainCitySlotDef,
 } from "@/engine/mainCitySlots";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
@@ -65,7 +69,17 @@ import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
+import {
+  formatMarchFormSummary,
+  readMarchFormSnapshot,
+  setMarchFormSummaryDisplay,
+} from "@/net/marchFormSummary";
+import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
+import {
+  applyMarchIntelRemarchPrefill,
+  buildMarchIntelRemarchPrefill,
+} from "@/net/marchIntelRemarch";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import {
   formatHudCenterTodoBadge,
@@ -147,6 +161,8 @@ export class MainCityScene implements Scene {
   private status = "";
   private lastMarch: MarchSummary | null = null;
   private marchSubmitInflight = false;
+  private intelRemarchTroopsLine: string | null = null;
+  private suppressMarchTargetHighlightClear = false;
   private social!: SocialPanels;
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
@@ -235,9 +251,12 @@ export class MainCityScene implements Scene {
       onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
     });
     this.renderHud();
+    skinHudBar(this.hud, this.assets);
     this.toolbar = document.createElement("div");
     this.toolbar.className = "main-city-toolbar layout-toolbar";
     this.toolbar.innerHTML = `
+      <div class="toolbar-scroll" data-role="toolbar-scroll">
+      <div class="toolbar-scroll-inner">
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
@@ -254,7 +273,10 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn"><span class="toolbar-btn-label">邮件</span></button>
       <button type="button" data-action="toggle-world">世界</button>
       <button type="button" data-action="toggle-queue">队列</button>
+      </div>
+      </div>
     `;
+    wrapToolbarButtonsForHit(this.toolbar);
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
     this.militaryPanel.dataset.centerPanel = "military";
@@ -271,6 +293,8 @@ export class MainCityScene implements Scene {
           </select>
         </label>
         <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
+        <p class="troop-recruit-preview" data-role="troop-recruit-preview"></p>
+        <p class="march-form-error hidden" data-role="troop-recruit-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
         <hr />
         <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
@@ -278,8 +302,11 @@ export class MainCityScene implements Scene {
           <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
           <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
         </div>
+        <p class="march-intel-last-troops hidden" data-role="march-intel-last-troops"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
+        <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
+        <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
@@ -408,6 +435,7 @@ export class MainCityScene implements Scene {
           this.world?.refreshMarchDestCounts();
         },
         onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
+        onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
         onSelectionChange: (march) => {
           if (march) {
             const tx = march.to_x;
@@ -536,7 +564,8 @@ export class MainCityScene implements Scene {
       (root) => skinMilitaryPanel(root, this.assets, 380, 300),
     );
     this.buildingPanel.attach();
-    skinPrimaryButtons(this.toolbar, this.assets, "button");
+    skinToolbarBar(this.toolbar, this.assets);
+    skinToolbarButtons(this.toolbar, this.assets);
     skinPrimaryButtons(this.militaryPanel, this.assets);
     skinMilitaryPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
     skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
@@ -545,20 +574,35 @@ export class MainCityScene implements Scene {
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
     skinHeroPanel(this.heroMail.getHeroRoot(), this.assets, 520, 320);
     skinBagPanel(this.content.getBagRoot(), this.assets, 520, 320);
+    skinShopPanel(this.content.getShopRoot(), this.assets, 520, 320);
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
     skinWorldPanel(this.world.getRoot(), this.assets, 520, 320);
     skinRankPanel(this.social.getRankRoot(), this.assets, 520, 320);
+    skinGuildPanel(this.social.getGuildRoot(), this.assets, 520, 320);
+    skinChatPanel(this.social.getChatRoot(), this.assets, 520, 320);
     skinCenterPrimary(this.heroMail.getHeroRoot());
     skinCenterPrimary(this.content.getBagRoot());
+    skinCenterPrimary(this.content.getShopRoot());
     skinCenterPrimary(this.queuePanels.getRoot());
     skinCenterPrimary(this.heroMail.getMailRoot());
     skinCenterPrimary(this.dailyQuest.getRoot());
     skinCenterPrimary(this.world.getRoot());
     skinCenterPrimary(this.social.getRankRoot());
+    skinCenterPrimary(this.social.getGuildRoot());
+    skinCenterPrimary(this.social.getChatRoot());
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
+    this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));
+    this.militaryPanel.addEventListener("input", (ev) => {
+      this.onMilitaryRecruitFieldChange(ev);
+      this.onMilitaryFormInput(ev);
+      const field = (ev.target as HTMLElement).getAttribute("data-field");
+      if (field === "unit" || field === "recruit-count") {
+        this.syncMilitaryPanel();
+      }
+    });
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
     this.canvas.addEventListener("wheel", this.onCanvasWheelBound, { passive: false });
     this.canvas.addEventListener("pointermove", this.onCanvasPointerBound);
@@ -589,6 +633,9 @@ export class MainCityScene implements Scene {
       if (marchNeedsPoll(this.minimapMarches)) {
         this.marchClockMs = Date.now();
         this.syncMinimapCollapsedMarchStatus();
+      }
+      if (!this.militaryPanel.classList.contains("hidden")) {
+        this.syncMilitaryPanel();
       }
     }
     if (this.queuePanels?.isOpen()) {
@@ -638,6 +685,8 @@ export class MainCityScene implements Scene {
     this.queuePanels?.detach();
     this.buildingPanel?.detach();
     this.slotUpgradeOverlay?.detach();
+    if (this.hud) clearHudBarChrome(this.hud);
+    if (this.toolbar) clearToolbarBarChrome(this.toolbar);
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -756,10 +805,43 @@ export class MainCityScene implements Scene {
     if (action === "march") void this.startMarch();
     if (action === "clear-march-target") {
       clearMarchTargetFromForm(this.militaryPanel);
+      this.intelRemarchTroopsLine = null;
+      this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
       this.renderHud();
       this.syncMilitaryPanel();
     }
+  }
+
+  private onMilitaryFormInput(ev: Event): void {
+    const field = (ev.target as HTMLElement).getAttribute("data-field");
+    if (field !== "to-x" && field !== "to-y" && field !== "march-count") return;
+    if (field === "to-x" || field === "to-y") {
+      if (!this.suppressMarchTargetHighlightClear) {
+        this.marchList.clearRecentMarchHighlight();
+        this.intelRemarchTroopsLine = null;
+      }
+    }
+    this.syncMilitaryPanel();
+  }
+
+  private openMilitaryFromIntelRemarch(march: MarchSummary): void {
+    const prefill = buildMarchIntelRemarchPrefill(march);
+    if (!prefill) {
+      this.status = "该行缺少有效目的格点，无法再出征";
+      this.renderHud();
+      return;
+    }
+    this.militaryPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.militaryPanel);
+    this.suppressMarchTargetHighlightClear = true;
+    applyMarchIntelRemarchPrefill(this.militaryPanel, prefill);
+    this.suppressMarchTargetHighlightClear = false;
+    this.intelRemarchTroopsLine = prefill.lastTroopsSummary;
+    setMarchTargetFieldHighlight(this.militaryPanel, false);
+    this.status = marchTargetStatusMessage("march_intel", prefill.toX, prefill.toY);
+    this.syncMilitaryPanel();
+    this.renderHud();
   }
 
   private field(name: string): HTMLInputElement | HTMLSelectElement | null {
@@ -783,7 +865,29 @@ export class MainCityScene implements Scene {
         ? "小地图选点已填入下方目标坐标（高亮）；与世界城池点选冲突时以最后一次操作为准。"
         : "出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。";
     }
+    const lastTroopsEl = this.militaryPanel.querySelector('[data-role="march-intel-last-troops"]');
+    if (lastTroopsEl) {
+      const line = this.intelRemarchTroopsLine;
+      lastTroopsEl.textContent = line ?? "";
+      lastTroopsEl.classList.toggle("hidden", !line);
+    }
     syncMarchSubmitButton(this.militaryPanel, this.marchSubmitInflight);
+    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    const summary = formatMarchFormSummary(
+      readMarchFormSnapshot(this.militaryPanel, {
+        cityX: this.session?.cityX,
+        cityY: this.session?.cityY,
+        wallet: this.session?.wallet,
+      }),
+      this.marchClockMs,
+    );
+    setMarchFormSummaryDisplay(this.militaryPanel, summary);
+  }
+
+  private onMilitaryRecruitFieldChange(ev: Event): void {
+    const t = ev.target as HTMLElement;
+    if (!t.matches('[data-field="unit"], [data-field="recruit-count"]')) return;
+    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
   }
 
   private minimapBoundsExtra(): MinimapWorldPoint[] {
@@ -1023,6 +1127,7 @@ export class MainCityScene implements Scene {
         marches?: MarchSummary[];
       };
       this.minimapMarches = res.marches ?? [];
+      this.marchList?.syncMinimapMarchFocusFromSnapshot(this.minimapMarches);
       this.world?.refreshMarchDestCounts();
     } catch {
       /* 小地图只读：失败时保留上次数据 */
@@ -1066,6 +1171,9 @@ export class MainCityScene implements Scene {
     }
     if (patch.wallet !== undefined || patch.buildings !== undefined) {
       this.buildingPanel?.sync();
+    }
+    if (patch.wallet !== undefined) {
+      this.syncMilitaryPanel();
     }
   }
 
@@ -1350,8 +1458,16 @@ export class MainCityScene implements Scene {
 
   private async recruit(): Promise<void> {
     if (!this.session) return;
-    const unitCfgId = Number((this.field("unit") as HTMLSelectElement)?.value ?? 1);
-    const count = Number((this.field("recruit-count") as HTMLInputElement)?.value ?? 1);
+    const preview = syncTroopRecruitFormPreview(this.militaryPanel, this.session.wallet);
+    if (!preview?.canAfford) {
+      setTroopRecruitFormError(this.militaryPanel, preview?.insufficientHint ?? "资源不足");
+      this.status = preview?.insufficientHint ?? "资源不足";
+      this.renderHud();
+      return;
+    }
+    const unitCfgId = preview.troopCfgId;
+    const count = preview.qty;
+    setTroopRecruitFormError(this.militaryPanel, null);
     this.status = `募兵 ${unitLabel(unitCfgId)}×${count}…`;
     this.renderHud();
     try {
@@ -1372,7 +1488,9 @@ export class MainCityScene implements Scene {
         ? `募兵排队 #${res.queue_id}，预计 ${finish}（见「队列」面板）`
         : `募兵完成，${unitLabel(unitCfgId)} 当前 ${res.troop?.count ?? "?"}`;
     } catch (e) {
-      this.status = (e as Error).message;
+      const msg = formatPanelGatewayErrorFromUnknown("march", e);
+      setTroopRecruitFormError(this.militaryPanel, msg);
+      this.status = msg;
     }
     this.renderHud();
     this.syncMilitaryPanel();
@@ -1439,10 +1557,7 @@ export class MainCityScene implements Scene {
     c2d.save();
     applyLayoutTransform(c2d, vp);
 
-    c2d.fillStyle = "rgba(26, 20, 16, 0.85)";
-    c2d.fillRect(0, 0, LAYOUT_FRAME.w, STAGE_TOP_Y);
-    c2d.fillStyle = "rgba(26, 20, 16, 0.92)";
-    c2d.fillRect(0, TOOLBAR_TOP_Y, LAYOUT_FRAME.w, LAYOUT_FRAME.h - TOOLBAR_TOP_Y);
+    // HUD / toolbar chrome is DOM-only (ART-CHROME-006); canvas leaves top/bottom clear.
 
     const bg = this.assets.getImageForAsset("mc.bg.plateau.v1");
     if (bg) {

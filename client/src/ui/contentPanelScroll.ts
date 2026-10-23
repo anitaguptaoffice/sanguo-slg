@@ -3,10 +3,11 @@ import {
   resetGameViewportScroll,
 } from "@/ui/queuePanelScroll";
 
-/** Center / military roots that use `.panel-scroll-body` at layout-narrow (CLIENT-062 + CLIENT-070 + CLIENT-078). */
+/** Center / military roots that use `.panel-scroll-body` at layout-narrow (CLIENT-062 + CLIENT-070 + CLIENT-078 + CLIENT-095). */
 export const NARROW_SCROLL_CENTER_PANEL_IDS = [
   "hero",
   "bag",
+  "shop",
   "queue",
   "military",
   "mail",
@@ -15,6 +16,8 @@ export const NARROW_SCROLL_CENTER_PANEL_IDS = [
   "rank",
   "march",
   "battle-report",
+  "guild",
+  "chat",
 ] as const;
 
 export type NarrowScrollCenterPanelId = (typeof NARROW_SCROLL_CENTER_PANEL_IDS)[number];

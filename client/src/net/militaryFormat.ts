@@ -26,6 +26,8 @@ export type MarchSummary = {
   purpose?: number;
   /** 可选：服务端或 mock 在到达后回填，用于战报深链（CLIENT-025/085）。 */
   report_id?: number;
+  /** ListMarches 当前军团编制（CLIENT-093 上次兵力摘要）。 */
+  troops?: CityTroopStack[];
 };
 
 export type BattleReportSummary = {
