@@ -303,6 +303,16 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 波次总览与 **DOCS-EXIT-017**（[#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 25」。
 
+## Wave 26 H5 背包商城·招募养成·出征募兵反馈加深（M4 出口 / INTG-023）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-023** 网关冒烟一致，合并后生效）。**范围外**同 Wave 25；**永不合并** art hold / VERIFY Draft。**世界瓦片/图集**仍暂缓。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 背包/商城/招募/军事 manifest** | [手动验收（1280 背包商城招募军事 CLIENT-119）](#手动验收1280-背包商城招募军事-client-119)（[#493](https://github.com/anitaguptaoffice/sanguo-slg/issues/493)） | 本 PR |
+
+**推荐串联**（在 [Wave 25](#wave-25-h5-主城队列邮件日常世界读图加深m4-出口--intg-022) 主城/邮件/队列 manifest 基础上）：视口 **1280×720** 背包/商城/将领招募/军事出征 manifest 与滚动巩固（**CLIENT-119**）；与 **CLIENT-112**～**118** 并行。
+
 ### 手动验收（聊天未读与社交角标 CLIENT-102）
 
 `ListChatMessages` 快照 + 本地 `localStorage` 键 **`chat-last-read-ts`** 估算世界/军团频道未读（无服务端 read cursor）。底栏 **「聊天」** 角标为两频道之和，**「军团」** 角标与聊天面板 **军团** tab、军团面板 **军团频道** 入口同步；打开频道并 **滚到底** 后该频道未读清零。单测：`chatUnread.test.ts`（`estimateChatUnread`）、`chatUnreadPoll.test.ts`；与 **CLIENT-077** 顶栏待办角标并存。
@@ -915,6 +925,16 @@ cd client && npm install && npm run dev
 3. **CLIENT-105** 队列完成脉冲（`queue-build-complete-pulse`）、**CLIENT-106** 邮件 tab 角标（`mail-filter-tab-badge` / `mail-unclaimed-badge`）、**CLIENT-107** 顶栏 `hud-center-todo-badge` 与底栏 `toolbar-badge` 在窄屏 **无横向溢出**（`flex-wrap` / `text-overflow` / inset 脉冲）。
 4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；建造侧栏/邮件/队列 manifest 与 **CLIENT-062/070/086** 表现不退化。
 5. 单测：`artPanelSkin.test.ts`（CLIENT-111 manifest 映射）、`contentPanelScroll.test.ts`（`building` / `mail` / `queue`）、`layoutViewport.test.ts`（CLIENT-111 注册表）、`MainCityBuildingPanel` / `HeroMailPanels` / `QueuePanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
+
+### 手动验收（1280 背包商城招募军事 CLIENT-119）
+
+`#layout-frame.layout-narrow` 下 **背包**（`data-center-panel="bag"` + **`ui.panel.bag.v1`**）、**商城**（`shop` + **`ui.panel.shop.v1`**）、**将领**（`hero` + **`ui.panel.hero.v1`**，含招募模板区）、**军事**（`.military-panel` + `data-center-panel="military"` + **`ui.panel.military.v1`**）根节点 nine-slice 与 CLIENT-095/086 同级；`skinBagPanel` / `skinShopPanel` / `skinHeroPanel` / `skinMilitaryPanel` 接线。`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **背包**、**商城**、**将领**、**军事**；四面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 背包道具表、商城货架、将领列表/模板与军事募兵/出征表单在 `.panel-scroll-body` 内 **`overflow-y: auto`** 滚动；`padding-bottom` 避免末行被底栏 **56px** 工具条遮挡（军事 **募兵** / **出征攻击** 可滚至可见）。
+3. **CLIENT-112**～**117** 提交行脉冲（`bag-row-used-pulse` / `hero-row-recruited-pulse` / `recruit-row-pulse` 等）与 **CLIENT-118** `ui.icon.toolbar.*.v1` 底栏图标在窄屏 **无横向溢出**（`overflow-x: hidden` / `overflow-wrap` / 工具栏横向滚动）。
+4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；四面板 manifest 与 **CLIENT-062/095/070** 表现不退化。
+5. 单测：`artPanelSkin.test.ts`（CLIENT-119 manifest 映射）、`contentPanelScroll.test.ts`（`bag` / `shop` / `hero` / `military`）、`layoutViewport.test.ts`（CLIENT-119 注册表）、`ContentPanels` / `HeroMailPanels` / `mainCityMilitaryPanelDom.test.ts`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 

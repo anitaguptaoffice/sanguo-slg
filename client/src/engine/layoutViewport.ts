@@ -99,3 +99,14 @@ export const CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS = ["building", "mail", 
 
 export type Client111NarrowManifestCenterPanelId =
   (typeof CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS)[number];
+
+/** CLIENT-119: center-panel ids wired for 1280 manifest + scroll (背包/商城/将领招募/军事出征). */
+export const CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS = [
+  "bag",
+  "shop",
+  "hero",
+  "military",
+] as const;
+
+export type Client119NarrowManifestCenterPanelId =
+  (typeof CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS)[number];

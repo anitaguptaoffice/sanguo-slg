@@ -22,7 +22,7 @@ function minimalGateway(): GatewayPort {
   } as unknown as GatewayPort;
 }
 
-describe("ContentPanels narrow scroll (CLIENT-095)", () => {
+describe("ContentPanels narrow scroll (CLIENT-095 + CLIENT-119)", () => {
   it("bag and shop panels have center-panel id and panel-scroll-body", () => {
     const mount = document.createElement("div");
     const panels = new ContentPanels(
