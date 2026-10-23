@@ -43,8 +43,7 @@ type Server struct {
 	reports    *report.Service
 	sessions   *SessionRegistry
 	gm         *GmService
-	shard      *shard.Handlers
-<<<<<<< HEAD
+	shard         *shard.Handlers
 	m3            *assembly.M3
 	m4            *assembly.M4
 	rankSvc       *rank.Service
@@ -52,15 +51,6 @@ type Server struct {
 	questSvc      *quest.Service
 	shopSvc       *shop.Service
 	contentSvc    *content.Service
-=======
-	m3           *assembly.M3
-	m4           *assembly.M4
-	rankSvc      *rank.Service
-	rankSch      *rank.Scheduler
-	questSvc     *quest.Service
-	shopSvc    *shop.Service
-	contentSvc *content.Service
->>>>>>> c19a330 (INTG-004: 恢复 INTG-003 M3/排行接线)
 	questChainIDs []int32
 	cities        map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord
