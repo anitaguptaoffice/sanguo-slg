@@ -22,6 +22,7 @@ var (
 const DefaultTopN = 200
 
 // DefaultRefreshInterval between scheduled snapshot refreshes.
+// Wired in make dev via internal/api/m3_wire.go (RunRankScheduler); smoke tests call RefreshRanks for immediate snapshots (see tools/smoke/README.md).
 const DefaultRefreshInterval = 5 * time.Minute
 
 // PlayerRow is live data fed into a refresh (from other domains via DataSource).

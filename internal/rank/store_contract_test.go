@@ -67,4 +67,22 @@ func runRankStoreContract(t *testing.T, store Store) {
 	if err != nil || meta2.BatchID != 2 || meta2.EntryCount != 1 {
 		t.Fatalf("second batch meta %+v err=%v", meta2, err)
 	}
+
+	// Older batch remains readable by explicit batch_id; latest must not alias stale rows.
+	stalePage, staleTotal, err := store.ListEntries(ctx, 1, RankPlayerPower, meta.BatchID, 0, 10)
+	if err != nil || staleTotal != 2 || len(stalePage) != 2 || stalePage[0].SubjectID != 2 {
+		t.Fatalf("stale batch list total=%d page=%+v err=%v", staleTotal, stalePage, err)
+	}
+	freshPage, freshTotal, err := store.ListEntries(ctx, 1, RankPlayerPower, meta2.BatchID, 0, 10)
+	if err != nil || freshTotal != 1 || len(freshPage) != 1 || freshPage[0].SubjectID != 9 {
+		t.Fatalf("latest batch list total=%d page=%+v err=%v", freshTotal, freshPage, err)
+	}
+	_, _, okOld, err := store.LookupSubject(ctx, 1, RankPlayerPower, meta.BatchID, 1)
+	if err != nil || !okOld {
+		t.Fatalf("stale lookup should still find subject in batch 1 ok=%v err=%v", okOld, err)
+	}
+	_, _, okNew, err := store.LookupSubject(ctx, 1, RankPlayerPower, meta2.BatchID, 1)
+	if err != nil || okNew {
+		t.Fatalf("subject dropped in batch 2 should not appear ok=%v err=%v", okNew, err)
+	}
 }
