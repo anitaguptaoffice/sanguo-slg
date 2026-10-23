@@ -80,6 +80,7 @@ describe("SocialPanels rank", () => {
     expect(getLeaderboard).toHaveBeenLastCalledWith(1, LB_PLAYER_RESOURCE, 1, 20);
     expect(mount.querySelector('[data-role="viewer-rank"]')?.textContent).toContain("未上榜");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("（空榜）");
+    expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("种子");
   });
 });
 

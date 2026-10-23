@@ -31,10 +31,17 @@ export type ChatMessageRow = {
 };
 
 export type GuildMemberRow = {
+  player_id?: number;
   display_name?: string;
   role?: number;
   power?: number;
   joined_at_ms?: number;
+};
+
+export type ChatDayGroup = {
+  dayKey: string;
+  title: string;
+  messages: ChatMessageRow[];
 };
 
 export type GameServerRow = {
@@ -96,8 +103,74 @@ export function chatChannelLabel(channel?: number): string {
 
 export function formatSenderLabel(displayName?: string, playerId?: number): string {
   const name = displayName?.trim() || "未知";
-  if (playerId && playerId > 0) return `${name} (#${playerId})`;
+  if (playerId && playerId > 0) return `${name} (${truncatePlayerId(playerId)})`;
   return name;
+}
+
+/** 列表行展示用：长 ID 保留末 4 位，避免撑破窄面板。 */
+export function truncatePlayerId(playerId: number): string {
+  if (!Number.isFinite(playerId) || playerId <= 0) return "#?";
+  const s = String(Math.trunc(playerId));
+  if (s.length <= 6) return `#${s}`;
+  return `#…${s.slice(-4)}`;
+}
+
+/** 职务排序键：团长(1) → 官员(2) → 成员(3) → 未知(99)。 */
+export function guildRoleSortKey(role?: number): number {
+  if (role === 1 || role === 2 || role === 3) return role;
+  return 99;
+}
+
+export function sortGuildMembers<T extends GuildMemberRow>(members: T[]): T[] {
+  return [...members].sort((a, b) => {
+    const dr = guildRoleSortKey(a.role) - guildRoleSortKey(b.role);
+    if (dr !== 0) return dr;
+    return (b.power ?? 0) - (a.power ?? 0);
+  });
+}
+
+/** 本地日历日键（YYYY-MM-DD），用于聊天分组。 */
+export function localCalendarDayKey(ms: number): string {
+  const d = new Date(ms);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** 分组标题：今日 / 昨日 / 其它本地日期。 */
+export function formatChatDayGroupTitle(dayKey: string, nowMs = Date.now()): string {
+  const todayKey = localCalendarDayKey(nowMs);
+  if (dayKey === todayKey) return "今日";
+  const yesterday = new Date(nowMs);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (dayKey === localCalendarDayKey(yesterday.getTime())) return "昨日";
+  const [y, m, d] = dayKey.split("-").map((x) => Number(x));
+  if (y && m && d) return `${m}月${d}日`;
+  return dayKey;
+}
+
+export function groupChatMessagesByLocalDay(
+  messages: ChatMessageRow[],
+  nowMs = Date.now(),
+): ChatDayGroup[] {
+  const sorted = [...messages].sort((a, b) => (a.sent_at_ms ?? 0) - (b.sent_at_ms ?? 0));
+  const groups: ChatDayGroup[] = [];
+  for (const msg of sorted) {
+    const ms = msg.sent_at_ms ?? 0;
+    const dayKey = ms > 0 ? localCalendarDayKey(ms) : "unknown";
+    const last = groups[groups.length - 1];
+    if (last && last.dayKey === dayKey) {
+      last.messages.push(msg);
+    } else {
+      groups.push({
+        dayKey,
+        title: dayKey === "unknown" ? "更早" : formatChatDayGroupTitle(dayKey, nowMs),
+        messages: [msg],
+      });
+    }
+  }
+  return groups;
 }
 
 /** 聊天列表单行：频道 · 本地时间 · 发送者 · 正文。 */
@@ -116,11 +189,10 @@ export function formatGuildSummaryText(guildId: number, guildName: string): stri
 }
 
 export function formatGuildMemberLine(member: GuildMemberRow): string {
-  const parts = [
-    member.display_name ?? "?",
-    guildRoleLabel(member.role),
-    `战力 ${member.power ?? 0}`,
-  ];
+  const name = member.display_name ?? "?";
+  const who =
+    member.player_id && member.player_id > 0 ? `${name} ${truncatePlayerId(member.player_id)}` : name;
+  const parts = [who, guildRoleLabel(member.role), `战力 ${member.power ?? 0}`];
   if (member.joined_at_ms) {
     parts.push(`加入 ${formatTimeMs(member.joined_at_ms)}`);
   }

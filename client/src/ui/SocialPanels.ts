@@ -1,7 +1,7 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
-  formatLeaderboardEntryLine,
+  formatLeaderboardEmptyHint,
   formatLeaderboardSnapshotMeta,
   formatViewerRankSummary,
   LB_PLAYER_POWER,
@@ -14,12 +14,16 @@ import {
   CHAT_CHANNEL_GUILD,
   CHAT_CHANNEL_PRIVATE,
   CHAT_CHANNEL_WORLD,
-  formatChatLogLine,
+  chatChannelLabel,
   formatGuildMemberLine,
   formatGuildSummaryText,
+  formatSenderLabel,
   formatSocialGatewayError,
+  groupChatMessagesByLocalDay,
+  sortGuildMembers,
   type ChatMessageRow,
 } from "@/net/socialFormat";
+import { formatTimeMs } from "@/net/militaryFormat";
 
 export class SocialPanels {
   private chatPanel!: HTMLElement;
@@ -175,10 +179,19 @@ export class SocialPanels {
           <option value="${LB_PLAYER_RESOURCE}">玩家资源总量</option>
         </select>
       </label>
-      <p data-role="viewer-rank">我的名次：—</p>
-      <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
-      <ol class="rank-list" data-role="rank-list"></ol>
+      <div class="rank-board" data-role="rank-board">
+        <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
+        <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
+        <div class="rank-table-scroll">
+          <table class="rank-table">
+            <thead class="rank-table-head">
+              <tr><th>名次</th><th>玩家</th><th>分数</th></tr>
+            </thead>
+            <tbody data-role="rank-list"></tbody>
+          </table>
+        </div>
+      </div>
     `;
     return el;
   }
@@ -204,12 +217,34 @@ export class SocialPanels {
     const ul = this.chatPanel.querySelector('[data-role="chat-log"]');
     if (!ul) return;
     ul.innerHTML = "";
-    const sorted = [...messages].sort((a, b) => (a.sent_at_ms ?? 0) - (b.sent_at_ms ?? 0));
-    for (const m of sorted) {
-      const li = document.createElement("li");
-      li.textContent = formatChatLogLine(m);
-      ul.appendChild(li);
+    const groups = groupChatMessagesByLocalDay(messages);
+    for (const g of groups) {
+      const head = document.createElement("li");
+      head.className = "chat-day-header";
+      head.textContent = g.title;
+      ul.appendChild(head);
+      for (const m of g.messages) {
+        ul.appendChild(this.buildChatMessageRow(m));
+      }
     }
+  }
+
+  private buildChatMessageRow(msg: ChatMessageRow): HTMLLIElement {
+    const li = document.createElement("li");
+    const ch = msg.channel ?? CHAT_CHANNEL_WORLD;
+    li.className = "chat-msg";
+    if (ch === CHAT_CHANNEL_WORLD) li.classList.add("chat-msg-world");
+    const meta = document.createElement("span");
+    meta.className = "chat-meta";
+    meta.textContent = `[${chatChannelLabel(ch)}] ${formatTimeMs(msg.sent_at_ms)} · `;
+    const sender = document.createElement("span");
+    sender.className = "chat-sender";
+    sender.textContent = formatSenderLabel(msg.sender_display_name, msg.sender_player_id);
+    const body = document.createElement("span");
+    body.className = "chat-body";
+    body.textContent = `: ${msg.content ?? ""}`;
+    li.append(meta, sender, body);
+    return li;
   }
 
   private async sendChat(): Promise<void> {
@@ -291,14 +326,20 @@ export class SocialPanels {
     try {
       const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
         guild?: { name?: string };
-        members?: { display_name?: string; role?: number; power?: number; joined_at_ms?: number }[];
+        members?: {
+          player_id?: number;
+          display_name?: string;
+          role?: number;
+          power?: number;
+          joined_at_ms?: number;
+        }[];
       };
       if (res.guild?.name) this.guildName = res.guild.name;
       this.syncGuildSummary();
       const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
       if (ul) {
         ul.innerHTML = "";
-        for (const m of res.members ?? []) {
+        for (const m of sortGuildMembers(res.members ?? [])) {
           const li = document.createElement("li");
           li.textContent = formatGuildMemberLine(m);
           ul.appendChild(li);
@@ -326,19 +367,26 @@ export class SocialPanels {
       snapEl.textContent = meta ?? "";
       snapEl.classList.toggle("hidden", !meta);
     }
-    const ol = this.rankPanel.querySelector('[data-role="rank-list"]');
-    if (ol) {
-      ol.innerHTML = "";
+    const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
+    if (tbody) {
+      tbody.innerHTML = "";
       const entries = res.entries ?? [];
       if (entries.length === 0) {
-        const li = document.createElement("li");
-        li.textContent = "（空榜）";
-        ol.appendChild(li);
+        const tr = document.createElement("tr");
+        tr.className = "rank-empty-row";
+        const td = document.createElement("td");
+        td.colSpan = 3;
+        td.textContent = formatLeaderboardEmptyHint();
+        tr.appendChild(td);
+        tbody.appendChild(tr);
       } else {
         for (const e of entries) {
-          const li = document.createElement("li");
-          li.textContent = formatLeaderboardEntryLine(e);
-          ol.appendChild(li);
+          const tr = document.createElement("tr");
+          const rank = e.rank ?? "?";
+          const name =
+            e.display_name?.trim() || (e.entity_id ? `玩家#${e.entity_id}` : "?");
+          tr.innerHTML = `<td class="rank-col-rank">${rank}</td><td class="rank-col-name">${name}</td><td class="rank-col-score">${e.score ?? 0}</td>`;
+          tbody.appendChild(tr);
         }
       }
     }

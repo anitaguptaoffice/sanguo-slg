@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
   chatChannelLabel,
+  formatChatDayGroupTitle,
   formatChatLogLine,
   formatGuildMemberLine,
   formatGuildSummaryText,
   formatServerLine,
   formatSocialGatewayError,
+  groupChatMessagesByLocalDay,
   guildRoleLabel,
+  localCalendarDayKey,
   parseGameServerInfo,
   serverStatusLabel,
+  sortGuildMembers,
+  truncatePlayerId,
 } from "@/net/socialFormat";
 
 describe("socialFormat", () => {
@@ -53,6 +58,43 @@ describe("socialFormat", () => {
     });
     expect(member).toContain("官员");
     expect(member).toContain("加入");
+  });
+
+  it("sorts guild members leader to member by role then power", () => {
+    const sorted = sortGuildMembers([
+      { display_name: "丙", role: 3, power: 9000, player_id: 3 },
+      { display_name: "甲", role: 1, power: 12000, player_id: 1 },
+      { display_name: "乙", role: 2, power: 10000, player_id: 2 },
+    ]);
+    expect(sorted.map((m) => m.role)).toEqual([1, 2, 3]);
+    expect(truncatePlayerId(100_012_345)).toBe("#…2345");
+    const line = formatGuildMemberLine({
+      display_name: "甲",
+      role: 1,
+      player_id: 100_012_345,
+      power: 1,
+    });
+    expect(line).toContain("#…2345");
+  });
+
+  it("groups chat messages by local calendar day with 今日/昨日 titles", () => {
+    const now = new Date(2026, 9, 23, 15, 0, 0).getTime();
+    const todayMorning = new Date(2026, 9, 23, 9, 0, 0).getTime();
+    const yesterday = new Date(2026, 9, 22, 20, 0, 0).getTime();
+    const groups = groupChatMessagesByLocalDay(
+      [
+        { content: "a", sent_at_ms: yesterday },
+        { content: "b", sent_at_ms: todayMorning },
+        { content: "c", sent_at_ms: todayMorning + 1000 },
+      ],
+      now,
+    );
+    expect(groups).toHaveLength(2);
+    expect(groups[0].title).toBe("昨日");
+    expect(groups[1].title).toBe("今日");
+    expect(groups[1].messages).toHaveLength(2);
+    const todayKey = localCalendarDayKey(todayMorning);
+    expect(formatChatDayGroupTitle(todayKey, now)).toBe("今日");
   });
 
   it("maps social gateway error codes to readable hints", () => {
