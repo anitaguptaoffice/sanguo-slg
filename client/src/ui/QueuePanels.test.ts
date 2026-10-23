@@ -33,6 +33,7 @@ describe("QueuePanels", () => {
     const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
     const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田", hall: "城主府" }, () => {}, () => {}, () => {});
     panel.attach();
+    expect(mount.querySelector('[data-center-panel="queue"] .panel-scroll-body')).toBeTruthy();
     panel.openAndHighlightBuildSlot("farm");
     const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
     expect(row?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(true);

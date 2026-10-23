@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   NARROW_SCROLL_CENTER_PANEL_IDS,
+  NARROW_SCROLL_SIDEBAR_PANEL_IDS,
   panelScrollBody,
   resetCenterPanelViewportScroll,
 } from "@/ui/contentPanelScroll";
 
-describe("contentPanelScroll (CLIENT-070 + CLIENT-078 + CLIENT-095 + CLIENT-103)", () => {
+describe("contentPanelScroll (CLIENT-070 + CLIENT-078 + CLIENT-095 + CLIENT-103 + CLIENT-111)", () => {
   it("lists narrow-scroll center panel ids including military mail daily world rank", () => {
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("military");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("mail");
@@ -18,6 +19,12 @@ describe("contentPanelScroll (CLIENT-070 + CLIENT-078 + CLIENT-095 + CLIENT-103)
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("shop");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("guild");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("chat");
+  });
+
+  it("lists narrow-scroll sidebar id for main-city building panel (CLIENT-111)", () => {
+    expect(NARROW_SCROLL_SIDEBAR_PANEL_IDS).toContain("building");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("mail");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("queue");
   });
 
   it("resets scroll on panel-scroll-body when present", () => {

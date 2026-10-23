@@ -10,7 +10,7 @@
 | `res.icon.wood.v1` | HUD 顶栏 DOM 木图标 |
 | `res.icon.iron.v1` | HUD 顶栏 DOM 铁图标 |
 | `res.icon.stone.v1` | HUD 顶栏 DOM 石图标 |
-| `ui.panel.default.v1` | 邮件面板根 nine-slice（`artPanelSkin.skinMailPanel`） |
+| `ui.panel.default.v1` | 邮件面板根 nine-slice（`artPanelSkin.skinMailPanel`）；主城 **建造侧栏**（`skinDefaultPanel`，CLIENT-111 / ART-CHROME-006） |
 | `ui.panel.daily.v1` | 日常面板根（`artPanelSkin.skinDailyPanel`，CLIENT-103） |
 | `ui.panel.hero.v1` | 将领面板根（`artPanelSkin.skinHeroPanel`，CLIENT-062） |
 | `ui.panel.bag.v1` | 背包面板根（`artPanelSkin.skinBagPanel`，CLIENT-062） |
@@ -856,6 +856,16 @@ cd client && npm install && npm run dev
 3. **CLIENT-096** `rank-viewer-bar` 钉选行、**CLIENT-091** 可领取 **定位首条**、**CLIENT-102** 底栏 `toolbar-badge` 在窄屏 **无横向溢出**（`overflow-wrap` / `flex-wrap`）。
 4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-078/091** 表现不退化。
 5. 单测：`artPanelSkin.test.ts`（CLIENT-103 manifest 映射）、`contentPanelScroll.test.ts`（`rank` / `hero` / `daily` id）、`layoutViewport.test.ts`（窄屏注册表）、`SocialPanels` / `HeroMailPanels` / `DailyQuestPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
+
+### 手动验收（1280 主城建造/邮件/队列 CLIENT-111）
+
+`#layout-frame.layout-narrow` 下 **建造侧栏**（`.building-panel` + `data-center-panel="building"` + **`ui.panel.default.v1`**，`skinDefaultPanel`）、**邮件**（`data-center-panel="mail"` + `ui.panel.default.v1`）、**队列**（`data-center-panel="queue"` + **`ui.panel.queue.v1`**）根节点 nine-slice 与 CLIENT-086/103 同级；画布槽位升级 overlay（CLIENT-066）在窄屏不横向越界。`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：点画布 **农田/城主府** 打开左侧建造侧栏，并打开底栏 **邮件**、**队列**；三处面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 建造预览、邮件长列表与队列建造/募兵表在 `.panel-scroll-body` 内 **`overflow-y: auto`** 滚动；底边距避免末行被底栏 **56px** 工具条遮挡。
+3. **CLIENT-105** 队列完成脉冲（`queue-build-complete-pulse`）、**CLIENT-106** 邮件 tab 角标（`mail-filter-tab-badge` / `mail-unclaimed-badge`）、**CLIENT-107** 顶栏 `hud-center-todo-badge` 与底栏 `toolbar-badge` 在窄屏 **无横向溢出**（`flex-wrap` / `text-overflow` / inset 脉冲）。
+4. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；建造侧栏/邮件/队列 manifest 与 **CLIENT-062/070/086** 表现不退化。
+5. 单测：`artPanelSkin.test.ts`（CLIENT-111 manifest 映射）、`contentPanelScroll.test.ts`（`building` / `mail` / `queue`）、`layoutViewport.test.ts`（CLIENT-111 注册表）、`MainCityBuildingPanel` / `HeroMailPanels` / `QueuePanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 

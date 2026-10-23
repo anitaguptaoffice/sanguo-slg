@@ -3,6 +3,9 @@ import {
   resetGameViewportScroll,
 } from "@/ui/queuePanelScroll";
 
+/** Main-city left sidebar (建造) — uses `.panel-scroll-body` at layout-narrow (CLIENT-111). */
+export const NARROW_SCROLL_SIDEBAR_PANEL_IDS = ["building"] as const;
+
 /** Center / military roots that use `.panel-scroll-body` at layout-narrow (CLIENT-062 + CLIENT-070 + CLIENT-078 + CLIENT-095 + CLIENT-103). */
 export const NARROW_SCROLL_CENTER_PANEL_IDS = [
   "hero",
