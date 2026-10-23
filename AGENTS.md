@@ -2,6 +2,8 @@
 
 多 agent 协作约定。任何接入本仓库的 agent 必须先读这份文件，再读 `tasks/backlog.yml` 里自己那张卡。
 
+**复刻项目**：原版资料只读，用法与边界见 [`docs/reference.md`](docs/reference.md)。**禁止合并** PR #77、#82。实现时规则看 `server/`、流程看 `swf/`、数值看 `db/`、视觉看 `art/`；不要把原版代码、文案或美术复制进主树（`internal/`、`client/assets` 等）。
+
 ## 一、唯一真源
 
 | 内容 | 位置 | 谁可以改 |
