@@ -12,11 +12,14 @@ import {
 } from "@/net/dailyQuestState";
 import {
   applyMailClaimResult,
-  formatHeroDetail,
   formatHeroLine,
+  formatRecruitDeductSummary,
   formatRecruitSuccessStatus,
   formatRecruitTemplateLine,
   heroListLines,
+  mergeRecruitTemplateOwnership,
+  parseGetHeroDetailResponse,
+  renderHeroDetailMarkup,
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
   mailCanClaimAttachments,
@@ -42,7 +45,7 @@ export class HeroMailPanels {
   private mailListError = "";
   private selectedHeroId = 0;
   private selectedMailId = 0;
-  private detailText = "";
+  private heroDetail: HeroDetail | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
   private recruitItemId = 0;
@@ -134,7 +137,7 @@ export class HeroMailPanels {
       <button type="button" data-action="recruit-hero">招募</button>
       <ul class="template-list" data-role="template-list"></ul>
       <ul class="hero-list" data-role="hero-list"></ul>
-      <pre class="hero-detail" data-role="hero-detail"></pre>
+      <div class="hero-detail" data-role="hero-detail"></div>
     `;
     return el;
   }
@@ -163,7 +166,7 @@ export class HeroMailPanels {
 
   private renderHeroList(): void {
     const ul = this.heroPanel.querySelector('[data-role="hero-list"]');
-    const pre = this.heroPanel.querySelector('[data-role="hero-detail"]');
+    const detailEl = this.heroPanel.querySelector('[data-role="hero-detail"]');
     if (!ul) return;
     ul.innerHTML = "";
     if (!this.heroes.length) {
@@ -182,7 +185,15 @@ export class HeroMailPanels {
         ul.appendChild(li);
       }
     }
-    if (pre) pre.textContent = this.detailText;
+    if (detailEl) {
+      detailEl.innerHTML = this.selectedHeroId
+        ? renderHeroDetailMarkup(this.heroDetail)
+        : renderHeroDetailMarkup(null);
+    }
+  }
+
+  private recruitTemplatesForDisplay(): RecruitTemplatePreview[] {
+    return mergeRecruitTemplateOwnership(this.recruitTemplates, this.heroes);
   }
 
   private renderTemplateList(): void {
@@ -192,8 +203,9 @@ export class HeroMailPanels {
     if (!ul || !sel) return;
     ul.innerHTML = "";
     sel.innerHTML = "";
-    const lines = recruitTemplateListLines(this.recruitTemplates);
-    if (!this.recruitTemplates.length) {
+    const displayTemplates = this.recruitTemplatesForDisplay();
+    const lines = recruitTemplateListLines(displayTemplates);
+    if (!displayTemplates.length) {
       const li = document.createElement("li");
       li.textContent = lines[0];
       ul.appendChild(li);
@@ -204,26 +216,30 @@ export class HeroMailPanels {
       if (preview) preview.textContent = "";
       return;
     }
-    for (const t of this.recruitTemplates) {
+    for (const t of displayTemplates) {
       const li = document.createElement("li");
       li.textContent = formatRecruitTemplateLine(t);
+      if (t.already_owned) li.classList.add("recruit-owned");
       if (t.template_cfg_id) {
         li.setAttribute("data-template-id", String(t.template_cfg_id));
         li.style.cursor = "pointer";
+        if (t.template_cfg_id === this.selectedTemplateId) li.classList.add("selected");
       }
       ul.appendChild(li);
       const opt = document.createElement("option");
       opt.value = String(t.template_cfg_id ?? 0);
-      opt.textContent = `#${t.template_cfg_id} ${t.template_name ?? ""} · 稀有${t.rarity ?? "?"}`;
+      const ownedTag = t.already_owned ? " · 已招募" : "";
+      opt.textContent = `#${t.template_cfg_id} ${t.template_name ?? ""} · 稀有${t.rarity ?? "?"}${ownedTag}`;
       sel.appendChild(opt);
     }
-    const pickId = this.selectedTemplateId || this.recruitTemplates[0]?.template_cfg_id || 0;
+    const pickId = this.selectedTemplateId || displayTemplates[0]?.template_cfg_id || 0;
     if (pickId) sel.value = String(pickId);
     this.applyTemplateSelection(pickId);
   }
 
   private applyTemplateSelection(templateCfgId: number): void {
-    const row = this.recruitTemplates.find((t) => t.template_cfg_id === templateCfgId);
+    const displayTemplates = this.recruitTemplatesForDisplay();
+    const row = displayTemplates.find((t) => t.template_cfg_id === templateCfgId);
     const pick = pickRecruitSelection(this.recruitTemplates, templateCfgId);
     if (pick) {
       this.selectedTemplateId = pick.templateCfgId;
@@ -233,11 +249,15 @@ export class HeroMailPanels {
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
     if (preview) {
       preview.textContent = row
-        ? `消耗预览：${formatRecruitTemplateLine(row)}`
+        ? `扣费明细：${formatRecruitDeductSummary(row)}`
         : this.recruitTemplates.length
           ? "请选择模板"
           : "";
     }
+    const ul = this.heroPanel.querySelector('[data-role="template-list"]');
+    ul?.querySelectorAll("li[data-template-id]").forEach((li) => {
+      li.classList.toggle("selected", Number(li.getAttribute("data-template-id")) === templateCfgId);
+    });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
   }
@@ -311,6 +331,7 @@ export class HeroMailPanels {
       };
       this.heroes = res.heroes ?? [];
       this.renderHeroList();
+      this.renderTemplateList();
       this.onStatus(`将领 ${this.heroes.length}/${res.total_count ?? this.heroes.length} 名`);
     } catch (e) {
       this.onStatus((e as Error).message);
@@ -323,11 +344,11 @@ export class HeroMailPanels {
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
-      this.detailText = formatHeroDetail(res as HeroDetail);
+      this.heroDetail = parseGetHeroDetailResponse(res);
       this.renderHeroList();
       this.onStatus("详情已加载");
     } catch (e) {
-      this.detailText = "";
+      this.heroDetail = null;
       this.renderHeroList();
       this.onStatus((e as Error).message);
     }
@@ -396,7 +417,7 @@ export class HeroMailPanels {
     const sid = this.serverId();
     const tpl = this.selectedTemplateId;
     const itemId = this.recruitItemId;
-    const templateRow = this.recruitTemplates.find((t) => t.template_cfg_id === tpl);
+    const templateRow = this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === tpl);
     if (!tpl) {
       this.onStatus("请先刷新并选择招募模板");
       return;
