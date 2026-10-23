@@ -1,4 +1,5 @@
 {
+  "evidenceCommitSha": "",
   "wallCropCss": {
     "x": 400,
     "y": 40,
@@ -6,6 +7,32 @@
     "height": 320
   },
   "capturedAt": "2026-10-23T14:11:35.847Z",
+  "dpr2WallReviewArtifacts": {
+    "note": "JPG/WebP lossy re-encode from dpr2-wall.png only; textures wall assets unchanged; PNG retained",
+    "cropCss": {
+      "x": 400,
+      "y": 40,
+      "width": 800,
+      "height": 320
+    },
+    "png": {
+      "path": "dpr2-wall.png",
+      "pixelSize": { "width": 1600, "height": 640 },
+      "bytes": 1441335
+    },
+    "jpg": {
+      "path": "dpr2-wall.jpg",
+      "pixelSize": { "width": 1600, "height": 640 },
+      "bytes": 237795,
+      "encoder": "ffmpeg mjpeg qscale=3"
+    },
+    "webp": {
+      "path": "dpr2-wall.webp",
+      "pixelSize": { "width": 1600, "height": 640 },
+      "bytes": 180556,
+      "encoder": "ffmpeg libwebp quality=88"
+    }
+  },
   "dpr1": {
     "devicePixelRatio": 1,
     "playwrightDeviceScaleFactor": 1,

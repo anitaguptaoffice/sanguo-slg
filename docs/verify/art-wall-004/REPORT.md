@@ -16,8 +16,10 @@
 | **墙裁切（CSS px，两档相同）** | x=400, y=40, w=800, h=320 | x=400, y=40, w=800, h=320 |
 
 - 全舞台（布局帧 JPG，DPR1）：`full-stage-dpr1.jpg`（layout-frame 1600×900 CSS）
-- 机器可读：`viewport-metadata.json`
-- **证据 commit SHA**：`cf6c8262a3882ce5b73a2b8386e0d697847a2b59`（截图与布局修复；链接使用 `raw/cf6c8262a3882ce5b73a2b8386e0d697847a2b59/…`）
+- DPR2 墙裁切（审阅可读，同 CSS 区，自 `dpr2-wall.png` 无损派生；**保留原 PNG**；**未改 `textures/*/maincity/wall.png`**）：`dpr2-wall.jpg`（≈232 KiB）、`dpr2-wall.webp`（≈176 KiB）
+- 机器可读：`viewport-metadata.json`（含 `dpr2WallReviewArtifacts` 与 `evidenceCommitSha`）
+- **证据 commit SHA**：见本分支最新 VERIFY 提交（`raw/<full-sha>/docs/verify/art-wall-004/…`；Draft PR 正文同步）
+- 布局/DPR 修复首版截图仍见于 `cf6c8262a3882ce5b73a2b8386e0d697847a2b59`；审阅请以本 SHA 下 JPG/WebP 复验 DPR2 墙专项
 
 ## 验收清单
 
@@ -26,13 +28,13 @@
 | DPR1 选 1× wall.png | PASS | `pickScaleVariant` @ DPR=1 → `textures/1x/maincity/wall.png`；解码 640×120 |
 | DPR2 选 2× wall.png | PASS | @ DPR≥1.5 → `textures/2x/maincity/wall.png`；解码 1280×240 |
 | DPR1 墙视觉（美术） | PASS（记录） | #108 @ `c13716df`；**非整体终验** |
-| DPR2 墙视觉（美术） | **PENDING** | 布局证据已修；待美术对 `dpr2-wall.png` 复验 |
+| DPR2 墙视觉（美术） | **PENDING** | 已补 `<1MB` 的 `dpr2-wall.jpg` / `dpr2-wall.webp`（同 CSS 裁切）；待美术复验 |
 | display / anchor / 布局 | PASS | display 640×120、anchor(320,120)、槽位 (480,200) 与 manifest + `MAIN_CITY_SLOTS` 一致 |
 | z=10 后景 | PASS | 绘制序按 z 升序，墙先于 z≥20 建筑；官府 z=30 叠在墙前 |
 | hit 640×140 | PASS | 槽位 hit 与约定一致；高 z 槽重叠区点击优先（按 z 降序取 top） |
 | QA 右端触边 | 观测 | 与 `docs/art/samples/art-wall-004/QA.json` 一致：输出 alpha 可触水平边界，不承诺源外延伸；未改 ID/尺寸/锚点 |
 
-截图见同目录 `dpr1-wall.png`、`dpr2-wall.png`、`z-hit-hall.png`、`full-stage-dpr1.jpg`（VERIFY 分支 `raw/<full-sha>/…` 链接见 Draft PR 正文）。
+截图见同目录 `dpr1-wall.png`、`dpr2-wall.png`、`dpr2-wall.jpg`、`dpr2-wall.webp`、`z-hit-hall.png`、`full-stage-dpr1.jpg`（VERIFY 分支 `raw/<full-sha>/…` 链接见 Draft PR 正文）。
 
 ## 勿合并
 
