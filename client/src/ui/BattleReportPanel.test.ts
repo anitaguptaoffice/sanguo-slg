@@ -5,6 +5,7 @@ import {
 } from "@/net/battleReportListState";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
+import { battleReportRoundRowDomId } from "@/net/battleReportDetailNav";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
 
 function mockStorage(): Storage {
@@ -254,6 +255,73 @@ describe("BattleReportPanel", () => {
     expect(mount.querySelector('li[data-report-id="8"]')?.classList.contains("selected")).toBe(
       true,
     );
+  });
+
+  it("renders troop scan summary and jumps to round row", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          {
+            report_id: 4,
+            location_x: 1,
+            location_y: 2,
+            attacker_player_id: 7,
+            defender_player_id: 8,
+            outcome: 1,
+            created_at_ms: 0,
+          },
+        ],
+        total: 1,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary: {
+            report_id: 4,
+            location_x: 1,
+            location_y: 2,
+            attacker_player_id: 7,
+            defender_player_id: 8,
+            outcome: 1,
+          },
+          detail: {
+            result: "attacker_win",
+            rounds: [
+              {
+                round: 1,
+                attacker_troops: { infantry: 40 },
+                defender_troops: { cavalry: 20 },
+                attacker_to_def_hp: 5,
+                defender_to_att_hp: 0,
+              },
+              {
+                round: 2,
+                attacker_troops: { infantry: 35 },
+                defender_troops: { cavalry: 15 },
+              },
+            ],
+          },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="4"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const detail = mount.querySelector('[data-role="report-detail"]');
+    expect(detail?.querySelector(".battle-report-troop-scan")?.textContent).toContain("步兵 40");
+    expect(detail?.querySelector(".battle-report-troop-scan")?.textContent).toContain(
+      "攻方玩家#7",
+    );
+    mount.querySelector('[data-action="jump-round"][data-round="2"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    const row = mount.querySelector(`#${battleReportRoundRowDomId(2)}`);
+    expect(row?.classList.contains("battle-report-round-row-highlight")).toBe(true);
   });
 
   it("collapses long round tables until expand", async () => {

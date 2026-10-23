@@ -304,6 +304,41 @@
       .battle-report-detail-coord { font-size: 14px; font-weight: 700; color: #f0c674; }
       .battle-report-detail-foe { font-size: 12px; color: #e8dcc8; flex: 1; min-width: 120px; }
       .battle-report-detail-head button[data-action="view-on-map"] { font-size: 12px; }
+      .battle-report-detail-summary {
+        margin-bottom: 8px; padding: 8px; background: #221a14; border-radius: 4px;
+        border: 1px solid #3d3028;
+      }
+      .battle-report-detail-summary-coord {
+        margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #f0c674;
+      }
+      .battle-report-troop-scan {
+        width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 4px;
+      }
+      .battle-report-troop-scan th,
+      .battle-report-troop-scan td {
+        border: 1px solid #3d3028; padding: 4px 6px; text-align: left;
+      }
+      .battle-report-troop-scan th { background: #2a221c; color: #e8dcc8; font-weight: 600; }
+      .battle-report-detail-opening-round {
+        margin: 4px 0 0; font-size: 11px; color: #b8a88a; line-height: 1.35;
+      }
+      .battle-report-round-jump {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+        margin: 8px 0 4px; padding: 6px 8px; background: #221a14; border-radius: 4px;
+        position: sticky; top: 0; z-index: 1;
+      }
+      .battle-report-round-jump-label { font-size: 12px; color: #e8dcc8; font-weight: 600; }
+      .battle-report-round-jump-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+      .battle-report-round-jump-chip {
+        min-width: 2em; padding: 2px 8px; font-size: 11px; border-radius: 4px;
+        background: #2a221c; color: #e8dcc8; border: 1px solid #4a3f35;
+      }
+      .battle-report-round-jump-chip.active,
+      .battle-report-round-jump-chip:hover { outline: 2px solid #c9a227; }
+      .battle-report-round-jump select { font-size: 12px; max-width: 100%; }
+      .battle-report-rounds-table tr.battle-report-round-row-highlight td {
+        background: #3d4a28; outline: 2px solid #c9a227;
+      }
       .battle-report-list li.selected { outline: 2px solid #c9a227; }
       .battle-report-list li[data-report-id] { cursor: pointer; }
       .battle-report-list li[data-report-id]:hover { background: #3d3028; }
