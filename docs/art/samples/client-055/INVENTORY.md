@@ -2,13 +2,13 @@
 
 CLIENT-054 美术 FAIL 余项：primary 160×48 完整接线、纸底漏网字色、代表截图/按钮 bounding box 重拍。
 
-| 证据 tip SHA | `b63ed95480293cb8eeca6cd520c36647b18a8cab` |
+| 证据 tip SHA | `99cae548ad236a5c1f35452b38b62f09db07f074` |
 |---|---|
 
 | 路径 | 字节 | 视口 | 面板 | 状态 | 备注 |
 |---|---:|---|---|---|---|
 | `docs/art/samples/client-055/queue-representative-1600-dpr1.jpg` | 33260 | 1600×900 DPR1 | queue | representative-center-panel |  |
-| `docs/art/samples/client-055/queue-representative-1600-dpr2.jpg` | 88508 | 1600×900 DPR2 | queue | representative-center-panel |  |
+| `docs/art/samples/client-055/queue-representative-1600-dpr2.jpg` | 88847 | 1600×900 DPR2 | queue | representative-center-panel |  |
 | `docs/art/samples/client-055/queue-representative-1280.jpg` | 29383 | 1280×720 DPR1 | queue | representative-center-panel |  |
 | `docs/art/samples/client-055/mail-selected-claim.jpg` | 42239 | 1600×900 DPR1 | mail | selected-detail-claim-visible |  |
 | `docs/art/samples/client-055/mail-selected-no-claim.jpg` | 34558 | 1600×900 DPR1 | mail | selected-detail-claim-hidden |  |
