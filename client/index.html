@@ -348,6 +348,10 @@
       }
       .battle-report-row-foe { font-size: 12px; line-height: 1.35; }
       .battle-report-row-time { font-size: 11px; color: #b8a88a; }
+      .battle-report-detail-nav {
+        display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
+      }
+      .battle-report-detail-nav button:disabled { opacity: 0.45; cursor: not-allowed; }
       .battle-report-detail-head {
         display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
         margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #4a3f35;
@@ -418,6 +422,7 @@
         display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; font-size: 12px;
       }
       .battle-report-summary-chip { cursor: default; opacity: 0.95; }
+      .battle-report-streak-chip { font-weight: 700; cursor: default; }
       .report-rounds-table-wrap { margin-top: 8px; font-size: 12px; }
       .battle-report-rounds-table {
         width: 100%; border-collapse: collapse; font-size: 11px;

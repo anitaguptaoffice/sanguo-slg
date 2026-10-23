@@ -494,6 +494,15 @@ cd client && npm install && npm run dev
 3. 摘要条应显示当前时间窗内胜/负/平计数；**加载更多**、回合表、**在地图查看** 行为不退化。
 4. 单测：`militaryFormat.test.ts`、`battleReportListState.test.ts`、`BattleReportPanel.test.ts`。
 
+### 手动验收（战报上一封下一封与胜负 streak CLIENT-083）
+
+详情顶栏 **上一封 / 下一封** 在当前 **时间窗（CLIENT-065）** 与 **outcome 筛选（CLIENT-049）** 后的列表顺序内切换 `report_id`；切换时尽量保留 **回合跳转（CLIENT-074）** 的高亮回合与展开状态（新战报无该回合则重置）。列表顶 **胜负摘要 chips** 旁增加 **连胜 / 连负** streak chip（`computeOutcomeStreak`，基于当前组合筛选后的已加载列表、自最近一场起连续胜/负计数）。**在地图查看（CLIENT-042）** 行为不退化；战报面板获得焦点时可用键盘 **← / →** 触发上一封/下一封（输入框/下拉内不拦截）。
+
+1. `make dev` 产生多条胜/负交错的战报；底栏 **「战报」** → 组合时间窗与胜负筛选，确认列表顺序与按钮禁用态（首条无上一封、末条无下一封）。
+2. 打开详情并点回合跳转高亮某一回合 → **下一封** 切到邻战报后高亮回合应尽量保留；点 **在地图查看** 仍驱动小地图高亮。
+3. 列表顶应同时见 **胜/负/平** 计数与 **连胜 N** 或 **连负 N**（最近一场为平局时不显示 streak）。
+4. 单测：`battleReportOutcomeStreak.test.ts`、`battleReportListNav.test.ts`、`BattleReportPanel.test.ts`。
+
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
 `GetBattleReport` 成功后，详情区顶部仍保留 `formatBattleReportDetail` 文字摘要；下方为结构化 **回合表**（回合号、攻/守行动摘要、双方剩余兵力 map）。回合数 **> 8** 时表格默认折叠，点 **「展开全部回合」** 显示全部行。列表/详情加载失败仍可用 **重试** 按钮（不退化 **CLIENT-029** 列表密度）。行军结束 HUD 链接（**CLIENT-025**）点击后调用 `openPanelWithDeepLink`：刷新 `ListBattleReports` 后选中 `MarchEndBattleReportHint` 或最近 `report_id` 并自动 `GetBattleReport`。
