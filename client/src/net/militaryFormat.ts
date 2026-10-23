@@ -28,6 +28,10 @@ export type MarchSummary = {
   report_id?: number;
   /** ListMarches 当前军团编制（CLIENT-093 上次兵力摘要）。 */
   troops?: CityTroopStack[];
+  /** 可选：目的格玩家展示名（ListMarches JSON 扩展，CLIENT-108）。 */
+  to_player_name?: string;
+  destination_player_name?: string;
+  target_display_name?: string;
 };
 
 export type BattleReportSummary = {
@@ -174,6 +178,47 @@ export function filterBattleReportsByTimeWindow(
   nowMs: number,
 ): BattleReportSummary[] {
   return reports.filter((r) => battleReportMatchesTimeWindowFilter(r, window, nowMs));
+}
+
+/** 战报战场格点是否与世界格点一致（只读 location_x/y）。 */
+export function battleReportLocationMatchesGrid(
+  report: BattleReportSummary,
+  x: number,
+  y: number,
+): boolean {
+  const wx = report.location_x;
+  const wy = report.location_y;
+  if (!Number.isFinite(wx) || !Number.isFinite(wy)) return false;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+  return wx === x && wy === y;
+}
+
+export function filterBattleReportsByLocation(
+  reports: BattleReportSummary[],
+  x: number,
+  y: number,
+): BattleReportSummary[] {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return [];
+  return reports.filter((r) => battleReportLocationMatchesGrid(r, x, y));
+}
+
+/** 在给定列表中取该格点最近一场战报（按 created_at_ms 降序）。 */
+export function findMostRecentBattleReportAtGrid(
+  reports: BattleReportSummary[],
+  x: number,
+  y: number,
+): BattleReportSummary | null {
+  let best: BattleReportSummary | null = null;
+  let bestMs = -1;
+  for (const r of reports) {
+    if (!battleReportLocationMatchesGrid(r, x, y)) continue;
+    const ms = battleReportCreatedAtMs(r);
+    if (ms > bestMs) {
+      bestMs = ms;
+      best = r;
+    }
+  }
+  return best;
 }
 
 export function countBattleReportsByOutcome(
