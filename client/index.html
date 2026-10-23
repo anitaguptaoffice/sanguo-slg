@@ -50,6 +50,13 @@
       #hud .hud-resource-icon {
         display: block; width: 18px; height: 18px; object-fit: contain;
       }
+      @keyframes hud-resource-pulse {
+        0%, 100% { transform: scale(1); filter: none; }
+        45% { transform: scale(1.12); filter: drop-shadow(0 0 5px rgba(159, 216, 159, 0.95)); }
+      }
+      #hud .hud-resource-item.resource-pulse {
+        animation: hud-resource-pulse 1.2s ease-out 1;
+      }
       .layout-toolbar {
         position: absolute; left: 0; right: 0; bottom: 0;
         height: calc(56 / 900 * 100%); z-index: 3;
