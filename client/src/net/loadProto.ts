@@ -28,7 +28,16 @@ export function getProtoRoot(): protobuf.Root {
   parseProtosInto(root, specModules);
   parseProtosInto(root, clientModules);
   root.resolveAll();
+  extendGetCityStateProductionRates(root);
   return root;
+}
+
+/** CLIENT-059：client 侧扩展 GetCityState.production_rates（field 3），不改 spec 契约文件。 */
+function extendGetCityStateProductionRates(r: protobuf.Root): void {
+  const type = r.lookupType("sanguo.domestic.v1.GetCityStateResponse");
+  if (!type) return;
+  if (type.fieldsArray.some((f) => f.name === "production_rates")) return;
+  type.add(new protobuf.Field("production_rates", 3, "sanguo.common.v1.ResourceWallet"));
 }
 
 export const Routes = {
