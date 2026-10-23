@@ -6,10 +6,18 @@ import {
 } from "@/net/marchTargetMemory";
 import {
   citiesFromListPlayerCitiesResponse,
+  formatCityCoords,
   formatPlayerCityLine,
   isCurrentMainCity,
   type PlayerCitySummary,
 } from "@/net/worldFormat";
+import {
+  findPlayerCityAtGrid,
+  gridCellsMatch,
+  WORLD_CITY_COORD_ONLY_CLASS,
+  WORLD_CITY_ROW_MARCH_DEST_CLASS,
+  WORLD_CITY_ROW_SELECTED_CLASS,
+} from "@/ui/marchWorldListLink";
 
 export type MarchTargetSink = {
   /** 出征表单容器（含 data-field to-x / to-y）；可选。 */
@@ -18,9 +26,16 @@ export type MarchTargetSink = {
   onFilled?: (x: number, y: number) => void;
 };
 
+export type WorldPanelsOptions = {
+  /** 世界列表点选格点变化（用于军情列表目的格筛选）。 */
+  onGridSelectionChange?: (grid: { x: number; y: number } | null) => void;
+};
+
 export class WorldPanels {
   private panel!: HTMLElement;
   private cities: PlayerCitySummary[] = [];
+  private selectedGrid: { x: number; y: number } | null = null;
+  private marchDestHighlight: { x: number; y: number } | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -28,6 +43,7 @@ export class WorldPanels {
     private getSession: () => MainCitySession | null,
     private readonly marchTarget: MarchTargetSink,
     private onStatus: (msg: string) => void,
+    private readonly options?: WorldPanelsOptions,
   ) {}
 
   attach(): void {
@@ -43,6 +59,27 @@ export class WorldPanels {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (!this.panel.classList.contains("hidden")) void this.refreshList();
+  }
+
+  getSelectedGrid(): { x: number; y: number } | null {
+    return this.selectedGrid;
+  }
+
+  /** 军情行选中时高亮目的格；null 清除。 */
+  setMarchDestHighlight(dest: { x: number; y: number } | null): void {
+    if (dest != null && (!Number.isFinite(dest.x) || !Number.isFinite(dest.y))) {
+      this.marchDestHighlight = null;
+    } else {
+      this.marchDestHighlight = dest;
+    }
+    this.renderList();
+  }
+
+  clearGridSelection(): void {
+    if (!this.selectedGrid) return;
+    this.selectedGrid = null;
+    this.options?.onGridSelectionChange?.(null);
+    this.renderList();
   }
 
   private buildPanel(): HTMLElement {
@@ -72,6 +109,20 @@ export class WorldPanels {
       ul.appendChild(li);
       return;
     }
+    const highlight = this.marchDestHighlight;
+    const hasCityAtHighlight =
+      highlight != null && findPlayerCityAtGrid(this.cities, highlight.x, highlight.y) != null;
+
+    if (highlight != null && !hasCityAtHighlight) {
+      const coordLi = document.createElement("li");
+      coordLi.className = WORLD_CITY_COORD_ONLY_CLASS;
+      coordLi.textContent = `格点 ${formatCityCoords(highlight.x, highlight.y)}（无玩家城池）`;
+      coordLi.setAttribute("data-x", String(highlight.x));
+      coordLi.setAttribute("data-y", String(highlight.y));
+      coordLi.classList.add(WORLD_CITY_ROW_MARCH_DEST_CLASS);
+      ul.appendChild(coordLi);
+    }
+
     for (const city of this.cities) {
       const li = document.createElement("li");
       const id = city.city_id ?? 0;
@@ -82,6 +133,18 @@ export class WorldPanels {
         li.setAttribute("data-y", String(city.y ?? ""));
       }
       if (isCurrentMainCity(city, currentId)) li.classList.add("current-main");
+      if (
+        highlight != null &&
+        gridCellsMatch(city.x, city.y, highlight.x, highlight.y)
+      ) {
+        li.classList.add(WORLD_CITY_ROW_MARCH_DEST_CLASS);
+      }
+      if (
+        this.selectedGrid != null &&
+        gridCellsMatch(city.x, city.y, this.selectedGrid.x, this.selectedGrid.y)
+      ) {
+        li.classList.add(WORLD_CITY_ROW_SELECTED_CLASS);
+      }
       ul.appendChild(li);
     }
   }
@@ -105,7 +168,7 @@ export class WorldPanels {
       void this.refreshList();
       return;
     }
-    const row = target.closest("li[data-city-id]");
+    const row = target.closest("li[data-x][data-y]");
     if (!row) return;
     const x = Number(row.getAttribute("data-x"));
     const y = Number(row.getAttribute("data-y"));
@@ -113,6 +176,14 @@ export class WorldPanels {
       this.onStatus("该城池无有效坐标");
       return;
     }
+    if (this.selectedGrid != null && gridCellsMatch(this.selectedGrid.x, this.selectedGrid.y, x, y)) {
+      this.clearGridSelection();
+      return;
+    }
+    this.selectedGrid = { x, y };
+    this.options?.onGridSelectionChange?.({ x, y });
+    this.renderList();
+
     const filled = applyMarchTargetAndRemember(this.marchTarget.marchFormRoot, x, y, {
       source: "world_city",
     });
