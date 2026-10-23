@@ -1,6 +1,9 @@
 # 任务卡清单（唯一真源）
 # 改这里 → 跑 tools/tasks_sync.py → GitHub Issues 同步
 # 字段说明见 tasks/README.md
+#
+# wave:7「对齐波次」策略：核心 cfg 子集可玩优先（见 docs/ROADMAP.md）。
+# 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
   title: 领域模型与数据库 DDL 草案
@@ -416,6 +419,7 @@
   body: |
     仅 client/**。在 MainCityScene 扩展或新增 MilitaryScene，复用 GatewayClient 与 bootstrapSession。
     依赖 INTG-002 后端闭环就绪后再切真实路由，开发期可用 mock-server 对齐消息形状。
+
 - id: CONTRACT-002
   title: M3 协议：分服选服、军团、聊天、排行
   wave: 5
@@ -547,6 +551,8 @@
     在 guild 域编排军团频道，聊天存储与投递复用 CHAT-001。
     允许 internal/guild 调用 chat 公开 API；禁止修改 internal/chat/**（需改聊天行为时另开 CHAT 卡）。
 
+    wave:7：PERSIST-001 将聊天落 PG 后，军团频道消息与禁言状态与 CHAT-001 存储一致（GUILD-002 不改 chat 实现，仅验证挂接）。
+
 - id: INTG-003
   title: 多人冒烟：选服、聊天、入团、上榜
   wave: 5
@@ -582,6 +588,8 @@
   body: |
     M3 客户端最小闭环 UI，占位美术可保留。
     依赖 CLIENT-003（M2 客户端基线）与 INTG-003 后端就绪。
+
+    wave:7：本卡仍是 M3 出口 UI；对齐波次不替换本卡。CLIENT-005 在 wave7 灌数与真扣费就绪后，用核心子集 cfg 做任务/商城/背包联调。
 
 - id: CONTRACT-003
   title: M4 协议：任务、商城、GM
@@ -705,11 +713,14 @@
     M4 出口关键路径。装配与冒烟 only，业务逻辑留在各域。
     GM-001 可选并行验证，但本卡验收不强制 GM 步骤。
 
+    wave:7：本卡验收 MemStore + 初版 SPEC-004 seed。对齐后须用 DATA-001 核心子集重跑 smoke，并覆盖 ECON-001 真扣钱包、PERSIST-* 重启恢复（可与 CLIENT-005 联调一并验证，不另开 INTG 卡除非编排者拆分）。
+
 - id: CLIENT-005
   title: 任务、背包、商城最小 UI
   wave: 6
   domain: client
-  depends_on: [CLIENT-004, INTG-004, CONTRACT-003]
+  depends_on: [CLIENT-004, INTG-004, CONTRACT-003, DATA-001, ECON-001, PERSIST-002, PERSIST-003]
+  blocked_until: [DATA-001, ECON-001, PERSIST-002, PERSIST-003]
   size: L
   owner_dir: client
   scope: [client/**]
@@ -717,7 +728,157 @@
   acceptance:
     - 任务列表与领奖流程 UI
     - 背包展示与使用道具（接 CONTENT-002 效果）
-    - 商城货架与购买反馈
-    - 联调 INTG-004 或 make dev 说明
+    - 商城货架与购买反馈（价格展示与扣费结果与 ECON-001 一致，无 spent overlay）
+    - 联调 INTG-004 或 make dev 说明；配置行数不超过 SPEC-ALIGN-001 核心子集上限
   body: |
     M4 客户端最小 UI。若 CLIENT-004 未合并，可暂基于 CLIENT-003 联调（编排者协调）。
+
+    wave:7：UI 不变更范围，依赖 DATA-001 核心子集数据与 PERSIST-002/003 持久化后的真实背包/商城状态；与 INTG-004 wave7 复跑对齐。
+
+- id: SPEC-ALIGN-001
+  title: 对照 legacy TABLES.md 产出必有 cfg_* 清单与核心子集范围
+  wave: 7
+  domain: spec
+  depends_on: [SPEC-004, SPEC-006]
+  blocked_until: [SPEC-006]
+  size: M
+  owner_dir: spec/data
+  scope: [spec/data/**, docs/**]
+  out_of_scope: [internal/**, cmd/**, client/**, reference/**]
+  acceptance:
+    - "只读检出 origin/reference/legacy-source 的 reference/legacy/db/TABLES.md（见 docs/reference.md），列出 M4 可玩所需的「必有 cfg_*」表（含任务/道具/将领/商城货架等），附每张表在新 schema 的映射目标（spec/data 或 spec/db）"
+    - "产出 spec/data/CORE_SUBSET.md：第一批核心子集行数上限（可调整但须写明理由），默认上限——任务链 cfg_task≤80、cfg_task_goal≤120、道具 cfg_goods/cfg_item 映射≤120、将领模板≤60、商城 cfg_shop 货架≤12、可购条目≤80、奖励包/宝箱明细≤60"
+    - 明确 wave:7 不纳入的 cfg 前缀（活动/排行奖励/禁名词库等）及扩量触发条件（第二批卡由编排者开）
+    - 不粘贴原版文案；不修改 reference/ 下任何文件
+  body: |
+    对齐波次入口卡。数值权威仍以原版 cfg_* 为准（docs/reference.md），但实现只写清单与映射，不灌数据。
+
+    查表路径：`TABLES.md` → `schema.sql` 字段 → `server/game/` 规则（worktree 只读，禁止合并 #82）。
+
+- id: DATA-001
+  title: 按核心子集灌 spec/data（文案全量重写）
+  wave: 7
+  domain: spec
+  depends_on: [SPEC-ALIGN-001]
+  blocked_until: [SPEC-ALIGN-001]
+  size: L
+  owner_dir: tools/data
+  scope: [tools/data/**, spec/data/**]
+  out_of_scope: [internal/**, cmd/**, client/**, reference/**]
+  acceptance:
+    - "按 spec/data/CORE_SUBSET.md 上限从 legacy cfg 抽样或手编，更新 spec/data/source/*.yml 与生成物（JSON/SQL），行数不超过文档上限"
+    - 任务/道具/将领/商城相关名称与描述全部重写，PR 自检无照搬 legacy 原文（grep 长句对照）
+    - "python3 tools/data 既有生成命令可重复执行且幂等；MAPPING.md 补充 wave7 新增字段说明"
+    - 不复制 PHP；不把 bloodwar dump 提交进仓库
+  body: |
+    核心子集可玩优先：先灌 DATA-001 再扩量。与 SPEC-004 管线兼容，可扩展 importer 读 worktree 内 sql（本地 only，不入库）。
+
+    可与 RULES-ALIGN-001 并行（‖），但 CLIENT-005 依赖本卡完成。
+
+- id: PERSIST-001
+  title: 聊天与排行 MemStore → PostgreSQL
+  wave: 7
+  domain: platform
+  depends_on: [SPEC-005, CHAT-001, RANK-001]
+  blocked_until: [CHAT-001, RANK-001]
+  size: M
+  owner_dir: internal/chat
+  scope: [internal/chat/**, internal/rank/**]
+  out_of_scope: [internal/guild/**, internal/api/**, client/**, spec/**]
+  acceptance:
+    - internal/chat 提供 PG Store：世界/私聊消息与玩家禁言截止时间（供 GM-002 写入）
+    - internal/rank 提供 PG Store：快照元数据与条目，行为与现有 MemStore 单测等价
+    - api 装配层可选用 PG Store（若需改 internal/api 仅注册注入，另提小 PR 或本卡 scope 扩至 internal/api/** 须在 PR 说明）
+    - 单测或集成测：写入 → 进程新实例加载 → 查询一致
+  body: |
+    wave:7 持久化第一批（社交读路径）。GUILD-002 军团频道仍走 chat API。
+
+    表结构以 SPEC-005 为准；缺列走 contract PR，不在本卡改 spec/db。
+
+- id: PERSIST-002
+  title: 将领与背包 MemStore → PostgreSQL
+  wave: 7
+  domain: hero
+  depends_on: [HERO-001, CONTENT-001, CONTENT-002, SPEC-006]
+  blocked_until: [CONTENT-002]
+  size: M
+  owner_dir: internal/hero
+  scope: [internal/hero/**, internal/content/**]
+  out_of_scope: [internal/quest/**, internal/shop/**, client/**, spec/**]
+  acceptance:
+    - "玩家将领实例与背包 player_item（或等价）落 PG，重启后可加载"
+    - 发奖钩子（CONTENT-002）写入经 PG store，幂等键行为不变
+    - 单测覆盖：发奖 → 重启 store → 数量一致
+  body: |
+    wave:7 持久化第二批（养成/背包）。与 DATA-001 配置 id 对齐即可，不扩表。
+
+- id: PERSIST-003
+  title: 任务与商城进度 MemStore → PostgreSQL
+  wave: 7
+  domain: content
+  depends_on: [QUEST-001, SHOP-001, SPEC-006]
+  blocked_until: [QUEST-001, SHOP-001]
+  size: M
+  owner_dir: internal/quest
+  scope: [internal/quest/**, internal/shop/**]
+  out_of_scope: [internal/content/**, client/**, spec/**]
+  acceptance:
+    - "player_quest 与商城库存/限购计数落 PG（对齐 SPEC-006 表名）"
+    - SHOP-001 默认构造改为 PG store（MemStore 仅测试）
+    - 单测覆盖任务进度与限购计数跨重启
+  body: |
+    wave:7 持久化第三批。ECON-001 依赖本卡完成后再切真扣费。
+
+- id: ECON-001
+  title: 商城购买真扣钱包（移除 shop spent overlay）
+  wave: 7
+  domain: content
+  depends_on: [SHOP-001, DOM-002, CONTENT-002, PERSIST-003]
+  blocked_until: [PERSIST-003]
+  size: M
+  owner_dir: internal/shop
+  scope: [internal/shop/**, internal/api/**]
+  out_of_scope: [internal/domestic/**, client/**, spec/**]
+  acceptance:
+    - "删除或停用 internal/shop/payments.go 的内存 spent overlay；购买扣费走 domestic 城池钱包（与募兵扣费同源）"
+    - 扣费、发货、限购与重启恢复在单测/集成测覆盖：余额不足拒绝、成功扣减、重启后余额与购买记录一致
+    - INTG-004 smoke 在 wave7 复跑时商城步骤不再依赖 overlay
+  body: |
+    经济对齐：游戏内商城消费必须反映真实资源。仅编排 shop + api 注入 domestic.Hub；禁止改 domestic 核心算法目录。
+
+- id: GM-002
+  title: GM 禁言接入聊天闸（替换进程内 stub）
+  wave: 7
+  domain: platform
+  depends_on: [GM-001, PERSIST-001]
+  blocked_until: [PERSIST-001]
+  size: S
+  owner_dir: internal/api
+  scope: [internal/api/**, cmd/gm/**]
+  out_of_scope: [internal/chat/**, client/**, spec/**]
+  acceptance:
+    - "GmService.MutePlayer 写入 chat PG store 的禁言截止时间，不再仅用进程内 map（见 gm_service.go 注释）"
+    - 聊天发送路径校验禁言：未解禁玩家发世界/私聊被拒绝且错误码稳定
+    - "cmd/gm 与 HTTP /gm/mute 行为一致；单测或 handler 测覆盖"
+  body: |
+    替换 stub，不扩 GM 指令集。若需改 chat 校验逻辑，在 CHAT 域开子卡——本卡仅 api/gm 编排 + chat 公开写禁言接口。
+
+- id: RULES-ALIGN-001
+  title: 抽样 legacy 战斗/内政/行军公式回写 params 与单测
+  wave: 7
+  domain: spec
+  depends_on: [SPEC-003, MIL-001, DOM-001, MIL-002]
+  blocked_until: [SPEC-ALIGN-001]
+  size: L
+  owner_dir: spec/rules
+  scope: [spec/rules/**, spec/data/source/params/**, internal/military/battle/**, internal/military/march/**, internal/domestic/**]
+  out_of_scope: [client/**, reference/**]
+  acceptance:
+    - "从 reference/legacy/server/game/ 抽样不少于 3 组公式（战斗伤害/资源产出或建筑耗时/行军时间各至少 1），在 spec/rules 标注出处类名与方法名（不贴 PHP）"
+    - "可调参写入 spec/data/source/params/（或既有 rules 文档中的系数表），与实现对齐"
+    - 新增或更新单测：固定种子下结果与文档公式一致（battle 包 + domestic/march 至少各 1 个用例）
+    - 不复制 PHP 实现；冲突时以 SPEC-ALIGN-001 清单优先级记录决策
+  body: |
+    规则对齐，与 DATA-001 并行（‖）。只读 legacy server/game（#82 分支 worktree）。
+
+    跨域改动仅限公式系数与测试 fixture；业务状态机逻辑不在本卡重写。

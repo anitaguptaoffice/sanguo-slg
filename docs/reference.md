@@ -59,3 +59,7 @@ reference/legacy/
 ## 一句话总结
 
 规则看 `server/`，流程看 `swf/`，数值看 `db/`，视觉看 `art/`。看懂了就自己实现，不要复制。
+
+## Wave 7 对齐波次
+
+任务卡在 `tasks/backlog.yml`（`wave: 7`）。入口为 **SPEC-ALIGN-001**（对照 `TABLES.md` 定核心 `cfg_*` 子集行数上限），再 **DATA-001** 灌 `spec/data`（文案重写）。实现侧见 **PERSIST-***、**ECON-001**、**GM-002**、**RULES-ALIGN-001**；路线图见 [ROADMAP.md](ROADMAP.md)。
