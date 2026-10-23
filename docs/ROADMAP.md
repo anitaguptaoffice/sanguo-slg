@@ -423,7 +423,7 @@ H5 人工验收与 **INTG-022** 网关冒烟对齐，见 [client/README.md](../c
 
 ## Wave 26 H5 背包商城·招募养成·出征募兵反馈加深 — **已完成**
 
-**策略**：在 wave:25 **主城建造/队列互跳 / 邮件 HUD 待办 / 世界读图 / 军情战报筛选 / ART-CHROME-006 / 1280 主城邮件队列 manifest** 收口后，**轮转**加深尚未同题堆叠的 **背包/商城购买与消耗提交脉冲**、**将领招募与养成道具可读执行**、**出征/募兵提交反馈巩固**、**ART-TOOLBAR-ICONS-007 底栏四态运行时接线**（工程挂载 [#482](https://github.com/anitaguptaoffice/sanguo-slg/pull/482) `f1a3888a`；**不**合并 [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) Draft）与 **1280 背包/商城/招募/军事 manifest**；网关 **INTG-023** 复跑 smoke（`ListPlayerBag` 堆叠 + 可选 `PurchaseShopOffer` + `GetHeroDetail` level/loyalty + optional `RecruitTroop` + `ListMarches` phase）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划 [#484](https://github.com/anitaguptaoffice/sanguo-slg/pull/484)（`90cef893`）；main tip 合入参考 `a36c1ae6`（#502 CLIENT-119 squash 末卡）。
+**策略**：在 wave:25 **主城建造/队列互跳 / 邮件 HUD 待办 / 世界读图 / 军情战报筛选 / ART-CHROME-006 / 1280 主城邮件队列 manifest** 收口后，**轮转**加深尚未同题堆叠的 **背包/商城购买与消耗提交脉冲**、**将领招募与养成道具可读执行**、**出征/募兵提交反馈巩固**、**ART-TOOLBAR-ICONS-007 底栏四态运行时接线**（工程挂载 [#482](https://github.com/anitaguptaoffice/sanguo-slg/pull/482) `f1a3888a`；**不**合并 [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) Draft）与 **1280 背包/商城/招募/军事 manifest**；网关 **INTG-023** 复跑 smoke（`ListPlayerBag` 堆叠 + 可选 `PurchaseShopOffer` + `GetHeroDetail` level/loyalty + optional `RecruitTroop` + `ListMarches` phase）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划 [#484](https://github.com/anitaguptaoffice/sanguo-slg/pull/484)（`90cef893`）；main tip 合入参考 `6c9d66cd`（#507 DOCS-EXIT-018）。
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
@@ -436,13 +436,34 @@ H5 人工验收与 **INTG-022** 网关冒烟对齐，见 [client/README.md](../c
 | [#492](https://github.com/anitaguptaoffice/sanguo-slg/issues/492) | CLIENT-118 | 已完成 | [#503](https://github.com/anitaguptaoffice/sanguo-slg/pull/503)（`cabe8f0a`） |
 | [#493](https://github.com/anitaguptaoffice/sanguo-slg/issues/493) | CLIENT-119 | 已完成 | [#502](https://github.com/anitaguptaoffice/sanguo-slg/pull/502)（`a36c1ae6`） |
 | [#494](https://github.com/anitaguptaoffice/sanguo-slg/issues/494) | INTG-023 | 已完成 | [#499](https://github.com/anitaguptaoffice/sanguo-slg/pull/499)（`92a96489`） |
-| [#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) | DOCS-EXIT-018 | 已完成 | [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507) |
+| [#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) | DOCS-EXIT-018 | 已完成 | [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507)（`6c9d66cd`） |
 
 H5 人工验收与 **INTG-023** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-26-h5-背包商城招募养成出征募兵反馈加深m4-出口--intg-023)（**背包/商城消耗提交脉冲 + 将领招募与养成道具执行反馈 + 出征募兵提交巩固 + ART-TOOLBAR-ICONS-007 四态接线 + 1280 背包商城招募军事 manifest**）。
 
 **wave:19 美术轨旁路（非 wave:26 backlog 实现卡，不阻塞本波收口）**：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:26 backlog 实现卡）。wave:26 实现卡 **CLIENT-112～119**，**勿占用 CLIENT-064**。
 
 **明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；**世界瓦片/图集**灌入或全屏大地图——仍 out of core subset。
+
+## Wave 27 H5 筛选列表·邮件日常军情战报可读加深 — **规划中**
+
+**策略**：在 wave:26 **背包/商城/将领/出征募兵提交脉冲 / ART-TOOLBAR-ICONS-007 / 1280 经济军事 manifest** 收口后，**轮转**加深尚未同题堆叠的 **ART-UI-FILTER-008 工程挂载与运行时接线**（对照 ART-TOOLBAR **#482** `f1a3888a`；Draft [**#506**](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) 只读、**永不合并** #506/#481/#444/#108/#100/#77/#82）、**邮件/日常/军情/战报筛选 chip + 列表行九宫 + badge.dot/count 可读**（契约 **9** asset id / **18** PNG；count 固定 **20×16** 文案 **1–9/9+**；chip 命中 **≥44px** 工程补）、**1280 筛选条不裁切与列表滚动不挡底栏**；网关 **INTG-024** 复跑 smoke（保留 INTG-023，按本波客户端轻量扩展邮件未读/附件、日常可领、军情 phase、战报 outcome 摘要）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划 PR 合入后由 `tasks_sync` 创建 Issue；main tip 参考 `6c9d66cd`（#507 DOCS-EXIT-018）。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| _待 sync_ | CLIENT-120 | 待 sync | ART-UI-FILTER-008 工程挂载 |
+| _待 sync_ | CLIENT-121 | 待 sync | chip 运行时 + ≥44px |
+| _待 sync_ | CLIENT-122 | 待 sync | 邮件筛选/行/角标 |
+| _待 sync_ | CLIENT-123 | 待 sync | 日常筛选/行/角标 |
+| _待 sync_ | CLIENT-124 | 待 sync | 军情筛选/行 |
+| _待 sync_ | CLIENT-125 | 待 sync | 战报筛选/行 |
+| _待 sync_ | CLIENT-126 | 待 sync | badge.dot/count 统一 |
+| _待 sync_ | CLIENT-127 | 待 sync | 1280 筛选列表 manifest |
+| _待 sync_ | INTG-024 | 待 sync | 网关冒烟 |
+| _待 sync_ | DOCS-EXIT-019 | blocked | 文档收口 |
+
+**wave:19 美术轨旁路（非 wave:27 backlog 实现卡，不阻塞本波收口）**：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:27 backlog 实现卡）。wave:27 实现卡 **CLIENT-120～127**，**勿占用 CLIENT-064**。
+
+**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；**世界瓦片/图集**仍暂缓；花钱类决策不做。
 
 ## 不做
 
