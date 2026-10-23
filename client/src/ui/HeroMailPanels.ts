@@ -23,7 +23,11 @@ import {
   renderHeroDetailMarkup,
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
+  countMailUnreadAndUnclaimed,
+  formatMailInboxAllTabAttachmentBadge,
+  formatMailInboxUnreadTabLabel,
   mailHasUnclaimedAttachments,
+  upsertMailRow,
   mailEmptyInboxMessage,
   mailIsUnread,
   mailTitle,
@@ -87,6 +91,10 @@ export class HeroMailPanels {
   private mailPanel!: HTMLElement;
   private heroes: HeroSummary[] = [];
   private mails: MailRow[] = [];
+  /** filter=all 首屏快照，供 tab 角标与 HUD 可领附件计数（与 CLIENT-077 列表推导一致）。 */
+  private mailInboxSnapshot: MailRow[] = [];
+  /** ListPlayerMail unread 的 total_count，与底栏 CLIENT-050 一致。 */
+  private mailUnreadTotal = 0;
   private mailFilter = MAIL_INBOX_FILTER_ALL;
   private mailListError = "";
   private selectedHeroId = 0;
@@ -565,6 +573,69 @@ export class HeroMailPanels {
     const unreadBtn = this.mailPanel.querySelector('[data-action="mail-filter-unread"]');
     allBtn?.classList.toggle("selected", this.mailFilter === MAIL_INBOX_FILTER_ALL);
     unreadBtn?.classList.toggle("selected", this.mailFilter === MAIL_INBOX_FILTER_UNREAD);
+    const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
+    const unreadForTab = Math.max(this.mailUnreadTotal, derived.unread);
+    if (unreadBtn) {
+      unreadBtn.textContent = formatMailInboxUnreadTabLabel(unreadForTab);
+    }
+    const attachBadge = allBtn?.querySelector('[data-role="mail-filter-attach-badge"]');
+    const attachLabel = formatMailInboxAllTabAttachmentBadge(derived.unclaimed);
+    if (allBtn) {
+      const base = allBtn.querySelector('[data-role="mail-filter-all-label"]');
+      if (!base) {
+        allBtn.textContent = "";
+        const span = document.createElement("span");
+        span.setAttribute("data-role", "mail-filter-all-label");
+        span.textContent = "全部";
+        allBtn.appendChild(span);
+        const badge = document.createElement("span");
+        badge.className = "mail-filter-badge";
+        badge.setAttribute("data-role", "mail-filter-attach-badge");
+        allBtn.appendChild(badge);
+      }
+      const badgeEl =
+        allBtn.querySelector('[data-role="mail-filter-attach-badge"]') ?? attachBadge;
+      if (badgeEl) {
+        badgeEl.textContent = attachLabel;
+        badgeEl.classList.toggle("hidden", !attachLabel);
+      }
+    }
+  }
+
+  private patchMailInboxSnapshot(mailId: number, patch: MailRow): void {
+    this.mailInboxSnapshot = upsertMailRow(this.mailInboxSnapshot, { ...patch, mail_id: mailId });
+    this.setMailFilterButtons();
+  }
+
+  private applyMailBadgeCountsFromSnapshot(): void {
+    const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
+    const unreadForHud = Math.max(this.mailUnreadTotal, derived.unread);
+    const snap = {
+      count: unreadForHud,
+      firstId: pickFirstUnreadMailId(this.mailInboxSnapshot),
+    };
+    this.applyMailUnreadHud(snap);
+    this.setMailFilterButtons();
+  }
+
+  private async refreshMailInboxSnapshot(): Promise<void> {
+    const sid = this.serverId();
+    if (!sid) {
+      this.mailInboxSnapshot = [];
+      this.setMailFilterButtons();
+      return;
+    }
+    try {
+      const res = (await this.gateway.listPlayerMail(sid, {
+        filter: MAIL_INBOX_FILTER_ALL,
+        pageSize: 50,
+        pageOffset: 0,
+      })) as { mails?: MailRow[] };
+      this.mailInboxSnapshot = res.mails ?? [];
+      this.setMailFilterButtons();
+    } catch {
+      /* 角标推导失败不阻断列表 */
+    }
   }
 
   private renderMailList(): void {
@@ -887,6 +958,14 @@ export class HeroMailPanels {
         total_count?: number;
       };
       this.mails = res.mails ?? [];
+      if (this.mailFilter === MAIL_INBOX_FILTER_ALL) {
+        this.mailInboxSnapshot = [...this.mails];
+      } else {
+        void this.refreshMailInboxSnapshot();
+      }
+      const unreadSnap = await this.pullMailUnreadSnapshot();
+      this.mailUnreadTotal = unreadSnap.count;
+      this.setMailFilterButtons();
       if (!this.selectedMailId && this.mails[0]?.mail_id) {
         this.selectedMailId = this.mails[0].mail_id!;
       } else if (
@@ -901,8 +980,8 @@ export class HeroMailPanels {
       const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
       const baseStatus = `邮件（${filterLabel}）${this.mails.length}/${total} 封`;
       this.onStatus(this.withMailWorldCoordHint(baseStatus, sel));
-      if (this.isMailOpen()) this.onUnreadCount?.(0);
-      else void this.syncUnreadBadge();
+      this.applyMailBadgeCountsFromSnapshot();
+      if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
       this.mailListError = (e as Error).message || "加载收件箱失败，请稍后重试";
       this.mails = [];
@@ -919,6 +998,10 @@ export class HeroMailPanels {
       const res = (await this.gateway.markPlayerMailRead(sid, mailId)) as { mail?: MailRow };
       if (res.mail) {
         this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
+        if (mailIsUnread(row)) {
+          this.mailUnreadTotal = Math.max(0, this.mailUnreadTotal - 1);
+        }
+        this.patchMailInboxSnapshot(mailId, res.mail);
         if (this.mailFilter === MAIL_INBOX_FILTER_UNREAD) {
           this.mails = this.mails.filter((m) => m.mail_id !== mailId);
           if (!this.mails.some((m) => m.mail_id === this.selectedMailId)) {
@@ -926,10 +1009,11 @@ export class HeroMailPanels {
           }
         }
         this.renderMailList();
+        this.applyMailBadgeCountsFromSnapshot();
       } else {
         await this.refreshMail();
       }
-      void this.syncUnreadBadge();
+      if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
       this.onStatus((e as Error).message);
     }
@@ -998,6 +1082,13 @@ export class HeroMailPanels {
         );
       }
       this.mailBatchSelected.delete(mailId);
+      const updatedRow = this.mails.find((m) => m.mail_id === mailId);
+      if (updatedRow) {
+        this.patchMailInboxSnapshot(mailId, updatedRow);
+      } else if (res.mail) {
+        this.patchMailInboxSnapshot(mailId, res.mail);
+      }
+      this.applyMailBadgeCountsFromSnapshot();
       return { ok: true, granted: res.granted };
     } catch (e) {
       return { ok: false, message: gatewayErrorMessage(e) };
@@ -1022,7 +1113,9 @@ export class HeroMailPanels {
         this.renderMailList();
         await this.syncBagFromServer();
         const snap = await this.pullMailUnreadSnapshot();
+        this.mailUnreadTotal = snap.count;
         this.applyMailUnreadHud(snap);
+        this.setMailFilterButtons();
         const summary = formatMailClaimGrantedSummary(step.granted);
         this.onStatus(`领取成功：${summary}`);
       } else {
@@ -1059,7 +1152,9 @@ export class HeroMailPanels {
       }
       await this.syncBagFromServer();
       const snap = await this.pullMailUnreadSnapshot();
+      this.mailUnreadTotal = snap.count;
       this.applyMailUnreadHud(snap);
+      this.setMailFilterButtons();
       const summary = batchClaimSummary(attempts);
       if (summary.lastError) {
         this.mailListError = summary.lastError;

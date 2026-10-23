@@ -697,6 +697,19 @@ cd client && npm install && npm run dev
 2. 模拟领取失败：面板内 `mail-status` 显示错误，仍可再次领取。
 3. 单测：`hudTodoBadge.test.ts`（`mailUnreadSnapshotFromListResponse`）、`hudTodoBadgePoll.test.ts`、`HeroMailPanels.test.ts` 领取/HUD 用例。
 
+### 手动验收（邮件面板 tab 角标 CLIENT-106）
+
+在 **CLIENT-050** 底栏未读角标与 **CLIENT-087** 批量领取基础上，收件箱工具栏 **未读 / 全部** 两个 tab 与 `ListPlayerMail` 快照同步：
+
+| Tab | 展示规则 |
+|---|---|
+| **未读** | 文案 `未读 N`，`N` = `ListPlayerMail`（`filter=未读`）`total_count`；打开邮件标已读后本地立即减 1（与底栏角标一致） |
+| **全部** | 主文案「全部」；有未领附件时旁侧金色角标 **`附件 M`**，`M` = `filter=all` 首屏列表上 `countMailUnreadAndUnclaimed` 的 `unclaimed`（与 CLIENT-077 可领邮件推导一致） |
+
+1. `make dev` / mock：多封未读与未领附件 → 打开邮件面板 → **未读 N** / **附件 M** 与列表一致。
+2. 点开未读或 **领取附件** / **批量领取** 成功后：同行高亮与 tab 数字即时递减，关面板后底栏未读角标仍与 **未读 N** 一致。
+3. 单测：`heroMailState.test.ts`（`countMailUnreadAndUnclaimed`）、`HeroMailPanels.test.ts`。
+
 ### 手动验收（HUD 资源变动脉冲 CLIENT-051）
 
 `GetCityState` 轮询检测到粮/木/铁/石/币任一 **增量 > 0** 时，顶栏对应 DOM 图标触发短暂 `resource-pulse` 动画（≤2s）；纯扣费仍走 **CLIENT-018** 文案摘要，不重复脉冲。
