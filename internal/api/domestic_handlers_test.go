@@ -132,6 +132,13 @@ func TestUseSpeedupShortensBuildAndGetCityState(t *testing.T) {
 	if farmFinish != afterFinish.UnixMilli() {
 		t.Fatalf("upgrade_finish_at_ms=%d want=%d", farmFinish, afterFinish.UnixMilli())
 	}
+	pr := st.GetProductionRates()
+	if pr == nil {
+		t.Fatal("missing production_rates")
+	}
+	if pr.GetFood() < 1 {
+		t.Fatalf("production_rates food=%d", pr.GetFood())
+	}
 }
 
 func TestUseSpeedupWithoutActiveBuildStillConsumes(t *testing.T) {
