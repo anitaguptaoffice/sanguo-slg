@@ -27,11 +27,14 @@ import {
   unitLabel,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import { CityStateFetch } from "@/net/cityStateFetch";
+import { CityStatePoll } from "@/net/cityStatePoll";
 import {
   formatKeyBuildingHudLine,
   formatResourceAmount,
   formatResourceHudGroup,
   formatSlotBuildingCaption,
+  formatWalletGainBrief,
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
@@ -48,6 +51,7 @@ const SLOT_LABEL: Record<string, string> = {
 
 const DEFAULT_MARCH_TARGET = { x: 5, y: 5 };
 const PURPOSE_ATTACK = 1;
+const WALLET_GAIN_FLASH_MS = 2800;
 
 export class MainCityScene implements Scene {
   readonly name = "mainCity";
@@ -70,6 +74,11 @@ export class MainCityScene implements Scene {
   private canvas!: HTMLCanvasElement;
   private hitDebug = "";
   private hudRefreshAccum = 0;
+  private cityStateFetch!: CityStateFetch;
+  private cityStatePoll!: CityStatePoll;
+  private walletGainBrief: string | null = null;
+  private walletGainUntilMs = 0;
+  private layoutFrame!: HTMLElement;
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
@@ -79,6 +88,13 @@ export class MainCityScene implements Scene {
     this.session = (data as MainCitySession) ?? null;
     this.hud = ctx.hud;
     this.gateway = ctx.gateway;
+    this.layoutFrame = ctx.layoutFrame;
+    this.cityStateFetch = new CityStateFetch(this.gateway, () => this.session?.cityId ?? null);
+    this.cityStatePoll = new CityStatePoll({
+      fetch: this.cityStateFetch,
+      isPanelVisible: () => this.isAnyPanelVisible(),
+      onState: (state) => this.applyCityStatePoll(state),
+    });
     this.renderHud();
     this.toolbar = document.createElement("div");
     this.toolbar.className = "main-city-toolbar layout-toolbar";
@@ -138,11 +154,7 @@ export class MainCityScene implements Scene {
       parent,
       this.gateway,
       () => this.session,
-      (patch) => {
-        if (!this.session) return;
-        Object.assign(this.session, patch);
-        this.renderHud();
-      },
+      (patch) => this.patchSession(patch),
       (msg) => {
         this.status = msg;
         this.renderHud();
@@ -153,16 +165,13 @@ export class MainCityScene implements Scene {
       parent,
       this.gateway,
       () => this.session,
-      (patch) => {
-        if (!this.session) return;
-        Object.assign(this.session, patch);
-        this.renderHud();
-      },
+      (patch) => this.patchSession(patch),
       (msg) => {
         this.status = msg;
         this.renderHud();
       },
       (count) => this.updateMailToolbarBadge(count),
+      this.cityStateFetch,
     );
     this.heroMail.attach();
     void this.heroMail.syncUnreadBadge();
@@ -185,15 +194,12 @@ export class MainCityScene implements Scene {
       parent,
       this.gateway,
       () => this.session,
-      (patch) => {
-        if (!this.session) return;
-        Object.assign(this.session, patch);
-        this.renderHud();
-      },
+      (patch) => this.patchSession(patch),
       (msg) => {
         this.status = msg;
         this.renderHud();
       },
+      this.cityStateFetch,
     );
     this.dailyQuest.attach();
     this.world = new WorldPanels(
@@ -224,18 +230,25 @@ export class MainCityScene implements Scene {
   }
 
   update(dt: number): void {
-    if (!this.session || !hasActiveBuildingUpgrade(this.session.buildings)) {
+    if (!this.session) return;
+    this.cityStatePoll?.tick(dt);
+    if (hasActiveBuildingUpgrade(this.session.buildings)) {
+      this.hudRefreshAccum += dt;
+      if (this.hudRefreshAccum >= 1) {
+        this.hudRefreshAccum = 0;
+        this.renderHud();
+      }
+    } else {
       this.hudRefreshAccum = 0;
-      return;
     }
-    this.hudRefreshAccum += dt;
-    if (this.hudRefreshAccum >= 1) {
-      this.hudRefreshAccum = 0;
+    if (this.walletGainBrief && Date.now() > this.walletGainUntilMs) {
+      this.walletGainBrief = null;
       this.renderHud();
     }
   }
 
   leave(): void {
+    this.cityStateFetch?.clear();
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
@@ -317,27 +330,63 @@ export class MainCityScene implements Scene {
     return p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
   }
 
+  private patchSession(patch: Partial<MainCitySession>, opts?: { flashWalletGain?: boolean }): void {
+    if (!this.session) return;
+    const beforeWallet = this.session.wallet;
+    Object.assign(this.session, patch);
+    const flash = opts?.flashWalletGain !== false;
+    if (flash && patch.wallet !== undefined) {
+      const brief = formatWalletGainBrief(beforeWallet, this.session.wallet);
+      if (brief) {
+        this.walletGainBrief = brief;
+        this.walletGainUntilMs = Date.now() + WALLET_GAIN_FLASH_MS;
+      }
+    }
+    this.renderHud();
+  }
+
+  private isAnyPanelVisible(): boolean {
+    if (!this.militaryPanel.classList.contains("hidden")) return true;
+    return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
+  }
+
+  private applyCityStatePoll(state: { wallet?: ResourceWallet; buildings?: CityBuilding[] }): void {
+    if (!this.session) return;
+    this.patchSession(
+      {
+        wallet: state.wallet ?? this.session.wallet,
+        buildings: state.buildings ?? this.session.buildings,
+      },
+      { flashWalletGain: false },
+    );
+  }
+
   private renderHud(): void {
     const s = this.session;
     const now = Date.now();
+    if (this.walletGainBrief && now > this.walletGainUntilMs) {
+      this.walletGainBrief = null;
+    }
     const p = s?.player;
     const troopHint = formatTroopStacks(s?.cityTroops);
     const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
     const groups: string[] = [
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
       formatResourceHudGroup(s?.wallet),
-      formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now),
     ];
+    if (this.walletGainBrief) groups.push(this.walletGainBrief);
+    groups.push(formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now));
     if (troopHint !== "无") groups.push(`兵 ${troopHint}`);
     if (this.hitDebug) groups.push(`点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}`);
     groups.push(dprTag);
     if (this.status) groups.push(this.status);
 
     this.hud.replaceChildren();
-    for (let i = 0; i < groups.length; i++) {
+    for (const text of groups) {
       const span = document.createElement("span");
-      span.className = "hud-group";
-      span.textContent = groups[i];
+      span.className =
+        text === this.walletGainBrief ? "hud-group hud-wallet-gain" : "hud-group";
+      span.textContent = text;
       this.hud.appendChild(span);
     }
   }
@@ -347,12 +396,19 @@ export class MainCityScene implements Scene {
     this.status = "刷新中…";
     this.renderHud();
     try {
-      const state = (await this.gateway.getCityState(this.session.cityId)) as {
+      const state = (await this.cityStateFetch.fetch()) as {
         wallet?: ResourceWallet;
         buildings?: CityBuilding[];
-      };
-      this.session.wallet = state.wallet ?? this.session.wallet;
-      this.session.buildings = state.buildings ?? [];
+      } | null;
+      if (state) {
+        this.patchSession(
+          {
+            wallet: state.wallet ?? this.session.wallet,
+            buildings: state.buildings ?? [],
+          },
+          { flashWalletGain: false },
+        );
+      }
       this.status = "已刷新";
     } catch (e) {
       this.status = (e as Error).message;

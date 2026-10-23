@@ -1,4 +1,5 @@
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
   bagFromListPlayerBagResponse,
@@ -31,6 +32,7 @@ export class DailyQuestPanels {
     private getSession: () => MainCitySession | null,
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
+    private readonly cityStateFetch?: CityStateFetch,
   ) {}
 
   attach(): void {
@@ -130,8 +132,10 @@ export class DailyQuestPanels {
       /* 保留合并结果 */
     }
     try {
-      const state = (await this.gateway.getCityState(session.cityId)) as { wallet?: ResourceWallet };
-      if (state.wallet) wallet = state.wallet;
+      const state = this.cityStateFetch
+        ? await this.cityStateFetch.fetch()
+        : ((await this.gateway.getCityState(session.cityId)) as { wallet?: ResourceWallet });
+      if (state?.wallet) wallet = state.wallet;
     } catch {
       /* 保留合并结果 */
     }

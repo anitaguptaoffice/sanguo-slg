@@ -5,6 +5,8 @@ import {
   formatResourceHudGroup,
   formatUpgradeRemaining,
   formatUpgradeSummary,
+  formatWalletGainBrief,
+  walletResourceIncreases,
 } from "@/net/hudFormat";
 
 describe("hudFormat", () => {
@@ -13,6 +15,12 @@ describe("hudFormat", () => {
     expect(formatResourceAmount(1234)).toBe((1234).toLocaleString("zh-CN"));
     expect(formatResourceAmount(15000)).toBe("1.5万");
     expect(formatResourceAmount(120_000_000)).toBe("1.2亿");
+  });
+
+  it("summarizes wallet increases for HUD flash", () => {
+    expect(walletResourceIncreases({ food: 100 }, { food: 250, wood: 10 })).toEqual({ food: 150, wood: 10 });
+    expect(formatWalletGainBrief({ food: 100 }, { food: 100 })).toBeNull();
+    expect(formatWalletGainBrief({ food: 100 }, { food: 1150, gold: 5 })).toBe("+粮1,050 +币5");
   });
 
   it("groups HUD wallet resources", () => {
