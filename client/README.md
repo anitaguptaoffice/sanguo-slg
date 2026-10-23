@@ -699,6 +699,8 @@ cd client && npm install && npm run dev
 2. 故意保留资源不足 → **募兵** 禁用 + 缺少提示；补足资源后按钮可点且不发 RPC 直至点击。
 3. 单测：`previewRecruitCost.test.ts`、`troopRecruitForm.test.ts`。
 
+**募兵提交反馈（CLIENT-117）**：点 **募兵** 后按钮 **disabled** 且文案 **募兵中…**（`recruitTroopSubmitFeedback`）；成功顶栏状态 `formatRecruitTroopSuccess`，队列募兵行与军事面板只读募兵列表行 **3s** `recruit-row-pulse`，扣粮木铁石时触发 **CLIENT-051** 资源脉冲；失败在 **troop-recruit-form-error** 展示 **CLIENT-067** 口径且保留 **CLIENT-088** 消耗预览。**CLIENT-019** 队列倒计时与 **CLIENT-024** 日常引导不退化。单测：`recruitTroopSubmitFeedback.test.ts`。
+
 ### 手动验收（日常可领取定位 CLIENT-091）
 
 日常面板筛选 **可领取** 时出现 **定位首条**（`daily-locate-first`）：滚动至 `pickFirstClaimableDailyQuestCfgIdForFilter` 首行并加 `daily-quest-claimable` 高亮；与 **CLIENT-077** HUD 待办深链（`center-claimable`）并存。**领奖** 成功该行短暂 `quest-claim-pulse` + **CLIENT-051** 资源脉冲；失败 **CLIENT-067** 口径。**CLIENT-075** 筛选记忆与 **CLIENT-044** 战报横幅不退化。
