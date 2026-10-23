@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1;domesticv1";
+
+// route: domestic.v1.GetCityState
+message GetCityStateRequest {
+  int64 city_id = 1;
+}
+
+message GetCityStateResponse {
+  sanguo.common.v1.ResourceWallet wallet = 1;
+  repeated sanguo.common.v1.CityBuilding buildings = 2;
+}
