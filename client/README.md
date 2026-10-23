@@ -97,7 +97,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **邮件附件领取 + 未领高亮** | [手动验收（邮件附件领取 CLIENT-035）](#手动验收邮件附件领取-client-035)（[#247](https://github.com/anitaguptaoffice/sanguo-slg/issues/247) / [#253](https://github.com/anitaguptaoffice/sanguo-slg/pull/253)）；基础收件箱仍见 [CLIENT-017](#手动验收邮件收件箱client-017) | 已合 |
 | **军事 panel manifest**（`ui.panel.military.v1`） | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)（[#248](https://github.com/anitaguptaoffice/sanguo-slg/issues/248) / [#255](https://github.com/anitaguptaoffice/sanguo-slg/pull/255)）；募兵主按钮样式见 **CLIENT-033** hotfix | 已合 |
 | **小地图比例尺 / 多行军扫读** | [手动验收（小地图 CLIENT-037）](#手动验收小地图比例尺与多行军-client-037)（[#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) / [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) `5a4bb4af`） | 已合 |
-| **小地图选点出征** | [手动验收（小地图选点 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265)） | 本 PR |
+| **小地图选点出征** | [手动验收（小地图选点 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265) / [#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) `12a8850f`） | 已合 |
 | **HUD 角标点击深链** | [手动验收（HUD 角标深链 CLIENT-038）](#手动验收hud-角标深链-client-038)（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`） | 已合 |
 | **1280 顶栏 canvas/DOM 叠字** | [手动验收（1280 顶栏 HUD CLIENT-039）](#手动验收1280-顶栏-hud-client-039)（[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) / [#260](https://github.com/anitaguptaoffice/sanguo-slg/pull/260) `9e98a28b`）；**不**替代 **CLIENT-033** hotfix | 已合 |
 
@@ -137,7 +137,28 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **推荐串联**（在 [Wave 17](#wave-17-世界出征互链与复盘导航m4-出口--intg-014) 小地图选点/目标记忆基础上）：**军事** 出征前看 **march-form-error** 内联校验（**CLIENT-048**）→ 底栏 **「行军」** 扫读 ETA 次行（**CLIENT-047**）→ **战报** 筛选记忆 + **加载更多**（**CLIENT-049**）→ **邮件** 领取后角标即时同步（**CLIENT-050**）→ 领奖/购买后顶栏 **resource-pulse**（**CLIENT-051**）→ **队列**/**日常** 互链按钮（**CLIENT-052**）→ **排行/军团/聊天** 空错态（**CLIENT-053**）；网关字段见 `tools/smoke/README.md` **INTG-015**。
 
-波次总览与 **DOCS-EXIT-010** 见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 18」。
+波次总览与 **DOCS-EXIT-010**（[#292](https://github.com/anitaguptaoffice/sanguo-slg/issues/292) / [#302](https://github.com/anitaguptaoffice/sanguo-slg/pull/302) `b63ed954`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 18」。
+
+## Wave 19 可玩加深（M4 出口 / INTG-016）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-016** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**（仅建造队列，见 wave:14 **DOM-003**）；**永不合并** art hold PR #77/#82/#108/#100/#126。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **将领招募对比 + 钱包可负担** | [CLIENT-031](#手动验收将领招募对比-client-031) + [CLIENT-056](#手动验收将领招募钱包对比-client-056)（[#327](https://github.com/anitaguptaoffice/sanguo-slg/issues/327) / [#341](https://github.com/anitaguptaoffice/sanguo-slg/pull/341) `2006b478`） | 已合 |
+| **商城购买 / 背包使用客户端校验** | [手动验收（背包与商城反馈 CLIENT-020）](#手动验收背包与商城反馈-client-020)（**CLIENT-057**，[#328](https://github.com/anitaguptaoffice/sanguo-slg/issues/328) / [#339](https://github.com/anitaguptaoffice/sanguo-slg/pull/339) `22368a0f`） | 已合 |
+| **小地图目的点 ETA 角标与图例** | [手动验收（小地图 ETA CLIENT-058）](#手动验收小地图目的点-eta-client-058)（[#329](https://github.com/anitaguptaoffice/sanguo-slg/issues/329) / [#338](https://github.com/anitaguptaoffice/sanguo-slg/pull/338) `eb8f8a26`）；列表 ETA 基线 [CLIENT-047](#手动验收行军列表-eta-与军情密度-client-047) | 已合 |
+| **建造/募兵队列总览 + 资源产出速率** | [手动验收（队列 CLIENT-019）](#手动验收队列-client-019)（**CLIENT-059**，[#330](https://github.com/anitaguptaoffice/sanguo-slg/issues/330) / [#343](https://github.com/anitaguptaoffice/sanguo-slg/pull/343) `6df0ef9f`） | 已合 |
+| **邮件 ↔ 战报 ↔ 日常三角深链** | [CLIENT-044](#手动验收日常战备与战报横幅-client-044) / [CLIENT-038](#手动验收hud-角标深链-client-038) + **CLIENT-060**（[#331](https://github.com/anitaguptaoffice/sanguo-slg/issues/331) / [#344](https://github.com/anitaguptaoffice/sanguo-slg/pull/344) `97c99156`） | 已合 |
+| **世界城池列表 ↔ 军情行双向高亮** | [CLIENT-047](#手动验收行军列表-eta-与军情密度-client-047) / [CLIENT-015](#手动验收世界坐标-client-015) + **CLIENT-061**（[#332](https://github.com/anitaguptaoffice/sanguo-slg/issues/332) / [#342](https://github.com/anitaguptaoffice/sanguo-slg/pull/342) `b2fb1a01`） | 已合 |
+| **1280 将领/背包/队列 manifest 与滚动** | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [手动验收（1280 将领/背包/队列 CLIENT-062）](#手动验收1280-将领背包队列-client-062)（[#333](https://github.com/anitaguptaoffice/sanguo-slg/issues/333) / [#340](https://github.com/anitaguptaoffice/sanguo-slg/pull/340) `1d9ab72f`） | 已合 |
+| **网关冒烟**（将领详情 + 邮件分页 + 城池队列字段） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 19** / `TestINTG016Wave19SmokePath`（[#334](https://github.com/anitaguptaoffice/sanguo-slg/issues/334) / [#337](https://github.com/anitaguptaoffice/sanguo-slg/pull/337) `7ecb7d4d`） | 已合 |
+
+**推荐串联**（在 [Wave 18](#wave-18-出征反馈与面板可读加深m4-出口--intg-015) 军情/校验/分页基础上）：**将领** 招募模板持/需对比（**CLIENT-056**）→ **背包/商城** `shop-form-error` / `bag-form-error` 内联校验（**CLIENT-057**）→ 出征后小地图 **目的点数字 ETA**（**CLIENT-058**）→ **队列** 顶栏总览与 HUD 产出速率（**CLIENT-059**）→ **邮件/战报/日常** 来源标签与三角深链（**CLIENT-060**）→ **世界** 城池与 **行军** 列表互选高亮（**CLIENT-061**）→ 视口 **1280×720** 下将领/背包/队列 manifest 与滚动（**CLIENT-062**）；网关字段见 `tools/smoke/README.md` **INTG-016**。
+
+**wave:18 美术轨**（非 wave:19 backlog）：**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）、**CLIENT-055**（[#303](https://github.com/anitaguptaoffice/sanguo-slg/issues/303) / [#305](https://github.com/anitaguptaoffice/sanguo-slg/pull/305) `f675d43a`）——均非 wave:19 实现卡。**wave:19 美术轨旁路**：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）已合，证据 [`docs/art/samples/client-063/`](../docs/art/samples/client-063/README.md)；art hold **#108** 仍 FAIL → **CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）进行中。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-011**（[#335](https://github.com/anitaguptaoffice/sanguo-slg/issues/335) / [#346](https://github.com/anitaguptaoffice/sanguo-slg/pull/346)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 19」。
 
 ## 网关地址
 
@@ -627,6 +648,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 资源或道具不足时 **招募** 按钮禁用，`march-form-error-sibling` 展示中文原因；强行改 DOM 触发仍被客户端拦截。网关 `RecruitHero` 失败时状态栏与错误区展示 `err.message`。
 4. 单测：`recruitAffordability.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（小地图目的点 ETA CLIENT-058）
+
+在 [CLIENT-028](#手动验收世界地图行军标注-client-028) / [CLIENT-037](#手动验收小地图比例尺与多行军-client-037) 与 [CLIENT-047](#手动验收行军列表-eta-与军情密度-client-047) 基础上：
+
+1. `make dev` 完成出征后，小地图 **目的点** 旁应出现 **剩余时间缩写**（行军中/撤回中，与 `formatMarchRemainingMsAbbrev` 同口径）或阶段简写 **待/达**（`minimapMarchPhaseShortLabel`）。
+2. 展开小地图时图例区应展示 **`点=目的格 · 数字=剩余时间`**（`MINIMAP_DEST_ETA_LEGEND`）；缩放/平移后角标仍随目的点绘制。
+3. 折叠小地图并在列表 **选中一行** 行军：状态栏应复述 `formatMinimapCollapsedSelectedMarchStatus`（含目的坐标与 ETA/阶段）。
+4. 仍无取消行军/加速。单测：`worldMinimap.test.ts`（ETA 角标文案与 `clampMinimapEtaLabelLayout`）。
+
 ### 手动验收（HUD 待办徽章，CLIENT-027）
 
 底栏 **邮件 / 日常 / 战报** 右上角数字角标；有计数时可 **角标深链**（**CLIENT-038**），按钮正文点击仍 toggle 面板。轮询间隔与 CLIENT-018 `CityStatePoll` 同档（面板打开 5s / 关闭 30s），各来源请求单飞。
@@ -651,7 +681,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）、`recruitAffordability`（招募消耗 vs HUD 钱包对比）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边/目的点 ETA 角标）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）、`recruitAffordability`（招募消耗 vs HUD 钱包对比）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
