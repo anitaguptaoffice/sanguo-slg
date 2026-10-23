@@ -51,7 +51,7 @@ func TestHeroGatewayRecruitAndList(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(listOut.GetHeroes()) != 1 || listOut.GetHeroes()[0].GetTemplateCfgId() != 1001 {
-		t.Fatalf("list %+v", listOut)
+		t.Fatalf("list heroes=%v total=%d", listOut.GetHeroes(), listOut.GetTotalCount())
 	}
 
 	detailResp, err := s.handleGetHeroDetail(ctx, &commonv1.ClientPacket{
