@@ -1,123 +1,271 @@
-# Wave7 商城（SHOP-001 / INTG-004）
+# DATA-002 商城（SHOP-001 / INTG-005 扩展货架）
 shops:
-  - code: resource_shop
-    name: 州府物资行
-    unlock_level: 1
-    shelves:
-      - code: daily
-        name: 每日平价
-        sort_order: 1
-        offers:
-          - code: food_bundle_daily
-            item_code: food_bundle_s
-            item_count: 1
-            price: { resources: { silver: 10 } }
-            per_player_daily_limit: 3
-          - code: wood_bundle_daily
-            item_code: wood_bundle_s
-            item_count: 1
-            price: { resources: { silver: 10 } }
-            per_player_daily_limit: 3
-          - code: speedup_daily
-            item_code: speedup_5m
-            item_count: 1
-            price: { resources: { silver: 30 } }
-            per_player_daily_limit: 2
-      - code: staple
-        name: 常备货架
-        sort_order: 2
-        offers:
-          - code: food_bundle_m_offer
-            item_code: food_bundle_m
-            item_count: 1
-            price: { resources: { silver: 45 } }
-          - code: wood_bundle_m_offer
-            item_code: wood_bundle_m
-            item_count: 1
-            price: { resources: { silver: 45 } }
-          - code: iron_bundle_offer
-            item_code: iron_bundle_s
-            item_count: 1
-            price: { resources: { silver: 50, wood: 200 } }
-  - code: military_shop
-    name: 军营补给处
-    unlock_level: 5
-    shelves:
-      - code: drill
-        name: 操练物资
-        sort_order: 1
-        offers:
-          - code: infantry_token_offer
-            item_code: infantry_token
-            item_count: 1
-            price: { resources: { food: 800, silver: 20 } }
-            per_player_daily_limit: 5
-          - code: cavalry_token_offer
-            item_code: cavalry_token
-            item_count: 1
-            price: { resources: { food: 1200, silver: 35 } }
-            per_player_daily_limit: 3
-          - code: archer_token_offer
-            item_code: archer_token
-            item_count: 1
-            price: { resources: { wood: 600, silver: 30 } }
-            per_player_daily_limit: 3
-      - code: recruit
-        name: 招募柜台
-        sort_order: 2
-        offers:
-          - code: recruit_scroll_offer
-            item_code: recruit_scroll
-            item_count: 1
-            price: { resources: { silver: 80 } }
-            per_player_total_limit: 10
-          - code: recruit_scroll_rare_offer
-            item_code: recruit_scroll_rare
-            item_count: 1
-            price: { resources: { silver: 200 } }
-            per_player_total_limit: 2
-  - code: treasury_shop
-    name: 府库兑换
-    unlock_level: 8
-    shelves:
-      - code: chest
-        name: 军需箱柜
-        sort_order: 1
-        offers:
-          - code: green_chest_offer
-            item_code: supply_chest_green
-            item_count: 1
-            price: { resources: { silver: 60 } }
-            per_player_daily_limit: 2
-          - code: blue_chest_offer
-            item_code: supply_chest_blue
-            item_count: 1
-            price: { resources: { silver: 150 } }
-            per_player_daily_limit: 1
-          - code: wall_kit_offer
-            item_code: wall_stone_kit
-            item_count: 1
-            price: { resources: { wood: 400, iron: 200 } }
-  - code: honor_shop
-    name: 功勋兑奖处
-    unlock_level: 10
-    meta: { currency_hint: merit }
-    shelves:
-      - code: merit
-        name: 功勋兑换
-        sort_order: 1
-        offers:
-          - code: merit_medal_trade
-            item_code: merit_medal
-            item_count: 5
-            price: { resources: { silver: 100 } }
-            per_player_daily_limit: 1
-          - code: banner_offer
-            item_code: banner_emblem
-            item_count: 1
-            price: { resources: { silver: 250 } }
-            per_player_total_limit: 3
-          - code: banquet_offer
-            item_code: banquet_ticket
-            item_count: 1
-            price: { resources: { food: 1000, wood: 1000 } }
+- code: resource_shop
+  name: 州府平价行
+  unlock_level: 1
+  shelves:
+  - code: daily
+    name: 每日平价架
+    sort_order: 1
+    offers:
+    - code: food_bundle_daily
+      item_code: food_bundle_s
+      item_count: 1
+      price:
+        resources:
+          silver: 10
+      per_player_daily_limit: 3
+    - code: wood_bundle_daily
+      item_code: wood_bundle_s
+      item_count: 1
+      price:
+        resources:
+          silver: 10
+      per_player_daily_limit: 3
+    - code: speedup_daily
+      item_code: speedup_5m
+      item_count: 1
+      price:
+        resources:
+          silver: 30
+      per_player_daily_limit: 2
+    - code: grain_satchel_daily
+      item_code: grain_satchel
+      item_count: 1
+      price:
+        resources:
+          silver: 25
+      per_player_daily_limit: 2
+  - code: staple
+    name: 常备物资架
+    sort_order: 2
+    offers:
+    - code: food_bundle_m_offer
+      item_code: food_bundle_m
+      item_count: 1
+      price:
+        resources:
+          silver: 45
+    - code: wood_bundle_m_offer
+      item_code: wood_bundle_m
+      item_count: 1
+      price:
+        resources:
+          silver: 45
+    - code: iron_bundle_offer
+      item_code: iron_bundle_s
+      item_count: 1
+      price:
+        resources:
+          silver: 50
+          wood: 200
+    - code: timber_crate_offer
+      item_code: timber_crate
+      item_count: 1
+      price:
+        resources:
+          silver: 40
+- code: military_shop
+  name: 军营补给栈
+  unlock_level: 5
+  shelves:
+  - code: drill
+    name: 操练柜台
+    sort_order: 1
+    offers:
+    - code: infantry_token_offer
+      item_code: infantry_token
+      item_count: 1
+      price:
+        resources:
+          food: 800
+          silver: 20
+      per_player_daily_limit: 5
+    - code: cavalry_token_offer
+      item_code: cavalry_token
+      item_count: 1
+      price:
+        resources:
+          food: 1200
+          silver: 35
+      per_player_daily_limit: 3
+    - code: archer_token_offer
+      item_code: archer_token
+      item_count: 1
+      price:
+        resources:
+          wood: 600
+          silver: 30
+      per_player_daily_limit: 3
+    - code: infantry_token_l_offer
+      item_code: infantry_token_l
+      item_count: 1
+      price:
+        resources:
+          food: 2000
+          silver: 80
+      per_player_daily_limit: 2
+  - code: recruit
+    name: 访贤柜台
+    sort_order: 2
+    offers:
+    - code: recruit_scroll_offer
+      item_code: recruit_scroll
+      item_count: 1
+      price:
+        resources:
+          silver: 80
+      per_player_total_limit: 10
+    - code: recruit_scroll_rare_offer
+      item_code: recruit_scroll_rare
+      item_count: 1
+      price:
+        resources:
+          silver: 200
+      per_player_total_limit: 2
+    - code: recruit_scroll_plus_offer
+      item_code: recruit_scroll_plus
+      item_count: 1
+      price:
+        resources:
+          silver: 150
+      per_player_total_limit: 3
+- code: treasury_shop
+  name: 府库兑换处
+  unlock_level: 8
+  shelves:
+  - code: chest
+    name: 军需箱柜
+    sort_order: 1
+    offers:
+    - code: green_chest_offer
+      item_code: supply_chest_green
+      item_count: 1
+      price:
+        resources:
+          silver: 60
+      per_player_daily_limit: 2
+    - code: blue_chest_offer
+      item_code: supply_chest_blue
+      item_count: 1
+      price:
+        resources:
+          silver: 150
+      per_player_daily_limit: 1
+    - code: wall_kit_offer
+      item_code: wall_stone_kit
+      item_count: 1
+      price:
+        resources:
+          wood: 400
+          iron: 200
+- code: honor_shop
+  name: 功勋兑奖台
+  unlock_level: 10
+  meta:
+    currency_hint: merit
+  shelves:
+  - code: merit
+    name: 功勋兑换
+    sort_order: 1
+    offers:
+    - code: merit_medal_trade
+      item_code: merit_medal
+      item_count: 5
+      price:
+        resources:
+          silver: 100
+      per_player_daily_limit: 1
+    - code: banner_offer
+      item_code: banner_emblem
+      item_count: 1
+      price:
+        resources:
+          silver: 250
+      per_player_total_limit: 3
+    - code: banquet_offer
+      item_code: banquet_ticket
+      item_count: 1
+      price:
+        resources:
+          food: 1000
+          wood: 1000
+- code: expedition_shop
+  name: 远征辎重站
+  unlock_level: 9
+  shelves:
+  - code: march
+    name: 行军货架
+    sort_order: 1
+    offers:
+    - code: march_ration_offer
+      item_code: march_ration
+      item_count: 2
+      price:
+        resources:
+          food: 400
+      per_player_daily_limit: 5
+    - code: ration_field_offer
+      item_code: ration_field
+      item_count: 1
+      price:
+        resources:
+          silver: 35
+    - code: signal_flare_offer
+      item_code: signal_flare
+      item_count: 1
+      price:
+        resources:
+          silver: 20
+  - code: speed
+    name: 催工货架
+    sort_order: 2
+    offers:
+    - code: speedup_15m_offer
+      item_code: speedup_15m
+      item_count: 1
+      price:
+        resources:
+          silver: 55
+      per_player_daily_limit: 3
+    - code: speedup_30m_offer
+      item_code: speedup_30m
+      item_count: 1
+      price:
+        resources:
+          silver: 95
+      per_player_daily_limit: 2
+- code: artisan_shop
+  name: 匠作材料坊
+  unlock_level: 7
+  shelves:
+  - code: craft
+    name: 工坊柜台
+    sort_order: 1
+    offers:
+    - code: forge_coal_offer
+      item_code: forge_coal
+      item_count: 2
+      price:
+        resources:
+          iron: 300
+          silver: 25
+    - code: ingot_bundle_offer
+      item_code: ingot_bundle
+      item_count: 1
+      price:
+        resources:
+          silver: 70
+    - code: shield_blank_offer
+      item_code: shield_blank
+      item_count: 1
+      price:
+        resources:
+          wood: 350
+          iron: 150
+    - code: catapult_rope_offer
+      item_code: catapult_rope
+      item_count: 1
+      price:
+        resources:
+          wood: 500

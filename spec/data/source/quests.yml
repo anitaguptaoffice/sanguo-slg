@@ -1,170 +1,665 @@
-# Wave7 任务链（INTG-004 / QUEST-001；标题与摘要写入 rewards.display）
+# DATA-002 任务链（标题与摘要写入 rewards.display）
 quests:
-  - code: tutorial_build_hall
-    title: 筑基官府
-    summary: 将治所升至二级，确立号令所出。
-    quest_type: 1
-    chain_id: 100
-    sort_in_chain: 1
-    unlock_level: 1
-    objectives: [{ type: build_level, building_cfg_id: 1, level: 2 }]
-    rewards: { resources: { food: 500 }, items: [{ item_code: food_bundle_s, qty: 1 }] }
-  - code: tutorial_recruit
-    title: 延揽贤士
-    summary: 完成一次将领招募。
-    quest_type: 1
-    chain_id: 100
-    prev_quest_code: tutorial_build_hall
-    sort_in_chain: 2
-    unlock_level: 1
-    objectives: [{ type: recruit_hero, count: 1 }]
-    rewards: { items: [{ item_code: recruit_scroll, qty: 1 }] }
-  - code: chain100_farm
-    title: 开垦良田
-    summary: 将农田升至三级以稳定粮源。
-    quest_type: 1
-    chain_id: 100
-    prev_quest_code: tutorial_recruit
-    sort_in_chain: 3
-    unlock_level: 2
-    objectives: [{ type: build_level, building_cfg_id: 2, level: 3 }]
-    rewards: { resources: { food: 1200 }, items: [{ item_code: food_bundle_m, qty: 1 }] }
-  - code: chain100_lumber
-    title: 整顿伐场
-    summary: 伐木场达到二级，保障城建木料。
-    quest_type: 1
-    chain_id: 100
-    prev_quest_code: chain100_farm
-    sort_in_chain: 4
-    unlock_level: 3
-    objectives: [{ type: build_level, building_cfg_id: 3, level: 2 }]
-    rewards: { resources: { wood: 1000 }, items: [{ item_code: wood_bundle_s, qty: 2 }] }
-  - code: chain100_barracks
-    title: 整训兵营
-    summary: 兵营升至二级，解锁基础征募。
-    quest_type: 1
-    chain_id: 100
-    prev_quest_code: chain100_lumber
-    sort_in_chain: 5
-    unlock_level: 4
-    objectives: [{ type: build_level, building_cfg_id: 6, level: 2 }]
-    rewards: { items: [{ item_code: infantry_token, qty: 1 }] }
-  - code: chain200_wall
-    title: 加固城垣
-    summary: 城墙达到一级，提升城防评级。
-    quest_type: 1
-    chain_id: 200
-    sort_in_chain: 1
-    unlock_level: 5
-    objectives: [{ type: build_level, building_cfg_id: 7, level: 1 }]
-    rewards: { resources: { wood: 800 }, items: [{ item_code: wall_stone_kit, qty: 1 }] }
-  - code: chain200_iron
-    title: 开炉冶铁
-    summary: 铁矿升至二级，支撑军械。
-    quest_type: 1
-    chain_id: 200
-    prev_quest_code: chain200_wall
-    sort_in_chain: 2
-    unlock_level: 6
-    objectives: [{ type: build_level, building_cfg_id: 5, level: 2 }]
-    rewards: { resources: { iron: 600 }, items: [{ item_code: iron_bundle_s, qty: 1 }] }
-  - code: chain200_hall5
-    title: 府库充盈
-    summary: 官府升至五级，解锁更多政令。
-    quest_type: 1
-    chain_id: 200
-    prev_quest_code: chain200_iron
-    sort_in_chain: 3
-    unlock_level: 8
-    objectives: [{ type: build_level, building_cfg_id: 1, level: 5 }]
-    rewards: { resources: { silver: 300 }, items: [{ item_code: supply_chest_green, qty: 1 }] }
-  - code: chain300_train_inf
-    title: 步卒成列
-    summary: 累计训练步兵两百名（占位计数）。
-    quest_type: 1
-    chain_id: 300
-    sort_in_chain: 1
-    unlock_level: 6
-    objectives: [{ type: train_troops, unit_code: infantry, count: 200 }]
-    rewards: { items: [{ item_code: infantry_token, qty: 2 }] }
-  - code: chain300_train_cav
-    title: 铁骑待命
-    summary: 累计训练骑兵八十名。
-    quest_type: 1
-    chain_id: 300
-    prev_quest_code: chain300_train_inf
-    sort_in_chain: 2
-    unlock_level: 8
-    objectives: [{ type: train_troops, unit_code: cavalry, count: 80 }]
-    rewards: { items: [{ item_code: cavalry_token, qty: 1 }] }
-  - code: chain300_recruit2
-    title: 再募贤才
-    summary: 完成第二次将领招募。
-    quest_type: 1
-    chain_id: 300
-    prev_quest_code: chain300_train_cav
-    sort_in_chain: 3
-    unlock_level: 9
-    objectives: [{ type: recruit_hero, count: 2 }]
-    rewards: { items: [{ item_code: recruit_scroll_rare, qty: 1 }] }
-  - code: daily_food_1
-    title: 日课·筹粮
-    summary: 为城池收集五千粮食。
-    quest_type: 2
-    chain_id: 400
-    sort_in_chain: 1
-    unlock_level: 5
-    repeatable: true
-    objectives: [{ type: collect_resource, resource: food, count: 5000 }]
-    rewards: { resources: { silver: 25 } }
-  - code: daily_wood_1
-    title: 日课·备木
-    summary: 收集四千木材。
-    quest_type: 2
-    chain_id: 400
-    sort_in_chain: 2
-    unlock_level: 5
-    repeatable: true
-    objectives: [{ type: collect_resource, resource: wood, count: 4000 }]
-    rewards: { resources: { silver: 25 } }
-  - code: daily_train_1
-    title: 日课·操练
-    summary: 今日训练任意兵种五十名。
-    quest_type: 2
-    chain_id: 400
-    sort_in_chain: 3
-    unlock_level: 6
-    repeatable: true
-    objectives: [{ type: train_troops, unit_code: any, count: 50 }]
-    rewards: { items: [{ item_code: speedup_5m, qty: 1 }] }
-  - code: daily_recruit_1
-    title: 日课·访贤
-    summary: 进行一次招募。
-    quest_type: 2
-    chain_id: 400
-    sort_in_chain: 4
-    unlock_level: 7
-    repeatable: true
-    objectives: [{ type: recruit_hero, count: 1 }]
-    rewards: { resources: { silver: 40 } }
-  - code: side_envoy
-    title: 使节来访
-    summary: 官府三级后接待使节（占位）。
-    quest_type: 3
-    unlock_level: 4
-    objectives: [{ type: build_level, building_cfg_id: 1, level: 3 }]
-    rewards: { items: [{ item_code: envoy_gift, qty: 1 }] }
-  - code: side_forge
-    title: 锻炉试火
-    summary: 交付一批铁砂以试锻炉。
-    quest_type: 3
-    unlock_level: 7
-    objectives: [{ type: collect_resource, resource: iron, count: 2000 }]
-    rewards: { items: [{ item_code: forge_coal, qty: 2 }] }
-  - code: side_scout
-    title: 绘制舆图
-    summary: 收集三份舆图残页（占位）。
-    quest_type: 3
-    unlock_level: 6
-    objectives: [{ type: use_item, item_code: map_fragment, count: 3 }]
-    rewards: { items: [{ item_code: supply_chest_blue, qty: 1 }] }
+- code: tutorial_build_hall
+  title: 奠基治所
+  summary: 将官府升至二级，确立号令所出。
+  quest_type: 1
+  chain_id: 100
+  sort_in_chain: 1
+  unlock_level: 1
+  objectives:
+  - type: build_level
+    building_cfg_id: 1
+    level: 2
+  rewards:
+    resources:
+      food: 500
+    items:
+    - item_code: food_bundle_s
+      qty: 1
+- code: tutorial_recruit
+  title: 延贤入幕
+  summary: 完成一次将领招募。
+  quest_type: 1
+  chain_id: 100
+  prev_quest_code: tutorial_build_hall
+  sort_in_chain: 2
+  unlock_level: 1
+  objectives:
+  - type: recruit_hero
+    count: 1
+  rewards:
+    items:
+    - item_code: recruit_scroll
+      qty: 1
+- code: chain100_farm
+  title: 垦辟良田
+  summary: 农田升至三级，稳住粮源。
+  quest_type: 1
+  chain_id: 100
+  prev_quest_code: tutorial_recruit
+  sort_in_chain: 3
+  unlock_level: 2
+  objectives:
+  - type: build_level
+    building_cfg_id: 2
+    level: 3
+  rewards:
+    resources:
+      food: 1200
+    items:
+    - item_code: food_bundle_m
+      qty: 1
+- code: chain100_lumber
+  title: 整饬林场
+  summary: 伐木场二级，保障城建木料。
+  quest_type: 1
+  chain_id: 100
+  prev_quest_code: chain100_farm
+  sort_in_chain: 4
+  unlock_level: 3
+  objectives:
+  - type: build_level
+    building_cfg_id: 3
+    level: 2
+  rewards:
+    resources:
+      wood: 1000
+    items:
+    - item_code: wood_bundle_s
+      qty: 2
+- code: chain100_barracks
+  title: 开营整训
+  summary: 兵营升至二级，解锁基础征募。
+  quest_type: 1
+  chain_id: 100
+  prev_quest_code: chain100_lumber
+  sort_in_chain: 5
+  unlock_level: 4
+  objectives:
+  - type: build_level
+    building_cfg_id: 6
+    level: 2
+  rewards:
+    items:
+    - item_code: infantry_token
+      qty: 1
+- code: chain200_wall
+  title: 修筑城垣
+  summary: 城墙一级，提升城防评级。
+  quest_type: 1
+  chain_id: 200
+  sort_in_chain: 1
+  unlock_level: 5
+  objectives:
+  - type: build_level
+    building_cfg_id: 7
+    level: 1
+  rewards:
+    resources:
+      wood: 800
+    items:
+    - item_code: wall_stone_kit
+      qty: 1
+- code: chain200_iron
+  title: 开炉冶铁
+  summary: 铁矿升至二级，支撑军械。
+  quest_type: 1
+  chain_id: 200
+  prev_quest_code: chain200_wall
+  sort_in_chain: 2
+  unlock_level: 6
+  objectives:
+  - type: build_level
+    building_cfg_id: 5
+    level: 2
+  rewards:
+    resources:
+      iron: 600
+    items:
+    - item_code: iron_bundle_s
+      qty: 1
+- code: chain200_hall5
+  title: 府库充盈
+  summary: 官府五级，解锁更多政令。
+  quest_type: 1
+  chain_id: 200
+  prev_quest_code: chain200_iron
+  sort_in_chain: 3
+  unlock_level: 8
+  objectives:
+  - type: build_level
+    building_cfg_id: 1
+    level: 5
+  rewards:
+    resources:
+      silver: 300
+    items:
+    - item_code: supply_chest_green
+      qty: 1
+- code: chain300_train_inf
+  title: 步阵成军
+  summary: 累计训练步兵两百名。
+  quest_type: 1
+  chain_id: 300
+  sort_in_chain: 1
+  unlock_level: 6
+  objectives:
+  - type: train_troops
+    unit_code: infantry
+    count: 200
+  rewards:
+    items:
+    - item_code: infantry_token
+      qty: 2
+- code: chain300_train_cav
+  title: 铁骑集结
+  summary: 累计训练骑兵八十名。
+  quest_type: 1
+  chain_id: 300
+  prev_quest_code: chain300_train_inf
+  sort_in_chain: 2
+  unlock_level: 8
+  objectives:
+  - type: train_troops
+    unit_code: cavalry
+    count: 80
+  rewards:
+    items:
+    - item_code: cavalry_token
+      qty: 1
+- code: chain300_recruit2
+  title: 再开贤馆
+  summary: 完成第二次将领招募。
+  quest_type: 1
+  chain_id: 300
+  prev_quest_code: chain300_train_cav
+  sort_in_chain: 3
+  unlock_level: 9
+  objectives:
+  - type: recruit_hero
+    count: 2
+  rewards:
+    items:
+    - item_code: recruit_scroll_rare
+      qty: 1
+- code: daily_food_1
+  title: 日课·筹粮
+  summary: 为城池收集五千粮食。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 1
+  unlock_level: 5
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: food
+    count: 5000
+  rewards:
+    resources:
+      silver: 25
+- code: daily_wood_1
+  title: 日课·备木
+  summary: 收集四千木材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 2
+  unlock_level: 5
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: wood
+    count: 4000
+  rewards:
+    resources:
+      silver: 25
+- code: daily_train_1
+  title: 日课·操练
+  summary: 今日训练任意兵种五十名。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 3
+  unlock_level: 6
+  repeatable: true
+  objectives:
+  - type: train_troops
+    unit_code: any
+    count: 50
+  rewards:
+    items:
+    - item_code: speedup_5m
+      qty: 1
+- code: daily_recruit_1
+  title: 日课·访贤
+  summary: 进行一次招募。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 4
+  unlock_level: 7
+  repeatable: true
+  objectives:
+  - type: recruit_hero
+    count: 1
+  rewards:
+    resources:
+      silver: 40
+- code: side_envoy
+  title: 使节抵城
+  summary: 官府三级后接待使节。
+  quest_type: 3
+  unlock_level: 4
+  objectives:
+  - type: build_level
+    building_cfg_id: 1
+    level: 3
+  rewards:
+    items:
+    - item_code: envoy_gift
+      qty: 1
+- code: side_forge
+  title: 试炉锻铁
+  summary: 交付铁砂试开锻炉。
+  quest_type: 3
+  unlock_level: 7
+  objectives:
+  - type: collect_resource
+    resource: iron
+    count: 2000
+  rewards:
+    items:
+    - item_code: forge_coal
+      qty: 2
+- code: side_scout
+  title: 拼合舆图
+  summary: 收集三份舆图残卷。
+  quest_type: 3
+  unlock_level: 6
+  objectives:
+  - type: use_item
+    item_code: map_fragment
+    count: 3
+  rewards:
+    items:
+    - item_code: supply_chest_blue
+      qty: 1
+- code: chain500_mill
+  title: 修葺磨坊
+  summary: 磨坊一级，提高粮秣加工。
+  quest_type: 1
+  chain_id: 500
+  sort_in_chain: 1
+  unlock_level: 6
+  objectives:
+  - type: build_level
+    building_cfg_id: 2
+    level: 4
+  rewards:
+    resources:
+      food: 800
+- code: chain500_store
+  title: 扩建仓廪
+  summary: 仓廪二级，提升储粮上限（占位）。
+  quest_type: 1
+  chain_id: 500
+  sort_in_chain: 2
+  unlock_level: 7
+  objectives:
+  - type: build_level
+    building_cfg_id: 1
+    level: 4
+  rewards:
+    items:
+    - item_code: grain_satchel
+      qty: 1
+  prev_quest_code: chain500_mill
+- code: chain500_road
+  title: 铺筑驿道
+  summary: 交付木材铺驿道。
+  quest_type: 1
+  chain_id: 500
+  sort_in_chain: 3
+  unlock_level: 8
+  objectives:
+  - type: collect_resource
+    resource: wood
+    count: 3000
+  rewards:
+    items:
+    - item_code: road_gravel
+      qty: 1
+  prev_quest_code: chain500_store
+- code: chain500_well
+  title: 开凿井渠
+  summary: 官府四级并收集粮食。
+  quest_type: 1
+  chain_id: 500
+  sort_in_chain: 4
+  unlock_level: 9
+  objectives:
+  - type: build_level
+    building_cfg_id: 1
+    level: 4
+  - type: collect_resource
+    resource: food
+    count: 2000
+  rewards:
+    items:
+    - item_code: well_repair_kit
+      qty: 1
+  prev_quest_code: chain500_road
+- code: chain500_tax
+  title: 清账赋税
+  summary: 收集银铤充实府库。
+  quest_type: 1
+  chain_id: 500
+  sort_in_chain: 5
+  unlock_level: 10
+  objectives:
+  - type: collect_resource
+    resource: silver
+    count: 500
+  rewards:
+    items:
+    - item_code: tax_warrant
+      qty: 2
+  prev_quest_code: chain500_well
+- code: chain600_archer
+  title: 弓队成列
+  summary: 训练弓兵六十名。
+  quest_type: 1
+  chain_id: 600
+  sort_in_chain: 1
+  unlock_level: 8
+  objectives:
+  - type: train_troops
+    unit_code: archer
+    count: 60
+  rewards:
+    items:
+    - item_code: archer_token
+      qty: 1
+- code: chain600_siege
+  title: 器械整备
+  summary: 训练器械五具。
+  quest_type: 1
+  chain_id: 600
+  sort_in_chain: 2
+  unlock_level: 9
+  objectives:
+  - type: train_troops
+    unit_code: siege
+    count: 5
+  rewards:
+    items:
+    - item_code: siege_token
+      qty: 1
+  prev_quest_code: chain600_archer
+- code: chain600_wall2
+  title: 加高城墙
+  summary: 城墙升至二级。
+  quest_type: 1
+  chain_id: 600
+  sort_in_chain: 3
+  unlock_level: 10
+  objectives:
+  - type: build_level
+    building_cfg_id: 7
+    level: 2
+  rewards:
+    items:
+    - item_code: wall_stone_kit
+      qty: 2
+  prev_quest_code: chain600_siege
+- code: chain600_drill
+  title: 校场操演
+  summary: 任意兵种训练一百名。
+  quest_type: 1
+  chain_id: 600
+  sort_in_chain: 4
+  unlock_level: 11
+  objectives:
+  - type: train_troops
+    unit_code: any
+    count: 100
+  rewards:
+    items:
+    - item_code: drill_manual
+      qty: 1
+  prev_quest_code: chain600_wall2
+- code: chain600_banner
+  title: 立旗誓师
+  summary: 收集木材与铁砂。
+  quest_type: 1
+  chain_id: 600
+  sort_in_chain: 5
+  unlock_level: 12
+  objectives:
+  - type: collect_resource
+    resource: wood
+    count: 2500
+  - type: collect_resource
+    resource: iron
+    count: 1500
+  rewards:
+    items:
+    - item_code: banner_emblem
+      qty: 1
+  prev_quest_code: chain600_drill
+- code: chain600_recruit3
+  title: 三顾贤馆
+  summary: 累计招募三名将领。
+  quest_type: 1
+  chain_id: 600
+  sort_in_chain: 6
+  unlock_level: 13
+  objectives:
+  - type: recruit_hero
+    count: 3
+  rewards:
+    items:
+    - item_code: recruit_scroll_plus
+      qty: 1
+  prev_quest_code: chain600_banner
+- code: daily_iron_1
+  title: 日课·冶铁
+  summary: 收集三千铁砂。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 5
+  unlock_level: 11
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: iron
+    count: 3000
+  rewards:
+    resources:
+      silver: 30
+- code: daily_silver_1
+  title: 日课·理财
+  summary: 收集二百银铤。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 6
+  unlock_level: 12
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: silver
+    count: 200
+  rewards:
+    resources:
+      silver: 35
+- code: daily_build_1
+  title: 日课·营造
+  summary: 完成一次建造升级（占位）。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 7
+  unlock_level: 13
+  repeatable: true
+  objectives:
+  - type: build_level
+    building_cfg_id: 2
+    level: 2
+  rewards:
+    items:
+    - item_code: speedup_15m
+      qty: 1
+- code: daily_march_1
+  title: 日课·战备
+  summary: 使用行军干粮一次。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 8
+  unlock_level: 14
+  repeatable: true
+  objectives:
+  - type: use_item
+    item_code: march_ration
+    count: 1
+  rewards:
+    items:
+    - item_code: ration_field
+      qty: 1
+- code: side_treaty
+  title: 草拟盟约
+  summary: 官府六级后筹备盟约。
+  quest_type: 3
+  unlock_level: 8
+  objectives:
+  - type: build_level
+    building_cfg_id: 1
+    level: 6
+  rewards:
+    items:
+    - item_code: treaty_scroll
+      qty: 1
+- code: side_banquet
+  title: 庆功小宴
+  summary: 交付粮食举办宴席。
+  quest_type: 3
+  unlock_level: 8
+  objectives:
+  - type: collect_resource
+    resource: food
+    count: 3500
+  rewards:
+    items:
+    - item_code: banquet_ticket
+      qty: 1
+- code: side_merit
+  title: 记功授勋
+  summary: 收集功勋铜章五枚。
+  quest_type: 3
+  unlock_level: 8
+  objectives:
+  - type: use_item
+    item_code: merit_medal
+    count: 5
+  rewards:
+    items:
+    - item_code: supply_chest_blue
+      qty: 1
+- code: side_lantern
+  title: 点灯祈福
+  summary: 节庆点灯换资源。
+  quest_type: 3
+  unlock_level: 8
+  objectives:
+  - type: use_item
+    item_code: lantern_festival
+    count: 1
+  rewards:
+    resources:
+      silver: 80
+- code: daily_wave9_01
+  title: 日课·积木·1
+  summary: 第 1 轮日常：收集一批木材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 21
+  unlock_level: 6
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: wood
+    count: 2200
+  rewards:
+    resources:
+      silver: 21
+- code: daily_wave9_02
+  title: 日课·积铁·2
+  summary: 第 2 轮日常：收集一批铁材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 22
+  unlock_level: 7
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: iron
+    count: 2400
+  rewards:
+    resources:
+      silver: 22
+- code: daily_wave9_03
+  title: 日课·积粮·3
+  summary: 第 3 轮日常：收集一批粮材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 23
+  unlock_level: 8
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: food
+    count: 2600
+  rewards:
+    resources:
+      silver: 23
+- code: daily_wave9_04
+  title: 日课·积木·4
+  summary: 第 4 轮日常：收集一批木材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 24
+  unlock_level: 9
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: wood
+    count: 2800
+  rewards:
+    resources:
+      silver: 24
+- code: daily_wave9_05
+  title: 日课·积铁·5
+  summary: 第 5 轮日常：收集一批铁材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 25
+  unlock_level: 10
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: iron
+    count: 3000
+  rewards:
+    resources:
+      silver: 25
+- code: daily_wave9_06
+  title: 日课·积粮·6
+  summary: 第 6 轮日常：收集一批粮材。
+  quest_type: 2
+  chain_id: 400
+  sort_in_chain: 26
+  unlock_level: 5
+  repeatable: true
+  objectives:
+  - type: collect_resource
+    resource: food
+    count: 3200
+  rewards:
+    resources:
+      silver: 26

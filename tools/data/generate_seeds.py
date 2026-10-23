@@ -24,13 +24,13 @@ SHOP_ID_START, SHELF_ID_START = 1, 1
 
 # spec/data/CORE_SUBSET.md
 SUBSET_LIMITS = {
-    "quests": 80,
-    "objectives": 120,
-    "items": 120,
-    "heroes": 60,
-    "shops": 12,
-    "offers": 80,
-    "reward_rows": 60,
+    "quests": 120,
+    "objectives": 180,
+    "items": 180,
+    "heroes": 90,
+    "shops": 18,
+    "offers": 120,
+    "reward_rows": 90,
 }
 
 
