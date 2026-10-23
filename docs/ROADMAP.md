@@ -197,6 +197,24 @@ H5 人工验收与 INTG-012 路径对齐，见 [client/README.md](../client/READ
 
 **明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权；行军 **取消/加速**（`CancelMarch` 等，需未来 contract 卡，当前 `military.v1` 无 RPC）；募兵队列 **加速**（与 wave:14 相同，仅建造队列对接 DOM-003）。
 
+## Wave 16 H5 战报邮件闭环与军事反馈加深 — **规划中**
+
+**策略**：在 wave:15 **世界地图标注 + 面板密度 + manifest 默认 面板** 之上，加深 **战报详情回合可读** 与 **行军结束深链**、**邮件附件领取** 与 HUD 一致、**军事九宫格**（`ui.panel.military.v1`，#227）接线、**小地图多行军扫读** 与 **HUD 角标深链**；网关 **INTG-013** 复跑 smoke（`GetBattleReport` + `ClaimPlayerMailAttachments`）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速。wave:15 军事运行时对比度/按钮/HUD hotfix **CLIENT-033**（#243）在途，**不**纳入本波 backlog（避免重复）。波次 backlog 规划 PR（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync`）。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| （待 sync） | CLIENT-034 | 待开工 | — |
+| （待 sync） | CLIENT-035 | 待开工 | — |
+| （待 sync） | CLIENT-036 | 待开工 | — |
+| （待 sync） | CLIENT-037 | 待开工 | — |
+| （待 sync） | CLIENT-038 | 待开工 | — |
+| （待 sync） | INTG-013 | 待开工 | — |
+| （待 sync） | DOCS-EXIT-008 | 阻塞（`blocked_until: INTG-013`） | — |
+
+**并行建议**：CLIENT-034～038 与 INTG-013 可并行；DOCS-EXIT-008 在 INTG-013 后收口（CLIENT-034/035 为文档引用路径）。
+
+**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权；行军 **取消/加速**（`CancelMarch` 等，需未来 contract 卡，当前 `military.v1` 无 RPC）；募兵队列 **加速**（与 wave:14/15 相同，仅建造队列对接 DOM-003）；**CLIENT-033** 军事对比度/募兵按钮/1280 HUD（wave:15 hotfix，单独 PR）。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。
