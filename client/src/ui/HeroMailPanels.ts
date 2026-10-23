@@ -69,6 +69,7 @@ import {
 } from "@/net/recruitAffordability";
 import {
   buildRecruitSuccessFeedback,
+  focusRecruitedHeroListRow,
   resolveRecruitSubmitPhase,
   setRecruitSuccessToastDisplay,
   syncRecruitSubmitButton,
@@ -929,6 +930,7 @@ export class HeroMailPanels {
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
         await this.loadHeroDetail(res.hero_id);
+        focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
       }
       const feedback = buildRecruitSuccessFeedback(res, templateRow);
       let status = feedback.statusText;

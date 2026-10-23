@@ -322,8 +322,16 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 
 在 [CLIENT-056](#手动验收将领招募钱包对比-client-056) 钱包对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
 
-1. 点 **招募**：主按钮 **disabled** 且文案 **提交中…**；成功则状态栏 `formatRecruitSuccessStatus` 摘要，可选 **打开详情**（带新 `hero_id`）；扣费涉及粮木铁石时顶栏 **resource-pulse**（**CLIENT-051**）。
+1. 点 **招募**：主按钮 **disabled** 且文案 **招募中…**（**CLIENT-114** 巩固，见下节）；成功则状态栏 `formatRecruitSuccessStatus` 摘要，可选 **打开详情**（带新 `hero_id`）；扣费涉及粮木铁石时顶栏 **resource-pulse**（**CLIENT-051**）。
 2. 失败：inline 错误保留模板选中；不扩 recruit pool。单测：`HeroMailPanels.test.ts` / 招募状态机纯函数。
+
+### 手动验收（将领招募提交反馈巩固 CLIENT-114）
+
+在 [CLIENT-098](#手动验收将领招募执行反馈-client-098) 执行反馈与 [CLIENT-099](#手动验收将领列表刷新与选中记忆-client-099) 选中记忆上巩固（无新招募模板 SKU）：
+
+1. `hero.v1.RecruitHero` 往返：主按钮 **招募中…** + **disabled**（`recruitSubmitFeedback`）；成功：`recruit-success-toast` 摘要 + 列表行短暂 **`hero-row-recruited-pulse`**，并写入 **`hero-detail-selected-id`**（与详情深链一致）。
+2. `ListPlayerHeroes` 刷新后新行 **滚入视**（`focusRecruitedHeroListRow`）；失败仍展示 **CLIENT-056** 钱包/道具对比 + **CLIENT-067** inline，保留模板选中。
+3. 单测：`recruitSubmitFeedback.test.ts`（`resolveRecruitSubmitPhase` 边界与行脉冲）、`HeroMailPanels.test.ts`。
 
 ### 手动验收（将领列表刷新与选中记忆 CLIENT-099）
 
