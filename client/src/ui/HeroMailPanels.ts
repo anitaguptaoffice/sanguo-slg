@@ -54,6 +54,11 @@ import {
 } from "@/net/mailBattleCrossLink";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
+  batchClaimSummary,
+  orderBatchClaimMailIds,
+  validateBatchClaimMailSelection,
+} from "@/net/mailBatchClaim";
+import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
   recruitAffordabilityForTemplate,
@@ -75,6 +80,7 @@ export class HeroMailPanels {
   private recruitItemId = 0;
   private recruitPool = "standard";
   private claimMailInflight = 0;
+  private mailBatchSelected = new Set<number>();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -98,6 +104,7 @@ export class HeroMailPanels {
     this.heroPanel.addEventListener("click", (ev) => this.onHeroClick(ev));
     this.mailPanel.addEventListener("click", (ev) => this.onMailClick(ev));
     this.heroPanel.addEventListener("change", (ev) => this.onHeroChange(ev));
+    this.mailPanel.addEventListener("change", (ev) => this.onMailChange(ev));
   }
 
   detach(): void {
@@ -115,6 +122,39 @@ export class HeroMailPanels {
   private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
     const session = this.getSession();
     return { wallet: session?.wallet ?? {}, bag: session?.bag ?? [] };
+  }
+
+  private setMailFormError(message: string | null): void {
+    const el = this.mailPanel?.querySelector('[data-role="mail-form-error"]');
+    if (!el) return;
+    if (message?.trim()) {
+      el.textContent = message;
+      el.classList.remove("hidden");
+    } else {
+      el.textContent = "";
+      el.classList.add("hidden");
+    }
+  }
+
+  private pruneMailBatchSelection(): void {
+    const valid = new Set(
+      this.mails
+        .filter(mailHasUnclaimedAttachments)
+        .map((m) => m.mail_id ?? 0)
+        .filter((id) => id > 0),
+    );
+    for (const id of this.mailBatchSelected) {
+      if (!valid.has(id)) this.mailBatchSelected.delete(id);
+    }
+  }
+
+  private syncBatchClaimButton(): void {
+    const btn = this.mailPanel?.querySelector(
+      '[data-action="claim-mail-batch"]',
+    ) as HTMLButtonElement | null;
+    if (!btn) return;
+    const hasPick = orderBatchClaimMailIds(this.mails, this.mailBatchSelected).length > 0;
+    btn.disabled = this.claimMailInflight !== 0 || !hasPick;
   }
 
   private withMailWorldCoordHint(baseStatus: string, mail: MailRow | null): string {
@@ -318,7 +358,10 @@ export class HeroMailPanels {
         <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full selected" data-action="mail-filter-all">全部</button>
         <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full" data-action="mail-filter-unread">未读</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
+      <p class="mail-form-error hidden" data-role="mail-form-error" role="alert"></p>
+      <p class="mail-batch-hint" data-role="mail-batch-hint">含未领附件的邮件可勾选，逐封调用领取并汇总结果。</p>
       <p class="mail-inbox-status" data-role="mail-status"></p>
       <div class="panel-scroll-body" data-role="mail-scroll">
         <ul class="mail-list" data-role="mail-list"></ul>
@@ -507,6 +550,19 @@ export class HeroMailPanels {
         for (const cls of mailListRowClassName(m).split(/\s+/).filter(Boolean)) {
           li.classList.add(cls);
         }
+        if (m.mail_id && mailHasUnclaimedAttachments(m)) {
+          const pick = document.createElement("label");
+          pick.className = "mail-batch-pick";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.setAttribute("data-role", "mail-batch-checkbox");
+          cb.dataset.mailId = String(m.mail_id);
+          cb.checked = this.mailBatchSelected.has(m.mail_id);
+          cb.disabled = this.claimMailInflight !== 0;
+          pick.appendChild(cb);
+          pick.appendChild(document.createTextNode("勾选"));
+          li.appendChild(pick);
+        }
         const titleSpan = document.createElement("span");
         titleSpan.className = "mail-row-title";
         titleSpan.textContent = mailRowTitleLine(m);
@@ -536,9 +592,11 @@ export class HeroMailPanels {
       claimBtn.classList.toggle("hidden", !show);
       claimBtn.classList.toggle("mail-claim-highlight", !!(show && sel && !mailIsUnread(sel)));
       if (claimBtn instanceof HTMLButtonElement) {
-        claimBtn.disabled = this.claimMailInflight > 0 && this.claimMailInflight === this.selectedMailId;
+        claimBtn.disabled = this.claimMailInflight !== 0;
       }
     }
+    this.pruneMailBatchSelection();
+    this.syncBatchClaimButton();
     if (battleBtn) {
       const link = sel
         ? resolveMailBattleReportLink(mailTitle(sel), sel.body ?? "")
@@ -792,18 +850,19 @@ export class HeroMailPanels {
     }
   }
 
-  private async claimMail(): Promise<void> {
+  private async claimMailAttachmentsForId(
+    mailId: number,
+  ): Promise<
+    | {
+        ok: true;
+        granted?: {
+          items?: { item_cfg_id?: number; quantity?: number }[];
+          resources?: ResourceWallet;
+        };
+      }
+    | { ok: false; message: string }
+  > {
     const sid = this.serverId();
-    const mailId = this.selectedMailId;
-    if (!mailId) {
-      this.onStatus("请选择邮件");
-      return;
-    }
-    if (this.claimMailInflight) return;
-    this.mailListError = "";
-    this.claimMailInflight = mailId;
-    this.renderMailList();
-    this.onStatus(`领取附件 #${mailId}…`);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
@@ -821,20 +880,81 @@ export class HeroMailPanels {
         this.onSessionPatch({ bag: patch.bag, wallet: patch.wallet });
       } else if (res.mail) {
         this.applyMailsAfterClaim(
-          this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail, has_unclaimed_attachments: false } : m)),
+          this.mails.map((m) =>
+            m.mail_id === mailId ? { ...m, ...res.mail, has_unclaimed_attachments: false } : m,
+          ),
           mailId,
         );
       }
+      this.mailBatchSelected.delete(mailId);
+      return { ok: true, granted: res.granted };
+    } catch (e) {
+      return { ok: false, message: gatewayErrorMessage(e) };
+    }
+  }
+
+  private async claimMail(): Promise<void> {
+    const mailId = this.selectedMailId;
+    if (!mailId) {
+      this.onStatus("请选择邮件");
+      return;
+    }
+    if (this.claimMailInflight) return;
+    this.mailListError = "";
+    this.setMailFormError(null);
+    this.claimMailInflight = mailId;
+    this.renderMailList();
+    this.onStatus(`领取附件 #${mailId}…`);
+    const step = await this.claimMailAttachmentsForId(mailId);
+    try {
+      if (step.ok) {
+        this.renderMailList();
+        await this.syncBagFromServer();
+        const snap = await this.pullMailUnreadSnapshot();
+        this.applyMailUnreadHud(snap);
+        const summary = formatMailClaimGrantedSummary(step.granted);
+        this.onStatus(`领取成功：${summary}`);
+      } else {
+        this.mailListError = step.message;
+        this.setMailFormError(step.message);
+        this.onStatus(step.message);
+      }
+    } finally {
+      this.claimMailInflight = 0;
       this.renderMailList();
+    }
+  }
+
+  private async claimMailBatch(): Promise<void> {
+    if (this.claimMailInflight) return;
+    const ordered = orderBatchClaimMailIds(this.mails, this.mailBatchSelected);
+    const validated = validateBatchClaimMailSelection({ mails: this.mails, selectedMailIds: ordered });
+    if (!validated.ok) {
+      this.setMailFormError(validated.message);
+      this.onStatus(validated.message);
+      return;
+    }
+    this.mailListError = "";
+    this.setMailFormError(null);
+    this.claimMailInflight = -1;
+    this.renderMailList();
+    this.onStatus(`批量领取 ${ordered.length} 封（逐封）…`);
+    const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
+    try {
+      for (const mailId of ordered) {
+        const step = await this.claimMailAttachmentsForId(mailId);
+        attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
+        this.renderMailList();
+      }
       await this.syncBagFromServer();
       const snap = await this.pullMailUnreadSnapshot();
       this.applyMailUnreadHud(snap);
-      const summary = formatMailClaimGrantedSummary(res.granted);
-      this.onStatus(`领取成功：${summary}`);
-    } catch (e) {
-      const msg = gatewayErrorMessage(e);
-      this.mailListError = msg;
-      this.onStatus(msg);
+      const summary = batchClaimSummary(attempts);
+      if (summary.lastError) {
+        this.mailListError = summary.lastError;
+        this.setMailFormError(summary.lastError);
+      }
+      this.onStatus(summary.summaryText);
     } finally {
       this.claimMailInflight = 0;
       this.renderMailList();
@@ -917,7 +1037,18 @@ export class HeroMailPanels {
     this.onStatus(ids.length ? `养成道具 item_cfg_id：${ids.join("、")}` : "背包暂无养成消耗品（将魂碎晶等）");
   }
 
+  private onMailChange(ev: Event): void {
+    const t = ev.target as HTMLInputElement;
+    if (t.getAttribute("data-role") !== "mail-batch-checkbox") return;
+    const id = Number(t.dataset.mailId) || 0;
+    if (!id) return;
+    if (t.checked) this.mailBatchSelected.add(id);
+    else this.mailBatchSelected.delete(id);
+    this.syncBatchClaimButton();
+  }
+
   private onMailClick(ev: Event): void {
+    if ((ev.target as HTMLElement).closest("label.mail-batch-pick")) return;
     const li = (ev.target as HTMLElement).closest("li[data-mail-id]");
     if (li) {
       const id = Number(li.getAttribute("data-mail-id"));
@@ -937,6 +1068,7 @@ export class HeroMailPanels {
       void this.refreshMail();
     }
     if (a === "claim-mail") void this.claimMail();
+    if (a === "claim-mail-batch") void this.claimMailBatch();
     if (a === "mail-open-battle-report") {
       const reportRaw = btn.dataset.reportId;
       const reportId = reportRaw ? Number(reportRaw) : 0;

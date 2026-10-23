@@ -699,6 +699,74 @@ describe("HeroMailPanels", () => {
     expect(statuses.some((s) => s.includes("可在世界面板查看"))).toBe(true);
   });
 
+  it("batch claim calls claim RPC in list order and summarizes results", async () => {
+    const mount = document.createElement("div");
+    const statuses: string[] = [];
+    const hudSnaps: { count: number; firstId: number }[] = [];
+    const claimPlayerMailAttachments = vi
+      .fn()
+      .mockResolvedValueOnce({
+        mail: { mail_id: 20, status: 2 },
+        granted: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      })
+      .mockRejectedValueOnce(Object.assign(new Error("附件已领"), { code: 40012 }));
+    const listPlayerMail = vi
+      .fn()
+      .mockResolvedValueOnce({
+        mails: [
+          {
+            mail_id: 20,
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+          {
+            mail_id: 21,
+            status: 0,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+        ],
+        total_count: 2,
+      })
+      .mockResolvedValue({ mails: [], total_count: 0 });
+    const gateway: GatewayPort = {
+      listPlayerMail,
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      claimPlayerMailAttachments,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      (msg) => statuses.push(msg),
+      undefined,
+      undefined,
+      undefined,
+      (snap) => hudSnaps.push(snap),
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    const boxes = mount.querySelectorAll('input[data-role="mail-batch-checkbox"]');
+    expect(boxes.length).toBe(2);
+    (boxes[1] as HTMLInputElement).checked = true;
+    boxes[1].dispatchEvent(new Event("change", { bubbles: true }));
+    (boxes[0] as HTMLInputElement).checked = true;
+    boxes[0].dispatchEvent(new Event("change", { bubbles: true }));
+    mount.querySelector('[data-action="claim-mail-batch"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(claimPlayerMailAttachments).toHaveBeenCalledTimes(2);
+    expect(claimPlayerMailAttachments.mock.calls[0][1]).toBe(20);
+    expect(claimPlayerMailAttachments.mock.calls[1][1]).toBe(21);
+    expect(statuses.some((s) => s.includes("批量领取") && s.includes("成功 1 封"))).toBe(true);
+    expect(statuses.some((s) => s.includes("失败 1 封"))).toBe(true);
+    expect(mount.querySelector('[data-role="mail-form-error"]')?.textContent).toContain("[40012]");
+    expect(hudSnaps.length).toBeGreaterThan(0);
+  });
+
   it("shows 查看战报 when mail body has report_id and opens deep link", async () => {
     const mount = document.createElement("div");
     const onOpenBattleReport = vi.fn();
