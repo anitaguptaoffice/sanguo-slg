@@ -326,6 +326,7 @@
       .content-panel .wallet-gap-line {
         margin: 4px 0 6px; font-size: 12px; color: #3d2e1f; line-height: 1.45;
         flex-wrap: wrap; display: flex; align-items: baseline; gap: 2px 0;
+        max-width: 100%; overflow-wrap: anywhere; word-break: break-word; min-width: 0;
       }
       .content-panel .wallet-gap-line.hidden { display: none; }
       .content-panel .wallet-gap-line .resource-gap-warn {
@@ -813,6 +814,11 @@
       .rank-col-score { text-align: right; white-space: nowrap; }
       .guild-members { padding-left: 0; max-height: 140px; overflow: auto; list-style: none; }
       .guild-members li { padding: 6px 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; font-size: 12px; }
+      .guild-members li.guild-member-row {
+        display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;
+      }
+      .guild-member-line { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+      .guild-member-mention { flex-shrink: 0; }
       .chat-log li.social-list-empty,
       .guild-members li.social-list-empty {
         cursor: default; color: #b8a88a; font-size: 12px; line-height: 1.45; background: transparent;
@@ -826,13 +832,16 @@
       .main-city-toolbar button { min-width: 72px; flex: 1 1 30%; }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"],
-      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] {
         display: flex;
         flex-direction: column;
         overflow: hidden;
@@ -843,17 +852,12 @@
         overflow: hidden;
       }
       #layout-frame.layout-narrow .content-panel .panel-scroll-body,
-      #layout-frame.layout-narrow .military-panel .panel-scroll-body {
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body,
+      #layout-frame.layout-narrow .social-panel .panel-scroll-body {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
         margin: 4px 0 0;
-      }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list {
-        flex: 1 1 auto;
-        min-height: 0;
-        max-height: none;
-        overflow-y: auto;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .template-list,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list {
@@ -934,8 +938,59 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li {
         min-width: 0; max-width: 100%; box-sizing: border-box;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-panel-feedback {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-panel-feedback,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-batch-hint,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .wallet-gap-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .content-panel-actions,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-form-error {
         flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-category-tabs,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="refresh-shop"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="buy-offer"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-form-error,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .wallet-gap-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-feedback"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] label {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-summary"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] label,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] button[data-action="create-guild"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] button[data-action="join-guild"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] button[data-action="refresh-members"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .social-refresh-retry,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .social-refresh-status {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-members {
+        max-height: none;
+        overflow: visible;
+      }
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-members li.guild-member-row {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] label,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] [data-role="guild-chat-hint"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] button[data-action="send-chat"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] button[data-action="refresh-chat"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .social-refresh-retry,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .social-refresh-status {
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log {
+        max-height: none;
+        overflow: visible;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-status {

@@ -28,7 +28,15 @@ function minimalGateway(overrides: Partial<GatewayPort> = {}): GatewayPort {
   } as unknown as GatewayPort;
 }
 
-describe("SocialPanels rank", () => {
+describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
+  it("guild and chat panels have center-panel id and scroll body (CLIENT-095)", () => {
+    const mount = document.createElement("div");
+    const panels = new SocialPanels(mount, minimalGateway(), () => baseSession(), () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-center-panel="guild"] .panel-scroll-body')).toBeTruthy();
+    expect(mount.querySelector('[data-center-panel="chat"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("rank panel uses content-panel scroll body for narrow layout (CLIENT-078)", () => {
     const mount = document.createElement("div");
     const panels = new SocialPanels(mount, minimalGateway(), () => baseSession(), () => {});

@@ -9,6 +9,9 @@ export const PANEL_ASSET_WORLD = "ui.panel.world.v1";
 export const PANEL_ASSET_RANK = "ui.panel.rank.v1";
 export const PANEL_ASSET_MARCH = "ui.panel.march.v1";
 export const PANEL_ASSET_BATTLE_REPORT = "ui.panel.battle-report.v1";
+export const PANEL_ASSET_SHOP = "ui.panel.shop.v1";
+export const PANEL_ASSET_GUILD = "ui.panel.guild.v1";
+export const PANEL_ASSET_CHAT = "ui.panel.chat.v1";
 
 /** CLIENT-062 center panels wired like CLIENT-032 military manifest ids. */
 export const CLIENT_062_CENTER_PANEL_ASSET_IDS = [
@@ -39,6 +42,15 @@ export const CLIENT_086_PANEL_ASSET_BY_CENTER_ID: Record<"march" | "battle-repor
   march: PANEL_ASSET_MARCH,
   "battle-report": PANEL_ASSET_BATTLE_REPORT,
 };
+
+/** CLIENT-095 narrow manifest roots: 背包 / 商城 / 军团 / 聊天。 */
+export const CLIENT_095_PANEL_ASSET_BY_CENTER_ID: Record<"bag" | "shop" | "guild" | "chat", string> =
+  {
+    bag: PANEL_ASSET_BAG,
+    shop: PANEL_ASSET_SHOP,
+    guild: PANEL_ASSET_GUILD,
+    chat: PANEL_ASSET_CHAT,
+  };
 
 /** Stretch a nine_slice panel asset as CSS border-image (24px logical slice by default). */
 export function skinNineSlicePanel(
@@ -156,4 +168,31 @@ export function skinBattleReportPanel(
   logicalH = 360,
 ): void {
   skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_BATTLE_REPORT);
+}
+
+export function skinShopPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_SHOP);
+}
+
+export function skinGuildPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_GUILD);
+}
+
+export function skinChatPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_CHAT);
 }

@@ -12,6 +12,7 @@ import {
   syncLayoutViewportRootClass,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
+import { NARROW_SCROLL_CENTER_PANEL_IDS } from "@/ui/contentPanelScroll";
 
 describe("computeLayoutViewport", () => {
   it("fits 1600×900 design at 1:1 on a 1600×900 viewport", () => {
@@ -94,5 +95,13 @@ describe("narrow layout root class", () => {
     expect(root.classList.contains(NARROW_LAYOUT_ROOT_CLASS)).toBe(true);
     syncLayoutViewportRootClass(root, computeLayoutViewport(1600, 900));
     expect(root.classList.contains(NARROW_LAYOUT_ROOT_CLASS)).toBe(false);
+  });
+
+  it("CLIENT-095 economy/social panels participate in narrow scroll registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    for (const id of ["bag", "shop", "guild", "chat"] as const) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
   });
 });
