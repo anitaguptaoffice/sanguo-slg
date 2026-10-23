@@ -863,11 +863,26 @@
       .rank-col-rank { width: 3em; color: #c9a227; }
       .rank-col-score { text-align: right; white-space: nowrap; }
       .guild-members { padding-left: 0; max-height: 140px; overflow: auto; list-style: none; }
-      .guild-members li { padding: 6px 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; font-size: 12px; }
       .guild-members li.guild-member-row {
         display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0;
+        padding: 6px 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; font-size: 12px;
       }
-      .guild-member-line { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+      .guild-members li.guild-role-group-header {
+        position: sticky; top: 0; z-index: 1;
+        padding: 4px 0; margin: 4px 0 2px; background: #2a221c; border-bottom: 1px solid #5c4a32;
+      }
+      .guild-role-group-toggle {
+        width: 100%; text-align: left; padding: 4px 6px; font-size: 11px; font-weight: 600;
+        color: #c9b896; background: transparent; border: none; cursor: pointer;
+      }
+      .guild-role-chip {
+        flex: 0 0 auto; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; line-height: 1.35;
+      }
+      .guild-role-chip-leader { background: #5c4a20; color: #f0c674; }
+      .guild-role-chip-officer { background: #3a4a62; color: #9ec5ff; }
+      .guild-role-chip-member { background: #3d3830; color: #c9b88a; }
+      .guild-role-chip-unknown { background: #333; color: #aaa; }
+      .guild-member-line { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
       .guild-member-mention { flex-shrink: 0; }
       .chat-log li.social-list-empty,
       .guild-members li.social-list-empty {
