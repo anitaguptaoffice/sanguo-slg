@@ -4,7 +4,7 @@
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
 
-**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/任务/背包/商城）→ 世界/私聊 → 军团 → 战力排行**
+**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/任务/背包/商城/将领/邮件）→ 世界/私聊 → 军团 → 战力排行**
 
 ## 网关地址
 
@@ -56,6 +56,22 @@ cd client && npm install && npm run dev
 3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时状态栏显示服务端错误；成功时 HUD **币** 减少且背包数量增加（`wallet_after` 真扣费，无 spent overlay）。
 4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag` 拉服务端持久化全量并覆盖会话背包展示；「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）。资源包(2001)/加速符(2003) 使用成功后 HUD 粮/币或状态栏效果摘要应更新。
 
+### 手动验收（M4：将领 / 邮件，CLIENT-008）
+
+与 `internal/api/hero_handlers.go`、`internal/api/mail_handlers.go` 网关路由一致（`make dev` 真实 PG）。
+
+1. 进入主城后点 **「将领」** →「刷新列表」。新号应为空列表提示；若已有将领，点击列表项加载 `hero.v1.GetHeroDetail` 详情（属性/忠诚）。
+2. **招募**：模板默认 `1001`（刘备），消耗道具默认 `2004`（贤士名册）。成功时列表出现新将领，状态栏显示 `hero_id`；道具/资源不足时显示服务端 `code` 与 `msg`。
+3. 点 **「邮件」** →「刷新收件箱」。可用 `cmd/gm send-mail`（见 `docs/ops`）向当前角色发带附件邮件。
+4. 选中邮件 ID →「标为已读」调用 `content.v1.MarkPlayerMailRead`；「领取附件」调用 `content.v1.ClaimMailAttachments`，HUD 资源/背包应更新（`wallet_after` / `bag_items`）。
+5. 面板落在 1600×900 外框内（与 CLIENT-007 一致）：顶底各 56px，内容区可滚动、不撑破外框。
+
+mock 网关预置 1 封欢迎邮件与 2 本名册，便于离线点领：
+
+```bash
+VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
+```
+
 ```bash
 # 仓库根
 make dev
@@ -85,13 +101,13 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）与 `StartMarchRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`heroMailState` / `HeroMailPanels`（空邮件、领取成功）与 `StartMarchRequest` proto 编解码。
 
 ## 目录
 
 - `src/engine/` — `GameApp`、`layoutViewport`、`mainCitySlots`、场景管理、`AssetLoader`（art v1 manifest）
 - `src/net/` — `GatewayClient`、`bootstrapSession`、`militaryFormat`、proto 加载
 - `src/scenes/` — 选服、主城（军事 + M3 社交面板）
-- `src/ui/` — 聊天/军团/排行与任务/背包/商城 DOM 面板
+- `src/ui/` — 聊天/军团/排行与任务/背包/商城/将领/邮件 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock
