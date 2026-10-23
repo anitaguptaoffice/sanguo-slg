@@ -292,6 +292,7 @@ export class MainCityScene implements Scene {
       () => this.openMailPanelFromDailyCrossLink(),
       () => this.session?.buildings,
       SLOT_LABEL,
+      () => this.queuePanels?.getRecruitQueueSnapshot() ?? [],
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
