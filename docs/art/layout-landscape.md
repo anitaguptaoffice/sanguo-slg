@@ -4,72 +4,49 @@
 
 | 概念 | 尺寸 | 说明 |
 |---|---|---|
-| **设计基线（layout design size）** | **1600 × 900** | 布局、槽位坐标、HUD 边距均在此坐标系下标注（逻辑 px）。 |
-| **最小内容视口（min content viewport）** | **1280 × 720** | 16:9；低于此宽度时优先保证主城舞台可读，两侧可裁切或加 letterbox。 |
-| **当前客户端画布（legacy / status only）** | 360 × 640，DOM `max-width: 480px` | **非**美术验收基线；仅记录 `client/index.html` 现状，横屏改造完成前仍可能以此开发。 |
+| **布局外框（layout frame）** | **1600 × 900** | HUD、舞台、底栏工具栏的总画布；槽位与 HUD 对齐用此坐标系。 |
+| **主城舞台（main-city stage）** | **1600 × 788** | 舞台矩形：x∈[0,1600)，y∈**[56, 844)**（900−56−56=788 舞台高；底栏 56px）。 |
+| **背景出图尺寸** | **1600 × 788** | 与舞台同尺寸；**不要**按 16:9（1600×900）画背景 PNG。 |
+| **最小内容视口** | **1280 × 720** | 整页 16:9；窄屏时 letterbox，舞台仍按外框比例缩放。 |
+| **当前客户端（legacy）** | 360×640，`max-width: 480px` | 非美术验收基线。 |
 
-未调整上述数字：1600×900 覆盖常见 1080p 窗口内嵌游戏区；1280×720 与 16:9 最小桌面窗口一致。
-
-## 区域划分（设计坐标 1600×900）
+## 区域划分（全布局坐标 1600×900）
 
 ```text
 +------------------------------------------------------------------+
-|  HUD  (0,0)-(1600,56)     资源条、城名、玩家名 — DOM 或 canvas 顶栏 |
+|  HUD  y: 0–56           资源条、城名 — DOM 或 canvas 顶栏          |
 +------------------------------------------------------------------+
-| L |                    MAIN-CITY STAGE                         | R |
-| e |              (0,56)-(1600,844)  背景 + 建筑槽位               | i |
-| t |                    z-ordered sprites                         | g |
-|   |                                                              | h |
-| t |                                                              | t |
-| o |                                                              |   |
-| o |                                                              | p |
-| l |                                                              | a |
-|   |                                                              | n |
-| 0 |                                                              | e |
-|   |                                                              | l |
-| 8 |                                                              |   |
-| 0 |                                                              | 3 |
-|   |                                                              | 2 |
-| 0 |                                                              | 0 |
-+---+--------------------------------------------------------------+---+
-|  TOOLBAR  (0,844)-(1600,900)  建造/刷新等主操作 — 当前为 DOM 按钮   |
+|                                                                    |
+|  MAIN-CITY STAGE  (0,56)–(1600,844)   1600×788                    |
+|  背景 mc.bg.plateau.v1 铺满舞台（1:1，非 16:9 素材）               |
+|  建筑槽位坐标见 maincity-slots.md（同一坐标系，y 已含 HUD）         |
+|                                                                    |
++------------------------------------------------------------------+
+|  TOOLBAR  y: 844–900    DOM 按钮（升级/刷新等）                     |
 +------------------------------------------------------------------+
 ```
 
-- **HUD**：固定高度 56px（设计 px），`contain` 缩放；文字由代码绘制，美术可提供九宫格底图。
-- **MAIN-CITY STAGE**：高度 788px；背景图 **cover** 裁切（保持 16:9 构图，安全区见 [maincity-slots.md](./maincity-slots.md)）。
-- **建筑精灵**：按槽位表定位；**contain** 在各自 `display` 矩形内，脚底对齐 `ground_anchor`。
-- **TOOLBAR**：DOM 层，`ui-scale` 与 HUD 相同（见下）。
-- **军事面板**（`military-panel`）：当前在画布下方 DOM；横屏目标为 **右侧滑出** 320px 宽（设计 px），`z-index` 高于舞台，**本轮美术不做该面板皮肤**。
-
-```mermaid
-flowchart TB
-  subgraph viewport [Browser viewport 16:9]
-    HUD[HUD scale UI]
-    STAGE[Main city stage cover bg + slot sprites]
-    TOOL[Toolbar DOM scale UI]
-  end
-  HUD --> STAGE
-  STAGE --> TOOL
-```
+- **HUD**：高度 56px；文字代码绘制。
+- **舞台背景**：素材 **1600×788**，绘制时贴满舞台矩形（`contain`/`cover` 实现阶段可定，默认 **1:1 贴满 788 高** 不裁切素材）。
+- **建筑精灵**：槽位表为全布局坐标；渲染时 `stageTop = 56` 仅用于划分区域，**槽位 y 不要再加 56**（见 [maincity-slots.md](./maincity-slots.md)）。
+- **TOOLBAR**：DOM，`y ≥ 844`。
+- **军事面板**（`military-panel`）：横屏目标为右侧滑出；**皮肤暂缓下一批**（ART-SAMPLE-001 不做）。
 
 ## 缩放策略
 
-设 `designW=1600`, `designH=900`，视口 `vw×vh`（游戏根容器，不含浏览器 chrome）。
+设外框 `designW=1600`, `designH=900`，视口 `vw×vh`。
 
-1. **UI 缩放因子** `uiScale = min(vw / designW, vh / designH)`（与舞台共用，保证整屏落在视口内）。
-2. **Letterbox**：若视口比例 ≠ 16:9，在根容器外居中，上下或左右铺 `#1a1410` 边条（与 `body` 背景一致）。
-3. **舞台背景**：在 `(0,56)`–`(1600,844)` 内 **cover**；安全区建议左右各留 80px、顶部 40px 不被裁切关键构图。
-4. **大于基线**（如 1920×1080）：不放大超过 1.0 的 UI 矢量/九宫格时可选用 `uiScale = min(1, …)` 避免 HUD 过大（实现阶段可选；文档默认 `uiScale` 随视口放大）。
-5. **小于 1280×720**：保持 16:9 letterbox；`uiScale` 下降；槽位点击区域仍按设计坐标变换，**hit rect 不小于 44×44 CSS px**。
+1. `uiScale = min(vw / designW, vh / designH)`。
+2. 非 16:9 视口：letterbox，铺 `#1a1410`。
+3. 舞台背景使用 1600×788 位图时，缩放后仍对齐舞台边（左右顶满舞台宽，高度 788 逻辑 px）。
+4. 小于 1280×720：`uiScale` 下降；hit 区域不小于 44×44 CSS px。
 
-## 客户端适配备注（占位期）
+## 样件与管线范围（本阶段）
 
-- 画布逻辑尺寸目标：`canvas.width=1600`, `canvas.height=900`（后续 PR）；当前仍为 360×640。
-- `AssetLoader` 将改为按 `manifest.json` 解析 `/assets/art/v1/`（见 `client/public/assets/art/v1/`）；本 PR 仅文档 + schema + 加载器注释/类型桩。
-- 社交面板（聊天/军团/排行）布局 **不在** 本轮美术范围；见 `client/src/ui/SocialPanels.ts` 仍用占位样式。
+- **ART-SAMPLE-001**：六类独立 PNG，1×/2×，**不打图集**；通过样件评审 **不** 代表图集 / 裁切管线已验收。
+- 完整 manifest 加载与横屏 canvas 改造：工程后续 PR，可与样件并行。
 
 ## 相关
 
-- 槽位坐标：[maincity-slots.md](./maincity-slots.md)
-- 资源 ID：[id-mapping.md](./id-mapping.md)
+- [maincity-slots.md](./maincity-slots.md)
+- [id-mapping.md](./id-mapping.md)

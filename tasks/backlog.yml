@@ -893,17 +893,20 @@
   scope: [client/public/assets/art/**, client/src/engine/AssetLoader.ts, docs/art/**]
   out_of_scope: [spec/**, internal/**, reference/**]
   acceptance:
-    - docs/art 含 1600×900 基线、1280×720 最小视口、竖屏 360×640 仅 legacy 说明
+    - docs/art 外框 1600×900、舞台/背景出图 1600×788；槽位全布局坐标（y 含 HUD，勿重复 +56）
+    - 1280×720 最小视口、竖屏 360×640 仅 legacy；样件可先基于 #100 提交、不要求合并后再出图
     - 主城 slot_key 显示表不改升级协议
     - client/public/assets/art/v1/schema 为 DRAFT JSON Schema + manifest.example.json
     - AssetLoader 保留占位行为并含路径解析/ID 映射桩
     - 不合并 PR #77/#82；不提交二进制美术
   body: |
-    工程侧美术管线文档与 schema 真源；美术在互审后按 ART-SAMPLE-001 出样本。
-    发布目录 client/public/assets/art/v1/；路径经 Vite base 解析。
+    工程侧美术管线文档与 schema 真源（PR #100 Draft）。
+    开工顺序：美术以 #100 分支 cursor/art-pipeline-docs-cffb 上**已推送提交**为基准即可做 ART-SAMPLE-001，不要求先合并本 PR。
+    外框 1600×900，舞台与背景出图 1600×788；槽位为全布局坐标（y 已含 HUD 56px，禁止重复 +56）。
+    发布目录 client/public/assets/art/v1/。
 
 - id: ART-SAMPLE-001
-  title: 第一套美术样本（对齐布局与 schema 后）
+  title: 第一套美术样本（六类独立 PNG，1×/2×）
   wave: 1
   domain: client
   depends_on: [CLIENT-ART-001]
@@ -912,14 +915,17 @@
   scope: [client/public/assets/art/v1/textures/**]
   out_of_scope: [client/public/assets/art/v1/schema/**, spec/**, internal/**, client/src/ui/SocialPanels.ts]
   acceptance:
-    - "样本 1：主城背景 mc.bg.plateau.v1 — 逻辑 1600×788，导出 1×/2×，验收截图 1600×900 画布含 HUD 边距示意（无建筑、无文字）"
-    - "样本 2：官府 hall — mc.building.hall.v1 — 逻辑 320×240，1×+2×，验收 320×240 透明底预览"
-    - "样本 3：农田 farm — mc.building.farm.v1 — 逻辑 200×160，1×+2×，验收 200×160"
-    - "样本 4：通用按钮 ui.button.primary.v1 — 逻辑 160×48，四态 normal/hover/pressed/disabled，1×，验收四态拼图或四张单图"
-    - "样本 5：九宫格 ui.panel.default.v1 — 逻辑 320×200，边距 24px，1×，验收拉伸至 480×300 不变形"
-    - "样本 6：粮图标 res.icon.food.v1 — 逻辑 32×32，1×+2×，验收 32×32 与 64×64"
-    - manifest 条目由工程写入 manifest.json（美术不改 schema）；样本 PR 仅纹理与 manifest 数据
-    - 不含聊天/军团/排行 UI；文字由代码绘制
+    - "基准：对齐 PR #100 分支文档/schema 即可开工，无需合并 #100；样件通过≠完整图集/裁切管线通过"
+    - "交付：standalone_png，不打图集；无裁切 trim（crop_offset 省略或 0）"
+    - "样本 1 背景 mc.bg.plateau.v1 — PNG 像素 1600×788（1×）与 3200×1576（2×）；逻辑 display 1600×788；验收：贴入 1600×900 外框示意（HUD 56+舞台+底栏），无建筑无文字"
+    - "样本 2 官府 mc.building.hall.v1 — 逻辑 320×240，1×+2× 透明底"
+    - "样本 3 农田 mc.building.farm.v1 — 逻辑 200×160，1×+2× 透明底"
+    - "样本 4 按钮 ui.button.primary.v1 — 逻辑 160×48；四态各 1×+2×（共 8 张 PNG）；结构同 manifest.example.json button_states"
+    - "样本 5 九宫格 ui.panel.default.v1 — 逻辑 320×200，边距 24（1×），1×+2×；验收拉伸 480×300 不变形"
+    - "样本 6 粮标 res.icon.food.v1 — 逻辑 32×32，1× 32px / 2× 64px"
+    - manifest.json 由工程维护；本卡仅纹理（+可选样件 PR 附 manifest 片段供工程粘贴）"
+    - 不含聊天/军团/排行 UI；军事面板皮肤**暂缓下一批**；文字代码绘制
   body: |
-    工作流：CLIENT-ART-001 合并后美术出本卡样本；工程并行占位横屏与 loader 接入；样本验证通过后再开批量生产卡。
-    slot 坐标以 docs/art/maincity-slots.md 为准；世界地图瓦片尺寸单独约定，禁止与主城 display 混用。
+    工作流：基于 #100 指定提交先出样件 → 工程 Draft PR 迭代与后续 loader 接入 → 样件评审通过后开批量卡。
+    槽位：docs/art/maincity-slots.md 全布局坐标（y 勿再加 56）。世界地图瓦片 px 单独约定。
+    pin_ref: GitHub PR #100 分支 cursor/art-pipeline-docs-cffb（取评审通过的 commit SHA 登记在样件交付说明即可）。

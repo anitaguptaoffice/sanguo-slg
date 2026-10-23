@@ -1,7 +1,23 @@
 # Art pack v1（DRAFT）
 
-- **Schema（工程维护，美术只读）**：`schema/asset-manifest.schema.json`
-- **示例清单**：`manifest.example.json`（非运行时文件；正式 `manifest.json` 由工程在接入时生成）
-- **纹理目录**（样本到位后）：`textures/1x/`、`textures/2x/`、`atlases/`
+## 本阶段交付（ART-SAMPLE-001）
 
-路径解析规则见 schema 内 `path` 字段说明。部署后 URL 前缀：`/assets/art/v1/`（受 Vite `base` 影响时加前缀）。
+- **纹理**：`textures/1x/`、`textures/2x/` 下**独立 PNG**，透明底按资源类型要求；**不打图集**。
+- **倍率**：六类样件均 **1× + 2×**；按钮 **每一态** 各一张 1×、一张 2×。
+- **背景**：文件像素 **1600×788**（舞台尺寸），非 1600×900。
+- **裁切**：样件批 `crop_offset` 省略或 `{0,0}`；无 trim 验收要求。图集 / 裁切协议稳定后再做管线级验收。
+- **基准提交**：对齐 PR **#100** 分支 `cursor/art-pipeline-docs-cffb` 上文档与 schema **即可出样**，无需合并 #100。
+
+## 文件
+
+| 路径 | 说明 |
+|---|---|
+| `schema/asset-manifest.schema.json` | 工程维护（DRAFT） |
+| `manifest.example.json` | 六类样件结构示例 |
+| `textures/` | 样件到位后放 PNG |
+
+URL 前缀：`/assets/art/v1/`（叠加 Vite `base`）。
+
+## 暂缓
+
+军事面板皮肤、聊天/军团/排行 UI：**下一批**，不在 ART-SAMPLE-001。

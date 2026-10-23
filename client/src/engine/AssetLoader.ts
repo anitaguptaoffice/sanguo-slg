@@ -38,7 +38,8 @@ export function resolveArtPackUrl(relativePath: string, baseUrl = ART_PACK_V1_BA
 
 /**
  * 占位资源加载：当前仍返回色块占位。
- * 后续：fetch `${ART_PACK_V1_BASE}/manifest.json`，按 ArtAssetMeta 加载 ImageBitmap / Image。
+ * 后续：fetch manifest（texture_delivery=standalone_png；样件批无图集），按 ArtAssetMeta 加载。
+ * 样件可对齐 PR #100 分支提交先行制作，无需等 PR 合并。
  */
 export class AssetLoader {
   private cache = new Map<string, PlaceholderAsset>();

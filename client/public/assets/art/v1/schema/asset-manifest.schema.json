@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://sanguo-slg.local/assets/art/v1/schema/asset-manifest.schema.json",
   "title": "Sanguo SLG Art Manifest v1",
-  "description": "DRAFT — not frozen. Engineering-owned; art fills metadata after mutual review.",
+  "description": "DRAFT — not frozen. ART-SAMPLE-001: standalone PNG only, no atlas; full pipeline (atlas, crop) is a later gate.",
   "type": "object",
   "required": ["schema_version", "pack", "assets"],
   "additionalProperties": false,
@@ -12,6 +12,12 @@
       "type": "string",
       "enum": ["maincity", "world", "ui", "shared"],
       "description": "Logical pack; world tiles must not reuse maincity display sizes."
+    },
+    "texture_delivery": {
+      "type": "string",
+      "enum": ["standalone_png", "atlas"],
+      "default": "standalone_png",
+      "description": "ART-SAMPLE-001 requires standalone_png. Atlas packing is not validated in the sample batch."
     },
     "base_url": {
       "type": "string",
@@ -52,42 +58,46 @@
         "right": { "type": "integer", "minimum": 0 },
         "bottom": { "type": "integer", "minimum": 0 }
       },
-      "additionalProperties": false
-    },
-    "buttonStates": {
-      "type": "object",
-      "required": ["normal", "hover", "pressed", "disabled"],
-      "properties": {
-        "normal": { "$ref": "#/$defs/frameRef" },
-        "hover": { "$ref": "#/$defs/frameRef" },
-        "pressed": { "$ref": "#/$defs/frameRef" },
-        "disabled": { "$ref": "#/$defs/frameRef" }
-      },
-      "additionalProperties": false
-    },
-    "frameRef": {
-      "type": "object",
-      "required": ["path"],
-      "properties": {
-        "path": {
-          "type": "string",
-          "description": "Relative to base_url, e.g. textures/1x/ui/btn.png"
-        },
-        "atlas": { "type": "string", "description": "Atlas page id if packed" },
-        "frame": { "type": "string", "description": "Frame name within atlas page" }
-      },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "Margins in source pixels at 1x; scale margins ×2 for 2x source."
     },
     "scaleVariant": {
       "type": "object",
       "required": ["scale", "path"],
       "properties": {
         "scale": { "type": "number", "enum": [1, 2] },
-        "path": { "type": "string" },
-        "atlas": { "type": "string" },
-        "frame": { "type": "string" }
+        "path": {
+          "type": "string",
+          "description": "Relative to base_url; standalone PNG path (no atlas in sample batch)."
+        },
+        "atlas": {
+          "type": "string",
+          "description": "Reserved for future atlas pipeline; omit for ART-SAMPLE-001."
+        },
+        "frame": {
+          "type": "string",
+          "description": "Reserved for future atlas frames; omit for ART-SAMPLE-001."
+        }
       },
       "additionalProperties": false
+    },
+    "scalePathList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/scaleVariant" },
+      "minItems": 1,
+      "description": "Typically both scale 1 and 2 for sample set."
+    },
+    "buttonStates": {
+      "type": "object",
+      "required": ["normal", "hover", "pressed", "disabled"],
+      "properties": {
+        "normal": { "$ref": "#/$defs/scalePathList" },
+        "hover": { "$ref": "#/$defs/scalePathList" },
+        "pressed": { "$ref": "#/$defs/scalePathList" },
+        "disabled": { "$ref": "#/$defs/scalePathList" }
+      },
+      "additionalProperties": false,
+      "description": "Each state lists 1x and 2x standalone PNG paths."
     },
     "asset": {
       "type": "object",
@@ -103,23 +113,27 @@
           "type": "string",
           "enum": ["sprite", "nine_slice", "button", "icon", "background"]
         },
-        "display_size": { "$ref": "#/$defs/size2", "description": "Logical size on 1600x900 design baseline" },
+        "display_size": {
+          "$ref": "#/$defs/size2",
+          "description": "Logical size: layout frame for sprites; stage 1600x788 for mc.bg.plateau.v1"
+        },
         "crop_offset": {
           "$ref": "#/$defs/vec2",
-          "description": "Trim offset from source image top-left to visible content"
+          "description": "Optional trim from source; omit in ART-SAMPLE-001 (uncropped PNGs)."
         },
         "anchor": {
           "$ref": "#/$defs/vec2",
-          "description": "Normalized 0-1 or pixel offset from display rect top-left; see manifest examples"
+          "description": "Pixel or normalized offset from display rect top-left"
         },
         "anchor_unit": { "type": "string", "enum": ["normalized", "pixels"], "default": "pixels" },
         "variants": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/scaleVariant" },
-          "minItems": 1,
-          "description": "1x and/or 2x source files"
+          "$ref": "#/$defs/scalePathList",
+          "description": "1x/2x for sprite, icon, background, nine_slice (not used when button_states is set)."
         },
-        "atlas_page": { "type": "string", "description": "Optional atlas page id" },
+        "atlas_page": {
+          "type": "string",
+          "description": "Future atlas pipeline only; omit for standalone_png delivery."
+        },
         "physical_frame": {
           "type": "object",
           "properties": {
@@ -128,7 +142,8 @@
             "w": { "type": "integer" },
             "h": { "type": "integer" }
           },
-          "additionalProperties": false
+          "additionalProperties": false,
+          "description": "Future atlas pipeline only."
         },
         "nine_slice": { "$ref": "#/$defs/nineSlice" },
         "button_states": { "$ref": "#/$defs/buttonStates" },
