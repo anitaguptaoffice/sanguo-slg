@@ -535,8 +535,8 @@ cd client && npm install && npm run dev
 2. **背包**：「刷新背包」→ 选 **2001** →「使用道具」。面板金色反馈区与 HUD 末行应同时显示效果（如「获得粮食 …」「+粮…」）；顶栏粮增加时出现 CLIENT-018 `+粮` 飘字。
 3. 选 **2003** →「使用道具」：面板与状态栏应显示加速文案（服务端 `effect_summary` 或 `speedup_seconds` 推导）。
 4. 故意数量大于库存或 mock 下耗尽道具：失败时面板与状态栏为 `[code] msg`，不静默。
-5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；**CLIENT-057** 起余额不足/售罄/限购在 `shop-form-error` 内联中文提示且不发 RPC；网关失败仍显示 `[code] msg`。
-6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** `march-form-error` 口径一致）。
+5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；**CLIENT-057** 起余额不足/售罄/限购在 `shop-form-error` 内联中文提示且不发 RPC；网关失败经 **CLIENT-067** `formatPanelGatewayError`（如 `余额不足 [64003]`）。
+6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。
 7. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
@@ -645,8 +645,12 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 1. **将领** → 刷新招募模板：列表行 **主行** 为模板名+稀有度，**次行** 为「持/需」与 ✓/不足；与顶栏五资源快照一致。
 2. 点选将领加载详情：详情区在属性表上方展示 **同一摘要**（同 `template_cfg_id` 的招募模板）。
-3. 资源或道具不足时 **招募** 按钮禁用，`march-form-error-sibling` 展示中文原因；强行改 DOM 触发仍被客户端拦截。网关 `RecruitHero` 失败时状态栏与错误区展示 `err.message`。
+3. 资源或道具不足时 **招募** 按钮禁用，`march-form-error-sibling` 展示中文原因；强行改 DOM 触发仍被客户端拦截。网关 `RecruitHero` 失败时状态栏与错误区与 **CLIENT-067** 一致（`formatPanelGatewayError`，如 `道具不足 [10001]`）。
 4. 单测：`recruitAffordability.test.ts`、`HeroMailPanels.test.ts`。
+
+### 手动验收（四类面板统一错误 CLIENT-067）
+
+将领/商城/背包/军事的内联错误区（`recruit-form-error`、`shop-form-error`、`bag-form-error`、`march-form-error`）经 `contentFormValidation.setPanelFormErrorDisplay` 渲染；网关失败统一为 `formatPanelGatewayError` 的中文摘要 + 末尾 `[code]`（如商城 `余额不足 [64003]`），与 CLIENT-056/057 预校验共用同一 DOM 槽位，成功操作后错误区清空。
 
 ### 手动验收（小地图目的点 ETA CLIENT-058）
 
