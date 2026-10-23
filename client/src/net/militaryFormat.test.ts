@@ -4,8 +4,10 @@ import {
   battleReportMatchesOutcomeFilter,
   battleReportMatchesTimeWindowFilter,
   countBattleReportsByOutcome,
+  filterBattleReportsByLocation,
   filterBattleReportsByOutcome,
   filterBattleReportsByTimeWindow,
+  findMostRecentBattleReportAtGrid,
   formatBattleReportDetail,
   formatCasualtyMap,
   formatMarchHint,
@@ -181,6 +183,16 @@ describe("military proto encode/decode", () => {
     const decoded = ListMarchesRequest.decode(ListMarchesRequest.encode(msg).finish());
     expect(Number(decoded.city_id)).toBe(501);
     expect(decoded.limit).toBe(20);
+  });
+
+  it("filters and picks recent battle report at grid", () => {
+    const reports = [
+      { report_id: 1, location_x: 2, location_y: 2, created_at_ms: 10 },
+      { report_id: 2, location_x: 2, location_y: 2, created_at_ms: 20 },
+      { report_id: 3, location_x: 3, location_y: 3, created_at_ms: 30 },
+    ];
+    expect(filterBattleReportsByLocation(reports, 2, 2).map((r) => r.report_id)).toEqual([1, 2]);
+    expect(findMostRecentBattleReportAtGrid(reports, 2, 2)?.report_id).toBe(2);
   });
 
   it("round-trips StartMarchRequest", () => {
