@@ -15,13 +15,9 @@ export function getProtoRoot(): protobuf.Root {
     "../../../spec/proto/sanguo/**/*.proto",
     { query: "?raw", import: "default", eager: true },
   ) as Record<string, string>;
-  const clientModules = import.meta.glob(
-    "../../proto/sanguo/**/*.proto",
-    { query: "?raw", import: "default", eager: true },
-  ) as Record<string, string>;
   root = new protobuf.Root();
   parseProtosInto(root, specModules);
-  parseProtosInto(root, clientModules);
+  // CONTRACT-001 后 Register/建城/内政等已收编进 spec；client/proto 保留副本供对照，避免重复 parse。
   root.resolveAll();
   return root;
 }
@@ -33,6 +29,10 @@ export const Routes = {
   ListPlayerCities: "world.v1.ListPlayerCities",
   GetCityState: "domestic.v1.GetCityState",
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
+  RecruitTroop: "military.v1.RecruitTroop",
+  StartMarch: "military.v1.StartMarch",
+  ListBattleReports: "military.v1.ListBattleReports",
+  GetBattleReport: "military.v1.GetBattleReport",
 } as const;
 
 export const ErrorCode = {
@@ -55,6 +55,14 @@ export type ProtoTypes = {
   GetCityStateResponse: protobuf.Type;
   StartBuildingUpgradeRequest: protobuf.Type;
   StartBuildingUpgradeResponse: protobuf.Type;
+  RecruitTroopRequest: protobuf.Type;
+  RecruitTroopResponse: protobuf.Type;
+  StartMarchRequest: protobuf.Type;
+  StartMarchResponse: protobuf.Type;
+  ListBattleReportsRequest: protobuf.Type;
+  ListBattleReportsResponse: protobuf.Type;
+  GetBattleReportRequest: protobuf.Type;
+  GetBattleReportResponse: protobuf.Type;
 };
 
 export function getTypes(): ProtoTypes {
@@ -74,5 +82,13 @@ export function getTypes(): ProtoTypes {
     GetCityStateResponse: r.lookupType("sanguo.domestic.v1.GetCityStateResponse"),
     StartBuildingUpgradeRequest: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeRequest"),
     StartBuildingUpgradeResponse: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeResponse"),
+    RecruitTroopRequest: r.lookupType("sanguo.military.v1.RecruitTroopRequest"),
+    RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),
+    StartMarchRequest: r.lookupType("sanguo.military.v1.StartMarchRequest"),
+    StartMarchResponse: r.lookupType("sanguo.military.v1.StartMarchResponse"),
+    ListBattleReportsRequest: r.lookupType("sanguo.military.v1.ListBattleReportsRequest"),
+    ListBattleReportsResponse: r.lookupType("sanguo.military.v1.ListBattleReportsResponse"),
+    GetBattleReportRequest: r.lookupType("sanguo.military.v1.GetBattleReportRequest"),
+    GetBattleReportResponse: r.lookupType("sanguo.military.v1.GetBattleReportResponse"),
   };
 }
