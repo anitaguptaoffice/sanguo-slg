@@ -2,6 +2,7 @@ import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
   applyUseResult,
+  bagStackQuantity,
   type BagStack,
   bagFromListPlayerBagResponse,
   mergeRewardBundle,
@@ -42,6 +43,14 @@ import {
   applyWalletGapBar,
   consumableUseWalletNeed,
 } from "@/net/walletGap";
+import {
+  findBagStackRow,
+  scheduleBagRowUsedPulse,
+  shouldPulseBagStackAfterUse,
+  syncUseConsumableSubmitButtons,
+  type UseConsumableSubmitState,
+  useConsumableSubmitStateMachine,
+} from "@/net/useConsumableSubmitFeedback";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type QuestProgress = {
@@ -77,6 +86,9 @@ export class ContentPanels {
   private shopCategory: ShopOfferClientCategory = "all";
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
+  private useConsumableSubmitState: UseConsumableSubmitState = "idle";
+  /** CLIENT-079：当前选中道具的批量格勾选（0-based 格序号）。 */
+  private bagBatchCheckedSlots = new Set<number>();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -98,6 +110,7 @@ export class ContentPanels {
     this.shopPanel.addEventListener("click", (ev) => this.onShopClick(ev));
     this.questPanel.addEventListener("change", (ev) => this.onQuestSelect(ev));
     this.bagPanel.addEventListener("change", (ev) => this.onBagSelect(ev));
+    this.syncUseConsumableSubmitUi();
     this.shopPanel.addEventListener("change", (ev) => this.onShopSelect(ev));
   }
 
@@ -329,6 +342,7 @@ export class ContentPanels {
     for (const row of bag) {
       const li = document.createElement("li");
       li.className = "bag-stack-row";
+      if (row.item_cfg_id) li.setAttribute("data-item-cfg-id", String(row.item_cfg_id));
       const { idCell, name, qtyCell } = formatBagStackRowLabel(row);
       const idSpan = document.createElement("span");
       idSpan.className = "bag-stack-id";
@@ -358,6 +372,8 @@ export class ContentPanels {
           cb.type = "checkbox";
           cb.setAttribute("data-role", "bag-slot-checkbox");
           cb.setAttribute("data-item-id", String(row.item_cfg_id));
+          cb.setAttribute("data-slot-index", String(i));
+          cb.checked = this.bagBatchCheckedSlots.has(i);
           pick.appendChild(cb);
           pick.appendChild(document.createTextNode(`${i + 1}`));
           slots.appendChild(pick);
@@ -521,14 +537,32 @@ export class ContentPanels {
     }
   }
 
+  private syncUseConsumableSubmitUi(): void {
+    syncUseConsumableSubmitButtons(this.bagPanel, this.useConsumableSubmitState);
+  }
+
+  private setUseConsumableSubmitState(next: UseConsumableSubmitState): void {
+    this.useConsumableSubmitState = next;
+    this.syncUseConsumableSubmitUi();
+  }
+
+  private pulseBagRowIfStackChanged(itemId: number, quantityBefore: number, remaining: number): void {
+    const quantityAfter = remaining > 0 ? remaining : 0;
+    this.renderBagList();
+    if (!shouldPulseBagStackAfterUse(quantityBefore, quantityAfter)) return;
+    scheduleBagRowUsedPulse(findBagStackRow(this.bagPanel, itemId));
+  }
+
   private async useItem(): Promise<void> {
+    if (this.useConsumableSubmitState === "submitting") return;
     const sid = this.serverId();
     const count = Number((this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1);
     const itemId = this.selectedItemId;
+    const bag = this.getSession()?.bag ?? [];
     const validated = validateUseConsumable({
       itemCfgId: itemId,
       count,
-      bag: this.getSession()?.bag ?? [],
+      bag,
     });
     if (!validated.ok) {
       setBagFormErrorDisplay(this.bagPanel, validated.message);
@@ -536,8 +570,14 @@ export class ContentPanels {
       return;
     }
     setBagFormErrorDisplay(this.bagPanel, null);
-    this.onStatus(`使用 ${itemLabel(itemId)}×${count}…`);
+    this.useConsumableSubmitState = useConsumableSubmitStateMachine(this.useConsumableSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    this.setUseConsumableSubmitState(
+      useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUBMIT" }),
+    );
     this.setBagFeedback(null);
+    const quantityBefore = bagStackQuantity(bag, itemId);
     try {
       const res = (await this.gateway.useConsumable(sid, itemId, count)) as {
         remaining?: number;
@@ -548,23 +588,31 @@ export class ContentPanels {
       const session = this.getSession();
       const walletBefore = session?.wallet;
       if (session) {
-        const bag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
+        const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
         const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
-        this.onSessionPatch({ bag, wallet });
+        this.onSessionPatch({ bag: nextBag, wallet });
       }
       setBagFormErrorDisplay(this.bagPanel, null);
       const summary = formatUseConsumableEffectSummary(itemId, res, walletBefore, res.wallet_after);
       this.setBagFeedback(summary);
       this.onStatus(summary);
+      this.pulseBagRowIfStackChanged(itemId, quantityBefore, res.remaining ?? 0);
+      this.setUseConsumableSubmitState(
+        useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
+      );
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("bag", e);
       setBagFormErrorDisplay(this.bagPanel, msg);
       this.setBagFeedback(null);
       this.onStatus(msg);
+      this.setUseConsumableSubmitState(
+        useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "FAIL" }),
+      );
     }
   }
 
   private async useItemBatch(): Promise<void> {
+    if (this.useConsumableSubmitState === "submitting") return;
     const itemId = this.selectedItemId;
     const slotCount = this.countSelectedBagBatchSlots(itemId);
     const bag = this.getSession()?.bag ?? [];
@@ -576,35 +624,65 @@ export class ContentPanels {
     }
     setBagFormErrorDisplay(this.bagPanel, null);
     this.setBagFeedback(null);
+    this.useConsumableSubmitState = useConsumableSubmitStateMachine(this.useConsumableSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    this.setUseConsumableSubmitState(
+      useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUBMIT" }),
+    );
     const sid = this.serverId();
-    this.onStatus(`批量使用 ${itemLabel(itemId)}×${slotCount}（逐次×1）…`);
+    const quantityBefore = bagStackQuantity(bag, itemId);
     const attempts: { ok: true } | { ok: false; message: string }[] = [];
-    for (let i = 0; i < slotCount; i += 1) {
-      try {
-        const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
-          remaining?: number;
-          wallet_after?: ResourceWallet;
-        };
-        const session = this.getSession();
-        if (session) {
-          const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
-          const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
-          this.onSessionPatch({ bag: nextBag, wallet });
+    let lastRemaining = quantityBefore;
+    try {
+      for (let i = 0; i < slotCount; i += 1) {
+        try {
+          const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
+            remaining?: number;
+            wallet_after?: ResourceWallet;
+          };
+          const session = this.getSession();
+          if (session) {
+            const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
+            const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
+            this.onSessionPatch({ bag: nextBag, wallet });
+          }
+          lastRemaining = res.remaining ?? 0;
+          attempts.push({ ok: true });
+        } catch (e) {
+          attempts.push({ ok: false, message: formatPanelGatewayErrorFromUnknown("bag", e) });
+          break;
         }
-        attempts.push({ ok: true });
-      } catch (e) {
-        attempts.push({ ok: false, message: formatPanelGatewayErrorFromUnknown("bag", e) });
+      }
+      const summary = summarizeBatchUseConsumableResults(attempts);
+      this.setBagFeedback(summary.summaryText);
+      if (summary.lastError) {
+        setBagFormErrorDisplay(this.bagPanel, summary.lastError);
+        this.setUseConsumableSubmitState(
+          useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "FAIL" }),
+        );
+      } else {
+        setBagFormErrorDisplay(this.bagPanel, null);
+        this.setUseConsumableSubmitState(
+          useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
+        );
+      }
+      this.onStatus(summary.summaryText);
+      if (summary.failureCount === 0) {
+        this.bagBatchCheckedSlots.clear();
+      }
+      if (attempts.some((a) => a.ok)) {
+        this.pulseBagRowIfStackChanged(itemId, quantityBefore, lastRemaining);
+      } else {
+        this.renderBagList();
+      }
+    } finally {
+      if (this.useConsumableSubmitState === "submitting") {
+        this.setUseConsumableSubmitState(
+          useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
+        );
       }
     }
-    const summary = summarizeBatchUseConsumableResults(attempts);
-    this.renderBagList();
-    this.setBagFeedback(summary.summaryText);
-    if (summary.lastError) {
-      setBagFormErrorDisplay(this.bagPanel, summary.lastError);
-    } else {
-      setBagFormErrorDisplay(this.bagPanel, null);
-    }
-    this.onStatus(summary.summaryText);
   }
 
   private async refreshShop(): Promise<void> {
@@ -682,11 +760,19 @@ export class ContentPanels {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "item-id") {
       this.selectedItemId = Number((t as HTMLSelectElement).value) || 2001;
+      this.bagBatchCheckedSlots.clear();
       this.renderBagList();
       this.syncBagWalletGap();
     }
     if (t.getAttribute("data-field") === "use-count") {
       this.syncBagWalletGap();
+    }
+    if (t.getAttribute("data-role") === "bag-slot-checkbox") {
+      const idx = Number(t.getAttribute("data-slot-index"));
+      const itemId = Number(t.getAttribute("data-item-id"));
+      if (itemId !== this.selectedItemId || !Number.isInteger(idx)) return;
+      if ((t as HTMLInputElement).checked) this.bagBatchCheckedSlots.add(idx);
+      else this.bagBatchCheckedSlots.delete(idx);
     }
   }
 

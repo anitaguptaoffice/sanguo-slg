@@ -902,7 +902,7 @@ cd client && npm install && npm run dev
 3. 选 **2003** →「使用道具」：面板与状态栏应显示加速文案（服务端 `effect_summary` 或 `speedup_seconds` 推导）。
 4. 故意数量大于库存或 mock 下耗尽道具：失败时面板与状态栏为 `[code] msg`，不静默。
 5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；**CLIENT-057** 起余额不足/售罄/限购在 `shop-form-error` 内联中文提示且不发 RPC；网关失败经 **CLIENT-067** `formatPanelGatewayError`（如 `余额不足 [64003]`）。
-6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。
+6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。**CLIENT-112**：「使用道具」/「批量使用勾选格」提交中 **disabled + 使用中…**；成功 `formatUseConsumableEffectSummary` + 列表行 `bag-row-used-pulse`（3s）+ 钱包增量 **CLIENT-051** 脉冲；失败保留道具选中与批量勾选。
 7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
 8. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`；全量 `cd client && npm test`。
 
