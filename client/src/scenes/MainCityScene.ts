@@ -1,3 +1,8 @@
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { skinPrimaryButtons } from "@/engine/artButtonSkin";
+import { skinNineSlicePanel } from "@/engine/artPanelSkin";
+import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
+import { MAIN_CITY_SLOTS, STAGE_TOP_Y, TOOLBAR_TOP_Y, type MainCitySlotDef } from "@/engine/mainCitySlots";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { SocialPanels } from "@/ui/SocialPanels";
@@ -40,8 +45,16 @@ export class MainCityScene implements Scene {
   private selectedReportText = "";
   private social!: SocialPanels;
   private content!: ContentPanels;
+  private assets!: AssetLoader;
+  private getViewport!: () => LayoutViewport;
+  private canvas!: HTMLCanvasElement;
+  private hitDebug = "";
+  private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
+    this.assets = ctx.assets;
+    this.getViewport = ctx.getViewport;
+    this.canvas = ctx.canvas;
     this.session = (data as MainCitySession) ?? null;
     this.hud = ctx.hud;
     this.gateway = ctx.gateway;
@@ -114,12 +127,16 @@ export class MainCityScene implements Scene {
       },
     );
     this.content.attach();
+    skinPrimaryButtons(this.toolbar, this.assets);
+    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
+    this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
     this.syncMilitaryPanel();
   }
 
   leave(): void {
+    this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
     this.toolbar?.remove();
@@ -188,15 +205,40 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private onCanvasPointer(ev: PointerEvent): void {
+    const rect = this.canvas.getBoundingClientRect();
+    const cssX = ev.clientX - rect.left;
+    const cssY = ev.clientY - rect.top;
+    const layout = canvasToLayout(cssX, cssY, this.getViewport());
+    const hits = [...MAIN_CITY_SLOTS]
+      .sort((a, b) => b.z - a.z)
+      .filter((slot) => this.pointInRect(layout, slot.hit));
+    const top = hits[0];
+    if (!top) return;
+    this.hitDebug = top.slot_key;
+    if (top.slot_key === "farm") void this.upgradeFarm();
+    else {
+      this.status = `选中 ${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
+      this.renderHud();
+    }
+  }
+
+  private pointInRect(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): boolean {
+    return p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
+  }
+
   private renderHud(): void {
     const s = this.session;
     const w = s?.wallet ?? {};
     const p = s?.player;
     const troopHint = formatTroopStacks(s?.cityTroops);
+    const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
     this.hud.textContent =
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1} · ` +
       `粮 ${w.food ?? 0} 木 ${w.wood ?? 0} 铁 ${w.iron ?? 0} 石 ${w.stone ?? 0} 币 ${w.gold ?? 0}` +
       (troopHint !== "无" ? ` · 兵 ${troopHint}` : "") +
+      (this.hitDebug ? ` · 点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}` : "") +
+      ` · ${dprTag}` +
       (this.status ? ` · ${this.status}` : "");
   }
 
@@ -363,46 +405,73 @@ export class MainCityScene implements Scene {
   }
 
   draw(c2d: CanvasRenderingContext2D): void {
-    const w = c2d.canvas.width;
-    const h = c2d.canvas.height;
-    c2d.fillStyle = "#3d5c3a";
-    c2d.fillRect(0, 0, w, h);
-    c2d.fillStyle = "#5c4a32";
-    c2d.fillRect(16, h - 160, w - 32, 136);
+    const vp = this.getViewport();
+    c2d.save();
+    applyLayoutTransform(c2d, vp);
+
+    c2d.fillStyle = "rgba(26, 20, 16, 0.85)";
+    c2d.fillRect(0, 0, 1600, STAGE_TOP_Y);
+    c2d.fillStyle = "rgba(26, 20, 16, 0.92)";
+    c2d.fillRect(0, TOOLBAR_TOP_Y, 1600, 900 - TOOLBAR_TOP_Y);
+
+    const bg = this.assets.getImageForAsset("mc.bg.plateau.v1");
+    if (bg) {
+      c2d.drawImage(bg.img, 0, STAGE_TOP_Y, 1600, 788);
+    } else {
+      c2d.fillStyle = "#3d5c3a";
+      c2d.fillRect(0, STAGE_TOP_Y, 1600, 788);
+    }
+
+    const buildingLevels = new Map(
+      (this.session?.buildings ?? []).map((b) => [b.slot_key ?? "", b] as const),
+    );
+    const sorted = [...MAIN_CITY_SLOTS].sort((a, b) => a.z - b.z);
+    for (const slot of sorted) {
+      this.drawSlot(c2d, slot, buildingLevels.get(slot.slot_key));
+    }
+
+    const food = this.assets.getImageForAsset("res.icon.food.v1");
+    if (food) {
+      c2d.drawImage(food.img, 16, 12, 32, 32);
+    }
     c2d.fillStyle = "#f5e6c8";
-    c2d.font = "18px system-ui";
-    c2d.fillText("主城（占位美术）", 24, h - 128);
-    c2d.font = "13px system-ui";
-    c2d.fillStyle = "#c9b896";
-    const p = this.session?.player;
-    c2d.fillText(`战力 ${p?.power ?? 0}`, 24, h - 104);
-    if (this.lastMarch?.march_id) {
-      c2d.fillText(formatMarchHint(this.lastMarch).slice(0, 48), 24, h - 84);
-    }
+    c2d.font = "16px system-ui";
+    const w = this.session?.wallet;
+    c2d.fillText(`粮 ${w?.food ?? 0}`, 56, 34);
 
-    const buildings = this.session?.buildings ?? [];
-    let x = 24;
-    const y = 48;
-    for (const b of buildings) {
-      const label = SLOT_LABEL[b.slot_key ?? ""] ?? b.slot_key ?? "?";
-      c2d.fillStyle = "#2a3d28";
-      c2d.fillRect(x, y, 100, 72);
+    c2d.restore();
+  }
+
+  private drawSlot(
+    c2d: CanvasRenderingContext2D,
+    slot: MainCitySlotDef,
+    building?: CityBuilding,
+  ): void {
+    const assetId = slot.asset_id ?? `mc.building.${slot.slot_key}.v1`;
+    const pack = slot.asset_id ? this.assets.getImageForAsset(assetId) : undefined;
+    const { display, ground_anchor: ga } = slot;
+    if (pack) {
+      const anchor = pack.meta.anchor;
+      const ax = pack.meta.anchor_unit === "normalized" ? anchor.x * display.w : anchor.x;
+      const ay = pack.meta.anchor_unit === "normalized" ? anchor.y * display.h : anchor.y;
+      const topX = display.x + ga.x - ax;
+      const topY = display.y + ga.y - ay;
+      c2d.drawImage(pack.img, topX, topY, display.w, display.h);
+    } else {
+      c2d.fillStyle = "rgba(42, 61, 40, 0.75)";
+      c2d.fillRect(display.x, display.y, display.w, display.h);
       c2d.fillStyle = "#e8dcc8";
-      c2d.font = "12px system-ui";
-      c2d.fillText(label, x + 8, y + 24);
-      c2d.fillText(`Lv${b.level ?? 0}`, x + 8, y + 44);
-      if (b.upgrade_finish_at_ms && b.upgrade_finish_at_ms > Date.now()) {
-        c2d.fillStyle = "#f0c674";
-        c2d.fillText("升级中", x + 8, y + 60);
-      }
-      x += 112;
+      c2d.font = "14px system-ui";
+      c2d.fillText(slot.label, display.x + 8, display.y + 24);
     }
-
-    c2d.fillStyle = "#8fbc8f";
-    c2d.fillRect(w - 56, 40, 40, 40);
-    c2d.fillStyle = "#1a1410";
-    c2d.font = "11px system-ui";
-    c2d.fillText("M3", w - 50, 66);
-    c2d.fillText("(5,5)", w - 54, 78);
+    if (building) {
+      c2d.fillStyle = "#f5e6c8";
+      c2d.font = "13px system-ui";
+      c2d.fillText(`Lv${building.level ?? 0}`, display.x + 8, display.y + display.h - 12);
+      if (building.upgrade_finish_at_ms && building.upgrade_finish_at_ms > Date.now()) {
+        c2d.fillStyle = "#f0c674";
+        c2d.fillText("升级中", display.x + display.w - 56, display.y + 20);
+      }
+    }
   }
 }
