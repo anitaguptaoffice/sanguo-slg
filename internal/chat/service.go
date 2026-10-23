@@ -72,6 +72,15 @@ func (s *Service) Send(ctx context.Context, actor Actor, req *chatv1.SendChatMes
 		return nil, ErrContentTooLong
 	}
 
+	now := s.now()
+	mutedUntilMS, err := s.store.MutedUntilMS(ctx, serverID, actor.PlayerID)
+	if err != nil {
+		return nil, err
+	}
+	if mutedUntilMS > now.UnixMilli() {
+		return nil, ErrPlayerMuted
+	}
+
 	var channelID int64
 	var recipientID int64
 	var guildID int64
@@ -108,7 +117,6 @@ func (s *Service) Send(ctx context.Context, actor Actor, req *chatv1.SendChatMes
 	}
 
 	rk := rateKey{serverID: serverID, playerID: actor.PlayerID, channelType: chType, channelID: channelID}
-	now := s.now()
 	dec := s.limiter.check(rk, now)
 	if !dec.Allowed {
 		return nil, ErrRateLimited

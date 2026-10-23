@@ -19,6 +19,8 @@ const (
 	errCodeChatContentTooLong     commonv1.ErrorCode = 61002
 	errCodeChatRateLimited        commonv1.ErrorCode = 61003
 	errCodeChatRecipientNotFound  commonv1.ErrorCode = 61004
+	// Next chat band code after CHAT_GUILD_REQUIRED (61005) in envelope.proto.
+	errCodeChatPlayerMuted commonv1.ErrorCode = 61006
 )
 
 // SessionResolver maps gateway session_id to the active shard player.
@@ -94,6 +96,8 @@ func chatErr(trace string, err error) *commonv1.ServerPacket {
 		return errResp(trace, errCodeChatContentTooLong, "content too long")
 	case errors.Is(err, ErrRateLimited):
 		return errResp(trace, errCodeChatRateLimited, "rate limited")
+	case errors.Is(err, ErrPlayerMuted):
+		return errResp(trace, errCodeChatPlayerMuted, "player muted")
 	case errors.Is(err, ErrRecipientRequired), errors.Is(err, ErrCannotMessageSelf):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, ErrRecipientNotFound):
