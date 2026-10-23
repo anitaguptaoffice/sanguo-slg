@@ -1,6 +1,7 @@
 import type { MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
-import type { MarchSummary } from "@/net/militaryFormat";
+import type { BattleReportSummary, MarchSummary } from "@/net/militaryFormat";
+import { readBattleReportTimeWindowFilterSession } from "@/net/battleReportListState";
 import {
   applyMarchTargetAndRemember,
   marchTargetStatusMessage,
@@ -22,7 +23,7 @@ import {
   WORLD_CITY_ROW_MARCH_DEST_CLASS,
   WORLD_CITY_ROW_SELECTED_CLASS,
 } from "@/ui/marchWorldListLink";
-import { buildWorldTileInfoCardSummary } from "@/ui/worldTileInfoCard";
+import { formatWorldTileInfoCard } from "@/ui/worldTileInfoCard";
 
 export type MarchTargetSink = {
   /** 出征表单容器（含 data-field to-x / to-y）；可选。 */
@@ -38,8 +39,12 @@ export type WorldPanelsOptions = {
   getMarchesSnapshot?: () => MarchSummary[];
   /** 点击「指向此格的行军 N 条」时选中军情首条匹配行。 */
   onMarchCountClick?: (grid: { x: number; y: number }) => void;
-  /** 信息卡「在军情中查看」深链。 */
+  /** 信息卡「打开军情」深链。 */
   onViewMarchesAtGrid?: (grid: { x: number; y: number }) => void;
+  /** 战报列表快照（只读，格点关联最近战报）。 */
+  getBattleReportsSnapshot?: () => BattleReportSummary[];
+  /** 信息卡「打开战报筛选」深链。 */
+  onViewBattleReportsAtGrid?: (grid: { x: number; y: number }, hintReportId?: number) => void;
 };
 
 export class WorldPanels {
@@ -131,8 +136,12 @@ export class WorldPanels {
       <aside class="world-tile-info hidden" data-role="world-tile-info" aria-live="polite">
         <h4>格点信息</h4>
         <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
+        <p class="world-tile-info-hint hidden" data-role="world-tile-occupation-hint"></p>
         <p class="world-tile-info-march" data-role="world-tile-march-count"></p>
-        <button type="button" data-action="view-marches-at-grid">在军情中查看</button>
+        <div class="world-tile-info-actions">
+          <button type="button" data-action="view-marches-at-grid">打开军情</button>
+          <button type="button" class="hidden" data-action="view-battle-reports-at-grid">打开战报筛选</button>
+        </div>
       </aside>
       <button type="button" data-action="refresh-world">刷新城池</button>
       <div class="panel-scroll-body" data-role="world-scroll">
@@ -215,27 +224,39 @@ export class WorldPanels {
   private renderInfoCard(): void {
     const card = this.panel.querySelector('[data-role="world-tile-info"]');
     const dl = this.panel.querySelector('[data-role="world-tile-info-lines"]');
+    const hintEl = this.panel.querySelector('[data-role="world-tile-occupation-hint"]');
     const marchEl = this.panel.querySelector('[data-role="world-tile-march-count"]');
-    if (!card || !dl || !marchEl) return;
+    const reportBtn = this.panel.querySelector<HTMLButtonElement>(
+      '[data-action="view-battle-reports-at-grid"]',
+    );
+    if (!card || !dl || !marchEl || !hintEl) return;
 
     if (!this.selectedGrid) {
       card.classList.add("hidden");
       dl.innerHTML = "";
+      hintEl.textContent = "";
+      hintEl.classList.add("hidden");
       marchEl.textContent = "";
+      reportBtn?.classList.add("hidden");
       return;
     }
 
     const { x, y } = this.selectedGrid;
     const marches = this.options?.getMarchesSnapshot?.() ?? [];
-    const summary = buildWorldTileInfoCardSummary({
-      x,
-      y,
-      cities: this.cities,
+    const battleReports = this.options?.getBattleReportsSnapshot?.() ?? [];
+    const timeWindow = readBattleReportTimeWindowFilterSession() ?? "all";
+    const summary = formatWorldTileInfoCard(
+      { x, y },
+      this.cities,
       marches,
-      ownCityX: this.getSession()?.cityX,
-      ownCityY: this.getSession()?.cityY,
-      currentCityId: this.currentCityId(),
-    });
+      {
+        ownCityX: this.getSession()?.cityX,
+        ownCityY: this.getSession()?.cityY,
+        currentCityId: this.currentCityId(),
+        battleReports,
+        battleReportTimeWindow: timeWindow,
+      },
+    );
 
     card.classList.remove("hidden");
     card.setAttribute("data-grid-x", String(x));
@@ -251,9 +272,30 @@ export class WorldPanels {
     };
     addLine("坐标", summary.coordsLine.replace(/^格点 /, ""));
     if (summary.cityLine) addLine("城池", summary.cityLine);
+    if (summary.playerLine) addLine("玩家", summary.playerLine);
     if (summary.terrainLine) addLine("地形", summary.terrainLine.replace(/^资源格：/, ""));
     if (summary.manhattanLine) addLine("距离", summary.manhattanLine);
+    if (summary.occupationHintLine) {
+      hintEl.textContent = summary.occupationHintLine;
+      hintEl.classList.remove("hidden");
+    } else {
+      hintEl.textContent = "";
+      hintEl.classList.add("hidden");
+    }
     marchEl.textContent = summary.marchCountLine;
+    if (reportBtn) {
+      if (summary.showBattleReportShortcut) {
+        reportBtn.classList.remove("hidden");
+        if (summary.recentBattleReportId != null) {
+          reportBtn.setAttribute("data-report-id", String(summary.recentBattleReportId));
+        } else {
+          reportBtn.removeAttribute("data-report-id");
+        }
+      } else {
+        reportBtn.classList.add("hidden");
+        reportBtn.removeAttribute("data-report-id");
+      }
+    }
   }
 
   private async refreshList(): Promise<void> {
@@ -293,6 +335,16 @@ export class WorldPanels {
     if (viewIntelBtn) {
       if (!this.selectedGrid) return;
       this.options?.onViewMarchesAtGrid?.({ ...this.selectedGrid });
+      return;
+    }
+    const viewReportBtn = target.closest("button[data-action='view-battle-reports-at-grid']");
+    if (viewReportBtn) {
+      if (!this.selectedGrid) return;
+      const hint = Number(viewReportBtn.getAttribute("data-report-id"));
+      this.options?.onViewBattleReportsAtGrid?.(
+        { ...this.selectedGrid },
+        Number.isFinite(hint) && hint > 0 ? hint : undefined,
+      );
       return;
     }
     const marchCountBtn = target.closest("button[data-action='world-march-count']");

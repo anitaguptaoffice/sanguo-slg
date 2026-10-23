@@ -737,12 +737,17 @@
       .world-tile-info-lines { margin: 0 0 8px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; min-width: 0; }
       .world-tile-info-lines dt { color: #b8a88a; margin: 0; }
       .world-tile-info-lines dd { margin: 0; color: #f5e6c8; overflow-wrap: anywhere; }
+      .world-tile-info-hint { margin: 0 0 8px; color: #b8a88a; font-style: italic; }
       .world-tile-info-march { margin: 0 0 8px; color: #c9e4ff; }
-      .world-tile-info button[data-action="view-marches-at-grid"] {
+      .world-tile-info-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+      .world-tile-info button[data-action="view-marches-at-grid"],
+      .world-tile-info button[data-action="view-battle-reports-at-grid"] {
         font-size: 11px; padding: 4px 8px; border-radius: 4px; border: 1px solid #6a9fd8;
         background: #1e2830; color: #c9e4ff; cursor: pointer;
       }
-      .world-tile-info button[data-action="view-marches-at-grid"]:hover { background: #2a3a48; }
+      .world-tile-info button[data-action="view-marches-at-grid"]:hover,
+      .world-tile-info button[data-action="view-battle-reports-at-grid"]:hover { background: #2a3a48; }
+      .battle-report-location-filter { font-size: 12px; color: #c9e4ff; margin-left: 4px; }
       .rank-panel .social-refresh-status,
       .rank-panel .social-refresh-retry { flex-shrink: 0; }
       .daily-quest-next {

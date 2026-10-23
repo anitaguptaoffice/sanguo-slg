@@ -152,11 +152,12 @@ describe("WorldPanels", () => {
     expect(marchGrid).toEqual({ x: 60, y: 60 });
   });
 
-  it("shows read-only info card with march count and intel deep link", async () => {
+  it("shows occupation hint, battle report shortcut, and intel deep link", async () => {
     const mount = document.createElement("div");
     const form = document.createElement("div");
     form.innerHTML = `<input data-field="to-x" /><input data-field="to-y" />`;
     let intelGrid: { x: number; y: number } | null = null;
+    let reportGrid: { x: number; y: number; hint?: number } | null = null;
     const gateway: GatewayPort = {
       listPlayerCities: vi.fn().mockResolvedValue({
         cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true, wall_level: 2 }],
@@ -185,6 +186,12 @@ describe("WorldPanels", () => {
         onViewMarchesAtGrid: (g) => {
           intelGrid = g;
         },
+        getBattleReportsSnapshot: () => [
+          { report_id: 42, location_x: 60, location_y: 60, created_at_ms: 1 },
+        ],
+        onViewBattleReportsAtGrid: (g, hint) => {
+          reportGrid = { ...g, hint };
+        },
       },
     );
     panels.attach();
@@ -196,10 +203,34 @@ describe("WorldPanels", () => {
     expect(card?.classList.contains("hidden")).toBe(false);
     expect(card?.textContent).toContain("指向此格行军：1 条");
     expect(card?.textContent).toContain("城墙 Lv.2");
+    expect(mount.querySelector('[data-action="view-battle-reports-at-grid"]')).toBeTruthy();
 
     mount.querySelector('[data-action="view-marches-at-grid"]')?.dispatchEvent(
       new Event("click", { bubbles: true }),
     );
     expect(intelGrid).toEqual({ x: 60, y: 60 });
+
+    mount.querySelector('[data-action="view-battle-reports-at-grid"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(reportGrid).toEqual({ x: 60, y: 60, hint: 42 });
+  });
+
+  it("shows neutral occupation hint on empty grid selection", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({ cities: [] }),
+    } as unknown as GatewayPort;
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => null,
+      { marchFormRoot: null },
+      () => {},
+    );
+    panels.attach();
+    panels.selectGridAt(7, 8);
+    const hint = mount.querySelector('[data-role="world-tile-occupation-hint"]');
+    expect(hint?.textContent).toContain("暂无城池或玩家占领");
   });
 });

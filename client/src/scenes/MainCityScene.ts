@@ -562,6 +562,12 @@ export class MainCityScene implements Scene {
           this.status = `军情：已筛选目的格 (${grid.x},${grid.y})`;
           this.renderHud();
         },
+        getBattleReportsSnapshot: () => this.battleReports.getReportsSnapshot(),
+        onViewBattleReportsAtGrid: (grid, hintReportId) => {
+          void this.battleReports.openListFilteredByGrid(grid.x, grid.y, hintReportId);
+          this.status = `战报：已筛选战场格点 (${grid.x},${grid.y})`;
+          this.renderHud();
+        },
       },
     );
     this.world.attach();

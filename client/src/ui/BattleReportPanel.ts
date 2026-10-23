@@ -33,6 +33,7 @@ import {
   battleReportOutcomeChipClass,
   battleReportOutcomeChipLabel,
   countBattleReportsByOutcome,
+  filterBattleReportsByLocation,
   filterBattleReportsByOutcome,
   filterBattleReportsByTimeWindow,
   formatBattleReportDetail,
@@ -97,6 +98,8 @@ export class BattleReportPanel {
   private total = 0;
   private outcomeFilter: BattleReportOutcomeFilter = "all";
   private timeWindowFilter: BattleReportTimeWindowFilter = "all";
+  /** 世界格点信息卡深链：按战场坐标客户端筛选（CLIENT-108）。 */
+  private locationFilter: { x: number; y: number } | null = null;
   private selectedReportId = 0;
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
@@ -179,6 +182,42 @@ export class BattleReportPanel {
     if (reportId > 0) await this.openReport(reportId);
   }
 
+  getLocationFilter(): { x: number; y: number } | null {
+    return this.locationFilter;
+  }
+
+  clearLocationFilter(): void {
+    if (!this.locationFilter) return;
+    this.locationFilter = null;
+    this.updateLocationFilterUi();
+    this.renderList();
+  }
+
+  /**
+   * 世界信息卡「打开战报筛选」：保留 CLIENT-065 时间窗/outcome 会话筛选，并叠加格点坐标过滤。
+   */
+  async openListFilteredByGrid(
+    x: number,
+    y: number,
+    hintReportId?: number,
+  ): Promise<void> {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    this.locationFilter = { x, y };
+    this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
+    await this.refreshList();
+    this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
+    this.panelOpts?.onUnreadChange?.(0);
+    this.updateLocationFilterUi();
+    this.renderList();
+    const reportId = selectDeepLinkBattleReportId(this.reports, hintReportId ?? null);
+    if (reportId > 0) await this.openReport(reportId);
+  }
+
+  getReportsSnapshot(): BattleReportSummary[] {
+    return this.reports;
+  }
+
   private async openAndSyncUnread(): Promise<void> {
     await this.refreshList();
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
@@ -206,6 +245,8 @@ export class BattleReportPanel {
             <option value="last7d">近7日</option>
           </select>
         </label>
+        <span class="battle-report-location-filter hidden" data-role="report-location-filter" aria-live="polite"></span>
+        <button type="button" class="hidden" data-action="clear-location-filter">清除格点筛选</button>
       </div>
       <div class="battle-report-outcome-summary" data-role="report-outcome-summary" aria-label="当前时间范围胜负统计" hidden></div>
       <button type="button" data-action="refresh-reports">刷新列表</button>
@@ -228,7 +269,28 @@ export class BattleReportPanel {
 
   private visibleReports(nowMs = Date.now()): BattleReportSummary[] {
     const byTime = this.timeWindowFilteredReports(nowMs);
-    return filterBattleReportsByOutcome(byTime, this.outcomeFilter);
+    const byOutcome = filterBattleReportsByOutcome(byTime, this.outcomeFilter);
+    const loc = this.locationFilter;
+    if (loc == null) return byOutcome;
+    return filterBattleReportsByLocation(byOutcome, loc.x, loc.y);
+  }
+
+  private updateLocationFilterUi(): void {
+    const label = this.panel.querySelector('[data-role="report-location-filter"]');
+    const clearBtn = this.panel.querySelector<HTMLButtonElement>(
+      '[data-action="clear-location-filter"]',
+    );
+    const loc = this.locationFilter;
+    if (!label || !clearBtn) return;
+    if (loc == null) {
+      label.textContent = "";
+      label.classList.add("hidden");
+      clearBtn.classList.add("hidden");
+      return;
+    }
+    label.textContent = `格点：(${loc.x},${loc.y})`;
+    label.classList.remove("hidden");
+    clearBtn.classList.remove("hidden");
   }
 
   private updateFilterButtons(): void {
@@ -288,6 +350,7 @@ export class BattleReportPanel {
     if (!ul) return;
 
     this.updateFilterButtons();
+    this.updateLocationFilterUi();
     this.renderOutcomeSummary();
 
     if (statusEl) {
@@ -826,6 +889,14 @@ export class BattleReportPanel {
     if (filterBtn) {
       const f = filterBtn.getAttribute("data-filter") as BattleReportOutcomeFilter;
       if (f) this.setOutcomeFilter(f);
+      return;
+    }
+
+    const clearLocBtn = (ev.target as HTMLElement).closest(
+      'button[data-action="clear-location-filter"]',
+    );
+    if (clearLocBtn) {
+      this.clearLocationFilter();
       return;
     }
 
