@@ -90,11 +90,18 @@ import {
   type HudCenterTodoCounts,
 } from "@/net/hudCenterTodo";
 import {
+  buildSubmitStateMachine,
+  formatBuildSubmitSuccess,
+  type BuildSubmitState,
+  walletBuildDeductPulseKeys,
+} from "@/net/buildSubmitFeedback";
+import {
   formatMarchDepartedStatusToast,
   syncMarchSubmitButton,
 } from "@/net/marchSubmitFeedback";
 import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
 import { ChatUnreadTracker } from "@/net/chatUnread";
+import { previewUpgradeCost } from "@/net/previewUpgradeCost";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { buildHudCenterTodoCounts } from "@/net/hudTodoBadges";
@@ -165,6 +172,7 @@ export class MainCityScene implements Scene {
   private status = "";
   private lastMarch: MarchSummary | null = null;
   private marchSubmitInflight = false;
+  private buildSubmitState: BuildSubmitState = "idle";
   private intelRemarchTroopsLine: string | null = null;
   private suppressMarchTargetHighlightClear = false;
   private social!: SocialPanels;
@@ -602,6 +610,7 @@ export class MainCityScene implements Scene {
       SLOT_LABEL,
       () => this.session,
       (slotKey, buildingCfgId) => void this.startBuildingUpgrade(slotKey, buildingCfgId),
+      () => this.buildSubmitState,
       (root) => skinDefaultPanel(root, this.assets, 380, 300),
     );
     this.buildingPanel.attach();
@@ -806,6 +815,7 @@ export class MainCityScene implements Scene {
       }
     }
     if (action === "upgrade-farm") {
+      this.resetBuildSubmitState();
       this.buildingPanel.selectSlot("farm");
       this.status = "建造：农田";
       this.renderHud();
@@ -1111,6 +1121,7 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
+    this.resetBuildSubmitState();
     this.buildingPanel.selectSlot(top.slot_key);
     this.status = `建造：${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
     this.renderHud();
@@ -1533,11 +1544,20 @@ export class MainCityScene implements Scene {
     this.syncMilitaryPanel();
   }
 
+  private resetBuildSubmitState(): void {
+    this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "CLEAR_ERROR" });
+  }
+
   private async startBuildingUpgrade(slotKey: string, buildingCfgId: number): Promise<void> {
     if (!this.session) return;
-    const label = SLOT_LABEL[slotKey] ?? slotKey;
-    this.status = `${label} 升级请求中…`;
+    const building = buildingBySlot(this.session.buildings, slotKey);
+    const level = building?.level ?? 0;
+    const preview = previewUpgradeCost(slotKey, level, this.session.wallet);
+    const targetLevel = preview?.targetLevel ?? level + 1;
+    const walletBefore = this.session.wallet;
+    this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "SUBMIT" });
     this.buildingPanel.setFormError(null);
+    this.buildingPanel.sync();
     this.renderHud();
     try {
       const res = (await this.gateway.startBuildingUpgrade(
@@ -1549,18 +1569,24 @@ export class MainCityScene implements Scene {
         building?: CityBuilding;
       };
       if (res.wallet) this.session.wallet = res.wallet;
+      const walletAfter = this.session.wallet;
+      const pulseKeys = walletBuildDeductPulseKeys(walletBefore, walletAfter, preview?.cost);
+      if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
       if (res.building) {
         const idx = this.session.buildings.findIndex((b) => b.slot_key === slotKey);
         if (idx >= 0) this.session.buildings[idx] = res.building;
         else this.session.buildings.push(res.building);
       }
+      this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "SUCCESS" });
       await this.refreshState();
-      this.status = `${label} 已排队升级`;
+      this.status = formatBuildSubmitSuccess(slotKey, targetLevel, SLOT_LABEL);
       this.buildingPanel.sync();
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "FAIL" });
       this.buildingPanel.setFormError(msg);
       this.status = msg;
+      this.buildingPanel.sync();
     }
     this.renderHud();
   }

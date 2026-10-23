@@ -640,6 +640,8 @@ cd client && npm install && npm run dev
 2. 资源充足时仅展示预览，需玩家点 **确认升级** 才发 RPC。
 3. 窄屏下预览行不横向溢出（与 **CLIENT-086** 一并验收）。单测：`previewUpgradeCost.test.ts`。
 
+**建造提交反馈（CLIENT-104）**：点 **确认升级** 后按钮 **disabled** 且文案 **提交中…**（`buildSubmitFeedback`）；成功顶栏状态 `formatBuildSubmitSuccess(slot_key, targetLevel)`，扣粮木铁石时触发 **CLIENT-051** 资源脉冲；失败在 **build-form-error** 展示 **CLIENT-067** 口径且保留槽位选中与消耗预览。**CLIENT-066** 队列深链不退化。单测：`buildSubmitFeedback.test.ts`。
+
 ### 手动验收（募兵消耗预览 CLIENT-088）
 
 军事/队列募兵区（军事面板募兵表单）在选中兵种与数量时展示 **下一批** 粮/木/铁/石消耗与耗时只读摘要（`previewRecruitCost` + `troopRecruitCatalog`，钱包来自 `GetCityState.resources`）；资源不足时 **募兵** disabled 且 inline **缺少：粮 N …**（**CLIENT-067** 口径）。足够时仅预览，需点 **募兵** 才发 `RecruitTroop`。募兵队列 **加速**仍 out；**CLIENT-082** 建造预览与 **DOM-003** 建造加速符不退化。
