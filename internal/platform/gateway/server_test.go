@@ -189,13 +189,13 @@ func TestStress3000Connections(t *testing.T) {
 			frame, _ := proto.Marshal(&commonv1.ClientPacket{Route: gateway.RoutePing, TraceId: "s"})
 			if err := c.WriteMessage(websocket.BinaryMessage, frame); err != nil {
 				errCh <- err
-				c.Close()
+				_ = c.Close()
 				return
 			}
 			if _, _, err := c.ReadMessage(); err != nil {
 				errCh <- err
 			}
-			c.Close()
+			_ = c.Close()
 		}()
 	}
 	wg.Wait()
