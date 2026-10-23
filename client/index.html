@@ -358,6 +358,40 @@
         text-align: center;
       }
       .server-select-panel button.art-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+      .server-select-panel button:focus-visible,
+      .server-select-panel .server-list li:focus-visible {
+        outline: 2px solid #c9a227;
+        outline-offset: 2px;
+      }
+      #hud .hud-server-select-trigger {
+        pointer-events: auto;
+        flex-shrink: 0;
+        margin-right: 8px;
+        padding: 4px 10px;
+        border: 1px solid #8a6d3b;
+        border-radius: 6px;
+        background: rgba(26, 20, 16, 0.85);
+        color: #f5e6c8;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      #hud .hud-server-select-trigger:focus-visible {
+        box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.55);
+        outline: none;
+      }
+      #hud .hud-server-select-status {
+        pointer-events: none;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .main-city-toolbar button:focus-visible {
+        box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.55);
+        outline: none;
+      }
       .social-panel button {
         margin: 6px 6px 0 0; padding: 8px 12px; border: 1px solid #5c4a32; border-radius: 6px;
         background: #3d3028; color: #f5e6c8; cursor: pointer;
@@ -1225,6 +1259,16 @@
         min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar button[data-has-badge] {
+        padding-right: 1.35rem;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar .toolbar-btn-label {
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: bottom;
       }
       #layout-frame.layout-narrow .main-city-toolbar .toolbar-badge {
         max-width: 2.25rem;

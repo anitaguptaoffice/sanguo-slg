@@ -22,6 +22,10 @@
 
 图标缺失时 HUD 回退为「粮/木/铁/石/币 + 数值」纯文字（与 CLIENT-011 一致）。面板根节点设 `data-art-skin="off"` 可跳过 nine-slice。
 
+### ART-CHROME-006 运行时 UX（CLIENT-110）
+
+在 **#452/#456** 已接线 `ui.panel.default.v1` 选服弹层与 `ui.hud.bar.v1` / `ui.toolbar.bar.v1` chrome 前提下：**选服** 顶栏触发钮打开 `role=dialog` 弹层，**Esc** 关闭并在关闭后焦点回到触发钮；弹层内 **Tab** 焦点循环与 `:focus-visible` 金环。主城底栏各 `toggle-*` 按钮 **`aria-expanded`** 与对应中心/侧栏面板打开态同步；**1280×720** `layout-narrow` 下工具栏标签与 **CLIENT-107** 角标溢出省略，完整计数见按钮 **`title`**。美术证据只读：`docs/art/samples/art-chrome-006/`。单测：`overlayFocusTrap.test.ts`、`toolbarAriaExpanded.test.ts`、`ServerSelectScene.test.ts`。
+
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
