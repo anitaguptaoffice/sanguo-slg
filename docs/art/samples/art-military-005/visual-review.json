@@ -1,0 +1,20 @@
+{
+  "status": "local visual review passed",
+  "reviewed": [
+    "previews/review-montage.png",
+    "textures/2x/ui/panel_military.png"
+  ],
+  "observations": [
+    "Jade/bronze frame matches established palette; warmer parchment center is clear.",
+    "Corners remain fixed in 320x200, 420x788 and 336x630 montage; no visible slice seams.",
+    "No baked text, icons, content or patterned center.",
+    "2x source inspected: fine frame and corner details remain sharp."
+  ],
+  "limitations": [
+    "Offline image review only; not DOM, gameplay, hit-area, viewport or runtime acceptance."
+  ],
+  "reviewed_sha256": {
+    "previews/review-montage.png": "6a7a14e4e9768c4b29d35e33136af768005a83308d7fe77980ffe27b7c0cb775",
+    "textures/2x/ui/panel_military.png": "484b7186fc4b0c8b597bd6ae989249beb259dd5cf454518763ebb7c098303f6b"
+  }
+}
