@@ -2181,7 +2181,8 @@
   wave: 17
   domain: client
   depends_on: [CLIENT-037, CLIENT-015]
-  sync_status: ready
+  sync_status: in-progress
+  assignee: cursor-cloud-agent
   size: M
   owner_dir: client
   scope: [client/**]

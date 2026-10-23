@@ -93,6 +93,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **邮件附件领取 + 未领高亮** | [手动验收（邮件附件领取 CLIENT-035）](#手动验收邮件附件领取-client-035)（[#247](https://github.com/anitaguptaoffice/sanguo-slg/issues/247) / [#253](https://github.com/anitaguptaoffice/sanguo-slg/pull/253)）；基础收件箱仍见 [CLIENT-017](#手动验收邮件收件箱client-017) | 已合 |
 | **军事 panel manifest**（`ui.panel.military.v1`） | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)（[#248](https://github.com/anitaguptaoffice/sanguo-slg/issues/248) / [#255](https://github.com/anitaguptaoffice/sanguo-slg/pull/255)）；募兵主按钮样式见 **CLIENT-033** hotfix | 已合 |
 | **小地图比例尺 / 多行军扫读** | [手动验收（小地图 CLIENT-037）](#手动验收小地图比例尺与多行军-client-037)（[#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) / [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) `5a4bb4af`） | 已合 |
+| **小地图选点出征** | [手动验收（小地图选点 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265)） | 本 PR |
 | **HUD 角标点击深链** | [手动验收（HUD 角标深链 CLIENT-038）](#手动验收hud-角标深链-client-038)（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`） | 已合 |
 | **1280 顶栏 canvas/DOM 叠字** | [手动验收（1280 顶栏 HUD CLIENT-039）](#手动验收1280-顶栏-hud-client-039)（[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) / [#260](https://github.com/anitaguptaoffice/sanguo-slg/pull/260) `9e98a28b`）；**不**替代 **CLIENT-033** hotfix | 已合 |
 
@@ -281,6 +282,16 @@ cd client && npm install && npm run dev
 3. 点右上角 **▼** 折叠为角标「世界 ▶」，刷新页面后折叠状态应保持（`sessionStorage` 键 `rxsg.client.worldMinimap.collapsed`）；折叠后点击角标可展开。
 4. 折叠状态下点击原小地图区域内的 **农田** 等槽位仍应响应（折叠条仅占右上角窄条，不占 270×210 hit 区）。
 5. 仍无取消行军/加速；`cd client && npm test` 含 `worldMinimap` 比例尺/折叠/描边用例。
+
+### 手动验收（小地图选点出征 CLIENT-041）
+
+在 [CLIENT-028](#手动验收世界地图行军标注-client-028) / [CLIENT-037](#手动验收小地图比例尺与多行军-client-037) 基础上：
+
+1. 展开小地图，在 **空白区域单击**（非行军目的点、非折叠 ▼）：军事面板 `to_x` / `to_y` 应更新为反算格点（0..499），状态栏提示 **「已选出征目标 (x,y)」**。
+2. 滚轮缩放或拖拽平移后再次单击空白，坐标应随当前视野变化；小幅移动仍视为拖拽，不填点。
+3. 单击已有 **行军目的点** 仍优先选中 `ListMarches` 行并打开军事面板（CLIENT-037），**不**覆盖为空白反算坐标。
+4. [世界坐标 CLIENT-015](#手动验收世界坐标-client-015) 点城填坐标与上述表单共用；折叠小地图时不响应地图区单击。
+5. `cd client && npm test` 含 `minimapLayoutToWorld` / `clampWorldMapCoord` 用例。
 
 ### 手动验收（世界坐标 CLIENT-015）
 
