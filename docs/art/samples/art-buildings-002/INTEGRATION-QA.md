@@ -51,12 +51,12 @@
 - `screenshots/maincity-four-slots-1600x900-dpr1-four-buildings-crop.jpg` / `.webp`
 - `screenshots/maincity-four-slots-1600x900-dpr2-four-buildings-crop.jpg` / `.webp`
 
-固定 commit raw 链接（`evidenceCommitSha` = `665b20fa85aeb7d6270713e8b2a64bd6d64686ce`）：
+固定 commit raw 链接（`evidenceCommitSha` = `593db948e5cf8e3b6c3339e9f476f45ae8932e61`）：
 
-- https://github.com/anitaguptaoffice/sanguo-slg/raw/665b20fa85aeb7d6270713e8b2a64bd6d64686ce/docs/art/samples/art-buildings-002/screenshots/maincity-four-slots-1600x900-dpr1-four-buildings-crop.jpg
-- https://github.com/anitaguptaoffice/sanguo-slg/raw/665b20fa85aeb7d6270713e8b2a64bd6d64686ce/docs/art/samples/art-buildings-002/screenshots/maincity-four-slots-1600x900-dpr2-four-buildings-crop.jpg
-- https://github.com/anitaguptaoffice/sanguo-slg/raw/665b20fa85aeb7d6270713e8b2a64bd6d64686ce/docs/art/samples/art-buildings-002/screenshots/maincity-four-slots-1600x900-dpr2-full.jpg
-- https://github.com/anitaguptaoffice/sanguo-slg/raw/665b20fa85aeb7d6270713e8b2a64bd6d64686ce/docs/art/samples/art-buildings-002/viewport-metadata.json
+- https://github.com/anitaguptaoffice/sanguo-slg/raw/593db948e5cf8e3b6c3339e9f476f45ae8932e61/docs/art/samples/art-buildings-002/screenshots/maincity-four-slots-1600x900-dpr1-four-buildings-crop.jpg
+- https://github.com/anitaguptaoffice/sanguo-slg/raw/593db948e5cf8e3b6c3339e9f476f45ae8932e61/docs/art/samples/art-buildings-002/screenshots/maincity-four-slots-1600x900-dpr2-four-buildings-crop.jpg
+- https://github.com/anitaguptaoffice/sanguo-slg/raw/593db948e5cf8e3b6c3339e9f476f45ae8932e61/docs/art/samples/art-buildings-002/screenshots/maincity-four-slots-1600x900-dpr2-full.jpg
+- https://github.com/anitaguptaoffice/sanguo-slg/raw/593db948e5cf8e3b6c3339e9f476f45ae8932e61/docs/art/samples/art-buildings-002/viewport-metadata.json
 
 ## npm
 
