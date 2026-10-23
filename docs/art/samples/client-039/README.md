@@ -23,3 +23,5 @@ node scripts/capture-client-039-evidence.mjs
 | `military-1280x720-dpr1-top-hud.png` | 同上视口顶栏 `#hud` 裁条 |
 
 CLIENT-033 军事字色 / 募兵四态证据仍在 `docs/art/samples/client-033/`（本卡未重做）。
+
+**CLIENT-040**：完整页 PNG 过大时，见 `docs/art/samples/client-040/`（同布局 WebP/JPEG <1MB；不替代本目录 HUD 裁条 PASS）。
