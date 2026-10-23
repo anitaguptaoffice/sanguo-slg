@@ -4,6 +4,7 @@ import { applyUseResult, bagStackQuantity } from "@/net/bagState";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import { findBuildDailyQuestForBuilding } from "@/net/dailyQuestQueueMatch";
+import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -70,16 +71,20 @@ export class QueuePanels {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (this.isOpen()) {
+      resetQueuePanelViewportScroll(this.panel);
       this.tickAccum = 0;
       this.render();
+      resetQueuePanelViewportScroll(this.panel);
     }
   }
 
   /** 打开队列面板（日常练兵/建造引导）。 */
   open(): void {
     this.panel.classList.remove("hidden");
+    resetQueuePanelViewportScroll(this.panel);
     this.tickAccum = 0;
     this.render();
+    resetQueuePanelViewportScroll(this.panel);
   }
 
   addRecruitEntry(entry: RecruitQueueEntry | null): void {
