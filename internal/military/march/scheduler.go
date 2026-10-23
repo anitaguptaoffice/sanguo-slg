@@ -57,20 +57,22 @@ func (s *Scheduler) Schedule(ev Event) {
 // PollDue runs all handlers for events with DueAt <= now.
 func (s *Scheduler) PollDue(now time.Time) int {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-	n := 0
+	var due []Event
 	for s.events.Len() > 0 {
 		top := s.events[0]
 		if top.ev.DueAt.After(now) {
 			break
 		}
 		item := heap.Pop(&s.events).(evItem)
-		if item.ev.Handler != nil {
-			item.ev.Handler(item.ev)
-		}
-		n++
+		due = append(due, item.ev)
 	}
-	return n
+	s.mu.Unlock()
+	for _, ev := range due {
+		if ev.Handler != nil {
+			ev.Handler(ev)
+		}
+	}
+	return len(due)
 }
 
 // NextDue returns the earliest pending due time, or zero if empty.

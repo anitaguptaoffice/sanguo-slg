@@ -9,18 +9,21 @@ var (
 	ErrInvalidMarch     = errors.New("march: invalid march order")
 	ErrMarchNotFound    = errors.New("march: order not found")
 	ErrInvalidPhase     = errors.New("march: invalid phase transition")
-	ErrNoTroopsToMarch  = errors.New("march: empty troop stack")
+	ErrNoTroopsToMarch     = errors.New("march: empty troop stack")
+	ErrInsufficientTroops = errors.New("march: insufficient city troops")
 )
 
 // StartMarchRequest creates a pending march that departs immediately when committed via Hub.
 type StartMarchRequest struct {
-	ArmyID  int64
-	FromX   int
-	FromY   int
-	ToX     int
-	ToY     int
-	Purpose int16
-	Troops  []TroopStack
+	ArmyID       int64
+	OriginCityID int64
+	PlayerID     int64
+	FromX        int
+	FromY        int
+	ToX          int
+	ToY          int
+	Purpose      int16
+	Troops       []TroopStack
 }
 
 // BeginMarch transitions pending → marching and returns the order with timing filled in.
