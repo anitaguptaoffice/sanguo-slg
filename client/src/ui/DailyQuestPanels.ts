@@ -124,14 +124,15 @@ export class DailyQuestPanels {
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.dataset.centerPanel = "daily";
     el.innerHTML = `
       <h3>日常</h3>
       <p class="daily-battle-report-banner hidden" data-role="daily-report-banner" data-action="daily-open-reports" role="button" tabindex="0" hidden></p>
       <p data-role="daily-hint">chain ${DAILY_QUEST_CHAIN_ID}；接取后由服务端自动累积进度，无需手填上报。</p>
       <div class="content-panel-actions">
-        <button type="button" data-action="refresh-daily">刷新列表</button>
-        <button type="button" data-action="accept-daily">接取</button>
-        <button type="button" class="art-btn-primary" data-action="claim-daily">领奖</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-daily">刷新列表</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="accept-daily">接取</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-daily">领奖</button>
       </div>
       <ul class="daily-quest-list" data-role="daily-list"></ul>
       <p class="daily-quest-next" data-role="daily-next" hidden></p>

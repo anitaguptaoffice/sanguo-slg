@@ -22,8 +22,12 @@ function applyButtonSkin(btn: HTMLButtonElement, assets: AssetLoader, state: Btn
   if (btn.classList.contains("art-btn-primary-full")) {
     btn.style.minWidth = `${w}px`;
     btn.style.width = `${w}px`;
-    btn.style.padding = "0";
-    btn.style.lineHeight = `${h}px`;
+    btn.style.padding = "4px 8px";
+    btn.style.lineHeight = "1.2";
+    btn.style.display = "inline-flex";
+    btn.style.alignItems = "center";
+    btn.style.justifyContent = "center";
+    btn.style.textAlign = "center";
   }
 }
 

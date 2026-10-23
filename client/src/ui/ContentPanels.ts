@@ -169,6 +169,7 @@ export class ContentPanels {
   private buildBagPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.dataset.centerPanel = "bag";
     el.innerHTML = `
       <h3>背包</h3>
       <p data-role="bag-hint">「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量；领奖/购买仍会先合并到本会话。</p>
@@ -181,8 +182,8 @@ export class ContentPanels {
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
       <div class="content-panel-actions">
-        <button type="button" data-action="refresh-bag">刷新背包</button>
-        <button type="button" class="art-btn-primary" data-action="use-item">使用道具</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-bag">刷新背包</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item">使用道具</button>
       </div>
       <ul class="bag-list" data-role="bag-list"></ul>
       <p class="panel-feedback bag-panel-feedback" data-role="bag-feedback" hidden></p>
