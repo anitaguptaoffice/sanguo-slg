@@ -151,6 +151,24 @@
         margin-top: 8px; padding: 8px; max-height: 100px; overflow: auto;
         background: #1a1410; border-radius: 4px; font-size: 12px; white-space: pre-wrap;
       }
+      .mail-inbox-panel .mail-inbox-toolbar {
+        display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px;
+      }
+      .mail-inbox-panel .mail-filter-btn.selected { outline: 2px solid #c9a227; }
+      .mail-inbox-status { margin: 4px 0; font-size: 12px; color: #b8a88a; min-height: 1em; }
+      .mail-inbox-status.is-error { color: #e8a87c; }
+      .mail-list { list-style: none; padding-left: 0; max-height: min(200px, 28vh); }
+      .mail-list li {
+        padding: 8px; margin-bottom: 4px; background: #1a1410; border-radius: 4px; cursor: pointer;
+      }
+      .mail-list li.mail-empty { cursor: default; color: #b8a88a; }
+      .mail-list li.selected { outline: 2px solid #c9a227; }
+      .mail-list li.unread .mail-row-title { font-weight: 600; }
+      .mail-list li.unread .mail-row-title::before { content: "● "; color: #c9a227; }
+      .mail-row-title { display: block; font-size: 13px; }
+      .mail-row-summary { display: block; font-size: 11px; color: #b8a88a; margin-top: 2px; }
+      .mail-detail-title { font-size: 14px; margin: 8px 0 4px; }
+      .mail-inbox-hint { font-size: 12px; color: #b8a88a; margin-bottom: 6px; }
       .social-panel label { display: block; margin: 6px 0; }
       .social-panel input, .social-panel select {
         margin-left: 6px; padding: 4px 6px; background: #1a1410; color: #f5e6c8; border: 1px solid #5c4a32;

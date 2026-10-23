@@ -13,6 +13,14 @@ const HERO_TEMPLATE_LABEL: Record<number, string> = {
 export const HERO_RECRUIT_SCROLL_ID = 2004;
 export const DEFAULT_RECRUIT_TEMPLATE_ID = 1001;
 
+/** 与 content.v1.PlayerMail.status / MailInboxFilter 对齐 */
+export const MAIL_STATUS_UNREAD = 0;
+export const MAIL_STATUS_READ = 1;
+export const MAIL_STATUS_CLAIMED = 2;
+
+export const MAIL_INBOX_FILTER_ALL = 0;
+export const MAIL_INBOX_FILTER_UNREAD = 1;
+
 const MAIL_STATUS_LABEL: Record<number, string> = {
   0: "未读",
   1: "已读",
@@ -210,9 +218,54 @@ export function pickRecruitSelection(
   };
 }
 
+export function mailIsUnread(m: MailRow): boolean {
+  return (m.status ?? MAIL_STATUS_UNREAD) === MAIL_STATUS_UNREAD;
+}
+
+export function mailHasAttachments(m: MailRow): boolean {
+  const att = m.attachments;
+  if (!att) return false;
+  if (att.items?.length) return true;
+  const r = att.resources;
+  return !!(r && Object.values(r).some((v) => (v ?? 0) > 0));
+}
+
+/** 仍有未领取附件（已读未领或未读带附件）。 */
+export function mailCanClaimAttachments(m: MailRow): boolean {
+  return mailHasAttachments(m) && (m.status ?? MAIL_STATUS_UNREAD) !== MAIL_STATUS_CLAIMED;
+}
+
+export function mailTitle(m: MailRow): string {
+  return m.title?.trim() || `邮件#${m.mail_id ?? "?"}`;
+}
+
+/** 列表摘要：正文首行截断，无正文时展示附件/状态提示。 */
+export function mailListSummary(m: MailRow, maxLen = 48): string {
+  const body = m.body?.replace(/\s+/g, " ").trim();
+  if (body) {
+    return body.length <= maxLen ? body : `${body.slice(0, maxLen)}…`;
+  }
+  if (mailHasAttachments(m)) {
+    if (mailCanClaimAttachments(m)) return "含附件，可一键领取";
+    return "附件已领取";
+  }
+  return mailStatusLabel(m.status);
+}
+
+export function mailEmptyInboxMessage(filter: number): string {
+  if (filter === MAIL_INBOX_FILTER_UNREAD) {
+    return "暂无未读邮件";
+  }
+  return "收件箱为空，可用 GM send-mail 发信后点「刷新」";
+}
+
 export function mailListLines(mails: MailRow[]): string[] {
-  if (!mails.length) return ["（空）"];
+  if (!mails.length) return [mailEmptyInboxMessage(MAIL_INBOX_FILTER_ALL)];
   return mails.map(formatMailLine);
+}
+
+export function countUnreadInMails(mails: MailRow[]): number {
+  return mails.filter(mailIsUnread).length;
 }
 
 export function upsertMailRow(mails: MailRow[], updated: MailRow): MailRow[] {

@@ -641,9 +641,18 @@ wss.on("connection", (ws) => {
       }
 
       if (route === "content.v1.ListPlayerMail") {
+        const req = T("sanguo.content.v1.ListPlayerMailRequest").decode(cp.payload);
+        let mails = state.mails;
+        const filter = req.filter ?? 0;
+        if (filter === 1) mails = mails.filter((x) => (x.status ?? 0) === 0);
+        else if (filter === 2) mails = mails.filter((x) => (x.status ?? 0) !== 0);
+        const pageSize = req.page_size > 0 ? req.page_size : 50;
+        const offset = req.page_offset ?? 0;
+        const total = mails.length;
+        mails = mails.slice(offset, offset + pageSize);
         replyOk(ws, cp.trace_id, T("sanguo.content.v1.ListPlayerMailResponse"), {
-          mails: state.mails,
-          total_count: state.mails.length,
+          mails,
+          total_count: total,
         });
         return;
       }

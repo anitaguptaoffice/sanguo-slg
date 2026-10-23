@@ -96,7 +96,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-bag">背包</button>
       <button type="button" data-action="toggle-shop">商城</button>
       <button type="button" data-action="toggle-hero">将领</button>
-      <button type="button" data-action="toggle-mail">邮件</button>
+      <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn">邮件</button>
       <button type="button" data-action="toggle-world">世界</button>
     `;
     this.militaryPanel = document.createElement("div");
@@ -162,8 +162,10 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
+      (count) => this.updateMailToolbarBadge(count),
     );
     this.heroMail.attach();
+    void this.heroMail.syncUnreadBadge();
     this.battleReports = new BattleReportPanel(parent, this.gateway, (msg) => {
       this.status = msg;
       this.renderHud();
@@ -535,5 +537,12 @@ export class MainCityScene implements Scene {
         c2d.fillText(caption.upgradeLine, display.x + display.w - 88, display.y + 20);
       }
     }
+  }
+
+  private updateMailToolbarBadge(unreadCount: number): void {
+    const btn = this.toolbar?.querySelector('[data-role="mail-toolbar-btn"]');
+    if (!btn) return;
+    btn.textContent = unreadCount > 0 ? `邮件(${unreadCount})` : "邮件";
+    btn.setAttribute("title", unreadCount > 0 ? `${unreadCount} 封未读` : "收件箱");
   }
 }
