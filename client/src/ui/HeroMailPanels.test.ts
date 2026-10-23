@@ -807,7 +807,7 @@ describe("HeroMailPanels", () => {
     recruitBtn.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(recruitBtn.disabled).toBe(true);
-    expect(recruitBtn.textContent).toBe("提交中…");
+    expect(recruitBtn.textContent).toBe("招募中…");
     resolveRecruit({
       hero_id: 1,
       template_cfg_id: 1001,
@@ -950,6 +950,9 @@ describe("HeroMailPanels", () => {
     ) as HTMLButtonElement;
     expect(detailBtn.hidden).toBe(false);
     expect(detailBtn.getAttribute("data-hero-id")).toBe("99");
+    expect(sessionStorage.getItem("hero-detail-selected-id")).toBe("99");
+    const row = mount.querySelector('li[data-hero-id="99"]');
+    expect(row?.classList.contains("hero-row-recruited-pulse")).toBe(true);
   });
 
   it("appends world panel hint when mail body has coordinates", async () => {
