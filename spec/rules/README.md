@@ -9,6 +9,7 @@
 | [combat.md](./combat.md) | 兵种克制、伤害、回合流程、胜负 |
 | [domestic.md](./domestic.md) | 资源产出、建造耗时与消耗、队列 |
 | [params.yml](./params.yml) | **唯一数值真源**（初版可玩默认数） |
+| [social.md](./social.md) | 选服、军团、聊天、排行快照与分服写边界（M3） |
 
 ## 标注约定
 
