@@ -344,6 +344,8 @@ export type BattleReportDetailView = {
   }[];
   attacker_casualties?: Record<string, number>;
   defender_casualties?: Record<string, number>;
+  final_attacker?: Record<string, number>;
+  final_defender?: Record<string, number>;
 };
 
 export type BattleRoundView = NonNullable<BattleReportDetailView["rounds"]>[number];

@@ -2,6 +2,12 @@ import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { selectDeepLinkBattleReportId } from "@/net/battleReportDeepLink";
 import {
+  battleReportRoundJumpNumbers,
+  battleReportRoundRowDomId,
+  shouldUseBattleReportRoundJumpSelect,
+} from "@/net/battleReportDetailNav";
+import { buildBattleReportTroopScan } from "@/net/battleReportDetailSummary";
+import {
   BATTLE_REPORT_ROUNDS_EXPAND_LABEL,
   buildBattleRoundTableRows,
   shouldCollapseBattleRounds,
@@ -72,9 +78,11 @@ export class BattleReportPanel {
   private selectedReportId = 0;
   private detailText = "";
   private detailRounds: BattleReportDetailView["rounds"] = [];
+  private detailView: BattleReportDetailView | undefined;
   private detailSummary: BattleReportSummary | undefined;
   private detailResult = "";
   private roundsTableExpanded = false;
+  private highlightedRound = 0;
   private listError = "";
   private detailError = "";
   private listLoading = false;
@@ -369,6 +377,43 @@ export class BattleReportPanel {
       head.appendChild(foe);
       head.appendChild(mapBtn);
       detailEl.appendChild(head);
+
+      const troopScan = buildBattleReportTroopScan(summary, this.detailView);
+      const summaryBlock = document.createElement("div");
+      summaryBlock.className = "battle-report-detail-summary";
+      summaryBlock.setAttribute("aria-label", "交战摘要");
+      const coordLine = document.createElement("p");
+      coordLine.className = "battle-report-detail-summary-coord";
+      coordLine.textContent = formatReportCoord(summary);
+      summaryBlock.appendChild(coordLine);
+      const troopTable = document.createElement("table");
+      troopTable.className = "battle-report-troop-scan";
+      troopTable.innerHTML = `
+        <thead>
+          <tr>
+            <th scope="col">阵营</th>
+            <th scope="col">兵力</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${troopScan.attackerLabel}</td>
+            <td>${troopScan.attackerTroops}</td>
+          </tr>
+          <tr>
+            <td>${troopScan.defenderLabel}</td>
+            <td>${troopScan.defenderTroops}</td>
+          </tr>
+        </tbody>
+      `;
+      summaryBlock.appendChild(troopTable);
+      if (troopScan.openingRoundLine) {
+        const roundHint = document.createElement("p");
+        roundHint.className = "battle-report-detail-opening-round";
+        roundHint.textContent = troopScan.openingRoundLine;
+        summaryBlock.appendChild(roundHint);
+      }
+      detailEl.appendChild(summaryBlock);
     }
 
     const pre = document.createElement("pre");
@@ -377,6 +422,39 @@ export class BattleReportPanel {
 
     const roundRows = buildBattleRoundTableRows(this.detailRounds);
     if (roundRows.length > 0) {
+      const jumpNumbers = battleReportRoundJumpNumbers(roundRows.map((r) => r.round));
+      const jumpBar = document.createElement("div");
+      jumpBar.className = "battle-report-round-jump";
+      jumpBar.setAttribute("role", "navigation");
+      jumpBar.setAttribute("aria-label", "回合跳转");
+      const jumpLabel = document.createElement("span");
+      jumpLabel.className = "battle-report-round-jump-label";
+      jumpLabel.textContent = "回合：";
+      jumpBar.appendChild(jumpLabel);
+      if (shouldUseBattleReportRoundJumpSelect(jumpNumbers.length)) {
+        const select = document.createElement("select");
+        select.setAttribute("data-action", "jump-round-select");
+        select.innerHTML = `<option value="">选择回合…</option>${jumpNumbers
+          .map((n) => `<option value="${n}">第 ${n} 回合</option>`)
+          .join("")}`;
+        jumpBar.appendChild(select);
+      } else {
+        const chips = document.createElement("div");
+        chips.className = "battle-report-round-jump-chips";
+        for (const n of jumpNumbers) {
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "battle-report-round-jump-chip";
+          chip.setAttribute("data-action", "jump-round");
+          chip.setAttribute("data-round", String(n));
+          chip.textContent = String(n);
+          if (n === this.highlightedRound) chip.classList.add("active");
+          chips.appendChild(chip);
+        }
+        jumpBar.appendChild(chips);
+      }
+      detailEl.appendChild(jumpBar);
+
       const wrap = document.createElement("div");
       wrap.className = "report-rounds-table-wrap";
 
@@ -399,6 +477,11 @@ export class BattleReportPanel {
       const visible = visibleBattleRoundTableRows(roundRows, this.roundsTableExpanded);
       for (const row of visible) {
         const tr = document.createElement("tr");
+        tr.id = battleReportRoundRowDomId(row.round);
+        tr.setAttribute("data-round", String(row.round));
+        if (row.round === this.highlightedRound) {
+          tr.classList.add("battle-report-round-row-highlight");
+        }
         tr.innerHTML = `
           <td>${row.round}</td>
           <td>${row.attackerAction}</td>
@@ -453,6 +536,25 @@ export class BattleReportPanel {
         dailyBtn.textContent = link.label;
         detailEl.appendChild(dailyBtn);
       }
+    }
+  }
+
+  private jumpToBattleRound(round: number): void {
+    const rows = buildBattleRoundTableRows(this.detailRounds);
+    if (!rows.some((r) => r.round === round)) return;
+    if (shouldCollapseBattleRounds(rows.length) && !this.roundsTableExpanded) {
+      this.roundsTableExpanded = true;
+    }
+    this.highlightedRound = round;
+    this.renderDetail();
+    this.scrollToBattleRoundRow(round);
+  }
+
+  private scrollToBattleRoundRow(round: number): void {
+    const id = battleReportRoundRowDomId(round);
+    const row = this.panel.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
+    if (row && typeof row.scrollIntoView === "function") {
+      row.scrollIntoView({ block: "nearest", behavior: "auto" });
     }
   }
 
@@ -525,9 +627,11 @@ export class BattleReportPanel {
     this.detailError = "";
     this.detailText = "";
     this.detailRounds = [];
+    this.detailView = undefined;
     this.detailSummary = undefined;
     this.detailResult = "";
     this.roundsTableExpanded = false;
+    this.highlightedRound = 0;
     this.detailLoading = true;
     this.onStatus(`战报 #${reportId}…`);
     this.renderList();
@@ -540,6 +644,7 @@ export class BattleReportPanel {
       };
       this.detailSummary = res.report?.summary;
       this.detailResult = res.report?.detail?.result ?? "";
+      this.detailView = res.report?.detail;
       this.detailText = formatBattleReportDetail(
         reportId,
         res.report?.summary,
@@ -551,23 +656,13 @@ export class BattleReportPanel {
       this.detailError = `详情加载失败：${(e as Error).message}`;
       this.detailText = "";
       this.detailRounds = [];
+      this.detailView = undefined;
       this.detailSummary = undefined;
       this.detailResult = "";
       this.onStatus(this.detailError);
     }
     this.detailLoading = false;
     this.renderList();
-  }
-
-  private onChange(ev: Event): void {
-    const select = (ev.target as HTMLElement).closest(
-      'select[data-action="filter-time-window"]',
-    ) as HTMLSelectElement | null;
-    if (!select) return;
-    const value = select.value as BattleReportTimeWindowFilter;
-    if (value === "all" || value === "today" || value === "last7d") {
-      this.setTimeWindowFilter(value);
-    }
   }
 
   private onClick(ev: Event): void {
@@ -606,6 +701,32 @@ export class BattleReportPanel {
     } else if (action === "open-related-daily") {
       const questCfgId = Number(btn.dataset.questCfgId) || 0;
       if (questCfgId > 0) this.panelOpts?.onOpenRelatedDaily?.(questCfgId);
+    } else if (action === "jump-round") {
+      const round = Number(btn.getAttribute("data-round"));
+      if (round > 0) this.jumpToBattleRound(round);
+    }
+  }
+
+  private onChange(ev: Event): void {
+    const timeSelect = (ev.target as HTMLElement).closest(
+      'select[data-action="filter-time-window"]',
+    ) as HTMLSelectElement | null;
+    if (timeSelect) {
+      const value = timeSelect.value as BattleReportTimeWindowFilter;
+      if (value === "all" || value === "today" || value === "last7d") {
+        this.setTimeWindowFilter(value);
+      }
+      return;
+    }
+
+    const jumpSelect = (ev.target as HTMLElement).closest(
+      'select[data-action="jump-round-select"]',
+    ) as HTMLSelectElement | null;
+    if (!jumpSelect) return;
+    const round = Number(jumpSelect.value);
+    if (round > 0) {
+      this.jumpToBattleRound(round);
+      jumpSelect.value = "";
     }
   }
 }
