@@ -9,16 +9,19 @@ describe("HudTodoBadgePoll", () => {
     const listBattleReports = vi.fn().mockResolvedValue({ reports: [] });
     const gateway = { listPlayerMail, listPlayerQuests, listBattleReports };
     const unread = new BattleReportUnreadSession();
-    let counts = { mailUnread: -1, dailyTodo: -1, battleReportUnread: -1 };
+    let counts = { mailUnread: -1, dailyTodo: -1, queueBuilding: -1, battleReportUnread: -1 };
     const poll = new HudTodoBadgePoll({
       gateway: gateway as never,
       getServerId: () => 1,
       getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
       battleReportUnread: unread,
       isPanelVisible: () => false,
       isMailSuppressed: () => true,
       isDailySuppressed: () => false,
       isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
       onCounts: (c) => {
         counts = c;
       },
@@ -33,11 +36,14 @@ describe("HudTodoBadgePoll", () => {
       gateway: gateway as never,
       getServerId: () => 1,
       getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
       battleReportUnread: unread,
       isPanelVisible: () => false,
       isMailSuppressed: () => false,
       isDailySuppressed: () => false,
       isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
       onCounts: (c) => {
         counts = c;
       },
@@ -48,6 +54,7 @@ describe("HudTodoBadgePoll", () => {
     void poll2.pollOnce();
     await vi.waitFor(() => expect(counts.mailUnread).toBe(7));
     expect(listPlayerMail).toHaveBeenCalledTimes(2);
+    expect(counts.queueBuilding).toBe(0);
   });
 
   it("stores deep-link snapshot ids from poll responses", async () => {
@@ -80,11 +87,14 @@ describe("HudTodoBadgePoll", () => {
       gateway: gateway as never,
       getServerId: () => 1,
       getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
       battleReportUnread: unread,
       isPanelVisible: () => false,
       isMailSuppressed: () => false,
       isDailySuppressed: () => false,
       isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
       onCounts: () => {},
     });
     await poll.pollOnce();
@@ -92,7 +102,8 @@ describe("HudTodoBadgePoll", () => {
     expect(snap.firstUnreadMailId).toBe(88);
     expect(snap.firstDailyTodoCfgId).toBe(101);
     expect(snap.firstUnreadBattleReportId).toBe(5);
-    expect(snap.mailUnread).toBe(2);
+    expect(snap.mailUnread).toBe(3);
+    expect(snap.mailUnreadTotal).toBe(2);
     expect(snap.dailyTodo).toBe(1);
     expect(snap.battleReportUnread).toBe(1);
     expect(snap.dailyChainRows).toHaveLength(2);
@@ -110,21 +121,28 @@ describe("HudTodoBadgePoll", () => {
       listBattleReports: vi.fn().mockResolvedValue({ reports: [] }),
     };
     const unread = new BattleReportUnreadSession();
-    let counts = { mailUnread: 9, dailyTodo: 0, battleReportUnread: 0 };
+    let counts = { mailUnread: 9, dailyTodo: 0, queueBuilding: 0, battleReportUnread: 0 };
+    let onCountsCalls = 0;
     const poll = new HudTodoBadgePoll({
       gateway: gateway as never,
       getServerId: () => 1,
       getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
       battleReportUnread: unread,
       isPanelVisible: () => false,
       isMailSuppressed: () => true,
       isDailySuppressed: () => false,
       isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
       onCounts: (c) => {
         counts = c;
+        onCountsCalls += 1;
       },
     });
     poll.applyMailUnreadSnapshot(2, 77);
+    expect(onCountsCalls).toBe(0);
+    expect(poll.getDeepLinkSnapshot().mailUnreadTotal).toBe(2);
     expect(poll.getDeepLinkSnapshot().mailUnread).toBe(2);
     expect(poll.getDeepLinkSnapshot().firstUnreadMailId).toBe(77);
     expect(counts.mailUnread).toBe(9);

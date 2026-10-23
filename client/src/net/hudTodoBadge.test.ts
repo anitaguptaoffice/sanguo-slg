@@ -28,7 +28,7 @@ describe("hudTodoBadge", () => {
   it("aggregates non-negative todo counts", () => {
     expect(
       aggregateHudTodoCounts({ mailUnread: 2, dailyTodo: -1, battleReportUnread: 5 }),
-    ).toEqual({ mailUnread: 2, dailyTodo: 0, battleReportUnread: 5 });
+    ).toEqual({ mailUnread: 2, dailyTodo: 0, queueBuilding: 0, battleReportUnread: 5 });
   });
 
   it("picks first unread mail id in list order", () => {
