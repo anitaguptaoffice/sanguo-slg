@@ -2,6 +2,7 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
   formatLeaderboardSnapshotMeta,
+  formatMyRankPinLine,
   formatViewerRankSummary,
   LB_PLAYER_POWER,
   LB_PLAYER_RESOURCE,
@@ -10,12 +11,21 @@ import {
   type LeaderboardPagePayload,
 } from "@/net/leaderboardFormat";
 import {
+  formatRankLastRefreshLine,
+  readRankLastRefreshMs,
+  writeRankLastRefreshMs,
+} from "@/net/rankLastRefreshSession";
+import {
   CHAT_CHANNEL_GUILD,
   CHAT_CHANNEL_PRIVATE,
   CHAT_CHANNEL_WORLD,
   chatChannelLabel,
   formatGuildMemberLine,
   formatGuildMentionDraft,
+  groupGuildMembersByRole,
+  guildRoleChipClass,
+  guildRoleGroupDefaultExpanded,
+  guildRoleLabel,
   formatGuildSummaryText,
   formatSenderLabel,
   formatSocialChatEmptyMessage,
@@ -29,8 +39,8 @@ import {
   socialChatEmptyListClass,
   socialGuildMembersEmptyListClass,
   socialRankEmptyRowClass,
-  sortGuildMembers,
   type ChatMessageRow,
+  type GuildMemberRow,
 } from "@/net/socialFormat";
 import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
@@ -54,6 +64,8 @@ export class SocialPanels {
   };
   private chatListError = "";
   private guildListError = "";
+  private guildMembersCache: GuildMemberRow[] = [];
+  private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
 
   constructor(
@@ -113,7 +125,10 @@ export class SocialPanels {
 
   toggleRank(): void {
     this.rankPanel.classList.toggle("hidden");
-    if (!this.rankPanel.classList.contains("hidden")) void this.refreshRank();
+    if (!this.rankPanel.classList.contains("hidden")) {
+      this.hydrateRankRefreshClockFromSession();
+      void this.refreshRank();
+    }
   }
 
   getRankRoot(): HTMLElement {
@@ -259,7 +274,10 @@ export class SocialPanels {
       </p>
       <div class="panel-scroll-body" data-role="rank-scroll">
         <div class="rank-board" data-role="rank-board">
-          <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
+          <div class="rank-viewer-bar" aria-label="我的名次与刷新时间">
+            <div data-role="viewer-rank">我的名次：—</div>
+            <div class="rank-last-refresh-line hidden" data-role="rank-last-refresh" aria-label="上次刷新"></div>
+          </div>
           <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
           <div class="rank-table-scroll">
             <table class="rank-table">
@@ -382,19 +400,18 @@ export class SocialPanels {
     }
   }
 
-  private renderGuildMembersList(
-    members: {
-      player_id?: number;
-      display_name?: string;
-      role?: number;
-      power?: number;
-      joined_at_ms?: number;
-    }[],
-  ): void {
+  private isGuildRoleGroupExpanded(roleKey: number): boolean {
+    const stored = this.guildRoleGroupExpanded.get(roleKey);
+    if (stored !== undefined) return stored;
+    return guildRoleGroupDefaultExpanded(roleKey);
+  }
+
+  private renderGuildMembersList(members: GuildMemberRow[]): void {
     const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
     if (!ul) return;
     ul.innerHTML = "";
     if (!this.guildId) {
+      this.guildMembersCache = [];
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
       li.textContent = `${formatSocialGuildNotJoinedReadonlyMessage()}可在本面板下方创建或加入军团。`;
@@ -402,6 +419,7 @@ export class SocialPanels {
       return;
     }
     if (!members.length) {
+      this.guildMembersCache = [];
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
       li.textContent = this.guildListError
@@ -410,21 +428,46 @@ export class SocialPanels {
       ul.appendChild(li);
       return;
     }
-    for (const m of sortGuildMembers(members)) {
-      const li = document.createElement("li");
-      li.className = "guild-member-row";
-      const line = document.createElement("span");
-      line.className = "guild-member-line";
-      line.textContent = formatGuildMemberLine(m);
-      const mention = document.createElement("button");
-      mention.type = "button";
-      mention.className = "guild-member-mention";
-      mention.setAttribute("data-action", "guild-mention");
-      mention.setAttribute("data-display-name", m.display_name ?? "");
-      mention.textContent = "提到";
-      li.append(line, mention);
-      ul.appendChild(li);
+    this.guildMembersCache = members;
+    for (const group of groupGuildMembersByRole(members)) {
+      const expanded = this.isGuildRoleGroupExpanded(group.roleKey);
+      const head = document.createElement("li");
+      head.className = "guild-role-group-header";
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "guild-role-group-toggle";
+      toggle.setAttribute("data-action", "toggle-guild-role-group");
+      toggle.setAttribute("data-role-key", String(group.roleKey));
+      toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+      toggle.textContent = `${expanded ? "▼" : "▶"} ${group.label}（${group.members.length}）`;
+      head.appendChild(toggle);
+      ul.appendChild(head);
+      if (!expanded) continue;
+      for (const m of group.members) {
+        ul.appendChild(this.buildGuildMemberRow(m));
+      }
     }
+  }
+
+  private buildGuildMemberRow(m: GuildMemberRow): HTMLLIElement {
+    const li = document.createElement("li");
+    li.className = "guild-member-row";
+    li.setAttribute("data-guild-role-key", String(m.role ?? 0));
+    const chip = document.createElement("span");
+    chip.className = guildRoleChipClass(m.role);
+    chip.setAttribute("data-role", "guild-role-chip");
+    chip.textContent = guildRoleLabel(m.role);
+    const line = document.createElement("span");
+    line.className = "guild-member-line";
+    line.textContent = formatGuildMemberLine(m, { includeRoleLabel: false });
+    const mention = document.createElement("button");
+    mention.type = "button";
+    mention.className = "guild-member-mention";
+    mention.setAttribute("data-action", "guild-mention");
+    mention.setAttribute("data-display-name", m.display_name ?? "");
+    mention.textContent = "提到";
+    li.append(chip, line, mention);
+    return li;
   }
 
   /** 打开聊天面板、切到军团频道并填入 @ 草稿（不发送、不额外 RPC）。 */
@@ -575,6 +618,25 @@ export class SocialPanels {
     });
   }
 
+  private hydrateRankRefreshClockFromSession(): void {
+    const boardType = this.selectedLeaderboardType();
+    const fromSession = readRankLastRefreshMs(boardType);
+    if (fromSession > 0) {
+      this.refreshClock.rank.lastUpdatedMs = fromSession;
+      this.syncRankLastRefreshBar(boardType);
+      this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: false });
+    }
+  }
+
+  private syncRankLastRefreshBar(boardType: number): void {
+    const el = this.rankPanel.querySelector('[data-role="rank-last-refresh"]');
+    if (!el) return;
+    const atMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
+    const line = formatRankLastRefreshLine(atMs);
+    el.textContent = line;
+    el.classList.toggle("hidden", !line);
+  }
+
   renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
     const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
     if (myEl) {
@@ -585,6 +647,7 @@ export class SocialPanels {
         viewerScoreFallback(this.getSession(), boardType),
       );
     }
+    this.syncRankLastRefreshBar(boardType);
     const snapEl = this.rankPanel.querySelector('[data-role="rank-snapshot"]');
     if (snapEl) {
       const meta = formatLeaderboardSnapshotMeta(res);
@@ -594,15 +657,33 @@ export class SocialPanels {
     const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
     if (tbody) {
       tbody.innerHTML = "";
-      const entries = res.entries ?? [];
-      if (entries.length === 0) {
+      const fallbackScore = viewerScoreFallback(this.getSession(), boardType);
+      const pinLine = formatMyRankPinLine(
+        res.my_rank,
+        res.my_score ?? fallbackScore,
+        boardType,
+      );
+      if (pinLine) {
         const tr = document.createElement("tr");
-        tr.className = socialRankEmptyRowClass();
+        tr.className = "rank-pin-row";
+        tr.setAttribute("aria-label", "我的排名钉选");
         const td = document.createElement("td");
         td.colSpan = 3;
-        td.textContent = formatSocialRankEmptyMessage();
+        td.textContent = pinLine;
         tr.appendChild(td);
         tbody.appendChild(tr);
+      }
+      const entries = res.entries ?? [];
+      if (entries.length === 0) {
+        if (!pinLine) {
+          const tr = document.createElement("tr");
+          tr.className = socialRankEmptyRowClass();
+          const td = document.createElement("td");
+          td.colSpan = 3;
+          td.textContent = formatSocialRankEmptyMessage();
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        }
       } else {
         for (const e of entries) {
           const tr = document.createElement("tr");
@@ -625,10 +706,12 @@ export class SocialPanels {
       try {
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
         this.rankSnapshotByType.set(boardType, res);
+        const refreshedAt = Date.now();
+        writeRankLastRefreshMs(boardType, refreshedAt);
         this.renderLeaderboardPage(res, boardType);
         this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
           busy: false,
-          lastUpdatedMs: Date.now(),
+          lastUpdatedMs: refreshedAt,
           error: null,
           stale: false,
         });
@@ -675,6 +758,13 @@ export class SocialPanels {
     if (a === "guild-mention") {
       const name = btn.getAttribute("data-display-name") ?? "";
       this.openChatWithGuildMentionDraft(name);
+    }
+    if (a === "toggle-guild-role-group") {
+      const roleKey = Number(btn.getAttribute("data-role-key"));
+      if (!Number.isFinite(roleKey)) return;
+      const next = !this.isGuildRoleGroupExpanded(roleKey);
+      this.guildRoleGroupExpanded.set(roleKey, next);
+      this.renderGuildMembersList(this.guildMembersCache);
     }
   }
 

@@ -605,6 +605,109 @@ describe("HeroMailPanels", () => {
     expect(unread).toBe(4);
   });
 
+  it("shows submitting label while RecruitHero is in flight", async () => {
+    const mount = document.createElement("div");
+    let resolveRecruit!: (v: unknown) => void;
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            recruit_cost: { food: 10 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      getCityState: vi.fn().mockResolvedValue({ wallet: { food: 90 } }),
+      getHeroDetail: vi.fn().mockResolvedValue({ hero_id: 1, template_cfg_id: 1001 }),
+      listPlayerQuests: vi.fn().mockResolvedValue({ quests: [] }),
+      recruitHero: vi.fn().mockImplementation(
+        () =>
+          new Promise((r) => {
+            resolveRecruit = r;
+          }),
+      ),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: { food: 100 },
+      buildings: [],
+      cityTroops: [],
+      bag: [{ item_cfg_id: 2004, quantity: 1 }],
+    };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const recruitBtn = mount.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement;
+    recruitBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(recruitBtn.disabled).toBe(true);
+    expect(recruitBtn.textContent).toBe("提交中…");
+    resolveRecruit({
+      hero_id: 1,
+      template_cfg_id: 1001,
+      level: 1,
+      loyalty: 100,
+    });
+    await flushPromises();
+    await flushPromises();
+    expect(recruitBtn.textContent).toBe("招募");
+  });
+
+  it("recruit failure keeps template selection and shows inline error", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            recruit_cost: { food: 10 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+      recruitHero: vi
+        .fn()
+        .mockRejectedValue(Object.assign(new Error("道具不足"), { code: 10001 })),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: { food: 100 },
+      buildings: [],
+      cityTroops: [],
+      bag: [{ item_cfg_id: 2004, quantity: 1 }],
+    };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const sel = mount.querySelector('[data-field="template-select"]') as HTMLSelectElement;
+    expect(sel.value).toBe("1001");
+    mount.querySelector('[data-action="recruit-hero"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    await flushPromises();
+    expect(mount.querySelector('[data-role="recruit-form-error"]')?.textContent).toContain("道具不足");
+    expect(sel.value).toBe("1001");
+    const toast = mount.querySelector('[data-role="recruit-success-toast"]');
+    expect(toast?.classList.contains("hidden")).toBe(true);
+  });
+
   it("recruit success refreshes list, selects new hero, and nudges daily recruit", async () => {
     const mount = document.createElement("div");
     const statuses: string[] = [];
@@ -684,6 +787,13 @@ describe("HeroMailPanels", () => {
     expect(selected).toBeTruthy();
     expect(onDaily).toHaveBeenCalled();
     expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
+    const toast = mount.querySelector('[data-role="recruit-success-toast"]');
+    expect(toast?.classList.contains("hidden")).toBe(false);
+    const detailBtn = mount.querySelector(
+      '[data-action="recruit-open-hero-detail"]',
+    ) as HTMLButtonElement;
+    expect(detailBtn.hidden).toBe(false);
+    expect(detailBtn.getAttribute("data-hero-id")).toBe("99");
   });
 
   it("appends world panel hint when mail body has coordinates", async () => {

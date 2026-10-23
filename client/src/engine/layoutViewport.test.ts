@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyLayoutFrameStyles,
   applyLayoutTransform,
   canvasToLayout,
   computeLayoutViewport,
@@ -87,6 +88,13 @@ describe("narrow layout root class", () => {
     const vp = computeLayoutViewport(1600, 900);
     expect(isNarrowLayoutViewport(vp)).toBe(false);
     expect(layoutViewportRootClass(vp)).toBe("");
+  });
+
+  it("applyLayoutFrameStyles sets --ui-scale on layout frame", () => {
+    const root = document.createElement("div");
+    const vp = computeLayoutViewport(1280, 720);
+    applyLayoutFrameStyles(root, vp);
+    expect(root.style.getPropertyValue("--ui-scale")).toBe(String(vp.uiScale));
   });
 
   it("syncLayoutViewportRootClass toggles on #layout-frame", () => {

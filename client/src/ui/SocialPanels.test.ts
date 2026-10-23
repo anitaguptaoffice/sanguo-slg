@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { LB_PLAYER_POWER, LB_PLAYER_RESOURCE } from "@/net/leaderboardFormat";
+import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
 import { SocialPanels } from "@/ui/SocialPanels";
 
 function flushPromises(): Promise<void> {
@@ -77,6 +78,9 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector('[data-role="viewer-rank"]')?.textContent).toContain("第 2 名");
     expect(mount.querySelector('[data-role="rank-snapshot"]')?.textContent).toContain("快照批次");
     expect(mount.querySelector('[data-role="rank-refresh-status"]')?.textContent).toContain("上次更新");
+    expect(mount.querySelector(".rank-pin-row")?.textContent).toContain("我的排名 #2");
+    expect(mount.querySelector('[data-role="rank-last-refresh"]')?.textContent).toContain("上次刷新：");
+    expect(sessionStorage.getItem(RANK_LAST_REFRESH_SESSION_KEY)).toContain(String(LB_PLAYER_POWER));
   });
 
   it("switches to resource board and shows empty list", async () => {
@@ -110,6 +114,7 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("（空榜）");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("刷新排行榜");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("种子");
+    expect(mount.querySelector(".rank-pin-row")).toBeNull();
   });
 
   it("keeps last rank snapshot on refresh failure and marks stale", async () => {
@@ -326,6 +331,9 @@ describe("SocialPanels chat & guild", () => {
     (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
     mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
+    mount
+      .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
     const mentionBtn = mount.querySelector(
       '[data-action="guild-mention"][data-display-name="副官乙"]',
     ) as HTMLButtonElement;
@@ -338,6 +346,40 @@ describe("SocialPanels chat & guild", () => {
     const content = mount.querySelector('[data-field="chat-content"]') as HTMLInputElement;
     expect(content.value).toBe("@副官乙 ");
     expect(gateway.sendChatMessage).not.toHaveBeenCalled();
+  });
+
+  it("renders role chips and collapses non-leader groups by default (CLIENT-101)", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      createGuild: vi.fn().mockResolvedValue({ guild: { guild_id: 7001, name: "虎贲营" } }),
+      listGuildMembers: vi.fn().mockResolvedValue({
+        guild: { name: "虎贲营" },
+        members: [
+          { display_name: "团长甲", role: 1, power: 1, player_id: 1 },
+          { display_name: "官员乙", role: 2, power: 2, player_id: 2 },
+          { display_name: "成员丙", role: 3, power: 3, player_id: 3 },
+        ],
+      }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
+    mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelectorAll('[data-role="guild-role-chip"]')).toHaveLength(1);
+    expect(mount.querySelector('[data-role="guild-role-chip"]')?.textContent).toBe("团长");
+    expect(mount.querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')?.textContent).toContain(
+      "官员（1）",
+    );
+    mount
+      .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount
+      .querySelector('[data-action="toggle-guild-role-group"][data-role-key="3"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(mount.querySelectorAll(".guild-member-row")).toHaveLength(3);
+    expect(mount.querySelectorAll('[data-action="guild-mention"]')).toHaveLength(3);
   });
 
   it("does not show mention buttons before joining a guild", () => {
