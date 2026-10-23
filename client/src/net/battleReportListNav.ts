@@ -2,6 +2,20 @@ import type { BattleReportSummary } from "@/net/militaryFormat";
 
 export type BattleReportListNavDirection = "prev" | "next";
 
+/** 详情 `role=region` 的 aria-label，注明相邻战报快捷键（CLIENT-094）。 */
+export const BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL =
+  "战报详情，方向键左或右、或 Alt+左或右切换上一封与下一封";
+
+/**
+ * 战报面板根节点属性：设为 `off` 关闭详情区方向键 / Alt+方向键相邻导航（见 client/README）。
+ * @see BATTLE_REPORT_ADJ_NAV_KEYBOARD_ATTR
+ */
+export const BATTLE_REPORT_ADJ_NAV_KEYBOARD_ATTR = "data-battle-report-adj-nav-keyboard";
+
+export function isBattleReportAdjNavKeyboardEnabled(root: HTMLElement): boolean {
+  return root.getAttribute(BATTLE_REPORT_ADJ_NAV_KEYBOARD_ATTR) !== "off";
+}
+
 /** 与列表 DOM 相同顺序的 report_id 序列。 */
 export function battleReportIdsInListOrder(
   reports: readonly BattleReportSummary[],
@@ -28,4 +42,13 @@ export function adjacentBattleReportId(
   const nextIdx = direction === "prev" ? idx - 1 : idx + 1;
   if (nextIdx < 0 || nextIdx >= orderedIds.length) return null;
   return orderedIds[nextIdx] ?? null;
+}
+
+/** 在已筛选后的摘要列表顺序内取相邻 report_id（与详情导航按钮同源）。 */
+export function adjacentBattleReportIdInSummaries(
+  reports: readonly BattleReportSummary[],
+  currentId: number,
+  direction: BattleReportListNavDirection,
+): number | null {
+  return adjacentBattleReportId(battleReportIdsInListOrder(reports), currentId, direction);
 }
