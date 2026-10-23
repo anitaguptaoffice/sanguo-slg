@@ -68,7 +68,7 @@ status:review   ──合并────▶  status:done
 | 18 | H5 出征反馈与面板可读加深（**已完成**，见 ROADMAP Wave 18） | CLIENT-047–053 ([#293](https://github.com/anitaguptaoffice/sanguo-slg/pull/293)–[#299](https://github.com/anitaguptaoffice/sanguo-slg/pull/299)、[#295](https://github.com/anitaguptaoffice/sanguo-slg/pull/295)–[#298](https://github.com/anitaguptaoffice/sanguo-slg/pull/298))、INTG-015 ([#301](https://github.com/anitaguptaoffice/sanguo-slg/pull/301) `ee574240`)、DOCS-EXIT-010 ([#302](https://github.com/anitaguptaoffice/sanguo-slg/pull/302) `b63ed954`)；**CLIENT-046** [#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) 美术证据轨、**CLIENT-054** [#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) 046 FAIL 跟进（[#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`） |
 | 19 | H5 可玩加深（**已完成**，见 ROADMAP Wave 19） | CLIENT-056–062 ([#339](https://github.com/anitaguptaoffice/sanguo-slg/pull/339)–[#344](https://github.com/anitaguptaoffice/sanguo-slg/pull/344)、[#340](https://github.com/anitaguptaoffice/sanguo-slg/pull/340)–[#342](https://github.com/anitaguptaoffice/sanguo-slg/pull/342)、[#341](https://github.com/anitaguptaoffice/sanguo-slg/pull/341) `2006b478`)、INTG-016 ([#337](https://github.com/anitaguptaoffice/sanguo-slg/pull/337) `7ecb7d4d`)、DOCS-EXIT-011 ([#335](https://github.com/anitaguptaoffice/sanguo-slg/issues/335) / [#346](https://github.com/anitaguptaoffice/sanguo-slg/pull/346) `d0920b5d`)；**CLIENT-054**/**CLIENT-055** wave:18 美术 hotfix——**非**本波 backlog；**CLIENT-063** [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) 已合、**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路 |
 | 20 | H5 面板互链与反馈巩固（**已完成**，见 ROADMAP Wave 20） | CLIENT-065–071 ([#360](https://github.com/anitaguptaoffice/sanguo-slg/pull/360)–[#364](https://github.com/anitaguptaoffice/sanguo-slg/pull/364)、[#359](https://github.com/anitaguptaoffice/sanguo-slg/pull/359) `4ea9e69f`)、INTG-017 ([#365](https://github.com/anitaguptaoffice/sanguo-slg/pull/365) `4b522cae`)、DOCS-EXIT-012 ([#358](https://github.com/anitaguptaoffice/sanguo-slg/issues/358) / [#367](https://github.com/anitaguptaoffice/sanguo-slg/pull/367) `79f54e0d`)；**CLIENT-063** [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) 已合、**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) wave:19 美术旁路——**非**本波 backlog 实现卡 |
-| 21 | H5 养成复盘与世界可读加深（**规划中**，见 ROADMAP Wave 21） | CLIENT-072–079、INTG-018、DOCS-EXIT-013（`backlog.yml` 真源；合并后 `tasks_sync`）；**CLIENT-064** 美术旁路——**非**本波实现编号 |
+| 21 | H5 养成复盘与世界可读加深（**已完成**，见 ROADMAP Wave 21） | CLIENT-072–079 ([#385](https://github.com/anitaguptaoffice/sanguo-slg/pull/385)–[#382](https://github.com/anitaguptaoffice/sanguo-slg/pull/382) `03c8149b`–`c9b53258`)、INTG-018 ([#377](https://github.com/anitaguptaoffice/sanguo-slg/issues/377) / [#380](https://github.com/anitaguptaoffice/sanguo-slg/pull/380) `0a78b1d6`)、DOCS-EXIT-013 ([#378](https://github.com/anitaguptaoffice/sanguo-slg/issues/378)）；**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路——**非**本波 backlog 实现卡 |
 
 ### Wave 9 进度（已完成）
 
@@ -232,19 +232,19 @@ status:review   ──合并────▶  status:done
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 20」。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；**永不合并** art hold PR **#77** / **#82** / **#108** / #100 / #126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)。**wave:19 美术轨旁路**（**非** wave:20 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）`status:done`；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）`status:in-progress`——与 **CLIENT-065** 起 wave:20 实现卡编号无关。
 
-### Wave 21 进度（`backlog.yml` 已入库，待 `tasks_sync` 创建 Issue）
+### Wave 21 进度（与 GitHub `wave:21` 标签同步，2026-10-23）
 
 | Issue | ID | 状态 |
 |---|---|---|
-| （待 sync） | CLIENT-072 | 待开工 |
-| （待 sync） | CLIENT-073 | 待开工 |
-| （待 sync） | CLIENT-074 | 待开工 |
-| （待 sync） | CLIENT-075 | 待开工 |
-| （待 sync） | CLIENT-076 | 待开工 |
-| （待 sync） | CLIENT-077 | 待开工 |
-| （待 sync） | CLIENT-078 | 待开工 |
-| （待 sync） | CLIENT-079 | 待开工 |
-| （待 sync） | INTG-018 | 待开工 |
-| （待 sync） | DOCS-EXIT-013 | `blocked_until: INTG-018` |
+| [#369](https://github.com/anitaguptaoffice/sanguo-slg/issues/369) | CLIENT-072 | `status:done`（[#385](https://github.com/anitaguptaoffice/sanguo-slg/pull/385) `03c8149b`） |
+| [#370](https://github.com/anitaguptaoffice/sanguo-slg/issues/370) | CLIENT-073 | `status:done`（[#386](https://github.com/anitaguptaoffice/sanguo-slg/pull/386) `87a2a8cb`） |
+| [#371](https://github.com/anitaguptaoffice/sanguo-slg/issues/371) | CLIENT-074 | `status:done`（[#379](https://github.com/anitaguptaoffice/sanguo-slg/pull/379) `4102f1a5`） |
+| [#372](https://github.com/anitaguptaoffice/sanguo-slg/issues/372) | CLIENT-075 | `status:done`（[#381](https://github.com/anitaguptaoffice/sanguo-slg/pull/381) `b0ca4ba5`） |
+| [#373](https://github.com/anitaguptaoffice/sanguo-slg/issues/373) | CLIENT-076 | `status:done`（[#384](https://github.com/anitaguptaoffice/sanguo-slg/pull/384) `439c1b67`） |
+| [#374](https://github.com/anitaguptaoffice/sanguo-slg/issues/374) | CLIENT-077 | `status:done`（[#387](https://github.com/anitaguptaoffice/sanguo-slg/pull/387) `e1d44182`） |
+| [#375](https://github.com/anitaguptaoffice/sanguo-slg/issues/375) | CLIENT-078 | `status:done`（[#383](https://github.com/anitaguptaoffice/sanguo-slg/pull/383) `8187d4f4`） |
+| [#376](https://github.com/anitaguptaoffice/sanguo-slg/issues/376) | CLIENT-079 | `status:done`（[#382](https://github.com/anitaguptaoffice/sanguo-slg/pull/382) `c9b53258`） |
+| [#377](https://github.com/anitaguptaoffice/sanguo-slg/issues/377) | INTG-018 | `status:done`（[#380](https://github.com/anitaguptaoffice/sanguo-slg/pull/380) `0a78b1d6`） |
+| [#378](https://github.com/anitaguptaoffice/sanguo-slg/issues/378) | DOCS-EXIT-013 | `status:in-progress`（文档收口 PR 开放） |
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 21」。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；**永不合并** art hold PR **#77** / **#82** / **#108** / #100 / #126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)。**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——**非** wave:21 实现 backlog；实现卡 **CLIENT-072** 起。
