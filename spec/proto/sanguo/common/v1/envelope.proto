@@ -76,4 +76,10 @@ enum ErrorCode {
   MILITARY_RECRUIT_NOT_ALLOWED = 50003;
   // 城内资源或人口不足无法募兵。
   MILITARY_INSUFFICIENT_RESOURCE = 50004;
+  // 行军参数非法或状态不允许（如空兵力、坐标非法）。
+  MILITARY_INVALID_MARCH = 50005;
+  // 城内兵力不足无法出征。
+  MILITARY_INSUFFICIENT_TROOPS = 50006;
+  // 战报不存在或当前玩家无权查看。
+  MILITARY_BATTLE_REPORT_NOT_FOUND = 50007;
 }

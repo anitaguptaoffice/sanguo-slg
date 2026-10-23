@@ -27,3 +27,17 @@ message StartBuildingUpgradeResponse {
   // 队列预计完成时间（Unix 毫秒），对应 work_queue.finish_at。
   int64 finish_at_ms = 4;
 }
+
+// route: domestic.v1.GetCityState
+// 拉取指定城池的建筑与资源钱包快照（INTG-001 主城联调）。
+message GetCityStateRequest {
+  // 目标城池 ID。
+  int64 city_id = 1;
+}
+
+message GetCityStateResponse {
+  // 当前资源钱包。
+  sanguo.common.v1.ResourceWallet wallet = 1;
+  // 城内建筑列表。
+  repeated sanguo.common.v1.CityBuilding buildings = 2;
+}

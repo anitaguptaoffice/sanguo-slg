@@ -4,13 +4,13 @@ H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约
 
 ## 分包
 
-| 路径 | 域 | M1 接口 |
+| 路径 | 域 | 主要 route |
 |------|-----|---------|
 | `sanguo/common/v1/` | 公共 | 帧封装、`ErrorCode`、共享 DTO |
-| `sanguo/account/v1/` | 账号 | `Login` |
-| `sanguo/world/v1/` | 世界 | `ListPlayerCities` |
-| `sanguo/domestic/v1/` | 内政 | `StartBuildingUpgrade` |
-| `sanguo/military/v1/` | 军事 | `RecruitTroop` |
+| `sanguo/account/v1/` | 账号 | `Login`、`Register`、`RefreshSession` |
+| `sanguo/world/v1/` | 世界 | `ListPlayerCities`、`CreateCity` |
+| `sanguo/domestic/v1/` | 内政 | `StartBuildingUpgrade`、`GetCityState` |
+| `sanguo/military/v1/` | 军事 | `RecruitTroop`、`StartMarch`、`ListMarches`、`GetBattleReport`、`ListBattleReports` |
 
 ## WebSocket 约定
 
