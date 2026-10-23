@@ -68,10 +68,18 @@ export function dailyObjectiveLabel(kind: DailyObjectiveKind): string {
   return OBJECTIVE_LABEL[kind] ?? OBJECTIVE_LABEL.unknown;
 }
 
+/** chain 400 行内展示标签（可与 objective kind 不同，如 daily_march_1 → 战备）。 */
+const QUEST_CODE_TO_ROW_LABEL: Record<string, string> = {
+  daily_march_1: "战备",
+};
+
 export function dailyObjectiveLabelForQuest(q: {
   quest_code?: string;
   quest_cfg_id?: number;
 }): string {
+  const code = q.quest_code?.trim();
+  if (code && QUEST_CODE_TO_ROW_LABEL[code]) return QUEST_CODE_TO_ROW_LABEL[code];
+  if ((q.quest_cfg_id ?? 0) === 1033) return "战备";
   return dailyObjectiveLabel(dailyObjectiveKindForQuest(q));
 }
 

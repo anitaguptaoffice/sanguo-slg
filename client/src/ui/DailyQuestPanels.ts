@@ -21,6 +21,10 @@ import {
   resolveDailyQuestNavAction,
   type DailyQuestNavAction,
 } from "@/net/dailyQuestObjective";
+import {
+  DAILY_BATTLE_REPORT_BANNER_TEXT,
+  shouldShowDailyBattleReportBanner,
+} from "@/net/dailyQuestBattleReportBanner";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -40,6 +44,8 @@ export class DailyQuestPanels {
     private onStatus: (msg: string) => void,
     private readonly cityStateFetch?: CityStateFetch,
     private readonly onNavigate?: (action: DailyQuestNavAction) => void,
+    private readonly getBattleReportUnread?: () => number,
+    private readonly onOpenBattleReports?: () => void,
   ) {}
 
   attach(): void {
@@ -62,7 +68,15 @@ export class DailyQuestPanels {
 
   toggle(): void {
     this.panel.classList.toggle("hidden");
-    if (!this.panel.classList.contains("hidden")) void this.refreshList();
+    if (!this.panel.classList.contains("hidden")) {
+      this.renderBattleReportBanner();
+      void this.refreshList();
+    }
+  }
+
+  /** CLIENT-044：与 HudTodoBadgePoll 战报未读计数同步。 */
+  syncBattleReportUnreadBanner(): void {
+    this.renderBattleReportBanner();
   }
 
   /** 待办角标深链：打开并高亮 chain 400 首条可接/可领（cfg id 来自轮询快照）。 */
@@ -92,6 +106,7 @@ export class DailyQuestPanels {
     el.className = "content-panel hidden";
     el.innerHTML = `
       <h3>日常</h3>
+      <p class="daily-battle-report-banner hidden" data-role="daily-report-banner" data-action="daily-open-reports" role="button" tabindex="0" hidden></p>
       <p data-role="daily-hint">chain ${DAILY_QUEST_CHAIN_ID}；接取后由服务端自动累积进度，无需手填上报。</p>
       <button type="button" data-action="refresh-daily">刷新列表</button>
       <button type="button" data-action="accept-daily">接取</button>
@@ -128,6 +143,17 @@ export class DailyQuestPanels {
     const selected = this.rows.find((r) => r.quest_cfg_id === this.selectedCfgId) ?? null;
     if (pre) pre.textContent = formatDailyQuestDetail(selected);
     this.renderNextStep(selected);
+    this.renderBattleReportBanner();
+  }
+
+  private renderBattleReportBanner(): void {
+    const el = this.panel.querySelector('[data-role="daily-report-banner"]') as HTMLElement | null;
+    if (!el) return;
+    const unread = this.getBattleReportUnread?.() ?? 0;
+    const show = shouldShowDailyBattleReportBanner(unread);
+    el.hidden = !show;
+    el.classList.toggle("hidden", !show);
+    el.textContent = show ? DAILY_BATTLE_REPORT_BANNER_TEXT : "";
   }
 
   private renderNextStep(selected: DailyQuestRow | null): void {
@@ -258,9 +284,19 @@ export class DailyQuestPanels {
       this.renderList();
       return;
     }
-    const btn = (ev.target as HTMLElement).closest("button");
+    const actionEl = (ev.target as HTMLElement).closest("[data-action]");
+    const btn = actionEl?.closest("button") ?? null;
+    if (!actionEl || (!btn && actionEl.getAttribute("data-action") !== "daily-open-reports")) return;
+    const a = actionEl.getAttribute("data-action");
+    if (a === "daily-open-reports") {
+      if (!this.onOpenBattleReports) {
+        this.onStatus("战报面板未配置");
+        return;
+      }
+      this.onOpenBattleReports();
+      return;
+    }
     if (!btn) return;
-    const a = btn.getAttribute("data-action");
     if (a === "refresh-daily") void this.refreshList();
     if (a === "accept-daily") void this.acceptDaily();
     if (a === "claim-daily") void this.claimDaily();

@@ -15,7 +15,7 @@ describe("dailyQuestObjective", () => {
     expect(dailyObjectiveLabelForQuest({ quest_code: "daily_recruit_1" })).toBe("招募");
     expect(dailyObjectiveLabelForQuest({ quest_code: "daily_train_1" })).toBe("练兵");
     expect(dailyObjectiveLabelForQuest({ quest_code: "daily_build_1" })).toBe("建造");
-    expect(dailyObjectiveLabelForQuest({ quest_code: "daily_march_1" })).toBe("使用道具");
+    expect(dailyObjectiveLabelForQuest({ quest_code: "daily_march_1" })).toBe("战备");
   });
 
   it("falls back to quest_cfg_id when code missing", () => {
