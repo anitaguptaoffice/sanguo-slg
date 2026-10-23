@@ -1,5 +1,7 @@
 export const DAILY_QUEST_CLAIMABLE_ROW_CLASS = "daily-quest-claimable";
 export const QUEST_CLAIM_PULSE_CLASS = "quest-claim-pulse";
+/** CLIENT-123：与行九宫皮肤并存的领奖脉冲类名。 */
+export const DAILY_QUEST_CLAIM_PULSE_CLASS = "daily-quest-claim-pulse";
 /** 领奖行脉冲时长（≤2s，与 HUD resource-pulse 并存）。 */
 export const QUEST_CLAIM_PULSE_MS = 1200;
 
@@ -7,8 +9,10 @@ export function scheduleQuestClaimRowPulse(row: HTMLElement | null | undefined):
   if (!row) return;
   row.classList.remove(QUEST_CLAIM_PULSE_CLASS);
   void row.offsetWidth;
-  row.classList.add(QUEST_CLAIM_PULSE_CLASS);
-  window.setTimeout(() => row.classList.remove(QUEST_CLAIM_PULSE_CLASS), QUEST_CLAIM_PULSE_MS);
+  row.classList.add(QUEST_CLAIM_PULSE_CLASS, DAILY_QUEST_CLAIM_PULSE_CLASS);
+  window.setTimeout(() => {
+    row.classList.remove(QUEST_CLAIM_PULSE_CLASS, DAILY_QUEST_CLAIM_PULSE_CLASS);
+  }, QUEST_CLAIM_PULSE_MS);
 }
 
 export function scrollDailyQuestRowIntoView(
