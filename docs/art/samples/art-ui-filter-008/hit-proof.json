@@ -1,0 +1,56 @@
+{
+  "art_asset_source_commit": "38451735d5d1004072fd0c07f40757332afe351c",
+  "captured_at": "2026-10-23T23:27:42.917Z",
+  "asset_ids": [
+    "ui.chip.filter.v1",
+    "ui.chip.filter.hover.v1",
+    "ui.chip.filter.pressed.v1",
+    "ui.chip.filter.selected.v1",
+    "ui.list.row.v1",
+    "ui.list.row.hover.v1",
+    "ui.list.row.selected.v1",
+    "ui.badge.dot.v1",
+    "ui.badge.count.v1"
+  ],
+  "chip_states": [
+    "normal",
+    "hover",
+    "pressed",
+    "selected"
+  ],
+  "row_states": [
+    "default",
+    "hover",
+    "selected"
+  ],
+  "badge": {
+    "dot_asset": "ui.badge.dot.v1",
+    "count_asset": "ui.badge.count.v1",
+    "count_display_px": {
+      "w": 20,
+      "h": 16
+    },
+    "count_labels": [
+      "1",
+      "2",
+      "9",
+      "9+"
+    ]
+  },
+  "chip_hit_contract": {
+    "sprite_display_px": {
+      "w": 72,
+      "h": 32
+    },
+    "min_hit_wrap_px": 44,
+    "css_in_index_html": true,
+    "helper": "artUiFilterSkin.mountFilterChip + button.art-filter-chip",
+    "data_art_skin_off": "skips sprite mount; preserves text label"
+  },
+  "runtime_selectors": {
+    "chip": "button[data-ui-filter-chip]",
+    "row": "[data-ui-filter-row]",
+    "badge_dot": "[data-ui-filter-badge='dot']",
+    "badge_count": "[data-ui-filter-badge='count']"
+  }
+}

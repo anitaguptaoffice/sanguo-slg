@@ -1,0 +1,240 @@
+{
+  "task": "ART-UI-FILTER-008",
+  "source": {
+    "pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/506",
+    "commit": "38451735d5d1004072fd0c07f40757332afe351c",
+    "note": "Read-only cherry-pick; Draft #506 not merged; #108/#77/#82 not merged"
+  },
+  "manifest_asset_count": 46,
+  "filter_asset_ids": [
+    "ui.chip.filter.v1",
+    "ui.chip.filter.hover.v1",
+    "ui.chip.filter.pressed.v1",
+    "ui.chip.filter.selected.v1",
+    "ui.list.row.v1",
+    "ui.list.row.hover.v1",
+    "ui.list.row.selected.v1",
+    "ui.badge.dot.v1",
+    "ui.badge.count.v1"
+  ],
+  "png_entries": 18,
+  "items": [
+    {
+      "asset_id": "ui.chip.filter.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/chip_filter_normal.png",
+      "bytes": 721,
+      "sha256": "e30103a4a8616d378c1161aa6a2a5b5e430f37db96772cf71863e59dd7946f96",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/chip_filter_normal.png",
+      "bytes": 1340,
+      "sha256": "d4f97747f6f174f5fd48c6f2348b22f7451289b396f4fda138ba1a541d427232",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.hover.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/chip_filter_hover.png",
+      "bytes": 815,
+      "sha256": "52939223f7773b476ae3818cbc5a1a9bdfd3ee804a213ef9c0bc2eb064231313",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.hover.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/chip_filter_hover.png",
+      "bytes": 1443,
+      "sha256": "192676d56c35d13a41bd7d7fd9b26caf0b4bba883bd6f49a7eb7ce2d3bad2c24",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.pressed.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/chip_filter_pressed.png",
+      "bytes": 745,
+      "sha256": "bea36024df520f364ae6710bcf32014f87f92d7139ec40b51df69aa2e3e4356f",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.pressed.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/chip_filter_pressed.png",
+      "bytes": 1370,
+      "sha256": "dc1a3ffb787b784d0c7ef274b237df0e96e6411996c2db79c4d0d6d5e295bd5a",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.selected.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/chip_filter_selected.png",
+      "bytes": 955,
+      "sha256": "141aa8554bbcdeda25b176446266c0e58a875c5d7f0528543ab73fbbadd18f9a",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.chip.filter.selected.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/chip_filter_selected.png",
+      "bytes": 1819,
+      "sha256": "b529ff12f820d79fa2ea8bb33eb4c9c2e4cf2c76bca41412935f4a7a5c7c53f2",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.list.row.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/list_row_default.png",
+      "bytes": 744,
+      "sha256": "7ff614f2a6105c9c7afa22980e734fa37343f4e512527f86b64f96d94ce363e6",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "kind": "nine_slice"
+    },
+    {
+      "asset_id": "ui.list.row.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/list_row_default.png",
+      "bytes": 1501,
+      "sha256": "3d55cb6f9c4c485241f023253a256dd53e30d662b0f85a1d4b4caa775f0b2812",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "kind": "nine_slice"
+    },
+    {
+      "asset_id": "ui.list.row.hover.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/list_row_hover.png",
+      "bytes": 872,
+      "sha256": "6a3d73b490f77bad5f98dbed1a929cb2fb75d5e295e335c0997b135f2ba19e8b",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "kind": "nine_slice"
+    },
+    {
+      "asset_id": "ui.list.row.hover.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/list_row_hover.png",
+      "bytes": 1798,
+      "sha256": "3d88cce06cbc1331e7ad5f8c67d6c6c7c76cbb350be727ed7e064f9e8a6d58c4",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "kind": "nine_slice"
+    },
+    {
+      "asset_id": "ui.list.row.selected.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/list_row_selected.png",
+      "bytes": 1031,
+      "sha256": "2419bc540e9fc93c1020fb684be320d80cf004780e6672ecb4e9e5f48e2f1214",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "kind": "nine_slice"
+    },
+    {
+      "asset_id": "ui.list.row.selected.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/list_row_selected.png",
+      "bytes": 2103,
+      "sha256": "2036b9a4b8c156330dc342ca1d25ed2d734843a2732194d744546a058f8b37bb",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "kind": "nine_slice"
+    },
+    {
+      "asset_id": "ui.badge.dot.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/badge_dot.png",
+      "bytes": 545,
+      "sha256": "ce6878a5aea0bc7acb1996ea15c33bfb0f8d0504d85c467adb79956051814146",
+      "display_size": {
+        "w": 16,
+        "h": 16
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.badge.dot.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/badge_dot.png",
+      "bytes": 1026,
+      "sha256": "0846a4ea9f3bafd11933dcdca3447eca823b909f49af825ec6cd1b0e3ef879ba",
+      "display_size": {
+        "w": 16,
+        "h": 16
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.badge.count.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/badge_count.png",
+      "bytes": 609,
+      "sha256": "e554c79e146d175a618b6ecce1e9e33041d7779df0187dded620974c7a9ff16b",
+      "display_size": {
+        "w": 20,
+        "h": 16
+      },
+      "kind": "sprite"
+    },
+    {
+      "asset_id": "ui.badge.count.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/badge_count.png",
+      "bytes": 1119,
+      "sha256": "722322350d60b0b9187cd7616aa6217465383a2b22010b7ca2a5206de55892f2",
+      "display_size": {
+        "w": 20,
+        "h": 16
+      },
+      "kind": "sprite"
+    }
+  ],
+  "generated_at": "2026-10-23T23:27:42.916Z"
+}

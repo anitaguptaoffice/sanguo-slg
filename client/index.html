@@ -796,6 +796,93 @@
       .daily-quest-filter-btn.daily-quest-locate-first {
         margin-left: auto; border-color: #c9a227; color: #f0c674;
       }
+      /* ART-UI-FILTER-008: chip hit wrap ≥44×44; sprite stays 72×32 centered */
+      button.art-filter-chip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 6px 10px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        color: #e8dcc8;
+        font-size: 12px;
+        line-height: 1.2;
+      }
+      button.art-filter-chip .art-filter-chip-sprite {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 72px;
+        height: 32px;
+        transform: translate(-50%, -50%);
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        pointer-events: none;
+      }
+      button.art-filter-chip .art-filter-chip-label {
+        position: relative;
+        z-index: 1;
+        max-width: 72px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        pointer-events: none;
+      }
+      .art-filter-row.art-filter-row--skinned {
+        border-radius: 4px;
+        min-height: 40px;
+        padding: 8px 10px;
+        list-style: none;
+      }
+      .art-filter-badge-dot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+      }
+      .art-filter-badge-dot .art-filter-badge-dot-sprite {
+        display: block;
+        width: 16px;
+        height: 16px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      .art-filter-badge-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 16px;
+        vertical-align: middle;
+      }
+      .art-filter-badge-count .art-filter-badge-count-sprite {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 16px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      .art-filter-badge-count-label {
+        position: relative;
+        z-index: 1;
+        font-size: 10px;
+        line-height: 1;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        color: #1a1510;
+        pointer-events: none;
+      }
       .daily-form-error {
         margin: 6px 0 0; font-size: 12px; color: #c45c5c; min-height: 1em;
       }
