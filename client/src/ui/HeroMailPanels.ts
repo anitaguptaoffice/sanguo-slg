@@ -17,7 +17,6 @@ import {
   formatHeroLine,
   formatMailClaimGrantedSummary,
   filterHeroCultivationBagItemIds,
-  formatRecruitSuccessStatus,
   heroListLines,
   mergeRecruitTemplateOwnership,
   parseGetHeroDetailResponse,
@@ -64,6 +63,13 @@ import {
   recruitAffordabilityForTemplate,
   setRecruitAffordabilityErrorDisplay,
 } from "@/net/recruitAffordability";
+import {
+  buildRecruitSuccessFeedback,
+  resolveRecruitSubmitPhase,
+  setRecruitSuccessToastDisplay,
+  syncRecruitSubmitButton,
+  walletMaterialDeductPulseKeys,
+} from "@/net/recruitSubmitFeedback";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -81,6 +87,9 @@ export class HeroMailPanels {
   private recruitPool = "standard";
   private claimMailInflight = 0;
   private mailBatchSelected = new Set<number>();
+  private recruitHeroInflight = false;
+  private recruitLastError: string | null = null;
+  private recruitLastSuccessHeroId: number | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -94,6 +103,7 @@ export class HeroMailPanels {
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
     private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
     private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
+    private readonly onRecruitMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
   ) {}
 
   attach(): void {
@@ -356,6 +366,10 @@ export class HeroMailPanels {
       </label>
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
       <button type="button" data-action="recruit-hero">招募</button>
+      <p class="recruit-success-toast hidden" data-role="recruit-success-toast" role="status">
+        <span data-role="recruit-success-msg"></span>
+        <button type="button" class="hidden" data-action="recruit-open-hero-detail">打开详情</button>
+      </p>
       <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
@@ -510,18 +524,27 @@ export class HeroMailPanels {
     this.renderHeroList();
   }
 
+  private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
+    return resolveRecruitSubmitPhase({
+      inflight: this.recruitHeroInflight,
+      lastError: this.recruitLastError,
+      lastSuccessHeroId: this.recruitLastSuccessHeroId,
+    });
+  }
+
   private syncRecruitButtonState(templateRow: RecruitTemplatePreview | undefined): void {
-    const btn = this.heroPanel.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement | null;
-    if (!btn) return;
     if (!templateRow) {
-      btn.disabled = true;
+      syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
       return;
     }
     const { wallet, bag } = this.sessionEconomy();
     const afford = compareRecruitAffordability(wallet, templateRow, bag);
-    btn.disabled = !afford.canAfford;
-    setRecruitAffordabilityErrorDisplay(this.heroPanel, afford.insufficientReason);
+    syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), afford.canAfford);
+    if (!this.recruitHeroInflight) {
+      const inlineError = this.recruitLastError?.trim() || afford.insufficientReason || null;
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, inlineError);
+    }
   }
 
   private setMailFilterButtons(): void {
@@ -720,6 +743,7 @@ export class HeroMailPanels {
   }
 
   private async recruitHero(): Promise<void> {
+    if (this.recruitHeroInflight) return;
     const sid = this.serverId();
     const tpl = this.selectedTemplateId;
     const itemId = this.recruitItemId;
@@ -728,6 +752,7 @@ export class HeroMailPanels {
       this.onStatus("请先刷新并选择招募模板");
       return;
     }
+    const walletBefore = this.sessionEconomy().wallet;
     const { wallet, bag } = this.sessionEconomy();
     const afford = compareRecruitAffordability(wallet, templateRow ?? {}, bag);
     if (!afford.canAfford) {
@@ -736,12 +761,16 @@ export class HeroMailPanels {
       return;
     }
     setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
+    setRecruitSuccessToastDisplay(this.heroPanel, null);
     let dailyBefore: DailyQuestRow | null = null;
     try {
       dailyBefore = await this.fetchDailyRecruitRow();
     } catch {
       /* 日常列表失败不阻断招募 */
     }
+    this.recruitHeroInflight = true;
+    this.recruitLastError = null;
+    this.syncRecruitButtonState(templateRow);
     this.onStatus(`招募模板 ${tpl}…`);
     try {
       const res = (await this.gateway.recruitHero(sid, tpl, {
@@ -754,12 +783,20 @@ export class HeroMailPanels {
         loyalty?: number;
       };
       await this.syncEconomyAfterRecruit();
+      const walletAfter = this.sessionEconomy().wallet;
+      const pulseKeys = walletMaterialDeductPulseKeys(
+        walletBefore,
+        walletAfter,
+        templateRow?.recruit_cost,
+      );
+      if (pulseKeys.length) this.onRecruitMaterialPulse?.(pulseKeys);
       await this.refreshHeroes();
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
         await this.loadHeroDetail(res.hero_id);
       }
-      let status = formatRecruitSuccessStatus(res, templateRow);
+      const feedback = buildRecruitSuccessFeedback(res, templateRow);
+      let status = feedback.statusText;
       try {
         const dailyAfter = await this.fetchDailyRecruitRow();
         if (shouldPromptDailyRecruitAfterRecruit(dailyBefore, dailyAfter)) {
@@ -769,12 +806,21 @@ export class HeroMailPanels {
       } catch {
         /* 忽略日常刷新失败 */
       }
+      this.recruitLastSuccessHeroId = res.hero_id ?? null;
+      this.recruitLastError = null;
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
+      setRecruitSuccessToastDisplay(this.heroPanel, { ...feedback, statusText: status });
       this.onStatus(status);
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
+      this.recruitLastError = msg;
+      this.recruitLastSuccessHeroId = null;
+      setRecruitSuccessToastDisplay(this.heroPanel, null);
       this.onStatus(msg);
       setRecruitAffordabilityErrorDisplay(this.heroPanel, msg);
+    } finally {
+      this.recruitHeroInflight = false;
+      this.syncRecruitButtonState(this.selectedRecruitTemplateRow());
     }
   }
 
@@ -1020,6 +1066,11 @@ export class HeroMailPanels {
     if (a === "refresh-heroes") void this.refreshHeroes();
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "recruit-hero") void this.recruitHero();
+    if (a === "recruit-open-hero-detail") {
+      const heroId = Number(btn.getAttribute("data-hero-id"));
+      if (heroId > 0) void this.loadHeroDetail(heroId);
+      return;
+    }
     if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
     if (a === "hero-related-items") void this.openRelatedCultivationItems();
   }

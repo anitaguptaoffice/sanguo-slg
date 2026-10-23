@@ -9,6 +9,9 @@ import {
   formatServerLine,
   formatSocialGatewayError,
   groupChatMessagesByLocalDay,
+  groupGuildMembersByRole,
+  guildRoleChipClass,
+  guildRoleGroupDefaultExpanded,
   guildRoleLabel,
   localCalendarDayKey,
   parseGameServerInfo,
@@ -75,6 +78,22 @@ describe("socialFormat", () => {
     });
     expect(member).toContain("官员");
     expect(member).toContain("加入");
+  });
+
+  it("groups guild members by role in leader-officer-member order (CLIENT-101)", () => {
+    const groups = groupGuildMembersByRole([
+      { display_name: "丙", role: 3, power: 9000 },
+      { display_name: "甲", role: 1, power: 12000 },
+      { display_name: "乙", role: 2, power: 10000 },
+      { display_name: "丁", role: 2, power: 8000 },
+    ]);
+    expect(groups.map((g) => g.roleKey)).toEqual([1, 2, 3]);
+    expect(groups[0].members.map((m) => m.display_name)).toEqual(["甲"]);
+    expect(groups[1].members.map((m) => m.display_name)).toEqual(["乙", "丁"]);
+    expect(guildRoleGroupDefaultExpanded(1)).toBe(true);
+    expect(guildRoleGroupDefaultExpanded(2)).toBe(false);
+    expect(guildRoleChipClass(1)).toContain("guild-role-chip-leader");
+    expect(guildRoleChipClass(99)).toContain("guild-role-chip-unknown");
   });
 
   it("sorts guild members leader to member by role then power", () => {

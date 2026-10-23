@@ -1,0 +1,232 @@
+{
+  "asset_source_sha": "85a2dec4c12805ffc6cafef5b9871b1c4a5b0ec2",
+  "captured_at": "2026-10-23T21:31:58.892Z",
+  "viewports": {
+    "1600x900_dpr1": {
+      "uiScale": 1,
+      "buttonCount": 16,
+      "scrollMetrics": {
+        "scrollWidth": 1638,
+        "clientWidth": 1585,
+        "maxScrollLeft": 53
+      },
+      "scrolledToEnd": true,
+      "lastEntryReachableAfterScroll": true,
+      "hitRects": [
+        {
+          "index": 0,
+          "label": "升级农田",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 1,
+          "label": "刷新状态",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 2,
+          "label": "军事",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 14,
+          "label": "世界",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 15,
+          "label": "队列",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        }
+      ],
+      "minHitHeightCss": 44
+    },
+    "1600x900_dpr2": {
+      "uiScale": 1,
+      "buttonCount": 16,
+      "scrollMetrics": {
+        "scrollWidth": 1638,
+        "clientWidth": 1585,
+        "maxScrollLeft": 53
+      },
+      "scrolledToEnd": true,
+      "lastEntryReachableAfterScroll": true,
+      "hitRects": [
+        {
+          "index": 0,
+          "label": "升级农田",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 1,
+          "label": "刷新状态",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 2,
+          "label": "军事",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 14,
+          "label": "世界",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        },
+        {
+          "index": 15,
+          "label": "队列",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 44
+          }
+        }
+      ],
+      "minHitHeightCss": 44
+    },
+    "1280x720_dpr1": {
+      "uiScale": 0.8,
+      "buttonCount": 16,
+      "scrollMetrics": {
+        "scrollWidth": 1638,
+        "clientWidth": 1265,
+        "maxScrollLeft": 373
+      },
+      "scrolledToEnd": true,
+      "lastEntryReachableAfterScroll": true,
+      "hitRects": [
+        {
+          "index": 0,
+          "label": "升级农田",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 55
+          }
+        },
+        {
+          "index": 1,
+          "label": "刷新状态",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 55
+          }
+        },
+        {
+          "index": 2,
+          "label": "军事",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 55
+          }
+        },
+        {
+          "index": 14,
+          "label": "世界",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 55
+          }
+        },
+        {
+          "index": 15,
+          "label": "队列",
+          "buttonCss": {
+            "w": 96,
+            "h": 44
+          },
+          "hitWrapCss": {
+            "w": 96,
+            "h": 55
+          }
+        }
+      ],
+      "minHitHeightCss": 55
+    }
+  },
+  "notes": [
+    "Bottom toolbar uses horizontal scroll; scrollMetrics.maxScrollLeft > 0 at 1280 when buttons overflow.",
+    "Hit wrap min-height uses calc(44px / var(--ui-scale)); expect minHitHeightCss >= 44 at 1280."
+  ]
+}
