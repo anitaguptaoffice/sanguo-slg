@@ -48,7 +48,7 @@
   > **v1 运营口径（GM-003）**：**GM CLI/HTTP**（`cmd/gm`：`lookup` / `grant` / `kick` / `mute` / `send-mail`；HTTP 仅 `POST /gm/lookup|grant|kick|mute`）+ **邮件运营**（`send-mail` → `player_mail`，验收见 [开服运营最小流程](ops/open-server-runbook.md) §4）。**非目标**：活动配置台、可视化排期、`cfg_act*` 灌入——仍 **out of core subset**。
 - [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
-出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟；wave:11 **CLIENT-009**（[#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169)）日常 UI、**CLIENT-010**（[#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171)）招募模板与背包/商城可读性、**CLIENT-012**（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)）战报底栏入口，**QUEST-003**（[#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173)）日常挂钩与 **INTG-008**（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)）冒烟——H5 **日常 + 招募模板预览 + 战报** 最短可玩路径见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)；wave:12 **CLIENT-013**（[#188](https://github.com/anitaguptaoffice/sanguo-slg/pull/188)）行军列表、**CLIENT-014**（[#187](https://github.com/anitaguptaoffice/sanguo-slg/pull/187)）将领详情、**CLIENT-015**（[#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186)）世界坐标出征、**CLIENT-016**/**CLIENT-017**/**CLIENT-018** 战报筛选/邮件收件箱/HUD 反馈与 **INTG-009**（[#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192)）冒烟——H5 **行军列表 + 将领详情 + 邮件 + 战报筛选** 可玩路径见 [client/README.md](../client/README.md#wave-12-可玩加深m4-出口--intg-009)。里程碑 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）、**DOCS-EXIT-003**（[#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168)）、**DOCS-EXIT-004**（[#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185)）。
+出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟；wave:11 **CLIENT-009**（[#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169)）日常 UI、**CLIENT-010**（[#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171)）招募模板与背包/商城可读性、**CLIENT-012**（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)）战报底栏入口，**QUEST-003**（[#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173)）日常挂钩与 **INTG-008**（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)）冒烟——H5 **日常 + 招募模板预览 + 战报** 最短可玩路径见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)；wave:12 **CLIENT-013**（[#188](https://github.com/anitaguptaoffice/sanguo-slg/pull/188)）行军列表、**CLIENT-014**（[#187](https://github.com/anitaguptaoffice/sanguo-slg/pull/187)）将领详情、**CLIENT-015**（[#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186)）世界坐标出征、**CLIENT-016**/**CLIENT-017**/**CLIENT-018** 战报筛选/邮件收件箱/HUD 反馈与 **INTG-009**（[#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192)）冒烟——H5 **行军列表 + 将领详情 + 邮件 + 战报筛选** 可玩路径见 [client/README.md](../client/README.md#wave-12-可玩加深m4-出口--intg-009)；wave:13 **CLIENT-019**（[#206](https://github.com/anitaguptaoffice/sanguo-slg/pull/206)）队列倒计时、**CLIENT-020**（[#204](https://github.com/anitaguptaoffice/sanguo-slg/pull/204)）背包/商城反馈、**CLIENT-021**（[#207](https://github.com/anitaguptaoffice/sanguo-slg/pull/207)）双榜只读、**CLIENT-022**（[#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205)）军团/聊天可读、**CLIENT-023**（[#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208)）招募↔日常闭环与 **INTG-010**（[#203](https://github.com/anitaguptaoffice/sanguo-slg/pull/203)）冒烟——H5 **队列倒计时 + 背包/商城反馈 + 双榜 + 社交可读 + 招募日常闭环** 路径见 [client/README.md](../client/README.md#wave-13-闭环加深m4-出口--intg-010)。里程碑 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）、**DOCS-EXIT-003**（[#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168)）、**DOCS-EXIT-004**（[#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185)）、**DOCS-EXIT-005**（[#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202)）。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -143,25 +143,23 @@ H5 人工验收与 INTG-009 路径对齐，见 [client/README.md](../client/READ
 
 **明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。全屏大地图 / 新建筑类型 / 改 `spec/proto` 冻结契约（战报筛选仅客户端）。
 
-## Wave 13 H5 闭环加深 — **进行中**
+## Wave 13 H5 闭环加深 — **已完成**
 
-**策略**：在 wave:12 **行军/将领/邮件/战报/HUD** 之上，补齐 **内政与募兵队列可读**、**背包/商城消费反馈**、**双榜只读**、**军团/聊天信息密度**与 **招募↔日常闭环**；网关 **INTG-010** 复跑 smoke。**仍**在 DATA-002 子集；**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。**不**做行军取消/加速（`military.v1` 无对应 RPC，本波不开 contract）。
+**策略**：在 wave:12 **行军/将领/邮件/战报/HUD** 之上，补齐 **内政与募兵队列可读**、**背包/商城消费反馈**、**双榜只读**、**军团/聊天信息密度**与 **招募↔日常闭环**；网关 **INTG-010** 复跑 smoke。**仍**在 DATA-002 子集；**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。**不**做行军取消/加速（`military.v1` 无对应 RPC，本波不开 contract）。波次 backlog 规划 [#195](https://github.com/anitaguptaoffice/sanguo-slg/pull/195)。
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| （待 sync） | CLIENT-019 | 待开工 | — |
-| （待 sync） | CLIENT-020 | 待开工 | — |
-| （待 sync） | CLIENT-021 | 待开工 | — |
-| （待 sync） | CLIENT-022 | 待开工 | — |
-| （待 sync） | CLIENT-023 | 待开工 | — |
-| （待 sync） | INTG-010 | 待开工 | — |
-| （待 sync） | DOCS-EXIT-005 | 阻塞（等 INTG-010） | — |
+| [#196](https://github.com/anitaguptaoffice/sanguo-slg/issues/196) | CLIENT-019 | 已完成 | [#206](https://github.com/anitaguptaoffice/sanguo-slg/pull/206) |
+| [#197](https://github.com/anitaguptaoffice/sanguo-slg/issues/197) | CLIENT-020 | 已完成 | [#204](https://github.com/anitaguptaoffice/sanguo-slg/pull/204) |
+| [#198](https://github.com/anitaguptaoffice/sanguo-slg/issues/198) | CLIENT-021 | 已完成 | [#207](https://github.com/anitaguptaoffice/sanguo-slg/pull/207) |
+| [#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) | CLIENT-022 | 已完成 | [#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205) |
+| [#200](https://github.com/anitaguptaoffice/sanguo-slg/issues/200) | CLIENT-023 | 已完成 | [#208](https://github.com/anitaguptaoffice/sanguo-slg/pull/208) |
+| [#201](https://github.com/anitaguptaoffice/sanguo-slg/issues/201) | INTG-010 | 已完成 | [#203](https://github.com/anitaguptaoffice/sanguo-slg/pull/203) |
+| [#202](https://github.com/anitaguptaoffice/sanguo-slg/issues/202) | DOCS-EXIT-005 | 已完成 | [#209](https://github.com/anitaguptaoffice/sanguo-slg/pull/209) |
 
-波次 backlog 规划见本仓库 `feat/wave-13-backlog` PR（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync` / 手工建 Issue）。
+H5 人工验收与 INTG-010 路径对齐，见 [client/README.md](../client/README.md#wave-13-闭环加深m4-出口--intg-010)（**队列倒计时 + 背包/商城反馈 + 双榜 + 社交可读 + 招募日常闭环**）。
 
-**并行建议**：CLIENT-019～023 可全开；INTG-010 与 CLIENT 并行；DOCS-EXIT-005 在 INTG-010 合并后放开。
-
-**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军加速（需未来 contract 卡）。
+**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权；行军 **取消/加速**（`CancelMarch` 等，需未来 contract 卡，当前 `military.v1` 无 RPC）。
 
 ## 不做
 
