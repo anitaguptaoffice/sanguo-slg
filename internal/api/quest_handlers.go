@@ -7,6 +7,7 @@ import (
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
 )
 
 const (
@@ -124,6 +125,10 @@ func (s *Server) handleClaimQuestReward(ctx context.Context, pkt *commonv1.Clien
 	if err != nil {
 		return nil, err
 	}
+	obs.EmitGameplayEvent(s.log, pkt.GetTraceId(), obs.EventQuestClaimReward, obs.PlayerRef{
+		ServerID: pc.ServerID,
+		PlayerID: pc.PlayerID,
+	})
 	return okResp(pkt.GetTraceId(), data), nil
 }
 

@@ -39,6 +39,19 @@ func TestWrapLogger(t *testing.T) {
 	}
 }
 
+func TestEmitGameplayEvent(t *testing.T) {
+	var buf strings.Builder
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	EmitGameplayEvent(log, "tr-9", EventLogin, PlayerRef{ServerID: 1, PlayerID: 42})
+	if !strings.Contains(buf.String(), "login") || !strings.Contains(buf.String(), "tr-9") {
+		t.Fatalf("log: %s", buf.String())
+	}
+	body := DefaultMetrics().text()
+	if !strings.Contains(body, `sanguo_gameplay_events_total{event="login"}`) {
+		t.Fatalf("metrics:\n%s", body)
+	}
+}
+
 func TestGaugesAndMetricsHandler(t *testing.T) {
 	SetOnlineConnections(7)
 	SetQueueLength(2)
