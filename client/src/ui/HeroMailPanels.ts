@@ -44,6 +44,7 @@ import {
   mailRowMetaLine,
   mailRowTitleLine,
 } from "@/net/panelDensity";
+import { pickFirstUnreadMailId } from "@/net/hudTodoBadge";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -108,6 +109,27 @@ export class HeroMailPanels {
       this.onUnreadCount?.(0);
       void this.refreshMail();
     } else void this.syncUnreadBadge();
+  }
+
+  /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照，不再单独查未读）。 */
+  openFromTodoBadge(preferredMailId = 0): void {
+    this.mailPanel.classList.remove("hidden");
+    this.onUnreadCount?.(0);
+    this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
+    if (preferredMailId > 0) this.selectedMailId = preferredMailId;
+    void this.refreshMail().then(() => this.focusFirstUnreadMail(preferredMailId));
+  }
+
+  private async focusFirstUnreadMail(preferredMailId: number): Promise<void> {
+    const fromList = pickFirstUnreadMailId(this.mails);
+    const pickId =
+      preferredMailId > 0 && this.mails.some((m) => m.mail_id === preferredMailId)
+        ? preferredMailId
+        : fromList;
+    if (!pickId) return;
+    await this.openMail(pickId);
+    const row = this.mailPanel.querySelector(`li[data-mail-id="${pickId}"]`);
+    row?.scrollIntoView?.({ block: "nearest" });
   }
 
   /** 底栏角标：拉取未读 total_count（与列表 filter 无关）。 */
@@ -484,7 +506,11 @@ export class HeroMailPanels {
     }
   }
 
-  private async refreshMail(): Promise<void> {
+  private refreshMail(): Promise<void> {
+    return this.refreshMailInner();
+  }
+
+  private async refreshMailInner(): Promise<void> {
     const sid = this.serverId();
     this.onStatus("拉取邮件…");
     this.mailListError = "";

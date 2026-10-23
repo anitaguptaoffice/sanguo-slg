@@ -49,4 +49,41 @@ describe("HudTodoBadgePoll", () => {
     await vi.waitFor(() => expect(counts.mailUnread).toBe(7));
     expect(listPlayerMail).toHaveBeenCalledTimes(1);
   });
+
+  it("stores deep-link snapshot ids from poll responses", async () => {
+    const listPlayerMail = vi.fn().mockResolvedValue({
+      total_count: 2,
+      mails: [{ mail_id: 88, status: 0 }],
+    });
+    const listPlayerQuests = vi.fn().mockResolvedValue({
+      quests: [
+        { quest_cfg_id: 100, state: 2 },
+        { quest_cfg_id: 101, state: 3 },
+      ],
+    });
+    const listBattleReports = vi.fn().mockResolvedValue({
+      reports: [{ report_id: 5, outcome: 1, created_at_ms: 0 }],
+    });
+    const gateway = { listPlayerMail, listPlayerQuests, listBattleReports };
+    const unread = new BattleReportUnreadSession();
+    const poll = new HudTodoBadgePoll({
+      gateway: gateway as never,
+      getServerId: () => 1,
+      getCityId: () => 9,
+      battleReportUnread: unread,
+      isPanelVisible: () => false,
+      isMailSuppressed: () => false,
+      isDailySuppressed: () => false,
+      isReportsSuppressed: () => false,
+      onCounts: () => {},
+    });
+    await poll.pollOnce();
+    const snap = poll.getDeepLinkSnapshot();
+    expect(snap.firstUnreadMailId).toBe(88);
+    expect(snap.firstDailyTodoCfgId).toBe(101);
+    expect(snap.firstUnreadBattleReportId).toBe(5);
+    expect(snap.mailUnread).toBe(2);
+    expect(snap.dailyTodo).toBe(1);
+    expect(snap.battleReportUnread).toBe(1);
+  });
 });

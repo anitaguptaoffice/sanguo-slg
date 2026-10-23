@@ -1,11 +1,15 @@
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import { DAILY_QUEST_CHAIN_ID, dailyQuestsFromListResponse, type DailyQuestRow } from "@/net/dailyQuestState";
 import type { GatewayPort } from "@/net/GatewayClient";
-import { MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
+import { MAIL_INBOX_FILTER_UNREAD, type MailRow } from "@/net/heroMailState";
 import {
   aggregateHudTodoCounts,
   countDailyTodoQuests,
+  EMPTY_HUD_TODO_DEEP_LINK,
+  pickFirstDailyTodoQuestCfgId,
+  pickFirstUnreadMailId,
   type HudTodoBadgeCounts,
+  type HudTodoDeepLinkSnapshot,
 } from "@/net/hudTodoBadge";
 import {
   CITY_STATE_POLL_FAST_SEC,
@@ -32,13 +36,19 @@ export class HudTodoBadgePoll {
   private accumSec = 0;
   private readonly fastSec: number;
   private readonly slowSec: number;
-  private mailInflight: Promise<number> | null = null;
-  private dailyInflight: Promise<number> | null = null;
-  private reportsInflight: Promise<number> | null = null;
+  private mailInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private dailyInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private reportsInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private deepLink: HudTodoDeepLinkSnapshot = { ...EMPTY_HUD_TODO_DEEP_LINK };
 
   constructor(private readonly opts: HudTodoBadgePollOptions) {
     this.fastSec = opts.fastIntervalSec ?? CITY_STATE_POLL_FAST_SEC;
     this.slowSec = opts.slowIntervalSec ?? CITY_STATE_POLL_SLOW_SEC;
+  }
+
+  /** 最近一次轮询快照，供角标深链复用（不再为选首条 id 单独 RPC）。 */
+  getDeepLinkSnapshot(): Readonly<HudTodoDeepLinkSnapshot> {
+    return this.deepLink;
   }
 
   reset(): void {
@@ -46,6 +56,7 @@ export class HudTodoBadgePoll {
     this.mailInflight = null;
     this.dailyInflight = null;
     this.reportsInflight = null;
+    this.deepLink = { ...EMPTY_HUD_TODO_DEEP_LINK };
   }
 
   tick(dtSec: number): void {
@@ -57,24 +68,43 @@ export class HudTodoBadgePoll {
   }
 
   async pollOnce(): Promise<void> {
-    const [mailUnread, dailyTodo, battleReportUnread] = await Promise.all([
-      this.opts.isMailSuppressed() ? 0 : this.fetchMailUnread(),
-      this.opts.isDailySuppressed() ? 0 : this.fetchDailyTodo(),
-      this.opts.isReportsSuppressed() ? 0 : this.fetchBattleReportUnread(),
+    const [mail, daily, reports] = await Promise.all([
+      this.opts.isMailSuppressed()
+        ? { count: 0, firstId: 0 }
+        : this.fetchMailSnapshot(),
+      this.opts.isDailySuppressed()
+        ? { count: 0, firstId: 0 }
+        : this.fetchDailySnapshot(),
+      this.opts.isReportsSuppressed()
+        ? { count: 0, firstId: 0 }
+        : this.fetchBattleReportSnapshot(),
     ]);
-    this.opts.onCounts(
-      aggregateHudTodoCounts({ mailUnread, dailyTodo, battleReportUnread }),
-    );
+    this.deepLink = {
+      ...aggregateHudTodoCounts({
+        mailUnread: mail.count,
+        dailyTodo: daily.count,
+        battleReportUnread: reports.count,
+      }),
+      firstUnreadMailId: mail.firstId,
+      firstDailyTodoCfgId: daily.firstId,
+      firstUnreadBattleReportId: reports.firstId,
+    };
+    this.opts.onCounts(this.deepLink);
   }
 
-  private fetchMailUnread(): Promise<number> {
+  private fetchMailSnapshot(): Promise<{ count: number; firstId: number }> {
     if (this.mailInflight) return this.mailInflight;
     const sid = this.opts.getServerId();
-    if (!sid) return Promise.resolve(0);
+    if (!sid) return Promise.resolve({ count: 0, firstId: 0 });
     const p = this.opts.gateway
       .listPlayerMail(sid, { filter: MAIL_INBOX_FILTER_UNREAD, pageSize: 1, pageOffset: 0 })
-      .then((res) => (res as { total_count?: number }).total_count ?? 0)
-      .catch(() => 0)
+      .then((res) => {
+        const mails = (res as { mails?: MailRow[] }).mails ?? [];
+        const count = (res as { total_count?: number }).total_count ?? 0;
+        const firstId = pickFirstUnreadMailId(mails);
+        return { count, firstId };
+      })
+      .catch(() => ({ count: 0, firstId: 0 }))
       .finally(() => {
         if (this.mailInflight === p) this.mailInflight = null;
       });
@@ -82,17 +112,20 @@ export class HudTodoBadgePoll {
     return p;
   }
 
-  private fetchDailyTodo(): Promise<number> {
+  private fetchDailySnapshot(): Promise<{ count: number; firstId: number }> {
     if (this.dailyInflight) return this.dailyInflight;
     const sid = this.opts.getServerId();
-    if (!sid) return Promise.resolve(0);
+    if (!sid) return Promise.resolve({ count: 0, firstId: 0 });
     const p = this.opts.gateway
       .listPlayerQuests(sid, { chainId: DAILY_QUEST_CHAIN_ID, includeCompleted: true })
       .then((res) => {
         const rows = dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] });
-        return countDailyTodoQuests(rows);
+        return {
+          count: countDailyTodoQuests(rows),
+          firstId: pickFirstDailyTodoQuestCfgId(rows),
+        };
       })
-      .catch(() => 0)
+      .catch(() => ({ count: 0, firstId: 0 }))
       .finally(() => {
         if (this.dailyInflight === p) this.dailyInflight = null;
       });
@@ -100,17 +133,19 @@ export class HudTodoBadgePoll {
     return p;
   }
 
-  private fetchBattleReportUnread(): Promise<number> {
+  private fetchBattleReportSnapshot(): Promise<{ count: number; firstId: number }> {
     if (this.reportsInflight) return this.reportsInflight;
     const cityId = this.opts.getCityId();
-    if (!cityId) return Promise.resolve(0);
+    if (!cityId) return Promise.resolve({ count: 0, firstId: 0 });
     const p = this.opts.gateway
       .listBattleReports(20, 0)
       .then((res) => {
         const reports = (res as { reports?: { report_id?: number }[] }).reports ?? [];
-        return this.opts.battleReportUnread.countUnread(reports);
+        const count = this.opts.battleReportUnread.countUnread(reports);
+        const firstId = this.opts.battleReportUnread.firstUnreadReportId(reports);
+        return { count, firstId };
       })
-      .catch(() => 0)
+      .catch(() => ({ count: 0, firstId: 0 }))
       .finally(() => {
         if (this.reportsInflight === p) this.reportsInflight = null;
       });
