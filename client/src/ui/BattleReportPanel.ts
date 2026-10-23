@@ -18,6 +18,12 @@ import {
 } from "@/net/battleReportOutcomeStreak";
 import { buildBattleReportTroopScan } from "@/net/battleReportDetailSummary";
 import {
+  formatBattleReportSideSummary,
+  resolveBattleReportHeroDeepLink,
+  resolveBattleReportRankDeepLink,
+  type BattleReportSideLinkContext,
+} from "@/net/battleReportSideLink";
+import {
   BATTLE_REPORT_ROUNDS_EXPAND_LABEL,
   buildBattleRoundTableRows,
   shouldCollapseBattleRounds,
@@ -77,6 +83,11 @@ export type BattleReportPanelOptions = {
   getDailyChainRows?: () => DailyQuestRow[];
   /** 详情「相关日常」：打开日常面板并滚到 cfg 行，不自动领奖。 */
   onOpenRelatedDaily?: (questCfgId: number) => void;
+  /** 复盘互链：当前玩家与将领列表快照（不额外 RPC）。 */
+  getBattleReportLinkContext?: () => BattleReportSideLinkContext;
+  onOpenBattleReportHero?: (heroId: number) => void;
+  onOpenBattleReportRank?: (playerId: number) => void;
+  onBattleReportReadonlyHint?: (message: string) => void;
 };
 
 export class BattleReportPanel {
@@ -429,6 +440,43 @@ export class BattleReportPanel {
     detailEl.appendChild(navBar);
 
     const summary = this.detailSummary;
+    if (summary) {
+      const sideSummary = formatBattleReportSideSummary({
+        summary,
+        detail: this.detailView,
+      });
+      const sideBar = document.createElement("div");
+      sideBar.className = "battle-report-detail-side-summary";
+      sideBar.setAttribute("aria-label", "攻守将领摘要");
+      const sideLine = document.createElement("p");
+      sideLine.className = "battle-report-detail-side-line";
+      sideLine.textContent = sideSummary.headline;
+      sideBar.appendChild(sideLine);
+      const linkRow = document.createElement("div");
+      linkRow.className = "battle-report-detail-side-links";
+      const attHeroBtn = document.createElement("button");
+      attHeroBtn.type = "button";
+      attHeroBtn.className = "battle-report-side-link-btn";
+      attHeroBtn.setAttribute("data-action", "open-battle-hero");
+      attHeroBtn.dataset.side = "attacker";
+      attHeroBtn.textContent = "打开将领（攻）";
+      const defHeroBtn = document.createElement("button");
+      defHeroBtn.type = "button";
+      defHeroBtn.className = "battle-report-side-link-btn";
+      defHeroBtn.setAttribute("data-action", "open-battle-hero");
+      defHeroBtn.dataset.side = "defender";
+      defHeroBtn.textContent = "打开将领（守）";
+      const rankBtn = document.createElement("button");
+      rankBtn.type = "button";
+      rankBtn.className = "battle-report-side-link-btn";
+      rankBtn.setAttribute("data-action", "open-battle-rank");
+      rankBtn.textContent = "打开排行";
+      linkRow.appendChild(attHeroBtn);
+      linkRow.appendChild(defHeroBtn);
+      linkRow.appendChild(rankBtn);
+      sideBar.appendChild(linkRow);
+      detailEl.appendChild(sideBar);
+    }
     if (summary) {
       const head = document.createElement("div");
       head.className = "battle-report-detail-head";
@@ -813,7 +861,53 @@ export class BattleReportPanel {
     } else if (action === "nav-prev-report" || action === "nav-next-report") {
       const direction = action === "nav-prev-report" ? "prev" : "next";
       void this.navigateAdjacentReport(direction);
+    } else if (action === "open-battle-hero") {
+      const side = btn.dataset.side === "defender" ? "defender" : "attacker";
+      this.handleOpenBattleHero(side);
+    } else if (action === "open-battle-rank") {
+      this.handleOpenBattleRank();
     }
+  }
+
+  private battleReportViewSnapshot(): {
+    summary?: BattleReportSummary;
+    detail?: BattleReportDetailView;
+  } {
+    return { summary: this.detailSummary, detail: this.detailView };
+  }
+
+  private handleOpenBattleHero(side: "attacker" | "defender"): void {
+    const ctx = this.panelOpts?.getBattleReportLinkContext?.() ?? {};
+    const link = resolveBattleReportHeroDeepLink(
+      side,
+      this.battleReportViewSnapshot(),
+      ctx,
+    );
+    if (link.action === "open" && link.heroId) {
+      this.panelOpts?.onOpenBattleReportHero?.(link.heroId);
+      return;
+    }
+    const msg = link.message ?? "将领详情只读";
+    if (this.panelOpts?.onBattleReportReadonlyHint) {
+      this.panelOpts.onBattleReportReadonlyHint(msg);
+    } else {
+      this.onStatus(msg);
+    }
+  }
+
+  private handleOpenBattleRank(): void {
+    const ctx = this.panelOpts?.getBattleReportLinkContext?.() ?? {};
+    const link = resolveBattleReportRankDeepLink(this.battleReportViewSnapshot(), ctx);
+    if (!link.show || !link.entityId) {
+      const msg = "暂无战力榜可映射的玩家";
+      if (this.panelOpts?.onBattleReportReadonlyHint) {
+        this.panelOpts.onBattleReportReadonlyHint(msg);
+      } else {
+        this.onStatus(msg);
+      }
+      return;
+    }
+    this.panelOpts?.onOpenBattleReportRank?.(link.entityId);
   }
 
   private async navigateAdjacentReport(

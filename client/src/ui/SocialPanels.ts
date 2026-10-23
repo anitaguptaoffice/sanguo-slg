@@ -10,6 +10,7 @@ import {
   viewerScoreFallback,
   type LeaderboardPagePayload,
 } from "@/net/leaderboardFormat";
+import { leaderboardRowDomId } from "@/net/battleReportSideLink";
 import {
   formatRankLastRefreshLine,
   readRankLastRefreshMs,
@@ -67,6 +68,7 @@ export class SocialPanels {
   private guildMembersCache: GuildMemberRow[] = [];
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
+  private rankHighlightEntityId = 0;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -129,6 +131,30 @@ export class SocialPanels {
       this.hydrateRankRefreshClockFromSession();
       void this.refreshRank();
     }
+  }
+
+  /** 战报深链：打开战力榜并高亮 entity_id 行（CLIENT-100）。 */
+  openPowerRankHighlightEntity(entityId: number): void {
+    if (!entityId) return;
+    this.chatPanel.classList.add("hidden");
+    this.guildPanel.classList.add("hidden");
+    this.rankHighlightEntityId = entityId;
+    const typeSelect = this.rankPanel.querySelector(
+      '[data-field="rank-type"]',
+    ) as HTMLSelectElement | null;
+    if (typeSelect) typeSelect.value = String(LB_PLAYER_POWER);
+    this.rankPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.rankPanel);
+    void this.refreshRank().then(() => this.scrollRankHighlightIntoView());
+  }
+
+  private scrollRankHighlightIntoView(): void {
+    const id = this.rankHighlightEntityId;
+    if (!id) return;
+    const row = this.rankPanel.querySelector<HTMLElement>(
+      `#${CSS.escape(leaderboardRowDomId(id))}`,
+    );
+    row?.scrollIntoView?.({ block: "nearest" });
   }
 
   getRankRoot(): HTMLElement {
@@ -687,6 +713,14 @@ export class SocialPanels {
       } else {
         for (const e of entries) {
           const tr = document.createElement("tr");
+          const entityId = e.entity_id ?? 0;
+          if (entityId > 0) {
+            tr.id = leaderboardRowDomId(entityId);
+            tr.dataset.entityId = String(entityId);
+          }
+          if (entityId > 0 && entityId === this.rankHighlightEntityId) {
+            tr.classList.add("rank-row-highlight");
+          }
           const rank = e.rank ?? "?";
           const name =
             e.display_name?.trim() || (e.entity_id ? `玩家#${e.entity_id}` : "?");
