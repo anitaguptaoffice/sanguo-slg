@@ -57,7 +57,8 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 		return nil, err
 	}
 	cityState := &domestic.CityState{
-		ID: cityID,
+		ID:       cityID,
+		PlayerID: pc.PlayerID,
 		Wallet: domestic.Resources{
 			Food: 8000, Wood: 8000, Stone: 5000, Iron: 5000,
 		},
@@ -68,6 +69,7 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 	}
 	s.domestic.RegisterCity(cityState)
 	s.cities[cityID] = cityState
+	s.registerNewCity(cityState, x, y)
 	summary := &apicommon.PlayerCitySummary{
 		CityId: cityID, Name: name, X: int32(x), Y: int32(y),
 		IsCapital: true, WallLevel: 1, Morale: 100,

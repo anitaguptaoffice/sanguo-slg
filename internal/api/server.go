@@ -8,6 +8,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
@@ -22,15 +23,21 @@ const (
 	defaultServerID           = 1
 )
 
+type clockFunc func() time.Time
+
 // Server wires account, world, and domestic behind the WebSocket gateway.
 type Server struct {
 	log      *slog.Logger
 	account  *account.Service
 	players  *PlayerStore
 	world    *world.Service
-	domestic *domestic.Hub
-	sessions *SessionRegistry
-	cities   map[int64]*domestic.CityState
+	domestic   *domestic.Hub
+	military   *march.Hub
+	sessions   *SessionRegistry
+	cities     map[int64]*domestic.CityState
+	cityCoords map[int64]cityCoord
+	nextArmyID int64
+	now        clockFunc
 }
 
 // AccountService exposes the account domain service for gateway session validation.
@@ -39,18 +46,28 @@ func (s *Server) AccountService() *account.Service {
 }
 
 // NewServer builds cross-domain handlers.
-func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, domesticHub *domestic.Hub) *Server {
+func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, domesticHub *domestic.Hub, militaryHub *march.Hub) *Server {
 	if log == nil {
 		log = slog.Default()
 	}
 	return &Server{
-		log:      log,
-		account:  account.NewService(account.NewStore(pool)),
-		players:  &PlayerStore{Pool: pool},
-		world:    worldSvc,
-		domestic: domesticHub,
-		sessions: NewSessionRegistry(),
-		cities:   make(map[int64]*domestic.CityState),
+		log:        log,
+		account:    account.NewService(account.NewStore(pool)),
+		players:    &PlayerStore{Pool: pool},
+		world:      worldSvc,
+		domestic:   domesticHub,
+		military:   militaryHub,
+		sessions:   NewSessionRegistry(),
+		cities:     make(map[int64]*domestic.CityState),
+		cityCoords: make(map[int64]cityCoord),
+		now:        time.Now,
+	}
+}
+
+// SetClock overrides the integration clock (tests).
+func (s *Server) SetClock(now clockFunc) {
+	if now != nil {
+		s.now = now
 	}
 }
 
@@ -68,6 +85,8 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteListPlayerCities] = s.handleListPlayerCities
 	handlers[RouteStartBuildingUpgrade] = s.handleStartBuildingUpgrade
 	handlers[RouteGetCityState] = s.handleGetCityState
+	handlers[RouteRecruitTroop] = s.handleRecruitTroop
+	handlers[RouteStartMarch] = s.handleStartMarch
 	return gateway.NewRouter(handlers)
 }
 
@@ -109,13 +128,13 @@ func (s *Server) wrapLogin(inner gateway.RouteHandler) gateway.RouteHandler {
 			}
 		}
 		if respPkt.GetCode() == 0 {
-			s.bindFromLoginResponse(respPkt, serverID)
+			s.bindFromLoginResponse(ctx, respPkt, serverID)
 		}
 		return respPkt, nil
 	}
 }
 
-func (s *Server) bindFromLoginResponse(respPkt *commonv1.ServerPacket, serverID int32) {
+func (s *Server) bindFromLoginResponse(ctx context.Context, respPkt *commonv1.ServerPacket, serverID int32) {
 	var resp accountv1.LoginResponse
 	if err := unmarshal(respPkt.GetData(), &resp); err != nil {
 		return
@@ -123,10 +142,12 @@ func (s *Server) bindFromLoginResponse(respPkt *commonv1.ServerPacket, serverID 
 	if resp.GetSessionId() == "" || resp.GetPlayer() == nil {
 		return
 	}
-	s.sessions.Bind(resp.GetSessionId(), PlayerContext{
+	pc := PlayerContext{
 		ServerID: serverID,
 		PlayerID: resp.GetPlayer().GetPlayerId(),
-	})
+	}
+	s.sessions.Bind(resp.GetSessionId(), pc)
+	s.hydratePlayerCities(ctx, pc)
 }
 
 func (s *Server) playerCtx(ctx context.Context, pkt *commonv1.ClientPacket) (PlayerContext, *commonv1.ServerPacket) {
@@ -143,6 +164,7 @@ func (s *Server) playerCtx(ctx context.Context, pkt *commonv1.ClientPacket) (Pla
 		}
 		pc = PlayerContext{AccountID: aid, ServerID: defaultServerID, PlayerID: pid}
 		s.sessions.Bind(pkt.GetSessionId(), pc)
+		s.hydratePlayerCities(ctx, pc)
 	}
 	return pc, nil
 }
@@ -159,4 +181,12 @@ func (s *Server) RunDomesticScheduler(ctx context.Context) {
 			s.domestic.Tick()
 		}
 	}
+}
+
+// RunMilitaryScheduler ticks march/recruit queues until ctx is cancelled.
+func (s *Server) RunMilitaryScheduler(ctx context.Context) {
+	if s.military == nil {
+		return
+	}
+	s.military.RunScheduler(ctx)
 }

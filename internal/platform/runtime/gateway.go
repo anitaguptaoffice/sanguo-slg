@@ -11,6 +11,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	platformdb "github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 )
 
@@ -48,7 +49,10 @@ func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler 
 func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	worldSvc := world.NewService(world.NewPGStore(a.DB))
 	hub := domestic.NewHub(time.Now)
-	srv := api.NewServer(a.Log, a.DB, worldSvc, hub)
+	hub.UseStore(domestic.NewPGStore(a.DB), defaultShardID, 30*time.Second)
+	militaryHub := march.NewHub(time.Now)
+	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	go srv.RunDomesticScheduler(ctx)
+	go srv.RunMilitaryScheduler(ctx)
 	return srv
 }
