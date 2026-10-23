@@ -509,6 +509,8 @@ cd client && npm install && npm run dev
 4. 合法坐标与数量出征成功 → 错误区清空；若网关失败，同区域展示 `err.message`（不只状态栏）。
 5. 与 **CLIENT-041** 选点、**CLIENT-043** 目标记忆并存。单测：`marchFormValidation.test.ts`。
 
+军事面板出征区 **`march-form-summary`**（**CLIENT-089**）：随 `to_x`/`to_y` 与出征步兵输入即时刷新，只读展示目标格点、兵力合计与 `formatMarchRemainingMs` 同源 ETA（由城格 + 表单推算单程耗时，不发 `StartMarch`）；途粮不足时汇总条带 `resource-warn` 且 `march-form-summary-warn` 一行提示，不自动打开商城。单测：`marchFormSummary.test.ts`。
+
 ### 手动验收（出征提交反馈 CLIENT-080）
 
 军事面板 **出征攻击**：`StartMarch` 发出后按钮 **disabled** 且文案 **出征中…**（`marchSubmitFeedback`）；成功顶栏 toast **已出征 (x,y)**，失败在 **march-form-error** 展示 `gatewayErrorMessage`（**CLIENT-067** 口径）。成功后底栏 **行军** 列表对应 `march_id` 行附加 `march-row-recent`（`sessionStorage` 键 `march-highlight-id`，选其他行或 **60s** 清除）。**CLIENT-048** 校验与 **CLIENT-047** ETA 不退化。
