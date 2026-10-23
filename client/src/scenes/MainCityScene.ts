@@ -28,7 +28,6 @@ import {
 import {
   formatKeyBuildingHudLine,
   formatResourceAmount,
-  formatResourceHudGroup,
   formatSlotBuildingCaption,
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
@@ -74,6 +73,7 @@ export class MainCityScene implements Scene {
     this.canvas = ctx.canvas;
     this.session = (data as MainCitySession) ?? null;
     this.hud = ctx.hud;
+    this.hud.classList.add("hud-main-city");
     this.gateway = ctx.gateway;
     this.renderHud();
     this.toolbar = document.createElement("div");
@@ -199,6 +199,7 @@ export class MainCityScene implements Scene {
   }
 
   leave(): void {
+    this.hud?.classList.remove("hud-main-city");
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
@@ -284,7 +285,6 @@ export class MainCityScene implements Scene {
     const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
     const groups: string[] = [
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
-      formatResourceHudGroup(s?.wallet),
       formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now),
     ];
     if (troopHint !== "无") groups.push(`兵 ${troopHint}`);
@@ -437,14 +437,24 @@ export class MainCityScene implements Scene {
       this.drawSlot(c2d, slot, buildingLevels.get(slot.slot_key));
     }
 
-    const food = this.assets.getImageForAsset("res.icon.food.v1");
-    if (food) {
-      c2d.drawImage(food.img, 16, 12, 32, 32);
-    }
+    const w = this.session?.wallet;
+    const hudResources: { assetId: string; text: string }[] = [
+      { assetId: "res.icon.food.v1", text: `粮 ${formatResourceAmount(w?.food)}` },
+      { assetId: "res.icon.wood.v1", text: `木 ${formatResourceAmount(w?.wood)}` },
+      { assetId: "res.icon.iron.v1", text: `铁 ${formatResourceAmount(w?.iron)}` },
+      { assetId: "res.icon.stone.v1", text: `石 ${formatResourceAmount(w?.stone)}` },
+    ];
     c2d.fillStyle = "#f5e6c8";
     c2d.font = "16px system-ui";
-    const w = this.session?.wallet;
-    c2d.fillText(`粮 ${formatResourceAmount(w?.food)}`, 56, 34);
+    let hudX = 16;
+    for (const { assetId, text } of hudResources) {
+      const pack = this.assets.getImageForAsset(assetId);
+      if (pack) {
+        c2d.drawImage(pack.img, hudX, 12, 32, 32);
+      }
+      c2d.fillText(text, hudX + 40, 34);
+      hudX += 120;
+    }
 
     c2d.restore();
   }

@@ -25,8 +25,9 @@ export function computeLayoutViewport(
   return { uiScale, offsetX, offsetY, cssWidth, cssHeight };
 }
 
+/** Multiplies the current canvas transform (e.g. GameApp DPR scale) — do not use setTransform here. */
 export function applyLayoutTransform(ctx: CanvasRenderingContext2D, vp: LayoutViewport): void {
-  ctx.setTransform(vp.uiScale, 0, 0, vp.uiScale, vp.offsetX, vp.offsetY);
+  ctx.transform(vp.uiScale, 0, 0, vp.uiScale, vp.offsetX, vp.offsetY);
 }
 
 export function layoutToCanvas(

@@ -1,0 +1,54 @@
+{
+  "capturedAt": "2026-10-23T14:44:53.588Z",
+  "purpose": "组合场景终验 — full layout-frame panorama; per-item VERIFY PASSes are not global PASS",
+  "dpr1": {
+    "devicePixelRatio": 1,
+    "cssViewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "layoutFrameCss": {
+      "width": 1600,
+      "height": 900,
+      "left": 0,
+      "top": 0
+    },
+    "canvasBacking": {
+      "width": 1600,
+      "height": 900
+    },
+    "playwrightDeviceScaleFactor": 1,
+    "layoutFrame": {
+      "w": 1600,
+      "h": 900
+    },
+    "hudSnippet": "主城 · 演示君主 Lv3城主府 Lv0 · 农田 Lv1art 1× @1.0dpr"
+  },
+  "dpr2": {
+    "devicePixelRatio": 2,
+    "cssViewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "layoutFrameCss": {
+      "width": 1600,
+      "height": 900,
+      "left": 0,
+      "top": 0
+    },
+    "canvasBacking": {
+      "width": 3200,
+      "height": 1800
+    },
+    "playwrightDeviceScaleFactor": 2,
+    "layoutFrame": {
+      "w": 1600,
+      "h": 900
+    },
+    "hudSnippet": "主城 · 演示君主 Lv3城主府 Lv0 · 农田 Lv1art 2× @2.0dpr"
+  },
+  "reviewCompressedAssets": {
+    "note": "PNG 为全分辨率证据；JPG/WebP 供 GitHub 连接器审阅（目标 <1MB）",
+    "maincity-full-scene-1600x900-dpr2.jpg": "1400×788 review export (ffmpeg), PNG 仍为 1600×900 layout-frame"
+  }
+}

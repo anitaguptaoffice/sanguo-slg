@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyLayoutTransform,
   canvasToLayout,
   computeLayoutViewport,
   layoutFrameCssSize,
@@ -43,6 +44,24 @@ describe("computeLayoutViewport", () => {
     const back = canvasToLayout(p.x, p.y, vp);
     expect(back.x).toBeCloseTo(640, 5);
     expect(back.y).toBeCloseTo(450, 5);
+  });
+});
+
+describe("applyLayoutTransform", () => {
+  it("multiplies an existing DPR scale instead of replacing it", () => {
+    const dpr = 2;
+    let a = dpr;
+    let d = dpr;
+    const ctx = {
+      transform(sx: number, _0: number, _1: number, sy: number) {
+        a *= sx;
+        d *= sy;
+      },
+    } as CanvasRenderingContext2D;
+    const vp = computeLayoutViewport(1600, 900);
+    applyLayoutTransform(ctx, vp);
+    expect(a).toBeCloseTo(dpr * vp.uiScale, 5);
+    expect(d).toBeCloseTo(dpr * vp.uiScale, 5);
   });
 });
 
