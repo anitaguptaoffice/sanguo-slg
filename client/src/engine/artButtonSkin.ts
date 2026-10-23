@@ -17,12 +17,23 @@ function applyButtonSkin(btn: HTMLButtonElement, assets: AssetLoader, state: Btn
   btn.style.backgroundColor = "transparent";
   btn.style.border = "none";
   btn.style.minHeight = `${h}px`;
+  btn.style.boxSizing = "border-box";
   btn.style.color = "#f5e6c8";
+  if (btn.classList.contains("art-btn-primary-full")) {
+    btn.style.minWidth = `${w}px`;
+    btn.style.width = `${w}px`;
+    btn.style.padding = "0";
+    btn.style.lineHeight = `${h}px`;
+  }
 }
 
-/** Skin toolbar / panel buttons with ui.button.primary.v1 four states. */
-export function skinPrimaryButtons(root: ParentNode, assets: AssetLoader): void {
-  const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>("button"));
+/** Skin primary manifest buttons (default: `.art-btn-primary`) with ui.button.primary.v1 four states. */
+export function skinPrimaryButtons(
+  root: ParentNode,
+  assets: AssetLoader,
+  selector = "button.art-btn-primary",
+): void {
+  const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>(selector));
   for (const btn of buttons) {
     if (btn.dataset.artSkin === "off") continue;
     const set = (state: BtnState) => applyButtonSkin(btn, assets, state);

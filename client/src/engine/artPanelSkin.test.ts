@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { AssetLoader } from "@/engine/AssetLoader";
-import { skinNineSlicePanel } from "@/engine/artPanelSkin";
+import { PANEL_ASSET_MILITARY, skinNineSlicePanel } from "@/engine/artPanelSkin";
 
 function mockAssets(): AssetLoader {
   const img = document.createElement("img");
@@ -28,5 +28,12 @@ describe("skinNineSlicePanel", () => {
     el.dataset.artSkin = "off";
     skinNineSlicePanel(el, mockAssets());
     expect(el.style.borderImageSource).toBe("");
+  });
+
+  it("requests military panel asset when passed", () => {
+    const el = document.createElement("div");
+    const assets = mockAssets();
+    skinNineSlicePanel(el, assets, 420, 320, PANEL_ASSET_MILITARY);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_MILITARY);
   });
 });
