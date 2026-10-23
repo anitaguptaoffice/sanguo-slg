@@ -3,6 +3,7 @@
 # 字段说明见 tasks/README.md
 #
 # wave:7「对齐波次」策略：核心 cfg 子集可玩优先（见 docs/ROADMAP.md）。
+# wave:8「M3/M4 出口加固」：在 wave7 与 WIRE-001 / CLIENT-ART-INTG 合并后验收 ROADMAP 仍开着的缺口。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -882,3 +883,130 @@
     规则对齐，与 DATA-001 并行（‖）。只读 legacy server/game（#82 分支 worktree）。
 
     跨域改动仅限公式系数与测试 fixture；业务状态机逻辑不在本卡重写。
+
+- id: INTG-005
+  title: wave7 后复跑 M3/M4 冒烟（DATA 子集 + 真扣费 + 持久化重启）
+  wave: 8
+  domain: platform
+  depends_on: [DATA-001, ECON-001, PERSIST-001, PERSIST-002, PERSIST-003]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/shop/**, internal/content/**, internal/chat/**, internal/rank/**, client/**, spec/**]
+  acceptance:
+    - "扩展或新增集成测：在 DATA-001 核心子集 cfg 下跑通 INTG-004 路径（任务→背包→商城真扣费→GM 发奖），步骤日志与 INTG-003/004 风格一致"
+    - "同一用例内模拟进程重启（重建 api.Server / 新 PG 连接池）：任务进度、背包、商城限购、钱包余额与禁言状态（若走 GM 步骤）与重启前一致"
+    - "复跑 M3 关键子集：选服进服 + 排行查询（引用 PERSIST-001 rank PG）；不重复实现 RANK-002 的深度验收"
+    - tools/smoke/README.md 提供一键命令（含 DATABASE_URL、GOTOOLCHAIN、go test -run 正则）；根 README 或 smoke README 链到该段
+    - CI 默认 -short 不跑压测/重启长测；完整冒烟在文档标明本地命令
+  body: |
+    编排卡（INTG-WAVE7-RERUN）。wave7 已灌 DATA-001、ECON-001 真扣费、PERSIST-* 落库；本卡只做装配与测试，不重写域逻辑。
+
+    参照：`internal/api/content_smoke_test.go`（TestM4ContentSmokePath）、`m3_smoke_test.go`（TestM3SocialSmokePath）。重启恢复可拆子测试或 helper，禁止改 quest/shop/content 包内算法。
+
+    与 CLIENT-006 可并行（‖）；客户端联调由 CLIENT-006 验收。
+
+- id: CLIENT-006
+  title: 任务/背包/商城 UI 对接 WIRE-001 真实网关路由
+  wave: 8
+  domain: client
+  depends_on: [CLIENT-005, INTG-004]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 默认连 `make dev` 网关时：任务/商城仍走 quest.v1 / shop.v1；背包「刷新」调用 `content.v1.ListPlayerBag`，「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）
+    - 军团聊天 UI（若已有入口）经 WIRE-001 挂接的 guild 聊天 route 收发，非 mock-only 路径；mock 网关仍可保留用于 `npm run mock:gateway`
+    - 单测或组件测覆盖 bagState 与网关响应合并；`npm test` 绿
+    - client/README.md 更新 M4 手动验收：删除「ListPlayerBag 未接线」等过时说明，写明真实网关步骤
+  body: |
+    CLIENT-WIRE-VERIFY。WIRE-001（#111）已在服务端注册 `content.v1.*` 与军团聊天；CLIENT-005 / CLIENT-ART-INTG 可能仍部分依赖 mock 或会话内累计背包。
+
+    占位美术保留；只改 client/**。依赖 INTG-005 非必须，但冒烟失败时先查后端 INTG-005。
+
+- id: RANK-002
+  title: 榜单完整性、双榜与定时刷新策略验收
+  wave: 8
+  domain: content
+  depends_on: [RANK-001, PERSIST-001]
+  sync_status: ready
+  size: M
+  owner_dir: internal/rank
+  scope: [internal/rank/**, internal/api/rank_gateway.go, internal/api/m3_smoke_test.go]
+  out_of_scope: [internal/guild/**, internal/chat/**, client/**, spec/**]
+  acceptance:
+    - 战力榜与资源总量榜（RankPlayerPower / RankPlayerResource）在 PG Store 上刷新、分页、ViewerPlayerID 名次与 RANK-001 行为一致
+    - 单测覆盖：同分 tie-break、TopN 截断、连续两次 Refresh 产生新 batch_id、旧 batch 条目不可被误读为最新（以 store 契约为准）
+    - Scheduler：Configure 多 server_id + 多 RankType 时 Tick 全量刷新；DefaultRefreshInterval 与 `make dev` 装配文档或代码注释一致
+    - 相对 RANK-001 冒烟加深：新增 rank 包集成测或扩展现有测，不复制 INTG-003 全流程
+  body: |
+    在 RANK-001 + PERSIST-001 之后加深验收，不新造排行算法。DataSource 仍只读他域聚合，禁止改 domestic/world 表。
+
+    若需改 rank 路由注册，允许薄改 `internal/api/rank_gateway.go` 与 `m3_smoke_test.go`（本卡 scope 已列出）；更大 api 装配另开卡。
+
+- id: LOAD-001
+  title: 网关 3000 并发连接可重复压测与基准报告
+  wave: 8
+  domain: platform
+  depends_on: [PLAT-002]
+  sync_status: ready
+  size: M
+  owner_dir: tools/load
+  scope: [tools/load/**, docs/load/**, Makefile]
+  out_of_scope: [internal/<业务域>/**, client/**, spec/**]
+  acceptance:
+    - 提供可重复脚本或 go test 入口（可包装 `internal/platform/gateway` 现有 3000 连接测），支持环境变量配置目标 ws URL、并发数、握手超时
+    - 产出 `docs/load/PLAT-002-baseline.md`：环境说明、命令、通过标准（≥3000 并发握手+ping）、最近一次跑数结果（日期、机器规格、耗时）
+    - Makefile 或文档一键目标（如 `make load-ws` 或 `go test` 文档化命令）；默认 CI 不跑（-short skip）
+    - 对照 PLAT-002 验收项「单机 3000 连接压测通过」
+  body: |
+    补齐 ROADMAP「3000 并发压测」文档与工具缺口，不重写网关核心。优先复用 `TestStress3000Connections` 逻辑抽到 tools/load，避免与 gateway 单测重复维护两份算法时可 thin wrapper。
+
+    与 INTG-005、CLIENT-006、RANK-002、OPS-OPEN-001、TELEMETRY-001 并行（‖）。
+
+- id: OPS-OPEN-001
+  title: 开服运营最小流程文档与可执行检查清单
+  wave: 8
+  domain: platform
+  depends_on: [PLAT-004, GM-001, GM-002]
+  sync_status: ready
+  size: S
+  owner_dir: docs
+  scope: [docs/ops/**, docs/ROADMAP.md]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/**]
+  acceptance:
+    - "docs/ops/open-server-runbook.md：选服列表来源（dev/staging）、进服、健康检查（Postgres/Redis/网关/metrics）"
+    - 可执行检查清单（markdown checkbox）：GM 查号、发奖、禁言（cmd/gm 子命令或 HTTP 示例，引用现有 GM-001/GM-002 行为）
+    - 明确「非目标」：完整运营后台 UI、活动配置台
+    - ROADMAP M3「开服运营流程」项链到该文档
+  body: |
+    文档 only，不写新 GM 功能。示例命令须与仓库现有 `cmd/gm`、`make dev` 一致，可复制粘贴验证。
+
+- id: TELEMETRY-001
+  title: 关键玩法埋点最小集（结构化日志 / obs）
+  wave: 8
+  domain: platform
+  depends_on: [PLAT-003]
+  sync_status: ready
+  size: M
+  owner_dir: internal/platform/obs
+  scope:
+    - internal/platform/obs/**
+    - internal/api/server.go
+    - internal/api/world_handlers.go
+    - internal/api/military_handlers.go
+    - internal/api/shop_handlers.go
+    - internal/api/quest_handlers.go
+  out_of_scope: [internal/military/battle/**, internal/domestic/**, internal/quest/**, internal/shop/**, client/**, spec/**]
+  acceptance:
+    - 定义稳定事件名与字段：至少 login、create_city、battle_report_ready（或 battle_complete）、shop_purchase、quest_claim_reward；JSON slog 或 Prometheus counter（二选一或并存，文档说明）
+    - 上述事件在对应 api handler 成功路径各打一条，带 trace_id、server_id、player_id（无 PII）
+    - obs 包单测断言事件 helper 不 panic；文档 `internal/platform/obs/doc.go` 或 docs/ops 简述查询方式（本地日志 grep / Grafana）
+    - 禁止改战斗演算、经济扣费、任务状态机实现文件
+  body: |
+    ROADMAP M4「数据埋点」最小闭环。优先复用 PLAT-003 结构化日志与 trace_id；新增代码集中在 obs + 列出的 api 挂钩文件。
+
+    与 LOAD-001、RANK-002 等并行（‖）。若需新 Prometheus 指标名，保持 `sanguo_` 前缀与 obs 现有风格一致。

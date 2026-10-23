@@ -32,21 +32,21 @@
 
 ## M3 多人（4–6 周）
 
-- [ ] 分服与开服流程（wave:5 PLAT-004 等）— 网关选服与 `ServerSelectScene` 已冒烟，开服运营流程未验收
-- [ ] 军团、聊天（GUILD-001/002、CHAT-001）— 域服务 + H5 面板已联调，非 wave:5 出口标准
-- [ ] 排行与榜单（RANK-001）— 战力榜冒烟通过，榜单完整性与刷新策略待验收
-- [ ] 3000 并发压测
+- [ ] 分服与开服流程（wave:5 PLAT-004 等）— 网关选服与 `ServerSelectScene` 已冒烟；**wave:8 OPS-OPEN-001** 验收开服运营清单
+- [x] 军团、聊天（GUILD-001/002、CHAT-001、WIRE-001）— 域服务 + H5 面板已联调
+- [ ] 排行与榜单 — RANK-001 冒烟通过；**wave:8 RANK-002** 双榜与刷新策略加深验收
+- [ ] 3000 并发压测 — **wave:8 LOAD-001** 可重复脚本 + `docs/load/PLAT-002-baseline.md`
 
-进度参考：`go test ./internal/api -run TestM3SocialSmokePath`（见根 `README.md`）。出口：可小范围对外开放；客户端 `CLIENT-004`（wave:5）。
+进度参考：`go test ./internal/api -run TestM3SocialSmokePath`（见根 `README.md`）。出口：可小范围对外开放；客户端 `CLIENT-004`（wave:5）；**wave:8 INTG-005** 复跑 M3 子集 + M4 持久化重启。
 
 ## M4 内容（持续）
 
-- [ ] 任务系统（QUEST-001）— `internal/quest` 与网关 handler 已有，端到端与配置子集未齐
-- [ ] 道具与商城（CONTENT-002、SHOP-001）— 钱包/商城域与冒烟测试进行中，真扣费见 wave:7 ECON-001
-- [ ] 活动与运营后台（GM-001）— `cmd/gm` 与 HTTP 入口已有，运营流程未验收
-- [ ] 数据埋点
+- [x] 任务系统（QUEST-001）+ wave:7 DATA-001 核心子集 — 端到端见 **INTG-005** 复跑
+- [x] 道具与商城（CONTENT-002、SHOP-001、ECON-001 真扣费）
+- [ ] 活动与运营后台（GM-001）— `cmd/gm` 已有；开服/运营流程见 **OPS-OPEN-001**
+- [ ] 数据埋点 — **wave:8 TELEMETRY-001**
 
-出口：`INTG-004` 内容冒烟；`CLIENT-005` 任务/背包/商城 UI（均未达里程碑出口）。
+出口：`INTG-004` / **INTG-005** 内容冒烟；`CLIENT-005` + **CLIENT-006**（真实网关背包/使用道具与军团聊天）达 M4 客户端出口。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -62,6 +62,21 @@
 | 复跑 | INTG-004、CLIENT-005 | 在子集数据与 wave7 后端就绪后联调（见各卡 body） |
 
 与 wave:5/6 关系：`GUILD-002`、`CLIENT-004` 仍为 M3/M4 出口卡；wave7 不替换它们，仅在其后的持久化与数据对齐阶段补充依赖说明。
+
+## Wave 8 M3/M4 出口加固
+
+wave:7、WIRE-001、CLIENT-ART-INTG-001 已合并后，补齐 ROADMAP 仍开放的验收与文档缺口（**core-subset-first** 不变）。
+
+| 可并行（status:ready） | 任务 | 说明 |
+|---|---|---|
+| ‖ | INTG-005 | DATA-001 + ECON-001 + PERSIST-* 下复跑 M3 子集与 M4 冒烟，含重启恢复；`tools/smoke` 一键命令 |
+| ‖ | CLIENT-006 | 客户端对接 `content.v1.ListPlayerBag` / `UseConsumable` 与 WIRE-001 军团聊天 |
+| ‖ | RANK-002 | 双榜 + PG + Scheduler 完整性（相对 RANK-001 加深） |
+| ‖ | LOAD-001 | 3000 连接压测脚本与 PLAT-002 基准报告 |
+| ‖ | OPS-OPEN-001 | 开服运营 runbook + GM 检查清单（文档 only） |
+| ‖ | TELEMETRY-001 | 登录/建城/战斗/购买/领奖等最小埋点 |
+
+依赖说明：INTG-005 与 CLIENT-006 建议同迭代联调，但可并行开工；RANK-002 不阻塞 INTG-005 的 M4 路径。
 
 ## 不做
 
