@@ -1,5 +1,7 @@
 # H5 客户端（CLIENT-001 ~ CLIENT-004）
 
+技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
+
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
 
 **选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事）→ 世界/私聊 → 军团 → 战力排行**
