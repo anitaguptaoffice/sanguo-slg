@@ -3,6 +3,8 @@ import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net
 import {
   formatMarchRowMetaLine,
   formatMarchRowPrimaryLine,
+  formatMarchRowRecentEtaBrief,
+  MARCH_ROW_RECENT_ETA_ROLE,
   marchNeedsPoll,
   marchPhaseChipClass,
   marchPhaseChipLabel,
@@ -18,6 +20,7 @@ import {
 import {
   clearMarchHighlightSession,
   MARCH_ROW_RECENT_CLASS,
+  marchRowShouldBeRecent,
   readMarchHighlightSession,
   remainingMarchHighlightMs,
   resolveMarchHighlightOnRowSelect,
@@ -255,13 +258,27 @@ export class MarchListPanel {
     }
   }
 
-  /** 出征成功后由主城场景调用：记住高亮 march_id，面板打开时立即刷新列表。 */
+  /**
+   * 出征成功后由主城场景调用（CLIENT-116）：写入高亮、打开军情面板并刷新列表，一步扫读新行军 ETA。
+   */
   notifyMarchStarted(marchId?: number | null): void {
     if (marchId != null && marchId > 0) {
       this.setRecentMarchHighlight(marchId);
+      syncMinimapMarchFocusSession(marchId);
+      this.selectedMarchId = marchId;
     }
-    if (!this.isOpen()) return;
-    void this.refreshList();
+    const opening = !this.isOpen();
+    if (opening) {
+      this.panel.classList.remove("hidden");
+      resetCenterPanelViewportScroll(this.panel);
+      this.startPoll();
+    }
+    void this.refreshList().then(() => {
+      this.scrollHighlightedMarchIntoView();
+      const march =
+        marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null;
+      if (march) this.onSelectionChange?.(march);
+    });
   }
 
   /** 写入 session 高亮并调度 TTL 清除（CLIENT-080）。 */
@@ -425,6 +442,20 @@ export class MarchListPanel {
       chip.textContent = marchPhaseChipLabel(m.phase);
       primary.appendChild(chip);
       primary.appendChild(document.createTextNode(formatMarchRowPrimaryLine(m)));
+      const isRecent =
+        m.march_id != null &&
+        marchRowShouldBeRecent(m.march_id, this.highlightState, now);
+      if (isRecent) {
+        const etaBrief = formatMarchRowRecentEtaBrief(m, now);
+        if (etaBrief) {
+          const etaEl = document.createElement("span");
+          etaEl.className = "march-row-recent-eta";
+          etaEl.setAttribute("data-role", MARCH_ROW_RECENT_ETA_ROLE);
+          if (m.march_id != null) etaEl.setAttribute("data-march-id", String(m.march_id));
+          etaEl.textContent = etaBrief;
+          body.appendChild(etaEl);
+        }
+      }
       const meta = document.createElement("span");
       meta.className = "march-row-meta";
       meta.setAttribute("data-role", "march-row-meta");
@@ -453,11 +484,7 @@ export class MarchListPanel {
       if (filter != null) {
         li.classList.add(MARCH_LIST_ROW_DEST_MATCH_CLASS);
       }
-      if (
-        m.march_id != null &&
-        this.highlightState &&
-        m.march_id === this.highlightState.march_id
-      ) {
+      if (isRecent) {
         li.classList.add(MARCH_ROW_RECENT_CLASS);
       }
       ul.appendChild(li);
@@ -473,6 +500,17 @@ export class MarchListPanel {
       const m = this.marches.find((row) => row.march_id === id);
       if (!m) continue;
       el.textContent = formatMarchRowMetaLine(m, now);
+    }
+    const etaNodes = this.panel.querySelectorAll<HTMLElement>(
+      `[data-role="${MARCH_ROW_RECENT_ETA_ROLE}"]`,
+    );
+    for (const el of etaNodes) {
+      const id = Number(el.getAttribute("data-march-id"));
+      if (Number.isNaN(id)) continue;
+      const m = this.marches.find((row) => row.march_id === id);
+      if (!m) continue;
+      const brief = formatMarchRowRecentEtaBrief(m, now);
+      if (brief) el.textContent = brief;
     }
   }
 
@@ -583,6 +621,13 @@ export class MarchListPanel {
       clearTimeout(this.highlightExpiryTimer);
       this.highlightExpiryTimer = null;
     }
+  }
+
+  private scrollHighlightedMarchIntoView(): void {
+    if (!this.highlightState) return;
+    const id = this.highlightState.march_id;
+    const li = this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
+    li?.scrollIntoView?.({ block: "nearest" });
   }
 
   private syncPollTimers(): void {
