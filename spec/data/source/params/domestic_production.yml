@@ -1,0 +1,10 @@
+# RULES-ALIGN-001：内政产出（legacy 复杂式 vs M1 简化式）
+# Legacy 出处：CityFunc::getCityProduct — 劳力 * GLOBAL_*_RATE * 科技% + 将领内政
+
+m1_implementation:
+  doc: spec/rules/domestic.md
+  params: spec/rules/params.yml
+  output_hour: "floor(base_per_hour * level * (1 + production_bonus_per_level * max(0, main_hall_level - 1)))"
+
+legacy_reference:
+  note: "原版按建筑劳力与多项科技/将领叠加；wave7 不灌 320 行 cfg_building_level，用 params 曲线近似。"

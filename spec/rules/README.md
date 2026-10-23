@@ -11,6 +11,9 @@
 | [params.yml](./params.yml) | **唯一数值真源**（初版可玩默认数） |
 | [social.md](./social.md) | 选服、军团、聊天、排行快照与分服写边界（M3） |
 | [content.md](./content.md) | 任务链、商城、邮件与发奖队列（M4） |
+| [legacy_alignment.md](./legacy_alignment.md) | Wave 7：legacy `server/game` 抽样公式与 M1 决策 |
+
+Wave 7 对齐系数另见 `spec/data/source/params/`（`march.yml` 等）。
 
 ## 标注约定
 
