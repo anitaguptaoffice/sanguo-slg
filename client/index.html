@@ -1120,17 +1120,16 @@
       .mail-inbox-panel .mail-inbox-toolbar {
         display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px;
       }
-      .mail-inbox-panel .mail-filter-btn.selected { outline: 2px solid #c9a227; }
-      .mail-inbox-panel .mail-filter-badge {
-        margin-left: 4px;
-        padding: 0 5px;
-        font-size: 10px;
-        line-height: 1.4;
-        color: #1a1510;
-        background: #f0c674;
-        border-radius: 8px;
-        font-weight: 600;
+      .mail-inbox-panel .mail-filter-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        flex-wrap: nowrap;
+        max-width: 100%;
       }
+      .mail-inbox-panel .mail-filter-btn.selected { outline: none; }
+      .mail-inbox-panel .mail-filter-tab-badge.hidden { display: none; }
       .mail-inbox-status { margin: 4px 0; font-size: 12px; color: #b8a88a; min-height: 1em; }
       .mail-inbox-status.is-error { color: #e8a87c; }
       .mail-list { list-style: none; padding-left: 0; max-height: min(200px, 28vh); }
@@ -1169,9 +1168,20 @@
       }
       .mail-list li.mail-empty { cursor: default; color: #b8a88a; }
       .mail-list li.selected { outline: 2px solid #c9a227; }
-      .mail-list li.unread .mail-row-title { font-weight: 600; }
-      .mail-list li.unread .mail-row-title::before { content: "● "; color: #c9a227; }
-      .mail-row-title { display: block; font-size: 13px; }
+      .mail-list li.unread .mail-row-title-text { font-weight: 600; }
+      .mail-list li.unread .mail-row-title::before { content: none; }
+      .mail-row-title {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px;
+        font-size: 13px;
+      }
+      .mail-row-title-text { flex: 1 1 auto; min-width: 0; }
+      .mail-list li.art-filter-row--skinned.unread {
+        border-left: none;
+        background: transparent;
+      }
       .mail-row-summary { display: block; font-size: 11px; color: #b8a88a; margin-top: 2px; }
       .mail-detail-title { font-size: 14px; margin: 8px 0 4px; }
       .mail-inbox-hint { font-size: 12px; margin-bottom: 6px; }
