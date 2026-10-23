@@ -1017,6 +1017,7 @@
   domain: spec
   depends_on: [DATA-001, INTG-005, CLIENT-006]
   sync_status: ready
+  # wave:9 已合 main（#137）；Issue #128 closed
   size: L
   owner_dir: tools/data
   scope: [tools/data/**, spec/data/**]
@@ -1039,8 +1040,7 @@
   wave: 9
   domain: hero
   depends_on: [HERO-001, PERSIST-002, DATA-002]
-  blocked_until: [DATA-002]
-  sync_status: blocked
+  sync_status: ready
   size: M
   owner_dir: internal/hero
   scope: [internal/hero/**, internal/api/hero_handlers.go, internal/api/hero_gateway.go, internal/api/server.go, internal/api/m3_wire.go, internal/api/m4_wire.go]
@@ -1105,8 +1105,7 @@
   wave: 9
   domain: platform
   depends_on: [DATA-002, INTG-005]
-  blocked_until: [DATA-002]
-  sync_status: blocked
+  sync_status: ready
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -1141,3 +1140,134 @@
     文档 only。可在 wave:9 其他卡并行开工；建议在 INTG-006 合并后做最终勾选。
 
     禁止修改 tasks/backlog.yml（契约由编排者 PR 维护）。禁止合并 #77/#82/#100/#108。
+
+- id: CLIENT-008
+  title: 将领/邮件最小面板（对接 HERO-002 / MAIL-001）
+  wave: 10
+  domain: client
+  depends_on: [CLIENT-007, HERO-002, MAIL-001]
+  sync_status: ready
+  size: L
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - 主城或 HUD 提供「将领」「邮件」入口；横屏基线（CLIENT-007）下布局不溢出 1600×900 外框
+    - 将领：调用 hero.v1.ListPlayerHeroes / GetHeroDetail / RecruitHero，列表+详情+招募反馈（扣费/错误码展示）
+    - 邮件：调用 content.v1.ListPlayerMail / MarkMailRead / ClaimMailAttachments（与 internal/api/mail_handlers.go 一致）
+    - 单测或组件测覆盖面板状态机（空列表、领取成功）；`npm test` 绿
+    - client/README.md 增补 M4 将领/邮件手动验收步骤（make dev 真实网关）
+  body: |
+    wave:9 后端已合 HERO-002、MAIL-001；客户端尚无将领/邮件 UI。仅 client/**，占位美术可保留。
+
+    与 HERO-003、QUEST-002 并行（‖）。禁止 merge/copy PR #77/#82/#100/#108/#126/#140/#141/#144/#145。
+
+- id: HERO-003
+  title: 招募模板列表与消耗预览（对接 DATA-002）
+  wave: 10
+  domain: hero
+  depends_on: [HERO-002, DATA-002]
+  sync_status: ready
+  size: M
+  owner_dir: internal/hero
+  scope:
+    - internal/hero/**
+    - internal/api/hero_handlers.go
+    - internal/api/hero_gateway.go
+    - internal/api/proto/sanguo/hero/v1/**
+    - internal/api/pb/sanguo/hero/v1/**
+  out_of_scope: [internal/military/**, client/**, spec/proto/**]
+  acceptance:
+    - 新增 ListRecruitTemplates（或等价 RPC）：按 pool/分页返回可招募模板 id、名称、稀有度、资源+道具消耗预览（来自 EmbeddedCatalog / DATA-002 seed）
+    - RecruitHero 扣费与模板 recruit_cost / recruit_item 一致；重复模板拒绝策略与 HERO-001 单测对齐
+    - 单测：模板列表非空、消耗不足返回稳定错误、成功扣 wallet+道具并入 PG
+    - 网关注册新 route；不改 spec/proto 主树（薄消息放 internal/api/proto）
+  body: |
+    在 HERO-002 列表/详情之上，补齐「可招谁、要花什么」玩家可见路径。配置权威 internal/hero/seed/heroes.json（DATA-002 对齐）。
+
+    与 CLIENT-008 并行；客户端可后接 ListRecruitTemplates 展示消耗。
+
+- id: QUEST-002
+  title: 日常任务（chain 400）接取与日切可重复
+  wave: 10
+  domain: content
+  depends_on: [QUEST-001, DATA-002]
+  sync_status: ready
+  size: M
+  owner_dir: internal/quest
+  scope:
+    - internal/quest/**
+    - internal/api/quest_progress_hook.go
+    - internal/api/hero_handlers.go
+    - internal/api/domestic_handlers.go
+  out_of_scope: [internal/shop/**, client/**, spec/**]
+  acceptance:
+    - ListPlayerQuests 支持按 quest_type=2（或 chain_id=400）过滤，返回 DATA-002 中 daily_* 配置
+    - repeatable 日常：按 server 日界（UTC 或文档约定时区）在 accept 前重置已完成行，允许再次接取/领奖
+    - api 挂钩最小事件：RecruitHero 成功推进 recruit_hero 目标；城池资源增量推进 collect_resource（food/wood 等）— 仅匹配进行中的日常
+    - 单测覆盖日切边界与 recruit_hero 自动进度；不引入 cfg_act*
+  body: |
+    DATA-002 已含 quest_type=2 日常行（chain 400）。QUEST-001 仅手动 ReportQuestProgress；本卡让日常可玩。
+
+    跨域仅限 internal/api 列出的薄挂钩文件；业务状态机在 internal/quest。
+
+- id: GM-003
+  title: GM 运营能力收口（查号/发奖/禁言/发邮件验收）
+  wave: 10
+  domain: platform
+  depends_on: [GM-001, GM-002, MAIL-001, OPS-OPEN-001]
+  sync_status: ready
+  size: S
+  owner_dir: docs
+  scope: [docs/ops/**, docs/ROADMAP.md]
+  out_of_scope: [internal/**, spec/**, client/**, cmd/**]
+  acceptance:
+    - docs/ops/open-server-runbook.md 增补 send-mail 可复制示例（与现有 cmd/gm send-mail 参数一致，含带附件与纯文本）
+    - 检查清单覆盖 lookup、grant、mute、kick、send-mail；明确「非目标：活动配置台、cfg_act*」
+    - runbook 命令与仓库内 cmd/gm usage 逐条对照一致；无新活动 cfg 灌入
+    - ROADMAP M4「活动与运营后台」脚注：v1 = GM CLI/HTTP + 邮件运营，完整活动后台仍 out of core subset
+  body: |
+    GM-001/002 与 MAIL-001 已合；runbook 仍缺 send-mail。文档 + cmd/gm 文案收口，不重做 GM 业务逻辑。
+
+    与 CLIENT-008、HERO-003 并行（‖）。
+
+- id: INTG-007
+  title: M4 加深冒烟（邮件+将领+日常+商城复跑）
+  wave: 10
+  domain: platform
+  depends_on: [INTG-006, HERO-002, MAIL-001, QUEST-002]
+  blocked_until: [QUEST-002]
+  sync_status: blocked
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/quest/**, internal/hero/**, internal/content/mail/**, client/**, spec/**]
+  acceptance:
+    - 扩展 INTG-006：GM send-mail → 网关 ListPlayerMail → ClaimMailAttachments 入背包（非 optional）
+    - 网关 RecruitHero 至少一次成功并 ListPlayerHeroes 可见；失败打印 template_cfg_id
+    - 日常链：accept daily_food_1（cfg 1012）→ 挂钩或 report 进度 → claim；重启后状态一致
+    - 保留 INTG-006 任务/商城/钱包/禁言/重启断言；tools/smoke/README.md 更新 -run 正则
+    - CI -short 跳过；不合并 art draft PR
+  body: |
+    INTG-WAVE10-RUN。QUEST-002 合并后编排者将本卡改为 ready（或去掉 blocked_until）。
+
+    HERO-003 非硬依赖；招募步骤用既有 RecruitHero 即可。
+
+- id: DOCS-EXIT-002
+  title: M4 玩法加深与 wave:10 文档收口
+  wave: 10
+  domain: platform
+  depends_on: [INTG-007, CLIENT-008, GM-003]
+  blocked_until: [INTG-007]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md]
+  out_of_scope: [internal/**, cmd/**, client/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - ROADMAP：Wave 10 表各卡标为已完成并链 Issue/PR；M4 出口描述含将领/邮件/日常可玩
+    - M4「活动与运营后台」按 GM-003 口径勾选或注明 residual（无活动 cfg 台）
+    - tasks/README.md 波次表 wave:10 完成态与 Issue 一致
+    - 不写第三批 DATA-003 / cfg_act 扩量
+  body: |
+    文档 only，在 INTG-007 与 CLIENT-008 合并后做最终勾选。禁止改 backlog.yml（编排者维护）。
