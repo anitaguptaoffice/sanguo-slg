@@ -2,7 +2,29 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 19 网关冒烟（INTG-016，推荐）
+
+在 INTG-015 全量断言之上强制验收 **将领详情**：`hero.v1.ListPlayerHeroes` 非空后取首 `hero_id` → `GetHeroDetail` 成功（日志打印 `template_cfg_id` 与四维 `force`/`intel`/`politics`/`command`）；**邮件分页**：`content.v1.ListPlayerMail` `page_size=5` `page_offset=0` 成功（打印 `total_count` 与条数），`page_offset=首页条数` 第二次调用不报错；**城池队列字段**：`domestic.v1.GetCityState` 打印 `buildings` 条数与首条 `upgrade_finish_at_ms`（`0` 表示空闲）。保留行军 ETA、战报分页、坐标/rounds、ClaimPlayerMailAttachments、邮件已读、建造加速与日常 claim、双榜/UseConsumable 2001/社交可选与进程重启持久化。
+
+**本波仍不做** `CancelMarch`/行军加速——`military.v1` 契约未定义对应 RPC。
+
+**可选**：`RecruitTroop` 后 `ListMarches` 仍为空或仅含本次 `StartMarch` 的 `march_id`；**失败不阻塞主路径**（见测试内 `smokeINTG014RecruitTroopListMarchesOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG016Wave19SmokePath' -count=1 -v
+```
+
+与 INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG016Wave19SmokePath|TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-016:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 18 网关冒烟（INTG-015，推荐）
 
