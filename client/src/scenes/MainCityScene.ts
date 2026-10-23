@@ -894,6 +894,8 @@ export class MainCityScene implements Scene {
   private patchSession(patch: Partial<MainCitySession>, opts?: { flashWalletGain?: boolean }): void {
     if (!this.session) return;
     const beforeWallet = this.session.wallet;
+    const pulseKeys =
+      patch.wallet !== undefined ? walletResourcePulseKeys(beforeWallet, patch.wallet) : [];
     Object.assign(this.session, patch);
     const flash = opts?.flashWalletGain !== false;
     if (flash && patch.wallet !== undefined) {
@@ -904,6 +906,7 @@ export class MainCityScene implements Scene {
       }
     }
     this.renderHud();
+    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
     if (patch.wallet !== undefined || patch.bag !== undefined) {
       this.heroMail?.refreshRecruitAffordability();
     }
