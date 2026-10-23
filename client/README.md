@@ -154,6 +154,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **世界城池列表 ↔ 军情行双向高亮** | [CLIENT-047](#手动验收行军列表-eta-与军情密度-client-047) / [CLIENT-015](#手动验收世界坐标-client-015) + **CLIENT-061**（[#332](https://github.com/anitaguptaoffice/sanguo-slg/issues/332) / [#342](https://github.com/anitaguptaoffice/sanguo-slg/pull/342) `b2fb1a01`） | 已合 |
 | **军情格点筛选与小地图视野联动** | [手动验收（军情筛选 CLIENT-069）](#手动验收军情格点筛选-client-069)（**CLIENT-069**） | 本卡 |
 | **1280 将领/背包/队列 manifest 与滚动** | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [手动验收（1280 将领/背包/队列 CLIENT-062）](#手动验收1280-将领背包队列-client-062)（[#333](https://github.com/anitaguptaoffice/sanguo-slg/issues/333) / [#340](https://github.com/anitaguptaoffice/sanguo-slg/pull/340) `1d9ab72f`） | 已合 |
+| **1280 军事/邮件/日常 manifest 与滚动** | [手动验收（1280 军事/邮件/日常 CLIENT-070）](#手动验收1280-军事邮件日常-client-070)（[#355](https://github.com/anitaguptaoffice/sanguo-slg/issues/355)） | 进行中 |
 | **网关冒烟**（将领详情 + 邮件分页 + 城池队列字段） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 19** / `TestINTG016Wave19SmokePath`（[#334](https://github.com/anitaguptaoffice/sanguo-slg/issues/334) / [#337](https://github.com/anitaguptaoffice/sanguo-slg/pull/337) `7ecb7d4d`） | 已合 |
 
 **推荐串联**（在 [Wave 18](#wave-18-出征反馈与面板可读加深m4-出口--intg-015) 军情/校验/分页基础上）：**将领** 招募模板持/需对比（**CLIENT-056**）→ **背包/商城** `shop-form-error` / `bag-form-error` 内联校验（**CLIENT-057**）→ 出征后小地图 **目的点数字 ETA**（**CLIENT-058**）→ **队列** 顶栏总览与 HUD 产出速率（**CLIENT-059**）→ **邮件/战报/日常** 来源标签与三角深链（**CLIENT-060**）→ **世界** 城池与 **行军** 列表互选高亮（**CLIENT-061**）→ 视口 **1280×720** 下将领/背包/队列 manifest 与滚动（**CLIENT-062**）；网关字段见 `tools/smoke/README.md` **INTG-016**。
@@ -504,7 +505,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（军事 manifest CLIENT-036）
 
-`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；邮件/日常等仍用 `ui.panel.default.v1`（CLIENT-032）。`data-art-skin="off"` 可跳过 nine-slice。
+`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；**邮件/日常** 中心根用 `ui.panel.default.v1`（`skinMailPanel` / `skinDailyPanel`，CLIENT-070 窄屏滚动与 CLIENT-062 同级接线）。`data-art-skin="off"` 可跳过 nine-slice。
 
 1. `make dev` 打开 **「军事」** / **「行军」** / **「队列」**：面板根应出现军事九宫格背景（与 `docs/art/samples/client-033/` 1600×900 样张一致）。
 2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
@@ -537,6 +538,15 @@ cd client && npm install && npm run dev
 2. 将领/背包/队列内长列表（模板、将领行、背包格、建造/募兵队列）在 `layout-narrow` 下于 `.panel-scroll-body` 或列表区 **`overflow-y: auto`** 滚动，底栏 56px 工具条不被面板内容盖住。
 3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054** 纸底表现不退化。
 4. 单测：`layoutViewport.test.ts`（窄屏 class）、`artPanelSkin.test.ts`（三面板 asset id）；`cd client && npm test` 绿。
+
+### 手动验收（1280 军事/邮件/日常 CLIENT-070）
+
+`#layout-frame.layout-narrow` 下 **军事**（`data-center-panel="military"` + `ui.panel.military.v1`）、**邮件**、**日常** 根节点 nine-slice 与 CLIENT-062 将领/背包/队列同级；邮件/日常仍用 `ui.panel.default.v1`（`skinMailPanel` / `skinDailyPanel`）。募兵/出征主按钮 hit 区与 **CLIENT-033** hotfix **并存**；`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **军事**、**邮件**、**日常**；面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 军事表单在 `.panel-scroll-body` 内滚动，**募兵** / **出征攻击** 主按钮可滚至可见且可点；邮件长列表与详情（含 **领取附件**）、日常任务列表与 **前往下一步** 在 `layout-narrow` 下 **`overflow-y: auto`**，底栏 56px 工具条不遮挡末行操作。
+3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054/055**、军事 **CLIENT-033** 表现不退化。
+4. 单测：`contentPanelScroll.test.ts`、`artPanelSkin.test.ts`（CLIENT-070 manifest 映射）、`HeroMailPanels` / `DailyQuestPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 

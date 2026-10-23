@@ -49,6 +49,7 @@ import {
   mailPlainTextHasWorldCoord,
   resolveMailBattleReportLink,
 } from "@/net/mailBattleCrossLink";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -156,6 +157,7 @@ export class HeroMailPanels {
   toggleMail(): void {
     this.mailPanel.classList.toggle("hidden");
     if (!this.mailPanel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.mailPanel);
       this.onUnreadCount?.(0);
       void this.refreshMail();
     } else void this.syncUnreadBadge();
@@ -165,6 +167,7 @@ export class HeroMailPanels {
   openMailPanel(): void {
     if (this.isMailOpen()) return;
     this.mailPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     void this.refreshMail();
   }
@@ -172,6 +175,7 @@ export class HeroMailPanels {
   /** 战报深链：打开收件箱并高亮指定邮件（不自动领取附件）。 */
   openAndHighlightMail(mailId: number): void {
     this.mailPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     this.mailFilter = MAIL_INBOX_FILTER_ALL;
     if (mailId > 0) this.selectedMailId = mailId;
@@ -188,6 +192,7 @@ export class HeroMailPanels {
   /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照）。 */
   openFromTodoBadge(preferredMailId = 0): void {
     this.mailPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
@@ -279,12 +284,14 @@ export class HeroMailPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
       </div>
       <p class="mail-inbox-status" data-role="mail-status"></p>
-      <ul class="mail-list" data-role="mail-list"></ul>
-      <div class="mail-detail hidden" data-role="mail-detail">
-        <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
-        <pre class="mail-body" data-role="mail-body"></pre>
-        <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
-        <button type="button" class="art-btn-primary art-btn-primary-full hidden mail-cross-link-btn" data-action="mail-open-battle-report">查看战报</button>
+      <div class="panel-scroll-body" data-role="mail-scroll">
+        <ul class="mail-list" data-role="mail-list"></ul>
+        <div class="mail-detail hidden" data-role="mail-detail">
+          <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
+          <pre class="mail-body" data-role="mail-body"></pre>
+          <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
+          <button type="button" class="art-btn-primary art-btn-primary-full hidden mail-cross-link-btn" data-action="mail-open-battle-report">查看战报</button>
+        </div>
       </div>
     `;
     return el;

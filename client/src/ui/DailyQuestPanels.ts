@@ -28,6 +28,7 @@ import {
   shouldShowDailyBattleReportBanner,
 } from "@/net/dailyQuestBattleReportBanner";
 import { dailyQuestCrossLinkTags } from "@/net/mailBattleCrossLink";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -81,6 +82,7 @@ export class DailyQuestPanels {
   /** 队列面板深链：打开日常并滚动到指定 quest 行。 */
   openAndFocusQuest(questCfgId: number): void {
     this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
     void this.refreshList(questCfgId).then(() => {
       const row = this.panel.querySelector(`li[data-quest-cfg-id="${questCfgId}"]`);
       row?.scrollIntoView?.({ block: "nearest" });
@@ -90,6 +92,7 @@ export class DailyQuestPanels {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (!this.panel.classList.contains("hidden")) {
+      resetCenterPanelViewportScroll(this.panel);
       this.renderBattleReportBanner();
       void this.refreshList();
     }
@@ -103,6 +106,7 @@ export class DailyQuestPanels {
   /** 待办角标深链：打开并高亮 chain 400 首条可接/可领（cfg id 来自轮询快照）。 */
   openFromTodoBadge(preferredCfgId = 0): void {
     this.panel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.panel);
     void this.refreshList(preferredCfgId, "todo-badge").then(() => {
       const id = this.selectedCfgId;
       if (id > 0) {
@@ -135,10 +139,12 @@ export class DailyQuestPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="accept-daily">接取</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-daily">领奖</button>
       </div>
-      <ul class="daily-quest-list" data-role="daily-list"></ul>
-      <p class="daily-quest-next" data-role="daily-next" hidden></p>
-      <button type="button" data-action="daily-go-next" hidden>前往下一步</button>
-      <pre class="daily-quest-detail" data-role="daily-detail"></pre>
+      <div class="panel-scroll-body" data-role="daily-scroll">
+        <ul class="daily-quest-list" data-role="daily-list"></ul>
+        <p class="daily-quest-next" data-role="daily-next" hidden></p>
+        <button type="button" data-action="daily-go-next" hidden>前往下一步</button>
+        <pre class="daily-quest-detail" data-role="daily-detail"></pre>
+      </div>
     `;
     return el;
   }

@@ -1,13 +1,14 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import {
-  PANEL_ASSET_MILITARY,
   skinBagPanel,
+  skinDailyPanel,
   skinHeroPanel,
+  skinMailPanel,
   skinMilitaryPanel,
-  skinNineSlicePanel,
   skinQueuePanel,
 } from "@/engine/artPanelSkin";
+import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { appendHudProductionRatesLine, appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
@@ -231,30 +232,33 @@ export class MainCityScene implements Scene {
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
+    this.militaryPanel.dataset.centerPanel = "military";
     this.militaryPanel.innerHTML = `
       <h3>军事</h3>
       <p class="military-troops" data-role="troops"></p>
-      <label>募兵兵种
-        <select data-field="unit">
-          <option value="1">步兵</option>
-          <option value="2">骑兵</option>
-          <option value="3">弓兵</option>
-          <option value="4">器械</option>
-        </select>
-      </label>
-      <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
-      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
-      <hr />
-      <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
-      <div class="march-target-fields" data-role="march-target-fields">
-        <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
-        <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
+      <div class="panel-scroll-body" data-role="military-scroll">
+        <label>募兵兵种
+          <select data-field="unit">
+            <option value="1">步兵</option>
+            <option value="2">骑兵</option>
+            <option value="3">弓兵</option>
+            <option value="4">器械</option>
+          </select>
+        </label>
+        <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
+        <hr />
+        <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
+        <div class="march-target-fields" data-role="march-target-fields">
+          <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
+          <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
+        </div>
+        <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
+        <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
+        <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
+        <p class="military-march" data-role="march"></p>
       </div>
-      <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
-      <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
-      <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
-      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
-      <p class="military-march" data-role="march"></p>
     `;
     const parent = ctx.layoutFrame;
     this.slotUpgradeOverlay = new MainCitySlotUpgradeOverlay(parent);
@@ -480,19 +484,19 @@ export class MainCityScene implements Scene {
     this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets, "button");
     skinPrimaryButtons(this.militaryPanel, this.assets);
-    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320, PANEL_ASSET_MILITARY);
+    skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
     skinMilitaryPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
     skinHeroPanel(this.heroMail.getHeroRoot(), this.assets, 520, 320);
     skinBagPanel(this.content.getBagRoot(), this.assets, 520, 320);
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
+    skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
+    skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
     skinCenterPrimary(this.heroMail.getHeroRoot());
     skinCenterPrimary(this.content.getBagRoot());
     skinCenterPrimary(this.queuePanels.getRoot());
-    for (const panel of [this.heroMail.getMailRoot(), this.dailyQuest.getRoot()]) {
-      skinNineSlicePanel(panel, this.assets, 520, 320);
-      skinCenterPrimary(panel);
-    }
+    skinCenterPrimary(this.heroMail.getMailRoot());
+    skinCenterPrimary(this.dailyQuest.getRoot());
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
@@ -646,6 +650,9 @@ export class MainCityScene implements Scene {
     if (action === "refresh") void this.refreshState();
     if (action === "toggle-military") {
       this.militaryPanel.classList.toggle("hidden");
+      if (!this.militaryPanel.classList.contains("hidden")) {
+        resetCenterPanelViewportScroll(this.militaryPanel);
+      }
       this.syncMilitaryPanel();
     }
     if (action === "toggle-reports") {

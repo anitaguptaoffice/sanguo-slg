@@ -13,6 +13,16 @@ export const CLIENT_062_CENTER_PANEL_ASSET_IDS = [
   PANEL_ASSET_QUEUE,
 ] as const;
 
+/** CLIENT-070 narrow manifest roots: military + mail/daily on default panel skin. */
+export const CLIENT_070_PANEL_ASSET_BY_CENTER_ID: Record<
+  "military" | "mail" | "daily",
+  string
+> = {
+  military: PANEL_ASSET_MILITARY,
+  mail: PANEL_ASSET_DEFAULT,
+  daily: PANEL_ASSET_DEFAULT,
+};
+
 /** Stretch a nine_slice panel asset as CSS border-image (24px logical slice by default). */
 export function skinNineSlicePanel(
   el: HTMLElement,
@@ -75,4 +85,22 @@ export function skinQueuePanel(
   logicalH = 320,
 ): void {
   skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_QUEUE);
+}
+
+export function skinMailPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DEFAULT);
+}
+
+export function skinDailyPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 520,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_DEFAULT);
 }
