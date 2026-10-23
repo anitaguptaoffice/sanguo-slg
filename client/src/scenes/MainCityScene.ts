@@ -40,7 +40,7 @@ import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
-import { setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
+import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import {
   DEFAULT_MINIMAP_VIEW,
@@ -431,6 +431,23 @@ export class MainCityScene implements Scene {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const action = btn.getAttribute("data-action");
+    if (isToolbarBadgeDeepLinkClick(ev)) {
+      const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+      if (action === "toggle-mail" && snap.mailUnread > 0) {
+        this.heroMail.openFromTodoBadge(snap.firstUnreadMailId);
+        return;
+      }
+      if (action === "toggle-daily" && snap.dailyTodo > 0) {
+        this.dailyQuest.openFromTodoBadge(snap.firstDailyTodoCfgId);
+        this.updateDailyToolbarBadge(0);
+        return;
+      }
+      if (action === "toggle-reports" && snap.battleReportUnread > 0) {
+        this.marchReportToastActive = false;
+        this.battleReports.openPanel();
+        return;
+      }
+    }
     if (action === "upgrade-farm") void this.upgradeFarm();
     if (action === "refresh") void this.refreshState();
     if (action === "toggle-military") {

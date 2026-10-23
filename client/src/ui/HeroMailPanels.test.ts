@@ -428,4 +428,32 @@ describe("HeroMailPanels", () => {
     expect(onDaily).toHaveBeenCalled();
     expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
   });
+
+  it("openFromTodoBadge selects first unread with unread filter", async () => {
+    const mount = document.createElement("div");
+    const listPlayerMail = vi.fn().mockResolvedValue({
+      mails: [
+        { mail_id: 9, title: "A", status: 0, body: "a" },
+        { mail_id: 10, title: "B", status: 0, body: "b" },
+      ],
+      total_count: 2,
+    });
+    const markPlayerMailRead = vi.fn().mockResolvedValue({ mail: { mail_id: 9, status: 1 } });
+    const gateway: GatewayPort = {
+      listPlayerMail,
+      markPlayerMailRead,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.openFromTodoBadge(9);
+    await flushPromises();
+    await flushPromises();
+    expect(listPlayerMail).toHaveBeenCalledWith(1, {
+      filter: MAIL_INBOX_FILTER_UNREAD,
+      pageSize: 50,
+    });
+    expect(mount.querySelector(".mail-inbox-panel")?.classList.contains("hidden")).toBe(false);
+    expect(markPlayerMailRead).toHaveBeenCalledWith(1, 9);
+  });
 });

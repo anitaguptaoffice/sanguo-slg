@@ -2,7 +2,7 @@ import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 
 const BADGE_SELECTOR = '[data-role="toolbar-badge"]';
 
-/** 底栏按钮角标：叠在按钮右上，pointer-events:none，不挡点击。 */
+/** 底栏按钮角标：默认不挡按钮点击；有计数时可深链（CLIENT-038）。 */
 export function setToolbarBadge(button: HTMLElement | null, count: number, titleHint?: string): void {
   if (!button) return;
   let badge = button.querySelector<HTMLElement>(BADGE_SELECTOR);
@@ -16,6 +16,7 @@ export function setToolbarBadge(button: HTMLElement | null, count: number, title
   const text = formatHudBadgeCount(count);
   if (!text) {
     badge.classList.add("hidden");
+    badge.classList.remove("toolbar-badge--deeplink");
     badge.textContent = "";
     button.removeAttribute("data-has-badge");
     if (titleHint) button.setAttribute("title", titleHint);
@@ -23,9 +24,20 @@ export function setToolbarBadge(button: HTMLElement | null, count: number, title
     return;
   }
   badge.classList.remove("hidden");
+  badge.classList.add("toolbar-badge--deeplink");
   badge.textContent = text;
   button.setAttribute("data-has-badge", "1");
   if (titleHint) button.setAttribute("title", titleHint);
+}
+
+/** 是否点在可深链的角标上（与按钮本体点击区分）。 */
+export function isToolbarBadgeDeepLinkClick(ev: Event): boolean {
+  const badge = (ev.target as HTMLElement | null)?.closest?.(BADGE_SELECTOR);
+  return !!(
+    badge &&
+    !badge.classList.contains("hidden") &&
+    badge.classList.contains("toolbar-badge--deeplink")
+  );
 }
 
 export function toolbarButtonLabel(button: HTMLElement | null): string {

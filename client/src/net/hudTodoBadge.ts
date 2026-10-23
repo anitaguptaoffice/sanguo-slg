@@ -1,4 +1,6 @@
 import type { DailyQuestRow } from "@/net/dailyQuestState";
+import type { MailRow } from "@/net/heroMailState";
+import { mailIsUnread } from "@/net/heroMailState";
 
 /** 日常 chain 400：可接取 */
 export const DAILY_QUEST_STATE_ACCEPTABLE = 1;
@@ -37,4 +39,40 @@ export function aggregateHudTodoCounts(parts: {
     dailyTodo: Math.max(0, parts.dailyTodo ?? 0),
     battleReportUnread: Math.max(0, parts.battleReportUnread ?? 0),
   };
+}
+
+export type HudTodoDeepLinkSnapshot = HudTodoBadgeCounts & {
+  firstUnreadMailId: number;
+  firstDailyTodoCfgId: number;
+  firstUnreadBattleReportId: number;
+};
+
+export const EMPTY_HUD_TODO_DEEP_LINK: HudTodoDeepLinkSnapshot = {
+  mailUnread: 0,
+  dailyTodo: 0,
+  battleReportUnread: 0,
+  firstUnreadMailId: 0,
+  firstDailyTodoCfgId: 0,
+  firstUnreadBattleReportId: 0,
+};
+
+/** 收件箱列表顺序下首封未读（与 unread filter 一致）。 */
+export function pickFirstUnreadMailId(mails: MailRow[]): number {
+  for (const m of mails) {
+    const id = m.mail_id ?? 0;
+    if (id > 0 && mailIsUnread(m)) return id;
+  }
+  return 0;
+}
+
+/** chain 400 列表顺序下首条可接取或可领奖。 */
+export function pickFirstDailyTodoQuestCfgId(rows: DailyQuestRow[]): number {
+  for (const q of rows) {
+    const s = q.state ?? 0;
+    if (s === DAILY_QUEST_STATE_ACCEPTABLE || s === DAILY_QUEST_STATE_CLAIMABLE) {
+      const id = q.quest_cfg_id ?? 0;
+      if (id > 0) return id;
+    }
+  }
+  return 0;
 }

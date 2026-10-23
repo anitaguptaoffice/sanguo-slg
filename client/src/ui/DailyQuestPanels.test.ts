@@ -147,4 +147,33 @@ describe("DailyQuestPanels", () => {
     expect(patched?.wallet?.food).toBe(9000);
     expect(patched?.wallet?.gold).toBe(75);
   });
+
+  it("openFromTodoBadge highlights first acceptable daily", async () => {
+    const mount = document.createElement("div");
+    const listPlayerQuests = vi.fn().mockResolvedValue({
+      quests: [
+        { quest_cfg_id: 1010, chain_id: 400, state: 2 },
+        { quest_cfg_id: 1012, chain_id: 400, state: 1 },
+      ],
+    });
+    const gateway: GatewayPort = {
+      listPlayerQuests,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.openFromTodoBadge(1012);
+    await flushPromises();
+    const row = mount.querySelector('li[data-quest-cfg-id="1012"]');
+    expect(row?.classList.contains("selected")).toBe(true);
+  });
 });

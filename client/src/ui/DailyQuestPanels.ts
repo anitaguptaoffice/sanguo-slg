@@ -15,6 +15,7 @@ import {
   pickDefaultDailyQuest,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
+import { pickFirstDailyTodoQuestCfgId } from "@/net/hudTodoBadge";
 import {
   formatDailyQuestNextStepHint,
   resolveDailyQuestNavAction,
@@ -62,6 +63,18 @@ export class DailyQuestPanels {
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (!this.panel.classList.contains("hidden")) void this.refreshList();
+  }
+
+  /** 待办角标深链：打开并高亮 chain 400 首条可接/可领（cfg id 来自轮询快照）。 */
+  openFromTodoBadge(preferredCfgId = 0): void {
+    this.panel.classList.remove("hidden");
+    void this.refreshList(preferredCfgId, "todo-badge").then(() => {
+      const id = this.selectedCfgId;
+      if (id > 0) {
+        const row = this.panel.querySelector(`li[data-quest-cfg-id="${id}"]`);
+        row?.scrollIntoView?.({ block: "nearest" });
+      }
+    });
   }
 
   /** 招募闭环：后台刷新 chain 400，可选聚焦日课·访贤行。 */
@@ -142,7 +155,10 @@ export class DailyQuestPanels {
     this.onNavigate(nav);
   }
 
-  private async refreshList(focusCfgId?: number): Promise<void> {
+  private async refreshList(
+    focusCfgId?: number,
+    pickMode: "default" | "todo-badge" = "default",
+  ): Promise<void> {
     const sid = this.serverId();
     this.onStatus("拉取日常…");
     try {
@@ -151,11 +167,15 @@ export class DailyQuestPanels {
         includeCompleted: true,
       });
       this.rows = dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] });
-      const focused =
-        focusCfgId != null
-          ? this.rows.find((r) => r.quest_cfg_id === focusCfgId) ?? null
-          : null;
-      const pick = focused ?? pickDefaultDailyQuest(this.rows);
+      let pick: DailyQuestRow | null = null;
+      if (focusCfgId != null && focusCfgId > 0) {
+        pick = this.rows.find((r) => r.quest_cfg_id === focusCfgId) ?? null;
+      }
+      if (!pick && pickMode === "todo-badge") {
+        const todoId = pickFirstDailyTodoQuestCfgId(this.rows);
+        if (todoId > 0) pick = this.rows.find((r) => r.quest_cfg_id === todoId) ?? null;
+      }
+      if (!pick) pick = pickDefaultDailyQuest(this.rows);
       if (pick?.quest_cfg_id) this.selectedCfgId = pick.quest_cfg_id;
       this.renderList();
       this.onStatus(`日常 ${this.rows.length} 条`);
