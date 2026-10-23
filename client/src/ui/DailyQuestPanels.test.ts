@@ -148,6 +148,89 @@ describe("DailyQuestPanels", () => {
     expect(patched?.wallet?.gold).toBe(75);
   });
 
+  it("shows battle-report unread banner and opens via callback", async () => {
+    const mount = document.createElement("div");
+    const onOpenBattleReports = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({ quests: [] }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      () => 2,
+      onOpenBattleReports,
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const banner = mount.querySelector('[data-role="daily-report-banner"]') as HTMLElement;
+    expect(banner?.hidden).toBe(false);
+    expect(banner?.textContent).toContain("未读战报");
+    banner?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenBattleReports).toHaveBeenCalledTimes(1);
+  });
+
+  it("daily_march_1 shows readiness tag and bag next-step", async () => {
+    const mount = document.createElement("div");
+    const onNavigate = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1033,
+            quest_code: "daily_march_1",
+            state: 2,
+            progress_current: 0,
+            progress_target: 1,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      onNavigate,
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const ul = mount.querySelector('[data-role="daily-list"]');
+    expect(ul?.textContent).toContain("[战备]");
+    const nextBtn = mount.querySelector('[data-action="daily-go-next"]') as HTMLButtonElement;
+    expect(nextBtn?.hidden).toBe(false);
+    nextBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onNavigate).toHaveBeenCalledWith({ kind: "use_item", itemCfgId: 2020 });
+  });
+
   it("openFromTodoBadge highlights first acceptable daily", async () => {
     const mount = document.createElement("div");
     const listPlayerQuests = vi.fn().mockResolvedValue({

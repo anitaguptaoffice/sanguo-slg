@@ -241,6 +241,8 @@ export class MainCityScene implements Scene {
       },
       this.cityStateFetch,
       (action) => this.navigateDailyQuest(action),
+      () => this.hudTodoBadgePoll.getDeepLinkSnapshot().battleReportUnread,
+      () => this.openBattleReportsFromDailyBanner(),
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
@@ -399,6 +401,17 @@ export class MainCityScene implements Scene {
     this.queuePanels?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
+  }
+
+  private openBattleReportsFromDailyBanner(): void {
+    this.marchReportToastActive = false;
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    void this.battleReports
+      .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
+      .then(() => {
+        this.dailyQuest.syncBattleReportUnreadBanner();
+        this.renderHud();
+      });
   }
 
   private navigateDailyQuest(action: DailyQuestNavAction): void {
@@ -735,6 +748,8 @@ export class MainCityScene implements Scene {
     }
     if (!this.dailyQuest?.isOpen()) {
       this.updateDailyToolbarBadge(counts.dailyTodo);
+    } else {
+      this.dailyQuest.syncBattleReportUnreadBanner();
     }
     if (!this.battleReports?.isOpen()) {
       this.updateReportsToolbarBadge(counts.battleReportUnread);
