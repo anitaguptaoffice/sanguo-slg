@@ -1051,6 +1051,231 @@
           "path": "textures/2x/ui/icon_toolbar_shop.png"
         }
       ]
+    },
+    {
+      "id": "ui.chip.filter.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/chip_filter_normal.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/chip_filter_normal.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.chip.filter.hover.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/chip_filter_hover.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/chip_filter_hover.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.chip.filter.pressed.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/chip_filter_pressed.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/chip_filter_pressed.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.chip.filter.selected.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 72,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/chip_filter_selected.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/chip_filter_selected.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.list.row.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/list_row_default.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/list_row_default.png"
+        }
+      ],
+      "nine_slice": {
+        "left": 8,
+        "top": 8,
+        "right": 8,
+        "bottom": 8
+      }
+    },
+    {
+      "id": "ui.list.row.hover.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/list_row_hover.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/list_row_hover.png"
+        }
+      ],
+      "nine_slice": {
+        "left": 8,
+        "top": 8,
+        "right": 8,
+        "bottom": 8
+      }
+    },
+    {
+      "id": "ui.list.row.selected.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 440,
+        "h": 40
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/list_row_selected.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/list_row_selected.png"
+        }
+      ],
+      "nine_slice": {
+        "left": 8,
+        "top": 8,
+        "right": 8,
+        "bottom": 8
+      }
+    },
+    {
+      "id": "ui.badge.dot.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 16,
+        "h": 16
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/badge_dot.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/badge_dot.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.badge.count.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 20,
+        "h": 16
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/badge_count.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/badge_count.png"
+        }
+      ]
     }
   ]
 }
