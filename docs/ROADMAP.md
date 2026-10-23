@@ -48,7 +48,7 @@
   > **v1 运营口径（GM-003）**：**GM CLI/HTTP**（`cmd/gm`：`lookup` / `grant` / `kick` / `mute` / `send-mail`；HTTP 仅 `POST /gm/lookup|grant|kick|mute`）+ **邮件运营**（`send-mail` → `player_mail`，验收见 [开服运营最小流程](ops/open-server-runbook.md) §4）。**非目标**：活动配置台、可视化排期、`cfg_act*` 灌入——仍 **out of core subset**。
 - [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
-出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟；wave:11 **CLIENT-009**（[#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169)）日常 UI、**CLIENT-010**（[#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171)）招募模板与背包/商城可读性、**CLIENT-012**（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)）战报底栏入口，**QUEST-003**（[#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173)）日常挂钩与 **INTG-008**（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)）冒烟——H5 **日常 + 招募模板预览 + 战报** 最短可玩路径见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)。里程碑 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）、**DOCS-EXIT-003**（[#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168)）。
+出口：wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）养成/邮件/横屏；wave:10 **CLIENT-008**（#156）将领/邮件面板、**HERO-003**（#158）招募预览、**QUEST-002**（#157）日常 chain、**GM-003**（#154）运营收口与 **INTG-007**（#159）冒烟；wave:11 **CLIENT-009**（[#169](https://github.com/anitaguptaoffice/sanguo-slg/pull/169)）日常 UI、**CLIENT-010**（[#171](https://github.com/anitaguptaoffice/sanguo-slg/pull/171)）招募模板与背包/商城可读性、**CLIENT-012**（[#170](https://github.com/anitaguptaoffice/sanguo-slg/pull/170)）战报底栏入口，**QUEST-003**（[#173](https://github.com/anitaguptaoffice/sanguo-slg/pull/173)）日常挂钩与 **INTG-008**（[#174](https://github.com/anitaguptaoffice/sanguo-slg/pull/174)）冒烟——H5 **日常 + 招募模板预览 + 战报** 最短可玩路径见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)；wave:12 **CLIENT-013**（[#188](https://github.com/anitaguptaoffice/sanguo-slg/pull/188)）行军列表、**CLIENT-014**（[#187](https://github.com/anitaguptaoffice/sanguo-slg/pull/187)）将领详情、**CLIENT-015**（[#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186)）世界坐标出征、**CLIENT-016**/**CLIENT-017**/**CLIENT-018** 战报筛选/邮件收件箱/HUD 反馈与 **INTG-009**（[#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192)）冒烟——H5 **行军列表 + 将领详情 + 邮件 + 战报筛选** 可玩路径见 [client/README.md](../client/README.md#wave-12-可玩加深m4-出口--intg-009)。里程碑 **DOCS-EXIT-002**（[#152](https://github.com/anitaguptaoffice/sanguo-slg/issues/152)）、**DOCS-EXIT-003**（[#168](https://github.com/anitaguptaoffice/sanguo-slg/issues/168)）、**DOCS-EXIT-004**（[#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185)）。
 
 ## Wave 7 对齐波次（核心子集可玩优先）
 
@@ -122,26 +122,26 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 
 H5 人工验收与 INTG-008 路径对齐，见 [client/README.md](../client/README.md#wave-11-可玩环m4-出口--intg-008)。
 
-**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。
+**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。
 
-## Wave 12 H5 可玩加深（进行中）
+## Wave 12 H5 可玩加深 — **已完成**
 
-**策略**：在 **DATA-002** 子集与 wave:11 H5 日常/招募/战报环上，加深**行军**、**将领详情**、**邮件**、**战报可读性**与 **HUD 反馈**；网关 **INTG-009** 复跑 `tools/smoke`。**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。波次 backlog 规划 PR（`feat/wave-12-backlog`，合并后由编排者 `tasks_sync` 建 Issue）。
+**策略**：在 **DATA-002** 子集与 wave:11 H5 日常/招募/战报环上，加深**行军**、**将领详情**、**邮件**、**战报可读性**与 **HUD 反馈**；网关 **INTG-009** 复跑 `tools/smoke`。**不**开 DATA-003、**不**灌 `cfg_act*`、不做不可逆消费扩量。波次 backlog 规划 [#176](https://github.com/anitaguptaoffice/sanguo-slg/pull/176)。
 
-| 任务 | 域 | 规模 | 说明 |
+| Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| CLIENT-013 | client | M | ListMarches 行军列表与出征后反馈 |
-| CLIENT-014 | client | M | GetHeroDetail 将领详情与列表可读性 |
-| CLIENT-015 | client | S | ListPlayerCities 坐标 → 出征目标填入 |
-| CLIENT-016 | client | S | 战报 outcome 客户端筛选与详情摘要 |
-| CLIENT-017 | client | M | 邮件收件箱 ListPlayerMail / 领附件 |
-| CLIENT-018 | client | S | HUD 资源变动提示与 GetCityState 轮询节流 |
-| INTG-009 | platform | M | wave:12 网关冒烟（行军 + 邮件 + 可选日常 train/build） |
-| DOCS-EXIT-004 | platform | S | 波次文档收口（待 INTG-009） |
+| [#178](https://github.com/anitaguptaoffice/sanguo-slg/issues/178) | CLIENT-013 | 已完成 | [#188](https://github.com/anitaguptaoffice/sanguo-slg/pull/188) |
+| [#179](https://github.com/anitaguptaoffice/sanguo-slg/issues/179) | CLIENT-014 | 已完成 | [#187](https://github.com/anitaguptaoffice/sanguo-slg/pull/187) |
+| [#180](https://github.com/anitaguptaoffice/sanguo-slg/issues/180) | CLIENT-015 | 已完成 | [#186](https://github.com/anitaguptaoffice/sanguo-slg/pull/186) |
+| [#181](https://github.com/anitaguptaoffice/sanguo-slg/issues/181) | CLIENT-016 | 审阅中 | [#189](https://github.com/anitaguptaoffice/sanguo-slg/pull/189) |
+| [#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) | CLIENT-017 | 审阅中 | [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190) |
+| [#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) | CLIENT-018 | 审阅中 | [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191) |
+| [#184](https://github.com/anitaguptaoffice/sanguo-slg/issues/184) | INTG-009 | 已完成 | [#192](https://github.com/anitaguptaoffice/sanguo-slg/pull/192) |
+| [#185](https://github.com/anitaguptaoffice/sanguo-slg/issues/185) | DOCS-EXIT-004 | 审阅中 | （本 PR） |
 
-并行关系：CLIENT-013～018 与 INTG-009 可并行（‖）；CLIENT-015 软依赖 CLIENT-013 出征表单；DOCS-EXIT-004 待 INTG-009 合并后改 `ready`。
+H5 人工验收与 INTG-009 路径对齐，见 [client/README.md](../client/README.md#wave-12-可玩加深m4-出口--intg-009)（**行军列表 + 将领详情 + 邮件 + 战报筛选**）。
 
-**明确不做**：合并或复制 art hold PR（同 wave:11 列表）；全屏大地图 / 新建筑类型 / 改 `spec/proto` 冻结契约（战报筛选仅客户端）。
+**明确不做**：合并或复制 PR #77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177；**DATA-003** 第三批核心子集扩量；`cfg_act*` 活动 cfg 灌入；不可逆消费（新道具/商城 SKU）扩量——无单独编排授权。全屏大地图 / 新建筑类型 / 改 `spec/proto` 冻结契约（战报筛选仅客户端）。
 
 ## 不做
 
