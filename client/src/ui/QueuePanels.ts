@@ -1,12 +1,18 @@
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagStackQuantity } from "@/net/bagState";
+import {
+  QUEUE_BUILD_COMPLETE_PULSE_MS,
+  QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS,
+  scheduleQueueBuildCompletePulse,
+} from "@/net/buildQueueComplete";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
   findBuildDailyQuestForBuilding,
   formatLinkedDailyQuestProgressSummary,
 } from "@/net/dailyQuestQueueMatch";
+import { buildingBySlot } from "@/net/hudFormat";
 import { centerTodoScrollTargetId } from "@/net/hudCenterTodo";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
@@ -43,6 +49,7 @@ export class QueuePanels {
   private readonly completedRecruitIds = new Set<number>();
   private highlightedBuildSlotKey: string | null = null;
   private buildCompleteTodoSlots: string[] = [];
+  private readonly completePulseSlots = new Set<string>();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -55,6 +62,7 @@ export class QueuePanels {
     private readonly getDailyChainRows?: () => DailyQuestRow[],
     private readonly onOpenDailyBuildQuest?: (questCfgId: number) => void,
     private readonly reskinPrimary?: QueuePanelReskin,
+    private readonly onBuildSlotHighlightChange?: (slotKey: string | null) => void,
   ) {}
 
   attach(): void {
@@ -101,6 +109,7 @@ export class QueuePanels {
   /** 打开队列并高亮指定槽位的建造行（主城画布深链）。 */
   openAndHighlightBuildSlot(slotKey: string): void {
     this.highlightedBuildSlotKey = slotKey.trim() || null;
+    this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
     this.panel.classList.remove("hidden");
     this.tickAccum = 0;
     this.render();
@@ -113,7 +122,47 @@ export class QueuePanels {
   }
 
   clearBuildSlotHighlight(): void {
+    if (!this.highlightedBuildSlotKey) return;
     this.highlightedBuildSlotKey = null;
+    this.onBuildSlotHighlightChange?.(null);
+    if (this.isOpen()) this.render();
+  }
+
+  getHighlightedBuildSlotKey(): string | null {
+    return this.highlightedBuildSlotKey;
+  }
+
+  /** GetCityState 检测到建造刚完成时触发队列行完成脉冲。 */
+  notifyBuildJustCompleted(slotKeys: readonly string[]): void {
+    if (!slotKeys.length) return;
+    for (const key of slotKeys) {
+      if (!key) continue;
+      this.completePulseSlots.add(key);
+      window.setTimeout(() => {
+        this.completePulseSlots.delete(key);
+        if (this.isOpen()) this.render();
+      }, QUEUE_BUILD_COMPLETE_PULSE_MS);
+    }
+    if (this.isOpen()) {
+      this.render();
+      this.applyCompletePulses(slotKeys);
+    }
+  }
+
+  private applyCompletePulses(slotKeys: readonly string[]): void {
+    for (const key of slotKeys) {
+      scheduleQueueBuildCompletePulse(this.findQueueRowForSlot(key));
+    }
+  }
+
+  private findQueueRowForSlot(slotKey: string): HTMLElement | null {
+    const rowId = queueBuildRowDomId(slotKey);
+    const byId = this.panel.querySelector(`#${CSS.escape(rowId)}`);
+    if (byId instanceof HTMLElement) return byId;
+    const byData = this.panel.querySelector(
+      `li.queue-list-row[data-slot-key="${CSS.escape(slotKey)}"]`,
+    );
+    return byData instanceof HTMLElement ? byData : null;
   }
 
   setBuildCompleteTodoSlots(slotKeys: string[]): void {
@@ -237,11 +286,21 @@ export class QueuePanels {
 
     for (const slotKey of completeSlots) {
       const name = this.slotLabels[slotKey] ?? slotKey;
+      const building = buildingBySlot(this.buildings(), slotKey);
+      const lv = building?.level ?? 0;
       const li = document.createElement("li");
       li.className = "queue-list-row queue-build-complete-todo";
+      li.dataset.slotKey = slotKey;
       li.setAttribute(TODO_SCROLL_TARGET_ATTR, centerTodoScrollTargetId("queue", slotKey));
+      if (this.highlightedBuildSlotKey === slotKey) {
+        li.classList.add(QUEUE_BUILD_ROW_SELECTED_CLASS);
+        li.classList.add(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+      }
+      if (this.completePulseSlots.has(slotKey)) {
+        li.classList.add("queue-build-complete-pulse");
+      }
       const span = document.createElement("span");
-      span.textContent = `[内政] ${name} · 建造已完成 · 点「刷新内政」确认等级`;
+      span.textContent = `[内政] ${name} · 建造已完成 Lv${lv} · 点「刷新内政」确认等级`;
       li.appendChild(span);
       buildUl.appendChild(li);
     }
@@ -258,6 +317,10 @@ export class QueuePanels {
       }
       if (this.highlightedBuildSlotKey && slotKey === this.highlightedBuildSlotKey) {
         li.classList.add(QUEUE_BUILD_ROW_SELECTED_CLASS);
+        li.classList.add(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+      }
+      if (this.completePulseSlots.has(slotKey)) {
+        li.classList.add("queue-build-complete-pulse");
       }
       const span = document.createElement("span");
       span.textContent = text;
@@ -385,8 +448,16 @@ export class QueuePanels {
   }
 
   private onClick(ev: Event): void {
-    const btn = (ev.target as HTMLElement).closest("button");
-    if (!btn) return;
+    const target = ev.target as HTMLElement;
+    const btn = target.closest("button");
+    if (!btn) {
+      const row = target.closest("li.queue-list-row[data-slot-key]");
+      if (row instanceof HTMLElement) {
+        const slotKey = row.dataset.slotKey?.trim();
+        if (slotKey) this.openAndHighlightBuildSlot(slotKey);
+      }
+      return;
+    }
     const action = btn.getAttribute("data-action");
     if (action === "refresh-queue") {
       void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
