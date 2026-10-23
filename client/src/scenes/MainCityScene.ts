@@ -25,6 +25,14 @@ import {
   unitLabel,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import {
+  formatKeyBuildingHudLine,
+  formatResourceAmount,
+  formatResourceHudGroup,
+  formatSlotBuildingCaption,
+  hasActiveBuildingUpgrade,
+  KEY_BUILDING_SLOTS,
+} from "@/net/hudFormat";
 
 const SLOT_LABEL: Record<string, string> = {
   hall: "城主府",
@@ -57,6 +65,7 @@ export class MainCityScene implements Scene {
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
   private hitDebug = "";
+  private hudRefreshAccum = 0;
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
@@ -177,6 +186,18 @@ export class MainCityScene implements Scene {
     this.syncMilitaryPanel();
   }
 
+  update(dt: number): void {
+    if (!this.session || !hasActiveBuildingUpgrade(this.session.buildings)) {
+      this.hudRefreshAccum = 0;
+      return;
+    }
+    this.hudRefreshAccum += dt;
+    if (this.hudRefreshAccum >= 1) {
+      this.hudRefreshAccum = 0;
+      this.renderHud();
+    }
+  }
+
   leave(): void {
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
@@ -257,17 +278,27 @@ export class MainCityScene implements Scene {
 
   private renderHud(): void {
     const s = this.session;
-    const w = s?.wallet ?? {};
+    const now = Date.now();
     const p = s?.player;
     const troopHint = formatTroopStacks(s?.cityTroops);
     const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
-    this.hud.textContent =
-      `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1} · ` +
-      `粮 ${w.food ?? 0} 木 ${w.wood ?? 0} 铁 ${w.iron ?? 0} 石 ${w.stone ?? 0} 币 ${w.gold ?? 0}` +
-      (troopHint !== "无" ? ` · 兵 ${troopHint}` : "") +
-      (this.hitDebug ? ` · 点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}` : "") +
-      ` · ${dprTag}` +
-      (this.status ? ` · ${this.status}` : "");
+    const groups: string[] = [
+      `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
+      formatResourceHudGroup(s?.wallet),
+      formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now),
+    ];
+    if (troopHint !== "无") groups.push(`兵 ${troopHint}`);
+    if (this.hitDebug) groups.push(`点选 ${SLOT_LABEL[this.hitDebug] ?? this.hitDebug}`);
+    groups.push(dprTag);
+    if (this.status) groups.push(this.status);
+
+    this.hud.replaceChildren();
+    for (let i = 0; i < groups.length; i++) {
+      const span = document.createElement("span");
+      span.className = "hud-group";
+      span.textContent = groups[i];
+      this.hud.appendChild(span);
+    }
   }
 
   private async refreshState(): Promise<void> {
@@ -413,7 +444,7 @@ export class MainCityScene implements Scene {
     c2d.fillStyle = "#f5e6c8";
     c2d.font = "16px system-ui";
     const w = this.session?.wallet;
-    c2d.fillText(`粮 ${w?.food ?? 0}`, 56, 34);
+    c2d.fillText(`粮 ${formatResourceAmount(w?.food)}`, 56, 34);
 
     c2d.restore();
   }
@@ -440,13 +471,28 @@ export class MainCityScene implements Scene {
       c2d.font = "14px system-ui";
       c2d.fillText(slot.label, display.x + 8, display.y + 24);
     }
+    const now = Date.now();
+    const caption = formatSlotBuildingCaption(
+      slot.slot_key,
+      slot.label,
+      building,
+      now,
+    );
+    if (KEY_BUILDING_SLOTS.has(slot.slot_key)) {
+      c2d.fillStyle = "rgba(26, 20, 16, 0.72)";
+      c2d.fillRect(display.x, display.y - 4, Math.min(display.w, 120), 22);
+      c2d.fillStyle = "#f5e6c8";
+      c2d.font = "12px system-ui";
+      c2d.fillText(caption.title, display.x + 6, display.y + 14);
+    }
     if (building) {
       c2d.fillStyle = "#f5e6c8";
       c2d.font = "13px system-ui";
-      c2d.fillText(`Lv${building.level ?? 0}`, display.x + 8, display.y + display.h - 12);
-      if (building.upgrade_finish_at_ms && building.upgrade_finish_at_ms > Date.now()) {
+      c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
+      if (caption.upgradeLine) {
         c2d.fillStyle = "#f0c674";
-        c2d.fillText("升级中", display.x + display.w - 56, display.y + 20);
+        c2d.font = "12px system-ui";
+        c2d.fillText(caption.upgradeLine, display.x + display.w - 88, display.y + 20);
       }
     }
   }

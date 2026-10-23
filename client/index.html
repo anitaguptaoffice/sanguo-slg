@@ -17,10 +17,17 @@
       }
       #hud {
         position: absolute; left: 0; top: 0; width: 100%; height: calc(56 / 900 * 100%);
-        padding: 0 12px; display: flex; align-items: center;
+        padding: 0 12px; display: flex; align-items: center; gap: 10px;
         font-size: clamp(11px, 1.4vw, 15px); color: #c9b896;
         pointer-events: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
         z-index: 2;
+      }
+      #hud .hud-group {
+        flex-shrink: 0; padding-right: 10px; border-right: 1px solid rgba(92, 74, 50, 0.65);
+      }
+      #hud .hud-group:last-child {
+        border-right: none; padding-right: 0; flex-shrink: 1; min-width: 0;
+        overflow: hidden; text-overflow: ellipsis;
       }
       .layout-toolbar {
         position: absolute; left: 0; right: 0; bottom: 0;
