@@ -198,13 +198,12 @@
       }
       .main-city-toolbar button.toolbar-chrome-btn:active { filter: brightness(0.95); }
       .main-city-toolbar button.toolbar-chrome-btn--with-icon {
-        flex-direction: column;
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 1px;
-        padding-top: 2px;
-        padding-bottom: 1px;
-        line-height: 1.05;
+        gap: 4px;
+        padding: 0;
+        line-height: 1.1;
       }
       .main-city-toolbar .toolbar-btn-icon {
         display: block;
@@ -218,11 +217,14 @@
         display: block;
         pointer-events: none;
         font-size: clamp(9px, 1.05vw, 11px);
-        line-height: 1.05;
-        max-width: 100%;
+        line-height: 1.1;
+        flex: 0 0 28px;
+        width: 28px;
+        max-width: 28px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        text-align: center;
       }
       .main-city-toolbar button.toolbar-chrome-btn--disabled-icon .toolbar-btn-icon {
         opacity: 0.42;

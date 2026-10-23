@@ -17,6 +17,6 @@ Art assets cherry-picked from Draft PR #481 @ `9f06e38` (**not merged**).
 
 ## Hit / mount proof
 
-`hit-proof.json` — per-action icon src, 2-char labels, ≥44 CSS hit wrap, no icon/label overlap.
+`hit-proof.json` — per-action icon src, 2-char labels, ≥44 CSS hit wrap, icon+label inside button & visible crop, no icon/label overlap.
 
 Regenerate: `cd client && node scripts/capture-art-toolbar-icons-007-evidence.mjs`
