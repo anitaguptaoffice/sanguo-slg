@@ -6,10 +6,10 @@
 
 | asset id | 用途 |
 |---|---|
-| `res.icon.food.v1` | HUD 顶栏 / 画布粮图标 |
-| `res.icon.wood.v1` | HUD 顶栏 / 画布木图标 |
-| `res.icon.iron.v1` | HUD 顶栏 / 画布铁图标 |
-| `res.icon.stone.v1` | HUD 顶栏 / 画布石图标 |
+| `res.icon.food.v1` | HUD 顶栏 DOM 粮图标（`appendHudResourceStrip`，CLIENT-039 起不再在 canvas 重复绘制） |
+| `res.icon.wood.v1` | HUD 顶栏 DOM 木图标 |
+| `res.icon.iron.v1` | HUD 顶栏 DOM 铁图标 |
+| `res.icon.stone.v1` | HUD 顶栏 DOM 石图标 |
 | `ui.panel.default.v1` | 队列 / 邮件 / 背包 / 日常面板根 nine-slice（`artPanelSkin.skinNineSlicePanel`） |
 | `ui.panel.military.v1` | 军事表单面板、行军列表、队列募兵区块（`artPanelSkin.skinMilitaryPanel`；募兵/出征主按钮见 CLIENT-033） |
 

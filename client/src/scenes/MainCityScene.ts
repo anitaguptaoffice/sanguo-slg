@@ -53,7 +53,6 @@ import {
 } from "@/ui/worldMinimap";
 import {
   formatKeyBuildingHudLine,
-  formatResourceAmount,
   formatSlotBuildingCaption,
   formatWalletGainBrief,
   hasActiveBuildingUpgrade,
@@ -861,26 +860,8 @@ export class MainCityScene implements Scene {
       this.drawSlot(c2d, slot, buildingLevels.get(slot.slot_key));
     }
 
-    const w = this.session?.wallet;
-    const hudResources: { assetId: string; text: string }[] = [
-      { assetId: "res.icon.food.v1", text: `粮 ${formatResourceAmount(w?.food)}` },
-      { assetId: "res.icon.wood.v1", text: `木 ${formatResourceAmount(w?.wood)}` },
-      { assetId: "res.icon.iron.v1", text: `铁 ${formatResourceAmount(w?.iron)}` },
-      { assetId: "res.icon.stone.v1", text: `石 ${formatResourceAmount(w?.stone)}` },
-    ];
-    c2d.fillStyle = "#f5e6c8";
-    c2d.font = "16px system-ui";
-    let hudX = 16;
-    for (const { assetId, text } of hudResources) {
-      const pack = this.assets.getImageForAsset(assetId);
-      if (pack) {
-        c2d.drawImage(pack.img, hudX, 12, 32, 32);
-        c2d.fillText(text, hudX + 40, 34);
-      } else {
-        c2d.fillText(text, hudX, 34);
-      }
-      hudX += 120;
-    }
+    // Top-bar wallet icons/amounts: DOM only (`appendHudResourceStrip` in renderHud). Canvas draws
+    // the opaque HUD band above; stacking canvas resource glyphs caused overlap at 1280×720 (CLIENT-039).
 
     drawWorldMinimap(c2d, {
       ownCityX: this.session?.cityX,

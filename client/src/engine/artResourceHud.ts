@@ -18,6 +18,7 @@ export const CLIENT_032_WIRED_ASSET_IDS = [
   "ui.panel.default.v1",
 ] as const;
 
+/** Single source of truth for top-bar resource icons/amounts (DOM `#hud`; not duplicated on canvas). */
 export function appendHudResourceStrip(
   hud: HTMLElement,
   wallet: ResourceWallet | undefined,
