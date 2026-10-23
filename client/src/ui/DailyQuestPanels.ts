@@ -34,10 +34,18 @@ import {
   countDailyQuestsByState,
   dailyQuestListEmptyMessage,
   dailyQuestRowsForList,
+  pickFirstClaimableDailyQuestCfgIdForFilter,
   readDailyQuestListFilterSession,
   type DailyQuestListFilter,
   writeDailyQuestListFilterSession,
 } from "@/net/dailyQuestListFilter";
+import {
+  DAILY_QUEST_CLAIMABLE_ROW_CLASS,
+  scheduleQuestClaimRowPulse,
+  scrollDailyQuestRowIntoView,
+} from "@/net/dailyQuestClaimFeedback";
+import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
+import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type RewardBundle = {
@@ -163,12 +171,14 @@ export class DailyQuestPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="accept-daily">接取</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-daily">领奖</button>
       </div>
+      <p class="daily-form-error hidden" data-role="daily-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="daily-scroll">
         <div class="daily-quest-filters" data-role="daily-filters">
           <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="all">全部</button>
           <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="in_progress">进行中</button>
           <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="claimable">可领取</button>
           <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="completed">已完成</button>
+          <button type="button" class="daily-quest-filter-btn daily-quest-locate-first hidden" data-action="daily-locate-first" hidden>定位首条</button>
         </div>
         <div class="daily-quest-state-summary" data-role="daily-state-summary" hidden></div>
         <ul class="daily-quest-list" data-role="daily-list"></ul>
@@ -191,6 +201,37 @@ export class DailyQuestPanels {
       const f = btn.getAttribute("data-filter") as DailyQuestListFilter;
       btn.classList.toggle("active", f === this.listFilter);
     }
+    const locateBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="daily-locate-first"]');
+    const showLocate =
+      this.listFilter === "claimable" && pickFirstClaimableDailyQuestCfgIdForFilter(this.rows) > 0;
+    if (locateBtn) {
+      locateBtn.hidden = !showLocate;
+      locateBtn.classList.toggle("hidden", !showLocate);
+    }
+  }
+
+  private setDailyFormError(message: string | null): void {
+    const el = this.panel.querySelector('[data-role="daily-form-error"]') as HTMLElement | null;
+    if (!el) return;
+    if (message?.trim()) {
+      el.textContent = message;
+      el.classList.remove("hidden");
+    } else {
+      el.textContent = "";
+      el.classList.add("hidden");
+    }
+  }
+
+  private locateFirstClaimableRow(): void {
+    const id = pickFirstClaimableDailyQuestCfgIdForFilter(this.rows);
+    if (id <= 0) {
+      this.onStatus("当前无可领取日常");
+      return;
+    }
+    this.selectedCfgId = id;
+    this.renderList();
+    scrollDailyQuestRowIntoView(this.panel, id);
+    this.onStatus(`已定位可领取日常 #${id}`);
   }
 
   private renderStateSummary(): void {
@@ -244,6 +285,7 @@ export class DailyQuestPanels {
         const id = q.quest_cfg_id ?? 0;
         const state = q.state ?? 0;
         if (state === 4) li.classList.add("daily-quest-row-completed");
+        if (state === DAILY_QUEST_STATE_CLAIMABLE) li.classList.add(DAILY_QUEST_CLAIMABLE_ROW_CLASS);
         let line = formatDailyQuestLine(q);
         const queueHint = formatDailyQuestQueueInlineHint(
           q,
@@ -402,16 +444,21 @@ export class DailyQuestPanels {
       return;
     }
     const sid = this.serverId();
+    this.setDailyFormError(null);
     this.onStatus(`领取日常 #${id}…`);
+    const rowBefore = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${id}"]`);
     try {
       const res = (await this.gateway.claimQuestReward(sid, id)) as {
         granted_rewards?: RewardBundle;
       };
+      scheduleQuestClaimRowPulse(rowBefore);
       await this.syncBagAndWallet(res.granted_rewards);
       await this.refreshList();
       this.onStatus("日常奖励已领取");
     } catch (e) {
-      this.onStatus((e as Error).message);
+      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+      this.setDailyFormError(msg);
+      this.onStatus(msg);
     }
   }
 
@@ -452,6 +499,11 @@ export class DailyQuestPanels {
         writeDailyQuestListFilterSession(f);
         this.renderList();
       }
+      return;
+    }
+    const locateBtn = (ev.target as HTMLElement).closest('[data-action="daily-locate-first"]');
+    if (locateBtn) {
+      this.locateFirstClaimableRow();
       return;
     }
     const actionEl = (ev.target as HTMLElement).closest("[data-action]");
