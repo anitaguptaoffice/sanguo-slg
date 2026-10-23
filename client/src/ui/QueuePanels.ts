@@ -7,6 +7,7 @@ import { findBuildDailyQuestForBuilding } from "@/net/dailyQuestQueueMatch";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
+  formatQueuePanelOverviewBar,
   formatRecruitQueueLine,
   isRecruitQueueActive,
   mergeRecruitQueue,
@@ -105,6 +106,7 @@ export class QueuePanels {
     el.dataset.centerPanel = "queue";
     el.innerHTML = `
       <h3>队列</h3>
+      <p class="queue-panel-overview" data-role="queue-overview"></p>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-queue">刷新内政</button>
@@ -138,9 +140,13 @@ export class QueuePanels {
   private render(): void {
     const buildUl = this.panel.querySelector('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
+    const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
     if (!buildUl || !recruitUl) return;
     const now = Date.now();
     this.recruits = pruneFinishedRecruits(this.recruits, now);
+    if (overviewEl) {
+      overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
+    }
     const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy;
     const buildRows = activeBuildingUpgrades(this.buildings(), now);
     const recruitLines = this.recruits.map((r) => formatRecruitQueueLine(r, now));
@@ -232,9 +238,11 @@ export class QueuePanels {
       const state = (await this.gateway.getCityState(session.cityId)) as {
         buildings?: CityBuilding[];
         wallet?: MainCitySession["wallet"];
+        production_rates?: MainCitySession["productionRates"];
       };
       if (state.buildings) session.buildings = state.buildings;
       if (state.wallet) session.wallet = state.wallet;
+      if (state.production_rates) session.productionRates = state.production_rates;
       this.onAfterCityRefresh();
       this.render();
     } catch {

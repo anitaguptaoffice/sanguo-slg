@@ -6,12 +6,5 @@ import "sanguo/common/v1/types.proto";
 
 option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1;domesticv1";
 
-// route: domestic.v1.GetCityState
-message GetCityStateRequest {
-  int64 city_id = 1;
-}
-
-message GetCityStateResponse {
-  sanguo.common.v1.ResourceWallet wallet = 1;
-  repeated sanguo.common.v1.CityBuilding buildings = 2;
-}
+// 文档：GetCityStateResponse field 3（production_rates）由 client loadProto / mock-server 运行时注入，
+// 勿在此重复声明完整 GetCityStateResponse（与 spec domestic.proto 冲突）。
