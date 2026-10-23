@@ -17,7 +17,9 @@ import {
   pickDefaultDailyQuest,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
+import { centerTodoScrollTargetId, pickFirstClaimableDailyQuestCfgId } from "@/net/hudCenterTodo";
 import { pickFirstDailyTodoQuestCfgId } from "@/net/hudTodoBadge";
+import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
 import {
   formatDailyQuestNextStepHint,
   resolveDailyQuestNavAction,
@@ -124,6 +126,18 @@ export class DailyQuestPanels {
         row?.scrollIntoView?.({ block: "nearest" });
       }
     });
+  }
+
+  /** CLIENT-077：顶栏待办聚合深链 — 首条可领奖日常（state=3）。 */
+  openFromCenterTodoClaimable(preferredCfgId = 0, opts?: { skipScroll?: boolean }): boolean {
+    const wasOpen = this.isOpen();
+    this.panel.classList.remove("hidden");
+    void this.refreshList(preferredCfgId, "center-claimable").then(() => {
+      const id = this.selectedCfgId;
+      if (id <= 0 || opts?.skipScroll) return;
+      scrollCenterTodoTarget(this.panel, centerTodoScrollTargetId("daily", id));
+    });
+    return wasOpen;
   }
 
   /** 招募闭环：后台刷新 chain 400，可选聚焦日课·访贤行。 */
@@ -254,6 +268,7 @@ export class DailyQuestPanels {
         }
         if (id) {
           li.setAttribute("data-quest-cfg-id", String(id));
+          li.setAttribute(TODO_SCROLL_TARGET_ATTR, centerTodoScrollTargetId("daily", id));
           if (id === this.selectedCfgId) li.classList.add("selected");
         }
         ul.appendChild(li);
@@ -302,7 +317,7 @@ export class DailyQuestPanels {
 
   private async refreshList(
     focusCfgId?: number,
-    pickMode: "default" | "todo-badge" = "default",
+    pickMode: "default" | "todo-badge" | "center-claimable" = "default",
   ): Promise<void> {
     const sid = this.serverId();
     this.onStatus("拉取日常…");
@@ -319,6 +334,10 @@ export class DailyQuestPanels {
       if (!pick && pickMode === "todo-badge") {
         const todoId = pickFirstDailyTodoQuestCfgId(this.rows);
         if (todoId > 0) pick = this.rows.find((r) => r.quest_cfg_id === todoId) ?? null;
+      }
+      if (!pick && pickMode === "center-claimable") {
+        const claimId = pickFirstClaimableDailyQuestCfgId(this.rows);
+        if (claimId > 0) pick = this.rows.find((r) => r.quest_cfg_id === claimId) ?? null;
       }
       if (!pick) pick = pickDefaultDailyQuest(this.rows);
       if (pick?.quest_cfg_id) this.selectedCfgId = pick.quest_cfg_id;

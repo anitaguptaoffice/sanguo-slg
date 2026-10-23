@@ -44,7 +44,9 @@ import {
   mailRowMetaLine,
   mailRowTitleLine,
 } from "@/net/panelDensity";
+import { centerTodoScrollTargetId, pickFirstClaimableMailId } from "@/net/hudCenterTodo";
 import { mailUnreadSnapshotFromListResponse, pickFirstUnreadMailId } from "@/net/hudTodoBadge";
+import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
 import {
   appendMailWorldCoordStatusHint,
   mailPlainTextHasWorldCoord,
@@ -205,6 +207,32 @@ export class HeroMailPanels {
     this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
     void this.refreshMail().then(() => this.focusFirstUnreadMail(preferredMailId));
+  }
+
+  /** CLIENT-077：顶栏待办聚合深链 — 首封可领附件邮件。 */
+  openFromCenterTodoClaimable(
+    preferredMailId = 0,
+    opts?: { skipScroll?: boolean },
+  ): boolean {
+    const wasOpen = this.isMailOpen();
+    this.mailPanel.classList.remove("hidden");
+    this.mailFilter = MAIL_INBOX_FILTER_ALL;
+    if (preferredMailId > 0) this.selectedMailId = preferredMailId;
+    void this.refreshMail().then(() => {
+      const pickId =
+        preferredMailId > 0 && this.mails.some((m) => m.mail_id === preferredMailId)
+          ? preferredMailId
+          : pickFirstClaimableMailId(this.mails);
+      if (!pickId) return;
+      void this.openMail(pickId).then(() => {
+        if (opts?.skipScroll) return;
+        scrollCenterTodoTarget(
+          this.mailPanel,
+          centerTodoScrollTargetId("mail", pickId),
+        );
+      });
+    });
+    return wasOpen;
   }
 
   private async focusFirstUnreadMail(preferredMailId: number): Promise<void> {
@@ -470,6 +498,10 @@ export class HeroMailPanels {
         const li = document.createElement("li");
         if (m.mail_id) {
           li.setAttribute("data-mail-id", String(m.mail_id));
+          li.setAttribute(
+            TODO_SCROLL_TARGET_ATTR,
+            centerTodoScrollTargetId("mail", m.mail_id),
+          );
           if (m.mail_id === this.selectedMailId) li.classList.add("selected");
         }
         for (const cls of mailListRowClassName(m).split(/\s+/).filter(Boolean)) {
