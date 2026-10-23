@@ -1,6 +1,7 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { skinNineSlicePanel } from "@/engine/artPanelSkin";
+import { appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
   LAYOUT_FRAME,
@@ -52,7 +53,6 @@ import {
 import {
   formatKeyBuildingHudLine,
   formatResourceAmount,
-  formatResourceHudGroup,
   formatSlotBuildingCaption,
   formatWalletGainBrief,
   hasActiveBuildingUpgrade,
@@ -321,6 +321,14 @@ export class MainCityScene implements Scene {
     this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
+    for (const panel of [
+      this.queuePanels.getRoot(),
+      this.heroMail.getMailRoot(),
+      this.content.getBagRoot(),
+      this.dailyQuest.getRoot(),
+    ]) {
+      skinNineSlicePanel(panel, this.assets, 520, 320);
+    }
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);
@@ -637,7 +645,6 @@ export class MainCityScene implements Scene {
     const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
     const groups: string[] = [
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
-      formatResourceHudGroup(s?.wallet),
     ];
     if (this.walletGainBrief) groups.push(this.walletGainBrief);
     groups.push(formatKeyBuildingHudLine(s?.buildings, SLOT_LABEL, ["hall", "farm"], now));
@@ -647,6 +654,7 @@ export class MainCityScene implements Scene {
     if (this.status) groups.push(this.status);
 
     this.hud.replaceChildren();
+    appendHudResourceStrip(this.hud, s?.wallet, this.assets);
     for (const text of groups) {
       const span = document.createElement("span");
       span.className =
@@ -849,8 +857,10 @@ export class MainCityScene implements Scene {
       const pack = this.assets.getImageForAsset(assetId);
       if (pack) {
         c2d.drawImage(pack.img, hudX, 12, 32, 32);
+        c2d.fillText(text, hudX + 40, 34);
+      } else {
+        c2d.fillText(text, hudX, 34);
       }
-      c2d.fillText(text, hudX + 40, 34);
       hudX += 120;
     }
 

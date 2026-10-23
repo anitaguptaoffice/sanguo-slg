@@ -1,4 +1,18 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-027）
+# H5 客户端（CLIENT-001 ~ CLIENT-032）
+
+## CLIENT-032 manifest 美术接线
+
+主树 `client/public/assets/art/v1/manifest.json`（#218）已落地样件，H5 接线 asset id：
+
+| asset id | 用途 |
+|---|---|
+| `res.icon.food.v1` | HUD 顶栏 / 画布粮图标 |
+| `res.icon.wood.v1` | HUD 顶栏 / 画布木图标 |
+| `res.icon.iron.v1` | HUD 顶栏 / 画布铁图标 |
+| `res.icon.stone.v1` | HUD 顶栏 / 画布石图标 |
+| `ui.panel.default.v1` | 队列 / 邮件 / 背包 / 日常面板根 nine-slice（`artPanelSkin.skinNineSlicePanel`） |
+
+图标缺失时 HUD 回退为「粮/木/铁/石/币 + 数值」纯文字（与 CLIENT-011 一致）。面板根节点设 `data-art-skin="off"` 可跳过 nine-slice。军事专用皮肤不在本卡范围。
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
