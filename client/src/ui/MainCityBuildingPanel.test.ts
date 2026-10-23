@@ -13,7 +13,13 @@ describe("MainCityBuildingPanel", () => {
       cityTroops: [],
       player: { display_name: "君主", level: 1 },
     };
-    const panel = new MainCityBuildingPanel(mount, { farm: "农田" }, () => session, () => {});
+    const panel = new MainCityBuildingPanel(
+      mount,
+      { farm: "农田" },
+      () => session,
+      () => {},
+      () => "idle",
+    );
     panel.attach();
     panel.selectSlot("farm");
 
