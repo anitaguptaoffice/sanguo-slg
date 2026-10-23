@@ -174,6 +174,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **1280 军事/邮件/日常 manifest 与滚动** | [手动验收（1280 军事/邮件/日常 CLIENT-070）](#手动验收1280-军事邮件日常-client-070)（[#355](https://github.com/anitaguptaoffice/sanguo-slg/issues/355) / [#364](https://github.com/anitaguptaoffice/sanguo-slg/pull/364) `944a3cdd`） | 已合 |
 | **队列↔日常行内进度与倒计时** | [手动验收（队列日常行内反馈 CLIENT-071）](#手动验收队列日常行内反馈-client-071)（[#356](https://github.com/anitaguptaoffice/sanguo-slg/issues/356) / [#359](https://github.com/anitaguptaoffice/sanguo-slg/pull/359) `4ea9e69f`） | 已合 |
 | **网关冒烟**（战报时间字段 + 产出速率 + 军情格点） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 20** / `TestINTG017Wave20SmokePath`（[#357](https://github.com/anitaguptaoffice/sanguo-slg/issues/357) / [#365](https://github.com/anitaguptaoffice/sanguo-slg/pull/365) `4b522cae`） | 已合 |
+| **世界格点只读信息卡与军情互链** | [手动验收（世界格点信息卡 CLIENT-073）](#手动验收世界格点信息卡-client-073)（[#370](https://github.com/anitaguptaoffice/sanguo-slg/issues/370)） | 本卡 |
 
 **推荐串联**（在 [Wave 19](#wave-19-可玩加深m4-出口--intg-016) 招募对比/队列总览/邮件三角深链基础上）：**战报** 时间窗 + 胜负 chips（**CLIENT-065**）→ 画布 **升级中槽位** 点选深链 **队列** 行（**CLIENT-066**）→ **将领/商城/背包/军事** 统一 `formatPanelGatewayError`（**CLIENT-067**）→ **邮件/战报** 正文解析与 **相关日常** 标签（**CLIENT-068**）→ **行军** 格点筛选 + 小地图视野（**CLIENT-069**）→ 视口 **1280×720** 军事/邮件/日常 manifest 滚动（**CLIENT-070**）→ **队列/日常** 同行日课进度与倒计时（**CLIENT-071**）；网关字段见 `tools/smoke/README.md` **INTG-017**。
 
@@ -699,6 +700,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 ### 手动验收（四类面板统一错误 CLIENT-067）
 
 将领/商城/背包/军事的内联错误区（`recruit-form-error`、`shop-form-error`、`bag-form-error`、`march-form-error`）经 `contentFormValidation.setPanelFormErrorDisplay` 渲染；网关失败统一为 `formatPanelGatewayError` 的中文摘要 + 末尾 `[code]`（如商城 `余额不足 [64003]`），与 CLIENT-056/057 预校验共用同一 DOM 槽位，成功操作后错误区清空。
+
+### 手动验收（世界格点信息卡 CLIENT-073）
+
+在 [CLIENT-069](#手动验收军情格点筛选-client-069) 格点筛选与 [CLIENT-061](#手动验收世界坐标-client-015) 双向高亮基础上，**世界** 面板点选城池/格点后展示只读 **格点信息卡**（坐标、匹配 `ListPlayerCities` 快照的城池名/城墙等级、空地格资源类型文案；**不新 world RPC**）。
+
+1. 打开 **世界** → 点选一城或列表行：应出现 **格点信息** 卡，含坐标与 **指向此格行军 N 条**（或「暂无」）；再次点选同一行取消选中并隐藏信息卡。
+2. 信息卡 **在军情中查看**：应打开/保持 **行军** 面板，目的格筛选为 **世界选中格**（与 CLIENT-069 一致）；列表仅显示 `to_x/to_y` 匹配行。
+3. 小地图 **空白单击** 选出征目标时，世界信息卡应同步该格；小地图视野 `pan/zoom` 纳入该格，目的点标注与 CLIENT-028 行军连线不退化；军情选中行军时仍以 CLIENT-069 目的格视野为准。
+4. 单测：`worldTileInfoCard.test.ts`、`WorldPanels.test.ts`、`MarchListPanel.test.ts`、`worldMinimap.test.ts`。
 
 ### 手动验收（军情格点筛选 CLIENT-069）
 

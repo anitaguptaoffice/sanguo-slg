@@ -4,6 +4,10 @@ export type PlayerCitySummary = {
   x?: number;
   y?: number;
   is_capital?: boolean;
+  wall_level?: number;
+  morale?: number;
+  /** 可选：世界快照资源格类型（proto/后续 world 字段对齐时展示）。 */
+  tile_resource_type?: string | number;
 };
 
 /** 世界格点坐标展示，如 (60,60)。 */

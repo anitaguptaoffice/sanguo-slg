@@ -150,4 +150,55 @@ describe("WorldPanels", () => {
     countBtn?.click();
     expect(marchGrid).toEqual({ x: 60, y: 60 });
   });
+
+  it("shows read-only info card with march count and intel deep link", async () => {
+    const mount = document.createElement("div");
+    const form = document.createElement("div");
+    form.innerHTML = `<input data-field="to-x" /><input data-field="to-y" />`;
+    let intelGrid: { x: number; y: number } | null = null;
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({
+        cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true, wall_level: 2 }],
+      }),
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "主城",
+      cityX: 50,
+      cityY: 50,
+      player: {},
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => session,
+      { marchFormRoot: form },
+      () => {},
+      {
+        getMarchesSnapshot: () => [{ march_id: 1, to_x: 60, to_y: 60 }],
+        onViewMarchesAtGrid: (g) => {
+          intelGrid = g;
+        },
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+
+    mount.querySelector('li[data-city-id="1"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    const card = mount.querySelector('[data-role="world-tile-info"]');
+    expect(card?.classList.contains("hidden")).toBe(false);
+    expect(card?.textContent).toContain("指向此格行军：1 条");
+    expect(card?.textContent).toContain("城墙 Lv.2");
+
+    mount.querySelector('[data-action="view-marches-at-grid"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(intelGrid).toEqual({ x: 60, y: 60 });
+  });
 });
