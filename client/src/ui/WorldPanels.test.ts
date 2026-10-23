@@ -44,6 +44,7 @@ describe("WorldPanels", () => {
       () => {},
     );
     panels.attach();
+    expect(mount.querySelector('[data-center-panel="world"] .panel-scroll-body')).toBeTruthy();
     panels.toggle();
     await flushPromises();
     const ul = mount.querySelector('[data-role="world-list"]');

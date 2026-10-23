@@ -5,12 +5,14 @@ import {
   resetCenterPanelViewportScroll,
 } from "@/ui/contentPanelScroll";
 
-describe("contentPanelScroll (CLIENT-070)", () => {
-  it("lists narrow-scroll center panel ids including military mail daily", () => {
+describe("contentPanelScroll (CLIENT-070 + CLIENT-078)", () => {
+  it("lists narrow-scroll center panel ids including military mail daily world rank", () => {
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("military");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("mail");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("daily");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("hero");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("world");
+    expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("rank");
   });
 
   it("resets scroll on panel-scroll-body when present", () => {

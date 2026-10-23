@@ -524,7 +524,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（军事 manifest CLIENT-036）
 
-`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；**邮件/日常** 中心根用 `ui.panel.default.v1`（`skinMailPanel` / `skinDailyPanel`，CLIENT-070 窄屏滚动与 CLIENT-062 同级接线）。`data-art-skin="off"` 可跳过 nine-slice。
+`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；**世界/排行** 用 `ui.panel.world.v1` / `ui.panel.rank.v1`（CLIENT-078）；**邮件/日常** 中心根用 `ui.panel.default.v1`（`skinMailPanel` / `skinDailyPanel`，CLIENT-070 窄屏滚动与 CLIENT-062 同级接线）。`data-art-skin="off"` 可跳过 nine-slice。
 
 1. `make dev` 打开 **「军事」** / **「行军」** / **「队列」**：面板根应出现军事九宫格背景（与 `docs/art/samples/client-033/` 1600×900 样张一致）。
 2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
@@ -566,6 +566,15 @@ cd client && npm install && npm run dev
 2. 军事表单在 `.panel-scroll-body` 内滚动，**募兵** / **出征攻击** 主按钮可滚至可见且可点；邮件长列表与详情（含 **领取附件**）、日常任务列表与 **前往下一步** 在 `layout-narrow` 下 **`overflow-y: auto`**，底栏 56px 工具条不遮挡末行操作。
 3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054/055**、军事 **CLIENT-033** 表现不退化。
 4. 单测：`contentPanelScroll.test.ts`、`artPanelSkin.test.ts`（CLIENT-070 manifest 映射）、`HeroMailPanels` / `DailyQuestPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
+
+### 手动验收（1280 将领/世界/排行 CLIENT-078）
+
+`#layout-frame.layout-narrow` 下 **将领**（`data-center-panel="hero"` + `ui.panel.hero.v1`，CLIENT-062）、**世界**（`data-center-panel="world"` + **`ui.panel.world.v1`**）、**排行**（`data-center-panel="rank"` + **`ui.panel.rank.v1`）根节点 nine-slice 与 CLIENT-070 军事/邮件/日常同级；`skinWorldPanel` / `skinRankPanel` 与 `skinHeroPanel` 同级接线。`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **将领**、**世界**、**排行**；面板纸底为 manifest 九宫格，顶栏 HUD 无叠字。
+2. 将领详情（`.hero-detail`）与世界格点信息卡（`.world-tile-info`，CLIENT-073）在窄屏下 **无横向溢出**；城池列表与排行表在 `.panel-scroll-body` 内 **`overflow-y: auto`**，底栏 56px 工具条不遮挡 **刷新城池** / **刷新排行榜**。
+3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054/055**、将领 **CLIENT-062** 表现不退化。
+4. 单测：`artPanelSkin.test.ts`（CLIENT-078 manifest 映射）、`contentPanelScroll.test.ts`（`world`/`rank` id）、`HeroMailPanels` / `WorldPanels` / `SocialPanels`（`panel-scroll-body`）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 

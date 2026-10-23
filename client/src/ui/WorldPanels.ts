@@ -72,6 +72,10 @@ export class WorldPanels {
     if (!this.panel.classList.contains("hidden")) void this.refreshList();
   }
 
+  getRoot(): HTMLElement {
+    return this.panel;
+  }
+
   getSelectedGrid(): { x: number; y: number } | null {
     return this.selectedGrid;
   }
@@ -120,6 +124,7 @@ export class WorldPanels {
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden world-panel";
+    el.dataset.centerPanel = "world";
     el.innerHTML = `
       <h3>世界</h3>
       <p class="world-panel-hint" data-role="world-hint">玩家城池与坐标（非大地图）；点选可将坐标填入出征目标，并在下方信息卡扫读格点上下文。</p>
@@ -130,7 +135,9 @@ export class WorldPanels {
         <button type="button" data-action="view-marches-at-grid">在军情中查看</button>
       </aside>
       <button type="button" data-action="refresh-world">刷新城池</button>
-      <ul class="world-city-list" data-role="world-list"></ul>
+      <div class="panel-scroll-body" data-role="world-scroll">
+        <ul class="world-city-list" data-role="world-list"></ul>
+      </div>
     `;
     return el;
   }

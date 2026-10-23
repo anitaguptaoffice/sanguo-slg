@@ -109,6 +109,10 @@ export class SocialPanels {
     if (!this.rankPanel.classList.contains("hidden")) void this.refreshRank();
   }
 
+  getRankRoot(): HTMLElement {
+    return this.rankPanel;
+  }
+
   private serverId(): number {
     const s = this.getSession();
     return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
@@ -216,7 +220,8 @@ export class SocialPanels {
 
   private buildRankPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "social-panel hidden";
+    el.className = "content-panel hidden rank-panel";
+    el.dataset.centerPanel = "rank";
     el.innerHTML = `
       <h3>排行榜</h3>
       <label>榜单
@@ -231,16 +236,18 @@ export class SocialPanels {
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
         <span data-role="rank-refresh-status-text"></span>
       </p>
-      <div class="rank-board" data-role="rank-board">
-        <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
-        <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
-        <div class="rank-table-scroll">
-          <table class="rank-table">
-            <thead class="rank-table-head">
-              <tr><th>名次</th><th>玩家</th><th>分数</th></tr>
-            </thead>
-            <tbody data-role="rank-list"></tbody>
-          </table>
+      <div class="panel-scroll-body" data-role="rank-scroll">
+        <div class="rank-board" data-role="rank-board">
+          <div class="rank-viewer-bar" data-role="viewer-rank" aria-label="我的名次">我的名次：—</div>
+          <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
+          <div class="rank-table-scroll">
+            <table class="rank-table">
+              <thead class="rank-table-head">
+                <tr><th>名次</th><th>玩家</th><th>分数</th></tr>
+              </thead>
+              <tbody data-role="rank-list"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     `;

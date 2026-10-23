@@ -3,11 +3,14 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   CLIENT_062_CENTER_PANEL_ASSET_IDS,
   CLIENT_070_PANEL_ASSET_BY_CENTER_ID,
+  CLIENT_078_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
   PANEL_ASSET_DEFAULT,
   PANEL_ASSET_HERO,
   PANEL_ASSET_MILITARY,
   PANEL_ASSET_QUEUE,
+  PANEL_ASSET_RANK,
+  PANEL_ASSET_WORLD,
   skinBagPanel,
   skinDailyPanel,
   skinHeroPanel,
@@ -15,6 +18,8 @@ import {
   skinMilitaryPanel,
   skinNineSlicePanel,
   skinQueuePanel,
+  skinRankPanel,
+  skinWorldPanel,
 } from "@/engine/artPanelSkin";
 
 function mockAssets(): AssetLoader {
@@ -96,5 +101,23 @@ describe("skinNineSlicePanel", () => {
     skinMailPanel(mail, assets);
     skinDailyPanel(daily, assets);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_DEFAULT);
+  });
+
+  it("CLIENT-078 maps hero world rank roots to manifest ids", () => {
+    expect(CLIENT_078_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      hero: PANEL_ASSET_HERO,
+      world: PANEL_ASSET_WORLD,
+      rank: PANEL_ASSET_RANK,
+    });
+  });
+
+  it("skinWorldPanel and skinRankPanel use dedicated asset ids", () => {
+    const assets = mockAssets();
+    const world = document.createElement("div");
+    const rank = document.createElement("div");
+    skinWorldPanel(world, assets);
+    skinRankPanel(rank, assets);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_WORLD);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_RANK);
   });
 });

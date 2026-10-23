@@ -7,6 +7,8 @@ import {
   skinMailPanel,
   skinMilitaryPanel,
   skinQueuePanel,
+  skinRankPanel,
+  skinWorldPanel,
 } from "@/engine/artPanelSkin";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { appendHudProductionRatesLine, appendHudResourceStrip } from "@/engine/artResourceHud";
@@ -524,11 +526,15 @@ export class MainCityScene implements Scene {
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
+    skinWorldPanel(this.world.getRoot(), this.assets, 520, 320);
+    skinRankPanel(this.social.getRankRoot(), this.assets, 520, 320);
     skinCenterPrimary(this.heroMail.getHeroRoot());
     skinCenterPrimary(this.content.getBagRoot());
     skinCenterPrimary(this.queuePanels.getRoot());
     skinCenterPrimary(this.heroMail.getMailRoot());
     skinCenterPrimary(this.dailyQuest.getRoot());
+    skinCenterPrimary(this.world.getRoot());
+    skinCenterPrimary(this.social.getRankRoot());
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.canvas.addEventListener("pointerdown", this.onCanvasPointerBound);

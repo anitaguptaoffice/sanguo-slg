@@ -29,6 +29,14 @@ function minimalGateway(overrides: Partial<GatewayPort> = {}): GatewayPort {
 }
 
 describe("SocialPanels rank", () => {
+  it("rank panel uses content-panel scroll body for narrow layout (CLIENT-078)", () => {
+    const mount = document.createElement("div");
+    const panels = new SocialPanels(mount, minimalGateway(), () => baseSession(), () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-center-panel="rank"]')).toBeTruthy();
+    expect(mount.querySelector('[data-center-panel="rank"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("fetches power leaderboard on open", async () => {
     const mount = document.createElement("div");
     const getLeaderboard = vi.fn().mockResolvedValue({
