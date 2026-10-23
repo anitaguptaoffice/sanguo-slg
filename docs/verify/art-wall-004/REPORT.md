@@ -17,7 +17,7 @@
 
 - 全舞台（布局帧 JPG，DPR1）：`full-stage-dpr1.jpg`（layout-frame 1600×900 CSS）
 - 机器可读：`viewport-metadata.json`
-- **证据 commit SHA**：`c8f7562049e32dffcf2f09a021a4789ef0cdc1ac`（链接使用 `raw/c8f7562049e32dffcf2f09a021a4789ef0cdc1ac/…`）
+- **证据 commit SHA**：`cf6c8262a3882ce5b73a2b8386e0d697847a2b59`（截图与布局修复；链接使用 `raw/cf6c8262a3882ce5b73a2b8386e0d697847a2b59/…`）
 
 ## 验收清单
 
