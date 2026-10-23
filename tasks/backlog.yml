@@ -1,0 +1,220 @@
+# 任务卡清单（唯一真源）
+# 改这里 → 跑 tools/tasks_sync.py → GitHub Issues 同步
+# 字段说明见 tasks/README.md
+
+- id: SPEC-001
+  title: 领域模型与数据库 DDL 草案
+  wave: 1
+  domain: spec
+  depends_on: []
+  size: L
+  owner_dir: spec/db
+  scope: [spec/db/**, spec/rules/**]
+  out_of_scope: [internal/**, cmd/**]
+  acceptance:
+    - 6 个域（account/world/domestic/military/hero/content）各一份 DDL
+    - 每张表带注释，说明用途与关键字段
+    - 表结构从零设计，不做既有模型的照搬
+    - 通过 psql 语法校验
+  body: |
+    数据模型从零设计。只参考玩法规则与数值区间，表结构、字段命名、索引策略全部自行定义。
+
+    核心域：账号、世界、内政、军事、将、内容。
+    每个域给出：表清单、ER 关系、索引策略、分服字段（server_id）。
+
+- id: SPEC-002
+  title: 通信协议定义（Protobuf + WebSocket）
+  wave: 1
+  domain: spec
+  depends_on: [SPEC-001]
+  size: L
+  owner_dir: spec/proto
+  scope: [spec/proto/**]
+  out_of_scope: [internal/**]
+  acceptance:
+    - 请求/响应消息按域分包
+    - 每个消息带注释说明字段含义
+    - 生成代码可通过 protoc 校验
+    - 覆盖 M1 所需接口：登录、拉取城池、建造、募兵
+  body: |
+    协议以 H5 客户端为消费者设计，不迁就旧 AMF 结构。
+    统一响应包：code / msg / data，错误码按域分段。
+
+- id: SPEC-003
+  title: 核心规则文档（战斗与内政）
+  wave: 1
+  domain: spec
+  depends_on: []
+  size: M
+  owner_dir: spec/rules
+  scope: [spec/rules/**]
+  out_of_scope: [spec/db/**, spec/proto/**]
+  acceptance:
+    - 战斗：兵种克制、伤害公式、回合流程、胜负判定
+    - 内政：资源产出、建筑耗时与消耗、队列规则
+    - 每条规则标注数值来源与调参入口
+  body: |
+    用文字 + 公式描述规则，产出是给实现 agent 看的规格，必须能直接照着写。
+    数值先给一版可玩的初始值，后续按测试数据调优。
+
+- id: SPEC-004
+  title: 数值数据管线与 seed 生成
+  wave: 1
+  domain: spec
+  depends_on: [SPEC-001]
+  size: M
+  owner_dir: tools/data
+  scope: [tools/data/**, spec/data/**]
+  out_of_scope: [internal/**]
+  acceptance:
+    - 兵种、将领、建筑、道具四类数值的 seed 数据（SQL 或 JSON）
+    - 生成脚本从配置源导入，转成新 schema
+    - 可重复执行，幂等
+    - 字段映射表写进 spec/data/MAPPING.md
+  body: |
+    数值先给初版，保证可玩；表结构与字段命名按新设计走。
+    脚本要能重跑，数值调整后可以增量更新。
+
+- id: PLAT-001
+  title: 仓库骨架与构建脚本
+  wave: 1
+  domain: platform
+  depends_on: []
+  size: M
+  owner_dir: .
+  scope: [go.mod, cmd/**, internal/platform/**, Makefile, docker-compose.yml, .github/**]
+  out_of_scope: [internal/<各业务域>/**, spec/**]
+  acceptance:
+    - "`make build` 产出单二进制"
+    - "`make test` 跑通"
+    - "`make dev` 起本地全栈（app + postgres + redis）"
+    - CI 跑 build + test + lint
+  body: |
+    Go 项目骨架：cmd/server、cmd/gm、internal/platform（配置、日志、DB、Redis）。
+    目录预留各业务域，先放空包。
+
+- id: PLAT-002
+  title: 网关与连接管理
+  wave: 1
+  domain: platform
+  depends_on: [PLAT-001, SPEC-002]
+  size: L
+  owner_dir: internal/platform/gateway
+  scope: [internal/platform/gateway/**]
+  out_of_scope: [internal/<业务域>/**]
+  acceptance:
+    - WebSocket 握手、鉴权、心跳、断线重连
+    - 单机 3000 连接压测通过
+    - 消息编解码走 proto 生成代码
+    - 限流与黑白名单
+  body: |
+    网关无状态，只负责连接与路由，不承载业务逻辑。
+
+- id: PLAT-003
+  title: 可观测性接入
+  wave: 1
+  domain: platform
+  depends_on: [PLAT-001]
+  size: S
+  owner_dir: internal/platform/obs
+  scope: [internal/platform/obs/**, deploy/**]
+  out_of_scope: [internal/<业务域>/**]
+  acceptance:
+    - 结构化日志（trace_id 贯穿）
+    - Prometheus 指标：QPS、延迟、在线数、队列长度
+    - 本地 Grafana 面板可看
+  body: |
+    从第一天就要有，否则线上问题只能靠猜。
+
+- id: MIL-001
+  title: 战斗引擎原型（纯函数）
+  wave: 1
+  domain: military
+  depends_on: [SPEC-003]
+  size: L
+  owner_dir: internal/military/battle
+  scope: [internal/military/battle/**]
+  out_of_scope: [internal/military/march/**, spec/**]
+  acceptance:
+    - 输入双方部队 + 将领，输出战报（回合、伤害、损失）
+    - 无 IO、无全局状态、可并发调用
+    - 通过 100 组基准用例，结果稳定可复现
+    - 单场 P99 < 50ms
+  body: |
+    这是全项目风险最高的一块，先做原型验证可行性。
+    对拍方式：同一组输入跑固定基准用例集，比对最终兵力与胜负，结果入库作为回归基线。
+
+- id: MIL-002
+  title: 募兵与行军队列
+  wave: 2
+  domain: military
+  depends_on: [MIL-001, SPEC-001]
+  size: M
+  owner_dir: internal/military/march
+  scope: [internal/military/march/**]
+  out_of_scope: [internal/military/battle/**]
+  acceptance:
+    - 募兵扣资源、入队、到期完成
+    - 行军时间按距离与兵种速度计算
+    - 队列到期由调度器触发，误差 < 1s
+  body: 队列状态机：待发 → 行军中 → 到达 → 返回。
+
+- id: ACC-001
+  title: 账号与登录
+  wave: 2
+  domain: account
+  depends_on: [SPEC-001, SPEC-002, PLAT-002]
+  size: M
+  owner_dir: internal/account
+  scope: [internal/account/**]
+  out_of_scope: [internal/world/**, spec/**]
+  acceptance:
+    - 注册、登录、token 续期
+    - 密码加盐哈希，不明文存储
+    - 单账号多服角色
+  body: 账号中心与游戏服解耦，账号表全局共享，角色表按 server_id 分。
+
+- id: WORLD-001
+  title: 地图与城池
+  wave: 2
+  domain: world
+  depends_on: [SPEC-001]
+  size: L
+  owner_dir: internal/world
+  scope: [internal/world/**]
+  out_of_scope: [internal/domestic/**, spec/**]
+  acceptance:
+    - 500×500 地图生成与持久化
+    - 城池创建、坐标占用、视野
+    - 野地/资源点刷新
+  body: 地图数据分块加载，不要一次性全量读入内存。
+
+- id: DOM-001
+  title: 建筑与资源
+  wave: 2
+  domain: domestic
+  depends_on: [SPEC-001, WORLD-001]
+  size: L
+  owner_dir: internal/domestic
+  scope: [internal/domestic/**]
+  out_of_scope: [internal/world/**, spec/**]
+  acceptance:
+    - 建筑升级前置条件校验
+    - 资源产出按秒结算
+    - 建造队列与调度器打通
+  body: 资源产出走增量结算，不要每秒写库。
+
+- id: CLIENT-001
+  title: H5 客户端骨架与协议联调
+  wave: 1
+  domain: client
+  depends_on: [SPEC-002]
+  size: L
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**]
+  acceptance:
+    - 引擎初始化、场景切换、资源加载
+    - 连接网关、收发 proto 消息
+    - 登录 → 主城界面跑通（占位美术）
+  body: 先用占位资源跑通链路，美术后续替换。
