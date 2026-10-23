@@ -1,10 +1,20 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-007）
+# H5 客户端（CLIENT-001 ~ CLIENT-012）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
 Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSocket + Protobuf** 全链路：
 
-**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/战报/任务/背包/商城/将领/邮件）→ 世界/私聊 → 军团 → 战力排行**
+**选服列表 → 登录/进服 → 拉城/建城 → 主城（内政/军事/战报/任务/日常/背包/商城/将领/邮件）→ 世界/私聊 → 军团 → 战力排行**
+
+## Wave 11 可玩环（M4 出口 / INTG-008）
+
+在 `make dev` 下联调的最短人工路径（与 `tools/smoke/README.md`、**INTG-008** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量。
+
+| 能力 | 验收小节 |
+|---|---|
+| **日常 UI**（chain 400，无手填上报） | [手动验收（日常 chain 400，CLIENT-009）](#手动验收日常-chain-400client-009) |
+| **招募模板预览**（将领面板 + 背包/商城可读性） | [手动验收（M4：将领 / 邮件，CLIENT-008）](#手动验收m4将领--邮件client-008) 步骤 2；背包/商城行文案见 **CLIENT-010**（#171） |
+| **战报入口**（底栏独立面板） | [手动验收（募兵 → 行军 → 战报）](#手动验收募兵--行军--战报) 步骤 4（**CLIENT-012**，#170） |
 
 ## 网关地址
 
@@ -56,7 +66,7 @@ cd client && npm install && npm run dev
 1. `make dev` 启动后进入主城，HUD 显示 **币**（`player_wallet.gold`，商城银币价映射到 gold 字段）。
 2. **任务**：打开「任务」→「接取」→「上报进度(绝对值2)」→「领奖」。背包应出现谷袋·初备（2001）；HUD 粮/币随奖励变化。
 3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时状态栏显示服务端错误；成功时 HUD **币** 减少且背包数量增加（`wallet_after` 真扣费，无 spent overlay）。
-4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag` 拉服务端持久化全量并覆盖会话背包展示；「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）。资源包(2001)/加速符(2003) 使用成功后 HUD 粮/币或状态栏效果摘要应更新。
+4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag` 拉服务端持久化全量并覆盖会话背包展示；「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）。资源包(2001)/加速符(2003) 使用成功后 HUD 粮/币或状态栏效果摘要应更新。CLIENT-010 起列表行展示道具名/数量摘要，商城货架行展示 offer 标题与价格，便于对照招募消耗。
 
 ### 手动验收（日常 chain 400，CLIENT-009）
 
@@ -96,7 +106,7 @@ make dev
 cd client && npm install && npm run dev
 ```
 
-### 手动验收（募兵 → 行军 → 战报）
+### 手动验收（募兵 → 行军 → 战报，CLIENT-012）
 
 1. 登录进入主城后，点 **「军事」** 打开面板。
 2. **募兵**：选兵种（默认步兵）、数量（如 50），点「募兵」。HUD 会显示扣费后的资源；若返回 `queue_id` / `finish_at_ms`，需等到完成时间后再出征（服务端调度器在 `make dev` 中自动推进）。
