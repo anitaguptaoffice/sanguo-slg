@@ -1,3 +1,4 @@
+import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
   battleReportListLines,
@@ -11,6 +12,11 @@ import {
 } from "@/net/militaryFormat";
 
 const PAGE_LIMIT = 20;
+
+export type BattleReportPanelOptions = {
+  unreadSession?: BattleReportUnreadSession;
+  onUnreadChange?: (count: number) => void;
+};
 
 export class BattleReportPanel {
   private panel!: HTMLElement;
@@ -30,6 +36,7 @@ export class BattleReportPanel {
     private readonly mount: HTMLElement,
     private readonly gateway: GatewayPort,
     private onStatus: (msg: string) => void,
+    private readonly panelOpts?: BattleReportPanelOptions,
   ) {}
 
   attach(): void {
@@ -42,11 +49,26 @@ export class BattleReportPanel {
     this.panel?.remove();
   }
 
+  isOpen(): boolean {
+    return this.panel != null && !this.panel.classList.contains("hidden");
+  }
+
   toggle(): void {
+    const wasHidden = this.panel.classList.contains("hidden");
     this.panel.classList.toggle("hidden");
-    if (!this.panel.classList.contains("hidden") && !this.reports.length && !this.listError) {
-      void this.refreshList();
-    }
+    if (wasHidden && this.isOpen()) void this.openAndSyncUnread();
+  }
+
+  /** 行军结束提示等入口：打开列表并清零未读基线。 */
+  openPanel(): void {
+    this.panel.classList.remove("hidden");
+    void this.openAndSyncUnread();
+  }
+
+  private async openAndSyncUnread(): Promise<void> {
+    await this.refreshList();
+    this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
+    this.panelOpts?.onUnreadChange?.(0);
   }
 
   private buildPanel(): HTMLElement {

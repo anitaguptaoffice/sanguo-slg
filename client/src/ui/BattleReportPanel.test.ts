@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
 
@@ -118,6 +119,30 @@ describe("BattleReportPanel", () => {
     const ul = mount.querySelector('[data-role="report-list"]');
     expect(ul?.textContent).toContain("#1");
     expect(ul?.textContent).toContain("#2");
+  });
+
+  it("clears unread session when panel opens", async () => {
+    const mount = document.createElement("div");
+    const unread = new BattleReportUnreadSession();
+    expect(unread.countUnread([{ report_id: 5 }])).toBe(1);
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [{ report_id: 5, outcome: 1, created_at_ms: 0 }],
+        total: 1,
+      }),
+    } as unknown as GatewayPort;
+    let badge = -1;
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      unreadSession: unread,
+      onUnreadChange: (n) => {
+        badge = n;
+      },
+    });
+    panel.attach();
+    panel.openPanel();
+    await flushPromises();
+    expect(unread.countUnread([{ report_id: 5 }, { report_id: 6 }])).toBe(1);
+    expect(badge).toBe(0);
   });
 
   it("shows list load failure in panel", async () => {
