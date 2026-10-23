@@ -124,6 +124,10 @@ export class HeroMailPanels {
     return this.mailPanel;
   }
 
+  getHeroRoot(): HTMLElement {
+    return this.heroPanel;
+  }
+
   toggleHero(): void {
     this.heroPanel.classList.toggle("hidden");
     if (!this.heroPanel.classList.contains("hidden")) {
@@ -228,6 +232,7 @@ export class HeroMailPanels {
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
+    el.dataset.centerPanel = "hero";
     el.innerHTML = `
       <h3>将领</h3>
       <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
@@ -239,9 +244,11 @@ export class HeroMailPanels {
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
       <button type="button" data-action="recruit-hero">招募</button>
       <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
-      <ul class="template-list" data-role="template-list"></ul>
-      <ul class="hero-list" data-role="hero-list"></ul>
-      <div class="hero-detail" data-role="hero-detail"></div>
+      <div class="panel-scroll-body" data-role="hero-scroll">
+        <ul class="template-list" data-role="template-list"></ul>
+        <ul class="hero-list" data-role="hero-list"></ul>
+        <div class="hero-detail" data-role="hero-detail"></div>
+      </div>
     `;
     return el;
   }

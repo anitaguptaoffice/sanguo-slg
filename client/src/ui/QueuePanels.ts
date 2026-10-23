@@ -111,10 +111,12 @@ export class QueuePanels {
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-queue">刷新内政</button>
       </div>
-      <ul class="queue-list" data-role="queue-build-list"></ul>
-      <div class="queue-military-section hidden" data-role="queue-military-section">
-        <p class="queue-military-heading">募兵队列</p>
-        <ul class="queue-list" data-role="queue-recruit-list"></ul>
+      <div class="panel-scroll-body" data-role="queue-scroll">
+        <ul class="queue-list" data-role="queue-build-list"></ul>
+        <div class="queue-military-section hidden" data-role="queue-military-section">
+          <p class="queue-military-heading">募兵队列</p>
+          <ul class="queue-list" data-role="queue-recruit-list"></ul>
+        </div>
       </div>
       <p class="queue-panel-status" data-role="queue-status"></p>
     `;

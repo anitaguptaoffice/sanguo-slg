@@ -10,7 +10,10 @@
 | `res.icon.wood.v1` | HUD 顶栏 DOM 木图标 |
 | `res.icon.iron.v1` | HUD 顶栏 DOM 铁图标 |
 | `res.icon.stone.v1` | HUD 顶栏 DOM 石图标 |
-| `ui.panel.default.v1` | 队列 / 邮件 / 背包 / 日常面板根 nine-slice（`artPanelSkin.skinNineSlicePanel`） |
+| `ui.panel.default.v1` | 邮件 / 日常面板根 nine-slice（`artPanelSkin.skinNineSlicePanel`） |
+| `ui.panel.hero.v1` | 将领面板根（`artPanelSkin.skinHeroPanel`，CLIENT-062） |
+| `ui.panel.bag.v1` | 背包面板根（`artPanelSkin.skinBagPanel`，CLIENT-062） |
+| `ui.panel.queue.v1` | 队列面板根（`artPanelSkin.skinQueuePanel`，CLIENT-062） |
 | `ui.panel.military.v1` | 军事表单面板、行军列表、队列募兵区块（`artPanelSkin.skinMilitaryPanel`；募兵/出征主按钮见 CLIENT-033） |
 
 图标缺失时 HUD 回退为「粮/木/铁/石/币 + 数值」纯文字（与 CLIENT-011 一致）。面板根节点设 `data-art-skin="off"` 可跳过 nine-slice。
@@ -490,7 +493,7 @@ cd client && npm install && npm run dev
 
 ### 手动验收（军事 manifest CLIENT-036）
 
-`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）；非军事面板仍用 `ui.panel.default.v1`（CLIENT-032）。`data-art-skin="off"` 可跳过 nine-slice。
+`artPanelSkin.skinMilitaryPanel` 对 **军事表单**、底栏 **「行军」** 列表根、**「队列」** 募兵区块应用 manifest `ui.panel.military.v1`（#227 / ART-MILITARY-005）。**将领/背包/队列** 中心面板根分别用 `ui.panel.hero.v1` / `bag.v1` / `queue.v1`（CLIENT-062）；邮件/日常等仍用 `ui.panel.default.v1`（CLIENT-032）。`data-art-skin="off"` 可跳过 nine-slice。
 
 1. `make dev` 打开 **「军事」** / **「行军」** / **「队列」**：面板根应出现军事九宫格背景（与 `docs/art/samples/client-033/` 1600×900 样张一致）。
 2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
@@ -514,6 +517,15 @@ cd client && npm install && npm run dev
 2. 视口 **1600×900**：行为与 CLIENT-011 / CLIENT-032 一致（manifest 图标 + 数值）。
 3. 可选复现截图：`cd client && node scripts/capture-client-039-evidence.mjs`。
 4. 军事字色/募兵四态仍以 **CLIENT-033** 样张为准（`docs/art/samples/client-033/`）。
+
+### 手动验收（1280 将领/背包/队列 CLIENT-062）
+
+`#layout-frame` 在最小内容视口 **1280×720**（`uiScale=0.8`）时带 `layout-narrow`（`layoutViewport.isNarrowLayoutViewport` / `GameApp` 同步）。三面板根分别接线 manifest **`ui.panel.hero.v1`** / **`ui.panel.bag.v1`** / **`ui.panel.queue.v1`**（`skinHeroPanel` / `skinBagPanel` / `skinQueuePanel`，与 CLIENT-032 军事 `ui.panel.military.v1` 同级 nine-slice）；邮件/日常仍用 `ui.panel.default.v1`。与 **CLIENT-039** 顶栏、**CLIENT-054/055** 纸底字色与 primary 按钮 **并存**。
+
+1. 视口 **1280×720**，`make dev` 进主城：依次打开 **将领**、**背包**、**队列**；面板纸底为 manifest 九宫格（非纯色 `#2a221c` 回退），顶栏 HUD 无叠字。
+2. 将领/背包/队列内长列表（模板、将领行、背包格、建造/募兵队列）在 `layout-narrow` 下于 `.panel-scroll-body` 或列表区 **`overflow-y: auto`** 滚动，底栏 56px 工具条不被面板内容盖住。
+3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；三面板 manifest 与 **CLIENT-054** 纸底表现不退化。
+4. 单测：`layoutViewport.test.ts`（窄屏 class）、`artPanelSkin.test.ts`（三面板 asset id）；`cd client && npm test` 绿。
 
 ### 手动验收（背包与商城反馈，CLIENT-020）
 
