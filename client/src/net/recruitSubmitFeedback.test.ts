@@ -1,10 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   buildRecruitSuccessFeedback,
+  focusRecruitedHeroListRow,
+  HERO_ROW_RECRUITED_PULSE_CLASS,
   RECRUIT_SUBMIT_INFLIGHT_LABEL,
   recruitSubmitButtonDisabled,
   recruitSubmitButtonLabel,
   resolveRecruitSubmitPhase,
+  scheduleHeroRecruitRowPulse,
   syncRecruitSubmitButton,
   walletMaterialDeductPulseKeys,
 } from "@/net/recruitSubmitFeedback";
@@ -30,6 +33,28 @@ describe("resolveRecruitSubmitPhase", () => {
     expect(
       resolveRecruitSubmitPhase({ inflight: false, lastError: null, lastSuccessHeroId: null }),
     ).toBe("idle");
+  });
+
+  it("treats whitespace-only error and non-positive hero id as idle", () => {
+    expect(
+      resolveRecruitSubmitPhase({ inflight: false, lastError: "   ", lastSuccessHeroId: 5 }),
+    ).toBe("success");
+    expect(
+      resolveRecruitSubmitPhase({ inflight: false, lastError: null, lastSuccessHeroId: 0 }),
+    ).toBe("idle");
+    expect(
+      resolveRecruitSubmitPhase({ inflight: false, lastError: null, lastSuccessHeroId: -1 }),
+    ).toBe("idle");
+  });
+
+  it("prefers error over success when both are set while idle", () => {
+    expect(
+      resolveRecruitSubmitPhase({
+        inflight: false,
+        lastError: "道具不足 [10001]",
+        lastSuccessHeroId: 12,
+      }),
+    ).toBe("error");
   });
 });
 
@@ -68,6 +93,26 @@ describe("walletMaterialDeductPulseKeys", () => {
       walletMaterialDeductPulseKeys({ food: 100, wood: 40 }, { food: 50, wood: 25 }, { food: 50, wood: 10 }),
     ).toEqual(["food", "wood"]);
     expect(walletMaterialDeductPulseKeys({ food: 100 }, { food: 100 }, { food: 50 })).toEqual([]);
+  });
+});
+
+describe("hero recruit row pulse", () => {
+  it("scheduleHeroRecruitRowPulse toggles hero-row-recruited-pulse class", () => {
+    const row = document.createElement("li");
+    scheduleHeroRecruitRowPulse(row);
+    expect(row.classList.contains(HERO_ROW_RECRUITED_PULSE_CLASS)).toBe(true);
+  });
+
+  it("focusRecruitedHeroListRow scrolls and pulses matching row", () => {
+    const panel = document.createElement("div");
+    const row = document.createElement("li");
+    row.setAttribute("data-hero-id", "7");
+    const scrolled = vi.fn();
+    row.scrollIntoView = scrolled;
+    panel.appendChild(row);
+    focusRecruitedHeroListRow(panel, 7);
+    expect(scrolled).toHaveBeenCalledWith({ block: "nearest" });
+    expect(row.classList.contains(HERO_ROW_RECRUITED_PULSE_CLASS)).toBe(true);
   });
 });
 
