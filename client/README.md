@@ -249,17 +249,54 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:23 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:23 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-015**（[#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) / [#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 23」。
+波次总览与 **DOCS-EXIT-015**（[#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) / [#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432) `58ec47a2`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 23」。**wave:24** 社交排行与将领执行反馈加深见下文 [Wave 24](#wave-24-h5-社交排行与将领执行反馈加深m4-出口--intg-021)。
 
-## Wave 24 排行将领日常窄屏巩固（M4 出口 / INTG-021）
+## Wave 24 H5 社交排行与将领执行反馈加深（M4 出口 / INTG-021）
 
-在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-021** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**；募兵队列 **加速**；**永不合并** art hold PR #77/#82/#108/#100/#126。
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-021** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**；**永不合并** art hold PR #77/#82/#108/#100/#126 及 VERIFY [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)。
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 排行/将领/日常 manifest** | [手动验收（1280 排行将领日常 CLIENT-103）](#手动验收1280-排行将领日常-client-103)（[#441](https://github.com/anitaguptaoffice/sanguo-slg/issues/441)） | 进行中 |
+| **双榜我的排名钉选与刷新戳记** | [手动验收（社交扫读 CLIENT-030）](#手动验收社交扫读-client-030) 排行第 1 步 **CLIENT-096**（[#434](https://github.com/anitaguptaoffice/sanguo-slg/issues/434) / [#446](https://github.com/anitaguptaoffice/sanguo-slg/pull/446) `4f8821bc`） | 已合 |
+| **排行条目→将领/世界深链** | [手动验收（社交扫读 CLIENT-030）](#手动验收社交扫读-client-030) 排行第 1 步 **CLIENT-097**（[#435](https://github.com/anitaguptaoffice/sanguo-slg/issues/435) / [#454](https://github.com/anitaguptaoffice/sanguo-slg/pull/454) `225ee845`） | 已合 |
+| **将领招募提交执行反馈** | [手动验收（将领招募钱包对比 CLIENT-056）](#手动验收将领招募钱包对比-client-056) + **CLIENT-098**（[#436](https://github.com/anitaguptaoffice/sanguo-slg/issues/436) / [#450](https://github.com/anitaguptaoffice/sanguo-slg/pull/450) `fd5e0128`） | 已合 |
+| **将领列表刷新与详情选中记忆** | [手动验收（将领详情养成对比 CLIENT-072）](#手动验收将领详情养成对比-client-072) + **CLIENT-099**（[#437](https://github.com/anitaguptaoffice/sanguo-slg/issues/437) / [#451](https://github.com/anitaguptaoffice/sanguo-slg/pull/451) `c207b6c9`） | 已合 |
+| **战报攻守摘要与排行/将领互链** | [手动验收（战报详情 CLIENT-034）](#手动验收战报详情回合表与行军深链-client-034) + **CLIENT-100**（[#438](https://github.com/anitaguptaoffice/sanguo-slg/issues/438) / [#453](https://github.com/anitaguptaoffice/sanguo-slg/pull/453) `91ee2474`） | 已合 |
+| **军团成员职务分组** | [手动验收（社交扫读 CLIENT-030）](#手动验收社交扫读-client-030) 军团第 2 步 **CLIENT-101**（[#439](https://github.com/anitaguptaoffice/sanguo-slg/issues/439) / [#448](https://github.com/anitaguptaoffice/sanguo-slg/pull/448) `d68c5f27`） | 已合 |
+| **聊天未读与社交角标** | [手动验收（聊天未读与社交角标 CLIENT-102）](#手动验收聊天未读与社交角标-client-102)（[#440](https://github.com/anitaguptaoffice/sanguo-slg/issues/440) / [#455](https://github.com/anitaguptaoffice/sanguo-slg/pull/455) `da139567`） | 已合 |
+| **1280 排行/将领/日常 manifest** | [手动验收（1280 排行将领日常 CLIENT-103）](#手动验收1280-排行将领日常-client-103)（[#441](https://github.com/anitaguptaoffice/sanguo-slg/issues/441) / [#449](https://github.com/anitaguptaoffice/sanguo-slg/pull/449) `62e13a90`） | 已合 |
+| **网关冒烟**（双榜 my_rank + 军团 role + 可选招募） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 24** / `TestINTG021Wave24SmokePath`（[#442](https://github.com/anitaguptaoffice/sanguo-slg/issues/442) / [#447](https://github.com/anitaguptaoffice/sanguo-slg/pull/447) `9eb18c48`） | 已合 |
 
-**推荐串联**（在 [Wave 23](#wave-23-后勤互链与全链路反馈加深m4-出口--intg-020) 背包商城军团 manifest 基础上）：视口 **1280×720** 双榜 / 将领 / 日常 manifest 与滚动巩固（**CLIENT-103**）；与 **CLIENT-096**～**102** 并行。
+**推荐串联**（在 [Wave 23](#wave-23-后勤互链与全链路反馈加深m4-出口--intg-020) 背包商城军团 manifest 基础上）：**排行** 双榜钉选与刷新戳记（**CLIENT-096**）→ 榜单行 **将领/世界** 深链（**CLIENT-097**）→ **将领** 招募执行反馈（**CLIENT-098**）与列表刷新/选中记忆（**CLIENT-099**）→ **战报** 攻守摘要与排行互链（**CLIENT-100**）→ **军团** 职务分组（**CLIENT-101**）→ **聊天** 未读与底栏角标（**CLIENT-102**）→ 视口 **1280×720** 排行/将领/日常 manifest（**CLIENT-103**）；网关字段见 `tools/smoke/README.md` **INTG-021**。
+
+**wave:19 美术轨旁路**（**非** wave:24 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:24 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-016**（[#443](https://github.com/anitaguptaoffice/sanguo-slg/issues/443)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 24」。
+
+### 手动验收（聊天未读与社交角标 CLIENT-102）
+
+`ListChatMessages` 快照 + 本地 `localStorage` 键 **`chat-last-read-ts`** 估算世界/军团频道未读（无服务端 read cursor）。底栏 **「聊天」** 角标为两频道之和，**「军团」** 角标与聊天面板 **军团** tab、军团面板 **军团频道** 入口同步；打开频道并 **滚到底** 后该频道未读清零。单测：`chatUnread.test.ts`（`estimateChatUnread`）、`chatUnreadPoll.test.ts`；与 **CLIENT-077** 顶栏待办角标并存。
+
+### 手动验收（将领招募执行反馈 CLIENT-098）
+
+在 [CLIENT-056](#手动验收将领招募钱包对比-client-056) 钱包对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
+
+1. 点 **招募**：主按钮 **disabled** 且文案 **提交中…**；成功则状态栏 `formatRecruitSuccessStatus` 摘要，可选 **打开详情**（带新 `hero_id`）；扣费涉及粮木铁石时顶栏 **resource-pulse**（**CLIENT-051**）。
+2. 失败：inline 错误保留模板选中；不扩 recruit pool。单测：`HeroMailPanels.test.ts` / 招募状态机纯函数。
+
+### 手动验收（将领列表刷新与选中记忆 CLIENT-099）
+
+在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比上：
+
+1. **刷新** 将领列表：loading + 成功后 `hero-list-refresh-pulse` 短暂高亮；失败走 **CLIENT-067**。
+2. 关闭再开将领面板：`sessionStorage` **`hero-detail-selected-id`** 恢复上次行并滚入视；与 **CLIENT-098** 成功深链写入一致。
+
+### 手动验收（战报攻守摘要与排行互链 CLIENT-100）
+
+在 [CLIENT-034](#手动验收战报详情回合表与行军深链-client-034) / [CLIENT-083](#手动验收战报上一封下一封与胜负-streak-client-083) / [CLIENT-094](#手动验收战报相邻导航键盘与焦点环-client-094) 基础上：
+
+1. 战报详情顶栏只读 **攻方/守方** 玩家名 + 模板名一行摘要（`formatBattleReportSideSummary`）。
+2. **打开将领** / **打开排行**：己方攻将→将领详情；守方 viewer→详情，否则只读提示；排行按钮打开战力榜并高亮可映射行（**CLIENT-097** 规则）。
 
 ## 网关地址
 
@@ -588,6 +625,8 @@ cd client && npm install && npm run dev
 2. 资源充足时仅展示预览，需玩家点 **确认升级** 才发 RPC。
 3. 窄屏下预览行不横向溢出（与 **CLIENT-086** 一并验收）。单测：`previewUpgradeCost.test.ts`。
 
+**建造提交反馈（CLIENT-104）**：点 **确认升级** 后按钮 **disabled** 且文案 **提交中…**（`buildSubmitFeedback`）；成功顶栏状态 `formatBuildSubmitSuccess(slot_key, targetLevel)`，扣粮木铁石时触发 **CLIENT-051** 资源脉冲；失败在 **build-form-error** 展示 **CLIENT-067** 口径且保留槽位选中与消耗预览。**CLIENT-066** 队列深链不退化。单测：`buildSubmitFeedback.test.ts`。
+
 ### 手动验收（募兵消耗预览 CLIENT-088）
 
 军事/队列募兵区（军事面板募兵表单）在选中兵种与数量时展示 **下一批** 粮/木/铁/石消耗与耗时只读摘要（`previewRecruitCost` + `troopRecruitCatalog`，钱包来自 `GetCityState.resources`）；资源不足时 **募兵** disabled 且 inline **缺少：粮 N …**（**CLIENT-067** 口径）。足够时仅预览，需点 **募兵** 才发 `RecruitTroop`。募兵队列 **加速**仍 out；**CLIENT-082** 建造预览与 **DOM-003** 建造加速符不退化。
@@ -883,7 +922,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
 
-1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。
+1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。**CLIENT-097**：点击榜单行 — 战力榜己方行打开将领详情（`GetHeroDetail`），他人行状态栏提示只读；资源榜有格点字段时打开世界信息卡，否则只读摘要弹层。
 2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行职务 chip + `player_id` 截断与加入时间摘要（CLIENT-101）。
 3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
 4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。

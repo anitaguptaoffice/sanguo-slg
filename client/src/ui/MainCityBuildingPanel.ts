@@ -1,4 +1,9 @@
 import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import {
+  buildSubmitButtonDisabled,
+  buildSubmitButtonLabel,
+  type BuildSubmitState,
+} from "@/net/buildSubmitFeedback";
 import { buildingBySlot } from "@/net/hudFormat";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -14,6 +19,7 @@ export class MainCityBuildingPanel {
     private readonly slotLabels: Record<string, string>,
     private readonly getSession: () => MainCitySession | null,
     private readonly onUpgrade: (slotKey: string, buildingCfgId: number) => void,
+    private readonly getSubmitState: () => BuildSubmitState,
     private readonly reskin?: MainCityBuildingPanelReskin,
   ) {}
 
@@ -28,7 +34,7 @@ export class MainCityBuildingPanel {
         <p class="building-upgrade-preview" data-role="build-preview"></p>
         <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" disabled>
-          升级
+          确认升级
         </button>
       </div>
     `;
@@ -121,8 +127,12 @@ export class MainCityBuildingPanel {
     }
 
     previewEl.textContent = preview.summaryLine;
-    btn.disabled = !preview.canAfford;
-    this.setFormError(preview.insufficientHint);
+    const submitState = this.getSubmitState();
+    btn.disabled = buildSubmitButtonDisabled(submitState, preview.canAfford, false);
+    btn.textContent = buildSubmitButtonLabel(submitState);
+    if (submitState !== "error") {
+      this.setFormError(preview.insufficientHint);
+    }
   }
 
   private onClick(ev: Event): void {
