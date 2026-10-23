@@ -3,7 +3,7 @@
 面向社区运营的三国题材 SLG 网页游戏。全新代码库、全新美术、自研服务端，按分服模式设计。
 
 - 服务端：Go 1.23 + PostgreSQL 17 + Redis 7 + NATS JetStream
-- 客户端：Cocos Creator（H5），WebSocket + Protobuf
+- 客户端：Vite + TypeScript，Canvas 2D / DOM（H5），WebSocket + Protobuf（见 [docs/client-engine.md](docs/client-engine.md)）
 - 部署：单机 docker-compose 起步，按服水平扩展
 
 ## 目标
@@ -65,6 +65,7 @@ GOTOOLCHAIN=go1.23.0 go test ./internal/api -run TestM3SocialSmokePath -count=1 
 | 文档 | 内容 |
 |---|---|
 | `docs/ARCHITECTURE.md` | 系统架构与域划分 |
+| `docs/client-engine.md` | 客户端当前栈、分层与引擎备选 |
 | `docs/ROADMAP.md` | 阶段计划 |
 | `spec/rules/` | 玩法规则 |
 | `spec/proto/` | 通信协议 |

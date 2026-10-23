@@ -3,7 +3,7 @@
 ## 一、总体拓扑
 
 ```
-   H5 客户端 (Cocos)
+   H5 客户端 (Vite + TS, Canvas 2D / DOM)
         │ WebSocket + Protobuf
         ▼
    ┌──────────┐
@@ -81,3 +81,9 @@
 - 结构化日志，`trace_id` 贯穿网关 → 域 → 存储
 - Prometheus 指标：QPS、P99、在线数、队列深度、战斗耗时
 - 本地 Grafana 面板随 `make dev` 起
+
+## 七、H5 客户端
+
+当前阶段采用 **Vite + TypeScript + Canvas 2D / DOM**，渲染层与业务/协议分离；资源与 `spec/proto` 保持引擎无关。PixiJS、Cocos Creator 仅作备选，在样例美术与代表场景性能验收通过前不迁移。
+
+详见 [client-engine.md](client-engine.md)（含当前 vs 备选决策表）。
