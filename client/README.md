@@ -301,17 +301,29 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:25 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:25 backlog 实现卡）。实现卡 **CLIENT-104** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-017**（[#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 25」。
+波次总览与 **DOCS-EXIT-017**（[#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469) / [#483](https://github.com/anitaguptaoffice/sanguo-slg/pull/483) `5752072e`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 25」。**wave:26** 背包商城·招募养成·出征募兵反馈加深见下文 [Wave 26](#wave-26-h5-背包商城招募养成出征募兵反馈加深m4-出口--intg-023)。
 
 ## Wave 26 H5 背包商城·招募养成·出征募兵反馈加深（M4 出口 / INTG-023）
 
-在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-023** 网关冒烟一致，合并后生效）。**范围外**同 Wave 25；**永不合并** art hold / VERIFY Draft。**世界瓦片/图集**仍暂缓。
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-023** 网关冒烟一致）。**范围外**同 Wave 25；**永不合并** art hold / VERIFY Draft（含 [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)）。**世界瓦片/图集**仍暂缓。
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 背包/商城/招募/军事 manifest** | [手动验收（1280 背包商城招募军事 CLIENT-119）](#手动验收1280-背包商城招募军事-client-119)（[#493](https://github.com/anitaguptaoffice/sanguo-slg/issues/493)） | 本 PR |
+| **背包道具使用/批量使用提交脉冲** | [手动验收（背包与商城反馈 CLIENT-020）](#手动验收背包与商城反馈-client-020) 第 6 步 **CLIENT-112**（[#486](https://github.com/anitaguptaoffice/sanguo-slg/issues/486) / [#498](https://github.com/anitaguptaoffice/sanguo-slg/pull/498) `68a687de`） | 已合 |
+| **商城购买提交与钱包扣费脉冲** | [手动验收（背包与商城反馈 CLIENT-020）](#手动验收背包与商城反馈-client-020) 第 5 步 **CLIENT-113**（[#487](https://github.com/anitaguptaoffice/sanguo-slg/issues/487) / [#501](https://github.com/anitaguptaoffice/sanguo-slg/pull/501) `2b0702d4`） | 已合 |
+| **将领招募提交反馈巩固** | [手动验收（将领招募提交反馈巩固 CLIENT-114）](#手动验收将领招募提交反馈巩固-client-114)（[#488](https://github.com/anitaguptaoffice/sanguo-slg/issues/488) / [#497](https://github.com/anitaguptaoffice/sanguo-slg/pull/497) `11a68ff4`） | 已合 |
+| **将领详情养成道具使用执行反馈** | [手动验收（将领详情养成道具使用反馈 CLIENT-115）](#手动验收将领详情养成道具使用反馈-client-115)（[#489](https://github.com/anitaguptaoffice/sanguo-slg/issues/489) / [#504](https://github.com/anitaguptaoffice/sanguo-slg/pull/504) `bfac0925`） | 已合 |
+| **出征提交反馈巩固与新行军 ETA** | [手动验收（出征提交反馈 CLIENT-080）](#手动验收出征提交反馈-client-080) **CLIENT-116**（[#490](https://github.com/anitaguptaoffice/sanguo-slg/issues/490) / [#505](https://github.com/anitaguptaoffice/sanguo-slg/pull/505) `d4ea2d8d`） | 已合 |
+| **募兵提交执行反馈与队列行脉冲** | [手动验收（募兵消耗预览 CLIENT-088）](#手动验收募兵消耗预览-client-088) **CLIENT-117**（[#491](https://github.com/anitaguptaoffice/sanguo-slg/issues/491) / [#500](https://github.com/anitaguptaoffice/sanguo-slg/pull/500) `314a6396`） | 已合 |
+| **ART-TOOLBAR-ICONS-007 底栏四态运行时接线** | [ART-TOOLBAR-ICONS-007 运行时 UX（CLIENT-118）](#art-toolbar-icons-007-运行时-uxclient-118)（[#492](https://github.com/anitaguptaoffice/sanguo-slg/issues/492) / [#503](https://github.com/anitaguptaoffice/sanguo-slg/pull/503) `cabe8f0a`） | 已合 |
+| **1280 背包/商城/招募/军事 manifest** | [手动验收（1280 背包商城招募军事 CLIENT-119）](#手动验收1280-背包商城招募军事-client-119)（[#493](https://github.com/anitaguptaoffice/sanguo-slg/issues/493) / [#502](https://github.com/anitaguptaoffice/sanguo-slg/pull/502) `a36c1ae6`） | 已合 |
+| **网关冒烟**（背包堆叠 + 商城扣费 + 将领详情 + 募兵 + 行军 phase） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 26** / `TestINTG023Wave26SmokePath`（[#494](https://github.com/anitaguptaoffice/sanguo-slg/issues/494) / [#499](https://github.com/anitaguptaoffice/sanguo-slg/pull/499) `92a96489`） | 已合 |
 
-**推荐串联**（在 [Wave 25](#wave-25-h5-主城队列邮件日常世界读图加深m4-出口--intg-022) 主城/邮件/队列 manifest 基础上）：视口 **1280×720** 背包/商城/将领招募/军事出征 manifest 与滚动巩固（**CLIENT-119**）；与 **CLIENT-112**～**118** 并行。
+**推荐串联**（在 [Wave 25](#wave-25-h5-主城队列邮件日常世界读图加深m4-出口--intg-022) 主城/邮件/队列 manifest 基础上）：**背包** 使用/批量提交脉冲（**CLIENT-112**）→ **商城** 购买提交与扣费脉冲（**CLIENT-113**）→ **将领** 招募提交巩固（**CLIENT-114**）与详情养成道具使用（**CLIENT-115**）→ **军事** 出征提交巩固（**CLIENT-116**）与募兵提交脉冲（**CLIENT-117**）→ 底栏 **ART-TOOLBAR-ICONS-007** 四态图标（**CLIENT-118**）→ 视口 **1280×720** 背包/商城/招募/军事 manifest（**CLIENT-119**）；网关字段见 `tools/smoke/README.md` **INTG-023**。
+
+**wave:19 美术轨旁路**（**非** wave:26 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:26 backlog 实现卡）。实现卡 **CLIENT-112** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-018**（[#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) / [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 26」。
 
 ### 手动验收（聊天未读与社交角标 CLIENT-102）
 
