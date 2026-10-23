@@ -400,20 +400,20 @@ H5 人工验收与 **INTG-021** 网关冒烟对齐，见 [client/README.md](../c
 
 ## Wave 25 H5 主城队列·邮件日常·世界读图加深 — **规划中**
 
-**策略**：在 wave:24 **双榜钉选 / 排行将领深链 / 招募执行反馈 / 将领记忆 / 战报攻守互链 / 军团职务 / 聊天未读角标 / 1280 排行将领日常 manifest** 之上，轮转加深 **主城建造提交与队列行互跳反馈**、**邮件未读/未领附件与 HUD 待办角标一致**、**世界格点只读信息卡**、**军情列表与战报胜负筛选记忆**、**ART-CHROME-006 选服/HUD chrome 运行时小 UX**（#452/#456 已接线，不合并 #444/#108）与 **1280 主城/邮件/队列 manifest**；网关 **INTG-022** 复跑 smoke（`GetCityState` 建造 `upgrade_finish_at_ms` + `ListPlayerMail` 未读 + 日常可领计数 + `ListPlayerCities` 格点）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量。波次 backlog 规划（本 PR，合入后 `tasks_sync` 建 Issue）。
+**策略**：在 wave:24 **双榜钉选 / 排行将领深链 / 招募执行反馈 / 将领记忆 / 战报攻守互链 / 军团职务 / 聊天未读角标 / 1280 排行将领日常 manifest** 之上，轮转加深 **主城建造提交与队列行互跳反馈**、**邮件未读/未领附件与 HUD 待办角标一致**、**世界格点只读信息卡**、**军情列表与战报胜负筛选记忆**、**ART-CHROME-006 选服/HUD chrome 运行时小 UX**（#452/#456 已接线，不合并 #444/#108）与 **1280 主城/邮件/队列 manifest**；网关 **INTG-022** 复跑 smoke（`GetCityState` 建造 `upgrade_finish_at_ms` + `ListPlayerMail` 未读 + 日常可领计数 + `ListPlayerCities` 格点）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量。波次 backlog 规划 [#458](https://github.com/anitaguptaoffice/sanguo-slg/pull/458)（`7a6189ba`）；Issue 映射随 `tasks_sync`（#460–#469）。
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| — | CLIENT-104 | 待 sync | — |
-| — | CLIENT-105 | 待 sync | — |
-| — | CLIENT-106 | 待 sync | — |
-| — | CLIENT-107 | 待 sync | — |
-| — | CLIENT-108 | 待 sync | — |
-| — | CLIENT-109 | 待 sync | — |
-| — | CLIENT-110 | 待 sync | — |
-| — | CLIENT-111 | 待 sync | — |
-| — | INTG-022 | 待 sync | — |
-| — | DOCS-EXIT-017 | 待 sync | — |
+| [#460](https://github.com/anitaguptaoffice/sanguo-slg/issues/460) | CLIENT-104 | 规划中 | — |
+| [#461](https://github.com/anitaguptaoffice/sanguo-slg/issues/461) | CLIENT-105 | 规划中 | — |
+| [#462](https://github.com/anitaguptaoffice/sanguo-slg/issues/462) | CLIENT-106 | 规划中 | — |
+| [#463](https://github.com/anitaguptaoffice/sanguo-slg/issues/463) | CLIENT-107 | 规划中 | — |
+| [#464](https://github.com/anitaguptaoffice/sanguo-slg/issues/464) | CLIENT-108 | 规划中 | — |
+| [#465](https://github.com/anitaguptaoffice/sanguo-slg/issues/465) | CLIENT-109 | 规划中 | — |
+| [#466](https://github.com/anitaguptaoffice/sanguo-slg/issues/466) | CLIENT-110 | 规划中 | — |
+| [#467](https://github.com/anitaguptaoffice/sanguo-slg/issues/467) | CLIENT-111 | 规划中 | — |
+| [#468](https://github.com/anitaguptaoffice/sanguo-slg/issues/468) | INTG-022 | 规划中 | — |
+| [#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469) | DOCS-EXIT-017 | 待依赖 | — |
 
 H5 人工验收与 **INTG-022** 网关冒烟对齐（合入实现后更新 [client/README.md](../client/README.md)）：**主城建造提交与队列互跳 + 邮件未读附件角标 + HUD 待办一致 + 世界信息卡加深 + 军情战报筛选记忆 + ART-CHROME-006 运行时 UX + 1280 主城邮件队列 manifest**。
 
