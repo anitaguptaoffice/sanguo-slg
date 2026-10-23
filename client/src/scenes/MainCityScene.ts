@@ -455,7 +455,7 @@ export class MainCityScene implements Scene {
     building?: CityBuilding,
   ): void {
     const assetId = slot.asset_id ?? `mc.building.${slot.slot_key}.v1`;
-    const pack = slot.asset_id ? this.assets.getImageForAsset(assetId) : undefined;
+    const pack = this.assets.getImageForAsset(assetId);
     const { display, ground_anchor: ga } = slot;
     if (pack) {
       const anchor = pack.meta.anchor;
