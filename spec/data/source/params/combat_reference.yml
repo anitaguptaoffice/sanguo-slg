@@ -1,0 +1,11 @@
+# RULES-ALIGN-001：战斗抽样（legacy PK 线 vs M1 池化战斗）
+# Legacy 出处：PKFunc::PKDamage($attackValue, $defenceValue)
+
+legacy_pk_sample:
+  defence_denominator_offset: 2000
+  formula: "damage = floor(attack * (1 - defence / (defence + offset)))"
+
+m1_pool_combat:
+  doc: spec/rules/combat.md
+  params: spec/rules/params.yml
+  note: "M1 使用兵种池化回合制，不用 PKDamage 单点公式；对齐仅记录参照与决策。"

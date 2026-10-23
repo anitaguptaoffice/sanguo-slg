@@ -46,6 +46,16 @@
 
 调参：改 `params.yml` 或 `source/*.yml` 后重跑生成器。
 
+## Wave 7 规则对齐（`source/params/`）
+
+| 文件 | 用途 |
+|------|------|
+| `params/march.yml` | 行军 legacy `GRID_DISTANCE` 与 M1 Chebyshev 校准 |
+| `params/combat_reference.yml` | PK 线伤害样本（M1 池化战斗不改） |
+| `params/domestic_production.yml` | 产出公式对照 `domestic.md` |
+
+详见 `spec/rules/legacy_alignment.md`。
+
 ## M4 配置源（SPEC-006，手工/后续管线）
 
 | 源文件 | 目标 DDL | 说明 |

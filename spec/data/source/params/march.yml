@@ -1,0 +1,12 @@
+# RULES-ALIGN-001：行军时间参照系数（legacy 对照 + M1 实现）
+# Legacy 出处：GroundFunc::StartTroop — pathNeedTime = pathLength * GRID_DISTANCE / minSpeed
+# 常量：common.php define('GRID_DISTANCE', 6000)
+
+legacy_reference:
+  grid_distance: 6000
+  distance_metric: euclidean   # sqrt((dx)^2 + (dy)^2)
+  speed_rule: min_troop_speed  # 军队中最慢 cfg_soldier.speed（含科技/将领加成，wave7 不实现）
+
+m1_implementation:
+  distance_metric: chebyshev   # max(|dx|, |dy|)，见 internal/military/march/duration.go
+  sec_per_cell_at_speed_50: 72 # 校准：1 格、速度 50、距离度量 Chebyshev
