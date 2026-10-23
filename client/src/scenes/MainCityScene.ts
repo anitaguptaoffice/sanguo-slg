@@ -19,7 +19,9 @@ import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { QueuePanels } from "@/ui/QueuePanels";
 import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
+import { recruitEntryFromResponse } from "@/net/queueState";
 import {
   formatMarchHint,
   formatTimeMs,
@@ -70,6 +72,7 @@ export class MainCityScene implements Scene {
   private marchList!: MarchListPanel;
   private dailyQuest!: DailyQuestPanels;
   private world!: WorldPanels;
+  private queuePanels!: QueuePanels;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -115,6 +118,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-hero">将领</button>
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn">邮件</button>
       <button type="button" data-action="toggle-world">世界</button>
+      <button type="button" data-action="toggle-queue">队列</button>
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
@@ -223,6 +227,21 @@ export class MainCityScene implements Scene {
       },
     );
     this.world.attach();
+    this.queuePanels = new QueuePanels(
+      parent,
+      this.gateway,
+      () => this.session,
+      SLOT_LABEL,
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+      () => {
+        this.renderHud();
+      },
+      () => this.syncMilitaryPanel(),
+    );
+    this.queuePanels.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
@@ -234,6 +253,9 @@ export class MainCityScene implements Scene {
   update(dt: number): void {
     if (!this.session) return;
     this.cityStatePoll?.tick(dt);
+    if (this.queuePanels?.isOpen()) {
+      this.queuePanels.tick(dt);
+    }
     if (hasActiveBuildingUpgrade(this.session.buildings)) {
       this.hudRefreshAccum += dt;
       if (this.hudRefreshAccum >= 1) {
@@ -259,6 +281,7 @@ export class MainCityScene implements Scene {
     this.marchList?.detach();
     this.dailyQuest?.detach();
     this.world?.detach();
+    this.queuePanels?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -285,6 +308,7 @@ export class MainCityScene implements Scene {
     if (action === "toggle-hero") this.heroMail.toggleHero();
     if (action === "toggle-mail") this.heroMail.toggleMail();
     if (action === "toggle-world") this.world.toggle();
+    if (action === "toggle-queue") this.queuePanels.toggle();
   }
 
   private onMilitaryClick(ev: Event): void {
@@ -461,9 +485,11 @@ export class MainCityScene implements Scene {
       if (res.troop) {
         this.session.cityTroops = mergeCityTroops(this.session.cityTroops, [res.troop]);
       }
+      const queued = recruitEntryFromResponse(res, unitCfgId, count);
+      this.queuePanels.addRecruitEntry(queued);
       const finish = res.finish_at_ms ? formatTimeMs(res.finish_at_ms) : "已完成";
       this.status = res.queue_id
-        ? `募兵排队 #${res.queue_id}，预计 ${finish}`
+        ? `募兵排队 #${res.queue_id}，预计 ${finish}（见「队列」面板）`
         : `募兵完成，${unitLabel(unitCfgId)} 当前 ${res.troop?.count ?? "?"}`;
     } catch (e) {
       this.status = (e as Error).message;
