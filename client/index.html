@@ -127,6 +127,13 @@
         margin: 6px 6px 0 0; padding: 8px 12px; border: 1px solid #5c4a32; border-radius: 6px;
         background: #3d3028; color: #f5e6c8; cursor: pointer;
       }
+      .social-panel button:disabled {
+        opacity: 0.55; cursor: not-allowed;
+      }
+      .social-refresh-status {
+        margin: 6px 0 0; font-size: 12px; color: #b8a88a;
+      }
+      .social-refresh-status.social-refresh-error { color: #e8a0a0; }
       .social-panel.hidden, .content-panel.hidden { display: none; }
       .content-panel {
         position: absolute; left: 50%; transform: translateX(-50%);
