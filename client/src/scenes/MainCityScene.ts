@@ -586,7 +586,9 @@ export class MainCityScene implements Scene {
     if (building) {
       c2d.fillStyle = "#f5e6c8";
       c2d.font = "13px system-ui";
-      c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
+      if (!KEY_BUILDING_SLOTS.has(slot.slot_key)) {
+        c2d.fillText(caption.levelLine, display.x + 8, display.y + display.h - 12);
+      }
       if (caption.upgradeLine) {
         c2d.fillStyle = "#f0c674";
         c2d.font = "12px system-ui";
