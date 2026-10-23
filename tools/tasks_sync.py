@@ -4,6 +4,7 @@
 用法：
     python3 tools/tasks_sync.py            # 同步（幂等）
     python3 tools/tasks_sync.py --dry-run  # 只看会做什么
+    python3 tools/tasks_sync.py --wave=18  # 仅同步指定波次
 
 依赖：gh（已登录）、PyYAML
 """
@@ -15,7 +16,7 @@ import yaml
 
 LABELS = {
     "domain": ["spec", "platform", "account", "world", "domestic", "military", "hero", "content", "client", "tools"],
-    "wave": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+    "wave": [str(i) for i in range(1, 19)],
     "size": ["S", "M", "L"],
 }
 STATUS = ["status:ready", "status:blocked", "status:in-progress", "status:review", "status:done"]
@@ -82,8 +83,16 @@ def labels_for(card):
     ]
 
 
+def wave_filter():
+    for arg in sys.argv[1:]:
+        if arg.startswith("--wave="):
+            return int(arg.split("=", 1)[1])
+    return None
+
+
 def main():
     dry = "--dry-run" in sys.argv
+    only_wave = wave_filter()
     cards = yaml.safe_load(open("tasks/backlog.yml"))
     if not dry:
         ensure_labels()
@@ -91,6 +100,8 @@ def main():
     created = updated = 0
 
     for card in cards:
+        if only_wave is not None and card.get("wave") != only_wave:
+            continue
         title = f"[{card['id']}] {card['title']}"
         body = render_body(card)
         labels = labels_for(card)
