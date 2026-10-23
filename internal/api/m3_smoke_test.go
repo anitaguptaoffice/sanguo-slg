@@ -167,4 +167,35 @@ func TestM3SocialSmokePath(t *testing.T) {
 	if rankOut.GetMyRank() == 0 || rankOut.GetTotalCount() < 1 {
 		fail("get_leaderboard", fmt.Errorf("not on board my_rank=%d total=%d", rankOut.GetMyRank(), rankOut.GetTotalCount()))
 	}
+
+	_, err = pool.Exec(ctx, `
+		UPDATE player_wallet SET food = 5000, wood = 5000, iron = 0, stone = 0, gold = 0
+		WHERE server_id = $1 AND player_id = $2`, serverID, playerID)
+	if err != nil {
+		fail("set_player_wallet", err)
+	}
+	if err := apiSrv.RefreshRanks(ctx); err != nil {
+		fail("refresh_ranks_resource", err)
+	}
+	resResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route:     api.RouteGetLeaderboard,
+		TraceId:   "m3-rank-resource",
+		SessionId: sid,
+		ServerId:  serverID,
+		Payload: mustMarshal(&rankv1.GetLeaderboardRequest{
+			ServerId: serverID,
+			Type:     rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_RESOURCE,
+			Page:     1,
+		}),
+	})
+	if resResp.Code != 0 {
+		fail("get_resource_leaderboard", fmt.Errorf("code=%d msg=%s", resResp.Code, resResp.Msg))
+	}
+	var resOut rankv1.GetLeaderboardResponse
+	if err := proto.Unmarshal(resResp.Data, &resOut); err != nil {
+		fail("get_resource_leaderboard_unmarshal", err)
+	}
+	if resOut.GetMyRank() == 0 || resOut.GetTotalCount() < 1 {
+		fail("get_resource_leaderboard", fmt.Errorf("not on board my_rank=%d total=%d", resOut.GetMyRank(), resOut.GetTotalCount()))
+	}
 }

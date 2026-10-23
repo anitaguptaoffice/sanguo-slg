@@ -7,6 +7,7 @@ import (
 )
 
 // Scheduler periodically refreshes configured leaderboard types per server_id.
+// Production wiring uses DefaultRefreshInterval (5m); each Tick refreshes every configured (server_id, RankType) pair.
 type Scheduler struct {
 	svc      *Service
 	interval time.Duration
