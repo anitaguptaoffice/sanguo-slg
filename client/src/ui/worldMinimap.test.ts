@@ -4,12 +4,15 @@ import {
   MINIMAP_COLLAPSED_SESSION_KEY,
   MINIMAP_LAYOUT_RECT,
   applyMinimapPan,
+  clampWorldMapCoord,
   collectMinimapDestMarkers,
   computeMinimapScaleBar,
   computeMinimapWorldBounds,
   findFirstMarchByDest,
   findMarchIdForMinimapDestClick,
   layoutPointInMinimap,
+  minimapLayoutToWorld,
+  WORLD_MAP_EDGE,
   layoutPointInMinimapMap,
   layoutPointInMinimapToggle,
   marchSelectionMatchesListRow,
@@ -42,6 +45,16 @@ describe("worldMinimap", () => {
     expect(layoutPointInMinimap(p.x, p.y)).toBe(true);
     expect(p.x).toBeGreaterThan(MINIMAP_LAYOUT_RECT.x);
     expect(p.y).toBeGreaterThan(MINIMAP_LAYOUT_RECT.y);
+  });
+
+  it("round-trips world ↔ layout and clamps to map edge", () => {
+    const bounds = computeMinimapWorldBounds(5, 5, marches, null);
+    const p = worldToMinimapLayout(10, 20, bounds, MINIMAP_LAYOUT_RECT, DEFAULT_MINIMAP_VIEW);
+    const back = minimapLayoutToWorld(p.x, p.y, bounds, MINIMAP_LAYOUT_RECT, DEFAULT_MINIMAP_VIEW);
+    expect(back).toEqual({ wx: 10, wy: 20 });
+    expect(clampWorldMapCoord(-3)).toBe(0);
+    expect(clampWorldMapCoord(999)).toBe(WORLD_MAP_EDGE - 1);
+    expect(minimapLayoutToWorld(0, 0, bounds, MINIMAP_LAYOUT_RECT, DEFAULT_MINIMAP_VIEW)).toBeNull();
   });
 
   it("finds first march by dest for list linkage", () => {

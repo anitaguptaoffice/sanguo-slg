@@ -117,6 +117,33 @@ function boundsSpan(b: WorldBounds): { w: number; h: number } {
   return { w: Math.max(1, b.maxX - b.minX + 1), h: Math.max(1, b.maxY - b.minY + 1) };
 }
 
+/** 将世界格点坐标限制在 0..WORLD_MAP_EDGE-1。 */
+export function clampWorldMapCoord(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(WORLD_MAP_EDGE - 1, Math.max(0, Math.round(value)));
+}
+
+/** 小地图 layout → 世界格点（含 zoom/pan）；点在 rect 外返回 null。 */
+export function minimapLayoutToWorld(
+  layoutX: number,
+  layoutY: number,
+  bounds: WorldBounds,
+  rect: MinimapLayoutRect,
+  view: MinimapView,
+): { wx: number; wy: number } | null {
+  if (!layoutPointInMinimap(layoutX, layoutY, rect)) return null;
+  const span = boundsSpan(bounds);
+  const cx = (bounds.minX + bounds.maxX) / 2 + view.panWx;
+  const cy = (bounds.minY + bounds.maxY) / 2 + view.panWy;
+  const halfW = span.w / view.zoom / 2;
+  const halfH = span.h / view.zoom / 2;
+  const nx = (layoutX - rect.x) / rect.w;
+  const ny = 1 - (layoutY - rect.y) / rect.h;
+  const wx = nx * halfW * 2 + (cx - halfW);
+  const wy = ny * halfH * 2 + (cy - halfH);
+  return { wx: clampWorldMapCoord(wx), wy: clampWorldMapCoord(wy) };
+}
+
 /** 世界格点 → 小地图 layout 坐标（含 zoom/pan）。 */
 export function worldToMinimapLayout(
   wx: number,

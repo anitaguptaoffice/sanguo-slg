@@ -42,14 +42,17 @@ import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
+import { applyMarchTargetToForm } from "@/net/worldFormat";
 import {
   DEFAULT_MINIMAP_VIEW,
+  MINIMAP_LAYOUT_RECT,
   applyMinimapPan,
   applyMinimapWheelZoom,
   computeMinimapWorldBounds,
   findMarchIdForMinimapDestClick,
   layoutPointInMinimapMap,
   layoutPointInMinimapToggle,
+  minimapLayoutToWorld,
   readMinimapCollapsedFromSession,
   writeMinimapCollapsedToSession,
   type MinimapView,
@@ -76,6 +79,8 @@ const DEFAULT_MARCH_TARGET = { x: 5, y: 5 };
 const PURPOSE_ATTACK = 1;
 const WALLET_GAIN_FLASH_MS = 2800;
 const MINIMAP_MARCH_REFRESH_S = 5;
+/** 小地图单击与拖拽区分阈值（layout px）。 */
+const MINIMAP_TAP_MOVE_THRESHOLD = 8;
 
 export class MainCityScene implements Scene {
   readonly name = "mainCity";
@@ -114,6 +119,7 @@ export class MainCityScene implements Scene {
   private minimapMarchRefreshAccum = 0;
   private minimapPanPointerId: number | null = null;
   private minimapPanLastLayout: { x: number; y: number } | null = null;
+  private minimapPanStartLayout: { x: number; y: number } | null = null;
   private minimapCollapsed = readMinimapCollapsedFromSession();
   private readonly onCanvasPointerBound = (ev: PointerEvent) => this.onCanvasPointer(ev);
   private readonly onCanvasWheelBound = (ev: WheelEvent) => this.onCanvasWheel(ev);
@@ -565,8 +571,20 @@ export class MainCityScene implements Scene {
 
     if (ev.type === "pointerup" || ev.type === "pointercancel") {
       if (this.minimapPanPointerId === ev.pointerId) {
+        const start = this.minimapPanStartLayout;
+        if (
+          start &&
+          layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)
+        ) {
+          const dx = layout.x - start.x;
+          const dy = layout.y - start.y;
+          if (dx * dx + dy * dy <= MINIMAP_TAP_MOVE_THRESHOLD * MINIMAP_TAP_MOVE_THRESHOLD) {
+            this.applyMinimapMarchTargetPick(layout.x, layout.y);
+          }
+        }
         this.minimapPanPointerId = null;
         this.minimapPanLastLayout = null;
+        this.minimapPanStartLayout = null;
       }
       return;
     }
@@ -598,6 +616,7 @@ export class MainCityScene implements Scene {
       }
       this.minimapPanPointerId = ev.pointerId;
       this.minimapPanLastLayout = layout;
+      this.minimapPanStartLayout = layout;
       try {
         this.canvas.setPointerCapture(ev.pointerId);
       } catch {
@@ -621,6 +640,28 @@ export class MainCityScene implements Scene {
 
   private pointInRect(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): boolean {
     return p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h;
+  }
+
+  private applyMinimapMarchTargetPick(layoutX: number, layoutY: number): void {
+    const bounds = computeMinimapWorldBounds(
+      this.session?.cityX,
+      this.session?.cityY,
+      this.minimapMarches,
+      this.marchList?.getSelectedMarch(),
+    );
+    const world = minimapLayoutToWorld(
+      layoutX,
+      layoutY,
+      bounds,
+      MINIMAP_LAYOUT_RECT,
+      this.minimapView,
+    );
+    if (!world) return;
+    if (!applyMarchTargetToForm(this.militaryPanel, world.wx, world.wy)) return;
+    this.militaryPanel.classList.remove("hidden");
+    this.status = `已选出征目标 (${world.wx},${world.wy})`;
+    this.renderHud();
+    this.syncMilitaryPanel();
   }
 
   private async refreshMinimapMarches(): Promise<void> {
