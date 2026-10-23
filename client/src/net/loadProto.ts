@@ -64,6 +64,7 @@ export const Routes = {
   ListPlayerHeroes: "hero.v1.ListPlayerHeroes",
   GetHeroDetail: "hero.v1.GetHeroDetail",
   RecruitHero: "hero.v1.RecruitHero",
+  ListRecruitTemplates: "hero.v1.ListRecruitTemplates",
 } as const;
 
 export const ErrorCode = {
@@ -138,6 +139,8 @@ export type ProtoTypes = {
   GetHeroDetailResponse: protobuf.Type;
   RecruitHeroRequest: protobuf.Type;
   RecruitHeroResponse: protobuf.Type;
+  ListRecruitTemplatesRequest: protobuf.Type;
+  ListRecruitTemplatesResponse: protobuf.Type;
 };
 
 export function getTypes(): ProtoTypes {
@@ -209,5 +212,7 @@ export function getTypes(): ProtoTypes {
     GetHeroDetailResponse: r.lookupType("sanguo.hero.v1.GetHeroDetailResponse"),
     RecruitHeroRequest: r.lookupType("sanguo.hero.v1.RecruitHeroRequest"),
     RecruitHeroResponse: r.lookupType("sanguo.hero.v1.RecruitHeroResponse"),
+    ListRecruitTemplatesRequest: r.lookupType("sanguo.hero.v1.ListRecruitTemplatesRequest"),
+    ListRecruitTemplatesResponse: r.lookupType("sanguo.hero.v1.ListRecruitTemplatesResponse"),
   };
 }

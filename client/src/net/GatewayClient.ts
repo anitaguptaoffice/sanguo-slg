@@ -76,6 +76,10 @@ export type GatewayPort = {
     templateCfgId: number,
     opts?: { itemCfgId?: number; pool?: string },
   ): Promise<unknown>;
+  listRecruitTemplates(
+    serverId: number,
+    opts?: { pool?: string; pageSize?: number; pageOffset?: number },
+  ): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
@@ -516,6 +520,25 @@ export class GatewayClient implements GatewayPort {
         pool: opts.pool ?? "",
       },
       RecruitHeroResponse,
+      true,
+    );
+  }
+
+  async listRecruitTemplates(
+    serverId: number,
+    opts: { pool?: string; pageSize?: number; pageOffset?: number } = {},
+  ) {
+    const { ListRecruitTemplatesResponse } = getTypes();
+    return this.rpc(
+      Routes.ListRecruitTemplates,
+      "ListRecruitTemplatesRequest",
+      {
+        server_id: serverId,
+        pool: opts.pool ?? "",
+        page_size: opts.pageSize ?? 50,
+        page_offset: opts.pageOffset ?? 0,
+      },
+      ListRecruitTemplatesResponse,
       true,
     );
   }

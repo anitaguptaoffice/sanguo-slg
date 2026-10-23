@@ -163,7 +163,7 @@ export class ContentPanels {
     const bag = this.getSession()?.bag ?? [];
     for (const row of bag) {
       const li = document.createElement("li");
-      li.textContent = `${itemLabel(row.item_cfg_id)} × ${row.quantity}`;
+      li.textContent = `${row.item_cfg_id} ${itemLabel(row.item_cfg_id)} × ${row.quantity}`;
       ul.appendChild(li);
     }
     if (!bag.length) {
@@ -182,10 +182,16 @@ export class ContentPanels {
     for (const o of this.shopOffers) {
       const li = document.createElement("li");
       const price = formatWalletPrice(o.price_resources ?? {});
+      const limitHint =
+        o.purchase_limit != null
+          ? ` · 限购 ${o.purchased_count ?? 0}/${o.purchase_limit}`
+          : o.purchased_count != null && o.purchased_count > 0
+            ? ` · 已购 ${o.purchased_count}`
+            : "";
       li.textContent =
         `#${o.offer_id} ${o.shelf_name ?? ""} → ${itemLabel(o.item_cfg_id)}×${o.quantity_per_purchase ?? 1} · ${price}` +
         (o.sold_out ? " · 售罄" : "") +
-        (o.purchase_limit ? ` · 限购 ${o.purchased_count ?? 0}/${o.purchase_limit}` : "");
+        limitHint;
       ul.appendChild(li);
       const opt = document.createElement("option");
       opt.value = String(o.offer_id ?? 0);
