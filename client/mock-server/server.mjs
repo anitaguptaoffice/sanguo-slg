@@ -311,13 +311,21 @@ wss.on("connection", (ws) => {
       }
 
       if (route === "rank.v1.GetLeaderboard") {
+        const req = T("sanguo.rank.v1.GetLeaderboardRequest").decode(cp.payload);
+        const lbType = req.type ?? 1;
+        const powerEntries = state.rankEntries;
+        const resourceEntries = [
+          { rank: 1, entity_id: 10003, display_name: "富贾", score: 25000 },
+          { rank: 2, entity_id: 10001, display_name: "演示君主", score: 19800 },
+        ];
+        const entries = lbType === 2 ? resourceEntries : powerEntries;
         replyOk(ws, cp.trace_id, T("sanguo.rank.v1.GetLeaderboardResponse"), {
-          type: 1,
-          entries: state.rankEntries,
-          total_count: state.rankEntries.length,
-          my_rank: 1,
-          my_score: 12800,
-          snapshot_version: 1,
+          type: lbType,
+          entries,
+          total_count: entries.length,
+          my_rank: lbType === 2 ? 0 : 1,
+          my_score: lbType === 2 ? 12000 : 12800,
+          snapshot_version: lbType === 2 ? 4 : 2,
           snapshot_refreshed_at_ms: Date.now(),
         });
         return;
