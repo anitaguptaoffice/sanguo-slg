@@ -1,17 +1,30 @@
 import { GATEWAY_WS_URL } from "@/config";
-import { getTypes } from "@/net/loadProto";
-
-export type GatewayPort = {
-  connect(handlers?: GatewayHandlers): Promise<void>;
-  login(loginName: string, password: string, serverId: number): Promise<unknown>;
-  getSessionId(): string;
-  close(): void;
-};
+import { getTypes, Routes } from "@/net/loadProto";
+import type protobuf from "protobufjs";
 
 export type GatewayHandlers = {
   onOpen?: () => void;
   onClose?: () => void;
   onError?: (err: Event) => void;
+};
+
+type ServerPacketShape = {
+  code: number;
+  msg?: string;
+  data: Uint8Array;
+  trace_id?: string;
+};
+
+export type GatewayPort = {
+  connect(handlers?: GatewayHandlers): Promise<void>;
+  register(loginName: string, password: string): Promise<unknown>;
+  login(loginName: string, password: string, serverId: number): Promise<unknown>;
+  listPlayerCities(): Promise<unknown>;
+  createCity(serverId: number, name: string, x: number, y: number): Promise<unknown>;
+  getCityState(cityId: number): Promise<unknown>;
+  startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number): Promise<unknown>;
+  getSessionId(): string;
+  close(): void;
 };
 
 export class GatewayClient implements GatewayPort {
@@ -40,32 +53,84 @@ export class GatewayClient implements GatewayPort {
     return this.sessionId;
   }
 
+  async register(loginName: string, password: string) {
+    const { RegisterResponse } = getTypes();
+    return this.rpc(Routes.Register, "RegisterRequest", { login_name: loginName, password }, RegisterResponse, false);
+  }
+
   async login(loginName: string, password: string, serverId: number) {
-    const { ClientPacket, ServerPacket, LoginRequest, LoginResponse } = getTypes();
+    const { LoginResponse } = getTypes();
+    const data = (await this.rpc(
+      Routes.Login,
+      "LoginRequest",
+      { login_name: loginName, password, server_id: serverId },
+      LoginResponse,
+      false,
+    )) as { session_id: string };
+    this.sessionId = data.session_id;
+    return data;
+  }
+
+  async listPlayerCities() {
+    const { ListPlayerCitiesResponse } = getTypes();
+    return this.rpc(Routes.ListPlayerCities, "ListPlayerCitiesRequest", {}, ListPlayerCitiesResponse, true);
+  }
+
+  async createCity(serverId: number, name: string, x: number, y: number) {
+    const { CreateCityResponse } = getTypes();
+    return this.rpc(
+      Routes.CreateCity,
+      "CreateCityRequest",
+      { server_id: serverId, name, x, y },
+      CreateCityResponse,
+      true,
+    );
+  }
+
+  async getCityState(cityId: number) {
+    const { GetCityStateResponse } = getTypes();
+    return this.rpc(Routes.GetCityState, "GetCityStateRequest", { city_id: cityId }, GetCityStateResponse, true);
+  }
+
+  async startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number) {
+    const { StartBuildingUpgradeResponse } = getTypes();
+    return this.rpc(
+      Routes.StartBuildingUpgrade,
+      "StartBuildingUpgradeRequest",
+      { city_id: cityId, slot_key: slotKey, building_cfg_id: buildingCfgId },
+      StartBuildingUpgradeResponse,
+      true,
+    );
+  }
+
+  private async rpc(
+    route: string,
+    requestTypeName: keyof ReturnType<typeof getTypes>,
+    fields: Record<string, unknown>,
+    responseType: protobuf.Type,
+    withSession: boolean,
+  ): Promise<unknown> {
+    const types = getTypes();
+    const RequestType = types[requestTypeName] as protobuf.Type;
+    const { ClientPacket, ServerPacket } = types;
     const traceId = crypto.randomUUID();
-    const payload = LoginRequest.encode(
-      LoginRequest.create({ login_name: loginName, password, server_id: serverId }),
-    ).finish();
+    const payload = RequestType.encode(RequestType.create(fields)).finish();
     const packet = ClientPacket.encode(
       ClientPacket.create({
-        route: "account.v1.Login",
+        route,
         payload,
         trace_id: traceId,
-        session_id: "",
+        session_id: withSession ? this.sessionId : "",
       }),
     ).finish();
     const reply = await this.sendAndWait(packet, traceId);
-    const sp = ServerPacket.decode(new Uint8Array(reply)) as unknown as {
-      code: number;
-      msg?: string;
-      data: Uint8Array;
-    };
+    const sp = ServerPacket.decode(new Uint8Array(reply)) as unknown as ServerPacketShape;
     if (sp.code !== 0) {
-      throw new Error(sp.msg || `login failed code=${sp.code}`);
+      const err = new Error(sp.msg || `gateway error code=${sp.code}`);
+      (err as Error & { code: number }).code = sp.code;
+      throw err;
     }
-    const data = LoginResponse.decode(sp.data) as unknown as { session_id: string };
-    this.sessionId = data.session_id;
-    return LoginResponse.decode(sp.data);
+    return responseType.decode(sp.data);
   }
 
   private sendAndWait(packet: Uint8Array, traceId: string): Promise<ArrayBuffer> {
@@ -74,7 +139,7 @@ export class GatewayClient implements GatewayPort {
       throw new Error("gateway not connected");
     }
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("gateway timeout")), 10_000);
+      const timer = setTimeout(() => reject(new Error("gateway timeout")), 15_000);
       const onMessage = (ev: MessageEvent) => {
         const buf = ev.data as ArrayBuffer;
         const { ServerPacket } = getTypes();
@@ -92,5 +157,6 @@ export class GatewayClient implements GatewayPort {
   close(): void {
     this.ws?.close();
     this.ws = null;
+    this.sessionId = "";
   }
 }

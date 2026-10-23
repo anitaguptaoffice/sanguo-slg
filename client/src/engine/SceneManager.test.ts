@@ -26,7 +26,17 @@ describe("SceneManager", () => {
     const ctx = {
       canvas,
       hud,
-      gateway: { connect: async () => {}, login: async () => ({}), close: () => {}, getSessionId: () => "" },
+      gateway: {
+        connect: async () => {},
+        register: async () => ({}),
+        login: async () => ({}),
+        listPlayerCities: async () => ({}),
+        createCity: async () => ({}),
+        getCityState: async () => ({}),
+        startBuildingUpgrade: async () => ({}),
+        close: () => {},
+        getSessionId: () => "",
+      },
       assets: new AssetLoader(),
       switchScene: vi.fn(),
     };
