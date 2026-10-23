@@ -358,6 +358,9 @@ export class MainCityScene implements Scene {
           : "背包暂无养成消耗品（将魂碎晶等）";
         this.renderHud();
       },
+      (keys) => {
+        if (keys.length) scheduleHudResourcePulse(this.hud, keys);
+      },
     );
     this.heroMail.attach();
     this.battleReports = new BattleReportPanel(
