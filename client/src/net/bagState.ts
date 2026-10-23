@@ -26,6 +26,10 @@ export function applyUseResult(bag: BagStack[], itemCfgId: number, remaining: nu
   return next.sort((a, b) => a.item_cfg_id - b.item_cfg_id);
 }
 
+export function bagStackQuantity(bag: BagStack[] | undefined, itemCfgId: number): number {
+  return bag?.find((s) => s.item_cfg_id === itemCfgId)?.quantity ?? 0;
+}
+
 export function stacksFromList(items: BagStack[]): BagStack[] {
   return [...items]
     .filter((s) => (s.item_cfg_id ?? 0) > 0 && (s.quantity ?? 0) > 0)

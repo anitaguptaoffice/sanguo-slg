@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyUseResult,
   bagFromListPlayerBagResponse,
+  bagStackQuantity,
   mergeRewardBundle,
   stacksFromList,
 } from "@/net/bagState";
@@ -40,6 +41,11 @@ describe("bagState", () => {
       items: [{ item_cfg_id: 2001, quantity: 1 }],
     });
     expect(merged).toEqual([{ item_cfg_id: 2001, quantity: 2 }]);
+  });
+
+  it("reads stack quantity by cfg id", () => {
+    expect(bagStackQuantity([], 2003)).toBe(0);
+    expect(bagStackQuantity([{ item_cfg_id: 2003, quantity: 2 }], 2003)).toBe(2);
   });
 
   it("filters zero stacks", () => {

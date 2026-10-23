@@ -37,6 +37,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | 能力 | 验收小节 |
 |---|---|
 | **内政/募兵队列倒计时** | [手动验收（队列 CLIENT-019）](#手动验收队列-client-019)（[#196](https://github.com/anitaguptaoffice/sanguo-slg/issues/196) / [#206](https://github.com/anitaguptaoffice/sanguo-slg/pull/206)） |
+| **建造队列加速符** | [手动验收（队列加速 CLIENT-026）](#手动验收队列加速-client-026)（[#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214)） |
 | **背包使用 / 商城购买可读反馈** | [手动验收（背包与商城反馈，CLIENT-020）](#手动验收背包与商城反馈-client-020)（[#197](https://github.com/anitaguptaoffice/sanguo-slg/issues/197) / [#204](https://github.com/anitaguptaoffice/sanguo-slg/pull/204)） |
 | **排行双榜只读**（战力 / 资源总量 + 快照元数据） | [手动验收（排行双榜 CLIENT-021）](#手动验收排行双榜-client-021)（[#198](https://github.com/anitaguptaoffice/sanguo-slg/issues/198) / [#207](https://github.com/anitaguptaoffice/sanguo-slg/pull/207)） |
 | **军团 / 聊天可读联调** | [手动验收（M3：选服 / 聊天 / 军团 / 排行，CLIENT-022）](#手动验收m3选服--聊天--军团--排行client-022)（[#199](https://github.com/anitaguptaoffice/sanguo-slg/issues/199) / [#205](https://github.com/anitaguptaoffice/sanguo-slg/pull/205)） |
@@ -266,6 +267,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。
 4. **1600×900** 下面板可滚动。
 
+### 手动验收（队列加速 CLIENT-026）
+
+1. `make dev` 下联调；确保背包有 **道具 2003**（短促工符 / 急工符·五刻，可用 GM 发放或商城购买后「刷新背包」）。
+2. 主城升级一槽建筑（如农田），使 `upgrade_finish_at_ms > now`；打开底栏 **「队列」**，进行中建造行旁应出现 **「使用短促工符」**。
+3. 无 2003 或数量为 0 时按钮应 **禁用**（悬停提示道具不足）；无进行中建造时不应出现可点的加速（或点击后提示无建造）。
+4. 点击 **「使用短促工符」**：调用 `content.v1.UseConsumable`（`item_cfg_id=2003`，`count=1`）；面板底部 `queue-status` 与 HUD 状态栏展示 `effect_summary` 或推导的加速秒数。
+5. 成功后自动 **GetCityState**：队列行剩余时间应缩短（`upgrade_finish_at_ms` 前移，依赖服务端 DOM-003）；背包 2003 数量减 1。可对比使用前后面板倒计时或完成时刻。
+6. 募兵行 **无** 加速按钮（本卡仅建造队列）。单测：`QueuePanels.test.ts`、`bagState`（`bagStackQuantity`）。
+
 ## 仅 mock 网关
 
 `mock-server` 实现 `Login`、**选服/进服**、**聊天（含军团频道）/军团/排行**、**quest/shop/content.v1 背包** 与军事路由的**即时**桩（募兵无队列）。另含最简建城/内政桩以便进主城；完整内政与持久化请连 `make dev`。
@@ -281,7 +291,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`queueState` / `QueuePanels`（内政升级与募兵队列行）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天行格式、军团摘要、禁言错误可读）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `SocialPanels`（聊天行格式、军团摘要、禁言错误可读）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `DailyQuestPanels`（chain 400 多类型标签、下一步导航与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

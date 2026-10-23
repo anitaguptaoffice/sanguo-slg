@@ -1,5 +1,7 @@
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
+import { applyUseResult, bagStackQuantity } from "@/net/bagState";
+import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -10,10 +12,16 @@ import {
   type RecruitQueueEntry,
 } from "@/net/queueState";
 
+/** 建造队列加速符（与 DATA-001 / content catalog item_cfg_id 2003 一致，勿新增 cfg）。 */
+export const BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID = 2003;
+
+const SPEEDUP_BUTTON_LABEL = "使用短促工符";
+
 export class QueuePanels {
   private panel!: HTMLElement;
   private recruits: RecruitQueueEntry[] = [];
   private tickAccum = 0;
+  private speedupBusy = false;
   private readonly completedRecruitIds = new Set<number>();
 
   constructor(
@@ -78,7 +86,7 @@ export class QueuePanels {
     el.className = "content-panel hidden";
     el.innerHTML = `
       <h3>队列</h3>
-      <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。</p>
+      <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <button type="button" data-action="refresh-queue">刷新内政</button>
       <ul class="queue-list" data-role="queue-list"></ul>
       <p class="queue-panel-status" data-role="queue-status"></p>
@@ -86,8 +94,19 @@ export class QueuePanels {
     return el;
   }
 
+  private serverId(): number {
+    const s = this.getSession();
+    return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
+  }
+
   private buildings(): CityBuilding[] {
     return this.getSession()?.buildings ?? [];
+  }
+
+  private canUseBuildSpeedup(now: number): boolean {
+    if (activeBuildingUpgrades(this.buildings(), now).length === 0) return false;
+    const bag = this.getSession()?.bag ?? [];
+    return bagStackQuantity(bag, BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID) >= 1;
   }
 
   private render(): void {
@@ -95,8 +114,10 @@ export class QueuePanels {
     if (!ul) return;
     const now = Date.now();
     this.recruits = pruneFinishedRecruits(this.recruits, now);
+    const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy;
     const lines: string[] = [];
-    for (const b of activeBuildingUpgrades(this.buildings(), now)) {
+    const buildRows = activeBuildingUpgrades(this.buildings(), now);
+    for (const b of buildRows) {
       lines.push(formatBuildingUpgradeQueueLine(b, this.slotLabels, now));
     }
     for (const r of this.recruits) {
@@ -109,9 +130,27 @@ export class QueuePanels {
       ul.appendChild(li);
       return;
     }
+    let buildIdx = 0;
     for (const text of lines) {
       const li = document.createElement("li");
-      li.textContent = text;
+      li.className = "queue-list-row";
+      const span = document.createElement("span");
+      span.textContent = text;
+      li.appendChild(span);
+      if (buildIdx < buildRows.length) {
+        buildIdx += 1;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.setAttribute("data-action", "speedup-build");
+        btn.textContent = SPEEDUP_BUTTON_LABEL;
+        if (!speedupEnabled) {
+          btn.disabled = true;
+          if (buildRows.length > 0 && bagStackQuantity(this.getSession()?.bag ?? [], BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID) < 1) {
+            btn.title = "背包中无短促工符（道具 2003）";
+          }
+        }
+        li.appendChild(btn);
+      }
       ul.appendChild(li);
     }
   }
@@ -140,8 +179,10 @@ export class QueuePanels {
     try {
       const state = (await this.gateway.getCityState(session.cityId)) as {
         buildings?: CityBuilding[];
+        wallet?: MainCitySession["wallet"];
       };
       if (state.buildings) session.buildings = state.buildings;
+      if (state.wallet) session.wallet = state.wallet;
       this.onAfterCityRefresh();
       this.render();
     } catch {
@@ -149,11 +190,54 @@ export class QueuePanels {
     }
   }
 
+  private async useBuildSpeedup(): Promise<void> {
+    const now = Date.now();
+    if (!this.canUseBuildSpeedup(now)) {
+      const msg =
+        activeBuildingUpgrades(this.buildings(), now).length === 0
+          ? "当前无进行中的建造，无法使用短促工符"
+          : "背包中短促工符不足（需要道具 2003×1）";
+      this.setPanelStatus(msg);
+      this.onStatus(msg);
+      return;
+    }
+    const sid = this.serverId();
+    const itemId = BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID;
+    this.speedupBusy = true;
+    this.render();
+    this.onStatus(`队列：${SPEEDUP_BUTTON_LABEL}…`);
+    try {
+      const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
+        remaining?: number;
+        effect_summary?: string;
+        speedup_seconds?: number;
+      };
+      const session = this.getSession();
+      if (session) {
+        session.bag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
+      }
+      const summary = formatUseConsumableEffectSummary(itemId, res);
+      this.setPanelStatus(summary);
+      this.onStatus(summary);
+      await this.refreshCityState();
+    } catch (e) {
+      const msg = gatewayErrorMessage(e);
+      this.setPanelStatus(msg);
+      this.onStatus(msg);
+    } finally {
+      this.speedupBusy = false;
+      this.render();
+    }
+  }
+
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
-    if (btn.getAttribute("data-action") === "refresh-queue") {
+    const action = btn.getAttribute("data-action");
+    if (action === "refresh-queue") {
       void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
+    } else if (action === "speedup-build") {
+      void this.useBuildSpeedup();
     }
   }
 }
