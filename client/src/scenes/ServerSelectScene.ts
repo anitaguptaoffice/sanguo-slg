@@ -83,7 +83,9 @@ export class ServerSelectScene implements Scene {
     }
     if (statusEl) statusEl.textContent = this.status;
     if (enterBtn) enterBtn.disabled = !this.selectedId;
-    this.hud.textContent = this.status || "请选择游戏服";
+    const hudBusy =
+      /^(连接|拉取|进入服)/.test(this.status) || this.status.includes("失败");
+    this.hud.textContent = hudBusy ? this.status : "请选择游戏服";
   }
 
   private onClick(ev: Event, ctx: SceneContext): void {

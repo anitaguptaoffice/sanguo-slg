@@ -2,7 +2,29 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 25 网关冒烟（INTG-022，推荐）
+
+在 INTG-021 全量断言之上强制验收 **建造队列字段**：`domestic.v1.GetCityState` 打印各槽位 `slot_key` 与 `upgrade_finish_at_ms`（`0` 表示空闲，供 CLIENT-105/107 对照）；**邮件未读**：`content.v1.ListPlayerMail` 打印 `total_count` 与 **未读**条数（`MAIL_INBOX_FILTER_UNREAD` 的 `total_count` 与 ALL 页推导一致，供 CLIENT-106 对照）；**日常待办**：`quest.v1.ListPlayerQuests` `chain_id=400` 打印 `claimable_count` 与 `progress_complete_count`（`progress_current>=progress_target` 等价，供 CLIENT-107/091 对照）；**格点信息卡**：`world.v1.ListPlayerCities` 打印首条 `x`/`y`/`name`（供 CLIENT-108 对照）。保留 INTG-021 双榜 `my_rank`、军团 `role`、可选 `RecruitHero`、INTG-020 商城/邮件附件/建筑 level、INTG-019 资源/phase 及进程重启持久化路径。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速——`military.v1` 契约未定义对应 RPC。
+
+**可选**：`RecruitTroop` 后 `ListMarches` 仍为空或仅含本次 `StartMarch` 的 `march_id`；**失败不阻塞主路径**（见测试内 `smokeINTG014RecruitTroopListMarchesOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG022Wave25SmokePath' -count=1 -v
+```
+
+与 INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG022Wave25SmokePath|TestINTG021Wave24SmokePath|TestINTG020Wave23SmokePath|TestINTG019Wave22SmokePath|TestINTG018Wave21SmokePath|TestINTG017Wave20SmokePath|TestINTG016Wave19SmokePath|TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-022:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 24 网关冒烟（INTG-021，推荐）
 
