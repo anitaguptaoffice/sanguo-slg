@@ -95,16 +95,37 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 mock 预置将领时可用 `VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev`，招募一名后再点列表验详情。
 
-### 手动验收（M4：将领 / 邮件，CLIENT-008）
+### 手动验收（M4：将领，CLIENT-008）
 
-与 `internal/api/hero_handlers.go`、`internal/api/mail_handlers.go` 网关路由一致（`make dev` 真实 PG）。
+与 `internal/api/hero_handlers.go` 网关路由一致（`make dev` 真实 PG）。
 
 1. 进入主城后点 **「将领」** →「刷新列表」。新号应为空列表提示；若已有将领，点击列表项加载 `hero.v1.GetHeroDetail` 详情（属性/忠诚，见 CLIENT-014）。
 2. **招募模板**：点「刷新招募模板」调用 `hero.v1.ListRecruitTemplates`；下拉或列表行展示模板名、稀有度、资源+道具消耗预览（与 HERO-003 / `make dev` 目录一致）。选择模板后「招募」使用所选 `template_cfg_id` 与预览中的 `item_cfg_id`（及 `pool`），不再手填 1001/2004。
 3. **招募**：成功时列表出现新将领，状态栏显示 `hero_id`；道具/资源不足时显示服务端 `code` 与 `msg`。
-4. 点 **「邮件」** →「刷新收件箱」。可用 `cmd/gm send-mail`（见 `docs/ops`）向当前角色发带附件邮件。
-5. 选中邮件 ID →「标为已读」调用 `content.v1.MarkPlayerMailRead`；「领取附件」调用 `content.v1.ClaimMailAttachments`，HUD 资源/背包应更新（`wallet_after` / `bag_items`）。
-6. 面板落在 1600×900 外框内（与 CLIENT-007 一致）：顶底各 56px，内容区可滚动、不撑破外框。
+
+### 手动验收（邮件收件箱，CLIENT-017）
+
+与 `internal/api/mail_handlers.go` 一致：`content.v1.ListPlayerMail`（`filter` 全部/未读）、`MarkPlayerMailRead`、`ClaimMailAttachments`。
+
+1. `make dev` 进入主城；底栏 **「邮件」** 有未读时显示 `邮件(N)` 角标。
+2. 打开邮件面板 → **全部 / 未读** 切换列表；每行展示**标题 + 摘要**（正文截断或附件提示）。
+3. **点开**一封未读邮件 → 自动调用 `MarkPlayerMailRead`；在「未读」筛选下该封应从列表消失。
+4. 带附件邮件显示 **「领取附件」** → 成功后 HUD 五资源与背包摘要更新（`wallet_after` / `bag_items`）；重复领取或失败时面板内显示明确错误文案。
+5. 空收件箱显示「收件箱为空…」；未读筛选无信时显示「暂无未读邮件」。
+6. 视口 **1600×900**：面板落在顶底 56px 带之间，列表与正文区可滚动、不撑破外框。
+
+**GM 发信（真实 PG）** — 参数见 [`docs/ops/open-server-runbook.md`](../docs/ops/open-server-runbook.md) §4.5：
+
+```bash
+# 仓库根；需 DATABASE_URL 等与 make dev 一致
+GOTOOLCHAIN=go1.23.0 go run ./cmd/gm send-mail \
+  --server-id=1 --player-id=<你的 player_id> \
+  --title='测试奖励' --body='CLIENT-017 验收' \
+  --food=1000 --gold=50 \
+  --reason='CLIENT-017 manual'
+```
+
+`player_id` 可在进服后 HUD 或 `cmd/gm lookup` 查到。发信后回到 H5 点邮件 **「刷新」**。
 
 mock 网关预置 1 封欢迎邮件与 2 本名册，便于离线点领：
 
@@ -157,7 +178,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板解析/空列表、邮件领取）/ `HeroMailPanels` 与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 

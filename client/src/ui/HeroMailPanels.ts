@@ -4,10 +4,15 @@ import {
   applyMailClaimResult,
   formatHeroDetail,
   formatHeroLine,
-  formatMailLine,
   formatRecruitTemplateLine,
   heroListLines,
-  mailListLines,
+  MAIL_INBOX_FILTER_ALL,
+  MAIL_INBOX_FILTER_UNREAD,
+  mailCanClaimAttachments,
+  mailEmptyInboxMessage,
+  mailIsUnread,
+  mailListSummary,
+  mailTitle,
   parseRecruitTemplates,
   pickRecruitSelection,
   recruitTemplateListLines,
@@ -22,6 +27,8 @@ export class HeroMailPanels {
   private mailPanel!: HTMLElement;
   private heroes: HeroSummary[] = [];
   private mails: MailRow[] = [];
+  private mailFilter = MAIL_INBOX_FILTER_ALL;
+  private mailListError = "";
   private selectedHeroId = 0;
   private selectedMailId = 0;
   private detailText = "";
@@ -36,6 +43,7 @@ export class HeroMailPanels {
     private getSession: () => MainCitySession | null,
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
+    private onUnreadCount?: (count: number) => void,
   ) {}
 
   attach(): void {
@@ -46,7 +54,6 @@ export class HeroMailPanels {
     this.heroPanel.addEventListener("click", (ev) => this.onHeroClick(ev));
     this.mailPanel.addEventListener("click", (ev) => this.onMailClick(ev));
     this.heroPanel.addEventListener("change", (ev) => this.onHeroChange(ev));
-    this.mailPanel.addEventListener("change", (ev) => this.onMailChange(ev));
   }
 
   detach(): void {
@@ -65,6 +72,23 @@ export class HeroMailPanels {
   toggleMail(): void {
     this.mailPanel.classList.toggle("hidden");
     if (!this.mailPanel.classList.contains("hidden")) void this.refreshMail();
+    else void this.syncUnreadBadge();
+  }
+
+  /** 底栏角标：拉取未读 total_count（与列表 filter 无关）。 */
+  async syncUnreadBadge(): Promise<void> {
+    const sid = this.serverId();
+    if (!sid || !this.onUnreadCount) return;
+    try {
+      const res = (await this.gateway.listPlayerMail(sid, {
+        filter: MAIL_INBOX_FILTER_UNREAD,
+        pageSize: 1,
+        pageOffset: 0,
+      })) as { total_count?: number };
+      this.onUnreadCount(res.total_count ?? 0);
+    } catch {
+      this.onUnreadCount(0);
+    }
   }
 
   private serverId(): number {
@@ -94,18 +118,22 @@ export class HeroMailPanels {
 
   private buildMailPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel mail-inbox-panel hidden";
     el.innerHTML = `
       <h3>邮件</h3>
-      <p data-role="mail-hint">content.v1 收件箱；GM send-mail 或运营发奖后在此领取。</p>
-      <button type="button" data-action="refresh-mail">刷新收件箱</button>
-      <label>邮件 ID
-        <input type="number" data-field="mail-id" min="1" value="1" />
-      </label>
-      <button type="button" data-action="mark-read">标为已读</button>
-      <button type="button" data-action="claim-mail">领取附件</button>
+      <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
+      <div class="mail-inbox-toolbar">
+        <button type="button" class="mail-filter-btn selected" data-action="mail-filter-all">全部</button>
+        <button type="button" class="mail-filter-btn" data-action="mail-filter-unread">未读</button>
+        <button type="button" data-action="refresh-mail">刷新</button>
+      </div>
+      <p class="mail-inbox-status" data-role="mail-status"></p>
       <ul class="mail-list" data-role="mail-list"></ul>
-      <pre class="mail-body" data-role="mail-body"></pre>
+      <div class="mail-detail hidden" data-role="mail-detail">
+        <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
+        <pre class="mail-body" data-role="mail-body"></pre>
+        <button type="button" class="hidden" data-action="claim-mail">领取附件</button>
+      </div>
     `;
     return el;
   }
@@ -190,29 +218,62 @@ export class HeroMailPanels {
     if (sel && templateCfgId) sel.value = String(templateCfgId);
   }
 
+  private setMailFilterButtons(): void {
+    const allBtn = this.mailPanel.querySelector('[data-action="mail-filter-all"]');
+    const unreadBtn = this.mailPanel.querySelector('[data-action="mail-filter-unread"]');
+    allBtn?.classList.toggle("selected", this.mailFilter === MAIL_INBOX_FILTER_ALL);
+    unreadBtn?.classList.toggle("selected", this.mailFilter === MAIL_INBOX_FILTER_UNREAD);
+  }
+
   private renderMailList(): void {
     const ul = this.mailPanel.querySelector('[data-role="mail-list"]');
+    const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
+    const detailWrap = this.mailPanel.querySelector('[data-role="mail-detail"]');
+    const titleEl = this.mailPanel.querySelector('[data-role="mail-detail-title"]');
     const body = this.mailPanel.querySelector('[data-role="mail-body"]');
+    const claimBtn = this.mailPanel.querySelector('[data-action="claim-mail"]');
     if (!ul) return;
+    this.setMailFilterButtons();
     ul.innerHTML = "";
+    if (statusEl) {
+      statusEl.textContent = this.mailListError;
+      statusEl.classList.toggle("is-error", !!this.mailListError);
+    }
     if (!this.mails.length) {
       const li = document.createElement("li");
-      li.textContent = mailListLines([])[0];
+      li.className = "mail-empty";
+      li.textContent = this.mailListError
+        ? "请点「刷新」重试"
+        : mailEmptyInboxMessage(this.mailFilter);
       ul.appendChild(li);
     } else {
       for (const m of this.mails) {
         const li = document.createElement("li");
-        li.textContent = formatMailLine(m);
         if (m.mail_id) {
           li.setAttribute("data-mail-id", String(m.mail_id));
-          li.style.cursor = "pointer";
+          if (m.mail_id === this.selectedMailId) li.classList.add("selected");
+          if (mailIsUnread(m)) li.classList.add("unread");
         }
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "mail-row-title";
+        titleSpan.textContent = mailTitle(m);
+        const summarySpan = document.createElement("span");
+        summarySpan.className = "mail-row-summary";
+        summarySpan.textContent = mailListSummary(m);
+        li.appendChild(titleSpan);
+        li.appendChild(summarySpan);
         ul.appendChild(li);
       }
     }
+    const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
+    if (detailWrap) detailWrap.classList.toggle("hidden", !sel);
+    if (titleEl) titleEl.textContent = sel ? mailTitle(sel) : "";
     if (body) {
-      const sel = this.mails.find((m) => m.mail_id === this.selectedMailId);
-      body.textContent = sel?.body?.trim() || (sel ? `（无正文）` : "");
+      body.textContent = sel?.body?.trim() || (sel ? "（无正文）" : "");
+    }
+    if (claimBtn) {
+      const show = sel && mailCanClaimAttachments(sel);
+      claimBtn.classList.toggle("hidden", !show);
     }
   }
 
@@ -305,39 +366,65 @@ export class HeroMailPanels {
   private async refreshMail(): Promise<void> {
     const sid = this.serverId();
     this.onStatus("拉取邮件…");
+    this.mailListError = "";
     try {
-      const res = (await this.gateway.listPlayerMail(sid)) as {
+      const res = (await this.gateway.listPlayerMail(sid, {
+        filter: this.mailFilter,
+        pageSize: 50,
+      })) as {
         mails?: MailRow[];
         total_count?: number;
       };
       this.mails = res.mails ?? [];
+      if (!this.selectedMailId && this.mails[0]?.mail_id) {
+        this.selectedMailId = this.mails[0].mail_id!;
+      } else if (
+        this.selectedMailId &&
+        !this.mails.some((m) => m.mail_id === this.selectedMailId)
+      ) {
+        this.selectedMailId = this.mails[0]?.mail_id ?? 0;
+      }
       this.renderMailList();
-      this.onStatus(`邮件 ${this.mails.length}/${res.total_count ?? this.mails.length} 封`);
+      const total = res.total_count ?? this.mails.length;
+      const filterLabel = this.mailFilter === MAIL_INBOX_FILTER_UNREAD ? "未读" : "全部";
+      this.onStatus(`邮件（${filterLabel}）${this.mails.length}/${total} 封`);
+      void this.syncUnreadBadge();
+    } catch (e) {
+      this.mailListError = (e as Error).message || "加载收件箱失败，请稍后重试";
+      this.mails = [];
+      this.renderMailList();
+      this.onStatus(this.mailListError);
+    }
+  }
+
+  private async markMailRead(mailId: number): Promise<void> {
+    const sid = this.serverId();
+    const row = this.mails.find((m) => m.mail_id === mailId);
+    if (!row || !mailIsUnread(row)) return;
+    try {
+      const res = (await this.gateway.markPlayerMailRead(sid, mailId)) as { mail?: MailRow };
+      if (res.mail) {
+        this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
+        if (this.mailFilter === MAIL_INBOX_FILTER_UNREAD) {
+          this.mails = this.mails.filter((m) => m.mail_id !== mailId);
+          if (!this.mails.some((m) => m.mail_id === this.selectedMailId)) {
+            this.selectedMailId = this.mails[0]?.mail_id ?? 0;
+          }
+        }
+        this.renderMailList();
+      } else {
+        await this.refreshMail();
+      }
+      void this.syncUnreadBadge();
     } catch (e) {
       this.onStatus((e as Error).message);
     }
   }
 
-  private async markMailRead(): Promise<void> {
-    const sid = this.serverId();
-    const mailId = this.selectedMailId;
-    if (!mailId) {
-      this.onStatus("请选择邮件");
-      return;
-    }
-    this.onStatus(`标记已读 #${mailId}…`);
-    try {
-      const res = (await this.gateway.markPlayerMailRead(sid, mailId)) as { mail?: MailRow };
-      if (res.mail) {
-        this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
-        this.renderMailList();
-      } else {
-        await this.refreshMail();
-      }
-      this.onStatus("已标为已读");
-    } catch (e) {
-      this.onStatus((e as Error).message);
-    }
+  private async openMail(mailId: number): Promise<void> {
+    this.selectedMailId = mailId;
+    this.renderMailList();
+    await this.markMailRead(mailId);
   }
 
   private async claimMail(): Promise<void> {
@@ -365,9 +452,16 @@ export class HeroMailPanels {
       }
       this.renderMailList();
       this.onStatus("附件已领取");
+      void this.syncUnreadBadge();
     } catch (e) {
       const err = e as Error & { code?: number };
-      this.onStatus(err.code ? `领取失败(code=${err.code})：${err.message}` : err.message);
+      const msg = err.code ? `领取失败(code=${err.code})：${err.message}` : err.message;
+      this.onStatus(msg);
+      const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
+      if (statusEl) {
+        statusEl.textContent = msg;
+        statusEl.classList.add("is-error");
+      }
     }
   }
 
@@ -376,13 +470,6 @@ export class HeroMailPanels {
     if (t.getAttribute("data-field") === "template-select") {
       const id = Number((t as HTMLSelectElement).value) || 0;
       if (id) this.applyTemplateSelection(id);
-    }
-  }
-
-  private onMailChange(ev: Event): void {
-    const t = ev.target as HTMLElement;
-    if (t.getAttribute("data-field") === "mail-id") {
-      this.selectedMailId = Number((t as HTMLInputElement).value) || 0;
     }
   }
 
@@ -411,19 +498,21 @@ export class HeroMailPanels {
     const li = (ev.target as HTMLElement).closest("li[data-mail-id]");
     if (li) {
       const id = Number(li.getAttribute("data-mail-id"));
-      if (id) {
-        this.selectedMailId = id;
-        const input = this.mailPanel.querySelector('[data-field="mail-id"]') as HTMLInputElement;
-        if (input) input.value = String(id);
-        this.renderMailList();
-      }
+      if (id) void this.openMail(id);
       return;
     }
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-mail") void this.refreshMail();
-    if (a === "mark-read") void this.markMailRead();
+    if (a === "mail-filter-all") {
+      this.mailFilter = MAIL_INBOX_FILTER_ALL;
+      void this.refreshMail();
+    }
+    if (a === "mail-filter-unread") {
+      this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
+      void this.refreshMail();
+    }
     if (a === "claim-mail") void this.claimMail();
   }
 }

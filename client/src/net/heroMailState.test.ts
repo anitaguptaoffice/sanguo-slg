@@ -7,7 +7,11 @@ import {
   formatRecruitTemplateLine,
   heroListLines,
   InvalidHeroDetailRequestError,
+  mailCanClaimAttachments,
+  mailEmptyInboxMessage,
   mailListLines,
+  mailListSummary,
+  MAIL_INBOX_FILTER_UNREAD,
   parseGetHeroDetailResponse,
   parseRecruitTemplates,
   recruitTemplateListLines,
@@ -18,7 +22,7 @@ import {
 describe("heroMailState", () => {
   it("shows empty placeholders", () => {
     expect(heroListLines([])).toEqual(["（尚无将领，可尝试招募）"]);
-    expect(mailListLines([])).toEqual(["（空）"]);
+    expect(mailListLines([])[0]).toContain("收件箱为空");
   });
 
   it("formats hero and mail lines", () => {
@@ -56,6 +60,21 @@ describe("heroMailState", () => {
     expect(() => requireHeroIdForDetail(-1)).toThrow(/hero_id/);
     expect(() => requireHeroIdForDetail(Number.NaN)).toThrow(InvalidHeroDetailRequestError);
     expect(() => requireHeroIdForDetail(1)).not.toThrow();
+  });
+
+  it("mailListSummary and claim helpers", () => {
+    expect(mailEmptyInboxMessage(MAIL_INBOX_FILTER_UNREAD)).toContain("未读");
+    expect(mailListSummary({ mail_id: 1, body: "一二三四五六七八九十" })).toContain("一二三四");
+    expect(
+      mailCanClaimAttachments({
+        mail_id: 1,
+        status: 0,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      }),
+    ).toBe(true);
+    expect(mailCanClaimAttachments({ mail_id: 1, status: 2, attachments: { items: [{ item_cfg_id: 1 }] } })).toBe(
+      false,
+    );
   });
 
   it("applyMailClaimResult merges wallet and marks mail claimed", () => {
