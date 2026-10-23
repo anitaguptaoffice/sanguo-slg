@@ -17,3 +17,21 @@ message ListPlayerCitiesResponse {
   // 城池列表，对应 player_city。
   repeated sanguo.common.v1.PlayerCitySummary cities = 1;
 }
+
+// route: world.v1.CreateCity
+// 在地图上为当前玩家创建一座城池（M1 建城联调）。
+message CreateCityRequest {
+  // 游戏服 ID。
+  int32 server_id = 1;
+  // 城池名称。
+  string name = 2;
+  // 地图坐标 X。
+  int32 x = 3;
+  // 地图坐标 Y。
+  int32 y = 4;
+}
+
+message CreateCityResponse {
+  // 新建城池摘要。
+  sanguo.common.v1.PlayerCitySummary city = 1;
+}
