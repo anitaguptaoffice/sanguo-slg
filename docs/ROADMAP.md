@@ -191,7 +191,7 @@ H5 人工验收与 INTG-011 路径对齐，见 [client/README.md](../client/READ
 | [#231](https://github.com/anitaguptaoffice/sanguo-slg/issues/231) | CLIENT-031 | 已完成 | [#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)（`58a95775`） |
 | [#232](https://github.com/anitaguptaoffice/sanguo-slg/issues/232) | CLIENT-032 | 已完成 | [#240](https://github.com/anitaguptaoffice/sanguo-slg/pull/240)（`1825858d`） |
 | [#233](https://github.com/anitaguptaoffice/sanguo-slg/issues/233) | INTG-012 | 已完成 | [#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)（`7f812896`） |
-| [#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234) | DOCS-EXIT-007 | 已完成 | 本波文档收口 PR |
+| [#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234) | DOCS-EXIT-007 | 已完成 | [#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242) |
 
 H5 人工验收与 INTG-012 路径对齐，见 [client/README.md](../client/README.md#wave-15-世界地图与面板密度m4-出口--intg-012)（**世界地图行军标注 + 邮件/战报/背包密度 + 社交扫读 + 将领招募对比 + manifest 接线**；manifest 资产表见同文件 [CLIENT-032 manifest 美术接线](../client/README.md#client-032-manifest-美术接线)）。
 
