@@ -1,5 +1,9 @@
 import type { MarchSummary } from "@/net/militaryFormat";
-import { formatMarchPhase } from "@/net/militaryFormat";
+import {
+  formatMarchPhase,
+  formatMarchRemainingMs,
+  formatMarchRemainingMsAbbrev,
+} from "@/net/militaryFormat";
 
 /** 世界格点地图边长（与 WORLD-001 一致，用于默认视野）。 */
 export const WORLD_MAP_EDGE = 500;
@@ -348,7 +352,68 @@ export function findMarchIdForMinimapDestClick(
   return undefined;
 }
 
-export function minimapPhaseCaption(phase: number | undefined): string {
+export const MINIMAP_DEST_ETA_LEGEND = "点=目的格 · 数字=剩余时间";
+
+const MINIMAP_PHASE_SHORT_LABEL: Record<number, string> = {
+  1: "待",
+  3: "达",
+};
+
+/** 待发/已到达等小地图角标阶段简写（行军中/撤回中用剩余分钟数字）。 */
+export function minimapMarchPhaseShortLabel(phase: number | undefined): string {
+  const p = phase ?? 0;
+  return MINIMAP_PHASE_SHORT_LABEL[p] ?? formatMarchPhase(phase);
+}
+
+/** 目的点旁是否绘制 ETA/阶段角标（与目的点可见性一致）。 */
+export function minimapDestShowsEtaBadge(m: MarchSummary): boolean {
+  return marchShowsDestOnMinimap(m);
+}
+
+/** 小地图目的点角标文案；行军中/撤回中与军情列表共用 nowMs 与 formatMarchRemainingMs 口径。 */
+export function minimapDestEtaBadgeLabel(m: MarchSummary, nowMs: number): string {
+  const phase = m.phase ?? 0;
+  if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
+    return formatMarchRemainingMsAbbrev(nowMs, m.arrive_at_ms);
+  }
+  return minimapMarchPhaseShortLabel(phase);
+}
+
+/** 折叠小地图时状态栏复述选中行军 ETA/阶段。 */
+export function formatMinimapCollapsedSelectedMarchStatus(m: MarchSummary, nowMs: number): string {
+  const id = m.march_id ?? "?";
+  const dest = `(${m.to_x ?? "?"},${m.to_y ?? "?"})`;
+  const phase = m.phase ?? 0;
+  if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
+    return `行军 #${id} → ${dest} · ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+  }
+  return `行军 #${id} → ${dest} · ${minimapMarchPhaseShortLabel(phase)}`;
+}
+
+/** 将角标文本锚点限制在小地图 rect 内，避免贴边裁切。 */
+export function clampMinimapEtaLabelLayout(
+  anchorX: number,
+  anchorY: number,
+  textWidth: number,
+  textHeight: number,
+  rect: MinimapLayoutRect = MINIMAP_LAYOUT_RECT,
+  pad = 2,
+): { x: number; y: number } {
+  let x = anchorX + 8;
+  let y = anchorY - textHeight * 0.5;
+  if (x + textWidth > rect.x + rect.w - pad) {
+    x = anchorX - textWidth - 8;
+  }
+  x = Math.max(rect.x + pad, Math.min(x, rect.x + rect.w - textWidth - pad));
+  y = Math.max(rect.y + pad, Math.min(y, rect.y + rect.h - textHeight - pad));
+  return { x, y };
+}
+
+export function minimapPhaseCaption(m: MarchSummary, nowMs: number): string {
+  const phase = m.phase ?? 0;
+  if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
+    return `${formatMarchPhase(phase)} · ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+  }
   return formatMarchPhase(phase);
 }
 
