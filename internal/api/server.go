@@ -10,8 +10,10 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -36,6 +38,8 @@ type Server struct {
 	military   *march.Hub
 	reports    *report.Service
 	sessions   *SessionRegistry
+	shard      *shard.Handlers
+	m3         *assembly.M3
 	cities     map[int64]*domestic.CityState
 	cityCoords map[int64]cityCoord
 	nextArmyID int64
@@ -52,7 +56,7 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Server{
+	srv := &Server{
 		log:        log,
 		account:    account.NewService(account.NewStore(pool)),
 		players:    &PlayerStore{Pool: pool},
@@ -60,9 +64,29 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 		domestic:   domesticHub,
 		military:   militaryHub,
 		sessions:   NewSessionRegistry(),
+		m3:         assembly.NewM3(),
 		cities:     make(map[int64]*domestic.CityState),
 		cityCoords: make(map[int64]cityCoord),
 		now:        time.Now,
+	}
+	shardStore := &shard.Store{Pool: pool}
+	srv.shard = shard.NewHandlers(shardStore, srv.account, srv)
+	return srv
+}
+
+// BindSession implements shard.Binder after login or enter-server.
+func (s *Server) BindSession(sessionID string, serverID int32, playerID int64, accountID int64) {
+	s.sessions.Bind(sessionID, PlayerContext{
+		AccountID: accountID,
+		ServerID:  serverID,
+		PlayerID:  playerID,
+	})
+	if playerID != 0 {
+		s.hydratePlayerCities(context.Background(), PlayerContext{
+			AccountID: accountID,
+			ServerID:  serverID,
+			PlayerID:  playerID,
+		})
 	}
 }
 
@@ -96,6 +120,12 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteStartMarch] = s.handleStartMarch
 	handlers[RouteGetBattleReport] = s.handleGetBattleReport
 	handlers[RouteListBattleReports] = s.handleListBattleReports
+	for route, h := range s.shard.GatewayHandlers() {
+		handlers[route] = h
+	}
+	for route, h := range s.m3.GatewayHandlers() {
+		handlers[route] = h
+	}
 	return gateway.NewRouter(handlers)
 }
 
@@ -105,6 +135,7 @@ func (s *Server) PublicRoutes() map[string]bool {
 	for k, v := range account.PublicRoutes() {
 		out[k] = v
 	}
+	out[shard.RouteListGameServers] = true
 	return out
 }
 
@@ -155,6 +186,9 @@ func (s *Server) bindFromLoginResponse(ctx context.Context, respPkt *commonv1.Se
 		ServerID: serverID,
 		PlayerID: resp.GetPlayer().GetPlayerId(),
 	}
+	if aid, err := s.players.AccountIDForSession(ctx, resp.GetSessionId()); err == nil {
+		pc.AccountID = aid
+	}
 	s.sessions.Bind(resp.GetSessionId(), pc)
 	s.hydratePlayerCities(ctx, pc)
 }
@@ -162,20 +196,22 @@ func (s *Server) bindFromLoginResponse(ctx context.Context, respPkt *commonv1.Se
 func (s *Server) playerCtx(ctx context.Context, pkt *commonv1.ClientPacket) (PlayerContext, *commonv1.ServerPacket) {
 	pc, ok := s.sessions.Get(pkt.GetSessionId())
 	if !ok {
-		aid, err := s.players.AccountIDForSession(ctx, pkt.GetSessionId())
-		if err != nil || aid == 0 {
-			return PlayerContext{}, errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAUTHORIZED, "session not bound")
-		}
-		// lazy bind: first shard player on default server
-		pid, err := s.players.EnsurePlayer(ctx, defaultServerID, aid, "")
-		if err != nil {
-			return PlayerContext{}, errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
-		}
-		pc = PlayerContext{AccountID: aid, ServerID: defaultServerID, PlayerID: pid}
-		s.sessions.Bind(pkt.GetSessionId(), pc)
-		s.hydratePlayerCities(ctx, pc)
+		return PlayerContext{}, errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAUTHORIZED, "session not bound to a server")
+	}
+	if errPkt := s.verifyShard(pkt, pc); errPkt != nil {
+		return PlayerContext{}, errPkt
 	}
 	return pc, nil
+}
+
+func (s *Server) verifyShard(pkt *commonv1.ClientPacket, pc PlayerContext) *commonv1.ServerPacket {
+	if pc.ServerID == 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAUTHORIZED, "server not selected")
+	}
+	if sid := pkt.GetServerId(); sid != 0 && sid != pc.ServerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch")
+	}
+	return nil
 }
 
 // RunDomesticScheduler ticks build queues until ctx is cancelled.
