@@ -222,6 +222,24 @@ export class HeroMailPanels {
     }
   }
 
+  /** CLIENT-097：排行深链 — 打开将领面板并 GetHeroDetail（只读）。 */
+  async openHeroDetailDeepLink(heroId: number): Promise<void> {
+    this.mailPanel.classList.add("hidden");
+    this.heroPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.heroPanel);
+    if (!this.heroes.length) await this.refreshHeroes();
+    let id = heroId;
+    if (id <= 0) {
+      id = this.heroes.find((h) => (h.hero_id ?? 0) > 0)?.hero_id ?? 0;
+    }
+    if (id <= 0) {
+      this.renderHeroList();
+      this.onStatus("暂无将领可查看");
+      return;
+    }
+    await this.loadHeroDetail(id);
+  }
+
   isMailOpen(): boolean {
     return this.mailPanel != null && !this.mailPanel.classList.contains("hidden");
   }

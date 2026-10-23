@@ -171,6 +171,86 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(btn.disabled).toBe(false);
   });
 
+  it("CLIENT-097: power row opens hero deep link for viewer entry", async () => {
+    const mount = document.createElement("div");
+    const onOpenHero = vi.fn();
+    const getLeaderboard = vi.fn().mockResolvedValue({
+      entries: [{ rank: 2, entity_id: 10001, display_name: "演示君主", score: 5000 }],
+      my_rank: 2,
+      my_score: 5000,
+    });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.setRankDeepLinkHandlers({
+      getViewerHeroIds: async () => [8001],
+      onOpenHeroDetail: onOpenHero,
+    });
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    mount.querySelector("tr.rank-data-row")?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(onOpenHero).toHaveBeenCalledWith(8001);
+  });
+
+  it("CLIENT-097: power row for other player shows viewer-only toast", async () => {
+    const mount = document.createElement("div");
+    const statuses: string[] = [];
+    const getLeaderboard = vi.fn().mockResolvedValue({
+      entries: [{ rank: 1, entity_id: 10002, display_name: "路人", score: 9000 }],
+      my_rank: 5,
+      my_score: 100,
+    });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), (m) => statuses.push(m));
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    mount.querySelector("tr.rank-data-row")?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(statuses.some((s) => s.includes("仅支持查看己方将领"))).toBe(true);
+  });
+
+  it("CLIENT-097: resource row with grid opens world deep link", async () => {
+    const mount = document.createElement("div");
+    const onWorld = vi.fn();
+    const getLeaderboard = vi.fn().mockImplementation((_sid: number, type: number) =>
+      Promise.resolve(
+        type === LB_PLAYER_RESOURCE
+          ? {
+              entries: [
+                { rank: 1, entity_id: 10003, display_name: "富贾", score: 25000, grid_x: 8, grid_y: 9 },
+              ],
+              my_rank: 0,
+              my_score: 0,
+            }
+          : { entries: [], my_rank: 0, my_score: 0 },
+      ),
+    );
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.setRankDeepLinkHandlers({ onOpenWorldAtGrid: onWorld });
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const select = mount.querySelector('[data-field="rank-type"]') as HTMLSelectElement;
+    select.value = String(LB_PLAYER_RESOURCE);
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector("tr.rank-data-row")?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(onWorld).toHaveBeenCalledWith(8, 9);
+  });
+
   it("shows rank refresh error in panel", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

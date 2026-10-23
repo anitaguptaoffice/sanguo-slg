@@ -547,6 +547,7 @@ export class MainCityScene implements Scene {
       },
     );
     this.world.attach();
+    this.wireSocialRankDeepLinks();
     const skinCenterPrimary = (root: HTMLElement) => skinPrimaryButtons(root, this.assets);
     this.queuePanels = new QueuePanels(
       parent,
@@ -1345,6 +1346,51 @@ export class MainCityScene implements Scene {
     countEl.textContent = badgeText;
     btn.append(label, countEl);
     this.hud.appendChild(btn);
+  }
+
+  private wireSocialRankDeepLinks(): void {
+    this.social.setRankDeepLinkHandlers({
+      getViewerHeroIds: async () => {
+        const sid = this.session?.serverId ?? this.gateway.getBoundServerId() ?? 0;
+        if (sid <= 0) return [];
+        try {
+          const res = (await this.gateway.listPlayerHeroes(sid)) as {
+            heroes?: { hero_id?: number }[];
+          };
+          return (res.heroes ?? []).map((h) => h.hero_id ?? 0).filter((id) => id > 0);
+        } catch {
+          return [];
+        }
+      },
+      onOpenHeroDetail: (heroId) => {
+        this.openRankHeroDeepLink(heroId);
+      },
+      onOpenWorldAtGrid: (gridX, gridY) => {
+        this.openWorldFromRankDeepLink(gridX, gridY);
+      },
+      onOpenWorldViewer: () => {
+        this.openWorldFromRankDeepLink(this.session?.cityX ?? Number.NaN, this.session?.cityY ?? Number.NaN);
+      },
+    });
+  }
+
+  private openRankHeroDeepLink(heroId: number): void {
+    this.social.getRankRoot().classList.add("hidden");
+    void this.heroMail.openHeroDetailDeepLink(heroId).then(() => this.renderHud());
+  }
+
+  private openWorldFromRankDeepLink(x: number, y: number): void {
+    this.social.getRankRoot().classList.add("hidden");
+    const root = this.world.getRoot();
+    if (root.classList.contains("hidden")) this.world.toggle();
+    if (Number.isFinite(x) && Number.isFinite(y)) {
+      this.world.selectGridAt(x, y);
+      this.focusMinimapOnWorldGrid(x, y);
+      this.status = `世界：已定位格点 (${x},${y})（来自排行）`;
+    } else {
+      this.status = "世界：已打开，可在城池列表或格点信息卡扫读";
+    }
+    this.renderHud();
   }
 
   private openHudCenterTodoDeepLink(): void {
