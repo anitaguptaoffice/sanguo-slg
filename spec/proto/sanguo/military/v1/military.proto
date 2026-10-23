@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sanguo.military.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/military/v1;militaryv1";
+
+// route: military.v1.RecruitTroop
+// 在指定城池募兵；完成后写入 city_troop（可经 work_queue 排队）。
+message RecruitTroopRequest {
+  // 募兵所在城池。
+  int64 city_id = 1;
+  // 兵种配置 ID。
+  int32 unit_cfg_id = 2;
+  // 招募数量（>0）。
+  int32 count = 3;
+}
+
+message RecruitTroopResponse {
+  // 该城该兵种最新数量（若未完成则可能为排队前快照 + 在途数量由实现定义）。
+  sanguo.common.v1.CityTroopStack troop = 1;
+  // 扣费后的资源钱包。
+  sanguo.common.v1.ResourceWallet wallet = 2;
+  // 若走队列：队列 ID；即时完成则为 0。
+  int64 queue_id = 3;
+  // 募兵完成时间（Unix 毫秒）；即时完成为 0。
+  int64 finish_at_ms = 4;
+}

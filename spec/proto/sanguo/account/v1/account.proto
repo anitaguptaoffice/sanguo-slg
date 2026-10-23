@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sanguo.account.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/account/v1;accountv1";
+
+// route: account.v1.Login
+// 账号密码登录并进入指定游戏服；成功返回会话与角色快照。
+message LoginRequest {
+  // 登录名，对应 account.login_name。
+  string login_name = 1;
+  // 明文密码（仅 TLS/WebSocket 加密链路上传输，服务端校验 password_hash）。
+  string password = 2;
+  // 要进入的游戏服 ID。
+  int32 server_id = 3;
+}
+
+message LoginResponse {
+  // 会话令牌 UUID，对应 account_session.session_id。
+  string session_id = 1;
+  // 当前服角色信息。
+  sanguo.common.v1.PlayerProfile player = 2;
+  // 资源钱包快照（登录后 UI 展示）。
+  sanguo.common.v1.ResourceWallet wallet = 3;
+  // 会话过期时间（Unix 毫秒），对应 account_session.expires_at。
+  int64 session_expires_at_ms = 4;
+}

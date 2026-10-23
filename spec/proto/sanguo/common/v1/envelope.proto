@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package sanguo.common.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/common/v1;commonv1";
+
+// WebSocket 上行：单连接单帧单请求。
+message ClientPacket {
+  // 路由键，格式 `<domain>.v1.<Method>`，例如 `account.v1.Login`。
+  string route = 1;
+  // 与 route 匹配的请求消息（*Request）protobuf 序列化。
+  bytes payload = 2;
+  // 客户端生成的追踪 ID，服务端在 ServerPacket 中回显。
+  string trace_id = 3;
+  // 登录后携带：account_session.session_id（UUID 字符串）；Login 请求可留空。
+  string session_id = 4;
+}
+
+// WebSocket 下行：统一响应包 code / msg / data。
+message ServerPacket {
+  // 业务状态码：0 成功；非 0 见 ErrorCode 及各域分段。
+  int32 code = 1;
+  // 面向玩家或调试的简短说明；成功时通常为空。
+  string msg = 2;
+  // 成功时为对应 *Response 的 protobuf 序列化；失败时通常为空。
+  bytes data = 3;
+  // 回显 ClientPacket.trace_id。
+  string trace_id = 4;
+}
+
+// 错误码：按域分段，与 ServerPacket.code 数值一致（成功时 code=0，不填本枚举）。
+enum ErrorCode {
+  // 占位；成功响应不使用本枚举。
+  ERROR_CODE_UNSPECIFIED = 0;
+
+  // --- 公共 / 网关 10000–10999 ---
+  // 请求体无法解析或 route 未知。
+  COMMON_INVALID_PACKET = 10001;
+  // 未登录或 session 无效/过期。
+  COMMON_UNAUTHORIZED = 10002;
+  // 服务端限流或维护。
+  COMMON_UNAVAILABLE = 10003;
+  // 未分类的内部错误。
+  COMMON_INTERNAL = 10004;
+
+  // --- 账号 20000–20999 ---
+  // 登录名或密码错误。
+  ACCOUNT_LOGIN_FAILED = 20001;
+  // 账号被封禁。
+  ACCOUNT_BANNED = 20002;
+  // 目标服不存在或未开服。
+  ACCOUNT_SERVER_NOT_FOUND = 20003;
+  // 目标服不可进入（维护/停服等）。
+  ACCOUNT_SERVER_UNAVAILABLE = 20004;
+  // 该服尚无角色且当前不允许自动创角。
+  ACCOUNT_NO_PLAYER = 20005;
+
+  // --- 世界 30000–30999 ---
+  // 城池不存在或不属于当前玩家。
+  WORLD_CITY_NOT_FOUND = 30001;
+
+  // --- 内政 40000–40999 ---
+  // 资源不足。
+  DOMESTIC_INSUFFICIENT_RESOURCE = 40001;
+  // 建筑槽位或配置非法。
+  DOMESTIC_INVALID_BUILDING = 40002;
+  // 该槽位已在升级/建造队列中。
+  DOMESTIC_BUILDING_BUSY = 40003;
+
+  // --- 军事 50000–50999 ---
+  // 兵种配置不存在。
+  MILITARY_INVALID_UNIT = 50001;
+  // 募兵数量非法（≤0 或超上限）。
+  MILITARY_INVALID_TROOP_COUNT = 50002;
+  // 兵营等级或前置条件不足。
+  MILITARY_RECRUIT_NOT_ALLOWED = 50003;
+  // 城内资源或人口不足无法募兵。
+  MILITARY_INSUFFICIENT_RESOURCE = 50004;
+}
