@@ -862,7 +862,8 @@
       }
       .mail-list li.unread { background: #322a22; border-left: 3px solid #c9a227; }
       .mail-row-summary.mail-row-meta-attach { color: #f0c674; }
-      .mail-unclaimed-badge {
+      .mail-unclaimed-badge,
+      .mail-filter-tab-badge {
         display: inline-block;
         margin-left: 6px;
         padding: 0 5px;
@@ -873,6 +874,16 @@
         border-radius: 3px;
         vertical-align: middle;
         font-weight: 600;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      @keyframes queue-build-complete-pulse-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+        50% { box-shadow: inset 0 0 0 2px #c9a227; }
+      }
+      .queue-list li.queue-build-complete-pulse {
+        animation: queue-build-complete-pulse-keyframes 3s ease-out 1;
       }
       .mail-list li.mail-has-unclaimed .mail-row-summary { color: #f0c674; }
       .mail-detail [data-action="claim-mail"].mail-claim-highlight {
@@ -1007,13 +1018,20 @@
         flex-direction: column;
         overflow: hidden;
       }
-      #layout-frame.layout-narrow .military-panel[data-center-panel="military"] {
+      #layout-frame.layout-narrow .military-panel[data-center-panel="military"],
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] {
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        min-width: 0;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] {
+        max-width: min(380px, 40%);
       }
       #layout-frame.layout-narrow .content-panel .panel-scroll-body,
       #layout-frame.layout-narrow .military-panel .panel-scroll-body,
+      #layout-frame.layout-narrow .building-panel .panel-scroll-body,
       #layout-frame.layout-narrow .social-panel .panel-scroll-body {
         flex: 1 1 auto;
         min-height: 0;
@@ -1083,6 +1101,16 @@
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-list-row > span {
         flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-build-complete-todo,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-build-complete-pulse {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .panel-scroll-body {
+        padding-bottom: 12px;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-hint,
@@ -1183,9 +1211,57 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-status {
         flex-shrink: 0;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar {
+        min-width: 0;
+        max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-filter-btn {
+        flex: 1 1 6rem;
+        min-width: 0;
+        max-width: 100%;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list {
         max-height: none;
         overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] h3,
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] .building-upgrade-preview,
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] .build-form-error {
+        flex-shrink: 0;
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag {
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow #hud.art-chrome-hud {
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow #hud .hud-center-todo-badge {
+        min-width: 0;
+        max-width: min(100%, 12rem);
+        overflow: hidden;
+      }
+      #layout-frame.layout-narrow #hud .hud-center-todo-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-battle-report-banner,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] [data-role="daily-hint"],

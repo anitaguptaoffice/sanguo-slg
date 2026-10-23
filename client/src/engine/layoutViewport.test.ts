@@ -11,9 +11,13 @@ import {
   minUiScaleForHitSize,
   NARROW_LAYOUT_ROOT_CLASS,
   syncLayoutViewportRootClass,
+  CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
-import { NARROW_SCROLL_CENTER_PANEL_IDS } from "@/ui/contentPanelScroll";
+import {
+  NARROW_SCROLL_CENTER_PANEL_IDS,
+  NARROW_SCROLL_SIDEBAR_PANEL_IDS,
+} from "@/ui/contentPanelScroll";
 
 describe("computeLayoutViewport", () => {
   it("fits 1600×900 design at 1:1 on a 1600×900 viewport", () => {
@@ -117,6 +121,18 @@ describe("narrow layout root class", () => {
     const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
     expect(isNarrowLayoutViewport(vp)).toBe(true);
     for (const id of ["rank", "hero", "daily"] as const) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+  });
+
+  it("CLIENT-111 building mail queue manifest registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    for (const id of CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(["building", "mail", "queue"]).toContain(id);
+    }
+    expect(NARROW_SCROLL_SIDEBAR_PANEL_IDS).toContain("building");
+    for (const id of ["mail", "queue"] as const) {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
   });

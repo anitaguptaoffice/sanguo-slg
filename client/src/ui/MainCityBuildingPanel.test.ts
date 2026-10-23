@@ -25,4 +25,15 @@ describe("MainCityBuildingPanel", () => {
     expect(err?.textContent).toMatch(/^缺少：/);
     panel.detach();
   });
+
+  it("has center-panel id and panel-scroll-body for narrow layout (CLIENT-111)", () => {
+    const mount = document.createElement("div");
+    const panel = new MainCityBuildingPanel(mount, { farm: "农田" }, () => null, () => {});
+    panel.attach();
+    expect(mount.querySelector('[data-center-panel="building"]')).toBeTruthy();
+    expect(
+      mount.querySelector('[data-center-panel="building"] .panel-scroll-body'),
+    ).toBeTruthy();
+    panel.detach();
+  });
 });

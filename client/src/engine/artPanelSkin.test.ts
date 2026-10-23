@@ -7,6 +7,7 @@ import {
   CLIENT_086_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_095_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_103_PANEL_ASSET_BY_CENTER_ID,
+  CLIENT_111_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
   PANEL_ASSET_DAILY,
   PANEL_ASSET_BATTLE_REPORT,
@@ -194,5 +195,13 @@ describe("skinNineSlicePanel", () => {
       daily: PANEL_ASSET_DAILY,
     });
     expect(CLIENT_095_PANEL_ASSET_BY_CENTER_ID.bag).toBe(PANEL_ASSET_BAG);
+  });
+
+  it("CLIENT-111 maps building mail queue roots to manifest ids", () => {
+    expect(CLIENT_111_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      building: PANEL_ASSET_DEFAULT,
+      mail: PANEL_ASSET_DEFAULT,
+      queue: PANEL_ASSET_QUEUE,
+    });
   });
 });
