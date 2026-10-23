@@ -42,6 +42,7 @@ func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler 
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
 	validator := account.SessionValidator{Svc: apiSrv.AccountService()}
 	gateway.Mount(mux, a.Log, gwCfg, gateway.AccessControl{}, validator, apiSrv.GatewayRouter())
+	api.MountGmHTTP(mux, apiSrv.Gm())
 	return mux
 }
 
@@ -54,6 +55,9 @@ func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub)
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	srv.AttachBattleReports(reportSvc)
+	if err := srv.WireM4Content(ctx); err != nil {
+		a.Log.Error("m4 content wire failed", "err", err)
+	}
 	go srv.RunDomesticScheduler(ctx)
 	go srv.RunMilitaryScheduler(ctx)
 	go srv.RunRankScheduler(ctx)

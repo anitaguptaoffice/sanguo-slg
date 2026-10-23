@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package sanguo.shop.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/shop/v1;shopv1";
+
+enum PurchaseLimitType {
+  PURCHASE_LIMIT_TYPE_UNSPECIFIED = 0;
+  PURCHASE_LIMIT_TYPE_NONE = 1;
+  PURCHASE_LIMIT_TYPE_DAILY = 2;
+  PURCHASE_LIMIT_TYPE_WEEKLY = 3;
+  PURCHASE_LIMIT_TYPE_LIFETIME = 4;
+}
+
+message ShopOffer {
+  int32 offer_id = 1;
+  int32 shelf_id = 2;
+  string shelf_name = 3;
+  int32 sort_order = 4;
+  int32 item_cfg_id = 5;
+  int32 quantity_per_purchase = 6;
+  sanguo.common.v1.ResourceWallet price_resources = 7;
+  repeated sanguo.common.v1.RewardItem price_items = 8;
+  int32 stock_total = 9;
+  int32 stock_remaining = 10;
+  PurchaseLimitType limit_type = 11;
+  int32 purchase_limit = 12;
+  int32 purchased_count = 13;
+  int64 limit_resets_at_ms = 14;
+  int64 sale_start_at_ms = 15;
+  int64 sale_end_at_ms = 16;
+  bool sold_out = 17;
+}
+
+// route: shop.v1.ListShopShelf
+message ListShopShelfRequest {
+  int32 server_id = 1;
+  int32 shelf_id = 2;
+}
+
+message ListShopShelfResponse {
+  repeated ShopOffer offers = 1;
+  int64 catalog_version = 2;
+}
+
+// route: shop.v1.PurchaseShopOffer
+message PurchaseShopOfferRequest {
+  int32 server_id = 1;
+  int32 offer_id = 2;
+  int32 purchase_count = 3;
+}
+
+message PurchaseShopOfferResponse {
+  ShopOffer offer = 1;
+  sanguo.common.v1.RewardBundle granted_items = 2;
+  sanguo.common.v1.ResourceWallet wallet_after = 3;
+}
