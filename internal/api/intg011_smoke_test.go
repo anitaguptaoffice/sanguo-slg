@@ -70,7 +70,7 @@ func runINTG011Wave14Smoke(t *testing.T) {
 
 	baseSnap := runData002M4Steps(t, ctx, c, apiSrv, pool, sid, playerID)
 	ext := runINTG008DeepenSteps(t, ctx, c, apiSrv, pool, sid, playerID, baseSnap)
-	marchID := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
+	marchID, _, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
 
 	speedupUsed := smokeINTG011BuildSpeedupGateway(t, ctx, c, apiSrv, sid, playerID)
 	smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
