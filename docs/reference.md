@@ -62,4 +62,4 @@ reference/legacy/
 
 ## Wave 7 对齐波次
 
-任务卡在 `tasks/backlog.yml`（`wave: 7`）。入口为 **SPEC-ALIGN-001**（对照 `TABLES.md` 定核心 `cfg_*` 子集行数上限），再 **DATA-001** 灌 `spec/data`（文案重写）。实现侧见 **PERSIST-***、**ECON-001**、**GM-002**、**RULES-ALIGN-001**；路线图见 [ROADMAP.md](ROADMAP.md)。
+任务卡在 `tasks/backlog.yml`（`wave: 7`）。入口为 **SPEC-ALIGN-001**（对照 `TABLES.md` 定核心 `cfg_*` 子集行数上限，产出见 [spec/data/CORE_SUBSET.md](../spec/data/CORE_SUBSET.md) 与 [CFG_CORE_MANIFEST.md](../spec/data/CFG_CORE_MANIFEST.md)），再 **DATA-001** 灌 `spec/data`（文案重写）。实现侧见 **PERSIST-***、**ECON-001**、**GM-002**、**RULES-ALIGN-001**；路线图见 [ROADMAP.md](ROADMAP.md)。
