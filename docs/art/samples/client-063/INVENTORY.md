@@ -2,7 +2,7 @@
 
 仅 `queue-representative` 三视口。根因：Playwright `element.screenshot` 在 `overflow:auto` + 九宫格 `border-image` 时上沿约 24px 呈 viewport 底色；改用 `page.screenshot` 按元素 border box 裁剪。
 
-| 证据 tip SHA | `af285a34acba996db283847bff6401a7b0f40178` |
+| 证据 tip SHA | `8cfe9703077eaa43d31bc4875604ee080931def6` |
 |---|---|
 
 | 路径 | 字节 | SHA-256 | 视口 | 面板 | 状态 |
