@@ -14,6 +14,7 @@ import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
+import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import {
   formatMarchHint,
   formatReportLine,
@@ -52,6 +53,7 @@ export class MainCityScene implements Scene {
   private selectedReportText = "";
   private social!: SocialPanels;
   private content!: ContentPanels;
+  private heroMail!: HeroMailPanels;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -78,6 +80,8 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-quest">任务</button>
       <button type="button" data-action="toggle-bag">背包</button>
       <button type="button" data-action="toggle-shop">商城</button>
+      <button type="button" data-action="toggle-hero">将领</button>
+      <button type="button" data-action="toggle-mail">邮件</button>
     `;
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
@@ -134,6 +138,21 @@ export class MainCityScene implements Scene {
       },
     );
     this.content.attach();
+    this.heroMail = new HeroMailPanels(
+      parent,
+      this.gateway,
+      () => this.session,
+      (patch) => {
+        if (!this.session) return;
+        Object.assign(this.session, patch);
+        this.renderHud();
+      },
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+    );
+    this.heroMail.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
@@ -146,6 +165,7 @@ export class MainCityScene implements Scene {
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
     this.social?.detach();
     this.content?.detach();
+    this.heroMail?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -166,6 +186,8 @@ export class MainCityScene implements Scene {
     if (action === "toggle-quest") this.content.toggleQuest();
     if (action === "toggle-bag") this.content.toggleBag();
     if (action === "toggle-shop") this.content.toggleShop();
+    if (action === "toggle-hero") this.heroMail.toggleHero();
+    if (action === "toggle-mail") this.heroMail.toggleMail();
   }
 
   private onMilitaryClick(ev: Event): void {

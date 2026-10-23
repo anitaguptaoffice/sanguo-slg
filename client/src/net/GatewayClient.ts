@@ -63,6 +63,19 @@ export type GatewayPort = {
   purchaseShopOffer(serverId: number, offerId: number, purchaseCount?: number): Promise<unknown>;
   listPlayerBag(serverId: number): Promise<unknown>;
   useConsumable(serverId: number, itemCfgId: number, count: number): Promise<unknown>;
+  listPlayerMail(
+    serverId: number,
+    opts?: { filter?: number; pageSize?: number; pageOffset?: number },
+  ): Promise<unknown>;
+  markPlayerMailRead(serverId: number, mailId: number): Promise<unknown>;
+  claimPlayerMailAttachments(serverId: number, mailId: number): Promise<unknown>;
+  listPlayerHeroes(serverId: number, opts?: { pageSize?: number; pageOffset?: number }): Promise<unknown>;
+  getHeroDetail(serverId: number, heroId: number): Promise<unknown>;
+  recruitHero(
+    serverId: number,
+    templateCfgId: number,
+    opts?: { itemCfgId?: number; pool?: string },
+  ): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
@@ -416,6 +429,93 @@ export class GatewayClient implements GatewayPort {
       "UseConsumableRequest",
       { server_id: serverId, item_cfg_id: itemCfgId, count },
       UseConsumableResponse,
+      true,
+    );
+  }
+
+  async listPlayerMail(
+    serverId: number,
+    opts: { filter?: number; pageSize?: number; pageOffset?: number } = {},
+  ) {
+    const { ListPlayerMailResponse } = getTypes();
+    return this.rpc(
+      Routes.ListPlayerMail,
+      "ListPlayerMailRequest",
+      {
+        server_id: serverId,
+        filter: opts.filter ?? 0,
+        page_size: opts.pageSize ?? 50,
+        page_offset: opts.pageOffset ?? 0,
+      },
+      ListPlayerMailResponse,
+      true,
+    );
+  }
+
+  async markPlayerMailRead(serverId: number, mailId: number) {
+    const { MarkPlayerMailReadResponse } = getTypes();
+    return this.rpc(
+      Routes.MarkPlayerMailRead,
+      "MarkPlayerMailReadRequest",
+      { server_id: serverId, mail_id: mailId },
+      MarkPlayerMailReadResponse,
+      true,
+    );
+  }
+
+  async claimPlayerMailAttachments(serverId: number, mailId: number) {
+    const { ClaimPlayerMailAttachmentsResponse } = getTypes();
+    return this.rpc(
+      Routes.ClaimPlayerMailAttachments,
+      "ClaimPlayerMailAttachmentsRequest",
+      { server_id: serverId, mail_id: mailId },
+      ClaimPlayerMailAttachmentsResponse,
+      true,
+    );
+  }
+
+  async listPlayerHeroes(serverId: number, opts: { pageSize?: number; pageOffset?: number } = {}) {
+    const { ListPlayerHeroesResponse } = getTypes();
+    return this.rpc(
+      Routes.ListPlayerHeroes,
+      "ListPlayerHeroesRequest",
+      {
+        server_id: serverId,
+        page_size: opts.pageSize ?? 50,
+        page_offset: opts.pageOffset ?? 0,
+      },
+      ListPlayerHeroesResponse,
+      true,
+    );
+  }
+
+  async getHeroDetail(serverId: number, heroId: number) {
+    const { GetHeroDetailResponse } = getTypes();
+    return this.rpc(
+      Routes.GetHeroDetail,
+      "GetHeroDetailRequest",
+      { server_id: serverId, hero_id: heroId },
+      GetHeroDetailResponse,
+      true,
+    );
+  }
+
+  async recruitHero(
+    serverId: number,
+    templateCfgId: number,
+    opts: { itemCfgId?: number; pool?: string } = {},
+  ) {
+    const { RecruitHeroResponse } = getTypes();
+    return this.rpc(
+      Routes.RecruitHero,
+      "RecruitHeroRequest",
+      {
+        server_id: serverId,
+        template_cfg_id: templateCfgId,
+        item_cfg_id: opts.itemCfgId ?? 0,
+        pool: opts.pool ?? "",
+      },
+      RecruitHeroResponse,
       true,
     );
   }

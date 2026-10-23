@@ -26,9 +26,12 @@ function loadRoot() {
   for (const f of files) {
     protobuf.parse(fs.readFileSync(path.join(protoRoot, f), "utf8"), root, { keepCase: true });
   }
-  const contentExtra = path.resolve(__dirname, "../proto/sanguo/content/v1/extra.proto");
-  if (fs.existsSync(contentExtra)) {
-    protobuf.parse(fs.readFileSync(contentExtra, "utf8"), root, { keepCase: true });
+  const clientProtoDir = path.resolve(__dirname, "../proto/sanguo");
+  for (const rel of ["content/v1/extra.proto", "hero/v1/hero.proto"]) {
+    const p = path.join(clientProtoDir, rel);
+    if (fs.existsSync(p)) {
+      protobuf.parse(fs.readFileSync(p, "utf8"), root, { keepCase: true });
+    }
   }
   root.resolveAll();
   return root;
@@ -67,9 +70,23 @@ function sessionState() {
       { rank: 1, entity_id: 10001, display_name: "演示君主", score: 12800 },
       { rank: 2, entity_id: 10002, display_name: "路人甲", score: 9200 },
     ],
-    bag: {},
+    bag: { 2004: 2 },
     quests: {},
     shopPurchased: {},
+    heroes: [],
+    nextHeroId: 8001,
+    mails: [
+      {
+        mail_id: 6001,
+        mail_type: 1,
+        title: "欢迎奖励",
+        body: "mock 网关演示邮件，可领取谷袋。",
+        status: 0,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+        created_at_ms: Date.now(),
+      },
+    ],
+    nextMailId: 6002,
   };
 }
 
@@ -497,6 +514,107 @@ wss.on("connection", (ws) => {
         } catch (e) {
           reply(ws, cp.trace_id, 10001, e.message);
         }
+        return;
+      }
+
+      if (route === "hero.v1.ListPlayerHeroes") {
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ListPlayerHeroesResponse"), {
+          heroes: state.heroes,
+          total_count: state.heroes.length,
+        });
+        return;
+      }
+
+      if (route === "hero.v1.GetHeroDetail") {
+        const req = T("sanguo.hero.v1.GetHeroDetailRequest").decode(cp.payload);
+        const h = state.heroes.find((x) => x.hero_id === req.hero_id);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.GetHeroDetailResponse"), {
+          hero_id: h.hero_id,
+          template_cfg_id: h.template_cfg_id,
+          template_name: "演示将领",
+          template_code: `tpl_${h.template_cfg_id}`,
+          rarity: 5,
+          level: h.level,
+          loyalty: h.loyalty,
+          loyalty_min: 0,
+          loyalty_max: 100,
+          attributes: { force: 70, intel: 72, politics: 68, command: 75 },
+        });
+        return;
+      }
+
+      if (route === "hero.v1.RecruitHero") {
+        const req = T("sanguo.hero.v1.RecruitHeroRequest").decode(cp.payload);
+        const scrollId = req.item_cfg_id || 2004;
+        const have = state.bag[scrollId] ?? 0;
+        if (have < 1) {
+          reply(ws, cp.trace_id, 10001, "道具不足");
+          return;
+        }
+        state.bag[scrollId] = have - 1;
+        const heroId = state.nextHeroId++;
+        const row = {
+          hero_id: heroId,
+          template_cfg_id: req.template_cfg_id || 1001,
+          level: 1,
+          loyalty: 100,
+        };
+        state.heroes.push(row);
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.RecruitHeroResponse"), row);
+        return;
+      }
+
+      if (route === "content.v1.ListPlayerMail") {
+        replyOk(ws, cp.trace_id, T("sanguo.content.v1.ListPlayerMailResponse"), {
+          mails: state.mails,
+          total_count: state.mails.length,
+        });
+        return;
+      }
+
+      if (route === "content.v1.MarkPlayerMailRead") {
+        const req = T("sanguo.content.v1.MarkPlayerMailReadRequest").decode(cp.payload);
+        const m = state.mails.find((x) => x.mail_id === req.mail_id);
+        if (!m) {
+          reply(ws, cp.trace_id, 10001, "mail not found");
+          return;
+        }
+        m.status = 1;
+        m.read_at_ms = Date.now();
+        replyOk(ws, cp.trace_id, T("sanguo.content.v1.MarkPlayerMailReadResponse"), { mail: m });
+        return;
+      }
+
+      if (route === "content.v1.ClaimPlayerMailAttachments") {
+        const req = T("sanguo.content.v1.ClaimPlayerMailAttachmentsRequest").decode(cp.payload);
+        const m = state.mails.find((x) => x.mail_id === req.mail_id);
+        if (!m) {
+          reply(ws, cp.trace_id, 10001, "mail not found");
+          return;
+        }
+        if (m.status === 2) {
+          reply(ws, cp.trace_id, 10001, "already claimed");
+          return;
+        }
+        const items = m.attachments?.items ?? [];
+        for (const it of items) {
+          addBag(state, it.item_cfg_id, it.quantity || 1);
+        }
+        const res = m.attachments?.resources;
+        if (res?.food) state.wallet.food += res.food;
+        if (res?.gold) state.wallet.gold += res.gold;
+        m.status = 2;
+        m.claimed_at_ms = Date.now();
+        replyOk(ws, cp.trace_id, T("sanguo.content.v1.ClaimPlayerMailAttachmentsResponse"), {
+          mail: m,
+          granted: m.attachments,
+          wallet_after: state.wallet,
+          bag_items: bagList(state),
+        });
         return;
       }
 

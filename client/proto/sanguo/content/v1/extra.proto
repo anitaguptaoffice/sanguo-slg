@@ -34,3 +34,57 @@ message UseConsumableResponse {
   int64 speedup_seconds = 4;
   string effect_summary = 5;
 }
+
+enum MailInboxFilter {
+  MAIL_INBOX_FILTER_ALL = 0;
+  MAIL_INBOX_FILTER_UNREAD = 1;
+  MAIL_INBOX_FILTER_READ = 2;
+}
+
+message PlayerMail {
+  int64 mail_id = 1;
+  int32 mail_type = 2;
+  string title = 3;
+  string body = 4;
+  int32 status = 5;
+  sanguo.common.v1.RewardBundle attachments = 6;
+  int64 created_at_ms = 7;
+  int64 read_at_ms = 8;
+  int64 claimed_at_ms = 9;
+}
+
+// route: content.v1.ListPlayerMail
+message ListPlayerMailRequest {
+  int32 server_id = 1;
+  MailInboxFilter filter = 2;
+  int32 page_size = 3;
+  int32 page_offset = 4;
+}
+
+message ListPlayerMailResponse {
+  repeated PlayerMail mails = 1;
+  int32 total_count = 2;
+}
+
+// route: content.v1.MarkPlayerMailRead
+message MarkPlayerMailReadRequest {
+  int32 server_id = 1;
+  int64 mail_id = 2;
+}
+
+message MarkPlayerMailReadResponse {
+  PlayerMail mail = 1;
+}
+
+// route: content.v1.ClaimPlayerMailAttachments
+message ClaimPlayerMailAttachmentsRequest {
+  int32 server_id = 1;
+  int64 mail_id = 2;
+}
+
+message ClaimPlayerMailAttachmentsResponse {
+  PlayerMail mail = 1;
+  sanguo.common.v1.RewardBundle granted = 2;
+  sanguo.common.v1.ResourceWallet wallet_after = 3;
+  repeated PlayerItemStack bag_items = 4;
+}

@@ -15,10 +15,15 @@ export function getProtoRoot(): protobuf.Root {
     "../../../spec/proto/sanguo/**/*.proto",
     { query: "?raw", import: "default", eager: true },
   ) as Record<string, string>;
-  const clientModules = import.meta.glob(
+  const clientContentModules = import.meta.glob(
     "../../proto/sanguo/content/**/*.proto",
     { query: "?raw", import: "default", eager: true },
   ) as Record<string, string>;
+  const clientHeroModules = import.meta.glob(
+    "../../proto/sanguo/hero/**/*.proto",
+    { query: "?raw", import: "default", eager: true },
+  ) as Record<string, string>;
+  const clientModules = { ...clientContentModules, ...clientHeroModules };
   root = new protobuf.Root();
   parseProtosInto(root, specModules);
   parseProtosInto(root, clientModules);
@@ -53,6 +58,12 @@ export const Routes = {
   PurchaseShopOffer: "shop.v1.PurchaseShopOffer",
   ListPlayerBag: "content.v1.ListPlayerBag",
   UseConsumable: "content.v1.UseConsumable",
+  ListPlayerMail: "content.v1.ListPlayerMail",
+  MarkPlayerMailRead: "content.v1.MarkPlayerMailRead",
+  ClaimPlayerMailAttachments: "content.v1.ClaimPlayerMailAttachments",
+  ListPlayerHeroes: "hero.v1.ListPlayerHeroes",
+  GetHeroDetail: "hero.v1.GetHeroDetail",
+  RecruitHero: "hero.v1.RecruitHero",
 } as const;
 
 export const ErrorCode = {
@@ -115,6 +126,18 @@ export type ProtoTypes = {
   ListPlayerBagResponse: protobuf.Type;
   UseConsumableRequest: protobuf.Type;
   UseConsumableResponse: protobuf.Type;
+  ListPlayerMailRequest: protobuf.Type;
+  ListPlayerMailResponse: protobuf.Type;
+  MarkPlayerMailReadRequest: protobuf.Type;
+  MarkPlayerMailReadResponse: protobuf.Type;
+  ClaimPlayerMailAttachmentsRequest: protobuf.Type;
+  ClaimPlayerMailAttachmentsResponse: protobuf.Type;
+  ListPlayerHeroesRequest: protobuf.Type;
+  ListPlayerHeroesResponse: protobuf.Type;
+  GetHeroDetailRequest: protobuf.Type;
+  GetHeroDetailResponse: protobuf.Type;
+  RecruitHeroRequest: protobuf.Type;
+  RecruitHeroResponse: protobuf.Type;
 };
 
 export function getTypes(): ProtoTypes {
@@ -174,5 +197,17 @@ export function getTypes(): ProtoTypes {
     ListPlayerBagResponse: r.lookupType("sanguo.content.v1.ListPlayerBagResponse"),
     UseConsumableRequest: r.lookupType("sanguo.content.v1.UseConsumableRequest"),
     UseConsumableResponse: r.lookupType("sanguo.content.v1.UseConsumableResponse"),
+    ListPlayerMailRequest: r.lookupType("sanguo.content.v1.ListPlayerMailRequest"),
+    ListPlayerMailResponse: r.lookupType("sanguo.content.v1.ListPlayerMailResponse"),
+    MarkPlayerMailReadRequest: r.lookupType("sanguo.content.v1.MarkPlayerMailReadRequest"),
+    MarkPlayerMailReadResponse: r.lookupType("sanguo.content.v1.MarkPlayerMailReadResponse"),
+    ClaimPlayerMailAttachmentsRequest: r.lookupType("sanguo.content.v1.ClaimPlayerMailAttachmentsRequest"),
+    ClaimPlayerMailAttachmentsResponse: r.lookupType("sanguo.content.v1.ClaimPlayerMailAttachmentsResponse"),
+    ListPlayerHeroesRequest: r.lookupType("sanguo.hero.v1.ListPlayerHeroesRequest"),
+    ListPlayerHeroesResponse: r.lookupType("sanguo.hero.v1.ListPlayerHeroesResponse"),
+    GetHeroDetailRequest: r.lookupType("sanguo.hero.v1.GetHeroDetailRequest"),
+    GetHeroDetailResponse: r.lookupType("sanguo.hero.v1.GetHeroDetailResponse"),
+    RecruitHeroRequest: r.lookupType("sanguo.hero.v1.RecruitHeroRequest"),
+    RecruitHeroResponse: r.lookupType("sanguo.hero.v1.RecruitHeroResponse"),
   };
 }
