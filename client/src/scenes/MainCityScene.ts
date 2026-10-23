@@ -288,6 +288,7 @@ export class MainCityScene implements Scene {
       (action) => this.navigateDailyQuest(action),
       () => this.hudTodoBadgePoll.getDeepLinkSnapshot().battleReportUnread,
       () => this.openBattleReportsFromDailyBanner(),
+      () => this.openMailPanelFromDailyCrossLink(),
       () => this.session?.buildings,
       SLOT_LABEL,
     );
@@ -307,6 +308,12 @@ export class MainCityScene implements Scene {
       this.cityStateFetch,
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
       (snap) => this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId),
+      (reportId) => {
+        this.marchReportToastActive = false;
+        void this.battleReports
+          .openPanelWithDeepLink(reportId ?? undefined)
+          .then(() => this.renderHud());
+      },
     );
     this.heroMail.attach();
     this.battleReports = new BattleReportPanel(
@@ -321,6 +328,10 @@ export class MainCityScene implements Scene {
         onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
         onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
         onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
+        onOpenRelatedMail: (mailId) => {
+          this.heroMail.openAndHighlightMail(mailId);
+          this.renderHud();
+        },
       },
     );
     this.battleReports.attach();
@@ -522,6 +533,11 @@ export class MainCityScene implements Scene {
     this.queuePanels?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
+  }
+
+  private openMailPanelFromDailyCrossLink(): void {
+    this.heroMail.openMailPanel();
+    this.renderHud();
   }
 
   private openBattleReportsFromDailyBanner(): void {

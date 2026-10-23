@@ -101,6 +101,35 @@ describe("BattleReportPanel", () => {
     expect(detail?.querySelector('[data-action="view-on-map"]')).toBeTruthy();
   });
 
+  it("shows 相关邮件 when detail has mail source hint", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 4,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { result: "attacker_win mail_id=6002", rounds: [{ round: 1 }] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const onOpenRelatedMail = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, { onOpenRelatedMail });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="4"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const mailBtn = mount.querySelector('[data-action="open-related-mail"]') as HTMLButtonElement;
+    expect(mailBtn?.textContent).toBe("相关邮件");
+    mailBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenRelatedMail).toHaveBeenCalledWith(6002);
+  });
+
   it("invokes onViewOnMap when clicking 在地图查看", async () => {
     const mount = document.createElement("div");
     const summary = {

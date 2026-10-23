@@ -225,10 +225,50 @@ describe("DailyQuestPanels", () => {
     await flushPromises();
     const ul = mount.querySelector('[data-role="daily-list"]');
     expect(ul?.textContent).toContain("[战备]");
+    expect(ul?.querySelector('[data-action="daily-cross-battle-report"]')?.textContent).toBe("战报");
     const nextBtn = mount.querySelector('[data-action="daily-go-next"]') as HTMLButtonElement;
     expect(nextBtn?.hidden).toBe(false);
     nextBtn?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(onNavigate).toHaveBeenCalledWith({ kind: "use_item", itemCfgId: 2020 });
+  });
+
+  it("daily_build_1 shows mail cross-link tag", async () => {
+    const mount = document.createElement("div");
+    const onOpenMail = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [{ quest_cfg_id: 1032, quest_code: "daily_build_1", state: 2 }],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onOpenMail,
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const tag = mount.querySelector('[data-action="daily-cross-mail"]') as HTMLButtonElement;
+    expect(tag?.textContent).toBe("邮件");
+    tag?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenMail).toHaveBeenCalledTimes(1);
   });
 
   it("openFromTodoBadge highlights first acceptable daily", async () => {

@@ -43,6 +43,7 @@ import {
   mailRowTitleLine,
 } from "@/net/panelDensity";
 import { mailUnreadSnapshotFromListResponse, pickFirstUnreadMailId } from "@/net/hudTodoBadge";
+import { resolveMailBattleReportLink } from "@/net/mailBattleCrossLink";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -76,6 +77,7 @@ export class HeroMailPanels {
     private readonly cityStateFetch?: CityStateFetch,
     private readonly onDailyRecruitLoop?: () => void | Promise<void>,
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
+    private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
   ) {}
 
   attach(): void {
@@ -146,7 +148,31 @@ export class HeroMailPanels {
     } else void this.syncUnreadBadge();
   }
 
-  /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照，不再单独查未读）。 */
+  /** 仅打开邮件面板（不 toggle 关闭）。 */
+  openMailPanel(): void {
+    if (this.isMailOpen()) return;
+    this.mailPanel.classList.remove("hidden");
+    this.onUnreadCount?.(0);
+    void this.refreshMail();
+  }
+
+  /** 战报深链：打开收件箱并高亮指定邮件（不自动领取附件）。 */
+  openAndHighlightMail(mailId: number): void {
+    this.mailPanel.classList.remove("hidden");
+    this.onUnreadCount?.(0);
+    this.mailFilter = MAIL_INBOX_FILTER_ALL;
+    if (mailId > 0) this.selectedMailId = mailId;
+    void this.refreshMail().then(() => this.focusHighlightedMail(mailId));
+  }
+
+  private async focusHighlightedMail(mailId: number): Promise<void> {
+    if (mailId <= 0 || !this.mails.some((m) => m.mail_id === mailId)) return;
+    await this.openMail(mailId);
+    const row = this.mailPanel.querySelector(`li[data-mail-id="${mailId}"]`);
+    row?.scrollIntoView?.({ block: "nearest" });
+  }
+
+  /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照）。 */
   openFromTodoBadge(preferredMailId = 0): void {
     this.mailPanel.classList.remove("hidden");
     this.onUnreadCount?.(0);
@@ -245,6 +271,7 @@ export class HeroMailPanels {
         <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
         <pre class="mail-body" data-role="mail-body"></pre>
         <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full hidden mail-cross-link-btn" data-action="mail-open-battle-report">查看战报</button>
       </div>
     `;
     return el;
@@ -389,6 +416,9 @@ export class HeroMailPanels {
     const titleEl = this.mailPanel.querySelector('[data-role="mail-detail-title"]');
     const body = this.mailPanel.querySelector('[data-role="mail-body"]');
     const claimBtn = this.mailPanel.querySelector('[data-action="claim-mail"]');
+    const battleBtn = this.mailPanel.querySelector(
+      '[data-action="mail-open-battle-report"]',
+    ) as HTMLButtonElement | null;
     if (!ul) return;
     this.setMailFilterButtons();
     ul.innerHTML = "";
@@ -444,6 +474,15 @@ export class HeroMailPanels {
       if (claimBtn instanceof HTMLButtonElement) {
         claimBtn.disabled = this.claimMailInflight > 0 && this.claimMailInflight === this.selectedMailId;
       }
+    }
+    if (battleBtn) {
+      const link = sel
+        ? resolveMailBattleReportLink(mailTitle(sel), sel.body ?? "")
+        : { show: false, reportId: null };
+      const showBattle = link.show && !!this.onOpenBattleReport;
+      battleBtn.classList.toggle("hidden", !showBattle);
+      if (link.reportId != null) battleBtn.dataset.reportId = String(link.reportId);
+      else battleBtn.removeAttribute("data-report-id");
     }
   }
 
@@ -795,5 +834,10 @@ export class HeroMailPanels {
       void this.refreshMail();
     }
     if (a === "claim-mail") void this.claimMail();
+    if (a === "mail-open-battle-report") {
+      const reportRaw = btn.dataset.reportId;
+      const reportId = reportRaw ? Number(reportRaw) : 0;
+      void this.onOpenBattleReport?.(reportId > 0 ? reportId : null);
+    }
   }
 }
