@@ -16,6 +16,9 @@ import (
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
+	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
@@ -42,8 +45,11 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	}
 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	apiSrv := api.NewServer(log, pool, world.NewService(store), domestic.NewHub(time.Now))
+	domHub := domestic.NewHub(time.Now)
+	milHub := march.NewHub(time.Now)
+	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, milHub)
 	go apiSrv.RunDomesticScheduler(ctx)
+	go apiSrv.RunMilitaryScheduler(ctx)
 
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
@@ -121,6 +127,51 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	})
 	if up.Code != 0 {
 		t.Fatalf("upgrade: %+v", up)
+	}
+
+	beforeRecruit := mustSend(t, c, &commonv1.ClientPacket{
+		Route:     api.RouteGetCityState,
+		TraceId:   "g3",
+		SessionId: sid,
+		Payload:   mustMarshal(&domesticv1.GetCityStateRequest{CityId: cityID}),
+	})
+	var stBefore domesticv1.GetCityStateResponse
+	_ = proto.Unmarshal(beforeRecruit.Data, &stBefore)
+
+	recruit := mustSend(t, c, &commonv1.ClientPacket{
+		Route:     api.RouteRecruitTroop,
+		TraceId:   "rt1",
+		SessionId: sid,
+		Payload: mustMarshal(&militaryv1.RecruitTroopRequest{
+			CityId: cityID, UnitCfgId: 1, Count: 5,
+		}),
+	})
+	if recruit.Code != 0 {
+		t.Fatalf("recruit: %+v", recruit)
+	}
+	var recruitOut militaryv1.RecruitTroopResponse
+	_ = proto.Unmarshal(recruit.Data, &recruitOut)
+	if recruitOut.GetWallet().GetFood() >= stBefore.GetWallet().GetFood() {
+		t.Fatalf("recruit should debit food")
+	}
+
+	milHub.City(cityID).Troops[1] = 30
+	marchResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route:     api.RouteStartMarch,
+		TraceId:   "sm1",
+		SessionId: sid,
+		Payload: mustMarshal(&militaryv1.StartMarchRequest{
+			CityId: cityID, ToX: 65, ToY: 65, Purpose: 1,
+			Troops: []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 10}},
+		}),
+	})
+	if marchResp.Code != 0 {
+		t.Fatalf("start march: %+v", marchResp)
+	}
+	var marchOut militaryv1.StartMarchResponse
+	_ = proto.Unmarshal(marchResp.Data, &marchOut)
+	if marchOut.GetMarch().GetMarchId() == 0 {
+		t.Fatal("expected march id")
 	}
 }
 
