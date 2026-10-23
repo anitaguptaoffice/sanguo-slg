@@ -1,4 +1,4 @@
-# H5 客户端（CLIENT-001 ~ CLIENT-018）
+# H5 客户端（CLIENT-001 ~ CLIENT-020）
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -29,6 +29,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **邮件**（收件箱 / 已读 / 领附件） | [手动验收（邮件收件箱，CLIENT-017）](#手动验收邮件收件箱client-017)（[#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) / [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190)）；招募相关仍见 [手动验收（M4：将领，CLIENT-008）](#手动验收m4将领client-008) |
 | **战报筛选**（outcome 客户端筛选 + 详情摘要） | [手动验收（战报筛选 CLIENT-016）](#手动验收战报筛选-client-016) |
 | **HUD 资源变动提示** | [手动验收（HUD 资源变动，CLIENT-018）](#手动验收hud-资源变动-client-018)（[#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) / [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191)） |
+
+## Wave 13 可玩加深（H5 loop）
+
+| 能力 | 验收小节 |
+|---|---|
+| **背包使用 / 商城购买可读反馈** | [手动验收（背包与商城反馈，CLIENT-020）](#手动验收背包与商城反馈-client-020)（[#197](https://github.com/anitaguptaoffice/sanguo-slg/issues/197)） |
 
 ## 网关地址
 
@@ -79,8 +85,8 @@ cd client && npm install && npm run dev
 
 1. `make dev` 启动后进入主城，HUD 显示 **币**（`player_wallet.gold`，商城银币价映射到 gold 字段）。
 2. **任务**：打开「任务」→「接取」→「上报进度(绝对值2)」→「领奖」。背包应出现谷袋·初备（2001）；HUD 粮/币随奖励变化。
-3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时状态栏显示服务端错误；成功时 HUD **币** 减少且背包数量增加（`wallet_after` 真扣费，无 spent overlay）。
-4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag` 拉服务端持久化全量并覆盖会话背包展示；「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）。资源包(2001)/加速符(2003) 使用成功后 HUD 粮/币或状态栏效果摘要应更新。CLIENT-010 起列表行展示道具名/数量摘要，商城货架行展示 offer 标题与价格，便于对照招募消耗。
+3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时面板与状态栏显示 `[code] msg`（如 `[64003] 余额不足`）；成功时见 [CLIENT-020](#手动验收背包与商城反馈-client-020)。
+4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag`；「使用道具」调用 `content.v1.UseConsumable`。效果摘要见 [CLIENT-020](#手动验收背包与商城反馈-client-020)。CLIENT-010 起列表行展示道具名/数量摘要，商城货架行展示 offer 标题与价格。
 
 ### 手动验收（日常 chain 400，CLIENT-009）
 
@@ -178,6 +184,17 @@ cd client && npm install && npm run dev
 4. 若列表超过一页，使用 **加载更多**（`limit`/`offset`）或既有分页；失败时状态栏文案可重试。
 5. 视口 **1600×900**：筛选行与列表落在顶底 56px 带之间、可滚动。
 
+### 手动验收（背包与商城反馈，CLIENT-020）
+
+`contentFeedback.ts` 解析 `UseConsumable` / `PurchaseShopOffer` 响应；背包/商城面板内 `panel-feedback` 与顶栏状态栏同步文案。使用资源包(2001) 成功后 **CLIENT-018** 顶栏仍可出现 `+粮…` 短时摘要（`patchSession` + `formatWalletGainBrief`）。
+
+1. `make dev` 或 mock 网关进入主城，**任务领奖**或 **商城购买** 获得谷袋(2001) 与急工符(2003)（mock 购买即得 2001）。
+2. **背包**：「刷新背包」→ 选 **2001** →「使用道具」。面板金色反馈区与 HUD 末行应同时显示效果（如「获得粮食 …」「+粮…」）；顶栏粮增加时出现 CLIENT-018 `+粮` 飘字。
+3. 选 **2003** →「使用道具」：面板与状态栏应显示加速文案（服务端 `effect_summary` 或 `speedup_seconds` 推导）。
+4. 故意数量大于库存或 mock 下耗尽道具：失败时面板与状态栏为 `[code] msg`，不静默。
+5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；余额不足为 `[64003] 余额不足`（真实服 code 以网关为准）。
+6. 单测：`contentFeedback.test.ts`；全量 `cd client && npm test`。
+
 ### 手动验收（HUD 资源变动，CLIENT-018）
 
 承接 **CLIENT-011** 顶栏五资源；`hudFormat.formatWalletGainBrief` 对比领奖/购买前后 `wallet` 字段，在 `#hud` 短时显示 `+粮/+木/+铁/+石/+币` 摘要（约数秒淡出）。`CityStateFetch` 对 `domestic.v1.GetCityState` **单飞去重**；`cityStatePoll` 在主城：有 DOM 面板打开时约 **5s** 轮询刷新 HUD/建筑等级，无面板时约 **30s** 降频。
@@ -219,7 +236,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板/收件箱 filter·摘要·领取合并）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
