@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { AssetLoader } from "@/engine/AssetLoader";
+import { computeLayoutViewport } from "@/engine/layoutViewport";
+import { LAYOUT_FRAME } from "@/engine/mainCitySlots";
 import { SceneManager, type Scene } from "@/engine/SceneManager";
 describe("SceneManager", () => {
   it("switches scenes and calls enter/leave", async () => {
@@ -38,6 +40,7 @@ describe("SceneManager", () => {
         getSessionId: () => "",
       },
       assets: new AssetLoader(),
+      getViewport: () => computeLayoutViewport(LAYOUT_FRAME.w, LAYOUT_FRAME.h),
       switchScene: vi.fn(),
     };
     await mgr.switch("a", ctx);

@@ -12,6 +12,7 @@ export type SceneContext = {
   switchScene: (name: string, data?: unknown) => Promise<void>;
   gateway: import("@/net/GatewayClient").GatewayPort;
   assets: import("@/engine/AssetLoader").AssetLoader;
+  getViewport: () => import("@/engine/layoutViewport").LayoutViewport;
 };
 
 export class SceneManager {

@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "pack": "maincity",
+  "texture_delivery": "standalone_png",
+  "base_url": "/assets/art/v1/",
+  "assets": [
+    {
+      "id": "mc.bg.plateau.v1",
+      "kind": "background",
+      "display_size": { "w": 1600, "h": 788 },
+      "anchor": { "x": 0, "y": 0 },
+      "anchor_unit": "pixels",
+      "variants": [
+        { "scale": 1, "path": "textures/1x/maincity/bg_plateau.png" },
+        { "scale": 2, "path": "textures/2x/maincity/bg_plateau.png" }
+      ],
+      "tags": ["sample-set", "stage-aligned-y56"]
+    },
+    {
+      "id": "mc.building.hall.v1",
+      "kind": "sprite",
+      "slot_key": "hall",
+      "display_size": { "w": 320, "h": 240 },
+      "anchor": { "x": 160, "y": 240 },
+      "anchor_unit": "pixels",
+      "variants": [
+        { "scale": 1, "path": "textures/1x/maincity/hall.png" },
+        { "scale": 2, "path": "textures/2x/maincity/hall.png" }
+      ]
+    },
+    {
+      "id": "mc.building.farm.v1",
+      "kind": "sprite",
+      "slot_key": "farm",
+      "display_size": { "w": 200, "h": 160 },
+      "anchor": { "x": 100, "y": 160 },
+      "anchor_unit": "pixels",
+      "variants": [
+        { "scale": 1, "path": "textures/1x/maincity/farm.png" },
+        { "scale": 2, "path": "textures/2x/maincity/farm.png" }
+      ]
+    },
+    {
+      "id": "ui.button.primary.v1",
+      "kind": "button",
+      "display_size": { "w": 160, "h": 48 },
+      "anchor": { "x": 0, "y": 0 },
+      "anchor_unit": "pixels",
+      "button_states": {
+        "normal": [
+          { "scale": 1, "path": "textures/1x/ui/btn_primary_normal.png" },
+          { "scale": 2, "path": "textures/2x/ui/btn_primary_normal.png" }
+        ],
+        "hover": [
+          { "scale": 1, "path": "textures/1x/ui/btn_primary_hover.png" },
+          { "scale": 2, "path": "textures/2x/ui/btn_primary_hover.png" }
+        ],
+        "pressed": [
+          { "scale": 1, "path": "textures/1x/ui/btn_primary_pressed.png" },
+          { "scale": 2, "path": "textures/2x/ui/btn_primary_pressed.png" }
+        ],
+        "disabled": [
+          { "scale": 1, "path": "textures/1x/ui/btn_primary_disabled.png" },
+          { "scale": 2, "path": "textures/2x/ui/btn_primary_disabled.png" }
+        ]
+      }
+    },
+    {
+      "id": "ui.panel.default.v1",
+      "kind": "nine_slice",
+      "display_size": { "w": 320, "h": 200 },
+      "anchor": { "x": 0, "y": 0 },
+      "anchor_unit": "pixels",
+      "nine_slice": { "left": 24, "top": 24, "right": 24, "bottom": 24 },
+      "variants": [
+        { "scale": 1, "path": "textures/1x/ui/panel_default.png" },
+        { "scale": 2, "path": "textures/2x/ui/panel_default.png" }
+      ]
+    },
+    {
+      "id": "res.icon.food.v1",
+      "kind": "icon",
+      "display_size": { "w": 32, "h": 32 },
+      "anchor": { "x": 16, "y": 16 },
+      "anchor_unit": "pixels",
+      "variants": [
+        { "scale": 1, "path": "textures/1x/icons/food.png" },
+        { "scale": 2, "path": "textures/2x/icons/food.png" }
+      ]
+    }
+  ]
+}
