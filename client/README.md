@@ -543,6 +543,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（队列 CLIENT-019）
 
+队列面板顶栏（**CLIENT-059**）汇总进行中建造/募兵条数与 `formatBuildQueueCountdown` 最近倒计时；顶栏资源条次行展示 `GetCityState.production_rates`（粮/木/铁/石 +/h，只读）。
+
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。
