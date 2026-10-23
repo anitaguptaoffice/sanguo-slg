@@ -3,13 +3,16 @@ import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import {
   skinBagPanel,
   skinBattleReportPanel,
+  skinChatPanel,
   skinDailyPanel,
+  skinGuildPanel,
   skinHeroPanel,
   skinMailPanel,
   skinMarchIntelPanel,
   skinMilitaryPanel,
   skinQueuePanel,
   skinRankPanel,
+  skinShopPanel,
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -545,18 +548,24 @@ export class MainCityScene implements Scene {
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
     skinHeroPanel(this.heroMail.getHeroRoot(), this.assets, 520, 320);
     skinBagPanel(this.content.getBagRoot(), this.assets, 520, 320);
+    skinShopPanel(this.content.getShopRoot(), this.assets, 520, 320);
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
     skinWorldPanel(this.world.getRoot(), this.assets, 520, 320);
     skinRankPanel(this.social.getRankRoot(), this.assets, 520, 320);
+    skinGuildPanel(this.social.getGuildRoot(), this.assets, 520, 320);
+    skinChatPanel(this.social.getChatRoot(), this.assets, 520, 320);
     skinCenterPrimary(this.heroMail.getHeroRoot());
     skinCenterPrimary(this.content.getBagRoot());
+    skinCenterPrimary(this.content.getShopRoot());
     skinCenterPrimary(this.queuePanels.getRoot());
     skinCenterPrimary(this.heroMail.getMailRoot());
     skinCenterPrimary(this.dailyQuest.getRoot());
     skinCenterPrimary(this.world.getRoot());
     skinCenterPrimary(this.social.getRankRoot());
+    skinCenterPrimary(this.social.getGuildRoot());
+    skinCenterPrimary(this.social.getChatRoot());
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));

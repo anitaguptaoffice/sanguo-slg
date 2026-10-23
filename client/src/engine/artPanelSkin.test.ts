@@ -5,9 +5,13 @@ import {
   CLIENT_070_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_078_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_086_PANEL_ASSET_BY_CENTER_ID,
+  CLIENT_095_PANEL_ASSET_BY_CENTER_ID,
   PANEL_ASSET_BAG,
   PANEL_ASSET_BATTLE_REPORT,
+  PANEL_ASSET_CHAT,
+  PANEL_ASSET_GUILD,
   PANEL_ASSET_MARCH,
+  PANEL_ASSET_SHOP,
   PANEL_ASSET_DEFAULT,
   PANEL_ASSET_HERO,
   PANEL_ASSET_MILITARY,
@@ -16,7 +20,9 @@ import {
   PANEL_ASSET_WORLD,
   skinBagPanel,
   skinBattleReportPanel,
+  skinChatPanel,
   skinDailyPanel,
+  skinGuildPanel,
   skinHeroPanel,
   skinMailPanel,
   skinMarchIntelPanel,
@@ -24,6 +30,7 @@ import {
   skinNineSlicePanel,
   skinQueuePanel,
   skinRankPanel,
+  skinShopPanel,
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
 
@@ -141,5 +148,27 @@ describe("skinNineSlicePanel", () => {
     skinBattleReportPanel(reports, assets);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_MARCH);
     expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_BATTLE_REPORT);
+  });
+
+  it("CLIENT-095 maps bag shop guild chat roots to manifest ids", () => {
+    expect(CLIENT_095_PANEL_ASSET_BY_CENTER_ID).toEqual({
+      bag: PANEL_ASSET_BAG,
+      shop: PANEL_ASSET_SHOP,
+      guild: PANEL_ASSET_GUILD,
+      chat: PANEL_ASSET_CHAT,
+    });
+  });
+
+  it("skinShopGuildChatPanel use dedicated asset ids", () => {
+    const assets = mockAssets();
+    const shop = document.createElement("div");
+    const guild = document.createElement("div");
+    const chat = document.createElement("div");
+    skinShopPanel(shop, assets);
+    skinGuildPanel(guild, assets);
+    skinChatPanel(chat, assets);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_SHOP);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_GUILD);
+    expect(assets.getImageForAsset).toHaveBeenCalledWith(PANEL_ASSET_CHAT);
   });
 });
