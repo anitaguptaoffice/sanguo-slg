@@ -65,7 +65,8 @@ status:review   ──合并────▶  status:done
 | 15 | H5 世界地图与面板密度（**已完成**，见 ROADMAP Wave 15） | CLIENT-028–032 ([#235](https://github.com/anitaguptaoffice/sanguo-slg/pull/235)–[#241](https://github.com/anitaguptaoffice/sanguo-slg/pull/241)、[#238](https://github.com/anitaguptaoffice/sanguo-slg/pull/238) `e084ac8f`), INTG-012 ([#237](https://github.com/anitaguptaoffice/sanguo-slg/pull/237)), DOCS-EXIT-007 ([#234](https://github.com/anitaguptaoffice/sanguo-slg/issues/234)/[#242](https://github.com/anitaguptaoffice/sanguo-slg/pull/242)) |
 | 16 | H5 战报邮件闭环与军事反馈加深（**已完成**，见 ROADMAP Wave 16） | CLIENT-034–039、INTG-013、DOCS-EXIT-008（[#245](https://github.com/anitaguptaoffice/sanguo-slg/pull/245) / [#261](https://github.com/anitaguptaoffice/sanguo-slg/pull/261) `58bd03b7`） |
 | 17 | H5 世界出征互链与复盘导航（**已完成**，见 ROADMAP Wave 17） | CLIENT-041–045 ([#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275)–[#279](https://github.com/anitaguptaoffice/sanguo-slg/pull/279)、[#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272)、[#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273)）、INTG-014 ([#274](https://github.com/anitaguptaoffice/sanguo-slg/pull/274) `90fb5356`)、DOCS-EXIT-009 ([#271](https://github.com/anitaguptaoffice/sanguo-slg/issues/271) / [#278](https://github.com/anitaguptaoffice/sanguo-slg/pull/278) `af713f07`) |
-| 18 | H5 出征反馈与面板可读加深（**已完成**，见 ROADMAP Wave 18） | CLIENT-047–053 ([#293](https://github.com/anitaguptaoffice/sanguo-slg/pull/293)–[#299](https://github.com/anitaguptaoffice/sanguo-slg/pull/299)、[#295](https://github.com/anitaguptaoffice/sanguo-slg/pull/295)–[#298](https://github.com/anitaguptaoffice/sanguo-slg/pull/298))、INTG-015 ([#301](https://github.com/anitaguptaoffice/sanguo-slg/pull/301) `ee574240`)、DOCS-EXIT-010 ([#292](https://github.com/anitaguptaoffice/sanguo-slg/issues/292) 收口 PR 开放)；**CLIENT-046** [#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) 美术证据轨、**CLIENT-054** [#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) 046 FAIL 跟进（[#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`） |
+| 18 | H5 出征反馈与面板可读加深（**已完成**，见 ROADMAP Wave 18） | CLIENT-047–053 ([#293](https://github.com/anitaguptaoffice/sanguo-slg/pull/293)–[#299](https://github.com/anitaguptaoffice/sanguo-slg/pull/299)、[#295](https://github.com/anitaguptaoffice/sanguo-slg/pull/295)–[#298](https://github.com/anitaguptaoffice/sanguo-slg/pull/298))、INTG-015 ([#301](https://github.com/anitaguptaoffice/sanguo-slg/pull/301) `ee574240`)、DOCS-EXIT-010 ([#302](https://github.com/anitaguptaoffice/sanguo-slg/pull/302) `b63ed954`)；**CLIENT-046** [#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) 美术证据轨、**CLIENT-054** [#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) 046 FAIL 跟进（[#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`） |
+| 19 | H5 可玩加深（**规划中**，见 ROADMAP Wave 19） | CLIENT-055–061、INTG-016、DOCS-EXIT-011（规划 PR 合并后 `tasks_sync`）；**CLIENT-054** 已合、**非**本波实现 backlog |
 
 ### Wave 9 进度（已完成）
 
@@ -196,3 +197,19 @@ status:review   ──合并────▶  status:done
 | [#292](https://github.com/anitaguptaoffice/sanguo-slg/issues/292) | DOCS-EXIT-010 | `status:in-progress`（文档收口 PR 开放） |
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 18」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；**永不合并** art hold PR #77/#82/#108/#100/#126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)。**美术轨**：**CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277) / [#280](https://github.com/anitaguptaoffice/sanguo-slg/pull/280) `722256c2`）中心四面板证据，**非** wave:18 实现 backlog；**CLIENT-054**（[#287](https://github.com/anitaguptaoffice/sanguo-slg/issues/287) / [#300](https://github.com/anitaguptaoffice/sanguo-slg/pull/300) `870ebcf2`）046 FAIL 跟进修 `status:done`，证据 [`docs/art/samples/client-054/`](../docs/art/samples/client-054/README.md)。
+
+### Wave 19 进度（规划 PR，Issue 待 sync）
+
+| ID | 状态 | 说明 |
+|---|---|---|
+| CLIENT-055 | 待 sync → `status:ready` | 将领招募钱包对比 |
+| CLIENT-056 | 待 sync → `status:ready` | 商城/背包客户端校验 |
+| CLIENT-057 | 待 sync → `status:ready` | 小地图行军 ETA 角标 |
+| CLIENT-058 | 待 sync → `status:ready` | 队列总览与资源产出摘要 |
+| CLIENT-059 | 待 sync → `status:ready` | 邮件战报日常三角深链 |
+| CLIENT-060 | 待 sync → `status:ready` | 世界城池与军情双向高亮 |
+| CLIENT-061 | 待 sync → `status:ready` | 1280 manifest 与滚动巩固 |
+| INTG-016 | 待 sync → `status:ready` | GetHeroDetail + 邮件分页 + GetCityState smoke |
+| DOCS-EXIT-011 | 待 sync → `status:blocked` | `blocked_until: INTG-016` |
+
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 19」。
