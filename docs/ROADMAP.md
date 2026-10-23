@@ -43,7 +43,9 @@
 
 - [x] 任务系统（QUEST-001）+ wave:7 DATA-001 核心子集 — **INTG-005** / wave:9 **INTG-006** 复跑
 - [x] 道具与商城（CONTENT-002、SHOP-001、ECON-001 真扣费）
-- [ ] 活动与运营后台（**GM-001** + wave:10 **GM-003** 收口）— `cmd/gm` 查号/发奖/禁言/发邮件已合；**无**活动配置台，`cfg_act*` 仍不纳入核心子集
+- [ ] 活动与运营后台（**GM-001** + wave:10 **GM-003** 收口）— 见下方脚注；完整活动后台仍待 **DOCS-EXIT-002** 最终勾选
+
+  > **v1 运营口径（GM-003）**：**GM CLI/HTTP**（`cmd/gm`：`lookup` / `grant` / `kick` / `mute` / `send-mail`；HTTP 仅 `POST /gm/lookup|grant|kick|mute`）+ **邮件运营**（`send-mail` → `player_mail`，验收见 [开服运营最小流程](ops/open-server-runbook.md) §4）。**非目标**：活动配置台、可视化排期、`cfg_act*` 灌入——仍 **out of core subset**。
 - [x] 数据埋点（**TELEMETRY-001**）— obs 事件 + api handler 挂钩
 
 出口：`INTG-005`（#125）+ **CLIENT-006**（#121）已合；wave:9 **INTG-006**（#138）+ **CLIENT-007**（#135）+ **HERO-002**（#139）+ **MAIL-001**（#136）+ **DATA-002**（#137）已 deepening 养成/邮件/横屏。wave:10 加深客户端面板、日常任务、GM 文档与 **INTG-007** 冒烟。
@@ -98,7 +100,7 @@ wave:7、WIRE-001、CLIENT-ART-INTG-001 合并后补齐的六卡均已合入 mai
 | TBD | CLIENT-008 | `status:ready` | 将领/邮件最小面板（仅 `client/**`） |
 | TBD | HERO-003 | `status:ready` | 招募模板列表与消耗预览 |
 | TBD | QUEST-002 | `status:ready` | 日常任务 chain 400 + 日切 + 最小进度挂钩 |
-| TBD | GM-003 | `status:ready` | runbook 发邮件 + GM 验收清单（文档/cmd） |
+| [#150](https://github.com/anitaguptaoffice/sanguo-slg/issues/150) | GM-003 | 进行中 | runbook `send-mail` + lookup/grant/mute/kick 验收清单（`docs/ops/**`） |
 | TBD | INTG-007 | `status:blocked` | 邮件+将领+日常冒烟（`blocked_until: QUEST-002`） |
 | TBD | DOCS-EXIT-002 | `status:blocked` | wave:10 与 M4 最终勾选（`blocked_until: INTG-007`） |
 
