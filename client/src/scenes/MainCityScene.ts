@@ -406,6 +406,24 @@ export class MainCityScene implements Scene {
           this.status = "已打开「日常」并定位对应日课（只读，不自动领奖）";
           this.renderHud();
         },
+        getBattleReportLinkContext: () => ({
+          viewerPlayerId: this.session?.player?.player_id,
+          viewerHeroes: this.heroMail.getHeroesSnapshot(),
+        }),
+        onOpenBattleReportHero: (heroId) => {
+          this.heroMail.openAndHighlightHero(heroId);
+          this.status = `已打开「将领」详情 #${heroId}（战报互链）`;
+          this.renderHud();
+        },
+        onOpenBattleReportRank: (playerId) => {
+          this.social.openPowerRankHighlightEntity(playerId);
+          this.status = `已打开「排行」并高亮玩家#${playerId}`;
+          this.renderHud();
+        },
+        onBattleReportReadonlyHint: (message) => {
+          this.status = message;
+          this.renderHud();
+        },
       },
     );
     this.battleReports.attach();
