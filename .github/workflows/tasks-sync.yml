@@ -18,7 +18,7 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'wave:18 tasks_sync'))
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'wave:19 tasks_sync'))
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
@@ -28,10 +28,17 @@ jobs:
         with:
           python-version: "3.x"
       - run: pip install pyyaml
+      - name: Close mistaken duplicate issues (#306–#325)
+        if: contains(github.event.pull_request.title, 'wave:19 tasks_sync') || github.event_name == 'workflow_dispatch'
+        run: |
+          COMMENT='duplicate: 旧 wave 任务早已合入；本次全量 sync 误重建。'
+          for n in $(seq 306 325); do
+            gh issue close "$n" --reason "not planned" --comment "$COMMENT" || true
+          done
       - name: Sync backlog issues
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            python3 tools/tasks_sync.py --wave=18
+          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python3 tools/tasks_sync.py --wave=19
           else
             python3 tools/tasks_sync.py
           fi
