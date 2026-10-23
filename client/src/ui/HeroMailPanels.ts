@@ -1,4 +1,5 @@
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import { gatewayErrorMessage } from "@/net/contentFeedback";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
@@ -13,6 +14,7 @@ import {
 import {
   applyMailClaimResult,
   formatHeroLine,
+  formatMailClaimGrantedSummary,
   formatRecruitDeductSummary,
   formatRecruitSuccessStatus,
   formatRecruitTemplateLine,
@@ -22,7 +24,7 @@ import {
   renderHeroDetailMarkup,
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
-  mailCanClaimAttachments,
+  mailHasUnclaimedAttachments,
   mailEmptyInboxMessage,
   mailIsUnread,
   mailTitle,
@@ -37,6 +39,7 @@ import {
 import {
   mailInboxEmptyListClass,
   mailInboxLoadErrorListHint,
+  MAIL_UNCLAIMED_BADGE_LABEL,
   mailListRowClassName,
   mailRowMetaLine,
   mailRowTitleLine,
@@ -312,10 +315,16 @@ export class HeroMailPanels {
         const titleSpan = document.createElement("span");
         titleSpan.className = "mail-row-title";
         titleSpan.textContent = mailRowTitleLine(m);
+        if (mailHasUnclaimedAttachments(m)) {
+          const badge = document.createElement("span");
+          badge.className = "mail-unclaimed-badge";
+          badge.textContent = MAIL_UNCLAIMED_BADGE_LABEL;
+          titleSpan.appendChild(badge);
+        }
         const summarySpan = document.createElement("span");
         summarySpan.className = "mail-row-summary";
         summarySpan.textContent = mailRowMetaLine(m);
-        if (mailCanClaimAttachments(m)) summarySpan.classList.add("mail-row-meta-attach");
+        if (mailHasUnclaimedAttachments(m)) summarySpan.classList.add("mail-row-meta-attach");
         li.appendChild(titleSpan);
         li.appendChild(summarySpan);
         ul.appendChild(li);
@@ -328,8 +337,9 @@ export class HeroMailPanels {
       body.textContent = sel?.body?.trim() || (sel ? "（无正文）" : "");
     }
     if (claimBtn) {
-      const show = sel && mailCanClaimAttachments(sel);
+      const show = sel && mailHasUnclaimedAttachments(sel);
       claimBtn.classList.toggle("hidden", !show);
+      claimBtn.classList.toggle("mail-claim-highlight", !!(show && sel && !mailIsUnread(sel)));
     }
   }
 
@@ -539,6 +549,22 @@ export class HeroMailPanels {
     await this.markMailRead(mailId);
   }
 
+  private async syncBagFromServer(): Promise<BagStack[] | null> {
+    const session = this.getSession();
+    if (!session) return null;
+    const sid = this.serverId();
+    try {
+      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
+        items?: { item_cfg_id?: number; quantity?: number }[];
+      };
+      const bag = bagFromListPlayerBagResponse(bagRes.items);
+      this.onSessionPatch({ bag });
+      return bag;
+    } catch {
+      return null;
+    }
+  }
+
   private async claimMail(): Promise<void> {
     const sid = this.serverId();
     const mailId = this.selectedMailId;
@@ -546,11 +572,15 @@ export class HeroMailPanels {
       this.onStatus("请选择邮件");
       return;
     }
+    this.mailListError = "";
     this.onStatus(`领取附件 #${mailId}…`);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
-        granted?: { items?: { item_cfg_id?: number; quantity?: number }[] };
+        granted?: {
+          items?: { item_cfg_id?: number; quantity?: number }[];
+          resources?: ResourceWallet;
+        };
         wallet_after?: MainCitySession["wallet"];
         bag_items?: { item_cfg_id?: number; quantity?: number }[];
       };
@@ -562,12 +592,13 @@ export class HeroMailPanels {
       } else if (res.mail) {
         this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
       }
-      this.renderMailList();
-      this.onStatus("附件已领取");
+      await this.syncBagFromServer();
+      await this.refreshMail();
+      const summary = formatMailClaimGrantedSummary(res.granted);
+      this.onStatus(`领取成功：${summary}`);
       void this.syncUnreadBadge();
     } catch (e) {
-      const err = e as Error & { code?: number };
-      const msg = err.code ? `领取失败(code=${err.code})：${err.message}` : err.message;
+      const msg = gatewayErrorMessage(e);
       this.onStatus(msg);
       const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
       if (statusEl) {

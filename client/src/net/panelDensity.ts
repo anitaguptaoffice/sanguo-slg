@@ -1,8 +1,8 @@
 import type { BagStack } from "@/net/bagState";
 import { itemLabel } from "@/net/contentFormat";
 import {
-  mailCanClaimAttachments,
   mailHasAttachments,
+  mailHasUnclaimedAttachments,
   mailIsUnread,
   mailStatusLabel,
   mailTitle,
@@ -14,8 +14,15 @@ import { formatTimeMs } from "@/net/militaryFormat";
 /** 邮件列表未读行 class（与 index.html / CLIENT-027 角标色 #c9a227 一致）。 */
 export const MAIL_LIST_ROW_UNREAD_CLASS = "unread";
 
+export const MAIL_LIST_ROW_UNCLAIMED_CLASS = "mail-has-unclaimed";
+
+export const MAIL_UNCLAIMED_BADGE_LABEL = "未领取";
+
 export function mailListRowClassName(m: MailRow): string {
-  return mailIsUnread(m) ? MAIL_LIST_ROW_UNREAD_CLASS : "";
+  const classes: string[] = [];
+  if (mailIsUnread(m)) classes.push(MAIL_LIST_ROW_UNREAD_CLASS);
+  if (mailHasUnclaimedAttachments(m)) classes.push(MAIL_LIST_ROW_UNCLAIMED_CLASS);
+  return classes.join(" ");
 }
 
 /** 列表第一行：标题 + 时间。 */
@@ -25,7 +32,7 @@ export function mailRowTitleLine(m: MailRow): string {
 
 /** 列表第二行：附件 / 已读角标文案。 */
 export function mailRowMetaLine(m: MailRow): string {
-  if (mailCanClaimAttachments(m)) return "附件待领";
+  if (mailHasUnclaimedAttachments(m)) return "附件待领";
   if (mailHasAttachments(m)) return "附件已领";
   return mailStatusLabel(m.status);
 }
