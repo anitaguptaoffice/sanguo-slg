@@ -499,6 +499,36 @@ export function mailIsUnread(m: MailRow): boolean {
   return (m.status ?? MAIL_STATUS_UNREAD) === MAIL_STATUS_UNREAD;
 }
 
+/** 与 MAIL_INBOX_FILTER_UNREAD / read_at_ms 等价：已标读时间戳优先于 status 占位。 */
+export function mailIsUnreadForInboxCount(m: MailRow): boolean {
+  if ((m.read_at_ms ?? 0) > 0) return false;
+  return mailIsUnread(m);
+}
+
+export type MailInboxBadgeCounts = { unread: number; unclaimed: number };
+
+/** ListPlayerMail（filter=all）快照上推导面板 tab 未读 / 未领附件条数。 */
+export function countMailUnreadAndUnclaimed(mails: MailRow[]): MailInboxBadgeCounts {
+  let unread = 0;
+  let unclaimed = 0;
+  for (const m of mails) {
+    if (mailIsUnreadForInboxCount(m)) unread++;
+    if (mailHasUnclaimedAttachments(m)) unclaimed++;
+  }
+  return { unread, unclaimed };
+}
+
+export function formatMailInboxUnreadTabLabel(unreadCount: number): string {
+  const n = Math.max(0, unreadCount);
+  return n > 0 ? `未读 ${n}` : "未读";
+}
+
+/** 「全部」tab 角标：仅在有未领附件时展示 `附件 M`。 */
+export function formatMailInboxAllTabAttachmentBadge(unclaimedCount: number): string {
+  const n = Math.max(0, unclaimedCount);
+  return n > 0 ? `附件 ${n}` : "";
+}
+
 export function mailHasAttachments(m: MailRow): boolean {
   const att = m.attachments;
   if (!att) return false;
