@@ -38,6 +38,17 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-center-panel="hero"] .panel-scroll-body')).toBeTruthy();
   });
 
+  it("hero panel scroll body wraps list and detail for narrow layout (CLIENT-103)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    const scroll = mount.querySelector('[data-center-panel="hero"] .panel-scroll-body');
+    expect(scroll?.querySelector('[data-role="hero-list"]')).toBeTruthy();
+    expect(scroll?.querySelector('[data-role="hero-detail"]')).toBeTruthy();
+    expect(mount.querySelector('[data-action="recruit-hero"]')?.closest(".panel-scroll-body")).toBeNull();
+  });
+
   it("renders empty mail list after refresh", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

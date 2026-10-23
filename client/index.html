@@ -951,10 +951,25 @@
         max-height: none;
         overflow: visible;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="hero-hint"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] button,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-cost-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="recruit-form-error"] {
+        flex-shrink: 0;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail {
         max-height: none;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
         overflow-x: auto;
         overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-head,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-links {
+        flex-wrap: wrap;
+        min-width: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info,
@@ -974,6 +989,17 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table-scroll {
         max-height: none;
         overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-viewer-bar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-snapshot-meta {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-col-name {
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list {
         max-height: none;
@@ -1087,12 +1113,45 @@
         max-height: none;
         overflow: visible;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .content-panel-actions {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-battle-report-banner,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] [data-role="daily-hint"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .content-panel-actions,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-form-error {
         flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-filters,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-state-summary {
+        min-width: 0;
+        max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-filter-btn.daily-quest-locate-first {
+        margin-left: 0;
+        flex: 1 1 8rem;
+        min-width: 0;
+        max-width: 100%;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list {
         max-height: none;
         overflow: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li {
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body {
+        padding-bottom: 12px;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar button {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar .toolbar-badge {
+        max-width: 2.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       #layout-frame.layout-narrow .military-panel .military-troops {
         flex-shrink: 0;

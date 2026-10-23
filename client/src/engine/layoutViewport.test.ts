@@ -112,4 +112,12 @@ describe("narrow layout root class", () => {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
   });
+
+  it("CLIENT-103 rank hero daily panels participate in narrow scroll registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    for (const id of ["rank", "hero", "daily"] as const) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+  });
 });
