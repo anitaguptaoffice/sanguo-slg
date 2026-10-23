@@ -52,7 +52,7 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	defer ts.Close()
 	wsURL := "ws" + strings.TrimPrefix(ts.URL, "http")
 	c := dial(t, wsURL)
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	loginName := "intg_" + time.Now().Format("150405")
 	mustSend(t, c, &commonv1.ClientPacket{
