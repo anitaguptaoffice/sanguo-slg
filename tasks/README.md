@@ -132,6 +132,6 @@ status:review   ──合并────▶  status:done
 | [#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214) | CLIENT-026 | `status:done`（[#222](https://github.com/anitaguptaoffice/sanguo-slg/pull/222) `0e0cef67`） |
 | [#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) | CLIENT-027 | `status:done`（[#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224) `95aac888`） |
 | [#216](https://github.com/anitaguptaoffice/sanguo-slg/issues/216) | INTG-011 | `status:done`（[#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223) `ad6ddc8e`） |
-| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | `status:review`（本卡 PR） |
+| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | `status:review`（[#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225)） |
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 14」；`backlog.yml` 为任务真源，本表仅便于对照 Issue。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速。

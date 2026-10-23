@@ -173,7 +173,7 @@ H5 人工验收与 INTG-010 路径对齐，见 [client/README.md](../client/READ
 | [#214](https://github.com/anitaguptaoffice/sanguo-slg/issues/214) | CLIENT-026 | 已完成 | [#222](https://github.com/anitaguptaoffice/sanguo-slg/pull/222)（`0e0cef67`） |
 | [#215](https://github.com/anitaguptaoffice/sanguo-slg/issues/215) | CLIENT-027 | 已完成 | [#224](https://github.com/anitaguptaoffice/sanguo-slg/pull/224)（`95aac888`） |
 | [#216](https://github.com/anitaguptaoffice/sanguo-slg/issues/216) | INTG-011 | 已完成 | [#223](https://github.com/anitaguptaoffice/sanguo-slg/pull/223)（`ad6ddc8e`） |
-| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | 已完成 | （本卡 PR） |
+| [#217](https://github.com/anitaguptaoffice/sanguo-slg/issues/217) | DOCS-EXIT-006 | 已完成 | [#225](https://github.com/anitaguptaoffice/sanguo-slg/pull/225) |
 
 H5 人工验收与 INTG-011 路径对齐，见 [client/README.md](../client/README.md#wave-14-日常与队列闭环m4-出口--intg-011)（**建造加速真实生效 + 多类型日常引导 + 行军战报提示 + HUD 待办徽章**）。
 
