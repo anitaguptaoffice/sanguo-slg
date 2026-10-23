@@ -22,10 +22,22 @@ import {
 } from "@/net/contentFormValidation";
 import { formatQuestLine, formatWalletPrice, itemLabel } from "@/net/contentFormat";
 import {
+  BATCH_USE_SLOT_CAP,
+  isBatchUseEligibleItem,
+  summarizeBatchUseConsumableResults,
+  validateBatchUseConsumableSlots,
+} from "@/net/bagBatchUse";
+import {
   bagEmptyListClass,
   bagEmptyListMessage,
   formatBagStackRowLabel,
 } from "@/net/panelDensity";
+import {
+  countShopOffersByCategory,
+  filterShopOffersByCategory,
+  SHOP_CATEGORY_TABS,
+  type ShopOfferClientCategory,
+} from "@/net/shopOfferCategory";
 
 type QuestProgress = {
   quest_cfg_id?: number;
@@ -57,6 +69,7 @@ export class ContentPanels {
   private selectedOfferId = 1001;
   private bagHighlightItemId = 0;
   private bagHighlightItemIds = new Set<number>();
+  private shopCategory: ShopOfferClientCategory = "all";
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
 
@@ -216,7 +229,9 @@ export class ContentPanels {
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-bag">刷新背包</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item">使用道具</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item-batch">批量使用勾选格</button>
       </div>
+      <p class="bag-batch-hint" data-role="bag-batch-hint">同道具可多格勾选，逐次调用 UseConsumable×1 并汇总结果。</p>
       <ul class="bag-list" data-role="bag-list"></ul>
       <p class="panel-feedback bag-panel-feedback" data-role="bag-feedback" hidden></p>
     `;
@@ -230,6 +245,7 @@ export class ContentPanels {
       <h3>商城</h3>
       <p data-role="shop-hint">扣费结果以 wallet_after 为准（ECON-001 真钱包）。</p>
       <p class="panel-feedback" data-role="shop-feedback" hidden></p>
+      <div class="shop-category-tabs" data-role="shop-category-tabs" role="tablist"></div>
       <button type="button" data-action="refresh-shop">刷新货架</button>
       <label>商品 offer
         <select data-field="offer-id"></select>
@@ -274,6 +290,28 @@ export class ContentPanels {
       li.appendChild(nameSpan);
       li.appendChild(qtySpan);
       if (
+        row.item_cfg_id === this.selectedItemId &&
+        isBatchUseEligibleItem(row.item_cfg_id) &&
+        (row.quantity ?? 0) > 0
+      ) {
+        const slots = document.createElement("span");
+        slots.className = "bag-slot-picks";
+        slots.setAttribute("data-role", "bag-slot-picks");
+        const cap = Math.min(row.quantity ?? 0, BATCH_USE_SLOT_CAP);
+        for (let i = 0; i < cap; i += 1) {
+          const pick = document.createElement("label");
+          pick.className = "bag-slot-pick";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.setAttribute("data-role", "bag-slot-checkbox");
+          cb.setAttribute("data-item-id", String(row.item_cfg_id));
+          pick.appendChild(cb);
+          pick.appendChild(document.createTextNode(`${i + 1}`));
+          slots.appendChild(pick);
+        }
+        li.appendChild(slots);
+      }
+      if (
         row.item_cfg_id &&
         (this.bagHighlightItemIds.has(row.item_cfg_id) ||
           (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId))
@@ -290,13 +328,45 @@ export class ContentPanels {
     }
   }
 
+  private renderShopCategoryTabs(): void {
+    const host = this.shopPanel.querySelector('[data-role="shop-category-tabs"]');
+    if (!host) return;
+    host.innerHTML = "";
+    const counts = countShopOffersByCategory(this.shopOffers);
+    for (const tab of SHOP_CATEGORY_TABS) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "shop-category-tab";
+      btn.setAttribute("data-shop-category", tab.id);
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", tab.id === this.shopCategory ? "true" : "false");
+      if (tab.id === this.shopCategory) btn.classList.add("active");
+      const n = tab.id === "all" ? counts.all : counts[tab.id];
+      btn.textContent = n > 0 ? `${tab.label} (${n})` : tab.label;
+      host.appendChild(btn);
+    }
+  }
+
+  private visibleShopOffers(): ShopOffer[] {
+    return filterShopOffersByCategory(this.shopOffers, this.shopCategory);
+  }
+
+  private countSelectedBagBatchSlots(itemId: number): number {
+    const boxes = this.bagPanel.querySelectorAll(
+      `input[data-role="bag-slot-checkbox"][data-item-id="${itemId}"]:checked`,
+    );
+    return boxes.length;
+  }
+
   private renderShopList(): void {
+    this.renderShopCategoryTabs();
+    const visible = this.visibleShopOffers();
     const ul = this.shopPanel.querySelector('[data-role="shop-list"]');
     const sel = this.shopPanel.querySelector('[data-field="offer-id"]') as HTMLSelectElement;
     if (!ul || !sel) return;
     ul.innerHTML = "";
     sel.innerHTML = "";
-    for (const o of this.shopOffers) {
+    for (const o of visible) {
       const li = document.createElement("li");
       const price = formatWalletPrice(o.price_resources ?? {});
       let line = formatShopOfferListLine(o, price);
@@ -309,8 +379,12 @@ export class ContentPanels {
       opt.textContent = `#${o.offer_id} ${itemLabel(o.item_cfg_id)}`;
       sel.appendChild(opt);
     }
-    if (this.shopOffers[0]?.offer_id) {
-      sel.value = String(this.selectedOfferId || this.shopOffers[0].offer_id);
+    const stillVisible = visible.some((o) => o.offer_id === this.selectedOfferId);
+    if (!stillVisible && visible[0]?.offer_id) {
+      this.selectedOfferId = visible[0].offer_id ?? this.selectedOfferId;
+    }
+    if (visible[0]?.offer_id) {
+      sel.value = String(this.selectedOfferId || visible[0].offer_id);
     }
   }
 
@@ -435,6 +509,49 @@ export class ContentPanels {
     }
   }
 
+  private async useItemBatch(): Promise<void> {
+    const itemId = this.selectedItemId;
+    const slotCount = this.countSelectedBagBatchSlots(itemId);
+    const bag = this.getSession()?.bag ?? [];
+    const validated = validateBatchUseConsumableSlots({ itemCfgId: itemId, slotCount, bag });
+    if (!validated.ok) {
+      setBagFormErrorDisplay(this.bagPanel, validated.message);
+      this.onStatus(validated.message);
+      return;
+    }
+    setBagFormErrorDisplay(this.bagPanel, null);
+    this.setBagFeedback(null);
+    const sid = this.serverId();
+    this.onStatus(`批量使用 ${itemLabel(itemId)}×${slotCount}（逐次×1）…`);
+    const attempts: { ok: true } | { ok: false; message: string }[] = [];
+    for (let i = 0; i < slotCount; i += 1) {
+      try {
+        const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
+          remaining?: number;
+          wallet_after?: ResourceWallet;
+        };
+        const session = this.getSession();
+        if (session) {
+          const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
+          const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
+          this.onSessionPatch({ bag: nextBag, wallet });
+        }
+        attempts.push({ ok: true });
+      } catch (e) {
+        attempts.push({ ok: false, message: formatPanelGatewayErrorFromUnknown("bag", e) });
+      }
+    }
+    const summary = summarizeBatchUseConsumableResults(attempts);
+    this.renderBagList();
+    this.setBagFeedback(summary.summaryText);
+    if (summary.lastError) {
+      setBagFormErrorDisplay(this.bagPanel, summary.lastError);
+    } else {
+      setBagFormErrorDisplay(this.bagPanel, null);
+    }
+    this.onStatus(summary.summaryText);
+  }
+
   private async refreshShop(): Promise<void> {
     const sid = this.serverId();
     this.onStatus("拉取货架…");
@@ -510,6 +627,7 @@ export class ContentPanels {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "item-id") {
       this.selectedItemId = Number((t as HTMLSelectElement).value) || 2001;
+      this.renderBagList();
     }
   }
 
@@ -536,6 +654,7 @@ export class ContentPanels {
     const a = btn.getAttribute("data-action");
     if (a === "refresh-bag") void this.refreshBag();
     if (a === "use-item") void this.useItem();
+    if (a === "use-item-batch") void this.useItemBatch();
   }
 
   private ensureBagSelectOption(itemCfgId: number): void {
@@ -550,6 +669,15 @@ export class ContentPanels {
   }
 
   private onShopClick(ev: Event): void {
+    const catBtn = (ev.target as HTMLElement).closest("[data-shop-category]");
+    if (catBtn) {
+      const next = catBtn.getAttribute("data-shop-category") as ShopOfferClientCategory | null;
+      if (next && next !== this.shopCategory) {
+        this.shopCategory = next;
+        this.renderShopList();
+      }
+      return;
+    }
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
