@@ -422,6 +422,17 @@ cd client && npm install && npm run dev
 6. 军事面板仍仅有出征表单（**无** 取消行军/加速按钮）；[世界坐标 CLIENT-015](#手动验收世界坐标-client-015) 填入出征目标流程不退化。
 7. 单测：`worldMinimap.test.ts`、`MarchListPanel` 选中用例；`cd client && npm test`。
 
+### 手动验收（小地图与军情互选 CLIENT-090）
+
+在 [CLIENT-028](#手动验收世界地图行军标注-client-028)、[CLIENT-080](#手动验收军情阶段提醒与列表-chips-client-085) 与 [CLIENT-069](#手动验收军情格点筛选-client-069) 基础上，小地图目的点与 **行军** 列表 **双向同步**（纯客户端，无新 military RPC）：
+
+1. **军情 → 小地图**：底栏 **「行军」** 点击一行，该行应带 `march-list-row-selected` 轮廓；小地图 **目的格** 与该行 `to_x/to_y` 加亮（`drawWorldMinimap` 的 `selectedMarchId` 标注层），连线加粗（CLIENT-037）。
+2. **小地图 → 军情**：展开小地图，点击 **行军目的点**（非空白）：应打开/聚焦 **行军** 面板并选中对应 `march_id` 行（同格多条时仍为 **首条**，CLIENT-037）；空白单击仍只填出征坐标（CLIENT-041），ETA 角标不退化（CLIENT-058）。
+3. **sessionStorage**：`minimap-march-focus-id` 记录当前互选 `march_id`；`march-highlight-id`（CLIENT-080 新出征扫读）独立并存、互不清除——规则见 `minimapMarchFocus.ts` 与 `minimapMarchFocus.test.ts`。
+4. 刷新页面后，小地图拉取 `ListMarches` 后应恢复上次互选行军的高亮（面板可未打开）。
+5. **格点筛选**（世界选中格 / 手动坐标）与上述互选并存，筛选仍只过滤列表行、不改网关请求。
+6. `cd client && npm test` 含 `minimapMarchFocus.test.ts` 与 `MarchListPanel` 焦点恢复用例。
+
 ### 手动验收（小地图比例尺与多行军 CLIENT-037）
 
 在 [CLIENT-028](#手动验收世界地图行军标注-client-028) 基础上：
@@ -719,7 +730,8 @@ cd client && npm install && npm run dev
 4. 故意数量大于库存或 mock 下耗尽道具：失败时面板与状态栏为 `[code] msg`，不静默。
 5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；**CLIENT-057** 起余额不足/售罄/限购在 `shop-form-error` 内联中文提示且不发 RPC；网关失败经 **CLIENT-067** `formatPanelGatewayError`（如 `余额不足 [64003]`）。
 6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。
-7. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`；全量 `cd client && npm test`。
+7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
+8. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
 

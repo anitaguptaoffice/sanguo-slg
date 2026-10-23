@@ -38,6 +38,10 @@ import {
   SHOP_CATEGORY_TABS,
   type ShopOfferClientCategory,
 } from "@/net/shopOfferCategory";
+import {
+  applyWalletGapBar,
+  consumableUseWalletNeed,
+} from "@/net/walletGap";
 
 type QuestProgress = {
   quest_cfg_id?: number;
@@ -167,6 +171,35 @@ export class ContentPanels {
   private patchBag(bag: BagStack[]): void {
     this.onSessionPatch({ bag });
     this.renderBagList();
+    this.syncBagWalletGap();
+  }
+
+  private sessionWallet(): ResourceWallet | undefined {
+    return this.getSession()?.wallet;
+  }
+
+  private syncBagWalletGap(): void {
+    const count = Number(
+      (this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1,
+    );
+    applyWalletGapBar(
+      this.bagPanel,
+      "bag-wallet-gap",
+      consumableUseWalletNeed(this.selectedItemId, count),
+      this.sessionWallet(),
+      { includeZeroNeed: true },
+    );
+  }
+
+  private syncShopWalletGap(): void {
+    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    applyWalletGapBar(
+      this.shopPanel,
+      "shop-wallet-gap",
+      offer?.price_resources,
+      this.sessionWallet(),
+      { multiplier: 1 },
+    );
   }
 
   private setBagFeedback(text: string | null): void {
@@ -225,6 +258,7 @@ export class ContentPanels {
         </select>
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
+      <p class="wallet-gap-line hidden" data-role="bag-wallet-gap" aria-live="polite"></p>
       <p class="bag-form-error hidden" data-role="bag-form-error" role="alert"></p>
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-bag">刷新背包</button>
@@ -250,6 +284,7 @@ export class ContentPanels {
       <label>商品 offer
         <select data-field="offer-id"></select>
       </label>
+      <p class="wallet-gap-line hidden" data-role="shop-wallet-gap" aria-live="polite"></p>
       <p class="shop-form-error hidden" data-role="shop-form-error" role="alert"></p>
       <button type="button" data-action="buy-offer">购买×1</button>
       <ul class="shop-list" data-role="shop-list"></ul>
@@ -326,6 +361,7 @@ export class ContentPanels {
       li.textContent = bagEmptyListMessage();
       ul.appendChild(li);
     }
+    this.syncBagWalletGap();
   }
 
   private renderShopCategoryTabs(): void {
@@ -386,6 +422,7 @@ export class ContentPanels {
     if (visible[0]?.offer_id) {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
     }
+    this.syncShopWalletGap();
   }
 
   private async refreshQuests(): Promise<void> {
@@ -628,6 +665,10 @@ export class ContentPanels {
     if (t.getAttribute("data-field") === "item-id") {
       this.selectedItemId = Number((t as HTMLSelectElement).value) || 2001;
       this.renderBagList();
+      this.syncBagWalletGap();
+    }
+    if (t.getAttribute("data-field") === "use-count") {
+      this.syncBagWalletGap();
     }
   }
 
@@ -635,6 +676,7 @@ export class ContentPanels {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "offer-id") {
       this.selectedOfferId = Number((t as HTMLSelectElement).value) || 1001;
+      this.syncShopWalletGap();
     }
   }
 

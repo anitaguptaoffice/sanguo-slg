@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { MARCH_HIGHLIGHT_SESSION_KEY, MARCH_ROW_RECENT_CLASS } from "@/net/marchHighlight";
+import { MINIMAP_MARCH_FOCUS_SESSION_KEY } from "@/net/minimapMarchFocus";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 
 describe("MarchListPanel", () => {
@@ -109,6 +110,52 @@ describe("MarchListPanel", () => {
     expect(gateway.listMarches).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
+  });
+
+  it("persists minimap march focus session on row select", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [{ march_id: 3, phase: 2, to_x: 8, to_y: 9 }],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+
+    mount.querySelector('.march-list li[data-march-id="3"]')!.click();
+    expect(sessionStorage.getItem(MINIMAP_MARCH_FOCUS_SESSION_KEY)).toBe("3");
+
+    mount.querySelector('.march-list li[data-march-id="3"]')!.click();
+    expect(panel.getSelectedMarchId()).toBeNull();
+    expect(sessionStorage.getItem(MINIMAP_MARCH_FOCUS_SESSION_KEY)).toBeNull();
+  });
+
+  it("restores minimap focus from session after list refresh", async () => {
+    sessionStorage.setItem(MINIMAP_MARCH_FOCUS_SESSION_KEY, "9");
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          { march_id: 9, phase: 2, to_x: 1, to_y: 2 },
+          { march_id: 10, phase: 2, to_x: 3, to_y: 4 },
+        ],
+        total: 2,
+      }),
+    };
+    const onSelectionChange = vi.fn();
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      onSelectionChange,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(panel.getSelectedMarchId()).toBe(9));
+    expect(onSelectionChange).toHaveBeenCalled();
+    expect(
+      mount.querySelector('.march-list li[data-march-id="9"]')?.classList.contains(
+        "march-list-row-selected",
+      ),
+    ).toBe(true);
   });
 
   it("selects march row and highlights on click", async () => {
