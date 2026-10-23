@@ -281,6 +281,6 @@ status:review   ──合并────▶  status:done
 | [#418](https://github.com/anitaguptaoffice/sanguo-slg/issues/418) | CLIENT-094 | `status:done`（[#428](https://github.com/anitaguptaoffice/sanguo-slg/pull/428) `f8152b2d`） |
 | [#419](https://github.com/anitaguptaoffice/sanguo-slg/issues/419) | CLIENT-095 | `status:done`（[#431](https://github.com/anitaguptaoffice/sanguo-slg/pull/431) `7d19874f`） |
 | [#420](https://github.com/anitaguptaoffice/sanguo-slg/issues/420) | INTG-020 | `status:done`（[#424](https://github.com/anitaguptaoffice/sanguo-slg/pull/424) `d27e863e`） |
-| [#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) | DOCS-EXIT-015 | `status:review`（文档收口 PR 待合并） |
+| [#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) | DOCS-EXIT-015 | `status:review`（[#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432)） |
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 23」。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；**永不合并** art hold PR **#77** / **#82** / **#108** / #100 / #126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)。**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——**非** wave:23 实现 backlog；实现卡 **CLIENT-088** 起。Issue 由 `tasks_sync`（[#411](https://github.com/anitaguptaoffice/sanguo-slg/pull/411) `83f94385` 合入后 Actions 全量 sync）创建。
