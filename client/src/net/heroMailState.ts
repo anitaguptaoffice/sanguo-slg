@@ -80,6 +80,8 @@ export type MailRow = {
   title?: string;
   body?: string;
   status?: number;
+  /** 网关可选字段；缺省时由 status + attachments 推导。 */
+  has_unclaimed_attachments?: boolean;
   attachments?: {
     items?: { item_cfg_id?: number; quantity?: number }[];
     resources?: ResourceWallet;
@@ -346,9 +348,35 @@ export function mailHasAttachments(m: MailRow): boolean {
   return !!(r && Object.values(r).some((v) => (v ?? 0) > 0));
 }
 
-/** 仍有未领取附件（已读未领或未读带附件）。 */
-export function mailCanClaimAttachments(m: MailRow): boolean {
+/** 仍有未领取附件（API 字段或 status+attachments 等价推导）。 */
+export function mailHasUnclaimedAttachments(m: MailRow): boolean {
+  if (typeof m.has_unclaimed_attachments === "boolean") return m.has_unclaimed_attachments;
   return mailHasAttachments(m) && (m.status ?? MAIL_STATUS_UNREAD) !== MAIL_STATUS_CLAIMED;
+}
+
+/** @deprecated 语义同 mailHasUnclaimedAttachments，保留旧调用点。 */
+export function mailCanClaimAttachments(m: MailRow): boolean {
+  return mailHasUnclaimedAttachments(m);
+}
+
+export function countMailsWithUnclaimedAttachments(mails: MailRow[]): number {
+  return mails.filter(mailHasUnclaimedAttachments).length;
+}
+
+/** 领取成功状态栏：道具 id/名 + 数量，资源走钱包文案。 */
+export function formatMailClaimGrantedSummary(granted?: {
+  items?: { item_cfg_id?: number; quantity?: number }[];
+  resources?: ResourceWallet;
+}): string {
+  const parts: string[] = [];
+  for (const it of granted?.items ?? []) {
+    const id = it.item_cfg_id;
+    if (id == null || id <= 0) continue;
+    parts.push(`${itemLabel(id)}×${it.quantity ?? 0}`);
+  }
+  const resText = formatWalletPrice(granted?.resources ?? {});
+  if (resText) parts.push(resText);
+  return parts.length ? parts.join("、") : "无附件明细";
 }
 
 export function mailTitle(m: MailRow): string {

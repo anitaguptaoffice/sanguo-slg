@@ -7,7 +7,10 @@ import {
   formatRecruitTemplateLine,
   heroListLines,
   InvalidHeroDetailRequestError,
+  countMailsWithUnclaimedAttachments,
+  formatMailClaimGrantedSummary,
   mailCanClaimAttachments,
+  mailHasUnclaimedAttachments,
   mailEmptyInboxMessage,
   mailListLines,
   mailListSummary,
@@ -81,6 +84,51 @@ describe("heroMailState", () => {
     expect(mailCanClaimAttachments({ mail_id: 1, status: 2, attachments: { items: [{ item_cfg_id: 1 }] } })).toBe(
       false,
     );
+  });
+
+  it("mailHasUnclaimedAttachments prefers API flag and counts rows", () => {
+    expect(
+      mailHasUnclaimedAttachments({
+        mail_id: 1,
+        status: 2,
+        has_unclaimed_attachments: true,
+      }),
+    ).toBe(true);
+    expect(
+      mailHasUnclaimedAttachments({
+        mail_id: 2,
+        status: 1,
+        has_unclaimed_attachments: false,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      }),
+    ).toBe(false);
+    expect(
+      mailHasUnclaimedAttachments({
+        mail_id: 3,
+        status: 1,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      }),
+    ).toBe(true);
+    const mails = [
+      { mail_id: 1, status: 0, attachments: { items: [{ item_cfg_id: 1, quantity: 1 }] } },
+      { mail_id: 2, status: 2 },
+    ];
+    expect(countMailsWithUnclaimedAttachments(mails)).toBe(1);
+    expect(
+      countMailsWithUnclaimedAttachments(
+        mails.map((m) => (m.mail_id === 1 ? { ...m, status: 2, has_unclaimed_attachments: false } : m)),
+      ),
+    ).toBe(0);
+  });
+
+  it("formatMailClaimGrantedSummary lists item labels and resources", () => {
+    const text = formatMailClaimGrantedSummary({
+      items: [{ item_cfg_id: 2001, quantity: 3 }],
+      resources: { gold: 50 },
+    });
+    expect(text).toContain("谷袋");
+    expect(text).toContain("×3");
+    expect(text).toContain("币");
   });
 
   it("applyMailClaimResult merges wallet and marks mail claimed", () => {

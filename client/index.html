@@ -277,6 +277,23 @@
       }
       .mail-list li.unread { background: #322a22; border-left: 3px solid #c9a227; }
       .mail-row-summary.mail-row-meta-attach { color: #f0c674; }
+      .mail-unclaimed-badge {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 0 5px;
+        font-size: 10px;
+        line-height: 1.4;
+        color: #1a1510;
+        background: #f0c674;
+        border-radius: 3px;
+        vertical-align: middle;
+        font-weight: 600;
+      }
+      .mail-list li.mail-has-unclaimed .mail-row-summary { color: #f0c674; }
+      .mail-detail [data-action="claim-mail"].mail-claim-highlight {
+        outline: 2px solid #f0c674;
+        box-shadow: 0 0 6px rgba(240, 198, 116, 0.45);
+      }
       .mail-list li.mail-empty { cursor: default; color: #b8a88a; }
       .mail-list li.selected { outline: 2px solid #c9a227; }
       .mail-list li.unread .mail-row-title { font-weight: 600; }

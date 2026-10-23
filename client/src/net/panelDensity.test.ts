@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { MAIL_INBOX_FILTER_UNREAD, mailEmptyInboxMessage } from "@/net/heroMailState";
 import {
   BATTLE_REPORT_FILTER_EMPTY_TEXT,
+  MAIL_LIST_ROW_UNCLAIMED_CLASS,
   MAIL_LIST_ROW_UNREAD_CLASS,
+  MAIL_UNCLAIMED_BADGE_LABEL,
   bagEmptyListMessage,
   battleReportListEmptyMessage,
   formatBagListItemIdCell,
@@ -24,6 +26,14 @@ describe("panelDensity", () => {
     expect(mailEmptyInboxMessage(0)).toContain("日常");
     expect(mailListRowClassName({ mail_id: 1, status: 0 })).toBe(MAIL_LIST_ROW_UNREAD_CLASS);
     expect(mailListRowClassName({ mail_id: 1, status: 1 })).toBe("");
+    expect(
+      mailListRowClassName({
+        mail_id: 5,
+        status: 1,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      }),
+    ).toBe(MAIL_LIST_ROW_UNCLAIMED_CLASS);
+    expect(MAIL_UNCLAIMED_BADGE_LABEL).toBe("未领取");
   });
 
   it("mail two-line row helpers", () => {
