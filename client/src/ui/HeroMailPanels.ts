@@ -1,9 +1,9 @@
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
-import { gatewayErrorMessage } from "@/net/contentFeedback";
+import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
-import { bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
+import { applyUseResult, bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
 import {
   DAILY_QUEST_CHAIN_ID,
   dailyQuestsFromListResponse,
@@ -86,6 +86,20 @@ import {
   setHeroListFormErrorDisplay,
   syncHeroListRefreshButton,
 } from "@/net/heroListRefreshFeedback";
+import {
+  formatHeroDetailCultivationUseStatus,
+  formatHeroDetailStatChangeSummary,
+  renderHeroDetailCultivationUseMarkup,
+  scheduleHeroDetailStatPulse,
+  setHeroCultivationFormErrorDisplay,
+  setHeroCultivationSuccessDisplay,
+  syncHeroDetailCultivationUseButton,
+  validateHeroDetailCultivationUse,
+} from "@/net/heroDetailCultivationUse";
+import {
+  type UseConsumableSubmitState,
+  useConsumableSubmitStateMachine,
+} from "@/net/useConsumableSubmitFeedback";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -111,6 +125,7 @@ export class HeroMailPanels {
   private recruitLastError: string | null = null;
   private recruitLastSuccessHeroId: number | null = null;
   private heroesRefreshInflight = false;
+  private heroCultivationSubmitState: UseConsumableSubmitState = "idle";
 
   constructor(
     private readonly mount: HTMLElement,
@@ -471,11 +486,16 @@ export class HeroMailPanels {
       }
     }
     if (detailEl) {
+      const { bag } = this.sessionEconomy();
+      const cultivationHtml = this.selectedHeroId
+        ? renderHeroDetailCultivationUseMarkup(bag, this.heroCultivationSubmitState)
+        : "";
       detailEl.innerHTML = this.selectedHeroId
         ? renderHeroDetailMarkup(
             this.heroDetail,
             this.recruitAffordSummaryForHeroDetail(),
             this.recruitTemplateForHeroDetail(),
+            cultivationHtml,
           )
         : renderHeroDetailMarkup(null);
     }
@@ -802,10 +822,20 @@ export class HeroMailPanels {
     }
   }
 
+  private resetHeroCultivationSubmitFeedback(): void {
+    this.heroCultivationSubmitState = useConsumableSubmitStateMachine(
+      this.heroCultivationSubmitState,
+      { type: "CLEAR_ERROR" },
+    );
+    setHeroCultivationFormErrorDisplay(this.heroPanel, null);
+    setHeroCultivationSuccessDisplay(this.heroPanel, null);
+  }
+
   private async loadHeroDetail(heroId: number): Promise<void> {
     const sid = this.serverId();
     this.selectedHeroId = heroId;
     writeHeroDetailSelectedSession(heroId);
+    this.resetHeroCultivationSubmitFeedback();
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
@@ -816,6 +846,75 @@ export class HeroMailPanels {
       this.heroDetail = null;
       this.renderHeroList();
       this.onStatus((e as Error).message);
+    }
+  }
+
+  private async useHeroCultivationItem(): Promise<void> {
+    if (this.heroCultivationSubmitState === "submitting" || !this.selectedHeroId) return;
+    const { bag } = this.sessionEconomy();
+    const validated = validateHeroDetailCultivationUse(bag);
+    if (!validated.ok || !validated.itemCfgId) {
+      setHeroCultivationFormErrorDisplay(this.heroPanel, validated.message);
+      this.onStatus(validated.message);
+      this.renderHeroList();
+      return;
+    }
+    const itemId = validated.itemCfgId;
+    const heroId = this.selectedHeroId;
+    const detailBefore = this.heroDetail;
+    this.heroCultivationSubmitState = useConsumableSubmitStateMachine(
+      this.heroCultivationSubmitState,
+      { type: "SUBMIT" },
+    );
+    setHeroCultivationFormErrorDisplay(this.heroPanel, null);
+    setHeroCultivationSuccessDisplay(this.heroPanel, null);
+    syncHeroDetailCultivationUseButton(this.heroPanel, this.heroCultivationSubmitState, bag);
+    const sid = this.serverId();
+    this.onStatus(`使用 ${itemId}×1…`);
+    try {
+      const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
+        remaining?: number;
+        wallet_after?: ResourceWallet;
+        effect_summary?: string;
+        speedup_seconds?: number;
+      };
+      const session = this.getSession();
+      if (session) {
+        const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
+        const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
+        this.onSessionPatch({ bag: nextBag, wallet });
+      }
+      const detailRes = await this.gateway.getHeroDetail(sid, heroId);
+      const detailAfter = parseGetHeroDetailResponse(detailRes);
+      this.heroDetail = detailAfter;
+      this.heroCultivationSubmitState = useConsumableSubmitStateMachine(
+        this.heroCultivationSubmitState,
+        { type: "SUCCESS" },
+      );
+      this.renderHeroList();
+      const statSummary = formatHeroDetailStatChangeSummary(detailBefore, detailAfter);
+      const statusText = formatHeroDetailCultivationUseStatus(
+        itemId,
+        statSummary,
+        formatUseConsumableEffectSummary(itemId, res),
+      );
+      setHeroCultivationSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroCultivationSubmitState = useConsumableSubmitStateMachine(
+        this.heroCultivationSubmitState,
+        { type: "FAIL" },
+      );
+      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+      setHeroCultivationFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      const { bag: bagAfter } = this.sessionEconomy();
+      syncHeroDetailCultivationUseButton(this.heroPanel, this.heroCultivationSubmitState, bagAfter);
     }
   }
 
@@ -1234,6 +1333,7 @@ export class HeroMailPanels {
     }
     if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
     if (a === "hero-related-items") void this.openRelatedCultivationItems();
+    if (a === "hero-use-cultivation-item") void this.useHeroCultivationItem();
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {
