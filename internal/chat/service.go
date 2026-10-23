@@ -90,9 +90,9 @@ func (s *Service) Send(ctx context.Context, actor Actor, req *chatv1.SendChatMes
 		if s.players == nil {
 			return nil, ErrRecipientNotFound
 		}
-		ok, err := s.players.ExistsOnServer(ctx, serverID, recipientID)
-		if err != nil {
-			return nil, err
+		ok, existErr := s.players.ExistsOnServer(ctx, serverID, recipientID)
+		if existErr != nil {
+			return nil, existErr
 		}
 		if !ok {
 			return nil, ErrRecipientNotFound
