@@ -46,6 +46,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **将领详情**（`GetHeroDetail`、列表可读性） | [手动验收（将领详情 CLIENT-014）](#手动验收将领详情-client-014) |
 | **邮件**（收件箱 / 已读 / 领附件） | [手动验收（邮件收件箱，CLIENT-017）](#手动验收邮件收件箱client-017)（[#182](https://github.com/anitaguptaoffice/sanguo-slg/issues/182) / [#190](https://github.com/anitaguptaoffice/sanguo-slg/pull/190)）；招募相关仍见 [手动验收（M4：将领，CLIENT-008）](#手动验收m4将领client-008) |
 | **战报筛选**（outcome 客户端筛选 + 详情摘要） | [手动验收（战报筛选 CLIENT-016）](#手动验收战报筛选-client-016) |
+| **战报时间窗筛选**（全部/今日/近7日 + 胜负摘要条，**CLIENT-065**） | [手动验收（战报时间窗 CLIENT-065）](#手动验收战报时间窗筛选-client-065) |
 | **HUD 资源变动提示** | [手动验收（HUD 资源变动，CLIENT-018）](#手动验收hud-资源变动-client-018)（[#183](https://github.com/anitaguptaoffice/sanguo-slg/issues/183) / [#191](https://github.com/anitaguptaoffice/sanguo-slg/pull/191)） |
 
 ## Wave 13 闭环加深（M4 出口 / INTG-010）
@@ -441,6 +442,15 @@ cd client && npm install && npm run dev
 2. 底栏 **「战报」** → 切换 **胜/负/平** 筛选 → 刷新浏览器页面，筛选应恢复。
 3. 列表超过首页 `limit` 时点 **加载更多**；末页按钮禁用且文案含总条数；加载失败保留已拉取行并展示 gateway 文案。
 4. **在地图查看**（CLIENT-042）与回合表（CLIENT-034）行为不退化。单测：`battleReportListState.test.ts`、`BattleReportPanel.test.ts`。
+
+### 手动验收（战报时间窗筛选 CLIENT-065）
+
+`filterBattleReportsByTimeWindow` 基于 `BattleReportSummary.created_at_ms` 做本地日历日过滤（**全部 / 今日 / 近7日**），不改 `ListBattleReports` 请求；时间窗与 outcome 筛选分别写入 `sessionStorage`（`battleReportListState`）。列表顶部 **胜/负/平** 只读 chips 统计当前时间窗内已加载战报；与 outcome 筛选组合后列表即时过滤，筛选无结果仍用 CLIENT-029「无匹配战报」文案。
+
+1. `make dev` 产生跨日或多条战报（见 CLIENT-049）。
+2. 底栏 **「战报」** → outcome 筛选旁 **时间** 下拉切换 **今日 / 近7日** → 列表行即时变化；刷新页面后时间窗与胜负筛选各自恢复。
+3. 摘要条应显示当前时间窗内胜/负/平计数；**加载更多**、回合表、**在地图查看** 行为不退化。
+4. 单测：`militaryFormat.test.ts`、`battleReportListState.test.ts`、`BattleReportPanel.test.ts`。
 
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
