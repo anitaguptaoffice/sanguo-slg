@@ -9,6 +9,7 @@ import (
 type Catalog interface {
 	Get(questCfgID int32) (QuestCfg, bool)
 	ListByChain(chainID int32) []QuestCfg
+	ListByQuestType(questType int16) []QuestCfg
 	All() []QuestCfg
 }
 
@@ -44,6 +45,16 @@ func (m *MemCatalog) ListByChain(chainID int32) []QuestCfg {
 	var out []QuestCfg
 	for _, q := range m.byID {
 		if q.ChainID == chainID {
+			out = append(out, q)
+		}
+	}
+	return out
+}
+
+func (m *MemCatalog) ListByQuestType(questType int16) []QuestCfg {
+	var out []QuestCfg
+	for _, q := range m.byID {
+		if q.QuestType == questType {
 			out = append(out, q)
 		}
 	}

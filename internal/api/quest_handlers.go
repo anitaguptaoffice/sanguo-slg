@@ -31,26 +31,28 @@ func (s *Server) handleListPlayerQuests(ctx context.Context, pkt *commonv1.Clien
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
 	actor := quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	chains := s.questChainIDs
+	filter := quest.ListQuestsFilter{IncludeCompleted: req.GetIncludeCompleted()}
 	if req.GetChainId() != 0 {
-		chains = []int32{req.GetChainId()}
-	}
-	var quests []*questv1.PlayerQuestProgress
-	var chainViews []*questv1.QuestChainStatus
-	for _, cid := range chains {
-		st, views, err := s.questSvc.GetQuestChainStatus(ctx, actor, cid)
-		if err != nil {
-			return nil, err
+		filter.ChainIDs = []int32{req.GetChainId()}
+		if req.GetChainId() == quest.DailyChainID {
+			filter.QuestType = quest.QuestTypeDaily
 		}
-		chainViews = append(chainViews, questChainToProto(st))
-		for _, v := range views {
-			if !req.GetIncludeCompleted() && v.State == quest.PlayerQuestStateCompleted {
-				continue
-			}
-			quests = append(quests, questProgressToProto(v))
-		}
+	} else {
+		filter.ChainIDs = s.questChainIDs
 	}
-	data, err := marshal(&questv1.ListPlayerQuestsResponse{Quests: quests, Chains: chainViews})
+	views, chainViews, err := s.questSvc.ListPlayerQuests(ctx, actor, filter)
+	if err != nil {
+		return nil, err
+	}
+	quests := make([]*questv1.PlayerQuestProgress, 0, len(views))
+	for _, v := range views {
+		quests = append(quests, questProgressToProto(v))
+	}
+	pbChains := make([]*questv1.QuestChainStatus, 0, len(chainViews))
+	for _, st := range chainViews {
+		pbChains = append(pbChains, questChainToProto(st))
+	}
+	data, err := marshal(&questv1.ListPlayerQuestsResponse{Quests: quests, Chains: pbChains})
 	if err != nil {
 		return nil, err
 	}

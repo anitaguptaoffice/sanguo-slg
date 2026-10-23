@@ -83,6 +83,7 @@ type Objective struct {
 	BuildingCfgID   int32
 	Level           int32
 	Count           int32
+	Resource        string
 }
 
 // ProgressCounter is stored in player_quest.progress JSON.

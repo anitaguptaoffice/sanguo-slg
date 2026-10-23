@@ -39,9 +39,9 @@ func (s *Service) SetClock(fn func() time.Time) {
 }
 
 func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32) (PlayerQuestProgress, QuestChainStatus, error) {
-	cfg, ok := s.catalog.Get(questCfgID)
-	if !ok {
-		return PlayerQuestProgress{}, QuestChainStatus{}, ErrQuestNotFound
+	cfg, row, has, err := s.getPlayerQuestFresh(ctx, actor, questCfgID)
+	if err != nil {
+		return PlayerQuestProgress{}, QuestChainStatus{}, err
 	}
 	if err := s.checkUnlock(ctx, actor, cfg); err != nil {
 		return PlayerQuestProgress{}, QuestChainStatus{}, err
@@ -49,18 +49,16 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 	if err := s.checkPrerequisite(ctx, actor, cfg); err != nil {
 		return PlayerQuestProgress{}, QuestChainStatus{}, err
 	}
-	row, has, err := s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, questCfgID)
-	if err != nil {
-		return PlayerQuestProgress{}, QuestChainStatus{}, err
-	}
 	if has {
 		switch row.State {
 		case StateInProgress, StateClaimable:
 			return PlayerQuestProgress{}, QuestChainStatus{}, ErrAlreadyAccepted
 		case StateCompleted:
-			if !cfg.Repeatable {
+			if !cfg.Repeatable || cfg.QuestType == QuestTypeDaily {
 				return PlayerQuestProgress{}, QuestChainStatus{}, ErrAlreadyCompleted
 			}
+		case StateUnaccepted:
+			// Prior-day daily reset left a row; fall through to fresh accept.
 		}
 	}
 	now := s.now()
@@ -167,6 +165,14 @@ func (s *Service) GetQuestChainStatus(ctx context.Context, actor Actor, chainID 
 		row, has, err := s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, cfg.QuestCfgID)
 		if err != nil {
 			return QuestChainStatus{}, nil, err
+		}
+		if has {
+			if err := s.ensureDailyFresh(ctx, cfg, &row); err != nil {
+				return QuestChainStatus{}, nil, err
+			}
+			if row.State == StateUnaccepted {
+				has = false
+			}
 		}
 		if !has {
 			views = append(views, s.buildProgress(cfg, PlayerQuestRow{}, false))
