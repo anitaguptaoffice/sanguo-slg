@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanguo-slg.local/assets/art/v1/schema/asset-manifest.schema.json",
+  "title": "Sanguo SLG Art Manifest v1",
+  "description": "DRAFT — not frozen. Engineering-owned; art fills metadata after mutual review.",
+  "type": "object",
+  "required": ["schema_version", "pack", "assets"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "pack": {
+      "type": "string",
+      "enum": ["maincity", "world", "ui", "shared"],
+      "description": "Logical pack; world tiles must not reuse maincity display sizes."
+    },
+    "base_url": {
+      "type": "string",
+      "default": "/assets/art/v1/",
+      "description": "Prefix for relative paths; prepend Vite import.meta.env.BASE_URL at runtime."
+    },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/asset" },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "vec2": {
+      "type": "object",
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "size2": {
+      "type": "object",
+      "required": ["w", "h"],
+      "properties": {
+        "w": { "type": "number", "minimum": 1 },
+        "h": { "type": "number", "minimum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "nineSlice": {
+      "type": "object",
+      "required": ["left", "top", "right", "bottom"],
+      "properties": {
+        "left": { "type": "integer", "minimum": 0 },
+        "top": { "type": "integer", "minimum": 0 },
+        "right": { "type": "integer", "minimum": 0 },
+        "bottom": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "buttonStates": {
+      "type": "object",
+      "required": ["normal", "hover", "pressed", "disabled"],
+      "properties": {
+        "normal": { "$ref": "#/$defs/frameRef" },
+        "hover": { "$ref": "#/$defs/frameRef" },
+        "pressed": { "$ref": "#/$defs/frameRef" },
+        "disabled": { "$ref": "#/$defs/frameRef" }
+      },
+      "additionalProperties": false
+    },
+    "frameRef": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Relative to base_url, e.g. textures/1x/ui/btn.png"
+        },
+        "atlas": { "type": "string", "description": "Atlas page id if packed" },
+        "frame": { "type": "string", "description": "Frame name within atlas page" }
+      },
+      "additionalProperties": false
+    },
+    "scaleVariant": {
+      "type": "object",
+      "required": ["scale", "path"],
+      "properties": {
+        "scale": { "type": "number", "enum": [1, 2] },
+        "path": { "type": "string" },
+        "atlas": { "type": "string" },
+        "frame": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "asset": {
+      "type": "object",
+      "required": ["id", "kind", "display_size", "anchor"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(\\.[a-z0-9_-]+)+\\.v[0-9]+$",
+          "description": "Stable asset id, e.g. mc.building.farm.v1"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["sprite", "nine_slice", "button", "icon", "background"]
+        },
+        "display_size": { "$ref": "#/$defs/size2", "description": "Logical size on 1600x900 design baseline" },
+        "crop_offset": {
+          "$ref": "#/$defs/vec2",
+          "description": "Trim offset from source image top-left to visible content"
+        },
+        "anchor": {
+          "$ref": "#/$defs/vec2",
+          "description": "Normalized 0-1 or pixel offset from display rect top-left; see manifest examples"
+        },
+        "anchor_unit": { "type": "string", "enum": ["normalized", "pixels"], "default": "pixels" },
+        "variants": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/scaleVariant" },
+          "minItems": 1,
+          "description": "1x and/or 2x source files"
+        },
+        "atlas_page": { "type": "string", "description": "Optional atlas page id" },
+        "physical_frame": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "integer" },
+            "y": { "type": "integer" },
+            "w": { "type": "integer" },
+            "h": { "type": "integer" }
+          },
+          "additionalProperties": false
+        },
+        "nine_slice": { "$ref": "#/$defs/nineSlice" },
+        "button_states": { "$ref": "#/$defs/buttonStates" },
+        "slot_key": {
+          "type": "string",
+          "enum": ["hall", "farm", "lumber", "quarry", "iron", "barracks", "wall"],
+          "description": "Only for maincity building sprites"
+        },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

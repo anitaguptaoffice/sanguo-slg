@@ -882,3 +882,44 @@
     规则对齐，与 DATA-001 并行（‖）。只读 legacy server/game（#82 分支 worktree）。
 
     跨域改动仅限公式系数与测试 fixture；业务状态机逻辑不在本卡重写。
+
+- id: CLIENT-ART-001
+  title: 横屏布局草案与美术 manifest schema（工程）
+  wave: 1
+  domain: client
+  depends_on: [CLIENT-001]
+  size: M
+  owner_dir: client
+  scope: [client/public/assets/art/**, client/src/engine/AssetLoader.ts, docs/art/**]
+  out_of_scope: [spec/**, internal/**, reference/**]
+  acceptance:
+    - docs/art 含 1600×900 基线、1280×720 最小视口、竖屏 360×640 仅 legacy 说明
+    - 主城 slot_key 显示表不改升级协议
+    - client/public/assets/art/v1/schema 为 DRAFT JSON Schema + manifest.example.json
+    - AssetLoader 保留占位行为并含路径解析/ID 映射桩
+    - 不合并 PR #77/#82；不提交二进制美术
+  body: |
+    工程侧美术管线文档与 schema 真源；美术在互审后按 ART-SAMPLE-001 出样本。
+    发布目录 client/public/assets/art/v1/；路径经 Vite base 解析。
+
+- id: ART-SAMPLE-001
+  title: 第一套美术样本（对齐布局与 schema 后）
+  wave: 1
+  domain: client
+  depends_on: [CLIENT-ART-001]
+  size: M
+  owner_dir: client/public/assets/art
+  scope: [client/public/assets/art/v1/textures/**]
+  out_of_scope: [client/public/assets/art/v1/schema/**, spec/**, internal/**, client/src/ui/SocialPanels.ts]
+  acceptance:
+    - "样本 1：主城背景 mc.bg.plateau.v1 — 逻辑 1600×788，导出 1×/2×，验收截图 1600×900 画布含 HUD 边距示意（无建筑、无文字）"
+    - "样本 2：官府 hall — mc.building.hall.v1 — 逻辑 320×240，1×+2×，验收 320×240 透明底预览"
+    - "样本 3：农田 farm — mc.building.farm.v1 — 逻辑 200×160，1×+2×，验收 200×160"
+    - "样本 4：通用按钮 ui.button.primary.v1 — 逻辑 160×48，四态 normal/hover/pressed/disabled，1×，验收四态拼图或四张单图"
+    - "样本 5：九宫格 ui.panel.default.v1 — 逻辑 320×200，边距 24px，1×，验收拉伸至 480×300 不变形"
+    - "样本 6：粮图标 res.icon.food.v1 — 逻辑 32×32，1×+2×，验收 32×32 与 64×64"
+    - manifest 条目由工程写入 manifest.json（美术不改 schema）；样本 PR 仅纹理与 manifest 数据
+    - 不含聊天/军团/排行 UI；文字由代码绘制
+  body: |
+    工作流：CLIENT-ART-001 合并后美术出本卡样本；工程并行占位横屏与 loader 接入；样本验证通过后再开批量生产卡。
+    slot 坐标以 docs/art/maincity-slots.md 为准；世界地图瓦片尺寸单独约定，禁止与主城 display 混用。

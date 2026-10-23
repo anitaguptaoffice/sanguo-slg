@@ -53,7 +53,7 @@ reference/legacy/
 1. **只读**。不改 `reference/` 下任何文件，不把参照代码复制进 `internal/`。
 2. **不照搬写法**。原版是 PHP 5.x 时代代码；只借鉴规则与流程，实现方式自己定。
 3. **文案重写**。原文案只能当规则参考，新项目文案必须重写。
-4. **美术重制**。`reference/art/` 只用于对标尺寸、配色、UI 密度，不进 `client/assets`，不随构建打包。
+4. **美术重制**。`reference/art/` 只用于对标尺寸、配色、UI 密度，不进 `client/public/assets/art/v1/`，不随新包打包。新资源规范见 [art/README.md](./art/README.md)。
 5. **不合并** PR #77 / #82。它们只作为参照物存在，合并会污染主分支。
 
 ## 一句话总结
