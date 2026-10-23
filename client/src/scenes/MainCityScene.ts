@@ -437,14 +437,24 @@ export class MainCityScene implements Scene {
       this.drawSlot(c2d, slot, buildingLevels.get(slot.slot_key));
     }
 
-    const food = this.assets.getImageForAsset("res.icon.food.v1");
-    if (food) {
-      c2d.drawImage(food.img, 16, 12, 32, 32);
-    }
+    const w = this.session?.wallet;
+    const hudResources: { assetId: string; text: string }[] = [
+      { assetId: "res.icon.food.v1", text: `粮 ${w?.food ?? 0}` },
+      { assetId: "res.icon.wood.v1", text: `木 ${w?.wood ?? 0}` },
+      { assetId: "res.icon.iron.v1", text: `铁 ${w?.iron ?? 0}` },
+      { assetId: "res.icon.stone.v1", text: `石 ${w?.stone ?? 0}` },
+    ];
     c2d.fillStyle = "#f5e6c8";
     c2d.font = "16px system-ui";
-    const w = this.session?.wallet;
-    c2d.fillText(`粮 ${w?.food ?? 0}`, 56, 34);
+    let hudX = 16;
+    for (const { assetId, text } of hudResources) {
+      const pack = this.assets.getImageForAsset(assetId);
+      if (pack) {
+        c2d.drawImage(pack.img, hudX, 12, 32, 32);
+      }
+      c2d.fillText(text, hudX + 40, 34);
+      hudX += 120;
+    }
 
     c2d.restore();
   }

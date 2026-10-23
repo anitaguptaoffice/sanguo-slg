@@ -1,0 +1,54 @@
+{
+  "hud-resources-dpr1": {
+    "res.icon.food.v1": {
+      "scale": 1,
+      "path": "textures/1x/icons/food.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32
+    },
+    "res.icon.wood.v1": {
+      "scale": 1,
+      "path": "textures/1x/icons/wood.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32
+    },
+    "res.icon.iron.v1": {
+      "scale": 1,
+      "path": "textures/1x/icons/iron.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32
+    },
+    "res.icon.stone.v1": {
+      "scale": 1,
+      "path": "textures/1x/icons/stone.png",
+      "naturalWidth": 32,
+      "naturalHeight": 32
+    }
+  },
+  "hud-resources-dpr2": {
+    "res.icon.food.v1": {
+      "scale": 2,
+      "path": "textures/2x/icons/food.png",
+      "naturalWidth": 64,
+      "naturalHeight": 64
+    },
+    "res.icon.wood.v1": {
+      "scale": 2,
+      "path": "textures/2x/icons/wood.png",
+      "naturalWidth": 64,
+      "naturalHeight": 64
+    },
+    "res.icon.iron.v1": {
+      "scale": 2,
+      "path": "textures/2x/icons/iron.png",
+      "naturalWidth": 64,
+      "naturalHeight": 64
+    },
+    "res.icon.stone.v1": {
+      "scale": 2,
+      "path": "textures/2x/icons/stone.png",
+      "naturalWidth": 64,
+      "naturalHeight": 64
+    }
+  }
+}
