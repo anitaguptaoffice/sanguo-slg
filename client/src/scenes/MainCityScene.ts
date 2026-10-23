@@ -1,6 +1,6 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
-import { skinNineSlicePanel } from "@/engine/artPanelSkin";
+import { PANEL_ASSET_MILITARY, skinNineSlicePanel } from "@/engine/artPanelSkin";
 import { appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
 import {
@@ -192,12 +192,12 @@ export class MainCityScene implements Scene {
         </select>
       </label>
       <label>数量 <input type="number" data-field="recruit-count" min="1" value="20" /></label>
-      <button type="button" data-action="recruit">募兵</button>
+      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
       <hr />
       <label>目标 X <input type="number" data-field="to-x" value="${DEFAULT_MARCH_TARGET.x}" /></label>
       <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
       <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
-      <button type="button" data-action="march">出征攻击</button>
+      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
       <p class="military-march" data-role="march"></p>
     `;
     const parent = ctx.layoutFrame;
@@ -319,8 +319,9 @@ export class MainCityScene implements Scene {
       () => this.syncMilitaryPanel(),
     );
     this.queuePanels.attach();
-    skinPrimaryButtons(this.toolbar, this.assets);
-    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
+    skinPrimaryButtons(this.toolbar, this.assets, "button");
+    skinPrimaryButtons(this.militaryPanel, this.assets);
+    skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320, PANEL_ASSET_MILITARY);
     for (const panel of [
       this.queuePanels.getRoot(),
       this.heroMail.getMailRoot(),
