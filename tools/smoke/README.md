@@ -2,7 +2,29 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 14 网关冒烟（INTG-011，推荐）
+
+在 INTG-010 全量断言之上强制验收 **DOM-003** 建造加速：`StartBuildingUpgrade` 后有进行中队列 → 网关 `content.v1.UseConsumable` `item_cfg_id=2003` → `GetCityState` 对应槽位 `upgrade_finish_at_ms` **严格减小**（日志打印 `slot_key` 与 `delta_ms`）；**QUEST-003** 日常加深：`daily_train_1`（`quest_cfg_id=1014`）经 `RecruitTroop` + `train_troops` 挂钩推进后领奖，或 `daily_build_1`（`quest_cfg_id=1032`）经建造完成挂钩后领奖（失败打印 `quest_cfg_id`）。保留双榜/UseConsumable 2001/行军/邮件/商城/重启与 M3 子集等 INTG-010 路径。
+
+**本波仍不做** `CancelMarch`/行军加速——`military.v1` 契约未定义对应 RPC。
+
+**QUEST-003 可选**：`UseConsumable` 远征干粮 `item_cfg_id=2020` 推进 `daily_march_1`（`quest_cfg_id=1033`）后领奖；**失败不阻塞主路径**（见测试内 `smokeINTG011DailyMarchOptional`）。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG011Wave14SmokePath' -count=1 -v
+```
+
+与 INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-011:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 13 网关冒烟（INTG-010，推荐）
 
