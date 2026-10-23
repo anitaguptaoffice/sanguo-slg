@@ -29,3 +29,13 @@ export function skinNineSlicePanel(
   el.style.minWidth = `${logicalW}px`;
   el.style.minHeight = `${logicalH}px`;
 }
+
+/** March list / queue recruit block roots (CLIENT-036); military form uses same asset in MainCityScene. */
+export function skinMilitaryPanel(
+  el: HTMLElement,
+  assets: AssetLoader,
+  logicalW = 420,
+  logicalH = 320,
+): void {
+  skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_MILITARY);
+}

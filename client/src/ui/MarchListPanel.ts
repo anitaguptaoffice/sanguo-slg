@@ -36,6 +36,10 @@ export class MarchListPanel {
     this.onSelectionChange = options?.onSelectionChange;
   }
 
+  getRoot(): HTMLElement {
+    return this.panel;
+  }
+
   getMarches(): MarchSummary[] {
     return this.marches;
   }

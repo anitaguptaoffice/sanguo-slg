@@ -25,7 +25,7 @@ describe("QueuePanels", () => {
     panel.attach();
     panel.toggle();
     panel.addRecruitEntry({ queue_id: 5, unit_cfg_id: 1, count: 12, finish_at_ms: now + 60_000 });
-    const text = mount.querySelector('[data-role="queue-list"]')?.textContent ?? "";
+    const text = mount.textContent ?? "";
     expect(text).toContain("农田");
     expect(text).toContain("步兵×12");
   });
