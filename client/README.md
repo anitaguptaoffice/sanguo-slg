@@ -578,12 +578,24 @@ cd client && npm install && npm run dev
 
 ### 手动验收（战报上一封下一封与胜负 streak CLIENT-083）
 
-详情顶栏 **上一封 / 下一封** 在当前 **时间窗（CLIENT-065）** 与 **outcome 筛选（CLIENT-049）** 后的列表顺序内切换 `report_id`；切换时尽量保留 **回合跳转（CLIENT-074）** 的高亮回合与展开状态（新战报无该回合则重置）。列表顶 **胜负摘要 chips** 旁增加 **连胜 / 连负** streak chip（`computeOutcomeStreak`，基于当前组合筛选后的已加载列表、自最近一场起连续胜/负计数）。**在地图查看（CLIENT-042）** 行为不退化；战报面板获得焦点时可用键盘 **← / →** 触发上一封/下一封（输入框/下拉内不拦截）。
+详情顶栏 **上一封 / 下一封** 在当前 **时间窗（CLIENT-065）** 与 **outcome 筛选（CLIENT-049）** 后的列表顺序内切换 `report_id`；切换时尽量保留 **回合跳转（CLIENT-074）** 的高亮回合与展开状态（新战报无该回合则重置）。列表顶 **胜负摘要 chips** 旁增加 **连胜 / 连负** streak chip（`computeOutcomeStreak`，基于当前组合筛选后的已加载列表、自最近一场起连续胜/负计数）。**在地图查看（CLIENT-042）** 行为不退化。键盘相邻导航与焦点环见 **CLIENT-094**。
 
 1. `make dev` 产生多条胜/负交错的战报；底栏 **「战报」** → 组合时间窗与胜负筛选，确认列表顺序与按钮禁用态（首条无上一封、末条无下一封）。
 2. 打开详情并点回合跳转高亮某一回合 → **下一封** 切到邻战报后高亮回合应尽量保留；点 **在地图查看** 仍驱动小地图高亮。
 3. 列表顶应同时见 **胜/负/平** 计数与 **连胜 N** 或 **连负 N**（最近一场为平局时不显示 streak）。
 4. 单测：`battleReportOutcomeStreak.test.ts`、`battleReportListNav.test.ts`、`BattleReportPanel.test.ts`。
+
+### 手动验收（战报相邻导航键盘与焦点环 CLIENT-094）
+
+详情区 `[data-role="report-detail"]` 为 **`role=region`**，`aria-label` 注明 **← / →** 与 **Alt+← / Alt+→** 切换上一封/下一封（与 **CLIENT-083** 按钮同源 `battleReportListNav`）。**详情区聚焦**时方向键触发相邻战报；在面板其它区域（如筛选条）可用 **Alt+方向键**；**时间窗（CLIENT-065）**、**回合跳转（CLIENT-074）** 与 outcome 筛选不退化。切换战报后焦点回到详情顶栏 **上一封/下一封** 按钮（`:focus-visible` 金环）；**1280×720** `layout-narrow` 下导航按钮 `scroll-margin-bottom` 与 `.panel-scroll-body` 底内边距避免焦点环被底栏 56px 工具条裁切。
+
+在战报面板根 `.battle-report-panel` 设置 **`data-battle-report-adj-nav-keyboard="off"`** 可关闭方向键 / Alt+方向键相邻导航（按钮仍可用）。
+
+1. `make dev` 打开战报详情 → Tab 聚焦详情区或导航按钮 → **← / →** 在筛选后列表内切换；筛选条聚焦时 **Alt+→** 仍可切换。
+2. 点 **下一封** 或键盘切换后焦点应在顶栏导航按钮上；窄屏下 Tab 到导航按钮时金环完整可见、不被底栏遮挡。
+3. 回合跳转下拉/芯片、时间窗下拉仍可操作；方向键在 `select` 内不触发相邻战报。
+4. 根节点 `data-battle-report-adj-nav-keyboard="off"` 后键盘不再切换，**上一封/下一封** 仍可点。
+5. 单测：`battleReportListNav.test.ts`（筛选列表邻接 id）、`BattleReportPanel.test.ts`（region/键盘/焦点/data attr）。
 
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
