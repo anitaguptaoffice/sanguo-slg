@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content/mail"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
@@ -33,6 +34,11 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 
 	s.shopSvc = shop.NewService(devShopCatalog(), nil, shop.NewPayments(contentSvc, s.newShopWalletStore()), s.players.Pool)
 	s.contentSvc = contentSvc
+	var mailStore mail.Store = mail.NewMemStore()
+	if s.players.Pool != nil {
+		mailStore = mail.NewPGStore(s.players.Pool)
+	}
+	s.mailSvc = mail.NewService(mailStore, contentSvc, s.log)
 	s.gm = NewGmService(s.log, s.players.Pool, s.sessions, contentSvc)
 
 	s.m4.Register(RouteListPlayerQuests, s.handleListPlayerQuests)
@@ -44,6 +50,9 @@ func (s *Server) WireM4Content(ctx context.Context) error {
 	s.m4.Register(RoutePurchaseShopOffer, s.handlePurchaseShopOffer)
 	s.m4.Register(RouteListPlayerBag, s.handleListPlayerBag)
 	s.m4.Register(RouteUseConsumable, s.handleUseConsumable)
+	s.m4.Register(RouteListPlayerMail, s.handleListPlayerMail)
+	s.m4.Register(RouteMarkPlayerMailRead, s.handleMarkPlayerMailRead)
+	s.m4.Register(RouteClaimPlayerMailAttachments, s.handleClaimPlayerMailAttachments)
 	return nil
 }
 
