@@ -3,6 +3,7 @@ import {
   aggregateHudTodoCounts,
   countDailyTodoQuests,
   formatHudBadgeCount,
+  mailUnreadSnapshotFromListResponse,
   pickFirstDailyTodoQuestCfgId,
   pickFirstUnreadMailId,
 } from "@/net/hudTodoBadge";
@@ -38,6 +39,15 @@ describe("hudTodoBadge", () => {
         { mail_id: 3, status: 0 },
       ]),
     ).toBe(2);
+  });
+
+  it("mailUnreadSnapshotFromListResponse matches ListPlayerMail unread page", () => {
+    expect(
+      mailUnreadSnapshotFromListResponse({
+        total_count: 5,
+        mails: [{ mail_id: 42, status: 0 }],
+      }),
+    ).toEqual({ count: 5, firstId: 42 });
   });
 
   it("picks first daily todo cfg id (acceptable before claimable)", () => {

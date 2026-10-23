@@ -144,6 +144,7 @@ describe("heroMailState", () => {
       { bag: [], wallet: { food: 100 } },
     );
     expect(patch.mails[0].status).toBe(2);
+    expect(patch.mails[0].has_unclaimed_attachments).toBe(false);
     expect(patch.wallet.food).toBe(999);
     expect(patch.bag).toEqual([{ item_cfg_id: 2001, quantity: 1 }]);
   });

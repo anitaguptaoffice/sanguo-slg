@@ -6,8 +6,8 @@ import {
   aggregateHudTodoCounts,
   countDailyTodoQuests,
   EMPTY_HUD_TODO_DEEP_LINK,
+  mailUnreadSnapshotFromListResponse,
   pickFirstDailyTodoQuestCfgId,
-  pickFirstUnreadMailId,
   type HudTodoBadgeCounts,
   type HudTodoDeepLinkSnapshot,
 } from "@/net/hudTodoBadge";
@@ -59,6 +59,25 @@ export class HudTodoBadgePoll {
     this.deepLink = { ...EMPTY_HUD_TODO_DEEP_LINK };
   }
 
+  /** 领取附件等局部刷新后写入邮件未读快照，避免等关面板再 poll。 */
+  applyMailUnreadSnapshot(count: number, firstUnreadMailId = 0): void {
+    const mailUnread = Math.max(0, count);
+    const firstId =
+      firstUnreadMailId > 0 ? firstUnreadMailId : mailUnread > 0 ? this.deepLink.firstUnreadMailId : 0;
+    this.deepLink = {
+      ...this.deepLink,
+      mailUnread,
+      firstUnreadMailId: firstId,
+    };
+    if (!this.opts.isMailSuppressed()) {
+      this.opts.onCounts({
+        mailUnread: this.deepLink.mailUnread,
+        dailyTodo: this.deepLink.dailyTodo,
+        battleReportUnread: this.deepLink.battleReportUnread,
+      });
+    }
+  }
+
   tick(dtSec: number): void {
     const interval = this.opts.isPanelVisible() ? this.fastSec : this.slowSec;
     this.accumSec += dtSec;
@@ -99,10 +118,8 @@ export class HudTodoBadgePoll {
     const p = this.opts.gateway
       .listPlayerMail(sid, { filter: MAIL_INBOX_FILTER_UNREAD, pageSize: 1, pageOffset: 0 })
       .then((res) => {
-        const mails = (res as { mails?: MailRow[] }).mails ?? [];
-        const count = (res as { total_count?: number }).total_count ?? 0;
-        const firstId = pickFirstUnreadMailId(mails);
-        return { count, firstId };
+        const snap = mailUnreadSnapshotFromListResponse(res as { mails?: MailRow[]; total_count?: number });
+        return { count: snap.count, firstId: snap.firstId };
       })
       .catch(() => ({ count: 0, firstId: 0 }))
       .finally(() => {

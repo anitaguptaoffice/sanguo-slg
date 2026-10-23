@@ -280,9 +280,12 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
-      (count) => this.updateMailToolbarBadge(count),
+      (count) => {
+        if (!this.heroMail?.isMailOpen()) this.updateMailToolbarBadge(count);
+      },
       this.cityStateFetch,
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
+      (snap) => this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId),
     );
     this.heroMail.attach();
     this.battleReports = new BattleReportPanel(
