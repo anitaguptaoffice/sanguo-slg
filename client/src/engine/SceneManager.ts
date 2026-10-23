@@ -9,6 +9,8 @@ export interface Scene {
 export type SceneContext = {
   canvas: HTMLCanvasElement;
   hud: HTMLElement;
+  /** Letterboxed 1600×900 DOM root (HUD band + overlays share layout coordinates). */
+  layoutFrame: HTMLElement;
   switchScene: (name: string, data?: unknown) => Promise<void>;
   gateway: import("@/net/GatewayClient").GatewayPort;
   assets: import("@/engine/AssetLoader").AssetLoader;

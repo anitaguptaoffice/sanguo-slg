@@ -25,7 +25,8 @@ export class ServerSelectScene implements Scene {
       <button type="button" data-action="enter-game" disabled>进入游戏</button>
       <p class="server-select-status" data-role="status"></p>
     `;
-    ctx.canvas.parentElement?.appendChild(this.panel);
+    this.panel.classList.add("layout-overlay-center");
+    ctx.layoutFrame.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev, ctx));
     this.hud.textContent = "连接网关…";
     try {

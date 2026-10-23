@@ -2,7 +2,14 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { skinNineSlicePanel } from "@/engine/artPanelSkin";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
-import { MAIN_CITY_SLOTS, STAGE_TOP_Y, TOOLBAR_TOP_Y, type MainCitySlotDef } from "@/engine/mainCitySlots";
+import {
+  LAYOUT_FRAME,
+  MAIN_CITY_SLOTS,
+  STAGE_HEIGHT,
+  STAGE_TOP_Y,
+  TOOLBAR_TOP_Y,
+  type MainCitySlotDef,
+} from "@/engine/mainCitySlots";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { SocialPanels } from "@/ui/SocialPanels";
@@ -60,7 +67,7 @@ export class MainCityScene implements Scene {
     this.gateway = ctx.gateway;
     this.renderHud();
     this.toolbar = document.createElement("div");
-    this.toolbar.className = "main-city-toolbar";
+    this.toolbar.className = "main-city-toolbar layout-toolbar";
     this.toolbar.innerHTML = `
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
@@ -99,11 +106,11 @@ export class MainCityScene implements Scene {
       <pre class="report-detail" data-role="report-detail"></pre>
     `;
     this.reportDetail = this.militaryPanel.querySelector('[data-role="report-detail"]') as HTMLElement;
-    const parent = ctx.canvas.parentElement;
-    parent?.appendChild(this.toolbar);
-    parent?.appendChild(this.militaryPanel);
+    const parent = ctx.layoutFrame;
+    parent.appendChild(this.toolbar);
+    parent.appendChild(this.militaryPanel);
     this.social = new SocialPanels(
-      parent ?? this.hud,
+      parent,
       this.gateway,
       () => this.session,
       (msg) => {
@@ -113,7 +120,7 @@ export class MainCityScene implements Scene {
     );
     this.social.attach();
     this.content = new ContentPanels(
-      parent ?? this.hud,
+      parent,
       this.gateway,
       () => this.session,
       (patch) => {
@@ -410,16 +417,16 @@ export class MainCityScene implements Scene {
     applyLayoutTransform(c2d, vp);
 
     c2d.fillStyle = "rgba(26, 20, 16, 0.85)";
-    c2d.fillRect(0, 0, 1600, STAGE_TOP_Y);
+    c2d.fillRect(0, 0, LAYOUT_FRAME.w, STAGE_TOP_Y);
     c2d.fillStyle = "rgba(26, 20, 16, 0.92)";
-    c2d.fillRect(0, TOOLBAR_TOP_Y, 1600, 900 - TOOLBAR_TOP_Y);
+    c2d.fillRect(0, TOOLBAR_TOP_Y, LAYOUT_FRAME.w, LAYOUT_FRAME.h - TOOLBAR_TOP_Y);
 
     const bg = this.assets.getImageForAsset("mc.bg.plateau.v1");
     if (bg) {
-      c2d.drawImage(bg.img, 0, STAGE_TOP_Y, 1600, 788);
+      c2d.drawImage(bg.img, 0, STAGE_TOP_Y, LAYOUT_FRAME.w, STAGE_HEIGHT);
     } else {
       c2d.fillStyle = "#3d5c3a";
-      c2d.fillRect(0, STAGE_TOP_Y, 1600, 788);
+      c2d.fillRect(0, STAGE_TOP_Y, LAYOUT_FRAME.w, STAGE_HEIGHT);
     }
 
     const buildingLevels = new Map(
