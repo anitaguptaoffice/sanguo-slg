@@ -80,6 +80,7 @@ import {
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
+import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
   hall: "城主府",
@@ -786,15 +787,26 @@ export class MainCityScene implements Scene {
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
   }
 
-  private applyCityStatePoll(state: { wallet?: ResourceWallet; buildings?: CityBuilding[] }): void {
+  private applyCityStateFromFetch(state: {
+    wallet?: ResourceWallet;
+    buildings?: CityBuilding[];
+  }): void {
     if (!this.session) return;
+    const beforeWallet = this.session.wallet;
+    const afterWallet = state.wallet ?? this.session.wallet;
+    const pulseKeys = walletResourcePulseKeys(beforeWallet, afterWallet);
     this.patchSession(
       {
-        wallet: state.wallet ?? this.session.wallet,
+        wallet: afterWallet,
         buildings: state.buildings ?? this.session.buildings,
       },
       { flashWalletGain: false },
     );
+    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
+  }
+
+  private applyCityStatePoll(state: { wallet?: ResourceWallet; buildings?: CityBuilding[] }): void {
+    this.applyCityStateFromFetch(state);
   }
 
   private renderHud(): void {
@@ -880,13 +892,10 @@ export class MainCityScene implements Scene {
         buildings?: CityBuilding[];
       } | null;
       if (state) {
-        this.patchSession(
-          {
-            wallet: state.wallet ?? this.session.wallet,
-            buildings: state.buildings ?? [],
-          },
-          { flashWalletGain: false },
-        );
+        this.applyCityStateFromFetch({
+          wallet: state.wallet,
+          buildings: state.buildings ?? [],
+        });
       }
       await this.syncSessionCityCoords();
       await this.refreshMinimapMarches();
