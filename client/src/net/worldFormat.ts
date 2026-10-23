@@ -35,7 +35,7 @@ export function citiesFromListPlayerCitiesResponse(res: {
   return [...(res.cities ?? [])];
 }
 
-/** 将坐标写入出征表单 to_x/to_y（CLIENT-013 字段）；无表单时返回 false。 */
+/** 将坐标写入出征表单 to_x/to_y（CLIENT-013 字段）；无表单时返回 false。会话记忆见 marchTargetMemory（CLIENT-043）。 */
 export function applyMarchTargetToForm(
   formRoot: ParentNode | null | undefined,
   x: number,
