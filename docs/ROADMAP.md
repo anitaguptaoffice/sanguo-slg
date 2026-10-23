@@ -230,11 +230,33 @@ H5 人工验收与 INTG-013 路径对齐，见 [client/README.md](../client/READ
 | [#268](https://github.com/anitaguptaoffice/sanguo-slg/issues/268) | CLIENT-044 | 已完成 | [#272](https://github.com/anitaguptaoffice/sanguo-slg/pull/272)（`d437076a`） |
 | [#269](https://github.com/anitaguptaoffice/sanguo-slg/issues/269) | CLIENT-045 | 已完成 | [#273](https://github.com/anitaguptaoffice/sanguo-slg/pull/273)（`5a3ae507`） |
 | [#270](https://github.com/anitaguptaoffice/sanguo-slg/issues/270) | INTG-014 | 已完成 | [#274](https://github.com/anitaguptaoffice/sanguo-slg/pull/274)（`90fb5356`） |
-| [#271](https://github.com/anitaguptaoffice/sanguo-slg/issues/271) | DOCS-EXIT-009 | 文档收口 | PR [#278](https://github.com/anitaguptaoffice/sanguo-slg/pull/278) |
+| [#271](https://github.com/anitaguptaoffice/sanguo-slg/issues/271) | DOCS-EXIT-009 | 已完成 | [#278](https://github.com/anitaguptaoffice/sanguo-slg/pull/278)（`af713f07`） |
 
 H5 人工验收与 **INTG-014** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-17-世界出征互链与复盘导航m4-出口--intg-014)（**小地图选点出征 + 战报坐标复盘 + 军事目标记忆 + 日常战报横幅 + 社交刷新**）。
 
 **明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；**CLIENT-040** 全页证据压缩（wave:16 美术轨单独跟进）。
+
+**wave:17 美术轨（非本波 backlog 实现卡）**：**CLIENT-046**（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277)）中心四面板美术证据轨，与 wave:18 实现卡 **CLIENT-047** 起编号无关。
+
+## Wave 18 H5 出征反馈与面板可读加深 — **规划中**
+
+**策略**：在 wave:17 **小地图选点/战报复盘/目标记忆/日常横幅/社交刷新** 之上，加深 **军情 ETA 与列表密度**、**出征表单客户端校验**、**战报分页与筛选记忆**、**邮件领取与 HUD 同步**、**资源变动脉冲**、**建造队列↔日常互链** 与 **社交空错态统一**；网关 **INTG-015** 复跑 smoke（行军 `depart_at_ms`/`arrive_at_ms` + 战报 `ListBattleReports` 分页）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速。波次 backlog 规划 PR（**本 PR 不建 GitHub Issue**；合并后编排者 `tasks_sync`）。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| （待 sync） | CLIENT-047 | 待开工 | — |
+| （待 sync） | CLIENT-048 | 待开工 | — |
+| （待 sync） | CLIENT-049 | 待开工 | — |
+| （待 sync） | CLIENT-050 | 待开工 | — |
+| （待 sync） | CLIENT-051 | 待开工 | — |
+| （待 sync） | CLIENT-052 | 待开工 | — |
+| （待 sync） | CLIENT-053 | 待开工 | — |
+| （待 sync） | INTG-015 | 待开工 | — |
+| （待 sync） | DOCS-EXIT-010 | 阻塞（`blocked_until: INTG-015`） | — |
+
+**并行建议**：CLIENT-047～053 与 INTG-015 可并行；DOCS-EXIT-010 在 INTG-015 合并后放开。
+
+**明确不做**：合并或复制 art hold PR（#77/#82/#100/#108/#126/#140/#141/#144/#145/#153/#155/#177）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)；**DATA-003**；`cfg_act*`；新道具/商城 SKU；`CancelMarch`/行军与募兵加速；**CLIENT-046** 美术证据（[#277](https://github.com/anitaguptaoffice/sanguo-slg/issues/277)）——非本波实现 backlog。
 
 ## 不做
 
