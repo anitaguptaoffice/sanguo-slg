@@ -20,6 +20,13 @@ import {
   type BattleReportSummary,
 } from "@/net/militaryFormat";
 import {
+  BATTLE_REPORT_LOAD_MORE_LABEL,
+  battleReportAllLoadedLabel,
+  hasMoreBattleReports,
+  readBattleReportOutcomeFilterSession,
+  writeBattleReportOutcomeFilterSession,
+} from "@/net/battleReportListState";
+import {
   BATTLE_REPORT_FILTER_EMPTY_TEXT,
   battleReportFilterEmptyClass,
   battleReportListEmptyClass,
@@ -63,6 +70,8 @@ export class BattleReportPanel {
   ) {}
 
   attach(): void {
+    const savedFilter = readBattleReportOutcomeFilterSession();
+    if (savedFilter) this.outcomeFilter = savedFilter;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
@@ -124,7 +133,7 @@ export class BattleReportPanel {
         <button type="button" data-action="filter-outcome" data-filter="draw">平</button>
       </div>
       <button type="button" data-action="refresh-reports">刷新列表</button>
-      <button type="button" data-action="load-more-reports" data-role="load-more" hidden>加载更多</button>
+      <button type="button" data-action="load-more-reports" data-role="load-more" hidden>${BATTLE_REPORT_LOAD_MORE_LABEL}</button>
       <button type="button" data-action="retry-list" data-role="retry-list" hidden>重试加载列表</button>
       <p class="report-panel-status" data-role="report-list-status"></p>
       <ul class="battle-report-list" data-role="report-list"></ul>
@@ -174,8 +183,17 @@ export class BattleReportPanel {
       (retryList as HTMLElement).hidden = !this.listError || this.listLoading;
     }
     if (loadMore) {
-      const canMore = !this.listError && !this.listLoading && this.reports.length < this.total;
-      (loadMore as HTMLElement).hidden = !canMore;
+      const btn = loadMore as HTMLButtonElement;
+      const showPager =
+        !this.listLoading && this.reports.length > 0 && this.total > 0;
+      btn.hidden = !showPager;
+      if (showPager) {
+        const canMore = hasMoreBattleReports(this.reports.length, this.total);
+        btn.disabled = !canMore;
+        btn.textContent = canMore
+          ? BATTLE_REPORT_LOAD_MORE_LABEL
+          : battleReportAllLoadedLabel(this.total);
+      }
     }
 
     ul.innerHTML = "";
@@ -184,7 +202,7 @@ export class BattleReportPanel {
       return;
     }
 
-    if (this.listError) {
+    if (this.listError && !this.reports.length) {
       const li = document.createElement("li");
       li.className = battleReportListErrorClass();
       li.textContent = battleReportListErrorListHint();
@@ -371,7 +389,7 @@ export class BattleReportPanel {
   }
 
   private async loadMoreReports(): Promise<void> {
-    if (this.listLoading || this.reports.length >= this.total) return;
+    if (this.listLoading || !hasMoreBattleReports(this.reports.length, this.total)) return;
     this.listError = "";
     this.listLoading = true;
     const offset = this.reports.length;
@@ -397,6 +415,7 @@ export class BattleReportPanel {
   private setOutcomeFilter(filter: BattleReportOutcomeFilter): void {
     if (this.outcomeFilter === filter) return;
     this.outcomeFilter = filter;
+    writeBattleReportOutcomeFilterSession(filter);
     this.renderList();
   }
 
