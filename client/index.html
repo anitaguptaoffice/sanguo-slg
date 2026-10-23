@@ -540,6 +540,23 @@
         background: #2a221c; color: #e8dcc8; border: 1px solid #4a3f35;
       }
       .daily-quest-filter-btn.active { outline: 2px solid #c9a227; }
+      .daily-quest-filter-btn.daily-quest-locate-first {
+        margin-left: auto; border-color: #c9a227; color: #f0c674;
+      }
+      .daily-form-error {
+        margin: 6px 0 0; font-size: 12px; color: #c45c5c; min-height: 1em;
+      }
+      .daily-form-error.hidden { display: none; }
+      .daily-quest-list li.daily-quest-claimable {
+        border-left: 3px solid #c9a227;
+      }
+      @keyframes quest-claim-pulse-keyframes {
+        0%, 100% { box-shadow: none; background: #1a1410; }
+        50% { box-shadow: 0 0 12px rgba(201, 162, 39, 0.75); background: #2a2418; }
+      }
+      .daily-quest-list li.quest-claim-pulse {
+        animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
+      }
       .daily-quest-state-summary {
         display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; font-size: 12px;
       }
