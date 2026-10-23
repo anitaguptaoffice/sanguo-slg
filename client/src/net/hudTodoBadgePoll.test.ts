@@ -47,13 +47,23 @@ describe("HudTodoBadgePoll", () => {
     void poll2.pollOnce();
     void poll2.pollOnce();
     await vi.waitFor(() => expect(counts.mailUnread).toBe(7));
-    expect(listPlayerMail).toHaveBeenCalledTimes(1);
+    expect(listPlayerMail).toHaveBeenCalledTimes(2);
   });
 
   it("stores deep-link snapshot ids from poll responses", async () => {
-    const listPlayerMail = vi.fn().mockResolvedValue({
-      total_count: 2,
-      mails: [{ mail_id: 88, status: 0 }],
+    const listPlayerMail = vi.fn().mockImplementation((_sid: number, opts: { filter?: number }) => {
+      if (opts?.filter === 1) {
+        return Promise.resolve({
+          total_count: 2,
+          mails: [{ mail_id: 88, status: 0 }],
+        });
+      }
+      return Promise.resolve({
+        mails: [
+          { mail_id: 88, status: 0 },
+          { mail_id: 90, status: 2, has_unclaimed_attachments: true },
+        ],
+      });
     });
     const listPlayerQuests = vi.fn().mockResolvedValue({
       quests: [
@@ -87,6 +97,10 @@ describe("HudTodoBadgePoll", () => {
     expect(snap.battleReportUnread).toBe(1);
     expect(snap.dailyChainRows).toHaveLength(2);
     expect(snap.dailyChainRows[0]?.quest_cfg_id).toBe(100);
+    expect(snap.mailClaimable).toBe(1);
+    expect(snap.firstClaimableMailId).toBe(90);
+    expect(snap.dailyClaimable).toBe(1);
+    expect(snap.firstClaimableDailyCfgId).toBe(101);
   });
 
   it("applyMailUnreadSnapshot patches deep link while mail panel suppressed", async () => {

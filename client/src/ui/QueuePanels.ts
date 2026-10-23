@@ -7,8 +7,9 @@ import {
   findBuildDailyQuestForBuilding,
   formatLinkedDailyQuestProgressSummary,
 } from "@/net/dailyQuestQueueMatch";
-import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
+import { centerTodoScrollTargetId } from "@/net/hudCenterTodo";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
+import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -19,6 +20,7 @@ import {
   pruneFinishedRecruits,
   type RecruitQueueEntry,
 } from "@/net/queueState";
+import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -40,6 +42,7 @@ export class QueuePanels {
   private speedupBusy = false;
   private readonly completedRecruitIds = new Set<number>();
   private highlightedBuildSlotKey: string | null = null;
+  private buildCompleteTodoSlots: string[] = [];
 
   constructor(
     private readonly mount: HTMLElement,
@@ -111,6 +114,26 @@ export class QueuePanels {
 
   clearBuildSlotHighlight(): void {
     this.highlightedBuildSlotKey = null;
+  }
+
+  setBuildCompleteTodoSlots(slotKeys: string[]): void {
+    this.buildCompleteTodoSlots = slotKeys.slice();
+    if (this.isOpen()) this.render();
+  }
+
+  /** CLIENT-077：顶栏待办深链到建造完成行。 */
+  openFromCenterTodoBuildComplete(
+    slotKey: string,
+    opts?: { skipScroll?: boolean; onAcknowledge?: () => void },
+  ): boolean {
+    const wasOpen = this.isOpen();
+    this.open();
+    this.render();
+    if (!opts?.skipScroll && slotKey) {
+      scrollCenterTodoTarget(this.panel, centerTodoScrollTargetId("queue", slotKey));
+    }
+    opts?.onAcknowledge?.();
+    return wasOpen;
   }
 
   addRecruitEntry(entry: RecruitQueueEntry | null): void {
@@ -189,25 +212,39 @@ export class QueuePanels {
     const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy;
     const buildRows = activeBuildingUpgrades(this.buildings(), now);
     const recruitLines = this.recruits.map((r) => formatRecruitQueueLine(r, now));
+    const completeSlots = this.buildCompleteTodoSlots.filter(
+      (key) => !buildRows.some((b) => b.slot_key === key),
+    );
 
     buildUl.innerHTML = "";
     recruitUl.innerHTML = "";
     this.militarySection.classList.toggle("hidden", recruitLines.length === 0);
 
-    if (!buildRows.length && !recruitLines.length) {
+    if (!buildRows.length && !recruitLines.length && !completeSlots.length) {
       const li = document.createElement("li");
       li.textContent = "（当前无排队中的升级或募兵）";
       buildUl.appendChild(li);
       return;
     }
 
-    if (!buildRows.length) {
+    if (!buildRows.length && !completeSlots.length) {
       const li = document.createElement("li");
       li.textContent = "（当前无排队中的内政升级）";
       buildUl.appendChild(li);
     }
 
     const dailyRows = this.getDailyChainRows?.() ?? [];
+
+    for (const slotKey of completeSlots) {
+      const name = this.slotLabels[slotKey] ?? slotKey;
+      const li = document.createElement("li");
+      li.className = "queue-list-row queue-build-complete-todo";
+      li.setAttribute(TODO_SCROLL_TARGET_ATTR, centerTodoScrollTargetId("queue", slotKey));
+      const span = document.createElement("span");
+      span.textContent = `[内政] ${name} · 建造已完成 · 点「刷新内政」确认等级`;
+      li.appendChild(span);
+      buildUl.appendChild(li);
+    }
 
     for (const b of buildRows) {
       const text = formatBuildingUpgradeQueueLine(b, this.slotLabels, now);
@@ -216,6 +253,9 @@ export class QueuePanels {
       li.className = "queue-list-row";
       li.id = queueBuildRowDomId(slotKey);
       li.dataset.slotKey = slotKey;
+      if (slotKey && slotKey !== "?") {
+        li.setAttribute(TODO_SCROLL_TARGET_ATTR, centerTodoScrollTargetId("queue", slotKey));
+      }
       if (this.highlightedBuildSlotKey && slotKey === this.highlightedBuildSlotKey) {
         li.classList.add(QUEUE_BUILD_ROW_SELECTED_CLASS);
       }

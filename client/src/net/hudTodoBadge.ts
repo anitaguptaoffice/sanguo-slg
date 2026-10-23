@@ -47,6 +47,11 @@ export type HudTodoDeepLinkSnapshot = HudTodoBadgeCounts & {
   firstUnreadBattleReportId: number;
   /** 最近一次 chain 400 轮询列表，供队列↔日常互链只读（不再单独 RPC）。 */
   dailyChainRows: DailyQuestRow[];
+  /** CLIENT-077：首屏收件箱可领附件计数与深链 id（ListPlayerMail filter=all，与未读轮询并行）。 */
+  mailClaimable: number;
+  firstClaimableMailId: number;
+  dailyClaimable: number;
+  firstClaimableDailyCfgId: number;
 };
 
 export const EMPTY_HUD_TODO_DEEP_LINK: HudTodoDeepLinkSnapshot = {
@@ -57,6 +62,10 @@ export const EMPTY_HUD_TODO_DEEP_LINK: HudTodoDeepLinkSnapshot = {
   firstDailyTodoCfgId: 0,
   firstUnreadBattleReportId: 0,
   dailyChainRows: [],
+  mailClaimable: 0,
+  firstClaimableMailId: 0,
+  dailyClaimable: 0,
+  firstClaimableDailyCfgId: 0,
 };
 
 /** 收件箱列表顺序下首封未读（与 unread filter 一致）。 */

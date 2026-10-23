@@ -58,6 +58,14 @@ import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
+import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
+import {
+  formatHudCenterTodoBadge,
+  hudCenterTodoTitle,
+  pickHudCenterTodoTarget,
+  shouldSkipRepeatCenterTodoScroll,
+  type HudCenterTodoCounts,
+} from "@/net/hudCenterTodo";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
@@ -143,6 +151,8 @@ export class MainCityScene implements Scene {
   private cityStateFetch!: CityStateFetch;
   private cityStatePoll!: CityStatePoll;
   private hudTodoBadgePoll!: HudTodoBadgePoll;
+  private readonly buildCompleteTodos = new BuildCompleteTodoTracker();
+  private lastCenterTodoScrollKey: string | null = null;
   private marchArrivalPoll!: MarchArrivalPoll;
   private readonly battleReportUnread = new BattleReportUnreadSession();
   private readonly marchEndReportHint = new MarchEndBattleReportHint();
@@ -170,6 +180,9 @@ export class MainCityScene implements Scene {
     this.getViewport = ctx.getViewport;
     this.canvas = ctx.canvas;
     this.session = (data as MainCitySession) ?? null;
+    this.buildCompleteTodos.reset();
+    this.buildCompleteTodos.onCityBuildings(this.session?.buildings);
+    this.lastCenterTodoScrollKey = null;
     this.hud = ctx.hud;
     this.gateway = ctx.gateway;
     this.layoutFrame = ctx.layoutFrame;
@@ -514,6 +527,7 @@ export class MainCityScene implements Scene {
     this.hud.addEventListener("click", this.onHudClickBound);
     restoreMarchTargetToForm(this.militaryPanel);
     this.syncMilitaryPanel();
+    this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
     void this.hudTodoBadgePoll.pollOnce();
     void this.refreshMinimapMarches();
     this.syncSlotUpgradeOverlay();
@@ -565,6 +579,8 @@ export class MainCityScene implements Scene {
   leave(): void {
     this.cityStateFetch?.clear();
     this.hudTodoBadgePoll?.reset();
+    this.buildCompleteTodos.reset();
+    this.lastCenterTodoScrollKey = null;
     this.marchArrivalPoll?.reset();
     this.hud?.removeEventListener("click", this.onHudClickBound);
     this.canvas?.removeEventListener("pointerdown", this.onCanvasPointerBound);
@@ -1006,6 +1022,10 @@ export class MainCityScene implements Scene {
     production_rates?: ResourceWallet;
   }): void {
     if (!this.session) return;
+    if (state.buildings) {
+      this.buildCompleteTodos.onCityBuildings(state.buildings);
+      this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
+    }
     const beforeWallet = this.session.wallet;
     const afterWallet = state.wallet ?? this.session.wallet;
     const pulseKeys = walletResourcePulseKeys(beforeWallet, afterWallet);
@@ -1051,6 +1071,7 @@ export class MainCityScene implements Scene {
     this.hud.replaceChildren();
     appendHudResourceStrip(this.hud, s?.wallet, this.assets);
     appendHudProductionRatesLine(this.hud, s?.productionRates);
+    this.appendHudCenterTodoBadge();
     for (const text of groups) {
       const span = document.createElement("span");
       span.className =
@@ -1070,11 +1091,88 @@ export class MainCityScene implements Scene {
   }
 
   private onHudClick(ev: Event): void {
+    const todoBtn = (ev.target as HTMLElement).closest('[data-action="open-hud-center-todo"]');
+    if (todoBtn) {
+      this.openHudCenterTodoDeepLink();
+      return;
+    }
     const el = (ev.target as HTMLElement).closest('[data-action="open-march-reports"]');
     if (!el) return;
     this.marchReportToastActive = false;
     const hint = this.marchEndReportHint.consume();
     void this.battleReports.openPanelWithDeepLink(hint).then(() => this.renderHud());
+    this.renderHud();
+  }
+
+  private centerTodoCountsFromSnapshot(): HudCenterTodoCounts {
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    return {
+      mailClaimable: snap.mailClaimable,
+      dailyClaimable: snap.dailyClaimable,
+      buildComplete: this.buildCompleteTodos.pendingCount(),
+    };
+  }
+
+  private appendHudCenterTodoBadge(): void {
+    const counts = this.centerTodoCountsFromSnapshot();
+    const badgeText = formatHudCenterTodoBadge(counts);
+    if (!badgeText) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "hud-center-todo-badge";
+    btn.setAttribute("data-action", "open-hud-center-todo");
+    btn.setAttribute("title", hudCenterTodoTitle(counts));
+    btn.setAttribute("aria-label", hudCenterTodoTitle(counts));
+    const label = document.createElement("span");
+    label.className = "hud-center-todo-label";
+    label.textContent = "待办";
+    const countEl = document.createElement("span");
+    countEl.className = "hud-center-todo-count";
+    countEl.textContent = badgeText;
+    btn.append(label, countEl);
+    this.hud.appendChild(btn);
+  }
+
+  private openHudCenterTodoDeepLink(): void {
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    const counts = this.centerTodoCountsFromSnapshot();
+    const buildSlots = this.buildCompleteTodos.pendingSlotKeys();
+    const target = pickHudCenterTodoTarget({
+      counts,
+      firstClaimableMailId: snap.firstClaimableMailId,
+      firstClaimableDailyCfgId: snap.firstClaimableDailyCfgId,
+      firstBuildCompleteSlotKey: buildSlots[0] ?? "",
+    });
+    if (!target) return;
+
+    const panelWasOpen =
+      target.panel === "daily"
+        ? this.dailyQuest.isOpen()
+        : target.panel === "mail"
+          ? this.heroMail.isMailOpen()
+          : this.queuePanels.isOpen();
+    const skipScroll = shouldSkipRepeatCenterTodoScroll(
+      this.lastCenterTodoScrollKey,
+      target,
+      panelWasOpen,
+    );
+
+    if (target.panel === "daily") {
+      this.dailyQuest.openFromCenterTodoClaimable(target.questCfgId ?? 0, { skipScroll });
+    } else if (target.panel === "mail") {
+      this.heroMail.openFromCenterTodoClaimable(target.mailId ?? 0, { skipScroll });
+    } else if (target.panel === "queue" && target.slotKey) {
+      this.queuePanels.openFromCenterTodoBuildComplete(target.slotKey, {
+        skipScroll,
+        onAcknowledge: () => this.buildCompleteTodos.dismissSlot(target.slotKey!),
+      });
+      this.queuePanels.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
+    }
+
+    if (!skipScroll) {
+      this.lastCenterTodoScrollKey = target.scrollTargetId;
+    }
+    this.status = `已打开中心面板待办（${target.panel}）`;
     this.renderHud();
   }
 

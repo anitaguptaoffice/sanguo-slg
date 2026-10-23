@@ -1,7 +1,13 @@
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import { DAILY_QUEST_CHAIN_ID, dailyQuestsFromListResponse, type DailyQuestRow } from "@/net/dailyQuestState";
 import type { GatewayPort } from "@/net/GatewayClient";
-import { MAIL_INBOX_FILTER_UNREAD, type MailRow } from "@/net/heroMailState";
+import { MAIL_INBOX_FILTER_ALL, MAIL_INBOX_FILTER_UNREAD, type MailRow } from "@/net/heroMailState";
+import {
+  countClaimableDailyQuests,
+  countClaimableMails,
+  pickFirstClaimableDailyQuestCfgId,
+  pickFirstClaimableMailId,
+} from "@/net/hudCenterTodo";
 import {
   aggregateHudTodoCounts,
   countDailyTodoQuests,
@@ -37,8 +43,14 @@ export class HudTodoBadgePoll {
   private readonly fastSec: number;
   private readonly slowSec: number;
   private mailInflight: Promise<{ count: number; firstId: number }> | null = null;
-  private dailyInflight: Promise<{ count: number; firstId: number; rows: DailyQuestRow[] }> | null =
-    null;
+  private mailClaimableInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private dailyInflight: Promise<{
+    count: number;
+    firstId: number;
+    claimableCount: number;
+    claimableFirstId: number;
+    rows: DailyQuestRow[];
+  }> | null = null;
   private reportsInflight: Promise<{ count: number; firstId: number }> | null = null;
   private deepLink: HudTodoDeepLinkSnapshot = { ...EMPTY_HUD_TODO_DEEP_LINK };
 
@@ -55,6 +67,7 @@ export class HudTodoBadgePoll {
   reset(): void {
     this.accumSec = 0;
     this.mailInflight = null;
+    this.mailClaimableInflight = null;
     this.dailyInflight = null;
     this.reportsInflight = null;
     this.deepLink = { ...EMPTY_HUD_TODO_DEEP_LINK };
@@ -88,12 +101,15 @@ export class HudTodoBadgePoll {
   }
 
   async pollOnce(): Promise<void> {
-    const [mail, daily, reports] = await Promise.all([
+    const [mail, mailClaimable, daily, reports] = await Promise.all([
       this.opts.isMailSuppressed()
         ? { count: 0, firstId: 0 }
         : this.fetchMailSnapshot(),
+      this.opts.isMailSuppressed()
+        ? { count: 0, firstId: 0 }
+        : this.fetchMailClaimableSnapshot(),
       this.opts.isDailySuppressed()
-        ? { count: 0, firstId: 0, rows: [] }
+        ? { count: 0, firstId: 0, claimableCount: 0, claimableFirstId: 0, rows: [] }
         : this.fetchDailySnapshot(),
       this.opts.isReportsSuppressed()
         ? { count: 0, firstId: 0 }
@@ -109,6 +125,10 @@ export class HudTodoBadgePoll {
       firstDailyTodoCfgId: daily.firstId,
       firstUnreadBattleReportId: reports.firstId,
       dailyChainRows: daily.rows,
+      mailClaimable: mailClaimable.count,
+      firstClaimableMailId: mailClaimable.firstId,
+      dailyClaimable: daily.claimableCount,
+      firstClaimableDailyCfgId: daily.claimableFirstId,
     };
     this.opts.onCounts(this.deepLink);
   }
@@ -131,14 +151,45 @@ export class HudTodoBadgePoll {
     return p;
   }
 
+  private fetchMailClaimableSnapshot(): Promise<{ count: number; firstId: number }> {
+    if (this.mailClaimableInflight) return this.mailClaimableInflight;
+    const sid = this.opts.getServerId();
+    if (!sid) return Promise.resolve({ count: 0, firstId: 0 });
+    const p = this.opts.gateway
+      .listPlayerMail(sid, { filter: MAIL_INBOX_FILTER_ALL, pageSize: 50, pageOffset: 0 })
+      .then((res) => {
+        const mails = (res as { mails?: MailRow[] }).mails ?? [];
+        return {
+          count: countClaimableMails(mails),
+          firstId: pickFirstClaimableMailId(mails),
+        };
+      })
+      .catch(() => ({ count: 0, firstId: 0 }))
+      .finally(() => {
+        if (this.mailClaimableInflight === p) this.mailClaimableInflight = null;
+      });
+    this.mailClaimableInflight = p;
+    return p;
+  }
+
   private fetchDailySnapshot(): Promise<{
     count: number;
     firstId: number;
+    claimableCount: number;
+    claimableFirstId: number;
     rows: DailyQuestRow[];
   }> {
     if (this.dailyInflight) return this.dailyInflight;
     const sid = this.opts.getServerId();
-    if (!sid) return Promise.resolve({ count: 0, firstId: 0, rows: [] });
+    if (!sid) {
+      return Promise.resolve({
+        count: 0,
+        firstId: 0,
+        claimableCount: 0,
+        claimableFirstId: 0,
+        rows: [],
+      });
+    }
     const p = this.opts.gateway
       .listPlayerQuests(sid, { chainId: DAILY_QUEST_CHAIN_ID, includeCompleted: true })
       .then((res) => {
@@ -146,10 +197,18 @@ export class HudTodoBadgePoll {
         return {
           count: countDailyTodoQuests(rows),
           firstId: pickFirstDailyTodoQuestCfgId(rows),
+          claimableCount: countClaimableDailyQuests(rows),
+          claimableFirstId: pickFirstClaimableDailyQuestCfgId(rows),
           rows,
         };
       })
-      .catch(() => ({ count: 0, firstId: 0, rows: [] }))
+      .catch(() => ({
+        count: 0,
+        firstId: 0,
+        claimableCount: 0,
+        claimableFirstId: 0,
+        rows: [],
+      }))
       .finally(() => {
         if (this.dailyInflight === p) this.dailyInflight = null;
       });
