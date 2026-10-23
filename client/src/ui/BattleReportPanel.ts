@@ -1,18 +1,30 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
   battleReportListLines,
+  filterBattleReportsByOutcome,
   formatBattleReportDetail,
+  formatBattleRoundLine,
   formatReportLine,
+  type BattleReportDetailView,
+  type BattleReportOutcomeFilter,
   type BattleReportSummary,
 } from "@/net/militaryFormat";
 
+const PAGE_LIMIT = 20;
+
 export class BattleReportPanel {
   private panel!: HTMLElement;
+  /** 已从服务端加载的完整列表（未按 outcome 筛选）。 */
   private reports: BattleReportSummary[] = [];
+  private total = 0;
+  private outcomeFilter: BattleReportOutcomeFilter = "all";
   private selectedReportId = 0;
   private detailText = "";
+  private detailRounds: BattleReportDetailView["rounds"] = [];
   private listError = "";
   private detailError = "";
+  private listLoading = false;
+  private detailLoading = false;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -32,7 +44,9 @@ export class BattleReportPanel {
 
   toggle(): void {
     this.panel.classList.toggle("hidden");
-    if (!this.panel.classList.contains("hidden")) void this.refreshList();
+    if (!this.panel.classList.contains("hidden") && !this.reports.length && !this.listError) {
+      void this.refreshList();
+    }
   }
 
   private buildPanel(): HTMLElement {
@@ -40,41 +54,93 @@ export class BattleReportPanel {
     el.className = "content-panel hidden";
     el.innerHTML = `
       <h3>战报</h3>
-      <p data-role="report-hint">military.v1 战报列表；点击条目加载详情。</p>
+      <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
+      <div class="battle-report-filters" role="group" aria-label="战报结果筛选">
+        <span>筛选：</span>
+        <button type="button" data-action="filter-outcome" data-filter="all" class="active">全部</button>
+        <button type="button" data-action="filter-outcome" data-filter="win">胜</button>
+        <button type="button" data-action="filter-outcome" data-filter="loss">负</button>
+        <button type="button" data-action="filter-outcome" data-filter="draw">平</button>
+      </div>
       <button type="button" data-action="refresh-reports">刷新列表</button>
+      <button type="button" data-action="load-more-reports" data-role="load-more" hidden>加载更多</button>
+      <button type="button" data-action="retry-list" data-role="retry-list" hidden>重试加载列表</button>
       <p class="report-panel-status" data-role="report-list-status"></p>
       <ul class="battle-report-list" data-role="report-list"></ul>
       <p class="report-panel-status" data-role="report-detail-status"></p>
-      <pre class="report-detail" data-role="report-detail"></pre>
+      <button type="button" data-action="retry-detail" data-role="retry-detail" hidden>重试加载详情</button>
+      <div class="report-detail" data-role="report-detail"></div>
     `;
     return el;
+  }
+
+  private visibleReports(): BattleReportSummary[] {
+    return filterBattleReportsByOutcome(this.reports, this.outcomeFilter);
+  }
+
+  private updateFilterButtons(): void {
+    for (const btn of Array.from(
+      this.panel.querySelectorAll<HTMLButtonElement>('[data-action="filter-outcome"]'),
+    )) {
+      const f = btn.getAttribute("data-filter") as BattleReportOutcomeFilter;
+      btn.classList.toggle("active", f === this.outcomeFilter);
+    }
   }
 
   private renderList(): void {
     const ul = this.panel.querySelector('[data-role="report-list"]');
     const statusEl = this.panel.querySelector('[data-role="report-list-status"]');
-    const detailPre = this.panel.querySelector('[data-role="report-detail"]');
-    const detailStatus = this.panel.querySelector('[data-role="report-detail-status"]');
+    const loadMore = this.panel.querySelector('[data-role="load-more"]');
+    const retryList = this.panel.querySelector('[data-role="retry-list"]');
     if (!ul) return;
 
+    this.updateFilterButtons();
+
     if (statusEl) {
-      statusEl.textContent = this.listError;
+      if (this.listLoading) {
+        statusEl.textContent = "加载中…";
+      } else if (this.listError) {
+        statusEl.textContent = `${this.listError}（可点「重试加载列表」）`;
+      } else if (this.reports.length) {
+        const shown = this.visibleReports().length;
+        statusEl.textContent = `已加载 ${this.reports.length}/${this.total} 条 · 当前筛选显示 ${shown} 条`;
+      } else {
+        statusEl.textContent = "";
+      }
+    }
+
+    if (retryList) {
+      (retryList as HTMLElement).hidden = !this.listError || this.listLoading;
+    }
+    if (loadMore) {
+      const canMore = !this.listError && !this.listLoading && this.reports.length < this.total;
+      (loadMore as HTMLElement).hidden = !canMore;
     }
 
     ul.innerHTML = "";
-    if (this.listError) {
+    if (this.listError || this.listLoading) {
+      this.renderDetail();
       return;
     }
 
-    const lines = battleReportListLines(this.reports);
+    const filtered = this.visibleReports();
     if (!this.reports.length) {
       const li = document.createElement("li");
-      li.textContent = lines[0];
+      li.textContent = battleReportListLines([])[0];
       ul.appendChild(li);
+      this.renderDetail();
       return;
     }
 
-    for (const r of this.reports) {
+    if (!filtered.length) {
+      const li = document.createElement("li");
+      li.textContent = "（当前筛选下暂无战报，可切换「全部」或加载更多）";
+      ul.appendChild(li);
+      this.renderDetail();
+      return;
+    }
+
+    for (const r of filtered) {
       const li = document.createElement("li");
       li.textContent = formatReportLine(r);
       const id = r.report_id ?? 0;
@@ -86,25 +152,104 @@ export class BattleReportPanel {
       ul.appendChild(li);
     }
 
-    if (detailPre) detailPre.textContent = this.detailText;
-    if (detailStatus) detailStatus.textContent = this.detailError;
+    this.renderDetail();
+  }
+
+  private renderDetail(): void {
+    const detailEl = this.panel.querySelector('[data-role="report-detail"]');
+    const detailStatus = this.panel.querySelector('[data-role="report-detail-status"]');
+    const retryDetail = this.panel.querySelector('[data-role="retry-detail"]');
+    if (!detailEl) return;
+
+    if (detailStatus) {
+      if (this.detailLoading) {
+        detailStatus.textContent = "详情加载中…";
+      } else if (this.detailError) {
+        detailStatus.textContent = `${this.detailError}（可点「重试加载详情」）`;
+      } else {
+        detailStatus.textContent = "";
+      }
+    }
+
+    if (retryDetail) {
+      (retryDetail as HTMLElement).hidden =
+        !this.detailError || this.detailLoading || !this.selectedReportId;
+    }
+
+    detailEl.textContent = "";
+    if (!this.selectedReportId || this.detailLoading) return;
+    if (this.detailError) return;
+
+    const pre = document.createElement("pre");
+    pre.textContent = this.detailText;
+    detailEl.appendChild(pre);
+
+    const rounds = this.detailRounds ?? [];
+    if (rounds.length > 0) {
+      const details = document.createElement("details");
+      details.className = "report-rounds-collapse";
+      const summary = document.createElement("summary");
+      summary.textContent = `回合明细（${rounds.length} 回合，点击展开）`;
+      details.appendChild(summary);
+      const roundPre = document.createElement("pre");
+      roundPre.textContent = rounds.map((r) => formatBattleRoundLine(r)).join("\n");
+      details.appendChild(roundPre);
+      detailEl.appendChild(details);
+    }
   }
 
   private async refreshList(): Promise<void> {
     this.listError = "";
+    this.listLoading = true;
+    this.reports = [];
+    this.total = 0;
+    this.renderList();
     this.onStatus("拉取战报…");
     try {
-      const res = (await this.gateway.listBattleReports(20, 0)) as {
+      const res = (await this.gateway.listBattleReports(PAGE_LIMIT, 0)) as {
         reports?: BattleReportSummary[];
         total?: number;
       };
       this.reports = res.reports ?? [];
-      this.onStatus(`战报 ${this.reports.length}/${res.total ?? 0} 条`);
+      this.total = res.total ?? this.reports.length;
+      this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
     } catch (e) {
       this.reports = [];
-      this.listError = `加载失败：${(e as Error).message}`;
+      this.total = 0;
+      this.listError = `列表加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
     }
+    this.listLoading = false;
+    this.renderList();
+  }
+
+  private async loadMoreReports(): Promise<void> {
+    if (this.listLoading || this.reports.length >= this.total) return;
+    this.listError = "";
+    this.listLoading = true;
+    const offset = this.reports.length;
+    this.renderList();
+    this.onStatus(`加载更多战报（offset ${offset}）…`);
+    try {
+      const res = (await this.gateway.listBattleReports(PAGE_LIMIT, offset)) as {
+        reports?: BattleReportSummary[];
+        total?: number;
+      };
+      const batch = res.reports ?? [];
+      this.reports = [...this.reports, ...batch];
+      this.total = res.total ?? this.total;
+      this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
+    } catch (e) {
+      this.listError = `加载更多失败：${(e as Error).message}`;
+      this.onStatus(this.listError);
+    }
+    this.listLoading = false;
+    this.renderList();
+  }
+
+  private setOutcomeFilter(filter: BattleReportOutcomeFilter): void {
+    if (this.outcomeFilter === filter) return;
+    this.outcomeFilter = filter;
     this.renderList();
   }
 
@@ -112,18 +257,15 @@ export class BattleReportPanel {
     this.selectedReportId = reportId;
     this.detailError = "";
     this.detailText = "";
+    this.detailRounds = [];
+    this.detailLoading = true;
     this.onStatus(`战报 #${reportId}…`);
     this.renderList();
     try {
       const res = (await this.gateway.getBattleReport(reportId)) as {
         report?: {
           summary?: BattleReportSummary;
-          detail?: {
-            result?: string;
-            rounds?: { round?: number }[];
-            attacker_casualties?: Record<string, number>;
-            defender_casualties?: Record<string, number>;
-          };
+          detail?: BattleReportDetailView;
         };
       };
       this.detailText = formatBattleReportDetail(
@@ -131,24 +273,43 @@ export class BattleReportPanel {
         res.report?.summary,
         res.report?.detail,
       );
+      this.detailRounds = res.report?.detail?.rounds ?? [];
       this.onStatus("战报已加载");
     } catch (e) {
       this.detailError = `详情加载失败：${(e as Error).message}`;
       this.detailText = "";
+      this.detailRounds = [];
       this.onStatus(this.detailError);
     }
+    this.detailLoading = false;
     this.renderList();
   }
 
   private onClick(ev: Event): void {
+    const filterBtn = (ev.target as HTMLElement).closest(
+      'button[data-action="filter-outcome"]',
+    );
+    if (filterBtn) {
+      const f = filterBtn.getAttribute("data-filter") as BattleReportOutcomeFilter;
+      if (f) this.setOutcomeFilter(f);
+      return;
+    }
+
     const li = (ev.target as HTMLElement).closest("li[data-report-id]");
     if (li) {
       const id = Number(li.getAttribute("data-report-id"));
       if (id) void this.openReport(id);
       return;
     }
+
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
-    if (btn.getAttribute("data-action") === "refresh-reports") void this.refreshList();
+    const action = btn.getAttribute("data-action");
+    if (action === "refresh-reports") void this.refreshList();
+    else if (action === "load-more-reports") void this.loadMoreReports();
+    else if (action === "retry-list") void this.refreshList();
+    else if (action === "retry-detail" && this.selectedReportId) {
+      void this.openReport(this.selectedReportId);
+    }
   }
 }
