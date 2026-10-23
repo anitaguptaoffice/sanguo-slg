@@ -1,0 +1,15 @@
+{
+  "generator": "builtin image_gen",
+  "calls": 3,
+  "originals": {
+    "wood": "exec-ed4ff5f2-7e86-41fc-9560-5325eda2ff6f.png",
+    "iron": "exec-ae0c3296-ca45-480d-a983-325ae264b720.png",
+    "stone": "exec-d490f9f8-ecf9-438d-950b-96287c91cb3d.png"
+  },
+  "reference": "exec-2a30ac65-c173-4735-8b9e-16b943db992f.png",
+  "prompts": "Original prompt records retained in private source package; not included",
+  "native_dimensions": [
+    1254,
+    1254
+  ]
+}
