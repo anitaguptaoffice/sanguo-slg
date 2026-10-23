@@ -533,6 +533,14 @@ cd client && npm install && npm run dev
 2. 资源充足时仅展示预览，需玩家点 **确认升级** 才发 RPC。
 3. 窄屏下预览行不横向溢出（与 **CLIENT-086** 一并验收）。单测：`previewUpgradeCost.test.ts`。
 
+### 手动验收（募兵消耗预览 CLIENT-088）
+
+军事/队列募兵区（军事面板募兵表单）在选中兵种与数量时展示 **下一批** 粮/木/铁/石消耗与耗时只读摘要（`previewRecruitCost` + `troopRecruitCatalog`，钱包来自 `GetCityState.resources`）；资源不足时 **募兵** disabled 且 inline **缺少：粮 N …**（**CLIENT-067** 口径）。足够时仅预览，需点 **募兵** 才发 `RecruitTroop`。募兵队列 **加速**仍 out；**CLIENT-082** 建造预览与 **DOM-003** 建造加速符不退化。
+
+1. `make dev` 打开 **军事** → 切换兵种/数量，预览行应含消耗与 `耗时 m:ss`。
+2. 故意保留资源不足 → **募兵** 禁用 + 缺少提示；补足资源后按钮可点且不发 RPC 直至点击。
+3. 单测：`previewRecruitCost.test.ts`、`troopRecruitForm.test.ts`。
+
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
 军团成员列表每行 **提到** 将 `@显示名 ` 填入聊天输入（`formatGuildMentionDraft`），并切换到军团聊天 tab；未入军团时按钮 hidden。**CLIENT-076** 刷新 meta 不退化。
