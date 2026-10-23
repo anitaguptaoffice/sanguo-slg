@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  battleReportListLines,
   formatMarchHint,
   formatReportLine,
   pickMarchTroops,
@@ -28,6 +29,16 @@ describe("militaryFormat", () => {
         created_at_ms: Date.UTC(2024, 0, 2, 8, 0, 0),
       }),
     ).toContain("攻胜");
+    expect(
+      formatReportLine({
+        report_id: 1,
+        location_x: 3,
+        location_y: 4,
+        outcome: 1,
+        created_at_ms: 0,
+      }),
+    ).toContain("坐标(3,4)");
+    expect(battleReportListLines([])[0]).toContain("暂无战报");
   });
 
   it("pickMarchTroops caps by available count", () => {
