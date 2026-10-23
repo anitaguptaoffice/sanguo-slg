@@ -1,5 +1,6 @@
 import type { MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { MarchSummary } from "@/net/militaryFormat";
 import {
   applyMarchTargetAndRemember,
   marchTargetStatusMessage,
@@ -12,9 +13,12 @@ import {
   type PlayerCitySummary,
 } from "@/net/worldFormat";
 import {
+  countMarchesToDestination,
   findPlayerCityAtGrid,
+  formatWorldCityMarchDestCount,
   gridCellsMatch,
   WORLD_CITY_COORD_ONLY_CLASS,
+  WORLD_CITY_ROW_MARCH_COUNT_CLASS,
   WORLD_CITY_ROW_MARCH_DEST_CLASS,
   WORLD_CITY_ROW_SELECTED_CLASS,
 } from "@/ui/marchWorldListLink";
@@ -29,6 +33,10 @@ export type MarchTargetSink = {
 export type WorldPanelsOptions = {
   /** 世界列表点选格点变化（用于军情列表目的格筛选）。 */
   onGridSelectionChange?: (grid: { x: number; y: number } | null) => void;
+  /** ListMarches 快照（只读计数，无新 RPC）。 */
+  getMarchesSnapshot?: () => MarchSummary[];
+  /** 点击「指向此格的行军 N 条」时选中军情首条匹配行。 */
+  onMarchCountClick?: (grid: { x: number; y: number }) => void;
 };
 
 export class WorldPanels {
@@ -82,6 +90,11 @@ export class WorldPanels {
     this.renderList();
   }
 
+  /** 军情列表刷新后更新各行行军计数。 */
+  refreshMarchDestCounts(): void {
+    this.renderList();
+  }
+
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden world-panel";
@@ -113,10 +126,16 @@ export class WorldPanels {
     const hasCityAtHighlight =
       highlight != null && findPlayerCityAtGrid(this.cities, highlight.x, highlight.y) != null;
 
+    const marches = this.options?.getMarchesSnapshot?.() ?? [];
+
     if (highlight != null && !hasCityAtHighlight) {
       const coordLi = document.createElement("li");
       coordLi.className = WORLD_CITY_COORD_ONLY_CLASS;
-      coordLi.textContent = `格点 ${formatCityCoords(highlight.x, highlight.y)}（无玩家城池）`;
+      const label = document.createElement("span");
+      label.className = "world-city-row-label";
+      label.textContent = `格点 ${formatCityCoords(highlight.x, highlight.y)}（无玩家城池）`;
+      coordLi.appendChild(label);
+      this.appendMarchCountButton(coordLi, highlight.x, highlight.y, marches);
       coordLi.setAttribute("data-x", String(highlight.x));
       coordLi.setAttribute("data-y", String(highlight.y));
       coordLi.classList.add(WORLD_CITY_ROW_MARCH_DEST_CLASS);
@@ -126,7 +145,15 @@ export class WorldPanels {
     for (const city of this.cities) {
       const li = document.createElement("li");
       const id = city.city_id ?? 0;
-      li.textContent = formatPlayerCityLine(city, currentId);
+      const label = document.createElement("span");
+      label.className = "world-city-row-label";
+      label.textContent = formatPlayerCityLine(city, currentId);
+      li.appendChild(label);
+      const cx = city.x;
+      const cy = city.y;
+      if (Number.isFinite(cx) && Number.isFinite(cy)) {
+        this.appendMarchCountButton(li, cx, cy, marches);
+      }
       if (id) {
         li.setAttribute("data-city-id", String(id));
         li.setAttribute("data-x", String(city.x ?? ""));
@@ -161,8 +188,37 @@ export class WorldPanels {
     }
   }
 
+  private appendMarchCountButton(
+    li: HTMLElement,
+    x: number,
+    y: number,
+    marches: MarchSummary[],
+  ): void {
+    const count = countMarchesToDestination(marches, x, y);
+    const text = formatWorldCityMarchDestCount(count);
+    if (!text) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = WORLD_CITY_ROW_MARCH_COUNT_CLASS;
+    btn.setAttribute("data-action", "world-march-count");
+    btn.setAttribute("data-x", String(x));
+    btn.setAttribute("data-y", String(y));
+    btn.textContent = text;
+    li.appendChild(btn);
+  }
+
   private onClick(ev: Event): void {
     const target = ev.target as HTMLElement;
+    const marchCountBtn = target.closest("button[data-action='world-march-count']");
+    if (marchCountBtn) {
+      ev.stopPropagation();
+      const x = Number(marchCountBtn.getAttribute("data-x"));
+      const y = Number(marchCountBtn.getAttribute("data-y"));
+      if (Number.isFinite(x) && Number.isFinite(y)) {
+        this.options?.onMarchCountClick?.({ x, y });
+      }
+      return;
+    }
     const action = target.closest("button")?.getAttribute("data-action");
     if (action === "refresh-world") {
       void this.refreshList();

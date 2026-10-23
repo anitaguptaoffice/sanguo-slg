@@ -152,6 +152,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **建造/募兵队列总览 + 资源产出速率** | [手动验收（队列 CLIENT-019）](#手动验收队列-client-019)（**CLIENT-059**，[#330](https://github.com/anitaguptaoffice/sanguo-slg/issues/330) / [#343](https://github.com/anitaguptaoffice/sanguo-slg/pull/343) `6df0ef9f`） | 已合 |
 | **邮件 ↔ 战报 ↔ 日常三角深链** | [CLIENT-044](#手动验收日常战备与战报横幅-client-044) / [CLIENT-038](#手动验收hud-角标深链-client-038) + **CLIENT-060**（[#331](https://github.com/anitaguptaoffice/sanguo-slg/issues/331) / [#344](https://github.com/anitaguptaoffice/sanguo-slg/pull/344) `97c99156`） | 已合 |
 | **世界城池列表 ↔ 军情行双向高亮** | [CLIENT-047](#手动验收行军列表-eta-与军情密度-client-047) / [CLIENT-015](#手动验收世界坐标-client-015) + **CLIENT-061**（[#332](https://github.com/anitaguptaoffice/sanguo-slg/issues/332) / [#342](https://github.com/anitaguptaoffice/sanguo-slg/pull/342) `b2fb1a01`） | 已合 |
+| **军情格点筛选与小地图视野联动** | [手动验收（军情筛选 CLIENT-069）](#手动验收军情格点筛选-client-069)（**CLIENT-069**） | 本卡 |
 | **1280 将领/背包/队列 manifest 与滚动** | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [手动验收（1280 将领/背包/队列 CLIENT-062）](#手动验收1280-将领背包队列-client-062)（[#333](https://github.com/anitaguptaoffice/sanguo-slg/issues/333) / [#340](https://github.com/anitaguptaoffice/sanguo-slg/pull/340) `1d9ab72f`） | 已合 |
 | **1280 军事/邮件/日常 manifest 与滚动** | [手动验收（1280 军事/邮件/日常 CLIENT-070）](#手动验收1280-军事邮件日常-client-070)（[#355](https://github.com/anitaguptaoffice/sanguo-slg/issues/355)） | 进行中 |
 | **网关冒烟**（将领详情 + 邮件分页 + 城池队列字段） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 19** / `TestINTG016Wave19SmokePath`（[#334](https://github.com/anitaguptaoffice/sanguo-slg/issues/334) / [#337](https://github.com/anitaguptaoffice/sanguo-slg/pull/337) `7ecb7d4d`） | 已合 |
@@ -671,6 +672,17 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 ### 手动验收（四类面板统一错误 CLIENT-067）
 
 将领/商城/背包/军事的内联错误区（`recruit-form-error`、`shop-form-error`、`bag-form-error`、`march-form-error`）经 `contentFormValidation.setPanelFormErrorDisplay` 渲染；网关失败统一为 `formatPanelGatewayError` 的中文摘要 + 末尾 `[code]`（如商城 `余额不足 [64003]`），与 CLIENT-056/057 预校验共用同一 DOM 槽位，成功操作后错误区清空。
+
+### 手动验收（军情格点筛选 CLIENT-069）
+
+在 [CLIENT-061](#手动验收世界坐标-client-015) 双向高亮与 [CLIENT-058](#手动验收小地图目的点-eta-client-058) ETA 角标基础上，降低多行军扫读成本（**无 CancelMarch/撤回**；筛选仅客户端过滤 `ListMarches` 快照，不新 RPC）。
+
+1. 打开 **行军** 面板：「目的格点筛选」应提供 **全部** / **世界选中格** / **手动格点**（x、y + **应用**）。
+2. **世界** 面板点选城池行：军情筛选自动切到 **世界选中格**，列表仅显示 `to_x/to_y` 与该格一致的行；再次点选同一行取消世界选中后，筛选回到 **全部**。
+3. **手动格点**：输入目的坐标并 **应用**，列表即时过滤；仍只使用已拉取的行军快照（可开 Network 确认无额外 `ListMarches`）。
+4. 军情列表 **选中一行**：展开小地图应 `pan/zoom` 纳入该行目的格与 ETA 角标（与 CLIENT-058 同口径）；**折叠** 小地图时顶栏状态栏复述 `formatMinimapCollapsedSelectedMarchStatus`（含坐标与剩余时间/阶段）。
+5. **世界** 列表各行在有条目指向该格时展示 **指向此格的行军 N 条**；点击该计数应打开/保持军情面板并选中 **首条** 匹配行军。
+6. 单测：`marchWorldListLink.test.ts`、`MarchListPanel.test.ts`、`WorldPanels.test.ts`、`worldMinimap.test.ts`。
 
 ### 手动验收（小地图目的点 ETA CLIENT-058）
 

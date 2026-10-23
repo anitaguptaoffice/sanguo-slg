@@ -317,6 +317,14 @@
       .march-list li[data-march-id] { cursor: pointer; }
       .march-list li[data-march-id]:hover { background: #3d3028; }
       .march-list li.march-list-row-selected { outline: 2px solid #c9a227; }
+      .march-dest-filter {
+        margin: 8px 0; padding: 8px; border: 1px solid #3d3028; border-radius: 4px;
+        font-size: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      }
+      .march-dest-filter legend { font-size: 11px; color: #b8a88a; padding: 0 4px; }
+      .march-dest-filter-manual { display: inline-flex; gap: 4px; align-items: center; }
+      .march-dest-filter-manual.hidden { display: none; }
+      .march-dest-filter-manual input[type="number"] { width: 4.5em; }
       .battle-report-filters { margin: 8px 0; font-size: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
       .battle-report-filters button.active { outline: 2px solid #c9a227; }
       .battle-report-time-window select { font-size: 12px; margin-left: 4px; }
@@ -377,6 +385,12 @@
       .world-city-list li.world-city-row-march-dest { outline: 2px solid #6a9fd8; }
       .world-city-list li.world-city-row-selected { outline: 2px solid #c9a227; }
       .world-city-list li.world-city-coord-only { font-style: italic; color: #b8a88a; }
+      .world-city-list li { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+      .world-city-row-march-count {
+        font-size: 11px; padding: 2px 6px; border-radius: 4px; border: 1px solid #6a9fd8;
+        background: #1e2830; color: #c9e4ff; cursor: pointer; flex-shrink: 0;
+      }
+      .world-city-row-march-count:hover { background: #2a3a48; }
       .march-list li.march-list-row-dest-match { border-left: 3px solid #6a9fd8; }
       .world-panel-hint { font-size: 12px; color: #c4b59a; margin-bottom: 6px; }
       .daily-quest-next {
