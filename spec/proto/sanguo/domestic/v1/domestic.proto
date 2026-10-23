@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package sanguo.domestic.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/domestic/v1;domesticv1";
+
+// route: domestic.v1.StartBuildingUpgrade
+// 在指定城池槽位建造新建筑或升级已有建筑（写入 city_building / work_queue）。
+message StartBuildingUpgradeRequest {
+  // 目标城池 ID。
+  int64 city_id = 1;
+  // 建筑槽位键；新造与升级均用此键定位。
+  string slot_key = 2;
+  // 建筑配置 ID；升级已存在建筑时可与当前配置一致。
+  int32 building_cfg_id = 3;
+}
+
+message StartBuildingUpgradeResponse {
+  // 升级后的建筑快照（含排队完成时间）。
+  sanguo.common.v1.CityBuilding building = 1;
+  // 扣费后的资源钱包。
+  sanguo.common.v1.ResourceWallet wallet = 2;
+  // 关联内政队列 ID，对应 work_queue.queue_id。
+  int64 queue_id = 3;
+  // 队列预计完成时间（Unix 毫秒），对应 work_queue.finish_at。
+  int64 finish_at_ms = 4;
+}

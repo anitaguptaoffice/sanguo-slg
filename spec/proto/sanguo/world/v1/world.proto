@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package sanguo.world.v1;
+
+import "sanguo/common/v1/types.proto";
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/world/v1;worldv1";
+
+// route: world.v1.ListPlayerCities
+// 拉取当前玩家在会话所在服的全部城池（M1 主城 + 分城）。
+message ListPlayerCitiesRequest {
+  // 可选：仅返回指定城池；为空则返回全部。
+  repeated int64 city_ids = 1;
+}
+
+message ListPlayerCitiesResponse {
+  // 城池列表，对应 player_city。
+  repeated sanguo.common.v1.PlayerCitySummary cities = 1;
+}
