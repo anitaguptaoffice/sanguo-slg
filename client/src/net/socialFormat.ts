@@ -188,6 +188,12 @@ export function formatGuildSummaryText(guildId: number, guildName: string): stri
   return `当前军团：${name} (#${guildId})`;
 }
 
+/** 军团成员「提到」填入聊天框的草稿前缀（末尾留空格，不发送）。 */
+export function formatGuildMentionDraft(displayName: string): string {
+  const name = displayName.trim() || "?";
+  return `@${name} `;
+}
+
 export function formatGuildMemberLine(member: GuildMemberRow): string {
   const name = member.display_name ?? "?";
   const who =

@@ -18,7 +18,7 @@ jobs:
     if: |
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'pull_request' && contains(github.event.pull_request.title, 'wave:19 tasks_sync'))
+      (github.event_name == 'pull_request' && (contains(github.event.pull_request.title, 'wave:22 tasks_sync') || contains(github.event.pull_request.title, 'wave:19 tasks_sync')))
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
@@ -37,7 +37,9 @@ jobs:
           done
       - name: Sync backlog issues
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if echo "${{ github.event.pull_request.title }}" | grep -q 'wave:22 tasks_sync'; then
+            python3 tools/tasks_sync.py --wave=22
+          elif [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             python3 tools/tasks_sync.py --wave=19
           else
             python3 tools/tasks_sync.py
