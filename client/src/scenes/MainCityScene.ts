@@ -1,5 +1,7 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
+import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
+import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
 import {
   skinBagPanel,
   skinBattleReportPanel,
@@ -23,7 +25,6 @@ import {
   MAIN_CITY_SLOTS,
   STAGE_HEIGHT,
   STAGE_TOP_Y,
-  TOOLBAR_TOP_Y,
   type MainCitySlotDef,
 } from "@/engine/mainCitySlots";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
@@ -250,9 +251,12 @@ export class MainCityScene implements Scene {
       onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
     });
     this.renderHud();
+    skinHudBar(this.hud, this.assets);
     this.toolbar = document.createElement("div");
     this.toolbar.className = "main-city-toolbar layout-toolbar";
     this.toolbar.innerHTML = `
+      <div class="toolbar-scroll" data-role="toolbar-scroll">
+      <div class="toolbar-scroll-inner">
       <button type="button" data-action="upgrade-farm">升级农田</button>
       <button type="button" data-action="refresh">刷新状态</button>
       <button type="button" data-action="toggle-military">军事</button>
@@ -269,7 +273,10 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn"><span class="toolbar-btn-label">邮件</span></button>
       <button type="button" data-action="toggle-world">世界</button>
       <button type="button" data-action="toggle-queue">队列</button>
+      </div>
+      </div>
     `;
+    wrapToolbarButtonsForHit(this.toolbar);
     this.militaryPanel = document.createElement("div");
     this.militaryPanel.className = "military-panel hidden";
     this.militaryPanel.dataset.centerPanel = "military";
@@ -554,7 +561,8 @@ export class MainCityScene implements Scene {
       (root) => skinMilitaryPanel(root, this.assets, 380, 300),
     );
     this.buildingPanel.attach();
-    skinPrimaryButtons(this.toolbar, this.assets, "button");
+    skinToolbarBar(this.toolbar, this.assets);
+    skinToolbarButtons(this.toolbar, this.assets);
     skinPrimaryButtons(this.militaryPanel, this.assets);
     skinMilitaryPanel(this.buildingPanel.getRoot(), this.assets, 380, 300);
     skinMilitaryPanel(this.militaryPanel, this.assets, 420, 320);
@@ -674,6 +682,8 @@ export class MainCityScene implements Scene {
     this.queuePanels?.detach();
     this.buildingPanel?.detach();
     this.slotUpgradeOverlay?.detach();
+    if (this.hud) clearHudBarChrome(this.hud);
+    if (this.toolbar) clearToolbarBarChrome(this.toolbar);
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -1544,10 +1554,7 @@ export class MainCityScene implements Scene {
     c2d.save();
     applyLayoutTransform(c2d, vp);
 
-    c2d.fillStyle = "rgba(26, 20, 16, 0.85)";
-    c2d.fillRect(0, 0, LAYOUT_FRAME.w, STAGE_TOP_Y);
-    c2d.fillStyle = "rgba(26, 20, 16, 0.92)";
-    c2d.fillRect(0, TOOLBAR_TOP_Y, LAYOUT_FRAME.w, LAYOUT_FRAME.h - TOOLBAR_TOP_Y);
+    // HUD / toolbar chrome is DOM-only (ART-CHROME-006); canvas leaves top/bottom clear.
 
     const bg = this.assets.getImageForAsset("mc.bg.plateau.v1");
     if (bg) {
