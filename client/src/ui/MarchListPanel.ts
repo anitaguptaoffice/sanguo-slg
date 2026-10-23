@@ -12,6 +12,10 @@ import {
   marchListEmptyClass,
   marchListEmptyMessage,
 } from "@/net/panelDensity";
+import {
+  filterMarchesByDestination,
+  MARCH_LIST_ROW_DEST_MATCH_CLASS,
+} from "@/ui/marchWorldListLink";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
@@ -32,6 +36,7 @@ export class MarchListPanel {
   private readonly onMarchesUpdated?: (marches: MarchSummary[]) => void;
   private readonly onSelectionChange?: (march: MarchSummary | null) => void;
   private selectedMarchId: number | null = null;
+  private destFilter: { x: number; y: number } | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -61,6 +66,20 @@ export class MarchListPanel {
   getSelectedMarch(): MarchSummary | null {
     if (this.selectedMarchId == null) return null;
     return this.marches.find((m) => m.march_id === this.selectedMarchId) ?? null;
+  }
+
+  getDestFilter(): { x: number; y: number } | null {
+    return this.destFilter;
+  }
+
+  /** 世界城池列表点选时按目的格筛选军情行（客户端快照，无新 RPC）。 */
+  setDestFilter(x: number | null, y: number | null): void {
+    if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
+      this.destFilter = null;
+    } else {
+      this.destFilter = { x, y };
+    }
+    this.renderList();
   }
 
   /** 小地图点击目的点时选中列表首条匹配行军（只读）。 */
@@ -145,7 +164,21 @@ export class MarchListPanel {
 
     if (this.listError) return;
 
-    if (!this.marches.length) {
+    const filter = this.destFilter;
+    const visible =
+      filter != null
+        ? filterMarchesByDestination(this.marches, filter.x, filter.y)
+        : this.marches;
+
+    if (filter != null && !visible.length && this.marches.length) {
+      const li = document.createElement("li");
+      li.className = marchListEmptyClass();
+      li.textContent = `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中）`;
+      ul.appendChild(li);
+      return;
+    }
+
+    if (!visible.length) {
       const li = document.createElement("li");
       li.className = marchListEmptyClass();
       li.textContent = marchListEmptyMessage();
@@ -153,12 +186,12 @@ export class MarchListPanel {
       return;
     }
 
-    if (this.marches.length >= 2) {
+    if (visible.length >= 2) {
       ul.classList.add(marchListCompactClass());
     }
 
     const now = this.nowMs();
-    for (const m of this.marches) {
+    for (const m of visible) {
       const li = document.createElement("li");
       const body = document.createElement("div");
       body.className = "march-row-body";
@@ -180,6 +213,9 @@ export class MarchListPanel {
       }
       if (m.march_id != null && m.march_id === this.selectedMarchId) {
         li.classList.add("march-list-row-selected");
+      }
+      if (filter != null) {
+        li.classList.add(MARCH_LIST_ROW_DEST_MATCH_CLASS);
       }
       ul.appendChild(li);
     }
@@ -300,7 +336,11 @@ export class MarchListPanel {
     if (row) {
       const id = Number(row.getAttribute("data-march-id"));
       if (!Number.isNaN(id)) {
-        this.setSelectedMarchId(id);
+        if (id === this.selectedMarchId) {
+          this.setSelectedMarchId(null);
+        } else {
+          this.setSelectedMarchId(id);
+        }
         return;
       }
     }

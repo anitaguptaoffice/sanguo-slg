@@ -20,6 +20,7 @@ import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { appendManhattanToStatus } from "@/ui/marchWorldListLink";
 import { QueuePanels } from "@/ui/QueuePanels";
 import type { DailyQuestNavAction } from "@/net/dailyQuestObjective";
 import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
@@ -280,6 +281,7 @@ export class MainCityScene implements Scene {
       (action) => this.navigateDailyQuest(action),
       () => this.hudTodoBadgePoll.getDeepLinkSnapshot().battleReportUnread,
       () => this.openBattleReportsFromDailyBanner(),
+      () => this.openMailPanelFromDailyCrossLink(),
       () => this.session?.buildings,
       SLOT_LABEL,
     );
@@ -299,6 +301,12 @@ export class MainCityScene implements Scene {
       this.cityStateFetch,
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
       (snap) => this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId),
+      (reportId) => {
+        this.marchReportToastActive = false;
+        void this.battleReports
+          .openPanelWithDeepLink(reportId ?? undefined)
+          .then(() => this.renderHud());
+      },
     );
     this.heroMail.attach();
     this.battleReports = new BattleReportPanel(
@@ -313,6 +321,10 @@ export class MainCityScene implements Scene {
         onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
         onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
         onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
+        onOpenRelatedMail: (mailId) => {
+          this.heroMail.openAndHighlightMail(mailId);
+          this.renderHud();
+        },
       },
     );
     this.battleReports.attach();
@@ -331,11 +343,35 @@ export class MainCityScene implements Scene {
         },
         onSelectionChange: (march) => {
           if (march) {
-            this.status = this.minimapCollapsed
-              ? formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs)
-              : `小地图联动：行军 #${march.march_id ?? "?"}`;
-            this.renderHud();
+            const tx = march.to_x;
+            const ty = march.to_y;
+            if (Number.isFinite(tx) && Number.isFinite(ty)) {
+              this.world.setMarchDestHighlight({ x: tx, y: ty });
+            } else {
+              this.world.setMarchDestHighlight(null);
+            }
+            let base: string;
+            if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
+              base = `军情联动：行军 #${march.march_id ?? "?"}（无目的坐标）`;
+            } else if (this.minimapCollapsed) {
+              base = formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs);
+            } else {
+              base = `小地图联动：行军 #${march.march_id ?? "?"}`;
+            }
+            this.status =
+              Number.isFinite(tx) && Number.isFinite(ty)
+                ? appendManhattanToStatus(
+                    base,
+                    this.session?.cityX,
+                    this.session?.cityY,
+                    tx,
+                    ty,
+                  )
+                : base;
+          } else {
+            this.world.setMarchDestHighlight(null);
           }
+          this.renderHud();
         },
       },
     );
@@ -354,8 +390,27 @@ export class MainCityScene implements Scene {
         },
       },
       (msg) => {
-        this.status = msg;
+        const grid = this.world.getSelectedGrid();
+        this.status =
+          grid != null
+            ? appendManhattanToStatus(
+                msg,
+                this.session?.cityX,
+                this.session?.cityY,
+                grid.x,
+                grid.y,
+              )
+            : msg;
         this.renderHud();
+      },
+      {
+        onGridSelectionChange: (grid) => {
+          if (grid) {
+            this.marchList.setDestFilter(grid.x, grid.y);
+          } else {
+            this.marchList.setDestFilter(null, null);
+          }
+        },
       },
     );
     this.world.attach();
@@ -470,6 +525,11 @@ export class MainCityScene implements Scene {
     this.queuePanels?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
+  }
+
+  private openMailPanelFromDailyCrossLink(): void {
+    this.heroMail.openMailPanel();
+    this.renderHud();
   }
 
   private openBattleReportsFromDailyBanner(): void {
@@ -758,7 +818,19 @@ export class MainCityScene implements Scene {
     if (!this.minimapCollapsed) return;
     const selected = this.marchList?.getSelectedMarch();
     if (!selected) return;
-    this.status = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    const base = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    const tx = selected.to_x;
+    const ty = selected.to_y;
+    this.status =
+      Number.isFinite(tx) && Number.isFinite(ty)
+        ? appendManhattanToStatus(
+            base,
+            this.session?.cityX,
+            this.session?.cityY,
+            tx,
+            ty,
+          )
+        : base;
     this.renderHud();
   }
 
@@ -822,6 +894,8 @@ export class MainCityScene implements Scene {
   private patchSession(patch: Partial<MainCitySession>, opts?: { flashWalletGain?: boolean }): void {
     if (!this.session) return;
     const beforeWallet = this.session.wallet;
+    const pulseKeys =
+      patch.wallet !== undefined ? walletResourcePulseKeys(beforeWallet, patch.wallet) : [];
     Object.assign(this.session, patch);
     const flash = opts?.flashWalletGain !== false;
     if (flash && patch.wallet !== undefined) {
@@ -832,6 +906,7 @@ export class MainCityScene implements Scene {
       }
     }
     this.renderHud();
+    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
     if (patch.wallet !== undefined || patch.bag !== undefined) {
       this.heroMail?.refreshRecruitAffordability();
     }
