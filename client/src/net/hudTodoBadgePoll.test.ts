@@ -85,5 +85,7 @@ describe("HudTodoBadgePoll", () => {
     expect(snap.mailUnread).toBe(2);
     expect(snap.dailyTodo).toBe(1);
     expect(snap.battleReportUnread).toBe(1);
+    expect(snap.dailyChainRows).toHaveLength(2);
+    expect(snap.dailyChainRows[0]?.quest_cfg_id).toBe(100);
   });
 });
