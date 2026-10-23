@@ -29,6 +29,15 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-center-panel="mail"] .panel-scroll-body')).toBeTruthy();
   });
 
+  it("hero panel has panel-scroll-body and center-panel id (CLIENT-078)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    expect(mount.querySelector('[data-center-panel="hero"]')).toBeTruthy();
+    expect(mount.querySelector('[data-center-panel="hero"] .panel-scroll-body')).toBeTruthy();
+  });
+
   it("renders empty mail list after refresh", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
