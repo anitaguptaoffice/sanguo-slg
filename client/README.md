@@ -277,6 +277,21 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 `ListChatMessages` 快照 + 本地 `localStorage` 键 **`chat-last-read-ts`** 估算世界/军团频道未读（无服务端 read cursor）。底栏 **「聊天」** 角标为两频道之和，**「军团」** 角标与聊天面板 **军团** tab、军团面板 **军团频道** 入口同步；打开频道并 **滚到底** 后该频道未读清零。单测：`chatUnread.test.ts`（`estimateChatUnread`）、`chatUnreadPoll.test.ts`；与 **CLIENT-077** 顶栏待办角标并存。
 
+### 手动验收（HUD 待办角标单一事实源 CLIENT-107）
+
+`src/net/hudTodoBadges.ts` 为底栏角标与 **CLIENT-077** 顶栏待办深链的**唯一计数推导**（`HudTodoBadgePoll` 轮询写入快照后调用 `buildHudTodoBadges`）。**CLIENT-102** 聊天/军团角标仍走 `ChatUnreadTracker`，**不**并入顶栏「待办」总和。
+
+| 入口 | 计数规则（纯函数） | 清零 / 抑制 |
+|---|---|---|
+| 底栏 **邮件** | `mailToolbarBadgeCount`：未读 `total_count` + 首屏「已读未领附件」（去重，兼容 **CLIENT-106** `countMailUnreadAndUnclaimed`） | 打开邮件面板；领取/MarkRead 后 `applyMailUnreadSnapshot` 递减 |
+| 底栏 **日常** | `dailyToolbarBadgeCount`：chain 400 **可领取** `state=3`（**CLIENT-091**） | 打开日常面板 |
+| 底栏 **队列** | `queueBuildingToolbarBadgeCount`：`upgrade_finish_at_ms > now` 槽位数 | 打开队列面板；建造完成或倒计时结束随 **GetCityState** `recomputeToolbarCounts` |
+| 底栏 **战报** | `BattleReportUnreadSession`（**CLIENT-027/025**） | 打开战报面板 |
+| 底栏 **聊天** / **军团** | `ChatUnreadTracker.getSummary`（**CLIENT-102**） | 频道滚到底 `markChannelRead` |
+| 顶栏 **待办** | `buildHudCenterTodoCounts`：可领附件邮件 / 可领日常 / `BuildCompleteTodoTracker` 建造完成 | 领取、确认队列完成槽位；与上表邮件/日常数字同源 |
+
+dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBadges.test.ts`、`hudTodoBadgePoll.test.ts`、`hudCenterTodo.test.ts`。
+
 ### 手动验收（将领招募执行反馈 CLIENT-098）
 
 在 [CLIENT-056](#手动验收将领招募钱包对比-client-056) 钱包对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
@@ -1082,7 +1097,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudCenterTodo` / `buildCompleteTodo`（顶栏待办聚合与 scroll target）、`hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标聚合与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边/目的点 ETA 角标）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）、`recruitAffordability`（招募消耗 vs HUD 钱包对比）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudCenterTodo` / `buildCompleteTodo`（顶栏待办聚合与 scroll target）、`hudTodoBadges` / `hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标单一事实源与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边/目的点 ETA 角标）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）、`recruitAffordability`（招募消耗 vs HUD 钱包对比）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
