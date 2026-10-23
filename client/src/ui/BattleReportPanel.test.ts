@@ -1,13 +1,45 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY } from "@/net/battleReportListState";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
+
+function mockStorage(): Storage {
+  const map = new Map<string, string>();
+  return {
+    getItem: (k) => map.get(k) ?? null,
+    setItem: (k, v) => {
+      map.set(k, v);
+    },
+    removeItem: (k) => {
+      map.delete(k);
+    },
+    clear: () => map.clear(),
+    key: () => null,
+    length: 0,
+  } as Storage;
+}
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
 }
 
 describe("BattleReportPanel", () => {
+  const storage = mockStorage();
+  const sessionProto = {
+    getItem: (k: string) => storage.getItem(k),
+    setItem: (k: string, v: string) => storage.setItem(k, v),
+    removeItem: (k: string) => storage.removeItem(k),
+    clear: () => storage.clear(),
+    key: () => null,
+    length: 0,
+  };
+
+  beforeEach(() => {
+    storage.clear();
+    vi.stubGlobal("sessionStorage", sessionProto);
+  });
+
   it("renders empty list placeholder after refresh", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
@@ -246,6 +278,73 @@ describe("BattleReportPanel", () => {
     expect(mount.querySelectorAll("li[data-report-id]").length).toBe(2);
     expect(mount.querySelector('li[data-report-id="1"]')).toBeTruthy();
     expect(mount.querySelector('li[data-report-id="2"]')).toBeTruthy();
+    const loadMoreAfter = mount.querySelector('[data-action="load-more-reports"]') as HTMLButtonElement;
+    expect(loadMoreAfter.disabled).toBe(true);
+    expect(loadMoreAfter.textContent).toContain("已加载全部 2 条");
+  });
+
+  it("keeps loaded rows when load more fails", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi
+        .fn()
+        .mockResolvedValueOnce({
+          reports: [{ report_id: 1, outcome: 1, created_at_ms: 0 }],
+          total: 3,
+        })
+        .mockRejectedValueOnce(new Error("网关繁忙")),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const loadMore = mount.querySelector('[data-action="load-more-reports"]') as HTMLButtonElement;
+    loadMore.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
+    const status = mount.querySelector('[data-role="report-list-status"]');
+    expect(status?.textContent).toContain("加载更多失败");
+    expect(status?.textContent).toContain("网关繁忙");
+  });
+
+  it("restores outcome filter from sessionStorage on attach", async () => {
+    storage.setItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY, "win");
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, outcome: 2, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    expect(mount.querySelector('button[data-filter="win"]')?.classList.contains("active")).toBe(
+      true,
+    );
+    expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
+  });
+
+  it("persists outcome filter when user changes filter", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [{ report_id: 1, outcome: 2, created_at_ms: 0 }],
+        total: 1,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('button[data-filter="loss"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBe("loss");
   });
 
   it("clears unread session when panel opens", async () => {
