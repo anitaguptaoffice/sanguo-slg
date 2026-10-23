@@ -7,7 +7,7 @@ import {
   countClaimableMails,
   type HudCenterTodoCounts,
 } from "@/net/hudCenterTodo";
-import { formatHudBadgeCount } from "@/net/hudTodoBadge";
+import { formatBadgeCount } from "@/engine/artBadgeSkin";
 import { activeBuildingUpgrades } from "@/net/queueState";
 
 /**
@@ -119,6 +119,11 @@ export function sumHudCenterTodoFromBundle(bundle: HudTodoBadgesBundle): number 
   return Math.max(0, c.mailClaimable) + Math.max(0, c.dailyClaimable) + Math.max(0, c.buildComplete);
 }
 
+/** CLIENT-126：顶栏待办数字角标文案（与 manifest count 槽 1–9 / 9+ 一致）。 */
+export function formatHudToolbarBadgeText(count: number): string {
+  return formatBadgeCount(count);
+}
+
 export function formatHudCenterTodoBadgeFromBundle(bundle: HudTodoBadgesBundle): string {
-  return formatHudBadgeCount(sumHudCenterTodoFromBundle(bundle));
+  return formatBadgeCount(sumHudCenterTodoFromBundle(bundle));
 }

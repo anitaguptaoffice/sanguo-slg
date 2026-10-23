@@ -2,6 +2,7 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
 import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
+import { applyUiCountBadge } from "@/engine/artBadgeSkin";
 import { remountPanelFilterChips } from "@/engine/artFilterChipRuntime";
 import { mountToolbarIcons } from "@/engine/artToolbarIconSkin";
 import {
@@ -90,6 +91,7 @@ import {
   hudCenterTodoTitle,
   pickHudCenterTodoTarget,
   shouldSkipRepeatCenterTodoScroll,
+  sumHudCenterTodoCounts,
   type HudCenterTodoCounts,
 } from "@/net/hudCenterTodo";
 import {
@@ -1487,8 +1489,8 @@ export class MainCityScene implements Scene {
     label.className = "hud-center-todo-label";
     label.textContent = "待办";
     const countEl = document.createElement("span");
-    countEl.className = "hud-center-todo-count";
-    countEl.textContent = badgeText;
+    countEl.className = "hud-center-todo-count ui-badge-count";
+    applyUiCountBadge(countEl, sumHudCenterTodoCounts(counts), { assets: this.assets });
     btn.append(label, countEl);
     this.hud.appendChild(btn);
   }
@@ -1904,6 +1906,7 @@ export class MainCityScene implements Scene {
       btn,
       unreadCount,
       unreadCount > 0 ? `${label} · ${unreadCount} 条未读` : "世界/军团聊天",
+      this.assets,
     );
   }
 
@@ -1914,6 +1917,7 @@ export class MainCityScene implements Scene {
       btn,
       unreadCount,
       unreadCount > 0 ? `${label} · 军团频道 ${unreadCount} 条未读` : "军团",
+      this.assets,
     );
   }
 
@@ -1924,6 +1928,7 @@ export class MainCityScene implements Scene {
       btn,
       unreadCount,
       unreadCount > 0 ? `${label} · ${unreadCount} 项待处理（未读/未领）` : "收件箱",
+      this.assets,
     );
   }
 
@@ -1934,6 +1939,7 @@ export class MainCityScene implements Scene {
       btn,
       todoCount,
       todoCount > 0 ? `${label} · ${todoCount} 项可领取` : "日常任务",
+      this.assets,
     );
   }
 
@@ -1944,6 +1950,7 @@ export class MainCityScene implements Scene {
       btn,
       inProgressCount,
       inProgressCount > 0 ? `${label} · ${inProgressCount} 槽建造中` : "内政/募兵队列",
+      this.assets,
     );
   }
 
@@ -1954,6 +1961,7 @@ export class MainCityScene implements Scene {
       btn,
       unreadCount,
       unreadCount > 0 ? `${label} · ${unreadCount} 条新战报` : "战报列表",
+      this.assets,
     );
   }
 }

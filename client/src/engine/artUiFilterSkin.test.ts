@@ -196,7 +196,9 @@ describe("mountFilterUiSkins", () => {
     mountFilterBadgeCount(count, mockAssets(), 0);
     expect(count.hidden).toBe(true);
     expect(count.classList.contains("hidden")).toBe(true);
+    expect(count.textContent).toBe("");
     expect(count.querySelector(".art-filter-badge-count-sprite")).toBeNull();
+    expect(count.querySelector(".art-badge-count-sprite")).toBeNull();
   });
 
   it("mountFilterBadgeDot and mountFilterBadgeCount respect art-skin off ancestor", () => {

@@ -241,11 +241,17 @@
         opacity: 0.72;
       }
       .main-city-toolbar .toolbar-badge {
-        position: absolute; top: 1px; right: 1px;
+        position: absolute; top: 0; right: 0;
         min-width: 15px; height: 15px; padding: 0 3px;
         border-radius: 8px; background: #c45c3a; color: #fff;
         font-size: 10px; font-weight: 700; line-height: 15px; text-align: center;
-        pointer-events: none; z-index: 1;
+        pointer-events: none; z-index: 2;
+        box-sizing: border-box;
+      }
+      .main-city-toolbar .toolbar-badge.ui-badge-count.art-badge-count--skinned {
+        width: 20px; min-width: 20px; max-width: 20px; height: 16px;
+        padding: 0; border-radius: 0; background: transparent; color: #1a1510;
+        line-height: 1;
       }
       .main-city-toolbar .toolbar-badge.hidden { display: none; }
       .main-city-toolbar .toolbar-badge.toolbar-badge--deeplink {
@@ -883,7 +889,8 @@
         background-repeat: no-repeat;
         background-position: center;
       }
-      .art-filter-badge-count-label {
+      .art-filter-badge-count-label,
+      .art-badge-count-label {
         position: relative;
         z-index: 1;
         font-size: 10px;
@@ -893,6 +900,52 @@
         color: #1a1510;
         pointer-events: none;
       }
+      .ui-badge-dot,
+      .art-badge-dot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        vertical-align: middle;
+        flex-shrink: 0;
+      }
+      .art-badge-dot-sprite,
+      .art-filter-badge-dot .art-badge-dot-sprite {
+        display: block;
+        width: 16px;
+        height: 16px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      .ui-badge-count,
+      .art-badge-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        min-width: 20px;
+        max-width: 20px;
+        height: 16px;
+        box-sizing: border-box;
+        vertical-align: middle;
+        flex-shrink: 0;
+        overflow: visible;
+      }
+      .art-badge-count-sprite,
+      .art-filter-badge-count .art-badge-count-sprite {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 16px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+      .ui-badge-count.hidden,
+      .mail-filter-badge.hidden { display: none; }
       .daily-form-error {
         margin: 6px 0 0; font-size: 12px; color: #c45c5c; min-height: 1em;
       }
@@ -1651,6 +1704,13 @@
         vertical-align: bottom;
       }
       #layout-frame.layout-narrow .main-city-toolbar .toolbar-badge {
+        top: 0;
+        right: 0;
+        max-width: 20px;
+        overflow: visible;
+        text-overflow: clip;
+      }
+      #layout-frame.layout-narrow .main-city-toolbar .toolbar-badge:not(.art-badge-count--skinned) {
         max-width: 2.25rem;
         overflow: hidden;
         text-overflow: ellipsis;

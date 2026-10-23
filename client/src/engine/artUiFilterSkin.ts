@@ -1,4 +1,14 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
+import {
+  BADGE_COUNT_ASSET_ID,
+  BADGE_COUNT_DISPLAY_H,
+  BADGE_COUNT_DISPLAY_W,
+  BADGE_DOT_ASSET_ID,
+  formatBadgeCount,
+  hideCountBadgeElement,
+  mountBadgeCount,
+  mountBadgeDot,
+} from "@/engine/artBadgeSkin";
 
 /** ART-UI-FILTER-008 (#506 @ 38451735 cherry-pick): nine manifest ids for list filter chrome. */
 export const ART_UI_FILTER_008_ASSET_IDS = [
@@ -32,23 +42,20 @@ export const ROW_FILTER_ASSET_BY_STATE: Record<FilterRowVisualState, ArtUiFilter
   selected: "ui.list.row.selected.v1",
 };
 
-export const BADGE_DOT_ASSET_ID: ArtUiFilter008AssetId = "ui.badge.dot.v1";
-export const BADGE_COUNT_ASSET_ID: ArtUiFilter008AssetId = "ui.badge.count.v1";
+export {
+  BADGE_DOT_ASSET_ID,
+  BADGE_COUNT_ASSET_ID,
+  BADGE_COUNT_DISPLAY_W,
+  BADGE_COUNT_DISPLAY_H,
+};
+
+/** @deprecated Use `formatBadgeCount` from `artBadgeSkin`. */
+export const formatFilterBadgeCount = formatBadgeCount;
 
 /** Manifest chip sprite is 72×32; CSS hit wrap must be ≥44×44 (#108 / engineering mount). */
 export const FILTER_CHIP_DISPLAY_W = 72;
 export const FILTER_CHIP_DISPLAY_H = 32;
 export const FILTER_CHIP_HIT_MIN = 44;
-
-export const BADGE_COUNT_DISPLAY_W = 20;
-export const BADGE_COUNT_DISPLAY_H = 16;
-
-/** Count badge label: 1–9 digits, overflow as 9+ (frozen #108). */
-export function formatFilterBadgeCount(count: number): string {
-  if (!Number.isFinite(count) || count <= 0) return "";
-  if (count > 9) return "9+";
-  return String(Math.trunc(count));
-}
 
 export function isArtUiFilter008AssetId(id: string): id is ArtUiFilter008AssetId {
   return (ART_UI_FILTER_008_ASSET_IDS as readonly string[]).includes(id);
@@ -241,57 +248,31 @@ export function mountFilterRows(
 }
 
 export function mountFilterBadgeDot(el: HTMLElement, assets: AssetLoader): void {
-  if (artSkinOff(el)) {
-    el.classList.remove("art-filter-badge-dot", "art-filter-badge-dot--skinned");
-    el.querySelector(".art-filter-badge-dot-sprite")?.remove();
-    return;
+  mountBadgeDot(el, assets);
+  if (!artSkinOff(el) && assets.getImageForAsset(BADGE_DOT_ASSET_ID)) {
+    el.classList.add("art-filter-badge-dot", "art-filter-badge-dot--skinned");
+    const sprite = el.querySelector(".art-badge-dot-sprite");
+    sprite?.classList.add("art-filter-badge-dot-sprite");
   }
-  const pack = assets.getImageForAsset(BADGE_DOT_ASSET_ID);
-  if (!pack) return;
-  el.classList.add("art-filter-badge-dot", "art-filter-badge-dot--skinned");
-  let sprite = el.querySelector<HTMLSpanElement>(".art-filter-badge-dot-sprite");
-  if (!sprite) {
-    sprite = document.createElement("span");
-    sprite.className = "art-filter-badge-dot-sprite";
-    sprite.setAttribute("aria-hidden", "true");
-    el.appendChild(sprite);
-  }
-  sprite.style.backgroundImage = `url(${pack.img.src})`;
 }
 
 export function mountFilterBadgeCount(el: HTMLElement, assets: AssetLoader, count: number): void {
-  const formatted = formatFilterBadgeCount(count);
-  if (!formatted) {
-    el.hidden = true;
-    el.classList.add("hidden");
-    el.textContent = "";
-    el.classList.remove("art-filter-badge-count", "art-filter-badge-count--skinned");
-    el.querySelector(".art-filter-badge-count-sprite")?.remove();
+  if (!formatBadgeCount(count)) {
+    hideCountBadgeElement(el);
     return;
   }
   el.hidden = false;
   el.classList.remove("hidden");
-  if (artSkinOff(el)) {
-    el.classList.remove("art-filter-badge-count", "art-filter-badge-count--skinned");
-    el.textContent = formatted;
-    return;
+  mountBadgeCount(el, assets, count);
+  if (!artSkinOff(el) && assets.getImageForAsset(BADGE_COUNT_ASSET_ID)) {
+    el.classList.add("art-filter-badge-count", "art-filter-badge-count--skinned");
+    const sprite = el.querySelector(".art-badge-count-sprite");
+    sprite?.classList.add("art-filter-badge-count-sprite");
+    const label = el.querySelector(".art-badge-count-label");
+    label?.classList.add("art-filter-badge-count-label");
+  } else if (artSkinOff(el)) {
+    el.textContent = formatBadgeCount(count);
   }
-  const pack = assets.getImageForAsset(BADGE_COUNT_ASSET_ID);
-  if (!pack) return;
-  el.classList.add("art-filter-badge-count", "art-filter-badge-count--skinned");
-  let sprite = el.querySelector<HTMLSpanElement>(".art-filter-badge-count-sprite");
-  if (!sprite) {
-    el.textContent = "";
-    sprite = document.createElement("span");
-    sprite.className = "art-filter-badge-count-sprite";
-    const label = document.createElement("span");
-    label.className = "art-filter-badge-count-label";
-    sprite.appendChild(label);
-    el.appendChild(sprite);
-  }
-  const label = sprite.querySelector<HTMLSpanElement>(".art-filter-badge-count-label");
-  sprite.style.backgroundImage = `url(${pack.img.src})`;
-  if (label) label.textContent = formatted;
 }
 
 export function mountFilterBadges(

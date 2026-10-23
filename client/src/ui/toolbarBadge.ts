@@ -1,31 +1,33 @@
-import { formatHudBadgeCount } from "@/net/hudTodoBadge";
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { applyUiCountBadge } from "@/engine/artBadgeSkin";
 
 const BADGE_SELECTOR = '[data-role="toolbar-badge"]';
 
-/** 底栏按钮角标：默认不挡按钮点击；有计数时可深链（CLIENT-038）。 */
-export function setToolbarBadge(button: HTMLElement | null, count: number, titleHint?: string): void {
+/** 底栏按钮角标：默认不挡按钮点击；有计数时可深链（CLIENT-038 / CLIENT-126）。 */
+export function setToolbarBadge(
+  button: HTMLElement | null,
+  count: number,
+  titleHint?: string,
+  assets?: AssetLoader,
+): void {
   if (!button) return;
   let badge = button.querySelector<HTMLElement>(BADGE_SELECTOR);
   if (!badge) {
     badge = document.createElement("span");
-    badge.className = "toolbar-badge hidden";
+    badge.className = "toolbar-badge hidden ui-badge-count";
     badge.setAttribute("data-role", "toolbar-badge");
     badge.setAttribute("aria-hidden", "true");
     button.appendChild(badge);
   }
-  const text = formatHudBadgeCount(count);
-  if (!text) {
-    badge.classList.add("hidden");
+  const visible = applyUiCountBadge(badge, count, { assets, hiddenClass: "hidden" });
+  if (!visible) {
     badge.classList.remove("toolbar-badge--deeplink");
-    badge.textContent = "";
     button.removeAttribute("data-has-badge");
     if (titleHint) button.setAttribute("title", titleHint);
     else button.removeAttribute("title");
     return;
   }
-  badge.classList.remove("hidden");
-  badge.classList.add("toolbar-badge--deeplink");
-  badge.textContent = text;
+  badge.classList.add("toolbar-badge", "toolbar-badge--deeplink");
   button.setAttribute("data-has-badge", "1");
   if (titleHint) button.setAttribute("title", titleHint);
 }
