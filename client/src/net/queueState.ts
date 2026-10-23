@@ -91,3 +91,48 @@ export function queuePanelHasCountdown(
   if (activeBuildingUpgrades(buildings, nowMs).length > 0) return true;
   return recruits.some((e) => isRecruitQueueActive(e, nowMs));
 }
+
+/** 建造+募兵队列中最早完成时刻（毫秒）；无进行中项时 null。 */
+export function nearestQueueFinishAtMs(
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[],
+  nowMs = Date.now(),
+): number | null {
+  let best: number | null = null;
+  for (const b of activeBuildingUpgrades(buildings, nowMs)) {
+    const t = b.upgrade_finish_at_ms ?? 0;
+    if (t > nowMs && (best === null || t < best)) best = t;
+  }
+  for (const r of recruits) {
+    if (!isRecruitQueueActive(r, nowMs)) continue;
+    if (best === null || r.finish_at_ms < best) best = r.finish_at_ms;
+  }
+  return best;
+}
+
+/** 最近一条队列完成倒计时摘要（纯展示，不含槽位名）。 */
+export function formatBuildQueueCountdown(
+  finishAtMs: number | null | undefined,
+  nowMs = Date.now(),
+): string | null {
+  if (!finishAtMs || finishAtMs <= nowMs) return null;
+  const rem = formatUpgradeRemaining(finishAtMs, nowMs);
+  return rem ? `最近 ${rem}` : null;
+}
+
+/** 队列面板顶栏：进行中建造/募兵条数 + 最近倒计时。 */
+export function formatQueuePanelOverviewBar(
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[],
+  nowMs = Date.now(),
+): string {
+  const buildCount = activeBuildingUpgrades(buildings, nowMs).length;
+  const recruitCount = recruits.filter((e) => isRecruitQueueActive(e, nowMs)).length;
+  const parts = [`建造 ${buildCount}`, `募兵 ${recruitCount}`];
+  const countdown = formatBuildQueueCountdown(
+    nearestQueueFinishAtMs(buildings, recruits, nowMs),
+    nowMs,
+  );
+  if (countdown) parts.push(countdown);
+  return parts.join(" · ");
+}

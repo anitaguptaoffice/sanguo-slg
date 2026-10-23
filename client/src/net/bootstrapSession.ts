@@ -35,6 +35,8 @@ export type MainCitySession = {
   serverId: number;
   player: PlayerProfile;
   wallet: ResourceWallet;
+  /** GetCityState.production_rates（粮/木/铁/石 每小时净产出，只读）。 */
+  productionRates?: ResourceWallet;
   cityId: number;
   cityName: string;
   /** 世界格点坐标（ListPlayerCities / CreateCity）。 */
@@ -100,12 +102,14 @@ export async function bootstrapMainCity(
   const state = (await gateway.getCityState(city.city_id)) as {
     wallet?: ResourceWallet;
     buildings?: CityBuilding[];
+    production_rates?: ResourceWallet;
   };
 
   return {
     serverId,
     player: login.player ?? {},
     wallet: state.wallet ?? login.wallet ?? {},
+    productionRates: state.production_rates,
     cityId: city.city_id,
     cityName: city.name ?? "主城",
     cityX: city.x ?? 60,
