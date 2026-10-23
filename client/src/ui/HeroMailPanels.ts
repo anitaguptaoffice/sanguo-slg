@@ -15,9 +15,7 @@ import {
   applyMailClaimResult,
   formatHeroLine,
   formatMailClaimGrantedSummary,
-  formatRecruitDeductSummary,
   formatRecruitSuccessStatus,
-  formatRecruitTemplateLine,
   heroListLines,
   mergeRecruitTemplateOwnership,
   parseGetHeroDetailResponse,
@@ -45,6 +43,12 @@ import {
   mailRowTitleLine,
 } from "@/net/panelDensity";
 import { mailUnreadSnapshotFromListResponse, pickFirstUnreadMailId } from "@/net/hudTodoBadge";
+import {
+  compareRecruitAffordability,
+  formatRecruitAffordabilitySummaryMarkup,
+  recruitAffordabilityForTemplate,
+  setRecruitAffordabilityErrorDisplay,
+} from "@/net/recruitAffordability";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -87,6 +91,31 @@ export class HeroMailPanels {
   detach(): void {
     this.heroPanel?.remove();
     this.mailPanel?.remove();
+  }
+
+  /** 会话钱包/背包变更时刷新招募可负担对比（与 HUD 快照一致）。 */
+  refreshRecruitAffordability(): void {
+    if (!this.heroPanel || this.heroPanel.classList.contains("hidden")) return;
+    this.renderTemplateList();
+    this.renderHeroList();
+  }
+
+  private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
+    const session = this.getSession();
+    return { wallet: session?.wallet ?? {}, bag: session?.bag ?? [] };
+  }
+
+  private selectedRecruitTemplateRow(): RecruitTemplatePreview | undefined {
+    return this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === this.selectedTemplateId);
+  }
+
+  private recruitAffordSummaryForHeroDetail(): string {
+    const tplId = this.heroDetail?.template_cfg_id;
+    if (!tplId) return "";
+    const template = this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === tplId);
+    if (!template) return "";
+    const { wallet, bag } = this.sessionEconomy();
+    return formatRecruitAffordabilitySummaryMarkup(template, wallet, bag);
   }
 
   getMailRoot(): HTMLElement {
@@ -183,6 +212,7 @@ export class HeroMailPanels {
       </label>
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
       <button type="button" data-action="recruit-hero">招募</button>
+      <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
       <ul class="template-list" data-role="template-list"></ul>
       <ul class="hero-list" data-role="hero-list"></ul>
       <div class="hero-detail" data-role="hero-detail"></div>
@@ -236,7 +266,7 @@ export class HeroMailPanels {
     }
     if (detailEl) {
       detailEl.innerHTML = this.selectedHeroId
-        ? renderHeroDetailMarkup(this.heroDetail)
+        ? renderHeroDetailMarkup(this.heroDetail, this.recruitAffordSummaryForHeroDetail())
         : renderHeroDetailMarkup(null);
     }
   }
@@ -265,9 +295,18 @@ export class HeroMailPanels {
       if (preview) preview.textContent = "";
       return;
     }
+    const { wallet, bag } = this.sessionEconomy();
     for (const t of displayTemplates) {
       const li = document.createElement("li");
-      li.textContent = formatRecruitTemplateLine(t);
+      const { primary, secondary } = recruitAffordabilityForTemplate(t, wallet, bag);
+      const primarySpan = document.createElement("span");
+      primarySpan.className = "recruit-afford-primary";
+      primarySpan.textContent = primary;
+      const secondarySpan = document.createElement("span");
+      secondarySpan.className = "recruit-afford-secondary";
+      secondarySpan.textContent = secondary;
+      li.appendChild(primarySpan);
+      li.appendChild(secondarySpan);
       if (t.already_owned) li.classList.add("recruit-owned");
       if (t.template_cfg_id) {
         li.setAttribute("data-template-id", String(t.template_cfg_id));
@@ -297,18 +336,36 @@ export class HeroMailPanels {
     }
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
     if (preview) {
-      preview.textContent = row
-        ? `扣费明细：${formatRecruitDeductSummary(row)}`
-        : this.recruitTemplates.length
-          ? "请选择模板"
-          : "";
+      if (row) {
+        const { wallet, bag } = this.sessionEconomy();
+        const { primary, secondary } = recruitAffordabilityForTemplate(row, wallet, bag);
+        preview.textContent = `${primary} — ${secondary}`;
+      } else {
+        preview.textContent = this.recruitTemplates.length ? "请选择模板" : "";
+      }
     }
+    this.syncRecruitButtonState(row);
     const ul = this.heroPanel.querySelector('[data-role="template-list"]');
     ul?.querySelectorAll("li[data-template-id]").forEach((li) => {
       li.classList.toggle("selected", Number(li.getAttribute("data-template-id")) === templateCfgId);
     });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
+    this.renderHeroList();
+  }
+
+  private syncRecruitButtonState(templateRow: RecruitTemplatePreview | undefined): void {
+    const btn = this.heroPanel.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement | null;
+    if (!btn) return;
+    if (!templateRow) {
+      btn.disabled = true;
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
+      return;
+    }
+    const { wallet, bag } = this.sessionEconomy();
+    const afford = compareRecruitAffordability(wallet, templateRow, bag);
+    btn.disabled = !afford.canAfford;
+    setRecruitAffordabilityErrorDisplay(this.heroPanel, afford.insufficientReason);
   }
 
   private setMailFilterButtons(): void {
@@ -484,6 +541,14 @@ export class HeroMailPanels {
       this.onStatus("请先刷新并选择招募模板");
       return;
     }
+    const { wallet, bag } = this.sessionEconomy();
+    const afford = compareRecruitAffordability(wallet, templateRow ?? {}, bag);
+    if (!afford.canAfford) {
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, afford.insufficientReason);
+      this.onStatus(afford.insufficientReason ?? "资源不足");
+      return;
+    }
+    setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
     let dailyBefore: DailyQuestRow | null = null;
     try {
       dailyBefore = await this.fetchDailyRecruitRow();
@@ -517,10 +582,13 @@ export class HeroMailPanels {
       } catch {
         /* 忽略日常刷新失败 */
       }
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
       this.onStatus(status);
     } catch (e) {
       const err = e as Error & { code?: number };
-      this.onStatus(err.code ? `招募失败(code=${err.code})：${err.message}` : err.message);
+      const msg = err.code ? `招募失败(code=${err.code})：${err.message}` : err.message;
+      this.onStatus(msg);
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, err.message);
     }
   }
 
