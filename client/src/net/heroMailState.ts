@@ -36,6 +36,17 @@ export type HeroDetail = HeroSummary & {
   attributes?: { force?: number; intel?: number; politics?: number; command?: number };
 };
 
+export type RecruitTemplatePreview = {
+  template_cfg_id?: number;
+  template_name?: string;
+  template_code?: string;
+  pool?: string;
+  rarity?: number;
+  recruit_cost?: ResourceWallet;
+  recruit_item?: { item_cfg_id?: number; quantity?: number };
+  already_owned?: boolean;
+};
+
 export type MailRow = {
   mail_id?: number;
   mail_type?: number;
@@ -96,6 +107,46 @@ export function formatMailLine(m: MailRow): string {
 export function heroListLines(heroes: HeroSummary[]): string[] {
   if (!heroes.length) return ["（尚无将领，可尝试招募）"];
   return heroes.map(formatHeroLine);
+}
+
+/** 规范化 ListRecruitTemplates 响应（过滤无 id 行）。 */
+export function parseRecruitTemplates(res: {
+  templates?: RecruitTemplatePreview[];
+  total_count?: number;
+}): { templates: RecruitTemplatePreview[]; totalCount: number } {
+  const templates = (res.templates ?? []).filter((t) => (t.template_cfg_id ?? 0) > 0);
+  const totalCount = res.total_count ?? templates.length;
+  return { templates, totalCount };
+}
+
+export function formatRecruitTemplateLine(t: RecruitTemplatePreview): string {
+  const name = t.template_name?.trim() || heroTemplateLabel(t.template_cfg_id);
+  const cost = formatWalletPrice(t.recruit_cost ?? {});
+  const item = t.recruit_item;
+  const itemPart = item?.item_cfg_id
+    ? `${itemLabel(item.item_cfg_id)}×${item.quantity ?? 1}`
+    : "无道具消耗";
+  const owned = t.already_owned ? " · 已拥有" : "";
+  return `#${t.template_cfg_id ?? "?"} ${name} · 稀有${t.rarity ?? "?"} · ${cost || "无资源"} + ${itemPart}${owned}`;
+}
+
+export function recruitTemplateListLines(templates: RecruitTemplatePreview[]): string[] {
+  if (!templates.length) return ["（无可招募模板）"];
+  return templates.map(formatRecruitTemplateLine);
+}
+
+export function pickRecruitSelection(
+  templates: RecruitTemplatePreview[],
+  preferredTemplateId?: number,
+): { templateCfgId: number; itemCfgId: number; pool: string } | null {
+  if (!templates.length) return null;
+  const row =
+    templates.find((t) => t.template_cfg_id === preferredTemplateId) ?? templates[0];
+  return {
+    templateCfgId: row.template_cfg_id ?? DEFAULT_RECRUIT_TEMPLATE_ID,
+    itemCfgId: row.recruit_item?.item_cfg_id ?? HERO_RECRUIT_SCROLL_ID,
+    pool: row.pool?.trim() || "standard",
+  };
 }
 
 export function mailListLines(mails: MailRow[]): string[] {

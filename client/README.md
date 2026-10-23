@@ -76,10 +76,11 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 与 `internal/api/hero_handlers.go`、`internal/api/mail_handlers.go` 网关路由一致（`make dev` 真实 PG）。
 
 1. 进入主城后点 **「将领」** →「刷新列表」。新号应为空列表提示；若已有将领，点击列表项加载 `hero.v1.GetHeroDetail` 详情（属性/忠诚）。
-2. **招募**：模板默认 `1001`（刘备），消耗道具默认 `2004`（贤士名册）。成功时列表出现新将领，状态栏显示 `hero_id`；道具/资源不足时显示服务端 `code` 与 `msg`。
-3. 点 **「邮件」** →「刷新收件箱」。可用 `cmd/gm send-mail`（见 `docs/ops`）向当前角色发带附件邮件。
-4. 选中邮件 ID →「标为已读」调用 `content.v1.MarkPlayerMailRead`；「领取附件」调用 `content.v1.ClaimMailAttachments`，HUD 资源/背包应更新（`wallet_after` / `bag_items`）。
-5. 面板落在 1600×900 外框内（与 CLIENT-007 一致）：顶底各 56px，内容区可滚动、不撑破外框。
+2. **招募模板**：点「刷新招募模板」调用 `hero.v1.ListRecruitTemplates`；下拉或列表行展示模板名、稀有度、资源+道具消耗预览（与 HERO-003 / `make dev` 目录一致）。选择模板后「招募」使用所选 `template_cfg_id` 与预览中的 `item_cfg_id`（及 `pool`），不再手填 1001/2004。
+3. **招募**：成功时列表出现新将领，状态栏显示 `hero_id`；道具/资源不足时显示服务端 `code` 与 `msg`。
+4. 点 **「邮件」** →「刷新收件箱」。可用 `cmd/gm send-mail`（见 `docs/ops`）向当前角色发带附件邮件。
+5. 选中邮件 ID →「标为已读」调用 `content.v1.MarkPlayerMailRead`；「领取附件」调用 `content.v1.ClaimMailAttachments`，HUD 资源/背包应更新（`wallet_after` / `bag_items`）。
+6. 面板落在 1600×900 外框内（与 CLIENT-007 一致）：顶底各 56px，内容区可滚动、不撑破外框。
 
 mock 网关预置 1 封欢迎邮件与 2 本名册，便于离线点领：
 
@@ -116,7 +117,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState` / `HeroMailPanels`（空邮件、领取成功）与 `StartMarchRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState`（招募模板解析/空列表、邮件领取）/ `HeroMailPanels` 与 `StartMarchRequest` proto 编解码。
 
 ## 目录
 

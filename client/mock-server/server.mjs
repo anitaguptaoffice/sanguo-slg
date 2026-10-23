@@ -535,6 +535,37 @@ wss.on("connection", (ws) => {
         return;
       }
 
+      if (route === "hero.v1.ListRecruitTemplates") {
+        const owned = new Set(state.heroes.map((h) => h.template_cfg_id));
+        const templates = [
+          {
+            template_cfg_id: 1001,
+            template_name: "玄德府君",
+            template_code: "xuan_de_lord",
+            pool: "standard",
+            rarity: 5,
+            recruit_cost: { food: 5000, wood: 5000, stone: 3000, iron: 2000 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+            already_owned: owned.has(1001),
+          },
+          {
+            template_cfg_id: 1002,
+            template_name: "青龙偃月帅",
+            template_code: "green_dragon",
+            pool: "elite",
+            rarity: 5,
+            recruit_cost: { food: 8000, wood: 6000, stone: 4000, iron: 3000 },
+            recruit_item: { item_cfg_id: 2004, quantity: 1 },
+            already_owned: owned.has(1002),
+          },
+        ];
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ListRecruitTemplatesResponse"), {
+          templates,
+          total_count: templates.length,
+        });
+        return;
+      }
+
       if (route === "hero.v1.ListPlayerHeroes") {
         replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ListPlayerHeroesResponse"), {
           heroes: state.heroes,

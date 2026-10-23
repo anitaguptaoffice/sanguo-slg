@@ -3,8 +3,11 @@ import {
   applyMailClaimResult,
   formatHeroLine,
   formatMailLine,
+  formatRecruitTemplateLine,
   heroListLines,
   mailListLines,
+  parseRecruitTemplates,
+  recruitTemplateListLines,
   upsertMailRow,
 } from "@/net/heroMailState";
 
@@ -39,5 +42,32 @@ describe("heroMailState", () => {
   it("upsertMailRow replaces existing row", () => {
     const next = upsertMailRow([{ mail_id: 1, status: 0 }], { mail_id: 1, status: 1 });
     expect(next).toEqual([{ mail_id: 1, status: 1 }]);
+  });
+
+  it("parseRecruitTemplates filters invalid rows", () => {
+    const { templates, totalCount } = parseRecruitTemplates({
+      templates: [
+        { template_cfg_id: 1001, template_name: "玄德", rarity: 5 },
+        { template_cfg_id: 0 },
+      ],
+      total_count: 2,
+    });
+    expect(templates).toHaveLength(1);
+    expect(templates[0].template_cfg_id).toBe(1001);
+    expect(totalCount).toBe(2);
+  });
+
+  it("recruitTemplateListLines handles empty list", () => {
+    expect(recruitTemplateListLines([])).toEqual(["（无可招募模板）"]);
+    const line = formatRecruitTemplateLine({
+      template_cfg_id: 1001,
+      template_name: "玄德府君",
+      rarity: 5,
+      recruit_cost: { food: 5000 },
+      recruit_item: { item_cfg_id: 2004, quantity: 1 },
+    });
+    expect(line).toContain("1001");
+    expect(line).toContain("贤士名册");
+    expect(line).toContain("粮");
   });
 });
