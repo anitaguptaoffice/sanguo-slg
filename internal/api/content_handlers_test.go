@@ -60,7 +60,7 @@ func TestContentBagGatewayHandlers(t *testing.T) {
 		t.Fatal(err)
 	}
 	if useOut.GetRemaining() != 1 || useOut.GetWalletAfter().GetFood() != 1000 {
-		t.Fatalf("use out=%+v", useOut)
+		t.Fatalf("use remaining=%d food=%d", useOut.GetRemaining(), useOut.GetWalletAfter().GetFood())
 	}
 	if useOut.GetEffectSummary() == "" {
 		t.Fatal("expected effect summary")

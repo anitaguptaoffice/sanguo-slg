@@ -204,6 +204,6 @@ func TestM4ContentSmokePath(t *testing.T) {
 		t.Fatal(err)
 	}
 	if useOut.GetRemaining() != 0 || useOut.GetSpeedupSeconds() != 300 {
-		t.Fatalf("use out=%+v", useOut)
+		t.Fatalf("use remaining=%d speedup=%d", useOut.GetRemaining(), useOut.GetSpeedupSeconds())
 	}
 }
