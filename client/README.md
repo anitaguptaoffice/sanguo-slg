@@ -275,7 +275,29 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:24 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（完整浏览器视口队列证据，**非** wave:24 backlog 实现卡）。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-016**（[#443](https://github.com/anitaguptaoffice/sanguo-slg/issues/443)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 24」。
+波次总览与 **DOCS-EXIT-016**（[#443](https://github.com/anitaguptaoffice/sanguo-slg/issues/443) / [#457](https://github.com/anitaguptaoffice/sanguo-slg/pull/457) `d1c517db`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 24」。**wave:25** 主城队列·邮件日常·世界读图加深见下文 [Wave 25](#wave-25-h5-主城队列邮件日常世界读图加深m4-出口--intg-022)。
+
+## Wave 25 H5 主城队列·邮件日常·世界读图加深（M4 出口 / INTG-022）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-022** 网关冒烟一致）。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；行军 **取消/加速**（`military.v1` 无 RPC）；募兵队列 **加速**；主城建造/募兵 **新 RPC**；战报 proto 扩量；**永不合并** art hold PR #77/#82/#108/#100/#126 及 VERIFY [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481)。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **主城槽位建造/升级提交反馈** | [建造消耗预览 CLIENT-082](#手动验收建造消耗预览-client-082) 内 **CLIENT-104**（[#460](https://github.com/anitaguptaoffice/sanguo-slg/issues/460) / [#471](https://github.com/anitaguptaoffice/sanguo-slg/pull/471) `7959d209`） | 已合 |
+| **建造队列完成脉冲与槽位互高亮** | [手动验收（建造队列完成脉冲 CLIENT-105）](#手动验收建造队列完成脉冲-client-105)（[#461](https://github.com/anitaguptaoffice/sanguo-slg/issues/461) / [#476](https://github.com/anitaguptaoffice/sanguo-slg/pull/476) `dc0a3ba0`） | 已合 |
+| **邮件未读/未领附件 tab 角标** | [手动验收（邮件面板 tab 角标 CLIENT-106）](#手动验收邮件面板-tab-角标-client-106)（[#462](https://github.com/anitaguptaoffice/sanguo-slg/issues/462) / [#474](https://github.com/anitaguptaoffice/sanguo-slg/pull/474) `3a43d2b4`） | 已合 |
+| **HUD 邮件/日常/队列待办角标一致** | [手动验收（HUD 待办角标单一事实源 CLIENT-107）](#手动验收hud-待办角标单一事实源-client-107)（[#463](https://github.com/anitaguptaoffice/sanguo-slg/issues/463) / [#480](https://github.com/anitaguptaoffice/sanguo-slg/pull/480) `bb402f94`） | 已合 |
+| **世界格点城池/资源点信息卡加深** | [手动验收（世界格点信息卡 CLIENT-073）](#手动验收世界格点信息卡-client-073) + [CLIENT-108 加深](#手动验收世界格点信息卡加深-client-108)（[#464](https://github.com/anitaguptaoffice/sanguo-slg/issues/464) / [#478](https://github.com/anitaguptaoffice/sanguo-slg/pull/478) `5b984854`） | 已合 |
+| **军情筛选记忆与战报复盘互链** | [手动验收（军情战报筛选记忆 CLIENT-109）](#手动验收军情战报筛选记忆-client-109)（[#465](https://github.com/anitaguptaoffice/sanguo-slg/issues/465) / [#477](https://github.com/anitaguptaoffice/sanguo-slg/pull/477) `afb8861b`） | 已合 |
+| **ART-CHROME-006 运行时 UX** | [ART-CHROME-006 运行时 UX（CLIENT-110）](#art-chrome-006-运行时-uxclient-110)（[#466](https://github.com/anitaguptaoffice/sanguo-slg/issues/466) / [#479](https://github.com/anitaguptaoffice/sanguo-slg/pull/479) `683a4bb6`；对比度工程 [#473](https://github.com/anitaguptaoffice/sanguo-slg/pull/473)） | 已合 |
+| **1280 主城/邮件/队列 manifest** | [手动验收（1280 主城建造/邮件/队列 CLIENT-111）](#手动验收1280-主城建造邮件队列-client-111)（[#467](https://github.com/anitaguptaoffice/sanguo-slg/issues/467) / [#475](https://github.com/anitaguptaoffice/sanguo-slg/pull/475) `e722a9b6`） | 已合 |
+| **网关冒烟**（建造队列 + 邮件未读 + 日常可领 + 格点） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 25** / `TestINTG022Wave25SmokePath`（[#468](https://github.com/anitaguptaoffice/sanguo-slg/issues/468) / [#472](https://github.com/anitaguptaoffice/sanguo-slg/pull/472) `d43f7777`） | 已合 |
+
+**推荐串联**（在 [Wave 24](#wave-24-h5-社交排行与将领执行反馈加深m4-出口--intg-021) 排行/将领/社交 manifest 基础上）：画布槽位 **确认升级** 提交反馈（**CLIENT-104**）→ **队列** 完成脉冲与槽位互高亮（**CLIENT-105**）→ **邮件** 未读/附件 tab 角标（**CLIENT-106**）与 **HUD** 待办单一事实源（**CLIENT-107**）→ **世界** 格点信息卡加深（**CLIENT-108**）→ **行军/战报** 筛选记忆与世界复盘互链（**CLIENT-109**）→ **选服/HUD chrome** 焦点与窄屏工具栏（**CLIENT-110**）→ 视口 **1280×720** 主城/邮件/队列 manifest（**CLIENT-111**）；网关字段见 `tools/smoke/README.md` **INTG-022**。
+
+**wave:19 美术轨旁路**（**非** wave:25 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:25 backlog 实现卡）。实现卡 **CLIENT-104** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-017**（[#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 25」。
 
 ### 手动验收（聊天未读与社交角标 CLIENT-102）
 
@@ -1014,6 +1036,22 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 2. 信息卡 **在军情中查看**：应打开/保持 **行军** 面板，目的格筛选为 **世界选中格**（与 CLIENT-069 一致）；列表仅显示 `to_x/to_y` 匹配行。
 3. 小地图 **空白单击** 选出征目标时，世界信息卡应同步该格；小地图视野 `pan/zoom` 纳入该格，目的点标注与 CLIENT-028 行军连线不退化；军情选中行军时仍以 CLIENT-069 目的格视野为准。
 4. 单测：`worldTileInfoCard.test.ts`、`WorldPanels.test.ts`、`MarchListPanel.test.ts`、`worldMinimap.test.ts`。
+
+### 手动验收（世界格点信息卡加深 CLIENT-108）
+
+在 **CLIENT-073** 基础上，信息卡补充 **玩家展示名**、**资源格类型**、**曼哈顿距离**（相对主城）与 **最近战报** 快捷入口（只读 `ListPlayerCities` / `ListMarches` / 战报列表快照，**无新 world RPC**）。战报列表行 **复盘格点** 应打开世界面板并选中对应坐标（与 **CLIENT-109** 互链）。
+
+1. **世界** 点选空地/资源格：信息卡应展示资源类型或「暂无城池」提示；有城池时展示城墙等级与玩家名（若快照带 `owner_display_name`）。
+2. 信息卡 **最近战报** / 战报行 **复盘格点**：应深链世界格点并保持 **CLIENT-069** 军情筛选不退化。
+3. 单测：`worldTileInfoCard.test.ts`、`WorldPanels.test.ts`、`BattleReportPanel.test.ts`。
+
+### 手动验收（军情战报筛选记忆 CLIENT-109）
+
+**行军** 列表：`military-list-filter-v1`（`sessionStorage`）记忆 **阶段筛选**（全部/待发/去程/驻扎/返回）与 **ETA 排序**；与 **CLIENT-047/069/085** 列表密度、格点筛选并存。**战报** 列表：胜负 outcome 筛选键迁移至 `battle-report-outcome-filter-v1`（兼容 **CLIENT-049** 旧键），与时间窗 **CLIENT-065** 分离；列表行 **复盘格点** 打开世界信息卡（**CLIENT-108**）。
+
+1. 切换军情阶段筛选与 ETA 排序 → 刷新页面后恢复。
+2. 战报 **胜/负/平** 筛选与时间窗组合 → 刷新后各自恢复；点 **复盘格点** 应选中世界格点。
+3. 单测：`militaryListFilter.test.ts`、`battleReportListState.test.ts`、`MarchListPanel.test.ts`、`BattleReportPanel.test.ts`。
 
 ### 手动验收（军情格点筛选 CLIENT-069）
 
