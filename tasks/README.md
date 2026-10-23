@@ -72,7 +72,7 @@ status:review   ──合并────▶  status:done
 | 22 | H5 出征执行反馈与主城经济扫读（**已完成**，见 ROADMAP Wave 22） | CLIENT-080–087（[#401](https://github.com/anitaguptaoffice/sanguo-slg/pull/401)–[#409](https://github.com/anitaguptaoffice/sanguo-slg/pull/409) `e19d0a71`–`48b0960c`）、INTG-019 ([#398](https://github.com/anitaguptaoffice/sanguo-slg/issues/398) / [#404](https://github.com/anitaguptaoffice/sanguo-slg/pull/404) `2482fd64`)、DOCS-EXIT-014 ([#399](https://github.com/anitaguptaoffice/sanguo-slg/issues/399) / [#410](https://github.com/anitaguptaoffice/sanguo-slg/pull/410) `23a6f0ed`)；**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路——**非**本波 backlog 实现卡 |
 | 23 | H5 后勤互链与全链路反馈加深（**已完成**，见 ROADMAP Wave 23） | CLIENT-088–095（[#423](https://github.com/anitaguptaoffice/sanguo-slg/pull/423)–[#431](https://github.com/anitaguptaoffice/sanguo-slg/pull/431) `d60d8345`–`7d19874f`）、INTG-020 ([#420](https://github.com/anitaguptaoffice/sanguo-slg/issues/420) / [#424](https://github.com/anitaguptaoffice/sanguo-slg/pull/424) `d27e863e`)、DOCS-EXIT-015 ([#421](https://github.com/anitaguptaoffice/sanguo-slg/issues/421) / [#432](https://github.com/anitaguptaoffice/sanguo-slg/pull/432) `58ec47a2`)；**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路——**非**本波 backlog 实现卡 |
 | 24 | H5 社交排行与将领执行反馈加深（**已完成**，见 ROADMAP Wave 24） | CLIENT-096–103（[#446](https://github.com/anitaguptaoffice/sanguo-slg/pull/446)–[#455](https://github.com/anitaguptaoffice/sanguo-slg/pull/455) `4f8821bc`–`da139567`）、INTG-021 ([#442](https://github.com/anitaguptaoffice/sanguo-slg/issues/442) / [#447](https://github.com/anitaguptaoffice/sanguo-slg/pull/447) `9eb18c48`)、DOCS-EXIT-016 ([#443](https://github.com/anitaguptaoffice/sanguo-slg/issues/443) / [#457](https://github.com/anitaguptaoffice/sanguo-slg/pull/457) `d1c517db`）；**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路——**非**本波 backlog 实现卡 |
-| 25 | H5 主城队列·邮件日常·世界读图加深（**规划中**，见 ROADMAP Wave 25） | CLIENT-104–111、INTG-022、DOCS-EXIT-017（backlog 已写入，**待** `tasks_sync` 建 Issue）；**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路——**非**本波 backlog 实现卡 |
+| 25 | H5 主城队列·邮件日常·世界读图加深（**规划中**，见 ROADMAP Wave 25） | CLIENT-104–111（[#460](https://github.com/anitaguptaoffice/sanguo-slg/issues/460)–[#467](https://github.com/anitaguptaoffice/sanguo-slg/issues/467)）、INTG-022 ([#468](https://github.com/anitaguptaoffice/sanguo-slg/issues/468))、DOCS-EXIT-017 ([#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469))；**CLIENT-064** [#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347) 美术旁路——**非**本波 backlog 实现卡 |
 
 ### Wave 9 进度（已完成）
 
@@ -304,19 +304,19 @@ status:review   ──合并────▶  status:done
 
 波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 24」。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；**永不合并** art hold PR **#77** / **#82** / **#108** / #100 / #126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)。**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——**非** wave:24 实现 backlog；实现卡 **CLIENT-096** 起。Issue 由 `tasks_sync`（[#433](https://github.com/anitaguptaoffice/sanguo-slg/pull/433) `8a182448` 合入后 Actions 全量 sync）创建。
 
-### Wave 25 进度（待 `tasks_sync`，2026-10-23）
+### Wave 25 进度（与 GitHub `wave:25` 标签同步，2026-10-23）
 
 | Issue | ID | 状态 |
 |---|---|---|
-| — | CLIENT-104 | 待 sync（`status:ready`） |
-| — | CLIENT-105 | 待 sync（`status:ready`） |
-| — | CLIENT-106 | 待 sync（`status:ready`） |
-| — | CLIENT-107 | 待 sync（`status:ready`） |
-| — | CLIENT-108 | 待 sync（`status:ready`） |
-| — | CLIENT-109 | 待 sync（`status:ready`） |
-| — | CLIENT-110 | 待 sync（`status:ready`） |
-| — | CLIENT-111 | 待 sync（`status:ready`） |
-| — | INTG-022 | 待 sync（`status:ready`） |
-| — | DOCS-EXIT-017 | 待 sync（`status:blocked`） |
+| [#460](https://github.com/anitaguptaoffice/sanguo-slg/issues/460) | CLIENT-104 | `status:ready` |
+| [#461](https://github.com/anitaguptaoffice/sanguo-slg/issues/461) | CLIENT-105 | `status:ready` |
+| [#462](https://github.com/anitaguptaoffice/sanguo-slg/issues/462) | CLIENT-106 | `status:ready` |
+| [#463](https://github.com/anitaguptaoffice/sanguo-slg/issues/463) | CLIENT-107 | `status:ready` |
+| [#464](https://github.com/anitaguptaoffice/sanguo-slg/issues/464) | CLIENT-108 | `status:ready` |
+| [#465](https://github.com/anitaguptaoffice/sanguo-slg/issues/465) | CLIENT-109 | `status:ready` |
+| [#466](https://github.com/anitaguptaoffice/sanguo-slg/issues/466) | CLIENT-110 | `status:ready` |
+| [#467](https://github.com/anitaguptaoffice/sanguo-slg/issues/467) | CLIENT-111 | `status:ready` |
+| [#468](https://github.com/anitaguptaoffice/sanguo-slg/issues/468) | INTG-022 | `status:ready` |
+| [#469](https://github.com/anitaguptaoffice/sanguo-slg/issues/469) | DOCS-EXIT-017 | `status:blocked` |
 
-波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 25」。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；**永不合并** art hold PR **#77** / **#82** / **#108** / #100 / #126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)。**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——**非** wave:25 实现 backlog；实现卡 **CLIENT-104～111**。Issue 于本 backlog PR 合并后由编排者跑 `tasks_sync` 创建。
+波次定义与依赖说明见 `docs/ROADMAP.md`「Wave 25」。**范围外**：DATA-003、`cfg_act*`、不可逆消费扩量；`CancelMarch` 与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；**永不合并** art hold PR **#77** / **#82** / **#108** / #100 / #126 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239) / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444)。**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——**非** wave:25 实现 backlog；实现卡 **CLIENT-104～111**。Issue 由 `tasks_sync`（[#458](https://github.com/anitaguptaoffice/sanguo-slg/pull/458) `7a6189ba` 合入 main 后 Actions 全量 sync）创建。
