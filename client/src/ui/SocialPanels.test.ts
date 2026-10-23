@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { LB_PLAYER_POWER, LB_PLAYER_RESOURCE } from "@/net/leaderboardFormat";
+import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
 import { SocialPanels } from "@/ui/SocialPanels";
 
 function flushPromises(): Promise<void> {
@@ -66,6 +67,9 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector('[data-role="viewer-rank"]')?.textContent).toContain("第 2 名");
     expect(mount.querySelector('[data-role="rank-snapshot"]')?.textContent).toContain("快照批次");
     expect(mount.querySelector('[data-role="rank-refresh-status"]')?.textContent).toContain("上次更新");
+    expect(mount.querySelector(".rank-pin-row")?.textContent).toContain("我的排名 #2");
+    expect(mount.querySelector('[data-role="rank-last-refresh"]')?.textContent).toContain("上次刷新：");
+    expect(sessionStorage.getItem(RANK_LAST_REFRESH_SESSION_KEY)).toContain(String(LB_PLAYER_POWER));
   });
 
   it("switches to resource board and shows empty list", async () => {
@@ -99,6 +103,7 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("（空榜）");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("刷新排行榜");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("种子");
+    expect(mount.querySelector(".rank-pin-row")).toBeNull();
   });
 
   it("keeps last rank snapshot on refresh failure and marks stale", async () => {
