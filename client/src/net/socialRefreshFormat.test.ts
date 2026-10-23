@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import {
   formatSocialPanelLastUpdated,
+  formatSocialPanelLastUpdatedLine,
   formatSocialPanelRefreshError,
 } from "@/net/socialRefreshFormat";
 
@@ -18,5 +19,15 @@ describe("socialRefreshFormat", () => {
 
   it("prefixes gateway error for panel display", () => {
     expect(formatSocialPanelRefreshError("网关超时")).toBe("刷新失败：网关超时");
+  });
+
+  it("appends stale label when snapshot may be outdated", () => {
+    vi.spyOn(Date.prototype, "toLocaleString").mockReturnValue("2026/1/15 18:30:00");
+    expect(formatSocialPanelLastUpdatedLine(Date.UTC(2026, 0, 15, 10, 30, 0), true)).toContain(
+      "数据可能已过期",
+    );
+    expect(formatSocialPanelLastUpdatedLine(Date.UTC(2026, 0, 15, 10, 30, 0), false)).not.toContain(
+      "数据可能已过期",
+    );
   });
 });

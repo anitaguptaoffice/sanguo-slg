@@ -529,6 +529,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 4. **「聊天」** 各频道（世界/私聊/军团）同理：**刷新** 按钮 + **上次更新**；发送成功后自动刷新也应更新时间戳。
 5. 单测：`socialRefreshFormat.test.ts`、`socialPanelInflight.test.ts`、`SocialPanels.test.ts`（时间戳、in-flight 禁用、失败文案）。
 
+### 手动验收（社交空态与错误文案 CLIENT-053）
+
+排行/军团/聊天空列表与刷新失败文案统一走 `socialFormat` + `formatSocialPanelRefreshError`（与 CLIENT-045 刷新按钮并存）。
+
+1. **排行**：空榜行含「刷新排行榜」引导；刷新失败且曾有成功数据时表格保留上次快照，状态栏 **刷新失败** 并标注 **数据可能已过期**。
+2. **聊天**：无消息时列表空态含「刷新」引导；军团频道未入团为只读说明 + **前往军团**（不新 RPC）。
+3. **军团**：未入团成员区只读说明；已入团无成员或刷新失败时列表空态与面板内 **刷新失败：…** 一致。
+4. 单测：`socialFormat.test.ts`（空态 key）、`SocialPanels.test.ts`（陈旧快照、军团跳转、列表重试提示）。
+
 ### 手动验收（将领招募对比 CLIENT-031）
 
 在 [CLIENT-014](#手动验收将领详情-client-014) / [CLIENT-008](#手动验收m4将领client-008) 基础上验收招募池对比与扣费明细。

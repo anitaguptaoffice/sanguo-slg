@@ -1,7 +1,6 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
-  formatLeaderboardEmptyHint,
   formatLeaderboardSnapshotMeta,
   formatViewerRankSummary,
   LB_PLAYER_POWER,
@@ -18,15 +17,25 @@ import {
   formatGuildMemberLine,
   formatGuildSummaryText,
   formatSenderLabel,
+  formatSocialChatEmptyMessage,
   formatSocialGatewayError,
+  formatSocialGuildMembersEmptyMessage,
+  formatSocialGuildNotJoinedReadonlyMessage,
+  formatSocialGuildTabNavigateLabel,
+  formatSocialPanelListRefreshHint,
+  formatSocialPanelStaleDataLabel,
+  formatSocialRankEmptyMessage,
   groupChatMessagesByLocalDay,
+  socialChatEmptyListClass,
+  socialGuildMembersEmptyListClass,
+  socialRankEmptyRowClass,
   sortGuildMembers,
   type ChatMessageRow,
 } from "@/net/socialFormat";
 import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import {
-  formatSocialPanelLastUpdated,
+  formatSocialPanelLastUpdatedLine,
   formatSocialPanelRefreshError,
 } from "@/net/socialRefreshFormat";
 
@@ -40,6 +49,10 @@ export class SocialPanels {
   private readonly rankListInflight = new SocialPanelInflight<void>();
   private chatLastUpdatedMs = 0;
   private rankLastUpdatedMs = 0;
+  private chatListError = "";
+  private guildListError = "";
+  private rankListStale = false;
+  private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -76,7 +89,19 @@ export class SocialPanels {
 
   toggleGuild(): void {
     this.guildPanel.classList.toggle("hidden");
-    if (!this.guildPanel.classList.contains("hidden")) this.syncGuildSummary();
+    if (!this.guildPanel.classList.contains("hidden")) {
+      this.syncGuildSummary();
+      this.renderGuildMembersList([]);
+    }
+  }
+
+  /** 聊天/排行等入口跳转军团面板（不触发新 RPC）。 */
+  openGuildPanel(): void {
+    this.chatPanel.classList.add("hidden");
+    this.rankPanel.classList.add("hidden");
+    this.guildPanel.classList.remove("hidden");
+    this.syncGuildSummary();
+    this.renderGuildMembersList([]);
   }
 
   toggleRank(): void {
@@ -152,7 +177,9 @@ export class SocialPanels {
       <p class="social-refresh-status" data-role="chat-refresh-status" hidden></p>
     `;
     el.querySelector('[data-field="channel"]')?.addEventListener("change", (ev) => {
-      this.syncChatChannelUi(Number((ev.target as HTMLSelectElement).value));
+      const ch = Number((ev.target as HTMLSelectElement).value);
+      this.syncChatChannelUi(ch);
+      if (!el.classList.contains("hidden")) void this.refreshChat();
     });
     return el;
   }
@@ -168,6 +195,7 @@ export class SocialPanels {
       <label>军团 ID <input type="number" data-field="join-guild-id" min="1" /></label>
       <button type="button" data-action="join-guild">加入军团</button>
       <button type="button" data-action="refresh-members">刷新成员</button>
+      <p class="social-refresh-status" data-role="guild-refresh-status" hidden></p>
       <ul class="guild-members" data-role="guild-members"></ul>
     `;
     return el;
@@ -221,7 +249,7 @@ export class SocialPanels {
     }
     status.classList.remove("social-refresh-error");
     if (this.chatLastUpdatedMs > 0) {
-      status.textContent = formatSocialPanelLastUpdated(this.chatLastUpdatedMs);
+      status.textContent = formatSocialPanelLastUpdatedLine(this.chatLastUpdatedMs);
       status.hidden = false;
     } else if (!opts.busy) {
       status.textContent = "";
@@ -229,12 +257,41 @@ export class SocialPanels {
     }
   }
 
-  private syncRankRefreshUi(opts: { busy: boolean; lastUpdatedMs?: number; error?: string | null }): void {
+  private syncRankRefreshUi(opts: {
+    busy: boolean;
+    lastUpdatedMs?: number;
+    error?: string | null;
+    stale?: boolean;
+  }): void {
     const btn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="refresh-rank"]');
     if (btn) btn.disabled = opts.busy;
     const status = this.rankPanel.querySelector('[data-role="rank-refresh-status"]');
     if (!status) return;
     if (opts.lastUpdatedMs) this.rankLastUpdatedMs = opts.lastUpdatedMs;
+    if (opts.stale !== undefined) this.rankListStale = opts.stale;
+    if (opts.error) {
+      let line = formatSocialPanelRefreshError(opts.error);
+      if (this.rankListStale) line += ` · ${formatSocialPanelStaleDataLabel()}`;
+      status.textContent = line;
+      status.classList.add("social-refresh-error");
+      status.hidden = false;
+      return;
+    }
+    status.classList.remove("social-refresh-error");
+    if (this.rankLastUpdatedMs > 0) {
+      status.textContent = formatSocialPanelLastUpdatedLine(this.rankLastUpdatedMs, this.rankListStale);
+      status.hidden = false;
+    } else if (!opts.busy) {
+      status.textContent = "";
+      status.hidden = true;
+    }
+  }
+
+  private syncGuildRefreshUi(opts: { busy: boolean; error?: string | null }): void {
+    const btn = this.guildPanel.querySelector<HTMLButtonElement>('[data-action="refresh-members"]');
+    if (btn) btn.disabled = opts.busy;
+    const status = this.guildPanel.querySelector('[data-role="guild-refresh-status"]');
+    if (!status) return;
     if (opts.error) {
       status.textContent = formatSocialPanelRefreshError(opts.error);
       status.classList.add("social-refresh-error");
@@ -242,10 +299,7 @@ export class SocialPanels {
       return;
     }
     status.classList.remove("social-refresh-error");
-    if (this.rankLastUpdatedMs > 0) {
-      status.textContent = formatSocialPanelLastUpdated(this.rankLastUpdatedMs);
-      status.hidden = false;
-    } else if (!opts.busy) {
+    if (!opts.busy) {
       status.textContent = "";
       status.hidden = true;
     }
@@ -254,7 +308,11 @@ export class SocialPanels {
   private async refreshChat(): Promise<void> {
     const sid = this.serverId();
     const ch = this.selectedChatChannel();
-    if (!this.ensureGuildChatReady(ch)) return;
+    if (ch === CHAT_CHANNEL_GUILD && this.guildId <= 0) {
+      this.chatListError = "";
+      this.renderChatLog([], ch);
+      return;
+    }
     return this.chatListInflight.run(async () => {
       this.syncChatRefreshUi({ busy: true });
       this.onStatus("拉取聊天…");
@@ -263,22 +321,48 @@ export class SocialPanels {
           ...this.chatListOpts(ch),
           limit: 30,
         })) as { messages?: ChatMessageRow[] };
-        this.renderChatLog(res.messages ?? []);
+        this.chatListError = "";
+        this.renderChatLog(res.messages ?? [], ch);
         this.syncChatRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null });
         this.onStatus("聊天已刷新");
       } catch (e) {
         const msg = formatSocialGatewayError(e);
+        this.chatListError = msg;
+        this.renderChatLog([], ch);
         this.syncChatRefreshUi({ busy: false, error: msg });
         this.onStatus(msg);
       }
     });
   }
 
-  private renderChatLog(messages: ChatMessageRow[]): void {
+  private renderChatLog(messages: ChatMessageRow[], channel = this.selectedChatChannel()): void {
     const ul = this.chatPanel.querySelector('[data-role="chat-log"]');
     if (!ul) return;
     ul.innerHTML = "";
+    if (channel === CHAT_CHANNEL_GUILD && this.guildId <= 0) {
+      const li = document.createElement("li");
+      li.className = socialChatEmptyListClass();
+      li.textContent = formatSocialGuildNotJoinedReadonlyMessage();
+      const nav = document.createElement("button");
+      nav.type = "button";
+      nav.className = "social-guild-nav";
+      nav.setAttribute("data-action", "navigate-guild-panel");
+      nav.textContent = formatSocialGuildTabNavigateLabel();
+      li.appendChild(document.createElement("br"));
+      li.appendChild(nav);
+      ul.appendChild(li);
+      return;
+    }
     const groups = groupChatMessagesByLocalDay(messages);
+    if (groups.length === 0) {
+      const li = document.createElement("li");
+      li.className = socialChatEmptyListClass();
+      li.textContent = this.chatListError
+        ? formatSocialPanelListRefreshHint()
+        : formatSocialChatEmptyMessage();
+      ul.appendChild(li);
+      return;
+    }
     for (const g of groups) {
       const head = document.createElement("li");
       head.className = "chat-day-header";
@@ -287,6 +371,41 @@ export class SocialPanels {
       for (const m of g.messages) {
         ul.appendChild(this.buildChatMessageRow(m));
       }
+    }
+  }
+
+  private renderGuildMembersList(
+    members: {
+      player_id?: number;
+      display_name?: string;
+      role?: number;
+      power?: number;
+      joined_at_ms?: number;
+    }[],
+  ): void {
+    const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
+    if (!ul) return;
+    ul.innerHTML = "";
+    if (!this.guildId) {
+      const li = document.createElement("li");
+      li.className = socialGuildMembersEmptyListClass();
+      li.textContent = `${formatSocialGuildNotJoinedReadonlyMessage()}可在本面板下方创建或加入军团。`;
+      ul.appendChild(li);
+      return;
+    }
+    if (!members.length) {
+      const li = document.createElement("li");
+      li.className = socialGuildMembersEmptyListClass();
+      li.textContent = this.guildListError
+        ? formatSocialPanelListRefreshHint()
+        : formatSocialGuildMembersEmptyMessage();
+      ul.appendChild(li);
+      return;
+    }
+    for (const m of sortGuildMembers(members)) {
+      const li = document.createElement("li");
+      li.textContent = formatGuildMemberLine(m);
+      ul.appendChild(li);
     }
   }
 
@@ -379,10 +498,13 @@ export class SocialPanels {
 
   private async refreshMembers(): Promise<void> {
     if (!this.guildId) {
+      this.guildListError = "";
+      this.renderGuildMembersList([]);
       this.onStatus("请先创建或加入军团");
       return;
     }
     const sid = this.serverId();
+    this.syncGuildRefreshUi({ busy: true });
     this.onStatus("拉取成员…");
     try {
       const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
@@ -397,18 +519,16 @@ export class SocialPanels {
       };
       if (res.guild?.name) this.guildName = res.guild.name;
       this.syncGuildSummary();
-      const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
-      if (ul) {
-        ul.innerHTML = "";
-        for (const m of sortGuildMembers(res.members ?? [])) {
-          const li = document.createElement("li");
-          li.textContent = formatGuildMemberLine(m);
-          ul.appendChild(li);
-        }
-      }
+      this.guildListError = "";
+      this.renderGuildMembersList(res.members ?? []);
+      this.syncGuildRefreshUi({ busy: false, error: null });
       this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
     } catch (e) {
-      this.onStatus(formatSocialGatewayError(e));
+      const msg = formatSocialGatewayError(e);
+      this.guildListError = msg;
+      this.renderGuildMembersList([]);
+      this.syncGuildRefreshUi({ busy: false, error: msg });
+      this.onStatus(msg);
     }
   }
 
@@ -434,10 +554,10 @@ export class SocialPanels {
       const entries = res.entries ?? [];
       if (entries.length === 0) {
         const tr = document.createElement("tr");
-        tr.className = "rank-empty-row";
+        tr.className = socialRankEmptyRowClass();
         const td = document.createElement("td");
         td.colSpan = 3;
-        td.textContent = formatLeaderboardEmptyHint();
+        td.textContent = formatSocialRankEmptyMessage();
         tr.appendChild(td);
         tbody.appendChild(tr);
       } else {
@@ -461,12 +581,19 @@ export class SocialPanels {
       this.onStatus("拉取排行榜…");
       try {
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+        this.rankSnapshotByType.set(boardType, res);
         this.renderLeaderboardPage(res, boardType);
-        this.syncRankRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null });
+        this.syncRankRefreshUi({ busy: false, lastUpdatedMs: Date.now(), error: null, stale: false });
         this.onStatus("排行榜已刷新");
       } catch (e) {
         const msg = formatSocialGatewayError(e);
-        this.syncRankRefreshUi({ busy: false, error: msg });
+        const cached = this.rankSnapshotByType.get(boardType);
+        if (cached) {
+          this.renderLeaderboardPage(cached, boardType);
+          this.syncRankRefreshUi({ busy: false, error: msg, stale: true });
+        } else {
+          this.syncRankRefreshUi({ busy: false, error: msg, stale: false });
+        }
         this.onStatus(msg);
       }
     });
@@ -478,6 +605,7 @@ export class SocialPanels {
     const a = btn.getAttribute("data-action");
     if (a === "send-chat") void this.sendChat();
     if (a === "refresh-chat") void this.refreshChat();
+    if (a === "navigate-guild-panel") this.openGuildPanel();
   }
 
   private onGuildClick(ev: Event): void {
