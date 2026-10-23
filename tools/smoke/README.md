@@ -2,7 +2,31 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 13 网关冒烟（INTG-010，推荐）
+
+在 INTG-009 路径上强制验收 **双榜** `rank.v1.GetLeaderboard`：战力榜与资源榜各一次（`RefreshRanks` 后 `my_rank` 与条目 `entity_id` 非空；dev 空榜时测试仅打日志、见下文说明）；**经济** `content.v1.UseConsumable` 对 DATA-002 消耗品 `item_cfg_id=2001`（成功则扣背包并校验 `effect_summary`，预期失败时打印 `item_cfg_id` 不阻塞）。保留行军/邮件/日常/商城/重启与 M3 子集等 INTG-009 全量断言。
+
+**本波不做** `CancelMarch`/行军加速——`military.v1` 契约未定义对应 RPC。
+
+**社交可选**：`chat.v1` 世界频道发收一条 + `guild.v1` 创建军团；**失败不阻塞主路径**（见测试内 `smokeINTG010SocialOptional`）。
+
+dev 空榜：本地未刷新排行或单服无种子玩家时，`GetLeaderboard` 可能 `total_count=0`；冒烟会记录 `viewer_player_id` 并继续，对照 `spec/data/CORE_SUBSET.md` 与 `make dev-up` 后重跑。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG010Wave13SmokePath' -count=1 -v
+```
+
+与 INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:`、`INTG-008:`、`INTG-009:` 与 `INTG-010:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 12 网关冒烟（INTG-009，推荐）
 
