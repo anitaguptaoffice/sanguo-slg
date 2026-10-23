@@ -56,6 +56,21 @@ cd client && npm install && npm run dev
 3. **商城**：打开「商城」→「刷新货架」→ 选择 offer 1001 →「购买×1」。余额不足时状态栏显示服务端错误；成功时 HUD **币** 减少且背包数量增加（`wallet_after` 真扣费，无 spent overlay）。
 4. **背包**：「刷新背包」调用 `content.v1.ListPlayerBag` 拉服务端持久化全量并覆盖会话背包展示；「使用道具」调用 `content.v1.UseConsumable`（与 `internal/api/content_handlers.go` 一致）。资源包(2001)/加速符(2003) 使用成功后 HUD 粮/币或状态栏效果摘要应更新。
 
+### 手动验收（日常 chain 400，CLIENT-009）
+
+与 `tools/smoke/README.md` / INTG-007 中 `daily_food_1`（`quest_cfg_id=1012`，`chain_id=400`）一致；进度由服务端 QUEST-002 自动挂钩，客户端**无**手填上报。
+
+1. `make dev` 进入主城（君主等级须满足 cfg 解锁，dev 账号通常已够）。
+2. 底栏点 **「日常」**（与教程 **「任务」** 面板分离）。列表应经 `quest.v1.ListPlayerQuests` + `chain_id=400` 展示 `daily_food_1` 等行：cfg code、状态文案、`current/target` 进度。
+3. 选中 `daily_food_1` → **接取** → 通过内政收粮或等待资源累积使进度达标（真实服自动推进）→ **领奖**。HUD **粮/木/铁/石/币** 与状态栏背包摘要应更新（`ListPlayerBag` + 领奖 `granted_rewards` 合并，同 ContentPanels）。
+4. 视口 **1600×900**：底栏含「日常」且单行不撑破 56px 底栏；面板落在顶底 56px 带之间、可滚动。
+
+mock 网关（chain 400 默认列出 1012）：
+
+```bash
+VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
+```
+
 ### 手动验收（M4：将领 / 邮件，CLIENT-008）
 
 与 `internal/api/hero_handlers.go`、`internal/api/mail_handlers.go` 网关路由一致（`make dev` 真实 PG）。
@@ -101,13 +116,13 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel`（空列表/加载失败/列表行）、`heroMailState` / `HeroMailPanels`（空邮件、领取成功）与 `StartMarchRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`militaryFormat`、`bagState`（网关背包合并）、`BattleReportPanel`（空列表/加载失败/列表行）、`dailyQuestState` / `DailyQuestPanels`（chain 400 列表与领奖合并）、`heroMailState` / `HeroMailPanels`（空邮件、领取成功）与 `StartMarchRequest` proto 编解码。
 
 ## 目录
 
 - `src/engine/` — `GameApp`、`layoutViewport`、`mainCitySlots`、场景管理、`AssetLoader`（art v1 manifest）
 - `src/net/` — `GatewayClient`、`bootstrapSession`、`militaryFormat`、proto 加载
 - `src/scenes/` — 选服、主城（军事 + M3 社交面板）
-- `src/ui/` — 聊天/军团/排行与任务/背包/商城/将领/邮件 DOM 面板
+- `src/ui/` — 聊天/军团/排行、任务/日常/战报、背包/商城/将领/邮件 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock

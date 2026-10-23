@@ -387,31 +387,49 @@ wss.on("connection", (ws) => {
       }
 
       if (route === "quest.v1.ListPlayerQuests") {
-        const rows = Object.values(state.quests);
-        replyOk(ws, cp.trace_id, T("sanguo.quest.v1.ListPlayerQuestsResponse"), {
-          quests: rows.length ? rows : [
-            {
+        const req = T("sanguo.quest.v1.ListPlayerQuestsRequest").decode(cp.payload);
+        const chainFilter = req.chain_id ?? 0;
+        const rows = Object.values(state.quests).filter(
+          (q) => !chainFilter || (q.chain_id ?? 0) === chainFilter,
+        );
+        const defaults = [];
+        if (!rows.length) {
+          if (chainFilter === 400) {
+            defaults.push({
+              quest_cfg_id: 1012,
+              quest_code: "daily_food_1",
+              chain_id: 400,
+              state: 1,
+              progress_current: 0,
+              progress_target: 5000,
+            });
+          } else if (!chainFilter || chainFilter === 100) {
+            defaults.push({
               quest_cfg_id: 1001,
               quest_code: "tutorial_build_hall",
               chain_id: 100,
               state: 1,
               progress_current: 0,
               progress_target: 2,
-            },
-          ],
+            });
+          }
+        }
+        replyOk(ws, cp.trace_id, T("sanguo.quest.v1.ListPlayerQuestsResponse"), {
+          quests: rows.length ? rows : defaults,
         });
         return;
       }
 
       if (route === "quest.v1.AcceptQuest") {
         const req = T("sanguo.quest.v1.AcceptQuestRequest").decode(cp.payload);
+        const isDaily = req.quest_cfg_id >= 1012 && req.quest_cfg_id < 1100;
         const row = {
           quest_cfg_id: req.quest_cfg_id,
-          quest_code: "tutorial_build_hall",
-          chain_id: 100,
+          quest_code: isDaily ? "daily_food_1" : "tutorial_build_hall",
+          chain_id: isDaily ? 400 : 100,
           state: 2,
           progress_current: 0,
-          progress_target: 2,
+          progress_target: isDaily ? 5000 : 2,
         };
         state.quests[req.quest_cfg_id] = row;
         replyOk(ws, cp.trace_id, T("sanguo.quest.v1.AcceptQuestResponse"), { quest: row });

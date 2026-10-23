@@ -16,6 +16,7 @@ import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
+import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import {
   formatMarchHint,
   formatTimeMs,
@@ -51,6 +52,7 @@ export class MainCityScene implements Scene {
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
   private battleReports!: BattleReportPanel;
+  private dailyQuest!: DailyQuestPanels;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
   private canvas!: HTMLCanvasElement;
@@ -76,6 +78,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-guild">军团</button>
       <button type="button" data-action="toggle-rank">排行</button>
       <button type="button" data-action="toggle-quest">任务</button>
+      <button type="button" data-action="toggle-daily">日常</button>
       <button type="button" data-action="toggle-bag">背包</button>
       <button type="button" data-action="toggle-shop">商城</button>
       <button type="button" data-action="toggle-hero">将领</button>
@@ -151,6 +154,21 @@ export class MainCityScene implements Scene {
       this.renderHud();
     });
     this.battleReports.attach();
+    this.dailyQuest = new DailyQuestPanels(
+      parent,
+      this.gateway,
+      () => this.session,
+      (patch) => {
+        if (!this.session) return;
+        Object.assign(this.session, patch);
+        this.renderHud();
+      },
+      (msg) => {
+        this.status = msg;
+        this.renderHud();
+      },
+    );
+    this.dailyQuest.attach();
     skinPrimaryButtons(this.toolbar, this.assets);
     skinNineSlicePanel(this.militaryPanel, this.assets, 420, 320);
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
@@ -165,6 +183,7 @@ export class MainCityScene implements Scene {
     this.content?.detach();
     this.heroMail?.detach();
     this.battleReports?.detach();
+    this.dailyQuest?.detach();
     this.toolbar?.remove();
     this.militaryPanel?.remove();
   }
@@ -184,6 +203,7 @@ export class MainCityScene implements Scene {
     if (action === "toggle-guild") this.social.toggleGuild();
     if (action === "toggle-rank") this.social.toggleRank();
     if (action === "toggle-quest") this.content.toggleQuest();
+    if (action === "toggle-daily") this.dailyQuest.toggle();
     if (action === "toggle-bag") this.content.toggleBag();
     if (action === "toggle-shop") this.content.toggleShop();
     if (action === "toggle-hero") this.heroMail.toggleHero();
