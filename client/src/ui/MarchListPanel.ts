@@ -25,6 +25,11 @@ import {
   writeMarchHighlightSession,
 } from "@/net/marchHighlight";
 import {
+  clearMinimapMarchFocusSession,
+  readMinimapMarchFocusSession,
+  syncMinimapMarchFocusSession,
+} from "@/net/minimapMarchFocus";
+import {
   filterMarchesByDestination,
   MARCH_LIST_ROW_DEST_MATCH_CLASS,
   type MarchDestFilterMode,
@@ -188,6 +193,7 @@ export class MarchListPanel {
 
   selectMarchById(marchId: number | null, opts?: { openPanel?: boolean }): void {
     if (opts?.openPanel && marchId != null && !this.isOpen()) {
+      syncMinimapMarchFocusSession(marchId);
       this.selectedMarchId = marchId;
       this.panel.classList.remove("hidden");
       void this.refreshList();
@@ -391,6 +397,7 @@ export class MarchListPanel {
   }
 
   private setSelectedMarchId(marchId: number | null): void {
+    syncMinimapMarchFocusSession(marchId);
     const nextHighlight = resolveMarchHighlightOnRowSelect(
       marchId,
       this.highlightState,
@@ -440,8 +447,32 @@ export class MarchListPanel {
       this.onSelectionChange?.(null);
     }
     this.syncHighlightFromSession();
+    this.tryRestoreMinimapMarchFocus();
     this.onMarchesUpdated?.(this.marches);
     this.renderList();
+  }
+
+  /** 小地图 ListMarches 快照到达后恢复焦点（面板可未打开）。 */
+  syncMinimapMarchFocusFromSnapshot(marches: MarchSummary[]): void {
+    this.applyMinimapMarchFocusRestore(marches);
+  }
+
+  /** 会话内恢复小地图↔军情焦点（CLIENT-090）；不覆盖用户已选行。 */
+  private tryRestoreMinimapMarchFocus(): void {
+    this.applyMinimapMarchFocusRestore(this.marches);
+  }
+
+  private applyMinimapMarchFocusRestore(marches: MarchSummary[]): void {
+    if (this.selectedMarchId != null) return;
+    const id = readMinimapMarchFocusSession();
+    if (id == null) return;
+    if (!marches.some((m) => m.march_id === id)) {
+      clearMinimapMarchFocusSession();
+      return;
+    }
+    this.selectedMarchId = id;
+    const march = marches.find((m) => m.march_id === id) ?? null;
+    this.onSelectionChange?.(march);
   }
 
   private syncHighlightFromSession(): void {
