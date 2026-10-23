@@ -20,6 +20,7 @@ import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { appendManhattanToStatus } from "@/ui/marchWorldListLink";
 import { QueuePanels } from "@/ui/QueuePanels";
 import type { DailyQuestNavAction } from "@/net/dailyQuestObjective";
 import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
@@ -331,11 +332,35 @@ export class MainCityScene implements Scene {
         },
         onSelectionChange: (march) => {
           if (march) {
-            this.status = this.minimapCollapsed
-              ? formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs)
-              : `小地图联动：行军 #${march.march_id ?? "?"}`;
-            this.renderHud();
+            const tx = march.to_x;
+            const ty = march.to_y;
+            if (Number.isFinite(tx) && Number.isFinite(ty)) {
+              this.world.setMarchDestHighlight({ x: tx, y: ty });
+            } else {
+              this.world.setMarchDestHighlight(null);
+            }
+            let base: string;
+            if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
+              base = `军情联动：行军 #${march.march_id ?? "?"}（无目的坐标）`;
+            } else if (this.minimapCollapsed) {
+              base = formatMinimapCollapsedSelectedMarchStatus(march, this.marchClockMs);
+            } else {
+              base = `小地图联动：行军 #${march.march_id ?? "?"}`;
+            }
+            this.status =
+              Number.isFinite(tx) && Number.isFinite(ty)
+                ? appendManhattanToStatus(
+                    base,
+                    this.session?.cityX,
+                    this.session?.cityY,
+                    tx,
+                    ty,
+                  )
+                : base;
+          } else {
+            this.world.setMarchDestHighlight(null);
           }
+          this.renderHud();
         },
       },
     );
@@ -354,8 +379,27 @@ export class MainCityScene implements Scene {
         },
       },
       (msg) => {
-        this.status = msg;
+        const grid = this.world.getSelectedGrid();
+        this.status =
+          grid != null
+            ? appendManhattanToStatus(
+                msg,
+                this.session?.cityX,
+                this.session?.cityY,
+                grid.x,
+                grid.y,
+              )
+            : msg;
         this.renderHud();
+      },
+      {
+        onGridSelectionChange: (grid) => {
+          if (grid) {
+            this.marchList.setDestFilter(grid.x, grid.y);
+          } else {
+            this.marchList.setDestFilter(null, null);
+          }
+        },
       },
     );
     this.world.attach();
@@ -758,7 +802,19 @@ export class MainCityScene implements Scene {
     if (!this.minimapCollapsed) return;
     const selected = this.marchList?.getSelectedMarch();
     if (!selected) return;
-    this.status = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    const base = formatMinimapCollapsedSelectedMarchStatus(selected, this.marchClockMs);
+    const tx = selected.to_x;
+    const ty = selected.to_y;
+    this.status =
+      Number.isFinite(tx) && Number.isFinite(ty)
+        ? appendManhattanToStatus(
+            base,
+            this.session?.cityX,
+            this.session?.cityY,
+            tx,
+            ty,
+          )
+        : base;
     this.renderHud();
   }
 
