@@ -7,7 +7,7 @@
 | **art_head_sha** | `8035dfb59b3e783cd033b72d07bded3f4d3da483` | Draft [#1203](https://github.com/anitaguptaoffice/sanguo-slg/pull/1203)；**勿合并** |
 | **runtime_code_sha / tip_sha** | `d2cf1a1841dfbdcdb14d15698297b701a7acdcda` | 生产 runtime（scroll/clip host + 招募区折叠）；见各 `probe-log.json` |
 | **HeroMailPanels.ts blob** | `642db6d4a46cdebd5dd77b5279bc56b52080018a` | 与 d2cf1a18 capture 一致 |
-| **evidence_head_sha** | `421ff351`（见 `git rev-parse HEAD`） | 本 eng PR 证据包 HEAD |
+| **evidence_head_sha** | 见本 eng PR `HEAD` | 证据 JPEG + `probe-log.json` 包 |
 | **capture_helper_commit_sha** | `d2cf1a1841dfbdcdb14d15698297b701a7acdcda` | 捕获脚本提交；`probe-log.json` 内 `tip_sha` 同此 |
 
 ## 范围（1021–1024）
