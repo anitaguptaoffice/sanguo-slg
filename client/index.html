@@ -1314,6 +1314,19 @@
         box-shadow: 0 0 6px rgba(240, 198, 116, 0.45);
       }
       .mail-list li.mail-empty { cursor: default; color: #b8a88a; }
+      .mail-list li.panel-state-chrome,
+      .hero-list li.panel-state-chrome,
+      .daily-quest-list li.panel-state-chrome,
+      .march-list li.panel-state-chrome,
+      .battle-report-list li.panel-state-chrome,
+      .queue-list li.panel-state-chrome {
+        cursor: default;
+        color: #b8a88a;
+        font-style: italic;
+        list-style: none;
+      }
+      .panel-state-chrome[data-panel-state="error"] { color: #e8a87c; }
+      .panel-state-chrome[data-panel-state="loading"] { color: #c9d1d9; font-style: normal; }
       .mail-list li.selected { outline: 2px solid #c9a227; }
       .mail-list li.unread .mail-row-title-text { font-weight: 600; }
       .mail-list li.unread .mail-row-title::before { content: none; }

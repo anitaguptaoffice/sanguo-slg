@@ -1,6 +1,10 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { applyUiCountBadge } from "@/engine/artBadgeSkin";
 import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
+import {
   remountPanelFilterChips,
   setFilterChipLabel,
   syncFilterChipAria,
@@ -19,7 +23,6 @@ import {
   shouldPromptDailyRecruitAfterRecruit,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
-import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   mountFilterBadgeCount,
   mountFilterBadgeDot,
@@ -138,6 +141,8 @@ export class HeroMailPanels {
   private mailUnreadTotal = 0;
   private mailFilter = MAIL_INBOX_FILTER_ALL;
   private mailListError = "";
+  private mailListLoading = false;
+  private heroListLoadError: string | null = null;
   private selectedHeroId = 0;
   private selectedMailId = 0;
   private heroDetail: HeroDetail | null = null;
@@ -518,10 +523,12 @@ export class HeroMailPanels {
     const detailEl = this.heroPanel.querySelector('[data-role="hero-detail"]');
     if (!ul) return;
     ul.innerHTML = "";
-    if (!this.heroes.length) {
-      const li = document.createElement("li");
-      li.textContent = heroListLines([])[0];
-      ul.appendChild(li);
+    if (this.heroesRefreshInflight && !this.heroes.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, { assets: this.assets });
+    } else if (!this.heroes.length) {
+      const msg = this.heroListLoadError ?? heroListLines([])[0];
+      const kind = this.heroListLoadError ? "error" : "empty";
+      renderPanelStateListRow(ul, kind, msg, { assets: this.assets });
     } else {
       for (const h of this.heroes) {
         const li = document.createElement("li");
@@ -755,16 +762,24 @@ export class HeroMailPanels {
     this.setMailFilterButtons();
     ul.innerHTML = "";
     if (statusEl) {
-      statusEl.textContent = this.mailListError;
-      statusEl.classList.toggle("is-error", !!this.mailListError);
+      statusEl.textContent = this.mailListLoading
+        ? PANEL_STATE_LOADING_MESSAGE
+        : this.mailListError;
+      statusEl.classList.toggle("is-error", !!this.mailListError && !this.mailListLoading);
     }
-    if (!this.mails.length) {
-      const li = document.createElement("li");
-      li.className = mailInboxEmptyListClass();
-      li.textContent = this.mailListError
+    if (this.mailListLoading && !this.mails.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
+        assets: this.assets,
+      });
+    } else if (!this.mails.length) {
+      const kind = this.mailListError ? "error" : "empty";
+      const msg = this.mailListError
         ? mailInboxLoadErrorListHint()
         : mailEmptyInboxMessage(this.mailFilter);
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, kind, msg, {
+        legacyClass: mailInboxEmptyListClass(),
+        assets: this.assets,
+      });
     } else {
       for (const m of this.mails) {
         const li = document.createElement("li");
@@ -878,6 +893,8 @@ export class HeroMailPanels {
     this.heroesRefreshInflight = true;
     syncHeroListRefreshButton(this.heroPanel, true);
     setHeroListFormErrorDisplay(this.heroPanel, null);
+    this.heroListLoadError = null;
+    if (!this.heroes.length) this.renderHeroList();
     const sid = this.serverId();
     this.onStatus("拉取将领…");
     try {
@@ -912,6 +929,10 @@ export class HeroMailPanels {
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       setHeroListFormErrorDisplay(this.heroPanel, msg);
+      if (!this.heroes.length) {
+        this.heroListLoadError = msg;
+        this.renderHeroList();
+      }
       this.onStatus(msg);
     } finally {
       this.heroesRefreshInflight = false;
@@ -1173,6 +1194,8 @@ export class HeroMailPanels {
     const sid = this.serverId();
     this.onStatus("拉取邮件…");
     this.mailListError = "";
+    this.mailListLoading = true;
+    this.renderMailList();
     try {
       const res = (await this.gateway.listPlayerMail(sid, {
         filter: this.mailFilter,
@@ -1211,6 +1234,9 @@ export class HeroMailPanels {
       this.mails = [];
       this.renderMailList();
       this.onStatus(this.mailListError);
+    } finally {
+      this.mailListLoading = false;
+      this.renderMailList();
     }
   }
 
