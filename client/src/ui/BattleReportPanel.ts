@@ -16,6 +16,17 @@ import {
   syncBattleReportListRovingFocus,
 } from "@/net/battleReportListNav";
 import {
+  applyBattleReportListDensityRowClasses,
+  formatBattleReportListDensityCoordLine,
+  formatBattleReportListDensityTimestampLine,
+  formatBattleReportListDensityTitleLine,
+  handleBattleReportListPanelKeyDown,
+  REPORT_LIST_DENSITY_COORD_CLASS,
+  REPORT_LIST_DENSITY_OUTCOME_BAND_CLASS,
+  REPORT_LIST_DENSITY_TIMESTAMP_CLASS,
+  syncBattleReportListKeyboardFocusRing,
+} from "@/net/battleReportListDensityKeyboard";
+import {
   computeOutcomeStreak,
   formatBattleReportOutcomeStreakLabel,
 } from "@/net/battleReportOutcomeStreak";
@@ -42,7 +53,6 @@ import {
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
   BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS,
   formatBattleReportCoordinateTag,
-  formatBattleReportListPrimaryLine,
   formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
   formatBattleReportRoundSummaryStrip,
@@ -283,6 +293,7 @@ export class BattleReportPanel {
     const el = document.createElement("div");
     el.className = "content-panel hidden battle-report-panel";
     el.dataset.centerPanel = "battle-report";
+    el.tabIndex = -1;
     el.innerHTML = `
       <h3>战报</h3>
       <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
@@ -480,6 +491,10 @@ export class BattleReportPanel {
       const r = filtered[i];
       const li = document.createElement("li");
       li.setAttribute("data-ui-filter-row", "");
+      const outcomeBand = document.createElement("span");
+      outcomeBand.className = `${REPORT_LIST_DENSITY_OUTCOME_BAND_CLASS} ${battleReportOutcomeChipClass(r.outcome)}`;
+      outcomeBand.setAttribute("aria-hidden", "true");
+      li.appendChild(outcomeBand);
       const outcomeCol = document.createElement("div");
       outcomeCol.className = "battle-report-row-outcome";
       const badgeKind = resolveBattleReportListOutcomeBadgeKind(r.outcome);
@@ -496,15 +511,22 @@ export class BattleReportPanel {
       outcomeCol.appendChild(chip);
       const body = document.createElement("span");
       body.className = "battle-report-row-body";
+      const timestamp = document.createElement("span");
+      timestamp.className = REPORT_LIST_DENSITY_TIMESTAMP_CLASS;
+      timestamp.textContent = formatBattleReportListDensityTimestampLine(r);
       const primary = document.createElement("span");
       primary.className = "battle-report-row-primary";
-      primary.textContent = formatBattleReportListPrimaryLine(r);
+      primary.textContent = formatBattleReportListDensityTitleLine(r);
       const secondary = document.createElement("span");
       secondary.className = `battle-report-row-secondary ${BATTLE_REPORT_LIST_STREAK_LINE_CLASS}`;
       const streakText = document.createElement("span");
       streakText.className = "battle-report-list-streak-text";
       streakText.textContent = formatBattleReportListStreakLine(r, i, filtered);
       secondary.appendChild(streakText);
+      const coordLine = document.createElement("span");
+      coordLine.className = REPORT_LIST_DENSITY_COORD_CLASS;
+      coordLine.textContent = formatBattleReportListDensityCoordLine(r);
+      secondary.appendChild(coordLine);
       if (parseBattleReportLocation(r)) {
         const coordTag = document.createElement("button");
         coordTag.type = "button";
@@ -517,6 +539,7 @@ export class BattleReportPanel {
         coordTag.textContent = formatBattleReportCoordinateTag(r);
         secondary.appendChild(coordTag);
       }
+      body.appendChild(timestamp);
       body.appendChild(primary);
       body.appendChild(secondary);
       const grid = battleReportWorldTileGrid(r);
@@ -537,6 +560,7 @@ export class BattleReportPanel {
         li.classList.toggle("selected", selected);
         li.setAttribute("aria-selected", selected ? "true" : "false");
       }
+      applyBattleReportListDensityRowClasses(li, r);
       ul.appendChild(li);
     }
 
@@ -546,6 +570,7 @@ export class BattleReportPanel {
       orderedIds,
       this.selectedReportId,
     );
+    syncBattleReportListKeyboardFocusRing(ul as HTMLElement, this.selectedReportId);
     this.renderDetail();
   }
 
@@ -1220,6 +1245,21 @@ export class BattleReportPanel {
 
   private onKeyDown(ev: KeyboardEvent): void {
     const list = this.panel.querySelector<HTMLElement>('[data-role="report-list"]');
+    const orderedIds = battleReportIdsInListOrder(this.visibleReports());
+    if (
+      list &&
+      handleBattleReportListPanelKeyDown(ev, {
+        panel: this.panel,
+        list,
+        orderedIds,
+        selectedReportId: this.selectedReportId,
+        onSelectReportId: (id) => {
+          void this.openReport(id, { preserveRoundNav: true });
+        },
+      })
+    ) {
+      return;
+    }
     if (
       list &&
       handleListRovingKeyDown(ev, list, {

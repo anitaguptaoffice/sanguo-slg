@@ -1814,6 +1814,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **wave:39（CLIENT-223）战报列表坐标军情互链**：列表次行 **`formatBattleReportCoordinateTag`** + 可点 **`report-list-intel-jump-tag`**（`data-action="report-list-intel-jump"`）：优先打开军情并选中同源/最近目的格行军，无匹配时 **坐标复盘** 展开小地图格点（**CLIENT-191/142** 详情互链、**CLIENT-207** 时间窗/streak **不退化**；**CLIENT-220** 同步环可接 `stubIntelMinimapSyncAfterReportListJump`）。单测：`battleReportListIntelJump.test.ts`、`militaryFormat.test.ts`、`BattleReportPanel.test.ts`。
 
+**wave:41（CLIENT-239）战报列表密度与键盘焦点环**：列表行 **`report-list-density-row`** 含左侧 **`report-list-density-outcome-band`** 色带、**`report-list-density-timestamp`** 时间戳单行扫读与次行 **`report-list-density-coord`** 坐标（**CLIENT-125/190** 筛选 chip 与详情 outcome 色带 **不退化**）。面板聚焦时 **j/k** 或 **↑/↓**（列表行已聚焦时仍由 roving 处理 ↑/↓）驱动相邻 `report_id` 并附加 **`report-list-keyboard-focus-ring`**（**CLIENT-094/158** 详情 ←/→ 与 Alt+←/→ **不退化**）。根节点 **`data-battle-report-list-keyboard="off"`** 可关闭列表键盘导航。单测：`battleReportListDensityKeyboard.test.ts`、`BattleReportPanel.test.ts`。
+
 **wave:37（CLIENT-208）**：战报详情 **`battle-report-outcome-band`** 下方只读 **`battle-report-round-summary-strip`**（`formatBattleReportRoundSummaryStrip`：首/末回合号 + 攻/守伤亡 map 摘要，沿用既有战报 detail JSON，**无** proto 扩量）；**CLIENT-065/207** 时间窗筛选后列表仍高亮当前 `report_id`；**CLIENT-125** 回合跳转表与折叠 **不退化**。单测：`militaryFormat.test.ts`（`formatBattleReportRoundSummaryStrip`）、`BattleReportPanel.test.ts`。
 
 **wave:39（CLIENT-224）**：战报详情回合摘要条内 **`report-round-summary-intel-link`**（`data-action="open-intel-for-report"`）只读跳转军情并选中 `resolveMarchIdForBattleReport` 解析的同源 `report_id`/坐标最近 `march_id` 行；**CLIENT-208** 摘要文案、**CLIENT-178** 军事汇总条与 **CLIENT-205** 军情信息卡 **不退化**（**无** proto 扩量）。单测：`battleReportRoundSummaryIntelLink.test.ts`、`BattleReportPanel.test.ts`。
