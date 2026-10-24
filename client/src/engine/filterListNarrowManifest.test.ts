@@ -104,6 +104,19 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(LEADERBOARD_TOP_DENSITY_LINE_CLASS);
   });
 
+  it("CLIENT-195 exposes wave:35 world intel battle mail daily bag shop narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain("world-tile-info-card");
+    expect(html).toContain("minimap-focus-pulse");
+    expect(html).toContain("march-form-coord-sync-highlight");
+    expect(html).toContain("battle-report-outcome-band");
+    expect(html).toContain("mail-claim-inline-pulse");
+    expect(html).toContain("daily-claim-progress-pulse");
+    expect(html).toContain("bag-row-inline-state");
+    expect(html).toContain("shop-price-wallet-gap-line");
+    expect(html).toContain("battle-report-replay-v1");
+  });
+
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(`padding-bottom: ${FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX}px`);

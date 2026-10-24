@@ -178,3 +178,13 @@ export {
   CITY_SLOT_PULSE_SELECTOR,
   LEADERBOARD_TOP_DENSITY_LINE_SELECTOR,
 } from "@/engine/wave34MainCityHeroRankSocialHudNarrowManifest";
+
+/** CLIENT-195: wave:35 世界·军情·战报·邮件·日常·背包·商城组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_195_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client195NarrowManifestCenterPanelId,
+  WAVE35_WORLD_INTEL_BATTLE_REPORT_MAIL_DAILY_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WORLD_TILE_INFO_CARD_SELECTOR,
+  BATTLE_REPORT_OUTCOME_BAND_SELECTOR,
+  MINIMAP_BATTLE_REPLAY_PULSE_SELECTOR,
+} from "@/engine/wave35WorldIntelBattleReportMailDailyNarrowManifest";
