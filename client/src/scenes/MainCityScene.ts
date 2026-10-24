@@ -205,6 +205,15 @@ import {
   setHudCenterPanelDeepLinkRefreshStamp,
 } from "@/net/mailTabUnreadSweep";
 import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
+import {
+  HUD_TODO_MERGED_SWEEP_FACET_ATTR,
+  HUD_TODO_MERGED_SWEEP_LINE_ROLE,
+  resolveToolbarPanelFromHudTodo,
+  scheduleToolbarPanelDeepLinkPulse,
+  toolbarPanelActionFromHudTodo,
+  type HudTodoMergedSweepCounts,
+  type HudTodoMergedSweepFacet,
+} from "@/net/hudTodoMergedSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
@@ -1050,6 +1059,16 @@ export class MainCityScene implements Scene {
     if (!btn) return;
     const action = btn.getAttribute("data-action");
     if (isToolbarBadgeDeepLinkClick(ev)) {
+      if (action === "toggle-chat") {
+        const social = hudTodoSocialBadgesFromChatSummary(
+          this.chatUnreadTracker.getSummary(this.social.getGuildId()),
+        );
+        if (social.chatToolbar > 0) {
+          if (!this.social.isChatOpen()) this.social.toggleChat();
+          this.pulseToolbarPanelDeepLink("social");
+          return;
+        }
+      }
       const toolbarAction = action as HudTodoToolbarAction | null;
       if (
         toolbarAction === "toggle-mail" ||
@@ -1071,6 +1090,7 @@ export class MainCityScene implements Scene {
               unclaimedCount: target.unclaimedCount,
             },
           });
+          this.pulseToolbarPanelDeepLink("mail");
           return;
         }
         if (target.kind === "daily") {
@@ -1079,11 +1099,13 @@ export class MainCityScene implements Scene {
             claimableCount: target.claimableCount,
           });
           this.updateDailyToolbarBadge(0);
+          this.pulseToolbarPanelDeepLink("daily");
           return;
         }
         if (target.kind === "queue-building") {
           this.queuePanels.openFromTodoBadge(target.slotKey);
           this.updateQueueToolbarBadge(0);
+          this.pulseToolbarPanelDeepLink("queue");
           return;
         }
         if (target.kind === "battle-report") {
@@ -2050,9 +2072,12 @@ export class MainCityScene implements Scene {
   }
 
   private onHudClick(ev: Event): void {
-    const facetBtn = (ev.target as HTMLElement).closest(`[${HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR}]`);
+    const facetBtn = (ev.target as HTMLElement).closest(
+      `[${HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR}], [${HUD_TODO_MERGED_SWEEP_FACET_ATTR}]`,
+    );
     if (facetBtn instanceof HTMLElement) {
-      const facet = facetBtn.getAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR) as
+      const facet = (facetBtn.getAttribute(HUD_TODO_MERGED_SWEEP_FACET_ATTR) ??
+        facetBtn.getAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR)) as
         | HudCenterPanelDeepLinkFacet
         | null;
       if (facet) {
@@ -2084,7 +2109,7 @@ export class MainCityScene implements Scene {
     });
   }
 
-  private centerPanelDeepLinkCounts(): HudCenterPanelDeepLinkCounts {
+  private hudTodoMergedSweepCounts(): HudTodoMergedSweepCounts {
     const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
     const social = hudTodoSocialBadgesFromChatSummary(
       this.chatUnreadTracker.getSummary(this.social.getGuildId()),
@@ -2097,12 +2122,16 @@ export class MainCityScene implements Scene {
     };
   }
 
+  private centerPanelDeepLinkCounts(): HudCenterPanelDeepLinkCounts {
+    return this.hudTodoMergedSweepCounts();
+  }
+
   private appendHudCenterPanelDeepLinkLine(): void {
     const counts = this.centerPanelDeepLinkCounts();
     const segments = hudCenterPanelDeepLinkSegments(counts);
     if (!segments.length) return;
     const wrap = document.createElement("span");
-    wrap.className = "hud-center-panel-deeplink";
+    wrap.className = "hud-center-panel-deeplink hud-todo-merged-sweep";
     wrap.setAttribute("data-role", HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
     if (this.hudCenterPanelDeepLinkRefreshStamp > 0) {
       setHudCenterPanelDeepLinkRefreshStamp(wrap, this.hudCenterPanelDeepLinkRefreshStamp);
@@ -2123,6 +2152,7 @@ export class MainCityScene implements Scene {
       btn.type = "button";
       btn.className = "hud-center-panel-deeplink-seg";
       btn.setAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR, seg.facet);
+      btn.setAttribute(HUD_TODO_MERGED_SWEEP_FACET_ATTR, seg.facet);
       btn.setAttribute("title", `打开${seg.label}`);
       btn.setAttribute("aria-label", `HUD 深链：${seg.label}`);
       btn.textContent = seg.label;
@@ -2136,6 +2166,13 @@ export class MainCityScene implements Scene {
     const action = centerPanelTabToolbarAction(tab);
     const btn = this.toolbarTrigger(action);
     scheduleCenterPanelTabPulse(btn);
+  }
+
+  private pulseToolbarPanelDeepLink(panel: HudTodoMergedSweepFacet): void {
+    const counts = this.hudTodoMergedSweepCounts();
+    if (!resolveToolbarPanelFromHudTodo(panel, counts)) return;
+    const action = toolbarPanelActionFromHudTodo(panel);
+    scheduleToolbarPanelDeepLinkPulse(this.toolbarTrigger(action));
   }
 
   private openHudCenterPanelDeepLink(facet: HudCenterPanelDeepLinkFacet): void {
@@ -2179,6 +2216,7 @@ export class MainCityScene implements Scene {
       this.social.toggleChat();
     }
     this.pulseCenterPanelToolbarTab(tab);
+    this.pulseToolbarPanelDeepLink(tab);
     this.status = `已打开中心面板（${tab}）`;
     this.renderHud();
   }

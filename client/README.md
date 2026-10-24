@@ -1164,6 +1164,8 @@ cd client && npm install && npm run dev
 
 **CLIENT-202（HUD 中心四面板 tab 深链余量扫读）**：顶栏 **`data-role="hud-center-panel-deeplink-line"`** 由 **`formatHudCenterPanelDeepLinkLine`** / **`hudCenterPanelDeepLinkSegments`** 合并邮件/日常（与 **CLIENT-193** `formatHudTodoSweepLine` 同源文案）、队列建造中、聊天未读；分段点击 **`resolveCenterPanelTabFromHudTodo`** 打开邮件/日常/队列/聊天中心面板并复用 **CLIENT-134/162** 角标深链落点（无新 HUD RPC）。对应底栏 tab 触发 **`center-panel-tab-pulse`** 1.5s；**CLIENT-186** 队列日常锚点与 **CLIENT-193** 底栏 `title` 扫读 **可叠加**。单测：`hudCenterPanelDeepLink.test.ts`、`hudCenterTodo.test.ts`；`cd client && npm test` 绿。
 
+**CLIENT-216（HUD 待办合并扫读行与底栏四面板深链脉冲）**：待办区 **`.hud-todo-merged-sweep`** 合并行由 **`formatHudTodoMergedSweepLine`**（邮件/日常/队列/社交单行扫读，与 **CLIENT-202/162/209** 文案同源）驱动；分段点击或底栏角标深链 **`resolveToolbarPanelFromHudTodo`** 打开对应面板并触发底栏 **`toolbar-panel-deep-link-pulse`** 1.5s（**CLIENT-118** 四态图标与 **CLIENT-202** `center-panel-tab-pulse` **不退化**；无新 HUD RPC）。单测：`hudTodoMergedSweep.test.ts`；`cd client && npm test` 绿。
+
 **CLIENT-209（邮件分 tab 未读与日常可领取 HUD 待办联动扫读）**：邮件面板 **`formatMailTabUnreadSweepLine`**（各 tab 未读/未领附件只读计数，与 **CLIENT-177** tab 角标同源）+ **`formatMailPanelHudCombinedSweepLine`**（**`formatQuestClaimHudLinkLine`** 首条可领 `#quest_cfg_id` 与邮件未读合并；**CLIENT-193** 底栏 `formatHudTodoSweepLine` **不退化**）。HUD 轮询 bump **`data-hud-center-panel-deeplink-stamp`** 与顶栏 **CLIENT-202** 深链行、邮件扫读行共用，并触发 **`mail-tab-hud-sync-pulse`** 1.5s（无新 content RPC）。单测：`mailTabUnreadSweep.test.ts`、`questClaimHudLink.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
