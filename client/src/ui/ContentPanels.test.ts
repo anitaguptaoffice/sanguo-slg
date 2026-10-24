@@ -175,6 +175,41 @@ describe("ContentPanels bag cfg summary and source tag (CLIENT-175)", () => {
   });
 });
 
+describe("ContentPanels recruit item gap bag highlight (CLIENT-201)", () => {
+  it("applies bag-hero-item-gap-highlight on recruit deep link", async () => {
+    const mount = document.createElement("div");
+    const session = baseSession();
+    session.bag = [{ item_cfg_id: 2004, quantity: 1 }];
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({
+        items: [{ item_cfg_id: 2004, quantity: 1 }],
+      }),
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.openBagFromRecruitItemGapDeepLink({
+      bagCategory: "all",
+      highlightItemId: 2004,
+      returnHeroId: 0,
+      recruitItemGap: true,
+      openSource: "hero",
+    });
+    await vi.waitFor(() =>
+      expect(mount.querySelector('.bag-stack-row[data-item-cfg-id="2004"]')).toBeTruthy(),
+    );
+    const row = mount.querySelector('.bag-stack-row[data-item-cfg-id="2004"]');
+    expect(row?.classList.contains("item-highlight")).toBe(true);
+    expect(row?.classList.contains("bag-hero-item-gap-highlight")).toBe(true);
+  });
+});
+
 describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
   it("updates tab settlement wallet line when switching category tabs", async () => {
     const mount = document.createElement("div");

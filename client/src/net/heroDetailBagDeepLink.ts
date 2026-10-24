@@ -18,6 +18,8 @@ export type HeroBagDeepLinkQuery = {
   highlightItemId: number;
   returnHeroId: number;
   openSource?: BagOpenSource;
+  /** CLIENT-201：自招募表单道具缺口深链打开背包。 */
+  recruitItemGap?: boolean;
 };
 
 export type HeroDetailBagDeepLinkPick =
@@ -47,6 +49,7 @@ export function buildHeroBagDeepLinkQuery(input: {
   bagCategory?: BagClientCategory;
   returnHeroId?: number;
   openSource?: BagOpenSource;
+  recruitItemGap?: boolean;
 }): HeroBagDeepLinkQuery {
   const highlightItemId = Math.floor(Number(input.highlightItemId) || 0);
   const returnHeroId = Math.floor(Number(input.returnHeroId) || 0);
@@ -60,6 +63,7 @@ export function buildHeroBagDeepLinkQuery(input: {
     highlightItemId,
     returnHeroId,
     openSource: input.openSource,
+    recruitItemGap: input.recruitItemGap,
   };
 }
 
@@ -78,6 +82,9 @@ export function serializeHeroBagDeepLinkQuery(query: HeroBagDeepLinkQuery): stri
   if (query.openSource) {
     appendBagOpenSourceQuery(params, query.openSource);
   }
+  if (query.recruitItemGap) {
+    params.set("recruitItemGap", "1");
+  }
   return params.toString();
 }
 
@@ -95,11 +102,13 @@ export function parseHeroBagDeepLinkQuery(
     categorizeBagStackRow({ item_cfg_id: Math.floor(highlightItemId), quantity: 1 });
   const returnHeroId = Number(params.get("returnHeroId") ?? params.get("return_hero_id") ?? 0);
   const openSource = parseBagOpenSource(params.get(BAG_OPEN_SOURCE_QUERY_KEY));
+  const recruitItemGap = params.get("recruitItemGap") === "1";
   return buildHeroBagDeepLinkQuery({
     highlightItemId: Math.floor(highlightItemId),
     bagCategory,
     returnHeroId: Number.isFinite(returnHeroId) && returnHeroId > 0 ? Math.floor(returnHeroId) : 0,
     openSource: openSource ?? undefined,
+    recruitItemGap: recruitItemGap || undefined,
   });
 }
 

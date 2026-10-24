@@ -28,6 +28,10 @@ import {
 } from "@/net/heroListReturnState";
 import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
 import { USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL } from "@/net/useConsumableSubmitFeedback";
+import {
+  RECRUIT_FORM_INLINE_WARN_CLASS,
+  RECRUIT_GOTO_BAG_ITEM_GAP_ACTION,
+} from "@/net/recruitFormInlineHint";
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
@@ -599,6 +603,61 @@ describe("HeroMailPanels", () => {
     mount.querySelector('li[data-template-id="1002"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(preview?.textContent).toContain("云长");
+  });
+
+  it("shows recruit form inline hint, disables submit, and opens bag on item gap (CLIENT-201)", async () => {
+    const mount = document.createElement("div");
+    const onOpenBag = vi.fn();
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            template_name: "玄德",
+            recruit_cost: { food: 10 },
+            recruit_item: { item_cfg_id: 2004, quantity: 2 },
+          },
+        ],
+        total_count: 1,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session = sessionBase();
+    session.wallet = { food: 100 };
+    session.bag = [{ item_cfg_id: 2004, quantity: 0 }];
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onOpenBag,
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const hint = mount.querySelector('[data-role="recruit-form-inline-hint"]');
+    expect(hint?.textContent).toContain("校验");
+    expect(hint?.classList.contains(RECRUIT_FORM_INLINE_WARN_CLASS)).toBe(true);
+    const recruitBtn = mount.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement;
+    expect(recruitBtn.disabled).toBe(true);
+    const bagBtn = mount.querySelector(
+      `[data-action="${RECRUIT_GOTO_BAG_ITEM_GAP_ACTION}"]`,
+    ) as HTMLButtonElement;
+    expect(bagBtn.classList.contains("hidden")).toBe(false);
+    bagBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onOpenBag).toHaveBeenCalledWith(
+      expect.objectContaining({ highlightItemId: 2004, recruitItemGap: true }),
+    );
   });
 
   it("recruit template row shows wallet sweep deficit and view-hero deep link (CLIENT-166)", async () => {

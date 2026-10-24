@@ -1,11 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildHeroBagDeepLinkQuery,
   parseHeroBagDeepLinkQuery,
   pickHeroDetailBagDeepLink,
   serializeHeroBagDeepLinkQuery,
 } from "@/net/heroDetailBagDeepLink";
 
 describe("heroBagDeepLinkQuery (CLIENT-165)", () => {
+  it("round-trips recruitItemGap flag (CLIENT-201)", () => {
+    const q = buildHeroBagDeepLinkQuery({
+      highlightItemId: 2004,
+      bagCategory: "cultivation",
+      recruitItemGap: true,
+      openSource: "hero",
+    });
+    const raw = serializeHeroBagDeepLinkQuery(q);
+    expect(raw).toContain("recruitItemGap=1");
+    const parsed = parseHeroBagDeepLinkQuery(raw);
+    expect(parsed?.recruitItemGap).toBe(true);
+    expect(parsed?.highlightItemId).toBe(2004);
+  });
+
   it("round-trips bagCategory and highlightItemId", () => {
     const q = {
       bagCategory: "cultivation" as const,

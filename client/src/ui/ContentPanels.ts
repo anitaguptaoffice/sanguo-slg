@@ -107,6 +107,7 @@ import {
   scrollBagItemRowIntoView,
   writeHeroBagDeepLinkQuerySession,
 } from "@/net/heroDetailBagDeepLink";
+import { BAG_HERO_ITEM_GAP_HIGHLIGHT_CLASS } from "@/net/recruitFormInlineHint";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type QuestProgress = {
@@ -139,6 +140,8 @@ export class ContentPanels {
   private selectedOfferId = 1001;
   private bagHighlightItemId = 0;
   private bagHighlightItemIds = new Set<number>();
+  /** CLIENT-201：招募道具缺口深链高亮（叠加 CLIENT-165 item-highlight）。 */
+  private bagRecruitItemGapHighlight = false;
   private shopCategory: ShopOfferClientCategory = "all";
   private bagCategory: BagClientCategory = readBagCategoryTabSession();
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
@@ -248,6 +251,14 @@ export class ContentPanels {
     this.openBagWithDeepLink(link, link.openSource ?? "hero");
   }
 
+  /** 招募表单养成道具缺口（CLIENT-201）：`bag-hero-item-gap-highlight` + 深链 query。 */
+  openBagFromRecruitItemGapDeepLink(link: HeroBagDeepLinkQuery): void {
+    this.openBagWithDeepLink(
+      { ...link, recruitItemGap: true, openSource: link.openSource ?? "hero" },
+      link.openSource ?? "hero",
+    );
+  }
+
   private openBagWithDeepLink(link: HeroBagDeepLinkQuery, source: BagOpenSource): void {
     writeBagOpenSourceSession(source);
     const highlightItemId = link.highlightItemId;
@@ -261,6 +272,7 @@ export class ContentPanels {
       ...link,
       openSource: link.openSource ?? source,
     });
+    this.bagRecruitItemGapHighlight = link.recruitItemGap === true;
     this.bagHighlightItemIds = new Set(ids);
     this.bagHighlightItemId = highlightItemId;
     if (highlightItemId > 0) {
@@ -644,6 +656,9 @@ export class ContentPanels {
           (this.bagHighlightItemId && row.item_cfg_id === this.bagHighlightItemId))
       ) {
         li.classList.add("item-highlight");
+        if (this.bagRecruitItemGapHighlight) {
+          li.classList.add(BAG_HERO_ITEM_GAP_HIGHLIGHT_CLASS);
+        }
       }
       ul.appendChild(li);
     }

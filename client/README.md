@@ -1533,6 +1533,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 2. 成功后 `GetCityState`（或 `cityStateFetch`）刷新会话 **wallet**，列表/预览 **余/需** 次行即时递减，并短暂 **`recruit-success-pulse`（1.5s）**；粮木铁石仍可走顶栏 **CLIENT-051** 脉冲。
 3. 失败仍走 **CLIENT-173** `formatPanelGatewayError` 内联区；单测：`recruitSubmitFeedback.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（招募表单行内校验与背包道具缺口深链 CLIENT-201）
+
+在 [CLIENT-166](#手动验收招募钱包扫读与详情互跳-client-166) 钱包扫读、[CLIENT-183](#手动验收将领招募提交行内反馈-client-183) 提交脉冲与 [CLIENT-165](#手动验收将领详情养成道具缺口与背包深链-client-165) 背包深链基础上（**非** wave:26 商城购买脉冲；**无** IAP/新 SKU）：
+
+1. 选中招募模板：预览下方 **`formatRecruitFormInlineHint`** 只读校验行（模板名 + 币种 **余/需**）；不足时带 **`recruit-form-inline-warn`** 且主钮 **disabled**（与 `recruit-form-error` / **CLIENT-057** 预校验并存）。
+2. **`recruit_item` 道具缺口**：校验行旁 **打开背包** 深链（`recruitItemGap=1` + `highlightItemId`）；背包堆叠行叠加 **`bag-hero-item-gap-highlight`**（保留 **CLIENT-165** `item-highlight` 与 **CLIENT-194** 行内态）。
+3. `RecruitHero` 成功仍走 **CLIENT-183** `recruit-success-pulse`；单测：`recruitFormInlineHint.test.ts`、`heroDetailBagDeepLink.test.ts`、`HeroMailPanels.test.ts`、`ContentPanels.test.ts`。
+
 ### 手动验收（将领详情养成对比 CLIENT-072）
 
 在 [CLIENT-014](#手动验收将领详情-client-014) / [CLIENT-056](#手动验收将领招募钱包对比-client-056) 基础上：

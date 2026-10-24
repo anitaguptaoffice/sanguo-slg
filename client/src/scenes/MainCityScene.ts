@@ -531,10 +531,18 @@ export class MainCityScene implements Scene {
           .then(() => this.renderHud());
       },
       (link) => {
-        this.content.openBagFromHeroDeepLink(link);
-        this.status = link.highlightItemId > 0
-          ? `背包已高亮养成道具 ${link.highlightItemId}（${link.bagCategory}），请「使用道具」`
-          : "背包暂无养成消耗品（将魂碎晶等）";
+        if (link.recruitItemGap) {
+          this.content.openBagFromRecruitItemGapDeepLink(link);
+          this.status =
+            link.highlightItemId > 0
+              ? `背包已高亮招募所需道具 ${link.highlightItemId}（${link.bagCategory}）`
+              : "背包暂无招募所需道具";
+        } else {
+          this.content.openBagFromHeroDeepLink(link);
+          this.status = link.highlightItemId > 0
+            ? `背包已高亮养成道具 ${link.highlightItemId}（${link.bagCategory}），请「使用道具」`
+            : "背包暂无养成消耗品（将魂碎晶等）";
+        }
         this.renderHud();
       },
       (keys) => {
