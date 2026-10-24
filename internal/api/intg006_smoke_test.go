@@ -158,9 +158,12 @@ func smokeFailf(t *testing.T, step string, format string, args ...any) {
 func startData002SmokeGateway(t *testing.T, log *slog.Logger, pool *pgxpool.Pool, worldStore *world.PGStore) (*api.Server, *httptest.Server, string) {
 	t.Helper()
 	ctx := context.Background()
-	domHub := domestic.NewHub(time.Now)
+	syncClk := &api.SmokeSyncClock{T: time.Now()}
+	domHub := domestic.NewHub(syncClk.Now)
 	domHub.UseStore(domestic.NewPGStore(pool), intg006ServerID, 0)
-	apiSrv := api.NewServer(log, pool, world.NewService(worldStore), domHub, march.NewHub(time.Now))
+	apiSrv := api.NewServer(log, pool, world.NewService(worldStore), domHub, march.NewHub(syncClk.Now))
+	apiSrv.SetClock(syncClk.Now)
+	apiSrv.BindSmokeSyncClock(syncClk)
 	if err := apiSrv.WireM4Content(ctx); err != nil {
 		t.Fatal(err)
 	}

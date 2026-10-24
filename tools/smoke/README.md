@@ -2,7 +2,19 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## 将领 L1–L5 网关冒烟（INTG-044，推荐）
+
+在 INTG-043 全量断言之上覆盖 **L1 客栈**（`hero.v1.ListHotelRecruitCandidates` 打印 candidates 长度 + `hotel_level`/`hero_capacity`/`hero_owned`；无客栈建筑 **skip** + hint；可选 `RefreshHotelRecruitPool` / `RecruitHotelCandidate` 成功或容量/缺金错误 hint）、**L2 出征绑将**（`military.v1.StartMarch` 必填 `hero_id`、非空闲拒绝、出征 status 与 Hub 结束后恢复 idle；沿用 `smokeEnsureMarchHeroID`）、**L3 赏赐**（`hero.v1.LargessHero` 忠诚 delta + 冷却拒绝 hint；钱包不足 **skip** + hint）、**L4 升级**（`hero.v1.UpgradeHero` 经验足够 level+1 / 不足拒绝；`GetHeroDetail` 暴露 `exp`/`exp_toward_next`/`upgrade_exp_required`，M1≤20）、**L5 城主**（`SetCityChief` / `GetCityChief` / `ClearCityChief` 一城一职；出征中拒绝任职；卸任恢复 idle）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量；**不跑 H5**；**无**俘虏/结交。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG044HeroL1L5SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-044:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 46 网关冒烟（INTG-043，推荐）
 
