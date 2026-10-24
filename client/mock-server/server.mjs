@@ -220,6 +220,10 @@ function applyEvidencePreset(state, preset) {
       { hero_id: 8002, template_cfg_id: 1002, level: 8, loyalty: 72 },
       { hero_id: 8003, template_cfg_id: 1003, level: 6, loyalty: 80 },
       { hero_id: 8004, template_cfg_id: 1004, level: 5, loyalty: 70 },
+      { hero_id: 8005, template_cfg_id: 1005, level: 10, loyalty: 85 },
+      { hero_id: 8006, template_cfg_id: 1006, level: 7, loyalty: 78 },
+      { hero_id: 8007, template_cfg_id: 1007, level: 15, loyalty: 92 },
+      { hero_id: 8008, template_cfg_id: 1008, level: 11, loyalty: 81 },
     ];
     return;
   }
@@ -312,6 +316,10 @@ const HERO_TEMPLATE_DETAIL_META = {
   1002: { template_name: "关羽", template_code: "green_dragon" },
   1003: { template_name: "张飞", template_code: "thunder_spear" },
   1004: { template_name: "赵云", template_code: "silver_rider" },
+  1005: { template_name: "黄忠", template_code: "sun_archer" },
+  1006: { template_name: "马超", template_code: "wind_cavalry" },
+  1007: { template_name: "诸葛亮", template_code: "jade_strategist" },
+  1008: { template_name: "周瑜", template_code: "fire_general" },
 };
 
 function mockHeroDetailPayload(row) {
