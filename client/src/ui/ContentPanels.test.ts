@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
+import {
+  applyBagPanelScrollTop,
+  readBagCategoryScrollState,
+  readBagPanelScrollTop,
+} from "@/net/bagCategoryScroll";
 import { PANEL_GATEWAY_RETRY_CLASS } from "@/net/panelGatewayError";
 import { ContentPanels } from "@/ui/ContentPanels";
 
@@ -73,24 +78,45 @@ describe("ContentPanels narrow scroll (CLIENT-095 + CLIENT-119)", () => {
     const cultTab = mount.querySelector('[data-bag-category="cultivation"]') as HTMLButtonElement;
     cultTab.click();
     expect(list()).toEqual(["2017"]);
-    expect(sessionStorage.getItem("bag-category-tab-v1")).toBe("cultivation");
+    expect(sessionStorage.getItem("bag-category-tab-v1")).toContain('"tab":"cultivation"');
   });
 
-  it("resets bag scroll body when toggling open", () => {
+  it("CLIENT-210 restores bag scroll when reopening and across category tabs", async () => {
+    sessionStorage.removeItem("bag-category-tab-v1");
     const mount = document.createElement("div");
+    const session = baseSession();
+    session.bag = [
+      { item_cfg_id: 2001, quantity: 2 },
+      { item_cfg_id: 2017, quantity: 1 },
+    ];
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({ items: session.bag }),
+    } as unknown as GatewayPort;
     const panels = new ContentPanels(
       mount,
-      minimalGateway(),
-      () => baseSession(),
-      () => {},
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
       () => {},
     );
     panels.attach();
-    const body = mount.querySelector('[data-center-panel="bag"] .panel-scroll-body') as HTMLElement;
-    body.scrollTop = 120;
+    panels.toggleBag();
+    await vi.waitFor(() => expect(mount.querySelector(".bag-stack-row")).toBeTruthy());
+    const bagRoot = mount.querySelector('[data-center-panel="bag"]') as HTMLElement;
+    applyBagPanelScrollTop(bagRoot, 120);
     panels.toggleBag();
     panels.toggleBag();
-    expect(body.scrollTop).toBe(0);
+    await vi.waitFor(() => expect(readBagPanelScrollTop(bagRoot)).toBe(120));
+    const cultTab = mount.querySelector('[data-bag-category="cultivation"]') as HTMLButtonElement;
+    cultTab.click();
+    expect(readBagCategoryScrollState().scrollTops.all).toBe(120);
+    applyBagPanelScrollTop(bagRoot, 40);
+    const allTab = mount.querySelector('[data-bag-category="all"]') as HTMLButtonElement;
+    allTab.click();
+    expect(readBagCategoryScrollState().scrollTops.cultivation).toBe(40);
+    expect(readBagCategoryScrollState().scrollTops.all).toBe(120);
+    await vi.waitFor(() => expect(readBagPanelScrollTop(bagRoot)).toBe(120));
   });
 });
 
@@ -251,6 +277,44 @@ describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
     otherTab.click();
     expect(sweep()?.textContent).toMatch(/本类余额：.*粮 800/);
     expect(sweep()?.textContent).not.toMatch(/币 50/);
+  });
+});
+
+describe("ContentPanels bag shop return highlight (CLIENT-210)", () => {
+  it("highlights last viewed stack when returning from shop", async () => {
+    sessionStorage.removeItem("bag-shop-return-v1");
+    const mount = document.createElement("div");
+    const session = baseSession();
+    session.bag = [{ item_cfg_id: 2001, quantity: 3 }];
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({ items: session.bag }),
+      listShopShelf: vi.fn().mockResolvedValue({ offers: [] }),
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.toggleBag();
+    await vi.waitFor(() => expect(mount.querySelector(".bag-stack-row")).toBeTruthy());
+    const itemSel = mount.querySelector('[data-field="item-id"]') as HTMLSelectElement;
+    itemSel.value = "2001";
+    itemSel.dispatchEvent(new Event("change", { bubbles: true }));
+    panels.toggleShop();
+    await vi.waitFor(() => expect(gateway.listShopShelf).toHaveBeenCalled());
+    panels.toggleBag();
+    panels.toggleBag();
+    await vi.waitFor(() =>
+      expect(
+        mount
+          .querySelector('.bag-stack-row[data-item-cfg-id="2001"]')
+          ?.classList.contains("bag-row-return-highlight"),
+      ).toBe(true),
+    );
   });
 });
 

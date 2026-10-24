@@ -48,7 +48,7 @@ describe("bagCategory (CLIENT-153)", () => {
     expect(parseBagCategoryTabSessionValue("cultivation")).toBe("cultivation");
     expect(parseBagCategoryTabSessionValue("invalid")).toBeNull();
     writeBagCategoryTabSession("consumable", mock);
-    expect(storage.get(BAG_CATEGORY_TAB_SESSION_KEY)).toBe("consumable");
     expect(readBagCategoryTabSession(mock)).toBe("consumable");
+    expect(storage.get(BAG_CATEGORY_TAB_SESSION_KEY)).toContain('"tab":"consumable"');
   });
 });
