@@ -322,6 +322,23 @@ import {
   type PersuadeTarget,
 } from "@/net/persuadeState";
 import {
+  renderComingHeroList,
+  setComingHeroFormError,
+  syncComingAcceptButton,
+  syncComingAcceptPreview,
+  syncComingListRefreshButton,
+  syncComingRejectButton,
+} from "@/net/comingHeroPanel";
+import {
+  canConfirmComingAccept,
+  filterComingForCity,
+  formatComingHeroGatewayError,
+  parseListComingHeroesResponse,
+  parseTryAcceptComingResponse,
+  type ComingAcceptPreview,
+  type ComingHeroRow,
+} from "@/net/comingHeroState";
+import {
   pickRestoredHeroId,
   readHeroDetailSelectedSession,
   writeHeroDetailSelectedSession,
@@ -467,6 +484,14 @@ export class HeroMailPanels {
   private selectedPersuadeNpcId = 0;
   private persuadeListInflight = false;
   private persuadePrimaryInflight = false;
+  private comingHeroesAll: ComingHeroRow[] = [];
+  private comingHeroes: ComingHeroRow[] = [];
+  private selectedComingHeroId = 0;
+  private comingAcceptPreview: ComingAcceptPreview | null = null;
+  private comingListInflight = false;
+  private comingTryInflight = false;
+  private comingAcceptInflight = false;
+  private comingRejectInflight = false;
   private heroesRefreshInflight = false;
   private heroListLastRefreshedAtMs = 0;
   /** CLIENT-199：自列表打开详情时保留筛选摘要；返回列表后清空。 */
@@ -564,6 +589,7 @@ export class HeroMailPanels {
     this.syncHotelRecruitUi();
     this.syncCaptiveHeroUi();
     this.syncPersuadeUi();
+    this.syncComingHeroUi();
   }
 
   private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
@@ -680,6 +706,7 @@ export class HeroMailPanels {
       void this.refreshHotelCandidates();
       void this.refreshCaptiveHeroes();
       void this.refreshPersuadeTargets();
+      void this.refreshComingHeroes();
     }
     this.syncHeroPanelFocusTrap();
   }
@@ -1353,6 +1380,167 @@ export class HeroMailPanels {
     }
   }
 
+  private selectedComingHero(): ComingHeroRow | undefined {
+    return this.comingHeroes.find((c) => c.hero_id === this.selectedComingHeroId);
+  }
+
+  private applyComingListPayload(res: unknown, opts?: { keepSelection?: boolean }): void {
+    this.comingHeroesAll = parseListComingHeroesResponse(res);
+    const cityId = this.cityId();
+    this.comingHeroes = filterComingForCity(this.comingHeroesAll, cityId);
+    if (
+      !opts?.keepSelection ||
+      !this.comingHeroes.some((c) => c.hero_id === this.selectedComingHeroId)
+    ) {
+      this.selectedComingHeroId = this.comingHeroes[0]?.hero_id ?? 0;
+    }
+    this.comingAcceptPreview = null;
+    this.syncComingHeroUi();
+    if (this.selectedComingHeroId > 0) void this.prefetchComingAcceptPreview();
+  }
+
+  private syncComingHeroUi(): void {
+    renderComingHeroList(this.heroPanel, this.comingHeroes, this.selectedComingHeroId);
+    syncComingAcceptPreview(this.heroPanel, this.selectedComingHero(), this.comingAcceptPreview);
+    const canSubmit = canConfirmComingAccept(this.comingAcceptPreview, this.selectedComingHeroId ?? 0);
+    syncComingListRefreshButton(this.heroPanel, this.comingListInflight);
+    syncComingAcceptButton(
+      this.heroPanel,
+      this.comingAcceptInflight,
+      this.comingTryInflight,
+      canSubmit.ok,
+    );
+    syncComingRejectButton(
+      this.heroPanel,
+      this.comingRejectInflight,
+      (this.selectedComingHeroId ?? 0) > 0,
+    );
+  }
+
+  private async refreshComingHeroes(): Promise<void> {
+    if (this.comingListInflight) return;
+    const sid = this.serverId();
+    const cityId = this.cityId();
+    if (!cityId) {
+      setComingHeroFormError(this.heroPanel, "尚未进入城池，无法拉取来投列表");
+      return;
+    }
+    this.comingListInflight = true;
+    setComingHeroFormError(this.heroPanel, null);
+    this.syncComingHeroUi();
+    this.onStatus("拉取来投列表…");
+    try {
+      const res = await this.gateway.listComingHeroes(sid);
+      this.applyComingListPayload(res);
+      this.onStatus(`来投 ${this.comingHeroes.length} 名（本城）`);
+    } catch (e) {
+      const msg = formatComingHeroGatewayError(e);
+      setComingHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.comingListInflight = false;
+      this.syncComingHeroUi();
+    }
+  }
+
+  private async prefetchComingAcceptPreview(): Promise<void> {
+    const coming = this.selectedComingHero();
+    const heroId = coming?.hero_id ?? 0;
+    const cityId = coming?.city_id || this.cityId();
+    const sid = this.serverId();
+    if (!heroId || !cityId) return;
+    if (this.comingTryInflight) return;
+    this.comingTryInflight = true;
+    this.comingAcceptPreview = null;
+    this.syncComingHeroUi();
+    try {
+      const res = await this.gateway.tryAcceptComing(sid, cityId, heroId);
+      this.comingAcceptPreview = parseTryAcceptComingResponse(res);
+    } catch (e) {
+      const msg = formatComingHeroGatewayError(e);
+      setComingHeroFormError(this.heroPanel, msg);
+    } finally {
+      this.comingTryInflight = false;
+      this.syncComingHeroUi();
+    }
+  }
+
+  private async confirmComingAccept(): Promise<void> {
+    if (this.comingAcceptInflight) return;
+    const coming = this.selectedComingHero();
+    const gate = canConfirmComingAccept(this.comingAcceptPreview, coming?.hero_id ?? 0);
+    if (!gate.ok) {
+      setComingHeroFormError(this.heroPanel, gate.reason ?? "无法接受");
+      return;
+    }
+    const sid = this.serverId();
+    const cityId = coming?.city_id || this.cityId();
+    const heroId = coming?.hero_id ?? 0;
+    if (!cityId || !heroId) {
+      setComingHeroFormError(this.heroPanel, "请先选择来投将领");
+      return;
+    }
+    this.comingAcceptInflight = true;
+    setComingHeroFormError(this.heroPanel, null);
+    this.syncComingHeroUi();
+    this.onStatus(`接受 ${coming?.display_name ?? "来投将领"}…`);
+    try {
+      const res = (await this.gateway.sureAcceptComing(sid, cityId, heroId)) as {
+        hero_id?: number;
+        display_name?: string;
+        level?: number;
+        loyalty?: number;
+      };
+      await this.syncEconomyAfterRecruit();
+      if (res.hero_id) {
+        this.selectedHeroId = res.hero_id;
+        writeHeroDetailSelectedSession(res.hero_id);
+      }
+      await this.refreshHeroes();
+      if (res.hero_id) focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
+      const listRes = await this.gateway.listComingHeroes(sid);
+      this.applyComingListPayload(listRes, { keepSelection: false });
+      const name = res.display_name?.trim() || coming?.display_name || "新将领";
+      this.onStatus(`已接受 ${name}${res.hero_id ? `（#${res.hero_id}）` : ""}`);
+    } catch (e) {
+      const msg = formatComingHeroGatewayError(e);
+      setComingHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.comingAcceptInflight = false;
+      this.syncComingHeroUi();
+    }
+  }
+
+  private async rejectSelectedComing(): Promise<void> {
+    if (this.comingRejectInflight) return;
+    const coming = this.selectedComingHero();
+    const sid = this.serverId();
+    const cityId = coming?.city_id || this.cityId();
+    const heroId = coming?.hero_id ?? 0;
+    if (!cityId || !heroId) {
+      setComingHeroFormError(this.heroPanel, "请先选择来投将领");
+      return;
+    }
+    this.comingRejectInflight = true;
+    setComingHeroFormError(this.heroPanel, null);
+    this.syncComingHeroUi();
+    this.onStatus(`拒绝 ${coming?.display_name ?? "来投将领"}…`);
+    try {
+      await this.gateway.rejectComing(sid, cityId, heroId);
+      const listRes = await this.gateway.listComingHeroes(sid);
+      this.applyComingListPayload(listRes, { keepSelection: false });
+      this.onStatus(`已拒绝 ${coming?.display_name ?? "来投将领"}`);
+    } catch (e) {
+      const msg = formatComingHeroGatewayError(e);
+      setComingHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.comingRejectInflight = false;
+      this.syncComingHeroUi();
+    }
+  }
+
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
@@ -1405,6 +1593,15 @@ export class HeroMailPanels {
         <button type="button" data-action="persuade-primary">结交/游说</button>
         <p class="march-form-error-sibling hidden" data-role="persuade-form-error" role="alert"></p>
         <ul class="persuade-target-list hotel-candidate-list template-list" data-role="persuade-target-list"></ul>
+      </section>
+      <section class="coming-hero-section" data-role="coming-hero-section" aria-label="来投将领">
+        <h4>来投将领</h4>
+        <button type="button" data-action="refresh-coming-list">拉取来投列表</button>
+        <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
+        <button type="button" data-action="coming-accept-confirm">确认接受</button>
+        <button type="button" data-action="coming-reject">拒绝来投</button>
+        <p class="march-form-error-sibling hidden" data-role="coming-hero-form-error" role="alert"></p>
+        <ul class="coming-hero-list template-list" data-role="coming-hero-list"></ul>
       </section>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
@@ -3257,6 +3454,18 @@ export class HeroMailPanels {
       }
       return;
     }
+    const comingLi = (ev.target as HTMLElement).closest("li.coming-hero-row[data-coming-id]");
+    if (comingLi && !btn) {
+      const id = Number(comingLi.getAttribute("data-coming-id"));
+      if (id > 0) {
+        this.selectedComingHeroId = id;
+        setComingHeroFormError(this.heroPanel, null);
+        this.comingAcceptPreview = null;
+        this.syncComingHeroUi();
+        void this.prefetchComingAcceptPreview();
+      }
+      return;
+    }
     const li = (ev.target as HTMLElement).closest("li[data-hero-id]");
     if (li && !btn) {
       const id = Number(li.getAttribute("data-hero-id"));
@@ -3301,6 +3510,9 @@ export class HeroMailPanels {
     if (a === "captive-release") void this.releaseSelectedCaptive();
     if (a === "refresh-persuade-targets") void this.refreshPersuadeTargets();
     if (a === "persuade-primary") void this.runPersuadePrimary();
+    if (a === "refresh-coming-list") void this.refreshComingHeroes();
+    if (a === "coming-accept-confirm") void this.confirmComingAccept();
+    if (a === "coming-reject") void this.rejectSelectedComing();
     if (a === "recruit-hero") void this.recruitHero();
     if (a === "recruit-open-hero-detail") {
       const heroId = Number(btn.getAttribute("data-hero-id"));
