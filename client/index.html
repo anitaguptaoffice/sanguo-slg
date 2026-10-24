@@ -2535,6 +2535,24 @@
       .shop-list li.bag-shop-inline-state-residual-ring {
         animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1;
       }
+      @keyframes bag-shop-inline-state-residual-deep-ring-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        40% { box-shadow: 0 0 14px rgba(200, 100, 50, 0.95); outline: 3px solid rgba(200, 100, 50, 0.95); }
+        75% { box-shadow: 0 0 6px rgba(200, 100, 50, 0.55); outline: 2px solid rgba(200, 100, 50, 0.6); }
+      }
+      .bag-list li .bag-shop-inline-state-residual-deep-ring,
+      .bag-list li.bag-shop-inline-state-residual-deep-ring,
+      .shop-list li .bag-shop-inline-state-residual-deep-ring,
+      .shop-list li.bag-shop-inline-state-residual-deep-ring {
+        animation: bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1;
+      }
+      .bag-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring,
+      .bag-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring,
+      .shop-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring,
+      .shop-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring {
+        animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1,
+          bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1;
+      }
       @keyframes panel-return-source-highlight-residual-keyframes {
         0%, 100% { box-shadow: none; outline: none; }
         40% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.8); outline: 2px solid rgba(120, 180, 120, 0.85); }
@@ -2543,6 +2561,20 @@
       .bag-category-tabs .panel-return-source-highlight-residual,
       .shop-category-tabs .panel-return-source-highlight-residual {
         animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1;
+      }
+      @keyframes panel-return-source-highlight-residual-deep-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        45% { box-shadow: 0 0 16px rgba(90, 160, 90, 0.9); outline: 3px solid rgba(90, 160, 90, 0.9); }
+        80% { box-shadow: 0 0 8px rgba(90, 160, 90, 0.55); outline: 2px solid rgba(90, 160, 90, 0.65); }
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual-deep,
+      .shop-category-tabs .panel-return-source-highlight-residual-deep {
+        animation: panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1;
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep,
+      .shop-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep {
+        animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1,
+          panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1;
       }
       @keyframes hero-list-return-highlight-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
@@ -4074,8 +4106,12 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-shop-inline-state-residual-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li .bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list-density-scan-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-pin-refresh-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-template-inline-residual-summary,

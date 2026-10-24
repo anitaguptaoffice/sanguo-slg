@@ -52,18 +52,18 @@ import {
 import { highlightBagShopCategoryScanRow } from "@/net/bagShopCategoryScan";
 import {
   findBagShopInlineStateResidualTarget,
-  scheduleBagShopInlineStateResidualRing,
   shouldBagShopInlineStateResidualRing,
 } from "@/net/bagShopInlineStateResidual";
+import { pulseBagShopInlineStateResidualRings } from "@/net/bagShopInlineStateResidualDeep";
 import {
   clearPanelReturnSourceSession,
   findPanelReturnSourceCategoryTab,
-  highlightPanelReturnSourceCategoryResidual,
   readPanelReturnSourceSession,
   writePanelReturnSourceSession,
   type PanelReturnSourceKind,
   type PanelReturnSourcePayload,
 } from "@/net/panelReturnSourceHighlightResidual";
+import { pulsePanelReturnSourceCategoryResidualHighlights } from "@/net/panelReturnSourceHighlightResidualDeep";
 import {
   bagEmptyListClass,
   formatBagStackRowLabel,
@@ -322,7 +322,7 @@ export class ContentPanels {
     if (!payload) return;
     const root = targetPanel === "bag" ? this.bagPanel : this.shopPanel;
     const tab = findPanelReturnSourceCategoryTab(root, targetPanel, payload.categoryId);
-    highlightPanelReturnSourceCategoryResidual(tab, root);
+    pulsePanelReturnSourceCategoryResidualHighlights(tab, root);
   }
 
   private syncBagInlineStateResidualRing(): void {
@@ -333,7 +333,7 @@ export class ContentPanels {
       `li[data-item-cfg-id="${this.selectedItemId}"]`,
     );
     const target = findBagShopInlineStateResidualTarget(li, "bag");
-    scheduleBagShopInlineStateResidualRing(target, this.bagPanel);
+    pulseBagShopInlineStateResidualRings(target, this.bagPanel);
   }
 
   private syncShopInlineStateResidualRing(): void {
@@ -344,7 +344,7 @@ export class ContentPanels {
       `li[data-offer-id="${this.selectedOfferId}"]`,
     );
     const target = findBagShopInlineStateResidualTarget(li, "shop");
-    scheduleBagShopInlineStateResidualRing(target, this.shopPanel);
+    pulseBagShopInlineStateResidualRings(target, this.shopPanel);
   }
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
