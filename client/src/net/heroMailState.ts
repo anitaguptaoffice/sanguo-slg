@@ -3,6 +3,14 @@ import { formatMailTabEmptyHint, mailInboxFilterToEmptyTab } from "@/net/mailInb
 import { bagFromListPlayerBagResponse, mergeRewardBundle, mergeWallet, type BagStack } from "@/net/bagState";
 import { formatWalletPrice, itemLabel } from "@/net/contentFormat";
 import {
+  formatHeroGrowthCompareStrip,
+  formatHeroUpgradeProgressLine,
+  HERO_GROWTH_COMPARE_STRIP_CLASS,
+  HERO_UPGRADE_PROGRESS_BAR_CLASS,
+  HERO_UPGRADE_PROGRESS_BAR_FILL_CLASS,
+  HERO_UPGRADE_PROGRESS_LINE_CLASS,
+} from "@/net/heroGrowthCompareFormat";
+import {
   formatHeroUpgradeItemGap,
   evaluateHeroUpgradeItemGap,
   resolveHeroLevelUpgradeItemNeed,
@@ -377,11 +385,12 @@ function renderHeroUpgradeProgressMarkup(d: HeroDetail, bag: BagStack[] = []): s
             ? loyaltyNeed
             : null;
       const gapLine = need != null ? renderHeroUpgradeItemGapLine(b.kind, need, bag) : "";
+      const progressLine = formatHeroUpgradeProgressLine(b);
       return (
         `<div class="hero-progress-row" data-kind="${b.kind}"><span class="hero-progress-label">${escapeHtml(b.label)}</span>` +
-        `<span class="hero-progress-caption">${escapeHtml(b.caption)}</span>` +
-        `<span class="hero-progress-track" role="progressbar" aria-valuenow="${b.percent}" aria-valuemin="0" aria-valuemax="100">` +
-        `<span class="hero-progress-fill" style="width:${b.percent}%"></span></span>${gapLine}</div>`
+        `<span class="hero-progress-caption ${HERO_UPGRADE_PROGRESS_LINE_CLASS}">${escapeHtml(progressLine)}</span>` +
+        `<span class="hero-progress-track ${HERO_UPGRADE_PROGRESS_BAR_CLASS}" role="progressbar" aria-valuenow="${b.percent}" aria-valuemin="0" aria-valuemax="100" aria-label="${escapeHtml(progressLine)}">` +
+        `<span class="hero-progress-fill ${HERO_UPGRADE_PROGRESS_BAR_FILL_CLASS}" style="width:${b.percent}%"></span></span>${gapLine}</div>`
       );
     })
     .join("");
@@ -408,6 +417,10 @@ export function renderHeroDetailMarkup(
       ? ` · 忠诚 ${loyalty}（${d.loyalty_min}~${d.loyalty_max ?? loyalty}）`
       : ` · 忠诚 ${loyalty}`;
   const head = `<header class="hero-detail-head"><span class="hero-detail-name">${name}</span><span class="hero-detail-level">Lv${level}</span><span class="hero-detail-meta">稀有${rarity}${loyaltyRange}</span></header>`;
+  const compareText = formatHeroGrowthCompareStrip(d);
+  const compareStrip = compareText
+    ? `<p class="${HERO_GROWTH_COMPARE_STRIP_CLASS}" data-role="hero-growth-compare-strip">${escapeHtml(compareText)}</p>`
+    : "";
   const progress = renderHeroUpgradeProgressMarkup(d, bag);
   const comparison = compareHeroDetailToTemplate(d, templatePreview ?? null);
   const deltaByKey = new Map(comparison.rows.map((r) => [r.key, r]));
@@ -434,7 +447,7 @@ export function renderHeroDetailMarkup(
     <button type="button" data-action="hero-related-items">相关道具</button>
   </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${progress}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
+  return `${head}${compareStrip}${progress}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

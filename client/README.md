@@ -1532,6 +1532,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. **去招募**：同面板招募区预选当前 `template_cfg_id`；**相关道具**：`ListPlayerBag` 过滤养成消耗品（如将魂碎晶 2017）并打开背包高亮。
 4. 单测：`heroMailState.test.ts`（对比/进度/背包过滤）、`HeroMailPanels.test.ts`。
 
+**CLIENT-198（将领详情养成前后对比与进度扫读）**：在 **CLIENT-072/133/165** 不退化前提下，详情头下 **`hero-growth-compare-strip`** 展示 `formatHeroGrowthCompareStrip`（等级/忠诚 **当前→下一档** 只读行）；养成区 **`hero-upgrade-progress-bar`** + 次行 **`formatHeroUpgradeProgressLine`**（caption + 百分比）；`GetHeroDetail` 失败仍走 **CLIENT-173** `formatPanelGatewayError`；道具缺口深链仍走 **CLIENT-165**。单测：`heroGrowthCompareFormat.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#724](https://github.com/anitaguptaoffice/sanguo-slg/issues/724)）
+
 ### 手动验收（四类面板统一错误 CLIENT-067）
 
 将领/商城/背包/军事的内联错误区（`recruit-form-error`、`shop-form-error`、`bag-form-error`、`march-form-error`）经 `contentFormValidation.setPanelFormErrorDisplay` 渲染；网关失败统一为 `formatPanelGatewayError` 的中文摘要 + 末尾 `[code]`（如商城 `余额不足 [64003]`），与 CLIENT-056/057 预校验共用同一 DOM 槽位，成功操作后错误区清空。
