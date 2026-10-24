@@ -106,6 +106,14 @@ import {
   validateSendChatContent,
 } from "@/net/chatSendValidation";
 import { persistGuildChatDraft, restoreGuildChatDraft } from "@/net/guildChatDraft";
+import {
+  formatRankRefreshCooldownStamp,
+  RANK_REFRESH_COOLDOWN_STAMP_ROLE,
+  rankRefreshCooldownRemainingMs,
+  readRankManualLastRefreshMs,
+  renderRankEmptyTableRow,
+  writeRankManualLastRefreshMs,
+} from "@/net/rankRefreshCooldown";
 
 export type SocialRankDeepLinkHandlers = {
   getViewerHeroIds?: () => Promise<number[]>;
@@ -140,6 +148,7 @@ export class SocialPanels {
   private cachedViewerHeroIds: number[] = [];
   private pendingReturnScroll: LeaderboardReturnScrollPayload | null = null;
   private showRankRefreshDensity = false;
+  private rankCooldownTimer: ReturnType<typeof setTimeout> | null = null;
   private lastRenderedChatMessages: ChatMessageRow[] = [];
 
   constructor(
@@ -166,11 +175,18 @@ export class SocialPanels {
     this.rankPanel.addEventListener("click", (ev) => this.onRankClick(ev));
     this.rankPanel.querySelector('[data-field="rank-type"]')?.addEventListener("change", () => {
       this.showRankRefreshDensity = false;
-      if (!this.rankPanel.classList.contains("hidden")) void this.refreshRank();
+      if (!this.rankPanel.classList.contains("hidden")) {
+        this.syncRankRefreshCooldownUi(this.selectedLeaderboardType());
+        void this.refreshRank();
+      }
     });
   }
 
   detach(): void {
+    if (this.rankCooldownTimer != null) {
+      clearTimeout(this.rankCooldownTimer);
+      this.rankCooldownTimer = null;
+    }
     this.chatPanel?.remove();
     this.guildPanel?.remove();
     this.rankPanel?.remove();
@@ -538,6 +554,7 @@ export class SocialPanels {
         </select>
       </label>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
+      <span class="rank-refresh-cooldown-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}" aria-live="polite"></span>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -984,6 +1001,52 @@ export class SocialPanels {
       this.syncRankLastRefreshBar(boardType);
       this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: false });
     }
+    this.syncRankRefreshCooldownUi(boardType);
+  }
+
+  private clearRankCooldownTimer(): void {
+    if (this.rankCooldownTimer != null) {
+      clearTimeout(this.rankCooldownTimer);
+      this.rankCooldownTimer = null;
+    }
+  }
+
+  private scheduleRankCooldownTimer(boardType: number, remainingMs: number): void {
+    this.clearRankCooldownTimer();
+    if (remainingMs <= 0) return;
+    this.rankCooldownTimer = setTimeout(() => {
+      this.rankCooldownTimer = null;
+      if (!this.rankPanel.classList.contains("hidden")) {
+        this.syncRankRefreshCooldownUi(this.selectedLeaderboardType());
+      }
+    }, remainingMs + 50);
+  }
+
+  private syncRankRefreshCooldownUi(boardType: number, nowMs = Date.now()): void {
+    const lastManualMs = readRankManualLastRefreshMs(boardType);
+    const remaining = rankRefreshCooldownRemainingMs(lastManualMs, nowMs);
+    const stampEl = this.rankPanel.querySelector(`[data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}"]`);
+    const line = formatRankRefreshCooldownStamp(lastManualMs, nowMs);
+    if (stampEl) {
+      stampEl.textContent = line;
+      stampEl.classList.toggle("hidden", !line);
+    }
+    const refreshBtn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="refresh-rank"]');
+    const retryBtn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="retry-refresh-rank"]');
+    const inCooldown = remaining > 0;
+    const busy = this.rankListInflight.isBusy();
+    if (refreshBtn) refreshBtn.disabled = busy || inCooldown;
+    for (const btn of this.rankPanel.querySelectorAll<HTMLButtonElement>(
+      `.rank-empty-retry-inline[data-action="retry-refresh-rank"]`,
+    )) {
+      btn.disabled = busy || inCooldown;
+    }
+    if (retryBtn) retryBtn.disabled = busy || inCooldown;
+    if (inCooldown) {
+      this.scheduleRankCooldownTimer(boardType, remaining);
+    } else {
+      this.clearRankCooldownTimer();
+    }
   }
 
   private syncRankLastRefreshBar(boardType: number): void {
@@ -1085,13 +1148,8 @@ export class SocialPanels {
       }
       if (entries.length === 0) {
         if (!pinLine) {
-          const tr = document.createElement("tr");
-          tr.className = socialRankEmptyRowClass();
-          const td = document.createElement("td");
-          td.colSpan = 4;
-          td.textContent = formatSocialRankEmptyMessage();
-          tr.appendChild(td);
-          tbody.appendChild(tr);
+          renderRankEmptyTableRow(tbody, formatSocialRankEmptyMessage());
+          this.syncRankRefreshCooldownUi(boardType);
         }
       } else {
         const viewerId = this.viewerPlayerId();
@@ -1221,9 +1279,16 @@ export class SocialPanels {
     await this.dispatchRankRowDeepLink(link, entry);
   }
 
-  private async refreshRank(): Promise<void> {
+  private async refreshRank(opts?: { manual?: boolean }): Promise<void> {
     const sid = this.serverId();
     const boardType = this.selectedLeaderboardType();
+    if (opts?.manual) {
+      const lastManual = readRankManualLastRefreshMs(boardType);
+      if (rankRefreshCooldownRemainingMs(lastManual) > 0) {
+        this.syncRankRefreshCooldownUi(boardType);
+        return;
+      }
+    }
     return this.rankListInflight.run(async () => {
       const hadSnapshot = this.rankSnapshotByType.has(boardType);
       if (hadSnapshot) {
@@ -1240,6 +1305,9 @@ export class SocialPanels {
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
         writeRankLastRefreshMs(boardType, refreshedAt);
+        if (opts?.manual) {
+          writeRankManualLastRefreshMs(boardType, refreshedAt);
+        }
         this.showRankRefreshDensity = hadSnapshot;
         this.renderLeaderboardPage(res, boardType);
         this.pendingRankPinPulse = false;
@@ -1255,6 +1323,7 @@ export class SocialPanels {
           error: null,
           stale: false,
         });
+        this.syncRankRefreshCooldownUi(boardType, refreshedAt);
         this.onStatus("排行榜已刷新");
       } catch (e) {
         const msg = formatPanelGatewayErrorFromUnknownForList("rank", e);
@@ -1340,7 +1409,7 @@ export class SocialPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-rank" || a === "retry-refresh-rank") void this.refreshRank();
+    if (a === "refresh-rank" || a === "retry-refresh-rank") void this.refreshRank({ manual: true });
     if (a === "dismiss-rank-summary") this.hideRankEntrySummary();
   }
 }

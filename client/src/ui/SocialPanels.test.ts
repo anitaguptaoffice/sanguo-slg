@@ -1,10 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { LB_PLAYER_POWER, LB_PLAYER_RESOURCE } from "@/net/leaderboardFormat";
 import { RANK_MY_RANK_CHANGED_PULSE_CLASS } from "@/net/leaderboardMyRankRefresh";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
+import {
+  formatRankRefreshCooldownStamp,
+  RANK_MANUAL_REFRESH_COOLDOWN_MS,
+  RANK_MANUAL_REFRESH_SESSION_KEY,
+} from "@/net/rankRefreshCooldown";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
   LEADERBOARD_RETURN_SCROLL_SESSION_KEY,
@@ -41,6 +46,10 @@ function minimalGateway(overrides: Partial<GatewayPort> = {}): GatewayPort {
 }
 
 describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
+  beforeEach(() => {
+    sessionStorage.removeItem(RANK_MANUAL_REFRESH_SESSION_KEY);
+  });
+
   it("guild and chat panels have center-panel id and scroll body (CLIENT-095)", () => {
     const mount = document.createElement("div");
     const panels = new SocialPanels(mount, minimalGateway(), () => baseSession(), () => {});
@@ -92,6 +101,70 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector(".rank-pin-row")?.textContent).toContain("我的排名 #2");
     expect(mount.querySelector('[data-role="rank-last-refresh"]')?.textContent).toContain("上次刷新：");
     expect(sessionStorage.getItem(RANK_LAST_REFRESH_SESSION_KEY)).toContain(String(LB_PLAYER_POWER));
+  });
+
+  it("CLIENT-214: empty rank list shows rank-empty-retry-inline", async () => {
+    const mount = document.createElement("div");
+    const getLeaderboard = vi.fn().mockResolvedValue({
+      entries: [],
+      my_rank: 0,
+      my_score: 0,
+    });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const emptyRow = mount.querySelector(".rank-empty-row");
+    expect(emptyRow?.querySelector(".rank-empty-retry-inline")).toBeTruthy();
+    expect(emptyRow?.textContent).toContain("（空榜）");
+    vi.mocked(getLeaderboard).mockClear();
+    emptyRow?.querySelector(".rank-empty-retry-inline")?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(getLeaderboard).toHaveBeenCalledTimes(1);
+  });
+
+  it("CLIENT-214: manual refresh shows cooldown stamp and blocks repeat RPC", async () => {
+    const mount = document.createElement("div");
+    const now = 1_700_000_000_000;
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
+    const getLeaderboard = vi.fn().mockResolvedValue({
+      entries: [{ rank: 1, display_name: "甲", score: 100 }],
+      my_rank: 1,
+      my_score: 100,
+    });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const openCalls = getLeaderboard.mock.calls.length;
+    try {
+      mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(getLeaderboard.mock.calls.length).toBe(openCalls + 1);
+      const stamp = mount.querySelector('[data-role="rank-refresh-cooldown"]');
+      expect(stamp?.textContent).toBe(formatRankRefreshCooldownStamp(now, now));
+      expect(stamp?.classList.contains("hidden")).toBe(false);
+      vi.mocked(getLeaderboard).mockClear();
+      mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(getLeaderboard).not.toHaveBeenCalled();
+      nowSpy.mockReturnValue(now + RANK_MANUAL_REFRESH_COOLDOWN_MS + 1);
+      mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(getLeaderboard).toHaveBeenCalledTimes(1);
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it("switches to resource board and shows empty list", async () => {
@@ -265,7 +338,27 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(btn.disabled).toBe(true);
     resolve({ entries: [], my_rank: 0, my_score: 0 });
     await flushPromises();
-    expect(btn.disabled).toBe(false);
+  });
+
+  it("CLIENT-214: keeps refresh disabled during manual cooldown after refresh completes", async () => {
+    const mount = document.createElement("div");
+    const getLeaderboard = vi.fn().mockResolvedValue({
+      entries: [],
+      my_rank: 0,
+      my_score: 0,
+    });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const btn = mount.querySelector('[data-action="refresh-rank"]') as HTMLButtonElement;
+    btn?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(btn.disabled).toBe(true);
   });
 
   it("CLIENT-097: power row opens hero deep link for viewer entry", async () => {
