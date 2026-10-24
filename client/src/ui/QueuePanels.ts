@@ -116,6 +116,7 @@ export class QueuePanels {
     private readonly dismissToolbarTrigger?: () => HTMLElement | null,
     private readonly onRecruitQueueJumpToMilitary?: (entry: RecruitQueueEntry) => void,
     private readonly onLocateCitySlotFromQueue?: (slotKey: string) => void,
+    private readonly onRecruitQueueJustCompleted?: (queueIds: number[]) => void,
   ) {}
 
   attach(): void {
@@ -500,6 +501,7 @@ export class QueuePanels {
     );
     if (recruitJustCompleted.length) {
       this.notifyRecruitJustCompleted(recruitJustCompleted);
+      this.onRecruitQueueJustCompleted?.(recruitJustCompleted);
     }
     this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
     if (overviewEl) {
@@ -696,6 +698,7 @@ export class QueuePanels {
       if (isRecruitQueueActive(entry, now)) continue;
       if (this.completedRecruitIds.has(entry.queue_id)) continue;
       this.completedRecruitIds.add(entry.queue_id);
+      this.onRecruitQueueJustCompleted?.([entry.queue_id]);
       this.onStatus(`募兵 #${entry.queue_id} 已完成，请刷新军事兵力`);
       this.setPanelStatus("募兵已完成：可刷新内政并打开军事查看兵力。");
       this.onMilitarySync();

@@ -208,6 +208,11 @@ import {
 } from "@/net/hudFormat";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
 import { MainCityBuildingPanel } from "@/ui/MainCityBuildingPanel";
+import {
+  collectHudPulseKeysForQueueCompletes,
+  refreshHudProductionWalletLine,
+  type QueueCompleteHudEvent,
+} from "@/net/hudQueueCompletePulse";
 import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
@@ -733,6 +738,8 @@ export class MainCityScene implements Scene {
       (entry) => this.openMilitaryRecruitFromQueueRow(entry),
       (slotKey) =>
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey),
+      (queueIds) =>
+        this.applyQueueCompleteHudPulse(queueIds.map((id) => ({ kind: "recruit", queueId: id }))),
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -1669,6 +1676,7 @@ export class MainCityScene implements Scene {
     );
     if (justCompleted.length) {
       this.queuePanels?.notifyBuildJustCompleted(justCompleted);
+      this.applyQueueCompleteHudPulse(justCompleted.map((slotKey) => ({ kind: "build", slotKey })));
     }
     this.syncSlotUpgradeOverlay();
     this.slotUpgradeOverlay?.setMutualHighlightSlot(
@@ -1682,6 +1690,14 @@ export class MainCityScene implements Scene {
     production_rates?: ResourceWallet;
   }): void {
     this.applyCityStateFromFetch(state);
+  }
+
+  /** CLIENT-181：队列完成 → 顶栏资源脉冲 + 产出/仓库扫读次行刷新。 */
+  private applyQueueCompleteHudPulse(events: readonly QueueCompleteHudEvent[]): void {
+    if (!events.length || !this.session) return;
+    const pulseKeys = collectHudPulseKeysForQueueCompletes(events, sessionStorage);
+    refreshHudProductionWalletLine(this.hud, this.session.productionRates, this.session.wallet);
+    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
   }
 
   private renderHud(): void {
