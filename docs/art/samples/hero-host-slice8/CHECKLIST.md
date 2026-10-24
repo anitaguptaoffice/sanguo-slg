@@ -6,9 +6,10 @@
 |---|---|---|
 | **art_head_sha** | `181b0191b834b2e0c3a983a7911690552fe143f0` | Draft [#1205](https://github.com/anitaguptaoffice/sanguo-slg/pull/1205)；**勿合并** |
 | **base_host_sha** | `035abdda48bdfab8bac44837c72afea76e9eae68` | Slice7 宿主 [#1233](https://github.com/anitaguptaoffice/sanguo-slg/pull/1233) |
-| **evidence_head_sha / tip_sha / runtime_code_sha** | 见各 `probe-log.json`（与 #1234 证据 `HEAD` 一致） | 含 capture8、mock 1029–1032、runtime JPEG；**不在** `base_host_sha` |
-| **capture_script_blob_sha** | 见各 `probe-log.json` | `capture-hero-host-slice8-evidence.mjs` git blob |
-| **mock_blob_sha** | 见各 `probe-log.json` | `client/mock-server/server.mjs` git blob（含 1029–1032 种子） |
+| **evidence_head_sha / tip_sha / runtime_code_sha** | `28c1d9ac92cfa45e5f957a96c572270ddfedb6c6` | 签收证据提交；含 capture8、mock 1029–1032、runtime JPEG；**不在** `base_host_sha` |
+| **capture_script_blob_sha** | `0dbec076dfb0bcfdcc26e73ebacc92314df9590c` | 原采证脚本 blob @ `evidence_head_sha` |
+| **capture_script_blob_sha_at_pr_head** | 见各 `probe-log.json`（与 #1234 PR `HEAD` 脚本 blob 一致） | 后续 PR 仅修订 probe 元数据写入；非重拍 |
+| **mock_blob_sha** | `5da72c80ae94fe397b7b554890170501844dacb4` | `server.mjs` @ `evidence_head_sha`（含 1029–1032 种子） |
 | **hero_mail_panels_blob_sha** | `356f8e33734ca1374f3cf1ecd61368431293a93c` | 与 `base_host_sha` 布局一致时不变 |
 | **Slice7 已签收路径** | [#1233](https://github.com/anitaguptaoffice/sanguo-slg/pull/1233) | 1025–1028 不在本卡重复挂载 |
 

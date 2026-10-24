@@ -33,6 +33,9 @@ const ART_HEAD_SHA = process.env.ART_HEAD_SHA || "181b0191b834b2e0c3a983a7911690
 /** Slice7 host layout baseline (#1233); production CSS/HeroMailPanels — not Slice8 capture/mock/assets. */
 const BASE_HOST_SHA =
   process.env.BASE_HOST_SHA || "035abdda48bdfab8bac44837c72afea76e9eae68";
+/** Signed-off runtime evidence commit (JPEGs + original capture script); not PR metadata HEAD. */
+const EVIDENCE_HEAD_SHA =
+  process.env.EVIDENCE_HEAD_SHA || "28c1d9ac92cfa45e5f957a96c572270ddfedb6c6";
 const CAPTURE_SCRIPT_REL = "client/scripts/capture-hero-host-slice8-evidence.mjs";
 const MOCK_SERVER_REL = "client/mock-server/server.mjs";
 const SLICE8_IDS = [1029, 1030, 1031, 1032];
@@ -103,17 +106,17 @@ async function writeJpegUnder1Mb(page, filePath, screenshotOpts = {}) {
   return { quality: 48, bytes: buffer.length };
 }
 
-function gitTipSha() {
+function gitBlobSha(relPath) {
   try {
-    return execSync("git rev-parse HEAD", { cwd: repoRoot, encoding: "utf8" }).trim();
+    return execSync(`git hash-object ${relPath}`, { cwd: repoRoot, encoding: "utf8" }).trim();
   } catch {
     return "unknown";
   }
 }
 
-function gitBlobSha(relPath) {
+function gitBlobShaAtCommit(commit, relPath) {
   try {
-    return execSync(`git hash-object ${relPath}`, { cwd: repoRoot, encoding: "utf8" }).trim();
+    return execSync(`git rev-parse ${commit}:${relPath}`, { cwd: repoRoot, encoding: "utf8" }).trim();
   } catch {
     return "unknown";
   }
@@ -242,8 +245,9 @@ async function captureHero(browser, templateCfgId, evidenceHeadSha) {
   }
 
   const heroMailPanelsBlob = gitBlobSha("client/src/ui/HeroMailPanels.ts");
-  const captureScriptBlob = gitBlobSha(CAPTURE_SCRIPT_REL);
-  const mockBlob = gitBlobSha(MOCK_SERVER_REL);
+  const captureScriptBlob = gitBlobShaAtCommit(evidenceHeadSha, CAPTURE_SCRIPT_REL);
+  const captureScriptBlobAtPrHead = gitBlobSha(CAPTURE_SCRIPT_REL);
+  const mockBlob = gitBlobShaAtCommit(evidenceHeadSha, MOCK_SERVER_REL);
   const probeLog = {
     task: "HERO-HOST-SLICE8",
     template_cfg_id: templateCfgId,
@@ -253,6 +257,7 @@ async function captureHero(browser, templateCfgId, evidenceHeadSha) {
     evidence_head_sha: evidenceHeadSha,
     runtime_code_sha: evidenceHeadSha,
     capture_script_blob_sha: captureScriptBlob,
+    capture_script_blob_sha_at_pr_head: captureScriptBlobAtPrHead,
     mock_blob_sha: mockBlob,
     hero_mail_panels_blob_sha: heroMailPanelsBlob,
     art_head_sha: artHeadSha,
@@ -266,8 +271,8 @@ async function captureHero(browser, templateCfgId, evidenceHeadSha) {
       "Art path-copied from Draft #1205 @ 181b0191; Draft remains unmerged.",
       "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible.",
       `Provenance: base_host_sha ${baseHostSha} is Slice7 host layout (#1233); capture script, mock 1029–1032 roster, and Slice8 assets are not present at that commit.`,
-      `tip_sha / evidence_head_sha / runtime_code_sha name the eng evidence commit (HEAD at capture) containing capture-hero-host-slice8-evidence.mjs, mock seeds, and runtime JPEGs.`,
-      `capture_script_blob_sha and mock_blob_sha are git blob ids at evidence_head_sha; hero_mail_panels_blob_sha matches base_host when layout unchanged.`,
+      `tip_sha / evidence_head_sha / runtime_code_sha name the signed-off eng evidence commit (${evidenceHeadSha}) containing capture-hero-host-slice8-evidence.mjs, mock seeds, and runtime JPEGs.`,
+      `capture_script_blob_sha ${captureScriptBlob} and mock_blob_sha ${mockBlob} are git blob ids at evidence_head_sha; capture_script_blob_sha_at_pr_head ${captureScriptBlobAtPrHead} is the metadata-revision script blob at PR HEAD (not the capture-time script); hero_mail_panels_blob_sha matches base_host when layout unchanged.`,
     ],
     captured_at: new Date().toISOString(),
   };
@@ -282,8 +287,9 @@ async function captureHero(browser, templateCfgId, evidenceHeadSha) {
     `| evidence_head_sha / tip_sha / runtime_code_sha | \`${evidenceHeadSha}\` |`,
     `| art_head_sha (#1205) | \`${artHeadSha}\` |`,
     `| hero_mail_panels_blob_sha | \`${heroMailPanelsBlob}\` |`,
-    `| capture_script_blob_sha | \`${captureScriptBlob}\` |`,
-    `| mock_blob_sha | \`${mockBlob}\` |`,
+    `| capture_script_blob_sha (@ evidence_head) | \`${captureScriptBlob}\` |`,
+    `| capture_script_blob_sha_at_pr_head (@ PR HEAD metadata) | \`${captureScriptBlobAtPrHead}\` |`,
+    `| mock_blob_sha (@ evidence_head) | \`${mockBlob}\` |`,
     "",
     "## Viewport captures",
     "",
@@ -351,7 +357,7 @@ async function main() {
     await setEvidencePreset(PRESET);
 
     const browser = await chromium.launch();
-    const evidenceHeadSha = gitTipSha();
+    const evidenceHeadSha = EVIDENCE_HEAD_SHA;
     let allOk = true;
     for (const id of HERO_IDS) {
       const ok = await captureHero(browser, id, evidenceHeadSha);

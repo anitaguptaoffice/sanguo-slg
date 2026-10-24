@@ -3,11 +3,12 @@
 | Field | SHA |
 |---|---|
 | base_host_sha (Slice7 #1233 layout) | `035abdda48bdfab8bac44837c72afea76e9eae68` |
-| evidence_head_sha / tip_sha / runtime_code_sha | `e5bfd0d0104934dc4442469b5c3aced37d06b5dd` |
+| evidence_head_sha / tip_sha / runtime_code_sha | `28c1d9ac92cfa45e5f957a96c572270ddfedb6c6` |
 | art_head_sha (#1205) | `181b0191b834b2e0c3a983a7911690552fe143f0` |
 | hero_mail_panels_blob_sha | `356f8e33734ca1374f3cf1ecd61368431293a93c` |
-| capture_script_blob_sha | `a3fddd850a348bd119bc29c2f330e8192627e5c8` |
-| mock_blob_sha | `5da72c80ae94fe397b7b554890170501844dacb4` |
+| capture_script_blob_sha (@ evidence_head) | `0dbec076dfb0bcfdcc26e73ebacc92314df9590c` |
+| capture_script_blob_sha_at_pr_head (@ PR HEAD metadata) | `55de52015769d9dcd1c11ce6b5c087b3068953bc` |
+| mock_blob_sha (@ evidence_head) | `5da72c80ae94fe397b7b554890170501844dacb4` |
 
 
 ## Viewport captures
