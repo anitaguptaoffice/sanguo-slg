@@ -2,7 +2,21 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 41 网关冒烟（INTG-038，推荐）
+
+在 INTG-037 全量断言之上扩展 **视口军情 scroll-sync**（`ListMarches` 多行 + `ListPlayerCities` 视口锚点，CLIENT-236/237）、**出征刷新戳记**（`StartMarch`/`MarchAttack` 同源，`march_id`+stamp，CLIENT-238）、**战报密度键盘**（`ListBattleReports` outcome/坐标，CLIENT-239/240）、**邮件/日常 HUD**（`ListPlayerMail` 未领附件+首条 id、`ListPlayerQuests` 可领条数，CLIENT-241）、**背包排行招募扫读**（`ListPlayerBag` 消耗品分类、`ListPowerRank`/`ListKillRank`、`ListRecruitTemplates` 长度、`ListShopShelf` 首 SKU，CLIENT-242）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速/主城建造新 RPC/战报 proto 扩量/新商城 SKU/IAP。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG038Wave41SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-038:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 40 网关冒烟（INTG-037，推荐）
 
