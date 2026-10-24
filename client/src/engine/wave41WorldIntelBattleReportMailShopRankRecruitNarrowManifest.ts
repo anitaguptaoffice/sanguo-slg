@@ -93,6 +93,12 @@ export { REPORT_LIST_DENSITY_ROW_CLASS, REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS };
 /** CLIENT-240: detail side template residual line + readonly coord copy bar. */
 export { BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS, COPY_REPORT_COORDS_READONLY_ACTION };
 
+/** CLIENT-254: list adjacent keyboard nav residual ring + coord copy bar residual sweep. */
+export {
+  REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS,
+} from "@/net/battleReportListKeyboardAdjacentNavResidual";
+export { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS } from "@/net/battleReportDetailTemplateResidual";
+
 /** CLIENT-241: mail claim success → HUD mail/quest badge sync pulse. */
 export { MAIL_CLAIM_HUD_SYNC_PULSE_CLASS };
 

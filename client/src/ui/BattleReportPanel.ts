@@ -117,6 +117,7 @@ import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
+import { pulseBattleReportListKeyboardAdjacentNavResidualRing } from "@/net/battleReportListKeyboardAdjacentNavResidual";
 import {
   applyBattleReportCoordsReadonlySelect,
   BATTLE_REPORT_COORD_COPY_BAR_CLASS,
@@ -190,6 +191,8 @@ export class BattleReportPanel {
   private detailLoading = false;
   /** 上一封/下一封切换后把焦点拉回详情顶栏导航（CLIENT-094）。 */
   private focusDetailNavAfterRender = false;
+  /** CLIENT-254：列表重绘后补相邻键盘导航残余环。 */
+  private adjacentNavResidualRingReportId: number | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -583,7 +586,19 @@ export class BattleReportPanel {
       this.selectedReportId,
     );
     syncBattleReportListKeyboardFocusRing(ul as HTMLElement, this.selectedReportId);
+    this.flushAdjacentNavResidualRing(ul as HTMLElement);
     this.renderDetail();
+  }
+
+  private flushAdjacentNavResidualRing(list: HTMLElement): void {
+    const id = this.adjacentNavResidualRingReportId;
+    if (id == null || id <= 0 || this.detailLoading) return;
+    pulseBattleReportListKeyboardAdjacentNavResidualRing(list, id);
+    this.adjacentNavResidualRingReportId = null;
+  }
+
+  private queueAdjacentNavResidualRing(reportId: number): void {
+    if (reportId > 0) this.adjacentNavResidualRingReportId = reportId;
   }
 
   private renderDetail(): void {
@@ -1307,6 +1322,7 @@ export class BattleReportPanel {
         orderedIds,
         selectedReportId: this.selectedReportId,
         onSelectReportId: (id) => {
+          this.queueAdjacentNavResidualRing(id);
           void this.openReport(id, { preserveRoundNav: true });
         },
       })
@@ -1319,7 +1335,10 @@ export class BattleReportPanel {
         itemSelector: "li[data-report-id]",
         onActivate: (row) => {
           const id = Number(row.getAttribute("data-report-id"));
-          if (id > 0) void this.openReport(id);
+          if (id > 0) {
+            this.queueAdjacentNavResidualRing(id);
+            void this.openReport(id);
+          }
         },
       })
     ) {

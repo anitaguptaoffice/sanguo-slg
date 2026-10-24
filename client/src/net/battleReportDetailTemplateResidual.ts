@@ -18,7 +18,13 @@ export const BATTLE_REPORT_COORD_COPY_TEXT_ROLE = "battle-report-coord-copy-text
 export const BATTLE_REPORT_COORD_COPY_SELECTED_CLASS =
   "battle-report-coord-copy-selected";
 
+export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS =
+  "battle-report-coord-copy-bar-residual-sweep";
+
 export const BATTLE_REPORT_COORD_COPY_SELECT_MS = 1500;
+
+/** CLIENT-254：复制条选中态扫读环时长（CLIENT-240 文本选中 1.5s **不退化**）。 */
+export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_MS = 2000;
 
 export type BattleReportSideTemplateResidualParts = {
   templateLine: string;
@@ -72,6 +78,34 @@ export function shouldShowBattleReportCoordCopyBar(
 }
 
 let coordCopySelectTimer: ReturnType<typeof setTimeout> | null = null;
+let coordCopyBarSweepTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** 坐标复制条选中扫读提示（只读；**无**剪贴板 API）。 */
+export function formatBattleReportCoordCopyBarResidualSweep(copyText: string): string {
+  const trimmed = copyText.trim();
+  if (!trimmed) return "";
+  return `坐标 ${trimmed} 只读选中扫读 2s`;
+}
+
+/**
+ * 复制条根节点附加 `battle-report-coord-copy-bar-residual-sweep` 2s（与 CLIENT-240 选中态并存）。
+ */
+export function applyBattleReportCoordCopyBarResidualSweep(
+  barEl: HTMLElement,
+  durationMs: number = BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_MS,
+  windowObj: Pick<Window, "setTimeout" | "clearTimeout"> = globalThis.window,
+): void {
+  barEl.classList.remove(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS);
+  void barEl.offsetWidth;
+  barEl.classList.add(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS);
+  if (coordCopyBarSweepTimer != null) {
+    windowObj.clearTimeout(coordCopyBarSweepTimer);
+  }
+  coordCopyBarSweepTimer = windowObj.setTimeout(() => {
+    barEl.classList.remove(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS);
+    coordCopyBarSweepTimer = null;
+  }, durationMs);
+}
 
 /**
  * 坐标只读复制条：文本选中态 1.5s（Selection API；**无** navigator.clipboard）。
@@ -91,9 +125,29 @@ export function applyBattleReportCoordsReadonlySelect(
   range.selectNodeContents(textEl);
   selection?.addRange(range);
   textEl.classList.add(BATTLE_REPORT_COORD_COPY_SELECTED_CLASS);
+  const barEl = textEl.closest<HTMLElement>(`.${BATTLE_REPORT_COORD_COPY_BAR_CLASS}`);
+  if (barEl) {
+    const sweepHint = formatBattleReportCoordCopyBarResidualSweep(textEl.textContent ?? "");
+    if (sweepHint) {
+      barEl.setAttribute("aria-label", sweepHint);
+    }
+    applyBattleReportCoordCopyBarResidualSweep(barEl);
+  }
   coordCopySelectTimer = setTimeout(() => {
     coordCopySelectTimer = null;
     textEl.classList.remove(BATTLE_REPORT_COORD_COPY_SELECTED_CLASS);
     selection?.removeAllRanges();
   }, durationMs);
+}
+
+/** @internal vitest */
+export function resetBattleReportCoordCopyBarResidualSweepTimersForTests(): void {
+  if (coordCopyBarSweepTimer != null) {
+    clearTimeout(coordCopyBarSweepTimer);
+    coordCopyBarSweepTimer = null;
+  }
+  if (coordCopySelectTimer != null) {
+    clearTimeout(coordCopySelectTimer);
+    coordCopySelectTimer = null;
+  }
 }
