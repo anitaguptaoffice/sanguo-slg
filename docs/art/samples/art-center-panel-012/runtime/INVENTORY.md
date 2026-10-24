@@ -2,8 +2,8 @@
 
 | SHA role | Commit | Notes |
 |---|---|---|
-| `runtime_code_sha` / `tip_sha` | `fe872aaad4803f4594860315c6e1fe4adfcb6745` | Rebased onto `465fd4b3` (CLIENT-191 #716); hero detail capture |
-| `screenshot_artifacts_commit_sha` | `fe872aaad4803f4594860315c6e1fe4adfcb6745` | JPEG + probe under `runtime/` |
+| `runtime_code_sha` / `tip_sha` | `ba8408a57623c6161a7a1b83a36dd6f2d461d4c1` | Rebased onto `465fd4b3` (CLIENT-191 #716); hero detail capture |
+| `screenshot_artifacts_commit_sha` | `ba8408a57623c6161a7a1b83a36dd6f2d461d4c1` | JPEG + probe under `runtime/` |
 
 Art PNGs from Draft #697 @ `bcf05c7365f92f17142f4ce25a3ba1bdd2b80247` (**not merged**).
 
