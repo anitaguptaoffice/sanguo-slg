@@ -906,6 +906,8 @@ cd client && npm install && npm run dev
 
 **募兵提交反馈（CLIENT-117）**：点 **募兵** 后按钮 **disabled** 且文案 **募兵中…**（`recruitTroopSubmitFeedback`）；成功顶栏状态 `formatRecruitTroopSuccess`，队列募兵行与军事面板只读募兵列表行 **3s** `recruit-row-pulse`，扣粮木铁石时触发 **CLIENT-051** 资源脉冲；失败在 **troop-recruit-form-error** 展示 **CLIENT-067** 口径且保留 **CLIENT-088** 消耗预览。**CLIENT-019** 队列倒计时与 **CLIENT-024** 日常引导不退化。单测：`recruitTroopSubmitFeedback.test.ts`。
 
+**募兵队列↔军事互跳（CLIENT-157）**：`RecruitTroop` 排队成功后保留 **CLIENT-117** 提交脉冲；队列面板 **首行**（最早完成批次）与兵营矩阵格 **互高亮**（`highlightRecruitQueue` / `queue-recruit-slot-mutual-highlight`），军事募兵区展示 **查看队列** → `openRecruitQueueAndHighlight(queue_id)`（`sessionStorage` 键 `recruit-highlight-queue-id`）。队列募兵行点击打开 **军事** 并滚动募兵区、预选对应兵种（`resolveRecruitQueueJumpTarget` + 只读快照，不新 RPC）；军事只读募兵列表行点击反向打开队列并高亮。**CLIENT-149** 完成脉冲 `queue-recruit-complete-pulse` 与提交 `recruit-row-pulse` 样式仍区分。单测：`recruitQueueJump.test.ts`、`QueuePanels.test.ts`。
+
 ### 手动验收（日常可领取定位 CLIENT-091）
 
 日常面板筛选 **可领取** 时出现 **定位首条**（`daily-locate-first`）：滚动至 `pickFirstClaimableDailyQuestCfgIdForFilter` 首行并加 `daily-quest-claimable` 高亮；与 **CLIENT-077** HUD 待办深链（`center-claimable`）并存。**领奖** 成功该行短暂 `quest-claim-pulse` + **CLIENT-051** 资源脉冲；失败 **CLIENT-067** 口径。**CLIENT-075** 筛选记忆与 **CLIENT-044** 战报横幅不退化。

@@ -1,6 +1,7 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import type { TroopRecruitResourceCost } from "@/net/troopRecruitCatalog";
 import { formatTimeMs, unitLabel } from "@/net/militaryFormat";
+import { QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS } from "@/net/recruitQueueComplete";
 import type { RecruitQueueEntry } from "@/net/queueState";
 import { formatRecruitQueueLine } from "@/net/queueState";
 import { walletMaterialDeductPulseKeys } from "@/net/recruitSubmitFeedback";
@@ -123,6 +124,7 @@ export function syncMilitaryRecruitQueueList(
   panel: ParentNode | null | undefined,
   entries: RecruitQueueEntry[],
   nowMs = Date.now(),
+  highlightQueueId: number | null = null,
 ): void {
   const ul = panel?.querySelector<HTMLElement>('[data-role="military-recruit-queue-list"]');
   if (!ul) return;
@@ -133,6 +135,10 @@ export function syncMilitaryRecruitQueueList(
     li.className = "queue-list-row";
     li.id = queueRecruitRowDomId(entry.queue_id);
     li.dataset.queueId = String(entry.queue_id);
+    if (highlightQueueId !== null && entry.queue_id === highlightQueueId) {
+      li.classList.add(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+      li.classList.add("selected");
+    }
     const span = document.createElement("span");
     span.textContent = formatRecruitQueueLine(entry, nowMs);
     li.appendChild(span);

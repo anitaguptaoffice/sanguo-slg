@@ -93,6 +93,7 @@ export class QueuePanels {
     private readonly reskinPrimary?: QueuePanelReskin,
     private readonly onBuildSlotHighlightChange?: (slotKey: string | null) => void,
     private readonly dismissToolbarTrigger?: () => HTMLElement | null,
+    private readonly onRecruitQueueJumpToMilitary?: (entry: RecruitQueueEntry) => void,
   ) {}
 
   attach(): void {
@@ -194,26 +195,39 @@ export class QueuePanels {
     if (this.isOpen()) this.render();
   }
 
-  /** 打开队列并高亮募兵行，与兵营矩阵格互高亮（CLIENT-149）。 */
-  openAndHighlightRecruitQueue(queueId: number): void {
+  /** 募兵互跳高亮（可不打开面板，仅更新高亮态）。 */
+  highlightRecruitQueue(queueId: number, opts?: { open?: boolean }): void {
     const id = queueId > 0 ? queueId : null;
     this.highlightedRecruitQueueId = id;
     this.highlightedBuildSlotKey = id ? RECRUIT_QUEUE_MATRIX_SLOT_KEY : null;
     this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
-    this.panel.classList.remove("hidden");
-    this.tickAccum = 0;
-    this.render();
-    resetQueuePanelViewportScroll(this.panel);
-    if (id) {
-      const row = this.panel.querySelector(`#${CSS.escape(queueRecruitRowDomId(id))}`);
-      if (row && typeof row.scrollIntoView === "function") {
-        row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (opts?.open) {
+      this.panel.classList.remove("hidden");
+      this.tickAccum = 0;
+    }
+    if (this.isOpen() || opts?.open) {
+      this.render();
+      resetQueuePanelViewportScroll(this.panel);
+      if (id) {
+        const row = this.panel.querySelector(`#${CSS.escape(queueRecruitRowDomId(id))}`);
+        if (row && typeof row.scrollIntoView === "function") {
+          row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        }
       }
     }
   }
 
+  /** 打开队列并高亮募兵行，与兵营矩阵格互高亮（CLIENT-149）。 */
+  openAndHighlightRecruitQueue(queueId: number): void {
+    this.highlightRecruitQueue(queueId, { open: true });
+  }
+
   getHighlightedBuildSlotKey(): string | null {
     return this.highlightedBuildSlotKey;
+  }
+
+  getHighlightedRecruitQueueId(): number | null {
+    return this.highlightedRecruitQueueId;
   }
 
   /** GetCityState 检测到建造刚完成时触发队列行完成脉冲。 */
@@ -691,7 +705,14 @@ export class QueuePanels {
       const recruitRow = target.closest("li.queue-list-row[data-queue-id]");
       if (recruitRow instanceof HTMLElement) {
         const qid = Number(recruitRow.dataset.queueId) || 0;
-        if (qid > 0) this.openAndHighlightRecruitQueue(qid);
+        if (qid > 0) {
+          const entry = this.recruits.find((e) => e.queue_id === qid);
+          if (entry && this.onRecruitQueueJumpToMilitary) {
+            this.onRecruitQueueJumpToMilitary(entry);
+          } else if (qid > 0) {
+            this.openAndHighlightRecruitQueue(qid);
+          }
+        }
         return;
       }
       const row = target.closest("li.queue-list-row[data-slot-key]");
