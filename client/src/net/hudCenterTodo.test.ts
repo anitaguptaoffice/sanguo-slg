@@ -4,6 +4,7 @@ import {
   countClaimableDailyQuests,
   countClaimableMails,
   formatHudCenterTodoBadge,
+  hudCenterTodoTitle,
   pickFirstClaimableDailyQuestCfgId,
   pickFirstClaimableMailId,
   pickHudCenterTodoTarget,
@@ -75,6 +76,15 @@ describe("hudCenterTodo", () => {
         firstBuildCompleteSlotKey: "hall",
       })?.scrollTargetId,
     ).toBe(centerTodoScrollTargetId("queue", "hall"));
+  });
+
+  it("hudCenterTodoTitle uses formatHudTodoSweepLine for mail and daily (CLIENT-193)", () => {
+    expect(
+      hudCenterTodoTitle({ mailClaimable: 2, dailyClaimable: 1, buildComplete: 0 }),
+    ).toBe("待办 · 邮件附件 2 · 日常可领 1");
+    expect(
+      hudCenterTodoTitle({ mailClaimable: 0, dailyClaimable: 0, buildComplete: 2 }),
+    ).toBe("待办 · 建造完成 2");
   });
 
   it("skips repeat scroll when same target and panel already open", () => {
