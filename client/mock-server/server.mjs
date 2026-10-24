@@ -214,6 +214,14 @@ function applyEvidencePreset(state, preset) {
     state.bag = { 2001: 1 };
     return;
   }
+  if (preset === "hero-panel-roster") {
+    state.heroes = [
+      { hero_id: 8001, template_cfg_id: 1001, level: 12, loyalty: 88 },
+      { hero_id: 8002, template_cfg_id: 1002, level: 8, loyalty: 72 },
+      { hero_id: 8003, template_cfg_id: 1001, level: 3, loyalty: 65 },
+    ];
+    return;
+  }
 }
 
 const server = http.createServer((req, res) => {
