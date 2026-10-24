@@ -17,7 +17,7 @@ func TestPGStoreRecruitSurvivesRestart(t *testing.T) {
 
 	ps := &PlayerState{
 		ServerID: 1, PlayerID: 42,
-		Wallet: Resources{10000, 10000, 10000, 10000},
+		Wallet: Resources{Food: 10000, Wood: 10000, Stone: 10000, Iron: 10000},
 		Items:  map[int32]int32{RecruitScrollID: 5},
 	}
 	svc1 := NewService()

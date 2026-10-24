@@ -37,10 +37,11 @@ type HeroDetail struct {
 	UpgradeExpRequired  int64
 }
 
-// InventoryPort loads and commits recruit costs against the content/wallet layer.
+// InventoryPort loads and commits recruit/largess costs against the content/wallet layer.
 type InventoryPort interface {
 	LoadWalletAndItems(ctx context.Context, p PlayerRef) (Resources, map[int32]int32, error)
 	ApplyRecruitSpend(ctx context.Context, p PlayerRef, walletBefore Resources, itemsBefore map[int32]int32, walletAfter Resources, itemsAfter map[int32]int32) error
+	ApplyLargessSpend(ctx context.Context, p PlayerRef, goldSpent int64, itemCfgID int32) error
 }
 
 // LoadPlayerState hydrates recruit/list state from the hero store and inventory port.

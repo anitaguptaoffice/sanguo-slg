@@ -86,5 +86,38 @@ func (h *heroInventory) ApplyRecruitSpend(ctx context.Context, p hero.PlayerRef,
 }
 
 func heroWalletFromContent(w content.ResourceWallet) hero.Resources {
-	return hero.Resources{Food: w.Food, Wood: w.Wood, Stone: w.Stone, Iron: w.Iron}
+	return hero.Resources{Food: w.Food, Wood: w.Wood, Stone: w.Stone, Iron: w.Iron, Gold: w.Gold}
+}
+
+func (h *heroInventory) ApplyLargessSpend(ctx context.Context, p hero.PlayerRef, goldSpent int64, itemCfgID int32) error {
+	ref := content.PlayerRef{ServerID: p.ServerID, PlayerID: p.PlayerID}
+	if goldSpent > 0 {
+		w := h.srv.newShopWalletStore()
+		if w != nil {
+			if _, err := w.Spend(ctx, ref, content.ResourceWallet{Gold: goldSpent}); err != nil {
+				if errors.Is(err, shop.ErrInsufficientBalance) {
+					return hero.ErrInsufficientGold
+				}
+				return err
+			}
+		} else if h.srv.contentSvc != nil {
+			if err := h.srv.contentSvc.SpendWallet(ref, content.ResourceWallet{Gold: goldSpent}); err != nil {
+				if errors.Is(err, content.ErrInsufficientWallet) {
+					return hero.ErrInsufficientGold
+				}
+				return err
+			}
+		} else {
+			return hero.ErrInsufficientGold
+		}
+	}
+	if itemCfgID > 0 && h.srv.contentSvc != nil {
+		if _, err := h.srv.contentSvc.Remove(ref, itemCfgID, 1); err != nil {
+			if errors.Is(err, content.ErrInsufficientItems) {
+				return hero.ErrInsufficientItem
+			}
+			return err
+		}
+	}
+	return nil
 }

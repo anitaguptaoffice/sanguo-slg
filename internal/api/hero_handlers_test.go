@@ -198,6 +198,75 @@ func TestHeroGatewaySetAndClearCityChief(t *testing.T) {
 	}
 }
 
+func TestHeroGatewayLargessGoldAndCooldown(t *testing.T) {
+	ctx := context.Background()
+	cat, err := content.EmbeddedCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentSvc := content.NewService(cat)
+	p := content.PlayerRef{ServerID: 1, PlayerID: 55}
+	_, err = contentSvc.Grant(p, content.RewardPackage{
+		Resources: map[string]int64{
+			"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000, "gold": 50000,
+		},
+		Items: []content.RewardItem{{ItemCfgID: hero.RecruitScrollID, Qty: 1}},
+	}, "test:largess")
+	if err != nil {
+		t.Fatal(err)
+	}
+	heroSvc := hero.NewService()
+	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: heroSvc}
+	s.sessions.Bind("sess-largess", PlayerContext{ServerID: 1, PlayerID: 55})
+
+	recruitResp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
+		TraceId: "t-rec", SessionId: "sess-largess", ServerId: 1,
+		Payload: mustProto(&herov1.RecruitHeroRequest{ServerId: 1, TemplateCfgId: 1003}),
+	})
+	if err != nil || recruitResp.Code != 0 {
+		t.Fatalf("recruit: err=%v resp=%+v", err, recruitResp)
+	}
+	var recruitOut herov1.RecruitHeroResponse
+	if err := proto.Unmarshal(recruitResp.Data, &recruitOut); err != nil {
+		t.Fatal(err)
+	}
+	heroID := recruitOut.GetHeroId()
+	h, err := heroSvc.Store.GetHero(ctx, 1, heroID)
+	if err != nil || h == nil {
+		t.Fatal(err)
+	}
+	if err := heroSvc.SetHeroLoyalty(ctx, h, 25); err != nil {
+		t.Fatal(err)
+	}
+
+	largessResp, err := s.handleLargessHero(ctx, &commonv1.ClientPacket{
+		TraceId: "t-largess", SessionId: "sess-largess", ServerId: 1,
+		Payload: mustProto(&herov1.LargessHeroRequest{
+			ServerId: 1, HeroId: heroID, GiftKind: herov1.LargessGiftKind_LARGESS_GIFT_GOLD,
+		}),
+	})
+	if err != nil || largessResp.Code != 0 {
+		t.Fatalf("largess: err=%v resp=%+v", err, largessResp)
+	}
+	var largessOut herov1.LargessHeroResponse
+	if err := proto.Unmarshal(largessResp.Data, &largessOut); err != nil {
+		t.Fatal(err)
+	}
+	if largessOut.GetLoyaltyDelta() < 1 || largessOut.GetGoldSpent() < 1 || largessOut.GetNextLargessAtMs() == 0 {
+		t.Fatalf("largess delta=%d gold=%d next_ms=%d", largessOut.GetLoyaltyDelta(), largessOut.GetGoldSpent(), largessOut.GetNextLargessAtMs())
+	}
+
+	cdResp, err := s.handleLargessHero(ctx, &commonv1.ClientPacket{
+		TraceId: "t-largess-cd", SessionId: "sess-largess", ServerId: 1,
+		Payload: mustProto(&herov1.LargessHeroRequest{
+			ServerId: 1, HeroId: heroID, GiftKind: herov1.LargessGiftKind_LARGESS_GIFT_GOLD,
+		}),
+	})
+	if err != nil || cdResp.Code == 0 {
+		t.Fatalf("expected cooldown error, err=%v resp=%+v", err, cdResp)
+	}
+}
+
 func TestHeroGatewayRecruitInsufficientItem(t *testing.T) {
 	ctx := context.Background()
 	cat, err := content.EmbeddedCatalog()

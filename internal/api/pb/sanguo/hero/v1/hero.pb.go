@@ -22,6 +22,56 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// route: hero.v1.LargessHero
+type LargessGiftKind int32
+
+const (
+	LargessGiftKind_LARGESS_GIFT_UNSPECIFIED LargessGiftKind = 0
+	LargessGiftKind_LARGESS_GIFT_GOLD        LargessGiftKind = 1
+	LargessGiftKind_LARGESS_GIFT_ITEM        LargessGiftKind = 2
+)
+
+// Enum value maps for LargessGiftKind.
+var (
+	LargessGiftKind_name = map[int32]string{
+		0: "LARGESS_GIFT_UNSPECIFIED",
+		1: "LARGESS_GIFT_GOLD",
+		2: "LARGESS_GIFT_ITEM",
+	}
+	LargessGiftKind_value = map[string]int32{
+		"LARGESS_GIFT_UNSPECIFIED": 0,
+		"LARGESS_GIFT_GOLD":        1,
+		"LARGESS_GIFT_ITEM":        2,
+	}
+)
+
+func (x LargessGiftKind) Enum() *LargessGiftKind {
+	p := new(LargessGiftKind)
+	*p = x
+	return p
+}
+
+func (x LargessGiftKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LargessGiftKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_sanguo_hero_v1_hero_proto_enumTypes[0].Descriptor()
+}
+
+func (LargessGiftKind) Type() protoreflect.EnumType {
+	return &file_sanguo_hero_v1_hero_proto_enumTypes[0]
+}
+
+func (x LargessGiftKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LargessGiftKind.Descriptor instead.
+func (LargessGiftKind) EnumDescriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{0}
+}
+
 type PlayerHeroSummary struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	HeroId        int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
@@ -1766,6 +1816,158 @@ func (x *GetCityChiefResponse) GetProductionBonus() float64 {
 	return 0
 }
 
+type LargessHeroRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	HeroId        int64                  `protobuf:"varint,2,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	GiftKind      LargessGiftKind        `protobuf:"varint,3,opt,name=gift_kind,json=giftKind,proto3,enum=sanguo.hero.v1.LargessGiftKind" json:"gift_kind,omitempty"`
+	ItemCfgId     int32                  `protobuf:"varint,4,opt,name=item_cfg_id,json=itemCfgId,proto3" json:"item_cfg_id,omitempty"` // required when gift_kind = LARGESS_GIFT_ITEM
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LargessHeroRequest) Reset() {
+	*x = LargessHeroRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LargessHeroRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LargessHeroRequest) ProtoMessage() {}
+
+func (x *LargessHeroRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LargessHeroRequest.ProtoReflect.Descriptor instead.
+func (*LargessHeroRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *LargessHeroRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *LargessHeroRequest) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *LargessHeroRequest) GetGiftKind() LargessGiftKind {
+	if x != nil {
+		return x.GiftKind
+	}
+	return LargessGiftKind_LARGESS_GIFT_UNSPECIFIED
+}
+
+func (x *LargessHeroRequest) GetItemCfgId() int32 {
+	if x != nil {
+		return x.ItemCfgId
+	}
+	return 0
+}
+
+type LargessHeroResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	HeroId          int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	Loyalty         int32                  `protobuf:"varint,2,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	LoyaltyDelta    int32                  `protobuf:"varint,3,opt,name=loyalty_delta,json=loyaltyDelta,proto3" json:"loyalty_delta,omitempty"`
+	GoldSpent       int64                  `protobuf:"varint,4,opt,name=gold_spent,json=goldSpent,proto3" json:"gold_spent,omitempty"`
+	ItemCfgId       int32                  `protobuf:"varint,5,opt,name=item_cfg_id,json=itemCfgId,proto3" json:"item_cfg_id,omitempty"`
+	NextLargessAtMs int64                  `protobuf:"varint,6,opt,name=next_largess_at_ms,json=nextLargessAtMs,proto3" json:"next_largess_at_ms,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *LargessHeroResponse) Reset() {
+	*x = LargessHeroResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LargessHeroResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LargessHeroResponse) ProtoMessage() {}
+
+func (x *LargessHeroResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LargessHeroResponse.ProtoReflect.Descriptor instead.
+func (*LargessHeroResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *LargessHeroResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *LargessHeroResponse) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
+func (x *LargessHeroResponse) GetLoyaltyDelta() int32 {
+	if x != nil {
+		return x.LoyaltyDelta
+	}
+	return 0
+}
+
+func (x *LargessHeroResponse) GetGoldSpent() int64 {
+	if x != nil {
+		return x.GoldSpent
+	}
+	return 0
+}
+
+func (x *LargessHeroResponse) GetItemCfgId() int32 {
+	if x != nil {
+		return x.ItemCfgId
+	}
+	return 0
+}
+
+func (x *LargessHeroResponse) GetNextLargessAtMs() int64 {
+	if x != nil {
+		return x.NextLargessAtMs
+	}
+	return 0
+}
+
 var File_sanguo_hero_v1_hero_proto protoreflect.FileDescriptor
 
 var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
@@ -2022,12 +2224,42 @@ var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
 	0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x70, 0x72, 0x6f, 0x64, 0x75,
 	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x62, 0x6f, 0x6e, 0x75, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
 	0x01, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x6f, 0x6e,
-	0x75, 0x73, 0x42, 0x4e, 0x5a, 0x4c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x61, 0x6e, 0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63,
-	0x65, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e,
-	0x67, 0x75, 0x6f, 0x2f, 0x68, 0x65, 0x72, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f,
-	0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x75, 0x73, 0x22, 0xa8, 0x01, 0x0a, 0x12, 0x4c, 0x61, 0x72, 0x67, 0x65, 0x73, 0x73, 0x48, 0x65,
+	0x72, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65, 0x72,
+	0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x12,
+	0x3c, 0x0a, 0x09, 0x67, 0x69, 0x66, 0x74, 0x5f, 0x6b, 0x69, 0x6e, 0x64, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x1f, 0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68, 0x65, 0x72, 0x6f,
+	0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x61, 0x72, 0x67, 0x65, 0x73, 0x73, 0x47, 0x69, 0x66, 0x74, 0x4b,
+	0x69, 0x6e, 0x64, 0x52, 0x08, 0x67, 0x69, 0x66, 0x74, 0x4b, 0x69, 0x6e, 0x64, 0x12, 0x1e, 0x0a,
+	0x0b, 0x69, 0x74, 0x65, 0x6d, 0x5f, 0x63, 0x66, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x09, 0x69, 0x74, 0x65, 0x6d, 0x43, 0x66, 0x67, 0x49, 0x64, 0x22, 0xd9, 0x01,
+	0x0a, 0x13, 0x4c, 0x61, 0x72, 0x67, 0x65, 0x73, 0x73, 0x48, 0x65, 0x72, 0x6f, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x12, 0x18,
+	0x0a, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x23, 0x0a, 0x0d, 0x6c, 0x6f, 0x79, 0x61,
+	0x6c, 0x74, 0x79, 0x5f, 0x64, 0x65, 0x6c, 0x74, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x0c, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x44, 0x65, 0x6c, 0x74, 0x61, 0x12, 0x1d, 0x0a,
+	0x0a, 0x67, 0x6f, 0x6c, 0x64, 0x5f, 0x73, 0x70, 0x65, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x09, 0x67, 0x6f, 0x6c, 0x64, 0x53, 0x70, 0x65, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0b,
+	0x69, 0x74, 0x65, 0x6d, 0x5f, 0x63, 0x66, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x09, 0x69, 0x74, 0x65, 0x6d, 0x43, 0x66, 0x67, 0x49, 0x64, 0x12, 0x2b, 0x0a, 0x12,
+	0x6e, 0x65, 0x78, 0x74, 0x5f, 0x6c, 0x61, 0x72, 0x67, 0x65, 0x73, 0x73, 0x5f, 0x61, 0x74, 0x5f,
+	0x6d, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0f, 0x6e, 0x65, 0x78, 0x74, 0x4c, 0x61,
+	0x72, 0x67, 0x65, 0x73, 0x73, 0x41, 0x74, 0x4d, 0x73, 0x2a, 0x5d, 0x0a, 0x0f, 0x4c, 0x61, 0x72,
+	0x67, 0x65, 0x73, 0x73, 0x47, 0x69, 0x66, 0x74, 0x4b, 0x69, 0x6e, 0x64, 0x12, 0x1c, 0x0a, 0x18,
+	0x4c, 0x41, 0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46, 0x54, 0x5f, 0x55, 0x4e, 0x53,
+	0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x15, 0x0a, 0x11, 0x4c, 0x41,
+	0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46, 0x54, 0x5f, 0x47, 0x4f, 0x4c, 0x44, 0x10,
+	0x01, 0x12, 0x15, 0x0a, 0x11, 0x4c, 0x41, 0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46,
+	0x54, 0x5f, 0x49, 0x54, 0x45, 0x4d, 0x10, 0x02, 0x42, 0x4e, 0x5a, 0x4c, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e, 0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74,
+	0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73,
+	0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x68, 0x65, 0x72, 0x6f, 0x2f, 0x76,
+	0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -2042,52 +2274,57 @@ func file_sanguo_hero_v1_hero_proto_rawDescGZIP() []byte {
 	return file_sanguo_hero_v1_hero_proto_rawDescData
 }
 
-var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_sanguo_hero_v1_hero_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_sanguo_hero_v1_hero_proto_goTypes = []any{
-	(*PlayerHeroSummary)(nil),                  // 0: sanguo.hero.v1.PlayerHeroSummary
-	(*ListPlayerHeroesRequest)(nil),            // 1: sanguo.hero.v1.ListPlayerHeroesRequest
-	(*ListPlayerHeroesResponse)(nil),           // 2: sanguo.hero.v1.ListPlayerHeroesResponse
-	(*GetHeroDetailRequest)(nil),               // 3: sanguo.hero.v1.GetHeroDetailRequest
-	(*HeroAttributes)(nil),                     // 4: sanguo.hero.v1.HeroAttributes
-	(*GetHeroDetailResponse)(nil),              // 5: sanguo.hero.v1.GetHeroDetailResponse
-	(*UpgradeHeroRequest)(nil),                 // 6: sanguo.hero.v1.UpgradeHeroRequest
-	(*UpgradeHeroResponse)(nil),                // 7: sanguo.hero.v1.UpgradeHeroResponse
-	(*RecruitHeroRequest)(nil),                 // 8: sanguo.hero.v1.RecruitHeroRequest
-	(*RecruitHeroResponse)(nil),                // 9: sanguo.hero.v1.RecruitHeroResponse
-	(*RecruitTemplatePreview)(nil),             // 10: sanguo.hero.v1.RecruitTemplatePreview
-	(*ListRecruitTemplatesRequest)(nil),        // 11: sanguo.hero.v1.ListRecruitTemplatesRequest
-	(*ListRecruitTemplatesResponse)(nil),       // 12: sanguo.hero.v1.ListRecruitTemplatesResponse
-	(*HotelRecruitCandidate)(nil),              // 13: sanguo.hero.v1.HotelRecruitCandidate
-	(*ListHotelRecruitCandidatesRequest)(nil),  // 14: sanguo.hero.v1.ListHotelRecruitCandidatesRequest
-	(*ListHotelRecruitCandidatesResponse)(nil), // 15: sanguo.hero.v1.ListHotelRecruitCandidatesResponse
-	(*RefreshHotelRecruitPoolRequest)(nil),     // 16: sanguo.hero.v1.RefreshHotelRecruitPoolRequest
-	(*RefreshHotelRecruitPoolResponse)(nil),    // 17: sanguo.hero.v1.RefreshHotelRecruitPoolResponse
-	(*RecruitHotelCandidateRequest)(nil),       // 18: sanguo.hero.v1.RecruitHotelCandidateRequest
-	(*RecruitHotelCandidateResponse)(nil),      // 19: sanguo.hero.v1.RecruitHotelCandidateResponse
-	(*SetCityChiefRequest)(nil),                // 20: sanguo.hero.v1.SetCityChiefRequest
-	(*SetCityChiefResponse)(nil),               // 21: sanguo.hero.v1.SetCityChiefResponse
-	(*ClearCityChiefRequest)(nil),              // 22: sanguo.hero.v1.ClearCityChiefRequest
-	(*ClearCityChiefResponse)(nil),             // 23: sanguo.hero.v1.ClearCityChiefResponse
-	(*GetCityChiefRequest)(nil),                // 24: sanguo.hero.v1.GetCityChiefRequest
-	(*GetCityChiefResponse)(nil),               // 25: sanguo.hero.v1.GetCityChiefResponse
-	(*v1.ResourceWallet)(nil),                  // 26: sanguo.common.v1.ResourceWallet
-	(*v1.RewardItem)(nil),                      // 27: sanguo.common.v1.RewardItem
+	(LargessGiftKind)(0),                       // 0: sanguo.hero.v1.LargessGiftKind
+	(*PlayerHeroSummary)(nil),                  // 1: sanguo.hero.v1.PlayerHeroSummary
+	(*ListPlayerHeroesRequest)(nil),            // 2: sanguo.hero.v1.ListPlayerHeroesRequest
+	(*ListPlayerHeroesResponse)(nil),           // 3: sanguo.hero.v1.ListPlayerHeroesResponse
+	(*GetHeroDetailRequest)(nil),               // 4: sanguo.hero.v1.GetHeroDetailRequest
+	(*HeroAttributes)(nil),                     // 5: sanguo.hero.v1.HeroAttributes
+	(*GetHeroDetailResponse)(nil),              // 6: sanguo.hero.v1.GetHeroDetailResponse
+	(*UpgradeHeroRequest)(nil),                 // 7: sanguo.hero.v1.UpgradeHeroRequest
+	(*UpgradeHeroResponse)(nil),                // 8: sanguo.hero.v1.UpgradeHeroResponse
+	(*RecruitHeroRequest)(nil),                 // 9: sanguo.hero.v1.RecruitHeroRequest
+	(*RecruitHeroResponse)(nil),                // 10: sanguo.hero.v1.RecruitHeroResponse
+	(*RecruitTemplatePreview)(nil),             // 11: sanguo.hero.v1.RecruitTemplatePreview
+	(*ListRecruitTemplatesRequest)(nil),        // 12: sanguo.hero.v1.ListRecruitTemplatesRequest
+	(*ListRecruitTemplatesResponse)(nil),       // 13: sanguo.hero.v1.ListRecruitTemplatesResponse
+	(*HotelRecruitCandidate)(nil),              // 14: sanguo.hero.v1.HotelRecruitCandidate
+	(*ListHotelRecruitCandidatesRequest)(nil),  // 15: sanguo.hero.v1.ListHotelRecruitCandidatesRequest
+	(*ListHotelRecruitCandidatesResponse)(nil), // 16: sanguo.hero.v1.ListHotelRecruitCandidatesResponse
+	(*RefreshHotelRecruitPoolRequest)(nil),     // 17: sanguo.hero.v1.RefreshHotelRecruitPoolRequest
+	(*RefreshHotelRecruitPoolResponse)(nil),    // 18: sanguo.hero.v1.RefreshHotelRecruitPoolResponse
+	(*RecruitHotelCandidateRequest)(nil),       // 19: sanguo.hero.v1.RecruitHotelCandidateRequest
+	(*RecruitHotelCandidateResponse)(nil),      // 20: sanguo.hero.v1.RecruitHotelCandidateResponse
+	(*SetCityChiefRequest)(nil),                // 21: sanguo.hero.v1.SetCityChiefRequest
+	(*SetCityChiefResponse)(nil),               // 22: sanguo.hero.v1.SetCityChiefResponse
+	(*ClearCityChiefRequest)(nil),              // 23: sanguo.hero.v1.ClearCityChiefRequest
+	(*ClearCityChiefResponse)(nil),             // 24: sanguo.hero.v1.ClearCityChiefResponse
+	(*GetCityChiefRequest)(nil),                // 25: sanguo.hero.v1.GetCityChiefRequest
+	(*GetCityChiefResponse)(nil),               // 26: sanguo.hero.v1.GetCityChiefResponse
+	(*LargessHeroRequest)(nil),                 // 27: sanguo.hero.v1.LargessHeroRequest
+	(*LargessHeroResponse)(nil),                // 28: sanguo.hero.v1.LargessHeroResponse
+	(*v1.ResourceWallet)(nil),                  // 29: sanguo.common.v1.ResourceWallet
+	(*v1.RewardItem)(nil),                      // 30: sanguo.common.v1.RewardItem
 }
 var file_sanguo_hero_v1_hero_proto_depIdxs = []int32{
-	0,  // 0: sanguo.hero.v1.ListPlayerHeroesResponse.heroes:type_name -> sanguo.hero.v1.PlayerHeroSummary
-	4,  // 1: sanguo.hero.v1.GetHeroDetailResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
-	4,  // 2: sanguo.hero.v1.UpgradeHeroResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
-	26, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
-	27, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
-	10, // 5: sanguo.hero.v1.ListRecruitTemplatesResponse.templates:type_name -> sanguo.hero.v1.RecruitTemplatePreview
-	4,  // 6: sanguo.hero.v1.HotelRecruitCandidate.attributes:type_name -> sanguo.hero.v1.HeroAttributes
-	13, // 7: sanguo.hero.v1.ListHotelRecruitCandidatesResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
-	13, // 8: sanguo.hero.v1.RefreshHotelRecruitPoolResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
-	9,  // [9:9] is the sub-list for method output_type
-	9,  // [9:9] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	1,  // 0: sanguo.hero.v1.ListPlayerHeroesResponse.heroes:type_name -> sanguo.hero.v1.PlayerHeroSummary
+	5,  // 1: sanguo.hero.v1.GetHeroDetailResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
+	5,  // 2: sanguo.hero.v1.UpgradeHeroResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
+	29, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
+	30, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
+	11, // 5: sanguo.hero.v1.ListRecruitTemplatesResponse.templates:type_name -> sanguo.hero.v1.RecruitTemplatePreview
+	5,  // 6: sanguo.hero.v1.HotelRecruitCandidate.attributes:type_name -> sanguo.hero.v1.HeroAttributes
+	14, // 7: sanguo.hero.v1.ListHotelRecruitCandidatesResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
+	14, // 8: sanguo.hero.v1.RefreshHotelRecruitPoolResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
+	0,  // 9: sanguo.hero.v1.LargessHeroRequest.gift_kind:type_name -> sanguo.hero.v1.LargessGiftKind
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_hero_v1_hero_proto_init() }
@@ -2100,13 +2337,14 @@ func file_sanguo_hero_v1_hero_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_hero_v1_hero_proto_rawDesc), len(file_sanguo_hero_v1_hero_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   26,
+			NumEnums:      1,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_sanguo_hero_v1_hero_proto_goTypes,
 		DependencyIndexes: file_sanguo_hero_v1_hero_proto_depIdxs,
+		EnumInfos:         file_sanguo_hero_v1_hero_proto_enumTypes,
 		MessageInfos:      file_sanguo_hero_v1_hero_proto_msgTypes,
 	}.Build()
 	File_sanguo_hero_v1_hero_proto = out.File

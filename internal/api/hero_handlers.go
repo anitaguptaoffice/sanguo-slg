@@ -295,6 +295,52 @@ func (s *Server) handleGetCityChief(ctx context.Context, pkt *commonv1.ClientPac
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
+func (s *Server) handleLargessHero(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	if s.heroSvc == nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "hero not wired"), nil
+	}
+	var req herov1.LargessHeroRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
+	}
+	if req.GetHeroId() == 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
+	}
+	var kind hero.LargessGiftKind
+	switch req.GetGiftKind() {
+	case herov1.LargessGiftKind_LARGESS_GIFT_GOLD:
+		kind = hero.LargessGiftGold
+	case herov1.LargessGiftKind_LARGESS_GIFT_ITEM:
+		kind = hero.LargessGiftItem
+		if req.GetItemCfgId() == 0 {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "item_cfg_id required"), nil
+		}
+	default:
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "gift_kind required"), nil
+	}
+	res, err := s.heroSvc.LargessPlayer(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, s.heroInventoryPort(), hero.LargessRequest{
+		HeroID: req.GetHeroId(), Kind: kind, ItemCfgID: req.GetItemCfgId(),
+	})
+	if err != nil {
+		return heroErr(pkt.GetTraceId(), err), nil
+	}
+	data, err := marshal(&herov1.LargessHeroResponse{
+		HeroId: res.Hero.HeroID, Loyalty: int32(res.Hero.Loyalty), LoyaltyDelta: res.LoyaltyDelta,
+		GoldSpent: res.GoldSpent, ItemCfgId: res.ItemCfgID, NextLargessAtMs: res.NextLargessAtMS,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
 func heroErr(trace string, err error) *commonv1.ServerPacket {
 	switch {
 	case errors.Is(err, hero.ErrHeroNotFound):
@@ -306,6 +352,12 @@ func heroErr(trace string, err error) *commonv1.ServerPacket {
 	case errors.Is(err, hero.ErrInsufficientRes), errors.Is(err, hero.ErrInsufficientItem), errors.Is(err, hero.ErrInsufficientExp):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrMaxLevel), errors.Is(err, hero.ErrHeroNotInCity):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, hero.ErrInsufficientGold):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, hero.ErrLargessCooldown),
+		errors.Is(err, hero.ErrLargessInvalidGift), errors.Is(err, hero.ErrLargessUnknownItem),
+		errors.Is(err, hero.ErrGoldLargessNotNeeded), errors.Is(err, hero.ErrLoyaltyMax):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrEmptyPool):
 		return errResp(trace, commonv1.ErrorCode_COMMON_UNAVAILABLE, err.Error())

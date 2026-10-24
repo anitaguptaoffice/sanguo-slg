@@ -14,11 +14,16 @@ var (
 	ErrHeroNotFound     = errors.New("hero: hero not found")
 	ErrHeroNotIdle      = errors.New("hero: hero is not idle")
 	ErrInvalidRecruit   = errors.New("hero: invalid recruit request")
-	ErrRecruitItemType  = errors.New("hero: item is not a recruit scroll")
-	ErrInsufficientExp  = errors.New("hero: insufficient exp")
-	ErrMaxLevel         = errors.New("hero: max level reached")
-	ErrHeroNotInCity    = errors.New("hero: not idle in city")
-	ErrLevelTableMissing = errors.New("hero: level table missing")
+	ErrRecruitItemType       = errors.New("hero: item is not a recruit scroll")
+	ErrInsufficientExp       = errors.New("hero: insufficient exp")
+	ErrMaxLevel              = errors.New("hero: max level reached")
+	ErrHeroNotInCity         = errors.New("hero: not idle in city")
+	ErrLevelTableMissing     = errors.New("hero: level table missing")
+	ErrLargessCooldown       = errors.New("hero: largess on cooldown")
+	ErrLargessInvalidGift    = errors.New("hero: invalid largess gift")
+	ErrLargessUnknownItem    = errors.New("hero: item cannot be used for largess")
+	ErrGoldLargessNotNeeded = errors.New("hero: gold largess not effective")
+	ErrLoyaltyMax           = errors.New("hero: loyalty already at maximum")
 )
 
 const (
@@ -32,9 +37,12 @@ const (
 	LoyaltyMax        = 100
 	LoyaltyDefault    = 100
 	MaxLevelM1        = 20
+	LargessCooldown   = 15 * 60 // seconds; legacy mem_hero_schedule.last_largess
 )
 
-type Resources struct{ Food, Wood, Stone, Iron int64 }
+type Resources struct {
+	Food, Wood, Stone, Iron, Gold int64
+}
 
 func (a *Resources) Sub(b Resources) bool {
 	if a.Food < b.Food || a.Wood < b.Wood || a.Stone < b.Stone || a.Iron < b.Iron {

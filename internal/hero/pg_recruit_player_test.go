@@ -94,6 +94,10 @@ func (p *pgRecruitInventory) ApplyRecruitSpend(ctx context.Context, ref PlayerRe
 	return nil
 }
 
+func (p *pgRecruitInventory) ApplyLargessSpend(_ context.Context, _ PlayerRef, _ int64, _ int32) error {
+	return nil
+}
+
 func TestRecruitPlayerPGDeductsWalletAndItems(t *testing.T) {
 	pool := openHeroTestDB(t)
 	ctx := context.Background()
