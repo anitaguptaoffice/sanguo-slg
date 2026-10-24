@@ -84,6 +84,14 @@ export function bagEmptyListClass(): string {
   return "bag-empty";
 }
 
+export function shopEmptyListMessage(): string {
+  return "货架暂无商品，可点「刷新货架」重试";
+}
+
+export function shopListLoadErrorListHint(): string {
+  return "请点「刷新货架」重试";
+}
+
 const BAG_ITEM_ID_COL_WIDTH = 5;
 
 /** 道具 ID 列（等宽数字，便于与数量列对齐）。 */

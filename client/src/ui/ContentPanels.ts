@@ -38,8 +38,20 @@ import {
   writeBagCategoryTabSession,
   type BagClientCategory,
 } from "@/net/bagCategory";
-import { bagEmptyListClass, formatBagStackRowLabel } from "@/net/panelDensity";
-import { renderPanelStateListRow } from "@/engine/panelStateChrome";
+import {
+  bagEmptyListClass,
+  formatBagStackRowLabel,
+  shopEmptyListMessage,
+  shopListLoadErrorListHint,
+} from "@/net/panelDensity";
+import {
+  applyShopPurchaseAffordDisplay,
+  shopOfferAffordInlineForRow,
+} from "@/net/shopOfferAfford";
+import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
 import {
   countShopOffersByCategory,
   filterShopOffersByCategory,
@@ -106,6 +118,8 @@ export class ContentPanels {
   /** CLIENT-079：当前选中道具的批量格勾选（0-based 格序号）。 */
   private bagBatchCheckedSlots = new Set<number>();
   private shopPurchaseSubmitState: PurchaseSubmitState = "idle";
+  private shopListLoading = false;
+  private shopListError: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -240,13 +254,13 @@ export class ContentPanels {
   }
 
   private syncShopWalletGap(): void {
+    const purchaseCount = 1;
     const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
-    applyWalletGapBar(
+    applyShopPurchaseAffordDisplay(
       this.shopPanel,
-      "shop-wallet-gap",
       offer?.price_resources,
       this.sessionWallet(),
-      { multiplier: 1 },
+      purchaseCount,
     );
     this.syncShopPurchaseSubmit();
   }
@@ -504,10 +518,25 @@ export class ContentPanels {
     if (!ul || !sel) return;
     ul.innerHTML = "";
     sel.innerHTML = "";
+    if (this.shopListLoading) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE);
+      this.syncShopWalletGap();
+      return;
+    }
+    if (this.shopListError) {
+      renderPanelStateListRow(ul, "error", this.shopListError, {
+        legacyClass: "shop-list-error",
+      });
+      this.syncShopWalletGap();
+      return;
+    }
+    const wallet = this.sessionWallet();
     for (const o of visible) {
       const li = document.createElement("li");
       const price = formatWalletPrice(o.price_resources ?? {});
       let line = formatShopOfferListLine(o, price);
+      const afford = shopOfferAffordInlineForRow(wallet, o, 1);
+      if (afford) line += ` · ${afford}`;
       const flash = this.shopPurchaseFlash.get(o.offer_id ?? 0);
       if (flash) line += ` · ${flash}`;
       li.textContent = line;
@@ -523,6 +552,11 @@ export class ContentPanels {
     }
     if (visible[0]?.offer_id) {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
+    }
+    if (!visible.length) {
+      const msg =
+        this.shopOffers.length === 0 ? shopEmptyListMessage() : "当前分类暂无商品";
+      renderPanelStateListRow(ul, "empty", msg, { legacyClass: "shop-empty" });
     }
     this.syncShopWalletGap();
   }
@@ -755,14 +789,22 @@ export class ContentPanels {
 
   private async refreshShop(): Promise<void> {
     const sid = this.serverId();
+    this.shopListLoading = true;
+    this.shopListError = null;
+    this.renderShopList();
     this.onStatus("拉取货架…");
     try {
       const res = (await this.gateway.listShopShelf(sid)) as { offers?: ShopOffer[] };
       this.shopOffers = res.offers ?? [];
+      this.shopListLoading = false;
+      this.shopListError = null;
       this.renderShopList();
       this.onStatus(`货架 ${this.shopOffers.length} 个商品`);
     } catch (e) {
-      this.onStatus(gatewayErrorMessage(e));
+      this.shopListLoading = false;
+      this.shopListError = `${gatewayErrorMessage(e)} · ${shopListLoadErrorListHint()}`;
+      this.renderShopList();
+      this.onStatus(this.shopListError);
     }
   }
 
