@@ -56,6 +56,14 @@ import {
   heroListRowShowsLoyaltyResidualWarnDot,
 } from "@/net/heroListLoyaltyResidualSubline";
 import {
+  formatHeroListLoyaltyResidualDeepSubline,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_ROLE,
+  HERO_LOYALTY_RESIDUAL_DEEP_WARN_DOT_CLASS,
+  heroListRowShowsLoyaltyResidualDeepWarnDot,
+} from "@/net/heroListLoyaltyResidualDeepSubline";
+import { scheduleHeroDetailConsumableStackResidualDeepSweep } from "@/net/heroDetailConsumableStackResidualDeepSweep";
+import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
   readHeroListFilterSession,
@@ -1047,9 +1055,22 @@ export class HeroMailPanels {
         loyaltyResidualSubline.appendChild(
           document.createTextNode(formatHeroListLoyaltyResidualSubline(rowSource, filterCtx)),
         );
+        const loyaltyResidualDeepSubline = document.createElement("span");
+        loyaltyResidualDeepSubline.className = HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS;
+        loyaltyResidualDeepSubline.setAttribute("data-role", HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_ROLE);
+        if (heroListRowShowsLoyaltyResidualDeepWarnDot(rowSource, filterCtx)) {
+          const deepDot = document.createElement("span");
+          deepDot.className = HERO_LOYALTY_RESIDUAL_DEEP_WARN_DOT_CLASS;
+          deepDot.setAttribute("aria-hidden", "true");
+          loyaltyResidualDeepSubline.appendChild(deepDot);
+        }
+        loyaltyResidualDeepSubline.appendChild(
+          document.createTextNode(formatHeroListLoyaltyResidualDeepSubline(rowSource, filterCtx)),
+        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
         body.appendChild(loyaltyResidualSubline);
+        body.appendChild(loyaltyResidualDeepSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
@@ -1102,6 +1123,7 @@ export class HeroMailPanels {
           this.assets,
           this.heroPanel,
         );
+        scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
       }
     }
   }

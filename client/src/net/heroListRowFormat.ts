@@ -10,6 +10,8 @@ export const HERO_LIST_ROW_PANEL_SKIN_ID = "ui.panel.listrow.default.v1";
 export type HeroListRowSource = HeroSummary & {
   template_name?: string;
   attributes?: HeroAttributes;
+  exp_current?: number;
+  exp_to_next?: number;
 };
 
 export function formatHeroAttributesAbbrev(attrs: HeroAttributes): string {
@@ -66,6 +68,8 @@ export function resolveHeroListRowSource(
     template_name: detail.template_name ?? hero.template_name,
     level: detail.level ?? hero.level,
     loyalty: detail.loyalty ?? hero.loyalty,
+    exp_current: detail.exp_current,
+    exp_to_next: detail.exp_to_next,
     attributes: detail.attributes,
   };
 }

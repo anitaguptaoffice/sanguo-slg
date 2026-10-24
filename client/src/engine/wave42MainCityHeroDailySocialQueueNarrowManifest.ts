@@ -68,6 +68,14 @@ export const HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS = "hero-list-loyalty-resid
 export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_CLASS =
   "hero-detail-consumable-stack-residual-line";
 
+/** CLIENT-262: hero list loyalty residual deep subline (CLIENT-246 baseline). */
+export const HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS =
+  "hero-list-row-loyalty-residual-deep-subline";
+
+/** CLIENT-262: hero detail consumable stack residual deep sweep line. */
+export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_CLASS =
+  "hero-detail-consumable-stack-residual-deep-sweep";
+
 /** CLIENT-247: hero panel loading/empty/error residual sweep row. */
 export const HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS = "hero-panel-state-residual-sweep";
 
@@ -111,6 +119,8 @@ export const DOMESTIC_SLOT_COMPLETE_MARGIN_RESIDUAL_RING_SELECTOR = `.main-city-
 export const DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_SELECTOR = `.main-city-slot-overlay .${DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_CLASS}, .main-city-slot-upgrade-tag .${DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_CLASS}`;
 export const HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_SELECTOR = `.content-panel[data-center-panel="hero"] .hero-list .${HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS}`;
 export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_CLASS}`;
+export const HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_SELECTOR = `.content-panel[data-center-panel="hero"] .hero-list .${HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS}`;
+export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_CLASS}`;
 export const HERO_PANEL_STATE_RESIDUAL_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS}`;
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS}`;
 export const RANK_PIN_KEEP_RESIDUAL_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-list li.${RANK_PIN_KEEP_RESIDUAL_RING_CLASS}`;
