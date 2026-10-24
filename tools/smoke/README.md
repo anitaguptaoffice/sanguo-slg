@@ -2,7 +2,19 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## 俘虏/结交/来投 L6–L8 网关冒烟（INTG-045，推荐）
+
+在 INTG-044 全量断言之上覆盖 **L6 俘虏**（`InjectCaptive` 种子 → `hero.v1.ListCaptiveHeroes`；`TrySummonCaptive` 城不匹配拒绝 + 成功预检；GM 补金 → `SureSummonCaptive` 招降 + 非俘虏再招降拒绝；第二俘虏 `ReleaseCaptive` 释放）、**L7 来投**（`InjectComing` → `ListComingHeroes`；`RejectComing` + 已拒 `TryAcceptComing` 非状态拒绝；`TryAcceptComing` / `SureAcceptComing` 接受）、**L8 结交**（`ListPersuadeTargets`；未结交 `PersuadeHero` 拒绝；`LionizeHero` 结交 + 好友不足再招募拒绝；GM 锦囊 + 测试时钟推进冷却 → 两次 `PersuadeHero` → `LionizeHero` 招募）。无城 **skip** + hint；**不改**业务语义，仅测试/种子。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG045HeroL6L8SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-045:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## 将领 L1–L5 网关冒烟（INTG-044，推荐）
 
