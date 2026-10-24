@@ -128,5 +128,50 @@ describe("ContentPanels shop afford inline (CLIENT-154)", () => {
     expect(buy.disabled).toBe(true);
     const row = mount.querySelector(".shop-list li");
     expect(row?.textContent).toContain("缺少：");
+    expect(row?.querySelector(".shop-price-vs-wallet")?.textContent).toMatch(/现价/);
+  });
+});
+
+describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
+  it("updates tab settlement wallet line when switching category tabs", async () => {
+    const mount = document.createElement("div");
+    const listShopShelf = vi.fn().mockResolvedValue({
+      offers: [
+        {
+          offer_id: 1001,
+          shelf_name: "谷袋",
+          item_cfg_id: 2001,
+          quantity_per_purchase: 1,
+          price_resources: { gold: 10 },
+        },
+        {
+          offer_id: 1022,
+          shelf_name: "补给包",
+          item_cfg_id: 2042,
+          quantity_per_purchase: 2,
+          price_resources: { food: 400 },
+        },
+      ],
+    });
+    const gateway = {
+      getBoundServerId: () => 1,
+      listShopShelf,
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => ({ ...baseSession(), wallet: { gold: 50, food: 800 } }),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleShop();
+    await vi.waitFor(() => expect(listShopShelf).toHaveBeenCalled());
+    const sweep = () => mount.querySelector('[data-role="shop-tab-currency-sweep"]');
+    expect(sweep()?.textContent).toMatch(/本类余额：.*币 50/);
+    const otherTab = mount.querySelector('[data-shop-category="other"]') as HTMLButtonElement;
+    otherTab.click();
+    expect(sweep()?.textContent).toMatch(/本类余额：.*粮 800/);
+    expect(sweep()?.textContent).not.toMatch(/币 50/);
   });
 });
