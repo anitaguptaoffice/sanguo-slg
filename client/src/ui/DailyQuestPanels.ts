@@ -63,6 +63,7 @@ import {
   orderBatchClaimDailyQuestIds,
   validateBatchClaimDailySelection,
 } from "@/net/dailyQuestBatchClaim";
+import { scrollDailyQuestCfgRowIntoView } from "@/net/dailyQueueAnchor";
 import {
   appendDailyQuestRowSecondary,
   formatDailyQuestRowPrimary,
@@ -140,13 +141,23 @@ export class DailyQuestPanels {
     return this.rows.slice();
   }
 
+  /** 当前选中日常行（含 catalog 全链快照，供队列锚点解析）。 */
+  getSelectedQuestRow(): DailyQuestRow | null {
+    const id = this.selectedCfgId;
+    if (id <= 0) return null;
+    return (
+      this.catalogQuestRows.find((r) => r.quest_cfg_id === id) ??
+      this.rows.find((r) => r.quest_cfg_id === id) ??
+      null
+    );
+  }
+
   /** 队列面板深链：打开日常并滚动到指定 quest 行。 */
   openAndFocusQuest(questCfgId: number): void {
     this.panel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.panel);
     void this.refreshList(questCfgId).then(() => {
-      const row = this.panel.querySelector(`li[data-quest-cfg-id="${questCfgId}"]`);
-      row?.scrollIntoView?.({ block: "nearest" });
+      scrollDailyQuestCfgRowIntoView(this.panel, questCfgId);
     });
   }
 
@@ -537,7 +548,12 @@ export class DailyQuestPanels {
       const catalogRows = filterDailyQuestRowsToCatalogChains(
         dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] }),
       );
-      this.applyChainTabRows(catalogRows, this.activeChainId, false);
+      let preferredChainId = this.activeChainId;
+      if (focusCfgId != null && focusCfgId > 0) {
+        const focused = catalogRows.find((r) => r.quest_cfg_id === focusCfgId);
+        if (focused?.chain_id) preferredChainId = focused.chain_id;
+      }
+      this.applyChainTabRows(catalogRows, preferredChainId, false);
       let pick: DailyQuestRow | null = null;
       if (focusCfgId != null && focusCfgId > 0) {
         pick = this.rows.find((r) => r.quest_cfg_id === focusCfgId) ?? null;

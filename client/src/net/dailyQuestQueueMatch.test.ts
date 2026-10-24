@@ -3,6 +3,7 @@ import {
   buildingUpgradeMatchesBuildQuest,
   findActiveUpgradeForBuildQuest,
   findBuildDailyQuestForBuilding,
+  findTrainDailyQuestForRecruit,
   formatBuildQueueCountdownForQuest,
   formatDailyQuestQueueInlineHint,
   formatLinkedDailyQuestProgressSummary,
@@ -65,6 +66,19 @@ describe("dailyQuestQueueMatch", () => {
     const summary = formatBuildQueueCountdownForQuest(quest, [building], { farm: "农田" }, now);
     expect(summary).toContain("队列：农田");
     expect(summary).toContain("Lv2");
+  });
+
+  it("links train daily to active recruit queue row", () => {
+    const trainQuest = { quest_cfg_id: 1014, quest_code: "daily_train_1", state: 2 };
+    const recruit = { queue_id: 3, unit_cfg_id: 1, count: 12, finish_at_ms: now + 80_000 };
+    expect(findTrainDailyQuestForRecruit(recruit, [trainQuest], now)).toEqual(trainQuest);
+    expect(
+      findTrainDailyQuestForRecruit(
+        { queue_id: 4, unit_cfg_id: 1, count: 1, finish_at_ms: now - 1 },
+        [trainQuest],
+        now,
+      ),
+    ).toBeNull();
   });
 
   it("formats linked daily progress for queue build row", () => {
