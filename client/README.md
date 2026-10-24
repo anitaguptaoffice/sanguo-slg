@@ -72,6 +72,8 @@
 
 **CLIENT-258（军情 phase 变更扫读与再出征表单预填残余）**：`ListMarches` phase 变化行与选中行军信息卡阶段条叠加 **`intel-phase-change-residual-pulse` 1.5s**（与 **CLIENT-221** `intel-phase-change-flash`、**CLIENT-205** `march-intel-phase-eta-strip`、**CLIENT-220** 小地图互选 **并存**；**非** wave:39 phase 脉冲主叙事重复堆叠）。军情行 **再出征** 走 **`prefillMarchFormFromIntelResidual`**，军事面板 **`march-intel-remarch-residual-summary`** 只读展示目标坐标与 **CLIENT-093** 同源兵力摘要（**CLIENT-222/238** 交接与校验戳记 **不退化**；**无** CancelMarch）。单测：`marchIntelPhaseChangeResidualPulse.test.ts`、`marchIntelRemarchResidual.test.ts`、`MarchListPanel.test.ts`；`cd client && npm test` 绿。
 
+**wave:45（CLIENT-274）军情 phase 变更扫读与再出征表单预填残余巩固加深**：`ListMarches` phase 变化行与选中行军信息卡阶段条在 **CLIENT-258** `intel-phase-change-residual-pulse` 上叠加 **`intel-phase-change-residual-deep-pulse` 2s** 巩固扫读（**CLIENT-221** flash、**CLIENT-220** 小地图互选、**CLIENT-258** 残余 **不退化**；**非** wave:39 phase 主脉冲重复堆叠）。军情行 **再出征** 走 **`prefillMarchFormFromIntelResidualDeep`**，军事面板 **`march-intel-remarch-residual-deep-summary`** 只读 **加深** 目标坐标/兵力摘要（可附带 **CLIENT-253** 底栏余量 hint；**CLIENT-258/253** **不退化**；**无** CancelMarch）。单测：`marchIntelPhaseChangeResidualDeepPulse.test.ts`、`marchIntelRemarchResidualDeep.test.ts`、`MarchListPanel.test.ts`；`cd client && npm test` 绿。
+
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。

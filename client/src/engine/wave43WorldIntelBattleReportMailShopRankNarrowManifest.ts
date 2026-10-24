@@ -124,10 +124,20 @@ export const RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS =
 /** CLIENT-258: intel phase change residual pulse (CLIENT-205/221 baseline). */
 export const INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS = "intel-phase-change-residual-pulse";
 
+/** CLIENT-274: intel phase change residual deep pulse (CLIENT-258 baseline). */
+export const INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS =
+  "intel-phase-change-residual-deep-pulse";
+
 /** CLIENT-258: remarch prefill readonly summary on military form. */
 export const INTEL_MARCH_PREFILL_RESIDUAL_LINE_CLASS = "intel-march-prefill-residual-line";
 
+/** CLIENT-274: remarch prefill readonly deep summary on military form. */
+export const INTEL_MARCH_PREFILL_RESIDUAL_DEEP_LINE_CLASS =
+  "march-intel-remarch-residual-deep-summary";
+
 export const PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_ACTION = "prefill-march-form-from-intel-residual";
+export const PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEP_ACTION =
+  "prefill-march-form-from-intel-residual-deep";
 
 /** Wave:41 baselines that must not regress alongside wave:43 residuals. */
 export {
@@ -158,7 +168,9 @@ export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_SELECTOR = `.${PANEL_RETURN_
 export const RANK_LIST_DENSITY_SCAN_RESIDUAL_LINE_SELECTOR = `.${RANK_LIST_DENSITY_SCAN_RESIDUAL_LINE_CLASS}`;
 export const RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_SELECTOR = `.${RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS}`;
 export const INTEL_PHASE_CHANGE_RESIDUAL_PULSE_SELECTOR = `.march-list li.${INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS}`;
+export const INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_SELECTOR = `.march-list li.${INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS}`;
 export const INTEL_MARCH_PREFILL_RESIDUAL_LINE_SELECTOR = `.military-panel .${INTEL_MARCH_PREFILL_RESIDUAL_LINE_CLASS}`;
+export const INTEL_MARCH_PREFILL_RESIDUAL_DEEP_LINE_SELECTOR = `.military-panel .${INTEL_MARCH_PREFILL_RESIDUAL_DEEP_LINE_CLASS}`;
 
 export const CLIENT_259_PANEL_ASSET_BY_CENTER_ID: Record<
   Client259NarrowManifestCenterPanelId,

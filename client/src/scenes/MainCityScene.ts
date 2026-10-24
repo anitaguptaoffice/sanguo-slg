@@ -121,9 +121,10 @@ import {
 } from "@/net/marchFormValidationSweep";
 import { buildMarchIntelRemarchPrefill } from "@/net/marchIntelRemarch";
 import {
-  clearMarchIntelRemarchResidualSummary,
-  prefillMarchFormFromIntelResidual,
-} from "@/net/marchIntelRemarchResidual";
+  clearMarchIntelRemarchResidualDeepSummary,
+  prefillMarchFormFromIntelResidualDeep,
+} from "@/net/marchIntelRemarchResidualDeep";
+import { clearMarchIntelRemarchResidualSummary } from "@/net/marchIntelRemarchResidual";
 import { restoreMarchTargetPrefill } from "@/net/marchTargetMemory";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import { detectBuildJustCompleted } from "@/net/buildQueueComplete";
@@ -557,6 +558,7 @@ export class MainCityScene implements Scene {
         </div>
         <p class="march-intel-last-troops hidden" data-role="march-intel-last-troops"></p>
         <p class="march-intel-remarch-residual-summary hidden" data-role="march-intel-remarch-residual-summary" aria-live="polite"></p>
+        <p class="march-intel-remarch-residual-deep-summary hidden" data-role="march-intel-remarch-residual-deep-summary" aria-live="polite"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
@@ -1337,6 +1339,7 @@ export class MainCityScene implements Scene {
       this.clearMinimapWorldGridFocus();
       this.intelRemarchTroopsLine = null;
       clearMarchIntelRemarchResidualSummary(this.militaryPanel);
+      clearMarchIntelRemarchResidualDeepSummary(this.militaryPanel);
       this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
       this.renderHud();
@@ -1352,6 +1355,7 @@ export class MainCityScene implements Scene {
         this.marchList.clearRecentMarchHighlight();
         this.intelRemarchTroopsLine = null;
         clearMarchIntelRemarchResidualSummary(this.militaryPanel);
+        clearMarchIntelRemarchResidualDeepSummary(this.militaryPanel);
       }
       syncMarchTargetSessionFromForm(this.militaryPanel);
       this.syncMinimapFocusFromMarchTarget();
@@ -1472,7 +1476,7 @@ export class MainCityScene implements Scene {
     this.militaryPanel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
-    const prefill = prefillMarchFormFromIntelResidual(
+    const prefill = prefillMarchFormFromIntelResidualDeep(
       this.militaryPanel,
       march,
       this.marchFormFeedbackContext(),
