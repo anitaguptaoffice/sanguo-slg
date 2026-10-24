@@ -78,6 +78,10 @@ import {
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
+  formatBattleReportLocationFields,
+  parseBattleReportLocation,
+} from "@/net/battleReportMinimapFocus";
+import {
   battleReportReplayGridLinkLabel,
   battleReportWorldTileGrid,
 } from "@/ui/worldTileInfoFromBattleReport";
@@ -87,7 +91,7 @@ const PAGE_LIMIT = 20;
 export type BattleReportPanelOptions = {
   unreadSession?: BattleReportUnreadSession;
   onUnreadChange?: (count: number) => void;
-  /** 详情「在地图查看」：由场景驱动小地图高亮与 pan/zoom。 */
+  /** 详情「在小地图定位」：由场景驱动复盘高亮、展开小地图与 pan/zoom（CLIENT-142）。 */
   onViewOnMap?: (summary: BattleReportSummary) => void;
   /** 关闭面板、切换战报或取消复盘时清除小地图临时标记。 */
   onClearMapReplay?: () => void;
@@ -590,31 +594,43 @@ export class BattleReportPanel {
       detailEl.appendChild(sideBar);
     }
     if (summary) {
+      const location = parseBattleReportLocation(summary);
+      const locationArea = document.createElement("div");
+      locationArea.className = "battle-report-detail-location";
+      locationArea.setAttribute("aria-label", "战场坐标");
+      const xy = document.createElement("span");
+      xy.className = "battle-report-detail-location-xy";
+      xy.textContent = location
+        ? formatBattleReportLocationFields(location)
+        : "location_x/location_y 未知";
+      locationArea.appendChild(xy);
+      if (location) {
+        const mapBtn = document.createElement("button");
+        mapBtn.type = "button";
+        mapBtn.setAttribute("data-action", "view-on-map");
+        mapBtn.textContent = "在小地图定位";
+        locationArea.appendChild(mapBtn);
+      }
+      detailEl.appendChild(locationArea);
+
       const head = document.createElement("div");
       head.className = "battle-report-detail-head";
-      const coord = document.createElement("span");
-      coord.className = "battle-report-detail-coord";
-      coord.textContent = formatReportCoord(summary);
       const foe = document.createElement("span");
       foe.className = "battle-report-detail-foe";
       foe.textContent = formatBattleReportFoeWithoutCoord(summary);
-      const mapBtn = document.createElement("button");
-      mapBtn.type = "button";
-      mapBtn.setAttribute("data-action", "view-on-map");
-      mapBtn.textContent = "在地图查看";
-      head.appendChild(coord);
       head.appendChild(foe);
-      head.appendChild(mapBtn);
       detailEl.appendChild(head);
 
       const troopScan = buildBattleReportTroopScan(summary, this.detailView);
       const summaryBlock = document.createElement("div");
       summaryBlock.className = "battle-report-detail-summary";
       summaryBlock.setAttribute("aria-label", "交战摘要");
-      const coordLine = document.createElement("p");
-      coordLine.className = "battle-report-detail-summary-coord";
-      coordLine.textContent = formatReportCoord(summary);
-      summaryBlock.appendChild(coordLine);
+      if (location) {
+        const coordLine = document.createElement("p");
+        coordLine.className = "battle-report-detail-summary-coord";
+        coordLine.textContent = formatBattleReportLocationFields(location);
+        summaryBlock.appendChild(coordLine);
+      }
       const troopTable = document.createElement("table");
       troopTable.className = "battle-report-troop-scan";
       troopTable.innerHTML = `
