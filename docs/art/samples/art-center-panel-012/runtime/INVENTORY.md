@@ -1,6 +1,11 @@
 # INVENTORY — ART-CENTER-PANEL-012 runtime
 
-Captured at git `60fdd24342794754170d0b6948c32bca1db82a07`. Art PNGs from Draft #697 @ `bcf05c7365f92f17142f4ce25a3ba1bdd2b80247` (**not merged**).
+| SHA role | Commit | Notes |
+|---|---|---|
+| `runtime_code_sha` / `tip_sha` | `fe872aaad4803f4594860315c6e1fe4adfcb6745` | Rebased onto `465fd4b3` (CLIENT-191 #716); hero detail capture |
+| `screenshot_artifacts_commit_sha` | `fe872aaad4803f4594860315c6e1fe4adfcb6745` | JPEG + probe under `runtime/` |
+
+Art PNGs from Draft #697 @ `bcf05c7365f92f17142f4ce25a3ba1bdd2b80247` (**not merged**).
 
 ## Asset contract
 
@@ -26,6 +31,8 @@ Captured at git `60fdd24342794754170d0b6948c32bca1db82a07`. Art PNGs from Draft 
 - [x] 1280 scroll reaches detail bottom
 - [x] paper muted readable
 - [x] ink body readable
+- [x] hero detail loaded (attrs table)
+- [x] 1280 scroll shows real detail (not error)
 
 Regenerate: `cd client && node scripts/capture-art-center-panel-012-evidence.mjs`
 

@@ -10,7 +10,7 @@
 
 ## Runtime
 
-见 `runtime/INVENTORY.md` 与 `runtime/probe-log.json`。
+见 `runtime/INVENTORY.md` 与 `probe-log.json`（区分 `runtime_code_sha` 与 `screenshot_artifacts_commit_sha`）。
 
 ```bash
 cd client && node scripts/capture-art-center-panel-012-evidence.mjs
