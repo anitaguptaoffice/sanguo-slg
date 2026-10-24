@@ -1,0 +1,85 @@
+{
+  "task": "ART-WORLD-MINIMAP-010",
+  "source": {
+    "note": "wave:29 engineering-original 2× sprite / 4 PNG; art Draft PR read-only (do not merge #77/#82/#108/#126/#444/#481/#506)",
+    "engineering_issue": "https://github.com/anitaguptaoffice/sanguo-slg/issues/558",
+    "pattern_prs": [
+      "https://github.com/anitaguptaoffice/sanguo-slg/pull/482",
+      "https://github.com/anitaguptaoffice/sanguo-slg/pull/509",
+      "https://github.com/anitaguptaoffice/sanguo-slg/pull/551"
+    ]
+  },
+  "manifest_asset_count": 51,
+  "minimap_asset_ids": [
+    "ui.minimap.dest.v1",
+    "ui.minimap.legend.v1"
+  ],
+  "png_entries": 4,
+  "items": [
+    {
+      "asset_id": "ui.minimap.dest.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/minimap_dest.png",
+      "bytes": 227,
+      "sha256": "c66182062a185430d0d6645f0225e7724772fa6662df224b88bb52c50901742c",
+      "display_size": {
+        "w": 14,
+        "h": 14
+      },
+      "kind": "sprite",
+      "anchor": {
+        "x": 7,
+        "y": 7
+      }
+    },
+    {
+      "asset_id": "ui.minimap.dest.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/minimap_dest.png",
+      "bytes": 531,
+      "sha256": "c8e66179fd1f6d31cb4541812e30951efd10767f3b575b620f5df1d11d3e713d",
+      "display_size": {
+        "w": 14,
+        "h": 14
+      },
+      "kind": "sprite",
+      "anchor": {
+        "x": 7,
+        "y": 7
+      }
+    },
+    {
+      "asset_id": "ui.minimap.legend.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/minimap_legend.png",
+      "bytes": 224,
+      "sha256": "6f0e432c6f9cfd619919d85f6ad73bdbad6a5a2d101cb41b0a60fb7576d9f429",
+      "display_size": {
+        "w": 240,
+        "h": 14
+      },
+      "kind": "sprite",
+      "anchor": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "asset_id": "ui.minimap.legend.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/minimap_legend.png",
+      "bytes": 305,
+      "sha256": "01c09b960daa993a48c0f5741bcce229128702f26ad72ab1188e9c184e05fd10",
+      "display_size": {
+        "w": 240,
+        "h": 14
+      },
+      "kind": "sprite",
+      "anchor": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "generated_at": "2026-10-24T01:15:36.167Z"
+}
