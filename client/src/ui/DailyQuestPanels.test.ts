@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
+import { DAILY_CHAIN_TAB_SESSION_KEY } from "@/net/dailyQuestChainTab";
 import { DAILY_QUEST_FILTER_SESSION_KEY } from "@/net/dailyQuestListFilter";
 import { DAILY_QUEST_CHAIN_ID } from "@/net/dailyQuestState";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
@@ -61,7 +62,7 @@ describe("DailyQuestPanels", () => {
     panels.toggle();
     await flushPromises();
     expect(listPlayerQuests).toHaveBeenCalledWith(1, {
-      chainId: DAILY_QUEST_CHAIN_ID,
+      chainId: 0,
       includeCompleted: true,
     });
     const ul = mount.querySelector('[data-role="daily-list"]');
@@ -517,6 +518,7 @@ describe("DailyQuestPanels", () => {
       {
         quest_cfg_id: 1012,
         quest_code: "daily_food_1",
+        chain_id: 400,
         state: 3,
         progress_current: 5000,
         progress_target: 5000,
@@ -524,6 +526,7 @@ describe("DailyQuestPanels", () => {
       {
         quest_cfg_id: 1013,
         quest_code: "daily_wood_1",
+        chain_id: 400,
         state: 3,
         progress_current: 5000,
         progress_target: 5000,
@@ -613,5 +616,90 @@ describe("DailyQuestPanels", () => {
     await flushPromises();
     const row = mount.querySelector('li[data-quest-cfg-id="1012"]');
     expect(row?.classList.contains("selected")).toBe(true);
+  });
+
+  it("shows chain tabs, switches tab, and scrolls to first in-progress (CLIENT-169)", async () => {
+    const storage = {
+      data: {} as Record<string, string>,
+      getItem(k: string) {
+        return this.data[k] ?? null;
+      },
+      setItem(k: string, v: string) {
+        this.data[k] = v;
+      },
+      removeItem(k: string) {
+        delete this.data[k];
+      },
+      clear() {
+        this.data = {};
+      },
+      key: () => null,
+      length: 0,
+    };
+    vi.stubGlobal("sessionStorage", storage);
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1010,
+            chain_id: 400,
+            state: 2,
+            progress_current: 10,
+            progress_target: 50,
+          },
+          {
+            quest_cfg_id: 2100,
+            chain_id: 401,
+            state: 2,
+            progress_current: 1,
+            progress_target: 3,
+          },
+          {
+            quest_cfg_id: 2101,
+            chain_id: 401,
+            state: 2,
+            progress_current: 5,
+            progress_target: 5,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    expect(mount.querySelectorAll(".daily-chain-tab")).toHaveLength(2);
+    expect(mount.querySelectorAll('li[data-quest-cfg-id="1010"]')).toHaveLength(1);
+
+    const tab401 = mount.querySelector('[data-daily-chain-id="401"]') as HTMLButtonElement;
+    tab401?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(storage.data[DAILY_CHAIN_TAB_SESSION_KEY]).toBe("401");
+    expect(mount.querySelectorAll('li[data-quest-cfg-id="2100"]')).toHaveLength(1);
+    expect(mount.querySelector('li[data-quest-cfg-id="2100"]')?.classList.contains("selected")).toBe(
+      true,
+    );
+    expect(scrollIntoView).toHaveBeenCalled();
+
+    mount
+      .querySelector('[data-action="daily-filter"][data-filter="claimable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(mount.querySelector('[data-action="daily-locate-first"]')?.hidden).toBe(true);
+
+    vi.unstubAllGlobals();
   });
 });

@@ -67,6 +67,15 @@ import {
   formatDailyQuestProgressSecondary,
   formatDailyQuestRowPrimary,
 } from "@/net/dailyQuestProgressFormat";
+import {
+  dailyQuestRowsForChain,
+  filterDailyQuestRowsToCatalogChains,
+  pickDailyChainTabs,
+  pickFirstInProgressDailyQuestCfgId,
+  readDailyChainTabSession,
+  resolveActiveDailyChainTab,
+  writeDailyChainTabSession,
+} from "@/net/dailyQuestChainTab";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -75,7 +84,11 @@ type RewardBundle = {
 
 export class DailyQuestPanels {
   private panel!: HTMLElement;
+  /** 当前 chain tab 下的列表行。 */
   private rows: DailyQuestRow[] = [];
+  /** ListPlayerQuests 全链快照（catalog 链裁剪后）。 */
+  private catalogQuestRows: DailyQuestRow[] = [];
+  private activeChainId = DAILY_QUEST_CHAIN_ID;
   private selectedCfgId = 0;
   private listFilter: DailyQuestListFilter = "all";
   private listLoading = false;
@@ -104,6 +117,7 @@ export class DailyQuestPanels {
 
   attach(): void {
     this.listFilter = readDailyQuestListFilterSession() ?? "all";
+    this.activeChainId = readDailyChainTabSession();
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
@@ -202,7 +216,8 @@ export class DailyQuestPanels {
     el.innerHTML = `
       <h3>日常</h3>
       <p class="daily-battle-report-banner hidden" data-role="daily-report-banner" data-action="daily-open-reports" role="button" tabindex="0" hidden></p>
-      <p data-role="daily-hint">chain ${DAILY_QUEST_CHAIN_ID}；接取后由服务端自动累积进度，无需手填上报。</p>
+      <p data-role="daily-hint">日常多链；接取后由服务端自动累积进度，无需手填上报。</p>
+      <div class="daily-chain-tabs" data-role="daily-chain-tabs" role="tablist" aria-label="日常链类型"></div>
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-daily">刷新列表</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="accept-daily">接取</button>
@@ -269,8 +284,63 @@ export class DailyQuestPanels {
     }
   }
 
+  private hudDailyChainRows(): DailyQuestRow[] {
+    return dailyQuestRowsForChain(this.catalogQuestRows, DAILY_QUEST_CHAIN_ID);
+  }
+
   private publishDailyChainSnapshot(): void {
-    this.onDailyChainRowsSnapshot?.(this.rows.slice());
+    this.onDailyChainRowsSnapshot?.(this.hudDailyChainRows());
+  }
+
+  private applyChainTabRows(
+    catalogRows: DailyQuestRow[],
+    preferredChainId = this.activeChainId,
+    scrollToFirstInProgress = false,
+  ): void {
+    this.catalogQuestRows = catalogRows;
+    this.activeChainId = resolveActiveDailyChainTab(catalogRows, preferredChainId);
+    writeDailyChainTabSession(this.activeChainId);
+    this.rows = dailyQuestRowsForChain(catalogRows, this.activeChainId);
+    if (scrollToFirstInProgress) {
+      const firstId = pickFirstInProgressDailyQuestCfgId(this.rows);
+      if (firstId > 0) this.selectedCfgId = firstId;
+    }
+  }
+
+  private renderDailyChainTabs(): void {
+    const host = this.panel.querySelector('[data-role="daily-chain-tabs"]');
+    if (!host) return;
+    const tabs = pickDailyChainTabs(this.catalogQuestRows);
+    host.innerHTML = "";
+    host.classList.toggle("hidden", tabs.length <= 1);
+    if (tabs.length <= 1) return;
+    for (const tab of tabs) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "daily-chain-tab";
+      btn.setAttribute("data-daily-chain-id", String(tab.chainId));
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", tab.chainId === this.activeChainId ? "true" : "false");
+      if (tab.chainId === this.activeChainId) btn.classList.add("active");
+      btn.textContent = `${tab.label} (${tab.chainId})`;
+      host.appendChild(btn);
+    }
+  }
+
+  private switchDailyChainTab(chainId: number, scrollToFirstInProgress: boolean): void {
+    if (chainId === this.activeChainId && !scrollToFirstInProgress) return;
+    this.activeChainId = chainId;
+    writeDailyChainTabSession(chainId);
+    this.rows = dailyQuestRowsForChain(this.catalogQuestRows, chainId);
+    if (scrollToFirstInProgress) {
+      const firstId = pickFirstInProgressDailyQuestCfgId(this.rows);
+      if (firstId > 0) this.selectedCfgId = firstId;
+    }
+    this.renderList();
+    if (scrollToFirstInProgress && this.selectedCfgId > 0) {
+      const row = this.panel.querySelector(`li[data-quest-cfg-id="${this.selectedCfgId}"]`);
+      row?.scrollIntoView?.({ block: "nearest" });
+    }
   }
 
   private setDailyFormError(message: string | null): void {
@@ -327,6 +397,7 @@ export class DailyQuestPanels {
     const ul = this.panel.querySelector('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
+    this.renderDailyChainTabs();
     this.updateFilterButtons();
     this.renderStateSummary();
     ul.innerHTML = "";
@@ -466,10 +537,13 @@ export class DailyQuestPanels {
     this.onStatus("拉取日常…");
     try {
       const res = await this.gateway.listPlayerQuests(sid, {
-        chainId: DAILY_QUEST_CHAIN_ID,
+        chainId: 0,
         includeCompleted: true,
       });
-      this.rows = dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] });
+      const catalogRows = filterDailyQuestRowsToCatalogChains(
+        dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] }),
+      );
+      this.applyChainTabRows(catalogRows, this.activeChainId, false);
       let pick: DailyQuestRow | null = null;
       if (focusCfgId != null && focusCfgId > 0) {
         pick = this.rows.find((r) => r.quest_cfg_id === focusCfgId) ?? null;
@@ -601,6 +675,11 @@ export class DailyQuestPanels {
           attempts.push({ ok: true });
           pulseCfgIds.push(questCfgId);
           this.rows = applyDailyQuestRowAfterClaim(this.rows, questCfgId, res.quest);
+          this.catalogQuestRows = applyDailyQuestRowAfterClaim(
+            this.catalogQuestRows,
+            questCfgId,
+            res.quest,
+          );
           this.publishDailyChainSnapshot();
           this.renderList();
           scheduleQuestClaimRowPulse(rowBefore);
@@ -654,6 +733,12 @@ export class DailyQuestPanels {
     if (li) {
       this.selectedCfgId = Number(li.getAttribute("data-quest-cfg-id")) || 0;
       this.renderList();
+      return;
+    }
+    const chainTabBtn = (ev.target as HTMLElement).closest("[data-daily-chain-id]");
+    if (chainTabBtn) {
+      const chainId = Number(chainTabBtn.getAttribute("data-daily-chain-id")) || 0;
+      if (chainId > 0) this.switchDailyChainTab(chainId, true);
       return;
     }
     const filterBtn = (ev.target as HTMLElement).closest('[data-action="daily-filter"]');
