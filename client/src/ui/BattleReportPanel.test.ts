@@ -930,7 +930,10 @@ describe("BattleReportPanel", () => {
     const band = mount.querySelector(`.${BATTLE_REPORT_OUTCOME_BAND_CLASS}`);
     const strip = mount.querySelector(`.${BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS}`);
     expect(strip?.textContent).toBe(formatBattleReportRoundSummaryStrip(detail));
-    expect(band?.nextElementSibling).toBe(strip);
+    expect(band?.nextElementSibling?.classList.contains("battle-report-side-template-residual")).toBe(
+      true,
+    );
+    expect(band?.nextElementSibling?.nextElementSibling).toBe(strip);
     expect(mount.querySelector(".battle-report-rounds-table")).toBeTruthy();
     expect(mount.querySelector(".battle-report-round-jump")).toBeTruthy();
   });
@@ -1394,6 +1397,58 @@ describe("BattleReportPanel", () => {
     await flushPromises();
     expect(gateway.getBattleReport).toHaveBeenCalledTimes(2);
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
+  });
+
+  it("renders template residual line and coord readonly copy bar (CLIENT-240)", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 40,
+      attacker_player_id: 1,
+      defender_player_id: 2,
+      attacker_hero_template_name: "吕布",
+      defender_hero_template_cfg_id: 1002,
+      location_x: 12,
+      location_y: 34,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: {
+            result: "attacker_win",
+            rounds: [{ round: 1 }],
+            attacker_casualties: { infantry: 3 },
+            defender_casualties: { archer: 1 },
+          },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="40"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const detail = mount.querySelector('[data-role="report-detail"]');
+    expect(
+      detail?.querySelector(".battle-report-side-template-residual-line")?.textContent,
+    ).toContain("吕布");
+    expect(
+      detail?.querySelector(".battle-report-side-template-residual-subline")?.textContent,
+    ).toContain("兵力损耗");
+    const copyBtn = detail?.querySelector(
+      '[data-action="copy-report-coords-readonly"]',
+    ) as HTMLButtonElement;
+    expect(copyBtn).toBeTruthy();
+    expect(copyBtn?.textContent).toBe("12,34");
+    expect(detail?.querySelector(".battle-report-detail-side-line")).toBeTruthy();
+    expect(detail?.querySelector(".battle-report-round-summary-strip")).toBeTruthy();
+    expect(mount.querySelector(".report-list-intel-jump-tag")).toBeTruthy();
   });
 
   it("shows side summary and opens viewer hero from battle link (CLIENT-100)", async () => {
