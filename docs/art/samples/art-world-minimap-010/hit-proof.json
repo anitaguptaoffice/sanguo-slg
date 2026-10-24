@@ -1,0 +1,37 @@
+{
+  "captured_at": "2026-10-24T01:15:36.168Z",
+  "asset_ids": [
+    "ui.minimap.dest.v1",
+    "ui.minimap.legend.v1"
+  ],
+  "kind": "sprite",
+  "dest_marker": {
+    "asset_id": "ui.minimap.dest.v1",
+    "display_logical_px": {
+      "w": 14,
+      "h": 14
+    },
+    "anchor_logical_px": {
+      "x": 7,
+      "y": 7
+    },
+    "canvas_fallback_color": "#c97b63",
+    "selected_fallback_color": "#f0c674"
+  },
+  "legend_chrome": {
+    "asset_id": "ui.minimap.legend.v1",
+    "display_logical_px": {
+      "w": 240,
+      "h": 14
+    },
+    "anchor_logical_px": {
+      "x": 0,
+      "y": 0
+    },
+    "legend_copy": "点=目的格 · 数字=剩余时间",
+    "legend_constant": "MINIMAP_DEST_ETA_LEGEND"
+  },
+  "runtime_helper": "client/src/engine/artWorldMinimapSkin.ts (CLIENT-139 drawWorldMinimap sprite mount)",
+  "data_art_skin_off": "CLIENT-139 keeps canvas drawDot / fillText legend; no sprite mount",
+  "interactive_hit": null
+}
