@@ -29,6 +29,7 @@ import {
   CLIENT_219_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_227_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_235_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_243_NARROW_MANIFEST_CENTER_PANEL_IDS,
   MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE32_MAIN_CITY_BUILD_HERO_SHOP_DAILY_WORLD_BOTTOM_TOOLBAR_CLEARANCE_PX,
@@ -40,6 +41,7 @@ import {
   WAVE38_MAIN_CITY_HERO_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE39_WORLD_INTEL_BATTLE_REPORT_MAIL_MARCH_HUD_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE40_MAIN_CITY_HERO_BAG_DAILY_GUILD_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WAVE41_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_RECRUIT_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
@@ -420,5 +422,27 @@ describe("narrow layout root class", () => {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
     expect(WAVE40_MAIN_CITY_HERO_BAG_DAILY_GUILD_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
+  });
+
+  it("CLIENT-243 wave:41 world intel battle report mail shop rank recruit manifest registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_243_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "world",
+      "march",
+      "military",
+      "battle-report",
+      "mail",
+      "bag",
+      "shop",
+      "rank",
+      "hero",
+    ]);
+    for (const id of CLIENT_243_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(
+      WAVE41_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_RECRUIT_BOTTOM_TOOLBAR_CLEARANCE_PX,
+    ).toBeGreaterThanOrEqual(56);
   });
 });

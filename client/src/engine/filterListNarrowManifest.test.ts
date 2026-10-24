@@ -71,6 +71,19 @@ import {
   HERO_PANEL_ART_MOUNT_ID,
   QUEST_CLAIMABLE_SCROLL_ANCHOR_ROLE,
   QUEST_CLAIM_PROGRESS_PULSE_CLASS,
+  BAG_SHOP_CATEGORY_SCAN_RING_CLASS,
+  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS,
+  COPY_REPORT_COORDS_READONLY_ACTION,
+  MAIL_CLAIM_HUD_SYNC_PULSE_CLASS,
+  MARCH_FORM_VALIDATION_SWEEP_LINE_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_CLASS,
+  MINIMAP_VIEWPORT_ANCHOR_SESSION_KEY,
+  MINIMAP_VIEWPORT_INTEL_SYNC_RING_CLASS,
+  RANK_PIN_REFRESH_RESIDUAL_LINE_CLASS,
+  RECRUIT_WALLET_COMPARE_RESIDUAL_LINE_CLASS,
+  REPORT_LIST_DENSITY_ROW_CLASS,
+  REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS,
+  WORLD_TILE_INTEL_ETA_RESIDUAL_RING_CLASS,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -181,6 +194,23 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(RECRUIT_FORM_INLINE_HINT_CLASS);
     expect(html).toContain(HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
     expect(html).toContain(CENTER_PANEL_TAB_PULSE_CLASS);
+  });
+
+  it("CLIENT-243 exposes wave:41 world intel battle report mail shop rank recruit narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(MINIMAP_VIEWPORT_INTEL_SYNC_RING_CLASS);
+    expect(html).toContain(MINIMAP_VIEWPORT_ANCHOR_SESSION_KEY);
+    expect(html).toContain(WORLD_TILE_INTEL_ETA_RESIDUAL_RING_CLASS);
+    expect(html).toContain(MARCH_FORM_VALIDATION_SWEEP_LINE_CLASS);
+    expect(html).toContain(MARCH_SUBMIT_INTEL_REFRESH_STAMP_CLASS);
+    expect(html).toContain(REPORT_LIST_DENSITY_ROW_CLASS);
+    expect(html).toContain(REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS);
+    expect(html).toContain(BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS);
+    expect(html).toContain(COPY_REPORT_COORDS_READONLY_ACTION);
+    expect(html).toContain(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS);
+    expect(html).toContain(BAG_SHOP_CATEGORY_SCAN_RING_CLASS);
+    expect(html).toContain(RANK_PIN_REFRESH_RESIDUAL_LINE_CLASS);
+    expect(html).toContain(RECRUIT_WALLET_COMPARE_RESIDUAL_LINE_CLASS);
   });
 
   it("CLIENT-235 exposes wave:40 main-city hero bag daily guild narrow hooks", () => {
