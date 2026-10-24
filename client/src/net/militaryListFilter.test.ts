@@ -53,6 +53,12 @@ describe("militaryListFilter", () => {
     expect(filtered.map((m) => m.march_id)).toEqual([2]);
   });
 
+  it("treats default eta sort as earliest arrival (eta_asc)", () => {
+    const byDefault = sortMarchesForMilitaryList(marches, "default", 0);
+    const byAsc = sortMarchesForMilitaryList(marches, "eta_asc", 0);
+    expect(byDefault.map((m) => m.march_id)).toEqual(byAsc.map((m) => m.march_id));
+  });
+
   it("sorts marches by ETA ascending for outbound/return phases", () => {
     const sorted = sortMarchesForMilitaryList(
       marches.filter((m) => (m.phase ?? 0) === 2 || (m.phase ?? 0) === 4),
@@ -82,5 +88,6 @@ describe("militaryListFilter", () => {
 
   it("falls back to default when session missing", () => {
     expect(readMilitaryListFilterSession(storage)).toEqual(DEFAULT_MILITARY_LIST_FILTER);
+    expect(DEFAULT_MILITARY_LIST_FILTER.etaSort).toBe("eta_asc");
   });
 });
