@@ -412,6 +412,41 @@ describe("QueuePanels", () => {
     expect(onOpenDaily).toHaveBeenCalledWith(1014);
   });
 
+  it("renders next-finish preview and opens daily anchor on click (CLIENT-218)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onOpenDaily = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      () => [
+        {
+          quest_cfg_id: 1032,
+          quest_code: "daily_build_1",
+          state: 2,
+          progress_current: 0,
+          progress_target: 1,
+        },
+      ],
+      onOpenDaily,
+    );
+    panel.attach();
+    panel.toggle();
+    const preview = mount.querySelector('[data-role="queue-next-finish-preview"]') as HTMLElement;
+    expect(preview?.textContent).toMatch(/下一完成/);
+    expect(preview?.textContent).toMatch(/农田/);
+    preview?.click();
+    expect(onOpenDaily).toHaveBeenCalledWith(1032);
+  });
+
   it("shows daily next link on build row when daily_build_1 matches farm upgrade", () => {
     const mount = document.createElement("div");
     const now = Date.now();
