@@ -1,14 +1,14 @@
 # HERO-HOST-SLICE4 runtime inventory — template 1016
 
-tip_sha / runtime_code_sha: `3b9b7098d988483e3e507e0de5f1b5996255e1c8`
+tip_sha / runtime_code_sha: `7023606c3773f531fdc9424524c7eeda86abb3ad`
 art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
 
 ## Viewport captures
 
-- `runtime/1016/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 475276 bytes, sha256 `5d2d686c93de58bcab4428bcd2535c38e3b149f5f91e8f3ed374e13662e6e099`
-- `runtime/1016/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 991493 bytes, sha256 `77c9d01f4415ce9e5f252eb307b89ef555cee6e43ab9f0d7c3e5ff713e0dc8b1`
-- `runtime/1016/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 259729 bytes, sha256 `2d0ffbd0776a7a4fc200bc71486eb7543970097da73289ab2f1abbea2a2ce243`
-- `runtime/1016/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `fc438438cbcb442f1c0cbc7d9e8d8a7700cdd0b2420dcb11841f8fe8c98bfa5a`
+- `runtime/1016/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471595 bytes, sha256 `6875b83194c8da248596debf8eea71a4f4aa5120db9c5bf1dcda85254e8c9d87`
+- `runtime/1016/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 983043 bytes, sha256 `7a54ab93bc389ef09fa4f7f1a139f681ac0f0654f1fa2790ed71535fd6b6eb0d`
+- `runtime/1016/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246144 bytes, sha256 `731338f78ed598d2d8d1be2c5710dd82063850de83236df0f7b466bb9fe0c171`
+- `runtime/1016/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `8a02fd0f1d9a92465844f7be067d8825ff3fd0f88cfc9629369c53dfbd05d445`
 
 ## Textures (hero.avatar.1016.v1 / hero.bust.1016.v1)
 
@@ -61,7 +61,16 @@ art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 437,
+        "width": 128,
+        "height": 160
+      }
     },
     "1600x900-dpr2": {
       "ok": true,
@@ -102,7 +111,16 @@ art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 437,
+        "width": 128,
+        "height": 160
+      }
     },
     "1280x720-dpr1": {
       "ok": true,
@@ -143,17 +161,34 @@ art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 174.984375,
+        "width": 128,
+        "height": 0
+      }
     }
   },
   "sameframe": {
     "ok": true,
+    "bustInClip": true,
+    "nameInClip": true,
     "bustInViewport": true,
     "nameInViewport": true,
     "nameRightOfBust": true,
     "verticalBandOverlap": true,
     "gapPx": 10,
     "gapNear10px": true,
+    "visibleClip": {
+      "left": 356,
+      "top": 174.984375,
+      "width": 568,
+      "height": 464.21875
+    },
     "name": {
       "text": "典韦"
     },

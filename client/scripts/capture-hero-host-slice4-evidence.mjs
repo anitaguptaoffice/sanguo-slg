@@ -1,5 +1,5 @@
 /**
- * HERO Slice4 (1013 / 1015 / 1016; 1014 HOLD) main-city runtime evidence.
+ * HERO Slice4 (1013–1016) main-city runtime evidence.
  *
  * Usage:
  *   cd client && npx playwright install chromium
@@ -15,13 +15,24 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
+import {
+  installHeroHostCaptureProbes,
+  probeBustNameSameFrameInPage,
+  probeHeroPortraitFramesInPage,
+  scrollHeroDetailHeadInPage,
+} from "./lib/hero-host-capture-probes.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..");
 const SAMPLE_ROOT = path.resolve(repoRoot, "docs/art/samples/hero-host-slice4");
-const ART_HEAD_SHA = process.env.ART_HEAD_SHA || "cc9da5f28492bbbcb8d82d87458041d685726661";
-const SLICE4_IDS = [1013, 1015, 1016];
+const ART_HEAD_BY_TEMPLATE = {
+  1013: "cc9da5f28492bbbcb8d82d87458041d685726661",
+  1014: "11f87490181675293bc07ec1e4772a50624c1867",
+  1015: "cc9da5f28492bbbcb8d82d87458041d685726661",
+  1016: "cc9da5f28492bbbcb8d82d87458041d685726661",
+};
+const SLICE4_IDS = [1013, 1014, 1015, 1016];
 const HERO_IDS = process.env.HERO_TEMPLATE_CFG_ID
   ? [Number(process.env.HERO_TEMPLATE_CFG_ID)]
   : SLICE4_IDS;
@@ -140,205 +151,14 @@ async function openHeroPanelWithDetail(page, templateCfgId) {
   await page.waitForTimeout(300);
 }
 
-async function scrollDetailHeadForSameFrame(page) {
-  await page.evaluate(() => {
-    const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
-    const scroll = panel?.querySelector(".panel-scroll-body");
-    const detail = panel?.querySelector(".hero-detail");
-    const bust = panel?.querySelector('[data-role="hero-detail-bust"]');
-    if (!(scroll instanceof HTMLElement) || !(detail instanceof HTMLElement)) return;
-    scroll.scrollTop = 0;
-    const scrollTop =
-      detail.offsetTop -
-      (scroll.firstElementChild instanceof HTMLElement ? scroll.firstElementChild.offsetTop : 0);
-    scroll.scrollTop = Math.max(0, scrollTop - 2);
-    bust?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    const head = detail.querySelector(".hero-detail-head");
-    head?.scrollIntoView({ block: "nearest", inline: "nearest" });
-    scroll.scrollTop = Math.max(0, scrollTop - 2);
-    if (bust instanceof HTMLElement) {
-      const marginTop = 12;
-      const marginBottom = 16;
-      const vh = window.innerHeight;
-      for (let i = 0; i < 10; i++) {
-        const br = bust.getBoundingClientRect();
-        if (br.top < marginTop) {
-          scroll.scrollTop -= marginTop - br.top;
-        } else if (br.bottom > vh - marginBottom) {
-          scroll.scrollTop += br.bottom - (vh - marginBottom);
-        } else {
-          break;
-        }
-      }
-    }
-  });
-  await page.waitForTimeout(350);
-}
-
-function probeHeroPortraitFrames(templateCfgId) {
-  const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
-  const layoutFrame = document.getElementById("layout-frame");
-  const uiScale = parseFloat(
-    getComputedStyle(layoutFrame || document.body).getPropertyValue("--ui-scale") || "1",
-  );
-  const detail = panel?.querySelector(".hero-detail");
-  const detailName = detail?.querySelector(".hero-detail-name");
-  const attrTable = detail?.querySelector(".hero-attr-table");
-  const detailError = detail?.querySelector(".panel-state-chrome.is-error");
-  const detailText = detail?.textContent ?? "";
-  const heroDetailLoaded =
-    !!detailName &&
-    !!attrTable &&
-    !detailError &&
-    !/hero not found|将领不存在/i.test(detailText);
-
-  const selectedRow = panel?.querySelector(
-    `.hero-list li[data-template-cfg-id="${templateCfgId}"].selected, .hero-list li[data-template-cfg-id="${templateCfgId}"][aria-selected="true"]`,
-  );
-  const listRow =
-    selectedRow ||
-    panel?.querySelector(`.hero-list li[data-template-cfg-id="${templateCfgId}"]`) ||
-    panel?.querySelector(".hero-list li.selected");
-  const avatar = listRow?.querySelector('[data-role="hero-list-avatar"]');
-  const bust = detail?.querySelector('[data-role="hero-detail-bust"]');
-  const head = detail?.querySelector(".hero-detail-head");
-  const name = detail?.querySelector(".hero-detail-name");
-
-  const avatarRect = avatar?.getBoundingClientRect();
-  const bustRect = bust?.getBoundingClientRect();
-  const headRect = head?.getBoundingClientRect();
-  const nameRect = name?.getBoundingClientRect();
-
-  const avatarSrc = avatar instanceof HTMLImageElement ? avatar.currentSrc || avatar.src : "";
-  const bustSrc = bust instanceof HTMLImageElement ? bust.currentSrc || bust.src : "";
-  const dpr = window.devicePixelRatio;
-  const avatarScale = avatar instanceof HTMLImageElement ? avatar.dataset.artTextureScale : null;
-  const bustScale = bust instanceof HTMLImageElement ? bust.dataset.artTextureScale : null;
-  const usesAvatar2x = avatarSrc.includes("/textures/2x/hero/avatar/");
-  const usesAvatar1x = avatarSrc.includes("/textures/1x/hero/avatar/");
-  const usesBust2x = bustSrc.includes("/textures/2x/hero/bust/");
-  const usesBust1x = bustSrc.includes("/textures/1x/hero/bust/");
-  const texturePickOk = dpr >= 1.75 ? usesAvatar2x && usesBust2x : usesAvatar1x && usesBust1x;
-  const avatarPathOk = avatarSrc.includes(`/hero/avatar/${templateCfgId}.png`);
-  const bustPathOk = bustSrc.includes(`/hero/bust/${templateCfgId}.png`);
-
-  const scroll = panel?.querySelector(".panel-scroll-body");
-  let scrollReachOk = true;
-  let detailFooterVisible = true;
-  if (scroll instanceof HTMLElement) {
-    const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
-    scroll.scrollTop = maxTop;
-    const scrollBottom = scroll.getBoundingClientRect().bottom;
-    const hint = detail?.querySelector(".hero-detail-hint");
-    if (hint instanceof HTMLElement) {
-      const fr = hint.getBoundingClientRect();
-      detailFooterVisible = fr.height > 0 && fr.bottom <= scrollBottom + 2;
-    }
-    scrollReachOk = maxTop <= 2 || detailFooterVisible;
-  }
-
-  const nameReadable =
-    !!detailName?.textContent?.trim() && (detailName.textContent?.trim()?.length ?? 0) >= 2;
-  const listAvatarVisible = !!(avatarRect && avatarRect.width >= 48 && avatarRect.height >= 48);
-  const gapPx = bustRect && nameRect ? Math.round(nameRect.left - bustRect.right) : null;
-  const nameBesideBustGapOk = gapPx != null && gapPx >= 4 && gapPx <= 18;
-  const nameOverlapBust =
-    !!(headRect && bustRect) &&
-    headRect.left < bustRect.right - 2 &&
-    headRect.top < bustRect.bottom - 2;
-
-  return {
-    ok:
-      heroDetailLoaded &&
-      listAvatarVisible &&
-      nameReadable &&
-      !!bust &&
-      texturePickOk &&
-      avatarPathOk &&
-      bustPathOk &&
-      scrollReachOk,
-    template_cfg_id: templateCfgId,
-    heroDetailLoaded,
-    nameReadable,
-    detailName: detailName?.textContent?.trim() ?? null,
-    listAvatarVisible,
-    dpr,
-    uiScale,
-    avatar: avatar
-      ? {
-          cssWidth: avatarRect?.width,
-          cssHeight: avatarRect?.height,
-          borderRadius: getComputedStyle(avatar).borderRadius,
-          artTextureScale: avatarScale,
-          srcTail: avatarSrc.split("/").slice(-4).join("/"),
-        }
-      : null,
-    bust: bust
-      ? {
-          cssWidth: bustRect?.width,
-          cssHeight: bustRect?.height,
-          artTextureScale: bustScale,
-          srcTail: bustSrc.split("/").slice(-4).join("/"),
-          float: getComputedStyle(bust).float,
-          marginRight: getComputedStyle(bust).marginRight,
-        }
-      : null,
-    layout: {
-      nameBesideBust: nameOverlapBust,
-      gapPx,
-      nameBesideBustGapOk,
-      headLeft: headRect?.left,
-      bustRight: bustRect?.right,
-    },
-    texturePickOk,
-    usesAvatar1x,
-    usesAvatar2x,
-    usesBust1x,
-    usesBust2x,
-    avatarPathOk,
-    bustPathOk,
-    scrollReachOk,
-    detailFooterVisible,
-  };
-}
-
-function probeBustNameSameFrame() {
-  const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
-  const bust = panel?.querySelector('[data-role="hero-detail-bust"]');
-  const name = panel?.querySelector(".hero-detail-name");
-  const br = bust?.getBoundingClientRect();
-  const nr = name?.getBoundingClientRect();
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const bustInViewport =
-    !!br &&
-    br.width >= 120 &&
-    br.height >= 120 &&
-    br.top >= 12 &&
-    br.left >= 0 &&
-    br.bottom <= vh - 16 + 1 &&
-    br.right <= vw + 1;
-  const nameInViewport =
-    !!nr && nr.width > 0 && nr.height > 0 && nr.top >= 0 && nr.bottom <= vh + 1 && nr.right <= vw + 1;
-  const nameRightOfBust = !!(br && nr && nr.left >= br.right - 24);
-  const verticalBandOverlap =
-    !!(br && nr && nr.bottom > br.top + 8 && nr.top < br.bottom - 8);
-  const gapPx = br && nr ? Math.round(nr.left - br.right) : null;
-  const gapNear10px = gapPx != null && gapPx >= 4 && gapPx <= 18;
-  return {
-    ok: bustInViewport && nameInViewport && nameRightOfBust && verticalBandOverlap && gapNear10px,
-    bustInViewport,
-    nameInViewport,
-    nameRightOfBust,
-    verticalBandOverlap,
-    gapPx,
-    gapNear10px,
-    name: { text: name?.textContent?.trim() },
-    viewport: { w: vw, h: vh, dpr: window.devicePixelRatio },
-  };
+function artHeadShaForTemplate(templateCfgId) {
+  const fromMap = ART_HEAD_BY_TEMPLATE[templateCfgId];
+  if (fromMap) return fromMap;
+  return process.env.ART_HEAD_SHA || ART_HEAD_BY_TEMPLATE[1013];
 }
 
 async function captureHero(browser, templateCfgId, tipSha) {
+  const artHeadSha = artHeadShaForTemplate(templateCfgId);
   const outDir = outDirForHero(templateCfgId);
   await mkdir(outDir, { recursive: true });
   const shots = {};
@@ -350,6 +170,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
       deviceScaleFactor: vp.dpr,
     });
     const page = await context.newPage();
+    await installHeroHostCaptureProbes(page);
     page.setDefaultTimeout(90000);
     await enterMainCity(page);
     await openHeroPanelWithDetail(page, templateCfgId);
@@ -364,7 +185,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     }
     const filePath = path.join(outDir, vp.file);
     const jpeg = await writeJpegUnder1Mb(page, filePath, { fullPage: false });
-    probes[vp.tag] = await page.evaluate(probeHeroPortraitFrames, templateCfgId);
+    probes[vp.tag] = await probeHeroPortraitFramesInPage(page, templateCfgId);
     shots[vp.file] = { ...jpeg, viewport: vp };
     await context.close();
   }
@@ -374,11 +195,13 @@ async function captureHero(browser, templateCfgId, tipSha) {
     deviceScaleFactor: 1,
   });
   const samePage = await sameContext.newPage();
+  await installHeroHostCaptureProbes(samePage);
   samePage.setDefaultTimeout(90000);
   await enterMainCity(samePage);
   await openHeroPanelWithDetail(samePage, templateCfgId);
-  await scrollDetailHeadForSameFrame(samePage);
-  const sameProbe = await samePage.evaluate(probeBustNameSameFrame);
+  await scrollHeroDetailHeadInPage(samePage);
+  await samePage.waitForTimeout(350);
+  const sameProbe = await probeBustNameSameFrameInPage(samePage);
   const samePath = path.join(outDir, SAMEFRAME_FILE);
   const sameJpeg = await writeJpegUnder1Mb(samePage, samePath, { fullPage: false });
   await sameContext.close();
@@ -389,7 +212,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     mock_preset: PRESET,
     tip_sha: tipSha,
     runtime_code_sha: tipSha,
-    art_head_sha: ART_HEAD_SHA,
+    art_head_sha: artHeadSha,
     art_asset_ids: heroAssetIds(templateCfgId),
     static_face_percent_min_required: 60,
     probes,
@@ -397,7 +220,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     shots,
     notes: [
       "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
-      "Art path-copied from Draft #1192; Draft remains unmerged.",
+      "Art path-copied from Draft #1192 (#1014 from #1192 @ 11f87490); Drafts remain unmerged.",
       "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
     ],
     captured_at: new Date().toISOString(),
@@ -408,7 +231,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     `# HERO-HOST-SLICE4 runtime inventory — template ${templateCfgId}`,
     "",
     `tip_sha / runtime_code_sha: \`${tipSha}\``,
-    `art_head_sha (Draft #1192): \`${ART_HEAD_SHA}\``,
+    `art_head_sha: \`${artHeadSha}\``,
     "",
     "## Viewport captures",
     "",

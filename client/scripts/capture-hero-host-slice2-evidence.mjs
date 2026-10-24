@@ -16,9 +16,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import {
-  probeBustNameSameFrame,
-  probeHeroPortraitFrames,
-  scrollHeroDetailHeadForSameFrame,
+  installHeroHostCaptureProbes,
+  probeBustNameSameFrameInPage,
+  probeHeroPortraitFramesInPage,
+  scrollHeroDetailHeadInPage,
 } from "./lib/hero-host-capture-probes.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -157,6 +158,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
       deviceScaleFactor: vp.dpr,
     });
     const page = await context.newPage();
+    await installHeroHostCaptureProbes(page);
     page.setDefaultTimeout(90000);
     await enterMainCity(page);
     await openHeroPanelWithDetail(page, templateCfgId);
@@ -171,7 +173,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     }
     const filePath = path.join(outDir, vp.file);
     const jpeg = await writeJpegUnder1Mb(page, filePath, { fullPage: false });
-    probes[vp.tag] = await page.evaluate(probeHeroPortraitFrames, templateCfgId);
+    probes[vp.tag] = await probeHeroPortraitFramesInPage(page, templateCfgId);
     shots[vp.file] = { ...jpeg, viewport: vp };
     await context.close();
   }
@@ -181,12 +183,13 @@ async function captureHero(browser, templateCfgId, tipSha) {
     deviceScaleFactor: 1,
   });
   const samePage = await sameContext.newPage();
+  await installHeroHostCaptureProbes(samePage);
   samePage.setDefaultTimeout(90000);
   await enterMainCity(samePage);
   await openHeroPanelWithDetail(samePage, templateCfgId);
-  await samePage.evaluate(scrollHeroDetailHeadForSameFrame);
+  await scrollHeroDetailHeadInPage(samePage);
   await samePage.waitForTimeout(350);
-  const sameProbe = await samePage.evaluate(probeBustNameSameFrame);
+  const sameProbe = await probeBustNameSameFrameInPage(samePage);
   const samePath = path.join(outDir, SAMEFRAME_FILE);
   const sameJpeg = await writeJpegUnder1Mb(samePage, samePath, { fullPage: false });
   await sameContext.close();
