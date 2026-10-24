@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatSlotOverlayLabel,
   formatUpgradeRemainingAbbrev,
   initialUpgradeProgressAnchor,
   queueBuildRowDomId,
@@ -13,6 +14,19 @@ describe("mainCitySlotUpgrade", () => {
   it("maps slot_key to queue build row dom id", () => {
     expect(queueBuildRowDomId("farm")).toBe("queue-build-row-farm");
     expect(queueBuildRowDomId("hall")).toBe("queue-build-row-hall");
+  });
+
+  it("formatSlotOverlayLabel shows Lv only when idle (upgrade_finish_at_ms=0)", () => {
+    expect(formatSlotOverlayLabel({ level: 4, upgrade_finish_at_ms: 0 }, now)).toBe("Lv4");
+    expect(formatSlotOverlayLabel({ level: 2 }, now)).toBe("Lv2");
+    expect(formatSlotOverlayLabel(undefined, now)).toBe("Lv0");
+  });
+
+  it("formatSlotOverlayLabel appends ETA while upgrade in progress", () => {
+    expect(formatSlotOverlayLabel({ level: 3, upgrade_finish_at_ms: now + 90_000 }, now)).toBe(
+      "Lv3 · 1:30",
+    );
+    expect(formatSlotOverlayLabel({ level: 1, upgrade_finish_at_ms: now - 1 }, now)).toBe("Lv1");
   });
 
   it("abbreviates upgrade remaining like formatUpgradeRemaining without 剩 prefix", () => {

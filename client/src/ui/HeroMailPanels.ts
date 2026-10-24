@@ -1,6 +1,10 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { applyUiCountBadge } from "@/engine/artBadgeSkin";
 import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
+import {
   remountPanelFilterChips,
   setFilterChipLabel,
   syncFilterChipAria,
@@ -19,7 +23,6 @@ import {
   shouldPromptDailyRecruitAfterRecruit,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
-import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   mountFilterBadgeCount,
   mountFilterBadgeDot,
@@ -36,6 +39,7 @@ import {
   mergeRecruitTemplateOwnership,
   parseGetHeroDetailResponse,
   renderHeroDetailMarkup,
+  syncHeroSummaryFromDetail,
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
   countMailUnreadAndUnclaimed,
@@ -106,6 +110,11 @@ import {
   setHeroListFormErrorDisplay,
   syncHeroListRefreshButton,
 } from "@/net/heroListRefreshFeedback";
+import { pickHeroDetailBagDeepLink } from "@/net/heroDetailBagDeepLink";
+import {
+  renderHeroDetailStateErrorMarkup,
+  renderHeroDetailStateLoadingMarkup,
+} from "@/net/panelStateChrome";
 import {
   formatHeroDetailCultivationUseStatus,
   formatHeroDetailStatChangeSummary,
@@ -132,9 +141,13 @@ export class HeroMailPanels {
   private mailUnreadTotal = 0;
   private mailFilter = MAIL_INBOX_FILTER_ALL;
   private mailListError = "";
+  private mailListLoading = false;
+  private heroListLoadError: string | null = null;
   private selectedHeroId = 0;
   private selectedMailId = 0;
   private heroDetail: HeroDetail | null = null;
+  private heroDetailLoading = false;
+  private heroDetailError: string | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
   private recruitItemId = 0;
@@ -510,10 +523,12 @@ export class HeroMailPanels {
     const detailEl = this.heroPanel.querySelector('[data-role="hero-detail"]');
     if (!ul) return;
     ul.innerHTML = "";
-    if (!this.heroes.length) {
-      const li = document.createElement("li");
-      li.textContent = heroListLines([])[0];
-      ul.appendChild(li);
+    if (this.heroesRefreshInflight && !this.heroes.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, { assets: this.assets });
+    } else if (!this.heroes.length) {
+      const msg = this.heroListLoadError ?? heroListLines([])[0];
+      const kind = this.heroListLoadError ? "error" : "empty";
+      renderPanelStateListRow(ul, kind, msg, { assets: this.assets });
     } else {
       for (const h of this.heroes) {
         const li = document.createElement("li");
@@ -527,18 +542,22 @@ export class HeroMailPanels {
       }
     }
     if (detailEl) {
-      const { bag } = this.sessionEconomy();
-      const cultivationHtml = this.selectedHeroId
-        ? renderHeroDetailCultivationUseMarkup(bag, this.heroCultivationSubmitState)
-        : "";
-      detailEl.innerHTML = this.selectedHeroId
-        ? renderHeroDetailMarkup(
-            this.heroDetail,
-            this.recruitAffordSummaryForHeroDetail(),
-            this.recruitTemplateForHeroDetail(),
-            cultivationHtml,
-          )
-        : renderHeroDetailMarkup(null);
+      if (!this.selectedHeroId) {
+        detailEl.innerHTML = renderHeroDetailMarkup(null);
+      } else if (this.heroDetailLoading) {
+        detailEl.innerHTML = renderHeroDetailStateLoadingMarkup();
+      } else if (this.heroDetailError) {
+        detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
+      } else {
+        const { bag } = this.sessionEconomy();
+        const cultivationHtml = renderHeroDetailCultivationUseMarkup(bag, this.heroCultivationSubmitState);
+        detailEl.innerHTML = renderHeroDetailMarkup(
+          this.heroDetail,
+          this.recruitAffordSummaryForHeroDetail(),
+          this.recruitTemplateForHeroDetail(),
+          cultivationHtml,
+        );
+      }
     }
   }
 
@@ -743,16 +762,24 @@ export class HeroMailPanels {
     this.setMailFilterButtons();
     ul.innerHTML = "";
     if (statusEl) {
-      statusEl.textContent = this.mailListError;
-      statusEl.classList.toggle("is-error", !!this.mailListError);
+      statusEl.textContent = this.mailListLoading
+        ? PANEL_STATE_LOADING_MESSAGE
+        : this.mailListError;
+      statusEl.classList.toggle("is-error", !!this.mailListError && !this.mailListLoading);
     }
-    if (!this.mails.length) {
-      const li = document.createElement("li");
-      li.className = mailInboxEmptyListClass();
-      li.textContent = this.mailListError
+    if (this.mailListLoading && !this.mails.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
+        assets: this.assets,
+      });
+    } else if (!this.mails.length) {
+      const kind = this.mailListError ? "error" : "empty";
+      const msg = this.mailListError
         ? mailInboxLoadErrorListHint()
         : mailEmptyInboxMessage(this.mailFilter);
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, kind, msg, {
+        legacyClass: mailInboxEmptyListClass(),
+        assets: this.assets,
+      });
     } else {
       for (const m of this.mails) {
         const li = document.createElement("li");
@@ -866,6 +893,8 @@ export class HeroMailPanels {
     this.heroesRefreshInflight = true;
     syncHeroListRefreshButton(this.heroPanel, true);
     setHeroListFormErrorDisplay(this.heroPanel, null);
+    this.heroListLoadError = null;
+    if (!this.heroes.length) this.renderHeroList();
     const sid = this.serverId();
     this.onStatus("拉取将领…");
     try {
@@ -900,6 +929,10 @@ export class HeroMailPanels {
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       setHeroListFormErrorDisplay(this.heroPanel, msg);
+      if (!this.heroes.length) {
+        this.heroListLoadError = msg;
+        this.renderHeroList();
+      }
       this.onStatus(msg);
     } finally {
       this.heroesRefreshInflight = false;
@@ -921,16 +954,23 @@ export class HeroMailPanels {
     this.selectedHeroId = heroId;
     writeHeroDetailSelectedSession(heroId);
     this.resetHeroCultivationSubmitFeedback();
+    this.heroDetailLoading = true;
+    this.heroDetailError = null;
+    this.renderHeroList();
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
       this.heroDetail = parseGetHeroDetailResponse(res);
-      this.renderHeroList();
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
+      this.heroDetailError = null;
       this.onStatus("详情已加载");
     } catch (e) {
       this.heroDetail = null;
+      this.heroDetailError = formatPanelGatewayErrorFromUnknown("recruit", e);
+      this.onStatus(this.heroDetailError);
+    } finally {
+      this.heroDetailLoading = false;
       this.renderHeroList();
-      this.onStatus((e as Error).message);
     }
   }
 
@@ -972,6 +1012,7 @@ export class HeroMailPanels {
       const detailRes = await this.gateway.getHeroDetail(sid, heroId);
       const detailAfter = parseGetHeroDetailResponse(detailRes);
       this.heroDetail = detailAfter;
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
       this.heroCultivationSubmitState = useConsumableSubmitStateMachine(
         this.heroCultivationSubmitState,
         { type: "SUCCESS" },
@@ -1153,6 +1194,8 @@ export class HeroMailPanels {
     const sid = this.serverId();
     this.onStatus("拉取邮件…");
     this.mailListError = "";
+    this.mailListLoading = true;
+    this.renderMailList();
     try {
       const res = (await this.gateway.listPlayerMail(sid, {
         filter: this.mailFilter,
@@ -1191,6 +1234,9 @@ export class HeroMailPanels {
       this.mails = [];
       this.renderMailList();
       this.onStatus(this.mailListError);
+    } finally {
+      this.mailListLoading = false;
+      this.renderMailList();
     }
   }
 
@@ -1418,6 +1464,7 @@ export class HeroMailPanels {
     }
     if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
     if (a === "hero-related-items") void this.openRelatedCultivationItems();
+    if (a === "hero-goto-bag-cultivation") void this.openHeroBagCultivationDeepLink();
     if (a === "hero-use-cultivation-item") void this.useHeroCultivationItem();
   }
 
@@ -1432,6 +1479,37 @@ export class HeroMailPanels {
     const anchor = this.heroPanel.querySelector('[data-field="template-select"]');
     anchor?.scrollIntoView?.({ block: "nearest" });
     this.onStatus(`招募区已预选模板 #${tplId}`);
+  }
+
+  private async openHeroBagCultivationDeepLink(): Promise<void> {
+    const heroId = this.selectedHeroId;
+    let items = this.sessionEconomy().bag;
+    const sid = this.serverId();
+    try {
+      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
+        items?: { item_cfg_id?: number; quantity?: number }[];
+      };
+      items = bagFromListPlayerBagResponse(bagRes.items);
+    } catch (e) {
+      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+      setHeroCultivationFormErrorDisplay(this.heroPanel, msg);
+      this.onStatus(msg);
+      return;
+    }
+    const pick = pickHeroDetailBagDeepLink(heroId, items);
+    if (!pick.ok) {
+      setHeroCultivationFormErrorDisplay(this.heroPanel, pick.errorMessage);
+      this.onStatus(pick.errorMessage);
+      this.renderHeroList();
+      return;
+    }
+    setHeroCultivationFormErrorDisplay(this.heroPanel, null);
+    if (this.onOpenHeroCultivationBag) {
+      this.onOpenHeroCultivationBag([pick.itemCfgId]);
+      this.onStatus(`背包已定位 ${pick.itemCfgId}，请「使用道具」`);
+      return;
+    }
+    this.onStatus(`养成道具 item_cfg_id=${pick.itemCfgId}`);
   }
 
   private async openRelatedCultivationItems(): Promise<void> {

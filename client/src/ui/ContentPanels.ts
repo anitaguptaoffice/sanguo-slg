@@ -58,6 +58,7 @@ import {
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
 } from "@/net/useConsumableSubmitFeedback";
+import { scrollBagItemRowIntoView } from "@/net/heroDetailBagDeepLink";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 type QuestProgress = {
@@ -164,7 +165,9 @@ export class ContentPanels {
     if (hint) {
       hint.textContent = `筛选高亮 item_cfg_id=${itemCfgId}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`;
     }
-    void this.refreshBag();
+    void this.refreshBag().then(() => {
+      if (itemCfgId > 0) scrollBagItemRowIntoView(this.bagPanel, itemCfgId);
+    });
   }
 
   /** 将领养成互链：高亮多个养成消耗品（ListPlayerBag 过滤结果）。 */
@@ -187,7 +190,9 @@ export class ContentPanels {
         ? `将领养成高亮 item_cfg_id=${ids.join("、")}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`
         : "暂无养成消耗品；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。";
     }
-    void this.refreshBag();
+    void this.refreshBag().then(() => {
+      if (first > 0) scrollBagItemRowIntoView(this.bagPanel, first);
+    });
   }
 
   toggleShop(): void {
