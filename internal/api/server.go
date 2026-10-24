@@ -62,7 +62,8 @@ type Server struct {
 	playerMarches map[int64][]playerMarchRef
 	marchHeroByID map[int64]marchHeroBinding
 	nextArmyID    int64
-	now        clockFunc
+	now           clockFunc
+	smokeSyncClock *SmokeSyncClock
 }
 
 // AccountService exposes the account domain service for gateway session validation.
