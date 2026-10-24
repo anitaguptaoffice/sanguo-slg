@@ -1372,6 +1372,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 小地图 **空白单击** 选出征目标时，世界信息卡应同步该格；小地图视野 `pan/zoom` 纳入该格，目的点标注与 CLIENT-028 行军连线不退化；军情选中行军时仍以 CLIENT-069 目的格视野为准。
 4. 单测：`worldTileInfoCard.test.ts`、`WorldPanels.test.ts`、`MarchListPanel.test.ts`、`worldMinimap.test.ts`；深化见 [CLIENT-140](#手动验收世界信息卡军情军事深链-client-140)。
 
+### 手动验收（世界格点扫读 CLIENT-170）
+
+在 [CLIENT-140](#手动验收世界信息卡军情军事深链-client-140) / [CLIENT-061](#手动验收世界坐标-client-015) 互链与 [CLIENT-156](#wave31-巩固client-156) 出征反馈基础上，补 **格点扫读余量**（只读 `ListPlayerCities` / `ListMarches` 快照，**不**灌世界瓦片/图集，**不**新 world RPC）：
+
+1. **世界** 格点信息卡：坐标 `x/y`、城池名、`formatWorldTileOccupationSummary` 占领态一行；次行 `formatWorldTileInfoSecondary` 展示首条进行中行军 ETA（无则 hint）。
+2. **小地图** 空白选点：世界信息卡同步该格并附加 **2s** `world-tile-focus-pulse`；小地图 `focusGrid` 金环与 CLIENT-090 军情选中不退化。
+3. 点击信息卡非按钮区域：**居中** 小地图视口（`focusMinimapOnWorldGrid`，无新 RPC）；出征 `march-queue-banner`（CLIENT-156）不退化。
+4. 单测：`formatWorldTileInfoSecondary`、`worldTileSelectionSync.test.ts`、`WorldPanels.test.ts`；`cd client && npm test` 绿。（[#633](https://github.com/anitaguptaoffice/sanguo-slg/issues/633)）
+
 ### 手动验收（世界信息卡↔军情军事深链 CLIENT-140）
 
 在 [CLIENT-073](#手动验收世界格点信息卡-client-073) / [CLIENT-108](#手动验收世界格点信息卡加深-client-108) 只读信息卡与 [CLIENT-069](#手动验收军情格点筛选-client-069) / [CLIENT-090](#手动验收小地图与军情互选-client-090) 互选基础上，补 **世界↔军情** 一步深链（纯 `ListMarches` 客户端过滤，**无** world proto 扩量）：

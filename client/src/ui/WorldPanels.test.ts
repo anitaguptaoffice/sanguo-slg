@@ -242,6 +242,73 @@ describe("WorldPanels", () => {
     expect(state?.classList.contains("hidden")).toBe(true);
   });
 
+  it("shows recent march secondary line and occupation summary (CLIENT-170)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({
+        cities: [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true }],
+      }),
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "主城",
+      player: {},
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => session,
+      { marchFormRoot: null },
+      () => {},
+      {
+        getMarchesSnapshot: () => [
+          { march_id: 7, to_x: 60, to_y: 60, phase: 2, arrive_at_ms: Date.now() + 60_000 },
+        ],
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    panels.selectGridAt(60, 60);
+    const secondary = mount.querySelector('[data-role="world-tile-march-secondary"]');
+    expect(secondary?.textContent).toContain("最近行军 #7");
+    expect(mount.querySelector('[data-role="world-tile-info-lines"]')?.textContent).toContain(
+      "己方主城",
+    );
+  });
+
+  it("pulses info card on minimap grid sync and recenters minimap on card click", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({ cities: [] }),
+    } as unknown as GatewayPort;
+    let centered: { x: number; y: number } | null = null;
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => null,
+      { marchFormRoot: null },
+      () => {},
+      {
+        onCenterMinimapAtGrid: (g) => {
+          centered = g;
+        },
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    panels.selectGridAt(4, 5, { source: "minimap" });
+    const card = mount.querySelector('[data-role="world-tile-info"]');
+    expect(card?.classList.contains("world-tile-focus-pulse")).toBe(true);
+    card?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(centered).toEqual({ x: 4, y: 5 });
+  });
+
   it("shows neutral occupation hint on empty grid selection", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
