@@ -240,6 +240,7 @@ import {
   validateHeroDetailCultivationUse,
 } from "@/net/heroDetailCultivationUse";
 import {
+  formatBagUseGatewayErrorFromUnknown,
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
 } from "@/net/useConsumableSubmitFeedback";
@@ -1667,7 +1668,7 @@ export class HeroMailPanels {
         this.heroCultivationSubmitState,
         { type: "FAIL" },
       );
-      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+      const msg = formatBagUseGatewayErrorFromUnknown(e);
       setHeroCultivationFormErrorDisplay(this.heroPanel, msg);
       this.renderHeroList();
       this.onStatus(msg);
