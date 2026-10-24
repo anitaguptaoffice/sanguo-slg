@@ -8,6 +8,10 @@ import {
   formatDomesticQueueEtaSegmentLabel,
 } from "@/net/domesticQueueEtaSegment";
 import {
+  DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_LABEL_CLASS,
+  formatDomesticQueueEtaSegmentResidualLabel,
+} from "@/net/domesticQueueEtaSegmentResidual";
+import {
   computeQueueRowProgressBarWidthPercent,
   formatQueueRemainingEtaLine,
   QUEUE_ROW_ETA_LINE_CLASS,
@@ -67,6 +71,15 @@ export function renderQueueRemainingProgressMarkup(
     parts.push(
       `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_LABEL_CLASS}">${escapeHtml(etaSegment)}</span>`,
     );
+    const etaResidual =
+      finishAtMs != null && finishAtMs > 0
+        ? formatDomesticQueueEtaSegmentResidualLabel(finishAtMs, nowMs)
+        : null;
+    if (etaResidual) {
+      parts.push(
+        `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_LABEL_CLASS}">${escapeHtml(etaResidual)}</span>`,
+      );
+    }
   }
   parts.push(
     `<span class="queue-row-countdown">${escapeHtml(progress.remainingText)}</span>`,

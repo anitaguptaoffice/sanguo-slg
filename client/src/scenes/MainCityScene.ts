@@ -311,6 +311,7 @@ import {
   formatDomesticQueueCompleteSlotMarginLabel,
   scheduleDomesticQueueCompleteSlotMargin,
 } from "@/net/domesticQueueCompleteSlotMargin";
+import { scheduleDomesticQueueCompleteFocusResidualRing } from "@/net/domesticQueueCompleteFocusResidualRing";
 import {
   collectCitySlotKeysForQueueCompleteFocus,
   scheduleCitySlotCompleteFocusRing,
@@ -2157,7 +2158,7 @@ export class MainCityScene implements Scene {
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
   }
 
-  /** CLIENT-197 / CLIENT-212：队列完成 → 七槽焦点环 2s + 完成态余量扫读。 */
+  /** CLIENT-197 / CLIENT-212 / CLIENT-244：队列完成 → 七槽焦点环 2s + 残余环 + 完成态余量扫读。 */
   private applyQueueCompleteFocusRing(events: readonly QueueCompleteHudEvent[]): void {
     const slotKeys = collectCitySlotKeysForQueueCompleteFocus(events, sessionStorage);
     if (!slotKeys.length) return;
@@ -2166,6 +2167,7 @@ export class MainCityScene implements Scene {
     const buildings = this.session?.buildings;
     for (const key of slotKeys) {
       scheduleCitySlotCompleteFocusRing(layer, key);
+      scheduleDomesticQueueCompleteFocusResidualRing(layer, key);
       const label = formatDomesticQueueCompleteSlotMarginLabel(
         buildingBySlot(buildings, key),
         nowMs,
