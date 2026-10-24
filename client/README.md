@@ -428,7 +428,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:29 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）——**非**本波 backlog 实现卡。实现卡 **CLIENT-138** 起，**勿占用 CLIENT-136/137**。
 
-波次总览与 **DOCS-EXIT-021**（[#567](https://github.com/anitaguptaoffice/sanguo-slg/issues/567)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 29」。main tip **`f60e3e95`**.
+波次总览与 **DOCS-EXIT-021**（[#567](https://github.com/anitaguptaoffice/sanguo-slg/issues/567) / [#581](https://github.com/anitaguptaoffice/sanguo-slg/pull/581) `924a2834`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 29」。实现末卡 tip **`f60e3e95`**（#577 CLIENT-145）；全收口 **`924a2834`**.
 
 ## Wave 30 H5 主城产出仓库·日常领取闭环·将领列表筛选扫读·双榜刷新加深（M4 出口 / INTG-027）
 
@@ -436,10 +436,21 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **HUD 产出速率与仓库余量扫读巩固** | [手动验收（HUD 经济扫读 CLIENT-148）](#手动验收hud-经济扫读-client-148)（[#584](https://github.com/anitaguptaoffice/sanguo-slg/issues/584)） | 进行中 |
-| **1280 主城产出·日常·将领·排行组合 manifest** | [手动验收（1280 wave:30 组合 manifest CLIENT-155）](#手动验收1280-wave30-组合-manifest-client-155)（[#591](https://github.com/anitaguptaoffice/sanguo-slg/issues/591)） | 进行中 |
+| **HUD 产出速率与仓库余量扫读巩固** | [手动验收（HUD 经济扫读 CLIENT-148）](#手动验收hud-经济扫读-client-148)（[#584](https://github.com/anitaguptaoffice/sanguo-slg/issues/584) / [#601](https://github.com/anitaguptaoffice/sanguo-slg/pull/601) `873b8158`） | 已合 |
+| **建造·募兵队列完成脉冲与七槽互跳** | [手动验收（队列 CLIENT-019）](#手动验收队列-client-019) 内 **CLIENT-149**（[#585](https://github.com/anitaguptaoffice/sanguo-slg/issues/585) / [#598](https://github.com/anitaguptaoffice/sanguo-slg/pull/598) `8ef18b2d`） | 已合 |
+| **日常可领批量/首条定位与 chain 进度** | [手动验收（日常可领取定位 CLIENT-091）](#手动验收日常可领取定位-client-091) 内 **CLIENT-150**（[#586](https://github.com/anitaguptaoffice/sanguo-slg/issues/586) / [#603](https://github.com/anitaguptaoffice/sanguo-slg/pull/603) `e34a2315`） | 已合 |
+| **将领列表筛选排序记忆扫读** | [手动验收（将领列表筛选排序记忆 CLIENT-151）](#手动验收将领列表筛选排序记忆-client-151)（[#587](https://github.com/anitaguptaoffice/sanguo-slg/issues/587) / [#600](https://github.com/anitaguptaoffice/sanguo-slg/pull/600) `197d3492`） | 已合 |
+| **双榜我的排名刷新跳动与钉选** | [手动验收（排行双榜 CLIENT-021）](#手动验收排行双榜-client-021) 内 **CLIENT-152**（[#588](https://github.com/anitaguptaoffice/sanguo-slg/issues/588) / [#596](https://github.com/anitaguptaoffice/sanguo-slg/pull/596) `e910be27`） | 已合 |
+| **背包分类 tab 与堆叠数量扫读** | [手动验收（背包与商城反馈 CLIENT-020）](#手动验收背包与商城反馈-client-020) 第 8 步 **CLIENT-153**（[#589](https://github.com/anitaguptaoffice/sanguo-slg/issues/589) / [#597](https://github.com/anitaguptaoffice/sanguo-slg/pull/597) `bc5fe88a`） | 已合 |
+| **商城货币不足行内态** | 同上第 9 步 **CLIENT-154**（[#590](https://github.com/anitaguptaoffice/sanguo-slg/issues/590) / [#599](https://github.com/anitaguptaoffice/sanguo-slg/pull/599) `d48a8520`） | 已合 |
+| **1280 主城产出·日常·将领·排行组合 manifest** | [手动验收（1280 wave:30 组合 manifest CLIENT-155）](#手动验收1280-wave30-组合-manifest-client-155)（[#591](https://github.com/anitaguptaoffice/sanguo-slg/issues/591) / [#602](https://github.com/anitaguptaoffice/sanguo-slg/pull/602) `6978ebac`） | 已合 |
+| **网关冒烟**（产出余量 + 日常进度 + 将领 + 双榜 + 背包堆叠） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 30** / `TestINTG027Wave30SmokePath`（[#592](https://github.com/anitaguptaoffice/sanguo-slg/issues/592) / [#595](https://github.com/anitaguptaoffice/sanguo-slg/pull/595) `ca125b9e`） | 已合 |
 
-**wave:19 美术轨旁路**（**非** wave:30 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）——**非**本波 backlog 实现卡。实现卡 **CLIENT-148** 起，**勿占用 CLIENT-136/137/146/147**。
+**推荐串联**（在 [Wave 29](#wave-29-h5-世界行军互链军情战报复盘邮件社交扫读加深m4-出口--intg-026) 世界行军/军情/邮件社交栈基础上）：顶栏 **HUD 产出/仓库扫读**（**CLIENT-148**）→ **队列** 建造/募兵完成脉冲与七槽互跳（**CLIENT-149**）→ **日常** 可领定位/批量领取与 chain 进度（**CLIENT-150**）→ **将领** 列表筛选排序记忆（**CLIENT-151**）→ **排行** 双榜刷新钉选（**CLIENT-152**）→ **背包/商城** 分类 tab 与行内态（**CLIENT-153/154**）→ 视口 **1280×720** 主城产出·日常·将领·排行组合 manifest（**CLIENT-155**）；网关字段见 `tools/smoke/README.md` **INTG-027**。
+
+**美术旁路**（**非** wave:30 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）；**CLIENT-137**（[#556](https://github.com/anitaguptaoffice/sanguo-slg/issues/556) / [#574](https://github.com/anitaguptaoffice/sanguo-slg/pull/574) `36c69009`）；**CLIENT-146**（[#578](https://github.com/anitaguptaoffice/sanguo-slg/issues/578) / [#579](https://github.com/anitaguptaoffice/sanguo-slg/pull/579) `4f5a9732`）；**CLIENT-147**（FILTER-008 旁路）——均 **非**本波 backlog 实现卡。实现卡 **CLIENT-148～155**，**勿占用 CLIENT-136/137/146/147**。
+
+波次总览与 **DOCS-EXIT-022**（[#593](https://github.com/anitaguptaoffice/sanguo-slg/issues/593) / [#604](https://github.com/anitaguptaoffice/sanguo-slg/pull/604)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 30」。实现合入后 main tip **`6978ebacaa3c91cc6556e93a10a1d227706e6c06`**（#602 CLIENT-155）。
 
 ### 手动验收（HUD 经济扫读 CLIENT-148）
 
