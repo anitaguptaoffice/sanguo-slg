@@ -21,7 +21,11 @@ var (
 )
 
 const (
-	StatusIdle        int16 = 1
+	StatusIdle        int16 = 1 // 空闲（可任职城主）
+	StatusGarrison    int16 = 2 // 驻守
+	StatusMarch       int16 = 3 // 出征（与城主互斥，见 office_march.go）
+	StatusExpr        int16 = 4 // 历练
+	StatusCityChief   int16 = 5 // 城主（一城一职；legacy state=1）
 	RecruitScrollID   int32 = 2004
 	LoyaltyMin        = 0
 	LoyaltyMax        = 100

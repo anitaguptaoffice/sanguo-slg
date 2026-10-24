@@ -11,14 +11,21 @@ type Store interface {
 	GetHero(ctx context.Context, serverID int32, heroID int64) (*Hero, error)
 	ListPlayerHeroes(ctx context.Context, serverID int32, playerID int64) ([]*Hero, error)
 	MaxHeroID(ctx context.Context, serverID int32) (int64, error)
+	SaveAssignment(ctx context.Context, a *Assignment) error
+	DeleteAssignmentByHero(ctx context.Context, serverID int32, heroID int64) error
+	FindCityChief(ctx context.Context, serverID int32, cityID int64) (*Assignment, error)
+	GetAssignmentByHero(ctx context.Context, serverID int32, heroID int64) (*Assignment, error)
 }
 
 type MemStore struct {
-	mu     sync.RWMutex
-	heroes map[int64]*Hero
+	mu          sync.RWMutex
+	heroes      map[int64]*Hero
+	assignments map[int64]*Assignment
 }
 
-func NewMemStore() *MemStore { return &MemStore{heroes: map[int64]*Hero{}} }
+func NewMemStore() *MemStore {
+	return &MemStore{heroes: map[int64]*Hero{}, assignments: map[int64]*Assignment{}}
+}
 
 func (m *MemStore) SaveHero(_ context.Context, h *Hero) error {
 	m.mu.Lock()
@@ -62,4 +69,45 @@ func (m *MemStore) MaxHeroID(_ context.Context, sid int32) (int64, error) {
 		}
 	}
 	return max, nil
+}
+
+func (m *MemStore) SaveAssignment(_ context.Context, a *Assignment) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	cp := *a
+	m.assignments[a.HeroID] = &cp
+	return nil
+}
+
+func (m *MemStore) DeleteAssignmentByHero(_ context.Context, serverID int32, heroID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	a, ok := m.assignments[heroID]
+	if ok && a.ServerID == serverID {
+		delete(m.assignments, heroID)
+	}
+	return nil
+}
+
+func (m *MemStore) FindCityChief(_ context.Context, serverID int32, cityID int64) (*Assignment, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, a := range m.assignments {
+		if a.ServerID == serverID && a.AssignType == AssignTypeCity && a.TargetID == cityID {
+			cp := *a
+			return &cp, nil
+		}
+	}
+	return nil, nil
+}
+
+func (m *MemStore) GetAssignmentByHero(_ context.Context, serverID int32, heroID int64) (*Assignment, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	a, ok := m.assignments[heroID]
+	if !ok || a.ServerID != serverID {
+		return nil, nil
+	}
+	cp := *a
+	return &cp, nil
 }

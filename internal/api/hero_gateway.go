@@ -13,6 +13,9 @@ const (
 	RouteListHotelRecruitCandidates = "hero.v1.ListHotelRecruitCandidates"
 	RouteRefreshHotelRecruitPool    = "hero.v1.RefreshHotelRecruitPool"
 	RouteRecruitHotelCandidate      = "hero.v1.RecruitHotelCandidate"
+	RouteSetCityChief               = "hero.v1.SetCityChief"
+	RouteClearCityChief             = "hero.v1.ClearCityChief"
+	RouteGetCityChief               = "hero.v1.GetCityChief"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -25,5 +28,8 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteListHotelRecruitCandidates: s.handleListHotelRecruitCandidates,
 		RouteRefreshHotelRecruitPool:    s.handleRefreshHotelRecruitPool,
 		RouteRecruitHotelCandidate:      s.handleRecruitHotelCandidate,
+		RouteSetCityChief:               s.handleSetCityChief,
+		RouteClearCityChief:             s.handleClearCityChief,
+		RouteGetCityChief:               s.handleGetCityChief,
 	}
 }
