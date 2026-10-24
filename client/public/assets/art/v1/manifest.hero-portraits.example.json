@@ -3,7 +3,6 @@
   "pack": "hero",
   "texture_delivery": "standalone_png",
   "base_url": "/assets/art/v1/",
-  "description": "DRAFT fragment — ART-HERO-AVATAR-BUST-001. Art delivers one object per asset; engineering merges into manifest.json. PNG paths are examples for template_cfg_id 1001 only; no binary in this contract PR.",
   "assets": [
     {
       "id": "hero.avatar.1001.v1",
