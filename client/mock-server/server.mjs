@@ -218,7 +218,8 @@ function applyEvidencePreset(state, preset) {
     state.heroes = [
       { hero_id: 8001, template_cfg_id: 1001, level: 12, loyalty: 88 },
       { hero_id: 8002, template_cfg_id: 1002, level: 8, loyalty: 72 },
-      { hero_id: 8003, template_cfg_id: 1001, level: 3, loyalty: 65 },
+      { hero_id: 8003, template_cfg_id: 1003, level: 6, loyalty: 80 },
+      { hero_id: 8004, template_cfg_id: 1004, level: 5, loyalty: 70 },
     ];
     return;
   }
@@ -309,6 +310,8 @@ function decodeInt64(value) {
 const HERO_TEMPLATE_DETAIL_META = {
   1001: { template_name: "刘备", template_code: "xuan_de_lord" },
   1002: { template_name: "关羽", template_code: "green_dragon" },
+  1003: { template_name: "张飞", template_code: "thunder_spear" },
+  1004: { template_name: "赵云", template_code: "silver_rider" },
 };
 
 function mockHeroDetailPayload(row) {
