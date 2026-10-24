@@ -26,6 +26,8 @@ var (
 	ErrLoyaltyMax           = errors.New("hero: loyalty already at maximum")
 	ErrHeroNotCaptive       = errors.New("hero: hero is not captive")
 	ErrCaptiveCityMismatch  = errors.New("hero: captive not held in this city")
+	ErrHeroNotComing        = errors.New("hero: hero is not coming")
+	ErrComingCityMismatch   = errors.New("hero: coming offer not for this city")
 )
 
 const (
@@ -35,6 +37,7 @@ const (
 	StatusExpr      int16 = 4 // 历练
 	StatusCityChief int16 = 5 // 城主（一城一职；legacy state=1）
 	StatusCaptive   int16 = 6 // 俘虏（legacy state=5；招降前不计入招贤馆容量）
+	StatusComing    int16 = 7 // 来投待接受（legacy state=6；接受前不计入招贤馆容量）
 	RecruitScrollID int32 = 2004
 	LoyaltyMin        = 0
 	LoyaltyMax        = 100

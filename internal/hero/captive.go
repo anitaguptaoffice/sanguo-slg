@@ -36,11 +36,11 @@ type InjectCaptiveInput struct {
 	Loyalty         int
 }
 
-// CountOwnedHeroes excludes captives from招贤馆容量 (legacy cityHasHeroPosition).
+// CountOwnedHeroes excludes captives and coming offers from招贤馆容量 (legacy cityHasHeroPosition).
 func CountOwnedHeroes(heroes []*Hero) int {
 	n := 0
 	for _, h := range heroes {
-		if h.Status != StatusCaptive {
+		if h.Status != StatusCaptive && h.Status != StatusComing {
 			n++
 		}
 	}

@@ -21,6 +21,10 @@ const (
 	RouteTrySummonCaptive           = "hero.v1.TrySummonCaptive"
 	RouteSureSummonCaptive          = "hero.v1.SureSummonCaptive"
 	RouteReleaseCaptive             = "hero.v1.ReleaseCaptive"
+	RouteListComingHeroes           = "hero.v1.ListComingHeroes"
+	RouteTryAcceptComing            = "hero.v1.TryAcceptComing"
+	RouteSureAcceptComing           = "hero.v1.SureAcceptComing"
+	RouteRejectComing               = "hero.v1.RejectComing"
 	RouteListPersuadeTargets        = "hero.v1.ListPersuadeTargets"
 	RoutePersuadeHero               = "hero.v1.PersuadeHero"
 	RouteLionizeHero                = "hero.v1.LionizeHero"
@@ -44,6 +48,10 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteTrySummonCaptive:           s.handleTrySummonCaptive,
 		RouteSureSummonCaptive:          s.handleSureSummonCaptive,
 		RouteReleaseCaptive:             s.handleReleaseCaptive,
+		RouteListComingHeroes:           s.handleListComingHeroes,
+		RouteTryAcceptComing:            s.handleTryAcceptComing,
+		RouteSureAcceptComing:           s.handleSureAcceptComing,
+		RouteRejectComing:               s.handleRejectComing,
 		RouteListPersuadeTargets:        s.handleListPersuadeTargets,
 		RoutePersuadeHero:               s.handlePersuadeHero,
 		RouteLionizeHero:                s.handleLionizeHero,

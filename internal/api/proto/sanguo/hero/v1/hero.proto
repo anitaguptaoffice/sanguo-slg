@@ -278,6 +278,62 @@ message ReleaseCaptiveResponse {
   int64 hero_id = 1;
 }
 
+// route: hero.v1.ListComingHeroes
+message ComingHeroSummary {
+  int64 hero_id = 1;
+  int64 city_id = 2;
+  int32 template_cfg_id = 3;
+  string display_name = 4;
+  int32 level = 5;
+  int32 loyalty = 6;
+  HeroAttributes attributes = 7;
+}
+
+message ListComingHeroesRequest {
+  int32 server_id = 1;
+}
+
+message ListComingHeroesResponse {
+  repeated ComingHeroSummary coming = 1;
+}
+
+// route: hero.v1.TryAcceptComing
+message TryAcceptComingRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 hero_id = 3;
+}
+
+message TryAcceptComingResponse {
+  int64 hero_id = 1;
+  string summary = 2;
+}
+
+// route: hero.v1.SureAcceptComing
+message SureAcceptComingRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 hero_id = 3;
+}
+
+message SureAcceptComingResponse {
+  int64 hero_id = 1;
+  string display_name = 2;
+  int32 level = 3;
+  int32 loyalty = 4;
+}
+
+// route: hero.v1.RejectComing
+message RejectComingRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 hero_id = 3;
+}
+
+message RejectComingResponse {
+  int64 hero_id = 1;
+}
+
 // route: hero.v1.ListPersuadeTargets
 message PersuadeTargetSummary {
   int32 npc_cfg_id = 1;
