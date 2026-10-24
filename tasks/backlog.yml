@@ -21,6 +21,7 @@
 # wave:26「H5 背包商城·招募养成·出征募兵反馈加深」：背包/商城购买与消耗提交脉冲、将领招募与养成道具可读执行、出征/募兵提交反馈巩固、ART-TOOLBAR-ICONS-007 底栏四态运行时接线、1280 背包/商城/招募/军事 manifest；INTG-023 冒烟；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓（实现卡 CLIENT-112～119，勿占用 CLIENT-064）。
 # wave:27「H5 筛选列表·邮件日常军情战报可读加深」：ART-UI-FILTER-008 工程挂载（对照 #482，Draft #506 只读不 merge）与运行时 chip/列表行九宫/badge 接线、邮件/日常/军情/战报筛选 chip 与 badge.dot/count 可读、1280 筛选条与列表滚动 manifest；INTG-024 冒烟；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓（实现卡 CLIENT-120～127，勿占用 CLIENT-064）。
 # wave:28「H5 主城七槽·将领养成·HUD深链·面板态可读加深」：主城七槽/建造队列扫读与互跳余量、将领列表·详情·忠诚养成扫读、HUD 资源/待办角标深链与筛选态一致、统一 loading/empty/error 骨架（可选 ART-UI-PANEL-STATE-009 工程挂载旁路）、面板内键盘焦点、1280 主城/将领/HUD 组合 manifest；INTG-025 冒烟；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓（实现卡 CLIENT-128～135，勿占用 CLIENT-064）。
+# wave:29「H5 世界行军互链·军情战报复盘·邮件社交扫读加深」：世界小地图行军标注与出征坐标互链余量、军情 ETA/列表密度与阶段扫读、战报坐标复盘与小地图跳转、邮件附件领取同步与收件箱密度、军团/聊天刷新扫读、军事目标记忆与出征表单校验巩固、可选 ART-WORLD-MINIMAP-010 工程挂载旁路、1280 世界·军情·战报·社交组合 manifest；INTG-026 冒烟；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓（实现卡 CLIENT-138～145，勿占用 CLIENT-136/137）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -4502,5 +4503,203 @@
     - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速/主城建造新 RPC/战报 proto 扩量仍 out；世界瓦片/图集仍暂缓；注明 **CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）美术旁路——非 wave:28 backlog 实现卡
   body: |
     文档 only。INTG-025 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#444/#481/#506 等 art hold / VERIFY draft PR。
+
+- id: CLIENT-138
+  title: ART-WORLD-MINIMAP-010 小地图行军点 chrome 工程挂载与证据目录
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-032, CLIENT-095, CLIENT-037]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**, docs/art/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "对照 main **#482** / **#551** 挂载流程与美术 Draft（编排 Issue 链 Draft PR，**只读**、**永不 merge** #77/#82/#100/#108/#126/#444/#481/#506 及 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)）：**ui.minimap.dest.v1**、**ui.minimap.legend.v1**（及 Draft 清单列出的 1×/2× PNG，以 Draft manifest 为准）复制进 `client/assets/` 并登记"
+    - "`docs/art/samples/art-world-minimap-010/` 含 INVENTORY、对照说明与 hit-proof（若有）；manifest 单测或既有 asset 校验扩展"
+    - "**不** merge 任何 art hold / VERIFY Draft；**不**灌世界瓦片/全屏图集；client/README.md 增补 ART-WORLD-MINIMAP-010 工程挂载 bullet（运行时接线由 CLIENT-139 承担）"
+  body: |
+    wave:28 已合 ART-UI-PANEL-STATE-009（#551）；本卡为 **可选美术旁路**——仅 **工程复制进主树 + 证据**，模式同 ART-UI-FILTER-008 **#509** + CLIENT-120。
+
+    与 CLIENT-139～145 并行（‖）时须先合本卡或实现方本地 cherry-pick 资产。禁止 DATA-003 / 新 SKU。世界瓦片/图集仍暂缓。
+
+    **一卡一 PR**：`feat/CLIENT-138`。
+
+- id: CLIENT-139
+  title: 小地图行军目的 ETA 角标与出征表单坐标互链巩固
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-138, CLIENT-041, CLIENT-058, CLIENT-090, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**, docs/art/**]
+  acceptance:
+    - "小地图目的格 **剩余 ETA 数字角标** 与 `formatMarchRemainingMs` 同步刷新（CLIENT-058 不退化）；图例 `MINIMAP_DEST_ETA_LEGEND` 与角标并存"
+    - "军事面板 `to_x/to_y` 变更（小地图空白单击 CLIENT-041 / 世界选点 CLIENT-015）后角标与 `marchTargetMemory` **同一事实源**；`data-art-skin=off` 时 canvas 描边回退不退化"
+    - "可选接 CLIENT-138 `ui.minimap.dest.v1` 目的点 sprite；单测覆盖 `formatMinimapDestEtaLabel` + 坐标回写；npm test 绿；client/README.md 增补小地图出征互链 bullet"
+  body: |
+    wave:17/19/23 已分散小地图选点与军情互选；wave:28 轮转主城/将领后本卡补 **世界出征互链余量**，无新 military RPC。
+
+    仅 client/**。CLIENT-138 资产可选（‖ 并行时 canvas 回退，验收前若启用皮肤须资产合入）。**一卡一 PR**：`feat/CLIENT-139`。
+
+- id: CLIENT-140
+  title: 世界格点信息卡与军情军事面板双向深链
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-073, CLIENT-069, CLIENT-090, CLIENT-139]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "世界面板 **只读信息卡** 展示格点坐标 + 指向此格 **进行中行军条数**（ListMarches 客户端过滤，不新 RPC）；「在军情中查看」应用 CLIENT-069 格点筛选并打开行军面板"
+    - "军情行选中时世界列表/小地图视野 **纳入该目的格**（`minimapMarchFocus` / CLIENT-090 互选不退化）；信息卡 loading/error 接 CLIENT-129"
+    - "单测覆盖 `countMarchesAtCell` + `buildWorldInfoCardSummary` 纯函数；npm test 绿；client/README.md 交叉引用 CLIENT-073"
+  body: |
+    wave:21 CLIENT-073 已建世界信息卡；wave:25 CLIENT-106 加深邮件角标后本卡补 **世界↔军情↔军事** 一步深链，不开 world proto 扩量。
+
+    仅 client/**。与 CLIENT-141～145 并行（‖）。**一卡一 PR**：`feat/CLIENT-140`。
+
+- id: CLIENT-141
+  title: 军情列表 ETA 次行密度与阶段变更扫读巩固
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-047, CLIENT-124, CLIENT-129, CLIENT-080, CLIENT-116]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "军情列表行 **主行**：目的格点 + 模板摘要；**次行**：`arrive_at_ms` 剩余 ETA + `phase` 中文标签（行军/驻扎/返回等既有枚举，不新 proto）"
+    - "`phase` 相对上次刷新 **变更** 时行内 `march-phase-changed` 脉冲 3s（CLIENT-084 规则不退化）；筛选 chip CLIENT-124 与排序 **最早到达** 默认并存"
+    - "列表 loading/empty/error 接 CLIENT-129；单测覆盖 `formatMarchListSecondary` + phase diff；npm test 绿；client/README.md 增补军情 ETA 密度 bullet"
+  body: |
+    wave:18/22/27 已分散 ETA 列与筛选 chip；本波在面板态统一后补 **军情扫读密度**，无 CancelMarch。
+
+    仅 client/**。与 CLIENT-140/142～145 并行（‖）。**一卡一 PR**：`feat/CLIENT-141`。
+
+- id: CLIENT-142
+  title: 战报坐标复盘高亮与小地图世界跳转加深
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-039, CLIENT-042, CLIENT-125, CLIENT-094, CLIENT-139]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "战报详情 **坐标区** 展示 `location_x/location_y` + 「在小地图定位」：调用既有复盘高亮（CLIENT-042）并 `openWorldMinimapExpanded`；世界信息卡格点与战报坐标一致"
+    - "战报列表行次行保留攻守摘要 CLIENT-098；筛选 chip CLIENT-125 与 **坐标跳转** 后 chip 记忆不退化；相邻导航 CLIENT-094 键盘不退化"
+    - "单测覆盖 `parseBattleReportLocation` + `applyBattleReportMinimapFocus` 纯函数；npm test 绿；client/README.md 增补战报坐标复盘 bullet"
+  body: |
+    wave:17/20/27 已分散战报坐标复盘与筛选；本卡补 **复盘→小地图→世界** 一步跳转余量，战报 proto 不扩量。
+
+    仅 client/**。与 CLIENT-140/141/143～145 并行（‖）。**一卡一 PR**：`feat/CLIENT-142`。
+
+- id: CLIENT-143
+  title: 邮件附件领取同步与收件箱行密度余量
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-050, CLIENT-122, CLIENT-129, CLIENT-134, CLIENT-106]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "`ClaimPlayerMailAttachments` 成功后：列表行 **已领** 态即时更新 + tab/HUD 角标与 CLIENT-106/134 **单一事实源**；批量领取 CLIENT-087 脉冲不退化"
+    - "收件箱行 **主行**：主题 + 未读点；**次行**：附件图标摘要 + 相对时间；筛选 chip CLIENT-122 与未读/未领角标一致"
+    - "领取失败 CLIENT-067 + CLIENT-129 error 骨架；单测覆盖 `syncMailRowAfterClaim` + 行密度 formatter；npm test 绿；client/README.md 增补邮件领取同步 bullet"
+  body: |
+    wave:18/25/27/28 已分散邮件领取与 HUD 深链；本卡补 **领取后列表/HUD 同步** 与行密度，无 mail proto 扩量。
+
+    仅 client/**。与 CLIENT-140～142/144/145 并行（‖）。**一卡一 PR**：`feat/CLIENT-143`。
+
+- id: CLIENT-144
+  title: 军团成员扫读与聊天手动刷新角标同步
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-101, CLIENT-102, CLIENT-053, CLIENT-129, CLIENT-096]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "军团面板：CLIENT-101 职务分组下每成员行 **主行** 昵称 + 职务标签；**刷新** 按钮展示 `上次刷新` 相对时间戳（session 级，不新 RPC）"
+    - "聊天面板：手动刷新后 **未读估算** 与 HUD 社交角标 CLIENT-102 同步；空错态 CLIENT-053 + CLIENT-129 骨架不退化"
+    - "排行 CLIENT-096 刷新戳记模式与军团/聊天一致（文案可复用 formatter）；单测覆盖 `formatPanelRefreshStamp`；npm test 绿；client/README.md 增补社交刷新 bullet"
+  body: |
+    wave:17/24 已分散社交刷新与未读角标；wave:28 轮转 HUD 后本卡补 **军团/聊天扫读密度**，无 guild/chat proto 扩量。
+
+    仅 client/**。与 CLIENT-140～143/145 并行（‖）。**一卡一 PR**：`feat/CLIENT-144`。
+
+- id: CLIENT-145
+  title: 军事目标记忆出征表单校验巩固与1280世界军情战报社交 manifest
+  wave: 29
+  domain: client
+  depends_on: [CLIENT-043, CLIENT-048, CLIENT-089, CLIENT-110, CLIENT-135, CLIENT-139, CLIENT-141, CLIENT-142, CLIENT-144]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "`marchTargetMemory` / session 预填与 CLIENT-043/090 **再出征** 预填并存；`march-form-error`（CLIENT-048）与 `march-form-summary`（CLIENT-089）在预填变更时 **即时重算**"
+    - "layoutViewport **1280×720**：世界小地图展开区、军情/战报/排行/军团/聊天面板根与 CLIENT-119/127 同级；`.panel-scroll-body` 不挡底栏 56px；CLIENT-135 键盘焦点规则延伸到军情/战报列表"
+    - "data-art-skin=off 可跳过；layoutViewport 单测扩展；npm test 绿；client/README.md 增补 wave:29 1280 验收 bullet"
+  body: |
+    CLIENT-111/127/135 已覆盖主城/筛选/将领 manifest；本卡补齐 **世界·军情·战报·社交** 组合窄屏契约，并巩固军事表单校验链。世界瓦片/图集仍暂缓。
+
+    仅 client/**。不合并 art hold/VERIFY。验收前建议 CLIENT-139/141/142 已合。**一卡一 PR**：`feat/CLIENT-145`。
+
+- id: INTG-026
+  title: wave:29 网关路径冒烟（行军格点 ETA+战报坐标+邮件附件+世界城池）
+  wave: 29
+  domain: platform
+  depends_on: [INTG-025]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-025 全量断言（七槽建造、将领列表、production_rates、邮件未读/日常可领、INTG-024 筛选字段、INTG-023 经济军事 optional 等）
+    - "主路径：`military.v1.ListMarches` 打印首条 `march_id` + `to_x`/`to_y` + `arrive_at_ms` + `phase`（供 CLIENT-139/140/141 对照；无行军 skip + hint）"
+    - "主路径：`ListBattleReports` 首条 `report_id` → `GetBattleReport` 打印 `summary.location_x`/`location_y`（供 CLIENT-142 对照；无战报 skip + hint）"
+    - "主路径：`ListPlayerMail` 打印未读条数 + **未领附件** 计数（供 CLIENT-143 对照）；`world.v1.ListPlayerCities` 打印 cities 条数与首条格点（供 CLIENT-140 对照）"
+    - tools/smoke/README.md 更新 wave:29 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE29-RUN。为 wave:29 客户端世界行军互链、军情 ETA、战报坐标、邮件附件与世界格点提供网关字段断言；**不跑 H5**。
+
+    **本波仍不做** CancelMarch / 行军与募兵加速 / 主城建造新 RPC / 战报 proto 扩量。
+
+    CLIENT-138～145 非硬依赖。与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-021
+  title: wave:29 H5 世界行军互链·军情战报复盘·邮件社交扫读加深文档收口
+  wave: 29
+  domain: platform
+  depends_on: [INTG-026, CLIENT-138, CLIENT-139, CLIENT-140, CLIENT-141, CLIENT-142, CLIENT-143, CLIENT-144, CLIENT-145]
+  blocked_until: [INTG-026, CLIENT-138, CLIENT-139, CLIENT-140, CLIENT-141, CLIENT-142, CLIENT-143, CLIENT-144, CLIENT-145]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - "ROADMAP：Wave 29 标为已完成并链 Issue/PR；Wave 28 保持已完成（含 DOCS-EXIT-020 [#555](https://github.com/anitaguptaoffice/sanguo-slg/pull/555) `9ef14ce6`）"
+    - M4/H5 出口描述含「小地图行军 ETA 与出征互链 + 世界信息卡军情深链 + 军情 ETA 密度 + 战报坐标复盘跳转 + 邮件领取同步 + 军团聊天刷新扫读 + 军事表单校验巩固 + 1280 世界军情战报社交 manifest」路径（指向 client/README）
+    - tasks/README.md wave:29 进度表与 Issue 一致；CLIENT 实现卡编号自 **CLIENT-138** 起
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速/主城建造新 RPC/战报 proto 扩量仍 out；世界瓦片/图集仍暂缓；注明 **CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）与 **CLIENT-137**（[#556](https://github.com/anitaguptaoffice/sanguo-slg/issues/556)）美术旁路——**非** wave:29 backlog 实现卡
+  body: |
+    文档 only。INTG-026 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。禁止合并 #77/#82/#100/#108/#126/#444/#481/#506 等 art hold / VERIFY draft PR。
