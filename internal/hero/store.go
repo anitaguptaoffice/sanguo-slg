@@ -3,6 +3,7 @@ package hero
 import (
 	"context"
 	"sync"
+	"time"
 )
 
 // Store persists player hero instances (player_hero).
@@ -15,16 +16,23 @@ type Store interface {
 	DeleteAssignmentByHero(ctx context.Context, serverID int32, heroID int64) error
 	FindCityChief(ctx context.Context, serverID int32, cityID int64) (*Assignment, error)
 	GetAssignmentByHero(ctx context.Context, serverID int32, heroID int64) (*Assignment, error)
+	LastLargessAt(ctx context.Context, serverID int32, heroID int64) (time.Time, error)
+	SetLastLargessAt(ctx context.Context, serverID int32, heroID int64, at time.Time) error
 }
 
 type MemStore struct {
-	mu          sync.RWMutex
-	heroes      map[int64]*Hero
-	assignments map[int64]*Assignment
+	mu            sync.RWMutex
+	heroes        map[int64]*Hero
+	assignments   map[int64]*Assignment
+	lastLargessAt map[int64]time.Time
 }
 
 func NewMemStore() *MemStore {
-	return &MemStore{heroes: map[int64]*Hero{}, assignments: map[int64]*Assignment{}}
+	return &MemStore{
+		heroes:        map[int64]*Hero{},
+		assignments:   map[int64]*Assignment{},
+		lastLargessAt: map[int64]time.Time{},
+	}
 }
 
 func (m *MemStore) SaveHero(_ context.Context, h *Hero) error {
@@ -110,4 +118,25 @@ func (m *MemStore) GetAssignmentByHero(_ context.Context, serverID int32, heroID
 	}
 	cp := *a
 	return &cp, nil
+}
+
+func (m *MemStore) LastLargessAt(_ context.Context, sid int32, heroID int64) (time.Time, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	h, ok := m.heroes[heroID]
+	if !ok || h.ServerID != sid {
+		return time.Time{}, nil
+	}
+	return m.lastLargessAt[heroID], nil
+}
+
+func (m *MemStore) SetLastLargessAt(_ context.Context, sid int32, heroID int64, at time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	h, ok := m.heroes[heroID]
+	if !ok || h.ServerID != sid {
+		return ErrHeroNotFound
+	}
+	m.lastLargessAt[heroID] = at
+	return nil
 }

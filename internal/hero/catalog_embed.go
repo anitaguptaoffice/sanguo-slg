@@ -80,8 +80,8 @@ func DefaultCatalog() map[int32]Template {
 
 func legacyDefaultCatalog() map[int32]Template {
 	scroll := ItemCost{RecruitScrollID, 1}
-	cost5 := Resources{5000, 5000, 3000, 2000}
-	cost4 := Resources{3000, 3000, 2000, 1000}
+	cost5 := Resources{Food: 5000, Wood: 5000, Stone: 3000, Iron: 2000}
+	cost4 := Resources{Food: 3000, Wood: 3000, Stone: 2000, Iron: 1000}
 	raw := []Template{
 		{1001, "liu_bei", "刘备", "standard", 5, BaseStats{72, 75, 88, 78}, cost5, scroll},
 		{1002, "guan_yu", "关羽", "standard", 5, BaseStats{95, 62, 55, 82}, cost5, scroll},

@@ -27,10 +27,20 @@ func (m *memInventory) ApplyRecruitSpend(_ context.Context, _ PlayerRef, walletB
 	return nil
 }
 
+func (m *memInventory) ApplyLargessSpend(_ context.Context, _ PlayerRef, goldSpent int64, itemCfgID int32) error {
+	if goldSpent > 0 {
+		m.wallet.Gold -= goldSpent
+	}
+	if itemCfgID > 0 && m.items[itemCfgID] > 0 {
+		m.items[itemCfgID]--
+	}
+	return nil
+}
+
 func TestRecruitPlayerInsufficientItem(t *testing.T) {
 	svc := NewService()
 	inv := &memInventory{
-		wallet: Resources{10000, 10000, 10000, 10000},
+		wallet: Resources{Food: 10000, Wood: 10000, Stone: 10000, Iron: 10000},
 		items:  map[int32]int32{RecruitScrollID: 0},
 	}
 	p := PlayerRef{ServerID: 1, PlayerID: 7}
@@ -43,7 +53,7 @@ func TestRecruitPlayerInsufficientItem(t *testing.T) {
 func TestRecruitPlayerSuccess(t *testing.T) {
 	svc := NewService()
 	inv := &memInventory{
-		wallet: Resources{10000, 10000, 10000, 10000},
+		wallet: Resources{Food: 10000, Wood: 10000, Stone: 10000, Iron: 10000},
 		items:  map[int32]int32{RecruitScrollID: 2},
 	}
 	p := PlayerRef{ServerID: 1, PlayerID: 7}
