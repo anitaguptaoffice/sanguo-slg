@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   applyLayoutFrameStyles,
@@ -23,6 +25,8 @@ import {
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
+
+const clientRoot = join(import.meta.dirname, "../..");
 import {
   NARROW_SCROLL_CENTER_PANEL_IDS,
   NARROW_SCROLL_SIDEBAR_PANEL_IDS,
@@ -209,6 +213,13 @@ describe("narrow layout root class", () => {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
     expect(MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
+  });
+
+  it("ART-TOOLBAR-ICONS-009 narrow toolbar scroll has no vertical padding (44px hit fits bottom band)", () => {
+    const html = readFileSync(join(clientRoot, "index.html"), "utf8");
+    expect(html).toContain("#layout-frame.layout-narrow .main-city-toolbar .toolbar-scroll");
+    expect(html).toContain("padding-top: 0");
+    expect(html).toContain("padding-bottom: 0");
   });
 
   it("CLIENT-163 wave:31 march/mail/social manifest registry at 1280×720", () => {
