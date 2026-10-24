@@ -209,6 +209,11 @@ import {
   syncRecruitWalletCompareResidualLine,
 } from "@/net/recruitWalletCompareResidual";
 import {
+  formatRecruitTemplateInlineResidualSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualSummary";
+import {
   buildRecruitItemGapBagDeepLink,
   formatRecruitFormInlineHint,
   syncRecruitFormInlineHintDisplay,
@@ -1144,8 +1149,15 @@ export class HeroMailPanels {
       secondarySpan.className = "recruit-afford-secondary";
       secondarySpan.textContent = sweep.text;
       if (sweep.hasDeficit) secondarySpan.classList.add("recruit-cost-deficit");
+      const residualSpan = document.createElement("span");
+      residualSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS;
+      residualSpan.setAttribute("data-role", RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE);
+      const residualSummary = formatRecruitTemplateInlineResidualSummary(wallet, t, bag);
+      residualSpan.textContent = residualSummary ?? "";
+      residualSpan.hidden = !residualSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
+      li.appendChild(residualSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";

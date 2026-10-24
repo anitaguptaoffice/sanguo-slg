@@ -143,6 +143,11 @@ import {
   RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE,
   syncRankRefreshCooldownResidualStamp,
 } from "@/net/rankRefreshCooldownResidual";
+import {
+  appendRankListDensityScanResidualSubline,
+  formatRankListDensityScanResidualLine,
+  lookupPreviousLeaderboardRank,
+} from "@/net/rankListDensityScanResidual";
 
 export type SocialRankDeepLinkHandlers = {
   getViewerHeroIds?: () => Promise<number[]>;
@@ -181,6 +186,8 @@ export class SocialPanels {
   private cachedViewerHeroIds: number[] = [];
   private pendingReturnScroll: LeaderboardReturnScrollPayload | null = null;
   private showRankRefreshDensity = false;
+  private rankDensityScanPrevEntries: LeaderboardEntryRow[] = [];
+  private rankDensityScanPrevMyRank: number | undefined;
   private rankCooldownTimer: ReturnType<typeof setTimeout> | null = null;
   private lastRenderedChatMessages: ChatMessageRow[] = [];
 
@@ -1210,6 +1217,7 @@ export class SocialPanels {
     if (tbody) {
       tbody.innerHTML = "";
       const entries = res.entries ?? [];
+      const fallbackScore = viewerScoreFallback(this.getSession(), boardType);
       if (this.showRankRefreshDensity) {
         const hint = formatLeaderboardRefreshedHint(boardType, entries);
         if (hint) {
@@ -1226,13 +1234,34 @@ export class SocialPanels {
             densityTr.className = "rank-top-density-row";
             const densityTd = document.createElement("td");
             densityTd.colSpan = 4;
-            densityTd.textContent = formatLeaderboardTopDensityLine(entry);
+            const primary = document.createElement("div");
+            primary.className = "leaderboard-top-density-line";
+            primary.textContent = formatLeaderboardTopDensityLine(entry);
+            densityTd.appendChild(primary);
+            const prevRank = lookupPreviousLeaderboardRank(this.rankDensityScanPrevEntries, entry);
+            appendRankListDensityScanResidualSubline(
+              densityTd,
+              formatRankListDensityScanResidualLine(boardType, entry, prevRank),
+            );
             densityTr.appendChild(densityTd);
             tbody.appendChild(densityTr);
           }
+          const viewerResidual = formatRankListDensityScanResidualLine(
+            boardType,
+            { rank: res.my_rank, score: res.my_score ?? fallbackScore },
+            this.rankDensityScanPrevMyRank,
+          );
+          if (viewerResidual && (res.my_rank ?? 0) > 0) {
+            const viewerTr = document.createElement("tr");
+            viewerTr.className = "rank-my-density-scan-residual-row";
+            const viewerTd = document.createElement("td");
+            viewerTd.colSpan = 4;
+            appendRankListDensityScanResidualSubline(viewerTd, viewerResidual);
+            viewerTr.appendChild(viewerTd);
+            tbody.appendChild(viewerTr);
+          }
         }
       }
-      const fallbackScore = viewerScoreFallback(this.getSession(), boardType);
       const pinLine = formatMyRankPinLine(
         res.my_rank,
         res.my_score ?? fallbackScore,
@@ -1415,6 +1444,8 @@ export class SocialPanels {
       try {
         this.rankListError = null;
         const prevSnapshot = this.rankSnapshotByType.get(boardType);
+        this.rankDensityScanPrevEntries = prevSnapshot?.entries ?? [];
+        this.rankDensityScanPrevMyRank = prevSnapshot?.my_rank;
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
         this.cachedViewerHeroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
         this.pendingRankPinPulse = detectLeaderboardMyRankChange(prevSnapshot?.my_rank, res.my_rank);

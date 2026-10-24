@@ -280,6 +280,10 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     await flushPromises();
     expect(mount.querySelector(".rank-refreshed-hint-row")?.textContent).toContain("三甲快览");
     expect(mount.querySelectorAll(".rank-top-density-row").length).toBe(3);
+    expect(
+      mount.querySelector(".rank-top-density-row [data-role='rank-list-density-scan-residual-line']")
+        ?.textContent,
+    ).toContain("密度扫读");
     expect(mount.querySelector(".rank-pin-row")?.querySelector(".rank-pin-primary")?.textContent).toContain(
       "我的排名 #2",
     );
