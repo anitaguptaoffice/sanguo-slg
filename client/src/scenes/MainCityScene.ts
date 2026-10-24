@@ -155,7 +155,7 @@ import {
   resolveHudTodoOpenTarget,
   type HudTodoToolbarAction,
 } from "@/net/hudTodoOpenTarget";
-import { buildHudCenterTodoCounts } from "@/net/hudTodoBadges";
+import { buildHudCenterTodoCounts, hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
@@ -1824,9 +1824,10 @@ export class MainCityScene implements Scene {
 
   private applyChatUnreadCounts(): void {
     const summary = this.chatUnreadTracker.getSummary(this.social.getGuildId());
+    const social = hudTodoSocialBadgesFromChatSummary(summary);
     this.social.syncChatUnreadBadges(summary);
-    this.updateChatToolbarBadge(summary.total);
-    this.updateGuildToolbarBadge(summary.guild);
+    this.updateChatToolbarBadge(social.chat);
+    this.updateGuildToolbarBadge(social.guild);
   }
 
   private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {

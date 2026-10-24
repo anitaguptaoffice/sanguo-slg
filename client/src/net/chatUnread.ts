@@ -81,6 +81,45 @@ export function countChatMessagesAfterTs(
   return n;
 }
 
+/** CLIENT-161：单频道未读条数（与角标 `estimateChatUnread` 同口径）。 */
+export function estimateChatUnreadCount(
+  messages: readonly ChatMessageRow[],
+  lastReadMs: number,
+): number {
+  return countChatMessagesAfterTs(messages, lastReadMs);
+}
+
+export function sortChatMessagesChronological(
+  messages: readonly ChatMessageRow[],
+): ChatMessageRow[] {
+  return [...messages].sort((a, b) => (a.sent_at_ms ?? 0) - (b.sent_at_ms ?? 0));
+}
+
+/**
+ * CLIENT-161：按时间升序消息列表中，未读分隔线应插在的首条未读下标；无未读返回 -1。
+ */
+export function chatUnreadDividerFlatIndex(
+  messages: readonly ChatMessageRow[],
+  lastReadMs: number,
+): number {
+  const sorted = sortChatMessagesChronological(messages);
+  for (let i = 0; i < sorted.length; i++) {
+    if ((sorted[i].sent_at_ms ?? 0) > lastReadMs) return i;
+  }
+  return -1;
+}
+
+/** 用户是否已向下滚过 `chat-unread-divider`（分隔线完全离开滚动区顶部以上）。 */
+export function isChatUnreadDividerScrolledPast(
+  scrollContainer: HTMLElement,
+  divider: HTMLElement,
+  slackPx = 4,
+): boolean {
+  const containerTop = scrollContainer.getBoundingClientRect().top;
+  const dividerBottom = divider.getBoundingClientRect().bottom;
+  return dividerBottom <= containerTop + slackPx;
+}
+
 export function maxChatMessageSentAtMs(messages: readonly ChatMessageRow[]): number {
   let max = 0;
   for (const m of messages) {
@@ -160,6 +199,10 @@ export class ChatUnreadTracker {
     this.lastRead = { ...this.lastRead, [key]: next };
     writeChatLastReadMap(this.lastRead, this.storage);
     this.emit();
+  }
+
+  getLastReadMs(key: string): number {
+    return this.lastRead[key] ?? 0;
   }
 
   getSummary(guildId: number): ChatUnreadSummary {

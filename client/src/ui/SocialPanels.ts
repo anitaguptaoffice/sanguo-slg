@@ -57,12 +57,14 @@ import {
 } from "@/net/socialPanelRefreshSession";
 import {
   chatChannelStorageKey,
+  chatUnreadDividerFlatIndex,
   type ChatUnreadSummary,
   type ChatUnreadTracker,
-  isElementScrolledToBottom,
+  isChatUnreadDividerScrolledPast,
   maxChatMessageSentAtMs,
 } from "@/net/chatUnread";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
+import { hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
   detectLeaderboardMyRankChange,
@@ -224,15 +226,16 @@ export class SocialPanels {
     return !!this.guildPanel && !this.guildPanel.classList.contains("hidden");
   }
 
-  /** HUD / 军团面板 tab 角标与底栏同步（CLIENT-102）。 */
+  /** HUD / 军团面板 tab 角标与底栏同步（CLIENT-102 + CLIENT-161 hudTodoBadges 社交段）。 */
   syncChatUnreadBadges(summary: ChatUnreadSummary): void {
-    this.setChatTabBadge(CHAT_CHANNEL_WORLD, summary.world);
-    this.setChatTabBadge(CHAT_CHANNEL_GUILD, summary.guild);
+    const social = hudTodoSocialBadgesFromChatSummary(summary);
+    this.setChatTabBadge(CHAT_CHANNEL_WORLD, social.world);
+    this.setChatTabBadge(CHAT_CHANNEL_GUILD, social.guild);
     const guildBadge = this.guildPanel?.querySelector<HTMLElement>(
       '[data-role="guild-chat-entry-badge"]',
     );
     if (guildBadge) {
-      const text = formatHudBadgeCount(summary.guild);
+      const text = formatHudBadgeCount(social.guild);
       guildBadge.textContent = text;
       guildBadge.classList.toggle("hidden", !text);
     }
@@ -286,11 +289,34 @@ export class SocialPanels {
     const ch = this.selectedChatChannel();
     if (ch !== CHAT_CHANNEL_WORLD && ch !== CHAT_CHANNEL_GUILD) return;
     const scroll = this.chatPanel.querySelector('[data-role="chat-scroll"]') as HTMLElement | null;
-    if (!scroll || !isElementScrolledToBottom(scroll)) return;
+    if (!scroll) return;
+    const divider = scroll.querySelector(".chat-unread-divider") as HTMLElement | null;
+    if (divider) {
+      if (!isChatUnreadDividerScrolledPast(scroll, divider)) return;
+    } else {
+      return;
+    }
     const guildId = ch === CHAT_CHANNEL_GUILD ? this.guildId : 0;
     const key = chatChannelStorageKey(ch, guildId);
     const through = maxChatMessageSentAtMs(this.lastRenderedChatMessages);
-    if (through > 0) this.chatUnreadTracker.markChannelRead(key, through);
+    if (through > 0) {
+      this.chatUnreadTracker.markChannelRead(key, through);
+      this.syncChatUnreadBadges(this.chatUnreadTracker.getSummary(this.guildId));
+      this.renderChatLog(this.lastRenderedChatMessages, ch);
+    }
+  }
+
+  private markChatChannelReadExplicit(): void {
+    if (!this.chatUnreadTracker) return;
+    const ch = this.selectedChatChannel();
+    if (ch !== CHAT_CHANNEL_WORLD && ch !== CHAT_CHANNEL_GUILD) return;
+    const guildId = ch === CHAT_CHANNEL_GUILD ? this.guildId : 0;
+    const key = chatChannelStorageKey(ch, guildId);
+    const through = maxChatMessageSentAtMs(this.lastRenderedChatMessages);
+    if (through <= 0) return;
+    this.chatUnreadTracker.markChannelRead(key, through);
+    this.syncChatUnreadBadges(this.chatUnreadTracker.getSummary(this.guildId));
+    this.renderChatLog(this.lastRenderedChatMessages, ch);
   }
 
   private openGuildChatChannel(): void {
@@ -361,6 +387,7 @@ export class SocialPanels {
       </div>
       <label>内容 <input type="text" data-field="chat-content" maxlength="120" placeholder="输入消息" /></label>
       <button type="button" data-action="send-chat">发送</button>
+      <button type="button" class="chat-mark-read hidden" data-action="mark-chat-read" data-role="chat-mark-read">标为已读</button>
       <button type="button" data-action="refresh-chat">刷新</button>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-chat" data-role="chat-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="chat-refresh-status" hidden aria-live="polite">
@@ -561,16 +588,37 @@ export class SocialPanels {
       ul.appendChild(li);
       return;
     }
+    const guildId = channel === CHAT_CHANNEL_GUILD ? this.guildId : 0;
+    const channelKey = chatChannelStorageKey(channel, guildId);
+    const lastReadMs = this.chatUnreadTracker?.getLastReadMs(channelKey) ?? 0;
+    const dividerAt = chatUnreadDividerFlatIndex(messages, lastReadMs);
+    let flatIndex = 0;
+    let dividerInserted = false;
     for (const g of groups) {
       const head = document.createElement("li");
       head.className = "chat-day-header";
       head.textContent = g.title;
       ul.appendChild(head);
       for (const m of g.messages) {
+        if (!dividerInserted && flatIndex === dividerAt) {
+          ul.appendChild(this.buildChatUnreadDivider());
+          dividerInserted = true;
+        }
         ul.appendChild(this.buildChatMessageRow(m));
+        flatIndex += 1;
       }
     }
-    queueMicrotask(() => this.maybeMarkChatChannelRead());
+    const markReadBtn = this.chatPanel.querySelector('[data-role="chat-mark-read"]');
+    markReadBtn?.classList.toggle("hidden", dividerAt < 0);
+  }
+
+  private buildChatUnreadDivider(): HTMLLIElement {
+    const li = document.createElement("li");
+    li.className = "chat-unread-divider";
+    li.setAttribute("role", "separator");
+    li.setAttribute("aria-label", "未读消息");
+    li.textContent = "—— 以下未读 ——";
+    return li;
   }
 
   private isGuildRoleGroupExpanded(roleKey: number): boolean {
@@ -1048,6 +1096,7 @@ export class SocialPanels {
     const a = btn.getAttribute("data-action");
     if (a === "send-chat") void this.sendChat();
     if (a === "refresh-chat" || a === "retry-refresh-chat") void this.refreshChat();
+    if (a === "mark-chat-read") this.markChatChannelReadExplicit();
     if (a === "navigate-guild-panel") this.openGuildPanel();
     if (a === "pick-chat-channel") {
       const ch = Number(btn.getAttribute("data-chat-channel") ?? CHAT_CHANNEL_WORLD);

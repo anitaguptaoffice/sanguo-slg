@@ -4,6 +4,7 @@ import {
   countMailUnreadAndUnclaimed,
   dailyToolbarBadgeCount,
   formatHudToolbarBadgeText,
+  hudTodoSocialBadgesFromChatSummary,
   mailToolbarBadgeCount,
   queueBuildingToolbarBadgeCount,
 } from "@/net/hudTodoBadges";
@@ -77,6 +78,27 @@ describe("hudTodoBadges", () => {
     expect(bundle.toolbar.queue).toBe(1);
     expect(bundle.toolbar.reports).toBe(2);
     expect(bundle.center).toEqual({ mailClaimable: 1, dailyClaimable: 1, buildComplete: 1 });
+    expect(bundle.social).toEqual({ chat: 0, world: 0, guild: 0 });
+  });
+
+  it("hudTodoSocialBadgesFromChatSummary aligns chat toolbar with panel tabs (CLIENT-161)", () => {
+    expect(
+      hudTodoSocialBadgesFromChatSummary({
+        world: 2,
+        guild: 3,
+        total: 5,
+        byChannel: {},
+      }),
+    ).toEqual({ chat: 5, world: 2, guild: 3 });
+    const bundle = buildHudTodoBadges({
+      mailUnreadTotal: 0,
+      mailClaimablePage: [],
+      dailyRows: [],
+      buildCompleteCount: 0,
+      battleReportUnread: 0,
+      chatUnread: { world: 1, guild: 0, total: 1, byChannel: {} },
+    });
+    expect(bundle.social).toEqual({ chat: 1, world: 1, guild: 0 });
   });
 
   it("formatHudToolbarBadgeText uses CLIENT-126 count cap", () => {

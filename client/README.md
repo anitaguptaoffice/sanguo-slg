@@ -494,7 +494,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | 底栏 **日常** | `dailyToolbarBadgeCount`：chain 400 **可领取** `state=3`（**CLIENT-091**） | 打开日常面板 |
 | 底栏 **队列** | `queueBuildingToolbarBadgeCount`：`upgrade_finish_at_ms > now` 槽位数 | 打开队列面板；建造完成或倒计时结束随 **GetCityState** `recomputeToolbarCounts` |
 | 底栏 **战报** | `BattleReportUnreadSession`（**CLIENT-027/025**） | 打开战报面板 |
-| 底栏 **聊天** / **军团** | `ChatUnreadTracker.getSummary`（**CLIENT-102**） | 频道滚到底 `markChannelRead` |
+| 底栏 **聊天** / **军团** | `hudTodoSocialBadgesFromChatSummary`（**CLIENT-161**，数据来自 **CLIENT-102** `ChatUnreadTracker`） | 滚过 `chat-unread-divider` 或 **标为已读**（**CLIENT-161**） |
 | 顶栏 **待办** | `buildHudCenterTodoCounts`：可领附件邮件 / 可领日常 / `BuildCompleteTodoTracker` 建造完成 | 领取、确认队列完成槽位；与上表邮件/日常数字同源 |
 
 dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBadges.test.ts`、`hudTodoBadgePoll.test.ts`、`hudCenterTodo.test.ts`。
@@ -1266,9 +1266,13 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 4. **「聊天」** 各频道（世界/私聊/军团）同理：**刷新** 按钮 + **上次更新**；发送成功后自动刷新也应更新时间戳。
 5. 单测：`socialRefreshFormat.test.ts`、`socialPanelInflight.test.ts`、`SocialPanels.test.ts`（时间戳、in-flight 禁用、失败文案）。
 
+### 手动验收（聊天未读列表扫读与角标同步 CLIENT-161）
+
+在 [CLIENT-102](#手动验收聊天未读与社交角标-client-102) / [CLIENT-144](#手动验收社交刷新戳记与角标同步-client-144) 之上：消息列表按本地已读游标插入 **`chat-unread-divider`**（`chatUnreadDividerFlatIndex`）；底栏 **聊天** / **军团** 与面板 tab 角标共用 `hudTodoBadges` **`hudTodoSocialBadgesFromChatSummary`**（与 `estimateChatUnreadCount` 同源）。**打开聊天 tab 不清零游标**；滚过分隔线或点 **标为已读** 后 `markChannelRead` 与 HUD 角标同步递减。空/错态仍 **CLIENT-053** + **CLIENT-129**。单测：`chatUnread.test.ts`、`hudTodoBadges.test.ts`、`SocialPanels.test.ts`。
+
 ### 手动验收（社交刷新戳记与角标同步 CLIENT-144）
 
-在 [CLIENT-045](#手动验收社交刷新-client-045) / [CLIENT-096](#手动验收社交扫读-client-030) / [CLIENT-102](#手动验收聊天未读与社交角标-client-102) 之上：`formatPanelRefreshStamp` 统一排行顶栏与军团/聊天 `social-refresh-status` 的 **上次刷新** 相对文案（48h 内 **刚刚/N 分钟前/N 小时前**；更久回退本地时间）；`chat-panel-last-refresh-ms` / `guild-panel-last-refresh-ms` **sessionStorage** 在重开面板时恢复戳记（不新 RPC）。聊天 **手动刷新** 后 `ChatUnreadTracker` 快照即时驱动频道 tab 角标（与底栏 **CLIENT-102** 同一估算）；空/错态仍走 **CLIENT-053** + **CLIENT-129** 骨架。
+在 [CLIENT-045](#手动验收社交刷新-client-045) / [CLIENT-096](#手动验收社交扫读-client-030) / [CLIENT-102](#手动验收聊天未读与社交角标-client-102) 之上：`formatPanelRefreshStamp` 统一排行顶栏与军团/聊天 `social-refresh-status` 的 **上次刷新** 相对文案（48h 内 **刚刚/N 分钟前/N 小时前**；更久回退本地时间）；`chat-panel-last-refresh-ms` / `guild-panel-last-refresh-ms` **sessionStorage** 在重开面板时恢复戳记（不新 RPC）。聊天 **手动刷新** 后 `ChatUnreadTracker` 快照即时驱动频道 tab 角标（与底栏 **CLIENT-161** `hudTodoSocialBadgesFromChatSummary` 同一估算）；空/错态仍走 **CLIENT-053** + **CLIENT-129** 骨架。
 
 1. **排行**：`rank-last-refresh-ms` 与刷新按钮旁状态行均含 **上次刷新：刚刚**（或相对时间）。
 2. **军团**：职务分组下成员主行见昵称 + 职务标签；**刷新成员** 成功后见相对 **上次刷新**。
