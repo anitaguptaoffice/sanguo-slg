@@ -741,6 +741,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/背包/日常/军团** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:40 DOM 钩子（软依赖 **CLIENT-228～234**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227** manifest 不退化。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。（[#857](https://github.com/anitaguptaoffice/sanguo-slg/issues/857) / [#864](https://github.com/anitaguptaoffice/sanguo-slg/pull/864) `fe533816`）
 
+## Wave 44 H5 主城队列 ETA/完成焦点残余巩固·将领养成扫读·panelState 筛选·双榜钉选·军团聊天·日常 HUD 深链·1280 组合 manifest（M4 出口 / INTG-041）
+
+在 [Wave 43](#wave-43-h5-世界小地图军情-scroll-sync-残余出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifestm4-出口--intg-040) 世界/军情/战报/邮件/商城栈基础上 **轮转**回主城/将领/队列/日常/社交栈的残余 **加深巩固**；**非** wave:43 排行招募密度扫读主叙事重复。**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / **#697** / **#983**）。
+
+**wave:44（CLIENT-262）将领列表忠诚次行与详情养成道具扫读残余巩固**：列表 **`formatHeroListLoyaltyResidualDeepSubline`** / **`hero-list-row-loyalty-residual-deep-subline`**（忠诚 + 经验进度只读深巩固；**CLIENT-246** `hero-list-row-loyalty-residual-subline` **不退化**；**无** hero 专用升级 RPC）；详情 **`formatHeroDetailConsumableStackResidualDeepSweep`** / **`hero-detail-consumable-stack-residual-deep-sweep`** + **`hero-detail-consumable-stack-residual-deep-sweep-ring` 2s** 只读扫读（养成堆叠 + **`pickHeroDetailBagDeepLink`** 背包深链 hint；**CLIENT-230** `data-art-panel=ui.panel.hero.v1` 壳与 **CLIENT-246** 残余行 **不退化**；**非** ART-012 / #983/#108/#697 像素任务）。单测：`heroListLoyaltyResidualDeepSubline.test.ts`、`heroDetailConsumableStackResidualDeepSweep.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#990](https://github.com/anitaguptaoffice/sanguo-slg/issues/990)）
+
 ## Wave 43 H5 世界小地图军情 scroll-sync 残余·出征戳记兵力余量·战报键盘坐标·邮件 HUD 附件·背包商城返回·排行招募扫读·军情 phase 预填·1280 组合 manifest（M4 出口 / INTG-040）
 
 在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-040** 网关冒烟一致）。**范围外**同 Wave 42；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / **#637** / **#649** / **#674** / **#697**）；**CLIENT-064** / **CLIENT-136** / **CLIENT-137** / **CLIENT-146** / **CLIENT-147** / **ART-012** 美术旁路——**非**本波 backlog 实现卡。
@@ -996,6 +1002,8 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 3. 单测：`heroListLoyaltyResidualSubline.test.ts`、`heroDetailConsumableStackResidualLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#915](https://github.com/anitaguptaoffice/sanguo-slg/issues/915)）
 
 **wave:42（CLIENT-246）将领列表忠诚次行与详情养成道具堆叠扫读残余**：列表 **`formatHeroListLoyaltyResidualSubline`** + **`hero-loyalty-residual-warn-dot`**；详情 **`formatHeroDetailConsumableStackResidualLine`** / **`hero-detail-consumable-stack-residual-line`**；**CLIENT-213/230** **不退化**；无 hero 专用升级 RPC。单测：`heroListLoyaltyResidualSubline.test.ts`、`heroDetailConsumableStackResidualLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`。
+
+**wave:44（CLIENT-262）** 在 **CLIENT-246** 之上叠加列表深巩固次行与详情深扫读行，见 [Wave 44](#wave-44-h5-主城队列-eta完成焦点残余巩固将领养成扫读panelstate-筛选双榜钉选军团聊天日常-hud-深链1280-组合-manifestm4-出口--intg-041) bullet。
 
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
