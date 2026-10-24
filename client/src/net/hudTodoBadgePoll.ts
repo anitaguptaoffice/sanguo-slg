@@ -15,6 +15,7 @@ import {
   type HudTodoDeepLinkSnapshot,
 } from "@/net/hudTodoBadge";
 import { buildHudTodoBadges } from "@/net/hudTodoBadges";
+import { pickFirstQueueBuildingSlotKey } from "@/net/hudTodoOpenTarget";
 import {
   CITY_STATE_POLL_FAST_SEC,
   CITY_STATE_POLL_SLOW_SEC,
@@ -77,6 +78,7 @@ export class HudTodoBadgePoll {
         dailyRows: dl.dailyChainRows,
         battleReportUnread: dl.battleReportUnread,
       }),
+      firstQueueBuildingSlotKey: pickFirstQueueBuildingSlotKey(this.opts.getBuildings()),
     };
     this.opts.onCounts(this.toolbarCountsForUi());
   }
@@ -145,6 +147,7 @@ export class HudTodoBadgePoll {
       dailyRows: daily.rows,
       battleReportUnread: reports.count,
     });
+    const buildings = this.opts.getBuildings();
     this.deepLink = {
       ...toolbarParts,
       mailUnreadTotal: mail.count,
@@ -157,6 +160,7 @@ export class HudTodoBadgePoll {
       firstClaimableMailId: mailClaimable.firstId,
       dailyClaimable: daily.claimableCount,
       firstClaimableDailyCfgId: daily.claimableFirstId,
+      firstQueueBuildingSlotKey: pickFirstQueueBuildingSlotKey(buildings),
     };
     this.opts.onCounts(this.toolbarCountsForUi());
   }

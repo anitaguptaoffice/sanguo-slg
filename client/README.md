@@ -138,7 +138,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **军事 panel manifest**（`ui.panel.military.v1`） | [CLIENT-032 manifest 美术接线](#client-032-manifest-美术接线) + [募兵 → 行军](#手动验收募兵--行军--战报client-012--client-013)（[#248](https://github.com/anitaguptaoffice/sanguo-slg/issues/248) / [#255](https://github.com/anitaguptaoffice/sanguo-slg/pull/255)）；募兵主按钮样式见 **CLIENT-033** hotfix | 已合 |
 | **小地图比例尺 / 多行军扫读** | [手动验收（小地图 CLIENT-037）](#手动验收小地图比例尺与多行军-client-037)（[#249](https://github.com/anitaguptaoffice/sanguo-slg/issues/249) / [#256](https://github.com/anitaguptaoffice/sanguo-slg/pull/256) `5a4bb4af`） | 已合 |
 | **小地图选点出征** | [手动验收（小地图选点 CLIENT-041）](#手动验收小地图选点出征-client-041)（[#265](https://github.com/anitaguptaoffice/sanguo-slg/issues/265) / [#275](https://github.com/anitaguptaoffice/sanguo-slg/pull/275) `12a8850f`） | 已合 |
-| **HUD 角标点击深链** | [手动验收（HUD 角标深链 CLIENT-038）](#手动验收hud-角标深链-client-038)（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`） | 已合 |
+| **HUD 角标点击深链** | [手动验收（HUD 角标深链 CLIENT-038）](#手动验收hud-角标深链-client-038)（[#250](https://github.com/anitaguptaoffice/sanguo-slg/issues/250) / [#258](https://github.com/anitaguptaoffice/sanguo-slg/pull/258) `30c95e2a`）；**CLIENT-134** 队列建造中 + 筛选 chip 对齐见 [CLIENT-134](#手动验收hud-资源条与待办角标深链-client-134) | 已合 |
 | **1280 顶栏 canvas/DOM 叠字** | [手动验收（1280 顶栏 HUD CLIENT-039）](#手动验收1280-顶栏-hud-client-039)（[#259](https://github.com/anitaguptaoffice/sanguo-slg/issues/259) / [#260](https://github.com/anitaguptaoffice/sanguo-slg/pull/260) `9e98a28b`）；**不**替代 **CLIENT-033** hotfix | 已合 |
 
 **wave:16 美术轨**（非 wave:17 实现卡）：**CLIENT-040**（[#262](https://github.com/anitaguptaoffice/sanguo-slg/issues/262) / [#263](https://github.com/anitaguptaoffice/sanguo-slg/pull/263) `a4add478`）1280 军事全页 `<1MB` 证据，见 [`docs/art/samples/client-040/`](../docs/art/samples/client-040/README.md)。
@@ -921,6 +921,18 @@ cd client && npm install && npm run dev
 2. **募兵** / **出征** 主按钮四态与对比度见 **CLIENT-033** hotfix（本卡不重复改 hit 区与 1280 HUD）。
 3. 单测：`artPanelSkin.test.ts`；全量 `cd client && npm test`。
 
+### 手动验收（HUD 资源条与待办角标深链 CLIENT-134）
+
+在 **CLIENT-038** / **CLIENT-107** / **CLIENT-122**～**126** 基础上：`resolveHudTodoOpenTarget` 将 `HudTodoBadgePoll.getDeepLinkSnapshot()` 映射为面板落点；底栏角标深链与筛选 chip **选中态**一致（`mail-inbox-filter-v1` / `daily-quest-filter` 键名不变）。
+
+| 角标 | 深链 filter / 高亮 | 面板 tab 数字（CLIENT-126） |
+|---|---|---|
+| **邮件** | 有未读 → `filter=未读`；仅可领附件 → `filter=全部` + 首封可领 | `mailFilterTabCountsFromHudDeepLink` 与快照 `mailUnreadTotal` / `mailClaimable` |
+| **日常** | 有可领 → **可领取** chip；否则 **全部** + 首条可接 | `claimableCount` 与 `dailyClaimable` |
+| **队列** | 打开面板并高亮 `firstQueueBuildingSlotKey` 建造行 | 与 `queueBuildingToolbarBadgeCount` 同源 |
+
+顶栏五资源 **hover / focus / 展开** 仍由 `wireHudResourceSweep` 展示 `formatResourceSweepLine(production_rates, wallet)`（与 `GetCityState` 同行字段）；**CLIENT-051** 资源脉冲与建造/招募表单并存。单测：`hudTodoOpenTarget.test.ts`、`artResourceHud.test.ts`。
+
 ### 手动验收（HUD 角标深链 CLIENT-038）
 
 在 [CLIENT-027](#手动验收hud-待办徽章-client-027) 角标计数基础上：`toolbarBadge` 有计数时角标带 `toolbar-badge--deeplink`，**点击角标**（非按钮正文）深链，复用 `HudTodoBadgePoll` 快照、**不**额外 RPC。
@@ -1284,7 +1296,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 cd client && npm test && npm run build
 ```
 
-单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudCenterTodo` / `buildCompleteTodo`（顶栏待办聚合与 scroll target）、`hudTodoBadges` / `hudTodoBadge` / `HudTodoBadgePoll` / `toolbarBadge`（待办角标单一事实源与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边/目的点 ETA 角标）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）、`recruitAffordability`（招募消耗 vs HUD 钱包对比）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
+单测包含 `layoutViewport`（横屏 letterbox / 1280×720）、`hudFormat`（资源条分组数值与 `+粮` 摘要）、`hudCenterTodo` / `buildCompleteTodo`（顶栏待办聚合与 scroll target）、`hudTodoBadges` / `hudTodoBadge` / `HudTodoBadgePoll` / `hudTodoOpenTarget` / `toolbarBadge`（待办角标单一事实源、深链落点与单飞轮询）、`battleReportReplayCoord`（战报复盘坐标提取）、`worldMinimap`（小地图缩放/行军高亮/战报复盘 framing/比例尺/折叠 sessionStorage/多行军描边/目的点 ETA 角标）、`panelDensity`（邮件/战报/背包空态与未读 class）、`queueState` / `QueuePanels`（内政升级与募兵队列行、建造加速符 UseConsumable）、`contentFeedback`（背包/商城效果与网关错误文案）、`cityStateFetch` / `cityStatePoll`（GetCityState 单飞与降频轮询）、`militaryFormat`、`socialFormat` / `socialRefreshFormat` / `socialPanelInflight` / `SocialPanels`（聊天日期分组、军团职务排序、排行空榜提示、刷新时间戳与单飞）、`bagState`（网关背包合并）、`BattleReportPanel` / `MarchListPanel`（空列表/加载失败/列表行）、`dailyQuestObjective` / `dailyQuestState` / `dailyQuestBattleReportBanner` / `DailyQuestPanels`（chain 400 多类型标签、战报未读横幅、下一步导航与领奖合并）、`heroMailState`（招募模板/已招募/扣费明细/收件箱 filter·摘要·领取合并）、`recruitAffordability`（招募消耗 vs HUD 钱包对比）/ `HeroMailPanels`（未读切换、点开已读、角标）与 `StartMarchRequest` / `ListMarchesRequest` proto 编解码。
 
 ## 目录
 
