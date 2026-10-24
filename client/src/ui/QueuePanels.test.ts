@@ -431,6 +431,47 @@ describe("QueuePanels", () => {
     expect(onOpenDaily).toHaveBeenCalledWith(1014);
   });
 
+  it("renders preview residual deep line and deep-rings slot on click (CLIENT-261)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onDeepRing = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onDeepRing,
+    );
+    panel.attach();
+    panel.toggle();
+    const deep = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deep-line"]',
+    ) as HTMLElement;
+    expect(deep?.textContent).toMatch(/巩固扫读/);
+    expect(deep?.textContent).toMatch(/内政×1/);
+    expect(deep?.getAttribute("data-action")).toBe(
+      "domestic-slot-preview-cross-link-residual-deep-ring",
+    );
+    deep?.click();
+    expect(onDeepRing).toHaveBeenCalledWith("farm");
+  });
+
   it("renders preview residual line and pulses slot on click (CLIENT-245)", () => {
     const mount = document.createElement("div");
     const now = Date.now();
