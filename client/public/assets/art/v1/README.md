@@ -21,3 +21,9 @@ URL 前缀：`/assets/art/v1/`（叠加 Vite `base`）。
 ## 暂缓
 
 军事面板皮肤、聊天/军团/排行 UI：**下一批**，不在 ART-SAMPLE-001。
+
+## 将领肖像（ART-HERO-AVATAR-BUST-001，DRAFT）
+
+- 契约文档：[docs/art/hero-avatar-bust-batch.md](../../../../docs/art/hero-avatar-bust-batch.md)
+- Manifest 片段示例：`manifest.hero-portraits.example.json`（**不**并入运行时 `manifest.json`，直至 PNG 到位）
+- 纹理目录（交付时创建）：`textures/{1x,2x}/hero/avatar/`、`textures/{1x,2x}/hero/bust/`

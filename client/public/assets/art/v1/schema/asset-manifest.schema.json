@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://sanguo-slg.local/assets/art/v1/schema/asset-manifest.schema.json",
   "title": "Sanguo SLG Art Manifest v1",
-  "description": "DRAFT — not frozen. ART-SAMPLE-001: standalone PNG only, no atlas; full pipeline (atlas, crop) is a later gate.",
+  "description": "DRAFT — not frozen. ART-SAMPLE-001: standalone PNG only, no atlas; ART-HERO-AVATAR-BUST-001 adds hero_avatar / hero_bust kinds keyed by template_cfg_id.",
   "type": "object",
   "required": ["schema_version", "pack", "assets"],
   "additionalProperties": false,
@@ -10,7 +10,7 @@
     "schema_version": { "const": 1 },
     "pack": {
       "type": "string",
-      "enum": ["maincity", "world", "ui", "shared"],
+      "enum": ["maincity", "world", "ui", "shared", "hero"],
       "description": "Logical pack; world tiles must not reuse maincity display sizes."
     },
     "texture_delivery": {
@@ -111,7 +111,7 @@
         },
         "kind": {
           "type": "string",
-          "enum": ["sprite", "nine_slice", "button", "icon", "background"]
+          "enum": ["sprite", "nine_slice", "button", "icon", "background", "hero_avatar", "hero_bust"]
         },
         "display_size": {
           "$ref": "#/$defs/size2",
@@ -152,8 +152,44 @@
           "enum": ["hall", "farm", "lumber", "quarry", "iron", "barracks", "wall"],
           "description": "Only for maincity building sprites"
         },
+        "template_cfg_id": {
+          "type": "integer",
+          "minimum": 1001,
+          "description": "cfg_hero_template.template_cfg_id (DATA-002). Required when kind is hero_avatar or hero_bust."
+        },
         "tags": { "type": "array", "items": { "type": "string" } }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "kind": { "enum": ["hero_avatar", "hero_bust"] } },
+            "required": ["kind"]
+          },
+          "then": { "required": ["template_cfg_id"] }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "hero_avatar" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "id": { "pattern": "^hero\\.avatar\\.[0-9]+\\.v[0-9]+$" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "kind": { "const": "hero_bust" } },
+            "required": ["kind"]
+          },
+          "then": {
+            "properties": {
+              "id": { "pattern": "^hero\\.bust\\.[0-9]+\\.v[0-9]+$" }
+            }
+          }
+        }
+      ]
     }
   }
 }
