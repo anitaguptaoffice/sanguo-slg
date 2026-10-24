@@ -366,6 +366,10 @@ func heroErr(trace string, err error) *commonv1.ServerPacket {
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrInsufficientPotential), errors.Is(err, hero.ErrInvalidPointTargets):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, hero.ErrHeroNotIdle), errors.Is(err, hero.ErrHeroNotExpr),
+		errors.Is(err, hero.ErrExprNotFound), errors.Is(err, hero.ErrExprNotComplete),
+		errors.Is(err, hero.ErrInvalidExprHours):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrHotelCapacityFull):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrNotCityOwner):

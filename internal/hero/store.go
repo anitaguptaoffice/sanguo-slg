@@ -18,6 +18,9 @@ type Store interface {
 	GetAssignmentByHero(ctx context.Context, serverID int32, heroID int64) (*Assignment, error)
 	LastLargessAt(ctx context.Context, serverID int32, heroID int64) (time.Time, error)
 	SetLastLargessAt(ctx context.Context, serverID int32, heroID int64, at time.Time) error
+	GetExprSession(ctx context.Context, serverID int32, heroID int64) (*ExprSession, error)
+	SaveExprSession(ctx context.Context, sess ExprSession) error
+	DeleteExprSession(ctx context.Context, serverID int32, heroID int64) error
 	DeleteHero(ctx context.Context, serverID int32, heroID int64) error
 }
 
@@ -26,6 +29,7 @@ type MemStore struct {
 	heroes        map[int64]*Hero
 	assignments   map[int64]*Assignment
 	lastLargessAt map[int64]time.Time
+	exprSessions  map[int64]ExprSession
 }
 
 func NewMemStore() *MemStore {
@@ -33,6 +37,7 @@ func NewMemStore() *MemStore {
 		heroes:        map[int64]*Hero{},
 		assignments:   map[int64]*Assignment{},
 		lastLargessAt: map[int64]time.Time{},
+		exprSessions:  map[int64]ExprSession{},
 	}
 }
 
@@ -139,6 +144,35 @@ func (m *MemStore) DeleteHero(_ context.Context, serverID int32, heroID int64) e
 		delete(m.heroes, heroID)
 		delete(m.assignments, heroID)
 		delete(m.lastLargessAt, heroID)
+		delete(m.exprSessions, heroID)
+	}
+	return nil
+}
+
+func (m *MemStore) GetExprSession(_ context.Context, sid int32, heroID int64) (*ExprSession, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	sess, ok := m.exprSessions[heroID]
+	if !ok || sess.ServerID != sid {
+		return nil, nil
+	}
+	cp := sess
+	return &cp, nil
+}
+
+func (m *MemStore) SaveExprSession(_ context.Context, sess ExprSession) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.exprSessions[sess.HeroID] = sess
+	return nil
+}
+
+func (m *MemStore) DeleteExprSession(_ context.Context, sid int32, heroID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	sess, ok := m.exprSessions[heroID]
+	if ok && sess.ServerID == sid {
+		delete(m.exprSessions, heroID)
 	}
 	return nil
 }

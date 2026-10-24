@@ -30,6 +30,10 @@ var (
 	ErrComingCityMismatch    = errors.New("hero: coming offer not for this city")
 	ErrInsufficientPotential = errors.New("hero: insufficient potential points")
 	ErrInvalidPointTargets   = errors.New("hero: invalid point targets")
+	ErrHeroNotExpr           = errors.New("hero: hero is not in training")
+	ErrExprNotFound          = errors.New("hero: expr session not found")
+	ErrExprNotComplete       = errors.New("hero: expr not finished yet")
+	ErrInvalidExprHours      = errors.New("hero: invalid expr hours")
 )
 
 const (

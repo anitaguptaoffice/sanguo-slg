@@ -99,6 +99,18 @@
 | 洗点 | `clearHeroPoint` → `useXiShuiDan`（洗髓丹 `ceil(level/10)`） | `ClearHeroPoint` 清零 adds；**M1 delta**：不扣道具 |
 | 出征 | `isHeroInCity` 拒绝 | 非 `StatusIdle` → `ErrHeroNotInCity` |
 
+## 7. 将领历练（Hero Expr）
+
+| 项 | Legacy（#82 `HeroFunc.php` / `HeroExpr.php`） | M1 实现 |
+|---|---|---|
+| 状态 | `sys_city_hero.state=10` 历练中 | `player_hero.status=4`（`StatusExpr`） |
+| 会话 | `sys_hero_expr`（start/end/hours/type/carrymoney） | `hero_expr_session`（started_at/ends_at/hours） |
+| 开始 | `beginExprHero` 扣城金+元宝、多历练类型 | `BeginHeroExpr`：扣 `player_wallet.gold` = `level×hours×10`；`hours` 1–4（默认 1） |
+| 取消 | `cancelHeroExpr` → state=11，cron 结算部分经验 | **M1 delta**：`CancelHeroExpr` 立即恢复 idle，无部分经验 |
+| 完成 | cron `finishHeroExpr` 按类型/时长加 exp + 奇遇 | `FinishHeroExpr`：`ends_at` 到达后加 `level×hours×20` exp |
+| 加速 | `fasterHeroExpr` 道具 143/144 | **M1 delta**：`FasterHeroExpr` 无道具，立即按完成奖励结算 |
+| 君主将 | `herotype=1000` 禁止历练 | **M1 delta**：暂不区分君主将 |
+
 ## 验证
 
 - `internal/military/march/legacy_align_test.go`：legacy 欧氏 + 6000 对拍常量  
@@ -108,4 +120,5 @@
 - `internal/hero/captive_test.go`：俘虏招降/释放与容量、道具闸  
 - `internal/hero/coming_test.go`：来投接受/拒绝与容量、非 coming 拒绝  
 - `internal/hero/persuade_test.go`：结交好感、达标招入、容量/冷却/好感不足拒绝  
+- `internal/hero/expr_test.go`：历练开始/取消/完成/加速与非 idle 拒绝  
 - `internal/hero/points_test.go`：潜力加点/洗点、出征拒绝、潜力不足  
