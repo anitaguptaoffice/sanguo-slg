@@ -331,6 +331,7 @@ import {
   scheduleDomesticQueueCompleteSlotMargin,
 } from "@/net/domesticQueueCompleteSlotMargin";
 import { scheduleDomesticQueueCompleteFocusResidualDeepRing } from "@/net/domesticQueueCompleteFocusResidualDeepRing";
+import { scheduleDomesticQueueCompleteFocusResidualDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeeperRing";
 import { scheduleDomesticQueueCompleteFocusResidualRing } from "@/net/domesticQueueCompleteFocusResidualRing";
 import {
   collectCitySlotKeysForQueueCompleteFocus,
@@ -2226,7 +2227,7 @@ export class MainCityScene implements Scene {
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
   }
 
-  /** CLIENT-197 / CLIENT-212 / CLIENT-244 / CLIENT-260：队列完成 → 七槽焦点环 + 残余/深残余环 + 完成态余量扫读。 */
+  /** CLIENT-197 / CLIENT-212 / CLIENT-244 / CLIENT-260 / CLIENT-276：队列完成 → 七槽焦点环 + 残余/深/更深残余环 + 完成态余量扫读。 */
   private applyQueueCompleteFocusRing(events: readonly QueueCompleteHudEvent[]): void {
     const slotKeys = collectCitySlotKeysForQueueCompleteFocus(events, sessionStorage);
     if (!slotKeys.length) return;
@@ -2237,6 +2238,7 @@ export class MainCityScene implements Scene {
       scheduleCitySlotCompleteFocusRing(layer, key);
       scheduleDomesticQueueCompleteFocusResidualRing(layer, key);
       scheduleDomesticQueueCompleteFocusResidualDeepRing(layer, key);
+      scheduleDomesticQueueCompleteFocusResidualDeeperRing(layer, key);
       const label = formatDomesticQueueCompleteSlotMarginLabel(
         buildingBySlot(buildings, key),
         nowMs,
