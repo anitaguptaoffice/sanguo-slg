@@ -219,10 +219,10 @@ def build_items() -> list[dict]:
 
 def build_heroes() -> list[dict]:
     base = [
-        ("xuan_de_lord", "玄德府君", 5, "以仁政安抚百姓，重整州县秩序。"),
-        ("green_dragon", "青龙偃月帅", 5, "长刀所向，先登破阵。"),
-        ("thunder_spear", "雷矛先锋", 4, "声如雷霆，冲锋不退。"),
-        ("silver_rider", "银甲骑将", 4, "七进七出，护主周全。"),
+        ("xuan_de_lord", "刘备", 5, "以仁德凝聚人心，重整州郡纲纪。"),
+        ("green_dragon", "关羽", 5, "偃月长刀，当先破阵。"),
+        ("thunder_spear", "张飞", 4, "雷吼当先，锐不可当。"),
+        ("silver_rider", "赵云", 4, "银甲护主，七进七出。"),
         ("sun_archer", "落日神弓", 4, "百步穿杨，镇守要道。"),
         ("wind_cavalry", "疾风铁骑", 4, "西凉铁骑，奔袭如风。"),
         ("jade_strategist", "碧玉谋臣", 5, "运筹帷幄，决胜千里。"),

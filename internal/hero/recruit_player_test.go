@@ -58,7 +58,7 @@ func TestRecruitPlayerSuccess(t *testing.T) {
 		t.Fatalf("items %v", inv.items)
 	}
 	tpl := svc.Catalog[1001]
-	if tpl.Name != "玄德府君" {
+	if tpl.Name != "刘备" {
 		t.Fatalf("DATA-002 name expected, got %q", tpl.Name)
 	}
 }

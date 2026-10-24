@@ -307,8 +307,8 @@ function decodeInt64(value) {
 }
 
 const HERO_TEMPLATE_DETAIL_META = {
-  1001: { template_name: "玄德府君", template_code: "xuan_de_lord" },
-  1002: { template_name: "青龙偃月帅", template_code: "green_dragon" },
+  1001: { template_name: "刘备", template_code: "xuan_de_lord" },
+  1002: { template_name: "关羽", template_code: "green_dragon" },
 };
 
 function mockHeroDetailPayload(row) {
@@ -863,7 +863,7 @@ wss.on("connection", (ws) => {
         const templates = [
           {
             template_cfg_id: 1001,
-            template_name: "玄德府君",
+            template_name: "刘备",
             template_code: "xuan_de_lord",
             pool: "standard",
             rarity: 5,
@@ -873,7 +873,7 @@ wss.on("connection", (ws) => {
           },
           {
             template_cfg_id: 1002,
-            template_name: "青龙偃月帅",
+            template_name: "关羽",
             template_code: "green_dragon",
             pool: "elite",
             rarity: 5,

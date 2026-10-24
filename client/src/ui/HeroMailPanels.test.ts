@@ -1528,7 +1528,7 @@ describe("HeroMailPanels", () => {
         templates: [
           {
             template_cfg_id: 1001,
-            template_name: "玄德府君",
+            template_name: "刘备",
             recruit_cost: { food: 100 },
             recruit_item: { item_cfg_id: 2004, quantity: 1 },
           },
@@ -1554,7 +1554,7 @@ describe("HeroMailPanels", () => {
       getHeroDetail: vi.fn().mockResolvedValue({
         hero_id: 99,
         template_cfg_id: 1001,
-        template_name: "玄德府君",
+        template_name: "刘备",
         level: 1,
         loyalty: 100,
       }),
@@ -1607,7 +1607,7 @@ describe("HeroMailPanels", () => {
     const selected = mount.querySelector('li[data-hero-id="99"].selected');
     expect(selected).toBeTruthy();
     expect(onDaily).toHaveBeenCalled();
-    expect(statuses.some((s) => s.includes("玄德府君") && s.includes("日常"))).toBe(true);
+    expect(statuses.some((s) => s.includes("刘备") && s.includes("日常"))).toBe(true);
     const toast = mount.querySelector('[data-role="recruit-success-toast"]');
     expect(toast?.classList.contains("hidden")).toBe(false);
     const detailBtn = mount.querySelector(

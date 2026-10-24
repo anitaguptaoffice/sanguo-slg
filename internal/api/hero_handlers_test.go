@@ -65,7 +65,7 @@ func TestHeroGatewayRecruitAndList(t *testing.T) {
 	if err := proto.Unmarshal(detailResp.Data, &detailOut); err != nil {
 		t.Fatal(err)
 	}
-	if detailOut.GetTemplateName() != "玄德府君" {
+	if detailOut.GetTemplateName() != "刘备" {
 		t.Fatalf("detail name %q", detailOut.GetTemplateName())
 	}
 }

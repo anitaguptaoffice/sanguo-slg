@@ -21,9 +21,9 @@
 | 生成 SQL | `spec/data/generated/cfg_hero_template.sql` |
 | ID 规则 | `heroes[]` **顺序** → `template_cfg_id` **从 1001 递增**（见 [MAPPING.md](../spec/data/MAPPING.md)） |
 
-当前 DATA-002 已灌入 **40** 个模板：**1001–1040**（与 `heroes.yml` / SQL 一致）。展示名以 `heroes.yml` 为准；**历史人物 likeness / 史实名对照** 不在本卡范围，待产品在 art board **#108** 确认后再开需求。
+当前 DATA-002 已灌入 **40** 个模板：**1001–1040**（与 `heroes.yml` / SQL 一致）。展示名以 `heroes.yml` 为准。
 
-**禁止**在本文或交付台账中臆造史实名映射。
+**Slice 1 史实身份**（1001–1004）已由 **HERO-HIST-NAME-001** 冻结；美术按 [hero-template-historical-identity.md](./hero-template-historical-identity.md) 绘制对应历史人物 likeness。1005+ 仍为风味展示名，史实名仅见该文档草案表。
 
 运行时将领面板（`data-center-panel="hero"`）今日仍用 **纯文案** 列表/详情；`ui.panel.hero.v1` / `ui.icon.toolbar.hero.v1` 仅为 **面板九宫格与底栏图标**（见 [samples/art-center-panel-012](./samples/art-center-panel-012/README.md)）。本批交付 **不阻塞** 玩法；缺图时客户端 **保持现状**（无图、无报错）。
 
@@ -125,15 +125,23 @@
 | **Slice 3** | 1013–1040 | 28 | 余下 DATA-002 模板直至满批 |
 | **Full core（目标）** | 1001–1040 | **40** | Batch 1 完整目标（80 个 asset 条目 = 40×2）；**40 为终态目标，非当前起步张数** |
 
-### Slice 1 扩批明细（1002–1004，在 Slice 0 通过后）
+### Slice 0 明细（建议先冻 — **史实身份已冻结**）
 
-| template_cfg_id | code |
-|---:|---|
-| 1002 | green_dragon |
-| 1003 | thunder_spear |
-| 1004 | silver_rider |
+| template_cfg_id | code | 绘制人物（冻结） |
+|---:|---|---|
+| 1001 | `xuan_de_lord` | **刘备** |
 
-（1001 `xuan_de_lord` 见 Slice 0。）
+### Slice 1 扩批明细（1002–1004，在 Slice 0 通过后 — **史实身份已冻结**）
+
+美术按 **`historical_identity` / 展示名** 绘制对应历史人物（非风味代号）。完整映射与 1005+ 草案见 [hero-template-historical-identity.md](./hero-template-historical-identity.md)。
+
+| template_cfg_id | code | 绘制人物（冻结） |
+|---:|---|---|
+| 1002 | `green_dragon` | **关羽** |
+| 1003 | `thunder_spear` | **张飞** |
+| 1004 | `silver_rider` | **赵云** |
+
+`alt` 文案与 manifest 台账使用上表中文名；`template_code` 仅作工程联结键。
 
 完整 40 模板 code 表见 `spec/data/generated/cfg_hero_template.sql` 或 `heroes.yml`。
 
@@ -182,3 +190,4 @@ PY
 |---|---|
 | 2026-10-24 | ART-HERO-AVATAR-BUST-001 初稿：命名、路径、40 模板分批、schema `hero_*` kind |
 | 2026-10-24 | 跟进 #108：圆形遮罩工程侧、安全区/2× 原生、bust 锚点语义、manifest 顶层键、Slice 0（1001）、示例 JSON 去非法 `description` |
+| 2026-10-24 | HERO-HIST-NAME-001：1001–1004 冻结刘备/关羽/张飞/赵云；链出史实映射文档 |

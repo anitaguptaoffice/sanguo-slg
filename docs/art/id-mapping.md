@@ -24,4 +24,4 @@
 | 列表头像 | `hero.avatar.<template_cfg_id>.v1` | `hero.avatar.1001.v1` |
 | 详情半身 | `hero.bust.<template_cfg_id>.v1` | `hero.bust.1001.v1` |
 
-路径与验收见 [hero-avatar-bust-batch.md](./hero-avatar-bust-batch.md)。
+路径与验收见 [hero-avatar-bust-batch.md](./hero-avatar-bust-batch.md)。史实人物与 `template_cfg_id` 对照见 [hero-template-historical-identity.md](./hero-template-historical-identity.md)。

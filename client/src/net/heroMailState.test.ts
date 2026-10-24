@@ -211,12 +211,12 @@ describe("heroMailState", () => {
       { hero_id: 42, template_cfg_id: 1001, level: 1, loyalty: 100 },
       {
         template_cfg_id: 1001,
-        template_name: "玄德府君",
+        template_name: "刘备",
         recruit_cost: { food: 5000 },
         recruit_item: { item_cfg_id: 2004, quantity: 1 },
       },
     );
-    expect(msg).toContain("玄德府君");
+    expect(msg).toContain("刘备");
     expect(msg).toContain("#42");
     expect(msg).toContain("贤士名册");
     expect(msg).toContain("粮");
@@ -226,7 +226,7 @@ describe("heroMailState", () => {
     expect(recruitTemplateListLines([])).toEqual(["（无可招募模板）"]);
     const line = formatRecruitTemplateLine({
       template_cfg_id: 1001,
-      template_name: "玄德府君",
+      template_name: "刘备",
       rarity: 5,
       recruit_cost: { food: 5000 },
       recruit_item: { item_cfg_id: 2004, quantity: 1 },

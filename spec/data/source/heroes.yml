@@ -1,41 +1,45 @@
 # DATA-002 将领模板（文案重写；不含玩家实例）
 heroes:
 - code: xuan_de_lord
-  name: 玄德府君
+  name: 刘备
   rarity: 5
   base_stats:
     force: 72
     intel: 75
     politics: 88
     command: 78
-    tagline: 以仁政安抚百姓，重整州县秩序。
+    historical_identity: 刘备
+    tagline: 以仁德凝聚人心，重整州郡纲纪。
 - code: green_dragon
-  name: 青龙偃月帅
+  name: 关羽
   rarity: 5
   base_stats:
     force: 95
     intel: 62
     politics: 55
     command: 82
-    tagline: 长刀所向，先登破阵。
+    historical_identity: 关羽
+    tagline: 偃月长刀，当先破阵。
 - code: thunder_spear
-  name: 雷矛先锋
+  name: 张飞
   rarity: 4
   base_stats:
     force: 92
     intel: 45
     politics: 40
     command: 75
-    tagline: 声如雷霆，冲锋不退。
+    historical_identity: 张飞
+    tagline: 雷吼当先，锐不可当。
 - code: silver_rider
-  name: 银甲骑将
+  name: 赵云
   rarity: 4
   base_stats:
     force: 88
     intel: 70
     politics: 58
     command: 85
-    tagline: 七进七出，护主周全。
+    historical_identity: 赵云
+    tagline: 银甲护主，七进七出。
 - code: sun_archer
   name: 落日神弓
   rarity: 4

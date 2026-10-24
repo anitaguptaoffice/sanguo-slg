@@ -27,7 +27,7 @@ const HERO_TEMPLATE_LABEL: Record<number, string> = {
   1001: "刘备",
   1002: "关羽",
   1003: "张飞",
-  1004: "诸葛亮",
+  1004: "赵云",
 };
 
 export const HERO_RECRUIT_SCROLL_ID = 2004;
