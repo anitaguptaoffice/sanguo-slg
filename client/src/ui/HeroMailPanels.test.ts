@@ -2629,4 +2629,75 @@ describe("HeroMailPanels", () => {
       expect(gateway.listPlayerHeroes).toHaveBeenCalled();
     });
   });
+
+  describe("persuade / lionize (CLIENT-hero-persuade-001)", () => {
+    it("loads persuade targets when opening hero panel", async () => {
+      const mount = document.createElement("div");
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listPersuadeTargets: vi.fn().mockResolvedValue({
+          targets: [
+            {
+              npc_cfg_id: 1001,
+              display_name: "刘备",
+              level: 40,
+              friend: 0,
+              state: 0,
+              hire_friend_min: 30,
+            },
+          ],
+        }),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      expect(gateway.listPersuadeTargets).toHaveBeenCalledWith(1);
+      expect(mount.querySelector('[data-role="persuade-meta"]')?.textContent).toContain("1 名");
+      expect(mount.querySelector('li[data-npc-cfg-id="1001"]')?.textContent).toContain("刘备");
+    });
+
+    it("persuade primary shows cooldown error from gateway", async () => {
+      const mount = document.createElement("div");
+      const listPersuadeTargets = vi.fn().mockResolvedValue({
+        targets: [
+          {
+            npc_cfg_id: 1002,
+            display_name: "关羽",
+            friend: 20,
+            state: 1,
+            hire_friend_min: 30,
+          },
+        ],
+      });
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listPersuadeTargets,
+        persuadeHero: vi.fn().mockRejectedValue(new Error("hero: persuade on cooldown")),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const session = (): MainCitySession => ({
+        ...sessionBase(),
+        bag: [{ item_cfg_id: 2004, quantity: 1 }],
+      });
+      const panels = new HeroMailPanels(mount, gateway, session, () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      const btn = mount.querySelector('[data-action="persuade-primary"]') as HTMLButtonElement;
+      expect(btn.textContent).toContain("游说");
+      expect(btn.disabled).toBe(false);
+      btn.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(gateway.persuadeHero).toHaveBeenCalledWith(1, 1, 1002);
+      expect(mount.querySelector('[data-role="persuade-form-error"]')?.textContent).toContain(
+        "游说冷却",
+      );
+    });
+  });
 });

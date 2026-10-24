@@ -88,6 +88,9 @@ export type GatewayPort = {
   listHotelRecruitCandidates(serverId: number, cityId: number): Promise<unknown>;
   refreshHotelRecruitPool(serverId: number, cityId: number): Promise<unknown>;
   recruitHotelCandidate(serverId: number, cityId: number, candidateId: number): Promise<unknown>;
+  listPersuadeTargets(serverId: number): Promise<unknown>;
+  persuadeHero(serverId: number, cityId: number, npcCfgId: number): Promise<unknown>;
+  lionizeHero(serverId: number, cityId: number, npcCfgId: number): Promise<unknown>;
   largessHero(
     serverId: number,
     heroId: number,
@@ -622,6 +625,39 @@ export class GatewayClient implements GatewayPort {
       "RecruitHotelCandidateRequest",
       { server_id: serverId, city_id: cityId, candidate_id: candidateId },
       RecruitHotelCandidateResponse,
+      true,
+    );
+  }
+
+  async listPersuadeTargets(serverId: number) {
+    const { ListPersuadeTargetsResponse } = getTypes();
+    return this.rpc(
+      Routes.ListPersuadeTargets,
+      "ListPersuadeTargetsRequest",
+      { server_id: serverId },
+      ListPersuadeTargetsResponse,
+      true,
+    );
+  }
+
+  async persuadeHero(serverId: number, cityId: number, npcCfgId: number) {
+    const { PersuadeHeroResponse } = getTypes();
+    return this.rpc(
+      Routes.PersuadeHero,
+      "PersuadeHeroRequest",
+      { server_id: serverId, city_id: cityId, npc_cfg_id: npcCfgId },
+      PersuadeHeroResponse,
+      true,
+    );
+  }
+
+  async lionizeHero(serverId: number, cityId: number, npcCfgId: number) {
+    const { LionizeHeroResponse } = getTypes();
+    return this.rpc(
+      Routes.LionizeHero,
+      "LionizeHeroRequest",
+      { server_id: serverId, city_id: cityId, npc_cfg_id: npcCfgId },
+      LionizeHeroResponse,
       true,
     );
   }

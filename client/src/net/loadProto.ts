@@ -79,6 +79,9 @@ export const Routes = {
   ListHotelRecruitCandidates: "hero.v1.ListHotelRecruitCandidates",
   RefreshHotelRecruitPool: "hero.v1.RefreshHotelRecruitPool",
   RecruitHotelCandidate: "hero.v1.RecruitHotelCandidate",
+  ListPersuadeTargets: "hero.v1.ListPersuadeTargets",
+  PersuadeHero: "hero.v1.PersuadeHero",
+  LionizeHero: "hero.v1.LionizeHero",
   LargessHero: "hero.v1.LargessHero",
   ListCaptiveHeroes: "hero.v1.ListCaptiveHeroes",
   TrySummonCaptive: "hero.v1.TrySummonCaptive",
@@ -173,6 +176,12 @@ export type ProtoTypes = {
   RefreshHotelRecruitPoolResponse: protobuf.Type;
   RecruitHotelCandidateRequest: protobuf.Type;
   RecruitHotelCandidateResponse: protobuf.Type;
+  ListPersuadeTargetsRequest: protobuf.Type;
+  ListPersuadeTargetsResponse: protobuf.Type;
+  PersuadeHeroRequest: protobuf.Type;
+  PersuadeHeroResponse: protobuf.Type;
+  LionizeHeroRequest: protobuf.Type;
+  LionizeHeroResponse: protobuf.Type;
   LargessHeroRequest: protobuf.Type;
   LargessHeroResponse: protobuf.Type;
   ListCaptiveHeroesRequest: protobuf.Type;
@@ -272,6 +281,12 @@ export function getTypes(): ProtoTypes {
     RefreshHotelRecruitPoolResponse: r.lookupType("sanguo.hero.v1.RefreshHotelRecruitPoolResponse"),
     RecruitHotelCandidateRequest: r.lookupType("sanguo.hero.v1.RecruitHotelCandidateRequest"),
     RecruitHotelCandidateResponse: r.lookupType("sanguo.hero.v1.RecruitHotelCandidateResponse"),
+    ListPersuadeTargetsRequest: r.lookupType("sanguo.hero.v1.ListPersuadeTargetsRequest"),
+    ListPersuadeTargetsResponse: r.lookupType("sanguo.hero.v1.ListPersuadeTargetsResponse"),
+    PersuadeHeroRequest: r.lookupType("sanguo.hero.v1.PersuadeHeroRequest"),
+    PersuadeHeroResponse: r.lookupType("sanguo.hero.v1.PersuadeHeroResponse"),
+    LionizeHeroRequest: r.lookupType("sanguo.hero.v1.LionizeHeroRequest"),
+    LionizeHeroResponse: r.lookupType("sanguo.hero.v1.LionizeHeroResponse"),
     LargessHeroRequest: r.lookupType("sanguo.hero.v1.LargessHeroRequest"),
     LargessHeroResponse: r.lookupType("sanguo.hero.v1.LargessHeroResponse"),
     ListCaptiveHeroesRequest: r.lookupType("sanguo.hero.v1.ListCaptiveHeroesRequest"),
