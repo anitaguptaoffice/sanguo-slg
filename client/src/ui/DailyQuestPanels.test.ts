@@ -920,6 +920,9 @@ describe("DailyQuestPanels", () => {
     const deep = row?.querySelector(".daily-quest-chain-queue-hud-residual-deep-subline");
     expect(deep?.textContent).toContain("深链巩固");
     expect(deep?.textContent).toContain("队列下一完成");
+    const deeper = row?.querySelector(".daily-quest-chain-queue-hud-residual-deeper-subline");
+    expect(deeper?.textContent).toContain("巩固再加深");
+    expect(deeper?.textContent).toContain("队列下一完成");
     vi.restoreAllMocks();
   });
 
