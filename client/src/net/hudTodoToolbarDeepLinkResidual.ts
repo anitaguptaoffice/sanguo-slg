@@ -13,6 +13,11 @@ export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_CLASS =
   "hud-todo-toolbar-deep-link-residual-deep-pulse";
 export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_MS = 2000;
 
+/** CLIENT-282：CLIENT-266 深脉冲上的 2.5s **巩固再加深** 脉冲（与 CLIENT-241 角标同步 **并存**）。 */
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_CLASS =
+  "hud-todo-toolbar-deep-link-residual-deeper-pulse";
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_MS = 2500;
+
 export function scheduleHudTodoToolbarDeepLinkResidualPulse(
   el: HTMLElement | null | undefined,
 ): void {
@@ -37,9 +42,22 @@ export function scheduleHudTodoToolbarDeepLinkResidualDeepPulse(
   }, HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_MS);
 }
 
-/** 打开底栏面板：CLIENT-216 主脉冲 + CLIENT-250 残余环 + CLIENT-266 深脉冲。 */
+export function scheduleHudTodoToolbarDeepLinkResidualDeeperPulse(
+  el: HTMLElement | null | undefined,
+): void {
+  if (!el) return;
+  el.classList.remove(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_CLASS);
+  void el.offsetWidth;
+  el.classList.add(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_CLASS);
+  window.setTimeout(() => {
+    el.classList.remove(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_CLASS);
+  }, HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_MS);
+}
+
+/** 打开底栏面板：CLIENT-216 主脉冲 + CLIENT-250 残余环 + CLIENT-266 深脉冲 + CLIENT-282 更深脉冲。 */
 export function pulseHudTodoToolbarDeepLinkResidual(el: HTMLElement | null | undefined): void {
   scheduleToolbarPanelDeepLinkPulse(el);
   scheduleHudTodoToolbarDeepLinkResidualPulse(el);
   scheduleHudTodoToolbarDeepLinkResidualDeepPulse(el);
+  scheduleHudTodoToolbarDeepLinkResidualDeeperPulse(el);
 }

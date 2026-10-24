@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_CLASS,
+  DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPER_SUBLINE_CLASS,
   formatQuestChainQueueHudResidualDeepSubline,
+  formatQuestChainQueueHudResidualDeeperSubline,
   formatQuestChainQueueHudResidualQueueEtaSnippet,
   formatQuestChainQueueHudResidualSubline,
 } from "@/net/questChainQueueHudResidual";
@@ -94,6 +96,52 @@ describe("formatQuestChainQueueHudResidualDeepSubline (CLIENT-266)", () => {
   it("exports deep subline DOM class", () => {
     expect(DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_CLASS).toBe(
       "daily-quest-chain-queue-hud-residual-deep-subline",
+    );
+  });
+});
+
+describe("formatQuestChainQueueHudResidualDeeperSubline (CLIENT-282)", () => {
+  const now = 1_700_000_000_000;
+
+  it("consolidates chain type with queue ETA on third line for claimable rows", () => {
+    const line = formatQuestChainQueueHudResidualDeeperSubline(
+      {
+        quest_cfg_id: 1013,
+        chain_id: 400,
+        state: 3,
+        progress_current: 4,
+        progress_target: 4,
+      },
+      [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 90_000 }],
+      [],
+      { farm: "农田" },
+      [],
+      now,
+    );
+    expect(line).toContain("巩固再加深");
+    expect(line).toContain("主线");
+    expect(line).toContain("队列下一完成");
+    expect(line).toContain("↔");
+    expect(line).toContain("对照");
+    expect(line).toContain("深链巩固");
+  });
+
+  it("returns null when no active queue", () => {
+    expect(
+      formatQuestChainQueueHudResidualDeeperSubline(
+        { quest_cfg_id: 1013, chain_id: 400, state: 3 },
+        [],
+        [],
+        {},
+        [],
+        now,
+      ),
+    ).toBeNull();
+  });
+
+  it("exports deeper subline DOM class", () => {
+    expect(DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPER_SUBLINE_CLASS).toBe(
+      "daily-quest-chain-queue-hud-residual-deeper-subline",
     );
   });
 });
