@@ -100,6 +100,12 @@ export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS = "rank-refresh-cooldown
 /** CLIENT-248: pin row keep highlight after manual refresh. */
 export const RANK_PIN_KEEP_RESIDUAL_RING_CLASS = "rank-pin-keep-residual-ring";
 
+/** CLIENT-264: consolidated cooldown deep stamp + pin deep ring (CLIENT-248/214 no regress). */
+export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_CLASS =
+  "rank-refresh-cooldown-residual-deep-stamp";
+export const RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS = "rank-pin-keep-residual-deep-ring";
+export const RANK_MANUAL_REFRESH_COUNT_SESSION_KEY = "rank-manual-refresh-count";
+
 /** CLIENT-249: guild duty group header residual line. */
 export const GUILD_DUTY_HEADER_RESIDUAL_LINE_CLASS = "guild-duty-header-residual-line";
 
@@ -137,7 +143,9 @@ export const HERO_PANEL_STATE_RESIDUAL_SWEEP_SELECTOR = `.content-panel[data-cen
 export const HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_CLASS}`;
 export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_CLASS}`;
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS}`;
+export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_CLASS}`;
 export const RANK_PIN_KEEP_RESIDUAL_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-list li.${RANK_PIN_KEEP_RESIDUAL_RING_CLASS}`;
+export const RANK_PIN_KEEP_RESIDUAL_DEEP_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.${RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS}`;
 export const GUILD_DUTY_HEADER_RESIDUAL_LINE_SELECTOR = `.social-panel[data-center-panel="guild"] .${GUILD_DUTY_HEADER_RESIDUAL_LINE_CLASS}`;
 export const GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_SWEEP_SELECTOR = `.social-panel[data-center-panel="chat"] .chat-log li.${GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_SWEEP_CLASS}`;
 export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_SELECTOR = `.content-panel[data-center-panel="daily"] .daily-quest-list .${QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_CLASS}`;

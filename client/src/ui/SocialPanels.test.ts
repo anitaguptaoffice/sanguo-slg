@@ -11,6 +11,9 @@ import {
   RANK_MANUAL_REFRESH_SESSION_KEY,
 } from "@/net/rankRefreshCooldown";
 import { formatRankRefreshCooldownResidualStamp } from "@/net/rankRefreshCooldownResidual";
+import { RANK_MANUAL_REFRESH_COUNT_SESSION_KEY } from "@/net/rankManualRefreshCountSession";
+import { formatRankRefreshCooldownResidualDeepStamp } from "@/net/rankRefreshCooldownResidualDeep";
+import { RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS } from "@/net/rankPinKeepResidualDeepRing";
 import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
@@ -50,6 +53,7 @@ function minimalGateway(overrides: Partial<GatewayPort> = {}): GatewayPort {
 describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
   beforeEach(() => {
     sessionStorage.removeItem(RANK_MANUAL_REFRESH_SESSION_KEY);
+    sessionStorage.removeItem(RANK_MANUAL_REFRESH_COUNT_SESSION_KEY);
   });
 
   it("guild and chat panels have center-panel id and scroll body (CLIENT-095)", () => {
@@ -387,6 +391,14 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
       expect(mount.querySelector('[data-role="rank-refresh-cooldown"]')?.textContent).toBe(
         formatRankRefreshCooldownStamp(now, now),
       );
+      const deep = mount.querySelector('[data-role="rank-refresh-cooldown-residual-deep"]');
+      expect(deep?.textContent).toBe(
+        formatRankRefreshCooldownResidualDeepStamp(now, now, 1, now),
+      );
+      expect(deep?.classList.contains("hidden")).toBe(false);
+      expect(
+        mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS),
+      ).toBe(true);
     } finally {
       nowSpy.mockRestore();
     }

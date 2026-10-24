@@ -137,12 +137,19 @@ import {
   formatRankPinRefreshResidualLine,
   syncRankPinRefreshResidualLine,
 } from "@/net/rankPinRefreshResidual";
+import { incrementRankManualRefreshCount, readRankManualRefreshCount } from "@/net/rankManualRefreshCountSession";
+import { pulseRankPinKeepResidualRingsAfterManualRefresh } from "@/net/rankPinKeepResidualDeepRing";
 import { highlightRankPinKeepResidualRing } from "@/net/rankPinKeepResidualRing";
 import {
   formatRankRefreshCooldownResidualStamp,
   RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE,
   syncRankRefreshCooldownResidualStamp,
 } from "@/net/rankRefreshCooldownResidual";
+import {
+  formatRankRefreshCooldownResidualDeepStamp,
+  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_ROLE,
+  syncRankRefreshCooldownResidualDeepStamp,
+} from "@/net/rankRefreshCooldownResidualDeep";
 import {
   appendRankListDensityScanResidualSubline,
   formatRankListDensityScanResidualLine,
@@ -597,6 +604,7 @@ export class SocialPanels {
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
       <span class="rank-refresh-cooldown-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}" aria-live="polite"></span>
       <p class="rank-refresh-cooldown-residual-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE}" aria-live="polite"></p>
+      <p class="rank-refresh-cooldown-residual-deep-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_ROLE}" aria-live="polite"></p>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -1154,6 +1162,16 @@ export class SocialPanels {
       this.rankPanel,
       formatRankRefreshCooldownResidualStamp(lastRefreshMs, lastManualMs, nowMs) || null,
     );
+    const manualCount = readRankManualRefreshCount(boardType);
+    syncRankRefreshCooldownResidualDeepStamp(
+      this.rankPanel,
+      formatRankRefreshCooldownResidualDeepStamp(
+        lastRefreshMs,
+        lastManualMs,
+        manualCount,
+        nowMs,
+      ) || null,
+    );
     this.syncRankPinRefreshResidualBar(boardType, this.rankViewerMyRank, nowMs);
   }
 
@@ -1454,6 +1472,7 @@ export class SocialPanels {
         writeRankLastRefreshMs(boardType, refreshedAt);
         if (opts?.manual) {
           writeRankManualLastRefreshMs(boardType, refreshedAt);
+          incrementRankManualRefreshCount(boardType);
         }
         this.showRankRefreshDensity = hadSnapshot;
         this.renderLeaderboardPage(res, boardType);
@@ -1472,7 +1491,10 @@ export class SocialPanels {
         });
         this.syncRankRefreshCooldownUi(boardType, refreshedAt);
         if (opts?.manual) {
-          highlightRankPinKeepResidualRing(this.rankPanel);
+          pulseRankPinKeepResidualRingsAfterManualRefresh(
+            this.rankPanel,
+            highlightRankPinKeepResidualRing,
+          );
         }
         this.onStatus("排行榜已刷新");
       } catch (e) {
