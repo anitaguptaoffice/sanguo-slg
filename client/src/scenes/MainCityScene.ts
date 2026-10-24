@@ -19,6 +19,7 @@ import {
   skinShopPanel,
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
+import { skinUiFilterSurfaces } from "@/engine/artUiFilterSkin";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
@@ -651,6 +652,8 @@ export class MainCityScene implements Scene {
     skinCenterPrimary(this.queuePanels.getRoot());
     skinCenterPrimary(this.heroMail.getMailRoot());
     skinCenterPrimary(this.dailyQuest.getRoot());
+    skinUiFilterSurfaces(this.heroMail.getMailRoot(), this.assets);
+    skinUiFilterSurfaces(this.dailyQuest.getRoot(), this.assets);
     skinCenterPrimary(this.world.getRoot());
     skinCenterPrimary(this.social.getRankRoot());
     skinCenterPrimary(this.social.getGuildRoot());

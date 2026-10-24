@@ -24,7 +24,6 @@ import {
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
   countMailUnreadAndUnclaimed,
-  formatMailInboxAllTabAttachmentBadge,
   formatMailInboxUnreadTabLabel,
   mailHasUnclaimedAttachments,
   upsertMailRow,
@@ -428,8 +427,8 @@ export class HeroMailPanels {
       <h3>邮件</h3>
       <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
       <div class="mail-inbox-toolbar">
-        <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full selected" data-action="mail-filter-all">全部</button>
-        <button type="button" class="mail-filter-btn art-btn-primary art-btn-primary-full" data-action="mail-filter-unread">未读</button>
+        <button type="button" class="mail-filter-btn art-filter-chip selected" data-action="mail-filter-all">全部</button>
+        <button type="button" class="mail-filter-btn art-filter-chip" data-action="mail-filter-unread">未读</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
@@ -598,7 +597,6 @@ export class HeroMailPanels {
       unreadBtn.textContent = formatMailInboxUnreadTabLabel(unreadForTab);
     }
     const attachBadge = allBtn?.querySelector('[data-role="mail-filter-attach-badge"]');
-    const attachLabel = formatMailInboxAllTabAttachmentBadge(derived.unclaimed);
     if (allBtn) {
       const base = allBtn.querySelector('[data-role="mail-filter-all-label"]');
       if (!base) {
@@ -608,15 +606,15 @@ export class HeroMailPanels {
         span.textContent = "全部";
         allBtn.appendChild(span);
         const badge = document.createElement("span");
-        badge.className = "mail-filter-badge";
+        badge.className = "mail-filter-badge art-ui-count-badge";
         badge.setAttribute("data-role", "mail-filter-attach-badge");
         allBtn.appendChild(badge);
       }
       const badgeEl =
         allBtn.querySelector('[data-role="mail-filter-attach-badge"]') ?? attachBadge;
-      if (badgeEl) {
-        badgeEl.textContent = attachLabel;
-        badgeEl.classList.toggle("hidden", !attachLabel);
+      if (badgeEl instanceof HTMLElement) {
+        badgeEl.setAttribute("data-ui-badge-count", String(Math.max(0, derived.unclaimed)));
+        badgeEl.classList.toggle("hidden", derived.unclaimed <= 0);
       }
     }
   }

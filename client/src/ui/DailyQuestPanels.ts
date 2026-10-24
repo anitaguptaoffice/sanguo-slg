@@ -174,10 +174,10 @@ export class DailyQuestPanels {
       <p class="daily-form-error hidden" data-role="daily-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="daily-scroll">
         <div class="daily-quest-filters" data-role="daily-filters">
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="all">全部</button>
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="in_progress">进行中</button>
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="claimable">可领取</button>
-          <button type="button" class="daily-quest-filter-btn" data-action="daily-filter" data-filter="completed">已完成</button>
+          <button type="button" class="daily-quest-filter-btn art-filter-chip" data-action="daily-filter" data-filter="all">全部</button>
+          <button type="button" class="daily-quest-filter-btn art-filter-chip" data-action="daily-filter" data-filter="in_progress">进行中</button>
+          <button type="button" class="daily-quest-filter-btn art-filter-chip" data-action="daily-filter" data-filter="claimable">可领取</button>
+          <button type="button" class="daily-quest-filter-btn art-filter-chip" data-action="daily-filter" data-filter="completed">已完成</button>
           <button type="button" class="daily-quest-filter-btn daily-quest-locate-first hidden" data-action="daily-locate-first" hidden>定位首条</button>
         </div>
         <div class="daily-quest-state-summary" data-role="daily-state-summary" hidden></div>

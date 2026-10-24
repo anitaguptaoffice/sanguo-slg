@@ -700,7 +700,7 @@ describe("HeroMailPanels", () => {
     const unreadBtn = mount.querySelector('[data-action="mail-filter-unread"]');
     expect(unreadBtn?.textContent).toBe("未读 2");
     const attachBadge = mount.querySelector('[data-role="mail-filter-attach-badge"]');
-    expect(attachBadge?.textContent).toBe("附件 1");
+    expect(attachBadge?.getAttribute("data-ui-badge-count")).toBe("1");
   });
 
   it("tab attachment badge drops immediately after claim", async () => {
@@ -731,7 +731,9 @@ describe("HeroMailPanels", () => {
     panels.attach();
     panels.toggleMail();
     await flushPromises();
-    expect(mount.querySelector('[data-role="mail-filter-attach-badge"]')?.textContent).toBe("附件 1");
+    expect(mount.querySelector('[data-role="mail-filter-attach-badge"]')?.getAttribute("data-ui-badge-count")).toBe(
+      "1",
+    );
     mount.querySelector('[data-action="claim-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     const badge = mount.querySelector('[data-role="mail-filter-attach-badge"]');
