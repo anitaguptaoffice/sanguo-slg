@@ -153,6 +153,13 @@ export class QueuePanels {
     });
   }
 
+  /** CLIENT-134：底栏队列角标深链 — 打开并高亮首条建造进行中槽位。 */
+  openFromTodoBadge(slotKey: string): void {
+    const key = slotKey.trim();
+    if (key) this.openAndHighlightBuildSlot(key);
+    else this.open();
+  }
+
   /** 打开队列并高亮指定槽位的建造行（主城画布深链）。 */
   openAndHighlightBuildSlot(slotKey: string): void {
     this.highlightedBuildSlotKey = slotKey.trim() || null;

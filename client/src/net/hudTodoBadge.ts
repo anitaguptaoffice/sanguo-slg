@@ -62,6 +62,8 @@ export type HudTodoDeepLinkSnapshot = HudTodoBadgeCounts & {
   firstClaimableMailId: number;
   dailyClaimable: number;
   firstClaimableDailyCfgId: number;
+  /** 建造进行中首槽（队列角标深链，与 `queueBuildingToolbarBadgeCount` 排序一致）。 */
+  firstQueueBuildingSlotKey: string;
 };
 
 export const EMPTY_HUD_TODO_DEEP_LINK: HudTodoDeepLinkSnapshot = {
@@ -79,6 +81,7 @@ export const EMPTY_HUD_TODO_DEEP_LINK: HudTodoDeepLinkSnapshot = {
   firstClaimableMailId: 0,
   dailyClaimable: 0,
   firstClaimableDailyCfgId: 0,
+  firstQueueBuildingSlotKey: "",
 };
 
 /** 收件箱列表顺序下首封未读（与 unread filter 一致）。 */

@@ -122,6 +122,10 @@ import { ChatUnreadTracker } from "@/net/chatUnread";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
 import { HudTodoBadgePoll } from "@/net/hudTodoBadgePoll";
 import type { HudTodoBadgeCounts } from "@/net/hudTodoBadge";
+import {
+  resolveHudTodoOpenTarget,
+  type HudTodoToolbarAction,
+} from "@/net/hudTodoOpenTarget";
 import { buildHudCenterTodoCounts } from "@/net/hudTodoBadges";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
@@ -849,23 +853,49 @@ export class MainCityScene implements Scene {
     if (!btn) return;
     const action = btn.getAttribute("data-action");
     if (isToolbarBadgeDeepLinkClick(ev)) {
-      const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-      if (action === "toggle-mail" && snap.mailUnread > 0) {
-        this.heroMail.openFromTodoBadge(snap.firstUnreadMailId);
-        return;
-      }
-      if (action === "toggle-daily" && snap.dailyTodo > 0) {
-        const cfgId = snap.firstClaimableDailyCfgId || snap.firstDailyTodoCfgId;
-        this.dailyQuest.openFromTodoBadge(cfgId);
-        this.updateDailyToolbarBadge(0);
-        return;
-      }
-      if (action === "toggle-reports" && snap.battleReportUnread > 0) {
-        this.marchArrivalHudReminder = null;
-        void this.battleReports
-          .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
-          .then(() => this.renderHud());
-        return;
+      const toolbarAction = action as HudTodoToolbarAction | null;
+      if (
+        toolbarAction === "toggle-mail" ||
+        toolbarAction === "toggle-daily" ||
+        toolbarAction === "toggle-queue" ||
+        toolbarAction === "toggle-reports"
+      ) {
+        const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+        const target = resolveHudTodoOpenTarget(
+          toolbarAction,
+          snap,
+          this.session?.buildings,
+        );
+        if (target.kind === "mail") {
+          this.heroMail.openFromTodoBadge(target.mailId, {
+            mailFilter: target.mailFilter,
+            filterTabCounts: {
+              unreadForTab: target.unreadForTab,
+              unclaimedCount: target.unclaimedCount,
+            },
+          });
+          return;
+        }
+        if (target.kind === "daily") {
+          this.dailyQuest.openFromTodoBadge(target.cfgId, {
+            listFilter: target.listFilter,
+            claimableCount: target.claimableCount,
+          });
+          this.updateDailyToolbarBadge(0);
+          return;
+        }
+        if (target.kind === "queue-building") {
+          this.queuePanels.openFromTodoBadge(target.slotKey);
+          this.updateQueueToolbarBadge(0);
+          return;
+        }
+        if (target.kind === "battle-report") {
+          this.marchArrivalHudReminder = null;
+          void this.battleReports
+            .openPanelWithDeepLink(target.reportId)
+            .then(() => this.renderHud());
+          return;
+        }
       }
     }
     if (action === "upgrade-farm") {
