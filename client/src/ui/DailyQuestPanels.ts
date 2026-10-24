@@ -69,7 +69,10 @@ import {
   appendDailyQuestRowSecondary,
   formatDailyQuestRowPrimary,
 } from "@/net/dailyQuestProgressFormat";
-import { appendQuestChainQueueHudResidualSubline } from "@/net/questChainQueueHudResidual";
+import {
+  appendQuestChainQueueHudResidualDeepSubline,
+  appendQuestChainQueueHudResidualSubline,
+} from "@/net/questChainQueueHudResidual";
 import {
   formatDailyClaimableSweepLine,
   scheduleDailyClaimProgressSweepPulse,
@@ -499,6 +502,15 @@ export class DailyQuestPanels {
         appendDailyQuestRowSecondary(li, q);
         if (state === DAILY_QUEST_STATE_CLAIMABLE) {
           appendQuestChainQueueHudResidualSubline(
+            li,
+            q,
+            buildings,
+            recruits,
+            slotLabels,
+            this.rows,
+            now,
+          );
+          appendQuestChainQueueHudResidualDeepSubline(
             li,
             q,
             buildings,

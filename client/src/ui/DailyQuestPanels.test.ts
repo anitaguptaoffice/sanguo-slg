@@ -917,6 +917,9 @@ describe("DailyQuestPanels", () => {
     expect(row?.querySelector(".daily-quest-chain-queue-hud-residual-subline")?.textContent).toBe(
       "主线 · 队列下一完成 <1h",
     );
+    const deep = row?.querySelector(".daily-quest-chain-queue-hud-residual-deep-subline");
+    expect(deep?.textContent).toContain("深链巩固");
+    expect(deep?.textContent).toContain("队列下一完成");
     vi.restoreAllMocks();
   });
 
