@@ -1,4 +1,8 @@
-import { setFilterChipLabel, syncFilterChipAria } from "@/engine/artFilterChipRuntime";
+import {
+  remountPanelFilterChips,
+  setFilterChipLabel,
+  syncFilterChipAria,
+} from "@/engine/artFilterChipRuntime";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
@@ -13,6 +17,14 @@ import {
   shouldPromptDailyRecruitAfterRecruit,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
+import type { AssetLoader } from "@/engine/AssetLoader";
+import {
+  mountFilterBadgeCount,
+  mountFilterBadgeDot,
+  mountFilterBadges,
+  mountFilterRow,
+  mountFilterRows,
+} from "@/engine/artUiFilterSkin";
 import {
   applyMailClaimResult,
   formatHeroLine,
@@ -25,8 +37,6 @@ import {
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
   countMailUnreadAndUnclaimed,
-  formatMailInboxAllTabAttachmentBadge,
-  formatMailInboxUnreadTabLabel,
   mailHasUnclaimedAttachments,
   upsertMailRow,
   mailEmptyInboxMessage,
@@ -41,9 +51,16 @@ import {
   type RecruitTemplatePreview,
 } from "@/net/heroMailState";
 import {
+  formatMailFilterChips,
+  formatMailRowCountBadge,
+  mailRowAttachmentBadgeCount,
+  mailRowShowsUnreadDot,
+  readMailInboxFilterSession,
+  writeMailInboxFilterSession,
+} from "@/net/mailInboxFilter";
+import {
   mailInboxEmptyListClass,
   mailInboxLoadErrorListHint,
-  MAIL_UNCLAIMED_BADGE_LABEL,
   mailListRowClassName,
   mailRowMetaLine,
   mailRowTitleLine,
@@ -141,9 +158,11 @@ export class HeroMailPanels {
     private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
     private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
     private readonly onRecruitMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
+    private readonly assets?: AssetLoader,
   ) {}
 
   attach(): void {
+    this.mailFilter = readMailInboxFilterSession() ?? MAIL_INBOX_FILTER_ALL;
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
     this.mount.appendChild(this.heroPanel);
@@ -235,6 +254,16 @@ export class HeroMailPanels {
     return this.mailPanel;
   }
 
+  /** 面板根挂载后由 MainCityScene 调用；列表重绘时内部也会刷新。 */
+  mountMailFilterSkins(assets?: AssetLoader): void {
+    const loader = assets ?? this.assets;
+    if (!loader || !this.mailPanel) return;
+    this.syncMailFilterChipDom(loader);
+    mountFilterRows(this.mailPanel, loader);
+    this.mountMailListRowSkins(loader);
+    remountPanelFilterChips(this.mailPanel, loader);
+  }
+
   getHeroRoot(): HTMLElement {
     return this.heroPanel;
   }
@@ -293,6 +322,7 @@ export class HeroMailPanels {
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     this.mailFilter = MAIL_INBOX_FILTER_ALL;
+    writeMailInboxFilterSession(this.mailFilter);
     if (mailId > 0) this.selectedMailId = mailId;
     void this.refreshMail().then(() => this.focusHighlightedMail(mailId));
   }
@@ -329,6 +359,7 @@ export class HeroMailPanels {
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
+    writeMailInboxFilterSession(this.mailFilter);
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
     void this.refreshMail().then(() => this.focusFirstUnreadMail(preferredMailId));
   }
@@ -341,6 +372,7 @@ export class HeroMailPanels {
     const wasOpen = this.isMailOpen();
     this.mailPanel.classList.remove("hidden");
     this.mailFilter = MAIL_INBOX_FILTER_ALL;
+    writeMailInboxFilterSession(this.mailFilter);
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
     void this.refreshMail().then(() => {
       const pickId =
@@ -443,12 +475,15 @@ export class HeroMailPanels {
     el.innerHTML = `
       <h3>邮件</h3>
       <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
-      <div class="mail-inbox-toolbar" role="group" aria-label="邮件筛选">
+      <div class="mail-inbox-toolbar mail-filter-bar" data-role="mail-filter-bar" role="group" aria-label="邮件筛选">
         <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-all" aria-pressed="true">
           <span data-role="mail-filter-all-label" class="art-filter-chip-label">全部</span>
-          <span class="mail-filter-badge hidden" data-role="mail-filter-attach-badge" hidden></span>
+          <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-all-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
         </button>
-        <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-unread" aria-pressed="false">未读</button>
+        <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-unread" aria-pressed="false">
+          <span data-role="mail-filter-unread-label" class="art-filter-chip-label">未读</span>
+          <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-unread-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
+        </button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
@@ -611,30 +646,44 @@ export class HeroMailPanels {
     }
   }
 
-  private setMailFilterButtons(): void {
+  private syncMailFilterChipDom(assets?: AssetLoader): void {
+    const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
+    const unreadForTab = Math.max(this.mailUnreadTotal, derived.unread);
+    const chipSpecs = formatMailFilterChips({
+      activeFilter: this.mailFilter,
+      unreadForTab,
+      unclaimedCount: derived.unclaimed,
+    });
     const allBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-all"]');
     const unreadBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-unread"]');
-    const chips = [allBtn, unreadBtn].filter((b): b is HTMLButtonElement => b != null);
-    syncFilterChipAria(chips, (btn) => {
+    const chipButtons = [allBtn, unreadBtn].filter((b): b is HTMLButtonElement => b != null);
+    syncFilterChipAria(chipButtons, (btn) => {
       if (btn.dataset.action === "mail-filter-all") return this.mailFilter === MAIL_INBOX_FILTER_ALL;
       if (btn.dataset.action === "mail-filter-unread") return this.mailFilter === MAIL_INBOX_FILTER_UNREAD;
       return false;
     });
-    const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
-    const unreadForTab = Math.max(this.mailUnreadTotal, derived.unread);
-    if (unreadBtn) {
-      setFilterChipLabel(unreadBtn, formatMailInboxUnreadTabLabel(unreadForTab));
-    }
-    const attachLabel = formatMailInboxAllTabAttachmentBadge(derived.unclaimed);
-    if (allBtn) {
-      const badgeEl = allBtn.querySelector<HTMLElement>('[data-role="mail-filter-attach-badge"]');
-      if (badgeEl) {
-        badgeEl.textContent = attachLabel;
-        const show = Boolean(attachLabel);
-        badgeEl.classList.toggle("hidden", !show);
-        badgeEl.hidden = !show;
+    const loader = assets ?? this.assets;
+    for (const spec of chipSpecs) {
+      const btn = this.mailPanel.querySelector<HTMLButtonElement>(`[data-action="${spec.action}"]`);
+      if (!btn) continue;
+      setFilterChipLabel(btn, spec.label);
+      const countEl = btn.querySelector<HTMLElement>("[data-ui-filter-badge='count']");
+      if (!countEl) continue;
+      const count = spec.action === "mail-filter-all" ? derived.unclaimed : unreadForTab;
+      countEl.dataset.filterBadgeCount = String(count);
+      if (loader) mountFilterBadgeCount(countEl, loader, count);
+      else {
+        countEl.textContent = spec.countBadge;
+        const show = Boolean(spec.countBadge);
+        countEl.classList.toggle("hidden", !show);
+        countEl.hidden = !show;
       }
     }
+    if (loader) remountPanelFilterChips(this.mailPanel, loader);
+  }
+
+  private setMailFilterButtons(): void {
+    this.syncMailFilterChipDom();
   }
 
   private patchMailInboxSnapshot(mailId: number, patch: MailRow): void {
@@ -700,6 +749,7 @@ export class HeroMailPanels {
     } else {
       for (const m of this.mails) {
         const li = document.createElement("li");
+        li.setAttribute("data-ui-filter-row", "");
         if (m.mail_id) {
           li.setAttribute("data-mail-id", String(m.mail_id));
           li.setAttribute(
@@ -726,12 +776,25 @@ export class HeroMailPanels {
         }
         const titleSpan = document.createElement("span");
         titleSpan.className = "mail-row-title";
-        titleSpan.textContent = mailRowTitleLine(m);
-        if (mailHasUnclaimedAttachments(m)) {
-          const badge = document.createElement("span");
-          badge.className = "mail-unclaimed-badge";
-          badge.textContent = MAIL_UNCLAIMED_BADGE_LABEL;
-          titleSpan.appendChild(badge);
+        if (mailRowShowsUnreadDot(m)) {
+          const dot = document.createElement("span");
+          dot.className = "mail-row-unread-dot";
+          dot.setAttribute("data-ui-filter-badge", "dot");
+          dot.setAttribute("aria-hidden", "true");
+          titleSpan.appendChild(dot);
+        }
+        const titleText = document.createElement("span");
+        titleText.className = "mail-row-title-text";
+        titleText.textContent = mailRowTitleLine(m);
+        titleSpan.appendChild(titleText);
+        const attachCount = mailRowAttachmentBadgeCount(m);
+        if (attachCount > 0) {
+          const countBadge = document.createElement("span");
+          countBadge.className = "mail-row-count-badge";
+          countBadge.setAttribute("data-ui-filter-badge", "count");
+          countBadge.dataset.filterBadgeCount = String(attachCount);
+          countBadge.setAttribute("aria-label", `附件 ${formatMailRowCountBadge(m)}`);
+          titleSpan.appendChild(countBadge);
         }
         const summarySpan = document.createElement("span");
         summarySpan.className = "mail-row-summary";
@@ -742,6 +805,7 @@ export class HeroMailPanels {
         ul.appendChild(li);
       }
     }
+    this.mountMailListRowSkins();
     const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
     if (detailWrap) detailWrap.classList.toggle("hidden", !sel);
     if (titleEl) titleEl.textContent = sel ? mailTitle(sel) : "";
@@ -767,6 +831,24 @@ export class HeroMailPanels {
       if (link.reportId != null) battleBtn.dataset.reportId = String(link.reportId);
       else battleBtn.removeAttribute("data-report-id");
     }
+  }
+
+  private mountMailListRowSkins(assets?: AssetLoader): void {
+    const loader = assets ?? this.assets;
+    if (!loader || !this.mailPanel) return;
+    const ul = this.mailPanel.querySelector('[data-role="mail-list"]');
+    if (!ul) return;
+    for (const row of Array.from(ul.querySelectorAll<HTMLElement>("li[data-ui-filter-row]"))) {
+      mountFilterRow(row, loader);
+      const dot = row.querySelector<HTMLElement>("[data-ui-filter-badge='dot']");
+      if (dot) mountFilterBadgeDot(dot, loader);
+      const countEl = row.querySelector<HTMLElement>("[data-ui-filter-badge='count']");
+      if (countEl) {
+        const count = Number(countEl.dataset.filterBadgeCount ?? "0");
+        mountFilterBadgeCount(countEl, loader, Number.isFinite(count) ? count : 0);
+      }
+    }
+    mountFilterBadges(ul, loader);
   }
 
   private async refreshHeroes(opts?: {
@@ -1388,10 +1470,12 @@ export class HeroMailPanels {
     if (a === "refresh-mail") void this.refreshMail();
     if (a === "mail-filter-all") {
       this.mailFilter = MAIL_INBOX_FILTER_ALL;
+      writeMailInboxFilterSession(this.mailFilter);
       void this.refreshMail();
     }
     if (a === "mail-filter-unread") {
       this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
+      writeMailInboxFilterSession(this.mailFilter);
       void this.refreshMail();
     }
     if (a === "claim-mail") void this.claimMail();
