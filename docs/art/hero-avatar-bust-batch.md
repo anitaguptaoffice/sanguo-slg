@@ -1,6 +1,6 @@
 # 将领头像 + 半身像批量交付（ART-HERO-AVATAR-BUST-001）
 
-> **状态：DRAFT — 美术像素未冻结。** 工程契约与 schema 槽位；**不含**真实绘制纹理。下文「工程契约澄清」可由工程在无产品拍板前落地；参照 PR #77 / #82 / #100 / #108 / #126 与 Draft art hold **只读**，禁止合并或把 legacy 美术复制进主树。
+> **状态：Slice 0–1 身份 + 宿主契约已冻结，**1001–1004** 像素已入库（8 asset / 16 PNG）；**Slice 2（1005–1008）** 身份 + 宿主契约已于 PR #108 联合冻结（美术 6386161474 / 工程 6386170338），美术可开绘，**像素尚未入库**。1009+ 仍为草案。工程 schema 槽位见下文；参照 PR #77 / #82 / #100 / #108 / #126 与 Draft art hold **只读**，禁止合并或把 legacy 美术复制进主树。
 
 ## 范围（Batch 1，固定）
 
@@ -23,7 +23,7 @@
 
 当前 DATA-002 已灌入 **40** 个模板：**1001–1040**（与 `heroes.yml` / SQL 一致）。展示名以 `heroes.yml` 为准。
 
-**Slice 1 史实身份**（1001–1004）已由 **HERO-HIST-NAME-001** 冻结；美术按 [hero-template-historical-identity.md](./hero-template-historical-identity.md) 绘制对应历史人物 likeness。1005+ 仍为风味展示名，史实名仅见该文档草案表。
+**Slice 1 史实身份**（1001–1004）已由 **HERO-HIST-NAME-001** 冻结并已交付纹理；**Slice 2**（1005–1008：黄忠 / 马超 / 诸葛亮 / 周瑜）身份已于 #108 联合冻结并与 seed（#1021 `5772e512`）对齐。美术按 [hero-template-historical-identity.md](./hero-template-historical-identity.md) 绘制 likeness。**1009+** 仍为风味展示名，史实名仅见该文档草案表。
 
 运行时将领面板（`data-center-panel="hero"`）今日仍用 **纯文案** 列表/详情；`ui.panel.hero.v1` / `ui.icon.toolbar.hero.v1` 仅为 **面板九宫格与底栏图标**（见 [samples/art-center-panel-012](./samples/art-center-panel-012/README.md)）。本批交付 **不阻塞** 玩法；缺图时客户端 **保持现状**（无图、无报错）。
 
@@ -46,8 +46,8 @@
 
 | kind | 逻辑框 `display_size` | 锚点 `anchor`（pixels） | 构图 |
 |---|---|---|---|
-| `hero_avatar` | **56 × 56** | **(28, 48)** 下颌/胸口中心偏下 | **圆形** 列表头像（见下）；面部占框 **≥60%** 高度；透明底；**不烘焙** 等级/稀有度/名字 |
-| `hero_bust` | **128 × 160** | **(64, 152)** 肩线中心（**定位锚点**，见下） | 头 + 肩胸；头顶留 **≥8px** 呼吸；左右肩裁切对称；透明底 |
+| `hero_avatar` | **56 × 56** | **(28, 48)** 下颌/胸口中心偏下 | **圆形** 列表头像（见下）；发际线至下巴（不含冠）占框 **≥60%** 高度（**仅 1001** 允许 **≥57%** 特例，**不**延续至 1002+）；透明底；**不烘焙** 等级/稀有度/名字 |
+| `hero_bust` | **128 × 160** | **(64, 152)** **定位锚点**（见下） | 头 + 肩胸；画幅顶 **≥12px**、底 **≥16px** 呼吸留白；左右肩裁切对称；透明底 |
 
 ### 工程契约澄清（裁剪 / 遮罩 / 锚点 / 倍率）
 
@@ -55,11 +55,12 @@
 - **列表 avatar 挂载**：`object-fit: cover`；`object-position: center`；逻辑框 **56×56**。
 - **安全区**：脸/冠/须落在画幅中心约 **80%** 区域内；四周保留 **≥2px** 全透明边距，勿贴边裁切。
 - **2× 来源**：必须为 **原生绘制/导出**（avatar **112×112**，bust **256×320**）；**禁止**从 1× 放大生成 2×。
-- **bust 锚点 (64, 152)**：仅表示半身像在详情容器内的 **挂载定位点**（肩线中心），**不是**要求肩线贴近画布底边；仍须头顶 **≥8px** 留白；画布底部约 **16px** 预留给名字条叠压（见上表说明）。
+- **bust 锚点 (64, 152)**：仅表示半身像在详情容器内的 **挂载定位点**；**不要求**肩线落在画布底边。画幅顶 **≥12px**、底 **≥16px** 为纯呼吸留白（底部 **16px 不是**名字条叠压区）。
+- **详情名字**：展示名在 bust **右侧** 约 **10px** 处排版，**不**覆盖人物轮廓；与 [heroPanelTextContrast](../../client/src/engine/heroPanelTextContrast.ts) 墨色文案并存。
 
 - `crop_offset`：Batch 1 **省略**或 `{0,0}`（与 ART-SAMPLE-001 一致）。
 - 列表行命中区仍遵守 **≥44×44** CSS（头像可 56 逻辑，由后续 CLIENT 皮肤挂载时包一层 wrap）。
-- 详情 bust 挂在 `.hero-detail` 墨底区（`ui.panel.hero.v1` 内），与 [heroPanelTextContrast](../../client/src/engine/heroPanelTextContrast.ts) 墨色文案并存；美术避免在 bust 底部 **16px** 内压暗关键轮廓（留给名字条叠压）。
+- 详情 bust 挂在 `.hero-detail` 墨底区（`ui.panel.hero.v1` 内）；底部 **16px** 仍须保留透明呼吸边，勿为「留名字」而裁切肩胸关键轮廓。
 
 ### 运行时挂载（工程后续 PR，非本卡）
 
@@ -121,19 +122,19 @@
 |---|---|---:|---|
 | **Slice 0（建议先冻）** | **1001** | **1** | 仅 2 个 asset 条目 + 4 张 PNG；先验证契约与挂载，再扩批 |
 | **Slice 1** | **1002–1004** | **3** | 与客户端冒烟子集 `heroTemplateLabel`（1001–1004）、招募默认 1001、INTG 固定 id 对齐 |
-| **Slice 2** | 1005–1012 | 8 | 核心高稀有度与招募池前排模板 |
+| **Slice 2** | **1005–1008** | **4** | 黄忠 / 马超 / 诸葛亮 / 周瑜；#108 联合冻结后可开绘（8 asset / 16 PNG） |
 | **Slice 3** | 1013–1040 | 28 | 余下 DATA-002 模板直至满批 |
 | **Full core（目标）** | 1001–1040 | **40** | Batch 1 完整目标（80 个 asset 条目 = 40×2）；**40 为终态目标，非当前起步张数** |
 
-### Slice 0 明细（建议先冻 — **史实身份已冻结**）
+### Slice 0 明细（**史实身份已冻结 — 像素已交付**）
 
 | template_cfg_id | code | 绘制人物（冻结） |
 |---:|---|---|
 | 1001 | `xuan_de_lord` | **刘备** |
 
-### Slice 1 扩批明细（1002–1004，在 Slice 0 通过后 — **史实身份已冻结**）
+### Slice 1 扩批明细（1002–1004 — **史实身份已冻结 — 像素已交付**）
 
-美术按 **`historical_identity` / 展示名** 绘制对应历史人物（非风味代号）。完整映射与 1005+ 草案见 [hero-template-historical-identity.md](./hero-template-historical-identity.md)。
+美术按 **`historical_identity` / 展示名** 绘制对应历史人物（非风味代号）。1009+ 草案见 [hero-template-historical-identity.md](./hero-template-historical-identity.md)。
 
 | template_cfg_id | code | 绘制人物（冻结） |
 |---:|---|---|
@@ -141,7 +142,18 @@
 | 1003 | `thunder_spear` | **张飞** |
 | 1004 | `silver_rider` | **赵云** |
 
-`alt` 文案与 manifest 台账使用上表中文名；`template_code` 仅作工程联结键。
+### Slice 2 明细（1005–1008 — **史实身份 + 宿主契约已冻结 — 待交付像素**）
+
+PR #108 联合冻结后授权美术绘制；**不**包含旧文档中的 1005–1012 八人批。
+
+| template_cfg_id | code | 绘制人物（冻结） |
+|---:|---|---|
+| 1005 | `sun_archer` | **黄忠** |
+| 1006 | `wind_cavalry` | **马超** |
+| 1007 | `jade_strategist` | **诸葛亮** |
+| 1008 | `fire_general` | **周瑜** |
+
+`alt` 文案与 manifest 台账使用上表中文名；`template_code` 仅作工程联结键。稳定 `asset_id`：`hero.avatar.<id>.v1`、`hero.bust.<id>.v1`；路径见上文「文件路径」。
 
 完整 40 模板 code 表见 `spec/data/generated/cfg_hero_template.sql` 或 `heroes.yml`。
 
@@ -191,3 +203,4 @@ PY
 | 2026-10-24 | ART-HERO-AVATAR-BUST-001 初稿：命名、路径、40 模板分批、schema `hero_*` kind |
 | 2026-10-24 | 跟进 #108：圆形遮罩工程侧、安全区/2× 原生、bust 锚点语义、manifest 顶层键、Slice 0（1001）、示例 JSON 去非法 `description` |
 | 2026-10-24 | HERO-HIST-NAME-001：1001–1004 冻结刘备/关羽/张飞/赵云；链出史实映射文档 |
+| 2026-10-24 | #108 Slice 2 联合冻结：1005–1008（4 人）、宿主契约（底 16px 呼吸非名字条、名字在 bust 右侧 10px、锚点仅定位、顶 12/底 16、面部 ≥60% / 1001 特例不延续）；状态横幅区分已交付 Slice 0–1 |

@@ -23,16 +23,23 @@
 
 **参照核对**：原版 `cfg_npc_hero` 为全量武将表（按 `npcid` 排序），与 DATA-002 模板顺序**无直接一一对应**；Slice 1 以本项目 `heroes.yml` 风味文案与 `internal/hero/catalog_embed.go` 遗留兜底名（刘备/关羽/张飞/赵云）对齐。客户端曾将 1004 占位标为「诸葛亮」，与银甲/七进七出风味及兜底目录冲突，本卡以 **赵云** 为准。
 
-## 1005–1040（草案 — 待编排确认）
+## Slice 2（冻结 — Batch 1 第二批）
 
-以下根据当前风味名与 `legacyDefaultCatalog()` 前 6 项等线索做的 **best-effort** 映射，**未写入** `heroes.yml` 的 `name` / `historical_identity`；美术勿按此批量开工，仅供后续 DATA/编排卡参考。
+与 PR #108 联合冻结（美术 comment 6386161474、工程 comment 6386170338）及 main 上身份数据（#1021 squash `5772e512`）一致：`heroes.yml` / seed 已写入 `name` 与 `base_stats.historical_identity`。肖像 **8 个 asset 条目 / 16 张 PNG**（avatar + bust × 1×/2×）待美术交付；**不含** 1009–1012 等旧八人扩批口径。
+
+| template_cfg_id | code | 展示名 / `historical_identity` | 状态 |
+|---:|---|---|---|
+| 1005 | `sun_archer` | **黄忠** | **冻结** |
+| 1006 | `wind_cavalry` | **马超** | **冻结** |
+| 1007 | `jade_strategist` | **诸葛亮** | **冻结** |
+| 1008 | `fire_general` | **周瑜** | **冻结** |
+
+## 1009–1040（草案 — 待编排确认）
+
+以下根据当前风味名与 `legacyDefaultCatalog()` 等线索做的 **best-effort** 映射，**未写入** `heroes.yml` 的 `name` / `historical_identity`（1005–1008 已冻结，见上节）；美术勿按此批量开工，仅供后续 DATA/编排卡参考。
 
 | id | code | 当前风味 `name` | 草案史实人物 | 依据（简述） |
 |---:|---|---|---|---|
-| 1005 | `sun_archer` | 落日神弓 | 黄忠 | 百步穿杨 |
-| 1006 | `wind_cavalry` | 疾风铁骑 | 马超 | 西凉铁骑 |
-| 1007 | `jade_strategist` | 碧玉谋臣 | 诸葛亮 | 运筹帷幄 |
-| 1008 | `fire_general` | 赤焰都督 | 周瑜 | 火烧连营 |
 | 1009 | `north_wall` | 北境柱石 | 张辽 | 固守边塞（待核） |
 | 1010 | `river_sage` | 江左智囊 | 陆逊 | 江左、以弱胜强（待核） |
 | 1011 | `stone_fort` | 坚城守御 | 曹仁 | 坚城（待核） |
@@ -70,4 +77,5 @@
 
 | 日期 | 说明 |
 |---|---|
-| 2026-10-24 | HERO-HIST-NAME-001：冻结 1001–1004 为刘备/关羽/张飞/赵云；补充 1005+ 草案表 |
+| 2026-10-24 | HERO-HIST-NAME-001：冻结 1001–1004 为刘备/关羽/张飞/赵云；补充 1009+ 草案表 |
+| 2026-10-24 | Slice 2 联合冻结（#108）：1005–1008 冻结为黄忠/马超/诸葛亮/周瑜；与 seed 对齐；1009–1040 仍为草案 |
