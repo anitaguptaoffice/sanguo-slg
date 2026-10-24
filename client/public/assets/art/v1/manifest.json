@@ -2521,6 +2521,238 @@
         "template_code:gold_envoy",
         "slice:4"
       ]
+    },
+    {
+      "id": "hero.avatar.1017.v1",
+      "kind": "hero_avatar",
+      "template_cfg_id": 1017,
+      "display_size": {
+        "w": 56,
+        "h": 56
+      },
+      "anchor": {
+        "x": 28,
+        "y": 48
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/avatar/1017.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/avatar/1017.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:crane_healer",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.avatar.1018.v1",
+      "kind": "hero_avatar",
+      "template_cfg_id": 1018,
+      "display_size": {
+        "w": 56,
+        "h": 56
+      },
+      "anchor": {
+        "x": 28,
+        "y": 48
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/avatar/1018.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/avatar/1018.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:bronze_smith",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.avatar.1019.v1",
+      "kind": "hero_avatar",
+      "template_cfg_id": 1019,
+      "display_size": {
+        "w": 56,
+        "h": 56
+      },
+      "anchor": {
+        "x": 28,
+        "y": 48
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/avatar/1019.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/avatar/1019.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:reed_scout",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.avatar.1020.v1",
+      "kind": "hero_avatar",
+      "template_cfg_id": 1020,
+      "display_size": {
+        "w": 56,
+        "h": 56
+      },
+      "anchor": {
+        "x": 28,
+        "y": 48
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/avatar/1020.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/avatar/1020.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:plum_hermit",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.bust.1017.v1",
+      "kind": "hero_bust",
+      "template_cfg_id": 1017,
+      "display_size": {
+        "w": 128,
+        "h": 160
+      },
+      "anchor": {
+        "x": 64,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/bust/1017.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/bust/1017.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:crane_healer",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.bust.1018.v1",
+      "kind": "hero_bust",
+      "template_cfg_id": 1018,
+      "display_size": {
+        "w": 128,
+        "h": 160
+      },
+      "anchor": {
+        "x": 64,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/bust/1018.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/bust/1018.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:bronze_smith",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.bust.1019.v1",
+      "kind": "hero_bust",
+      "template_cfg_id": 1019,
+      "display_size": {
+        "w": 128,
+        "h": 160
+      },
+      "anchor": {
+        "x": 64,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/bust/1019.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/bust/1019.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:reed_scout",
+        "slice:5"
+      ]
+    },
+    {
+      "id": "hero.bust.1020.v1",
+      "kind": "hero_bust",
+      "template_cfg_id": 1020,
+      "display_size": {
+        "w": 128,
+        "h": 160
+      },
+      "anchor": {
+        "x": 64,
+        "y": 152
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/hero/bust/1020.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/hero/bust/1020.png"
+        }
+      ],
+      "tags": [
+        "hero-portrait-batch1",
+        "template_code:plum_hermit",
+        "slice:5"
+      ]
     }
   ]
 }
