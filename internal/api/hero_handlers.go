@@ -200,6 +200,101 @@ func (s *Server) handleUpgradeHero(ctx context.Context, pkt *commonv1.ClientPack
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
+func (s *Server) handleSetCityChief(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	if s.heroSvc == nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "hero not wired"), nil
+	}
+	var req herov1.SetCityChiefRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
+	}
+	if req.GetCityId() == 0 || req.GetHeroId() == 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id and hero_id required"), nil
+	}
+	ref := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	view, err := s.heroSvc.SetCityChief(ctx, ref, req.GetCityId(), req.GetHeroId(), s.heroCityOwnership(ctx, pc))
+	if err != nil {
+		return heroErr(pkt.GetTraceId(), err), nil
+	}
+	data, err := marshal(&herov1.SetCityChiefResponse{
+		CityId: view.CityID, HeroId: view.HeroID, Loyalty: int32(view.Loyalty),
+		ProductionBonus: view.ProductionBonus,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
+func (s *Server) handleClearCityChief(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	if s.heroSvc == nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "hero not wired"), nil
+	}
+	var req herov1.ClearCityChiefRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
+	}
+	if req.GetCityId() == 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id required"), nil
+	}
+	ref := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	if err := s.heroSvc.ClearCityChief(ctx, ref, req.GetCityId(), s.heroCityOwnership(ctx, pc)); err != nil {
+		return heroErr(pkt.GetTraceId(), err), nil
+	}
+	data, err := marshal(&herov1.ClearCityChiefResponse{CityId: req.GetCityId()})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
+func (s *Server) handleGetCityChief(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	if s.heroSvc == nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "hero not wired"), nil
+	}
+	var req herov1.GetCityChiefRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
+	}
+	if req.GetCityId() == 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id required"), nil
+	}
+	ref := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	view, err := s.heroSvc.GetCityChief(ctx, ref, req.GetCityId(), s.heroCityOwnership(ctx, pc))
+	if err != nil {
+		return heroErr(pkt.GetTraceId(), err), nil
+	}
+	data, err := marshal(&herov1.GetCityChiefResponse{
+		CityId: view.CityID, HeroId: view.HeroID, Loyalty: int32(view.Loyalty),
+		ProductionBonus: view.ProductionBonus,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
 func heroErr(trace string, err error) *commonv1.ServerPacket {
 	switch {
 	case errors.Is(err, hero.ErrHeroNotFound):
@@ -214,6 +309,10 @@ func heroErr(trace string, err error) *commonv1.ServerPacket {
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrEmptyPool):
 		return errResp(trace, commonv1.ErrorCode_COMMON_UNAVAILABLE, err.Error())
+	case errors.Is(err, hero.ErrHeroBusy), errors.Is(err, hero.ErrNoCityChief):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, hero.ErrNotCityOwner):
+		return errResp(trace, commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, err.Error())
 	default:
 		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
 	}

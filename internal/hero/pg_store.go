@@ -102,3 +102,63 @@ func (p *PGStore) MaxHeroID(ctx context.Context, serverID int32) (int64, error) 
 	`, serverID).Scan(&max)
 	return max, err
 }
+
+func (p *PGStore) SaveAssignment(ctx context.Context, a *Assignment) error {
+	at := a.AssignedAt
+	if at.IsZero() {
+		at = time.Now()
+	}
+	_, err := p.Pool.Exec(ctx, `
+		INSERT INTO hero_assignment (server_id, hero_id, assign_type, target_id, assigned_at)
+		VALUES ($1,$2,$3,$4,$5)
+		ON CONFLICT (server_id, hero_id) DO UPDATE SET
+			assign_type = EXCLUDED.assign_type,
+			target_id = EXCLUDED.target_id,
+			assigned_at = EXCLUDED.assigned_at
+	`, a.ServerID, a.HeroID, a.AssignType, a.TargetID, at)
+	return err
+}
+
+func (p *PGStore) DeleteAssignmentByHero(ctx context.Context, serverID int32, heroID int64) error {
+	_, err := p.Pool.Exec(ctx, `
+		DELETE FROM hero_assignment WHERE server_id = $1 AND hero_id = $2
+	`, serverID, heroID)
+	return err
+}
+
+func (p *PGStore) FindCityChief(ctx context.Context, serverID int32, cityID int64) (*Assignment, error) {
+	var a Assignment
+	err := p.Pool.QueryRow(ctx, `
+		SELECT server_id, hero_id, assign_type, target_id, assigned_at
+		FROM hero_assignment
+		WHERE server_id = $1 AND assign_type = $2 AND target_id = $3
+		LIMIT 1
+	`, serverID, AssignTypeCity, cityID).Scan(
+		&a.ServerID, &a.HeroID, &a.AssignType, &a.TargetID, &a.AssignedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}
+
+func (p *PGStore) GetAssignmentByHero(ctx context.Context, serverID int32, heroID int64) (*Assignment, error) {
+	var a Assignment
+	err := p.Pool.QueryRow(ctx, `
+		SELECT server_id, hero_id, assign_type, target_id, assigned_at
+		FROM hero_assignment
+		WHERE server_id = $1 AND hero_id = $2
+	`, serverID, heroID).Scan(
+		&a.ServerID, &a.HeroID, &a.AssignType, &a.TargetID, &a.AssignedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &a, nil
+}

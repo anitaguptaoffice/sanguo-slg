@@ -6,6 +6,7 @@ import (
 
 	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"google.golang.org/protobuf/proto"
@@ -145,6 +146,55 @@ func TestHeroGatewayListRecruitTemplates(t *testing.T) {
 	first := out.GetTemplates()[0]
 	if first.GetRecruitCost().GetFood() != 5000 || first.GetRecruitItem().GetItemCfgId() != hero.RecruitScrollID {
 		t.Fatalf("preview %+v", first)
+	}
+}
+
+func TestHeroGatewaySetAndClearCityChief(t *testing.T) {
+	ctx := context.Background()
+	cityID := int64(501)
+	heroSvc := hero.NewService()
+	s := &Server{
+		sessions: NewSessionRegistry(),
+		heroSvc:  heroSvc,
+		cities: map[int64]*domestic.CityState{
+			cityID: {ID: cityID, PlayerID: 7},
+		},
+	}
+	s.sessions.Bind("sess-chief", PlayerContext{ServerID: 1, PlayerID: 7})
+	h := &hero.Hero{ServerID: 1, HeroID: 11, PlayerID: 7, TemplateCfgID: 1001, Status: hero.StatusIdle, Loyalty: 90}
+	if err := heroSvc.Store.SaveHero(ctx, h); err != nil {
+		t.Fatal(err)
+	}
+
+	setResp, err := s.handleSetCityChief(ctx, &commonv1.ClientPacket{
+		TraceId: "t-chief-set", SessionId: "sess-chief", ServerId: 1,
+		Payload: mustProto(&herov1.SetCityChiefRequest{ServerId: 1, CityId: cityID, HeroId: 11}),
+	})
+	if err != nil || setResp.Code != 0 {
+		t.Fatalf("set chief: err=%v resp=%+v", err, setResp)
+	}
+	var setOut herov1.SetCityChiefResponse
+	if err := proto.Unmarshal(setResp.Data, &setOut); err != nil {
+		t.Fatal(err)
+	}
+	if setOut.GetHeroId() != 11 || setOut.GetProductionBonus() <= 0 {
+		t.Fatalf("set out %+v", &setOut)
+	}
+
+	getResp, err := s.handleGetCityChief(ctx, &commonv1.ClientPacket{
+		TraceId: "t-chief-get", SessionId: "sess-chief", ServerId: 1,
+		Payload: mustProto(&herov1.GetCityChiefRequest{ServerId: 1, CityId: cityID}),
+	})
+	if err != nil || getResp.Code != 0 {
+		t.Fatalf("get chief: err=%v resp=%+v", err, getResp)
+	}
+
+	clearResp, err := s.handleClearCityChief(ctx, &commonv1.ClientPacket{
+		TraceId: "t-chief-clear", SessionId: "sess-chief", ServerId: 1,
+		Payload: mustProto(&herov1.ClearCityChiefRequest{ServerId: 1, CityId: cityID}),
+	})
+	if err != nil || clearResp.Code != 0 {
+		t.Fatalf("clear chief: err=%v resp=%+v", err, clearResp)
 	}
 }
 

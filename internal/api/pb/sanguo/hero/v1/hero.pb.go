@@ -1419,6 +1419,353 @@ func (x *RecruitHotelCandidateResponse) GetLoyalty() int32 {
 	return 0
 }
 
+// route: hero.v1.SetCityChief
+type SetCityChiefRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	HeroId        int64                  `protobuf:"varint,3,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetCityChiefRequest) Reset() {
+	*x = SetCityChiefRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetCityChiefRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetCityChiefRequest) ProtoMessage() {}
+
+func (x *SetCityChiefRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetCityChiefRequest.ProtoReflect.Descriptor instead.
+func (*SetCityChiefRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *SetCityChiefRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *SetCityChiefRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *SetCityChiefRequest) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+type SetCityChiefResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	CityId          int64                  `protobuf:"varint,1,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	HeroId          int64                  `protobuf:"varint,2,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	Loyalty         int32                  `protobuf:"varint,3,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	ProductionBonus float64                `protobuf:"fixed64,4,opt,name=production_bonus,json=productionBonus,proto3" json:"production_bonus,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *SetCityChiefResponse) Reset() {
+	*x = SetCityChiefResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetCityChiefResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetCityChiefResponse) ProtoMessage() {}
+
+func (x *SetCityChiefResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetCityChiefResponse.ProtoReflect.Descriptor instead.
+func (*SetCityChiefResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *SetCityChiefResponse) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *SetCityChiefResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *SetCityChiefResponse) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
+func (x *SetCityChiefResponse) GetProductionBonus() float64 {
+	if x != nil {
+		return x.ProductionBonus
+	}
+	return 0
+}
+
+// route: hero.v1.ClearCityChief
+type ClearCityChiefRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClearCityChiefRequest) Reset() {
+	*x = ClearCityChiefRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClearCityChiefRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClearCityChiefRequest) ProtoMessage() {}
+
+func (x *ClearCityChiefRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClearCityChiefRequest.ProtoReflect.Descriptor instead.
+func (*ClearCityChiefRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ClearCityChiefRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *ClearCityChiefRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+type ClearCityChiefResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CityId        int64                  `protobuf:"varint,1,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ClearCityChiefResponse) Reset() {
+	*x = ClearCityChiefResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ClearCityChiefResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ClearCityChiefResponse) ProtoMessage() {}
+
+func (x *ClearCityChiefResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ClearCityChiefResponse.ProtoReflect.Descriptor instead.
+func (*ClearCityChiefResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ClearCityChiefResponse) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+// route: hero.v1.GetCityChief
+type GetCityChiefRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetCityChiefRequest) Reset() {
+	*x = GetCityChiefRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCityChiefRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCityChiefRequest) ProtoMessage() {}
+
+func (x *GetCityChiefRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCityChiefRequest.ProtoReflect.Descriptor instead.
+func (*GetCityChiefRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *GetCityChiefRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *GetCityChiefRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+type GetCityChiefResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	CityId          int64                  `protobuf:"varint,1,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	HeroId          int64                  `protobuf:"varint,2,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	Loyalty         int32                  `protobuf:"varint,3,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	ProductionBonus float64                `protobuf:"fixed64,4,opt,name=production_bonus,json=productionBonus,proto3" json:"production_bonus,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *GetCityChiefResponse) Reset() {
+	*x = GetCityChiefResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCityChiefResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCityChiefResponse) ProtoMessage() {}
+
+func (x *GetCityChiefResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCityChiefResponse.ProtoReflect.Descriptor instead.
+func (*GetCityChiefResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *GetCityChiefResponse) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *GetCityChiefResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *GetCityChiefResponse) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
+func (x *GetCityChiefResponse) GetProductionBonus() float64 {
+	if x != nil {
+		return x.ProductionBonus
+	}
+	return 0
+}
+
 var File_sanguo_hero_v1_hero_proto protoreflect.FileDescriptor
 
 var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
@@ -1637,13 +1984,50 @@ var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
 	0x52, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a,
 	0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x65,
 	0x76, 0x65, 0x6c, 0x12, 0x18, 0x0a, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x42, 0x4e, 0x5a,
-	0x4c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e, 0x69, 0x74,
-	0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x61, 0x6e,
-	0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x68,
-	0x65, 0x72, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f, 0x76, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x22, 0x64, 0x0a,
+	0x13, 0x53, 0x65, 0x74, 0x43, 0x69, 0x74, 0x79, 0x43, 0x68, 0x69, 0x65, 0x66, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49,
+	0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65,
+	0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72,
+	0x6f, 0x49, 0x64, 0x22, 0x8d, 0x01, 0x0a, 0x14, 0x53, 0x65, 0x74, 0x43, 0x69, 0x74, 0x79, 0x43,
+	0x68, 0x69, 0x65, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07,
+	0x63, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63,
+	0x69, 0x74, 0x79, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x12, 0x18,
+	0x0a, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x70, 0x72, 0x6f, 0x64,
+	0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x62, 0x6f, 0x6e, 0x75, 0x73, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x01, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x6f,
+	0x6e, 0x75, 0x73, 0x22, 0x4d, 0x0a, 0x15, 0x43, 0x6c, 0x65, 0x61, 0x72, 0x43, 0x69, 0x74, 0x79,
+	0x43, 0x68, 0x69, 0x65, 0x66, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74,
+	0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79,
+	0x49, 0x64, 0x22, 0x31, 0x0a, 0x16, 0x43, 0x6c, 0x65, 0x61, 0x72, 0x43, 0x69, 0x74, 0x79, 0x43,
+	0x68, 0x69, 0x65, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07,
+	0x63, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63,
+	0x69, 0x74, 0x79, 0x49, 0x64, 0x22, 0x4b, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x43, 0x69, 0x74, 0x79,
+	0x43, 0x68, 0x69, 0x65, 0x66, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74,
+	0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79,
+	0x49, 0x64, 0x22, 0x8d, 0x01, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x43, 0x69, 0x74, 0x79, 0x43, 0x68,
+	0x69, 0x65, 0x66, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x63,
+	0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69,
+	0x74, 0x79, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x12, 0x18, 0x0a,
+	0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07,
+	0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x70, 0x72, 0x6f, 0x64, 0x75,
+	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x62, 0x6f, 0x6e, 0x75, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x01, 0x52, 0x0f, 0x70, 0x72, 0x6f, 0x64, 0x75, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x6f, 0x6e,
+	0x75, 0x73, 0x42, 0x4e, 0x5a, 0x4c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x61, 0x6e, 0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63,
+	0x65, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74,
+	0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e,
+	0x67, 0x75, 0x6f, 0x2f, 0x68, 0x65, 0x72, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f,
+	0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -1658,7 +2042,7 @@ func file_sanguo_hero_v1_hero_proto_rawDescGZIP() []byte {
 	return file_sanguo_hero_v1_hero_proto_rawDescData
 }
 
-var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_sanguo_hero_v1_hero_proto_goTypes = []any{
 	(*PlayerHeroSummary)(nil),                  // 0: sanguo.hero.v1.PlayerHeroSummary
 	(*ListPlayerHeroesRequest)(nil),            // 1: sanguo.hero.v1.ListPlayerHeroesRequest
@@ -1680,15 +2064,21 @@ var file_sanguo_hero_v1_hero_proto_goTypes = []any{
 	(*RefreshHotelRecruitPoolResponse)(nil),    // 17: sanguo.hero.v1.RefreshHotelRecruitPoolResponse
 	(*RecruitHotelCandidateRequest)(nil),       // 18: sanguo.hero.v1.RecruitHotelCandidateRequest
 	(*RecruitHotelCandidateResponse)(nil),      // 19: sanguo.hero.v1.RecruitHotelCandidateResponse
-	(*v1.ResourceWallet)(nil),                  // 20: sanguo.common.v1.ResourceWallet
-	(*v1.RewardItem)(nil),                      // 21: sanguo.common.v1.RewardItem
+	(*SetCityChiefRequest)(nil),                // 20: sanguo.hero.v1.SetCityChiefRequest
+	(*SetCityChiefResponse)(nil),               // 21: sanguo.hero.v1.SetCityChiefResponse
+	(*ClearCityChiefRequest)(nil),              // 22: sanguo.hero.v1.ClearCityChiefRequest
+	(*ClearCityChiefResponse)(nil),             // 23: sanguo.hero.v1.ClearCityChiefResponse
+	(*GetCityChiefRequest)(nil),                // 24: sanguo.hero.v1.GetCityChiefRequest
+	(*GetCityChiefResponse)(nil),               // 25: sanguo.hero.v1.GetCityChiefResponse
+	(*v1.ResourceWallet)(nil),                  // 26: sanguo.common.v1.ResourceWallet
+	(*v1.RewardItem)(nil),                      // 27: sanguo.common.v1.RewardItem
 }
 var file_sanguo_hero_v1_hero_proto_depIdxs = []int32{
 	0,  // 0: sanguo.hero.v1.ListPlayerHeroesResponse.heroes:type_name -> sanguo.hero.v1.PlayerHeroSummary
 	4,  // 1: sanguo.hero.v1.GetHeroDetailResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
 	4,  // 2: sanguo.hero.v1.UpgradeHeroResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
-	20, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
-	21, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
+	26, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
+	27, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
 	10, // 5: sanguo.hero.v1.ListRecruitTemplatesResponse.templates:type_name -> sanguo.hero.v1.RecruitTemplatePreview
 	4,  // 6: sanguo.hero.v1.HotelRecruitCandidate.attributes:type_name -> sanguo.hero.v1.HeroAttributes
 	13, // 7: sanguo.hero.v1.ListHotelRecruitCandidatesResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
@@ -1711,7 +2101,7 @@ func file_sanguo_hero_v1_hero_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_hero_v1_hero_proto_rawDesc), len(file_sanguo_hero_v1_hero_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
