@@ -17,8 +17,10 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import {
   installHeroHostCaptureProbes,
+  prepareHeroHostEvidenceChromeInPage,
   probeBustNameSameFrameInPage,
   probeHeroPortraitFramesInPage,
+  scrollHeroDetailFooterInPage,
   scrollHeroDetailHeadInPage,
   scrollHeroListRowForPortraitInPage,
 } from "./lib/hero-host-capture-probes.mjs";
@@ -162,6 +164,7 @@ async function openHeroPanelWithDetail(page, templateCfgId) {
   await page.waitForSelector(`${HERO_PANEL_SELECTOR} .hero-attr-table`, { timeout: 12000 });
   await page.waitForSelector(`${HERO_PANEL_SELECTOR} [data-role="hero-list-avatar"]`, { timeout: 8000 });
   await page.waitForSelector(`${HERO_PANEL_SELECTOR} [data-role="hero-detail-bust"]`, { timeout: 8000 });
+  await prepareHeroHostEvidenceChromeInPage(page);
   await page.waitForTimeout(300);
 }
 
@@ -194,12 +197,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
       await page.waitForTimeout(250);
     }
     if (vp.tag === "1280x720-dpr1") {
-      await page.evaluate(() => {
-        const scroll = document.querySelector(
-          '.content-panel[data-center-panel="hero"] .panel-scroll-body',
-        );
-        if (scroll instanceof HTMLElement) scroll.scrollTop = scroll.scrollHeight;
-      });
+      await scrollHeroDetailFooterInPage(page);
       await page.waitForTimeout(200);
     }
     const filePath = path.join(outDir, vp.file);

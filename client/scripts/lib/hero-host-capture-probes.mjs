@@ -11,8 +11,16 @@ export async function installHeroHostCaptureProbes(page) {
   await page.addInitScript({ path: HERO_HOST_PROBE_INIT_SCRIPT });
 }
 
+export async function prepareHeroHostEvidenceChromeInPage(page) {
+  await page.evaluate(() => window.__heroHostCaptureProbes.prepareHeroHostEvidenceChrome());
+}
+
 export async function scrollHeroDetailHeadInPage(page) {
   await page.evaluate(() => window.__heroHostCaptureProbes.scrollHeroDetailHeadForSameFrame());
+}
+
+export async function scrollHeroDetailFooterInPage(page) {
+  await page.evaluate(() => window.__heroHostCaptureProbes.scrollHeroDetailFooterIntoView());
 }
 
 export async function scrollHeroListRowForPortraitInPage(page, templateCfgId) {

@@ -2,9 +2,9 @@
   "task": "HERO-HOST-SLICE7",
   "template_cfg_id": 1027,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "a083a52a146a5a743327c5c5751776380277fec7",
-  "runtime_code_sha": "a083a52a146a5a743327c5c5751776380277fec7",
-  "hero_mail_panels_blob_sha": "3b24f48c572902562d4d2fbc16a713a7ef9bae93",
+  "tip_sha": "e81a3840c6b0504ba6dc25f59c0b64d852a255a3",
+  "runtime_code_sha": "e81a3840c6b0504ba6dc25f59c0b64d852a255a3",
+  "hero_mail_panels_blob_sha": "356f8e33734ca1374f3cf1ecd61368431293a93c",
   "art_head_sha": "dea932332475ed1e3cf4f336693f3d4c12a6d903",
   "art_asset_ids": [
     "hero.avatar.1027.v1",
@@ -17,14 +17,14 @@
       "template_cfg_id": 1027,
       "heroDetailLoaded": true,
       "nameReadable": true,
-      "detailName": "\u592a\u53f2\u6148",
+      "detailName": "太史慈",
       "listAvatarVisible": true,
       "listAvatarInClip": true,
       "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
       "listAvatarFrameOk": true,
-      "listRowPrimaryText": "\u592a\u53f2\u6148 \u00b7 Lv11 \u00b7 \u5fe0\u8bda 85",
+      "listRowPrimaryText": "太史慈 · Lv11 · 忠诚 85",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -63,15 +63,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1254.78125,
+        "top": 1956.59375,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 516,
-        "top": 202,
+        "top": 208.1875,
         "width": 568,
-        "height": 606
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,14 +79,14 @@
       "template_cfg_id": 1027,
       "heroDetailLoaded": true,
       "nameReadable": true,
-      "detailName": "\u592a\u53f2\u6148",
+      "detailName": "太史慈",
       "listAvatarVisible": true,
       "listAvatarInClip": true,
       "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
       "listAvatarFrameOk": true,
-      "listRowPrimaryText": "\u592a\u53f2\u6148 \u00b7 Lv11 \u00b7 \u5fe0\u8bda 85",
+      "listRowPrimaryText": "太史慈 · Lv11 · 忠诚 85",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -125,15 +125,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1254.78125,
+        "top": 1956.59375,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 516,
-        "top": 202,
+        "top": 208.1875,
         "width": 568,
-        "height": 606
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {
@@ -141,14 +141,14 @@
       "template_cfg_id": 1027,
       "heroDetailLoaded": true,
       "nameReadable": true,
-      "detailName": "\u592a\u53f2\u6148",
+      "detailName": "太史慈",
       "listAvatarVisible": true,
       "listAvatarInClip": false,
       "listNameInClip": false,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
       "listAvatarFrameOk": false,
-      "listRowPrimaryText": "\u592a\u53f2\u6148 \u00b7 Lv11 \u00b7 \u5fe0\u8bda 85",
+      "listRowPrimaryText": "太史慈 · Lv11 · 忠诚 85",
       "dpr": 1,
       "uiScale": 0.8,
       "avatar": {
@@ -187,15 +187,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 194.796875,
+        "top": 174.984375,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 374,
-        "top": 194.796875,
-        "width": 550,
-        "height": 0
+        "left": 356,
+        "top": 174.984375,
+        "width": 568,
+        "height": 464.21875
       }
     }
   },
@@ -203,7 +203,7 @@
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 252978
+      "bytes": 255296
     },
     "probe": {
       "ok": true,
@@ -217,12 +217,12 @@
       "gapNear10px": true,
       "visibleClip": {
         "left": 356,
-        "top": 194.796875,
+        "top": 174.984375,
         "width": 568,
-        "height": 444.40625
+        "height": 464.21875
       },
       "name": {
-        "text": "\u592a\u53f2\u6148"
+        "text": "太史慈"
       },
       "viewport": {
         "w": 1280,
@@ -234,7 +234,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 478379,
+      "bytes": 474289,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -244,8 +244,8 @@
       }
     },
     "hero-host-1600x900-dpr2.jpg": {
-      "quality": 68,
-      "bytes": 939939,
+      "quality": 72,
+      "bytes": 999058,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -256,7 +256,7 @@
     },
     "hero-host-1280x720-dpr1.jpg": {
       "quality": 88,
-      "bytes": 245865,
+      "bytes": 245651,
       "viewport": {
         "tag": "1280x720-dpr1",
         "file": "hero-host-1280x720-dpr1.jpg",
@@ -267,9 +267,9 @@
     }
   },
   "notes": [
-    "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster seeds roster incl. 1025\u20131028.",
+    "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster seeds roster incl. 1025–1028.",
     "Art path-copied from Draft #1204 @ dea93233; Draft remains unmerged.",
     "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
   ],
-  "captured_at": "2026-10-24T20:37:36.407Z"
+  "captured_at": "2026-10-24T21:28:05.659Z"
 }

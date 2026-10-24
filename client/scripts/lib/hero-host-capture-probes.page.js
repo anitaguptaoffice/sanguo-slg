@@ -102,6 +102,27 @@
     return er.top - sr.top + scroll.scrollTop;
   }
 
+  /** Collapse recruit + satellite sections so hero-scroll keeps viewport (matches detail-open host chrome). */
+  function prepareHeroHostEvidenceChrome() {
+    const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
+    if (!panel) return;
+    const host = panel.querySelector('[data-role="hero-recruit-host"]');
+    if (host instanceof HTMLDetailsElement) host.open = false;
+    for (const sel of [
+      '[data-role="captive-hero-section"]',
+      '[data-role="persuade-section"]',
+      '[data-role="coming-hero-section"]',
+    ]) {
+      const el = panel.querySelector(sel);
+      if (el instanceof HTMLElement) el.hidden = true;
+    }
+  }
+
+  function clampHeroScrollTop(scroll, top) {
+    const max = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+    return Math.max(0, Math.min(top, max));
+  }
+
   function scrollHeroListRowForPortraitViewport(templateCfgId) {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     const scroll = panel?.querySelector('[data-role="hero-scroll"]');
@@ -113,17 +134,15 @@
     if (!(avatar instanceof HTMLElement)) return;
     const targets = nameEl instanceof HTMLElement ? [avatar, nameEl] : [avatar];
 
-    const listAnchorTop = elementTopInScrollContainer(scroll, listRow);
-    scroll.scrollTop = Math.max(0, listAnchorTop - 80);
+    scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
 
     const margin = 6;
-    for (let pass = 0; pass < 48; pass++) {
-      let clip = effectiveVisibleClip(listRow);
-      if (clip.height < 8) {
-        const scrollRect = scroll.getBoundingClientRect();
-        const avatarRect = avatar.getBoundingClientRect();
-        scroll.scrollTop += avatarRect.top - scrollRect.top - 80;
-        clip = effectiveVisibleClip(listRow);
+    const minClipH = 64;
+    for (let pass = 0; pass < 64; pass++) {
+      let clip = effectiveVisibleClip(scroll);
+      if (clip.height < minClipH) {
+        scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
+        clip = effectiveVisibleClip(scroll);
       }
       const padded = {
         left: clip.left + margin,
@@ -131,8 +150,8 @@
         right: clip.right - margin,
         bottom: clip.bottom - margin,
       };
-      if (padded.bottom <= padded.top + 4 || padded.right <= padded.left + 4) {
-        scroll.scrollTop = Math.max(0, elementTopInScrollContainer(scroll, avatar) - 80);
+      if (padded.bottom <= padded.top + minClipH) {
+        scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
         continue;
       }
       const rects = targets.map((el) => el.getBoundingClientRect());
@@ -145,13 +164,29 @@
         if (r.bottom > padded.bottom) delta += r.bottom - padded.bottom;
       }
       if (Math.abs(delta) < 0.25) break;
-      scroll.scrollTop += delta;
+      scroll.scrollTop = clampHeroScrollTop(scroll, scroll.scrollTop + delta);
+    }
+  }
+
+  function scrollHeroDetailFooterIntoView() {
+    const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
+    const scroll = panel?.querySelector('[data-role="hero-scroll"]');
+    const hint = panel?.querySelector(".hero-detail-hint");
+    if (!(scroll instanceof HTMLElement) || !(hint instanceof HTMLElement)) return;
+    scroll.scrollTop = scroll.scrollHeight;
+    for (let pass = 0; pass < 48; pass++) {
+      const clip = effectiveVisibleClip(scroll);
+      const hr = hint.getBoundingClientRect();
+      if (hr.height > 0 && rectFullyInClip(hr, clip, 1)) return;
+      if (hr.bottom > clip.bottom) scroll.scrollTop += hr.bottom - clip.bottom + 4;
+      else if (hr.top < clip.top) scroll.scrollTop -= clip.top - hr.top + 4;
+      else break;
     }
   }
 
   function scrollHeroDetailHeadForSameFrame() {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
-    const scroll = panel?.querySelector(".panel-scroll-body");
+    const scroll = panel?.querySelector('[data-role="hero-scroll"]');
     const bust = panel?.querySelector('[data-role="hero-detail-bust"]');
     const name = panel?.querySelector(".hero-detail-name");
     if (!(scroll instanceof HTMLElement) || !(bust instanceof HTMLElement)) return;
@@ -280,7 +315,13 @@
     const bustPathOk = bustSrc.includes(`/hero/bust/${templateCfgId}.png`);
 
     const listAvatarVisible = !!(avatarRect && avatarRect.width >= 48 && avatarRect.height >= 48);
-    const listRowClip = listRow ? effectiveVisibleClip(listRow) : null;
+    const heroScrollEl = panel?.querySelector('[data-role="hero-scroll"]');
+    const listRowClip =
+      heroScrollEl instanceof HTMLElement
+        ? effectiveVisibleClip(heroScrollEl)
+        : listRow
+          ? effectiveVisibleClip(listRow)
+          : null;
     const listAvatarInClip =
       !!avatarRect &&
       !!listRowClip &&
@@ -304,14 +345,13 @@
       listRowTemplateOk &&
       avatarPathOk;
 
-    const scroll = panel?.querySelector(".panel-scroll-body");
+    const scroll = panel?.querySelector('[data-role="hero-scroll"]');
     let scrollReachOk = true;
     let detailFooterVisible = true;
     let detailFooterTopInScroll = false;
     let detailFooterBottomInScroll = false;
     if (scroll instanceof HTMLElement) {
-      const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
-      scroll.scrollTop = maxTop;
+      scrollHeroDetailFooterIntoView();
       const scrollClip = effectiveVisibleClip(scroll);
       const hint = detail?.querySelector(".hero-detail-hint");
       if (hint instanceof HTMLElement) {
@@ -320,6 +360,7 @@
         detailFooterBottomInScroll = fr.height > 0 && fr.bottom <= scrollClip.bottom + 2;
         detailFooterVisible = detailFooterTopInScroll && detailFooterBottomInScroll;
       }
+      const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
       scrollReachOk = maxTop <= 2 || detailFooterVisible;
     }
 
@@ -416,7 +457,9 @@
   }
 
   window.__heroHostCaptureProbes = {
+    prepareHeroHostEvidenceChrome,
     scrollHeroDetailHeadForSameFrame,
+    scrollHeroDetailFooterIntoView,
     scrollHeroListRowForPortraitViewport,
     probeBustNameSameFrame,
     probeHeroPortraitFrames,

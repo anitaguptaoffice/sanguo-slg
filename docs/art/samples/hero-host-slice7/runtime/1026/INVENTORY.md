@@ -1,15 +1,15 @@
 # HERO-HOST-SLICE7 runtime inventory — template 1026
 
-tip_sha / runtime_code_sha: `a083a52a146a5a743327c5c5751776380277fec7`
+tip_sha / runtime_code_sha: `e81a3840c6b0504ba6dc25f59c0b64d852a255a3`
 art_head_sha: `dea932332475ed1e3cf4f336693f3d4c12a6d903`
-hero_mail_panels_blob_sha: `3b24f48c572902562d4d2fbc16a713a7ef9bae93`
+hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
 
 ## Viewport captures
 
-- `runtime/1026/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 478385 bytes, sha256 `4060bc33f9de3d5ba8e073bed11d3adf99a7793c4593e8642b98186f3b1cda32`
-- `runtime/1026/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 938957 bytes, sha256 `fb2bd7e3cce835365553d9e764881e77e9da9bce36121a918d31a32c11a74a9f`
-- `runtime/1026/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245830 bytes, sha256 `6dd5b0bfc5103af9de02052c8ed81c8ebb7665ea994de6af1818db9f5cfb8ed4`
-- `runtime/1026/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `85de876349e984bec1b42977d3195e82ba724f96c0164117e1bd15f573d7e459`
+- `runtime/1026/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 473385 bytes, sha256 `8eb19897ddc42050a13fb519be98fb5d23c3c8121a29d2b03f251d819f1b0286`
+- `runtime/1026/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 997717 bytes, sha256 `da07b9fc3192451f42ace11dc4f50a6f2d18e03130492050098f561c9d88894d`
+- `runtime/1026/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245596 bytes, sha256 `d1450af42a6c7facc29bb0987a3b5515838e0234934681492d40f42fb8c20c21`
+- `runtime/1026/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `4b85625888ae4836ed371fe37198c9c051a92f14e8d7e99edfe23d161acec100`
 
 ## Textures (hero.avatar.1026.v1 / hero.bust.1026.v1)
 
@@ -74,15 +74,15 @@ hero_mail_panels_blob_sha: `3b24f48c572902562d4d2fbc16a713a7ef9bae93`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 829.78125,
+        "top": 1000.59375,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 516,
-        "top": 202,
+        "top": 208.1875,
         "width": 568,
-        "height": 606
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -136,15 +136,15 @@ hero_mail_panels_blob_sha: `3b24f48c572902562d4d2fbc16a713a7ef9bae93`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 829.78125,
+        "top": 1000.59375,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 516,
-        "top": 202,
+        "top": 208.1875,
         "width": 568,
-        "height": 606
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {
@@ -198,15 +198,15 @@ hero_mail_panels_blob_sha: `3b24f48c572902562d4d2fbc16a713a7ef9bae93`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 194.796875,
+        "top": 174.984375,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 374,
-        "top": 194.796875,
-        "width": 550,
-        "height": 0
+        "left": 356,
+        "top": 174.984375,
+        "width": 568,
+        "height": 464.21875
       }
     }
   },
@@ -222,9 +222,9 @@ hero_mail_panels_blob_sha: `3b24f48c572902562d4d2fbc16a713a7ef9bae93`
     "gapNear10px": true,
     "visibleClip": {
       "left": 356,
-      "top": 194.796875,
+      "top": 174.984375,
       "width": 568,
-      "height": 444.40625
+      "height": 464.21875
     },
     "name": {
       "text": "蒋琬"
