@@ -718,6 +718,12 @@ describe("SocialPanels chat & guild", () => {
     expect(mount.querySelector('[data-role="guild-refresh-retry"]')?.classList.contains("hidden")).toBe(
       false,
     );
-    expect(mount.querySelector(".guild-members .social-list-empty")?.textContent).toContain("请点「刷新」重试");
+    const guildListErr = mount.querySelector(
+      '.guild-members [data-panel-state="error"]',
+    );
+    expect(guildListErr?.textContent).toContain("军团：");
+    expect(
+      guildListErr?.querySelector('[data-action="retry-refresh-members"]'),
+    ).toBeTruthy();
   });
 });

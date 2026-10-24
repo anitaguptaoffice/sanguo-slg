@@ -17,7 +17,11 @@ import {
   queueRecruitRowDomId,
   scheduleRecruitRowPulse,
 } from "@/net/recruitTroopSubmitFeedback";
-import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
+import { formatUseConsumableEffectSummary } from "@/net/contentFeedback";
+import {
+  formatPanelGatewayErrorFromUnknownForList,
+  renderPanelGatewayErrorListRow,
+} from "@/net/panelGatewayError";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
   findBuildDailyQuestForBuilding,
@@ -478,8 +482,9 @@ export class QueuePanels {
     }
 
     if (this.buildListError) {
-      renderPanelStateListRow(buildUl, "error", this.buildListError, {
+      renderPanelGatewayErrorListRow(buildUl, this.buildListError, {
         legacyClass: "queue-list-empty",
+        retryAction: "retry-refresh-queue-build",
       });
       return;
     }
@@ -646,7 +651,7 @@ export class QueuePanels {
       if (state.production_rates) session.productionRates = state.production_rates;
       this.onAfterCityRefresh();
     } catch (e) {
-      this.buildListError = gatewayErrorMessage(e);
+      this.buildListError = formatPanelGatewayErrorFromUnknownForList("buildQueue", e);
       this.setPanelStatus(this.buildListError);
     } finally {
       this.buildListLoading = false;
@@ -742,7 +747,7 @@ export class QueuePanels {
       return;
     }
     const action = btn.getAttribute("data-action");
-    if (action === "refresh-queue") {
+    if (action === "refresh-queue" || action === "retry-refresh-queue-build") {
       void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
     } else if (action === "speedup-build") {
       void this.useBuildSpeedup();

@@ -30,7 +30,6 @@ import {
 } from "@/net/bagBatchUse";
 import {
   BAG_CATEGORY_TABS,
-  bagCategoryListEmptyMessage,
   countBagRowsByCategory,
   filterBagRowsByCategory,
   formatBagStackQty,
@@ -41,9 +40,12 @@ import {
 import {
   bagEmptyListClass,
   formatBagStackRowLabel,
-  shopEmptyListMessage,
-  shopListLoadErrorListHint,
 } from "@/net/panelDensity";
+import {
+  formatPanelEmptyHint,
+  formatPanelGatewayErrorFromUnknownForList,
+  renderPanelGatewayErrorListRow,
+} from "@/net/panelGatewayError";
 import {
   applyShopPurchaseAffordDisplay,
   shopOfferAffordInlineForRow,
@@ -132,6 +134,8 @@ export class ContentPanels {
   private shopPurchaseSubmitState: PurchaseSubmitState = "idle";
   private shopListLoading = false;
   private shopListError: string | null = null;
+  private bagListLoading = false;
+  private bagListError: string | null = null;
   private bagReturnHeroId = 0;
   private onBagReturnHeroDetail?: (heroId: number) => void;
 
@@ -479,6 +483,19 @@ export class ContentPanels {
     if (!ul) return;
     ul.innerHTML = "";
     const bag = this.getSession()?.bag ?? [];
+    if (this.bagListLoading && !bag.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE);
+      this.syncBagWalletGap();
+      return;
+    }
+    if (this.bagListError && !bag.length) {
+      renderPanelGatewayErrorListRow(ul, this.bagListError, {
+        legacyClass: bagEmptyListClass(),
+        retryAction: "retry-refresh-bag",
+      });
+      this.syncBagWalletGap();
+      return;
+    }
     const visible = this.visibleBagStacks();
     for (const row of visible) {
       const li = document.createElement("li");
@@ -531,7 +548,11 @@ export class ContentPanels {
       ul.appendChild(li);
     }
     if (!visible.length) {
-      const msg = bagCategoryListEmptyMessage(this.bagCategory, bag.length > 0);
+      const msg = formatPanelEmptyHint({
+        panel: "bag",
+        category: this.bagCategory,
+        hasAnyStacks: bag.length > 0,
+      });
       renderPanelStateListRow(ul, "empty", msg, { legacyClass: bagEmptyListClass() });
     }
     this.syncBagWalletGap();
@@ -581,8 +602,9 @@ export class ContentPanels {
       return;
     }
     if (this.shopListError) {
-      renderPanelStateListRow(ul, "error", this.shopListError, {
+      renderPanelGatewayErrorListRow(ul, this.shopListError, {
         legacyClass: "shop-list-error",
+        retryAction: "retry-refresh-shop",
       });
       this.syncShopWalletGap();
       return;
@@ -626,8 +648,10 @@ export class ContentPanels {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
     }
     if (!visible.length) {
-      const msg =
-        this.shopOffers.length === 0 ? shopEmptyListMessage() : "当前分类暂无商品";
+      const msg = formatPanelEmptyHint({
+        panel: "shop",
+        hasAnyOffers: this.shopOffers.length > 0,
+      });
       renderPanelStateListRow(ul, "empty", msg, { legacyClass: "shop-empty" });
     }
     this.syncShopWalletGap();
@@ -697,6 +721,9 @@ export class ContentPanels {
 
   private async refreshBag(): Promise<void> {
     const sid = this.serverId();
+    this.bagListLoading = true;
+    this.bagListError = null;
+    this.renderBagList();
     this.onStatus("拉取背包…");
     try {
       const res = (await this.gateway.listPlayerBag(sid)) as {
@@ -704,10 +731,15 @@ export class ContentPanels {
       };
       const stacks = bagFromListPlayerBagResponse(res.items);
       this.patchBag(stacks);
+      this.bagListLoading = false;
+      this.bagListError = null;
+      this.renderBagList();
       this.onStatus(`背包 ${stacks.length} 种道具（content.v1）`);
     } catch (e) {
+      this.bagListLoading = false;
+      this.bagListError = formatPanelGatewayErrorFromUnknownForList("bag", e);
       this.renderBagList();
-      this.onStatus(`背包刷新失败：${gatewayErrorMessage(e)}`);
+      this.onStatus(this.bagListError);
     }
   }
 
@@ -874,7 +906,7 @@ export class ContentPanels {
       this.onStatus(`货架 ${this.shopOffers.length} 个商品`);
     } catch (e) {
       this.shopListLoading = false;
-      this.shopListError = `${gatewayErrorMessage(e)} · ${shopListLoadErrorListHint()}`;
+      this.shopListError = formatPanelGatewayErrorFromUnknownForList("shop", e);
       this.renderShopList();
       this.onStatus(this.shopListError);
     }
@@ -1018,7 +1050,7 @@ export class ContentPanels {
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "bag-return-hero") this.returnToHeroDetailFromBag();
-    if (a === "refresh-bag") void this.refreshBag();
+    if (a === "refresh-bag" || a === "retry-refresh-bag") void this.refreshBag();
     if (a === "use-item") void this.useItem();
     if (a === "use-item-batch") void this.useItemBatch();
   }
@@ -1047,7 +1079,7 @@ export class ContentPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-shop") void this.refreshShop();
+    if (a === "refresh-shop" || a === "retry-refresh-shop") void this.refreshShop();
     if (a === "buy-offer") void this.buyOffer();
   }
 }

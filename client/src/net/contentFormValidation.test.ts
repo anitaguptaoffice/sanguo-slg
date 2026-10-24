@@ -110,6 +110,14 @@ describe("formatPanelGatewayError", () => {
     expect(formatPanelGatewayError("bag", 99999, "自定义错误")).toBe("自定义错误 [99999]");
   });
 
+  it("maps rank/guild/buildQueue list gateway codes", () => {
+    expect(formatPanelGatewayError("rank", 62002, "排行榜未开放")).toBe("排行榜未开放 [62002]");
+    expect(formatPanelGatewayError("guild", 60007, "军团权限不足")).toBe("军团权限不足 [60007]");
+    expect(formatPanelGatewayError("buildQueue", 40004, "建筑等级已满")).toBe(
+      "建筑等级已满 [40004]",
+    );
+  });
+
   it("formats from Error with code via helper", () => {
     const err = Object.assign(new Error("余额不足"), { code: 64003 });
     expect(formatPanelGatewayErrorFromUnknown("shop", err)).toBe("余额不足 [64003]");

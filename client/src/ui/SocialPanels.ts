@@ -48,6 +48,11 @@ import {
 import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
+import {
+  formatPanelGatewayErrorFromUnknownForList,
+  renderPanelGatewayErrorListRow,
+  renderPanelGatewayErrorTableRow,
+} from "@/net/panelGatewayError";
 import { formatPanelRefreshMeta } from "@/net/socialRefreshFormat";
 import {
   CHAT_PANEL_LAST_REFRESH_SESSION_KEY,
@@ -115,6 +120,7 @@ export class SocialPanels {
   };
   private chatListError = "";
   private guildListError = "";
+  private rankListError: string | null = null;
   private guildMembersCache: GuildMemberRow[] = [];
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
@@ -709,11 +715,16 @@ export class SocialPanels {
     }
     if (!members.length) {
       this.guildMembersCache = [];
+      if (this.guildListError) {
+        renderPanelGatewayErrorListRow(ul, this.guildListError, {
+          legacyClass: socialGuildMembersEmptyListClass(),
+          retryAction: "retry-refresh-members",
+        });
+        return;
+      }
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
-      li.textContent = this.guildListError
-        ? formatSocialPanelListRefreshHint()
-        : formatSocialGuildMembersEmptyMessage();
+      li.textContent = formatSocialGuildMembersEmptyMessage();
       ul.appendChild(li);
       return;
     }
@@ -928,7 +939,7 @@ export class SocialPanels {
         });
         this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
       } catch (e) {
-        const msg = formatSocialGatewayError(e);
+        const msg = formatPanelGatewayErrorFromUnknownForList("guild", e);
         this.guildListError = msg;
         this.renderGuildMembersList([]);
         this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", {
@@ -957,6 +968,21 @@ export class SocialPanels {
     const line = formatRankLastRefreshLine(atMs);
     el.textContent = line;
     el.classList.toggle("hidden", !line);
+  }
+
+  private renderRankListGatewayError(): void {
+    const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
+    if (!tbody || !this.rankListError) return;
+    tbody.innerHTML = "";
+    const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
+    if (myEl) myEl.textContent = "我的名次：—";
+    const snapEl = this.rankPanel.querySelector('[data-role="rank-snapshot"]');
+    snapEl?.classList.add("hidden");
+    renderPanelGatewayErrorTableRow(tbody, this.rankListError, {
+      legacyClass: socialRankEmptyRowClass(),
+      retryAction: "retry-refresh-rank",
+    });
+    this.hideRankEntrySummary();
   }
 
   renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
@@ -1155,6 +1181,7 @@ export class SocialPanels {
       this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: true });
       this.onStatus("拉取排行榜…");
       try {
+        this.rankListError = null;
         const prevSnapshot = this.rankSnapshotByType.get(boardType);
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
         this.cachedViewerHeroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
@@ -1172,7 +1199,7 @@ export class SocialPanels {
         });
         this.onStatus("排行榜已刷新");
       } catch (e) {
-        const msg = formatSocialGatewayError(e);
+        const msg = formatPanelGatewayErrorFromUnknownForList("rank", e);
         const refreshErr = gatewayErrorMessage(e);
         const cached = this.rankSnapshotByType.get(boardType);
         if (cached) {
@@ -1183,6 +1210,8 @@ export class SocialPanels {
             stale: true,
           });
         } else {
+          this.rankListError = msg;
+          this.renderRankListGatewayError();
           this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
             busy: false,
             error: refreshErr,

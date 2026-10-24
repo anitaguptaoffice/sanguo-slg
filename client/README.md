@@ -52,6 +52,8 @@
 
 **`panelStateChrome`**：`resolvePanelStateSkin` 将 **loading / empty / error** 映射 **`ui.panel.loading.v1`** / **`ui.panel.empty.v1`** / **`ui.panel.error.v1`**（CLIENT-128 manifest 就绪时 nine-slice 挂到列表占位行）；邮件 / 日常 / 将领列表 / 建造队列 / 军情 / 战报 **首屏拉取** 与 **筛选空结果** 共用 **`data-panel-state=loading|empty|error`** + **`panel-state-chrome`** class（筛选 chip 与 **CLIENT-029** / wave:27 **`data-ui-filter-chip`** 不退化）。面板或列表祖先设 **`data-art-skin="off"`** 时跳过九宫、保留 **`panelDensity` / CLIENT-067** 纯文案回退。单测：`panelStateChrome.test.ts`。
 
+**CLIENT-173（面板网关错误与重试）**：背包 / 商城 / 排行 / 军团 / 建造队列首屏拉取失败时列表占位行共用 **`formatPanelGatewayListError`**（域前缀 + **CLIENT-067** `[code]`）与行内 **`panel-gateway-retry`**（`data-action` 重试刷新）；与 **CLIENT-129** `data-panel-state=error` **并存**。分类 / 筛选 chip 空结果仍走 **`formatPanelEmptyHint`** → **empty** 态，不与 error 混用。单测：`panelGatewayError.test.ts`、`contentFormValidation.test.ts`、`ContentPanels.test.ts`。
+
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。
