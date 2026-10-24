@@ -1,7 +1,7 @@
 # INVENTORY — ART-CENTER-PANEL-012 runtime
 
-Runtime code at capture: `7e1e6f986e4e34da3baaaae90ec5114607c1d852` (mock + client; must resolve on GitHub).
-Screenshot JPEGs / probe-log land in a follow-up git commit — after push, set `screenshot_artifacts_commit_sha` in `probe-log.json` to that commit (often same as runtime when captured on a clean checkout).
+Visual evidence bound to main merge `ce61ee7523b2d4b963db586209a72f8320573069` ([#721](https://github.com/anitaguptaoffice/sanguo-slg/pull/721)); JPEGs + probe-log on that tree. Pre-squash capture/refresh branch HEAD was `607aab01bdb972c5fcb5ca160cce82019ac9023e` (resolves on GitHub).
+`probe-log.json` records `runtime_code_sha` / `screenshot_artifacts_commit_sha` / `tip_sha` = `ce61ee7523b2d4b963db586209a72f8320573069` for traceability (must resolve on GitHub).
 Art PNGs from Draft #697 @ `bcf05c7365f92f17142f4ce25a3ba1bdd2b80247` (**not merged**).
 
 ## Asset contract

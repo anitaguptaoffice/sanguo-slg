@@ -10,7 +10,7 @@
 
 ## Runtime
 
-见 `runtime/INVENTORY.md` 与 `probe-log.json`（区分 `runtime_code_sha` 与 `screenshot_artifacts_commit_sha`）。
+见 `runtime/INVENTORY.md` 与 `probe-log.json`（证据 SHA 绑定 main #721 合并 `ce61ee7523b2d4b963db586209a72f8320573069`；预 squash 刷新分支 `607aab01bdb972c5fcb5ca160cce82019ac9023e`）。
 
 ```bash
 cd client && node scripts/capture-art-center-panel-012-evidence.mjs
