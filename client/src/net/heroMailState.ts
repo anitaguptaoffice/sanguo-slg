@@ -1,6 +1,12 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import { bagFromListPlayerBagResponse, mergeRewardBundle, mergeWallet, type BagStack } from "@/net/bagState";
 import { formatWalletPrice, itemLabel } from "@/net/contentFormat";
+import {
+  formatHeroUpgradeItemGap,
+  evaluateHeroUpgradeItemGap,
+  resolveHeroLevelUpgradeItemNeed,
+  resolveHeroLoyaltyUpgradeItemNeed,
+} from "@/net/heroUpgradeItemGap";
 
 /** 与 internal/hero/seed/heroes.json 核心子集展示名对齐（占位，非 legacy 文案）。 */
 const HERO_TEMPLATE_LABEL: Record<number, string> = {
@@ -64,6 +70,10 @@ export type HeroDetail = HeroSummary & {
   /** 网关可选：本级经验进度（无字段时详情区降级为 Lv+忠诚摘要）。 */
   exp_current?: number;
   exp_to_next?: number;
+  /** 网关可选：升级所需道具（无字段时客户端按养成子集推导）。 */
+  level_upgrade_item?: { item_cfg_id?: number; quantity?: number };
+  /** 网关可选：忠诚养成所需道具。 */
+  loyalty_upgrade_item?: { item_cfg_id?: number; quantity?: number };
 };
 
 export type RecruitTemplatePreview = {
@@ -204,8 +214,19 @@ export function parseGetHeroDetailResponse(raw: unknown): HeroDetail {
     loyalty_max: numField(r.loyalty_max),
     exp_current: numField(r.exp_current ?? r.level_exp_current ?? r.experience),
     exp_to_next: numField(r.exp_to_next ?? r.exp_to_next_level ?? r.level_exp_max ?? r.exp_max),
+    level_upgrade_item: parseItemNeedField(r.level_upgrade_item ?? r.level_up_item),
+    loyalty_upgrade_item: parseItemNeedField(r.loyalty_upgrade_item ?? r.loyalty_up_item),
     attributes,
   };
+}
+
+function parseItemNeedField(raw: unknown): { item_cfg_id?: number; quantity?: number } | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const item_cfg_id = numField(o.item_cfg_id ?? o.itemCfgId);
+  const quantity = numField(o.quantity ?? o.qty);
+  if (item_cfg_id == null && quantity == null) return undefined;
+  return { item_cfg_id, quantity };
 }
 
 export function heroTemplateBaseStats(templateCfgId: number | undefined): HeroAttributes | undefined {
@@ -322,19 +343,44 @@ function escapeHtml(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function renderHeroUpgradeProgressMarkup(d: HeroDetail): string {
+function renderHeroUpgradeItemGapLine(
+  kind: "level_exp" | "loyalty",
+  need: { itemCfgId: number; quantity: number } | null,
+  bag: BagStack[],
+): string {
+  if (!need) return "";
+  const text = formatHeroUpgradeItemGap(need, bag);
+  if (!text) return "";
+  const gap = evaluateHeroUpgradeItemGap(need, bag);
+  const warn = gap.sufficient ? "" : " hero-upgrade-item-gap-warn";
+  return `<p class="hero-upgrade-item-gap${warn}" data-role="hero-upgrade-item-gap" data-kind="${kind}">${escapeHtml(text)}</p>`;
+}
+
+function renderHeroUpgradeProgressMarkup(d: HeroDetail, bag: BagStack[] = []): string {
   const progress = resolveHeroDetailUpgradeProgress(d);
+  const levelNeed = resolveHeroLevelUpgradeItemNeed(d);
+  const loyaltyNeed = resolveHeroLoyaltyUpgradeItemNeed(d);
   if (progress.mode === "fallback") {
-    return `<p class="hero-upgrade-fallback">${escapeHtml(progress.summary)}</p>`;
+    const levelGap = levelNeed ? renderHeroUpgradeItemGapLine("level_exp", levelNeed, bag) : "";
+    const loyaltyGap = loyaltyNeed ? renderHeroUpgradeItemGapLine("loyalty", loyaltyNeed, bag) : "";
+    return `<p class="hero-upgrade-fallback">${escapeHtml(progress.summary)}</p>${levelGap}${loyaltyGap}`;
   }
   const bars = progress.bars
-    .map(
-      (b) =>
+    .map((b) => {
+      const need =
+        b.kind === "level_exp"
+          ? levelNeed
+          : b.kind === "loyalty"
+            ? loyaltyNeed
+            : null;
+      const gapLine = need != null ? renderHeroUpgradeItemGapLine(b.kind, need, bag) : "";
+      return (
         `<div class="hero-progress-row" data-kind="${b.kind}"><span class="hero-progress-label">${escapeHtml(b.label)}</span>` +
         `<span class="hero-progress-caption">${escapeHtml(b.caption)}</span>` +
         `<span class="hero-progress-track" role="progressbar" aria-valuenow="${b.percent}" aria-valuemin="0" aria-valuemax="100">` +
-        `<span class="hero-progress-fill" style="width:${b.percent}%"></span></span></div>`,
-    )
+        `<span class="hero-progress-fill" style="width:${b.percent}%"></span></span>${gapLine}</div>`
+      );
+    })
     .join("");
   return `<section class="hero-upgrade-progress" aria-label="养成进度">${bars}</section>`;
 }
@@ -345,6 +391,7 @@ export function renderHeroDetailMarkup(
   recruitAffordSummaryHtml = "",
   templatePreview?: RecruitTemplatePreview | null,
   cultivationUseHtml = "",
+  bag: BagStack[] = [],
 ): string {
   if (!d?.hero_id) {
     return '<p class="hero-detail-empty">点选将领查看详情</p>';
@@ -358,7 +405,7 @@ export function renderHeroDetailMarkup(
       ? ` · 忠诚 ${loyalty}（${d.loyalty_min}~${d.loyalty_max ?? loyalty}）`
       : ` · 忠诚 ${loyalty}`;
   const head = `<header class="hero-detail-head"><span class="hero-detail-name">${name}</span><span class="hero-detail-level">Lv${level}</span><span class="hero-detail-meta">稀有${rarity}${loyaltyRange}</span></header>`;
-  const progress = renderHeroUpgradeProgressMarkup(d);
+  const progress = renderHeroUpgradeProgressMarkup(d, bag);
   const comparison = compareHeroDetailToTemplate(d, templatePreview ?? null);
   const deltaByKey = new Map(comparison.rows.map((r) => [r.key, r]));
   const attrs = d.attributes;

@@ -413,9 +413,10 @@ describe("HeroMailPanels", () => {
     await flushPromises();
     const useBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-use-cultivation-item"]');
     expect(useBtn?.disabled).toBe(true);
-    expect(mount.querySelector('[data-role="hero-cultivation-disabled-reason"]')?.textContent).toContain(
-      "养成消耗品",
+    expect(mount.querySelector('[data-role="hero-cultivation-disabled-reason"]')?.textContent).toMatch(
+      /缺口|养成消耗品/,
     );
+    expect(mount.querySelector('[data-role="hero-upgrade-item-gap"]')?.textContent).toContain("缺口");
   });
 
   it("marks owned recruit template and shows affordability preview on selection", async () => {
@@ -558,7 +559,9 @@ describe("HeroMailPanels", () => {
       .querySelector('[data-action="hero-goto-bag-cultivation"]')
       ?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    expect(onBag).toHaveBeenCalledWith([2017]);
+    expect(onBag).toHaveBeenCalledWith(
+      expect.objectContaining({ highlightItemId: 2017, bagCategory: "cultivation", returnHeroId: 1 }),
+    );
   });
 
   it("hero detail load failure shows CLIENT-129 error chrome", async () => {
@@ -631,7 +634,9 @@ describe("HeroMailPanels", () => {
       ?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(gateway.listPlayerBag).toHaveBeenCalled();
-    expect(onBag).toHaveBeenCalledWith([2017]);
+    expect(onBag).toHaveBeenCalledWith(
+      expect.objectContaining({ highlightItemId: 2017, returnHeroId: 1 }),
+    );
   });
 
   it("hero detail shows same recruit affordability summary as template list", async () => {

@@ -7,6 +7,7 @@ import {
   filterHeroCultivationBagItemIds,
   type HeroDetail,
 } from "@/net/heroMailState";
+import { heroUpgradeItemGapDisabledReason } from "@/net/heroUpgradeItemGap";
 import {
   USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL,
   type UseConsumableSubmitState,
@@ -43,9 +44,11 @@ export function validateHeroDetailCultivationUse(bag: BagStack[]): {
 export function heroDetailCultivationUseButtonDisabled(
   submitState: UseConsumableSubmitState,
   bag: BagStack[],
+  detail?: HeroDetail | null,
 ): boolean {
   const validation = validateHeroDetailCultivationUse(bag);
-  return useConsumableSubmitButtonsDisabled(submitState) || !validation.ok;
+  const gapReason = heroUpgradeItemGapDisabledReason(detail ?? null, bag);
+  return useConsumableSubmitButtonsDisabled(submitState) || !validation.ok || gapReason != null;
 }
 
 export function heroDetailCultivationUseButtonLabel(submitState: UseConsumableSubmitState): string {
@@ -91,7 +94,12 @@ export function formatHeroDetailCultivationUseStatus(
   return `已使用 ${itemName}×1：${statSummary}`;
 }
 
-export function heroDetailCultivationDisabledReason(bag: BagStack[]): string | null {
+export function heroDetailCultivationDisabledReason(
+  bag: BagStack[],
+  detail?: HeroDetail | null,
+): string | null {
+  const gapReason = heroUpgradeItemGapDisabledReason(detail ?? null, bag);
+  if (gapReason) return gapReason;
   const validation = validateHeroDetailCultivationUse(bag);
   return validation.ok ? null : validation.message;
 }
@@ -99,15 +107,16 @@ export function heroDetailCultivationDisabledReason(bag: BagStack[]): string | n
 export function renderHeroDetailCultivationUseMarkup(
   bag: BagStack[],
   submitState: UseConsumableSubmitState,
+  detail?: HeroDetail | null,
 ): string {
   const validation = validateHeroDetailCultivationUse(bag);
-  const disabled = heroDetailCultivationUseButtonDisabled(submitState, bag);
+  const disabled = heroDetailCultivationUseButtonDisabled(submitState, bag, detail);
   const label = heroDetailCultivationUseButtonLabel(submitState);
   const itemHint =
     validation.itemCfgId != null
       ? `将消耗 ${itemLabel(validation.itemCfgId)}×1`
       : `可用养成道具：${HERO_CULTIVATION_CONSUMABLE_CFG_IDS.map((id) => itemLabel(id)).join("、")}`;
-  const reason = validation.ok ? "" : validation.message;
+  const reason = heroDetailCultivationDisabledReason(bag, detail) ?? "";
   return `<div class="hero-detail-cultivation-use" aria-label="养成道具使用">
     <button type="button" data-action="hero-use-cultivation-item"${disabled ? " disabled" : ""}>${label}</button>
     <button type="button" data-action="hero-goto-bag-cultivation">${HERO_GOTO_BAG_CULTIVATION_LABEL}</button>
@@ -152,10 +161,11 @@ export function syncHeroDetailCultivationUseButton(
   panelRoot: ParentNode | null | undefined,
   submitState: UseConsumableSubmitState,
   bag: BagStack[],
+  detail?: HeroDetail | null,
 ): void {
   const btn = panelRoot?.querySelector<HTMLButtonElement>('[data-action="hero-use-cultivation-item"]');
   if (!btn) return;
-  btn.disabled = heroDetailCultivationUseButtonDisabled(submitState, bag);
+  btn.disabled = heroDetailCultivationUseButtonDisabled(submitState, bag, detail);
   btn.textContent = heroDetailCultivationUseButtonLabel(submitState);
 }
 

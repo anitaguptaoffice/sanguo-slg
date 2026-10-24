@@ -139,7 +139,11 @@ import {
   setHeroListFormErrorDisplay,
   syncHeroListRefreshButton,
 } from "@/net/heroListRefreshFeedback";
-import { pickHeroDetailBagDeepLink } from "@/net/heroDetailBagDeepLink";
+import {
+  buildHeroBagDeepLinkQuery,
+  pickHeroDetailBagDeepLink,
+  type HeroBagDeepLinkQuery,
+} from "@/net/heroDetailBagDeepLink";
 import {
   renderHeroDetailStateErrorMarkup,
   renderHeroDetailStateLoadingMarkup,
@@ -210,7 +214,7 @@ export class HeroMailPanels {
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
     private readonly onMailInboxSnapshot?: (mails: MailRow[], mailUnreadTotal: number) => void,
     private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
-    private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
+    private readonly onOpenHeroCultivationBag?: (link: HeroBagDeepLinkQuery) => void,
     private readonly onRecruitMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
     private readonly assets?: AssetLoader,
     private readonly dismissHeroToolbarTrigger?: () => HTMLElement | null,
@@ -765,12 +769,17 @@ export class HeroMailPanels {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
       } else {
         const { bag } = this.sessionEconomy();
-        const cultivationHtml = renderHeroDetailCultivationUseMarkup(bag, this.heroCultivationSubmitState);
+        const cultivationHtml = renderHeroDetailCultivationUseMarkup(
+          bag,
+          this.heroCultivationSubmitState,
+          this.heroDetail,
+        );
         detailEl.innerHTML = renderHeroDetailMarkup(
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
           cultivationHtml,
+          bag,
         );
       }
     }
@@ -1217,7 +1226,7 @@ export class HeroMailPanels {
     );
     setHeroCultivationFormErrorDisplay(this.heroPanel, null);
     setHeroCultivationSuccessDisplay(this.heroPanel, null);
-    syncHeroDetailCultivationUseButton(this.heroPanel, this.heroCultivationSubmitState, bag);
+    syncHeroDetailCultivationUseButton(this.heroPanel, this.heroCultivationSubmitState, bag, this.heroDetail);
     const sid = this.serverId();
     this.onStatus(`使用 ${itemId}×1…`);
     try {
@@ -1264,7 +1273,12 @@ export class HeroMailPanels {
       this.onStatus(msg);
     } finally {
       const { bag: bagAfter } = this.sessionEconomy();
-      syncHeroDetailCultivationUseButton(this.heroPanel, this.heroCultivationSubmitState, bagAfter);
+      syncHeroDetailCultivationUseButton(
+        this.heroPanel,
+        this.heroCultivationSubmitState,
+        bagAfter,
+        this.heroDetail,
+      );
     }
   }
 
@@ -1774,7 +1788,12 @@ export class HeroMailPanels {
     }
     setHeroCultivationFormErrorDisplay(this.heroPanel, null);
     if (this.onOpenHeroCultivationBag) {
-      this.onOpenHeroCultivationBag([pick.itemCfgId]);
+      const link = buildHeroBagDeepLinkQuery({
+        highlightItemId: pick.itemCfgId,
+        bagCategory: pick.bagCategory,
+        returnHeroId: heroId,
+      });
+      this.onOpenHeroCultivationBag(link);
       this.onStatus(`背包已定位 ${pick.itemCfgId}，请「使用道具」`);
       return;
     }
@@ -1794,7 +1813,15 @@ export class HeroMailPanels {
     }
     const ids = filterHeroCultivationBagItemIds(items);
     if (this.onOpenHeroCultivationBag) {
-      this.onOpenHeroCultivationBag(ids);
+      const first = ids[0] ?? 0;
+      if (first > 0) {
+        this.onOpenHeroCultivationBag(
+          buildHeroBagDeepLinkQuery({
+            highlightItemId: first,
+            returnHeroId: this.selectedHeroId,
+          }),
+        );
+      }
       return;
     }
     this.onStatus(ids.length ? `养成道具 item_cfg_id：${ids.join("、")}` : "背包暂无养成消耗品（将魂碎晶等）");

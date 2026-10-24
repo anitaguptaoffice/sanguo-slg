@@ -481,10 +481,10 @@ export class MainCityScene implements Scene {
           .openPanelWithDeepLink(reportId ?? undefined)
           .then(() => this.renderHud());
       },
-      (itemCfgIds) => {
-        this.content.openBagHighlightItems(itemCfgIds);
-        this.status = itemCfgIds.length
-          ? `背包已高亮养成道具 ${itemCfgIds.join("、")}，请「使用道具」`
+      (link) => {
+        this.content.openBagFromHeroDeepLink(link);
+        this.status = link.highlightItemId > 0
+          ? `背包已高亮养成道具 ${link.highlightItemId}（${link.bagCategory}），请「使用道具」`
           : "背包暂无养成消耗品（将魂碎晶等）";
         this.renderHud();
       },
@@ -495,6 +495,9 @@ export class MainCityScene implements Scene {
       () => this.toolbarTrigger("toggle-hero"),
     );
     this.heroMail.attach();
+    this.content.setBagReturnHeroDetailHandler((heroId) => {
+      void this.heroMail.openHeroDetailDeepLink(heroId).then(() => this.renderHud());
+    });
     this.heroMail.mountMailFilterSkins(this.assets);
     this.heroMail.mountHeroListFilterSkins(this.assets);
     this.battleReports = new BattleReportPanel(
