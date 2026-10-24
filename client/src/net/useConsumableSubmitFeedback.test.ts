@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   BAG_ROW_USED_PULSE_CLASS,
+  BAG_USE_INLINE_PULSE_CLASS,
   countBagStackAfterUse,
   scheduleBagRowUsedPulse,
+  scheduleBagUseInlinePulse,
   shouldPulseBagStackAfterUse,
   USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL,
   useConsumableSubmitButtonLabel,
@@ -65,6 +67,18 @@ describe("scheduleBagRowUsedPulse", () => {
     const row = document.createElement("li");
     scheduleBagRowUsedPulse(row);
     expect(row.classList.contains(BAG_ROW_USED_PULSE_CLASS)).toBe(true);
+  });
+});
+
+describe("scheduleBagUseInlinePulse (CLIENT-194)", () => {
+  it("pulses bag-row-inline-state without replacing row pulse", () => {
+    const row = document.createElement("li");
+    const inline = document.createElement("span");
+    inline.className = "bag-row-inline-state";
+    row.appendChild(inline);
+    scheduleBagUseInlinePulse(row);
+    expect(row.classList.contains(BAG_ROW_USED_PULSE_CLASS)).toBe(false);
+    expect(inline.classList.contains(BAG_USE_INLINE_PULSE_CLASS)).toBe(true);
   });
 });
 

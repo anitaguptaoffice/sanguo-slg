@@ -52,8 +52,10 @@ import {
 } from "@/net/shopOfferAfford";
 import {
   formatShopPriceVsWallet,
+  formatShopPriceWalletGapLine,
   formatShopTabWalletBalanceLine,
   resolveShopTabCurrency,
+  SHOP_PRICE_WALLET_GAP_LINE_CLASS,
 } from "@/net/shopTabCurrency";
 import { SHOP_OFFER_AFFORD_INLINE_CLASS } from "@/engine/mainCityWave30NarrowManifest";
 import {
@@ -80,12 +82,18 @@ import {
 import {
   findBagStackRow,
   scheduleBagRowUsedPulse,
+  scheduleBagUseInlinePulse,
   shouldPulseBagStackAfterUse,
   syncUseConsumableSubmitButtons,
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
 } from "@/net/useConsumableSubmitFeedback";
+import { BAG_ITEM_CFG_SUMMARY_CLASS } from "@/engine/wave33IntelBattleMailBagDailyNarrowManifest";
 import { formatBagItemCfgSummary } from "@/net/bagItemCfgSummary";
+import {
+  BAG_ROW_INLINE_STATE_CLASS,
+  formatBagRowInlineState,
+} from "@/net/bagRowInlineState";
 import {
   clearBagOpenSourceSession,
   formatBagOpenSourceTagLabel,
@@ -593,9 +601,18 @@ export class ContentPanels {
       const summary = formatBagItemCfgSummary(row);
       if (summary) {
         const secondary = document.createElement("span");
-        secondary.className = "bag-stack-secondary";
+        secondary.className = `bag-stack-secondary ${BAG_ITEM_CFG_SUMMARY_CLASS}`;
         secondary.textContent = summary;
         li.appendChild(secondary);
+      }
+      if (row.item_cfg_id === this.selectedItemId) {
+        const inline = formatBagRowInlineState(row);
+        if (inline) {
+          const inlineEl = document.createElement("span");
+          inlineEl.className = BAG_ROW_INLINE_STATE_CLASS;
+          inlineEl.textContent = inline;
+          li.appendChild(inlineEl);
+        }
       }
       if (
         row.item_cfg_id === this.selectedItemId &&
@@ -709,6 +726,13 @@ export class ContentPanels {
         vs.className = "shop-price-vs-wallet";
         vs.textContent = priceVsWallet;
         li.appendChild(vs);
+      }
+      const priceWalletGap = formatShopPriceWalletGapLine(wallet, o.price_resources, 1);
+      if (priceWalletGap) {
+        const gapLine = document.createElement("span");
+        gapLine.className = SHOP_PRICE_WALLET_GAP_LINE_CLASS;
+        gapLine.textContent = priceWalletGap;
+        li.appendChild(gapLine);
       }
       const afford = shopOfferAffordInlineForRow(wallet, o, 1);
       if (afford) {
@@ -839,7 +863,9 @@ export class ContentPanels {
     const quantityAfter = remaining > 0 ? remaining : 0;
     this.renderBagList();
     if (!shouldPulseBagStackAfterUse(quantityBefore, quantityAfter)) return;
-    scheduleBagRowUsedPulse(findBagStackRow(this.bagPanel, itemId));
+    const row = findBagStackRow(this.bagPanel, itemId);
+    scheduleBagRowUsedPulse(row);
+    scheduleBagUseInlinePulse(row);
   }
 
   private async useItem(): Promise<void> {

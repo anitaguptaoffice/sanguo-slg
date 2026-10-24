@@ -52,6 +52,9 @@ export const MAIL_ATTACHMENT_SWEEP_SELECTOR = `.${MAIL_ATTACHMENT_SWEEP_CLASS}`;
 /** CLIENT-175: cfg summary secondary line + deep-link source tag on bag panel. */
 export const BAG_ITEM_CFG_SUMMARY_CLASS = "bag-item-cfg-summary";
 export const BAG_ITEM_CFG_SUMMARY_SELECTOR = `.${BAG_ITEM_CFG_SUMMARY_CLASS}`;
+/** CLIENT-194: selected stack qty + cfg summary inline read. */
+export { BAG_ROW_INLINE_STATE_CLASS } from "@/net/bagRowInlineState";
+export const BAG_ROW_INLINE_STATE_SELECTOR = ".bag-row-inline-state";
 export const BAG_OPEN_SOURCE_TAG_CLASS = "bag-open-source-v1";
 export const BAG_OPEN_SOURCE_TAG_SELECTOR = `.${BAG_OPEN_SOURCE_TAG_CLASS}`;
 
