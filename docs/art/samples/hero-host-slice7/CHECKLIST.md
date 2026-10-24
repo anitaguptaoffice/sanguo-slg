@@ -5,10 +5,10 @@
 | 字段 | 值 | 说明 |
 |---|---|---|
 | **art_head_sha** | `dea932332475ed1e3cf4f336693f3d4c12a6d903` | Draft [#1204](https://github.com/anitaguptaoffice/sanguo-slg/pull/1204)；**勿合并** |
-| **runtime_code_sha / tip_sha** | `a083a52a146a5a743327c5c5751776380277fec7` | 生产 runtime（scroll/clip host + 招募区折叠）；见各 `probe-log.json` |
-| **HeroMailPanels.ts blob** | `3b24f48c572902562d4d2fbc16a713a7ef9bae93` | 与 a083a52a capture 一致 |
-| **evidence_head_sha** | 见本 eng PR `HEAD`（`cf76257c…`） | 证据 JPEG + `probe-log.json` 包 |
-| **capture_helper_commit_sha** | `a083a52a146a5a743327c5c5751776380277fec7` | 捕获脚本提交；`probe-log.json` 内 `tip_sha` 同此 |
+| **runtime_code_sha / tip_sha** | 见各 `probe-log.json`（与证据提交 `HEAD` 一致） | 生产 runtime @ `e81a3840` 挂载 + 捕获脚本；[#108](https://github.com/anitaguptaoffice/sanguo-slg/issues/108) comment `6389564724` 证据缺口重拍 |
+| **HeroMailPanels.ts blob** | `356f8e33734ca1374f3cf1ecd61368431293a93c` | 与当前 runtime 捕获一致 |
+| **evidence_head_sha** | 见本 eng PR 证据提交 `HEAD` | JPEG + `probe-log.json` 包 |
+| **capture_helper_commit_sha** | 与 `evidence_head_sha` 同提交（含 `hero-host-capture-probes*` 滚动/折叠修正） | |
 | **Slice6 已签收** | [#1228](https://github.com/anitaguptaoffice/sanguo-slg/pull/1228) @ `9f507b1d` | 1021–1024 不在本卡重复挂载 |
 
 ## 范围（1025–1028）
@@ -17,7 +17,7 @@
 |---|---|---|
 | 4 template / 8 manifest ID / 16 PNG | PASS | `hero.avatar.{1025..1028}.v1` + bust |
 | manifest 仅增量 +8 | PASS | 保留 main 既有 75 项 |
-| PNG SHA256 对齐 #1204 正文 | PASS | 16/16 |
+| PNG SHA256 对齐 #1204 正文 | PASS | 16/16（本 PR 未改 PNG） |
 | 未合并 #1203–#1207 / #1191–#1193 / #1201 / #1195 / #1198 / #1228 / #1069 / #1017 / #108 / #983 / #697 / #77 / #82 | PASS | 仅路径复制 |
 | 生产主城 → 将领面板（`hero-panel-roster`） | PASS | |
 | 1600 DPR1/DPR2 目标列表圆头像+主行名在 clip 内 | PASS | `listAvatarFrameOk` @ probe-log |

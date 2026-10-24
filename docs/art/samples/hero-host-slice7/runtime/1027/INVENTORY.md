@@ -1,12 +1,12 @@
 # HERO-HOST-SLICE7 runtime inventory — template 1027
 
-tip_sha / runtime_code_sha: `e81a3840c6b0504ba6dc25f59c0b64d852a255a3`
+tip_sha / runtime_code_sha: `6889eb050c043d931b0f4c97ada4f9be57780cb0`
 art_head_sha: `dea932332475ed1e3cf4f336693f3d4c12a6d903`
 hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
 
 ## Viewport captures
 
-- `runtime/1027/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 474289 bytes, sha256 `549cf8e66067e8a360fbc47dfa6ac4a620fa7b5a6ada2325d948e74bb54ecdb0`
+- `runtime/1027/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 474364 bytes, sha256 `16569cf81e025af519b1e380aefd15b3de430d2d4340eb4612750d0e50ea0a10`
 - `runtime/1027/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 999058 bytes, sha256 `a696a0f881c6ad9c807c7c75cb00f7687b326f7c3a5750cbc364e5b7a36cbf5e`
 - `runtime/1027/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245651 bytes, sha256 `beca1b1de25e3cbdf9b67d82cd269104957dce4ffae4c3b4b72dfc50a46bf046`
 - `runtime/1027/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `848a22757db121887a654982b22b836c1c45a35ab5d336139c56bd60ce296efd`
