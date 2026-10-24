@@ -1276,6 +1276,93 @@
           "path": "textures/2x/ui/badge_count.png"
         }
       ]
+    },
+    {
+      "id": "ui.panel.loading.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/panel_loading.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/panel_loading.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.panel.empty.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/panel_empty.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/panel_empty.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.panel.error.v1",
+      "kind": "nine_slice",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/panel_error.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/panel_error.png"
+        }
+      ]
     }
   ]
 }

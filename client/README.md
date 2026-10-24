@@ -30,6 +30,10 @@
 
 在 **#482** `artToolbarIconSkin` 工程挂载前提下：底栏八个 `toggle-*`（军事/邮件/队列/背包/日常/世界/将领/商城）在 `ui.button.toolbar.v1` chrome 内挂 **`ui.icon.toolbar.*.v1`** 32px 图标 + 两字标签；`mountToolbarIcons` 对 **normal/hover/pressed/disabled** 走 `getButtonImage`（manifest `button_states` 就绪时）或 **variants** 回退，并与 chrome 同步指针态。按钮设 **`data-art-skin="off"`** 时跳过图标、保留文字标签。**1280×720** 底栏横向滚动时图标与 **CLIENT-107** 角标不被 `overflow` 裁切，标签省略、完整文案见 **`title`**；**`aria-expanded`** 仍由 **CLIENT-110** `syncToolbarAriaExpanded` 维护。美术证据只读：`docs/art/samples/art-toolbar-icons-007/`。单测：`artToolbarIconSkin.test.ts`。
 
+### ART-UI-PANEL-STATE-009 工程挂载（面板 loading/empty/error 纸底）
+
+对照 **#482** / **#509** 只读 cherry-pick **3** manifest id / **6** PNG（`ui.panel.loading.v1`、`ui.panel.empty.v1`、`ui.panel.error.v1` 九宫 **320×120**，L/T/R/B **16**）；**不合** art hold / VERIFY Draft（#77 / #82 / #108 / #506 等）。薄封装 **`artPanelStateSkin`**：`resolvePanelStateAssetId` / `PANEL_STATE_ASSET_BY_KIND` 供 **CLIENT-129** `panelStateChrome` 接线；**`data-art-skin="off"`** 回退 **CLIENT-067** 纯文案。证据：`docs/art/samples/art-ui-panel-state-009/`（`INVENTORY.md`、`manifest-index.json`、`hit-proof.json`）。单测：`artPanelStateSkin.test.ts`。
+
 ### ART-UI-FILTER-008 工程挂载（列表筛选 chrome）
 
 从 Draft **#506** @ `38451735` 只读 cherry-pick **9** manifest id / **18** PNG（chip 四态、row 三态 nine-slice、`badge.dot` / `badge.count`）；**不合** #506 / #108 / #77 / #82。运行时薄封装 **`artUiFilterSkin`**：`mountFilterUiSkins` 对 `data-ui-filter-chip` / `data-ui-filter-row` / `data-ui-filter-badge` 接线；chip 精灵 **72×32**、**命中区 CSS ≥44×44**；计数角标 **20×16** 文案 **1–9 / 9+**（`formatFilterBadgeCount`）。**`data-art-skin="off"`** 跳过皮肤。证据：`docs/art/samples/art-ui-filter-008/`（`manifest-index.json`、`hit-proof.json`）。单测：`artUiFilterSkin.test.ts`。
@@ -52,6 +56,7 @@
 | `ui.list.row.v1` / `.hover` / `.selected` | 列表行 nine-slice 三态 |
 | `ui.badge.dot.v1` | 未读/提示圆点 |
 | `ui.badge.count.v1` | 数字角标底图（20×16） |
+| `ui.panel.loading.v1` / `.empty` / `.error` | 面板列表区 loading / empty / error 九宫纸底（**CLIENT-128** `artPanelStateSkin`；运行时 **CLIENT-129**） |
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 
@@ -419,6 +424,15 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. 成功：再拉 `GetHeroDetail`，行内展示等级/忠诚变化摘要，详情头 `hero-detail-stat-pulse` 短暂高亮；**CLIENT-072** 进度条与 Δ 列不退化。
 3. 背包无养成消耗品时按钮 **disabled**，`hero-cultivation-disabled-reason` 中文可读；网关失败走 `hero-cultivation-form-error`（**CLIENT-067** 口径）。
 4. 单测：`heroDetailCultivationUse.test.ts`、`useConsumableSubmitFeedback.test.ts`、`HeroMailPanels.test.ts`。
+
+### 手动验收（将领详情忠诚养成深链 CLIENT-133）
+
+在 [CLIENT-072](#手动验收将领详情养成对比-client-072) / [CLIENT-115](#手动验收将领详情养成道具使用反馈-client-115) 基础上：
+
+1. 点选将领：`GetHeroDetail` 往返中详情区 **CLIENT-129** 骨架「详情加载中…」；失败 inline **CLIENT-067**（`panel-state-error`），列表行不退化。
+2. 详情 **忠诚条/等级经验** 与列表行 `Lv` / `忠诚` 数值一致；`UseConsumable` 成功后列表行同步更新，**CLIENT-115** 摘要与 `hero-detail-stat-pulse` 不退化。
+3. **前往背包使用养成道具**：拉 `ListPlayerBag` 后打开背包并滚入视首条养成 consumable（2017 子集）；无道具或网关失败走 **CLIENT-067**（`hero-cultivation-form-error`）。
+4. 单测：`heroDetailBagDeepLink.test.ts`、`panelStateChrome.test.ts`、`heroMailState.test.ts`（`syncHeroSummaryFromDetail`）、`HeroMailPanels.test.ts`。
 
 ### 手动验收（战报攻守摘要与排行互链 CLIENT-100）
 
@@ -1184,6 +1198,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 1. `make dev` 升级一槽建筑至 `upgrade_finish_at_ms > now`：画布槽位旁应出现剩余时间缩写与细进度条。
 2. 点击该升级中槽位：应打开 **队列** 面板，对应建造行 `selected` 并滚入视口（id `queue-build-row-<slot_key>`）。
 3. **CLIENT-059** HUD 产出速率次行与 **CLIENT-026** 建造加速符逻辑不退化。单测：`mainCitySlotUpgrade.test.ts`、`QueuePanels.test.ts`。
+
+### 手动验收（主城七槽等级与升级 ETA 扫读 CLIENT-130）
+
+在 **CLIENT-066** 队列深链与 **CLIENT-104** 建造提交反馈之上，**七槽**（`hall`…`wall`，见 [`docs/art/maincity-slots.md`](../docs/art/maincity-slots.md)）画布 overlay 常驻 **`formatSlotOverlayLabel`**（`Lv.N`，升级中追加 `formatUpgradeRemainingAbbrev` ETA + 细进度条）；空闲与 `upgrade_finish_at_ms=0` 一致仅 **Lv**。点击空闲槽仍开建造侧栏；升级中仍深链队列 **`openAndHighlightBuildSlot`**（**CLIENT-105** 互高亮）；底栏 **CLIENT-107** `queueBuilding` 角标仍按进行中槽位数。契约仍 **`GetCityState`**，无新建造 RPC。
+
+1. `make dev` 进主城：七槽均应可见 **Lv.N**；令一槽升级进行中 → 该槽标签为 **Lv.N · m:ss** 且带进度条，其余槽仅等级。
+2. 升级中点槽 → **队列** 高亮对应行；点空闲槽 → **建造** 侧栏；互高亮与 **CLIENT-105** 脉冲不退化。
+3. 单测：`mainCitySlotUpgrade.test.ts`（`formatSlotOverlayLabel`）、`QueuePanels.test.ts`、`buildSubmitFeedback.test.ts`（**CLIENT-104**）。
 
 ### 手动验收（建造队列完成脉冲 CLIENT-105）
 
