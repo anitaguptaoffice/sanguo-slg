@@ -3220,6 +3220,36 @@
       #layout-frame.layout-narrow .building-panel .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-219 wave:38 主城将领社交队列 HUD 深链组合 manifest */
+      /* sessionStorage key rank-manual-refresh-ms (CLIENT-214); data-action queue-open-daily-anchor (CLIENT-218) */
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-slot-margin,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li .hero-list-row-loyalty-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-subline"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-warn-dot,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-member-online-summary,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-member-online-summary"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-backoff-retry,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-backoff-retry,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-chain-type-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="queue-open-daily-anchor"],
+      #layout-frame.layout-narrow #hud .hud-todo-merged-sweep,
+      #layout-frame.layout-narrow #hud [data-role="hud-todo-merged-sweep-line"],
+      #layout-frame.layout-narrow .main-city-toolbar button.toolbar-panel-deep-link-pulse {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .panel-scroll-body,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .panel-scroll-body,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
+        padding-bottom: 64px;
+      }
       /* CLIENT-195 wave:35 世界军情战报邮件日常背包商城组合 manifest */
       /* sessionStorage key battle-report-replay-v1 (CLIENT-191) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info-card,

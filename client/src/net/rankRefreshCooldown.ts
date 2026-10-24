@@ -9,6 +9,9 @@ export const RANK_MANUAL_REFRESH_SESSION_KEY = "rank-manual-refresh-ms";
 
 export const RANK_EMPTY_RETRY_INLINE_CLASS = "rank-empty-retry-inline";
 
+/** CLIENT-214：刷新按钮旁冷却戳记 DOM class（`data-role` 见下）。 */
+export const RANK_REFRESH_COOLDOWN_STAMP_CLASS = "rank-refresh-cooldown-stamp";
+
 export const RANK_REFRESH_COOLDOWN_STAMP_ROLE = "rank-refresh-cooldown";
 
 export function readRankManualLastRefreshMs(
