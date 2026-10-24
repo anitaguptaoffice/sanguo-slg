@@ -441,6 +441,32 @@ describe("MarchListPanel", () => {
     ).toBeTruthy();
   });
 
+  it("notifyMarchStarted applies intel refresh stamp and list row pulse (CLIENT-238)", async () => {
+    vi.useFakeTimers();
+    const arriveAt = Date.now() + 30 * 60_000;
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [{ march_id: 88, phase: 2, to_x: 3, to_y: 4, arrive_at_ms: arriveAt }],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.notifyMarchStarted(88, { toX: 3, toY: 4 });
+    await vi.waitFor(() => {
+      const stamp = mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]');
+      expect(stamp?.textContent).toMatch(/新行军 #88/);
+    });
+    const row = mount.querySelector('.march-list li[data-march-id="88"]');
+    expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(true);
+    vi.advanceTimersByTime(2000);
+    expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(false);
+    expect(mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]')?.classList.contains("hidden")).toBe(
+      true,
+    );
+    vi.useRealTimers();
+  });
+
   it("notifyMarchStarted applies intel handoff strip and intel-new-march-highlight (CLIENT-222)", async () => {
     vi.useFakeTimers();
     const arriveAt = Date.now() + 30 * 60_000;

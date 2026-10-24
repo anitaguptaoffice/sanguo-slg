@@ -1214,6 +1214,31 @@
         line-height: 1.35;
       }
       .march-submit-intel-handoff-strip.hidden { display: none; }
+      .march-submit-intel-refresh-stamp {
+        font-size: 11px;
+        font-weight: 600;
+        color: #b8e0ff;
+        margin: 2px 0 4px;
+        line-height: 1.35;
+      }
+      .march-submit-intel-refresh-stamp.hidden { display: none; }
+      @keyframes intel-list-refresh-march-pulse-keyframes {
+        0% { box-shadow: inset 0 0 0 2px rgba(184, 224, 255, 0.9); }
+        100% { box-shadow: none; }
+      }
+      .march-list li.intel-list-refresh-march-pulse {
+        animation: intel-list-refresh-march-pulse-keyframes 2s ease-out 1;
+      }
+      .military-panel .march-form-validation-sweep-line {
+        font-size: 11px;
+        line-height: 1.35;
+        color: #9ab8a0;
+        margin: 4px 0 6px;
+      }
+      .military-panel .march-form-validation-sweep-line.march-form-validation-sweep-warn {
+        color: #e8b86a;
+        font-weight: 600;
+      }
       @keyframes march-phase-changed-pulse-keyframes {
         0% { background-color: rgba(158, 197, 255, 0.35); }
         100% { background-color: transparent; }
@@ -3513,6 +3538,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-new-march-highlight,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-intel-phase-eta-strip,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-handoff-line,
+      #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] [data-role="march-submit-intel-refresh-stamp"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-list-refresh-march-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .report-list-intel-jump-tag,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .report-round-summary-intel-link,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] [data-action="open-intel-for-report"],
