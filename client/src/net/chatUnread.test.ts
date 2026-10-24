@@ -3,7 +3,10 @@ import {
   CHAT_LAST_READ_TS_STORAGE_KEY,
   chatChannelStorageKey,
   findChatUnreadSeparatorIndex,
+  chatUnreadSeparatorDomClassName,
   formatChatUnreadSweepLine,
+  GUILD_CHAT_UNREAD_SEPARATOR_CLASS,
+  shouldShowChatUnreadSeparator,
   countChatMessagesAfterTs,
   estimateChatUnread,
   estimateChatUnreadCount,
@@ -76,6 +79,18 @@ describe("chatUnread", () => {
     expect(findChatUnreadSeparatorIndex(messages, 150)).toBe(1);
     expect(findChatUnreadSeparatorIndex(messages, 400)).toBe(-1);
     expect(findChatUnreadSeparatorIndex([], 0)).toBe(-1);
+  });
+
+  it("shouldShowChatUnreadSeparator mirrors mark-read visibility (CLIENT-234)", () => {
+    expect(shouldShowChatUnreadSeparator(0)).toBe(true);
+    expect(shouldShowChatUnreadSeparator(3)).toBe(true);
+    expect(shouldShowChatUnreadSeparator(-1)).toBe(false);
+    expect(shouldShowChatUnreadSeparator(Number.NaN)).toBe(false);
+  });
+
+  it("chatUnreadSeparatorDomClassName pairs base and guild-chat classes (CLIENT-234)", () => {
+    expect(chatUnreadSeparatorDomClassName()).toContain("chat-unread-separator");
+    expect(chatUnreadSeparatorDomClassName()).toContain(GUILD_CHAT_UNREAD_SEPARATOR_CLASS);
   });
 
   it("formatChatUnreadSweepLine summarizes unread count for separator (CLIENT-185)", () => {

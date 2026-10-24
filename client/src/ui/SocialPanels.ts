@@ -30,7 +30,9 @@ import {
   formatGuildMemberSecondaryLine,
   GUILD_MEMBER_ONLINE_SUMMARY_CLASS,
   formatGuildMentionDraft,
+  formatGuildRoleGroupCountLabel,
   formatGuildRoleGroupHeaderLabel,
+  formatGuildRoleGroupHeaderLine,
   groupGuildMembersByRole,
   guildRoleChipClass,
   guildRoleGroupDefaultExpanded,
@@ -69,10 +71,12 @@ import {
   chatChannelStorageKey,
   estimateChatUnreadCount,
   findChatUnreadSeparatorIndex,
+  chatUnreadSeparatorDomClassName,
   formatChatUnreadSweepLine,
   type ChatUnreadSummary,
   type ChatUnreadTracker,
   isChatUnreadSeparatorScrolledPast,
+  shouldShowChatUnreadSeparator,
   maxChatMessageSentAtMs,
 } from "@/net/chatUnread";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
@@ -735,12 +739,12 @@ export class SocialPanels {
       }
     }
     const markReadBtn = this.chatPanel.querySelector('[data-role="chat-mark-read"]');
-    markReadBtn?.classList.toggle("hidden", dividerAt < 0);
+    markReadBtn?.classList.toggle("hidden", !shouldShowChatUnreadSeparator(dividerAt));
   }
 
   private buildChatUnreadSeparator(unreadCount: number): HTMLLIElement {
     const li = document.createElement("li");
-    li.className = "chat-unread-separator";
+    li.className = chatUnreadSeparatorDomClassName();
     li.setAttribute("role", "separator");
     const sweep = formatChatUnreadSweepLine(unreadCount);
     li.setAttribute("aria-label", sweep);
@@ -798,10 +802,15 @@ export class SocialPanels {
       toggle.setAttribute("data-role-key", String(group.roleKey));
       toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
       toggle.textContent = formatGuildRoleGroupHeaderLabel(group.label, expanded);
+      toggle.setAttribute(
+        "aria-label",
+        formatGuildRoleGroupHeaderLine(group.label, expanded, group.members.length),
+      );
       const count = document.createElement("span");
       count.className = "guild-role-group-count";
       count.setAttribute("data-role", "guild-role-group-count");
-      count.textContent = String(group.members.length);
+      count.setAttribute("aria-hidden", "true");
+      count.textContent = formatGuildRoleGroupCountLabel(group.members.length);
       head.append(toggle, count);
       ul.appendChild(head);
       if (!expanded) continue;

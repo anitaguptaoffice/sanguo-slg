@@ -744,10 +744,12 @@ describe("SocialPanels chat & guild", () => {
     expect(mount.querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')?.textContent).toContain(
       "官员",
     );
+    const officerToggle = mount.querySelector(
+      '[data-action="toggle-guild-role-group"][data-role-key="2"]',
+    );
+    expect(officerToggle?.getAttribute("aria-label")).toBe("▶ 官员 · 1 人");
     expect(
-      mount.querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')?.parentElement?.querySelector(
-        '[data-role="guild-role-group-count"]',
-      )?.textContent,
+      officerToggle?.parentElement?.querySelector('[data-role="guild-role-group-count"]')?.textContent,
     ).toBe("1");
     mount
       .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
@@ -797,6 +799,7 @@ describe("SocialPanels chat & guild", () => {
     await flushPromises();
     const separator = mount.querySelector(".chat-unread-separator");
     expect(separator).toBeTruthy();
+    expect(separator?.classList.contains("guild-chat-unread-separator")).toBe(true);
     expect(separator?.textContent).toBe("1 条未读");
     expect(mount.querySelector('[data-role="chat-mark-read"]')?.classList.contains("hidden")).toBe(
       false,

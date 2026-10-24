@@ -65,6 +65,9 @@ export const CHAT_INPUT_COUNTER_SELECTOR = `[data-role="${CHAT_INPUT_COUNTER_ROL
 /** CLIENT-185: unread separator inside chat log (CLIENT-161 前身 `chat-unread-divider`). */
 export const CHAT_UNREAD_SEPARATOR_CLASS = "chat-unread-separator";
 export const CHAT_UNREAD_SEPARATOR_SELECTOR = `.${CHAT_UNREAD_SEPARATOR_CLASS}`;
+/** CLIENT-234: guild/chat unread separator skim class (paired on same `<li>`). */
+export const GUILD_CHAT_UNREAD_SEPARATOR_CLASS = "guild-chat-unread-separator";
+export const GUILD_CHAT_UNREAD_SEPARATOR_SELECTOR = `.${GUILD_CHAT_UNREAD_SEPARATOR_CLASS}`;
 /** @deprecated CLIENT-185 起请用 `CHAT_UNREAD_SEPARATOR_CLASS`。 */
 export const CHAT_UNREAD_DIVIDER_CLASS = CHAT_UNREAD_SEPARATOR_CLASS;
 /** @deprecated CLIENT-185 起请用 `CHAT_UNREAD_SEPARATOR_SELECTOR`。 */

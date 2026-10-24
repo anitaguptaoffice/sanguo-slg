@@ -3215,6 +3215,7 @@
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-input-counter,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] [data-role="chat-input-counter"],
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-unread-separator,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-unread-separator,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-draft {
         min-width: 0; max-width: 100%; flex-shrink: 0; overflow-x: hidden;
       }
@@ -3484,7 +3485,8 @@
         font-size: 11px; line-height: 1.35; color: #b8a88a;
         margin: 4px 0 6px; overflow-wrap: anywhere; min-width: 0;
       }
-      /* CLIENT-185 chat-unread-separator 基础样式见上文 */
+      /* CLIENT-185 chat-unread-separator 基础样式见上文；CLIENT-234 guild-chat-unread-separator 同节点挂载 */
+      .guild-chat-unread-separator { min-width: 0; max-width: 100%; }
       #layout-frame.layout-narrow .main-city-slot-overlay-wrap {
         display: block; pointer-events: auto;
       }
@@ -3514,6 +3516,7 @@
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-members li.guild-role-group-header,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-role-group-toggle,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.chat-unread-separator,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-separator,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.chat-unread-divider {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere;
       }

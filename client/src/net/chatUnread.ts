@@ -113,6 +113,19 @@ export function findChatUnreadSeparatorIndex(
 /** @deprecated CLIENT-185 起请用 `findChatUnreadSeparatorIndex`。 */
 export const chatUnreadDividerFlatIndex = findChatUnreadSeparatorIndex;
 
+/** CLIENT-234：军团/聊天列表未读分隔线语义 class（与 CLIENT-185 `chat-unread-separator` 并存）。 */
+export const GUILD_CHAT_UNREAD_SEPARATOR_CLASS = "guild-chat-unread-separator";
+
+/** DOM `className`：基础分隔线 + CLIENT-234 扫读 class。 */
+export function chatUnreadSeparatorDomClassName(): string {
+  return `chat-unread-separator ${GUILD_CHAT_UNREAD_SEPARATOR_CLASS}`;
+}
+
+/** 是否在消息列表中插入未读分隔线（与「标为已读」钮可见性同口径）。 */
+export function shouldShowChatUnreadSeparator(dividerAt: number): boolean {
+  return Number.isFinite(dividerAt) && dividerAt >= 0;
+}
+
 /** CLIENT-185：未读分隔线居中摘要（条数与 CLIENT-162 角标 `estimateChatUnreadCount` 同口径）。 */
 export function formatChatUnreadSweepLine(unreadCount: number): string {
   const n = Number.isFinite(unreadCount) ? Math.max(0, Math.trunc(unreadCount)) : 0;

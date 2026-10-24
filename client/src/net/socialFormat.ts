@@ -173,6 +173,26 @@ export function formatGuildRoleGroupHeaderLabel(label: string, expanded: boolean
   return `${expanded ? "▼" : "▶"} ${title}`;
 }
 
+function guildRoleGroupMemberCount(memberCount: number): number {
+  const n = Number.isFinite(memberCount) ? memberCount : 0;
+  return Math.max(0, Math.trunc(n));
+}
+
+/** CLIENT-234：职务分组头扫读整行（折叠符 + 职务 + 只读人数，无新 RPC）。 */
+export function formatGuildRoleGroupHeaderLine(
+  label: string,
+  expanded: boolean,
+  memberCount: number,
+): string {
+  const n = guildRoleGroupMemberCount(memberCount);
+  return `${formatGuildRoleGroupHeaderLabel(label, expanded)} · ${n} 人`;
+}
+
+/** CLIENT-234：`guild-role-group-count` chip 只读人数（与 `formatGuildRoleGroupHeaderLine` 同口径）。 */
+export function formatGuildRoleGroupCountLabel(memberCount: number): string {
+  return String(guildRoleGroupMemberCount(memberCount));
+}
+
 /** 按职务分组（组内已按 sortGuildMembers 排序）；空输入返回空数组。 */
 export function groupGuildMembersByRole<T extends GuildMemberRow>(members: T[]): GuildMembersByRoleGroup<T>[] {
   const sorted = sortGuildMembers(members);
