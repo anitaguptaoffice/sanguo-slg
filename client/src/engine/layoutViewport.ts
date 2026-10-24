@@ -188,3 +188,13 @@ export {
   BATTLE_REPORT_OUTCOME_BAND_SELECTOR,
   MINIMAP_BATTLE_REPLAY_PULSE_SELECTOR,
 } from "@/engine/wave35WorldIntelBattleReportMailDailyNarrowManifest";
+
+/** CLIENT-203: wave:36 主城队列·将领养成·社交·HUD 深链组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_203_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client203NarrowManifestCenterPanelId,
+  WAVE36_MAIN_CITY_QUEUE_HERO_SOCIAL_HUD_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  QUEUE_ROW_ETA_LINE_SELECTOR,
+  HUD_CENTER_PANEL_DEEPLINK_LINE_SELECTOR,
+  CENTER_PANEL_TAB_PULSE_SELECTOR,
+} from "@/engine/wave36MainCityQueueHeroSocialHudNarrowManifest";
