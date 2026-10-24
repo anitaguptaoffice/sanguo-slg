@@ -25,8 +25,10 @@ import {
   CHAT_CHANNEL_PRIVATE,
   CHAT_CHANNEL_WORLD,
   chatChannelLabel,
+  formatGuildMemberOnlineSummaryLine,
   formatGuildMemberPrimaryNick,
   formatGuildMemberSecondaryLine,
+  GUILD_MEMBER_ONLINE_SUMMARY_CLASS,
   formatGuildMentionDraft,
   formatGuildRoleGroupHeaderLabel,
   groupGuildMembersByRole,
@@ -107,6 +109,11 @@ import {
 } from "@/net/chatSendValidation";
 import { persistGuildChatDraft, restoreGuildChatDraft } from "@/net/guildChatDraft";
 import {
+  formatGuildChatGatewayBackoffErrorLine,
+  guildChatGatewayBackoffSeconds,
+  renderGuildChatBackoffGatewayErrorListRow,
+} from "@/net/guildChatGatewayBackoff";
+import {
   formatRankRefreshCooldownStamp,
   RANK_REFRESH_COOLDOWN_STAMP_ROLE,
   rankRefreshCooldownRemainingMs,
@@ -137,7 +144,10 @@ export class SocialPanels {
     guild: { lastUpdatedMs: 0, stale: false },
   };
   private chatListError = "";
+  private chatListGatewayFailureCount = 0;
   private guildListError = "";
+  private guildMemberTotalCount = 0;
+  private guildMemberOnlineCountHint: number | undefined;
   private rankListError: string | null = null;
   private guildMembersCache: GuildMemberRow[] = [];
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
@@ -529,6 +539,7 @@ export class SocialPanels {
         <span class="social-refresh-spinner" data-role="guild-refresh-spinner" hidden></span>
         <span data-role="guild-refresh-status-text"></span>
       </p>
+      <p class="${GUILD_MEMBER_ONLINE_SUMMARY_CLASS} hidden" data-role="guild-member-online-summary" aria-live="polite"></p>
       <div class="panel-scroll-body" data-role="guild-scroll">
         <ul class="guild-members" data-role="guild-members"></ul>
       </div>
@@ -638,6 +649,7 @@ export class SocialPanels {
           limit: 30,
         })) as { messages?: ChatMessageRow[] };
         this.chatListError = "";
+        this.chatListGatewayFailureCount = 0;
         const messages = res.messages ?? [];
         this.renderChatLog(messages, ch);
         this.pushChatSnapshot(ch, messages);
@@ -650,7 +662,10 @@ export class SocialPanels {
         });
         this.onStatus("聊天已刷新");
       } catch (e) {
-        const msg = formatGuildChatPanelGatewayListError("chat", e);
+        this.chatListGatewayFailureCount += 1;
+        const base = formatGuildChatPanelGatewayListError("chat", e);
+        const backoffSec = guildChatGatewayBackoffSeconds(this.chatListGatewayFailureCount);
+        const msg = formatGuildChatGatewayBackoffErrorLine(base, backoffSec);
         this.chatListError = msg;
         this.renderChatLog([], ch);
         this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", {
@@ -684,10 +699,11 @@ export class SocialPanels {
     const groups = groupChatMessagesByLocalDay(messages);
     if (groups.length === 0) {
       if (this.chatListError) {
-        renderPanelGatewayErrorListRow(ul, this.chatListError, {
+        const backoffSec = guildChatGatewayBackoffSeconds(this.chatListGatewayFailureCount);
+        renderGuildChatBackoffGatewayErrorListRow(ul, this.chatListError, {
           legacyClass: socialChatEmptyListClass(),
           retryAction: "retry-refresh-chat",
-          retryClass: GUILD_CHAT_RETRY_INLINE_CLASS,
+          backoffSeconds: backoffSec,
         });
         return;
       }
@@ -744,6 +760,9 @@ export class SocialPanels {
     ul.innerHTML = "";
     if (!this.guildId) {
       this.guildMembersCache = [];
+      this.guildMemberTotalCount = 0;
+      this.guildMemberOnlineCountHint = undefined;
+      this.syncGuildMemberOnlineSummary();
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
       li.textContent = formatGuildPanelEmptyHint("guildMembers", { guildJoined: false });
@@ -767,6 +786,7 @@ export class SocialPanels {
       return;
     }
     this.guildMembersCache = members;
+    this.syncGuildMemberOnlineSummary();
     for (const group of groupGuildMembersByRole(members)) {
       const expanded = this.isGuildRoleGroupExpanded(group.roleKey);
       const head = document.createElement("li");
@@ -944,6 +964,30 @@ export class SocialPanels {
   private syncGuildSummary(): void {
     const p = this.guildPanel.querySelector('[data-role="guild-summary"]');
     if (p) p.textContent = formatGuildSummaryText(this.guildId, this.guildName);
+    this.syncGuildMemberOnlineSummary();
+  }
+
+  private syncGuildMemberOnlineSummary(): void {
+    const el = this.guildPanel.querySelector('[data-role="guild-member-online-summary"]');
+    if (!el) return;
+    if (!this.guildId) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
+    }
+    const hasMembers = this.guildMembersCache.length > 0;
+    const hasTotals = this.guildMemberTotalCount > 0 || this.guildMemberOnlineCountHint !== undefined;
+    if (!hasMembers && !hasTotals) {
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
+    }
+    el.textContent = formatGuildMemberOnlineSummaryLine({
+      members: this.guildMembersCache,
+      totalCount: this.guildMemberTotalCount || this.guildMembersCache.length,
+      onlineCount: this.guildMemberOnlineCountHint,
+    });
+    el.classList.remove("hidden");
   }
 
   private async refreshMembers(): Promise<void> {
@@ -959,19 +1003,21 @@ export class SocialPanels {
       this.onStatus("拉取成员…");
       try {
         const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
-          guild?: { name?: string };
-          members?: {
-            player_id?: number;
-            display_name?: string;
-            role?: number;
-            power?: number;
-            joined_at_ms?: number;
-          }[];
+          guild?: { name?: string; member_count?: number; online_count?: number };
+          members?: GuildMemberRow[];
+          total_count?: number;
+          online_count?: number;
         };
         if (res.guild?.name) this.guildName = res.guild.name;
+        const members = res.members ?? [];
+        this.guildMemberTotalCount =
+          res.total_count ?? res.guild?.member_count ?? members.length;
+        const onlineHint = res.online_count ?? res.guild?.online_count;
+        this.guildMemberOnlineCountHint =
+          onlineHint !== undefined && onlineHint >= 0 ? onlineHint : undefined;
         this.syncGuildSummary();
         this.guildListError = "";
-        this.renderGuildMembersList(res.members ?? []);
+        this.renderGuildMembersList(members);
         const refreshedAt = Date.now();
         writeSocialPanelLastRefreshMs(GUILD_PANEL_LAST_REFRESH_SESSION_KEY, refreshedAt);
         this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", {

@@ -3,7 +3,9 @@ import {
   chatChannelLabel,
   formatChatDayGroupTitle,
   formatChatLogLine,
+  countGuildMembersOnline,
   formatGuildMemberLine,
+  formatGuildMemberOnlineSummaryLine,
   formatGuildMemberPrimaryNick,
   formatGuildMemberSecondaryLine,
   formatGuildMentionDraft,
@@ -69,6 +71,19 @@ describe("socialFormat", () => {
     expect(formatGuildMentionDraft("虎贲甲")).toBe("@虎贲甲 ");
     expect(formatGuildMentionDraft("  ")).toBe("@? ");
     expect(formatGuildMentionDraft("")).toBe("@? ");
+  });
+
+  it("formatGuildMemberOnlineSummaryLine uses hint or is_online rows (CLIENT-217)", () => {
+    const members = [
+      { display_name: "甲", is_online: true },
+      { display_name: "乙", is_online: false },
+      { display_name: "丙" },
+    ];
+    expect(countGuildMembersOnline(members)).toBe(1);
+    expect(formatGuildMemberOnlineSummaryLine({ members })).toBe("在线 1 / 共 3 人");
+    expect(formatGuildMemberOnlineSummaryLine({ members, totalCount: 10, onlineCount: 6 })).toBe(
+      "在线 6 / 共 10 人",
+    );
   });
 
   it("formats guild summary and member rows", () => {

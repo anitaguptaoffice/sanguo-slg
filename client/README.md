@@ -60,6 +60,8 @@
 
 **CLIENT-200（军团/聊天空错态扫读）**：成员列表与聊天列表 **empty** 走 **CLIENT-053** `social-list-empty` + **`formatGuildPanelEmptyHint`**；首屏拉取 **gateway error** 走 **CLIENT-173** **`formatGuildChatPanelGatewayListError`**（`formatPanelGatewayError` + 「军团：/聊天：」前缀）与行内 **`guild-chat-retry-inline`**（`retry-refresh-members` / `retry-refresh-chat`，同源刷新 handler，无新 guild RPC）。**CLIENT-185** 职务分组头 / 聊天未读分隔线与 **CLIENT-144** 刷新戳记不退化。单测：`socialFormat.test.ts`、`SocialPanels.test.ts`。
 
+**CLIENT-217（军团在线摘要与聊天退避重试）**：成员列表头 **`formatGuildMemberOnlineSummaryLine`** / **`guild-member-online-summary`** 展示在线/总数（`ListGuildMembers` 同源 `total_count` / `online_count` hint 或成员 `is_online` 计数，无新 RPC）；聊天列表 gateway error 在 **CLIENT-200** 文案与 **`guild-chat-retry-inline`** 基础上叠加 **`guild-chat-backoff-retry`**（指数退避秒数 + `重试 (Ns)` 行内钮）。**CLIENT-161** 未读分隔线与空错态不退化。单测：`socialFormat.test.ts`、`guildChatGatewayBackoff.test.ts`、`SocialPanels.test.ts`。
+
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。

@@ -588,7 +588,9 @@ describe("SocialPanels chat & guild", () => {
     await flushPromises();
     const errRow = mount.querySelector('[data-role="chat-log"] [data-panel-state="error"]');
     expect(errRow?.textContent).toContain("聊天：network");
+    expect(errRow?.textContent).toContain("建议 2 秒后重试");
     expect(errRow?.querySelector(".guild-chat-retry-inline")).toBeTruthy();
+    expect(errRow?.querySelector(".guild-chat-backoff-retry")).toBeTruthy();
     expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("刷新失败");
   });
 
@@ -882,6 +884,30 @@ describe("SocialPanels chat & guild", () => {
       guildListErr?.querySelector('[data-action="retry-refresh-members"]'),
     ).toBeTruthy();
     expect(guildListErr?.querySelector(".guild-chat-retry-inline")).toBeTruthy();
+  });
+
+  it("shows guild member online summary after refresh (CLIENT-217)", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      createGuild: vi.fn().mockResolvedValue({ guild: { guild_id: 7001, name: "虎贲营" } }),
+      listGuildMembers: vi.fn().mockResolvedValue({
+        guild: { name: "虎贲营", member_count: 4, online_count: 2 },
+        total_count: 4,
+        members: [
+          { display_name: "甲", role: 1, is_online: true },
+          { display_name: "乙", role: 2, is_online: true },
+        ],
+      }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
+    mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const summary = mount.querySelector('[data-role="guild-member-online-summary"]');
+    expect(summary?.classList.contains("hidden")).toBe(false);
+    expect(summary?.textContent).toBe("在线 2 / 共 4 人");
   });
 
   it("shows chat refresh gateway error with guild-chat-retry-inline (CLIENT-200)", async () => {
