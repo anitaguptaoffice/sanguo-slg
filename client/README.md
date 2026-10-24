@@ -464,7 +464,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | **募兵提交→募兵队列与军事互跳** | [手动验收（募兵消耗预览 CLIENT-088）](#手动验收募兵消耗预览-client-088) 内 **CLIENT-157**（[#607](https://github.com/anitaguptaoffice/sanguo-slg/issues/607) / [#623](https://github.com/anitaguptaoffice/sanguo-slg/pull/623) `b415fc76`） | 已合 |
 | **战报详情相邻条导航与列表焦点** | [手动验收（战报相邻条导航 CLIENT-158）](#手动验收战报相邻条导航与列表焦点-client-158)（[#608](https://github.com/anitaguptaoffice/sanguo-slg/issues/608) / [#617](https://github.com/anitaguptaoffice/sanguo-slg/pull/617) `f19cada1`） | 已合 |
 | **邮件附件一键批量领取与 HUD 同步** | [手动验收（邮件附件批量领取 CLIENT-087 / CLIENT-159）](#手动验收邮件附件批量领取-client-087--client-159)（[#609](https://github.com/anitaguptaoffice/sanguo-slg/issues/609) / [#622](https://github.com/anitaguptaoffice/sanguo-slg/pull/622) `085e903a`） | 已合 |
-| **军团提到草稿记忆与聊天输入扫读** | [手动验收（军团聊天 CLIENT-084）](#手动验收军团聊天-client-084) 内 **CLIENT-160**（[#610](https://github.com/anitaguptaoffice/sanguo-slg/issues/610) / [#621](https://github.com/anitaguptaoffice/sanguo-slg/pull/621) `7eadaf82`） | 已合 |
+| **军团提到草稿记忆与聊天输入扫读** | [手动验收（军团提到聊天草稿 CLIENT-084）](#手动验收军团提到聊天草稿-client-084) 内 **CLIENT-160**（[#610](https://github.com/anitaguptaoffice/sanguo-slg/issues/610) / [#621](https://github.com/anitaguptaoffice/sanguo-slg/pull/621) `7eadaf82`） | 已合 |
 | **聊天未读角标与列表分隔线扫读** | [手动验收（聊天未读列表扫读 CLIENT-161）](#手动验收聊天未读列表扫读与角标同步-client-161)（[#611](https://github.com/anitaguptaoffice/sanguo-slg/issues/611) / [#619](https://github.com/anitaguptaoffice/sanguo-slg/pull/619) `ce0b3925`） | 已合 |
 | **HUD 待办角标与面板 tab/chip 一致** | [手动验收（HUD 待办与面板 tab/chip 一致 CLIENT-162）](#手动验收hud-待办与面板-tabchip-一致-client-162)（[#612](https://github.com/anitaguptaoffice/sanguo-slg/issues/612) / [#620](https://github.com/anitaguptaoffice/sanguo-slg/pull/620) `3c9c40b2`） | 已合 |
 | **1280 出征募兵战报邮件社交组合 manifest** | [手动验收（1280 wave:31 组合 manifest CLIENT-163）](#手动验收1280-wave31-组合-manifest-client-163)（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613) / [#624](https://github.com/anitaguptaoffice/sanguo-slg/pull/624) `5ffcb5af`） | 已合 |
@@ -474,7 +474,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **美术旁路**（**非** wave:31 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）；**CLIENT-137**（[#556](https://github.com/anitaguptaoffice/sanguo-slg/issues/556) / [#574](https://github.com/anitaguptaoffice/sanguo-slg/pull/574) `36c69009`）；**CLIENT-146**（[#578](https://github.com/anitaguptaoffice/sanguo-slg/issues/578) / [#579](https://github.com/anitaguptaoffice/sanguo-slg/pull/579) `4f5a9732`）；**CLIENT-147**（FILTER-008 旁路）——均 **非**本波 backlog 实现卡。实现卡 **CLIENT-156～163**，**勿占用 CLIENT-136/137/146/147**。
 
-波次总览与 **DOCS-EXIT-023**（[#615](https://github.com/anitaguptaoffice/sanguo-slg/issues/615) 本文 PR）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 31」。实现合入后 main tip **`5ffcb5af031e574f9d5d081c5ceb3a008b3b235d`**（#624 CLIENT-163）；基线 wave:30 **`ad278a7c6bb80e6991306d17c3eb42e58046b336`**（DOCS-EXIT-022 [#604](https://github.com/anitaguptaoffice/sanguo-slg/pull/604) `ad278a7c`）。
+波次总览与 **DOCS-EXIT-023**（[#615](https://github.com/anitaguptaoffice/sanguo-slg/issues/615) / [#625](https://github.com/anitaguptaoffice/sanguo-slg/pull/625)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 31」。实现合入后 main tip **`5ffcb5af031e574f9d5d081c5ceb3a008b3b235d`**（#624 CLIENT-163）；基线 wave:30 **`ad278a7c6bb80e6991306d17c3eb42e58046b336`**（DOCS-EXIT-022 [#604](https://github.com/anitaguptaoffice/sanguo-slg/pull/604) `ad278a7c`）。
 
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
