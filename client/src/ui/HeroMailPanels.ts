@@ -291,6 +291,23 @@ import {
   type HotelRecruitPoolMeta,
 } from "@/net/hotelRecruitState";
 import {
+  renderCaptiveHeroList,
+  setCaptiveHeroFormError,
+  syncCaptiveListRefreshButton,
+  syncCaptiveReleaseButton,
+  syncCaptiveSummonButton,
+  syncCaptiveSummonPreview,
+} from "@/net/captiveHeroPanel";
+import {
+  canAffordCaptiveSummon,
+  filterCaptivesForCity,
+  formatCaptiveHeroGatewayError,
+  parseListCaptiveHeroesResponse,
+  parseTrySummonCaptiveResponse,
+  type CaptiveHeroRow,
+  type CaptiveSummonPreview,
+} from "@/net/captiveHeroState";
+import {
   pickRestoredHeroId,
   readHeroDetailSelectedSession,
   writeHeroDetailSelectedSession,
@@ -424,6 +441,14 @@ export class HeroMailPanels {
   private hotelListInflight = false;
   private hotelRefreshInflight = false;
   private hotelRecruitInflight = false;
+  private captiveHeroesAll: CaptiveHeroRow[] = [];
+  private captiveHeroes: CaptiveHeroRow[] = [];
+  private selectedCaptiveHeroId = 0;
+  private captiveSummonPreview: CaptiveSummonPreview | null = null;
+  private captiveListInflight = false;
+  private captiveTryInflight = false;
+  private captiveSummonInflight = false;
+  private captiveReleaseInflight = false;
   private heroesRefreshInflight = false;
   private heroListLastRefreshedAtMs = 0;
   /** CLIENT-199：自列表打开详情时保留筛选摘要；返回列表后清空。 */
@@ -519,6 +544,7 @@ export class HeroMailPanels {
     this.renderTemplateList();
     this.renderHeroList();
     this.syncHotelRecruitUi();
+    this.syncCaptiveHeroUi();
   }
 
   private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
@@ -633,6 +659,7 @@ export class HeroMailPanels {
       void this.refreshRecruitTemplates();
       void this.refreshHeroes({ restoreSelection: true });
       void this.refreshHotelCandidates();
+      void this.refreshCaptiveHeroes();
     }
     this.syncHeroPanelFocusTrap();
   }
@@ -1036,6 +1063,175 @@ export class HeroMailPanels {
     }
   }
 
+  private selectedCaptiveHero(): CaptiveHeroRow | undefined {
+    return this.captiveHeroes.find((c) => c.hero_id === this.selectedCaptiveHeroId);
+  }
+
+  private applyCaptiveListPayload(res: unknown, opts?: { keepSelection?: boolean }): void {
+    this.captiveHeroesAll = parseListCaptiveHeroesResponse(res);
+    const cityId = this.cityId();
+    this.captiveHeroes = filterCaptivesForCity(this.captiveHeroesAll, cityId);
+    if (
+      !opts?.keepSelection ||
+      !this.captiveHeroes.some((c) => c.hero_id === this.selectedCaptiveHeroId)
+    ) {
+      this.selectedCaptiveHeroId = this.captiveHeroes[0]?.hero_id ?? 0;
+    }
+    this.captiveSummonPreview = null;
+    this.syncCaptiveHeroUi();
+    if (this.selectedCaptiveHeroId > 0) void this.prefetchCaptiveSummonPreview();
+  }
+
+  private syncCaptiveHeroUi(): void {
+    const { wallet, bag } = this.sessionEconomy();
+    renderCaptiveHeroList(this.heroPanel, this.captiveHeroes, this.selectedCaptiveHeroId);
+    syncCaptiveSummonPreview(
+      this.heroPanel,
+      this.selectedCaptiveHero(),
+      this.captiveSummonPreview,
+      wallet,
+      bag,
+    );
+    const afford = canAffordCaptiveSummon(this.captiveSummonPreview, wallet, bag);
+    syncCaptiveListRefreshButton(this.heroPanel, this.captiveListInflight);
+    syncCaptiveSummonButton(
+      this.heroPanel,
+      this.captiveSummonInflight,
+      this.captiveTryInflight,
+      afford.ok && (this.selectedCaptiveHeroId ?? 0) > 0,
+    );
+    syncCaptiveReleaseButton(
+      this.heroPanel,
+      this.captiveReleaseInflight,
+      (this.selectedCaptiveHeroId ?? 0) > 0,
+    );
+  }
+
+  private async refreshCaptiveHeroes(): Promise<void> {
+    if (this.captiveListInflight) return;
+    const sid = this.serverId();
+    const cityId = this.cityId();
+    if (!cityId) {
+      setCaptiveHeroFormError(this.heroPanel, "尚未进入城池，无法拉取俘虏列表");
+      return;
+    }
+    this.captiveListInflight = true;
+    setCaptiveHeroFormError(this.heroPanel, null);
+    this.syncCaptiveHeroUi();
+    this.onStatus("拉取俘虏列表…");
+    try {
+      const res = await this.gateway.listCaptiveHeroes(sid);
+      this.applyCaptiveListPayload(res);
+      this.onStatus(`俘虏 ${this.captiveHeroes.length} 名（本城）`);
+    } catch (e) {
+      const msg = formatCaptiveHeroGatewayError(e);
+      setCaptiveHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.captiveListInflight = false;
+      this.syncCaptiveHeroUi();
+    }
+  }
+
+  private async prefetchCaptiveSummonPreview(): Promise<void> {
+    const captive = this.selectedCaptiveHero();
+    const heroId = captive?.hero_id ?? 0;
+    const cityId = captive?.city_id || this.cityId();
+    if (!heroId || !cityId) return;
+    if (this.captiveTryInflight) return;
+    this.captiveTryInflight = true;
+    this.captiveSummonPreview = null;
+    this.syncCaptiveHeroUi();
+    const sid = this.serverId();
+    try {
+      const res = await this.gateway.trySummonCaptive(sid, cityId, heroId);
+      this.captiveSummonPreview = parseTrySummonCaptiveResponse(res);
+    } catch (e) {
+      const msg = formatCaptiveHeroGatewayError(e);
+      setCaptiveHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.captiveTryInflight = false;
+      this.syncCaptiveHeroUi();
+    }
+  }
+
+  private async confirmCaptiveSummon(): Promise<void> {
+    if (this.captiveSummonInflight) return;
+    const captive = this.selectedCaptiveHero();
+    const { wallet, bag } = this.sessionEconomy();
+    const afford = canAffordCaptiveSummon(this.captiveSummonPreview, wallet, bag);
+    if (!afford.ok) {
+      setCaptiveHeroFormError(this.heroPanel, afford.reason ?? "无法招降");
+      this.onStatus(afford.reason ?? "无法招降");
+      return;
+    }
+    const sid = this.serverId();
+    const cityId = captive?.city_id || this.cityId();
+    const heroId = captive?.hero_id ?? 0;
+    if (!cityId || !heroId) {
+      setCaptiveHeroFormError(this.heroPanel, "请先选择俘虏");
+      return;
+    }
+    this.captiveSummonInflight = true;
+    setCaptiveHeroFormError(this.heroPanel, null);
+    this.syncCaptiveHeroUi();
+    this.onStatus(`招降 ${captive?.display_name ?? "俘虏"}…`);
+    try {
+      const res = (await this.gateway.sureSummonCaptive(sid, cityId, heroId)) as {
+        hero_id?: number;
+        display_name?: string;
+      };
+      await this.syncEconomyAfterRecruit();
+      if (res.hero_id) {
+        this.selectedHeroId = res.hero_id;
+        writeHeroDetailSelectedSession(res.hero_id);
+      }
+      await this.refreshHeroes();
+      if (res.hero_id) focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
+      const listRes = await this.gateway.listCaptiveHeroes(sid);
+      this.applyCaptiveListPayload(listRes, { keepSelection: false });
+      const name = res.display_name?.trim() || captive?.display_name || "新将领";
+      this.onStatus(`已招降 ${name}${res.hero_id ? `（#${res.hero_id}）` : ""}`);
+    } catch (e) {
+      const msg = formatCaptiveHeroGatewayError(e);
+      setCaptiveHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.captiveSummonInflight = false;
+      this.syncCaptiveHeroUi();
+    }
+  }
+
+  private async releaseSelectedCaptive(): Promise<void> {
+    if (this.captiveReleaseInflight) return;
+    const captive = this.selectedCaptiveHero();
+    const sid = this.serverId();
+    const cityId = captive?.city_id || this.cityId();
+    const heroId = captive?.hero_id ?? 0;
+    if (!cityId || !heroId) {
+      setCaptiveHeroFormError(this.heroPanel, "请先选择俘虏");
+      return;
+    }
+    this.captiveReleaseInflight = true;
+    setCaptiveHeroFormError(this.heroPanel, null);
+    this.syncCaptiveHeroUi();
+    this.onStatus(`释放 ${captive?.display_name ?? "俘虏"}…`);
+    try {
+      await this.gateway.releaseCaptive(sid, cityId, heroId);
+      const listRes = await this.gateway.listCaptiveHeroes(sid);
+      this.applyCaptiveListPayload(listRes, { keepSelection: false });
+      this.onStatus(`已释放 ${captive?.display_name ?? "俘虏"}`);
+    } catch (e) {
+      const msg = formatCaptiveHeroGatewayError(e);
+      setCaptiveHeroFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.captiveReleaseInflight = false;
+      this.syncCaptiveHeroUi();
+    }
+  }
+
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
@@ -1070,6 +1266,15 @@ export class HeroMailPanels {
         <button type="button" data-action="recruit-hotel-candidate">招入麾下</button>
         <p class="march-form-error-sibling hidden" data-role="hotel-recruit-form-error" role="alert"></p>
         <ul class="hotel-candidate-list template-list" data-role="hotel-candidate-list"></ul>
+      </section>
+      <section class="captive-hero-section" data-role="captive-hero-section" aria-label="俘虏招降">
+        <h4>俘虏招降</h4>
+        <button type="button" data-action="refresh-captive-list">拉取俘虏列表</button>
+        <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
+        <button type="button" data-action="captive-summon-confirm">确认招降</button>
+        <button type="button" data-action="captive-release">释放俘虏</button>
+        <p class="march-form-error-sibling hidden" data-role="captive-hero-form-error" role="alert"></p>
+        <ul class="captive-hero-list template-list" data-role="captive-hero-list"></ul>
       </section>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
@@ -2900,6 +3105,18 @@ export class HeroMailPanels {
       }
       return;
     }
+    const captiveLi = (ev.target as HTMLElement).closest("li.captive-hero-row[data-captive-id]");
+    if (captiveLi && !btn) {
+      const id = Number(captiveLi.getAttribute("data-captive-id"));
+      if (id > 0) {
+        this.selectedCaptiveHeroId = id;
+        setCaptiveHeroFormError(this.heroPanel, null);
+        this.captiveSummonPreview = null;
+        this.syncCaptiveHeroUi();
+        void this.prefetchCaptiveSummonPreview();
+      }
+      return;
+    }
     const li = (ev.target as HTMLElement).closest("li[data-hero-id]");
     if (li && !btn) {
       const id = Number(li.getAttribute("data-hero-id"));
@@ -2939,6 +3156,9 @@ export class HeroMailPanels {
     if (a === "refresh-hotel-candidates") void this.refreshHotelCandidates();
     if (a === "refresh-hotel-pool") void this.refreshHotelPool();
     if (a === "recruit-hotel-candidate") void this.recruitHotelCandidate();
+    if (a === "refresh-captive-list") void this.refreshCaptiveHeroes();
+    if (a === "captive-summon-confirm") void this.confirmCaptiveSummon();
+    if (a === "captive-release") void this.releaseSelectedCaptive();
     if (a === "recruit-hero") void this.recruitHero();
     if (a === "recruit-open-hero-detail") {
       const heroId = Number(btn.getAttribute("data-hero-id"));

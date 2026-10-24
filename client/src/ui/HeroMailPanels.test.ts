@@ -2454,6 +2454,94 @@ describe("HeroMailPanels", () => {
     expect(markPlayerMailRead).toHaveBeenCalledWith(1, 9);
   });
 
+  describe("captive summon panel (CLIENT-hero-captive-001)", () => {
+    it("loads captives when opening hero panel and runs try/sure summon flow", async () => {
+      const mount = document.createElement("div");
+      const listCaptiveHeroes = vi.fn().mockResolvedValue({
+        captives: [
+          {
+            hero_id: 55,
+            city_id: 1,
+            display_name: "吕布",
+            level: 8,
+            loyalty: 20,
+            attributes: { force: 95, intel: 30, politics: 10, command: 88 },
+          },
+        ],
+      });
+      const trySummonCaptive = vi.fn().mockResolvedValue({
+        hero_id: 55,
+        gold_cost: 800,
+        items: [{ item_cfg_id: 2050, quantity: 1 }],
+        summary: "招降吕布需要黄金800，道具2050×1。",
+      });
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listCaptiveHeroes,
+        trySummonCaptive,
+        sureSummonCaptive: vi.fn().mockResolvedValue({
+          hero_id: 99,
+          display_name: "吕布",
+          level: 8,
+          loyalty: 70,
+        }),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const session = (): MainCitySession => ({
+        ...sessionBase(),
+        wallet: { gold: 5000 },
+        bag: [{ item_cfg_id: 2050, quantity: 3 }],
+      });
+      const panels = new HeroMailPanels(mount, gateway, session, () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      expect(listCaptiveHeroes).toHaveBeenCalledWith(1);
+      expect(trySummonCaptive).toHaveBeenCalledWith(1, 1, 55);
+      const preview = mount.querySelector('[data-role="captive-hero-preview"]');
+      expect(preview?.textContent).toContain("黄金800");
+      const summonBtn = mount.querySelector('[data-action="captive-summon-confirm"]') as HTMLButtonElement;
+      expect(summonBtn.disabled).toBe(false);
+      summonBtn.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(gateway.sureSummonCaptive).toHaveBeenCalledWith(1, 1, 55);
+      expect(gateway.listPlayerHeroes).toHaveBeenCalled();
+    });
+
+    it("shows readable error for capacity full on sure summon", async () => {
+      const mount = document.createElement("div");
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listCaptiveHeroes: vi.fn().mockResolvedValue({
+          captives: [{ hero_id: 2, city_id: 1, display_name: "张辽", level: 5 }],
+        }),
+        trySummonCaptive: vi.fn().mockResolvedValue({
+          hero_id: 2,
+          gold_cost: 0,
+          items: [],
+          summary: "招降张辽免费。",
+        }),
+        sureSummonCaptive: vi.fn().mockRejectedValue(new Error("hero: hero capacity full (office level)")),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      mount.querySelector('[data-action="captive-summon-confirm"]')?.dispatchEvent(
+        new Event("click", { bubbles: true }),
+      );
+      await flushPromises();
+      expect(mount.querySelector('[data-role="captive-hero-form-error"]')?.textContent).toContain(
+        "招贤馆容量已满",
+      );
+    });
+  });
+
   describe("hotel recruit pool (CLIENT-hero-hotel-001)", () => {
     it("loads hotel candidates when opening hero panel and shows capacity meta", async () => {
       const mount = document.createElement("div");
