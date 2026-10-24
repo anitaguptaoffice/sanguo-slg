@@ -31,6 +31,10 @@ import {
   type RecruitQueueEntry,
 } from "@/net/queueState";
 import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
+import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -54,6 +58,8 @@ export class QueuePanels {
   private highlightedBuildSlotKey: string | null = null;
   private buildCompleteTodoSlots: string[] = [];
   private readonly completePulseSlots = new Set<string>();
+  private buildListLoading = false;
+  private buildListError: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -279,17 +285,29 @@ export class QueuePanels {
     recruitUl.innerHTML = "";
     this.militarySection.classList.toggle("hidden", recruitLines.length === 0);
 
+    if (this.buildListLoading) {
+      renderPanelStateListRow(buildUl, "loading", PANEL_STATE_LOADING_MESSAGE);
+      return;
+    }
+
+    if (this.buildListError) {
+      renderPanelStateListRow(buildUl, "error", this.buildListError, {
+        legacyClass: "queue-list-empty",
+      });
+      return;
+    }
+
     if (!buildRows.length && !recruitLines.length && !completeSlots.length) {
-      const li = document.createElement("li");
-      li.textContent = "（当前无排队中的升级或募兵）";
-      buildUl.appendChild(li);
+      renderPanelStateListRow(buildUl, "empty", "（当前无排队中的升级或募兵）", {
+        legacyClass: "queue-list-empty",
+      });
       return;
     }
 
     if (!buildRows.length && !completeSlots.length) {
-      const li = document.createElement("li");
-      li.textContent = "（当前无排队中的内政升级）";
-      buildUl.appendChild(li);
+      renderPanelStateListRow(buildUl, "empty", "（当前无排队中的内政升级）", {
+        legacyClass: "queue-list-empty",
+      });
     }
 
     const dailyRows = this.getDailyChainRows?.() ?? [];
@@ -404,6 +422,9 @@ export class QueuePanels {
   private async refreshCityState(): Promise<void> {
     const session = this.getSession();
     if (!session) return;
+    this.buildListLoading = true;
+    this.buildListError = null;
+    this.render();
     try {
       const state = (await this.gateway.getCityState(session.cityId)) as {
         buildings?: CityBuilding[];
@@ -414,9 +435,12 @@ export class QueuePanels {
       if (state.wallet) session.wallet = state.wallet;
       if (state.production_rates) session.productionRates = state.production_rates;
       this.onAfterCityRefresh();
+    } catch (e) {
+      this.buildListError = gatewayErrorMessage(e);
+      this.setPanelStatus(this.buildListError);
+    } finally {
+      this.buildListLoading = false;
       this.render();
-    } catch {
-      /* ignore */
     }
   }
 

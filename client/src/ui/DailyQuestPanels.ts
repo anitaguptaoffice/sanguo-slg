@@ -51,6 +51,10 @@ import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { mountFilterUiSkins } from "@/engine/artUiFilterSkin";
 import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
+import {
   dailyQuestClaimableBadgeCount,
   shouldShowDailyQuestClaimableFilterBadge,
 } from "@/net/dailyQuestFilterUi";
@@ -65,6 +69,8 @@ export class DailyQuestPanels {
   private rows: DailyQuestRow[] = [];
   private selectedCfgId = 0;
   private listFilter: DailyQuestListFilter = "all";
+  private listLoading = false;
+  private listError: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -287,14 +293,28 @@ export class DailyQuestPanels {
     this.updateFilterButtons();
     this.renderStateSummary();
     ul.innerHTML = "";
+    if (this.listLoading && !this.rows.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
+        assets: this.assets,
+      });
+      return;
+    }
+    if (this.listError && !this.rows.length) {
+      renderPanelStateListRow(ul, "error", this.listError, {
+        legacyClass: "daily-quest-list-empty",
+        assets: this.assets,
+      });
+      return;
+    }
     const displayRows = this.visibleRows();
     if (!displayRows.length) {
-      const li = document.createElement("li");
-      li.className = "daily-quest-list-empty";
-      li.textContent = this.rows.length
+      const msg = this.rows.length
         ? dailyQuestListEmptyMessage(this.listFilter)
         : dailyQuestListEmptyMessage("all");
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, "empty", msg, {
+        legacyClass: "daily-quest-list-empty",
+        assets: this.assets,
+      });
     } else {
       const now = Date.now();
       const slotLabels = this.queueSlotLabels ?? {};
@@ -396,6 +416,9 @@ export class DailyQuestPanels {
     pickMode: "default" | "todo-badge" | "center-claimable" = "default",
   ): Promise<void> {
     const sid = this.serverId();
+    this.listLoading = true;
+    this.listError = null;
+    this.renderList();
     this.onStatus("拉取日常…");
     try {
       const res = await this.gateway.listPlayerQuests(sid, {
@@ -420,7 +443,14 @@ export class DailyQuestPanels {
       this.renderList();
       this.onStatus(`日常 ${this.rows.length} 条`);
     } catch (e) {
-      this.onStatus((e as Error).message);
+      const msg = (e as Error).message || "日常列表加载失败，请点「刷新列表」重试";
+      this.listError = msg;
+      this.rows = [];
+      this.renderList();
+      this.onStatus(msg);
+    } finally {
+      this.listLoading = false;
+      this.renderList();
     }
   }
 

@@ -16,7 +16,12 @@ import {
   marchListCompactClass,
   marchListEmptyClass,
   marchListEmptyMessage,
+  marchListLoadErrorListHint,
 } from "@/net/panelDensity";
+import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
 import {
   clearMarchHighlightSession,
   MARCH_ROW_RECENT_CLASS,
@@ -73,6 +78,7 @@ export class MarchListPanel {
   private panel!: HTMLElement;
   private marches: MarchSummary[] = [];
   private listError = "";
+  private listLoading = false;
   private listPollTimer: ReturnType<typeof setInterval> | null = null;
   private remainingTickTimer: ReturnType<typeof setInterval> | null = null;
   private readonly pollIntervalMs: number;
@@ -387,12 +393,29 @@ export class MarchListPanel {
     const statusEl = this.panel.querySelector('[data-role="march-list-status"]');
     if (!ul) return;
 
-    if (statusEl) statusEl.textContent = this.listError;
+    if (statusEl) {
+      statusEl.textContent = this.listLoading
+        ? PANEL_STATE_LOADING_MESSAGE
+        : this.listError;
+    }
 
     ul.innerHTML = "";
     ul.classList.remove(marchListCompactClass());
 
-    if (this.listError) return;
+    if (this.listLoading && !this.marches.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
+        assets: this.assets,
+      });
+      return;
+    }
+
+    if (this.listError && !this.marches.length) {
+      renderPanelStateListRow(ul, "error", marchListLoadErrorListHint(), {
+        legacyClass: marchListEmptyClass(),
+        assets: this.assets,
+      });
+      return;
+    }
 
     const filter = this.resolveDestFilter();
     const destFiltered =
@@ -403,21 +426,25 @@ export class MarchListPanel {
     const visible = applyMilitaryListClientFilters(destFiltered, this.listFilter, now);
 
     if (this.destFilterMode === "world" && filter == null && this.marches.length) {
-      const li = document.createElement("li");
-      li.className = marchListEmptyClass();
-      li.textContent = "请在「世界」面板点选城池格，或切换为「全部」/「手动格点」筛选";
-      ul.appendChild(li);
+      renderPanelStateListRow(
+        ul,
+        "empty",
+        "请在「世界」面板点选城池格，或切换为「全部」/「手动格点」筛选",
+        { legacyClass: marchListEmptyClass(), assets: this.assets },
+      );
       return;
     }
 
     if (filter != null && !visible.length && this.marches.length) {
-      const li = document.createElement("li");
-      li.className = marchListEmptyClass();
       const phaseLabel = militaryListPhaseFilterLabel(this.listFilter.phase);
       const phaseHint =
         this.listFilter.phase !== "all" ? `，阶段「${phaseLabel}」无匹配` : "";
-      li.textContent = `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中${phaseHint}）`;
-      ul.appendChild(li);
+      renderPanelStateListRow(
+        ul,
+        "empty",
+        `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中${phaseHint}）`,
+        { legacyClass: marchListEmptyClass(), assets: this.assets },
+      );
       return;
     }
 
@@ -426,18 +453,20 @@ export class MarchListPanel {
       !visible.length &&
       this.listFilter.phase !== "all"
     ) {
-      const li = document.createElement("li");
-      li.className = marchListEmptyClass();
-      li.textContent = `阶段「${militaryListPhaseFilterLabel(this.listFilter.phase)}」暂无匹配行军（共 ${destFiltered.length} 条）`;
-      ul.appendChild(li);
+      renderPanelStateListRow(
+        ul,
+        "empty",
+        `阶段「${militaryListPhaseFilterLabel(this.listFilter.phase)}」暂无匹配行军（共 ${destFiltered.length} 条）`,
+        { legacyClass: marchListEmptyClass(), assets: this.assets },
+      );
       return;
     }
 
     if (!visible.length) {
-      const li = document.createElement("li");
-      li.className = marchListEmptyClass();
-      li.textContent = marchListEmptyMessage();
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, "empty", marchListEmptyMessage(), {
+        legacyClass: marchListEmptyClass(),
+        assets: this.assets,
+      });
       return;
     }
 
@@ -560,6 +589,8 @@ export class MarchListPanel {
 
   private async refreshList(): Promise<void> {
     this.listError = "";
+    this.listLoading = true;
+    this.renderList();
     this.onStatus("拉取行军…");
     const cityId = this.getCityId();
     const prevSnapshot = this.lastListSnapshot;
@@ -592,6 +623,7 @@ export class MarchListPanel {
     this.syncHighlightFromSession();
     this.tryRestoreMinimapMarchFocus();
     this.onMarchesUpdated?.(this.marches);
+    this.listLoading = false;
     this.renderList();
   }
 
