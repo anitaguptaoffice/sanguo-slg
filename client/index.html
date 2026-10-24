@@ -53,6 +53,13 @@
       .main-city-slot-upgrade-tag.city-slot-pulse {
         animation: city-slot-pulse-keyframes 2s ease-out 1;
       }
+      @keyframes domestic-slot-queue-focus-ring-keyframes {
+        0%, 100% { outline: none; box-shadow: none; }
+        40% { outline: 2px solid #d4a84b; box-shadow: 0 0 10px rgba(212, 168, 75, 0.55); }
+      }
+      .main-city-slot-upgrade-tag.domestic-slot-queue-focus-ring {
+        animation: domestic-slot-queue-focus-ring-keyframes 1.5s ease-out 1;
+      }
       @keyframes city-slot-complete-focus-ring-keyframes {
         0%, 100% { outline: none; box-shadow: none; }
         40% { outline: 2px solid #8fd4a8; box-shadow: 0 0 12px rgba(143, 212, 168, 0.55); }
@@ -1304,6 +1311,13 @@
       }
       .queue-list li.queue-list-row.queue-row-slot-highlight {
         animation: queue-row-slot-highlight-keyframes 2s ease-out 1;
+      }
+      @keyframes domestic-queue-row-focus-ring-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+        40% { box-shadow: inset 0 0 0 2px #d4a84b; background: #2a2418; }
+      }
+      .queue-list li.queue-list-row.domestic-slot-queue-focus-ring {
+        animation: domestic-queue-row-focus-ring-keyframes 1.5s ease-out 1;
       }
       @keyframes queue-row-complete-pulse-keyframes {
         0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
@@ -3415,7 +3429,9 @@
       /* CLIENT-185 chat-unread-separator 基础样式见上文 */
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-pulse,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-complete-focus-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-slot-queue-focus-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-slot-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-queue-focus-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-readonly,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.daily-queue-anchor-highlight,
