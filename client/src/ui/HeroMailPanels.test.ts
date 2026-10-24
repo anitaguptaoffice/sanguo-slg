@@ -2314,4 +2314,92 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector(".mail-inbox-panel")?.classList.contains("hidden")).toBe(false);
     expect(markPlayerMailRead).toHaveBeenCalledWith(1, 9);
   });
+
+  describe("hotel recruit pool (CLIENT-hero-hotel-001)", () => {
+    it("loads hotel candidates when opening hero panel and shows capacity meta", async () => {
+      const mount = document.createElement("div");
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({
+          candidates: [
+            {
+              candidate_id: 11,
+              display_name: "赵武",
+              level: 3,
+              gold_cost: 400,
+              attributes: { force: 40, intel: 30, politics: 20, command: 25 },
+            },
+          ],
+          hotel_level: 2,
+          hero_capacity: 5,
+          hero_owned: 1,
+        }),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      expect(gateway.listHotelRecruitCandidates).toHaveBeenCalledWith(1, 1);
+      const meta = mount.querySelector('[data-role="hotel-recruit-meta"]');
+      expect(meta?.textContent).toContain("将领 1/5");
+      const row = mount.querySelector('li[data-candidate-id="11"]');
+      expect(row?.textContent).toContain("赵武");
+    });
+
+    it("recruit hotel candidate refreshes hero list and shows capacity gate error", async () => {
+      const mount = document.createElement("div");
+      const session = (): MainCitySession => ({
+        ...sessionBase(),
+        wallet: { gold: 5000 },
+      });
+      const listHotelRecruitCandidates = vi.fn().mockResolvedValue({
+        candidates: [{ candidate_id: 3, display_name: "钱文", gold_cost: 10, level: 1 }],
+        hotel_level: 1,
+        hero_capacity: 1,
+        hero_owned: 1,
+      });
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [{ hero_id: 9 }], total_count: 1 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates,
+        recruitHotelCandidate: vi.fn().mockResolvedValue({
+          hero_id: 42,
+          display_name: "钱文",
+          level: 1,
+          loyalty: 70,
+        }),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, session, () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      const recruitBtn = mount.querySelector('[data-action="recruit-hotel-candidate"]') as HTMLButtonElement;
+      expect(recruitBtn.disabled).toBe(true);
+      const capErr = mount.querySelector('[data-role="hotel-recruit-form-error"]');
+      expect(capErr?.classList.contains("hidden")).toBe(true);
+      recruitBtn.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(mount.querySelector('[data-role="hotel-recruit-form-error"]')?.textContent).toContain(
+        "招贤馆容量已满",
+      );
+      listHotelRecruitCandidates.mockResolvedValue({
+        candidates: [{ candidate_id: 3, display_name: "钱文", gold_cost: 10, level: 1 }],
+        hotel_level: 1,
+        hero_capacity: 5,
+        hero_owned: 1,
+      });
+      mount.querySelector('[data-action="refresh-hotel-candidates"]')?.dispatchEvent(
+        new Event("click", { bubbles: true }),
+      );
+      await flushPromises();
+      expect(recruitBtn.disabled).toBe(false);
+      recruitBtn.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(gateway.recruitHotelCandidate).toHaveBeenCalledWith(1, 1, 3);
+      expect(gateway.listPlayerHeroes).toHaveBeenCalled();
+    });
+  });
 });
