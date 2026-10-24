@@ -1,6 +1,6 @@
 # HERO-HOST-1001 slice:0 runtime inventory
 
-tip_sha / runtime_code_sha: `0dab7176596b255fcccb1b5c970655c86407ed28`
+tip_sha / runtime_code_sha: `d078ca9d42e4256b0533b03f707b77e389db4ea3`
 art_head_sha (Draft #983): `eef9514b507c3b21921987ab94232021422bdc2f`
 
 ## Viewport captures

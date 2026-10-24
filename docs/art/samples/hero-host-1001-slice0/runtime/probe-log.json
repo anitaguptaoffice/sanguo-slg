@@ -1,9 +1,9 @@
 {
   "task": "HERO-HOST-1001-SLICE0",
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "0dab7176596b255fcccb1b5c970655c86407ed28",
-  "runtime_code_sha": "0dab7176596b255fcccb1b5c970655c86407ed28",
-  "git_tip_sha": "0dab7176596b255fcccb1b5c970655c86407ed28",
+  "tip_sha": "d078ca9d42e4256b0533b03f707b77e389db4ea3",
+  "runtime_code_sha": "d078ca9d42e4256b0533b03f707b77e389db4ea3",
+  "git_tip_sha": "d078ca9d42e4256b0533b03f707b77e389db4ea3",
   "art_head_sha": "eef9514b507c3b21921987ab94232021422bdc2f",
   "art_asset_ids": [
     "hero.avatar.1001.v1",
@@ -150,5 +150,5 @@
     "Detail bust: float-left 128×160 logical box; name header flows beside/overlap per flex+float.",
     "Production art mount from Draft PR #983 (slice:0); not engineering-placeholder tags."
   ],
-  "captured_at": "2026-10-24T14:00:42.414Z"
+  "captured_at": "2026-10-24T14:04:08.018Z"
 }
