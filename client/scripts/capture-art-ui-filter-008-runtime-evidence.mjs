@@ -20,6 +20,8 @@ const MOCK_HTTP = `http://127.0.0.1:${MOCK_PORT}`;
 const FILTER_CHIP_HIT_MIN = 44;
 const FILTER_CHIP_DISPLAY_W = 72;
 const FILTER_CHIP_DISPLAY_H = 32;
+const FILTER_ROW_SKIN_BAR_HEIGHT = 40;
+const ROW_HEIGHT_TOLERANCE = 0.75;
 const MAX_JPEG_BYTES = 1_000_000;
 
 const VIEWPORTS = [
@@ -159,17 +161,49 @@ async function probeFilterChipsInPanel(page, panelSelector) {
           minHeight: Number.parseFloat(style.minHeight) || 0,
         };
       }
+      function intersectRects(a, b) {
+        const left = Math.max(a.left, b.left);
+        const top = Math.max(a.top, b.top);
+        const right = Math.min(a.right, b.right);
+        const bottom = Math.min(a.bottom, b.bottom);
+        const width = Math.max(0, right - left);
+        const height = Math.max(0, bottom - top);
+        return { left, top, right, bottom, width, height };
+      }
+      function rectArea(r) {
+        return r.width * r.height;
+      }
+      function intersectionArea(a, b) {
+        return rectArea(intersectRects(a, b));
+      }
+      function clipRectsForElement(el) {
+        const rects = [];
+        let node = el.parentElement;
+        while (node) {
+          const style = getComputedStyle(node);
+          const clips =
+            /(hidden|clip|scroll|auto)/.test(style.overflow) ||
+            /(hidden|clip|scroll|auto)/.test(style.overflowX) ||
+            /(hidden|clip|scroll|auto)/.test(style.overflowY);
+          if (clips) rects.push(node.getBoundingClientRect());
+          node = node.parentElement;
+        }
+        rects.push({ left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight });
+        return rects;
+      }
       function probeSprite(btn) {
         const sprite = btn.querySelector(".art-filter-chip-sprite");
         if (!sprite) return null;
         const btnRect = btn.getBoundingClientRect();
         const spriteRect = sprite.getBoundingClientRect();
         const spriteArea = spriteRect.width * spriteRect.height;
-        const visibleIntersectionArea = (() => {
-          const w = Math.max(0, Math.min(btnRect.right, spriteRect.right) - Math.max(btnRect.left, spriteRect.left));
-          const h = Math.max(0, Math.min(btnRect.bottom, spriteRect.bottom) - Math.max(btnRect.top, spriteRect.top));
-          return w * h;
-        })();
+        const buttonSpriteIntersectionArea = intersectionArea(btnRect, spriteRect);
+        let clipped = intersectRects(btnRect, spriteRect);
+        for (const clip of clipRectsForElement(btn)) {
+          clipped = intersectRects(clipped, clip);
+        }
+        const containerVisibleIntersectionArea = rectArea(clipped);
+        const visibleIntersectionArea = containerVisibleIntersectionArea;
         return {
           spriteRect: {
             width: spriteRect.width,
@@ -187,19 +221,37 @@ async function probeFilterChipsInPanel(page, panelSelector) {
             spriteRect.bottom <= btnRect.bottom + 0.5,
           expectedDisplay: { w: displayW, h: displayH },
           visibleIntersectionArea,
+          buttonSpriteIntersectionArea,
+          containerVisibleIntersectionArea,
           spriteArea,
           intersectionCoversSprite:
-            spriteArea > 0 ? visibleIntersectionArea / spriteArea >= 0.98 : false,
+            spriteArea > 0 ? containerVisibleIntersectionArea / spriteArea >= 0.98 : false,
         };
       }
-      function probeFromPoint(btn) {
+      function probeEdgeHits(btn) {
         const rect = btn.getBoundingClientRect();
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-        const top = document.elementFromPoint(x, y);
+        const inset = 2;
+        const points = [
+          { edge: "center", x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+          { edge: "left", x: rect.left + inset, y: rect.top + rect.height / 2 },
+          { edge: "right", x: rect.right - inset, y: rect.top + rect.height / 2 },
+          { edge: "top", x: rect.left + rect.width / 2, y: rect.top + inset },
+          { edge: "bottom", x: rect.left + rect.width / 2, y: rect.bottom - inset },
+        ];
+        return points.map(({ edge, x, y }) => {
+          const top = document.elementFromPoint(x, y);
+          return {
+            edge,
+            hitsChip: top === btn || (top != null && btn.contains(top)),
+            topTag: top?.tagName ?? null,
+          };
+        });
+      }
+      function probeFromPoint(btn) {
+        const center = probeEdgeHits(btn).find((p) => p.edge === "center");
         return {
-          centerHitsChip: top === btn || (top != null && btn.contains(top)),
-          topTag: top?.tagName ?? null,
+          centerHitsChip: center?.hitsChip ?? false,
+          topTag: center?.topTag ?? null,
         };
       }
       function probe(btn, index) {
@@ -224,6 +276,7 @@ async function probeFilterChipsInPanel(page, panelSelector) {
           meetsMin44: meets,
           sprite: probeSprite(btn),
           elementFromPoint: probeFromPoint(btn),
+          edgeHits: probeEdgeHits(btn),
           filterChipState: btn.dataset.filterChipState ?? null,
         };
       }
@@ -251,21 +304,64 @@ async function probeFilterChipsInPanel(page, panelSelector) {
 }
 
 async function probeRowsInPanel(page, panelSelector) {
-  return page.evaluate((panelSelector) => {
-    const rows = Array.from(document.querySelectorAll(`${panelSelector} [data-ui-filter-row]`));
-    return rows.slice(0, 6).map((row, index) => {
-      const rect = row.getBoundingClientRect();
-      const style = getComputedStyle(row);
-      return {
-        index,
-        skinned: row.classList.contains("art-filter-row--skinned"),
-        rowState: row.dataset.filterRowState ?? (row.classList.contains("selected") ? "selected" : "default"),
-        height: rect.height,
-        color: style.color,
-        minHeightCss: style.minHeight,
-      };
+  return page.evaluate(
+    ({ panelSelector, skinBarHeight, tol }) => {
+      const rows = Array.from(document.querySelectorAll(`${panelSelector} [data-ui-filter-row]`));
+      return rows.slice(0, 6).map((row, index) => {
+        const bar = row.querySelector(".art-filter-row-skin-bar");
+        const barRect = bar?.getBoundingClientRect();
+        const rect = row.getBoundingClientRect();
+        const style = getComputedStyle(row);
+        const h = barRect?.height ?? rect.height;
+        return {
+          index,
+          skinned: row.classList.contains("art-filter-row--skinned"),
+          rowState: row.dataset.filterRowState ?? (row.classList.contains("selected") ? "selected" : "default"),
+          height: rect.height,
+          skinBarHeight: barRect?.height ?? null,
+          skinBarHeightExact:
+            barRect != null && Math.abs(barRect.height - skinBarHeight) <= tol,
+          color: style.color,
+          minHeightCss: style.minHeight,
+        };
+      });
+    },
+    { panelSelector, skinBarHeight: FILTER_ROW_SKIN_BAR_HEIGHT, tol: ROW_HEIGHT_TOLERANCE },
+  );
+}
+
+async function probeChipClickTargets(page, panelSelector) {
+  const chips = page.locator(`${panelSelector} button[data-ui-filter-chip]`);
+  const n = await chips.count();
+  const results = [];
+  for (let i = 0; i < n; i++) {
+    const chip = chips.nth(i);
+    const box = await chip.boundingBox();
+    if (!box) {
+      results.push({ index: i, missing: true });
+      continue;
+    }
+    const leftX = box.x + 2;
+    const midY = box.y + box.height / 2;
+    const action = await chip.getAttribute("data-action");
+    const hit = await page.evaluate(
+      ({ x, y, action }) => {
+        const btn = document.querySelector(`button[data-action="${action}"]`);
+        const top = document.elementFromPoint(x, y);
+        const hitsChip = top === btn || (top != null && btn != null && btn.contains(top));
+        return { topTag: top?.tagName ?? null, hitsChip };
+      },
+      { x: leftX, y: midY, action },
+    );
+    await chip.click({ position: { x: 2, y: box.height / 2 }, force: true });
+    results.push({
+      index: i,
+      edge: "left",
+      elementFromPoint: hit,
+      clickDispatched: true,
     });
-  }, panelSelector);
+  }
+  return results;
 }
 
 async function probeCountBadgesInPanel(page, panelSelector) {
@@ -309,10 +405,12 @@ async function captureScenario(browser, { preset, panel, openFn, panelSelector, 
     const file = `${filePrefix}-${vp.tag}.jpg`;
     const meta = await shotFullViewport(page, path.join(outDir, file));
     const chipProbe = await probeFilterChipsInPanel(page, panelSelector);
+    const chipClickProbe =
+      panel === "mail" ? await probeChipClickTargets(page, panelSelector) : [];
     const badgeProbe = await probeCountBadgesInPanel(page, panelSelector);
     const rowProbe = await probeRowsInPanel(page, panelSelector);
     shots[vp.tag] = { file, ...meta, viewport: vp };
-    probes[vp.tag] = { chips: chipProbe, badges: badgeProbe, rows: rowProbe };
+    probes[vp.tag] = { chips: chipProbe, chipClicks: chipClickProbe, badges: badgeProbe, rows: rowProbe };
     await context.close();
   }
   return { panel, preset, shots, probes };
@@ -327,23 +425,36 @@ async function captureChipStateSheet(browser) {
   const page = await context.newPage();
   await enterMainCity(page);
   await openMailPanel(page);
+  await page.evaluate(({ chipStates }) => {
+    const panel = document.querySelector(".mail-inbox-panel");
+    if (!panel) throw new Error("mail panel missing");
+    let host = document.getElementById("art-filter-chip-evidence-staging");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "art-filter-chip-evidence-staging";
+      const anchor = panel.querySelector(".panel-filter-chip-bar") ?? panel.querySelector(".mail-inbox-hint");
+      (anchor?.parentElement ?? panel).insertBefore(host, anchor?.nextSibling ?? null);
+    }
+    const hook = window.__artFilter008Evidence;
+    if (!hook?.stageChipStates) throw new Error("__artFilter008Evidence hook missing");
+    hook.stageChipStates(host, chipStates);
+  }, { chipStates: CHIP_STATES });
   const states = await page.evaluate(({ chipStates }) => {
     const chips = Array.from(
-      document.querySelectorAll('.mail-inbox-panel button[data-ui-filter-chip]'),
-    ).slice(0, chipStates.length);
+      document.querySelectorAll("#art-filter-chip-evidence-staging button[data-ui-filter-chip]"),
+    );
     return chipStates.map((state, i) => {
       const btn = chips[i];
       if (!btn) return { state, missing: true };
-      btn.setAttribute("aria-pressed", state === "selected" ? "true" : "false");
-      btn.classList.toggle("selected", state === "selected");
-      btn.classList.toggle("active", state === "selected");
       const sprite = btn.querySelector(".art-filter-chip-sprite");
-      if (sprite) sprite.dataset.filterChipState = state;
-      btn.dataset.filterChipState = state;
+      const bg = sprite ? getComputedStyle(sprite).backgroundImage : "";
+      const hasAsset = Boolean(bg && bg !== "none");
       return {
         state,
-        action: btn.getAttribute("data-action"),
-        filterChipState: btn.dataset.filterChipState,
+        missing: false,
+        filterChipState: btn.dataset.filterChipState ?? null,
+        stateMatches: btn.dataset.filterChipState === state,
+        hasSpriteAsset: hasAsset,
       };
     });
   }, { chipStates: CHIP_STATES });
@@ -362,26 +473,59 @@ async function captureRowStateSheet(browser) {
   const page = await context.newPage();
   await enterMainCity(page);
   await openMailPanel(page);
-  const rows = await page.evaluate(({ rowStates }) => {
-    const list = Array.from(document.querySelectorAll(".mail-inbox-panel .mail-list [data-ui-filter-row]"));
+  await page.evaluate(({ rowStates }) => {
+    const panel = document.querySelector(".mail-inbox-panel");
+    if (!panel) throw new Error("mail panel missing");
+    let host = document.getElementById("art-filter-row-evidence-staging");
+    if (!host) {
+      host = document.createElement("div");
+      host.id = "art-filter-row-evidence-staging";
+      const list = panel.querySelector(".mail-list");
+      (list?.parentElement ?? panel).insertBefore(host, list ?? null);
+    }
+    const hook = window.__artFilter008Evidence;
+    if (!hook?.stageRowStates) throw new Error("__artFilter008Evidence hook missing");
+    hook.stageRowStates(host, rowStates);
+  }, { rowStates: ROW_STATES });
+  const rows = await page.evaluate(({ rowStates, skinBarHeight, tol }) => {
+    const list = Array.from(
+      document.querySelectorAll("#art-filter-row-evidence-staging [data-ui-filter-row]"),
+    );
     return rowStates.map((state, i) => {
       const row = list[i];
       if (!row) return { state, missing: true };
-      row.classList.remove("selected");
-      delete row.dataset.filterRowState;
-      if (state === "selected") row.classList.add("selected");
-      if (state === "hover") row.dataset.filterRowState = "hover";
+      const bar = row.querySelector(".art-filter-row-skin-bar");
+      const barH = bar?.getBoundingClientRect().height ?? null;
       return {
         state,
+        missing: false,
         height: row.getBoundingClientRect().height,
+        skinBarHeight: barH,
+        skinBarHeightExact: barH != null && Math.abs(barH - skinBarHeight) <= tol,
         skinned: row.classList.contains("art-filter-row--skinned"),
       };
     });
-  }, { rowStates: ROW_STATES });
+  }, { rowStates: ROW_STATES, skinBarHeight: FILTER_ROW_SKIN_BAR_HEIGHT, tol: ROW_HEIGHT_TOLERANCE });
   const file = "mail-rows-three-states-1600x900.jpg";
   const meta = await shotFullViewport(page, path.join(outDir, file));
   await context.close();
   return { file, ...meta, rows };
+}
+
+async function captureBadgeCountNineExact(browser) {
+  await setEvidencePreset("mail-filter-badge-count-nine");
+  const context = await browser.newContext({
+    viewport: { width: 1600, height: 900 },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+  await enterMainCity(page);
+  await openMailPanel(page);
+  const badges = await probeCountBadgesInPanel(page, ".mail-inbox-panel");
+  const file = "mail-badge-count-exact-nine-1600x900.jpg";
+  const meta = await shotFullViewport(page, path.join(outDir, file));
+  await context.close();
+  return { file, ...meta, badges };
 }
 
 async function captureBadgeNine(browser) {
@@ -406,12 +550,15 @@ function summarizePassFail(evidence) {
   let spritePass = true;
   let overlapPass = true;
   let fromPointPass = true;
+  let edgeHitPass = true;
+  let chipClickPass = true;
   let labelColorPass = true;
   let rowHeightPass = true;
 
   for (const [panelKey, block] of Object.entries(evidence.panels)) {
     for (const [vp, probe] of Object.entries(block.probes)) {
       for (const chip of probe.chips.chips ?? []) {
+        const edgeHitsOk = (chip.edgeHits ?? []).every((p) => p.hitsChip);
         chipRows.push({
           panel: panelKey,
           viewport: vp,
@@ -422,15 +569,23 @@ function summarizePassFail(evidence) {
           spriteInside: chip.sprite?.spriteFullyInsideButton ?? null,
           overlapFree: (probe.chips.adjacentHitOverlaps ?? []).length === 0,
           centerHits: chip.elementFromPoint?.centerHitsChip ?? null,
+          edgeHitsOk,
         });
         if (chip.skinned && chip.sprite && !chip.sprite.spriteFullyInsideButton) spritePass = false;
         if (chip.skinned && chip.sprite && !chip.sprite.intersectionCoversSprite) spritePass = false;
         if (chip.elementFromPoint && !chip.elementFromPoint.centerHitsChip) fromPointPass = false;
+        if (!edgeHitsOk) edgeHitPass = false;
         if (chip.skinned && chip.labelColor && chip.labelColor !== "rgb(61, 46, 31)") {
           labelColorPass = false;
         }
       }
       if ((probe.chips.adjacentHitOverlaps ?? []).length > 0) overlapPass = false;
+      if (panelKey === "mail") {
+        for (const click of probe.chipClicks ?? []) {
+          if (click.missing || !click.clickDispatched) chipClickPass = false;
+          if (click.elementFromPoint && !click.elementFromPoint.hitsChip) chipClickPass = false;
+        }
+      }
       for (const b of probe.badges.badges ?? []) {
         badgeRows.push({
           panel: panelKey,
@@ -441,24 +596,43 @@ function summarizePassFail(evidence) {
         });
       }
       for (const row of probe.rows ?? []) {
-        if (row.skinned && row.height > 0 && row.height < 38) rowHeightPass = false;
+        if (row.skinned && row.skinBarHeight != null && !row.skinBarHeightExact) rowHeightPass = false;
       }
     }
   }
 
   const chipsMinPass = chipRows.every((r) => r.meetsMin44);
+  const chipStatesPass = (evidence.chipStates?.states ?? []).every(
+    (s) => !s.missing && s.stateMatches && s.hasSpriteAsset,
+  );
+  const rowStatesPass = (evidence.rowStates?.rows ?? []).every(
+    (r) => !r.missing && r.skinBarHeightExact,
+  );
   const nineBadge = evidence.badgeNine?.badges?.badges?.find(
     (b) => b.role === "mail-filter-unread-count",
   );
-  const badgeNinePass = nineBadge && nineBadge.filterBadgeCount >= 9 && nineBadge.labelText.includes("9");
+  const badgeNinePlusPass =
+    nineBadge && nineBadge.filterBadgeCount >= 10 && nineBadge.labelText.includes("9+");
+  const exactNineBadge = evidence.badgeCountNine?.badges?.badges?.find(
+    (b) => b.role === "mail-filter-unread-count",
+  );
+  const badgeCountNinePass =
+    exactNineBadge &&
+    exactNineBadge.filterBadgeCount === 9 &&
+    exactNineBadge.labelText === "9";
   const overall =
     chipsMinPass &&
     spritePass &&
     overlapPass &&
     fromPointPass &&
+    edgeHitPass &&
+    chipClickPass &&
     labelColorPass &&
     rowHeightPass &&
-    badgeNinePass;
+    chipStatesPass &&
+    rowStatesPass &&
+    badgeNinePlusPass &&
+    badgeCountNinePass;
 
   return {
     chipRows,
@@ -467,16 +641,21 @@ function summarizePassFail(evidence) {
     spritePass,
     overlapPass,
     fromPointPass,
+    edgeHitPass,
+    chipClickPass,
     labelColorPass,
     rowHeightPass,
-    badgeNinePass,
+    chipStatesPass,
+    rowStatesPass,
+    badgeNinePlusPass,
+    badgeCountNinePass,
     overall,
   };
 }
 
 async function writeIntegrationQa(evidence, summary, tipSha) {
   const lines = [
-    "# ART-UI-FILTER-008 运行时工程验收（CLIENT-136 补证）",
+    "# ART-UI-FILTER-008 运行时工程验收（CLIENT-137 补证）",
     "",
     "| 项 | 值 |",
     "|---|---|",
@@ -490,12 +669,17 @@ async function writeIntegrationQa(evidence, summary, tipSha) {
     "| 检查项 | 结果 |",
     "|---|---|",
     `| chip DOM ≥44×44（仅进展指标，不单独等同完整命中 PASS） | **${summary.chipsMinPass ? "PASS" : "FAIL"}** |`,
-    `| 72×32 精灵完全落在按钮可视槽内（可见交集） | **${summary.spritePass ? "PASS" : "FAIL"}** |`,
+    `| 72×32 精灵 + 容器/视口可见交集 | **${summary.spritePass ? "PASS" : "FAIL"}** |`,
     `| 相邻 chip 命中盒无重叠 | **${summary.overlapPass ? "PASS" : "FAIL"}** |`,
     `| elementFromPoint 中心落点命中 chip | **${summary.fromPointPass ? "PASS" : "FAIL"}** |`,
+    `| 边缘 elementFromPoint 命中 chip 热区 | **${summary.edgeHitPass ? "PASS" : "FAIL"}** |`,
+    `| 边缘点击落点命中 chip（Playwright） | **${summary.chipClickPass ? "PASS" : "FAIL"}** |`,
     `| 纸底 chip 标签色 #3d2e1f | **${summary.labelColorPass ? "PASS" : "FAIL"}** |`,
-    `| 九宫行高约 ≥40px | **${summary.rowHeightPass ? "PASS" : "FAIL"}** |`,
-    `| count 9 / 9+ 角标（跳过 count=0 重拍） | **${summary.badgeNinePass ? "PASS" : "FAIL"}** |`,
+    `| 九宫行条逻辑高 **40px**（仅横向拉伸） | **${summary.rowHeightPass ? "PASS" : "FAIL"}** |`,
+    `| chip 四态 staging（含 pressed/selected 真图） | **${summary.chipStatesPass ? "PASS" : "FAIL"}** |`,
+    `| row 三态 staging（40px 行条完整） | **${summary.rowStatesPass ? "PASS" : "FAIL"}** |`,
+    `| count **9** 角标（不重拍 count=0） | **${summary.badgeCountNinePass ? "PASS" : "FAIL"}** |`,
+    `| count **9+** 角标（10→9+） | **${summary.badgeNinePlusPass ? "PASS" : "FAIL"}** |`,
     `| 综合工程补证 | **${summary.overall ? "PASS" : "FAIL"}** |`,
     "",
     "## 全视口 JPEG",
@@ -511,6 +695,7 @@ async function writeIntegrationQa(evidence, summary, tipSha) {
   lines.push(`| \`runtime/${evidence.chipStates.file}\` | 1600×900 | mail chip 四态 staging |`);
   lines.push(`| \`runtime/${evidence.rowStates.file}\` | 1600×900 | mail row 三态 staging |`);
   lines.push(`| \`runtime/${evidence.badgeNine.file}\` | 1600×900 | mail count 9+ |`);
+  lines.push(`| \`runtime/${evidence.badgeCountNine.file}\` | 1600×900 | mail count 9 |`);
   lines.push("");
   lines.push("详细 JSON：`probe-log.json`。");
   lines.push("");
@@ -560,6 +745,7 @@ async function main() {
     const chipStates = await captureChipStateSheet(browser);
     const rowStates = await captureRowStateSheet(browser);
     const badgeNine = await captureBadgeNine(browser);
+    const badgeCountNine = await captureBadgeCountNineExact(browser);
     await browser.close();
 
     try {
@@ -570,7 +756,7 @@ async function main() {
 
     const evidence = {
       task: "ART-UI-FILTER-008",
-      client_task: "CLIENT-136",
+      client_task: "CLIENT-137",
       tip_sha: tipSha,
       captured_at: new Date().toISOString(),
       note: "Full-viewport runtime evidence; chip sprite/click probes; not art-board static PASS.",
@@ -578,6 +764,7 @@ async function main() {
       chipStates,
       rowStates,
       badgeNine,
+      badgeCountNine,
     };
     const summary = summarizePassFail(evidence);
     evidence.summary = summary;
@@ -588,6 +775,7 @@ async function main() {
       chipStates.file,
       rowStates.file,
       badgeNine.file,
+      badgeCountNine.file,
     ];
     const expectedDims = {};
     for (const f of jpegFiles) {
