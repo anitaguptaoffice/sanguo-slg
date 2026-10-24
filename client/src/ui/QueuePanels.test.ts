@@ -431,6 +431,46 @@ describe("QueuePanels", () => {
     expect(onOpenDaily).toHaveBeenCalledWith(1014);
   });
 
+  it("renders preview residual line and pulses slot on click (CLIENT-245)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onMarginRing = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onMarginRing,
+    );
+    panel.attach();
+    panel.toggle();
+    const residual = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-line"]',
+    ) as HTMLElement;
+    expect(residual?.textContent).toMatch(/残余扫读/);
+    expect(residual?.textContent).toMatch(/cfg#2/);
+    expect(residual?.getAttribute("data-action")).toBe(
+      "domestic-slot-complete-margin-residual-ring",
+    );
+    residual?.click();
+    expect(onMarginRing).toHaveBeenCalledWith("farm");
+  });
+
   it("renders next-finish preview and opens daily anchor on click (CLIENT-218)", () => {
     const mount = document.createElement("div");
     const now = Date.now();
