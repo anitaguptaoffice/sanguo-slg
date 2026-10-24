@@ -104,7 +104,14 @@ import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
-import { syncMarchFormInlineFeedback } from "@/net/marchFormSummary";
+import {
+  formatMarchFormSummary,
+  syncMarchFormInlineFeedback,
+} from "@/net/marchFormSummary";
+import {
+  formatMarchFormTroopMarginResidualLine,
+  syncMarchFormTroopMarginResidualLine,
+} from "@/net/marchFormTroopMarginResidual";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
@@ -546,6 +553,10 @@ export class MainCityScene implements Scene {
         <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
         <p class="march-form-validation-sweep-line" data-role="march-form-validation-sweep-line" aria-live="polite"></p>
+        <p class="march-form-troop-margin-residual-line hidden" data-role="march-form-troop-margin-residual-line" aria-live="polite">
+          <span data-role="march-form-troop-margin-residual-primary"></span>
+          <span class="march-form-troop-margin-residual-subline" data-role="march-form-troop-margin-residual-subline"></span>
+        </p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
       </div>
@@ -1545,6 +1556,15 @@ export class MainCityScene implements Scene {
         toXRaw: marchSnap.toXRaw,
         toYRaw: marchSnap.toYRaw,
       }),
+    );
+    const marchSummary = formatMarchFormSummary(marchSnap, this.marchClockMs);
+    syncMarchFormTroopMarginResidualLine(
+      this.militaryPanel,
+      formatMarchFormTroopMarginResidualLine(
+        troopReserve,
+        marchSummary,
+        this.session?.wallet,
+      ),
     );
     syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget);
     const queueId = this.marchQueueBannerTarget?.march_id ?? null;

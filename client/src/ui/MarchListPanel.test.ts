@@ -441,7 +441,7 @@ describe("MarchListPanel", () => {
     ).toBeTruthy();
   });
 
-  it("notifyMarchStarted applies intel refresh stamp and list row pulse (CLIENT-238)", async () => {
+  it("notifyMarchStarted applies deep intel refresh stamp and list row pulse (CLIENT-253)", async () => {
     vi.useFakeTimers();
     const arriveAt = Date.now() + 30 * 60_000;
     const gateway = {
@@ -456,11 +456,15 @@ describe("MarchListPanel", () => {
     await vi.waitFor(() => {
       const stamp = mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]');
       expect(stamp?.textContent).toMatch(/新行军 #88/);
+      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-deep")).toBe(true);
     });
     const row = mount.querySelector('.march-list li[data-march-id="88"]');
     expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(true);
-    vi.advanceTimersByTime(2000);
+    const subline = row?.querySelector(".intel-row-phase-subline");
+    expect(subline?.classList.contains("intel-list-refresh-march-subline-pulse")).toBe(true);
+    vi.advanceTimersByTime(2500);
     expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(false);
+    expect(subline?.classList.contains("intel-list-refresh-march-subline-pulse")).toBe(false);
     expect(mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]')?.classList.contains("hidden")).toBe(
       true,
     );
