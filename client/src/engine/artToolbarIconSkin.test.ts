@@ -58,8 +58,8 @@ describe("resolveToolbarIconPack", () => {
 });
 
 describe("mountToolbarIcons", () => {
-  it("maps fifteen toolbar actions to two-character labels and icon nodes", () => {
-    expect(Object.keys(TOOLBAR_ICON_BY_ACTION)).toHaveLength(15);
+  it("maps sixteen toolbar actions to two-character labels and icon nodes", () => {
+    expect(Object.keys(TOOLBAR_ICON_BY_ACTION)).toHaveLength(16);
     const root = document.createElement("div");
     root.innerHTML = `
       <div class="toolbar-scroll-inner">
@@ -79,6 +79,25 @@ describe("mountToolbarIcons", () => {
       label: "战报",
       title: "战报",
     });
+  });
+
+  it("maps upgrade-farm action icon with two-char label and four-char title/aria", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="toolbar-scroll-inner">
+        <button type="button" data-action="upgrade-farm" title="升级农田">升级农田</button>
+      </div>`;
+    mountToolbarIcons(root, mockAssets());
+    const upgrade = root.querySelector('[data-action="upgrade-farm"]')!;
+    expect(TOOLBAR_ICON_BY_ACTION["upgrade-farm"]).toEqual({
+      assetId: "ui.icon.action.upgrade.v1",
+      label: "升级",
+      title: "升级农田",
+    });
+    expect(upgrade.querySelector(".toolbar-btn-icon")).toBeTruthy();
+    expect(upgrade.querySelector(".toolbar-btn-label")?.textContent).toBe("升级");
+    expect(upgrade.getAttribute("aria-label")).toBe("升级农田");
+    expect(upgrade.getAttribute("title")).toBe("升级农田");
   });
 
   it("maps refresh action icon with two-char label and four-char title/aria", () => {
