@@ -1014,9 +1014,14 @@
         background: #221a14; border-left-color: #b8a88a;
       }
       .battle-report-round-summary-strip {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
         margin: 0 0 8px; padding: 6px 10px; border-radius: 4px;
         font-size: 12px; line-height: 1.45; color: #c9b896;
         background: rgba(30, 24, 18, 0.85); border: 1px solid #3d3028;
+      }
+      .battle-report-round-summary-line { flex: 1 1 200px; min-width: 0; }
+      .battle-report-round-summary-strip .report-round-summary-intel-link {
+        flex: 0 0 auto; font-size: 11px; padding: 3px 8px;
       }
       .battle-report-detail-nav {
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;

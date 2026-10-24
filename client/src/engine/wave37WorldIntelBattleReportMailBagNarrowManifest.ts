@@ -71,6 +71,12 @@ export const BATTLE_REPORT_LIST_STREAK_LINE_SELECTOR = `.${BATTLE_REPORT_LIST_ST
 export const BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS = "battle-report-round-summary-strip";
 export const BATTLE_REPORT_ROUND_SUMMARY_STRIP_SELECTOR = `.${BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS}`;
 
+/** CLIENT-224: round summary strip → intel march row (read-only ListMarches). */
+export {
+  OPEN_INTEL_FOR_REPORT_ACTION,
+  REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS,
+} from "@/net/battleReportRoundSummaryIntelLink";
+
 /** CLIENT-209: per-tab unread sweep + HUD refresh sync pulse (CLIENT-202 deeplink line). */
 export const MAIL_TAB_UNREAD_SWEEP_LINE_CLASS = "mail-tab-unread-sweep-line";
 export const MAIL_TAB_UNREAD_SWEEP_LINE_SELECTOR = `.${MAIL_TAB_UNREAD_SWEEP_LINE_CLASS}`;

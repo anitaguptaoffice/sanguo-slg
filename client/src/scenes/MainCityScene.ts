@@ -79,13 +79,13 @@ import {
   buildBattleReportReplaySessionFromSummary,
   canOfferBattleReportIntelJump,
   openMinimapForBattleCoords,
-  resolveIntelRowNearCoords,
   writeBattleReportReplaySession,
 } from "@/net/battleReportIntelReplayJump";
 import {
   dispatchBattleReportListIntelJump,
   stubIntelMinimapSyncAfterReportListJump,
 } from "@/net/battleReportListIntelJump";
+import { resolveMarchIdForBattleReport } from "@/net/battleReportRoundSummaryIntelLink";
 import { parseBattleReportLocation } from "@/net/battleReportMinimapFocus";
 import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
@@ -1664,14 +1664,14 @@ export class MainCityScene implements Scene {
     }
     const session = buildBattleReportReplaySessionFromSummary(summary);
     if (session) writeBattleReportReplaySession(session);
-    const resolved = resolveIntelRowNearCoords(this.minimapMarches, location.x, location.y);
-    if (!resolved) {
+    const marchId = resolveMarchIdForBattleReport(this.minimapMarches, summary);
+    if (marchId == null) {
       this.status = "军情列表无同坐标行军可匹配";
       this.renderHud();
       return;
     }
-    this.openMarchIntelPanelHighlight(resolved.marchId);
-    this.status = `军情：已选中行军 #${resolved.marchId}（战报坐标 ${location.x},${location.y}）`;
+    this.openMarchIntelPanelHighlight(marchId);
+    this.status = `军情：已选中行军 #${marchId}（战报坐标 ${location.x},${location.y}）`;
     this.renderHud();
   }
 
