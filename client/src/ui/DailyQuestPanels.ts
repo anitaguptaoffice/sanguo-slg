@@ -71,6 +71,8 @@ export class DailyQuestPanels {
   private listFilter: DailyQuestListFilter = "all";
   private listLoading = false;
   private listError: string | null = null;
+  /** CLIENT-134：角标深链打开前「可领取」chip 数字与 HUD 快照对齐。 */
+  private dailyClaimableCountOverride: number | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -137,11 +139,21 @@ export class DailyQuestPanels {
     this.renderBattleReportBanner();
   }
 
-  /** 待办角标深链：打开并高亮 chain 400 首条可接/可领（cfg id 来自轮询快照）。 */
-  openFromTodoBadge(preferredCfgId = 0): void {
+  /** 待办角标深链：打开筛选并高亮首条目标（filter/cfg 来自 `resolveHudTodoOpenTarget`）。 */
+  openFromTodoBadge(
+    preferredCfgId = 0,
+    opts?: { listFilter?: DailyQuestListFilter; claimableCount?: number },
+  ): void {
     this.panel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.panel);
+    if (opts?.listFilter) {
+      this.listFilter = opts.listFilter;
+      writeDailyQuestListFilterSession(this.listFilter);
+    }
+    this.dailyClaimableCountOverride =
+      opts?.claimableCount != null ? Math.max(0, opts.claimableCount) : null;
     void this.refreshList(preferredCfgId, "todo-badge").then(() => {
+      this.dailyClaimableCountOverride = null;
       const id = this.selectedCfgId;
       if (id > 0) {
         const row = this.panel.querySelector(`li[data-quest-cfg-id="${id}"]`);
@@ -219,7 +231,8 @@ export class DailyQuestPanels {
       const f = btn.getAttribute("data-filter") as DailyQuestListFilter;
       return f === this.listFilter;
     });
-    const claimableCount = dailyQuestClaimableBadgeCount(this.rows);
+    const claimableCount =
+      this.dailyClaimableCountOverride ?? dailyQuestClaimableBadgeCount(this.rows);
     const countBadge = this.panel.querySelector<HTMLElement>('[data-role="daily-claimable-count-badge"]');
     if (countBadge) {
       const show = shouldShowDailyQuestClaimableFilterBadge(this.rows);

@@ -139,6 +139,8 @@ export class HeroMailPanels {
   private mailInboxSnapshot: MailRow[] = [];
   /** ListPlayerMail unread 的 total_count，与底栏 CLIENT-050 一致。 */
   private mailUnreadTotal = 0;
+  /** CLIENT-134：角标深链打开面板前，筛选 chip 数字与 `HudTodoDeepLinkSnapshot` 对齐。 */
+  private mailFilterTabCountOverride: { unreadForTab: number; unclaimedCount: number } | null = null;
   private mailFilter = MAIL_INBOX_FILTER_ALL;
   private mailListError = "";
   private mailListLoading = false;
@@ -368,15 +370,38 @@ export class HeroMailPanels {
     row?.scrollIntoView?.({ block: "nearest" });
   }
 
-  /** 待办角标深链：打开未读筛选并选中首封未读（id 来自轮询快照）。 */
-  openFromTodoBadge(preferredMailId = 0): void {
+  /** 待办角标深链：打开筛选并选中首条目标（id/filter 来自 `resolveHudTodoOpenTarget`）。 */
+  openFromTodoBadge(
+    preferredMailId = 0,
+    opts?: {
+      mailFilter?: typeof MAIL_INBOX_FILTER_ALL | typeof MAIL_INBOX_FILTER_UNREAD;
+      filterTabCounts?: { unreadForTab: number; unclaimedCount: number };
+    },
+  ): void {
     this.mailPanel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
-    this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
+    const mailFilter = opts?.mailFilter ?? MAIL_INBOX_FILTER_UNREAD;
+    this.mailFilterTabCountOverride = opts?.filterTabCounts ?? null;
+    this.mailFilter = mailFilter;
     writeMailInboxFilterSession(this.mailFilter);
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
-    void this.refreshMail().then(() => this.focusFirstUnreadMail(preferredMailId));
+    void this.refreshMail().then(() => {
+      this.mailFilterTabCountOverride = null;
+      if (mailFilter === MAIL_INBOX_FILTER_UNREAD) {
+        void this.focusFirstUnreadMail(preferredMailId);
+        return;
+      }
+      const pickId =
+        preferredMailId > 0 && this.mails.some((m) => m.mail_id === preferredMailId)
+          ? preferredMailId
+          : pickFirstClaimableMailId(this.mails);
+      if (pickId <= 0) return;
+      void this.openMail(pickId).then(() => {
+        const row = this.mailPanel.querySelector(`li[data-mail-id="${pickId}"]`);
+        row?.scrollIntoView?.({ block: "nearest" });
+      });
+    });
   }
 
   /** CLIENT-077：顶栏待办聚合深链 — 首封可领附件邮件。 */
@@ -669,11 +694,14 @@ export class HeroMailPanels {
 
   private syncMailFilterChipDom(assets?: AssetLoader): void {
     const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
-    const unreadForTab = Math.max(this.mailUnreadTotal, derived.unread);
+    const unreadForTab =
+      this.mailFilterTabCountOverride?.unreadForTab ??
+      Math.max(this.mailUnreadTotal, derived.unread);
+    const unclaimedCount = this.mailFilterTabCountOverride?.unclaimedCount ?? derived.unclaimed;
     const chipSpecs = formatMailFilterChips({
       activeFilter: this.mailFilter,
       unreadForTab,
-      unclaimedCount: derived.unclaimed,
+      unclaimedCount,
     });
     const allBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-all"]');
     const unreadBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-unread"]');
@@ -690,7 +718,7 @@ export class HeroMailPanels {
       setFilterChipLabel(btn, spec.label);
       const countEl = btn.querySelector<HTMLElement>("[data-ui-filter-badge='count']");
       if (!countEl) continue;
-      const count = spec.action === "mail-filter-all" ? derived.unclaimed : unreadForTab;
+      const count = spec.action === "mail-filter-all" ? unclaimedCount : unreadForTab;
       countEl.dataset.filterBadgeCount = String(count);
       if (loader) {
         applyUiCountBadge(countEl, count, {
