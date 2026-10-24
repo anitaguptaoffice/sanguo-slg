@@ -304,11 +304,11 @@
       "variants": [
         {
           "scale": 1,
-          "path": "textures/1x/ui/panel_default.png"
+          "path": "textures/1x/ui/panel_hero.png"
         },
         {
           "scale": 2,
-          "path": "textures/2x/ui/panel_default.png"
+          "path": "textures/2x/ui/panel_hero.png"
         }
       ],
       "tags": [
