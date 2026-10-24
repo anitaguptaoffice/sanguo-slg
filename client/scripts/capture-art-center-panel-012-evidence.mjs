@@ -343,8 +343,7 @@ async function main() {
     const evidence = {
       task: "ART-CENTER-PANEL-012",
       runtime_code_sha: tipSha,
-      screenshot_artifacts_commit_sha:
-        "pending-git-commit — set to the commit that lands JPEGs under docs/art/samples/art-center-panel-012/runtime/",
+      screenshot_artifacts_commit_sha: tipSha,
       tip_sha: tipSha,
       art_asset_source_commit: "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
       captured_at: new Date().toISOString(),
