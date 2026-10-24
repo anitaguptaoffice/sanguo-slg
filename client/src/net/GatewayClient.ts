@@ -101,6 +101,10 @@ export type GatewayPort = {
   trySummonCaptive(serverId: number, cityId: number, heroId: number): Promise<unknown>;
   sureSummonCaptive(serverId: number, cityId: number, heroId: number): Promise<unknown>;
   releaseCaptive(serverId: number, cityId: number, heroId: number): Promise<unknown>;
+  listComingHeroes(serverId: number): Promise<unknown>;
+  tryAcceptComing(serverId: number, cityId: number, heroId: number): Promise<unknown>;
+  sureAcceptComing(serverId: number, cityId: number, heroId: number): Promise<unknown>;
+  rejectComing(serverId: number, cityId: number, heroId: number): Promise<unknown>;
   getCityChief(serverId: number, cityId: number): Promise<unknown>;
   setCityChief(serverId: number, cityId: number, heroId: number): Promise<unknown>;
   clearCityChief(serverId: number, cityId: number): Promise<unknown>;
@@ -722,6 +726,53 @@ export class GatewayClient implements GatewayPort {
       "ReleaseCaptiveRequest",
       { server_id: serverId, city_id: cityId, hero_id: heroId },
       ReleaseCaptiveResponse,
+      true,
+    );
+  }
+
+  async listComingHeroes(serverId: number) {
+    const { ListComingHeroesResponse } = getTypes();
+    return this.rpc(
+      Routes.ListComingHeroes,
+      "ListComingHeroesRequest",
+      { server_id: serverId },
+      ListComingHeroesResponse,
+      true,
+    );
+  }
+
+  async tryAcceptComing(serverId: number, cityId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { TryAcceptComingResponse } = getTypes();
+    return this.rpc(
+      Routes.TryAcceptComing,
+      "TryAcceptComingRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      TryAcceptComingResponse,
+      true,
+    );
+  }
+
+  async sureAcceptComing(serverId: number, cityId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { SureAcceptComingResponse } = getTypes();
+    return this.rpc(
+      Routes.SureAcceptComing,
+      "SureAcceptComingRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      SureAcceptComingResponse,
+      true,
+    );
+  }
+
+  async rejectComing(serverId: number, cityId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { RejectComingResponse } = getTypes();
+    return this.rpc(
+      Routes.RejectComing,
+      "RejectComingRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      RejectComingResponse,
       true,
     );
   }

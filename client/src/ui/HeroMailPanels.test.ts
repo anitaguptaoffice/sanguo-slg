@@ -2542,6 +2542,116 @@ describe("HeroMailPanels", () => {
     });
   });
 
+  describe("coming hero panel (CLIENT-hero-coming-001)", () => {
+    it("loads coming heroes when opening hero panel and runs try/sure accept flow", async () => {
+      const mount = document.createElement("div");
+      const listComingHeroes = vi.fn().mockResolvedValue({
+        coming: [
+          {
+            hero_id: 77,
+            city_id: 1,
+            display_name: "黄忠",
+            level: 15,
+            loyalty: 60,
+            attributes: { force: 88, intel: 40, politics: 20, command: 75 },
+          },
+        ],
+      });
+      const tryAcceptComing = vi.fn().mockResolvedValue({
+        hero_id: 77,
+        summary: "是否接受将领黄忠加入麾下？",
+      });
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listCaptiveHeroes: vi.fn().mockResolvedValue({ captives: [] }),
+        listComingHeroes,
+        tryAcceptComing,
+        sureAcceptComing: vi.fn().mockResolvedValue({
+          hero_id: 88,
+          display_name: "黄忠",
+          level: 15,
+          loyalty: 70,
+        }),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      expect(listComingHeroes).toHaveBeenCalledWith(1);
+      expect(tryAcceptComing).toHaveBeenCalledWith(1, 1, 77);
+      const preview = mount.querySelector('[data-role="coming-hero-preview"]');
+      expect(preview?.textContent).toContain("黄忠");
+      const acceptBtn = mount.querySelector('[data-action="coming-accept-confirm"]') as HTMLButtonElement;
+      expect(acceptBtn.disabled).toBe(false);
+      acceptBtn.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(gateway.sureAcceptComing).toHaveBeenCalledWith(1, 1, 77);
+      expect(gateway.listPlayerHeroes).toHaveBeenCalled();
+    });
+
+    it("shows readable error for capacity full on sure accept", async () => {
+      const mount = document.createElement("div");
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listCaptiveHeroes: vi.fn().mockResolvedValue({ captives: [] }),
+        listComingHeroes: vi.fn().mockResolvedValue({
+          coming: [{ hero_id: 5, city_id: 1, display_name: "魏延", level: 6 }],
+        }),
+        tryAcceptComing: vi.fn().mockResolvedValue({
+          hero_id: 5,
+          summary: "是否接受将领魏延加入麾下？",
+        }),
+        sureAcceptComing: vi.fn().mockRejectedValue(new Error("hero: hero capacity full (office level)")),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      mount.querySelector('[data-action="coming-accept-confirm"]')?.dispatchEvent(
+        new Event("click", { bubbles: true }),
+      );
+      await flushPromises();
+      expect(mount.querySelector('[data-role="coming-hero-form-error"]')?.textContent).toContain(
+        "招贤馆容量已满",
+      );
+    });
+
+    it("reject coming refreshes list", async () => {
+      const mount = document.createElement("div");
+      const listComingHeroes = vi
+        .fn()
+        .mockResolvedValueOnce({
+          coming: [{ hero_id: 9, city_id: 1, display_name: "姜维", level: 4 }],
+        })
+        .mockResolvedValueOnce({ coming: [] });
+      const gateway: GatewayPort = {
+        listPlayerHeroes: vi.fn().mockResolvedValue({ heroes: [], total_count: 0 }),
+        listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+        listHotelRecruitCandidates: vi.fn().mockResolvedValue({ candidates: [] }),
+        listCaptiveHeroes: vi.fn().mockResolvedValue({ captives: [] }),
+        listComingHeroes,
+        tryAcceptComing: vi.fn().mockResolvedValue({ hero_id: 9, summary: "是否接受？" }),
+        rejectComing: vi.fn().mockResolvedValue({ hero_id: 9 }),
+        getBoundServerId: () => 1,
+      } as unknown as GatewayPort;
+      const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+      panels.attach();
+      panels.toggleHero();
+      await flushPromises();
+      mount.querySelector('[data-action="coming-reject"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      expect(gateway.rejectComing).toHaveBeenCalledWith(1, 1, 9);
+      expect(listComingHeroes).toHaveBeenCalledTimes(2);
+      expect(mount.querySelector(".coming-hero-empty")?.textContent).toContain("暂无来投");
+    });
+  });
+
   describe("hotel recruit pool (CLIENT-hero-hotel-001)", () => {
     it("loads hotel candidates when opening hero panel and shows capacity meta", async () => {
       const mount = document.createElement("div");

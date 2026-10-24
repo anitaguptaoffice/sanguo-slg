@@ -87,6 +87,10 @@ export const Routes = {
   TrySummonCaptive: "hero.v1.TrySummonCaptive",
   SureSummonCaptive: "hero.v1.SureSummonCaptive",
   ReleaseCaptive: "hero.v1.ReleaseCaptive",
+  ListComingHeroes: "hero.v1.ListComingHeroes",
+  TryAcceptComing: "hero.v1.TryAcceptComing",
+  SureAcceptComing: "hero.v1.SureAcceptComing",
+  RejectComing: "hero.v1.RejectComing",
   SetCityChief: "hero.v1.SetCityChief",
   ClearCityChief: "hero.v1.ClearCityChief",
   GetCityChief: "hero.v1.GetCityChief",
@@ -192,6 +196,14 @@ export type ProtoTypes = {
   SureSummonCaptiveResponse: protobuf.Type;
   ReleaseCaptiveRequest: protobuf.Type;
   ReleaseCaptiveResponse: protobuf.Type;
+  ListComingHeroesRequest: protobuf.Type;
+  ListComingHeroesResponse: protobuf.Type;
+  TryAcceptComingRequest: protobuf.Type;
+  TryAcceptComingResponse: protobuf.Type;
+  SureAcceptComingRequest: protobuf.Type;
+  SureAcceptComingResponse: protobuf.Type;
+  RejectComingRequest: protobuf.Type;
+  RejectComingResponse: protobuf.Type;
   SetCityChiefRequest: protobuf.Type;
   SetCityChiefResponse: protobuf.Type;
   ClearCityChiefRequest: protobuf.Type;
@@ -297,6 +309,14 @@ export function getTypes(): ProtoTypes {
     SureSummonCaptiveResponse: r.lookupType("sanguo.hero.v1.SureSummonCaptiveResponse"),
     ReleaseCaptiveRequest: r.lookupType("sanguo.hero.v1.ReleaseCaptiveRequest"),
     ReleaseCaptiveResponse: r.lookupType("sanguo.hero.v1.ReleaseCaptiveResponse"),
+    ListComingHeroesRequest: r.lookupType("sanguo.hero.v1.ListComingHeroesRequest"),
+    ListComingHeroesResponse: r.lookupType("sanguo.hero.v1.ListComingHeroesResponse"),
+    TryAcceptComingRequest: r.lookupType("sanguo.hero.v1.TryAcceptComingRequest"),
+    TryAcceptComingResponse: r.lookupType("sanguo.hero.v1.TryAcceptComingResponse"),
+    SureAcceptComingRequest: r.lookupType("sanguo.hero.v1.SureAcceptComingRequest"),
+    SureAcceptComingResponse: r.lookupType("sanguo.hero.v1.SureAcceptComingResponse"),
+    RejectComingRequest: r.lookupType("sanguo.hero.v1.RejectComingRequest"),
+    RejectComingResponse: r.lookupType("sanguo.hero.v1.RejectComingResponse"),
     SetCityChiefRequest: r.lookupType("sanguo.hero.v1.SetCityChiefRequest"),
     SetCityChiefResponse: r.lookupType("sanguo.hero.v1.SetCityChiefResponse"),
     ClearCityChiefRequest: r.lookupType("sanguo.hero.v1.ClearCityChiefRequest"),
