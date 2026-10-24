@@ -35,6 +35,7 @@ import {
 } from "@/net/dailyQuestQueueMatch";
 import { buildingBySlot } from "@/net/hudFormat";
 import { centerTodoScrollTargetId } from "@/net/hudCenterTodo";
+import { highlightQueueRowForSlot } from "@/net/citySlotQueueLink";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
 import { buildBuildQueueSlotMatrix } from "@/net/buildQueueMatrix";
@@ -114,6 +115,7 @@ export class QueuePanels {
     private readonly onBuildSlotHighlightChange?: (slotKey: string | null) => void,
     private readonly dismissToolbarTrigger?: () => HTMLElement | null,
     private readonly onRecruitQueueJumpToMilitary?: (entry: RecruitQueueEntry) => void,
+    private readonly onLocateCitySlotFromQueue?: (slotKey: string) => void,
   ) {}
 
   attach(): void {
@@ -205,6 +207,18 @@ export class QueuePanels {
     if (row && typeof row.scrollIntoView === "function") {
       row.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
+    this.pulseQueueRowForOverlaySlot(this.highlightedBuildSlotKey ?? "");
+  }
+
+  /** 七槽 overlay 选中 → 队列行 2s 高亮（CLIENT-180，只读快照）。 */
+  pulseQueueRowForOverlaySlot(slotKey: string): void {
+    const key = slotKey.trim();
+    if (!key || !this.panel) return;
+    highlightQueueRowForSlot(this.panel, key, {
+      buildings: this.buildings(),
+      recruits: this.recruits,
+      nowMs: Date.now(),
+    });
   }
 
   clearBuildSlotHighlight(): void {
@@ -233,6 +247,7 @@ export class QueuePanels {
         if (row && typeof row.scrollIntoView === "function") {
           row.scrollIntoView({ block: "nearest", behavior: "smooth" });
         }
+        this.pulseQueueRowForOverlaySlot(RECRUIT_QUEUE_MATRIX_SLOT_KEY);
       }
     }
   }
@@ -796,7 +811,10 @@ export class QueuePanels {
       const row = target.closest("li.queue-list-row[data-slot-key]");
       if (row instanceof HTMLElement) {
         const slotKey = row.dataset.slotKey?.trim();
-        if (slotKey) this.openAndHighlightBuildSlot(slotKey);
+        if (slotKey) {
+          this.onLocateCitySlotFromQueue?.(slotKey);
+          this.openAndHighlightBuildSlot(slotKey);
+        }
       }
       return;
     }
