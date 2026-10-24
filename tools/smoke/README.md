@@ -2,7 +2,27 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 40 网关冒烟（INTG-037，推荐）
+
+在 INTG-036 全量断言之上强制验收 **主城七槽队列抛光**：`domestic.v1.GetCityState` 打印七槽各 `building_cfg_id` + `build_queue`/`recruit_queue` 首条 `upgrade_finish_at_ms`（供 CLIENT-228/229 对照；无城 **skip** + hint）；**将领面板壳**：`hero.v1.ListPlayerHeroes` 打印首条 `hero_id`/`level` hint（供 CLIENT-230/231 对照；空 **skip** + hint）；**背包使用**：`content.v1.ListPlayerBag` 首条消耗品 `item_id`/`count` + 既有 `UseConsumable` 路径打印结果 hint（供 CLIENT-232 对照；空 **skip** + hint；**不**扩 SKU）；**日常领取 UX**：`quest.v1.ListPlayerQuests` `chain_id=400` 可领取条数 + 首条 `quest_id` hint（供 CLIENT-233 对照；无可领 **skip** + hint）；**军团社交扫读**：`guild.v1.ListGuildMembers` 职务/在线字段 hint + `guild.v1.ListGuildChatMessages`（`chat.v1.ListChatMessages` 军团频道）列表长度（供 CLIENT-234 对照；无军团/空聊天 **skip** + hint）。保留 INTG-036 军事类（`ListMarches`、`StartMarch` handoff、`ListBattleReports`、`ListPlayerMail` 战报 tab、`ListPlayerQuests` 军事链）及更早链路。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速/主城建造新 RPC/战报 proto 扩量/新商城 SKU/IAP。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG037Wave40SmokePath' -count=1 -v
+```
+
+与 INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG037Wave40SmokePath|TestINTG036Wave39SmokePath|TestINTG035Wave38SmokePath|TestINTG034Wave37SmokePath|TestINTG033Wave36SmokePath|TestINTG032Wave35SmokePath|TestINTG031Wave34SmokePath|TestINTG030Wave33SmokePath|TestINTG029Wave32SmokePath|TestINTG028Wave31SmokePath|TestINTG027Wave30SmokePath|TestINTG026Wave29SmokePath|TestINTG025Wave28SmokePath|TestINTG024Wave27SmokePath|TestINTG023Wave26SmokePath|TestINTG022Wave25SmokePath|TestINTG021Wave24SmokePath|TestINTG020Wave23SmokePath|TestINTG019Wave22SmokePath|TestINTG018Wave21SmokePath|TestINTG017Wave20SmokePath|TestINTG016Wave19SmokePath|TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-037:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 39 网关冒烟（INTG-036，推荐）
 
