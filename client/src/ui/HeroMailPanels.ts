@@ -84,7 +84,12 @@ import {
   mailPlainTextHasWorldCoord,
   resolveMailBattleReportLink,
 } from "@/net/mailBattleCrossLink";
+import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import {
+  handleListRovingKeyDown,
+  syncListRovingTabindex,
+} from "@/ui/listRovingTabindex";
 import {
   batchClaimSummary,
   orderBatchClaimMailIds,
@@ -166,6 +171,8 @@ export class HeroMailPanels {
   private recruitLastSuccessHeroId: number | null = null;
   private heroesRefreshInflight = false;
   private heroCultivationSubmitState: UseConsumableSubmitState = "idle";
+  private heroFocusTrap: CenterPanelFocusTrap | null = null;
+  private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
 
   constructor(
     private readonly mount: HTMLElement,
@@ -181,6 +188,7 @@ export class HeroMailPanels {
     private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
     private readonly onRecruitMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
     private readonly assets?: AssetLoader,
+    private readonly dismissHeroToolbarTrigger?: () => HTMLElement | null,
   ) {}
 
   attach(): void {
@@ -193,11 +201,42 @@ export class HeroMailPanels {
     this.mailPanel.addEventListener("click", (ev) => this.onMailClick(ev));
     this.heroPanel.addEventListener("change", (ev) => this.onHeroChange(ev));
     this.mailPanel.addEventListener("change", (ev) => this.onMailChange(ev));
+    this.heroPanel.addEventListener("keydown", this.onHeroListKeyDown);
+    this.heroFocusTrap = createCenterPanelFocusTrap(this.heroPanel, () => this.closeHeroFromKeyboard());
   }
 
   detach(): void {
+    this.heroPanel?.removeEventListener("keydown", this.onHeroListKeyDown);
+    this.heroFocusTrap?.dispose();
+    this.heroFocusTrap = null;
     this.heroPanel?.remove();
     this.mailPanel?.remove();
+  }
+
+  private closeHeroFromKeyboard(): void {
+    this.heroPanel.classList.add("hidden");
+  }
+
+  private syncHeroPanelFocusTrap(): void {
+    const open = !this.heroPanel.classList.contains("hidden");
+    if (open) {
+      this.heroFocusTrap?.setOpen(true, this.dismissHeroToolbarTrigger?.() ?? null);
+    } else {
+      this.heroFocusTrap?.setOpen(false, null, true);
+    }
+  }
+
+  private onHeroPanelListKeyDown(ev: KeyboardEvent): void {
+    if (this.heroPanel.classList.contains("hidden")) return;
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
+    if (!ul) return;
+    handleListRovingKeyDown(ev, ul, {
+      itemSelector: "li[data-hero-id]",
+      onActivate: (row) => {
+        const id = Number(row.getAttribute("data-hero-id"));
+        if (id > 0) void this.loadHeroDetail(id);
+      },
+    });
   }
 
   /** 会话钱包/背包变更时刷新招募可负担对比（与 HUD 快照一致）。 */
@@ -296,6 +335,7 @@ export class HeroMailPanels {
       void this.refreshRecruitTemplates();
       void this.refreshHeroes({ restoreSelection: true });
     }
+    this.syncHeroPanelFocusTrap();
   }
 
   /** CLIENT-097：排行深链 — 打开将领面板并 GetHeroDetail（只读）。 */
@@ -314,6 +354,7 @@ export class HeroMailPanels {
       return;
     }
     await this.loadHeroDetail(id);
+    this.syncHeroPanelFocusTrap();
   }
 
   isMailOpen(): boolean {
@@ -584,11 +625,13 @@ export class HeroMailPanels {
         if (h.hero_id) {
           li.setAttribute("data-hero-id", String(h.hero_id));
           li.style.cursor = "pointer";
+          li.tabIndex = -1;
           if (h.hero_id === this.selectedHeroId) li.classList.add("selected");
         }
         ul.appendChild(li);
       }
     }
+    syncListRovingTabindex(ul, "li[data-hero-id]");
     if (detailEl) {
       if (!this.selectedHeroId) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);

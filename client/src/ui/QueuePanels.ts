@@ -32,11 +32,16 @@ import {
   sortBuildQueueRows,
   type RecruitQueueEntry,
 } from "@/net/queueState";
+import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
 import {
   PANEL_STATE_LOADING_MESSAGE,
   renderPanelStateListRow,
 } from "@/engine/panelStateChrome";
+import {
+  handleListRovingKeyDown,
+  syncListRovingTabindex,
+} from "@/ui/listRovingTabindex";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -62,6 +67,8 @@ export class QueuePanels {
   private readonly completePulseSlots = new Set<string>();
   private buildListLoading = false;
   private buildListError: string | null = null;
+  private focusTrap: CenterPanelFocusTrap | null = null;
+  private readonly onListKeyDown = (ev: KeyboardEvent) => this.onQueueListKeyDown(ev);
 
   constructor(
     private readonly mount: HTMLElement,
@@ -75,15 +82,21 @@ export class QueuePanels {
     private readonly onOpenDailyBuildQuest?: (questCfgId: number) => void,
     private readonly reskinPrimary?: QueuePanelReskin,
     private readonly onBuildSlotHighlightChange?: (slotKey: string | null) => void,
+    private readonly dismissToolbarTrigger?: () => HTMLElement | null,
   ) {}
 
   attach(): void {
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.panel.addEventListener("keydown", this.onListKeyDown);
+    this.focusTrap = createCenterPanelFocusTrap(this.panel, () => this.closeFromKeyboard());
   }
 
   detach(): void {
+    this.panel?.removeEventListener("keydown", this.onListKeyDown);
+    this.focusTrap?.dispose();
+    this.focusTrap = null;
     this.panel?.remove();
   }
 
@@ -100,12 +113,16 @@ export class QueuePanels {
   }
 
   toggle(): void {
+    const wasOpen = this.isOpen();
     this.panel.classList.toggle("hidden");
     if (this.isOpen()) {
       resetQueuePanelViewportScroll(this.panel);
       this.tickAccum = 0;
       this.render();
       resetQueuePanelViewportScroll(this.panel);
+      this.focusTrap?.setOpen(true, this.dismissToolbarTrigger?.() ?? null);
+    } else if (wasOpen) {
+      this.focusTrap?.setOpen(false, null, true);
     }
   }
 
@@ -116,6 +133,24 @@ export class QueuePanels {
     this.tickAccum = 0;
     this.render();
     resetQueuePanelViewportScroll(this.panel);
+    this.focusTrap?.setOpen(true, this.dismissToolbarTrigger?.() ?? null);
+  }
+
+  private closeFromKeyboard(): void {
+    this.panel.classList.add("hidden");
+  }
+
+  private onQueueListKeyDown(ev: KeyboardEvent): void {
+    if (!this.isOpen()) return;
+    const buildUl = this.panel.querySelector<HTMLElement>('[data-role="queue-build-list"]');
+    if (!buildUl) return;
+    handleListRovingKeyDown(ev, buildUl, {
+      itemSelector: "li.queue-list-row[data-slot-key]",
+      onActivate: (row) => {
+        const slotKey = row.dataset.slotKey?.trim();
+        if (slotKey) this.openAndHighlightBuildSlot(slotKey);
+      },
+    });
   }
 
   /** CLIENT-134：底栏队列角标深链 — 打开并高亮首条建造进行中槽位。 */
@@ -443,6 +478,8 @@ export class QueuePanels {
       li.appendChild(btn);
       buildUl.appendChild(li);
     }
+
+    syncListRovingTabindex(buildUl, "li.queue-list-row[data-slot-key]");
 
     for (const entry of this.recruits) {
       const text = formatRecruitQueueLine(entry, now);

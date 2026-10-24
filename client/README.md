@@ -373,7 +373,24 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:27 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:27 backlog 实现卡）。实现卡 **CLIENT-120** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-019**（[#519](https://github.com/anitaguptaoffice/sanguo-slg/issues/519)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 27」。
+波次总览与 **DOCS-EXIT-019**（[#519](https://github.com/anitaguptaoffice/sanguo-slg/issues/519)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 27」。**wave:28** 主城七槽·将领养成·HUD 深链·面板态可读加深见下文 [Wave 28](#wave-28-h5-主城七槽将领养成hud深链面板态可读加深m4-出口--intg-025)。
+
+## Wave 28 H5 主城七槽·将领养成·HUD 深链·面板态可读加深（M4 出口 / INTG-025）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-025** 网关冒烟一致）。**范围外**同 Wave 27；**永不合并** art hold / VERIFY Draft。**世界瓦片/图集**仍暂缓。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 主城将领 HUD manifest + 面板键盘焦点** | [手动验收（1280 主城将领 HUD manifest CLIENT-135）](#手动验收1280-主城将领-hud-manifest-client-135)（[#539](https://github.com/anitaguptaoffice/sanguo-slg/issues/539)） | 本卡 |
+
+### 手动验收（1280 主城将领 HUD manifest CLIENT-135）
+
+`#layout-frame.layout-narrow` 下 **建造侧栏**（`building`）、**队列**（`queue`）、**将领**（`hero`）与画布 **七槽升级 overlay**、顶栏 **HUD 待办角标**、**CLIENT-129** 预留 `data-panel-state` 骨架：**不遮挡底栏 56px**、**无横向溢出**；`data-art-skin="off"` 可跳过纸底。
+
+1. 视口 **1280×720**，`make dev` 进主城：点画布槽位打开 **建造侧栏**，底栏打开 **队列** / **将领**；面板内 **Tab** 焦点在面板根内循环，**Esc** 关闭并将焦点回到对应底栏触发钮（**CLIENT-110** 口径）；**将领列表** / **队列建造行** 聚焦后 **↑/↓** roving 切换（`data-list-roving-keyboard=off` 可关）。
+2. 七槽 DOM overlay、队列表与将领长列表在 `.panel-scroll-body` 内滚动；`padding-bottom: 64px` 与 `scroll-margin-bottom` 避免末行/焦点环被底栏裁切；顶栏 `hud-center-todo-badge` 与底栏 `toolbar-badge` 窄屏省略不退化 **CLIENT-107**。
+3. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119** manifest 不退化。
+4. 单测：`mainCityHeroHudNarrowManifest.test.ts`、`centerPanelFocusTrap.test.ts`、`listRovingTabindex.test.ts`、`layoutViewport.test.ts`（CLIENT-135 注册表）；`cd client && npm test` 绿。
 
 ### 手动验收（聊天未读与社交角标 CLIENT-102）
 
