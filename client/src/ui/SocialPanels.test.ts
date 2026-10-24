@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { LB_PLAYER_POWER, LB_PLAYER_RESOURCE } from "@/net/leaderboardFormat";
+import { RANK_MY_RANK_CHANGED_PULSE_CLASS } from "@/net/leaderboardMyRankRefresh";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
 import {
@@ -120,6 +121,39 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("刷新排行榜");
     expect(mount.querySelector('[data-role="rank-list"]')?.textContent).toContain("种子");
     expect(mount.querySelector(".rank-pin-row")).toBeNull();
+  });
+
+  it("CLIENT-152: pulses pin row when my_rank changes on manual refresh", async () => {
+    const mount = document.createElement("div");
+    const getLeaderboard = vi
+      .fn()
+      .mockResolvedValueOnce({
+        entries: [{ rank: 1, display_name: "甲", score: 100 }],
+        my_rank: 2,
+        my_score: 90,
+      })
+      .mockResolvedValueOnce({
+        entries: [{ rank: 1, display_name: "甲", score: 100 }],
+        my_rank: 4,
+        my_score: 88,
+      });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const pin = mount.querySelector(".rank-pin-row");
+    expect(pin?.querySelector(".rank-pin-primary")?.textContent).toContain("我的排名 #2");
+    expect(pin?.querySelector(".rank-pin-secondary")?.textContent).toContain("上次刷新");
+    expect(pin?.classList.contains(RANK_MY_RANK_CHANGED_PULSE_CLASS)).toBe(false);
+    mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const pinAfter = mount.querySelector(".rank-pin-row");
+    expect(pinAfter?.querySelector(".rank-pin-primary")?.textContent).toContain("我的排名 #4");
+    expect(pinAfter?.classList.contains(RANK_MY_RANK_CHANGED_PULSE_CLASS)).toBe(true);
   });
 
   it("keeps last rank snapshot on refresh failure and marks stale", async () => {
