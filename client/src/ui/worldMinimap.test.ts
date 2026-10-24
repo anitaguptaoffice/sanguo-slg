@@ -27,6 +27,7 @@ import {
   minimapMarchPhaseShortLabel,
   minimapMarchRouteStroke,
   readMinimapCollapsedFromSession,
+  openWorldMinimapExpanded,
   writeMinimapCollapsedToSession,
   worldToMinimapLayout,
   DEFAULT_MINIMAP_VIEW,
@@ -125,6 +126,19 @@ describe("worldMinimap", () => {
     writeMinimapCollapsedToSession(true, storage);
     expect(storage.getItem(MINIMAP_COLLAPSED_SESSION_KEY)).toBe("1");
     expect(readMinimapCollapsedFromSession(storage)).toBe(true);
+  });
+
+  it("openWorldMinimapExpanded clears collapsed session (CLIENT-142)", () => {
+    const store = new Map<string, string>();
+    const storage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => store.set(k, v),
+    };
+    writeMinimapCollapsedToSession(true, storage);
+    const result = openWorldMinimapExpanded(true, storage);
+    expect(result).toEqual({ collapsed: false, didExpand: true });
+    expect(readMinimapCollapsedFromSession(storage)).toBe(false);
+    expect(openWorldMinimapExpanded(false, storage)).toEqual({ collapsed: false, didExpand: false });
   });
 
   it("includes extra world points in bounds for battle replay", () => {

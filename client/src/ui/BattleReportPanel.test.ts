@@ -115,8 +115,15 @@ describe("BattleReportPanel", () => {
     const detail = mount.querySelector('[data-role="report-detail"]');
     expect(detail?.textContent).toContain("守方获胜");
     expect(detail?.querySelector(".battle-report-rounds-table")).toBeTruthy();
-    expect(detail?.querySelector(".battle-report-detail-coord")?.textContent).toContain("坐标(8,9)");
-    expect(detail?.querySelector('[data-action="view-on-map"]')).toBeTruthy();
+    expect(detail?.querySelector(".battle-report-detail-location-xy")?.textContent).toContain(
+      "location_x=8",
+    );
+    expect(detail?.querySelector(".battle-report-detail-location-xy")?.textContent).toContain(
+      "location_y=9",
+    );
+    expect(detail?.querySelector('[data-action="view-on-map"]')?.textContent).toBe(
+      "在小地图定位",
+    );
   });
 
   it("shows 相关日常 when outcome win/loss and daily march in progress", async () => {
@@ -178,7 +185,7 @@ describe("BattleReportPanel", () => {
     expect(onOpenRelatedMail).toHaveBeenCalledWith(6002);
   });
 
-  it("invokes onViewOnMap when clicking 在地图查看", async () => {
+  it("invokes onViewOnMap when clicking 在小地图定位", async () => {
     const mount = document.createElement("div");
     const summary = {
       report_id: 3,
