@@ -1,8 +1,9 @@
 {
   "task": "ART-CENTER-PANEL-012",
-  "runtime_code_sha": "7e1e6f986e4e34da3baaaae90ec5114607c1d852",
-  "screenshot_artifacts_commit_sha": "7e1e6f986e4e34da3baaaae90ec5114607c1d852",
-  "tip_sha": "7e1e6f986e4e34da3baaaae90ec5114607c1d852",
+  "runtime_code_sha": "ce61ee7523b2d4b963db586209a72f8320573069",
+  "screenshot_artifacts_commit_sha": "ce61ee7523b2d4b963db586209a72f8320573069",
+  "tip_sha": "ce61ee7523b2d4b963db586209a72f8320573069",
+  "note": "Evidence JPEGs + probes bound to #721 squash merge ce61ee75; pre-squash refresh branch 607aab01bdb972c5fcb5ca160cce82019ac9023e. Visual PASS unchanged.",
   "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
   "captured_at": "2026-10-24T06:53:25.612Z",
   "asset_id": "ui.panel.hero.v1",
