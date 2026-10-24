@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE6",
   "template_cfg_id": 1024,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "7633826dc3f5f77270d494b8b8becec8e15c1f39",
-  "runtime_code_sha": "7633826dc3f5f77270d494b8b8becec8e15c1f39",
+  "tip_sha": "d2cf1a1841dfbdcdb14d15698297b701a7acdcda",
+  "runtime_code_sha": "d2cf1a1841dfbdcdb14d15698297b701a7acdcda",
   "hero_mail_panels_blob_sha": "642db6d4a46cdebd5dd77b5279bc56b52080018a",
   "art_head_sha": "8035dfb59b3e783cd033b72d07bded3f4d3da483",
   "art_asset_ids": [
@@ -203,7 +203,7 @@
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 259989
+      "bytes": 260025
     },
     "probe": {
       "ok": true,
@@ -271,5 +271,5 @@
     "Art path-copied from Draft #1203 @ 8035dfb5; Draft remains unmerged.",
     "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
   ],
-  "captured_at": "2026-10-24T20:16:59.353Z"
+  "captured_at": "2026-10-24T20:18:14.384Z"
 }

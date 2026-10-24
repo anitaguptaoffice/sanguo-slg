@@ -1,6 +1,6 @@
 # HERO-HOST-SLICE6 runtime inventory — template 1024
 
-tip_sha / runtime_code_sha: `7633826dc3f5f77270d494b8b8becec8e15c1f39`
+tip_sha / runtime_code_sha: `d2cf1a1841dfbdcdb14d15698297b701a7acdcda`
 art_head_sha: `8035dfb59b3e783cd033b72d07bded3f4d3da483`
 hero_mail_panels_blob_sha: `642db6d4a46cdebd5dd77b5279bc56b52080018a`
 
@@ -9,7 +9,7 @@ hero_mail_panels_blob_sha: `642db6d4a46cdebd5dd77b5279bc56b52080018a`
 - `runtime/1024/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 479445 bytes, sha256 `7ce16c4984d604ee547754bfae2d060f336c9c87491a7bad08aea86057b62d0c`
 - `runtime/1024/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 940790 bytes, sha256 `127200ba1874209a0f67b38cc9bcc1aafd46ab2b1fca4bccb67b3614c5730695`
 - `runtime/1024/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245629 bytes, sha256 `46c809847b356735fa4f7cb776d86992e8e1393d216837c231aecbcccf23d694`
-- `runtime/1024/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `7bfff2b0163444d3c2acde215f9ed246b61483fad3671bd22e6f674616b3600e`
+- `runtime/1024/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `6b757f3030f41b770b3eba182cd259255ae8fda07f39ad5bbecca81b340ed0b2`
 
 ## Textures (hero.avatar.1024.v1 / hero.bust.1024.v1)
 
