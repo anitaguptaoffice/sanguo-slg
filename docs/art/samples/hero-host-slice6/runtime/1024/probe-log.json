@@ -1,0 +1,275 @@
+{
+  "task": "HERO-HOST-SLICE6",
+  "template_cfg_id": 1024,
+  "mock_preset": "hero-panel-roster",
+  "tip_sha": "d2cf1a1841dfbdcdb14d15698297b701a7acdcda",
+  "runtime_code_sha": "d2cf1a1841dfbdcdb14d15698297b701a7acdcda",
+  "hero_mail_panels_blob_sha": "642db6d4a46cdebd5dd77b5279bc56b52080018a",
+  "art_head_sha": "8035dfb59b3e783cd033b72d07bded3f4d3da483",
+  "art_asset_ids": [
+    "hero.avatar.1024.v1",
+    "hero.bust.1024.v1"
+  ],
+  "static_face_percent_min_required": 60,
+  "probes": {
+    "1600x900-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1024,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "姜维",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "姜维 · Lv12 · 忠诚 86",
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1024.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1024.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 1360.78125,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 202,
+        "width": 568,
+        "height": 606
+      }
+    },
+    "1600x900-dpr2": {
+      "ok": true,
+      "template_cfg_id": 1024,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "姜维",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "姜维 · Lv12 · 忠诚 86",
+      "dpr": 2,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/avatar/1024.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/bust/1024.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": false,
+      "usesAvatar2x": true,
+      "usesBust1x": false,
+      "usesBust2x": true,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 1360.78125,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 202,
+        "width": 568,
+        "height": 606
+      }
+    },
+    "1280x720-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1024,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "姜维",
+      "listAvatarVisible": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": false,
+      "listRowPrimaryText": "姜维 · Lv12 · 忠诚 86",
+      "dpr": 1,
+      "uiScale": 0.8,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1024.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1024.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 502,
+        "bustRight": 492
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 194.796875,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 374,
+        "top": 194.796875,
+        "width": 550,
+        "height": 0
+      }
+    }
+  },
+  "sameframe": {
+    "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
+    "jpeg": {
+      "quality": 88,
+      "bytes": 260025
+    },
+    "probe": {
+      "ok": true,
+      "bustInClip": true,
+      "nameInClip": true,
+      "bustInViewport": true,
+      "nameInViewport": true,
+      "nameRightOfBust": true,
+      "verticalBandOverlap": true,
+      "gapPx": 10,
+      "gapNear10px": true,
+      "visibleClip": {
+        "left": 356,
+        "top": 194.796875,
+        "width": 568,
+        "height": 444.40625
+      },
+      "name": {
+        "text": "姜维"
+      },
+      "viewport": {
+        "w": 1280,
+        "h": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "shots": {
+    "hero-host-1600x900-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 479445,
+      "viewport": {
+        "tag": "1600x900-dpr1",
+        "file": "hero-host-1600x900-dpr1.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-host-1600x900-dpr2.jpg": {
+      "quality": 68,
+      "bytes": 940790,
+      "viewport": {
+        "tag": "1600x900-dpr2",
+        "file": "hero-host-1600x900-dpr2.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-host-1280x720-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 245629,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "notes": [
+    "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster seeds roster incl. 1021–1024.",
+    "Art path-copied from Draft #1203 @ 8035dfb5; Draft remains unmerged.",
+    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
+  ],
+  "captured_at": "2026-10-24T20:18:14.384Z"
+}
