@@ -614,6 +614,14 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **美术旁路**（**非** wave:36 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）；**CLIENT-137**（[#556](https://github.com/anitaguptaoffice/sanguo-slg/issues/556) / [#574](https://github.com/anitaguptaoffice/sanguo-slg/pull/574)）；**CLIENT-146**（[#578](https://github.com/anitaguptaoffice/sanguo-slg/issues/578) / [#579](https://github.com/anitaguptaoffice/sanguo-slg/pull/579)）；**CLIENT-147**（FILTER-008 旁路）；**ART-012**（[#698](https://github.com/anitaguptaoffice/sanguo-slg/pull/698) 工程修 + [#721](https://github.com/anitaguptaoffice/sanguo-slg/pull/721) 终验补丁 `ce61ee75`——**非**本波 backlog；Draft [#697](https://github.com/anitaguptaoffice/sanguo-slg/pull/697) **不合**）。实现卡 **CLIENT-196～203**。波次总览与 **DOCS-EXIT-028**（[#731](https://github.com/anitaguptaoffice/sanguo-slg/issues/731)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 36」。实现合入后 main tip **`6d4daaa4c4daff6cca11ae2bf4b4335b81f882e5`**（#735 CLIENT-203）；工程 tip（含 ART-012 #721）**`ce61ee7523b2d4b963db586209a72f8320573069`**；基线 wave:35 **`9737f49a08e3e7b518d03ad22cc89d579ac61e52`**（DOCS-EXIT-027 [#719](https://github.com/anitaguptaoffice/sanguo-slg/pull/719)；实现 tip **`8b4230e4`**）。
 
+## Wave 37 H5 世界小地图行军叠标·军情 ETA·战报邮件背包扫读·1280组合manifest（M4 出口 / INTG-034）
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **世界小地图多行军终点叠标与格点行军摘要** | 正文 **wave:37（CLIENT-204）** bullet | 本 PR |
+
+- **wave:37（CLIENT-204）小地图行军叠标**：在 **CLIENT-188** `minimap-march-end-highlight` 基础上，同格点多行军目的点绘制只读 **`minimap-march-stack-badge`**（`×N` 角标，`ListMarches` 客户端计数）；格点信息卡次行 **`formatWorldTileMarchSummaryLine`** / `world-tile-march-summary-line` 展示 **最近终点行军** phase/ETA（与军情 `formatMarchListSecondary` 同口径，无新 world RPC）。单测：`minimapMarchStack.test.ts`、`wave37MinimapMarchStackNarrowManifest.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（1280 wave:36 组合 manifest CLIENT-203）
 
 视口 **1280×720** `layout-narrow`：**队列** `queue-row-eta-line` / `queue-row-progress-bar`（**CLIENT-196**）、完成 **七槽** `city-slot-complete-focus-ring` / `queue-row-complete-pulse`（**CLIENT-197**）、**将领** `hero-growth-compare-strip` / `hero-upgrade-progress-bar`（**CLIENT-198**）、列表返回 `hero-list-return-v1` / `hero-list-return-highlight`（**CLIENT-199**）、**军团/聊天** `guild-chat-empty-error-row` / `guild-chat-retry-inline`（**CLIENT-200**）、招募 `recruit-form-inline-hint` / `bag-hero-item-gap-highlight`（**CLIENT-201**）、顶栏 `hud-center-panel-deeplink-line` / 底栏 `center-panel-tab-pulse`（**CLIENT-202**）与 **CLIENT-187/195** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；队列/社交密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave36MainCityQueueHeroSocialHudNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-203）；`cd client && npm test` 绿。（[#729](https://github.com/anitaguptaoffice/sanguo-slg/issues/729) / [#735](https://github.com/anitaguptaoffice/sanguo-slg/pull/735) `6d4daaa4`）

@@ -4,6 +4,7 @@ import {
   resolveMinimapDestMarkerDrawMode,
 } from "@/engine/artMinimapDestSkin";
 import type { MarchSummary } from "@/net/militaryFormat";
+import { layoutMinimapMarchStackBadges } from "@/ui/minimapMarchStack";
 import {
   MINIMAP_MARCH_END_RING_COLOR,
   isMinimapFocusPulseActive,
@@ -162,6 +163,7 @@ export function drawWorldMinimap(
   }
 
   const destSeen = new Set<string>();
+  const stackDestKeys: { wx: number; wy: number }[] = [];
   c2d.font = "10px system-ui";
   for (const m of opts.marches) {
     const wx = m.to_x;
@@ -170,6 +172,7 @@ export function drawWorldMinimap(
     const key = `${wx},${wy}`;
     if (destSeen.has(key)) continue;
     destSeen.add(key);
+    stackDestKeys.push({ wx, wy });
     const matchesFocus =
       focus != null && focus.wx === wx && focus.wy === wy;
     const isSel =
@@ -184,6 +187,29 @@ export function drawWorldMinimap(
       const pos = clampMinimapEtaLabelLayout(p.x, p.y, metrics.width, textH, rect);
       c2d.fillStyle = isSel ? "#f0c674" : "rgba(245, 230, 200, 0.88)";
       c2d.fillText(label, pos.x, pos.y + textH - 2);
+    }
+  }
+
+  const stackBadges = layoutMinimapMarchStackBadges(
+    opts.marches,
+    stackDestKeys,
+    (wx, wy) => worldToMinimapLayout(wx, wy, bounds, rect, opts.view),
+  );
+  if (stackBadges.length > 0) {
+    c2d.font = "bold 10px system-ui";
+    for (const badge of stackBadges) {
+      const metrics = c2d.measureText(badge.label);
+      const padX = 3;
+      const padY = 2;
+      const w = metrics.width + padX * 2;
+      const h = 12;
+      c2d.fillStyle = "rgba(18, 14, 10, 0.82)";
+      c2d.fillRect(badge.x - padX, badge.y - h + padY, w, h);
+      c2d.strokeStyle = "rgba(245, 230, 200, 0.75)";
+      c2d.lineWidth = 1;
+      c2d.strokeRect(badge.x - padX, badge.y - h + padY, w, h);
+      c2d.fillStyle = "#f0c674";
+      c2d.fillText(badge.label, badge.x, badge.y);
     }
   }
 

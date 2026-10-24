@@ -194,6 +194,7 @@ import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import { applyMinimapBattleReplayPulse } from "@/ui/minimapBattleReplayPulse";
+import { syncMinimapMarchStackBadgeClass } from "@/ui/minimapMarchStack";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -2477,6 +2478,11 @@ export class MainCityScene implements Scene {
 
     // Top-bar wallet icons/amounts: DOM only (`appendHudResourceStrip` in renderHud). Canvas draws
     // the opaque HUD band above; stacking canvas resource glyphs caused overlap at 1280×720 (CLIENT-039).
+
+    syncMinimapMarchStackBadgeClass(
+      this.minimapMarches,
+      document.getElementById("layout-frame"),
+    );
 
     drawWorldMinimap(c2d, {
       ownCityX: this.session?.cityX,

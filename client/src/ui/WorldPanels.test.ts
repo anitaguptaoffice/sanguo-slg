@@ -297,7 +297,8 @@ describe("WorldPanels", () => {
     await flushPromises();
     panels.selectGridAt(60, 60);
     const secondary = mount.querySelector('[data-role="world-tile-march-secondary"]');
-    expect(secondary?.textContent).toContain("最近行军 #7");
+    expect(secondary?.textContent).toContain("最近终点行军 #7");
+    expect(secondary?.classList.contains("world-tile-march-summary-line")).toBe(true);
     expect(mount.querySelector('[data-role="world-tile-info-lines"]')?.textContent).toContain(
       "己方主城",
     );

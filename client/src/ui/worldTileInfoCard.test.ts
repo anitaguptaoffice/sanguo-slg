@@ -111,18 +111,18 @@ describe("formatWorldTileInfoCard", () => {
     expect(formatWorldTileOccupationSummary(undefined)).toBe("无城池（空地格）");
   });
 
-  it("formatWorldTileInfoSecondary shows first in-progress march ETA or hint", () => {
+  it("formatWorldTileInfoSecondary shows most recent in-progress march ETA or hint", () => {
     const now = Date.UTC(2026, 9, 24, 12, 0, 0);
     const line = formatWorldTileInfoSecondary(
       [
-        { march_id: 99, to_x: 3, to_y: 4, phase: 1 },
-        { march_id: 100, to_x: 3, to_y: 4, phase: 2, arrive_at_ms: now + 30 * 60_000 },
+        { march_id: 99, to_x: 3, to_y: 4, phase: 1, depart_at_ms: now - 120_000 },
+        { march_id: 100, to_x: 3, to_y: 4, phase: 2, depart_at_ms: now, arrive_at_ms: now + 30 * 60_000 },
       ],
       { x: 3, y: 4 },
       now,
     );
-    expect(line).toContain("最近行军 #99");
-    expect(line).toContain("待发");
+    expect(line).toContain("最近终点行军 #100");
+    expect(line).toContain("行军中");
     expect(
       formatWorldTileInfoSecondary([], { x: 1, y: 2 }),
     ).toBe(WORLD_TILE_NO_RECENT_MARCH_HINT);

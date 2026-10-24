@@ -125,6 +125,12 @@ export {
   WORLD_TILE_INFO_CARD_CLASS,
 } from "@/engine/wave35WorldIntelBattleReportMailDailyNarrowManifest";
 
+/** CLIENT-204: wave:37 小地图多行军终点叠标（软依赖 CLIENT-188）。 */
+export {
+  MINIMAP_MARCH_STACK_BADGE_CLASS,
+  WORLD_TILE_MARCH_SUMMARY_LINE_CLASS,
+} from "@/engine/wave37MinimapMarchStackNarrowManifest";
+
 /** CLIENT-203: wave:36 主城队列将领社交 HUD 深链组合窄屏钩子（196～202 见 main 实装）。 */
 export {
   CENTER_PANEL_TAB_PULSE_CLASS,
