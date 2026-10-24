@@ -20,10 +20,14 @@ describe("formatQueueRemainingProgress", () => {
     expect(markup).toContain("domestic-queue-eta-segment-residual-label");
     expect(markup).toContain("domestic-queue-eta-segment-residual-deep-label");
     expect(markup).toContain("domestic-queue-eta-segment-residual-deep-finish");
+    expect(markup).toContain("domestic-queue-eta-segment-residual-deeper-label");
+    expect(markup).toContain("domestic-queue-eta-segment-residual-deeper-finish");
     expect(markup).toContain("&lt;1h");
     expect(markup).toContain("下一档 完成");
     expect(markup).toContain("巩固分段");
+    expect(markup).toContain("巩固再加深");
     expect(markup).toContain("完成倒计时");
+    expect(markup).toContain("第四行");
     expect(markup).toContain("queue-row-progress-bar");
     expect(markup).toContain("queue-row-progress-fill");
     expect(markup).toContain('style="width:50%"');
