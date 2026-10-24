@@ -741,6 +741,25 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/背包/日常/军团** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:40 DOM 钩子（软依赖 **CLIENT-228～234**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227** manifest 不退化。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。（[#857](https://github.com/anitaguptaoffice/sanguo-slg/issues/857) / [#864](https://github.com/anitaguptaoffice/sanguo-slg/pull/864) `fe533816`）
 
+## Wave 43 H5 世界小地图军情 scroll-sync 残余·出征戳记兵力余量·战报键盘坐标·邮件 HUD 附件·背包商城返回·排行招募扫读·军情 phase 预填·1280 组合 manifest（M4 出口 / INTG-040）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-040** 网关冒烟一致）。**范围外**同 Wave 42；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / **#637** / **#649** / **#674** / **#697**）；**CLIENT-064** / **CLIENT-136** / **CLIENT-137** / **CLIENT-146** / **CLIENT-147** / **ART-012** 美术旁路——**非**本波 backlog 实现卡。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 世界军情战报邮件商城排行招募组合 manifest** | [手动验收（1280 wave:43 组合 manifest CLIENT-259）](#手动验收1280-wave43-组合-manifest-client-259)（[#962](https://github.com/anitaguptaoffice/sanguo-slg/issues/962)） | 进行中 |
+
+**推荐串联**（在 [Wave 42](#wave-42-h5-主城队列-eta-完成焦点残余将领养成扫读双榜钉选军团聊天日常-chain-hud-深链1280-组合-manifestm4-出口--intg-039) 主城栈基础上 **轮转**回世界/军情/战报/邮件/商城/排行/招募栈）：小地图↔军情 scroll-sync 残余（**CLIENT-252**）→ 出征刷新戳记与兵力余量（**CLIENT-253**）→ 战报键盘相邻导航与坐标复制（**CLIENT-254**）→ 邮件 HUD 附件领取（**CLIENT-255**）→ 背包商城返回高亮（**CLIENT-256**）→ 排行招募扫读（**CLIENT-257**）→ 军情 phase 再出征预填（**CLIENT-258**）→ 视口 **1280×720** 世界军情战报邮件商城排行 manifest（**CLIENT-259**）；网关字段见 `tools/smoke/README.md` **INTG-040**。
+
+实现卡 **CLIENT-252～259**（自 **CLIENT-252** 起）。**勿**将 **ART-012** 登记为本波实现卡 ID。
+
+### 手动验收（1280 wave:43 组合 manifest CLIENT-259）
+
+视口 **1280×720** `layout-narrow`：**世界** `minimap-intel-scroll-sync-deep-ring` + `world-tile-intel-eta-cross-residual-line`（**CLIENT-252**；**CLIENT-236/237** 不退化）、**军事出征** `march-form-troop-margin-residual-line` / `march-submit-intel-refresh-stamp-deep`（**CLIENT-253**；**CLIENT-238** 戳记 **不退化**）、**战报** `report-list-keyboard-adjacent-nav-residual-ring` / `battle-report-coord-copy-bar-residual-sweep`（**CLIENT-254**；**CLIENT-239/240** **不退化**）、**邮件** `mail-claim-hud-sync-deep-pulse` / `mail-attachment-claim-residual-subline`（**CLIENT-255**；**CLIENT-241** **不退化**）、**背包/商城** `bag-shop-inline-state-residual-ring` / `panel-return-source-highlight-residual`（**CLIENT-256**；**CLIENT-242/211** **不退化**）、**排行/招募** `rank-list-density-scan-residual-line` / `recruit-template-inline-residual-summary`（**CLIENT-257**；**CLIENT-184/242** **不退化**）、**军情** `intel-phase-change-residual-pulse` / `intel-march-prefill-residual-line` + `data-action="prefill-march-form-from-intel-residual"`（**CLIENT-258**；**CLIENT-205/222** **不退化**）与 **CLIENT-243/251** 同级窄屏契约（**非** wave:42 主城将领日常社交队列 manifest 面板集）；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；世界/军情/战报/邮件/商城密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave43WorldIntelBattleReportMailShopRankNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-259）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：**世界/军情/军事出征/战报/邮件/背包/商城/排行/招募** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:43 DOM 钩子（软依赖 **CLIENT-252～258**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227/235/243/251** manifest 不退化。单测：`wave43WorldIntelBattleReportMailShopRankNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-259）；`cd client && npm test` 绿。
+
 ## Wave 42 H5 主城队列 ETA 完成焦点残余·将领养成扫读·双榜钉选·军团聊天·日常 chain HUD 深链·1280 组合 manifest（M4 出口 / INTG-039）
 
 在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-039** 网关冒烟一致）。**范围外**同 Wave 41；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / **#637** / **#649** / **#674** / **#697**）；**CLIENT-064** / **CLIENT-136** / **CLIENT-137** / **CLIENT-146** / **CLIENT-147** / **ART-012** 美术旁路——**非**本波 backlog 实现卡。
