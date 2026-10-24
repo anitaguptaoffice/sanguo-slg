@@ -1144,7 +1144,8 @@ cd client && npm install && npm run dev
 6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。**CLIENT-112**：「使用道具」/「批量使用勾选格」提交中 **disabled + 使用中…**；成功 `formatUseConsumableEffectSummary` + 列表行 `bag-row-used-pulse`（3s）+ 钱包增量 **CLIENT-051** 脉冲；失败保留道具选中与批量勾选。
 7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
 8. **CLIENT-153 背包分类**：**全部 / 消耗品 / 养成** tab（`sessionStorage` 键 `bag-category-tab-v1`）；切换仅客户端过滤 `ListPlayerBag` 会话快照、**不新 RPC**；行内 **cfg 名 + `bag-stack-qty`（`formatBagStackQty`）** 堆叠扫读；真空/筛选无匹配走 **CLIENT-029** + **CLIENT-129** `renderPanelStateListRow`；**CLIENT-112** 使用提交脉冲不退化。
-9. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`；全量 `cd client && npm test`。
+9. **CLIENT-154 商城行内态**：货架列表行与购买区 `shop-wallet-gap` 在钱包不足时行内展示 `formatShopOfferAffordInline`（`缺少：粮 N …`，**CLIENT-067** 口径）；足够时购买区仍为 **CLIENT-092** 需/余对比条，**购买×1** disabled 与文案一致；货架 **loading/error/空** 走 **CLIENT-129** `renderPanelStateListRow`；**CLIENT-113** 购买脉冲不退化。
+10. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`shopOfferAfford.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
 

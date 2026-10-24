@@ -92,3 +92,41 @@ describe("ContentPanels narrow scroll (CLIENT-095 + CLIENT-119)", () => {
     expect(body.scrollTop).toBe(0);
   });
 });
+
+describe("ContentPanels shop afford inline (CLIENT-154)", () => {
+  it("shows purchase-area 缺少 line and disables buy when wallet insufficient", async () => {
+    const mount = document.createElement("div");
+    const listShopShelf = vi.fn().mockResolvedValue({
+      offers: [
+        {
+          offer_id: 1001,
+          shelf_name: "谷袋",
+          item_cfg_id: 2001,
+          quantity_per_purchase: 1,
+          price_resources: { gold: 100 },
+        },
+      ],
+    });
+    const gateway = {
+      getBoundServerId: () => 1,
+      listShopShelf,
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => ({ ...baseSession(), wallet: { gold: 5 } }),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleShop();
+    await vi.waitFor(() => expect(listShopShelf).toHaveBeenCalled());
+    const gap = mount.querySelector('[data-role="shop-wallet-gap"]');
+    expect(gap?.textContent).toMatch(/^缺少：/);
+    expect(gap?.classList.contains("shop-afford-inline")).toBe(true);
+    const buy = mount.querySelector('button[data-action="buy-offer"]') as HTMLButtonElement;
+    expect(buy.disabled).toBe(true);
+    const row = mount.querySelector(".shop-list li");
+    expect(row?.textContent).toContain("缺少：");
+  });
+});
