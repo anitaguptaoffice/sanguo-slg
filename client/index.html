@@ -145,6 +145,40 @@
         font-variant-numeric: tabular-nums;
         text-align: center;
       }
+      #hud .hud-center-panel-deeplink {
+        flex-shrink: 0;
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0;
+        margin-right: 6px;
+        max-width: min(100%, 420px);
+        font-size: 11px;
+        line-height: 1.25;
+        color: #d4c4a0;
+      }
+      #hud .hud-center-panel-deeplink-seg {
+        pointer-events: auto;
+        cursor: pointer;
+        padding: 0 2px;
+        border: none;
+        background: none;
+        color: #e8c547;
+        font: inherit;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      #hud .hud-center-panel-deeplink-sep {
+        color: #9a8a70;
+        pointer-events: none;
+      }
+      @keyframes center-panel-tab-pulse-keyframes {
+        0%, 100% { box-shadow: none; }
+        40% { box-shadow: 0 0 0 2px #c9a227, 0 0 10px rgba(201, 162, 39, 0.55); }
+      }
+      .main-city-toolbar button.center-panel-tab-pulse {
+        animation: center-panel-tab-pulse-keyframes 1.5s ease-out 1;
+      }
       #hud .hud-resource-strip {
         position: relative;
         display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 0 0 auto;
@@ -2936,7 +2970,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-item-cfg-summary,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-price-wallet-gap-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-price-vs-wallet,
-      #layout-frame.layout-narrow #hud [data-role="hud-todo-sweep-line"] {
+      #layout-frame.layout-narrow #hud [data-role="hud-todo-sweep-line"],
+      #layout-frame.layout-narrow #hud [data-role="hud-center-panel-deeplink-line"] {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .panel-scroll-body,
