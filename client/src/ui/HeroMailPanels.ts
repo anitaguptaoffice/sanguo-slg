@@ -181,8 +181,12 @@ import {
   scheduleMailClaimRowPulse,
 } from "@/net/mailClaimFeedback";
 import {
-  scheduleMailClaimHudSyncPulse,
-  syncHudMailQuestBadgeAfterClaim,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE,
+} from "@/net/mailAttachmentClaimResidualSubline";
+import {
+  pulseMailClaimHudSyncAfterClaimDeep,
+  syncHudMailQuestBadgeAfterClaimDeep,
 } from "@/net/mailClaimHudBadgeSync";
 import {
   compareRecruitAffordability,
@@ -313,6 +317,8 @@ export class HeroMailPanels {
   private mailBatchClaimFailedIds = new Set<number>();
   /** CLIENT-192：单封领取详情行内成功文案（按 mail_id 记忆，切换邮件仍可见）。 */
   private mailClaimSuccessLineByMailId = new Map<number, string>();
+  /** CLIENT-255：列表行附件领取残余次行（按 mail_id 记忆）。 */
+  private mailAttachmentClaimResidualSublineByMailId = new Map<number, string>();
   private mailClaimInlinePulseMailId = 0;
   /** CLIENT-209：与 HUD 深链轮询同源的日常 chain 400 快照（只读扫读，无新 RPC）。 */
   private mailHudTodoDailyRows: DailyQuestRow[] = [];
@@ -722,7 +728,7 @@ export class HeroMailPanels {
     if (!this.mailPanel) return;
     const row = findMailListRow(this.mailPanel, mailId);
     scheduleMailClaimRowPulse(row);
-    scheduleMailClaimHudSyncPulse(row);
+    pulseMailClaimHudSyncAfterClaimDeep(row);
     this.bumpMailClaimHudTodoSweepLinkage();
   }
 
@@ -734,8 +740,13 @@ export class HeroMailPanels {
     this.syncMailHudTodoSweepDom();
   }
 
-  private applyHudMailQuestBadgeAfterClaim(mailId: number, rowAfter: MailRow): void {
-    const sync = syncHudMailQuestBadgeAfterClaim(
+  private applyHudMailQuestBadgeAfterClaim(
+    mailId: number,
+    rowAfter: MailRow,
+    granted?: MailClaimGrantedPayload,
+    mailBeforeClaim?: MailRow,
+  ): void {
+    const sync = syncHudMailQuestBadgeAfterClaimDeep(
       {
         mailUnreadTotal: this.mailUnreadTotal,
         mailInboxSnapshot: this.mailInboxSnapshot,
@@ -744,8 +755,16 @@ export class HeroMailPanels {
       mailId,
       rowAfter,
       mailInboxFilterToUnreadSweepTab(this.mailFilter),
+      granted,
+      mailBeforeClaim,
     );
     this.mailInboxSnapshot = sync.mailInboxSnapshot;
+    if (sync.attachmentClaimResidualSubline && mailId > 0) {
+      this.mailAttachmentClaimResidualSublineByMailId.set(
+        mailId,
+        sync.attachmentClaimResidualSubline,
+      );
+    }
   }
 
   private syncMailClaimInlineFeedback(mailId: number): void {
@@ -1516,6 +1535,17 @@ export class HeroMailPanels {
         if (mailHasUnclaimedAttachments(m)) summarySpan.classList.add("mail-row-meta-attach");
         li.appendChild(titleSpan);
         li.appendChild(summarySpan);
+        const residualSubline =
+          m.mail_id != null
+            ? this.mailAttachmentClaimResidualSublineByMailId.get(m.mail_id)
+            : undefined;
+        if (residualSubline) {
+          const residualSpan = document.createElement("span");
+          residualSpan.className = MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS;
+          residualSpan.setAttribute("data-role", MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE);
+          residualSpan.textContent = residualSubline;
+          li.appendChild(residualSpan);
+        }
         ul.appendChild(li);
       }
     }
@@ -2102,6 +2132,7 @@ export class HeroMailPanels {
     | { ok: false; message: string }
   > {
     const sid = this.serverId();
+    const mailBeforeClaim = this.mails.find((m) => m.mail_id === mailId);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
@@ -2126,7 +2157,7 @@ export class HeroMailPanels {
         nextMails.find((m) => m.mail_id === mailId) ??
         syncMailRowAfterClaim([], mailId, res).find((m) => m.mail_id === mailId);
       if (updatedRow) {
-        this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow);
+        this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow, res.granted, mailBeforeClaim);
       }
       this.applyMailBadgeCountsFromSnapshot();
       return { ok: true, granted: res.granted };
