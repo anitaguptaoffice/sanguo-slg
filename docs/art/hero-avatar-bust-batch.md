@@ -1,6 +1,6 @@
 # 将领头像 + 半身像批量交付（ART-HERO-AVATAR-BUST-001）
 
-> **状态：DRAFT — 未冻结。** 工程契约与 schema 槽位；**不含**真实绘制纹理。参照 PR #77 / #82 / #100 / #108 / #126 与 Draft art hold **只读**，禁止合并或把 legacy 美术复制进主树。
+> **状态：DRAFT — 美术像素未冻结。** 工程契约与 schema 槽位；**不含**真实绘制纹理。下文「工程契约澄清」可由工程在无产品拍板前落地；参照 PR #77 / #82 / #100 / #108 / #126 与 Draft art hold **只读**，禁止合并或把 legacy 美术复制进主树。
 
 ## 范围（Batch 1，固定）
 
@@ -21,7 +21,9 @@
 | 生成 SQL | `spec/data/generated/cfg_hero_template.sql` |
 | ID 规则 | `heroes[]` **顺序** → `template_cfg_id` **从 1001 递增**（见 [MAPPING.md](../spec/data/MAPPING.md)） |
 
-当前 DATA-002 已灌入 **40** 个模板：**1001–1040**（与 `heroes.yml` / SQL 一致）。
+当前 DATA-002 已灌入 **40** 个模板：**1001–1040**（与 `heroes.yml` / SQL 一致）。展示名以 `heroes.yml` 为准；**历史人物 likeness / 史实名对照** 不在本卡范围，待产品在 art board **#108** 确认后再开需求。
+
+**禁止**在本文或交付台账中臆造史实名映射。
 
 运行时将领面板（`data-center-panel="hero"`）今日仍用 **纯文案** 列表/详情；`ui.panel.hero.v1` / `ui.icon.toolbar.hero.v1` 仅为 **面板九宫格与底栏图标**（见 [samples/art-center-panel-012](./samples/art-center-panel-012/README.md)）。本批交付 **不阻塞** 玩法；缺图时客户端 **保持现状**（无图、无报错）。
 
@@ -44,8 +46,16 @@
 
 | kind | 逻辑框 `display_size` | 锚点 `anchor`（pixels） | 构图 |
 |---|---|---|---|
-| `hero_avatar` | **56 × 56** | **(28, 48)** 下颌/胸口中心偏下 | 圆形或圆角方头像；面部占框 **≥60%** 高度；透明底；**不烘焙** 等级/稀有度/名字 |
-| `hero_bust` | **128 × 160** | **(64, 152)** 肩线中心 | 头 + 肩胸；头顶留 **≥8px** 呼吸；左右肩裁切对称；透明底 |
+| `hero_avatar` | **56 × 56** | **(28, 48)** 下颌/胸口中心偏下 | **圆形** 列表头像（见下）；面部占框 **≥60%** 高度；透明底；**不烘焙** 等级/稀有度/名字 |
+| `hero_bust` | **128 × 160** | **(64, 152)** 肩线中心（**定位锚点**，见下） | 头 + 肩胸；头顶留 **≥8px** 呼吸；左右肩裁切对称；透明底 |
+
+### 工程契约澄清（裁剪 / 遮罩 / 锚点 / 倍率）
+
+- **交付像素**：美术提交 **正方形** RGBA 透明 PNG（avatar 画布 56×56 / 112×112；bust 画布 128×160 / 256×320）。**圆形遮罩由工程侧**（`border-radius: 50%` 或 `clip-path: circle()`）应用；**禁止**在像素里烘焙圆形 alpha 遮罩。
+- **列表 avatar 挂载**：`object-fit: cover`；`object-position: center`；逻辑框 **56×56**。
+- **安全区**：脸/冠/须落在画幅中心约 **80%** 区域内；四周保留 **≥2px** 全透明边距，勿贴边裁切。
+- **2× 来源**：必须为 **原生绘制/导出**（avatar **112×112**，bust **256×320**）；**禁止**从 1× 放大生成 2×。
+- **bust 锚点 (64, 152)**：仅表示半身像在详情容器内的 **挂载定位点**（肩线中心），**不是**要求肩线贴近画布底边；仍须头顶 **≥8px** 留白；画布底部约 **16px** 预留给名字条叠压（见上表说明）。
 
 - `crop_offset`：Batch 1 **省略**或 `{0,0}`（与 ART-SAMPLE-001 一致）。
 - 列表行命中区仍遵守 **≥44×44** CSS（头像可 56 逻辑，由后续 CLIENT 皮肤挂载时包一层 wrap）。
@@ -83,8 +93,13 @@
 美术 **不编辑** `client/public/assets/art/v1/schema/`。交付物：
 
 1. PNG（成对 1×/2×）
-2. **manifest 片段**（JSON 数组或按 [`manifest.hero-portraits.example.json`](../../client/public/assets/art/v1/manifest.hero-portraits.example.json) 填写的对象列表）
+2. **manifest 片段**：`assets` **数组**（每条为一个 asset 对象），或仅含 schema 允许的顶层键的 JSON 包：`schema_version`、`pack`、`texture_delivery`（可选）、`base_url`（可选）、`assets`。整包示例见 [`manifest.hero-portraits.example.json`](../../client/public/assets/art/v1/manifest.hero-portraits.example.json)（**不得**含 `description` 等额外顶层键）。
 3. 可选：`INVENTORY.md`（模板 id 清单 + SHA256）
+
+**校验口径**：
+
+- **片段**：每个 asset 单独包一层后校验：`{"schema_version":1,"pack":"hero","base_url":"/assets/art/v1/","assets":[<entry>]}`。
+- **整文件示例**：`manifest.hero-portraits.example.json` **作为完整 manifest 对象**亦须通过同一 schema（`additionalProperties: false`）。
 
 每个 `asset` 对象必填字段：
 
@@ -104,25 +119,27 @@
 
 | 阶段 | `template_cfg_id` | 数量 | 理由 |
 |---|---|---:|---|
-| **Slice 1（首批）** | **1001–1004** | **4** | 与客户端冒烟子集 `heroTemplateLabel`（1001–1004）、招募默认 1001、INTG 固定 id 对齐；先打通列表+详情两条链路 |
+| **Slice 0（建议先冻）** | **1001** | **1** | 仅 2 个 asset 条目 + 4 张 PNG；先验证契约与挂载，再扩批 |
+| **Slice 1** | **1002–1004** | **3** | 与客户端冒烟子集 `heroTemplateLabel`（1001–1004）、招募默认 1001、INTG 固定 id 对齐 |
 | **Slice 2** | 1005–1012 | 8 | 核心高稀有度与招募池前排模板 |
 | **Slice 3** | 1013–1040 | 28 | 余下 DATA-002 模板直至满批 |
-| **Full core** | 1001–1040 | **40** | Batch 1 完整目标（80 个 asset 条目 = 40×2） |
+| **Full core（目标）** | 1001–1040 | **40** | Batch 1 完整目标（80 个 asset 条目 = 40×2）；**40 为终态目标，非当前起步张数** |
 
-### Slice 1 明细（首批必交）
+### Slice 1 扩批明细（1002–1004，在 Slice 0 通过后）
 
 | template_cfg_id | code |
 |---:|---|
-| 1001 | xuan_de_lord |
 | 1002 | green_dragon |
 | 1003 | thunder_spear |
 | 1004 | silver_rider |
+
+（1001 `xuan_de_lord` 见 Slice 0。）
 
 完整 40 模板 code 表见 `spec/data/generated/cfg_hero_template.sql` 或 `heroes.yml`。
 
 ## 验收
 
-1. **Schema**：片段中每个 asset 通过 `asset-manifest.schema.json`（`pack=hero`，`kind` 为 `hero_avatar` / `hero_bust`，含 `template_cfg_id`）。
+1. **Schema**：`manifest.hero-portraits.example.json` 整文件通过 schema；片段中每个 asset 经单层包裹后亦通过（`pack=hero`，`kind` 为 `hero_avatar` / `hero_bust`，含 `template_cfg_id`）。
 2. **文件**：每个 `variants[].path` 在仓库中存在对应 PNG；1×/2× 成对；RGBA；透明底。
 3. **尺寸**：解码后 1× 边长 = `display_size`；2× 边长 = `display_size × 2`（容差 ±0）。
 4. **游戏（挂载 PR 之后）**：1600×900 DPR1/DPR2 打开将领面板——列表行见 avatar；点选详情见 bust；对 **未交付** 的 template 仍无图。
@@ -137,12 +154,15 @@ import json, pathlib
 from jsonschema import validate
 root = pathlib.Path("client/public/assets/art/v1")
 schema = json.loads((root / "schema/asset-manifest.schema.json").read_text())
-# 校验完整 manifest（合并后）
-manifest = json.loads((root / "manifest.json").read_text())
-validate(manifest, schema)
-# 仅校验美术片段
-fragment = json.loads((root / "manifest.hero-portraits.example.json").read_text())
-for entry in fragment["assets"]:
+# 校验完整 manifest（合并后，若存在）
+manifest_path = root / "manifest.json"
+if manifest_path.is_file():
+    manifest = json.loads(manifest_path.read_text())
+    validate(manifest, schema)
+# 整文件示例 + 逐条片段
+example = json.loads((root / "manifest.hero-portraits.example.json").read_text())
+validate(example, schema)
+for entry in example["assets"]:
     validate({"schema_version": 1, "pack": "hero", "base_url": "/assets/art/v1/", "assets": [entry]}, schema)
 print("ok")
 PY
@@ -161,3 +181,4 @@ PY
 | 日期 | 说明 |
 |---|---|
 | 2026-10-24 | ART-HERO-AVATAR-BUST-001 初稿：命名、路径、40 模板分批、schema `hero_*` kind |
+| 2026-10-24 | 跟进 #108：圆形遮罩工程侧、安全区/2× 原生、bust 锚点语义、manifest 顶层键、Slice 0（1001）、示例 JSON 去非法 `description` |
