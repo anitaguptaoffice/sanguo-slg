@@ -1069,6 +1069,16 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. 筛选 chip 写入 **`hero-list-filter-chip-residual-deep-v1`**，筛选条 **`hero-list-filter-chip-residual-deep-sweep`** 展示深化摘要；**`hero-list-return-highlight`** 与 **`hero-list-selected-v1`** 仍正常。
 3. 单测：`heroPanelStateResidualDeepSweep.test.ts`、`heroListFilterChipResidualDeep.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。（[#991](https://github.com/anitaguptaoffice/sanguo-slg/issues/991)）
 
+**wave:46（CLIENT-279）将领 panelState 与列表筛选 chip 记忆残余抛光再加深**：列表/详情 loading·empty·error 在 **CLIENT-263** `hero-panel-state-residual-deep-sweep` 下追加只读 **`hero-panel-state-residual-deeper-sweep`**（`formatHeroPanelStateResidualDeeperSweepLine`：巩固再加深文案 + **`formatHeroPanelGatewayRetryDeeperHint`** 网关重试 hint；**CLIENT-173** `panel-gateway-retry` / **CLIENT-067** `hero-list-form-error` **不退化**）。筛选 chip 点击写入 **`hero-list-filter-chip-residual-deeper-v1`**（与 **`hero-list-filter-chip-residual-deep-v1`**、**`hero-list-filter-chip-residual-v1`**、**`hero-list-filter-v1`**、**`hero-list-return-v1`** 并存）；筛选条下 **`hero-list-filter-chip-residual-deeper-sweep`** 展示巩固再加深记忆摘要（**CLIENT-231** 返回高亮 / **CLIENT-199** `hero-list-selected-v1` **不退化**）。单测：`heroPanelStateResidualDeeperSweep.test.ts`、`heroListFilterChipResidualDeeper.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
+### 手动验收（将领 panelState 与列表筛选 chip 记忆残余抛光再加深 CLIENT-279）
+
+在 [CLIENT-263](#手动验收将领-panelstate-与筛选-chip-记忆残余抛光加深-client-263) 深化扫读与 [CLIENT-231](#手动验收将领列表返回高亮与筛选-chip-记忆抛光-client-231) / [CLIENT-199](#手动验收将领列表详情筛选记忆扫读-client-199) 记忆 **不退化** 前提下：
+
+1. 将领列表/详情 **loading / empty / error** 占位在 **`hero-panel-state-residual-deep-sweep`** 下追加 **`hero-panel-state-residual-deeper-sweep`**（巩固再加深文案 + gateway 重试 hint）；首屏失败仍走 **CLIENT-173** 行内重试与顶栏表单错误。
+2. 筛选 chip 写入 **`hero-list-filter-chip-residual-deeper-v1`**，筛选条 **`hero-list-filter-chip-residual-deeper-sweep`** 展示巩固再加深摘要；**`hero-list-return-highlight`** 与 **`hero-list-selected-v1`** 仍正常。
+3. 单测：`heroPanelStateResidualDeeperSweep.test.ts`、`heroListFilterChipResidualDeeper.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1076](https://github.com/anitaguptaoffice/sanguo-slg/issues/1076)）
+
 ### 手动验收（将领忠诚次行与养成道具堆叠扫读 CLIENT-213）
 
 在 [CLIENT-132](#手动验收将领列表行扫读-client-132) / [CLIENT-165](#手动验收将领详情养成道具缺口与背包深链-client-165) / [CLIENT-198](#手动验收将领详情养成对比-client-072) 不退化前提下：

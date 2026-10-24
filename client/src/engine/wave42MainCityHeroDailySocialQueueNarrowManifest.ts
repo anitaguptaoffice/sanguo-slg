@@ -94,6 +94,18 @@ export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SESSION_KEY =
 export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_CLASS =
   "hero-list-filter-chip-residual-deep-sweep";
 
+/** CLIENT-279: hero panel state consolidated deeper sweep row (CLIENT-263 baseline). */
+export const HERO_PANEL_STATE_RESIDUAL_DEEPER_SWEEP_CLASS =
+  "hero-panel-state-residual-deeper-sweep";
+
+/** CLIENT-279: filter chip deeper session key alongside CLIENT-263 deep v1. */
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SESSION_KEY =
+  "hero-list-filter-chip-residual-deeper-v1";
+
+/** CLIENT-279: filter chip deeper sweep line under filter bar. */
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SWEEP_CLASS =
+  "hero-list-filter-chip-residual-deeper-sweep";
+
 /** CLIENT-248: rank manual refresh cooldown residual stamp line. */
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS = "rank-refresh-cooldown-residual-stamp";
 
@@ -156,7 +168,9 @@ export const HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_SELECTOR = `.content-panel[
 export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_CLASS}`;
 export const HERO_PANEL_STATE_RESIDUAL_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS}`;
 export const HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_CLASS}`;
+export const HERO_PANEL_STATE_RESIDUAL_DEEPER_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_DEEPER_SWEEP_CLASS}`;
 export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_CLASS}`;
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SWEEP_CLASS}`;
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS}`;
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_CLASS}`;
 export const RANK_PIN_KEEP_RESIDUAL_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-list li.${RANK_PIN_KEEP_RESIDUAL_RING_CLASS}`;
