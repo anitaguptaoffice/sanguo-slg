@@ -214,6 +214,14 @@ function applyEvidencePreset(state, preset) {
     state.bag = { 2001: 1 };
     return;
   }
+  if (preset === "hero-panel-roster") {
+    state.heroes = [
+      { hero_id: 8001, template_cfg_id: 1001, level: 12, loyalty: 88 },
+      { hero_id: 8002, template_cfg_id: 1002, level: 8, loyalty: 72 },
+      { hero_id: 8003, template_cfg_id: 1001, level: 3, loyalty: 65 },
+    ];
+    return;
+  }
 }
 
 const server = http.createServer((req, res) => {
@@ -290,6 +298,44 @@ function sessionState() {
   };
   applyEvidencePreset(state, evidencePreset);
   return state;
+}
+
+/** protobufjs decodes proto int64 as Long; normalize before comparing to JS numbers. */
+function decodeInt64(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.trunc(n) : 0;
+}
+
+const HERO_TEMPLATE_DETAIL_META = {
+  1001: { template_name: "玄德府君", template_code: "xuan_de_lord" },
+  1002: { template_name: "青龙偃月帅", template_code: "green_dragon" },
+};
+
+function mockHeroDetailPayload(row) {
+  const meta =
+    HERO_TEMPLATE_DETAIL_META[row.template_cfg_id] ?? {
+      template_name: "演示将领",
+      template_code: `tpl_${row.template_cfg_id}`,
+    };
+  const level = row.level ?? 1;
+  const loyalty = row.loyalty ?? 50;
+  return {
+    hero_id: row.hero_id,
+    template_cfg_id: row.template_cfg_id,
+    template_name: meta.template_name,
+    template_code: meta.template_code,
+    rarity: 5,
+    level,
+    loyalty,
+    loyalty_min: 0,
+    loyalty_max: 100,
+    attributes: {
+      force: 62 + level,
+      intel: 58 + Math.floor(level / 2),
+      politics: 55 + Math.floor(level / 3),
+      command: 60 + Math.floor(level / 2),
+    },
+  };
 }
 
 function bagList(state) {
@@ -644,7 +690,7 @@ wss.on("connection", (ws) => {
 
       if (route === "military.v1.GetBattleReport") {
         const req = T("sanguo.military.v1.GetBattleReportRequest").decode(cp.payload);
-        const summary = state.reports.find((r) => r.report_id === req.report_id);
+        const summary = state.reports.find((r) => r.report_id === decodeInt64(req.report_id));
         replyOk(ws, cp.trace_id, T("sanguo.military.v1.GetBattleReportResponse"), {
           report: {
             summary,
@@ -853,23 +899,13 @@ wss.on("connection", (ws) => {
 
       if (route === "hero.v1.GetHeroDetail") {
         const req = T("sanguo.hero.v1.GetHeroDetailRequest").decode(cp.payload);
-        const h = state.heroes.find((x) => x.hero_id === req.hero_id);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
         if (!h) {
           reply(ws, cp.trace_id, 10001, "hero not found");
           return;
         }
-        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.GetHeroDetailResponse"), {
-          hero_id: h.hero_id,
-          template_cfg_id: h.template_cfg_id,
-          template_name: "演示将领",
-          template_code: `tpl_${h.template_cfg_id}`,
-          rarity: 5,
-          level: h.level,
-          loyalty: h.loyalty,
-          loyalty_min: 0,
-          loyalty_max: 100,
-          attributes: { force: 70, intel: 72, politics: 68, command: 75 },
-        });
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.GetHeroDetailResponse"), mockHeroDetailPayload(h));
         return;
       }
 
@@ -917,7 +953,7 @@ wss.on("connection", (ws) => {
 
       if (route === "content.v1.MarkPlayerMailRead") {
         const req = T("sanguo.content.v1.MarkPlayerMailReadRequest").decode(cp.payload);
-        const m = state.mails.find((x) => x.mail_id === req.mail_id);
+        const m = state.mails.find((x) => x.mail_id === decodeInt64(req.mail_id));
         if (!m) {
           reply(ws, cp.trace_id, 10001, "mail not found");
           return;
@@ -930,7 +966,7 @@ wss.on("connection", (ws) => {
 
       if (route === "content.v1.ClaimPlayerMailAttachments") {
         const req = T("sanguo.content.v1.ClaimPlayerMailAttachmentsRequest").decode(cp.payload);
-        const m = state.mails.find((x) => x.mail_id === req.mail_id);
+        const m = state.mails.find((x) => x.mail_id === decodeInt64(req.mail_id));
         if (!m) {
           reply(ws, cp.trace_id, 10001, "mail not found");
           return;

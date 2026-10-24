@@ -1,0 +1,217 @@
+{
+  "task": "ART-CENTER-PANEL-012",
+  "runtime_code_sha": "76e209ac1b4b0f60150f94c8c70a840b6a6518b6",
+  "screenshot_artifacts_commit_sha": "3372e083bc648ae4ef1904510a0ba4107409b4e8",
+  "tip_sha": "76e209ac1b4b0f60150f94c8c70a840b6a6518b6",
+  "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
+  "captured_at": "2026-10-24T06:34:00.593Z",
+  "asset_id": "ui.panel.hero.v1",
+  "texture_paths": {
+    "scale_1": "textures/1x/ui/panel_hero.png",
+    "scale_2": "textures/2x/ui/panel_hero.png"
+  },
+  "sha256": {
+    "textures/1x/ui/panel_hero.png": "959d45eee714f2208170d343d36715e53373d7bc713e4451baa6f1dbc118f7de",
+    "textures/2x/ui/panel_hero.png": "6e5e3628514010751a72af49b142cc2f71c8952d1ce9444532852d6e34adb92f"
+  },
+  "mock_preset": "hero-panel-roster",
+  "shots": {
+    "hero-center-panel-1600x900.jpg": {
+      "quality": 88,
+      "bytes": 461241,
+      "viewport": {
+        "tag": "1600x900",
+        "file": "hero-center-panel-1600x900.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-center-panel-3200x1800.jpg": {
+      "quality": 72,
+      "bytes": 960781,
+      "viewport": {
+        "tag": "3200x1800",
+        "file": "hero-center-panel-3200x1800.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-center-panel-1280x720.jpg": {
+      "quality": 88,
+      "bytes": 262374,
+      "viewport": {
+        "tag": "1280x720",
+        "file": "hero-center-panel-1280x720.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    },
+    "hero-center-panel-1280x720-detail-scroll.jpg": {
+      "quality": 88,
+      "bytes": 255195,
+      "viewport": {
+        "tag": "1280x720-scroll",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "probes": {
+    "1600x900": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "玄德府君",
+      "dpr": 1,
+      "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/1x/ui/panel_hero.png\")",
+      "skinPathOk": true,
+      "uses1x": true,
+      "uses2x": false,
+      "panelRect": {
+        "width": 640,
+        "height": 788,
+        "top": 56,
+        "left": 480
+      },
+      "padding": "12px",
+      "paperMutedColor": "rgb(74, 56, 40)",
+      "inkBodyColor": "rgb(232, 220, 200)",
+      "scrollMetrics": {
+        "scrollHeight": 473,
+        "clientHeight": 473,
+        "scrollTop": 0,
+        "scrollable": false
+      },
+      "scrollReachOk": true,
+      "hasTopColorBar": false,
+      "detailInScroll": true,
+      "detailRect": {
+        "width": 568,
+        "height": 160,
+        "bottom": 868.984375
+      },
+      "scrollRect": {
+        "width": 568,
+        "height": 472.59375,
+        "bottom": 868.984375
+      }
+    },
+    "3200x1800": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "玄德府君",
+      "dpr": 2,
+      "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/2x/ui/panel_hero.png\")",
+      "skinPathOk": true,
+      "uses1x": false,
+      "uses2x": true,
+      "panelRect": {
+        "width": 640,
+        "height": 788,
+        "top": 56,
+        "left": 480
+      },
+      "padding": "12px",
+      "paperMutedColor": "rgb(74, 56, 40)",
+      "inkBodyColor": "rgb(232, 220, 200)",
+      "scrollMetrics": {
+        "scrollHeight": 473,
+        "clientHeight": 473,
+        "scrollTop": 0,
+        "scrollable": false
+      },
+      "scrollReachOk": true,
+      "hasTopColorBar": false,
+      "detailInScroll": true,
+      "detailRect": {
+        "width": 568,
+        "height": 160,
+        "bottom": 868.984375
+      },
+      "scrollRect": {
+        "width": 568,
+        "height": 472.59375,
+        "bottom": 868.984375
+      }
+    },
+    "1280x720": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "玄德府君",
+      "dpr": 1,
+      "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/1x/ui/panel_hero.png\")",
+      "skinPathOk": true,
+      "uses1x": true,
+      "uses2x": false,
+      "panelRect": {
+        "width": 640,
+        "height": 630.40625,
+        "top": 44.796875,
+        "left": 320
+      },
+      "padding": "12px",
+      "paperMutedColor": "rgb(74, 56, 40)",
+      "inkBodyColor": "rgb(232, 220, 200)",
+      "scrollMetrics": {
+        "scrollHeight": 776,
+        "clientHeight": 270,
+        "scrollTop": 0,
+        "scrollable": true
+      },
+      "scrollReachOk": true,
+      "hasTopColorBar": false,
+      "detailInScroll": true,
+      "detailRect": {
+        "width": 568,
+        "height": 390.96875,
+        "bottom": 1080.671875
+      },
+      "scrollRect": {
+        "width": 568,
+        "height": 270.09375,
+        "bottom": 639.203125
+      }
+    },
+    "1280x720-scroll": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "玄德府君",
+      "dpr": 1,
+      "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/1x/ui/panel_hero.png\")",
+      "skinPathOk": true,
+      "uses1x": true,
+      "uses2x": false,
+      "panelRect": {
+        "width": 640,
+        "height": 630.40625,
+        "top": 44.796875,
+        "left": 320
+      },
+      "padding": "12px",
+      "paperMutedColor": "rgb(74, 56, 40)",
+      "inkBodyColor": "rgb(232, 220, 200)",
+      "scrollMetrics": {
+        "scrollHeight": 776,
+        "clientHeight": 270,
+        "scrollTop": 506,
+        "scrollable": true
+      },
+      "scrollReachOk": true,
+      "hasTopColorBar": false,
+      "detailInScroll": true,
+      "detailRect": {
+        "width": 568,
+        "height": 390.96875,
+        "bottom": 574.671875
+      },
+      "scrollRect": {
+        "width": 568,
+        "height": 270.09375,
+        "bottom": 639.203125
+      }
+    }
+  }
+}

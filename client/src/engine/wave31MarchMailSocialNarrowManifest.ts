@@ -7,10 +7,10 @@ import {
   PANEL_ASSET_MARCH,
   PANEL_ASSET_MILITARY,
 } from "@/engine/artPanelSkin";
-import {
-  MAIL_CLAIM_ALL_ATTACHMENTS_ACTION,
-  PANEL_FILTER_CHIP_BAR_CLASS,
-} from "@/engine/filterListNarrowManifest";
+import { PANEL_FILTER_CHIP_BAR_CLASS } from "@/engine/panelFilterChipBarClass";
+
+/** Same string as `filterListNarrowManifest.MAIL_CLAIM_ALL_ATTACHMENTS_ACTION` (avoid import cycle). */
+export const MAIL_CLAIM_ALL_ATTACHMENTS_ACTION = "claim-mail-all";
 import { TOOLBAR_HEIGHT } from "@/engine/mainCitySlots";
 import {
   MARCH_QUEUE_BANNER_CLASS,
@@ -49,7 +49,6 @@ export const BATTLE_REPORT_DETAIL_NAV_CLASS = "battle-report-detail-nav";
 export const BATTLE_REPORT_DETAIL_NAV_SELECTOR = `.${BATTLE_REPORT_DETAIL_NAV_CLASS}`;
 
 /** CLIENT-159: one-click claim all unclaimed attachments on current mail tab. */
-export { MAIL_CLAIM_ALL_ATTACHMENTS_ACTION };
 export const MAIL_CLAIM_ALL_ATTACHMENTS_SELECTOR = `[data-action="${MAIL_CLAIM_ALL_ATTACHMENTS_ACTION}"]`;
 
 export const MAIL_INBOX_BATCH_TOOLBAR_SELECTOR = `.mail-inbox-toolbar.${PANEL_FILTER_CHIP_BAR_CLASS}`;
