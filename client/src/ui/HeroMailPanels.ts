@@ -75,12 +75,21 @@ import {
   writeHeroListSortSession,
 } from "@/net/heroListFilter";
 import {
-  captureHeroListFilterChipResidual,
   formatHeroListFilterChipResidualSweepLine,
   readHeroListFilterChipResidualSession,
   syncHeroListFilterChipResidualSweep,
   type HeroListFilterChipAction,
 } from "@/net/heroListFilterChipResidual";
+import {
+  captureHeroListFilterChipResidualDeep,
+  formatHeroListFilterChipResidualDeepSweepLine,
+  readHeroListFilterChipResidualDeepSession,
+  syncHeroListFilterChipResidualDeepSweep,
+} from "@/net/heroListFilterChipResidualDeep";
+import {
+  appendHeroPanelStateResidualDeepSweep,
+  skimHeroDetailPanelStateResidualDeepSweep,
+} from "@/net/heroPanelStateResidualDeepSweep";
 import {
   appendHeroPanelStateResidualSweep,
   skimHeroDetailPanelStateResidualSweep,
@@ -373,8 +382,8 @@ export class HeroMailPanels {
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
     this.heroListSort = readHeroListSortSession();
-    if (!readHeroListFilterChipResidualSession()) {
-      captureHeroListFilterChipResidual(this.heroListFilter, this.heroListSort);
+    if (!readHeroListFilterChipResidualDeepSession()) {
+      captureHeroListFilterChipResidualDeep(this.heroListFilter, this.heroListSort);
     }
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
@@ -879,6 +888,12 @@ export class HeroMailPanels {
           aria-live="polite"
           hidden
         ></p>
+        <p
+          class="hero-list-filter-chip-residual-deep-sweep hidden"
+          data-role="hero-list-filter-chip-residual-deep-sweep"
+          aria-live="polite"
+          hidden
+        ></p>
         <ul class="hero-list" data-role="hero-list"></ul>
         <div class="hero-detail" data-role="hero-detail"></div>
       </div>
@@ -951,7 +966,7 @@ export class HeroMailPanels {
   }
 
   private persistHeroListFilterChipResidual(lastChipAction?: HeroListFilterChipAction): void {
-    captureHeroListFilterChipResidual(this.heroListFilter, this.heroListSort, lastChipAction);
+    captureHeroListFilterChipResidualDeep(this.heroListFilter, this.heroListSort, lastChipAction);
   }
 
   private heroListFilterContext(): HeroListFilterContext | undefined {
@@ -997,20 +1012,24 @@ export class HeroMailPanels {
         retryAction: "retry-refresh-heroes",
       });
       appendHeroPanelStateResidualSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
+      appendHeroPanelStateResidualDeepSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
     } else if (this.heroesRefreshInflight && !this.heroes.length) {
       const li = renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
         assets: this.assets,
       });
       appendHeroPanelStateResidualSweep(li, "loading", residualCtx());
+      appendHeroPanelStateResidualDeepSweep(li, "loading", residualCtx());
     } else if (!this.heroes.length) {
       const msg = heroListLines([])[0];
       const li = renderPanelStateListRow(ul, "empty", msg, { assets: this.assets });
       appendHeroPanelStateResidualSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepSweep(li, "empty", residualCtx());
     } else if (!visibleHeroes.length) {
       const li = renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
         assets: this.assets,
       });
       appendHeroPanelStateResidualSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepSweep(li, "empty", residualCtx());
     } else {
       for (const h of visibleHeroes) {
         const li = document.createElement("li");
@@ -1092,15 +1111,21 @@ export class HeroMailPanels {
       this.heroPanel,
       formatHeroListFilterChipResidualSweepLine(readHeroListFilterChipResidualSession()),
     );
+    syncHeroListFilterChipResidualDeepSweep(
+      this.heroPanel,
+      formatHeroListFilterChipResidualDeepSweepLine(readHeroListFilterChipResidualDeepSession()),
+    );
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
       } else if (this.heroDetailLoading) {
         detailEl.innerHTML = renderHeroDetailStateLoadingMarkup();
         skimHeroDetailPanelStateResidualSweep(detailEl, "loading", residualCtx());
+        skimHeroDetailPanelStateResidualDeepSweep(detailEl, "loading", residualCtx());
       } else if (this.heroDetailError) {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
         skimHeroDetailPanelStateResidualSweep(detailEl, "error", residualCtx());
+        skimHeroDetailPanelStateResidualDeepSweep(detailEl, "error", residualCtx());
       } else {
         const { bag } = this.sessionEconomy();
         const cultivationHtml = renderHeroDetailCultivationUseMarkup(
