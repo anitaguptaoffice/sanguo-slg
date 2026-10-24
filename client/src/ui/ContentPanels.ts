@@ -49,6 +49,12 @@ import {
   shopOfferAffordInlineForRow,
 } from "@/net/shopOfferAfford";
 import {
+  formatShopPriceVsWallet,
+  formatShopTabWalletBalanceLine,
+  resolveShopTabCurrency,
+} from "@/net/shopTabCurrency";
+import { SHOP_OFFER_AFFORD_INLINE_CLASS } from "@/engine/mainCityWave30NarrowManifest";
+import {
   PANEL_STATE_LOADING_MESSAGE,
   renderPanelStateListRow,
 } from "@/engine/panelStateChrome";
@@ -296,7 +302,22 @@ export class ContentPanels {
       this.sessionWallet(),
       purchaseCount,
     );
+    this.syncShopTabCurrencySweep();
     this.syncShopPurchaseSubmit();
+  }
+
+  private syncShopTabCurrencySweep(): void {
+    const el = this.shopPanel.querySelector('[data-role="shop-tab-currency-sweep"]');
+    if (!el || !(el instanceof HTMLElement)) return;
+    const currencies = resolveShopTabCurrency(this.shopOffers, this.shopCategory);
+    const line = formatShopTabWalletBalanceLine(this.sessionWallet(), currencies);
+    if (!line) {
+      el.textContent = "";
+      el.hidden = true;
+      return;
+    }
+    el.textContent = line;
+    el.hidden = false;
   }
 
   private shopPurchaseCanAfford(): boolean {
@@ -401,6 +422,7 @@ export class ContentPanels {
       <p data-role="shop-hint">扣费结果以 wallet_after 为准（ECON-001 真钱包）。</p>
       <p class="panel-feedback" data-role="shop-feedback" hidden></p>
       <div class="shop-category-tabs" data-role="shop-category-tabs" role="tablist"></div>
+      <p class="shop-tab-currency-sweep hidden" data-role="shop-tab-currency-sweep" aria-live="polite"></p>
       <button type="button" data-action="refresh-shop">刷新货架</button>
       <label>商品 offer
         <select data-field="offer-id"></select>
@@ -570,11 +592,26 @@ export class ContentPanels {
       const li = document.createElement("li");
       const price = formatWalletPrice(o.price_resources ?? {});
       let line = formatShopOfferListLine(o, price);
-      const afford = shopOfferAffordInlineForRow(wallet, o, 1);
-      if (afford) line += ` · ${afford}`;
       const flash = this.shopPurchaseFlash.get(o.offer_id ?? 0);
       if (flash) line += ` · ${flash}`;
-      li.textContent = line;
+      const main = document.createElement("span");
+      main.className = "shop-offer-line-main";
+      main.textContent = line;
+      li.appendChild(main);
+      const priceVsWallet = formatShopPriceVsWallet(wallet, o.price_resources, 1);
+      if (priceVsWallet) {
+        const vs = document.createElement("span");
+        vs.className = "shop-price-vs-wallet";
+        vs.textContent = priceVsWallet;
+        li.appendChild(vs);
+      }
+      const afford = shopOfferAffordInlineForRow(wallet, o, 1);
+      if (afford) {
+        const affordEl = document.createElement("span");
+        affordEl.className = SHOP_OFFER_AFFORD_INLINE_CLASS;
+        affordEl.textContent = afford;
+        li.appendChild(affordEl);
+      }
       ul.appendChild(li);
       const opt = document.createElement("option");
       opt.value = String(o.offer_id ?? 0);

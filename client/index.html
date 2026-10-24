@@ -170,6 +170,20 @@
         margin-top: 2px;
         overflow-wrap: anywhere;
       }
+      .shop-tab-currency-sweep {
+        display: block;
+        font-size: 12px;
+        color: #c9b896;
+        margin: 4px 0 6px;
+        overflow-wrap: anywhere;
+      }
+      .shop-list li .shop-price-vs-wallet {
+        display: block;
+        font-size: 11px;
+        color: #9a8f7a;
+        margin-top: 2px;
+        overflow-wrap: anywhere;
+      }
       .content-panel .bag-category-tabs {
         display: flex;
         flex-wrap: wrap;
@@ -2101,6 +2115,8 @@
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tabs,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-category-tabs,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-tab-currency-sweep"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="refresh-shop"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="buy-offer"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-form-error,
@@ -2122,7 +2138,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
         padding-bottom: 64px;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-offer-afford-inline {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-offer-afford-inline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-vs-wallet,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep {
         min-width: 0;
         max-width: 100%;
         overflow-x: hidden;

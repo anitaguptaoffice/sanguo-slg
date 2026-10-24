@@ -21,6 +21,8 @@ import {
   RANK_PIN_ROW_CLASS,
   RANK_VIEWER_BAR_CLASS,
   SHOP_OFFER_AFFORD_INLINE_CLASS,
+  SHOP_TAB_CURRENCY_SWEEP_CLASS,
+  SHOP_TAB_CURRENCY_SWEEP_SELECTOR,
 } from "@/engine/mainCityWave30NarrowManifest";
 import {
   PANEL_ASSET_BAG,
@@ -76,6 +78,8 @@ describe("mainCityWave30NarrowManifest (CLIENT-155)", () => {
     expect(html).toContain(BAG_CATEGORY_TABS_SELECTOR);
     expect(html).toContain(BAG_CATEGORY_TAB_CLASS);
     expect(html).toContain(SHOP_OFFER_AFFORD_INLINE_CLASS);
+    expect(html).toContain(SHOP_TAB_CURRENCY_SWEEP_SELECTOR);
+    expect(html).toContain(SHOP_TAB_CURRENCY_SWEEP_CLASS);
     expect(html).toContain(DAILY_QUEST_PROGRESS_SECONDARY_CLASS);
     expect(html).toContain(
       `padding-bottom: ${MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX}px`,

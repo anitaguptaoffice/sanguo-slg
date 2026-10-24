@@ -63,10 +63,10 @@ function mockAssets(): AssetLoader {
 }
 
 describe("ART-UI-FILTER-008 manifest mount", () => {
-  it("lists nine asset ids (51 total manifest entries)", () => {
+  it("lists nine asset ids (57 total manifest entries)", () => {
     const manifest = loadManifest();
     expect(ART_UI_FILTER_008_ASSET_IDS).toHaveLength(9);
-    expect(manifest.assets).toHaveLength(51);
+    expect(manifest.assets).toHaveLength(57);
     for (const id of ART_UI_FILTER_008_ASSET_IDS) {
       expect(manifest.assets.some((a) => a.id === id)).toBe(true);
     }

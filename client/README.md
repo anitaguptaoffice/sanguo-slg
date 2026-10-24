@@ -1222,7 +1222,8 @@ cd client && npm install && npm run dev
 7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
 8. **CLIENT-153 背包分类**：**全部 / 消耗品 / 养成** tab（`sessionStorage` 键 `bag-category-tab-v1`）；切换仅客户端过滤 `ListPlayerBag` 会话快照、**不新 RPC**；行内 **cfg 名 + `bag-stack-qty`（`formatBagStackQty`）** 堆叠扫读；真空/筛选无匹配走 **CLIENT-029** + **CLIENT-129** `renderPanelStateListRow`；**CLIENT-112** 使用提交脉冲不退化。
 9. **CLIENT-154 商城行内态**：货架列表行与购买区 `shop-wallet-gap` 在钱包不足时行内展示 `formatShopOfferAffordInline`（`缺少：粮 N …`，**CLIENT-067** 口径）；足够时购买区仍为 **CLIENT-092** 需/余对比条，**购买×1** disabled 与文案一致；货架 **loading/error/空** 走 **CLIENT-129** `renderPanelStateListRow`；**CLIENT-113** 购买脉冲不退化。
-10. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`shopOfferAfford.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`、`heroUpgradeItemGap.test.ts`、`heroDetailBagDeepLink.test.ts`；全量 `cd client && npm test`。
+10. **CLIENT-167 商城货币扫读**：分类 tab 下 `shop-tab-currency-sweep` 展示 `resolveShopTabCurrency` + `formatShopTabWalletBalanceLine`（本类结算币种余额，切换 tab **即时**更新）；货架行次行 `formatShopPriceVsWallet`（现价/余额并排）与 **CLIENT-154**「缺少」行内态并存；**CLIENT-113** 购买提交脉冲不退化。
+11. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`shopOfferAfford.test.ts`、`shopTabCurrency.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`、`heroUpgradeItemGap.test.ts`、`heroDetailBagDeepLink.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
 
