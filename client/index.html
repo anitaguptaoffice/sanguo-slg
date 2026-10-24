@@ -721,6 +721,13 @@
         outline-offset: -1px;
         background: rgba(201, 162, 39, 0.12);
       }
+      @keyframes march-phase-changed-pulse-keyframes {
+        0% { background-color: rgba(158, 197, 255, 0.35); }
+        100% { background-color: transparent; }
+      }
+      .march-list li.march-phase-changed {
+        animation: march-phase-changed-pulse-keyframes 3s ease-out 1;
+      }
       .march-row-recent-eta {
         font-size: 12px;
         font-weight: 600;
