@@ -1,8 +1,8 @@
 {
   "task": "ART-CENTER-PANEL-012",
-  "runtime_code_sha": "16f9df1b0a54831883ce4adb1a34929be66aae12",
-  "screenshot_artifacts_commit_sha": "16f9df1b0a54831883ce4adb1a34929be66aae12",
-  "tip_sha": "16f9df1b0a54831883ce4adb1a34929be66aae12",
+  "runtime_code_sha": "5ed84dd6588baabc2e61aa325d804cbb958d85f2",
+  "screenshot_artifacts_commit_sha": "5ed84dd6588baabc2e61aa325d804cbb958d85f2",
+  "tip_sha": "5ed84dd6588baabc2e61aa325d804cbb958d85f2",
   "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
   "captured_at": "2026-10-24T06:47:07.024Z",
   "asset_id": "ui.panel.hero.v1",
