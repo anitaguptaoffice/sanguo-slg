@@ -13,11 +13,9 @@ describe("socialRefreshFormat", () => {
     vi.restoreAllMocks();
   });
 
-  it("formats last-updated label in zh-CN local time", () => {
-    vi.spyOn(Date.prototype, "toLocaleString").mockReturnValue("2026/1/15 18:30:00");
-    expect(formatSocialPanelLastUpdated(Date.UTC(2026, 0, 15, 10, 30, 0))).toBe(
-      "上次更新：2026/1/15 18:30:00",
-    );
+  it("formats last refresh stamp with relative time (CLIENT-144)", () => {
+    const now = 1_700_000_000_000;
+    expect(formatSocialPanelLastUpdated(now - 30_000, now)).toBe("上次刷新：刚刚");
   });
 
   it("prefixes gateway error for panel display", () => {
@@ -25,13 +23,9 @@ describe("socialRefreshFormat", () => {
   });
 
   it("appends stale label when snapshot may be outdated", () => {
-    vi.spyOn(Date.prototype, "toLocaleString").mockReturnValue("2026/1/15 18:30:00");
-    expect(formatSocialPanelLastUpdatedLine(Date.UTC(2026, 0, 15, 10, 30, 0), true)).toContain(
-      "数据可能已过期",
-    );
-    expect(formatSocialPanelLastUpdatedLine(Date.UTC(2026, 0, 15, 10, 30, 0), false)).not.toContain(
-      "数据可能已过期",
-    );
+    const now = 1_700_000_000_000;
+    expect(formatSocialPanelLastUpdatedLine(now - 60_000, true, now)).toContain("数据可能已过期");
+    expect(formatSocialPanelLastUpdatedLine(now - 60_000, false, now)).not.toContain("数据可能已过期");
   });
 
   it("wraps gateway errors with [code] for refresh failure (CLIENT-076)", () => {
@@ -52,14 +46,15 @@ describe("socialRefreshFormat", () => {
       expect(meta.statusHidden).toBe(false);
     });
 
-    it("shows last updated after success", () => {
-      vi.spyOn(Date.prototype, "toLocaleString").mockReturnValue("2026/1/15 18:30:00");
+    it("shows last refresh stamp after success", () => {
+      const now = 1_700_000_000_000;
+      vi.spyOn(Date, "now").mockReturnValue(now);
       const meta = formatPanelRefreshMeta({
         busy: false,
-        lastUpdatedMs: Date.UTC(2026, 0, 15, 10, 30, 0),
+        lastUpdatedMs: now - 120_000,
         error: null,
       });
-      expect(meta.statusText).toContain("上次更新");
+      expect(meta.statusText).toContain("上次刷新");
       expect(meta.spinnerVisible).toBe(false);
       expect(meta.statusHidden).toBe(false);
     });

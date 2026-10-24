@@ -245,6 +245,20 @@ export function writeMinimapCollapsedToSession(
   }
 }
 
+/** 战报坐标复盘等入口：强制展开小地图并写入会话（CLIENT-142）。 */
+export function openWorldMinimapExpanded(
+  collapsed: boolean,
+  storage: Pick<Storage, "setItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): { collapsed: false; didExpand: boolean } {
+  const didExpand = collapsed;
+  if (collapsed) {
+    writeMinimapCollapsedToSession(false, storage);
+  }
+  return { collapsed: false, didExpand };
+}
+
 export function marchHasRouteOnMinimap(m: MarchSummary): boolean {
   if (!marchShowsDestOnMinimap(m)) return false;
   return m.from_x != null && m.from_y != null && m.to_x != null && m.to_y != null;

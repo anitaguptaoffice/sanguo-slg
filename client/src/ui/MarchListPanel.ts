@@ -1,17 +1,19 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
 import {
-  formatMarchRowMetaLine,
-  formatMarchRowPrimaryLine,
+  formatMarchListPrimaryLine,
+  formatMarchListSecondary,
   formatMarchRowRecentEtaBrief,
   MARCH_ROW_RECENT_ETA_ROLE,
   marchNeedsPoll,
-  marchPhaseChipClass,
-  marchPhaseChipLabel,
   MARCH_LIST_POLL_MS,
   MARCH_LIST_REMAINING_TICK_MS,
   type MarchSummary,
 } from "@/net/militaryFormat";
+import {
+  detectMarchPhaseChanges,
+  scheduleMarchPhaseChangedPulse,
+} from "@/net/marchPhaseListRefresh";
 import {
   marchListCompactClass,
   marchListEmptyClass,
@@ -95,6 +97,7 @@ export class MarchListPanel {
   private listFilter: MilitaryListFilterV1 = readMilitaryListFilterSession();
   private highlightState: MarchHighlightState | null = null;
   private highlightExpiryTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingPhaseChangePulseIds: number[] = [];
   private readonly assets?: AssetLoader;
 
   constructor(
@@ -481,12 +484,7 @@ export class MarchListPanel {
       body.className = "march-row-body";
       const primary = document.createElement("span");
       primary.className = "march-row-primary";
-      const chip = document.createElement("span");
-      chip.className = `march-phase-chip ${marchPhaseChipClass(m.phase)}`;
-      chip.setAttribute("data-role", "march-phase-chip");
-      chip.textContent = marchPhaseChipLabel(m.phase);
-      primary.appendChild(chip);
-      primary.appendChild(document.createTextNode(formatMarchRowPrimaryLine(m)));
+      primary.textContent = formatMarchListPrimaryLine(m);
       const isRecent =
         m.march_id != null &&
         marchRowShouldBeRecent(m.march_id, this.highlightState, now);
@@ -509,7 +507,7 @@ export class MarchListPanel {
       const meta = document.createElement("span");
       meta.className = "march-row-meta";
       meta.setAttribute("data-role", "march-row-meta");
-      meta.textContent = formatMarchRowMetaLine(m, now);
+      meta.textContent = formatMarchListSecondary(m, now);
       body.appendChild(primary);
       body.appendChild(meta);
       li.appendChild(body);
@@ -542,7 +540,17 @@ export class MarchListPanel {
       }
       ul.appendChild(li);
     }
+    this.applyPhaseChangeRowPulses();
     this.mountFilterSkins();
+  }
+
+  private applyPhaseChangeRowPulses(): void {
+    if (!this.pendingPhaseChangePulseIds.length) return;
+    for (const id of this.pendingPhaseChangePulseIds) {
+      const li = this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
+      scheduleMarchPhaseChangedPulse(li);
+    }
+    this.pendingPhaseChangePulseIds = [];
   }
 
   private updateRemainingLabels(): void {
@@ -553,7 +561,7 @@ export class MarchListPanel {
       if (Number.isNaN(id)) continue;
       const m = this.marches.find((row) => row.march_id === id);
       if (!m) continue;
-      el.textContent = formatMarchRowMetaLine(m, now);
+      el.textContent = formatMarchListSecondary(m, now);
     }
     const etaNodes = this.panel.querySelectorAll<HTMLElement>(
       `[data-role="${MARCH_ROW_RECENT_ETA_ROLE}"]`,
@@ -600,6 +608,7 @@ export class MarchListPanel {
         total?: number;
       };
       const nextMarches = res.marches ?? [];
+      this.pendingPhaseChangePulseIds = detectMarchPhaseChanges(prevSnapshot, nextMarches);
       const reminders = detectNewMarchArrivalReminders(prevSnapshot, nextMarches, new Set());
       if (reminders.length) this.onMarchArrivalReminders?.(reminders);
       this.marches = nextMarches;

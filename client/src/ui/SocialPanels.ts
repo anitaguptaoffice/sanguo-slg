@@ -22,7 +22,8 @@ import {
   CHAT_CHANNEL_PRIVATE,
   CHAT_CHANNEL_WORLD,
   chatChannelLabel,
-  formatGuildMemberLine,
+  formatGuildMemberPrimaryNick,
+  formatGuildMemberSecondaryLine,
   formatGuildMentionDraft,
   groupGuildMembersByRole,
   guildRoleChipClass,
@@ -48,6 +49,12 @@ import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelRefreshMeta } from "@/net/socialRefreshFormat";
+import {
+  CHAT_PANEL_LAST_REFRESH_SESSION_KEY,
+  GUILD_PANEL_LAST_REFRESH_SESSION_KEY,
+  readSocialPanelLastRefreshMs,
+  writeSocialPanelLastRefreshMs,
+} from "@/net/socialPanelRefreshSession";
 import {
   chatChannelStorageKey,
   type ChatUnreadSummary,
@@ -130,6 +137,7 @@ export class SocialPanels {
     this.chatPanel.classList.toggle("hidden");
     if (!this.chatPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.chatPanel);
+      this.hydrateChatRefreshClockFromSession();
       void this.refreshChat();
     }
   }
@@ -138,6 +146,7 @@ export class SocialPanels {
     this.guildPanel.classList.toggle("hidden");
     if (!this.guildPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.guildPanel);
+      this.hydrateGuildRefreshClockFromSession();
       this.syncGuildSummary();
       this.renderGuildMembersList([]);
     }
@@ -263,6 +272,7 @@ export class SocialPanels {
     const guildId = channel === CHAT_CHANNEL_GUILD ? this.guildId : 0;
     const key = chatChannelStorageKey(channel, guildId);
     this.chatUnreadTracker.replaceSnapshot({ key, channel, messages });
+    this.syncChatUnreadBadges(this.chatUnreadTracker.getSummary(this.guildId));
   }
 
   private maybeMarkChatChannelRead(): void {
@@ -495,9 +505,11 @@ export class SocialPanels {
         const messages = res.messages ?? [];
         this.renderChatLog(messages, ch);
         this.pushChatSnapshot(ch, messages);
+        const refreshedAt = Date.now();
+        writeSocialPanelLastRefreshMs(CHAT_PANEL_LAST_REFRESH_SESSION_KEY, refreshedAt);
         this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", {
           busy: false,
-          lastUpdatedMs: Date.now(),
+          lastUpdatedMs: refreshedAt,
           error: null,
         });
         this.onStatus("聊天已刷新");
@@ -608,21 +620,44 @@ export class SocialPanels {
     const li = document.createElement("li");
     li.className = "guild-member-row";
     li.setAttribute("data-guild-role-key", String(m.role ?? 0));
+    const primary = document.createElement("div");
+    primary.className = "guild-member-primary";
+    primary.setAttribute("data-role", "guild-member-primary");
+    const nick = document.createElement("span");
+    nick.className = "guild-member-nick";
+    nick.textContent = formatGuildMemberPrimaryNick(m);
     const chip = document.createElement("span");
     chip.className = guildRoleChipClass(m.role);
     chip.setAttribute("data-role", "guild-role-chip");
     chip.textContent = guildRoleLabel(m.role);
-    const line = document.createElement("span");
-    line.className = "guild-member-line";
-    line.textContent = formatGuildMemberLine(m, { includeRoleLabel: false });
+    primary.append(nick, chip);
+    const secondary = document.createElement("span");
+    secondary.className = "guild-member-secondary";
+    secondary.textContent = formatGuildMemberSecondaryLine(m);
     const mention = document.createElement("button");
     mention.type = "button";
     mention.className = "guild-member-mention";
     mention.setAttribute("data-action", "guild-mention");
     mention.setAttribute("data-display-name", m.display_name ?? "");
     mention.textContent = "提到";
-    li.append(chip, line, mention);
+    li.append(primary, secondary, mention);
     return li;
+  }
+
+  private hydrateChatRefreshClockFromSession(): void {
+    const fromSession = readSocialPanelLastRefreshMs(CHAT_PANEL_LAST_REFRESH_SESSION_KEY);
+    if (fromSession > 0) {
+      this.refreshClock.chat.lastUpdatedMs = fromSession;
+      this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", { busy: false });
+    }
+  }
+
+  private hydrateGuildRefreshClockFromSession(): void {
+    const fromSession = readSocialPanelLastRefreshMs(GUILD_PANEL_LAST_REFRESH_SESSION_KEY);
+    if (fromSession > 0) {
+      this.refreshClock.guild.lastUpdatedMs = fromSession;
+      this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", { busy: false });
+    }
   }
 
   /** 打开聊天面板、切到军团频道并填入 @ 草稿（不发送、不额外 RPC）。 */
@@ -755,9 +790,11 @@ export class SocialPanels {
         this.syncGuildSummary();
         this.guildListError = "";
         this.renderGuildMembersList(res.members ?? []);
+        const refreshedAt = Date.now();
+        writeSocialPanelLastRefreshMs(GUILD_PANEL_LAST_REFRESH_SESSION_KEY, refreshedAt);
         this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", {
           busy: false,
-          lastUpdatedMs: Date.now(),
+          lastUpdatedMs: refreshedAt,
           error: null,
         });
         this.onStatus(`成员 ${res.members?.length ?? 0} 人`);

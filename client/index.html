@@ -661,6 +661,15 @@
         margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #4a3f35;
       }
       .battle-report-detail-coord { font-size: 14px; font-weight: 700; color: #f0c674; }
+      .battle-report-detail-location {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        margin-bottom: 8px; padding: 8px; background: #221a14; border-radius: 4px;
+        border: 1px solid #4a3f35;
+      }
+      .battle-report-detail-location-xy {
+        font-size: 14px; font-weight: 700; color: #f0c674; font-family: ui-monospace, monospace;
+      }
+      .battle-report-detail-location button[data-action="view-on-map"] { font-size: 12px; }
       .battle-report-detail-foe { font-size: 12px; color: #e8dcc8; flex: 1; min-width: 120px; }
       .battle-report-detail-head button[data-action="view-on-map"] { font-size: 12px; }
       .battle-report-detail-summary {
@@ -711,6 +720,13 @@
         outline: 1px solid #c9a227;
         outline-offset: -1px;
         background: rgba(201, 162, 39, 0.12);
+      }
+      @keyframes march-phase-changed-pulse-keyframes {
+        0% { background-color: rgba(158, 197, 255, 0.35); }
+        100% { background-color: transparent; }
+      }
+      .march-list li.march-phase-changed {
+        animation: march-phase-changed-pulse-keyframes 3s ease-out 1;
       }
       .march-row-recent-eta {
         font-size: 12px;
@@ -1135,6 +1151,9 @@
       .daily-quest-list li.daily-quest-claim-pulse {
         animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
       }
+      .mail-list li.mail-claim-pulse {
+        animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
+      }
       .daily-quest-filter-claimable {
         position: relative;
         display: inline-flex;
@@ -1451,7 +1470,16 @@
         border-left: none;
         background: transparent;
       }
-      .mail-row-summary { display: block; font-size: 11px; color: #b8a88a; margin-top: 2px; }
+      .mail-row-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #b8a88a;
+        margin-top: 2px;
+      }
+      .mail-row-meta-text { flex: 1 1 auto; min-width: 0; }
       .mail-detail-title { font-size: 14px; margin: 8px 0 4px; }
       .mail-inbox-hint { font-size: 12px; margin-bottom: 6px; }
       .social-panel label { display: block; margin: 6px 0; }
@@ -1545,7 +1573,15 @@
       .guild-role-chip-officer { background: #3a4a62; color: #9ec5ff; }
       .guild-role-chip-member { background: #3d3830; color: #c9b88a; }
       .guild-role-chip-unknown { background: #333; color: #aaa; }
-      .guild-member-line { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
+      .guild-member-primary {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+        flex: 1 1 8rem; min-width: 0;
+      }
+      .guild-member-nick { font-weight: 600; color: #f5e6c8; overflow-wrap: anywhere; }
+      .guild-member-secondary {
+        flex: 1 1 100%; min-width: 0; font-size: 11px; color: #b8a88a;
+        overflow-wrap: anywhere; line-height: 1.35; padding-left: 2px;
+      }
       .guild-member-mention { flex-shrink: 0; }
       .chat-log li.social-list-empty,
       .guild-members li.social-list-empty {

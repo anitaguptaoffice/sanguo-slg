@@ -44,6 +44,8 @@
 
 **CLIENT-122（邮件面板）**：在 **CLIENT-121** `artFilterChipRuntime` / `remountPanelFilterChips` 之上，收件箱 **全部 / 未读** 筛选条接 `data-ui-filter-chip` + `badge.count`（count=0 整节点 `hidden`）；`mail-inbox-filter-v1` 记忆 filter（与 **CLIENT-106** 角标推导并存）。列表行 `data-ui-filter-row` + 未读 **dot** / 未领附件 **count**（`formatMailFilterChips` / `formatMailRowCountBadge`）。`HeroMailPanels.mountMailFilterSkins(assets)` 与 `MainCityScene` 全局 `remountPanelFilterChips` 并存。
 
+**CLIENT-143（邮件领取同步）**：`ClaimPlayerMailAttachments` 成功后 `syncMailRowAfterClaim` / `syncMailInboxSnapshotAfterClaim` 即时更新列表 **已领** 态；tab 筛选 chip 与底栏 HUD 待办角标共用 `mailInboxSnapshot` + `countMailUnreadAndUnclaimed`（**CLIENT-106** / **CLIENT-134**）。收件箱主行 **主题 + 未读点**；次行 **`mailRowAttachmentIconSummary` + `formatMailRelativeTime`**；批量领取 **CLIENT-087** 成功行 `mail-claim-pulse`。领取失败 **CLIENT-067** `mail-form-error` + 列表 **CLIENT-129** 骨架不退化。单测：`heroMailState.test.ts`（`syncMailRowAfterClaim`）、`panelDensity.test.ts`、`mailClaimFeedback.test.ts`。
+
 ### ART-UI-PANEL-STATE-009 面板态运行时（CLIENT-129）
 
 **`panelStateChrome`**：`resolvePanelStateSkin` 将 **loading / empty / error** 映射 **`ui.panel.loading.v1`** / **`ui.panel.empty.v1`** / **`ui.panel.error.v1`**（CLIENT-128 manifest 就绪时 nine-slice 挂到列表占位行）；邮件 / 日常 / 将领列表 / 建造队列 / 军情 / 战报 **首屏拉取** 与 **筛选空结果** 共用 **`data-panel-state=loading|empty|error`** + **`panel-state-chrome`** class（筛选 chip 与 **CLIENT-029** / wave:27 **`data-ui-filter-chip`** 不退化）。面板或列表祖先设 **`data-art-skin="off"`** 时跳过九宫、保留 **`panelDensity` / CLIENT-067** 纯文案回退。单测：`panelStateChrome.test.ts`。
@@ -604,7 +606,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 1. `make dev` 打开 **排行**，切换战力/资源榜后点 **刷新排行榜**：列表更新且出现 **上次更新** 行；刷新过程中按钮不可点。
 2. **聊天**（世界/私聊/军团）点 **刷新**：`ListChatMessages` 成功后同样展示时间戳；空列表仍用 CLIENT-029/030 密度文案。
 3. 断网或网关错误：状态行显示 **刷新失败：…**（`formatSocialPanelRefreshError`），状态栏同步 gateway 摘要。
-4. **CLIENT-076**：排行/军团/聊天三面板刷新共用 `formatPanelRefreshMeta`（in-flight **刷新中…** + spinner、成功 **上次更新**、失败 **`[code]`** + **重试**）；单测：`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
+4. **CLIENT-076**：排行/军团/聊天三面板刷新共用 `formatPanelRefreshMeta`（in-flight **刷新中…** + spinner、成功 **上次刷新**（**CLIENT-144** `formatPanelRefreshStamp`）、失败 **`[code]`** + **重试**）；单测：`panelRefreshStamp.test.ts`、`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（将领详情 CLIENT-014）
 
@@ -902,14 +904,13 @@ cd client && npm install && npm run dev
 
 ### 手动验收（战报坐标与小地图复盘 CLIENT-042）
 
-（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`）。战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情顶栏同样展示坐标与 **「在地图查看」**。点击后经 `extractBattleReportReplayCoord` 读取 summary 既有 `location_x/y`（不扩 proto），主城舞台小地图绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野；关闭战报面板或切换选中战报时清除高亮。小地图折叠时状态栏仍提示坐标。
+（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`）。战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情 **坐标区** 展示 `location_x/location_y` 与 **「在小地图定位」**（[#562](https://github.com/anitaguptaoffice/sanguo-slg/issues/562) **CLIENT-142**）。点击后经 `parseBattleReportLocation` + `applyBattleReportMinimapFocus` 读取 summary 既有 `location_x/y`（不扩 proto），`openWorldMinimapExpanded` 展开小地图、绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野，同时 **世界信息卡** 选中格与战报坐标一致；关闭战报面板或切换选中战报时清除高亮。列表次行攻守摘要（**CLIENT-098**）、筛选 chip（**CLIENT-125**）与详情键盘相邻导航（**CLIENT-094**）在坐标跳转后不退化。
 
 1. `make dev` 产生至少一条带 `location_x/y` 的战报（见募兵 → 行军）。
-2. 底栏 **「战报」** → 列表行应见金色 **坐标(...)** 行；点开详情顶栏有坐标与 **在地图查看**。
-3. 点击 **在地图查看**：展开小地图时应出现 **战报** 标记与橙红高亮圈，视野自动对准该格点。
-4. 折叠小地图后再次点击 **在地图查看**：状态栏应提示坐标与「展开小地图可查看高亮」。
-5. 关闭战报面板或点另一条战报：小地图临时高亮应消失。
-6. 单测：`battleReportReplayCoord.test.ts`、`worldMinimap.test.ts`、`BattleReportPanel.test.ts`。
+2. 底栏 **「战报」** → 列表行应见金色 **坐标(...)** 行；点开详情坐标区有 `location_x=… · location_y=…` 与 **在小地图定位**。
+3. 点击 **在小地图定位**：小地图应自动展开，出现 **战报** 标记与橙红高亮圈，视野对准该格点；世界面板信息卡格点与战报一致。
+4. 关闭战报面板或点另一条战报：小地图临时高亮应消失。
+5. 单测：`battleReportMinimapFocus.test.ts`、`battleReportReplayCoord.test.ts`、`worldMinimap.test.ts`、`BattleReportPanel.test.ts`。
 
 ### 手动验收（邮件附件领取 CLIENT-035）
 
@@ -1159,7 +1160,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
 
 1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。**CLIENT-097**：点击榜单行 — 战力榜己方行打开将领详情（`GetHeroDetail`），他人行状态栏提示只读；资源榜有格点字段时打开世界信息卡，否则只读摘要弹层。
-2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行职务 chip + `player_id` 截断与加入时间摘要（CLIENT-101）。
+2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行 **主行** 昵称 + 职务 chip，次行 `player_id` 截断与战力/加入摘要（CLIENT-101 + **CLIENT-144**）。
 3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
 4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。
 
@@ -1172,6 +1173,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 断网或 mock 失败：面板内红色 **刷新失败：…** 文案（网关 `formatSocialGatewayError`），状态栏同步；修复后再次刷新应恢复时间戳。
 4. **「聊天」** 各频道（世界/私聊/军团）同理：**刷新** 按钮 + **上次更新**；发送成功后自动刷新也应更新时间戳。
 5. 单测：`socialRefreshFormat.test.ts`、`socialPanelInflight.test.ts`、`SocialPanels.test.ts`（时间戳、in-flight 禁用、失败文案）。
+
+### 手动验收（社交刷新戳记与角标同步 CLIENT-144）
+
+在 [CLIENT-045](#手动验收社交刷新-client-045) / [CLIENT-096](#手动验收社交扫读-client-030) / [CLIENT-102](#手动验收聊天未读与社交角标-client-102) 之上：`formatPanelRefreshStamp` 统一排行顶栏与军团/聊天 `social-refresh-status` 的 **上次刷新** 相对文案（48h 内 **刚刚/N 分钟前/N 小时前**；更久回退本地时间）；`chat-panel-last-refresh-ms` / `guild-panel-last-refresh-ms` **sessionStorage** 在重开面板时恢复戳记（不新 RPC）。聊天 **手动刷新** 后 `ChatUnreadTracker` 快照即时驱动频道 tab 角标（与底栏 **CLIENT-102** 同一估算）；空/错态仍走 **CLIENT-053** + **CLIENT-129** 骨架。
+
+1. **排行**：`rank-last-refresh-ms` 与刷新按钮旁状态行均含 **上次刷新：刚刚**（或相对时间）。
+2. **军团**：职务分组下成员主行见昵称 + 职务标签；**刷新成员** 成功后见相对 **上次刷新**。
+3. **聊天**：手动 **刷新** 后未读 tab 角标与快照一致；失败/空列表不退化 CLIENT-053。
+4. 单测：`panelRefreshStamp.test.ts`、`socialRefreshFormat.test.ts`、`SocialPanels.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（社交空态与错误文案 CLIENT-053）
 
@@ -1248,6 +1258,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 单测：`militaryListFilter.test.ts`、`battleReportListState.test.ts`、`MarchListPanel.test.ts`、`BattleReportPanel.test.ts`。
 
 **wave:27（CLIENT-124）**：在 **CLIENT-109** 记忆与 **CLIENT-090/093** 小地图互选、再出征预填不退化前提下，军情 **阶段** 改为 **ART-UI-FILTER-008** 筛选 chip（`data-ui-filter-chip` + `militaryListPhaseChipReducer`）；列表行接 **九宫**（`data-ui-filter-row`）与新出征 **badge.dot**（`data-ui-filter-badge="dot"`，与 **CLIENT-116** `march-row-recent` / 行内 ETA 并存）。ETA 仍用下拉排序。无 `CancelMarch`/加速。单测：`militaryListPhaseChip.test.ts`、`MarchListPanel.test.ts`。
+
+**wave:29（CLIENT-141）**：军情列表 **主行** = 目的格点 + 模板摘要（目的 / `#id` / 编制）；**次行** = `formatMarchRemainingMs` 剩余 ETA + `formatMarchPhase` 中文阶段。`ListMarches` 刷新后 `detectMarchPhaseChanges` 对 phase 变化的行附加 **`march-phase-changed`** 脉冲 3s；**CLIENT-124** 筛选 chip 与 **最早到达** 默认排序（`eta_asc`，`default` 同义）并存；loading/empty/error 仍走 **CLIENT-129**。单测：`formatMarchListSecondary`、`marchPhaseListRefresh.test.ts`、`MarchListPanel.test.ts`。
 
 ### 手动验收（军情格点筛选 CLIENT-069）
 
