@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE4 runtime inventory — template 1014
 
-tip_sha / runtime_code_sha: `8dbb071374eaa5e5512457eab6ef1fb195ab9c78`
+tip_sha / runtime_code_sha: `b53990c34976b980cdc3f8f85bbcfa5385943447`
 art_head_sha: `11f87490181675293bc07ec1e4772a50624c1867`
 
 ## Viewport captures
 
-- `runtime/1014/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471204 bytes, sha256 `1bc3cba8f85a2a7940db3f63ae46a62c8f6e236c62f1772cac67d66b4d646372`
-- `runtime/1014/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 978817 bytes, sha256 `b92104e9d8f3327e3a8e0ee357c247717a7e4f365a26da3bfa8cf01a5d45b2ef`
-- `runtime/1014/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245994 bytes, sha256 `733595df6bc0fbeaf955db4ccacdd728827535da76da81cebdf6eaa02e77bccd`
+- `runtime/1014/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 472838 bytes, sha256 `1ed807dd4f34ca62d43ee19d4d198a05cb573e758774bbb66e59a71a029eb6de`
+- `runtime/1014/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 995172 bytes, sha256 `80e844c63fd0dbbb345afbac99921a2cb2dadc2d5448a6593cab20a2025bc036`
 - `runtime/1014/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `d33a439026459667086a25a67f043e842622499b07a573796b5ffc67f29dbcba`
 
 ## Textures (hero.avatar.1014.v1 / hero.bust.1014.v1)
@@ -29,6 +28,12 @@ art_head_sha: `11f87490181675293bc07ec1e4772a50624c1867`
       "nameReadable": true,
       "detailName": "陆逊",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "陆逊 · Lv10 · 忠诚 82",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `11f87490181675293bc07ec1e4772a50624c1867`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.21875,
+        "top": 623.21875,
         "width": 128,
         "height": 160
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `11f87490181675293bc07ec1e4772a50624c1867`
       "nameReadable": true,
       "detailName": "陆逊",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "陆逊 · Lv10 · 忠诚 82",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `11f87490181675293bc07ec1e4772a50624c1867`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.21875,
+        "top": 623.21875,
         "width": 128,
         "height": 160
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

@@ -20,6 +20,7 @@ import {
   probeBustNameSameFrameInPage,
   probeHeroPortraitFramesInPage,
   scrollHeroDetailHeadInPage,
+  scrollHeroListRowForPortraitInPage,
 } from "./lib/hero-host-capture-probes.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -36,6 +37,8 @@ const SLICE4_IDS = [1013, 1014, 1015, 1016];
 const HERO_IDS = process.env.HERO_TEMPLATE_CFG_ID
   ? [Number(process.env.HERO_TEMPLATE_CFG_ID)]
   : SLICE4_IDS;
+const SKIP_SAMEFRAME = process.env.SKIP_SAMEFRAME === "1";
+const SKIP_1280_VIEWPORT = process.env.SKIP_1280_VIEWPORT === "1";
 
 const MOCK_PORT = Number(process.env.MOCK_GATEWAY_PORT || 19098);
 const APP_PORT = Number(process.env.CLIENT_EVIDENCE_PORT || 16218);
@@ -50,6 +53,9 @@ const VIEWPORTS = [
   { tag: "1280x720-dpr1", file: "hero-host-1280x720-dpr1.jpg", width: 1280, height: 720, dpr: 1 },
 ];
 const SAMEFRAME_FILE = "hero-host-1280x720-dpr1-bust-name-sameframe.jpg";
+const ACTIVE_VIEWPORTS = VIEWPORTS.filter(
+  (vp) => !(SKIP_1280_VIEWPORT && vp.tag === "1280x720-dpr1"),
+);
 
 function heroAssetIds(templateCfgId) {
   return [`hero.avatar.${templateCfgId}.v1`, `hero.bust.${templateCfgId}.v1`];
@@ -163,8 +169,15 @@ async function captureHero(browser, templateCfgId, tipSha) {
   await mkdir(outDir, { recursive: true });
   const shots = {};
   const probes = {};
+  let priorProbeLog = null;
+  const priorPath = path.join(outDir, "probe-log.json");
+  try {
+    priorProbeLog = JSON.parse(await readFile(priorPath, "utf8"));
+  } catch {
+    priorProbeLog = null;
+  }
 
-  for (const vp of VIEWPORTS) {
+  for (const vp of ACTIVE_VIEWPORTS) {
     const context = await browser.newContext({
       viewport: { width: vp.width, height: vp.height },
       deviceScaleFactor: vp.dpr,
@@ -174,6 +187,10 @@ async function captureHero(browser, templateCfgId, tipSha) {
     page.setDefaultTimeout(90000);
     await enterMainCity(page);
     await openHeroPanelWithDetail(page, templateCfgId);
+    if (vp.width === 1600) {
+      await scrollHeroListRowForPortraitInPage(page, templateCfgId);
+      await page.waitForTimeout(250);
+    }
     if (vp.tag === "1280x720-dpr1") {
       await page.evaluate(() => {
         const scroll = document.querySelector(
@@ -185,26 +202,38 @@ async function captureHero(browser, templateCfgId, tipSha) {
     }
     const filePath = path.join(outDir, vp.file);
     const jpeg = await writeJpegUnder1Mb(page, filePath, { fullPage: false });
-    probes[vp.tag] = await probeHeroPortraitFramesInPage(page, templateCfgId);
+    probes[vp.tag] = await probeHeroPortraitFramesInPage(page, templateCfgId, {
+      requireListAvatarInClip: vp.width === 1600,
+    });
     shots[vp.file] = { ...jpeg, viewport: vp };
     await context.close();
   }
 
-  const sameContext = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    deviceScaleFactor: 1,
-  });
-  const samePage = await sameContext.newPage();
-  await installHeroHostCaptureProbes(samePage);
-  samePage.setDefaultTimeout(90000);
-  await enterMainCity(samePage);
-  await openHeroPanelWithDetail(samePage, templateCfgId);
-  await scrollHeroDetailHeadInPage(samePage);
-  await samePage.waitForTimeout(350);
-  const sameProbe = await probeBustNameSameFrameInPage(samePage);
   const samePath = path.join(outDir, SAMEFRAME_FILE);
-  const sameJpeg = await writeJpegUnder1Mb(samePage, samePath, { fullPage: false });
-  await sameContext.close();
+  let sameProbe = priorProbeLog?.sameframe?.probe ?? null;
+  let sameJpeg = priorProbeLog?.sameframe?.jpeg ?? null;
+  if (!SKIP_SAMEFRAME) {
+    const sameContext = await browser.newContext({
+      viewport: { width: 1280, height: 720 },
+      deviceScaleFactor: 1,
+    });
+    const samePage = await sameContext.newPage();
+    await installHeroHostCaptureProbes(samePage);
+    samePage.setDefaultTimeout(90000);
+    await enterMainCity(samePage);
+    await openHeroPanelWithDetail(samePage, templateCfgId);
+    await scrollHeroDetailHeadInPage(samePage);
+    await samePage.waitForTimeout(350);
+    sameProbe = await probeBustNameSameFrameInPage(samePage);
+    sameJpeg = await writeJpegUnder1Mb(samePage, samePath, { fullPage: false });
+    await sameContext.close();
+  } else if (priorProbeLog?.probes?.["1280x720-dpr1"]) {
+    probes["1280x720-dpr1"] = priorProbeLog.probes["1280x720-dpr1"];
+    const vp1280 = VIEWPORTS.find((v) => v.tag === "1280x720-dpr1");
+    if (vp1280 && priorProbeLog.shots?.[vp1280.file]) {
+      shots[vp1280.file] = priorProbeLog.shots[vp1280.file];
+    }
+  }
 
   const probeLog = {
     task: "HERO-HOST-SLICE4",
@@ -222,6 +251,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
       "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
       "Art path-copied from Draft #1192 (#1014 from #1192 @ 11f87490); Drafts remain unmerged.",
       "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
+      "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible.",
     ],
     captured_at: new Date().toISOString(),
   };
@@ -237,6 +267,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     "",
   ];
   for (const vp of VIEWPORTS) {
+    if (SKIP_1280_VIEWPORT && vp.tag === "1280x720-dpr1") continue;
     const rel = `runtime/${templateCfgId}/${vp.file}`;
     const abs = path.join(outDir, vp.file);
     const bytes = (await readFile(abs)).length;

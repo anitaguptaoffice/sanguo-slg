@@ -4,36 +4,34 @@
 
 | 字段 | 值 | 说明 |
 |---|---|---|
-| **art_head_sha** | `cc9da5f28492bbbcb8d82d87458041d685726661` | Draft [#1192](https://github.com/anitaguptaoffice/sanguo-slg/pull/1192) 路径复制源（**仅 1013/1015/1016**）；**勿合并** Draft |
-| **runtime_code_sha / tip_sha** | 见各 `runtime/{id}/probe-log.json` | 工程挂载 PR HEAD（证据捕获时 `git rev-parse HEAD`） |
-| **1014 陆逊** | **HOLD / FAIL** | 见 [HOLD-1014.md](./HOLD-1014.md)；无 PNG/manifest/运行时签收 |
+| **art_head_sha（1013/1015/1016）** | `cc9da5f28492bbbcb8d82d87458041d685726661` | Draft [#1192](https://github.com/anitaguptaoffice/sanguo-slg/pull/1192)；**勿合并** |
+| **art_head_sha（1014）** | `11f87490181675293bc07ec1e4772a50624c1867` | #1192 @ 11f87490 路径复制；**勿合并** |
+| **runtime_code_sha / tip_sha** | 见各 `runtime/{id}/probe-log.json` | 工程挂载 PR HEAD（含 list-avatar clip-aware 1600 捕获） |
 
 ## 范围
 
 | 项 | 结果 | 备注 |
 |---|---|---|
-| 3 template / 6 manifest ID / 12 PNG | PASS | `hero.avatar.{1013,1015,1016}.v1` + `hero.bust.*`；保留既有 1001–1008 |
-| 1014 | **HOLD** | 不挂载、不采证 |
-| 未合并 #1191/#1192/#1193/#1069/#1017/#108/#983/#697/#77/#82 | PASS | 仅路径复制可挂载三人 |
-| 生产主城 → 将领面板（`hero-panel-roster-slice4`） | PASS | mock 种子 8013 / 8015 / 8016 |
-| 列表行：圆角头像 + 可读主名 | PASS | probe `listAvatarVisible` + `nameReadable` |
-| 详情：半身 + 名右侧约 10px（`gapPx`） | PASS | 同帧图 `*-bust-name-sameframe.jpg` |
-| 1600 DPR1 / 1600 DPR2 / 1280 详情末尾 | PASS | 每将领 `runtime/{id}/` |
-| DPR2 走 2× 纹理 | PASS | probe `usesAvatar2x` / `usesBust2x` @ dpr2 |
+| 4 template / 8 manifest ID / 16 PNG | PASS | `hero.avatar.{1013..1016}.v1` + bust |
+| 未合并 #1191/#1192/#1193/#1069/#1017/#108/#983/#697/#77/#82 | PASS | 仅路径复制 |
+| 生产主城 → 将领面板（`hero-panel-roster-slice4`） | PASS | mock 种子含 1014 |
+| 1600 DPR1/DPR2 目标列表圆头像+主行名在 clip 内 | PASS | 1014 重拍；1013/1015/1016 沿用 prior 像素 |
+| 1280 sameframe / 详情末尾 | PASS | 未重拍 sameframe |
+| DPR2 走 2× 纹理 | PASS | probe @ dpr2 |
 
 ## 每将领产物
 
 | template_cfg_id | 名称 | 证据目录 |
 |---|---|---|
 | 1013 | 张辽 | `docs/art/samples/hero-host-slice4/runtime/1013/` |
+| 1014 | 陆逊 | `docs/art/samples/hero-host-slice4/runtime/1014/` |
 | 1015 | 曹仁 | `docs/art/samples/hero-host-slice4/runtime/1015/` |
 | 1016 | 典韦 | `docs/art/samples/hero-host-slice4/runtime/1016/` |
-
-每目录含：`hero-host-1600x900-dpr1.jpg`、`hero-host-1600x900-dpr2.jpg`、`hero-host-1280x720-dpr1.jpg`、`hero-host-1280x720-dpr1-bust-name-sameframe.jpg`、`probe-log.json`、`INVENTORY.md`。
 
 ## 重跑捕获
 
 ```bash
-cd client && ART_HEAD_SHA=cc9da5f28492bbbcb8d82d87458041d685726661 \
-  node scripts/capture-hero-host-slice4-evidence.mjs
+cd client && node scripts/capture-hero-host-slice4-evidence.mjs
+# 仅重拍 1600（保留 1280 / sameframe）：
+# SKIP_SAMEFRAME=1 SKIP_1280_VIEWPORT=1 HERO_TEMPLATE_CFG_ID=1014 node scripts/capture-hero-host-slice4-evidence.mjs
 ```
