@@ -5,7 +5,13 @@ import {
   type BuildSubmitState,
 } from "@/net/buildSubmitFeedback";
 import { buildingBySlot } from "@/net/hudFormat";
+import { formatBuildUpgradeCostLine } from "@/net/buildUpgradeCostLine";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
+import {
+  applyPanelStateChrome,
+  PANEL_STATE_CHROME_CLASS,
+  PANEL_STATE_LOADING_MESSAGE,
+} from "@/engine/panelStateChrome";
 import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
@@ -128,15 +134,37 @@ export class MainCityBuildingPanel {
       return;
     }
 
-    const preview = previewUpgradeCost(slotKey, level, this.wallet());
-    if (!preview) {
-      previewEl.textContent = "暂无升级配置";
+    const session = this.getSession();
+    if (!session) {
+      previewEl.textContent = PANEL_STATE_LOADING_MESSAGE;
+      previewEl.innerHTML = "";
+      applyPanelStateChrome(previewEl as HTMLElement, "loading");
       btn.disabled = true;
       this.setFormError(null);
       return;
     }
 
-    previewEl.textContent = preview.summaryLine;
+    const preview = previewUpgradeCost(slotKey, level, this.wallet());
+    if (!preview) {
+      previewEl.textContent = "暂无升级配置";
+      previewEl.innerHTML = "";
+      previewEl.classList.remove(PANEL_STATE_CHROME_CLASS);
+      previewEl.removeAttribute("data-panel-state");
+      btn.disabled = true;
+      this.setFormError(null);
+      return;
+    }
+
+    previewEl.classList.remove(PANEL_STATE_CHROME_CLASS);
+    previewEl.removeAttribute("data-panel-state");
+    const costLine = formatBuildUpgradeCostLine(
+      preview.targetLevel,
+      preview.cost,
+      this.wallet(),
+      { timeSec: preview.timeSec },
+    );
+    previewEl.textContent = costLine.textLine;
+    previewEl.innerHTML = costLine.htmlLine;
     const submitState = this.getSubmitState();
     btn.disabled = buildSubmitButtonDisabled(submitState, preview.canAfford, false);
     btn.textContent = buildSubmitButtonLabel(submitState);

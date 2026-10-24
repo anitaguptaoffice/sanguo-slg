@@ -1258,6 +1258,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **CLIENT-149 队列完成反馈**：建造仍由 `detectBuildJustCompleted` 触发 **3s** `queue-build-complete-pulse`，队列行/七槽矩阵/画布 `queue-build-slot-mutual-highlight` 互跳不退化；募兵批次完成由 `detectRecruitQueueJustCompleted` 触发 **3s** `queue-recruit-complete-pulse`（与提交成功 `recruit-row-pulse`、建造脉冲样式区分），募兵行与兵营矩阵格 `queue-recruit-slot-mutual-highlight` 互跳；无新 RPC、募兵加速仍 **out**。单测：`recruitQueueComplete.test.ts`、`QueuePanels.test.ts`。
 
+**wave:32（CLIENT-164）主城建造消耗与队列 ETA 扫读**：选中槽位时建造面板 `formatBuildUpgradeCostLine` 行内展示下级粮/木/铁/石消耗，相对 `GetCityState.wallet` 不足段 **`resource-deficit` 标红**（只读）；队列建造/募兵行次行展示 `formatUpgradeRemaining` 剩余时间 + `formatQueueRemainingProgress` **细进度条**（`finish_at_ms` 与 cfg 反推 `started_at`；无起点则仅倒计时），顶栏 `formatBuildQueueCountdown` 与 **CLIENT-149** 完成脉冲并存。loading/error 仍 **CLIENT-129**；单测：`buildUpgradeCostLine.test.ts`、`queueRemainingProgress.test.ts`、`MainCityBuildingPanel.test.ts`、`QueuePanels.test.ts`。
+
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。
