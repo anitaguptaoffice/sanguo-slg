@@ -20,8 +20,10 @@ import {
   CLIENT_145_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_155_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_163_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_171_NARROW_MANIFEST_CENTER_PANEL_IDS,
   MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WAVE32_MAIN_CITY_BUILD_HERO_SHOP_DAILY_WORLD_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
@@ -237,5 +239,26 @@ describe("narrow layout root class", () => {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
     expect(WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
+  });
+
+  it("CLIENT-171 wave:32 build/hero/shop/daily/world manifest registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_171_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "building",
+      "queue",
+      "hero",
+      "shop",
+      "daily",
+      "rank",
+      "world",
+    ]);
+    expect(NARROW_SCROLL_SIDEBAR_PANEL_IDS).toContain("building");
+    for (const id of ["queue", "hero", "shop", "daily", "rank", "world"] as const) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(WAVE32_MAIN_CITY_BUILD_HERO_SHOP_DAILY_WORLD_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(
+      56,
+    );
   });
 });

@@ -476,6 +476,31 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 波次总览与 **DOCS-EXIT-023**（[#615](https://github.com/anitaguptaoffice/sanguo-slg/issues/615) / [#625](https://github.com/anitaguptaoffice/sanguo-slg/pull/625)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 31」。实现合入后 main tip **`5ffcb5af031e574f9d5d081c5ceb3a008b3b235d`**（#624 CLIENT-163）；基线 wave:30 **`ad278a7c6bb80e6991306d17c3eb42e58046b336`**（DOCS-EXIT-022 [#604](https://github.com/anitaguptaoffice/sanguo-slg/pull/604) `ad278a7c`）。
 
+## Wave 32 H5 主城建造消耗队列扫读·将领招募商城货币·双榜深链·日常链·世界格点（M4 出口 / INTG-029）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-029** 网关冒烟一致）。**范围外**同 Wave 31；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)）。**世界瓦片/图集**仍暂缓。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **主城建造消耗与队列 ETA 扫读** | [手动验收（主城建造 CLIENT-082）](#手动验收主城建造升级-client-082) 内 **CLIENT-164**（[#627](https://github.com/anitaguptaoffice/sanguo-slg/issues/627) / [#638](https://github.com/anitaguptaoffice/sanguo-slg/pull/638)） | 已合 |
+| **将领详情养成道具缺口与背包深链** | [手动验收（将领详情养成道具缺口与背包深链 CLIENT-165）](#手动验收将领详情养成道具缺口与背包深链-client-165)（[#628](https://github.com/anitaguptaoffice/sanguo-slg/issues/628) / [#646](https://github.com/anitaguptaoffice/sanguo-slg/pull/646)） | 已合 |
+| **招募面板币种余额扫读与将领详情互跳** | [手动验收（招募钱包扫读与详情互跳 CLIENT-166）](#手动验收招募钱包扫读与详情互跳-client-166)（[#629](https://github.com/anitaguptaoffice/sanguo-slg/issues/629) / [#643](https://github.com/anitaguptaoffice/sanguo-slg/pull/643)） | 已合 |
+| **商城分类 tab 货币余额扫读与行内价格对比** | [手动验收（背包商城 CLIENT-057）](#手动验收背包商城-client-057) 内 **CLIENT-167**（[#630](https://github.com/anitaguptaoffice/sanguo-slg/issues/630) / [#645](https://github.com/anitaguptaoffice/sanguo-slg/pull/645)） | 已合 |
+| **双榜列表行将领详情深链与返回榜位记忆** | [手动验收（排行双榜 CLIENT-021）](#手动验收排行双榜-client-021) 内 **CLIENT-168**（[#631](https://github.com/anitaguptaoffice/sanguo-slg/issues/631) / [#640](https://github.com/anitaguptaoffice/sanguo-slg/pull/640)） | 已合 |
+| **日常多 chain 类型 tab 与进行中首条定位** | [手动验收（日常可领取定位 CLIENT-091）](#手动验收日常可领取定位-client-091) 内 **CLIENT-169**（[#632](https://github.com/anitaguptaoffice/sanguo-slg/issues/632) / [#644](https://github.com/anitaguptaoffice/sanguo-slg/pull/644)） | 已合 |
+| **世界格点信息卡与小地图选点焦点扫读** | [手动验收（世界格点扫读 CLIENT-170）](#手动验收世界格点扫读-client-170)（[#633](https://github.com/anitaguptaoffice/sanguo-slg/issues/633) / [#642](https://github.com/anitaguptaoffice/sanguo-slg/pull/642)） | 已合 |
+| **1280 主城建造将领商城日常世界组合 manifest** | [手动验收（1280 wave:32 组合 manifest CLIENT-171）](#手动验收1280-wave32-组合-manifest-client-171)（[#634](https://github.com/anitaguptaoffice/sanguo-slg/issues/634)） | 进行中 |
+| **网关冒烟**（建造队列+将领详情+背包+商城+双榜+日常链+世界格点） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 32** / `TestINTG029Wave32SmokePath`（[#635](https://github.com/anitaguptaoffice/sanguo-slg/issues/635) / [#639](https://github.com/anitaguptaoffice/sanguo-slg/pull/639)） | 已合 |
+
+**推荐串联**（在 [Wave 31](#wave-31-h5-出征募兵执行反馈巩固战报相邻导航加深邮件批量领取军团聊天草稿未读hud待办一致m4-出口--intg-028) 出征/邮件/HUD 栈基础上）：**建造** 消耗预览与队列 ETA 扫读（**CLIENT-164**）→ **将领详情** 道具缺口与背包深链（**CLIENT-165**）→ **招募** 钱包扫读与详情互跳（**CLIENT-166**）→ **商城** 分类币种余额（**CLIENT-167**）→ **双榜** 将领深链与返回记忆（**CLIENT-168**）→ **日常** chain tab 与进行中定位（**CLIENT-169**）→ **世界** 格点信息卡与小地图焦点（**CLIENT-170**）→ 视口 **1280×720** 组合 manifest（**CLIENT-171**）；网关字段见 `tools/smoke/README.md` **INTG-029**。
+
+### 手动验收（1280 wave:32 组合 manifest CLIENT-171）
+
+视口 **1280×720** `layout-narrow`：**建造侧栏** `building-upgrade-preview` / `resource-deficit`（**CLIENT-164**）、**队列** `queue-row-progress` / `queue-row-progress-fill`、**将领** 详情 `hero-upgrade-item-gap` / `hero-upgrade-item-gap-warn`（**CLIENT-165**）与招募 `recruit-afford-secondary` / `recruit-cost-deficit` / `recruit-scroll-anchor-v1`（**CLIENT-166**）、**商城** `shop-tab-currency-sweep` / `shop-price-vs-wallet`（**CLIENT-167**）、**双榜** `rank-view-hero` / `leaderboard-return-scroll-v1`（**CLIENT-168**）、**日常** `daily-chain-tabs`（`daily-chain-tab-v1` / **CLIENT-169**）、**世界** `world-tile-info` / `formatWorldTileInfoSecondary` / `world-tile-focus-pulse`（**CLIENT-170**）与小地图窄屏 rect 与 **CLIENT-155/163** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；队列进度条与商城余额条 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave32MainCityBuildHeroShopDailyWorldNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-171）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：点槽位开 **建造**、底栏 **队列/将领/商城/日常/世界/排行**；长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:32 DOM 钩子（软依赖 **CLIENT-164～170**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163** manifest 不退化。
+
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
 视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-divider`；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）

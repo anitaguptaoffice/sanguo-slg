@@ -6,6 +6,9 @@ import {
   CLIENT_127_NARROW_FILTER_LIST_CENTER_PANEL_IDS,
   CLIENT_127_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_127_PANEL_SCROLL_ROLE_BY_CENTER_ID,
+  DAILY_CHAIN_TAB_BAR_CLASS,
+  DAILY_CHAIN_TAB_CLASS,
+  DAILY_CHAIN_TAB_SESSION_KEY,
   DAILY_QUEST_PROGRESS_SECONDARY_CLASS,
   FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX,
   MAIL_CLAIM_ALL_ATTACHMENTS_ACTION,
@@ -61,6 +64,13 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(MAIL_CLAIM_ALL_ATTACHMENTS_ACTION).toBe("claim-mail-all");
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(`data-action="${MAIL_CLAIM_ALL_ATTACHMENTS_ACTION}"`);
+  });
+
+  it("CLIENT-171 exposes daily chain tab bar hooks for narrow manifest", () => {
+    expect(DAILY_CHAIN_TAB_SESSION_KEY).toBe("daily-chain-tab-v1");
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(DAILY_CHAIN_TAB_BAR_CLASS);
+    expect(html).toContain(DAILY_CHAIN_TAB_CLASS);
   });
 
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {

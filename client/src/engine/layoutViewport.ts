@@ -148,3 +148,13 @@ export {
   MARCH_QUEUE_BANNER_SELECTOR,
   MAIL_CLAIM_ALL_ATTACHMENTS_SELECTOR,
 } from "@/engine/wave31MarchMailSocialNarrowManifest";
+
+/** CLIENT-171: wave:32 主城建造·将领招募商城·日常 chain·世界格点组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_171_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client171NarrowManifestCenterPanelId,
+  WAVE32_MAIN_CITY_BUILD_HERO_SHOP_DAILY_WORLD_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  DAILY_CHAIN_TAB_BAR_SELECTOR,
+  SHOP_TAB_CURRENCY_SWEEP_SELECTOR,
+  WORLD_TILE_INFO_SELECTOR,
+} from "@/engine/wave32MainCityBuildHeroShopDailyWorldNarrowManifest";
