@@ -216,3 +216,55 @@ message LargessHeroResponse {
   int32 item_cfg_id = 5;
   int64 next_largess_at_ms = 6;
 }
+
+// route: hero.v1.ListPersuadeTargets
+message PersuadeTargetSummary {
+  int32 npc_cfg_id = 1;
+  int32 template_cfg_id = 2;
+  string display_name = 3;
+  int32 level = 4;
+  int32 friend = 5;
+  int32 state = 6;
+  int32 hire_friend_min = 7;
+  int64 next_persuade_at_ms = 8;
+}
+
+message ListPersuadeTargetsRequest {
+  int32 server_id = 1;
+}
+
+message ListPersuadeTargetsResponse {
+  repeated PersuadeTargetSummary targets = 1;
+}
+
+// route: hero.v1.PersuadeHero
+message PersuadeHeroRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int32 npc_cfg_id = 3;
+}
+
+message PersuadeHeroResponse {
+  int32 npc_cfg_id = 1;
+  int32 friend = 2;
+  int32 friend_delta = 3;
+  int64 next_persuade_at_ms = 4;
+}
+
+// route: hero.v1.LionizeHero
+message LionizeHeroRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int32 npc_cfg_id = 3;
+}
+
+message LionizeHeroResponse {
+  int32 npc_cfg_id = 1;
+  int32 friend = 2;
+  int32 state = 3;
+  int64 gold_spent = 4;
+  bool befriended = 5;
+  bool recruited = 6;
+  int64 hero_id = 7;
+  string display_name = 8;
+}

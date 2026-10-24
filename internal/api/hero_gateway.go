@@ -21,6 +21,9 @@ const (
 	RouteTrySummonCaptive           = "hero.v1.TrySummonCaptive"
 	RouteSureSummonCaptive          = "hero.v1.SureSummonCaptive"
 	RouteReleaseCaptive             = "hero.v1.ReleaseCaptive"
+	RouteListPersuadeTargets        = "hero.v1.ListPersuadeTargets"
+	RoutePersuadeHero               = "hero.v1.PersuadeHero"
+	RouteLionizeHero                = "hero.v1.LionizeHero"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -41,5 +44,8 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteTrySummonCaptive:           s.handleTrySummonCaptive,
 		RouteSureSummonCaptive:          s.handleSureSummonCaptive,
 		RouteReleaseCaptive:             s.handleReleaseCaptive,
+		RouteListPersuadeTargets:        s.handleListPersuadeTargets,
+		RoutePersuadeHero:               s.handlePersuadeHero,
+		RouteLionizeHero:                s.handleLionizeHero,
 	}
 }
