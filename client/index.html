@@ -2355,6 +2355,34 @@
         box-shadow: inset 0 0 0 2px rgba(120, 200, 255, 0.65);
         animation: minimap-intel-scroll-sync-deep-ring-keyframes 1.2s ease-out 1;
       }
+      @keyframes minimap-intel-scroll-sync-residual-deep-ring-keyframes {
+        0% { outline-offset: 0; outline: 2px solid rgba(160, 220, 255, 0); }
+        40% { outline-offset: 4px; outline: 2px solid rgba(160, 220, 255, 0.7); }
+        100% { outline-offset: 0; outline: 2px solid rgba(160, 220, 255, 0); }
+      }
+      #layout-frame.minimap-intel-scroll-sync-residual-deep-ring {
+        animation: minimap-intel-scroll-sync-residual-deep-ring-keyframes 1.5s ease-out 1;
+      }
+      .march-list li.minimap-intel-scroll-sync-residual-deep-ring {
+        box-shadow: inset 0 0 0 2px rgba(160, 220, 255, 0.75);
+        animation: minimap-intel-scroll-sync-residual-deep-ring-keyframes 1.5s ease-out 1;
+      }
+      #layout-frame.minimap-intel-scroll-sync-deep-ring.minimap-intel-scroll-sync-residual-deep-ring,
+      .march-list li.minimap-intel-scroll-sync-deep-ring.minimap-intel-scroll-sync-residual-deep-ring {
+        animation: minimap-intel-scroll-sync-deep-ring-keyframes 1.2s ease-out 1,
+          minimap-intel-scroll-sync-residual-deep-ring-keyframes 1.5s ease-out 1;
+      }
+      .world-tile-intel-eta-cross-residual-deep-line {
+        margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #8eb8d8;
+      }
+      .world-tile-intel-eta-cross-residual-deep-line.hidden { display: none; }
+      @keyframes world-tile-intel-eta-cross-residual-deep-pulse-keyframes {
+        0%, 100% { background-color: transparent; }
+        50% { background-color: rgba(160, 220, 255, 0.22); }
+      }
+      .world-tile-intel-eta-cross-residual-deep-line.world-tile-intel-eta-cross-residual-deep-pulse {
+        animation: world-tile-intel-eta-cross-residual-deep-pulse-keyframes 1.5s ease-out 1;
+      }
       .world-tile-intel-eta-cross-residual-line {
         margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #9cc8e8;
       }
@@ -4083,8 +4111,10 @@
       /* CLIENT-259 wave:43 世界军情战报邮件商城排行招募组合 manifest */
       /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); data-action prefill-march-form-from-intel-residual (CLIENT-258) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-viewport-intel-sync-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deep-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-phase-change-residual-pulse,
@@ -4187,7 +4217,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-row-minimap-sync-highlight,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-deep-ring,
+      #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-line,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp,
