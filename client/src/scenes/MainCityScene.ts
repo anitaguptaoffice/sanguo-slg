@@ -178,6 +178,12 @@ import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import {
+  applyMinimapFocusPulseClass,
+  highlightMinimapMarchEnd,
+  type MinimapMarchEndHighlight,
+  syncMinimapFocusFromTileCard,
+} from "@/ui/minimapTileFocusLink";
+import {
   DEFAULT_MARCH_TARGET,
   applyMarchTargetAndRemember,
   clearMarchTargetFromForm,
@@ -300,6 +306,10 @@ export class MainCityScene implements Scene {
   private minimapBattleReportReplay: MinimapWorldPoint | null = null;
   /** 世界信息卡选中格（小地图高亮与视野纳入，CLIENT-073）。 */
   private minimapFocusGrid: MinimapWorldPoint | null = null;
+  /** CLIENT-188：信息卡反向定位脉冲截止（`marchClockMs` 轴）。 */
+  private minimapFocusPulseUntilMs = 0;
+  /** CLIENT-188：军情选中行军终点叠加高亮。 */
+  private minimapMarchEndHighlight: MinimapMarchEndHighlight | null = null;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
   private minimapEtaTickAccum = 0;
@@ -617,6 +627,7 @@ export class MainCityScene implements Scene {
           highlightMarchFormCoordsFromIntel(this.militaryPanel, march, {
             timers: this.marchFormCoordSyncTimers,
           });
+          this.minimapMarchEndHighlight = highlightMinimapMarchEnd(march);
           if (march) {
             const tx = march.to_x;
             const ty = march.to_y;
@@ -708,7 +719,7 @@ export class MainCityScene implements Scene {
         },
         getBattleReportsSnapshot: () => this.battleReports.getReportsSnapshot(),
         onCenterMinimapAtGrid: (grid) => {
-          this.focusMinimapOnWorldGrid(grid.x, grid.y);
+          this.applyMinimapFocusFromWorldTileCard(grid);
         },
         onViewBattleReportsAtGrid: (grid, hintReportId) => {
           void this.battleReports.openListFilteredByGrid(grid.x, grid.y, hintReportId);
@@ -1371,6 +1382,16 @@ export class MainCityScene implements Scene {
     this.minimapFocusGrid = { wx: x, wy: y };
     const bounds = this.currentMinimapWorldBounds();
     this.minimapView = computeMinimapViewFramingPoints(bounds, [{ wx: x, wy: y }]);
+  }
+
+  /** CLIENT-188：格点信息卡点击 → 居中视野 + 2s `minimap-focus-pulse`。 */
+  private applyMinimapFocusFromWorldTileCard(grid: { x: number; y: number }): void {
+    const bounds = this.currentMinimapWorldBounds();
+    const synced = syncMinimapFocusFromTileCard(grid, bounds, this.marchClockMs);
+    this.minimapFocusGrid = synced.focusGrid;
+    this.minimapView = synced.view;
+    this.minimapFocusPulseUntilMs = synced.focusPulseUntilMs;
+    applyMinimapFocusPulseClass(this.layoutFrame);
   }
 
   private clearMinimapWorldGridFocus(): void {
@@ -2240,6 +2261,8 @@ export class MainCityScene implements Scene {
       marches: this.minimapMarches,
       selectedMarchId: this.marchList?.getSelectedMarchId(),
       focusGrid: this.minimapFocusGrid,
+      focusPulseUntilMs: this.minimapFocusPulseUntilMs,
+      marchEndHighlight: this.minimapMarchEndHighlight,
       view: this.minimapView,
       rect: this.currentMinimapLayoutRect(),
       collapsed: this.minimapCollapsed,

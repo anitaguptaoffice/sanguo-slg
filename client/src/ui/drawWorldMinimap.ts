@@ -5,6 +5,11 @@ import {
 } from "@/engine/artMinimapDestSkin";
 import type { MarchSummary } from "@/net/militaryFormat";
 import {
+  MINIMAP_MARCH_END_RING_COLOR,
+  isMinimapFocusPulseActive,
+  type MinimapMarchEndHighlight,
+} from "@/ui/minimapTileFocusLink";
+import {
   MINIMAP_COLLAPSED_CHROME_RECT,
   MINIMAP_DEST_ETA_LEGEND,
   MINIMAP_LAYOUT_RECT,
@@ -35,6 +40,10 @@ export function drawWorldMinimap(
     battleReportReplay?: { wx: number; wy: number } | null;
     /** 世界信息卡选中格（与军情选中目的格区分，CLIENT-073）。 */
     focusGrid?: { wx: number; wy: number } | null;
+    /** CLIENT-188：信息卡反向定位 2s 脉冲窗口（毫秒时间戳）。 */
+    focusPulseUntilMs?: number;
+    /** CLIENT-188：军情选中行军终点叠加环（与信息卡可叠加）。 */
+    marchEndHighlight?: MinimapMarchEndHighlight | null;
     nowMs?: number;
     assets?: AssetLoader;
     /** 用于检测 `data-art-skin=off`（如 `#layout-frame`）。 */
@@ -191,17 +200,33 @@ export function drawWorldMinimap(
     c2d.fillText(caption, rect.x + 8, rect.y + rect.h - 28);
   }
 
+  const focusPulseActive = isMinimapFocusPulseActive(
+    opts.focusPulseUntilMs ?? 0,
+    nowMs,
+  );
   if (focus && (focus.wx != null || focus.wy != null)) {
     const p = worldToMinimapLayout(focus.wx, focus.wy, bounds, rect, opts.view);
     const selectedAtFocus =
       selected?.to_x === focus.wx && selected?.to_y === focus.wy;
     if (!selectedAtFocus) {
       c2d.beginPath();
-      c2d.strokeStyle = "#c9a227";
-      c2d.lineWidth = 2;
-      c2d.arc(p.x, p.y, 10, 0, Math.PI * 2);
+      c2d.strokeStyle = focusPulseActive ? "#f0c674" : "#c9a227";
+      c2d.lineWidth = focusPulseActive ? 3 : 2;
+      c2d.arc(p.x, p.y, focusPulseActive ? 12 : 10, 0, Math.PI * 2);
       c2d.stroke();
     }
+  }
+
+  const marchEnd = opts.marchEndHighlight;
+  if (marchEnd) {
+    const p = worldToMinimapLayout(marchEnd.wx, marchEnd.wy, bounds, rect, opts.view);
+    c2d.beginPath();
+    c2d.strokeStyle = MINIMAP_MARCH_END_RING_COLOR;
+    c2d.lineWidth = 2.5;
+    c2d.setLineDash([5, 4]);
+    c2d.arc(p.x, p.y, 13, 0, Math.PI * 2);
+    c2d.stroke();
+    c2d.setLineDash([]);
   }
 
   const replay = opts.battleReportReplay;

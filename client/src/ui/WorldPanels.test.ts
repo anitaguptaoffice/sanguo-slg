@@ -231,6 +231,7 @@ describe("WorldPanels", () => {
     panels.attach();
     panels.openAndFocusTile(11, 22);
     const card = mount.querySelector('[data-role="world-tile-info"]');
+    expect(card?.classList.contains("world-tile-info-card")).toBe(true);
     expect(card?.classList.contains("hidden")).toBe(false);
     expect(card?.getAttribute("data-grid-x")).toBe("11");
     expect(card?.classList.contains("world-tile-focus-pulse")).toBe(true);
