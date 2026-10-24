@@ -17,16 +17,16 @@ describe("formatWorldTileInfoCard", () => {
       { x: 60, y: 60 },
       [{ city_id: 1, name: "主城", x: 60, y: 60, is_capital: true, wall_level: 3 }],
       [
-        { march_id: 1, to_x: 60, to_y: 60 },
-        { march_id: 2, to_x: 10, to_y: 10 },
-        { march_id: 3, to_x: 60, to_y: 60 },
+        { march_id: 1, to_x: 60, to_y: 60, phase: 1 },
+        { march_id: 2, to_x: 10, to_y: 10, phase: 1 },
+        { march_id: 3, to_x: 60, to_y: 60, phase: 2 },
       ],
       { currentCityId: 1, ownCityX: 50, ownCityY: 50 },
     );
     expect(summary.coordsLine).toBe("格点 (60,60)");
     expect(summary.cityLine).toBe("主城 · 城墙 Lv.3 · 主城");
     expect(summary.marchCount).toBe(2);
-    expect(summary.marchCountLine).toBe("指向此格行军：2 条");
+    expect(summary.marchCountLine).toBe("指向此格进行中行军：2 条");
     expect(summary.manhattanLine).toBe("距主城曼哈顿 20 格");
     expect(summary.occupationHintLine).toBeNull();
   });
@@ -62,7 +62,7 @@ describe("formatWorldTileInfoCard", () => {
     expect(empty.occupationHintLine).toBe(WORLD_TILE_NO_OCCUPATION_HINT);
     expect(empty.terrainLine).toContain("坐标派生");
     expect(empty.marchCount).toBe(0);
-    expect(formatMarchCountInfoLine(0)).toBe("指向此格行军：暂无");
+    expect(formatMarchCountInfoLine(0)).toBe("指向此格进行中行军：暂无");
   });
 
   it("links recent battle report at grid within time window (CLIENT-065)", () => {
