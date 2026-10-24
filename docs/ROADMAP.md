@@ -753,7 +753,7 @@ H5 人工验收与 **INTG-035** 网关冒烟对齐，见 [client/README.md](../c
 | [#844](https://github.com/anitaguptaoffice/sanguo-slg/issues/844) | CLIENT-226 | 已完成 | [#836](https://github.com/anitaguptaoffice/sanguo-slg/pull/836)（`a7e1b21a`） |
 | [#845](https://github.com/anitaguptaoffice/sanguo-slg/issues/845) | CLIENT-227 | 已完成 | [#832](https://github.com/anitaguptaoffice/sanguo-slg/pull/832)（`bd66eab9`） |
 | [#846](https://github.com/anitaguptaoffice/sanguo-slg/issues/846) | INTG-036 | 已完成 | [#833](https://github.com/anitaguptaoffice/sanguo-slg/pull/833)（`f298dd4f`） |
-| [#826](https://github.com/anitaguptaoffice/sanguo-slg/issues/826) | DOCS-EXIT-031 | 进行中 | 本 PR |
+| [#826](https://github.com/anitaguptaoffice/sanguo-slg/issues/826) | DOCS-EXIT-031 | 待审 | [#848](https://github.com/anitaguptaoffice/sanguo-slg/pull/848) |
 
 H5 人工验收与 **INTG-036** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-39-h5-世界小地图军情双向同步军情-phase-变更脉冲出征军情交接战报坐标军情互链邮件战报联动hud-军事待办深链1280组合manifestm4-出口--intg-036)（**小地图军情双向同步 + 军情 phase 变更脉冲 + 出征军情交接 + 战报坐标军情互链 + 战报回合摘要军情互跳 + 邮件战报 tab 与 outcome 联动 + HUD 军事待办深链 + 1280 世界军情战报邮件出征 manifest**）。
 
