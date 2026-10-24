@@ -739,6 +739,21 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/背包/日常/军团** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:40 DOM 钩子（软依赖 **CLIENT-228～234**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227** manifest 不退化。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。（[#857](https://github.com/anitaguptaoffice/sanguo-slg/issues/857) / [#864](https://github.com/anitaguptaoffice/sanguo-slg/pull/864) `fe533816`）
 
+## Wave 42 H5 主城队列 ETA 完成焦点残余·将领养成扫读·双榜钉选·军团聊天·日常 chain HUD 深链·1280 组合 manifest（M4 出口 / INTG-039）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-039** 网关冒烟一致，待本波 CLIENT 卡收口）。**范围外**同 Wave 41；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做。实现卡 **CLIENT-244～251**（自 **CLIENT-244** 起）；**勿占用 CLIENT-064/136/137/146/147**；**勿**将 **ART-012** 登记为本波实现卡 ID。波次总览见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 42」。基线 wave:41 **全收口** tip **`98d6535ec22139d10bf9b0a6b8cb852f3c5d1fb4`**。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 主城将领日常社交队列组合 manifest** | [手动验收（1280 wave:42 组合 manifest CLIENT-251）](#手动验收1280-wave42-组合-manifest-client-251)（[#920](https://github.com/anitaguptaoffice/sanguo-slg/issues/920)） | 进行中 |
+
+### 手动验收（1280 wave:42 组合 manifest CLIENT-251）
+
+视口 **1280×720** `layout-narrow`：**队列** `domestic-queue-eta-segment-residual-label` / `domestic-queue-complete-focus-residual-ring`（**CLIENT-244**；**CLIENT-212/228** 不退化）、`queue-next-finish-preview-residual-line` / `domestic-slot-complete-margin-residual-ring`（**CLIENT-245**；**CLIENT-218** 不退化）、**将领** `hero-list-loyalty-residual-subline` / `hero-detail-consumable-stack-residual-line`（**CLIENT-246**；**CLIENT-213/230** 不退化）、`hero-panel-state-residual-sweep` + session `hero-list-filter-chip-residual-v1`（**CLIENT-247**；**CLIENT-231** 不退化）、**双榜** `rank-refresh-cooldown-residual-stamp` / `rank-pin-keep-residual-ring`（**CLIENT-248**；**CLIENT-214/242** 不退化）、**军团/聊天** `guild-duty-header-residual-line` / `guild-chat-unread-divider-residual-sweep`（**CLIENT-249**；**CLIENT-234/217** 不退化）、**日常/HUD** `quest-chain-queue-hud-residual-subline` / `hud-todo-toolbar-deep-link-residual-pulse`（**CLIENT-250**；**CLIENT-233/216** 不退化）与 **CLIENT-235/219** 同级窄屏契约（**非** wave:41 世界军情战报邮件商城 manifest 面板集）；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；主城/将领/社交密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave42MainCityHeroDailySocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-251）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：底栏 **队列/将领/排行/军团/聊天/日常** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:42 DOM 钩子（软依赖 **CLIENT-244～250**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227/235/243** manifest 不退化。单测：`wave42MainCityHeroDailySocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-251）；`cd client && npm test` 绿。
+
 ## Wave 41 H5 世界小地图视口军情残余·出征表单反馈·战报密度键盘·邮件 HUD 同步·背包商城排行招募扫读·1280 组合 manifest（M4 出口 / INTG-038）
 
 | 能力 | 文档锚点 | 状态 |
