@@ -31,6 +31,7 @@
 # wave:36「H5 主城槽位队列可读加深·将领养成对比巩固·社交军团聊天空错·招募背包表单反馈·HUD中心面板深链·1280组合manifest」：七槽/建造募兵队列剩余时间与进度条扫读、队列完成态与槽位焦点环互链巩固、将领详情养成前后对比与升级进度条、将领列表↔详情筛选记忆加深、军团/聊天面板网关 empty/error 重试扫读、招募表单行内校验与背包养成道具缺口深链（非商城花钱类）、HUD 待办与中心四面板 tab 深链余量、1280 主城将领社交队列组合 manifest；INTG-033 在 INTG-032 上扩展网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做；ART-012 旁路——**非**本波实现卡（实现卡 CLIENT-196～203，勿占用 CLIENT-064/137/146/147）。
 # wave:37「H5 世界小地图行军叠标·军情 ETA 阶段条·出征兵力余量警示·战报列表时间窗·战报详情回合摘要·邮件日常 HUD 联动·背包分类商城返回·1280组合manifest」：小地图多行军终点叠标与格点信息卡行军摘要、军情信息卡 phase/ETA 阶段条与列表次行扫读、出征表单兵力余量警示与军情汇总互跳、战报列表时间窗 chip 记忆与胜负 streak 次行、战报详情回合摘要条只读扫读、邮件分 tab 未读与日常可领取 HUD 联动加深、背包分类 tab 滚动记忆与商城返回行高亮（非扩 SKU）、1280 世界·军情·战报·邮件·背包组合 manifest；INTG-034 在 INTG-033 上扩展网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；ART-012 仅将领 ui.panel.hero.v1 旁路——**非**本波实现卡；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-204～211，勿占用 CLIENT-064/137/146/147）。
 # wave:38「H5 主城队列 ETA 分段与完成余量·将领忠诚养成道具扫读·双榜刷新冷却与社交退避重试·招募商城多币种只读对比·HUD 底栏深链余量·日常 chain 与队列下一完成预览·1280组合manifest」：建造/募兵队列 ETA 分段标签与完成态七槽余量扫读（非 wave:36 进度条主叙事）、将领列表/详情忠诚次行与养成道具堆叠扫读、双榜手动刷新冷却戳记与排行空态行内重试、军团聊天拉取失败退避重试与成员在线摘要、招募/商城多币种钱包只读对比行（非 IAP/扩 SKU）、HUD 待办合并行与底栏四面板深链脉冲余量、日常可领 chain 次行与队列下一完成 ETA 预览互链、1280 主城·将领·社交·队列组合 manifest；INTG-035 在 INTG-034 上扩展网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；ART-012 旁路——**非**本波实现卡；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-212～219，勿占用 CLIENT-064/136/137/146/147）。
+# wave:39「H5 世界小地图军情双向同步·军情 phase 变更脉冲·出征提交军情交接·战报坐标军情互链·战报回合摘要军情互跳·邮件战报 tab 与 outcome 联动·HUD 军事待办深链·1280组合manifest」：小地图格点与军情列表双向同步高亮环巩固、军情 phase 变更列表脉冲与信息卡阶段条同步、出征提交成功自动打开军情并高亮新行军、战报列表坐标标签跳转军情/小地图、战报详情回合摘要跳转同源军情行军、邮件战报类 tab 扫读与战报 outcome 筛选 session 联动、HUD 军事待办分段深链军情/战报/出征面板脉冲、1280 世界·军情·战报·邮件·出征组合 manifest；INTG-036 在 INTG-035 上扩展网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；ART-012 旁路——**非**本波实现卡；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-220～227，勿占用 CLIENT-064/136/137/146/147）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -6454,7 +6455,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-196, CLIENT-197, CLIENT-164, CLIENT-180, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6477,7 +6478,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-198, CLIENT-199, CLIENT-165, CLIENT-151, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6500,7 +6501,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-184, CLIENT-152, CLIENT-096, CLIENT-173, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6523,7 +6524,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-166, CLIENT-167, CLIENT-201, CLIENT-056, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6546,7 +6547,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-202, CLIENT-162, CLIENT-209, CLIENT-118, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6569,7 +6570,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-200, CLIENT-185, CLIENT-161, CLIENT-144, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6592,7 +6593,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-186, CLIENT-174, CLIENT-169, CLIENT-212, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6615,7 +6616,7 @@
   wave: 38
   domain: client
   depends_on: [CLIENT-135, CLIENT-203, CLIENT-211, CLIENT-212, CLIENT-213, CLIENT-214, CLIENT-215, CLIENT-216, CLIENT-217, CLIENT-218, CLIENT-129]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: client
   scope: [client/**]
@@ -6638,7 +6639,7 @@
   wave: 38
   domain: platform
   depends_on: [INTG-034]
-  sync_status: ready
+  sync_status: done
   size: M
   owner_dir: cmd
   scope: [cmd/**, internal/api/**, tools/smoke/**]
@@ -6667,7 +6668,7 @@
   domain: platform
   depends_on: [INTG-035, CLIENT-212, CLIENT-213, CLIENT-214, CLIENT-215, CLIENT-216, CLIENT-217, CLIENT-218, CLIENT-219]
   blocked_until: [INTG-035, CLIENT-212, CLIENT-213, CLIENT-214, CLIENT-215, CLIENT-216, CLIENT-217, CLIENT-218, CLIENT-219]
-  sync_status: blocked
+  sync_status: done
   size: S
   owner_dir: docs
   scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
@@ -6679,5 +6680,237 @@
     - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速/主城建造新 RPC/战报 proto 扩量仍 out；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做；注明 **CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012** 美术旁路——**非** wave:38 backlog 实现卡
   body: |
     文档 only。INTG-035 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。**永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+- id: CLIENT-220
+  title: 小地图格点选中与军情列表行双向同步高亮环巩固
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-204, CLIENT-205, CLIENT-189, CLIENT-170, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "选中军情列表行时小地图对应终点格 `minimap-intel-sync-ring` 1.5s 焦点环；小地图选点/格点信息卡打开军情时列表同源 `march_id` 行 `intel-row-minimap-sync-highlight` 高亮（CLIENT-204/205/189 **不退化**）"
+    - "CLIENT-170 格点坐标摘要 **不退化**；**无**新 world RPC / 世界瓦片图集"
+    - "单测覆盖 `highlightIntelRowForMinimapTile` + sync ring class；npm test 绿；client/README.md 增补 wave:39 小地图军情同步 bullet"
+  body: |
+    wave:37 CLIENT-204/205 与 wave:35 CLIENT-189、wave:32 CLIENT-170 已分散小地图叠标、军情阶段条与坐标互链。wave:38 **轮转**主城/将领/社交栈后，本波 **轮转**回世界/军情栈补 **格点↔军情列表双向同步高亮环**，主叙事 **非** wave:37 叠标/阶段条重复堆叠。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-221～227 并行（‖）。**一卡一 PR**：`feat/CLIENT-220`。
+
+- id: CLIENT-221
+  title: 军情行军 phase 变更列表脉冲与信息卡阶段条同步扫读
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-205, CLIENT-172, CLIENT-082, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "轮询/刷新检测到 `ListMarches` 同源 `phase` 变化时列表行 `intel-phase-change-flash` 2s 脉冲；信息卡 `formatMarchIntelPhaseEtaStrip` 同步更新（CLIENT-205 阶段条 **不退化**）"
+    - "CLIENT-082 阶段提醒文案口径 **可叠加**；**无** CancelMarch / 募兵加速"
+    - "单测覆盖 `detectMarchPhaseChange` + flash class；npm test 绿；client/README.md 增补军情 phase 变更脉冲 bullet"
+  body: |
+    wave:37 CLIENT-205 与 wave:33 CLIENT-172、wave:22 CLIENT-082 已建军情 phase/ETA 扫读与阶段提醒。本卡补 **phase 变更检测与列表/信息卡同步脉冲**，避开 wave:37 阶段条首版主叙事重复。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-220/222～227 并行（‖）。**一卡一 PR**：`feat/CLIENT-221`。
+
+- id: CLIENT-222
+  title: 出征提交成功军情交接与新行军列表高亮扫读
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-156, CLIENT-205, CLIENT-178, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "`MarchAttack`（或 smoke 同源出征 handler）成功后自动打开军情面板并 `intel-new-march-highlight` 高亮新 `march_id` 行 3s（CLIENT-156 顶栏反馈 **不退化**）"
+    - "顶栏 `formatMarchSubmitIntelHandoffLine` 只读交接文案（目标坐标 + phase hint）；CLIENT-178 军事汇总条互跳 **不退化**"
+    - "单测覆盖 handoff line formatter + highlight class；npm test 绿；client/README.md 增补出征军情交接 bullet"
+  body: |
+    wave:31 CLIENT-156 与 wave:37 CLIENT-205、wave:33 CLIENT-178 已分散出征提交反馈与军情汇总互跳。本卡补 **提交成功→军情面板交接与新行军高亮**，主叙事非 wave:38 主城/社交栈。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-220～221/223～227 并行（‖）。**一卡一 PR**：`feat/CLIENT-222`。
+
+- id: CLIENT-223
+  title: 战报列表坐标标签与军情小地图复盘互链加深
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-207, CLIENT-191, CLIENT-142, CLIENT-220, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "战报列表行次行 `formatBattleReportCoordinateTag` + `report-list-intel-jump-tag`：展示坐标只读标签；点击跳转军情选中同源坐标/最近终点行或打开小地图格点（CLIENT-191/142 **不退化**）"
+    - "CLIENT-207 时间窗 chip 与 streak 次行 **不退化**；**无**战报 proto 扩量"
+    - "单测覆盖 coordinate tag formatter + jump handler；npm test 绿；client/README.md 增补战报坐标军情互链 bullet"
+  body: |
+    wave:37 CLIENT-207 与 wave:35 CLIENT-191、wave:17 CLIENT-142 已建战报时间窗与坐标复盘互链。本卡补 **列表坐标标签→军情/小地图一键互链** 新切面，**非** wave:37 详情 outcome 色带主叙事重复。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-220～222/224～227 并行（‖）。软依赖 CLIENT-220 可用 stub 跳转。**一卡一 PR**：`feat/CLIENT-223`。
+
+- id: CLIENT-224
+  title: 战报详情回合摘要与军情同源行军只读互跳
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-208, CLIENT-178, CLIENT-205, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "战报详情顶栏回合摘要条 `report-round-summary-intel-link`：点击 `data-action=\"open-intel-for-report\"` 打开军情并选中 `battle_report` 同源坐标/最近 `march_id` 行（CLIENT-208 摘要条 **不退化**；**无** proto 扩量）"
+    - "CLIENT-178 军事汇总条与 CLIENT-205 信息卡 **不退化**"
+    - "单测覆盖 `resolveMarchIdForBattleReport` + link action；npm test 绿；client/README.md 增补战报回合摘要军情互跳 bullet"
+  body: |
+    wave:37 CLIENT-208 与 wave:33 CLIENT-178、CLIENT-205 已建回合摘要条与军情汇总互跳。本卡补 **详情摘要条→军情行军只读互跳** 巩固，主叙事非 wave:38 HUD/队列栈。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-220～223/225～227 并行（‖）。**一卡一 PR**：`feat/CLIENT-224`。
+
+- id: CLIENT-225
+  title: 邮件战报类分 tab 扫读与战报 outcome 筛选记忆联动
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-176, CLIENT-177, CLIENT-209, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "邮件面板战报/系统类 tab 顶栏 `formatMailBattleCategorySweepLine` 只读未读/附件计数扫读（CLIENT-177 分 tab 空态 **不退化**）"
+    - "sessionStorage 键 `report-outcome-filter-bridge-v1`：自邮件战报类条目深链打开战报面板时同步 outcome chip 筛选（CLIENT-176 outcome 记忆 **不退化**）；自战报返回邮件保持 tab"
+    - "单测覆盖 sweep line + bridge serialize；npm test 绿；client/README.md 增补邮件战报联动 bullet"
+  body: |
+    wave:33 CLIENT-176/177 与 wave:37 CLIENT-209 已分散战报 outcome 筛选与邮件 tab/HUD 联动。本卡补 **邮件战报类 tab 扫读与战报 outcome 筛选 session 桥接**，**非** wave:38 主城/双榜主叙事。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-220～224/226～227 并行（‖）。**一卡一 PR**：`feat/CLIENT-225`。
+
+- id: CLIENT-226
+  title: HUD 军事待办分段深链军情战报出征面板脉冲
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-216, CLIENT-156, CLIENT-158, CLIENT-209, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "HUD 待办区 `formatHudMilitaryTodoSweepLine` 分段展示军情进行中/战报未读/出征可提交只读计数（与 CLIENT-216 合并行 **并存**，不替换）"
+    - "点击分段或角标：`resolveToolbarPanelFromHudMilitaryTodo` 打开军情/战报/军事面板并 `hud-military-todo-pulse` 1.5s（CLIENT-156/158/209 **不退化**；**无**新 HUD RPC）"
+    - "单测覆盖 military todo formatter + resolver；npm test 绿；client/README.md 增补 HUD 军事待办深链 bullet"
+  body: |
+    wave:38 CLIENT-216 与 wave:31 CLIENT-156/158、wave:37 CLIENT-209 已建 HUD 待办合并行与军事/邮件联动。本卡补 **军事向待办分段与军情/战报/出征深链脉冲**，主叙事非 wave:38 主城/社交/招募栈。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-220～225/227 并行（‖）。**一卡一 PR**：`feat/CLIENT-226`。
+
+- id: CLIENT-227
+  title: 1280 世界军情战报邮件出征组合 manifest
+  wave: 39
+  domain: client
+  depends_on: [CLIENT-135, CLIENT-211, CLIENT-219, CLIENT-220, CLIENT-221, CLIENT-222, CLIENT-223, CLIENT-224, CLIENT-225, CLIENT-226, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "layoutViewport **1280×720**：小地图军情同步环、phase 变更脉冲、出征军情交接高亮、战报坐标标签、回合摘要军情链接、邮件战报 tab 扫读、HUD 军事待办分段与 CLIENT-211/219 同级窄屏契约"
+    - "`.panel-scroll-body` 长列表 **不遮挡底栏 56px**；世界/军情/战报/邮件密度行在 `layout-narrow` **无横向溢出**；1600 基线不退化"
+    - "data-art-skin=off 可跳过；`layoutViewport` / `filterListNarrowManifest` / 专用 `wave39*NarrowManifest` 单测扩展；npm test 绿；client/README.md 增补 wave:39 1280 验收 bullet"
+  body: |
+    CLIENT-211/219 已覆盖 wave:37/38 组合 manifest；本卡补齐 **世界·军情·战报·邮件·出征·HUD 军事待办** 组合窄屏契约。世界瓦片/图集仍暂缓。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；不合并 art hold/VERIFY（含 **#637**/#649/#674/#697）；**花钱类/IAP**；**ART-012** 将领面板旁路——**非**本波实现卡。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    仅 client/**。软依赖本波 CLIENT-220～226。验收前建议 CLIENT-220/223/227 关键钩子已合。**一卡一 PR**：`feat/CLIENT-227`。
+
+- id: INTG-036
+  title: wave:39 网关路径冒烟（小地图军情同步+phase脉冲+出征军情交接+战报坐标互链+邮件战报联动+HUD军事待办）
+  wave: 39
+  domain: platform
+  depends_on: [INTG-035]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-035 全量断言（GetCityState、ListPlayerHeroes、ListPowerRank、ListKillRank、ListPlayerQuests、ListPlayerMail、ListGuildMembers 等）
+    - "主路径：`military.v1.ListMarches` 打印 **多条** `march_id`/`phase`/`to_x`/`to_y` + 首条 ETA hint（供 CLIENT-220/221/222 小地图军情同步与 phase 对照；空列表 skip + hint）"
+    - "主路径：`military.v1.MarchAttack` 或 smoke 既有出征路径打印响应 `march_id` hint（供 CLIENT-222 军情交接对照；无目标 skip + hint；**不**测 CancelMarch）"
+    - "主路径：`military.v1.ListBattleReports` 打印首条 `report_id` + 坐标/outcome 字段 hint（供 CLIENT-223/224/225 对照；空列表 skip + hint；**无** proto 扩量）"
+    - "主路径：`content.v1.ListPlayerMail` 分 tab/附件类型计数 + 战报类邮件首条 id hint（供 CLIENT-225 对照；空 skip + hint）"
+    - "主路径：`quest.v1.ListPlayerQuests` 军事类进行中条数 hint（供 CLIENT-226 HUD 军事待办对照；空 skip + hint）"
+    - tools/smoke/README.md 更新 wave:39 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE39-RUN。在 INTG-035 上为 wave:39 客户端小地图军情同步、phase 变更脉冲、出征军情交接、战报坐标互链、邮件战报联动与 HUD 军事待办提供网关字段 hint；**不跑 H5**。
+
+    **本波仍不做** CancelMarch / 行军与募兵加速 / 主城建造新 RPC / 战报 proto 扩量 / 新商城 SKU / IAP。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+    CLIENT-220～227 非硬依赖。与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-031
+  title: wave:39 H5 世界军情战报邮件出征互链·1280组合manifest文档收口
+  wave: 39
+  domain: platform
+  depends_on: [INTG-036, CLIENT-220, CLIENT-221, CLIENT-222, CLIENT-223, CLIENT-224, CLIENT-225, CLIENT-226, CLIENT-227]
+  blocked_until: [INTG-036, CLIENT-220, CLIENT-221, CLIENT-222, CLIENT-223, CLIENT-224, CLIENT-225, CLIENT-226, CLIENT-227]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - "ROADMAP：Wave 39 标为已完成并链 Issue/PR；Wave 38 保持已完成（含 DOCS-EXIT-030 [#814](https://github.com/anitaguptaoffice/sanguo-slg/pull/814) `d71eba71`；实现 tip **`f7572123`**）"
+    - M4/H5 出口描述含「小地图军情双向同步 + 军情 phase 变更脉冲 + 出征军情交接 + 战报坐标军情互链 + 战报回合摘要军情互跳 + 邮件战报 tab 与 outcome 联动 + HUD 军事待办深链 + 1280 世界军情战报邮件出征 manifest」路径（指向 client/README）
+    - tasks/README.md wave:39 进度表与 Issue 一致；CLIENT 实现卡编号自 **CLIENT-220** 起
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速/主城建造新 RPC/战报 proto 扩量仍 out；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做；注明 **CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012** 美术旁路——**非** wave:39 backlog 实现卡
+  body: |
+    文档 only。INTG-036 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。**永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
