@@ -249,6 +249,12 @@ import {
   type MinimapIntelSyncTimers,
 } from "@/ui/minimapIntelSyncHighlight";
 import {
+  createMinimapViewportIntelSyncTimers,
+  scrollIntelListToVisibleMarch,
+  syncMinimapViewportToIntelRow,
+  type MinimapViewportIntelSyncTimers,
+} from "@/net/minimapViewportIntelSync";
+import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
   type MinimapMarchEndHighlight,
@@ -402,6 +408,9 @@ export class MainCityScene implements Scene {
   private minimapIntelSyncRing: MinimapIntelSyncRingState | null = null;
   private readonly minimapIntelSyncTimers: MinimapIntelSyncTimers =
     createMinimapIntelSyncTimers();
+  private readonly minimapViewportIntelSyncTimers: MinimapViewportIntelSyncTimers =
+    createMinimapViewportIntelSyncTimers();
+  private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
   private minimapEtaTickAccum = 0;
@@ -756,7 +765,7 @@ export class MainCityScene implements Scene {
             const ty = march.to_y;
             if (Number.isFinite(tx) && Number.isFinite(ty)) {
               this.world.setMarchDestHighlight({ x: tx, y: ty });
-              this.focusMinimapOnMarchDestination(march);
+              this.syncMinimapViewportForIntelSelection(march);
             } else {
               this.world.setMarchDestHighlight(null);
             }
@@ -1592,12 +1601,36 @@ export class MainCityScene implements Scene {
     );
   }
 
-  private focusMinimapOnMarchDestination(march: MarchSummary): void {
-    const tx = march.to_x;
-    const ty = march.to_y;
-    if (!Number.isFinite(tx) || !Number.isFinite(ty)) return;
+  private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    this.minimapView = computeMinimapViewFramingPoints(bounds, [{ wx: tx, wy: ty }]);
+    const synced = syncMinimapViewportToIntelRow(
+      {
+        march,
+        bounds,
+        currentView: this.minimapView,
+        layoutFrame: this.layoutFrame,
+      },
+      { timers: this.minimapViewportIntelSyncTimers },
+    );
+    if (synced.applied) {
+      this.minimapView = synced.view;
+    }
+  }
+
+  private flushMinimapViewportIntelListScroll(): void {
+    if (this.minimapCollapsed) return;
+    const panelMarches = this.marchList.getMarches();
+    const marches = panelMarches.length ? panelMarches : this.minimapMarches;
+    scrollIntelListToVisibleMarch({
+      intelRoot: this.marchList.getRoot(),
+      marches,
+      ownCityX: this.session?.cityX,
+      ownCityY: this.session?.cityY,
+      bounds: this.currentMinimapWorldBounds(),
+      rect: this.currentMinimapLayoutRect(),
+      view: this.minimapView,
+      preferredMarchId: this.marchList.getSelectedMarch()?.march_id ?? null,
+    });
   }
 
   private focusMinimapOnWorldGrid(x: number, y: number): void {
@@ -1755,6 +1788,7 @@ export class MainCityScene implements Scene {
       layout.y,
       ev.deltaY,
     );
+    this.flushMinimapViewportIntelListScroll();
   }
 
   private onCanvasPointer(ev: PointerEvent): void {
@@ -1766,6 +1800,7 @@ export class MainCityScene implements Scene {
       const bounds = this.currentMinimapWorldBounds();
       this.minimapView = applyMinimapPan(this.minimapView, bounds, dx, dy);
       this.minimapPanLastLayout = layout;
+      this.minimapViewportGestureActive = true;
       return;
     }
 
@@ -1782,6 +1817,10 @@ export class MainCityScene implements Scene {
             this.applyMinimapMarchTargetPick(layout.x, layout.y);
           }
         }
+        if (this.minimapViewportGestureActive) {
+          this.flushMinimapViewportIntelListScroll();
+        }
+        this.minimapViewportGestureActive = false;
         this.minimapPanPointerId = null;
         this.minimapPanLastLayout = null;
         this.minimapPanStartLayout = null;
