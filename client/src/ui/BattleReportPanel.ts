@@ -244,7 +244,7 @@ export class BattleReportPanel {
     el.innerHTML = `
       <h3>战报</h3>
       <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
-      <div class="battle-report-filters" role="group" aria-label="战报结果筛选">
+      <div class="battle-report-filters panel-filter-chip-bar" role="group" aria-label="战报结果筛选">
         <span>筛选：</span>
         <div class="battle-report-outcome-chip-group" role="group" aria-label="胜负筛选">
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="all" class="active" aria-pressed="true">全部</button>

@@ -181,7 +181,7 @@ export class DailyQuestPanels {
       </div>
       <p class="daily-form-error hidden" data-role="daily-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="daily-scroll">
-        <div class="daily-quest-filters" data-role="daily-filters" role="group" aria-label="日常筛选">
+        <div class="daily-quest-filters panel-filter-chip-bar" data-role="daily-filters" role="group" aria-label="日常筛选">
           <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="all" aria-pressed="true">全部</button>
           <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="in_progress" aria-pressed="false">进行中</button>
           <button type="button" class="daily-quest-filter-btn daily-quest-filter-claimable" data-ui-filter-chip data-action="daily-filter" data-filter="claimable" aria-pressed="false">

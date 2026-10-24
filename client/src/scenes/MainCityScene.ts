@@ -21,6 +21,7 @@ import {
   skinShopPanel,
   skinWorldPanel,
 } from "@/engine/artPanelSkin";
+import { mountFilterListPanelSkins } from "@/engine/filterListNarrowManifest";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { appendHudResourceStrip } from "@/engine/artResourceHud";
 import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
@@ -669,6 +670,10 @@ export class MainCityScene implements Scene {
     remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
     remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
     remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
+    mountFilterListPanelSkins(this.heroMail.getMailRoot(), this.assets);
+    mountFilterListPanelSkins(this.dailyQuest.getRoot(), this.assets);
+    mountFilterListPanelSkins(this.marchList.getRoot(), this.assets);
+    mountFilterListPanelSkins(this.battleReports.getRoot(), this.assets);
     skinWorldPanel(this.world.getRoot(), this.assets, 520, 320);
     skinRankPanel(this.social.getRankRoot(), this.assets, 520, 320);
     skinGuildPanel(this.social.getGuildRoot(), this.assets, 520, 320);

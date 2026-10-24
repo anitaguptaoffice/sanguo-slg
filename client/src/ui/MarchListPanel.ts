@@ -321,7 +321,7 @@ export class MarchListPanel {
           <button type="button" data-action="apply-march-dest-filter">应用</button>
         </span>
       </fieldset>
-      <fieldset class="march-list-filter" data-role="march-list-filter">
+      <fieldset class="march-list-filter panel-filter-chip-bar" data-role="march-list-filter">
         <legend>阶段与排序</legend>
         <div
           class="march-list-phase-chips"
