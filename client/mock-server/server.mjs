@@ -231,6 +231,15 @@ function applyEvidencePreset(state, preset) {
     ];
     return;
   }
+  if (preset === "hero-panel-roster-slice4") {
+    state.heroes = [
+      { hero_id: 8013, template_cfg_id: 1013, level: 9, loyalty: 84, exp: 5000 },
+      { hero_id: 8014, template_cfg_id: 1014, level: 10, loyalty: 82, exp: 5000 },
+      { hero_id: 8015, template_cfg_id: 1015, level: 8, loyalty: 76, exp: 5000 },
+      { hero_id: 8016, template_cfg_id: 1016, level: 12, loyalty: 90, exp: 5000 },
+    ];
+    return;
+  }
 }
 
 const server = http.createServer((req, res) => {
