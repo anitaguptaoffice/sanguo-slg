@@ -40,9 +40,11 @@ import {
   formatBattleReportDetail,
   formatBattleReportFoeWithoutCoord,
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
+  BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS,
   formatBattleReportListPrimaryLine,
   formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
+  formatBattleReportRoundSummaryStrip,
   formatReportCoord,
   formatTimeMs,
   type BattleReportDetailView,
@@ -557,6 +559,15 @@ export class BattleReportPanel {
       outcomeBand.setAttribute("aria-label", "战报胜负结果");
       outcomeBand.textContent = formatBattleReportOutcomeHeadline(summary);
       detailEl.appendChild(outcomeBand);
+    }
+
+    const roundSummaryText = formatBattleReportRoundSummaryStrip(this.detailView);
+    if (roundSummaryText) {
+      const roundStrip = document.createElement("div");
+      roundStrip.className = BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS;
+      roundStrip.setAttribute("aria-label", "回合兵力损失摘要");
+      roundStrip.textContent = roundSummaryText;
+      detailEl.appendChild(roundStrip);
     }
 
     const orderedIds = battleReportIdsInListOrder(this.visibleReports());

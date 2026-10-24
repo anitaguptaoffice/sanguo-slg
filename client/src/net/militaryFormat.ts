@@ -512,6 +512,39 @@ export function formatBattleReportOutcomeHeadline(r: BattleReportSummary): strin
   return `${outcome} · 战报 #${id} · ${foe}`;
 }
 
+/** 战报详情 outcome 色带下方回合摘要条（CLIENT-208；只读既有 detail JSON）。 */
+export const BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS = "battle-report-round-summary-strip";
+
+function battleReportRoundNumberSpan(
+  rounds: BattleReportDetailView["rounds"],
+): { first: number; last: number } | null {
+  if (!rounds?.length) return null;
+  const nums = rounds
+    .map((r) => r.round)
+    .filter((n): n is number => n != null && n > 0);
+  if (!nums.length) {
+    const n = rounds.length;
+    return { first: 1, last: n };
+  }
+  return { first: nums[0], last: nums[nums.length - 1] };
+}
+
+export function formatBattleReportRoundSummaryStrip(
+  detail: BattleReportDetailView | undefined,
+): string {
+  if (!detail) return "";
+  const span = battleReportRoundNumberSpan(detail.rounds);
+  const attLoss = formatCasualtyMap(detail.attacker_casualties);
+  const defLoss = formatCasualtyMap(detail.defender_casualties);
+  if (!span && attLoss === "无" && defLoss === "无") return "";
+  const roundPart = span
+    ? span.first === span.last
+      ? `第 ${span.first} 回合`
+      : `第 ${span.first}–${span.last} 回合`
+    : "回合：—";
+  return `${roundPart} · 攻方伤亡 ${attLoss} · 守方伤亡 ${defLoss}`;
+}
+
 /** 战报列表行：对手/守方摘要（无新 proto 字段时的可读拼接）。 */
 export function formatBattleReportFoeSummary(r: BattleReportSummary): string {
   const foe = formatBattleReportFoeWithoutCoord(r);

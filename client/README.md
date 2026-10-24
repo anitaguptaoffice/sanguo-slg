@@ -1652,6 +1652,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **wave:37（CLIENT-207）**：战报列表顶栏 **时间窗 chip**（`battle-report-time-filter-v1`）与列表次行 **`formatBattleReportListStreakLine`** streak 扫读；**CLIENT-176** outcome 筛选、**CLIENT-083/158** 顶栏 streak 与相邻导航不退化。单测：`battleReportListState.test.ts`、`battleReportTimeFilterChip.test.ts`、`militaryFormat.test.ts`、`BattleReportPanel.test.ts`。
 
+**wave:37（CLIENT-208）**：战报详情 **`battle-report-outcome-band`** 下方只读 **`battle-report-round-summary-strip`**（`formatBattleReportRoundSummaryStrip`：首/末回合号 + 攻/守伤亡 map 摘要，沿用既有战报 detail JSON，**无** proto 扩量）；**CLIENT-065/207** 时间窗筛选后列表仍高亮当前 `report_id`；**CLIENT-125** 回合跳转表与折叠 **不退化**。单测：`militaryFormat.test.ts`（`formatBattleReportRoundSummaryStrip`）、`BattleReportPanel.test.ts`。
+
 **wave:27（CLIENT-124）**：在 **CLIENT-109** 记忆与 **CLIENT-090/093** 小地图互选、再出征预填不退化前提下，军情 **阶段** 改为 **ART-UI-FILTER-008** 筛选 chip（`data-ui-filter-chip` + `militaryListPhaseChipReducer`）；列表行接 **九宫**（`data-ui-filter-row`）与新出征 **badge.dot**（`data-ui-filter-badge="dot"`，与 **CLIENT-116** `march-row-recent` / 行内 ETA 并存）。ETA 仍用下拉排序。无 `CancelMarch`/加速。单测：`militaryListPhaseChip.test.ts`、`MarchListPanel.test.ts`。
 
 **wave:29（CLIENT-141）**：军情列表 **主行** = 目的格点 + 模板摘要（目的 / `#id` / 编制）；**次行** = `formatMarchRemainingMs` 剩余 ETA + `formatMarchPhase` 中文阶段。`ListMarches` 刷新后 `detectMarchPhaseChanges` 对 phase 变化的行附加 **`march-phase-changed`** 脉冲 3s；**CLIENT-124** 筛选 chip 与 **最早到达** 默认排序（`eta_asc`，`default` 同义）并存；loading/empty/error 仍走 **CLIENT-129**。单测：`formatMarchListSecondary`、`marchPhaseListRefresh.test.ts`、`MarchListPanel.test.ts`。
