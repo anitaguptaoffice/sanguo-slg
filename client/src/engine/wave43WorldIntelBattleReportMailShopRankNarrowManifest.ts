@@ -113,6 +113,14 @@ export const RANK_LIST_DENSITY_SCAN_RESIDUAL_LINE_CLASS = "rank-list-density-sca
 /** CLIENT-257: recruit template inline summary residual line. */
 export const RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS = "recruit-template-inline-residual-summary";
 
+/** CLIENT-273: rank density scan residual deep line (CLIENT-257 baseline). */
+export const RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEP_LINE_CLASS =
+  "rank-list-density-scan-residual-deep-line";
+
+/** CLIENT-273: recruit template inline residual deep summary. */
+export const RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS =
+  "recruit-template-inline-residual-deep-summary";
+
 /** CLIENT-258: intel phase change residual pulse (CLIENT-205/221 baseline). */
 export const INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS = "intel-phase-change-residual-pulse";
 

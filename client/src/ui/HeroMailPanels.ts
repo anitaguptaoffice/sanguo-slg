@@ -230,6 +230,11 @@ import {
   syncRecruitWalletCompareResidualLine,
 } from "@/net/recruitWalletCompareResidual";
 import {
+  formatRecruitTemplateInlineResidualDeepSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepSummary";
+import {
   formatRecruitTemplateInlineResidualSummary,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
@@ -1214,9 +1219,16 @@ export class HeroMailPanels {
       const residualSummary = formatRecruitTemplateInlineResidualSummary(wallet, t, bag);
       residualSpan.textContent = residualSummary ?? "";
       residualSpan.hidden = !residualSummary;
+      const residualDeepSpan = document.createElement("span");
+      residualDeepSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS;
+      residualDeepSpan.setAttribute("data-role", RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_ROLE);
+      const residualDeepSummary = formatRecruitTemplateInlineResidualDeepSummary(wallet, t, bag);
+      residualDeepSpan.textContent = residualDeepSummary ?? "";
+      residualDeepSpan.hidden = !residualDeepSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
       li.appendChild(residualSpan);
+      li.appendChild(residualDeepSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
