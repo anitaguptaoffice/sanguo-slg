@@ -815,6 +815,37 @@
       .military-recruit-queue.hidden {
         display: none;
       }
+      .queue-build-matrix {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 6px 0 4px;
+      }
+      .queue-build-matrix.hidden {
+        display: none;
+      }
+      .queue-build-matrix-cell {
+        min-width: 2rem;
+        padding: 4px 6px;
+        font-size: 12px;
+        line-height: 1.2;
+        border: 1px solid #4a3c30;
+        border-radius: 4px;
+        background: #1a1410;
+        color: #d8cbb8;
+        cursor: pointer;
+      }
+      .queue-build-matrix-cell[data-status="upgrading"] {
+        border-color: #c9a227;
+        background: #2a2218;
+      }
+      .queue-build-matrix-cell[data-status="upgradable"] {
+        border-color: #6a9e5a;
+      }
+      .queue-build-matrix-cell.queue-build-matrix-cell-selected,
+      .queue-build-matrix-cell.queue-build-slot-mutual-highlight {
+        box-shadow: 0 0 0 2px #c9a227;
+      }
       .queue-panel-overview {
         font-size: 13px;
         font-weight: 600;

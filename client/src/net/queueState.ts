@@ -1,6 +1,9 @@
 import type { CityBuilding } from "@/net/bootstrapSession";
+import { sortBuildQueueRows } from "@/net/buildQueueMatrix";
 import { formatUpgradeRemaining } from "@/net/hudFormat";
 import { formatTimeMs, unitLabel } from "@/net/militaryFormat";
+
+export { sortBuildQueueRows } from "@/net/buildQueueMatrix";
 
 export type RecruitQueueEntry = {
   queue_id: number;
@@ -37,9 +40,7 @@ export function activeBuildingUpgrades(
   buildings: CityBuilding[] | undefined,
   nowMs = Date.now(),
 ): CityBuilding[] {
-  return (buildings ?? [])
-    .filter((b) => (b.upgrade_finish_at_ms ?? 0) > nowMs)
-    .sort((a, b) => (a.upgrade_finish_at_ms ?? 0) - (b.upgrade_finish_at_ms ?? 0));
+  return sortBuildQueueRows(buildings ?? [], nowMs);
 }
 
 export function formatBuildingUpgradeQueueLine(

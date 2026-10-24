@@ -1091,6 +1091,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 队列面板顶栏（**CLIENT-059**）汇总进行中建造/募兵条数与 `formatBuildQueueCountdown` 最近倒计时；顶栏资源条 hover/focus/点击展开时通过 `formatResourceSweepLine` 扫读余量与 `production_rates`（缺字段则仅余量），不占固定次行（**CLIENT-081**）。
 
+**CLIENT-131** 队列面板在顶栏摘要下展示 **七槽状态矩阵**（`buildBuildQueueSlotMatrix` / `hall`…`wall` 列序）：只读缩写格标注空闲/升级中/可升级；格点击 `openAndHighlightBuildSlot` 与 **CLIENT-105** / **CLIENT-130** 画布深链互高亮并存。进行中建造行经 `sortBuildQueueRows` **最早完成优先**；列表 loading/empty/error 与 **CLIENT-129** `renderPanelStateListRow` / `data-panel-state` 共用骨架。单测：`buildQueueMatrix.test.ts`、`QueuePanels.test.ts`。
+
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。

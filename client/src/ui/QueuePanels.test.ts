@@ -100,6 +100,60 @@ describe("QueuePanels", () => {
     expect(row?.classList.contains(RECRUIT_ROW_PULSE_CLASS)).toBe(true);
   });
 
+  it("renders seven-slot matrix and sorts build rows by earliest finish", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [
+      { slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 },
+      { slot_key: "hall", level: 1, upgrade_finish_at_ms: now + 60_000 },
+    ];
+    session.wallet = { food: 9_999_999, wood: 9_999_999, stone: 9_999_999, iron: 9_999_999 };
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田", hall: "官府" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.toggle();
+    const cells = mount.querySelectorAll(".queue-build-matrix-cell");
+    expect(cells.length).toBe(7);
+    expect(cells[0]?.getAttribute("data-matrix-index")).toBe("0");
+    expect(cells[0]?.getAttribute("data-status")).toBe("upgrading");
+    const buildRows = mount.querySelectorAll("#" + queueBuildRowDomId("hall") + ", #" + queueBuildRowDomId("farm"));
+    expect(buildRows.length).toBe(2);
+    const firstRow = mount.querySelector(`#${queueBuildRowDomId("hall")}`);
+    const secondRow = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
+    expect(firstRow?.compareDocumentPosition(secondRow!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("matrix cell click opens and highlights build slot", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onHighlight = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      onHighlight,
+    );
+    panel.attach();
+    panel.toggle();
+    const cell = mount.querySelector('.queue-build-matrix-cell[data-slot-key="farm"]') as HTMLElement;
+    cell.click();
+    expect(onHighlight).toHaveBeenCalledWith("farm");
+    const cellAfter = mount.querySelector('.queue-build-matrix-cell[data-slot-key="farm"]');
+    expect(cellAfter?.classList.contains("queue-build-matrix-cell-selected")).toBe(true);
+    expect(cellAfter?.classList.contains(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
+  });
+
   it("shows upgrade and recruit rows when open", () => {
     const mount = document.createElement("div");
     const now = Date.now();
