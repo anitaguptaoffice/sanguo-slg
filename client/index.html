@@ -2433,6 +2433,11 @@
       #layout-frame.layout-narrow .main-city-toolbar .toolbar-scroll-inner {
         max-width: 100%;
       }
+      /* 1280×720 (uiScale 0.8): bottom band ≈44.8px — drop scroll top pad so 44px hit row fits */
+      #layout-frame.layout-narrow .main-city-toolbar .toolbar-scroll {
+        padding-top: 0;
+        padding-bottom: 0;
+      }
     </style>
   </head>
   <body>

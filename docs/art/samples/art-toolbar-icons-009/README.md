@@ -10,10 +10,12 @@ Coordination board [#108](https://github.com/anitaguptaoffice/sanguo-slg/pull/10
 |------|-------------|
 | `runtime/maincity-1600x900-full.jpg` | 1600×900 DPR1 — new six + military + sample 007 icons |
 | `runtime/maincity-3200x1800-full.jpg` | DPR2 equivalent (1600×900 logical) |
-| `runtime/maincity-1280x720-new-six-visible.jpg` | 1280×720 after toolbar scroll — all six new entries fully visible |
+| `runtime/maincity-1280x720-new-six-visible.jpg` | 1280×720 — six new entries on first screen (scrollLeft=0) |
 
 ## Hit / mount proof
 
-`runtime/hit-proof.json` — per-action labels, icon src, ≥44px hit wrap, no icon/label overlap.
+`runtime/hit-proof.json` — per-action labels, icon src, visible intersection ≥44px, edge hit probes, ≥44px hit wrap.
 
-Regenerate: `cd client && node scripts/capture-art-toolbar-icons-009-evidence.mjs`
+Regenerate all: `cd client && node scripts/capture-art-toolbar-icons-009-evidence.mjs`
+
+Refresh 1280 only: `cd client && node scripts/capture-art-toolbar-icons-009-evidence.mjs --only-1280`

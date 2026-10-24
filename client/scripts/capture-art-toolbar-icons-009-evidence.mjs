@@ -1,9 +1,9 @@
 /**
  * ART-TOOLBAR-ICONS-009 runtime evidence: six new toolbar icons + hit proof.
- * Usage: node scripts/capture-art-toolbar-icons-009-evidence.mjs
+ * Usage: node scripts/capture-art-toolbar-icons-009-evidence.mjs [--only-1280]
  */
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -14,6 +14,7 @@ const outDir = path.resolve(clientRoot, "../docs/art/samples/art-toolbar-icons-0
 
 const ART_ASSET_SHA = "b4908240c1fd427e7294e8e48ae43dc37bd27f07";
 const MAX_JPEG_BYTES = 1_000_000;
+const MIN_VISIBLE_HIT_CSS = 44;
 
 /** Six ART-TOOLBAR-ICONS-009 mounts (plus military for 007 continuity in wide shots). */
 const NEW_ICON_ACTIONS = [
@@ -26,6 +27,8 @@ const NEW_ICON_ACTIONS = [
 ];
 
 const WIDE_CONTEXT_ACTIONS = ["toggle-military", ...NEW_ICON_ACTIONS, "toggle-mail", "toggle-queue"];
+
+const ONLY_1280 = process.argv.includes("--only-1280");
 
 async function waitForHttp(url, timeoutMs = 30000) {
   const start = Date.now();
@@ -100,173 +103,257 @@ async function layoutFrameClip(page) {
   return frame;
 }
 
-async function scrollToolbarForNewSix(page) {
-  await page.evaluate((actions) => {
-    const scroll = document.querySelector('[data-role="toolbar-scroll"]');
-    if (!(scroll instanceof HTMLElement)) return;
-    const buttons = actions
-      .map((a) => document.querySelector(`button[data-action="${a}"]`))
-      .filter((b) => b instanceof HTMLElement);
-    if (buttons.length === 0) return;
-    const scrollRect = scroll.getBoundingClientRect();
-    const groupLeft = Math.min(...buttons.map((b) => b.getBoundingClientRect().left));
-    const groupRight = Math.max(...buttons.map((b) => b.getBoundingClientRect().right));
-    const groupWidth = groupRight - groupLeft;
-    const pad = 4;
-    if (groupWidth <= scrollRect.width - pad * 2) {
-      const delta = groupLeft - scrollRect.left - (scrollRect.width - groupWidth) / 2;
-      scroll.scrollLeft = Math.max(0, scroll.scrollLeft + delta);
-    } else {
-      const first = buttons[0].getBoundingClientRect();
-      scroll.scrollLeft = Math.max(0, scroll.scrollLeft + (first.left - scrollRect.left - pad));
+/** Browser-side mount + visible-hit proof (serialized into page.evaluate). */
+function measureIconMountInPage({ actionList, minVisibleHitCss }) {
+  const scroll = document.querySelector('[data-role="toolbar-scroll"]');
+  const layoutFrame = document.getElementById("layout-frame");
+  const uiScale = parseFloat(
+    getComputedStyle(layoutFrame || document.body).getPropertyValue("--ui-scale") || "1",
+  );
+
+  function intersect(a, b) {
+    const left = Math.max(a.left, b.left);
+    const top = Math.max(a.top, b.top);
+    const right = Math.min(a.right, b.right);
+    const bottom = Math.min(a.bottom, b.bottom);
+    return {
+      left,
+      top,
+      right,
+      bottom,
+      width: Math.max(0, right - left),
+      height: Math.max(0, bottom - top),
+    };
+  }
+
+  function rectToObj(r) {
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }
+
+  function rectFullyInside(inner, outer, eps = 0.5) {
+    if (!inner || !outer) return false;
+    return (
+      inner.left >= outer.left - eps &&
+      inner.top >= outer.top - eps &&
+      inner.right <= outer.right + eps &&
+      inner.bottom <= outer.bottom + eps
+    );
+  }
+
+  function visibleIntersection(domRect, clips) {
+    let box = {
+      left: domRect.left,
+      top: domRect.top,
+      right: domRect.right,
+      bottom: domRect.bottom,
+    };
+    let out = intersect(box, box);
+    for (const clip of clips) {
+      if (!clip) continue;
+      out = intersect(
+        { left: out.left, top: out.top, right: out.right, bottom: out.bottom },
+        clip,
+      );
     }
-  }, NEW_ICON_ACTIONS);
-  await page.waitForTimeout(150);
+    return out;
+  }
+
+  function probeVisibleHits(btn, wrap, vis) {
+    const visW = vis.width;
+    const visH = vis.height;
+    if (visW < 1 || visH < 1) {
+      return { elementFromPoint: [], allProbesHitTarget: false, centerHitsButton: false };
+    }
+    const inset = Math.min(3, visW / 4, visH / 4);
+    const cx = vis.left + visW / 2;
+    const cy = vis.top + visH / 2;
+    const points = [
+      { name: "center", x: cx, y: cy },
+      { name: "left", x: vis.left + inset, y: cy },
+      { name: "right", x: vis.left + visW - inset, y: cy },
+      { name: "top", x: cx, y: vis.top + inset },
+      { name: "bottom", x: cx, y: vis.top + visH - inset },
+    ];
+    function hitsTarget(el) {
+      if (!el) return false;
+      if (el === btn || btn.contains(el)) return true;
+      if (wrap && (el === wrap || wrap.contains(el))) return true;
+      return false;
+    }
+    const elementFromPoint = points.map((p) => {
+      const el = document.elementFromPoint(p.x, p.y);
+      return {
+        ...p,
+        elementTag: el?.tagName ?? null,
+        hitsButton: !!(el && (el === btn || btn.contains(el))),
+        hitsTarget: hitsTarget(el),
+      };
+    });
+    return {
+      elementFromPoint,
+      allProbesHitTarget: elementFromPoint.every((p) => p.hitsTarget),
+      centerHitsButton: elementFromPoint.find((p) => p.name === "center")?.hitsButton ?? false,
+    };
+  }
+
+  const scrollRect = scroll?.getBoundingClientRect();
+  const toolbarRect = document.querySelector(".main-city-toolbar")?.getBoundingClientRect();
+  const layoutRect = layoutFrame?.getBoundingClientRect();
+  const clipBoxes = [
+    scrollRect
+      ? {
+          left: scrollRect.left,
+          top: scrollRect.top,
+          right: scrollRect.right,
+          bottom: scrollRect.bottom,
+        }
+      : null,
+    toolbarRect
+      ? {
+          left: toolbarRect.left,
+          top: toolbarRect.top,
+          right: toolbarRect.right,
+          bottom: toolbarRect.bottom,
+        }
+      : null,
+    layoutRect
+      ? {
+          left: layoutRect.left,
+          top: layoutRect.top,
+          right: layoutRect.right,
+          bottom: layoutRect.bottom,
+        }
+      : null,
+  ];
+
+  const iconButtons = actionList.map((action) => {
+    const btn = document.querySelector(`button[data-action="${action}"]`);
+    if (!(btn instanceof HTMLButtonElement)) return { action, ok: false, reason: "missing button" };
+    const icon = btn.querySelector(".toolbar-btn-icon");
+    const label = btn.querySelector(".toolbar-btn-label");
+    const br = btn.getBoundingClientRect();
+    const wrap = btn.closest(".toolbar-btn-hit");
+    const wr = wrap?.getBoundingClientRect();
+
+    const buttonVis = visibleIntersection(br, clipBoxes);
+    const hitWrapVis = wr ? visibleIntersection(wr, clipBoxes) : null;
+
+    const iconRect = icon?.getBoundingClientRect();
+    const labelRect = label?.getBoundingClientRect();
+    const overlap =
+      iconRect && labelRect
+        ? !(
+            iconRect.bottom <= labelRect.top + 0.5 ||
+            labelRect.bottom <= iconRect.top + 0.5 ||
+            iconRect.right <= labelRect.left + 0.5 ||
+            labelRect.right <= iconRect.left + 0.5
+          )
+        : null;
+
+    const btnBox = { left: br.left, top: br.top, right: br.right, bottom: br.bottom };
+    const visBox = {
+      left: buttonVis.left,
+      top: buttonVis.top,
+      right: buttonVis.right,
+      bottom: buttonVis.bottom,
+    };
+    const iconInsideButton = iconRect ? rectFullyInside(iconRect, btnBox) : false;
+    const labelInsideButton = labelRect ? rectFullyInside(labelRect, btnBox) : false;
+    const iconInsideVisible =
+      iconRect && buttonVis.width > 0 && buttonVis.height > 0
+        ? rectFullyInside(iconRect, visBox)
+        : !iconRect;
+    const labelInsideVisible =
+      labelRect && buttonVis.width > 0 && buttonVis.height > 0
+        ? rectFullyInside(labelRect, visBox)
+        : !labelRect;
+
+    const onScreen = buttonVis.width >= 8 && buttonVis.height >= 8;
+    const buttonFullyVisible =
+      buttonVis.width >= br.width - 0.5 && buttonVis.height >= br.height - 0.5;
+
+    const probes = probeVisibleHits(btn, wrap, buttonVis);
+    const wrapMinCss = wr ? Math.min(wr.width, wr.height) : 0;
+
+    const meetsMinVisibleHit =
+      buttonVis.width >= minVisibleHitCss - 0.5 && buttonVis.height >= minVisibleHitCss - 0.5;
+    const hitWrapMeetsMinVisible =
+      hitWrapVis &&
+      hitWrapVis.width >= minVisibleHitCss - 0.5 &&
+      hitWrapVis.height >= minVisibleHitCss - 0.5;
+
+    const layoutOk =
+      iconInsideButton &&
+      labelInsideButton &&
+      (!buttonFullyVisible || (iconInsideVisible && labelInsideVisible)) &&
+      overlap === false;
+
+    const structuralOk =
+      !!icon?.src &&
+      !icon.src.includes("data:image/gif") &&
+      (label?.textContent?.trim()?.length ?? 0) === 2 &&
+      br.width >= minVisibleHitCss * uiScale - 0.5 &&
+      br.height >= minVisibleHitCss * uiScale - 0.5 &&
+      wrapMinCss >= minVisibleHitCss - 0.5 &&
+      layoutOk;
+
+    const visibilityOk = buttonFullyVisible || meetsMinVisibleHit;
+    const hitTargetOk =
+      onScreen && probes.allProbesHitTarget && (buttonFullyVisible || meetsMinVisibleHit);
+
+    return {
+      action,
+      onScreen,
+      ok: structuralOk && visibilityOk && hitTargetOk,
+      structuralOk,
+      visibilityOk,
+      hitTargetOk,
+      meetsMinVisibleHit,
+      hitWrapMeetsMinVisible: !!hitWrapMeetsMinVisible,
+      minVisibleHitCss,
+      label: label?.textContent?.trim() ?? "",
+      iconSrc: icon?.src ?? null,
+      buttonRect: rectToObj(br),
+      hitWrapRect: wr ? rectToObj(wr) : null,
+      scrollParentRect: scrollRect ? rectToObj(scrollRect) : null,
+      toolbarRect: toolbarRect ? rectToObj(toolbarRect) : null,
+      layoutFrameRect: layoutRect ? rectToObj(layoutRect) : null,
+      visibleIntersectionButton: rectToObj(buttonVis),
+      visibleIntersectionHitWrap: hitWrapVis ? rectToObj(hitWrapVis) : null,
+      buttonCss: { w: br.width, h: br.height },
+      hitWrapCss: wr ? { w: wr.width, h: wr.height } : null,
+      buttonFullyVisible,
+      iconOverlapsLabel: overlap,
+      iconInsideButton,
+      labelInsideButton,
+      iconInsideVisibleRegion: iconInsideVisible,
+      labelInsideVisibleRegion: labelInsideVisible,
+      edgeHitProof: probes,
+    };
+  });
+
+  return {
+    uiScale,
+    scrollMetrics: scroll
+      ? {
+          scrollWidth: scroll.scrollWidth,
+          clientWidth: scroll.clientWidth,
+          scrollLeft: scroll.scrollLeft,
+        }
+      : null,
+    iconButtons,
+  };
 }
 
 async function measureIconMount(page, actions) {
-  return page.evaluate((actionList) => {
-    const scroll = document.querySelector('[data-role="toolbar-scroll"]');
-    const uiScale = parseFloat(
-      getComputedStyle(document.getElementById("layout-frame") || document.body).getPropertyValue(
-        "--ui-scale",
-      ) || "1",
-    );
-    function intersect(a, b) {
-      const left = Math.max(a.left, b.left);
-      const top = Math.max(a.top, b.top);
-      const right = Math.min(a.right, b.right);
-      const bottom = Math.min(a.bottom, b.bottom);
-      return {
-        left,
-        top,
-        right,
-        bottom,
-        width: Math.max(0, right - left),
-        height: Math.max(0, bottom - top),
-      };
-    }
-    function rectFullyInside(inner, outer, eps = 0.5) {
-      if (!inner || !outer) return false;
-      return (
-        inner.left >= outer.left - eps &&
-        inner.top >= outer.top - eps &&
-        inner.right <= outer.right + eps &&
-        inner.bottom <= outer.bottom + eps
-      );
-    }
-    const scrollRect = scroll?.getBoundingClientRect();
-    const toolbarRect = document.querySelector(".main-city-toolbar")?.getBoundingClientRect();
-
-    const iconButtons = actionList.map((action) => {
-      const btn = document.querySelector(`button[data-action="${action}"]`);
-      if (!(btn instanceof HTMLButtonElement)) return { action, ok: false, reason: "missing button" };
-      const icon = btn.querySelector(".toolbar-btn-icon");
-      const label = btn.querySelector(".toolbar-btn-label");
-      const br = btn.getBoundingClientRect();
-      const wrap = btn.closest(".toolbar-btn-hit");
-      const wr = wrap?.getBoundingClientRect();
-      let vis = { left: br.left, top: br.top, width: br.width, height: br.height };
-      if (scrollRect) {
-        vis = intersect(
-          { left: br.left, top: br.top, right: br.right, bottom: br.bottom },
-          {
-            left: scrollRect.left,
-            top: scrollRect.top,
-            right: scrollRect.right,
-            bottom: scrollRect.bottom,
-          },
-        );
-      }
-      if (toolbarRect) {
-        vis = intersect(
-          { left: vis.left, top: vis.top, right: vis.left + vis.width, bottom: vis.top + vis.height },
-          {
-            left: toolbarRect.left,
-            top: toolbarRect.top,
-            right: toolbarRect.right,
-            bottom: toolbarRect.bottom,
-          },
-        );
-      }
-      const iconRect = icon?.getBoundingClientRect();
-      const labelRect = label?.getBoundingClientRect();
-      const overlap =
-        iconRect && labelRect
-          ? !(
-              iconRect.bottom <= labelRect.top + 0.5 ||
-              labelRect.bottom <= iconRect.top + 0.5 ||
-              iconRect.right <= labelRect.left + 0.5 ||
-              labelRect.right <= iconRect.left + 0.5
-            )
-          : null;
-      const btnBox = { left: br.left, top: br.top, right: br.right, bottom: br.bottom };
-      const visBox = {
-        left: vis.left,
-        top: vis.top,
-        right: vis.left + vis.width,
-        bottom: vis.top + vis.height,
-      };
-      const iconInsideButton = iconRect ? rectFullyInside(iconRect, btnBox) : false;
-      const labelInsideButton = labelRect ? rectFullyInside(labelRect, btnBox) : false;
-      const iconInsideVisible =
-        iconRect && vis.width > 0 && vis.height > 0 ? rectFullyInside(iconRect, visBox) : !iconRect;
-      const labelInsideVisible =
-        labelRect && vis.width > 0 && vis.height > 0 ? rectFullyInside(labelRect, visBox) : !labelRect;
-      const onScreen = vis.width >= 8 && vis.height >= 8;
-      const buttonFullyVisible =
-        vis.width >= br.width - 0.5 && vis.height >= br.height - 0.5;
-      const center = { x: br.left + br.width / 2, y: br.top + br.height / 2 };
-      const el = onScreen ? document.elementFromPoint(center.x, center.y) : null;
-      const hitsButton = !!(el && (el === btn || btn.contains(el)));
-      const wrapMinCss = wr ? Math.min(wr.width, wr.height) : 0;
-      const layoutOk =
-        iconInsideButton &&
-        labelInsideButton &&
-        (!buttonFullyVisible || (iconInsideVisible && labelInsideVisible)) &&
-        overlap === false;
-      const structuralOk =
-        !!icon?.src &&
-        !icon.src.includes("data:image/gif") &&
-        (label?.textContent?.trim()?.length ?? 0) === 2 &&
-        br.width >= 44 * uiScale - 0.5 &&
-        br.height >= 44 * uiScale - 0.5 &&
-        wrapMinCss >= 44 - 0.5 &&
-        layoutOk;
-      return {
-        action,
-        onScreen,
-        ok: structuralOk && (!onScreen || hitsButton),
-        structuralOk,
-        label: label?.textContent?.trim() ?? "",
-        iconSrc: icon?.src ?? null,
-        buttonCss: { w: br.width, h: br.height },
-        hitWrapCss: wr ? { w: wr.width, h: wr.height } : null,
-        buttonFullyVisible,
-        iconOverlapsLabel: overlap,
-        iconInsideButton,
-        labelInsideButton,
-        iconInsideVisibleRegion: iconInsideVisible,
-        labelInsideVisibleRegion: labelInsideVisible,
-      };
-    });
-
-    return {
-      uiScale,
-      scrollMetrics: scroll
-        ? {
-            scrollWidth: scroll.scrollWidth,
-            clientWidth: scroll.clientWidth,
-            scrollLeft: scroll.scrollLeft,
-          }
-        : null,
-      iconButtons,
-    };
-  }, actions);
+  return page.evaluate(measureIconMountInPage, {
+    actionList: actions,
+    minVisibleHitCss: MIN_VISIBLE_HIT_CSS,
+  });
 }
 
 async function captureViewports(browser, appPort) {
-  const specs = [
+  const allSpecs = [
     {
       file: "maincity-1600x900-full.jpg",
       viewport: { width: 1600, height: 900 },
@@ -285,10 +372,13 @@ async function captureViewports(browser, appPort) {
       file: "maincity-1280x720-new-six-visible.jpg",
       viewport: { width: 1280, height: 720 },
       dpr: 1,
-      scroll: "newSix",
+      scroll: "none",
       measureActions: NEW_ICON_ACTIONS,
     },
   ];
+  const specs = ONLY_1280
+    ? allSpecs.filter((s) => s.file === "maincity-1280x720-new-six-visible.jpg")
+    : allSpecs;
   const results = {};
   for (const spec of specs) {
     const context = await browser.newContext({
@@ -297,7 +387,6 @@ async function captureViewports(browser, appPort) {
     });
     const page = await context.newPage();
     await enterMainCityIdle(page, appPort);
-    if (spec.scroll === "newSix") await scrollToolbarForNewSix(page);
     await page.waitForTimeout(300);
     const clip = await layoutFrameClip(page);
     const meta = await writeJpegUnder1Mb(page, path.join(outDir, spec.file), { clip });
@@ -345,6 +434,16 @@ async function main() {
       "toggle-quest": "ui.icon.toolbar.task.v1",
     };
 
+    let priorViewports = {};
+    if (ONLY_1280) {
+      try {
+        const prior = JSON.parse(await readFile(path.join(outDir, "hit-proof.json"), "utf8"));
+        priorViewports = prior.viewports ?? {};
+      } catch {
+        /* fresh run */
+      }
+    }
+
     const hitProof = {
       art_asset_source_sha: ART_ASSET_SHA,
       art_draft_pr: "https://github.com/anitaguptaoffice/sanguo-slg/pull/637",
@@ -352,10 +451,13 @@ async function main() {
       captured_at: new Date().toISOString(),
       asset_ids: NEW_ICON_ACTIONS.map((a) => assetIdByAction[a]),
       label_mapping: labelByAction,
-      viewports,
+      viewports: ONLY_1280 ? { ...priorViewports, ...viewports } : viewports,
       layout_notes: [
         "96×44 toolbar chrome; 32px icon + 4px gap + two-character label inside button.",
         ".toolbar-btn-hit wrap keeps effective hit target ≥44×44 CSS px.",
+        "1280×720: six new icons first-screen visible at scrollLeft=0 (no forced toolbar scroll).",
+        "hit-proof exports visibleIntersection w/h (scroll∩toolbar∩layout-frame) and edge elementFromPoint probes.",
+        "ok at 1280 requires visible intersection ≥44×44 CSS px and edge hits when buttonFullyVisible is false.",
         "Disabled styling uses ui.button.toolbar.v1 chrome only — no per-icon four-state sprites.",
         "DPR2 shot: 1600×900 logical viewport, deviceScaleFactor=2 → 3200×1800 JPEG pixels.",
       ],
@@ -377,13 +479,15 @@ Coordination board [#108](https://github.com/anitaguptaoffice/sanguo-slg/pull/10
 |------|-------------|
 | \`runtime/maincity-1600x900-full.jpg\` | 1600×900 DPR1 — new six + military + sample 007 icons |
 | \`runtime/maincity-3200x1800-full.jpg\` | DPR2 equivalent (1600×900 logical) |
-| \`runtime/maincity-1280x720-new-six-visible.jpg\` | 1280×720 after toolbar scroll — all six new entries fully visible |
+| \`runtime/maincity-1280x720-new-six-visible.jpg\` | 1280×720 — six new entries on first screen (scrollLeft=0) |
 
 ## Hit / mount proof
 
-\`runtime/hit-proof.json\` — per-action labels, icon src, ≥44px hit wrap, no icon/label overlap.
+\`runtime/hit-proof.json\` — per-action labels, icon src, visible intersection ≥44px, edge hit probes, ≥44px hit wrap.
 
-Regenerate: \`cd client && node scripts/capture-art-toolbar-icons-009-evidence.mjs\`
+Regenerate all: \`cd client && node scripts/capture-art-toolbar-icons-009-evidence.mjs\`
+
+Refresh 1280 only: \`cd client && node scripts/capture-art-toolbar-icons-009-evidence.mjs --only-1280\`
 `,
     );
     console.log(`Evidence written to ${outDir}`);
