@@ -62,7 +62,20 @@
 | 容量 | `cityHasHeroPosition` | 招降成功时复用 `HasHeroCapacity`（俘虏不计入 `CountOwnedHeroes`） |
 | 产俘 | 战报抓将 | **M1**：`InjectCaptive` 测试/GM 注入；真实战报产俘另开 MIL 卡 |
 
-## 6. 名将结交 / 游说（Persuade / Lionize）
+## 6. 来投接受 / 拒绝（Coming）
+
+| 项 | Legacy（#82 `HeroFunc.php`） | M1 实现 |
+|---|---|---|
+| 状态 | `sys_city_hero.state=6` 来投待接受 | `player_hero.status=7`（`StatusComing`；对齐 legacy state=6 语义） |
+| 元数据 | 来投队列挂城池 | `player_hero_coming`（城 `city_id`） |
+| 列表 | 城池将领面板 | `hero.v1.ListComingHeroes` |
+| 预检 / 确认 | `tryAcceptHero` / `sureAcceptHero` | `TryAcceptComing` / `SureAcceptComing` |
+| 拒绝 | `rejectHero` 删将 | `RejectComing` 删除 `player_hero` 与 coming 行 |
+| 费用 | 无黄金/道具（赠送入队） | **M1**：接受不扣资源 |
+| 容量 | `cityHasHeroPosition` | `HasHeroCapacity` + `CountOwnedHeroes`（来投待接受不计入容量） |
+| 来源 | 玩家赠送 / 俘虏转让等 | **M1**：`InjectComing` 测试/GM；真实产出来投另开卡 |
+
+## 7. 名将结交 / 游说（Persuade / Lionize）
 
 | 项 | Legacy（#82 `HotelFunc.php`） | M1 实现 |
 |---|---|---|
@@ -81,4 +94,5 @@
 - `internal/domestic/production_align_test.go`：`domestic.md` 一小时产出  
 - `internal/hero/hotel_test.go`：客栈招募与招贤馆容量拒绝  
 - `internal/hero/captive_test.go`：俘虏招降/释放与容量、道具闸  
+- `internal/hero/coming_test.go`：来投接受/拒绝与容量、非 coming 拒绝  
 - `internal/hero/persuade_test.go`：结交好感、达标招入、容量/冷却/好感不足拒绝  

@@ -23,6 +23,7 @@ type Service struct {
 	Items        map[int32]RecruitItemSpec
 	Store        Store
 	CaptiveStore CaptiveStore
+	ComingStore  ComingStore
 	LionizeStore LionizeStore
 	HotelStore   HotelStore
 	levels       *LevelTable
@@ -34,7 +35,7 @@ func NewService() *Service {
 	levels, _ := DefaultLevelTable()
 	return &Service{
 		Catalog: DefaultCatalog(), Items: DefaultRecruitItems(),
-		Store: NewMemStore(), CaptiveStore: NewMemCaptiveStore(), LionizeStore: NewMemLionizeStore(), levels: levels,
+		Store: NewMemStore(), CaptiveStore: NewMemCaptiveStore(), ComingStore: NewMemComingStore(), LionizeStore: NewMemLionizeStore(), levels: levels,
 		RNG: rand.New(rand.NewSource(1)), clock: time.Now,
 	}
 }
