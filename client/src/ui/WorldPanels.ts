@@ -28,8 +28,18 @@ import {
   WORLD_CITY_ROW_MARCH_DEST_CLASS,
   WORLD_CITY_ROW_SELECTED_CLASS,
 } from "@/ui/marchWorldListLink";
+import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { buildWorldInfoCardSummary } from "@/ui/worldInfoCard";
+import {
+  formatWorldTileInfoSecondary,
+  formatWorldTileOccupationSummary,
+} from "@/ui/worldTileInfoCard";
+import {
+  applyWorldTileFocusPulse,
+  shouldPulseWorldTileFocusOnSelect,
+  type WorldTileGridSelectionSource,
+} from "@/ui/worldTileSelectionSync";
 
 export type MarchTargetSink = {
   /** 出征表单容器（含 data-field to-x / to-y）；可选。 */
@@ -53,6 +63,8 @@ export type WorldPanelsOptions = {
   onViewBattleReportsAtGrid?: (grid: { x: number; y: number }, hintReportId?: number) => void;
   /** CLIENT-129 信息卡 loading/error 九宫（可选）。 */
   assets?: AssetLoader;
+  /** 信息卡点击：居中小地图视口（不新 world RPC）。 */
+  onCenterMinimapAtGrid?: (grid: { x: number; y: number }) => void;
 };
 
 export class WorldPanels {
@@ -122,7 +134,11 @@ export class WorldPanels {
   }
 
   /** 小地图等外部入口同步世界选中格（不重复写入出征表单）。 */
-  selectGridAt(x: number, y: number, opts?: { toggleOffIfSame?: boolean }): void {
+  selectGridAt(
+    x: number,
+    y: number,
+    opts?: { toggleOffIfSame?: boolean; source?: WorldTileGridSelectionSource },
+  ): void {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     if (
       opts?.toggleOffIfSame &&
@@ -136,6 +152,10 @@ export class WorldPanels {
     this.options?.onGridSelectionChange?.({ x, y });
     this.renderList();
     this.renderInfoCard();
+    if (shouldPulseWorldTileFocusOnSelect(opts?.source)) {
+      const card = this.panel.querySelector<HTMLElement>('[data-role="world-tile-info"]');
+      applyWorldTileFocusPulse(card);
+    }
   }
 
   /** 军情列表刷新后更新各行行军计数与信息卡。 */
@@ -158,6 +178,7 @@ export class WorldPanels {
           <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
           <p class="world-tile-info-hint hidden" data-role="world-tile-occupation-hint"></p>
           <p class="world-tile-info-march" data-role="world-tile-march-count"></p>
+          <p class="world-tile-info-secondary" data-role="world-tile-march-secondary"></p>
           <div class="world-tile-info-actions">
             <button type="button" data-action="view-marches-at-grid">在军情中查看</button>
             <button type="button" class="hidden" data-action="view-battle-reports-at-grid">打开战报筛选</button>
@@ -249,10 +270,11 @@ export class WorldPanels {
     const dl = this.panel.querySelector('[data-role="world-tile-info-lines"]');
     const hintEl = this.panel.querySelector('[data-role="world-tile-occupation-hint"]');
     const marchEl = this.panel.querySelector('[data-role="world-tile-march-count"]');
+    const secondaryEl = this.panel.querySelector('[data-role="world-tile-march-secondary"]');
     const reportBtn = this.panel.querySelector<HTMLButtonElement>(
       '[data-action="view-battle-reports-at-grid"]',
     );
-    if (!card || !dl || !marchEl || !hintEl || !stateEl || !bodyEl) return;
+    if (!card || !dl || !marchEl || !secondaryEl || !hintEl || !stateEl || !bodyEl) return;
 
     if (!this.selectedGrid) {
       card.classList.add("hidden");
@@ -264,6 +286,7 @@ export class WorldPanels {
       hintEl.textContent = "";
       hintEl.classList.add("hidden");
       marchEl.textContent = "";
+      secondaryEl.textContent = "";
       reportBtn?.classList.add("hidden");
       return;
     }
@@ -297,6 +320,7 @@ export class WorldPanels {
     const marches = this.options?.getMarchesSnapshot?.() ?? [];
     const battleReports = this.options?.getBattleReportsSnapshot?.() ?? [];
     const timeWindow = readBattleReportTimeWindowFilterSession() ?? "all";
+    const cityAtGrid = findPlayerCityAtGrid(this.cities, x, y);
     const summary = buildWorldInfoCardSummary({
       cell: { x, y },
       cities: this.cities,
@@ -320,6 +344,7 @@ export class WorldPanels {
     };
     addLine("坐标", summary.coordsLine.replace(/^格点 /, ""));
     if (summary.cityLine) addLine("城池", summary.cityLine);
+    addLine("占领", formatWorldTileOccupationSummary(cityAtGrid, this.currentCityId()));
     if (summary.playerLine) addLine("玩家", summary.playerLine);
     if (summary.terrainLine) addLine("地形", summary.terrainLine.replace(/^资源格：/, ""));
     if (summary.manhattanLine) addLine("距离", summary.manhattanLine);
@@ -331,6 +356,7 @@ export class WorldPanels {
       hintEl.classList.add("hidden");
     }
     marchEl.textContent = summary.marchCountLine;
+    secondaryEl.textContent = formatWorldTileInfoSecondary(marches, { x, y });
     if (reportBtn) {
       if (summary.showBattleReportShortcut) {
         reportBtn.classList.remove("hidden");
@@ -388,6 +414,15 @@ export class WorldPanels {
 
   private onClick(ev: Event): void {
     const target = ev.target as HTMLElement;
+    const infoCard = target.closest('[data-role="world-tile-info"]');
+    if (
+      infoCard &&
+      !target.closest("button") &&
+      this.selectedGrid &&
+      !this.panel.classList.contains("hidden")
+    ) {
+      this.options?.onCenterMinimapAtGrid?.({ ...this.selectedGrid });
+    }
     const viewIntelBtn = target.closest("button[data-action='view-marches-at-grid']");
     if (viewIntelBtn) {
       if (!this.selectedGrid) return;

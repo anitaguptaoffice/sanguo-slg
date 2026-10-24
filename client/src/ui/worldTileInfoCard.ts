@@ -11,11 +11,13 @@ import {
   type PlayerCitySummary,
 } from "@/net/worldFormat";
 import {
+  filterInProgressMarchesAtCell,
   filterMarchesByDestination,
   findPlayerCityAtGrid,
   formatManhattanFromOwnCity,
 } from "@/ui/marchWorldListLink";
 import { countMarchesAtCell } from "@/ui/marchWorldListLink";
+import { formatMarchListSecondary } from "@/net/militaryFormat";
 
 export type WorldTileRef = { x: number; y: number };
 
@@ -63,6 +65,9 @@ export type WorldTileInfoCardInput = {
 
 export const WORLD_TILE_NO_OCCUPATION_HINT =
   "暂无城池或玩家占领信息（只读快照，可刷新城池或查看军情）";
+
+export const WORLD_TILE_NO_RECENT_MARCH_HINT =
+  "最近行军：暂无指向此格的进行中行军（可打开军情查看历史）";
 
 const RESOURCE_TILE_LABELS: Record<string, string> = {
   food: "粮田",
@@ -136,6 +141,35 @@ export function formatWorldTileOccupationHint(
 ): string | null {
   if (city != null || playerLine) return null;
   return WORLD_TILE_NO_OCCUPATION_HINT;
+}
+
+/** ListPlayerCities 快照上的占领态一行摘要（不新 world RPC）。 */
+export function formatWorldTileOccupationSummary(
+  city: PlayerCitySummary | undefined,
+  currentCityId?: number,
+): string {
+  if (!city) return "无城池（空地格）";
+  if (isCurrentMainCity(city, currentCityId)) return "己方主城";
+  const owner =
+    city.player_name?.trim() ||
+    city.owner_name?.trim() ||
+    city.display_name?.trim();
+  if (owner) return `所属玩家：${owner}`;
+  const name = city.name?.trim() || `城池#${city.city_id ?? "?"}`;
+  return `中立城池：${name}`;
+}
+
+/** 信息卡次行：指向此格的首条进行中行军 ETA（ListMarches 快照）。 */
+export function formatWorldTileInfoSecondary(
+  marches: MarchSummary[],
+  tile: WorldTileRef,
+  nowMs = Date.now(),
+): string {
+  const first = filterInProgressMarchesAtCell(marches, tile.x, tile.y)[0];
+  if (!first) return WORLD_TILE_NO_RECENT_MARCH_HINT;
+  const id = first.march_id ?? "?";
+  const eta = formatMarchListSecondary(first, nowMs);
+  return `最近行军 #${id} · ${eta}`;
 }
 
 function resolveRecentBattleReportId(

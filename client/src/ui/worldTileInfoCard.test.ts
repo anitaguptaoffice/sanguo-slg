@@ -6,9 +6,12 @@ import {
   formatMarchCountInfoLine,
   formatResourceTileTypeFromField,
   formatWorldTileInfoCard,
+  formatWorldTileInfoSecondary,
   formatWorldTileOccupationHint,
+  formatWorldTileOccupationSummary,
   resolveWorldTilePlayerLine,
   WORLD_TILE_NO_OCCUPATION_HINT,
+  WORLD_TILE_NO_RECENT_MARCH_HINT,
 } from "@/ui/worldTileInfoCard";
 
 describe("formatWorldTileInfoCard", () => {
@@ -93,6 +96,36 @@ describe("formatWorldTileInfoCard", () => {
       "吕布",
     );
     expect(formatWorldTileOccupationHint(undefined, null)).toBe(WORLD_TILE_NO_OCCUPATION_HINT);
+  });
+
+  it("formatWorldTileOccupationSummary reads ListPlayerCities snapshot", () => {
+    expect(
+      formatWorldTileOccupationSummary(
+        { city_id: 1, name: "主城", is_capital: true },
+        1,
+      ),
+    ).toBe("己方主城");
+    expect(
+      formatWorldTileOccupationSummary({ city_id: 2, name: "边城", player_name: "刘备" }),
+    ).toBe("所属玩家：刘备");
+    expect(formatWorldTileOccupationSummary(undefined)).toBe("无城池（空地格）");
+  });
+
+  it("formatWorldTileInfoSecondary shows first in-progress march ETA or hint", () => {
+    const now = Date.UTC(2026, 9, 24, 12, 0, 0);
+    const line = formatWorldTileInfoSecondary(
+      [
+        { march_id: 99, to_x: 3, to_y: 4, phase: 1 },
+        { march_id: 100, to_x: 3, to_y: 4, phase: 2, arrive_at_ms: now + 30 * 60_000 },
+      ],
+      { x: 3, y: 4 },
+      now,
+    );
+    expect(line).toContain("最近行军 #99");
+    expect(line).toContain("待发");
+    expect(
+      formatWorldTileInfoSecondary([], { x: 1, y: 2 }),
+    ).toBe(WORLD_TILE_NO_RECENT_MARCH_HINT);
   });
 
   it("buildWorldTileInfoCardSummary remains compatible", () => {

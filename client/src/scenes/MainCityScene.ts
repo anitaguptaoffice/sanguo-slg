@@ -659,6 +659,9 @@ export class MainCityScene implements Scene {
           this.renderHud();
         },
         getBattleReportsSnapshot: () => this.battleReports.getReportsSnapshot(),
+        onCenterMinimapAtGrid: (grid) => {
+          this.focusMinimapOnWorldGrid(grid.x, grid.y);
+        },
         onViewBattleReportsAtGrid: (grid, hintReportId) => {
           void this.battleReports.openListFilteredByGrid(grid.x, grid.y, hintReportId);
           this.status = `战报：已筛选战场格点 (${grid.x},${grid.y})`;
@@ -1453,7 +1456,7 @@ export class MainCityScene implements Scene {
     ) {
       return;
     }
-    this.world?.selectGridAt(world.wx, world.wy);
+    this.world?.selectGridAt(world.wx, world.wy, { source: "minimap" });
     this.focusMinimapOnWorldGrid(world.wx, world.wy);
     this.militaryPanel.classList.remove("hidden");
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
