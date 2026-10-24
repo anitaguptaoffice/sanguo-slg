@@ -3,6 +3,12 @@ import { buildingCfgIdForSlot } from "@/net/dailyQuestQueueMatch";
 import { formatUpgradeRemaining } from "@/net/hudFormat";
 import { computeUpgradeCostAtLevel } from "@/net/previewUpgradeCost";
 import { previewRecruitCost } from "@/net/previewRecruitCost";
+import {
+  computeQueueRowProgressBarWidthPercent,
+  formatQueueRemainingEtaLine,
+  QUEUE_ROW_ETA_LINE_CLASS,
+  QUEUE_ROW_PROGRESS_BAR_CLASS,
+} from "@/net/queueRemainingEtaLine";
 import { formatBuildQueueCountdown, type RecruitQueueEntry } from "@/net/queueState";
 
 export type QueueRemainingProgress = {
@@ -13,11 +19,6 @@ export type QueueRemainingProgress = {
   /** 0–100；无 started_at 或无效区间时为 null（仅展示倒计时）。 */
   progressPercent: number | null;
 };
-
-function clampPercent(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(100, Math.max(0, Math.round(value)));
-}
 
 /**
  * 队列行剩余时间与细进度条（finish_at_ms + 可选 started_at_ms；无起点则仅倒计时）。
@@ -33,25 +34,33 @@ export function formatQueueRemainingProgress(
   }
   const remainingText = formatUpgradeRemaining(finish, nowMs);
   const overviewCountdown = formatBuildQueueCountdown(finish, nowMs);
-  let progressPercent: number | null = null;
-  const started = startedAtMs ?? 0;
-  if (started > 0 && started < finish) {
-    const total = finish - started;
-    const elapsed = nowMs - started;
-    progressPercent = clampPercent((elapsed / total) * 100);
-  }
+  const progressPercent = computeQueueRowProgressBarWidthPercent(finish, nowMs, startedAtMs);
   return { remainingText, overviewCountdown, progressPercent };
 }
 
-/** 队列行次行 HTML：倒计时 + 可选细进度条。 */
+/** 队列行次行 HTML：ETA 扫读 + CLIENT-164 倒计时 + 可选细进度条。 */
 export function renderQueueRemainingProgressMarkup(
   progress: QueueRemainingProgress,
+  finishAtMs?: number,
+  nowMs = Date.now(),
 ): string | null {
   if (!progress.remainingText) return null;
-  const parts = [`<span class="queue-row-countdown">${escapeHtml(progress.remainingText)}</span>`];
+  const parts: string[] = [];
+  const etaLine =
+    finishAtMs != null && finishAtMs > 0
+      ? formatQueueRemainingEtaLine(finishAtMs, nowMs)
+      : null;
+  if (etaLine) {
+    parts.push(
+      `<span class="${QUEUE_ROW_ETA_LINE_CLASS}">${escapeHtml(etaLine)}</span>`,
+    );
+  }
+  parts.push(
+    `<span class="queue-row-countdown">${escapeHtml(progress.remainingText)}</span>`,
+  );
   if (progress.progressPercent != null) {
     parts.push(
-      `<span class="queue-row-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.progressPercent}">` +
+      `<span class="queue-row-progress ${QUEUE_ROW_PROGRESS_BAR_CLASS}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.progressPercent}">` +
         `<span class="queue-row-progress-fill" style="width:${progress.progressPercent}%"></span></span>`,
     );
   }
@@ -95,7 +104,7 @@ export function appendQueueRemainingProgressRow(
   startedAtMs?: number | null,
 ): void {
   const progress = formatQueueRemainingProgress(finishAtMs, nowMs, startedAtMs);
-  const markup = renderQueueRemainingProgressMarkup(progress);
+  const markup = renderQueueRemainingProgressMarkup(progress, finishAtMs, nowMs);
   if (!markup) return;
   const wrap = document.createElement("div");
   wrap.innerHTML = markup;

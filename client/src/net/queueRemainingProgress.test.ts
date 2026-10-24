@@ -14,7 +14,9 @@ describe("formatQueueRemainingProgress", () => {
     expect(progress.remainingText).toBe("剩 0:30");
     expect(progress.overviewCountdown).toBe("最近 剩 0:30");
     expect(progress.progressPercent).toBe(50);
-    const markup = renderQueueRemainingProgressMarkup(progress);
+    const markup = renderQueueRemainingProgressMarkup(progress, finish, now);
+    expect(markup).toContain("queue-row-eta-line");
+    expect(markup).toContain("queue-row-progress-bar");
     expect(markup).toContain("queue-row-progress-fill");
     expect(markup).toContain('style="width:50%"');
   });
@@ -25,9 +27,10 @@ describe("formatQueueRemainingProgress", () => {
     const progress = formatQueueRemainingProgress(finish, now);
     expect(progress.remainingText).toBe("剩 1:00");
     expect(progress.progressPercent).toBeNull();
-    const markup = renderQueueRemainingProgressMarkup(progress);
+    const markup = renderQueueRemainingProgressMarkup(progress, finish, now);
+    expect(markup).toContain("queue-row-eta-line");
     expect(markup).toContain("queue-row-countdown");
-    expect(markup).not.toContain("queue-row-progress");
+    expect(markup).not.toContain("queue-row-progress-bar");
   });
 
   it("inferBuildUpgradeStartedAtMs uses cfg duration", () => {
