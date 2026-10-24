@@ -67,6 +67,13 @@
       .main-city-slot-upgrade-tag.city-slot-complete-focus-ring {
         animation: city-slot-complete-focus-ring-keyframes 2s ease-out 1;
       }
+      @keyframes domestic-queue-complete-focus-residual-ring-keyframes {
+        0%, 100% { outline: none; box-shadow: none; }
+        40% { outline: 2px solid #c9a227; box-shadow: 0 0 10px rgba(201, 162, 39, 0.5); }
+      }
+      .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-ring {
+        animation: domestic-queue-complete-focus-residual-ring-keyframes 2s ease-out 1;
+      }
       @keyframes domestic-slot-return-ring-keyframes {
         0%, 100% { outline: none; box-shadow: none; }
         40% { outline: 2px solid #c9a227; box-shadow: 0 0 10px rgba(201, 162, 39, 0.55); }
@@ -1515,6 +1522,13 @@
         border-radius: 3px;
         background: rgba(201, 162, 39, 0.14);
         border: 1px solid rgba(201, 162, 39, 0.28);
+      }
+      .queue-list li.queue-list-row .domestic-queue-eta-segment-residual-label {
+        display: block;
+        font-size: 10px;
+        line-height: 1.35;
+        color: #7a6848;
+        font-variant-numeric: tabular-nums;
       }
       @keyframes domestic-queue-complete-slot-margin-keyframes {
         0%, 100% { opacity: 0.85; transform: translateY(0); }
@@ -3530,9 +3544,11 @@
       /* CLIENT-203 wave:36 主城队列将领社交 HUD 深链组合 manifest */
       /* sessionStorage key hero-list-return-v1 (CLIENT-199) */
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-complete-focus-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-slot-margin,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-eta-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-label,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress-bar,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-growth-compare-strip,
