@@ -76,6 +76,15 @@ import {
   resolveRankRowDeepLink,
   type RankRowDeepLink,
 } from "@/net/rankRowDeepLink";
+import { parseLeaderboardRowHeroId } from "@/net/leaderboardRowHeroId";
+import {
+  applyRankPanelScrollTop,
+  clearLeaderboardReturnScroll,
+  readLeaderboardReturnScroll,
+  readRankPanelScrollTop,
+  writeLeaderboardReturnScroll,
+  type LeaderboardReturnScrollPayload,
+} from "@/net/leaderboardReturnScroll";
 import {
   CHAT_SEND_MAX_CONTENT_LENGTH,
   formatChatInputCounter,
@@ -112,6 +121,8 @@ export class SocialPanels {
   private pendingRankPinPulse = false;
   private rankHighlightEntityId = 0;
   private rankDeepLink: SocialRankDeepLinkHandlers = {};
+  private cachedViewerHeroIds: number[] = [];
+  private pendingReturnScroll: LeaderboardReturnScrollPayload | null = null;
   private lastRenderedChatMessages: ChatMessageRow[] = [];
 
   constructor(
@@ -184,8 +195,19 @@ export class SocialPanels {
   toggleRank(): void {
     this.rankPanel.classList.toggle("hidden");
     if (!this.rankPanel.classList.contains("hidden")) {
+      const pending = readLeaderboardReturnScroll();
+      if (pending) {
+        clearLeaderboardReturnScroll();
+        this.pendingReturnScroll = pending;
+        const typeSelect = this.rankPanel.querySelector(
+          '[data-field="rank-type"]',
+        ) as HTMLSelectElement | null;
+        if (typeSelect) typeSelect.value = String(pending.boardType);
+      } else {
+        this.pendingReturnScroll = null;
+      }
       this.hydrateRankRefreshClockFromSession();
-      void this.refreshRank();
+      void this.refreshRank().then(() => this.applyPendingReturnScroll());
     }
   }
 
@@ -522,7 +544,7 @@ export class SocialPanels {
           <div class="rank-table-scroll">
             <table class="rank-table">
               <thead class="rank-table-head">
-                <tr><th>名次</th><th>玩家</th><th>分数</th></tr>
+                <tr><th>名次</th><th>玩家</th><th>分数</th><th class="rank-col-action">操作</th></tr>
               </thead>
               <tbody data-role="rank-list"></tbody>
             </table>
@@ -968,7 +990,7 @@ export class SocialPanels {
         tr.className = "rank-pin-row";
         tr.setAttribute("aria-label", "我的排名钉选");
         const td = document.createElement("td");
-        td.colSpan = 3;
+        td.colSpan = 4;
         const primary = document.createElement("div");
         primary.className = "rank-pin-primary";
         primary.textContent = pinLine;
@@ -993,17 +1015,19 @@ export class SocialPanels {
           const tr = document.createElement("tr");
           tr.className = socialRankEmptyRowClass();
           const td = document.createElement("td");
-          td.colSpan = 3;
+          td.colSpan = 4;
           td.textContent = formatSocialRankEmptyMessage();
           tr.appendChild(td);
           tbody.appendChild(tr);
         }
       } else {
+        const viewerId = this.viewerPlayerId();
+        const heroIds = this.cachedViewerHeroIds;
         entries.forEach((e, index) => {
           const tr = document.createElement("tr");
           tr.className = "rank-data-row";
           tr.setAttribute("data-rank-entry-index", String(index));
-          const entityId = e.entity_id ?? 0;
+          const entityId = e.entity_id ?? e.player_id ?? 0;
           if (entityId > 0) {
             tr.id = leaderboardRowDomId(entityId);
             tr.setAttribute("data-entity-id", String(entityId));
@@ -1014,8 +1038,19 @@ export class SocialPanels {
           }
           const rank = e.rank ?? "?";
           const name =
-            e.display_name?.trim() || (e.entity_id ? `玩家#${e.entity_id}` : "?");
+            e.display_name?.trim() || (entityId ? `玩家#${entityId}` : "?");
           tr.innerHTML = `<td class="rank-col-rank">${rank}</td><td class="rank-col-name">${name}</td><td class="rank-col-score">${e.score ?? 0}</td>`;
+          const actionTd = document.createElement("td");
+          actionTd.className = "rank-col-action";
+          if (parseLeaderboardRowHeroId(boardType, e, viewerId, heroIds) !== null) {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "rank-view-hero-link";
+            btn.setAttribute("data-action", "rank-view-hero");
+            btn.textContent = "查看将领";
+            actionTd.appendChild(btn);
+          }
+          tr.appendChild(actionTd);
           tbody.appendChild(tr);
         });
       }
@@ -1050,6 +1085,20 @@ export class SocialPanels {
     return entry ?? null;
   }
 
+  private persistRankScrollForHeroReturn(): void {
+    writeLeaderboardReturnScroll({
+      boardType: this.selectedLeaderboardType(),
+      scrollTop: readRankPanelScrollTop(this.rankPanel),
+    });
+  }
+
+  private applyPendingReturnScroll(): void {
+    const pending = this.pendingReturnScroll;
+    if (!pending) return;
+    this.pendingReturnScroll = null;
+    applyRankPanelScrollTop(this.rankPanel, pending.scrollTop);
+  }
+
   private async dispatchRankRowDeepLink(link: RankRowDeepLink, entry: LeaderboardEntryRow): Promise<void> {
     const boardType = this.selectedLeaderboardType();
     switch (link.kind) {
@@ -1059,6 +1108,7 @@ export class SocialPanels {
           this.onStatus("将领面板未就绪");
           return;
         }
+        this.persistRankScrollForHeroReturn();
         let heroId = link.heroId;
         if (heroId <= 0) {
           const ids = await this.rankDeepLink.getViewerHeroIds?.();
@@ -1107,6 +1157,7 @@ export class SocialPanels {
       try {
         const prevSnapshot = this.rankSnapshotByType.get(boardType);
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+        this.cachedViewerHeroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
         this.pendingRankPinPulse = detectLeaderboardMyRankChange(prevSnapshot?.my_rank, res.my_rank);
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
@@ -1187,6 +1238,13 @@ export class SocialPanels {
   }
 
   private onRankClick(ev: Event): void {
+    const heroBtn = (ev.target as HTMLElement).closest('[data-action="rank-view-hero"]');
+    if (heroBtn) {
+      ev.stopPropagation();
+      const row = heroBtn.closest("tr.rank-data-row");
+      if (row) void this.onRankRowActivate(row as HTMLElement);
+      return;
+    }
     const row = (ev.target as HTMLElement).closest("tr.rank-data-row");
     if (row) {
       void this.onRankRowActivate(row as HTMLElement);
