@@ -10,7 +10,10 @@ import {
   type MarchSummary,
 } from "@/net/militaryFormat";
 import {
-  detectMarchPhaseChanges,
+  detectMarchPhaseChange,
+  scheduleIntelPhaseChangeFlash,
+} from "@/net/marchIntelPhaseChangeFlash";
+import {
   scheduleMarchPhaseChangedPulse,
 } from "@/net/marchPhaseListRefresh";
 import {
@@ -735,9 +738,17 @@ export class MarchListPanel {
 
   private applyPhaseChangeRowPulses(): void {
     if (!this.pendingPhaseChangePulseIds.length) return;
+    const changedIds = new Set(this.pendingPhaseChangePulseIds);
     for (const id of this.pendingPhaseChangePulseIds) {
       const li = this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
       scheduleMarchPhaseChangedPulse(li);
+      scheduleIntelPhaseChangeFlash(li);
+    }
+    if (this.selectedMarchId != null && changedIds.has(this.selectedMarchId)) {
+      const strip = this.panel.querySelector<HTMLElement>(
+        `[data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"].${MARCH_INTEL_PHASE_ETA_STRIP_CLASS}`,
+      );
+      scheduleIntelPhaseChangeFlash(strip);
     }
     this.pendingPhaseChangePulseIds = [];
   }
@@ -821,7 +832,7 @@ export class MarchListPanel {
         total?: number;
       };
       const nextMarches = res.marches ?? [];
-      this.pendingPhaseChangePulseIds = detectMarchPhaseChanges(prevSnapshot, nextMarches);
+      this.pendingPhaseChangePulseIds = detectMarchPhaseChange(prevSnapshot, nextMarches);
       const reminders = detectNewMarchArrivalReminders(prevSnapshot, nextMarches, new Set());
       if (reminders.length) this.onMarchArrivalReminders?.(reminders);
       this.marches = nextMarches;

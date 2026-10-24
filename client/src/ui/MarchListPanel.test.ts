@@ -2,6 +2,10 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { MARCH_HIGHLIGHT_SESSION_KEY, MARCH_ROW_RECENT_CLASS } from "@/net/marchHighlight";
 import { MILITARY_LIST_FILTER_SESSION_KEY } from "@/net/militaryListFilter";
 import { MINIMAP_MARCH_FOCUS_SESSION_KEY } from "@/net/minimapMarchFocus";
+import {
+  INTEL_PHASE_CHANGE_FLASH_CLASS,
+  INTEL_PHASE_CHANGE_FLASH_MS,
+} from "@/net/marchIntelPhaseChangeFlash";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 
 describe("MarchListPanel", () => {
@@ -466,6 +470,52 @@ describe("MarchListPanel", () => {
     expect(row?.classList.contains("march-phase-changed")).toBe(true);
     vi.advanceTimersByTime(3000);
     expect(row?.classList.contains("march-phase-changed")).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("pulses intel-phase-change-flash on row and info strip when selected march phase changes (CLIENT-221)", async () => {
+    vi.useFakeTimers();
+    const gateway = {
+      listMarches: vi
+        .fn()
+        .mockResolvedValueOnce({
+          marches: [
+            {
+              march_id: 5,
+              phase: 2,
+              to_x: 3,
+              to_y: 4,
+              arrive_at_ms: Date.now() + 60_000,
+            },
+          ],
+          total: 1,
+        })
+        .mockResolvedValueOnce({
+          marches: [{ march_id: 5, phase: 3, to_x: 3, to_y: 4, arrive_at_ms: Date.now() }],
+          total: 1,
+        }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      pollIntervalMs: 60_000,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    mount.querySelector('.march-list li[data-march-id="5"]')!.click();
+    const stripBefore = mount.querySelector(".march-intel-phase-eta-strip");
+    expect(stripBefore?.textContent).toContain("行军中");
+
+    await panel.getRoot().querySelector<HTMLButtonElement>('[data-action="refresh-marches"]')!.click();
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(2));
+
+    const row = mount.querySelector('.march-list li[data-march-id="5"]');
+    const strip = mount.querySelector(".march-intel-phase-eta-strip");
+    expect(row?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(true);
+    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(true);
+    expect(strip?.textContent).toContain("已到达");
+    vi.advanceTimersByTime(INTEL_PHASE_CHANGE_FLASH_MS);
+    expect(row?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(false);
+    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(false);
     vi.useRealTimers();
   });
 

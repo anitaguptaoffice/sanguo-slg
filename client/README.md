@@ -1738,6 +1738,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **wave:37（CLIENT-205）**：军情信息卡顶栏 **`march-intel-phase-eta-strip`**（`formatMarchIntelPhaseEtaStrip`：phase 只读标签 + 剩余秒数/`formatMarchRemainingMs` + `arrive_at_ms` 到达时刻）；列表行次行 **`intel-row-phase-subline`** 与信息卡 **`march-intel-phase-eta-mutual-highlight`** 同步高亮；**CLIENT-172** 主/次行与 **CLIENT-189** `march-form-coord-sync-highlight` **不退化**（无 CancelMarch）。单测：`marchIntelPhaseEtaStrip.test.ts`、`MarchListPanel.test.ts`。
 
+**wave:39（CLIENT-221）**：`ListMarches` 轮询/刷新时 `detectMarchPhaseChange` 对 phase 变化行附加 **`intel-phase-change-flash`** **2s** 脉冲（与 **CLIENT-141** `march-phase-changed` **3s** 可叠加）；选中行军 phase 变更时信息卡 **`formatMarchIntelPhaseEtaStrip`** 即时刷新且阶段条同步脉冲；**CLIENT-082/085** 到达阶段提醒 **可叠加**（无 CancelMarch）。单测：`marchIntelPhaseChangeFlash.test.ts`、`MarchListPanel.test.ts`。
+
 ### 手动验收（军情格点筛选 CLIENT-069）
 
 在 [CLIENT-061](#手动验收世界坐标-client-015) 双向高亮与 [CLIENT-058](#手动验收小地图目的点-eta-client-058) ETA 角标基础上，降低多行军扫读成本（**无 CancelMarch/撤回**；筛选仅客户端过滤 `ListMarches` 快照，不新 RPC）。
