@@ -34,6 +34,10 @@
 
 对照 **#482** / **#509** 只读 cherry-pick **3** manifest id / **6** PNG（`ui.panel.loading.v1`、`ui.panel.empty.v1`、`ui.panel.error.v1` 九宫 **320×120**，L/T/R/B **16**）；**不合** art hold / VERIFY Draft（#77 / #82 / #108 / #506 等）。薄封装 **`artPanelStateSkin`**：`resolvePanelStateAssetId` / `PANEL_STATE_ASSET_BY_KIND` 供 **CLIENT-129** `panelStateChrome` 接线；**`data-art-skin="off"`** 回退 **CLIENT-067** 纯文案。证据：`docs/art/samples/art-ui-panel-state-009/`（`INVENTORY.md`、`manifest-index.json`、`hit-proof.json`）。单测：`artPanelStateSkin.test.ts`。
 
+### ART-WORLD-MINIMAP-010 工程挂载（小地图目的点 / 图例 chrome）
+
+对照 **#482** / **#509** / **#551** 只读工程挂载 **2** manifest id / **4** PNG（`ui.minimap.dest.v1` 目的格 marker **14×14** 锚点中心 **7,7**；`ui.minimap.legend.v1` 图例条 **240×14**）；**不合** art hold / VERIFY Draft（#77 / #82 / #108 / #506 等）。薄封装 **`artWorldMinimapSkin`**：`resolveMinimapDestAssetId` / `resolveMinimapLegendAssetId` 供 **CLIENT-139** `drawWorldMinimap` 接线；图例文案仍用 **`MINIMAP_DEST_ETA_LEGEND`** 代码绘制；**`data-art-skin="off"`** 回退 canvas 圆点/纯文字。证据：`docs/art/samples/art-world-minimap-010/`（`INVENTORY.md`、`manifest-index.json`、`hit-proof.json`）。单测：`artWorldMinimapSkin.test.ts`。**不**含世界瓦片/全屏图集。
+
 ### ART-UI-FILTER-008 工程挂载（列表筛选 chrome）
 
 从 Draft **#506** @ `38451735` 只读 cherry-pick **9** manifest id / **18** PNG（chip 四态、row 三态 nine-slice、`badge.dot` / `badge.count`）；**不合** #506 / #108 / #77 / #82。运行时薄封装 **`artUiFilterSkin`**：`mountFilterUiSkins` 对 `data-ui-filter-chip` / `data-ui-filter-row` / `data-ui-filter-badge` 接线；chip 精灵 **72×32**、**命中区 CSS ≥44×44**；计数角标 **20×16** 文案 **1–9 / 9+**（`formatFilterBadgeCount`）。**`data-art-skin="off"`** 跳过皮肤。证据：`docs/art/samples/art-ui-filter-008/`（`manifest-index.json`、`hit-proof.json`）。单测：`artUiFilterSkin.test.ts`。
@@ -52,6 +56,7 @@
 
 | asset id | 用途 |
 |---|---|
+| `ui.minimap.dest.v1` / `ui.minimap.legend.v1` | 小地图目的格 marker / 图例条 chrome（**CLIENT-138** `artWorldMinimapSkin`；运行时 **CLIENT-139**） |
 | `ui.chip.filter.v1` / `.hover` / `.pressed` / `.selected` | 筛选 chip 四态 sprite |
 | `ui.list.row.v1` / `.hover` / `.selected` | 列表行 nine-slice 三态 |
 | `ui.badge.dot.v1` | 未读/提示圆点 |

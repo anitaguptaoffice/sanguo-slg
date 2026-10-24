@@ -13,6 +13,7 @@ import {
   formatFilterBadgeCount,
   mountFilterBadgeCount,
   mountFilterBadgeDot,
+  applyFilterChipVisualState,
   mountFilterChip,
   mountFilterChips,
   mountFilterRow,
@@ -62,10 +63,10 @@ function mockAssets(): AssetLoader {
 }
 
 describe("ART-UI-FILTER-008 manifest mount", () => {
-  it("lists nine asset ids (49 total manifest entries)", () => {
+  it("lists nine asset ids (51 total manifest entries)", () => {
     const manifest = loadManifest();
     expect(ART_UI_FILTER_008_ASSET_IDS).toHaveLength(9);
-    expect(manifest.assets).toHaveLength(49);
+    expect(manifest.assets).toHaveLength(51);
     for (const id of ART_UI_FILTER_008_ASSET_IDS) {
       expect(manifest.assets.some((a) => a.id === id)).toBe(true);
     }
@@ -153,12 +154,37 @@ describe("mountFilterRow", () => {
   it("nine-slices default and selected row assets", () => {
     const row = document.createElement("li");
     row.dataset.uiFilterRow = "";
+    const title = document.createElement("span");
+    title.className = "mail-row-title";
+    title.textContent = "标题";
+    const summary = document.createElement("span");
+    summary.className = "mail-row-summary";
+    summary.textContent = "摘要";
+    row.append(title, summary);
     mountFilterRow(row, mockAssets());
-    expect(row.dataset.filterRowAsset).toBe(ROW_FILTER_ASSET_BY_STATE.default);
-    expect(row.style.borderImageSource).toContain("url(");
+    const bar = row.querySelector(".art-filter-row-skin-bar");
+    expect(bar).toBeTruthy();
+    expect(row.querySelector(".art-filter-row-detail")?.contains(summary)).toBe(true);
+    expect(bar?.dataset.filterRowAsset).toBe(ROW_FILTER_ASSET_BY_STATE.default);
+    expect(bar?.style.borderImageSource).toContain("url(");
 
     row.classList.add("selected");
     expect(resolveFilterRowAssetId(row)).toBe(ROW_FILTER_ASSET_BY_STATE.selected);
+  });
+});
+
+describe("applyFilterChipVisualState", () => {
+  it("forces pressed and selected sprites for evidence staging", () => {
+    const btn = document.createElement("button");
+    btn.dataset.uiFilterChip = "";
+    btn.textContent = "测";
+    const assets = mockAssets();
+    mountFilterChip(btn, assets);
+    applyFilterChipVisualState(btn, assets, "pressed");
+    expect(btn.dataset.filterChipState).toBe("pressed");
+    applyFilterChipVisualState(btn, assets, "selected");
+    expect(btn.dataset.filterChipState).toBe("selected");
+    expect(btn.getAttribute("aria-pressed")).toBe("true");
   });
 });
 
