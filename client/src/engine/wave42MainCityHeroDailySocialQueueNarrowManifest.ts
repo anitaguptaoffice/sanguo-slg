@@ -113,6 +113,13 @@ export const GUILD_DUTY_HEADER_RESIDUAL_LINE_CLASS = "guild-duty-header-residual
 export const GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_SWEEP_CLASS =
   "guild-chat-unread-divider-residual-sweep";
 
+/** CLIENT-265: guild duty header consolidated deep subline. */
+export const GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS = "guild-duty-header-residual-deep-line";
+
+/** CLIENT-265: chat unread divider residual deep sweep. */
+export const GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_DEEP_SWEEP_CLASS =
+  "guild-chat-unread-divider-residual-deep-sweep";
+
 /** CLIENT-250: daily chain + queue ETA HUD residual subline. */
 export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_CLASS = "quest-chain-queue-hud-residual-subline";
 
