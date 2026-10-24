@@ -53,6 +53,13 @@ export const SHOP_TAB_CURRENCY_SWEEP_SELECTOR = '[data-role="shop-tab-currency-s
 export const SHOP_TAB_CURRENCY_SWEEP_CLASS = "shop-tab-currency-sweep";
 export const SHOP_PRICE_VS_WALLET_CLASS = "shop-price-vs-wallet";
 
+/** CLIENT-215: shop category tab price vs wallet compare strip. */
+export {
+  SHOP_WALLET_COMPARE_LINE_CLASS,
+  SHOP_WALLET_COMPARE_LINE_ROLE,
+} from "@/net/shopTabCurrency";
+export const SHOP_WALLET_COMPARE_LINE_SELECTOR = '[data-role="shop-wallet-compare-line"]';
+
 /** CLIENT-152: dual-board pinned viewer bar + sticky pin row. */
 export const RANK_VIEWER_BAR_CLASS = "rank-viewer-bar";
 export const RANK_PIN_ROW_CLASS = "rank-pin-row";

@@ -272,11 +272,14 @@ describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
     panels.toggleShop();
     await vi.waitFor(() => expect(listShopShelf).toHaveBeenCalled());
     const sweep = () => mount.querySelector('[data-role="shop-tab-currency-sweep"]');
+    const compare = () => mount.querySelector('[data-role="shop-wallet-compare-line"]');
     expect(sweep()?.textContent).toMatch(/本类余额：.*币 50/);
+    expect(compare()?.textContent).toMatch(/标价10.*余额50/);
     const otherTab = mount.querySelector('[data-shop-category="other"]') as HTMLButtonElement;
     otherTab.click();
     expect(sweep()?.textContent).toMatch(/本类余额：.*粮 800/);
     expect(sweep()?.textContent).not.toMatch(/币 50/);
+    expect(compare()?.textContent).toMatch(/标价400.*余额800/);
   });
 });
 

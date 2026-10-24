@@ -258,6 +258,22 @@
         margin: 4px 0 6px;
         overflow-wrap: anywhere;
       }
+      .shop-wallet-compare-line {
+        display: block;
+        font-size: 12px;
+        color: #b8a078;
+        margin: 0 0 6px;
+        overflow-wrap: anywhere;
+      }
+      .shop-wallet-compare-line.shop-wallet-compare-deficit { color: #8b1a1a; }
+      .recruit-wallet-compare-line {
+        display: block;
+        font-size: 12px;
+        color: #c9b896;
+        margin: 4px 0 6px;
+        overflow-wrap: anywhere;
+      }
+      .recruit-wallet-compare-line.recruit-wallet-compare-deficit { color: #8b1a1a; }
       .shop-list li .shop-price-vs-wallet {
         display: block;
         font-size: 11px;
@@ -2688,6 +2704,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-category-tabs,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-tab-currency-sweep"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-wallet-compare-line"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="refresh-shop"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="buy-offer"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-form-error,
@@ -2712,7 +2730,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-offer-afford-inline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-vs-wallet,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-wallet-gap,
-      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line {
         min-width: 0;
         max-width: 100%;
         overflow-x: hidden;
@@ -3047,6 +3066,8 @@
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-tab-currency-sweep"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-wallet-compare-line"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-vs-wallet,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-wallet-gap,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .wallet-gap-line[data-role="shop-wallet-gap"] {
@@ -3154,6 +3175,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-upgrade-progress-bar,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-return-highlight,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-form-inline-hint,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-form-inline-warn,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-panel-empty-hint,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-empty-error-row,

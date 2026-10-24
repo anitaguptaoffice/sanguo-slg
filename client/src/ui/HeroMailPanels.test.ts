@@ -743,6 +743,9 @@ describe("HeroMailPanels", () => {
     mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
+    const compareLine = mount.querySelector('[data-role="recruit-wallet-compare-line"]');
+    expect(compareLine?.textContent).toMatch(/需20.*持5/);
+    expect(compareLine?.classList.contains("recruit-wallet-compare-deficit")).toBe(true);
     const ownedRow = mount.querySelector('li[data-template-id="1001"]');
     expect(ownedRow?.querySelector(".recruit-cost-deficit")?.textContent).toContain("不足");
     const viewBtn = ownedRow?.querySelector('[data-action="recruit-view-hero"]') as HTMLButtonElement;

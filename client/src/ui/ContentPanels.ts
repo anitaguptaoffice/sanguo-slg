@@ -66,8 +66,10 @@ import {
   formatShopPriceVsWallet,
   formatShopPriceWalletGapLine,
   formatShopTabWalletBalanceLine,
+  formatShopWalletCompareLine,
   resolveShopTabCurrency,
   SHOP_PRICE_WALLET_GAP_LINE_CLASS,
+  syncShopWalletCompareLine,
 } from "@/net/shopTabCurrency";
 import { SHOP_OFFER_AFFORD_INLINE_CLASS } from "@/engine/mainCityWave30NarrowManifest";
 import {
@@ -481,10 +483,14 @@ export class ContentPanels {
     if (!line) {
       el.textContent = "";
       el.hidden = true;
-      return;
+    } else {
+      el.textContent = line;
+      el.hidden = false;
     }
-    el.textContent = line;
-    el.hidden = false;
+    syncShopWalletCompareLine(
+      this.shopPanel,
+      formatShopWalletCompareLine(this.sessionWallet(), this.shopOffers, this.shopCategory),
+    );
   }
 
   private shopPurchaseCanAfford(): boolean {
@@ -604,6 +610,7 @@ export class ContentPanels {
       <p class="panel-feedback" data-role="shop-feedback" hidden></p>
       <div class="shop-category-tabs" data-role="shop-category-tabs" role="tablist"></div>
       <p class="shop-tab-currency-sweep hidden" data-role="shop-tab-currency-sweep" aria-live="polite"></p>
+      <p class="shop-wallet-compare-line hidden" data-role="shop-wallet-compare-line" aria-live="polite"></p>
       <button type="button" data-action="refresh-shop">刷新货架</button>
       <label>商品 offer
         <select data-field="offer-id"></select>
