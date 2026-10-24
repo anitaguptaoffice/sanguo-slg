@@ -187,3 +187,9 @@ export {
   SHOP_WALLET_COMPARE_LINE_ROLE,
   TOOLBAR_PANEL_DEEP_LINK_PULSE_CLASS,
 } from "@/engine/wave38MainCityHeroSocialQueueNarrowManifest";
+
+/** CLIENT-220: wave:39 小地图格点 ↔ 军情列表双向同步高亮环。 */
+export {
+  INTEL_ROW_MINIMAP_SYNC_HIGHLIGHT_CLASS,
+  MINIMAP_INTEL_SYNC_RING_CLASS,
+} from "@/engine/wave39MinimapIntelSyncNarrowManifest";

@@ -6,6 +6,11 @@ import {
 import type { MarchSummary } from "@/net/militaryFormat";
 import { layoutMinimapMarchStackBadges } from "@/ui/minimapMarchStack";
 import {
+  isMinimapIntelSyncRingActive,
+  MINIMAP_INTEL_SYNC_RING_COLOR,
+  type MinimapIntelSyncRingState,
+} from "@/ui/minimapIntelSyncHighlight";
+import {
   MINIMAP_MARCH_END_RING_COLOR,
   isMinimapFocusPulseActive,
   type MinimapMarchEndHighlight,
@@ -45,6 +50,8 @@ export function drawWorldMinimap(
     focusPulseUntilMs?: number;
     /** CLIENT-188：军情选中行军终点叠加环（与信息卡可叠加）。 */
     marchEndHighlight?: MinimapMarchEndHighlight | null;
+    /** CLIENT-220：军情列表选中后 1.5s 目的格 sync 焦点环。 */
+    intelSyncRing?: MinimapIntelSyncRingState | null;
     nowMs?: number;
     assets?: AssetLoader;
     /** 用于检测 `data-art-skin=off`（如 `#layout-frame`）。 */
@@ -253,6 +260,19 @@ export function drawWorldMinimap(
     c2d.arc(p.x, p.y, 13, 0, Math.PI * 2);
     c2d.stroke();
     c2d.setLineDash([]);
+  }
+
+  const intelRing = opts.intelSyncRing;
+  if (
+    intelRing &&
+    isMinimapIntelSyncRingActive(intelRing.untilMs, nowMs)
+  ) {
+    const p = worldToMinimapLayout(intelRing.wx, intelRing.wy, bounds, rect, opts.view);
+    c2d.beginPath();
+    c2d.strokeStyle = MINIMAP_INTEL_SYNC_RING_COLOR;
+    c2d.lineWidth = 3;
+    c2d.arc(p.x, p.y, 15, 0, Math.PI * 2);
+    c2d.stroke();
   }
 
   const replay = opts.battleReportReplay;
