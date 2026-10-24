@@ -154,6 +154,10 @@ import {
   syncRankRefreshCooldownResidualDeepStamp,
 } from "@/net/rankRefreshCooldownResidualDeep";
 import {
+  appendRankListDensityScanResidualDeepSubline,
+  formatRankListDensityScanResidualDeepLine,
+} from "@/net/rankListDensityScanResidualDeep";
+import {
   appendRankListDensityScanResidualSubline,
   formatRankListDensityScanResidualLine,
   lookupPreviousLeaderboardRank,
@@ -1264,6 +1268,10 @@ export class SocialPanels {
               densityTd,
               formatRankListDensityScanResidualLine(boardType, entry, prevRank),
             );
+            appendRankListDensityScanResidualDeepSubline(
+              densityTd,
+              formatRankListDensityScanResidualDeepLine(boardType, entry, prevRank),
+            );
             densityTr.appendChild(densityTd);
             tbody.appendChild(densityTr);
           }
@@ -1278,6 +1286,14 @@ export class SocialPanels {
             const viewerTd = document.createElement("td");
             viewerTd.colSpan = 4;
             appendRankListDensityScanResidualSubline(viewerTd, viewerResidual);
+            appendRankListDensityScanResidualDeepSubline(
+              viewerTd,
+              formatRankListDensityScanResidualDeepLine(
+                boardType,
+                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
+                this.rankDensityScanPrevMyRank,
+              ),
+            );
             viewerTr.appendChild(viewerTd);
             tbody.appendChild(viewerTr);
           }
