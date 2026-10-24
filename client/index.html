@@ -2896,6 +2896,22 @@
         flex: 0 0 auto; padding: 2px 8px; font-size: 10px; font-weight: 600;
         color: #e8d4a8; background: #3d3028; border-radius: 10px;
       }
+      .guild-role-group-header-residual-line {
+        flex: 1 1 100%; min-width: 0; font-size: 10px; line-height: 1.35;
+        color: #b8a88a; padding: 0 6px 2px; overflow-wrap: anywhere;
+      }
+      .chat-unread-separator.guild-chat-unread-divider-residual-sweep::before,
+      .chat-unread-separator.guild-chat-unread-divider-residual-sweep::after {
+        border-top-color: #c9a227;
+      }
+      .chat-msg.guild-chat-unread-first-msg-sweep-ring {
+        outline: 2px solid #c9a227; outline-offset: 1px;
+        animation: guild-chat-unread-first-msg-sweep-ring-keyframes 1.2s ease-out 1;
+      }
+      @keyframes guild-chat-unread-first-msg-sweep-ring-keyframes {
+        0% { outline-color: #f0c674; }
+        100% { outline-color: transparent; }
+      }
       .guild-role-chip {
         flex: 0 0 auto; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; line-height: 1.35;
       }

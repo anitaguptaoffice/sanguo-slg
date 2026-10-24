@@ -71,7 +71,6 @@ import {
   chatChannelStorageKey,
   estimateChatUnreadCount,
   findChatUnreadSeparatorIndex,
-  chatUnreadSeparatorDomClassName,
   formatChatUnreadSweepLine,
   type ChatUnreadSummary,
   type ChatUnreadTracker,
@@ -79,6 +78,15 @@ import {
   shouldShowChatUnreadSeparator,
   maxChatMessageSentAtMs,
 } from "@/net/chatUnread";
+import {
+  formatGuildDutyHeaderResidualLine,
+  GUILD_ROLE_GROUP_HEADER_LINE_ROLE,
+  GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS,
+} from "@/net/guildDutyHeaderResidual";
+import {
+  chatUnreadSeparatorResidualDomClassName,
+  scheduleGuildChatUnreadFirstMsgSweepRing,
+} from "@/net/guildChatUnreadDividerResidual";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 import { hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -747,7 +755,12 @@ export class SocialPanels {
           ul.appendChild(this.buildChatUnreadSeparator(unreadCount));
           dividerInserted = true;
         }
-        ul.appendChild(this.buildChatMessageRow(m));
+        const isFirstUnreadRow = dividerAt >= 0 && flatIndex === dividerAt;
+        const row = this.buildChatMessageRow(m);
+        ul.appendChild(row);
+        if (isFirstUnreadRow) {
+          scheduleGuildChatUnreadFirstMsgSweepRing(row);
+        }
         flatIndex += 1;
       }
     }
@@ -757,7 +770,7 @@ export class SocialPanels {
 
   private buildChatUnreadSeparator(unreadCount: number): HTMLLIElement {
     const li = document.createElement("li");
-    li.className = chatUnreadSeparatorDomClassName();
+    li.className = chatUnreadSeparatorResidualDomClassName();
     li.setAttribute("role", "separator");
     const sweep = formatChatUnreadSweepLine(unreadCount);
     li.setAttribute("aria-label", sweep);
@@ -824,7 +837,21 @@ export class SocialPanels {
       count.setAttribute("data-role", "guild-role-group-count");
       count.setAttribute("aria-hidden", "true");
       count.textContent = formatGuildRoleGroupCountLabel(group.members.length);
-      head.append(toggle, count);
+      const residual = document.createElement("span");
+      residual.className = GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS;
+      residual.setAttribute("data-role", GUILD_ROLE_GROUP_HEADER_LINE_ROLE);
+      residual.setAttribute("aria-hidden", "true");
+      residual.textContent = formatGuildDutyHeaderResidualLine({
+        label: group.label,
+        expanded,
+        members: group.members,
+        guildOnlineSummary: {
+          members: this.guildMembersCache,
+          totalCount: this.guildMemberTotalCount || this.guildMembersCache.length,
+          onlineCount: this.guildMemberOnlineCountHint,
+        },
+      });
+      head.append(toggle, count, residual);
       ul.appendChild(head);
       if (!expanded) continue;
       for (const m of group.members) {
