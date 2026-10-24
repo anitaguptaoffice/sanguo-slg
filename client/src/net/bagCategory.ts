@@ -1,8 +1,14 @@
 import type { BagStack } from "@/net/bagState";
+import {
+  readBagCategoryScrollState,
+  updateBagCategoryTabInScrollState,
+  BAG_CATEGORY_TAB_SESSION_KEY,
+} from "@/net/bagCategoryScroll";
+import { parseBagCategoryTabSessionValue } from "@/net/bagCategoryTabParse";
 import { HERO_CULTIVATION_CONSUMABLE_CFG_IDS } from "@/net/heroMailState";
 
 /** sessionStorage：背包分类 tab（CLIENT-153，仅客户端过滤 ListPlayerBag 快照）。 */
-export const BAG_CATEGORY_TAB_SESSION_KEY = "bag-category-tab-v1";
+export { BAG_CATEGORY_TAB_SESSION_KEY };
 
 /** 背包客户端分类 tab（与 DATA-001 子集道具只读映射）。 */
 export type BagClientCategory = "all" | "consumable" | "cultivation";
@@ -12,8 +18,6 @@ export const BAG_CATEGORY_TABS: { id: BagClientCategory; label: string }[] = [
   { id: "consumable", label: "消耗品" },
   { id: "cultivation", label: "养成" },
 ];
-
-const CATEGORY_VALUES: readonly BagClientCategory[] = ["all", "consumable", "cultivation"];
 
 const CONSUMABLE_ITEM_CFG_IDS = new Set([2001, 2002, 2003, 2020]);
 const CULTIVATION_ITEM_CFG_IDS = new Set<number>([
@@ -28,15 +32,7 @@ export function bagCategoryTabLabel(category: BagClientCategory): string {
   return tab?.label ?? category;
 }
 
-export function parseBagCategoryTabSessionValue(
-  raw: string | null | undefined,
-): BagClientCategory | null {
-  if (raw == null || raw === "") return null;
-  if ((CATEGORY_VALUES as readonly string[]).includes(raw)) {
-    return raw as BagClientCategory;
-  }
-  return null;
-}
+export { parseBagCategoryTabSessionValue } from "@/net/bagCategoryTabParse";
 
 export function readBagCategoryTabSession(
   storage: Pick<Storage, "getItem"> | null = typeof sessionStorage !== "undefined"
@@ -44,10 +40,7 @@ export function readBagCategoryTabSession(
     : null,
 ): BagClientCategory {
   try {
-    return (
-      parseBagCategoryTabSessionValue(storage?.getItem(BAG_CATEGORY_TAB_SESSION_KEY) ?? null) ??
-      "all"
-    );
+    return readBagCategoryScrollState(storage).tab;
   } catch {
     return "all";
   }
@@ -55,12 +48,12 @@ export function readBagCategoryTabSession(
 
 export function writeBagCategoryTabSession(
   category: BagClientCategory,
-  storage: Pick<Storage, "setItem"> | null = typeof sessionStorage !== "undefined"
+  storage: Pick<Storage, "setItem" | "getItem"> | null = typeof sessionStorage !== "undefined"
     ? sessionStorage
     : null,
 ): void {
   try {
-    storage?.setItem(BAG_CATEGORY_TAB_SESSION_KEY, category);
+    updateBagCategoryTabInScrollState(category, storage);
   } catch {
     /* quota / private mode */
   }

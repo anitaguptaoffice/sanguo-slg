@@ -38,6 +38,18 @@ import {
   type BagClientCategory,
 } from "@/net/bagCategory";
 import {
+  applyBagPanelScrollTop,
+  readBagCategoryScrollState,
+  readBagPanelScrollTop,
+  scrollTopForBagCategory,
+  updateBagCategoryScrollTop,
+} from "@/net/bagCategoryScroll";
+import {
+  captureBagLastViewedForShopReturn,
+  consumeBagShopReturnHighlight,
+  scheduleBagRowReturnHighlight,
+} from "@/net/bagShopReturnHighlight";
+import {
   bagEmptyListClass,
   formatBagStackRowLabel,
 } from "@/net/panelDensity";
@@ -144,6 +156,8 @@ export class ContentPanels {
   private bagRecruitItemGapHighlight = false;
   private shopCategory: ShopOfferClientCategory = "all";
   private bagCategory: BagClientCategory = readBagCategoryTabSession();
+  /** CLIENT-210：各分类 tab 滚动位置（与 session 同步）。 */
+  private bagCategoryScrollTops = new Map<BagClientCategory, number>();
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
   private useConsumableSubmitState: UseConsumableSubmitState = "idle";
@@ -202,15 +216,32 @@ export class ContentPanels {
     const wasHidden = this.bagPanel.classList.contains("hidden");
     this.bagPanel.classList.toggle("hidden");
     if (!wasHidden) {
+      this.persistBagCategoryScrollPosition();
+      if (!this.shopPanel.classList.contains("hidden")) {
+        captureBagLastViewedForShopReturn(this.selectedItemId);
+      }
       this.syncBagOpenSourceTag();
       return;
     }
     if (!this.bagHighlightItemId) {
       clearBagOpenSourceSession();
     }
-    resetCenterPanelViewportScroll(this.bagPanel);
+    const returnFromShop = !this.shopPanel.classList.contains("hidden");
+    const shopReturnItemId = returnFromShop ? consumeBagShopReturnHighlight() : null;
+    this.syncBagCategoryScrollMemoryFromSession();
+    const deepLinkHighlight = this.bagHighlightItemId > 0;
+    if (deepLinkHighlight) {
+      resetCenterPanelViewportScroll(this.bagPanel);
+    }
     this.syncBagOpenSourceTag();
-    void this.refreshBag();
+    void this.refreshBag().then(() => {
+      if (!deepLinkHighlight) {
+        this.applyBagCategoryScrollTop(this.scrollTopForActiveBagCategory());
+      }
+      if (shopReturnItemId) {
+        scheduleBagRowReturnHighlight(this.bagPanel, shopReturnItemId);
+      }
+    });
   }
 
   getBagRoot(): HTMLElement {
@@ -293,7 +324,12 @@ export class ContentPanels {
     }
     this.syncBagOpenSourceTag();
     void this.refreshBag().then(() => {
-      if (highlightItemId > 0) scrollBagItemRowIntoView(this.bagPanel, highlightItemId);
+      if (highlightItemId > 0) {
+        scrollBagItemRowIntoView(this.bagPanel, highlightItemId);
+        if (source === "shop") {
+          scheduleBagRowReturnHighlight(this.bagPanel, highlightItemId);
+        }
+      }
     });
   }
 
@@ -345,9 +381,55 @@ export class ContentPanels {
   toggleShop(): void {
     this.shopPanel.classList.toggle("hidden");
     if (!this.shopPanel.classList.contains("hidden")) {
+      if (!this.bagPanel.classList.contains("hidden")) {
+        this.persistBagCategoryScrollPosition();
+        captureBagLastViewedForShopReturn(this.selectedItemId);
+      }
       resetCenterPanelViewportScroll(this.shopPanel);
       void this.refreshShop();
     }
+  }
+
+  private syncBagCategoryScrollMemoryFromSession(): void {
+    const state = readBagCategoryScrollState();
+    this.bagCategoryScrollTops.clear();
+    for (const key of ["all", "consumable", "cultivation"] as const) {
+      const top = scrollTopForBagCategory(state, key);
+      if (top > 0) this.bagCategoryScrollTops.set(key, top);
+    }
+  }
+
+  private persistBagCategoryScrollPosition(): void {
+    const top = readBagPanelScrollTop(this.bagPanel);
+    this.bagCategoryScrollTops.set(this.bagCategory, top);
+    updateBagCategoryScrollTop(this.bagCategory, top);
+  }
+
+  private scrollTopForActiveBagCategory(): number {
+    const cached = this.bagCategoryScrollTops.get(this.bagCategory);
+    if (cached != null && Number.isFinite(cached) && cached >= 0) return Math.trunc(cached);
+    return scrollTopForBagCategory(readBagCategoryScrollState(), this.bagCategory);
+  }
+
+  private restoreBagCategoryScrollPosition(): void {
+    this.applyBagCategoryScrollTop(this.scrollTopForActiveBagCategory());
+  }
+
+  /** 列表重绘后再恢复 scrollTop（避免 jsdom/窄屏下 scrollHeight 未更新时钳位）。 */
+  private applyBagCategoryScrollTop(scrollTop: number): void {
+    applyBagPanelScrollTop(this.bagPanel, scrollTop);
+    queueMicrotask(() => applyBagPanelScrollTop(this.bagPanel, scrollTop));
+  }
+
+  private switchBagCategory(next: BagClientCategory): void {
+    if (next === this.bagCategory) return;
+    const currentTop = readBagPanelScrollTop(this.bagPanel);
+    this.bagCategoryScrollTops.set(this.bagCategory, currentTop);
+    updateBagCategoryScrollTop(this.bagCategory, currentTop);
+    this.bagCategory = next;
+    writeBagCategoryTabSession(next);
+    this.renderBagList();
+    this.applyBagCategoryScrollTop(this.scrollTopForActiveBagCategory());
   }
 
   private serverId(): number {
@@ -1167,9 +1249,7 @@ export class ContentPanels {
     if (catBtn) {
       const next = catBtn.getAttribute("data-bag-category") as BagClientCategory | null;
       if (next && next !== this.bagCategory) {
-        this.bagCategory = next;
-        writeBagCategoryTabSession(next);
-        this.renderBagList();
+        this.switchBagCategory(next);
       }
       return;
     }

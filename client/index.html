@@ -1930,6 +1930,14 @@
         cursor: default; color: #4a3828; font-family: inherit; font-size: 12px; line-height: 1.4;
       }
       .bag-list li.item-highlight { outline: 2px solid #c9a227; background: #3d3028; }
+      @keyframes bag-row-return-highlight-keyframes {
+        0%, 100% { box-shadow: none; background: #1a1410; }
+        40% { box-shadow: 0 0 12px rgba(120, 180, 220, 0.75); background: #243038; }
+        75% { box-shadow: 0 0 6px rgba(120, 180, 220, 0.4); background: #1e2830; }
+      }
+      .bag-list li.bag-row-return-highlight {
+        animation: bag-row-return-highlight-keyframes 2s ease-out 1;
+      }
       @keyframes bag-row-used-pulse-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
         35% { box-shadow: 0 0 14px rgba(201, 162, 39, 0.8); background: #2a2418; }
