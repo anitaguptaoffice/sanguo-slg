@@ -2,7 +2,19 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 46 网关冒烟（INTG-043，推荐）
+
+在 INTG-042 全量断言之上扩展主城七槽 `GetCityState` 队列 ETA/完成 **residual deeper**（CLIENT-276/277）、将领 `ListPlayerHeroes`+背包养成扫读（CLIENT-278/279）、双榜钉选刷新（CLIENT-280）、军团成员+聊天（CLIENT-281）、日常 `ListPlayerQuests` 与队列 ETA 互链 HUD 深链（CLIENT-282）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量；**不跑 H5**。仍不做募兵加速/主城建造新 RPC/战报 proto 扩量/IAP。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG043Wave46SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-043:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 45 网关冒烟（INTG-042，推荐）
 
