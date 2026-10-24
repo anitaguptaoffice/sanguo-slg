@@ -457,7 +457,7 @@ describe("HeroMailPanels", () => {
     expect(ownedLi?.querySelector(".recruit-afford-secondary")?.textContent).toContain("粮");
     const preview = mount.querySelector('[data-role="recruit-preview"]');
     expect(preview?.textContent).toContain("玄德");
-    expect(preview?.textContent).toContain("持");
+    expect(preview?.textContent).toContain("余");
     const recruitBtn = mount.querySelector('[data-action="recruit-hero"]') as HTMLButtonElement;
     expect(recruitBtn.disabled).toBe(true);
     const errEl = mount.querySelector('[data-role="recruit-form-error"]');
@@ -465,6 +465,58 @@ describe("HeroMailPanels", () => {
     mount.querySelector('li[data-template-id="1002"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(preview?.textContent).toContain("云长");
+  });
+
+  it("recruit template row shows wallet sweep deficit and view-hero deep link (CLIENT-166)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          {
+            template_cfg_id: 1001,
+            template_name: "玄德",
+            recruit_cost: { gold: 20 },
+          },
+          { template_cfg_id: 1002, template_name: "云长", recruit_cost: { gold: 1 } },
+        ],
+        total_count: 2,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 1, loyalty: 90 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 1,
+        loyalty: 90,
+        attributes: { force: 1, intel: 1, politics: 1, command: 1 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session = sessionBase();
+    session.wallet = { gold: 5 };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const ownedRow = mount.querySelector('li[data-template-id="1001"]');
+    expect(ownedRow?.querySelector(".recruit-cost-deficit")?.textContent).toContain("不足");
+    const viewBtn = ownedRow?.querySelector('[data-action="recruit-view-hero"]') as HTMLButtonElement;
+    expect(viewBtn.disabled).toBe(false);
+    expect(viewBtn.getAttribute("data-hero-id")).toBe("3");
+    const lockedRow = mount.querySelector('li[data-template-id="1002"]');
+    expect(lockedRow?.classList.contains("recruit-template-locked")).toBe(true);
+    expect(
+      (lockedRow?.querySelector('[data-action="recruit-view-hero"]') as HTMLButtonElement).disabled,
+    ).toBe(true);
+    viewBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 3);
   });
 
   it("hero-goto-recruit preselects matching template_cfg_id", async () => {
@@ -509,6 +561,47 @@ describe("HeroMailPanels", () => {
     const sel = mount.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     expect(sel?.value).toBe("1002");
     expect(mount.querySelector('li[data-template-id="1002"]')?.classList.contains("selected")).toBe(true);
+  });
+
+  it("hero-goto-recruit writes scroll anchor and scrolls template row (CLIENT-166)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listRecruitTemplates: vi.fn().mockResolvedValue({
+        templates: [
+          { template_cfg_id: 1001, template_name: "玄德" },
+          { template_cfg_id: 1002, template_name: "云长" },
+        ],
+        total_count: 2,
+      }),
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1002, level: 1, loyalty: 90 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1002,
+        template_name: "云长",
+        level: 1,
+        loyalty: 90,
+        attributes: { force: 1, intel: 1, politics: 1, command: 1 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-templates"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const row = mount.querySelector('li[data-template-id="1002"]') as HTMLLIElement;
+    row.scrollIntoView = vi.fn();
+    mount
+      .querySelector('[data-action="hero-goto-recruit"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(sessionStorage.getItem("recruit-scroll-anchor-v1")).toBeNull();
+    expect(row.scrollIntoView).toHaveBeenCalled();
   });
 
   it("hero-goto-bag-cultivation opens bag with first consumable via callback", async () => {

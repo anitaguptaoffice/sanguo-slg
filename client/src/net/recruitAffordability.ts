@@ -98,14 +98,14 @@ function lineMark(sufficient: boolean): string {
   return sufficient ? "✓" : "不足";
 }
 
-/** 次行：消耗 vs 当前 HUD 快照（持/需 + ✓ 或 不足）。 */
+/** 次行：消耗 vs 当前 HUD 快照（余/需 + ✓ 或 不足，CLIENT-166 钱包扫读）。 */
 export function recruitAffordabilitySecondaryLine(result: RecruitAffordabilityResult): string {
   if (!result.lines.length) return "无资源/道具消耗";
   return result.lines
     .map((l) => {
       const have = l.kind === "resource" ? formatResourceAmount(l.available) : String(l.available);
       const need = l.kind === "resource" ? formatResourceAmount(l.required) : String(l.required);
-      return `${l.label} 持${have}/需${need}${lineMark(l.sufficient)}`;
+      return `${l.label} 余${have}/需${need}${lineMark(l.sufficient)}`;
     })
     .join(" · ");
 }
@@ -133,10 +133,11 @@ export function formatRecruitAffordabilitySummaryMarkup(
   wallet: ResourceWallet | undefined,
   bag: BagStack[] | undefined,
 ): string {
-  const { primary, secondary } = recruitAffordabilityForTemplate(template, wallet, bag);
+  const { primary, secondary, result } = recruitAffordabilityForTemplate(template, wallet, bag);
+  const deficitClass = result.canAfford ? "" : " recruit-cost-deficit";
   return `<div class="recruit-afford-summary" data-role="recruit-afford-summary">
   <p class="recruit-afford-primary">${escapeHtml(primary)}</p>
-  <p class="recruit-afford-secondary">${escapeHtml(secondary)}</p>
+  <p class="recruit-afford-secondary${deficitClass}">${escapeHtml(secondary)}</p>
 </div>`;
 }
 
