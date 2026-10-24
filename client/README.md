@@ -1871,6 +1871,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **wave:44（CLIENT-261）队列下一完成预览与七槽互链残余巩固**：在 **CLIENT-245** 残余行下追加 **`formatNextQueueFinishPreviewResidualDeepLine`** / **`queue-next-finish-preview-residual-deep-line`**（建造/募兵双队列只读计数 + 下一完成 ETA 巩固摘要；**CLIENT-218/245 不退化**）；点击 **`data-action="domestic-slot-preview-cross-link-residual-deep-ring"`** 定位七槽并 **`domestic-slot-preview-cross-link-residual-deep-ring` 2s** 深环（叠加 **CLIENT-244** `domestic-queue-complete-focus-residual-ring`；**CLIENT-260** `domestic-queue-complete-focus-residual-deep-ring` 软依赖 stub **不退化**；**无**新 domestic RPC）。单测：`nextQueueFinishPreviewResidualDeep.test.ts`、`QueuePanels.test.ts`；`cd client && npm test` 绿。
 
+**wave:46（CLIENT-277）队列下一完成预览与七槽互链残余巩固再加深**：在 **CLIENT-261** 深巩固行下追加 **`formatNextQueueFinishPreviewResidualDeeperLine`** / **`queue-next-finish-preview-residual-deeper-line`**（双队列类型 + 槽位标签 + 下一完成 ETA 只读 **巩固再加深** 摘要；**CLIENT-261/218/245 不退化**；**非** wave:44 CLIENT-261 首版巩固主叙事重复）；点击 **`data-action="domestic-slot-preview-cross-link-residual-deeper-ring"`** 定位七槽并 **`domestic-slot-preview-cross-link-residual-deeper-ring` 2.5s** 更深环（叠 **CLIENT-261** 深环与 **CLIENT-276** `domestic-queue-complete-focus-residual-deeper-ring` **不退化**；**无**新 domestic RPC）。单测：`nextQueueFinishPreviewResidualDeeper.test.ts`、`QueuePanels.test.ts`；`cd client && npm test` 绿。
+
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。
