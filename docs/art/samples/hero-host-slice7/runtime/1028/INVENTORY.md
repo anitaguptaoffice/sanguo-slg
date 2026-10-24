@@ -1,15 +1,15 @@
 # HERO-HOST-SLICE7 runtime inventory — template 1028
 
-tip_sha / runtime_code_sha: `26b0ec27dcd0a9248914b2c11ad46f482912970c`
+tip_sha / runtime_code_sha: `e2697c2043b4b3ccf3adda7afa61709288ea1030`
 art_head_sha: `dea932332475ed1e3cf4f336693f3d4c12a6d903`
 hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
 
 ## Viewport captures
 
-- `runtime/1028/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 449364 bytes, sha256 `64ee794deb0a19580328b623e53598a8cd40ae22ebcb4bc74c9bc38f7cf0f2ab`
-- `runtime/1028/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 946546 bytes, sha256 `f0816d542bf1eabf6b63c0e83af01471ea8429c99ae7eb2a4d9571c314159bfd`
-- `runtime/1028/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 256678 bytes, sha256 `52e8470933ed6fe5e0849ac070bd2ffcf48eaca9ec2c1d8d8fd1145a0275e156`
-- `runtime/1028/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `dc6ef7e4ef1ebe391d9291ee9fbcc58c3e36e423b8954354bcad8dd8f057c4a1`
+- `runtime/1028/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 463194 bytes, sha256 `9ef3ce423e9982f961f560ed7e930c24ed4121f78d1156fe14c59195fed833dd`
+- `runtime/1028/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 969599 bytes, sha256 `a14605e83dbd977b88af21248396d43ffdbafefcaf8ae349f01d2c55e6938639`
+- `runtime/1028/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 248097 bytes, sha256 `d28cf08bbe373c82a796cbb6b4f56521b44d802975f6c6bc3051b95108fb84dc`
+- `runtime/1028/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `850d90b7fb45dc4e5dc1b53f224eda7b1e2648abda1dd750bde7920b98a7fc7e`
 
 ## Textures (hero.avatar.1028.v1 / hero.bust.1028.v1)
 
@@ -30,11 +30,11 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "nameReadable": true,
       "detailName": "吕蒙",
       "listAvatarVisible": true,
-      "listAvatarInClip": false,
-      "listNameInClip": false,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": false,
+      "listAvatarFrameOk": true,
       "listRowPrimaryText": "吕蒙 · Lv12 · 忠诚 87",
       "captureSectionsVisible": true,
       "dpr": 1,
@@ -75,15 +75,15 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 3042.765625,
+        "top": 2666.171875,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 534,
-        "top": 1114.828125,
-        "width": 56,
-        "height": 0
+        "left": 516,
+        "top": 657.765625,
+        "width": 568,
+        "height": 150.234375
       }
     },
     "1600x900-dpr2": {
@@ -93,11 +93,11 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "nameReadable": true,
       "detailName": "吕蒙",
       "listAvatarVisible": true,
-      "listAvatarInClip": false,
-      "listNameInClip": false,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": false,
+      "listAvatarFrameOk": true,
       "listRowPrimaryText": "吕蒙 · Lv12 · 忠诚 87",
       "captureSectionsVisible": true,
       "dpr": 2,
@@ -138,15 +138,15 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 3042.765625,
+        "top": 2672.171875,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 534,
-        "top": 1114.828125,
-        "width": 56,
-        "height": 0
+        "left": 516,
+        "top": 663.765625,
+        "width": 568,
+        "height": 144.234375
       }
     },
     "1280x720-dpr1": {
@@ -194,21 +194,21 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "usesBust2x": false,
       "avatarPathOk": true,
       "bustPathOk": true,
-      "scrollReachOk": false,
-      "detailFooterVisible": false,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
       "detailFooterTopInScroll": true,
-      "detailFooterBottomInScroll": false,
+      "detailFooterBottomInScroll": true,
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 575.15625,
+        "top": 374.15625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 374,
-        "top": 575.15625,
-        "width": 56,
+        "top": 374.15625,
+        "width": 550,
         "height": 0
       }
     }
@@ -224,10 +224,10 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
     "gapPx": 10,
     "gapNear10px": true,
     "visibleClip": {
-      "left": 364,
-      "top": 519.5625,
-      "width": 128,
-      "height": 155.640625
+      "left": 356,
+      "top": 374.15625,
+      "width": 568,
+      "height": 301.046875
     },
     "name": {
       "text": "吕蒙"

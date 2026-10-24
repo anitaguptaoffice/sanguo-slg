@@ -1,15 +1,15 @@
 # HERO-HOST-SLICE7 runtime inventory — template 1027
 
-tip_sha / runtime_code_sha: `26b0ec27dcd0a9248914b2c11ad46f482912970c`
+tip_sha / runtime_code_sha: `e2697c2043b4b3ccf3adda7afa61709288ea1030`
 art_head_sha: `dea932332475ed1e3cf4f336693f3d4c12a6d903`
 hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
 
 ## Viewport captures
 
-- `runtime/1027/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 449098 bytes, sha256 `9d53512d9821b50ba976d97d7e13ead263101ef50012dcc8b07bffdabba00083`
-- `runtime/1027/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 946117 bytes, sha256 `18171c0cd738fd588a7e986ebc0c1d88e781e5f17ffdfe1572fa8fb43ef75220`
-- `runtime/1027/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 256678 bytes, sha256 `52e8470933ed6fe5e0849ac070bd2ffcf48eaca9ec2c1d8d8fd1145a0275e156`
-- `runtime/1027/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `d13e641cdd815b4ea556c518061deba136706f6d4d140ebc2a325b7642d148ad`
+- `runtime/1027/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 463061 bytes, sha256 `8240eddd0b70177ca6bc0927214e8202e320acb1f62521b83a574c3278c76b0b`
+- `runtime/1027/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 969860 bytes, sha256 `2f894a8ac97e7cc6bfd08eda219aecdec2db3a69b4901f0025222e3e6fe74008`
+- `runtime/1027/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 248090 bytes, sha256 `cdf791b498e98475eb17b6a94cb09ef3a7d6b0b809613ddaa2ecc8baaff58ea8`
+- `runtime/1027/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `3652a46e0eb2f71965be32f787d6c50e5bb12253fb1ee3a353961a47da76edfa`
 
 ## Textures (hero.avatar.1027.v1 / hero.bust.1027.v1)
 
@@ -30,11 +30,11 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "nameReadable": true,
       "detailName": "太史慈",
       "listAvatarVisible": true,
-      "listAvatarInClip": false,
-      "listNameInClip": false,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": false,
+      "listAvatarFrameOk": true,
       "listRowPrimaryText": "太史慈 · Lv11 · 忠诚 85",
       "captureSectionsVisible": true,
       "dpr": 1,
@@ -75,15 +75,15 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 2830.765625,
+        "top": 2454.171875,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 534,
-        "top": 1115.265625,
-        "width": 56,
-        "height": 0
+        "left": 516,
+        "top": 657.765625,
+        "width": 568,
+        "height": 150.234375
       }
     },
     "1600x900-dpr2": {
@@ -93,11 +93,11 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "nameReadable": true,
       "detailName": "太史慈",
       "listAvatarVisible": true,
-      "listAvatarInClip": false,
-      "listNameInClip": false,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": false,
+      "listAvatarFrameOk": true,
       "listRowPrimaryText": "太史慈 · Lv11 · 忠诚 85",
       "captureSectionsVisible": true,
       "dpr": 2,
@@ -138,15 +138,15 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 2830.765625,
+        "top": 2460.171875,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 534,
-        "top": 1115.265625,
-        "width": 56,
-        "height": 0
+        "left": 516,
+        "top": 663.765625,
+        "width": 568,
+        "height": 144.234375
       }
     },
     "1280x720-dpr1": {
@@ -194,21 +194,21 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "usesBust2x": false,
       "avatarPathOk": true,
       "bustPathOk": true,
-      "scrollReachOk": false,
-      "detailFooterVisible": false,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
       "detailFooterTopInScroll": true,
-      "detailFooterBottomInScroll": false,
+      "detailFooterBottomInScroll": true,
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 575.15625,
+        "top": 374.15625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 374,
-        "top": 575.15625,
-        "width": 56,
+        "top": 374.15625,
+        "width": 550,
         "height": 0
       }
     }
@@ -224,10 +224,10 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
     "gapPx": 10,
     "gapNear10px": true,
     "visibleClip": {
-      "left": 364,
-      "top": 519.5625,
-      "width": 128,
-      "height": 155.640625
+      "left": 356,
+      "top": 374.15625,
+      "width": 568,
+      "height": 301.046875
     },
     "name": {
       "text": "太史慈"

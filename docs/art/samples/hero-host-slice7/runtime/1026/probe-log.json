@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE7",
   "template_cfg_id": 1026,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "26b0ec27dcd0a9248914b2c11ad46f482912970c",
-  "runtime_code_sha": "26b0ec27dcd0a9248914b2c11ad46f482912970c",
+  "tip_sha": "e2697c2043b4b3ccf3adda7afa61709288ea1030",
+  "runtime_code_sha": "e2697c2043b4b3ccf3adda7afa61709288ea1030",
   "hero_mail_panels_blob_sha": "356f8e33734ca1374f3cf1ecd61368431293a93c",
   "art_head_sha": "dea932332475ed1e3cf4f336693f3d4c12a6d903",
   "art_asset_ids": [
@@ -19,11 +19,11 @@
       "nameReadable": true,
       "detailName": "蒋琬",
       "listAvatarVisible": true,
-      "listAvatarInClip": false,
-      "listNameInClip": false,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": false,
+      "listAvatarFrameOk": true,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
       "captureSectionsVisible": true,
       "dpr": 1,
@@ -64,15 +64,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1877.765625,
+        "top": 1498.171875,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 534,
-        "top": 1118.234375,
-        "width": 56,
-        "height": 0
+        "left": 516,
+        "top": 657.765625,
+        "width": 568,
+        "height": 150.234375
       }
     },
     "1600x900-dpr2": {
@@ -82,11 +82,11 @@
       "nameReadable": true,
       "detailName": "蒋琬",
       "listAvatarVisible": true,
-      "listAvatarInClip": false,
-      "listNameInClip": false,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": false,
+      "listAvatarFrameOk": true,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
       "captureSectionsVisible": true,
       "dpr": 2,
@@ -127,15 +127,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1877.765625,
+        "top": 1504.171875,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 534,
-        "top": 1118.234375,
-        "width": 56,
-        "height": 0
+        "left": 516,
+        "top": 663.765625,
+        "width": 568,
+        "height": 144.234375
       }
     },
     "1280x720-dpr1": {
@@ -183,21 +183,21 @@
       "usesBust2x": false,
       "avatarPathOk": true,
       "bustPathOk": true,
-      "scrollReachOk": false,
-      "detailFooterVisible": false,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
       "detailFooterTopInScroll": true,
-      "detailFooterBottomInScroll": false,
+      "detailFooterBottomInScroll": true,
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 575.15625,
+        "top": 374.15625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
         "left": 374,
-        "top": 575.15625,
-        "width": 56,
+        "top": 374.15625,
+        "width": 550,
         "height": 0
       }
     }
@@ -206,7 +206,7 @@
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 254140
+      "bytes": 248834
     },
     "probe": {
       "ok": true,
@@ -219,10 +219,10 @@
       "gapPx": 10,
       "gapNear10px": true,
       "visibleClip": {
-        "left": 364,
-        "top": 519.5625,
-        "width": 128,
-        "height": 155.640625
+        "left": 356,
+        "top": 374.15625,
+        "width": 568,
+        "height": 301.046875
       },
       "name": {
         "text": "蒋琬"
@@ -237,7 +237,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 448794,
+      "bytes": 463065,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -248,7 +248,7 @@
     },
     "hero-host-1600x900-dpr2.jpg": {
       "quality": 72,
-      "bytes": 945735,
+      "bytes": 969152,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -259,7 +259,7 @@
     },
     "hero-host-1280x720-dpr1.jpg": {
       "quality": 88,
-      "bytes": 256678,
+      "bytes": 247973,
       "viewport": {
         "tag": "1280x720-dpr1",
         "file": "hero-host-1280x720-dpr1.jpg",
@@ -274,5 +274,5 @@
     "Art path-copied from Draft #1204 @ dea93233; Draft remains unmerged.",
     "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
   ],
-  "captured_at": "2026-10-24T22:18:05.328Z"
+  "captured_at": "2026-10-24T22:37:01.513Z"
 }

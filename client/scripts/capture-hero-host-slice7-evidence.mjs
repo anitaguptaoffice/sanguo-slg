@@ -198,7 +198,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
     }
     if (vp.tag === "1280x720-dpr1") {
       await scrollHeroDetailFooterInPage(page);
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(350);
     }
     const filePath = path.join(outDir, vp.file);
     const jpeg = await writeJpegUnder1Mb(page, filePath, { fullPage: false });
