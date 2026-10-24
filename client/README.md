@@ -1129,6 +1129,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 2. 战报 **胜/负/平** 筛选与时间窗组合 → 刷新后各自恢复；点 **复盘格点** 应选中世界格点。
 3. 单测：`militaryListFilter.test.ts`、`battleReportListState.test.ts`、`MarchListPanel.test.ts`、`BattleReportPanel.test.ts`。
 
+**wave:27（CLIENT-124）**：在 **CLIENT-109** 记忆与 **CLIENT-090/093** 小地图互选、再出征预填不退化前提下，军情 **阶段** 改为 **ART-UI-FILTER-008** 筛选 chip（`data-ui-filter-chip` + `militaryListPhaseChipReducer`）；列表行接 **九宫**（`data-ui-filter-row`）与新出征 **badge.dot**（`data-ui-filter-badge="dot"`，与 **CLIENT-116** `march-row-recent` / 行内 ETA 并存）。ETA 仍用下拉排序。无 `CancelMarch`/加速。单测：`militaryListPhaseChip.test.ts`、`MarchListPanel.test.ts`。
+
 ### 手动验收（军情格点筛选 CLIENT-069）
 
 在 [CLIENT-061](#手动验收世界坐标-client-015) 双向高亮与 [CLIENT-058](#手动验收小地图目的点-eta-client-058) ETA 角标基础上，降低多行军扫读成本（**无 CancelMarch/撤回**；筛选仅客户端过滤 `ListMarches` 快照，不新 RPC）。
