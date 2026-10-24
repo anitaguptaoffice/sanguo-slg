@@ -158,3 +158,13 @@ export {
   SHOP_TAB_CURRENCY_SWEEP_SELECTOR,
   WORLD_TILE_INFO_SELECTOR,
 } from "@/engine/wave32MainCityBuildHeroShopDailyWorldNarrowManifest";
+
+/** CLIENT-179: wave:33 军情信息卡·战报·邮件·背包·日常·军事汇总组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_179_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client179NarrowManifestCenterPanelId,
+  WAVE33_INTEL_BATTLE_MAIL_BAG_DAILY_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  MARCH_INFO_CARD_SELECTOR,
+  MARCH_FORM_READONLY_STRIP_SELECTOR,
+  BATTLE_REPORT_OUTCOME_SUMMARY_SELECTOR,
+} from "@/engine/wave33IntelBattleMailBagDailyNarrowManifest";

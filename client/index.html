@@ -2623,6 +2623,46 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-179 wave:33 军情战报邮件背包日常军事组合 manifest */
+      /* sessionStorage key battle-report-outcome-filter-v1 (CLIENT-176) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-info-card,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-info-card [data-role="march-info-primary"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-info-card [data-role="march-info-secondary"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.march-row-selected,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] button[data-action="view-march-intel-card"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] button[data-action="open-military-from-march-intel"] {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-outcome-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-outcome-chip-group,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .battle-report-row-summary {
+        min-width: 0; max-width: 100%; overflow-x: hidden; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-tab-empty-hint,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-sweep {
+        min-width: 0; max-width: 100%; overflow-x: hidden; overflow-wrap: anywhere;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-item-cfg-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-open-source-v1 {
+        min-width: 0; max-width: 100%; overflow-x: hidden; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-progress,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-reward-line {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .military-panel .march-form-readonly-strip,
+      #layout-frame.layout-narrow .military-panel [data-action="view-march-intel-card"],
+      #layout-frame.layout-narrow .military-panel [data-action="open-military-from-march-intel"] {
+        min-width: 0; max-width: 100%; overflow-x: hidden; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body,
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body {
+        padding-bottom: 64px;
+      }
       #layout-frame.layout-narrow .main-city-toolbar button.toolbar-chrome-btn--with-icon {
         flex: 0 0 auto;
         min-width: 0;
