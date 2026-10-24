@@ -818,6 +818,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. 详情 **返回列表**：按 `hero-list-return-v1` 恢复筛选/排序/滚动与行高亮；**刷新戳记** `hero-list-refreshed-at` 与 **CLIENT-072** 养成对比/进度条不退化。
 3. 单测：`heroListReturnState.test.ts`（`serializeHeroListReturnState` / `formatHeroDetailFromListHint`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+### 手动验收（将领列表返回高亮与筛选 chip 记忆抛光 CLIENT-231）
+
+在 [CLIENT-199](#手动验收将领列表详情筛选记忆扫读-client-199) 列表↔详情互跳与 [CLIENT-151](#手动验收将领列表筛选排序记忆-client-151) **`hero-list-filter-v1`** 不退化、[CLIENT-213](#手动验收将领忠诚次行与养成道具堆叠扫读-client-213) 忠诚次行 **不重复主叙事** 前提下：
+
+1. 详情 **返回列表**：对应 `hero_id` 行追加 **`hero-list-return-highlight` 2s** 扫读脉冲（与 `.selected` 选中并存）；消费 **`hero-list-return-v1`** 后筛选/排序仍由 **`hero-list-filter-v1` / `hero-list-sort-v1`** 恢复 chip 态。
+2. **`hero-list-selected-v1`** 滚动与选中记忆、详情顶栏 **`formatHeroDetailFromListHint`** 与 **CLIENT-182** 刷新戳记不退化。
+3. 单测：`heroListReturnHighlight.test.ts`、`heroListReturnState.test.ts`（`consumeHeroListReturnState`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领忠诚次行与养成道具堆叠扫读 CLIENT-213）
 
 在 [CLIENT-132](#手动验收将领列表行扫读-client-132) / [CLIENT-165](#手动验收将领详情养成道具缺口与背包深链-client-165) / [CLIENT-198](#手动验收将领详情养成对比-client-072) 不退化前提下：
