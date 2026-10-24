@@ -12,6 +12,9 @@ import { shopEmptyListMessage } from "@/net/panelDensity";
 /** 列表首屏拉取失败重试钮（CLIENT-067 + CLIENT-173）。 */
 export const PANEL_GATEWAY_RETRY_CLASS = "panel-gateway-retry";
 
+/** 军团成员 / 聊天列表行内重试（CLIENT-200；与 `panel-gateway-retry` 同 `data-action` 语义）。 */
+export const GUILD_CHAT_RETRY_INLINE_CLASS = "guild-chat-retry-inline";
+
 const LIST_DOMAIN_PREFIX: Partial<Record<PanelGatewayDomain, string>> = {
   bag: "背包",
   shop: "商城",
@@ -47,6 +50,18 @@ export function formatPanelGatewayErrorFromUnknownForList(
   return formatPanelGatewayListError(domain, undefined, String(err));
 }
 
+/** 军团成员 / 聊天首屏拉取失败列表文案（CLIENT-173 + CLIENT-200）。 */
+export function formatGuildChatPanelGatewayListError(
+  surface: "guildMembers" | "chat",
+  err: unknown,
+): string {
+  if (surface === "guildMembers") {
+    return formatPanelGatewayErrorFromUnknownForList("guild", err);
+  }
+  const core = formatPanelGatewayErrorFromUnknown("guild", err);
+  return `聊天：${core}`;
+}
+
 export type PanelEmptyHintInput =
   | { panel: "bag"; category: BagClientCategory; hasAnyStacks: boolean }
   | { panel: "shop"; hasAnyOffers: boolean };
@@ -67,12 +82,18 @@ export type PanelGatewayErrorRowOptions = {
   assets?: AssetLoader;
   /** `data-action` 值，由面板 click 委托触发重试 RPC。 */
   retryAction: string;
+  /** 默认 `panel-gateway-retry`；军团/聊天列表用 `guild-chat-retry-inline`（CLIENT-200）。 */
+  retryClass?: string;
 };
 
-function appendPanelGatewayRetryButton(li: HTMLElement, retryAction: string): HTMLButtonElement {
+function appendPanelGatewayRetryButton(
+  li: HTMLElement,
+  retryAction: string,
+  retryClass = PANEL_GATEWAY_RETRY_CLASS,
+): HTMLButtonElement {
   const btn = document.createElement("button");
   btn.type = "button";
-  btn.className = PANEL_GATEWAY_RETRY_CLASS;
+  btn.className = retryClass;
   btn.setAttribute("data-action", retryAction);
   btn.textContent = "重试";
   li.appendChild(btn);
@@ -89,7 +110,7 @@ export function renderPanelGatewayErrorListRow(
     legacyClass: options.legacyClass,
     assets: options.assets,
   });
-  appendPanelGatewayRetryButton(li, options.retryAction);
+  appendPanelGatewayRetryButton(li, options.retryAction, options.retryClass);
   return li;
 }
 
@@ -106,7 +127,7 @@ export function renderPanelGatewayErrorTableRow(
   const wrap = document.createElement("div");
   wrap.className = "panel-gateway-error-cell";
   wrap.textContent = message;
-  appendPanelGatewayRetryButton(wrap, options.retryAction);
+  appendPanelGatewayRetryButton(wrap, options.retryAction, options.retryClass);
   td.appendChild(wrap);
   tr.appendChild(td);
   tbody.appendChild(tr);
@@ -118,9 +139,10 @@ export function renderPanelGatewayErrorTableRow(
 export function dispatchPanelGatewayRetryClick(
   root: ParentNode,
   retryAction: string,
+  retryClass = PANEL_GATEWAY_RETRY_CLASS,
 ): boolean {
   const btn = root.querySelector<HTMLButtonElement>(
-    `button.${PANEL_GATEWAY_RETRY_CLASS}[data-action="${retryAction}"]`,
+    `button.${retryClass}[data-action="${retryAction}"]`,
   );
   if (!btn) return false;
   btn.click();

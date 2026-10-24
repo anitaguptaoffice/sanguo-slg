@@ -7,6 +7,7 @@ import {
   formatGuildMemberPrimaryNick,
   formatGuildMemberSecondaryLine,
   formatGuildMentionDraft,
+  formatGuildPanelEmptyHint,
   formatGuildSummaryText,
   formatServerLine,
   formatSocialGatewayError,
@@ -160,6 +161,15 @@ describe("socialFormat", () => {
     expect(formatSocialGuildNotJoinedReadonlyMessage()).toContain("尚未加入军团");
     expect(formatSocialPanelListRefreshHint()).toBe("请点「刷新」重试");
     expect(formatSocialPanelStaleDataLabel()).toBe("数据可能已过期");
+  });
+
+  it("formatGuildPanelEmptyHint unifies guild/chat empty copy (CLIENT-200 + CLIENT-053)", () => {
+    expect(formatGuildPanelEmptyHint("chat", { guildJoined: true })).toBe(formatSocialChatEmptyMessage());
+    expect(formatGuildPanelEmptyHint("guildMembers", { guildJoined: true })).toBe(
+      formatSocialGuildMembersEmptyMessage(),
+    );
+    expect(formatGuildPanelEmptyHint("chat", { guildJoined: false })).toContain("尚未加入军团");
+    expect(formatGuildPanelEmptyHint("guildMembers", { guildJoined: false })).toContain("创建或加入军团");
   });
 
   it("maps social gateway error codes to readable hints", () => {

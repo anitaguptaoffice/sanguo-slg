@@ -484,7 +484,7 @@ describe("SocialPanels chat & guild", () => {
     expect(mount.querySelectorAll(".social-panel:not(.hidden) h3")[0]?.textContent).toBe("军团");
   });
 
-  it("shows chat empty copy and list refresh hint on load error", async () => {
+  it("shows chat gateway error row with guild-chat-retry-inline on load error (CLIENT-200)", async () => {
     const mount = document.createElement("div");
     const gateway = minimalGateway({
       listChatMessages: vi.fn().mockRejectedValue(new Error("network")),
@@ -493,7 +493,9 @@ describe("SocialPanels chat & guild", () => {
     panels.attach();
     panels.toggleChat();
     await flushPromises();
-    expect(mount.querySelector('[data-role="chat-log"] .social-list-empty')?.textContent).toContain("请点「刷新」重试");
+    const errRow = mount.querySelector('[data-role="chat-log"] [data-panel-state="error"]');
+    expect(errRow?.textContent).toContain("聊天：network");
+    expect(errRow?.querySelector(".guild-chat-retry-inline")).toBeTruthy();
     expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("刷新失败");
   });
 
@@ -786,5 +788,28 @@ describe("SocialPanels chat & guild", () => {
     expect(
       guildListErr?.querySelector('[data-action="retry-refresh-members"]'),
     ).toBeTruthy();
+    expect(guildListErr?.querySelector(".guild-chat-retry-inline")).toBeTruthy();
+  });
+
+  it("shows chat refresh gateway error with guild-chat-retry-inline (CLIENT-200)", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      listChatMessages: vi
+        .fn()
+        .mockRejectedValueOnce(Object.assign(new Error("已被禁言"), { code: 61006 })),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleChat();
+    await flushPromises();
+    const errRow = mount.querySelector('.chat-log [data-panel-state="error"]');
+    expect(errRow?.textContent).toContain("聊天：已被禁言 [61006]");
+    const inlineRetry = errRow?.querySelector(".guild-chat-retry-inline");
+    expect(inlineRetry?.getAttribute("data-action")).toBe("retry-refresh-chat");
+    expect(inlineRetry?.classList.contains("hidden")).toBe(false);
+    gateway.listChatMessages = vi.fn().mockResolvedValue({ messages: [] });
+    inlineRetry?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.listChatMessages).toHaveBeenCalled();
   });
 });

@@ -338,6 +338,29 @@ export function formatSocialGuildMembersEmptyMessage(): string {
   return "暂无成员，请点「刷新成员」同步列表";
 }
 
+export type GuildPanelEmptySurface = "guildMembers" | "chat";
+
+/**
+ * 军团成员 / 聊天列表 empty 文案（CLIENT-053 统一 `SOCIAL_LIST_EMPTY_CLASS` + CLIENT-200 扫读）。
+ * 与网关 error 态分离：error 走 CLIENT-173 + 行内重试。
+ */
+export function formatGuildPanelEmptyHint(
+  surface: GuildPanelEmptySurface,
+  options?: { guildJoined?: boolean },
+): string {
+  const joined = options?.guildJoined ?? true;
+  if (surface === "guildMembers") {
+    if (!joined) {
+      return `${formatSocialGuildNotJoinedReadonlyMessage()}可在本面板下方创建或加入军团。`;
+    }
+    return formatSocialGuildMembersEmptyMessage();
+  }
+  if (!joined) {
+    return formatSocialGuildNotJoinedReadonlyMessage();
+  }
+  return formatSocialChatEmptyMessage();
+}
+
 /** 排行双榜空榜（含 dev 无种子提示与刷新引导）。 */
 export function formatSocialRankEmptyMessage(): string {
   return "（空榜）暂无上榜数据，请点「刷新排行榜」拉取；dev 环境可能未写入排行种子，可对照 Scheduler / smoke 造数。";

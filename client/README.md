@@ -58,6 +58,8 @@
 
 **CLIENT-173（面板网关错误与重试）**：背包 / 商城 / 排行 / 军团 / 建造队列首屏拉取失败时列表占位行共用 **`formatPanelGatewayListError`**（域前缀 + **CLIENT-067** `[code]`）与行内 **`panel-gateway-retry`**（`data-action` 重试刷新）；与 **CLIENT-129** `data-panel-state=error` **并存**。分类 / 筛选 chip 空结果仍走 **`formatPanelEmptyHint`** → **empty** 态，不与 error 混用。单测：`panelGatewayError.test.ts`、`contentFormValidation.test.ts`、`ContentPanels.test.ts`。
 
+**CLIENT-200（军团/聊天空错态扫读）**：成员列表与聊天列表 **empty** 走 **CLIENT-053** `social-list-empty` + **`formatGuildPanelEmptyHint`**；首屏拉取 **gateway error** 走 **CLIENT-173** **`formatGuildChatPanelGatewayListError`**（`formatPanelGatewayError` + 「军团：/聊天：」前缀）与行内 **`guild-chat-retry-inline`**（`retry-refresh-members` / `retry-refresh-chat`，同源刷新 handler，无新 guild RPC）。**CLIENT-185** 职务分组头 / 聊天未读分隔线与 **CLIENT-144** 刷新戳记不退化。单测：`socialFormat.test.ts`、`SocialPanels.test.ts`。
+
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。
@@ -1489,12 +1491,12 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（社交空态与错误文案 CLIENT-053）
 
-排行/军团/聊天空列表与刷新失败文案统一走 `socialFormat` + `formatSocialPanelRefreshError`（与 CLIENT-045 刷新按钮并存）。
+排行/军团/聊天空列表与刷新失败文案统一走 `socialFormat` + `formatSocialPanelRefreshError`（与 CLIENT-045 刷新按钮并存）。**CLIENT-200** 起军团成员 / 聊天列表 empty 统一 **`formatGuildPanelEmptyHint`**；列表区网关失败为 **`data-panel-state=error`** + **`guild-chat-retry-inline`**（与工具栏 `social-refresh-retry` 并存）。
 
 1. **排行**：空榜行含「刷新排行榜」引导；刷新失败且曾有成功数据时表格保留上次快照，状态栏 **刷新失败** 并标注 **数据可能已过期**。
-2. **聊天**：无消息时列表空态含「刷新」引导；军团频道未入团为只读说明 + **前往军团**（不新 RPC）。
-3. **军团**：未入团成员区只读说明；已入团无成员或刷新失败时列表空态与面板内 **刷新失败：…** 一致。
-4. 单测：`socialFormat.test.ts`（空态 key）、`SocialPanels.test.ts`（陈旧快照、军团跳转、列表重试提示）。
+2. **聊天**：无消息时列表空态含「刷新」引导；军团频道未入团为只读说明 + **前往军团**（不新 RPC）；刷新失败见 **聊天：** + `[code]` 与列表内 **重试**。
+3. **军团**：未入团成员区只读说明；已入团无成员见 `formatGuildPanelEmptyHint`；刷新失败见 **军团：** + `[code]` 与 **`guild-chat-retry-inline`**。
+4. 单测：`socialFormat.test.ts`（`formatGuildPanelEmptyHint`）、`SocialPanels.test.ts`（陈旧快照、军团跳转、行内重试）。
 
 ### 手动验收（将领招募对比 CLIENT-031）
 
