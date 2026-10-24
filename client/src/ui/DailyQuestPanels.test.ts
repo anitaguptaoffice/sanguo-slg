@@ -511,6 +511,81 @@ describe("DailyQuestPanels", () => {
     expect(countBadge?.hidden).toBe(true);
   });
 
+  it("batch claim pulses rows and shows secondary progress line (CLIENT-150)", async () => {
+    const mount = document.createElement("div");
+    const questRows = [
+      {
+        quest_cfg_id: 1012,
+        quest_code: "daily_food_1",
+        state: 3,
+        progress_current: 5000,
+        progress_target: 5000,
+      },
+      {
+        quest_cfg_id: 1013,
+        quest_code: "daily_wood_1",
+        state: 3,
+        progress_current: 5000,
+        progress_target: 5000,
+      },
+    ];
+    const claimQuestReward = vi.fn().mockImplementation(async (_sid, questCfgId: number) => {
+      const row = questRows.find((q) => q.quest_cfg_id === questCfgId);
+      if (row) row.state = 4;
+      return { granted_rewards: { resources: { gold: 1 } }, quest: { state: 4 } };
+    });
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockImplementation(async () => ({
+        quests: questRows.map((q) => ({ ...q })),
+      })),
+      claimQuestReward,
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      getCityState: vi.fn().mockResolvedValue({ wallet: {} }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const hudSnapshots: number[] = [];
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (rows) => {
+        hudSnapshots.push(rows.filter((q) => q.state === 3).length);
+      },
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const secondary = mount.querySelector(".daily-quest-row-secondary");
+    expect(secondary?.textContent).toContain("链进度");
+    const batchBtn = mount.querySelector('[data-action="claim-daily-batch"]') as HTMLButtonElement;
+    expect(batchBtn?.hidden).toBe(false);
+    batchBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(claimQuestReward).toHaveBeenCalledTimes(2);
+    expect(hudSnapshots.some((n) => n === 1)).toBe(true);
+    expect(hudSnapshots[hudSnapshots.length - 1]).toBe(0);
+  });
+
   it("openFromTodoBadge highlights first acceptable daily", async () => {
     const mount = document.createElement("div");
     const listPlayerQuests = vi.fn().mockResolvedValue({

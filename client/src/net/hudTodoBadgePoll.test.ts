@@ -114,6 +114,40 @@ describe("HudTodoBadgePoll", () => {
     expect(snap.firstClaimableDailyCfgId).toBe(101);
   });
 
+  it("applyDailyChainRowsSnapshot updates claimable toolbar count (CLIENT-150)", async () => {
+    const gateway = {
+      listPlayerMail: vi.fn(),
+      listPlayerQuests: vi.fn(),
+      listBattleReports: vi.fn(),
+    };
+    const unread = new BattleReportUnreadSession();
+    let counts = { mailUnread: 0, dailyTodo: 2, queueBuilding: 0, battleReportUnread: 0 };
+    const poll = new HudTodoBadgePoll({
+      gateway: gateway as never,
+      getServerId: () => 1,
+      getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
+      battleReportUnread: unread,
+      isPanelVisible: () => false,
+      isMailSuppressed: () => false,
+      isDailySuppressed: () => false,
+      isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
+      onCounts: (c) => {
+        counts = c;
+      },
+    });
+    poll.applyDailyChainRowsSnapshot([
+      { quest_cfg_id: 1012, state: 3 },
+      { quest_cfg_id: 1013, state: 3 },
+    ]);
+    expect(counts.dailyTodo).toBe(2);
+    poll.applyDailyChainRowsSnapshot([{ quest_cfg_id: 1012, state: 4 }]);
+    expect(counts.dailyTodo).toBe(0);
+    expect(poll.getDeepLinkSnapshot().dailyClaimable).toBe(0);
+  });
+
   it("applyMailUnreadSnapshot patches deep link while mail panel suppressed", async () => {
     const gateway = {
       listPlayerMail: vi.fn(),

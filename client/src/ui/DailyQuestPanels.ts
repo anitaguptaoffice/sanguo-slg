@@ -13,7 +13,6 @@ import {
   DAILY_QUEST_CHAIN_ID,
   dailyQuestsFromListResponse,
   formatDailyQuestDetail,
-  formatDailyQuestLine,
   pickDefaultDailyQuest,
   type DailyQuestRow,
 } from "@/net/dailyQuestState";
@@ -58,6 +57,16 @@ import {
   dailyQuestClaimableBadgeCount,
   shouldShowDailyQuestClaimableFilterBadge,
 } from "@/net/dailyQuestFilterUi";
+import {
+  applyDailyQuestRowAfterClaim,
+  dailyBatchClaimSummary,
+  orderBatchClaimDailyQuestIds,
+  validateBatchClaimDailySelection,
+} from "@/net/dailyQuestBatchClaim";
+import {
+  formatDailyQuestProgressSecondary,
+  formatDailyQuestRowPrimary,
+} from "@/net/dailyQuestProgressFormat";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -71,6 +80,7 @@ export class DailyQuestPanels {
   private listFilter: DailyQuestListFilter = "all";
   private listLoading = false;
   private listError: string | null = null;
+  private claimBatchInflight = false;
   /** CLIENT-134：角标深链打开前「可领取」chip 数字与 HUD 快照对齐。 */
   private dailyClaimableCountOverride: number | null = null;
 
@@ -89,6 +99,7 @@ export class DailyQuestPanels {
     private readonly queueSlotLabels?: Record<string, string>,
     private readonly getQueueRecruits?: () => RecruitQueueEntry[] | undefined,
     private readonly assets?: AssetLoader,
+    private readonly onDailyChainRowsSnapshot?: (rows: DailyQuestRow[]) => void,
   ) {}
 
   attach(): void {
@@ -196,6 +207,7 @@ export class DailyQuestPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-daily">刷新列表</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="accept-daily">接取</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-daily">领奖</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-daily-batch" hidden>批量领取可领</button>
       </div>
       <p class="daily-form-error hidden" data-role="daily-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="daily-scroll">
@@ -247,6 +259,18 @@ export class DailyQuestPanels {
       locateBtn.hidden = !showLocate;
       locateBtn.classList.toggle("hidden", !showLocate);
     }
+    const batchBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="claim-daily-batch"]');
+    const claimableIds = orderBatchClaimDailyQuestIds(this.rows);
+    const showBatch = claimableIds.length > 0;
+    if (batchBtn) {
+      batchBtn.hidden = !showBatch;
+      batchBtn.classList.toggle("hidden", !showBatch);
+      batchBtn.disabled = this.claimBatchInflight || !showBatch;
+    }
+  }
+
+  private publishDailyChainSnapshot(): void {
+    this.onDailyChainRowsSnapshot?.(this.rows.slice());
   }
 
   private setDailyFormError(message: string | null): void {
@@ -347,7 +371,7 @@ export class DailyQuestPanels {
           dot.setAttribute("aria-hidden", "true");
           li.appendChild(dot);
         }
-        let line = formatDailyQuestLine(q);
+        let line = formatDailyQuestRowPrimary(q);
         const queueHint = formatDailyQuestQueueInlineHint(
           q,
           buildings,
@@ -360,6 +384,13 @@ export class DailyQuestPanels {
         main.className = "daily-quest-row-main";
         main.textContent = line;
         li.appendChild(main);
+        const secondary = formatDailyQuestProgressSecondary(q);
+        if (secondary) {
+          const secondarySpan = document.createElement("span");
+          secondarySpan.className = "daily-quest-row-secondary";
+          secondarySpan.textContent = secondary;
+          li.appendChild(secondarySpan);
+        }
         for (const tag of dailyQuestCrossLinkTags(q)) {
           const tagBtn = document.createElement("button");
           tagBtn.type = "button";
@@ -454,6 +485,7 @@ export class DailyQuestPanels {
       if (!pick) pick = pickDefaultDailyQuest(this.rows);
       if (pick?.quest_cfg_id) this.selectedCfgId = pick.quest_cfg_id;
       this.renderList();
+      this.publishDailyChainSnapshot();
       this.onStatus(`日常 ${this.rows.length} 条`);
     } catch (e) {
       const msg = (e as Error).message || "日常列表加载失败，请点「刷新列表」重试";
@@ -531,11 +563,67 @@ export class DailyQuestPanels {
       scheduleQuestClaimRowPulse(rowBefore);
       await this.syncBagAndWallet(res.granted_rewards);
       await this.refreshList();
+      this.publishDailyChainSnapshot();
       this.onStatus("日常奖励已领取");
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("bag", e);
       this.setDailyFormError(msg);
       this.onStatus(msg);
+    }
+  }
+
+  private async claimDailyBatch(): Promise<void> {
+    if (this.claimBatchInflight) return;
+    const validated = validateBatchClaimDailySelection(this.rows);
+    if (!validated.ok) {
+      this.setDailyFormError(validated.message);
+      this.onStatus(validated.message);
+      return;
+    }
+    const ordered = orderBatchClaimDailyQuestIds(this.rows);
+    const sid = this.serverId();
+    this.setDailyFormError(null);
+    this.claimBatchInflight = true;
+    this.renderList();
+    this.onStatus(`批量领取 ${ordered.length} 条日常（逐条）…`);
+    const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
+    const pulseCfgIds: number[] = [];
+    try {
+      for (const questCfgId of ordered) {
+        const rowBefore = this.panel.querySelector<HTMLElement>(
+          `li[data-quest-cfg-id="${questCfgId}"]`,
+        );
+        try {
+          const res = (await this.gateway.claimQuestReward(sid, questCfgId)) as {
+            granted_rewards?: RewardBundle;
+            quest?: DailyQuestRow;
+          };
+          attempts.push({ ok: true });
+          pulseCfgIds.push(questCfgId);
+          this.rows = applyDailyQuestRowAfterClaim(this.rows, questCfgId, res.quest);
+          this.publishDailyChainSnapshot();
+          this.renderList();
+          scheduleQuestClaimRowPulse(rowBefore);
+        } catch (e) {
+          const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+          attempts.push({ ok: false, message: msg });
+        }
+      }
+      await this.syncBagAndWallet();
+      await this.refreshList();
+      this.publishDailyChainSnapshot();
+      const summary = dailyBatchClaimSummary(attempts);
+      if (summary.lastError) {
+        this.setDailyFormError(summary.lastError);
+      }
+      this.onStatus(summary.summaryText);
+    } finally {
+      this.claimBatchInflight = false;
+      this.renderList();
+      for (const cfgId of pulseCfgIds) {
+        const row = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${cfgId}"]`);
+        scheduleQuestClaimRowPulse(row);
+      }
     }
   }
 
@@ -599,6 +687,7 @@ export class DailyQuestPanels {
     if (a === "refresh-daily") void this.refreshList();
     if (a === "accept-daily") void this.acceptDaily();
     if (a === "claim-daily") void this.claimDaily();
+    if (a === "claim-daily-batch") void this.claimDailyBatch();
     if (a === "daily-go-next") this.goNextStep();
   }
 }

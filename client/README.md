@@ -882,6 +882,8 @@ cd client && npm install && npm run dev
 2. **领奖** 后观察脉冲与 HUD；刷新页面筛选记忆仍恢复。
 3. 单测：`dailyQuestListFilter.test.ts`、`DailyQuestPanels.test.ts`。
 
+**CLIENT-150（日常领取闭环）**：列表行 **次行** `formatDailyQuestProgressSecondary` 展示 chain 400 `progress_current/progress_target`（`ListPlayerQuests` 快照，不新 RPC）；**批量领取可领**（CLIENT-087 同级逐条 `ClaimQuestReward`）成功行 `quest-claim-pulse`，`HudTodoBadgePoll.applyDailyChainRowsSnapshot` 使底栏 **可领** 角标即时递减；筛选 **可领取** 时 **定位首条**（CLIENT-091）与 CLIENT-123 chip 并存。loading/error 仍走 **CLIENT-129**。单测：`dailyQuestProgressFormat.test.ts`、`dailyQuestBatchClaim.test.ts`、`dailyQuestListFilter.test.ts`（`pickFirstClaimableDailyQuestCfgIdForFilter`）、`DailyQuestPanels.test.ts`、`hudTodoBadgePoll.test.ts`。
+
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
 军团成员列表每行 **提到** 将 `@显示名 ` 填入聊天输入（`formatGuildMentionDraft`），并切换到军团聊天 tab；未入军团时按钮 hidden。**CLIENT-076** 刷新 meta 不退化。
