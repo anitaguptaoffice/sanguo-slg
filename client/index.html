@@ -1316,6 +1316,11 @@
         margin: 2px 0 4px;
         line-height: 1.35;
       }
+      .march-submit-intel-refresh-stamp.march-submit-intel-refresh-stamp-deep {
+        color: #d4f0ff;
+        font-size: 12px;
+        text-shadow: 0 0 8px rgba(126, 200, 255, 0.35);
+      }
       .march-submit-intel-refresh-stamp.hidden { display: none; }
       @keyframes intel-list-refresh-march-pulse-keyframes {
         0% { box-shadow: inset 0 0 0 2px rgba(184, 224, 255, 0.9); }
@@ -1323,6 +1328,14 @@
       }
       .march-list li.intel-list-refresh-march-pulse {
         animation: intel-list-refresh-march-pulse-keyframes 2s ease-out 1;
+      }
+      @keyframes intel-list-refresh-march-subline-pulse-keyframes {
+        0% { color: #e8f4ff; text-shadow: 0 0 6px rgba(184, 224, 255, 0.85); }
+        100% { color: #b8a88a; text-shadow: none; }
+      }
+      .intel-row-phase-subline.intel-list-refresh-march-subline-pulse {
+        animation: intel-list-refresh-march-subline-pulse-keyframes 2.5s ease-out 1;
+        font-weight: 600;
       }
       .military-panel .march-form-validation-sweep-line {
         font-size: 11px;
@@ -1333,6 +1346,29 @@
       .military-panel .march-form-validation-sweep-line.march-form-validation-sweep-warn {
         color: #e8b86a;
         font-weight: 600;
+      }
+      .military-panel .march-form-troop-margin-residual-line {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 11px;
+        line-height: 1.35;
+        color: #9ab8a0;
+        margin: 2px 0 6px;
+      }
+      .military-panel .march-form-troop-margin-residual-line.hidden { display: none; }
+      .military-panel .march-form-troop-margin-residual-line.march-form-troop-margin-residual-warn {
+        color: #e8b86a;
+        font-weight: 600;
+      }
+      .military-panel .march-form-troop-margin-residual-subline {
+        font-size: 10px;
+        font-weight: 500;
+        color: #8aa898;
+      }
+      .military-panel .march-form-troop-margin-residual-line.march-form-troop-margin-residual-warn
+        .march-form-troop-margin-residual-subline {
+        color: #d4a86a;
       }
       @keyframes march-phase-changed-pulse-keyframes {
         0% { background-color: rgba(158, 197, 255, 0.35); }
@@ -3786,7 +3822,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-line,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp,
+      #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-deep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .intel-row-phase-subline.intel-list-refresh-march-subline-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-density-row,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-focus-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-side-template-residual-line,

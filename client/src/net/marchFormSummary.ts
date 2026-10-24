@@ -36,6 +36,8 @@ export type MarchFormSummaryResult = {
   summaryLine: string;
   resourceWarn: boolean;
   resourceWarnLine: string | null;
+  /** 途粮估算（与 `resourceWarnLine` 同源；供 CLIENT-253 底栏残余对照）。 */
+  estimatedFoodCost: number;
 };
 
 export function chebyshevGridDistance(
@@ -157,6 +159,7 @@ export function formatMarchFormSummary(
     summaryLine,
     resourceWarn: resourceWarnLine != null,
     resourceWarnLine,
+    estimatedFoodCost: foodNeed,
   };
 }
 
