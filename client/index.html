@@ -1087,6 +1087,17 @@
       .battle-report-outcome-summary {
         display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; font-size: 12px;
       }
+      /* CLIENT-190 battle-report detail outcome band + adjacent nav focus ring */
+      .battle-report-outcome-band {
+        margin: 0 0 8px; padding: 6px 8px; font-size: 12px; line-height: 1.4;
+        border-radius: 4px; overflow-wrap: anywhere; min-width: 0;
+      }
+      .battle-report-outcome-band--win { background: rgba(46, 125, 50, 0.2); color: #c8e6c9; }
+      .battle-report-outcome-band--loss { background: rgba(183, 28, 28, 0.2); color: #ffcdd2; }
+      .battle-report-outcome-band--draw { background: rgba(120, 120, 120, 0.25); color: #e0e0e0; }
+      .battle-report-adjacent-focus-ring:focus-visible {
+        outline: 2px solid #c9a227; outline-offset: 2px;
+      }
       .battle-report-summary-chip { cursor: default; opacity: 0.95; }
       .battle-report-streak-chip { font-weight: 700; cursor: default; }
       .report-rounds-table-wrap { margin-top: 8px; font-size: 12px; }
@@ -2854,6 +2865,41 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body,
       #layout-frame.layout-narrow .military-panel .panel-scroll-body {
+        padding-bottom: 64px;
+      }
+      /* CLIENT-195 wave:35 世界军情战报邮件日常背包商城组合 manifest */
+      /* sessionStorage key battle-report-replay-v1 (CLIENT-191) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info-card,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info.world-tile-info-card,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-focus-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-march-end-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-battle-replay-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .minimap-march-end-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-info-card,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-row-selected,
+      #layout-frame.layout-narrow .military-panel .march-form-coord-sync-highlight,
+      #layout-frame.layout-narrow .military-panel .march-form-readonly-strip,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-outcome-band,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-adjacent-focus-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-detail-nav,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-outcome-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-row-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-tab-empty-hint,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-claim-inline-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] [data-role="daily-claimable-sweep-line"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-claim-progress-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-progress,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-row-inline-state,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-use-inline-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-item-cfg-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-price-wallet-gap-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-price-vs-wallet,
+      #layout-frame.layout-narrow #hud [data-role="hud-todo-sweep-line"] {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
         padding-bottom: 64px;
       }
       /* CLIENT-187 wave:34 主城将领排行社交 HUD 组合 manifest; hero-list-selected-v1; CLIENT-180 槽位/队列动画见上文 */

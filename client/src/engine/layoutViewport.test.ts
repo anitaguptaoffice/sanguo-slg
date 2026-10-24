@@ -23,11 +23,13 @@ import {
   CLIENT_171_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_179_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_187_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_195_NARROW_MANIFEST_CENTER_PANEL_IDS,
   MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE32_MAIN_CITY_BUILD_HERO_SHOP_DAILY_WORLD_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE33_INTEL_BATTLE_MAIL_BAG_DAILY_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE34_MAIN_CITY_HERO_RANK_SOCIAL_HUD_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WAVE35_WORLD_INTEL_BATTLE_REPORT_MAIL_DAILY_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
@@ -290,5 +292,24 @@ describe("narrow layout root class", () => {
     expect(CLIENT_187_NARROW_MANIFEST_CENTER_PANEL_IDS).toContain("guild");
     expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain("rank");
     expect(WAVE34_MAIN_CITY_HERO_RANK_SOCIAL_HUD_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
+  });
+
+  it("CLIENT-195 wave:35 world intel battle mail daily bag shop manifest registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_195_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "world",
+      "march",
+      "military",
+      "battle-report",
+      "mail",
+      "daily",
+      "bag",
+      "shop",
+    ]);
+    for (const id of CLIENT_195_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(WAVE35_WORLD_INTEL_BATTLE_REPORT_MAIL_DAILY_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
   });
 });
