@@ -41,8 +41,9 @@ import {
 } from "@/net/dailyQuestListFilter";
 import {
   DAILY_QUEST_CLAIMABLE_ROW_CLASS,
+  pulseDailyQuestClaimProgress,
   scheduleQuestClaimRowPulse,
-  scrollDailyQuestRowIntoView,
+  scrollQuestClaimableIntoView,
 } from "@/net/dailyQuestClaimFeedback";
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
@@ -170,7 +171,9 @@ export class DailyQuestPanels {
     if (!this.panel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.panel);
       this.renderBattleReportBanner();
-      void this.refreshList();
+      void this.refreshList(undefined, "default").then(() => {
+        scrollQuestClaimableIntoView(this.panel, this.rows, this.listFilter);
+      });
     }
   }
 
@@ -379,7 +382,7 @@ export class DailyQuestPanels {
     }
     this.selectedCfgId = id;
     this.renderList();
-    scrollDailyQuestRowIntoView(this.panel, id);
+    scrollQuestClaimableIntoView(this.panel, this.rows, this.listFilter);
     this.onStatus(`已定位可领取日常 #${id}`);
   }
 
@@ -665,12 +668,18 @@ export class DailyQuestPanels {
     const sid = this.serverId();
     this.setDailyFormError(null);
     this.onStatus(`领取日常 #${id}…`);
-    const rowBefore = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${id}"]`);
     try {
       const res = (await this.gateway.claimQuestReward(sid, id)) as {
         granted_rewards?: RewardBundle;
+        quest?: DailyQuestRow;
       };
-      scheduleQuestClaimRowPulse(rowBefore);
+      this.rows = applyDailyQuestRowAfterClaim(this.rows, id, res.quest);
+      this.catalogQuestRows = applyDailyQuestRowAfterClaim(this.catalogQuestRows, id, res.quest);
+      this.publishDailyChainSnapshot();
+      this.renderList();
+      const rowAfter = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${id}"]`);
+      scheduleQuestClaimRowPulse(rowAfter);
+      pulseDailyQuestClaimProgress(this.panel, id);
       await this.syncBagAndWallet(res.granted_rewards);
       await this.refreshList();
       this.publishDailyChainSnapshot();
@@ -720,6 +729,7 @@ export class DailyQuestPanels {
           this.publishDailyChainSnapshot();
           this.renderList();
           scheduleQuestClaimRowPulse(rowBefore);
+          pulseDailyQuestClaimProgress(this.panel, questCfgId);
         } catch (e) {
           const msg = formatPanelGatewayErrorFromUnknown("bag", e);
           attempts.push({ ok: false, message: msg });
@@ -740,6 +750,7 @@ export class DailyQuestPanels {
       for (const cfgId of pulseCfgIds) {
         const row = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${cfgId}"]`);
         scheduleQuestClaimRowPulse(row);
+        pulseDailyQuestClaimProgress(this.panel, cfgId);
       }
     }
   }
