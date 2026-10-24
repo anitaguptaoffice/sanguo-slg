@@ -69,6 +69,7 @@ import {
   appendDailyQuestRowSecondary,
   formatDailyQuestRowPrimary,
 } from "@/net/dailyQuestProgressFormat";
+import { appendQuestChainQueueHudResidualSubline } from "@/net/questChainQueueHudResidual";
 import {
   formatDailyClaimableSweepLine,
   scheduleDailyClaimProgressSweepPulse,
@@ -496,6 +497,17 @@ export class DailyQuestPanels {
         main.textContent = line;
         li.appendChild(main);
         appendDailyQuestRowSecondary(li, q);
+        if (state === DAILY_QUEST_STATE_CLAIMABLE) {
+          appendQuestChainQueueHudResidualSubline(
+            li,
+            q,
+            buildings,
+            recruits,
+            slotLabels,
+            this.rows,
+            now,
+          );
+        }
         for (const tag of dailyQuestCrossLinkTags(q)) {
           const tagBtn = document.createElement("button");
           tagBtn.type = "button";

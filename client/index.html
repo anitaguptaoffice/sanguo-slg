@@ -233,6 +233,13 @@
       .main-city-toolbar button.toolbar-panel-deep-link-pulse {
         animation: toolbar-panel-deep-link-pulse-keyframes 1.5s ease-out 1;
       }
+      @keyframes hud-todo-toolbar-deep-link-residual-pulse-keyframes {
+        0%, 100% { outline: none; }
+        40% { outline: 2px solid #8fbc8f; outline-offset: 1px; }
+      }
+      .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-pulse {
+        animation: hud-todo-toolbar-deep-link-residual-pulse-keyframes 1.5s ease-out 1;
+      }
       @keyframes hud-military-todo-pulse-keyframes {
         0%, 100% { box-shadow: none; }
         40% { box-shadow: 0 0 0 2px #7eb8da, 0 0 12px rgba(126, 184, 218, 0.55); }
@@ -1688,6 +1695,13 @@
         font-size: 11px;
         color: #6b5a42;
         margin-bottom: 2px;
+      }
+      .daily-quest-chain-queue-hud-residual-subline {
+        display: block;
+        font-size: 10px;
+        color: #5a6b52;
+        margin-top: 2px;
+        font-style: italic;
       }
       .march-queue-banner {
         display: block;
@@ -3659,6 +3673,7 @@
       #layout-frame.layout-narrow #hud [data-role="hud-military-todo-sweep-line"],
       #layout-frame.layout-narrow .main-city-toolbar button.center-panel-tab-pulse,
       #layout-frame.layout-narrow .main-city-toolbar button.toolbar-panel-deep-link-pulse,
+      #layout-frame.layout-narrow .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-pulse,
       #layout-frame.layout-narrow .main-city-toolbar button.hud-military-todo-pulse {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }
@@ -3685,6 +3700,7 @@
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-backoff-retry,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-backoff-retry,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-chain-type-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-chain-queue-hud-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="queue-open-daily-anchor"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
@@ -3694,6 +3710,7 @@
       #layout-frame.layout-narrow #hud .hud-military-todo-sweep,
       #layout-frame.layout-narrow #hud [data-role="hud-military-todo-sweep-line"],
       #layout-frame.layout-narrow .main-city-toolbar button.toolbar-panel-deep-link-pulse,
+      #layout-frame.layout-narrow .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-pulse,
       #layout-frame.layout-narrow .main-city-toolbar button.hud-military-todo-pulse {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }

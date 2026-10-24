@@ -866,6 +866,60 @@ describe("DailyQuestPanels", () => {
     expect(row?.querySelector(".daily-quest-progress-fill")).toBeTruthy();
   });
 
+  it("renders chain-queue HUD residual subline when queue active (CLIENT-250)", async () => {
+    const now = 1_700_000_000_000;
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1013,
+            quest_code: "daily_wood_1",
+            chain_id: 400,
+            state: 3,
+            progress_current: 4,
+            progress_target: 4,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 90_000 }],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () => session,
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      () => session.buildings,
+      { farm: "农田" },
+      () => [],
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const row = mount.querySelector('li[data-quest-cfg-id="1013"]');
+    expect(row?.querySelector(".daily-quest-chain-type-subline")).toBeTruthy();
+    expect(row?.querySelector(".daily-quest-chain-queue-hud-residual-subline")?.textContent).toBe(
+      "主线 · 队列下一完成 <1h",
+    );
+    vi.restoreAllMocks();
+  });
+
   it("renders progress bar and reward line on secondary row (CLIENT-174)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

@@ -222,11 +222,11 @@ import {
   HUD_TODO_MERGED_SWEEP_FACET_ATTR,
   HUD_TODO_MERGED_SWEEP_LINE_ROLE,
   resolveToolbarPanelFromHudTodo,
-  scheduleToolbarPanelDeepLinkPulse,
   toolbarPanelActionFromHudTodo,
   type HudTodoMergedSweepCounts,
   type HudTodoMergedSweepFacet,
 } from "@/net/hudTodoMergedSweep";
+import { pulseHudTodoToolbarDeepLinkResidual } from "@/net/hudTodoToolbarDeepLinkResidual";
 import {
   findFirstIntelInProgressMarchId,
   HUD_MILITARY_TODO_FACET_ATTR,
@@ -2455,7 +2455,7 @@ export class MainCityScene implements Scene {
     const counts = this.hudTodoMergedSweepCounts();
     if (!resolveToolbarPanelFromHudTodo(panel, counts)) return;
     const action = toolbarPanelActionFromHudTodo(panel);
-    scheduleToolbarPanelDeepLinkPulse(this.toolbarTrigger(action));
+    pulseHudTodoToolbarDeepLinkResidual(this.toolbarTrigger(action));
   }
 
   private pulseHudMilitaryTodoForFacet(facet: HudMilitaryTodoSweepFacet): void {
