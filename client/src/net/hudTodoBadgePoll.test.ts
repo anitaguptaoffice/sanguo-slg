@@ -148,6 +148,44 @@ describe("HudTodoBadgePoll", () => {
     expect(poll.getDeepLinkSnapshot().dailyClaimable).toBe(0);
   });
 
+  it("applyMailInboxSnapshot updates claimable deep link and toolbar mail count", async () => {
+    const gateway = {
+      listPlayerMail: vi.fn(),
+      listPlayerQuests: vi.fn(),
+      listBattleReports: vi.fn(),
+    };
+    const unread = new BattleReportUnreadSession();
+    let counts = { mailUnread: 0, dailyTodo: 0, queueBuilding: 0, battleReportUnread: 0 };
+    const poll = new HudTodoBadgePoll({
+      gateway: gateway as never,
+      getServerId: () => 1,
+      getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
+      battleReportUnread: unread,
+      isPanelVisible: () => false,
+      isMailSuppressed: () => false,
+      isDailySuppressed: () => false,
+      isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
+      onCounts: (c) => {
+        counts = c;
+      },
+    });
+    poll.applyMailInboxSnapshot(
+      [
+        { mail_id: 1, status: 0, attachments: { items: [{ item_cfg_id: 1, quantity: 1 }] } },
+        { mail_id: 2, status: 2, has_unclaimed_attachments: true },
+      ],
+      2,
+    );
+    expect(counts.mailUnread).toBe(3);
+    expect(poll.getDeepLinkSnapshot().mailClaimable).toBe(2);
+    poll.applyMailInboxSnapshot([{ mail_id: 2, status: 2, has_unclaimed_attachments: true }], 1);
+    expect(counts.mailUnread).toBe(2);
+    expect(poll.getDeepLinkSnapshot().mailClaimable).toBe(1);
+  });
+
   it("applyMailUnreadSnapshot patches deep link while mail panel suppressed", async () => {
     const gateway = {
       listPlayerMail: vi.fn(),

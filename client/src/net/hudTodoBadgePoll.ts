@@ -124,6 +124,38 @@ export class HudTodoBadgePoll {
     }
   }
 
+  /** 领取附件后写入收件箱快照，使 HUD / CLIENT-134 深链与面板 tab 同一事实源递减。 */
+  applyMailInboxSnapshot(mails: MailRow[], mailUnreadTotal?: number): void {
+    const mailClaimablePage = mails.slice();
+    const unreadTotal =
+      mailUnreadTotal != null ? Math.max(0, mailUnreadTotal) : this.deepLink.mailUnreadTotal;
+    const toolbarParts = this.toolbarCountsFromParts({
+      mailUnreadTotal: unreadTotal,
+      mailClaimablePage,
+      dailyRows: this.deepLink.dailyChainRows,
+      battleReportUnread: this.deepLink.battleReportUnread,
+    });
+    const bundle = buildHudTodoBadges({
+      mailUnreadTotal: unreadTotal,
+      mailClaimablePage,
+      dailyRows: this.deepLink.dailyChainRows,
+      buildings: this.opts.getBuildings(),
+      buildCompleteCount: this.opts.getBuildCompleteCount(),
+      battleReportUnread: this.deepLink.battleReportUnread,
+    });
+    this.deepLink = {
+      ...this.deepLink,
+      ...toolbarParts,
+      mailUnreadTotal: unreadTotal,
+      mailClaimablePage,
+      mailClaimable: bundle.center.mailClaimable,
+      firstClaimableMailId: pickFirstClaimableMailId(mailClaimablePage),
+    };
+    if (!this.opts.isMailSuppressed()) {
+      this.opts.onCounts(this.toolbarCountsForUi());
+    }
+  }
+
   /** 领取附件等局部刷新后写入邮件未读快照，避免等关面板再 poll。 */
   applyMailUnreadSnapshot(count: number, firstUnreadMailId = 0): void {
     const mailUnreadTotal = Math.max(0, count);

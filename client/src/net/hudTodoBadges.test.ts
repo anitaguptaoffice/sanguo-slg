@@ -3,8 +3,10 @@ import {
   buildHudTodoBadges,
   countMailUnreadAndUnclaimed,
   dailyToolbarBadgeCount,
+  diffHudTodoMailBadgeCounts,
   formatHudToolbarBadgeText,
   hudTodoSocialBadgesFromChatSummary,
+  mailHudBadgeFacetCounts,
   mailToolbarBadgeCount,
   queueBuildingToolbarBadgeCount,
 } from "@/net/hudTodoBadges";
@@ -105,5 +107,20 @@ describe("hudTodoBadges", () => {
     expect(formatHudToolbarBadgeText(0)).toBe("");
     expect(formatHudToolbarBadgeText(8)).toBe("8");
     expect(formatHudToolbarBadgeText(12)).toBe("9+");
+  });
+
+  it("diffHudTodoMailBadgeCounts aligns toolbar tab and deep link deltas on one snapshot", () => {
+    const beforeMails = [
+      { mail_id: 1, status: 0, attachments: { items: [{ item_cfg_id: 1, quantity: 1 }] } },
+      { mail_id: 2, status: 2, has_unclaimed_attachments: true },
+    ];
+    const afterMails = [{ mail_id: 2, status: 2, has_unclaimed_attachments: true }];
+    const before = mailHudBadgeFacetCounts({ mailUnreadTotal: 2, mailInboxSnapshot: beforeMails });
+    const after = mailHudBadgeFacetCounts({ mailUnreadTotal: 1, mailInboxSnapshot: afterMails });
+    const delta = diffHudTodoMailBadgeCounts(before, after);
+    expect(delta.toolbarMail).toBe(-1);
+    expect(delta.inboxUnread).toBe(-1);
+    expect(delta.inboxUnclaimed).toBe(-1);
+    expect(delta.deepLinkMailClaimable).toBe(-1);
   });
 });

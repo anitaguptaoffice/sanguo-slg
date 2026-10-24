@@ -1,7 +1,11 @@
 import type { CityBuilding } from "@/net/bootstrapSession";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import type { MailRow } from "@/net/heroMailState";
-import { mailHasUnclaimedAttachments, mailIsUnread } from "@/net/heroMailState";
+import {
+  countMailUnreadAndUnclaimed as countMailInboxTabBadgeCounts,
+  mailHasUnclaimedAttachments,
+  mailIsUnread,
+} from "@/net/heroMailState";
 import {
   countClaimableDailyQuests,
   countClaimableMails,
@@ -153,4 +157,45 @@ export function formatHudToolbarBadgeText(count: number): string {
 
 export function formatHudCenterTodoBadgeFromBundle(bundle: HudTodoBadgesBundle): string {
   return formatBadgeCount(sumHudCenterTodoFromBundle(bundle));
+}
+
+/** CLIENT-159：邮件 HUD / tab / 深链可领计数同一快照切面（单测角标 diff）。 */
+export type MailHudBadgeFacetCounts = {
+  toolbarMail: number;
+  inboxUnread: number;
+  inboxUnclaimed: number;
+  deepLinkMailClaimable: number;
+};
+
+export function mailHudBadgeFacetCounts(input: {
+  mailUnreadTotal: number;
+  mailInboxSnapshot: MailRow[];
+}): MailHudBadgeFacetCounts {
+  const mails = input.mailInboxSnapshot ?? [];
+  const tab = countMailInboxTabBadgeCounts(mails);
+  const bundle = buildHudTodoBadges({
+    mailUnreadTotal: input.mailUnreadTotal,
+    mailClaimablePage: mails,
+    dailyRows: [],
+    buildCompleteCount: 0,
+    battleReportUnread: 0,
+  });
+  return {
+    toolbarMail: bundle.toolbar.mail,
+    inboxUnread: Math.max(0, input.mailUnreadTotal, tab.unread),
+    inboxUnclaimed: tab.unclaimed,
+    deepLinkMailClaimable: bundle.center.mailClaimable,
+  };
+}
+
+export function diffHudTodoMailBadgeCounts(
+  before: MailHudBadgeFacetCounts,
+  after: MailHudBadgeFacetCounts,
+): MailHudBadgeFacetCounts {
+  return {
+    toolbarMail: after.toolbarMail - before.toolbarMail,
+    inboxUnread: after.inboxUnread - before.inboxUnread,
+    inboxUnclaimed: after.inboxUnclaimed - before.inboxUnclaimed,
+    deepLinkMailClaimable: after.deepLinkMailClaimable - before.deepLinkMailClaimable,
+  };
 }
