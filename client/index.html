@@ -74,6 +74,13 @@
       .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-ring {
         animation: domestic-queue-complete-focus-residual-ring-keyframes 2s ease-out 1;
       }
+      @keyframes domestic-queue-complete-focus-residual-deep-ring-keyframes {
+        0%, 100% { outline: none; box-shadow: none; }
+        35% { outline: 3px solid #e0b84a; box-shadow: 0 0 14px rgba(224, 184, 74, 0.62); }
+      }
+      .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deep-ring {
+        animation: domestic-queue-complete-focus-residual-deep-ring-keyframes 2.5s ease-out 1;
+      }
       @keyframes domestic-slot-return-ring-keyframes {
         0%, 100% { outline: none; box-shadow: none; }
         40% { outline: 2px solid #c9a227; box-shadow: 0 0 10px rgba(201, 162, 39, 0.55); }
@@ -1620,6 +1627,21 @@
         font-size: 10px;
         line-height: 1.35;
         color: #7a6848;
+        font-variant-numeric: tabular-nums;
+      }
+      .queue-list li.queue-list-row .domestic-queue-eta-segment-residual-deep-label {
+        display: block;
+        font-size: 10px;
+        line-height: 1.35;
+        color: #6a5838;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .queue-list li.queue-list-row .domestic-queue-eta-segment-residual-deep-finish {
+        display: block;
+        font-size: 10px;
+        line-height: 1.35;
+        color: #5a4a32;
         font-variant-numeric: tabular-nums;
       }
       @keyframes domestic-queue-complete-slot-margin-keyframes {
@@ -3790,10 +3812,13 @@
       /* sessionStorage key hero-list-return-v1 (CLIENT-199) */
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-complete-focus-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-slot-margin,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-eta-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-label,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deep-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deep-finish,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress-bar,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-growth-compare-strip,
@@ -3912,9 +3937,14 @@
       /* CLIENT-251 wave:42 主城将领日常社交队列组合 manifest */
       /* sessionStorage key hero-list-filter-chip-residual-v1 (CLIENT-247); wave:40 hero-list-filter-v1 (CLIENT-231) 不退化 */
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deep-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deep-finish,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-complete-margin-residual-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-complete-margin-residual-ring,
