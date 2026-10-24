@@ -501,6 +501,10 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBadges.test.ts`、`hudTodoBadgePoll.test.ts`、`hudCenterTodo.test.ts`。
 
+### 手动验收（HUD 待办与面板 tab/chip 一致 CLIENT-162）
+
+在 [CLIENT-107](#手动验收hud-待办角标单一事实源-client-107) / [CLIENT-134](#手动验收hud-角标深链-client-134) 之上：`buildHudTodoReconciled` + `reconcileHudTodoBadges` 保证底栏 **邮件/日常/队列** 与邮件 **未读·全部** chip、日常 **可领取** chip、**GetCityState** 队列角标 **零漂移**；`mailPanelTabBadgeCounts` / `mailPanelTabBadgeCountsFromPollSnapshot` 为面板与深链唯一推导。聊天/军团走 `chatSocialBadgesFromSummary`（**CLIENT-102/161**），不并入顶栏待办总和。`HudTodoBadgePoll.pollOnce` 并发 **合并为单飞**，与 `ChatUnreadPoll` 同 tick 不嵌套重复 RPC。单测：`hudTodoBadges.test.ts` 快照表、`hudTodoBadgePoll.test.ts` 合并轮询用例。
+
 ### 手动验收（将领招募执行反馈 CLIENT-098）
 
 在 [CLIENT-056](#手动验收将领招募钱包对比-client-056) 钱包对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
@@ -927,13 +931,9 @@ cd client && npm install && npm run dev
 1. `make dev` 已入军团 → **军团** 面板点某成员 **提到** → **聊天** 输入框应出现 `@…` 草稿（不自动发送）。
 2. 单测：`socialFormat.test.ts`（`formatGuildMentionDraft`）、`SocialPanels.test.ts`。
 
-<<<<<<< HEAD
 **CLIENT-160（聊天草稿记忆与输入扫读）**：**提到** 与输入变更将草稿写入 `sessionStorage` 键 **`guild-chat-draft-v1`**；切换底栏 **聊天** 关闭再打开 **恢复草稿**（不自动发送）。聊天输入区只读 **`chat-input-counter`**（如 `0/500`，上限与 `validateSendChatContent` / 网关 SendChat 一致）；**CLIENT-101** 职务分组与 **提到** 并存。单测：`guildChatDraft.test.ts`、`chatSendValidation.test.ts`、`SocialPanels.test.ts`。
 
-### 手动验收（邮件附件批量领取 CLIENT-087）
-=======
 ### 手动验收（邮件附件批量领取 CLIENT-087 / CLIENT-159）
->>>>>>> 5d2d2e8 (CLIENT-159: 邮件领取全部附件与 HUD 角标快照同步)
 
 邮件列表含未领附件的行可勾选，点 **批量领取勾选** 或 **领取全部附件**（当前 tab 下全部未领）顺序调用既有领取 RPC；`batchClaimSummary` 汇总成功/失败条数，失败走 **CLIENT-067** 文案且失败行 `mail-claim-error`。成功后 **CLIENT-050** / `applyMailInboxSnapshot` HUD 与 tab 角标同步递减，**CLIENT-068** 战报深链不退化。
 
