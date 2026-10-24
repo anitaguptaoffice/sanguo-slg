@@ -160,8 +160,19 @@ import {
 } from "@/net/marchInfoCard";
 import {
   MARCH_FORM_VIEW_INTEL_INFO_ACTION,
+  resolveMarchFormReadonlyStripModel,
   syncMarchFormReadonlyStripFromInput,
 } from "@/net/marchFormReadonlyStrip";
+import {
+  buildMarchFormTroopReserveLine,
+  buildScrollIntelContextFromMarchForm,
+  MARCH_FORM_RESERVE_JUMP_INTEL_ACTION,
+  marchFormAllowsSubmit,
+  scrollIntelRowForMarchForm,
+  syncMarchFormTroopReserveLine,
+  type ScrollIntelRowForMarchFormContext,
+} from "@/net/marchFormTroopReserve";
+import { readMarchFormSnapshot } from "@/net/marchFormSummary";
 import {
   createMarchFormCoordSyncTimers,
   highlightMarchFormCoordsFromIntel,
@@ -277,6 +288,11 @@ export class MainCityScene implements Scene {
   private lastMarch: MarchSummary | null = null;
   private marchQueueBannerTarget: MarchQueueBannerTarget | null = null;
   private marchSubmitState: MarchSubmitState = "idle";
+  private marchFormIntelScrollContext: ScrollIntelRowForMarchFormContext = {
+    preferredMarchId: null,
+    toX: null,
+    toY: null,
+  };
   private buildSubmitState: BuildSubmitState = "idle";
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
   /** 募兵队列↔军事互跳高亮 queue_id（CLIENT-157，与 session 同步）。 */
@@ -420,6 +436,7 @@ export class MainCityScene implements Scene {
         <p class="march-form-readonly-strip-line" data-role="march-form-readonly-strip-line"></p>
         <button type="button" class="march-form-view-intel-info hidden" data-action="${MARCH_FORM_VIEW_INTEL_INFO_ACTION}">查看军情信息卡</button>
       </div>
+      <button type="button" class="march-form-troop-reserve-line hidden" data-role="march-form-troop-reserve-line" data-action="${MARCH_FORM_RESERVE_JUMP_INTEL_ACTION}" aria-live="polite"></button>
       <p class="military-troops" data-role="troops"></p>
       <div class="panel-scroll-body" data-role="military-scroll">
         <div class="military-recruit-section" data-role="military-recruit-section">
@@ -1137,6 +1154,10 @@ export class MainCityScene implements Scene {
       if (marchId > 0) this.openMarchIntelFromFormStrip(marchId);
       return;
     }
+    if (action === MARCH_FORM_RESERVE_JUMP_INTEL_ACTION) {
+      this.openMarchIntelFromTroopReserveWarn();
+      return;
+    }
     if (action === "view-recruit-queue") {
       const qid = Number(btn.dataset.queueId) || this.recruitQueueHighlightId || 0;
       if (qid > 0) this.openRecruitQueueAndHighlight(qid);
@@ -1180,6 +1201,24 @@ export class MainCityScene implements Scene {
       coords.y,
       { timers: this.marchFormCoordSyncTimers, assets: this.assets },
     );
+  }
+
+  private openMarchIntelFromTroopReserveWarn(): void {
+    const marches = this.marchList.getMarches();
+    const marchId = scrollIntelRowForMarchForm(
+      this.marchList.getPanelElement(),
+      marches,
+      this.marchFormIntelScrollContext,
+      { timers: this.marchFormCoordSyncTimers, assets: this.assets },
+    );
+    if (marchId == null || marchId <= 0) {
+      this.status = "军情：暂无与出征表单关联的行军可定位";
+      this.renderHud();
+      return;
+    }
+    this.openMarchIntelFromFormStrip(marchId);
+    this.status = `军情：已定位行军 #${marchId}（出征兵力余量警示互跳）`;
+    this.renderHud();
   }
 
   private openMarchIntelFromFormStrip(marchId: number): void {
@@ -1305,7 +1344,50 @@ export class MainCityScene implements Scene {
       lastTroopsEl.textContent = line ?? "";
       lastTroopsEl.classList.toggle("hidden", !line);
     }
-    syncMarchSubmitButton(this.militaryPanel, this.marchSubmitState);
+    const marchSnap = readMarchFormSnapshot(this.militaryPanel, {
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      wallet: this.session?.wallet,
+    });
+    const troopReserve = buildMarchFormTroopReserveLine(
+      marchSnap.marchCountRaw,
+      this.session?.cityTroops ?? [],
+    );
+    syncMarchFormTroopReserveLine(this.militaryPanel, troopReserve);
+    const stripModel = resolveMarchFormReadonlyStripModel({
+      intelSelectedMarch: this.marchList.getSelectedMarch(),
+      queueBannerMarchId: this.marchQueueBannerTarget?.march_id ?? null,
+      queueBannerMarch:
+        this.marchQueueBannerTarget?.march_id != null
+          ? this.minimapMarches.find((m) => m.march_id === this.marchQueueBannerTarget?.march_id) ??
+            null
+          : null,
+      formRoot: this.militaryPanel,
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      wallet: this.session?.wallet,
+      nowMs: this.marchClockMs,
+    });
+    this.marchFormIntelScrollContext = buildScrollIntelContextFromMarchForm(
+      stripModel.jumpMarchId,
+      {
+        toXRaw: marchSnap.toXRaw,
+        toYRaw: marchSnap.toYRaw,
+      },
+    );
+    const marchValidated = validateMarchForm({
+      toXRaw: marchSnap.toXRaw,
+      toYRaw: marchSnap.toYRaw,
+      marchCountRaw: marchSnap.marchCountRaw,
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      cityTroops: this.session?.cityTroops ?? [],
+    });
+    syncMarchSubmitButton(
+      this.militaryPanel,
+      this.marchSubmitState,
+      marchFormAllowsSubmit(marchValidated, troopReserve),
+    );
     const recruitPreview = syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
     syncRecruitTroopSubmitButton(
       this.militaryPanel,

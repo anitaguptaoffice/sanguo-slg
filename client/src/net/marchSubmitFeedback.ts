@@ -22,8 +22,11 @@ export function marchSubmitStateMachine(
   }
 }
 
-export function marchSubmitButtonDisabled(state: MarchSubmitState): boolean {
-  return state === "submitting";
+export function marchSubmitButtonDisabled(
+  state: MarchSubmitState,
+  canSubmitForm = true,
+): boolean {
+  return state === "submitting" || !canSubmitForm;
 }
 
 export function marchSubmitButtonLabel(state: MarchSubmitState): string {
@@ -39,9 +42,10 @@ export function formatMarchDepartedStatusToast(toX: number, toY: number): string
 export function syncMarchSubmitButton(
   formRoot: ParentNode | null | undefined,
   state: MarchSubmitState,
+  canSubmitForm = true,
 ): void {
   const btn = formRoot?.querySelector<HTMLButtonElement>('button[data-action="march"]');
   if (!btn) return;
-  btn.disabled = marchSubmitButtonDisabled(state);
+  btn.disabled = marchSubmitButtonDisabled(state, canSubmitForm);
   btn.textContent = marchSubmitButtonLabel(state);
 }
