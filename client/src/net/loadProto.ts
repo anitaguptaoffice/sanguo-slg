@@ -80,6 +80,10 @@ export const Routes = {
   RefreshHotelRecruitPool: "hero.v1.RefreshHotelRecruitPool",
   RecruitHotelCandidate: "hero.v1.RecruitHotelCandidate",
   LargessHero: "hero.v1.LargessHero",
+  ListCaptiveHeroes: "hero.v1.ListCaptiveHeroes",
+  TrySummonCaptive: "hero.v1.TrySummonCaptive",
+  SureSummonCaptive: "hero.v1.SureSummonCaptive",
+  ReleaseCaptive: "hero.v1.ReleaseCaptive",
   SetCityChief: "hero.v1.SetCityChief",
   ClearCityChief: "hero.v1.ClearCityChief",
   GetCityChief: "hero.v1.GetCityChief",
@@ -171,6 +175,14 @@ export type ProtoTypes = {
   RecruitHotelCandidateResponse: protobuf.Type;
   LargessHeroRequest: protobuf.Type;
   LargessHeroResponse: protobuf.Type;
+  ListCaptiveHeroesRequest: protobuf.Type;
+  ListCaptiveHeroesResponse: protobuf.Type;
+  TrySummonCaptiveRequest: protobuf.Type;
+  TrySummonCaptiveResponse: protobuf.Type;
+  SureSummonCaptiveRequest: protobuf.Type;
+  SureSummonCaptiveResponse: protobuf.Type;
+  ReleaseCaptiveRequest: protobuf.Type;
+  ReleaseCaptiveResponse: protobuf.Type;
   SetCityChiefRequest: protobuf.Type;
   SetCityChiefResponse: protobuf.Type;
   ClearCityChiefRequest: protobuf.Type;
@@ -262,6 +274,14 @@ export function getTypes(): ProtoTypes {
     RecruitHotelCandidateResponse: r.lookupType("sanguo.hero.v1.RecruitHotelCandidateResponse"),
     LargessHeroRequest: r.lookupType("sanguo.hero.v1.LargessHeroRequest"),
     LargessHeroResponse: r.lookupType("sanguo.hero.v1.LargessHeroResponse"),
+    ListCaptiveHeroesRequest: r.lookupType("sanguo.hero.v1.ListCaptiveHeroesRequest"),
+    ListCaptiveHeroesResponse: r.lookupType("sanguo.hero.v1.ListCaptiveHeroesResponse"),
+    TrySummonCaptiveRequest: r.lookupType("sanguo.hero.v1.TrySummonCaptiveRequest"),
+    TrySummonCaptiveResponse: r.lookupType("sanguo.hero.v1.TrySummonCaptiveResponse"),
+    SureSummonCaptiveRequest: r.lookupType("sanguo.hero.v1.SureSummonCaptiveRequest"),
+    SureSummonCaptiveResponse: r.lookupType("sanguo.hero.v1.SureSummonCaptiveResponse"),
+    ReleaseCaptiveRequest: r.lookupType("sanguo.hero.v1.ReleaseCaptiveRequest"),
+    ReleaseCaptiveResponse: r.lookupType("sanguo.hero.v1.ReleaseCaptiveResponse"),
     SetCityChiefRequest: r.lookupType("sanguo.hero.v1.SetCityChiefRequest"),
     SetCityChiefResponse: r.lookupType("sanguo.hero.v1.SetCityChiefResponse"),
     ClearCityChiefRequest: r.lookupType("sanguo.hero.v1.ClearCityChiefRequest"),
