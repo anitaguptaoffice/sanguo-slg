@@ -100,3 +100,12 @@ export {
   DAILY_CHAIN_TAB_CLASS,
   DAILY_CHAIN_TAB_SESSION_KEY,
 } from "@/engine/wave32MainCityBuildHeroShopDailyWorldNarrowManifest";
+
+/** CLIENT-187: wave:34 主城将领排行社交 HUD 组合窄屏钩子（180～185 见 main 实装）。 */
+export {
+  CITY_SLOT_PULSE_CLASS,
+  DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS,
+  GUILD_ROLE_GROUP_HEADER_CLASS,
+  HERO_LIST_SELECTED_SESSION_KEY,
+  LEADERBOARD_TOP_DENSITY_LINE_CLASS,
+} from "@/engine/wave34MainCityHeroRankSocialHudNarrowManifest";

@@ -168,3 +168,13 @@ export {
   MARCH_FORM_READONLY_STRIP_SELECTOR,
   BATTLE_REPORT_OUTCOME_SUMMARY_SELECTOR,
 } from "@/engine/wave33IntelBattleMailBagDailyNarrowManifest";
+
+/** CLIENT-187: wave:34 主城七槽·将领·排行·军团/聊天·HUD·队列日常锚点组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_187_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client187NarrowManifestCenterPanelId,
+  WAVE34_MAIN_CITY_HERO_RANK_SOCIAL_HUD_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  HUD_PRODUCTION_WALLET_LINE_SELECTOR,
+  CITY_SLOT_PULSE_SELECTOR,
+  LEADERBOARD_TOP_DENSITY_LINE_SELECTOR,
+} from "@/engine/wave34MainCityHeroRankSocialHudNarrowManifest";

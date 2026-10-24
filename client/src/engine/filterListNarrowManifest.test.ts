@@ -6,10 +6,15 @@ import {
   CLIENT_127_NARROW_FILTER_LIST_CENTER_PANEL_IDS,
   CLIENT_127_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_127_PANEL_SCROLL_ROLE_BY_CENTER_ID,
+  CITY_SLOT_PULSE_CLASS,
   DAILY_CHAIN_TAB_BAR_CLASS,
   DAILY_CHAIN_TAB_CLASS,
   DAILY_CHAIN_TAB_SESSION_KEY,
+  DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS,
   DAILY_QUEST_PROGRESS_SECONDARY_CLASS,
+  GUILD_ROLE_GROUP_HEADER_CLASS,
+  HERO_LIST_SELECTED_SESSION_KEY,
+  LEADERBOARD_TOP_DENSITY_LINE_CLASS,
   FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX,
   MAIL_CLAIM_ALL_ATTACHMENTS_ACTION,
   isFilterListArtSkinOff,
@@ -88,6 +93,15 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain("daily-quest-progress");
     expect(html).toContain("march-form-readonly-strip");
     expect(html).toContain("battle-report-outcome-filter-v1");
+  });
+
+  it("CLIENT-187 exposes wave:34 main-city hero rank social HUD narrow hooks", () => {
+    expect(HERO_LIST_SELECTED_SESSION_KEY).toBe("hero-list-selected-v1");
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(CITY_SLOT_PULSE_CLASS);
+    expect(html).toContain(DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS);
+    expect(html).toContain(GUILD_ROLE_GROUP_HEADER_CLASS);
+    expect(html).toContain(LEADERBOARD_TOP_DENSITY_LINE_CLASS);
   });
 
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {
