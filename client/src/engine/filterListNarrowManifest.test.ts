@@ -79,6 +79,17 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(DAILY_CHAIN_TAB_CLASS);
   });
 
+  it("CLIENT-179 exposes wave:33 intel/battle/mail/bag/daily/military narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain("march-info-card");
+    expect(html).toContain("battle-report-row-summary");
+    expect(html).toContain("mail-attachment-sweep");
+    expect(html).toContain("bag-item-cfg-summary");
+    expect(html).toContain("daily-quest-progress");
+    expect(html).toContain("march-form-readonly-strip");
+    expect(html).toContain("battle-report-outcome-filter-v1");
+  });
+
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(`padding-bottom: ${FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX}px`);

@@ -507,6 +507,13 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：点槽位开 **建造**、底栏 **队列/将领/商城/日常/世界/排行**；长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:32 DOM 钩子（软依赖 **CLIENT-164～170**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163** manifest 不退化。
 
+### 手动验收（1280 wave:33 组合 manifest CLIENT-179）
+
+视口 **1280×720** `layout-narrow`：**军情** `march-info-card` / `march-row-selected`（**CLIENT-172**）、**战报** `battle-report-outcome-summary` / `battle-report-row-summary` + `battle-report-outcome-filter-v1`（**CLIENT-176**）、**邮件** `mail-tab-empty-hint` / `mail-attachment-sweep`（**CLIENT-177**）、**背包** `bag-item-cfg-summary` / `bag-open-source-v1`（**CLIENT-175**）、**日常** `daily-quest-progress` / `daily-quest-reward-line`（**CLIENT-174**）、**军事** `march-form-readonly-strip` 与军情互跳 `view-march-intel-card` / `open-military-from-march-intel`（**CLIENT-178**）与 **CLIENT-163/171** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；信息卡与汇总条在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave33IntelBattleMailBagDailyNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-179）；`cd client && npm test` 绿。（[#659](https://github.com/anitaguptaoffice/sanguo-slg/issues/659)）
+
+1. 视口 **1280×720**：底栏 **军情/战报/邮件/背包/日常/军事** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:33 DOM 钩子（软依赖 **CLIENT-172～178**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171** manifest 不退化。
+
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
 视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-divider`；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
