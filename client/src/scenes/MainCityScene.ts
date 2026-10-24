@@ -82,6 +82,10 @@ import {
   resolveIntelRowNearCoords,
   writeBattleReportReplaySession,
 } from "@/net/battleReportIntelReplayJump";
+import {
+  dispatchBattleReportListIntelJump,
+  stubIntelMinimapSyncAfterReportListJump,
+} from "@/net/battleReportListIntelJump";
 import { parseBattleReportLocation } from "@/net/battleReportMinimapFocus";
 import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
@@ -666,6 +670,7 @@ export class MainCityScene implements Scene {
           this.renderHud();
         },
         onOpenReplayWorldTile: (summary) => this.openWorldTileFromBattleReport(summary),
+        onListIntelJump: (summary) => this.jumpFromBattleReportListToIntelOrMinimap(summary),
         filterListSkinAssets: this.assets,
       },
     );
@@ -1622,6 +1627,31 @@ export class MainCityScene implements Scene {
     const session = buildBattleReportReplaySessionFromSummary(summary);
     if (session) writeBattleReportReplaySession(session);
     this.status = applied.focus.status;
+    this.renderHud();
+  }
+
+  /** CLIENT-223：战报列表坐标标签 → 军情或小地图（CLIENT-191/142 详情互链不退化）。 */
+  private jumpFromBattleReportListToIntelOrMinimap(summary: BattleReportSummary): void {
+    const location = parseBattleReportLocation(summary);
+    if (!location) {
+      this.status = "战报缺少有效战场坐标";
+      this.renderHud();
+      return;
+    }
+    const session = buildBattleReportReplaySessionFromSummary(summary);
+    if (session) writeBattleReportReplaySession(session);
+    const mode = dispatchBattleReportListIntelJump(summary, this.minimapMarches, {
+      openIntelMarch: (marchId) => this.openMarchIntelPanelHighlight(marchId),
+      openMinimapAtCoords: () => this.replayBattleReportOnMinimap(summary),
+      afterIntelJumpSyncStub: stubIntelMinimapSyncAfterReportListJump,
+    });
+    if (mode === "intel") {
+      this.status = `军情：已选中与战报坐标 ${location.x},${location.y} 匹配的行军`;
+    } else if (mode === "minimap") {
+      /* replayBattleReportOnMinimap 已写入 status */
+    } else {
+      this.status = "战报缺少有效战场坐标";
+    }
     this.renderHud();
   }
 

@@ -41,6 +41,7 @@ import {
   formatBattleReportFoeWithoutCoord,
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
   BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS,
+  formatBattleReportCoordinateTag,
   formatBattleReportListPrimaryLine,
   formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
@@ -93,6 +94,11 @@ import {
   BATTLE_REPORT_VIEW_INTEL_ACTION,
 } from "@/net/battleReportIntelReplayJump";
 import {
+  BATTLE_REPORT_LIST_INTEL_JUMP_ACTION,
+  BATTLE_REPORT_LIST_INTEL_JUMP_TAG_CLASS,
+} from "@/net/battleReportListIntelJump";
+import { BATTLE_REPORT_LIST_STREAK_LINE_CLASS } from "@/engine/wave37WorldIntelBattleReportMailBagNarrowManifest";
+import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
@@ -128,6 +134,8 @@ export type BattleReportPanelOptions = {
   onBattleReportReadonlyHint?: (message: string) => void;
   /** 列表行「复盘格点」：打开世界格点信息卡（CLIENT-109 / CLIENT-108）。 */
   onOpenReplayWorldTile?: (summary: BattleReportSummary) => void;
+  /** CLIENT-223：列表坐标标签 → 军情选中或小地图格点。 */
+  onListIntelJump?: (summary: BattleReportSummary) => void;
   /** CLIENT-125：列表行九宫与胜负 badge（chip 由 MainCity `remountPanelFilterChips` 挂载）。 */
   filterListSkinAssets?: AssetLoader;
 };
@@ -486,8 +494,23 @@ export class BattleReportPanel {
       primary.className = "battle-report-row-primary";
       primary.textContent = formatBattleReportListPrimaryLine(r);
       const secondary = document.createElement("span");
-      secondary.className = "battle-report-row-secondary";
-      secondary.textContent = formatBattleReportListStreakLine(r, i, filtered);
+      secondary.className = `battle-report-row-secondary ${BATTLE_REPORT_LIST_STREAK_LINE_CLASS}`;
+      const streakText = document.createElement("span");
+      streakText.className = "battle-report-list-streak-text";
+      streakText.textContent = formatBattleReportListStreakLine(r, i, filtered);
+      secondary.appendChild(streakText);
+      if (parseBattleReportLocation(r)) {
+        const coordTag = document.createElement("button");
+        coordTag.type = "button";
+        coordTag.className = BATTLE_REPORT_LIST_INTEL_JUMP_TAG_CLASS;
+        coordTag.setAttribute("data-action", BATTLE_REPORT_LIST_INTEL_JUMP_ACTION);
+        coordTag.setAttribute(
+          "aria-label",
+          `${formatBattleReportCoordinateTag(r)}，跳转军情或小地图`,
+        );
+        coordTag.textContent = formatBattleReportCoordinateTag(r);
+        secondary.appendChild(coordTag);
+      }
       body.appendChild(primary);
       body.appendChild(secondary);
       const grid = battleReportWorldTileGrid(r);
@@ -1023,6 +1046,20 @@ export class BattleReportPanel {
     );
     if (clearLocBtn) {
       this.clearLocationFilter();
+      return;
+    }
+
+    const listIntelJumpBtn = (ev.target as HTMLElement).closest(
+      `[data-action="${BATTLE_REPORT_LIST_INTEL_JUMP_ACTION}"]`,
+    );
+    if (listIntelJumpBtn) {
+      ev.stopPropagation();
+      const row = listIntelJumpBtn.closest("li[data-report-id]");
+      const id = Number(row?.getAttribute("data-report-id"));
+      if (id) {
+        const summary = this.reports.find((r) => r.report_id === id);
+        if (summary) this.panelOpts?.onListIntelJump?.(summary);
+      }
       return;
     }
 

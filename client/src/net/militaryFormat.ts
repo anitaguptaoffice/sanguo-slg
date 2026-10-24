@@ -421,6 +421,19 @@ export function formatReportCoord(r: BattleReportSummary): string {
   return `坐标(${r.location_x ?? "?"},${r.location_y ?? "?"})`;
 }
 
+/** 战报列表次行可点击坐标标签文案（CLIENT-223；与 {@link formatReportCoord} 同源）。 */
+export function formatBattleReportCoordinateTag(r: BattleReportSummary): string {
+  return formatReportCoord(r);
+}
+
+/** 列表次行扫读：胜负与攻守方，不含坐标（坐标由 {@link formatBattleReportCoordinateTag} 标签展示）。 */
+export function formatBattleReportRowSummarySansCoord(r: BattleReportSummary): string {
+  const outcome = formatBattleOutcome(r.outcome);
+  const attacker = battleReportListSideShort("attacker", r);
+  const defender = battleReportListSideShort("defender", r);
+  return `${outcome} · 攻:${attacker} vs 守:${defender}`;
+}
+
 export function formatReportLine(r: BattleReportSummary): string {
   const when = formatTimeMs(r.created_at_ms);
   const coord = formatReportCoord(r);
@@ -483,7 +496,7 @@ export function formatBattleReportListStreakLine(
   index: number,
   reportsInListOrder: readonly BattleReportSummary[],
 ): string {
-  const base = formatBattleReportRowSummary(report);
+  const base = formatBattleReportRowSummarySansCoord(report);
   const outcome = report.outcome ?? 0;
   if (outcome !== 1 && outcome !== 2) return base;
   if (
