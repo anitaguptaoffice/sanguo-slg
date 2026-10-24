@@ -202,6 +202,18 @@ export function syncHeroSummaryFromDetail(
   );
 }
 
+/** LargessHero 成功后把列表行忠诚与服务端响应对齐。 */
+export function syncHeroSummaryFromLargess(
+  heroes: HeroSummary[],
+  res: { hero_id?: number; loyalty?: number },
+): HeroSummary[] {
+  const heroId = res.hero_id;
+  if (!heroId) return heroes;
+  return heroes.map((h) =>
+    h.hero_id === heroId ? { ...h, loyalty: res.loyalty ?? h.loyalty } : h,
+  );
+}
+
 /** 将领养成道具走背包 UseConsumable，详情区展示用（无 hero 专用 RPC）。 */
 export const HERO_DETAIL_TRAINING_HINT =
   "养成：打开底栏「背包」→「使用道具」调用 content.v1.UseConsumable（忠诚度等效果以服务端为准）。";

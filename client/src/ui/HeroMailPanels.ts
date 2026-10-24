@@ -122,6 +122,7 @@ import {
   parseGetHeroDetailResponse,
   renderHeroDetailMarkup,
   syncHeroSummaryFromDetail,
+  syncHeroSummaryFromLargess,
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNCLAIMED,
   MAIL_INBOX_FILTER_UNREAD,
@@ -337,6 +338,20 @@ import {
   validateHeroDetailCultivationUse,
 } from "@/net/heroDetailCultivationUse";
 import {
+  formatHeroLargessGatewayErrorFromUnknown,
+  formatHeroLargessSuccessStatus,
+  largessGiftKindProto,
+  parseLargessHeroResponse,
+  pickDefaultLargessItemCfgId,
+  renderHeroDetailLargessMarkup,
+  setHeroLargessFormErrorDisplay,
+  setHeroLargessSuccessDisplay,
+  syncHeroDetailLargessCooldownDisplay,
+  syncHeroDetailLargessSubmitButton,
+  validateHeroDetailLargessSubmit,
+  type HeroLargessGiftMode,
+} from "@/net/heroDetailLargess";
+import {
   formatBagUseGatewayErrorFromUnknown,
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
@@ -407,6 +422,11 @@ export class HeroMailPanels {
   /** CLIENT-199：返回列表后折叠详情区，行高亮仍由 selectedHeroId 驱动。 */
   private heroDetailCollapsed = false;
   private heroCultivationSubmitState: UseConsumableSubmitState = "idle";
+  private heroLargessSubmitState: UseConsumableSubmitState = "idle";
+  private heroLargessGiftMode: HeroLargessGiftMode = "gold";
+  private heroLargessItemCfgId: number | null = null;
+  private heroLargessNextAtByHeroId = new Map<number, number>();
+  private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
   private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
 
@@ -449,6 +469,7 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    this.clearHeroLargessCooldownTimer();
     this.heroPanel?.removeEventListener("keydown", this.onHeroListKeyDown);
     this.heroFocusTrap?.dispose();
     this.heroFocusTrap = null;
@@ -1362,20 +1383,31 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeepSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "error", residualCtx());
       } else {
-        const { bag } = this.sessionEconomy();
+        const { bag, wallet } = this.sessionEconomy();
         const cultivationHtml = renderHeroDetailCultivationUseMarkup(
           bag,
           this.heroCultivationSubmitState,
           this.heroDetail,
         );
+        const largessHtml = renderHeroDetailLargessMarkup(
+          this.heroDetail,
+          bag,
+          wallet,
+          this.heroLargessSubmitState,
+          this.heroLargessGiftMode,
+          this.heroLargessItemCfgId,
+          this.getHeroLargessNextAtMs(),
+          Date.now(),
+        );
         detailEl.innerHTML = renderHeroDetailMarkup(
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
-          cultivationHtml,
+          cultivationHtml + largessHtml,
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
         );
+        this.ensureHeroLargessCooldownTimer();
         mountHeroDetailBust(
           detailEl,
           this.heroDetail?.template_cfg_id,
@@ -2004,6 +2036,58 @@ export class HeroMailPanels {
     setHeroCultivationSuccessDisplay(this.heroPanel, null);
   }
 
+  private resetHeroLargessSubmitFeedback(): void {
+    this.heroLargessSubmitState = useConsumableSubmitStateMachine(this.heroLargessSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    setHeroLargessFormErrorDisplay(this.heroPanel, null);
+    setHeroLargessSuccessDisplay(this.heroPanel, null);
+  }
+
+  private getHeroLargessNextAtMs(): number | null {
+    const heroId = this.selectedHeroId;
+    if (!heroId) return null;
+    return this.heroLargessNextAtByHeroId.get(heroId) ?? null;
+  }
+
+  private clearHeroLargessCooldownTimer(): void {
+    if (this.heroLargessCooldownTimer != null) {
+      window.clearInterval(this.heroLargessCooldownTimer);
+      this.heroLargessCooldownTimer = null;
+    }
+  }
+
+  private ensureHeroLargessCooldownTimer(): void {
+    const nextAt = this.getHeroLargessNextAtMs();
+    const onCd = nextAt != null && nextAt > Date.now();
+    if (!onCd) {
+      this.clearHeroLargessCooldownTimer();
+      return;
+    }
+    if (this.heroLargessCooldownTimer != null) return;
+    this.heroLargessCooldownTimer = window.setInterval(() => {
+      const heroNext = this.getHeroLargessNextAtMs();
+      const now = Date.now();
+      syncHeroDetailLargessCooldownDisplay(this.heroPanel, heroNext, now);
+      const { bag, wallet } = this.sessionEconomy();
+      syncHeroDetailLargessSubmitButton(
+        this.heroPanel,
+        this.heroLargessSubmitState,
+        this.heroDetail,
+        bag,
+        wallet,
+        this.heroLargessGiftMode,
+        this.heroLargessItemCfgId,
+        heroNext,
+        now,
+      );
+      if (!heroNext || heroNext <= now) {
+        this.clearHeroLargessCooldownTimer();
+        this.renderHeroList();
+      }
+    }, 1000);
+  }
+
   private persistHeroListSelectedFromListView(heroId: number): void {
     const scrollTop = readHeroPanelListScrollTop(this.heroPanel);
     writeHeroListSelectedSession({ heroId, scrollTop });
@@ -2062,6 +2146,7 @@ export class HeroMailPanels {
     }
     if (!opts?.skipListSelectionWrite) this.persistHeroListSelectedFromListView(heroId);
     this.resetHeroCultivationSubmitFeedback();
+    this.resetHeroLargessSubmitFeedback();
     this.heroDetailLoading = true;
     this.heroDetailError = null;
     this.renderHeroList();
@@ -2153,6 +2238,107 @@ export class HeroMailPanels {
         this.heroCultivationSubmitState,
         bagAfter,
         this.heroDetail,
+      );
+    }
+  }
+
+  private async submitHeroLargess(): Promise<void> {
+    if (this.heroLargessSubmitState === "submitting" || !this.selectedHeroId) return;
+    const heroId = this.selectedHeroId;
+    const { bag, wallet } = this.sessionEconomy();
+    const now = Date.now();
+    const validated = validateHeroDetailLargessSubmit(
+      this.heroDetail,
+      bag,
+      wallet,
+      this.heroLargessGiftMode,
+      this.heroLargessItemCfgId,
+      this.getHeroLargessNextAtMs(),
+      now,
+    );
+    if (!validated.ok) {
+      setHeroLargessFormErrorDisplay(this.heroPanel, validated.message);
+      this.onStatus(validated.message);
+      this.renderHeroList();
+      return;
+    }
+    const detailBefore = this.heroDetail;
+    const itemCfgId = validated.itemCfgId ?? 0;
+    this.heroLargessSubmitState = useConsumableSubmitStateMachine(this.heroLargessSubmitState, {
+      type: "SUBMIT",
+    });
+    setHeroLargessFormErrorDisplay(this.heroPanel, null);
+    setHeroLargessSuccessDisplay(this.heroPanel, null);
+    syncHeroDetailLargessSubmitButton(
+      this.heroPanel,
+      this.heroLargessSubmitState,
+      this.heroDetail,
+      bag,
+      wallet,
+      this.heroLargessGiftMode,
+      this.heroLargessItemCfgId,
+      this.getHeroLargessNextAtMs(),
+      now,
+    );
+    const sid = this.serverId();
+    this.onStatus("赏赐中…");
+    try {
+      const raw = await this.gateway.largessHero(
+        sid,
+        heroId,
+        largessGiftKindProto(this.heroLargessGiftMode),
+        this.heroLargessGiftMode === "item" ? itemCfgId : 0,
+      );
+      const res = parseLargessHeroResponse(raw);
+      if (res.next_largess_at_ms) {
+        this.heroLargessNextAtByHeroId.set(heroId, res.next_largess_at_ms);
+      }
+      const session = this.getSession();
+      if (session && res.gold_spent && res.gold_spent > 0) {
+        const nextWallet = { ...session.wallet, gold: (session.wallet.gold ?? 0) - res.gold_spent };
+        this.onSessionPatch({ wallet: nextWallet });
+      }
+      if (session && res.item_cfg_id) {
+        const have = bag.find((s) => s.item_cfg_id === res.item_cfg_id)?.quantity ?? 0;
+        const remaining = Math.max(0, have - 1);
+        const nextBag = applyUseResult(session.bag, res.item_cfg_id, remaining);
+        this.onSessionPatch({ bag: nextBag });
+      }
+      if (res.loyalty != null && this.heroDetail) {
+        this.heroDetail = { ...this.heroDetail, loyalty: res.loyalty };
+      }
+      this.heroes = syncHeroSummaryFromLargess(this.heroes, res);
+      this.heroLargessSubmitState = useConsumableSubmitStateMachine(this.heroLargessSubmitState, {
+        type: "SUCCESS",
+      });
+      this.renderHeroList();
+      const statusText = formatHeroLargessSuccessStatus(detailBefore, res);
+      setHeroLargessSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.ensureHeroLargessCooldownTimer();
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroLargessSubmitState = useConsumableSubmitStateMachine(this.heroLargessSubmitState, {
+        type: "FAIL",
+      });
+      const msg = formatHeroLargessGatewayErrorFromUnknown(e);
+      setHeroLargessFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      const econ = this.sessionEconomy();
+      syncHeroDetailLargessSubmitButton(
+        this.heroPanel,
+        this.heroLargessSubmitState,
+        this.heroDetail,
+        econ.bag,
+        econ.wallet,
+        this.heroLargessGiftMode,
+        this.heroLargessItemCfgId,
+        this.getHeroLargessNextAtMs(),
+        Date.now(),
       );
     }
   }
@@ -2605,6 +2791,23 @@ export class HeroMailPanels {
     if (t.getAttribute("data-field") === "template-select") {
       const id = Number((t as HTMLSelectElement).value) || 0;
       if (id) this.applyTemplateSelection(id);
+      return;
+    }
+    if (t.getAttribute("data-field") === "hero-largess-item") {
+      this.heroLargessItemCfgId = Number((t as HTMLSelectElement).value) || null;
+      this.renderHeroList();
+      return;
+    }
+    const kindInput = t.closest('input[data-action="hero-largess-kind"]');
+    if (kindInput && (kindInput as HTMLInputElement).checked) {
+      const mode = (kindInput as HTMLInputElement).value;
+      if (mode === "gold" || mode === "item") {
+        this.heroLargessGiftMode = mode;
+        if (mode === "item" && !this.heroLargessItemCfgId) {
+          this.heroLargessItemCfgId = pickDefaultLargessItemCfgId(this.sessionEconomy().bag);
+        }
+        this.renderHeroList();
+      }
     }
   }
 
@@ -2686,6 +2889,7 @@ export class HeroMailPanels {
     if (a === "hero-goto-bag-cultivation") void this.openHeroBagCultivationDeepLink();
     if (a === "recruit-goto-bag-item-gap") void this.openRecruitItemGapBagDeepLink(btn);
     if (a === "hero-use-cultivation-item") void this.useHeroCultivationItem();
+    if (a === "hero-largess-submit") void this.submitHeroLargess();
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {

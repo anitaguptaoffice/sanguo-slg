@@ -291,6 +291,7 @@ function sessionState() {
     nextHotelCandidateId: 1,
     hotelLevel: 2,
     heroOfficeLevel: 8,
+    heroLargessNextAt: {},
     mails: [
       {
         mail_id: 6001,
@@ -324,6 +325,19 @@ const HERO_TEMPLATE_DETAIL_META = {
   1006: { template_name: "马超", template_code: "wind_cavalry" },
   1007: { template_name: "诸葛亮", template_code: "jade_strategist" },
   1008: { template_name: "周瑜", template_code: "fire_general" },
+};
+
+const LARGESS_COOLDOWN_MS = 15 * 60 * 1000;
+const LARGESS_ITEM_GAIN = {
+  2050: 5,
+  2051: 10,
+  2052: 15,
+  2053: 20,
+  2054: 25,
+  2055: 30,
+  2056: 40,
+  2057: 50,
+  2058: 60,
 };
 
 function mockHeroDetailPayload(row) {
@@ -921,6 +935,74 @@ wss.on("connection", (ws) => {
           return;
         }
         replyOk(ws, cp.trace_id, T("sanguo.hero.v1.GetHeroDetailResponse"), mockHeroDetailPayload(h));
+        return;
+      }
+
+      if (route === "hero.v1.LargessHero") {
+        const req = T("sanguo.hero.v1.LargessHeroRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        const now = Date.now();
+        const cdUntil = state.heroLargessNextAt[heroId] ?? 0;
+        if (cdUntil > now) {
+          reply(ws, cp.trace_id, 10001, "hero: largess on cooldown");
+          return;
+        }
+        const loyaltyBefore = h.loyalty ?? 50;
+        if (loyaltyBefore >= 100) {
+          reply(ws, cp.trace_id, 10001, "hero: loyalty max");
+          return;
+        }
+        let goldSpent = 0;
+        let itemCfgId = 0;
+        let delta = 0;
+        const giftKind = req.gift_kind ?? req.giftKind ?? 0;
+        if (giftKind === 1) {
+          const level = h.level ?? 1;
+          const salary = level * 20;
+          const cost = salary * 5;
+          if ((state.wallet.gold ?? 0) < cost) {
+            reply(ws, cp.trace_id, 10001, "hero: insufficient gold");
+            return;
+          }
+          state.wallet.gold -= cost;
+          goldSpent = cost;
+          delta = Math.min(20, 100 - loyaltyBefore);
+          if (delta < 1) delta = 1;
+        } else if (giftKind === 2) {
+          itemCfgId = req.item_cfg_id || req.itemCfgId || 0;
+          const gain = LARGESS_ITEM_GAIN[itemCfgId];
+          if (!gain) {
+            reply(ws, cp.trace_id, 10001, "hero: item cannot be used for largess");
+            return;
+          }
+          const have = state.bag[itemCfgId] ?? 0;
+          if (have < 1) {
+            reply(ws, cp.trace_id, 10001, "hero: insufficient item");
+            return;
+          }
+          state.bag[itemCfgId] = have - 1;
+          if (state.bag[itemCfgId] <= 0) delete state.bag[itemCfgId];
+          delta = Math.min(gain, 100 - loyaltyBefore);
+        } else {
+          reply(ws, cp.trace_id, 10001, "gift_kind required");
+          return;
+        }
+        h.loyalty = loyaltyBefore + delta;
+        const nextAt = now + LARGESS_COOLDOWN_MS;
+        state.heroLargessNextAt[heroId] = nextAt;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.LargessHeroResponse"), {
+          hero_id: heroId,
+          loyalty: h.loyalty,
+          loyalty_delta: delta,
+          gold_spent: goldSpent,
+          item_cfg_id: itemCfgId,
+          next_largess_at_ms: nextAt,
+        });
         return;
       }
 

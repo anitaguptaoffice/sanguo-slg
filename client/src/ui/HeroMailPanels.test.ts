@@ -1009,6 +1009,70 @@ describe("HeroMailPanels", () => {
     expect(onStatus).toHaveBeenCalled();
   });
 
+  it("hero largess refreshes loyalty, sets cooldown, and blocks re-submit", async () => {
+    const mount = document.createElement("div");
+    let loyalty = 60;
+    const nextAtByCall: number[] = [];
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockImplementation(async () => ({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        rarity: 5,
+        level: 2,
+        loyalty,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      })),
+      largessHero: vi.fn().mockImplementation(async () => {
+        loyalty = 75;
+        const next = Date.now() + 900_000;
+        nextAtByCall.push(next);
+        return {
+          hero_id: 3,
+          loyalty: 75,
+          loyalty_delta: 15,
+          gold_spent: 200,
+          next_largess_at_ms: next,
+        };
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: { gold: 50_000 },
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const submitBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-largess-submit"]');
+    expect(submitBtn?.disabled).toBe(false);
+    submitBtn?.click();
+    await flushPromises();
+    expect(gateway.largessHero).toHaveBeenCalledWith(1, 3, 1, 0);
+    expect(mount.querySelector('[data-role="hero-largess-success"]')?.textContent).toContain("60→75");
+    expect(mount.querySelector('li[data-hero-id="3"]')?.textContent).toContain("忠诚 75");
+    expect(mount.querySelector('[data-role="hero-largess-cd"]')?.textContent).toContain("赏赐冷却");
+    mount.querySelector<HTMLButtonElement>('[data-action="hero-largess-submit"]')?.click();
+    await flushPromises();
+    expect(gateway.largessHero).toHaveBeenCalledTimes(1);
+    expect(nextAtByCall.length).toBe(1);
+  });
+
   it("disables hero cultivation use when bag lacks consumables", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
