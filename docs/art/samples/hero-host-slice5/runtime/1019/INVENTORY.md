@@ -1,6 +1,15 @@
 # HERO-HOST-SLICE5 runtime inventory — template 1019
 
-tip_sha / runtime_code_sha: `ce09318d6e81ca9e3b56131e3906a75e7aa0eaaf`
+## Git provenance（勿混用）
+
+| 角色 | SHA | 说明 |
+|---|---|---|
+| **runtime_code_sha / tip_sha** | `d7cc3a62f9115572b3fa2fc77725828f563dd2df` | 生产 runtime（scroll/clip host，`HeroMailPanels` 所在提交） |
+| **HeroMailPanels.ts blob** | `3dc43b682fa39b23c38ec183c985a967e51a03d2` | 在 d7cc3a62 / e65fefe2 / 15d1b425 上相同 |
+| **evidence_head_sha** | `15d1b425abb20cab48ebb7ecf779a947151d25d7` | #1198 证据包 HEAD（写入 probe 时） |
+| **capture_helper_commit_sha** | `15d1b425abb20cab48ebb7ecf779a947151d25d7` | 捕获脚本提交；blob 与 d7cc3a62 不同（见 probe-log notes） |
+| **prior_capture_record_sha** | `e65fefe2e4c83ff68f1fb5371df02e89e21ac990` | 上一轮 Slice5 runtime 刷新基线 |
+
 art_head_sha: `0b2b3987989fef0066bce8d728c54029b219cd55`
 
 ## Viewport captures

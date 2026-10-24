@@ -6,7 +6,11 @@
 |---|---|---|
 | **art_head_sha（1017/1018/1020）** | `9f15a34119c1bcb157399693a5420c0a2787a47a` | Draft [#1193](https://github.com/anitaguptaoffice/sanguo-slg/pull/1193)；**勿合并** |
 | **art_head_sha（1019）** | `0b2b3987989fef0066bce8d728c54029b219cd55` | #1193 @ 0b2b3987 路径复制；**勿合并** |
-| **runtime_code_sha / tip_sha** | 见各 `runtime/{id}/probe-log.json` | 工程挂载 PR HEAD（含 list-avatar clip-aware 1600 捕获） |
+| **runtime_code_sha / tip_sha** | `d7cc3a62f9115572b3fa2fc77725828f563dd2df` | 生产 runtime（scroll/clip host）；见各 `probe-log.json` |
+| **HeroMailPanels.ts blob** | `3dc43b682fa39b23c38ec183c985a967e51a03d2` | 与 d7cc3a62 / e65fefe2 / 15d1b425 一致 |
+| **evidence_head_sha** | `15d1b425abb20cab48ebb7ecf779a947151d25d7` | [#1198](https://github.com/anitaguptaoffice/sanguo-slg/pull/1198) 证据包 HEAD |
+| **capture_helper_commit_sha** | `15d1b425abb20cab48ebb7ecf779a947151d25d7` | 1600 clip-aware 捕获脚本提交（≠ runtime_code_sha） |
+| **prior_capture_record_sha** | `e65fefe2e4c83ff68f1fb5371df02e89e21ac990` | 上一轮 Slice5 runtime 证据刷新 |
 
 ## 范围（1017–1020）
 

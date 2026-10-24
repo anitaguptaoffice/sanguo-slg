@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE5",
   "template_cfg_id": 1017,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "ce09318d6e81ca9e3b56131e3906a75e7aa0eaaf",
-  "runtime_code_sha": "ce09318d6e81ca9e3b56131e3906a75e7aa0eaaf",
+  "tip_sha": "d7cc3a62f9115572b3fa2fc77725828f563dd2df",
+  "runtime_code_sha": "d7cc3a62f9115572b3fa2fc77725828f563dd2df",
   "art_head_sha": "9f15a34119c1bcb157399693a5420c0a2787a47a",
   "art_asset_ids": [
     "hero.avatar.1017.v1",
@@ -257,7 +257,16 @@
     "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
     "Art path-copied from Draft #1193 (1019 @ 0b2b3987, 1017/1018/1020 @ 9f15a341); Drafts remain unmerged.",
     "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
-    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
+    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible.",
+    "Provenance: runtime_code_sha and tip_sha name d7cc3a62 (production scroll/clip host commit on #1198).",
+    "HeroMailPanels.ts git blob 3dc43b682fa39b23c38ec183c985a967e51a03d2 is identical at d7cc3a62, e65fefe2, and 15d1b425.",
+    "evidence_head_sha 15d1b425abb20cab48ebb7ecf779a947151d25d7 is PR #1198 HEAD when these probe logs were finalized; capture helpers at that commit differ from d7cc3a62 (hero-host-capture-probes.mjs 2f08ea50→e7f01db9; probes.page.js ecd46ed5→b50ccdfd).",
+    "prior_capture_record_sha e65fefe2e4c83ff68f1fb5371df02e89e21ac990 is the earlier Slice5 runtime evidence refresh before clip-aware 1600 recapture.",
+    "Replaced unreachable local-only ce09318d that was erroneously written into probe SHAs; JPG/PNG bytes unchanged."
   ],
-  "captured_at": "2026-10-24T19:41:55.026Z"
+  "captured_at": "2026-10-24T19:41:55.026Z",
+  "evidence_head_sha": "15d1b425abb20cab48ebb7ecf779a947151d25d7",
+  "prior_capture_record_sha": "e65fefe2e4c83ff68f1fb5371df02e89e21ac990",
+  "capture_helper_commit_sha": "15d1b425abb20cab48ebb7ecf779a947151d25d7",
+  "production_runtime_blob_hero_mail_panels_ts": "3dc43b682fa39b23c38ec183c985a967e51a03d2"
 }
