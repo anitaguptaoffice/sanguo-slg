@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   applyMailClaimResult,
+  syncMailInboxSnapshotAfterClaim,
+  syncMailRowAfterClaim,
   formatHeroDetail,
   formatHeroLine,
   syncHeroSummaryFromDetail,
@@ -148,6 +150,24 @@ describe("heroMailState", () => {
     expect(text).toContain("谷袋");
     expect(text).toContain("×3");
     expect(text).toContain("币");
+  });
+
+  it("syncMailRowAfterClaim marks row claimed and updates inbox snapshot", () => {
+    const mails = [
+      {
+        mail_id: 9,
+        status: 0,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      },
+    ];
+    const next = syncMailRowAfterClaim(mails, 9, {
+      mail: { mail_id: 9, status: 2, claimed_at_ms: 99 },
+    });
+    expect(next[0].status).toBe(2);
+    expect(next[0].has_unclaimed_attachments).toBe(false);
+    expect(mailHasUnclaimedAttachments(next[0])).toBe(false);
+    const snap = syncMailInboxSnapshotAfterClaim(mails, 9, next[0]);
+    expect(countMailUnreadAndUnclaimed(snap).unclaimed).toBe(0);
   });
 
   it("applyMailClaimResult merges wallet and marks mail claimed", () => {

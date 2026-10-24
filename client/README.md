@@ -44,6 +44,8 @@
 
 **CLIENT-122（邮件面板）**：在 **CLIENT-121** `artFilterChipRuntime` / `remountPanelFilterChips` 之上，收件箱 **全部 / 未读** 筛选条接 `data-ui-filter-chip` + `badge.count`（count=0 整节点 `hidden`）；`mail-inbox-filter-v1` 记忆 filter（与 **CLIENT-106** 角标推导并存）。列表行 `data-ui-filter-row` + 未读 **dot** / 未领附件 **count**（`formatMailFilterChips` / `formatMailRowCountBadge`）。`HeroMailPanels.mountMailFilterSkins(assets)` 与 `MainCityScene` 全局 `remountPanelFilterChips` 并存。
 
+**CLIENT-143（邮件领取同步）**：`ClaimPlayerMailAttachments` 成功后 `syncMailRowAfterClaim` / `syncMailInboxSnapshotAfterClaim` 即时更新列表 **已领** 态；tab 筛选 chip 与底栏 HUD 待办角标共用 `mailInboxSnapshot` + `countMailUnreadAndUnclaimed`（**CLIENT-106** / **CLIENT-134**）。收件箱主行 **主题 + 未读点**；次行 **`mailRowAttachmentIconSummary` + `formatMailRelativeTime`**；批量领取 **CLIENT-087** 成功行 `mail-claim-pulse`。领取失败 **CLIENT-067** `mail-form-error` + 列表 **CLIENT-129** 骨架不退化。单测：`heroMailState.test.ts`（`syncMailRowAfterClaim`）、`panelDensity.test.ts`、`mailClaimFeedback.test.ts`。
+
 ### ART-UI-PANEL-STATE-009 面板态运行时（CLIENT-129）
 
 **`panelStateChrome`**：`resolvePanelStateSkin` 将 **loading / empty / error** 映射 **`ui.panel.loading.v1`** / **`ui.panel.empty.v1`** / **`ui.panel.error.v1`**（CLIENT-128 manifest 就绪时 nine-slice 挂到列表占位行）；邮件 / 日常 / 将领列表 / 建造队列 / 军情 / 战报 **首屏拉取** 与 **筛选空结果** 共用 **`data-panel-state=loading|empty|error`** + **`panel-state-chrome`** class（筛选 chip 与 **CLIENT-029** / wave:27 **`data-ui-filter-chip`** 不退化）。面板或列表祖先设 **`data-art-skin="off"`** 时跳过九宫、保留 **`panelDensity` / CLIENT-067** 纯文案回退。单测：`panelStateChrome.test.ts`。

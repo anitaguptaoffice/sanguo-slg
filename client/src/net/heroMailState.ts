@@ -632,6 +632,33 @@ export type ClaimMailSessionPatch = {
   mails: MailRow[];
 };
 
+/** 领取附件后更新列表行「已领」态（与 tab/HUD `countMailUnreadAndUnclaimed` 快照同源）。 */
+export function syncMailRowAfterClaim(
+  mails: MailRow[],
+  mailId: number,
+  res: { mail?: MailRow },
+): MailRow[] {
+  const mailPatch: MailRow = {
+    ...(res.mail ?? { mail_id: mailId, status: MAIL_STATUS_CLAIMED, claimed_at_ms: Date.now() }),
+    mail_id: mailId,
+    has_unclaimed_attachments: false,
+  };
+  return upsertMailRow(mails, mailPatch);
+}
+
+/** 角标推导快照 `mailInboxSnapshot` 与列表行领取态对齐。 */
+export function syncMailInboxSnapshotAfterClaim(
+  snapshot: MailRow[],
+  mailId: number,
+  rowAfter: MailRow,
+): MailRow[] {
+  return upsertMailRow(snapshot, {
+    ...rowAfter,
+    mail_id: mailId,
+    has_unclaimed_attachments: false,
+  });
+}
+
 /** 领取附件后合并会话背包/钱包并更新邮件行状态。 */
 export function applyMailClaimResult(
   mails: MailRow[],
@@ -653,13 +680,9 @@ export function applyMailClaimResult(
   const wallet = res.wallet_after
     ? { ...res.wallet_after }
     : mergeWallet(session.wallet ?? {}, res.granted?.resources);
-  const mailPatch = {
-    ...(res.mail ?? { mail_id: mailId, status: MAIL_STATUS_CLAIMED, claimed_at_ms: Date.now() }),
-    has_unclaimed_attachments: false,
-  };
   return {
     bag,
     wallet,
-    mails: upsertMailRow(mails, mailPatch),
+    mails: syncMailRowAfterClaim(mails, mailId, res),
   };
 }
