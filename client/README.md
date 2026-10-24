@@ -50,6 +50,8 @@
 
 **CLIENT-177（邮件分 tab 空态与附件扫读）**：收件箱 **全部 / 未读 / 未领附件** tab（未领附件为 `MAIL_INBOX_FILTER_UNCLAIMED` 客户端过滤 `ListPlayerMail` ALL 快照，不新 RPC）；真空列表 `formatMailTabEmptyHint` 差异化 hint（含 dev 无种子提示）+ **CLIENT-129** `data-panel-state=empty`。有附件行次行 `formatMailAttachmentTypeSweep`（资源/道具图标摘要，只读 attachments metadata）；**CLIENT-159** 批量领取与 HUD 角标 **不退化**。单测：`mailInboxTabFormat.test.ts`、`HeroMailPanels.test.ts`。
 
+**CLIENT-192（邮件领取行内反馈）**：单封 **领取附件** 成功后详情区 `data-role="mail-claim-inline"` 展示 `formatMailClaimSuccessLine`（资源/道具摘要，无新 mail RPC）并触发 `mail-claim-inline-pulse`；列表行仍 `mail-claim-pulse`，HUD 角标走 **CLIENT-162** `applyMailBadgeCountsFromSnapshot`；**CLIENT-177** 分 tab 空态与 **CLIENT-159** 批量领取 **不退化**。单测：`mailClaimFeedback.test.ts`、`HeroMailPanels.test.ts`。
+
 ### ART-UI-PANEL-STATE-009 面板态运行时（CLIENT-129）
 
 **`panelStateChrome`**：`resolvePanelStateSkin` 将 **loading / empty / error** 映射 **`ui.panel.loading.v1`** / **`ui.panel.empty.v1`** / **`ui.panel.error.v1`**（CLIENT-128 manifest 就绪时 nine-slice 挂到列表占位行）；邮件 / 日常 / 将领列表 / 建造队列 / 军情 / 战报 **首屏拉取** 与 **筛选空结果** 共用 **`data-panel-state=loading|empty|error`** + **`panel-state-chrome`** class（筛选 chip 与 **CLIENT-029** / wave:27 **`data-ui-filter-chip`** 不退化）。面板或列表祖先设 **`data-art-skin="off"`** 时跳过九宫、保留 **`panelDensity` / CLIENT-067** 纯文案回退。单测：`panelStateChrome.test.ts`。

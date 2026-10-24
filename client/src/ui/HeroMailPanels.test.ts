@@ -916,6 +916,10 @@ describe("HeroMailPanels", () => {
     expect(session.wallet?.gold).toBe(50);
     expect(statuses.some((s) => s.includes("领取成功") && s.includes("谷袋"))).toBe(true);
     expect(mount.querySelector(".mail-row-count-badge")).toBeNull();
+    const inline = mount.querySelector('[data-role="mail-claim-inline"]');
+    expect(inline?.classList.contains("hidden")).toBe(false);
+    expect(inline?.textContent).toMatch(/领取成功/);
+    expect(inline?.textContent).toContain("谷袋");
   });
 
   it("mail without attachments hides claim button", async () => {
