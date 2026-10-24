@@ -489,6 +489,7 @@ export class MainCityScene implements Scene {
           this.renderHud();
         },
         onOpenReplayWorldTile: (summary) => this.openWorldTileFromBattleReport(summary),
+        filterListSkinAssets: this.assets,
       },
     );
     this.battleReports.attach();
