@@ -8,6 +8,7 @@ import {
   RECRUIT_QUEUE_MATRIX_SLOT_KEY,
 } from "@/net/recruitQueueComplete";
 import { QUEUE_ROW_SLOT_HIGHLIGHT_CLASS } from "@/net/citySlotQueueLink";
+import { DOMESTIC_SLOT_QUEUE_FOCUS_RING_CLASS } from "@/net/domesticSlotQueueFocusRing";
 import {
   QUEUE_ROW_COMPLETE_PULSE_CLASS,
   QUEUE_ROW_COMPLETE_READONLY_CLASS,
@@ -102,6 +103,23 @@ describe("QueuePanels", () => {
     panel.pulseQueueRowForOverlaySlot("farm");
     const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
     expect(row?.classList.contains(QUEUE_ROW_SLOT_HIGHLIGHT_CLASS)).toBe(true);
+  });
+
+  it("pulseQueueRowForOverlaySlot adds domestic-slot-queue-focus-ring (CLIENT-228)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [
+      { slot_key: "farm", building_cfg_id: 2, level: 2, upgrade_finish_at_ms: now + 120_000 },
+    ];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.toggle();
+    panel.pulseQueueRowForOverlaySlot("farm");
+    const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
+    expect(row?.classList.contains(DOMESTIC_SLOT_QUEUE_FOCUS_RING_CLASS)).toBe(true);
+    expect(row?.getAttribute("data-building-cfg-id")).toBe("2");
   });
 
   it("notifyBuildJustCompleted adds queue-row-complete-pulse on complete todo row (CLIENT-197)", () => {

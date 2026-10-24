@@ -37,6 +37,10 @@ import { buildingBySlot } from "@/net/hudFormat";
 import { centerTodoScrollTargetId } from "@/net/hudCenterTodo";
 import { highlightQueueRowForSlot } from "@/net/citySlotQueueLink";
 import {
+  applyQueueRowBuildingCfgIdDataset,
+  highlightDomesticQueueRowFocusRing,
+} from "@/net/domesticSlotQueueFocusRing";
+import {
   QUEUE_ROW_COMPLETE_PULSE_CLASS,
   QUEUE_ROW_COMPLETE_PULSE_MS,
   QUEUE_ROW_COMPLETE_READONLY_CLASS,
@@ -228,11 +232,18 @@ export class QueuePanels {
   pulseQueueRowForOverlaySlot(slotKey: string): void {
     const key = slotKey.trim();
     if (!key || !this.panel) return;
-    highlightQueueRowForSlot(this.panel, key, {
+    const snapshot = {
       buildings: this.buildings(),
       recruits: this.recruits,
       nowMs: Date.now(),
-    });
+    };
+    highlightQueueRowForSlot(this.panel, key, snapshot);
+    highlightDomesticQueueRowFocusRing(
+      this.panel,
+      key,
+      snapshot,
+      buildingBySlot(this.buildings(), key),
+    );
   }
 
   clearBuildSlotHighlight(): void {
@@ -661,6 +672,7 @@ export class QueuePanels {
       li.className = "queue-list-row";
       li.id = queueBuildRowDomId(slotKey);
       li.dataset.slotKey = slotKey;
+      applyQueueRowBuildingCfgIdDataset(li, b);
       if (slotKey && slotKey !== "?") {
         li.setAttribute(TODO_SCROLL_TARGET_ATTR, centerTodoScrollTargetId("queue", slotKey));
       }

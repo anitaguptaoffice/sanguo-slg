@@ -46,6 +46,7 @@ import {
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { scrollCitySlotIntoView } from "@/net/citySlotQueueLink";
+import { highlightDomesticSlotForQueueRow } from "@/net/domesticSlotQueueFocusRing";
 import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
@@ -872,8 +873,15 @@ export class MainCityScene implements Scene {
       (slotKey) => this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey),
       () => this.toolbarTrigger("toggle-queue"),
       (entry) => this.openMilitaryRecruitFromQueueRow(entry),
-      (slotKey) =>
-        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey),
+      (slotKey) => {
+        const building = buildingBySlot(this.session?.buildings, slotKey);
+        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
+        highlightDomesticSlotForQueueRow(
+          this.slotUpgradeOverlay?.getOverlayLayer(),
+          slotKey,
+          building,
+        );
+      },
       (queueIds) => {
         const events = queueIds.map((id) => ({ kind: "recruit" as const, queueId: id }));
         this.applyQueueCompleteHudPulse(events);
