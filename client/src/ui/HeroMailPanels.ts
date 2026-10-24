@@ -31,8 +31,13 @@ import {
   mountFilterRows,
 } from "@/engine/artUiFilterSkin";
 import {
+  formatHeroListRowPrimary,
+  formatHeroListRowSecondary,
+  HERO_LIST_ROW_PANEL_SKIN_ID,
+  resolveHeroListRowSource,
+} from "@/net/heroListRowFormat";
+import {
   applyMailClaimResult,
-  formatHeroLine,
   formatMailClaimGrantedSummary,
   filterHeroCultivationBagItemIds,
   heroListLines,
@@ -557,7 +562,25 @@ export class HeroMailPanels {
     } else {
       for (const h of this.heroes) {
         const li = document.createElement("li");
-        li.textContent = formatHeroLine(h);
+        li.setAttribute("data-ui-panel-listrow", HERO_LIST_ROW_PANEL_SKIN_ID);
+        const rowSource = resolveHeroListRowSource(h, this.heroDetail);
+        const detailAttrs =
+          h.hero_id === this.selectedHeroId && this.heroDetail?.attributes
+            ? this.heroDetail.attributes
+            : null;
+        const body = document.createElement("div");
+        body.className = "hero-list-row-body";
+        const primarySpan = document.createElement("span");
+        primarySpan.className = "hero-list-row-primary";
+        primarySpan.textContent = formatHeroListRowPrimary(rowSource);
+        const secondarySpan = document.createElement("span");
+        secondarySpan.className = "hero-list-row-secondary";
+        secondarySpan.textContent = formatHeroListRowSecondary(rowSource, {
+          detailAttributes: detailAttrs,
+        });
+        body.appendChild(primarySpan);
+        body.appendChild(secondarySpan);
+        li.appendChild(body);
         if (h.hero_id) {
           li.setAttribute("data-hero-id", String(h.hero_id));
           li.style.cursor = "pointer";
