@@ -1,14 +1,14 @@
 # HERO-HOST-SLICE4 runtime inventory — template 1015
 
-tip_sha / runtime_code_sha: `7023606c3773f531fdc9424524c7eeda86abb3ad`
-art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
+tip_sha / runtime_code_sha: `8dbb071374eaa5e5512457eab6ef1fb195ab9c78`
+art_head_sha: `cc9da5f28492bbbcb8d82d87458041d685726661`
 
 ## Viewport captures
 
-- `runtime/1015/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471819 bytes, sha256 `c998264f4dddfa04df9c458c74af1d9f48d8280861510074b3b143a0940f845e`
-- `runtime/1015/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 983253 bytes, sha256 `d41d35c56eb351deaa1e67d434a81fa824e7fcde1a44a9f88cb63e7f83725070`
-- `runtime/1015/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246018 bytes, sha256 `ed861f8b3af07ff92703e20ced67066e740b632213e5f3bcd749854fb73cf559`
-- `runtime/1015/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `2b824e935e2781c0b847f27fa8ec7080c2a9c84af02c7fd5c38b61365181f1c3`
+- `runtime/1015/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 472427 bytes, sha256 `b4f0d78b3b388f3fe0dec8b5031ba49e5fdc4b17160019105fed074ce020b021`
+- `runtime/1015/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 980692 bytes, sha256 `187e0d9d213125241a1492d2c1ca66cd8d4a2a6936ad41c24524e6ea193a4639`
+- `runtime/1015/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245904 bytes, sha256 `64c9e3060a4a75aeebe06a2378c4a9f0fadfbcbbf5eac6bfe9e426410697d0c2`
+- `runtime/1015/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `c525f0cdbf2cbdb772c5f98358453be2099277f4e75e3c43ddc04ab7eb2a7524`
 
 ## Textures (hero.avatar.1015.v1 / hero.bust.1015.v1)
 
@@ -67,7 +67,7 @@ art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 437,
+        "top": 436.21875,
         "width": 128,
         "height": 160
       }
@@ -117,7 +117,7 @@ art_head_sha (Draft #1192): `cc9da5f28492bbbcb8d82d87458041d685726661`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 437,
+        "top": 436.21875,
         "width": 128,
         "height": 160
       }

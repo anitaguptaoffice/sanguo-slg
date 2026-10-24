@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE4",
   "template_cfg_id": 1016,
   "mock_preset": "hero-panel-roster-slice4",
-  "tip_sha": "7023606c3773f531fdc9424524c7eeda86abb3ad",
-  "runtime_code_sha": "7023606c3773f531fdc9424524c7eeda86abb3ad",
+  "tip_sha": "8dbb071374eaa5e5512457eab6ef1fb195ab9c78",
+  "runtime_code_sha": "8dbb071374eaa5e5512457eab6ef1fb195ab9c78",
   "art_head_sha": "cc9da5f28492bbbcb8d82d87458041d685726661",
   "art_asset_ids": [
     "hero.avatar.1016.v1",
@@ -56,7 +56,7 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 437,
+        "top": 436.21875,
         "width": 128,
         "height": 160
       }
@@ -106,7 +106,7 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 437,
+        "top": 436.21875,
         "width": 128,
         "height": 160
       }
@@ -166,7 +166,7 @@
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 263789
+      "bytes": 264230
     },
     "probe": {
       "ok": true,
@@ -197,7 +197,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 471595,
+      "bytes": 471560,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -208,7 +208,7 @@
     },
     "hero-host-1600x900-dpr2.jpg": {
       "quality": 72,
-      "bytes": 983043,
+      "bytes": 980017,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -219,7 +219,7 @@
     },
     "hero-host-1280x720-dpr1.jpg": {
       "quality": 88,
-      "bytes": 246144,
+      "bytes": 246040,
       "viewport": {
         "tag": "1280x720-dpr1",
         "file": "hero-host-1280x720-dpr1.jpg",
@@ -231,8 +231,8 @@
   },
   "notes": [
     "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
-    "Art path-copied from Draft #1192; Draft remains unmerged.",
+    "Art path-copied from Draft #1192 (#1014 from #1192 @ 11f87490); Drafts remain unmerged.",
     "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot."
   ],
-  "captured_at": "2026-10-24T18:48:48.040Z"
+  "captured_at": "2026-10-24T18:50:16.827Z"
 }
