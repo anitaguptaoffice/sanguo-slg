@@ -64,10 +64,12 @@ import {
 import {
   MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS,
   MAIL_CLAIM_HUD_SYNC_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS,
 } from "@/net/mailClaimHudBadgeSync";
 import {
   MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE,
 } from "@/net/mailAttachmentClaimResidualSubline";
+import { MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_ROLE } from "@/net/mailAttachmentClaimResidualDeepSubline";
 import {
   MAIL_BATTLE_CATEGORY_SWEEP_ROLE,
   MAIL_BATTLE_CATEGORY_TAB_SESSION_KEY,
@@ -193,9 +195,13 @@ describe("HeroMailPanels", () => {
     const row = mount.querySelector('.mail-list li[data-mail-id="71"]');
     expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS)).toBe(true);
     expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS)).toBe(true);
+    expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     expect(
       row?.querySelector(`[data-role="${MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE}"]`)?.textContent,
     ).toContain("附件残余");
+    expect(
+      row?.querySelector(`[data-role="${MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_ROLE}"]`)?.textContent,
+    ).toContain("附件残余加深");
     const combined = mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`);
     expect(combined?.textContent).toContain("未领附件 1");
     expect(combined?.textContent).toContain("日常可领 1 · #42");
