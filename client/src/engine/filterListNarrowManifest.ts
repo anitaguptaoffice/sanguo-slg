@@ -52,6 +52,13 @@ export const PANEL_FILTER_CHIP_BAR_CLASS = "panel-filter-chip-bar";
 /** CLIENT-155 / soft-dep CLIENT-150: chain progress secondary line on daily quest rows. */
 export const DAILY_QUEST_PROGRESS_SECONDARY_CLASS = "daily-quest-row-progress";
 
+/** CLIENT-169 / CLIENT-171: multi chain_id tab bar above daily quest filters at 1280×720. */
+export {
+  DAILY_CHAIN_TAB_BAR_CLASS,
+  DAILY_CHAIN_TAB_CLASS,
+  DAILY_CHAIN_TAB_SESSION_KEY,
+} from "@/engine/wave32MainCityBuildHeroShopDailyWorldNarrowManifest";
+
 /** CLIENT-163 / soft-dep CLIENT-159: mail inbox batch toolbar hosts claim-all beside filter chips. */
 export const MAIL_CLAIM_ALL_ATTACHMENTS_ACTION = "claim-mail-all";
 

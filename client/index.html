@@ -415,6 +415,38 @@
       .building-panel .building-upgrade-preview.panel-state-chrome {
         color: #5a4a32;
       }
+      .hero-detail .hero-upgrade-item-gap,
+      [data-role="hero-upgrade-item-gap"] {
+        font-size: 11px; line-height: 1.4; margin: 4px 0; min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      /* sessionStorage key recruit-scroll-anchor-v1 (CLIENT-166) */
+      .template-list li .recruit-afford-secondary,
+      .hero-detail .recruit-afford-secondary {
+        font-size: 11px; line-height: 1.4; margin: 4px 0; min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .recruit-cost-deficit { color: #b3261e; font-weight: 600; }
+      .rank-table button[data-action="rank-view-hero"],
+      .rank-view-hero-link {
+        font-size: 11px; padding: 2px 6px; flex-shrink: 0;
+      }
+      /* sessionStorage key daily-chain-tab-v1 (CLIENT-169) */
+      .daily-chain-tabs.panel-filter-chip-bar {
+        display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 6px;
+        min-width: 0;
+      }
+      .daily-chain-tab {
+        flex: 0 0 auto; min-height: 44px; min-width: 44px;
+        padding: 6px 10px; font-size: 11px;
+      }
+      .world-tile-info.world-tile-focus-pulse {
+        animation: world-tile-focus-pulse-keyframes 2s ease-out 1;
+      }
+      @keyframes world-tile-focus-pulse-keyframes {
+        0%, 100% { box-shadow: none; }
+        40% { box-shadow: 0 0 0 2px #c9a227; }
+      }
       .building-panel .build-form-error {
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
         color: #8b1a1a; background: rgba(139, 26, 26, 0.1); border-radius: 4px;
@@ -2452,6 +2484,46 @@
       #layout-frame.layout-narrow .military-panel .panel-scroll-body button.art-btn-primary {
         max-width: 100%;
         box-sizing: border-box;
+      }
+      /* CLIENT-171 wave:32 主城建造·将领招募商城·日常 chain·世界格点组合 manifest */
+      #layout-frame.layout-narrow .building-panel .building-upgrade-preview,
+      #layout-frame.layout-narrow .building-panel .building-upgrade-preview .resource-deficit {
+        min-width: 0; max-width: 100%; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-secondary {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-upgrade-item-gap,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="hero-upgrade-item-gap"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-afford-secondary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-cost-deficit {
+        min-width: 0; max-width: 100%; overflow-x: hidden; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-tab-currency-sweep"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-vs-wallet,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .wallet-gap-line[data-role="shop-wallet-gap"] {
+        min-width: 0; max-width: 100%; overflow-x: hidden; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] button[data-action="rank-view-hero"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-view-hero-link,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr .rank-open-hero-cell {
+        min-width: 0; max-width: 100%; overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-chain-tabs.panel-filter-chip-bar {
+        overflow-x: auto; overflow-y: visible; flex-shrink: 0;
+        min-width: 0; max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-chain-tab {
+        flex: 0 0 auto; min-width: 0; max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] [data-role="world-tile-info"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info.world-tile-focus-pulse {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .panel-scroll-body {
+        padding-bottom: 64px;
       }
       #layout-frame.layout-narrow .main-city-toolbar button.toolbar-chrome-btn--with-icon {
         flex: 0 0 auto;
