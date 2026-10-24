@@ -239,6 +239,40 @@ describe("HeroMailPanels", () => {
     expect(detail?.textContent).toContain("UseConsumable");
   });
 
+  it("hero list rows use primary/secondary scan lines (CLIENT-132)", async () => {
+    sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 2,
+        loyalty: 77,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    const row = mount.querySelector('li[data-hero-id="3"]') as HTMLElement;
+    expect(row?.getAttribute("data-ui-panel-listrow")).toBe("ui.panel.listrow.default.v1");
+    expect(row?.querySelector(".hero-list-row-primary")?.textContent).toContain("Lv2");
+    expect(row?.querySelector(".hero-list-row-primary")?.textContent).toContain("忠诚 77");
+    expect(row?.querySelector(".hero-list-row-secondary")?.textContent).toBe("详情查看养成");
+    row?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 3);
+    const rowAfter = mount.querySelector('li[data-hero-id="3"]');
+    expect(rowAfter?.querySelector(".hero-list-row-secondary")?.textContent).toContain("武60");
+  });
+
   it("hero detail cultivation use shows inflight label, refreshes detail, and pulses on success", async () => {
     const mount = document.createElement("div");
     let loyalty = 70;

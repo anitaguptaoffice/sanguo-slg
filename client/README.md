@@ -407,6 +407,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 1. **刷新** 将领列表：loading + 成功后 `hero-list-refresh-pulse` 短暂高亮；失败走 **CLIENT-067**。
 2. 关闭再开将领面板：`sessionStorage` **`hero-detail-selected-id`** 恢复上次行并滚入视；与 **CLIENT-098** 成功深链写入一致。
 
+### 手动验收（将领列表行扫读 CLIENT-132）
+
+在 [CLIENT-099](#手动验收将领列表刷新与选中记忆-client-099) 选中记忆与 [CLIENT-114](#手动验收将领招募提交反馈巩固-client-114) 招募行脉冲不退化前提下：
+
+1. **刷新列表** 后每行 **主行** 为模板名 + **Lv.N** + **忠诚** 摘要（`formatHeroListRowPrimary`）；**次行** 为四维缩写（已加载详情时）或 **详情查看养成**（`formatHeroListRowSecondary`）。
+2. 行容器可选挂 `data-ui-panel-listrow="ui.panel.listrow.default.v1"`；`data-hero-id` / `hero-row-recruited-pulse` / 滚入视逻辑不变。
+3. 单测：`heroListRowFormat.test.ts`、`HeroMailPanels.test.ts`；全量 `cd client && npm test`。
+
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
