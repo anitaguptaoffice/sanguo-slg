@@ -1,6 +1,7 @@
 import { formatFilterBadgeCount } from "@/engine/artUiFilterSkin";
 import {
   MAIL_INBOX_FILTER_ALL,
+  MAIL_INBOX_FILTER_UNCLAIMED,
   MAIL_INBOX_FILTER_UNREAD,
   mailHasUnclaimedAttachments,
   mailIsUnread,
@@ -10,11 +11,15 @@ import {
 /** sessionStorage：收件箱 ListPlayerMail filter（CLIENT-122；与 CLIENT-106 tab 角标规则并存）。 */
 export const MAIL_INBOX_FILTER_SESSION_KEY = "mail-inbox-filter-v1";
 
-const FILTER_VALUES: readonly number[] = [MAIL_INBOX_FILTER_ALL, MAIL_INBOX_FILTER_UNREAD];
+const FILTER_VALUES: readonly number[] = [
+  MAIL_INBOX_FILTER_ALL,
+  MAIL_INBOX_FILTER_UNREAD,
+  MAIL_INBOX_FILTER_UNCLAIMED,
+];
 
 export type MailInboxFilterChipSpec = {
   filter: number;
-  action: "mail-filter-all" | "mail-filter-unread";
+  action: "mail-filter-all" | "mail-filter-unread" | "mail-filter-unclaimed";
   label: string;
   selected: boolean;
   /** 筛选 chip 角标文案（1–9 / 9+；0 为空串隐藏） */
@@ -85,6 +90,13 @@ export function formatMailFilterChips(input: {
       label: "未读",
       selected: active === MAIL_INBOX_FILTER_UNREAD,
       countBadge: formatFilterBadgeCount(unread),
+    },
+    {
+      filter: MAIL_INBOX_FILTER_UNCLAIMED,
+      action: "mail-filter-unclaimed",
+      label: "未领附件",
+      selected: active === MAIL_INBOX_FILTER_UNCLAIMED,
+      countBadge: formatFilterBadgeCount(unclaimed),
     },
   ];
 }

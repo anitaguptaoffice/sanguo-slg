@@ -1,12 +1,11 @@
 import type { BagStack } from "@/net/bagState";
-import { formatWalletPrice, itemLabel } from "@/net/contentFormat";
+import { itemLabel } from "@/net/contentFormat";
+import { formatMailAttachmentTypeSweep } from "@/net/mailInboxTabFormat";
 import {
-  mailHasAttachments,
   mailHasUnclaimedAttachments,
   mailIsUnread,
   mailStatusLabel,
   mailTitle,
-  MAIL_INBOX_FILTER_UNREAD,
   type MailRow,
 } from "@/net/heroMailState";
 import { formatTimeMs } from "@/net/militaryFormat";
@@ -37,20 +36,9 @@ export function formatMailRelativeTime(ms: number | undefined, nowMs = Date.now(
   return formatTimeMs(ms);
 }
 
-/** 次行附件图标摘要（📎 待领 / ✓ 已领 + 道具/资源文案）。 */
+/** 次行附件图标摘要（委托 CLIENT-177 `formatMailAttachmentTypeSweep`）。 */
 export function mailRowAttachmentIconSummary(m: MailRow): string {
-  if (!mailHasAttachments(m)) return "";
-  const parts: string[] = [];
-  for (const it of m.attachments?.items ?? []) {
-    const id = it.item_cfg_id ?? 0;
-    if (id <= 0) continue;
-    parts.push(`${itemLabel(id)}×${it.quantity ?? 0}`);
-  }
-  const resText = formatWalletPrice(m.attachments?.resources ?? {});
-  if (resText) parts.push(resText);
-  const body = parts.length ? parts.join("、") : "附件";
-  if (mailHasUnclaimedAttachments(m)) return `📎 ${body}`;
-  return `✓ ${body}`;
+  return formatMailAttachmentTypeSweep(m);
 }
 
 /** 列表主行：主题（未读点在 DOM 侧挂载）。 */

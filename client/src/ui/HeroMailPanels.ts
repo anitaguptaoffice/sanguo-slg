@@ -58,10 +58,10 @@ import {
   renderHeroDetailMarkup,
   syncHeroSummaryFromDetail,
   MAIL_INBOX_FILTER_ALL,
+  MAIL_INBOX_FILTER_UNCLAIMED,
   MAIL_INBOX_FILTER_UNREAD,
   mailHasUnclaimedAttachments,
   upsertMailRow,
-  mailEmptyInboxMessage,
   mailIsUnread,
   mailTitle,
   parseRecruitTemplates,
@@ -80,6 +80,12 @@ import {
   readMailInboxFilterSession,
   writeMailInboxFilterSession,
 } from "@/net/mailInboxFilter";
+import {
+  filterMailRowsForInboxTab,
+  formatMailTabEmptyHint,
+  mailInboxFilterToEmptyTab,
+  resolveMailListPlayerMailFilter,
+} from "@/net/mailInboxTabFormat";
 import { mailPanelTabBadgeCounts, mailToolbarBadgeCount } from "@/net/hudTodoBadges";
 import {
   mailInboxEmptyListClass,
@@ -668,6 +674,10 @@ export class HeroMailPanels {
           <span data-role="mail-filter-unread-label" class="art-filter-chip-label">未读</span>
           <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-unread-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
         </button>
+        <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-unclaimed" aria-pressed="false">
+          <span data-role="mail-filter-unclaimed-label" class="art-filter-chip-label">未领附件</span>
+          <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-unclaimed-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
+        </button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取全部附件</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
@@ -929,10 +939,16 @@ export class HeroMailPanels {
     });
     const allBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-all"]');
     const unreadBtn = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="mail-filter-unread"]');
-    const chipButtons = [allBtn, unreadBtn].filter((b): b is HTMLButtonElement => b != null);
+    const unclaimedBtn = this.mailPanel.querySelector<HTMLButtonElement>(
+      '[data-action="mail-filter-unclaimed"]',
+    );
+    const chipButtons = [allBtn, unreadBtn, unclaimedBtn].filter((b): b is HTMLButtonElement => b != null);
     syncFilterChipAria(chipButtons, (btn) => {
       if (btn.dataset.action === "mail-filter-all") return this.mailFilter === MAIL_INBOX_FILTER_ALL;
       if (btn.dataset.action === "mail-filter-unread") return this.mailFilter === MAIL_INBOX_FILTER_UNREAD;
+      if (btn.dataset.action === "mail-filter-unclaimed") {
+        return this.mailFilter === MAIL_INBOX_FILTER_UNCLAIMED;
+      }
       return false;
     });
     const loader = assets ?? this.assets;
@@ -942,7 +958,12 @@ export class HeroMailPanels {
       setFilterChipLabel(btn, spec.label);
       const countEl = btn.querySelector<HTMLElement>("[data-ui-filter-badge='count']");
       if (!countEl) continue;
-      const count = spec.action === "mail-filter-all" ? unclaimedCount : unreadForTab;
+      const count =
+        spec.action === "mail-filter-unread"
+          ? unreadForTab
+          : spec.action === "mail-filter-all" || spec.action === "mail-filter-unclaimed"
+            ? unclaimedCount
+            : 0;
       countEl.dataset.filterBadgeCount = String(count);
       if (loader) {
         mountFilterBadgeCount(countEl, loader, count);
@@ -1026,7 +1047,7 @@ export class HeroMailPanels {
       const kind = this.mailListError ? "error" : "empty";
       const msg = this.mailListError
         ? mailInboxLoadErrorListHint()
-        : mailEmptyInboxMessage(this.mailFilter);
+        : formatMailTabEmptyHint(mailInboxFilterToEmptyTab(this.mailFilter));
       renderPanelStateListRow(ul, kind, msg, {
         legacyClass: mailInboxEmptyListClass(),
         assets: this.assets,
@@ -1459,16 +1480,18 @@ export class HeroMailPanels {
     this.mailListLoading = true;
     this.renderMailList();
     try {
+      const rpcFilter = resolveMailListPlayerMailFilter(this.mailFilter);
       const res = (await this.gateway.listPlayerMail(sid, {
-        filter: this.mailFilter,
+        filter: rpcFilter,
         pageSize: 50,
       })) as {
         mails?: MailRow[];
         total_count?: number;
       };
-      this.mails = res.mails ?? [];
-      if (this.mailFilter === MAIL_INBOX_FILTER_ALL) {
-        this.mailInboxSnapshot = [...this.mails];
+      const page = res.mails ?? [];
+      this.mails = filterMailRowsForInboxTab(page, this.mailFilter);
+      if (rpcFilter === MAIL_INBOX_FILTER_ALL) {
+        this.mailInboxSnapshot = [...page];
       } else {
         void this.refreshMailInboxSnapshot();
       }
@@ -1486,7 +1509,12 @@ export class HeroMailPanels {
       }
       this.renderMailList();
       const total = res.total_count ?? this.mails.length;
-      const filterLabel = this.mailFilter === MAIL_INBOX_FILTER_UNREAD ? "未读" : "全部";
+      const filterLabel =
+        this.mailFilter === MAIL_INBOX_FILTER_UNREAD
+          ? "未读"
+          : this.mailFilter === MAIL_INBOX_FILTER_UNCLAIMED
+            ? "未领附件"
+            : "全部";
       const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
       const baseStatus = `邮件（${filterLabel}）${this.mails.length}/${total} 封`;
       this.onStatus(this.withMailWorldCoordHint(baseStatus, sel));
@@ -1714,6 +1742,17 @@ export class HeroMailPanels {
       }
       return;
     }
+    if (
+      this.mailFilter === MAIL_INBOX_FILTER_UNCLAIMED &&
+      updated &&
+      !mailHasUnclaimedAttachments(updated)
+    ) {
+      this.mails = nextMails.filter((m) => m.mail_id !== mailId);
+      if (!this.mails.some((m) => m.mail_id === this.selectedMailId)) {
+        this.selectedMailId = this.mails[0]?.mail_id ?? 0;
+      }
+      return;
+    }
     this.mails = nextMails;
   }
 
@@ -1888,6 +1927,12 @@ export class HeroMailPanels {
     }
     if (a === "mail-filter-unread") {
       this.mailFilter = MAIL_INBOX_FILTER_UNREAD;
+      writeMailInboxFilterSession(this.mailFilter);
+      void this.refreshMail();
+      return;
+    }
+    if (a === "mail-filter-unclaimed") {
+      this.mailFilter = MAIL_INBOX_FILTER_UNCLAIMED;
       writeMailInboxFilterSession(this.mailFilter);
       void this.refreshMail();
     }

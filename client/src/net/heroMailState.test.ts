@@ -81,7 +81,7 @@ describe("heroMailState", () => {
   });
 
   it("mailListSummary and claim helpers", () => {
-    expect(mailEmptyInboxMessage(MAIL_INBOX_FILTER_UNREAD)).toContain("未读");
+    expect(mailEmptyInboxMessage(MAIL_INBOX_FILTER_UNREAD)).toContain("无未读");
     expect(mailListSummary({ mail_id: 1, body: "一二三四五六七八九十" })).toContain("一二三四");
     expect(
       mailCanClaimAttachments({

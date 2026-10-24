@@ -9,7 +9,11 @@ import {
   readMailInboxFilterSession,
   writeMailInboxFilterSession,
 } from "@/net/mailInboxFilter";
-import { MAIL_INBOX_FILTER_ALL, MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
+import {
+  MAIL_INBOX_FILTER_ALL,
+  MAIL_INBOX_FILTER_UNCLAIMED,
+  MAIL_INBOX_FILTER_UNREAD,
+} from "@/net/heroMailState";
 
 describe("mailInboxFilter session", () => {
   it("uses mail-inbox-filter-v1 key", () => {
@@ -27,6 +31,7 @@ describe("mailInboxFilter session", () => {
     writeMailInboxFilterSession(MAIL_INBOX_FILTER_UNREAD, mock);
     expect(readMailInboxFilterSession(mock)).toBe(MAIL_INBOX_FILTER_UNREAD);
     expect(parseMailInboxFilterSessionValue("2")).toBeNull();
+    expect(parseMailInboxFilterSessionValue("3")).toBe(MAIL_INBOX_FILTER_UNCLAIMED);
   });
 });
 
@@ -43,6 +48,9 @@ describe("formatMailFilterChips", () => {
     expect(chips[1].label).toBe("未读");
     expect(chips[1].selected).toBe(true);
     expect(chips[1].countBadge).toBe("9+");
+    expect(chips[2].label).toBe("未领附件");
+    expect(chips[2].selected).toBe(false);
+    expect(chips[2].countBadge).toBe("3");
   });
 
   it("hides count badges at zero", () => {
@@ -53,6 +61,13 @@ describe("formatMailFilterChips", () => {
     });
     expect(chips[0].countBadge).toBe("");
     expect(chips[1].countBadge).toBe("");
+    expect(chips[2].countBadge).toBe("");
+  });
+
+  it("persists unclaimed tab in session storage", () => {
+    const mock = { data: {} as Record<string, string>, getItem(k: string) { return this.data[k] ?? null; }, setItem(k: string, v: string) { this.data[k] = v; } };
+    writeMailInboxFilterSession(MAIL_INBOX_FILTER_UNCLAIMED, mock);
+    expect(readMailInboxFilterSession(mock)).toBe(MAIL_INBOX_FILTER_UNCLAIMED);
   });
 });
 
