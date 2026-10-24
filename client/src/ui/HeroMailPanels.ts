@@ -60,7 +60,6 @@ import {
 } from "@/net/heroListFilter";
 import {
   applyMailClaimResult,
-  syncMailInboxSnapshotAfterClaim,
   syncMailRowAfterClaim,
   formatMailClaimGrantedSummary,
   filterHeroCultivationBagItemIds,
@@ -161,6 +160,10 @@ import {
   scheduleMailClaimInlinePulse,
   scheduleMailClaimRowPulse,
 } from "@/net/mailClaimFeedback";
+import {
+  scheduleMailClaimHudSyncPulse,
+  syncHudMailQuestBadgeAfterClaim,
+} from "@/net/mailClaimHudBadgeSync";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -690,7 +693,32 @@ export class HeroMailPanels {
 
   private pulseMailRowAfterClaim(mailId: number): void {
     if (!this.mailPanel) return;
-    scheduleMailClaimRowPulse(findMailListRow(this.mailPanel, mailId));
+    const row = findMailListRow(this.mailPanel, mailId);
+    scheduleMailClaimRowPulse(row);
+    scheduleMailClaimHudSyncPulse(row);
+    this.bumpMailClaimHudTodoSweepLinkage();
+  }
+
+  /** CLIENT-241：领取成功后刷新邮件面板 HUD 扫读行并触发 mail-tab-hud-sync-pulse。 */
+  private bumpMailClaimHudTodoSweepLinkage(): void {
+    if (!this.isMailOpen()) return;
+    this.mailHudTodoRefreshStamp = Date.now();
+    this.mailHudTodoPulsePending = true;
+    this.syncMailHudTodoSweepDom();
+  }
+
+  private applyHudMailQuestBadgeAfterClaim(mailId: number, rowAfter: MailRow): void {
+    const sync = syncHudMailQuestBadgeAfterClaim(
+      {
+        mailUnreadTotal: this.mailUnreadTotal,
+        mailInboxSnapshot: this.mailInboxSnapshot,
+        dailyChainRows: this.mailHudTodoDailyRows,
+      },
+      mailId,
+      rowAfter,
+      mailInboxFilterToUnreadSweepTab(this.mailFilter),
+    );
+    this.mailInboxSnapshot = sync.mailInboxSnapshot;
   }
 
   private syncMailClaimInlineFeedback(mailId: number): void {
@@ -2011,11 +2039,7 @@ export class HeroMailPanels {
         nextMails.find((m) => m.mail_id === mailId) ??
         syncMailRowAfterClaim([], mailId, res).find((m) => m.mail_id === mailId);
       if (updatedRow) {
-        this.mailInboxSnapshot = syncMailInboxSnapshotAfterClaim(
-          this.mailInboxSnapshot,
-          mailId,
-          updatedRow,
-        );
+        this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow);
       }
       this.applyMailBadgeCountsFromSnapshot();
       return { ok: true, granted: res.granted };

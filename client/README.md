@@ -1282,6 +1282,8 @@ cd client && npm install && npm run dev
 
 **CLIENT-209（邮件分 tab 未读与日常可领取 HUD 待办联动扫读）**：邮件面板 **`formatMailTabUnreadSweepLine`**（各 tab 未读/未领附件只读计数，与 **CLIENT-177** tab 角标同源）+ **`formatMailPanelHudCombinedSweepLine`**（**`formatQuestClaimHudLinkLine`** 首条可领 `#quest_cfg_id` 与邮件未读合并；**CLIENT-193** 底栏 `formatHudTodoSweepLine` **不退化**）。HUD 轮询 bump **`data-hud-center-panel-deeplink-stamp`** 与顶栏 **CLIENT-202** 深链行、邮件扫读行共用，并触发 **`mail-tab-hud-sync-pulse`** 1.5s（无新 content RPC）。单测：`mailTabUnreadSweep.test.ts`、`questClaimHudLink.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+**CLIENT-241（邮件附件领取成功与 HUD 邮件/日常可领角标同步残余）**：`ClaimPlayerMailAttachments` 成功后 **`syncHudMailQuestBadgeAfterClaim`** 合并更新 `mailInboxSnapshot` 并推导底栏邮件未读/未领附件与日常可领计数（**CLIENT-050/106/209** 轮询与 tab 角标 **不退化**；**CLIENT-193** `formatHudTodoSweepLine` 与 **CLIENT-209** 扫读行经 `bumpMailClaimHudTodoSweepLinkage` 即时刷新）。列表成功行 **`mail-claim-hud-sync-pulse`** 2s（与 **CLIENT-192** `mail-claim-pulse` 并存）。单测：`mailClaimHudBadgeSync.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 **CLIENT-225（邮件战报类分 tab 扫读与战报 outcome 筛选记忆联动）**：邮件面板顶栏 **战报/系统** 分类 tab + **`formatMailBattleCategorySweepLine`**（分类内未读/未领附件只读计数；**CLIENT-177** 全部/未读/未领附件空态与 **CLIENT-209** HUD 扫读 **不退化**）。自战报类邮件 **查看战报** 深链写入 `sessionStorage` **`report-outcome-filter-bridge-v1`**，打开战报面板时一次性同步 outcome chip（**CLIENT-176** `battle-report-outcome-filter-v1` 记忆保留）；自战报 **相关邮件** 返回时恢复分类 tab 与收件箱 filter。单测：`mailBattleCategory.test.ts`、`reportOutcomeFilterBridge.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
 ### 手动验收（军团提到聊天草稿 CLIENT-084）

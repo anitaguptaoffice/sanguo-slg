@@ -1976,6 +1976,13 @@
       .mail-list li.mail-claim-pulse {
         animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
       }
+      @keyframes mail-claim-hud-sync-pulse-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        50% { box-shadow: 0 0 14px rgba(120, 180, 220, 0.65); outline: 1px solid rgba(120, 180, 220, 0.45); }
+      }
+      .mail-list li.mail-claim-hud-sync-pulse {
+        animation: mail-claim-hud-sync-pulse-keyframes 2s ease-out 1;
+      }
       .mail-list li.mail-claim-error {
         outline: 1px solid #c45c4a;
         background: rgba(92, 48, 24, 0.35);
