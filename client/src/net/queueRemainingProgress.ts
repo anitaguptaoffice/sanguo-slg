@@ -12,6 +12,11 @@ import {
   formatDomesticQueueEtaSegmentResidualLabel,
 } from "@/net/domesticQueueEtaSegmentResidual";
 import {
+  DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEP_FINISH_CLASS,
+  DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEP_LABEL_CLASS,
+  formatDomesticQueueEtaSegmentResidualDeepLabel,
+} from "@/net/domesticQueueEtaSegmentResidualDeep";
+import {
   computeQueueRowProgressBarWidthPercent,
   formatQueueRemainingEtaLine,
   QUEUE_ROW_ETA_LINE_CLASS,
@@ -79,6 +84,16 @@ export function renderQueueRemainingProgressMarkup(
       parts.push(
         `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_LABEL_CLASS}">${escapeHtml(etaResidual)}</span>`,
       );
+      const etaDeep =
+        finishAtMs != null && finishAtMs > 0
+          ? formatDomesticQueueEtaSegmentResidualDeepLabel(finishAtMs, nowMs)
+          : null;
+      if (etaDeep) {
+        parts.push(
+          `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEP_LABEL_CLASS}">${escapeHtml(etaDeep.consolidate)}</span>`,
+          `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEP_FINISH_CLASS}">${escapeHtml(etaDeep.finishCountdown)}</span>`,
+        );
+      }
     }
   }
   parts.push(
