@@ -3319,6 +3319,11 @@
         overflow-wrap: anywhere;
       }
       .rank-panel .rank-refresh-cooldown-residual-deep-stamp.hidden { display: none; }
+      .rank-panel .rank-refresh-cooldown-residual-deeper-stamp {
+        margin: 2px 0 0; font-size: 10px; line-height: 1.35; color: #7a94b8;
+        overflow-wrap: anywhere;
+      }
+      .rank-panel .rank-refresh-cooldown-residual-deeper-stamp.hidden { display: none; }
       @keyframes rank-pin-keep-residual-ring-keyframes {
         0%, 100% { box-shadow: inset 0 0 0 0 rgba(201, 162, 39, 0); }
         35% { box-shadow: inset 0 0 0 2px rgba(201, 162, 39, 0.95); }
@@ -3338,6 +3343,19 @@
       .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring.rank-pin-keep-residual-deep-ring td {
         animation: rank-pin-keep-residual-ring-keyframes 1.5s ease-out 1,
           rank-pin-keep-residual-deep-ring-keyframes 2s ease-out 1;
+      }
+      @keyframes rank-pin-keep-residual-deeper-ring-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 rgba(106, 132, 168, 0); }
+        42% { box-shadow: inset 0 0 0 4px rgba(106, 132, 168, 0.9); }
+        78% { box-shadow: inset 0 0 0 2px rgba(106, 132, 168, 0.55); }
+      }
+      .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td {
+        animation: rank-pin-keep-residual-deeper-ring-keyframes 2.5s ease-out 1;
+      }
+      .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring.rank-pin-keep-residual-deep-ring.rank-pin-keep-residual-deeper-ring td {
+        animation: rank-pin-keep-residual-ring-keyframes 1.5s ease-out 1,
+          rank-pin-keep-residual-deep-ring-keyframes 2s ease-out 1,
+          rank-pin-keep-residual-deeper-ring-keyframes 2.5s ease-out 1;
       }
       .rank-table .rank-empty-retry-inline,
       .rank-panel .rank-empty-retry-inline {
@@ -4190,6 +4208,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deep"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deeper"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-member-online-summary,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-member-online-summary"],
@@ -4310,7 +4329,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list-filter-chip-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deep-subline,
@@ -4424,8 +4445,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list-filter-chip-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deep-ring td,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-sweep,
@@ -4483,8 +4506,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-pin-refresh-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deep-ring td,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-residual-line {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }
