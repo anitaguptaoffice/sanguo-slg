@@ -1,7 +1,7 @@
 {
   "task": "HERO-HOST-PLACEHOLDER-001",
   "mode": "fixture",
-  "git_tip_sha": "8b97cf8e8176b86d95e2ed9d6de507e9d1b20baa",
+  "git_tip_sha": "fdba70377e15cc72d16e5bc3d323a333c54cc119",
   "probes": {
     "1600x900-dpr1": {
       "ok": true,
@@ -91,7 +91,7 @@
       }
     },
     "hero-host-1600x900-dpr2.jpg": {
-      "bytes": 89736,
+      "bytes": 89715,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",

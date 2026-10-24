@@ -1,11 +1,11 @@
 # HERO-HOST-PLACEHOLDER-001 runtime inventory
 
-Git tip SHA: `8b97cf8e8176b86d95e2ed9d6de507e9d1b20baa`
+Git tip SHA: `fdba70377e15cc72d16e5bc3d323a333c54cc119`
 
 Mode: Vite fixture mount (real AssetLoader + placeholder PNGs).
 
 - `runtime/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 34295 bytes, sha256 `35b384d972beb267c71757d55dcad829477df638cb699a0ef720bb20d50a9df2`
-- `runtime/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 89736 bytes, sha256 `d3094ee65ade171a6b66673d20b42cfa9c2ca1cdd137c45767be64bd4dde49c0`
+- `runtime/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 89715 bytes, sha256 `93a280c593e4b4e1c2d4cc85728861dfce5b89541986a5bb3e47a29ce25c9e9a`
 - `runtime/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 29980 bytes, sha256 `a6e99311202f3789fc6921c7146d6e73ec09925c31e92bfd25e6b80f61c81f15`
 
 ## Textures (engineering placeholders)
