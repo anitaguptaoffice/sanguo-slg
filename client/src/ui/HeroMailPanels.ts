@@ -36,6 +36,17 @@ import {
   resolveHeroListRowSource,
 } from "@/net/heroListRowFormat";
 import {
+  heroListFilteredEmptyMessage,
+  heroListRowsForDisplay,
+  readHeroListFilterSession,
+  readHeroListSortSession,
+  type HeroListFilter,
+  type HeroListFilterContext,
+  type HeroListSort,
+  writeHeroListFilterSession,
+  writeHeroListSortSession,
+} from "@/net/heroListFilter";
+import {
   applyMailClaimResult,
   syncMailInboxSnapshotAfterClaim,
   syncMailRowAfterClaim,
@@ -159,6 +170,8 @@ export class HeroMailPanels {
   private mailListError = "";
   private mailListLoading = false;
   private heroListLoadError: string | null = null;
+  private heroListFilter: HeroListFilter = "all";
+  private heroListSort: HeroListSort = "level_desc";
   private selectedHeroId = 0;
   private selectedMailId = 0;
   private heroDetail: HeroDetail | null = null;
@@ -197,6 +210,8 @@ export class HeroMailPanels {
 
   attach(): void {
     this.mailFilter = readMailInboxFilterSession() ?? MAIL_INBOX_FILTER_ALL;
+    this.heroListFilter = readHeroListFilterSession();
+    this.heroListSort = readHeroListSortSession();
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
     this.mount.appendChild(this.heroPanel);
@@ -327,6 +342,14 @@ export class HeroMailPanels {
     mountFilterRows(this.mailPanel, loader);
     this.mountMailListRowSkins(loader);
     remountPanelFilterChips(this.mailPanel, loader);
+  }
+
+  /** CLIENT-151：将领列表筛选 chip（CLIENT-121）；列表重绘时内部也会刷新。 */
+  mountHeroListFilterSkins(assets?: AssetLoader): void {
+    const loader = assets ?? this.assets;
+    if (!loader || !this.heroPanel) return;
+    this.syncHeroListFilterChipDom(loader);
+    remountPanelFilterChips(this.heroPanel, loader);
   }
 
   getHeroRoot(): HTMLElement {
@@ -556,6 +579,49 @@ export class HeroMailPanels {
       <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
+        <div
+          class="hero-list-toolbar panel-filter-chip-bar"
+          data-role="hero-list-filter-bar"
+          role="group"
+          aria-label="将领列表筛选"
+        >
+          <button
+            type="button"
+            class="hero-filter-btn"
+            data-ui-filter-chip
+            data-action="hero-filter-all"
+            aria-pressed="true"
+          >
+            <span class="art-filter-chip-label">全部</span>
+          </button>
+          <button
+            type="button"
+            class="hero-filter-btn"
+            data-ui-filter-chip
+            data-action="hero-filter-deployable"
+            aria-pressed="false"
+          >
+            <span class="art-filter-chip-label">可出征</span>
+          </button>
+          <button
+            type="button"
+            class="hero-filter-btn"
+            data-ui-filter-chip
+            data-action="hero-sort-level"
+            aria-pressed="true"
+          >
+            <span class="art-filter-chip-label">等级↓</span>
+          </button>
+          <button
+            type="button"
+            class="hero-filter-btn"
+            data-ui-filter-chip
+            data-action="hero-sort-loyalty"
+            aria-pressed="false"
+          >
+            <span class="art-filter-chip-label">忠诚↓</span>
+          </button>
+        </div>
         <ul class="hero-list" data-role="hero-list"></ul>
         <div class="hero-detail" data-role="hero-detail"></div>
       </div>
@@ -598,19 +664,54 @@ export class HeroMailPanels {
     return el;
   }
 
+  private heroListFilterContext(): HeroListFilterContext | undefined {
+    const detail = this.heroDetail;
+    const heroId = detail?.hero_id ?? 0;
+    const lmin = detail?.loyalty_min;
+    if (heroId <= 0 || lmin == null || !Number.isFinite(lmin)) return undefined;
+    return { detailLoyaltyMinByHeroId: new Map([[heroId, lmin]]) };
+  }
+
+  private syncHeroListFilterChipDom(assets?: AssetLoader): void {
+    const bar = this.heroPanel?.querySelector('[data-role="hero-list-filter-bar"]');
+    if (!bar) return;
+    const chipButtons = bar.querySelectorAll<HTMLButtonElement>("button[data-ui-filter-chip]");
+    syncFilterChipAria(chipButtons, (btn) => {
+      const action = btn.dataset.action;
+      if (action === "hero-filter-all") return this.heroListFilter === "all";
+      if (action === "hero-filter-deployable") return this.heroListFilter === "deployable";
+      if (action === "hero-sort-level") return this.heroListSort === "level_desc";
+      if (action === "hero-sort-loyalty") return this.heroListSort === "loyalty_desc";
+      return false;
+    });
+    const loader = assets ?? this.assets;
+    if (loader) remountPanelFilterChips(this.heroPanel, loader);
+  }
+
   private renderHeroList(): void {
     const ul = this.heroPanel.querySelector('[data-role="hero-list"]');
     const detailEl = this.heroPanel.querySelector('[data-role="hero-detail"]');
     if (!ul) return;
     ul.innerHTML = "";
+    this.syncHeroListFilterChipDom();
+    const visibleHeroes = heroListRowsForDisplay(
+      this.heroes,
+      this.heroListFilter,
+      this.heroListSort,
+      this.heroListFilterContext(),
+    );
     if (this.heroesRefreshInflight && !this.heroes.length) {
       renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, { assets: this.assets });
     } else if (!this.heroes.length) {
       const msg = this.heroListLoadError ?? heroListLines([])[0];
       const kind = this.heroListLoadError ? "error" : "empty";
       renderPanelStateListRow(ul, kind, msg, { assets: this.assets });
+    } else if (!visibleHeroes.length) {
+      renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
+        assets: this.assets,
+      });
     } else {
-      for (const h of this.heroes) {
+      for (const h of visibleHeroes) {
         const li = document.createElement("li");
         li.setAttribute("data-ui-panel-listrow", HERO_LIST_ROW_PANEL_SKIN_ID);
         const rowSource = resolveHeroListRowSource(h, this.heroDetail);
@@ -1564,6 +1665,26 @@ export class HeroMailPanels {
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-heroes") void this.refreshHeroes({ pulseOnSuccess: true });
+    if (a === "hero-filter-all") {
+      this.heroListFilter = "all";
+      writeHeroListFilterSession(this.heroListFilter);
+      this.renderHeroList();
+    }
+    if (a === "hero-filter-deployable") {
+      this.heroListFilter = "deployable";
+      writeHeroListFilterSession(this.heroListFilter);
+      this.renderHeroList();
+    }
+    if (a === "hero-sort-level") {
+      this.heroListSort = "level_desc";
+      writeHeroListSortSession(this.heroListSort);
+      this.renderHeroList();
+    }
+    if (a === "hero-sort-loyalty") {
+      this.heroListSort = "loyalty_desc";
+      writeHeroListSortSession(this.heroListSort);
+      this.renderHeroList();
+    }
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "recruit-hero") void this.recruitHero();
     if (a === "recruit-open-hero-detail") {

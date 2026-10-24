@@ -468,6 +468,7 @@ export class MainCityScene implements Scene {
     );
     this.heroMail.attach();
     this.heroMail.mountMailFilterSkins(this.assets);
+    this.heroMail.mountHeroListFilterSkins(this.assets);
     this.battleReports = new BattleReportPanel(
       parent,
       this.gateway,
@@ -693,6 +694,7 @@ export class MainCityScene implements Scene {
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
     registerArtFilter008EvidenceHooks(this.assets);
     remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
+    remountPanelFilterChips(this.heroMail.getHeroRoot(), this.assets);
     remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
     remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
     mountFilterListPanelSkins(this.heroMail.getMailRoot(), this.assets);

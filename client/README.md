@@ -508,6 +508,15 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. 行容器可选挂 `data-ui-panel-listrow="ui.panel.listrow.default.v1"`；`data-hero-id` / `hero-row-recruited-pulse` / 滚入视逻辑不变。
 3. 单测：`heroListRowFormat.test.ts`、`HeroMailPanels.test.ts`；全量 `cd client && npm test`。
 
+### 手动验收（将领列表筛选排序记忆 CLIENT-151）
+
+在 [CLIENT-132](#手动验收将领列表行扫读-client-132) 行扫读与 [CLIENT-099](#手动验收将领列表刷新与选中记忆-client-099) 选中记忆不退化前提下：
+
+1. 将领列表上方筛选条：**全部 / 可出征** + 排序 **等级↓ / 忠诚↓**（`data-ui-filter-chip`；`data-art-skin=off` 回退文字按钮）。
+2. 筛选与排序仅客户端处理已加载 `ListPlayerHeroes` 快照，不写新 RPC；「可出征」按忠诚阈值（默认 ≥30，已加载详情时尊重 `loyalty_min`）过滤。
+3. `sessionStorage`：**`hero-list-filter-v1`** / **`hero-list-sort-v1`** 跨会话记忆；筛选无匹配走 **CLIENT-129** empty 占位，加载/拉取失败仍走 **CLIENT-129** loading/error。
+4. 单测：`heroListFilter.test.ts`（`filterHeroListRows` / `sortHeroListRows`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
