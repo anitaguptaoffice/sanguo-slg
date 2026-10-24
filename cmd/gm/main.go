@@ -192,7 +192,7 @@ func smokeBoot(ctx context.Context) {
 	defer app.Close()
 	app.Log.Info("gm ready", "postgres", app.Config.DatabaseURL, "redis", app.Config.RedisAddr)
 	fmt.Println("sanguo-slg gm: platform wiring ok; subcommands lookup|grant|kick|mute|send-mail")
-	fmt.Println("smoke: see tools/smoke/README.md (INTG-036 TestINTG036Wave39SmokePath; INTG-035 TestINTG035Wave38SmokePath; INTG-034 TestINTG034Wave37SmokePath; INTG-033 TestINTG033Wave36SmokePath; INTG-032 TestINTG032Wave35SmokePath; INTG-031 TestINTG031Wave34SmokePath; INTG-030 TestINTG030Wave33SmokePath; INTG-029 TestINTG029Wave32SmokePath; INTG-028 TestINTG028Wave31SmokePath; INTG-027 TestINTG027Wave30SmokePath; INTG-026 TestINTG026Wave29SmokePath; INTG-009 TestINTG009Wave12SmokePath; INTG-008 TestINTG008Wave11SmokePath; INTG-007 TestINTG007M4DeepSmokePath; INTG-006 TestINTG006Data002SmokePath)")
+	fmt.Println("smoke: see tools/smoke/README.md (INTG-038 TestINTG038Wave41SmokePath; INTG-037 TestINTG037Wave40SmokePath; INTG-036 TestINTG036Wave39SmokePath; INTG-035 TestINTG035Wave38SmokePath; INTG-034 TestINTG034Wave37SmokePath; INTG-033 TestINTG033Wave36SmokePath; INTG-032 TestINTG032Wave35SmokePath; INTG-031 TestINTG031Wave34SmokePath; INTG-030 TestINTG030Wave33SmokePath; INTG-029 TestINTG029Wave32SmokePath; INTG-028 TestINTG028Wave31SmokePath; INTG-027 TestINTG027Wave30SmokePath; INTG-026 TestINTG026Wave29SmokePath; INTG-009 TestINTG009Wave12SmokePath; INTG-008 TestINTG008Wave11SmokePath; INTG-007 TestINTG007M4DeepSmokePath; INTG-006 TestINTG006Data002SmokePath)")
 }
 
 func usage() {
