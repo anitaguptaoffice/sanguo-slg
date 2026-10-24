@@ -110,6 +110,9 @@ describe("formatPanelGatewayError", () => {
     expect(formatPanelGatewayError("march", 50005, "hero: hero is not idle")).toBe(
       "出征参数无效：将领当前非空闲，无法出征 [50005]",
     );
+    expect(formatPanelGatewayError("march", 50005, "hero: insufficient march force")).toBe(
+      "出征参数无效：将领出征体力不足 [50005]",
+    );
     expect(formatPanelGatewayError("march", 10001, "hero: hero not found")).toBe(
       "将领不存在或不属于您 [10001]",
     );

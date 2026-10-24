@@ -65,8 +65,12 @@ describe("heroMailState", () => {
       exp_toward_next: 50,
       upgrade_exp_required: 700,
       attributes: { force: 95, intel: 75, politics: 60, command: 88 },
+      march_force: 30,
+      march_force_max: 44,
     });
     expect(detail.template_name).toBe("云长");
+    expect(detail.march_force).toBe(30);
+    expect(detail.march_force_max).toBe(44);
     expect(detail.rarity).toBe(5);
     expect(detail.exp_current).toBe(50);
     expect(detail.exp_to_next).toBe(700);

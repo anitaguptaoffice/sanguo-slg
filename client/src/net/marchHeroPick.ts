@@ -176,5 +176,8 @@ export function normalizeMarchHeroGatewayMessage(msg: string): string {
   if (lower.includes("not idle") || lower.includes("hero is not idle")) {
     return "将领当前非空闲，无法出征";
   }
+  if (lower.includes("insufficient march force")) {
+    return "将领出征体力不足";
+  }
   return msg;
 }

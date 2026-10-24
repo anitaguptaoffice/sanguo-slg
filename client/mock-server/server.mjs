@@ -403,6 +403,12 @@ function mockNormalizeExprHours(hours) {
   return Math.min(4, Math.max(1, h));
 }
 
+function mockHeroMarchForceMax(level) {
+  const lv = level >= 1 ? level : 1;
+  const max = 20 + lv * 4;
+  return max > 100 ? 100 : max;
+}
+
 function mockHeroDetailPayload(row) {
   const meta =
     HERO_TEMPLATE_DETAIL_META[row.template_cfg_id] ?? {
@@ -433,6 +439,8 @@ function mockHeroDetailPayload(row) {
       politics: 55 + Math.floor(level / 3) + (row.politics_add ?? 0),
       command: 60 + Math.floor(level / 2),
     },
+    march_force: row.march_force ?? mockHeroMarchForceMax(level),
+    march_force_max: mockHeroMarchForceMax(level),
   };
 }
 
@@ -1192,6 +1200,28 @@ wss.on("connection", (ws) => {
         h.intel_add = 0;
         h.politics_add = 0;
         replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ClearHeroPointResponse"), mockHeroPointResponse(h));
+        return;
+      }
+
+      if (route === "hero.v1.RestHero") {
+        const req = T("sanguo.hero.v1.RestHeroRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? HERO_MOCK_STATUS_IDLE) !== HERO_MOCK_STATUS_IDLE) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not in city");
+          return;
+        }
+        const max = mockHeroMarchForceMax(h.level ?? 1);
+        h.march_force = max;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.RestHeroResponse"), {
+          hero_id: heroId,
+          march_force: max,
+          march_force_max: max,
+        });
         return;
       }
 

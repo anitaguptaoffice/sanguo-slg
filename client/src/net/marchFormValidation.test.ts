@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { HERO_MARCH_FORCE_SESSION_KEY } from "@/net/heroMarchForceSession";
 import {
   MARCH_FORM_INFANTRY_UNIT_CFG_ID,
   setMarchFormErrorDisplay,
@@ -80,6 +81,21 @@ describe("validateMarchForm", () => {
     const r = validateMarchForm({ ...base, heroIdRaw: "" });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.message).toContain("请选择带队将领");
+  });
+
+  it("rejects march when session cached hero march force is too low", () => {
+    sessionStorage.setItem(
+      HERO_MARCH_FORCE_SESSION_KEY,
+      JSON.stringify({ "7": { current: 5, max: 40, updatedAtMs: 1 } }),
+    );
+    const r = validateMarchForm({
+      ...base,
+      heroIdRaw: "7",
+      ownedHeroes: [{ hero_id: 7, template_cfg_id: 1001, level: 1, loyalty: 50, status: 1 }],
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toContain("体力不足");
+    sessionStorage.removeItem(HERO_MARCH_FORCE_SESSION_KEY);
   });
 });
 

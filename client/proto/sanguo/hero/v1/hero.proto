@@ -52,6 +52,8 @@ message GetHeroDetailResponse {
   int64 exp = 11;
   int64 exp_toward_next = 12;
   int64 upgrade_exp_required = 13;
+  int32 march_force = 14;
+  int32 march_force_max = 15;
 }
 
 // route: hero.v1.UpgradeHero
@@ -471,4 +473,16 @@ message FasterHeroExprResponse {
   int32 status = 2;
   int64 exp_gained = 3;
   int64 exp = 4;
+}
+
+// route: hero.v1.RestHero
+message RestHeroRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+}
+
+message RestHeroResponse {
+  int64 hero_id = 1;
+  int32 march_force = 2;
+  int32 march_force_max = 3;
 }
