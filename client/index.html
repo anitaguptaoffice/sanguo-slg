@@ -1976,6 +1976,16 @@
         outline: 2px solid #f0c674;
         box-shadow: 0 0 6px rgba(240, 198, 116, 0.45);
       }
+      .mail-detail .mail-claim-inline-feedback {
+        font-size: 12px;
+        color: #c9e4a0;
+        margin: 6px 0 0;
+        line-height: 1.35;
+      }
+      .mail-detail .mail-claim-inline-feedback.hidden { display: none; }
+      .mail-detail .mail-claim-inline-feedback.mail-claim-inline-pulse {
+        animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
+      }
       .mail-list li.mail-empty { cursor: default; color: #b8a88a; }
       .mail-list li.panel-state-chrome,
       .hero-list li.panel-state-chrome,

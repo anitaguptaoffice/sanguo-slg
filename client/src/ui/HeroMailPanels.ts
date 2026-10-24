@@ -117,7 +117,10 @@ import {
 } from "@/net/mailBatchClaim";
 import {
   findMailListRow,
+  formatMailClaimSuccessLine,
   MAIL_CLAIM_ERROR_CLASS,
+  type MailClaimGrantedPayload,
+  scheduleMailClaimInlinePulse,
   scheduleMailClaimRowPulse,
 } from "@/net/mailClaimFeedback";
 import {
@@ -216,6 +219,9 @@ export class HeroMailPanels {
   private claimMailInflight = 0;
   private mailBatchSelected = new Set<number>();
   private mailBatchClaimFailedIds = new Set<number>();
+  /** CLIENT-192：单封领取详情行内成功文案（按 mail_id 记忆，切换邮件仍可见）。 */
+  private mailClaimSuccessLineByMailId = new Map<number, string>();
+  private mailClaimInlinePulseMailId = 0;
   private recruitHeroInflight = false;
   private recruitLastError: string | null = null;
   private recruitLastSuccessHeroId: number | null = null;
@@ -592,6 +598,24 @@ export class HeroMailPanels {
     scheduleMailClaimRowPulse(findMailListRow(this.mailPanel, mailId));
   }
 
+  private syncMailClaimInlineFeedback(mailId: number): void {
+    const el = this.mailPanel?.querySelector<HTMLElement>('[data-role="mail-claim-inline"]');
+    if (!el) return;
+    const line = mailId > 0 ? this.mailClaimSuccessLineByMailId.get(mailId) : undefined;
+    const show = !!line;
+    el.textContent = line ?? "";
+    el.classList.toggle("hidden", !show);
+    if (show && this.mailClaimInlinePulseMailId === mailId) {
+      this.mailClaimInlinePulseMailId = 0;
+      scheduleMailClaimInlinePulse(el);
+    }
+  }
+
+  private rememberMailClaimInlineSuccess(mailId: number, granted?: MailClaimGrantedPayload): void {
+    this.mailClaimSuccessLineByMailId.set(mailId, formatMailClaimSuccessLine(granted));
+    this.mailClaimInlinePulseMailId = mailId;
+  }
+
   private serverId(): number {
     const s = this.getSession();
     return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
@@ -703,6 +727,7 @@ export class HeroMailPanels {
           <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
           <pre class="mail-body" data-role="mail-body"></pre>
           <button type="button" class="art-btn-primary art-btn-primary-full hidden" data-action="claim-mail">领取附件</button>
+          <p class="mail-claim-inline-feedback hidden" data-role="mail-claim-inline" aria-live="polite"></p>
           <button type="button" class="art-btn-primary art-btn-primary-full hidden mail-cross-link-btn" data-action="mail-open-battle-report">查看战报</button>
         </div>
       </div>
@@ -1147,6 +1172,7 @@ export class HeroMailPanels {
         claimBtn.disabled = this.claimMailInflight !== 0;
       }
     }
+    this.syncMailClaimInlineFeedback(sel?.mail_id ?? 0);
     this.pruneMailBatchSelection();
     this.syncBatchClaimButton();
     if (battleBtn) {
@@ -1705,6 +1731,7 @@ export class HeroMailPanels {
     try {
       if (step.ok) {
         pulseMailId = mailId;
+        this.rememberMailClaimInlineSuccess(mailId, step.granted);
         this.renderMailList();
         await this.syncBagFromServer();
         const snap = await this.pullMailUnreadSnapshot();
