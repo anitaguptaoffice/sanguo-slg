@@ -895,6 +895,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. **`hero-list-selected-v1`** 滚动与选中记忆、详情顶栏 **`formatHeroDetailFromListHint`** 与 **CLIENT-182** 刷新戳记不退化。
 3. 单测：`heroListReturnHighlight.test.ts`、`heroListReturnState.test.ts`（`consumeHeroListReturnState`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+### 手动验收（将领 panelState 与筛选 chip 记忆残余抛光 CLIENT-247）
+
+在 [CLIENT-231](#手动验收将领列表返回高亮与筛选-chip-记忆抛光-client-231) 返回高亮与 [CLIENT-199](#手动验收将领列表详情筛选记忆扫读-client-199) **`hero-list-selected-v1`** 不退化、[CLIENT-129](#panelstatechrome) `data-panel-state` 骨架不退化前提下：
+
+1. 将领列表/详情 **loading / empty / error** 占位下追加只读 **`hero-panel-state-residual-sweep`**（`formatHeroPanelStateResidualSweepLine`：当前筛选/排序记忆 + gateway 重试扫读）；列表首屏拉取失败仍走 **CLIENT-173** 行内 **`panel-gateway-retry`**（`retry-refresh-heroes`）且顶栏 **CLIENT-067** `hero-list-form-error` **不退化**。
+2. 筛选 chip 点击写入 **`hero-list-filter-chip-residual-v1`**（与 **`hero-list-filter-v1` / `hero-list-sort-v1`**、**`hero-list-return-v1`** 并存）；筛选条下 **`hero-list-filter-chip-residual-sweep`** 展示末次 chip 记忆摘要。
+3. 单测：`heroPanelStateResidualSweep.test.ts`、`heroListFilterChipResidual.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领忠诚次行与养成道具堆叠扫读 CLIENT-213）
 
 在 [CLIENT-132](#手动验收将领列表行扫读-client-132) / [CLIENT-165](#手动验收将领详情养成道具缺口与背包深链-client-165) / [CLIENT-198](#手动验收将领详情养成对比-client-072) 不退化前提下：

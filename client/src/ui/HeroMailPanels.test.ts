@@ -33,6 +33,15 @@ import {
   HERO_LIST_RETURN_SESSION_KEY,
   readHeroListReturnState,
 } from "@/net/heroListReturnState";
+import {
+  HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY,
+  readHeroListFilterChipResidualSession,
+} from "@/net/heroListFilterChipResidual";
+import {
+  HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS,
+  HERO_PANEL_STATE_RESIDUAL_SWEEP_ROLE,
+} from "@/net/heroPanelStateResidualSweep";
+import { PANEL_GATEWAY_RETRY_CLASS } from "@/net/panelGatewayError";
 import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
 import { USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL } from "@/net/useConsumableSubmitFeedback";
 import {
@@ -695,6 +704,44 @@ describe("HeroMailPanels", () => {
     sessionStorage.removeItem(HERO_LIST_RETURN_SESSION_KEY);
     sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
+  });
+
+  it("hero-panel-state-residual-sweep and filter chip residual session (CLIENT-247)", async () => {
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_SORT_SESSION_KEY);
+    const mount = document.createElement("div");
+    const err = Object.assign(new Error("网关超时"), { code: 10001 });
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockRejectedValue(err),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    await flushPromises();
+    const residual = mount.querySelector(
+      `[data-role="${HERO_PANEL_STATE_RESIDUAL_SWEEP_ROLE}"].${HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS}`,
+    );
+    expect(residual?.textContent).toContain("刷新列表");
+    expect(
+      mount.querySelector(
+        `button.${PANEL_GATEWAY_RETRY_CLASS}[data-action="retry-refresh-heroes"]`,
+      ),
+    ).toBeTruthy();
+    const errEl = mount.querySelector('[data-role="hero-list-form-error"]');
+    expect(errEl?.textContent).toContain("[10001]");
+    mount
+      .querySelector('[data-action="hero-filter-deployable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(readHeroListFilterChipResidualSession()?.lastChipAction).toBe("hero-filter-deployable");
+    expect(sessionStorage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY)).toBeTruthy();
+    expect(sessionStorage.getItem(HERO_LIST_FILTER_SESSION_KEY)).toBe("deployable");
+    expect(mount.querySelector('[data-role="hero-list-filter-chip-residual-sweep"]')?.textContent).toContain(
+      "可出征",
+    );
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY);
   });
 
   it("hero detail cultivation use shows inflight label, refreshes detail, and pulses on success", async () => {
