@@ -120,6 +120,12 @@ import {
   recruitAffordabilityForTemplate,
   setRecruitAffordabilityErrorDisplay,
 } from "@/net/recruitAffordability";
+import { resolveHeroIdForRecruitTemplate } from "@/net/recruitHeroViewLink";
+import {
+  applyRecruitScrollAnchorSession,
+  writeRecruitScrollAnchorSession,
+} from "@/net/recruitScrollAnchor";
+import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 import {
   buildRecruitSuccessFeedback,
   focusRecruitedHeroListRow,
@@ -812,15 +818,31 @@ export class HeroMailPanels {
     const { wallet, bag } = this.sessionEconomy();
     for (const t of displayTemplates) {
       const li = document.createElement("li");
-      const { primary, secondary } = recruitAffordabilityForTemplate(t, wallet, bag);
+      const { primary } = recruitAffordabilityForTemplate(t, wallet, bag);
+      const sweep = formatRecruitWalletSweepLine(wallet, t, bag);
       const primarySpan = document.createElement("span");
       primarySpan.className = "recruit-afford-primary";
       primarySpan.textContent = primary;
       const secondarySpan = document.createElement("span");
       secondarySpan.className = "recruit-afford-secondary";
-      secondarySpan.textContent = secondary;
+      secondarySpan.textContent = sweep.text;
+      if (sweep.hasDeficit) secondarySpan.classList.add("recruit-cost-deficit");
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
+      const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
+      const viewBtn = document.createElement("button");
+      viewBtn.type = "button";
+      viewBtn.className = "recruit-view-hero-btn";
+      viewBtn.dataset.action = "recruit-view-hero";
+      viewBtn.textContent = "查看将领";
+      if (heroIdForTemplate) {
+        viewBtn.dataset.heroId = String(heroIdForTemplate);
+      } else {
+        viewBtn.disabled = true;
+        viewBtn.classList.add("recruit-view-hero-locked");
+        li.classList.add("recruit-template-locked");
+      }
+      li.appendChild(viewBtn);
       if (t.already_owned) li.classList.add("recruit-owned");
       if (t.template_cfg_id) {
         li.setAttribute("data-template-id", String(t.template_cfg_id));
@@ -837,6 +859,7 @@ export class HeroMailPanels {
     const pickId = this.selectedTemplateId || displayTemplates[0]?.template_cfg_id || 0;
     if (pickId) sel.value = String(pickId);
     this.applyTemplateSelection(pickId);
+    applyRecruitScrollAnchorSession(this.heroPanel);
   }
 
   private applyTemplateSelection(templateCfgId: number): void {
@@ -852,8 +875,9 @@ export class HeroMailPanels {
     if (preview) {
       if (row) {
         const { wallet, bag } = this.sessionEconomy();
-        const { primary, secondary } = recruitAffordabilityForTemplate(row, wallet, bag);
-        preview.textContent = `${primary} — ${secondary}`;
+        const { primary } = recruitAffordabilityForTemplate(row, wallet, bag);
+        const sweep = formatRecruitWalletSweepLine(wallet, row, bag);
+        preview.textContent = `${primary} — ${sweep.text}`;
       } else {
         preview.textContent = this.recruitTemplates.length ? "请选择模板" : "";
       }
@@ -1702,19 +1726,25 @@ export class HeroMailPanels {
   }
 
   private onHeroClick(ev: Event): void {
+    const btn = (ev.target as HTMLElement).closest("button");
+    const btnAction = btn?.getAttribute("data-action");
+    if (btnAction === "recruit-view-hero") {
+      const heroId = Number(btn?.getAttribute("data-hero-id"));
+      if (heroId > 0) void this.loadHeroDetail(heroId);
+      return;
+    }
     const tplLi = (ev.target as HTMLElement).closest("li[data-template-id]");
-    if (tplLi) {
+    if (tplLi && !btn) {
       const id = Number(tplLi.getAttribute("data-template-id"));
       if (id) this.applyTemplateSelection(id);
       return;
     }
     const li = (ev.target as HTMLElement).closest("li[data-hero-id]");
-    if (li) {
+    if (li && !btn) {
       const id = Number(li.getAttribute("data-hero-id"));
       if (id) void this.loadHeroDetail(id);
       return;
     }
-    const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-heroes") void this.refreshHeroes({ pulseOnSuccess: true });
@@ -1758,9 +1788,9 @@ export class HeroMailPanels {
       return;
     }
     if (!this.recruitTemplates.length) await this.refreshRecruitTemplates();
+    writeRecruitScrollAnchorSession(tplId);
     this.applyTemplateSelection(tplId);
-    const anchor = this.heroPanel.querySelector('[data-field="template-select"]');
-    anchor?.scrollIntoView?.({ block: "nearest" });
+    applyRecruitScrollAnchorSession(this.heroPanel);
     this.onStatus(`招募区已预选模板 #${tplId}`);
   }
 

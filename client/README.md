@@ -1352,6 +1352,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 资源或道具不足时 **招募** 按钮禁用，`march-form-error-sibling` 展示中文原因；强行改 DOM 触发仍被客户端拦截。网关 `RecruitHero` 失败时状态栏与错误区与 **CLIENT-067** 一致（`formatPanelGatewayError`，如 `道具不足 [10001]`）。
 4. 单测：`recruitAffordability.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（招募钱包扫读与详情互跳 CLIENT-166）
+
+在 [CLIENT-056](#手动验收将领招募钱包对比-client-056) / [CLIENT-148](#手动验收hud-经济扫读-client-148) HUD `wallet` 与 [CLIENT-099](#手动验收将领列表刷新与选中记忆-client-099) 选中记忆基础上巩固（**无新** hero/recruit RPC；**不重复** wave:26 **CLIENT-114** 提交脉冲/toast 主叙事）：
+
+1. **将领** → 刷新招募模板：列表行 **次行** `formatRecruitWalletSweepLine` 展示招募币种（**币**/将魂碎晶等 `recruit_cost`/`recruit_item`）与顶栏 **wallet**/背包 **余/需** 对比；不足时次行带 **`recruit-cost-deficit`**（只读）。
+2. 招募行 **查看将领**：已拥有同 `template_cfg_id` 时打开 `GetHeroDetail`（`hero_id`）；未拥有实例时按钮 **灰显**（`recruit-template-locked`），招募行选中与 **CLIENT-114** 脉冲不退化。
+3. 详情 **去招募**：预选 `template_cfg_id`，写入 **`recruit-scroll-anchor-v1`** 并滚动至对应模板行；与 **CLIENT-072** 互跳并存。
+4. 单测：`recruitWalletSweep.test.ts`、`recruitScrollAnchor.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领详情养成对比 CLIENT-072）
 
 在 [CLIENT-014](#手动验收将领详情-client-014) / [CLIENT-056](#手动验收将领招募钱包对比-client-056) 基础上：
