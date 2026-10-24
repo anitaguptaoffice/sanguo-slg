@@ -1073,6 +1073,61 @@ describe("HeroMailPanels", () => {
     expect(nextAtByCall.length).toBe(1);
   });
 
+  it("hero detail points add/clear calls AddHeroPoint and ClearHeroPoint", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 7, template_cfg_id: 1001, level: 3, loyalty: 80, status: 1 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 7,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 3,
+        loyalty: 80,
+        status: 1,
+        attributes: { force: 65, intel: 59, politics: 56, command: 61 },
+      }),
+      addHeroPoint: vi.fn().mockResolvedValue({
+        hero_id: 7,
+        potential_remaining: 2,
+        force_add: 1,
+        intel_add: 0,
+        politics_add: 0,
+        attributes: { force: 66, intel: 59, politics: 56, command: 61 },
+      }),
+      clearHeroPoint: vi.fn().mockResolvedValue({
+        hero_id: 7,
+        potential_remaining: 3,
+        force_add: 0,
+        intel_add: 0,
+        politics_add: 0,
+        attributes: { force: 65, intel: 59, politics: 56, command: 61 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="7"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const forceBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-point-add"][data-stat="force"]');
+    expect(forceBtn?.disabled).toBe(false);
+    forceBtn?.click();
+    await flushPromises();
+    expect(gateway.addHeroPoint).toHaveBeenCalledWith(1, 7, { force: 66, intel: 59, politics: 56 });
+    expect(mount.querySelector('[data-role="hero-point-success"]')?.textContent).toContain("武力");
+    const clearBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-point-clear"]');
+    expect(clearBtn?.disabled).toBe(false);
+    clearBtn?.click();
+    await flushPromises();
+    expect(gateway.clearHeroPoint).toHaveBeenCalledWith(1, 7);
+    expect(mount.querySelector('[data-role="hero-point-success"]')?.textContent).toContain("洗点成功");
+  });
+
   it("hero detail upgrade calls UpgradeHero, updates level/exp, and shows success", async () => {
     const mount = document.createElement("div");
     let level = 2;

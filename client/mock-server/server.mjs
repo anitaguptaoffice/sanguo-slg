@@ -411,11 +411,37 @@ function mockHeroDetailPayload(row) {
     exp_toward_next: expTowardNext,
     upgrade_exp_required: upgradeExpRequired,
     attributes: {
-      force: 62 + level,
-      intel: 58 + Math.floor(level / 2),
-      politics: 55 + Math.floor(level / 3),
+      force: 62 + level + (row.force_add ?? 0),
+      intel: 58 + Math.floor(level / 2) + (row.intel_add ?? 0),
+      politics: 55 + Math.floor(level / 3) + (row.politics_add ?? 0),
       command: 60 + Math.floor(level / 2),
     },
+  };
+}
+
+function mockHeroPointBudget(level) {
+  return level < 0 ? 0 : level;
+}
+
+function mockHeroPointUsed(row) {
+  return (row.force_add ?? 0) + (row.intel_add ?? 0) + (row.politics_add ?? 0);
+}
+
+function mockHeroPointRemaining(row) {
+  const level = row.level ?? 1;
+  const rem = mockHeroPointBudget(level) - mockHeroPointUsed(row);
+  return rem < 0 ? 0 : rem;
+}
+
+function mockHeroPointResponse(row) {
+  const detail = mockHeroDetailPayload(row);
+  return {
+    hero_id: row.hero_id,
+    potential_remaining: mockHeroPointRemaining(row),
+    attributes: detail.attributes,
+    force_add: row.force_add ?? 0,
+    intel_add: row.intel_add ?? 0,
+    politics_add: row.politics_add ?? 0,
   };
 }
 
@@ -1090,6 +1116,65 @@ wss.on("connection", (ws) => {
           upgrade_exp_required: detail.upgrade_exp_required,
           attributes: detail.attributes,
         });
+        return;
+      }
+
+      if (route === "hero.v1.AddHeroPoint") {
+        const req = T("sanguo.hero.v1.AddHeroPointRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? 1) !== 1) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not in city");
+          return;
+        }
+        const detail = mockHeroDetailPayload({ ...h, force_add: 0, intel_add: 0, politics_add: 0 });
+        const base = detail.attributes;
+        const targetF = req.force ?? base.force;
+        const targetI = req.intel ?? base.intel;
+        const targetP = req.politics ?? base.politics;
+        const newF = targetF - base.force;
+        const newI = targetI - base.intel;
+        const newP = targetP - base.politics;
+        if (newF < 0 || newI < 0 || newP < 0) {
+          reply(ws, cp.trace_id, 10001, "hero: invalid point targets");
+          return;
+        }
+        if (newF < (h.force_add ?? 0) || newI < (h.intel_add ?? 0) || newP < (h.politics_add ?? 0)) {
+          reply(ws, cp.trace_id, 10001, "hero: invalid point targets");
+          return;
+        }
+        const used = newF + newI + newP;
+        if (used > mockHeroPointBudget(h.level ?? 1)) {
+          reply(ws, cp.trace_id, 10001, "hero: insufficient potential points");
+          return;
+        }
+        h.force_add = newF;
+        h.intel_add = newI;
+        h.politics_add = newP;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.AddHeroPointResponse"), mockHeroPointResponse(h));
+        return;
+      }
+
+      if (route === "hero.v1.ClearHeroPoint") {
+        const req = T("sanguo.hero.v1.ClearHeroPointRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? 1) !== 1) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not in city");
+          return;
+        }
+        h.force_add = 0;
+        h.intel_add = 0;
+        h.politics_add = 0;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ClearHeroPointResponse"), mockHeroPointResponse(h));
         return;
       }
 

@@ -1,4 +1,5 @@
 import { GATEWAY_WS_URL } from "@/config";
+import { parseHeroPointResponse } from "@/net/heroDetailPoints";
 import { parseUpgradeHeroResponse } from "@/net/heroDetailUpgrade";
 import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMailState";
 import { getTypes, Routes } from "@/net/loadProto";
@@ -76,6 +77,12 @@ export type GatewayPort = {
   listPlayerHeroes(serverId: number, opts?: { pageSize?: number; pageOffset?: number }): Promise<unknown>;
   getHeroDetail(serverId: number, heroId: number): Promise<unknown>;
   upgradeHero(serverId: number, heroId: number): Promise<unknown>;
+  addHeroPoint(
+    serverId: number,
+    heroId: number,
+    targets: { force: number; intel: number; politics: number },
+  ): Promise<unknown>;
+  clearHeroPoint(serverId: number, heroId: number): Promise<unknown>;
   recruitHero(
     serverId: number,
     templateCfgId: number,
@@ -559,6 +566,42 @@ export class GatewayClient implements GatewayPort {
       true,
     );
     return parseUpgradeHeroResponse(raw);
+  }
+
+  async addHeroPoint(
+    serverId: number,
+    heroId: number,
+    targets: { force: number; intel: number; politics: number },
+  ) {
+    requireHeroIdForDetail(heroId);
+    const { AddHeroPointResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.AddHeroPoint,
+      "AddHeroPointRequest",
+      {
+        server_id: serverId,
+        hero_id: heroId,
+        force: targets.force,
+        intel: targets.intel,
+        politics: targets.politics,
+      },
+      AddHeroPointResponse,
+      true,
+    );
+    return parseHeroPointResponse(raw);
+  }
+
+  async clearHeroPoint(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { ClearHeroPointResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.ClearHeroPoint,
+      "ClearHeroPointRequest",
+      { server_id: serverId, hero_id: heroId },
+      ClearHeroPointResponse,
+      true,
+    );
+    return parseHeroPointResponse(raw);
   }
 
   async recruitHero(
