@@ -154,6 +154,11 @@ import {
   syncRankRefreshCooldownResidualDeepStamp,
 } from "@/net/rankRefreshCooldownResidualDeep";
 import {
+  formatRankRefreshCooldownResidualDeeperStamp,
+  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPER_STAMP_ROLE,
+  syncRankRefreshCooldownResidualDeeperStamp,
+} from "@/net/rankRefreshCooldownResidualDeeper";
+import {
   appendRankListDensityScanResidualDeepSubline,
   formatRankListDensityScanResidualDeepLine,
 } from "@/net/rankListDensityScanResidualDeep";
@@ -612,6 +617,7 @@ export class SocialPanels {
       <span class="rank-refresh-cooldown-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}" aria-live="polite"></span>
       <p class="rank-refresh-cooldown-residual-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE}" aria-live="polite"></p>
       <p class="rank-refresh-cooldown-residual-deep-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_ROLE}" aria-live="polite"></p>
+      <p class="rank-refresh-cooldown-residual-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -1173,6 +1179,15 @@ export class SocialPanels {
     syncRankRefreshCooldownResidualDeepStamp(
       this.rankPanel,
       formatRankRefreshCooldownResidualDeepStamp(
+        lastRefreshMs,
+        lastManualMs,
+        manualCount,
+        nowMs,
+      ) || null,
+    );
+    syncRankRefreshCooldownResidualDeeperStamp(
+      this.rankPanel,
+      formatRankRefreshCooldownResidualDeeperStamp(
         lastRefreshMs,
         lastManualMs,
         manualCount,
