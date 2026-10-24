@@ -10,6 +10,7 @@ import {
 } from "@/engine/artUiFilterSkin";
 import {
   FILTER_CHIP_BUTTON_SELECTOR,
+  FILTER_CHIP_DISPLAY_W,
   probeFilterChipHitMeetsMin,
   readFilterChipCssMinHit,
   remountPanelFilterChips,
@@ -94,6 +95,16 @@ describe("probeFilterChipHitMeetsMin", () => {
     );
     expect(dailyHtml).toContain("data-ui-filter-chip");
     expect(FILTER_CHIP_BUTTON_SELECTOR).toBe("button[data-ui-filter-chip]");
+  });
+});
+
+describe("CLIENT-136 index.css contract", () => {
+  it("skinned chips reserve 72px visual min-width and paper label color", () => {
+    const indexHtml = readFileSync(join(repoRoot, "client/index.html"), "utf8");
+    expect(indexHtml).toContain("art-filter-chip--skinned");
+    expect(indexHtml).toContain(`min-width: ${FILTER_CHIP_DISPLAY_W}px`);
+    expect(indexHtml).toMatch(/art-filter-chip--skinned[\s\S]*color:\s*#3d2e1f/i);
+    expect(indexHtml).toMatch(/art-filter-row--skinned[\s\S]*color:\s*#3d2e1f/i);
   });
 });
 

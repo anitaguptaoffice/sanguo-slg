@@ -1,6 +1,6 @@
 {
   "art_asset_source_commit": "38451735d5d1004072fd0c07f40757332afe351c",
-  "captured_at": "2026-10-23T23:27:42.917Z",
+  "captured_at": "2026-10-24T00:32:26.527Z",
   "asset_ids": [
     "ui.chip.filter.v1",
     "ui.chip.filter.hover.v1",
@@ -42,10 +42,18 @@
       "w": 72,
       "h": 32
     },
+    "skinned_visual_min_width_px": 72,
     "min_hit_wrap_px": 44,
     "css_in_index_html": true,
+    "skinned_min_width_in_index": true,
+    "paper_label_color": "#3d2e1f",
     "helper": "artUiFilterSkin.mountFilterChip + button.art-filter-chip",
-    "data_art_skin_off": "skips sprite mount; preserves text label"
+    "data_art_skin_off": "skips sprite mount; preserves text label",
+    "runtime_probes": [
+      "sprite intersection inside button",
+      "adjacent hit boxes non-overlapping",
+      "elementFromPoint center"
+    ]
   },
   "runtime_selectors": {
     "chip": "button[data-ui-filter-chip]",

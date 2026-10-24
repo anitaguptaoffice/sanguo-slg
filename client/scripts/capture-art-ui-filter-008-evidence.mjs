@@ -87,11 +87,20 @@ async function main() {
     },
     chip_hit_contract: {
       sprite_display_px: { w: 72, h: 32 },
+      skinned_visual_min_width_px: 72,
       min_hit_wrap_px: 44,
       css_in_index_html:
         indexHtml.includes("min-width: 44px") && indexHtml.includes("min-height: 44px"),
+      skinned_min_width_in_index: indexHtml.includes("art-filter-chip--skinned") &&
+        indexHtml.includes("min-width: 72px"),
+      paper_label_color: "#3d2e1f",
       helper: "artUiFilterSkin.mountFilterChip + button.art-filter-chip",
       data_art_skin_off: "skips sprite mount; preserves text label",
+      runtime_probes: [
+        "sprite intersection inside button",
+        "adjacent hit boxes non-overlapping",
+        "elementFromPoint center",
+      ],
     },
     runtime_selectors: {
       chip: "button[data-ui-filter-chip]",

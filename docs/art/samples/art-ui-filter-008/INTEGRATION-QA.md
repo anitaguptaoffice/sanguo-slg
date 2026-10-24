@@ -1,73 +1,39 @@
-# ART-UI-FILTER-008 运行时工程验收（非美术静态 PASS）
+# ART-UI-FILTER-008 运行时工程验收（CLIENT-136 补证）
 
 | 项 | 值 |
 |---|---|
-| tip SHA | `8c45fa1ac3429cec3811211d34cc3c7a7d158f50` |
-| 范围 | 邮件 + 日常筛选面板（wave:27 CLIENT-121～127 + #509 mount） |
+| tip SHA | `b2e123e76dbd470c5f7a3eaf039554e6e2a5b1c3` |
+| 范围 | 邮件 + 日常；全视口 JPEG（非面板 crop） |
 | 采集 | Playwright Chromium + mock 网关 + vite dev |
 | 再生 | `cd client && node scripts/capture-art-ui-filter-008-runtime-evidence.mjs` |
 
-## 结论（工程探针 + JPEG）
+## 结论（探针 + 目视 JPEG；非美术静态 PASS）
 
 | 检查项 | 结果 |
 |---|---|
-| 筛选 chip DOM ≥44×44（`getBoundingClientRect` / CSS min 回退，对齐 `probeFilterChipHitMeetsMin`） | **PASS** |
-| count>0 角标节点可见 | **PASS** |
-| count=0 整块角标节点 `hidden` + `.hidden`（非仅空文案） | **PASS** |
-| 综合（本包工程终验证据，仍非美术签字） | **PASS** |
+| chip DOM ≥44×44（仅进展指标，不单独等同完整命中 PASS） | **PASS** |
+| 72×32 精灵完全落在按钮可视槽内（可见交集） | **PASS** |
+| 相邻 chip 命中盒无重叠 | **PASS** |
+| elementFromPoint 中心落点命中 chip | **PASS** |
+| 纸底 chip 标签色 #3d2e1f | **PASS** |
+| 九宫行高约 ≥40px | **PASS** |
+| count 9 / 9+ 角标（跳过 count=0 重拍） | **PASS** |
+| 综合工程补证 | **PASS** |
 
-## 视口 JPEG
+## 全视口 JPEG
 
 | 文件 | 视口 | 面板 |
 |---|---|---|
-| `runtime/mail-filters-1600x900-dpr1.jpg` | 1600x900-dpr1 | mail |
-| `runtime/mail-filters-1600x900-dpr2.jpg` | 1600x900-dpr2 | mail |
+| `runtime/mail-filters-1600x900.jpg` | 1600x900 | mail |
+| `runtime/mail-filters-3200x1800.jpg` | 3200x1800 | mail |
 | `runtime/mail-filters-1280x720.jpg` | 1280x720 | mail |
-| `runtime/daily-filters-1600x900-dpr1.jpg` | 1600x900-dpr1 | daily |
-| `runtime/daily-filters-1600x900-dpr2.jpg` | 1600x900-dpr2 | daily |
+| `runtime/daily-filters-1600x900.jpg` | 1600x900 | daily |
+| `runtime/daily-filters-3200x1800.jpg` | 3200x1800 | daily |
 | `runtime/daily-filters-1280x720.jpg` | 1280x720 | daily |
-| `runtime/mail-filters-badge-zero-1600x900-dpr1.jpg` | 1600×900 DPR1 | mail（空收件箱，角标归零） |
-
-## Chip 探针明细（px）
-
-| 面板 | 视口 | chip | width | height | ≥44 |
-|---|---|---|---:|---:|---|
-| mail | 1600x900-dpr1 | mail-filter-all | 74.0 | 44.0 | Y |
-| mail | 1600x900-dpr1 | mail-filter-unread | 74.0 | 44.0 | Y |
-| mail | 1600x900-dpr2 | mail-filter-all | 74.0 | 44.0 | Y |
-| mail | 1600x900-dpr2 | mail-filter-unread | 74.0 | 44.0 | Y |
-| mail | 1280x720 | mail-filter-all | 107.0 | 44.0 | Y |
-| mail | 1280x720 | mail-filter-unread | 107.0 | 44.0 | Y |
-| daily | 1600x900-dpr1 | daily-filter | 44.0 | 44.0 | Y |
-| daily | 1600x900-dpr1 | daily-filter | 56.0 | 44.0 | Y |
-| daily | 1600x900-dpr1 | daily-filter | 80.0 | 44.0 | Y |
-| daily | 1600x900-dpr1 | daily-filter | 56.0 | 44.0 | Y |
-| daily | 1600x900-dpr2 | daily-filter | 44.0 | 44.0 | Y |
-| daily | 1600x900-dpr2 | daily-filter | 56.0 | 44.0 | Y |
-| daily | 1600x900-dpr2 | daily-filter | 80.0 | 44.0 | Y |
-| daily | 1600x900-dpr2 | daily-filter | 56.0 | 44.0 | Y |
-| daily | 1280x720 | daily-filter | 44.0 | 44.0 | Y |
-| daily | 1280x720 | daily-filter | 56.0 | 44.0 | Y |
-| daily | 1280x720 | daily-filter | 80.0 | 44.0 | Y |
-| daily | 1280x720 | daily-filter | 56.0 | 44.0 | Y |
-
-## 角标探针
-
-| 面板 | 视口 | role | count | 归零隐藏 OK |
-|---|---|---|---:|---|
-| mail | 1600x900-dpr1 | mail-filter-all-count | 1 | Y |
-| mail | 1600x900-dpr1 | mail-filter-unread-count | 2 | Y |
-| mail | 1600x900-dpr1 | — | 1 | Y |
-| mail | 1600x900-dpr2 | mail-filter-all-count | 1 | Y |
-| mail | 1600x900-dpr2 | mail-filter-unread-count | 2 | Y |
-| mail | 1600x900-dpr2 | — | 1 | Y |
-| mail | 1280x720 | mail-filter-all-count | 1 | Y |
-| mail | 1280x720 | mail-filter-unread-count | 2 | Y |
-| mail | 1280x720 | — | 1 | Y |
-| daily | 1600x900-dpr1 | daily-claimable-count-badge | 1 | Y |
-| daily | 1600x900-dpr2 | daily-claimable-count-badge | 1 | Y |
-| daily | 1280x720 | daily-claimable-count-badge | 1 | Y |
+| `runtime/mail-chips-four-states-1600x900.jpg` | 1600×900 | mail chip 四态 staging |
+| `runtime/mail-rows-three-states-1600x900.jpg` | 1600×900 | mail row 三态 staging |
+| `runtime/mail-badge-count-nine-1600x900.jpg` | 1600×900 | mail count 9+ |
 
 详细 JSON：`probe-log.json`。
 
-> **说明**：`docs/art/samples/art-ui-filter-008/hit-proof.json` 为静态挂载契约；本目录为 tip 上 **运行时** 接线证据，供 PR #108 工程终验引用。Draft #506 / art hold #108 **未合并**；本结论 **不是** 美术静态 PASS。
+> **说明**：008 仍为「联调修正/补证中」，待美术在 #108 目视复签；Draft #506 / art hold **未合并**。

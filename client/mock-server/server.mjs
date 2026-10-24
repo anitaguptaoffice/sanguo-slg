@@ -100,6 +100,18 @@ function applyEvidencePreset(state, preset) {
     ];
     return;
   }
+  if (preset === "mail-filter-badge-nine") {
+    state.mails = Array.from({ length: 10 }, (_, i) => ({
+      mail_id: 7000 + i,
+      mail_type: 1,
+      title: `未读样本 ${i + 1}`,
+      body: "CLIENT-136 count 9 / 9+ evidence",
+      status: 0,
+      created_at_ms: now - (10 - i) * 1000,
+    }));
+    state.nextMailId = 7010;
+    return;
+  }
   if (preset === "mail-unread-multi") {
     state.mails = [
       {
