@@ -39,11 +39,11 @@ describe("marchInfoCard formatters", () => {
     const full: MarchSummary = {
       phase: 3,
       troops: [{ unit_cfg_id: 1, count: 100 }],
-      hero_template_name: "青龙偃月帅",
+      hero_template_name: "关羽",
     };
     expect(formatMarchInfoCardSecondary(full, now)).toContain("ETA 已到达");
     expect(formatMarchInfoCardSecondary(full, now)).toContain("步兵×100");
-    expect(formatMarchInfoCardSecondary(full, now)).toContain("将领 青龙偃月帅");
+    expect(formatMarchInfoCardSecondary(full, now)).toContain("将领 关羽");
 
     const empty: MarchSummary = { phase: 1 };
     expect(formatMarchInfoCardSecondary(empty, now)).toContain(MARCH_INFO_FORCE_HINT);

@@ -8,7 +8,7 @@ func TestEmbeddedCatalogMatchesDATA002FirstHero(t *testing.T) {
 		t.Fatal(err)
 	}
 	tpl := cat[1001]
-	if tpl.Name != "玄德府君" || tpl.Code != "xuan_de_lord" {
+	if tpl.Name != "刘备" || tpl.Code != "xuan_de_lord" {
 		t.Fatalf("tpl %+v", tpl)
 	}
 	if len(cat) < 20 {

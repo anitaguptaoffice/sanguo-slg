@@ -36,6 +36,7 @@
 | `heroes[]` 顺序 + 1001 起 | `template_cfg_id` |
 | `code`, `name`, `rarity`, `base_stats` | 同名列 |
 | `base_stats.tagline` | 将领简介（JSON 内，非独立列） |
+| `base_stats.historical_identity` | 美术绘制用的史实人物名（与 `name` 对齐；见 `docs/art/hero-template-historical-identity.md`） |
 
 → `cfg_hero_template.sql`
 

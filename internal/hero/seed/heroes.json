@@ -3,7 +3,7 @@
     {
       "template_cfg_id": 1001,
       "code": "xuan_de_lord",
-      "name": "玄德府君",
+      "name": "刘备",
       "rarity": 5,
       "pool": "standard",
       "base_stats": {
@@ -26,7 +26,7 @@
     {
       "template_cfg_id": 1002,
       "code": "green_dragon",
-      "name": "青龙偃月帅",
+      "name": "关羽",
       "rarity": 5,
       "pool": "elite",
       "base_stats": {
@@ -49,7 +49,7 @@
     {
       "template_cfg_id": 1003,
       "code": "thunder_spear",
-      "name": "雷矛先锋",
+      "name": "张飞",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -72,7 +72,7 @@
     {
       "template_cfg_id": 1004,
       "code": "silver_rider",
-      "name": "银甲骑将",
+      "name": "赵云",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {

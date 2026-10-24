@@ -75,7 +75,7 @@
     "1600x900": {
       "ok": true,
       "heroDetailLoaded": true,
-      "detailName": "玄德府君",
+      "detailName": "刘备",
       "dpr": 1,
       "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/1x/ui/panel_hero.png\")",
       "skinPathOk": true,
@@ -116,7 +116,7 @@
     "3200x1800": {
       "ok": true,
       "heroDetailLoaded": true,
-      "detailName": "玄德府君",
+      "detailName": "刘备",
       "dpr": 2,
       "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/2x/ui/panel_hero.png\")",
       "skinPathOk": true,
@@ -157,7 +157,7 @@
     "1280x720": {
       "ok": true,
       "heroDetailLoaded": true,
-      "detailName": "玄德府君",
+      "detailName": "刘备",
       "dpr": 1,
       "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/1x/ui/panel_hero.png\")",
       "skinPathOk": true,
@@ -198,7 +198,7 @@
     "1280x720-scroll": {
       "ok": true,
       "heroDetailLoaded": true,
-      "detailName": "玄德府君",
+      "detailName": "刘备",
       "dpr": 1,
       "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/1x/ui/panel_hero.png\")",
       "skinPathOk": true,
@@ -239,7 +239,7 @@
     "3200x1800-scroll": {
       "ok": true,
       "heroDetailLoaded": true,
-      "detailName": "玄德府君",
+      "detailName": "刘备",
       "dpr": 2,
       "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/2x/ui/panel_hero.png\")",
       "skinPathOk": true,
