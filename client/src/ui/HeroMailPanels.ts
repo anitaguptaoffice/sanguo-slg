@@ -1,3 +1,5 @@
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { applyUiCountBadge } from "@/engine/artBadgeSkin";
 import {
   remountPanelFilterChips,
   setFilterChipLabel,
@@ -671,8 +673,13 @@ export class HeroMailPanels {
       if (!countEl) continue;
       const count = spec.action === "mail-filter-all" ? derived.unclaimed : unreadForTab;
       countEl.dataset.filterBadgeCount = String(count);
-      if (loader) mountFilterBadgeCount(countEl, loader, count);
-      else {
+      if (loader) {
+        applyUiCountBadge(countEl, count, {
+          assets: loader,
+          hiddenClass: "hidden",
+          fallbackText: () => spec.countBadge,
+        });
+      } else {
         countEl.textContent = spec.countBadge;
         const show = Boolean(spec.countBadge);
         countEl.classList.toggle("hidden", !show);
