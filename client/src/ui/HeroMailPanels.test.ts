@@ -909,6 +909,9 @@ describe("HeroMailPanels", () => {
     const compareLine = mount.querySelector('[data-role="recruit-wallet-compare-line"]');
     expect(compareLine?.textContent).toMatch(/需20.*持5/);
     expect(compareLine?.classList.contains("recruit-wallet-compare-deficit")).toBe(true);
+    const compareResidual = mount.querySelector('[data-role="recruit-wallet-compare-residual-line"]');
+    expect(compareResidual?.textContent).toContain("列表口径");
+    expect(compareResidual?.classList.contains("recruit-wallet-compare-residual-deficit")).toBe(true);
     const ownedRow = mount.querySelector('li[data-template-id="1001"]');
     expect(ownedRow?.querySelector(".recruit-cost-deficit")?.textContent).toContain("不足");
     const viewBtn = ownedRow?.querySelector('[data-action="recruit-view-hero"]') as HTMLButtonElement;

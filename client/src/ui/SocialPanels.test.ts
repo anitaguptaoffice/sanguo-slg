@@ -226,6 +226,9 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     const pin = mount.querySelector(".rank-pin-row");
     expect(pin?.querySelector(".rank-pin-primary")?.textContent).toContain("我的排名 #2");
     expect(pin?.querySelector(".rank-pin-secondary")?.textContent).toContain("上次刷新");
+    expect(
+      mount.querySelector('[data-role="rank-pin-refresh-residual-line"]')?.textContent,
+    ).toContain("钉选 #2");
     expect(pin?.classList.contains(RANK_MY_RANK_CHANGED_PULSE_CLASS)).toBe(false);
     mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();

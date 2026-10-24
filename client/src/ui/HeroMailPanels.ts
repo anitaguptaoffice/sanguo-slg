@@ -181,6 +181,10 @@ import {
   syncRecruitWalletCompareLine,
 } from "@/net/recruitWalletCompare";
 import {
+  formatRecruitWalletCompareResidualLine,
+  syncRecruitWalletCompareResidualLine,
+} from "@/net/recruitWalletCompareResidual";
+import {
   buildRecruitItemGapBagDeepLink,
   formatRecruitFormInlineHint,
   syncRecruitFormInlineHintDisplay,
@@ -759,6 +763,7 @@ export class HeroMailPanels {
         <select data-field="template-select"><option value="">（先刷新模板）</option></select>
       </label>
       <p class="recruit-wallet-compare-line hidden" data-role="recruit-wallet-compare-line" aria-live="polite"></p>
+      <p class="recruit-wallet-compare-residual-line hidden" data-role="recruit-wallet-compare-residual-line" aria-live="polite"></p>
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
       <p class="recruit-form-inline-hint hidden" data-role="recruit-form-inline-hint" aria-live="polite"></p>
       <button type="button" class="hidden recruit-goto-bag-item-gap-btn" data-action="recruit-goto-bag-item-gap">打开背包</button>
@@ -1029,6 +1034,7 @@ export class HeroMailPanels {
         formatRecruitFormInlineHint(undefined, this.sessionEconomy().wallet, this.sessionEconomy().bag),
       );
       syncRecruitWalletCompareLine(this.heroPanel, null);
+      syncRecruitWalletCompareResidualLine(this.heroPanel, null);
       syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
       return;
     }
@@ -1106,6 +1112,10 @@ export class HeroMailPanels {
     syncRecruitWalletCompareLine(
       this.heroPanel,
       row ? formatRecruitWalletCompareLine(wallet, row, bag) : null,
+    );
+    syncRecruitWalletCompareResidualLine(
+      this.heroPanel,
+      row ? formatRecruitWalletCompareResidualLine(wallet, row, bag) : null,
     );
     this.syncRecruitFormInlineState(row);
     const ul = this.heroPanel.querySelector('[data-role="template-list"]');

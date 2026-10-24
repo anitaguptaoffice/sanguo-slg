@@ -125,6 +125,10 @@ import {
   renderRankEmptyTableRow,
   writeRankManualLastRefreshMs,
 } from "@/net/rankRefreshCooldown";
+import {
+  formatRankPinRefreshResidualLine,
+  syncRankPinRefreshResidualLine,
+} from "@/net/rankPinRefreshResidual";
 
 export type SocialRankDeepLinkHandlers = {
   getViewerHeroIds?: () => Promise<number[]>;
@@ -157,6 +161,7 @@ export class SocialPanels {
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
   private pendingRankPinPulse = false;
+  private rankViewerMyRank = 0;
   private rankHighlightEntityId = 0;
   private rankDeepLink: SocialRankDeepLinkHandlers = {};
   private cachedViewerHeroIds: number[] = [];
@@ -580,6 +585,7 @@ export class SocialPanels {
           <div class="rank-viewer-bar" aria-label="我的名次与刷新时间">
             <div data-role="viewer-rank">我的名次：—</div>
             <div class="rank-last-refresh-line hidden" data-role="rank-last-refresh" aria-label="上次刷新"></div>
+            <div class="rank-pin-refresh-residual-line hidden" data-role="rank-pin-refresh-residual-line" aria-live="polite"></div>
           </div>
           <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
           <aside
@@ -1102,6 +1108,7 @@ export class SocialPanels {
     } else {
       this.clearRankCooldownTimer();
     }
+    this.syncRankPinRefreshResidualBar(boardType, this.rankViewerMyRank, nowMs);
   }
 
   private syncRankLastRefreshBar(boardType: number): void {
@@ -1111,6 +1118,19 @@ export class SocialPanels {
     const line = formatRankLastRefreshLine(atMs);
     el.textContent = line;
     el.classList.toggle("hidden", !line);
+  }
+
+  private syncRankPinRefreshResidualBar(
+    boardType: number,
+    myRank?: number,
+    nowMs = Date.now(),
+  ): void {
+    const lastRefreshMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
+    const lastManualMs = readRankManualLastRefreshMs(boardType);
+    syncRankPinRefreshResidualLine(
+      this.rankPanel,
+      formatRankPinRefreshResidualLine(myRank, lastRefreshMs, lastManualMs, nowMs),
+    );
   }
 
   private renderRankListGatewayError(): void {
@@ -1139,6 +1159,8 @@ export class SocialPanels {
       );
     }
     this.syncRankLastRefreshBar(boardType);
+    this.rankViewerMyRank = res.my_rank ?? 0;
+    this.syncRankPinRefreshResidualBar(boardType, this.rankViewerMyRank);
     const snapEl = this.rankPanel.querySelector('[data-role="rank-snapshot"]');
     if (snapEl) {
       const meta = formatLeaderboardSnapshotMeta(res);

@@ -331,6 +331,16 @@
         overflow-wrap: anywhere;
       }
       .recruit-wallet-compare-line.recruit-wallet-compare-deficit { color: #8b1a1a; }
+      .recruit-wallet-compare-residual-line {
+        display: block;
+        font-size: 11px;
+        color: #9a8f7a;
+        margin: 0 0 6px;
+        overflow-wrap: anywhere;
+      }
+      .recruit-wallet-compare-residual-line.recruit-wallet-compare-residual-deficit {
+        color: #8b1a1a;
+      }
       .shop-list li .shop-price-vs-wallet {
         display: block;
         font-size: 11px;
@@ -2265,6 +2275,15 @@
       .bag-list li.bag-row-return-highlight {
         animation: bag-row-return-highlight-keyframes 2s ease-out 1;
       }
+      @keyframes bag-shop-category-scan-ring-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        35% { box-shadow: 0 0 10px rgba(100, 170, 220, 0.85); outline: 2px solid rgba(100, 170, 220, 0.9); }
+        70% { box-shadow: 0 0 4px rgba(100, 170, 220, 0.45); outline: 1px solid rgba(100, 170, 220, 0.5); }
+      }
+      .bag-list li.bag-shop-category-scan-ring,
+      .shop-list li.bag-shop-category-scan-ring {
+        animation: bag-shop-category-scan-ring-keyframes 1.5s ease-out 1;
+      }
       @keyframes hero-list-return-highlight-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
         40% { box-shadow: 0 0 12px rgba(120, 180, 220, 0.75); background: #243038; }
@@ -2707,6 +2726,10 @@
       }
       .rank-viewer-bar .rank-last-refresh-line {
         margin-top: 4px; font-size: 11px; color: #b8a88a;
+      }
+      .rank-viewer-bar .rank-pin-refresh-residual-line {
+        margin-top: 4px; font-size: 11px; color: #9ab0c8;
+        overflow-wrap: anywhere;
       }
       .rank-table tr.rank-refreshed-hint-row td,
       .rank-table tr.rank-top-density-row td {

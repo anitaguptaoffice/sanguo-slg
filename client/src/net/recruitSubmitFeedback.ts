@@ -9,6 +9,10 @@ import {
 } from "@/net/heroMailState";
 import { scrollHeroListRowIntoView } from "@/net/heroListRefreshFeedback";
 import { formatRecruitWalletCompareLine, syncRecruitWalletCompareLine } from "@/net/recruitWalletCompare";
+import {
+  formatRecruitWalletCompareResidualLine,
+  syncRecruitWalletCompareResidualLine,
+} from "@/net/recruitWalletCompareResidual";
 import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 
 /** 招募主按钮默认文案（CLIENT-098）。 */
@@ -168,6 +172,10 @@ export function refreshRecruitWalletSweepDisplays(
   syncRecruitWalletCompareLine(
     formRoot,
     formatRecruitWalletCompareLine(wallet, template, bag ?? []),
+  );
+  syncRecruitWalletCompareResidualLine(
+    formRoot,
+    formatRecruitWalletCompareResidualLine(wallet, template, bag ?? []),
   );
 }
 
