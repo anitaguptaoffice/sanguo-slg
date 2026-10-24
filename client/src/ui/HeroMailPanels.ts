@@ -136,6 +136,11 @@ import {
 } from "@/net/recruitScrollAnchor";
 import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 import {
+  buildRecruitItemGapBagDeepLink,
+  formatRecruitFormInlineHint,
+  syncRecruitFormInlineHintDisplay,
+} from "@/net/recruitFormInlineHint";
+import {
   buildRecruitSuccessFeedback,
   focusRecruitedHeroListRow,
   refreshRecruitWalletSweepDisplays,
@@ -648,6 +653,8 @@ export class HeroMailPanels {
         <select data-field="template-select"><option value="">（先刷新模板）</option></select>
       </label>
       <p class="recruit-cost-preview" data-role="recruit-preview"></p>
+      <p class="recruit-form-inline-hint hidden" data-role="recruit-form-inline-hint" aria-live="polite"></p>
+      <button type="button" class="hidden recruit-goto-bag-item-gap-btn" data-action="recruit-goto-bag-item-gap">打开背包</button>
       <button type="button" data-action="recruit-hero">招募</button>
       <p class="recruit-success-toast hidden" data-role="recruit-success-toast" role="status">
         <span data-role="recruit-success-msg"></span>
@@ -873,6 +880,11 @@ export class HeroMailPanels {
       opt.textContent = "（无模板）";
       sel.appendChild(opt);
       if (preview) preview.textContent = "";
+      syncRecruitFormInlineHintDisplay(
+        this.heroPanel,
+        formatRecruitFormInlineHint(undefined, this.sessionEconomy().wallet, this.sessionEconomy().bag),
+      );
+      syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
       return;
     }
     const { wallet, bag } = this.sessionEconomy();
@@ -945,7 +957,7 @@ export class HeroMailPanels {
         preview.textContent = this.recruitTemplates.length ? "请选择模板" : "";
       }
     }
-    this.syncRecruitButtonState(row);
+    this.syncRecruitFormInlineState(row);
     const ul = this.heroPanel.querySelector('[data-role="template-list"]');
     ul?.querySelectorAll("li[data-template-id]").forEach((li) => {
       li.classList.toggle("selected", Number(li.getAttribute("data-template-id")) === templateCfgId);
@@ -963,7 +975,20 @@ export class HeroMailPanels {
     });
   }
 
-  private syncRecruitButtonState(templateRow: RecruitTemplatePreview | undefined): void {
+  private syncRecruitFormInlineState(templateRow: RecruitTemplatePreview | undefined): void {
+    const { wallet, bag } = this.sessionEconomy();
+    const inlineHint = formatRecruitFormInlineHint(templateRow, wallet, bag);
+    syncRecruitFormInlineHintDisplay(this.heroPanel, inlineHint);
+    this.syncRecruitButtonState(templateRow, inlineHint);
+  }
+
+  private syncRecruitButtonState(
+    templateRow: RecruitTemplatePreview | undefined,
+    inlineHint?: ReturnType<typeof formatRecruitFormInlineHint>,
+  ): void {
+    const hint =
+      inlineHint ??
+      formatRecruitFormInlineHint(templateRow, this.sessionEconomy().wallet, this.sessionEconomy().bag);
     if (!templateRow) {
       syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
@@ -971,7 +996,7 @@ export class HeroMailPanels {
     }
     const { wallet, bag } = this.sessionEconomy();
     const afford = compareRecruitAffordability(wallet, templateRow, bag);
-    syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), afford.canAfford);
+    syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), hint.canSubmit);
     if (!this.recruitHeroInflight) {
       const inlineError = this.recruitLastError?.trim() || afford.insufficientReason || null;
       setRecruitAffordabilityErrorDisplay(this.heroPanel, inlineError);
@@ -1543,7 +1568,7 @@ export class HeroMailPanels {
     this.recruitHeroInflight = true;
     this.recruitLastError = null;
     syncRecruitSubmittingLine(this.heroPanel, true);
-    this.syncRecruitButtonState(templateRow);
+    this.syncRecruitFormInlineState(templateRow);
     this.onStatus(`招募模板 ${tpl}…`);
     try {
       const res = (await this.gateway.recruitHero(sid, tpl, {
@@ -1608,7 +1633,7 @@ export class HeroMailPanels {
       const templateId =
         this.selectedRecruitTemplateRow()?.template_cfg_id ?? this.selectedTemplateId;
       if (templateId) this.applyTemplateSelection(templateId, { skipHeroListRender: true });
-      else this.syncRecruitButtonState(undefined);
+      else this.syncRecruitFormInlineState(undefined);
     }
   }
 
@@ -1965,6 +1990,7 @@ export class HeroMailPanels {
     if (a === "hero-goto-recruit") void this.openRecruitForCurrentHero();
     if (a === "hero-related-items") void this.openRelatedCultivationItems();
     if (a === "hero-goto-bag-cultivation") void this.openHeroBagCultivationDeepLink();
+    if (a === "recruit-goto-bag-item-gap") void this.openRecruitItemGapBagDeepLink(btn);
     if (a === "hero-use-cultivation-item") void this.useHeroCultivationItem();
   }
 
@@ -1979,6 +2005,22 @@ export class HeroMailPanels {
     this.applyTemplateSelection(tplId);
     applyRecruitScrollAnchorSession(this.heroPanel);
     this.onStatus(`招募区已预选模板 #${tplId}`);
+  }
+
+  private openRecruitItemGapBagDeepLink(btn: HTMLElement): void {
+    const itemCfgId = Number(btn.dataset.itemCfgId) || 0;
+    if (itemCfgId <= 0) {
+      this.onStatus("暂无招募道具缺口可定位");
+      return;
+    }
+    if (!this.onOpenHeroCultivationBag) {
+      this.onStatus(`养成道具 item_cfg_id=${itemCfgId}`);
+      return;
+    }
+    const link = buildRecruitItemGapBagDeepLink(itemCfgId);
+    this.onOpenHeroCultivationBag(link);
+    setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
+    this.onStatus(`背包已高亮招募所需道具 ${itemCfgId}，请查看持有数量`);
   }
 
   private async openHeroBagCultivationDeepLink(): Promise<void> {
