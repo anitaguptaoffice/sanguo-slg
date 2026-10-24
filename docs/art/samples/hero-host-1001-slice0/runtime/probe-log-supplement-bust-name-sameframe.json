@@ -1,0 +1,55 @@
+{
+  "task": "HERO-HOST-1001-SLICE0-SUPPLEMENT-BUST-NAME-SAMEFRAME",
+  "purpose": "1280 viewport: full bust box + hero name on the right in one frame (detail head, not list/footer).",
+  "mock_preset": "hero-panel-roster",
+  "supplement_runtime_code_sha": "c47bce6d0ac127769013fc91149e4c77ed9ea5cb",
+  "art_head_sha": "eef9514b507c3b21921987ab94232021422bdc2f",
+  "prior_matrix_runtime_code_sha": "d078ca9d42e4256b0533b03f707b77e389db4ea3",
+  "art_reviewed_pr_head_sha": "70d90432db231b20a20f47cf0c6d49f833a1399e",
+  "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
+  "jpeg": {
+    "quality": 88,
+    "bytes": 264432
+  },
+  "sha256": "2fb3160052f772ffeb870c1b63fc74d219ccf09f9bf78b986568f674222355a2",
+  "probe": {
+    "ok": true,
+    "bustInViewport": true,
+    "nameInViewport": true,
+    "nameRightOfBust": true,
+    "verticalBandOverlap": true,
+    "unionInViewport": true,
+    "gapPx": 10,
+    "listAvatarDominatesViewport": false,
+    "bust": {
+      "cssWidth": 128,
+      "cssHeight": 160,
+      "top": 458.109375,
+      "right": 492
+    },
+    "name": {
+      "text": "刘备",
+      "left": 502,
+      "top": 458.109375,
+      "right": 530,
+      "bottom": 477.109375
+    },
+    "head": {
+      "left": 502,
+      "right": 916,
+      "top": 458.109375,
+      "bottom": 498.109375
+    },
+    "viewport": {
+      "w": 1280,
+      "h": 720,
+      "dpr": 1
+    }
+  },
+  "captured_at": "2026-10-24T14:14:32.869Z",
+  "notes": [
+    "Does not replace hero-host-1280x720-dpr1.jpg (detail footer scroll evidence).",
+    "Does not re-capture 1600 matrix or dpr2 shots from prior capture d078ca9d."
+  ],
+  "supplement_delivery_commit_sha": "c47bce6d0ac127769013fc91149e4c77ed9ea5cb"
+}

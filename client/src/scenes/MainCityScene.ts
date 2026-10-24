@@ -2378,14 +2378,16 @@ export class MainCityScene implements Scene {
 
   private hudTodoMergedSweepCounts(): HudTodoMergedSweepCounts {
     const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    const social = hudTodoSocialBadgesFromChatSummary(
-      this.chatUnreadTracker.getSummary(this.social.getGuildId()),
-    );
+    const social = this.social
+      ? hudTodoSocialBadgesFromChatSummary(
+          this.chatUnreadTracker.getSummary(this.social.getGuildId()),
+        )
+      : { chat: 0, world: 0, guild: 0 };
     return {
       mailClaimable: snap.mailClaimable,
       dailyClaimable: snap.dailyClaimable,
       queueBuilding: snap.queueBuilding,
-      chatUnread: social.chatToolbar,
+      chatUnread: social.chat ?? 0,
     };
   }
 
