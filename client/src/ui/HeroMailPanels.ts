@@ -149,8 +149,15 @@ import {
   scheduleHeroListRefreshPulse,
   scrollHeroListRowIntoView,
   setHeroListFormErrorDisplay,
+  syncHeroListRefreshedAtDisplay,
   syncHeroListRefreshButton,
 } from "@/net/heroListRefreshFeedback";
+import {
+  applyHeroPanelListScrollTop,
+  readHeroListSelectedSession,
+  readHeroPanelListScrollTop,
+  writeHeroListSelectedSession,
+} from "@/net/heroListSelectedSession";
 import {
   buildHeroBagDeepLinkQuery,
   pickHeroDetailBagDeepLink,
@@ -210,6 +217,7 @@ export class HeroMailPanels {
   private recruitLastError: string | null = null;
   private recruitLastSuccessHeroId: number | null = null;
   private heroesRefreshInflight = false;
+  private heroListLastRefreshedAtMs = 0;
   private heroCultivationSubmitState: UseConsumableSubmitState = "idle";
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
   private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
@@ -594,6 +602,7 @@ export class HeroMailPanels {
       <h3>将领</h3>
       <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
       <button type="button" data-action="refresh-heroes">刷新列表</button>
+      <p class="hero-list-refresh-status hidden" data-role="hero-list-refreshed-at" aria-label="列表上次刷新"></p>
       <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <button type="button" data-action="refresh-templates">刷新招募模板</button>
       <label>招募模板
@@ -1181,9 +1190,14 @@ export class HeroMailPanels {
         total_count?: number;
       };
       this.heroes = res.heroes ?? [];
+      this.heroListLastRefreshedAtMs = Date.now();
+      syncHeroListRefreshedAtDisplay(this.heroPanel, this.heroListLastRefreshedAtMs);
+      const listScrollRestore = opts?.restoreSelection ? readHeroListSelectedSession() : null;
       if (opts?.restoreSelection) {
         const stored = readHeroDetailSelectedSession();
-        const pick = pickRestoredHeroId(this.heroes, stored);
+        const listPick = pickRestoredHeroId(this.heroes, listScrollRestore?.heroId ?? null);
+        const detailPick = pickRestoredHeroId(this.heroes, stored);
+        const pick = listPick ?? detailPick;
         if (pick) this.selectedHeroId = pick;
       } else if (
         this.selectedHeroId > 0 &&
@@ -1195,8 +1209,14 @@ export class HeroMailPanels {
       this.renderHeroList();
       this.renderTemplateList();
       if (opts?.restoreSelection && this.selectedHeroId > 0) {
-        await this.loadHeroDetail(this.selectedHeroId);
-        scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+        await this.loadHeroDetail(this.selectedHeroId, { skipListSelectionWrite: true });
+        if (listScrollRestore && listScrollRestore.heroId === this.selectedHeroId) {
+          applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
+        } else {
+          scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+        }
+      } else if (opts?.restoreSelection && listScrollRestore) {
+        applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
       }
       if (opts?.pulseOnSuccess) {
         scheduleHeroListRefreshPulse(
@@ -1227,10 +1247,21 @@ export class HeroMailPanels {
     setHeroCultivationSuccessDisplay(this.heroPanel, null);
   }
 
-  private async loadHeroDetail(heroId: number): Promise<void> {
+  private persistHeroListSelectedFromListView(heroId: number): void {
+    writeHeroListSelectedSession({
+      heroId,
+      scrollTop: readHeroPanelListScrollTop(this.heroPanel),
+    });
+  }
+
+  private async loadHeroDetail(
+    heroId: number,
+    opts?: { skipListSelectionWrite?: boolean },
+  ): Promise<void> {
     const sid = this.serverId();
     this.selectedHeroId = heroId;
     writeHeroDetailSelectedSession(heroId);
+    if (!opts?.skipListSelectionWrite) this.persistHeroListSelectedFromListView(heroId);
     this.resetHeroCultivationSubmitFeedback();
     this.heroDetailLoading = true;
     this.heroDetailError = null;
