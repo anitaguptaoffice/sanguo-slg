@@ -621,6 +621,8 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/军团/聊天** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:36 DOM 钩子（软依赖 **CLIENT-196～202**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195** manifest 不退化。
 
+**wave:38（CLIENT-214）双榜手动刷新冷却戳记与排行空态行内重试**：「刷新排行榜」旁只读 **`formatRankRefreshCooldownStamp`** / `rank-refresh-cooldown`（`rank-manual-refresh-ms` session，5s 客户端冷却；**无**新 rank RPC）；空榜行内 **`rank-empty-retry-inline`**（`retry-refresh-rank`，同源 `refreshRank`）；首屏拉取失败仍走 **CLIENT-173** `formatPanelGatewayError` + `panel-gateway-retry`。**CLIENT-184** 三甲密度行 / 钉选滚动与 **CLIENT-152** 戳记 **不退化**。单测：`rankRefreshCooldown.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（[#787](https://github.com/anitaguptaoffice/sanguo-slg/issues/787)）
+
 ## Wave 37 H5 世界小地图行军叠标·军情 ETA 阶段条·出征兵力余量警示·战报列表密度·战报回合摘要·邮件日常 HUD·背包商城返回·1280组合manifest（M4 出口 / INTG-034）
 
 在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-034** 网关冒烟一致）。**范围外**同 Wave 36；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#637** / **#649** / **#674** / **#697**）；**CLIENT-064** / **CLIENT-137** / **CLIENT-146** / **CLIENT-147** / **ART-012** 美术旁路——**非**本波 backlog 实现卡。
