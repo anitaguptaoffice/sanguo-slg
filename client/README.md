@@ -1104,6 +1104,8 @@ cd client && npm install && npm run dev
 
 **CLIENT-193（日常可领取进度扫读与邮件 HUD 待办联动）**：日常面板顶栏 **`formatDailyClaimableSweepLine`**（chain 400 可领条数 + 首条 `#quest_cfg_id` 进度 %）；领奖成功后顶栏扫读行 **`daily-claim-progress-pulse`** 1s（**CLIENT-174** 行内进度条不退化）。顶栏待办与底栏邮件/日常角标 **`title`** 共用 **`formatHudTodoSweepLine`**（邮件未领附件 + 日常可领计数，与 **CLIENT-162/192** 同源快照、无重复 toast）；**CLIENT-186** 队列日常锚点不退化。单测：`dailyClaimableSweep.test.ts`、`hudTodoSweep.test.ts`、`DailyQuestPanels.test.ts`；`cd client && npm test` 绿。
 
+**CLIENT-202（HUD 中心四面板 tab 深链余量扫读）**：顶栏 **`data-role="hud-center-panel-deeplink-line"`** 由 **`formatHudCenterPanelDeepLinkLine`** / **`hudCenterPanelDeepLinkSegments`** 合并邮件/日常（与 **CLIENT-193** `formatHudTodoSweepLine` 同源文案）、队列建造中、聊天未读；分段点击 **`resolveCenterPanelTabFromHudTodo`** 打开邮件/日常/队列/聊天中心面板并复用 **CLIENT-134/162** 角标深链落点（无新 HUD RPC）。对应底栏 tab 触发 **`center-panel-tab-pulse`** 1.5s；**CLIENT-186** 队列日常锚点与 **CLIENT-193** 底栏 `title` 扫读 **可叠加**。单测：`hudCenterPanelDeepLink.test.ts`、`hudCenterTodo.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
 军团成员列表每行 **提到** 将 `@显示名 ` 填入聊天输入（`formatGuildMentionDraft`），并切换到军团聊天 tab；未入军团时按钮 hidden。**CLIENT-076** 刷新 meta 不退化。

@@ -178,6 +178,17 @@ import {
   type HudTodoToolbarAction,
 } from "@/net/hudTodoOpenTarget";
 import { buildHudCenterTodoCounts, hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
+import {
+  HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR,
+  HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE,
+  centerPanelTabToolbarAction,
+  hudCenterPanelDeepLinkSegments,
+  resolveCenterPanelTabFromHudTodo,
+  scheduleCenterPanelTabPulse,
+  type CenterPanelTabFromHudTodo,
+  type HudCenterPanelDeepLinkCounts,
+  type HudCenterPanelDeepLinkFacet,
+} from "@/net/hudCenterPanelDeepLink";
 import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
@@ -1869,6 +1880,7 @@ export class MainCityScene implements Scene {
     appendHudResourceStrip(this.hud, s?.wallet, this.assets, s?.productionRates);
     restoreHudResourceStripExpanded(this.hud, resourceStripExpanded);
     this.appendHudCenterTodoBadge();
+    this.appendHudCenterPanelDeepLinkLine();
     for (const text of groups) {
       const span = document.createElement("span");
       span.className =
@@ -1947,6 +1959,16 @@ export class MainCityScene implements Scene {
   }
 
   private onHudClick(ev: Event): void {
+    const facetBtn = (ev.target as HTMLElement).closest(`[${HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR}]`);
+    if (facetBtn instanceof HTMLElement) {
+      const facet = facetBtn.getAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR) as
+        | HudCenterPanelDeepLinkFacet
+        | null;
+      if (facet) {
+        this.openHudCenterPanelDeepLink(facet);
+        return;
+      }
+    }
     const todoBtn = (ev.target as HTMLElement).closest('[data-action="open-hud-center-todo"]');
     if (todoBtn) {
       this.openHudCenterTodoDeepLink();
@@ -1969,6 +1991,98 @@ export class MainCityScene implements Scene {
       dailyRows: snap.dailyChainRows,
       buildCompleteCount: this.buildCompleteTodos.pendingCount(),
     });
+  }
+
+  private centerPanelDeepLinkCounts(): HudCenterPanelDeepLinkCounts {
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    const social = hudTodoSocialBadgesFromChatSummary(
+      this.chatUnreadTracker.getSummary(this.social.getGuildId()),
+    );
+    return {
+      mailClaimable: snap.mailClaimable,
+      dailyClaimable: snap.dailyClaimable,
+      queueBuilding: snap.queueBuilding,
+      chatUnread: social.chatToolbar,
+    };
+  }
+
+  private appendHudCenterPanelDeepLinkLine(): void {
+    const counts = this.centerPanelDeepLinkCounts();
+    const segments = hudCenterPanelDeepLinkSegments(counts);
+    if (!segments.length) return;
+    const wrap = document.createElement("span");
+    wrap.className = "hud-center-panel-deeplink";
+    wrap.setAttribute("data-role", HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
+    segments.forEach((seg, index) => {
+      if (index > 0) {
+        const sep = document.createElement("span");
+        sep.className = "hud-center-panel-deeplink-sep";
+        sep.textContent = " · ";
+        sep.setAttribute("aria-hidden", "true");
+        wrap.appendChild(sep);
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "hud-center-panel-deeplink-seg";
+      btn.setAttribute(HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR, seg.facet);
+      btn.setAttribute("title", `打开${seg.label}`);
+      btn.setAttribute("aria-label", `HUD 深链：${seg.label}`);
+      btn.textContent = seg.label;
+      wrap.appendChild(btn);
+    });
+    this.hud.appendChild(wrap);
+  }
+
+  private pulseCenterPanelToolbarTab(tab: CenterPanelTabFromHudTodo | null): void {
+    if (!tab) return;
+    const action = centerPanelTabToolbarAction(tab);
+    const btn = this.toolbarTrigger(action);
+    scheduleCenterPanelTabPulse(btn);
+  }
+
+  private openHudCenterPanelDeepLink(facet: HudCenterPanelDeepLinkFacet): void {
+    const counts = this.centerPanelDeepLinkCounts();
+    const tab = resolveCenterPanelTabFromHudTodo(facet, counts);
+    if (!tab) return;
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    if (tab === "mail") {
+      const target = resolveHudTodoOpenTarget("toggle-mail", snap, this.session?.buildings);
+      if (target.kind === "mail") {
+        this.heroMail.openFromTodoBadge(target.mailId, {
+          mailFilter: target.mailFilter,
+          filterTabCounts: {
+            unreadForTab: target.unreadForTab,
+            unclaimedCount: target.unclaimedCount,
+          },
+        });
+      } else {
+        this.heroMail.toggleMail();
+      }
+    } else if (tab === "daily") {
+      const target = resolveHudTodoOpenTarget("toggle-daily", snap, this.session?.buildings);
+      if (target.kind === "daily") {
+        this.dailyQuest.openFromTodoBadge(target.cfgId, {
+          listFilter: target.listFilter,
+          claimableCount: target.claimableCount,
+        });
+        this.updateDailyToolbarBadge(0);
+      } else {
+        this.dailyQuest.toggle();
+      }
+    } else if (tab === "queue") {
+      const target = resolveHudTodoOpenTarget("toggle-queue", snap, this.session?.buildings);
+      if (target.kind === "queue-building") {
+        this.queuePanels.openFromTodoBadge(target.slotKey);
+        this.updateQueueToolbarBadge(0);
+      } else {
+        this.queuePanels.toggle();
+      }
+    } else if (tab === "social" && !this.social.isChatOpen()) {
+      this.social.toggleChat();
+    }
+    this.pulseCenterPanelToolbarTab(tab);
+    this.status = `已打开中心面板（${tab}）`;
+    this.renderHud();
   }
 
   private appendHudCenterTodoBadge(): void {
