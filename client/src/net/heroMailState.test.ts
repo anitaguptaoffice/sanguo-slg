@@ -313,6 +313,8 @@ describe("heroMailState", () => {
     );
     expect(html).toContain("hero-detail-consumable-stack-line");
     expect(html).toContain("堆叠×2");
+    expect(html).toContain("hero-detail-consumable-stack-residual-line");
+    expect(html).toContain("堆叠残余");
     expect(html).toContain("hero-upgrade-item-gap");
   });
 
