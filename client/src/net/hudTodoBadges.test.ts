@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
   buildHudTodoBadges,
+  buildHudTodoReconciled,
+  chatSocialBadgesFromSummary,
   countMailUnreadAndUnclaimed,
+  countMailToolbarUnionFromPage,
   dailyToolbarBadgeCount,
   diffHudTodoMailBadgeCounts,
   formatHudToolbarBadgeText,
   hudTodoSocialBadgesFromChatSummary,
   mailHudBadgeFacetCounts,
+  mailPanelTabBadgeCounts,
   mailToolbarBadgeCount,
   queueBuildingToolbarBadgeCount,
+  reconcileHudTodoBadges,
 } from "@/net/hudTodoBadges";
 
 describe("hudTodoBadges", () => {
@@ -22,6 +27,12 @@ describe("hudTodoBadges", () => {
         { mail_id: 3, status: 0, has_unclaimed_attachments: true },
       ]),
     ).toBe(3);
+    expect(
+      countMailToolbarUnionFromPage([
+        { mail_id: 1, status: 0 },
+        { mail_id: 2, status: 2, has_unclaimed_attachments: true },
+      ]),
+    ).toBe(2);
   });
 
   it("mailToolbarBadgeCount adds read-unclaimed on top of unread total", () => {
@@ -122,5 +133,111 @@ describe("hudTodoBadges", () => {
     expect(delta.inboxUnread).toBe(-1);
     expect(delta.inboxUnclaimed).toBe(-1);
     expect(delta.deepLinkMailClaimable).toBe(-1);
+  });
+
+  it("chatSocialBadgesFromSummary mirrors toolbar and panel tabs", () => {
+    expect(chatSocialBadgesFromSummary({ world: 2, guild: 3, total: 5 })).toEqual({
+      chatToolbar: 5,
+      guildToolbar: 3,
+      worldTab: 2,
+      guildTab: 3,
+      guildEntry: 3,
+    });
+  });
+});
+
+describe("reconcileHudTodoBadges (CLIENT-162 snapshot table)", () => {
+  const now = 1_700_000_000_000;
+
+  const cases: {
+    name: string;
+    input: Parameters<typeof buildHudTodoReconciled>[0];
+  }[] = [
+    {
+      name: "empty inbox and quests",
+      input: {
+        mailUnreadTotal: 0,
+        mailClaimablePage: [],
+        dailyRows: [],
+        buildCompleteCount: 0,
+        battleReportUnread: 0,
+        chatSummary: { world: 0, guild: 0, total: 0 },
+      },
+    },
+    {
+      name: "mail unread + unclaimed + daily claimable",
+      input: {
+        mailUnreadTotal: 2,
+        mailClaimablePage: [
+          { mail_id: 1, status: 0 },
+          { mail_id: 2, status: 2, has_unclaimed_attachments: true },
+        ],
+        dailyRows: [
+          { quest_cfg_id: 10, state: 3 },
+          { quest_cfg_id: 11, state: 3 },
+        ],
+        buildings: [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 90_000 }],
+        buildCompleteCount: 2,
+        battleReportUnread: 1,
+        nowMs: now,
+        chatSummary: { world: 1, guild: 2, total: 3 },
+      },
+    },
+    {
+      name: "read-unclaimed only on first page",
+      input: {
+        mailUnreadTotal: 0,
+        mailClaimablePage: [{ mail_id: 5, status: 2, has_unclaimed_attachments: true }],
+        dailyRows: [],
+        buildCompleteCount: 0,
+        battleReportUnread: 0,
+      },
+    },
+    {
+      name: "daily batch claim decrements to zero",
+      input: {
+        mailUnreadTotal: 0,
+        mailClaimablePage: [],
+        dailyRows: [{ quest_cfg_id: 99, state: 4 }],
+        buildCompleteCount: 0,
+        battleReportUnread: 0,
+      },
+    },
+  ];
+
+  for (const c of cases) {
+    it(`${c.name}: toolbar ↔ panel tab/chip zero drift`, () => {
+      const reconciled = buildHudTodoReconciled(c.input);
+      expect(reconcileHudTodoBadges(reconciled)).toEqual([]);
+      const tabs = mailPanelTabBadgeCounts({
+        mailUnreadTotal: c.input.mailUnreadTotal,
+        mailClaimablePage: c.input.mailClaimablePage ?? [],
+      });
+      expect(reconciled.panel.mail).toEqual(tabs);
+      expect(reconciled.panel.daily.claimableChip).toBe(reconciled.bundle.toolbar.daily);
+      expect(reconciled.panel.queue.inProgress).toBe(reconciled.bundle.toolbar.queue);
+      if (c.input.chatSummary) {
+        expect(reconciled.social.chatToolbar).toBe(c.input.chatSummary.total);
+      }
+      const facets = mailHudBadgeFacetCounts({
+        mailUnreadTotal: c.input.mailUnreadTotal,
+        mailInboxSnapshot: c.input.mailClaimablePage ?? [],
+      });
+      expect(facets.toolbarMail).toBe(reconciled.bundle.toolbar.mail);
+      expect(facets.inboxUnclaimed).toBe(reconciled.panel.mail.unclaimedTab);
+    });
+  }
+
+  it("reports drift when panel counts are patched inconsistently", () => {
+    const reconciled = buildHudTodoReconciled({
+      mailUnreadTotal: 1,
+      mailClaimablePage: [{ mail_id: 1, status: 0 }],
+      dailyRows: [{ quest_cfg_id: 1, state: 3 }],
+      buildCompleteCount: 0,
+      battleReportUnread: 0,
+    });
+    reconciled.panel.daily.claimableChip = 99;
+    const drifts = reconcileHudTodoBadges(reconciled);
+    expect(drifts.some((d) => d.surface === "toolbar.daily")).toBe(true);
   });
 });

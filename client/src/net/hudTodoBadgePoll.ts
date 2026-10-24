@@ -55,6 +55,7 @@ export class HudTodoBadgePoll {
     rows: DailyQuestRow[];
   }> | null = null;
   private reportsInflight: Promise<{ count: number; firstId: number }> | null = null;
+  private pollOnceInflight: Promise<void> | null = null;
   private deepLink: HudTodoDeepLinkSnapshot = { ...EMPTY_HUD_TODO_DEEP_LINK };
 
   constructor(private readonly opts: HudTodoBadgePollOptions) {
@@ -89,6 +90,7 @@ export class HudTodoBadgePoll {
     this.mailClaimableInflight = null;
     this.dailyInflight = null;
     this.reportsInflight = null;
+    this.pollOnceInflight = null;
     this.deepLink = { ...EMPTY_HUD_TODO_DEEP_LINK };
   }
 
@@ -189,7 +191,16 @@ export class HudTodoBadgePoll {
     void this.pollOnce();
   }
 
-  async pollOnce(): Promise<void> {
+  pollOnce(): Promise<void> {
+    if (this.pollOnceInflight) return this.pollOnceInflight;
+    const p = this.runPollOnce().finally(() => {
+      if (this.pollOnceInflight === p) this.pollOnceInflight = null;
+    });
+    this.pollOnceInflight = p;
+    return p;
+  }
+
+  private async runPollOnce(): Promise<void> {
     const [mail, mailClaimable, daily, reports] = await Promise.all([
       this.opts.isMailSuppressed()
         ? { count: 0, firstId: 0 }

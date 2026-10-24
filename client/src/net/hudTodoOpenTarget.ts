@@ -2,6 +2,7 @@ import type { CityBuilding } from "@/net/bootstrapSession";
 import type { DailyQuestListFilter } from "@/net/dailyQuestListFilter";
 import { MAIL_INBOX_FILTER_ALL, MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
 import type { HudTodoDeepLinkSnapshot } from "@/net/hudTodoBadge";
+import { mailPanelTabBadgeCountsFromPollSnapshot } from "@/net/hudTodoBadges";
 import { activeBuildingUpgrades } from "@/net/queueState";
 
 /** 底栏 `data-action` 与角标深链解析入口（CLIENT-134 / CLIENT-038）。 */
@@ -44,10 +45,7 @@ export function pickFirstQueueBuildingSlotKey(
 export function mailFilterTabCountsFromHudDeepLink(
   snap: Pick<HudTodoDeepLinkSnapshot, "mailUnreadTotal" | "mailClaimable">,
 ): { unreadForTab: number; unclaimedCount: number } {
-  return {
-    unreadForTab: Math.max(0, snap.mailUnreadTotal),
-    unclaimedCount: Math.max(0, snap.mailClaimable),
-  };
+  return mailPanelTabBadgeCountsFromPollSnapshot(snap);
 }
 
 /**

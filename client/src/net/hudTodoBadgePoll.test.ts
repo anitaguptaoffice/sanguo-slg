@@ -57,6 +57,35 @@ describe("HudTodoBadgePoll", () => {
     expect(counts.queueBuilding).toBe(0);
   });
 
+  it("coalesces concurrent pollOnce (CLIENT-162 batch refresh)", async () => {
+    const listPlayerMail = vi.fn().mockResolvedValue({ total_count: 1, mails: [] });
+    const gateway = {
+      listPlayerMail,
+      listPlayerQuests: vi.fn().mockResolvedValue({ quests: [] }),
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [] }),
+    };
+    const unread = new BattleReportUnreadSession();
+    const poll = new HudTodoBadgePoll({
+      gateway: gateway as never,
+      getServerId: () => 1,
+      getCityId: () => 9,
+      getBuildings: () => [],
+      getBuildCompleteCount: () => 0,
+      battleReportUnread: unread,
+      isPanelVisible: () => false,
+      isMailSuppressed: () => false,
+      isDailySuppressed: () => false,
+      isReportsSuppressed: () => false,
+      isQueueSuppressed: () => false,
+      onCounts: () => {},
+    });
+    const first = poll.pollOnce();
+    const second = poll.pollOnce();
+    expect(first).toBe(second);
+    await first;
+    expect(listPlayerMail).toHaveBeenCalledTimes(2);
+  });
+
   it("stores deep-link snapshot ids from poll responses", async () => {
     const listPlayerMail = vi.fn().mockImplementation((_sid: number, opts: { filter?: number }) => {
       if (opts?.filter === 1) {

@@ -59,7 +59,6 @@ import {
   syncHeroSummaryFromDetail,
   MAIL_INBOX_FILTER_ALL,
   MAIL_INBOX_FILTER_UNREAD,
-  countMailUnreadAndUnclaimed,
   mailHasUnclaimedAttachments,
   upsertMailRow,
   mailEmptyInboxMessage,
@@ -81,6 +80,7 @@ import {
   readMailInboxFilterSession,
   writeMailInboxFilterSession,
 } from "@/net/mailInboxFilter";
+import { mailPanelTabBadgeCounts, mailToolbarBadgeCount } from "@/net/hudTodoBadges";
 import {
   mailInboxEmptyListClass,
   mailInboxLoadErrorListHint,
@@ -883,11 +883,12 @@ export class HeroMailPanels {
   }
 
   private syncMailFilterChipDom(assets?: AssetLoader): void {
-    const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
-    const unreadForTab =
-      this.mailFilterTabCountOverride?.unreadForTab ??
-      Math.max(this.mailUnreadTotal, derived.unread);
-    const unclaimedCount = this.mailFilterTabCountOverride?.unclaimedCount ?? derived.unclaimed;
+    const tabCounts = mailPanelTabBadgeCounts({
+      mailUnreadTotal: this.mailUnreadTotal,
+      mailClaimablePage: this.mailInboxSnapshot,
+    });
+    const unreadForTab = this.mailFilterTabCountOverride?.unreadForTab ?? tabCounts.unreadTab;
+    const unclaimedCount = this.mailFilterTabCountOverride?.unclaimedCount ?? tabCounts.unclaimedTab;
     const chipSpecs = formatMailFilterChips({
       activeFilter: this.mailFilter,
       unreadForTab,
@@ -932,14 +933,16 @@ export class HeroMailPanels {
   }
 
   private applyMailBadgeCountsFromSnapshot(): void {
-    const derived = countMailUnreadAndUnclaimed(this.mailInboxSnapshot);
-    const unreadForHud = Math.max(this.mailUnreadTotal, derived.unread);
+    const toolbarMail = mailToolbarBadgeCount({
+      unreadTotal: this.mailUnreadTotal,
+      mailClaimablePage: this.mailInboxSnapshot,
+    });
     const snap = {
-      count: unreadForHud,
+      count: toolbarMail,
       firstId: this.mailUnreadFirstId || pickFirstUnreadMailId(this.mailInboxSnapshot),
     };
     this.applyMailUnreadHud(snap);
-    this.onMailInboxSnapshot?.(this.mailInboxSnapshot, unreadForHud);
+    this.onMailInboxSnapshot?.(this.mailInboxSnapshot, toolbarMail);
     this.setMailFilterButtons();
   }
 
