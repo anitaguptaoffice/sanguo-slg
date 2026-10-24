@@ -1145,7 +1145,13 @@
         margin-top: 4px; font-size: 11px; color: #5a4a32;
       }
       .queue-list li.queue-list-row .queue-row-countdown { font-variant-numeric: tabular-nums; }
-      .queue-list li.queue-list-row .queue-row-progress {
+      .queue-list li.queue-list-row .queue-row-eta-line {
+        font-variant-numeric: tabular-nums;
+        color: #4a3c28;
+        line-height: 1.35;
+      }
+      .queue-list li.queue-list-row .queue-row-progress,
+      .queue-list li.queue-list-row .queue-row-progress-bar {
         display: block; width: 100%; max-width: 280px; height: 4px;
         border-radius: 2px; background: rgba(90, 74, 50, 0.18); overflow: hidden;
       }
@@ -2791,6 +2797,8 @@
         min-width: 0; max-width: 100%; overflow-wrap: anywhere; flex-shrink: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress-bar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-eta-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-secondary {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box;
       }

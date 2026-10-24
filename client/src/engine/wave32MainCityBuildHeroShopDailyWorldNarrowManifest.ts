@@ -45,6 +45,12 @@ export const QUEUE_REMAINING_PROGRESS_CLASS = "queue-row-progress";
 export const QUEUE_REMAINING_PROGRESS_FILL_CLASS = "queue-row-progress-fill";
 export const QUEUE_REMAINING_PROGRESS_SELECTOR = `.${QUEUE_REMAINING_PROGRESS_CLASS}`;
 
+/** CLIENT-196: queue row ETA line + progress bar scan (`QueuePanels` DOM). */
+export {
+  QUEUE_ROW_ETA_LINE_CLASS,
+  QUEUE_ROW_PROGRESS_BAR_CLASS,
+} from "@/net/queueRemainingEtaLine";
+
 /** CLIENT-165: hero detail cultivation item gap vs bag snapshot. */
 export const HERO_UPGRADE_ITEM_GAP_CLASS = "hero-upgrade-item-gap";
 export const HERO_UPGRADE_ITEM_GAP_SELECTOR = `[data-role="hero-upgrade-item-gap"]`;
