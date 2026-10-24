@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   appendManhattanToStatus,
+  countMarchesAtCell,
   countMarchesToDestination,
   filterMarchesByDestination,
   findFirstMarchIdAtDestination,
@@ -40,11 +41,12 @@ describe("marchWorldListLink", () => {
 
   it("countMarchesToDestination and formatWorldCityMarchDestCount", () => {
     const marches = [
-      { march_id: 1, to_x: 10, to_y: 20 },
-      { march_id: 2, to_x: 10, to_y: 20 },
-      { march_id: 3, to_x: 1, to_y: 1 },
+      { march_id: 1, to_x: 10, to_y: 20, phase: 1 },
+      { march_id: 2, to_x: 10, to_y: 20, phase: 0 },
+      { march_id: 3, to_x: 1, to_y: 1, phase: 1 },
     ];
     expect(countMarchesToDestination(marches, 10, 20)).toBe(2);
+    expect(countMarchesAtCell(marches, 10, 20)).toBe(1);
     expect(formatWorldCityMarchDestCount(2)).toBe("指向此格的行军 2 条");
     expect(formatWorldCityMarchDestCount(0)).toBeNull();
     expect(findFirstMarchIdAtDestination(marches, 10, 20)).toBe(1);

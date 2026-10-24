@@ -134,8 +134,8 @@ describe("WorldPanels", () => {
       () => {},
       {
         getMarchesSnapshot: () => [
-          { march_id: 9, to_x: 60, to_y: 60 },
-          { march_id: 10, to_x: 60, to_y: 60 },
+          { march_id: 9, to_x: 60, to_y: 60, phase: 1 },
+          { march_id: 10, to_x: 60, to_y: 60, phase: 2 },
         ],
         onMarchCountClick: (g) => {
           marchGrid = g;
@@ -182,7 +182,7 @@ describe("WorldPanels", () => {
       { marchFormRoot: form },
       () => {},
       {
-        getMarchesSnapshot: () => [{ march_id: 1, to_x: 60, to_y: 60 }],
+        getMarchesSnapshot: () => [{ march_id: 1, to_x: 60, to_y: 60, phase: 1 }],
         onViewMarchesAtGrid: (g) => {
           intelGrid = g;
         },
@@ -201,7 +201,10 @@ describe("WorldPanels", () => {
     mount.querySelector('li[data-city-id="1"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     const card = mount.querySelector('[data-role="world-tile-info"]');
     expect(card?.classList.contains("hidden")).toBe(false);
-    expect(card?.textContent).toContain("指向此格行军：1 条");
+    expect(card?.textContent).toContain("指向此格进行中行军：1 条");
+    expect(mount.querySelector('[data-action="view-marches-at-grid"]')?.textContent).toBe(
+      "在军情中查看",
+    );
     expect(card?.textContent).toContain("城墙 Lv.2");
     expect(mount.querySelector('[data-action="view-battle-reports-at-grid"]')).toBeTruthy();
 
@@ -214,6 +217,29 @@ describe("WorldPanels", () => {
       new Event("click", { bubbles: true }),
     );
     expect(reportGrid).toEqual({ x: 60, y: 60, hint: 42 });
+  });
+
+  it("shows CLIENT-129 loading on info card while cities refresh", async () => {
+    const mount = document.createElement("div");
+    let resolveCities: (v: unknown) => void = () => {};
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockImplementation(
+        () =>
+          new Promise((r) => {
+            resolveCities = r;
+          }),
+      ),
+    } as unknown as GatewayPort;
+    const panels = new WorldPanels(mount, gateway, () => null, { marchFormRoot: null }, () => {});
+    panels.attach();
+    panels.selectGridAt(3, 4);
+    panels.toggle();
+    const state = mount.querySelector('[data-role="world-tile-info-state"]');
+    expect(state?.classList.contains("hidden")).toBe(false);
+    expect(state?.getAttribute("data-panel-state")).toBe("loading");
+    resolveCities({ cities: [] });
+    await flushPromises();
+    expect(state?.classList.contains("hidden")).toBe(true);
   });
 
   it("shows neutral occupation hint on empty grid selection", async () => {
