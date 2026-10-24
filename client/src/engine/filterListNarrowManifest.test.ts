@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import {
+  CENTER_PANEL_TAB_PULSE_CLASS,
   CLIENT_127_FILTER_CHIP_BAR_SELECTOR_BY_CENTER_ID,
   CLIENT_127_NARROW_FILTER_LIST_CENTER_PANEL_IDS,
   CLIENT_127_PANEL_ASSET_BY_CENTER_ID,
@@ -12,11 +13,18 @@ import {
   DAILY_CHAIN_TAB_SESSION_KEY,
   DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS,
   DAILY_QUEST_PROGRESS_SECONDARY_CLASS,
+  GUILD_CHAT_RETRY_INLINE_CLASS,
   GUILD_ROLE_GROUP_HEADER_CLASS,
+  HERO_GROWTH_COMPARE_STRIP_CLASS,
+  HERO_LIST_RETURN_SESSION_KEY,
   HERO_LIST_SELECTED_SESSION_KEY,
+  HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE,
   LEADERBOARD_TOP_DENSITY_LINE_CLASS,
   FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX,
   MAIL_CLAIM_ALL_ATTACHMENTS_ACTION,
+  QUEUE_ROW_ETA_LINE_CLASS,
+  QUEUE_ROW_PROGRESS_BAR_CLASS,
+  RECRUIT_FORM_INLINE_HINT_CLASS,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -115,6 +123,18 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain("bag-row-inline-state");
     expect(html).toContain("shop-price-wallet-gap-line");
     expect(html).toContain("battle-report-replay-v1");
+  });
+
+  it("CLIENT-203 exposes wave:36 queue hero social HUD deep-link narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(QUEUE_ROW_ETA_LINE_CLASS);
+    expect(html).toContain(QUEUE_ROW_PROGRESS_BAR_CLASS);
+    expect(html).toContain(HERO_GROWTH_COMPARE_STRIP_CLASS);
+    expect(html).toContain(HERO_LIST_RETURN_SESSION_KEY);
+    expect(html).toContain(GUILD_CHAT_RETRY_INLINE_CLASS);
+    expect(html).toContain(RECRUIT_FORM_INLINE_HINT_CLASS);
+    expect(html).toContain(HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
+    expect(html).toContain(CENTER_PANEL_TAB_PULSE_CLASS);
   });
 
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {

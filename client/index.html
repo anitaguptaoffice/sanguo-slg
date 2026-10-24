@@ -2942,6 +2942,29 @@
       #layout-frame.layout-narrow .military-panel .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-203 wave:36 主城队列将领社交 HUD 深链组合 manifest */
+      /* sessionStorage key hero-list-return-v1 (CLIENT-199) */
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-complete-focus-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-eta-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress-bar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-growth-compare-strip,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-upgrade-progress-bar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-return-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-form-inline-hint,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-form-inline-warn,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-panel-empty-hint,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-empty-error-row,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-empty-error-row,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-retry-inline,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-retry-inline,
+      #layout-frame.layout-narrow #hud [data-role="hud-center-panel-deeplink-line"],
+      #layout-frame.layout-narrow .main-city-toolbar button.center-panel-tab-pulse {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .building-panel .panel-scroll-body {
+        padding-bottom: 64px;
+      }
       /* CLIENT-195 wave:35 世界军情战报邮件日常背包商城组合 manifest */
       /* sessionStorage key battle-report-replay-v1 (CLIENT-191) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info-card,
