@@ -1,10 +1,10 @@
 {
   "task": "ART-CENTER-PANEL-012",
-  "runtime_code_sha": "b20d9c706fd98db6b7c7c2884d4d255f7e2e4d5d",
-  "screenshot_artifacts_commit_sha": "b20d9c706fd98db6b7c7c2884d4d255f7e2e4d5d",
-  "tip_sha": "b20d9c706fd98db6b7c7c2884d4d255f7e2e4d5d",
+  "runtime_code_sha": "7e1e6f986e4e34da3baaaae90ec5114607c1d852",
+  "screenshot_artifacts_commit_sha": "7e1e6f986e4e34da3baaaae90ec5114607c1d852",
+  "tip_sha": "7e1e6f986e4e34da3baaaae90ec5114607c1d852",
   "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
-  "captured_at": "2026-10-24T06:50:39.565Z",
+  "captured_at": "2026-10-24T06:53:25.612Z",
   "asset_id": "ui.panel.hero.v1",
   "texture_paths": {
     "scale_1": "textures/1x/ui/panel_hero.png",
@@ -40,7 +40,7 @@
     },
     "hero-center-panel-1280x720.jpg": {
       "quality": 88,
-      "bytes": 262541,
+      "bytes": 262401,
       "viewport": {
         "tag": "1280x720",
         "file": "hero-center-panel-1280x720.jpg",
