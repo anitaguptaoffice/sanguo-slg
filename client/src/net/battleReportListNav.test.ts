@@ -3,6 +3,9 @@ import {
   adjacentBattleReportId,
   adjacentBattleReportIdInSummaries,
   battleReportIdsInListOrder,
+  battleReportListRovingFocusIndex,
+  setBattleReportAdjNavButtonEnabled,
+  syncBattleReportListRovingFocus,
 } from "@/net/battleReportListNav";
 import {
   filterBattleReportsByOutcome,
@@ -54,5 +57,32 @@ describe("battleReportListNav", () => {
     const visible = filterBattleReportsByOutcome(todayOnly, "all");
     expect(adjacentBattleReportIdInSummaries(visible, 15, "prev")).toBe(20);
     expect(adjacentBattleReportIdInSummaries(visible, 20, "next")).toBe(15);
+  });
+
+  it("roving focus index tracks selected id in filtered order (CLIENT-158)", () => {
+    const ids = [10, 8, 5];
+    expect(battleReportListRovingFocusIndex(ids, 8)).toBe(1);
+    expect(battleReportListRovingFocusIndex(ids, 99)).toBe(0);
+    expect(battleReportListRovingFocusIndex([], 10)).toBe(0);
+  });
+
+  it("syncBattleReportListRovingFocus sets tabindex on matching row", () => {
+    const ul = document.createElement("ul");
+    ul.innerHTML = `<li data-report-id="10"></li><li data-report-id="8"></li><li data-report-id="5"></li>`;
+    syncBattleReportListRovingFocus(ul, [10, 8, 5], 8);
+    const items = ul.querySelectorAll("li");
+    expect(items[0].tabIndex).toBe(-1);
+    expect(items[1].tabIndex).toBe(0);
+    expect(items[2].tabIndex).toBe(-1);
+  });
+
+  it("adj nav buttons expose aria-disabled when disabled (CLIENT-158)", () => {
+    const btn = document.createElement("button");
+    setBattleReportAdjNavButtonEnabled(btn, false);
+    expect(btn.disabled).toBe(true);
+    expect(btn.getAttribute("aria-disabled")).toBe("true");
+    setBattleReportAdjNavButtonEnabled(btn, true);
+    expect(btn.disabled).toBe(false);
+    expect(btn.getAttribute("aria-disabled")).toBe("false");
   });
 });

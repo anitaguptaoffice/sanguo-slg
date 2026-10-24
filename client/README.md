@@ -969,6 +969,14 @@ cd client && npm install && npm run dev
 4. 根节点 `data-battle-report-adj-nav-keyboard="off"` 后键盘不再切换，**上一封/下一封** 仍可点。
 5. 单测：`battleReportListNav.test.ts`（筛选列表邻接 id）、`BattleReportPanel.test.ts`（region/键盘/焦点/data attr）。
 
+### 手动验收（战报相邻条导航与列表焦点 CLIENT-158）
+
+在 **CLIENT-083 / CLIENT-094** 基础上：**上一封/下一封**（及详情区 **←/→**、筛选区 **Alt+←/→**）在 **CLIENT-083** 筛选序内切换时，列表 **↑/↓ roving** 的 `tabindex` 同步到对应 `report_id` 行（键盘焦点仍回到详情顶栏导航按钮，与 CLIENT-094 一致）。首/末封按钮 **`disabled` + `aria-disabled="true"`**；切换后保留 **CLIENT-074** 回合高亮仅当新战报仍含该回合，否则重置。**CLIENT-125** 筛选 chip 变更后邻接序与按钮禁用态即时重算；**CLIENT-142** 坐标复盘不退化。
+
+1. `make dev` 打开战报，选中中间一条 → **下一封** 后列表中仅邻行 `tabindex=0`，再 **↑/↓** 可继续 roving 打开其它战报。
+2. 首条战报 **上一封**、末条 **下一封** 应禁用且 `aria-disabled=true`；切换 outcome 筛选后邻接按钮状态与列表顺序一致。
+3. 单测：`battleReportListNav.test.ts`（`battleReportListRovingFocusIndex` / `syncBattleReportListRovingFocus`）、`BattleReportPanel.test.ts`（邻接+焦点索引+筛选重算）。
+
 ### 手动验收（战报详情回合表与行军深链 CLIENT-034）
 
 `GetBattleReport` 成功后，详情区顶部仍保留 `formatBattleReportDetail` 文字摘要；下方为结构化 **回合表**（回合号、攻/守行动摘要、双方剩余兵力 map）。回合数 **> 8** 时表格默认折叠，点 **「展开全部回合」** 显示全部行。列表/详情加载失败仍可用 **重试** 按钮（不退化 **CLIENT-029** 列表密度）。行军结束 HUD 链接（**CLIENT-025**）点击后调用 `openPanelWithDeepLink`：刷新 `ListBattleReports` 后选中 `MarchEndBattleReportHint` 或最近 `report_id` 并自动 `GetBattleReport`。

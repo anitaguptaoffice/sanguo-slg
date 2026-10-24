@@ -52,3 +52,51 @@ export function adjacentBattleReportIdInSummaries(
 ): number | null {
   return adjacentBattleReportId(battleReportIdsInListOrder(reports), currentId, direction);
 }
+
+/**
+ * 列表 roving tabindex 应落在的索引（CLIENT-158）：与筛选序内 `report_id` 对齐。
+ */
+export function battleReportListRovingFocusIndex(
+  orderedIds: readonly number[],
+  selectedReportId: number,
+): number {
+  if (!orderedIds.length) return 0;
+  if (selectedReportId <= 0) return 0;
+  const idx = orderedIds.indexOf(selectedReportId);
+  return idx >= 0 ? idx : 0;
+}
+
+/** 详情顶栏上一封/下一封：disabled 与 `aria-disabled` 同源（CLIENT-158）。 */
+export function setBattleReportAdjNavButtonEnabled(
+  button: HTMLButtonElement,
+  enabled: boolean,
+): void {
+  button.disabled = !enabled;
+  button.setAttribute("aria-disabled", enabled ? "false" : "true");
+}
+
+const BATTLE_REPORT_LIST_ITEM_SELECTOR = "li[data-report-id]";
+
+function battleReportListRovingItems(list: HTMLElement): HTMLElement[] {
+  return Array.from(
+    list.querySelectorAll<HTMLElement>(BATTLE_REPORT_LIST_ITEM_SELECTOR),
+  ).filter(
+    (el) => !el.hasAttribute("hidden") && el.getAttribute("aria-hidden") !== "true",
+  );
+}
+
+/**
+ * 刷新列表 DOM 后，将 roving `tabindex` 同步到当前选中 `report_id`（不抢键盘焦点）。
+ */
+export function syncBattleReportListRovingFocus(
+  list: HTMLElement,
+  orderedIds: readonly number[],
+  selectedReportId: number,
+): void {
+  const items = battleReportListRovingItems(list);
+  if (!items.length) return;
+  const focusIdx = battleReportListRovingFocusIndex(orderedIds, selectedReportId);
+  for (let i = 0; i < items.length; i++) {
+    items[i].tabIndex = i === focusIdx ? 0 : -1;
+  }
+}

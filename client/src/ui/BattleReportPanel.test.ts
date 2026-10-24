@@ -778,6 +778,132 @@ describe("BattleReportPanel", () => {
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(10);
   });
 
+  it("syncs list roving tabindex when navigating adjacent reports (CLIENT-158)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 10, outcome: 1, created_at_ms: 0 },
+          { report_id: 8, outcome: 1, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: 1 },
+            detail: { result: "attacker_win", rounds: [{ round: 1 }] },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const row10 = mount.querySelector('li[data-report-id="10"]') as HTMLElement;
+    const row8 = mount.querySelector('li[data-report-id="8"]') as HTMLElement;
+    expect(row10.tabIndex).toBe(0);
+    expect(row8.tabIndex).toBe(-1);
+
+    mount.querySelector('[data-action="nav-next-report"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const row8After = mount.querySelector('li[data-report-id="8"]') as HTMLElement;
+    const row10After = mount.querySelector('li[data-report-id="10"]') as HTMLElement;
+    expect(row8After.tabIndex).toBe(0);
+    expect(row10After.tabIndex).toBe(-1);
+
+    const prevBtn = mount.querySelector('[data-action="nav-prev-report"]') as HTMLButtonElement;
+    const nextBtn = mount.querySelector('[data-action="nav-next-report"]') as HTMLButtonElement;
+    expect(prevBtn.getAttribute("aria-disabled")).toBe("false");
+    expect(nextBtn.getAttribute("aria-disabled")).toBe("true");
+  });
+
+  it("recalculates adjacency when outcome filter chip changes (CLIENT-158)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 10, outcome: 1, created_at_ms: 0 },
+          { report_id: 8, outcome: 2, created_at_ms: 0 },
+          { report_id: 5, outcome: 1, created_at_ms: 0 },
+        ],
+        total: 3,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: 1 },
+            detail: { result: "attacker_win", rounds: [] },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    mount.querySelector('button[data-filter="win"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const nextBtn = mount.querySelector('[data-action="nav-next-report"]') as HTMLButtonElement;
+    expect(nextBtn.disabled).toBe(false);
+    nextBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(5);
+  });
+
+  it("resets round highlight when adjacent report lacks preserved round (CLIENT-158)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 10, outcome: 1, created_at_ms: 0 },
+          { report_id: 8, outcome: 1, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: 1 },
+            detail: {
+              result: "attacker_win",
+              rounds: id === 10 ? [{ round: 1 }, { round: 2 }] : [{ round: 1 }],
+            },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    mount.querySelector('[data-action="jump-round"][data-round="2"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    mount.querySelector('[data-action="nav-next-report"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(mount.querySelector(`#${battleReportRoundRowDomId(2)}`)).toBeNull();
+  });
+
   it("exposes detail region aria-label and navigates with arrows when detail focused (CLIENT-094)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
