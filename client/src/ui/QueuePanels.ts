@@ -24,7 +24,13 @@ import {
 } from "@/net/panelGatewayError";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
+  DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS,
+  DAILY_QUEUE_ANCHOR_HIGHLIGHT_MS,
+  type DailyQueueAnchorTarget,
+} from "@/net/dailyQueueAnchor";
+import {
   findBuildDailyQuestForBuilding,
+  findTrainDailyQuestForRecruit,
   formatLinkedDailyQuestProgressSummary,
 } from "@/net/dailyQuestQueueMatch";
 import { buildingBySlot } from "@/net/hudFormat";
@@ -61,6 +67,8 @@ import {
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
+export { DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS } from "@/net/dailyQueueAnchor";
+
 /** 建造队列行选中高亮（与日常/邮件列表 `selected` 口径一致）。 */
 export const QUEUE_BUILD_ROW_SELECTED_CLASS = "selected";
 
@@ -84,6 +92,9 @@ export class QueuePanels {
   private readonly completePulseSlots = new Set<string>();
   private readonly completePulseRecruitIds = new Set<number>();
   private recruitDetectSnapshot: RecruitQueueEntry[] = [];
+  private dailyAnchorHighlightBuildSlot: string | null = null;
+  private dailyAnchorHighlightRecruitId: number | null = null;
+  private dailyAnchorHighlightTimer: ReturnType<typeof setTimeout> | null = null;
   private buildListLoading = false;
   private buildListError: string | null = null;
   private focusTrap: CenterPanelFocusTrap | null = null;
@@ -229,6 +240,30 @@ export class QueuePanels {
   /** 打开队列并高亮募兵行，与兵营矩阵格互高亮（CLIENT-149）。 */
   openAndHighlightRecruitQueue(queueId: number): void {
     this.highlightRecruitQueue(queueId, { open: true });
+  }
+
+  /** 日常「前往下一步」：匹配队列行 `daily-queue-anchor-highlight` 2s（可与槽位/进度 class 叠加）。 */
+  flashDailyQueueAnchorHighlight(target: DailyQueueAnchorTarget | null): void {
+    if (!target) return;
+    if (this.dailyAnchorHighlightTimer != null) {
+      clearTimeout(this.dailyAnchorHighlightTimer);
+      this.dailyAnchorHighlightTimer = null;
+    }
+    if (target.kind === "build") {
+      this.dailyAnchorHighlightRecruitId = null;
+      this.dailyAnchorHighlightBuildSlot = target.slotKey;
+      this.openAndHighlightBuildSlot(target.slotKey);
+    } else {
+      this.dailyAnchorHighlightBuildSlot = null;
+      this.dailyAnchorHighlightRecruitId = target.queueId;
+      this.openAndHighlightRecruitQueue(target.queueId);
+    }
+    this.dailyAnchorHighlightTimer = window.setTimeout(() => {
+      this.dailyAnchorHighlightBuildSlot = null;
+      this.dailyAnchorHighlightRecruitId = null;
+      this.dailyAnchorHighlightTimer = null;
+      if (this.isOpen()) this.render();
+    }, DAILY_QUEUE_ANCHOR_HIGHLIGHT_MS);
   }
 
   getHighlightedBuildSlotKey(): string | null {
@@ -542,6 +577,9 @@ export class QueuePanels {
       if (this.completePulseSlots.has(slotKey)) {
         li.classList.add("queue-build-complete-pulse");
       }
+      if (this.dailyAnchorHighlightBuildSlot && slotKey === this.dailyAnchorHighlightBuildSlot) {
+        li.classList.add(DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS);
+      }
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
@@ -600,6 +638,12 @@ export class QueuePanels {
       if (this.completePulseRecruitIds.has(entry.queue_id)) {
         li.classList.add("queue-recruit-complete-pulse");
       }
+      if (
+        this.dailyAnchorHighlightRecruitId != null &&
+        entry.queue_id === this.dailyAnchorHighlightRecruitId
+      ) {
+        li.classList.add(DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS);
+      }
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
@@ -610,6 +654,16 @@ export class QueuePanels {
           now,
           inferRecruitQueueStartedAtMs(entry),
         );
+      }
+      const linkedTrainQuest = findTrainDailyQuestForRecruit(entry, dailyRows, now);
+      if (linkedTrainQuest && this.onOpenDailyBuildQuest) {
+        const cfgId = linkedTrainQuest.quest_cfg_id ?? 0;
+        const dailyBtn = document.createElement("button");
+        dailyBtn.type = "button";
+        dailyBtn.setAttribute("data-action", "daily-build-next");
+        if (cfgId > 0) dailyBtn.setAttribute("data-quest-cfg-id", String(cfgId));
+        dailyBtn.textContent = QUEUE_DAILY_NEXT_BUTTON_LABEL;
+        li.appendChild(dailyBtn);
       }
       recruitUl.appendChild(li);
     }

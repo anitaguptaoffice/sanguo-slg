@@ -54,6 +54,7 @@ import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
 import { appendManhattanToStatus } from "@/ui/marchWorldListLink";
 import { QueuePanels } from "@/ui/QueuePanels";
+import { resolveDailyQueueAnchorTarget } from "@/net/dailyQueueAnchor";
 import type { DailyQuestNavAction } from "@/net/dailyQuestObjective";
 import { DAILY_RECRUIT_QUEST_CFG_ID } from "@/net/dailyQuestState";
 import { recruitEntryFromResponse } from "@/net/queueState";
@@ -909,15 +910,23 @@ export class MainCityScene implements Scene {
   }
 
   private navigateDailyQuest(action: DailyQuestNavAction): void {
+    const queueAnchorQuest = this.dailyQuest.getSelectedQuestRow();
+    const queueAnchorTarget = resolveDailyQueueAnchorTarget(
+      queueAnchorQuest,
+      this.session?.buildings,
+      this.queuePanels.getRecruitQueueSnapshot(),
+    );
     switch (action.kind) {
       case "train_troops":
         this.queuePanels.open();
+        this.queuePanels.flashDailyQueueAnchorHighlight(queueAnchorTarget);
         this.militaryPanel.classList.remove("hidden");
         this.syncMilitaryPanel();
         this.status = "已打开「队列」与「军事」募兵（练兵日常 QUEST-003）";
         break;
       case "build_level":
         this.queuePanels.open();
+        this.queuePanels.flashDailyQueueAnchorHighlight(queueAnchorTarget);
         this.status = "已打开「队列」；点选主城建筑或「升级农田」完成建造日常";
         break;
       case "use_item":

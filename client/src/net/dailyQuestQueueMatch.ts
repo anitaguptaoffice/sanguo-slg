@@ -152,6 +152,19 @@ export function findBuildDailyQuestForBuilding(
   return null;
 }
 
+/** 募兵队列行：匹配进行中练兵日常（chain 400 快照，不新 RPC）。 */
+export function findTrainDailyQuestForRecruit(
+  recruit: RecruitQueueEntry,
+  quests: QuestRow[],
+  nowMs = Date.now(),
+): QuestRow | null {
+  if (!isRecruitQueueActive(recruit, nowMs)) return null;
+  for (const q of quests) {
+    if (isTrainDailyNeedingProgress(q)) return q;
+  }
+  return null;
+}
+
 export function findActiveUpgradeForBuildQuest(
   quest: QuestRow,
   buildings: CityBuilding[] | undefined,

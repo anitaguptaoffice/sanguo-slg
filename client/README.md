@@ -749,8 +749,9 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. **daily_train_1**：接取且进行中 → 详情/「下一步」提示募兵 → 点 **「前往下一步」** 应打开 **「队列」** 与 **「军事」**；完成募兵后进度由服务端推进 → **领奖**，顶栏 CLIENT-018 `+…` 飘字与 HUD 更新。
 4. **daily_build_1**：接取且进行中 → **「前往下一步」** 打开 **「队列」**；对农田等发起升级并完成队列后进度达标 → 领奖。
 5. **CLIENT-052 队列↔日常互链**：`daily_build_1` 进行中且农田（`building_cfg_id=2`）正在升级 → **「队列」** 对应建造行出现 **「日常：下一步」**，点击打开 **「日常」** 并滚到 1032 行；日常列表该行附带 **队列：农田 → Lv… · 剩余 …** 只读摘要（与队列面板同一 `GetCityState` 快照，不新 RPC）。加速符 **DOM-003** 逻辑不变。
-6. **daily_march_1**：接取且进行中 → **「前往下一步」** 打开 **「背包」** 并高亮 **2020 远征干粮** → **使用道具** 成功后日常进度推进 → 领奖。
-7. 单测：`dailyQuestObjective.test.ts`、`dailyQuestQueueMatch.test.ts`；全量 `cd client && npm test`。
+6. **CLIENT-186 队列日常锚点高亮**：日常 **「前往下一步」**（建造/练兵）打开队列时，匹配建造/募兵行 **`daily-queue-anchor-highlight` 2s**（与 **CLIENT-174** 进度条、**CLIENT-180** 槽位高亮 class **可叠加**）；队列 **「日常：下一步」** 反向打开日常并按 `quest_cfg_id` **`scrollIntoView`**（含 **CLIENT-169** chain tab 切换）。单测：`dailyQueueAnchor.test.ts`、`QueuePanels.test.ts`。
+7. **daily_march_1**：接取且进行中 → **「前往下一步」** 打开 **「背包」** 并高亮 **2020 远征干粮** → **使用道具** 成功后日常进度推进 → 领奖。
+8. 单测：`dailyQuestObjective.test.ts`、`dailyQuestQueueMatch.test.ts`、`dailyQueueAnchor.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（日常战备与战报横幅 CLIENT-044）
 

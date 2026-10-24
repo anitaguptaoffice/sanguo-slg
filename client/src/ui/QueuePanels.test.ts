@@ -8,8 +8,10 @@ import {
   RECRUIT_QUEUE_MATRIX_SLOT_KEY,
 } from "@/net/recruitQueueComplete";
 import { queueRecruitRowDomId, RECRUIT_ROW_PULSE_CLASS } from "@/net/recruitTroopSubmitFeedback";
+import { DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS } from "@/net/dailyQueueAnchor";
 import {
   BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID,
+  DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS as QUEUE_PANEL_ANCHOR_CLASS,
   QUEUE_BUILD_ROW_SELECTED_CLASS,
   QUEUE_DAILY_NEXT_BUTTON_LABEL,
   QueuePanels,
@@ -279,6 +281,59 @@ describe("QueuePanels", () => {
     panel.toggle();
     const btn2 = mount.querySelector('[data-action="speedup-build"]') as HTMLButtonElement;
     expect(btn2.disabled).toBe(false);
+  });
+
+  it("flashes daily-queue-anchor-highlight on matching build row (CLIENT-186)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.flashDailyQueueAnchorHighlight({ kind: "build", slotKey: "farm" });
+    const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
+    expect(row?.classList.contains(DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS)).toBe(true);
+    expect(row?.classList.contains(QUEUE_PANEL_ANCHOR_CLASS)).toBe(true);
+    expect(row?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(true);
+    expect(row?.classList.contains(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
+    expect(row?.querySelector(".queue-row-progress-fill")).toBeTruthy();
+  });
+
+  it("shows daily next link on recruit row when daily_train_1 is in progress", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onOpenDaily = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      {},
+      () => {},
+      () => {},
+      () => {},
+      () => [
+        {
+          quest_cfg_id: 1014,
+          quest_code: "daily_train_1",
+          state: 2,
+          progress_current: 0,
+          progress_target: 1,
+        },
+      ],
+      onOpenDaily,
+    );
+    panel.attach();
+    panel.toggle();
+    panel.addRecruitEntry({ queue_id: 9, unit_cfg_id: 1, count: 10, finish_at_ms: now + 90_000 });
+    const dailyBtn = mount.querySelector(
+      `#${queueRecruitRowDomId(9)} [data-action="daily-build-next"]`,
+    ) as HTMLButtonElement;
+    expect(dailyBtn?.textContent).toBe(QUEUE_DAILY_NEXT_BUTTON_LABEL);
+    dailyBtn.click();
+    expect(onOpenDaily).toHaveBeenCalledWith(1014);
   });
 
   it("shows daily next link on build row when daily_build_1 matches farm upgrade", () => {
