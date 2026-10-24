@@ -1,0 +1,644 @@
+{
+  "task": "ART-UI-FILTER-008",
+  "tip_sha": "8c45fa1ac3429cec3811211d34cc3c7a7d158f50",
+  "captured_at": "2026-10-24T00:13:21.079Z",
+  "note": "Runtime JPEG + DOM probes for engineering acceptance; not art-board static PASS.",
+  "panels": {
+    "mail": {
+      "panel": "mail",
+      "preset": "mail-unread-multi",
+      "shots": {
+        "1600x900-dpr1": {
+          "file": "mail-filters-1600x900-dpr1.jpg",
+          "quality": 88,
+          "bytes": 52753
+        },
+        "1600x900-dpr2": {
+          "file": "mail-filters-1600x900-dpr2.jpg",
+          "quality": 88,
+          "bytes": 149367
+        },
+        "1280x720": {
+          "file": "mail-filters-1280x720.jpg",
+          "quality": 88,
+          "bytes": 49174
+        }
+      },
+      "probes": {
+        "1600x900-dpr1": {
+          "chips": {
+            "chipCount": 2,
+            "chips": [
+              {
+                "action": "mail-filter-all",
+                "label": "全部",
+                "skinned": true,
+                "rect": {
+                  "width": 74,
+                  "height": 44,
+                  "left": 518,
+                  "top": 153.390625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "mail-filter-unread",
+                "label": "未读",
+                "skinned": true,
+                "rect": {
+                  "width": 74,
+                  "height": 44,
+                  "left": 604,
+                  "top": 153.390625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              }
+            ]
+          },
+          "badges": {
+            "badgeCount": 3,
+            "badges": [
+              {
+                "role": "mail-filter-all-count",
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "block",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              },
+              {
+                "role": "mail-filter-unread-count",
+                "filterBadgeCount": 2,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "block",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              },
+              {
+                "role": null,
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "flex",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              }
+            ]
+          }
+        },
+        "1600x900-dpr2": {
+          "chips": {
+            "chipCount": 2,
+            "chips": [
+              {
+                "action": "mail-filter-all",
+                "label": "全部",
+                "skinned": true,
+                "rect": {
+                  "width": 74,
+                  "height": 44,
+                  "left": 518,
+                  "top": 153.390625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "mail-filter-unread",
+                "label": "未读",
+                "skinned": true,
+                "rect": {
+                  "width": 74,
+                  "height": 44,
+                  "left": 604,
+                  "top": 153.390625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              }
+            ]
+          },
+          "badges": {
+            "badgeCount": 3,
+            "badges": [
+              {
+                "role": "mail-filter-all-count",
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "block",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              },
+              {
+                "role": "mail-filter-unread-count",
+                "filterBadgeCount": 2,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "block",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              },
+              {
+                "role": null,
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "flex",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              }
+            ]
+          }
+        },
+        "1280x720": {
+          "chips": {
+            "chipCount": 2,
+            "chips": [
+              {
+                "action": "mail-filter-all",
+                "label": "全部",
+                "skinned": true,
+                "rect": {
+                  "width": 107,
+                  "height": 44,
+                  "left": 358,
+                  "top": 142.1875
+                },
+                "cssMin": {
+                  "minWidth": 0,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "mail-filter-unread",
+                "label": "未读",
+                "skinned": true,
+                "rect": {
+                  "width": 107,
+                  "height": 44,
+                  "left": 477,
+                  "top": 142.1875
+                },
+                "cssMin": {
+                  "minWidth": 0,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              }
+            ]
+          },
+          "badges": {
+            "badgeCount": 3,
+            "badges": [
+              {
+                "role": "mail-filter-all-count",
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "block",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              },
+              {
+                "role": "mail-filter-unread-count",
+                "filterBadgeCount": 2,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "block",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              },
+              {
+                "role": null,
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "flex",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              }
+            ]
+          }
+        }
+      }
+    },
+    "daily": {
+      "panel": "daily",
+      "preset": "daily-claimable",
+      "shots": {
+        "1600x900-dpr1": {
+          "file": "daily-filters-1600x900-dpr1.jpg",
+          "quality": 88,
+          "bytes": 51230
+        },
+        "1600x900-dpr2": {
+          "file": "daily-filters-1600x900-dpr2.jpg",
+          "quality": 88,
+          "bytes": 145375
+        },
+        "1280x720": {
+          "file": "daily-filters-1280x720.jpg",
+          "quality": 88,
+          "bytes": 48052
+        }
+      },
+      "probes": {
+        "1600x900-dpr1": {
+          "chips": {
+            "chipCount": 4,
+            "chips": [
+              {
+                "action": "daily-filter",
+                "label": "全部",
+                "skinned": true,
+                "rect": {
+                  "width": 44,
+                  "height": 44,
+                  "left": 518,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "进行中",
+                "skinned": true,
+                "rect": {
+                  "width": 56,
+                  "height": 44,
+                  "left": 574,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "可领取",
+                "skinned": true,
+                "rect": {
+                  "width": 80,
+                  "height": 44,
+                  "left": 642,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "已完成",
+                "skinned": true,
+                "rect": {
+                  "width": 56,
+                  "height": 44,
+                  "left": 734,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              }
+            ]
+          },
+          "badges": {
+            "badgeCount": 1,
+            "badges": [
+              {
+                "role": "daily-claimable-count-badge",
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "flex",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              }
+            ]
+          }
+        },
+        "1600x900-dpr2": {
+          "chips": {
+            "chipCount": 4,
+            "chips": [
+              {
+                "action": "daily-filter",
+                "label": "全部",
+                "skinned": true,
+                "rect": {
+                  "width": 44,
+                  "height": 44,
+                  "left": 518,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "进行中",
+                "skinned": true,
+                "rect": {
+                  "width": 56,
+                  "height": 44,
+                  "left": 574,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "可领取",
+                "skinned": true,
+                "rect": {
+                  "width": 80,
+                  "height": 44,
+                  "left": 642,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "已完成",
+                "skinned": true,
+                "rect": {
+                  "width": 56,
+                  "height": 44,
+                  "left": 734,
+                  "top": 208.84375
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              }
+            ]
+          },
+          "badges": {
+            "badgeCount": 1,
+            "badges": [
+              {
+                "role": "daily-claimable-count-badge",
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "flex",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              }
+            ]
+          }
+        },
+        "1280x720": {
+          "chips": {
+            "chipCount": 4,
+            "chips": [
+              {
+                "action": "daily-filter",
+                "label": "全部",
+                "skinned": true,
+                "rect": {
+                  "width": 44,
+                  "height": 44,
+                  "left": 358,
+                  "top": 201.640625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "进行中",
+                "skinned": true,
+                "rect": {
+                  "width": 56,
+                  "height": 44,
+                  "left": 414,
+                  "top": 201.640625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "可领取",
+                "skinned": true,
+                "rect": {
+                  "width": 80,
+                  "height": 44,
+                  "left": 482,
+                  "top": 201.640625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              },
+              {
+                "action": "daily-filter",
+                "label": "已完成",
+                "skinned": true,
+                "rect": {
+                  "width": 56,
+                  "height": 44,
+                  "left": 574,
+                  "top": 201.640625
+                },
+                "cssMin": {
+                  "minWidth": 44,
+                  "minHeight": 44
+                },
+                "probeMethod": "getBoundingClientRect",
+                "meetsMin44": true
+              }
+            ]
+          },
+          "badges": {
+            "badgeCount": 1,
+            "badges": [
+              {
+                "role": "daily-claimable-count-badge",
+                "filterBadgeCount": 1,
+                "hiddenAttr": false,
+                "hasHiddenClass": false,
+                "display": "flex",
+                "visibility": "visible",
+                "rect": {
+                  "width": 20,
+                  "height": 16
+                },
+                "entireNodeHiddenWhenZero": null,
+                "visibleWhenPositive": true
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "mailBadgeZero": {
+    "file": "mail-filters-badge-zero-1600x900-dpr1.jpg",
+    "quality": 88,
+    "bytes": 41469,
+    "badges": {
+      "badgeCount": 2,
+      "badges": [
+        {
+          "role": "mail-filter-all-count",
+          "filterBadgeCount": 0,
+          "hiddenAttr": true,
+          "hasHiddenClass": true,
+          "display": "none",
+          "visibility": "visible",
+          "rect": {
+            "width": 0,
+            "height": 0
+          },
+          "entireNodeHiddenWhenZero": true,
+          "visibleWhenPositive": null
+        },
+        {
+          "role": "mail-filter-unread-count",
+          "filterBadgeCount": 0,
+          "hiddenAttr": true,
+          "hasHiddenClass": true,
+          "display": "none",
+          "visibility": "visible",
+          "rect": {
+            "width": 0,
+            "height": 0
+          },
+          "entireNodeHiddenWhenZero": true,
+          "visibleWhenPositive": null
+        }
+      ]
+    }
+  },
+  "summary": {
+    "chipsPass": true,
+    "badgesPass": true,
+    "zeroPass": true,
+    "overall": true
+  }
+}
