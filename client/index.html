@@ -1881,6 +1881,18 @@
         outline: 2px solid #8b6914;
         background: rgba(201, 162, 39, 0.12);
       }
+      .march-list li.intel-row-minimap-sync-highlight {
+        outline: 2px solid #7ec8e3;
+        background: rgba(126, 200, 227, 0.14);
+      }
+      @keyframes minimap-intel-sync-ring-keyframes {
+        0% { box-shadow: inset 0 0 0 0 rgba(156, 220, 254, 0); }
+        45% { box-shadow: inset -10px -10px 40px 2px rgba(156, 220, 254, 0.35); }
+        100% { box-shadow: inset 0 0 0 0 rgba(156, 220, 254, 0); }
+      }
+      #layout-frame.minimap-intel-sync-ring {
+        animation: minimap-intel-sync-ring-keyframes 1.5s ease-out 1;
+      }
       .march-intel-coord-sync-empty-hint {
         margin: 4px 0 6px; font-size: 12px; line-height: 1.45; color: #b8a88a;
       }
@@ -3267,6 +3279,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-focus-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-march-end-highlight,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-battle-replay-pulse,
+      #layout-frame.layout-narrow.minimap-intel-sync-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .intel-row-minimap-sync-highlight,
       #layout-frame.layout-narrow.minimap-march-stack-badge,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-march-summary-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .minimap-march-end-highlight,

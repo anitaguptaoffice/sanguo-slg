@@ -180,6 +180,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(QUEUE_NEXT_FINISH_PREVIEW_ACTION);
   });
 
+  it("CLIENT-220 exposes wave:39 minimap intel sync narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain("minimap-intel-sync-ring");
+    expect(html).toContain("intel-row-minimap-sync-highlight");
+  });
+
   it("CLIENT-211 exposes wave:37 world intel battle report mail bag narrow hooks", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain("minimap-march-stack-badge");

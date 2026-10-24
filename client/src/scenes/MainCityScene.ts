@@ -220,6 +220,13 @@ import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
 import { applyMinimapBattleReplayPulse } from "@/ui/minimapBattleReplayPulse";
 import { syncMinimapMarchStackBadgeClass } from "@/ui/minimapMarchStack";
 import {
+  beginMinimapIntelSyncRingForMarch,
+  createMinimapIntelSyncTimers,
+  highlightIntelRowForMinimapTile,
+  type MinimapIntelSyncRingState,
+  type MinimapIntelSyncTimers,
+} from "@/ui/minimapIntelSyncHighlight";
+import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
   type MinimapMarchEndHighlight,
@@ -367,6 +374,10 @@ export class MainCityScene implements Scene {
   private minimapFocusPulseUntilMs = 0;
   /** CLIENT-188：军情选中行军终点叠加高亮。 */
   private minimapMarchEndHighlight: MinimapMarchEndHighlight | null = null;
+  /** CLIENT-220：军情选中 → 小地图目的格 1.5s sync 环（canvas 状态）。 */
+  private minimapIntelSyncRing: MinimapIntelSyncRingState | null = null;
+  private readonly minimapIntelSyncTimers: MinimapIntelSyncTimers =
+    createMinimapIntelSyncTimers();
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
   private minimapEtaTickAccum = 0;
@@ -704,6 +715,10 @@ export class MainCityScene implements Scene {
             timers: this.marchFormCoordSyncTimers,
           });
           this.minimapMarchEndHighlight = highlightMinimapMarchEnd(march);
+          this.minimapIntelSyncRing = beginMinimapIntelSyncRingForMarch(march, this.layoutFrame, {
+            timers: this.minimapIntelSyncTimers,
+            nowMs: this.marchClockMs,
+          });
           if (march) {
             const tx = march.to_x;
             const ty = march.to_y;
@@ -733,6 +748,7 @@ export class MainCityScene implements Scene {
                 : base;
           } else {
             this.world.setMarchDestHighlight(null);
+            this.minimapIntelSyncRing = null;
           }
           this.renderHud();
         },
@@ -782,6 +798,7 @@ export class MainCityScene implements Scene {
         onMarchCountClick: (grid) => {
           const opened = this.marchList.selectMarchByDest(grid.x, grid.y);
           if (opened) {
+            this.pulseIntelRowFromMinimapTile(grid.x, grid.y);
             this.status = `军情：已选中指向 (${grid.x},${grid.y}) 的首条行军`;
           } else {
             this.status = `格点 (${grid.x},${grid.y}) 暂无进行中行军`;
@@ -790,6 +807,7 @@ export class MainCityScene implements Scene {
         },
         onViewMarchesAtGrid: (grid) => {
           this.marchList.openIntelViewForGrid(grid.x, grid.y);
+          this.pulseIntelRowFromMinimapTile(grid.x, grid.y);
           this.status = `军情：已筛选目的格 (${grid.x},${grid.y})`;
           this.renderHud();
         },
@@ -1732,6 +1750,12 @@ export class MainCityScene implements Scene {
       );
       if (marchId != null) {
         this.marchList.selectMarchById(marchId, { openPanel: true });
+        const march = this.minimapMarches.find((m) => m.march_id === marchId);
+        const tx = march?.to_x;
+        const ty = march?.to_y;
+        if (Number.isFinite(tx) && Number.isFinite(ty)) {
+          this.pulseIntelRowFromMinimapTile(tx!, ty!, marchId);
+        }
         this.status = `小地图选中行军 #${marchId}`;
         this.renderHud();
         return;
@@ -1794,6 +1818,15 @@ export class MainCityScene implements Scene {
           )
         : base;
     this.renderHud();
+  }
+
+  private pulseIntelRowFromMinimapTile(wx: number, wy: number, marchId?: number): void {
+    const panelMarches = this.marchList.getMarches();
+    const marches = panelMarches.length ? panelMarches : this.minimapMarches;
+    highlightIntelRowForMinimapTile(this.marchList.getRoot(), marches, wx, wy, {
+      marchId,
+      timers: this.minimapIntelSyncTimers,
+    });
   }
 
   private applyMinimapMarchTargetPick(layoutX: number, layoutY: number): void {
@@ -2650,6 +2683,7 @@ export class MainCityScene implements Scene {
       focusGrid: this.minimapFocusGrid,
       focusPulseUntilMs: this.minimapFocusPulseUntilMs,
       marchEndHighlight: this.minimapMarchEndHighlight,
+      intelSyncRing: this.minimapIntelSyncRing,
       view: this.minimapView,
       rect: this.currentMinimapLayoutRect(),
       collapsed: this.minimapCollapsed,
