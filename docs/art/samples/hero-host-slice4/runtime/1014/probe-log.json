@@ -1,0 +1,263 @@
+{
+  "task": "HERO-HOST-SLICE4",
+  "template_cfg_id": 1014,
+  "mock_preset": "hero-panel-roster-slice4",
+  "tip_sha": "b53990c34976b980cdc3f8f85bbcfa5385943447",
+  "runtime_code_sha": "b53990c34976b980cdc3f8f85bbcfa5385943447",
+  "art_head_sha": "11f87490181675293bc07ec1e4772a50624c1867",
+  "art_asset_ids": [
+    "hero.avatar.1014.v1",
+    "hero.bust.1014.v1"
+  ],
+  "static_face_percent_min_required": 60,
+  "probes": {
+    "1600x900-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1014,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "陆逊",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "陆逊 · Lv10 · 忠诚 82",
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1014.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1014.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 623.21875,
+        "width": 128,
+        "height": 160
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
+      }
+    },
+    "1600x900-dpr2": {
+      "ok": true,
+      "template_cfg_id": 1014,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "陆逊",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "陆逊 · Lv10 · 忠诚 82",
+      "dpr": 2,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/avatar/1014.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/bust/1014.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": false,
+      "usesAvatar2x": true,
+      "usesBust1x": false,
+      "usesBust2x": true,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 623.21875,
+        "width": 128,
+        "height": 160
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
+      }
+    },
+    "1280x720-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1014,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "陆逊",
+      "listAvatarVisible": true,
+      "dpr": 1,
+      "uiScale": 0.8,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1014.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1014.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 502,
+        "bustRight": 492
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 174.984375,
+        "width": 128,
+        "height": 0
+      }
+    }
+  },
+  "sameframe": {
+    "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
+    "jpeg": {
+      "quality": 88,
+      "bytes": 263917
+    },
+    "probe": {
+      "ok": true,
+      "bustInClip": true,
+      "nameInClip": true,
+      "bustInViewport": true,
+      "nameInViewport": true,
+      "nameRightOfBust": true,
+      "verticalBandOverlap": true,
+      "gapPx": 10,
+      "gapNear10px": true,
+      "visibleClip": {
+        "left": 356,
+        "top": 174.984375,
+        "width": 568,
+        "height": 464.21875
+      },
+      "name": {
+        "text": "陆逊"
+      },
+      "viewport": {
+        "w": 1280,
+        "h": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "shots": {
+    "hero-host-1600x900-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 472838,
+      "viewport": {
+        "tag": "1600x900-dpr1",
+        "file": "hero-host-1600x900-dpr1.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-host-1600x900-dpr2.jpg": {
+      "quality": 72,
+      "bytes": 995172,
+      "viewport": {
+        "tag": "1600x900-dpr2",
+        "file": "hero-host-1600x900-dpr2.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-host-1280x720-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 245994,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "notes": [
+    "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
+    "Art path-copied from Draft #1192 (#1014 from #1192 @ 11f87490); Drafts remain unmerged.",
+    "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
+    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
+  ],
+  "captured_at": "2026-10-24T19:36:23.969Z"
+}
