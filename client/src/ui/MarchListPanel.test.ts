@@ -70,11 +70,11 @@ describe("MarchListPanel", () => {
 
     const row = mount.querySelector(".march-list li[data-march-id]");
     expect(row?.querySelector(".march-row-primary")?.textContent).toContain("攻击");
-    expect(row?.querySelector('[data-role="march-phase-chip"]')?.textContent).toBe("去程");
-    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("攻击");
-    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("(1,2)");
-    expect(row?.querySelector(".march-row-meta")?.textContent).toContain("出发");
+    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("(5,5)");
+    expect(row?.querySelector(".march-row-primary")?.textContent).toContain("#7");
+    expect(row?.querySelector('[data-role="march-phase-chip"]')).toBeNull();
     expect(row?.querySelector(".march-row-meta")?.textContent).toMatch(/剩余|即将到达/);
+    expect(row?.querySelector(".march-row-meta")?.textContent).toContain("行军中");
   });
 
   it("ticks remaining labels without extra listMarches RPC", async () => {
@@ -315,6 +315,35 @@ describe("MarchListPanel", () => {
       mount.querySelector('.march-list li[data-march-id="11"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
     ).toBe(false);
     expect(sessionStorage.getItem(MARCH_HIGHLIGHT_SESSION_KEY)).toBeNull();
+  });
+
+  it("pulses march-phase-changed when phase changes on refresh (CLIENT-141)", async () => {
+    vi.useFakeTimers();
+    const gateway = {
+      listMarches: vi
+        .fn()
+        .mockResolvedValueOnce({
+          marches: [{ march_id: 5, phase: 2, to_x: 3, to_y: 4, arrive_at_ms: Date.now() + 60_000 }],
+          total: 1,
+        })
+        .mockResolvedValueOnce({
+          marches: [{ march_id: 5, phase: 3, to_x: 3, to_y: 4, arrive_at_ms: Date.now() }],
+          total: 1,
+        }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      pollIntervalMs: 60_000,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    await panel.getRoot().querySelector<HTMLButtonElement>('[data-action="refresh-marches"]')!.click();
+    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(2));
+    const row = mount.querySelector('.march-list li[data-march-id="5"]');
+    expect(row?.classList.contains("march-phase-changed")).toBe(true);
+    vi.advanceTimersByTime(3000);
+    expect(row?.classList.contains("march-phase-changed")).toBe(false);
+    vi.useRealTimers();
   });
 
   it("fires onMarchArrivalReminders when phase changes on refresh", async () => {

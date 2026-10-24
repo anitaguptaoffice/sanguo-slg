@@ -282,6 +282,44 @@ export function formatMarchLine(m: MarchSummary): string {
   return `${primary} · ${meta}`;
 }
 
+/** 军情列表目的格点（含可选玩家展示名，CLIENT-108 扩展字段）。 */
+export function formatMarchListDestCell(m: MarchSummary): string {
+  const coord = `(${m.to_x ?? "?"},${m.to_y ?? "?"})`;
+  const display =
+    m.to_player_name?.trim() ||
+    m.destination_player_name?.trim() ||
+    m.target_display_name?.trim();
+  return display ? `${coord} · ${display}` : coord;
+}
+
+/** 军情列表模板摘要：出征目的 + #id + ListMarches 编制快照。 */
+export function formatMarchListTemplateSummary(m: MarchSummary): string {
+  const parts: string[] = [formatMarchPurpose(m.purpose)];
+  if (m.march_id != null) parts.push(`#${m.march_id}`);
+  const troops = formatTroopStacks(m.troops);
+  if (troops && troops !== "无") parts.push(troops);
+  return parts.join(" · ");
+}
+
+/** 军情列表主行：目的格点 + 模板摘要（CLIENT-141）。 */
+export function formatMarchListPrimaryLine(m: MarchSummary): string {
+  const dest = formatMarchListDestCell(m);
+  const summary = formatMarchListTemplateSummary(m);
+  return summary ? `${dest} · ${summary}` : dest;
+}
+
+/** 军情列表次行：arrive_at_ms 剩余 ETA + phase 中文标签（CLIENT-141）。 */
+export function formatMarchListSecondary(m: MarchSummary, nowMs: number): string {
+  const phase = m.phase ?? 0;
+  const phaseLabel = formatMarchPhase(phase);
+  const etaPart =
+    phase === 2 || phase === 4
+      ? formatMarchRemainingMs(nowMs, m.arrive_at_ms)
+      : phaseLabel;
+  if (etaPart === phaseLabel) return phaseLabel;
+  return `${etaPart} · ${phaseLabel}`;
+}
+
 /** 行军列表主行：#id · 目的 · 坐标（阶段由列表行 chip 展示）。 */
 export function formatMarchRowPrimaryLine(m: MarchSummary): string {
   const id = m.march_id ?? "?";

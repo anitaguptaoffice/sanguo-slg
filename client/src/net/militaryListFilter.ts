@@ -19,7 +19,7 @@ export type MilitaryListFilterV1 = {
 
 export const DEFAULT_MILITARY_LIST_FILTER: MilitaryListFilterV1 = {
   phase: "all",
-  etaSort: "default",
+  etaSort: "eta_asc",
 };
 
 const PHASE_VALUES: readonly MilitaryListPhaseFilter[] = [
@@ -152,7 +152,9 @@ export function sortMarchesForMilitaryList(
   etaSort: MilitaryListEtaSort,
   nowMs: number,
 ): MarchSummary[] {
-  if (etaSort === "default") return marches;
+  if (etaSort === "default") {
+    return sortMarchesForMilitaryList(marches, "eta_asc", nowMs);
+  }
   const copy = [...marches];
   copy.sort((a, b) => {
     const ka = marchListEtaSortKey(a, nowMs);
