@@ -1,10 +1,10 @@
 {
   "task": "ART-CENTER-PANEL-012",
-  "runtime_code_sha": "76e209ac1b4b0f60150f94c8c70a840b6a6518b6",
-  "screenshot_artifacts_commit_sha": "3372e083bc648ae4ef1904510a0ba4107409b4e8",
-  "tip_sha": "76e209ac1b4b0f60150f94c8c70a840b6a6518b6",
+  "runtime_code_sha": "9737f49a08e3e7b518d03ad22cc89d579ac61e52",
+  "screenshot_artifacts_commit_sha": "pending-git-commit — set to the commit that lands JPEGs under docs/art/samples/art-center-panel-012/runtime/",
+  "tip_sha": "9737f49a08e3e7b518d03ad22cc89d579ac61e52",
   "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
-  "captured_at": "2026-10-24T06:34:00.593Z",
+  "captured_at": "2026-10-24T06:41:31.013Z",
   "asset_id": "ui.panel.hero.v1",
   "texture_paths": {
     "scale_1": "textures/1x/ui/panel_hero.png",
@@ -18,7 +18,7 @@
   "shots": {
     "hero-center-panel-1600x900.jpg": {
       "quality": 88,
-      "bytes": 461241,
+      "bytes": 464699,
       "viewport": {
         "tag": "1600x900",
         "file": "hero-center-panel-1600x900.jpg",
@@ -29,7 +29,7 @@
     },
     "hero-center-panel-3200x1800.jpg": {
       "quality": 72,
-      "bytes": 960781,
+      "bytes": 969543,
       "viewport": {
         "tag": "3200x1800",
         "file": "hero-center-panel-3200x1800.jpg",
@@ -40,7 +40,7 @@
     },
     "hero-center-panel-1280x720.jpg": {
       "quality": 88,
-      "bytes": 262374,
+      "bytes": 262541,
       "viewport": {
         "tag": "1280x720",
         "file": "hero-center-panel-1280x720.jpg",
@@ -51,12 +51,22 @@
     },
     "hero-center-panel-1280x720-detail-scroll.jpg": {
       "quality": 88,
-      "bytes": 255195,
+      "bytes": 256897,
       "viewport": {
         "tag": "1280x720-scroll",
         "width": 1280,
         "height": 720,
         "dpr": 1
+      }
+    },
+    "hero-center-panel-3200x1800-detail-scroll.jpg": {
+      "quality": 72,
+      "bytes": 967310,
+      "viewport": {
+        "tag": "3200x1800-scroll",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
       }
     }
   },
@@ -80,23 +90,26 @@
       "paperMutedColor": "rgb(74, 56, 40)",
       "inkBodyColor": "rgb(232, 220, 200)",
       "scrollMetrics": {
-        "scrollHeight": 473,
-        "clientHeight": 473,
+        "scrollHeight": 712,
+        "clientHeight": 420,
         "scrollTop": 0,
-        "scrollable": false
+        "scrollable": true
       },
       "scrollReachOk": true,
+      "detailEndReachOk": true,
+      "detailNotClamped": true,
+      "deficitHintColor": "rgb(240, 168, 160)",
       "hasTopColorBar": false,
       "detailInScroll": true,
       "detailRect": {
         "width": 568,
-        "height": 160,
-        "bottom": 868.984375
+        "height": 390.96875,
+        "bottom": 1099.953125
       },
       "scrollRect": {
         "width": 568,
-        "height": 472.59375,
-        "bottom": 868.984375
+        "height": 419.609375,
+        "bottom": 808
       }
     },
     "3200x1800": {
@@ -118,23 +131,26 @@
       "paperMutedColor": "rgb(74, 56, 40)",
       "inkBodyColor": "rgb(232, 220, 200)",
       "scrollMetrics": {
-        "scrollHeight": 473,
-        "clientHeight": 473,
+        "scrollHeight": 712,
+        "clientHeight": 420,
         "scrollTop": 0,
-        "scrollable": false
+        "scrollable": true
       },
       "scrollReachOk": true,
+      "detailEndReachOk": true,
+      "detailNotClamped": true,
+      "deficitHintColor": "rgb(240, 168, 160)",
       "hasTopColorBar": false,
       "detailInScroll": true,
       "detailRect": {
         "width": 568,
-        "height": 160,
-        "bottom": 868.984375
+        "height": 390.96875,
+        "bottom": 1099.953125
       },
       "scrollRect": {
         "width": 568,
-        "height": 472.59375,
-        "bottom": 868.984375
+        "height": 419.609375,
+        "bottom": 808
       }
     },
     "1280x720": {
@@ -157,21 +173,24 @@
       "inkBodyColor": "rgb(232, 220, 200)",
       "scrollMetrics": {
         "scrollHeight": 776,
-        "clientHeight": 270,
+        "clientHeight": 258,
         "scrollTop": 0,
         "scrollable": true
       },
       "scrollReachOk": true,
+      "detailEndReachOk": true,
+      "detailNotClamped": true,
+      "deficitHintColor": "rgb(240, 168, 160)",
       "hasTopColorBar": false,
       "detailInScroll": true,
       "detailRect": {
         "width": 568,
         "height": 390.96875,
-        "bottom": 1080.671875
+        "bottom": 1092.75
       },
       "scrollRect": {
         "width": 568,
-        "height": 270.09375,
+        "height": 258.015625,
         "bottom": 639.203125
       }
     },
@@ -195,22 +214,66 @@
       "inkBodyColor": "rgb(232, 220, 200)",
       "scrollMetrics": {
         "scrollHeight": 776,
-        "clientHeight": 270,
-        "scrollTop": 506,
+        "clientHeight": 258,
+        "scrollTop": 518,
         "scrollable": true
       },
       "scrollReachOk": true,
+      "detailEndReachOk": true,
+      "detailNotClamped": true,
+      "deficitHintColor": "rgb(240, 168, 160)",
       "hasTopColorBar": false,
       "detailInScroll": true,
       "detailRect": {
         "width": 568,
         "height": 390.96875,
-        "bottom": 574.671875
+        "bottom": 574.75
       },
       "scrollRect": {
         "width": 568,
-        "height": 270.09375,
+        "height": 258.015625,
         "bottom": 639.203125
+      }
+    },
+    "3200x1800-scroll": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "玄德府君",
+      "dpr": 2,
+      "borderImageSource": "url(\"http://127.0.0.1:16212/assets/art/v1/textures/2x/ui/panel_hero.png\")",
+      "skinPathOk": true,
+      "uses1x": false,
+      "uses2x": true,
+      "panelRect": {
+        "width": 640,
+        "height": 788,
+        "top": 56,
+        "left": 480
+      },
+      "padding": "12px",
+      "paperMutedColor": "rgb(74, 56, 40)",
+      "inkBodyColor": "rgb(232, 220, 200)",
+      "scrollMetrics": {
+        "scrollHeight": 712,
+        "clientHeight": 420,
+        "scrollTop": 292,
+        "scrollable": true
+      },
+      "scrollReachOk": true,
+      "detailEndReachOk": true,
+      "detailNotClamped": true,
+      "deficitHintColor": "rgb(240, 168, 160)",
+      "hasTopColorBar": false,
+      "detailInScroll": true,
+      "detailRect": {
+        "width": 568,
+        "height": 390.96875,
+        "bottom": 807.953125
+      },
+      "scrollRect": {
+        "width": 568,
+        "height": 419.609375,
+        "bottom": 808
       }
     }
   }

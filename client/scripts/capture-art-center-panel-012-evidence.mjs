@@ -164,17 +164,38 @@ function probeHeroPanelInPage() {
   const uses2x = borderSrc.includes("/textures/2x/ui/panel_hero.png");
   const skinPathOk = dpr >= 1.75 ? uses2x : uses1x;
 
+  const detailFooter = detail?.querySelector(".hero-detail-hint");
+  const detailLinks = detail?.querySelector(".hero-detail-links");
+  const deficitGap = detail?.querySelector(
+    '[data-role="hero-upgrade-item-gap"].hero-upgrade-item-gap-warn, .hero-cultivation-disabled-reason',
+  );
+
   let scrollReachOk = true;
-  if (scroll && scrollMetrics?.scrollable) {
-    const maxTop = scroll.scrollHeight - scroll.clientHeight;
+  let detailEndReachOk = true;
+  if (scroll instanceof HTMLElement) {
+    const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
     scroll.scrollTop = maxTop;
+    const scrollBox = scroll.getBoundingClientRect();
+    const scrollBottom = scrollBox.bottom;
+    const scrollTopEdge = scrollBox.top;
     const detailBottom = detail?.getBoundingClientRect().bottom ?? 0;
-    const scrollBottom = scroll.getBoundingClientRect().bottom;
-    scrollReachOk = detailBottom <= scrollBottom + 2;
+    scrollReachOk = maxTop <= 2 || detailBottom <= scrollBottom + 2;
+    if (detailFooter instanceof HTMLElement) {
+      const fr = detailFooter.getBoundingClientRect();
+      detailEndReachOk =
+        fr.height > 0 && fr.bottom <= scrollBottom + 2 && fr.top >= scrollTopEdge - 2;
+    } else if (detailLinks instanceof HTMLElement) {
+      const lr = detailLinks.getBoundingClientRect();
+      detailEndReachOk = lr.bottom <= scrollBottom + 2;
+    }
   }
 
+  const detailNotClamped = (detailRect?.height ?? 0) > 200;
+  const deficitHintColor =
+    deficitGap instanceof HTMLElement ? getComputedStyle(deficitGap).color : null;
+
   return {
-    ok: skinPathOk && !hasTopColorBar && scrollReachOk && heroDetailLoaded,
+    ok: skinPathOk && !hasTopColorBar && scrollReachOk && detailEndReachOk && heroDetailLoaded,
     heroDetailLoaded,
     detailName: detailName?.textContent?.trim() ?? null,
     dpr,
@@ -188,6 +209,9 @@ function probeHeroPanelInPage() {
     inkBodyColor: inkBody,
     scrollMetrics,
     scrollReachOk,
+    detailEndReachOk,
+    detailNotClamped,
+    deficitHintColor,
     hasTopColorBar: !!hasTopColorBar,
     detailInScroll: !!(scroll && detail && scroll.contains(detail)),
     detailRect: detailRect
@@ -276,6 +300,35 @@ async function main() {
     probes["1280x720-scroll"] = await page1280.evaluate(probeHeroPanelInPage);
     shots[scrollFile] = { ...scrollJpeg, viewport: { tag: "1280x720-scroll", width: 1280, height: 720, dpr: 1 } };
     await context1280.close();
+
+    const contextDpr2Scroll = await browser.newContext({
+      viewport: { width: 1600, height: 900 },
+      deviceScaleFactor: 2,
+    });
+    const pageDpr2 = await contextDpr2Scroll.newPage();
+    await enterMainCity(pageDpr2);
+    await openHeroPanelWithDetail(pageDpr2);
+    await pageDpr2.evaluate(() => {
+      const scroll = document.querySelector(
+        '.content-panel[data-center-panel="hero"] .panel-scroll-body',
+      );
+      if (scroll instanceof HTMLElement) {
+        scroll.scrollTop = scroll.scrollHeight;
+      }
+    });
+    await pageDpr2.waitForTimeout(200);
+    const dpr2ScrollFile = "hero-center-panel-3200x1800-detail-scroll.jpg";
+    const dpr2ScrollJpeg = await writeJpegUnder1Mb(
+      pageDpr2,
+      path.join(outDir, dpr2ScrollFile),
+      { fullPage: false },
+    );
+    probes["3200x1800-scroll"] = await pageDpr2.evaluate(probeHeroPanelInPage);
+    shots[dpr2ScrollFile] = {
+      ...dpr2ScrollJpeg,
+      viewport: { tag: "3200x1800-scroll", width: 1600, height: 900, dpr: 2 },
+    };
+    await contextDpr2Scroll.close();
     await browser.close();
 
     const tex1 = path.join(
@@ -311,18 +364,43 @@ async function main() {
 
     await writeFile(path.join(outDir, "probe-log.json"), `${JSON.stringify(evidence, null, 2)}\n`);
 
+    const inkDeficitRgb = "rgb(240, 168, 160)";
     const checklist = [
       ["panel_hero 1×/2× by DPR", probes["1600x900"]?.skinPathOk && probes["3200x1800"]?.skinPathOk],
       ["nine-slice border-image mounted", probes["1600x900"]?.borderImageSource?.includes("panel_hero")],
       ["no top color bar", !probes["1600x900"]?.hasTopColorBar],
       ["detail inside scroll body", probes["1280x720"]?.detailInScroll],
       ["1280 scroll reaches detail bottom", probes["1280x720-scroll"]?.scrollReachOk],
+      ["1280 scroll detail footer reachable", probes["1280x720-scroll"]?.detailEndReachOk],
       ["paper muted readable", probes["1600x900"]?.paperMutedColor === "rgb(74, 56, 40)"],
       ["ink body readable", probes["1600x900"]?.inkBodyColor === "rgb(232, 220, 200)"],
       ["hero detail loaded (attrs table)", probes["1600x900"]?.heroDetailLoaded],
       [
         "1280 scroll shows real detail (not error)",
         probes["1280x720-scroll"]?.heroDetailLoaded && (probes["1280x720-scroll"]?.detailRect?.height ?? 0) > 120,
+      ],
+      [
+        "1600 detail not max-height clamped",
+        probes["1600x900"]?.detailNotClamped && probes["3200x1800"]?.detailNotClamped,
+      ],
+      [
+        "1600/DPR2 scroll body scrollable when detail overflows",
+        (probes["1600x900"]?.scrollMetrics?.scrollable ||
+          (probes["1600x900"]?.scrollMetrics?.scrollHeight ?? 0) >
+            (probes["1600x900"]?.scrollMetrics?.clientHeight ?? 0) + 2) &&
+          (probes["3200x1800"]?.scrollMetrics?.scrollable ||
+            (probes["3200x1800"]?.scrollMetrics?.scrollHeight ?? 0) >
+              (probes["3200x1800"]?.scrollMetrics?.clientHeight ?? 0) + 2),
+      ],
+      [
+        "1600/DPR2 scroll reaches detail footer",
+        probes["3200x1800-scroll"]?.detailEndReachOk &&
+          probes["1600x900"]?.detailEndReachOk &&
+          probes["3200x1800"]?.detailEndReachOk,
+      ],
+      [
+        "1280 scroll-bottom deficit hint readable on ink",
+        probes["1280x720-scroll"]?.deficitHintColor === inkDeficitRgb,
       ],
     ];
     const failed = checklist.filter(([, pass]) => !pass);
@@ -351,6 +429,7 @@ async function main() {
       "| `hero-center-panel-3200x1800.jpg` | 1600×900 DPR2 | 2× 纹理路径 `textures/2x/ui/panel_hero.png` |",
       "| `hero-center-panel-1280x720.jpg` | 1280×720 DPR1 | 窄布局 `layout-narrow` |",
       "| `hero-center-panel-1280x720-detail-scroll.jpg` | 1280×720 | `.panel-scroll-body` 滚至底部 |",
+      "| `hero-center-panel-3200x1800-detail-scroll.jpg` | 1600×900 DPR2 | 宽屏滚至详情末尾 |",
       "",
       "## Checklist",
       "",
