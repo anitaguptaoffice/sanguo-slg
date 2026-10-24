@@ -84,6 +84,13 @@ export const BAG_SHOP_INLINE_STATE_RESIDUAL_RING_CLASS = "bag-shop-inline-state-
 
 export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_CLASS = "panel-return-source-highlight-residual";
 
+/** CLIENT-272: bag/shop inline state residual deep ring + panel return source deep highlight. */
+export const BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_CLASS =
+  "bag-shop-inline-state-residual-deep-ring";
+
+export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS =
+  "panel-return-source-highlight-residual-deep";
+
 /** CLIENT-257: rank list density scan residual line. */
 export const RANK_LIST_DENSITY_SCAN_RESIDUAL_LINE_CLASS = "rank-list-density-scan-residual-line";
 
