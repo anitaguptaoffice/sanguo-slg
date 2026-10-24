@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE1",
   "template_cfg_id": 1003,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "020b34453b8af0feaf62be439305b66c90b1b2e1",
-  "runtime_code_sha": "020b34453b8af0feaf62be439305b66c90b1b2e1",
+  "tip_sha": "c520c83a751aa24065a90286632a32757e0fb7e7",
+  "runtime_code_sha": "c520c83a751aa24065a90286632a32757e0fb7e7",
   "art_head_sha": "d9d04ac15ded6e31c49139cb43afc28abe5a35b0",
   "art_asset_ids": [
     "hero.avatar.1003.v1",
