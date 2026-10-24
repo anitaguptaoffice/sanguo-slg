@@ -56,8 +56,8 @@ describe("resolveToolbarIconPack", () => {
 });
 
 describe("mountToolbarIcons", () => {
-  it("maps eight toolbar actions to two-character labels and icon nodes", () => {
-    expect(Object.keys(TOOLBAR_ICON_BY_ACTION)).toHaveLength(8);
+  it("maps fourteen toolbar actions to two-character labels and icon nodes", () => {
+    expect(Object.keys(TOOLBAR_ICON_BY_ACTION)).toHaveLength(14);
     const root = document.createElement("div");
     root.innerHTML = `
       <div class="toolbar-scroll-inner">
@@ -72,6 +72,11 @@ describe("mountToolbarIcons", () => {
     expect(military.getAttribute("title")).toBe("军事");
     const mail = root.querySelector('[data-action="toggle-mail"]')!;
     expect(mail.querySelector(".toolbar-btn-icon")?.getAttribute("src")).toContain("data:image");
+    expect(TOOLBAR_ICON_BY_ACTION["toggle-reports"]).toEqual({
+      assetId: "ui.icon.toolbar.report.v1",
+      label: "战报",
+      title: "战报",
+    });
   });
 
   it("skips icon mount when data-art-skin=off", () => {

@@ -1,0 +1,615 @@
+{
+  "art_asset_source_sha": "b4908240c1fd427e7294e8e48ae43dc37bd27f07",
+  "art_draft_pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/637",
+  "coordination_board_pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/108",
+  "captured_at": "2026-10-24T03:35:29.790Z",
+  "asset_ids": [
+    "ui.icon.toolbar.report.v1",
+    "ui.icon.toolbar.march.v1",
+    "ui.icon.toolbar.chat.v1",
+    "ui.icon.toolbar.legion.v1",
+    "ui.icon.toolbar.rank.v1",
+    "ui.icon.toolbar.task.v1"
+  ],
+  "label_mapping": {
+    "toggle-reports": "战报",
+    "toggle-marches": "行军",
+    "toggle-chat": "聊天",
+    "toggle-guild": "军团",
+    "toggle-rank": "排行",
+    "toggle-quest": "任务"
+  },
+  "viewports": {
+    "maincity-1600x900-full.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 651334
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "toggle-military",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军事",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_military.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-reports",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "战报",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_report.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-marches",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "行军",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_march.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-chat",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "聊天",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_chat.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-guild",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军团",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_legion.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-rank",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "排行",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_rank.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-quest",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "任务",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_task.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-mail",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "邮件",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_mail.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-queue",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "队列",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_queue.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": false
+          }
+        ]
+      }
+    },
+    "maincity-3200x1800-full.jpg": {
+      "jpeg": {
+        "quality": 58,
+        "bytes": 992050
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "toggle-military",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军事",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_military.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-reports",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "战报",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_report.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-marches",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "行军",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_march.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-chat",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "聊天",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_chat.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-guild",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军团",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_legion.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-rank",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "排行",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_rank.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-quest",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "任务",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_task.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-mail",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "邮件",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_mail.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-queue",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "队列",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/2x/ui/icon_toolbar_queue.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": false
+          }
+        ]
+      }
+    },
+    "maincity-1280x720-new-six-visible.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 390139
+      },
+      "mount": {
+        "uiScale": 0.8,
+        "scrollMetrics": {
+          "scrollWidth": 1632,
+          "clientWidth": 1265,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "toggle-reports",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "战报",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_report.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-marches",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "行军",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_march.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-chat",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "聊天",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_chat.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-guild",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "军团",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_legion.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-rank",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "排行",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_rank.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          },
+          {
+            "action": "toggle-quest",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "label": "任务",
+            "iconSrc": "http://127.0.0.1:16209/assets/art/v1/textures/1x/ui/icon_toolbar_task.png",
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": false,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true
+          }
+        ]
+      }
+    }
+  },
+  "layout_notes": [
+    "96×44 toolbar chrome; 32px icon + 4px gap + two-character label inside button.",
+    ".toolbar-btn-hit wrap keeps effective hit target ≥44×44 CSS px.",
+    "Disabled styling uses ui.button.toolbar.v1 chrome only — no per-icon four-state sprites.",
+    "DPR2 shot: 1600×900 logical viewport, deviceScaleFactor=2 → 3200×1800 JPEG pixels."
+  ],
+  "banned_unmerged": [
+    "#637",
+    "#108",
+    "#77",
+    "#82",
+    "#444",
+    "#481",
+    "#506"
+  ]
+}
