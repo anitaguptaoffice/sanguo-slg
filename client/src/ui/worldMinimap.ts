@@ -370,14 +370,17 @@ export function minimapDestShowsEtaBadge(m: MarchSummary): boolean {
   return marchShowsDestOnMinimap(m);
 }
 
-/** 小地图目的点角标文案；行军中/撤回中与军情列表共用 nowMs 与 formatMarchRemainingMs 口径。 */
-export function minimapDestEtaBadgeLabel(m: MarchSummary, nowMs: number): string {
+/** 小地图目的点角标文案；行军中/撤回中与军情列表共用 nowMs 与 {@link formatMarchRemainingMs} 口径。 */
+export function formatMinimapDestEtaLabel(m: MarchSummary, nowMs: number): string {
   const phase = m.phase ?? 0;
   if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
     return formatMarchRemainingMsAbbrev(nowMs, m.arrive_at_ms);
   }
   return minimapMarchPhaseShortLabel(phase);
 }
+
+/** @deprecated 使用 {@link formatMinimapDestEtaLabel} */
+export const minimapDestEtaBadgeLabel = formatMinimapDestEtaLabel;
 
 /** 折叠小地图时状态栏复述选中行军 ETA/阶段。 */
 export function formatMinimapCollapsedSelectedMarchStatus(m: MarchSummary, nowMs: number): string {

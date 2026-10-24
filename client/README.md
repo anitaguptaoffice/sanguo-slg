@@ -1309,6 +1309,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 折叠小地图并在列表 **选中一行** 行军：状态栏应复述 `formatMinimapCollapsedSelectedMarchStatus`（含目的坐标与 ETA/阶段）。
 4. 仍无取消行军/加速。单测：`worldMinimap.test.ts`（ETA 角标文案与 `clampMinimapEtaLabelLayout`）。
 
+### 手动验收（小地图出征互链巩固 CLIENT-139）
+
+在 [CLIENT-058](#手动验收小地图目的点-eta-client-058) / [CLIENT-041](#手动验收小地图选点出征-client-041) / [CLIENT-015](#手动验收世界坐标-client-015) 之上：目的格 **ETA 角标** 由 `formatMinimapDestEtaLabel` 驱动（与 `formatMarchRemainingMs` / `marchClockMs` 同 tick）；图例 **`MINIMAP_DEST_ETA_LEGEND`** 与角标并存。军事面板 `to_x`/`to_y`、**`marchTargetMemory`**（`resolveMarchTargetTruth` / `syncMarchTargetSessionFromForm`）与小地图 **focus 环** 同一事实源；`data-art-skin=off` 时目的点走 **canvas 描边**（`ui.minimap.dest.v1` 可选，CLIENT-138 资产缺失时自动回退）。
+
+1. 小地图空白单击 → 表单坐标 + session + 小地图金环同步；世界城池点选后同样对齐。
+2. 行军中目的点旁数字角标每秒刷新，与军情列表 `formatMarchRemainingMs` 一致。
+3. 单测：`worldMinimap.test.ts`（`formatMinimapDestEtaLabel`）、`minimapMarchTargetCoord.test.ts`（坐标回写）、`artMinimapDestSkin.test.ts`。
+
 ### 手动验收（HUD 待办聚合与中心面板深链 CLIENT-077）
 
 顶栏 `#hud` 在资源条旁展示 **待办** 聚合角标（三类计数之和）：**可领取邮件**（`mailHasUnclaimedAttachments`）、**可领日常**（chain 400 `state=3`）、**建造完成**（`BuildCompleteTodoTracker` 记录的槽位，来自 `GetCityState` 队列状态变迁，无新 RPC）。与底栏 **CLIENT-027/038** 邮件未读/日常可接+可领/战报未读角标并存。
