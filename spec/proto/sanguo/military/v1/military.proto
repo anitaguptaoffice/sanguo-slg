@@ -72,6 +72,8 @@ message StartMarchRequest {
   int32 purpose = 4;
   // 本次带出的兵力（须为城内已有兵种）。
   repeated sanguo.common.v1.CityTroopStack troops = 5;
+  // 带队将领实例 ID（须为玩家拥有且 status=空闲）。
+  int64 hero_id = 6;
 }
 
 message StartMarchResponse {

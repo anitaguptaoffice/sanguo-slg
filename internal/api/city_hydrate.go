@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 )
 
 // hydratePlayerCities loads world/domestic snapshots and registers military cities for the session.
@@ -41,6 +42,11 @@ func (s *Server) RegisterCityForTest(cityID int64, c *domestic.CityState, x, y i
 // BindSessionForTest binds a player context without going through login.
 func (s *Server) BindSessionForTest(sessionID string, pc PlayerContext) {
 	s.sessions.Bind(sessionID, pc)
+}
+
+// SetHeroServiceForTest wires an in-memory hero service (handler unit tests).
+func (s *Server) SetHeroServiceForTest(svc *hero.Service) {
+	s.heroSvc = svc
 }
 
 // SeedCityTroopsForTest sets in-city troop counts for gateway smoke tests (api_test).

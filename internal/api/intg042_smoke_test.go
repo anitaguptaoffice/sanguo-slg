@@ -122,13 +122,14 @@ func smokeINTG042MarchTroopMarginRefreshStampResidualDeepGateway(t *testing.T, c
 	listBeforeMs := time.Now().UnixMilli()
 	var toX, toY int32 = 52, 53
 	apiSrv.SeedCityTroopsForTest(cityID, smokeMarchTroopUnitCfgID, 40)
+	heroID := smokeEnsureMarchHeroID(t, context.Background(), c, apiSrv, sid, playerID)
 	const marchPurpose = int32(1)
 	const marchCount = int32(5)
 	smokeStep(t, fmt.Sprintf("INTG-042 MIL: gateway StartMarch (MarchAttack equiv) march_id+troop_margin+intel_refresh_stamp residual deep to=(%d,%d)", toX, toY))
 	marchResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteStartMarch, TraceId: "i42-march-margin-deep", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&militaryv1.StartMarchRequest{
-			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose,
+			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose, HeroId: heroID,
 			Troops: []*apicommon.CityTroopStack{{UnitCfgId: smokeMarchTroopUnitCfgID, Count: marchCount}},
 		}),
 	})

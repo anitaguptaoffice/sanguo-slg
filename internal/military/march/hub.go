@@ -16,12 +16,17 @@ type Hub struct {
 	marchCtx  map[int64]marchRuntime
 	nextMarch int64
 	onArrive  MarchArrivalHandler
+	onFinished MarchFinishedHandler
 	now       func() time.Time
 }
+
+// MarchFinishedHandler runs after a march ends (arrival without return, or return complete).
+type MarchFinishedHandler func(marchID int64)
 
 type marchRuntime struct {
 	OriginCityID int64
 	PlayerID     int64
+	HeroID       int64
 	Troops       []TroopStack
 }
 
@@ -45,6 +50,13 @@ func (h *Hub) SetMarchArrivalHandler(fn MarchArrivalHandler) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.onArrive = fn
+}
+
+// SetMarchFinishedHandler notifies when a march lifecycle completes (troops home or stranded at target).
+func (h *Hub) SetMarchFinishedHandler(fn MarchFinishedHandler) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.onFinished = fn
 }
 
 // Scheduler exposes the underlying scheduler (tests).
@@ -143,6 +155,7 @@ func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 	h.marchCtx[order.ID] = marchRuntime{
 		OriginCityID: req.OriginCityID,
 		PlayerID:     req.PlayerID,
+		HeroID:       req.HeroID,
 		Troops:       cloneStacks(req.Troops),
 	}
 
@@ -166,6 +179,7 @@ func (h *Hub) onMarchArrive(ev Event) {
 	}
 	_ = MarkArrived(o)
 	ctx := h.marchCtx[ev.RefID]
+	scheduledReturn := false
 	if h.onArrive != nil && ctx.PlayerID != 0 {
 		res, err := h.onArrive(context.Background(), MarchArrivalEvent{
 			MarchID:  ev.RefID,
@@ -180,6 +194,7 @@ func (h *Hub) onMarchArrive(ev Event) {
 			if troopStackTotal(ctx.Troops) > 0 {
 				now := h.now()
 				if err := BeginReturn(o, now); err == nil {
+					scheduledReturn = true
 					h.scheduler.Schedule(Event{
 						Kind:   EventMarchReturnDone,
 						DueAt:  o.ReturnFinishAt,
@@ -191,6 +206,9 @@ func (h *Hub) onMarchArrive(ev Event) {
 				}
 			}
 		}
+	}
+	if !scheduledReturn {
+		h.emitMarchFinished(ev.RefID)
 	}
 }
 
@@ -236,6 +254,15 @@ func (h *Hub) onMarchReturn(ev Event) {
 		}
 	}
 	_ = MarkReturnComplete(o)
+	h.emitMarchFinished(ev.RefID)
+}
+
+func (h *Hub) emitMarchFinished(marchID int64) {
+	fn := h.onFinished
+	if fn == nil {
+		return
+	}
+	fn(marchID)
 }
 
 // March returns a copy of the march order.

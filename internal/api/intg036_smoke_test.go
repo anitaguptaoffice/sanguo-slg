@@ -117,12 +117,13 @@ func smokeINTG036StartMarchIntelHandoffGateway(t *testing.T, c *websocket.Conn, 
 		}
 	}
 	apiSrv.SeedCityTroopsForTest(cityID, smokeMarchTroopUnitCfgID, 30)
+	heroID := smokeEnsureMarchHeroID(t, context.Background(), c, apiSrv, sid, playerID)
 	const marchPurpose = int32(1)
 	smokeStep(t, fmt.Sprintf("INTG-036 MIL: gateway StartMarch march_id handoff (MarchAttack equiv) to=(%d,%d)", toX, toY))
 	marchResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteStartMarch, TraceId: "i36-march-handoff", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&militaryv1.StartMarchRequest{
-			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose,
+			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose, HeroId: heroID,
 			Troops: []*apicommon.CityTroopStack{{UnitCfgId: smokeMarchTroopUnitCfgID, Count: 5}},
 		}),
 	})

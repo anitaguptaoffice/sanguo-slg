@@ -60,6 +60,7 @@ type Server struct {
 	cities        map[int64]*domestic.CityState
 	cityCoords    map[int64]cityCoord
 	playerMarches map[int64][]playerMarchRef
+	marchHeroByID map[int64]marchHeroBinding
 	nextArmyID    int64
 	now        clockFunc
 }
@@ -99,6 +100,7 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 	shardStore := &shard.Store{Pool: pool}
 	srv.shard = shard.NewHandlers(shardStore, srv.account, srv)
 	srv.wireM3(pool)
+	srv.wireMarchHeroLifecycle()
 	return srv
 }
 

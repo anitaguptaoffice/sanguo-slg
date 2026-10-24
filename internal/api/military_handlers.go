@@ -7,6 +7,7 @@ import (
 	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 )
@@ -92,9 +93,15 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if dom == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
+	if req.GetHeroId() <= 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "hero_id required"), nil
+	}
 	stacks, errPkt := parseMarchTroops(pkt.GetTraceId(), req.GetTroops())
 	if errPkt != nil {
 		return errPkt, nil
+	}
+	if err := s.claimMarchHero(ctx, pc, req.GetHeroId()); err != nil {
+		return s.mapMarchHeroErr(pkt.GetTraceId(), err), nil
 	}
 	accrue(dom, domestic.DefaultCatalog(), s.now())
 	mc := s.ensureMilitaryCity(dom)
@@ -107,6 +114,7 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		ArmyID:       s.nextArmyID,
 		OriginCityID: req.GetCityId(),
 		PlayerID:     pc.PlayerID,
+		HeroID:       req.GetHeroId(),
 		FromX:        coord.x,
 		FromY:        coord.y,
 		ToX:          int(req.GetToX()),
@@ -115,9 +123,13 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		Troops:       stacks,
 	})
 	if err != nil {
+		if s.heroSvc != nil {
+			_ = s.heroSvc.ReleaseFromMarch(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetHeroId())
+		}
 		return s.mapMarchCreateErr(pkt.GetTraceId(), err), nil
 	}
-	s.recordPlayerMarch(pc.PlayerID, req.GetCityId(), order.ID, stacks)
+	s.recordPlayerMarch(pc.PlayerID, req.GetCityId(), order.ID, req.GetHeroId(), stacks)
+	s.bindMarchHeroServer(order.ID, pc.ServerID)
 	data, err := marshal(&militaryv1.StartMarchResponse{
 		March:      marchSummaryProto(req.GetCityId(), order, stacks),
 		CityTroops: troopStacksProto(mc.Troops, stacks),
@@ -180,6 +192,17 @@ func (s *Server) mapMarchRecruitErr(trace string, err error) *commonv1.ServerPac
 		return errResp(trace, commonv1.ErrorCode_MILITARY_INVALID_TROOP_COUNT, "invalid count")
 	case errors.Is(err, march.ErrInsufficientRes):
 		return errResp(trace, commonv1.ErrorCode_MILITARY_INSUFFICIENT_RESOURCE, "insufficient resources")
+	default:
+		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
+	}
+}
+
+func (s *Server) mapMarchHeroErr(trace string, err error) *commonv1.ServerPacket {
+	switch {
+	case errors.Is(err, hero.ErrHeroNotFound):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, hero.ErrHeroNotIdle), errors.Is(err, hero.ErrHeroBusy):
+		return errResp(trace, commonv1.ErrorCode(50005), err.Error())
 	default:
 		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
 	}

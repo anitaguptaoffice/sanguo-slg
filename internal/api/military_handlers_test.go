@@ -42,6 +42,7 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 	}
 	domHub.RegisterCity(domCity)
 	srv.RegisterCityForTest(cityID, domCity, 60, 61)
+	heroID := seedIdleHeroForTest(t, srv, 1, playerID)
 
 	sid := "test-session"
 	srv.BindSessionForTest(sid, api.PlayerContext{ServerID: 1, PlayerID: playerID})
@@ -85,6 +86,7 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 			ToX:     70,
 			ToY:     71,
 			Purpose: 1,
+			HeroId:  heroID,
 			Troops: []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 20}},
 		}),
 	}

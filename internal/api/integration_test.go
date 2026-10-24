@@ -81,6 +81,7 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 		t.Fatal(err)
 	}
 	sid := login.GetSessionId()
+	playerID := login.GetPlayer().GetPlayerId()
 
 	createResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route:     api.RouteCreateCity,
@@ -157,12 +158,13 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	}
 
 	milHub.City(cityID).Troops[1] = 30
+	heroID := smokeEnsureMarchHeroID(t, ctx, c, apiSrv, sid, playerID)
 	marchResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route:     api.RouteStartMarch,
 		TraceId:   "sm1",
 		SessionId: sid,
 		Payload: mustMarshal(&militaryv1.StartMarchRequest{
-			CityId: cityID, ToX: 65, ToY: 65, Purpose: 1,
+			CityId: cityID, ToX: 65, ToY: 65, Purpose: 1, HeroId: heroID,
 			Troops: []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 10}},
 		}),
 	})
@@ -230,6 +232,7 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 		t.Fatal(err)
 	}
 	sid := login.GetSessionId()
+	playerID := login.GetPlayer().GetPlayerId()
 
 	createResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route:     api.RouteCreateCity,
@@ -253,12 +256,13 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 	mc.Troops[1] = 200
 	mc.Troops[2] = 50
 
+	heroID := smokeEnsureMarchHeroID(t, ctx, c, apiSrv, sid, playerID)
 	marchResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route:     api.RouteStartMarch,
 		TraceId:   "sm1",
 		SessionId: sid,
 		Payload: mustMarshal(&militaryv1.StartMarchRequest{
-			CityId: cityID, ToX: 5, ToY: 5, Purpose: int32(combat.PurposeAttack),
+			CityId: cityID, ToX: 5, ToY: 5, Purpose: int32(combat.PurposeAttack), HeroId: heroID,
 			Troops: []*apicommon.CityTroopStack{
 				{UnitCfgId: 1, Count: 150},
 				{UnitCfgId: 2, Count: 40},

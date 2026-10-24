@@ -12,6 +12,7 @@ var (
 	ErrInsufficientItem = errors.New("hero: insufficient item")
 	ErrEmptyPool        = errors.New("hero: no heroes available in pool")
 	ErrHeroNotFound     = errors.New("hero: hero not found")
+	ErrHeroNotIdle      = errors.New("hero: hero is not idle")
 	ErrInvalidRecruit   = errors.New("hero: invalid recruit request")
 	ErrRecruitItemType  = errors.New("hero: item is not a recruit scroll")
 	ErrInsufficientExp  = errors.New("hero: insufficient exp")
@@ -21,12 +22,12 @@ var (
 )
 
 const (
-	StatusIdle        int16 = 1 // 空闲（可任职城主）
-	StatusGarrison    int16 = 2 // 驻守
-	StatusMarch       int16 = 3 // 出征（与城主互斥，见 office_march.go）
-	StatusExpr        int16 = 4 // 历练
-	StatusCityChief   int16 = 5 // 城主（一城一职；legacy state=1）
-	RecruitScrollID   int32 = 2004
+	StatusIdle      int16 = 1 // 空闲（可任职城主）
+	StatusGarrison  int16 = 2 // 驻守
+	StatusMarch     int16 = 3 // 出征（与城主互斥，见 office_march.go）
+	StatusExpr      int16 = 4 // 历练
+	StatusCityChief int16 = 5 // 城主（一城一职；legacy state=1）
+	RecruitScrollID int32 = 2004
 	LoyaltyMin        = 0
 	LoyaltyMax        = 100
 	LoyaltyDefault    = 100
