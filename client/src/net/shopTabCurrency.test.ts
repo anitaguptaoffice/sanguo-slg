@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatShopPriceVsWallet,
+  formatShopPriceWalletGapLine,
   formatShopTabWalletBalanceLine,
   resolveShopOfferPriceCurrencies,
   resolveShopTabCurrency,
@@ -64,5 +65,21 @@ describe("formatShopPriceVsWallet", () => {
 
   it("returns null when price empty", () => {
     expect(formatShopPriceVsWallet({ gold: 1 }, {})).toBeNull();
+  });
+});
+
+describe("formatShopPriceWalletGapLine (CLIENT-194)", () => {
+  it("shows price, balance, and shortfall when insufficient", () => {
+    expect(formatShopPriceWalletGapLine({ gold: 5 }, { gold: 10 }, 1)).toBe(
+      "币 标价10/余额5/缺5",
+    );
+  });
+
+  it("omits gap segment when affordable", () => {
+    expect(formatShopPriceWalletGapLine({ gold: 50 }, { gold: 10 }, 1)).toBe("币 标价10/余额50");
+  });
+
+  it("returns null when price empty", () => {
+    expect(formatShopPriceWalletGapLine({ gold: 1 }, {})).toBeNull();
   });
 });

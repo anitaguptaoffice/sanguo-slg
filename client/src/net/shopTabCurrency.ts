@@ -79,3 +79,32 @@ export function formatShopPriceVsWallet(
   if (!parts.length) return null;
   return parts.join(" · ");
 }
+
+/**
+ * 行内标价/余额/缺口只读对比（CLIENT-194；与 CLIENT-167 `formatShopPriceVsWallet` 并存）。
+ * 例：`币 标价10/余额5/缺5`；足额时省略缺口段。
+ */
+export function formatShopPriceWalletGapLine(
+  wallet: ResourceWallet | undefined,
+  price: ResourceWallet | undefined,
+  purchaseCount = 1,
+): string | null {
+  const count = Math.max(1, Math.floor(purchaseCount));
+  const parts: string[] = [];
+  for (const { key, label } of WALLET_RESOURCE_KEYS) {
+    const unit = price?.[key] ?? 0;
+    if (unit <= 0) continue;
+    const need = unit * count;
+    const have = wallet?.[key] ?? 0;
+    const gap = Math.max(0, need - have);
+    const segment = gap > 0
+      ? `${label} 标价${formatResourceAmount(need)}/余额${formatResourceAmount(have)}/缺${formatResourceAmount(gap)}`
+      : `${label} 标价${formatResourceAmount(need)}/余额${formatResourceAmount(have)}`;
+    parts.push(segment);
+  }
+  if (!parts.length) return null;
+  return parts.join(" · ");
+}
+
+/** 商城列表行缺口对比 DOM 类名（CLIENT-194）。 */
+export const SHOP_PRICE_WALLET_GAP_LINE_CLASS = "shop-price-wallet-gap";

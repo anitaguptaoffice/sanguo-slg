@@ -219,6 +219,58 @@ describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
   });
 });
 
+describe("ContentPanels bag inline state and shop wallet gap (CLIENT-194)", () => {
+  it("shows bag-row-inline-state on selected stack and shop-price-wallet-gap on offers", async () => {
+    sessionStorage.removeItem("bag-category-tab-v1");
+    const mount = document.createElement("div");
+    const session = baseSession();
+    session.bag = [
+      { item_cfg_id: 2001, quantity: 5 },
+      { item_cfg_id: 2017, quantity: 2 },
+    ];
+    session.wallet = { gold: 5 };
+    const listShopShelf = vi.fn().mockResolvedValue({
+      offers: [
+        {
+          offer_id: 1001,
+          shelf_name: "谷袋",
+          item_cfg_id: 2001,
+          quantity_per_purchase: 1,
+          price_resources: { gold: 10 },
+        },
+      ],
+    });
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({ items: session.bag }),
+      listShopShelf,
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.toggleBag();
+    await vi.waitFor(() =>
+      expect(
+        mount.querySelector('.bag-stack-row[data-item-cfg-id="2001"] .bag-row-inline-state')
+          ?.textContent,
+      ).toMatch(/^×5/),
+    );
+    panels.toggleShop();
+    await vi.waitFor(() => expect(listShopShelf).toHaveBeenCalled());
+    const gap = mount.querySelector(".shop-price-wallet-gap");
+    expect(gap?.textContent).toBe("币 标价10/余额5/缺5");
+    expect(mount.querySelector(".shop-price-vs-wallet")?.textContent).toMatch(/现价/);
+    expect(mount.querySelector('[data-role="shop-tab-currency-sweep"]')?.textContent).toMatch(
+      /本类余额/,
+    );
+  });
+});
+
 describe("ContentPanels gateway list error (CLIENT-173)", () => {
   it("shop shelf failure shows prefixed error, empty filter stays empty", async () => {
     const mount = document.createElement("div");

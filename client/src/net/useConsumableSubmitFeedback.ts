@@ -1,4 +1,5 @@
 import { applyUseResult, bagStackQuantity, type BagStack } from "@/net/bagState";
+import { BAG_ROW_INLINE_STATE_CLASS } from "@/net/bagRowInlineState";
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import { walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
@@ -12,6 +13,10 @@ export const USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL = "使用中…";
 export const BAG_ROW_USED_PULSE_CLASS = "bag-row-used-pulse";
 /** 消耗行内脉冲时长（3s，与验收一致）。 */
 export const BAG_ROW_USED_PULSE_MS = 3000;
+
+/** CLIENT-194：使用成功时 `bag-row-inline-state` 行内脉冲（列表行 `bag-row-used-pulse` 不退化）。 */
+export const BAG_USE_INLINE_PULSE_CLASS = "bag-use-inline-pulse";
+export const BAG_USE_INLINE_PULSE_MS = BAG_ROW_USED_PULSE_MS;
 
 export type UseConsumableSubmitState = "idle" | "submitting" | "error";
 
@@ -86,6 +91,19 @@ export function scheduleBagRowUsedPulse(row: HTMLElement | null | undefined): vo
   void row.offsetWidth;
   row.classList.add(BAG_ROW_USED_PULSE_CLASS);
   window.setTimeout(() => row.classList.remove(BAG_ROW_USED_PULSE_CLASS), BAG_ROW_USED_PULSE_MS);
+}
+
+export function scheduleBagUseInlinePulse(row: HTMLElement | null | undefined): void {
+  if (!row) return;
+  const inline = row.querySelector<HTMLElement>(`.${BAG_ROW_INLINE_STATE_CLASS}`);
+  if (!inline) return;
+  inline.classList.remove(BAG_USE_INLINE_PULSE_CLASS);
+  void inline.offsetWidth;
+  inline.classList.add(BAG_USE_INLINE_PULSE_CLASS);
+  window.setTimeout(
+    () => inline.classList.remove(BAG_USE_INLINE_PULSE_CLASS),
+    BAG_USE_INLINE_PULSE_MS,
+  );
 }
 
 export function findBagStackRow(

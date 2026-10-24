@@ -224,6 +224,14 @@
         margin-top: 2px;
         overflow-wrap: anywhere;
       }
+      .shop-list li .shop-price-wallet-gap {
+        display: block;
+        font-size: 11px;
+        color: #b8a078;
+        margin-top: 2px;
+        overflow-wrap: anywhere;
+        font-variant-numeric: tabular-nums;
+      }
       .content-panel .bag-category-tabs {
         display: flex;
         flex-wrap: wrap;
@@ -1772,6 +1780,23 @@
         color: #8a7a62;
         margin-top: 2px;
       }
+      .bag-list li .bag-row-inline-state {
+        grid-column: 1 / -1;
+        font-family: inherit;
+        font-size: 11px;
+        line-height: 1.35;
+        color: #c9b896;
+        margin-top: 2px;
+        overflow-wrap: anywhere;
+      }
+      @keyframes bag-use-inline-pulse-keyframes {
+        0%, 100% { color: #c9b896; }
+        40% { color: #f0d878; text-shadow: 0 0 6px rgba(201, 162, 39, 0.65); }
+        75% { color: #d4bc70; }
+      }
+      .bag-list li .bag-row-inline-state.bag-use-inline-pulse {
+        animation: bag-use-inline-pulse-keyframes 3s ease-out 1;
+      }
       .bag-open-source-tag {
         display: inline-block;
         font-size: 11px;
@@ -2433,6 +2458,7 @@
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-offer-afford-inline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-vs-wallet,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-wallet-gap,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep {
         min-width: 0;
         max-width: 100%;
@@ -2766,6 +2792,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] [data-role="shop-tab-currency-sweep"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-tab-currency-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-vs-wallet,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-price-wallet-gap,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .wallet-gap-line[data-role="shop-wallet-gap"] {
         min-width: 0; max-width: 100%; overflow-x: hidden; flex-shrink: 0;
       }
@@ -2808,6 +2835,7 @@
         min-width: 0; max-width: 100%; overflow-x: hidden; overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-item-cfg-summary,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-row-inline-state,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-open-source-v1 {
         min-width: 0; max-width: 100%; overflow-x: hidden; flex-shrink: 0;
       }
