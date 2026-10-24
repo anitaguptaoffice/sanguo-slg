@@ -6,7 +6,7 @@
 |---|---|---|---|
 | **原矩阵 capture** | `d078ca9d42e4256b0533b03f707b77e389db4ea3` | 1600 dpr1/dpr2、1280 详情末尾等 | 美术已在 #108 复核通过项；**勿删勿全矩阵重拍** |
 | **美术审 #984 固定** | `70d90432db231b20a20f47cf0c6d49f833a1399e` | 同上证据集 | #108 评论 6385191293 对照的 PR 头 |
-| **同帧补图（本次）** | `e5757f805d4874db40fc9f47021a22d0212e99f1` | 仅 `hero-host-1280x720-dpr1-bust-name-sameframe.jpg` | 生产主城链路；详情头部滚位，非列表/非尾部 |
+| **同帧补图（本次）** | 见 `probe-log-supplement-bust-name-sameframe.json` → `supplement_runtime_code_sha`（与 #984 推送提交一致） | 仅 `hero-host-1280x720-dpr1-bust-name-sameframe.jpg` | 生产主城链路；详情头部滚位，非列表/非尾部 |
 | **美术源** | `eef9514b507c3b21921987ab94232021422bdc2f` | Draft #983 四 PNG | blob 与 manifest `slice:0` |
 
 ## 验收表
