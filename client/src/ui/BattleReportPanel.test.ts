@@ -13,7 +13,9 @@ import {
 } from "@/net/battleReportListNav";
 import {
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
+  BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS,
   formatBattleReportOutcomeHeadline,
+  formatBattleReportRoundSummaryStrip,
 } from "@/net/militaryFormat";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
 
@@ -851,6 +853,96 @@ describe("BattleReportPanel", () => {
     prevBtn.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(10);
+  });
+
+  it("renders round summary strip below outcome band (CLIENT-208)", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 10,
+      outcome: 1,
+      defender_player_id: 42,
+      created_at_ms: 0,
+    };
+    const detail = {
+      result: "attacker_win",
+      rounds: [
+        { round: 1, attacker_troops: { infantry: 100 }, defender_troops: { infantry: 80 } },
+        { round: 2, attacker_troops: { infantry: 90 }, defender_troops: { infantry: 50 } },
+      ],
+      attacker_casualties: { infantry: 10 },
+      defender_casualties: { infantry: 30 },
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [summary],
+        total: 1,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: { summary, detail },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const band = mount.querySelector(`.${BATTLE_REPORT_OUTCOME_BAND_CLASS}`);
+    const strip = mount.querySelector(`.${BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS}`);
+    expect(strip?.textContent).toBe(formatBattleReportRoundSummaryStrip(detail));
+    expect(band?.nextElementSibling).toBe(strip);
+    expect(mount.querySelector(".battle-report-rounds-table")).toBeTruthy();
+    expect(mount.querySelector(".battle-report-round-jump")).toBeTruthy();
+  });
+
+  it("keeps selected report highlight when time window filter changes (CLIENT-208)", async () => {
+    const now = Date.UTC(2024, 5, 10, 12, 0, 0);
+    vi.spyOn(Date, "now").mockReturnValue(now);
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 1,
+      outcome: 1,
+      created_at_ms: Date.UTC(2024, 5, 10, 8, 0, 0),
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          summary,
+          { report_id: 2, outcome: 2, created_at_ms: Date.UTC(2024, 5, 9, 8, 0, 0) },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: {
+            rounds: [{ round: 1 }],
+            attacker_casualties: { infantry: 1 },
+            defender_casualties: {},
+          },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="1"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
+    select.value = "last7d";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(mount.querySelector('li[data-report-id="1"]')?.classList.contains("selected")).toBe(
+      true,
+    );
+    expect(
+      mount.querySelector(`.${BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS}`)?.textContent,
+    ).toBeTruthy();
+    vi.mocked(Date.now).mockRestore();
   });
 
   it("renders outcome band and adjacent focus ring on detail nav (CLIENT-190)", async () => {

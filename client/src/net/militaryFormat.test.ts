@@ -12,6 +12,7 @@ import {
   formatBattleReportListPrimaryLine,
   formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
+  formatBattleReportRoundSummaryStrip,
   formatBattleReportRowSummary,
   formatCasualtyMap,
   formatMarchHint,
@@ -168,6 +169,31 @@ describe("militaryFormat", () => {
       }),
     ).toContain("平局");
     expect(formatBattleReportRowSummary({ outcome: 2 })).toContain("守胜");
+  });
+
+  it("formatBattleReportRoundSummaryStrip for detail round scan line (CLIENT-208)", () => {
+    expect(
+      formatBattleReportRoundSummaryStrip({
+        rounds: [{ round: 1 }, { round: 2 }, { round: 3 }],
+        attacker_casualties: { infantry: 10 },
+        defender_casualties: { cavalry: 5 },
+      }),
+    ).toBe("第 1–3 回合 · 攻方伤亡 步兵 10 · 守方伤亡 骑兵 5");
+    expect(
+      formatBattleReportRoundSummaryStrip({
+        rounds: [{ round: 2 }],
+        attacker_casualties: {},
+        defender_casualties: { infantry: 1 },
+      }),
+    ).toBe("第 2 回合 · 攻方伤亡 无 · 守方伤亡 步兵 1");
+    expect(formatBattleReportRoundSummaryStrip(undefined)).toBe("");
+    expect(formatBattleReportRoundSummaryStrip({ rounds: [] })).toBe("");
+    expect(
+      formatBattleReportRoundSummaryStrip({
+        attacker_casualties: { infantry: 3 },
+        defender_casualties: {},
+      }),
+    ).toBe("回合：— · 攻方伤亡 步兵 3 · 守方伤亡 无");
   });
 
   it("formatBattleReportOutcomeHeadline for detail outcome band (CLIENT-190)", () => {
