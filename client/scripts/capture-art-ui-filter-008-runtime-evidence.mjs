@@ -312,6 +312,10 @@ async function probeRowsInPanel(page, panelSelector) {
         const barRect = bar?.getBoundingClientRect();
         const rect = row.getBoundingClientRect();
         const style = getComputedStyle(row);
+        const main = row.querySelector(".daily-quest-row-main");
+        const mainInSkinBar = main != null && bar != null && bar.contains(main);
+        const skinBarWidthRatio =
+          barRect && rect.width > 0 ? barRect.width / rect.width : null;
         const h = barRect?.height ?? rect.height;
         return {
           index,
@@ -321,6 +325,8 @@ async function probeRowsInPanel(page, panelSelector) {
           skinBarHeight: barRect?.height ?? null,
           skinBarHeightExact:
             barRect != null && Math.abs(barRect.height - skinBarHeight) <= tol,
+          skinBarWidthRatio,
+          dailyMainInSkinBar: main ? mainInSkinBar : null,
           color: style.color,
           minHeightCss: style.minHeight,
         };
@@ -328,6 +334,143 @@ async function probeRowsInPanel(page, panelSelector) {
     },
     { panelSelector, skinBarHeight: FILTER_ROW_SKIN_BAR_HEIGHT, tol: ROW_HEIGHT_TOLERANCE },
   );
+}
+
+/** Red badge_count on filter chips: sprite DOM, backgroundImage, visible intersection (#578). */
+async function probeFilterChipBadgeCountSkin(page, panelSelector) {
+  return page.evaluate((panelSelector) => {
+    const panel = document.querySelector(panelSelector);
+    if (!panel) return { badges: [] };
+    function intersectRects(a, b) {
+      const left = Math.max(a.left, b.left);
+      const top = Math.max(a.top, b.top);
+      const right = Math.min(a.right, b.right);
+      const bottom = Math.min(a.bottom, b.bottom);
+      const width = Math.max(0, right - left);
+      const height = Math.max(0, bottom - top);
+      return { left, top, right, bottom, width, height };
+    }
+    function rectArea(r) {
+      return r.width * r.height;
+    }
+    function clipRectsForElement(el) {
+      const rects = [];
+      let node = el.parentElement;
+      while (node) {
+        const style = getComputedStyle(node);
+        const clips =
+          /(hidden|clip|scroll|auto)/.test(style.overflow) ||
+          /(hidden|clip|scroll|auto)/.test(style.overflowX) ||
+          /(hidden|clip|scroll|auto)/.test(style.overflowY);
+        if (clips) rects.push(node.getBoundingClientRect());
+        node = node.parentElement;
+      }
+      rects.push({
+        left: 0,
+        top: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+      return rects;
+    }
+    function probeOne(el) {
+      const hostRect = el.getBoundingClientRect();
+      const sprite = el.querySelector(".art-badge-count-sprite, .art-filter-badge-count-sprite");
+      if (!sprite) {
+        return {
+          role: el.getAttribute("data-role"),
+          missingSprite: true,
+        };
+      }
+      const spriteRect = sprite.getBoundingClientRect();
+      const bg = getComputedStyle(sprite).backgroundImage;
+      const spriteArea = spriteRect.width * spriteRect.height;
+      let clipped = {
+        left: spriteRect.left,
+        top: spriteRect.top,
+        right: spriteRect.right,
+        bottom: spriteRect.bottom,
+        width: spriteRect.width,
+        height: spriteRect.height,
+      };
+      for (const clip of clipRectsForElement(el)) {
+        clipped = intersectRects(clipped, clip);
+      }
+      const visibleArea = rectArea(clipped);
+      return {
+        role: el.getAttribute("data-role"),
+        skinned:
+          el.classList.contains("art-filter-badge-count--skinned") ||
+          el.classList.contains("art-badge-count--skinned"),
+        labelText:
+          el.querySelector(".art-badge-count-label, .art-filter-badge-count-label")?.textContent?.trim() ??
+          "",
+        hasBackgroundImage: Boolean(bg && bg !== "none"),
+        spriteRect: { width: spriteRect.width, height: spriteRect.height },
+        hostRect: { width: hostRect.width, height: hostRect.height },
+        intersectionCoversSprite: spriteArea > 0 ? visibleArea / spriteArea >= 0.98 : false,
+        missingSprite: false,
+      };
+    }
+    const badges = Array.from(panel.querySelectorAll("[data-ui-filter-badge='count']")).filter(
+      (el) => !el.hidden && !el.classList.contains("hidden"),
+    );
+    return { badges: badges.map(probeOne) };
+  }, panelSelector);
+}
+
+async function shotBadgeCountCrop(page, role, fileName) {
+  const loc = page.locator(`[data-role="${role}"]:visible`);
+  await loc.first().waitFor({ state: "visible", timeout: 12000 });
+  const box = await loc.first().boundingBox();
+  if (!box) throw new Error(`badge crop missing box for ${role}`);
+  const pad = 10;
+  const vp = page.viewportSize();
+  const maxW = vp?.width ?? 1600;
+  const maxH = vp?.height ?? 900;
+  const x = Math.max(0, box.x - pad);
+  const y = Math.max(0, box.y - pad);
+  const clip = {
+    x,
+    y,
+    width: Math.min(maxW - x, box.width + pad * 2),
+    height: Math.min(maxH - y, box.height + pad * 2),
+  };
+  return writeJpegUnder1Mb(page, path.join(outDir, fileName), { clip });
+}
+
+async function captureMailChipBadgeCountSkinEvidence(browser) {
+  const shots = {};
+  const probes = {};
+  for (const { preset, role, file, key } of [
+    {
+      preset: "mail-filter-badge-count-nine",
+      role: "mail-filter-unread-count",
+      file: "mail-chip-badge-count-skin-nine-crop-1600x900.jpg",
+      key: "nine",
+    },
+    {
+      preset: "mail-filter-badge-nine",
+      role: "mail-filter-unread-count",
+      file: "mail-chip-badge-count-skin-nineplus-crop-1600x900.jpg",
+      key: "ninePlus",
+    },
+  ]) {
+    await setEvidencePreset(preset);
+    const context = await browser.newContext({
+      viewport: { width: 1600, height: 900 },
+      deviceScaleFactor: 1,
+    });
+    const page = await context.newPage();
+    await enterMainCity(page);
+    await openMailPanel(page);
+    probes[key] = await probeFilterChipBadgeCountSkin(page, ".mail-inbox-panel");
+    shots[key] = { file, ...(await shotBadgeCountCrop(page, role, file)) };
+    await context.close();
+  }
+  return { shots, probes };
 }
 
 async function probeChipClickTargets(page, panelSelector) {
@@ -554,6 +697,7 @@ function summarizePassFail(evidence) {
   let chipClickPass = true;
   let labelColorPass = true;
   let rowHeightPass = true;
+  let dailyRowBarPass = true;
 
   for (const [panelKey, block] of Object.entries(evidence.panels)) {
     for (const [vp, probe] of Object.entries(block.probes)) {
@@ -597,9 +741,26 @@ function summarizePassFail(evidence) {
       }
       for (const row of probe.rows ?? []) {
         if (row.skinned && row.skinBarHeight != null && !row.skinBarHeightExact) rowHeightPass = false;
+        if (panelKey === "daily" && row.skinned) {
+          if (row.dailyMainInSkinBar === false) dailyRowBarPass = false;
+          if (row.skinBarWidthRatio != null && row.skinBarWidthRatio < 0.92) dailyRowBarPass = false;
+        }
       }
     }
   }
+
+  const badgeSkinProbe = evidence.badgeCountSkin?.probes ?? {};
+  const badgeCountSkinPass = ["nine", "ninePlus"].every((key) => {
+    const block = badgeSkinProbe[key];
+    const hit = block?.badges?.find((b) => b.role === "mail-filter-unread-count");
+    return (
+      hit &&
+      !hit.missingSprite &&
+      hit.skinned &&
+      hit.hasBackgroundImage &&
+      hit.intersectionCoversSprite
+    );
+  });
 
   const chipsMinPass = chipRows.every((r) => r.meetsMin44);
   const chipStatesPass = (evidence.chipStates?.states ?? []).every(
@@ -632,7 +793,9 @@ function summarizePassFail(evidence) {
     chipStatesPass &&
     rowStatesPass &&
     badgeNinePlusPass &&
-    badgeCountNinePass;
+    badgeCountNinePass &&
+    dailyRowBarPass &&
+    badgeCountSkinPass;
 
   return {
     chipRows,
@@ -645,10 +808,12 @@ function summarizePassFail(evidence) {
     chipClickPass,
     labelColorPass,
     rowHeightPass,
+    dailyRowBarPass,
     chipStatesPass,
     rowStatesPass,
     badgeNinePlusPass,
     badgeCountNinePass,
+    badgeCountSkinPass,
     overall,
   };
 }
@@ -680,6 +845,8 @@ async function writeIntegrationQa(evidence, summary, tipSha) {
     `| row 三态 staging（40px 行条完整） | **${summary.rowStatesPass ? "PASS" : "FAIL"}** |`,
     `| count **9** 角标（不重拍 count=0） | **${summary.badgeCountNinePass ? "PASS" : "FAIL"}** |`,
     `| count **9+** 角标（10→9+） | **${summary.badgeNinePlusPass ? "PASS" : "FAIL"}** |`,
+    `| 日常行条主标题在 40px skin bar 内且横向铺满 | **${summary.dailyRowBarPass ? "PASS" : "FAIL"}** |`,
+    `| 邮件 chip 实例 badge_count 皮肤可见交集 | **${summary.badgeCountSkinPass ? "PASS" : "FAIL"}** |`,
     `| 综合工程补证 | **${summary.overall ? "PASS" : "FAIL"}** |`,
     "",
     "## 全视口 JPEG",
@@ -696,6 +863,16 @@ async function writeIntegrationQa(evidence, summary, tipSha) {
   lines.push(`| \`runtime/${evidence.rowStates.file}\` | 1600×900 | mail row 三态 staging |`);
   lines.push(`| \`runtime/${evidence.badgeNine.file}\` | 1600×900 | mail count 9+ |`);
   lines.push(`| \`runtime/${evidence.badgeCountNine.file}\` | 1600×900 | mail count 9 |`);
+  if (evidence.badgeCountSkin?.shots?.nine?.file) {
+    lines.push(
+      `| \`runtime/${evidence.badgeCountSkin.shots.nine.file}\` | crop | mail chip badge_count 皮肤 count=9 |`,
+    );
+  }
+  if (evidence.badgeCountSkin?.shots?.ninePlus?.file) {
+    lines.push(
+      `| \`runtime/${evidence.badgeCountSkin.shots.ninePlus.file}\` | crop | mail chip badge_count 皮肤 9+ |`,
+    );
+  }
   lines.push("");
   lines.push("详细 JSON：`probe-log.json`。");
   lines.push("");
@@ -746,6 +923,7 @@ async function main() {
     const rowStates = await captureRowStateSheet(browser);
     const badgeNine = await captureBadgeNine(browser);
     const badgeCountNine = await captureBadgeCountNineExact(browser);
+    const badgeCountSkin = await captureMailChipBadgeCountSkinEvidence(browser);
     await browser.close();
 
     try {
@@ -765,6 +943,7 @@ async function main() {
       rowStates,
       badgeNine,
       badgeCountNine,
+      badgeCountSkin,
     };
     const summary = summarizePassFail(evidence);
     evidence.summary = summary;
@@ -776,9 +955,12 @@ async function main() {
       rowStates.file,
       badgeNine.file,
       badgeCountNine.file,
+      badgeCountSkin.shots.nine.file,
+      badgeCountSkin.shots.ninePlus.file,
     ];
     const expectedDims = {};
     for (const f of jpegFiles) {
+      if (f.includes("-crop-")) continue;
       if (f.includes("3200x1800")) expectedDims[f] = { width: 3200, height: 1800 };
       else if (f.includes("1280x720")) expectedDims[f] = { width: 1280, height: 720 };
       else expectedDims[f] = { width: 1600, height: 900 };

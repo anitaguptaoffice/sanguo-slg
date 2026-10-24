@@ -61,7 +61,7 @@ export const FILTER_CHIP_HIT_MIN = 44;
 export const FILTER_ROW_SKIN_BAR_HEIGHT = 40;
 
 const FILTER_ROW_DETAIL_SELECTORS =
-  ".mail-row-summary, .daily-quest-row-main, .daily-cross-link-tag, .march-row-meta, .march-row-recent-eta, .march-row-remarch-btn, .battle-report-row-foe, .battle-report-row-time, .battle-report-replay-grid-btn";
+  ".mail-row-summary, .daily-cross-link-tag, .march-row-meta, .march-row-recent-eta, .march-row-remarch-btn, .battle-report-row-foe, .battle-report-row-time, .battle-report-replay-grid-btn";
 
 export function isArtUiFilter008AssetId(id: string): id is ArtUiFilter008AssetId {
   return (ART_UI_FILTER_008_ASSET_IDS as readonly string[]).includes(id);

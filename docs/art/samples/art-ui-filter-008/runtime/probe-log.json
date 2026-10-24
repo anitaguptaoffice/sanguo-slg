@@ -1,8 +1,8 @@
 {
   "task": "ART-UI-FILTER-008",
   "client_task": "CLIENT-137",
-  "tip_sha": "747c050574525ecddda3f2ef4bc8bf9631464b0c",
-  "captured_at": "2026-10-24T01:15:59.046Z",
+  "tip_sha": "75c0f953bf3cddde78ad29474896ed6b0804c4d1",
+  "captured_at": "2026-10-24T01:30:42.687Z",
   "note": "Full-viewport runtime evidence; chip sprite/click probes; not art-board static PASS.",
   "panels": {
     "mail": {
@@ -12,7 +12,7 @@
         "1600x900": {
           "file": "mail-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 435718,
+          "bytes": 436000,
           "viewport": {
             "tag": "1600x900",
             "width": 1600,
@@ -23,7 +23,7 @@
         "3200x1800": {
           "file": "mail-filters-3200x1800.jpg",
           "quality": 72,
-          "bytes": 925137,
+          "bytes": 925318,
           "viewport": {
             "tag": "3200x1800",
             "width": 1600,
@@ -34,7 +34,7 @@
         "1280x720": {
           "file": "mail-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 248727,
+          "bytes": 248820,
           "viewport": {
             "tag": "1280x720",
             "width": 1280,
@@ -268,6 +268,8 @@
               "height": 69,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 1,
+              "dailyMainInSkinBar": null,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             },
@@ -278,6 +280,8 @@
               "height": 69,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 1,
+              "dailyMainInSkinBar": null,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             }
@@ -507,6 +511,8 @@
               "height": 69,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 1,
+              "dailyMainInSkinBar": null,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             },
@@ -517,6 +523,8 @@
               "height": 69,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 1,
+              "dailyMainInSkinBar": null,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             }
@@ -746,6 +754,8 @@
               "height": 69,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 1,
+              "dailyMainInSkinBar": null,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             },
@@ -756,6 +766,8 @@
               "height": 69,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 1,
+              "dailyMainInSkinBar": null,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             }
@@ -770,7 +782,7 @@
         "1600x900": {
           "file": "daily-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 432613,
+          "bytes": 434058,
           "viewport": {
             "tag": "1600x900",
             "width": 1600,
@@ -781,7 +793,7 @@
         "3200x1800": {
           "file": "daily-filters-3200x1800.jpg",
           "quality": 76,
-          "bytes": 992761,
+          "bytes": 998337,
           "viewport": {
             "tag": "3200x1800",
             "width": 1600,
@@ -792,7 +804,7 @@
         "1280x720": {
           "file": "daily-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 247285,
+          "bytes": 248463,
           "viewport": {
             "tag": "1280x720",
             "width": 1280,
@@ -1128,9 +1140,11 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 40,
+              "height": 58,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 0.9947183098591549,
+              "dailyMainInSkinBar": true,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             }
@@ -1462,9 +1476,11 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 40,
+              "height": 58,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 0.9947183098591549,
+              "dailyMainInSkinBar": true,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             }
@@ -1796,9 +1812,11 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 40,
+              "height": 58,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
+              "skinBarWidthRatio": 0.9947183098591549,
+              "dailyMainInSkinBar": true,
               "color": "rgb(61, 46, 31)",
               "minHeightCss": "0px"
             }
@@ -1810,7 +1828,7 @@
   "chipStates": {
     "file": "mail-chips-four-states-1600x900.jpg",
     "quality": 88,
-    "bytes": 424366,
+    "bytes": 424497,
     "states": [
       {
         "state": "normal",
@@ -1845,7 +1863,7 @@
   "rowStates": {
     "file": "mail-rows-three-states-1600x900.jpg",
     "quality": 88,
-    "bytes": 451069,
+    "bytes": 451208,
     "rows": [
       {
         "state": "default",
@@ -1876,7 +1894,7 @@
   "badgeNine": {
     "file": "mail-badge-count-nine-1600x900.jpg",
     "quality": 88,
-    "bytes": 432997,
+    "bytes": 432875,
     "badges": {
       "badgeCount": 2,
       "badges": [
@@ -1910,7 +1928,7 @@
   "badgeCountNine": {
     "file": "mail-badge-count-exact-nine-1600x900.jpg",
     "quality": 88,
-    "bytes": 432318,
+    "bytes": 432510,
     "badges": {
       "badgeCount": 2,
       "badges": [
@@ -1939,6 +1957,62 @@
           }
         }
       ]
+    }
+  },
+  "badgeCountSkin": {
+    "shots": {
+      "nine": {
+        "file": "mail-chip-badge-count-skin-nine-crop-1600x900.jpg",
+        "quality": 88,
+        "bytes": 1151
+      },
+      "ninePlus": {
+        "file": "mail-chip-badge-count-skin-nineplus-crop-1600x900.jpg",
+        "quality": 88,
+        "bytes": 1261
+      }
+    },
+    "probes": {
+      "nine": {
+        "badges": [
+          {
+            "role": "mail-filter-unread-count",
+            "skinned": true,
+            "labelText": "9",
+            "hasBackgroundImage": true,
+            "spriteRect": {
+              "width": 20,
+              "height": 16
+            },
+            "hostRect": {
+              "width": 20,
+              "height": 16
+            },
+            "intersectionCoversSprite": true,
+            "missingSprite": false
+          }
+        ]
+      },
+      "ninePlus": {
+        "badges": [
+          {
+            "role": "mail-filter-unread-count",
+            "skinned": true,
+            "labelText": "9+",
+            "hasBackgroundImage": true,
+            "spriteRect": {
+              "width": 20,
+              "height": 16
+            },
+            "hostRect": {
+              "width": 20,
+              "height": 16
+            },
+            "intersectionCoversSprite": true,
+            "missingSprite": false
+          }
+        ]
+      }
     }
   },
   "summary": {
@@ -2254,16 +2328,18 @@
     "chipClickPass": true,
     "labelColorPass": true,
     "rowHeightPass": true,
+    "dailyRowBarPass": true,
     "chipStatesPass": true,
     "rowStatesPass": true,
     "badgeNinePlusPass": true,
     "badgeCountNinePass": true,
+    "badgeCountSkinPass": true,
     "overall": true
   },
   "jpegVerify": [
     {
       "file": "mail-filters-1600x900.jpg",
-      "bytes": 435718,
+      "bytes": 436000,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2271,7 +2347,7 @@
     },
     {
       "file": "mail-filters-3200x1800.jpg",
-      "bytes": 925137,
+      "bytes": 925318,
       "width": 3200,
       "height": 1800,
       "under1mb": true,
@@ -2279,7 +2355,7 @@
     },
     {
       "file": "mail-filters-1280x720.jpg",
-      "bytes": 248727,
+      "bytes": 248820,
       "width": 1280,
       "height": 720,
       "under1mb": true,
@@ -2287,7 +2363,7 @@
     },
     {
       "file": "daily-filters-1600x900.jpg",
-      "bytes": 432613,
+      "bytes": 434058,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2295,7 +2371,7 @@
     },
     {
       "file": "daily-filters-3200x1800.jpg",
-      "bytes": 992761,
+      "bytes": 998337,
       "width": 3200,
       "height": 1800,
       "under1mb": true,
@@ -2303,7 +2379,7 @@
     },
     {
       "file": "daily-filters-1280x720.jpg",
-      "bytes": 247285,
+      "bytes": 248463,
       "width": 1280,
       "height": 720,
       "under1mb": true,
@@ -2311,7 +2387,7 @@
     },
     {
       "file": "mail-chips-four-states-1600x900.jpg",
-      "bytes": 424366,
+      "bytes": 424497,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2319,7 +2395,7 @@
     },
     {
       "file": "mail-rows-three-states-1600x900.jpg",
-      "bytes": 451069,
+      "bytes": 451208,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2327,7 +2403,7 @@
     },
     {
       "file": "mail-badge-count-nine-1600x900.jpg",
-      "bytes": 432997,
+      "bytes": 432875,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2335,9 +2411,25 @@
     },
     {
       "file": "mail-badge-count-exact-nine-1600x900.jpg",
-      "bytes": 432318,
+      "bytes": 432510,
       "width": 1600,
       "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-chip-badge-count-skin-nine-crop-1600x900.jpg",
+      "bytes": 1151,
+      "width": 40,
+      "height": 36,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-chip-badge-count-skin-nineplus-crop-1600x900.jpg",
+      "bytes": 1261,
+      "width": 40,
+      "height": 36,
       "under1mb": true,
       "dimensionsOk": true
     }

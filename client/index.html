@@ -1028,6 +1028,13 @@
       }
       .daily-quest-list li.art-filter-row--skinned {
         flex-wrap: nowrap;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+      }
+      .daily-quest-list li.art-filter-row--skinned .art-filter-row-skin-bar {
+        width: 100%;
+        box-sizing: border-box;
       }
       .art-filter-chip-evidence-staging,
       .art-filter-row-evidence-staging {
@@ -1414,6 +1421,13 @@
         max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      .mail-filter-tab-badge.art-filter-badge-count--skinned {
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        overflow: visible;
+        color: inherit;
       }
       @keyframes queue-build-complete-pulse-keyframes {
         0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
