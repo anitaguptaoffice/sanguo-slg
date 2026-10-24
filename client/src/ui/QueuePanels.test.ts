@@ -143,7 +143,39 @@ describe("QueuePanels", () => {
     expect(firstRow?.compareDocumentPosition(secondRow!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("recruit row click highlights barracks matrix cell mutual jump", () => {
+  it("recruit row click invokes military jump callback when wired (CLIENT-157)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [];
+    session.wallet = { food: 9_999_999, wood: 9_999_999, stone: 9_999_999, iron: 9_999_999 };
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onJump = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { barracks: "兵营" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onJump,
+    );
+    panel.attach();
+    panel.toggle();
+    const entry = { queue_id: 4, unit_cfg_id: 1, count: 6, finish_at_ms: now + 60_000 };
+    panel.addRecruitEntry(entry);
+    const row = mount.querySelector(`#${queueRecruitRowDomId(4)}`) as HTMLElement;
+    row.click();
+    expect(onJump).toHaveBeenCalledWith(entry);
+  });
+
+  it("barracks matrix cell click mutual-highlights recruit queue row (CLIENT-149)", () => {
     const mount = document.createElement("div");
     const now = Date.now();
     const session = baseSession();
@@ -167,13 +199,11 @@ describe("QueuePanels", () => {
     panel.attach();
     panel.toggle();
     panel.addRecruitEntry({ queue_id: 4, unit_cfg_id: 1, count: 6, finish_at_ms: now + 60_000 });
-    const row = mount.querySelector(`#${queueRecruitRowDomId(4)}`) as HTMLElement;
-    row.click();
-    expect(onHighlight).toHaveBeenCalledWith(RECRUIT_QUEUE_MATRIX_SLOT_KEY);
     const barracksCell = mount.querySelector(
       `.queue-build-matrix-cell[data-slot-key="${RECRUIT_QUEUE_MATRIX_SLOT_KEY}"]`,
-    );
-    expect(barracksCell?.classList.contains(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
+    ) as HTMLElement;
+    barracksCell.click();
+    expect(onHighlight).toHaveBeenCalledWith(RECRUIT_QUEUE_MATRIX_SLOT_KEY);
     const rowAfter = mount.querySelector(`#${queueRecruitRowDomId(4)}`);
     expect(rowAfter?.classList.contains(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
   });

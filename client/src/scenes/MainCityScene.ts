@@ -114,6 +114,14 @@ import {
   walletBuildDeductPulseKeys,
 } from "@/net/buildSubmitFeedback";
 import {
+  applyRecruitQueueJumpToMilitaryPanel,
+  readRecruitHighlightQueueSession,
+  resolveRecruitQueueJumpTarget,
+  syncMilitaryRecruitViewQueueLink,
+  writeRecruitHighlightQueueSession,
+} from "@/net/recruitQueueJump";
+import type { RecruitQueueEntry } from "@/net/queueState";
+import {
   formatRecruitTroopSuccess,
   queueRecruitRowDomId,
   recruitTroopSubmitStateMachine,
@@ -220,6 +228,8 @@ export class MainCityScene implements Scene {
   private marchSubmitState: MarchSubmitState = "idle";
   private buildSubmitState: BuildSubmitState = "idle";
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
+  /** 募兵队列↔军事互跳高亮 queue_id（CLIENT-157，与 session 同步）。 */
+  private recruitQueueHighlightId: number | null = null;
   private intelRemarchTroopsLine: string | null = null;
   private suppressMarchTargetHighlightClear = false;
   private social!: SocialPanels;
@@ -351,6 +361,7 @@ export class MainCityScene implements Scene {
       <button type="button" class="march-queue-banner hidden" data-role="march-queue-banner"></button>
       <p class="military-troops" data-role="troops"></p>
       <div class="panel-scroll-body" data-role="military-scroll">
+        <div class="military-recruit-section" data-role="military-recruit-section">
         <label>募兵兵种
           <select data-field="unit">
             <option value="1">步兵</option>
@@ -363,7 +374,11 @@ export class MainCityScene implements Scene {
         <p class="troop-recruit-preview" data-role="troop-recruit-preview"></p>
         <p class="march-form-error hidden" data-role="troop-recruit-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
+        <p class="military-recruit-view-queue hidden" data-role="recruit-view-queue-wrap">
+          <button type="button" data-action="view-recruit-queue">查看队列</button>
+        </p>
         <ul class="queue-list military-recruit-queue hidden" data-role="military-recruit-queue-list"></ul>
+        </div>
         <hr />
         <p class="march-target-hint" data-role="march-target-hint">出征目标可从小地图空白单击或「世界」城池填入；以下坐标会记住到本次会话。</p>
         <div class="march-target-fields" data-role="march-target-fields">
@@ -676,6 +691,7 @@ export class MainCityScene implements Scene {
       skinCenterPrimary,
       (slotKey) => this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey),
       () => this.toolbarTrigger("toggle-queue"),
+      (entry) => this.openMilitaryRecruitFromQueueRow(entry),
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -978,12 +994,26 @@ export class MainCityScene implements Scene {
   }
 
   private onMilitaryClick(ev: Event): void {
-    const btn = (ev.target as HTMLElement).closest("button");
+    const target = ev.target as HTMLElement;
+    const recruitLi = target.closest(
+      '[data-role="military-recruit-queue-list"] li.queue-list-row[data-queue-id]',
+    );
+    if (recruitLi instanceof HTMLElement) {
+      const qid = Number(recruitLi.dataset.queueId) || 0;
+      if (qid > 0) this.openRecruitQueueAndHighlight(qid);
+      return;
+    }
+    const btn = target.closest("button");
     if (!btn) return;
     const action = btn.getAttribute("data-action");
     if (action === MARCH_QUEUE_BANNER_OPEN_INTEL_ACTION) {
       const marchId = Number(btn.getAttribute("data-march-id"));
       if (marchId > 0) this.openMarchIntelPanelHighlight(marchId);
+      return;
+    }
+    if (action === "view-recruit-queue") {
+      const qid = Number(btn.dataset.queueId) || this.recruitQueueHighlightId || 0;
+      if (qid > 0) this.openRecruitQueueAndHighlight(qid);
       return;
     }
     if (action === "recruit") void this.recruit();
@@ -1103,9 +1133,17 @@ export class MainCityScene implements Scene {
       this.recruitTroopSubmitState,
       recruitPreview?.canAfford ?? false,
     );
-    syncMilitaryRecruitQueueList(
+    const recruitSnapshot = this.queuePanels?.getRecruitQueueSnapshot() ?? [];
+    const highlightId =
+      this.recruitQueueHighlightId ??
+      readRecruitHighlightQueueSession() ??
+      this.queuePanels?.getHighlightedRecruitQueueId() ??
+      null;
+    syncMilitaryRecruitQueueList(this.militaryPanel, recruitSnapshot, Date.now(), highlightId);
+    syncMilitaryRecruitViewQueueLink(
       this.militaryPanel,
-      this.queuePanels?.getRecruitQueueSnapshot() ?? [],
+      recruitSnapshot,
+      highlightId,
     );
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
     syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget);
@@ -1127,6 +1165,33 @@ export class MainCityScene implements Scene {
 
   private currentMinimapLayoutRect() {
     return resolveMinimapExpandedLayoutRect(this.isNarrowLayout());
+  }
+
+  /** 打开队列面板并高亮募兵行（session `recruit-highlight-queue-id`）。 */
+  openRecruitQueueAndHighlight(queueId: number): void {
+    if (queueId <= 0) return;
+    writeRecruitHighlightQueueSession(queueId);
+    this.recruitQueueHighlightId = queueId;
+    this.queuePanels.openAndHighlightRecruitQueue(queueId);
+    this.syncMilitaryPanel();
+    this.renderHud();
+  }
+
+  private openMilitaryRecruitFromQueueRow(entry: RecruitQueueEntry): void {
+    const target = resolveRecruitQueueJumpTarget(
+      entry.queue_id,
+      this.queuePanels.getRecruitQueueSnapshot(),
+    );
+    if (!target) return;
+    writeRecruitHighlightQueueSession(target.queue_id);
+    this.recruitQueueHighlightId = target.queue_id;
+    this.militaryPanel.classList.remove("hidden");
+    resetCenterPanelViewportScroll(this.militaryPanel);
+    applyRecruitQueueJumpToMilitaryPanel(this.militaryPanel, target);
+    this.queuePanels.highlightRecruitQueue(target.queue_id);
+    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    this.syncMilitaryPanel();
+    this.renderHud();
   }
 
   private onMilitaryRecruitFieldChange(ev: Event): void {
@@ -1901,6 +1966,15 @@ export class MainCityScene implements Scene {
       if (queued) {
         pulseQueueId = queued.queue_id;
         this.queuePanels.pulseRecruitRow(queued.queue_id);
+        writeRecruitHighlightQueueSession(queued.queue_id);
+        this.recruitQueueHighlightId = queued.queue_id;
+        const jump = resolveRecruitQueueJumpTarget(
+          queued.queue_id,
+          this.queuePanels.getRecruitQueueSnapshot(),
+        );
+        if (jump) {
+          this.queuePanels.highlightRecruitQueue(jump.head_queue_id);
+        }
       }
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
