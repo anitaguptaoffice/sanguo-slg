@@ -1,0 +1,114 @@
+{
+  "task": "HERO-HOST-PLACEHOLDER-001",
+  "mode": "fixture",
+  "git_tip_sha": "fdba70377e15cc72d16e5bc3d323a333c54cc119",
+  "probes": {
+    "1600x900-dpr1": {
+      "ok": true,
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "width": 56,
+        "height": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1"
+      },
+      "bust": {
+        "width": 128,
+        "height": 160,
+        "float": "left",
+        "artTextureScale": "1"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "headLeft": 639,
+        "bustRight": 629
+      },
+      "scrollReachOk": true,
+      "uses1x": true,
+      "uses2x": false
+    },
+    "1600x900-dpr2": {
+      "ok": true,
+      "dpr": 2,
+      "uiScale": 1,
+      "avatar": {
+        "width": 56,
+        "height": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "2"
+      },
+      "bust": {
+        "width": 128,
+        "height": 160,
+        "float": "left",
+        "artTextureScale": "2"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "headLeft": 639,
+        "bustRight": 629
+      },
+      "scrollReachOk": true,
+      "uses1x": false,
+      "uses2x": true
+    },
+    "1280x720-dpr1": {
+      "ok": true,
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "width": 56,
+        "height": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1"
+      },
+      "bust": {
+        "width": 128,
+        "height": 160,
+        "float": "left",
+        "artTextureScale": "1"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "headLeft": 639,
+        "bustRight": 629
+      },
+      "scrollReachOk": true,
+      "uses1x": true,
+      "uses2x": false
+    }
+  },
+  "shots": {
+    "hero-host-1600x900-dpr1.jpg": {
+      "bytes": 34295,
+      "viewport": {
+        "tag": "1600x900-dpr1",
+        "file": "hero-host-1600x900-dpr1.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-host-1600x900-dpr2.jpg": {
+      "bytes": 89715,
+      "viewport": {
+        "tag": "1600x900-dpr2",
+        "file": "hero-host-1600x900-dpr2.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-host-1280x720-dpr1.jpg": {
+      "bytes": 29980,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  }
+}

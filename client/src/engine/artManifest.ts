@@ -2,12 +2,20 @@ export type ArtScaleVariant = { scale: 1 | 2; path: string };
 
 export type ArtAssetMeta = {
   id: string;
-  kind: "sprite" | "nine_slice" | "button" | "icon" | "background";
+  kind:
+    | "sprite"
+    | "nine_slice"
+    | "button"
+    | "icon"
+    | "background"
+    | "hero_avatar"
+    | "hero_bust";
   display_size: { w: number; h: number };
   anchor: { x: number; y: number };
   anchor_unit?: "normalized" | "pixels";
   variants?: ArtScaleVariant[];
   slot_key?: string;
+  template_cfg_id?: number;
   nine_slice?: { left: number; top: number; right: number; bottom: number };
   button_states?: Record<string, ArtScaleVariant[]>;
   tags?: string[];
