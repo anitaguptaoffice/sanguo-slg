@@ -788,6 +788,31 @@ H5 人工验收与 **INTG-037** 网关冒烟对齐，见 [client/README.md](../c
 
 **明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649) / [#674](https://github.com/anitaguptaoffice/sanguo-slg/pull/674) / [#697](https://github.com/anitaguptaoffice/sanguo-slg/pull/697)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU**。
 
+## Wave 41 H5 世界小地图视口军情残余·出征表单反馈·战报密度键盘·邮件日常HUD同步·商城背包排行招募扫读·1280组合manifest — **规划中**
+
+**策略**：在 wave:40 **主城七槽队列双向焦点抛光 / 将领 hero 壳挂载 / 背包 UseConsumable 反馈 / 日常领取 scroll·脉冲 / 军团职务未读扫读 / 1280 主城将领背包日常 manifest** 全收口（实现 tip **`fe533816`**，#864 CLIENT-235；工程 tip **`d4f37ce7`**，INTG-037 [#866](https://github.com/anitaguptaoffice/sanguo-slg/pull/866)；文档 tip **`b2171e25`**，DOCS-EXIT-032 [#880](https://github.com/anitaguptaoffice/sanguo-slg/pull/880)；基线 wave:39 **`3d62bd3a`**）后，**轮转**避开 wave:40 主城槽位/将领壳/背包使用/日常 scroll/军团 manifest 栈与 wave:39 小地图军情双向同步/phase 脉冲/出征交接/战报坐标互链/邮件战报联动/HUD 军事待办**主叙事**重复，在既有 RPC/面板上做 **残余加深**：**小地图视口锚点与军情列表可见行 scroll-sync 残余**（**非** wave:39 双向高亮环主叙事）、**格点信息卡坐标次行与军情 ETA 只读对照残余**、**出征表单校验汇总与提交后军情刷新戳记残余**、**战报列表行密度与 j/k 键盘焦点环残余**、**战报详情攻守摘要与坐标只读复制条残余**、**邮件领取与 HUD 邮件/日常可领角标同步残余**（**非** wave:40 日常 scroll 主叙事）、**背包商城分类扫描高亮与双榜钉选/招募钱包对比行残余**、**1280 世界·军情·战报·邮件·商城·排行·招募组合 manifest**（**非** wave:40 主城将领背包日常面板集）；网关 **INTG-038** 在 **INTG-037** 上扩展 smoke（保留 INTG-037，扩展 `ListMarches` 视口锚点 hint、`MarchAttack` 刷新戳记、`ListBattleReports` outcome/坐标、`ListPlayerMail` 未领附件、`ListPlayerQuests` 可领、背包/双榜/招募列表长度 hint，空列表 skip+hint）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**勿**将 **ART-012** 登记为 wave:41 实现卡 ID。波次 backlog 待本 PR 合入后 `tasks_sync` 创建 Issues；实现卡 **CLIENT-236～243**，**勿占用 CLIENT-064/136/137/146/147**。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| — | CLIENT-236 | 待开工 | — |
+| — | CLIENT-237 | 待开工 | — |
+| — | CLIENT-238 | 待开工 | — |
+| — | CLIENT-239 | 待开工 | — |
+| — | CLIENT-240 | 待开工 | — |
+| — | CLIENT-241 | 待开工 | — |
+| — | CLIENT-242 | 待开工 | — |
+| — | CLIENT-243 | 待开工 | — |
+| — | INTG-038 | 待开工 | — |
+| — | DOCS-EXIT-033 | 阻塞 | 待 CLIENT-236～243 + INTG-038 |
+
+H5 人工验收与 **INTG-038** 网关冒烟对齐（合入实现卡后更新 client/README 锚点）：**小地图视口军情 scroll-sync + 格点 ETA 对照 + 出征表单刷新戳记 + 战报密度键盘 + 邮件 HUD 同步 + 背包商城排行招募扫读 + 1280 世界军情战报邮件商城排行 manifest**。
+
+**基线** wave:40 **全收口** main tip **`b2171e2579a1de522da28a36f3801a84153f858a`**（DOCS-EXIT-032 [#880](https://github.com/anitaguptaoffice/sanguo-slg/pull/880) `b2171e25`；工程 tip **`d4f37ce7`** #866 INTG-037；实现 tip **`fe533816`** #864 CLIENT-235）。
+
+**美术旁路（非 wave:41 backlog 实现卡）**：**CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012**（含工程修 [#698](https://github.com/anitaguptaoffice/sanguo-slg/pull/698)、终验补丁 [#721](https://github.com/anitaguptaoffice/sanguo-slg/pull/721) `ce61ee75`）——均 **非** wave:41 实现卡。wave:41 实现卡 **CLIENT-236～243**，**勿占用 CLIENT-064/136/137/146/147**。
+
+**明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649) / [#674](https://github.com/anitaguptaoffice/sanguo-slg/pull/674) / [#697](https://github.com/anitaguptaoffice/sanguo-slg/pull/697)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU**。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。
