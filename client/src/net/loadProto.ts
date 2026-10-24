@@ -80,6 +80,9 @@ export const Routes = {
   RefreshHotelRecruitPool: "hero.v1.RefreshHotelRecruitPool",
   RecruitHotelCandidate: "hero.v1.RecruitHotelCandidate",
   LargessHero: "hero.v1.LargessHero",
+  SetCityChief: "hero.v1.SetCityChief",
+  ClearCityChief: "hero.v1.ClearCityChief",
+  GetCityChief: "hero.v1.GetCityChief",
 } as const;
 
 export const ErrorCode = {
@@ -168,6 +171,12 @@ export type ProtoTypes = {
   RecruitHotelCandidateResponse: protobuf.Type;
   LargessHeroRequest: protobuf.Type;
   LargessHeroResponse: protobuf.Type;
+  SetCityChiefRequest: protobuf.Type;
+  SetCityChiefResponse: protobuf.Type;
+  ClearCityChiefRequest: protobuf.Type;
+  ClearCityChiefResponse: protobuf.Type;
+  GetCityChiefRequest: protobuf.Type;
+  GetCityChiefResponse: protobuf.Type;
 };
 
 export function getTypes(): ProtoTypes {
@@ -253,5 +262,11 @@ export function getTypes(): ProtoTypes {
     RecruitHotelCandidateResponse: r.lookupType("sanguo.hero.v1.RecruitHotelCandidateResponse"),
     LargessHeroRequest: r.lookupType("sanguo.hero.v1.LargessHeroRequest"),
     LargessHeroResponse: r.lookupType("sanguo.hero.v1.LargessHeroResponse"),
+    SetCityChiefRequest: r.lookupType("sanguo.hero.v1.SetCityChiefRequest"),
+    SetCityChiefResponse: r.lookupType("sanguo.hero.v1.SetCityChiefResponse"),
+    ClearCityChiefRequest: r.lookupType("sanguo.hero.v1.ClearCityChiefRequest"),
+    ClearCityChiefResponse: r.lookupType("sanguo.hero.v1.ClearCityChiefResponse"),
+    GetCityChiefRequest: r.lookupType("sanguo.hero.v1.GetCityChiefRequest"),
+    GetCityChiefResponse: r.lookupType("sanguo.hero.v1.GetCityChiefResponse"),
   };
 }

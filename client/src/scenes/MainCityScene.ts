@@ -330,6 +330,15 @@ import {
 import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
 import { MainCityBuildingPanel } from "@/ui/MainCityBuildingPanel";
+import { MainCityCityOfficePanel } from "@/ui/MainCityCityOfficePanel";
+import {
+  CITY_CHIEF_HALL_SLOT_KEY,
+  formatCityChiefGatewayError,
+  heroIdsOnActiveMarch,
+  loadCityOfficeBundle,
+  runClearCityChief,
+  runSetCityChief,
+} from "@/net/cityChiefOffice";
 import {
   collectHudPulseKeysForQueueCompletes,
   refreshHudProductionWalletLine,
@@ -403,6 +412,8 @@ export class MainCityScene implements Scene {
   private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
   private domesticSlotStrip!: MainCityDomesticSlotStrip;
   private buildingPanel!: MainCityBuildingPanel;
+  private cityOfficePanel!: MainCityCityOfficePanel;
+  private activeDomesticSlotKey: string | null = null;
   private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
   private getViewport!: () => LayoutViewport;
@@ -778,6 +789,9 @@ export class MainCityScene implements Scene {
         getWorldSelectedGrid: () => this.world?.getSelectedGrid() ?? null,
         onMarchesUpdated: (marches) => {
           this.minimapMarches = marches;
+          if (this.activeDomesticSlotKey === CITY_CHIEF_HALL_SLOT_KEY) {
+            this.cityOfficePanel?.setMarchingHeroIds(heroIdsOnActiveMarch(marches));
+          }
           this.world?.refreshMarchDestCounts();
         },
         onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
@@ -999,6 +1013,11 @@ export class MainCityScene implements Scene {
       () => this.buildingDismissTrigger(),
     );
     this.buildingPanel.attach();
+    this.cityOfficePanel = new MainCityCityOfficePanel({
+      onAppoint: (heroId) => void this.appointCityChief(heroId),
+      onClear: () => void this.clearCityChief(),
+    });
+    this.cityOfficePanel.mountInto(this.buildingPanel.getRoot());
     skinToolbarBar(this.toolbar, this.assets);
     skinToolbarButtons(this.toolbar, this.assets);
     mountToolbarIcons(this.toolbar, this.assets);
@@ -2024,11 +2043,76 @@ export class MainCityScene implements Scene {
     }
     this.resetBuildSubmitState();
     this.queuePanels.clearBuildSlotHighlight();
+    this.activeDomesticSlotKey = key;
     this.buildingPanel.selectSlot(key, {
       dismissTrigger: this.buildingDismissTrigger(),
     });
+    this.syncCityOfficePanelForSlot(key);
     this.queuePanels.pulseQueueRowForOverlaySlot(key);
     this.status = `建造：${SLOT_LABEL[key] ?? key}`;
+    this.renderHud();
+  }
+
+  private syncCityOfficePanelForSlot(slotKey: string): void {
+    const showHall = slotKey === CITY_CHIEF_HALL_SLOT_KEY;
+    this.cityOfficePanel?.setVisibleForHallSlot(showHall ? slotKey : null);
+    if (showHall) void this.refreshCityOfficePanel();
+  }
+
+  private async refreshCityOfficePanel(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || !this.cityOfficePanel) return;
+    this.cityOfficePanel.setPhase("loading");
+    this.cityOfficePanel.setFormError(null);
+    try {
+      const bundle = await loadCityOfficeBundle(
+        this.gateway,
+        session.serverId,
+        session.cityId,
+        this.minimapMarches,
+      );
+      this.cityOfficePanel.setMarchingHeroIds(bundle.marchingHeroIds);
+      this.cityOfficePanel.setHeroes(bundle.heroes);
+      this.cityOfficePanel.setChiefView(bundle.chief);
+    } catch (e) {
+      this.cityOfficePanel.setFormError(formatCityChiefGatewayError(e));
+    } finally {
+      this.cityOfficePanel.setPhase("idle");
+    }
+  }
+
+  private async appointCityChief(heroId: number): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || heroId <= 0 || !this.cityOfficePanel) return;
+    this.cityOfficePanel.setPhase("appointing");
+    this.cityOfficePanel.setFormError(null);
+    const { chief, error } = await runSetCityChief(
+      this.gateway,
+      session.serverId,
+      session.cityId,
+      heroId,
+    );
+    this.cityOfficePanel.setChiefView(chief);
+    if (error) this.cityOfficePanel.setFormError(error);
+    else this.status = "城主已任命";
+    this.cityOfficePanel.setPhase("idle");
+    this.renderHud();
+  }
+
+  private async clearCityChief(): Promise<void> {
+    const session = this.session;
+    if (!session?.cityId || !this.cityOfficePanel) return;
+    this.cityOfficePanel.setPhase("clearing");
+    this.cityOfficePanel.setFormError(null);
+    const { chief, error } = await runClearCityChief(
+      this.gateway,
+      session.serverId,
+      session.cityId,
+    );
+    this.cityOfficePanel.setChiefView(chief);
+    if (error) this.cityOfficePanel.setFormError(error);
+    else this.status = "城主已卸任";
+    this.cityOfficePanel.setPhase("idle");
     this.renderHud();
   }
 
