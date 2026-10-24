@@ -14,6 +14,10 @@ var (
 	ErrHeroNotFound     = errors.New("hero: hero not found")
 	ErrInvalidRecruit   = errors.New("hero: invalid recruit request")
 	ErrRecruitItemType  = errors.New("hero: item is not a recruit scroll")
+	ErrInsufficientExp  = errors.New("hero: insufficient exp")
+	ErrMaxLevel         = errors.New("hero: max level reached")
+	ErrHeroNotInCity    = errors.New("hero: not idle in city")
+	ErrLevelTableMissing = errors.New("hero: level table missing")
 )
 
 const (

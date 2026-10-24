@@ -22,15 +22,23 @@ type Service struct {
 	Catalog map[int32]Template
 	Items   map[int32]RecruitItemSpec
 	Store   Store
+	levels  *LevelTable
 	RNG     *rand.Rand
 	clock   func() time.Time
 }
 
 func NewService() *Service {
+	levels, _ := DefaultLevelTable()
 	return &Service{
 		Catalog: DefaultCatalog(), Items: DefaultRecruitItems(),
-		Store: NewMemStore(), RNG: rand.New(rand.NewSource(1)), clock: time.Now,
+		Store: NewMemStore(), levels: levels,
+		RNG: rand.New(rand.NewSource(1)), clock: time.Now,
 	}
+}
+
+// UseLevelTable overrides the embedded cfg_hero_level table (tests).
+func (s *Service) UseLevelTable(t *LevelTable) {
+	s.levels = t
 }
 
 func (s *Service) now() time.Time {
