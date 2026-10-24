@@ -48,6 +48,13 @@ import {
   heroListRowShowsLoyaltyWarnDot,
 } from "@/net/heroListLoyaltySubline";
 import {
+  formatHeroListLoyaltyResidualSubline,
+  HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_ROLE,
+  HERO_LOYALTY_RESIDUAL_WARN_DOT_CLASS,
+  heroListRowShowsLoyaltyResidualWarnDot,
+} from "@/net/heroListLoyaltyResidualSubline";
+import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
   readHeroListFilterSession,
@@ -955,8 +962,21 @@ export class HeroMailPanels {
         loyaltySubline.appendChild(
           document.createTextNode(formatHeroListLoyaltySubline(rowSource, filterCtx)),
         );
+        const loyaltyResidualSubline = document.createElement("span");
+        loyaltyResidualSubline.className = HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS;
+        loyaltyResidualSubline.setAttribute("data-role", HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_ROLE);
+        if (heroListRowShowsLoyaltyResidualWarnDot(rowSource, filterCtx)) {
+          const residualDot = document.createElement("span");
+          residualDot.className = HERO_LOYALTY_RESIDUAL_WARN_DOT_CLASS;
+          residualDot.setAttribute("aria-hidden", "true");
+          loyaltyResidualSubline.appendChild(residualDot);
+        }
+        loyaltyResidualSubline.appendChild(
+          document.createTextNode(formatHeroListLoyaltyResidualSubline(rowSource, filterCtx)),
+        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
+        body.appendChild(loyaltyResidualSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);

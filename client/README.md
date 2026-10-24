@@ -903,6 +903,16 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. **将领详情** 养成进度区下方展示 `formatHeroDetailConsumableStackLine`（`hero-detail-consumable-stack-line`）：`ListPlayerBag` 同源养成道具 **堆叠×N** + 升级/忠诚 **需/缺口** 只读对比；`hero-upgrade-item-gap` 与 **CLIENT-198** 进度条次行 **不退化**。
 3. 单测：`heroListLoyaltySubline.test.ts`、`heroDetailConsumableStackLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#786](https://github.com/anitaguptaoffice/sanguo-slg/issues/786)）
 
+### 手动验收（将领列表忠诚次行与详情养成道具堆叠扫读残余 CLIENT-246）
+
+在 [CLIENT-213](#手动验收将领忠诚次行与养成道具堆叠扫读-client-213) 忠诚主行与正文 **CLIENT-230** hero 壳挂载 **不退化**、[CLIENT-231](#手动验收将领列表返回高亮与筛选-chip-记忆抛光-client-231) 列表返回抛光 **不重复主叙事** 前提下：
+
+1. **将领列表** 每行在 **CLIENT-213** 忠诚次行下方展示 `formatHeroListLoyaltyResidualSubline`（`hero-list-row-loyalty-residual-subline` / `data-role="hero-list-loyalty-residual-subline"`）：忠诚摘要 + 出征阈值只读对照；低忠诚时前置 `hero-loyalty-residual-warn-dot`（与主行 `hero-loyalty-warn-dot` 同源阈值；**无** hero 专用升级 RPC）。
+2. **将领详情** 养成进度区在 **CLIENT-213** `hero-detail-consumable-stack-line` 下方展示 `formatHeroDetailConsumableStackResidualLine`（`hero-detail-consumable-stack-residual-line`）：背包同源养成道具 **持/需** 汇总 + 总缺口只读扫读；缺口时 `hero-detail-consumable-stack-residual-deficit`；`hero-upgrade-item-gap` 与 **CLIENT-230** `data-art-panel=ui.panel.hero.v1` 壳 **不退化**（**非** ART-012 任务 ID）。
+3. 单测：`heroListLoyaltyResidualSubline.test.ts`、`heroDetailConsumableStackResidualLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#915](https://github.com/anitaguptaoffice/sanguo-slg/issues/915)）
+
+**wave:42（CLIENT-246）将领列表忠诚次行与详情养成道具堆叠扫读残余**：列表 **`formatHeroListLoyaltyResidualSubline`** + **`hero-loyalty-residual-warn-dot`**；详情 **`formatHeroDetailConsumableStackResidualLine`** / **`hero-detail-consumable-stack-residual-line`**；**CLIENT-213/230** **不退化**；无 hero 专用升级 RPC。单测：`heroListLoyaltyResidualSubline.test.ts`、`heroDetailConsumableStackResidualLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`。
+
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：

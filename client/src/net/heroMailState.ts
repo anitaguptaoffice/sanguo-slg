@@ -21,6 +21,12 @@ import {
   HERO_DETAIL_CONSUMABLE_STACK_LINE_CLASS,
   HERO_DETAIL_CONSUMABLE_STACK_LINE_ROLE,
 } from "@/net/heroDetailConsumableStackLine";
+import {
+  formatHeroDetailConsumableStackResidualLine,
+  HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEFICIT_CLASS,
+  HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_CLASS,
+  HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_ROLE,
+} from "@/net/heroDetailConsumableStackResidualLine";
 
 /** 与 internal/hero/seed/heroes.json 核心子集展示名对齐（占位，非 legacy 文案）。 */
 const HERO_TEMPLATE_LABEL: Record<number, string> = {
@@ -435,6 +441,10 @@ export function renderHeroDetailMarkup(
   const consumableStackLine = consumableStackText
     ? `<p class="${HERO_DETAIL_CONSUMABLE_STACK_LINE_CLASS}" data-role="${HERO_DETAIL_CONSUMABLE_STACK_LINE_ROLE}">${escapeHtml(consumableStackText)}</p>`
     : "";
+  const consumableStackResidual = formatHeroDetailConsumableStackResidualLine(d, bag);
+  const consumableStackResidualLine = consumableStackResidual?.text
+    ? `<p class="${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_CLASS}${consumableStackResidual.hasDeficit ? ` ${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEFICIT_CLASS}` : ""}" data-role="${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_ROLE}">${escapeHtml(consumableStackResidual.text)}</p>`
+    : "";
   const comparison = compareHeroDetailToTemplate(d, templatePreview ?? null);
   const deltaByKey = new Map(comparison.rows.map((r) => [r.key, r]));
   const attrs = d.attributes;
@@ -461,7 +471,7 @@ export function renderHeroDetailMarkup(
     <button type="button" data-action="hero-related-items">相关道具</button>
   </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${compareStrip}${listHintLine}${progress}${consumableStackLine}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
+  return `${head}${compareStrip}${listHintLine}${progress}${consumableStackLine}${consumableStackResidualLine}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

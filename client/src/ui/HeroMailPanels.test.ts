@@ -595,6 +595,28 @@ describe("HeroMailPanels", () => {
     vi.unstubAllGlobals();
   });
 
+  it("hero list loyalty residual subline shows warn dot and threshold scan (CLIENT-246)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 2, template_cfg_id: 1002, level: 9, loyalty: 10, morale: 40 }],
+        total_count: 1,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    const residual = mount.querySelector('[data-role="hero-list-loyalty-residual-subline"]');
+    expect(residual?.textContent).toContain("忠诚残余");
+    expect(residual?.textContent).toContain("低忠诚警示");
+    expect(residual?.querySelector(".hero-loyalty-residual-warn-dot")).toBeTruthy();
+    const mainSubline = mount.querySelector('[data-role="hero-list-loyalty-subline"]');
+    expect(mainSubline?.textContent).toContain("不可出征");
+    panels.detach();
+  });
+
   it("hero list loyalty subline shows warn dot when deployable threshold not met (CLIENT-213)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
