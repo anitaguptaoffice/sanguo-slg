@@ -406,6 +406,10 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 波次总览与 **DOCS-EXIT-020**（[#541](https://github.com/anitaguptaoffice/sanguo-slg/issues/541)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 28」。main tip **`747c0505`**。
 
+### 手动验收（1280 世界军情战报社交 CLIENT-145，wave:29）
+
+视口 **1280×720** `layout-narrow`：**世界小地图展开区**（窄屏放大 rect）、**军情/战报/排行/军团/聊天** 面板根 `worldIntelSocialNarrowManifest`（与 CLIENT-119/127 同级）；session **marchTargetMemory** 与军情 **再出征** 并存，预填变更时 **march-form-error** / **march-form-summary** 即时重算；军情/战报列表 **↑/↓** roving；`.panel-scroll-body` **padding-bottom: 64px** 清底栏 **56px**；`data-art-skin="off"` 可跳过。单测：`worldIntelSocialNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-145）；`cd client && npm test` 绿。（[#565](https://github.com/anitaguptaoffice/sanguo-slg/issues/565)）
+
 ### 手动验收（1280 主城将领 HUD manifest CLIENT-135）
 
 `#layout-frame.layout-narrow` 下 **建造侧栏**（`building`）、**队列**（`queue`）、**将领**（`hero`）与画布 **七槽升级 overlay**、顶栏 **HUD 待办角标**、**CLIENT-129** 预留 `data-panel-state` 骨架：**不遮挡底栏 56px**、**无横向溢出**；`data-art-skin="off"` 可跳过纸底。

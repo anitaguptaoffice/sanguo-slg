@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   applyMarchIntelRemarchPrefill,
+  applyMarchIntelRemarchPrefillWithFeedback,
   buildMarchIntelRemarchPrefill,
   formatMarchIntelLastTroopsSummary,
 } from "@/net/marchIntelRemarch";
@@ -51,5 +52,23 @@ describe("marchIntelRemarch", () => {
     expect((root.querySelector('[data-field="to-x"]') as HTMLInputElement).value).toBe("40");
     expect((root.querySelector('[data-field="to-y"]') as HTMLInputElement).value).toBe("41");
     expect(storage.getItem(MARCH_TARGET_SESSION_KEY)).toBe(JSON.stringify({ x: 40, y: 41 }));
+  });
+
+  it("applyMarchIntelRemarchPrefillWithFeedback updates summary after remarch prefill", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div data-role="march-target-fields"><input data-field="to-x" /><input data-field="to-y" /></div>
+      <input data-field="march-count" value="50" />
+      <p data-role="march-form-summary"></p>
+      <p class="hidden" data-role="march-form-error"></p>
+    `;
+    const prefill = buildMarchIntelRemarchPrefill(march)!;
+    applyMarchIntelRemarchPrefillWithFeedback(root, prefill, {
+      cityX: 5,
+      cityY: 5,
+      cityTroops: [{ unit_cfg_id: 1, count: 200 }],
+      clockMs: 0,
+    });
+    expect(root.querySelector('[data-role="march-form-summary"]')?.textContent).toContain("(40,41)");
   });
 });

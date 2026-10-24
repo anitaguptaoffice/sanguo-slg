@@ -6,6 +6,7 @@ import {
   marchDurationSecFromDistance,
   readMarchFormSnapshot,
   setMarchFormSummaryDisplay,
+  syncMarchFormInlineFeedback,
 } from "@/net/marchFormSummary";
 
 describe("marchFormSummary", () => {
@@ -78,6 +79,26 @@ describe("marchFormSummary", () => {
     setMarchFormSummaryDisplay(root, result);
     expect(root.querySelector('[data-role="march-form-summary"]')?.textContent).toContain(
       "出征汇总",
+    );
+  });
+
+  it("syncMarchFormInlineFeedback refreshes summary and march-form-error on prefill", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <input data-field="to-x" value="60" />
+      <input data-field="to-y" value="60" />
+      <input data-field="march-count" value="50" />
+      <p data-role="march-form-summary"></p>
+      <p class="hidden" data-role="march-form-error"></p>
+    `;
+    syncMarchFormInlineFeedback(root, {
+      cityX: 60,
+      cityY: 60,
+      cityTroops: [{ unit_cfg_id: 1, count: 100 }],
+      clockMs: 0,
+    });
+    expect(root.querySelector('[data-role="march-form-error"]')?.textContent).toContain(
+      "不能与己方城池同格",
     );
   });
 });

@@ -122,3 +122,11 @@ export {
   CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS,
   type Client135NarrowManifestCenterPanelId,
 } from "@/engine/mainCityHeroHudNarrowManifest";
+
+/** CLIENT-145: world minimap expanded + march/battle-report/rank/guild/chat manifest at 1280×720. */
+export {
+  CLIENT_145_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client145NarrowManifestCenterPanelId,
+  WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
+} from "@/engine/worldIntelSocialNarrowManifest";
+export { resolveMinimapExpandedLayoutRect as resolveWorldMinimapExpandedLayoutRect } from "@/ui/worldMinimap";

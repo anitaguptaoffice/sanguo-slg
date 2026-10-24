@@ -1,5 +1,9 @@
 import { formatTroopStacks, type MarchSummary } from "@/net/militaryFormat";
 import {
+  syncMarchFormInlineFeedback,
+  type MarchFormInlineFeedbackContext,
+} from "@/net/marchFormSummary";
+import {
   applyMarchTargetAndRemember,
   type MarchTargetSource,
 } from "@/net/marchTargetMemory";
@@ -43,4 +47,16 @@ export function applyMarchIntelRemarchPrefill(
     source: MARCH_INTEL_REMARCH_SOURCE,
     storage,
   });
+}
+
+/** 再出征预填与 session 记忆并存，并即时重算表单 summary/error（CLIENT-145）。 */
+export function applyMarchIntelRemarchPrefillWithFeedback(
+  formRoot: ParentNode | null | undefined,
+  prefill: MarchIntelRemarchPrefill,
+  feedback?: MarchFormInlineFeedbackContext,
+  storage?: Pick<Storage, "setItem"> | null,
+): boolean {
+  const applied = applyMarchIntelRemarchPrefill(formRoot, prefill, storage);
+  if (applied && feedback) syncMarchFormInlineFeedback(formRoot, feedback);
+  return applied;
 }
