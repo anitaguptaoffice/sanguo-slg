@@ -999,6 +999,39 @@
       .battle-report-list li.battle-report-empty.is-error { color: #e8a87c; }
       .battle-report-list li[data-report-id] {
         display: flex; gap: 8px; align-items: flex-start; cursor: pointer;
+        position: relative;
+      }
+      /* CLIENT-239 battle-report list density row + keyboard focus ring */
+      .battle-report-list li.report-list-density-row {
+        padding-left: 10px;
+      }
+      .battle-report-list .report-list-density-outcome-band {
+        position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+        border-radius: 4px 0 0 4px;
+      }
+      .battle-report-list .report-list-density-outcome-band.outcome-attacker-win {
+        background: #8fbc6a;
+      }
+      .battle-report-list .report-list-density-outcome-band.outcome-defender-win {
+        background: #e8a87c;
+      }
+      .battle-report-list .report-list-density-outcome-band.outcome-draw {
+        background: #c9b896;
+      }
+      .battle-report-list .report-list-density-outcome-band.outcome-unknown {
+        background: #b8a88a;
+      }
+      .battle-report-list .report-list-density-timestamp {
+        display: block; font-size: 11px; line-height: 1.3; color: #c9b896;
+        font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
+      }
+      .battle-report-list .report-list-density-coord {
+        font-weight: 700; color: #f0c674; letter-spacing: 0.02em;
+      }
+      .battle-report-list li.report-list-keyboard-focus-ring:focus-visible,
+      .battle-report-list li.report-list-keyboard-focus-ring.selected {
+        outline: 2px solid #c9a227;
+        outline-offset: 2px;
       }
       .battle-report-list li[data-report-id].art-filter-row--skinned {
         background: transparent;

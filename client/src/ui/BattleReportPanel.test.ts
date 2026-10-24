@@ -11,6 +11,12 @@ import {
   BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS,
   BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
 } from "@/net/battleReportListNav";
+import {
+  BATTLE_REPORT_LIST_KEYBOARD_ATTR,
+  REPORT_LIST_DENSITY_ROW_CLASS,
+  REPORT_LIST_DENSITY_TIMESTAMP_CLASS,
+  REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS,
+} from "@/net/battleReportListDensityKeyboard";
 import { OPEN_INTEL_FOR_REPORT_ACTION } from "@/net/battleReportRoundSummaryIntelLink";
 import {
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
@@ -1039,6 +1045,67 @@ describe("BattleReportPanel", () => {
       mount.querySelector(`.${BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS}`)?.textContent,
     ).toBeTruthy();
     vi.mocked(Date.now).mockRestore();
+  });
+
+  it("renders density row with timestamp line and j/k list nav from detail (CLIENT-239)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          {
+            report_id: 10,
+            outcome: 1,
+            defender_player_id: 3,
+            location_x: 5,
+            location_y: 6,
+            created_at_ms: Date.UTC(2024, 0, 2),
+          },
+          {
+            report_id: 8,
+            outcome: 2,
+            defender_player_id: 4,
+            location_x: 1,
+            location_y: 2,
+            created_at_ms: Date.UTC(2024, 0, 1),
+          },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn().mockImplementation((id: number) =>
+        Promise.resolve({
+          report: {
+            summary: { report_id: id, outcome: id === 10 ? 1 : 2 },
+            detail: { result: "attacker_win", rounds: [] },
+          },
+        }),
+      ),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const row = mount.querySelector('li[data-report-id="10"]') as HTMLElement;
+    expect(row.classList.contains(REPORT_LIST_DENSITY_ROW_CLASS)).toBe(true);
+    expect(row.querySelector(`.${REPORT_LIST_DENSITY_TIMESTAMP_CLASS}`)?.textContent).toBeTruthy();
+    expect(row.classList.contains(REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS)).toBe(true);
+
+    const detail = mount.querySelector('[data-role="report-detail"]') as HTMLElement;
+    detail.focus();
+    detail.dispatchEvent(new KeyboardEvent("keydown", { key: "j", bubbles: true }));
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenLastCalledWith(8);
+    const row8 = mount.querySelector('li[data-report-id="8"]') as HTMLElement;
+    expect(row8.classList.contains(REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS)).toBe(true);
+
+    const root = mount.querySelector(".battle-report-panel") as HTMLElement;
+    root.setAttribute(BATTLE_REPORT_LIST_KEYBOARD_ATTR, "off");
+    detail.dispatchEvent(new KeyboardEvent("keydown", { key: "k", bubbles: true }));
+    await flushPromises();
+    expect(gateway.getBattleReport).toHaveBeenCalledTimes(2);
   });
 
   it("renders outcome band and adjacent focus ring on detail nav (CLIENT-190)", async () => {
