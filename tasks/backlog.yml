@@ -36,6 +36,7 @@
 # wave:41「H5 世界小地图视口军情残余·出征表单反馈·战报密度键盘·邮件日常HUD同步·商城背包排行招募扫读·1280组合manifest」：小地图视口锚点与军情列表可见行 scroll-sync 残余（**非** wave:39 双向高亮环/phase 脉冲主叙事）、格点信息卡坐标次行与军情 ETA 只读对照残余、出征表单校验汇总与提交后军情刷新戳记残余、战报列表行密度与 j/k 键盘焦点环残余、战报详情攻守摘要与坐标只读复制条残余、邮件领取与 HUD 邮件/日常可领角标同步残余（**非** wave:40 日常 scroll 主叙事）、背包商城分类扫描高亮与双榜钉选/招募钱包对比行残余、1280 世界·军情·战报·邮件·商城·排行·招募组合 manifest（**非** wave:40 主城将领背包日常面板集）；INTG-038 在 INTG-037 上扩展网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-236～243，勿占用 CLIENT-064/136/137/146/147；**勿**将 ART-012 登记为实现卡 ID）。
 # wave:42「H5 主城七槽队列ETA完成焦点残余·将领列表详情养成扫读·双榜钉选军团聊天残余·日常chain队列互链·HUD待办底栏深链残余·1280主城将领日常社交队列组合manifest」：建造募兵队列 ETA 分段与完成态七槽焦点残余扫读（**非** wave:40 双向焦点抛光 / wave:38 ETA 分段主叙事重复堆叠）、队列下一完成预览与槽位余量 ring 残余互链、将领列表忠诚次行与详情养成道具堆叠扫读残余（**非** ART-012 像素实现）、将领 panelState 与列表筛选 chip 记忆残余抛光、双榜刷新冷却与钉选保持残余扫读（**非** wave:41 排行招募扫读主叙事）、军团职务头与聊天未读分隔扫读残余（**非** wave:38 退避重试主叙事）、日常 chain 次行与队列互链及 HUD 待办底栏深链残余（**非** wave:41 邮件 HUD 同步主叙事）、1280 主城·将领·日常·社交·队列组合 manifest（**非** wave:41 世界军情战报邮件商城栈）；INTG-039 在 INTG-038 上扩展主城/将领/社交/日常网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-244～251，勿占用 CLIENT-064/136/137/146/147；**勿**将 ART-012 登记为实现卡 ID）。
 # wave:43「H5 世界小地图视口军情scroll-sync残余·出征表单兵力余量·战报键盘相邻导航坐标复制·邮件HUD附件领取·背包商城返回高亮·排行招募扫读·军情phase再出征预填·1280组合manifest」：小地图视口与军情列表 scroll-sync 残余巩固与格点 ETA 只读对照残余（**非** wave:39 双向高亮环/phase 脉冲主叙事）、出征提交刷新戳记与兵力余量只读对照残余、战报列表密度 j/k 键盘与相邻条导航及详情坐标只读复制条残余、邮件附件领取与 HUD 邮件/日常角标同步残余（**非** wave:42 日常 chain/HUD 深链主叙事）、背包商城行内态与面板返回来源高亮残余、排行列表密度扫读与招募模板行内摘要残余（**非** wave:42 双榜钉选保持主叙事）、军情 phase 变更扫读与再出征表单预填残余、1280 世界·军情·战报·邮件·商城·排行组合 manifest（**非** wave:42 主城将领日常社交队列 manifest）；INTG-040 在 INTG-039 上扩展世界/军情/战报/邮件/商城/排行网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-252～259，勿占用 CLIENT-064/136/137/146/147；**勿**将 ART-012 登记为实现卡 ID）。
+# wave:44「H5 主城七槽队列ETA完成焦点残余巩固·队列预览槽位互链·将领养成扫读·panelState筛选chip·双榜钉选·军团聊天·日常chain队列HUD深链·1280主城将领日常社交队列组合manifest」：建造募兵队列 ETA 分段与完成态七槽 ring **残余巩固**（**非** wave:42 CLIENT-244/245 首版残余 / wave:40/38 主叙事重复堆叠）、队列下一完成预览与槽位互链 **残余加深**、将领列表忠诚次行与详情养成道具扫读 **残余巩固**（**非** ART-012 像素；不合 #983/#108/#697）、将领 panelState 与列表筛选 chip 记忆 **残余抛光加深**、双榜刷新冷却与钉选保持 **残余巩固**（**非** wave:43 CLIENT-257 排行招募密度扫读主叙事）、军团职务头与聊天未读分隔扫读 **残余巩固**（**非** wave:43 世界军情战报邮件商城栈）、日常 chain 次行与队列互链及 HUD 待办底栏深链 **残余加深**（**非** wave:43 邮件 HUD 附件主叙事）、1280 主城·将领·日常·社交·队列组合 manifest **巩固**（**非** wave:43 CLIENT-259 世界军情战报邮件商城排行 manifest）；INTG-041 在 INTG-040 上扩展主城/将领/社交/日常网关字段 hint；仍 DATA-002，无 CancelMarch；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做（实现卡 CLIENT-260～267，勿占用 CLIENT-064/136/137/146/147；**勿**将 ART-012 登记为实现卡 ID）。
 # 参照物只读 PR #77 / #82（分支见 docs/reference.md），禁止合并、禁止复制 PHP。
 
 - id: SPEC-001
@@ -8081,3 +8082,235 @@
     文档 only。INTG-040 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
 
     禁止改 backlog.yml。**永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697 等 art hold / VERIFY draft PR。
+
+- id: CLIENT-260
+  title: 主城队列 ETA 分段完成焦点与七槽 ring 残余巩固
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-244, CLIENT-228, CLIENT-212, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "队列行 `formatDomesticQueueEtaSegmentResidualDeepLabel`：在 CLIENT-244 残余次行上补 **巩固** 分段阈值 + 完成倒计时只读第三行（CLIENT-212 **不退化**；**非** wave:40/38 主叙事重复）"
+    - "完成态 `domestic-queue-complete-focus-residual-deep-ring`：七槽 2.5s 深环 + CLIENT-244 `domestic-queue-complete-focus-residual-ring` **不退化**（**无**主城建造新 RPC）"
+    - "单测覆盖 deep segment label + deep complete ring class；npm test 绿；client/README.md 增补 wave:44 队列 ETA 完成焦点巩固 bullet"
+  body: |
+    wave:42 CLIENT-244 与 wave:40 CLIENT-228、wave:38 CLIENT-212 已建 ETA 分段与完成态七槽焦点残余。wave:43 **轮转**世界/军情/战报栈后，本波 **轮转回**主城队列栈做 **残余巩固加深**，主叙事 **非** wave:42 首版残余 / wave:40 双向焦点抛光重复堆叠。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-261～267 并行（‖）。**一卡一 PR**：`feat/CLIENT-260`。
+
+- id: CLIENT-261
+  title: 队列下一完成预览与七槽互链残余巩固
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-245, CLIENT-218, CLIENT-260, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "顶栏 `formatNextQueueFinishPreviewResidualDeepLine`：下一完成 ETA + 双队列类型只读 **巩固** 摘要（CLIENT-245 **不退化**；**非** wave:38 预览首版主叙事）"
+    - "预览行点击 `domestic-slot-preview-cross-link-residual-deep-ring` 跳转七槽并 2s 深环脉冲（CLIENT-260 完成焦点 **不退化**）"
+    - "单测覆盖 preview deep formatter + cross-link deep ring class；npm test 绿；client/README.md 增补队列预览槽位互链巩固 bullet"
+  body: |
+    wave:42 CLIENT-245 与 wave:38 CLIENT-218 已建下一完成预览与七槽余量 ring 残余互链。本卡补 **预览↔槽位互链残余巩固**，避开 wave:43 世界/出征主叙事。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-260/262～267 并行（‖）。软依赖 CLIENT-260 可用 stub。**一卡一 PR**：`feat/CLIENT-261`。
+
+- id: CLIENT-262
+  title: 将领列表忠诚次行与详情养成道具扫读残余巩固
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-246, CLIENT-213, CLIENT-230, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "列表行 `formatHeroListLoyaltyResidualDeepSubline`：忠诚 + 经验进度只读 **巩固** 次行（CLIENT-246 **不退化**；**无** hero 专用升级 RPC）"
+    - "详情 `formatHeroDetailConsumableStackResidualDeepSweep`：养成道具堆叠 + 背包深链 hint 只读扫读 2s（CLIENT-230 壳 **不退化**；**非** ART-012 / #983/#108/#697 像素任务）"
+    - "单测覆盖 loyalty/consumable deep formatters + sweep class；npm test 绿；client/README.md 增补将领养成扫读巩固 bullet"
+  body: |
+    wave:42 CLIENT-246 与 wave:38 CLIENT-213、wave:40 CLIENT-230 已建忠诚次行与养成道具堆叠扫读残余。本卡 **巩固加深**列表/详情扫读，主叙事非 wave:43 排行招募密度栈。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-260～261/263～267 并行（‖）。**一卡一 PR**：`feat/CLIENT-262`。
+
+- id: CLIENT-263
+  title: 将领 panelState 与列表筛选 chip 记忆残余抛光加深
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-247, CLIENT-231, CLIENT-199, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "将领面板 `hero-panel-state-residual-deep-sweep`：loading/empty/error 只读 **巩固** 文案行 + gateway 重试 hint（CLIENT-247 **不退化**）"
+    - "筛选 chip session `hero-list-filter-chip-residual-deep-v1` 与 CLIENT-231 返回高亮 **并存**；CLIENT-199 选中记忆 **不退化**"
+    - "单测覆盖 panel deep sweep + filter chip deep key；npm test 绿；client/README.md 增补将领 panelState 筛选巩固 bullet"
+  body: |
+    wave:42 CLIENT-247 与 wave:40 CLIENT-230/231、wave:36 CLIENT-199 已建 panelState 扫读与 chip 记忆残余抛光。本卡 **抛光加深**，避开 wave:38 忠诚养成主叙事重复。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-260～262/264～267 并行（‖）。**一卡一 PR**：`feat/CLIENT-263`。
+
+- id: CLIENT-264
+  title: 双榜刷新冷却戳记与钉选保持残余巩固
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-248, CLIENT-214, CLIENT-242, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "双榜顶栏 `formatRankRefreshCooldownResidualDeepStamp`：冷却 + 上次刷新 + 手动刷新次数只读 **巩固** 次行（CLIENT-248/214 **不退化**；**无**新 rank RPC）"
+    - "钉选行 `rank-pin-keep-residual-deep-ring`：刷新后 2s 深环保持（CLIENT-248 **不退化**；**非** wave:43 CLIENT-257 排行密度/招募摘要主叙事）"
+    - "单测覆盖 cooldown deep stamp + pin deep ring；npm test 绿；client/README.md 增补双榜钉选刷新巩固 bullet"
+  body: |
+    wave:42 CLIENT-248 与 wave:38 CLIENT-214、wave:41 CLIENT-242 已建双榜冷却与钉选保持残余。wave:43 CLIENT-257 已补排行招募密度扫读。本卡 **巩固**钉选与冷却残余，主叙事 **非** wave:43 排行招募密度重复。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-260～263/265～267 并行（‖）。**一卡一 PR**：`feat/CLIENT-264`。
+
+- id: CLIENT-265
+  title: 军团职务分组头与聊天未读分隔扫读残余巩固
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-249, CLIENT-234, CLIENT-200, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "成员列表 `formatGuildDutyHeaderResidualDeepLine`：职务头 + 在线/职务计数只读 **巩固** 次行（CLIENT-249/234 **不退化**；**无**新 guild RPC）"
+    - "聊天 `guild-chat-unread-divider-residual-deep-sweep`：未读边界 + 首条未读 1.5s 深扫读环（CLIENT-200 空错态 **不退化**；**非** wave:43 世界栈主叙事）"
+    - "单测覆盖 duty deep header + unread deep sweep class；npm test 绿；client/README.md 增补军团聊天扫读巩固 bullet"
+  body: |
+    wave:42 CLIENT-249 与 wave:40 CLIENT-234、wave:36 CLIENT-200 已建职务头与未读分隔残余扫读。本卡 **巩固加深**，主叙事非 wave:43 军情/战报/邮件栈。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-260～264/266～267 并行（‖）。**一卡一 PR**：`feat/CLIENT-265`。
+
+- id: CLIENT-266
+  title: 日常 chain 队列互链与 HUD 待办底栏深链残余加深
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-250, CLIENT-233, CLIENT-218, CLIENT-241, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "日常行 `formatQuestChainQueueHudResidualDeepSubline`：chain 类型 + 队列下一完成 ETA **巩固** 次行（CLIENT-250/218 **不退化**；**非** wave:43 CLIENT-255 邮件 HUD 附件主叙事）"
+    - "HUD `hud-todo-toolbar-deep-link-residual-deep-pulse`：底栏面板打开 2s 深脉冲（CLIENT-250/241 角标 **不退化**）"
+    - "单测覆盖 chain-queue-hud deep formatter + deep pulse class；npm test 绿；client/README.md 增补日常队列 HUD 深链巩固 bullet"
+  body: |
+    wave:42 CLIENT-250 与 wave:40 CLIENT-233、wave:38 CLIENT-218、wave:43 CLIENT-241 已分散日常 chain·队列·HUD 深链与邮件角标同步。本卡 **加深**日常↔队列↔HUD 残余互链，避开 wave:43 邮件 HUD 附件主叙事重复。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；**花钱类/IAP/新商城 SKU**。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。与 CLIENT-260～265/267 并行（‖）。**一卡一 PR**：`feat/CLIENT-266`。
+
+- id: CLIENT-267
+  title: 1280 主城将领日常社交队列组合 manifest 巩固
+  wave: 44
+  domain: client
+  depends_on: [CLIENT-135, CLIENT-251, CLIENT-259, CLIENT-260, CLIENT-261, CLIENT-262, CLIENT-263, CLIENT-264, CLIENT-265, CLIENT-266, CLIENT-129]
+  sync_status: ready
+  size: M
+  owner_dir: client
+  scope: [client/**]
+  out_of_scope: [internal/**, spec/**, tools/**]
+  acceptance:
+    - "layoutViewport **1280×720**：队列 ETA/完成焦点巩固、将领养成扫读、双榜钉选、军团聊天、日常 chain HUD 深链与 CLIENT-251/235 同级窄屏契约（**非** wave:43 CLIENT-259 世界军情战报邮件商城排行 manifest 面板集）"
+    - "`.panel-scroll-body` 长列表 **不遮挡底栏 56px**；主城/将领/社交密度行在 `layout-narrow` **无横向溢出**；1600 基线不退化"
+    - "data-art-skin=off 可跳过；`layoutViewport` / `filterListNarrowManifest` / 专用 `wave44*NarrowManifest` 单测扩展；npm test 绿；client/README.md 增补 wave:44 1280 验收 bullet"
+  body: |
+    CLIENT-251/259 已覆盖 wave:42/43 组合 manifest；本卡 **巩固** **主城·将领·日常·社交·队列·HUD 深链** 窄屏契约。世界瓦片/图集仍暂缓。
+
+    **本波仍不做** DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch / 募兵加速；主城建造/募兵新 RPC；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；世界瓦片/图集；不合并 art hold/VERIFY（含 **#637**/#649/#674/#697/#942/#983）；**花钱类/IAP**；**勿**将 **ART-012** 登记为本波实现卡 ID。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    仅 client/**。软依赖本波 CLIENT-260～266。验收前建议 CLIENT-260/266/267 关键钩子已合。**一卡一 PR**：`feat/CLIENT-267`。
+
+- id: INTG-041
+  title: wave:44 网关路径冒烟（主城队列ETA巩固+将领养成扫读+双榜钉选+军团聊天+日常队列HUD深链）
+  wave: 44
+  domain: platform
+  depends_on: [INTG-040]
+  sync_status: ready
+  size: M
+  owner_dir: cmd
+  scope: [cmd/**, internal/api/**, tools/smoke/**]
+  out_of_scope: [internal/military/**, internal/content/**, client/**, spec/**]
+  acceptance:
+    - 保留 INTG-040 全量断言（ListMarches、MarchAttack hint、ListBattleReports、ListPlayerMail、ListPlayerBag、双榜/招募 hint 等）
+    - "主路径：`domestic.v1.GetCityState` 打印七槽 `building_cfg_id` + `build_queue`/`recruit_queue` 首条 `upgrade_finish_at_ms` + ETA 分段/完成态 **巩固** hint（供 CLIENT-260/261 对照；无城 skip + hint）"
+    - "主路径：`hero.v1.ListPlayerHeroes` 打印首条 `hero_id`/`level` + 忠诚或经验字段 **巩固** hint + `content.v1.ListPlayerBag` 首条养成 `item_id`/`count`（供 CLIENT-262/263 对照；空 skip + hint）"
+    - "主路径：`rank.v1.ListPowerRank` / `ListKillRank` 打印列表长度 + 首条 `player_id` + 钉选刷新 **巩固** hint（供 CLIENT-264 对照；空列表 skip + hint）"
+    - "主路径：`guild.v1.ListGuildMembers` 职务/在线字段 **巩固** hint + `guild.v1.ListGuildChatMessages` 首条 id/长度（供 CLIENT-265 对照；无军团/空聊天 skip + hint）"
+    - "主路径：`quest.v1.ListPlayerQuests` 可领取条数 + chain 类型 hint + 与 `GetCityState` 队列 ETA **巩固** 对照 hint（供 CLIENT-266 HUD/日常对照；空 skip + hint）"
+    - tools/smoke/README.md 更新 wave:44 段与 go test -run 正则；CI -short 跳过长测
+  body: |
+    INTG-WAVE44-RUN。在 INTG-040 上为 wave:44 客户端主城队列 ETA/完成焦点巩固、将领养成扫读、双榜钉选、军团聊天扫读与日常 chain·队列·HUD 深链残余加深提供网关字段 hint；**不跑 H5**。
+
+    **本波仍不做** CancelMarch / 行军与募兵加速 / 主城建造新 RPC / 战报 proto 扩量 / 新商城 SKU / IAP。禁改 internal/military/**、internal/content/** 业务核。
+
+    **永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
+
+    CLIENT-260～267 非硬依赖。与 CLIENT 卡并行（‖）。
+
+- id: DOCS-EXIT-036
+  title: wave:44 H5 主城将领日常社交队列HUD深链残余巩固·1280组合manifest文档收口
+  wave: 44
+  domain: platform
+  depends_on: [INTG-041, CLIENT-260, CLIENT-261, CLIENT-262, CLIENT-263, CLIENT-264, CLIENT-265, CLIENT-266, CLIENT-267]
+  blocked_until: [INTG-041, CLIENT-260, CLIENT-261, CLIENT-262, CLIENT-263, CLIENT-264, CLIENT-265, CLIENT-266, CLIENT-267]
+  sync_status: blocked
+  size: S
+  owner_dir: docs
+  scope: [docs/ROADMAP.md, tasks/README.md, client/README.md]
+  out_of_scope: [internal/**, cmd/**, spec/**, tasks/backlog.yml]
+  acceptance:
+    - "ROADMAP：Wave 44 标为已完成并链 Issue/PR；Wave 43 保持已完成（含 DOCS-EXIT-035 [#986](https://github.com/anitaguptaoffice/sanguo-slg/pull/986)；基线 tip **`84e6b990`**）"
+    - M4/H5 出口描述含「主城队列 ETA 完成焦点巩固 + 将领养成道具扫读加深 + 双榜钉选残余巩固 + 军团聊天扫读 + 日常 chain 队列互链 + HUD 待办底栏深链加深 + 1280 主城将领日常社交队列 manifest 巩固」路径（指向 client/README）
+    - tasks/README.md wave:44 进度表与 Issue 一致；CLIENT 实现卡编号自 **CLIENT-260** 起
+    - 重申不做 DATA-003 / cfg_act* / 不可逆消费扩量；CancelMarch/募兵加速/主城建造新 RPC/战报 proto 扩量仍 out；世界瓦片/图集仍暂缓；**花钱类/IAP/新商城 SKU** 不做；注明 **CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012** 美术旁路——**非** wave:44 backlog 实现卡
+  body: |
+    文档 only。INTG-041 与本波全部 CLIENT 实现卡合并后编排者将本卡改为 ready。
+
+    禁止改 backlog.yml。**永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983 等 art hold / VERIFY draft PR。
