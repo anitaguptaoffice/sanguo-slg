@@ -192,7 +192,7 @@ func smokeBoot(ctx context.Context) {
 	defer app.Close()
 	app.Log.Info("gm ready", "postgres", app.Config.DatabaseURL, "redis", app.Config.RedisAddr)
 	fmt.Println("sanguo-slg gm: platform wiring ok; subcommands lookup|grant|kick|mute|send-mail")
-	fmt.Println("smoke: see tools/smoke/README.md (INTG-028 TestINTG028Wave31SmokePath; INTG-027 TestINTG027Wave30SmokePath; INTG-026 TestINTG026Wave29SmokePath; INTG-009 TestINTG009Wave12SmokePath; INTG-008 TestINTG008Wave11SmokePath; INTG-007 TestINTG007M4DeepSmokePath; INTG-006 TestINTG006Data002SmokePath)")
+	fmt.Println("smoke: see tools/smoke/README.md (INTG-029 TestINTG029Wave32SmokePath; INTG-028 TestINTG028Wave31SmokePath; INTG-027 TestINTG027Wave30SmokePath; INTG-026 TestINTG026Wave29SmokePath; INTG-009 TestINTG009Wave12SmokePath; INTG-008 TestINTG008Wave11SmokePath; INTG-007 TestINTG007M4DeepSmokePath; INTG-006 TestINTG006Data002SmokePath)")
 }
 
 func usage() {
