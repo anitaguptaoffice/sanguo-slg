@@ -13,7 +13,6 @@ import {
   skinDailyPanel,
   skinDefaultPanel,
   skinGuildPanel,
-  skinHeroPanel,
   skinMailPanel,
   skinMarchIntelPanel,
   skinMilitaryPanel,
@@ -923,7 +922,7 @@ export class MainCityScene implements Scene {
     skinMarchIntelPanel(this.marchList.getRoot(), this.assets, 520, 320);
     skinBattleReportPanel(this.battleReports.getRoot(), this.assets, 520, 360);
     skinMilitaryPanel(this.queuePanels.getMilitarySectionRoot(), this.assets, 480, 160);
-    skinHeroPanel(this.heroMail.getHeroRoot(), this.assets, 520, 320);
+    this.heroMail.mountHeroPanelArtShell(this.assets);
     skinBagPanel(this.content.getBagRoot(), this.assets, 520, 320);
     skinShopPanel(this.content.getShopRoot(), this.assets, 520, 320);
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
@@ -931,7 +930,6 @@ export class MainCityScene implements Scene {
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
     registerArtFilter008EvidenceHooks(this.assets);
     remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
-    remountPanelFilterChips(this.heroMail.getHeroRoot(), this.assets);
     remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
     remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
     mountFilterListPanelSkins(this.heroMail.getMailRoot(), this.assets);

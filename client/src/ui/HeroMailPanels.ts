@@ -8,6 +8,10 @@ import {
   setFilterChipLabel,
   syncFilterChipAria,
 } from "@/engine/artFilterChipRuntime";
+import {
+  mountHeroPanelArtRuntime,
+  skimHeroPanelStateChrome,
+} from "@/engine/heroPanelArtMount";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
@@ -452,12 +456,22 @@ export class HeroMailPanels {
     remountPanelFilterChips(this.mailPanel, loader);
   }
 
+  /** CLIENT-230：`ui.panel.hero.v1` 壳挂载 + CLIENT-129 panelState 扫读。 */
+  mountHeroPanelArtShell(assets?: AssetLoader): void {
+    const loader = assets ?? this.assets;
+    if (!loader || !this.heroPanel) return;
+    mountHeroPanelArtRuntime(this.heroPanel, loader, 520, 320);
+    this.syncHeroListFilterChipDom(loader);
+    remountPanelFilterChips(this.heroPanel, loader);
+  }
+
   /** CLIENT-151：将领列表筛选 chip（CLIENT-121）；列表重绘时内部也会刷新。 */
   mountHeroListFilterSkins(assets?: AssetLoader): void {
     const loader = assets ?? this.assets;
     if (!loader || !this.heroPanel) return;
     this.syncHeroListFilterChipDom(loader);
     remountPanelFilterChips(this.heroPanel, loader);
+    skimHeroPanelStateChrome(this.heroPanel, loader);
   }
 
   getHeroRoot(): HTMLElement {
@@ -914,6 +928,7 @@ export class HeroMailPanels {
       }
     }
     syncListRovingTabindex(ul, "li[data-hero-id]");
+    skimHeroPanelStateChrome(this.heroPanel, this.assets);
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
