@@ -1833,6 +1833,21 @@
         margin-top: 2px;
         font-style: italic;
       }
+      .daily-quest-chain-queue-hud-residual-deep-subline {
+        display: block;
+        font-size: 10px;
+        color: #4a5f48;
+        margin-top: 2px;
+        font-style: italic;
+        opacity: 0.92;
+      }
+      @keyframes hud-todo-toolbar-deep-link-residual-deep-pulse-keyframes {
+        0%, 100% { outline: none; box-shadow: none; }
+        40% { outline: 2px solid #6a9a6a; outline-offset: 2px; box-shadow: 0 0 10px rgba(106, 154, 106, 0.45); }
+      }
+      .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-deep-pulse {
+        animation: hud-todo-toolbar-deep-link-residual-deep-pulse-keyframes 2s ease-out 1;
+      }
       .march-queue-banner {
         display: block;
         width: 100%;
@@ -3977,6 +3992,7 @@
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-backoff-retry,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-chain-type-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-chain-queue-hud-residual-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .daily-quest-chain-queue-hud-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="queue-open-daily-anchor"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
@@ -4079,8 +4095,11 @@
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deep-subline,
       #layout-frame.layout-narrow #hud .hud-todo-toolbar-deep-link-residual-pulse,
-      #layout-frame.layout-narrow .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-pulse {
+      #layout-frame.layout-narrow .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-pulse,
+      #layout-frame.layout-narrow #hud .hud-todo-toolbar-deep-link-residual-deep-pulse,
+      #layout-frame.layout-narrow .main-city-toolbar button.hud-todo-toolbar-deep-link-residual-deep-pulse {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }
       #layout-frame.layout-narrow .building-panel .panel-scroll-body,

@@ -127,6 +127,14 @@ export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_CLASS = "quest-chain-queue-h
 export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_PULSE_CLASS =
   "hud-todo-toolbar-deep-link-residual-pulse";
 
+/** CLIENT-266: daily chain + queue ETA HUD residual deep subline. */
+export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_CLASS =
+  "quest-chain-queue-hud-residual-deep-subline";
+
+/** CLIENT-266: HUD todo toolbar deep-link residual deep pulse (2s). */
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_CLASS =
+  "hud-todo-toolbar-deep-link-residual-deep-pulse";
+
 /** Wave:40 / wave:38 baselines that must not regress alongside wave:42 residuals. */
 export {
   DOMESTIC_SLOT_QUEUE_FOCUS_RING_CLASS,
@@ -156,7 +164,9 @@ export const RANK_PIN_KEEP_RESIDUAL_DEEP_RING_SELECTOR = `.content-panel[data-ce
 export const GUILD_DUTY_HEADER_RESIDUAL_LINE_SELECTOR = `.social-panel[data-center-panel="guild"] .${GUILD_DUTY_HEADER_RESIDUAL_LINE_CLASS}`;
 export const GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_SWEEP_SELECTOR = `.social-panel[data-center-panel="chat"] .chat-log li.${GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_SWEEP_CLASS}`;
 export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_SELECTOR = `.content-panel[data-center-panel="daily"] .daily-quest-list .${QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_CLASS}`;
+export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_SELECTOR = `.content-panel[data-center-panel="daily"] .daily-quest-list .${QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_CLASS}`;
 export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_PULSE_SELECTOR = `#layout-frame.layout-narrow #hud .${HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_PULSE_CLASS}, #layout-frame.layout-narrow .main-city-toolbar button.${HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_PULSE_CLASS}`;
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_SELECTOR = `#layout-frame.layout-narrow #hud .${HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_CLASS}, #layout-frame.layout-narrow .main-city-toolbar button.${HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEP_PULSE_CLASS}`;
 
 export const CLIENT_251_PANEL_ASSET_BY_CENTER_ID: Record<
   Client251NarrowManifestCenterPanelId,

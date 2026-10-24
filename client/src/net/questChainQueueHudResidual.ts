@@ -1,6 +1,7 @@
 import type { CityBuilding } from "@/net/bootstrapSession";
 import type { QuestRow } from "@/net/contentFormat";
 import { dailyQuestChainTabLabel } from "@/net/dailyQuestChainTab";
+import { formatQuestChainTypeSubline } from "@/net/questChainTypeSubline";
 import { formatDomesticQueueEtaSegmentLabel } from "@/net/domesticQueueEtaSegment";
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import { DAILY_QUEST_CHAIN_ID, type DailyQuestRow } from "@/net/dailyQuestState";
@@ -12,6 +13,12 @@ export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_CLASS =
   "daily-quest-chain-queue-hud-residual-subline";
 export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_SUBLINE_ROLE =
   "daily-quest-chain-queue-hud-residual-subline";
+
+/** CLIENT-266：可领日常行 chain·队列·HUD 深链巩固次行（CLIENT-250/218 **不退化**）。 */
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_CLASS =
+  "daily-quest-chain-queue-hud-residual-deep-subline";
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_ROLE =
+  "daily-quest-chain-queue-hud-residual-deep-subline";
 
 export function formatQuestChainQueueHudResidualQueueEtaSnippet(
   finishAtMs: number,
@@ -44,6 +51,59 @@ export function formatQuestChainQueueHudResidualSubline(
   if (!preview) return null;
   const eta = formatQuestChainQueueHudResidualQueueEtaSnippet(preview.finishAtMs, nowMs);
   return `${chainLabel} · ${eta}`;
+}
+
+/**
+ * 可领日常行：CLIENT-218 chain 类型次行 + CLIENT-250 队列下一完成 ETA 只读 **巩固** 深链次行。
+ */
+export function formatQuestChainQueueHudResidualDeepSubline(
+  q: DailyQuestRow,
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[] | undefined,
+  slotLabels: Record<string, string>,
+  dailyRows: QuestRow[],
+  nowMs = Date.now(),
+): string | null {
+  const residual = formatQuestChainQueueHudResidualSubline(
+    q,
+    buildings,
+    recruits,
+    slotLabels,
+    dailyRows,
+    nowMs,
+  );
+  if (!residual) return null;
+  const chainHint = formatQuestChainTypeSubline(q);
+  const eta = residual.includes(" · ")
+    ? residual.slice(residual.indexOf(" · ") + 3)
+    : residual;
+  if (chainHint) return `深链巩固 · ${chainHint} ↔ ${eta}`;
+  return `深链巩固 · ${residual}`;
+}
+
+export function appendQuestChainQueueHudResidualDeepSubline(
+  li: HTMLElement,
+  q: DailyQuestRow,
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[] | undefined,
+  slotLabels: Record<string, string>,
+  dailyRows: QuestRow[],
+  nowMs = Date.now(),
+): void {
+  const text = formatQuestChainQueueHudResidualDeepSubline(
+    q,
+    buildings,
+    recruits,
+    slotLabels,
+    dailyRows,
+    nowMs,
+  );
+  if (!text) return;
+  const span = document.createElement("span");
+  span.className = DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_CLASS;
+  span.setAttribute("data-role", DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEP_SUBLINE_ROLE);
+  span.textContent = text;
+  li.appendChild(span);
 }
 
 export function appendQuestChainQueueHudResidualSubline(
