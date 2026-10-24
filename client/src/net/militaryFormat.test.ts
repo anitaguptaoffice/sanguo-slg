@@ -9,11 +9,13 @@ import {
   filterBattleReportsByTimeWindow,
   findMostRecentBattleReportAtGrid,
   formatBattleReportDetail,
+  formatBattleReportCoordinateTag,
   formatBattleReportListPrimaryLine,
   formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
   formatBattleReportRoundSummaryStrip,
   formatBattleReportRowSummary,
+  formatBattleReportRowSummarySansCoord,
   formatCasualtyMap,
   formatMarchHint,
   formatMarchLine,
@@ -142,6 +144,13 @@ describe("militaryFormat", () => {
         [{ report_id: 9, outcome: 3 }],
       ),
     ).not.toContain("连胜");
+  });
+
+  it("formatBattleReportCoordinateTag matches formatReportCoord (CLIENT-223)", () => {
+    expect(
+      formatBattleReportCoordinateTag({ location_x: 8, location_y: 9 }),
+    ).toBe("坐标(8,9)");
+    expect(formatBattleReportRowSummarySansCoord({ outcome: 1 })).toBe("攻胜 · 攻:攻方 vs 守:守方");
   });
 
   it("formatBattleReportRowSummary lists outcome, sides, and coord (CLIENT-176)", () => {

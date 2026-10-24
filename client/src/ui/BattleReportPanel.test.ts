@@ -114,7 +114,7 @@ describe("BattleReportPanel", () => {
     const ul = mount.querySelector('[data-role="report-list"]');
     expect(ul?.querySelector(".battle-outcome-chip")?.textContent).toContain("守胜");
     expect(ul?.querySelector(".battle-report-row-secondary")?.textContent).toContain("守胜");
-    expect(ul?.querySelector(".battle-report-row-secondary")?.textContent).toContain("坐标(8,9)");
+    expect(ul?.querySelector(".report-list-intel-jump-tag")?.textContent).toContain("坐标(8,9)");
     mount.querySelector('li[data-report-id="2"]')?.dispatchEvent(
       new Event("click", { bubbles: true }),
     );
@@ -761,6 +761,37 @@ describe("BattleReportPanel", () => {
     const ul = mount.querySelector('[data-role="report-list"]');
     expect(ul?.textContent).toContain("无匹配战报");
     expect(mount.querySelector(".battle-report-filters")).toBeTruthy();
+  });
+
+  it("list coordinate tag invokes onListIntelJump without selecting report (CLIENT-223)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          {
+            report_id: 4,
+            outcome: 1,
+            created_at_ms: 0,
+            defender_player_id: 1,
+            location_x: 2,
+            location_y: 3,
+          },
+        ],
+        total: 1,
+      }),
+    } as unknown as GatewayPort;
+    const onListIntelJump = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, { onListIntelJump });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector(".report-list-intel-jump-tag")?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(onListIntelJump).toHaveBeenCalledWith(
+      expect.objectContaining({ report_id: 4, location_x: 2, location_y: 3 }),
+    );
+    expect(gateway.listBattleReports).toHaveBeenCalledTimes(1);
   });
 
   it("shows list row streak line on streak head (CLIENT-207)", async () => {

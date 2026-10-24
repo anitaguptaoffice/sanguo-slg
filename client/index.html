@@ -976,6 +976,17 @@
       }
       .battle-report-row-secondary {
         font-size: 12px; line-height: 1.35; color: #b8a88a;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      }
+      .report-list-intel-jump-tag {
+        flex: 0 0 auto; margin: 0; padding: 1px 6px; border-radius: 4px;
+        font-size: 12px; font-weight: 700; line-height: 1.35; letter-spacing: 0.02em;
+        color: #f0c674; background: rgba(42, 34, 28, 0.85); border: 1px solid #5a4a38;
+        cursor: pointer;
+      }
+      .report-list-intel-jump-tag:hover { border-color: #c9a86a; color: #ffe8a8; }
+      .report-list-intel-jump-tag:focus-visible {
+        outline: 2px solid #f0c674; outline-offset: 2px;
       }
       .battle-report-row-secondary .battle-report-row-coord {
         font-weight: 700; color: #f0c674; letter-spacing: 0.02em;
@@ -3211,6 +3222,7 @@
       #layout-frame.layout-narrow .military-panel .march-form-reserve-warn,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-time-filter-v1,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .battle-report-list-streak-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .report-list-intel-jump-tag,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-round-summary-strip,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-tab-unread-sweep-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar .mail-tab-hud-sync-pulse,
