@@ -344,7 +344,7 @@ export class MainCityScene implements Scene {
       <div class="toolbar-scroll" data-role="toolbar-scroll">
       <div class="toolbar-scroll-inner">
       <button type="button" data-action="upgrade-farm">升级农田</button>
-      <button type="button" data-action="refresh">刷新状态</button>
+      <button type="button" data-action="refresh" title="刷新状态">刷新</button>
       <button type="button" data-action="toggle-military" title="军事"><span class="toolbar-btn-label">军事</span></button>
       <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn"><span class="toolbar-btn-label">战报</span></button>
       <button type="button" data-action="toggle-marches">行军</button>

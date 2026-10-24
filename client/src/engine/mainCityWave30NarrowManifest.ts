@@ -7,10 +7,8 @@ import {
   PANEL_ASSET_RANK,
   PANEL_ASSET_SHOP,
 } from "@/engine/artPanelSkin";
-import {
-  DAILY_QUEST_PROGRESS_SECONDARY_CLASS,
-  PANEL_FILTER_CHIP_BAR_CLASS,
-} from "@/engine/filterListNarrowManifest";
+import { DAILY_QUEST_PROGRESS_SECONDARY_CLASS } from "@/engine/filterListNarrowManifest";
+import { PANEL_FILTER_CHIP_BAR_CLASS } from "@/engine/panelFilterChipBarClass";
 import { TOOLBAR_HEIGHT } from "@/engine/mainCitySlots";
 
 /** Bottom toolbar (56px) + focus-ring slack — same as CLIENT-127 / CLIENT-135 / CLIENT-145. */

@@ -8,7 +8,7 @@ import {
   PANEL_ASSET_SHOP,
   PANEL_ASSET_WORLD,
 } from "@/engine/artPanelSkin";
-import { PANEL_FILTER_CHIP_BAR_CLASS } from "@/engine/filterListNarrowManifest";
+import { PANEL_FILTER_CHIP_BAR_CLASS } from "@/engine/panelFilterChipBarClass";
 import { TOOLBAR_HEIGHT } from "@/engine/mainCitySlots";
 import {
   MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
@@ -53,13 +53,6 @@ export const HERO_UPGRADE_ITEM_GAP_SELECTOR = `[data-role="hero-upgrade-item-gap
 export const RECRUIT_WALLET_SWEEP_SECONDARY_CLASS = "recruit-afford-secondary";
 export const RECRUIT_COST_DEFICIT_CLASS = "recruit-cost-deficit";
 export { RECRUIT_SCROLL_ANCHOR_SESSION_KEY } from "@/net/recruitScrollAnchor";
-
-/** CLIENT-167: per-category settlement currency balance beside shop tabs. */
-export {
-  SHOP_TAB_CURRENCY_SWEEP_CLASS,
-  SHOP_TAB_CURRENCY_SWEEP_SELECTOR,
-  SHOP_PRICE_VS_WALLET_CLASS,
-} from "@/engine/mainCityWave30NarrowManifest";
 
 /** CLIENT-168: dual-board list row → hero detail deep link control. */
 export const RANK_OPEN_HERO_DETAIL_ACTION = "rank-view-hero";
@@ -130,3 +123,10 @@ export function queryClient171PanelRoot(
 export function mountClient171PanelSkins(_root: HTMLElement, _assets: AssetLoader): void {
   if (_root && isWave32MainCityBuildHeroShopDailyWorldArtSkinOff(_root)) return;
 }
+
+/** CLIENT-167: per-category settlement currency balance beside shop tabs. */
+export {
+  SHOP_TAB_CURRENCY_SWEEP_CLASS,
+  SHOP_TAB_CURRENCY_SWEEP_SELECTOR,
+  SHOP_PRICE_VS_WALLET_CLASS,
+} from "@/engine/mainCityWave30NarrowManifest";
