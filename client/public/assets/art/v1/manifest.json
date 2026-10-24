@@ -1409,6 +1409,144 @@
           "path": "textures/2x/ui/minimap_legend.png"
         }
       ]
+    },
+    {
+      "id": "ui.icon.toolbar.report.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_report.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_report.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.march.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_march.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_march.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.chat.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_chat.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_chat.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.legion.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_legion.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_legion.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.rank.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_rank.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_rank.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.icon.toolbar.task.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_toolbar_task.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_toolbar_task.png"
+        }
+      ]
     }
   ]
 }
