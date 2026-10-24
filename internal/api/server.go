@@ -125,6 +125,9 @@ func (s *Server) BindSession(sessionID string, serverID int32, playerID int64, a
 func (s *Server) SetClock(now clockFunc) {
 	if now != nil {
 		s.now = now
+		if s.heroSvc != nil {
+			s.heroSvc.SetClock(now)
+		}
 	}
 }
 

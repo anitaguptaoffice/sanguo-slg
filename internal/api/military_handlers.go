@@ -203,6 +203,8 @@ func (s *Server) mapMarchHeroErr(trace string, err error) *commonv1.ServerPacket
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrHeroNotIdle), errors.Is(err, hero.ErrHeroBusy):
 		return errResp(trace, commonv1.ErrorCode(50005), err.Error())
+	case errors.Is(err, hero.ErrInsufficientMarchForce):
+		return errResp(trace, commonv1.ErrorCode(50005), err.Error())
 	default:
 		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
 	}

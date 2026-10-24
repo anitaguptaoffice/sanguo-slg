@@ -47,6 +47,9 @@ func (s *Server) BindSessionForTest(sessionID string, pc PlayerContext) {
 // SetHeroServiceForTest wires an in-memory hero service (handler unit tests).
 func (s *Server) SetHeroServiceForTest(svc *hero.Service) {
 	s.heroSvc = svc
+	if svc != nil && s.now != nil {
+		svc.SetClock(s.now)
+	}
 }
 
 // SeedCityTroopsForTest sets in-city troop counts for gateway smoke tests (api_test).

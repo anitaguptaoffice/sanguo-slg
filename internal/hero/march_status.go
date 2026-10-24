@@ -23,6 +23,9 @@ func (s *Service) ClaimForMarch(ctx context.Context, p PlayerRef, heroID int64) 
 	if err := MustClearOfficeBeforeMarch(h); err != nil {
 		return err
 	}
+	if err := s.consumeMarchForceForMarch(ctx, p, h); err != nil {
+		return err
+	}
 	h.Status = StatusMarch
 	return s.Store.SaveHero(ctx, h)
 }

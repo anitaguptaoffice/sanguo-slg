@@ -34,6 +34,7 @@ const (
 	RouteCancelHeroExpr             = "hero.v1.CancelHeroExpr"
 	RouteFinishHeroExpr             = "hero.v1.FinishHeroExpr"
 	RouteFasterHeroExpr             = "hero.v1.FasterHeroExpr"
+	RouteRestHero                   = "hero.v1.RestHero"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -67,5 +68,6 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteCancelHeroExpr:             s.handleCancelHeroExpr,
 		RouteFinishHeroExpr:             s.handleFinishHeroExpr,
 		RouteFasterHeroExpr:             s.handleFasterHeroExpr,
+		RouteRestHero:                   s.handleRestHero,
 	}
 }

@@ -34,6 +34,7 @@ var (
 	ErrExprNotFound          = errors.New("hero: expr session not found")
 	ErrExprNotComplete       = errors.New("hero: expr not finished yet")
 	ErrInvalidExprHours      = errors.New("hero: invalid expr hours")
+	ErrInsufficientMarchForce = errors.New("hero: insufficient march force")
 )
 
 const (
