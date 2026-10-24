@@ -208,6 +208,41 @@ describe("MarchListPanel", () => {
     expect(onRemarchFromRow).toHaveBeenCalled();
   });
 
+  it("shows phase-eta strip and intel-row-phase-subline mutual highlight (CLIENT-205)", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 11,
+            phase: 2,
+            to_x: 1,
+            to_y: 2,
+            arrive_at_ms: Date.now() + 60_000,
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+
+    const row = mount.querySelector('.march-list li[data-march-id="11"]');
+    expect(row?.querySelector(".intel-row-phase-subline")?.textContent).toContain("行军中");
+
+    row!.click();
+    const strip = mount.querySelector(".march-intel-phase-eta-strip");
+    expect(strip?.textContent).toContain("行军中");
+    expect(strip?.classList.contains("march-intel-phase-eta-mutual-highlight")).toBe(true);
+    const rowAfter = mount.querySelector('.march-list li[data-march-id="11"]');
+    expect(
+      rowAfter?.querySelector(".intel-row-phase-subline")?.classList.contains(
+        "march-intel-phase-eta-mutual-highlight",
+      ),
+    ).toBe(true);
+  });
+
   it("march-info-card 复盘战报 uses report_id (CLIENT-191)", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({
