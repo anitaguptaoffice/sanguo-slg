@@ -352,6 +352,15 @@ import {
   type HeroLargessGiftMode,
 } from "@/net/heroDetailLargess";
 import {
+  applyUpgradeHeroToDetail,
+  formatHeroUpgradeGatewayErrorFromUnknown,
+  formatHeroUpgradeSuccessStatus,
+  renderHeroDetailUpgradeMarkup,
+  setHeroUpgradeFormErrorDisplay,
+  setHeroUpgradeSuccessDisplay,
+  syncHeroDetailUpgradeButton,
+} from "@/net/heroDetailUpgrade";
+import {
   formatBagUseGatewayErrorFromUnknown,
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
@@ -427,6 +436,7 @@ export class HeroMailPanels {
   private heroLargessItemCfgId: number | null = null;
   private heroLargessNextAtByHeroId = new Map<number, number>();
   private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
+  private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
   private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
 
@@ -1384,6 +1394,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "error", residualCtx());
       } else {
         const { bag, wallet } = this.sessionEconomy();
+        const upgradeHtml = renderHeroDetailUpgradeMarkup(this.heroUpgradeSubmitState, this.heroDetail);
         const cultivationHtml = renderHeroDetailCultivationUseMarkup(
           bag,
           this.heroCultivationSubmitState,
@@ -1403,6 +1414,7 @@ export class HeroMailPanels {
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
+          upgradeHtml,
           cultivationHtml + largessHtml,
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
@@ -2044,6 +2056,14 @@ export class HeroMailPanels {
     setHeroLargessSuccessDisplay(this.heroPanel, null);
   }
 
+  private resetHeroUpgradeSubmitFeedback(): void {
+    this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    setHeroUpgradeFormErrorDisplay(this.heroPanel, null);
+    setHeroUpgradeSuccessDisplay(this.heroPanel, null);
+  }
+
   private getHeroLargessNextAtMs(): number | null {
     const heroId = this.selectedHeroId;
     if (!heroId) return null;
@@ -2147,6 +2167,7 @@ export class HeroMailPanels {
     if (!opts?.skipListSelectionWrite) this.persistHeroListSelectedFromListView(heroId);
     this.resetHeroCultivationSubmitFeedback();
     this.resetHeroLargessSubmitFeedback();
+    this.resetHeroUpgradeSubmitFeedback();
     this.heroDetailLoading = true;
     this.heroDetailError = null;
     this.renderHeroList();
@@ -2164,6 +2185,46 @@ export class HeroMailPanels {
     } finally {
       this.heroDetailLoading = false;
       this.renderHeroList();
+    }
+  }
+
+  private async upgradeSelectedHero(): Promise<void> {
+    if (this.heroUpgradeSubmitState === "submitting" || !this.selectedHeroId) return;
+    const heroId = this.selectedHeroId;
+    const detailBefore = this.heroDetail;
+    this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
+      type: "SUBMIT",
+    });
+    setHeroUpgradeFormErrorDisplay(this.heroPanel, null);
+    setHeroUpgradeSuccessDisplay(this.heroPanel, null);
+    syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
+    const sid = this.serverId();
+    this.onStatus("将领升级…");
+    try {
+      const res = await this.gateway.upgradeHero(sid, heroId);
+      const detailAfter = applyUpgradeHeroToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
+        type: "SUCCESS",
+      });
+      this.renderHeroList();
+      const statusText = formatHeroUpgradeSuccessStatus(detailBefore, detailAfter);
+      setHeroUpgradeSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
+        type: "FAIL",
+      });
+      const msg = formatHeroUpgradeGatewayErrorFromUnknown(e);
+      setHeroUpgradeFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
     }
   }
 
@@ -2890,6 +2951,7 @@ export class HeroMailPanels {
     if (a === "recruit-goto-bag-item-gap") void this.openRecruitItemGapBagDeepLink(btn);
     if (a === "hero-use-cultivation-item") void this.useHeroCultivationItem();
     if (a === "hero-largess-submit") void this.submitHeroLargess();
+    if (a === "hero-upgrade") void this.upgradeSelectedHero();
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {

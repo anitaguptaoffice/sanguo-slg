@@ -61,10 +61,15 @@ describe("heroMailState", () => {
       loyalty: 90,
       loyalty_min: 0,
       loyalty_max: 100,
+      exp: 1200,
+      exp_toward_next: 50,
+      upgrade_exp_required: 700,
       attributes: { force: 95, intel: 75, politics: 60, command: 88 },
     });
     expect(detail.template_name).toBe("云长");
     expect(detail.rarity).toBe(5);
+    expect(detail.exp_current).toBe(50);
+    expect(detail.exp_to_next).toBe(700);
     expect(detail.attributes?.force).toBe(95);
     const text = formatHeroDetail(detail);
     expect(text).toContain("云长");
@@ -308,6 +313,7 @@ describe("heroMailState", () => {
       },
       "",
       null,
+      "",
       "",
       [{ item_cfg_id: 2017, quantity: 2 }],
     );

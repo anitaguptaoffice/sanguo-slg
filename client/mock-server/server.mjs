@@ -216,14 +216,14 @@ function applyEvidencePreset(state, preset) {
   }
   if (preset === "hero-panel-roster") {
     state.heroes = [
-      { hero_id: 8001, template_cfg_id: 1001, level: 12, loyalty: 88 },
-      { hero_id: 8002, template_cfg_id: 1002, level: 8, loyalty: 72 },
-      { hero_id: 8003, template_cfg_id: 1003, level: 6, loyalty: 80 },
-      { hero_id: 8004, template_cfg_id: 1004, level: 5, loyalty: 70 },
-      { hero_id: 8005, template_cfg_id: 1005, level: 10, loyalty: 85 },
-      { hero_id: 8006, template_cfg_id: 1006, level: 7, loyalty: 78 },
-      { hero_id: 8007, template_cfg_id: 1007, level: 15, loyalty: 92 },
-      { hero_id: 8008, template_cfg_id: 1008, level: 11, loyalty: 81 },
+      { hero_id: 8001, template_cfg_id: 1001, level: 12, loyalty: 88, exp: 5000 },
+      { hero_id: 8002, template_cfg_id: 1002, level: 8, loyalty: 72, exp: 5000 },
+      { hero_id: 8003, template_cfg_id: 1003, level: 6, loyalty: 80, exp: 5000 },
+      { hero_id: 8004, template_cfg_id: 1004, level: 5, loyalty: 70, exp: 5000 },
+      { hero_id: 8005, template_cfg_id: 1005, level: 10, loyalty: 85, exp: 5000 },
+      { hero_id: 8006, template_cfg_id: 1006, level: 7, loyalty: 78, exp: 5000 },
+      { hero_id: 8007, template_cfg_id: 1007, level: 15, loyalty: 92, exp: 5000 },
+      { hero_id: 8008, template_cfg_id: 1008, level: 11, loyalty: 81, exp: 5000 },
     ];
     return;
   }
@@ -371,6 +371,21 @@ const LARGESS_ITEM_GAIN = {
   2057: 50,
   2058: 60,
 };
+const HERO_MOCK_MAX_LEVEL = 20;
+
+function mockHeroUpgradeExpRequired(level) {
+  if (level >= HERO_MOCK_MAX_LEVEL) return 0;
+  return 100 * level;
+}
+
+function mockHeroExpTowardNext(row) {
+  const level = row.level ?? 1;
+  const req = mockHeroUpgradeExpRequired(level);
+  if (req <= 0) return 0;
+  const pool = row.exp ?? 0;
+  if (pool >= req) return req;
+  return pool;
+}
 
 function mockHeroDetailPayload(row) {
   const meta =
@@ -380,6 +395,8 @@ function mockHeroDetailPayload(row) {
     };
   const level = row.level ?? 1;
   const loyalty = row.loyalty ?? 50;
+  const upgradeExpRequired = mockHeroUpgradeExpRequired(level);
+  const expTowardNext = mockHeroExpTowardNext(row);
   return {
     hero_id: row.hero_id,
     template_cfg_id: row.template_cfg_id,
@@ -390,6 +407,9 @@ function mockHeroDetailPayload(row) {
     loyalty,
     loyalty_min: 0,
     loyalty_max: 100,
+    exp: row.exp ?? 0,
+    exp_toward_next: expTowardNext,
+    upgrade_exp_required: upgradeExpRequired,
     attributes: {
       force: 62 + level,
       intel: 58 + Math.floor(level / 2),
@@ -1038,6 +1058,41 @@ wss.on("connection", (ws) => {
         return;
       }
 
+      if (route === "hero.v1.UpgradeHero") {
+        const req = T("sanguo.hero.v1.UpgradeHeroRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        const level = h.level ?? 1;
+        if (level >= HERO_MOCK_MAX_LEVEL) {
+          reply(ws, cp.trace_id, 10001, "hero: max level reached");
+          return;
+        }
+        const cost = mockHeroUpgradeExpRequired(level);
+        const toward = mockHeroExpTowardNext(h);
+        if (toward < cost) {
+          reply(ws, cp.trace_id, 10001, "hero: insufficient exp");
+          return;
+        }
+        const prev = level;
+        h.level = prev + 1;
+        h.exp = (h.exp ?? 0) + (cost - toward);
+        const detail = mockHeroDetailPayload(h);
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.UpgradeHeroResponse"), {
+          hero_id: h.hero_id,
+          level: h.level,
+          exp: h.exp ?? 0,
+          previous_level: prev,
+          exp_toward_next: detail.exp_toward_next,
+          upgrade_exp_required: detail.upgrade_exp_required,
+          attributes: detail.attributes,
+        });
+        return;
+      }
+
       if (route === "hero.v1.RecruitHero") {
         const req = T("sanguo.hero.v1.RecruitHeroRequest").decode(cp.payload);
         const scrollId = req.item_cfg_id || 2004;
@@ -1053,6 +1108,7 @@ wss.on("connection", (ws) => {
           template_cfg_id: req.template_cfg_id || 1001,
           level: 1,
           loyalty: 100,
+          exp: 5000,
         };
         state.heroes.push(row);
         replyOk(ws, cp.trace_id, T("sanguo.hero.v1.RecruitHeroResponse"), row);

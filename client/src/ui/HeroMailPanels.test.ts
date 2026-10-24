@@ -1073,6 +1073,81 @@ describe("HeroMailPanels", () => {
     expect(nextAtByCall.length).toBe(1);
   });
 
+  it("hero detail upgrade calls UpgradeHero, updates level/exp, and shows success", async () => {
+    const mount = document.createElement("div");
+    let level = 2;
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level, loyalty: 80 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockImplementation(async () => ({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level,
+        loyalty: 80,
+        exp_toward_next: 150,
+        upgrade_exp_required: 100,
+      })),
+      upgradeHero: vi.fn().mockImplementation(async () => {
+        level = 3;
+        return {
+          hero_id: 3,
+          level: 3,
+          previous_level: 2,
+          exp: 200,
+          exp_toward_next: 0,
+          upgrade_exp_required: 300,
+        };
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const onStatus = vi.fn();
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, onStatus);
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const upgradeBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-upgrade"]');
+    expect(upgradeBtn?.disabled).toBe(false);
+    upgradeBtn?.click();
+    await flushPromises();
+    expect(gateway.upgradeHero).toHaveBeenCalledWith(1, 3);
+    expect(mount.querySelector('[data-role="hero-upgrade-success"]')?.textContent).toContain("Lv2→Lv3");
+    expect(mount.querySelector(".hero-detail-level")?.textContent).toBe("Lv3");
+    expect(mount.querySelector('li[data-hero-id="3"]')?.textContent).toContain("Lv3");
+  });
+
+  it("hero upgrade at max level disables button with reason", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 3, template_cfg_id: 1001, level: 20, loyalty: 80 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        level: 20,
+        exp_toward_next: 0,
+        upgrade_exp_required: 0,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const upgradeBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-upgrade"]');
+    expect(upgradeBtn?.disabled).toBe(true);
+    expect(mount.querySelector('[data-role="hero-upgrade-disabled-reason"]')?.textContent).toMatch(/上限/);
+  });
+
   it("disables hero cultivation use when bag lacks consumables", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
