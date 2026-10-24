@@ -1,8 +1,8 @@
 {
   "task": "ART-UI-FILTER-008",
-  "client_task": "CLIENT-136",
-  "tip_sha": "84e926edeac829716bd90ad37086c10c82299599",
-  "captured_at": "2026-10-24T00:33:10.343Z",
+  "client_task": "CLIENT-137",
+  "tip_sha": "747c050574525ecddda3f2ef4bc8bf9631464b0c",
+  "captured_at": "2026-10-24T01:15:59.046Z",
   "note": "Full-viewport runtime evidence; chip sprite/click probes; not art-board static PASS.",
   "panels": {
     "mail": {
@@ -12,7 +12,7 @@
         "1600x900": {
           "file": "mail-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 435452,
+          "bytes": 435718,
           "viewport": {
             "tag": "1600x900",
             "width": 1600,
@@ -23,7 +23,7 @@
         "3200x1800": {
           "file": "mail-filters-3200x1800.jpg",
           "quality": 72,
-          "bytes": 928141,
+          "bytes": 925137,
           "viewport": {
             "tag": "3200x1800",
             "width": 1600,
@@ -34,7 +34,7 @@
         "1280x720": {
           "file": "mail-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 249554,
+          "bytes": 248727,
           "viewport": {
             "tag": "1280x720",
             "width": 1280,
@@ -84,6 +84,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -91,6 +93,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "selected"
               },
               {
@@ -129,6 +158,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -136,11 +167,58 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               }
             ],
             "adjacentHitOverlaps": []
           },
+          "chipClicks": [
+            {
+              "index": 0,
+              "edge": "left",
+              "elementFromPoint": {
+                "topTag": "BUTTON",
+                "hitsChip": true
+              },
+              "clickDispatched": true
+            },
+            {
+              "index": 1,
+              "edge": "left",
+              "elementFromPoint": {
+                "topTag": "BUTTON",
+                "hitsChip": true
+              },
+              "clickDispatched": true
+            }
+          ],
           "badges": {
             "badgeCount": 3,
             "badges": [
@@ -187,25 +265,21 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 95,
+              "height": 69,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             },
             {
               "index": 1,
               "skinned": true,
               "rowState": "default",
-              "height": 67,
+              "height": 69,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
-            },
-            {
-              "index": 2,
-              "skinned": true,
-              "rowState": "default",
-              "height": 67,
-              "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             }
           ]
         },
@@ -249,6 +323,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -256,6 +332,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "selected"
               },
               {
@@ -294,6 +397,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -301,11 +406,58 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               }
             ],
             "adjacentHitOverlaps": []
           },
+          "chipClicks": [
+            {
+              "index": 0,
+              "edge": "left",
+              "elementFromPoint": {
+                "topTag": "BUTTON",
+                "hitsChip": true
+              },
+              "clickDispatched": true
+            },
+            {
+              "index": 1,
+              "edge": "left",
+              "elementFromPoint": {
+                "topTag": "BUTTON",
+                "hitsChip": true
+              },
+              "clickDispatched": true
+            }
+          ],
           "badges": {
             "badgeCount": 3,
             "badges": [
@@ -352,25 +504,21 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 96,
+              "height": 69,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             },
             {
               "index": 1,
               "skinned": true,
               "rowState": "default",
-              "height": 67,
+              "height": 69,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
-            },
-            {
-              "index": 2,
-              "skinned": true,
-              "rowState": "default",
-              "height": 67,
-              "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             }
           ]
         },
@@ -414,6 +562,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -421,6 +571,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "selected"
               },
               {
@@ -459,6 +636,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -466,11 +645,58 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               }
             ],
             "adjacentHitOverlaps": []
           },
+          "chipClicks": [
+            {
+              "index": 0,
+              "edge": "left",
+              "elementFromPoint": {
+                "topTag": "BUTTON",
+                "hitsChip": true
+              },
+              "clickDispatched": true
+            },
+            {
+              "index": 1,
+              "edge": "left",
+              "elementFromPoint": {
+                "topTag": "BUTTON",
+                "hitsChip": true
+              },
+              "clickDispatched": true
+            }
+          ],
           "badges": {
             "badgeCount": 3,
             "badges": [
@@ -517,25 +743,21 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 95,
+              "height": 69,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             },
             {
               "index": 1,
               "skinned": true,
               "rowState": "default",
-              "height": 67,
+              "height": 69,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
-            },
-            {
-              "index": 2,
-              "skinned": true,
-              "rowState": "default",
-              "height": 67,
-              "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             }
           ]
         }
@@ -548,7 +770,7 @@
         "1600x900": {
           "file": "daily-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 434800,
+          "bytes": 432613,
           "viewport": {
             "tag": "1600x900",
             "width": 1600,
@@ -558,8 +780,8 @@
         },
         "3200x1800": {
           "file": "daily-filters-3200x1800.jpg",
-          "quality": 72,
-          "bytes": 926056,
+          "quality": 76,
+          "bytes": 992761,
           "viewport": {
             "tag": "3200x1800",
             "width": 1600,
@@ -570,7 +792,7 @@
         "1280x720": {
           "file": "daily-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 249156,
+          "bytes": 247285,
           "viewport": {
             "tag": "1280x720",
             "width": 1280,
@@ -620,6 +842,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -627,6 +851,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "selected"
               },
               {
@@ -665,6 +916,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -672,6 +925,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               },
               {
@@ -710,6 +990,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -717,6 +999,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               },
               {
@@ -755,6 +1064,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -762,11 +1073,39 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               }
             ],
             "adjacentHitOverlaps": []
           },
+          "chipClicks": [],
           "badges": {
             "badgeCount": 1,
             "badges": [
@@ -789,9 +1128,11 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 50,
+              "height": 40,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             }
           ]
         },
@@ -835,6 +1176,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -842,6 +1185,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "selected"
               },
               {
@@ -880,6 +1250,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -887,6 +1259,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               },
               {
@@ -925,6 +1324,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -932,6 +1333,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               },
               {
@@ -970,6 +1398,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -977,11 +1407,39 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               }
             ],
             "adjacentHitOverlaps": []
           },
+          "chipClicks": [],
           "badges": {
             "badgeCount": 1,
             "badges": [
@@ -1004,9 +1462,11 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 50,
+              "height": 40,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             }
           ]
         },
@@ -1050,6 +1510,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -1057,6 +1519,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "selected"
               },
               {
@@ -1095,6 +1584,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -1102,6 +1593,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               },
               {
@@ -1140,6 +1658,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -1147,6 +1667,33 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               },
               {
@@ -1185,6 +1732,8 @@
                     "h": 32
                   },
                   "visibleIntersectionArea": 2304,
+                  "buttonSpriteIntersectionArea": 2304,
+                  "containerVisibleIntersectionArea": 2304,
                   "spriteArea": 2304,
                   "intersectionCoversSprite": true
                 },
@@ -1192,11 +1741,39 @@
                   "centerHitsChip": true,
                   "topTag": "BUTTON"
                 },
+                "edgeHits": [
+                  {
+                    "edge": "center",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "left",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "right",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "top",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  },
+                  {
+                    "edge": "bottom",
+                    "hitsChip": true,
+                    "topTag": "BUTTON"
+                  }
+                ],
                 "filterChipState": "normal"
               }
             ],
             "adjacentHitOverlaps": []
           },
+          "chipClicks": [],
           "badges": {
             "badgeCount": 1,
             "badges": [
@@ -1219,9 +1796,11 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 50,
+              "height": 40,
+              "skinBarHeight": 40,
+              "skinBarHeightExact": true,
               "color": "rgb(61, 46, 31)",
-              "minHeightCss": "40px"
+              "minHeightCss": "0px"
             }
           ]
         }
@@ -1231,46 +1810,65 @@
   "chipStates": {
     "file": "mail-chips-four-states-1600x900.jpg",
     "quality": 88,
-    "bytes": 421674,
+    "bytes": 424366,
     "states": [
       {
         "state": "normal",
-        "action": "mail-filter-all",
-        "filterChipState": "normal"
+        "missing": false,
+        "filterChipState": "normal",
+        "stateMatches": true,
+        "hasSpriteAsset": true
       },
       {
         "state": "hover",
-        "action": "mail-filter-unread",
-        "filterChipState": "hover"
+        "missing": false,
+        "filterChipState": "hover",
+        "stateMatches": true,
+        "hasSpriteAsset": true
       },
       {
         "state": "pressed",
-        "missing": true
+        "missing": false,
+        "filterChipState": "pressed",
+        "stateMatches": true,
+        "hasSpriteAsset": true
       },
       {
         "state": "selected",
-        "missing": true
+        "missing": false,
+        "filterChipState": "selected",
+        "stateMatches": true,
+        "hasSpriteAsset": true
       }
     ]
   },
   "rowStates": {
     "file": "mail-rows-three-states-1600x900.jpg",
     "quality": 88,
-    "bytes": 435554,
+    "bytes": 451069,
     "rows": [
       {
         "state": "default",
-        "height": 95,
+        "missing": false,
+        "height": 69,
+        "skinBarHeight": 40,
+        "skinBarHeightExact": true,
         "skinned": true
       },
       {
         "state": "hover",
-        "height": 67,
+        "missing": false,
+        "height": 69,
+        "skinBarHeight": 40,
+        "skinBarHeightExact": true,
         "skinned": true
       },
       {
         "state": "selected",
-        "height": 67,
+        "missing": false,
+        "height": 69,
+        "skinBarHeight": 40,
+        "skinBarHeightExact": true,
         "skinned": true
       }
     ]
@@ -1278,7 +1876,7 @@
   "badgeNine": {
     "file": "mail-badge-count-nine-1600x900.jpg",
     "quality": 88,
-    "bytes": 433483,
+    "bytes": 432997,
     "badges": {
       "badgeCount": 2,
       "badges": [
@@ -1309,6 +1907,40 @@
       ]
     }
   },
+  "badgeCountNine": {
+    "file": "mail-badge-count-exact-nine-1600x900.jpg",
+    "quality": 88,
+    "bytes": 432318,
+    "badges": {
+      "badgeCount": 2,
+      "badges": [
+        {
+          "role": "mail-filter-all-count",
+          "filterBadgeCount": 0,
+          "labelText": "",
+          "hiddenAttr": true,
+          "hasHiddenClass": true,
+          "display": "none",
+          "rect": {
+            "width": 0,
+            "height": 0
+          }
+        },
+        {
+          "role": "mail-filter-unread-count",
+          "filterBadgeCount": 9,
+          "labelText": "9",
+          "hiddenAttr": false,
+          "hasHiddenClass": false,
+          "display": "block",
+          "rect": {
+            "width": 20,
+            "height": 16
+          }
+        }
+      ]
+    }
+  },
   "summary": {
     "chipRows": [
       {
@@ -1320,7 +1952,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "mail",
@@ -1331,7 +1964,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "mail",
@@ -1342,7 +1976,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "mail",
@@ -1353,7 +1988,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "mail",
@@ -1364,7 +2000,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "mail",
@@ -1375,7 +2012,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1386,7 +2024,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1397,7 +2036,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1408,7 +2048,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1419,7 +2060,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1430,7 +2072,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1441,7 +2084,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1452,7 +2096,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1463,7 +2108,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1474,7 +2120,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1485,7 +2132,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1496,7 +2144,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       },
       {
         "panel": "daily",
@@ -1507,7 +2156,8 @@
         "h": 44,
         "spriteInside": true,
         "overlapFree": true,
-        "centerHits": true
+        "centerHits": true,
+        "edgeHitsOk": true
       }
     ],
     "badgeRows": [
@@ -1600,15 +2250,20 @@
     "spritePass": true,
     "overlapPass": true,
     "fromPointPass": true,
+    "edgeHitPass": true,
+    "chipClickPass": true,
     "labelColorPass": true,
     "rowHeightPass": true,
-    "badgeNinePass": true,
+    "chipStatesPass": true,
+    "rowStatesPass": true,
+    "badgeNinePlusPass": true,
+    "badgeCountNinePass": true,
     "overall": true
   },
   "jpegVerify": [
     {
       "file": "mail-filters-1600x900.jpg",
-      "bytes": 435452,
+      "bytes": 435718,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -1616,7 +2271,7 @@
     },
     {
       "file": "mail-filters-3200x1800.jpg",
-      "bytes": 928141,
+      "bytes": 925137,
       "width": 3200,
       "height": 1800,
       "under1mb": true,
@@ -1624,7 +2279,7 @@
     },
     {
       "file": "mail-filters-1280x720.jpg",
-      "bytes": 249554,
+      "bytes": 248727,
       "width": 1280,
       "height": 720,
       "under1mb": true,
@@ -1632,7 +2287,7 @@
     },
     {
       "file": "daily-filters-1600x900.jpg",
-      "bytes": 434800,
+      "bytes": 432613,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -1640,7 +2295,7 @@
     },
     {
       "file": "daily-filters-3200x1800.jpg",
-      "bytes": 926056,
+      "bytes": 992761,
       "width": 3200,
       "height": 1800,
       "under1mb": true,
@@ -1648,7 +2303,7 @@
     },
     {
       "file": "daily-filters-1280x720.jpg",
-      "bytes": 249156,
+      "bytes": 247285,
       "width": 1280,
       "height": 720,
       "under1mb": true,
@@ -1656,7 +2311,7 @@
     },
     {
       "file": "mail-chips-four-states-1600x900.jpg",
-      "bytes": 421674,
+      "bytes": 424366,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -1664,7 +2319,7 @@
     },
     {
       "file": "mail-rows-three-states-1600x900.jpg",
-      "bytes": 435554,
+      "bytes": 451069,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -1672,7 +2327,15 @@
     },
     {
       "file": "mail-badge-count-nine-1600x900.jpg",
-      "bytes": 433483,
+      "bytes": 432997,
+      "width": 1600,
+      "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-badge-count-exact-nine-1600x900.jpg",
+      "bytes": 432318,
       "width": 1600,
       "height": 900,
       "under1mb": true,

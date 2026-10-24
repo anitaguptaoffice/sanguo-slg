@@ -5,8 +5,11 @@ import {
   clearMarchTargetFromForm,
   clearMarchTargetSession,
   parseMarchTargetSessionValue,
+  readMarchTargetFromForm,
   readMarchTargetSession,
+  resolveMarchTargetTruth,
   restoreMarchTargetToForm,
+  syncMarchTargetSessionFromForm,
   writeMarchTargetSession,
 } from "@/net/marchTargetMemory";
 
@@ -72,6 +75,21 @@ describe("marchTargetMemory", () => {
     const restored = restoreMarchTargetToForm(root, { x: 5, y: 5 }, storage);
     expect(restored).toEqual({ x: 99, y: 88 });
     expect((root.querySelector('[data-field="to-x"]') as HTMLInputElement).value).toBe("99");
+  });
+
+  it("resolveMarchTargetTruth prefers session over stale form fields", () => {
+    writeMarchTargetSession(22, 33, storage);
+    const root = document.createElement("div");
+    root.innerHTML = `<input data-field="to-x" value="0" /><input data-field="to-y" value="0" />`;
+    expect(resolveMarchTargetTruth(root, storage)).toEqual({ x: 22, y: 33 });
+    expect(readMarchTargetFromForm(root)).toEqual({ x: 0, y: 0 });
+  });
+
+  it("syncMarchTargetSessionFromForm aligns session with form", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `<input data-field="to-x" value="41" /><input data-field="to-y" value="42" />`;
+    expect(syncMarchTargetSessionFromForm(root, storage)).toEqual({ x: 41, y: 42 });
+    expect(readMarchTargetSession(storage)).toEqual({ x: 41, y: 42 });
   });
 
   it("clearMarchTargetFromForm removes session and resets inputs", () => {

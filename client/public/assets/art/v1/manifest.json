@@ -1363,6 +1363,52 @@
           "path": "textures/2x/ui/panel_error.png"
         }
       ]
+    },
+    {
+      "id": "ui.minimap.dest.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 14,
+        "h": 14
+      },
+      "anchor": {
+        "x": 7,
+        "y": 7
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/minimap_dest.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/minimap_dest.png"
+        }
+      ]
+    },
+    {
+      "id": "ui.minimap.legend.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 240,
+        "h": 14
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/minimap_legend.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/minimap_legend.png"
+        }
+      ]
     }
   ]
 }
