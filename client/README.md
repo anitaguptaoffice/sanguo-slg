@@ -534,6 +534,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **军情/战报/邮件/背包/日常/军事** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:33 DOM 钩子（软依赖 **CLIENT-172～178**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171** manifest 不退化。
 
+## Wave 35 H5 世界小地图军情互链巩固·战报 outcome 复盘导航·邮件日常领取·背包商城货币扫读·1280组合manifest（M4 出口 / INTG-032）
+
+在 wave:34 主城/将领/社交栈收口后 **轮转**回世界读图栈：**小地图选点 ↔ 格点信息卡** 双向焦点互链（**CLIENT-188**）、军情列表与出征表单坐标高亮（**CLIENT-189**）等；**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / CancelMarch / 募兵加速 / 花钱 IAP / 新商城 SKU；**世界瓦片/图集**仍暂缓。
+
+- **wave:35（CLIENT-188）小地图格点互链**：小地图选点后 **`world-tile-info-card`** 展示坐标与城池/空地只读摘要（CLIENT-170 口径）；信息卡非按钮点击反向 **`minimap-focus-pulse`** 2s 高亮选点（CLIENT-139 互链不退化）；军情选中行军终点同步小地图 **`minimap-march-end-highlight`**（与 CLIENT-172 信息卡可叠加，无新 world RPC）。单测：`minimapTileFocusLink.test.ts`（`syncMinimapFocusFromTileCard` / `highlightMinimapMarchEnd`）；`cd client && npm test` 绿。
+
 ## Wave 34 H5 主城七槽队列互链巩固·将领列表招募执行反馈·双榜军团聊天扫读·HUD产出待办深链·1280组合manifest（M4 出口 / INTG-031）
 
 在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-031** 网关冒烟一致）。**范围外**同 Wave 33；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649) / [#674](https://github.com/anitaguptaoffice/sanguo-slg/pull/674)）。

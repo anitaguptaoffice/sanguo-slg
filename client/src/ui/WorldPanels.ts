@@ -35,6 +35,7 @@ import {
   formatWorldTileInfoSecondary,
   formatWorldTileOccupationSummary,
 } from "@/ui/worldTileInfoCard";
+import { WORLD_TILE_INFO_CARD_CLASS } from "@/ui/minimapTileFocusLink";
 import {
   applyWorldTileFocusPulse,
   shouldPulseWorldTileFocusOnSelect,
@@ -199,7 +200,7 @@ export class WorldPanels {
     el.innerHTML = `
       <h3>世界</h3>
       <p class="world-panel-hint" data-role="world-hint">玩家城池与坐标（非大地图）；点选可将坐标填入出征目标，并在下方信息卡扫读格点上下文。</p>
-      <aside class="world-tile-info hidden" data-role="world-tile-info" aria-live="polite">
+      <aside class="world-tile-info ${WORLD_TILE_INFO_CARD_CLASS} hidden" data-role="world-tile-info" aria-live="polite">
         <h4>格点信息</h4>
         <p class="world-tile-info-state hidden" data-role="world-tile-info-state"></p>
         <div data-role="world-tile-info-body">
