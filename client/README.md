@@ -766,6 +766,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/排行/军团/聊天/日常** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:42 DOM 钩子（软依赖 **CLIENT-244～250**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227/235/243** manifest 不退化。单测：`wave42MainCityHeroDailySocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-251）；`cd client && npm test` 绿。（[#920](https://github.com/anitaguptaoffice/sanguo-slg/issues/920) / [#936](https://github.com/anitaguptaoffice/sanguo-slg/pull/936) `0928260b`）
 
+## Wave 43 H5 世界小地图军情 scroll-sync 残余·出征兵力余量·战报键盘坐标·邮件 HUD·背包商城·排行招募·军情 phase 再出征·1280 组合 manifest（M4 出口 / INTG-040）
+
+在 wave:42 主城/将领/队列栈 **轮转**回世界/军情/战报/邮件/商城/排行栈后的残余加深；**非** wave:39 双向高亮环 / phase 脉冲主叙事重复堆叠。**范围外**同 Wave 42；基线 main tip **`0dab7176596b255fcccb1b5c970655c86407ed28`**（wave:43 backlog [#944](https://github.com/anitaguptaoffice/sanguo-slg/pull/944)）。
+
+**wave:43（CLIENT-252）小地图视口锚点与军情列表 scroll-sync 残余巩固**：军情行变更时 **`syncMinimapViewportIntelScrollResidual`** 在 **CLIENT-236** `syncMinimapViewportToIntelRow` 视口锚点与列表滚入基础上，叠加 **`minimap-intel-scroll-sync-deep-ring` 1.2s**（**CLIENT-220** `minimap-intel-sync-ring` / **CLIENT-138/090** 互选 **不退化**；**非** wave:39 phase 脉冲主叙事）；格点信息卡 **`formatWorldTileIntelEtaCrossResidualLine`** / `world-tile-intel-eta-cross-residual-line` 与军情 **`march-intel-phase-eta-strip`** **`march-intel-eta-cross-residual-pulse` 1.2s** 只读对照（**CLIENT-237** `formatWorldTileIntelEtaResidualLine` / `world-tile-intel-eta-residual-ring` **不退化**；**无**新 world RPC）。单测：`minimapViewportIntelScrollResidual.test.ts`、`worldTileIntelEtaCrossResidual.test.ts`；`cd client && npm test` 绿。
+
 ## Wave 41 H5 世界小地图视口军情残余·出征表单反馈·战报密度键盘·邮件 HUD 同步·背包商城排行招募扫读·1280 组合 manifest（M4 出口 / INTG-038）
 
 | 能力 | 文档锚点 | 状态 |

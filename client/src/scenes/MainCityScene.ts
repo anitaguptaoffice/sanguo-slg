@@ -256,9 +256,13 @@ import {
 import {
   createMinimapViewportIntelSyncTimers,
   scrollIntelListToVisibleMarch,
-  syncMinimapViewportToIntelRow,
   type MinimapViewportIntelSyncTimers,
 } from "@/net/minimapViewportIntelSync";
+import {
+  createMinimapViewportIntelScrollResidualTimers,
+  syncMinimapViewportIntelScrollResidual,
+  type MinimapViewportIntelScrollResidualTimers,
+} from "@/net/minimapViewportIntelScrollResidual";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -416,6 +420,8 @@ export class MainCityScene implements Scene {
     createMinimapIntelSyncTimers();
   private readonly minimapViewportIntelSyncTimers: MinimapViewportIntelSyncTimers =
     createMinimapViewportIntelSyncTimers();
+  private readonly minimapViewportIntelScrollResidualTimers: MinimapViewportIntelScrollResidualTimers =
+    createMinimapViewportIntelScrollResidualTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -1628,14 +1634,18 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportToIntelRow(
+    const synced = syncMinimapViewportIntelScrollResidual(
       {
         march,
         bounds,
         currentView: this.minimapView,
         layoutFrame: this.layoutFrame,
+        intelRoot: this.marchList.getRoot(),
       },
-      { timers: this.minimapViewportIntelSyncTimers },
+      {
+        viewportTimers: this.minimapViewportIntelSyncTimers,
+        residualTimers: this.minimapViewportIntelScrollResidualTimers,
+      },
     );
     if (synced.applied) {
       this.minimapView = synced.view;

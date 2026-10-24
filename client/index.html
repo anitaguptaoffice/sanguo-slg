@@ -2184,6 +2184,30 @@
       #layout-frame.minimap-viewport-intel-sync-ring {
         animation: minimap-viewport-intel-sync-ring-keyframes 1.2s ease-out 1;
       }
+      @keyframes minimap-intel-scroll-sync-deep-ring-keyframes {
+        0% { outline-offset: 0; outline: 2px solid rgba(120, 200, 255, 0); }
+        45% { outline-offset: 3px; outline: 2px solid rgba(120, 200, 255, 0.55); }
+        100% { outline-offset: 0; outline: 2px solid rgba(120, 200, 255, 0); }
+      }
+      #layout-frame.minimap-intel-scroll-sync-deep-ring {
+        animation: minimap-intel-scroll-sync-deep-ring-keyframes 1.2s ease-out 1;
+      }
+      .march-list li.minimap-intel-scroll-sync-deep-ring {
+        box-shadow: inset 0 0 0 2px rgba(120, 200, 255, 0.65);
+        animation: minimap-intel-scroll-sync-deep-ring-keyframes 1.2s ease-out 1;
+      }
+      .world-tile-intel-eta-cross-residual-line {
+        margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #9cc8e8;
+      }
+      .world-tile-intel-eta-cross-residual-line.hidden { display: none; }
+      .world-tile-intel-eta-cross-residual-line.world-tile-intel-eta-cross-residual-pulse,
+      .march-intel-phase-eta-strip.march-intel-eta-cross-residual-pulse {
+        animation: world-tile-intel-eta-cross-residual-pulse-keyframes 1.2s ease-out 1;
+      }
+      @keyframes world-tile-intel-eta-cross-residual-pulse-keyframes {
+        0%, 100% { background-color: transparent; }
+        50% { background-color: rgba(120, 200, 255, 0.18); }
+      }
       .march-intel-coord-sync-empty-hint {
         margin: 4px 0 6px; font-size: 12px; line-height: 1.45; color: #b8a88a;
       }
@@ -3756,8 +3780,11 @@
       /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); data-action copy-report-coords-readonly (CLIENT-240) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-viewport-intel-sync-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-residual-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-row-minimap-sync-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-deep-ring,
+      #layout-frame.layout-narrow.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-density-row,
