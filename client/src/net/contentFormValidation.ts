@@ -99,6 +99,11 @@ export function validateUseConsumable(input: UseConsumableValidationInput): Cont
 /** 招募/商城/背包/军事四类面板内联错误区（CLIENT-067）。 */
 export type PanelFormDomain = "recruit" | "shop" | "bag" | "march";
 
+/** 列表首屏拉取域（CLIENT-173）；与 PanelFormDomain 共用 `formatPanelGatewayError` code 映射。 */
+export type PanelListGatewayDomain = "rank" | "guild" | "buildQueue";
+
+export type PanelGatewayDomain = PanelFormDomain | PanelListGatewayDomain;
+
 const PANEL_FORM_ERROR_ROLE: Record<PanelFormDomain, string> = {
   recruit: "recruit-form-error",
   shop: "shop-form-error",
@@ -109,7 +114,7 @@ const PANEL_FORM_ERROR_ROLE: Record<PanelFormDomain, string> = {
 const COMMON_INVALID_PACKET = 10001;
 const DOMESTIC_INSUFFICIENT_RESOURCE = 40001;
 
-const PANEL_GATEWAY_CODE_HINT: Record<PanelFormDomain, Partial<Record<number, string>>> = {
+const PANEL_GATEWAY_CODE_HINT: Record<PanelGatewayDomain, Partial<Record<number, string>>> = {
   shop: {
     64001: "货架不存在或未开放",
     64002: "商品不存在或已下架",
@@ -133,13 +138,33 @@ const PANEL_GATEWAY_CODE_HINT: Record<PanelFormDomain, Partial<Record<number, st
     50005: "出征参数无效",
     50006: "城内兵力不足",
   },
+  rank: {
+    62001: "排行榜不存在",
+    62002: "排行榜未开放",
+    [COMMON_INVALID_PACKET]: "请求无效",
+  },
+  guild: {
+    60001: "军团不存在",
+    60002: "已在其他军团",
+    60003: "不在该军团",
+    60006: "军团人数已满",
+    60007: "军团权限不足",
+    [COMMON_INVALID_PACKET]: "请求无效",
+  },
+  buildQueue: {
+    [COMMON_INVALID_PACKET]: "请求无效",
+    [DOMESTIC_INSUFFICIENT_RESOURCE]: "资源不足",
+    40002: "城池不存在",
+    40003: "建筑槽位无效",
+    40004: "建筑等级已满",
+  },
 };
 
 /**
  * 四类面板网关失败文案：优先域内 code 中文摘要，末尾固定 `[code]`（与预校验区同元素展示）。
  */
 export function formatPanelGatewayError(
-  domain: PanelFormDomain,
+  domain: PanelGatewayDomain,
   code: number | undefined,
   msg: string,
 ): string {
@@ -155,7 +180,7 @@ export function formatPanelGatewayError(
   return `${summary} [${code}]`;
 }
 
-export function formatPanelGatewayErrorFromUnknown(domain: PanelFormDomain, err: unknown): string {
+export function formatPanelGatewayErrorFromUnknown(domain: PanelGatewayDomain, err: unknown): string {
   if (err instanceof Error) {
     const code = (err as Error & { code?: number }).code;
     return formatPanelGatewayError(domain, code, err.message);

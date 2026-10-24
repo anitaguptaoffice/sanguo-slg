@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
+import { PANEL_GATEWAY_RETRY_CLASS } from "@/net/panelGatewayError";
 import { ContentPanels } from "@/ui/ContentPanels";
 
 function baseSession(): MainCitySession {
@@ -173,5 +174,87 @@ describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
     otherTab.click();
     expect(sweep()?.textContent).toMatch(/本类余额：.*粮 800/);
     expect(sweep()?.textContent).not.toMatch(/币 50/);
+  });
+});
+
+describe("ContentPanels gateway list error (CLIENT-173)", () => {
+  it("shop shelf failure shows prefixed error, empty filter stays empty", async () => {
+    const mount = document.createElement("div");
+    const listShopShelf = vi
+      .fn()
+      .mockRejectedValueOnce(Object.assign(new Error("余额不足"), { code: 64003 }))
+      .mockResolvedValueOnce({
+        offers: [
+          {
+            offer_id: 1001,
+            item_cfg_id: 2001,
+            price_resources: { gold: 1 },
+          },
+        ],
+      });
+    const gateway = {
+      getBoundServerId: () => 1,
+      listShopShelf,
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => baseSession(),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleShop();
+    await vi.waitFor(() =>
+      expect(mount.querySelector('[data-panel-state="error"]')?.textContent).toContain(
+        "商城：余额不足",
+      ),
+    );
+    const retry = mount.querySelector(
+      `button.${PANEL_GATEWAY_RETRY_CLASS}[data-action="retry-refresh-shop"]`,
+    ) as HTMLButtonElement;
+    expect(retry).toBeTruthy();
+    retry.click();
+    await vi.waitFor(() => expect(listShopShelf).toHaveBeenCalledTimes(2));
+    const speedupTab = mount.querySelector('[data-shop-category="speedup"]') as HTMLButtonElement;
+    speedupTab.click();
+    const emptyRow = mount.querySelector('[data-panel-state="empty"]');
+    expect(emptyRow?.textContent).toMatch(/分类|加速/);
+    expect(mount.querySelector('[data-panel-state="error"]')).toBeNull();
+  });
+
+  it("bag refresh failure shows retry when session bag is empty", async () => {
+    const mount = document.createElement("div");
+    const listPlayerBag = vi
+      .fn()
+      .mockRejectedValueOnce(Object.assign(new Error("请求无效"), { code: 10001 }))
+      .mockResolvedValueOnce({ items: [{ item_cfg_id: 2001, quantity: 1 }] });
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag,
+    } as unknown as GatewayPort;
+    const session = baseSession();
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.toggleBag();
+    await vi.waitFor(() =>
+      expect(mount.querySelector('[data-panel-state="error"]')?.textContent).toContain("背包："),
+    );
+    (
+      mount.querySelector(
+        `button.${PANEL_GATEWAY_RETRY_CLASS}[data-action="retry-refresh-bag"]`,
+      ) as HTMLButtonElement
+    ).click();
+    await vi.waitFor(() => expect(listPlayerBag).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() =>
+      expect(mount.querySelector('[data-panel-state="error"]')).toBeNull(),
+    );
+    expect(session.bag?.some((s) => s.item_cfg_id === 2001)).toBe(true);
   });
 });

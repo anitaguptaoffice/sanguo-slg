@@ -28,7 +28,13 @@ export function resolvePanelStateSkin(kind: PanelStateKind): string {
 }
 
 export function isPanelStateArtSkinOff(el: HTMLElement): boolean {
-  return el.dataset.artSkin === "off" || el.closest("[data-art-skin='off']") != null;
+  if (el.dataset.artSkin === "off") return true;
+  let cur: HTMLElement | null = el.parentElement;
+  while (cur) {
+    if (cur.dataset.artSkin === "off") return true;
+    cur = cur.parentElement;
+  }
+  return false;
 }
 
 function applyPanelStateNineSlice(el: HTMLElement, assets: AssetLoader, assetId: string): void {
