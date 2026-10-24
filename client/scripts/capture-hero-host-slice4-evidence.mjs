@@ -1,5 +1,5 @@
 /**
- * HERO Slice4 (1013–1016) main-city runtime evidence — production hero panel path only.
+ * HERO Slice4 (1013 / 1015 / 1016; 1014 HOLD) main-city runtime evidence.
  *
  * Usage:
  *   cd client && npx playwright install chromium
@@ -21,7 +21,7 @@ const clientRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..");
 const SAMPLE_ROOT = path.resolve(repoRoot, "docs/art/samples/hero-host-slice4");
 const ART_HEAD_SHA = process.env.ART_HEAD_SHA || "cc9da5f28492bbbcb8d82d87458041d685726661";
-const SLICE4_IDS = [1013, 1014, 1015, 1016];
+const SLICE4_IDS = [1013, 1015, 1016];
 const HERO_IDS = process.env.HERO_TEMPLATE_CFG_ID
   ? [Number(process.env.HERO_TEMPLATE_CFG_ID)]
   : SLICE4_IDS;
