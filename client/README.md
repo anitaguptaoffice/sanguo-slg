@@ -66,6 +66,8 @@
 
 **CLIENT-234（军团职务头与聊天未读分隔抛光）**：成员职务分组折叠钮 **`aria-label`** 走 **`formatGuildRoleGroupHeaderLine`**（`formatGuildRoleGroupHeaderLabel` + 只读 **`formatGuildRoleGroupCountLabel`**，**CLIENT-185/101** 折叠与 `guild-role-group-count` chip **不退化**，无新 guild RPC）；聊天未读分隔 `<li>` 叠加 **`guild-chat-unread-separator`**（与 **CLIENT-185** `chat-unread-separator`、**CLIENT-161** tab/HUD 角标及 **`shouldShowChatUnreadSeparator`** 标为已读可见性 **并存**）。单测：`socialFormat.test.ts`、`chatUnread.test.ts`、`SocialPanels.test.ts`。
 
+**CLIENT-249（军团职务分组头与聊天未读分隔扫读残余）**：职务分组头下 **`formatGuildDutyHeaderResidualLine`** / **`data-role="guild-role-group-header-line"`** 只读残余次行（**CLIENT-234** 折叠钮 **`aria-label`** 与 **`guild-role-group-count`**、**CLIENT-217** **`guild-member-online-summary`** **不退化**；无新 guild RPC）；聊天未读分隔 `<li>` 叠加 **`guild-chat-unread-divider-residual-sweep`**（与 **CLIENT-234** `guild-chat-unread-separator` 并存），首条未读消息行 **`guild-chat-unread-first-msg-sweep-ring` 1.2s**（**CLIENT-200** 空错态与 **CLIENT-217** 退避重试钮 **不退化**；**非** wave:38 退避主叙事）。单测：`guildDutyHeaderResidual.test.ts`、`guildChatUnreadDividerResidual.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。
+
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。
