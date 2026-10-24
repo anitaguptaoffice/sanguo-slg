@@ -65,6 +65,11 @@ import {
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
+  detectLeaderboardMyRankChange,
+  formatMyRankPinSecondaryLine,
+  scheduleRankMyRankChangedPulse,
+} from "@/net/leaderboardMyRankRefresh";
+import {
   formatRankReadonlySummary,
   resolveRankRowDeepLink,
   type RankRowDeepLink,
@@ -96,6 +101,7 @@ export class SocialPanels {
   private guildMembersCache: GuildMemberRow[] = [];
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
+  private pendingRankPinPulse = false;
   private rankHighlightEntityId = 0;
   private rankDeepLink: SocialRankDeepLinkHandlers = {};
   private lastRenderedChatMessages: ChatMessageRow[] = [];
@@ -862,9 +868,23 @@ export class SocialPanels {
         tr.setAttribute("aria-label", "我的排名钉选");
         const td = document.createElement("td");
         td.colSpan = 3;
-        td.textContent = pinLine;
+        const primary = document.createElement("div");
+        primary.className = "rank-pin-primary";
+        primary.textContent = pinLine;
+        td.appendChild(primary);
+        const refreshMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
+        const secondary = formatMyRankPinSecondaryLine(refreshMs);
+        if (secondary) {
+          const sub = document.createElement("div");
+          sub.className = "rank-pin-secondary rank-last-refresh-line";
+          sub.textContent = secondary;
+          td.appendChild(sub);
+        }
         tr.appendChild(td);
         tbody.appendChild(tr);
+        if (this.pendingRankPinPulse) {
+          scheduleRankMyRankChangedPulse(tr);
+        }
       }
       const entries = res.entries ?? [];
       if (entries.length === 0) {
@@ -984,11 +1004,14 @@ export class SocialPanels {
       this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: true });
       this.onStatus("拉取排行榜…");
       try {
+        const prevSnapshot = this.rankSnapshotByType.get(boardType);
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+        this.pendingRankPinPulse = detectLeaderboardMyRankChange(prevSnapshot?.my_rank, res.my_rank);
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
         writeRankLastRefreshMs(boardType, refreshedAt);
         this.renderLeaderboardPage(res, boardType);
+        this.pendingRankPinPulse = false;
         this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
           busy: false,
           lastUpdatedMs: refreshedAt,

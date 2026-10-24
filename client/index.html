@@ -1555,6 +1555,16 @@
         color: #f0c674; background: #2a221c;
         border-bottom: 1px solid #c9a227;
       }
+      .rank-table tr.rank-pin-row .rank-pin-secondary {
+        margin-top: 4px; font-size: 11px; font-weight: 400; color: #b8a88a;
+      }
+      @keyframes rank-my-rank-changed-pulse-keyframes {
+        0% { background-color: rgba(201, 162, 39, 0.42); }
+        100% { background-color: #2a221c; }
+      }
+      .rank-table tr.rank-pin-row.rank-my-rank-changed-pulse td {
+        animation: rank-my-rank-changed-pulse-keyframes 3s ease-out 1;
+      }
       .rank-snapshot-meta { font-size: 11px; color: #b8a88a; margin: 0 0 6px; }
       .rank-table-scroll { max-height: min(200px, 32vh); overflow: auto; border-radius: 4px; }
       .rank-table { width: 100%; border-collapse: collapse; font-size: 12px; }
