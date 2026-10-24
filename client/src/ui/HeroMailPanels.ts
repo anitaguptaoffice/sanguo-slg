@@ -400,6 +400,20 @@ import {
   type HeroLargessGiftMode,
 } from "@/net/heroDetailLargess";
 import {
+  applyHeroPointResultToDetail,
+  buildAddHeroPointTargets,
+  formatHeroPointAddSuccessStatus,
+  formatHeroPointClearSuccessStatus,
+  formatHeroPointGatewayErrorFromUnknown,
+  heroPointSnapshotFromDetail,
+  mergeHeroPointSnapshot,
+  renderHeroDetailPointsMarkup,
+  setHeroPointFormErrorDisplay,
+  setHeroPointSuccessDisplay,
+  syncHeroDetailPointsControls,
+  type HeroPointAllocStat,
+} from "@/net/heroDetailPoints";
+import {
   applyUpgradeHeroToDetail,
   formatHeroUpgradeGatewayErrorFromUnknown,
   formatHeroUpgradeSuccessStatus,
@@ -505,6 +519,11 @@ export class HeroMailPanels {
   private heroLargessNextAtByHeroId = new Map<number, number>();
   private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
   private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
+  private heroPointSubmitState: UseConsumableSubmitState = "idle";
+  private heroPointSnapshotByHeroId = new Map<
+    number,
+    ReturnType<typeof heroPointSnapshotFromDetail>
+  >();
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
   private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
 
@@ -1926,7 +1945,9 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "error", residualCtx());
       } else {
         const { bag, wallet } = this.sessionEconomy();
-        const upgradeHtml = renderHeroDetailUpgradeMarkup(this.heroUpgradeSubmitState, this.heroDetail);
+        const upgradeHtml =
+          renderHeroDetailUpgradeMarkup(this.heroUpgradeSubmitState, this.heroDetail) +
+          renderHeroDetailPointsMarkup(this.heroPointSubmitState, this.heroDetail);
         const cultivationHtml = renderHeroDetailCultivationUseMarkup(
           bag,
           this.heroCultivationSubmitState,
@@ -2596,6 +2617,21 @@ export class HeroMailPanels {
     setHeroUpgradeSuccessDisplay(this.heroPanel, null);
   }
 
+  private resetHeroPointSubmitFeedback(): void {
+    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    setHeroPointFormErrorDisplay(this.heroPanel, null);
+    setHeroPointSuccessDisplay(this.heroPanel, null);
+  }
+
+  private persistHeroPointSnapshot(detail: HeroDetail | null | undefined): void {
+    const snap = heroPointSnapshotFromDetail(detail);
+    const heroId = detail?.hero_id;
+    if (!heroId || !snap) return;
+    this.heroPointSnapshotByHeroId.set(heroId, snap);
+  }
+
   private getHeroLargessNextAtMs(): number | null {
     const heroId = this.selectedHeroId;
     if (!heroId) return null;
@@ -2700,13 +2736,19 @@ export class HeroMailPanels {
     this.resetHeroCultivationSubmitFeedback();
     this.resetHeroLargessSubmitFeedback();
     this.resetHeroUpgradeSubmitFeedback();
+    this.resetHeroPointSubmitFeedback();
     this.heroDetailLoading = true;
     this.heroDetailError = null;
     this.renderHeroList();
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
-      this.heroDetail = parseGetHeroDetailResponse(res);
+      const parsed = parseGetHeroDetailResponse(res);
+      this.heroDetail = mergeHeroPointSnapshot(
+        parsed,
+        this.heroPointSnapshotByHeroId.get(heroId) ?? null,
+      );
+      this.persistHeroPointSnapshot(this.heroDetail);
       this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
       this.heroDetailError = null;
       this.onStatus("详情已加载");
@@ -2757,6 +2799,87 @@ export class HeroMailPanels {
       this.onStatus(msg);
     } finally {
       syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
+    }
+  }
+
+  private async addHeroPointForStat(stat: HeroPointAllocStat): Promise<void> {
+    if (this.heroPointSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    const heroId = this.selectedHeroId;
+    const targets = buildAddHeroPointTargets(this.heroDetail, stat);
+    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+      type: "SUBMIT",
+    });
+    setHeroPointFormErrorDisplay(this.heroPanel, null);
+    setHeroPointSuccessDisplay(this.heroPanel, null);
+    syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+    const sid = this.serverId();
+    this.onStatus("潜力加点…");
+    try {
+      const res = await this.gateway.addHeroPoint(sid, heroId, targets);
+      const detailAfter = applyHeroPointResultToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.persistHeroPointSnapshot(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+        type: "SUCCESS",
+      });
+      this.renderHeroList();
+      const statusText = formatHeroPointAddSuccessStatus(stat);
+      setHeroPointSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+        type: "FAIL",
+      });
+      const msg = formatHeroPointGatewayErrorFromUnknown(e);
+      setHeroPointFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+    }
+  }
+
+  private async clearHeroPointsSelected(): Promise<void> {
+    if (this.heroPointSubmitState === "submitting" || !this.selectedHeroId) return;
+    const heroId = this.selectedHeroId;
+    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+      type: "SUBMIT",
+    });
+    setHeroPointFormErrorDisplay(this.heroPanel, null);
+    setHeroPointSuccessDisplay(this.heroPanel, null);
+    syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+    const sid = this.serverId();
+    this.onStatus("潜力洗点…");
+    try {
+      const res = await this.gateway.clearHeroPoint(sid, heroId);
+      const detailAfter = applyHeroPointResultToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.persistHeroPointSnapshot(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+        type: "SUCCESS",
+      });
+      this.renderHeroList();
+      const statusText = formatHeroPointClearSuccessStatus(detailAfter);
+      setHeroPointSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
+        type: "FAIL",
+      });
+      const msg = formatHeroPointGatewayErrorFromUnknown(e);
+      setHeroPointFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
     }
   }
 
@@ -3526,6 +3649,13 @@ export class HeroMailPanels {
     if (a === "hero-use-cultivation-item") void this.useHeroCultivationItem();
     if (a === "hero-largess-submit") void this.submitHeroLargess();
     if (a === "hero-upgrade") void this.upgradeSelectedHero();
+    if (a === "hero-point-add") {
+      const stat = btn.getAttribute("data-stat");
+      if (stat === "force" || stat === "intel" || stat === "politics") {
+        void this.addHeroPointForStat(stat);
+      }
+    }
+    if (a === "hero-point-clear") void this.clearHeroPointsSelected();
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {

@@ -74,6 +74,8 @@ export const Routes = {
   ListPlayerHeroes: "hero.v1.ListPlayerHeroes",
   GetHeroDetail: "hero.v1.GetHeroDetail",
   UpgradeHero: "hero.v1.UpgradeHero",
+  AddHeroPoint: "hero.v1.AddHeroPoint",
+  ClearHeroPoint: "hero.v1.ClearHeroPoint",
   RecruitHero: "hero.v1.RecruitHero",
   ListRecruitTemplates: "hero.v1.ListRecruitTemplates",
   ListHotelRecruitCandidates: "hero.v1.ListHotelRecruitCandidates",
@@ -170,6 +172,10 @@ export type ProtoTypes = {
   GetHeroDetailResponse: protobuf.Type;
   UpgradeHeroRequest: protobuf.Type;
   UpgradeHeroResponse: protobuf.Type;
+  AddHeroPointRequest: protobuf.Type;
+  AddHeroPointResponse: protobuf.Type;
+  ClearHeroPointRequest: protobuf.Type;
+  ClearHeroPointResponse: protobuf.Type;
   RecruitHeroRequest: protobuf.Type;
   RecruitHeroResponse: protobuf.Type;
   ListRecruitTemplatesRequest: protobuf.Type;
@@ -283,6 +289,10 @@ export function getTypes(): ProtoTypes {
     GetHeroDetailResponse: r.lookupType("sanguo.hero.v1.GetHeroDetailResponse"),
     UpgradeHeroRequest: r.lookupType("sanguo.hero.v1.UpgradeHeroRequest"),
     UpgradeHeroResponse: r.lookupType("sanguo.hero.v1.UpgradeHeroResponse"),
+    AddHeroPointRequest: r.lookupType("sanguo.hero.v1.AddHeroPointRequest"),
+    AddHeroPointResponse: r.lookupType("sanguo.hero.v1.AddHeroPointResponse"),
+    ClearHeroPointRequest: r.lookupType("sanguo.hero.v1.ClearHeroPointRequest"),
+    ClearHeroPointResponse: r.lookupType("sanguo.hero.v1.ClearHeroPointResponse"),
     RecruitHeroRequest: r.lookupType("sanguo.hero.v1.RecruitHeroRequest"),
     RecruitHeroResponse: r.lookupType("sanguo.hero.v1.RecruitHeroResponse"),
     ListRecruitTemplatesRequest: r.lookupType("sanguo.hero.v1.ListRecruitTemplatesRequest"),

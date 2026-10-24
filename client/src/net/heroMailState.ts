@@ -136,6 +136,11 @@ export type HeroDetail = HeroSummary & {
   level_upgrade_item?: { item_cfg_id?: number; quantity?: number };
   /** 网关可选：忠诚养成所需道具。 */
   loyalty_upgrade_item?: { item_cfg_id?: number; quantity?: number };
+  /** Add/ClearHeroPoint 响应或会话快照：剩余潜力。 */
+  potential_remaining?: number;
+  force_add?: number;
+  intel_add?: number;
+  politics_add?: number;
 };
 
 export type RecruitTemplatePreview = {
