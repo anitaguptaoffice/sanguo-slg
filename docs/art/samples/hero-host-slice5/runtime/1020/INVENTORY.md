@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE5 runtime inventory — template 1020
 
-tip_sha / runtime_code_sha: `d7cc3a62f9115572b3fa2fc77725828f563dd2df`
+tip_sha / runtime_code_sha: `ce09318d6e81ca9e3b56131e3906a75e7aa0eaaf`
 art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
 
 ## Viewport captures
 
-- `runtime/1020/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471731 bytes, sha256 `e8b357b6c878f961cecb7921fdd49b9b121af7953431aa7a855a14d946316c26`
-- `runtime/1020/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 984215 bytes, sha256 `a34d51e5db018882bd4b4979af44f76a6082d5f2e507acc5051d2ae8a0f9750d`
-- `runtime/1020/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246168 bytes, sha256 `a2a98c41fef9e2bff67be9aea2b4dedd85e7ae33e1229a6e17e546d151d71b99`
+- `runtime/1020/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 477184 bytes, sha256 `ca3b37b6c4281609b8a40ea82aeae988e74c59536b00f72b5d5fa4ea22faa869`
+- `runtime/1020/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 937880 bytes, sha256 `0f56d7cb06c81d20e0bb7874400d42c8c2f60062f63ae5d97678bb0639cf6807`
 - `runtime/1020/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `b748e0b7e2867e7718b3580d14abaabac06160b173b13860eabf86e2264c6755`
 
 ## Textures (hero.avatar.1020.v1 / hero.bust.1020.v1)
@@ -29,6 +28,12 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "nameReadable": true,
       "detailName": "甘宁",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "甘宁 · Lv12 · 忠诚 88",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1366.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "nameReadable": true,
       "detailName": "甘宁",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "甘宁 · Lv12 · 忠诚 88",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1366.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE5 runtime inventory — template 1018
 
-tip_sha / runtime_code_sha: `d7cc3a62f9115572b3fa2fc77725828f563dd2df`
+tip_sha / runtime_code_sha: `ce09318d6e81ca9e3b56131e3906a75e7aa0eaaf`
 art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
 
 ## Viewport captures
 
-- `runtime/1018/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471209 bytes, sha256 `8faca1166dbf5e02da9acc7f3cc77e9e94253cb53559e4301ea5584281ba06f2`
-- `runtime/1018/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 982374 bytes, sha256 `1cbe175e93c2b6c63ea1300d68b1ca014a310b42d1e3df3baeeda2894297c8ac`
-- `runtime/1018/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245998 bytes, sha256 `93c6dab8b28535f69c4c073dbbf10f30ab3198ee4ad7a1a453f7dc51750617fd`
+- `runtime/1018/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 477701 bytes, sha256 `2afe81b4ecc8a6a03a54c1b3258694f31d51a868a9afb32f93f419166e6bfd4c`
+- `runtime/1018/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 937394 bytes, sha256 `095cec7c605c4ce773ff03e901355d7636c9d68fc727f90dda764712c7ff1eca`
 - `runtime/1018/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `42d367d54286e0c3fe23d27cf99c7c690890ccf725602fc39d57f4f375108c58`
 
 ## Textures (hero.avatar.1018.v1 / hero.bust.1018.v1)
@@ -29,6 +28,12 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "nameReadable": true,
       "detailName": "荀彧",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "荀彧 · Lv8 · 忠诚 79",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 835.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "nameReadable": true,
       "detailName": "荀彧",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "荀彧 · Lv8 · 忠诚 79",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `9f15a34119c1bcb157399693a5420c0a2787a47a`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 835.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

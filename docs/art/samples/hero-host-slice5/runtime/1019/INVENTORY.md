@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE5 runtime inventory — template 1019
 
-tip_sha / runtime_code_sha: `d7cc3a62f9115572b3fa2fc77725828f563dd2df`
+tip_sha / runtime_code_sha: `ce09318d6e81ca9e3b56131e3906a75e7aa0eaaf`
 art_head_sha: `0b2b3987989fef0066bce8d728c54029b219cd55`
 
 ## Viewport captures
 
-- `runtime/1019/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 470435 bytes, sha256 `480df9c906242092d1866a84e7640987d034910169ed031dd90455d54257f4d9`
-- `runtime/1019/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 980639 bytes, sha256 `76b04c752b0b41c31c60ff9f9e800aa3c62183dbe1a2ace3002805b8c6839c2e`
-- `runtime/1019/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246063 bytes, sha256 `625e4d486cff86d41cf7f50fd46e7f9114743392e452cad3b4d1d672af9d98b8`
+- `runtime/1019/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 477293 bytes, sha256 `e1592e80d39ae1f9dd0350765748754f62dd88c77d6a4eabdc218bed0a194ca2`
+- `runtime/1019/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 938077 bytes, sha256 `70ff6c8e7d1c09c3419b5e0c106cf4022e39fbe514f4a1267f20548c36fe8557`
 - `runtime/1019/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `09da968714d2f28350ed6e2d72e4c267826b12f8d0d5bbd15a94aa77e22fec21`
 
 ## Textures (hero.avatar.1019.v1 / hero.bust.1019.v1)
@@ -29,6 +28,12 @@ art_head_sha: `0b2b3987989fef0066bce8d728c54029b219cd55`
       "nameReadable": true,
       "detailName": "庞统",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "庞统 · Lv10 · 忠诚 81",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `0b2b3987989fef0066bce8d728c54029b219cd55`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1047.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `0b2b3987989fef0066bce8d728c54029b219cd55`
       "nameReadable": true,
       "detailName": "庞统",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "庞统 · Lv10 · 忠诚 81",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `0b2b3987989fef0066bce8d728c54029b219cd55`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1047.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {
