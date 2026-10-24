@@ -1,0 +1,481 @@
+{
+  "art_asset_source_sha": "258c89a15c3876eb291b3d9c449034e9484cab31",
+  "art_draft_pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/674",
+  "coordination_board_pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/108",
+  "captured_at": "2026-10-24T05:26:16.900Z",
+  "asset_id": "ui.icon.action.upgrade.v1",
+  "label_mapping": {
+    "upgrade-farm": "升级"
+  },
+  "title_aria_mapping": {
+    "upgrade-farm": "升级农田"
+  },
+  "viewports": {
+    "maincity-1600x900-full.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 651576
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "upgrade-farm",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "visibilityOk": true,
+            "hitTargetOk": true,
+            "meetsMinVisibleHit": true,
+            "hitWrapMeetsMinVisible": true,
+            "minVisibleHitCss": 44,
+            "label": "升级",
+            "ariaLabel": "升级农田",
+            "title": "升级农田",
+            "iconSrc": "http://127.0.0.1:16211/assets/art/v1/textures/1x/ui/icon_action_upgrade.png",
+            "buttonRect": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "hitWrapRect": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionButton": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionHitWrap": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true,
+            "edgeHitProof": {
+              "elementFromPoint": [
+                {
+                  "name": "center",
+                  "x": 54,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "left",
+                  "x": 9,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "right",
+                  "x": 99,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "top",
+                  "x": 54,
+                  "y": 854,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "bottom",
+                  "x": 54,
+                  "y": 892,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                }
+              ],
+              "allProbesHitTarget": true,
+              "centerHitsButton": true
+            }
+          }
+        ]
+      }
+    },
+    "maincity-3200x1800-full.jpg": {
+      "jpeg": {
+        "quality": 58,
+        "bytes": 992150
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "upgrade-farm",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "visibilityOk": true,
+            "hitTargetOk": true,
+            "meetsMinVisibleHit": true,
+            "hitWrapMeetsMinVisible": true,
+            "minVisibleHitCss": 44,
+            "label": "升级",
+            "ariaLabel": "升级农田",
+            "title": "升级农田",
+            "iconSrc": "http://127.0.0.1:16211/assets/art/v1/textures/2x/ui/icon_action_upgrade.png",
+            "buttonRect": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "hitWrapRect": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionButton": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionHitWrap": {
+              "left": 6,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true,
+            "edgeHitProof": {
+              "elementFromPoint": [
+                {
+                  "name": "center",
+                  "x": 54,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "left",
+                  "x": 9,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "right",
+                  "x": 99,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "top",
+                  "x": 54,
+                  "y": 854,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "bottom",
+                  "x": 54,
+                  "y": 892,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                }
+              ],
+              "allProbesHitTarget": true,
+              "centerHitsButton": true
+            }
+          }
+        ]
+      }
+    },
+    "maincity-1280x720-full.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 390393
+      },
+      "mount": {
+        "uiScale": 0.8,
+        "scrollMetrics": {
+          "scrollWidth": 1632,
+          "clientWidth": 1265,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "upgrade-farm",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "visibilityOk": true,
+            "hitTargetOk": true,
+            "meetsMinVisibleHit": true,
+            "hitWrapMeetsMinVisible": true,
+            "minVisibleHitCss": 44,
+            "label": "升级",
+            "ariaLabel": "升级农田",
+            "title": "升级农田",
+            "iconSrc": "http://127.0.0.1:16211/assets/art/v1/textures/1x/ui/icon_action_upgrade.png",
+            "buttonRect": {
+              "left": 6,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "hitWrapRect": {
+              "left": 6,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionButton": {
+              "left": 6,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionHitWrap": {
+              "left": 6,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true,
+            "edgeHitProof": {
+              "elementFromPoint": [
+                {
+                  "name": "center",
+                  "x": 54,
+                  "y": 697.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "left",
+                  "x": 9,
+                  "y": 697.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "right",
+                  "x": 99,
+                  "y": 697.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "top",
+                  "x": 54,
+                  "y": 678.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "bottom",
+                  "x": 54,
+                  "y": 716.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                }
+              ],
+              "allProbesHitTarget": true,
+              "centerHitsButton": true
+            }
+          }
+        ]
+      }
+    }
+  },
+  "upgrade_farm_button_1280": {
+    "action": "upgrade-farm",
+    "onScreen": true,
+    "ok": true,
+    "structuralOk": true,
+    "visibilityOk": true,
+    "hitTargetOk": true,
+    "meetsMinVisibleHit": true,
+    "hitWrapMeetsMinVisible": true,
+    "minVisibleHitCss": 44,
+    "label": "升级",
+    "ariaLabel": "升级农田",
+    "title": "升级农田",
+    "iconSrc": "http://127.0.0.1:16211/assets/art/v1/textures/1x/ui/icon_action_upgrade.png",
+    "buttonRect": {
+      "left": 6,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "hitWrapRect": {
+      "left": 6,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "visibleIntersectionButton": {
+      "left": 6,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "visibleIntersectionHitWrap": {
+      "left": 6,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "buttonCss": {
+      "w": 96,
+      "h": 44
+    },
+    "hitWrapCss": {
+      "w": 96,
+      "h": 44
+    },
+    "buttonFullyVisible": true,
+    "iconOverlapsLabel": false,
+    "iconInsideButton": true,
+    "labelInsideButton": true,
+    "iconInsideVisibleRegion": true,
+    "labelInsideVisibleRegion": true,
+    "edgeHitProof": {
+      "elementFromPoint": [
+        {
+          "name": "center",
+          "x": 54,
+          "y": 697.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "left",
+          "x": 9,
+          "y": 697.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "right",
+          "x": 99,
+          "y": 697.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "top",
+          "x": 54,
+          "y": 678.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "bottom",
+          "x": 54,
+          "y": 716.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        }
+      ],
+      "allProbesHitTarget": true,
+      "centerHitsButton": true
+    }
+  },
+  "layout_notes": [
+    "96×44 toolbar chrome; 32px icon + 4px gap + two-character label inside button.",
+    ".toolbar-btn-hit wrap keeps effective hit target ≥44×44 CSS px.",
+    "hit-proof exports visibleIntersection w/h (scroll∩toolbar∩layout-frame) and edge elementFromPoint probes.",
+    "ok requires consistency: when buttonFullyVisible is false, meetsMinVisibleHit must be true for ok:true.",
+    "Disabled styling uses ui.button.toolbar.v1 chrome only — no per-icon four-state sprites.",
+    "DPR2 shot: 1600×900 logical viewport, deviceScaleFactor=2 → 3200×1800 JPEG pixels.",
+    "Click behavior unchanged: opens farm building panel via buildingPanel.selectSlot(\"farm\"), not upgrade RPC."
+  ],
+  "banned_unmerged": [
+    "#674",
+    "#108",
+    "#77",
+    "#82",
+    "#100",
+    "#126",
+    "#444",
+    "#481",
+    "#506",
+    "#637",
+    "#649"
+  ]
+}

@@ -1570,6 +1570,29 @@
           "path": "textures/2x/ui/icon_action_refresh.png"
         }
       ]
+    },
+    {
+      "id": "ui.icon.action.upgrade.v1",
+      "kind": "sprite",
+      "display_size": {
+        "w": 32,
+        "h": 32
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/ui/icon_action_upgrade.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/ui/icon_action_upgrade.png"
+        }
+      ]
     }
   ]
 }

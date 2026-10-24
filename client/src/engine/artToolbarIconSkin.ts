@@ -77,6 +77,11 @@ export const TOOLBAR_ICON_BY_ACTION: Record<string, { assetId: string; label: st
     label: "刷新",
     title: "刷新状态",
   },
+  "upgrade-farm": {
+    assetId: "ui.icon.action.upgrade.v1",
+    label: "升级",
+    title: "升级农田",
+  },
 };
 
 export type ToolbarIconBtnState = "normal" | "hover" | "pressed" | "disabled";
