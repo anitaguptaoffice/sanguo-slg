@@ -1,35 +1,55 @@
 {
   "task": "ART-UI-FILTER-008",
-  "tip_sha": "8c45fa1ac3429cec3811211d34cc3c7a7d158f50",
-  "captured_at": "2026-10-24T00:13:21.079Z",
-  "note": "Runtime JPEG + DOM probes for engineering acceptance; not art-board static PASS.",
+  "client_task": "CLIENT-136",
+  "tip_sha": "84e926edeac829716bd90ad37086c10c82299599",
+  "captured_at": "2026-10-24T00:33:10.343Z",
+  "note": "Full-viewport runtime evidence; chip sprite/click probes; not art-board static PASS.",
   "panels": {
     "mail": {
       "panel": "mail",
       "preset": "mail-unread-multi",
       "shots": {
-        "1600x900-dpr1": {
-          "file": "mail-filters-1600x900-dpr1.jpg",
+        "1600x900": {
+          "file": "mail-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 52753
+          "bytes": 435452,
+          "viewport": {
+            "tag": "1600x900",
+            "width": 1600,
+            "height": 900,
+            "dpr": 1
+          }
         },
-        "1600x900-dpr2": {
-          "file": "mail-filters-1600x900-dpr2.jpg",
-          "quality": 88,
-          "bytes": 149367
+        "3200x1800": {
+          "file": "mail-filters-3200x1800.jpg",
+          "quality": 72,
+          "bytes": 928141,
+          "viewport": {
+            "tag": "3200x1800",
+            "width": 1600,
+            "height": 900,
+            "dpr": 2
+          }
         },
         "1280x720": {
           "file": "mail-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 49174
+          "bytes": 249554,
+          "viewport": {
+            "tag": "1280x720",
+            "width": 1280,
+            "height": 720,
+            "dpr": 1
+          }
         }
       },
       "probes": {
-        "1600x900-dpr1": {
+        "1600x900": {
           "chips": {
             "chipCount": 2,
             "chips": [
               {
+                "index": 0,
                 "action": "mail-filter-all",
                 "label": "全部",
                 "skinned": true,
@@ -40,13 +60,41 @@
                   "top": 153.390625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 519,
+                    "top": 159.390625
+                  },
+                  "btnRect": {
+                    "width": 74,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "selected"
               },
               {
+                "index": 1,
                 "action": "mail-filter-unread",
                 "label": "未读",
                 "skinned": true,
@@ -57,13 +105,41 @@
                   "top": 153.390625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 605,
+                    "top": 159.390625
+                  },
+                  "btnRect": {
+                    "width": 74,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               }
-            ]
+            ],
+            "adjacentHitOverlaps": []
           },
           "badges": {
             "badgeCount": 3,
@@ -71,53 +147,74 @@
               {
                 "role": "mail-filter-all-count",
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "block",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               },
               {
                 "role": "mail-filter-unread-count",
                 "filterBadgeCount": 2,
+                "labelText": "2",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "block",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               },
               {
                 "role": null,
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "flex",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               }
             ]
-          }
+          },
+          "rows": [
+            {
+              "index": 0,
+              "skinned": true,
+              "rowState": "selected",
+              "height": 95,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            },
+            {
+              "index": 1,
+              "skinned": true,
+              "rowState": "default",
+              "height": 67,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            },
+            {
+              "index": 2,
+              "skinned": true,
+              "rowState": "default",
+              "height": 67,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            }
+          ]
         },
-        "1600x900-dpr2": {
+        "3200x1800": {
           "chips": {
             "chipCount": 2,
             "chips": [
               {
+                "index": 0,
                 "action": "mail-filter-all",
                 "label": "全部",
                 "skinned": true,
@@ -128,13 +225,41 @@
                   "top": 153.390625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 519,
+                    "top": 159.390625
+                  },
+                  "btnRect": {
+                    "width": 74,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "selected"
               },
               {
+                "index": 1,
                 "action": "mail-filter-unread",
                 "label": "未读",
                 "skinned": true,
@@ -145,13 +270,41 @@
                   "top": 153.390625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 605,
+                    "top": 159.390625
+                  },
+                  "btnRect": {
+                    "width": 74,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               }
-            ]
+            ],
+            "adjacentHitOverlaps": []
           },
           "badges": {
             "badgeCount": 3,
@@ -159,87 +312,164 @@
               {
                 "role": "mail-filter-all-count",
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "block",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               },
               {
                 "role": "mail-filter-unread-count",
                 "filterBadgeCount": 2,
+                "labelText": "2",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "block",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               },
               {
                 "role": null,
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "flex",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               }
             ]
-          }
+          },
+          "rows": [
+            {
+              "index": 0,
+              "skinned": true,
+              "rowState": "selected",
+              "height": 96,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            },
+            {
+              "index": 1,
+              "skinned": true,
+              "rowState": "default",
+              "height": 67,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            },
+            {
+              "index": 2,
+              "skinned": true,
+              "rowState": "default",
+              "height": 67,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            }
+          ]
         },
         "1280x720": {
           "chips": {
             "chipCount": 2,
             "chips": [
               {
+                "index": 0,
                 "action": "mail-filter-all",
                 "label": "全部",
                 "skinned": true,
                 "rect": {
-                  "width": 107,
+                  "width": 74,
                   "height": 44,
                   "left": 358,
                   "top": 142.1875
                 },
                 "cssMin": {
-                  "minWidth": 0,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 359,
+                    "top": 148.1875
+                  },
+                  "btnRect": {
+                    "width": 74,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "selected"
               },
               {
+                "index": 1,
                 "action": "mail-filter-unread",
                 "label": "未读",
                 "skinned": true,
                 "rect": {
-                  "width": 107,
+                  "width": 74,
                   "height": 44,
-                  "left": 477,
+                  "left": 444,
                   "top": 142.1875
                 },
                 "cssMin": {
-                  "minWidth": 0,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 445,
+                    "top": 148.1875
+                  },
+                  "btnRect": {
+                    "width": 74,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               }
-            ]
+            ],
+            "adjacentHitOverlaps": []
           },
           "badges": {
             "badgeCount": 3,
@@ -247,47 +477,67 @@
               {
                 "role": "mail-filter-all-count",
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "block",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               },
               {
                 "role": "mail-filter-unread-count",
                 "filterBadgeCount": 2,
+                "labelText": "2",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "block",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               },
               {
                 "role": null,
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "flex",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               }
             ]
-          }
+          },
+          "rows": [
+            {
+              "index": 0,
+              "skinned": true,
+              "rowState": "selected",
+              "height": 95,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            },
+            {
+              "index": 1,
+              "skinned": true,
+              "rowState": "default",
+              "height": 67,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            },
+            {
+              "index": 2,
+              "skinned": true,
+              "rowState": "default",
+              "height": 67,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            }
+          ]
         }
       }
     },
@@ -295,96 +545,227 @@
       "panel": "daily",
       "preset": "daily-claimable",
       "shots": {
-        "1600x900-dpr1": {
-          "file": "daily-filters-1600x900-dpr1.jpg",
+        "1600x900": {
+          "file": "daily-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 51230
+          "bytes": 434800,
+          "viewport": {
+            "tag": "1600x900",
+            "width": 1600,
+            "height": 900,
+            "dpr": 1
+          }
         },
-        "1600x900-dpr2": {
-          "file": "daily-filters-1600x900-dpr2.jpg",
-          "quality": 88,
-          "bytes": 145375
+        "3200x1800": {
+          "file": "daily-filters-3200x1800.jpg",
+          "quality": 72,
+          "bytes": 926056,
+          "viewport": {
+            "tag": "3200x1800",
+            "width": 1600,
+            "height": 900,
+            "dpr": 2
+          }
         },
         "1280x720": {
           "file": "daily-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 48052
+          "bytes": 249156,
+          "viewport": {
+            "tag": "1280x720",
+            "width": 1280,
+            "height": 720,
+            "dpr": 1
+          }
         }
       },
       "probes": {
-        "1600x900-dpr1": {
+        "1600x900": {
           "chips": {
             "chipCount": 4,
             "chips": [
               {
+                "index": 0,
                 "action": "daily-filter",
                 "label": "全部",
                 "skinned": true,
                 "rect": {
-                  "width": 44,
+                  "width": 72,
                   "height": 44,
                   "left": 518,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 518,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "selected"
               },
               {
+                "index": 1,
                 "action": "daily-filter",
                 "label": "进行中",
                 "skinned": true,
                 "rect": {
-                  "width": 56,
+                  "width": 72,
                   "height": 44,
-                  "left": 574,
+                  "left": 602,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 602,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               },
               {
+                "index": 2,
                 "action": "daily-filter",
                 "label": "可领取",
                 "skinned": true,
                 "rect": {
                   "width": 80,
                   "height": 44,
-                  "left": 642,
+                  "left": 686,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 690,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 80,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               },
               {
+                "index": 3,
                 "action": "daily-filter",
                 "label": "已完成",
                 "skinned": true,
                 "rect": {
-                  "width": 56,
+                  "width": 72,
                   "height": 44,
-                  "left": 734,
+                  "left": 778,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 778,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               }
-            ]
+            ],
+            "adjacentHitOverlaps": []
           },
           "badges": {
             "badgeCount": 1,
@@ -392,93 +773,214 @@
               {
                 "role": "daily-claimable-count-badge",
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "flex",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               }
             ]
-          }
+          },
+          "rows": [
+            {
+              "index": 0,
+              "skinned": true,
+              "rowState": "selected",
+              "height": 50,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            }
+          ]
         },
-        "1600x900-dpr2": {
+        "3200x1800": {
           "chips": {
             "chipCount": 4,
             "chips": [
               {
+                "index": 0,
                 "action": "daily-filter",
                 "label": "全部",
                 "skinned": true,
                 "rect": {
-                  "width": 44,
+                  "width": 72,
                   "height": 44,
                   "left": 518,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 518,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "selected"
               },
               {
+                "index": 1,
                 "action": "daily-filter",
                 "label": "进行中",
                 "skinned": true,
                 "rect": {
-                  "width": 56,
+                  "width": 72,
                   "height": 44,
-                  "left": 574,
+                  "left": 602,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 602,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               },
               {
+                "index": 2,
                 "action": "daily-filter",
                 "label": "可领取",
                 "skinned": true,
                 "rect": {
                   "width": 80,
                   "height": 44,
-                  "left": 642,
+                  "left": 686,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 690,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 80,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               },
               {
+                "index": 3,
                 "action": "daily-filter",
                 "label": "已完成",
                 "skinned": true,
                 "rect": {
-                  "width": 56,
+                  "width": 72,
                   "height": 44,
-                  "left": 734,
+                  "left": 778,
                   "top": 208.84375
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 778,
+                    "top": 214.84375
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               }
-            ]
+            ],
+            "adjacentHitOverlaps": []
           },
           "badges": {
             "badgeCount": 1,
@@ -486,93 +988,214 @@
               {
                 "role": "daily-claimable-count-badge",
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "flex",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               }
             ]
-          }
+          },
+          "rows": [
+            {
+              "index": 0,
+              "skinned": true,
+              "rowState": "selected",
+              "height": 50,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            }
+          ]
         },
         "1280x720": {
           "chips": {
             "chipCount": 4,
             "chips": [
               {
+                "index": 0,
                 "action": "daily-filter",
                 "label": "全部",
                 "skinned": true,
                 "rect": {
-                  "width": 44,
+                  "width": 72,
                   "height": 44,
                   "left": 358,
                   "top": 201.640625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 358,
+                    "top": 207.640625
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "selected"
               },
               {
+                "index": 1,
                 "action": "daily-filter",
                 "label": "进行中",
                 "skinned": true,
                 "rect": {
-                  "width": 56,
+                  "width": 72,
                   "height": 44,
-                  "left": 414,
+                  "left": 442,
                   "top": 201.640625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 442,
+                    "top": 207.640625
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               },
               {
+                "index": 2,
                 "action": "daily-filter",
                 "label": "可领取",
                 "skinned": true,
                 "rect": {
                   "width": 80,
                   "height": 44,
-                  "left": 482,
+                  "left": 526,
                   "top": 201.640625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 530,
+                    "top": 207.640625
+                  },
+                  "btnRect": {
+                    "width": 80,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               },
               {
+                "index": 3,
                 "action": "daily-filter",
                 "label": "已完成",
                 "skinned": true,
                 "rect": {
-                  "width": 56,
+                  "width": 72,
                   "height": 44,
-                  "left": 574,
+                  "left": 618,
                   "top": 201.640625
                 },
                 "cssMin": {
-                  "minWidth": 44,
+                  "minWidth": 72,
                   "minHeight": 44
                 },
+                "labelColor": "rgb(61, 46, 31)",
                 "probeMethod": "getBoundingClientRect",
-                "meetsMin44": true
+                "meetsMin44": true,
+                "sprite": {
+                  "spriteRect": {
+                    "width": 72,
+                    "height": 32,
+                    "left": 618,
+                    "top": 207.640625
+                  },
+                  "btnRect": {
+                    "width": 72,
+                    "height": 44
+                  },
+                  "spriteFitsButton": true,
+                  "spriteFullyInsideButton": true,
+                  "expectedDisplay": {
+                    "w": 72,
+                    "h": 32
+                  },
+                  "visibleIntersectionArea": 2304,
+                  "spriteArea": 2304,
+                  "intersectionCoversSprite": true
+                },
+                "elementFromPoint": {
+                  "centerHitsChip": true,
+                  "topTag": "BUTTON"
+                },
+                "filterChipState": "normal"
               }
-            ]
+            ],
+            "adjacentHitOverlaps": []
           },
           "badges": {
             "badgeCount": 1,
@@ -580,65 +1203,480 @@
               {
                 "role": "daily-claimable-count-badge",
                 "filterBadgeCount": 1,
+                "labelText": "1",
                 "hiddenAttr": false,
                 "hasHiddenClass": false,
                 "display": "flex",
-                "visibility": "visible",
                 "rect": {
                   "width": 20,
                   "height": 16
-                },
-                "entireNodeHiddenWhenZero": null,
-                "visibleWhenPositive": true
+                }
               }
             ]
-          }
+          },
+          "rows": [
+            {
+              "index": 0,
+              "skinned": true,
+              "rowState": "selected",
+              "height": 50,
+              "color": "rgb(61, 46, 31)",
+              "minHeightCss": "40px"
+            }
+          ]
         }
       }
     }
   },
-  "mailBadgeZero": {
-    "file": "mail-filters-badge-zero-1600x900-dpr1.jpg",
+  "chipStates": {
+    "file": "mail-chips-four-states-1600x900.jpg",
     "quality": 88,
-    "bytes": 41469,
+    "bytes": 421674,
+    "states": [
+      {
+        "state": "normal",
+        "action": "mail-filter-all",
+        "filterChipState": "normal"
+      },
+      {
+        "state": "hover",
+        "action": "mail-filter-unread",
+        "filterChipState": "hover"
+      },
+      {
+        "state": "pressed",
+        "missing": true
+      },
+      {
+        "state": "selected",
+        "missing": true
+      }
+    ]
+  },
+  "rowStates": {
+    "file": "mail-rows-three-states-1600x900.jpg",
+    "quality": 88,
+    "bytes": 435554,
+    "rows": [
+      {
+        "state": "default",
+        "height": 95,
+        "skinned": true
+      },
+      {
+        "state": "hover",
+        "height": 67,
+        "skinned": true
+      },
+      {
+        "state": "selected",
+        "height": 67,
+        "skinned": true
+      }
+    ]
+  },
+  "badgeNine": {
+    "file": "mail-badge-count-nine-1600x900.jpg",
+    "quality": 88,
+    "bytes": 433483,
     "badges": {
       "badgeCount": 2,
       "badges": [
         {
           "role": "mail-filter-all-count",
           "filterBadgeCount": 0,
+          "labelText": "",
           "hiddenAttr": true,
           "hasHiddenClass": true,
           "display": "none",
-          "visibility": "visible",
           "rect": {
             "width": 0,
             "height": 0
-          },
-          "entireNodeHiddenWhenZero": true,
-          "visibleWhenPositive": null
+          }
         },
         {
           "role": "mail-filter-unread-count",
-          "filterBadgeCount": 0,
-          "hiddenAttr": true,
-          "hasHiddenClass": true,
-          "display": "none",
-          "visibility": "visible",
+          "filterBadgeCount": 10,
+          "labelText": "9+",
+          "hiddenAttr": false,
+          "hasHiddenClass": false,
+          "display": "block",
           "rect": {
-            "width": 0,
-            "height": 0
-          },
-          "entireNodeHiddenWhenZero": true,
-          "visibleWhenPositive": null
+            "width": 20,
+            "height": 16
+          }
         }
       ]
     }
   },
   "summary": {
-    "chipsPass": true,
-    "badgesPass": true,
-    "zeroPass": true,
+    "chipRows": [
+      {
+        "panel": "mail",
+        "viewport": "1600x900",
+        "chip": "mail-filter-all",
+        "meetsMin44": true,
+        "w": 74,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "mail",
+        "viewport": "1600x900",
+        "chip": "mail-filter-unread",
+        "meetsMin44": true,
+        "w": 74,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "mail",
+        "viewport": "3200x1800",
+        "chip": "mail-filter-all",
+        "meetsMin44": true,
+        "w": 74,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "mail",
+        "viewport": "3200x1800",
+        "chip": "mail-filter-unread",
+        "meetsMin44": true,
+        "w": 74,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "mail",
+        "viewport": "1280x720",
+        "chip": "mail-filter-all",
+        "meetsMin44": true,
+        "w": 74,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "mail",
+        "viewport": "1280x720",
+        "chip": "mail-filter-unread",
+        "meetsMin44": true,
+        "w": 74,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1600x900",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1600x900",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1600x900",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 80,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1600x900",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "3200x1800",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "3200x1800",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "3200x1800",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 80,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "3200x1800",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1280x720",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1280x720",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1280x720",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 80,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      },
+      {
+        "panel": "daily",
+        "viewport": "1280x720",
+        "chip": "daily-filter",
+        "meetsMin44": true,
+        "w": 72,
+        "h": 44,
+        "spriteInside": true,
+        "overlapFree": true,
+        "centerHits": true
+      }
+    ],
+    "badgeRows": [
+      {
+        "panel": "mail",
+        "viewport": "1600x900",
+        "role": "mail-filter-all-count",
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "mail",
+        "viewport": "1600x900",
+        "role": "mail-filter-unread-count",
+        "count": 2,
+        "label": "2"
+      },
+      {
+        "panel": "mail",
+        "viewport": "1600x900",
+        "role": null,
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "mail",
+        "viewport": "3200x1800",
+        "role": "mail-filter-all-count",
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "mail",
+        "viewport": "3200x1800",
+        "role": "mail-filter-unread-count",
+        "count": 2,
+        "label": "2"
+      },
+      {
+        "panel": "mail",
+        "viewport": "3200x1800",
+        "role": null,
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "mail",
+        "viewport": "1280x720",
+        "role": "mail-filter-all-count",
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "mail",
+        "viewport": "1280x720",
+        "role": "mail-filter-unread-count",
+        "count": 2,
+        "label": "2"
+      },
+      {
+        "panel": "mail",
+        "viewport": "1280x720",
+        "role": null,
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "daily",
+        "viewport": "1600x900",
+        "role": "daily-claimable-count-badge",
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "daily",
+        "viewport": "3200x1800",
+        "role": "daily-claimable-count-badge",
+        "count": 1,
+        "label": "1"
+      },
+      {
+        "panel": "daily",
+        "viewport": "1280x720",
+        "role": "daily-claimable-count-badge",
+        "count": 1,
+        "label": "1"
+      }
+    ],
+    "chipsMinPass": true,
+    "spritePass": true,
+    "overlapPass": true,
+    "fromPointPass": true,
+    "labelColorPass": true,
+    "rowHeightPass": true,
+    "badgeNinePass": true,
     "overall": true
-  }
+  },
+  "jpegVerify": [
+    {
+      "file": "mail-filters-1600x900.jpg",
+      "bytes": 435452,
+      "width": 1600,
+      "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-filters-3200x1800.jpg",
+      "bytes": 928141,
+      "width": 3200,
+      "height": 1800,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-filters-1280x720.jpg",
+      "bytes": 249554,
+      "width": 1280,
+      "height": 720,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "daily-filters-1600x900.jpg",
+      "bytes": 434800,
+      "width": 1600,
+      "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "daily-filters-3200x1800.jpg",
+      "bytes": 926056,
+      "width": 3200,
+      "height": 1800,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "daily-filters-1280x720.jpg",
+      "bytes": 249156,
+      "width": 1280,
+      "height": 720,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-chips-four-states-1600x900.jpg",
+      "bytes": 421674,
+      "width": 1600,
+      "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-rows-three-states-1600x900.jpg",
+      "bytes": 435554,
+      "width": 1600,
+      "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    },
+    {
+      "file": "mail-badge-count-nine-1600x900.jpg",
+      "bytes": 433483,
+      "width": 1600,
+      "height": 900,
+      "under1mb": true,
+      "dimensionsOk": true
+    }
+  ]
 }

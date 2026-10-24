@@ -22,13 +22,7 @@ Art assets cherry-picked from Draft PR [#506](https://github.com/anitaguptaoffic
 
 Chip **CSS hit wrap ≥44×44** while sprite stays **72×32** — see `hit-proof.json`.
 
-## Runtime engineering acceptance (tip `8c45fa1`)
-
-JPEG + DOM probes（邮件/日常筛选，1600×900 DPR1/2、1280×720）：见 [`INTEGRATION-QA.md`](./INTEGRATION-QA.md) 与 [`runtime/`](./runtime/)。**非**美术静态 PASS。
-
-`cd client && node scripts/capture-art-ui-filter-008-runtime-evidence.mjs`
-
-## Regenerate (static mount inventory)
+## Regenerate
 
 `cd client && node scripts/capture-art-ui-filter-008-evidence.mjs`
 
