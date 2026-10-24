@@ -39,6 +39,8 @@ describe("marchFormTroopReserve (CLIENT-206)", () => {
       toXRaw: "10",
       toYRaw: "20",
       marchCountRaw: "101",
+      heroIdRaw: "1",
+      ownedHeroes: [{ hero_id: 1, template_cfg_id: 1001, status: 1 }],
       cityX: 60,
       cityY: 60,
       cityTroops: [{ unit_cfg_id: MARCH_FORM_INFANTRY_UNIT_CFG_ID, count: 100 }],

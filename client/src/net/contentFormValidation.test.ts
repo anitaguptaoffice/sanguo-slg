@@ -106,6 +106,15 @@ describe("formatPanelGatewayError", () => {
     expect(formatPanelGatewayError("march", 50005, "出征参数无效")).toBe("出征参数无效 [50005]");
   });
 
+  it("maps march hero gateway messages to readable Chinese", () => {
+    expect(formatPanelGatewayError("march", 50005, "hero: hero is not idle")).toBe(
+      "出征参数无效：将领当前非空闲，无法出征 [50005]",
+    );
+    expect(formatPanelGatewayError("march", 10001, "hero: hero not found")).toBe(
+      "将领不存在或不属于您 [10001]",
+    );
+  });
+
   it("falls back to server message when code is unknown", () => {
     expect(formatPanelGatewayError("bag", 99999, "自定义错误")).toBe("自定义错误 [99999]");
   });

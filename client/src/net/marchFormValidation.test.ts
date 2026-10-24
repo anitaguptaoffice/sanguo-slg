@@ -7,10 +7,13 @@ import {
 } from "@/net/marchFormValidation";
 
 describe("validateMarchForm", () => {
+  const ownedHeroes = [{ hero_id: 7, template_cfg_id: 1001, level: 1, loyalty: 50, status: 1 }];
   const base = {
     toXRaw: "10",
     toYRaw: "20",
     marchCountRaw: "30",
+    heroIdRaw: "7",
+    ownedHeroes,
     cityX: 60,
     cityY: 60,
     cityTroops: [{ unit_cfg_id: MARCH_FORM_INFANTRY_UNIT_CFG_ID, count: 100 }],
@@ -22,6 +25,7 @@ describe("validateMarchForm", () => {
       toX: 0,
       toY: WORLD_MAP_COORD_MAX,
       marchCount: 30,
+      heroId: 7,
     });
   });
 
@@ -70,6 +74,12 @@ describe("validateMarchForm", () => {
   it("rejects empty or non-positive march count", () => {
     expect(validateMarchForm({ ...base, marchCountRaw: "" }).ok).toBe(false);
     expect(validateMarchForm({ ...base, marchCountRaw: "0" }).ok).toBe(false);
+  });
+
+  it("rejects march without hero selection", () => {
+    const r = validateMarchForm({ ...base, heroIdRaw: "" });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toContain("请选择带队将领");
   });
 });
 

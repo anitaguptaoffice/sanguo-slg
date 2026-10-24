@@ -30,6 +30,7 @@ export type GatewayPort = {
     toX: number,
     toY: number,
     purpose: number,
+    heroId: number,
     troops: { unit_cfg_id: number; count: number }[],
   ): Promise<unknown>;
   listMarches(cityId?: number, limit?: number, offset?: number): Promise<unknown>;
@@ -302,13 +303,14 @@ export class GatewayClient implements GatewayPort {
     toX: number,
     toY: number,
     purpose: number,
+    heroId: number,
     troops: { unit_cfg_id: number; count: number }[],
   ) {
     const { StartMarchResponse } = getTypes();
     return this.rpc(
       Routes.StartMarch,
       "StartMarchRequest",
-      { city_id: cityId, to_x: toX, to_y: toY, purpose, troops },
+      { city_id: cityId, to_x: toX, to_y: toY, purpose, hero_id: heroId, troops },
       StartMarchResponse,
       true,
     );

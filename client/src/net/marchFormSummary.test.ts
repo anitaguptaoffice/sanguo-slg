@@ -68,6 +68,7 @@ describe("marchFormSummary", () => {
       <input data-field="to-x" value="8" />
       <input data-field="to-y" value="9" />
       <input data-field="march-count" value="20" />
+      <select data-field="march-hero"><option value="1" selected>将领</option></select>
       <p data-role="march-form-summary"></p>
       <p class="hidden" data-role="march-form-summary-warn"></p>
     `;
@@ -88,6 +89,7 @@ describe("marchFormSummary", () => {
       <input data-field="to-x" value="60" />
       <input data-field="to-y" value="60" />
       <input data-field="march-count" value="50" />
+      <select data-field="march-hero"><option value="1" selected>将领</option></select>
       <p data-role="march-form-summary"></p>
       <p class="hidden" data-role="march-form-error"></p>
     `;
@@ -95,6 +97,7 @@ describe("marchFormSummary", () => {
       cityX: 60,
       cityY: 60,
       cityTroops: [{ unit_cfg_id: 1, count: 100 }],
+      ownedHeroes: [{ hero_id: 1, template_cfg_id: 1001, status: 1 }],
       clockMs: 0,
     });
     expect(root.querySelector('[data-role="march-form-error"]')?.textContent).toContain(
