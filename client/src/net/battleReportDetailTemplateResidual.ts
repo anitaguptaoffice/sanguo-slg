@@ -4,6 +4,10 @@ import type { BattleReportDetailView, BattleReportSummary } from "@/net/military
 import { formatCasualtyMap } from "@/net/militaryFormat";
 import { parseBattleReportLocation } from "@/net/battleReportMinimapFocus";
 import type { BattleReportLocation } from "@/net/battleReportMinimapFocus";
+import {
+  applyBattleReportCoordCopyBarResidualDeepSweep,
+  formatBattleReportCoordCopyBarResidualDeepSweep,
+} from "@/net/battleReportCoordCopyBarResidualDeepSweep";
 
 export const BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS =
   "battle-report-side-template-residual";
@@ -127,11 +131,16 @@ export function applyBattleReportCoordsReadonlySelect(
   textEl.classList.add(BATTLE_REPORT_COORD_COPY_SELECTED_CLASS);
   const barEl = textEl.closest<HTMLElement>(`.${BATTLE_REPORT_COORD_COPY_BAR_CLASS}`);
   if (barEl) {
-    const sweepHint = formatBattleReportCoordCopyBarResidualSweep(textEl.textContent ?? "");
-    if (sweepHint) {
+    const copyText = textEl.textContent ?? "";
+    const deepSweepHint = formatBattleReportCoordCopyBarResidualDeepSweep(copyText);
+    const sweepHint = formatBattleReportCoordCopyBarResidualSweep(copyText);
+    if (deepSweepHint) {
+      barEl.setAttribute("aria-label", deepSweepHint);
+    } else if (sweepHint) {
       barEl.setAttribute("aria-label", sweepHint);
     }
     applyBattleReportCoordCopyBarResidualSweep(barEl);
+    applyBattleReportCoordCopyBarResidualDeepSweep(barEl);
   }
   coordCopySelectTimer = setTimeout(() => {
     coordCopySelectTimer = null;

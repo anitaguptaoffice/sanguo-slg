@@ -117,7 +117,7 @@ import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
-import { pulseBattleReportListKeyboardAdjacentNavResidualRing } from "@/net/battleReportListKeyboardAdjacentNavResidual";
+import { pulseBattleReportListKeyboardAdjacentNavResidualRings } from "@/net/battleReportListKeyboardAdjacentNavResidualDeep";
 import {
   applyBattleReportCoordsReadonlySelect,
   BATTLE_REPORT_COORD_COPY_BAR_CLASS,
@@ -191,7 +191,7 @@ export class BattleReportPanel {
   private detailLoading = false;
   /** 上一封/下一封切换后把焦点拉回详情顶栏导航（CLIENT-094）。 */
   private focusDetailNavAfterRender = false;
-  /** CLIENT-254：列表重绘后补相邻键盘导航残余环。 */
+  /** CLIENT-254/270：列表重绘后补相邻键盘导航残余环 + 深环。 */
   private adjacentNavResidualRingReportId: number | null = null;
 
   constructor(
@@ -593,7 +593,7 @@ export class BattleReportPanel {
   private flushAdjacentNavResidualRing(list: HTMLElement): void {
     const id = this.adjacentNavResidualRingReportId;
     if (id == null || id <= 0 || this.detailLoading) return;
-    pulseBattleReportListKeyboardAdjacentNavResidualRing(list, id);
+    pulseBattleReportListKeyboardAdjacentNavResidualRings(list, id);
     this.adjacentNavResidualRingReportId = null;
   }
 

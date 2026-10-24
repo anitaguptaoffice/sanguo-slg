@@ -82,6 +82,14 @@ export const REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS =
 export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS =
   "battle-report-coord-copy-bar-residual-sweep";
 
+/** CLIENT-270: adjacent report list keyboard nav residual deep ring. */
+export const REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEP_RING_CLASS =
+  "report-list-keyboard-adjacent-nav-residual-deep-ring";
+
+/** CLIENT-270: coord copy bar selection deep sweep (CLIENT-254 baseline). */
+export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEP_SWEEP_CLASS =
+  "battle-report-coord-copy-bar-residual-deep-sweep";
+
 /** CLIENT-255: mail claim → HUD badge deep pulse after CLIENT-241 sync. */
 export const MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS = "mail-claim-hud-sync-deep-pulse";
 
