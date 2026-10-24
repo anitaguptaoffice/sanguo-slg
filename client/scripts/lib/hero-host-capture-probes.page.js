@@ -102,20 +102,12 @@
     return er.top - sr.top + scroll.scrollTop;
   }
 
-  /** Collapse recruit + satellite sections so hero-scroll keeps viewport (matches detail-open host chrome). */
+  /** Close recruit details only; do not mutate captive/persuade/coming sections (production UI). */
   function prepareHeroHostEvidenceChrome() {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     if (!panel) return;
     const host = panel.querySelector('[data-role="hero-recruit-host"]');
     if (host instanceof HTMLDetailsElement) host.open = false;
-    for (const sel of [
-      '[data-role="captive-hero-section"]',
-      '[data-role="persuade-section"]',
-      '[data-role="coming-hero-section"]',
-    ]) {
-      const el = panel.querySelector(sel);
-      if (el instanceof HTMLElement) el.hidden = true;
-    }
   }
 
   function clampHeroScrollTop(scroll, top) {
@@ -139,10 +131,10 @@
     const margin = 6;
     const minClipH = 64;
     for (let pass = 0; pass < 64; pass++) {
-      let clip = effectiveVisibleClip(scroll);
+      let clip = effectiveVisibleClip(targets[0]);
       if (clip.height < minClipH) {
         scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
-        clip = effectiveVisibleClip(scroll);
+        clip = effectiveVisibleClip(targets[0]);
       }
       const padded = {
         left: clip.left + margin,
@@ -315,11 +307,10 @@
     const bustPathOk = bustSrc.includes(`/hero/bust/${templateCfgId}.png`);
 
     const listAvatarVisible = !!(avatarRect && avatarRect.width >= 48 && avatarRect.height >= 48);
-    const heroScrollEl = panel?.querySelector('[data-role="hero-scroll"]');
     const listRowClip =
-      heroScrollEl instanceof HTMLElement
-        ? effectiveVisibleClip(heroScrollEl)
-        : listRow
+      avatar instanceof HTMLElement
+        ? effectiveVisibleClip(avatar)
+        : listRow instanceof HTMLElement
           ? effectiveVisibleClip(listRow)
           : null;
     const listAvatarInClip =
