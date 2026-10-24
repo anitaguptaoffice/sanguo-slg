@@ -1,5 +1,5 @@
 /**
- * HERO Slice3 (1009–1012) main-city runtime evidence — production hero panel path only.
+ * HERO Slice3 (1011–1012; 1009/1010 HOLD) main-city runtime evidence — production hero panel path only.
  *
  * Usage:
  *   cd client && npx playwright install chromium
@@ -21,7 +21,7 @@ const clientRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..");
 const SAMPLE_ROOT = path.resolve(repoRoot, "docs/art/samples/hero-host-slice3");
 const ART_HEAD_SHA = process.env.ART_HEAD_SHA || "320955f1ff4565b161268640226bf3d4156d4f17";
-const SLICE3_IDS = [1009, 1010, 1011, 1012];
+const SLICE3_IDS = [1011, 1012];
 const HERO_IDS = process.env.HERO_TEMPLATE_CFG_ID
   ? [Number(process.env.HERO_TEMPLATE_CFG_ID)]
   : SLICE3_IDS;
@@ -39,6 +39,18 @@ const VIEWPORTS = [
   { tag: "1280x720-dpr1", file: "hero-host-1280x720-dpr1.jpg", width: 1280, height: 720, dpr: 1 },
 ];
 const SAMEFRAME_FILE = "hero-host-1280x720-dpr1-bust-name-sameframe.jpg";
+/** Art #108 comment 6388032901 — do not sign off sameframe until shared host+probe fix lands. */
+const SAMEFRAME_SIGNOFF = {
+  ok: false,
+  status: "FAIL_PENDING_HOST_FIX",
+  art_freeze_comment_id: "6388032901",
+  summary:
+    "1280 bust+name sameframe not signed off: legacy probe uses window-only rects; recruit area / scroll ancestors may clip bust (mouth/chest/clothes). Await ancestor∩viewport probe + host scroll fix before PASS. Do not ask art to re-sign clipped shots.",
+};
+
+function wrapSameframeProbe(legacyWindowProbe) {
+  return { ...SAMEFRAME_SIGNOFF, legacy_window_only_probe: legacyWindowProbe };
+}
 
 function heroAssetIds(templateCfgId) {
   return [`hero.avatar.${templateCfgId}.v1`, `hero.bust.${templateCfgId}.v1`];
@@ -385,12 +397,17 @@ async function captureHero(browser, templateCfgId, tipSha) {
     art_asset_ids: heroAssetIds(templateCfgId),
     static_face_percent_min_required: 60,
     probes,
-    sameframe: { shot: SAMEFRAME_FILE, jpeg: sameJpeg, probe: sameProbe },
+    sameframe: {
+      shot: SAMEFRAME_FILE,
+      jpeg: sameJpeg,
+      signoff: SAMEFRAME_SIGNOFF,
+      probe: wrapSameframeProbe(sameProbe),
+    },
     shots,
     notes: [
       "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
       "Art path-copied from Draft #1191; Draft remains unmerged.",
-      "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
+      "1280 sameframe: FAIL_PENDING_HOST_FIX per #108 6388032901 — reference JPEG only, not art sign-off.",
     ],
     captured_at: new Date().toISOString(),
   };
@@ -416,7 +433,7 @@ async function captureHero(browser, templateCfgId, tipSha) {
   }
   const sameRel = `runtime/${templateCfgId}/${SAMEFRAME_FILE}`;
   inventoryLines.push(
-    `- \`${sameRel}\` — 1280×720 bust+name same frame, sha256 \`${await sha256File(samePath)}\``,
+    `- \`${sameRel}\` — 1280×720 bust+name same frame (**FAIL_PENDING_HOST_FIX**, reference only), sha256 \`${await sha256File(samePath)}\``,
     "",
     `## Textures (${heroAssetIds(templateCfgId).join(" / ")})`,
     "",
@@ -430,13 +447,21 @@ async function captureHero(browser, templateCfgId, tipSha) {
       inventoryLines.push(`- \`${rel}\` — ${bytes} bytes, sha256 \`${sha}\``);
     }
   }
-  inventoryLines.push("", "## Probe summary", "", "```json", JSON.stringify({ probes, sameframe: sameProbe }, null, 2), "```");
+  inventoryLines.push(
+    "",
+    "## Probe summary",
+    "",
+    "1280 sameframe signoff: **FAIL_PENDING_HOST_FIX** (#108 6388032901).",
+    "",
+    "```json",
+    JSON.stringify({ probes, sameframe: wrapSameframeProbe(sameProbe) }, null, 2),
+    "```",
+  );
   await writeFile(path.join(outDir, "INVENTORY.md"), inventoryLines.join("\n"));
 
   const matrixOk = Object.values(probes).every((p) => p?.ok);
-  const sameOk = sameProbe?.ok;
-  if (!matrixOk || !sameOk) {
-    console.error(`probe failed for ${templateCfgId}`, { probes, sameProbe });
+  if (!matrixOk) {
+    console.error(`viewport probe failed for ${templateCfgId}`, { probes });
     return false;
   }
   return true;
