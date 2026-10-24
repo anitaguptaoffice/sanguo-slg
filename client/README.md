@@ -1123,7 +1123,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（军情战报筛选记忆 CLIENT-109）
 
-**行军** 列表：`military-list-filter-v1`（`sessionStorage`）记忆 **阶段筛选**（全部/待发/去程/驻扎/返回）与 **ETA 排序**；与 **CLIENT-047/069/085** 列表密度、格点筛选并存。**战报** 列表：胜负 outcome 筛选键迁移至 `battle-report-outcome-filter-v1`（兼容 **CLIENT-049** 旧键），与时间窗 **CLIENT-065** 分离；列表行 **复盘格点** 打开世界信息卡（**CLIENT-108**）。
+**行军** 列表：`military-list-filter-v1`（`sessionStorage`）记忆 **阶段筛选**（全部/待发/去程/驻扎/返回）与 **ETA 排序**；与 **CLIENT-047/069/085** 列表密度、格点筛选并存。**战报** 列表：胜负 outcome 筛选键迁移至 `battle-report-outcome-filter-v1`（兼容 **CLIENT-049** 旧键），与时间窗 **CLIENT-065** 分离；**CLIENT-125** 筛选条接 **CLIENT-121** `data-ui-filter-chip`（`aria-pressed` + `battle-report-outcome-filter-v1` 记忆），列表行 `data-ui-filter-row` 九宫与胜/负 **badge.dot**（与攻守摘要 **CLIENT-100**、键盘 **CLIENT-094**、复盘格点 **CLIENT-108** 并存）；列表行 **复盘格点** 打开世界信息卡（**CLIENT-108**）。
 
 1. 切换军情阶段筛选与 ETA 排序 → 刷新页面后恢复。
 2. 战报 **胜/负/平** 筛选与时间窗组合 → 刷新后各自恢复；点 **复盘格点** 应选中世界格点。

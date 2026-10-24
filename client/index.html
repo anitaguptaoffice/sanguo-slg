@@ -584,6 +584,35 @@
       .battle-report-list li[data-report-id] {
         display: flex; gap: 8px; align-items: flex-start; cursor: pointer;
       }
+      .battle-report-list li[data-report-id].art-filter-row--skinned {
+        background: transparent;
+      }
+      .battle-report-row-outcome {
+        flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        min-width: 2.75em;
+      }
+      .battle-report-outcome-badge--win .art-filter-badge-dot-sprite,
+      .battle-report-outcome-badge--win:not(.art-filter-badge-dot--skinned) {
+        box-shadow: 0 0 0 2px #3d4a28;
+        border-radius: 50%;
+        background: #7cb342;
+      }
+      .battle-report-outcome-badge--loss .art-filter-badge-dot-sprite,
+      .battle-report-outcome-badge--loss:not(.art-filter-badge-dot--skinned) {
+        box-shadow: 0 0 0 2px #4a3028;
+        border-radius: 50%;
+        background: #e8a87c;
+      }
+      .battle-report-outcome-badge:not(.art-filter-badge-dot--skinned) {
+        display: inline-block; width: 10px; height: 10px;
+      }
+      .battle-report-outcome-chip-group {
+        display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px;
+      }
+      .battle-report-filters button.art-filter-chip:focus-visible {
+        outline: 2px solid #c9a227;
+        outline-offset: 2px;
+      }
       .battle-outcome-chip {
         flex: 0 0 auto; min-width: 2.5em; padding: 2px 6px; border-radius: 4px;
         font-size: 11px; font-weight: 600; text-align: center; line-height: 1.3;

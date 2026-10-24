@@ -510,6 +510,35 @@ describe("BattleReportPanel", () => {
     expect(mount.querySelector('[data-role="report-detail"]')?.textContent).toBe("");
   });
 
+  it("wires outcome filter chips with aria-pressed and list row skins (CLIENT-125)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 1, outcome: 1, created_at_ms: 0 },
+          { report_id: 2, outcome: 2, created_at_ms: 0 },
+        ],
+        total: 2,
+      }),
+      getBattleReport: vi.fn(),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const winChip = mount.querySelector<HTMLButtonElement>(
+      'button[data-filter="win"][data-ui-filter-chip]',
+    );
+    expect(winChip).toBeTruthy();
+    winChip?.click();
+    await flushPromises();
+    expect(winChip?.getAttribute("aria-pressed")).toBe("true");
+    const row = mount.querySelector('li[data-report-id="1"]');
+    expect(row?.getAttribute("data-ui-filter-row")).toBe("");
+    expect(row?.querySelector('[data-ui-filter-badge="dot"]')).toBeTruthy();
+    expect(row?.querySelector(".battle-outcome-chip")?.textContent).toContain("攻胜");
+  });
+
   it("persists outcome filter when user changes filter", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

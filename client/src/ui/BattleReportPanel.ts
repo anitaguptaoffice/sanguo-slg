@@ -33,8 +33,6 @@ import {
   battleReportOutcomeChipClass,
   battleReportOutcomeChipLabel,
   countBattleReportsByOutcome,
-  filterBattleReportsByLocation,
-  filterBattleReportsByOutcome,
   filterBattleReportsByTimeWindow,
   formatBattleReportDetail,
   formatBattleReportFoeWithoutCoord,
@@ -54,6 +52,13 @@ import {
   writeBattleReportOutcomeFilterSession,
   writeBattleReportTimeWindowFilterSession,
 } from "@/net/battleReportListState";
+import {
+  filterBattleReportsForPanelList,
+  resolveBattleReportListOutcomeBadgeKind,
+  syncBattleReportOutcomeFilterChips,
+} from "@/net/battleReportOutcomeFilterChip";
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { mountFilterBadges, mountFilterRows } from "@/engine/artUiFilterSkin";
 import {
   BATTLE_REPORT_FILTER_EMPTY_TEXT,
   battleReportFilterEmptyClass,
@@ -95,6 +100,8 @@ export type BattleReportPanelOptions = {
   onBattleReportReadonlyHint?: (message: string) => void;
   /** 列表行「复盘格点」：打开世界格点信息卡（CLIENT-109 / CLIENT-108）。 */
   onOpenReplayWorldTile?: (summary: BattleReportSummary) => void;
+  /** CLIENT-125：列表行九宫与胜负 badge（chip 由 MainCity `remountPanelFilterChips` 挂载）。 */
+  filterListSkinAssets?: AssetLoader;
 };
 
 export class BattleReportPanel {
@@ -239,10 +246,12 @@ export class BattleReportPanel {
       <p data-role="report-hint">military.v1 战报列表；筛选仅在客户端生效，点击条目加载详情。</p>
       <div class="battle-report-filters" role="group" aria-label="战报结果筛选">
         <span>筛选：</span>
+        <div class="battle-report-outcome-chip-group" role="group" aria-label="胜负筛选">
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="all" class="active" aria-pressed="true">全部</button>
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="win" aria-pressed="false">胜</button>
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="loss" aria-pressed="false">负</button>
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="draw" aria-pressed="false">平</button>
+        </div>
         <label class="battle-report-time-window">
           时间：
           <select data-action="filter-time-window" aria-label="战报时间范围">
@@ -274,11 +283,12 @@ export class BattleReportPanel {
   }
 
   private visibleReports(nowMs = Date.now()): BattleReportSummary[] {
-    const byTime = this.timeWindowFilteredReports(nowMs);
-    const byOutcome = filterBattleReportsByOutcome(byTime, this.outcomeFilter);
-    const loc = this.locationFilter;
-    if (loc == null) return byOutcome;
-    return filterBattleReportsByLocation(byOutcome, loc.x, loc.y);
+    return filterBattleReportsForPanelList(this.reports, {
+      outcomeFilter: this.outcomeFilter,
+      timeWindowFilter: this.timeWindowFilter,
+      nowMs,
+      location: this.locationFilter,
+    });
   }
 
   private updateLocationFilterUi(): void {
@@ -300,22 +310,18 @@ export class BattleReportPanel {
   }
 
   private updateFilterButtons(): void {
-    const chips = Array.from(
-      this.panel.querySelectorAll<HTMLButtonElement>('[data-action="filter-outcome"]'),
-    );
-    for (const btn of chips) {
-      const f = btn.getAttribute("data-filter") as BattleReportOutcomeFilter;
-      const selected = f === this.outcomeFilter;
-      btn.classList.toggle("active", selected);
-      btn.classList.toggle("selected", selected);
-      btn.setAttribute("aria-pressed", selected ? "true" : "false");
-      if (selected) btn.setAttribute("aria-current", "true");
-      else btn.removeAttribute("aria-current");
-    }
+    syncBattleReportOutcomeFilterChips(this.panel, this.outcomeFilter);
     const timeSelect = this.panel.querySelector<HTMLSelectElement>(
       '[data-action="filter-time-window"]',
     );
     if (timeSelect) timeSelect.value = this.timeWindowFilter;
+  }
+
+  private mountListRowFilterSkins(): void {
+    const assets = this.panelOpts?.filterListSkinAssets;
+    if (!assets) return;
+    mountFilterRows(this.panel, assets);
+    mountFilterBadges(this.panel, assets);
   }
 
   private renderOutcomeSummary(): void {
@@ -363,6 +369,7 @@ export class BattleReportPanel {
 
     this.updateFilterButtons();
     this.updateLocationFilterUi();
+    this.mountListRowFilterSkins();
     this.renderOutcomeSummary();
 
     if (statusEl) {
@@ -431,9 +438,21 @@ export class BattleReportPanel {
 
     for (const r of filtered) {
       const li = document.createElement("li");
+      li.setAttribute("data-ui-filter-row", "");
+      const outcomeCol = document.createElement("div");
+      outcomeCol.className = "battle-report-row-outcome";
+      const badgeKind = resolveBattleReportListOutcomeBadgeKind(r.outcome);
+      if (badgeKind) {
+        const dot = document.createElement("span");
+        dot.setAttribute("data-ui-filter-badge", "dot");
+        dot.className = `battle-report-outcome-badge battle-report-outcome-badge--${badgeKind}`;
+        dot.setAttribute("aria-hidden", "true");
+        outcomeCol.appendChild(dot);
+      }
       const chip = document.createElement("span");
       chip.className = `battle-outcome-chip ${battleReportOutcomeChipClass(r.outcome)}`;
       chip.textContent = battleReportOutcomeChipLabel(r.outcome);
+      outcomeCol.appendChild(chip);
       const body = document.createElement("span");
       body.className = "battle-report-row-body";
       const coord = document.createElement("span");
@@ -457,12 +476,14 @@ export class BattleReportPanel {
         replayBtn.textContent = battleReportReplayGridLinkLabel(grid.x, grid.y);
         body.appendChild(replayBtn);
       }
-      li.appendChild(chip);
+      li.appendChild(outcomeCol);
       li.appendChild(body);
       const id = r.report_id ?? 0;
       if (id) {
         li.setAttribute("data-report-id", String(id));
-        if (id === this.selectedReportId) li.classList.add("selected");
+        const selected = id === this.selectedReportId;
+        li.classList.toggle("selected", selected);
+        li.setAttribute("aria-selected", selected ? "true" : "false");
       }
       ul.appendChild(li);
     }
