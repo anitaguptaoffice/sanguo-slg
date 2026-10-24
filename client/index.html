@@ -1114,6 +1114,23 @@
         outline-offset: -1px;
         background: rgba(201, 162, 39, 0.12);
       }
+      .march-list li.intel-new-march-highlight {
+        box-shadow: inset 0 0 0 2px #7ec8ff;
+        background: rgba(126, 200, 255, 0.18);
+        animation: intel-new-march-highlight-pulse-keyframes 3s ease-out 1;
+      }
+      @keyframes intel-new-march-highlight-pulse-keyframes {
+        0% { background-color: rgba(126, 200, 255, 0.35); }
+        100% { background-color: rgba(126, 200, 255, 0.12); }
+      }
+      .march-submit-intel-handoff-strip {
+        font-size: 12px;
+        font-weight: 600;
+        color: #9ed5ff;
+        margin: 4px 0 6px;
+        line-height: 1.35;
+      }
+      .march-submit-intel-handoff-strip.hidden { display: none; }
       @keyframes march-phase-changed-pulse-keyframes {
         0% { background-color: rgba(158, 197, 255, 0.35); }
         100% { background-color: transparent; }

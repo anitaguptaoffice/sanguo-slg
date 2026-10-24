@@ -91,6 +91,11 @@ import {
   MARCH_INTEL_PHASE_ETA_STRIP_ROLE,
   syncMarchIntelPhaseEtaMutualHighlight,
 } from "@/net/marchIntelPhaseEtaStrip";
+import {
+  applyMarchSubmitIntelHandoff,
+  MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE,
+  MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS,
+} from "@/net/marchSubmitIntelHandoff";
 export type MarchListPanelOptions = {
   /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
   assets?: AssetLoader;
@@ -353,8 +358,14 @@ export class MarchListPanel {
 
   /**
    * 出征成功后由主城场景调用（CLIENT-116）：写入高亮、打开军情面板并刷新列表，一步扫读新行军 ETA。
+   * CLIENT-222：顶栏军情交接文案 + `intel-new-march-highlight` 3s。
    */
-  notifyMarchStarted(marchId?: number | null): void {
+  notifyMarchStarted(
+    marchId?: number | null,
+    opts?: { march?: MarchSummary | null; toX?: number; toY?: number },
+  ): void {
+    const fallbackToX = opts?.toX ?? 0;
+    const fallbackToY = opts?.toY ?? 0;
     if (marchId != null && marchId > 0) {
       this.setRecentMarchHighlight(marchId);
       syncMinimapMarchFocusSession(marchId);
@@ -369,8 +380,17 @@ export class MarchListPanel {
     void this.refreshList().then(() => {
       this.scrollHighlightedMarchIntoView();
       const march =
-        marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null;
+        opts?.march ??
+        (marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null);
       if (march) this.onSelectionChange?.(march);
+      if (marchId != null && marchId > 0) {
+        applyMarchSubmitIntelHandoff(this.panel, marchId, {
+          march,
+          toX: fallbackToX,
+          toY: fallbackToY,
+          nowMs: this.nowMs(),
+        });
+      }
     });
   }
 
@@ -389,6 +409,7 @@ export class MarchListPanel {
     el.dataset.centerPanel = "march";
     el.innerHTML = `
       <h3>行军</h3>
+      <p class="${MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS} hidden" data-role="${MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE}" aria-live="polite"></p>
       <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
       <fieldset class="march-dest-filter" data-role="march-dest-filter">
         <legend>目的格点筛选</legend>

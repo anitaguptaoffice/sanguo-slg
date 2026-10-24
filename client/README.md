@@ -1144,6 +1144,8 @@ cd client && npm install && npm run dev
 
 **wave:31 巩固（CLIENT-156）**：`StartMarch` 成功除 **CLIENT-116** `march-row-recent` 外，**军事** 面板顶栏 **`march-queue-banner`** 展示 `formatMarchQueueBanner` 摘要（**5s** `march-queue-banner-pulse`）；军情新高亮行次行追加 **「已提交」** 戳记（与 **CLIENT-141** ETA/phase 并存）。点击摘要条 `openMarchPanelAndHighlight(march_id)` 打开军情并高亮行；行内 **军事队列** 链回军事顶栏（`resolveMarchQueueJumpIndex` 互跳索引）。loading/empty/error 仍走 **CLIENT-129** `panelStateChrome`。单测：`marchQueueBanner.test.ts`、`MarchListPanel.test.ts`。
 
+**wave:39（CLIENT-222）**：`StartMarch` / smoke 同源出征成功后 **`notifyMarchStarted`** 自动打开军情面板；顶栏 **`march-submit-intel-handoff-strip`** 展示 `formatMarchSubmitIntelHandoffLine`（目标坐标 + `formatMarchIntelPhaseEtaStrip` phase hint，**3s** 收起）；新 `march_id` 列表行附加 **`intel-new-march-highlight`** **3s** 扫读脉冲（与 **CLIENT-116** `march-row-recent` / **CLIENT-156** `march-queue-banner` 并存；**CLIENT-178** 军事只读汇总条互跳 **不退化**）。单测：`marchSubmitIntelHandoff.test.ts`、`MarchListPanel.test.ts`。
+
 **wave:33（CLIENT-178）**：军事面板 **`march-form-readonly-strip`** 用 `formatMarchFormSummaryLine` / 军情选中行军快照扫读 **格点 + 兵力 + ETA**；**查看军情信息卡** 跳转军情列表选中 `march_id` 并高亮 **`march-info-card`**（与 **CLIENT-172** 信息卡 DOM/格式化钩子可叠加）。信息卡 **打开军事** 走 **CLIENT-093** `applyMarchIntelRemarchPrefillWithFeedback`；**CLIENT-156** 队列顶栏与 **CLIENT-145** 表单 summary/error 不退化。单测：`marchFormReadonlyStrip.test.ts`、`marchInfoCard.test.ts`、`marchFormIntelJump.test.ts`。
 
 **wave:35（CLIENT-189）**：军情列表选中 `march_id` 时军事表单目标坐标输入框 **`march-form-coord-sync-highlight`** **1.5s**（同源 `to_x`/`to_y`）；军事面板改 `to_x`/`to_y` 后军情列表 **`scrollIntelRowForCoords`** 滚动并高亮终点匹配行，无匹配时 **`march-intel-coord-sync-empty-hint`**（**CLIENT-173** empty 态，非网关 error）。**CLIENT-178** 汇总条与 **CLIENT-156** 提交反馈不退化。单测：`marchFormCoordSync.test.ts`。
