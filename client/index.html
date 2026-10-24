@@ -2187,6 +2187,24 @@
       .mail-detail .mail-claim-inline-feedback.mail-claim-inline-pulse {
         animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
       }
+      .mail-tab-unread-sweep,
+      .mail-daily-hud-combined-sweep {
+        font-size: 12px;
+        color: #9a8a70;
+        margin: 4px 0 0;
+        line-height: 1.35;
+      }
+      .mail-tab-unread-sweep.hidden,
+      .mail-daily-hud-combined-sweep.hidden { display: none; }
+      @keyframes mail-tab-hud-sync-pulse-keyframes {
+        0%, 100% { color: #9a8a70; }
+        40% { color: #f0c674; text-shadow: 0 0 6px rgba(240, 198, 116, 0.45); }
+      }
+      .mail-tab-unread-sweep.mail-tab-hud-sync-pulse,
+      .mail-daily-hud-combined-sweep.mail-tab-hud-sync-pulse,
+      #hud .hud-center-panel-deeplink.mail-tab-hud-sync-pulse {
+        animation: mail-tab-hud-sync-pulse-keyframes 1.5s ease-out 1;
+      }
       .mail-list li.mail-empty { cursor: default; color: #b8a88a; }
       .mail-list li.panel-state-chrome,
       .hero-list li.panel-state-chrome,

@@ -32,6 +32,11 @@ import {
   RECRUIT_FORM_INLINE_WARN_CLASS,
   RECRUIT_GOTO_BAG_ITEM_GAP_ACTION,
 } from "@/net/recruitFormInlineHint";
+import {
+  MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
+  MAIL_TAB_UNREAD_SWEEP_ROLE,
+} from "@/net/mailTabUnreadSweep";
+import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
@@ -64,6 +69,23 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-action="mail-filter-unclaimed"][data-ui-filter-chip]')).toBeTruthy();
     expect(mount.querySelector('[data-role="mail-filter-bar"]')).toBeTruthy();
     expect(mount.querySelector(".mail-inbox-toolbar.panel-filter-chip-bar")).toBeTruthy();
+  });
+
+  it("mail panel exposes HUD todo sweep lines (CLIENT-209)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.openMailPanel();
+    panels.syncMailTabHudTodoLinkage({
+      dailyRows: [{ quest_cfg_id: 42, state: DAILY_QUEST_STATE_CLAIMABLE }],
+      stamp: 1700000000001,
+      pulse: false,
+    });
+    expect(mount.querySelector(`[data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}"]`)).toBeTruthy();
+    expect(mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`)).toBeTruthy();
+    const combined = mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`);
+    expect(combined?.textContent).toContain("日常可领 1 · #42");
   });
 
   it("mail panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {

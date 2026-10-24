@@ -3,6 +3,8 @@ import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
 /** HUD 顶栏：邮件/日常/队列/社交四面板 tab 深链合并扫读（CLIENT-202；与 CLIENT-193 sweep 同源邮件/日常文案）。 */
 export const HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE = "hud-center-panel-deeplink-line";
 export const HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR = "data-hud-center-panel-facet";
+/** CLIENT-209：与邮件面板 tab 扫读行共用的 HUD 深链刷新戳记（轮询/快照 bump）。 */
+export const HUD_CENTER_PANEL_DEEPLINK_REFRESH_STAMP_ATTR = "data-hud-center-panel-deeplink-stamp";
 
 export const CENTER_PANEL_TAB_PULSE_CLASS = "center-panel-tab-pulse";
 export const CENTER_PANEL_TAB_PULSE_MS = 1500;

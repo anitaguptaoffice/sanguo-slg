@@ -86,7 +86,17 @@ import {
   mailInboxFilterToEmptyTab,
   resolveMailListPlayerMailFilter,
 } from "@/net/mailInboxTabFormat";
+import type { DailyQuestRow } from "@/net/dailyQuestState";
 import { mailPanelTabBadgeCounts, mailToolbarBadgeCount } from "@/net/hudTodoBadges";
+import {
+  MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
+  MAIL_TAB_UNREAD_SWEEP_ROLE,
+  formatMailTabUnreadSweepLine,
+  mailInboxFilterToUnreadSweepTab,
+  scheduleMailTabHudSyncPulse,
+  setHudCenterPanelDeepLinkRefreshStamp,
+} from "@/net/mailTabUnreadSweep";
+import { formatMailPanelHudCombinedSweepLine } from "@/net/questClaimHudLink";
 import {
   mailInboxEmptyListClass,
   mailInboxLoadErrorListHint,
@@ -235,6 +245,10 @@ export class HeroMailPanels {
   /** CLIENT-192：单封领取详情行内成功文案（按 mail_id 记忆，切换邮件仍可见）。 */
   private mailClaimSuccessLineByMailId = new Map<number, string>();
   private mailClaimInlinePulseMailId = 0;
+  /** CLIENT-209：与 HUD 深链轮询同源的日常 chain 400 快照（只读扫读，无新 RPC）。 */
+  private mailHudTodoDailyRows: DailyQuestRow[] = [];
+  private mailHudTodoRefreshStamp = 0;
+  private mailHudTodoPulsePending = false;
   private recruitHeroInflight = false;
   private recruitLastError: string | null = null;
   private recruitLastSuccessHeroId: number | null = null;
@@ -737,6 +751,8 @@ export class HeroMailPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取全部附件</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
+      <p class="mail-tab-unread-sweep hidden" data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}" aria-live="polite" hidden></p>
+      <p class="mail-daily-hud-combined-sweep hidden" data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <p class="mail-form-error hidden" data-role="mail-form-error" role="alert"></p>
       <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 含未领附件的邮件可「领取全部」或勾选后批量领取，逐封调用领取并汇总结果。</p>
       <p class="mail-inbox-status" data-role="mail-status"></p>
@@ -1053,6 +1069,59 @@ export class HeroMailPanels {
       }
     }
     if (loader) remountPanelFilterChips(this.mailPanel, loader);
+    this.syncMailHudTodoSweepDom();
+  }
+
+  /** CLIENT-209：HUD 待办轮询刷新戳记与邮件 tab 扫读联动（由 MainCityScene 驱动）。 */
+  syncMailTabHudTodoLinkage(input: {
+    dailyRows: DailyQuestRow[];
+    stamp: number;
+    pulse?: boolean;
+  }): void {
+    this.mailHudTodoDailyRows = input.dailyRows.slice();
+    this.mailHudTodoRefreshStamp = input.stamp;
+    if (input.pulse) this.mailHudTodoPulsePending = true;
+    if (this.isMailOpen()) this.syncMailHudTodoSweepDom();
+  }
+
+  private syncMailHudTodoSweepDom(): void {
+    const tabCounts = mailPanelTabBadgeCounts({
+      mailUnreadTotal: this.mailUnreadTotal,
+      mailClaimablePage: this.mailInboxSnapshot,
+    });
+    const unreadForTab = this.mailFilterTabCountOverride?.unreadForTab ?? tabCounts.unreadTab;
+    const unclaimedCount = this.mailFilterTabCountOverride?.unclaimedCount ?? tabCounts.unclaimedTab;
+    const counts = { unreadForTab, unclaimedCount };
+    const tabLine = formatMailTabUnreadSweepLine(
+      mailInboxFilterToUnreadSweepTab(this.mailFilter),
+      counts,
+    );
+    const combinedLine = formatMailPanelHudCombinedSweepLine(counts, this.mailHudTodoDailyRows);
+    const tabEl = this.mailPanel.querySelector<HTMLElement>(`[data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}"]`);
+    const combinedEl = this.mailPanel.querySelector<HTMLElement>(
+      `[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`,
+    );
+    const syncLine = (el: HTMLElement | null, line: string | null) => {
+      if (!el) return;
+      if (!line) {
+        el.hidden = true;
+        el.classList.add("hidden");
+        el.textContent = "";
+        return;
+      }
+      el.hidden = false;
+      el.classList.remove("hidden");
+      el.textContent = line;
+    };
+    syncLine(tabEl, tabLine);
+    syncLine(combinedEl, combinedLine);
+    const stamp = this.mailHudTodoRefreshStamp;
+    for (const el of [tabEl, combinedEl]) {
+      if (!el || stamp <= 0) continue;
+      setHudCenterPanelDeepLinkRefreshStamp(el, stamp);
+      if (this.mailHudTodoPulsePending) scheduleMailTabHudSyncPulse(el);
+    }
+    this.mailHudTodoPulsePending = false;
   }
 
   private setMailFilterButtons(): void {

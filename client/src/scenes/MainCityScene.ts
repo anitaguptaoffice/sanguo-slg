@@ -200,6 +200,10 @@ import {
   type HudCenterPanelDeepLinkCounts,
   type HudCenterPanelDeepLinkFacet,
 } from "@/net/hudCenterPanelDeepLink";
+import {
+  scheduleMailTabHudSyncPulse,
+  setHudCenterPanelDeepLinkRefreshStamp,
+} from "@/net/mailTabUnreadSweep";
 import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
@@ -326,6 +330,9 @@ export class MainCityScene implements Scene {
   /** Last focused bottom-toolbar toggle (CLIENT-135 Esc focus return). */
   private lastToolbarFocus: HTMLElement | null = null;
   private lastCenterTodoScrollKey: string | null = null;
+  /** CLIENT-209：HUD 中心深链与邮件 tab 扫读共用刷新戳记。 */
+  private hudCenterPanelDeepLinkRefreshStamp = 0;
+  private mailTabHudSyncPulsePending = false;
   private marchArrivalPoll!: MarchArrivalPoll;
   private readonly battleReportUnread = new BattleReportUnreadSession();
   private readonly marchEndReportHint = new MarchEndBattleReportHint();
@@ -1121,7 +1128,8 @@ export class MainCityScene implements Scene {
     if (action === "toggle-hero") this.heroMail.toggleHero();
     if (action === "toggle-mail") {
       this.heroMail.toggleMail();
-      if (!this.heroMail.isMailOpen()) void this.hudTodoBadgePoll.pollOnce();
+      if (this.heroMail.isMailOpen()) this.bumpMailTabHudSyncFromPoll(false);
+      else void this.hudTodoBadgePoll.pollOnce();
     }
     if (action === "toggle-world") this.world.toggle();
     if (action === "toggle-queue") {
@@ -2096,6 +2104,13 @@ export class MainCityScene implements Scene {
     const wrap = document.createElement("span");
     wrap.className = "hud-center-panel-deeplink";
     wrap.setAttribute("data-role", HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
+    if (this.hudCenterPanelDeepLinkRefreshStamp > 0) {
+      setHudCenterPanelDeepLinkRefreshStamp(wrap, this.hudCenterPanelDeepLinkRefreshStamp);
+      if (this.mailTabHudSyncPulsePending) {
+        scheduleMailTabHudSyncPulse(wrap);
+        this.mailTabHudSyncPulsePending = false;
+      }
+    }
     segments.forEach((seg, index) => {
       if (index > 0) {
         const sep = document.createElement("span");
@@ -2304,7 +2319,19 @@ export class MainCityScene implements Scene {
     return line ? ` · ${line}` : "";
   }
 
+  private bumpMailTabHudSyncFromPoll(pulse = true): void {
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    this.hudCenterPanelDeepLinkRefreshStamp = Date.now();
+    if (pulse) this.mailTabHudSyncPulsePending = true;
+    this.heroMail?.syncMailTabHudTodoLinkage({
+      dailyRows: snap.dailyChainRows,
+      stamp: this.hudCenterPanelDeepLinkRefreshStamp,
+      pulse,
+    });
+  }
+
   private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {
+    this.bumpMailTabHudSyncFromPoll(true);
     const sweepSuffix = this.hudTodoSweepTitleSuffix();
     if (!this.heroMail?.isMailOpen()) {
       this.updateMailToolbarBadge(counts.mailUnread, sweepSuffix);
