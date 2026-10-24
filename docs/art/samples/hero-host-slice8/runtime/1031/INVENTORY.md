@@ -1,8 +1,14 @@
 # HERO-HOST-SLICE8 runtime inventory — template 1031
 
-tip_sha / runtime_code_sha: `035abdda48bdfab8bac44837c72afea76e9eae68`
-art_head_sha: `181b0191b834b2e0c3a983a7911690552fe143f0`
-hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
+| Field | SHA |
+|---|---|
+| base_host_sha (Slice7 #1233 layout) | `035abdda48bdfab8bac44837c72afea76e9eae68` |
+| evidence_head_sha / tip_sha / runtime_code_sha | `e5bfd0d0104934dc4442469b5c3aced37d06b5dd` |
+| art_head_sha (#1205) | `181b0191b834b2e0c3a983a7911690552fe143f0` |
+| hero_mail_panels_blob_sha | `356f8e33734ca1374f3cf1ecd61368431293a93c` |
+| capture_script_blob_sha | `a3fddd850a348bd119bc29c2f330e8192627e5c8` |
+| mock_blob_sha | `5da72c80ae94fe397b7b554890170501844dacb4` |
+
 
 ## Viewport captures
 

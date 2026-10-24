@@ -6,7 +6,14 @@
 
 契约：[hero-avatar-bust-batch.md](../../hero-avatar-bust-batch.md)
 
-## Runtime 证据 SHA（勿与 PR HEAD 混用）
+## Runtime 证据 SHA（勿混用）
+
+| 角色 | 字段 | 说明 |
+|---|---|---|
+| 美术源 | `art_head_sha` | [#1205](https://github.com/anitaguptaoffice/sanguo-slg/pull/1205) @ `181b0191…` |
+| 宿主基线 | `base_host_sha` | [#1233](https://github.com/anitaguptaoffice/sanguo-slg/pull/1233) @ `035abdda…`（布局/CSS/HeroMailPanels；**无** Slice8 capture/mock/资产） |
+| 证据提交 | `evidence_head_sha` / `tip_sha` / `runtime_code_sha` | 见各 `probe-log.json`（#1234 `HEAD`，含 capture8 + mock + runtime） |
+| 脚本 / mock blob | `capture_script_blob_sha` / `mock_blob_sha` | 见各 `probe-log.json` |
 
 明细见 `CHECKLIST.md` 与各 `runtime/{1029..1032}/probe-log.json`。
 

@@ -30,6 +30,11 @@ const clientRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..");
 const SAMPLE_ROOT = path.resolve(repoRoot, "docs/art/samples/hero-host-slice8");
 const ART_HEAD_SHA = process.env.ART_HEAD_SHA || "181b0191b834b2e0c3a983a7911690552fe143f0";
+/** Slice7 host layout baseline (#1233); production CSS/HeroMailPanels — not Slice8 capture/mock/assets. */
+const BASE_HOST_SHA =
+  process.env.BASE_HOST_SHA || "035abdda48bdfab8bac44837c72afea76e9eae68";
+const CAPTURE_SCRIPT_REL = "client/scripts/capture-hero-host-slice8-evidence.mjs";
+const MOCK_SERVER_REL = "client/mock-server/server.mjs";
 const SLICE8_IDS = [1029, 1030, 1031, 1032];
 const HERO_IDS = process.env.HERO_TEMPLATE_CFG_ID
   ? [Number(process.env.HERO_TEMPLATE_CFG_ID)]
@@ -168,8 +173,9 @@ async function openHeroPanelWithDetail(page, templateCfgId) {
   await page.waitForTimeout(300);
 }
 
-async function captureHero(browser, templateCfgId, tipSha) {
+async function captureHero(browser, templateCfgId, evidenceHeadSha) {
   const artHeadSha = ART_HEAD_SHA;
+  const baseHostSha = BASE_HOST_SHA;
   const outDir = outDirForHero(templateCfgId);
   await mkdir(outDir, { recursive: true });
   const shots = {};
@@ -236,12 +242,18 @@ async function captureHero(browser, templateCfgId, tipSha) {
   }
 
   const heroMailPanelsBlob = gitBlobSha("client/src/ui/HeroMailPanels.ts");
+  const captureScriptBlob = gitBlobSha(CAPTURE_SCRIPT_REL);
+  const mockBlob = gitBlobSha(MOCK_SERVER_REL);
   const probeLog = {
     task: "HERO-HOST-SLICE8",
     template_cfg_id: templateCfgId,
     mock_preset: PRESET,
-    tip_sha: tipSha,
-    runtime_code_sha: tipSha,
+    base_host_sha: baseHostSha,
+    tip_sha: evidenceHeadSha,
+    evidence_head_sha: evidenceHeadSha,
+    runtime_code_sha: evidenceHeadSha,
+    capture_script_blob_sha: captureScriptBlob,
+    mock_blob_sha: mockBlob,
     hero_mail_panels_blob_sha: heroMailPanelsBlob,
     art_head_sha: artHeadSha,
     art_asset_ids: heroAssetIds(templateCfgId),
@@ -253,6 +265,9 @@ async function captureHero(browser, templateCfgId, tipSha) {
       "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster seeds roster incl. 1029–1032.",
       "Art path-copied from Draft #1205 @ 181b0191; Draft remains unmerged.",
       "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible.",
+      `Provenance: base_host_sha ${baseHostSha} is Slice7 host layout (#1233); capture script, mock 1029–1032 roster, and Slice8 assets are not present at that commit.`,
+      `tip_sha / evidence_head_sha / runtime_code_sha name the eng evidence commit (HEAD at capture) containing capture-hero-host-slice8-evidence.mjs, mock seeds, and runtime JPEGs.`,
+      `capture_script_blob_sha and mock_blob_sha are git blob ids at evidence_head_sha; hero_mail_panels_blob_sha matches base_host when layout unchanged.`,
     ],
     captured_at: new Date().toISOString(),
   };
@@ -261,9 +276,14 @@ async function captureHero(browser, templateCfgId, tipSha) {
   const inventoryLines = [
     `# HERO-HOST-SLICE8 runtime inventory — template ${templateCfgId}`,
     "",
-    `tip_sha / runtime_code_sha: \`${tipSha}\``,
-    `art_head_sha: \`${artHeadSha}\``,
-    `hero_mail_panels_blob_sha: \`${heroMailPanelsBlob}\``,
+    "| Field | SHA |",
+    "|---|---|",
+    `| base_host_sha (Slice7 #1233 layout) | \`${baseHostSha}\` |`,
+    `| evidence_head_sha / tip_sha / runtime_code_sha | \`${evidenceHeadSha}\` |`,
+    `| art_head_sha (#1205) | \`${artHeadSha}\` |`,
+    `| hero_mail_panels_blob_sha | \`${heroMailPanelsBlob}\` |`,
+    `| capture_script_blob_sha | \`${captureScriptBlob}\` |`,
+    `| mock_blob_sha | \`${mockBlob}\` |`,
     "",
     "## Viewport captures",
     "",
@@ -331,10 +351,10 @@ async function main() {
     await setEvidencePreset(PRESET);
 
     const browser = await chromium.launch();
-    const tipSha = gitTipSha();
+    const evidenceHeadSha = gitTipSha();
     let allOk = true;
     for (const id of HERO_IDS) {
-      const ok = await captureHero(browser, id, tipSha);
+      const ok = await captureHero(browser, id, evidenceHeadSha);
       allOk = allOk && ok;
     }
     await browser.close();
