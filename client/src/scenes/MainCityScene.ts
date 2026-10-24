@@ -47,6 +47,10 @@ import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { scrollCitySlotIntoView } from "@/net/citySlotQueueLink";
 import { highlightDomesticSlotForQueueRow } from "@/net/domesticSlotQueueFocusRing";
+import {
+  captureDomesticSlotScrollAnchor,
+  restoreDomesticSlotScrollAnchor,
+} from "@/net/domesticSlotScrollAnchor";
 import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
@@ -286,6 +290,7 @@ import {
   hasActiveBuildingUpgrade,
   KEY_BUILDING_SLOTS,
 } from "@/net/hudFormat";
+import { MainCityDomesticSlotStrip } from "@/ui/MainCityDomesticSlotStrip";
 import { MainCitySlotUpgradeOverlay } from "@/ui/MainCitySlotUpgradeOverlay";
 import { MainCityBuildingPanel } from "@/ui/MainCityBuildingPanel";
 import {
@@ -353,6 +358,7 @@ export class MainCityScene implements Scene {
   private world!: WorldPanels;
   private queuePanels!: QueuePanels;
   private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
+  private domesticSlotStrip!: MainCityDomesticSlotStrip;
   private buildingPanel!: MainCityBuildingPanel;
   private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
@@ -526,6 +532,13 @@ export class MainCityScene implements Scene {
     const parent = ctx.layoutFrame;
     this.slotUpgradeOverlay = new MainCitySlotUpgradeOverlay(parent);
     this.slotUpgradeOverlay.attach();
+    this.domesticSlotStrip = new MainCityDomesticSlotStrip(
+      parent,
+      SLOT_LABEL,
+      () => this.session,
+      (slotKey) => this.activateMainCitySlot(slotKey),
+    );
+    this.domesticSlotStrip.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
     this.chatUnreadTracker.onCounts = () => this.applyChatUnreadCounts();
@@ -870,7 +883,7 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       skinCenterPrimary,
-      (slotKey) => this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey),
+      (slotKey) => this.onQueueBuildSlotHighlightChange(slotKey),
       () => this.toolbarTrigger("toggle-queue"),
       (entry) => this.openMilitaryRecruitFromQueueRow(entry),
       (slotKey) => {
@@ -887,6 +900,7 @@ export class MainCityScene implements Scene {
         this.applyQueueCompleteHudPulse(events);
         this.applyQueueCompleteFocusRing(events);
       },
+      (open) => this.onQueuePanelVisibilityChange(open),
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -1043,6 +1057,7 @@ export class MainCityScene implements Scene {
     this.world?.detach();
     this.queuePanels?.detach();
     this.buildingPanel?.detach();
+    this.domesticSlotStrip?.detach();
     this.slotUpgradeOverlay?.detach();
     if (this.hud) clearHudBarChrome(this.hud);
     if (this.toolbar) clearToolbarBarChrome(this.toolbar);
@@ -1836,23 +1851,56 @@ export class MainCityScene implements Scene {
     const top = hits[0];
     if (!top) return;
     this.hitDebug = top.slot_key;
-    const building = buildingBySlot(this.session?.buildings, top.slot_key);
+    this.activateMainCitySlot(top.slot_key);
+  }
+
+  private activateMainCitySlot(slotKey: string): void {
+    const key = slotKey.trim();
+    if (!key) return;
+    this.domesticSlotStrip?.setSelectedSlotKey(key);
+    captureDomesticSlotScrollAnchor(this.domesticSlotStrip?.getStripRoot(), key);
+    const building = buildingBySlot(this.session?.buildings, key);
     const now = Date.now();
     if ((building?.upgrade_finish_at_ms ?? 0) > now) {
-      this.queuePanels.openAndHighlightBuildSlot(top.slot_key);
-      const label = SLOT_LABEL[top.slot_key] ?? top.slot_key;
+      this.queuePanels.openAndHighlightBuildSlot(key);
+      const label = SLOT_LABEL[key] ?? key;
       this.status = `队列：${label} 升级进行中`;
       this.renderHud();
       return;
     }
     this.resetBuildSubmitState();
     this.queuePanels.clearBuildSlotHighlight();
-    this.buildingPanel.selectSlot(top.slot_key, {
+    this.buildingPanel.selectSlot(key, {
       dismissTrigger: this.buildingDismissTrigger(),
     });
-    this.queuePanels.pulseQueueRowForOverlaySlot(top.slot_key);
-    this.status = `建造：${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
+    this.queuePanels.pulseQueueRowForOverlaySlot(key);
+    this.status = `建造：${SLOT_LABEL[key] ?? key}`;
     this.renderHud();
+  }
+
+  private onQueueBuildSlotHighlightChange(slotKey: string | null): void {
+    this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey);
+    this.domesticSlotStrip?.setSelectedSlotKey(slotKey);
+    if (this.queuePanels?.isOpen() && slotKey) {
+      captureDomesticSlotScrollAnchor(this.domesticSlotStrip?.getStripRoot(), slotKey);
+    }
+  }
+
+  private onQueuePanelVisibilityChange(open: boolean): void {
+    if (open) {
+      const slotKey =
+        this.queuePanels.getHighlightedBuildSlotKey() ??
+        this.domesticSlotStrip?.getSelectedSlotKey();
+      if (slotKey) {
+        captureDomesticSlotScrollAnchor(this.domesticSlotStrip?.getStripRoot(), slotKey);
+      }
+      return;
+    }
+    this.domesticSlotStrip?.sync();
+    restoreDomesticSlotScrollAnchor(
+      this.domesticSlotStrip?.getStripRoot(),
+      this.slotUpgradeOverlay?.getOverlayLayer(),
+    );
   }
 
   private pointInRect(p: { x: number; y: number }, r: { x: number; y: number; w: number; h: number }): boolean {
@@ -1995,6 +2043,7 @@ export class MainCityScene implements Scene {
 
   private syncSlotUpgradeOverlay(): void {
     this.slotUpgradeOverlay?.sync(this.session?.buildings, Date.now());
+    this.domesticSlotStrip?.sync();
   }
 
   private applyCityStateFromFetch(state: {

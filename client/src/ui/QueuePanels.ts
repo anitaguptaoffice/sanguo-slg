@@ -134,6 +134,7 @@ export class QueuePanels {
     private readonly onRecruitQueueJumpToMilitary?: (entry: RecruitQueueEntry) => void,
     private readonly onLocateCitySlotFromQueue?: (slotKey: string) => void,
     private readonly onRecruitQueueJustCompleted?: (queueIds: number[]) => void,
+    private readonly onQueueVisibilityChange?: (open: boolean) => void,
   ) {}
 
   attach(): void {
@@ -175,6 +176,7 @@ export class QueuePanels {
     } else if (wasOpen) {
       this.focusTrap?.setOpen(false, null, true);
     }
+    this.onQueueVisibilityChange?.(this.isOpen());
   }
 
   /** 打开队列面板（日常练兵/建造引导）。 */
@@ -185,10 +187,12 @@ export class QueuePanels {
     this.render();
     resetQueuePanelViewportScroll(this.panel);
     this.focusTrap?.setOpen(true, this.dismissToolbarTrigger?.() ?? null);
+    this.onQueueVisibilityChange?.(true);
   }
 
   private closeFromKeyboard(): void {
     this.panel.classList.add("hidden");
+    this.onQueueVisibilityChange?.(false);
   }
 
   private onQueueListKeyDown(ev: KeyboardEvent): void {
