@@ -94,6 +94,10 @@ export type GatewayPort = {
     giftKind: number,
     itemCfgId?: number,
   ): Promise<unknown>;
+  listCaptiveHeroes(serverId: number): Promise<unknown>;
+  trySummonCaptive(serverId: number, cityId: number, heroId: number): Promise<unknown>;
+  sureSummonCaptive(serverId: number, cityId: number, heroId: number): Promise<unknown>;
+  releaseCaptive(serverId: number, cityId: number, heroId: number): Promise<unknown>;
   getCityChief(serverId: number, cityId: number): Promise<unknown>;
   setCityChief(serverId: number, cityId: number, heroId: number): Promise<unknown>;
   clearCityChief(serverId: number, cityId: number): Promise<unknown>;
@@ -635,6 +639,53 @@ export class GatewayClient implements GatewayPort {
         item_cfg_id: itemCfgId,
       },
       LargessHeroResponse,
+      true,
+    );
+  }
+
+  async listCaptiveHeroes(serverId: number) {
+    const { ListCaptiveHeroesResponse } = getTypes();
+    return this.rpc(
+      Routes.ListCaptiveHeroes,
+      "ListCaptiveHeroesRequest",
+      { server_id: serverId },
+      ListCaptiveHeroesResponse,
+      true,
+    );
+  }
+
+  async trySummonCaptive(serverId: number, cityId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { TrySummonCaptiveResponse } = getTypes();
+    return this.rpc(
+      Routes.TrySummonCaptive,
+      "TrySummonCaptiveRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      TrySummonCaptiveResponse,
+      true,
+    );
+  }
+
+  async sureSummonCaptive(serverId: number, cityId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { SureSummonCaptiveResponse } = getTypes();
+    return this.rpc(
+      Routes.SureSummonCaptive,
+      "SureSummonCaptiveRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      SureSummonCaptiveResponse,
+      true,
+    );
+  }
+
+  async releaseCaptive(serverId: number, cityId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { ReleaseCaptiveResponse } = getTypes();
+    return this.rpc(
+      Routes.ReleaseCaptive,
+      "ReleaseCaptiveRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      ReleaseCaptiveResponse,
       true,
     );
   }
