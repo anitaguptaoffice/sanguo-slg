@@ -129,6 +129,12 @@ import {
   formatRankPinRefreshResidualLine,
   syncRankPinRefreshResidualLine,
 } from "@/net/rankPinRefreshResidual";
+import { highlightRankPinKeepResidualRing } from "@/net/rankPinKeepResidualRing";
+import {
+  formatRankRefreshCooldownResidualStamp,
+  RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE,
+  syncRankRefreshCooldownResidualStamp,
+} from "@/net/rankRefreshCooldownResidual";
 
 export type SocialRankDeepLinkHandlers = {
   getViewerHeroIds?: () => Promise<number[]>;
@@ -575,6 +581,7 @@ export class SocialPanels {
       </label>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
       <span class="rank-refresh-cooldown-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}" aria-live="polite"></span>
+      <p class="rank-refresh-cooldown-residual-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE}" aria-live="polite"></p>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -1108,6 +1115,11 @@ export class SocialPanels {
     } else {
       this.clearRankCooldownTimer();
     }
+    const lastRefreshMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
+    syncRankRefreshCooldownResidualStamp(
+      this.rankPanel,
+      formatRankRefreshCooldownResidualStamp(lastRefreshMs, lastManualMs, nowMs) || null,
+    );
     this.syncRankPinRefreshResidualBar(boardType, this.rankViewerMyRank, nowMs);
   }
 
@@ -1401,6 +1413,9 @@ export class SocialPanels {
           stale: false,
         });
         this.syncRankRefreshCooldownUi(boardType, refreshedAt);
+        if (opts?.manual) {
+          highlightRankPinKeepResidualRing(this.rankPanel);
+        }
         this.onStatus("排行榜已刷新");
       } catch (e) {
         const msg = formatPanelGatewayErrorFromUnknownForList("rank", e);
