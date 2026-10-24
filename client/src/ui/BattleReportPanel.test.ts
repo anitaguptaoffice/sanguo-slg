@@ -658,9 +658,9 @@ describe("BattleReportPanel", () => {
     expect(summary?.textContent).toContain("胜 1");
     expect(summary?.textContent).toContain("负 1");
     expect(summary?.textContent).toContain("平 1");
-    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
-    select.value = "today";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
+    mount
+      .querySelector('button[data-action="filter-time-window"][data-filter="today"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
     expect(mount.querySelector('li[data-report-id="1"]')).toBeTruthy();
     expect(summary?.textContent).toContain("胜 1");
@@ -686,8 +686,10 @@ describe("BattleReportPanel", () => {
     panel.attach();
     panel.toggle();
     await flushPromises();
-    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
-    expect(select.value).toBe("last7d");
+    const todayChip = mount.querySelector(
+      'button[data-action="filter-time-window"][data-filter="last7d"]',
+    );
+    expect(todayChip?.getAttribute("aria-pressed")).toBe("true");
     expect(mount.querySelectorAll("li[data-report-id]").length).toBe(1);
     vi.mocked(Date.now).mockRestore();
   });
@@ -704,9 +706,9 @@ describe("BattleReportPanel", () => {
     panel.attach();
     panel.toggle();
     await flushPromises();
-    const select = mount.querySelector('[data-action="filter-time-window"]') as HTMLSelectElement;
-    select.value = "today";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
+    mount
+      .querySelector('button[data-action="filter-time-window"][data-filter="today"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("today");
     expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBeNull();
   });
@@ -757,6 +759,31 @@ describe("BattleReportPanel", () => {
     const ul = mount.querySelector('[data-role="report-list"]');
     expect(ul?.textContent).toContain("无匹配战报");
     expect(mount.querySelector(".battle-report-filters")).toBeTruthy();
+  });
+
+  it("shows list row streak line on streak head (CLIENT-207)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [
+          { report_id: 3, outcome: 1, created_at_ms: 0, defender_player_id: 1 },
+          { report_id: 2, outcome: 1, created_at_ms: 0, defender_player_id: 1 },
+          { report_id: 1, outcome: 2, created_at_ms: 0, defender_player_id: 1 },
+        ],
+        total: 3,
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    const rows = mount.querySelectorAll("li[data-report-id]");
+    expect(rows[0]?.querySelector(".battle-report-row-secondary")?.textContent).toContain(
+      "连胜 2",
+    );
+    expect(rows[1]?.querySelector(".battle-report-row-secondary")?.textContent).not.toContain(
+      "连胜",
+    );
   });
 
   it("shows streak chip alongside outcome summary", async () => {

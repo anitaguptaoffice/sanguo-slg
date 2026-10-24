@@ -41,8 +41,8 @@ import {
   formatBattleReportFoeWithoutCoord,
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
   formatBattleReportListPrimaryLine,
+  formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
-  formatBattleReportRowSummary,
   formatReportCoord,
   formatTimeMs,
   type BattleReportDetailView,
@@ -64,6 +64,7 @@ import {
   resolveBattleReportListOutcomeBadgeKind,
   syncBattleReportOutcomeFilterChips,
 } from "@/net/battleReportOutcomeFilterChip";
+import { syncBattleReportTimeFilterChips } from "@/net/battleReportTimeFilterChip";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { mountFilterBadges, mountFilterRows } from "@/engine/artUiFilterSkin";
 import {
@@ -277,14 +278,12 @@ export class BattleReportPanel {
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="loss" aria-pressed="false">负</button>
         <button type="button" data-ui-filter-chip data-action="filter-outcome" data-filter="draw" aria-pressed="false">平</button>
         </div>
-        <label class="battle-report-time-window">
-          时间：
-          <select data-action="filter-time-window" aria-label="战报时间范围">
-            <option value="all">全部</option>
-            <option value="today">今日</option>
-            <option value="last7d">近7日</option>
-          </select>
-        </label>
+        <div class="battle-report-time-chip-group" role="group" aria-label="战报时间范围">
+          <span>时间：</span>
+          <button type="button" data-ui-filter-chip data-action="filter-time-window" data-filter="all" aria-pressed="true">全部</button>
+          <button type="button" data-ui-filter-chip data-action="filter-time-window" data-filter="today" aria-pressed="false">今日</button>
+          <button type="button" data-ui-filter-chip data-action="filter-time-window" data-filter="last7d" aria-pressed="false">近7日</button>
+        </div>
         <span class="battle-report-location-filter hidden" data-role="report-location-filter" aria-live="polite"></span>
         <button type="button" class="hidden" data-action="clear-location-filter">清除格点筛选</button>
       </div>
@@ -336,10 +335,7 @@ export class BattleReportPanel {
 
   private updateFilterButtons(): void {
     syncBattleReportOutcomeFilterChips(this.panel, this.outcomeFilter);
-    const timeSelect = this.panel.querySelector<HTMLSelectElement>(
-      '[data-action="filter-time-window"]',
-    );
-    if (timeSelect) timeSelect.value = this.timeWindowFilter;
+    syncBattleReportTimeFilterChips(this.panel, this.timeWindowFilter);
   }
 
   private mountListRowFilterSkins(): void {
@@ -464,7 +460,8 @@ export class BattleReportPanel {
       return;
     }
 
-    for (const r of filtered) {
+    for (let i = 0; i < filtered.length; i++) {
+      const r = filtered[i];
       const li = document.createElement("li");
       li.setAttribute("data-ui-filter-row", "");
       const outcomeCol = document.createElement("div");
@@ -488,7 +485,7 @@ export class BattleReportPanel {
       primary.textContent = formatBattleReportListPrimaryLine(r);
       const secondary = document.createElement("span");
       secondary.className = "battle-report-row-secondary";
-      secondary.textContent = formatBattleReportRowSummary(r);
+      secondary.textContent = formatBattleReportListStreakLine(r, i, filtered);
       body.appendChild(primary);
       body.appendChild(secondary);
       const grid = battleReportWorldTileGrid(r);
@@ -999,6 +996,17 @@ export class BattleReportPanel {
       return;
     }
 
+    const timeFilterBtn = (ev.target as HTMLElement).closest(
+      'button[data-action="filter-time-window"]',
+    );
+    if (timeFilterBtn) {
+      const value = timeFilterBtn.getAttribute("data-filter") as BattleReportTimeWindowFilter;
+      if (value === "all" || value === "today" || value === "last7d") {
+        this.setTimeWindowFilter(value);
+      }
+      return;
+    }
+
     const clearLocBtn = (ev.target as HTMLElement).closest(
       'button[data-action="clear-location-filter"]',
     );
@@ -1152,17 +1160,6 @@ export class BattleReportPanel {
   }
 
   private onChange(ev: Event): void {
-    const timeSelect = (ev.target as HTMLElement).closest(
-      'select[data-action="filter-time-window"]',
-    ) as HTMLSelectElement | null;
-    if (timeSelect) {
-      const value = timeSelect.value as BattleReportTimeWindowFilter;
-      if (value === "all" || value === "today" || value === "last7d") {
-        this.setTimeWindowFilter(value);
-      }
-      return;
-    }
-
     const jumpSelect = (ev.target as HTMLElement).closest(
       'select[data-action="jump-round-select"]',
     ) as HTMLSelectElement | null;

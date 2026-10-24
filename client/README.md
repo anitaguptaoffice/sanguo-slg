@@ -1177,6 +1177,14 @@ cd client && npm install && npm run dev
 3. 摘要条应显示当前时间窗内胜/负/平计数；**加载更多**、回合表、**在地图查看** 行为不退化。
 4. 单测：`militaryFormat.test.ts`、`battleReportListState.test.ts`、`BattleReportPanel.test.ts`。
 
+### 手动验收（战报列表时间窗 chip 与 streak 次行 CLIENT-207）
+
+顶栏 **时间** chip（**全部 / 今日 / 近7日**，`data-ui-filter-chip`）写入 `sessionStorage` 键 **`battle-report-time-filter-v1`**（自 `rxsg.client.battleReport.timeWindowFilter` 迁移）；与 **CLIENT-176** `battle-report-outcome-filter-v1` 分离，返回战报面板后各自恢复。列表行次行 `formatBattleReportListStreakLine`：在当前组合筛选序内，连续胜/负 streak 段 **首行** 附加 **连胜 N / 连负 N** 只读摘要；顶栏 **CLIENT-083** streak chip 与 **CLIENT-158** 相邻导航 **不退化**；**无**战报 proto 扩量。
+
+1. `make dev` 产生跨日、多胜负交错的战报 → 切换时间 chip 与 outcome chip 组合 → 刷新页面后两路筛选恢复。
+2. 连续两场以上胜/负时，列表 streak 段首行次行应含 **连胜/连负**；摘要条 streak chip 仍显示自最近一场起的计数。
+3. 单测：`battleReportListState.test.ts`（`serializeBattleReportTimeFilter`）、`militaryFormat.test.ts`（`formatBattleReportListStreakLine`）、`battleReportTimeFilterChip.test.ts`、`BattleReportPanel.test.ts`。
+
 ### 手动验收（战报上一封下一封与胜负 streak CLIENT-083）
 
 详情顶栏 **上一封 / 下一封** 在当前 **时间窗（CLIENT-065）** 与 **outcome 筛选（CLIENT-049）** 后的列表顺序内切换 `report_id`；切换时尽量保留 **回合跳转（CLIENT-074）** 的高亮回合与展开状态（新战报无该回合则重置）。列表顶 **胜负摘要 chips** 旁增加 **连胜 / 连负** streak chip（`computeOutcomeStreak`，基于当前组合筛选后的已加载列表、自最近一场起连续胜/负计数）。**在地图查看（CLIENT-042）** 行为不退化。键盘相邻导航与焦点环见 **CLIENT-094**。
@@ -1641,6 +1649,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 **wave:33（CLIENT-176）**：战报列表 **主行** `formatBattleReportListPrimaryLine`（`#report_id` + 对手标题 + 时间）；**次行** `formatBattleReportRowSummary`（胜负 + 攻守方简称 + `formatReportCoord`）；顶栏 outcome chip（胜/负/全部/平）仍写 `battle-report-outcome-filter-v1`，与 **CLIENT-158** 相邻导航、**CLIENT-125** 筛选条不退化。单测：`militaryFormat.test.ts`（`formatBattleReportRowSummary`）、`battleReportListState.test.ts`、`BattleReportPanel.test.ts`。
 
 **wave:35（CLIENT-190）**：战报详情顶栏只读 **`battle-report-outcome-band`**（`formatBattleReportOutcomeHeadline` + 胜/负/平色带）；**上一封/下一封** 与键盘 **←/→** / **Alt+←/→** 导航按钮附加 **`battle-report-adjacent-focus-ring`** 加深 `:focus-visible`；**CLIENT-176** outcome 筛选记忆、**CLIENT-158** 相邻导航与 streak 摘要不退化。单测：`militaryFormat.test.ts`（`formatBattleReportOutcomeHeadline`）、`battleReportListNav.test.ts`、`BattleReportPanel.test.ts`。
+
+**wave:37（CLIENT-207）**：战报列表顶栏 **时间窗 chip**（`battle-report-time-filter-v1`）与列表次行 **`formatBattleReportListStreakLine`** streak 扫读；**CLIENT-176** outcome 筛选、**CLIENT-083/158** 顶栏 streak 与相邻导航不退化。单测：`battleReportListState.test.ts`、`battleReportTimeFilterChip.test.ts`、`militaryFormat.test.ts`、`BattleReportPanel.test.ts`。
 
 **wave:27（CLIENT-124）**：在 **CLIENT-109** 记忆与 **CLIENT-090/093** 小地图互选、再出征预填不退化前提下，军情 **阶段** 改为 **ART-UI-FILTER-008** 筛选 chip（`data-ui-filter-chip` + `militaryListPhaseChipReducer`）；列表行接 **九宫**（`data-ui-filter-row`）与新出征 **badge.dot**（`data-ui-filter-badge="dot"`，与 **CLIENT-116** `march-row-recent` / 行内 ETA 并存）。ETA 仍用下拉排序。无 `CancelMarch`/加速。单测：`militaryListPhaseChip.test.ts`、`MarchListPanel.test.ts`。
 

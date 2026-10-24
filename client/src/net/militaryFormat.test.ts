@@ -10,6 +10,7 @@ import {
   findMostRecentBattleReportAtGrid,
   formatBattleReportDetail,
   formatBattleReportListPrimaryLine,
+  formatBattleReportListStreakLine,
   formatBattleReportOutcomeHeadline,
   formatBattleReportRowSummary,
   formatCasualtyMap,
@@ -122,6 +123,24 @@ describe("militaryFormat", () => {
     expect(formatMarchListSecondary(marching, now)).toBe("剩余 30m · 行军中");
     expect(formatMarchListSecondary(arrived, now)).toBe("已到达");
     expect(formatMarchListSecondary(pending, now)).toBe("待发");
+  });
+
+  it("formatBattleReportListStreakLine appends streak on streak head only (CLIENT-207)", () => {
+    const reports = [
+      { report_id: 3, outcome: 1, defender_player_id: 1, location_x: 1, location_y: 2 },
+      { report_id: 2, outcome: 1, defender_player_id: 1, location_x: 1, location_y: 2 },
+      { report_id: 1, outcome: 2, defender_player_id: 1, location_x: 1, location_y: 2 },
+    ];
+    expect(formatBattleReportListStreakLine(reports[0], 0, reports)).toContain("连胜 2");
+    expect(formatBattleReportListStreakLine(reports[1], 1, reports)).not.toContain("连胜");
+    expect(formatBattleReportListStreakLine(reports[2], 2, reports)).not.toContain("连负");
+    expect(
+      formatBattleReportListStreakLine(
+        { report_id: 9, outcome: 3, defender_player_id: 1, location_x: 0, location_y: 0 },
+        0,
+        [{ report_id: 9, outcome: 3 }],
+      ),
+    ).not.toContain("连胜");
   });
 
   it("formatBattleReportRowSummary lists outcome, sides, and coord (CLIENT-176)", () => {

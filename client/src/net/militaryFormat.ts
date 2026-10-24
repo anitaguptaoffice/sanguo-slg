@@ -474,6 +474,34 @@ export function formatBattleReportRowSummary(r: BattleReportSummary): string {
   return `${outcome} · 攻:${attacker} vs 守:${defender} · ${coord}`;
 }
 
+/**
+ * 战报列表次行扫读：在 {@link formatBattleReportRowSummary} 基础上，若该行开启一段连续胜/负 streak（≥2），附加只读 streak 摘要（CLIENT-207）。
+ * `reportsInListOrder` 须与列表展示顺序一致（通常为时间倒序）。
+ */
+export function formatBattleReportListStreakLine(
+  report: BattleReportSummary,
+  index: number,
+  reportsInListOrder: readonly BattleReportSummary[],
+): string {
+  const base = formatBattleReportRowSummary(report);
+  const outcome = report.outcome ?? 0;
+  if (outcome !== 1 && outcome !== 2) return base;
+  if (
+    index > 0 &&
+    (reportsInListOrder[index - 1]?.outcome ?? 0) === outcome
+  ) {
+    return base;
+  }
+  let count = 0;
+  for (let i = index; i < reportsInListOrder.length; i++) {
+    if ((reportsInListOrder[i]?.outcome ?? 0) === outcome) count += 1;
+    else break;
+  }
+  if (count < 2) return base;
+  const streakLabel = outcome === 1 ? `连胜 ${count}` : `连负 ${count}`;
+  return `${base} · ${streakLabel}`;
+}
+
 /** 战报详情顶栏 outcome 色带主文案（CLIENT-190；只读 ListBattleReports 字段）。 */
 export const BATTLE_REPORT_OUTCOME_BAND_CLASS = "battle-report-outcome-band";
 
