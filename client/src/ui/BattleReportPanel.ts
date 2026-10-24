@@ -38,6 +38,8 @@ import {
   filterBattleReportsByTimeWindow,
   formatBattleReportDetail,
   formatBattleReportFoeWithoutCoord,
+  formatBattleReportListPrimaryLine,
+  formatBattleReportRowSummary,
   formatReportCoord,
   formatTimeMs,
   type BattleReportDetailView,
@@ -469,18 +471,14 @@ export class BattleReportPanel {
       outcomeCol.appendChild(chip);
       const body = document.createElement("span");
       body.className = "battle-report-row-body";
-      const coord = document.createElement("span");
-      coord.className = "battle-report-row-coord";
-      coord.textContent = formatReportCoord(r);
-      const foe = document.createElement("span");
-      foe.className = "battle-report-row-foe";
-      foe.textContent = formatBattleReportFoeWithoutCoord(r);
-      const when = document.createElement("span");
-      when.className = "battle-report-row-time";
-      when.textContent = formatTimeMs(r.created_at_ms);
-      body.appendChild(coord);
-      body.appendChild(foe);
-      body.appendChild(when);
+      const primary = document.createElement("span");
+      primary.className = "battle-report-row-primary";
+      primary.textContent = formatBattleReportListPrimaryLine(r);
+      const secondary = document.createElement("span");
+      secondary.className = "battle-report-row-secondary";
+      secondary.textContent = formatBattleReportRowSummary(r);
+      body.appendChild(primary);
+      body.appendChild(secondary);
       const grid = battleReportWorldTileGrid(r);
       if (grid) {
         const replayBtn = document.createElement("button");

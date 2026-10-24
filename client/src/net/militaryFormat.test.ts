@@ -9,6 +9,8 @@ import {
   filterBattleReportsByTimeWindow,
   findMostRecentBattleReportAtGrid,
   formatBattleReportDetail,
+  formatBattleReportListPrimaryLine,
+  formatBattleReportRowSummary,
   formatCasualtyMap,
   formatMarchHint,
   formatMarchLine,
@@ -119,6 +121,33 @@ describe("militaryFormat", () => {
     expect(formatMarchListSecondary(marching, now)).toBe("剩余 30m · 行军中");
     expect(formatMarchListSecondary(arrived, now)).toBe("已到达");
     expect(formatMarchListSecondary(pending, now)).toBe("待发");
+  });
+
+  it("formatBattleReportRowSummary lists outcome, sides, and coord (CLIENT-176)", () => {
+    const report = {
+      report_id: 7,
+      attacker_player_id: 10001,
+      defender_player_id: 10002,
+      attacker_display_name: "演示君主",
+      location_x: 8,
+      location_y: 9,
+      outcome: 1,
+      created_at_ms: Date.UTC(2024, 5, 1, 10, 0, 0),
+    };
+    expect(formatBattleReportListPrimaryLine(report)).toContain("#7");
+    expect(formatBattleReportListPrimaryLine(report)).toContain("守方玩家#10002");
+    expect(formatBattleReportRowSummary(report)).toBe(
+      "攻胜 · 攻:演示君主 vs 守:玩家#10002 · 坐标(8,9)",
+    );
+    expect(
+      formatBattleReportRowSummary({
+        defender_city_id: 3,
+        location_x: 1,
+        location_y: 2,
+        outcome: 3,
+      }),
+    ).toContain("平局");
+    expect(formatBattleReportRowSummary({ outcome: 2 })).toContain("守胜");
   });
 
   it("filters battle reports by outcome client-side", () => {
