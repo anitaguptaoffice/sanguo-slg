@@ -36,7 +36,39 @@ export type GuildMemberRow = {
   role?: number;
   power?: number;
   joined_at_ms?: number;
+  /** 可选：ListGuildMembers 成员在线 hint（无字段时由列表计数回退）。 */
+  is_online?: boolean;
 };
+
+/** 从成员行统计在线人数（`is_online === true`）。 */
+export function countGuildMembersOnline(members: GuildMemberRow[]): number {
+  let n = 0;
+  for (const m of members) {
+    if (m.is_online === true) n += 1;
+  }
+  return n;
+}
+
+export type GuildMemberOnlineSummaryInput = {
+  members: GuildMemberRow[];
+  /** ListGuildMembersResponse.total_count；缺省为 members.length。 */
+  totalCount?: number;
+  /** 网关在线计数 hint；缺省为 countGuildMembersOnline(members)。 */
+  onlineCount?: number;
+};
+
+/** 军团成员列表头只读在线/总数摘要（同源成员列表字段，无新 RPC）。 */
+export function formatGuildMemberOnlineSummaryLine(input: GuildMemberOnlineSummaryInput): string {
+  const total = Math.max(0, input.totalCount ?? input.members.length);
+  const online =
+    input.onlineCount !== undefined && input.onlineCount >= 0
+      ? input.onlineCount
+      : countGuildMembersOnline(input.members);
+  return `在线 ${online} / 共 ${total} 人`;
+}
+
+/** 成员列表头 DOM class（CLIENT-217）。 */
+export const GUILD_MEMBER_ONLINE_SUMMARY_CLASS = "guild-member-online-summary";
 
 export type ChatDayGroup = {
   dayKey: string;

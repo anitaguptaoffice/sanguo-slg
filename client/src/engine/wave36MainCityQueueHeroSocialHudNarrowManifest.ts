@@ -7,8 +7,9 @@ import {
   PANEL_ASSET_QUEUE,
 } from "@/engine/artPanelSkin";
 import { TOOLBAR_HEIGHT } from "@/engine/mainCitySlots";
+import { GUILD_CHAT_BACKOFF_RETRY_CLASS } from "@/net/guildChatGatewayBackoff";
 import { GUILD_CHAT_RETRY_INLINE_CLASS } from "@/net/panelGatewayError";
-import { formatGuildPanelEmptyHint } from "@/net/socialFormat";
+import { formatGuildPanelEmptyHint, GUILD_MEMBER_ONLINE_SUMMARY_CLASS } from "@/net/socialFormat";
 
 /** CLIENT-200 军团/聊天 empty·error 行 DOM（manifest 登记；实装见 SocialPanels）。 */
 export const GUILD_PANEL_EMPTY_HINT_CLASS = "guild-panel-empty-hint";
@@ -95,7 +96,9 @@ export {
   formatHeroDetailFromListHint,
   HERO_LIST_RETURN_SESSION_KEY,
   formatGuildPanelEmptyHint,
+  GUILD_MEMBER_ONLINE_SUMMARY_CLASS,
   GUILD_CHAT_RETRY_INLINE_CLASS,
+  GUILD_CHAT_BACKOFF_RETRY_CLASS,
   formatRecruitFormInlineHint,
   RECRUIT_FORM_INLINE_WARN_CLASS,
   BAG_HERO_ITEM_GAP_HIGHLIGHT_CLASS,
@@ -121,6 +124,8 @@ export const HERO_LIST_RETURN_HIGHLIGHT_SELECTOR = `.hero-list li.${HERO_LIST_RE
 export const GUILD_PANEL_EMPTY_HINT_SELECTOR = `.${GUILD_PANEL_EMPTY_HINT_CLASS}`;
 export const GUILD_CHAT_EMPTY_ERROR_ROW_SELECTOR = `.${GUILD_CHAT_EMPTY_ERROR_ROW_CLASS}`;
 export const GUILD_CHAT_RETRY_INLINE_SELECTOR = `.${GUILD_CHAT_RETRY_INLINE_CLASS}`;
+export const GUILD_CHAT_BACKOFF_RETRY_SELECTOR = `.${GUILD_CHAT_BACKOFF_RETRY_CLASS}`;
+export const GUILD_MEMBER_ONLINE_SUMMARY_SELECTOR = `.${GUILD_MEMBER_ONLINE_SUMMARY_CLASS}`;
 export const RECRUIT_FORM_INLINE_HINT_SELECTOR = `[data-role="${RECRUIT_FORM_INLINE_HINT_ROLE}"], .recruit-form-inline-hint`;
 export const HUD_CENTER_PANEL_DEEPLINK_LINE_SELECTOR = `[data-role="${HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE}"]`;
 export const HUD_TODO_MERGED_SWEEP_LINE_SELECTOR = `#hud .hud-todo-merged-sweep, [data-role="${HUD_TODO_MERGED_SWEEP_LINE_ROLE}"]`;
