@@ -1,4 +1,5 @@
 import type { MainCitySession } from "@/net/bootstrapSession";
+import { formatResourceAmount } from "@/net/hudFormat";
 import { formatSocialRankEmptyMessage, leaderboardTypeLabel } from "@/net/socialFormat";
 
 /** 与 sanguo.rank.v1.LeaderboardType / rank_gateway 一致 */
@@ -51,6 +52,49 @@ export function formatLeaderboardEntryLine(entry: LeaderboardEntryRow): string {
   const rank = entry.rank ?? "?";
   const name = entry.display_name?.trim() || (entry.entity_id ? `玩家#${entry.entity_id}` : "?");
   return `${rank}. ${name} · ${entry.score ?? 0}`;
+}
+
+/** 三甲行昵称简称上限（CLIENT-184 密度扫读）。 */
+export const LEADERBOARD_TOP_DENSITY_NAME_MAX = 4;
+
+export function abbreviateLeaderboardDisplayName(
+  displayName: string,
+  maxRunes = LEADERBOARD_TOP_DENSITY_NAME_MAX,
+): string {
+  const trimmed = displayName.trim();
+  if (!trimmed) return "?";
+  const runes = Array.from(trimmed);
+  if (runes.length <= maxRunes) return trimmed;
+  return `${runes.slice(0, maxRunes).join("")}…`;
+}
+
+function leaderboardEntryDisplayName(entry: LeaderboardEntryRow): string {
+  const entityId = entry.entity_id ?? entry.player_id;
+  return entry.display_name?.trim() || (entityId ? `玩家#${entityId}` : "?");
+}
+
+/** 头部三甲密度行：名次 + 简称 + 分数截断（CLIENT-184）。 */
+export function formatLeaderboardTopDensityLine(entry: LeaderboardEntryRow): string {
+  const rank = entry.rank ?? "?";
+  const shortName = abbreviateLeaderboardDisplayName(leaderboardEntryDisplayName(entry));
+  const scoreText = formatResourceAmount(entry.score);
+  return `#${rank} ${shortName} ${scoreText}`;
+}
+
+/** 手动刷新后列表顶提示行；无三甲数据时返回 null。 */
+export function formatLeaderboardRefreshedHint(
+  boardType: number,
+  topEntries: LeaderboardEntryRow[],
+): string | null {
+  const top3 = topEntries.filter((e) => (e.rank ?? 0) > 0).slice(0, 3);
+  if (top3.length === 0) return null;
+  const board = leaderboardTypeLabel(boardType);
+  return `已刷新 · ${board}三甲快览`;
+}
+
+/** 取榜单头部最多三条（按 entries 顺序，供密度行渲染）。 */
+export function leaderboardTopDensityEntries(entries: LeaderboardEntryRow[]): LeaderboardEntryRow[] {
+  return entries.filter((e) => (e.rank ?? 0) > 0).slice(0, 3);
 }
 
 /** 空榜占位与 dev 无种子提示（CLIENT-030 / CLIENT-053 统一 socialFormat）。 */

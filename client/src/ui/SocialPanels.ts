@@ -1,9 +1,12 @@
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
+  formatLeaderboardRefreshedHint,
   formatLeaderboardSnapshotMeta,
+  formatLeaderboardTopDensityLine,
   formatMyRankPinLine,
   formatViewerRankSummary,
+  leaderboardTopDensityEntries,
   LB_PLAYER_POWER,
   LB_PLAYER_RESOURCE,
   selectedLeaderboardTypeFromValue,
@@ -83,6 +86,11 @@ import {
 } from "@/net/rankRowDeepLink";
 import { parseLeaderboardRowHeroId } from "@/net/leaderboardRowHeroId";
 import {
+  applyLeaderboardPinAfterRefresh,
+  captureLeaderboardPinBeforeRefresh,
+  shouldDeferPinApplyForReturnScroll,
+} from "@/net/leaderboardPin";
+import {
   applyRankPanelScrollTop,
   clearLeaderboardReturnScroll,
   readLeaderboardReturnScroll,
@@ -129,6 +137,7 @@ export class SocialPanels {
   private rankDeepLink: SocialRankDeepLinkHandlers = {};
   private cachedViewerHeroIds: number[] = [];
   private pendingReturnScroll: LeaderboardReturnScrollPayload | null = null;
+  private showRankRefreshDensity = false;
   private lastRenderedChatMessages: ChatMessageRow[] = [];
 
   constructor(
@@ -154,6 +163,7 @@ export class SocialPanels {
     this.guildPanel.addEventListener("click", (ev) => this.onGuildClick(ev));
     this.rankPanel.addEventListener("click", (ev) => this.onRankClick(ev));
     this.rankPanel.querySelector('[data-field="rank-type"]')?.addEventListener("change", () => {
+      this.showRankRefreshDensity = false;
       if (!this.rankPanel.classList.contains("hidden")) void this.refreshRank();
     });
   }
@@ -1005,6 +1015,29 @@ export class SocialPanels {
     const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
     if (tbody) {
       tbody.innerHTML = "";
+      const entries = res.entries ?? [];
+      if (this.showRankRefreshDensity) {
+        const hint = formatLeaderboardRefreshedHint(boardType, entries);
+        if (hint) {
+          const hintTr = document.createElement("tr");
+          hintTr.className = "rank-refreshed-hint-row";
+          hintTr.setAttribute("aria-label", "刷新后头部三甲快览");
+          const hintTd = document.createElement("td");
+          hintTd.colSpan = 4;
+          hintTd.textContent = hint;
+          hintTr.appendChild(hintTd);
+          tbody.appendChild(hintTr);
+          for (const entry of leaderboardTopDensityEntries(entries)) {
+            const densityTr = document.createElement("tr");
+            densityTr.className = "rank-top-density-row";
+            const densityTd = document.createElement("td");
+            densityTd.colSpan = 4;
+            densityTd.textContent = formatLeaderboardTopDensityLine(entry);
+            densityTr.appendChild(densityTd);
+            tbody.appendChild(densityTr);
+          }
+        }
+      }
       const fallbackScore = viewerScoreFallback(this.getSession(), boardType);
       const pinLine = formatMyRankPinLine(
         res.my_rank,
@@ -1035,7 +1068,6 @@ export class SocialPanels {
           scheduleRankMyRankChangedPulse(tr);
         }
       }
-      const entries = res.entries ?? [];
       if (entries.length === 0) {
         if (!pinLine) {
           const tr = document.createElement("tr");
@@ -1178,6 +1210,10 @@ export class SocialPanels {
     const sid = this.serverId();
     const boardType = this.selectedLeaderboardType();
     return this.rankListInflight.run(async () => {
+      const hadSnapshot = this.rankSnapshotByType.has(boardType);
+      if (hadSnapshot) {
+        captureLeaderboardPinBeforeRefresh(this.rankPanel, boardType);
+      }
       this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", { busy: true });
       this.onStatus("拉取排行榜…");
       try {
@@ -1189,8 +1225,15 @@ export class SocialPanels {
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
         writeRankLastRefreshMs(boardType, refreshedAt);
+        this.showRankRefreshDensity = hadSnapshot;
         this.renderLeaderboardPage(res, boardType);
         this.pendingRankPinPulse = false;
+        if (
+          hadSnapshot &&
+          !shouldDeferPinApplyForReturnScroll(this.pendingReturnScroll, boardType)
+        ) {
+          applyLeaderboardPinAfterRefresh(this.rankPanel, boardType);
+        }
         this.syncPanelRefreshUi(this.rankPanel, "rank", "refresh-rank", {
           busy: false,
           lastUpdatedMs: refreshedAt,
