@@ -11,11 +11,11 @@ import {
   type PlayerCitySummary,
 } from "@/net/worldFormat";
 import {
-  countMarchesToDestination,
   filterMarchesByDestination,
   findPlayerCityAtGrid,
   formatManhattanFromOwnCity,
 } from "@/ui/marchWorldListLink";
+import { countMarchesAtCell } from "@/ui/marchWorldListLink";
 
 export type WorldTileRef = { x: number; y: number };
 
@@ -104,8 +104,8 @@ export function formatCityLevelLine(city: PlayerCitySummary, currentCityId?: num
 }
 
 export function formatMarchCountInfoLine(count: number): string {
-  if (!Number.isFinite(count) || count <= 0) return "指向此格行军：暂无";
-  return `指向此格行军：${count} 条`;
+  if (!Number.isFinite(count) || count <= 0) return "指向此格进行中行军：暂无";
+  return `指向此格进行中行军：${count} 条`;
 }
 
 /** 从城池或指向此格行军快照解析玩家展示名（不新 world RPC）。 */
@@ -187,7 +187,7 @@ export function formatWorldTileInfoCard(
     terrainLine = `资源格：${formatDerivedResourceTileLabel(x, y)}（坐标派生）`;
   }
 
-  const marchCount = countMarchesToDestination(marches, x, y);
+  const marchCount = countMarchesAtCell(marches, x, y);
   const marchCountLine = formatMarchCountInfoLine(marchCount);
   const manhattanLine = formatManhattanFromOwnCity(ownCityX, ownCityY, x, y);
   const recentBattleReportId = resolveRecentBattleReportId(
