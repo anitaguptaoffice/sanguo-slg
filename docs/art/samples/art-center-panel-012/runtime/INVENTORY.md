@@ -1,10 +1,7 @@
 # INVENTORY — ART-CENTER-PANEL-012 runtime
 
-| SHA role | Commit | Notes |
-|---|---|---|
-| `runtime_code_sha` / `tip_sha` | `ba8408a57623c6161a7a1b83a36dd6f2d461d4c1` | Rebased onto `465fd4b3` (CLIENT-191 #716); hero detail capture |
-| `screenshot_artifacts_commit_sha` | `ba8408a57623c6161a7a1b83a36dd6f2d461d4c1` | JPEG + probe under `runtime/` |
-
+Runtime code at capture: `701ce124cb0d0044481a42ecc0addaa48e0fa35f` (mock + client; must resolve on GitHub).
+Screenshot JPEGs / probe-log land in a follow-up git commit — after push, set `screenshot_artifacts_commit_sha` in `probe-log.json` to that commit (often same as runtime when captured on a clean checkout).
 Art PNGs from Draft #697 @ `bcf05c7365f92f17142f4ce25a3ba1bdd2b80247` (**not merged**).
 
 ## Asset contract
