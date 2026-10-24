@@ -342,7 +342,29 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:26 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:26 backlog 实现卡）。实现卡 **CLIENT-112** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-018**（[#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) / [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 26」。
+波次总览与 **DOCS-EXIT-018**（[#495](https://github.com/anitaguptaoffice/sanguo-slg/issues/495) / [#507](https://github.com/anitaguptaoffice/sanguo-slg/pull/507) `6c9d66cd`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 26」。**wave:27** 筛选列表·邮件日常军情战报可读加深见下文 [Wave 27](#wave-27-h5-筛选列表邮件日常军情战报可读加深m4-出口--intg-024)。
+
+## Wave 27 H5 筛选列表·邮件日常军情战报可读加深（M4 出口 / INTG-024）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-024** 网关冒烟一致）。**范围外**同 Wave 26；**永不合并** art hold / VERIFY Draft（含 [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)）。**世界瓦片/图集**仍暂缓；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch`/募兵加速/主城建造新 RPC/战报 proto 扩量。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **ART-UI-FILTER-008 工程挂载** | [ART-UI-FILTER-008 工程挂载（列表筛选 chrome）](#art-ui-filter-008-工程挂载列表筛选-chrome) **CLIENT-120**（[#510](https://github.com/anitaguptaoffice/sanguo-slg/issues/510) / [#509](https://github.com/anitaguptaoffice/sanguo-slg/pull/509) `50e052f0`） | 已合 |
+| **筛选 chip 运行时（≥44px）** | [ART-UI-FILTER-008 运行时 chip（CLIENT-121）](#art-ui-filter-008-运行时-chipclient-121)（[#511](https://github.com/anitaguptaoffice/sanguo-slg/issues/511) / [#524](https://github.com/anitaguptaoffice/sanguo-slg/pull/524) `4edacef9`） | 已合 |
+| **邮件筛选/行/角标可读** | 上文 **CLIENT-122** + [邮件收件箱](#邮件收件箱)（[#512](https://github.com/anitaguptaoffice/sanguo-slg/issues/512) / [#528](https://github.com/anitaguptaoffice/sanguo-slg/pull/528) `b15449a3`） | 已合 |
+| **日常筛选/行/角标可读** | [日常任务](#日常任务) **CLIENT-123**（[#513](https://github.com/anitaguptaoffice/sanguo-slg/issues/513) / [#525](https://github.com/anitaguptaoffice/sanguo-slg/pull/525) `e86375f7`） | 已合 |
+| **军情筛选/行可读** | [行军列表](#行军列表) **CLIENT-124**（[#514](https://github.com/anitaguptaoffice/sanguo-slg/issues/514) / [#522](https://github.com/anitaguptaoffice/sanguo-slg/pull/522) `32f195cc`） | 已合 |
+| **战报筛选/行可读** | [战报列表](#战报列表) **CLIENT-125**（[#515](https://github.com/anitaguptaoffice/sanguo-slg/issues/515) / [#523](https://github.com/anitaguptaoffice/sanguo-slg/pull/523) `2cff59f0`） | 已合 |
+| **badge.dot/count 统一** | **CLIENT-126**（[#516](https://github.com/anitaguptaoffice/sanguo-slg/issues/516) / [#526](https://github.com/anitaguptaoffice/sanguo-slg/pull/526) `d1424a39`）；见 [ART-UI-FILTER-008 运行时 chip](#art-ui-filter-008-运行时-chipclient-121) | 已合 |
+| **1280 筛选列表 manifest** | [手动验收（1280 邮件/日常/军情/战报筛选列表 CLIENT-127）](#手动验收1280-邮件日常军情战报筛选列表-client-127)（[#517](https://github.com/anitaguptaoffice/sanguo-slg/issues/517) / [#527](https://github.com/anitaguptaoffice/sanguo-slg/pull/527) `8c45fa1a`） | 已合 |
+| **网关冒烟**（邮件未读/附件 + 日常可领 + 军情 phase + 战报 outcome） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 27** / `TestINTG024Wave27SmokePath`（[#518](https://github.com/anitaguptaoffice/sanguo-slg/issues/518) / [#521](https://github.com/anitaguptaoffice/sanguo-slg/pull/521) `aa64edb2`） | 已合 |
+
+**推荐串联**（在 [Wave 26](#wave-26-h5-背包商城招募养成出征募兵反馈加深m4-出口--intg-023) 经济军事 manifest 基础上）：**ART-UI-FILTER-008** 资产工程挂载（**CLIENT-120**）→ 全局 **`remountPanelFilterChips`**（**CLIENT-121**）→ **`artBadgeSkin`** dot/count（**CLIENT-126**）→ **邮件** / **日常** / **军情** / **战报** 各面板筛选 chip + 列表行九宫（**CLIENT-122**～**125**）→ 视口 **1280×720** 四面板筛选条与列表 manifest（**CLIENT-127**）；网关字段见 `tools/smoke/README.md` **INTG-024**。
+
+**wave:19 美术轨旁路**（**非** wave:27 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:27 backlog 实现卡）。实现卡 **CLIENT-120** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
+
+波次总览与 **DOCS-EXIT-019**（[#519](https://github.com/anitaguptaoffice/sanguo-slg/issues/519)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 27」。
 
 ### 手动验收（聊天未读与社交角标 CLIENT-102）
 
