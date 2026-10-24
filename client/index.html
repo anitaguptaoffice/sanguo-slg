@@ -46,6 +46,13 @@
         outline: 2px solid #f0c674;
         box-shadow: 0 0 6px rgba(201, 162, 39, 0.55);
       }
+      @keyframes city-slot-pulse-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        35% { outline: 2px solid #f0c674; box-shadow: 0 0 10px rgba(240, 198, 116, 0.65); }
+      }
+      .main-city-slot-upgrade-tag.city-slot-pulse {
+        animation: city-slot-pulse-keyframes 2s ease-out 1;
+      }
       #hud {
         position: absolute; left: 0; top: 0; width: 100%;
         height: calc(56 / 900 * 100%); min-height: calc(56 / 900 * 100%); max-height: calc(56 / 900 * 100%);
@@ -1059,6 +1066,13 @@
       .queue-list li.queue-list-row.queue-build-slot-mutual-highlight.selected {
         outline-width: 2px;
         box-shadow: 0 0 6px rgba(201, 162, 39, 0.45);
+      }
+      @keyframes queue-row-slot-highlight-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+        35% { box-shadow: inset 0 0 0 2px #c9a227; background: #2a2218; }
+      }
+      .queue-list li.queue-list-row.queue-row-slot-highlight {
+        animation: queue-row-slot-highlight-keyframes 2s ease-out 1;
       }
       .queue-list li.queue-list-row { cursor: pointer; }
       .queue-list li.queue-list-row button { cursor: pointer; }

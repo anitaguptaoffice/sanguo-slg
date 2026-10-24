@@ -45,6 +45,7 @@ import {
 } from "@/engine/mainCitySlots";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import { scrollCitySlotIntoView } from "@/net/citySlotQueueLink";
 import { SocialPanels } from "@/ui/SocialPanels";
 import { ContentPanels } from "@/ui/ContentPanels";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
@@ -730,6 +731,8 @@ export class MainCityScene implements Scene {
       (slotKey) => this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey),
       () => this.toolbarTrigger("toggle-queue"),
       (entry) => this.openMilitaryRecruitFromQueueRow(entry),
+      (slotKey) =>
+        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey),
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -1501,6 +1504,7 @@ export class MainCityScene implements Scene {
     this.buildingPanel.selectSlot(top.slot_key, {
       dismissTrigger: this.buildingDismissTrigger(),
     });
+    this.queuePanels.pulseQueueRowForOverlaySlot(top.slot_key);
     this.status = `建造：${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
     this.renderHud();
   }

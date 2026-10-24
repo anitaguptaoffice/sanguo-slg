@@ -19,6 +19,10 @@ export class MainCitySlotUpgradeOverlay {
 
   constructor(private readonly mount: HTMLElement) {}
 
+  getOverlayLayer(): HTMLElement | undefined {
+    return this.layer;
+  }
+
   setMutualHighlightSlot(slotKey: string | null): void {
     this.mutualHighlightSlotKey = slotKey?.trim() || null;
     this.layer?.querySelectorAll(`.${TAG_CLASS}`).forEach((el) => {

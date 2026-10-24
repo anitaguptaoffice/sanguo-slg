@@ -7,6 +7,7 @@ import {
   QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS,
   RECRUIT_QUEUE_MATRIX_SLOT_KEY,
 } from "@/net/recruitQueueComplete";
+import { QUEUE_ROW_SLOT_HIGHLIGHT_CLASS } from "@/net/citySlotQueueLink";
 import { queueRecruitRowDomId, RECRUIT_ROW_PULSE_CLASS } from "@/net/recruitTroopSubmitFeedback";
 import { DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS } from "@/net/dailyQueueAnchor";
 import {
@@ -57,6 +58,7 @@ describe("QueuePanels", () => {
     session.buildings = [{ slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 }];
     const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
     const onHighlight = vi.fn();
+    const onLocate = vi.fn();
     const panel = new QueuePanels(
       mount,
       gateway,
@@ -69,12 +71,30 @@ describe("QueuePanels", () => {
       undefined,
       undefined,
       onHighlight,
+      undefined,
+      undefined,
+      onLocate,
     );
     panel.attach();
     panel.toggle();
     const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`) as HTMLElement;
     row.click();
     expect(onHighlight).toHaveBeenCalledWith("farm");
+    expect(onLocate).toHaveBeenCalledWith("farm");
+  });
+
+  it("pulseQueueRowForOverlaySlot adds queue-row-slot-highlight (CLIENT-180)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.toggle();
+    panel.pulseQueueRowForOverlaySlot("farm");
+    const row = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
+    expect(row?.classList.contains(QUEUE_ROW_SLOT_HIGHLIGHT_CLASS)).toBe(true);
   });
 
   it("notifyBuildJustCompleted adds pulse class on complete todo row", () => {
