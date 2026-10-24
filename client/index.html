@@ -943,7 +943,19 @@
       .battle-report-detail-location-xy {
         font-size: 14px; font-weight: 700; color: #f0c674; font-family: ui-monospace, monospace;
       }
-      .battle-report-detail-location button[data-action="view-on-map"] { font-size: 12px; }
+      .battle-report-detail-location button[data-action="view-on-map"],
+      .battle-report-detail-location button[data-action="battle-report-coord-replay"],
+      .battle-report-detail-location button[data-action="battle-report-view-intel"] {
+        font-size: 12px;
+      }
+      @keyframes minimap-battle-replay-pulse-keyframes {
+        0% { box-shadow: inset 0 0 0 0 rgba(255, 138, 101, 0); }
+        40% { box-shadow: inset -12px -12px 48px 4px rgba(255, 138, 101, 0.45); }
+        100% { box-shadow: inset 0 0 0 0 rgba(255, 138, 101, 0); }
+      }
+      #layout-frame.minimap-battle-replay-pulse {
+        animation: minimap-battle-replay-pulse-keyframes 2s ease-out 1;
+      }
       .battle-report-detail-foe { font-size: 12px; color: #e8dcc8; flex: 1; min-width: 120px; }
       .battle-report-detail-head button[data-action="view-on-map"] { font-size: 12px; }
       .battle-report-detail-summary {

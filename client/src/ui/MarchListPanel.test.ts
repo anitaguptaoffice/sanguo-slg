@@ -208,6 +208,40 @@ describe("MarchListPanel", () => {
     expect(onRemarchFromRow).toHaveBeenCalled();
   });
 
+  it("march-info-card 复盘战报 uses report_id (CLIENT-191)", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 7,
+            phase: 3,
+            to_x: 8,
+            to_y: 9,
+            report_id: 42,
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const onReplayBattleReportFromInfoCard = vi.fn();
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      onReplayBattleReportFromInfoCard,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    mount.querySelector('.march-list li[data-march-id="7"]')!.click();
+    const replayBtn = mount.querySelector(
+      '[data-action="march-info-replay-battle-report"]',
+    ) as HTMLButtonElement;
+    expect(replayBtn?.disabled).toBe(false);
+    replayBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onReplayBattleReportFromInfoCard).toHaveBeenCalledWith(
+      expect.objectContaining({ march_id: 7 }),
+      42,
+    );
+  });
+
   it("selects march row and highlights on click", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({

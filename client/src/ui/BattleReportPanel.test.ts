@@ -130,6 +130,9 @@ describe("BattleReportPanel", () => {
     expect(detail?.querySelector('[data-action="view-on-map"]')?.textContent).toBe(
       "在小地图定位",
     );
+    expect(detail?.querySelector('[data-action="battle-report-coord-replay"]')?.textContent).toBe(
+      "坐标复盘",
+    );
   });
 
   it("shows 相关日常 when outcome win/loss and daily march in progress", async () => {
@@ -189,6 +192,45 @@ describe("BattleReportPanel", () => {
     expect(mailBtn?.textContent).toBe("相关邮件");
     mailBtn?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(onOpenRelatedMail).toHaveBeenCalledWith(6002);
+  });
+
+  it("invokes onCoordReplay and onViewIntelNearReport (CLIENT-191)", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 11,
+      location_x: 4,
+      location_y: 5,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: { summary, detail: { result: "attacker_win", rounds: [] } },
+      }),
+    } as unknown as GatewayPort;
+    const onCoordReplay = vi.fn();
+    const onViewIntelNearReport = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      onCoordReplay,
+      onViewIntelNearReport,
+      canOfferIntelJump: () => true,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="11"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    mount.querySelector('[data-action="battle-report-coord-replay"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    mount.querySelector('[data-action="battle-report-view-intel"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(onCoordReplay).toHaveBeenCalledWith(summary);
+    expect(onViewIntelNearReport).toHaveBeenCalledWith(summary);
   });
 
   it("invokes onViewOnMap when clicking 在小地图定位", async () => {

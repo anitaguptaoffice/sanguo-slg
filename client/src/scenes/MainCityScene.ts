@@ -76,9 +76,13 @@ import {
   formatBattleReportReplayStatusExpanded,
 } from "@/net/battleReportReplayCoord";
 import {
-  applyBattleReportMinimapFocus,
-  parseBattleReportLocation,
-} from "@/net/battleReportMinimapFocus";
+  buildBattleReportReplaySessionFromSummary,
+  canOfferBattleReportIntelJump,
+  openMinimapForBattleCoords,
+  resolveIntelRowNearCoords,
+  writeBattleReportReplaySession,
+} from "@/net/battleReportIntelReplayJump";
+import { parseBattleReportLocation } from "@/net/battleReportMinimapFocus";
 import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import {
@@ -178,6 +182,7 @@ import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
+import { applyMinimapBattleReplayPulse } from "@/ui/minimapBattleReplayPulse";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -207,7 +212,6 @@ import {
   layoutPointInMinimapToggle,
   minimapLayoutToWorld,
   formatMinimapCollapsedSelectedMarchStatus,
-  openWorldMinimapExpanded,
   readMinimapCollapsedFromSession,
   writeMinimapCollapsedToSession,
   type MinimapView,
@@ -552,6 +556,10 @@ export class MainCityScene implements Scene {
         unreadSession: this.battleReportUnread,
         onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
         onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
+        onCoordReplay: (summary) => this.replayBattleReportOnMinimap(summary),
+        onViewIntelNearReport: (summary) => this.openIntelNearBattleReport(summary),
+        canOfferIntelJump: (summary) =>
+          canOfferBattleReportIntelJump(this.minimapMarches, summary),
         onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
         onOpenRelatedMail: (mailId) => {
           this.heroMail.openAndHighlightMail(mailId);
@@ -623,6 +631,12 @@ export class MainCityScene implements Scene {
           this.renderHud();
         },
         onOpenMilitaryFromInfoCard: (march) => this.handleOpenMilitaryFromMarchInfoCard(march),
+        onReplayBattleReportFromInfoCard: (_march, reportId) => {
+          if (!this.battleReports.isOpen()) this.battleReports.openPanel();
+          void this.battleReports.openPanelWithDeepLink(reportId).then(() => this.renderHud());
+          this.status = `战报：已定位 #${reportId}（军情复盘互链）`;
+          this.renderHud();
+        },
         onSelectionChange: (march) => {
           this.syncMilitaryPanel();
           highlightMarchFormCoordsFromIntel(this.militaryPanel, march, {
@@ -1406,15 +1420,67 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    const expanded = openWorldMinimapExpanded(this.minimapCollapsed);
-    this.minimapCollapsed = expanded.collapsed;
     const bounds = this.currentMinimapWorldBounds();
-    const applied = applyBattleReportMinimapFocus(location, bounds, this.minimapView);
-    this.minimapBattleReportReplay = applied.replay;
-    this.minimapFocusGrid = applied.focusGrid;
-    this.minimapView = applied.view;
+    const applied = openMinimapForBattleCoords({
+      location,
+      bounds,
+      currentView: this.minimapView,
+      minimapCollapsed: this.minimapCollapsed,
+    });
+    this.minimapCollapsed = applied.minimapCollapsed;
+    this.minimapBattleReportReplay = applied.focus.replay;
+    this.minimapFocusGrid = applied.focus.focusGrid;
+    this.minimapView = applied.focus.view;
     this.world?.selectGridAt(location.x, location.y);
-    this.status = applied.status;
+    this.status = applied.focus.status;
+    this.renderHud();
+  }
+
+  /** CLIENT-191：坐标复盘 → 世界面板 + 小地图脉冲 + session 互链。 */
+  private replayBattleReportOnMinimap(summary: BattleReportSummary): void {
+    const location = parseBattleReportLocation(summary);
+    if (!location) {
+      this.status = "战报缺少有效战场坐标";
+      this.renderHud();
+      return;
+    }
+    this.world.openPanel();
+    const bounds = this.currentMinimapWorldBounds();
+    const applied = openMinimapForBattleCoords({
+      location,
+      bounds,
+      currentView: this.minimapView,
+      minimapCollapsed: this.minimapCollapsed,
+    });
+    this.minimapCollapsed = applied.minimapCollapsed;
+    this.minimapBattleReportReplay = applied.focus.replay;
+    this.minimapFocusGrid = applied.focus.focusGrid;
+    this.minimapView = applied.focus.view;
+    this.world.selectGridAt(location.x, location.y);
+    applyMinimapBattleReplayPulse(document.getElementById("layout-frame"));
+    const session = buildBattleReportReplaySessionFromSummary(summary);
+    if (session) writeBattleReportReplaySession(session);
+    this.status = applied.focus.status;
+    this.renderHud();
+  }
+
+  private openIntelNearBattleReport(summary: BattleReportSummary): void {
+    const location = parseBattleReportLocation(summary);
+    if (!location) {
+      this.status = "战报缺少有效战场坐标";
+      this.renderHud();
+      return;
+    }
+    const session = buildBattleReportReplaySessionFromSummary(summary);
+    if (session) writeBattleReportReplaySession(session);
+    const resolved = resolveIntelRowNearCoords(this.minimapMarches, location.x, location.y);
+    if (!resolved) {
+      this.status = "军情列表无同坐标行军可匹配";
+      this.renderHud();
+      return;
+    }
+    this.openMarchIntelPanelHighlight(resolved.marchId);
+    this.status = `军情：已选中行军 #${resolved.marchId}（战报坐标 ${location.x},${location.y}）`;
     this.renderHud();
   }
 

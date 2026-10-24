@@ -70,6 +70,11 @@ import {
   MARCH_INTEL_TO_QUEUE_BANNER_ACTION,
 } from "@/net/marchQueueBanner";
 import {
+  MARCH_INFO_REPLAY_BATTLE_REPORT_ACTION,
+  readBattleReportReplaySession,
+  resolveBattleReportIdForMarchReplay,
+} from "@/net/battleReportIntelReplayJump";
+import {
   formatMarchInfoCardPrimary,
   formatMarchInfoCardSecondary,
   MARCH_INFO_CARD_CLASS,
@@ -94,6 +99,8 @@ export type MarchListPanelOptions = {
   onViewMarchDestTile?: (march: MarchSummary) => void;
   /** CLIENT-178：军情信息卡「打开军事」→ CLIENT-093 预填。 */
   onOpenMilitaryFromInfoCard?: (march: MarchSummary) => void;
+  /** CLIENT-191：信息卡「复盘战报」→ 战报详情 report_id（session 只读匹配）。 */
+  onReplayBattleReportFromInfoCard?: (march: MarchSummary, reportId: number) => void;
 };
 
 export class MarchListPanel {
@@ -113,6 +120,10 @@ export class MarchListPanel {
   private readonly onOpenMilitaryQueueBanner?: (marchId: number) => void;
   private readonly onViewMarchDestTile?: (march: MarchSummary) => void;
   private readonly onOpenMilitaryFromInfoCard?: (march: MarchSummary) => void;
+  private readonly onReplayBattleReportFromInfoCard?: (
+    march: MarchSummary,
+    reportId: number,
+  ) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
@@ -140,6 +151,7 @@ export class MarchListPanel {
     this.onOpenMilitaryQueueBanner = options?.onOpenMilitaryQueueBanner;
     this.onViewMarchDestTile = options?.onViewMarchDestTile;
     this.onOpenMilitaryFromInfoCard = options?.onOpenMilitaryFromInfoCard;
+    this.onReplayBattleReportFromInfoCard = options?.onReplayBattleReportFromInfoCard;
     this.assets = options?.assets;
   }
 
@@ -409,6 +421,7 @@ export class MarchListPanel {
             <button type="button" data-action="march-info-view-dest">查看目的格点</button>
             <button type="button" data-action="march-info-remarch">再出征</button>
             <button type="button" data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}">打开军事</button>
+            <button type="button" data-action="${MARCH_INFO_REPLAY_BATTLE_REPORT_ACTION}">复盘战报</button>
           </div>
         </div>
       </aside>
@@ -683,10 +696,18 @@ export class MarchListPanel {
     const openMilitaryBtn = card.querySelector<HTMLButtonElement>(
       `[data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}"]`,
     );
+    const replayReportBtn = card.querySelector<HTMLButtonElement>(
+      `[data-action="${MARCH_INFO_REPLAY_BATTLE_REPORT_ACTION}"]`,
+    );
     const hasDest = Number.isFinite(march.to_x) && Number.isFinite(march.to_y);
     viewDestBtn?.toggleAttribute("disabled", !hasDest);
     remarchBtn?.toggleAttribute("disabled", !hasDest);
     openMilitaryBtn?.toggleAttribute("disabled", !hasDest);
+    const replayReportId = resolveBattleReportIdForMarchReplay(
+      march,
+      readBattleReportReplaySession(),
+    );
+    replayReportBtn?.toggleAttribute("disabled", replayReportId == null);
     if (openMilitaryBtn && march.march_id != null) {
       openMilitaryBtn.setAttribute("data-march-id", String(march.march_id));
     }
@@ -959,6 +980,21 @@ export class MarchListPanel {
         const march = this.marches.find((row) => row.march_id === id) ?? null;
         if (march) this.onOpenMilitaryFromInfoCard?.(march);
       }
+      return;
+    }
+
+    const replayReportBtn = (ev.target as HTMLElement).closest(
+      `[data-action="${MARCH_INFO_REPLAY_BATTLE_REPORT_ACTION}"]`,
+    );
+    if (replayReportBtn) {
+      ev.stopPropagation();
+      const march = this.getSelectedMarch();
+      if (!march) return;
+      const reportId = resolveBattleReportIdForMarchReplay(
+        march,
+        readBattleReportReplaySession(),
+      );
+      if (reportId != null) this.onReplayBattleReportFromInfoCard?.(march, reportId);
       return;
     }
 

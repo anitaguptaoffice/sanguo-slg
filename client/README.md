@@ -1153,6 +1153,8 @@ cd client && npm install && npm run dev
 4. 关闭战报面板或点另一条战报：小地图临时高亮应消失。
 5. 单测：`battleReportMinimapFocus.test.ts`、`battleReportReplayCoord.test.ts`、`worldMinimap.test.ts`、`BattleReportPanel.test.ts`。
 
+**wave:35（CLIENT-191）战报复盘互跳**：战报详情坐标区除 **在小地图定位**（CLIENT-142）外，**坐标复盘** 经 `openMinimapForBattleCoords` 展开世界/小地图、canvas 战报高亮与 **`#layout-frame.minimap-battle-replay-pulse`** 2s 脉冲，并写入 `sessionStorage` **`battle-report-replay-v1`**；有 ListMarches 快照匹配时显示 **查看军情**（`resolveIntelRowNearCoords` 只读选中同格/最近目的格行军）。军情 **`march-info-card`** **复盘战报** 优先 `march.report_id`，否则同目的格 session 深链 `openPanelWithDeepLink(report_id)`；**CLIENT-142** 定位与 **CLIENT-176/158** outcome/相邻导航不退化。单测：`battleReportIntelReplayJump.test.ts`、`BattleReportPanel.test.ts`、`MarchListPanel.test.ts`。
+
 ### 手动验收（邮件附件领取 CLIENT-035）
 
 在 [CLIENT-017](#手动验收邮件收件箱client-017) 基础上验收 **未领附件高亮** 与领取后与 **CLIENT-027** HUD 角标一致。

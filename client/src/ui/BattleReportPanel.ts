@@ -86,6 +86,10 @@ import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { handleListRovingKeyDown } from "@/ui/listRovingTabindex";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
+  BATTLE_REPORT_COORD_REPLAY_ACTION,
+  BATTLE_REPORT_VIEW_INTEL_ACTION,
+} from "@/net/battleReportIntelReplayJump";
+import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
@@ -101,6 +105,11 @@ export type BattleReportPanelOptions = {
   onUnreadChange?: (count: number) => void;
   /** 详情「在小地图定位」：由场景驱动复盘高亮、展开小地图与 pan/zoom（CLIENT-142）。 */
   onViewOnMap?: (summary: BattleReportSummary) => void;
+  /** CLIENT-191：「坐标复盘」→ 世界/小地图脉冲 + session 互链。 */
+  onCoordReplay?: (summary: BattleReportSummary) => void;
+  /** CLIENT-191：「查看军情」→ 同坐标最近行军（只读 ListMarches 快照）。 */
+  onViewIntelNearReport?: (summary: BattleReportSummary) => void;
+  canOfferIntelJump?: (summary: BattleReportSummary) => boolean;
   /** 关闭面板、切换战报或取消复盘时清除小地图临时标记。 */
   onClearMapReplay?: () => void;
   /** 详情「相关邮件」：只读高亮邮件行，不自动领取。 */
@@ -630,6 +639,19 @@ export class BattleReportPanel {
         mapBtn.setAttribute("data-action", "view-on-map");
         mapBtn.textContent = "在小地图定位";
         locationArea.appendChild(mapBtn);
+        const coordReplayBtn = document.createElement("button");
+        coordReplayBtn.type = "button";
+        coordReplayBtn.setAttribute("data-action", BATTLE_REPORT_COORD_REPLAY_ACTION);
+        coordReplayBtn.textContent = "坐标复盘";
+        locationArea.appendChild(coordReplayBtn);
+        const intelBtn = document.createElement("button");
+        intelBtn.type = "button";
+        intelBtn.setAttribute("data-action", BATTLE_REPORT_VIEW_INTEL_ACTION);
+        intelBtn.textContent = "查看军情";
+        const offerIntel = this.panelOpts?.canOfferIntelJump?.(summary) ?? false;
+        intelBtn.toggleAttribute("disabled", !offerIntel);
+        intelBtn.classList.toggle("hidden", !offerIntel);
+        locationArea.appendChild(intelBtn);
       }
       detailEl.appendChild(locationArea);
 
@@ -1019,6 +1041,10 @@ export class BattleReportPanel {
       this.renderDetail();
     } else if (action === "view-on-map" && this.detailSummary) {
       this.panelOpts?.onViewOnMap?.(this.detailSummary);
+    } else if (action === BATTLE_REPORT_COORD_REPLAY_ACTION && this.detailSummary) {
+      this.panelOpts?.onCoordReplay?.(this.detailSummary);
+    } else if (action === BATTLE_REPORT_VIEW_INTEL_ACTION && this.detailSummary) {
+      this.panelOpts?.onViewIntelNearReport?.(this.detailSummary);
     } else if (action === "open-related-mail") {
       const mailId = Number(btn.dataset.mailId) || 0;
       if (mailId > 0) this.panelOpts?.onOpenRelatedMail?.(mailId);
