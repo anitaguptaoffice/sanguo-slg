@@ -421,6 +421,15 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 3. 背包无养成消耗品时按钮 **disabled**，`hero-cultivation-disabled-reason` 中文可读；网关失败走 `hero-cultivation-form-error`（**CLIENT-067** 口径）。
 4. 单测：`heroDetailCultivationUse.test.ts`、`useConsumableSubmitFeedback.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（将领详情忠诚养成深链 CLIENT-133）
+
+在 [CLIENT-072](#手动验收将领详情养成对比-client-072) / [CLIENT-115](#手动验收将领详情养成道具使用反馈-client-115) 基础上：
+
+1. 点选将领：`GetHeroDetail` 往返中详情区 **CLIENT-129** 骨架「详情加载中…」；失败 inline **CLIENT-067**（`panel-state-error`），列表行不退化。
+2. 详情 **忠诚条/等级经验** 与列表行 `Lv` / `忠诚` 数值一致；`UseConsumable` 成功后列表行同步更新，**CLIENT-115** 摘要与 `hero-detail-stat-pulse` 不退化。
+3. **前往背包使用养成道具**：拉 `ListPlayerBag` 后打开背包并滚入视首条养成 consumable（2017 子集）；无道具或网关失败走 **CLIENT-067**（`hero-cultivation-form-error`）。
+4. 单测：`heroDetailBagDeepLink.test.ts`、`panelStateChrome.test.ts`、`heroMailState.test.ts`（`syncHeroSummaryFromDetail`）、`HeroMailPanels.test.ts`。
+
 ### 手动验收（战报攻守摘要与排行互链 CLIENT-100）
 
 在 [CLIENT-034](#手动验收战报详情回合表与行军深链-client-034) / [CLIENT-083](#手动验收战报上一封下一封与胜负-streak-client-083) / [CLIENT-094](#手动验收战报相邻导航键盘与焦点环-client-094) 基础上：
@@ -1185,6 +1194,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 1. `make dev` 升级一槽建筑至 `upgrade_finish_at_ms > now`：画布槽位旁应出现剩余时间缩写与细进度条。
 2. 点击该升级中槽位：应打开 **队列** 面板，对应建造行 `selected` 并滚入视口（id `queue-build-row-<slot_key>`）。
 3. **CLIENT-059** HUD 产出速率次行与 **CLIENT-026** 建造加速符逻辑不退化。单测：`mainCitySlotUpgrade.test.ts`、`QueuePanels.test.ts`。
+
+### 手动验收（主城七槽等级与升级 ETA 扫读 CLIENT-130）
+
+在 **CLIENT-066** 队列深链与 **CLIENT-104** 建造提交反馈之上，**七槽**（`hall`…`wall`，见 [`docs/art/maincity-slots.md`](../docs/art/maincity-slots.md)）画布 overlay 常驻 **`formatSlotOverlayLabel`**（`Lv.N`，升级中追加 `formatUpgradeRemainingAbbrev` ETA + 细进度条）；空闲与 `upgrade_finish_at_ms=0` 一致仅 **Lv**。点击空闲槽仍开建造侧栏；升级中仍深链队列 **`openAndHighlightBuildSlot`**（**CLIENT-105** 互高亮）；底栏 **CLIENT-107** `queueBuilding` 角标仍按进行中槽位数。契约仍 **`GetCityState`**，无新建造 RPC。
+
+1. `make dev` 进主城：七槽均应可见 **Lv.N**；令一槽升级进行中 → 该槽标签为 **Lv.N · m:ss** 且带进度条，其余槽仅等级。
+2. 升级中点槽 → **队列** 高亮对应行；点空闲槽 → **建造** 侧栏；互高亮与 **CLIENT-105** 脉冲不退化。
+3. 单测：`mainCitySlotUpgrade.test.ts`（`formatSlotOverlayLabel`）、`QueuePanels.test.ts`、`buildSubmitFeedback.test.ts`（**CLIENT-104**）。
 
 ### 手动验收（建造队列完成脉冲 CLIENT-105）
 
