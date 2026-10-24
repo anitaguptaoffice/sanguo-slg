@@ -58,6 +58,19 @@ import {
   REPORT_LIST_INTEL_JUMP_TAG_CLASS,
   REPORT_OUTCOME_FILTER_BRIDGE_SESSION_KEY,
   REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS,
+  BAG_USE_CONSUMABLE_PULSE_CLASS,
+  BAG_USE_ECONOMY_ERROR_LINE_CLASS,
+  DOMESTIC_SLOT_QUEUE_FOCUS_RING_CLASS,
+  DOMESTIC_SLOT_RETURN_RING_CLASS,
+  DOMESTIC_SLOT_SCROLL_SESSION_KEY,
+  GUILD_CHAT_UNREAD_SEPARATOR_CLASS,
+  GUILD_ROLE_GROUP_HEADER_LINE_ROLE,
+  HERO_LIST_FILTER_SESSION_KEY,
+  HERO_LIST_RETURN_HIGHLIGHT_CLASS,
+  HERO_PANEL_ART_MOUNT_ATTR,
+  HERO_PANEL_ART_MOUNT_ID,
+  QUEST_CLAIMABLE_SCROLL_ANCHOR_ROLE,
+  QUEST_CLAIM_PROGRESS_PULSE_CLASS,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -168,6 +181,23 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(RECRUIT_FORM_INLINE_HINT_CLASS);
     expect(html).toContain(HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
     expect(html).toContain(CENTER_PANEL_TAB_PULSE_CLASS);
+  });
+
+  it("CLIENT-235 exposes wave:40 main-city hero bag daily guild narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(DOMESTIC_SLOT_QUEUE_FOCUS_RING_CLASS);
+    expect(html).toContain(DOMESTIC_SLOT_RETURN_RING_CLASS);
+    expect(html).toContain(DOMESTIC_SLOT_SCROLL_SESSION_KEY);
+    expect(html).toContain(HERO_PANEL_ART_MOUNT_ATTR);
+    expect(html).toContain(HERO_PANEL_ART_MOUNT_ID);
+    expect(html).toContain(HERO_LIST_RETURN_HIGHLIGHT_CLASS);
+    expect(html).toContain(HERO_LIST_FILTER_SESSION_KEY);
+    expect(html).toContain(BAG_USE_CONSUMABLE_PULSE_CLASS);
+    expect(html).toContain(BAG_USE_ECONOMY_ERROR_LINE_CLASS);
+    expect(html).toContain(QUEST_CLAIMABLE_SCROLL_ANCHOR_ROLE);
+    expect(html).toContain(QUEST_CLAIM_PROGRESS_PULSE_CLASS);
+    expect(html).toContain(GUILD_ROLE_GROUP_HEADER_LINE_ROLE);
+    expect(html).toContain(GUILD_CHAT_UNREAD_SEPARATOR_CLASS);
   });
 
   it("CLIENT-227 exposes wave:39 world intel battle report mail march hud narrow hooks", () => {

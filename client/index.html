@@ -3408,6 +3408,32 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-235 wave:40 主城将领背包日常军团组合 manifest */
+      /* sessionStorage key domestic-slot-scroll-v1 (CLIENT-229); hero-list-filter-v1 (CLIENT-231); data-art-panel ui.panel.hero.v1 (CLIENT-230) */
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-queue-focus-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-queue-focus-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-queue-focus-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-return-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-return-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"][data-art-panel="ui.panel.hero.v1"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-return-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-use-consumable-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-use-economy-error-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list [data-role="daily-claimable-scroll-anchor"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li .quest-claim-progress-pulse,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-members [data-role="guild-role-group-header-line"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-members li.guild-role-group-header,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-separator {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .building-panel .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .panel-scroll-body,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .panel-scroll-body {
+        padding-bottom: 64px;
+      }
       /* CLIENT-227 wave:39 世界军情战报邮件出征 HUD 军事待办组合 manifest */
       /* sessionStorage key report-outcome-filter-bridge-v1 (CLIENT-225); data-action open-intel-for-report (CLIENT-224) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-sync-ring,

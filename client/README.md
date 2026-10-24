@@ -710,6 +710,23 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：**世界/军情/军事出征/战报/邮件** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:39 DOM 钩子（软依赖 **CLIENT-220～226**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219** manifest 不退化。单测：`wave39WorldIntelBattleReportMailMarchHudNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-227）；`cd client && npm test` 绿。（[#845](https://github.com/anitaguptaoffice/sanguo-slg/issues/845) / [#832](https://github.com/anitaguptaoffice/sanguo-slg/pull/832) `bd66eab9`）
 
+## Wave 40 H5 主城七槽队列抛光·将领面板壳·背包使用·日常领取·军团社交扫读·1280组合manifest（M4 出口 / INTG-037）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-037** 网关冒烟一致）。**范围外**同 Wave 39；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft；**ART-012** 美术旁路——**非**本波 backlog 实现卡。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 主城将领背包日常军团组合 manifest** | [手动验收（1280 wave:40 组合 manifest CLIENT-235）](#手动验收1280-wave40-组合-manifest-client-235)（[#857](https://github.com/anitaguptaoffice/sanguo-slg/issues/857)） | 待合 |
+
+实现卡 **CLIENT-228～235**（本卡 **CLIENT-235** 登记窄屏 DOM 钩子；软依赖 **CLIENT-228～234** 实装可并行）。
+
+### 手动验收（1280 wave:40 组合 manifest CLIENT-235）
+
+视口 **1280×720** `layout-narrow`：**七槽/队列** `domestic-slot-queue-focus-ring` / `domestic-slot-return-ring` + session `domestic-slot-scroll-v1`（**CLIENT-228/229**；**CLIENT-180/197/212** 不退化）、**将领** `data-art-panel="ui.panel.hero.v1"`（**CLIENT-230**；**CLIENT-213** 忠诚次行不退化）、`hero-list-return-highlight` + `hero-list-filter-v1`（**CLIENT-231**；**CLIENT-199** 不退化）、**背包** `bag-use-consumable-pulse` / `bag-use-economy-error-line`（**CLIENT-232**；**CLIENT-112/194** 不退化）、**日常** `data-role="daily-claimable-scroll-anchor"` / `quest-claim-progress-pulse`（**CLIENT-233**；**CLIENT-174/193** 不退化）、**军团** `data-role="guild-role-group-header-line"` / `guild-chat-unread-separator`（**CLIENT-234**；**CLIENT-185/217** 不退化）与 **CLIENT-219/227** 同级窄屏契约（**非** wave:39 世界军情 manifest 面板集）；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；主城/将领/背包/日常密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：底栏 **队列/将领/背包/日常/军团** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:40 DOM 钩子（软依赖 **CLIENT-228～234**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227** manifest 不退化。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。
+
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
 视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-separator`（**CLIENT-185**）；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
