@@ -1,10 +1,14 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
+import type { BagStack } from "@/net/bagState";
+import { recruitAffordabilityForTemplate } from "@/net/recruitAffordability";
 import {
-  formatRecruitSuccessStatus,
+  formatRecruitDeductSummary,
+  heroTemplateLabel,
   type RecruitHeroResult,
   type RecruitTemplatePreview,
 } from "@/net/heroMailState";
 import { scrollHeroListRowIntoView } from "@/net/heroListRefreshFeedback";
+import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 
 /** 招募主按钮默认文案（CLIENT-098）。 */
 export const RECRUIT_SUBMIT_DEFAULT_LABEL = "招募";
@@ -13,6 +17,12 @@ export const RECRUIT_SUBMIT_INFLIGHT_LABEL = "招募中…";
 export const HERO_ROW_RECRUITED_PULSE_CLASS = "hero-row-recruited-pulse";
 /** 招募成功行脉冲时长（≤2s，与 hero-list-refresh-pulse 并存）。 */
 export const HERO_ROW_RECRUITED_PULSE_MS = 1200;
+/** RecruitHero 往返期间招募预览行 loading（CLIENT-183）。 */
+export const RECRUIT_SUBMITTING_CLASS = "recruit-submitting";
+export const RECRUIT_SUBMIT_INFLIGHT_PREVIEW = "招募提交中…";
+/** 招募币种扫读次行成功脉冲（CLIENT-183，≠ 商城购买脉冲）。 */
+export const RECRUIT_SUCCESS_PULSE_CLASS = "recruit-success-pulse";
+export const RECRUIT_SUCCESS_PULSE_MS = 1500;
 export const RECRUIT_OPEN_DETAIL_LABEL = "打开详情";
 
 export type RecruitSubmitPhase = "idle" | "inflight" | "success" | "error";
@@ -97,16 +107,85 @@ export type RecruitSuccessFeedback = {
   showDetailLink: boolean;
 };
 
+/** 成功行内摘要：将领名 + 扣费币种（仅用 RecruitHero 响应与模板，无额外 hero RPC）。 */
+export function formatRecruitSuccessLine(
+  res: RecruitHeroResult,
+  template: RecruitTemplatePreview | undefined,
+): string {
+  const tplId = res.template_cfg_id ?? template?.template_cfg_id;
+  const name = template?.template_name?.trim() || heroTemplateLabel(tplId);
+  const deduct = formatRecruitDeductSummary(template);
+  return `招募成功：${name} · 已扣 ${deduct}`;
+}
+
 export function buildRecruitSuccessFeedback(
   res: RecruitHeroResult,
   template: RecruitTemplatePreview | undefined,
 ): RecruitSuccessFeedback {
   const heroId = res.hero_id ?? null;
   return {
-    statusText: formatRecruitSuccessStatus(res, template),
+    statusText: formatRecruitSuccessLine(res, template),
     heroId,
     showDetailLink: heroId != null && heroId > 0,
   };
+}
+
+/** `data-role="recruit-preview"` 行内 loading（CLIENT-183）。 */
+export function syncRecruitSubmittingLine(
+  formRoot: ParentNode | null | undefined,
+  submitting: boolean,
+): void {
+  const preview = formRoot?.querySelector<HTMLElement>('[data-role="recruit-preview"]');
+  if (!preview) return;
+  preview.classList.toggle(RECRUIT_SUBMITTING_CLASS, submitting);
+  preview.toggleAttribute("aria-busy", submitting);
+  if (submitting) preview.textContent = RECRUIT_SUBMIT_INFLIGHT_PREVIEW;
+}
+
+/** 成功后刷新 CLIENT-166 钱包扫读次行（同源 GetCityState / 会话 wallet）。 */
+export function refreshRecruitWalletSweepDisplays(
+  formRoot: ParentNode | null | undefined,
+  templateCfgId: number,
+  template: RecruitTemplatePreview | undefined,
+  wallet: ResourceWallet | undefined,
+  bag: BagStack[] | undefined,
+): void {
+  if (!template || templateCfgId <= 0) return;
+  const sweep = formatRecruitWalletSweepLine(wallet, template, bag ?? []);
+  const { primary } = recruitAffordabilityForTemplate(template, wallet, bag);
+  const preview = formRoot?.querySelector<HTMLElement>('[data-role="recruit-preview"]');
+  if (preview && !preview.classList.contains(RECRUIT_SUBMITTING_CLASS)) {
+    preview.textContent = `${primary} — ${sweep.text}`;
+  }
+  const rowSecondary = formRoot?.querySelector<HTMLElement>(
+    `li[data-template-id="${templateCfgId}"] .recruit-afford-secondary`,
+  );
+  if (rowSecondary) {
+    rowSecondary.textContent = sweep.text;
+    rowSecondary.classList.toggle("recruit-cost-deficit", sweep.hasDeficit);
+  }
+}
+
+/** 招募币种扫读行成功脉冲（列表次行 + 预览行，1.5s）。 */
+export function scheduleRecruitWalletSweepPulse(
+  formRoot: ParentNode | null | undefined,
+  templateCfgId: number,
+): void {
+  const targets: HTMLElement[] = [];
+  const preview = formRoot?.querySelector<HTMLElement>('[data-role="recruit-preview"]');
+  if (preview) targets.push(preview);
+  if (templateCfgId > 0) {
+    const rowSecondary = formRoot?.querySelector<HTMLElement>(
+      `li[data-template-id="${templateCfgId}"] .recruit-afford-secondary`,
+    );
+    if (rowSecondary) targets.push(rowSecondary);
+  }
+  for (const el of targets) {
+    el.classList.remove(RECRUIT_SUCCESS_PULSE_CLASS);
+    void el.offsetWidth;
+    el.classList.add(RECRUIT_SUCCESS_PULSE_CLASS);
+    window.setTimeout(() => el.classList.remove(RECRUIT_SUCCESS_PULSE_CLASS), RECRUIT_SUCCESS_PULSE_MS);
+  }
 }
 
 /** 成功摘要 + 可选「打开详情」链（`data-hero-id` 深链到详情区）。 */
