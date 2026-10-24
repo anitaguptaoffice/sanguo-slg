@@ -1144,6 +1144,9 @@
       .daily-quest-list li.daily-quest-claim-pulse {
         animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
       }
+      .mail-list li.mail-claim-pulse {
+        animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
+      }
       .daily-quest-filter-claimable {
         position: relative;
         display: inline-flex;
@@ -1453,7 +1456,16 @@
         border-left: none;
         background: transparent;
       }
-      .mail-row-summary { display: block; font-size: 11px; color: #b8a88a; margin-top: 2px; }
+      .mail-row-summary {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #b8a88a;
+        margin-top: 2px;
+      }
+      .mail-row-meta-text { flex: 1 1 auto; min-width: 0; }
       .mail-detail-title { font-size: 14px; margin: 8px 0 4px; }
       .mail-inbox-hint { font-size: 12px; margin-bottom: 6px; }
       .social-panel label { display: block; margin: 6px 0; }

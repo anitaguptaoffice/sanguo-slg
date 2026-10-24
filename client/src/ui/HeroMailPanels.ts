@@ -38,6 +38,8 @@ import {
 } from "@/net/heroListRowFormat";
 import {
   applyMailClaimResult,
+  syncMailInboxSnapshotAfterClaim,
+  syncMailRowAfterClaim,
   formatMailClaimGrantedSummary,
   filterHeroCultivationBagItemIds,
   heroListLines,
@@ -95,6 +97,7 @@ import {
   orderBatchClaimMailIds,
   validateBatchClaimMailSelection,
 } from "@/net/mailBatchClaim";
+import { findMailListRow, scheduleMailClaimRowPulse } from "@/net/mailClaimFeedback";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -149,6 +152,8 @@ export class HeroMailPanels {
   private mailInboxSnapshot: MailRow[] = [];
   /** ListPlayerMail unread 的 total_count，与底栏 CLIENT-050 一致。 */
   private mailUnreadTotal = 0;
+  /** `ListPlayerMail` filter=未读 首条 id（与 `mailUnreadTotal` 同源轮询）。 */
+  private mailUnreadFirstId = 0;
   /** CLIENT-134：角标深链打开面板前，筛选 chip 数字与 `HudTodoDeepLinkSnapshot` 对齐。 */
   private mailFilterTabCountOverride: { unreadForTab: number; unclaimedCount: number } | null = null;
   private mailFilter = MAIL_INBOX_FILTER_ALL;
@@ -520,6 +525,11 @@ export class HeroMailPanels {
     this.onUnreadCount?.(this.isMailOpen() ? 0 : snap.count);
   }
 
+  private pulseMailRowAfterClaim(mailId: number): void {
+    if (!this.mailPanel) return;
+    scheduleMailClaimRowPulse(findMailListRow(this.mailPanel, mailId));
+  }
+
   private serverId(): number {
     const s = this.getSession();
     return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
@@ -816,7 +826,7 @@ export class HeroMailPanels {
     const unreadForHud = Math.max(this.mailUnreadTotal, derived.unread);
     const snap = {
       count: unreadForHud,
-      firstId: pickFirstUnreadMailId(this.mailInboxSnapshot),
+      firstId: this.mailUnreadFirstId || pickFirstUnreadMailId(this.mailInboxSnapshot),
     };
     this.applyMailUnreadHud(snap);
     this.setMailFilterButtons();
@@ -915,6 +925,12 @@ export class HeroMailPanels {
         titleText.className = "mail-row-title-text";
         titleText.textContent = mailRowTitleLine(m);
         titleSpan.appendChild(titleText);
+        const summarySpan = document.createElement("span");
+        summarySpan.className = "mail-row-summary";
+        const metaText = document.createElement("span");
+        metaText.className = "mail-row-meta-text";
+        metaText.textContent = mailRowMetaLine(m);
+        summarySpan.appendChild(metaText);
         const attachCount = mailRowAttachmentBadgeCount(m);
         if (attachCount > 0) {
           const countBadge = document.createElement("span");
@@ -922,11 +938,8 @@ export class HeroMailPanels {
           countBadge.setAttribute("data-ui-filter-badge", "count");
           countBadge.dataset.filterBadgeCount = String(attachCount);
           countBadge.setAttribute("aria-label", `附件 ${formatMailRowCountBadge(m)}`);
-          titleSpan.appendChild(countBadge);
+          summarySpan.appendChild(countBadge);
         }
-        const summarySpan = document.createElement("span");
-        summarySpan.className = "mail-row-summary";
-        summarySpan.textContent = mailRowMetaLine(m);
         if (mailHasUnclaimedAttachments(m)) summarySpan.classList.add("mail-row-meta-attach");
         li.appendChild(titleSpan);
         li.appendChild(summarySpan);
@@ -1306,6 +1319,7 @@ export class HeroMailPanels {
       }
       const unreadSnap = await this.pullMailUnreadSnapshot();
       this.mailUnreadTotal = unreadSnap.count;
+      this.mailUnreadFirstId = unreadSnap.firstId;
       this.setMailFilterButtons();
       if (!this.selectedMailId && this.mails[0]?.mail_id) {
         this.selectedMailId = this.mails[0].mail_id!;
@@ -1413,24 +1427,24 @@ export class HeroMailPanels {
         bag_items?: { item_cfg_id?: number; quantity?: number }[];
       };
       const session = this.getSession();
-      if (session) {
-        const patch = applyMailClaimResult(this.mails, mailId, res, session);
-        this.applyMailsAfterClaim(patch.mails, mailId);
-        this.onSessionPatch({ bag: patch.bag, wallet: patch.wallet });
-      } else if (res.mail) {
-        this.applyMailsAfterClaim(
-          this.mails.map((m) =>
-            m.mail_id === mailId ? { ...m, ...res.mail, has_unclaimed_attachments: false } : m,
-          ),
-          mailId,
-        );
+      const claimPatch = session
+        ? applyMailClaimResult(this.mails, mailId, res, session)
+        : null;
+      const nextMails = claimPatch?.mails ?? syncMailRowAfterClaim(this.mails, mailId, res);
+      this.applyMailsAfterClaim(nextMails, mailId);
+      if (claimPatch) {
+        this.onSessionPatch({ bag: claimPatch.bag, wallet: claimPatch.wallet });
       }
       this.mailBatchSelected.delete(mailId);
-      const updatedRow = this.mails.find((m) => m.mail_id === mailId);
+      const updatedRow =
+        nextMails.find((m) => m.mail_id === mailId) ??
+        syncMailRowAfterClaim([], mailId, res).find((m) => m.mail_id === mailId);
       if (updatedRow) {
-        this.patchMailInboxSnapshot(mailId, updatedRow);
-      } else if (res.mail) {
-        this.patchMailInboxSnapshot(mailId, res.mail);
+        this.mailInboxSnapshot = syncMailInboxSnapshotAfterClaim(
+          this.mailInboxSnapshot,
+          mailId,
+          updatedRow,
+        );
       }
       this.applyMailBadgeCountsFromSnapshot();
       return { ok: true, granted: res.granted };
@@ -1452,14 +1466,16 @@ export class HeroMailPanels {
     this.renderMailList();
     this.onStatus(`领取附件 #${mailId}…`);
     const step = await this.claimMailAttachmentsForId(mailId);
+    let pulseMailId = 0;
     try {
       if (step.ok) {
+        pulseMailId = mailId;
         this.renderMailList();
         await this.syncBagFromServer();
         const snap = await this.pullMailUnreadSnapshot();
         this.mailUnreadTotal = snap.count;
-        this.applyMailUnreadHud(snap);
-        this.setMailFilterButtons();
+        this.mailUnreadFirstId = snap.firstId;
+        this.applyMailBadgeCountsFromSnapshot();
         const summary = formatMailClaimGrantedSummary(step.granted);
         this.onStatus(`领取成功：${summary}`);
       } else {
@@ -1470,6 +1486,7 @@ export class HeroMailPanels {
     } finally {
       this.claimMailInflight = 0;
       this.renderMailList();
+      if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
     }
   }
 
@@ -1488,17 +1505,19 @@ export class HeroMailPanels {
     this.renderMailList();
     this.onStatus(`批量领取 ${ordered.length} 封（逐封）…`);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
+    const pulseMailIds: number[] = [];
     try {
       for (const mailId of ordered) {
         const step = await this.claimMailAttachmentsForId(mailId);
         attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
+        if (step.ok) pulseMailIds.push(mailId);
         this.renderMailList();
       }
       await this.syncBagFromServer();
       const snap = await this.pullMailUnreadSnapshot();
       this.mailUnreadTotal = snap.count;
-      this.applyMailUnreadHud(snap);
-      this.setMailFilterButtons();
+      this.mailUnreadFirstId = snap.firstId;
+      this.applyMailBadgeCountsFromSnapshot();
       const summary = batchClaimSummary(attempts);
       if (summary.lastError) {
         this.mailListError = summary.lastError;
@@ -1508,6 +1527,7 @@ export class HeroMailPanels {
     } finally {
       this.claimMailInflight = 0;
       this.renderMailList();
+      for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
     }
   }
 
