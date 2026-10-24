@@ -284,7 +284,11 @@ describe("heroMailState", () => {
     expect(html).toContain("hero-attr-table");
     expect(html).toContain('style="width:90%"');
     expect(html).toContain("统率");
+    expect(html).toContain("hero-growth-compare-strip");
+    expect(html).toContain("等级 Lv5→Lv6");
     expect(html).toContain("hero-upgrade-progress");
+    expect(html).toContain("hero-upgrade-progress-bar");
+    expect(html).toContain("hero-upgrade-progress-line");
     expect(html).toContain("hero-goto-recruit");
     expect(html).toContain("hero-attr-delta-pos");
     expect(html).toContain("+12");
