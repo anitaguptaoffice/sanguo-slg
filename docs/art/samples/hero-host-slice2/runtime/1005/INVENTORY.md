@@ -1,14 +1,14 @@
 # HERO-HOST-SLICE2 runtime inventory — template 1005
 
-tip_sha / runtime_code_sha: `099dccba34390fed4556cb3555301403db65478b`
+tip_sha / runtime_code_sha: `0e96842e67ea10e549db52fa427c6236e9072dcf`
 art_head_sha (Draft #1069): `4af5abdccf9f882db0123ffb37753c24322be90e`
 
 ## Viewport captures
 
-- `runtime/1005/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 474076 bytes, sha256 `43ae3f9cc7abaf5915a5e5c117b15a912006095084c4ef3c4b29c803763d3e29`
+- `runtime/1005/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 473929 bytes, sha256 `0c83da79c21cec61eef1e7290a31064a83f25f5e02f76b6ec970631abf81be78`
 - `runtime/1005/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 990952 bytes, sha256 `aa45474339a37b6401764bde90f5f9d6f829cdd2bec1b94ee07a606e93a96c19`
 - `runtime/1005/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 257221 bytes, sha256 `6a0ad02c0ab0f2fbee8c866135949025829f49d3eb0e4d87582ff8279e8c75c1`
-- `runtime/1005/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `81fbd0e830620ac2b2a2df470c3cffe6e38707dcba8c00501fa8a46a75a7ba32`
+- `runtime/1005/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `48b62c491fc89ea8e7175ffe87bce96e15c9a11bce505e1912313fc7cd74bb35`
 
 ## Textures (hero.avatar.1005.v1 / hero.bust.1005.v1)
 

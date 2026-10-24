@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE2",
   "template_cfg_id": 1008,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "099dccba34390fed4556cb3555301403db65478b",
-  "runtime_code_sha": "099dccba34390fed4556cb3555301403db65478b",
+  "tip_sha": "0e96842e67ea10e549db52fa427c6236e9072dcf",
+  "runtime_code_sha": "0e96842e67ea10e549db52fa427c6236e9072dcf",
   "art_head_sha": "4af5abdccf9f882db0123ffb37753c24322be90e",
   "art_asset_ids": [
     "hero.avatar.1008.v1",
@@ -139,7 +139,7 @@
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 263216
+      "bytes": 263233
     },
     "probe": {
       "ok": true,
@@ -199,5 +199,5 @@
     "Art path-copied from Draft #1069; Draft remains unmerged.",
     "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot."
   ],
-  "captured_at": "2026-10-24T16:05:13.937Z"
+  "captured_at": "2026-10-24T16:06:14.252Z"
 }

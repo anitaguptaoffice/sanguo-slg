@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE2",
   "template_cfg_id": 1007,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "099dccba34390fed4556cb3555301403db65478b",
-  "runtime_code_sha": "099dccba34390fed4556cb3555301403db65478b",
+  "tip_sha": "0e96842e67ea10e549db52fa427c6236e9072dcf",
+  "runtime_code_sha": "0e96842e67ea10e549db52fa427c6236e9072dcf",
   "art_head_sha": "4af5abdccf9f882db0123ffb37753c24322be90e",
   "art_asset_ids": [
     "hero.avatar.1007.v1",
@@ -162,7 +162,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 473382,
+      "bytes": 473425,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -199,5 +199,5 @@
     "Art path-copied from Draft #1069; Draft remains unmerged.",
     "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot."
   ],
-  "captured_at": "2026-10-24T16:05:06.156Z"
+  "captured_at": "2026-10-24T16:06:05.874Z"
 }
