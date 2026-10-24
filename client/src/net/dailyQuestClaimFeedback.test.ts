@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  DAILY_QUEST_CLAIM_PULSE_CLASS,
   QUEST_CLAIM_PULSE_CLASS,
   QUEST_CLAIM_PULSE_MS,
   scheduleQuestClaimRowPulse,
@@ -24,8 +25,10 @@ describe("dailyQuestClaimFeedback", () => {
     const row = document.createElement("li");
     scheduleQuestClaimRowPulse(row);
     expect(row.classList.contains(QUEST_CLAIM_PULSE_CLASS)).toBe(true);
+    expect(row.classList.contains(DAILY_QUEST_CLAIM_PULSE_CLASS)).toBe(true);
     vi.advanceTimersByTime(QUEST_CLAIM_PULSE_MS);
     expect(row.classList.contains(QUEST_CLAIM_PULSE_CLASS)).toBe(false);
+    expect(row.classList.contains(DAILY_QUEST_CLAIM_PULSE_CLASS)).toBe(false);
     vi.useRealTimers();
   });
 });

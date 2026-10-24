@@ -933,9 +933,25 @@
         0%, 100% { box-shadow: none; background: #1a1410; }
         50% { box-shadow: 0 0 12px rgba(201, 162, 39, 0.75); background: #2a2418; }
       }
-      .daily-quest-list li.quest-claim-pulse {
+      .daily-quest-list li.quest-claim-pulse,
+      .daily-quest-list li.daily-quest-claim-pulse {
         animation: quest-claim-pulse-keyframes 1.2s ease-out 1;
       }
+      .daily-quest-filter-claimable {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .daily-quest-filter-badge-count.hidden { display: none; }
+      .daily-quest-list li[data-ui-filter-row] {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .daily-quest-row-claim-dot { flex-shrink: 0; }
+      .daily-quest-row-main { flex: 1; min-width: 0; }
       @keyframes hero-list-refresh-pulse-keyframes {
         0%, 100% { box-shadow: none; }
         50% { box-shadow: inset 0 0 0 2px rgba(201, 162, 39, 0.85); }
