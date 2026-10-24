@@ -94,6 +94,9 @@ export type GatewayPort = {
     giftKind: number,
     itemCfgId?: number,
   ): Promise<unknown>;
+  getCityChief(serverId: number, cityId: number): Promise<unknown>;
+  setCityChief(serverId: number, cityId: number, heroId: number): Promise<unknown>;
+  clearCityChief(serverId: number, cityId: number): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
@@ -632,6 +635,39 @@ export class GatewayClient implements GatewayPort {
         item_cfg_id: itemCfgId,
       },
       LargessHeroResponse,
+      true,
+    );
+  }
+
+  async getCityChief(serverId: number, cityId: number) {
+    const { GetCityChiefResponse } = getTypes();
+    return this.rpc(
+      Routes.GetCityChief,
+      "GetCityChiefRequest",
+      { server_id: serverId, city_id: cityId },
+      GetCityChiefResponse,
+      true,
+    );
+  }
+
+  async setCityChief(serverId: number, cityId: number, heroId: number) {
+    const { SetCityChiefResponse } = getTypes();
+    return this.rpc(
+      Routes.SetCityChief,
+      "SetCityChiefRequest",
+      { server_id: serverId, city_id: cityId, hero_id: heroId },
+      SetCityChiefResponse,
+      true,
+    );
+  }
+
+  async clearCityChief(serverId: number, cityId: number) {
+    const { ClearCityChiefResponse } = getTypes();
+    return this.rpc(
+      Routes.ClearCityChief,
+      "ClearCityChiefRequest",
+      { server_id: serverId, city_id: cityId },
+      ClearCityChiefResponse,
       true,
     );
   }
