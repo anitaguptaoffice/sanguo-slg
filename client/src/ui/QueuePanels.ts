@@ -36,6 +36,12 @@ import {
 import { buildingBySlot } from "@/net/hudFormat";
 import { centerTodoScrollTargetId } from "@/net/hudCenterTodo";
 import { highlightQueueRowForSlot } from "@/net/citySlotQueueLink";
+import {
+  QUEUE_ROW_COMPLETE_PULSE_CLASS,
+  QUEUE_ROW_COMPLETE_PULSE_MS,
+  QUEUE_ROW_COMPLETE_READONLY_CLASS,
+  scheduleQueueRowCompletePulse,
+} from "@/net/queueCompleteFocusRing";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
 import { buildBuildQueueSlotMatrix } from "@/net/buildQueueMatrix";
@@ -92,6 +98,8 @@ export class QueuePanels {
   private buildCompleteTodoSlots: string[] = [];
   private readonly completePulseSlots = new Set<string>();
   private readonly completePulseRecruitIds = new Set<number>();
+  private readonly completeFocusPulseSlots = new Set<string>();
+  private readonly completeFocusPulseRecruitIds = new Set<number>();
   private recruitDetectSnapshot: RecruitQueueEntry[] = [];
   private dailyAnchorHighlightBuildSlot: string | null = null;
   private dailyAnchorHighlightRecruitId: number | null = null;
@@ -296,14 +304,20 @@ export class QueuePanels {
     for (const key of slotKeys) {
       if (!key) continue;
       this.completePulseSlots.add(key);
+      this.completeFocusPulseSlots.add(key);
       window.setTimeout(() => {
         this.completePulseSlots.delete(key);
         if (this.isOpen()) this.render();
       }, QUEUE_BUILD_COMPLETE_PULSE_MS);
+      window.setTimeout(() => {
+        this.completeFocusPulseSlots.delete(key);
+        if (this.isOpen()) this.render();
+      }, QUEUE_ROW_COMPLETE_PULSE_MS);
     }
     if (this.isOpen()) {
       this.render();
       this.applyCompletePulses(slotKeys);
+      this.applyCompleteFocusPulses(slotKeys);
     }
   }
 
@@ -313,26 +327,44 @@ export class QueuePanels {
     }
   }
 
+  private applyCompleteFocusPulses(slotKeys: readonly string[]): void {
+    for (const key of slotKeys) {
+      scheduleQueueRowCompletePulse(this.findQueueRowForSlot(key));
+    }
+  }
+
   /** 募兵批次刚完成时触发队列行完成脉冲（与提交成功 `recruit-row-pulse` 区分）。 */
   notifyRecruitJustCompleted(queueIds: readonly number[]): void {
     if (!queueIds.length) return;
     for (const id of queueIds) {
       if (id <= 0) continue;
       this.completePulseRecruitIds.add(id);
+      this.completeFocusPulseRecruitIds.add(id);
       window.setTimeout(() => {
         this.completePulseRecruitIds.delete(id);
         if (this.isOpen()) this.render();
       }, QUEUE_RECRUIT_COMPLETE_PULSE_MS);
+      window.setTimeout(() => {
+        this.completeFocusPulseRecruitIds.delete(id);
+        if (this.isOpen()) this.render();
+      }, QUEUE_ROW_COMPLETE_PULSE_MS);
     }
     if (this.isOpen()) {
       this.render();
       this.applyRecruitCompletePulses(queueIds);
+      this.applyRecruitCompleteFocusPulses(queueIds);
     }
   }
 
   private applyRecruitCompletePulses(queueIds: readonly number[]): void {
     for (const id of queueIds) {
       scheduleQueueRecruitCompletePulse(this.findRecruitRow(id));
+    }
+  }
+
+  private applyRecruitCompleteFocusPulses(queueIds: readonly number[]): void {
+    for (const id of queueIds) {
+      scheduleQueueRowCompletePulse(this.findRecruitRow(id));
     }
   }
 
@@ -562,6 +594,7 @@ export class QueuePanels {
       const lv = building?.level ?? 0;
       const li = document.createElement("li");
       li.className = "queue-list-row queue-build-complete-todo";
+      li.classList.add(QUEUE_ROW_COMPLETE_READONLY_CLASS);
       li.dataset.slotKey = slotKey;
       li.setAttribute(TODO_SCROLL_TARGET_ATTR, centerTodoScrollTargetId("queue", slotKey));
       if (this.highlightedBuildSlotKey === slotKey) {
@@ -570,6 +603,9 @@ export class QueuePanels {
       }
       if (this.completePulseSlots.has(slotKey)) {
         li.classList.add("queue-build-complete-pulse");
+      }
+      if (this.completeFocusPulseSlots.has(slotKey)) {
+        li.classList.add(QUEUE_ROW_COMPLETE_PULSE_CLASS);
       }
       const span = document.createElement("span");
       span.textContent = `[内政] ${name} · 建造已完成 Lv${lv} · 点「刷新内政」确认等级`;
@@ -655,6 +691,9 @@ export class QueuePanels {
       if (this.completePulseRecruitIds.has(entry.queue_id)) {
         li.classList.add("queue-recruit-complete-pulse");
       }
+      if (this.completeFocusPulseRecruitIds.has(entry.queue_id)) {
+        li.classList.add(QUEUE_ROW_COMPLETE_PULSE_CLASS);
+      }
       if (
         this.dailyAnchorHighlightRecruitId != null &&
         entry.queue_id === this.dailyAnchorHighlightRecruitId
@@ -664,6 +703,9 @@ export class QueuePanels {
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
+      if (!isRecruitQueueActive(entry, now)) {
+        li.classList.add(QUEUE_ROW_COMPLETE_READONLY_CLASS);
+      }
       if (isRecruitQueueActive(entry, now)) {
         appendQueueRemainingProgressRow(
           li,
@@ -698,6 +740,7 @@ export class QueuePanels {
       if (isRecruitQueueActive(entry, now)) continue;
       if (this.completedRecruitIds.has(entry.queue_id)) continue;
       this.completedRecruitIds.add(entry.queue_id);
+      this.notifyRecruitJustCompleted([entry.queue_id]);
       this.onRecruitQueueJustCompleted?.([entry.queue_id]);
       this.onStatus(`募兵 #${entry.queue_id} 已完成，请刷新军事兵力`);
       this.setPanelStatus("募兵已完成：可刷新内政并打开军事查看兵力。");
@@ -803,7 +846,11 @@ export class QueuePanels {
         const qid = Number(recruitRow.dataset.queueId) || 0;
         if (qid > 0) {
           const entry = this.recruits.find((e) => e.queue_id === qid);
-          if (entry && this.onRecruitQueueJumpToMilitary) {
+          const now = Date.now();
+          if (entry && !isRecruitQueueActive(entry, now)) {
+            this.onLocateCitySlotFromQueue?.(RECRUIT_QUEUE_MATRIX_SLOT_KEY);
+            this.openAndHighlightRecruitQueue(qid);
+          } else if (entry && this.onRecruitQueueJumpToMilitary) {
             this.onRecruitQueueJumpToMilitary(entry);
           } else if (qid > 0) {
             this.openAndHighlightRecruitQueue(qid);
