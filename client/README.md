@@ -745,9 +745,11 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 ## Wave 45 H5 世界小地图军情 scroll-sync 残余巩固加深（CLIENT-268 起）
 
-在 [Wave 44](#wave-44-h5-主城队列-etaf完成焦点残余巩固将领养成扫读panelstate-筛选双榜钉选军团聊天日常-hud-深链1280-组合-manifestm4-出口--intg-041) 主城栈基础上 **轮转**回世界/军情栈的 scroll-sync 与格点 ETA 对照 **残余巩固加深**；**非** wave:43 CLIENT-252 首版巩固标题复刻 / wave:39 双向高亮环主叙事。**仍** DATA-002；**无**新 world RPC / CancelMarch / IAP。
+在 [Wave 44](#wave-44-h5-主城队列-etaf完成焦点残余巩固将领养成扫读panelstate-筛选双榜钉选军团聊天日常-hud-深链1280-组合-manifestm4-出口--intg-041) 主城栈基础上 **轮转**回世界/军情/战报栈的 scroll-sync、格点 ETA 对照与战报键盘坐标复制 **残余巩固加深**；**非** wave:43 CLIENT-252～254 首版巩固标题复刻 / wave:39 双向高亮环 / wave:44 主城栈主叙事。**仍** DATA-002；**无**新 world RPC / 战报 proto 扩量 / CancelMarch / IAP。
 
 **wave:45（CLIENT-268）小地图视口锚点与军情列表 scroll-sync 残余巩固加深**：军情行变更时 **`syncMinimapViewportIntelScrollResidualDeep`** 在 **CLIENT-252** `syncMinimapViewportIntelScrollResidual` 与 **`minimap-intel-scroll-sync-deep-ring` 1.2s** 之上叠加 **`minimap-intel-scroll-sync-residual-deep-ring` 1.5s**（**CLIENT-220** `minimap-intel-sync-ring` **不退化**；**非** wave:39 phase 脉冲主叙事）；格点信息卡 **`formatWorldTileIntelEtaCrossResidualDeepLine`** / `world-tile-intel-eta-cross-residual-deep-line` **巩固第三行** **`world-tile-intel-eta-cross-residual-deep-pulse` 1.5s** 只读对照（**CLIENT-252** `formatWorldTileIntelEtaCrossResidualLine` / cross 脉冲 **不退化**；**无**新 world RPC）。单测：`minimapViewportIntelScrollResidualDeep.test.ts`、`worldTileIntelEtaCrossResidualDeep.test.ts`；`cd client && npm test` 绿。
+
+**wave:45（CLIENT-270）战报列表密度键盘相邻导航与详情坐标复制条残余巩固加深**：面板聚焦时 **j/k** 或 **↑/↓** 驱动相邻 `report_id` 时列表行在 **CLIENT-254** `report-list-keyboard-adjacent-nav-residual-ring` **2s** 上叠加 **`report-list-keyboard-adjacent-nav-residual-deep-ring` 2.5s**（**CLIENT-239** `report-list-density-row` / `report-list-keyboard-focus-ring` **不退化**；**无** proto 扩量）；详情坐标只读复制条点击后在 **CLIENT-254** `formatBattleReportCoordCopyBarResidualSweep` / **`battle-report-coord-copy-bar-residual-sweep` 2s** 上叠加 **`formatBattleReportCoordCopyBarResidualDeepSweep`** + **`battle-report-coord-copy-bar-residual-deep-sweep` 2.5s** 深扫读环（**CLIENT-240** Selection 选中 **1.5s** **不退化**；**无**剪贴板 API 扩权限）。单测：`battleReportListKeyboardAdjacentNavResidualDeep.test.ts`、`battleReportCoordCopyBarResidualDeepSweep.test.ts`、`battleReportDetailTemplateResidual.test.ts`、`BattleReportPanel.test.ts`；`cd client && npm test` 绿。（[#1024](https://github.com/anitaguptaoffice/sanguo-slg/issues/1024)）
 
 ## Wave 44 H5 主城队列 ETA/完成焦点残余巩固·将领养成扫读·panelState 筛选·双榜钉选·军团聊天·日常 HUD 深链·1280 组合 manifest（M4 出口 / INTG-041）
 
