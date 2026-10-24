@@ -17,6 +17,8 @@ import {
   REPORT_LIST_DENSITY_TIMESTAMP_CLASS,
   REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS,
 } from "@/net/battleReportListDensityKeyboard";
+import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidual";
+import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS } from "@/net/battleReportDetailTemplateResidual";
 import { OPEN_INTEL_FOR_REPORT_ACTION } from "@/net/battleReportRoundSummaryIntelLink";
 import {
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
@@ -1103,6 +1105,9 @@ describe("BattleReportPanel", () => {
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(8);
     const row8 = mount.querySelector('li[data-report-id="8"]') as HTMLElement;
     expect(row8.classList.contains(REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS)).toBe(true);
+    expect(row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS)).toBe(
+      true,
+    );
 
     const root = mount.querySelector(".battle-report-panel") as HTMLElement;
     root.setAttribute(BATTLE_REPORT_LIST_KEYBOARD_ATTR, "off");
@@ -1446,6 +1451,10 @@ describe("BattleReportPanel", () => {
     ) as HTMLButtonElement;
     expect(copyBtn).toBeTruthy();
     expect(copyBtn?.textContent).toBe("12,34");
+    copyBtn?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(copyBtn?.classList.contains(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS)).toBe(
+      true,
+    );
     expect(detail?.querySelector(".battle-report-detail-side-line")).toBeTruthy();
     expect(detail?.querySelector(".battle-report-round-summary-strip")).toBeTruthy();
     expect(mount.querySelector(".report-list-intel-jump-tag")).toBeTruthy();
