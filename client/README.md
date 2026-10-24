@@ -1190,6 +1190,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 2. 点击该升级中槽位：应打开 **队列** 面板，对应建造行 `selected` 并滚入视口（id `queue-build-row-<slot_key>`）。
 3. **CLIENT-059** HUD 产出速率次行与 **CLIENT-026** 建造加速符逻辑不退化。单测：`mainCitySlotUpgrade.test.ts`、`QueuePanels.test.ts`。
 
+### 手动验收（主城七槽等级与升级 ETA 扫读 CLIENT-130）
+
+在 **CLIENT-066** 队列深链与 **CLIENT-104** 建造提交反馈之上，**七槽**（`hall`…`wall`，见 [`docs/art/maincity-slots.md`](../docs/art/maincity-slots.md)）画布 overlay 常驻 **`formatSlotOverlayLabel`**（`Lv.N`，升级中追加 `formatUpgradeRemainingAbbrev` ETA + 细进度条）；空闲与 `upgrade_finish_at_ms=0` 一致仅 **Lv**。点击空闲槽仍开建造侧栏；升级中仍深链队列 **`openAndHighlightBuildSlot`**（**CLIENT-105** 互高亮）；底栏 **CLIENT-107** `queueBuilding` 角标仍按进行中槽位数。契约仍 **`GetCityState`**，无新建造 RPC。
+
+1. `make dev` 进主城：七槽均应可见 **Lv.N**；令一槽升级进行中 → 该槽标签为 **Lv.N · m:ss** 且带进度条，其余槽仅等级。
+2. 升级中点槽 → **队列** 高亮对应行；点空闲槽 → **建造** 侧栏；互高亮与 **CLIENT-105** 脉冲不退化。
+3. 单测：`mainCitySlotUpgrade.test.ts`（`formatSlotOverlayLabel`）、`QueuePanels.test.ts`、`buildSubmitFeedback.test.ts`（**CLIENT-104**）。
+
 ### 手动验收（建造队列完成脉冲 CLIENT-105）
 
 `GetCityState` 轮询/推送后，`detectBuildJustCompleted` 检测槽位 `upgrade_finish_at_ms` 由进行中→空闲：对应队列行 **3s** `queue-build-complete-pulse` 并展示最新 **Lv** 文案。队列建造行点击仍 `openAndHighlightBuildSlot`；与画布升级标签 **互高亮**（`queue-build-slot-mutual-highlight`）直至点选其他槽位或关闭互选。与 **CLIENT-052** 日常互链、**CLIENT-026** 加速符并存；募兵加速仍 **out**。
