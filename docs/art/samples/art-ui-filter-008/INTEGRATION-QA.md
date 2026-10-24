@@ -1,8 +1,8 @@
-# ART-UI-FILTER-008 运行时工程验收（CLIENT-136 补证）
+# ART-UI-FILTER-008 运行时工程验收（CLIENT-137 补证）
 
 | 项 | 值 |
 |---|---|
-| tip SHA | `84e926edeac829716bd90ad37086c10c82299599` |
+| tip SHA | `747c050574525ecddda3f2ef4bc8bf9631464b0c` |
 | 范围 | 邮件 + 日常；全视口 JPEG（非面板 crop） |
 | 采集 | Playwright Chromium + mock 网关 + vite dev |
 | 再生 | `cd client && node scripts/capture-art-ui-filter-008-runtime-evidence.mjs` |
@@ -12,12 +12,17 @@
 | 检查项 | 结果 |
 |---|---|
 | chip DOM ≥44×44（仅进展指标，不单独等同完整命中 PASS） | **PASS** |
-| 72×32 精灵完全落在按钮可视槽内（可见交集） | **PASS** |
+| 72×32 精灵 + 容器/视口可见交集 | **PASS** |
 | 相邻 chip 命中盒无重叠 | **PASS** |
 | elementFromPoint 中心落点命中 chip | **PASS** |
+| 边缘 elementFromPoint 命中 chip 热区 | **PASS** |
+| 边缘点击落点命中 chip（Playwright） | **PASS** |
 | 纸底 chip 标签色 #3d2e1f | **PASS** |
-| 九宫行高约 ≥40px | **PASS** |
-| count 9 / 9+ 角标（跳过 count=0 重拍） | **PASS** |
+| 九宫行条逻辑高 **40px**（仅横向拉伸） | **PASS** |
+| chip 四态 staging（含 pressed/selected 真图） | **PASS** |
+| row 三态 staging（40px 行条完整） | **PASS** |
+| count **9** 角标（不重拍 count=0） | **PASS** |
+| count **9+** 角标（10→9+） | **PASS** |
 | 综合工程补证 | **PASS** |
 
 ## 全视口 JPEG
@@ -33,6 +38,7 @@
 | `runtime/mail-chips-four-states-1600x900.jpg` | 1600×900 | mail chip 四态 staging |
 | `runtime/mail-rows-three-states-1600x900.jpg` | 1600×900 | mail row 三态 staging |
 | `runtime/mail-badge-count-nine-1600x900.jpg` | 1600×900 | mail count 9+ |
+| `runtime/mail-badge-count-exact-nine-1600x900.jpg` | 1600×900 | mail count 9 |
 
 详细 JSON：`probe-log.json`。
 

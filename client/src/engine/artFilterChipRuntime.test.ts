@@ -11,12 +11,15 @@ import {
 import {
   FILTER_CHIP_BUTTON_SELECTOR,
   FILTER_CHIP_DISPLAY_W,
+  probeFilterChipEdgeHits,
   probeFilterChipHitMeetsMin,
+  probeFilterChipSpriteInButton,
   readFilterChipCssMinHit,
   remountPanelFilterChips,
   setFilterChipLabel,
   syncFilterChipAria,
 } from "@/engine/artFilterChipRuntime";
+import { mountFilterChip } from "@/engine/artUiFilterSkin";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -105,6 +108,38 @@ describe("CLIENT-136 index.css contract", () => {
     expect(indexHtml).toContain(`min-width: ${FILTER_CHIP_DISPLAY_W}px`);
     expect(indexHtml).toMatch(/art-filter-chip--skinned[\s\S]*color:\s*#3d2e1f/i);
     expect(indexHtml).toMatch(/art-filter-row--skinned[\s\S]*color:\s*#3d2e1f/i);
+  });
+});
+
+describe("probeFilterChipSpriteInButton", () => {
+  it("reports container-visible intersection for mounted chip", () => {
+    const btn = document.createElement("button");
+    btn.dataset.uiFilterChip = "";
+    btn.textContent = "chip";
+    document.body.appendChild(btn);
+    mountFilterChip(btn, mockAssets());
+    const sprite = btn.querySelector(".art-filter-chip-sprite")!;
+    vi.spyOn(btn, "getBoundingClientRect").mockReturnValue(new DOMRect(10, 20, 74, 44));
+    vi.spyOn(sprite, "getBoundingClientRect").mockReturnValue(new DOMRect(11, 26, 72, 32));
+    const probe = probeFilterChipSpriteInButton(btn);
+    expect(probe).not.toBeNull();
+    expect(probe?.containerVisibleIntersectionArea).toBe(72 * 32);
+    expect(probe?.buttonSpriteIntersectionArea).toBe(probe?.containerVisibleIntersectionArea);
+    btn.remove();
+  });
+});
+
+describe("probeFilterChipEdgeHits", () => {
+  it("returns five edge probes when chip has layout box", () => {
+    const btn = document.createElement("button");
+    btn.dataset.uiFilterChip = "";
+    document.body.appendChild(btn);
+    vi.spyOn(btn, "getBoundingClientRect").mockReturnValue(new DOMRect(0, 0, 72, 44));
+    document.elementFromPoint = () => btn;
+    const hits = probeFilterChipEdgeHits(btn);
+    expect(hits).toHaveLength(5);
+    expect(hits.map((h) => h.edge)).toEqual(["center", "left", "right", "top", "bottom"]);
+    btn.remove();
   });
 });
 
