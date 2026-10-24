@@ -373,15 +373,31 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:19 美术轨旁路**（**非** wave:27 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:27 backlog 实现卡）。实现卡 **CLIENT-120** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
 
-波次总览与 **DOCS-EXIT-019**（[#519](https://github.com/anitaguptaoffice/sanguo-slg/issues/519)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 27」。**wave:28** 主城七槽·将领养成·HUD 深链·面板态可读加深见下文 [Wave 28](#wave-28-h5-主城七槽将领养成hud深链面板态可读加深m4-出口--intg-025)。
+波次总览与 **DOCS-EXIT-019**（[#519](https://github.com/anitaguptaoffice/sanguo-slg/issues/519) / [#529](https://github.com/anitaguptaoffice/sanguo-slg/pull/529) `bb4437e4`）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 27」。**wave:28** 主城七槽·将领养成·HUD 深链·面板态可读加深见下文 [Wave 28](#wave-28-h5-主城七槽将领养成hud深链面板态可读加深m4-出口--intg-025)。
 
 ## Wave 28 H5 主城七槽·将领养成·HUD 深链·面板态可读加深（M4 出口 / INTG-025）
 
-在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-025** 网关冒烟一致）。**范围外**同 Wave 27；**永不合并** art hold / VERIFY Draft。**世界瓦片/图集**仍暂缓。
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-025** 网关冒烟一致）。**范围外**同 Wave 27；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)）。**世界瓦片/图集**仍暂缓；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch`/募兵加速/主城建造新 RPC/战报 proto 扩量。
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 主城将领 HUD manifest + 面板键盘焦点** | [手动验收（1280 主城将领 HUD manifest CLIENT-135）](#手动验收1280-主城将领-hud-manifest-client-135)（[#539](https://github.com/anitaguptaoffice/sanguo-slg/issues/539)） | 本卡 |
+| **ART-UI-PANEL-STATE-009 工程挂载** | [ART-UI-PANEL-STATE-009 工程挂载（面板 loading/empty/error 纸底）](#art-ui-panel-state-009-工程挂载面板-loadingemptyerror-纸底) **CLIENT-128**（[#532](https://github.com/anitaguptaoffice/sanguo-slg/issues/532) / [#551](https://github.com/anitaguptaoffice/sanguo-slg/pull/551) `f900255b`） | 已合 |
+| **面板 loading/empty/error 统一** | [ART-UI-PANEL-STATE-009 面板态运行时（CLIENT-129）](#art-ui-panel-state-009-面板态运行时client-129)（[#533](https://github.com/anitaguptaoffice/sanguo-slg/issues/533) / [#549](https://github.com/anitaguptaoffice/sanguo-slg/pull/549) `bbed304f`） | 已合 |
+| **主城七槽等级/ETA 扫读与队列深链** | [手动验收（主城七槽等级与升级 ETA 扫读 CLIENT-130）](#手动验收主城七槽等级与升级-eta-扫读-client-130)（[#534](https://github.com/anitaguptaoffice/sanguo-slg/issues/534) / [#544](https://github.com/anitaguptaoffice/sanguo-slg/pull/544) `68bafda8`） | 已合 |
+| **建造队列七槽状态矩阵与互跳** | [手动验收（队列 CLIENT-019）](#手动验收队列-client-019) 内 **CLIENT-131**（[#535](https://github.com/anitaguptaoffice/sanguo-slg/issues/535) / [#548](https://github.com/anitaguptaoffice/sanguo-slg/pull/548) `aab1b10f`） | 已合 |
+| **将领列表等级/忠诚扫读** | [手动验收（将领列表行扫读 CLIENT-132）](#手动验收将领列表行扫读-client-132)（[#536](https://github.com/anitaguptaoffice/sanguo-slg/issues/536) / [#550](https://github.com/anitaguptaoffice/sanguo-slg/pull/550) `862592e1`） | 已合 |
+| **将领详情忠诚养成与背包深链** | [手动验收（将领详情忠诚养成深链 CLIENT-133）](#手动验收将领详情忠诚养成深链-client-133)（[#537](https://github.com/anitaguptaoffice/sanguo-slg/issues/537) / [#546](https://github.com/anitaguptaoffice/sanguo-slg/pull/546) `aee4ad93`） | 已合 |
+| **HUD 资源条与待办角标深链一致** | [手动验收（HUD 资源条与待办角标深链 CLIENT-134）](#手动验收hud-资源条与待办角标深链-client-134)（[#538](https://github.com/anitaguptaoffice/sanguo-slg/issues/538) / [#547](https://github.com/anitaguptaoffice/sanguo-slg/pull/547) `735f4670`） | 已合 |
+| **面板内键盘焦点 + 1280 主城将领 HUD manifest** | [手动验收（1280 主城将领 HUD manifest CLIENT-135）](#手动验收1280-主城将领-hud-manifest-client-135)（[#539](https://github.com/anitaguptaoffice/sanguo-slg/issues/539) / [#553](https://github.com/anitaguptaoffice/sanguo-slg/pull/553) `747c0505`） | 已合 |
+| **网关冒烟**（七槽 `level`/ETA + 将领 level/loyalty + 待办字段） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 28** / `TestINTG025Wave28SmokePath`（[#540](https://github.com/anitaguptaoffice/sanguo-slg/issues/540) / [#545](https://github.com/anitaguptaoffice/sanguo-slg/pull/545) `508a7ac2`） | 已合 |
+
+**推荐串联**（在 [Wave 27](#wave-27-h5-筛选列表邮件日常军情战报可读加深m4-出口--intg-024) 筛选列表 manifest 基础上）：**ART-UI-PANEL-STATE-009** 工程挂载（**CLIENT-128**）→ 各面板 **`panelStateChrome`** loading/empty/error（**CLIENT-129**）→ 画布 **七槽 overlay** 扫读与队列深链（**CLIENT-130**）→ **队列** 七槽状态矩阵互跳（**CLIENT-131**）→ **将领** 列表行扫读（**CLIENT-132**）与详情养成背包深链（**CLIENT-133**）→ 顶栏/底栏 **HUD 待办深链** 与筛选 chip 一致（**CLIENT-134**）→ 视口 **1280×720** 主城/将领/HUD manifest + 面板 **Tab/Esc/↑↓** 焦点（**CLIENT-135**）；网关字段见 `tools/smoke/README.md` **INTG-025**。
+
+**wave:19 美术轨旁路**（**非** wave:28 backlog 实现卡）：**CLIENT-063**（[#336](https://github.com/anitaguptaoffice/sanguo-slg/issues/336) / [#345](https://github.com/anitaguptaoffice/sanguo-slg/pull/345) `8b34edd1`）**已合**；**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）wave:19 美术旁路（**非** wave:28 backlog 实现卡）。实现卡 **CLIENT-128** 起，**勿占用 CLIENT-064**。**永不合并** art hold **#77** / **#82** / **#108**。
+
+**工程修**（**非** wave:28 backlog 实现卡）：**CLIENT-136**（[#552](https://github.com/anitaguptaoffice/sanguo-slg/pull/552) `f26ed1cb`）ART-UI-FILTER-008 纸底字色/chip 视觉槽与冻结证据补齐（联调修正）。
+
+波次总览与 **DOCS-EXIT-020**（[#541](https://github.com/anitaguptaoffice/sanguo-slg/issues/541)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 28」。main tip **`747c0505`**。
 
 ### 手动验收（1280 主城将领 HUD manifest CLIENT-135）
 
