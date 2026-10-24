@@ -828,7 +828,7 @@ H5 人工验收与 **INTG-038** 网关冒烟对齐，见 [client/README.md](../c
 | [#919](https://github.com/anitaguptaoffice/sanguo-slg/issues/919) | CLIENT-250 | 已完成 | [#938](https://github.com/anitaguptaoffice/sanguo-slg/pull/938)（`d68d273f`） |
 | [#920](https://github.com/anitaguptaoffice/sanguo-slg/issues/920) | CLIENT-251 | 已完成 | [#936](https://github.com/anitaguptaoffice/sanguo-slg/pull/936)（`0928260b`） |
 | [#921](https://github.com/anitaguptaoffice/sanguo-slg/issues/921) | INTG-039 | 已完成 | [#933](https://github.com/anitaguptaoffice/sanguo-slg/pull/933)（`46c79a09`） |
-| [#922](https://github.com/anitaguptaoffice/sanguo-slg/issues/922) | DOCS-EXIT-034 | 已完成 | DOCS PR（合入后更新短 hash） |
+| [#922](https://github.com/anitaguptaoffice/sanguo-slg/issues/922) | DOCS-EXIT-034 | 已完成 | [#943](https://github.com/anitaguptaoffice/sanguo-slg/pull/943)（合入后更新短 hash） |
 
 H5 人工验收与 **INTG-039** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-42-h5-主城队列-eta-完成焦点残余将领养成扫读双榜钉选军团聊天日常-chain-hud-深链1280-组合-manifestm4-出口--intg-039)（**主城队列 ETA 完成焦点残余 + 将领养成道具扫读 + 双榜钉选残余 + 军团聊天扫读 + 日常 chain 队列互链 + HUD 待办底栏深链残余 + 1280 主城将领日常社交队列 manifest**）。
 
