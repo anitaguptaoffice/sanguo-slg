@@ -542,6 +542,30 @@
         margin: 0 0 6px; font-size: 12px; color: #6b4f1a;
       }
       .military-panel .march-intel-last-troops.hidden { display: none; }
+      .military-panel .march-form-readonly-strip {
+        margin: 6px 0 8px; padding: 6px 8px; font-size: 12px; line-height: 1.45;
+        color: #3d4a28; background: rgba(70, 90, 110, 0.1); border-radius: 4px;
+        border: 1px solid rgba(50, 70, 90, 0.25);
+      }
+      .military-panel .march-form-readonly-strip.hidden { display: none; }
+      .military-panel .march-form-readonly-strip.march-form-intel-mutual-highlight {
+        outline: 2px solid #c9a227;
+      }
+      .military-panel .march-form-view-intel-info {
+        margin-top: 4px; font-size: 12px; cursor: pointer;
+      }
+      .military-panel .march-form-view-intel-info.hidden { display: none; }
+      .march-info-card {
+        margin: 8px 0; padding: 8px 10px; font-size: 12px; line-height: 1.45;
+        background: rgba(201, 162, 39, 0.08); border: 1px solid rgba(201, 162, 39, 0.35);
+        border-radius: 4px;
+      }
+      .march-info-card.hidden { display: none; }
+      .march-info-card.march-form-intel-mutual-highlight { outline: 2px solid #c9a227; }
+      .march-info-card-primary { font-weight: 600; color: #2a1f14; }
+      .march-info-card-secondary { margin-top: 4px; color: #4a3828; }
+      .march-info-card-open-military { margin-top: 6px; font-size: 12px; cursor: pointer; }
+      .march-list li.march-info-card-row-linked { box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.55); }
       .military-panel .march-form-error {
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
         color: #8b1a1a; background: rgba(139, 26, 26, 0.1); border-radius: 4px;
@@ -2482,6 +2506,7 @@
       }
       #layout-frame.layout-narrow .military-panel[data-center-panel="military"] h3,
       #layout-frame.layout-narrow .military-panel .march-target-hint,
+      #layout-frame.layout-narrow .military-panel .march-form-readonly-strip,
       #layout-frame.layout-narrow .military-panel .march-form-summary,
       #layout-frame.layout-narrow .military-panel .march-form-summary-warn,
       #layout-frame.layout-narrow .military-panel .march-form-error,

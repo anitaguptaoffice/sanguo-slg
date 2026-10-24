@@ -1,10 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  applyMarchFormIntelMutualHighlight,
   formatMarchEtaLine,
   formatMarchForceSummary,
   formatMarchInfoCardPrimary,
   formatMarchInfoCardSecondary,
   MARCH_INFO_FORCE_HINT,
+  openMarchIntelInfoCardFromMilitary,
+  openMilitaryFromMarchInfoCard,
+  resolveMarchFormIntelJumpIndex,
 } from "@/net/marchInfoCard";
 import type { MarchSummary } from "@/net/militaryFormat";
 
@@ -44,5 +48,26 @@ describe("marchInfoCard formatters", () => {
     const empty: MarchSummary = { phase: 1 };
     expect(formatMarchInfoCardSecondary(empty, now)).toContain(MARCH_INFO_FORCE_HINT);
     expect(formatMarchForceSummary(empty)).toBeNull();
+  });
+});
+
+describe("marchInfoCard intel jump (CLIENT-178)", () => {
+  it("navigation helpers wire march_id", () => {
+    const openMarchIntel = vi.fn();
+    openMarchIntelInfoCardFromMilitary(4, { openMarchIntel, highlightIntel: vi.fn() });
+    expect(openMarchIntel).toHaveBeenCalledWith(4);
+    const openMilitaryWithMarch = vi.fn();
+    openMilitaryFromMarchInfoCard({ march_id: 2, to_x: 1, to_y: 2 }, {
+      openMilitaryWithMarch,
+      highlightMilitaryStrip: vi.fn(),
+    });
+    expect(openMilitaryWithMarch).toHaveBeenCalled();
+  });
+
+  it("applyMarchFormIntelMutualHighlight marks intel card", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `<aside data-role="march-info-card" class="march-info-card"></aside>`;
+    applyMarchFormIntelMutualHighlight(root, resolveMarchFormIntelJumpIndex(1), "intel-card");
+    expect(root.querySelector(".march-form-intel-mutual-highlight")).toBeTruthy();
   });
 });
