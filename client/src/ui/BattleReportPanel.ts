@@ -11,6 +11,8 @@ import {
   battleReportIdsInListOrder,
   BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
   isBattleReportAdjNavKeyboardEnabled,
+  setBattleReportAdjNavButtonEnabled,
+  syncBattleReportListRovingFocus,
 } from "@/net/battleReportListNav";
 import {
   computeOutcomeStreak,
@@ -76,10 +78,7 @@ import {
   resolveBattleReportMailLink,
 } from "@/net/mailBattleCrossLink";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
-import {
-  handleListRovingKeyDown,
-  syncListRovingTabindex,
-} from "@/ui/listRovingTabindex";
+import { handleListRovingKeyDown } from "@/ui/listRovingTabindex";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
   formatBattleReportLocationFields,
@@ -503,7 +502,12 @@ export class BattleReportPanel {
       ul.appendChild(li);
     }
 
-    syncListRovingTabindex(ul as HTMLElement, "li[data-report-id]");
+    const orderedIds = battleReportIdsInListOrder(filtered);
+    syncBattleReportListRovingFocus(
+      ul as HTMLElement,
+      orderedIds,
+      this.selectedReportId,
+    );
     this.renderDetail();
   }
 
@@ -550,12 +554,12 @@ export class BattleReportPanel {
     prevBtn.type = "button";
     prevBtn.setAttribute("data-action", "nav-prev-report");
     prevBtn.textContent = "上一封";
-    prevBtn.disabled = prevId == null;
+    setBattleReportAdjNavButtonEnabled(prevBtn, prevId != null);
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.setAttribute("data-action", "nav-next-report");
     nextBtn.textContent = "下一封";
-    nextBtn.disabled = nextId == null;
+    setBattleReportAdjNavButtonEnabled(nextBtn, nextId != null);
     navBar.appendChild(prevBtn);
     navBar.appendChild(nextBtn);
     detailEl.appendChild(navBar);
