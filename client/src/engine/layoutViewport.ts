@@ -198,3 +198,13 @@ export {
   HUD_CENTER_PANEL_DEEPLINK_LINE_SELECTOR,
   CENTER_PANEL_TAB_PULSE_SELECTOR,
 } from "@/engine/wave36MainCityQueueHeroSocialHudNarrowManifest";
+
+/** CLIENT-211: wave:37 世界·军情·战报·邮件·背包组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_211_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client211NarrowManifestCenterPanelId,
+  WAVE37_WORLD_INTEL_BATTLE_REPORT_MAIL_BAG_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  MINIMAP_MARCH_STACK_BADGE_SELECTOR,
+  MARCH_INTEL_PHASE_ETA_STRIP_SELECTOR,
+  BATTLE_REPORT_ROUND_SUMMARY_STRIP_SELECTOR,
+} from "@/engine/wave37WorldIntelBattleReportMailBagNarrowManifest";

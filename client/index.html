@@ -3049,6 +3049,36 @@
       #layout-frame.layout-narrow .military-panel .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-211 wave:37 世界军情战报邮件背包组合 manifest */
+      /* sessionStorage keys battle-report-time-filter-v1 (CLIENT-207), bag-category-tab-v1 (CLIENT-210), bag-category-scroll-v1 (CLIENT-210) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-march-stack-badge,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-march-summary-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info .world-tile-march-summary-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-intel-phase-eta-strip,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li .intel-row-phase-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-info-card .march-intel-phase-eta-strip,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-reserve-line,
+      #layout-frame.layout-narrow .military-panel .march-form-reserve-warn,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-time-filter-v1,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .battle-report-list-streak-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-round-summary-strip,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-tab-unread-sweep-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar .mail-tab-hud-sync-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-filter-btn.mail-tab-hud-sync-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] [data-role="quest-claim-hud-link-line"],
+      #layout-frame.layout-narrow #hud [data-role="quest-claim-hud-link-line"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-row-return-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tabs.bag-category-scroll-v1 {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body,
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body {
+        padding-bottom: 64px;
+      }
       /* CLIENT-203 wave:36 主城队列将领社交 HUD 深链组合 manifest */
       /* sessionStorage key hero-list-return-v1 (CLIENT-199) */
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-complete-focus-ring,
