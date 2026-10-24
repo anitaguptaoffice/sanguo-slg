@@ -99,6 +99,10 @@ import {
 } from "@/net/battleReportListIntelJump";
 import { BATTLE_REPORT_LIST_STREAK_LINE_CLASS } from "@/engine/wave37WorldIntelBattleReportMailBagNarrowManifest";
 import {
+  OPEN_INTEL_FOR_REPORT_ACTION,
+  REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS,
+} from "@/net/battleReportRoundSummaryIntelLink";
+import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
@@ -589,7 +593,21 @@ export class BattleReportPanel {
       const roundStrip = document.createElement("div");
       roundStrip.className = BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS;
       roundStrip.setAttribute("aria-label", "回合兵力损失摘要");
-      roundStrip.textContent = roundSummaryText;
+      const roundSummaryLine = document.createElement("span");
+      roundSummaryLine.className = "battle-report-round-summary-line";
+      roundSummaryLine.textContent = roundSummaryText;
+      roundStrip.appendChild(roundSummaryLine);
+      const offerRoundIntel =
+        this.detailSummary != null &&
+        (this.panelOpts?.canOfferIntelJump?.(this.detailSummary) ?? false);
+      if (offerRoundIntel) {
+        const intelLink = document.createElement("button");
+        intelLink.type = "button";
+        intelLink.className = REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS;
+        intelLink.setAttribute("data-action", OPEN_INTEL_FOR_REPORT_ACTION);
+        intelLink.textContent = "查看军情行军";
+        roundStrip.appendChild(intelLink);
+      }
       detailEl.appendChild(roundStrip);
     }
 
@@ -1100,6 +1118,8 @@ export class BattleReportPanel {
     } else if (action === BATTLE_REPORT_COORD_REPLAY_ACTION && this.detailSummary) {
       this.panelOpts?.onCoordReplay?.(this.detailSummary);
     } else if (action === BATTLE_REPORT_VIEW_INTEL_ACTION && this.detailSummary) {
+      this.panelOpts?.onViewIntelNearReport?.(this.detailSummary);
+    } else if (action === OPEN_INTEL_FOR_REPORT_ACTION && this.detailSummary) {
       this.panelOpts?.onViewIntelNearReport?.(this.detailSummary);
     } else if (action === "open-related-mail") {
       const mailId = Number(btn.dataset.mailId) || 0;

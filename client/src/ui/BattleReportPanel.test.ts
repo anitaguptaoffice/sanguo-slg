@@ -11,6 +11,7 @@ import {
   BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS,
   BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
 } from "@/net/battleReportListNav";
+import { OPEN_INTEL_FOR_REPORT_ACTION } from "@/net/battleReportRoundSummaryIntelLink";
 import {
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
   BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS,
@@ -926,6 +927,70 @@ describe("BattleReportPanel", () => {
     expect(band?.nextElementSibling).toBe(strip);
     expect(mount.querySelector(".battle-report-rounds-table")).toBeTruthy();
     expect(mount.querySelector(".battle-report-round-jump")).toBeTruthy();
+  });
+
+  it("round summary intel link opens军情 via open-intel-for-report (CLIENT-224)", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 10,
+      location_x: 4,
+      location_y: 5,
+      outcome: 1,
+      created_at_ms: 0,
+    };
+    const detail = {
+      rounds: [{ round: 1 }],
+      attacker_casualties: { infantry: 1 },
+      defender_casualties: {},
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({ report: { summary, detail } }),
+    } as unknown as GatewayPort;
+    const onViewIntelNearReport = vi.fn();
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      onViewIntelNearReport,
+      canOfferIntelJump: () => true,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const link = mount.querySelector(
+      `[data-action="${OPEN_INTEL_FOR_REPORT_ACTION}"]`,
+    ) as HTMLButtonElement;
+    expect(link).toBeTruthy();
+    expect(link.classList.contains("report-round-summary-intel-link")).toBe(true);
+    link.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onViewIntelNearReport).toHaveBeenCalledWith(summary);
+  });
+
+  it("hides round summary intel link when canOfferIntelJump is false (CLIENT-224)", async () => {
+    const mount = document.createElement("div");
+    const summary = { report_id: 10, outcome: 1, created_at_ms: 0 };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({ reports: [summary], total: 1 }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { rounds: [{ round: 1 }], attacker_casualties: {}, defender_casualties: {} },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {}, {
+      canOfferIntelJump: () => false,
+    });
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(mount.querySelector(`[data-action="${OPEN_INTEL_FOR_REPORT_ACTION}"]`)).toBeNull();
   });
 
   it("keeps selected report highlight when time window filter changes (CLIENT-208)", async () => {
