@@ -287,6 +287,11 @@ describe("MarchListPanel", () => {
     expect(mount.querySelector('.march-list li[data-march-id="99"]')?.getAttribute("data-ui-filter-row")).toBe(
       "",
     );
+    const meta = mount.querySelector('.march-list li[data-march-id="99"] [data-role="march-row-meta"]');
+    expect(meta?.textContent).toMatch(/^已提交 ·/);
+    expect(
+      mount.querySelector('[data-action="march-intel-to-queue-banner"][data-march-id="99"]'),
+    ).toBeTruthy();
   });
 
   it("applies march-row-recent for highlighted march and clears on other row select", async () => {
