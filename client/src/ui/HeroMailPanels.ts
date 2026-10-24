@@ -62,7 +62,15 @@ import {
   HERO_LOYALTY_RESIDUAL_DEEP_WARN_DOT_CLASS,
   heroListRowShowsLoyaltyResidualDeepWarnDot,
 } from "@/net/heroListLoyaltyResidualDeepSubline";
+import {
+  formatHeroListLoyaltyResidualDeeperSubline,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_ROLE,
+  HERO_LOYALTY_RESIDUAL_DEEPER_WARN_DOT_CLASS,
+  heroListRowShowsLoyaltyResidualDeeperWarnDot,
+} from "@/net/heroListLoyaltyResidualDeeperSubline";
 import { scheduleHeroDetailConsumableStackResidualDeepSweep } from "@/net/heroDetailConsumableStackResidualDeepSweep";
+import { scheduleHeroDetailConsumableStackResidualDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeeperSweep";
 import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
@@ -1103,10 +1111,26 @@ export class HeroMailPanels {
         loyaltyResidualDeepSubline.appendChild(
           document.createTextNode(formatHeroListLoyaltyResidualDeepSubline(rowSource, filterCtx)),
         );
+        const loyaltyResidualDeeperSubline = document.createElement("span");
+        loyaltyResidualDeeperSubline.className = HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_CLASS;
+        loyaltyResidualDeeperSubline.setAttribute(
+          "data-role",
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_ROLE,
+        );
+        if (heroListRowShowsLoyaltyResidualDeeperWarnDot(rowSource, filterCtx)) {
+          const deeperDot = document.createElement("span");
+          deeperDot.className = HERO_LOYALTY_RESIDUAL_DEEPER_WARN_DOT_CLASS;
+          deeperDot.setAttribute("aria-hidden", "true");
+          loyaltyResidualDeeperSubline.appendChild(deeperDot);
+        }
+        loyaltyResidualDeeperSubline.appendChild(
+          document.createTextNode(formatHeroListLoyaltyResidualDeeperSubline(rowSource, filterCtx)),
+        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
         body.appendChild(loyaltyResidualSubline);
         body.appendChild(loyaltyResidualDeepSubline);
+        body.appendChild(loyaltyResidualDeeperSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
@@ -1166,6 +1190,7 @@ export class HeroMailPanels {
           this.heroPanel,
         );
         scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
+        scheduleHeroDetailConsumableStackResidualDeeperSweep(detailEl, this.heroDetail, bag);
       }
     }
   }
