@@ -14,7 +14,9 @@ import {
   formatServerLine,
   formatSocialGatewayError,
   groupChatMessagesByLocalDay,
+  formatGuildRoleGroupCountLabel,
   formatGuildRoleGroupHeaderLabel,
+  formatGuildRoleGroupHeaderLine,
   groupGuildMembersByRole,
   guildRoleChipClass,
   guildRoleGroupDefaultExpanded,
@@ -122,6 +124,10 @@ describe("socialFormat", () => {
     expect(groups.map((g) => g.members.length)).toEqual([1, 2, 1]);
     expect(formatGuildRoleGroupHeaderLabel("官员", false)).toBe("▶ 官员");
     expect(formatGuildRoleGroupHeaderLabel("团长", true)).toBe("▼ 团长");
+    expect(formatGuildRoleGroupHeaderLine("官员", false, 2)).toBe("▶ 官员 · 2 人");
+    expect(formatGuildRoleGroupHeaderLine("团长", true, 1)).toBe("▼ 团长 · 1 人");
+    expect(formatGuildRoleGroupCountLabel(3)).toBe("3");
+    expect(formatGuildRoleGroupCountLabel(-2)).toBe("0");
     expect(guildRoleGroupDefaultExpanded(1)).toBe(true);
     expect(guildRoleGroupDefaultExpanded(2)).toBe(false);
     expect(guildRoleChipClass(1)).toContain("guild-role-chip-leader");
