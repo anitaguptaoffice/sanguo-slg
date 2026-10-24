@@ -20,6 +20,7 @@ import { buildingBySlot } from "@/net/hudFormat";
 import { centerTodoScrollTargetId } from "@/net/hudCenterTodo";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
+import { buildBuildQueueSlotMatrix } from "@/net/buildQueueMatrix";
 import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
@@ -28,6 +29,7 @@ import {
   isRecruitQueueActive,
   mergeRecruitQueue,
   pruneFinishedRecruits,
+  sortBuildQueueRows,
   type RecruitQueueEntry,
 } from "@/net/queueState";
 import { TODO_SCROLL_TARGET_ATTR, scrollCenterTodoTarget } from "@/ui/centerTodoScroll";
@@ -232,6 +234,7 @@ export class QueuePanels {
     el.innerHTML = `
       <h3>队列</h3>
       <p class="queue-panel-overview" data-role="queue-overview"></p>
+      <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-queue">刷新内政</button>
@@ -264,18 +267,65 @@ export class QueuePanels {
     return bagStackQuantity(bag, BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID) >= 1;
   }
 
+  private renderBuildSlotMatrix(now: number): void {
+    const matrixEl = this.panel.querySelector('[data-role="queue-build-matrix"]');
+    if (!matrixEl) return;
+    const session = this.getSession();
+    if (!session) {
+      matrixEl.replaceChildren();
+      matrixEl.classList.add("hidden");
+      return;
+    }
+    matrixEl.classList.remove("hidden");
+    const cells = buildBuildQueueSlotMatrix(
+      session.buildings,
+      session.wallet,
+      this.slotLabels,
+      now,
+    );
+    matrixEl.replaceChildren();
+    for (const cell of cells) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "queue-build-matrix-cell";
+      btn.dataset.action = "queue-matrix-slot";
+      btn.dataset.slotKey = cell.slotKey;
+      btn.dataset.matrixIndex = String(cell.matrixIndex);
+      btn.dataset.status = cell.status;
+      btn.title = cell.title;
+      btn.setAttribute("aria-label", cell.title);
+      btn.textContent = cell.abbrev;
+      if (this.highlightedBuildSlotKey === cell.slotKey) {
+        btn.classList.add("queue-build-matrix-cell-selected");
+        btn.classList.add(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+      }
+      matrixEl.appendChild(btn);
+    }
+  }
+
   private render(): void {
     const buildUl = this.panel.querySelector('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
     if (!buildUl || !recruitUl) return;
+    const session = this.getSession();
     const now = Date.now();
     this.recruits = pruneFinishedRecruits(this.recruits, now);
     if (overviewEl) {
       overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }
+    this.renderBuildSlotMatrix(now);
+    if (!session) {
+      buildUl.replaceChildren();
+      renderPanelStateListRow(buildUl, "loading", PANEL_STATE_LOADING_MESSAGE, {
+        legacyClass: "queue-list-empty",
+      });
+      recruitUl.replaceChildren();
+      this.militarySection.classList.add("hidden");
+      return;
+    }
     const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy;
-    const buildRows = activeBuildingUpgrades(this.buildings(), now);
+    const buildRows = sortBuildQueueRows(this.buildings(), now);
     const recruitLines = this.recruits.map((r) => formatRecruitQueueLine(r, now));
     const completeSlots = this.buildCompleteTodoSlots.filter(
       (key) => !buildRows.some((b) => b.slot_key === key),
@@ -486,6 +536,12 @@ export class QueuePanels {
 
   private onClick(ev: Event): void {
     const target = ev.target as HTMLElement;
+    const matrixBtn = target.closest('[data-action="queue-matrix-slot"]');
+    if (matrixBtn instanceof HTMLElement) {
+      const slotKey = matrixBtn.dataset.slotKey?.trim();
+      if (slotKey) this.openAndHighlightBuildSlot(slotKey);
+      return;
+    }
     const btn = target.closest("button");
     if (!btn) {
       const row = target.closest("li.queue-list-row[data-slot-key]");

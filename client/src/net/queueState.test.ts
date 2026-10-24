@@ -10,6 +10,7 @@ import {
   nearestQueueFinishAtMs,
   queuePanelHasCountdown,
   recruitEntryFromResponse,
+  sortBuildQueueRows,
 } from "@/net/queueState";
 
 describe("queueState", () => {
@@ -29,15 +30,13 @@ describe("queueState", () => {
   });
 
   it("lists active building upgrades sorted by finish time", () => {
-    const rows = activeBuildingUpgrades(
-      [
-        { slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 3000 },
-        { slot_key: "hall", level: 1, upgrade_finish_at_ms: now + 1000 },
-        { slot_key: "wall", level: 1, upgrade_finish_at_ms: now - 1 },
-      ],
-      now,
-    );
-    expect(rows.map((b) => b.slot_key)).toEqual(["hall", "farm"]);
+    const buildings = [
+      { slot_key: "farm", level: 2, upgrade_finish_at_ms: now + 3000 },
+      { slot_key: "hall", level: 1, upgrade_finish_at_ms: now + 1000 },
+      { slot_key: "wall", level: 1, upgrade_finish_at_ms: now - 1 },
+    ];
+    expect(sortBuildQueueRows(buildings, now).map((b) => b.slot_key)).toEqual(["hall", "farm"]);
+    expect(activeBuildingUpgrades(buildings, now).map((b) => b.slot_key)).toEqual(["hall", "farm"]);
   });
 
   it("formats upgrade and recruit queue lines with remaining time", () => {
