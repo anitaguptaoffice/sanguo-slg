@@ -1073,6 +1073,72 @@ describe("HeroMailPanels", () => {
     expect(nextAtByCall.length).toBe(1);
   });
 
+  it("hero detail expr begin/cancel/faster calls BeginHeroExpr CancelHeroExpr FasterHeroExpr", async () => {
+    const mount = document.createElement("div");
+    const endsAt = Date.now() + 3_600_000;
+    let status = 1;
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 11, template_cfg_id: 1001, level: 4, loyalty: 80, status }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockImplementation(async () => ({
+        hero_id: 11,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 4,
+        loyalty: 80,
+        status,
+        exp: 100,
+      })),
+      beginHeroExpr: vi.fn().mockImplementation(async () => {
+        status = 4;
+        return {
+          hero_id: 11,
+          status: 4,
+          ends_at_ms: endsAt,
+          gold_spent: 40,
+          hours: 2,
+        };
+      }),
+      cancelHeroExpr: vi.fn().mockResolvedValue({ hero_id: 11, status: 1 }),
+      fasterHeroExpr: vi.fn().mockResolvedValue({
+        hero_id: 11,
+        status: 1,
+        exp_gained: 160,
+        exp: 260,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session = { ...sessionBase(), wallet: { gold: 10_000 } };
+    const onSessionPatch = vi.fn();
+    const panels = new HeroMailPanels(mount, gateway, () => session, onSessionPatch, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="11"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const beginBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-expr-begin"]');
+    expect(beginBtn?.disabled).toBe(false);
+    mount.querySelector<HTMLButtonElement>('[data-action="hero-expr-hours"][data-hours="2"]')?.click();
+    beginBtn?.click();
+    await flushPromises();
+    expect(gateway.beginHeroExpr).toHaveBeenCalledWith(1, 11, 2);
+    expect(mount.querySelector('[data-role="hero-expr-success"]')?.textContent).toContain("开始历练");
+    const cancelBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-expr-cancel"]');
+    cancelBtn?.click();
+    await flushPromises();
+    expect(gateway.cancelHeroExpr).toHaveBeenCalledWith(1, 11);
+    status = 4;
+    mount.querySelector<HTMLButtonElement>('[data-action="hero-expr-begin"]')?.click();
+    await flushPromises();
+    mount.querySelector<HTMLButtonElement>('[data-action="hero-expr-faster"]')?.click();
+    await flushPromises();
+    expect(gateway.fasterHeroExpr).toHaveBeenCalledWith(1, 11);
+    expect(mount.querySelector('[data-role="hero-expr-success"]')?.textContent).toContain("加速完成");
+  });
+
   it("hero detail points add/clear calls AddHeroPoint and ClearHeroPoint", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
