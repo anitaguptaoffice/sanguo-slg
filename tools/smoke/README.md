@@ -2,7 +2,19 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## 功勋/经验/体力出征 L9–L11 网关冒烟（INTG-046，推荐）
+
+在 INTG-045 全量断言之上覆盖 **L9 功勋点**（`GetHeroDetail` 暴露属性/`exp`/`march_force`；`AddHeroPoint` 分配 + 非空闲拒绝）、**L10 历练**（`BeginHeroExpr` → 提前 `FinishHeroExpr` 拒绝 → 时钟推进 → `FinishHeroExpr` 经验入账 + `GetHeroDetail` `exp`）、**L11 出征体力**（体力不足 `StartMarch` → **50005**；空闲 `RestHero` 回满；出征扣体力；非空闲 `RestHero` 拒绝）。无城 **skip** + hint；**不改**业务语义，仅测试/种子。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG046HeroL9L11SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-046:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## 俘虏/结交/来投 L6–L8 网关冒烟（INTG-045，推荐）
 
