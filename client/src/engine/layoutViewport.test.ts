@@ -16,6 +16,8 @@ import {
   CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_145_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_155_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
@@ -188,5 +190,22 @@ describe("narrow layout root class", () => {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
     expect(WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT.w).toBeGreaterThan(270);
+  });
+
+  it("CLIENT-155 wave:30 econ/daily/hero/rank manifest registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_155_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "queue",
+      "daily",
+      "hero",
+      "rank",
+      "bag",
+      "shop",
+    ]);
+    for (const id of CLIENT_155_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
   });
 });

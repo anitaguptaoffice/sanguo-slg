@@ -6,6 +6,7 @@ import {
   CLIENT_127_NARROW_FILTER_LIST_CENTER_PANEL_IDS,
   CLIENT_127_PANEL_ASSET_BY_CENTER_ID,
   CLIENT_127_PANEL_SCROLL_ROLE_BY_CENTER_ID,
+  DAILY_QUEST_PROGRESS_SECONDARY_CLASS,
   FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
@@ -47,6 +48,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(CLIENT_127_FILTER_CHIP_BAR_SELECTOR_BY_CENTER_ID.daily).toContain(
       PANEL_FILTER_CHIP_BAR_CLASS,
     );
+  });
+
+  it("CLIENT-155 exposes daily quest progress secondary class for narrow manifest", () => {
+    expect(DAILY_QUEST_PROGRESS_SECONDARY_CLASS).toBe("daily-quest-row-progress");
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(`.${DAILY_QUEST_PROGRESS_SECONDARY_CLASS}`);
   });
 
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {

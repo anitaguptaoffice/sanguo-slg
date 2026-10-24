@@ -130,3 +130,12 @@ export {
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/worldIntelSocialNarrowManifest";
 export { resolveMinimapExpandedLayoutRect as resolveWorldMinimapExpandedLayoutRect } from "@/ui/worldMinimap";
+
+/** CLIENT-155: HUD 产出展开·队列顶栏·日常/将领/排行·背包商城 tab 组合窄屏 manifest at 1280×720. */
+export {
+  CLIENT_155_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client155NarrowManifestCenterPanelId,
+  MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  HUD_RESOURCE_STRIP_SELECTOR,
+  HUD_RESOURCE_SWEEP_SELECTOR,
+} from "@/engine/mainCityWave30NarrowManifest";
