@@ -904,14 +904,13 @@ cd client && npm install && npm run dev
 
 ### 手动验收（战报坐标与小地图复盘 CLIENT-042）
 
-（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`）。战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情顶栏同样展示坐标与 **「在地图查看」**。点击后经 `extractBattleReportReplayCoord` 读取 summary 既有 `location_x/y`（不扩 proto），主城舞台小地图绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野；关闭战报面板或切换选中战报时清除高亮。小地图折叠时状态栏仍提示坐标。
+（[#266](https://github.com/anitaguptaoffice/sanguo-slg/issues/266) / [#276](https://github.com/anitaguptaoffice/sanguo-slg/pull/276) `7b9e4c3f`）。战报列表行 **坐标** 与守方摘要分行突出（`formatReportCoord` / `formatBattleReportFoeWithoutCoord`）；详情 **坐标区** 展示 `location_x/location_y` 与 **「在小地图定位」**（[#562](https://github.com/anitaguptaoffice/sanguo-slg/issues/562) **CLIENT-142**）。点击后经 `parseBattleReportLocation` + `applyBattleReportMinimapFocus` 读取 summary 既有 `location_x/y`（不扩 proto），`openWorldMinimapExpanded` 展开小地图、绘制 **临时战报高亮** 并 `pan/zoom` 纳入视野，同时 **世界信息卡** 选中格与战报坐标一致；关闭战报面板或切换选中战报时清除高亮。列表次行攻守摘要（**CLIENT-098**）、筛选 chip（**CLIENT-125**）与详情键盘相邻导航（**CLIENT-094**）在坐标跳转后不退化。
 
 1. `make dev` 产生至少一条带 `location_x/y` 的战报（见募兵 → 行军）。
-2. 底栏 **「战报」** → 列表行应见金色 **坐标(...)** 行；点开详情顶栏有坐标与 **在地图查看**。
-3. 点击 **在地图查看**：展开小地图时应出现 **战报** 标记与橙红高亮圈，视野自动对准该格点。
-4. 折叠小地图后再次点击 **在地图查看**：状态栏应提示坐标与「展开小地图可查看高亮」。
-5. 关闭战报面板或点另一条战报：小地图临时高亮应消失。
-6. 单测：`battleReportReplayCoord.test.ts`、`worldMinimap.test.ts`、`BattleReportPanel.test.ts`。
+2. 底栏 **「战报」** → 列表行应见金色 **坐标(...)** 行；点开详情坐标区有 `location_x=… · location_y=…` 与 **在小地图定位**。
+3. 点击 **在小地图定位**：小地图应自动展开，出现 **战报** 标记与橙红高亮圈，视野对准该格点；世界面板信息卡格点与战报一致。
+4. 关闭战报面板或点另一条战报：小地图临时高亮应消失。
+5. 单测：`battleReportMinimapFocus.test.ts`、`battleReportReplayCoord.test.ts`、`worldMinimap.test.ts`、`BattleReportPanel.test.ts`。
 
 ### 手动验收（邮件附件领取 CLIENT-035）
 
