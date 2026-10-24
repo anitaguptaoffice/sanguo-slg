@@ -1,8 +1,8 @@
 {
   "task": "ART-UI-FILTER-008",
   "client_task": "CLIENT-136",
-  "tip_sha": "b2e123e76dbd470c5f7a3eaf039554e6e2a5b1c3",
-  "captured_at": "2026-10-24T00:32:24.234Z",
+  "tip_sha": "84e926edeac829716bd90ad37086c10c82299599",
+  "captured_at": "2026-10-24T00:33:10.343Z",
   "note": "Full-viewport runtime evidence; chip sprite/click probes; not art-board static PASS.",
   "panels": {
     "mail": {

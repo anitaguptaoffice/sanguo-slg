@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| tip SHA | `b2e123e76dbd470c5f7a3eaf039554e6e2a5b1c3` |
+| tip SHA | `84e926edeac829716bd90ad37086c10c82299599` |
 | 范围 | 邮件 + 日常；全视口 JPEG（非面板 crop） |
 | 采集 | Playwright Chromium + mock 网关 + vite dev |
 | 再生 | `cd client && node scripts/capture-art-ui-filter-008-runtime-evidence.mjs` |
