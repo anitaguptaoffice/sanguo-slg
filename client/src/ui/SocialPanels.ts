@@ -28,6 +28,7 @@ import {
   formatGuildMemberPrimaryNick,
   formatGuildMemberSecondaryLine,
   formatGuildMentionDraft,
+  formatGuildRoleGroupHeaderLabel,
   groupGuildMembersByRole,
   guildRoleChipClass,
   guildRoleGroupDefaultExpanded,
@@ -65,10 +66,12 @@ import {
 } from "@/net/socialPanelRefreshSession";
 import {
   chatChannelStorageKey,
-  chatUnreadDividerFlatIndex,
+  estimateChatUnreadCount,
+  findChatUnreadSeparatorIndex,
+  formatChatUnreadSweepLine,
   type ChatUnreadSummary,
   type ChatUnreadTracker,
-  isChatUnreadDividerScrolledPast,
+  isChatUnreadSeparatorScrolledPast,
   maxChatMessageSentAtMs,
 } from "@/net/chatUnread";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
@@ -339,9 +342,9 @@ export class SocialPanels {
     if (ch !== CHAT_CHANNEL_WORLD && ch !== CHAT_CHANNEL_GUILD) return;
     const scroll = this.chatPanel.querySelector('[data-role="chat-scroll"]') as HTMLElement | null;
     if (!scroll) return;
-    const divider = scroll.querySelector(".chat-unread-divider") as HTMLElement | null;
+    const divider = scroll.querySelector(".chat-unread-separator") as HTMLElement | null;
     if (divider) {
-      if (!isChatUnreadDividerScrolledPast(scroll, divider)) return;
+      if (!isChatUnreadSeparatorScrolledPast(scroll, divider)) return;
     } else {
       return;
     }
@@ -675,7 +678,8 @@ export class SocialPanels {
     const guildId = channel === CHAT_CHANNEL_GUILD ? this.guildId : 0;
     const channelKey = chatChannelStorageKey(channel, guildId);
     const lastReadMs = this.chatUnreadTracker?.getLastReadMs(channelKey) ?? 0;
-    const dividerAt = chatUnreadDividerFlatIndex(messages, lastReadMs);
+    const dividerAt = findChatUnreadSeparatorIndex(messages, lastReadMs);
+    const unreadCount = estimateChatUnreadCount(messages, lastReadMs);
     let flatIndex = 0;
     let dividerInserted = false;
     for (const g of groups) {
@@ -685,7 +689,7 @@ export class SocialPanels {
       ul.appendChild(head);
       for (const m of g.messages) {
         if (!dividerInserted && flatIndex === dividerAt) {
-          ul.appendChild(this.buildChatUnreadDivider());
+          ul.appendChild(this.buildChatUnreadSeparator(unreadCount));
           dividerInserted = true;
         }
         ul.appendChild(this.buildChatMessageRow(m));
@@ -696,12 +700,13 @@ export class SocialPanels {
     markReadBtn?.classList.toggle("hidden", dividerAt < 0);
   }
 
-  private buildChatUnreadDivider(): HTMLLIElement {
+  private buildChatUnreadSeparator(unreadCount: number): HTMLLIElement {
     const li = document.createElement("li");
-    li.className = "chat-unread-divider";
+    li.className = "chat-unread-separator";
     li.setAttribute("role", "separator");
-    li.setAttribute("aria-label", "未读消息");
-    li.textContent = "—— 以下未读 ——";
+    const sweep = formatChatUnreadSweepLine(unreadCount);
+    li.setAttribute("aria-label", sweep);
+    li.textContent = sweep;
     return li;
   }
 
@@ -749,8 +754,12 @@ export class SocialPanels {
       toggle.setAttribute("data-action", "toggle-guild-role-group");
       toggle.setAttribute("data-role-key", String(group.roleKey));
       toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
-      toggle.textContent = `${expanded ? "▼" : "▶"} ${group.label}（${group.members.length}）`;
-      head.appendChild(toggle);
+      toggle.textContent = formatGuildRoleGroupHeaderLabel(group.label, expanded);
+      const count = document.createElement("span");
+      count.className = "guild-role-group-count";
+      count.setAttribute("data-role", "guild-role-group-count");
+      count.textContent = String(group.members.length);
+      head.append(toggle, count);
       ul.appendChild(head);
       if (!expanded) continue;
       for (const m of group.members) {

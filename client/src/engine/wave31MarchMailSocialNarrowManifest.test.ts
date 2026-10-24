@@ -8,8 +8,8 @@ import {
   CHAT_INPUT_COUNTER_ROLE,
   CHAT_INPUT_COUNTER_SELECTOR,
   MAIL_FILTER_TAB_BADGE_CLASS,
-  CHAT_UNREAD_DIVIDER_CLASS,
-  CHAT_UNREAD_DIVIDER_SELECTOR,
+  CHAT_UNREAD_SEPARATOR_CLASS,
+  CHAT_UNREAD_SEPARATOR_SELECTOR,
   CLIENT_163_LIST_ROVING_ITEM_SELECTOR_BY_CENTER_ID,
   CLIENT_163_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_163_PANEL_ASSET_BY_CENTER_ID,
@@ -83,7 +83,7 @@ describe("wave31MarchMailSocialNarrowManifest (CLIENT-163)", () => {
     expect(html).toContain(MAIL_CLAIM_ALL_ATTACHMENTS_SELECTOR);
     expect(html).toContain(MAIL_INBOX_BATCH_TOOLBAR_SELECTOR.slice(1));
     expect(html).toContain(GUILD_CHAT_DRAFT_CLASS);
-    expect(html).toContain(CHAT_UNREAD_DIVIDER_CLASS);
+    expect(html).toContain(CHAT_UNREAD_SEPARATOR_CLASS);
     expect(html).toContain(CHAT_INPUT_COUNTER_ROLE);
     expect(html).toContain(CHAT_INPUT_COUNTER_CLASS);
     expect(html).toContain(MAIL_FILTER_TAB_BADGE_CLASS);
@@ -92,7 +92,7 @@ describe("wave31MarchMailSocialNarrowManifest (CLIENT-163)", () => {
     );
     expect(html).toContain(CLIENT_163_LIST_ROVING_ITEM_SELECTOR_BY_CENTER_ID.march);
     expect(html).toContain(GUILD_CHAT_DRAFT_SELECTOR);
-    expect(html).toContain(CHAT_UNREAD_DIVIDER_SELECTOR);
+    expect(html).toContain(CHAT_UNREAD_SEPARATOR_SELECTOR);
     expect(html).toContain(BATTLE_REPORT_DETAIL_NAV_SELECTOR);
   });
 

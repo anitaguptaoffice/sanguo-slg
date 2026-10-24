@@ -96,9 +96,10 @@ export function sortChatMessagesChronological(
 }
 
 /**
- * CLIENT-161：按时间升序消息列表中，未读分隔线应插在的首条未读下标；无未读返回 -1。
+ * CLIENT-185：按时间升序消息列表中，未读分隔线应插在的首条未读下标；无未读返回 -1。
+ * CLIENT-161 别名 `chatUnreadDividerFlatIndex` 仍导出供旧引用。
  */
-export function chatUnreadDividerFlatIndex(
+export function findChatUnreadSeparatorIndex(
   messages: readonly ChatMessageRow[],
   lastReadMs: number,
 ): number {
@@ -109,8 +110,18 @@ export function chatUnreadDividerFlatIndex(
   return -1;
 }
 
-/** 用户是否已向下滚过 `chat-unread-divider`（分隔线完全离开滚动区顶部以上）。 */
-export function isChatUnreadDividerScrolledPast(
+/** @deprecated CLIENT-185 起请用 `findChatUnreadSeparatorIndex`。 */
+export const chatUnreadDividerFlatIndex = findChatUnreadSeparatorIndex;
+
+/** CLIENT-185：未读分隔线居中摘要（条数与 CLIENT-162 角标 `estimateChatUnreadCount` 同口径）。 */
+export function formatChatUnreadSweepLine(unreadCount: number): string {
+  const n = Number.isFinite(unreadCount) ? Math.max(0, Math.trunc(unreadCount)) : 0;
+  if (n <= 0) return "以下未读";
+  return `${n} 条未读`;
+}
+
+/** 用户是否已向下滚过 `chat-unread-separator`（分隔线完全离开滚动区顶部以上）。 */
+export function isChatUnreadSeparatorScrolledPast(
   scrollContainer: HTMLElement,
   divider: HTMLElement,
   slackPx = 4,
@@ -119,6 +130,9 @@ export function isChatUnreadDividerScrolledPast(
   const dividerBottom = divider.getBoundingClientRect().bottom;
   return dividerBottom <= containerTop + slackPx;
 }
+
+/** @deprecated CLIENT-185 起请用 `isChatUnreadSeparatorScrolledPast`。 */
+export const isChatUnreadDividerScrolledPast = isChatUnreadSeparatorScrolledPast;
 
 export function maxChatMessageSentAtMs(messages: readonly ChatMessageRow[]): number {
   let max = 0;

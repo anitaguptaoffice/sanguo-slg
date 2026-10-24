@@ -63,9 +63,13 @@ export const CHAT_INPUT_COUNTER_ROLE = "chat-input-counter";
 export const CHAT_INPUT_COUNTER_CLASS = "chat-input-counter";
 export const CHAT_INPUT_COUNTER_SELECTOR = `[data-role="${CHAT_INPUT_COUNTER_ROLE}"]`;
 
-/** CLIENT-161: unread cursor divider inside chat log. */
-export const CHAT_UNREAD_DIVIDER_CLASS = "chat-unread-divider";
-export const CHAT_UNREAD_DIVIDER_SELECTOR = `.${CHAT_UNREAD_DIVIDER_CLASS}`;
+/** CLIENT-185: unread separator inside chat log (CLIENT-161 前身 `chat-unread-divider`). */
+export const CHAT_UNREAD_SEPARATOR_CLASS = "chat-unread-separator";
+export const CHAT_UNREAD_SEPARATOR_SELECTOR = `.${CHAT_UNREAD_SEPARATOR_CLASS}`;
+/** @deprecated CLIENT-185 起请用 `CHAT_UNREAD_SEPARATOR_CLASS`。 */
+export const CHAT_UNREAD_DIVIDER_CLASS = CHAT_UNREAD_SEPARATOR_CLASS;
+/** @deprecated CLIENT-185 起请用 `CHAT_UNREAD_SEPARATOR_SELECTOR`。 */
+export const CHAT_UNREAD_DIVIDER_SELECTOR = CHAT_UNREAD_SEPARATOR_SELECTOR;
 
 /** CLIENT-162: mail filter tab badges share `mailPanelTabBadgeCounts` with HUD toolbar. */
 export const MAIL_FILTER_TAB_BADGE_CLASS = "mail-filter-tab-badge";
