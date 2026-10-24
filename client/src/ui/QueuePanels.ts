@@ -80,6 +80,12 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_ACTION,
   QUEUE_NEXT_FINISH_PREVIEW_CLASS,
 } from "@/net/nextQueueFinishPreview";
+import {
+  formatNextQueueFinishPreviewResidualLine,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ACTION,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_CLASS,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ROLE,
+} from "@/net/nextQueueFinishPreviewResidual";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -135,6 +141,7 @@ export class QueuePanels {
     private readonly onLocateCitySlotFromQueue?: (slotKey: string) => void,
     private readonly onRecruitQueueJustCompleted?: (queueIds: number[]) => void,
     private readonly onQueueVisibilityChange?: (open: boolean) => void,
+    private readonly onPreviewMarginResidualRing?: (slotKey: string) => void,
   ) {}
 
   attach(): void {
@@ -462,6 +469,7 @@ export class QueuePanels {
       <h3>队列</h3>
       <p class="queue-panel-overview" data-role="queue-overview"></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_CLASS} hidden" data-role="queue-next-finish-preview" data-action="${QUEUE_NEXT_FINISH_PREVIEW_ACTION}" role="button" tabindex="0" hidden></p>
+      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
@@ -540,11 +548,19 @@ export class QueuePanels {
 
   private renderNextQueueFinishPreview(
     previewEl: Element | null,
+    residualEl: Element | null,
     nowMs: number,
   ): void {
     if (!(previewEl instanceof HTMLElement)) return;
     const dailyRows = this.getDailyChainRows?.() ?? [];
     const preview = formatNextQueueFinishPreviewLine(
+      this.buildings(),
+      this.recruits,
+      this.slotLabels,
+      dailyRows,
+      nowMs,
+    );
+    const residual = formatNextQueueFinishPreviewResidualLine(
       this.buildings(),
       this.recruits,
       this.slotLabels,
@@ -557,6 +573,13 @@ export class QueuePanels {
       previewEl.textContent = "";
       previewEl.removeAttribute("data-quest-cfg-id");
       previewEl.removeAttribute("title");
+      if (residualEl instanceof HTMLElement) {
+        residualEl.hidden = true;
+        residualEl.classList.add("hidden");
+        residualEl.textContent = "";
+        residualEl.removeAttribute("data-slot-key");
+        residualEl.removeAttribute("title");
+      }
       return;
     }
     previewEl.hidden = false;
@@ -569,6 +592,21 @@ export class QueuePanels {
       previewEl.removeAttribute("data-quest-cfg-id");
       previewEl.title = "下一队列完成预览（只读）";
     }
+    if (residualEl instanceof HTMLElement) {
+      if (!residual) {
+        residualEl.hidden = true;
+        residualEl.classList.add("hidden");
+        residualEl.textContent = "";
+        residualEl.removeAttribute("data-slot-key");
+        residualEl.removeAttribute("title");
+      } else {
+        residualEl.hidden = false;
+        residualEl.classList.remove("hidden");
+        residualEl.textContent = residual.line;
+        residualEl.dataset.slotKey = residual.slotKey;
+        residualEl.title = `定位七槽 ${residual.slotKey}（余量对照）`;
+      }
+    }
   }
 
   private render(): void {
@@ -576,6 +614,9 @@ export class QueuePanels {
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
     const previewEl = this.panel.querySelector('[data-role="queue-next-finish-preview"]');
+    const previewResidualEl = this.panel.querySelector(
+      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ROLE}"]`,
+    );
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
     const now = Date.now();
@@ -594,7 +635,7 @@ export class QueuePanels {
     if (overviewEl) {
       overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }
-    this.renderNextQueueFinishPreview(previewEl, now);
+    this.renderNextQueueFinishPreview(previewEl, previewResidualEl, now);
     this.renderBuildSlotMatrix(now);
     if (!session) {
       buildUl.replaceChildren();
@@ -893,6 +934,16 @@ export class QueuePanels {
         } else {
           this.openAndHighlightBuildSlot(slotKey);
         }
+      }
+      return;
+    }
+    const residualAnchor = target.closest(
+      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_ACTION}"]`,
+    );
+    if (residualAnchor instanceof HTMLElement) {
+      const slotKey = residualAnchor.getAttribute("data-slot-key")?.trim();
+      if (slotKey) {
+        this.onPreviewMarginResidualRing?.(slotKey);
       }
       return;
     }

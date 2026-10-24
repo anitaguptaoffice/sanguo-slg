@@ -46,6 +46,7 @@ import type { Scene, SceneContext } from "@/engine/SceneManager";
 import type { CityBuilding, CityTroopStack, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { scrollCitySlotIntoView } from "@/net/citySlotQueueLink";
 import { highlightDomesticSlotForQueueRow } from "@/net/domesticSlotQueueFocusRing";
+import { pulseDomesticSlotCompleteMarginResidualRing } from "@/net/nextQueueFinishPreviewResidual";
 import {
   captureDomesticSlotScrollAnchor,
   restoreDomesticSlotScrollAnchor,
@@ -919,6 +920,13 @@ export class MainCityScene implements Scene {
         this.applyQueueCompleteFocusRing(events);
       },
       (open) => this.onQueuePanelVisibilityChange(open),
+      (slotKey) => {
+        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
+        pulseDomesticSlotCompleteMarginResidualRing(
+          this.slotUpgradeOverlay?.getOverlayLayer(),
+          slotKey,
+        );
+      },
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
