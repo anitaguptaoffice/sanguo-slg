@@ -398,6 +398,7 @@ export class MarchListPanel {
       </fieldset>
       <button type="button" data-action="refresh-marches">刷新列表</button>
       <p class="report-panel-status" data-role="march-list-status"></p>
+      <p class="march-intel-coord-sync-empty-hint hidden" data-role="march-intel-coord-sync-empty-hint" aria-live="polite"></p>
       <aside class="${MARCH_INFO_CARD_CLASS} hidden" data-role="march-info-card" aria-live="polite">
         <h4>行军信息</h4>
         <p class="march-info-card-state hidden" data-role="march-info-card-state"></p>

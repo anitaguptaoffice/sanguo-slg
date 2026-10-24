@@ -158,6 +158,12 @@ import {
   MARCH_FORM_VIEW_INTEL_INFO_ACTION,
   syncMarchFormReadonlyStripFromInput,
 } from "@/net/marchFormReadonlyStrip";
+import {
+  createMarchFormCoordSyncTimers,
+  highlightMarchFormCoordsFromIntel,
+  scrollIntelRowForCoords,
+  type MarchFormCoordSyncTimers,
+} from "@/net/marchFormCoordSync";
 import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
@@ -176,6 +182,7 @@ import {
   applyMarchTargetAndRemember,
   clearMarchTargetFromForm,
   marchTargetStatusMessage,
+  readMarchTargetFromForm,
   resolveMarchTargetTruth,
   setMarchTargetFieldHighlight,
   syncMarchTargetSessionFromForm,
@@ -249,6 +256,8 @@ export class MainCityScene implements Scene {
   private recruitQueueHighlightId: number | null = null;
   private intelRemarchTroopsLine: string | null = null;
   private suppressMarchTargetHighlightClear = false;
+  private readonly marchFormCoordSyncTimers: MarchFormCoordSyncTimers =
+    createMarchFormCoordSyncTimers();
   private social!: SocialPanels;
   private content!: ContentPanels;
   private heroMail!: HeroMailPanels;
@@ -605,6 +614,9 @@ export class MainCityScene implements Scene {
         onOpenMilitaryFromInfoCard: (march) => this.handleOpenMilitaryFromMarchInfoCard(march),
         onSelectionChange: (march) => {
           this.syncMilitaryPanel();
+          highlightMarchFormCoordsFromIntel(this.militaryPanel, march, {
+            timers: this.marchFormCoordSyncTimers,
+          });
           if (march) {
             const tx = march.to_x;
             const ty = march.to_y;
@@ -1100,8 +1112,21 @@ export class MainCityScene implements Scene {
       }
       syncMarchTargetSessionFromForm(this.militaryPanel);
       this.syncMinimapFocusFromMarchTarget();
+      this.syncIntelListFromMarchFormCoords();
     }
     this.syncMilitaryPanel();
+  }
+
+  private syncIntelListFromMarchFormCoords(): void {
+    const coords = readMarchTargetFromForm(this.militaryPanel);
+    if (!coords) return;
+    scrollIntelRowForCoords(
+      this.marchList.getPanelElement(),
+      this.marchList.getMarches(),
+      coords.x,
+      coords.y,
+      { timers: this.marchFormCoordSyncTimers, assets: this.assets },
+    );
   }
 
   private openMarchIntelFromFormStrip(marchId: number): void {

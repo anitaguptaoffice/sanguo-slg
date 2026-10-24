@@ -1011,6 +1011,8 @@ cd client && npm install && npm run dev
 
 **wave:33（CLIENT-178）**：军事面板 **`march-form-readonly-strip`** 用 `formatMarchFormSummaryLine` / 军情选中行军快照扫读 **格点 + 兵力 + ETA**；**查看军情信息卡** 跳转军情列表选中 `march_id` 并高亮 **`march-info-card`**（与 **CLIENT-172** 信息卡 DOM/格式化钩子可叠加）。信息卡 **打开军事** 走 **CLIENT-093** `applyMarchIntelRemarchPrefillWithFeedback`；**CLIENT-156** 队列顶栏与 **CLIENT-145** 表单 summary/error 不退化。单测：`marchFormReadonlyStrip.test.ts`、`marchInfoCard.test.ts`、`marchFormIntelJump.test.ts`。
 
+**wave:35（CLIENT-189）**：军情列表选中 `march_id` 时军事表单目标坐标输入框 **`march-form-coord-sync-highlight`** **1.5s**（同源 `to_x`/`to_y`）；军事面板改 `to_x`/`to_y` 后军情列表 **`scrollIntelRowForCoords`** 滚动并高亮终点匹配行，无匹配时 **`march-intel-coord-sync-empty-hint`**（**CLIENT-173** empty 态，非网关 error）。**CLIENT-178** 汇总条与 **CLIENT-156** 提交反馈不退化。单测：`marchFormCoordSync.test.ts`。
+
 1. `make dev` 合法出征一次 → 观察按钮 **出征中…** 与顶栏 toast → **行军** 面板应自动展开且新行带金色 ETA 前缀与高亮框。
 2. 故意网关失败（断网或非法兵力）→ 表单内错误文案，按钮恢复可点。
 3. 单测：`marchHighlight.test.ts`、`marchSubmitFeedback.test.ts`、`marchFormSummary.test.ts`、`MarchListPanel.test.ts`。
