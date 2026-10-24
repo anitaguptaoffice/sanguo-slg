@@ -2631,7 +2631,11 @@ export class MainCityScene implements Scene {
         this.marchQueueBannerTarget = null;
       }
       syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget, { pulse: true });
-      this.marchList.notifyMarchStarted(this.lastMarch?.march_id);
+      this.marchList.notifyMarchStarted(this.lastMarch?.march_id, {
+        march: this.lastMarch,
+        toX,
+        toY,
+      });
       void this.refreshMinimapMarches();
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("march", e);

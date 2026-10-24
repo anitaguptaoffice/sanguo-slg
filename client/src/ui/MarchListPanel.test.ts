@@ -416,6 +416,39 @@ describe("MarchListPanel", () => {
     ).toBeTruthy();
   });
 
+  it("notifyMarchStarted applies intel handoff strip and intel-new-march-highlight (CLIENT-222)", async () => {
+    vi.useFakeTimers();
+    const arriveAt = Date.now() + 30 * 60_000;
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 42,
+            phase: 2,
+            to_x: 6,
+            to_y: 7,
+            arrive_at_ms: arriveAt,
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.notifyMarchStarted(42, { toX: 6, toY: 7 });
+    await vi.waitFor(() => {
+      const line = mount.querySelector('[data-role="march-submit-intel-handoff-line"]');
+      expect(line?.textContent).toMatch(/^军情交接 · \(6,7\) · /);
+    });
+    const handoff = mount.querySelector('[data-role="march-submit-intel-handoff-line"]');
+    const row = mount.querySelector('.march-list li[data-march-id="42"]');
+    expect(row?.classList.contains("intel-new-march-highlight")).toBe(true);
+    vi.advanceTimersByTime(3000);
+    expect(row?.classList.contains("intel-new-march-highlight")).toBe(false);
+    expect(handoff?.classList.contains("hidden")).toBe(true);
+    vi.useRealTimers();
+  });
+
   it("applies march-row-recent for highlighted march and clears on other row select", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({
