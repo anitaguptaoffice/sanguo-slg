@@ -404,6 +404,7 @@ export function renderHeroDetailMarkup(
   templatePreview?: RecruitTemplatePreview | null,
   cultivationUseHtml = "",
   bag: BagStack[] = [],
+  listHint = "",
 ): string {
   if (!d?.hero_id) {
     return '<p class="hero-detail-empty">点选将领查看详情</p>';
@@ -420,6 +421,9 @@ export function renderHeroDetailMarkup(
   const compareText = formatHeroGrowthCompareStrip(d);
   const compareStrip = compareText
     ? `<p class="${HERO_GROWTH_COMPARE_STRIP_CLASS}" data-role="hero-growth-compare-strip">${escapeHtml(compareText)}</p>`
+    : "";
+  const listHintLine = listHint.trim()
+    ? `<p class="hero-detail-list-hint" data-role="hero-detail-list-hint">${escapeHtml(listHint.trim())}</p>`
     : "";
   const progress = renderHeroUpgradeProgressMarkup(d, bag);
   const comparison = compareHeroDetailToTemplate(d, templatePreview ?? null);
@@ -443,11 +447,12 @@ export function renderHeroDetailMarkup(
   }).join("");
   const table = `<table class="hero-attr-table" aria-label="基础属性"><tbody>${rows}</tbody></table>`;
   const links = `<div class="hero-detail-links">
+    <button type="button" data-action="hero-back-to-list">返回列表</button>
     <button type="button" data-action="hero-goto-recruit">去招募</button>
     <button type="button" data-action="hero-related-items">相关道具</button>
   </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${compareStrip}${progress}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
+  return `${head}${compareStrip}${listHintLine}${progress}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

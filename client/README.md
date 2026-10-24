@@ -694,6 +694,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. 自列表点选将领打开详情后关闭再开面板：`sessionStorage` **`hero-list-selected-v1`** 恢复 **`hero-scroll` scrollTop** 与对应 **`hero_id` 行高亮**；**`hero-list-filter-v1` / `hero-list-sort-v1`** 仍按 CLIENT-151 恢复。
 3. 单测：`formatHeroListRefreshedAt.test.ts`、`heroListSelectedSession.test.ts`、`heroListRefreshFeedback.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+### 手动验收（将领列表↔详情筛选记忆扫读 CLIENT-199）
+
+在 [CLIENT-151](#手动验收将领列表筛选排序记忆-client-151) 与 [CLIENT-182](#手动验收将领列表刷新戳记与详情返回记忆-client-182) 不退化前提下：
+
+1. 自列表点选将领：`sessionStorage` **`hero-list-return-v1`** 快照当前 **筛选 chip + 排序 + `hero-scroll` scrollTop + `hero_id`**（与 **`hero-list-filter-v1` / `hero-list-sort-v1` / `hero-list-selected-v1`** 并存）；详情顶栏展示 **`formatHeroDetailFromListHint`**（`data-role="hero-detail-list-hint"`）。
+2. 详情 **返回列表**：按 `hero-list-return-v1` 恢复筛选/排序/滚动与行高亮；**刷新戳记** `hero-list-refreshed-at` 与 **CLIENT-072** 养成对比/进度条不退化。
+3. 单测：`heroListReturnState.test.ts`（`serializeHeroListReturnState` / `formatHeroDetailFromListHint`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：

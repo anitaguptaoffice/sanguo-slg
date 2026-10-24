@@ -22,6 +22,10 @@ import {
   HERO_LIST_SELECTED_SESSION_KEY,
   readHeroListSelectedSession,
 } from "@/net/heroListSelectedSession";
+import {
+  HERO_LIST_RETURN_SESSION_KEY,
+  readHeroListReturnState,
+} from "@/net/heroListReturnState";
 import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
 import { USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL } from "@/net/useConsumableSubmitFeedback";
 
@@ -402,6 +406,62 @@ describe("HeroMailPanels", () => {
     vi.unstubAllGlobals();
   });
 
+  it("hero list return restores filter sort scroll and shows list hint (CLIENT-199)", async () => {
+    sessionStorage.removeItem(HERO_LIST_RETURN_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [
+          { hero_id: 1, template_cfg_id: 1001, level: 3, loyalty: 80 },
+          { hero_id: 2, template_cfg_id: 1002, level: 9, loyalty: 10 },
+          { hero_id: 3, template_cfg_id: 1003, level: 5, loyalty: 60 },
+        ],
+        total_count: 3,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1003,
+        template_name: "玄德",
+        level: 5,
+        loyalty: 60,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount
+      .querySelector('[data-action="hero-filter-deployable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount
+      .querySelector('[data-action="hero-sort-loyalty"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    const scroll = mount.querySelector('[data-role="hero-scroll"]') as HTMLElement;
+    scroll.scrollTop = 64;
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(readHeroListReturnState()?.filter).toBe("deployable");
+    expect(readHeroListReturnState()?.sort).toBe("loyalty_desc");
+    expect(readHeroListReturnState()?.scrollTop).toBe(64);
+    const hint = mount.querySelector('[data-role="hero-detail-list-hint"]');
+    expect(hint?.textContent).toContain("可出征");
+    expect(hint?.textContent).toContain("忠诚↓");
+    mount
+      .querySelector('[data-action="hero-back-to-list"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(mount.querySelector('[data-role="hero-detail-list-hint"]')).toBeNull();
+    expect(mount.querySelector('li[data-hero-id="3"].selected')).toBeTruthy();
+    expect(scroll.scrollTop).toBe(64);
+    expect(readHeroListFilterSession()).toBe("deployable");
+    expect(readHeroListSortSession()).toBe("loyalty_desc");
+    sessionStorage.removeItem(HERO_LIST_RETURN_SESSION_KEY);
+    sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
+  });
+
   it("hero detail cultivation use shows inflight label, refreshes detail, and pulses on success", async () => {
     const mount = document.createElement("div");
     let loyalty = 70;
@@ -670,6 +730,8 @@ describe("HeroMailPanels", () => {
     await flushPromises();
     const row = mount.querySelector('li[data-template-id="1002"]') as HTMLLIElement;
     row.scrollIntoView = vi.fn();
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
     mount
       .querySelector('[data-action="hero-goto-recruit"]')
       ?.dispatchEvent(new Event("click", { bubbles: true }));
