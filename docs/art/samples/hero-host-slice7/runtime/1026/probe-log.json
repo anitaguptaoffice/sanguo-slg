@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE7",
   "template_cfg_id": 1026,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "6889eb050c043d931b0f4c97ada4f9be57780cb0",
-  "runtime_code_sha": "6889eb050c043d931b0f4c97ada4f9be57780cb0",
+  "tip_sha": "d4f3b2c5ea295b5203c6ffb45b625b030f3a9973",
+  "runtime_code_sha": "d4f3b2c5ea295b5203c6ffb45b625b030f3a9973",
   "hero_mail_panels_blob_sha": "356f8e33734ca1374f3cf1ecd61368431293a93c",
   "art_head_sha": "dea932332475ed1e3cf4f336693f3d4c12a6d903",
   "art_asset_ids": [
@@ -19,12 +19,13 @@
       "nameReadable": true,
       "detailName": "蒋琬",
       "listAvatarVisible": true,
-      "listAvatarInClip": true,
-      "listNameInClip": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": true,
+      "listAvatarFrameOk": false,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
+      "captureSectionsVisible": true,
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -63,15 +64,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1000.59375,
+        "top": 1877.765625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 516,
-        "top": 208.1875,
-        "width": 568,
-        "height": 599.8125
+        "left": 534,
+        "top": 1118.234375,
+        "width": 56,
+        "height": 0
       }
     },
     "1600x900-dpr2": {
@@ -81,12 +82,13 @@
       "nameReadable": true,
       "detailName": "蒋琬",
       "listAvatarVisible": true,
-      "listAvatarInClip": true,
-      "listNameInClip": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": true,
+      "listAvatarFrameOk": false,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
+      "captureSectionsVisible": true,
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -125,15 +127,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1000.59375,
+        "top": 1877.765625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 516,
-        "top": 208.1875,
-        "width": 568,
-        "height": 599.8125
+        "left": 534,
+        "top": 1118.234375,
+        "width": 56,
+        "height": 0
       }
     },
     "1280x720-dpr1": {
@@ -149,6 +151,7 @@
       "listRowTemplateOk": true,
       "listAvatarFrameOk": false,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
+      "captureSectionsVisible": true,
       "dpr": 1,
       "uiScale": 0.8,
       "avatar": {
@@ -180,22 +183,22 @@
       "usesBust2x": false,
       "avatarPathOk": true,
       "bustPathOk": true,
-      "scrollReachOk": true,
-      "detailFooterVisible": true,
+      "scrollReachOk": false,
+      "detailFooterVisible": false,
       "detailFooterTopInScroll": true,
-      "detailFooterBottomInScroll": true,
+      "detailFooterBottomInScroll": false,
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 174.984375,
+        "top": 575.15625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 356,
-        "top": 174.984375,
-        "width": 568,
-        "height": 464.21875
+        "left": 374,
+        "top": 575.15625,
+        "width": 56,
+        "height": 0
       }
     }
   },
@@ -203,7 +206,7 @@
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 254193
+      "bytes": 254140
     },
     "probe": {
       "ok": true,
@@ -216,10 +219,10 @@
       "gapPx": 10,
       "gapNear10px": true,
       "visibleClip": {
-        "left": 356,
-        "top": 174.984375,
-        "width": 568,
-        "height": 464.21875
+        "left": 364,
+        "top": 519.5625,
+        "width": 128,
+        "height": 155.640625
       },
       "name": {
         "text": "蒋琬"
@@ -234,7 +237,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 473385,
+      "bytes": 448794,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -245,7 +248,7 @@
     },
     "hero-host-1600x900-dpr2.jpg": {
       "quality": 72,
-      "bytes": 997717,
+      "bytes": 945735,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -256,7 +259,7 @@
     },
     "hero-host-1280x720-dpr1.jpg": {
       "quality": 88,
-      "bytes": 245596,
+      "bytes": 256678,
       "viewport": {
         "tag": "1280x720-dpr1",
         "file": "hero-host-1280x720-dpr1.jpg",
@@ -271,5 +274,5 @@
     "Art path-copied from Draft #1204 @ dea93233; Draft remains unmerged.",
     "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
   ],
-  "captured_at": "2026-10-24T21:29:07.807Z"
+  "captured_at": "2026-10-24T22:16:03.878Z"
 }

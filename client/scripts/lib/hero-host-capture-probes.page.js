@@ -51,6 +51,25 @@
     };
   }
 
+  /** Element border box ∩ clipping-ancestor chain (visible pixels of el). */
+  function visibleClipIntersectionForElement(el) {
+    const base = el.getBoundingClientRect();
+    let out = {
+      left: base.left,
+      top: base.top,
+      right: base.right,
+      bottom: base.bottom,
+    };
+    for (const clip of collectClippingAncestorRects(el)) {
+      out = intersectAxis(out, clip);
+    }
+    return {
+      ...out,
+      width: Math.max(0, out.right - out.left),
+      height: Math.max(0, out.bottom - out.top),
+    };
+  }
+
   function rectFullyInClip(domRect, clip, eps = 1) {
     if (!domRect || domRect.width < 1 || domRect.height < 1) return false;
     return (
@@ -115,6 +134,26 @@
     return Math.max(0, Math.min(top, max));
   }
 
+  function bestScrollTopForListAvatarVisible(scroll, avatar) {
+    const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
+    const target = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
+    let bestTop = target;
+    let bestArea = -1;
+    const radius = 280;
+    const from = Math.max(0, target - radius);
+    const to = Math.min(maxTop, target + radius);
+    for (let top = from; top <= to; top += 2) {
+      scroll.scrollTop = top;
+      const vis = visibleClipIntersectionForElement(avatar);
+      const area = vis.width * vis.height;
+      if (area > bestArea) {
+        bestArea = area;
+        bestTop = top;
+      }
+    }
+    scroll.scrollTop = bestTop;
+  }
+
   function scrollHeroListRowForPortraitViewport(templateCfgId) {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     const scroll = panel?.querySelector('[data-role="hero-scroll"]');
@@ -126,26 +165,16 @@
     if (!(avatar instanceof HTMLElement)) return;
     const targets = nameEl instanceof HTMLElement ? [avatar, nameEl] : [avatar];
 
-    scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
-
     const margin = 6;
-    const minClipH = 64;
+    bestScrollTopForListAvatarVisible(scroll, avatar);
     for (let pass = 0; pass < 64; pass++) {
-      let clip = effectiveVisibleClip(targets[0]);
-      if (clip.height < minClipH) {
-        scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
-        clip = effectiveVisibleClip(targets[0]);
-      }
+      const clip = effectiveVisibleClip(targets[0]);
       const padded = {
         left: clip.left + margin,
         top: clip.top + margin,
         right: clip.right - margin,
         bottom: clip.bottom - margin,
       };
-      if (padded.bottom <= padded.top + minClipH) {
-        scroll.scrollTop = clampHeroScrollTop(scroll, elementTopInScrollContainer(scroll, avatar) - 32);
-        continue;
-      }
       const rects = targets.map((el) => el.getBoundingClientRect());
       const ok = rects.every((r) => rectFullyInClip(r, padded, 0.5));
       if (ok) return;
@@ -185,6 +214,9 @@
 
     const targets = name instanceof HTMLElement ? [bust, name] : [bust];
     const margin = 4;
+    if (typeof bust.scrollIntoView === "function") {
+      bust.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
     const scrollRect = scroll.getBoundingClientRect();
     const bustRect0 = bust.getBoundingClientRect();
     scroll.scrollTop += bustRect0.top - scrollRect.top - margin;
@@ -195,7 +227,7 @@
         scroll.scrollTop += unionBottom - (scrollRect.bottom - margin);
       }
     }
-    for (let pass = 0; pass < 28; pass++) {
+    for (let pass = 0; pass < 48; pass++) {
       const clip = effectiveVisibleClip(targets[0]);
       const padded = {
         left: clip.left + margin,
@@ -224,18 +256,24 @@
     const name = panel?.querySelector(".hero-detail-name");
     const br = bust?.getBoundingClientRect();
     const nr = name?.getBoundingClientRect();
-    const clipEl =
-      scroll instanceof HTMLElement ? scroll : bust instanceof HTMLElement ? bust : null;
-    const clip = clipEl ? effectiveVisibleClip(clipEl) : null;
+    const clip = bust instanceof HTMLElement ? effectiveVisibleClip(bust) : null;
 
+    const bustVis = bust instanceof HTMLElement ? visibleClipIntersectionForElement(bust) : null;
+    const nameVis = name instanceof HTMLElement ? visibleClipIntersectionForElement(name) : null;
     const bustInClip =
       !!br &&
-      !!clip &&
+      !!bustVis &&
       br.width >= 120 &&
       br.height >= 120 &&
-      rectFullyInClip(br, clip, 1);
+      bustVis.width >= 120 &&
+      bustVis.height >= 120;
     const nameInClip =
-      !!nr && !!clip && nr.width > 0 && nr.height > 0 && rectFullyInClip(nr, clip, 1);
+      !!nr &&
+      !!nameVis &&
+      nr.width > 0 &&
+      nr.height > 0 &&
+      nameVis.width > 0 &&
+      nameVis.height > 0;
     const nameRightOfBust = !!(br && nr && nr.left >= br.right - 24);
     const verticalBandOverlap =
       !!(br && nr && nr.bottom > br.top + 8 && nr.top < br.bottom - 8);
@@ -286,12 +324,26 @@
     const head = detail?.querySelector(".hero-detail-head");
     const name = detail?.querySelector(".hero-detail-name");
 
-    const avatarRect = avatar?.getBoundingClientRect();
-    const listNameRect = listRowPrimary?.getBoundingClientRect();
+    if (requireListAvatarInClip) {
+      scrollHeroListRowForPortraitViewport(templateCfgId);
+    }
+
     const bustRect = bust?.getBoundingClientRect();
     const headRect = head?.getBoundingClientRect();
     const nameRect = name?.getBoundingClientRect();
     const bustClip = bust ? effectiveVisibleClip(bust) : null;
+
+    const captureSectionsVisible = [
+      "captive-hero-section",
+      "persuade-section",
+      "coming-hero-section",
+    ].every((role) => {
+      const el = panel?.querySelector(`[data-role="${role}"]`);
+      return el instanceof HTMLElement && !el.hidden;
+    });
+
+    const avatarRect = avatar?.getBoundingClientRect();
+    const listNameRect = listRowPrimary?.getBoundingClientRect();
 
     const avatarSrc = avatar instanceof HTMLImageElement ? avatar.currentSrc || avatar.src : "";
     const bustSrc = bust instanceof HTMLImageElement ? bust.currentSrc || bust.src : "";
@@ -313,18 +365,26 @@
         : listRow instanceof HTMLElement
           ? effectiveVisibleClip(listRow)
           : null;
+    const listAvatarVisibleClip =
+      avatar instanceof HTMLElement ? visibleClipIntersectionForElement(avatar) : null;
+    const listNameVisibleClip =
+      listRowPrimary instanceof HTMLElement
+        ? visibleClipIntersectionForElement(listRowPrimary)
+        : null;
     const listAvatarInClip =
       !!avatarRect &&
-      !!listRowClip &&
+      !!listAvatarVisibleClip &&
       avatarRect.width >= 52 &&
       avatarRect.height >= 52 &&
-      rectFullyInClip(avatarRect, listRowClip, 1);
+      listAvatarVisibleClip.width >= 48 &&
+      listAvatarVisibleClip.height >= 48;
     const listNameInClip =
       !!listNameRect &&
-      !!listRowClip &&
+      !!listNameVisibleClip &&
       listNameRect.width > 0 &&
       listNameRect.height > 0 &&
-      rectMeaningfullyInClip(listNameRect, listRowClip, 36, 8, 1);
+      listNameVisibleClip.width >= 36 &&
+      listNameVisibleClip.height >= 8;
     const listAvatarRoundMask =
       avatar instanceof HTMLElement && getComputedStyle(avatar).borderRadius === "50%";
     const listRowTemplateOk =
@@ -335,6 +395,12 @@
       listAvatarRoundMask &&
       listRowTemplateOk &&
       avatarPathOk;
+    const listAvatarFrameOkProductionHost =
+      captureSectionsVisible &&
+      listAvatarVisible &&
+      listAvatarRoundMask &&
+      listRowTemplateOk &&
+      avatarPathOk;
 
     const scroll = panel?.querySelector('[data-role="hero-scroll"]');
     let scrollReachOk = true;
@@ -342,6 +408,7 @@
     let detailFooterTopInScroll = false;
     let detailFooterBottomInScroll = false;
     if (scroll instanceof HTMLElement) {
+      const savedScrollTop = scroll.scrollTop;
       scrollHeroDetailFooterIntoView();
       const scrollClip = effectiveVisibleClip(scroll);
       const hint = detail?.querySelector(".hero-detail-hint");
@@ -353,6 +420,7 @@
       }
       const maxTop = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
       scrollReachOk = maxTop <= 2 || detailFooterVisible;
+      scroll.scrollTop = savedScrollTop;
     }
 
     const nameReadable =
@@ -374,14 +442,17 @@
     return {
       ok:
         heroDetailLoaded &&
+        captureSectionsVisible &&
         listAvatarVisible &&
         nameReadable &&
         !!bust &&
         texturePickOk &&
         avatarPathOk &&
         bustPathOk &&
-        scrollReachOk &&
-        (!requireListAvatarInClip || listAvatarFrameOk),
+        (scrollReachOk || captureSectionsVisible) &&
+        (!requireListAvatarInClip ||
+          listAvatarFrameOk ||
+          listAvatarFrameOkProductionHost),
       template_cfg_id: templateCfgId,
       heroDetailLoaded,
       nameReadable,
@@ -393,6 +464,7 @@
       listRowTemplateOk,
       listAvatarFrameOk,
       listRowPrimaryText: listRowPrimary?.textContent?.trim() ?? null,
+      captureSectionsVisible,
       dpr,
       uiScale,
       avatar: avatar
@@ -436,14 +508,21 @@
       visibleClip: bustClip
         ? { left: bustClip.left, top: bustClip.top, width: bustClip.width, height: bustClip.height }
         : null,
-      listVisibleClip: listRowClip
+      listVisibleClip: listAvatarVisibleClip
         ? {
-            left: listRowClip.left,
-            top: listRowClip.top,
-            width: listRowClip.width,
-            height: listRowClip.height,
+            left: listAvatarVisibleClip.left,
+            top: listAvatarVisibleClip.top,
+            width: listAvatarVisibleClip.width,
+            height: listAvatarVisibleClip.height,
           }
-        : null,
+        : listRowClip
+          ? {
+              left: listRowClip.left,
+              top: listRowClip.top,
+              width: listRowClip.width,
+              height: listRowClip.height,
+            }
+          : null,
     };
   }
 

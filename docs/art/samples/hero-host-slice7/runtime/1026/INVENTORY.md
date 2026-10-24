@@ -1,15 +1,15 @@
 # HERO-HOST-SLICE7 runtime inventory — template 1026
 
-tip_sha / runtime_code_sha: `6889eb050c043d931b0f4c97ada4f9be57780cb0`
+tip_sha / runtime_code_sha: `d4f3b2c5ea295b5203c6ffb45b625b030f3a9973`
 art_head_sha: `dea932332475ed1e3cf4f336693f3d4c12a6d903`
 hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
 
 ## Viewport captures
 
-- `runtime/1026/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 473385 bytes, sha256 `8eb19897ddc42050a13fb519be98fb5d23c3c8121a29d2b03f251d819f1b0286`
-- `runtime/1026/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 997717 bytes, sha256 `da07b9fc3192451f42ace11dc4f50a6f2d18e03130492050098f561c9d88894d`
-- `runtime/1026/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 245596 bytes, sha256 `d1450af42a6c7facc29bb0987a3b5515838e0234934681492d40f42fb8c20c21`
-- `runtime/1026/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `4b85625888ae4836ed371fe37198c9c051a92f14e8d7e99edfe23d161acec100`
+- `runtime/1026/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 448794 bytes, sha256 `2cb052e79529cbe2b9aba6e29f80afbb8a9069b10fb5c08fba44c1df411b9dca`
+- `runtime/1026/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 945735 bytes, sha256 `b2a87b00d2e54675d57721349b33e777cf955265bbcf350f411ef668cf9c05a6`
+- `runtime/1026/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 256678 bytes, sha256 `52e8470933ed6fe5e0849ac070bd2ffcf48eaca9ec2c1d8d8fd1145a0275e156`
+- `runtime/1026/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `838f4c39ba469ead494f7b4f8cf1ef2e21b5fbe0ef93b8ff6340ad657384566c`
 
 ## Textures (hero.avatar.1026.v1 / hero.bust.1026.v1)
 
@@ -30,12 +30,13 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "nameReadable": true,
       "detailName": "蒋琬",
       "listAvatarVisible": true,
-      "listAvatarInClip": true,
-      "listNameInClip": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": true,
+      "listAvatarFrameOk": false,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
+      "captureSectionsVisible": true,
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -74,15 +75,15 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1000.59375,
+        "top": 1877.765625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 516,
-        "top": 208.1875,
-        "width": 568,
-        "height": 599.8125
+        "left": 534,
+        "top": 1118.234375,
+        "width": 56,
+        "height": 0
       }
     },
     "1600x900-dpr2": {
@@ -92,12 +93,13 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "nameReadable": true,
       "detailName": "蒋琬",
       "listAvatarVisible": true,
-      "listAvatarInClip": true,
-      "listNameInClip": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
       "listAvatarRoundMask": true,
       "listRowTemplateOk": true,
-      "listAvatarFrameOk": true,
+      "listAvatarFrameOk": false,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
+      "captureSectionsVisible": true,
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -136,15 +138,15 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 1000.59375,
+        "top": 1877.765625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 516,
-        "top": 208.1875,
-        "width": 568,
-        "height": 599.8125
+        "left": 534,
+        "top": 1118.234375,
+        "width": 56,
+        "height": 0
       }
     },
     "1280x720-dpr1": {
@@ -160,6 +162,7 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "listRowTemplateOk": true,
       "listAvatarFrameOk": false,
       "listRowPrimaryText": "蒋琬 · Lv9 · 忠诚 79",
+      "captureSectionsVisible": true,
       "dpr": 1,
       "uiScale": 0.8,
       "avatar": {
@@ -191,22 +194,22 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
       "usesBust2x": false,
       "avatarPathOk": true,
       "bustPathOk": true,
-      "scrollReachOk": true,
-      "detailFooterVisible": true,
+      "scrollReachOk": false,
+      "detailFooterVisible": false,
       "detailFooterTopInScroll": true,
-      "detailFooterBottomInScroll": true,
+      "detailFooterBottomInScroll": false,
       "bustNameInClip": false,
       "visibleClip": {
         "left": 364,
-        "top": 174.984375,
+        "top": 575.15625,
         "width": 128,
         "height": 0
       },
       "listVisibleClip": {
-        "left": 356,
-        "top": 174.984375,
-        "width": 568,
-        "height": 464.21875
+        "left": 374,
+        "top": 575.15625,
+        "width": 56,
+        "height": 0
       }
     }
   },
@@ -221,10 +224,10 @@ hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
     "gapPx": 10,
     "gapNear10px": true,
     "visibleClip": {
-      "left": 356,
-      "top": 174.984375,
-      "width": 568,
-      "height": 464.21875
+      "left": 364,
+      "top": 519.5625,
+      "width": 128,
+      "height": 155.640625
     },
     "name": {
       "text": "蒋琬"
