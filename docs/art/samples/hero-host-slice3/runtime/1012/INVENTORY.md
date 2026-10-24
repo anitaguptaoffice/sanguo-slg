@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE3 runtime inventory — template 1012
 
-tip_sha / runtime_code_sha: `cfb0a40f61ac7347dc652489c7bfef3be321061a`
+tip_sha / runtime_code_sha: `6b27f5570d809d96dfa4c6c83e5c09eed797377a`
 art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
 
 ## Viewport captures
 
-- `runtime/1012/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 470951 bytes, sha256 `cb1e049604b92234d70f5df5d3645bbe690fa815b0fba076fa1464f403674dbc`
-- `runtime/1012/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 982664 bytes, sha256 `2d95d11fb7afd37d1d4d73f3336c287fd94f1ae31676527ebcd9ba9d7ce460f4`
-- `runtime/1012/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246203 bytes, sha256 `3536c3da1af88f9981f98de76a4f0ebca85bc6cddd5cebdc447e156aa13e023b`
+- `runtime/1012/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 478550 bytes, sha256 `88885522fa21f41a9c4c3b3b36d816087f6a68b1075efff06a6e422b043808e4`
+- `runtime/1012/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 938893 bytes, sha256 `cab0745b3262dbd3f8d6e4a28ae6e59ae8b4012e62065e2940e0340faf33a6c6`
 - `runtime/1012/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `4fa4c18171cc74e499a2d785e700850118b1c4a12ba7e4d16c2f77db12726056`
 
 ## Textures (hero.avatar.1012.v1 / hero.bust.1012.v1)
@@ -29,6 +28,12 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "nameReadable": true,
       "detailName": "司马懿",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "司马懿 · Lv13 · 忠诚 79",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1260.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "nameReadable": true,
       "detailName": "司马懿",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "司马懿 · Lv13 · 忠诚 79",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1260.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

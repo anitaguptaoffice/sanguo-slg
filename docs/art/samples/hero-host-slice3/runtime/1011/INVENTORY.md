@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE3 runtime inventory — template 1011
 
-tip_sha / runtime_code_sha: `cfb0a40f61ac7347dc652489c7bfef3be321061a`
+tip_sha / runtime_code_sha: `6b27f5570d809d96dfa4c6c83e5c09eed797377a`
 art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
 
 ## Viewport captures
 
-- `runtime/1011/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471546 bytes, sha256 `88955c9d3d6354d779148d7cdb4eb8b541a935339be0833e8dbca01cc0a354bc`
-- `runtime/1011/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 983712 bytes, sha256 `00965cfd112d4cf42af76a3ad1f4bda2d3da619e5a444fc75af5d01cf58258e4`
-- `runtime/1011/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246212 bytes, sha256 `f37be9c3fb31a5c38f9ee17d780f3de8f469fce2ec05caebab0d9ce609a2f50c`
+- `runtime/1011/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 476939 bytes, sha256 `9ee091690fd497d2655093f7ed713e4905c99fbcaa6a1ccd80d5e6a9b45f913c`
+- `runtime/1011/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 936405 bytes, sha256 `2c5e651b67ec416ca8d58ae58cdb15ce798eb608fc7916f894a6cf6fbc7e71ce`
 - `runtime/1011/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `966b57de5e711fd40791ec5154e8231d8b79934d4cf62838daa83ae47e469b11`
 
 ## Textures (hero.avatar.1011.v1 / hero.bust.1011.v1)
@@ -29,6 +28,12 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "nameReadable": true,
       "detailName": "吕布",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "吕布 · Lv16 · 忠诚 55",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1578.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "nameReadable": true,
       "detailName": "吕布",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "吕布 · Lv16 · 忠诚 55",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `320955f1ff4565b161268640226bf3d4156d4f17`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1578.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

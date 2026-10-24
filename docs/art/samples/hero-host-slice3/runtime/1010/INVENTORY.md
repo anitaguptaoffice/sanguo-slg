@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE3 runtime inventory — template 1010
 
-tip_sha / runtime_code_sha: `cfb0a40f61ac7347dc652489c7bfef3be321061a`
+tip_sha / runtime_code_sha: `6b27f5570d809d96dfa4c6c83e5c09eed797377a`
 art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
 
 ## Viewport captures
 
-- `runtime/1010/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471340 bytes, sha256 `db68bd7a7a4c2989e85d8f481a4a23e32c7518e46c26a510125ea10e5444ac8c`
-- `runtime/1010/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 982522 bytes, sha256 `90ca3eb7f49968e82158ce07920a4a4f307066e73f2ec493290a3f3286205460`
-- `runtime/1010/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246021 bytes, sha256 `b4cc3eda57a3f33546bb406459685cd2ba1fa937f8fbdf2ffa817f3443585c8a`
+- `runtime/1010/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 477160 bytes, sha256 `66bdcf26f9bb36dc65d16d218194fee994dcf31d0c3a6fbd2f46e7564e49277c`
+- `runtime/1010/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 937889 bytes, sha256 `e9fc7dde332126df6e90371f528da466a71af7ebe1359f81ead5cd700e22e10d`
 - `runtime/1010/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `e8f76e585ef87202b76b7b52ecbc5b55ee17c188ff4cca49c675ae0832263261`
 
 ## Textures (hero.avatar.1010.v1 / hero.bust.1010.v1)
@@ -29,6 +28,12 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "nameReadable": true,
       "detailName": "孙权",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "孙权 · Lv11 · 忠诚 74",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 941.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "nameReadable": true,
       "detailName": "孙权",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "孙权 · Lv11 · 忠诚 74",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 941.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

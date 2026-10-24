@@ -1,13 +1,12 @@
 # HERO-HOST-SLICE3 runtime inventory — template 1009
 
-tip_sha / runtime_code_sha: `cfb0a40f61ac7347dc652489c7bfef3be321061a`
+tip_sha / runtime_code_sha: `6b27f5570d809d96dfa4c6c83e5c09eed797377a`
 art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
 
 ## Viewport captures
 
-- `runtime/1009/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 471344 bytes, sha256 `69c06b9e7137c1bd0427fafe837e83f27724cfbc3b17ee78df028aeb800fb5d9`
-- `runtime/1009/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 983471 bytes, sha256 `a07c9990303c69dac9091ebb1b4cb35190ea0116d922b841eab260821ef53e5e`
-- `runtime/1009/hero-host-1280x720-dpr1.jpg` — 1280×720 @ DPR 1, 246139 bytes, sha256 `1daae384423f6a2092cb62441c2556cde794c81feccd7fb2ca7a5a319fcbd398`
+- `runtime/1009/hero-host-1600x900-dpr1.jpg` — 1600×900 @ DPR 1, 477402 bytes, sha256 `3bd9afac05ccef94dea9cf2c322a52a84f2d8cd549f663f9225d162b6d4a6b51`
+- `runtime/1009/hero-host-1600x900-dpr2.jpg` — 1600×900 @ DPR 2, 937603 bytes, sha256 `bf30b1974c3ec9768cd5fe7061761fcc022736afc292b05dd65ad50062141064`
 - `runtime/1009/hero-host-1280x720-dpr1-bust-name-sameframe.jpg` — 1280×720 bust+name same frame, sha256 `324effe6580afdde523ce648f8f1b4733847c599a80be5c06e564fadc7ea75d0`
 
 ## Textures (hero.avatar.1009.v1 / hero.bust.1009.v1)
@@ -29,6 +28,12 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "nameReadable": true,
       "detailName": "曹操",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "曹操 · Lv14 · 忠诚 86",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -67,9 +72,15 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1366.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -79,6 +90,12 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "nameReadable": true,
       "detailName": "曹操",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "曹操 · Lv14 · 忠诚 86",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -117,9 +134,15 @@ art_head_sha: `7c085cd1fd69c0d0d769d4e9191731e3bcc75bbc`
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1366.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {

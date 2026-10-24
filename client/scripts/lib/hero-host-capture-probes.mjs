@@ -15,13 +15,20 @@ export async function scrollHeroDetailHeadInPage(page) {
   await page.evaluate(() => window.__heroHostCaptureProbes.scrollHeroDetailHeadForSameFrame());
 }
 
+export async function scrollHeroListRowForPortraitInPage(page, templateCfgId) {
+  await page.evaluate(
+    (id) => window.__heroHostCaptureProbes.scrollHeroListRowForPortraitViewport(id),
+    templateCfgId,
+  );
+}
+
 export async function probeBustNameSameFrameInPage(page) {
   return page.evaluate(() => window.__heroHostCaptureProbes.probeBustNameSameFrame());
 }
 
-export async function probeHeroPortraitFramesInPage(page, templateCfgId) {
+export async function probeHeroPortraitFramesInPage(page, templateCfgId, options = {}) {
   return page.evaluate(
-    (id) => window.__heroHostCaptureProbes.probeHeroPortraitFrames(id),
-    templateCfgId,
+    ({ id, opts }) => window.__heroHostCaptureProbes.probeHeroPortraitFrames(id, opts),
+    { id: templateCfgId, opts: options },
   );
 }

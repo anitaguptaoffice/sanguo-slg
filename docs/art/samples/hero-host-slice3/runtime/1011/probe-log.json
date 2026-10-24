@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE3",
   "template_cfg_id": 1011,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "cfb0a40f61ac7347dc652489c7bfef3be321061a",
-  "runtime_code_sha": "cfb0a40f61ac7347dc652489c7bfef3be321061a",
+  "tip_sha": "6b27f5570d809d96dfa4c6c83e5c09eed797377a",
+  "runtime_code_sha": "6b27f5570d809d96dfa4c6c83e5c09eed797377a",
   "art_head_sha": "320955f1ff4565b161268640226bf3d4156d4f17",
   "art_asset_ids": [
     "hero.avatar.1011.v1",
@@ -18,6 +18,12 @@
       "nameReadable": true,
       "detailName": "吕布",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "吕布 · Lv16 · 忠诚 55",
       "dpr": 1,
       "uiScale": 1,
       "avatar": {
@@ -56,9 +62,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1578.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1600x900-dpr2": {
@@ -68,6 +80,12 @@
       "nameReadable": true,
       "detailName": "吕布",
       "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "吕布 · Lv16 · 忠诚 55",
       "dpr": 2,
       "uiScale": 1,
       "avatar": {
@@ -106,9 +124,15 @@
       "bustNameInClip": false,
       "visibleClip": {
         "left": 524,
-        "top": 436.96875,
+        "top": 1578.96875,
         "width": 128,
-        "height": 160
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 208.1875,
+        "width": 568,
+        "height": 599.8125
       }
     },
     "1280x720-dpr1": {
@@ -197,7 +221,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 471546,
+      "bytes": 476939,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -207,8 +231,8 @@
       }
     },
     "hero-host-1600x900-dpr2.jpg": {
-      "quality": 72,
-      "bytes": 983712,
+      "quality": 68,
+      "bytes": 936405,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -232,7 +256,8 @@
   "notes": [
     "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
     "Art path-copied from Draft #1191 (1009/1010 @ 7c085cd1, 1011/1012 @ 320955f1); Drafts remain unmerged.",
-    "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot."
+    "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
+    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
   ],
-  "captured_at": "2026-10-24T18:51:33.171Z"
+  "captured_at": "2026-10-24T19:32:11.945Z"
 }

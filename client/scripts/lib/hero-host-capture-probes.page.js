@@ -61,6 +61,94 @@
     );
   }
 
+  function rectMeaningfullyInClip(domRect, clip, minW = 10, minH = 8, eps = 1) {
+    if (!domRect || domRect.width < 1 || domRect.height < 1) return false;
+    const inter = intersectAxis(
+      {
+        left: domRect.left,
+        top: domRect.top,
+        right: domRect.right,
+        bottom: domRect.bottom,
+      },
+      {
+        left: clip.left - eps,
+        top: clip.top - eps,
+        right: clip.right + eps,
+        bottom: clip.bottom + eps,
+      },
+    );
+    return inter.width >= minW && inter.height >= minH;
+  }
+
+  function findTargetHeroListRow(templateCfgId) {
+    const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
+    const selectedRow = panel?.querySelector(
+      `.hero-list li[data-template-cfg-id="${templateCfgId}"].selected, .hero-list li[data-template-cfg-id="${templateCfgId}"][aria-selected="true"]`,
+    );
+    return (
+      selectedRow ||
+      panel?.querySelector(`.hero-list li[data-template-cfg-id="${templateCfgId}"]`) ||
+      null
+    );
+  }
+
+  /**
+   * Scroll production hero-scroll so the target row's round list avatar + primary name
+   * sit inside the clip-ancestor ∩ viewport chain (1600 portrait evidence).
+   */
+  function elementTopInScrollContainer(scroll, el) {
+    const er = el.getBoundingClientRect();
+    const sr = scroll.getBoundingClientRect();
+    return er.top - sr.top + scroll.scrollTop;
+  }
+
+  function scrollHeroListRowForPortraitViewport(templateCfgId) {
+    const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
+    const scroll = panel?.querySelector('[data-role="hero-scroll"]');
+    const listRow = findTargetHeroListRow(templateCfgId);
+    if (!(scroll instanceof HTMLElement) || !(listRow instanceof HTMLElement)) return;
+
+    const avatar = listRow.querySelector('[data-role="hero-list-avatar"]');
+    const nameEl = listRow.querySelector(".hero-list-row-primary");
+    if (!(avatar instanceof HTMLElement)) return;
+    const targets = nameEl instanceof HTMLElement ? [avatar, nameEl] : [avatar];
+
+    const listAnchorTop = elementTopInScrollContainer(scroll, listRow);
+    scroll.scrollTop = Math.max(0, listAnchorTop - 80);
+
+    const margin = 6;
+    for (let pass = 0; pass < 48; pass++) {
+      let clip = effectiveVisibleClip(listRow);
+      if (clip.height < 8) {
+        const scrollRect = scroll.getBoundingClientRect();
+        const avatarRect = avatar.getBoundingClientRect();
+        scroll.scrollTop += avatarRect.top - scrollRect.top - 80;
+        clip = effectiveVisibleClip(listRow);
+      }
+      const padded = {
+        left: clip.left + margin,
+        top: clip.top + margin,
+        right: clip.right - margin,
+        bottom: clip.bottom - margin,
+      };
+      if (padded.bottom <= padded.top + 4 || padded.right <= padded.left + 4) {
+        scroll.scrollTop = Math.max(0, elementTopInScrollContainer(scroll, avatar) - 80);
+        continue;
+      }
+      const rects = targets.map((el) => el.getBoundingClientRect());
+      const ok = rects.every((r) => rectFullyInClip(r, padded, 0.5));
+      if (ok) return;
+
+      let delta = 0;
+      for (const r of rects) {
+        if (r.top < padded.top) delta -= padded.top - r.top;
+        if (r.bottom > padded.bottom) delta += r.bottom - padded.bottom;
+      }
+      if (Math.abs(delta) < 0.25) break;
+      scroll.scrollTop += delta;
+    }
+  }
+
   function scrollHeroDetailHeadForSameFrame() {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     const scroll = panel?.querySelector(".panel-scroll-body");
@@ -145,7 +233,8 @@
     };
   }
 
-  function probeHeroPortraitFrames(templateCfgId) {
+  function probeHeroPortraitFrames(templateCfgId, options = {}) {
+    const requireListAvatarInClip = options.requireListAvatarInClip === true;
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     const layoutFrame = document.getElementById("layout-frame");
     const uiScale = parseFloat(
@@ -162,19 +251,16 @@
       !detailError &&
       !/hero not found|将领不存在/i.test(detailText);
 
-    const selectedRow = panel?.querySelector(
-      `.hero-list li[data-template-cfg-id="${templateCfgId}"].selected, .hero-list li[data-template-cfg-id="${templateCfgId}"][aria-selected="true"]`,
-    );
     const listRow =
-      selectedRow ||
-      panel?.querySelector(`.hero-list li[data-template-cfg-id="${templateCfgId}"]`) ||
-      panel?.querySelector(".hero-list li.selected");
+      findTargetHeroListRow(templateCfgId) || panel?.querySelector(".hero-list li.selected");
     const avatar = listRow?.querySelector('[data-role="hero-list-avatar"]');
+    const listRowPrimary = listRow?.querySelector(".hero-list-row-primary");
     const bust = detail?.querySelector('[data-role="hero-detail-bust"]');
     const head = detail?.querySelector(".hero-detail-head");
     const name = detail?.querySelector(".hero-detail-name");
 
     const avatarRect = avatar?.getBoundingClientRect();
+    const listNameRect = listRowPrimary?.getBoundingClientRect();
     const bustRect = bust?.getBoundingClientRect();
     const headRect = head?.getBoundingClientRect();
     const nameRect = name?.getBoundingClientRect();
@@ -192,6 +278,31 @@
     const texturePickOk = dpr >= 1.75 ? usesAvatar2x && usesBust2x : usesAvatar1x && usesBust1x;
     const avatarPathOk = avatarSrc.includes(`/hero/avatar/${templateCfgId}.png`);
     const bustPathOk = bustSrc.includes(`/hero/bust/${templateCfgId}.png`);
+
+    const listAvatarVisible = !!(avatarRect && avatarRect.width >= 48 && avatarRect.height >= 48);
+    const listRowClip = listRow ? effectiveVisibleClip(listRow) : null;
+    const listAvatarInClip =
+      !!avatarRect &&
+      !!listRowClip &&
+      avatarRect.width >= 52 &&
+      avatarRect.height >= 52 &&
+      rectFullyInClip(avatarRect, listRowClip, 1);
+    const listNameInClip =
+      !!listNameRect &&
+      !!listRowClip &&
+      listNameRect.width > 0 &&
+      listNameRect.height > 0 &&
+      rectMeaningfullyInClip(listNameRect, listRowClip, 36, 8, 1);
+    const listAvatarRoundMask =
+      avatar instanceof HTMLElement && getComputedStyle(avatar).borderRadius === "50%";
+    const listRowTemplateOk =
+      listRow?.getAttribute("data-template-cfg-id") === String(templateCfgId);
+    const listAvatarFrameOk =
+      listAvatarInClip &&
+      listNameInClip &&
+      listAvatarRoundMask &&
+      listRowTemplateOk &&
+      avatarPathOk;
 
     const scroll = panel?.querySelector(".panel-scroll-body");
     let scrollReachOk = true;
@@ -214,7 +325,6 @@
 
     const nameReadable =
       !!detailName?.textContent?.trim() && (detailName.textContent?.trim()?.length ?? 0) >= 2;
-    const listAvatarVisible = !!(avatarRect && avatarRect.width >= 48 && avatarRect.height >= 48);
     const gapPx = bustRect && nameRect ? Math.round(nameRect.left - bustRect.right) : null;
     const nameBesideBustGapOk = gapPx != null && gapPx >= 4 && gapPx <= 18;
     const nameOverlapBust =
@@ -238,12 +348,19 @@
         texturePickOk &&
         avatarPathOk &&
         bustPathOk &&
-        scrollReachOk,
+        scrollReachOk &&
+        (!requireListAvatarInClip || listAvatarFrameOk),
       template_cfg_id: templateCfgId,
       heroDetailLoaded,
       nameReadable,
       detailName: detailName?.textContent?.trim() ?? null,
       listAvatarVisible,
+      listAvatarInClip,
+      listNameInClip,
+      listAvatarRoundMask,
+      listRowTemplateOk,
+      listAvatarFrameOk,
+      listRowPrimaryText: listRowPrimary?.textContent?.trim() ?? null,
       dpr,
       uiScale,
       avatar: avatar
@@ -287,11 +404,20 @@
       visibleClip: bustClip
         ? { left: bustClip.left, top: bustClip.top, width: bustClip.width, height: bustClip.height }
         : null,
+      listVisibleClip: listRowClip
+        ? {
+            left: listRowClip.left,
+            top: listRowClip.top,
+            width: listRowClip.width,
+            height: listRowClip.height,
+          }
+        : null,
     };
   }
 
   window.__heroHostCaptureProbes = {
     scrollHeroDetailHeadForSameFrame,
+    scrollHeroListRowForPortraitViewport,
     probeBustNameSameFrame,
     probeHeroPortraitFrames,
   };
