@@ -71,6 +71,11 @@ import {
   handleListRovingKeyDown,
   syncListRovingTabindex,
 } from "@/ui/listRovingTabindex";
+import {
+  formatNextQueueFinishPreviewLine,
+  QUEUE_NEXT_FINISH_PREVIEW_ACTION,
+  QUEUE_NEXT_FINISH_PREVIEW_CLASS,
+} from "@/net/nextQueueFinishPreview";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -441,6 +446,7 @@ export class QueuePanels {
     el.innerHTML = `
       <h3>队列</h3>
       <p class="queue-panel-overview" data-role="queue-overview"></p>
+      <p class="${QUEUE_NEXT_FINISH_PREVIEW_CLASS} hidden" data-role="queue-next-finish-preview" data-action="${QUEUE_NEXT_FINISH_PREVIEW_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
@@ -517,10 +523,44 @@ export class QueuePanels {
     }
   }
 
+  private renderNextQueueFinishPreview(
+    previewEl: Element | null,
+    nowMs: number,
+  ): void {
+    if (!(previewEl instanceof HTMLElement)) return;
+    const dailyRows = this.getDailyChainRows?.() ?? [];
+    const preview = formatNextQueueFinishPreviewLine(
+      this.buildings(),
+      this.recruits,
+      this.slotLabels,
+      dailyRows,
+      nowMs,
+    );
+    if (!preview) {
+      previewEl.hidden = true;
+      previewEl.classList.add("hidden");
+      previewEl.textContent = "";
+      previewEl.removeAttribute("data-quest-cfg-id");
+      previewEl.removeAttribute("title");
+      return;
+    }
+    previewEl.hidden = false;
+    previewEl.classList.remove("hidden");
+    previewEl.textContent = preview.line;
+    if (preview.questCfgId > 0 && this.onOpenDailyBuildQuest) {
+      previewEl.dataset.questCfgId = String(preview.questCfgId);
+      previewEl.title = `打开日常 #${preview.questCfgId}`;
+    } else {
+      previewEl.removeAttribute("data-quest-cfg-id");
+      previewEl.title = "下一队列完成预览（只读）";
+    }
+  }
+
   private render(): void {
     const buildUl = this.panel.querySelector('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
+    const previewEl = this.panel.querySelector('[data-role="queue-next-finish-preview"]');
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
     const now = Date.now();
@@ -539,6 +579,7 @@ export class QueuePanels {
     if (overviewEl) {
       overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }
+    this.renderNextQueueFinishPreview(previewEl, now);
     this.renderBuildSlotMatrix(now);
     if (!session) {
       buildUl.replaceChildren();
@@ -839,6 +880,14 @@ export class QueuePanels {
       }
       return;
     }
+    const previewAnchor = target.closest(`[data-action="${QUEUE_NEXT_FINISH_PREVIEW_ACTION}"]`);
+    if (previewAnchor instanceof HTMLElement) {
+      const cfgId = Number(previewAnchor.getAttribute("data-quest-cfg-id")) || 0;
+      if (cfgId > 0 && this.onOpenDailyBuildQuest) {
+        this.onOpenDailyBuildQuest(cfgId);
+      }
+      return;
+    }
     const btn = target.closest("button");
     if (!btn) {
       const recruitRow = target.closest("li.queue-list-row[data-queue-id]");
@@ -873,7 +922,7 @@ export class QueuePanels {
       void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
     } else if (action === "speedup-build") {
       void this.useBuildSpeedup();
-    } else if (action === "daily-build-next") {
+    } else if (action === "daily-build-next" || action === QUEUE_NEXT_FINISH_PREVIEW_ACTION) {
       const cfgId = Number(btn.getAttribute("data-quest-cfg-id")) || 0;
       if (cfgId > 0 && this.onOpenDailyBuildQuest) {
         this.onOpenDailyBuildQuest(cfgId);

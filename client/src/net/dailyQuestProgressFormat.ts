@@ -7,6 +7,10 @@ import {
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import { DAILY_QUEST_PROGRESS_SECONDARY_CLASS } from "@/engine/filterListNarrowManifest";
+import {
+  DAILY_QUEST_CHAIN_TYPE_SUBLINE_CLASS,
+  formatQuestChainTypeSubline,
+} from "@/net/questChainTypeSubline";
 
 export const DAILY_QUEST_PROGRESS_BAR_CLASS = "daily-quest-progress";
 export const DAILY_QUEST_PROGRESS_FILL_CLASS = "daily-quest-progress-fill";
@@ -103,6 +107,15 @@ export function appendDailyQuestRowSecondary(li: HTMLElement, q: DailyQuestRow):
 
   const wrap = document.createElement("span");
   wrap.className = `daily-quest-row-secondary ${DAILY_QUEST_PROGRESS_SECONDARY_CLASS}`;
+
+  const chainSubline =
+    (q.state ?? 0) === DAILY_QUEST_STATE_CLAIMABLE ? formatQuestChainTypeSubline(q) : null;
+  if (chainSubline) {
+    const chainSpan = document.createElement("span");
+    chainSpan.className = DAILY_QUEST_CHAIN_TYPE_SUBLINE_CLASS;
+    chainSpan.textContent = chainSubline;
+    wrap.appendChild(chainSpan);
+  }
 
   if (text) {
     const textSpan = document.createElement("span");

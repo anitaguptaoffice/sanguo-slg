@@ -1400,6 +1400,23 @@
         margin: 0 0 6px;
         color: #3d2e1f;
       }
+      .queue-next-finish-preview {
+        font-size: 12px;
+        margin: 0 0 8px;
+        padding: 6px 8px;
+        border-radius: 4px;
+        background: #f0e6d4;
+        border: 1px dashed #8a7355;
+        color: #3d2e1f;
+        cursor: pointer;
+      }
+      .queue-next-finish-preview:hover { background: #e8dcc8; }
+      .daily-quest-chain-type-subline {
+        display: block;
+        font-size: 11px;
+        color: #6b5a42;
+        margin-bottom: 2px;
+      }
       .march-queue-banner {
         display: block;
         width: 100%;
@@ -2633,6 +2650,7 @@
         padding-bottom: 64px;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .content-panel-actions {
         flex-shrink: 0;
@@ -2878,7 +2896,9 @@
         word-break: break-word;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
-      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-overview"] {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-overview"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-next-finish-preview"] {
         min-width: 0;
         max-width: 100%;
         overflow-wrap: anywhere;
