@@ -145,6 +145,9 @@ export type HeroDetail = HeroSummary & {
   expr_ends_at_ms?: number;
   /** 历练时长（小时，M1：1–4）。 */
   expr_hours?: number;
+  /** GetHeroDetail / RestHero：出征体力（对齐 legacy mem_hero_blood）。 */
+  march_force?: number;
+  march_force_max?: number;
 };
 
 export type RecruitTemplatePreview = {
@@ -314,6 +317,8 @@ export function parseGetHeroDetailResponse(raw: unknown): HeroDetail {
     ),
     level_upgrade_item: parseItemNeedField(r.level_upgrade_item ?? r.level_up_item),
     loyalty_upgrade_item: parseItemNeedField(r.loyalty_upgrade_item ?? r.loyalty_up_item),
+    march_force: numField(r.march_force ?? r.marchForce),
+    march_force_max: numField(r.march_force_max ?? r.marchForceMax),
     attributes,
   };
 }

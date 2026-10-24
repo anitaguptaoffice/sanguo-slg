@@ -1,4 +1,5 @@
 import { setPanelFormErrorDisplay } from "@/net/contentFormValidation";
+import { validateMarchHeroMarchForce } from "@/net/heroDetailForce";
 import {
   type MarchHeroRow,
   validateMarchHeroSelection,
@@ -110,6 +111,11 @@ export function validateMarchForm(input: MarchFormValidationInput): MarchFormVal
   });
   if (!heroValidated.ok) {
     errors.push(heroValidated.message);
+  } else {
+    const forceValidated = validateMarchHeroMarchForce(heroValidated.heroId);
+    if (!forceValidated.ok) {
+      errors.push(forceValidated.message);
+    }
   }
 
   if (errors.length) {

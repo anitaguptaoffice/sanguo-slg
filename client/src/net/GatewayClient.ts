@@ -6,6 +6,7 @@ import {
 } from "@/net/heroDetailExpr";
 import { parseHeroPointResponse } from "@/net/heroDetailPoints";
 import { parseUpgradeHeroResponse } from "@/net/heroDetailUpgrade";
+import { parseRestHeroResponse } from "@/net/heroDetailForce";
 import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMailState";
 import { getTypes, Routes } from "@/net/loadProto";
 import type protobuf from "protobufjs";
@@ -92,6 +93,7 @@ export type GatewayPort = {
   cancelHeroExpr(serverId: number, heroId: number): Promise<unknown>;
   finishHeroExpr(serverId: number, heroId: number): Promise<unknown>;
   fasterHeroExpr(serverId: number, heroId: number): Promise<unknown>;
+  restHero(serverId: number, heroId: number): Promise<unknown>;
   recruitHero(
     serverId: number,
     templateCfgId: number,
@@ -663,6 +665,19 @@ export class GatewayClient implements GatewayPort {
       true,
     );
     return parseHeroExprFinishResponse(raw);
+  }
+
+  async restHero(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { RestHeroResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.RestHero,
+      "RestHeroRequest",
+      { server_id: serverId, hero_id: heroId },
+      RestHeroResponse,
+      true,
+    );
+    return parseRestHeroResponse(raw);
   }
 
   async recruitHero(

@@ -414,6 +414,16 @@ import {
   type HeroPointAllocStat,
 } from "@/net/heroDetailPoints";
 import {
+  applyRestHeroToDetail,
+  formatHeroForceGatewayErrorFromUnknown,
+  formatHeroRestSuccessStatus,
+  persistHeroMarchForceFromDetail,
+  renderHeroDetailForceMarkup,
+  setHeroForceFormErrorDisplay,
+  setHeroForceSuccessDisplay,
+  syncHeroDetailForceControls,
+} from "@/net/heroDetailForce";
+import {
   applyUpgradeHeroToDetail,
   formatHeroUpgradeGatewayErrorFromUnknown,
   formatHeroUpgradeSuccessStatus,
@@ -538,6 +548,7 @@ export class HeroMailPanels {
   private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
   private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
   private heroPointSubmitState: UseConsumableSubmitState = "idle";
+  private heroForceSubmitState: UseConsumableSubmitState = "idle";
   private heroPointSnapshotByHeroId = new Map<
     number,
     ReturnType<typeof heroPointSnapshotFromDetail>
@@ -1972,6 +1983,7 @@ export class HeroMailPanels {
         const { bag, wallet } = this.sessionEconomy();
         const upgradeHtml =
           renderHeroDetailUpgradeMarkup(this.heroUpgradeSubmitState, this.heroDetail) +
+          renderHeroDetailForceMarkup(this.heroForceSubmitState, this.heroDetail) +
           renderHeroDetailPointsMarkup(this.heroPointSubmitState, this.heroDetail) +
           renderHeroDetailExprMarkup(
             this.heroExprSubmitState,
@@ -2657,6 +2669,14 @@ export class HeroMailPanels {
     setHeroPointSuccessDisplay(this.heroPanel, null);
   }
 
+  private resetHeroForceSubmitFeedback(): void {
+    this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    setHeroForceFormErrorDisplay(this.heroPanel, null);
+    setHeroForceSuccessDisplay(this.heroPanel, null);
+  }
+
   private resetHeroExprSubmitFeedback(): void {
     this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, {
       type: "CLEAR_ERROR",
@@ -2818,6 +2838,7 @@ export class HeroMailPanels {
     this.resetHeroLargessSubmitFeedback();
     this.resetHeroUpgradeSubmitFeedback();
     this.resetHeroPointSubmitFeedback();
+    this.resetHeroForceSubmitFeedback();
     this.resetHeroExprSubmitFeedback();
     this.heroDetailLoading = true;
     this.heroDetailError = null;
@@ -2831,6 +2852,7 @@ export class HeroMailPanels {
         this.heroExprSnapshotByHeroId.get(heroId) ?? null,
       );
       this.persistHeroPointSnapshot(this.heroDetail);
+      persistHeroMarchForceFromDetail(this.heroDetail);
       this.persistHeroExprSnapshot(this.heroDetail);
       this.ensureHeroExprCountdownTimer();
       this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
@@ -2924,6 +2946,46 @@ export class HeroMailPanels {
       this.onStatus(msg);
     } finally {
       syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+    }
+  }
+
+  private async restHeroForceSelected(): Promise<void> {
+    if (this.heroForceSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    const heroId = this.selectedHeroId;
+    this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
+      type: "SUBMIT",
+    });
+    setHeroForceFormErrorDisplay(this.heroPanel, null);
+    setHeroForceSuccessDisplay(this.heroPanel, null);
+    syncHeroDetailForceControls(this.heroPanel, this.heroForceSubmitState, this.heroDetail);
+    const sid = this.serverId();
+    this.onStatus("将领休整…");
+    try {
+      const res = await this.gateway.restHero(sid, heroId);
+      const detailAfter = applyRestHeroToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      persistHeroMarchForceFromDetail(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
+        type: "SUCCESS",
+      });
+      this.renderHeroList();
+      const statusText = formatHeroRestSuccessStatus(detailAfter);
+      setHeroForceSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
+        type: "FAIL",
+      });
+      const msg = formatHeroForceGatewayErrorFromUnknown(e);
+      setHeroForceFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      syncHeroDetailForceControls(this.heroPanel, this.heroForceSubmitState, this.heroDetail);
     }
   }
 
@@ -3892,6 +3954,7 @@ export class HeroMailPanels {
       }
     }
     if (a === "hero-point-clear") void this.clearHeroPointsSelected();
+    if (a === "hero-force-rest") void this.restHeroForceSelected();
     if (a === "hero-expr-hours") {
       const h = Number(btn.getAttribute("data-hours"));
       if (h >= 1 && h <= 4) {

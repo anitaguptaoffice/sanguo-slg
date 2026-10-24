@@ -80,6 +80,7 @@ export const Routes = {
   CancelHeroExpr: "hero.v1.CancelHeroExpr",
   FinishHeroExpr: "hero.v1.FinishHeroExpr",
   FasterHeroExpr: "hero.v1.FasterHeroExpr",
+  RestHero: "hero.v1.RestHero",
   RecruitHero: "hero.v1.RecruitHero",
   ListRecruitTemplates: "hero.v1.ListRecruitTemplates",
   ListHotelRecruitCandidates: "hero.v1.ListHotelRecruitCandidates",
@@ -188,6 +189,8 @@ export type ProtoTypes = {
   FinishHeroExprResponse: protobuf.Type;
   FasterHeroExprRequest: protobuf.Type;
   FasterHeroExprResponse: protobuf.Type;
+  RestHeroRequest: protobuf.Type;
+  RestHeroResponse: protobuf.Type;
   RecruitHeroRequest: protobuf.Type;
   RecruitHeroResponse: protobuf.Type;
   ListRecruitTemplatesRequest: protobuf.Type;
@@ -313,6 +316,8 @@ export function getTypes(): ProtoTypes {
     FinishHeroExprResponse: r.lookupType("sanguo.hero.v1.FinishHeroExprResponse"),
     FasterHeroExprRequest: r.lookupType("sanguo.hero.v1.FasterHeroExprRequest"),
     FasterHeroExprResponse: r.lookupType("sanguo.hero.v1.FasterHeroExprResponse"),
+    RestHeroRequest: r.lookupType("sanguo.hero.v1.RestHeroRequest"),
+    RestHeroResponse: r.lookupType("sanguo.hero.v1.RestHeroResponse"),
     RecruitHeroRequest: r.lookupType("sanguo.hero.v1.RecruitHeroRequest"),
     RecruitHeroResponse: r.lookupType("sanguo.hero.v1.RecruitHeroResponse"),
     ListRecruitTemplatesRequest: r.lookupType("sanguo.hero.v1.ListRecruitTemplatesRequest"),

@@ -66,6 +66,9 @@ describe("marchHeroPick", () => {
   it("normalizeMarchHeroGatewayMessage maps server hero errors", () => {
     expect(normalizeMarchHeroGatewayMessage("hero_id required")).toBe("请选择带队将领");
     expect(normalizeMarchHeroGatewayMessage("hero: hero not found")).toBe("将领不存在或不属于您");
+    expect(normalizeMarchHeroGatewayMessage("hero: insufficient march force")).toBe(
+      "将领出征体力不足",
+    );
     expect(normalizeMarchHeroGatewayMessage("hero: hero is not idle")).toBe(
       "将领当前非空闲，无法出征",
     );

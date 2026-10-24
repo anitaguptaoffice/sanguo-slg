@@ -1139,6 +1139,48 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-role="hero-expr-success"]')?.textContent).toContain("加速完成");
   });
 
+  it("hero detail force rest calls RestHero and refreshes march_force", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 9, template_cfg_id: 1001, level: 3, loyalty: 80, status: 1 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 9,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 3,
+        loyalty: 80,
+        status: 1,
+        march_force: 8,
+        march_force_max: 32,
+        attributes: { force: 65, intel: 59, politics: 56, command: 61 },
+      }),
+      restHero: vi.fn().mockResolvedValue({
+        hero_id: 9,
+        march_force: 32,
+        march_force_max: 32,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="9"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelector('[data-role="hero-force-summary"]')?.textContent).toContain("8/32");
+    const restBtn = mount.querySelector<HTMLButtonElement>('[data-action="hero-force-rest"]');
+    expect(restBtn?.disabled).toBe(false);
+    restBtn?.click();
+    await flushPromises();
+    expect(gateway.restHero).toHaveBeenCalledWith(1, 9);
+    expect(mount.querySelector('[data-role="hero-force-success"]')?.textContent).toContain("休整成功");
+    expect(mount.querySelector('[data-role="hero-force-summary"]')?.textContent).toContain("32/32");
+  });
+
   it("hero detail points add/clear calls AddHeroPoint and ClearHeroPoint", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
