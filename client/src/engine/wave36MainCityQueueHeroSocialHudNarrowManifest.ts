@@ -34,6 +34,12 @@ import {
   HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE,
   resolveCenterPanelTabFromHudTodo,
 } from "@/net/hudCenterPanelDeepLink";
+import {
+  formatHudTodoMergedSweepLine,
+  HUD_TODO_MERGED_SWEEP_LINE_ROLE,
+  resolveToolbarPanelFromHudTodo,
+  TOOLBAR_PANEL_DEEP_LINK_PULSE_CLASS,
+} from "@/net/hudTodoMergedSweep";
 import { CITY_SLOT_PULSE_CLASS, QUEUE_ROW_SLOT_HIGHLIGHT_CLASS } from "@/net/citySlotQueueLink";
 import {
   CITY_SLOT_COMPLETE_FOCUS_RING_CLASS,
@@ -94,9 +100,13 @@ export {
   RECRUIT_FORM_INLINE_WARN_CLASS,
   BAG_HERO_ITEM_GAP_HIGHLIGHT_CLASS,
   formatHudCenterPanelDeepLinkLine,
+  formatHudTodoMergedSweepLine,
   resolveCenterPanelTabFromHudTodo,
+  resolveToolbarPanelFromHudTodo,
   HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE,
+  HUD_TODO_MERGED_SWEEP_LINE_ROLE,
   CENTER_PANEL_TAB_PULSE_CLASS,
+  TOOLBAR_PANEL_DEEP_LINK_PULSE_CLASS,
   CITY_SLOT_PULSE_CLASS,
   QUEUE_ROW_SLOT_HIGHLIGHT_CLASS,
 };
@@ -113,7 +123,9 @@ export const GUILD_CHAT_EMPTY_ERROR_ROW_SELECTOR = `.${GUILD_CHAT_EMPTY_ERROR_RO
 export const GUILD_CHAT_RETRY_INLINE_SELECTOR = `.${GUILD_CHAT_RETRY_INLINE_CLASS}`;
 export const RECRUIT_FORM_INLINE_HINT_SELECTOR = `[data-role="${RECRUIT_FORM_INLINE_HINT_ROLE}"], .recruit-form-inline-hint`;
 export const HUD_CENTER_PANEL_DEEPLINK_LINE_SELECTOR = `[data-role="${HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE}"]`;
+export const HUD_TODO_MERGED_SWEEP_LINE_SELECTOR = `#hud .hud-todo-merged-sweep, [data-role="${HUD_TODO_MERGED_SWEEP_LINE_ROLE}"]`;
 export const CENTER_PANEL_TAB_PULSE_SELECTOR = `.main-city-toolbar .${CENTER_PANEL_TAB_PULSE_CLASS}`;
+export const TOOLBAR_PANEL_DEEP_LINK_PULSE_SELECTOR = `.main-city-toolbar .${TOOLBAR_PANEL_DEEP_LINK_PULSE_CLASS}`;
 
 export const CLIENT_203_PANEL_ASSET_BY_CENTER_ID: Record<
   Client203NarrowManifestCenterPanelId,
