@@ -107,7 +107,8 @@ async function openHeroPanelWithDetail(page) {
   const firstHero = page.locator(`${HERO_PANEL_SELECTOR} .hero-list li[data-hero-id]`).first();
   await firstHero.waitFor({ state: "visible", timeout: 8000 });
   await firstHero.click();
-  await page.waitForSelector('[data-role="hero-detail"]:not(.hidden)', { timeout: 8000 });
+  await page.waitForSelector(`${HERO_PANEL_SELECTOR} .hero-detail-name`, { timeout: 12000 });
+  await page.waitForSelector(`${HERO_PANEL_SELECTOR} .hero-attr-table`, { timeout: 12000 });
   await page.waitForTimeout(300);
 }
 
@@ -122,6 +123,15 @@ function probeHeroPanelInPage() {
   const detail = panel.querySelector(".hero-detail");
   const hint = panel.querySelector('[data-role="hero-hint"]');
   const detailBody = detail?.querySelector(".hero-detail-body") || detail;
+  const detailName = detail?.querySelector(".hero-detail-name");
+  const attrTable = detail?.querySelector(".hero-attr-table");
+  const detailError = detail?.querySelector(".panel-state-chrome.is-error");
+  const detailText = detail?.textContent ?? "";
+  const heroDetailLoaded =
+    !!detailName &&
+    !!attrTable &&
+    !detailError &&
+    !/hero not found|将领不存在/i.test(detailText);
 
   const scrollMetrics = scroll
     ? {
@@ -164,7 +174,9 @@ function probeHeroPanelInPage() {
   }
 
   return {
-    ok: skinPathOk && !hasTopColorBar && scrollReachOk,
+    ok: skinPathOk && !hasTopColorBar && scrollReachOk && heroDetailLoaded,
+    heroDetailLoaded,
+    detailName: detailName?.textContent?.trim() ?? null,
     dpr,
     borderImageSource: borderSrc,
     skinPathOk,
@@ -194,7 +206,11 @@ async function main() {
   const mock = spawn("node", ["mock-server/server.mjs"], {
     cwd: clientRoot,
     stdio: "inherit",
-    env: { ...process.env, MOCK_GATEWAY_PORT: String(MOCK_PORT) },
+    env: {
+      ...process.env,
+      MOCK_GATEWAY_PORT: String(MOCK_PORT),
+      MOCK_EVIDENCE_PRESET: PRESET,
+    },
   });
   const preview = spawn(
     "npm",
@@ -273,6 +289,9 @@ async function main() {
 
     const evidence = {
       task: "ART-CENTER-PANEL-012",
+      runtime_code_sha: tipSha,
+      screenshot_artifacts_commit_sha:
+        "pending-git-commit — set to the commit that lands JPEGs under docs/art/samples/art-center-panel-012/runtime/",
       tip_sha: tipSha,
       art_asset_source_commit: "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
       captured_at: new Date().toISOString(),
@@ -300,6 +319,11 @@ async function main() {
       ["1280 scroll reaches detail bottom", probes["1280x720-scroll"]?.scrollReachOk],
       ["paper muted readable", probes["1600x900"]?.paperMutedColor === "rgb(74, 56, 40)"],
       ["ink body readable", probes["1600x900"]?.inkBodyColor === "rgb(232, 220, 200)"],
+      ["hero detail loaded (attrs table)", probes["1600x900"]?.heroDetailLoaded],
+      [
+        "1280 scroll shows real detail (not error)",
+        probes["1280x720-scroll"]?.heroDetailLoaded && (probes["1280x720-scroll"]?.detailRect?.height ?? 0) > 120,
+      ],
     ];
     const failed = checklist.filter(([, pass]) => !pass);
     if (failed.length) {
@@ -309,7 +333,9 @@ async function main() {
     const invLines = [
       "# INVENTORY — ART-CENTER-PANEL-012 runtime",
       "",
-      `Captured at git \`${tipSha}\`. Art PNGs from Draft #697 @ \`bcf05c7365f92f17142f4ce25a3ba1bdd2b80247\` (**not merged**).`,
+      `Runtime code at capture: \`${tipSha}\` (mock + client; must resolve on GitHub).`,
+      `Screenshot JPEGs / probe-log land in a follow-up git commit — after push, set \`screenshot_artifacts_commit_sha\` in \`probe-log.json\` to that commit (often same as runtime when captured on a clean checkout).`,
+      `Art PNGs from Draft #697 @ \`bcf05c7365f92f17142f4ce25a3ba1bdd2b80247\` (**not merged**).`,
       "",
       "## Asset contract",
       "",
