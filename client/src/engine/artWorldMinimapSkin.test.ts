@@ -27,7 +27,7 @@ describe("ART-WORLD-MINIMAP-010 manifest mount", () => {
   it("lists two sprite asset ids (57 total manifest entries)", () => {
     const manifest = loadManifest();
     expect(ART_WORLD_MINIMAP_010_ASSET_IDS).toHaveLength(2);
-    expect(manifest.assets).toHaveLength(58);
+    expect(manifest.assets).toHaveLength(59);
     for (const id of ART_WORLD_MINIMAP_010_ASSET_IDS) {
       const meta = manifest.assets.find((a) => a.id === id);
       expect(meta).toBeTruthy();
