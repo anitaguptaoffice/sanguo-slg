@@ -352,6 +352,84 @@ describe("ContentPanels bag shop return highlight (CLIENT-210)", () => {
   });
 });
 
+describe("ContentPanels bag shop inline residual and panel return highlight (CLIENT-256)", () => {
+  it("rings bag inline state at stack cap and highlights category tab after rank return", async () => {
+    sessionStorage.removeItem("bag-category-tab-v1");
+    sessionStorage.removeItem("panel-return-source-v1");
+    const mount = document.createElement("div");
+    const session = baseSession();
+    session.bag = [{ item_cfg_id: 2001, quantity: 99 }];
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({ items: session.bag }),
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.toggleBag();
+    await vi.waitFor(() =>
+      expect(
+        mount.querySelector(".bag-row-inline-state")?.classList.contains(
+          "bag-shop-inline-state-residual-ring",
+        ),
+      ).toBe(true),
+    );
+    const consumableTab = mount.querySelector(
+      '[data-bag-category="consumable"]',
+    ) as HTMLButtonElement;
+    consumableTab.click();
+    panels.capturePanelReturnSourceBeforeRankIntel("rank");
+    panels.toggleBag();
+    expect(sessionStorage.getItem("panel-return-source-v1")).toContain("consumable");
+    panels.toggleBag();
+    await vi.waitFor(() => {
+      const tab = mount.querySelector('[data-bag-category="consumable"]');
+      expect(tab?.classList.contains("panel-return-source-highlight-residual")).toBe(true);
+    });
+  });
+
+  it("rings shop afford inline when wallet insufficient", async () => {
+    sessionStorage.removeItem("panel-return-source-v1");
+    const mount = document.createElement("div");
+    const listShopShelf = vi.fn().mockResolvedValue({
+      offers: [
+        {
+          offer_id: 1001,
+          shelf_name: "谷袋",
+          item_cfg_id: 2001,
+          quantity_per_purchase: 1,
+          price_resources: { gold: 100 },
+        },
+      ],
+    });
+    const gateway = {
+      getBoundServerId: () => 1,
+      listShopShelf,
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => ({ ...baseSession(), wallet: { gold: 5 } }),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleShop();
+    await vi.waitFor(() =>
+      expect(
+        mount.querySelector(".shop-offer-afford-inline")?.classList.contains(
+          "bag-shop-inline-state-residual-ring",
+        ),
+      ).toBe(true),
+    );
+  });
+});
+
 describe("ContentPanels bag inline state and shop wallet gap (CLIENT-194)", () => {
   it("shows bag-row-inline-state on selected stack and shop-price-wallet-gap on offers", async () => {
     sessionStorage.removeItem("bag-category-tab-v1");

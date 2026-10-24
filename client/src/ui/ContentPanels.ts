@@ -51,6 +51,20 @@ import {
 } from "@/net/bagShopReturnHighlight";
 import { highlightBagShopCategoryScanRow } from "@/net/bagShopCategoryScan";
 import {
+  findBagShopInlineStateResidualTarget,
+  scheduleBagShopInlineStateResidualRing,
+  shouldBagShopInlineStateResidualRing,
+} from "@/net/bagShopInlineStateResidual";
+import {
+  clearPanelReturnSourceSession,
+  findPanelReturnSourceCategoryTab,
+  highlightPanelReturnSourceCategoryResidual,
+  readPanelReturnSourceSession,
+  writePanelReturnSourceSession,
+  type PanelReturnSourceKind,
+  type PanelReturnSourcePayload,
+} from "@/net/panelReturnSourceHighlightResidual";
+import {
   bagEmptyListClass,
   formatBagStackRowLabel,
 } from "@/net/panelDensity";
@@ -176,6 +190,10 @@ export class ContentPanels {
   private bagReturnHeroId = 0;
   private shopLastGrantedItemCfgId = 0;
   private onBagReturnHeroDetail?: (heroId: number) => void;
+  /** CLIENT-256：打开背包/商城时待高亮分类（在 toggle 时同步消费 session，避免陈旧 refresh then）。 */
+  private pendingPanelReturnSourceHighlight: PanelReturnSourcePayload | null = null;
+  private bagOpenGeneration = 0;
+  private shopOpenGeneration = 0;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -231,6 +249,8 @@ export class ContentPanels {
     if (!this.bagHighlightItemId) {
       clearBagOpenSourceSession();
     }
+    this.stashPanelReturnSourceHighlightOnOpen("bag");
+    const bagOpenGeneration = ++this.bagOpenGeneration;
     const returnFromShop = !this.shopPanel.classList.contains("hidden");
     const shopReturnItemId = returnFromShop ? consumeBagShopReturnHighlight() : null;
     this.syncBagCategoryScrollMemoryFromSession();
@@ -240,12 +260,14 @@ export class ContentPanels {
     }
     this.syncBagOpenSourceTag();
     void this.refreshBag().then(() => {
+      if (bagOpenGeneration !== this.bagOpenGeneration) return;
       if (!deepLinkHighlight) {
         this.applyBagCategoryScrollTop(this.scrollTopForActiveBagCategory());
       }
       if (shopReturnItemId) {
         scheduleBagRowReturnHighlight(this.bagPanel, shopReturnItemId);
       }
+      this.applyPanelReturnSourceHighlightResidual("bag");
     });
   }
 
@@ -255,6 +277,74 @@ export class ContentPanels {
 
   getShopRoot(): HTMLElement {
     return this.shopPanel;
+  }
+
+  /** 打开排行/军情前记录背包或商城当前分类（CLIENT-256）。 */
+  capturePanelReturnSourceBeforeRankIntel(sourceKind: PanelReturnSourceKind): void {
+    const bagOpen = !this.bagPanel.classList.contains("hidden");
+    const shopOpen = !this.shopPanel.classList.contains("hidden");
+    if (bagOpen) {
+      writePanelReturnSourceSession({
+        targetPanel: "bag",
+        categoryId: this.bagCategory,
+        sourceKind,
+      });
+    } else if (shopOpen) {
+      writePanelReturnSourceSession({
+        targetPanel: "shop",
+        categoryId: this.shopCategory,
+        sourceKind,
+      });
+    }
+  }
+
+  private takePendingPanelReturnSourceHighlight(
+    targetPanel: "bag" | "shop",
+  ): PanelReturnSourcePayload | null {
+    const payload = this.pendingPanelReturnSourceHighlight;
+    if (!payload || payload.targetPanel !== targetPanel) return null;
+    this.pendingPanelReturnSourceHighlight = null;
+    return payload;
+  }
+
+  private stashPanelReturnSourceHighlightOnOpen(targetPanel: "bag" | "shop"): void {
+    const payload = readPanelReturnSourceSession();
+    if (payload?.targetPanel === targetPanel) {
+      clearPanelReturnSourceSession();
+      this.pendingPanelReturnSourceHighlight = payload;
+    } else {
+      this.pendingPanelReturnSourceHighlight = null;
+    }
+  }
+
+  private applyPanelReturnSourceHighlightResidual(targetPanel: "bag" | "shop"): void {
+    const payload = this.takePendingPanelReturnSourceHighlight(targetPanel);
+    if (!payload) return;
+    const root = targetPanel === "bag" ? this.bagPanel : this.shopPanel;
+    const tab = findPanelReturnSourceCategoryTab(root, targetPanel, payload.categoryId);
+    highlightPanelReturnSourceCategoryResidual(tab, root);
+  }
+
+  private syncBagInlineStateResidualRing(): void {
+    const bag = this.getSession()?.bag ?? [];
+    const row = bag.find((r) => r.item_cfg_id === this.selectedItemId) ?? null;
+    if (!shouldBagShopInlineStateResidualRing("bag", row, undefined, null)) return;
+    const li = this.bagPanel.querySelector<HTMLElement>(
+      `li[data-item-cfg-id="${this.selectedItemId}"]`,
+    );
+    const target = findBagShopInlineStateResidualTarget(li, "bag");
+    scheduleBagShopInlineStateResidualRing(target, this.bagPanel);
+  }
+
+  private syncShopInlineStateResidualRing(): void {
+    const wallet = this.sessionWallet();
+    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId) ?? null;
+    if (!shouldBagShopInlineStateResidualRing("shop", null, wallet, offer)) return;
+    const li = this.shopPanel.querySelector<HTMLElement>(
+      `li[data-offer-id="${this.selectedOfferId}"]`,
+    );
+    const target = findBagShopInlineStateResidualTarget(li, "shop");
+    scheduleBagShopInlineStateResidualRing(target, this.shopPanel);
   }
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
@@ -384,15 +474,20 @@ export class ContentPanels {
   }
 
   toggleShop(): void {
+    const wasHidden = this.shopPanel.classList.contains("hidden");
     this.shopPanel.classList.toggle("hidden");
-    if (!this.shopPanel.classList.contains("hidden")) {
-      if (!this.bagPanel.classList.contains("hidden")) {
-        this.persistBagCategoryScrollPosition();
-        captureBagLastViewedForShopReturn(this.selectedItemId);
-      }
-      resetCenterPanelViewportScroll(this.shopPanel);
-      void this.refreshShop();
+    if (!wasHidden) return;
+    this.stashPanelReturnSourceHighlightOnOpen("shop");
+    const shopOpenGeneration = ++this.shopOpenGeneration;
+    if (!this.bagPanel.classList.contains("hidden")) {
+      this.persistBagCategoryScrollPosition();
+      captureBagLastViewedForShopReturn(this.selectedItemId);
     }
+    resetCenterPanelViewportScroll(this.shopPanel);
+    void this.refreshShop().then(() => {
+      if (shopOpenGeneration !== this.shopOpenGeneration) return;
+      this.applyPanelReturnSourceHighlightResidual("shop");
+    });
   }
 
   private syncBagCategoryScrollMemoryFromSession(): void {
@@ -771,6 +866,7 @@ export class ContentPanels {
       renderPanelStateListRow(ul, "empty", msg, { legacyClass: bagEmptyListClass() });
     }
     this.syncBagWalletGap();
+    this.syncBagInlineStateResidualRing();
   }
 
   private renderShopCategoryTabs(): void {
@@ -827,6 +923,7 @@ export class ContentPanels {
     const wallet = this.sessionWallet();
     for (const o of visible) {
       const li = document.createElement("li");
+      if (o.offer_id) li.setAttribute("data-offer-id", String(o.offer_id));
       const price = formatWalletPrice(o.price_resources ?? {});
       let line = formatShopOfferListLine(o, price);
       const flash = this.shopPurchaseFlash.get(o.offer_id ?? 0);
@@ -877,6 +974,7 @@ export class ContentPanels {
       renderPanelStateListRow(ul, "empty", msg, { legacyClass: "shop-empty" });
     }
     this.syncShopWalletGap();
+    this.syncShopInlineStateResidualRing();
   }
 
   private async refreshQuests(): Promise<void> {
@@ -1250,6 +1348,7 @@ export class ContentPanels {
     if (t.getAttribute("data-field") === "offer-id") {
       this.selectedOfferId = Number((t as HTMLSelectElement).value) || 1001;
       this.syncShopWalletGap();
+      this.syncShopInlineStateResidualRing();
     }
   }
 

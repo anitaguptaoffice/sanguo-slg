@@ -1248,10 +1248,16 @@ export class MainCityScene implements Scene {
       this.marchArrivalHudReminder = null;
       this.battleReports.toggle();
     }
-    if (action === "toggle-marches") this.marchList.toggle();
+    if (action === "toggle-marches") {
+      this.content.capturePanelReturnSourceBeforeRankIntel("intel");
+      this.marchList.toggle();
+    }
     if (action === "toggle-chat") this.social.toggleChat();
     if (action === "toggle-guild") this.social.toggleGuild();
-    if (action === "toggle-rank") this.social.toggleRank();
+    if (action === "toggle-rank") {
+      this.content.capturePanelReturnSourceBeforeRankIntel("rank");
+      this.social.toggleRank();
+    }
     if (action === "toggle-quest") this.content.toggleQuest();
     if (action === "toggle-daily") {
       this.dailyQuest.toggle();
