@@ -1,5 +1,5 @@
 import type { BagStack } from "@/net/bagState";
-import { itemLabel } from "@/net/contentFormat";
+import { formatWalletPrice, itemLabel } from "@/net/contentFormat";
 import {
   mailHasAttachments,
   mailHasUnclaimedAttachments,
@@ -25,15 +25,46 @@ export function mailListRowClassName(m: MailRow): string {
   return classes.join(" ");
 }
 
-/** 列表第一行：标题 + 时间。 */
-export function mailRowTitleLine(m: MailRow): string {
-  return `${mailTitle(m)} · ${formatTimeMs(m.created_at_ms)}`;
+/** 收件箱相对时间（列表次行；与社交刷新戳记同粒度）。 */
+export function formatMailRelativeTime(ms: number | undefined, nowMs = Date.now()): string {
+  if (!ms || !Number.isFinite(ms)) return "—";
+  const delta = Math.max(0, nowMs - ms);
+  if (delta < 60_000) return "刚刚";
+  const min = Math.floor(delta / 60_000);
+  if (min < 60) return `${min} 分钟前`;
+  const h = Math.floor(min / 60);
+  if (h < 48) return `${h} 小时前`;
+  return formatTimeMs(ms);
 }
 
-/** 列表第二行：附件 / 已读角标文案。 */
-export function mailRowMetaLine(m: MailRow): string {
-  if (mailHasUnclaimedAttachments(m)) return "附件待领";
-  if (mailHasAttachments(m)) return "附件已领";
+/** 次行附件图标摘要（📎 待领 / ✓ 已领 + 道具/资源文案）。 */
+export function mailRowAttachmentIconSummary(m: MailRow): string {
+  if (!mailHasAttachments(m)) return "";
+  const parts: string[] = [];
+  for (const it of m.attachments?.items ?? []) {
+    const id = it.item_cfg_id ?? 0;
+    if (id <= 0) continue;
+    parts.push(`${itemLabel(id)}×${it.quantity ?? 0}`);
+  }
+  const resText = formatWalletPrice(m.attachments?.resources ?? {});
+  if (resText) parts.push(resText);
+  const body = parts.length ? parts.join("、") : "附件";
+  if (mailHasUnclaimedAttachments(m)) return `📎 ${body}`;
+  return `✓ ${body}`;
+}
+
+/** 列表主行：主题（未读点在 DOM 侧挂载）。 */
+export function mailRowTitleLine(m: MailRow): string {
+  return mailTitle(m);
+}
+
+/** 列表次行：附件图标摘要 + 相对时间。 */
+export function mailRowMetaLine(m: MailRow, nowMs = Date.now()): string {
+  const time = formatMailRelativeTime(m.created_at_ms, nowMs);
+  const attach = mailRowAttachmentIconSummary(m);
+  if (attach && time !== "—") return `${attach} · ${time}`;
+  if (attach) return attach;
+  if (time !== "—") return `${time} · ${mailStatusLabel(m.status)}`;
   return mailStatusLabel(m.status);
 }
 

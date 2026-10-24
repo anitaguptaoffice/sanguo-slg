@@ -11,6 +11,8 @@ import {
   formatBagListQuantityCell,
   formatBagStackRowLabel,
   mailListRowClassName,
+  formatMailRelativeTime,
+  mailRowAttachmentIconSummary,
   mailRowMetaLine,
   mailRowTitleLine,
   marchListEmptyClass,
@@ -40,16 +42,28 @@ describe("panelDensity", () => {
 
   it("mail two-line row helpers", () => {
     const when = Date.UTC(2024, 2, 1, 12, 0, 0);
-    expect(mailRowTitleLine({ mail_id: 2, title: "系统", created_at_ms: when })).toContain("系统");
-    expect(mailRowTitleLine({ mail_id: 2, title: "系统", created_at_ms: when })).toMatch(/\d/);
+    const now = when + 5 * 60_000;
+    expect(mailRowTitleLine({ mail_id: 2, title: "系统", created_at_ms: when })).toBe("系统");
+    expect(formatMailRelativeTime(when, now)).toBe("5 分钟前");
     expect(
-      mailRowMetaLine({
+      mailRowAttachmentIconSummary({
         mail_id: 3,
         status: 0,
         attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
       }),
-    ).toBe("附件待领");
-    expect(mailRowMetaLine({ mail_id: 4, status: 1 })).toContain("已读");
+    ).toContain("📎");
+    expect(
+      mailRowMetaLine(
+        {
+          mail_id: 3,
+          status: 0,
+          attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          created_at_ms: when,
+        },
+        now,
+      ),
+    ).toContain("5 分钟前");
+    expect(mailRowMetaLine({ mail_id: 4, status: 1, created_at_ms: when }, now)).toContain("已读");
   });
 
   it("bag empty and aligned cells", () => {
