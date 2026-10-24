@@ -874,6 +874,24 @@
         white-space: nowrap;
         pointer-events: none;
       }
+      /* CLIENT-136: 72×32 视觉槽完整；纸底 chip 标签深字（非全局改色） */
+      button.art-filter-chip.art-filter-chip--skinned {
+        min-width: 72px;
+        box-sizing: border-box;
+        overflow: visible;
+        color: #3d2e1f;
+      }
+      button.art-filter-chip.art-filter-chip--skinned .art-filter-chip-label {
+        color: #3d2e1f;
+      }
+      .content-panel .mail-list li.art-filter-row--skinned,
+      .content-panel .daily-quest-list li.art-filter-row--skinned {
+        color: #3d2e1f;
+      }
+      .content-panel .mail-list li.art-filter-row--skinned .mail-row-summary,
+      .content-panel .daily-quest-list li.art-filter-row--skinned .daily-quest-row-main {
+        color: #4a3828;
+      }
       button.art-filter-chip:focus-visible {
         outline: 2px solid #c9a227;
         outline-offset: 2px;
@@ -912,6 +930,10 @@
       .panel-filter-chip-bar button.art-filter-chip:focus-visible {
         outline: 2px solid #c9a227;
         outline-offset: 2px;
+      }
+      .panel-filter-chip-bar button.art-filter-chip.art-filter-chip--skinned {
+        min-width: 72px;
+        overflow: visible;
       }
       .mail-list li [data-ui-filter-badge],
       .daily-quest-list li [data-ui-filter-badge],
@@ -1710,6 +1732,10 @@
         min-width: 0;
         max-width: 100%;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-filter-btn.art-filter-chip--skinned {
+        flex: 0 0 auto;
+        min-width: 72px;
+      }
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list {
         max-height: none;
         overflow: visible;
@@ -1777,6 +1803,10 @@
         flex: 1 1 8rem;
         min-width: 0;
         max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-filter-btn.art-filter-chip--skinned {
+        flex: 0 0 auto;
+        min-width: 72px;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list {
         max-height: none;
