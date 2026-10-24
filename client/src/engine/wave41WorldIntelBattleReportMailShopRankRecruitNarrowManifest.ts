@@ -45,7 +45,13 @@ import {
   COPY_REPORT_COORDS_READONLY_ACTION,
 } from "@/net/battleReportDetailTemplateResidual";
 import { BAG_SHOP_CATEGORY_SCAN_RING_CLASS } from "@/net/bagShopCategoryScan";
-import { MAIL_CLAIM_HUD_SYNC_PULSE_CLASS } from "@/net/mailClaimHudBadgeSync";
+import {
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS,
+} from "@/net/mailAttachmentClaimResidualSubline";
+import {
+  MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_PULSE_CLASS,
+} from "@/net/mailClaimHudBadgeSync";
 import { RANK_PIN_REFRESH_RESIDUAL_CLASS } from "@/net/rankPinRefreshResidual";
 import { RECRUIT_WALLET_COMPARE_RESIDUAL_CLASS } from "@/net/recruitWalletCompareResidual";
 import {
@@ -102,6 +108,9 @@ export { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS } from "@/net/battleR
 /** CLIENT-241: mail claim success → HUD mail/quest badge sync pulse. */
 export { MAIL_CLAIM_HUD_SYNC_PULSE_CLASS };
 
+/** CLIENT-255: deep HUD sync pulse + attachment claim residual subline (CLIENT-241 **不退化**). */
+export { MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS, MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS };
+
 /** CLIENT-242: bag/shop category scan ring + rank pin / recruit wallet residual compare lines. */
 export { BAG_SHOP_CATEGORY_SCAN_RING_CLASS };
 export const RANK_PIN_REFRESH_RESIDUAL_LINE_CLASS = RANK_PIN_REFRESH_RESIDUAL_CLASS;
@@ -132,6 +141,8 @@ export const REPORT_LIST_KEYBOARD_FOCUS_RING_SELECTOR = `.battle-report-list li.
 export const BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_SELECTOR = `.${BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS}`;
 export const COPY_REPORT_COORDS_READONLY_SELECTOR = `[data-action="${COPY_REPORT_COORDS_READONLY_ACTION}"]`;
 export const MAIL_CLAIM_HUD_SYNC_PULSE_SELECTOR = `.mail-list li .${MAIL_CLAIM_HUD_SYNC_PULSE_CLASS}`;
+export const MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_SELECTOR = `.mail-list li .${MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS}`;
+export const MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_SELECTOR = `.mail-list li .${MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS}`;
 export const BAG_SHOP_CATEGORY_SCAN_RING_SELECTOR = `.bag-list li.${BAG_SHOP_CATEGORY_SCAN_RING_CLASS}, .shop-offer-list li.${BAG_SHOP_CATEGORY_SCAN_RING_CLASS}`;
 export const RANK_PIN_REFRESH_RESIDUAL_LINE_SELECTOR = `.${RANK_PIN_REFRESH_RESIDUAL_LINE_CLASS}`;
 export const RECRUIT_WALLET_COMPARE_RESIDUAL_LINE_SELECTOR = `.${RECRUIT_WALLET_COMPARE_RESIDUAL_LINE_CLASS}`;
