@@ -1779,12 +1779,38 @@
         cursor: pointer;
       }
       .queue-next-finish-preview-residual-line:hover { background: #e2d8c8; }
+      .queue-next-finish-preview-residual-deep-line {
+        font-size: 10px;
+        margin: -6px 0 8px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        background: #e4ddd2;
+        border: 1px dashed #9a8870;
+        color: #4a3d2a;
+        cursor: pointer;
+        font-style: italic;
+      }
+      .queue-next-finish-preview-residual-deep-line:hover { background: #dbd2c4; }
       @keyframes domestic-slot-complete-margin-residual-ring-keyframes {
         0% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.85); }
         100% { box-shadow: 0 0 0 6px rgba(201, 162, 39, 0); }
       }
       .main-city-slot-upgrade-tag.domestic-slot-complete-margin-residual-ring {
         animation: domestic-slot-complete-margin-residual-ring-keyframes 1.5s ease-out 1;
+      }
+      @keyframes domestic-slot-preview-cross-link-residual-deep-ring-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(74, 124, 89, 0.9); outline: 2px solid rgba(74, 124, 89, 0.75); }
+        100% { box-shadow: 0 0 0 10px rgba(74, 124, 89, 0); outline: 2px solid rgba(74, 124, 89, 0); }
+      }
+      .main-city-slot-upgrade-tag.domestic-slot-preview-cross-link-residual-deep-ring {
+        animation: domestic-slot-preview-cross-link-residual-deep-ring-keyframes 2s ease-out 1;
+      }
+      @keyframes domestic-queue-complete-focus-residual-deep-ring-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(56, 118, 168, 0.85); }
+        100% { box-shadow: 0 0 0 8px rgba(56, 118, 168, 0); }
+      }
+      .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deep-ring {
+        animation: domestic-queue-complete-focus-residual-deep-ring-keyframes 2.5s ease-out 1;
       }
       .daily-quest-chain-type-subline {
         display: block;
@@ -3264,6 +3290,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .content-panel-actions {
         flex-shrink: 0;
@@ -3513,7 +3540,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-next-finish-preview"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
-      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-next-finish-preview-residual-line"] {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-next-finish-preview-residual-line"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-next-finish-preview-residual-deep-line"] {
         min-width: 0;
         max-width: 100%;
         overflow-wrap: anywhere;
@@ -3871,7 +3900,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="queue-open-daily-anchor"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="domestic-slot-complete-margin-residual-ring"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="domestic-slot-preview-cross-link-residual-deep-ring"],
       #layout-frame.layout-narrow #hud .hud-todo-merged-sweep,
       #layout-frame.layout-narrow #hud [data-role="hud-todo-merged-sweep-line"],
       #layout-frame.layout-narrow #hud .hud-military-todo-sweep,
@@ -3946,8 +3977,12 @@
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-complete-margin-residual-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-complete-margin-residual-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deep-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deep-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list .hero-list-loyalty-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-sweep,

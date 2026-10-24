@@ -53,6 +53,14 @@ export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_LINE_CLASS =
 export const DOMESTIC_SLOT_COMPLETE_MARGIN_RESIDUAL_RING_CLASS =
   "domestic-slot-complete-margin-residual-ring";
 
+/** CLIENT-261 */
+export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_LINE_CLASS =
+  "queue-next-finish-preview-residual-deep-line";
+export const DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_CLASS =
+  "domestic-slot-preview-cross-link-residual-deep-ring";
+export const DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEP_RING_CLASS =
+  "domestic-queue-complete-focus-residual-deep-ring";
+
 /** CLIENT-246: hero list loyalty residual subline (CLIENT-213 baseline). */
 export const HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS = "hero-list-loyalty-residual-subline";
 
@@ -98,7 +106,9 @@ export { DOMESTIC_QUEUE_ETA_SEGMENT_LABEL_CLASS };
 export const DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_LABEL_SELECTOR = `.content-panel[data-center-panel="queue"] .${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_LABEL_CLASS}`;
 export const DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_RING_SELECTOR = `.main-city-slot-overlay .${DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_RING_CLASS}, .main-city-slot-upgrade-tag .${DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_RING_CLASS}, .content-panel[data-center-panel="queue"] .queue-list li.${DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_RING_CLASS}`;
 export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_LINE_SELECTOR = `.content-panel[data-center-panel="queue"] .${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_LINE_CLASS}`;
+export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_LINE_SELECTOR = `.content-panel[data-center-panel="queue"] .${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_LINE_CLASS}`;
 export const DOMESTIC_SLOT_COMPLETE_MARGIN_RESIDUAL_RING_SELECTOR = `.main-city-slot-overlay .${DOMESTIC_SLOT_COMPLETE_MARGIN_RESIDUAL_RING_CLASS}, .main-city-slot-upgrade-tag .${DOMESTIC_SLOT_COMPLETE_MARGIN_RESIDUAL_RING_CLASS}`;
+export const DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_SELECTOR = `.main-city-slot-overlay .${DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_CLASS}, .main-city-slot-upgrade-tag .${DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEP_RING_CLASS}`;
 export const HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_SELECTOR = `.content-panel[data-center-panel="hero"] .hero-list .${HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS}`;
 export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_CLASS}`;
 export const HERO_PANEL_STATE_RESIDUAL_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS}`;
