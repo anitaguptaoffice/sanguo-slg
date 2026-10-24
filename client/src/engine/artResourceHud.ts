@@ -105,3 +105,18 @@ export function wireHudResourceSweep(
     );
   });
 }
+
+/** `renderHud` 重建资源条后恢复点击展开态（CLIENT-148）。 */
+export function restoreHudResourceStripExpanded(hud: ParentNode, expanded: boolean): void {
+  if (!expanded) return;
+  const strip = hud.querySelector('[data-role="hud-resources"]');
+  if (!(strip instanceof HTMLElement)) return;
+  strip.classList.add("hud-resource-expanded");
+  strip.setAttribute("aria-expanded", "true");
+}
+
+/** 读取顶栏资源条是否处于点击展开（hover/focus 不占持久态）。 */
+export function readHudResourceStripExpanded(hud: ParentNode): boolean {
+  const strip = hud.querySelector('[data-role="hud-resources"]');
+  return strip instanceof HTMLElement && strip.classList.contains("hud-resource-expanded");
+}

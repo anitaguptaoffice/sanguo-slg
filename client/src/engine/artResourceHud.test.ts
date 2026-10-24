@@ -3,6 +3,8 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   appendHudResourceStrip,
   CLIENT_032_WIRED_ASSET_IDS,
+  readHudResourceStripExpanded,
+  restoreHudResourceStripExpanded,
   wireHudResourceSweep,
 } from "@/engine/artResourceHud";
 
@@ -51,6 +53,21 @@ describe("appendHudResourceStrip", () => {
     expect(strip.querySelector('[data-role="hud-resource-sweep"]')?.textContent).toBe(
       "粮 50 · 木 1 · 铁 0 · 石 0",
     );
+  });
+
+  it("restores click-expanded state after HUD rebuild (CLIENT-148)", () => {
+    const hud = document.createElement("div");
+    const assets = { getImageForAsset: vi.fn(() => undefined) } as unknown as AssetLoader;
+    appendHudResourceStrip(hud, { food: 1 }, assets);
+    const strip = hud.querySelector('[data-role="hud-resources"]') as HTMLElement;
+    strip.classList.add("hud-resource-expanded");
+    expect(readHudResourceStripExpanded(hud)).toBe(true);
+    hud.replaceChildren();
+    appendHudResourceStrip(hud, { food: 99 }, assets);
+    expect(readHudResourceStripExpanded(hud)).toBe(false);
+    restoreHudResourceStripExpanded(hud, true);
+    expect(readHudResourceStripExpanded(hud)).toBe(true);
+    expect(hud.querySelector('[data-role="hud-resource-sweep"]')?.textContent).toContain("粮 99");
   });
 
   it("falls back to label text when icons missing", () => {

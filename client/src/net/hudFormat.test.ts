@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  diffWalletPositiveGains,
   formatKeyBuildingHudLine,
   formatResourceAmount,
   formatResourceHudGroup,
@@ -19,7 +20,14 @@ describe("hudFormat", () => {
     expect(formatResourceAmount(120_000_000)).toBe("1.2亿");
   });
 
-  it("summarizes wallet increases for HUD flash", () => {
+  it("diffWalletPositiveGains ignores non-positive deltas (CLIENT-148 / CLIENT-051)", () => {
+    expect(diffWalletPositiveGains(undefined, { food: 10, wood: 0 })).toEqual({ food: 10 });
+    expect(diffWalletPositiveGains({ food: 100, wood: 50 }, { food: 250, wood: 10, gold: 5 })).toEqual({
+      food: 150,
+      gold: 5,
+    });
+    expect(diffWalletPositiveGains({ food: 200 }, { food: 100 })).toEqual({});
+    expect(diffWalletPositiveGains({ food: 100 }, { food: 100, iron: 0 })).toEqual({});
     expect(walletResourceIncreases({ food: 100 }, { food: 250, wood: 10 })).toEqual({ food: 150, wood: 10 });
     expect(formatWalletGainBrief({ food: 100 }, { food: 100 })).toBeNull();
     expect(formatWalletGainBrief({ food: 100 }, { food: 1150, gold: 5 })).toBe("+粮1,050 +币5");
@@ -38,6 +46,10 @@ describe("hudFormat", () => {
     expect(formatResourceSweepLine({ food: 120, wood: 100, iron: 40, stone: 80 }, wallet)).toBe(
       "粮 100 +120/h · 木 2,000 +100/h · 铁 0 +40/h · 石 50 +80/h",
     );
+    expect(formatResourceSweepLine({ food: 1 }, wallet)).toBe(
+      "粮 100 +1/h · 木 2,000 +0/h · 铁 0 +0/h · 石 50 +0/h",
+    );
+    expect(formatResourceSweepLine({}, wallet)).toBe("粮 100 · 木 2,000 · 铁 0 · 石 50");
   });
 
   it("groups HUD wallet resources", () => {
