@@ -24,6 +24,8 @@ var (
 	ErrLargessUnknownItem    = errors.New("hero: item cannot be used for largess")
 	ErrGoldLargessNotNeeded = errors.New("hero: gold largess not effective")
 	ErrLoyaltyMax           = errors.New("hero: loyalty already at maximum")
+	ErrHeroNotCaptive       = errors.New("hero: hero is not captive")
+	ErrCaptiveCityMismatch  = errors.New("hero: captive not held in this city")
 )
 
 const (
@@ -32,6 +34,7 @@ const (
 	StatusMarch     int16 = 3 // 出征（与城主互斥，见 office_march.go）
 	StatusExpr      int16 = 4 // 历练
 	StatusCityChief int16 = 5 // 城主（一城一职；legacy state=1）
+	StatusCaptive   int16 = 6 // 俘虏（legacy state=5；招降前不计入招贤馆容量）
 	RecruitScrollID int32 = 2004
 	LoyaltyMin        = 0
 	LoyaltyMax        = 100

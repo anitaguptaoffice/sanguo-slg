@@ -1968,6 +1968,602 @@ func (x *LargessHeroResponse) GetNextLargessAtMs() int64 {
 	return 0
 }
 
+// route: hero.v1.ListCaptiveHeroes
+type CaptiveHeroSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HeroId        int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	TemplateCfgId int32                  `protobuf:"varint,3,opt,name=template_cfg_id,json=templateCfgId,proto3" json:"template_cfg_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,4,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Level         int32                  `protobuf:"varint,5,opt,name=level,proto3" json:"level,omitempty"`
+	Loyalty       int32                  `protobuf:"varint,6,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	Attributes    *HeroAttributes        `protobuf:"bytes,7,opt,name=attributes,proto3" json:"attributes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CaptiveHeroSummary) Reset() {
+	*x = CaptiveHeroSummary{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CaptiveHeroSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaptiveHeroSummary) ProtoMessage() {}
+
+func (x *CaptiveHeroSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaptiveHeroSummary.ProtoReflect.Descriptor instead.
+func (*CaptiveHeroSummary) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *CaptiveHeroSummary) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *CaptiveHeroSummary) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *CaptiveHeroSummary) GetTemplateCfgId() int32 {
+	if x != nil {
+		return x.TemplateCfgId
+	}
+	return 0
+}
+
+func (x *CaptiveHeroSummary) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *CaptiveHeroSummary) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *CaptiveHeroSummary) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
+func (x *CaptiveHeroSummary) GetAttributes() *HeroAttributes {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
+type ListCaptiveHeroesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCaptiveHeroesRequest) Reset() {
+	*x = ListCaptiveHeroesRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCaptiveHeroesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCaptiveHeroesRequest) ProtoMessage() {}
+
+func (x *ListCaptiveHeroesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCaptiveHeroesRequest.ProtoReflect.Descriptor instead.
+func (*ListCaptiveHeroesRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *ListCaptiveHeroesRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+type ListCaptiveHeroesResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Captives      []*CaptiveHeroSummary  `protobuf:"bytes,1,rep,name=captives,proto3" json:"captives,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListCaptiveHeroesResponse) Reset() {
+	*x = ListCaptiveHeroesResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListCaptiveHeroesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListCaptiveHeroesResponse) ProtoMessage() {}
+
+func (x *ListCaptiveHeroesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListCaptiveHeroesResponse.ProtoReflect.Descriptor instead.
+func (*ListCaptiveHeroesResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *ListCaptiveHeroesResponse) GetCaptives() []*CaptiveHeroSummary {
+	if x != nil {
+		return x.Captives
+	}
+	return nil
+}
+
+// route: hero.v1.TrySummonCaptive
+type SummonCostItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemCfgId     int32                  `protobuf:"varint,1,opt,name=item_cfg_id,json=itemCfgId,proto3" json:"item_cfg_id,omitempty"`
+	Quantity      int32                  `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SummonCostItem) Reset() {
+	*x = SummonCostItem{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SummonCostItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SummonCostItem) ProtoMessage() {}
+
+func (x *SummonCostItem) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SummonCostItem.ProtoReflect.Descriptor instead.
+func (*SummonCostItem) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *SummonCostItem) GetItemCfgId() int32 {
+	if x != nil {
+		return x.ItemCfgId
+	}
+	return 0
+}
+
+func (x *SummonCostItem) GetQuantity() int32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
+type TrySummonCaptiveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	HeroId        int64                  `protobuf:"varint,3,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrySummonCaptiveRequest) Reset() {
+	*x = TrySummonCaptiveRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrySummonCaptiveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrySummonCaptiveRequest) ProtoMessage() {}
+
+func (x *TrySummonCaptiveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrySummonCaptiveRequest.ProtoReflect.Descriptor instead.
+func (*TrySummonCaptiveRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *TrySummonCaptiveRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *TrySummonCaptiveRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *TrySummonCaptiveRequest) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+type TrySummonCaptiveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HeroId        int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	GoldCost      int64                  `protobuf:"varint,2,opt,name=gold_cost,json=goldCost,proto3" json:"gold_cost,omitempty"`
+	Items         []*SummonCostItem      `protobuf:"bytes,3,rep,name=items,proto3" json:"items,omitempty"`
+	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrySummonCaptiveResponse) Reset() {
+	*x = TrySummonCaptiveResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[33]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrySummonCaptiveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrySummonCaptiveResponse) ProtoMessage() {}
+
+func (x *TrySummonCaptiveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[33]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrySummonCaptiveResponse.ProtoReflect.Descriptor instead.
+func (*TrySummonCaptiveResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{33}
+}
+
+func (x *TrySummonCaptiveResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *TrySummonCaptiveResponse) GetGoldCost() int64 {
+	if x != nil {
+		return x.GoldCost
+	}
+	return 0
+}
+
+func (x *TrySummonCaptiveResponse) GetItems() []*SummonCostItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *TrySummonCaptiveResponse) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
+}
+
+// route: hero.v1.SureSummonCaptive
+type SureSummonCaptiveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	HeroId        int64                  `protobuf:"varint,3,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SureSummonCaptiveRequest) Reset() {
+	*x = SureSummonCaptiveRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SureSummonCaptiveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SureSummonCaptiveRequest) ProtoMessage() {}
+
+func (x *SureSummonCaptiveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SureSummonCaptiveRequest.ProtoReflect.Descriptor instead.
+func (*SureSummonCaptiveRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *SureSummonCaptiveRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *SureSummonCaptiveRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *SureSummonCaptiveRequest) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+type SureSummonCaptiveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HeroId        int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Level         int32                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Loyalty       int32                  `protobuf:"varint,4,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SureSummonCaptiveResponse) Reset() {
+	*x = SureSummonCaptiveResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SureSummonCaptiveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SureSummonCaptiveResponse) ProtoMessage() {}
+
+func (x *SureSummonCaptiveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SureSummonCaptiveResponse.ProtoReflect.Descriptor instead.
+func (*SureSummonCaptiveResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *SureSummonCaptiveResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *SureSummonCaptiveResponse) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *SureSummonCaptiveResponse) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *SureSummonCaptiveResponse) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
+// route: hero.v1.ReleaseCaptive
+type ReleaseCaptiveRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	HeroId        int64                  `protobuf:"varint,3,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseCaptiveRequest) Reset() {
+	*x = ReleaseCaptiveRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseCaptiveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseCaptiveRequest) ProtoMessage() {}
+
+func (x *ReleaseCaptiveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseCaptiveRequest.ProtoReflect.Descriptor instead.
+func (*ReleaseCaptiveRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *ReleaseCaptiveRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *ReleaseCaptiveRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *ReleaseCaptiveRequest) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+type ReleaseCaptiveResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HeroId        int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReleaseCaptiveResponse) Reset() {
+	*x = ReleaseCaptiveResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReleaseCaptiveResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReleaseCaptiveResponse) ProtoMessage() {}
+
+func (x *ReleaseCaptiveResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReleaseCaptiveResponse.ProtoReflect.Descriptor instead.
+func (*ReleaseCaptiveResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *ReleaseCaptiveResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
 var File_sanguo_hero_v1_hero_proto protoreflect.FileDescriptor
 
 var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
@@ -2248,18 +2844,91 @@ var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
 	0x05, 0x52, 0x09, 0x69, 0x74, 0x65, 0x6d, 0x43, 0x66, 0x67, 0x49, 0x64, 0x12, 0x2b, 0x0a, 0x12,
 	0x6e, 0x65, 0x78, 0x74, 0x5f, 0x6c, 0x61, 0x72, 0x67, 0x65, 0x73, 0x73, 0x5f, 0x61, 0x74, 0x5f,
 	0x6d, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0f, 0x6e, 0x65, 0x78, 0x74, 0x4c, 0x61,
-	0x72, 0x67, 0x65, 0x73, 0x73, 0x41, 0x74, 0x4d, 0x73, 0x2a, 0x5d, 0x0a, 0x0f, 0x4c, 0x61, 0x72,
-	0x67, 0x65, 0x73, 0x73, 0x47, 0x69, 0x66, 0x74, 0x4b, 0x69, 0x6e, 0x64, 0x12, 0x1c, 0x0a, 0x18,
-	0x4c, 0x41, 0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46, 0x54, 0x5f, 0x55, 0x4e, 0x53,
-	0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x15, 0x0a, 0x11, 0x4c, 0x41,
-	0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46, 0x54, 0x5f, 0x47, 0x4f, 0x4c, 0x44, 0x10,
-	0x01, 0x12, 0x15, 0x0a, 0x11, 0x4c, 0x41, 0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46,
-	0x54, 0x5f, 0x49, 0x54, 0x45, 0x4d, 0x10, 0x02, 0x42, 0x4e, 0x5a, 0x4c, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e, 0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74,
-	0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73,
-	0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x68, 0x65, 0x72, 0x6f, 0x2f, 0x76,
-	0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x67, 0x65, 0x73, 0x73, 0x41, 0x74, 0x4d, 0x73, 0x22, 0x81, 0x02, 0x0a, 0x12, 0x43, 0x61,
+	0x70, 0x74, 0x69, 0x76, 0x65, 0x48, 0x65, 0x72, 0x6f, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79,
+	0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74,
+	0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79,
+	0x49, 0x64, 0x12, 0x26, 0x0a, 0x0f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x5f, 0x63,
+	0x66, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0d, 0x74, 0x65, 0x6d,
+	0x70, 0x6c, 0x61, 0x74, 0x65, 0x43, 0x66, 0x67, 0x49, 0x64, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x69,
+	0x73, 0x70, 0x6c, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a,
+	0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x05, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x65,
+	0x76, 0x65, 0x6c, 0x12, 0x18, 0x0a, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x3e, 0x0a,
+	0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x18, 0x07, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1e, 0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68, 0x65, 0x72, 0x6f, 0x2e,
+	0x76, 0x31, 0x2e, 0x48, 0x65, 0x72, 0x6f, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65,
+	0x73, 0x52, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x22, 0x37, 0x0a,
+	0x18, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x61, 0x70, 0x74, 0x69, 0x76, 0x65, 0x48, 0x65, 0x72, 0x6f,
+	0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65, 0x72,
+	0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x22, 0x5b, 0x0a, 0x19, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x61,
+	0x70, 0x74, 0x69, 0x76, 0x65, 0x48, 0x65, 0x72, 0x6f, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x08, 0x63, 0x61, 0x70, 0x74, 0x69, 0x76, 0x65, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68,
+	0x65, 0x72, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x61, 0x70, 0x74, 0x69, 0x76, 0x65, 0x48, 0x65,
+	0x72, 0x6f, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x52, 0x08, 0x63, 0x61, 0x70, 0x74, 0x69,
+	0x76, 0x65, 0x73, 0x22, 0x4c, 0x0a, 0x0e, 0x53, 0x75, 0x6d, 0x6d, 0x6f, 0x6e, 0x43, 0x6f, 0x73,
+	0x74, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x1e, 0x0a, 0x0b, 0x69, 0x74, 0x65, 0x6d, 0x5f, 0x63, 0x66,
+	0x67, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x69, 0x74, 0x65, 0x6d,
+	0x43, 0x66, 0x67, 0x49, 0x64, 0x12, 0x1a, 0x0a, 0x08, 0x71, 0x75, 0x61, 0x6e, 0x74, 0x69, 0x74,
+	0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x71, 0x75, 0x61, 0x6e, 0x74, 0x69, 0x74,
+	0x79, 0x22, 0x68, 0x0a, 0x17, 0x54, 0x72, 0x79, 0x53, 0x75, 0x6d, 0x6d, 0x6f, 0x6e, 0x43, 0x61,
+	0x70, 0x74, 0x69, 0x76, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74,
+	0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79,
+	0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x18,
+	0x54, 0x72, 0x79, 0x53, 0x75, 0x6d, 0x6d, 0x6f, 0x6e, 0x43, 0x61, 0x70, 0x74, 0x69, 0x76, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49,
+	0x64, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x6f, 0x6c, 0x64, 0x5f, 0x63, 0x6f, 0x73, 0x74, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x67, 0x6f, 0x6c, 0x64, 0x43, 0x6f, 0x73, 0x74, 0x12, 0x34,
+	0x0a, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e,
+	0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68, 0x65, 0x72, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x53,
+	0x75, 0x6d, 0x6d, 0x6f, 0x6e, 0x43, 0x6f, 0x73, 0x74, 0x49, 0x74, 0x65, 0x6d, 0x52, 0x05, 0x69,
+	0x74, 0x65, 0x6d, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x22, 0x69,
+	0x0a, 0x18, 0x53, 0x75, 0x72, 0x65, 0x53, 0x75, 0x6d, 0x6d, 0x6f, 0x6e, 0x43, 0x61, 0x70, 0x74,
+	0x69, 0x76, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74, 0x79, 0x5f,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79, 0x49, 0x64,
+	0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x22, 0x87, 0x01, 0x0a, 0x19, 0x53, 0x75,
+	0x72, 0x65, 0x53, 0x75, 0x6d, 0x6d, 0x6f, 0x6e, 0x43, 0x61, 0x70, 0x74, 0x69, 0x76, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64,
+	0x12, 0x21, 0x0a, 0x0c, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e,
+	0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x05, 0x52, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x12, 0x18, 0x0a, 0x07, 0x6c, 0x6f, 0x79,
+	0x61, 0x6c, 0x74, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6c, 0x6f, 0x79, 0x61,
+	0x6c, 0x74, 0x79, 0x22, 0x66, 0x0a, 0x15, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x43, 0x61,
+	0x70, 0x74, 0x69, 0x76, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52,
+	0x08, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74,
+	0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79,
+	0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x22, 0x31, 0x0a, 0x16, 0x52,
+	0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x43, 0x61, 0x70, 0x74, 0x69, 0x76, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x2a, 0x5d,
+	0x0a, 0x0f, 0x4c, 0x61, 0x72, 0x67, 0x65, 0x73, 0x73, 0x47, 0x69, 0x66, 0x74, 0x4b, 0x69, 0x6e,
+	0x64, 0x12, 0x1c, 0x0a, 0x18, 0x4c, 0x41, 0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46,
+	0x54, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12,
+	0x15, 0x0a, 0x11, 0x4c, 0x41, 0x52, 0x47, 0x45, 0x53, 0x53, 0x5f, 0x47, 0x49, 0x46, 0x54, 0x5f,
+	0x47, 0x4f, 0x4c, 0x44, 0x10, 0x01, 0x12, 0x15, 0x0a, 0x11, 0x4c, 0x41, 0x52, 0x47, 0x45, 0x53,
+	0x53, 0x5f, 0x47, 0x49, 0x46, 0x54, 0x5f, 0x49, 0x54, 0x45, 0x4d, 0x10, 0x02, 0x42, 0x4e, 0x5a,
+	0x4c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e, 0x69, 0x74,
+	0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x61, 0x6e,
+	0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x68,
+	0x65, 0x72, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f, 0x76, 0x31, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -2275,7 +2944,7 @@ func file_sanguo_hero_v1_hero_proto_rawDescGZIP() []byte {
 }
 
 var file_sanguo_hero_v1_hero_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_sanguo_hero_v1_hero_proto_goTypes = []any{
 	(LargessGiftKind)(0),                       // 0: sanguo.hero.v1.LargessGiftKind
 	(*PlayerHeroSummary)(nil),                  // 1: sanguo.hero.v1.PlayerHeroSummary
@@ -2306,25 +2975,38 @@ var file_sanguo_hero_v1_hero_proto_goTypes = []any{
 	(*GetCityChiefResponse)(nil),               // 26: sanguo.hero.v1.GetCityChiefResponse
 	(*LargessHeroRequest)(nil),                 // 27: sanguo.hero.v1.LargessHeroRequest
 	(*LargessHeroResponse)(nil),                // 28: sanguo.hero.v1.LargessHeroResponse
-	(*v1.ResourceWallet)(nil),                  // 29: sanguo.common.v1.ResourceWallet
-	(*v1.RewardItem)(nil),                      // 30: sanguo.common.v1.RewardItem
+	(*CaptiveHeroSummary)(nil),                 // 29: sanguo.hero.v1.CaptiveHeroSummary
+	(*ListCaptiveHeroesRequest)(nil),           // 30: sanguo.hero.v1.ListCaptiveHeroesRequest
+	(*ListCaptiveHeroesResponse)(nil),          // 31: sanguo.hero.v1.ListCaptiveHeroesResponse
+	(*SummonCostItem)(nil),                     // 32: sanguo.hero.v1.SummonCostItem
+	(*TrySummonCaptiveRequest)(nil),            // 33: sanguo.hero.v1.TrySummonCaptiveRequest
+	(*TrySummonCaptiveResponse)(nil),           // 34: sanguo.hero.v1.TrySummonCaptiveResponse
+	(*SureSummonCaptiveRequest)(nil),           // 35: sanguo.hero.v1.SureSummonCaptiveRequest
+	(*SureSummonCaptiveResponse)(nil),          // 36: sanguo.hero.v1.SureSummonCaptiveResponse
+	(*ReleaseCaptiveRequest)(nil),              // 37: sanguo.hero.v1.ReleaseCaptiveRequest
+	(*ReleaseCaptiveResponse)(nil),             // 38: sanguo.hero.v1.ReleaseCaptiveResponse
+	(*v1.ResourceWallet)(nil),                  // 39: sanguo.common.v1.ResourceWallet
+	(*v1.RewardItem)(nil),                      // 40: sanguo.common.v1.RewardItem
 }
 var file_sanguo_hero_v1_hero_proto_depIdxs = []int32{
 	1,  // 0: sanguo.hero.v1.ListPlayerHeroesResponse.heroes:type_name -> sanguo.hero.v1.PlayerHeroSummary
 	5,  // 1: sanguo.hero.v1.GetHeroDetailResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
 	5,  // 2: sanguo.hero.v1.UpgradeHeroResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
-	29, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
-	30, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
+	39, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
+	40, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
 	11, // 5: sanguo.hero.v1.ListRecruitTemplatesResponse.templates:type_name -> sanguo.hero.v1.RecruitTemplatePreview
 	5,  // 6: sanguo.hero.v1.HotelRecruitCandidate.attributes:type_name -> sanguo.hero.v1.HeroAttributes
 	14, // 7: sanguo.hero.v1.ListHotelRecruitCandidatesResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
 	14, // 8: sanguo.hero.v1.RefreshHotelRecruitPoolResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
 	0,  // 9: sanguo.hero.v1.LargessHeroRequest.gift_kind:type_name -> sanguo.hero.v1.LargessGiftKind
-	10, // [10:10] is the sub-list for method output_type
-	10, // [10:10] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	5,  // 10: sanguo.hero.v1.CaptiveHeroSummary.attributes:type_name -> sanguo.hero.v1.HeroAttributes
+	29, // 11: sanguo.hero.v1.ListCaptiveHeroesResponse.captives:type_name -> sanguo.hero.v1.CaptiveHeroSummary
+	32, // 12: sanguo.hero.v1.TrySummonCaptiveResponse.items:type_name -> sanguo.hero.v1.SummonCostItem
+	13, // [13:13] is the sub-list for method output_type
+	13, // [13:13] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_hero_v1_hero_proto_init() }
@@ -2338,7 +3020,7 @@ func file_sanguo_hero_v1_hero_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_hero_v1_hero_proto_rawDesc), len(file_sanguo_hero_v1_hero_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   28,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

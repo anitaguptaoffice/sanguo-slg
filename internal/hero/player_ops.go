@@ -42,6 +42,7 @@ type InventoryPort interface {
 	LoadWalletAndItems(ctx context.Context, p PlayerRef) (Resources, map[int32]int32, error)
 	ApplyRecruitSpend(ctx context.Context, p PlayerRef, walletBefore Resources, itemsBefore map[int32]int32, walletAfter Resources, itemsAfter map[int32]int32) error
 	ApplyLargessSpend(ctx context.Context, p PlayerRef, goldSpent int64, itemCfgID int32) error
+	SpendItemQty(ctx context.Context, p PlayerRef, itemCfgID int32, qty int32) error
 }
 
 // LoadPlayerState hydrates recruit/list state from the hero store and inventory port.
@@ -77,6 +78,13 @@ func (s *Service) ListPlayerHeroes(ctx context.Context, p PlayerRef, q ListQuery
 	if err != nil {
 		return ListResult{}, err
 	}
+	var owned []*Hero
+	for _, h := range heroes {
+		if h.Status != StatusCaptive {
+			owned = append(owned, h)
+		}
+	}
+	heroes = owned
 	total := len(heroes)
 	if q.Offset < 0 {
 		q.Offset = 0

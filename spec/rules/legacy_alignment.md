@@ -46,9 +46,26 @@
 
 **决策**：跟原版 **客栈池** 而非「仅模板抽卡+容量」；美术 roster 1009+ 冻结与本服逻辑分轨。活动将 `generateHeroFromConfig`、结交/游说、野兵 rumor **不在** HERO-hotel-001。
 
+## 5. 俘虏招降 / 释放（Captive）
+
+| 项 | Legacy（#82 `HeroFunc.php`） | M1 实现 |
+|---|---|---|
+| 状态 | `sys_city_hero.state=5` 俘虏 | `player_hero.status=6`（`StatusCaptive`；对齐 legacy state=5 语义，与城主 `status=5` 分轨） |
+| 元数据 | `sys_hero_captive` + `mem_hero_summon` 道具需求 | `player_hero_captive`（城 `city_id` + 招降道具闸） |
+| 列表 | 城池将领面板 | `hero.v1.ListCaptiveHeroes` |
+| 预检 / 确认 | `trySummonHero` / `sureSummonHero` | `TrySummonCaptive` / `SureSummonCaptive` |
+| 黄金 | `getHeroSummonGold`（三维溢出 ×50 后 ×50） | `HeroSummonGold` = `HeroSalary`×50；扣 `player_wallet.gold`（与客栈口径一致） |
+| 高等级道具 | `makeHeroSummonNeed` 随机珠宝 gid 30–38 | **M1 delta**：等级 ≥50 固定 `item_cfg_id=2050`，数量 `1+(level-50)/10` |
+| 爵位 | `nobility` 门槛 | **M1 delta**：暂不校验爵位 |
+| 名将概率 / 结交 | `sys_lionize` 成功率 | **M1 delta**：跳过（L8 #1197）；名将按普通俘虏招降 |
+| 释放 | `releaseHero` → 野地 + 删 captive | `ReleaseCaptive` 删除 `player_hero` 与 captive 行 |
+| 容量 | `cityHasHeroPosition` | 招降成功时复用 `HasHeroCapacity`（俘虏不计入 `CountOwnedHeroes`） |
+| 产俘 | 战报抓将 | **M1**：`InjectCaptive` 测试/GM 注入；真实战报产俘另开 MIL 卡 |
+
 ## 验证
 
 - `internal/military/march/legacy_align_test.go`：legacy 欧氏 + 6000 对拍常量  
 - `internal/military/battle/legacy_pk_test.go`：PKDamage 样本  
 - `internal/domestic/production_align_test.go`：`domestic.md` 一小时产出  
 - `internal/hero/hotel_test.go`：客栈招募与招贤馆容量拒绝  
+- `internal/hero/captive_test.go`：俘虏招降/释放与容量、道具闸  

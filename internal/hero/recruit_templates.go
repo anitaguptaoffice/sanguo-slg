@@ -32,6 +32,9 @@ func (s *Service) ListRecruitTemplates(ctx context.Context, p PlayerRef, q ListR
 		return ListRecruitTemplatesResult{}, err
 	}
 	for _, h := range heroes {
+		if h.Status == StatusCaptive || h.TemplateCfgID == 0 {
+			continue
+		}
 		owned[h.TemplateCfgID] = true
 	}
 	poolFilter := q.Pool

@@ -89,6 +89,23 @@ func heroWalletFromContent(w content.ResourceWallet) hero.Resources {
 	return hero.Resources{Food: w.Food, Wood: w.Wood, Stone: w.Stone, Iron: w.Iron, Gold: w.Gold}
 }
 
+func (h *heroInventory) SpendItemQty(ctx context.Context, p hero.PlayerRef, itemCfgID int32, qty int32) error {
+	if qty <= 0 || itemCfgID <= 0 {
+		return nil
+	}
+	ref := content.PlayerRef{ServerID: p.ServerID, PlayerID: p.PlayerID}
+	if h.srv.contentSvc == nil {
+		return hero.ErrInsufficientItem
+	}
+	if _, err := h.srv.contentSvc.Remove(ref, itemCfgID, qty); err != nil {
+		if errors.Is(err, content.ErrInsufficientItems) {
+			return hero.ErrInsufficientItem
+		}
+		return err
+	}
+	return nil
+}
+
 func (h *heroInventory) ApplyLargessSpend(ctx context.Context, p hero.PlayerRef, goldSpent int64, itemCfgID int32) error {
 	ref := content.PlayerRef{ServerID: p.ServerID, PlayerID: p.PlayerID}
 	if goldSpent > 0 {

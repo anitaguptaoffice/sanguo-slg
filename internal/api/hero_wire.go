@@ -13,6 +13,7 @@ func (s *Server) wireHeroService(pool *pgxpool.Pool) {
 	svc := hero.NewService()
 	if pool != nil {
 		svc.UseStore(hero.NewPGStore(pool))
+		svc.CaptiveStore = hero.NewPGCaptiveStore(pool)
 		svc.HotelStore = hero.NewPGHotelStore(pool)
 	}
 	s.heroSvc = svc

@@ -18,6 +18,7 @@ type Store interface {
 	GetAssignmentByHero(ctx context.Context, serverID int32, heroID int64) (*Assignment, error)
 	LastLargessAt(ctx context.Context, serverID int32, heroID int64) (time.Time, error)
 	SetLastLargessAt(ctx context.Context, serverID int32, heroID int64, at time.Time) error
+	DeleteHero(ctx context.Context, serverID int32, heroID int64) error
 }
 
 type MemStore struct {
@@ -128,6 +129,18 @@ func (m *MemStore) LastLargessAt(_ context.Context, sid int32, heroID int64) (ti
 		return time.Time{}, nil
 	}
 	return m.lastLargessAt[heroID], nil
+}
+
+func (m *MemStore) DeleteHero(_ context.Context, serverID int32, heroID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	h, ok := m.heroes[heroID]
+	if ok && h.ServerID == serverID {
+		delete(m.heroes, heroID)
+		delete(m.assignments, heroID)
+		delete(m.lastLargessAt, heroID)
+	}
+	return nil
 }
 
 func (m *MemStore) SetLastLargessAt(_ context.Context, sid int32, heroID int64, at time.Time) error {

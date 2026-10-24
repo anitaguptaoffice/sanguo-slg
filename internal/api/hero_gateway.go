@@ -17,6 +17,10 @@ const (
 	RouteClearCityChief             = "hero.v1.ClearCityChief"
 	RouteGetCityChief               = "hero.v1.GetCityChief"
 	RouteLargessHero                = "hero.v1.LargessHero"
+	RouteListCaptiveHeroes          = "hero.v1.ListCaptiveHeroes"
+	RouteTrySummonCaptive           = "hero.v1.TrySummonCaptive"
+	RouteSureSummonCaptive          = "hero.v1.SureSummonCaptive"
+	RouteReleaseCaptive             = "hero.v1.ReleaseCaptive"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -33,5 +37,9 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteClearCityChief:             s.handleClearCityChief,
 		RouteGetCityChief:               s.handleGetCityChief,
 		RouteLargessHero:                s.handleLargessHero,
+		RouteListCaptiveHeroes:          s.handleListCaptiveHeroes,
+		RouteTrySummonCaptive:           s.handleTrySummonCaptive,
+		RouteSureSummonCaptive:          s.handleSureSummonCaptive,
+		RouteReleaseCaptive:             s.handleReleaseCaptive,
 	}
 }
