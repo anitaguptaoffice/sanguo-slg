@@ -1,0 +1,479 @@
+{
+  "art_asset_source_sha": "7c401f7381576fd8da769cb963354b29e5c0f0c4",
+  "art_draft_pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/649",
+  "coordination_board_pr": "https://github.com/anitaguptaoffice/sanguo-slg/pull/108",
+  "captured_at": "2026-10-24T04:26:53.088Z",
+  "asset_id": "ui.icon.action.refresh.v1",
+  "label_mapping": {
+    "refresh": "刷新"
+  },
+  "title_aria_mapping": {
+    "refresh": "刷新状态"
+  },
+  "viewports": {
+    "maincity-1600x900-full.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 651374
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "refresh",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "visibilityOk": true,
+            "hitTargetOk": true,
+            "meetsMinVisibleHit": true,
+            "hitWrapMeetsMinVisible": true,
+            "minVisibleHitCss": 44,
+            "label": "刷新",
+            "ariaLabel": "刷新状态",
+            "title": "刷新状态",
+            "iconSrc": "http://127.0.0.1:16210/assets/art/v1/textures/1x/ui/icon_action_refresh.png",
+            "buttonRect": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "hitWrapRect": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionButton": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionHitWrap": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true,
+            "edgeHitProof": {
+              "elementFromPoint": [
+                {
+                  "name": "center",
+                  "x": 156,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "left",
+                  "x": 111,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "right",
+                  "x": 201,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "top",
+                  "x": 156,
+                  "y": 854,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "bottom",
+                  "x": 156,
+                  "y": 892,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                }
+              ],
+              "allProbesHitTarget": true,
+              "centerHitsButton": true
+            }
+          }
+        ]
+      }
+    },
+    "maincity-3200x1800-full.jpg": {
+      "jpeg": {
+        "quality": 58,
+        "bytes": 992064
+      },
+      "mount": {
+        "uiScale": 1,
+        "scrollMetrics": {
+          "scrollWidth": 1638,
+          "clientWidth": 1585,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "refresh",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "visibilityOk": true,
+            "hitTargetOk": true,
+            "meetsMinVisibleHit": true,
+            "hitWrapMeetsMinVisible": true,
+            "minVisibleHitCss": 44,
+            "label": "刷新",
+            "ariaLabel": "刷新状态",
+            "title": "刷新状态",
+            "iconSrc": "http://127.0.0.1:16210/assets/art/v1/textures/2x/ui/icon_action_refresh.png",
+            "buttonRect": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "hitWrapRect": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionButton": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionHitWrap": {
+              "left": 108,
+              "top": 851,
+              "width": 96,
+              "height": 44
+            },
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true,
+            "edgeHitProof": {
+              "elementFromPoint": [
+                {
+                  "name": "center",
+                  "x": 156,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "left",
+                  "x": 111,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "right",
+                  "x": 201,
+                  "y": 873,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "top",
+                  "x": 156,
+                  "y": 854,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "bottom",
+                  "x": 156,
+                  "y": 892,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                }
+              ],
+              "allProbesHitTarget": true,
+              "centerHitsButton": true
+            }
+          }
+        ]
+      }
+    },
+    "maincity-1280x720-full.jpg": {
+      "jpeg": {
+        "quality": 90,
+        "bytes": 390289
+      },
+      "mount": {
+        "uiScale": 0.8,
+        "scrollMetrics": {
+          "scrollWidth": 1632,
+          "clientWidth": 1265,
+          "scrollLeft": 0
+        },
+        "iconButtons": [
+          {
+            "action": "refresh",
+            "onScreen": true,
+            "ok": true,
+            "structuralOk": true,
+            "visibilityOk": true,
+            "hitTargetOk": true,
+            "meetsMinVisibleHit": true,
+            "hitWrapMeetsMinVisible": true,
+            "minVisibleHitCss": 44,
+            "label": "刷新",
+            "ariaLabel": "刷新状态",
+            "title": "刷新状态",
+            "iconSrc": "http://127.0.0.1:16210/assets/art/v1/textures/1x/ui/icon_action_refresh.png",
+            "buttonRect": {
+              "left": 108,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "hitWrapRect": {
+              "left": 108,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionButton": {
+              "left": 108,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "visibleIntersectionHitWrap": {
+              "left": 108,
+              "top": 675.59375,
+              "width": 96,
+              "height": 44
+            },
+            "buttonCss": {
+              "w": 96,
+              "h": 44
+            },
+            "hitWrapCss": {
+              "w": 96,
+              "h": 44
+            },
+            "buttonFullyVisible": true,
+            "iconOverlapsLabel": false,
+            "iconInsideButton": true,
+            "labelInsideButton": true,
+            "iconInsideVisibleRegion": true,
+            "labelInsideVisibleRegion": true,
+            "edgeHitProof": {
+              "elementFromPoint": [
+                {
+                  "name": "center",
+                  "x": 156,
+                  "y": 697.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "left",
+                  "x": 111,
+                  "y": 697.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "right",
+                  "x": 201,
+                  "y": 697.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "top",
+                  "x": 156,
+                  "y": 678.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                },
+                {
+                  "name": "bottom",
+                  "x": 156,
+                  "y": 716.59375,
+                  "elementTag": "BUTTON",
+                  "hitsButton": true,
+                  "hitsTarget": true
+                }
+              ],
+              "allProbesHitTarget": true,
+              "centerHitsButton": true
+            }
+          }
+        ]
+      }
+    }
+  },
+  "refresh_button_1280": {
+    "action": "refresh",
+    "onScreen": true,
+    "ok": true,
+    "structuralOk": true,
+    "visibilityOk": true,
+    "hitTargetOk": true,
+    "meetsMinVisibleHit": true,
+    "hitWrapMeetsMinVisible": true,
+    "minVisibleHitCss": 44,
+    "label": "刷新",
+    "ariaLabel": "刷新状态",
+    "title": "刷新状态",
+    "iconSrc": "http://127.0.0.1:16210/assets/art/v1/textures/1x/ui/icon_action_refresh.png",
+    "buttonRect": {
+      "left": 108,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "hitWrapRect": {
+      "left": 108,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "visibleIntersectionButton": {
+      "left": 108,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "visibleIntersectionHitWrap": {
+      "left": 108,
+      "top": 675.59375,
+      "width": 96,
+      "height": 44
+    },
+    "buttonCss": {
+      "w": 96,
+      "h": 44
+    },
+    "hitWrapCss": {
+      "w": 96,
+      "h": 44
+    },
+    "buttonFullyVisible": true,
+    "iconOverlapsLabel": false,
+    "iconInsideButton": true,
+    "labelInsideButton": true,
+    "iconInsideVisibleRegion": true,
+    "labelInsideVisibleRegion": true,
+    "edgeHitProof": {
+      "elementFromPoint": [
+        {
+          "name": "center",
+          "x": 156,
+          "y": 697.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "left",
+          "x": 111,
+          "y": 697.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "right",
+          "x": 201,
+          "y": 697.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "top",
+          "x": 156,
+          "y": 678.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        },
+        {
+          "name": "bottom",
+          "x": 156,
+          "y": 716.59375,
+          "elementTag": "BUTTON",
+          "hitsButton": true,
+          "hitsTarget": true
+        }
+      ],
+      "allProbesHitTarget": true,
+      "centerHitsButton": true
+    }
+  },
+  "layout_notes": [
+    "96×44 toolbar chrome; 32px icon + 4px gap + two-character label inside button.",
+    ".toolbar-btn-hit wrap keeps effective hit target ≥44×44 CSS px.",
+    "hit-proof exports visibleIntersection w/h (scroll∩toolbar∩layout-frame) and edge elementFromPoint probes.",
+    "ok requires consistency: when buttonFullyVisible is false, meetsMinVisibleHit must be true for ok:true.",
+    "Disabled styling uses ui.button.toolbar.v1 chrome only — no per-icon four-state sprites.",
+    "DPR2 shot: 1600×900 logical viewport, deviceScaleFactor=2 → 3200×1800 JPEG pixels."
+  ],
+  "banned_unmerged": [
+    "#649",
+    "#108",
+    "#77",
+    "#82",
+    "#100",
+    "#126",
+    "#444",
+    "#481",
+    "#506",
+    "#637"
+  ]
+}

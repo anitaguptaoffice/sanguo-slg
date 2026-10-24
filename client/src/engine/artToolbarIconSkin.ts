@@ -72,6 +72,11 @@ export const TOOLBAR_ICON_BY_ACTION: Record<string, { assetId: string; label: st
     label: "商城",
     title: "商城",
   },
+  refresh: {
+    assetId: "ui.icon.action.refresh.v1",
+    label: "刷新",
+    title: "刷新状态",
+  },
 };
 
 export type ToolbarIconBtnState = "normal" | "hover" | "pressed" | "disabled";

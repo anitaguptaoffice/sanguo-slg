@@ -6,6 +6,7 @@ import {
   PANEL_ASSET_DEFAULT,
   PANEL_ASSET_MARCH,
 } from "@/engine/artPanelSkin";
+import { PANEL_FILTER_CHIP_BAR_CLASS } from "@/engine/panelFilterChipBarClass";
 
 /** Bottom toolbar height (layout-landscape) + focus-ring slack for scroll padding. */
 export const FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX = 64;
@@ -47,17 +48,10 @@ export const CLIENT_127_PANEL_SCROLL_ROLE_BY_CENTER_ID: Record<
  * Filter chip / phase bar roots inside each panel.
  * Soft-deps CLIENT-122～125: may add `data-ui-filter-chip` inside these bars.
  */
-export const PANEL_FILTER_CHIP_BAR_CLASS = "panel-filter-chip-bar";
+export { PANEL_FILTER_CHIP_BAR_CLASS } from "@/engine/panelFilterChipBarClass";
 
 /** CLIENT-155 / soft-dep CLIENT-150: chain progress secondary line on daily quest rows. */
 export const DAILY_QUEST_PROGRESS_SECONDARY_CLASS = "daily-quest-row-progress";
-
-/** CLIENT-169 / CLIENT-171: multi chain_id tab bar above daily quest filters at 1280×720. */
-export {
-  DAILY_CHAIN_TAB_BAR_CLASS,
-  DAILY_CHAIN_TAB_CLASS,
-  DAILY_CHAIN_TAB_SESSION_KEY,
-} from "@/engine/wave32MainCityBuildHeroShopDailyWorldNarrowManifest";
 
 /** CLIENT-163 / soft-dep CLIENT-159: mail inbox batch toolbar hosts claim-all beside filter chips. */
 export const MAIL_CLAIM_ALL_ATTACHMENTS_ACTION = "claim-mail-all";
@@ -99,3 +93,10 @@ export function mountFilterListPanelSkins(root: HTMLElement, assets: AssetLoader
   if (isFilterListArtSkinOff(root)) return;
   mountFilterUiSkins(root, assets);
 }
+
+/** CLIENT-169 / CLIENT-171: multi chain_id tab bar above daily quest filters at 1280×720. */
+export {
+  DAILY_CHAIN_TAB_BAR_CLASS,
+  DAILY_CHAIN_TAB_CLASS,
+  DAILY_CHAIN_TAB_SESSION_KEY,
+} from "@/engine/wave32MainCityBuildHeroShopDailyWorldNarrowManifest";

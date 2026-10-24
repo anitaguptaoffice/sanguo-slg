@@ -16,13 +16,13 @@ function mockImg(src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAA
 function mockAssets(opts?: { withButtonStates?: boolean }): AssetLoader {
   const withStates = opts?.withButtonStates ?? false;
   const getButtonImage = vi.fn((id: string, state: string) => {
-    if (!id.startsWith("ui.icon.toolbar.")) return undefined;
+    if (!id.startsWith("ui.icon.toolbar.") && !id.startsWith("ui.icon.action.")) return undefined;
     if (!withStates) return undefined;
     const img = mockImg(`data:image/gif;base64,${state}`);
     return { img, scale: 1 as const };
   });
   const getImageForAsset = vi.fn((id: string) =>
-    id.startsWith("ui.icon.toolbar.")
+    id.startsWith("ui.icon.toolbar.") || id.startsWith("ui.icon.action.")
       ? {
           img: mockImg(),
           meta: { id, display_size: { w: 32, h: 32 } },
@@ -34,7 +34,9 @@ function mockAssets(opts?: { withButtonStates?: boolean }): AssetLoader {
     getButtonImage,
     getImageForAsset,
     getArtMeta: vi.fn((id: string) =>
-      id.startsWith("ui.icon.toolbar.") ? { id, display_size: { w: 32, h: 32 } } : undefined,
+      id.startsWith("ui.icon.toolbar.") || id.startsWith("ui.icon.action.")
+        ? { id, display_size: { w: 32, h: 32 } }
+        : undefined,
     ),
   } as unknown as AssetLoader;
 }
@@ -56,8 +58,8 @@ describe("resolveToolbarIconPack", () => {
 });
 
 describe("mountToolbarIcons", () => {
-  it("maps fourteen toolbar actions to two-character labels and icon nodes", () => {
-    expect(Object.keys(TOOLBAR_ICON_BY_ACTION)).toHaveLength(14);
+  it("maps fifteen toolbar actions to two-character labels and icon nodes", () => {
+    expect(Object.keys(TOOLBAR_ICON_BY_ACTION)).toHaveLength(15);
     const root = document.createElement("div");
     root.innerHTML = `
       <div class="toolbar-scroll-inner">
@@ -77,6 +79,25 @@ describe("mountToolbarIcons", () => {
       label: "战报",
       title: "战报",
     });
+  });
+
+  it("maps refresh action icon with two-char label and four-char title/aria", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <div class="toolbar-scroll-inner">
+        <button type="button" data-action="refresh" title="刷新状态">刷新状态</button>
+      </div>`;
+    mountToolbarIcons(root, mockAssets());
+    const refresh = root.querySelector('[data-action="refresh"]')!;
+    expect(TOOLBAR_ICON_BY_ACTION.refresh).toEqual({
+      assetId: "ui.icon.action.refresh.v1",
+      label: "刷新",
+      title: "刷新状态",
+    });
+    expect(refresh.querySelector(".toolbar-btn-icon")).toBeTruthy();
+    expect(refresh.querySelector(".toolbar-btn-label")?.textContent).toBe("刷新");
+    expect(refresh.getAttribute("aria-label")).toBe("刷新状态");
+    expect(refresh.getAttribute("title")).toBe("刷新状态");
   });
 
   it("skips icon mount when data-art-skin=off", () => {
