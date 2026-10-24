@@ -64,7 +64,7 @@ import {
   validateBatchClaimDailySelection,
 } from "@/net/dailyQuestBatchClaim";
 import {
-  formatDailyQuestProgressSecondary,
+  appendDailyQuestRowSecondary,
   formatDailyQuestRowPrimary,
 } from "@/net/dailyQuestProgressFormat";
 import {
@@ -455,13 +455,7 @@ export class DailyQuestPanels {
         main.className = "daily-quest-row-main";
         main.textContent = line;
         li.appendChild(main);
-        const secondary = formatDailyQuestProgressSecondary(q);
-        if (secondary) {
-          const secondarySpan = document.createElement("span");
-          secondarySpan.className = "daily-quest-row-secondary";
-          secondarySpan.textContent = secondary;
-          li.appendChild(secondarySpan);
-        }
+        appendDailyQuestRowSecondary(li, q);
         for (const tag of dailyQuestCrossLinkTags(q)) {
           const tagBtn = document.createElement("button");
           tagBtn.type = "button";

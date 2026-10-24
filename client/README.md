@@ -987,6 +987,8 @@ cd client && npm install && npm run dev
 
 **CLIENT-169（日常多 chain tab）**：顶栏 **chain 类型 tab**（如 400 主线 / 401 支线，`pickDailyChainTabs` 对空链隐藏）；`sessionStorage` 键 **`daily-chain-tab-v1`** 记忆上次 tab。`ListPlayerQuests` `chain_id=0` 拉全链快照后按 tab 过滤，**切换 tab** 时 `findFirstInProgressQuestIndex` 定位首条 `progress_current<progress_target` 并 `scrollIntoView`；**可领取**筛选与 **批量领取**（CLIENT-150/159）不退化；**主线（400）tab** 内可领 chip 与 **CLIENT-162** HUD 日常角标一致。单测：`dailyQuestChainTab.test.ts`、`DailyQuestPanels.test.ts`。
 
+**CLIENT-174（日常进度条与奖励道具扫读）**：日常列表行 **次行** 在 `formatDailyQuestProgressSecondary` 文案下展示细进度条 **`daily-quest-progress`** / **`daily-quest-progress-fill`**（`progress_current`/`progress_target` 宽度经 `clampDailyQuestProgressPercent` 钳制）；有 cfg 道具奖励时追加 **`formatDailyQuestRewardLine`**（`reward_item_id`/`quantity` 或 DATA-002 回退，无则省略）。不新 quest RPC；**CLIENT-169** chain tab、**CLIENT-150** 领取脉冲、**CLIENT-162** HUD 角标不退化。单测：`dailyQuestProgressFormat.test.ts`、`DailyQuestPanels.test.ts`、`filterListNarrowManifest.test.ts`。
+
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
 军团成员列表每行 **提到** 将 `@显示名 ` 填入聊天输入（`formatGuildMentionDraft`），并切换到军团聊天 tab；未入军团时按钮 hidden。**CLIENT-076** 刷新 meta 不退化。
