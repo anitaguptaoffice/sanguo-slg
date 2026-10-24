@@ -12,11 +12,14 @@ type UpgradeResult struct {
 	UpgradeExpCost  int64
 }
 
-// ApplyStatsForLevel recomputes stored attrs from template growth at level.
+// ApplyStatsForLevel recomputes stored attrs from template growth at level plus point adds.
 func ApplyStatsForLevel(h *Hero, t Template, level int32) {
 	st := StatsAtLevel(t, level)
 	h.Level = level
-	h.Force, h.Intel, h.Politics, h.Command = st.Force, st.Intel, st.Politics, st.Command
+	h.Force = st.Force + h.ForceAdd
+	h.Intel = st.Intel + h.IntelAdd
+	h.Politics = st.Politics + h.PoliticsAdd
+	h.Command = st.Command
 }
 
 // UpgradeHeroOnce applies legacy upgradeHero rules for one level (M1 cap, idle-only).

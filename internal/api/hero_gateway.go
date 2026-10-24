@@ -10,6 +10,8 @@ const (
 	RouteRecruitHero                = "hero.v1.RecruitHero"
 	RouteListRecruitTemplates       = "hero.v1.ListRecruitTemplates"
 	RouteUpgradeHero                = "hero.v1.UpgradeHero"
+	RouteAddHeroPoint               = "hero.v1.AddHeroPoint"
+	RouteClearHeroPoint             = "hero.v1.ClearHeroPoint"
 	RouteListHotelRecruitCandidates = "hero.v1.ListHotelRecruitCandidates"
 	RouteRefreshHotelRecruitPool    = "hero.v1.RefreshHotelRecruitPool"
 	RouteRecruitHotelCandidate      = "hero.v1.RecruitHotelCandidate"
@@ -37,6 +39,8 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteRecruitHero:                s.handleRecruitHero,
 		RouteListRecruitTemplates:       s.handleListRecruitTemplates,
 		RouteUpgradeHero:                s.handleUpgradeHero,
+		RouteAddHeroPoint:               s.handleAddHeroPoint,
+		RouteClearHeroPoint:             s.handleClearHeroPoint,
 		RouteListHotelRecruitCandidates: s.handleListHotelRecruitCandidates,
 		RouteRefreshHotelRecruitPool:    s.handleRefreshHotelRecruitPool,
 		RouteRecruitHotelCandidate:      s.handleRecruitHotelCandidate,

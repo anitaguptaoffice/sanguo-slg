@@ -27,7 +27,9 @@ var (
 	ErrHeroNotCaptive       = errors.New("hero: hero is not captive")
 	ErrCaptiveCityMismatch  = errors.New("hero: captive not held in this city")
 	ErrHeroNotComing        = errors.New("hero: hero is not coming")
-	ErrComingCityMismatch   = errors.New("hero: coming offer not for this city")
+	ErrComingCityMismatch    = errors.New("hero: coming offer not for this city")
+	ErrInsufficientPotential = errors.New("hero: insufficient potential points")
+	ErrInvalidPointTargets   = errors.New("hero: invalid point targets")
 )
 
 const (
@@ -77,6 +79,7 @@ type Hero struct {
 	DisplayName                    string
 	Loyalty                        int
 	Force, Intel, Politics, Command int32
+	ForceAdd, IntelAdd, PoliticsAdd int32
 	Status                         int16
 	CreatedAt                      time.Time
 }

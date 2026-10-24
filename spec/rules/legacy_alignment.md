@@ -87,6 +87,18 @@
 | 容量 | `cityHasHeroPosition` | `HasHeroCapacity` + `CountOwnedHeroes`（同客栈/俘虏） |
 | 爵位 / 同时结交上限 | 爵位≥2；state=1 最多 2 人（道具可扩） | **M1 delta**：暂不校验 |
 
+## 8. 潜力加点 / 洗点（Points）
+
+| 项 | Legacy（#82 `HeroFunc.php`） | M1 实现 |
+|---|---|---|
+| 加点 | `addHeroPoint` 设置 `affairs_add` / `bravery_add` / `wisdom_add` | `AddHeroPoint` 设置 `politics_add` / `force_add` / `intel_add` |
+| 目标值 | 请求为内政/勇武/智力**绝对值** | 请求为 `politics` / `force` / `intel` 绝对值（对齐 legacy 三维） |
+| 潜力池 | `levelAdd`（君主将 3×level + 爵位加成） | **M1 delta**：`PointBudget(level)=level` |
+| 统率 | `command = level + command_base`（不参与手动加点） | `command` 仅随等级成长（`StatsAtLevel`），不可加点 |
+| 校验 | 在城；潜力不足；不可下调已加点 | `StatusIdle`；`ErrInsufficientPotential`；`ErrInvalidPointTargets` |
+| 洗点 | `clearHeroPoint` → `useXiShuiDan`（洗髓丹 `ceil(level/10)`） | `ClearHeroPoint` 清零 adds；**M1 delta**：不扣道具 |
+| 出征 | `isHeroInCity` 拒绝 | 非 `StatusIdle` → `ErrHeroNotInCity` |
+
 ## 验证
 
 - `internal/military/march/legacy_align_test.go`：legacy 欧氏 + 6000 对拍常量  
@@ -96,3 +108,4 @@
 - `internal/hero/captive_test.go`：俘虏招降/释放与容量、道具闸  
 - `internal/hero/coming_test.go`：来投接受/拒绝与容量、非 coming 拒绝  
 - `internal/hero/persuade_test.go`：结交好感、达标招入、容量/冷却/好感不足拒绝  
+- `internal/hero/points_test.go`：潜力加点/洗点、出征拒绝、潜力不足  
