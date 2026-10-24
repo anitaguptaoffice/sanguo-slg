@@ -236,8 +236,26 @@ export function formatGuildMentionDraft(displayName: string): string {
   return `@${name} `;
 }
 
+/** 成员行主行：昵称（CLIENT-144 职务标签由 DOM chip 展示）。 */
+export function formatGuildMemberPrimaryNick(member: GuildMemberRow): string {
+  return (member.display_name ?? "?").trim() || "?";
+}
+
+/** 成员行次行：玩家 id 截断、战力与加入时间。 */
+export function formatGuildMemberSecondaryLine(member: GuildMemberRow): string {
+  const parts: string[] = [];
+  if (member.player_id && member.player_id > 0) {
+    parts.push(truncatePlayerId(member.player_id));
+  }
+  parts.push(`战力 ${member.power ?? 0}`);
+  if (member.joined_at_ms) {
+    parts.push(`加入 ${formatTimeMs(member.joined_at_ms)}`);
+  }
+  return parts.join(" · ");
+}
+
 export function formatGuildMemberLine(member: GuildMemberRow, opts?: { includeRoleLabel?: boolean }): string {
-  const name = member.display_name ?? "?";
+  const name = formatGuildMemberPrimaryNick(member);
   const who =
     member.player_id && member.player_id > 0 ? `${name} ${truncatePlayerId(member.player_id)}` : name;
   const parts = [who];

@@ -606,7 +606,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 1. `make dev` 打开 **排行**，切换战力/资源榜后点 **刷新排行榜**：列表更新且出现 **上次更新** 行；刷新过程中按钮不可点。
 2. **聊天**（世界/私聊/军团）点 **刷新**：`ListChatMessages` 成功后同样展示时间戳；空列表仍用 CLIENT-029/030 密度文案。
 3. 断网或网关错误：状态行显示 **刷新失败：…**（`formatSocialPanelRefreshError`），状态栏同步 gateway 摘要。
-4. **CLIENT-076**：排行/军团/聊天三面板刷新共用 `formatPanelRefreshMeta`（in-flight **刷新中…** + spinner、成功 **上次更新**、失败 **`[code]`** + **重试**）；单测：`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
+4. **CLIENT-076**：排行/军团/聊天三面板刷新共用 `formatPanelRefreshMeta`（in-flight **刷新中…** + spinner、成功 **上次刷新**（**CLIENT-144** `formatPanelRefreshStamp`）、失败 **`[code]`** + **重试**）；单测：`panelRefreshStamp.test.ts`、`socialRefreshFormat.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（将领详情 CLIENT-014）
 
@@ -1160,7 +1160,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
 
 1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。**CLIENT-097**：点击榜单行 — 战力榜己方行打开将领详情（`GetHeroDetail`），他人行状态栏提示只读；资源榜有格点字段时打开世界信息卡，否则只读摘要弹层。
-2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行职务 chip + `player_id` 截断与加入时间摘要（CLIENT-101）。
+2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行 **主行** 昵称 + 职务 chip，次行 `player_id` 截断与战力/加入摘要（CLIENT-101 + **CLIENT-144**）。
 3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
 4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。
 
@@ -1173,6 +1173,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 断网或 mock 失败：面板内红色 **刷新失败：…** 文案（网关 `formatSocialGatewayError`），状态栏同步；修复后再次刷新应恢复时间戳。
 4. **「聊天」** 各频道（世界/私聊/军团）同理：**刷新** 按钮 + **上次更新**；发送成功后自动刷新也应更新时间戳。
 5. 单测：`socialRefreshFormat.test.ts`、`socialPanelInflight.test.ts`、`SocialPanels.test.ts`（时间戳、in-flight 禁用、失败文案）。
+
+### 手动验收（社交刷新戳记与角标同步 CLIENT-144）
+
+在 [CLIENT-045](#手动验收社交刷新-client-045) / [CLIENT-096](#手动验收社交扫读-client-030) / [CLIENT-102](#手动验收聊天未读与社交角标-client-102) 之上：`formatPanelRefreshStamp` 统一排行顶栏与军团/聊天 `social-refresh-status` 的 **上次刷新** 相对文案（48h 内 **刚刚/N 分钟前/N 小时前**；更久回退本地时间）；`chat-panel-last-refresh-ms` / `guild-panel-last-refresh-ms` **sessionStorage** 在重开面板时恢复戳记（不新 RPC）。聊天 **手动刷新** 后 `ChatUnreadTracker` 快照即时驱动频道 tab 角标（与底栏 **CLIENT-102** 同一估算）；空/错态仍走 **CLIENT-053** + **CLIENT-129** 骨架。
+
+1. **排行**：`rank-last-refresh-ms` 与刷新按钮旁状态行均含 **上次刷新：刚刚**（或相对时间）。
+2. **军团**：职务分组下成员主行见昵称 + 职务标签；**刷新成员** 成功后见相对 **上次刷新**。
+3. **聊天**：手动 **刷新** 后未读 tab 角标与快照一致；失败/空列表不退化 CLIENT-053。
+4. 单测：`panelRefreshStamp.test.ts`、`socialRefreshFormat.test.ts`、`SocialPanels.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（社交空态与错误文案 CLIENT-053）
 

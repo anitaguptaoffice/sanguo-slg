@@ -1,3 +1,5 @@
+import { formatPanelRefreshStamp } from "@/net/panelRefreshStamp";
+
 /** sessionStorage：双榜手动刷新成功时刻（CLIENT-096，按榜单类型分键）。 */
 export const RANK_LAST_REFRESH_SESSION_KEY = "rank-last-refresh-ms";
 
@@ -49,9 +51,7 @@ export function writeRankLastRefreshMs(
   }
 }
 
-/** 排行顶栏「上次刷新」本地时间戳文案。 */
-export function formatRankLastRefreshLine(atMs: number): string {
-  if (!Number.isFinite(atMs) || atMs <= 0) return "";
-  const d = new Date(atMs);
-  return `上次刷新：${d.toLocaleString("zh-CN", { hour12: false })}`;
+/** 排行顶栏「上次刷新」戳记（与军团/聊天共用 formatter，CLIENT-144）。 */
+export function formatRankLastRefreshLine(atMs: number, nowMs = Date.now()): string {
+  return formatPanelRefreshStamp(atMs, nowMs);
 }

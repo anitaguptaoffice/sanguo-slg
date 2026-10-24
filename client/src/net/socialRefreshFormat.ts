@@ -1,10 +1,10 @@
 import { gatewayErrorMessage } from "@/net/contentFeedback";
+import { formatPanelRefreshStamp } from "@/net/panelRefreshStamp";
 import { formatSocialPanelStaleDataLabel } from "@/net/socialFormat";
 
-/** 社交面板「上次更新」本地时间戳（CLIENT-045）。 */
-export function formatSocialPanelLastUpdated(atMs: number): string {
-  const d = new Date(atMs);
-  return `上次更新：${d.toLocaleString("zh-CN", { hour12: false })}`;
+/** 社交面板刷新成功戳记（CLIENT-045 + CLIENT-144 相对「上次刷新」）。 */
+export function formatSocialPanelLastUpdated(atMs: number, nowMs = Date.now()): string {
+  return formatPanelRefreshStamp(atMs, nowMs);
 }
 
 export function formatSocialPanelRefreshError(message: string): string {
@@ -17,8 +17,8 @@ export function formatSocialPanelRefreshFailure(err: unknown): string {
 }
 
 /** 成功刷新后的状态行；stale 时追加 CLIENT-053 陈旧标注。 */
-export function formatSocialPanelLastUpdatedLine(atMs: number, stale = false): string {
-  const base = formatSocialPanelLastUpdated(atMs);
+export function formatSocialPanelLastUpdatedLine(atMs: number, stale = false, nowMs = Date.now()): string {
+  const base = formatSocialPanelLastUpdated(atMs, nowMs);
   if (!stale) return base;
   return `${base} · ${formatSocialPanelStaleDataLabel()}`;
 }
@@ -68,7 +68,7 @@ export function formatPanelRefreshMeta(input: PanelRefreshMetaInput): PanelRefre
   }
   if (input.lastUpdatedMs > 0) {
     return {
-      statusText: formatSocialPanelLastUpdatedLine(input.lastUpdatedMs, stale),
+      statusText: formatSocialPanelLastUpdatedLine(input.lastUpdatedMs, stale, Date.now()),
       statusHidden: false,
       isError: false,
       isStale: stale,
