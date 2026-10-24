@@ -11,6 +11,7 @@ import {
   battleReportIdsInListOrder,
   BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
   isBattleReportAdjNavKeyboardEnabled,
+  applyBattleReportAdjNavFocusRing,
   setBattleReportAdjNavButtonEnabled,
   syncBattleReportListRovingFocus,
 } from "@/net/battleReportListNav";
@@ -38,7 +39,9 @@ import {
   filterBattleReportsByTimeWindow,
   formatBattleReportDetail,
   formatBattleReportFoeWithoutCoord,
+  BATTLE_REPORT_OUTCOME_BAND_CLASS,
   formatBattleReportListPrimaryLine,
+  formatBattleReportOutcomeHeadline,
   formatBattleReportRowSummary,
   formatReportCoord,
   formatTimeMs,
@@ -541,6 +544,15 @@ export class BattleReportPanel {
     detailEl.setAttribute("aria-label", BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL);
     detailEl.tabIndex = 0;
 
+    const summary = this.detailSummary;
+    if (summary) {
+      const outcomeBand = document.createElement("div");
+      outcomeBand.className = `${BATTLE_REPORT_OUTCOME_BAND_CLASS} ${battleReportOutcomeChipClass(summary.outcome)}`;
+      outcomeBand.setAttribute("aria-label", "战报胜负结果");
+      outcomeBand.textContent = formatBattleReportOutcomeHeadline(summary);
+      detailEl.appendChild(outcomeBand);
+    }
+
     const orderedIds = battleReportIdsInListOrder(this.visibleReports());
     const prevId = adjacentBattleReportId(orderedIds, this.selectedReportId, "prev");
     const nextId = adjacentBattleReportId(orderedIds, this.selectedReportId, "next");
@@ -553,16 +565,17 @@ export class BattleReportPanel {
     prevBtn.setAttribute("data-action", "nav-prev-report");
     prevBtn.textContent = "上一封";
     setBattleReportAdjNavButtonEnabled(prevBtn, prevId != null);
+    applyBattleReportAdjNavFocusRing(prevBtn);
     const nextBtn = document.createElement("button");
     nextBtn.type = "button";
     nextBtn.setAttribute("data-action", "nav-next-report");
     nextBtn.textContent = "下一封";
     setBattleReportAdjNavButtonEnabled(nextBtn, nextId != null);
+    applyBattleReportAdjNavFocusRing(nextBtn);
     navBar.appendChild(prevBtn);
     navBar.appendChild(nextBtn);
     detailEl.appendChild(navBar);
 
-    const summary = this.detailSummary;
     if (summary) {
       const sideSummary = formatBattleReportSideSummary({
         summary,

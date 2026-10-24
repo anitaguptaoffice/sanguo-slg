@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   adjacentBattleReportId,
   adjacentBattleReportIdInSummaries,
+  applyBattleReportAdjNavFocusRing,
+  BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS,
   battleReportIdsInListOrder,
   battleReportListRovingFocusIndex,
   setBattleReportAdjNavButtonEnabled,
@@ -84,5 +86,11 @@ describe("battleReportListNav", () => {
     setBattleReportAdjNavButtonEnabled(btn, true);
     expect(btn.disabled).toBe(false);
     expect(btn.getAttribute("aria-disabled")).toBe("false");
+  });
+
+  it("applyBattleReportAdjNavFocusRing adds adjacent focus class (CLIENT-190)", () => {
+    const btn = document.createElement("button");
+    applyBattleReportAdjNavFocusRing(btn);
+    expect(btn.classList.contains(BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS)).toBe(true);
   });
 });

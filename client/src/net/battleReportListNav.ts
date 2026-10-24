@@ -75,6 +75,13 @@ export function setBattleReportAdjNavButtonEnabled(
   button.setAttribute("aria-disabled", enabled ? "false" : "true");
 }
 
+/** 相邻条导航按钮加深焦点环 class（CLIENT-190）。 */
+export const BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS = "battle-report-adjacent-focus-ring";
+
+export function applyBattleReportAdjNavFocusRing(button: HTMLButtonElement): void {
+  button.classList.add(BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS);
+}
+
 const BATTLE_REPORT_LIST_ITEM_SELECTOR = "li[data-report-id]";
 
 function battleReportListRovingItems(list: HTMLElement): HTMLElement[] {

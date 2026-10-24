@@ -883,6 +883,23 @@
       }
       .battle-report-row-foe { font-size: 12px; line-height: 1.35; }
       .battle-report-row-time { font-size: 11px; color: #b8a88a; }
+      .battle-report-outcome-band {
+        margin: 0 0 8px; padding: 8px 10px; border-radius: 4px;
+        font-size: 13px; font-weight: 700; line-height: 1.4; color: #e8dcc8;
+        border: 1px solid #4a3f35; border-left-width: 4px;
+      }
+      .battle-report-outcome-band.outcome-attacker-win {
+        background: rgba(61, 74, 40, 0.55); border-left-color: #8fbc6a; color: #d4e8c0;
+      }
+      .battle-report-outcome-band.outcome-defender-win {
+        background: rgba(74, 48, 40, 0.55); border-left-color: #e8a87c; color: #f0d0b8;
+      }
+      .battle-report-outcome-band.outcome-draw {
+        background: rgba(58, 58, 48, 0.55); border-left-color: #c9b896; color: #e0d4c0;
+      }
+      .battle-report-outcome-band.outcome-unknown {
+        background: #221a14; border-left-color: #b8a88a;
+      }
       .battle-report-detail-nav {
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
       }
@@ -902,14 +919,15 @@
         background: rgba(201, 162, 39, 0.22);
         outline: 1px solid #c9a227;
       }
-      .battle-report-detail-nav button:focus-visible {
-        outline: 2px solid #c9a227;
+      .battle-report-detail-nav button.battle-report-adjacent-focus-ring:focus-visible {
+        outline: 3px solid #f0c674;
         outline-offset: 2px;
+        box-shadow: 0 0 0 1px #1a1410, 0 0 0 6px rgba(240, 198, 116, 0.38);
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-scroll-body {
         padding-bottom: 64px;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-detail-nav button:focus-visible {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-detail-nav button.battle-report-adjacent-focus-ring:focus-visible {
         scroll-margin-bottom: 64px;
       }
       .battle-report-detail-head {
