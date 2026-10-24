@@ -14,3 +14,14 @@
 | MainCityScene 建筑色块 | `mc.building.<slot_key>.v1` | 见 [maincity-slots.md](./maincity-slots.md) |
 
 加载器在迁移期可同时接受旧 id（通过 `PLACEHOLDER_TO_STABLE_ID`）与新 `asset_id`。
+
+## 将领肖像（Batch 1，按 `template_cfg_id`）
+
+联结 DATA-002 `cfg_hero_template.template_cfg_id`（1001 起）。**非**玩家 `hero_id`。
+
+| 用途 | `asset_id` 模式 | 示例 |
+|---|---|---|
+| 列表头像 | `hero.avatar.<template_cfg_id>.v1` | `hero.avatar.1001.v1` |
+| 详情半身 | `hero.bust.<template_cfg_id>.v1` | `hero.bust.1001.v1` |
+
+路径与验收见 [hero-avatar-bust-batch.md](./hero-avatar-bust-batch.md)。

@@ -17,6 +17,7 @@
 | [layout-landscape.md](./layout-landscape.md) | 外框 1600×900、舞台 1600×788、缩放策略 |
 | [maincity-slots.md](./maincity-slots.md) | 主城槽位 `slot_key` 与**全布局坐标**（y 已含 HUD，勿重复 +56） |
 | [id-mapping.md](./id-mapping.md) | 旧占位 ID → 新稳定 `asset_id` |
+| [hero-avatar-bust-batch.md](./hero-avatar-bust-batch.md) | 将领列表 avatar + 详情 bust 批量交付（DATA-002 `template_cfg_id`） |
 | [../reference.md](../reference.md) | 原版参照（**禁止**合并 #77 / #82） |
 
 ## 开工顺序（与 PR #100 一致）
