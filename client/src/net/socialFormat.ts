@@ -135,6 +135,12 @@ export type GuildMembersByRoleGroup<T extends GuildMemberRow = GuildMemberRow> =
   members: T[];
 };
 
+/** CLIENT-185：职务分组头主标题（人数由 DOM `guild-role-group-count` 展示）。 */
+export function formatGuildRoleGroupHeaderLabel(label: string, expanded: boolean): string {
+  const title = label.trim() || "—";
+  return `${expanded ? "▼" : "▶"} ${title}`;
+}
+
 /** 按职务分组（组内已按 sortGuildMembers 排序）；空输入返回空数组。 */
 export function groupGuildMembersByRole<T extends GuildMemberRow>(members: T[]): GuildMembersByRoleGroup<T>[] {
   const sorted = sortGuildMembers(members);

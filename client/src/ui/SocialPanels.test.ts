@@ -645,8 +645,13 @@ describe("SocialPanels chat & guild", () => {
     expect(primary?.querySelector(".guild-member-nick")?.textContent).toBe("团长甲");
     expect(primary?.querySelector('[data-role="guild-role-chip"]')?.textContent).toBe("团长");
     expect(mount.querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')?.textContent).toContain(
-      "官员（1）",
+      "官员",
     );
+    expect(
+      mount.querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')?.parentElement?.querySelector(
+        '[data-role="guild-role-group-count"]',
+      )?.textContent,
+    ).toBe("1");
     mount
       .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
       ?.dispatchEvent(new Event("click", { bubbles: true }));
@@ -665,7 +670,7 @@ describe("SocialPanels chat & guild", () => {
     expect(mount.querySelector('[data-action="guild-mention"]')).toBeNull();
   });
 
-  it("renders chat-unread-divider and keeps badge until mark read (CLIENT-161)", async () => {
+  it("renders chat-unread-separator and keeps badge until mark read (CLIENT-161 + CLIENT-185)", async () => {
     const mount = document.createElement("div");
     const tracker = new ChatUnreadTracker(null);
     tracker.markChannelRead("world", 1_000);
@@ -693,7 +698,9 @@ describe("SocialPanels chat & guild", () => {
     panels.attach();
     panels.toggleChat();
     await flushPromises();
-    expect(mount.querySelector(".chat-unread-divider")).toBeTruthy();
+    const separator = mount.querySelector(".chat-unread-separator");
+    expect(separator).toBeTruthy();
+    expect(separator?.textContent).toBe("1 条未读");
     expect(mount.querySelector('[data-role="chat-mark-read"]')?.classList.contains("hidden")).toBe(
       false,
     );
@@ -701,7 +708,7 @@ describe("SocialPanels chat & guild", () => {
     expect(badge?.textContent).toBe("1");
     mount.querySelector('[data-action="mark-chat-read"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
-    expect(mount.querySelector(".chat-unread-divider")).toBeNull();
+    expect(mount.querySelector(".chat-unread-separator")).toBeNull();
     expect(badge?.classList.contains("hidden")).toBe(true);
   });
 

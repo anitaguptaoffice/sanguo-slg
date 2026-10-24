@@ -536,7 +536,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
-视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-divider`；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
+视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-separator`（**CLIENT-185**）；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
 
 ### 手动验收（HUD 经济扫读 CLIENT-148）
 
@@ -580,7 +580,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | 底栏 **日常** | `dailyToolbarBadgeCount`：chain 400 **可领取** `state=3`（**CLIENT-091**） | 打开日常面板 |
 | 底栏 **队列** | `queueBuildingToolbarBadgeCount`：`upgrade_finish_at_ms > now` 槽位数 | 打开队列面板；建造完成或倒计时结束随 **GetCityState** `recomputeToolbarCounts` |
 | 底栏 **战报** | `BattleReportUnreadSession`（**CLIENT-027/025**） | 打开战报面板 |
-| 底栏 **聊天** / **军团** | `hudTodoSocialBadgesFromChatSummary`（**CLIENT-161**，数据来自 **CLIENT-102** `ChatUnreadTracker`） | 滚过 `chat-unread-divider` 或 **标为已读**（**CLIENT-161**） |
+| 底栏 **聊天** / **军团** | `hudTodoSocialBadgesFromChatSummary`（**CLIENT-161**，数据来自 **CLIENT-102** `ChatUnreadTracker`） | 滚过 `chat-unread-separator` 或 **标为已读**（**CLIENT-161/185**） |
 | 顶栏 **待办** | `buildHudCenterTodoCounts`：可领附件邮件 / 可领日常 / `BuildCompleteTodoTracker` 建造完成 | 领取、确认队列完成槽位；与上表邮件/日常数字同源 |
 
 dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBadges.test.ts`、`hudTodoBadgePoll.test.ts`、`hudCenterTodo.test.ts`。
@@ -1375,7 +1375,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 在 CLIENT-021 / CLIENT-022 基础上加深排行顶栏、军团排序与聊天分组（`make dev` 或 mock）。
 
 1. **排行**：打开面板后 `rank-viewer-bar` 展示 **我的名次 / 分数**（`my_rank` / `my_score`）；手动刷新成功后同栏展示 **上次刷新**（`rank-last-refresh-ms` session）；`my_rank>0` 时列表顶行 **钉选** `formatMyRankPinLine`；表头 `thead` 固定；空榜行使用 `formatLeaderboardEmptyHint()`（含 dev 无种子提示）。**CLIENT-097**：点击榜单行 — 战力榜己方行打开将领详情（`GetHeroDetail`），他人行状态栏提示只读；资源榜有格点字段时打开世界信息卡，否则只读摘要弹层。**CLIENT-168（wave:32）**：列表行在 `parseLeaderboardRowHeroId` 可解析时展示 **查看将领** 按钮（快照可选 `hero_id` / `player_id`）；跳转将领详情 **CLIENT-099** 选中态；自详情再开排行时 `leaderboard-return-scroll-v1` 恢复 **原榜 tab + scrollTop**。**CLIENT-152（wave:30）**：手动 **刷新排行榜** 后若 `my_rank` 相对上次快照变化，钉选行附加 `rank-my-rank-changed-pulse` 3s；钉选 **主行** 为 `formatMyRankPinLine`，**次行** `formatMyRankPinSecondaryLine`（复用 `formatSocialPanelLastUpdated`）；`rank-viewer-bar` 戳记模式不退化。**CLIENT-184（wave:34）**：第二次及以后 **手动刷新** 成功后列表顶先展示 `formatLeaderboardRefreshedHint` + 最多三条 `formatLeaderboardTopDensityLine`（名次+简称+分数截断），其下仍为钉选行；`leaderboard-pin-v1` 恢复刷新前 `scrollTop` 以保持钉选扫读，且 **不** 清除 `leaderboard-return-scroll-v1`；空榜仍 **CLIENT-053**。单测：`leaderboardFormat.test.ts`、`leaderboardPin.test.ts`、`leaderboardRowHeroId.test.ts`、`leaderboardReturnScroll.test.ts`、`leaderboardMyRankRefresh.test.ts`、`SocialPanels.test.ts`。
-2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，默认展开团长组）；每行 **主行** 昵称 + 职务 chip，次行 `player_id` 截断与战力/加入摘要（CLIENT-101 + **CLIENT-144**）。
+2. **军团**：「刷新成员」列表按职务（团长→官员→成员）与战力排序（`sortGuildMembers`），并按职务 **分组折叠**（`groupGuildMembersByRole`，**CLIENT-185** `guild-role-group-header` + `guild-role-group-count`，默认展开团长组）；每行 **主行** 昵称 + 职务 chip，次行 `player_id` 截断与战力/加入摘要（CLIENT-101 + **CLIENT-144**）。
 3. **聊天**：世界频道消息按本地日插入 **今日/昨日** 分组标题（`groupChatMessagesByLocalDay`）；世界行 `chat-msg-world` 行高收紧，`chat-sender` 长昵称不被裁切。
 4. 单测：`socialFormat.test.ts`、`leaderboardFormat.test.ts`、`SocialPanels.test.ts`。
 
@@ -1391,7 +1391,15 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 ### 手动验收（聊天未读列表扫读与角标同步 CLIENT-161）
 
-在 [CLIENT-102](#手动验收聊天未读与社交角标-client-102) / [CLIENT-144](#手动验收社交刷新戳记与角标同步-client-144) 之上：消息列表按本地已读游标插入 **`chat-unread-divider`**（`chatUnreadDividerFlatIndex`）；底栏 **聊天** / **军团** 与面板 tab 角标共用 `hudTodoBadges` **`hudTodoSocialBadgesFromChatSummary`**（与 `estimateChatUnreadCount` 同源）。**打开聊天 tab 不清零游标**；滚过分隔线或点 **标为已读** 后 `markChannelRead` 与 HUD 角标同步递减。空/错态仍 **CLIENT-053** + **CLIENT-129**。单测：`chatUnread.test.ts`、`hudTodoBadges.test.ts`、`SocialPanels.test.ts`。
+在 [CLIENT-102](#手动验收聊天未读与社交角标-client-102) / [CLIENT-144](#手动验收社交刷新戳记与角标同步-client-144) 之上：消息列表按本地已读游标插入未读分隔线（**CLIENT-185** 起 class **`chat-unread-separator`**，`findChatUnreadSeparatorIndex`）；底栏 **聊天** / **军团** 与面板 tab 角标共用 `hudTodoBadges` **`hudTodoSocialBadgesFromChatSummary`**（与 `estimateChatUnreadCount` 同源）。**打开聊天 tab 不清零游标**；滚过分隔线或点 **标为已读** 后 `markChannelRead` 与 HUD 角标同步递减。空/错态仍 **CLIENT-053** + **CLIENT-129**。单测：`chatUnread.test.ts`、`hudTodoBadges.test.ts`、`SocialPanels.test.ts`。
+
+### 手动验收（军团职务分组头与聊天未读分隔线扫读 CLIENT-185）
+
+在 [CLIENT-101](#手动验收社交扫读-client-030) / [CLIENT-160](#手动验收军团提到聊天草稿-client-084) / [CLIENT-161](#手动验收聊天未读列表扫读与角标同步-client-161) / [CLIENT-162](#手动验收hud-待办与面板-tabchip-一致-client-162) 之上加深扫读：
+
+1. **军团**：成员列表 `groupGuildMembersByRole` 职务顺序（团长→官员→成员）不退化；每组 **`guild-role-group-header`** 展示折叠钮 + **`guild-role-group-count`** 人数 chip（默认仅团长组展开）。
+2. **聊天**：首条未读消息上方插入 **`chat-unread-separator`**，居中文案 **`formatChatUnreadSweepLine`**（与 tab/HUD `estimateChatUnreadCount` 条数一致）；滚过分隔线或 **标为已读** 后角标递减；**`guild-chat-draft-v1`** 草稿记忆（CLIENT-160）与 **CLIENT-162** 底栏社交角标不退化。
+3. 单测：`socialFormat.test.ts`（`groupGuildMembersByRole`）、`chatUnread.test.ts`（`findChatUnreadSeparatorIndex`、`formatChatUnreadSweepLine`）、`SocialPanels.test.ts`；`cd client && npm test` 绿。
 
 ### 手动验收（社交刷新戳记与角标同步 CLIENT-144）
 

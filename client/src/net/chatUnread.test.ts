@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   CHAT_LAST_READ_TS_STORAGE_KEY,
   chatChannelStorageKey,
-  chatUnreadDividerFlatIndex,
+  findChatUnreadSeparatorIndex,
+  formatChatUnreadSweepLine,
   countChatMessagesAfterTs,
   estimateChatUnread,
   estimateChatUnreadCount,
@@ -65,16 +66,23 @@ describe("chatUnread", () => {
     expect(estimateChatUnreadCount(messages, 20)).toBe(0);
   });
 
-  it("chatUnreadDividerFlatIndex points at first unread in chronological order", () => {
+  it("findChatUnreadSeparatorIndex points at first unread in chronological order (CLIENT-185)", () => {
     const messages = [
       { sent_at_ms: 100 },
       { sent_at_ms: 300 },
       { sent_at_ms: 200 },
       { sent_at_ms: 400 },
     ];
-    expect(chatUnreadDividerFlatIndex(messages, 150)).toBe(1);
-    expect(chatUnreadDividerFlatIndex(messages, 400)).toBe(-1);
-    expect(chatUnreadDividerFlatIndex([], 0)).toBe(-1);
+    expect(findChatUnreadSeparatorIndex(messages, 150)).toBe(1);
+    expect(findChatUnreadSeparatorIndex(messages, 400)).toBe(-1);
+    expect(findChatUnreadSeparatorIndex([], 0)).toBe(-1);
+  });
+
+  it("formatChatUnreadSweepLine summarizes unread count for separator (CLIENT-185)", () => {
+    expect(formatChatUnreadSweepLine(3)).toBe("3 条未读");
+    expect(formatChatUnreadSweepLine(1)).toBe("1 条未读");
+    expect(formatChatUnreadSweepLine(0)).toBe("以下未读");
+    expect(formatChatUnreadSweepLine(-1)).toBe("以下未读");
   });
 
   it("parses chat-last-read-ts storage map", () => {
