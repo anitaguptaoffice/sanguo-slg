@@ -120,6 +120,21 @@ import {
   mailPlainTextHasWorldCoord,
   resolveMailBattleReportLink,
 } from "@/net/mailBattleCrossLink";
+import {
+  MAIL_BATTLE_CATEGORY_SWEEP_CLASS,
+  MAIL_BATTLE_CATEGORY_SWEEP_ROLE,
+  MAIL_BATTLE_CATEGORY_TABS,
+  filterMailRowsByBattleCategory,
+  formatMailBattleCategorySweepLine,
+  mailBattleCategorySweepCounts,
+  readMailBattleCategoryTabSession,
+  writeMailBattleCategoryTabSession,
+  type MailBattleCategoryTab,
+} from "@/net/mailBattleCategory";
+import {
+  stageReportOutcomeFilterBridgeFromMail,
+  takeMailReturnFromReportBridge,
+} from "@/net/reportOutcomeFilterBridge";
 import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import {
@@ -237,6 +252,9 @@ export class HeroMailPanels {
   /** CLIENT-134：角标深链打开面板前，筛选 chip 数字与 `HudTodoDeepLinkSnapshot` 对齐。 */
   private mailFilterTabCountOverride: { unreadForTab: number; unclaimedCount: number } | null = null;
   private mailFilter = MAIL_INBOX_FILTER_ALL;
+  private mailBattleCategory: MailBattleCategoryTab = "system";
+  /** 最近一次 ListPlayerMail 页（收件箱 filter 应用前），供战报/系统 tab 切换本地过滤。 */
+  private mailListRpcPage: MailRow[] = [];
   private mailListError = "";
   private mailListLoading = false;
   private heroListLoadError: string | null = null;
@@ -294,6 +312,7 @@ export class HeroMailPanels {
 
   attach(): void {
     this.mailFilter = readMailInboxFilterSession() ?? MAIL_INBOX_FILTER_ALL;
+    this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
     this.heroListSort = readHeroListSortSession();
     this.heroPanel = this.buildHeroPanel();
@@ -500,8 +519,19 @@ export class HeroMailPanels {
     this.mailPanel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
-    this.mailFilter = MAIL_INBOX_FILTER_ALL;
-    writeMailInboxFilterSession(this.mailFilter);
+    const mailReturn = takeMailReturnFromReportBridge();
+    if (mailReturn) {
+      this.mailBattleCategory = mailReturn.categoryTab;
+      writeMailBattleCategoryTabSession(this.mailBattleCategory);
+      this.mailFilter = mailReturn.inboxFilter;
+      writeMailInboxFilterSession(this.mailFilter);
+      if (mailReturn.selectedMailId && mailReturn.selectedMailId > 0) {
+        this.selectedMailId = mailReturn.selectedMailId;
+      }
+    } else {
+      this.mailFilter = MAIL_INBOX_FILTER_ALL;
+      writeMailInboxFilterSession(this.mailFilter);
+    }
     if (mailId > 0) this.selectedMailId = mailId;
     void this.refreshMail().then(() => this.focusHighlightedMail(mailId));
   }
@@ -747,6 +777,15 @@ export class HeroMailPanels {
     el.innerHTML = `
       <h3>邮件</h3>
       <p class="mail-inbox-hint" data-role="mail-hint">content.v1 收件箱；点开自动标已读，有附件可一键领取。</p>
+      <div class="mail-battle-category-bar panel-filter-chip-bar" data-role="mail-battle-category-bar" role="tablist" aria-label="邮件战报与系统分类">
+        ${MAIL_BATTLE_CATEGORY_TABS.map(
+          (tab) =>
+            `<button type="button" class="mail-battle-category-btn" data-ui-filter-chip data-action="mail-category-${tab.id}" role="tab" aria-selected="false">
+              <span class="art-filter-chip-label">${tab.label}</span>
+            </button>`,
+        ).join("")}
+      </div>
+      <p class="mail-battle-category-sweep ${MAIL_BATTLE_CATEGORY_SWEEP_CLASS} hidden" data-role="${MAIL_BATTLE_CATEGORY_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <div class="mail-inbox-toolbar mail-filter-bar panel-filter-chip-bar" data-role="mail-filter-bar" role="group" aria-label="邮件筛选">
         <button type="button" class="mail-filter-btn" data-ui-filter-chip data-action="mail-filter-all" aria-pressed="true">
           <span data-role="mail-filter-all-label" class="art-filter-chip-label">全部</span>
@@ -1102,7 +1141,43 @@ export class HeroMailPanels {
       }
     }
     if (loader) remountPanelFilterChips(this.mailPanel, loader);
+    this.syncMailBattleCategoryDom();
     this.syncMailHudTodoSweepDom();
+  }
+
+  private applyMailListClientFilters(page: MailRow[]): MailRow[] {
+    const inbox = filterMailRowsForInboxTab(page, this.mailFilter);
+    return filterMailRowsByBattleCategory(inbox, this.mailBattleCategory);
+  }
+
+  private syncMailBattleCategoryDom(): void {
+    const bar = this.mailPanel.querySelector('[data-role="mail-battle-category-bar"]');
+    if (bar) {
+      for (const btn of Array.from(bar.querySelectorAll<HTMLButtonElement>("button[data-action]"))) {
+        const action = btn.dataset.action ?? "";
+        const tab = action.replace("mail-category-", "") as MailBattleCategoryTab;
+        const selected = tab === this.mailBattleCategory;
+        btn.setAttribute("aria-selected", selected ? "true" : "false");
+        btn.setAttribute("aria-pressed", selected ? "true" : "false");
+        btn.classList.toggle("active", selected);
+      }
+      if (this.assets) remountPanelFilterChips(this.mailPanel, this.assets);
+    }
+    const counts = mailBattleCategorySweepCounts(this.mailInboxSnapshot, this.mailBattleCategory);
+    const line = formatMailBattleCategorySweepLine(this.mailBattleCategory, counts);
+    const sweepEl = this.mailPanel.querySelector<HTMLElement>(
+      `[data-role="${MAIL_BATTLE_CATEGORY_SWEEP_ROLE}"]`,
+    );
+    if (!sweepEl) return;
+    if (!line) {
+      sweepEl.hidden = true;
+      sweepEl.classList.add("hidden");
+      sweepEl.textContent = "";
+      return;
+    }
+    sweepEl.hidden = false;
+    sweepEl.classList.remove("hidden");
+    sweepEl.textContent = line;
   }
 
   /** CLIENT-209：HUD 待办轮询刷新戳记与邮件 tab 扫读联动（由 MainCityScene 驱动）。 */
@@ -1759,7 +1834,8 @@ export class HeroMailPanels {
         total_count?: number;
       };
       const page = res.mails ?? [];
-      this.mails = filterMailRowsForInboxTab(page, this.mailFilter);
+      this.mailListRpcPage = [...page];
+      this.mails = this.applyMailListClientFilters(page);
       if (rpcFilter === MAIL_INBOX_FILTER_ALL) {
         this.mailInboxSnapshot = [...page];
       } else {
@@ -2234,7 +2310,29 @@ export class HeroMailPanels {
     if (a === "mail-open-battle-report") {
       const reportRaw = btn.dataset.reportId;
       const reportId = reportRaw ? Number(reportRaw) : 0;
+      const sel = this.mails.find((m) => m.mail_id === this.selectedMailId) ?? null;
+      if (sel && this.mailBattleCategory === "battle") {
+        stageReportOutcomeFilterBridgeFromMail({
+          title: mailTitle(sel),
+          body: sel.body ?? "",
+          categoryTab: this.mailBattleCategory,
+          inboxFilter: this.mailFilter,
+          selectedMailId: sel.mail_id,
+        });
+      }
       void this.onOpenBattleReport?.(reportId > 0 ? reportId : null);
+    }
+    if (a === "mail-category-battle" || a === "mail-category-system") {
+      const tab: MailBattleCategoryTab = a === "mail-category-battle" ? "battle" : "system";
+      if (tab === this.mailBattleCategory) return;
+      this.mailBattleCategory = tab;
+      writeMailBattleCategoryTabSession(tab);
+      this.mails = this.applyMailListClientFilters(this.mailListRpcPage);
+      if (!this.mails.some((m) => m.mail_id === this.selectedMailId)) {
+        this.selectedMailId = this.mails[0]?.mail_id ?? 0;
+      }
+      this.setMailFilterButtons();
+      this.renderMailList();
     }
   }
 }

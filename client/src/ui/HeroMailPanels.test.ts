@@ -36,6 +36,10 @@ import {
   MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
   MAIL_TAB_UNREAD_SWEEP_ROLE,
 } from "@/net/mailTabUnreadSweep";
+import {
+  MAIL_BATTLE_CATEGORY_SWEEP_ROLE,
+  MAIL_BATTLE_CATEGORY_TAB_SESSION_KEY,
+} from "@/net/mailBattleCategory";
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 
 function flushPromises(): Promise<void> {
@@ -57,6 +61,7 @@ function sessionBase(): MainCitySession {
 describe("HeroMailPanels", () => {
   beforeEach(() => {
     sessionStorage.removeItem(MAIL_INBOX_FILTER_SESSION_KEY);
+    sessionStorage.removeItem(MAIL_BATTLE_CATEGORY_TAB_SESSION_KEY);
   });
 
   it("mail filter toolbar exposes ART-UI-FILTER chip hooks (CLIENT-122)", () => {
@@ -69,6 +74,17 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector('[data-action="mail-filter-unclaimed"][data-ui-filter-chip]')).toBeTruthy();
     expect(mount.querySelector('[data-role="mail-filter-bar"]')).toBeTruthy();
     expect(mount.querySelector(".mail-inbox-toolbar.panel-filter-chip-bar")).toBeTruthy();
+  });
+
+  it("mail panel exposes battle/system category tabs and sweep line (CLIENT-225)", () => {
+    const mount = document.createElement("div");
+    const gateway = { getBoundServerId: () => 1 } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.openMailPanel();
+    expect(mount.querySelector('[data-action="mail-category-battle"]')).toBeTruthy();
+    expect(mount.querySelector('[data-action="mail-category-system"]')).toBeTruthy();
+    expect(mount.querySelector(`[data-role="${MAIL_BATTLE_CATEGORY_SWEEP_ROLE}"]`)).toBeTruthy();
   });
 
   it("mail panel exposes HUD todo sweep lines (CLIENT-209)", () => {
@@ -1834,6 +1850,10 @@ describe("HeroMailPanels", () => {
     );
     panels.attach();
     panels.toggleMail();
+    await flushPromises();
+    mount
+      .querySelector('[data-action="mail-category-battle"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     const btn = mount.querySelector('[data-action="mail-open-battle-report"]') as HTMLButtonElement;
     expect(btn?.hidden).toBe(false);
