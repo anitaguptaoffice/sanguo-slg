@@ -2432,6 +2432,26 @@
       .shop-list li.bag-shop-category-scan-ring {
         animation: bag-shop-category-scan-ring-keyframes 1.5s ease-out 1;
       }
+      @keyframes bag-shop-inline-state-residual-ring-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        35% { box-shadow: 0 0 10px rgba(220, 140, 80, 0.85); outline: 2px solid rgba(220, 140, 80, 0.9); }
+        70% { box-shadow: 0 0 4px rgba(220, 140, 80, 0.45); outline: 1px solid rgba(220, 140, 80, 0.5); }
+      }
+      .bag-list li .bag-shop-inline-state-residual-ring,
+      .bag-list li.bag-shop-inline-state-residual-ring,
+      .shop-list li .bag-shop-inline-state-residual-ring,
+      .shop-list li.bag-shop-inline-state-residual-ring {
+        animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1;
+      }
+      @keyframes panel-return-source-highlight-residual-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        40% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.8); outline: 2px solid rgba(120, 180, 120, 0.85); }
+        75% { box-shadow: 0 0 6px rgba(120, 180, 120, 0.45); outline: 1px solid rgba(120, 180, 120, 0.5); }
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual,
+      .shop-category-tabs .panel-return-source-highlight-residual {
+        animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1;
+      }
       @keyframes hero-list-return-highlight-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
         40% { box-shadow: 0 0 12px rgba(120, 180, 220, 0.75); background: #243038; }
