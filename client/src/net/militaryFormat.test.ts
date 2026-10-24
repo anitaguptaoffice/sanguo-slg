@@ -315,11 +315,13 @@ describe("military proto encode/decode", () => {
       to_x: 5,
       to_y: 5,
       purpose: 1,
+      hero_id: 9001,
       troops: [{ unit_cfg_id: 1, count: 50 }],
     });
     const decoded = StartMarchRequest.decode(StartMarchRequest.encode(msg).finish());
     expect(Number(decoded.city_id)).toBe(42);
     expect(decoded.to_x).toBe(5);
+    expect(Number(decoded.hero_id)).toBe(9001);
     expect(decoded.troops?.[0]?.count).toBe(50);
   });
 });

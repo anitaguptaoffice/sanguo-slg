@@ -18,6 +18,7 @@ type StartMarchRequest struct {
 	ArmyID       int64
 	OriginCityID int64
 	PlayerID     int64
+	HeroID       int64
 	FromX        int
 	FromY        int
 	ToX          int

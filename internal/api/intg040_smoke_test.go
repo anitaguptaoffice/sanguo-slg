@@ -121,13 +121,14 @@ func smokeINTG040MarchTroopMarginRefreshStampGateway(t *testing.T, c *websocket.
 	listBeforeMs := time.Now().UnixMilli()
 	var toX, toY int32 = 48, 49
 	apiSrv.SeedCityTroopsForTest(cityID, smokeMarchTroopUnitCfgID, 40)
+	heroID := smokeEnsureMarchHeroID(t, context.Background(), c, apiSrv, sid, playerID)
 	const marchPurpose = int32(1)
 	const marchCount = int32(6)
 	smokeStep(t, fmt.Sprintf("INTG-040 MIL: gateway StartMarch (MarchAttack equiv) march_id+troop_margin+intel_refresh_stamp to=(%d,%d)", toX, toY))
 	marchResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteStartMarch, TraceId: "i40-march-margin", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&militaryv1.StartMarchRequest{
-			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose,
+			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose, HeroId: heroID,
 			Troops: []*apicommon.CityTroopStack{{UnitCfgId: smokeMarchTroopUnitCfgID, Count: marchCount}},
 		}),
 	})

@@ -10,7 +10,10 @@ import (
 
 	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
+	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
@@ -125,13 +128,14 @@ func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *
 
 	const troopCount = int32(25)
 	apiSrv.SeedCityTroopsForTest(cityID, smokeMarchTroopUnitCfgID, troopCount)
+	heroID := smokeEnsureMarchHeroID(t, context.Background(), c, apiSrv, sid, playerID)
 	toX, toY = cityX+3, cityY+2
 	const marchPurpose = int32(1)
-	smokeStep(t, fmt.Sprintf("MIL: gateway StartMarch purpose=%d to=(%d,%d)", marchPurpose, toX, toY))
+	smokeStep(t, fmt.Sprintf("MIL: gateway StartMarch purpose=%d to=(%d,%d) hero_id=%d", marchPurpose, toX, toY, heroID))
 	marchResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteStartMarch, TraceId: "i9-march", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&militaryv1.StartMarchRequest{
-			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose,
+			CityId: cityID, ToX: toX, ToY: toY, Purpose: marchPurpose, HeroId: heroID,
 			Troops: []*apicommon.CityTroopStack{{UnitCfgId: smokeMarchTroopUnitCfgID, Count: 10}},
 		}),
 	})
@@ -290,6 +294,51 @@ func smokeFirstPlayerCityID(t *testing.T, c *websocket.Conn, sid string) int64 {
 		return 0
 	}
 	return listOut.GetCities()[0].GetCityId()
+}
+
+// smokeEnsureMarchHeroID returns an idle hero for StartMarch (recruits via GM grant when needed).
+func smokeEnsureMarchHeroID(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) int64 {
+	t.Helper()
+	listResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route: api.RouteListPlayerHeroes, TraceId: "march-hero-list", SessionId: sid, ServerId: intg006ServerID,
+		Payload: mustMarshal(&herov1.ListPlayerHeroesRequest{ServerId: intg006ServerID}),
+	})
+	if listResp.Code == 0 {
+		var listOut herov1.ListPlayerHeroesResponse
+		if err := proto.Unmarshal(listResp.Data, &listOut); err == nil {
+			for _, h := range listOut.GetHeroes() {
+				if h.GetHeroId() > 0 {
+					return h.GetHeroId()
+				}
+			}
+		}
+	}
+	smokeStep(t, "MIL: recruit hero for StartMarch hero_id")
+	audit := api.GmAudit{OperatorID: "smoke", OperatorName: "smoke", Reason: "march-hero", TicketID: "T-march-hero"}
+	_, _, err := apiSrv.Gm().GrantReward(ctx, "", audit, intg006ServerID, playerID, content.RewardPackage{
+		Items: []content.RewardItem{{ItemCfgID: hero.RecruitScrollID, Qty: 2}},
+		Resources: map[string]int64{
+			"food": 25000, "wood": 25000, "iron": 25000, "stone": 25000,
+		},
+	}, "march-hero-seed")
+	if err != nil {
+		intg009Failf(t, "ensure march hero", "gm grant err=%v", err)
+	}
+	recruitResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route: api.RouteRecruitHero, TraceId: "march-hero-recruit", SessionId: sid, ServerId: intg006ServerID,
+		Payload: mustMarshal(&herov1.RecruitHeroRequest{ServerId: intg006ServerID, TemplateCfgId: smokeHeroTemplateCfgID}),
+	})
+	if recruitResp.Code != 0 {
+		intg009Failf(t, "ensure march hero", "RecruitHero code=%d msg=%s", recruitResp.Code, recruitResp.Msg)
+	}
+	var recruitOut herov1.RecruitHeroResponse
+	if err := proto.Unmarshal(recruitResp.Data, &recruitOut); err != nil {
+		intg009Failf(t, "ensure march hero", "decode err=%v", err)
+	}
+	if recruitOut.GetHeroId() == 0 {
+		intg009Failf(t, "ensure march hero", "empty hero_id")
+	}
+	return recruitOut.GetHeroId()
 }
 
 func assertINTG009Persistence(t *testing.T, ctx context.Context, pool *pgxpool.Pool, apiSrv *api.Server, c *websocket.Conn, sid string, playerID int64, want intg009PersistSnapshot) {
