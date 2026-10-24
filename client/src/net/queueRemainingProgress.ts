@@ -4,6 +4,10 @@ import { formatUpgradeRemaining } from "@/net/hudFormat";
 import { computeUpgradeCostAtLevel } from "@/net/previewUpgradeCost";
 import { previewRecruitCost } from "@/net/previewRecruitCost";
 import {
+  DOMESTIC_QUEUE_ETA_SEGMENT_LABEL_CLASS,
+  formatDomesticQueueEtaSegmentLabel,
+} from "@/net/domesticQueueEtaSegment";
+import {
   computeQueueRowProgressBarWidthPercent,
   formatQueueRemainingEtaLine,
   QUEUE_ROW_ETA_LINE_CLASS,
@@ -53,6 +57,15 @@ export function renderQueueRemainingProgressMarkup(
   if (etaLine) {
     parts.push(
       `<span class="${QUEUE_ROW_ETA_LINE_CLASS}">${escapeHtml(etaLine)}</span>`,
+    );
+  }
+  const etaSegment =
+    finishAtMs != null && finishAtMs > 0
+      ? formatDomesticQueueEtaSegmentLabel(finishAtMs, nowMs)
+      : null;
+  if (etaSegment) {
+    parts.push(
+      `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_LABEL_CLASS}">${escapeHtml(etaSegment)}</span>`,
     );
   }
   parts.push(

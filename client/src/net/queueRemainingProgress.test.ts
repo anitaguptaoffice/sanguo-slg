@@ -16,6 +16,8 @@ describe("formatQueueRemainingProgress", () => {
     expect(progress.progressPercent).toBe(50);
     const markup = renderQueueRemainingProgressMarkup(progress, finish, now);
     expect(markup).toContain("queue-row-eta-line");
+    expect(markup).toContain("domestic-queue-eta-segment-label");
+    expect(markup).toContain("&lt;1h");
     expect(markup).toContain("queue-row-progress-bar");
     expect(markup).toContain("queue-row-progress-fill");
     expect(markup).toContain('style="width:50%"');

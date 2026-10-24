@@ -53,6 +53,7 @@ describe("QueuePanels", () => {
     expect(hallRow?.classList.contains(QUEUE_BUILD_ROW_SELECTED_CLASS)).toBe(false);
     expect(row?.classList.contains(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
     expect(row?.querySelector(".queue-row-eta-line")).toBeTruthy();
+    expect(row?.querySelector(".domestic-queue-eta-segment-label")).toBeTruthy();
     expect(row?.querySelector(".queue-row-progress-bar")).toBeTruthy();
     expect(row?.querySelector(".queue-row-progress-fill")).toBeTruthy();
   });

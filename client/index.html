@@ -1252,6 +1252,31 @@
         color: #4a3c28;
         line-height: 1.35;
       }
+      .queue-list li.queue-list-row .domestic-queue-eta-segment-label {
+        display: inline-block;
+        align-self: flex-start;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        color: #6a5838;
+        padding: 1px 6px;
+        border-radius: 3px;
+        background: rgba(201, 162, 39, 0.14);
+        border: 1px solid rgba(201, 162, 39, 0.28);
+      }
+      @keyframes domestic-queue-complete-slot-margin-keyframes {
+        0%, 100% { opacity: 0.85; transform: translateY(0); }
+        45% { opacity: 1; transform: translateY(-1px); box-shadow: 0 0 8px rgba(143, 212, 168, 0.45); }
+      }
+      .main-city-slot-upgrade-tag .domestic-queue-complete-slot-margin {
+        display: block;
+        margin-top: 2px;
+        font-size: 10px;
+        font-weight: 600;
+        color: #8fd4a8;
+        text-align: center;
+        animation: domestic-queue-complete-slot-margin-keyframes 2s ease-out 1;
+      }
       .queue-list li.queue-list-row .queue-row-progress,
       .queue-list li.queue-list-row .queue-row-progress-bar {
         display: block; width: 100%; max-width: 280px; height: 4px;
@@ -3082,7 +3107,9 @@
       /* CLIENT-203 wave:36 主城队列将领社交 HUD 深链组合 manifest */
       /* sessionStorage key hero-list-return-v1 (CLIENT-199) */
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-complete-focus-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-slot-margin,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-eta-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-label,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress-bar,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-growth-compare-strip,
