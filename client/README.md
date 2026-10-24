@@ -745,9 +745,24 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 ## Wave 44 H5 主城队列 ETA/完成焦点残余巩固·将领养成扫读·panelState 筛选·双榜钉选·军团聊天·日常 HUD 深链·1280 组合 manifest（M4 出口 / INTG-041）
 
-在 [Wave 43](#wave-43-h5-世界小地图军情-scroll-sync-残余出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifestm4-出口--intg-040) 世界/军情/战报/邮件/商城栈基础上 **轮转**回主城/将领/队列/日常/社交栈的残余 **加深巩固**；**非** wave:43 排行招募密度扫读主叙事重复。**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / **#697** / **#983**）。
+在 [Wave 43](#wave-43-h5-世界小地图军情-scroll-sync-残余出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifestm4-出口--intg-040) 世界/军情/战报/邮件/商城栈基础上 **轮转**回主城/将领/队列/日常/社交栈的残余 **加深巩固**；**非** wave:43 CLIENT-259 世界军情战报邮件商城排行 manifest 面板集 / 排行招募密度扫读主叙事重复。**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**勿**将 **ART-012** 登记为本波实现卡 ID；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / **#697** / **#983**）。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 主城将领日常社交队列组合 manifest 巩固** | [手动验收（1280 wave:44 组合 manifest 巩固 CLIENT-267）](#手动验收1280-wave44-组合-manifest-巩固-client-267)（[#995](https://github.com/anitaguptaoffice/sanguo-slg/issues/995)） | 进行中 |
+
+**推荐串联**（在 [Wave 43](#wave-43-h5-世界小地图军情-scroll-sync-残余出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifestm4-出口--intg-040) 世界栈基础上 **轮转**回主城栈）：**队列** ETA/完成焦点残余巩固（**CLIENT-260**）→ **队列** 预览槽位互链残余巩固（**CLIENT-261**）→ **将领** 养成扫读残余巩固（**CLIENT-262**）→ **将领** panelState 与筛选 chip 残余抛光（**CLIENT-263**）→ **双榜** 钉选刷新残余巩固（**CLIENT-264**）→ **军团/聊天** 扫读残余巩固（**CLIENT-265**）→ **日常/HUD** chain 队列深链残余加深（**CLIENT-266**）→ 视口 **1280×720** 主城将领日常社交队列 manifest **巩固**（**CLIENT-267**）；网关字段见 `tools/smoke/README.md` **INTG-041**。
 
 **wave:44（CLIENT-262）将领列表忠诚次行与详情养成道具扫读残余巩固**：列表 **`formatHeroListLoyaltyResidualDeepSubline`** / **`hero-list-row-loyalty-residual-deep-subline`**（忠诚 + 经验进度只读深巩固；**CLIENT-246** `hero-list-row-loyalty-residual-subline` **不退化**；**无** hero 专用升级 RPC）；详情 **`formatHeroDetailConsumableStackResidualDeepSweep`** / **`hero-detail-consumable-stack-residual-deep-sweep`** + **`hero-detail-consumable-stack-residual-deep-sweep-ring` 2s** 只读扫读（养成堆叠 + **`pickHeroDetailBagDeepLink`** 背包深链 hint；**CLIENT-230** `data-art-panel=ui.panel.hero.v1` 壳与 **CLIENT-246** 残余行 **不退化**；**非** ART-012 / #983/#108/#697 像素任务）。单测：`heroListLoyaltyResidualDeepSubline.test.ts`、`heroDetailConsumableStackResidualDeepSweep.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#990](https://github.com/anitaguptaoffice/sanguo-slg/issues/990)）
+
+**美术旁路**（**非** wave:44 backlog 实现卡）：**CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012**——**非**本波 backlog。实现卡 **CLIENT-260～267**（自 **CLIENT-260** 起）。
+
+### 手动验收（1280 wave:44 组合 manifest 巩固 CLIENT-267）
+
+视口 **1280×720** `layout-narrow`：**队列** `domestic-queue-eta-segment-residual-deep-label` / `domestic-queue-complete-focus-residual-deep-ring`（**CLIENT-260**；**CLIENT-244/212** **不退化**）、`queue-next-finish-preview-residual-deep-line` / `domestic-slot-preview-cross-link-residual-deep-ring`（**CLIENT-261**；**CLIENT-245/218** **不退化**）、**将领** `hero-list-row-loyalty-residual-deep-subline` / `hero-detail-consumable-stack-residual-deep-sweep`（**CLIENT-262**；**CLIENT-246/230** **不退化**）、`hero-panel-state-residual-deep-sweep` + session `hero-list-filter-chip-residual-deep-v1`（**CLIENT-263**；**CLIENT-247/231** **不退化**）、**双榜** `rank-refresh-cooldown-residual-deep-stamp` / `rank-pin-keep-residual-deep-ring`（**CLIENT-264**；**CLIENT-248/214** **不退化**）、**军团/聊天** `guild-duty-header-residual-deep-line` / `guild-chat-unread-divider-residual-deep-sweep`（**CLIENT-265**；**CLIENT-249/234** **不退化**）、**日常/HUD** `quest-chain-queue-hud-residual-deep-subline` / `hud-todo-toolbar-deep-link-residual-deep-pulse`（**CLIENT-266**；**CLIENT-250/216** **不退化**）与 **CLIENT-251/235** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；主城/将领/社交密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave44MainCityHeroDailySocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-267）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：底栏 **队列/将领/排行/军团/聊天/日常** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:44 DOM 钩子（软依赖 **CLIENT-260～266**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227/235/243/251/259** manifest 不退化。单测：`wave44MainCityHeroDailySocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-267）；`cd client && npm test` 绿。
 
 ## Wave 43 H5 世界小地图军情 scroll-sync 残余·出征戳记兵力余量·战报键盘坐标·邮件 HUD 附件·背包商城返回·排行招募扫读·军情 phase 预填·1280 组合 manifest（M4 出口 / INTG-040）
 
