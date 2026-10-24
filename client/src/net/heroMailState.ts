@@ -141,6 +141,10 @@ export type HeroDetail = HeroSummary & {
   force_add?: number;
   intel_add?: number;
   politics_add?: number;
+  /** BeginHeroExpr 响应或会话快照：历练结束时间（毫秒）。 */
+  expr_ends_at_ms?: number;
+  /** 历练时长（小时，M1：1–4）。 */
+  expr_hours?: number;
 };
 
 export type RecruitTemplatePreview = {
@@ -237,7 +241,13 @@ export function syncHeroSummaryFromDetail(
   if (!heroId) return heroes;
   return heroes.map((h) =>
     h.hero_id === heroId
-      ? { ...h, level: detail.level ?? h.level, loyalty: detail.loyalty ?? h.loyalty }
+      ? {
+          ...h,
+          level: detail.level ?? h.level,
+          loyalty: detail.loyalty ?? h.loyalty,
+          status: detail.status ?? h.status,
+          exp: detail.exp ?? h.exp,
+        }
       : h,
   );
 }

@@ -387,6 +387,22 @@ function mockHeroExpTowardNext(row) {
   return pool;
 }
 
+const HERO_MOCK_STATUS_IDLE = 1;
+const HERO_MOCK_STATUS_EXPR = 4;
+
+function mockExprGoldCost(level, hours) {
+  return (level ?? 1) * (hours ?? 1) * 10;
+}
+
+function mockExprRewardExp(level, hours) {
+  return (level ?? 1) * (hours ?? 1) * 20;
+}
+
+function mockNormalizeExprHours(hours) {
+  const h = hours > 0 ? hours : 1;
+  return Math.min(4, Math.max(1, h));
+}
+
 function mockHeroDetailPayload(row) {
   const meta =
     HERO_TEMPLATE_DETAIL_META[row.template_cfg_id] ?? {
@@ -405,6 +421,7 @@ function mockHeroDetailPayload(row) {
     rarity: 5,
     level,
     loyalty,
+    status: row.status ?? HERO_MOCK_STATUS_IDLE,
     loyalty_min: 0,
     loyalty_max: 100,
     exp: row.exp ?? 0,
@@ -1175,6 +1192,121 @@ wss.on("connection", (ws) => {
         h.intel_add = 0;
         h.politics_add = 0;
         replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ClearHeroPointResponse"), mockHeroPointResponse(h));
+        return;
+      }
+
+      if (route === "hero.v1.BeginHeroExpr") {
+        const req = T("sanguo.hero.v1.BeginHeroExprRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? HERO_MOCK_STATUS_IDLE) !== HERO_MOCK_STATUS_IDLE) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not idle");
+          return;
+        }
+        const hours = mockNormalizeExprHours(req.hours ?? 0);
+        const cost = mockExprGoldCost(h.level ?? 1, hours);
+        const gold = state.wallet?.gold ?? 0;
+        if (gold < cost) {
+          reply(ws, cp.trace_id, 10001, "hero: insufficient gold");
+          return;
+        }
+        state.wallet = { ...state.wallet, gold: gold - cost };
+        const endsAt = Date.now() + hours * 3600 * 1000;
+        h.status = HERO_MOCK_STATUS_EXPR;
+        h.expr_hours = hours;
+        h.expr_ends_at_ms = endsAt;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.BeginHeroExprResponse"), {
+          hero_id: h.hero_id,
+          status: h.status,
+          ends_at_ms: endsAt,
+          gold_spent: cost,
+          hours,
+        });
+        return;
+      }
+
+      if (route === "hero.v1.CancelHeroExpr") {
+        const req = T("sanguo.hero.v1.CancelHeroExprRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? HERO_MOCK_STATUS_IDLE) !== HERO_MOCK_STATUS_EXPR) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not expr");
+          return;
+        }
+        h.status = HERO_MOCK_STATUS_IDLE;
+        delete h.expr_hours;
+        delete h.expr_ends_at_ms;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.CancelHeroExprResponse"), {
+          hero_id: h.hero_id,
+          status: h.status,
+        });
+        return;
+      }
+
+      if (route === "hero.v1.FinishHeroExpr") {
+        const req = T("sanguo.hero.v1.FinishHeroExprRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? HERO_MOCK_STATUS_IDLE) !== HERO_MOCK_STATUS_EXPR) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not expr");
+          return;
+        }
+        const ends = h.expr_ends_at_ms ?? 0;
+        if (Date.now() < ends) {
+          reply(ws, cp.trace_id, 10001, "hero: expr not complete");
+          return;
+        }
+        const hours = mockNormalizeExprHours(h.expr_hours ?? 1);
+        const gain = mockExprRewardExp(h.level ?? 1, hours);
+        h.exp = (h.exp ?? 0) + gain;
+        h.status = HERO_MOCK_STATUS_IDLE;
+        delete h.expr_hours;
+        delete h.expr_ends_at_ms;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.FinishHeroExprResponse"), {
+          hero_id: h.hero_id,
+          status: h.status,
+          exp_gained: gain,
+          exp: h.exp,
+        });
+        return;
+      }
+
+      if (route === "hero.v1.FasterHeroExpr") {
+        const req = T("sanguo.hero.v1.FasterHeroExprRequest").decode(cp.payload);
+        const heroId = decodeInt64(req.hero_id);
+        const h = state.heroes.find((x) => x.hero_id === heroId);
+        if (!h) {
+          reply(ws, cp.trace_id, 10001, "hero not found");
+          return;
+        }
+        if ((h.status ?? HERO_MOCK_STATUS_IDLE) !== HERO_MOCK_STATUS_EXPR) {
+          reply(ws, cp.trace_id, 10001, "hero: hero not expr");
+          return;
+        }
+        const hours = mockNormalizeExprHours(h.expr_hours ?? 1);
+        const gain = mockExprRewardExp(h.level ?? 1, hours);
+        h.exp = (h.exp ?? 0) + gain;
+        h.status = HERO_MOCK_STATUS_IDLE;
+        delete h.expr_hours;
+        delete h.expr_ends_at_ms;
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.FasterHeroExprResponse"), {
+          hero_id: h.hero_id,
+          status: h.status,
+          exp_gained: gain,
+          exp: h.exp,
+        });
         return;
       }
 

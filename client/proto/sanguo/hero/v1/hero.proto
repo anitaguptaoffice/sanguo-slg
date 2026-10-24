@@ -420,3 +420,55 @@ message LionizeHeroResponse {
   int64 hero_id = 7;
   string display_name = 8;
 }
+
+// route: hero.v1.BeginHeroExpr
+message BeginHeroExprRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+  int32 hours = 3; // M1: 1–4, default 1 when 0
+}
+
+message BeginHeroExprResponse {
+  int64 hero_id = 1;
+  int32 status = 2;
+  int64 ends_at_ms = 3;
+  int64 gold_spent = 4;
+  int32 hours = 5;
+}
+
+// route: hero.v1.CancelHeroExpr
+message CancelHeroExprRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+}
+
+message CancelHeroExprResponse {
+  int64 hero_id = 1;
+  int32 status = 2;
+}
+
+// route: hero.v1.FinishHeroExpr
+message FinishHeroExprRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+}
+
+message FinishHeroExprResponse {
+  int64 hero_id = 1;
+  int32 status = 2;
+  int64 exp_gained = 3;
+  int64 exp = 4;
+}
+
+// route: hero.v1.FasterHeroExpr
+message FasterHeroExprRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+}
+
+message FasterHeroExprResponse {
+  int64 hero_id = 1;
+  int32 status = 2;
+  int64 exp_gained = 3;
+  int64 exp = 4;
+}

@@ -76,6 +76,10 @@ export const Routes = {
   UpgradeHero: "hero.v1.UpgradeHero",
   AddHeroPoint: "hero.v1.AddHeroPoint",
   ClearHeroPoint: "hero.v1.ClearHeroPoint",
+  BeginHeroExpr: "hero.v1.BeginHeroExpr",
+  CancelHeroExpr: "hero.v1.CancelHeroExpr",
+  FinishHeroExpr: "hero.v1.FinishHeroExpr",
+  FasterHeroExpr: "hero.v1.FasterHeroExpr",
   RecruitHero: "hero.v1.RecruitHero",
   ListRecruitTemplates: "hero.v1.ListRecruitTemplates",
   ListHotelRecruitCandidates: "hero.v1.ListHotelRecruitCandidates",
@@ -176,6 +180,14 @@ export type ProtoTypes = {
   AddHeroPointResponse: protobuf.Type;
   ClearHeroPointRequest: protobuf.Type;
   ClearHeroPointResponse: protobuf.Type;
+  BeginHeroExprRequest: protobuf.Type;
+  BeginHeroExprResponse: protobuf.Type;
+  CancelHeroExprRequest: protobuf.Type;
+  CancelHeroExprResponse: protobuf.Type;
+  FinishHeroExprRequest: protobuf.Type;
+  FinishHeroExprResponse: protobuf.Type;
+  FasterHeroExprRequest: protobuf.Type;
+  FasterHeroExprResponse: protobuf.Type;
   RecruitHeroRequest: protobuf.Type;
   RecruitHeroResponse: protobuf.Type;
   ListRecruitTemplatesRequest: protobuf.Type;
@@ -293,6 +305,14 @@ export function getTypes(): ProtoTypes {
     AddHeroPointResponse: r.lookupType("sanguo.hero.v1.AddHeroPointResponse"),
     ClearHeroPointRequest: r.lookupType("sanguo.hero.v1.ClearHeroPointRequest"),
     ClearHeroPointResponse: r.lookupType("sanguo.hero.v1.ClearHeroPointResponse"),
+    BeginHeroExprRequest: r.lookupType("sanguo.hero.v1.BeginHeroExprRequest"),
+    BeginHeroExprResponse: r.lookupType("sanguo.hero.v1.BeginHeroExprResponse"),
+    CancelHeroExprRequest: r.lookupType("sanguo.hero.v1.CancelHeroExprRequest"),
+    CancelHeroExprResponse: r.lookupType("sanguo.hero.v1.CancelHeroExprResponse"),
+    FinishHeroExprRequest: r.lookupType("sanguo.hero.v1.FinishHeroExprRequest"),
+    FinishHeroExprResponse: r.lookupType("sanguo.hero.v1.FinishHeroExprResponse"),
+    FasterHeroExprRequest: r.lookupType("sanguo.hero.v1.FasterHeroExprRequest"),
+    FasterHeroExprResponse: r.lookupType("sanguo.hero.v1.FasterHeroExprResponse"),
     RecruitHeroRequest: r.lookupType("sanguo.hero.v1.RecruitHeroRequest"),
     RecruitHeroResponse: r.lookupType("sanguo.hero.v1.RecruitHeroResponse"),
     ListRecruitTemplatesRequest: r.lookupType("sanguo.hero.v1.ListRecruitTemplatesRequest"),

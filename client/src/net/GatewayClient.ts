@@ -1,4 +1,9 @@
 import { GATEWAY_WS_URL } from "@/config";
+import {
+  parseBeginHeroExprResponse,
+  parseCancelHeroExprResponse,
+  parseHeroExprFinishResponse,
+} from "@/net/heroDetailExpr";
 import { parseHeroPointResponse } from "@/net/heroDetailPoints";
 import { parseUpgradeHeroResponse } from "@/net/heroDetailUpgrade";
 import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMailState";
@@ -83,6 +88,10 @@ export type GatewayPort = {
     targets: { force: number; intel: number; politics: number },
   ): Promise<unknown>;
   clearHeroPoint(serverId: number, heroId: number): Promise<unknown>;
+  beginHeroExpr(serverId: number, heroId: number, hours: number): Promise<unknown>;
+  cancelHeroExpr(serverId: number, heroId: number): Promise<unknown>;
+  finishHeroExpr(serverId: number, heroId: number): Promise<unknown>;
+  fasterHeroExpr(serverId: number, heroId: number): Promise<unknown>;
   recruitHero(
     serverId: number,
     templateCfgId: number,
@@ -602,6 +611,58 @@ export class GatewayClient implements GatewayPort {
       true,
     );
     return parseHeroPointResponse(raw);
+  }
+
+  async beginHeroExpr(serverId: number, heroId: number, hours: number) {
+    requireHeroIdForDetail(heroId);
+    const { BeginHeroExprResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.BeginHeroExpr,
+      "BeginHeroExprRequest",
+      { server_id: serverId, hero_id: heroId, hours },
+      BeginHeroExprResponse,
+      true,
+    );
+    return parseBeginHeroExprResponse(raw);
+  }
+
+  async cancelHeroExpr(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { CancelHeroExprResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.CancelHeroExpr,
+      "CancelHeroExprRequest",
+      { server_id: serverId, hero_id: heroId },
+      CancelHeroExprResponse,
+      true,
+    );
+    return parseCancelHeroExprResponse(raw);
+  }
+
+  async finishHeroExpr(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { FinishHeroExprResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.FinishHeroExpr,
+      "FinishHeroExprRequest",
+      { server_id: serverId, hero_id: heroId },
+      FinishHeroExprResponse,
+      true,
+    );
+    return parseHeroExprFinishResponse(raw);
+  }
+
+  async fasterHeroExpr(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { FasterHeroExprResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.FasterHeroExpr,
+      "FasterHeroExprRequest",
+      { server_id: serverId, hero_id: heroId },
+      FasterHeroExprResponse,
+      true,
+    );
+    return parseHeroExprFinishResponse(raw);
   }
 
   async recruitHero(

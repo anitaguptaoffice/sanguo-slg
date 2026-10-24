@@ -423,6 +423,24 @@ import {
   syncHeroDetailUpgradeButton,
 } from "@/net/heroDetailUpgrade";
 import {
+  applyBeginHeroExprToDetail,
+  applyCancelHeroExprToDetail,
+  applyHeroExprFinishToDetail,
+  formatHeroExprBeginSuccessStatus,
+  formatHeroExprCancelSuccessStatus,
+  formatHeroExprFasterSuccessStatus,
+  formatHeroExprFinishSuccessStatus,
+  formatHeroExprGatewayErrorFromUnknown,
+  heroExprSnapshotFromDetail,
+  isHeroExprInProgress,
+  mergeHeroExprSnapshot,
+  normalizeHeroExprHours,
+  renderHeroDetailExprMarkup,
+  setHeroExprFormErrorDisplay,
+  setHeroExprSuccessDisplay,
+  syncHeroDetailExprControls,
+} from "@/net/heroDetailExpr";
+import {
   formatBagUseGatewayErrorFromUnknown,
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
@@ -524,6 +542,13 @@ export class HeroMailPanels {
     number,
     ReturnType<typeof heroPointSnapshotFromDetail>
   >();
+  private heroExprSubmitState: UseConsumableSubmitState = "idle";
+  private heroExprHoursPref = 1;
+  private heroExprSnapshotByHeroId = new Map<
+    number,
+    ReturnType<typeof heroExprSnapshotFromDetail>
+  >();
+  private heroExprCountdownTimer: ReturnType<typeof setInterval> | null = null;
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
   private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
 
@@ -1947,7 +1972,14 @@ export class HeroMailPanels {
         const { bag, wallet } = this.sessionEconomy();
         const upgradeHtml =
           renderHeroDetailUpgradeMarkup(this.heroUpgradeSubmitState, this.heroDetail) +
-          renderHeroDetailPointsMarkup(this.heroPointSubmitState, this.heroDetail);
+          renderHeroDetailPointsMarkup(this.heroPointSubmitState, this.heroDetail) +
+          renderHeroDetailExprMarkup(
+            this.heroExprSubmitState,
+            this.heroDetail,
+            wallet,
+            this.heroExprHoursPref,
+            Date.now(),
+          );
         const cultivationHtml = renderHeroDetailCultivationUseMarkup(
           bag,
           this.heroCultivationSubmitState,
@@ -2625,11 +2657,60 @@ export class HeroMailPanels {
     setHeroPointSuccessDisplay(this.heroPanel, null);
   }
 
+  private resetHeroExprSubmitFeedback(): void {
+    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, {
+      type: "CLEAR_ERROR",
+    });
+    setHeroExprFormErrorDisplay(this.heroPanel, null);
+    setHeroExprSuccessDisplay(this.heroPanel, null);
+  }
+
   private persistHeroPointSnapshot(detail: HeroDetail | null | undefined): void {
     const snap = heroPointSnapshotFromDetail(detail);
     const heroId = detail?.hero_id;
     if (!heroId || !snap) return;
     this.heroPointSnapshotByHeroId.set(heroId, snap);
+  }
+
+  private persistHeroExprSnapshot(detail: HeroDetail | null | undefined): void {
+    const snap = heroExprSnapshotFromDetail(detail);
+    const heroId = detail?.hero_id;
+    if (!heroId) return;
+    if (!snap) {
+      this.heroExprSnapshotByHeroId.delete(heroId);
+      return;
+    }
+    this.heroExprSnapshotByHeroId.set(heroId, snap);
+  }
+
+  private clearHeroExprCountdownTimer(): void {
+    if (this.heroExprCountdownTimer != null) {
+      window.clearInterval(this.heroExprCountdownTimer);
+      this.heroExprCountdownTimer = null;
+    }
+  }
+
+  private ensureHeroExprCountdownTimer(): void {
+    const inExpr = isHeroExprInProgress(this.heroDetail);
+    if (!inExpr) {
+      this.clearHeroExprCountdownTimer();
+      return;
+    }
+    if (this.heroExprCountdownTimer != null) return;
+    this.heroExprCountdownTimer = window.setInterval(() => {
+      const { wallet } = this.sessionEconomy();
+      syncHeroDetailExprControls(
+        this.heroPanel,
+        this.heroExprSubmitState,
+        this.heroDetail,
+        wallet,
+        this.heroExprHoursPref,
+        Date.now(),
+      );
+      if (!isHeroExprInProgress(this.heroDetail)) {
+        this.clearHeroExprCountdownTimer();
+      }
+    }, 1000);
   }
 
   private getHeroLargessNextAtMs(): number | null {
@@ -2737,6 +2818,7 @@ export class HeroMailPanels {
     this.resetHeroLargessSubmitFeedback();
     this.resetHeroUpgradeSubmitFeedback();
     this.resetHeroPointSubmitFeedback();
+    this.resetHeroExprSubmitFeedback();
     this.heroDetailLoading = true;
     this.heroDetailError = null;
     this.renderHeroList();
@@ -2744,11 +2826,13 @@ export class HeroMailPanels {
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
       const parsed = parseGetHeroDetailResponse(res);
-      this.heroDetail = mergeHeroPointSnapshot(
-        parsed,
-        this.heroPointSnapshotByHeroId.get(heroId) ?? null,
+      this.heroDetail = mergeHeroExprSnapshot(
+        mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId) ?? null),
+        this.heroExprSnapshotByHeroId.get(heroId) ?? null,
       );
       this.persistHeroPointSnapshot(this.heroDetail);
+      this.persistHeroExprSnapshot(this.heroDetail);
+      this.ensureHeroExprCountdownTimer();
       this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
       this.heroDetailError = null;
       this.onStatus("详情已加载");
@@ -2880,6 +2964,158 @@ export class HeroMailPanels {
       this.onStatus(msg);
     } finally {
       syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+    }
+  }
+
+  private syncHeroExprControlsNow(): void {
+    const { wallet } = this.sessionEconomy();
+    syncHeroDetailExprControls(
+      this.heroPanel,
+      this.heroExprSubmitState,
+      this.heroDetail,
+      wallet,
+      this.heroExprHoursPref,
+      Date.now(),
+    );
+  }
+
+  private async beginHeroExprSelected(): Promise<void> {
+    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    const heroId = this.selectedHeroId;
+    const hours = normalizeHeroExprHours(this.heroExprHoursPref);
+    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
+    setHeroExprFormErrorDisplay(this.heroPanel, null);
+    setHeroExprSuccessDisplay(this.heroPanel, null);
+    this.syncHeroExprControlsNow();
+    const sid = this.serverId();
+    this.onStatus("开始历练…");
+    try {
+      const res = await this.gateway.beginHeroExpr(sid, heroId, hours);
+      const detailAfter = applyBeginHeroExprToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.persistHeroExprSnapshot(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      const session = this.getSession();
+      if (session && res.gold_spent > 0) {
+        const nextWallet = { ...session.wallet, gold: (session.wallet.gold ?? 0) - res.gold_spent };
+        this.onSessionPatch({ wallet: nextWallet });
+      }
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
+      this.renderHeroList();
+      const statusText = formatHeroExprBeginSuccessStatus(res);
+      setHeroExprSuccessDisplay(this.heroPanel, statusText);
+      this.ensureHeroExprCountdownTimer();
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
+      const msg = formatHeroExprGatewayErrorFromUnknown(e);
+      setHeroExprFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      this.syncHeroExprControlsNow();
+    }
+  }
+
+  private async cancelHeroExprSelected(): Promise<void> {
+    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
+    const heroId = this.selectedHeroId;
+    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
+    setHeroExprFormErrorDisplay(this.heroPanel, null);
+    setHeroExprSuccessDisplay(this.heroPanel, null);
+    this.syncHeroExprControlsNow();
+    const sid = this.serverId();
+    this.onStatus("取消历练…");
+    try {
+      const res = await this.gateway.cancelHeroExpr(sid, heroId);
+      const detailAfter = applyCancelHeroExprToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.persistHeroExprSnapshot(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
+      this.clearHeroExprCountdownTimer();
+      this.renderHeroList();
+      const statusText = formatHeroExprCancelSuccessStatus();
+      setHeroExprSuccessDisplay(this.heroPanel, statusText);
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
+      const msg = formatHeroExprGatewayErrorFromUnknown(e);
+      setHeroExprFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      this.syncHeroExprControlsNow();
+    }
+  }
+
+  private async finishHeroExprSelected(): Promise<void> {
+    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
+    const heroId = this.selectedHeroId;
+    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
+    setHeroExprFormErrorDisplay(this.heroPanel, null);
+    setHeroExprSuccessDisplay(this.heroPanel, null);
+    this.syncHeroExprControlsNow();
+    const sid = this.serverId();
+    this.onStatus("领取历练经验…");
+    try {
+      const res = await this.gateway.finishHeroExpr(sid, heroId);
+      const detailAfter = applyHeroExprFinishToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.persistHeroExprSnapshot(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
+      this.clearHeroExprCountdownTimer();
+      this.renderHeroList();
+      const statusText = formatHeroExprFinishSuccessStatus(res);
+      setHeroExprSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
+      const msg = formatHeroExprGatewayErrorFromUnknown(e);
+      setHeroExprFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      this.syncHeroExprControlsNow();
+    }
+  }
+
+  private async fasterHeroExprSelected(): Promise<void> {
+    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
+    const heroId = this.selectedHeroId;
+    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
+    setHeroExprFormErrorDisplay(this.heroPanel, null);
+    setHeroExprSuccessDisplay(this.heroPanel, null);
+    this.syncHeroExprControlsNow();
+    const sid = this.serverId();
+    this.onStatus("加速历练…");
+    try {
+      const res = await this.gateway.fasterHeroExpr(sid, heroId);
+      const detailAfter = applyHeroExprFinishToDetail(this.heroDetail, res);
+      this.heroDetail = detailAfter;
+      this.persistHeroExprSnapshot(detailAfter);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
+      this.clearHeroExprCountdownTimer();
+      this.renderHeroList();
+      const statusText = formatHeroExprFasterSuccessStatus(res);
+      setHeroExprSuccessDisplay(this.heroPanel, statusText);
+      scheduleHeroDetailStatPulse(
+        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
+      );
+      this.onStatus(statusText);
+    } catch (e) {
+      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
+      const msg = formatHeroExprGatewayErrorFromUnknown(e);
+      setHeroExprFormErrorDisplay(this.heroPanel, msg);
+      this.renderHeroList();
+      this.onStatus(msg);
+    } finally {
+      this.syncHeroExprControlsNow();
     }
   }
 
@@ -3656,6 +3892,17 @@ export class HeroMailPanels {
       }
     }
     if (a === "hero-point-clear") void this.clearHeroPointsSelected();
+    if (a === "hero-expr-hours") {
+      const h = Number(btn.getAttribute("data-hours"));
+      if (h >= 1 && h <= 4) {
+        this.heroExprHoursPref = h;
+        this.syncHeroExprControlsNow();
+      }
+    }
+    if (a === "hero-expr-begin") void this.beginHeroExprSelected();
+    if (a === "hero-expr-cancel") void this.cancelHeroExprSelected();
+    if (a === "hero-expr-finish") void this.finishHeroExprSelected();
+    if (a === "hero-expr-faster") void this.fasterHeroExprSelected();
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {
