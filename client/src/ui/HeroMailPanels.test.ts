@@ -41,8 +41,10 @@ import {
 } from "@/net/recruitFormInlineHint";
 import {
   MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
+  MAIL_TAB_HUD_SYNC_PULSE_CLASS,
   MAIL_TAB_UNREAD_SWEEP_ROLE,
 } from "@/net/mailTabUnreadSweep";
+import { MAIL_CLAIM_HUD_SYNC_PULSE_CLASS } from "@/net/mailClaimHudBadgeSync";
 import {
   MAIL_BATTLE_CATEGORY_SWEEP_ROLE,
   MAIL_BATTLE_CATEGORY_TAB_SESSION_KEY,
@@ -109,6 +111,69 @@ describe("HeroMailPanels", () => {
     expect(mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`)).toBeTruthy();
     const combined = mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`);
     expect(combined?.textContent).toContain("日常可领 1 · #42");
+  });
+
+  it("mail claim success applies mail-claim-hud-sync-pulse and refreshes HUD sweep (CLIENT-241)", async () => {
+    const mount = document.createElement("div");
+    const inboxSnaps: MailRow[][] = [];
+    const listPlayerMail = vi
+      .fn()
+      .mockResolvedValueOnce({
+        mails: [
+          {
+            mail_id: 71,
+            title: "奖",
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+          {
+            mail_id: 72,
+            title: "奖2",
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+        ],
+        total_count: 2,
+      })
+      .mockResolvedValue({ mails: [], total_count: 0 });
+    const gateway: GatewayPort = {
+      listPlayerMail,
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      claimPlayerMailAttachments: vi.fn().mockResolvedValue({
+        mail: { mail_id: 71, status: 2, has_unclaimed_attachments: false },
+        granted: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (mails) => inboxSnaps.push(mails.map((m) => ({ ...m }))),
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    panels.syncMailTabHudTodoLinkage({
+      dailyRows: [{ quest_cfg_id: 42, state: DAILY_QUEST_STATE_CLAIMABLE }],
+      stamp: 1,
+      pulse: false,
+    });
+    mount.querySelector('[data-action="claim-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const row = mount.querySelector('.mail-list li[data-mail-id="71"]');
+    expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS)).toBe(true);
+    const combined = mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`);
+    expect(combined?.textContent).toContain("未领附件 1");
+    expect(combined?.textContent).toContain("日常可领 1 · #42");
+    expect(combined?.classList.contains(MAIL_TAB_HUD_SYNC_PULSE_CLASS)).toBe(true);
+    expect(inboxSnaps.at(-1)?.find((m) => m.mail_id === 71)?.has_unclaimed_attachments).toBe(false);
   });
 
   it("mail panel has panel-scroll-body for narrow layout (CLIENT-070)", () => {
