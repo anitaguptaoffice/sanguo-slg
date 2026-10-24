@@ -49,6 +49,7 @@ import {
   consumeBagShopReturnHighlight,
   scheduleBagRowReturnHighlight,
 } from "@/net/bagShopReturnHighlight";
+import { highlightBagShopCategoryScanRow } from "@/net/bagShopCategoryScan";
 import {
   bagEmptyListClass,
   formatBagStackRowLabel,
@@ -434,6 +435,14 @@ export class ContentPanels {
     writeBagCategoryTabSession(next);
     this.renderBagList();
     this.applyBagCategoryScrollTop(this.scrollTopForActiveBagCategory());
+    highlightBagShopCategoryScanRow(this.bagPanel, "bag");
+  }
+
+  private switchShopCategory(next: ShopOfferClientCategory): void {
+    if (next === this.shopCategory) return;
+    this.shopCategory = next;
+    this.renderShopList();
+    highlightBagShopCategoryScanRow(this.shopPanel, "shop");
   }
 
   private serverId(): number {
@@ -1288,8 +1297,7 @@ export class ContentPanels {
     if (catBtn) {
       const next = catBtn.getAttribute("data-shop-category") as ShopOfferClientCategory | null;
       if (next && next !== this.shopCategory) {
-        this.shopCategory = next;
-        this.renderShopList();
+        this.switchShopCategory(next);
       }
       return;
     }

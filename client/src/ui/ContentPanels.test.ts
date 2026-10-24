@@ -81,6 +81,37 @@ describe("ContentPanels narrow scroll (CLIENT-095 + CLIENT-119)", () => {
     expect(sessionStorage.getItem("bag-category-tab-v1")).toContain('"tab":"cultivation"');
   });
 
+  it("CLIENT-242 highlights first bag row on category tab switch", async () => {
+    sessionStorage.removeItem("bag-category-tab-v1");
+    const mount = document.createElement("div");
+    const session = baseSession();
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({
+        items: [
+          { item_cfg_id: 2001, quantity: 2 },
+          { item_cfg_id: 2017, quantity: 1 },
+        ],
+      }),
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.toggleBag();
+    await vi.waitFor(() => expect(mount.querySelector(".bag-stack-row")).toBeTruthy());
+    const consumableTab = mount.querySelector(
+      '[data-bag-category="consumable"]',
+    ) as HTMLButtonElement;
+    consumableTab.click();
+    const first = mount.querySelector(".bag-stack-row");
+    expect(first?.classList.contains("bag-shop-category-scan-ring")).toBe(true);
+  });
+
   it("CLIENT-210 restores bag scroll when reopening and across category tabs", async () => {
     sessionStorage.removeItem("bag-category-tab-v1");
     const mount = document.createElement("div");

@@ -65,6 +65,19 @@ export const RANK_VIEWER_BAR_CLASS = "rank-viewer-bar";
 export const RANK_PIN_ROW_CLASS = "rank-pin-row";
 export const RANK_MY_RANK_CHANGED_PULSE_CLASS = "rank-my-rank-changed-pulse";
 
+/** Soft-dep CLIENT-242: bag/shop category tab first-row scan ring + rank/recruit residual lines. */
+export {
+  BAG_SHOP_CATEGORY_SCAN_RING_CLASS,
+} from "@/net/bagShopCategoryScan";
+export {
+  RANK_PIN_REFRESH_RESIDUAL_CLASS,
+  RANK_PIN_REFRESH_RESIDUAL_ROLE,
+} from "@/net/rankPinRefreshResidual";
+export {
+  RECRUIT_WALLET_COMPARE_RESIDUAL_CLASS,
+  RECRUIT_WALLET_COMPARE_RESIDUAL_ROLE,
+} from "@/net/recruitWalletCompareResidual";
+
 export const CLIENT_155_PANEL_ASSET_BY_CENTER_ID: Record<
   Client155NarrowManifestCenterPanelId,
   string
