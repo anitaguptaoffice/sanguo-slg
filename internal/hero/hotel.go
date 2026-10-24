@@ -304,7 +304,7 @@ func (s *Service) RecruitHotelCandidate(ctx context.Context, p PlayerRef, city C
 	if err != nil {
 		return RecruitHotelResult{}, err
 	}
-	if !HasHeroCapacity(officeLevel, len(heroes)) {
+	if !HasHeroCapacity(officeLevel, CountOwnedHeroes(heroes)) {
 		return RecruitHotelResult{}, ErrHotelCapacityFull
 	}
 	rows, err := hs.ListCandidates(ctx, p.ServerID, city.CityID)

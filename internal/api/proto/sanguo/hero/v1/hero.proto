@@ -214,3 +214,66 @@ message LargessHeroResponse {
   int32 item_cfg_id = 5;
   int64 next_largess_at_ms = 6;
 }
+
+// route: hero.v1.ListCaptiveHeroes
+message CaptiveHeroSummary {
+  int64 hero_id = 1;
+  int64 city_id = 2;
+  int32 template_cfg_id = 3;
+  string display_name = 4;
+  int32 level = 5;
+  int32 loyalty = 6;
+  HeroAttributes attributes = 7;
+}
+
+message ListCaptiveHeroesRequest {
+  int32 server_id = 1;
+}
+
+message ListCaptiveHeroesResponse {
+  repeated CaptiveHeroSummary captives = 1;
+}
+
+// route: hero.v1.TrySummonCaptive
+message SummonCostItem {
+  int32 item_cfg_id = 1;
+  int32 quantity = 2;
+}
+
+message TrySummonCaptiveRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 hero_id = 3;
+}
+
+message TrySummonCaptiveResponse {
+  int64 hero_id = 1;
+  int64 gold_cost = 2;
+  repeated SummonCostItem items = 3;
+  string summary = 4;
+}
+
+// route: hero.v1.SureSummonCaptive
+message SureSummonCaptiveRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 hero_id = 3;
+}
+
+message SureSummonCaptiveResponse {
+  int64 hero_id = 1;
+  string display_name = 2;
+  int32 level = 3;
+  int32 loyalty = 4;
+}
+
+// route: hero.v1.ReleaseCaptive
+message ReleaseCaptiveRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 hero_id = 3;
+}
+
+message ReleaseCaptiveResponse {
+  int64 hero_id = 1;
+}

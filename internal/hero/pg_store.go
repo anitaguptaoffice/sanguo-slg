@@ -198,6 +198,21 @@ func (p *PGStore) LastLargessAt(ctx context.Context, serverID int32, heroID int6
 	return at, nil
 }
 
+func (p *PGStore) DeleteHero(ctx context.Context, serverID int32, heroID int64) error {
+	_, err := p.Pool.Exec(ctx, `
+		DELETE FROM hero_assignment WHERE server_id = $1 AND hero_id = $2`,
+		serverID, heroID,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = p.Pool.Exec(ctx, `
+		DELETE FROM player_hero WHERE server_id = $1 AND hero_id = $2`,
+		serverID, heroID,
+	)
+	return err
+}
+
 func (p *PGStore) SetLastLargessAt(ctx context.Context, serverID int32, heroID int64, at time.Time) error {
 	if err := p.ensureLargessTable(ctx); err != nil {
 		return err

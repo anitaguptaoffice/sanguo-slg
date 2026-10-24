@@ -85,6 +85,14 @@ func (l *largessTestInventory) ApplyRecruitSpend(context.Context, PlayerRef, Res
 	return nil
 }
 
+func (l *largessTestInventory) SpendItemQty(_ context.Context, _ PlayerRef, itemCfgID int32, qty int32) error {
+	if l.items[itemCfgID] < qty {
+		return ErrInsufficientItem
+	}
+	l.items[itemCfgID] -= qty
+	return nil
+}
+
 func (l *largessTestInventory) ApplyLargessSpend(_ context.Context, _ PlayerRef, goldSpent int64, itemCfgID int32) error {
 	if goldSpent > 0 {
 		if l.gold < goldSpent {

@@ -19,20 +19,21 @@ type RecruitResult struct {
 }
 
 type Service struct {
-	Catalog    map[int32]Template
-	Items      map[int32]RecruitItemSpec
-	Store      Store
-	HotelStore HotelStore
-	levels     *LevelTable
-	RNG        *rand.Rand
-	clock      func() time.Time
+	Catalog      map[int32]Template
+	Items        map[int32]RecruitItemSpec
+	Store        Store
+	CaptiveStore CaptiveStore
+	HotelStore   HotelStore
+	levels       *LevelTable
+	RNG          *rand.Rand
+	clock        func() time.Time
 }
 
 func NewService() *Service {
 	levels, _ := DefaultLevelTable()
 	return &Service{
 		Catalog: DefaultCatalog(), Items: DefaultRecruitItems(),
-		Store: NewMemStore(), levels: levels,
+		Store: NewMemStore(), CaptiveStore: NewMemCaptiveStore(), levels: levels,
 		RNG: rand.New(rand.NewSource(1)), clock: time.Now,
 	}
 }

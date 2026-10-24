@@ -27,6 +27,14 @@ func (m *memInventory) ApplyRecruitSpend(_ context.Context, _ PlayerRef, walletB
 	return nil
 }
 
+func (m *memInventory) SpendItemQty(_ context.Context, _ PlayerRef, itemCfgID int32, qty int32) error {
+	if m.items[itemCfgID] < qty {
+		return ErrInsufficientItem
+	}
+	m.items[itemCfgID] -= qty
+	return nil
+}
+
 func (m *memInventory) ApplyLargessSpend(_ context.Context, _ PlayerRef, goldSpent int64, itemCfgID int32) error {
 	if goldSpent > 0 {
 		m.wallet.Gold -= goldSpent

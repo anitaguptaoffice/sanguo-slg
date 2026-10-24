@@ -98,6 +98,17 @@ func (p *pgRecruitInventory) ApplyLargessSpend(_ context.Context, _ PlayerRef, _
 	return nil
 }
 
+func (p *pgRecruitInventory) SpendItemQty(_ context.Context, ref PlayerRef, itemCfgID int32, qty int32) error {
+	cref := content.PlayerRef{ServerID: ref.ServerID, PlayerID: ref.PlayerID}
+	if _, err := p.content.Remove(cref, itemCfgID, qty); err != nil {
+		if errors.Is(err, content.ErrInsufficientItems) {
+			return ErrInsufficientItem
+		}
+		return err
+	}
+	return nil
+}
+
 func TestRecruitPlayerPGDeductsWalletAndItems(t *testing.T) {
 	pool := openHeroTestDB(t)
 	ctx := context.Background()
