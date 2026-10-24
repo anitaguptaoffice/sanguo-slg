@@ -57,10 +57,22 @@
 | 黄金 | `getHeroSummonGold`（三维溢出 ×50 后 ×50） | `HeroSummonGold` = `HeroSalary`×50；扣 `player_wallet.gold`（与客栈口径一致） |
 | 高等级道具 | `makeHeroSummonNeed` 随机珠宝 gid 30–38 | **M1 delta**：等级 ≥50 固定 `item_cfg_id=2050`，数量 `1+(level-50)/10` |
 | 爵位 | `nobility` 门槛 | **M1 delta**：暂不校验爵位 |
-| 名将概率 / 结交 | `sys_lionize` 成功率 | **M1 delta**：跳过（L8 #1197）；名将按普通俘虏招降 |
+| 名将概率 / 结交 | `sys_lionize` 成功率 | 俘虏线仍按普通招降；名将结交见 §6 |
 | 释放 | `releaseHero` → 野地 + 删 captive | `ReleaseCaptive` 删除 `player_hero` 与 captive 行 |
 | 容量 | `cityHasHeroPosition` | 招降成功时复用 `HasHeroCapacity`（俘虏不计入 `CountOwnedHeroes`） |
 | 产俘 | 战报抓将 | **M1**：`InjectCaptive` 测试/GM 注入；真实战报产俘另开 MIL 卡 |
+
+## 6. 名将结交 / 游说（Persuade / Lionize）
+
+| 项 | Legacy（#82 `HotelFunc.php`） | M1 实现 |
+|---|---|---|
+| 进度表 | `sys_lionize`（uid,npcid,friend,state） | `player_hero_lionize` |
+| 目标将 | `cfg_npc_hero` 全表 | **M1 delta**：`DefaultPersuadeTargets` 子集（模板 1001–1004） |
+| 结交 | `LionizeHero` 扣金 `level×500`，friend=10，state=1 | `LionizeHero` 首次调用（state=0）同口径扣 `player_wallet.gold` |
+| 游说 | `PersuadeHero` friend≥100、每日一次、锦囊×15、概率夺将 | **M1 delta**：`PersuadeHero` 每次 +10 friend（上限 30）、24h 冷却、道具 `item_cfg_id=2004`×1；无概率夺 NPC 城将 |
+| 招入 | 游说成功 state=2 | **M1 delta**：friend≥30 时 `LionizeHero` 再次调用写入 `player_hero`（模板将） |
+| 容量 | `cityHasHeroPosition` | `HasHeroCapacity` + `CountOwnedHeroes`（同客栈/俘虏） |
+| 爵位 / 同时结交上限 | 爵位≥2；state=1 最多 2 人（道具可扩） | **M1 delta**：暂不校验 |
 
 ## 验证
 
@@ -69,3 +81,4 @@
 - `internal/domestic/production_align_test.go`：`domestic.md` 一小时产出  
 - `internal/hero/hotel_test.go`：客栈招募与招贤馆容量拒绝  
 - `internal/hero/captive_test.go`：俘虏招降/释放与容量、道具闸  
+- `internal/hero/persuade_test.go`：结交好感、达标招入、容量/冷却/好感不足拒绝  
