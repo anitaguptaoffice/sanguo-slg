@@ -187,7 +187,7 @@
     {
       "template_cfg_id": 1009,
       "code": "north_wall",
-      "name": "北境柱石",
+      "name": "曹操",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -210,7 +210,7 @@
     {
       "template_cfg_id": 1010,
       "code": "river_sage",
-      "name": "江左智囊",
+      "name": "孙权",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -233,7 +233,7 @@
     {
       "template_cfg_id": 1011,
       "code": "stone_fort",
-      "name": "坚城守御",
+      "name": "吕布",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -256,7 +256,7 @@
     {
       "template_cfg_id": 1012,
       "code": "dawn_marshal",
-      "name": "破晓元帅",
+      "name": "司马懿",
       "rarity": 5,
       "pool": "standard",
       "base_stats": {
@@ -279,7 +279,7 @@
     {
       "template_cfg_id": 1013,
       "code": "ink_advisor",
-      "name": "墨香学士",
+      "name": "张辽",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -302,7 +302,7 @@
     {
       "template_cfg_id": 1014,
       "code": "bamboo_guard",
-      "name": "青竹卫尉",
+      "name": "陆逊",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -325,7 +325,7 @@
     {
       "template_cfg_id": 1015,
       "code": "frost_blade",
-      "name": "寒霜剑侍",
+      "name": "曹仁",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -348,7 +348,7 @@
     {
       "template_cfg_id": 1016,
       "code": "gold_envoy",
-      "name": "金印使节",
+      "name": "典韦",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -371,7 +371,7 @@
     {
       "template_cfg_id": 1017,
       "code": "crane_healer",
-      "name": "白鹤医官",
+      "name": "许褚",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -394,7 +394,7 @@
     {
       "template_cfg_id": 1018,
       "code": "bronze_smith",
-      "name": "青铜匠师",
+      "name": "荀彧",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -417,7 +417,7 @@
     {
       "template_cfg_id": 1019,
       "code": "reed_scout",
-      "name": "芦荡斥候",
+      "name": "庞统",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -440,7 +440,7 @@
     {
       "template_cfg_id": 1020,
       "code": "plum_hermit",
-      "name": "梅岭隐士",
+      "name": "甘宁",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -463,7 +463,7 @@
     {
       "template_cfg_id": 1021,
       "code": "azure_phalanx",
-      "name": "青岚方阵",
+      "name": "鲁肃",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -486,7 +486,7 @@
     {
       "template_cfg_id": 1022,
       "code": "ember_duelist",
-      "name": "烬锋斗士",
+      "name": "黄盖",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -509,7 +509,7 @@
     {
       "template_cfg_id": 1023,
       "code": "mist_ranger",
-      "name": "雾林游侠",
+      "name": "魏延",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -532,7 +532,7 @@
     {
       "template_cfg_id": 1024,
       "code": "coral_admiral",
-      "name": "珊瑚水师",
+      "name": "姜维",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -555,7 +555,7 @@
     {
       "template_cfg_id": 1025,
       "code": "sand_pillar",
-      "name": "沙洲柱将",
+      "name": "华佗",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -578,7 +578,7 @@
     {
       "template_cfg_id": 1026,
       "code": "iron_bard",
-      "name": "铁弦乐士",
+      "name": "蒋琬",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -601,7 +601,7 @@
     {
       "template_cfg_id": 1027,
       "code": "lotus_healer",
-      "name": "莲塘医女",
+      "name": "太史慈",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -624,7 +624,7 @@
     {
       "template_cfg_id": 1028,
       "code": "copper_quarter",
-      "name": "铜衡督粮",
+      "name": "吕蒙",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -647,7 +647,7 @@
     {
       "template_cfg_id": 1029,
       "code": "jade_sentinel",
-      "name": "玉门哨帅",
+      "name": "夏侯惇",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -670,7 +670,7 @@
     {
       "template_cfg_id": 1030,
       "code": "storm_lancer",
-      "name": "惊雷枪骑",
+      "name": "夏侯渊",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -693,7 +693,7 @@
     {
       "template_cfg_id": 1031,
       "code": "pine_sage",
-      "name": "松岭谋士",
+      "name": "张郃",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -716,7 +716,7 @@
     {
       "template_cfg_id": 1032,
       "code": "reed_admiral",
-      "name": "苇泽舟帅",
+      "name": "徐晃",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -739,7 +739,7 @@
     {
       "template_cfg_id": 1033,
       "code": "granite_warden",
-      "name": "磐石戍将",
+      "name": "郭嘉",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -762,7 +762,7 @@
     {
       "template_cfg_id": 1034,
       "code": "silk_diplomat",
-      "name": "锦帛行卿",
+      "name": "贾诩",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -785,7 +785,7 @@
     {
       "template_cfg_id": 1035,
       "code": "amber_alchemist",
-      "name": "琥珀丹师",
+      "name": "法正",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -808,7 +808,7 @@
     {
       "template_cfg_id": 1036,
       "code": "obsidian_scout",
-      "name": "玄羽探子",
+      "name": "徐庶",
       "rarity": 2,
       "pool": "standard",
       "base_stats": {
@@ -831,7 +831,7 @@
     {
       "template_cfg_id": 1037,
       "code": "harbor_master",
-      "name": "津渡监官",
+      "name": "邓艾",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -854,7 +854,7 @@
     {
       "template_cfg_id": 1038,
       "code": "field_engineer",
-      "name": "野营匠首",
+      "name": "孙策",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -877,7 +877,7 @@
     {
       "template_cfg_id": 1039,
       "code": "dawn_archer",
-      "name": "晨曦弓监",
+      "name": "孙坚",
       "rarity": 3,
       "pool": "standard",
       "base_stats": {
@@ -900,7 +900,7 @@
     {
       "template_cfg_id": 1040,
       "code": "night_captain",
-      "name": "夜巡都尉",
+      "name": "貂蝉",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {

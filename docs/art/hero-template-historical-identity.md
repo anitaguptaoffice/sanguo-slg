@@ -34,44 +34,46 @@
 | 1007 | `jade_strategist` | **诸葛亮** | **冻结** |
 | 1008 | `fire_general` | **周瑜** | **冻结** |
 
-## 1009–1040（草案 — 待编排确认）
+## Slice 3（冻结 — Batch 1 第三批，1009–1040）
 
-以下根据当前风味名与 `legacyDefaultCatalog()` 等线索做的 **best-effort** 映射，**未写入** `heroes.yml` 的 `name` / `historical_identity`（1005–1008 已冻结，见上节）；美术勿按此批量开工，仅供后续 DATA/编排卡参考。
+与 PR #108 联合冻结（工程 comment [6387652485](https://github.com/anitaguptaoffice/sanguo-slg/pull/108#issuecomment-6387652485)）一致：沿用 Slice 2 模式，`heroes.yml` → `generate_seeds.py` → `cfg_hero_template.sql`，并同步 `internal/hero/seed/heroes.json` 与客户端 `heroTemplateLabel` / mock 元数据。`template_code` 与 `template_cfg_id` **不变**；仅更新 `name` 与 `base_stats.historical_identity`。肖像 PNG **不在本卡**。
 
-| id | code | 当前风味 `name` | 草案史实人物 | 依据（简述） |
-|---:|---|---|---|---|
-| 1009 | `north_wall` | 北境柱石 | 张辽 | 固守边塞（待核） |
-| 1010 | `river_sage` | 江左智囊 | 陆逊 | 江左、以弱胜强（待核） |
-| 1011 | `stone_fort` | 坚城守御 | 曹仁 | 坚城（待核） |
-| 1012 | `dawn_marshal` | 破晓元帅 | 孙权 | 统御三军（待核） |
-| 1013 | `ink_advisor` | 墨香学士 | 荀彧 | 典章教化（待核） |
-| 1014 | `bamboo_guard` | 青竹卫尉 | 典韦 | 护卫宫阙（待核） |
-| 1015 | `frost_blade` | 寒霜剑侍 | 许褚 | 近卫剑士（待核） |
-| 1016 | `gold_envoy` | 金印使节 | 蒋琬 | 游说盟约（待核） |
-| 1017 | `crane_healer` | 白鹤医官 | 华佗 | 疗伤济世（待核） |
-| 1018 | `bronze_smith` | 青铜匠师 | — | 泛化职司，无单一人物 |
-| 1019 | `reed_scout` | 芦荡斥候 | — | 泛化职司 |
-| 1020 | `plum_hermit` | 梅岭隐士 | 庞统 | 隐士奇策（待核） |
-| 1021 | `azure_phalanx` | 青岚方阵 | — | 泛化阵型 |
-| 1022 | `ember_duelist` | 烬锋斗士 | — | 待核 |
-| 1023 | `mist_ranger` | 雾林游侠 | — | 待核 |
-| 1024 | `coral_admiral` | 珊瑚水师 | 甘宁 | 水师（待核） |
-| 1025 | `sand_pillar` | 沙洲柱将 | — | 待核 |
-| 1026 | `iron_bard` | 铁弦乐士 | — | 待核 |
-| 1027 | `lotus_healer` | 莲塘医女 | — | 待核 |
-| 1028 | `copper_quarter` | 铜衡督粮 | — | 待核 |
-| 1029 | `jade_sentinel` | 玉门哨帅 | — | 待核 |
-| 1030 | `storm_lancer` | 惊雷枪骑 | — | 待核 |
-| 1031 | `pine_sage` | 松岭谋士 | — | 待核 |
-| 1032 | `reed_admiral` | 苇泽舟帅 | — | 待核 |
-| 1033 | `granite_warden` | 磐石戍将 | — | 待核 |
-| 1034 | `silk_diplomat` | 锦帛行卿 | — | 待核 |
-| 1035 | `amber_alchemist` | 琥珀丹师 | — | 待核 |
-| 1036 | `obsidian_scout` | 玄羽探子 | — | 待核 |
-| 1037 | `harbor_master` | 津渡监官 | — | 待核 |
-| 1038 | `field_engineer` | 野营匠首 | — | 待核 |
-| 1039 | `dawn_archer` | 晨曦弓监 | — | 待核 |
-| 1040 | `night_captain` | 夜巡都尉 | — | 待核 |
+| template_cfg_id | code | 展示名 / `historical_identity` | 状态 |
+|---:|---|---|---|
+| 1009 | `north_wall` | **曹操** | **冻结** |
+| 1010 | `river_sage` | **孙权** | **冻结** |
+| 1011 | `stone_fort` | **吕布** | **冻结** |
+| 1012 | `dawn_marshal` | **司马懿** | **冻结** |
+| 1013 | `ink_advisor` | **张辽** | **冻结** |
+| 1014 | `bamboo_guard` | **陆逊** | **冻结** |
+| 1015 | `frost_blade` | **曹仁** | **冻结** |
+| 1016 | `gold_envoy` | **典韦** | **冻结** |
+| 1017 | `crane_healer` | **许褚** | **冻结** |
+| 1018 | `bronze_smith` | **荀彧** | **冻结** |
+| 1019 | `reed_scout` | **庞统** | **冻结** |
+| 1020 | `plum_hermit` | **甘宁** | **冻结** |
+| 1021 | `azure_phalanx` | **鲁肃** | **冻结** |
+| 1022 | `ember_duelist` | **黄盖** | **冻结** |
+| 1023 | `mist_ranger` | **魏延** | **冻结** |
+| 1024 | `coral_admiral` | **姜维** | **冻结** |
+| 1025 | `sand_pillar` | **华佗** | **冻结** |
+| 1026 | `iron_bard` | **蒋琬** | **冻结** |
+| 1027 | `lotus_healer` | **太史慈** | **冻结** |
+| 1028 | `copper_quarter` | **吕蒙** | **冻结** |
+| 1029 | `jade_sentinel` | **夏侯惇** | **冻结** |
+| 1030 | `storm_lancer` | **夏侯渊** | **冻结** |
+| 1031 | `pine_sage` | **张郃** | **冻结** |
+| 1032 | `reed_admiral` | **徐晃** | **冻结** |
+| 1033 | `granite_warden` | **郭嘉** | **冻结** |
+| 1034 | `silk_diplomat` | **贾诩** | **冻结** |
+| 1035 | `amber_alchemist` | **法正** | **冻结** |
+| 1036 | `obsidian_scout` | **徐庶** | **冻结** |
+| 1037 | `harbor_master` | **邓艾** | **冻结** |
+| 1038 | `field_engineer` | **孙策** | **冻结** |
+| 1039 | `dawn_archer` | **孙坚** | **冻结** |
+| 1040 | `night_captain` | **貂蝉** | **冻结** |
+
+**1040 例外**：貂蝉为《三国演义》等演义体系人物，**非**正史可考单一人名；`name` / `historical_identity` 仍填 **貂蝉**，供 UI 与美术绘制，文档与评审按**文学人物**口径处理（与史实武将表区分）。
 
 ## 变更记录
 
@@ -79,3 +81,4 @@
 |---|---|
 | 2026-10-24 | HERO-HIST-NAME-001：冻结 1001–1004 为刘备/关羽/张飞/赵云；补充 1009+ 草案表 |
 | 2026-10-24 | Slice 2 联合冻结（#108）：1005–1008 冻结为黄忠/马超/诸葛亮/周瑜；与 seed 对齐；1009–1040 仍为草案 |
+| 2026-10-25 | Slice 3 联合冻结（#108 comment 6387652485）：1009–1040 写入 `heroes.yml` / seed / SQL；1040 貂蝉标注演义人物例外 |
