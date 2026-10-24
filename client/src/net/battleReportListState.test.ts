@@ -2,12 +2,15 @@ import { describe, expect, it, beforeEach } from "vitest";
 import {
   BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY,
   BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY,
+  LEGACY_BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY,
   battleReportAllLoadedLabel,
+  deserializeBattleReportTimeFilter,
   hasMoreBattleReports,
   parseBattleReportOutcomeFilterSessionValue,
   parseBattleReportTimeWindowFilterSessionValue,
   readBattleReportOutcomeFilterSession,
   readBattleReportTimeWindowFilterSession,
+  serializeBattleReportTimeFilter,
   writeBattleReportOutcomeFilterSession,
   writeBattleReportTimeWindowFilterSession,
 } from "@/net/battleReportListState";
@@ -70,13 +73,28 @@ describe("battleReportListState", () => {
     expect(parseBattleReportOutcomeFilterSessionValue("draw")).toBe("draw");
   });
 
-  it("persists time window filter in separate sessionStorage key", () => {
+  it("serializeBattleReportTimeFilter round-trips via deserialize", () => {
+    expect(serializeBattleReportTimeFilter("last7d")).toBe("last7d");
+    expect(deserializeBattleReportTimeFilter(serializeBattleReportTimeFilter("today"))).toBe(
+      "today",
+    );
+    expect(deserializeBattleReportTimeFilter("invalid")).toBeNull();
+  });
+
+  it("persists time window filter in battle-report-time-filter-v1", () => {
     writeBattleReportTimeWindowFilterSession("today", storage);
     expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("today");
     expect(readBattleReportTimeWindowFilterSession(storage)).toBe("today");
     writeBattleReportOutcomeFilterSession("win", storage);
     expect(storage.getItem(BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY)).toBe("win");
     expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("today");
+  });
+
+  it("migrates legacy rxsg time window key on read (CLIENT-207)", () => {
+    storage.setItem(LEGACY_BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY, "last7d");
+    expect(readBattleReportTimeWindowFilterSession(storage)).toBe("last7d");
+    expect(storage.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBe("last7d");
+    expect(storage.getItem(LEGACY_BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY)).toBeNull();
   });
 
   it("parseBattleReportTimeWindowFilterSessionValue rejects unknown values", () => {

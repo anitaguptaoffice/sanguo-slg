@@ -10,8 +10,11 @@ export const BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY = "battle-report-outcome-f
 export const LEGACY_BATTLE_REPORT_OUTCOME_FILTER_SESSION_KEY =
   "rxsg.client.battleReport.outcomeFilter";
 
-/** sessionStorage：战报列表时间窗筛选（CLIENT-065，与 outcome 键分离）。 */
-export const BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY =
+/** sessionStorage：战报列表时间窗筛选（CLIENT-207 / CLIENT-065，与 outcome 键分离）。 */
+export const BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY = "battle-report-time-filter-v1";
+
+/** CLIENT-065 旧键；读取时迁移至 {@link BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY}。 */
+export const LEGACY_BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY =
   "rxsg.client.battleReport.timeWindowFilter";
 
 export const BATTLE_REPORT_LOAD_MORE_LABEL = "加载更多";
@@ -87,15 +90,38 @@ export function parseBattleReportTimeWindowFilterSessionValue(
   return null;
 }
 
+export function serializeBattleReportTimeFilter(
+  filter: BattleReportTimeWindowFilter,
+): string {
+  return filter;
+}
+
+export function deserializeBattleReportTimeFilter(
+  raw: string | null | undefined,
+): BattleReportTimeWindowFilter | null {
+  return parseBattleReportTimeWindowFilterSessionValue(raw);
+}
+
 export function readBattleReportTimeWindowFilterSession(
-  storage: Pick<Storage, "getItem"> | null = typeof sessionStorage !== "undefined"
-    ? sessionStorage
-    : null,
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null =
+    typeof sessionStorage !== "undefined" ? sessionStorage : null,
 ): BattleReportTimeWindowFilter | null {
   try {
-    return parseBattleReportTimeWindowFilterSessionValue(
+    const fromCurrent = deserializeBattleReportTimeFilter(
       storage?.getItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY) ?? null,
     );
+    if (fromCurrent) return fromCurrent;
+    const legacy = deserializeBattleReportTimeFilter(
+      storage?.getItem(LEGACY_BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY) ?? null,
+    );
+    if (!legacy) return null;
+    writeBattleReportTimeWindowFilterSession(legacy, storage);
+    try {
+      storage?.removeItem(LEGACY_BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY);
+    } catch {
+      /* ignore */
+    }
+    return legacy;
   } catch {
     return null;
   }
@@ -108,7 +134,10 @@ export function writeBattleReportTimeWindowFilterSession(
     : null,
 ): void {
   try {
-    storage?.setItem(BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY, filter);
+    storage?.setItem(
+      BATTLE_REPORT_TIME_WINDOW_FILTER_SESSION_KEY,
+      serializeBattleReportTimeFilter(filter),
+    );
   } catch {
     /* quota / private mode */
   }
