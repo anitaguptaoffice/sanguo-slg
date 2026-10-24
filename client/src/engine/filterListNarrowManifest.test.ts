@@ -137,6 +137,18 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(CENTER_PANEL_TAB_PULSE_CLASS);
   });
 
+  it("CLIENT-211 exposes wave:37 world intel battle report mail bag narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain("minimap-march-stack-badge");
+    expect(html).toContain("march-intel-phase-eta-strip");
+    expect(html).toContain("march-form-reserve-warn");
+    expect(html).toContain("battle-report-time-filter-v1");
+    expect(html).toContain("battle-report-round-summary-strip");
+    expect(html).toContain("mail-tab-hud-sync-pulse");
+    expect(html).toContain("bag-row-return-highlight");
+    expect(html).toContain("bag-category-scroll-v1");
+  });
+
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(`padding-bottom: ${FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX}px`);

@@ -629,6 +629,13 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/军团/聊天** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:36 DOM 钩子（软依赖 **CLIENT-196～202**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195** manifest 不退化。
 
+### 手动验收（1280 wave:37 组合 manifest CLIENT-211）
+
+视口 **1280×720** `layout-narrow`：**世界** `minimap-march-stack-badge` / `world-tile-march-summary-line`（**CLIENT-204**）、**军情** `march-intel-phase-eta-strip` / `intel-row-phase-subline`（**CLIENT-205**）与军事 **出征** `march-form-troop-reserve-line` / `march-form-reserve-warn`（**CLIENT-206**）、**战报** `battle-report-time-filter-v1` / `battle-report-list-streak-line` / `battle-report-round-summary-strip`（**CLIENT-207/208**；**CLIENT-176/190** 不退化）、**邮件** `mail-tab-unread-sweep-line` / `mail-tab-hud-sync-pulse` 与日常 `quest-claim-hud-link-line`（**CLIENT-209**）、**背包/商城** `bag-category-tab-v1` / `bag-category-scroll-v1` / `bag-row-return-highlight`（**CLIENT-210**；**CLIENT-194** 不退化）与 **CLIENT-195/203** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；军情/战报/邮件密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave37WorldIntelBattleReportMailBagNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-211）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：底栏 **世界/军情/战报/邮件/背包/商城/军事** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:37 DOM 钩子（软依赖 **CLIENT-204～210**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203** manifest 不退化。
+
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
 视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-separator`（**CLIENT-185**）；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
