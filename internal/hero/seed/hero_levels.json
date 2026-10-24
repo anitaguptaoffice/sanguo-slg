@@ -1,0 +1,28 @@
+{
+  "schema": "cfg_hero_level_m1",
+  "max_level": 20,
+  "comment": "Legacy cfg_hero_level: upgrade_exp on row L is cost (L-1)→L; upgradeHero reads row hero.level+1.",
+  "levels": [
+    {"level": 1, "total_exp": 0, "upgrade_exp": 100},
+    {"level": 2, "total_exp": 100, "upgrade_exp": 100},
+    {"level": 3, "total_exp": 300, "upgrade_exp": 200},
+    {"level": 4, "total_exp": 600, "upgrade_exp": 300},
+    {"level": 5, "total_exp": 1000, "upgrade_exp": 400},
+    {"level": 6, "total_exp": 1500, "upgrade_exp": 500},
+    {"level": 7, "total_exp": 2100, "upgrade_exp": 600},
+    {"level": 8, "total_exp": 2800, "upgrade_exp": 700},
+    {"level": 9, "total_exp": 3600, "upgrade_exp": 800},
+    {"level": 10, "total_exp": 4500, "upgrade_exp": 900},
+    {"level": 11, "total_exp": 5500, "upgrade_exp": 1000},
+    {"level": 12, "total_exp": 6600, "upgrade_exp": 1100},
+    {"level": 13, "total_exp": 7800, "upgrade_exp": 1200},
+    {"level": 14, "total_exp": 9100, "upgrade_exp": 1300},
+    {"level": 15, "total_exp": 10500, "upgrade_exp": 1400},
+    {"level": 16, "total_exp": 12000, "upgrade_exp": 1500},
+    {"level": 17, "total_exp": 13600, "upgrade_exp": 1600},
+    {"level": 18, "total_exp": 15300, "upgrade_exp": 1700},
+    {"level": 19, "total_exp": 17100, "upgrade_exp": 1800},
+    {"level": 20, "total_exp": 19000, "upgrade_exp": 1900},
+    {"level": 21, "total_exp": 20900, "upgrade_exp": 0}
+  ]
+}

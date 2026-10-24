@@ -25,14 +25,16 @@ type ListResult struct {
 
 // HeroDetail enriches a hero row with template metadata.
 type HeroDetail struct {
-	Hero           *Hero
-	TemplateName   string
-	TemplateCode   string
-	Rarity         int16
-	LoyaltyMin     int32
-	LoyaltyMax     int32
-	Tagline        string
-	ExpectedStats  BaseStats
+	Hero                *Hero
+	TemplateName        string
+	TemplateCode        string
+	Rarity              int16
+	LoyaltyMin          int32
+	LoyaltyMax          int32
+	Tagline             string
+	ExpectedStats       BaseStats
+	ExpTowardNext       int64
+	UpgradeExpRequired  int64
 }
 
 // InventoryPort loads and commits recruit costs against the content/wallet layer.
@@ -104,10 +106,23 @@ func (s *Service) GetHeroDetail(ctx context.Context, p PlayerRef, heroID int64) 
 	if !ok {
 		return HeroDetail{}, ErrUnknownTemplate
 	}
+	levels := s.levels
+	if levels == nil {
+		levels, err = DefaultLevelTable()
+		if err != nil {
+			return HeroDetail{}, err
+		}
+	}
+	toward := levels.ExpTowardNext(h.Level, h.Exp)
+	req := levels.UpgradeExpToNext(h.Level)
+	if h.Level >= MaxLevelM1 {
+		req = 0
+	}
 	return HeroDetail{
 		Hero: h, TemplateName: t.Name, TemplateCode: t.Code, Rarity: t.Rarity,
 		LoyaltyMin: LoyaltyMin, LoyaltyMax: LoyaltyMax,
 		ExpectedStats: BaseStats{Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command},
+		ExpTowardNext: toward, UpgradeExpRequired: req,
 	}, nil
 }
 

@@ -71,6 +71,7 @@ func (s *Server) handleGetHeroDetail(ctx context.Context, pkt *commonv1.ClientPa
 		HeroId: h.HeroID, TemplateCfgId: h.TemplateCfgID, TemplateName: detail.TemplateName,
 		TemplateCode: detail.TemplateCode, Rarity: int32(detail.Rarity), Level: h.Level, Loyalty: int32(h.Loyalty),
 		LoyaltyMin: detail.LoyaltyMin, LoyaltyMax: detail.LoyaltyMax,
+		Exp: h.Exp, ExpTowardNext: detail.ExpTowardNext, UpgradeExpRequired: detail.UpgradeExpRequired,
 		Attributes: &herov1.HeroAttributes{
 			Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command,
 		},
@@ -159,6 +160,46 @@ func (s *Server) handleRecruitHero(ctx context.Context, pkt *commonv1.ClientPack
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
+func (s *Server) handleUpgradeHero(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	if s.heroSvc == nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "hero not wired"), nil
+	}
+	var req herov1.UpgradeHeroRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
+	}
+	if req.GetHeroId() == 0 {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
+	}
+	res, err := s.heroSvc.UpgradePlayer(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetHeroId())
+	if err != nil {
+		return heroErr(pkt.GetTraceId(), err), nil
+	}
+	h := res.Hero
+	detail, err := s.heroSvc.GetHeroDetail(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, h.HeroID)
+	if err != nil {
+		return nil, err
+	}
+	data, err := marshal(&herov1.UpgradeHeroResponse{
+		HeroId: h.HeroID, Level: h.Level, Exp: h.Exp, PreviousLevel: res.PreviousLevel,
+		ExpTowardNext: detail.ExpTowardNext, UpgradeExpRequired: detail.UpgradeExpRequired,
+		Attributes: &herov1.HeroAttributes{
+			Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
 func heroErr(trace string, err error) *commonv1.ServerPacket {
 	switch {
 	case errors.Is(err, hero.ErrHeroNotFound):
@@ -167,7 +208,9 @@ func heroErr(trace string, err error) *commonv1.ServerPacket {
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrAlreadyOwned):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
-	case errors.Is(err, hero.ErrInsufficientRes), errors.Is(err, hero.ErrInsufficientItem):
+	case errors.Is(err, hero.ErrInsufficientRes), errors.Is(err, hero.ErrInsufficientItem), errors.Is(err, hero.ErrInsufficientExp):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, hero.ErrMaxLevel), errors.Is(err, hero.ErrHeroNotInCity):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrEmptyPool):
 		return errResp(trace, commonv1.ErrorCode_COMMON_UNAVAILABLE, err.Error())

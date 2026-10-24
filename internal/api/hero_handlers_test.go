@@ -70,6 +70,59 @@ func TestHeroGatewayRecruitAndList(t *testing.T) {
 	}
 }
 
+func TestHeroGatewayUpgradeHero(t *testing.T) {
+	ctx := context.Background()
+	cat, err := content.EmbeddedCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	contentSvc := content.NewService(cat)
+	p := content.PlayerRef{ServerID: 1, PlayerID: 50}
+	_, err = contentSvc.Grant(p, content.RewardPackage{
+		Resources: map[string]int64{"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000},
+		Items:     []content.RewardItem{{ItemCfgID: hero.RecruitScrollID, Qty: 1}},
+	}, "test:hero-upgrade")
+	if err != nil {
+		t.Fatal(err)
+	}
+	heroSvc := hero.NewService()
+	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: heroSvc}
+	s.sessions.Bind("sess-up", PlayerContext{ServerID: 1, PlayerID: 50})
+
+	recruitResp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
+		TraceId: "t-rec", SessionId: "sess-up", ServerId: 1,
+		Payload: mustProto(&herov1.RecruitHeroRequest{ServerId: 1, TemplateCfgId: 1001}),
+	})
+	if err != nil || recruitResp.Code != 0 {
+		t.Fatalf("recruit: err=%v code=%d", err, recruitResp.Code)
+	}
+	var recruitOut herov1.RecruitHeroResponse
+	if err := proto.Unmarshal(recruitResp.Data, &recruitOut); err != nil {
+		t.Fatal(err)
+	}
+	hid := recruitOut.GetHeroId()
+	h, _ := heroSvc.Store.GetHero(ctx, 1, hid)
+	h.Exp = 200
+	if err := heroSvc.Store.SaveHero(ctx, h); err != nil {
+		t.Fatal(err)
+	}
+
+	upResp, err := s.handleUpgradeHero(ctx, &commonv1.ClientPacket{
+		TraceId: "t-up", SessionId: "sess-up", ServerId: 1,
+		Payload: mustProto(&herov1.UpgradeHeroRequest{ServerId: 1, HeroId: hid}),
+	})
+	if err != nil || upResp.Code != 0 {
+		t.Fatalf("upgrade: err=%v code=%d msg=%s", err, upResp.Code, upResp.Msg)
+	}
+	var upOut herov1.UpgradeHeroResponse
+	if err := proto.Unmarshal(upResp.Data, &upOut); err != nil {
+		t.Fatal(err)
+	}
+	if upOut.GetLevel() != 2 || upOut.GetPreviousLevel() != 1 {
+		t.Fatalf("upgrade out level=%d prev=%d", upOut.GetLevel(), upOut.GetPreviousLevel())
+	}
+}
+
 func TestHeroGatewayListRecruitTemplates(t *testing.T) {
 	ctx := context.Background()
 	s := &Server{sessions: NewSessionRegistry(), heroSvc: hero.NewService()}
