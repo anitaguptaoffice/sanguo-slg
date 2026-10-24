@@ -1,6 +1,7 @@
 import type { BagStack } from "@/net/bagState";
 import { itemLabel } from "@/net/contentFormat";
 import { validateUseConsumable } from "@/net/contentFormValidation";
+import { HERO_GOTO_BAG_CULTIVATION_LABEL } from "@/net/heroDetailBagDeepLink";
 import {
   HERO_CULTIVATION_CONSUMABLE_CFG_IDS,
   filterHeroCultivationBagItemIds,
@@ -109,6 +110,7 @@ export function renderHeroDetailCultivationUseMarkup(
   const reason = validation.ok ? "" : validation.message;
   return `<div class="hero-detail-cultivation-use" aria-label="养成道具使用">
     <button type="button" data-action="hero-use-cultivation-item"${disabled ? " disabled" : ""}>${label}</button>
+    <button type="button" data-action="hero-goto-bag-cultivation">${HERO_GOTO_BAG_CULTIVATION_LABEL}</button>
     <p class="hero-cultivation-item-hint">${itemHint}</p>
     <p class="march-form-error-sibling hero-cultivation-disabled-reason${reason ? "" : " hidden"}" data-role="hero-cultivation-disabled-reason">${reason}</p>
     <p class="march-form-error-sibling hidden" data-role="hero-cultivation-form-error" role="alert"></p>
