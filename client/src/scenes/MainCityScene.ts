@@ -429,6 +429,7 @@ export class MainCityScene implements Scene {
       SLOT_LABEL,
       () => this.queuePanels?.getRecruitQueueSnapshot() ?? [],
       this.assets,
+      (rows) => this.hudTodoBadgePoll.applyDailyChainRowsSnapshot(rows),
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(

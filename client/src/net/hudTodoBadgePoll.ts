@@ -92,6 +92,38 @@ export class HudTodoBadgePoll {
     this.deepLink = { ...EMPTY_HUD_TODO_DEEP_LINK };
   }
 
+  /** 日常领奖/批量领取后写入 chain 400 快照，底栏可领角标即时递减。 */
+  applyDailyChainRowsSnapshot(rows: DailyQuestRow[]): void {
+    const dailyRows = rows.slice();
+    const toolbarParts = this.toolbarCountsFromParts({
+      mailUnreadTotal: this.deepLink.mailUnreadTotal,
+      mailClaimablePage: this.deepLink.mailClaimablePage,
+      dailyRows,
+      battleReportUnread: this.deepLink.battleReportUnread,
+    });
+    const bundle = buildHudTodoBadges({
+      mailUnreadTotal: this.deepLink.mailUnreadTotal,
+      mailClaimablePage: this.deepLink.mailClaimablePage,
+      dailyRows,
+      buildings: this.opts.getBuildings(),
+      buildCompleteCount: this.opts.getBuildCompleteCount(),
+      battleReportUnread: this.deepLink.battleReportUnread,
+    });
+    this.deepLink = {
+      ...this.deepLink,
+      ...toolbarParts,
+      dailyChainRows: dailyRows,
+      dailyClaimable: bundle.center.dailyClaimable,
+      firstClaimableDailyCfgId: pickFirstClaimableDailyQuestCfgId(dailyRows),
+      firstDailyTodoCfgId:
+        pickFirstClaimableDailyQuestCfgId(dailyRows) || pickFirstDailyTodoQuestCfgId(dailyRows),
+      dailyTodo: bundle.toolbar.daily,
+    };
+    if (!this.opts.isDailySuppressed()) {
+      this.opts.onCounts(this.toolbarCountsForUi());
+    }
+  }
+
   /** 领取附件等局部刷新后写入邮件未读快照，避免等关面板再 poll。 */
   applyMailUnreadSnapshot(count: number, firstUnreadMailId = 0): void {
     const mailUnreadTotal = Math.max(0, count);
