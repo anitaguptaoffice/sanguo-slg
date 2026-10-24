@@ -49,6 +49,9 @@ export const CLIENT_127_PANEL_SCROLL_ROLE_BY_CENTER_ID: Record<
  */
 export const PANEL_FILTER_CHIP_BAR_CLASS = "panel-filter-chip-bar";
 
+/** CLIENT-155 / soft-dep CLIENT-150: chain progress secondary line on daily quest rows. */
+export const DAILY_QUEST_PROGRESS_SECONDARY_CLASS = "daily-quest-row-progress";
+
 export const CLIENT_127_FILTER_CHIP_BAR_SELECTOR_BY_CENTER_ID: Record<
   Client127NarrowFilterListCenterPanelId,
   string

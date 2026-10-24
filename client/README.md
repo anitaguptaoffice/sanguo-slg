@@ -437,6 +437,9 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
 | **HUD 产出速率与仓库余量扫读巩固** | [手动验收（HUD 经济扫读 CLIENT-148）](#手动验收hud-经济扫读-client-148)（[#584](https://github.com/anitaguptaoffice/sanguo-slg/issues/584)） | 进行中 |
+| **1280 主城产出·日常·将领·排行组合 manifest** | [手动验收（1280 wave:30 组合 manifest CLIENT-155）](#手动验收1280-wave30-组合-manifest-client-155)（[#591](https://github.com/anitaguptaoffice/sanguo-slg/issues/591)） | 进行中 |
+
+**wave:19 美术轨旁路**（**非** wave:30 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）——**非**本波 backlog 实现卡。实现卡 **CLIENT-148** 起，**勿占用 CLIENT-136/137/146/147**。
 
 ### 手动验收（HUD 经济扫读 CLIENT-148）
 
@@ -445,6 +448,13 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. `make dev` 进主城：悬停或 Tab 聚焦顶栏资源条 → 次行应含余量与 **+/h**（与网关 `GetCityState` 一致）；点击展开后日常领奖使粮增加 → **resource-pulse** 与展开条粮余量同步更新，展开态不随 `renderHud` 丢失。
 2. 打开 **队列** 面板：顶栏资源扫读与队列总览 **同时**可读；待办角标深链仍只走既有轮询单飞。
 3. 单测：`hudFormat.test.ts`（`formatResourceSweepLine`、`diffWalletPositiveGains`）、`hudResourcePulse.test.ts`、`artResourceHud.test.ts`；`cd client && npm test` 绿。
+
+### 手动验收（1280 wave:30 组合 manifest CLIENT-155）
+
+视口 **1280×720** `layout-narrow`：顶栏 **HUD 资源展开条**（`hud-resource-sweep` / **CLIENT-148** 产出扫读）、**队列顶栏** `queue-panel-overview`（**CLIENT-059**）、**日常筛选条**（`filterListNarrowManifest` / **CLIENT-127** + 行次行 `daily-quest-row-progress` 槽位 **CLIENT-150**）、**将领列表** + 预留 **`hero-list-filters`**（**CLIENT-151**）、**排行钉选** `rank-viewer-bar` / `rank-pin-row`（**CLIENT-152** `rank-my-rank-changed-pulse`）、**背包/商城** `bag-category-tabs` / `shop-offer-afford-inline`（**CLIENT-153/154** 软依赖 DOM）与 **CLIENT-127/135** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；`data-art-skin="off"` 可跳过。单测：`mainCityWave30NarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-155）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：顶栏资源条 **hover/focus/点击** 展开 `formatResourceSweepLine` 次行不换行溢出；打开 **队列** 见顶栏总览行；**日常** 筛选 chip 条横向滚动；**将领** / **排行** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；**背包/商城** tab 与行内文案 **无横向溢出**。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145** manifest 不退化。
 
 ### 手动验收（1280 世界军情战报社交 CLIENT-145）
 

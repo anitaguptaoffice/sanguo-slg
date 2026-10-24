@@ -156,6 +156,55 @@
       #hud .hud-resource-item.resource-pulse {
         animation: hud-resource-pulse 1.2s ease-out 1;
       }
+      .daily-quest-row-progress {
+        display: block;
+        font-size: 11px;
+        color: #9a8f7a;
+        margin-top: 2px;
+        overflow-wrap: anywhere;
+      }
+      .shop-offer-afford-inline {
+        display: block;
+        font-size: 11px;
+        color: #e8a87c;
+        margin-top: 2px;
+        overflow-wrap: anywhere;
+      }
+      .content-panel .bag-category-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 8px 0 4px;
+      }
+      .content-panel .bag-category-tab {
+        margin: 0;
+        padding: 4px 10px;
+        font-size: 12px;
+        border: 1px solid #5c4a32;
+        border-radius: 6px;
+        background: #3d3028;
+        color: #f5e6c8;
+        cursor: pointer;
+      }
+      .content-panel .bag-category-tab.active {
+        outline: 2px solid #c9a227;
+        background: #4a3a2c;
+      }
+      .hero-list-filters.panel-filter-chip-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0 0 8px;
+        min-width: 0;
+        max-width: 100%;
+      }
+      @keyframes rank-my-rank-changed-pulse-keyframes {
+        0%, 100% { box-shadow: none; }
+        50% { box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.75); }
+      }
+      .rank-viewer-bar.rank-my-rank-changed-pulse {
+        animation: rank-my-rank-changed-pulse-keyframes 3s ease-out 1;
+      }
       .layout-toolbar {
         position: absolute; left: 0; right: 0; bottom: 0;
         height: calc(56 / 900 * 100%); z-index: 3;
@@ -1723,7 +1772,12 @@
         overflow-x: hidden;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list-filters.panel-filter-chip-bar {
+        overflow-x: auto;
+        overflow-y: visible;
+        flex-shrink: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info,
@@ -1773,7 +1827,7 @@
         overflow-x: hidden;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-hint,
@@ -1836,7 +1890,19 @@
         overflow-x: hidden;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tabs,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] [data-role="bag-category-tabs"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tab {
+        min-width: 0;
+        max-width: 100%;
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tabs,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] [data-role="bag-category-tabs"] {
+        overflow-x: auto;
+        overflow-y: visible;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tabs,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-category-tabs,
@@ -1859,7 +1925,12 @@
         overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-list li .shop-offer-afford-inline {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
       }
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-summary"],
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] label,
@@ -1981,6 +2052,30 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+      }
+      #layout-frame.layout-narrow #hud .hud-resource-strip {
+        max-width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+        box-sizing: border-box;
+      }
+      #layout-frame.layout-narrow #hud .hud-resource-sweep {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-panel-overview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-overview"] {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row td {
+        min-width: 0;
+        max-width: 100%;
+        overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-battle-report-banner,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] [data-role="daily-hint"],
