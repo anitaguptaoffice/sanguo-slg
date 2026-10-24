@@ -81,290 +81,322 @@ heroes:
     historical_identity: 周瑜
     tagline: 火烧连营，克敌先机。
 - code: north_wall
-  name: 北境柱石
+  name: 曹操
   rarity: 4
   base_stats:
     force: 86
     intel: 72
     politics: 65
     command: 84
+    historical_identity: 曹操
     tagline: 固守边塞，御敌于外。
 - code: river_sage
-  name: 江左智囊
+  name: 孙权
   rarity: 4
   base_stats:
     force: 52
     intel: 91
     politics: 82
     command: 68
+    historical_identity: 孙权
     tagline: 善借地利，以弱胜强。
 - code: stone_fort
-  name: 坚城守御
+  name: 吕布
   rarity: 3
   base_stats:
     force: 78
     intel: 60
     politics: 70
     command: 76
+    historical_identity: 吕布
     tagline: 深沟高垒，令敌难越。
 - code: dawn_marshal
-  name: 破晓元帅
+  name: 司马懿
   rarity: 5
   base_stats:
     force: 93
     intel: 74
     politics: 62
     command: 94
+    historical_identity: 司马懿
     tagline: 统御三军，开疆拓土。
 - code: ink_advisor
-  name: 墨香学士
+  name: 张辽
   rarity: 3
   base_stats:
     force: 40
     intel: 85
     politics: 88
     command: 55
+    historical_identity: 张辽
     tagline: 典章律令，教化士民。
 - code: bamboo_guard
-  name: 青竹卫尉
+  name: 陆逊
   rarity: 3
   base_stats:
     force: 82
     intel: 58
     politics: 50
     command: 72
+    historical_identity: 陆逊
     tagline: 护卫宫阙，肃清宵小。
 - code: frost_blade
-  name: 寒霜剑侍
+  name: 曹仁
   rarity: 3
   base_stats:
     force: 84
     intel: 64
     politics: 45
     command: 74
+    historical_identity: 曹仁
     tagline: 剑出如霜，斩尽来犯。
 - code: gold_envoy
-  name: 金印使节
+  name: 典韦
   rarity: 3
   base_stats:
     force: 55
     intel: 80
     politics: 92
     command: 60
+    historical_identity: 典韦
     tagline: 游说诸侯，缔结盟约。
 - code: crane_healer
-  name: 白鹤医官
+  name: 许褚
   rarity: 2
   base_stats:
     force: 35
     intel: 88
     politics: 75
     command: 48
+    historical_identity: 许褚
     tagline: 疗伤济世，稳军心。
 - code: bronze_smith
-  name: 青铜匠师
+  name: 荀彧
   rarity: 2
   base_stats:
     force: 60
     intel: 70
     politics: 55
     command: 50
+    historical_identity: 荀彧
     tagline: 锻造兵戈，补给前线。
 - code: reed_scout
-  name: 芦荡斥候
+  name: 庞统
   rarity: 2
   base_stats:
     force: 65
     intel: 68
     politics: 40
     command: 62
+    historical_identity: 庞统
     tagline: 探查敌情，回报迅捷。
 - code: plum_hermit
-  name: 梅岭隐士
+  name: 甘宁
   rarity: 2
   base_stats:
     force: 50
     intel: 82
     politics: 60
     command: 52
+    historical_identity: 甘宁
     tagline: 避世研兵，偶献奇策。
 - code: azure_phalanx
-  name: 青岚方阵
+  name: 鲁肃
   rarity: 4
   base_stats:
     force: 65
     intel: 50
     politics: 45
     command: 55
+    historical_identity: 鲁肃
     tagline: 列阵如墙，稳步推进。
 - code: ember_duelist
-  name: 烬锋斗士
+  name: 黄盖
   rarity: 3
   base_stats:
     force: 68
     intel: 55
     politics: 52
     command: 59
+    historical_identity: 黄盖
     tagline: 近身缠斗，以快制慢。
 - code: mist_ranger
-  name: 雾林游侠
+  name: 魏延
   rarity: 3
   base_stats:
     force: 71
     intel: 60
     politics: 59
     command: 63
+    historical_identity: 魏延
     tagline: 借林隐匿，奇袭粮道。
 - code: coral_admiral
-  name: 珊瑚水师
+  name: 姜维
   rarity: 4
   base_stats:
     force: 74
     intel: 65
     politics: 66
     command: 67
+    historical_identity: 姜维
     tagline: 熟谙潮汐，控扼津渡。
 - code: sand_pillar
-  name: 沙洲柱将
+  name: 华佗
   rarity: 3
   base_stats:
     force: 77
     intel: 70
     politics: 73
     command: 71
+    historical_identity: 华佗
     tagline: 据险守渡，拖垮来犯。
 - code: iron_bard
-  name: 铁弦乐士
+  name: 蒋琬
   rarity: 2
   base_stats:
     force: 80
     intel: 75
     politics: 80
     command: 75
+    historical_identity: 蒋琬
     tagline: 军歌振气，稳阵脚。
 - code: lotus_healer
-  name: 莲塘医女
+  name: 太史慈
   rarity: 2
   base_stats:
     force: 83
     intel: 80
     politics: 47
     command: 79
+    historical_identity: 太史慈
     tagline: 清创敷药，减员损。
 - code: copper_quarter
-  name: 铜衡督粮
+  name: 吕蒙
   rarity: 3
   base_stats:
     force: 86
     intel: 85
     politics: 54
     command: 83
+    historical_identity: 吕蒙
     tagline: 精算粮秣，省耗十之一。
 - code: jade_sentinel
-  name: 玉门哨帅
+  name: 夏侯惇
   rarity: 4
   base_stats:
     force: 89
     intel: 90
     politics: 61
     command: 87
+    historical_identity: 夏侯惇
     tagline: 夜巡关隘，不漏烽火。
 - code: storm_lancer
-  name: 惊雷枪骑
+  name: 夏侯渊
   rarity: 4
   base_stats:
     force: 92
     intel: 50
     politics: 68
     command: 91
+    historical_identity: 夏侯渊
     tagline: 枪出如电，破阵一线。
 - code: pine_sage
-  name: 松岭谋士
+  name: 张郃
   rarity: 3
   base_stats:
     force: 95
     intel: 55
     politics: 75
     command: 57
+    historical_identity: 张郃
     tagline: 善用地形，诱敌深入。
 - code: reed_admiral
-  name: 苇泽舟帅
+  name: 徐晃
   rarity: 3
   base_stats:
     force: 95
     intel: 60
     politics: 82
     command: 61
+    historical_identity: 徐晃
     tagline: 浅水伏击，断敌舟楫。
 - code: granite_warden
-  name: 磐石戍将
+  name: 郭嘉
   rarity: 4
   base_stats:
     force: 95
     intel: 65
     politics: 49
     command: 65
+    historical_identity: 郭嘉
     tagline: 身先士卒，稳守城楼。
 - code: silk_diplomat
-  name: 锦帛行卿
+  name: 贾诩
   rarity: 3
   base_stats:
     force: 95
     intel: 70
     politics: 56
     command: 69
+    historical_identity: 贾诩
     tagline: 舌锋如剑，化战为盟。
 - code: amber_alchemist
-  name: 琥珀丹师
+  name: 法正
   rarity: 2
   base_stats:
     force: 67
     intel: 75
     politics: 63
     command: 73
+    historical_identity: 法正
     tagline: 调制伤药，略通火攻。
 - code: obsidian_scout
-  name: 玄羽探子
+  name: 徐庶
   rarity: 2
   base_stats:
     force: 70
     intel: 80
     politics: 70
     command: 77
+    historical_identity: 徐庶
     tagline: 潜行百里，回报如飞。
 - code: harbor_master
-  name: 津渡监官
+  name: 邓艾
   rarity: 3
   base_stats:
     force: 73
     intel: 85
     politics: 77
     command: 81
+    historical_identity: 邓艾
     tagline: 调度舟楫，通商饷。
 - code: field_engineer
-  name: 野营匠首
+  name: 孙策
   rarity: 3
   base_stats:
     force: 76
     intel: 90
     politics: 84
     command: 85
+    historical_identity: 孙策
     tagline: 立寨开壕，速成营垒。
 - code: dawn_archer
-  name: 晨曦弓监
+  name: 孙坚
   rarity: 3
   base_stats:
     force: 79
     intel: 50
     politics: 51
     command: 89
+    historical_identity: 孙坚
     tagline: 晨射百步，教众卒。
 - code: night_captain
-  name: 夜巡都尉
+  name: 貂蝉
   rarity: 4
   base_stats:
     force: 82
     intel: 55
     politics: 58
     command: 55
+    historical_identity: 貂蝉
     tagline: 暗哨连环，御偷袭。
