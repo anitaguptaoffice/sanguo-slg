@@ -31,12 +31,41 @@ export function intersectionRectArea(a: DOMRect, b: DOMRect): number {
   return w * h;
 }
 
-/** Sprite 72×32 must fit inside button box (CLIENT-136 visual slot, not 44px clip). */
+export function intersectDomRects(a: DOMRect, b: DOMRect): DOMRect {
+  const left = Math.max(a.left, b.left);
+  const top = Math.max(a.top, b.top);
+  const right = Math.min(a.right, b.right);
+  const bottom = Math.min(a.bottom, b.bottom);
+  const width = Math.max(0, right - left);
+  const height = Math.max(0, bottom - top);
+  return new DOMRect(left, top, width, height);
+}
+
+function clipRectsForElement(el: HTMLElement): DOMRect[] {
+  const rects: DOMRect[] = [];
+  let node: HTMLElement | null = el.parentElement;
+  while (node) {
+    const style = getComputedStyle(node);
+    const clips =
+      /(hidden|clip|scroll|auto)/.test(style.overflow) ||
+      /(hidden|clip|scroll|auto)/.test(style.overflowX) ||
+      /(hidden|clip|scroll|auto)/.test(style.overflowY);
+    if (clips) rects.push(node.getBoundingClientRect());
+    node = node.parentElement;
+  }
+  rects.push(new DOMRect(0, 0, window.innerWidth, window.innerHeight));
+  return rects;
+}
+
+/** Sprite 72×32 must fit inside button box; visible area includes parent/viewport clipping. */
 export function probeFilterChipSpriteInButton(btn: HTMLElement): {
   spriteFitsButton: boolean;
   spriteFullyInsideButton: boolean;
   spriteArea: number;
   visibleIntersectionArea: number;
+  buttonSpriteIntersectionArea: number;
+  containerVisibleIntersectionArea: number;
+  intersectionCoversSprite: boolean;
 } | null {
   const sprite = btn.querySelector<HTMLElement>(".art-filter-chip-sprite");
   if (!sprite) return null;
@@ -44,7 +73,13 @@ export function probeFilterChipSpriteInButton(btn: HTMLElement): {
   const spriteRect = sprite.getBoundingClientRect();
   if (spriteRect.width <= 0 || spriteRect.height <= 0) return null;
   const spriteArea = spriteRect.width * spriteRect.height;
-  const visibleIntersectionArea = intersectionRectArea(btnRect, spriteRect);
+  const buttonSpriteIntersectionArea = intersectionRectArea(btnRect, spriteRect);
+  let clipped = intersectDomRects(btnRect, spriteRect);
+  for (const clip of clipRectsForElement(btn)) {
+    clipped = intersectDomRects(clipped, clip);
+  }
+  const containerVisibleIntersectionArea = clipped.width * clipped.height;
+  const visibleIntersectionArea = containerVisibleIntersectionArea;
   const spriteFitsButton =
     spriteRect.width <= btnRect.width + 0.5 && spriteRect.height <= btnRect.height + 0.5;
   const spriteFullyInsideButton =
@@ -52,12 +87,49 @@ export function probeFilterChipSpriteInButton(btn: HTMLElement): {
     spriteRect.right <= btnRect.right + 0.5 &&
     spriteRect.top >= btnRect.top - 0.5 &&
     spriteRect.bottom <= btnRect.bottom + 0.5;
+  const intersectionCoversSprite =
+    spriteArea > 0 ? containerVisibleIntersectionArea / spriteArea >= 0.98 : false;
   return {
     spriteFitsButton,
     spriteFullyInsideButton,
     spriteArea,
     visibleIntersectionArea,
+    buttonSpriteIntersectionArea,
+    containerVisibleIntersectionArea,
+    intersectionCoversSprite,
   };
+}
+
+export type ChipEdgeHitProbe = {
+  edge: string;
+  x: number;
+  y: number;
+  hitsChip: boolean;
+  topTag: string | null;
+};
+
+/** Edge + center elementFromPoint for chip hit zone (center alone is insufficient). */
+export function probeFilterChipEdgeHits(btn: HTMLElement): ChipEdgeHitProbe[] {
+  const rect = btn.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return [];
+  const inset = 2;
+  const points: { edge: string; x: number; y: number }[] = [
+    { edge: "center", x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+    { edge: "left", x: rect.left + inset, y: rect.top + rect.height / 2 },
+    { edge: "right", x: rect.right - inset, y: rect.top + rect.height / 2 },
+    { edge: "top", x: rect.left + rect.width / 2, y: rect.top + inset },
+    { edge: "bottom", x: rect.left + rect.width / 2, y: rect.bottom - inset },
+  ];
+  return points.map(({ edge, x, y }) => {
+    const top = document.elementFromPoint(x, y);
+    return {
+      edge,
+      x,
+      y,
+      hitsChip: top === btn || (top != null && btn.contains(top)),
+      topTag: top?.tagName ?? null,
+    };
+  });
 }
 
 export type AdjacentChipHitOverlap = { indexA: number; indexB: number; overlapArea: number };

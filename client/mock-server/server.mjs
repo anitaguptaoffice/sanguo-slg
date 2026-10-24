@@ -112,6 +112,18 @@ function applyEvidencePreset(state, preset) {
     state.nextMailId = 7010;
     return;
   }
+  if (preset === "mail-filter-badge-count-nine") {
+    state.mails = Array.from({ length: 9 }, (_, i) => ({
+      mail_id: 7200 + i,
+      mail_type: 1,
+      title: `未读九封 ${i + 1}`,
+      body: "CLIENT-137 count=9 evidence",
+      status: 0,
+      created_at_ms: now - (9 - i) * 1000,
+    }));
+    state.nextMailId = 7209;
+    return;
+  }
   if (preset === "mail-unread-multi") {
     state.mails = [
       {

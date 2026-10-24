@@ -3,6 +3,7 @@ import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
 import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
 import { applyUiCountBadge } from "@/engine/artBadgeSkin";
+import { registerArtFilter008EvidenceHooks } from "@/engine/artFilter008EvidenceStaging";
 import { remountPanelFilterChips } from "@/engine/artFilterChipRuntime";
 import { mountToolbarIcons } from "@/engine/artToolbarIconSkin";
 import {
@@ -681,6 +682,7 @@ export class MainCityScene implements Scene {
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
+    registerArtFilter008EvidenceHooks(this.assets);
     remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
     remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
     remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
