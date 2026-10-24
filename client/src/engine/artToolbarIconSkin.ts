@@ -1,11 +1,41 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
 
-/** ART-TOOLBAR-ICONS-007: mount sprites inside toolbar chrome; hit target stays the button. */
+/** ART-TOOLBAR-ICONS-007/009: mount sprites inside toolbar chrome; hit target stays the button. */
 export const TOOLBAR_ICON_BY_ACTION: Record<string, { assetId: string; label: string; title: string }> = {
   "toggle-military": {
     assetId: "ui.icon.toolbar.military.v1",
     label: "军事",
     title: "军事",
+  },
+  "toggle-reports": {
+    assetId: "ui.icon.toolbar.report.v1",
+    label: "战报",
+    title: "战报",
+  },
+  "toggle-marches": {
+    assetId: "ui.icon.toolbar.march.v1",
+    label: "行军",
+    title: "行军",
+  },
+  "toggle-chat": {
+    assetId: "ui.icon.toolbar.chat.v1",
+    label: "聊天",
+    title: "聊天",
+  },
+  "toggle-guild": {
+    assetId: "ui.icon.toolbar.legion.v1",
+    label: "军团",
+    title: "军团",
+  },
+  "toggle-rank": {
+    assetId: "ui.icon.toolbar.rank.v1",
+    label: "排行",
+    title: "排行",
+  },
+  "toggle-quest": {
+    assetId: "ui.icon.toolbar.task.v1",
+    label: "任务",
+    title: "任务",
   },
   "toggle-mail": {
     assetId: "ui.icon.toolbar.mail.v1",
