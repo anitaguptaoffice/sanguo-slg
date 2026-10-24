@@ -579,6 +579,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 3. 背包无养成消耗品时按钮 **disabled**，`hero-cultivation-disabled-reason` 中文可读；网关失败走 `hero-cultivation-form-error`（**CLIENT-067** 口径）。
 4. 单测：`heroDetailCultivationUse.test.ts`、`useConsumableSubmitFeedback.test.ts`、`HeroMailPanels.test.ts`。
 
+### 手动验收（将领详情养成道具缺口与背包深链 CLIENT-165）
+
+在 [CLIENT-132](#手动验收将领列表行扫读-client-132) / [CLIENT-153](#手动验收背包分类-tab-与堆叠扫读-client-153) / [CLIENT-099](#手动验收将领列表刷新与选中记忆-client-099) 基础上：
+
+1. 将领详情 **等级经验 / 忠诚** 进度条次行展示 `formatHeroUpgradeItemGap`（道具 `#id` 需/持 vs `ListPlayerBag` 快照）；不足时 **使用养成道具** 保持 disabled + `hero-cultivation-disabled-reason` 缺口文案。
+2. **前往背包使用养成道具**：深链带 `bagCategory` + `highlightItemId` + `returnHeroId`（`serializeHeroBagDeepLinkQuery` / CLIENT-134 模式），打开背包定位 **CLIENT-153** 分类 tab 与高亮堆叠行；**返回将领详情** 保留 `hero_id`。
+3. 单测：`heroUpgradeItemGap.test.ts`、`heroDetailBagDeepLink.test.ts`（query 解析）、`HeroMailPanels.test.ts` / `ContentPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领详情忠诚养成深链 CLIENT-133）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) / [CLIENT-115](#手动验收将领详情养成道具使用反馈-client-115) 基础上：
@@ -1212,7 +1220,7 @@ cd client && npm install && npm run dev
 7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
 8. **CLIENT-153 背包分类**：**全部 / 消耗品 / 养成** tab（`sessionStorage` 键 `bag-category-tab-v1`）；切换仅客户端过滤 `ListPlayerBag` 会话快照、**不新 RPC**；行内 **cfg 名 + `bag-stack-qty`（`formatBagStackQty`）** 堆叠扫读；真空/筛选无匹配走 **CLIENT-029** + **CLIENT-129** `renderPanelStateListRow`；**CLIENT-112** 使用提交脉冲不退化。
 9. **CLIENT-154 商城行内态**：货架列表行与购买区 `shop-wallet-gap` 在钱包不足时行内展示 `formatShopOfferAffordInline`（`缺少：粮 N …`，**CLIENT-067** 口径）；足够时购买区仍为 **CLIENT-092** 需/余对比条，**购买×1** disabled 与文案一致；货架 **loading/error/空** 走 **CLIENT-129** `renderPanelStateListRow`；**CLIENT-113** 购买脉冲不退化。
-10. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`shopOfferAfford.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`；全量 `cd client && npm test`。
+10. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`shopOfferAfford.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`、`heroUpgradeItemGap.test.ts`、`heroDetailBagDeepLink.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
 
