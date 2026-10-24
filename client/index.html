@@ -1737,7 +1737,30 @@
         overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .building-panel[data-center-panel="building"] .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-slot-matrix"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-panel-state],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-panel-state],
+      #layout-frame.layout-narrow .building-panel[data-center-panel="building"] [data-panel-state] {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-role="queue-slot-matrix"] {
+        overflow-x: auto;
+        overflow-y: visible;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li[data-hero-id]:focus-visible,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-list-row[data-slot-key]:focus-visible {
+        outline-offset: 2px;
+        scroll-margin-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .main-city-slot-upgrade-layer {
+        max-width: 100%;
+        overflow: hidden;
+        pointer-events: none;
       }
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag {
         min-width: 0;

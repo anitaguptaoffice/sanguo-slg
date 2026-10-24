@@ -6,6 +6,7 @@ import {
 } from "@/net/buildSubmitFeedback";
 import { buildingBySlot } from "@/net/hudFormat";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
+import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 
 export type MainCityBuildingPanelReskin = (root: HTMLElement) => void;
@@ -13,6 +14,7 @@ export type MainCityBuildingPanelReskin = (root: HTMLElement) => void;
 export class MainCityBuildingPanel {
   private panel!: HTMLElement;
   private selectedSlotKey: string | null = null;
+  private focusTrap: CenterPanelFocusTrap | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -21,6 +23,7 @@ export class MainCityBuildingPanel {
     private readonly onUpgrade: (slotKey: string, buildingCfgId: number) => void,
     private readonly getSubmitState: () => BuildSubmitState,
     private readonly reskin?: MainCityBuildingPanelReskin,
+    private readonly defaultDismissTrigger?: () => HTMLElement | null,
   ) {}
 
   attach(): void {
@@ -29,7 +32,7 @@ export class MainCityBuildingPanel {
     this.panel.dataset.centerPanel = "building";
     this.panel.innerHTML = `
       <h3 data-role="build-title">建造</h3>
-      <div class="panel-scroll-body">
+      <div class="panel-scroll-body" data-role="building-scroll">
         <p class="building-level-line" data-role="build-level"></p>
         <p class="building-upgrade-preview" data-role="build-preview"></p>
         <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
@@ -40,10 +43,13 @@ export class MainCityBuildingPanel {
     `;
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.focusTrap = createCenterPanelFocusTrap(this.panel, () => this.close());
     this.reskin?.(this.panel);
   }
 
   detach(): void {
+    this.focusTrap?.dispose();
+    this.focusTrap = null;
     this.panel?.remove();
   }
 
@@ -56,16 +62,20 @@ export class MainCityBuildingPanel {
   }
 
   close(): void {
+    this.focusTrap?.setOpen(false);
     this.panel?.classList.add("hidden");
     this.selectedSlotKey = null;
   }
 
-  selectSlot(slotKey: string): void {
+  selectSlot(slotKey: string, opts?: { dismissTrigger?: HTMLElement | null }): void {
     this.selectedSlotKey = slotKey.trim() || null;
     this.panel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.panel);
     this.render();
     resetCenterPanelViewportScroll(this.panel);
+    const trigger =
+      opts?.dismissTrigger ?? this.defaultDismissTrigger?.() ?? null;
+    this.focusTrap?.setOpen(true, trigger);
   }
 
   sync(): void {

@@ -14,6 +14,7 @@ import {
   CLIENT_111_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
 import {
@@ -163,6 +164,16 @@ describe("narrow layout root class", () => {
       "battle-report",
     ]);
     for (const id of CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+  });
+
+  it("CLIENT-135 building queue hero HUD narrow manifest at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual(["building", "queue", "hero"]);
+    expect(NARROW_SCROLL_SIDEBAR_PANEL_IDS).toContain("building");
+    for (const id of ["queue", "hero"] as const) {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
   });

@@ -116,3 +116,9 @@ export {
   CLIENT_127_NARROW_FILTER_LIST_CENTER_PANEL_IDS as CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS,
   type Client127NarrowFilterListCenterPanelId as Client127NarrowManifestCenterPanelId,
 } from "@/engine/filterListNarrowManifest";
+
+/** CLIENT-135: main-city building / queue / hero list + HUD slot overlay narrow manifest. */
+export {
+  CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client135NarrowManifestCenterPanelId,
+} from "@/engine/mainCityHeroHudNarrowManifest";

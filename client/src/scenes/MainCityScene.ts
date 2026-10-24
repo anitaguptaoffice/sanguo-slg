@@ -217,6 +217,8 @@ export class MainCityScene implements Scene {
   private readonly chatUnreadTracker = new ChatUnreadTracker();
   private chatUnreadPoll!: ChatUnreadPoll;
   private readonly buildCompleteTodos = new BuildCompleteTodoTracker();
+  /** Last focused bottom-toolbar toggle (CLIENT-135 Esc focus return). */
+  private lastToolbarFocus: HTMLElement | null = null;
   private lastCenterTodoScrollKey: string | null = null;
   private marchArrivalPoll!: MarchArrivalPoll;
   private readonly battleReportUnread = new BattleReportUnreadSession();
@@ -444,6 +446,7 @@ export class MainCityScene implements Scene {
         if (keys.length) scheduleHudResourcePulse(this.hud, keys);
       },
       this.assets,
+      () => this.toolbarTrigger("toggle-hero"),
     );
     this.heroMail.attach();
     this.heroMail.mountMailFilterSkins(this.assets);
@@ -640,6 +643,7 @@ export class MainCityScene implements Scene {
       },
       skinCenterPrimary,
       (slotKey) => this.slotUpgradeOverlay?.setMutualHighlightSlot(slotKey),
+      () => this.toolbarTrigger("toggle-queue"),
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -649,6 +653,7 @@ export class MainCityScene implements Scene {
       (slotKey, buildingCfgId) => void this.startBuildingUpgrade(slotKey, buildingCfgId),
       () => this.buildSubmitState,
       (root) => skinDefaultPanel(root, this.assets, 380, 300),
+      () => this.buildingDismissTrigger(),
     );
     this.buildingPanel.attach();
     skinToolbarBar(this.toolbar, this.assets);
@@ -688,6 +693,10 @@ export class MainCityScene implements Scene {
     skinCenterPrimary(this.social.getRankRoot());
     skinCenterPrimary(this.social.getGuildRoot());
     skinCenterPrimary(this.social.getChatRoot());
+    this.toolbar.addEventListener("focusin", (ev) => {
+      const btn = (ev.target as HTMLElement).closest("button[data-action]");
+      if (btn instanceof HTMLElement) this.lastToolbarFocus = btn;
+    });
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
     this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));
@@ -1194,7 +1203,9 @@ export class MainCityScene implements Scene {
     }
     this.resetBuildSubmitState();
     this.queuePanels.clearBuildSlotHighlight();
-    this.buildingPanel.selectSlot(top.slot_key);
+    this.buildingPanel.selectSlot(top.slot_key, {
+      dismissTrigger: this.buildingDismissTrigger(),
+    });
     this.status = `建造：${SLOT_LABEL[top.slot_key] ?? top.slot_key}`;
     this.renderHud();
   }
@@ -1420,6 +1431,14 @@ export class MainCityScene implements Scene {
 
   private panelRootOpen(el: HTMLElement | null | undefined): boolean {
     return !!el && !el.classList.contains("hidden");
+  }
+
+  private toolbarTrigger(action: string): HTMLElement | null {
+    return this.toolbar?.querySelector<HTMLElement>(`button[data-action="${action}"]`) ?? null;
+  }
+
+  private buildingDismissTrigger(): HTMLElement | null {
+    return this.lastToolbarFocus ?? this.toolbarTrigger("toggle-queue");
   }
 
   private syncToolbarChromeA11y(): void {
