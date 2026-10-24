@@ -62,6 +62,7 @@ import {
   writeBattleReportOutcomeFilterSession,
   writeBattleReportTimeWindowFilterSession,
 } from "@/net/battleReportListState";
+import { consumePendingOutcomeFilterBridge } from "@/net/reportOutcomeFilterBridge";
 import {
   filterBattleReportsForPanelList,
   resolveBattleReportListOutcomeBadgeKind,
@@ -228,6 +229,7 @@ export class BattleReportPanel {
   async openPanelWithDeepLink(hintReportId?: number | null): Promise<void> {
     this.panel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.panel);
+    this.applyOutcomeFilterBridgeFromMail();
     await this.refreshList();
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
@@ -941,6 +943,14 @@ export class BattleReportPanel {
     }
     this.listLoading = false;
     this.renderList();
+  }
+
+  private applyOutcomeFilterBridgeFromMail(): void {
+    const bridged = consumePendingOutcomeFilterBridge();
+    if (!bridged) return;
+    this.outcomeFilter = bridged;
+    writeBattleReportOutcomeFilterSession(bridged);
+    syncBattleReportOutcomeFilterChips(this.panel, this.outcomeFilter);
   }
 
   private setOutcomeFilter(filter: BattleReportOutcomeFilter): void {
