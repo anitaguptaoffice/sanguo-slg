@@ -820,8 +820,22 @@
       .queue-list li.queue-build-complete-pulse {
         animation: queue-build-complete-pulse-keyframes 3s ease-out 1;
       }
+      @keyframes queue-recruit-complete-pulse-keyframes {
+        0%, 100% { background: #1a1410; }
+        35% { background: #1a2828; box-shadow: inset 0 0 0 2px #5a9e8a; }
+      }
+      .queue-list li.queue-recruit-complete-pulse {
+        animation: queue-recruit-complete-pulse-keyframes 3s ease-out 1;
+      }
+      .queue-list li.queue-list-row.queue-recruit-slot-mutual-highlight.selected {
+        outline-color: #5a9e8a;
+        box-shadow: 0 0 6px rgba(90, 158, 138, 0.45);
+      }
+      .queue-build-matrix-cell.queue-recruit-slot-mutual-highlight {
+        box-shadow: 0 0 0 2px #5a9e8a;
+      }
       .queue-list li.recruit-row-pulse {
-        animation: queue-build-complete-pulse-keyframes 3s ease-out 1;
+        animation: recruit-row-pulse-keyframes 3s ease-out 1;
       }
       .military-recruit-queue {
         margin: 8px 0 0;
@@ -1442,6 +1456,9 @@
       .queue-list li.queue-build-complete-pulse {
         animation: queue-build-complete-pulse-keyframes 3s ease-out 1;
       }
+      .queue-list li.queue-recruit-complete-pulse {
+        animation: queue-recruit-complete-pulse-keyframes 3s ease-out 1;
+      }
       .mail-list li.mail-has-unclaimed .mail-row-summary { color: #f0c674; }
       .mail-detail [data-action="claim-mail"].mail-claim-highlight {
         outline: 2px solid #f0c674;
@@ -1721,7 +1738,8 @@
         flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-build-complete-todo,
-      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-build-complete-pulse {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-build-complete-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-recruit-complete-pulse {
         min-width: 0;
         max-width: 100%;
         box-sizing: border-box;

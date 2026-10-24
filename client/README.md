@@ -1176,6 +1176,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **CLIENT-131** 队列面板在顶栏摘要下展示 **七槽状态矩阵**（`buildBuildQueueSlotMatrix` / `hall`…`wall` 列序）：只读缩写格标注空闲/升级中/可升级；格点击 `openAndHighlightBuildSlot` 与 **CLIENT-105** / **CLIENT-130** 画布深链互高亮并存。进行中建造行经 `sortBuildQueueRows` **最早完成优先**；列表 loading/empty/error 与 **CLIENT-129** `renderPanelStateListRow` / `data-panel-state` 共用骨架。单测：`buildQueueMatrix.test.ts`、`QueuePanels.test.ts`。
 
+**CLIENT-149 队列完成反馈**：建造仍由 `detectBuildJustCompleted` 触发 **3s** `queue-build-complete-pulse`，队列行/七槽矩阵/画布 `queue-build-slot-mutual-highlight` 互跳不退化；募兵批次完成由 `detectRecruitQueueJustCompleted` 触发 **3s** `queue-recruit-complete-pulse`（与提交成功 `recruit-row-pulse`、建造脉冲样式区分），募兵行与兵营矩阵格 `queue-recruit-slot-mutual-highlight` 互跳；无新 RPC、募兵加速仍 **out**。单测：`recruitQueueComplete.test.ts`、`QueuePanels.test.ts`。
+
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。

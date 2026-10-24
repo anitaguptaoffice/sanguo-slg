@@ -7,6 +7,13 @@ import {
   scheduleQueueBuildCompletePulse,
 } from "@/net/buildQueueComplete";
 import {
+  detectRecruitQueueJustCompleted,
+  QUEUE_RECRUIT_COMPLETE_PULSE_MS,
+  QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS,
+  RECRUIT_QUEUE_MATRIX_SLOT_KEY,
+  scheduleQueueRecruitCompletePulse,
+} from "@/net/recruitQueueComplete";
+import {
   queueRecruitRowDomId,
   scheduleRecruitRowPulse,
 } from "@/net/recruitTroopSubmitFeedback";
@@ -63,8 +70,11 @@ export class QueuePanels {
   private speedupBusy = false;
   private readonly completedRecruitIds = new Set<number>();
   private highlightedBuildSlotKey: string | null = null;
+  private highlightedRecruitQueueId: number | null = null;
   private buildCompleteTodoSlots: string[] = [];
   private readonly completePulseSlots = new Set<string>();
+  private readonly completePulseRecruitIds = new Set<number>();
+  private recruitDetectSnapshot: RecruitQueueEntry[] = [];
   private buildListLoading = false;
   private buildListError: string | null = null;
   private focusTrap: CenterPanelFocusTrap | null = null;
@@ -162,6 +172,7 @@ export class QueuePanels {
 
   /** 打开队列并高亮指定槽位的建造行（主城画布深链）。 */
   openAndHighlightBuildSlot(slotKey: string): void {
+    this.highlightedRecruitQueueId = null;
     this.highlightedBuildSlotKey = slotKey.trim() || null;
     this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
     this.panel.classList.remove("hidden");
@@ -176,10 +187,29 @@ export class QueuePanels {
   }
 
   clearBuildSlotHighlight(): void {
-    if (!this.highlightedBuildSlotKey) return;
+    if (!this.highlightedBuildSlotKey && this.highlightedRecruitQueueId === null) return;
     this.highlightedBuildSlotKey = null;
+    this.highlightedRecruitQueueId = null;
     this.onBuildSlotHighlightChange?.(null);
     if (this.isOpen()) this.render();
+  }
+
+  /** 打开队列并高亮募兵行，与兵营矩阵格互高亮（CLIENT-149）。 */
+  openAndHighlightRecruitQueue(queueId: number): void {
+    const id = queueId > 0 ? queueId : null;
+    this.highlightedRecruitQueueId = id;
+    this.highlightedBuildSlotKey = id ? RECRUIT_QUEUE_MATRIX_SLOT_KEY : null;
+    this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
+    this.panel.classList.remove("hidden");
+    this.tickAccum = 0;
+    this.render();
+    resetQueuePanelViewportScroll(this.panel);
+    if (id) {
+      const row = this.panel.querySelector(`#${CSS.escape(queueRecruitRowDomId(id))}`);
+      if (row && typeof row.scrollIntoView === "function") {
+        row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
+    }
   }
 
   getHighlightedBuildSlotKey(): string | null {
@@ -207,6 +237,34 @@ export class QueuePanels {
     for (const key of slotKeys) {
       scheduleQueueBuildCompletePulse(this.findQueueRowForSlot(key));
     }
+  }
+
+  /** 募兵批次刚完成时触发队列行完成脉冲（与提交成功 `recruit-row-pulse` 区分）。 */
+  notifyRecruitJustCompleted(queueIds: readonly number[]): void {
+    if (!queueIds.length) return;
+    for (const id of queueIds) {
+      if (id <= 0) continue;
+      this.completePulseRecruitIds.add(id);
+      window.setTimeout(() => {
+        this.completePulseRecruitIds.delete(id);
+        if (this.isOpen()) this.render();
+      }, QUEUE_RECRUIT_COMPLETE_PULSE_MS);
+    }
+    if (this.isOpen()) {
+      this.render();
+      this.applyRecruitCompletePulses(queueIds);
+    }
+  }
+
+  private applyRecruitCompletePulses(queueIds: readonly number[]): void {
+    for (const id of queueIds) {
+      scheduleQueueRecruitCompletePulse(this.findRecruitRow(id));
+    }
+  }
+
+  private findRecruitRow(queueId: number): HTMLElement | null {
+    const row = this.panel.querySelector(`#${CSS.escape(queueRecruitRowDomId(queueId))}`);
+    return row instanceof HTMLElement ? row : null;
   }
 
   private findQueueRowForSlot(slotKey: string): HTMLElement | null {
@@ -242,6 +300,7 @@ export class QueuePanels {
   addRecruitEntry(entry: RecruitQueueEntry | null): void {
     if (!entry) return;
     this.recruits = mergeRecruitQueue(this.recruits, entry);
+    this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
     if (this.isOpen()) this.render();
   }
 
@@ -341,6 +400,13 @@ export class QueuePanels {
         btn.classList.add("queue-build-matrix-cell-selected");
         btn.classList.add(QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS);
       }
+      if (
+        this.highlightedRecruitQueueId !== null &&
+        cell.slotKey === RECRUIT_QUEUE_MATRIX_SLOT_KEY
+      ) {
+        btn.classList.add("queue-build-matrix-cell-selected");
+        btn.classList.add(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+      }
       matrixEl.appendChild(btn);
     }
   }
@@ -352,7 +418,17 @@ export class QueuePanels {
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
     const now = Date.now();
+    const prevRecruitSnapshot = this.recruitDetectSnapshot;
     this.recruits = pruneFinishedRecruits(this.recruits, now);
+    const recruitJustCompleted = detectRecruitQueueJustCompleted(
+      prevRecruitSnapshot,
+      this.recruits,
+      now,
+    );
+    if (recruitJustCompleted.length) {
+      this.notifyRecruitJustCompleted(recruitJustCompleted);
+    }
+    this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
     if (overviewEl) {
       overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }
@@ -487,6 +563,13 @@ export class QueuePanels {
       li.className = "queue-list-row";
       li.id = queueRecruitRowDomId(entry.queue_id);
       li.dataset.queueId = String(entry.queue_id);
+      if (this.highlightedRecruitQueueId === entry.queue_id) {
+        li.classList.add(QUEUE_BUILD_ROW_SELECTED_CLASS);
+        li.classList.add(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS);
+      }
+      if (this.completePulseRecruitIds.has(entry.queue_id)) {
+        li.classList.add("queue-recruit-complete-pulse");
+      }
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
@@ -583,11 +666,34 @@ export class QueuePanels {
     const matrixBtn = target.closest('[data-action="queue-matrix-slot"]');
     if (matrixBtn instanceof HTMLElement) {
       const slotKey = matrixBtn.dataset.slotKey?.trim();
-      if (slotKey) this.openAndHighlightBuildSlot(slotKey);
+      if (slotKey) {
+        const now = Date.now();
+        const barracksUpgrading = this.buildings().some(
+          (b) =>
+            b.slot_key === RECRUIT_QUEUE_MATRIX_SLOT_KEY &&
+            (b.upgrade_finish_at_ms ?? 0) > now,
+        );
+        const activeRecruit = this.recruits.find((e) => isRecruitQueueActive(e, now));
+        if (
+          slotKey === RECRUIT_QUEUE_MATRIX_SLOT_KEY &&
+          activeRecruit &&
+          !barracksUpgrading
+        ) {
+          this.openAndHighlightRecruitQueue(activeRecruit.queue_id);
+        } else {
+          this.openAndHighlightBuildSlot(slotKey);
+        }
+      }
       return;
     }
     const btn = target.closest("button");
     if (!btn) {
+      const recruitRow = target.closest("li.queue-list-row[data-queue-id]");
+      if (recruitRow instanceof HTMLElement) {
+        const qid = Number(recruitRow.dataset.queueId) || 0;
+        if (qid > 0) this.openAndHighlightRecruitQueue(qid);
+        return;
+      }
       const row = target.closest("li.queue-list-row[data-slot-key]");
       if (row instanceof HTMLElement) {
         const slotKey = row.dataset.slotKey?.trim();

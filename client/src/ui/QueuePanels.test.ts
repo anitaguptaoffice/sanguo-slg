@@ -3,6 +3,10 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS } from "@/net/buildQueueComplete";
+import {
+  QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS,
+  RECRUIT_QUEUE_MATRIX_SLOT_KEY,
+} from "@/net/recruitQueueComplete";
 import { queueRecruitRowDomId, RECRUIT_ROW_PULSE_CLASS } from "@/net/recruitTroopSubmitFeedback";
 import {
   BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID,
@@ -86,6 +90,21 @@ describe("QueuePanels", () => {
     expect(row?.textContent).toContain("Lv3");
   });
 
+  it("notifyRecruitJustCompleted adds queue-recruit-complete-pulse on recruit line", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, {}, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.toggle();
+    panel.addRecruitEntry({ queue_id: 7, unit_cfg_id: 1, count: 10, finish_at_ms: now + 90_000 });
+    panel.notifyRecruitJustCompleted([7]);
+    const row = mount.querySelector(`#${queueRecruitRowDomId(7)}`);
+    expect(row?.classList.contains("queue-recruit-complete-pulse")).toBe(true);
+    expect(row?.classList.contains(RECRUIT_ROW_PULSE_CLASS)).toBe(false);
+  });
+
   it("pulseRecruitRow adds recruit-row-pulse on queue recruit line", () => {
     const mount = document.createElement("div");
     const now = Date.now();
@@ -122,6 +141,41 @@ describe("QueuePanels", () => {
     const firstRow = mount.querySelector(`#${queueBuildRowDomId("hall")}`);
     const secondRow = mount.querySelector(`#${queueBuildRowDomId("farm")}`);
     expect(firstRow?.compareDocumentPosition(secondRow!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("recruit row click highlights barracks matrix cell mutual jump", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [];
+    session.wallet = { food: 9_999_999, wood: 9_999_999, stone: 9_999_999, iron: 9_999_999 };
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onHighlight = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { barracks: "兵营" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      onHighlight,
+    );
+    panel.attach();
+    panel.toggle();
+    panel.addRecruitEntry({ queue_id: 4, unit_cfg_id: 1, count: 6, finish_at_ms: now + 60_000 });
+    const row = mount.querySelector(`#${queueRecruitRowDomId(4)}`) as HTMLElement;
+    row.click();
+    expect(onHighlight).toHaveBeenCalledWith(RECRUIT_QUEUE_MATRIX_SLOT_KEY);
+    const barracksCell = mount.querySelector(
+      `.queue-build-matrix-cell[data-slot-key="${RECRUIT_QUEUE_MATRIX_SLOT_KEY}"]`,
+    );
+    expect(barracksCell?.classList.contains(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
+    const rowAfter = mount.querySelector(`#${queueRecruitRowDomId(4)}`);
+    expect(rowAfter?.classList.contains(QUEUE_RECRUIT_SLOT_MUTUAL_HIGHLIGHT_CLASS)).toBe(true);
   });
 
   it("matrix cell click opens and highlights build slot", () => {
