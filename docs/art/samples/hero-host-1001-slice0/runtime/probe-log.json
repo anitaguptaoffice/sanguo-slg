@@ -1,0 +1,154 @@
+{
+  "task": "HERO-HOST-1001-SLICE0",
+  "mock_preset": "hero-panel-roster",
+  "tip_sha": "0dab7176596b255fcccb1b5c970655c86407ed28",
+  "runtime_code_sha": "0dab7176596b255fcccb1b5c970655c86407ed28",
+  "git_tip_sha": "0dab7176596b255fcccb1b5c970655c86407ed28",
+  "art_head_sha": "eef9514b507c3b21921987ab94232021422bdc2f",
+  "art_asset_ids": [
+    "hero.avatar.1001.v1",
+    "hero.bust.1001.v1"
+  ],
+  "probes": {
+    "1600x900-dpr1": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "刘备",
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1001.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1001.png",
+        "float": "left"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "scrollReachOk": true,
+      "detailFooterVisible": true
+    },
+    "1600x900-dpr2": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "刘备",
+      "dpr": 2,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/avatar/1001.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/bust/1001.png",
+        "float": "left"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": false,
+      "usesAvatar2x": true,
+      "usesBust1x": false,
+      "usesBust2x": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true
+    },
+    "1280x720-dpr1": {
+      "ok": true,
+      "heroDetailLoaded": true,
+      "detailName": "刘备",
+      "dpr": 1,
+      "uiScale": 0.8,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1001.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1001.png",
+        "float": "left"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "headLeft": 502,
+        "bustRight": 492
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "scrollReachOk": true,
+      "detailFooterVisible": true
+    }
+  },
+  "shots": {
+    "hero-host-1600x900-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 465787,
+      "viewport": {
+        "tag": "1600x900-dpr1",
+        "file": "hero-host-1600x900-dpr1.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-host-1600x900-dpr2.jpg": {
+      "quality": 72,
+      "bytes": 973216,
+      "viewport": {
+        "tag": "1600x900-dpr2",
+        "file": "hero-host-1600x900-dpr2.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-host-1280x720-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 257221,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "notes": [
+    "List avatar: engineering circle mask (border-radius 50%), manifest display_size 56×56.",
+    "Detail bust: float-left 128×160 logical box; name header flows beside/overlap per flex+float.",
+    "Production art mount from Draft PR #983 (slice:0); not engineering-placeholder tags."
+  ],
+  "captured_at": "2026-10-24T14:00:42.414Z"
+}

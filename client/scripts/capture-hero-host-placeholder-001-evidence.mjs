@@ -13,7 +13,9 @@ import { chromium } from "playwright";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientRoot = path.resolve(__dirname, "..");
 const repoRoot = path.resolve(clientRoot, "..");
-const outDir = path.resolve(repoRoot, "docs/art/samples/hero-host-placeholder-001/runtime");
+const EVIDENCE_SAMPLE = process.env.HERO_HOST_EVIDENCE_SAMPLE || "hero-host-placeholder-001";
+const ART_HEAD_SHA = process.env.ART_HEAD_SHA || "";
+const outDir = path.resolve(repoRoot, `docs/art/samples/${EVIDENCE_SAMPLE}/runtime`);
 
 const MOCK_PORT = Number(process.env.MOCK_GATEWAY_PORT || 19094);
 const APP_PORT = Number(process.env.CLIENT_EVIDENCE_PORT || 16213);
@@ -85,13 +87,20 @@ async function enterMainCity(page) {
     timeout: 25000,
   });
   await page.waitForSelector(".server-list li", { timeout: 25000 });
+  await page.waitForFunction(
+    () => document.querySelector('[data-role="status"]')?.textContent?.includes("共"),
+    { timeout: 25000 },
+  );
   await page.locator(".server-list li").first().click();
-  await page.waitForTimeout(250);
+  await page.waitForSelector('[data-action="enter-game"]:not([disabled])');
   await page.locator('[data-action="enter-game"]').click();
   await page.waitForFunction(
-    () => document.querySelector('[data-action="toggle-hero"]') != null,
-    { timeout: 60000 },
+    () =>
+      document.querySelector('[data-action="toggle-hero"]') != null &&
+      document.getElementById("hud")?.textContent?.includes("art"),
+    { timeout: 90000 },
   );
+  await page.waitForSelector(".main-city-toolbar.art-chrome-toolbar", { timeout: 15000 });
 }
 
 async function openHeroPanelWithDetail(page) {
@@ -266,23 +275,37 @@ async function main() {
     await browser.close();
 
     const probeLog = {
-      task: "HERO-HOST-PLACEHOLDER-001",
+      task: EVIDENCE_SAMPLE === "hero-host-1001-slice0"
+        ? "HERO-HOST-1001-SLICE0"
+        : "HERO-HOST-PLACEHOLDER-001",
       mock_preset: PRESET,
+      tip_sha: tipSha,
+      runtime_code_sha: tipSha,
       git_tip_sha: tipSha,
+      art_head_sha: ART_HEAD_SHA || null,
+      art_asset_ids: ["hero.avatar.1001.v1", "hero.bust.1001.v1"],
       probes,
       shots,
       notes: [
         "List avatar: engineering circle mask (border-radius 50%), manifest display_size 56×56.",
         "Detail bust: float-left 128×160 logical box; name header flows beside/overlap per flex+float.",
-        "Placeholders only (magenta checker PNG) for template_cfg_id 1001.",
+        EVIDENCE_SAMPLE === "hero-host-1001-slice0"
+          ? "Production art mount from Draft PR #983 (slice:0); not engineering-placeholder tags."
+          : "Placeholders only (magenta checker PNG) for template_cfg_id 1001.",
       ],
+      captured_at: new Date().toISOString(),
     };
     await writeFile(path.join(outDir, "probe-log.json"), JSON.stringify(probeLog, null, 2));
 
+    const inventoryTitle =
+      EVIDENCE_SAMPLE === "hero-host-1001-slice0"
+        ? "# HERO-HOST-1001 slice:0 runtime inventory"
+        : "# HERO-HOST-PLACEHOLDER-001 runtime inventory";
     const inventoryLines = [
-      "# HERO-HOST-PLACEHOLDER-001 runtime inventory",
+      inventoryTitle,
       "",
-      `Git tip SHA: \`${tipSha}\``,
+      `tip_sha / runtime_code_sha: \`${tipSha}\``,
+      ...(ART_HEAD_SHA ? [`art_head_sha (Draft #983): \`${ART_HEAD_SHA}\``] : []),
       "",
       "## Viewport captures",
       "",
@@ -296,7 +319,11 @@ async function main() {
         `- \`${rel}\` — ${vp.width}×${vp.height} @ DPR ${vp.dpr}, ${bytes} bytes, sha256 \`${sha}\``,
       );
     }
-    inventoryLines.push("", "## Placeholder textures (engineering only)", "");
+    const textureSection =
+      EVIDENCE_SAMPLE === "hero-host-1001-slice0"
+        ? "## Textures (hero.avatar.1001.v1 / hero.bust.1001.v1)"
+        : "## Placeholder textures (engineering only)";
+    inventoryLines.push("", textureSection, "");
     for (const rel of [
       "client/public/assets/art/v1/textures/1x/hero/avatar/1001.png",
       "client/public/assets/art/v1/textures/2x/hero/avatar/1001.png",
