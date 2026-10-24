@@ -6,6 +6,7 @@ import {
   buildingUpgradeSpecForCfgId,
   type BuildingUpgradeResourceCost,
 } from "@/net/buildingUpgradeCatalog";
+import { formatBuildUpgradeCostLine } from "@/net/buildUpgradeCostLine";
 import { formatResourceAmount, WALLET_RESOURCE_KEYS } from "@/net/hudFormat";
 
 const BUILD_RESOURCE_KEYS = WALLET_RESOURCE_KEYS.filter(({ key }) => key !== "gold");
@@ -95,8 +96,7 @@ export function formatUpgradeCostSummaryLine(
   cost: BuildingUpgradeResourceCost,
   timeSec: number,
 ): string {
-  const costText = formatCostParts(cost).join(" · ") || "无资源消耗";
-  return `升至 Lv${targetLevel}：${costText} · 耗时 ${formatUpgradeDurationSec(timeSec)}`;
+  return formatBuildUpgradeCostLine(targetLevel, cost, undefined, { timeSec }).textLine;
 }
 
 /**

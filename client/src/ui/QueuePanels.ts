@@ -29,6 +29,11 @@ import { queueBuildRowDomId } from "@/net/mainCitySlotUpgrade";
 import { resetQueuePanelViewportScroll } from "@/ui/queuePanelScroll";
 import { buildBuildQueueSlotMatrix } from "@/net/buildQueueMatrix";
 import {
+  appendQueueRemainingProgressRow,
+  inferBuildUpgradeStartedAtMs,
+  inferRecruitQueueStartedAtMs,
+} from "@/net/queueRemainingProgress";
+import {
   activeBuildingUpgrades,
   formatBuildingUpgradeQueueLine,
   formatQueuePanelOverviewBar,
@@ -535,6 +540,12 @@ export class QueuePanels {
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
+      appendQueueRemainingProgressRow(
+        li,
+        b.upgrade_finish_at_ms ?? 0,
+        now,
+        inferBuildUpgradeStartedAtMs(b),
+      );
       const linkedQuest = findBuildDailyQuestForBuilding(b, dailyRows, now);
       if (linkedQuest) {
         const progressSummary = formatLinkedDailyQuestProgressSummary(linkedQuest);
@@ -587,6 +598,14 @@ export class QueuePanels {
       const span = document.createElement("span");
       span.textContent = text;
       li.appendChild(span);
+      if (isRecruitQueueActive(entry, now)) {
+        appendQueueRemainingProgressRow(
+          li,
+          entry.finish_at_ms,
+          now,
+          inferRecruitQueueStartedAtMs(entry),
+        );
+      }
       recruitUl.appendChild(li);
     }
     this.reskinPrimary?.(this.panel);

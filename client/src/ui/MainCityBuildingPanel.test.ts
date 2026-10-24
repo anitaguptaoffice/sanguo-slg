@@ -25,6 +25,7 @@ describe("MainCityBuildingPanel", () => {
 
     const preview = mount.querySelector('[data-role="build-preview"]');
     expect(preview?.textContent).toContain("升至 Lv2");
+    expect(preview?.querySelector(".resource-deficit")?.textContent).toContain("木");
     const btn = mount.querySelector<HTMLButtonElement>('[data-action="confirm-upgrade"]');
     expect(btn?.disabled).toBe(true);
     const err = mount.querySelector('[data-role="build-form-error"]');
