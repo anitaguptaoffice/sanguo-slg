@@ -450,7 +450,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **美术旁路**（**非** wave:30 backlog 实现卡）：**CLIENT-064**（[#347](https://github.com/anitaguptaoffice/sanguo-slg/issues/347)）；**CLIENT-137**（[#556](https://github.com/anitaguptaoffice/sanguo-slg/issues/556) / [#574](https://github.com/anitaguptaoffice/sanguo-slg/pull/574) `36c69009`）；**CLIENT-146**（[#578](https://github.com/anitaguptaoffice/sanguo-slg/issues/578) / [#579](https://github.com/anitaguptaoffice/sanguo-slg/pull/579) `4f5a9732`）；**CLIENT-147**（FILTER-008 旁路）——均 **非**本波 backlog 实现卡。实现卡 **CLIENT-148～155**，**勿占用 CLIENT-136/137/146/147**。
 
-波次总览与 **DOCS-EXIT-022**（[#593](https://github.com/anitaguptaoffice/sanguo-slg/issues/593)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 30」。实现合入后 main tip **`6978ebacaa3c91cc6556e93a10a1d227706e6c06`**（#602 CLIENT-155）。
+波次总览与 **DOCS-EXIT-022**（[#593](https://github.com/anitaguptaoffice/sanguo-slg/issues/593) / [#604](https://github.com/anitaguptaoffice/sanguo-slg/pull/604)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 30」。实现合入后 main tip **`6978ebacaa3c91cc6556e93a10a1d227706e6c06`**（#602 CLIENT-155）。
 
 ### 手动验收（HUD 经济扫读 CLIENT-148）
 
