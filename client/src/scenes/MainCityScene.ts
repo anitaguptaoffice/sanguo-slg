@@ -620,6 +620,7 @@ export class MainCityScene implements Scene {
           this.status = `战报：已筛选战场格点 (${grid.x},${grid.y})`;
           this.renderHud();
         },
+        assets: this.assets,
       },
     );
     this.world.attach();

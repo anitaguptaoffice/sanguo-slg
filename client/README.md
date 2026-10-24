@@ -1217,10 +1217,19 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 在 [CLIENT-069](#手动验收军情格点筛选-client-069) 格点筛选与 [CLIENT-061](#手动验收世界坐标-client-015) 双向高亮基础上，**世界** 面板点选城池/格点后展示只读 **格点信息卡**（坐标、匹配 `ListPlayerCities` 快照的城池名/城墙等级、空地格资源类型文案；**不新 world RPC**）。
 
-1. 打开 **世界** → 点选一城或列表行：应出现 **格点信息** 卡，含坐标与 **指向此格行军 N 条**（或「暂无」）；再次点选同一行取消选中并隐藏信息卡。
+1. 打开 **世界** → 点选一城或列表行：应出现 **格点信息** 卡，含坐标与 **指向此格进行中行军 N 条**（或「暂无」）；再次点选同一行取消选中并隐藏信息卡。
 2. 信息卡 **在军情中查看**：应打开/保持 **行军** 面板，目的格筛选为 **世界选中格**（与 CLIENT-069 一致）；列表仅显示 `to_x/to_y` 匹配行。
 3. 小地图 **空白单击** 选出征目标时，世界信息卡应同步该格；小地图视野 `pan/zoom` 纳入该格，目的点标注与 CLIENT-028 行军连线不退化；军情选中行军时仍以 CLIENT-069 目的格视野为准。
-4. 单测：`worldTileInfoCard.test.ts`、`WorldPanels.test.ts`、`MarchListPanel.test.ts`、`worldMinimap.test.ts`。
+4. 单测：`worldTileInfoCard.test.ts`、`WorldPanels.test.ts`、`MarchListPanel.test.ts`、`worldMinimap.test.ts`；深化见 [CLIENT-140](#手动验收世界信息卡军情军事深链-client-140)。
+
+### 手动验收（世界信息卡↔军情军事深链 CLIENT-140）
+
+在 [CLIENT-073](#手动验收世界格点信息卡-client-073) / [CLIENT-108](#手动验收世界格点信息卡加深-client-108) 只读信息卡与 [CLIENT-069](#手动验收军情格点筛选-client-069) / [CLIENT-090](#手动验收小地图与军情互选-client-090) 互选基础上，补 **世界↔军情** 一步深链（纯 `ListMarches` 客户端过滤，**无** world proto 扩量）：
+
+1. **世界** 信息卡：`countMarchesAtCell` 仅计进行中阶段（与 minimap 目的点口径一致）；**在军情中查看** 打开行军面板并套用目的格筛选。
+2. **军情** 行选中：世界列表目的格高亮 + 小地图视野纳入目的格（`minimapMarchFocus` / CLIENT-090 不退化）。
+3. 刷新城池时信息卡 **CLIENT-129** `data-panel-state` loading/error（`world-tile-info-state`）；`data-art-skin="off"` 回退纯文案。
+4. 单测：`worldInfoCard.test.ts`（`countMarchesAtCell` + `buildWorldInfoCardSummary`）、`WorldPanels.test.ts`、`MarchListPanel.test.ts`。
 
 ### 手动验收（世界格点信息卡加深 CLIENT-108）
 

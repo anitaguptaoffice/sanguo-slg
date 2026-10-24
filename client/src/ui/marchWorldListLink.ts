@@ -1,5 +1,6 @@
 import type { MarchSummary } from "@/net/militaryFormat";
 import type { PlayerCitySummary } from "@/net/worldFormat";
+import { marchShowsDestOnMinimap } from "@/ui/worldMinimap";
 
 /** 两格点是否为同一世界格（整数格点坐标）。 */
 export function gridCellsMatch(
@@ -70,6 +71,20 @@ export function countMarchesToDestination(
   y: number,
 ): number {
   return filterMarchesByDestination(marches, x, y).length;
+}
+
+/** 目的格一致且仍为进行中阶段（CLIENT-140 / minimap 目的点口径）。 */
+export function filterInProgressMarchesAtCell(
+  marches: MarchSummary[],
+  x: number,
+  y: number,
+): MarchSummary[] {
+  return filterMarchesByDestination(marches, x, y).filter(marchShowsDestOnMinimap);
+}
+
+/** 格点进行中行军条数（ListMarches 客户端过滤，无新 RPC）。 */
+export function countMarchesAtCell(marches: MarchSummary[], x: number, y: number): number {
+  return filterInProgressMarchesAtCell(marches, x, y).length;
 }
 
 /** 世界列表行只读计数文案；0 条时不展示。 */
