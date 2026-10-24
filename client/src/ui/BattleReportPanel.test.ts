@@ -8,8 +8,13 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import { battleReportRoundRowDomId } from "@/net/battleReportDetailNav";
 import {
   BATTLE_REPORT_ADJ_NAV_KEYBOARD_ATTR,
+  BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS,
   BATTLE_REPORT_DETAIL_REGION_ARIA_LABEL,
 } from "@/net/battleReportListNav";
+import {
+  BATTLE_REPORT_OUTCOME_BAND_CLASS,
+  formatBattleReportOutcomeHeadline,
+} from "@/net/militaryFormat";
 import { BattleReportPanel } from "@/ui/BattleReportPanel";
 
 function mockStorage(): Storage {
@@ -777,6 +782,43 @@ describe("BattleReportPanel", () => {
     prevBtn.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(10);
+  });
+
+  it("renders outcome band and adjacent focus ring on detail nav (CLIENT-190)", async () => {
+    const mount = document.createElement("div");
+    const summary = {
+      report_id: 10,
+      outcome: 1,
+      defender_player_id: 42,
+      created_at_ms: 0,
+    };
+    const gateway: GatewayPort = {
+      listBattleReports: vi.fn().mockResolvedValue({
+        reports: [summary],
+        total: 1,
+      }),
+      getBattleReport: vi.fn().mockResolvedValue({
+        report: {
+          summary,
+          detail: { result: "attacker_win", rounds: [] },
+        },
+      }),
+    } as unknown as GatewayPort;
+    const panel = new BattleReportPanel(mount, gateway, () => {});
+    panel.attach();
+    panel.toggle();
+    await flushPromises();
+    mount.querySelector('li[data-report-id="10"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    const band = mount.querySelector(`.${BATTLE_REPORT_OUTCOME_BAND_CLASS}`);
+    expect(band?.textContent).toBe(formatBattleReportOutcomeHeadline(summary));
+    expect(band?.classList.contains("outcome-attacker-win")).toBe(true);
+    const prevBtn = mount.querySelector('[data-action="nav-prev-report"]') as HTMLButtonElement;
+    const nextBtn = mount.querySelector('[data-action="nav-next-report"]') as HTMLButtonElement;
+    expect(prevBtn.classList.contains(BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS)).toBe(true);
+    expect(nextBtn.classList.contains(BATTLE_REPORT_ADJACENT_FOCUS_RING_CLASS)).toBe(true);
   });
 
   it("syncs list roving tabindex when navigating adjacent reports (CLIENT-158)", async () => {

@@ -474,6 +474,16 @@ export function formatBattleReportRowSummary(r: BattleReportSummary): string {
   return `${outcome} · 攻:${attacker} vs 守:${defender} · ${coord}`;
 }
 
+/** 战报详情顶栏 outcome 色带主文案（CLIENT-190；只读 ListBattleReports 字段）。 */
+export const BATTLE_REPORT_OUTCOME_BAND_CLASS = "battle-report-outcome-band";
+
+export function formatBattleReportOutcomeHeadline(r: BattleReportSummary): string {
+  const outcome = formatBattleOutcome(r.outcome);
+  const id = r.report_id ?? "?";
+  const foe = formatBattleReportFoeWithoutCoord(r);
+  return `${outcome} · 战报 #${id} · ${foe}`;
+}
+
 /** 战报列表行：对手/守方摘要（无新 proto 字段时的可读拼接）。 */
 export function formatBattleReportFoeSummary(r: BattleReportSummary): string {
   const foe = formatBattleReportFoeWithoutCoord(r);

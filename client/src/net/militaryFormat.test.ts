@@ -10,6 +10,7 @@ import {
   findMostRecentBattleReportAtGrid,
   formatBattleReportDetail,
   formatBattleReportListPrimaryLine,
+  formatBattleReportOutcomeHeadline,
   formatBattleReportRowSummary,
   formatCasualtyMap,
   formatMarchHint,
@@ -148,6 +149,23 @@ describe("militaryFormat", () => {
       }),
     ).toContain("平局");
     expect(formatBattleReportRowSummary({ outcome: 2 })).toContain("守胜");
+  });
+
+  it("formatBattleReportOutcomeHeadline for detail outcome band (CLIENT-190)", () => {
+    expect(
+      formatBattleReportOutcomeHeadline({
+        report_id: 7,
+        defender_player_id: 10002,
+        outcome: 1,
+      }),
+    ).toBe("攻胜 · 战报 #7 · 守方玩家#10002");
+    expect(
+      formatBattleReportOutcomeHeadline({
+        report_id: 3,
+        outcome: 3,
+        defender_city_id: 9,
+      }),
+    ).toBe("平局 · 战报 #3 · 城池#9");
   });
 
   it("filters battle reports by outcome client-side", () => {
