@@ -8,6 +8,12 @@ import {
   readMailInboxFilterSession,
 } from "@/net/mailInboxFilter";
 import { HERO_DETAIL_SELECTED_SESSION_KEY } from "@/net/heroDetailSelectedSession";
+import {
+  HERO_LIST_FILTER_SESSION_KEY,
+  HERO_LIST_SORT_SESSION_KEY,
+  readHeroListFilterSession,
+  readHeroListSortSession,
+} from "@/net/heroListFilter";
 import { HERO_LIST_REFRESH_PULSE_CLASS } from "@/net/heroListRefreshFeedback";
 import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
 import { USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL } from "@/net/useConsumableSubmitFeedback";
@@ -271,6 +277,55 @@ describe("HeroMailPanels", () => {
     expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 3);
     const rowAfter = mount.querySelector('li[data-hero-id="3"]');
     expect(rowAfter?.querySelector(".hero-list-row-secondary")?.textContent).toContain("武60");
+  });
+
+  it("filters and sorts hero list with sessionStorage memory (CLIENT-151)", async () => {
+    const mount = document.createElement("div");
+    const storage = new Map<string, string>();
+    vi.stubGlobal("sessionStorage", {
+      getItem: (k: string) => storage.get(k) ?? null,
+      setItem: (k: string, v: string) => storage.set(k, v),
+      removeItem: (k: string) => storage.delete(k),
+      clear: () => storage.clear(),
+    });
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [
+          { hero_id: 1, template_cfg_id: 1001, level: 3, loyalty: 80 },
+          { hero_id: 2, template_cfg_id: 1002, level: 9, loyalty: 10 },
+          { hero_id: 3, template_cfg_id: 1003, level: 5, loyalty: 60 },
+        ],
+        total_count: 3,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    expect(mount.querySelector(".hero-list-toolbar.panel-filter-chip-bar")).toBeTruthy();
+    mount
+      .querySelector('[data-action="hero-filter-deployable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(storage.get(HERO_LIST_FILTER_SESSION_KEY)).toBe("deployable");
+    expect(mount.querySelectorAll("li[data-hero-id]").length).toBe(2);
+    mount
+      .querySelector('[data-action="hero-sort-loyalty"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(storage.get(HERO_LIST_SORT_SESSION_KEY)).toBe("loyalty_desc");
+    const ids = [...mount.querySelectorAll("li[data-hero-id]")].map((li) =>
+      li.getAttribute("data-hero-id"),
+    );
+    expect(ids).toEqual(["1", "3"]);
+    panels.detach();
+    const mount2 = document.createElement("div");
+    const panels2 = new HeroMailPanels(mount2, gateway, () => sessionBase(), () => {}, () => {});
+    panels2.attach();
+    expect(readHeroListFilterSession()).toBe("deployable");
+    expect(readHeroListSortSession()).toBe("loyalty_desc");
+    vi.unstubAllGlobals();
   });
 
   it("hero detail cultivation use shows inflight label, refreshes detail, and pulses on success", async () => {
