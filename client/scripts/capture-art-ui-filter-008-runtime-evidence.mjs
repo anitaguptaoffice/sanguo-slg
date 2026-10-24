@@ -399,6 +399,17 @@ async function probeFilterChipBadgeCountSkin(page, panelSelector) {
         clipped = intersectRects(clipped, clip);
       }
       const visibleArea = rectArea(clipped);
+      const cx = spriteRect.left + spriteRect.width / 2;
+      const cy = spriteRect.top + spriteRect.height / 2;
+      const topAtSpriteCenter = document.elementFromPoint(cx, cy);
+      const chipBtn = el.closest("button[data-ui-filter-chip]");
+      const chipSprite = chipBtn?.querySelector(".art-filter-chip-sprite");
+      const spriteCenterTopInBadge =
+        topAtSpriteCenter === sprite ||
+        topAtSpriteCenter === el ||
+        (topAtSpriteCenter != null &&
+          el.contains(topAtSpriteCenter) &&
+          topAtSpriteCenter !== chipSprite);
       return {
         role: el.getAttribute("data-role"),
         skinned:
@@ -411,6 +422,8 @@ async function probeFilterChipBadgeCountSkin(page, panelSelector) {
         spriteRect: { width: spriteRect.width, height: spriteRect.height },
         hostRect: { width: hostRect.width, height: hostRect.height },
         intersectionCoversSprite: spriteArea > 0 ? visibleArea / spriteArea >= 0.98 : false,
+        spriteCenterTopInBadge,
+        spriteCenterTopTag: topAtSpriteCenter?.tagName ?? null,
         missingSprite: false,
       };
     }
@@ -758,7 +771,8 @@ function summarizePassFail(evidence) {
       !hit.missingSprite &&
       hit.skinned &&
       hit.hasBackgroundImage &&
-      hit.intersectionCoversSprite
+      hit.intersectionCoversSprite &&
+      hit.spriteCenterTopInBadge
     );
   });
 

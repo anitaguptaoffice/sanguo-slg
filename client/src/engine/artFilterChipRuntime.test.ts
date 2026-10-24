@@ -11,6 +11,7 @@ import {
 import {
   FILTER_CHIP_BUTTON_SELECTOR,
   FILTER_CHIP_DISPLAY_W,
+  probeFilterChipBadgeCountPaintStack,
   probeFilterChipEdgeHits,
   probeFilterChipHitMeetsMin,
   probeFilterChipSpriteInButton,
@@ -19,7 +20,7 @@ import {
   setFilterChipLabel,
   syncFilterChipAria,
 } from "@/engine/artFilterChipRuntime";
-import { mountFilterChip } from "@/engine/artUiFilterSkin";
+import { mountFilterBadgeCount, mountFilterChip } from "@/engine/artUiFilterSkin";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 
@@ -108,6 +109,52 @@ describe("CLIENT-136 index.css contract", () => {
     expect(indexHtml).toContain(`min-width: ${FILTER_CHIP_DISPLAY_W}px`);
     expect(indexHtml).toMatch(/art-filter-chip--skinned[\s\S]*color:\s*#3d2e1f/i);
     expect(indexHtml).toMatch(/art-filter-row--skinned[\s\S]*color:\s*#3d2e1f/i);
+  });
+});
+
+describe("CLIENT-147 chip badge_count stacking", () => {
+  it("index.css lifts count badge above chip paper sprite", () => {
+    const indexHtml = readFileSync(join(repoRoot, "client/index.html"), "utf8");
+    expect(indexHtml).toMatch(/art-filter-chip-sprite[\s\S]*z-index:\s*0/i);
+    expect(indexHtml).toMatch(
+      /button\.art-filter-chip\s*>\s*\[data-ui-filter-badge="count"\][\s\S]*z-index:\s*2/i,
+    );
+  });
+
+  it("probeFilterChipBadgeCountPaintStack reports badge subtree on top at sprite center", () => {
+    const style = document.createElement("style");
+    style.textContent = `
+      button.art-filter-chip { position: relative; display: inline-flex; width: 120px; height: 44px; }
+      button.art-filter-chip .art-filter-chip-sprite {
+        position: absolute; left: 50%; top: 50%; width: 72px; height: 32px;
+        transform: translate(-50%, -50%); z-index: 0;
+      }
+      button.art-filter-chip > [data-ui-filter-badge="count"] { position: relative; z-index: 2; }
+    `;
+    document.head.appendChild(style);
+    const btn = document.createElement("button");
+    btn.className = "art-filter-chip art-filter-chip--skinned";
+    btn.innerHTML = `
+      <span class="art-filter-chip-label">未读</span>
+      <span data-ui-filter-badge="count" data-filter-badge-count="9"></span>`;
+    document.body.appendChild(btn);
+    const assets = mockAssets();
+    mountFilterChip(btn, assets);
+    const badge = btn.querySelector<HTMLElement>("[data-ui-filter-badge='count']")!;
+    mountFilterBadgeCount(badge, assets, 9);
+    vi.spyOn(btn.querySelector(".art-filter-chip-sprite")!, "getBoundingClientRect").mockReturnValue(
+      new DOMRect(24, 6, 72, 32),
+    );
+    const badgeSprite = badge.querySelector<HTMLElement>(".art-badge-count-sprite")!;
+    vi.spyOn(badgeSprite, "getBoundingClientRect").mockReturnValue(new DOMRect(90, 14, 20, 16));
+    document.elementFromPoint = (x: number, y: number) => {
+      if (x === 100 && y === 22) return badgeSprite;
+      return btn;
+    };
+    const probe = probeFilterChipBadgeCountPaintStack(btn);
+    expect(probe.spriteCenterTopInBadge).toBe(true);
+    style.remove();
+    btn.remove();
   });
 });
 

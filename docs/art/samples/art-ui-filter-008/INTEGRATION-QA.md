@@ -2,7 +2,7 @@
 
 | 项 | 值 |
 |---|---|
-| tip SHA | `75c0f953bf3cddde78ad29474896ed6b0804c4d1` |
+| tip SHA | `d03c491`（CLIENT-147；完整 SHA 见 PR head） |
 | 范围 | 邮件 + 日常；全视口 JPEG（非面板 crop） |
 | 采集 | Playwright Chromium + mock 网关 + vite dev |
 | 再生 | `cd client && node scripts/capture-art-ui-filter-008-runtime-evidence.mjs` |
@@ -25,6 +25,7 @@
 | count **9+** 角标（10→9+） | **PASS** |
 | 日常行条主标题在 40px skin bar 内且横向铺满 | **PASS** |
 | 邮件 chip 实例 badge_count 皮肤可见交集 | **PASS** |
+| 邮件 chip badge_count 精灵中心落点命中角标子树（#580 叠层） | **PASS** |
 | 综合工程补证 | **PASS** |
 
 ## 全视口 JPEG
@@ -46,4 +47,6 @@
 
 详细 JSON：`probe-log.json`。
 
-> **说明**：008 仍为「联调修正/补证中」，待美术在 #108 目视复签；Draft #506 / art hold **未合并**。
+> **说明**：008 仍为「联调修正/补证中」，待美术在 #108 目视复签；Draft #506 / art hold **未合并**。CLIENT-147：`badge_count` crop 须目视见红色皮肤；`spriteCenterTopInBadge` 仅辅助，不可替代 crop。
+
+> **#580 crop 目视**：`mail-chip-badge-count-skin-nine-crop-1600x900.jpg`、`mail-chip-badge-count-skin-nineplus-crop-1600x900.jpg` 须见红底角标皮。

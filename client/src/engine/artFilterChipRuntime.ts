@@ -149,6 +149,40 @@ export function probeAdjacentChipHitOverlaps(chips: HTMLElement[]): AdjacentChip
   return overlaps;
 }
 
+/** Badge count on a filter chip must paint above the centered chip paper sprite (#580). */
+export function probeFilterChipBadgeCountPaintStack(btn: HTMLButtonElement): {
+  badgeHost: HTMLElement | null;
+  spriteCenterTopInBadge: boolean;
+  spriteCenterTopTag: string | null;
+} {
+  const badgeHost = btn.querySelector<HTMLElement>("[data-ui-filter-badge='count']");
+  if (!badgeHost || badgeHost.hidden || badgeHost.classList.contains("hidden")) {
+    return { badgeHost: null, spriteCenterTopInBadge: false, spriteCenterTopTag: null };
+  }
+  const sprite = badgeHost.querySelector<HTMLElement>(
+    ".art-badge-count-sprite, .art-filter-badge-count-sprite",
+  );
+  if (!sprite) {
+    return { badgeHost, spriteCenterTopInBadge: false, spriteCenterTopTag: null };
+  }
+  const rect = sprite.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return { badgeHost, spriteCenterTopInBadge: false, spriteCenterTopTag: null };
+  }
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  const top = document.elementFromPoint(x, y);
+  const spriteCenterTopInBadge =
+    top === sprite ||
+    top === badgeHost ||
+    (top != null && badgeHost.contains(top) && !top.classList.contains("art-filter-chip-sprite"));
+  return {
+    badgeHost,
+    spriteCenterTopInBadge,
+    spriteCenterTopTag: top?.tagName ?? null,
+  };
+}
+
 export function probeChipCenterElementFromPoint(btn: HTMLElement): {
   centerHitsChip: boolean;
   topTag: string | null;
