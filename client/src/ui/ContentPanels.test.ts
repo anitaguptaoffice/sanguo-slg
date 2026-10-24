@@ -133,6 +133,48 @@ describe("ContentPanels shop afford inline (CLIENT-154)", () => {
   });
 });
 
+describe("ContentPanels bag cfg summary and source tag (CLIENT-175)", () => {
+  it("shows stack secondary line and hero open-source tag on deep link", async () => {
+    sessionStorage.removeItem("bag-open-source-v1");
+    const mount = document.createElement("div");
+    const session = baseSession();
+    session.bag = [{ item_cfg_id: 2017, quantity: 2 }];
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({
+        items: [{ item_cfg_id: 2017, quantity: 2 }],
+      }),
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.openBagFromHeroDeepLink({
+      bagCategory: "cultivation",
+      highlightItemId: 2017,
+      returnHeroId: 9,
+      openSource: "hero",
+    });
+    await vi.waitFor(() =>
+      expect(mount.querySelector(".bag-stack-secondary")?.textContent).toContain("养成"),
+    );
+    const tag = mount.querySelector('[data-role="bag-open-source-tag"]');
+    expect(tag?.getAttribute("data-bag-open-source")).toBe("hero");
+    expect(tag?.textContent).toContain("将领");
+    expect(sessionStorage.getItem("bag-open-source-v1")).toBe("hero");
+    const row = mount.querySelector('.bag-stack-row[data-item-cfg-id="2017"]');
+    expect(row?.classList.contains("item-highlight")).toBe(true);
+    panels.toggleBag();
+    panels.toggleBag();
+    expect(row?.classList.contains("item-highlight")).toBe(true);
+    expect(mount.querySelector('[data-role="bag-open-source-tag"]')?.hidden).toBe(false);
+  });
+});
+
 describe("ContentPanels shop tab currency sweep (CLIENT-167)", () => {
   it("updates tab settlement wallet line when switching category tabs", async () => {
     const mount = document.createElement("div");
