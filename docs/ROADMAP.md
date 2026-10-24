@@ -588,28 +588,51 @@ H5 人工验收与 **INTG-029** 网关冒烟对齐，见 [client/README.md](../c
 
 **明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓。
 
-## Wave 33 H5 军情行军只读信息卡·面板空错态巩固·日常背包任务可读·战报邮件扫读·1280组合manifest补洞 — **规划中**
+## Wave 33 H5 军情行军只读信息卡·面板空错态巩固·日常背包任务可读·战报邮件扫读·1280组合manifest补洞 — **已完成**
 
-**策略**：在 wave:32 **主城建造消耗/队列 ETA / 将领详情道具缺口 / 招募·商城货币扫读 / 双榜将领深链 / 日常 chain tab / 世界格点信息卡 / 1280 主城建造将领商城日常世界 manifest** 全收口（tip **`5440264`**，含 DOCS-EXIT-024 [#650](https://github.com/anitaguptaoffice/sanguo-slg/pull/650)；实现 tip **`30b6d007`**）后，**轮转**避开 wave:26～32 已堆叠的背包商城提交脉冲、主城建造/将领商城货币、出征募兵战报邮件 HUD 主栈，在既有 RPC/面板上加深：**军情列表选中→行军只读信息卡**（phase/起终点/ETA/兵力摘要）与世界格点互链、**面板网关 error/empty 文案与重试扫读余量**（非 wave:28 panelState 首版主叙事）、**日常任务进度条与奖励道具次行**、**背包道具 cfg 摘要与来源标签**、**战报列表胜负摘要与 outcome 筛选记忆**、**邮件分 tab 空态与附件类型扫读**、**军事出征只读汇总条与军情信息卡互跳**、**1280 军情战报邮件背包日常组合 manifest 补洞**；网关 **INTG-030** 复跑 smoke（保留 INTG-029，扩展 `ListMarches` 行军字段、`ListPlayerQuests` 进度/奖励 hint、`ListPlayerBag` cfg 摘要、`ListBattleReports` outcome、`ListPlayerMail` 附件 hint）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog PR 待合（tasks_sync 后填 Issue）；实现卡 **CLIENT-172～179**，**勿占用 CLIENT-136/137/146/147**；**ART-ACTION-ICONS-010** 由 #108 留言板推进，**非** backlog 实现卡。
+**策略**：在 wave:32 **主城建造消耗/队列 ETA / 将领详情道具缺口 / 招募·商城货币扫读 / 双榜将领深链 / 日常 chain tab / 世界格点信息卡 / 1280 主城建造将领商城日常世界 manifest** 全收口（tip **`5440264`**，含 DOCS-EXIT-024 [#650](https://github.com/anitaguptaoffice/sanguo-slg/pull/650)；实现 tip **`30b6d007`**）后，**轮转**避开 wave:26～32 已堆叠的背包商城提交脉冲、主城建造/将领商城货币、出征募兵战报邮件 HUD 主栈，在既有 RPC/面板上加深：**军情列表选中→行军只读信息卡**（phase/起终点/ETA/兵力摘要）与世界格点互链、**面板网关 error/empty 文案与重试扫读余量**（非 wave:28 panelState 首版主叙事）、**日常任务进度条与奖励道具次行**、**背包道具 cfg 摘要与来源标签**、**战报列表胜负摘要与 outcome 筛选记忆**、**邮件分 tab 空态与附件类型扫读**、**军事出征只读汇总条与军情信息卡互跳**、**1280 军情战报邮件背包日常组合 manifest 补洞**；网关 **INTG-030** 复跑 smoke（保留 INTG-029，扩展 `ListMarches` 行军字段、`ListPlayerQuests` 进度/奖励 hint、`ListPlayerBag` cfg 摘要、`ListBattleReports` outcome、`ListPlayerMail` 附件 hint）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog [#651](https://github.com/anitaguptaoffice/sanguo-slg/pull/651)（`3e0afdc3`）；实现 tip **`03a210b2`**（#666 CLIENT-179）；**实现全收口** main tip **`03a210b23bbdb724ea8cddd2d2cac32dd57d7817`**（DOCS-EXIT-025 [#661](https://github.com/anitaguptaoffice/sanguo-slg/issues/661) 文档收口另 agent 进行中）；实现卡 **CLIENT-172～179**，**勿占用 CLIENT-136/137/146/147**；**ART-ACTION-ICONS-010** [#662](https://github.com/anitaguptaoffice/sanguo-slg/pull/662) 工程旁路——**非** backlog 实现卡。
 
 | Issue | 任务 | 状态 | 合并参考 |
 |---|---|---|---|
-| tasks_sync 后填 | CLIENT-172 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-173 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-174 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-175 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-176 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-177 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-178 | 待开工 | — |
-| tasks_sync 后填 | CLIENT-179 | 待开工 | — |
-| tasks_sync 后填 | INTG-030 | 待开工 | — |
-| tasks_sync 后填 | DOCS-EXIT-025 | 阻塞 | — |
+| [#652](https://github.com/anitaguptaoffice/sanguo-slg/issues/652) | CLIENT-172 | 已完成 | [#667](https://github.com/anitaguptaoffice/sanguo-slg/pull/667)（`a75444c2`） |
+| [#653](https://github.com/anitaguptaoffice/sanguo-slg/issues/653) | CLIENT-173 | 已完成 | [#671](https://github.com/anitaguptaoffice/sanguo-slg/pull/671)（`fd001811`） |
+| [#654](https://github.com/anitaguptaoffice/sanguo-slg/issues/654) | CLIENT-174 | 已完成 | [#664](https://github.com/anitaguptaoffice/sanguo-slg/pull/664)（`6a871fbb`） |
+| [#655](https://github.com/anitaguptaoffice/sanguo-slg/issues/655) | CLIENT-175 | 已完成 | [#670](https://github.com/anitaguptaoffice/sanguo-slg/pull/670)（`7ae0d93d`） |
+| [#656](https://github.com/anitaguptaoffice/sanguo-slg/issues/656) | CLIENT-176 | 已完成 | [#663](https://github.com/anitaguptaoffice/sanguo-slg/pull/663)（`908f7998`） |
+| [#657](https://github.com/anitaguptaoffice/sanguo-slg/issues/657) | CLIENT-177 | 已完成 | [#669](https://github.com/anitaguptaoffice/sanguo-slg/pull/669)（`e43ba39b`） |
+| [#658](https://github.com/anitaguptaoffice/sanguo-slg/issues/658) | CLIENT-178 | 已完成 | [#668](https://github.com/anitaguptaoffice/sanguo-slg/pull/668)（`9b68da69`） |
+| [#659](https://github.com/anitaguptaoffice/sanguo-slg/issues/659) | CLIENT-179 | 已完成 | [#666](https://github.com/anitaguptaoffice/sanguo-slg/pull/666)（`03a210b2`） |
+| [#660](https://github.com/anitaguptaoffice/sanguo-slg/issues/660) | INTG-030 | 已完成 | [#665](https://github.com/anitaguptaoffice/sanguo-slg/pull/665)（`ac174cf0`） |
+| [#661](https://github.com/anitaguptaoffice/sanguo-slg/issues/661) | DOCS-EXIT-025 | 进行中 | — |
 
-H5 人工验收与 **INTG-030** 网关冒烟对齐，见 `client/README.md`（DOCS-EXIT-025 收口后增补 wave:33 锚点；**军情行军只读信息卡 + 面板 error/重试 + 日常进度/奖励扫读 + 背包道具摘要 + 战报 outcome 摘要 + 邮件空态/附件扫读 + 军事汇总互跳 + 1280 军情战报邮件背包日常 manifest 补洞**）。
+H5 人工验收与 **INTG-030** 网关冒烟对齐，见 [client/README.md](../client/README.md)（**军情行军只读信息卡 + 面板 error/重试 + 日常进度/奖励扫读 + 背包道具摘要 + 战报 outcome 摘要 + 邮件空态/附件扫读 + 军事汇总互跳 + 1280 军情战报邮件背包日常 manifest 补洞**）。
 
 **美术旁路（非 wave:33 backlog 实现卡）**：**CLIENT-064**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**——均 **非** wave:33 实现卡。wave:33 实现卡 **CLIENT-172～179**，**勿占用 CLIENT-136/137/146/147**。
 
 **明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓。
+
+## Wave 34 H5 主城七槽队列互链巩固·将领列表招募执行反馈·双榜军团聊天扫读·HUD产出待办深链·1280组合manifest — **规划中**
+
+**策略**：在 wave:33 **军情行军只读信息卡 / 面板 error 重试 / 日常进度奖励 / 背包道具摘要 / 战报 outcome / 邮件空态附件 / 军事汇总互跳 / 1280 军情战报邮件背包日常 manifest** 实现全收口（tip **`03a210b2`**，含 CLIENT-179 [#666](https://github.com/anitaguptaoffice/sanguo-slg/pull/666)；基线 wave:32 **`5440264`**）后，**轮转**避开 wave:26～33 已堆叠的军情战报邮件背包日常军事主栈、主城建造/将领商城货币扫读（wave:32）、出征募兵 HUD 反馈（wave:31），在既有 RPC/面板上加深：**主城七槽选中与建造/募兵队列行双向高亮互跳**、**队列完成脉冲与 HUD 产出/仓库余量联动扫读**、**将领列表刷新戳记与详情选中记忆**、**招募提交行内反馈与币种行脉冲**（**非** wave:26 商城购买/花钱类）、**双榜手动刷新密度与钉选保持**、**军团职务分组头与聊天未读分隔线**、**队列↔日常前往下一步双向锚点高亮**、**1280 主城将领排行社交 HUD 组合 manifest**；网关 **INTG-031** 复跑 smoke（保留 INTG-030，扩展 `GetCityState` 七槽/产出、`ListPlayerHeroes`、`RecruitHero` 响应 hint、`GetLeaderboard` Top3/`my_rank`、`ListGuildMembers` role 计数、`ListPlayerQuests` 可领锚点 hint）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做。波次 backlog PR 待合（tasks_sync 后填 Issue）；实现卡 **CLIENT-180～187**，**勿占用 CLIENT-136/137/146/147**。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| tasks_sync 后填 | CLIENT-180 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-181 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-182 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-183 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-184 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-185 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-186 | 待开工 | — |
+| tasks_sync 后填 | CLIENT-187 | 待开工 | — |
+| tasks_sync 后填 | INTG-031 | 待开工 | — |
+| tasks_sync 后填 | DOCS-EXIT-026 | 阻塞 | — |
+
+H5 人工验收与 **INTG-031** 网关冒烟对齐，见 `client/README.md`（DOCS-EXIT-026 收口后增补 wave:34 锚点；**主城七槽↔队列互链 + HUD 产出余量联动 + 将领列表刷新/招募反馈 + 双榜刷新密度 + 军团职务分组/聊天未读 + 队列日常锚点 + 1280 主城将领排行社交 HUD manifest**）。
+
+**美术旁路（非 wave:34 backlog 实现卡）**：**CLIENT-064**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**——均 **非** wave:34 实现卡。wave:34 实现卡 **CLIENT-180～187**，**勿占用 CLIENT-136/137/146/147**。
+
+**明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP**。
 
 ## 不做
 
