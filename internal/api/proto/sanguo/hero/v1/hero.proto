@@ -68,6 +68,39 @@ message UpgradeHeroResponse {
   HeroAttributes attributes = 7;
 }
 
+// route: hero.v1.AddHeroPoint
+message AddHeroPointRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+  int32 force = 3;
+  int32 intel = 4;
+  int32 politics = 5;
+}
+
+message AddHeroPointResponse {
+  int64 hero_id = 1;
+  int32 potential_remaining = 2;
+  HeroAttributes attributes = 3;
+  int32 force_add = 4;
+  int32 intel_add = 5;
+  int32 politics_add = 6;
+}
+
+// route: hero.v1.ClearHeroPoint
+message ClearHeroPointRequest {
+  int32 server_id = 1;
+  int64 hero_id = 2;
+}
+
+message ClearHeroPointResponse {
+  int64 hero_id = 1;
+  int32 potential_remaining = 2;
+  HeroAttributes attributes = 3;
+  int32 force_add = 4;
+  int32 intel_add = 5;
+  int32 politics_add = 6;
+}
+
 message RecruitHeroRequest {
   int32 server_id = 1;
   int32 template_cfg_id = 2;

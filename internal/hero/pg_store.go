@@ -17,6 +17,12 @@ func nullString(s string) interface{} {
 }
 
 // heroLargessScheduleDDL extends player_hero until contract adds hero_largess_schedule.
+const heroPointAddColumnsDDL = `
+ALTER TABLE player_hero ADD COLUMN IF NOT EXISTS force_add INT NOT NULL DEFAULT 0;
+ALTER TABLE player_hero ADD COLUMN IF NOT EXISTS intel_add INT NOT NULL DEFAULT 0;
+ALTER TABLE player_hero ADD COLUMN IF NOT EXISTS politics_add INT NOT NULL DEFAULT 0;
+`
+
 const heroLargessScheduleDDL = `
 CREATE TABLE IF NOT EXISTS hero_largess_schedule (
     server_id       INT          NOT NULL,
@@ -33,7 +39,15 @@ type PGStore struct{ Pool *pgxpool.Pool }
 // NewPGStore wraps a PostgreSQL pool.
 func NewPGStore(pool *pgxpool.Pool) *PGStore { return &PGStore{Pool: pool} }
 
+func (p *PGStore) ensurePointAddColumns(ctx context.Context) error {
+	_, err := p.Pool.Exec(ctx, heroPointAddColumnsDDL)
+	return err
+}
+
 func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
+	if err := p.ensurePointAddColumns(ctx); err != nil {
+		return err
+	}
 	created := h.CreatedAt
 	if created.IsZero() {
 		created = time.Now()
@@ -41,8 +55,8 @@ func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
 	_, err := p.Pool.Exec(ctx, `
 		INSERT INTO player_hero (
 			server_id, hero_id, player_id, template_cfg_id, display_name, level, exp, loyalty,
-			force, intel, politics, command, status, created_at
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+			force, intel, politics, command, force_add, intel_add, politics_add, status, created_at
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
 		ON CONFLICT (server_id, hero_id) DO UPDATE SET
 			player_id = EXCLUDED.player_id,
 			template_cfg_id = EXCLUDED.template_cfg_id,
@@ -54,22 +68,28 @@ func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
 			intel = EXCLUDED.intel,
 			politics = EXCLUDED.politics,
 			command = EXCLUDED.command,
+			force_add = EXCLUDED.force_add,
+			intel_add = EXCLUDED.intel_add,
+			politics_add = EXCLUDED.politics_add,
 			status = EXCLUDED.status
 	`, h.ServerID, h.HeroID, h.PlayerID, h.TemplateCfgID, nullString(h.DisplayName), h.Level, h.Exp, h.Loyalty,
-		h.Force, h.Intel, h.Politics, h.Command, h.Status, created)
+		h.Force, h.Intel, h.Politics, h.Command, h.ForceAdd, h.IntelAdd, h.PoliticsAdd, h.Status, created)
 	return err
 }
 
 func (p *PGStore) GetHero(ctx context.Context, serverID int32, heroID int64) (*Hero, error) {
+	if err := p.ensurePointAddColumns(ctx); err != nil {
+		return nil, err
+	}
 	var h Hero
 	err := p.Pool.QueryRow(ctx, `
 		SELECT server_id, hero_id, player_id, template_cfg_id, COALESCE(display_name,''), level, exp, loyalty,
-		       force, intel, politics, command, status, created_at
+		       force, intel, politics, command, force_add, intel_add, politics_add, status, created_at
 		FROM player_hero
 		WHERE server_id = $1 AND hero_id = $2
 	`, serverID, heroID).Scan(
 		&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.DisplayName, &h.Level, &h.Exp, &h.Loyalty,
-		&h.Force, &h.Intel, &h.Politics, &h.Command, &h.Status, &h.CreatedAt,
+		&h.Force, &h.Intel, &h.Politics, &h.Command, &h.ForceAdd, &h.IntelAdd, &h.PoliticsAdd, &h.Status, &h.CreatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -81,9 +101,12 @@ func (p *PGStore) GetHero(ctx context.Context, serverID int32, heroID int64) (*H
 }
 
 func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID int64) ([]*Hero, error) {
+	if err := p.ensurePointAddColumns(ctx); err != nil {
+		return nil, err
+	}
 	rows, err := p.Pool.Query(ctx, `
 		SELECT server_id, hero_id, player_id, template_cfg_id, COALESCE(display_name,''), level, exp, loyalty,
-		       force, intel, politics, command, status, created_at
+		       force, intel, politics, command, force_add, intel_add, politics_add, status, created_at
 		FROM player_hero
 		WHERE server_id = $1 AND player_id = $2
 		ORDER BY hero_id
@@ -97,7 +120,7 @@ func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID
 		var h Hero
 		if err := rows.Scan(
 			&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.DisplayName, &h.Level, &h.Exp, &h.Loyalty,
-			&h.Force, &h.Intel, &h.Politics, &h.Command, &h.Status, &h.CreatedAt,
+			&h.Force, &h.Intel, &h.Politics, &h.Command, &h.ForceAdd, &h.IntelAdd, &h.PoliticsAdd, &h.Status, &h.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
