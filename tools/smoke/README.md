@@ -2,7 +2,27 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 34 网关冒烟（INTG-031，推荐）
+
+在 INTG-030 全量断言之上强制验收 **主城队列与 HUD 产出**：`domestic.v1.GetCityState` 打印 `build_queue` 活跃条数 + 首槽 `building_cfg_id`/`level` + `production_rates` 首资源（供 CLIENT-180/181 对照；无城 **skip** + hint）；**将领列表**：`hero.v1.ListPlayerHeroes` 打印条目数 + 首条 `hero_id`/`level`（供 CLIENT-182 对照；空列表 **skip** + hint）；**招募反馈**：`hero.v1.ListRecruitTemplates` → `RecruitHero` 打印 `hero_id` + 扣费币种 hint（供 CLIENT-183 对照；无模板或失败 **skip** + hint；**不**扩 SKU）；**战力榜密度**：`rank.v1.GetLeaderboard` 战力榜打印 Top3 `rank`/`score` + `my_rank`（供 CLIENT-184 对照；空榜 hint only）；**军团职务分组**：`guild.v1.ListGuildMembers` 打印各 `role` 计数摘要（供 CLIENT-185 对照；无军团 **skip** + hint）；**日常队列锚点**：`quest.v1.ListPlayerQuests` `chain_id=400` 打印首条可领取 `quest_id` + `building_cfg_id` hint（供 CLIENT-186 对照；无可领 **skip** + hint）。保留 INTG-030/029 及更早链路。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速/主城建造新 RPC/战报 proto 扩量/新商城 SKU。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG031Wave34SmokePath' -count=1 -v
+```
+
+与 INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / M4 一并跑：
+
+```bash
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG031Wave34SmokePath|TestINTG030Wave33SmokePath|TestINTG029Wave32SmokePath|TestINTG028Wave31SmokePath|TestINTG027Wave30SmokePath|TestINTG026Wave29SmokePath|TestINTG025Wave28SmokePath|TestINTG024Wave27SmokePath|TestINTG023Wave26SmokePath|TestINTG022Wave25SmokePath|TestINTG021Wave24SmokePath|TestINTG020Wave23SmokePath|TestINTG019Wave22SmokePath|TestINTG018Wave21SmokePath|TestINTG017Wave20SmokePath|TestINTG016Wave19SmokePath|TestINTG015Wave18SmokePath|TestINTG014Wave17SmokePath|TestINTG013Wave16SmokePath|TestINTG012Wave15SmokePath|TestINTG011Wave14SmokePath|TestINTG010Wave13SmokePath|TestINTG009Wave12SmokePath|TestINTG008Wave11SmokePath|TestINTG007M4DeepSmokePath|TestINTG006Data002SmokePath|TestM4ContentSmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-031:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 33 网关冒烟（INTG-030，推荐）
 
