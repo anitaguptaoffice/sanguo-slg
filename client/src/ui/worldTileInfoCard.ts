@@ -11,13 +11,12 @@ import {
   type PlayerCitySummary,
 } from "@/net/worldFormat";
 import {
-  filterInProgressMarchesAtCell,
   filterMarchesByDestination,
   findPlayerCityAtGrid,
   formatManhattanFromOwnCity,
 } from "@/ui/marchWorldListLink";
 import { countMarchesAtCell } from "@/ui/marchWorldListLink";
-import { formatMarchListSecondary } from "@/net/militaryFormat";
+import { formatWorldTileMarchSummaryLine } from "@/ui/minimapMarchStack";
 
 export type WorldTileRef = { x: number; y: number };
 
@@ -159,17 +158,13 @@ export function formatWorldTileOccupationSummary(
   return `中立城池：${name}`;
 }
 
-/** 信息卡次行：指向此格的首条进行中行军 ETA（ListMarches 快照）。 */
+/** @deprecated 使用 {@link formatWorldTileMarchSummaryLine}（CLIENT-204）。 */
 export function formatWorldTileInfoSecondary(
   marches: MarchSummary[],
   tile: WorldTileRef,
   nowMs = Date.now(),
 ): string {
-  const first = filterInProgressMarchesAtCell(marches, tile.x, tile.y)[0];
-  if (!first) return WORLD_TILE_NO_RECENT_MARCH_HINT;
-  const id = first.march_id ?? "?";
-  const eta = formatMarchListSecondary(first, nowMs);
-  return `最近行军 #${id} · ${eta}`;
+  return formatWorldTileMarchSummaryLine(marches, tile, nowMs);
 }
 
 function resolveRecentBattleReportId(

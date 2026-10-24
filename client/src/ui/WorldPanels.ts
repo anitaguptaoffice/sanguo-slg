@@ -31,10 +31,11 @@ import {
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { buildWorldInfoCardSummary } from "@/ui/worldInfoCard";
+import { formatWorldTileOccupationSummary } from "@/ui/worldTileInfoCard";
 import {
-  formatWorldTileInfoSecondary,
-  formatWorldTileOccupationSummary,
-} from "@/ui/worldTileInfoCard";
+  formatWorldTileMarchSummaryLine,
+  WORLD_TILE_MARCH_SUMMARY_LINE_CLASS,
+} from "@/ui/minimapMarchStack";
 import { WORLD_TILE_INFO_CARD_CLASS } from "@/ui/minimapTileFocusLink";
 import {
   applyWorldTileFocusPulse,
@@ -207,7 +208,7 @@ export class WorldPanels {
           <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
           <p class="world-tile-info-hint hidden" data-role="world-tile-occupation-hint"></p>
           <p class="world-tile-info-march" data-role="world-tile-march-count"></p>
-          <p class="world-tile-info-secondary" data-role="world-tile-march-secondary"></p>
+          <p class="world-tile-info-secondary ${WORLD_TILE_MARCH_SUMMARY_LINE_CLASS}" data-role="world-tile-march-secondary"></p>
           <div class="world-tile-info-actions">
             <button type="button" data-action="view-marches-at-grid">在军情中查看</button>
             <button type="button" class="hidden" data-action="view-battle-reports-at-grid">打开战报筛选</button>
@@ -385,7 +386,7 @@ export class WorldPanels {
       hintEl.classList.add("hidden");
     }
     marchEl.textContent = summary.marchCountLine;
-    secondaryEl.textContent = formatWorldTileInfoSecondary(marches, { x, y });
+    secondaryEl.textContent = formatWorldTileMarchSummaryLine(marches, { x, y });
     if (reportBtn) {
       if (summary.showBattleReportShortcut) {
         reportBtn.classList.remove("hidden");
