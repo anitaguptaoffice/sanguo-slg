@@ -1,4 +1,5 @@
 import { GATEWAY_WS_URL } from "@/config";
+import { parseUpgradeHeroResponse } from "@/net/heroDetailUpgrade";
 import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMailState";
 import { getTypes, Routes } from "@/net/loadProto";
 import type protobuf from "protobufjs";
@@ -74,6 +75,7 @@ export type GatewayPort = {
   claimPlayerMailAttachments(serverId: number, mailId: number): Promise<unknown>;
   listPlayerHeroes(serverId: number, opts?: { pageSize?: number; pageOffset?: number }): Promise<unknown>;
   getHeroDetail(serverId: number, heroId: number): Promise<unknown>;
+  upgradeHero(serverId: number, heroId: number): Promise<unknown>;
   recruitHero(
     serverId: number,
     templateCfgId: number,
@@ -530,6 +532,19 @@ export class GatewayClient implements GatewayPort {
       true,
     );
     return parseGetHeroDetailResponse(raw);
+  }
+
+  async upgradeHero(serverId: number, heroId: number) {
+    requireHeroIdForDetail(heroId);
+    const { UpgradeHeroResponse } = getTypes();
+    const raw = await this.rpc(
+      Routes.UpgradeHero,
+      "UpgradeHeroRequest",
+      { server_id: serverId, hero_id: heroId },
+      UpgradeHeroResponse,
+      true,
+    );
+    return parseUpgradeHeroResponse(raw);
   }
 
   async recruitHero(

@@ -126,8 +126,11 @@ export type HeroDetail = HeroSummary & {
   loyalty_min?: number;
   loyalty_max?: number;
   attributes?: HeroAttributes;
-  /** 网关可选：本级经验进度（无字段时详情区降级为 Lv+忠诚摘要）。 */
+  /** 网关 hero.v1 经验池总量（exp）。 */
+  exp?: number;
+  /** 网关可选：本级经验进度 exp_toward_next（无字段时详情区降级为 Lv+忠诚摘要）。 */
   exp_current?: number;
+  /** 网关可选：升级所需经验 upgrade_exp_required。 */
   exp_to_next?: number;
   /** 网关可选：升级所需道具（无字段时客户端按养成子集推导）。 */
   level_upgrade_item?: { item_cfg_id?: number; quantity?: number };
@@ -287,8 +290,13 @@ export function parseGetHeroDetailResponse(raw: unknown): HeroDetail {
     loyalty: numField(r.loyalty),
     loyalty_min: numField(r.loyalty_min),
     loyalty_max: numField(r.loyalty_max),
-    exp_current: numField(r.exp_current ?? r.level_exp_current ?? r.experience),
-    exp_to_next: numField(r.exp_to_next ?? r.exp_to_next_level ?? r.level_exp_max ?? r.exp_max),
+    exp: numField(r.exp),
+    exp_current: numField(
+      r.exp_toward_next ?? r.exp_current ?? r.level_exp_current ?? r.experience,
+    ),
+    exp_to_next: numField(
+      r.upgrade_exp_required ?? r.exp_to_next ?? r.exp_to_next_level ?? r.level_exp_max ?? r.exp_max,
+    ),
     level_upgrade_item: parseItemNeedField(r.level_upgrade_item ?? r.level_up_item),
     loyalty_upgrade_item: parseItemNeedField(r.loyalty_upgrade_item ?? r.loyalty_up_item),
     attributes,
@@ -466,6 +474,7 @@ export function renderHeroDetailMarkup(
   d: HeroDetail | null | undefined,
   recruitAffordSummaryHtml = "",
   templatePreview?: RecruitTemplatePreview | null,
+  upgradeHtml = "",
   cultivationUseHtml = "",
   bag: BagStack[] = [],
   listHint = "",
@@ -490,6 +499,7 @@ export function renderHeroDetailMarkup(
     ? `<p class="hero-detail-list-hint" data-role="hero-detail-list-hint">${escapeHtml(listHint.trim())}</p>`
     : "";
   const progress = renderHeroUpgradeProgressMarkup(d, bag);
+  const upgradeSection = upgradeHtml;
   const consumableStackText = formatHeroDetailConsumableStackLine(d, bag);
   const consumableStackLine = consumableStackText
     ? `<p class="${HERO_DETAIL_CONSUMABLE_STACK_LINE_CLASS}" data-role="${HERO_DETAIL_CONSUMABLE_STACK_LINE_ROLE}">${escapeHtml(consumableStackText)}</p>`
@@ -524,7 +534,7 @@ export function renderHeroDetailMarkup(
     <button type="button" data-action="hero-related-items">相关道具</button>
   </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${compareStrip}${listHintLine}${progress}${consumableStackLine}${consumableStackResidualLine}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
+  return `${head}${compareStrip}${listHintLine}${progress}${upgradeSection}${consumableStackLine}${consumableStackResidualLine}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {
