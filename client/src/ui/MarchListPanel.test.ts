@@ -283,6 +283,10 @@ describe("MarchListPanel", () => {
     expect(
       mount.querySelector('.march-list li[data-march-id="99"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
     ).toBe(true);
+    expect(mount.querySelector('[data-role="march-row-recent-dot"]')).toBeTruthy();
+    expect(mount.querySelector('.march-list li[data-march-id="99"]')?.getAttribute("data-ui-filter-row")).toBe(
+      "",
+    );
   });
 
   it("applies march-row-recent for highlighted march and clears on other row select", async () => {
@@ -375,6 +379,20 @@ describe("MarchListPanel", () => {
     expect(panel.getSelectedMarchId()).toBeNull();
   });
 
+  it("exposes phase filter chips with aria-pressed (CLIENT-124)", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({ marches: [], total: 0 }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    const chips = mount.querySelectorAll('[data-action="march-phase-filter-chip"][data-ui-filter-chip]');
+    expect(chips.length).toBe(5);
+    const allChip = mount.querySelector(
+      '[data-action="march-phase-filter-chip"][data-phase="all"]',
+    ) as HTMLButtonElement;
+    expect(allChip.getAttribute("aria-pressed")).toBe("true");
+  });
+
   it("filters by phase and persists military-list-filter-v1 (CLIENT-109)", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({
@@ -390,11 +408,10 @@ describe("MarchListPanel", () => {
     panel.toggle();
     await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
 
-    const phaseSelect = mount.querySelector(
-      '[data-action="march-phase-filter"]',
-    ) as HTMLSelectElement;
-    phaseSelect.value = "return";
-    phaseSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    const returnChip = mount.querySelector(
+      '[data-action="march-phase-filter-chip"][data-phase="return"]',
+    ) as HTMLButtonElement;
+    returnChip.click();
     expect(mount.querySelectorAll(".march-list li").length).toBe(1);
     expect(mount.querySelector('.march-list li[data-march-id="2"]')).toBeTruthy();
     expect(sessionStorage.getItem(MILITARY_LIST_FILTER_SESSION_KEY)).toContain('"return"');
