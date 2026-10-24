@@ -4,6 +4,8 @@ import {
   formatChatDayGroupTitle,
   formatChatLogLine,
   formatGuildMemberLine,
+  formatGuildMemberPrimaryNick,
+  formatGuildMemberSecondaryLine,
   formatGuildMentionDraft,
   formatGuildSummaryText,
   formatServerLine,
@@ -78,6 +80,16 @@ describe("socialFormat", () => {
     });
     expect(member).toContain("官员");
     expect(member).toContain("加入");
+    expect(formatGuildMemberPrimaryNick({ display_name: "甲", role: 2 })).toBe("甲");
+    const secondary = formatGuildMemberSecondaryLine({
+      display_name: "甲",
+      role: 2,
+      power: 9000,
+      player_id: 100_012_345,
+      joined_at_ms: Date.UTC(2026, 0, 1, 12, 0, 0),
+    });
+    expect(secondary).toContain("#…2345");
+    expect(secondary).toContain("战力 9000");
   });
 
   it("groups guild members by role in leader-officer-member order (CLIENT-101)", () => {

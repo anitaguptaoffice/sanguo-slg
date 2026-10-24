@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { LB_PLAYER_POWER, LB_PLAYER_RESOURCE } from "@/net/leaderboardFormat";
+import { ChatUnreadTracker } from "@/net/chatUnread";
 import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
+import {
+  CHAT_PANEL_LAST_REFRESH_SESSION_KEY,
+  GUILD_PANEL_LAST_REFRESH_SESSION_KEY,
+} from "@/net/socialPanelRefreshSession";
 import { SocialPanels } from "@/ui/SocialPanels";
 
 function flushPromises(): Promise<void> {
@@ -77,7 +82,7 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(getLeaderboard).toHaveBeenCalledWith(1, LB_PLAYER_POWER, 1, 20);
     expect(mount.querySelector('[data-role="viewer-rank"]')?.textContent).toContain("第 2 名");
     expect(mount.querySelector('[data-role="rank-snapshot"]')?.textContent).toContain("快照批次");
-    expect(mount.querySelector('[data-role="rank-refresh-status"]')?.textContent).toContain("上次更新");
+    expect(mount.querySelector('[data-role="rank-refresh-status"]')?.textContent).toContain("上次刷新");
     expect(mount.querySelector(".rank-pin-row")?.textContent).toContain("我的排名 #2");
     expect(mount.querySelector('[data-role="rank-last-refresh"]')?.textContent).toContain("上次刷新：");
     expect(sessionStorage.getItem(RANK_LAST_REFRESH_SESSION_KEY)).toContain(String(LB_PLAYER_POWER));
@@ -297,7 +302,7 @@ describe("SocialPanels chat & guild", () => {
     expect(log?.textContent).toContain("[世界]");
     expect(log?.textContent).toContain("(#10001)");
     expect(log?.textContent).toContain("测试");
-    expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("上次更新");
+    expect(mount.querySelector('[data-role="chat-refresh-status"]')?.textContent).toContain("上次刷新");
   });
 
   it("shows guild-not-joined readonly chat empty with navigate to guild panel", async () => {
@@ -379,7 +384,7 @@ describe("SocialPanels chat & guild", () => {
     const summary = mount.querySelector('[data-role="guild-summary"]');
     expect(summary?.textContent).toContain("虎贲营 (#7001)");
     expect(mount.querySelector('[data-role="guild-refresh-status-text"]')?.textContent).toContain(
-      "上次更新",
+      "上次刷新",
     );
 
     panels.toggleChat();
@@ -449,6 +454,9 @@ describe("SocialPanels chat & guild", () => {
     await flushPromises();
     expect(mount.querySelectorAll('[data-role="guild-role-chip"]')).toHaveLength(1);
     expect(mount.querySelector('[data-role="guild-role-chip"]')?.textContent).toBe("团长");
+    const primary = mount.querySelector('[data-role="guild-member-primary"]');
+    expect(primary?.querySelector(".guild-member-nick")?.textContent).toBe("团长甲");
+    expect(primary?.querySelector('[data-role="guild-role-chip"]')?.textContent).toBe("团长");
     expect(mount.querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')?.textContent).toContain(
       "官员（1）",
     );
@@ -468,6 +476,50 @@ describe("SocialPanels chat & guild", () => {
     panels.attach();
     panels.toggleGuild();
     expect(mount.querySelector('[data-action="guild-mention"]')).toBeNull();
+  });
+
+  it("syncs chat tab badge after manual refresh (CLIENT-144 + CLIENT-102)", async () => {
+    const mount = document.createElement("div");
+    const tracker = new ChatUnreadTracker(null);
+    const gateway = minimalGateway({
+      listChatMessages: vi.fn().mockResolvedValue({
+        messages: [
+          {
+            channel: 1,
+            sender_display_name: "新消息",
+            sender_player_id: 10002,
+            content: "hi",
+            sent_at_ms: 9_000,
+          },
+        ],
+      }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {}, tracker);
+    panels.attach();
+    panels.toggleChat();
+    await flushPromises();
+    const badge = mount.querySelector('[data-role="chat-tab-badge-1"]');
+    expect(badge?.textContent).toBe("1");
+    expect(badge?.classList.contains("hidden")).toBe(false);
+    expect(sessionStorage.getItem(CHAT_PANEL_LAST_REFRESH_SESSION_KEY)).toBeTruthy();
+  });
+
+  it("persists guild refresh stamp in session (CLIENT-144)", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      createGuild: vi.fn().mockResolvedValue({ guild: { guild_id: 7001, name: "虎贲营" } }),
+      listGuildMembers: vi.fn().mockResolvedValue({
+        guild: { name: "虎贲营" },
+        members: [{ display_name: "甲", role: 1, power: 1 }],
+      }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
+    mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(sessionStorage.getItem(GUILD_PANEL_LAST_REFRESH_SESSION_KEY)).toBeTruthy();
   });
 
   it("shows guild member refresh error via formatSocialPanelRefreshError", async () => {

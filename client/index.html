@@ -1492,7 +1492,15 @@
       .guild-role-chip-officer { background: #3a4a62; color: #9ec5ff; }
       .guild-role-chip-member { background: #3d3830; color: #c9b88a; }
       .guild-role-chip-unknown { background: #333; color: #aaa; }
-      .guild-member-line { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
+      .guild-member-primary {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+        flex: 1 1 8rem; min-width: 0;
+      }
+      .guild-member-nick { font-weight: 600; color: #f5e6c8; overflow-wrap: anywhere; }
+      .guild-member-secondary {
+        flex: 1 1 100%; min-width: 0; font-size: 11px; color: #b8a88a;
+        overflow-wrap: anywhere; line-height: 1.35; padding-left: 2px;
+      }
       .guild-member-mention { flex-shrink: 0; }
       .chat-log li.social-list-empty,
       .guild-members li.social-list-empty {
