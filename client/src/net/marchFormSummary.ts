@@ -1,6 +1,11 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import { formatResourceAmount } from "@/net/hudFormat";
-import { MARCH_FORM_INFANTRY_UNIT_CFG_ID } from "@/net/marchFormValidation";
+import {
+  MARCH_FORM_INFANTRY_UNIT_CFG_ID,
+  setMarchFormErrorDisplay,
+  validateMarchForm,
+} from "@/net/marchFormValidation";
+import type { CityTroopStack } from "@/net/militaryFormat";
 import { formatMarchRemainingMs, unitLabel } from "@/net/militaryFormat";
 
 /** 与 spec/data/source/params/march.yml `sec_per_cell_at_speed_50` 及 internal/military/march/duration.go 一致。 */
@@ -197,4 +202,34 @@ export function setMarchFormSummaryDisplay(
       warnEl.classList.add("hidden");
     }
   }
+}
+
+export type MarchFormInlineFeedbackContext = {
+  cityX?: number;
+  cityY?: number;
+  cityTroops: CityTroopStack[];
+  wallet?: ResourceWallet;
+  clockMs: number;
+};
+
+/** CLIENT-048 + CLIENT-089：预填或输入变更时同步 summary 与内联校验。 */
+export function syncMarchFormInlineFeedback(
+  formRoot: ParentNode | null | undefined,
+  ctx: MarchFormInlineFeedbackContext,
+): void {
+  const snap = readMarchFormSnapshot(formRoot, {
+    cityX: ctx.cityX,
+    cityY: ctx.cityY,
+    wallet: ctx.wallet,
+  });
+  setMarchFormSummaryDisplay(formRoot, formatMarchFormSummary(snap, ctx.clockMs));
+  const validated = validateMarchForm({
+    toXRaw: snap.toXRaw,
+    toYRaw: snap.toYRaw,
+    marchCountRaw: snap.marchCountRaw,
+    cityX: ctx.cityX,
+    cityY: ctx.cityY,
+    cityTroops: ctx.cityTroops,
+  });
+  setMarchFormErrorDisplay(formRoot, validated.ok ? null : validated.message);
 }

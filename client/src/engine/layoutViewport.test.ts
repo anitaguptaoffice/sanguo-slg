@@ -15,6 +15,8 @@ import {
   CLIENT_119_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_127_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_145_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
 import {
@@ -176,5 +178,15 @@ describe("narrow layout root class", () => {
     for (const id of ["queue", "hero"] as const) {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
+  });
+
+  it("CLIENT-145 intel/social manifest + narrow minimap at 1280×720", () => {
+    expect(isNarrowLayoutViewport(computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h))).toBe(
+      true,
+    );
+    for (const id of CLIENT_145_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT.w).toBeGreaterThan(270);
   });
 });

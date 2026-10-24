@@ -60,6 +60,10 @@ import {
   type MarchDestFilterMode,
 } from "@/ui/marchWorldListLink";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import {
+  handleListRovingKeyDown,
+  syncListRovingTabindex,
+} from "@/ui/listRovingTabindex";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
@@ -249,12 +253,17 @@ export class MarchListPanel {
     this.setSelectedMarchId(marchId);
   }
 
+  private readonly onListKeyDownBound = (ev: KeyboardEvent): void => {
+    this.onListKeyDown(ev);
+  };
+
   attach(): void {
     this.listFilter = readMilitaryListFilterSession();
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("change", (ev) => this.onFilterChange(ev));
+    this.panel.addEventListener("keydown", this.onListKeyDownBound);
     this.renderFilterControls();
     this.mountFilterSkins();
   }
@@ -262,7 +271,21 @@ export class MarchListPanel {
   detach(): void {
     this.stopPoll();
     this.clearHighlightExpiryTimer();
+    this.panel?.removeEventListener("keydown", this.onListKeyDownBound);
     this.panel?.remove();
+  }
+
+  private onListKeyDown(ev: KeyboardEvent): void {
+    if (!this.isOpen()) return;
+    const ul = this.panel.querySelector<HTMLElement>('[data-role="march-list"]');
+    if (!ul) return;
+    handleListRovingKeyDown(ev, ul, {
+      itemSelector: "li[data-march-id]",
+      onActivate: (row) => {
+        const id = Number(row.getAttribute("data-march-id"));
+        if (id > 0) this.setSelectedMarchId(id);
+      },
+    });
   }
 
   isOpen(): boolean {
@@ -541,6 +564,7 @@ export class MarchListPanel {
       ul.appendChild(li);
     }
     this.applyPhaseChangeRowPulses();
+    syncListRovingTabindex(ul as HTMLElement, "li[data-march-id]");
     this.mountFilterSkins();
   }
 

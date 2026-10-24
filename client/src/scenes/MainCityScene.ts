@@ -25,7 +25,13 @@ import {
 import { mountFilterListPanelSkins } from "@/engine/filterListNarrowManifest";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { appendHudResourceStrip } from "@/engine/artResourceHud";
-import { applyLayoutTransform, canvasToLayout, type LayoutViewport } from "@/engine/layoutViewport";
+import {
+  applyLayoutTransform,
+  canvasToLayout,
+  isNarrowLayoutViewport,
+  type LayoutViewport,
+} from "@/engine/layoutViewport";
+import { resolveMinimapExpandedLayoutRect } from "@/ui/worldMinimap";
 import {
   LAYOUT_FRAME,
   MAIN_CITY_SLOTS,
@@ -79,17 +85,14 @@ import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
-import {
-  formatMarchFormSummary,
-  readMarchFormSnapshot,
-  setMarchFormSummaryDisplay,
-} from "@/net/marchFormSummary";
+import { syncMarchFormInlineFeedback } from "@/net/marchFormSummary";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
-  applyMarchIntelRemarchPrefill,
+  applyMarchIntelRemarchPrefillWithFeedback,
   buildMarchIntelRemarchPrefill,
 } from "@/net/marchIntelRemarch";
+import { restoreMarchTargetPrefill } from "@/net/marchTargetMemory";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import { detectBuildJustCompleted } from "@/net/buildQueueComplete";
 import {
@@ -141,14 +144,12 @@ import {
   clearMarchTargetFromForm,
   marchTargetStatusMessage,
   resolveMarchTargetTruth,
-  restoreMarchTargetToForm,
   setMarchTargetFieldHighlight,
   syncMarchTargetSessionFromForm,
   writeMarchTargetSession,
 } from "@/net/marchTargetMemory";
 import {
   DEFAULT_MINIMAP_VIEW,
-  MINIMAP_LAYOUT_RECT,
   applyMinimapPan,
   applyMinimapWheelZoom,
   computeMinimapWorldBounds,
@@ -728,7 +729,12 @@ export class MainCityScene implements Scene {
     this.canvas.addEventListener("pointerup", this.onCanvasPointerBound);
     this.canvas.addEventListener("pointercancel", this.onCanvasPointerBound);
     this.hud.addEventListener("click", this.onHudClickBound);
-    restoreMarchTargetToForm(this.militaryPanel);
+    restoreMarchTargetPrefill(
+      this.militaryPanel,
+      DEFAULT_MARCH_TARGET,
+      typeof sessionStorage !== "undefined" ? sessionStorage : null,
+      this.marchFormFeedbackContext(),
+    );
     this.syncMinimapFocusFromMarchTarget();
     this.syncMilitaryPanel();
     this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
@@ -993,7 +999,11 @@ export class MainCityScene implements Scene {
     this.militaryPanel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
-    applyMarchIntelRemarchPrefill(this.militaryPanel, prefill);
+    applyMarchIntelRemarchPrefillWithFeedback(
+      this.militaryPanel,
+      prefill,
+      this.marchFormFeedbackContext(),
+    );
     this.suppressMarchTargetHighlightClear = false;
     this.intelRemarchTroopsLine = prefill.lastTroopsSummary;
     setMarchTargetFieldHighlight(this.militaryPanel, false);
@@ -1040,15 +1050,25 @@ export class MainCityScene implements Scene {
       this.militaryPanel,
       this.queuePanels?.getRecruitQueueSnapshot() ?? [],
     );
-    const summary = formatMarchFormSummary(
-      readMarchFormSnapshot(this.militaryPanel, {
-        cityX: this.session?.cityX,
-        cityY: this.session?.cityY,
-        wallet: this.session?.wallet,
-      }),
-      this.marchClockMs,
-    );
-    setMarchFormSummaryDisplay(this.militaryPanel, summary);
+    syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
+  }
+
+  private marchFormFeedbackContext() {
+    return {
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      cityTroops: this.session?.cityTroops ?? [],
+      wallet: this.session?.wallet,
+      clockMs: this.marchClockMs,
+    };
+  }
+
+  private isNarrowLayout(): boolean {
+    return isNarrowLayoutViewport(this.getViewport());
+  }
+
+  private currentMinimapLayoutRect() {
+    return resolveMinimapExpandedLayoutRect(this.isNarrowLayout());
   }
 
   private onMilitaryRecruitFieldChange(ev: Event): void {
@@ -1142,7 +1162,8 @@ export class MainCityScene implements Scene {
 
   private onCanvasWheel(ev: WheelEvent): void {
     const layout = this.layoutFromPointerEvent(ev);
-    if (!layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)) return;
+    if (!layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed, this.isNarrowLayout()))
+      return;
     ev.preventDefault();
     const bounds = this.currentMinimapWorldBounds();
     this.minimapView = applyMinimapWheelZoom(
@@ -1171,7 +1192,7 @@ export class MainCityScene implements Scene {
         const start = this.minimapPanStartLayout;
         if (
           start &&
-          layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)
+          layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed, this.isNarrowLayout())
         ) {
           const dx = layout.x - start.x;
           const dy = layout.y - start.y;
@@ -1188,7 +1209,7 @@ export class MainCityScene implements Scene {
 
     if (ev.type !== "pointerdown") return;
 
-    if (layoutPointInMinimapToggle(layout.x, layout.y, this.minimapCollapsed)) {
+    if (layoutPointInMinimapToggle(layout.x, layout.y, this.minimapCollapsed, this.isNarrowLayout())) {
       this.minimapCollapsed = !this.minimapCollapsed;
       writeMinimapCollapsedToSession(this.minimapCollapsed);
       if (this.minimapBattleReportReplay) {
@@ -1207,7 +1228,7 @@ export class MainCityScene implements Scene {
       return;
     }
 
-    if (layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed)) {
+    if (layoutPointInMinimapMap(layout.x, layout.y, this.minimapCollapsed, this.isNarrowLayout())) {
       const marchId = findMarchIdForMinimapDestClick(
         layout.x,
         layout.y,
@@ -1215,6 +1236,7 @@ export class MainCityScene implements Scene {
         this.session?.cityX,
         this.session?.cityY,
         this.minimapView,
+        this.currentMinimapLayoutRect(),
       );
       if (marchId != null) {
         this.marchList.selectMarchById(marchId, { openPanel: true });
@@ -1292,7 +1314,7 @@ export class MainCityScene implements Scene {
       layoutX,
       layoutY,
       bounds,
-      MINIMAP_LAYOUT_RECT,
+      this.currentMinimapLayoutRect(),
       this.minimapView,
     );
     if (!world) return;
@@ -1930,6 +1952,7 @@ export class MainCityScene implements Scene {
       selectedMarchId: this.marchList?.getSelectedMarchId(),
       focusGrid: this.minimapFocusGrid,
       view: this.minimapView,
+      rect: this.currentMinimapLayoutRect(),
       collapsed: this.minimapCollapsed,
       battleReportReplay: this.minimapBattleReportReplay,
       nowMs: this.marchClockMs,

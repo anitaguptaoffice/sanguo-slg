@@ -1,3 +1,7 @@
+import {
+  syncMarchFormInlineFeedback,
+  type MarchFormInlineFeedbackContext,
+} from "@/net/marchFormSummary";
 import { applyMarchTargetToForm } from "@/net/worldFormat";
 
 /** sessionStorage：本会话最近一次出征目标格点（与 CLIENT-013 to_x/to_y 一致）。 */
@@ -191,6 +195,18 @@ export function restoreMarchTargetToForm(
   }
   applyMarchTargetToForm(formRoot, fallback.x, fallback.y);
   return null;
+}
+
+/** session 预填 + 可选 CLIENT-048/089 即时反馈（CLIENT-145）。 */
+export function restoreMarchTargetPrefill(
+  formRoot: ParentNode | null | undefined,
+  fallback: MarchTargetCoords,
+  storage: Pick<Storage, "getItem"> | null,
+  feedback?: MarchFormInlineFeedbackContext,
+): MarchTargetCoords | null {
+  const restored = restoreMarchTargetToForm(formRoot, fallback, storage);
+  if (feedback) syncMarchFormInlineFeedback(formRoot, feedback);
+  return restored;
 }
 
 export function clearMarchTargetFromForm(

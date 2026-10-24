@@ -11,15 +11,22 @@ export const WORLD_MAP_EDGE = 500;
 /** 主城舞台上的小地图区域（layout 坐标，位于 STAGE 带内右上角）。 */
 export const MINIMAP_LAYOUT_RECT = { x: 1310, y: 72, w: 270, h: 210 };
 
+/** CLIENT-145: expanded minimap draw/hit rect at layout-narrow (1600×900 layout space). */
+export const MINIMAP_NARROW_EXPANDED_LAYOUT_RECT = { x: 1248, y: 64, w: 340, h: 252 };
+
 /** 折叠后仅保留角标条，不占原 270×210 槽位 hit 区。 */
 export const MINIMAP_COLLAPSED_CHROME_RECT = { x: 1310, y: 72, w: 112, h: 28 };
+
+export type MinimapLayoutRect = typeof MINIMAP_LAYOUT_RECT;
+
+export function resolveMinimapExpandedLayoutRect(narrowLayout: boolean): MinimapLayoutRect {
+  return narrowLayout ? MINIMAP_NARROW_EXPANDED_LAYOUT_RECT : MINIMAP_LAYOUT_RECT;
+}
 
 export const MINIMAP_COLLAPSED_SESSION_KEY = "rxsg.client.worldMinimap.collapsed";
 
 const MARCH_PHASE_MARCHING = 2;
 const MARCH_PHASE_RETURNING = 4;
-
-export type MinimapLayoutRect = typeof MINIMAP_LAYOUT_RECT;
 
 export type MinimapView = {
   /** 相对默认 fit 的缩放倍数，≥ 1。 */
@@ -189,24 +196,32 @@ export function layoutPointInMinimap(
 }
 
 /** 展开时完整小地图交互区；折叠时无地图区（不挡建筑槽位）。 */
-export function minimapMapInteractionRect(collapsed: boolean): MinimapLayoutRect | null {
-  return collapsed ? null : MINIMAP_LAYOUT_RECT;
+export function minimapMapInteractionRect(
+  collapsed: boolean,
+  narrowLayout = false,
+): MinimapLayoutRect | null {
+  return collapsed ? null : resolveMinimapExpandedLayoutRect(narrowLayout);
 }
 
 export function layoutPointInMinimapMap(
   layoutX: number,
   layoutY: number,
   collapsed: boolean,
+  narrowLayout = false,
 ): boolean {
-  const rect = minimapMapInteractionRect(collapsed);
+  const rect = minimapMapInteractionRect(collapsed, narrowLayout);
   return rect != null && layoutPointInMinimap(layoutX, layoutY, rect);
 }
 
-export function minimapCollapseToggleRect(collapsed: boolean): MinimapLayoutRect {
+export function minimapCollapseToggleRect(
+  collapsed: boolean,
+  narrowLayout = false,
+): MinimapLayoutRect {
   if (collapsed) return MINIMAP_COLLAPSED_CHROME_RECT;
+  const mapRect = resolveMinimapExpandedLayoutRect(narrowLayout);
   return {
-    x: MINIMAP_LAYOUT_RECT.x + MINIMAP_LAYOUT_RECT.w - 28,
-    y: MINIMAP_LAYOUT_RECT.y + 2,
+    x: mapRect.x + mapRect.w - 28,
+    y: mapRect.y + 2,
     w: 26,
     h: 22,
   };
@@ -216,8 +231,13 @@ export function layoutPointInMinimapToggle(
   layoutX: number,
   layoutY: number,
   collapsed: boolean,
+  narrowLayout = false,
 ): boolean {
-  return layoutPointInMinimap(layoutX, layoutY, minimapCollapseToggleRect(collapsed));
+  return layoutPointInMinimap(
+    layoutX,
+    layoutY,
+    minimapCollapseToggleRect(collapsed, narrowLayout),
+  );
 }
 
 export function readMinimapCollapsedFromSession(

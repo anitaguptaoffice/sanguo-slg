@@ -76,6 +76,10 @@ import {
   resolveBattleReportMailLink,
 } from "@/net/mailBattleCrossLink";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import {
+  handleListRovingKeyDown,
+  syncListRovingTabindex,
+} from "@/ui/listRovingTabindex";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import {
   formatBattleReportLocationFields,
@@ -499,6 +503,7 @@ export class BattleReportPanel {
       ul.appendChild(li);
     }
 
+    syncListRovingTabindex(ul as HTMLElement, "li[data-report-id]");
     this.renderDetail();
   }
 
@@ -1087,6 +1092,19 @@ export class BattleReportPanel {
   }
 
   private onKeyDown(ev: KeyboardEvent): void {
+    const list = this.panel.querySelector<HTMLElement>('[data-role="report-list"]');
+    if (
+      list &&
+      handleListRovingKeyDown(ev, list, {
+        itemSelector: "li[data-report-id]",
+        onActivate: (row) => {
+          const id = Number(row.getAttribute("data-report-id"));
+          if (id > 0) void this.openReport(id);
+        },
+      })
+    ) {
+      return;
+    }
     if (!this.shouldHandleAdjacentNavKey(ev)) return;
     ev.preventDefault();
     void this.navigateAdjacentReport(ev.key === "ArrowLeft" ? "prev" : "next");
