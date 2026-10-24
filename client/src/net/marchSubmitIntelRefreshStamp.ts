@@ -19,9 +19,21 @@ export const INTEL_LIST_REFRESH_MARCH_SUBLINE_PULSE_CLASS =
   "intel-list-refresh-march-subline-pulse";
 export const INTEL_LIST_REFRESH_MARCH_SUBLINE_PULSE_MS = MARCH_SUBMIT_INTEL_REFRESH_STAMP_DEEP_MS;
 
+/** CLIENT-269：在 CLIENT-253 戳记加深上延长展示与残余巩固类。 */
+export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_CLASS =
+  "march-submit-intel-refresh-stamp-residual-deep";
+export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_MS = 3000;
+
+/** CLIENT-269：首条新行军 phase 次行残余加深脉冲（与 CLIENT-253 次行脉冲并存）。 */
+export const INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_CLASS =
+  "intel-list-refresh-march-subline-residual-deep-pulse";
+export const INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_MS =
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_MS;
+
 let refreshStampHideTimer: ReturnType<typeof setTimeout> | null = null;
 let refreshMarchPulseTimer: ReturnType<typeof setTimeout> | null = null;
 let refreshMarchSublinePulseTimer: ReturnType<typeof setTimeout> | null = null;
+let refreshMarchSublineResidualDeepPulseTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function formatMarchSubmitIntelRefreshStampLine(
   marchId: number,
@@ -45,6 +57,7 @@ export function syncMarchSubmitIntelRefreshStamp(
     el.textContent = "";
     el.classList.remove(MARCH_SUBMIT_INTEL_REFRESH_STAMP_CLASS);
     el.classList.remove(MARCH_SUBMIT_INTEL_REFRESH_STAMP_DEEP_CLASS);
+    el.classList.remove(MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_CLASS);
     return;
   }
   el.textContent = line;
@@ -143,6 +156,51 @@ function syncMarchSubmitIntelRefreshStampDeepClass(
   el.classList.toggle(MARCH_SUBMIT_INTEL_REFRESH_STAMP_DEEP_CLASS, deep);
 }
 
+function syncMarchSubmitIntelRefreshStampResidualDeepClass(
+  intelRoot: ParentNode | null | undefined,
+  residualDeep: boolean,
+): void {
+  const el = intelRoot?.querySelector<HTMLElement>(
+    `[data-role="${MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE}"]`,
+  );
+  if (!el) return;
+  el.classList.toggle(MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_CLASS, residualDeep);
+}
+
+export function clearIntelListRefreshMarchSublineResidualDeepPulse(
+  intelRoot: ParentNode | null | undefined,
+): void {
+  if (!intelRoot) return;
+  intelRoot
+    .querySelectorAll<HTMLElement>(`.${INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_CLASS}`)
+    .forEach((el) => el.classList.remove(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_CLASS));
+}
+
+export function pulseIntelListRefreshMarchSublineResidualDeep(
+  intelRoot: ParentNode | null | undefined,
+  marchId: number,
+  windowObj: Pick<Window, "setTimeout"> = globalThis.window,
+  durationMs: number = INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_MS,
+): void {
+  if (!intelRoot || !Number.isFinite(marchId) || marchId <= 0) return;
+  const id = Math.trunc(marchId);
+  const row = intelRoot.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
+  const subline = row?.querySelector<HTMLElement>(`.${INTEL_ROW_PHASE_SUBLINE_CLASS}`);
+  if (!subline) return;
+
+  if (refreshMarchSublineResidualDeepPulseTimer != null) {
+    clearTimeout(refreshMarchSublineResidualDeepPulseTimer);
+    refreshMarchSublineResidualDeepPulseTimer = null;
+  }
+  clearIntelListRefreshMarchSublineResidualDeepPulse(intelRoot);
+  subline.classList.add(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_CLASS);
+  void subline.offsetWidth;
+  refreshMarchSublineResidualDeepPulseTimer = windowObj.setTimeout(() => {
+    subline.classList.remove(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEP_PULSE_CLASS);
+    refreshMarchSublineResidualDeepPulseTimer = null;
+  }, durationMs);
+}
+
 /** 出征成功：军情顶栏 2s 刷新戳记 + 新行军行脉冲（CLIENT-238）。 */
 export function applyMarchSubmitIntelRefreshStamp(
   intelRoot: ParentNode | null | undefined,
@@ -183,4 +241,33 @@ export function applyMarchSubmitIntelRefreshStampDeep(
     MARCH_SUBMIT_INTEL_REFRESH_STAMP_DEEP_MS,
   );
   pulseIntelListRefreshMarchSubline(intelRoot, marchId);
+}
+
+/**
+ * `MarchAttack` 成功：CLIENT-253 戳记加深 **3s** + 新行军 phase 次行残余加深脉冲（CLIENT-269；CLIENT-080 **不退化**）。
+ */
+export function applyMarchSubmitIntelRefreshStampResidualDeep(
+  intelRoot: ParentNode | null | undefined,
+  marchId: number | null | undefined,
+  refreshedAtMs: number,
+  nowMs = Date.now(),
+): void {
+  if (marchId == null || marchId <= 0) return;
+  const line = formatMarchSubmitIntelRefreshStampLine(marchId, refreshedAtMs, nowMs);
+  syncMarchSubmitIntelRefreshStamp(intelRoot, line);
+  syncMarchSubmitIntelRefreshStampDeepClass(intelRoot, true);
+  syncMarchSubmitIntelRefreshStampResidualDeepClass(intelRoot, true);
+  scheduleMarchSubmitIntelRefreshStampHide(
+    intelRoot,
+    globalThis.window,
+    MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_MS,
+  );
+  pulseIntelListRefreshMarchRow(
+    intelRoot,
+    marchId,
+    globalThis.window,
+    MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_MS,
+  );
+  pulseIntelListRefreshMarchSubline(intelRoot, marchId);
+  pulseIntelListRefreshMarchSublineResidualDeep(intelRoot, marchId);
 }
