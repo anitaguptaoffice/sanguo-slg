@@ -6,6 +6,10 @@ import { RANK_MY_RANK_CHANGED_PULSE_CLASS } from "@/net/leaderboardMyRankRefresh
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
 import {
+  LEADERBOARD_RETURN_SCROLL_SESSION_KEY,
+  writeLeaderboardReturnScroll,
+} from "@/net/leaderboardReturnScroll";
+import {
   CHAT_PANEL_LAST_REFRESH_SESSION_KEY,
   GUILD_PANEL_LAST_REFRESH_SESSION_KEY,
 } from "@/net/socialPanelRefreshSession";
@@ -254,6 +258,71 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     mount.querySelector("tr.rank-data-row")?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     expect(statuses.some((s) => s.includes("仅支持查看己方将领"))).toBe(true);
+  });
+
+  it("CLIENT-168: list row shows 查看将领 and persists return scroll on hero deep link", async () => {
+    const mount = document.createElement("div");
+    const onOpenHero = vi.fn();
+    const getLeaderboard = vi.fn().mockResolvedValue({
+      entries: [
+        { rank: 2, entity_id: 10001, display_name: "演示君主", score: 5000, hero_id: 8001 },
+        { rank: 1, entity_id: 10002, display_name: "路人", score: 9000 },
+      ],
+      my_rank: 2,
+      my_score: 5000,
+    });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.setRankDeepLinkHandlers({
+      getViewerHeroIds: async () => [8001],
+      onOpenHeroDetail: onOpenHero,
+    });
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const rows = mount.querySelectorAll("tr.rank-data-row");
+    expect(rows[0]?.querySelector('[data-action="rank-view-hero"]')?.textContent).toBe("查看将领");
+    expect(rows[1]?.querySelector('[data-action="rank-view-hero"]')).toBeNull();
+    const scrollBody = mount.querySelector('[data-role="rank-scroll"]') as HTMLElement;
+    scrollBody.scrollTop = 64;
+    rows[0]?.querySelector('[data-action="rank-view-hero"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(onOpenHero).toHaveBeenCalledWith(8001);
+    const raw = sessionStorage.getItem(LEADERBOARD_RETURN_SCROLL_SESSION_KEY);
+    expect(raw).toContain(String(LB_PLAYER_POWER));
+    expect(raw).toContain("64");
+  });
+
+  it("CLIENT-168: reopen rank restores tab and scroll from session", async () => {
+    const mount = document.createElement("div");
+    writeLeaderboardReturnScroll({ boardType: LB_PLAYER_RESOURCE, scrollTop: 42 });
+    const getLeaderboard = vi.fn().mockImplementation((_sid: number, type: number) =>
+      Promise.resolve({
+        entries: [{ rank: 1, entity_id: 10001, score: 1 }],
+        my_rank: 1,
+        my_score: 1,
+        type,
+      }),
+    );
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    const select = mount.querySelector('[data-field="rank-type"]') as HTMLSelectElement;
+    expect(select.value).toBe(String(LB_PLAYER_RESOURCE));
+    expect(getLeaderboard).toHaveBeenCalledWith(1, LB_PLAYER_RESOURCE, 1, 20);
+    const scrollBody = mount.querySelector('[data-role="rank-scroll"]') as HTMLElement;
+    expect(scrollBody.scrollTop).toBe(42);
+    expect(sessionStorage.getItem(LEADERBOARD_RETURN_SCROLL_SESSION_KEY)).toBeNull();
   });
 
   it("CLIENT-097: resource row with grid opens world deep link", async () => {

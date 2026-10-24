@@ -8,8 +8,12 @@ export const LB_PLAYER_RESOURCE = 2;
 export type LeaderboardEntryRow = {
   rank?: number;
   entity_id?: number;
+  /** 可选扩展：与 entity_id 同义的 player_id（快照字段，非新 rank proto）。 */
+  player_id?: number;
   display_name?: string;
   score?: number;
+  /** 可选扩展：行关联将领（快照字段，供 CLIENT-168 深链）。 */
+  hero_id?: number;
   /** 可选扩展：资源榜行关联格点/城池（网关快照字段，非新 rank proto）。 */
   grid_x?: number;
   grid_y?: number;
