@@ -76,6 +76,12 @@ import {
   resolveRankRowDeepLink,
   type RankRowDeepLink,
 } from "@/net/rankRowDeepLink";
+import {
+  CHAT_SEND_MAX_CONTENT_LENGTH,
+  formatChatInputCounter,
+  validateSendChatContent,
+} from "@/net/chatSendValidation";
+import { persistGuildChatDraft, restoreGuildChatDraft } from "@/net/guildChatDraft";
 
 export type SocialRankDeepLinkHandlers = {
   getViewerHeroIds?: () => Promise<number[]>;
@@ -142,10 +148,15 @@ export class SocialPanels {
   }
 
   toggleChat(): void {
+    const wasHidden = this.chatPanel.classList.contains("hidden");
+    if (!wasHidden) {
+      this.persistChatInputDraft();
+    }
     this.chatPanel.classList.toggle("hidden");
     if (!this.chatPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.chatPanel);
       this.hydrateChatRefreshClockFromSession();
+      this.restoreChatInputDraftFromSession();
       void this.refreshChat();
     }
   }
@@ -385,7 +396,10 @@ export class SocialPanels {
       <div class="panel-scroll-body" data-role="chat-scroll">
         <ul class="chat-log" data-role="chat-log"></ul>
       </div>
-      <label>内容 <input type="text" data-field="chat-content" maxlength="120" placeholder="输入消息" /></label>
+      <label class="chat-input-label">内容
+        <input type="text" data-field="chat-content" maxlength="${CHAT_SEND_MAX_CONTENT_LENGTH}" placeholder="输入消息" aria-describedby="chat-input-counter" />
+        <span class="chat-input-counter" id="chat-input-counter" data-role="chat-input-counter" aria-live="polite"></span>
+      </label>
       <button type="button" data-action="send-chat">发送</button>
       <button type="button" class="chat-mark-read hidden" data-action="mark-chat-read" data-role="chat-mark-read">标为已读</button>
       <button type="button" data-action="refresh-chat">刷新</button>
@@ -406,7 +420,39 @@ export class SocialPanels {
       () => this.maybeMarkChatChannelRead(),
       { passive: true },
     );
+    const chatInput = el.querySelector('[data-field="chat-content"]') as HTMLInputElement | null;
+    chatInput?.addEventListener("input", () => {
+      this.syncChatInputCounter();
+      this.persistChatInputDraft();
+    });
+    this.syncChatInputCounter();
     return el;
+  }
+
+  private chatContentInput(): HTMLInputElement | null {
+    return this.chatPanel?.querySelector('[data-field="chat-content"]') as HTMLInputElement | null;
+  }
+
+  private syncChatInputCounter(): void {
+    const input = this.chatContentInput();
+    const counter = this.chatPanel?.querySelector('[data-role="chat-input-counter"]');
+    if (!input || !counter) return;
+    counter.textContent = formatChatInputCounter(input.value);
+  }
+
+  private persistChatInputDraft(): void {
+    persistGuildChatDraft(this.chatContentInput()?.value ?? "");
+  }
+
+  private restoreChatInputDraftFromSession(): void {
+    const draft = restoreGuildChatDraft();
+    const input = this.chatContentInput();
+    if (!input || !draft) {
+      this.syncChatInputCounter();
+      return;
+    }
+    input.value = draft;
+    this.syncChatInputCounter();
   }
 
   private buildGuildPanel(): HTMLElement {
@@ -724,9 +770,11 @@ export class SocialPanels {
     if (channel) channel.value = String(CHAT_CHANNEL_GUILD);
     this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
     this.syncChatChannelTabUi(CHAT_CHANNEL_GUILD);
-    const input = this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement;
+    const input = this.chatContentInput();
     if (input) {
       input.value = formatGuildMentionDraft(displayName);
+      this.syncChatInputCounter();
+      this.persistChatInputDraft();
       input.focus();
     }
   }
@@ -752,16 +800,21 @@ export class SocialPanels {
   private async sendChat(): Promise<void> {
     const sid = this.serverId();
     const ch = this.selectedChatChannel();
-    const content = (this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement)?.value?.trim();
-    if (!content) {
-      this.onStatus("消息不能为空");
+    const raw = this.chatContentInput()?.value ?? "";
+    const validation = validateSendChatContent(raw);
+    if (!validation.ok) {
+      this.onStatus(validation.reason);
       return;
     }
+    const content = raw.trim();
     if (!this.ensureGuildChatReady(ch)) return;
     this.onStatus("发送中…");
     try {
       await this.gateway.sendChatMessage(sid, ch, content, this.chatSendOpts(ch));
-      (this.chatPanel.querySelector('[data-field="chat-content"]') as HTMLInputElement).value = "";
+      const input = this.chatContentInput();
+      if (input) input.value = "";
+      persistGuildChatDraft("");
+      this.syncChatInputCounter();
       await this.refreshChat();
       this.onStatus("已发送");
     } catch (e) {
