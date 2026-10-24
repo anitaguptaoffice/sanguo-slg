@@ -938,6 +938,44 @@
         margin: 0 0 6px;
         color: #3d2e1f;
       }
+      .march-queue-banner {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 6px;
+        padding: 6px 10px;
+        text-align: left;
+        color: #3d2e1f;
+        background: #efe6d4;
+        border: 1px solid #c9a227;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .march-queue-banner.hidden { display: none; }
+      .march-queue-banner.march-queue-banner-pulse {
+        animation: march-queue-banner-pulse 5s ease-out 1;
+      }
+      @keyframes march-queue-banner-pulse {
+        0%, 100% { box-shadow: none; background: #efe6d4; }
+        15%, 45% { box-shadow: 0 0 0 2px #c9a227; background: #fff6df; }
+      }
+      .march-queue-banner.march-queue-banner-mutual-highlight,
+      .march-list li.march-queue-banner-mutual-highlight {
+        outline: 2px solid #c9a227;
+        outline-offset: 1px;
+      }
+      .march-intel-queue-banner-link {
+        font-size: 11px;
+        margin-left: 6px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid #c9a227;
+        background: #2a2218;
+        color: #f0c674;
+        cursor: pointer;
+      }
       .queue-panel-hint { font-size: 12px; margin-bottom: 6px; }
       .queue-panel-status { margin-top: 8px; font-size: 12px; min-height: 1em; }
       .queue-military-section { margin-top: 10px; }

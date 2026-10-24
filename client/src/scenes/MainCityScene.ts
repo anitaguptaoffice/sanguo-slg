@@ -129,6 +129,15 @@ import {
   type MarchSubmitState,
   syncMarchSubmitButton,
 } from "@/net/marchSubmitFeedback";
+import {
+  applyMarchQueueMutualHighlight,
+  MARCH_QUEUE_BANNER_OPEN_INTEL_ACTION,
+  marchQueueBannerTargetFromMarch,
+  openMarchPanelAndHighlight,
+  openMilitaryQueueBannerAndHighlight,
+  syncMarchQueueBanner,
+  type MarchQueueBannerTarget,
+} from "@/net/marchQueueBanner";
 import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
@@ -207,6 +216,7 @@ export class MainCityScene implements Scene {
   private gateway!: SceneContext["gateway"];
   private status = "";
   private lastMarch: MarchSummary | null = null;
+  private marchQueueBannerTarget: MarchQueueBannerTarget | null = null;
   private marchSubmitState: MarchSubmitState = "idle";
   private buildSubmitState: BuildSubmitState = "idle";
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
@@ -338,6 +348,7 @@ export class MainCityScene implements Scene {
     this.militaryPanel.dataset.centerPanel = "military";
     this.militaryPanel.innerHTML = `
       <h3>军事</h3>
+      <button type="button" class="march-queue-banner hidden" data-role="march-queue-banner"></button>
       <p class="military-troops" data-role="troops"></p>
       <div class="panel-scroll-body" data-role="military-scroll">
         <label>募兵兵种
@@ -536,6 +547,7 @@ export class MainCityScene implements Scene {
         },
         onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
         onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
+        onOpenMilitaryQueueBanner: (marchId) => this.openMilitaryQueueBannerHighlight(marchId),
         onSelectionChange: (march) => {
           if (march) {
             const tx = march.to_x;
@@ -969,6 +981,11 @@ export class MainCityScene implements Scene {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const action = btn.getAttribute("data-action");
+    if (action === MARCH_QUEUE_BANNER_OPEN_INTEL_ACTION) {
+      const marchId = Number(btn.getAttribute("data-march-id"));
+      if (marchId > 0) this.openMarchIntelPanelHighlight(marchId);
+      return;
+    }
     if (action === "recruit") void this.recruit();
     if (action === "march") void this.startMarch();
     if (action === "clear-march-target") {
@@ -994,6 +1011,39 @@ export class MainCityScene implements Scene {
       this.syncMinimapFocusFromMarchTarget();
     }
     this.syncMilitaryPanel();
+  }
+
+  private openMarchIntelPanelHighlight(marchId: number): void {
+    const layoutFrame = document.getElementById("layout-frame");
+    openMarchPanelAndHighlight(marchId, {
+      openMarchIntel: (id) => {
+        this.marchList.selectMarchById(id, { openPanel: true });
+        this.status = `军情：已定位行军 #${id}（军事队列摘要互跳）`;
+        this.renderHud();
+      },
+      highlightIntelRow: (jump) => {
+        if (layoutFrame) applyMarchQueueMutualHighlight(layoutFrame, jump, "intel-row");
+      },
+    });
+  }
+
+  private openMilitaryQueueBannerHighlight(marchId: number): void {
+    const layoutFrame = document.getElementById("layout-frame");
+    openMilitaryQueueBannerAndHighlight(marchId, {
+      openMilitaryPanel: () => {
+        this.militaryPanel.classList.remove("hidden");
+        resetCenterPanelViewportScroll(this.militaryPanel);
+      },
+      highlightMilitaryBanner: (jump) => {
+        if (layoutFrame) applyMarchQueueMutualHighlight(layoutFrame, jump, "military-banner");
+        const banner = this.militaryPanel.querySelector<HTMLElement>(
+          `#${CSS.escape(jump.bannerDomId)}`,
+        );
+        banner?.scrollIntoView?.({ block: "nearest" });
+      },
+    });
+    this.status = `军事：队列顶栏已定位行军 #${marchId}`;
+    this.renderHud();
   }
 
   private openMilitaryFromIntelRemarch(march: MarchSummary): void {
@@ -1058,6 +1108,7 @@ export class MainCityScene implements Scene {
       this.queuePanels?.getRecruitQueueSnapshot() ?? [],
     );
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
+    syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget);
   }
 
   private marchFormFeedbackContext() {
@@ -1912,6 +1963,15 @@ export class MainCityScene implements Scene {
       this.status = formatMarchDepartedStatusToast(toX, toY);
       setMarchTargetFieldHighlight(this.militaryPanel, false);
       this.marchArrivalPoll.trackMarch(this.lastMarch?.march_id, this.lastMarch ?? undefined);
+      this.marchQueueBannerTarget = marchQueueBannerTargetFromMarch(this.lastMarch) ?? {
+        march_id: this.lastMarch?.march_id ?? 0,
+        to_x: toX,
+        to_y: toY,
+      };
+      if ((this.marchQueueBannerTarget?.march_id ?? 0) <= 0) {
+        this.marchQueueBannerTarget = null;
+      }
+      syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget, { pulse: true });
       this.marchList.notifyMarchStarted(this.lastMarch?.march_id);
       void this.refreshMinimapMarches();
     } catch (e) {

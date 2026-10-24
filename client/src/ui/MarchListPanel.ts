@@ -2,7 +2,6 @@ import type { GatewayPort } from "@/net/GatewayClient";
 import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
 import {
   formatMarchListPrimaryLine,
-  formatMarchListSecondary,
   formatMarchRowRecentEtaBrief,
   MARCH_ROW_RECENT_ETA_ROLE,
   marchNeedsPoll,
@@ -65,6 +64,10 @@ import {
   syncListRovingTabindex,
 } from "@/ui/listRovingTabindex";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
+import {
+  formatMarchIntelSecondaryLine,
+  MARCH_INTEL_TO_QUEUE_BANNER_ACTION,
+} from "@/net/marchQueueBanner";
 
 export type MarchListPanelOptions = {
   /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
@@ -78,6 +81,8 @@ export type MarchListPanelOptions = {
   onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
   /** CLIENT-093：军情行再出征 → 军事面板预填。 */
   onRemarchFromRow?: (march: MarchSummary) => void;
+  /** CLIENT-156：军情新出征行 → 军事队列顶栏摘要互跳。 */
+  onOpenMilitaryQueueBanner?: (marchId: number) => void;
 };
 
 export class MarchListPanel {
@@ -94,6 +99,7 @@ export class MarchListPanel {
   private readonly getWorldSelectedGrid?: () => { x: number; y: number } | null;
   private readonly onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
   private readonly onRemarchFromRow?: (march: MarchSummary) => void;
+  private readonly onOpenMilitaryQueueBanner?: (marchId: number) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
@@ -118,6 +124,7 @@ export class MarchListPanel {
     this.getWorldSelectedGrid = options?.getWorldSelectedGrid;
     this.onMarchArrivalReminders = options?.onMarchArrivalReminders;
     this.onRemarchFromRow = options?.onRemarchFromRow;
+    this.onOpenMilitaryQueueBanner = options?.onOpenMilitaryQueueBanner;
     this.assets = options?.assets;
   }
 
@@ -530,10 +537,19 @@ export class MarchListPanel {
       const meta = document.createElement("span");
       meta.className = "march-row-meta";
       meta.setAttribute("data-role", "march-row-meta");
-      meta.textContent = formatMarchListSecondary(m, now);
+      meta.textContent = formatMarchIntelSecondaryLine(m, now, this.highlightState);
       body.appendChild(primary);
       body.appendChild(meta);
       li.appendChild(body);
+      if (isRecent && m.march_id != null) {
+        const toBanner = document.createElement("button");
+        toBanner.type = "button";
+        toBanner.className = "march-intel-queue-banner-link";
+        toBanner.setAttribute("data-action", MARCH_INTEL_TO_QUEUE_BANNER_ACTION);
+        toBanner.setAttribute("data-march-id", String(m.march_id));
+        toBanner.textContent = "军事队列";
+        li.appendChild(toBanner);
+      }
       if (m.march_id != null && Number.isFinite(m.to_x) && Number.isFinite(m.to_y)) {
         const remarch = document.createElement("button");
         remarch.type = "button";
@@ -585,7 +601,7 @@ export class MarchListPanel {
       if (Number.isNaN(id)) continue;
       const m = this.marches.find((row) => row.march_id === id);
       if (!m) continue;
-      el.textContent = formatMarchListSecondary(m, now);
+      el.textContent = formatMarchIntelSecondaryLine(m, now, this.highlightState);
     }
     const etaNodes = this.panel.querySelectorAll<HTMLElement>(
       `[data-role="${MARCH_ROW_RECENT_ETA_ROLE}"]`,
@@ -815,6 +831,16 @@ export class MarchListPanel {
         const next = militaryListPhaseChipReducer(this.listFilter, { type: "select", phase });
         this.setListFilter(next);
       }
+      return;
+    }
+
+    const toBannerBtn = (ev.target as HTMLElement).closest(
+      `[data-action="${MARCH_INTEL_TO_QUEUE_BANNER_ACTION}"]`,
+    );
+    if (toBannerBtn) {
+      ev.stopPropagation();
+      const id = Number(toBannerBtn.getAttribute("data-march-id"));
+      if (!Number.isNaN(id) && id > 0) this.onOpenMilitaryQueueBanner?.(id);
       return;
     }
 
