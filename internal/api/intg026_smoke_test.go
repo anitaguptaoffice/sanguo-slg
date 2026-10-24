@@ -17,20 +17,28 @@ import (
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/protobuf/proto"
 )
 
 const smokeINTG026CfgHint = smokeINTG025CfgHint + "; INTG-026: ListMarches first march_id+to_x/to_y+arrive_at_ms+phase; ListBattleReports→GetBattleReport location_x/y; ListPlayerMail unread+unclaimed_attachment; ListPlayerCities count+first cell"
+
+// intg026BeforeRestartHook runs wave-specific gateway assertions immediately before the INTG-026 process-restart segment.
+type intg026BeforeRestartHook func(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64, cityID int64)
 
 // TestINTG026Wave29SmokePath extends INTG-025 with march grid+ETA, battle report coordinates, mail badge counts, and world city grid summary.
 func TestINTG026Wave29SmokePath(t *testing.T) {
 	if testing.Short() {
 		t.Skip("INTG-026 wave:29 smoke skipped in -short mode (see tools/smoke/README.md)")
 	}
-	runINTG026Wave29Smoke(t)
+	runINTG026SmokePath(t, nil)
 }
 
 func runINTG026Wave29Smoke(t *testing.T) {
+	runINTG026SmokePath(t, nil)
+}
+
+func runINTG026SmokePath(t *testing.T, beforeRestart intg026BeforeRestartHook) {
 	pool := openDB(t)
 	ctx := context.Background()
 	root := runtime.RepoRoot()
@@ -118,6 +126,10 @@ func runINTG026Wave29Smoke(t *testing.T) {
 	}
 	if mailGranted > 0 {
 		want.intg008PersistSnapshot.intg007PersistSnapshot.Bag2001 += mailGranted
+	}
+
+	if beforeRestart != nil {
+		beforeRestart(t, ctx, c, apiSrv, pool, sid, playerID, cityID)
 	}
 
 	ts.Close()
