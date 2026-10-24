@@ -110,9 +110,9 @@ import {
   syncMarchFormInlineFeedback,
 } from "@/net/marchFormSummary";
 import {
-  formatMarchFormTroopMarginResidualLine,
-  syncMarchFormTroopMarginResidualLine,
-} from "@/net/marchFormTroopMarginResidual";
+  formatMarchFormTroopMarginResidualDeepLine,
+  syncMarchFormTroopMarginResidualDeepLine,
+} from "@/net/marchFormTroopMarginResidualDeep";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
@@ -566,6 +566,7 @@ export class MainCityScene implements Scene {
         <p class="march-form-troop-margin-residual-line hidden" data-role="march-form-troop-margin-residual-line" aria-live="polite">
           <span data-role="march-form-troop-margin-residual-primary"></span>
           <span class="march-form-troop-margin-residual-subline" data-role="march-form-troop-margin-residual-subline"></span>
+          <span class="march-form-troop-margin-residual-deep-line hidden" data-role="march-form-troop-margin-residual-deep-line"></span>
         </p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
@@ -1582,9 +1583,9 @@ export class MainCityScene implements Scene {
       }),
     );
     const marchSummary = formatMarchFormSummary(marchSnap, this.marchClockMs);
-    syncMarchFormTroopMarginResidualLine(
+    syncMarchFormTroopMarginResidualDeepLine(
       this.militaryPanel,
-      formatMarchFormTroopMarginResidualLine(
+      formatMarchFormTroopMarginResidualDeepLine(
         troopReserve,
         marchSummary,
         this.session?.wallet,
