@@ -308,6 +308,20 @@ import {
   type CaptiveSummonPreview,
 } from "@/net/captiveHeroState";
 import {
+  renderPersuadeTargetList,
+  setPersuadeFormError,
+  syncPersuadeListRefreshButton,
+  syncPersuadeMeta,
+  syncPersuadePreview,
+  syncPersuadePrimaryButton,
+} from "@/net/persuadePanel";
+import {
+  formatPersuadeGatewayError,
+  parsePersuadeTargetListResponse,
+  resolvePersuadePrimaryAction,
+  type PersuadeTarget,
+} from "@/net/persuadeState";
+import {
   pickRestoredHeroId,
   readHeroDetailSelectedSession,
   writeHeroDetailSelectedSession,
@@ -449,6 +463,10 @@ export class HeroMailPanels {
   private captiveTryInflight = false;
   private captiveSummonInflight = false;
   private captiveReleaseInflight = false;
+  private persuadeTargets: PersuadeTarget[] = [];
+  private selectedPersuadeNpcId = 0;
+  private persuadeListInflight = false;
+  private persuadePrimaryInflight = false;
   private heroesRefreshInflight = false;
   private heroListLastRefreshedAtMs = 0;
   /** CLIENT-199：自列表打开详情时保留筛选摘要；返回列表后清空。 */
@@ -545,6 +563,7 @@ export class HeroMailPanels {
     this.renderHeroList();
     this.syncHotelRecruitUi();
     this.syncCaptiveHeroUi();
+    this.syncPersuadeUi();
   }
 
   private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
@@ -660,6 +679,7 @@ export class HeroMailPanels {
       void this.refreshHeroes({ restoreSelection: true });
       void this.refreshHotelCandidates();
       void this.refreshCaptiveHeroes();
+      void this.refreshPersuadeTargets();
     }
     this.syncHeroPanelFocusTrap();
   }
@@ -1232,6 +1252,107 @@ export class HeroMailPanels {
     }
   }
 
+  private selectedPersuadeTarget(): PersuadeTarget | undefined {
+    return this.persuadeTargets.find((t) => t.npc_cfg_id === this.selectedPersuadeNpcId);
+  }
+
+  private applyPersuadeListPayload(res: unknown, opts?: { keepSelection?: boolean }): void {
+    const targets = parsePersuadeTargetListResponse(res);
+    this.persuadeTargets = targets;
+    if (
+      !opts?.keepSelection ||
+      !targets.some((t) => t.npc_cfg_id === this.selectedPersuadeNpcId)
+    ) {
+      this.selectedPersuadeNpcId = targets[0]?.npc_cfg_id ?? 0;
+    }
+    this.syncPersuadeUi();
+  }
+
+  private syncPersuadeUi(): void {
+    const { wallet, bag } = this.sessionEconomy();
+    syncPersuadeMeta(this.heroPanel, this.persuadeTargets.length);
+    renderPersuadeTargetList(this.heroPanel, this.persuadeTargets, this.selectedPersuadeNpcId);
+    syncPersuadePreview(this.heroPanel, this.selectedPersuadeTarget(), wallet, bag);
+    syncPersuadeListRefreshButton(this.heroPanel, this.persuadeListInflight);
+    syncPersuadePrimaryButton(
+      this.heroPanel,
+      this.persuadePrimaryInflight,
+      this.selectedPersuadeTarget(),
+      wallet,
+      bag,
+    );
+  }
+
+  private async refreshPersuadeTargets(): Promise<void> {
+    if (this.persuadeListInflight) return;
+    const sid = this.serverId();
+    this.persuadeListInflight = true;
+    setPersuadeFormError(this.heroPanel, null);
+    this.syncPersuadeUi();
+    this.onStatus("拉取结交目标…");
+    try {
+      const res = await this.gateway.listPersuadeTargets(sid);
+      this.applyPersuadeListPayload(res);
+      this.onStatus(`结交目标 ${this.persuadeTargets.length} 名`);
+    } catch (e) {
+      const msg = formatPersuadeGatewayError(e);
+      setPersuadeFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.persuadeListInflight = false;
+      this.syncPersuadeUi();
+    }
+  }
+
+  private async runPersuadePrimary(): Promise<void> {
+    if (this.persuadePrimaryInflight) return;
+    const target = this.selectedPersuadeTarget();
+    const npcId = target?.npc_cfg_id ?? 0;
+    const action = resolvePersuadePrimaryAction(target);
+    const sid = this.serverId();
+    const cityId = this.cityId();
+    if (!cityId || !npcId) {
+      setPersuadeFormError(this.heroPanel, "尚未进入城池或未选择结交目标");
+      return;
+    }
+    this.persuadePrimaryInflight = true;
+    setPersuadeFormError(this.heroPanel, null);
+    this.syncPersuadeUi();
+    try {
+      if (action === "persuade") {
+        const res = (await this.gateway.persuadeHero(sid, cityId, npcId)) as {
+          friend_delta?: number;
+        };
+        const delta = res.friend_delta != null ? Number(res.friend_delta) : 0;
+        this.onStatus(`游说成功，友好+${delta}`);
+      } else if (action === "befriend" || action === "hire") {
+        const res = (await this.gateway.lionizeHero(sid, cityId, npcId)) as {
+          befriended?: boolean;
+          recruited?: boolean;
+          display_name?: string;
+        };
+        const name = res.display_name ?? target?.display_name ?? "名将";
+        if (res.recruited) {
+          this.onStatus(`已招入 ${name}`);
+          await this.refreshHeroes({ restoreSelection: false });
+        } else if (res.befriended) {
+          this.onStatus(`已结交 ${name}`);
+        } else {
+          this.onStatus("名将结交操作完成");
+        }
+      }
+      const listRes = await this.gateway.listPersuadeTargets(sid);
+      this.applyPersuadeListPayload(listRes, { keepSelection: true });
+    } catch (e) {
+      const msg = formatPersuadeGatewayError(e);
+      setPersuadeFormError(this.heroPanel, msg);
+      this.onStatus(msg);
+    } finally {
+      this.persuadePrimaryInflight = false;
+      this.syncPersuadeUi();
+    }
+  }
+
   private buildHeroPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden";
@@ -1275,6 +1396,15 @@ export class HeroMailPanels {
         <button type="button" data-action="captive-release">释放俘虏</button>
         <p class="march-form-error-sibling hidden" data-role="captive-hero-form-error" role="alert"></p>
         <ul class="captive-hero-list template-list" data-role="captive-hero-list"></ul>
+      </section>
+      <section class="persuade-section hotel-recruit-section" data-role="persuade-section" aria-label="名将结交游说">
+        <h4>名将结交/游说</h4>
+        <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
+        <button type="button" data-action="refresh-persuade-targets">拉取结交目标</button>
+        <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
+        <button type="button" data-action="persuade-primary">结交/游说</button>
+        <p class="march-form-error-sibling hidden" data-role="persuade-form-error" role="alert"></p>
+        <ul class="persuade-target-list hotel-candidate-list template-list" data-role="persuade-target-list"></ul>
       </section>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
@@ -3117,6 +3247,16 @@ export class HeroMailPanels {
       }
       return;
     }
+    const persuadeLi = (ev.target as HTMLElement).closest("li.persuade-target-row[data-npc-cfg-id]");
+    if (persuadeLi && !btn) {
+      const id = Number(persuadeLi.getAttribute("data-npc-cfg-id"));
+      if (id > 0) {
+        this.selectedPersuadeNpcId = id;
+        setPersuadeFormError(this.heroPanel, null);
+        this.syncPersuadeUi();
+      }
+      return;
+    }
     const li = (ev.target as HTMLElement).closest("li[data-hero-id]");
     if (li && !btn) {
       const id = Number(li.getAttribute("data-hero-id"));
@@ -3159,6 +3299,8 @@ export class HeroMailPanels {
     if (a === "refresh-captive-list") void this.refreshCaptiveHeroes();
     if (a === "captive-summon-confirm") void this.confirmCaptiveSummon();
     if (a === "captive-release") void this.releaseSelectedCaptive();
+    if (a === "refresh-persuade-targets") void this.refreshPersuadeTargets();
+    if (a === "persuade-primary") void this.runPersuadePrimary();
     if (a === "recruit-hero") void this.recruitHero();
     if (a === "recruit-open-hero-detail") {
       const heroId = Number(btn.getAttribute("data-hero-id"));
