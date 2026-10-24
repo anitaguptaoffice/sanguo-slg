@@ -294,6 +294,28 @@ describe("heroMailState", () => {
     expect(html).toContain("+12");
   });
 
+  it("renderHeroDetailMarkup includes consumable stack scan line (CLIENT-213)", () => {
+    const html = renderHeroDetailMarkup(
+      {
+        hero_id: 3,
+        template_cfg_id: 1001,
+        level: 2,
+        loyalty: 70,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        exp_current: 10,
+        exp_to_next: 100,
+      },
+      "",
+      null,
+      "",
+      [{ item_cfg_id: 2017, quantity: 2 }],
+    );
+    expect(html).toContain("hero-detail-consumable-stack-line");
+    expect(html).toContain("堆叠×2");
+    expect(html).toContain("hero-upgrade-item-gap");
+  });
+
   it("compareHeroDetailToTemplate computes four-attribute deltas", () => {
     const { rows, hasBaseline } = compareHeroDetailToTemplate(
       {

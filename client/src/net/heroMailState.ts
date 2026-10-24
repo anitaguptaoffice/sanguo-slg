@@ -16,6 +16,11 @@ import {
   resolveHeroLevelUpgradeItemNeed,
   resolveHeroLoyaltyUpgradeItemNeed,
 } from "@/net/heroUpgradeItemGap";
+import {
+  formatHeroDetailConsumableStackLine,
+  HERO_DETAIL_CONSUMABLE_STACK_LINE_CLASS,
+  HERO_DETAIL_CONSUMABLE_STACK_LINE_ROLE,
+} from "@/net/heroDetailConsumableStackLine";
 
 /** 与 internal/hero/seed/heroes.json 核心子集展示名对齐（占位，非 legacy 文案）。 */
 const HERO_TEMPLATE_LABEL: Record<number, string> = {
@@ -426,6 +431,10 @@ export function renderHeroDetailMarkup(
     ? `<p class="hero-detail-list-hint" data-role="hero-detail-list-hint">${escapeHtml(listHint.trim())}</p>`
     : "";
   const progress = renderHeroUpgradeProgressMarkup(d, bag);
+  const consumableStackText = formatHeroDetailConsumableStackLine(d, bag);
+  const consumableStackLine = consumableStackText
+    ? `<p class="${HERO_DETAIL_CONSUMABLE_STACK_LINE_CLASS}" data-role="${HERO_DETAIL_CONSUMABLE_STACK_LINE_ROLE}">${escapeHtml(consumableStackText)}</p>`
+    : "";
   const comparison = compareHeroDetailToTemplate(d, templatePreview ?? null);
   const deltaByKey = new Map(comparison.rows.map((r) => [r.key, r]));
   const attrs = d.attributes;
@@ -452,7 +461,7 @@ export function renderHeroDetailMarkup(
     <button type="button" data-action="hero-related-items">相关道具</button>
   </div>`;
   const hint = `<p class="hero-detail-hint">${escapeHtml(HERO_DETAIL_TRAINING_HINT)}</p>`;
-  return `${head}${compareStrip}${listHintLine}${progress}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
+  return `${head}${compareStrip}${listHintLine}${progress}${consumableStackLine}${recruitAffordSummaryHtml}${table}${links}${cultivationUseHtml}${hint}`;
 }
 
 export function formatMailLine(m: MailRow): string {

@@ -760,6 +760,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 2. 详情 **返回列表**：按 `hero-list-return-v1` 恢复筛选/排序/滚动与行高亮；**刷新戳记** `hero-list-refreshed-at` 与 **CLIENT-072** 养成对比/进度条不退化。
 3. 单测：`heroListReturnState.test.ts`（`serializeHeroListReturnState` / `formatHeroDetailFromListHint`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+### 手动验收（将领忠诚次行与养成道具堆叠扫读 CLIENT-213）
+
+在 [CLIENT-132](#手动验收将领列表行扫读-client-132) / [CLIENT-165](#手动验收将领详情养成道具缺口与背包深链-client-165) / [CLIENT-198](#手动验收将领详情养成对比-client-072) 不退化前提下：
+
+1. **将领列表** 每行在主行与四维次行之间展示 `formatHeroListLoyaltySubline`（`hero-list-row-loyalty-subline`）：忠诚/可选士气只读摘要 + 可出征态；忠诚低于 **CLIENT-151** 阈值时前置 `hero-loyalty-warn-dot`（同源 `ListPlayerHeroes` 字段，**无** hero 专用升级 RPC）。
+2. **将领详情** 养成进度区下方展示 `formatHeroDetailConsumableStackLine`（`hero-detail-consumable-stack-line`）：`ListPlayerBag` 同源养成道具 **堆叠×N** + 升级/忠诚 **需/缺口** 只读对比；`hero-upgrade-item-gap` 与 **CLIENT-198** 进度条次行 **不退化**。
+3. 单测：`heroListLoyaltySubline.test.ts`、`heroDetailConsumableStackLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`；`cd client && npm test` 绿。（[#786](https://github.com/anitaguptaoffice/sanguo-slg/issues/786)）
+
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
