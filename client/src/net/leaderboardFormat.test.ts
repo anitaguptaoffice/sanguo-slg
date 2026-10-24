@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  abbreviateLeaderboardDisplayName,
   formatLeaderboardEmptyHint,
   formatLeaderboardEntryLine,
+  formatLeaderboardRefreshedHint,
   formatLeaderboardSnapshotMeta,
+  formatLeaderboardTopDensityLine,
   formatMyRankPinLine,
   formatViewerRankSummary,
   LB_PLAYER_POWER,
@@ -54,5 +57,20 @@ describe("leaderboardFormat", () => {
     expect(selectedLeaderboardTypeFromValue("2")).toBe(LB_PLAYER_RESOURCE);
     expect(selectedLeaderboardTypeFromValue("1")).toBe(LB_PLAYER_POWER);
     expect(selectedLeaderboardTypeFromValue("99")).toBe(LB_PLAYER_POWER);
+  });
+
+  it("CLIENT-184: abbreviates display name and formats top density line", () => {
+    expect(abbreviateLeaderboardDisplayName("演示君主甲")).toBe("演示君主…");
+    expect(
+      formatLeaderboardTopDensityLine({ rank: 1, display_name: "演示君主甲", score: 15_000 }),
+    ).toBe("#1 演示君主… 1.5万");
+    expect(formatLeaderboardTopDensityLine({ rank: 2, entity_id: 42, score: 90 })).toBe("#2 玩家#4… 90");
+  });
+
+  it("CLIENT-184: refreshed hint requires top entries", () => {
+    expect(formatLeaderboardRefreshedHint(LB_PLAYER_POWER, [])).toBeNull();
+    expect(
+      formatLeaderboardRefreshedHint(LB_PLAYER_POWER, [{ rank: 1, display_name: "甲", score: 1 }]),
+    ).toContain("三甲快览");
   });
 });

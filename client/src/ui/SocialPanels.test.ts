@@ -5,6 +5,7 @@ import { LB_PLAYER_POWER, LB_PLAYER_RESOURCE } from "@/net/leaderboardFormat";
 import { RANK_MY_RANK_CHANGED_PULSE_CLASS } from "@/net/leaderboardMyRankRefresh";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { RANK_LAST_REFRESH_SESSION_KEY } from "@/net/rankLastRefreshSession";
+import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
   LEADERBOARD_RETURN_SCROLL_SESSION_KEY,
   writeLeaderboardReturnScroll,
@@ -158,6 +159,59 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     const pinAfter = mount.querySelector(".rank-pin-row");
     expect(pinAfter?.querySelector(".rank-pin-primary")?.textContent).toContain("我的排名 #4");
     expect(pinAfter?.classList.contains(RANK_MY_RANK_CHANGED_PULSE_CLASS)).toBe(true);
+  });
+
+  it("CLIENT-184: manual refresh shows top density rows and keeps pin scroll + hero deep link", async () => {
+    const mount = document.createElement("div");
+    const onOpenHero = vi.fn();
+    const getLeaderboard = vi
+      .fn()
+      .mockResolvedValueOnce({
+        entries: [
+          { rank: 1, display_name: "榜首甲", score: 20_000 },
+          { rank: 2, entity_id: 10001, display_name: "演示君主", score: 5000, hero_id: 8001 },
+        ],
+        my_rank: 2,
+        my_score: 5000,
+      })
+      .mockResolvedValueOnce({
+        entries: [
+          { rank: 1, display_name: "榜首甲", score: 21_000 },
+          { rank: 2, entity_id: 10001, display_name: "演示君主", score: 5100, hero_id: 8001 },
+          { rank: 3, display_name: "丙", score: 100 },
+        ],
+        my_rank: 2,
+        my_score: 5100,
+      });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.setRankDeepLinkHandlers({
+      getViewerHeroIds: async () => [8001],
+      onOpenHeroDetail: onOpenHero,
+    });
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    expect(mount.querySelector(".rank-refreshed-hint-row")).toBeNull();
+    const scrollBody = mount.querySelector('[data-role="rank-scroll"]') as HTMLElement;
+    scrollBody.scrollTop = 72;
+    mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelector(".rank-refreshed-hint-row")?.textContent).toContain("三甲快览");
+    expect(mount.querySelectorAll(".rank-top-density-row").length).toBe(3);
+    expect(mount.querySelector(".rank-pin-row")?.querySelector(".rank-pin-primary")?.textContent).toContain(
+      "我的排名 #2",
+    );
+    expect(scrollBody.scrollTop).toBe(72);
+    expect(sessionStorage.getItem(LEADERBOARD_PIN_SESSION_KEY)).toBeNull();
+    const heroBtn = mount.querySelector('[data-action="rank-view-hero"]');
+    heroBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(onOpenHero).toHaveBeenCalledWith(8001);
+    expect(sessionStorage.getItem(LEADERBOARD_RETURN_SCROLL_SESSION_KEY)).toContain("72");
   });
 
   it("keeps last rank snapshot on refresh failure and marks stale", async () => {
