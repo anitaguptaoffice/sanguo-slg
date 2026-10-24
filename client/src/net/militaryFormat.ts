@@ -433,6 +433,40 @@ export function formatBattleReportFoeWithoutCoord(r: BattleReportSummary): strin
   return parts.length ? parts.join(" · ") : "对手信息未记录";
 }
 
+function battleReportListSideShort(
+  side: "attacker" | "defender",
+  r: BattleReportSummary,
+): string {
+  if (side === "attacker") {
+    const name = r.attacker_display_name?.trim();
+    if (name) return name;
+    if (r.attacker_player_id) return `玩家#${r.attacker_player_id}`;
+    return "攻方";
+  }
+  const name = r.defender_display_name?.trim();
+  if (name) return name;
+  if (r.defender_player_id) return `玩家#${r.defender_player_id}`;
+  if (r.defender_city_id) return `城池#${r.defender_city_id}`;
+  return "守方";
+}
+
+/** 战报列表主行：战报标题 + 时间（CLIENT-176）。 */
+export function formatBattleReportListPrimaryLine(r: BattleReportSummary): string {
+  const id = r.report_id ?? "?";
+  const title = formatBattleReportFoeWithoutCoord(r);
+  const when = formatTimeMs(r.created_at_ms);
+  return `#${id} · ${title} · ${when}`;
+}
+
+/** 战报列表次行：胜负 + 攻守方简称 + 坐标（ListBattleReports 既有字段，CLIENT-176）。 */
+export function formatBattleReportRowSummary(r: BattleReportSummary): string {
+  const outcome = formatBattleOutcome(r.outcome);
+  const attacker = battleReportListSideShort("attacker", r);
+  const defender = battleReportListSideShort("defender", r);
+  const coord = formatReportCoord(r);
+  return `${outcome} · 攻:${attacker} vs 守:${defender} · ${coord}`;
+}
+
 /** 战报列表行：对手/守方摘要（无新 proto 字段时的可读拼接）。 */
 export function formatBattleReportFoeSummary(r: BattleReportSummary): string {
   const foe = formatBattleReportFoeWithoutCoord(r);

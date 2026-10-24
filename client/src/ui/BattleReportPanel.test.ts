@@ -106,7 +106,8 @@ describe("BattleReportPanel", () => {
     await flushPromises();
     const ul = mount.querySelector('[data-role="report-list"]');
     expect(ul?.querySelector(".battle-outcome-chip")?.textContent).toContain("守胜");
-    expect(ul?.querySelector(".battle-report-row-coord")?.textContent).toContain("坐标(8,9)");
+    expect(ul?.querySelector(".battle-report-row-secondary")?.textContent).toContain("守胜");
+    expect(ul?.querySelector(".battle-report-row-secondary")?.textContent).toContain("坐标(8,9)");
     mount.querySelector('li[data-report-id="2"]')?.dispatchEvent(
       new Event("click", { bubbles: true }),
     );
