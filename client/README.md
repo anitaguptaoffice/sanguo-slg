@@ -656,6 +656,23 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:38（CLIENT-215）招募商城多币种钱包对比**：将领面板顶栏 **`recruit-wallet-compare-line`**（`formatRecruitWalletCompareLine`：选中模板币种 **需 | 持** vs HUD `wallet`/背包，只读；与 **CLIENT-166/056** 列表次行 **余/需** 并存）；商城分类 tab 下 **`shop-wallet-compare-line`**（`formatShopWalletCompareLine`：本 tab 最低标价 vs 钱包余额；**CLIENT-167** `shop-tab-currency-sweep` 与 **CLIENT-194** 行内标价对比 **不退化**）。**非** IAP / **不**扩 SKU。单测：`recruitWalletCompare.test.ts`、`shopTabCurrency.test.ts`、`HeroMailPanels.test.ts`、`ContentPanels.test.ts`；`cd client && npm test` 绿。
 
+## Wave 38 H5 主城队列 ETA 分段·将领忠诚·双榜冷却·招募商城币种·HUD 底栏深链·社交退避·日常队列预览·1280组合manifest（M4 出口 / INTG-035）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-035** 网关冒烟一致）。**范围外**同 Wave 37；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领装备槽 / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**ART-012** 旁路——**非**本波实现卡；**永不合并** art hold / VERIFY Draft（含 **#637** / **#649** / **#674** / **#697**）。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **1280 主城将领社交队列组合 manifest** | [手动验收（1280 wave:38 组合 manifest CLIENT-219）](#手动验收1280-wave38-组合-manifest-client-219)（[#792](https://github.com/anitaguptaoffice/sanguo-slg/issues/792)） | 待合 |
+
+实现卡 **CLIENT-212～219**（本卡 **CLIENT-219** 登记窄屏 DOM 钩子；软依赖 **CLIENT-212～218** 实装可并行）。
+
+### 手动验收（1280 wave:38 组合 manifest CLIENT-219）
+
+视口 **1280×720** `layout-narrow`：**队列** `domestic-queue-eta-segment-label` / `domestic-queue-complete-slot-margin` / `queue-next-finish-preview` / `data-action="queue-open-daily-anchor"`（**CLIENT-212/218**；**CLIENT-196/197** 不退化）、**将领** `hero-list-row-loyalty-subline` / `data-role="hero-list-loyalty-subline"` / `hero-loyalty-warn-dot` / `hero-detail-consumable-stack-line`（**CLIENT-213**）、**双榜** `rank-refresh-cooldown-stamp` / `data-role="rank-refresh-cooldown"` / `rank-manual-refresh-ms` / `rank-empty-retry-inline`（**CLIENT-214**）、**招募/商城** `recruit-wallet-compare-line` / `shop-wallet-compare-line`（**CLIENT-215**）、**HUD** `.hud-todo-merged-sweep` / `data-role="hud-todo-merged-sweep-line"` / `toolbar-panel-deep-link-pulse`（**CLIENT-216**；**CLIENT-202** 不退化）、**军团** `guild-member-online-summary` / `data-role="guild-member-online-summary"` / `guild-chat-backoff-retry`（**CLIENT-217**）、**日常** `daily-quest-chain-type-subline`（**CLIENT-218**；**CLIENT-174/169** 不退化）与 **CLIENT-203/211** 同级窄屏契约；`.panel-scroll-body` **`padding-bottom: 64px`** 清底栏 **56px**；主城/将领/社交密度行在窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave38MainCityHeroSocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-219）；`cd client && npm test` 绿。
+
+1. 视口 **1280×720**：底栏 **队列/将领/排行/军团/聊天/日常/商城** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:38 DOM 钩子（软依赖 **CLIENT-212～218**）在窄屏下不换行溢出。
+2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211** manifest 不退化。
+
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
 视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-separator`（**CLIENT-185**）；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
@@ -1515,6 +1532,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 **wave:36（CLIENT-197）队列完成焦点环互链**：建造/募兵完成（`detectBuildJustCompleted` / `detectRecruitQueueJustCompleted` 同源 **CLIENT-181** 检测，无新 toast）时，对应七槽 overlay **`city-slot-complete-focus-ring` 2s** + 队列只读行 **`queue-row-complete-pulse` 2s**（`queue-row-complete-readonly` 标记完成待领取/已结束；与 **CLIENT-149** 3s 脉冲及 **CLIENT-164** 剩余进度行可叠加）。点击完成队列行仍 **`scrollCitySlotIntoView` + `city-slot-pulse`（CLIENT-180 不退化）**；`sessionStorage` 键 **`queue-complete-focus-ring-v1`** 去重。单测：`queueCompleteFocusRing.test.ts`、`QueuePanels.test.ts`。
 
 **wave:38（CLIENT-212）主城队列 ETA 分段与完成态七槽余量扫读**：建造/募兵队列行次行在 **CLIENT-196** `queue-row-eta-line` / `queue-row-progress-bar` **并列**展示只读 **`formatDomesticQueueEtaSegmentLabel`**（`<1h` / `今日内` / `>1d`）与 class **`domestic-queue-eta-segment-label`**；队列项完成时七槽对应格叠加 **`domestic-queue-complete-slot-margin`** 余量文案（`空闲槽` / `升级中槽`）**2s** 脉冲，**CLIENT-197** `city-slot-complete-focus-ring` **不退化**；无新 domestic RPC / 募兵加速。单测：`domesticQueueEtaSegment.test.ts`、`domesticQueueCompleteSlotMargin.test.ts`、`queueRemainingProgress.test.ts`、`QueuePanels.test.ts`。
+
+**wave:38（CLIENT-213）将领列表忠诚次行与详情养成道具堆叠扫读**：列表行 **`formatHeroListLoyaltySubline`**（class **`hero-list-row-loyalty-subline`** / `data-role="hero-list-loyalty-subline"`）+ 低忠诚 **`hero-loyalty-warn-dot`**；详情 **`formatHeroDetailConsumableStackLine`**（**`hero-detail-consumable-stack-line`**）堆叠×N 与需/缺口只读对比；**CLIENT-165/198** **不退化**；无 hero 专用升级 RPC。单测：`heroListLoyaltySubline.test.ts`、`heroDetailConsumableStackLine.test.ts`、`HeroMailPanels.test.ts`、`heroMailState.test.ts`。（[#786](https://github.com/anitaguptaoffice/sanguo-slg/issues/786) / [#806](https://github.com/anitaguptaoffice/sanguo-slg/pull/806) `80003615`）
+
+**wave:38（CLIENT-214）双榜手动刷新冷却戳记与排行空态行内重试**：「刷新排行榜」旁只读 **`formatRankRefreshCooldownStamp`** / **`rank-refresh-cooldown-stamp`** / `data-role="rank-refresh-cooldown"`（`rank-manual-refresh-ms` session，5s 客户端冷却；**无**新 rank RPC）；空榜行内 **`rank-empty-retry-inline`**（`retry-refresh-rank`，同源 `refreshRank`）；首屏拉取失败仍走 **CLIENT-173** `formatPanelGatewayError` + `panel-gateway-retry`。**CLIENT-184** 三甲密度行 / 钉选滚动与 **CLIENT-152** 戳记 **不退化**。单测：`rankRefreshCooldown.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（[#787](https://github.com/anitaguptaoffice/sanguo-slg/issues/787) / [#813](https://github.com/anitaguptaoffice/sanguo-slg/pull/813) `339a4dac`）
+
+**wave:38（CLIENT-217）军团成员在线摘要与聊天拉取失败退避重试**：军团成员列表头 **`formatGuildMemberOnlineSummaryLine`** / **`guild-member-online-summary`** / `data-role="guild-member-online-summary"`；聊天 gateway error 叠加 **`guild-chat-backoff-retry`**（退避秒数 + 行内重试，与 **CLIENT-200** `guild-chat-retry-inline` **并存**）；**CLIENT-161** 未读分隔线与空错态 **不退化**。单测：`socialFormat.test.ts`、`guildChatGatewayBackoff.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（[#788](https://github.com/anitaguptaoffice/sanguo-slg/issues/788) / [#808](https://github.com/anitaguptaoffice/sanguo-slg/pull/808) `2b8787c7`）
+
+**wave:38（CLIENT-218）日常可领 chain 次行与队列下一完成 ETA 预览互链**：日常可领行次行 **`formatQuestChainTypeSubline`**（**`daily-quest-chain-type-subline`**）；队列顶栏 **`formatNextQueueFinishPreviewLine`**（**`queue-next-finish-preview`**，`data-action="queue-open-daily-anchor"` 跳转日常锚点；**CLIENT-212** 分段可叠加）。单测：`questChainTypeSubline.test.ts`、`nextQueueFinishPreview.test.ts`、`DailyQuestPanels.test.ts`、`QueuePanels.test.ts`；`cd client && npm test` 绿。（[#789](https://github.com/anitaguptaoffice/sanguo-slg/issues/789) / [#812](https://github.com/anitaguptaoffice/sanguo-slg/pull/812) `bcc74181`）
 
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
