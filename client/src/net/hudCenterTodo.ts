@@ -3,6 +3,7 @@ import type { MailRow } from "@/net/heroMailState";
 import { mailHasUnclaimedAttachments } from "@/net/heroMailState";
 import { formatBadgeCount } from "@/engine/artBadgeSkin";
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
+import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
 
 /**
  * CLIENT-077 顶栏待办聚合（中心面板邮件 / 日常 / 队列），与底栏 CLIENT-027·038 角标并存。
@@ -116,8 +117,11 @@ export function shouldSkipRepeatCenterTodoScroll(
 
 export function hudCenterTodoTitle(counts: HudCenterTodoCounts): string {
   const parts: string[] = [];
-  if (counts.dailyClaimable > 0) parts.push(`日常可领 ${counts.dailyClaimable}`);
-  if (counts.mailClaimable > 0) parts.push(`邮件可领 ${counts.mailClaimable}`);
+  const sweep = formatHudTodoSweepLine({
+    mailClaimable: counts.mailClaimable,
+    dailyClaimable: counts.dailyClaimable,
+  });
+  if (sweep) parts.push(sweep);
   if (counts.buildComplete > 0) parts.push(`建造完成 ${counts.buildComplete}`);
   return parts.length ? `待办 · ${parts.join(" · ")}` : "暂无待办";
 }

@@ -69,6 +69,10 @@ import {
   formatDailyQuestRowPrimary,
 } from "@/net/dailyQuestProgressFormat";
 import {
+  formatDailyClaimableSweepLine,
+  scheduleDailyClaimProgressSweepPulse,
+} from "@/net/dailyClaimableSweep";
+import {
   dailyQuestRowsForChain,
   filterDailyQuestRowsToCatalogChains,
   pickDailyChainTabs,
@@ -226,6 +230,7 @@ export class DailyQuestPanels {
     el.dataset.centerPanel = "daily";
     el.innerHTML = `
       <h3>日常</h3>
+      <p class="daily-claimable-sweep hidden" data-role="daily-claimable-sweep" aria-live="polite" hidden></p>
       <p class="daily-battle-report-banner hidden" data-role="daily-report-banner" data-action="daily-open-reports" role="button" tabindex="0" hidden></p>
       <p data-role="daily-hint">日常多链；接取后由服务端自动累积进度，无需手填上报。</p>
       <div class="daily-chain-tabs" data-role="daily-chain-tabs" role="tablist" aria-label="日常链类型"></div>
@@ -378,6 +383,26 @@ export class DailyQuestPanels {
     this.onStatus(`已定位可领取日常 #${id}`);
   }
 
+  private renderDailyClaimableSweep(): void {
+    const el = this.panel.querySelector('[data-role="daily-claimable-sweep"]') as HTMLElement | null;
+    if (!el) return;
+    const line = formatDailyClaimableSweepLine(this.hudDailyChainRows());
+    if (!line) {
+      el.hidden = true;
+      el.classList.add("hidden");
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.classList.remove("hidden");
+    el.textContent = line;
+  }
+
+  private pulseDailyClaimableSweep(): void {
+    const el = this.panel.querySelector('[data-role="daily-claimable-sweep"]') as HTMLElement | null;
+    scheduleDailyClaimProgressSweepPulse(el);
+  }
+
   private renderStateSummary(): void {
     const summaryEl = this.panel.querySelector('[data-role="daily-state-summary"]') as HTMLElement | null;
     if (!summaryEl) return;
@@ -410,6 +435,7 @@ export class DailyQuestPanels {
     if (!ul) return;
     this.renderDailyChainTabs();
     this.updateFilterButtons();
+    this.renderDailyClaimableSweep();
     this.renderStateSummary();
     ul.innerHTML = "";
     if (this.listLoading && !this.rows.length) {
@@ -648,6 +674,7 @@ export class DailyQuestPanels {
       await this.syncBagAndWallet(res.granted_rewards);
       await this.refreshList();
       this.publishDailyChainSnapshot();
+      this.pulseDailyClaimableSweep();
       this.onStatus("日常奖励已领取");
     } catch (e) {
       const msg = formatPanelGatewayErrorFromUnknown("bag", e);
@@ -706,6 +733,7 @@ export class DailyQuestPanels {
         this.setDailyFormError(summary.lastError);
       }
       this.onStatus(summary.summaryText);
+      if (pulseCfgIds.length) this.pulseDailyClaimableSweep();
     } finally {
       this.claimBatchInflight = false;
       this.renderList();

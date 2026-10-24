@@ -174,6 +174,7 @@ import {
   type HudTodoToolbarAction,
 } from "@/net/hudTodoOpenTarget";
 import { buildHudCenterTodoCounts, hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
+import { formatHudTodoSweepLine } from "@/net/hudTodoSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
@@ -1999,12 +2000,22 @@ export class MainCityScene implements Scene {
     this.updateGuildToolbarBadge(social.guild);
   }
 
+  private hudTodoSweepTitleSuffix(): string {
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    const line = formatHudTodoSweepLine({
+      mailClaimable: snap.mailClaimable,
+      dailyClaimable: snap.dailyClaimable,
+    });
+    return line ? ` · ${line}` : "";
+  }
+
   private applyHudTodoBadgeCounts(counts: HudTodoBadgeCounts): void {
+    const sweepSuffix = this.hudTodoSweepTitleSuffix();
     if (!this.heroMail?.isMailOpen()) {
-      this.updateMailToolbarBadge(counts.mailUnread);
+      this.updateMailToolbarBadge(counts.mailUnread, sweepSuffix);
     }
     if (!this.dailyQuest?.isOpen()) {
-      this.updateDailyToolbarBadge(counts.dailyTodo);
+      this.updateDailyToolbarBadge(counts.dailyTodo, sweepSuffix);
     } else {
       this.dailyQuest.syncBattleReportUnreadBanner();
     }
@@ -2342,24 +2353,26 @@ export class MainCityScene implements Scene {
     );
   }
 
-  private updateMailToolbarBadge(unreadCount: number): void {
+  private updateMailToolbarBadge(unreadCount: number, sweepSuffix = ""): void {
     const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="mail-toolbar-btn"]');
     const label = toolbarButtonLabel(btn) || "邮件";
     setToolbarBadge(
       btn,
       unreadCount,
-      unreadCount > 0 ? `${label} · ${unreadCount} 项待处理（未读/未领）` : "收件箱",
+      unreadCount > 0
+        ? `${label} · ${unreadCount} 项待处理（未读/未领）${sweepSuffix}`
+        : "收件箱",
       this.assets,
     );
   }
 
-  private updateDailyToolbarBadge(todoCount: number): void {
+  private updateDailyToolbarBadge(todoCount: number, sweepSuffix = ""): void {
     const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="daily-toolbar-btn"]');
     const label = toolbarButtonLabel(btn) || "日常";
     setToolbarBadge(
       btn,
       todoCount,
-      todoCount > 0 ? `${label} · ${todoCount} 项可领取` : "日常任务",
+      todoCount > 0 ? `${label} · ${todoCount} 项可领取${sweepSuffix}` : "日常任务",
       this.assets,
     );
   }

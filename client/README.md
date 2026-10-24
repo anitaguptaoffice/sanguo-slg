@@ -1067,6 +1067,8 @@ cd client && npm install && npm run dev
 
 **CLIENT-174（日常进度条与奖励道具扫读）**：日常列表行 **次行** 在 `formatDailyQuestProgressSecondary` 文案下展示细进度条 **`daily-quest-progress`** / **`daily-quest-progress-fill`**（`progress_current`/`progress_target` 宽度经 `clampDailyQuestProgressPercent` 钳制）；有 cfg 道具奖励时追加 **`formatDailyQuestRewardLine`**（`reward_item_id`/`quantity` 或 DATA-002 回退，无则省略）。不新 quest RPC；**CLIENT-169** chain tab、**CLIENT-150** 领取脉冲、**CLIENT-162** HUD 角标不退化。单测：`dailyQuestProgressFormat.test.ts`、`DailyQuestPanels.test.ts`、`filterListNarrowManifest.test.ts`。
 
+**CLIENT-193（日常可领取进度扫读与邮件 HUD 待办联动）**：日常面板顶栏 **`formatDailyClaimableSweepLine`**（chain 400 可领条数 + 首条 `#quest_cfg_id` 进度 %）；领奖成功后顶栏扫读行 **`daily-claim-progress-pulse`** 1s（**CLIENT-174** 行内进度条不退化）。顶栏待办与底栏邮件/日常角标 **`title`** 共用 **`formatHudTodoSweepLine`**（邮件未领附件 + 日常可领计数，与 **CLIENT-162/192** 同源快照、无重复 toast）；**CLIENT-186** 队列日常锚点不退化。单测：`dailyClaimableSweep.test.ts`、`hudTodoSweep.test.ts`、`DailyQuestPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（军团提到聊天草稿 CLIENT-084）
 
 军团成员列表每行 **提到** 将 `@显示名 ` 填入聊天输入（`formatGuildMentionDraft`），并切换到军团聊天 tab；未入军团时按钮 hidden。**CLIENT-076** 刷新 meta 不退化。

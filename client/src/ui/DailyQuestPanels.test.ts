@@ -705,6 +705,41 @@ describe("DailyQuestPanels", () => {
     vi.unstubAllGlobals();
   });
 
+  it("renders daily claimable sweep on panel header (CLIENT-193)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1013,
+            quest_code: "daily_wood_1",
+            chain_id: 400,
+            state: 3,
+            progress_current: 3,
+            progress_target: 4,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const sweep = mount.querySelector('[data-role="daily-claimable-sweep"]');
+    expect(sweep?.textContent).toBe("可领 1 · #1013 进度 75%");
+    expect(mount.querySelector(".daily-quest-progress-fill")).toBeTruthy();
+  });
+
   it("renders progress bar and reward line on secondary row (CLIENT-174)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
