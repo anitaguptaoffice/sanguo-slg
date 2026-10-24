@@ -3336,6 +3336,32 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-227 wave:39 世界军情战报邮件出征 HUD 军事待办组合 manifest */
+      /* sessionStorage key report-outcome-filter-bridge-v1 (CLIENT-225); data-action open-intel-for-report (CLIENT-224) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-sync-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-march-stack-badge .minimap-intel-sync-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-row-minimap-sync-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-phase-change-flash,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-new-march-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-intel-phase-eta-strip,
+      #layout-frame.layout-narrow .military-panel .march-submit-intel-handoff-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li .report-list-intel-jump-tag,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .report-round-summary-intel-link,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] [data-action="open-intel-for-report"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-battle-category-sweep-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar .mail-battle-category-sweep-line,
+      #layout-frame.layout-narrow #hud .hud-military-todo-sweep,
+      #layout-frame.layout-narrow #hud [data-role="hud-military-todo-sweep-line"],
+      #layout-frame.layout-narrow .main-city-toolbar button.hud-military-todo-pulse {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .panel-scroll-body,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .panel-scroll-body,
+      #layout-frame.layout-narrow .military-panel .panel-scroll-body {
+        padding-bottom: 64px;
+      }
       /* CLIENT-195 wave:35 世界军情战报邮件日常背包商城组合 manifest */
       /* sessionStorage key battle-report-replay-v1 (CLIENT-191) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info-card,

@@ -45,6 +45,19 @@ import {
   RECRUIT_WALLET_COMPARE_LINE_CLASS,
   SHOP_WALLET_COMPARE_LINE_CLASS,
   TOOLBAR_PANEL_DEEP_LINK_PULSE_CLASS,
+  HUD_MILITARY_TODO_PULSE_CLASS,
+  HUD_MILITARY_TODO_SWEEP_CLASS,
+  HUD_MILITARY_TODO_SWEEP_LINE_ROLE,
+  INTEL_NEW_MARCH_HIGHLIGHT_CLASS,
+  INTEL_PHASE_CHANGE_FLASH_CLASS,
+  INTEL_ROW_MINIMAP_SYNC_HIGHLIGHT_CLASS,
+  MAIL_BATTLE_CATEGORY_SWEEP_LINE_CLASS,
+  MARCH_SUBMIT_INTEL_HANDOFF_LINE_CLASS,
+  MINIMAP_INTEL_SYNC_RING_CLASS,
+  OPEN_INTEL_FOR_REPORT_ACTION,
+  REPORT_LIST_INTEL_JUMP_TAG_CLASS,
+  REPORT_OUTCOME_FILTER_BRIDGE_SESSION_KEY,
+  REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -155,6 +168,23 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(RECRUIT_FORM_INLINE_HINT_CLASS);
     expect(html).toContain(HUD_CENTER_PANEL_DEEPLINK_LINE_ROLE);
     expect(html).toContain(CENTER_PANEL_TAB_PULSE_CLASS);
+  });
+
+  it("CLIENT-227 exposes wave:39 world intel battle report mail march hud narrow hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(MINIMAP_INTEL_SYNC_RING_CLASS);
+    expect(html).toContain(INTEL_ROW_MINIMAP_SYNC_HIGHLIGHT_CLASS);
+    expect(html).toContain(INTEL_PHASE_CHANGE_FLASH_CLASS);
+    expect(html).toContain(INTEL_NEW_MARCH_HIGHLIGHT_CLASS);
+    expect(html).toContain(MARCH_SUBMIT_INTEL_HANDOFF_LINE_CLASS);
+    expect(html).toContain(REPORT_LIST_INTEL_JUMP_TAG_CLASS);
+    expect(html).toContain(REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS);
+    expect(html).toContain(OPEN_INTEL_FOR_REPORT_ACTION);
+    expect(html).toContain(MAIL_BATTLE_CATEGORY_SWEEP_LINE_CLASS);
+    expect(html).toContain(REPORT_OUTCOME_FILTER_BRIDGE_SESSION_KEY);
+    expect(html).toContain(HUD_MILITARY_TODO_SWEEP_CLASS);
+    expect(html).toContain(HUD_MILITARY_TODO_SWEEP_LINE_ROLE);
+    expect(html).toContain(HUD_MILITARY_TODO_PULSE_CLASS);
   });
 
   it("CLIENT-219 exposes wave:38 main-city hero social queue narrow hooks", () => {
