@@ -1801,6 +1801,39 @@
       }
       .content-panel .march-form-error-sibling.hidden { display: none; }
       .recruit-cost-preview { font-size: 12px; color: #e8dcc8; min-height: 1.2em; }
+      /* CLIENT-188 / ART-012 QA: paper vs hero-detail ink — scoped to ui.panel.hero.v1 host only */
+      .content-panel[data-center-panel="hero"] [data-role="hero-hint"],
+      .content-panel[data-center-panel="hero"] .hero-list-refresh-status,
+      .content-panel[data-center-panel="hero"] .recruit-cost-preview:not(.recruit-submitting) {
+        color: #4a3828;
+      }
+      .content-panel[data-center-panel="hero"] .template-list li .recruit-afford-secondary,
+      .content-panel[data-center-panel="hero"] .hero-list li .hero-list-row-secondary {
+        color: #5a3d18;
+      }
+      .content-panel[data-center-panel="hero"] .template-list li.recruit-owned {
+        color: #3d5c38;
+      }
+      .content-panel[data-center-panel="hero"] .hero-list li.panel-state-chrome,
+      .content-panel[data-center-panel="hero"] .template-list li.panel-state-chrome,
+      .content-panel[data-center-panel="hero"] .panel-scroll-body > .panel-state-chrome {
+        color: #4a3828;
+      }
+      .content-panel[data-center-panel="hero"] .panel-state-chrome[data-panel-state="loading"] {
+        color: #6b5a28;
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail {
+        color: #e8dcc8;
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail .recruit-afford-primary {
+        color: #f5e6c8;
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail .recruit-afford-secondary:not(.recruit-cost-deficit) {
+        color: #c9b896;
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail .recruit-afford-secondary.recruit-cost-deficit {
+        color: #f0a8a0;
+      }
       .recruit-cost-preview.recruit-submitting { color: #c9a227; font-style: italic; }
       @keyframes recruit-success-pulse-keyframes {
         0%, 100% { background-color: transparent; }
