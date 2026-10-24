@@ -739,6 +739,8 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:41（CLIENT-236）小地图视口锚点与军情列表 scroll-sync**：军情列表选中行军时 **`syncMinimapViewportToIntelRow`** 将小地图视口平移至该行 `to_x`/`to_y` 锚点，并叠加 **`minimap-viewport-intel-sync-ring` 1.2s**（session **`minimap-viewport-intel-anchor-v1`** 序列化 zoom/pan；**CLIENT-220** `minimap-intel-sync-ring` / **CLIENT-138/090** 互选 **不退化**）；小地图 **拖拽/滚轮缩放** 结束后 **`scrollIntelListToVisibleMarch`** 将视口中心对应 `march_id` 行滚入 **`.panel-scroll-body[data-role='march-scroll']`**。单测：`minimapViewportIntelSync.test.ts`；`cd client && npm test` 绿。
 
+**CLIENT-237（格点信息卡坐标次行与军情 ETA 只读对照残余扫读）**：世界格点信息卡顶栏 **`formatWorldTileIntelEtaResidualLine`** / `world-tile-intel-eta-residual-line` 展示选中格 **最近终点行军** `phase` + ETA（与 **CLIENT-205** `formatMarchIntelPhaseEtaStrip` 同源；**CLIENT-170/188** `world-tile-march-summary-line` **不退化**；无新 world RPC）；军情只读信息卡 **`march-intel-eta-residual-coord`** 目的格坐标次行与格点信息卡 **`world-tile-intel-eta-residual-ring`** **1s** 互高亮（**CLIENT-172/205** 信息卡阶段条 **不退化**）。单测：`worldTileIntelEtaResidual.test.ts`、`WorldPanels.test.ts`、`MarchListPanel.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
 
 视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-separator`（**CLIENT-185**）；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）

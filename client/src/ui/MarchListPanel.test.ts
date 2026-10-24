@@ -212,6 +212,31 @@ describe("MarchListPanel", () => {
     expect(onRemarchFromRow).toHaveBeenCalled();
   });
 
+  it("shows eta residual coord subline on march info card (CLIENT-237)", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 2,
+            to_x: 9,
+            to_y: 10,
+            phase: 2,
+            arrive_at_ms: Date.now() + 30_000,
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    mount.querySelector('.march-list li[data-march-id="2"]')!.click();
+    const coord = mount.querySelector('[data-role="march-info-card-eta-residual-coord"]');
+    expect(coord?.textContent).toBe("目的格 (9,10)");
+    expect(coord?.classList.contains("march-intel-eta-residual-coord")).toBe(true);
+  });
+
   it("shows phase-eta strip and intel-row-phase-subline mutual highlight (CLIENT-205)", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({

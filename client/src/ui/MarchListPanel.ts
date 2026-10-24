@@ -92,6 +92,11 @@ import {
   syncMarchIntelPhaseEtaMutualHighlight,
 } from "@/net/marchIntelPhaseEtaStrip";
 import {
+  formatMarchIntelEtaResidualCoordLine,
+  MARCH_INTEL_ETA_RESIDUAL_COORD_CLASS,
+  MARCH_INTEL_ETA_RESIDUAL_COORD_ROLE,
+} from "@/ui/worldTileIntelEtaResidual";
+import {
   applyMarchSubmitIntelHandoff,
   MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE,
   MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS,
@@ -447,6 +452,7 @@ export class MarchListPanel {
         <p class="march-info-card-state hidden" data-role="march-info-card-state"></p>
         <div class="march-info-card-body hidden" data-role="march-info-card-body">
           <p class="${MARCH_INTEL_PHASE_ETA_STRIP_CLASS}" data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"></p>
+          <p class="${MARCH_INTEL_ETA_RESIDUAL_COORD_CLASS}" data-role="${MARCH_INTEL_ETA_RESIDUAL_COORD_ROLE}"></p>
           <p class="march-info-card-primary" data-role="march-info-card-primary"></p>
           <p class="march-info-card-secondary" data-role="march-info-card-secondary"></p>
           <div class="march-info-card-actions">
@@ -683,7 +689,19 @@ export class MarchListPanel {
     const phaseEtaStripEl = this.panel?.querySelector<HTMLElement>(
       `[data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"]`,
     );
-    if (!card || !stateEl || !bodyEl || !primaryEl || !secondaryEl || !phaseEtaStripEl) return;
+    const etaResidualCoordEl = this.panel?.querySelector<HTMLElement>(
+      `[data-role="${MARCH_INTEL_ETA_RESIDUAL_COORD_ROLE}"]`,
+    );
+    if (
+      !card ||
+      !stateEl ||
+      !bodyEl ||
+      !primaryEl ||
+      !secondaryEl ||
+      !phaseEtaStripEl ||
+      !etaResidualCoordEl
+    )
+      return;
 
     const march = this.getSelectedMarch();
     const selected = march != null;
@@ -721,6 +739,8 @@ export class MarchListPanel {
       card.classList.add("hidden");
       card.classList.remove(MARCH_ROW_SELECTED_CLASS);
       syncMarchIntelPhaseEtaMutualHighlight(this.panel, null);
+      etaResidualCoordEl.textContent = "";
+      etaResidualCoordEl.classList.add("hidden");
       return;
     }
 
@@ -731,6 +751,14 @@ export class MarchListPanel {
 
     const now = this.nowMs();
     phaseEtaStripEl.textContent = formatMarchIntelPhaseEtaStrip(march, now);
+    const coordLine = formatMarchIntelEtaResidualCoordLine(march);
+    if (coordLine) {
+      etaResidualCoordEl.textContent = coordLine;
+      etaResidualCoordEl.classList.remove("hidden");
+    } else {
+      etaResidualCoordEl.textContent = "";
+      etaResidualCoordEl.classList.add("hidden");
+    }
     primaryEl.textContent = formatMarchInfoCardPrimary(march);
     secondaryEl.textContent = formatMarchInfoCardSecondary(march, now);
     syncMarchIntelPhaseEtaMutualHighlight(this.panel, march.march_id ?? null);

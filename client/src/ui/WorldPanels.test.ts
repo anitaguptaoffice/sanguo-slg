@@ -263,6 +263,50 @@ describe("WorldPanels", () => {
     expect(state?.classList.contains("hidden")).toBe(true);
   });
 
+  it("shows intel ETA residual line and mutual ring when intel dest matches grid (CLIENT-237)", () => {
+    vi.useFakeTimers();
+    const mount = document.createElement("div");
+    const intelMount = document.createElement("div");
+    intelMount.innerHTML = `
+      <aside data-role="march-info-card">
+        <p data-role="march-info-card-eta-residual-coord" class="march-intel-eta-residual-coord"></p>
+      </aside>
+    `;
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({ cities: [] }),
+    } as unknown as GatewayPort;
+    const march = {
+      march_id: 3,
+      to_x: 7,
+      to_y: 8,
+      phase: 2,
+      arrive_at_ms: Date.now() + 50_000,
+      depart_at_ms: Date.now() - 1000,
+    };
+    const panels = new WorldPanels(
+      mount,
+      gateway,
+      () => null,
+      { marchFormRoot: null },
+      () => {},
+      {
+        getMarchesSnapshot: () => [march],
+        getSelectedIntelMarch: () => march,
+        getIntelPanelRoot: () => intelMount,
+      },
+    );
+    panels.attach();
+    panels.selectGridAt(7, 8);
+    const residual = mount.querySelector('[data-role="world-tile-intel-eta-residual-line"]');
+    expect(residual?.textContent).toContain("格点 (7,8)");
+    expect(residual?.textContent).toContain("军情 #3");
+    const card = mount.querySelector('[data-role="world-tile-info"]');
+    expect(card?.classList.contains("world-tile-intel-eta-residual-ring")).toBe(true);
+    vi.advanceTimersByTime(1000);
+    expect(card?.classList.contains("world-tile-intel-eta-residual-ring")).toBe(false);
+    vi.useRealTimers();
+  });
+
   it("shows recent march secondary line and occupation summary (CLIENT-170)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {

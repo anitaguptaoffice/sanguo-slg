@@ -36,6 +36,15 @@ import {
   formatWorldTileMarchSummaryLine,
   WORLD_TILE_MARCH_SUMMARY_LINE_CLASS,
 } from "@/ui/minimapMarchStack";
+import {
+  createWorldTileIntelEtaResidualTimers,
+  formatWorldTileIntelEtaResidualLine,
+  pulseWorldTileIntelEtaResidualMutualHighlight,
+  WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE,
+  worldTileIntelEtaResidualCoordsMatch,
+  type WorldTileIntelEtaResidualTimers,
+} from "@/ui/worldTileIntelEtaResidual";
 import { WORLD_TILE_INFO_CARD_CLASS } from "@/ui/minimapTileFocusLink";
 import {
   applyWorldTileFocusPulse,
@@ -70,6 +79,10 @@ export type WorldPanelsOptions = {
   assets?: AssetLoader;
   /** 信息卡点击：居中小地图视口（不新 world RPC）。 */
   onCenterMinimapAtGrid?: (grid: { x: number; y: number }) => void;
+  /** 军情列表当前选中行军（只读对照互高亮，CLIENT-237）。 */
+  getSelectedIntelMarch?: () => MarchSummary | null;
+  /** 军情面板根节点（互高亮 DOM 查询）。 */
+  getIntelPanelRoot?: () => ParentNode | null;
 };
 
 export class WorldPanels {
@@ -79,6 +92,8 @@ export class WorldPanels {
   private marchDestHighlight: { x: number; y: number } | null = null;
   private citiesLoading = false;
   private citiesLoadError: string | null = null;
+  private readonly intelEtaResidualTimers: WorldTileIntelEtaResidualTimers =
+    createWorldTileIntelEtaResidualTimers();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -169,6 +184,38 @@ export class WorldPanels {
     this.renderInfoCard();
   }
 
+  /** 军情选中变化时刷新 ETA 对照互高亮（CLIENT-237）。 */
+  syncIntelEtaResidualHighlightFromMarch(march: MarchSummary | null): void {
+    const card = this.panel.querySelector<HTMLElement>('[data-role="world-tile-info"]');
+    if (!card || card.classList.contains("hidden") || !this.selectedGrid) {
+      pulseWorldTileIntelEtaResidualMutualHighlight(
+        card,
+        this.options?.getIntelPanelRoot?.() ?? null,
+        false,
+        { timers: this.intelEtaResidualTimers },
+      );
+      return;
+    }
+    const { x, y } = this.selectedGrid;
+    pulseWorldTileIntelEtaResidualMutualHighlight(
+      card,
+      this.options?.getIntelPanelRoot?.() ?? null,
+      worldTileIntelEtaResidualCoordsMatch({ x, y }, march),
+      { timers: this.intelEtaResidualTimers },
+    );
+    const residualLineEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"]`,
+    );
+    if (residualLineEl) {
+      const marches = this.options?.getMarchesSnapshot?.() ?? [];
+      residualLineEl.textContent = formatWorldTileIntelEtaResidualLine(
+        marches,
+        { x, y },
+        Date.now(),
+      );
+    }
+  }
+
   /** 打开世界面板、选中格点并触发 CLIENT-170 焦点脉冲（无新 world RPC）。 */
   openAndFocusTile(x: number, y: number): void {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
@@ -203,6 +250,7 @@ export class WorldPanels {
       <p class="world-panel-hint" data-role="world-hint">玩家城池与坐标（非大地图）；点选可将坐标填入出征目标，并在下方信息卡扫读格点上下文。</p>
       <aside class="world-tile-info ${WORLD_TILE_INFO_CARD_CLASS} hidden" data-role="world-tile-info" aria-live="polite">
         <h4>格点信息</h4>
+        <p class="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_CLASS}" data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"></p>
         <p class="world-tile-info-state hidden" data-role="world-tile-info-state"></p>
         <div data-role="world-tile-info-body">
           <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
@@ -301,10 +349,14 @@ export class WorldPanels {
     const hintEl = this.panel.querySelector('[data-role="world-tile-occupation-hint"]');
     const marchEl = this.panel.querySelector('[data-role="world-tile-march-count"]');
     const secondaryEl = this.panel.querySelector('[data-role="world-tile-march-secondary"]');
+    const residualLineEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"]`,
+    );
     const reportBtn = this.panel.querySelector<HTMLButtonElement>(
       '[data-action="view-battle-reports-at-grid"]',
     );
-    if (!card || !dl || !marchEl || !secondaryEl || !hintEl || !stateEl || !bodyEl) return;
+    if (!card || !dl || !marchEl || !secondaryEl || !hintEl || !stateEl || !bodyEl || !residualLineEl)
+      return;
 
     if (!this.selectedGrid) {
       card.classList.add("hidden");
@@ -317,7 +369,14 @@ export class WorldPanels {
       hintEl.classList.add("hidden");
       marchEl.textContent = "";
       secondaryEl.textContent = "";
+      residualLineEl.textContent = "";
       reportBtn?.classList.add("hidden");
+      pulseWorldTileIntelEtaResidualMutualHighlight(
+        card as HTMLElement,
+        this.options?.getIntelPanelRoot?.() ?? null,
+        false,
+        { timers: this.intelEtaResidualTimers },
+      );
       return;
     }
 
@@ -387,6 +446,15 @@ export class WorldPanels {
     }
     marchEl.textContent = summary.marchCountLine;
     secondaryEl.textContent = formatWorldTileMarchSummaryLine(marches, { x, y });
+    const nowMs = Date.now();
+    residualLineEl.textContent = formatWorldTileIntelEtaResidualLine(marches, { x, y }, nowMs);
+    const selectedIntel = this.options?.getSelectedIntelMarch?.() ?? null;
+    pulseWorldTileIntelEtaResidualMutualHighlight(
+      card as HTMLElement,
+      this.options?.getIntelPanelRoot?.() ?? null,
+      worldTileIntelEtaResidualCoordsMatch({ x, y }, selectedIntel),
+      { timers: this.intelEtaResidualTimers },
+    );
     if (reportBtn) {
       if (summary.showBattleReportShortcut) {
         reportBtn.classList.remove("hidden");

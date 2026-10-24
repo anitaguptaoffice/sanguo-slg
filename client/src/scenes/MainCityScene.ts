@@ -752,6 +752,7 @@ export class MainCityScene implements Scene {
         },
         onSelectionChange: (march) => {
           this.syncMilitaryPanel();
+          this.world?.syncIntelEtaResidualHighlightFromMarch(march);
           highlightMarchFormCoordsFromIntel(this.militaryPanel, march, {
             timers: this.marchFormCoordSyncTimers,
           });
@@ -826,12 +827,15 @@ export class MainCityScene implements Scene {
       {
         onGridSelectionChange: (grid) => {
           this.marchList.syncWorldGridSelection(grid);
+          this.world?.syncIntelEtaResidualHighlightFromMarch(this.marchList.getSelectedMarch());
           if (grid) {
             this.focusMinimapOnWorldGrid(grid.x, grid.y);
           } else {
             this.clearMinimapWorldGridFocus();
           }
         },
+        getSelectedIntelMarch: () => this.marchList.getSelectedMarch(),
+        getIntelPanelRoot: () => this.marchList.getRoot(),
         getMarchesSnapshot: () => {
           const fromPanel = this.marchList.getMarches();
           return fromPanel.length ? fromPanel : this.minimapMarches;
