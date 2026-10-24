@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MarchSummary } from "@/net/militaryFormat";
+import { formatMarchRemainingMs } from "@/net/militaryFormat";
 import {
   MINIMAP_COLLAPSED_SESSION_KEY,
   MINIMAP_LAYOUT_RECT,
@@ -20,6 +21,7 @@ import {
   marchShowsDestOnMinimap,
   clampMinimapEtaLabelLayout,
   formatMinimapCollapsedSelectedMarchStatus,
+  formatMinimapDestEtaLabel,
   minimapDestEtaBadgeLabel,
   minimapDestShowsEtaBadge,
   minimapMarchPhaseShortLabel,
@@ -174,10 +176,12 @@ describe("worldMinimap", () => {
     };
     expect(minimapDestShowsEtaBadge(marching)).toBe(true);
     expect(minimapDestShowsEtaBadge({ phase: 5, to_x: 1, to_y: 1 })).toBe(false);
-    expect(minimapDestEtaBadgeLabel(marching, now)).toBe("30");
-    expect(minimapDestEtaBadgeLabel({ ...marching, phase: 1 }, now)).toBe("待");
-    expect(minimapDestEtaBadgeLabel({ ...marching, phase: 3 }, now)).toBe("达");
-    expect(minimapDestEtaBadgeLabel({ ...marching, phase: 4 }, now)).toBe("30");
+    expect(formatMinimapDestEtaLabel(marching, now)).toBe("30");
+    expect(formatMinimapDestEtaLabel({ ...marching, phase: 1 }, now)).toBe("待");
+    expect(formatMinimapDestEtaLabel({ ...marching, phase: 3 }, now)).toBe("达");
+    expect(formatMinimapDestEtaLabel({ ...marching, phase: 4 }, now)).toBe("30");
+    expect(minimapDestEtaBadgeLabel(marching, now)).toBe(formatMinimapDestEtaLabel(marching, now));
+    expect(formatMarchRemainingMs(now, arrive)).toBe("剩余 30m");
     expect(minimapMarchPhaseShortLabel(1)).toBe("待");
     expect(formatMinimapCollapsedSelectedMarchStatus(marching, now)).toContain("剩余 30m");
   });

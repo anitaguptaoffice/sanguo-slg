@@ -1,3 +1,8 @@
+import type { AssetLoader } from "@/engine/AssetLoader";
+import {
+  MINIMAP_DEST_MARKER_ASSET_ID,
+  resolveMinimapDestMarkerDrawMode,
+} from "@/engine/artMinimapDestSkin";
 import type { MarchSummary } from "@/net/militaryFormat";
 import {
   MINIMAP_COLLAPSED_CHROME_RECT,
@@ -9,8 +14,8 @@ import {
   computeMinimapScaleBar,
   computeMinimapWorldBounds,
   findFirstMarchByDest,
+  formatMinimapDestEtaLabel,
   marchHasRouteOnMinimap,
-  minimapDestEtaBadgeLabel,
   minimapDestShowsEtaBadge,
   minimapMarchRouteStroke,
   minimapPhaseCaption,
@@ -31,6 +36,9 @@ export function drawWorldMinimap(
     /** 世界信息卡选中格（与军情选中目的格区分，CLIENT-073）。 */
     focusGrid?: { wx: number; wy: number } | null;
     nowMs?: number;
+    assets?: AssetLoader;
+    /** 用于检测 `data-art-skin=off`（如 `#layout-frame`）。 */
+    artSkinAnchor?: HTMLElement | null;
   },
 ): void {
   const collapsed = opts.collapsed ?? false;
@@ -84,13 +92,37 @@ export function drawWorldMinimap(
   c2d.font = "10px system-ui";
   c2d.fillText(scale.label, scaleX, scaleY - 4);
 
-  const drawDot = (wx: number, wy: number, color: string, radius = 5) => {
+  const destMarkerMode = resolveMinimapDestMarkerDrawMode(opts.artSkinAnchor, opts.assets ?? null);
+  const destSpritePack =
+    destMarkerMode === "sprite" ? opts.assets?.getImageForAsset(MINIMAP_DEST_MARKER_ASSET_ID) : null;
+
+  const drawDot = (
+    wx: number,
+    wy: number,
+    color: string,
+    radius = 5,
+    style: "city" | "march_dest" = "city",
+  ) => {
     const p = worldToMinimapLayout(wx, wy, bounds, rect, opts.view);
+    if (style === "march_dest" && destSpritePack) {
+      const size = radius * 2.4;
+      c2d.drawImage(destSpritePack.img, p.x - size / 2, p.y - size / 2, size, size);
+      return;
+    }
     c2d.beginPath();
     c2d.fillStyle = color;
     c2d.arc(p.x, p.y, radius, 0, Math.PI * 2);
     c2d.fill();
+    if (style === "march_dest") {
+      c2d.strokeStyle = isSelStrokeColor(color) ? "#f0c674" : "rgba(245, 230, 200, 0.9)";
+      c2d.lineWidth = isSelStrokeColor(color) ? 2.5 : 1.5;
+      c2d.stroke();
+    }
   };
+
+  function isSelStrokeColor(color: string): boolean {
+    return color === "#f0c674";
+  }
 
   const drawRoute = (m: MarchSummary, isSel: boolean) => {
     const fx = m.from_x!;
@@ -133,10 +165,10 @@ export function drawWorldMinimap(
       focus != null && focus.wx === wx && focus.wy === wy;
     const isSel =
       (selected && selected.to_x === wx && selected.to_y === wy) || matchesFocus;
-    drawDot(wx, wy, isSel ? "#f0c674" : "#c97b63", isSel ? 7 : 5);
+    drawDot(wx, wy, isSel ? "#f0c674" : "#c97b63", isSel ? 7 : 5, "march_dest");
     const marchForBadge = findFirstMarchByDest(opts.marches, wx, wy);
     if (marchForBadge && minimapDestShowsEtaBadge(marchForBadge)) {
-      const label = minimapDestEtaBadgeLabel(marchForBadge, nowMs);
+      const label = formatMinimapDestEtaLabel(marchForBadge, nowMs);
       const p = worldToMinimapLayout(wx, wy, bounds, rect, opts.view);
       const metrics = c2d.measureText(label);
       const textH = 10;

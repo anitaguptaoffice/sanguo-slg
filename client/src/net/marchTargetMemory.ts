@@ -50,6 +50,53 @@ export function readMarchTargetSession(
   }
 }
 
+export function parseMarchTargetCoordField(raw: string): number | null {
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return null;
+  return Math.trunc(n);
+}
+
+/** 读取军事面板 to_x/to_y 当前值（未校验 session）。 */
+export function readMarchTargetFromForm(
+  formRoot: ParentNode | null | undefined,
+): MarchTargetCoords | null {
+  if (!formRoot) return null;
+  const xEl = formRoot.querySelector('[data-field="to-x"]') as HTMLInputElement | null;
+  const yEl = formRoot.querySelector('[data-field="to-y"]') as HTMLInputElement | null;
+  if (!xEl || !yEl) return null;
+  const x = parseMarchTargetCoordField(xEl.value);
+  const y = parseMarchTargetCoordField(yEl.value);
+  if (x == null || y == null) return null;
+  return { x, y };
+}
+
+/**
+ * 出征目标事实源：session 记忆优先，否则表单解析（CLIENT-139 小地图角标/汇总同源）。
+ */
+export function resolveMarchTargetTruth(
+  formRoot: ParentNode | null | undefined,
+  storage: Pick<Storage, "getItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): MarchTargetCoords | null {
+  const stored = readMarchTargetSession(storage);
+  if (stored) return stored;
+  return readMarchTargetFromForm(formRoot);
+}
+
+/** 手动改 to_x/to_y 时将会话记忆与表单对齐。 */
+export function syncMarchTargetSessionFromForm(
+  formRoot: ParentNode | null | undefined,
+  storage: Pick<Storage, "setItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): MarchTargetCoords | null {
+  const fromForm = readMarchTargetFromForm(formRoot);
+  if (!fromForm) return null;
+  writeMarchTargetSession(fromForm.x, fromForm.y, storage);
+  return fromForm;
+}
+
 export function writeMarchTargetSession(
   x: number,
   y: number,
