@@ -165,6 +165,14 @@ import {
   writeHeroListSelectedSession,
 } from "@/net/heroListSelectedSession";
 import {
+  applyHeroListReturnScroll,
+  captureHeroListReturnPayload,
+  formatHeroDetailFromListHint,
+  readHeroListReturnState,
+  type HeroListReturnPayload,
+  writeHeroListReturnState,
+} from "@/net/heroListReturnState";
+import {
   buildHeroBagDeepLinkQuery,
   pickHeroDetailBagDeepLink,
   type HeroBagDeepLinkQuery,
@@ -227,6 +235,10 @@ export class HeroMailPanels {
   private recruitLastSuccessHeroId: number | null = null;
   private heroesRefreshInflight = false;
   private heroListLastRefreshedAtMs = 0;
+  /** CLIENT-199：自列表打开详情时保留筛选摘要；返回列表后清空。 */
+  private heroDetailListContext: Pick<HeroListReturnPayload, "filter" | "sort"> | null = null;
+  /** CLIENT-199：返回列表后折叠详情区，行高亮仍由 selectedHeroId 驱动。 */
+  private heroDetailCollapsed = false;
   private heroCultivationSubmitState: UseConsumableSubmitState = "idle";
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
   private readonly onHeroListKeyDown = (ev: KeyboardEvent) => this.onHeroPanelListKeyDown(ev);
@@ -294,7 +306,7 @@ export class HeroMailPanels {
       itemSelector: "li[data-hero-id]",
       onActivate: (row) => {
         const id = Number(row.getAttribute("data-hero-id"));
-        if (id > 0) void this.loadHeroDetail(id);
+        if (id > 0) void this.loadHeroDetail(id, { fromHeroList: true });
       },
     });
   }
@@ -814,7 +826,7 @@ export class HeroMailPanels {
     }
     syncListRovingTabindex(ul, "li[data-hero-id]");
     if (detailEl) {
-      if (!this.selectedHeroId) {
+      if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
       } else if (this.heroDetailLoading) {
         detailEl.innerHTML = renderHeroDetailStateLoadingMarkup();
@@ -833,6 +845,7 @@ export class HeroMailPanels {
           this.recruitTemplateForHeroDetail(),
           cultivationHtml,
           bag,
+          formatHeroDetailFromListHint(this.heroDetailListContext),
         );
       }
     }
@@ -1224,13 +1237,26 @@ export class HeroMailPanels {
       this.heroes = res.heroes ?? [];
       this.heroListLastRefreshedAtMs = Date.now();
       syncHeroListRefreshedAtDisplay(this.heroPanel, this.heroListLastRefreshedAtMs);
-      const listScrollRestore = opts?.restoreSelection ? readHeroListSelectedSession() : null;
+      const returnRestore = opts?.restoreSelection ? readHeroListReturnState() : null;
+      const listScrollRestore =
+        returnRestore ??
+        (opts?.restoreSelection ? readHeroListSelectedSession() : null);
+      if (opts?.restoreSelection && returnRestore) {
+        this.heroListFilter = returnRestore.filter;
+        this.heroListSort = returnRestore.sort;
+        writeHeroListFilterSession(this.heroListFilter);
+        writeHeroListSortSession(this.heroListSort);
+      }
       if (opts?.restoreSelection) {
         const stored = readHeroDetailSelectedSession();
         const listPick = pickRestoredHeroId(this.heroes, listScrollRestore?.heroId ?? null);
         const detailPick = pickRestoredHeroId(this.heroes, stored);
         const pick = listPick ?? detailPick;
         if (pick) this.selectedHeroId = pick;
+        if (returnRestore && listPick) {
+          this.heroDetailCollapsed = true;
+          this.heroDetailListContext = null;
+        }
       } else if (
         this.selectedHeroId > 0 &&
         !this.heroes.some((h) => h.hero_id === this.selectedHeroId)
@@ -1240,8 +1266,11 @@ export class HeroMailPanels {
       }
       this.renderHeroList();
       this.renderTemplateList();
-      if (opts?.restoreSelection && this.selectedHeroId > 0) {
-        await this.loadHeroDetail(this.selectedHeroId, { skipListSelectionWrite: true });
+      if (opts?.restoreSelection && this.selectedHeroId > 0 && !this.heroDetailCollapsed) {
+        await this.loadHeroDetail(this.selectedHeroId, {
+          skipListSelectionWrite: true,
+          fromHeroList: !!returnRestore,
+        });
         if (listScrollRestore && listScrollRestore.heroId === this.selectedHeroId) {
           applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
         } else {
@@ -1249,6 +1278,9 @@ export class HeroMailPanels {
         }
       } else if (opts?.restoreSelection && listScrollRestore) {
         applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
+        if (this.selectedHeroId > 0) {
+          scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+        }
       }
       if (opts?.pulseOnSuccess) {
         scheduleHeroListRefreshPulse(
@@ -1280,19 +1312,52 @@ export class HeroMailPanels {
   }
 
   private persistHeroListSelectedFromListView(heroId: number): void {
-    writeHeroListSelectedSession({
+    const scrollTop = readHeroPanelListScrollTop(this.heroPanel);
+    writeHeroListSelectedSession({ heroId, scrollTop });
+    const captured = captureHeroListReturnPayload(
+      this.heroPanel,
+      this.heroListFilter,
+      this.heroListSort,
       heroId,
-      scrollTop: readHeroPanelListScrollTop(this.heroPanel),
-    });
+    );
+    if (captured) writeHeroListReturnState(captured);
+  }
+
+  private restoreHeroListFromReturnState(): void {
+    const snap = readHeroListReturnState();
+    if (snap) {
+      this.heroListFilter = snap.filter;
+      this.heroListSort = snap.sort;
+      writeHeroListFilterSession(snap.filter);
+      writeHeroListSortSession(snap.sort);
+      this.selectedHeroId = pickRestoredHeroId(this.heroes, snap.heroId) ?? snap.heroId;
+      applyHeroListReturnScroll(this.heroPanel, snap.scrollTop);
+    }
+    this.heroDetailCollapsed = true;
+    this.heroDetailListContext = null;
+    this.renderHeroList();
+    if (this.selectedHeroId > 0) {
+      scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+    }
+    this.onStatus(snap ? "已返回将领列表" : "列表已展开");
   }
 
   private async loadHeroDetail(
     heroId: number,
-    opts?: { skipListSelectionWrite?: boolean },
+    opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean },
   ): Promise<void> {
     const sid = this.serverId();
     this.selectedHeroId = heroId;
+    this.heroDetailCollapsed = false;
     writeHeroDetailSelectedSession(heroId);
+    if (opts?.fromHeroList) {
+      this.heroDetailListContext = {
+        filter: this.heroListFilter,
+        sort: this.heroListSort,
+      };
+    } else if (!opts?.skipListSelectionWrite) {
+      this.heroDetailListContext = null;
+    }
     if (!opts?.skipListSelectionWrite) this.persistHeroListSelectedFromListView(heroId);
     this.resetHeroCultivationSubmitFeedback();
     this.heroDetailLoading = true;
@@ -1851,6 +1916,10 @@ export class HeroMailPanels {
       if (heroId > 0) void this.loadHeroDetail(heroId);
       return;
     }
+    if (btnAction === "hero-back-to-list") {
+      this.restoreHeroListFromReturnState();
+      return;
+    }
     const tplLi = (ev.target as HTMLElement).closest("li[data-template-id]");
     if (tplLi && !btn) {
       const id = Number(tplLi.getAttribute("data-template-id"));
@@ -1860,7 +1929,7 @@ export class HeroMailPanels {
     const li = (ev.target as HTMLElement).closest("li[data-hero-id]");
     if (li && !btn) {
       const id = Number(li.getAttribute("data-hero-id"));
-      if (id) void this.loadHeroDetail(id);
+      if (id) void this.loadHeroDetail(id, { fromHeroList: true });
       return;
     }
     if (!btn) return;
