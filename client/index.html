@@ -721,6 +721,13 @@
         margin: 0 0 6px; font-size: 12px; color: #8b3a18; line-height: 1.4;
       }
       .military-panel .march-form-summary-warn.hidden { display: none; }
+      .military-panel .march-intel-remarch-residual-summary {
+        font-size: 12px;
+        color: #c8b890;
+        margin: 4px 0 6px;
+        line-height: 1.35;
+      }
+      .military-panel .march-intel-remarch-residual-summary.hidden { display: none; }
       .military-panel .march-intel-last-troops {
         margin: 0 0 6px; font-size: 12px; color: #6b4f1a;
       }
@@ -1407,6 +1414,16 @@
       }
       .march-intel-phase-eta-strip.intel-phase-change-flash {
         animation: intel-phase-change-flash-keyframes 2s ease-out 1;
+      }
+      @keyframes intel-phase-change-residual-pulse-keyframes {
+        0% { box-shadow: inset 0 0 0 1px rgba(200, 180, 120, 0.9); background-color: rgba(48, 42, 28, 0.35); }
+        100% { box-shadow: none; background-color: transparent; }
+      }
+      .march-list li.intel-phase-change-residual-pulse {
+        animation: intel-phase-change-residual-pulse-keyframes 1.5s ease-out 1;
+      }
+      .march-intel-phase-eta-strip.intel-phase-change-residual-pulse {
+        animation: intel-phase-change-residual-pulse-keyframes 1.5s ease-out 1;
       }
       .march-row-recent-eta {
         font-size: 12px;
@@ -3603,6 +3620,7 @@
         box-sizing: border-box;
       }
       #layout-frame.layout-narrow .military-panel .march-target-fields,
+      #layout-frame.layout-narrow .military-panel .march-intel-remarch-residual-summary,
       #layout-frame.layout-narrow .military-panel .march-intel-last-troops {
         min-width: 0;
         max-width: 100%;
@@ -3950,6 +3968,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-march-stack-badge .minimap-intel-sync-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-row-minimap-sync-highlight,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-phase-change-flash,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-phase-change-residual-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-new-march-highlight,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-intel-phase-eta-strip,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-handoff-line,

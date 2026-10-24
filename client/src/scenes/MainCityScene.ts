@@ -118,10 +118,11 @@ import {
   formatMarchFormValidationSweepLine,
   syncMarchFormValidationSweepLine,
 } from "@/net/marchFormValidationSweep";
+import { buildMarchIntelRemarchPrefill } from "@/net/marchIntelRemarch";
 import {
-  applyMarchIntelRemarchPrefillWithFeedback,
-  buildMarchIntelRemarchPrefill,
-} from "@/net/marchIntelRemarch";
+  clearMarchIntelRemarchResidualSummary,
+  prefillMarchFormFromIntelResidual,
+} from "@/net/marchIntelRemarchResidual";
 import { restoreMarchTargetPrefill } from "@/net/marchTargetMemory";
 import { BuildCompleteTodoTracker } from "@/net/buildCompleteTodo";
 import { detectBuildJustCompleted } from "@/net/buildQueueComplete";
@@ -547,6 +548,7 @@ export class MainCityScene implements Scene {
           <label>目标 Y <input type="number" data-field="to-y" value="${DEFAULT_MARCH_TARGET.y}" /></label>
         </div>
         <p class="march-intel-last-troops hidden" data-role="march-intel-last-troops"></p>
+        <p class="march-intel-remarch-residual-summary hidden" data-role="march-intel-remarch-residual-summary" aria-live="polite"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
@@ -1318,6 +1320,7 @@ export class MainCityScene implements Scene {
       clearMarchTargetFromForm(this.militaryPanel);
       this.clearMinimapWorldGridFocus();
       this.intelRemarchTroopsLine = null;
+      clearMarchIntelRemarchResidualSummary(this.militaryPanel);
       this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
       this.renderHud();
@@ -1332,6 +1335,7 @@ export class MainCityScene implements Scene {
       if (!this.suppressMarchTargetHighlightClear) {
         this.marchList.clearRecentMarchHighlight();
         this.intelRemarchTroopsLine = null;
+        clearMarchIntelRemarchResidualSummary(this.militaryPanel);
       }
       syncMarchTargetSessionFromForm(this.militaryPanel);
       this.syncMinimapFocusFromMarchTarget();
@@ -1444,8 +1448,7 @@ export class MainCityScene implements Scene {
   }
 
   private openMilitaryFromIntelRemarch(march: MarchSummary): void {
-    const prefill = buildMarchIntelRemarchPrefill(march);
-    if (!prefill) {
+    if (!buildMarchIntelRemarchPrefill(march)) {
       this.status = "该行缺少有效目的格点，无法再出征";
       this.renderHud();
       return;
@@ -1453,11 +1456,11 @@ export class MainCityScene implements Scene {
     this.militaryPanel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
-    applyMarchIntelRemarchPrefillWithFeedback(
+    const prefill = prefillMarchFormFromIntelResidual(
       this.militaryPanel,
-      prefill,
+      march,
       this.marchFormFeedbackContext(),
-    );
+    )!;
     this.suppressMarchTargetHighlightClear = false;
     this.intelRemarchTroopsLine = prefill.lastTroopsSummary;
     setMarchTargetFieldHighlight(this.militaryPanel, false);
