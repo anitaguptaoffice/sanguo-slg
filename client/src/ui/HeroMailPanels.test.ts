@@ -14,7 +14,14 @@ import {
   readHeroListFilterSession,
   readHeroListSortSession,
 } from "@/net/heroListFilter";
-import { HERO_LIST_REFRESH_PULSE_CLASS } from "@/net/heroListRefreshFeedback";
+import {
+  HERO_LIST_INFLIGHT_ATTR,
+  HERO_LIST_REFRESH_PULSE_CLASS,
+} from "@/net/heroListRefreshFeedback";
+import {
+  HERO_LIST_SELECTED_SESSION_KEY,
+  readHeroListSelectedSession,
+} from "@/net/heroListSelectedSession";
 import { HERO_DETAIL_STAT_PULSE_CLASS } from "@/net/heroDetailCultivationUse";
 import { USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL } from "@/net/useConsumableSubmitFeedback";
 
@@ -114,6 +121,31 @@ describe("HeroMailPanels", () => {
     expect(gateway.markPlayerMailRead).toHaveBeenCalledWith(1, 3);
   });
 
+  it("hero list refresh shows refreshed-at stamp and data-hero-list-inflight while loading", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 2, template_cfg_id: 1001 }],
+        total_count: 1,
+      }),
+      listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    const heroPanel = mount.querySelector('[data-center-panel="hero"]') as HTMLElement;
+    const refreshBtn = mount.querySelector('[data-action="refresh-heroes"]') as HTMLButtonElement;
+    refreshBtn.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(heroPanel.getAttribute(HERO_LIST_INFLIGHT_ATTR)).toBe("1");
+    await flushPromises();
+    expect(heroPanel.hasAttribute(HERO_LIST_INFLIGHT_ATTR)).toBe(false);
+    const stamp = mount.querySelector('[data-role="hero-list-refreshed-at"]');
+    expect(stamp?.textContent).toMatch(/^列表更新：/);
+    expect(stamp?.classList.contains("hidden")).toBe(false);
+  });
+
   it("hero list refresh disables button, pulses on success, and shows CLIENT-067 error on failure", async () => {
     const mount = document.createElement("div");
     const err = Object.assign(new Error("网关超时"), { code: 10001 });
@@ -173,6 +205,45 @@ describe("HeroMailPanels", () => {
     expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 8);
     expect(mount.querySelector('li[data-hero-id="8"].selected')).toBeTruthy();
     sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
+  });
+
+  it("persists hero-list-selected-v1 and restores scrollTop when panel reopens", async () => {
+    sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [
+          { hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 },
+          { hero_id: 4, template_cfg_id: 1002, level: 1, loyalty: 50 },
+        ],
+        total_count: 2,
+      }),
+      listRecruitTemplates: vi.fn().mockResolvedValue({ templates: [], total_count: 0 }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 2,
+        loyalty: 77,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    const scroll = mount.querySelector('[data-role="hero-scroll"]') as HTMLElement;
+    scroll.scrollTop = 120;
+    mount.querySelector('li[data-hero-id="3"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(readHeroListSelectedSession()).toEqual({ heroId: 3, scrollTop: 120 });
+    panels.toggleHero();
+    panels.toggleHero();
+    await flushPromises();
+    expect(scroll.scrollTop).toBe(120);
+    expect(mount.querySelector('li[data-hero-id="3"].selected')).toBeTruthy();
+    sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
   });
 
   it("persists hero-detail-selected-id when a hero row is clicked", async () => {
@@ -249,6 +320,7 @@ describe("HeroMailPanels", () => {
 
   it("hero list rows use primary/secondary scan lines (CLIENT-132)", async () => {
     sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
       listPlayerHeroes: vi.fn().mockResolvedValue({

@@ -628,6 +628,14 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 3. `sessionStorage`：**`hero-list-filter-v1`** / **`hero-list-sort-v1`** 跨会话记忆；筛选无匹配走 **CLIENT-129** empty 占位，加载/拉取失败仍走 **CLIENT-129** loading/error。
 4. 单测：`heroListFilter.test.ts`（`filterHeroListRows` / `sortHeroListRows`）、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+### 手动验收（将领列表刷新戳记与详情返回记忆 CLIENT-182）
+
+在 [CLIENT-151](#手动验收将领列表筛选排序记忆-client-151) 筛选排序与 [CLIENT-099](#手动验收将领列表刷新与选中记忆-client-099) 选中记忆不退化前提下：
+
+1. **刷新列表** 成功后顶栏展示 `formatHeroListRefreshedAt`（**列表更新：刚刚 / N 分钟前** 等，基于 `ListPlayerHeroes` 成功时刻）；刷新中面板根 `data-hero-list-inflight=1` 且按钮 **disabled**，禁止重复点击。
+2. 自列表点选将领打开详情后关闭再开面板：`sessionStorage` **`hero-list-selected-v1`** 恢复 **`hero-scroll` scrollTop** 与对应 **`hero_id` 行高亮**；**`hero-list-filter-v1` / `hero-list-sort-v1`** 仍按 CLIENT-151 恢复。
+3. 单测：`formatHeroListRefreshedAt.test.ts`、`heroListSelectedSession.test.ts`、`heroListRefreshFeedback.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（将领详情养成道具使用反馈 CLIENT-115）
 
 在 [CLIENT-072](#手动验收将领详情养成对比-client-072) 养成对比与 [CLIENT-067](#手动验收四类面板统一错误-client-067) 错误口径上：
