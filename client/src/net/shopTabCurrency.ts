@@ -108,3 +108,83 @@ export function formatShopPriceWalletGapLine(
 
 /** 商城列表行缺口对比 DOM 类名（CLIENT-194）。 */
 export const SHOP_PRICE_WALLET_GAP_LINE_CLASS = "shop-price-wallet-gap";
+
+/** 商城分类顶栏标价 vs 钱包只读对比行（CLIENT-215；与 CLIENT-167 余额扫读并存）。 */
+export const SHOP_WALLET_COMPARE_LINE_ROLE = "shop-wallet-compare-line";
+export const SHOP_WALLET_COMPARE_LINE_CLASS = "shop-wallet-compare-line";
+export const SHOP_WALLET_COMPARE_DEFICIT_CLASS = "shop-wallet-compare-deficit";
+
+export type ShopWalletCompareLine = {
+  text: string;
+  hasDeficit: boolean;
+};
+
+function shopLineMark(sufficient: boolean): string {
+  return sufficient ? "✓" : "不足";
+}
+
+/** 当前分类 tab 下各结算币种最低单价（只读；不扩 SKU）。 */
+export function resolveShopTabMinUnitPrices(
+  offers: ShopOfferRow[],
+  category: ShopOfferClientCategory,
+): Partial<ResourceWallet> {
+  const visible = filterShopOffersByCategory(offers, category);
+  const mins: Partial<Record<ShopPriceCurrency, number>> = {};
+  for (const o of visible) {
+    const price = o.price_resources ?? {};
+    for (const key of resolveShopOfferPriceCurrencies(o)) {
+      const unit = price[key] ?? 0;
+      if (unit <= 0) continue;
+      const prev = mins[key];
+      mins[key] = prev == null ? unit : Math.min(prev, unit);
+    }
+  }
+  return mins;
+}
+
+/**
+ * 商城分类顶栏：本 tab 标价币种（最低单价）vs HUD 钱包余额只读并排对比。
+ * 与 `formatShopTabWalletBalanceLine` / 行内 `formatShopPriceWalletGapLine` **不退化**。
+ */
+export function formatShopWalletCompareLine(
+  wallet: ResourceWallet | undefined,
+  offers: ShopOfferRow[],
+  category: ShopOfferClientCategory,
+): ShopWalletCompareLine | null {
+  const currencies = resolveShopTabCurrency(offers, category);
+  if (!currencies.length) return null;
+  const mins = resolveShopTabMinUnitPrices(offers, category);
+  const parts: string[] = [];
+  let hasDeficit = false;
+  for (const key of currencies) {
+    const label = WALLET_RESOURCE_KEYS.find((e) => e.key === key)?.label ?? String(key);
+    const need = mins[key] ?? 0;
+    const have = wallet?.[key] ?? 0;
+    const sufficient = have >= need;
+    if (!sufficient) hasDeficit = true;
+    parts.push(
+      `${label} 标价${formatResourceAmount(need)} | 余额${formatResourceAmount(have)}${shopLineMark(sufficient)}`,
+    );
+  }
+  if (!parts.length) return null;
+  return { text: parts.join(" · "), hasDeficit };
+}
+
+export function syncShopWalletCompareLine(
+  shopRoot: ParentNode | null | undefined,
+  compare: ShopWalletCompareLine | null,
+): void {
+  const el = shopRoot?.querySelector<HTMLElement>(
+    `[data-role="${SHOP_WALLET_COMPARE_LINE_ROLE}"]`,
+  );
+  if (!el) return;
+  if (!compare?.text) {
+    el.textContent = "";
+    el.hidden = true;
+    el.classList.remove(SHOP_WALLET_COMPARE_DEFICIT_CLASS);
+    return;
+  }
+  el.textContent = compare.text;
+  el.hidden = false;
+  el.classList.toggle(SHOP_WALLET_COMPARE_DEFICIT_CLASS, compare.hasDeficit);
+}

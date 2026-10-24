@@ -3,8 +3,10 @@ import {
   formatShopPriceVsWallet,
   formatShopPriceWalletGapLine,
   formatShopTabWalletBalanceLine,
+  formatShopWalletCompareLine,
   resolveShopOfferPriceCurrencies,
   resolveShopTabCurrency,
+  resolveShopTabMinUnitPrices,
 } from "@/net/shopTabCurrency";
 import type { ShopOfferRow } from "@/net/contentFeedback";
 
@@ -65,6 +67,25 @@ describe("formatShopPriceVsWallet", () => {
 
   it("returns null when price empty", () => {
     expect(formatShopPriceVsWallet({ gold: 1 }, {})).toBeNull();
+  });
+});
+
+describe("formatShopWalletCompareLine (CLIENT-215)", () => {
+  const offers: ShopOfferRow[] = [
+    { offer_id: 1, item_cfg_id: 2001, price_resources: { gold: 30 } },
+    { offer_id: 2, item_cfg_id: 2002, price_resources: { gold: 10 } },
+    { offer_id: 3, item_cfg_id: 2020, price_resources: { food: 400 } },
+  ];
+
+  it("uses min unit price per tab currency vs wallet balance", () => {
+    const line = formatShopWalletCompareLine({ gold: 5, food: 800 }, offers, "all");
+    expect(line?.hasDeficit).toBe(true);
+    expect(line?.text).toContain("币 标价10 | 余额5不足");
+    expect(line?.text).toContain("粮 标价400 | 余额800✓");
+  });
+
+  it("resolveShopTabMinUnitPrices picks lowest gold in resource tab", () => {
+    expect(resolveShopTabMinUnitPrices(offers, "resource")).toEqual({ gold: 10 });
   });
 });
 

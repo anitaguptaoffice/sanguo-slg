@@ -8,6 +8,7 @@ import {
   type RecruitTemplatePreview,
 } from "@/net/heroMailState";
 import { scrollHeroListRowIntoView } from "@/net/heroListRefreshFeedback";
+import { formatRecruitWalletCompareLine, syncRecruitWalletCompareLine } from "@/net/recruitWalletCompare";
 import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 
 /** 招募主按钮默认文案（CLIENT-098）。 */
@@ -164,6 +165,10 @@ export function refreshRecruitWalletSweepDisplays(
     rowSecondary.textContent = sweep.text;
     rowSecondary.classList.toggle("recruit-cost-deficit", sweep.hasDeficit);
   }
+  syncRecruitWalletCompareLine(
+    formRoot,
+    formatRecruitWalletCompareLine(wallet, template, bag ?? []),
+  );
 }
 
 /** 招募币种扫读行成功脉冲（列表次行 + 预览行，1.5s）。 */

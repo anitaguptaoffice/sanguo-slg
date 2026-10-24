@@ -58,6 +58,14 @@ export const HERO_UPGRADE_ITEM_GAP_SELECTOR = `[data-role="hero-upgrade-item-gap
 /** CLIENT-166: recruit template wallet sweep on list/detail secondary line. */
 export const RECRUIT_WALLET_SWEEP_SECONDARY_CLASS = "recruit-afford-secondary";
 export const RECRUIT_COST_DEFICIT_CLASS = "recruit-cost-deficit";
+
+/** CLIENT-215: recruit panel top bar wallet compare strip. */
+export {
+  RECRUIT_WALLET_COMPARE_DEFICIT_CLASS,
+  RECRUIT_WALLET_COMPARE_LINE_CLASS,
+  RECRUIT_WALLET_COMPARE_LINE_ROLE,
+} from "@/net/recruitWalletCompare";
+export const RECRUIT_WALLET_COMPARE_LINE_SELECTOR = '[data-role="recruit-wallet-compare-line"]';
 export { RECRUIT_SCROLL_ANCHOR_SESSION_KEY } from "@/net/recruitScrollAnchor";
 
 /** CLIENT-183: recruit submit inline feedback on preview / wallet sweep line. */
