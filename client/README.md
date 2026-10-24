@@ -30,6 +30,10 @@
 
 在 **#482** `artToolbarIconSkin` 工程挂载前提下：底栏八个 `toggle-*`（军事/邮件/队列/背包/日常/世界/将领/商城）在 `ui.button.toolbar.v1` chrome 内挂 **`ui.icon.toolbar.*.v1`** 32px 图标 + 两字标签；`mountToolbarIcons` 对 **normal/hover/pressed/disabled** 走 `getButtonImage`（manifest `button_states` 就绪时）或 **variants** 回退，并与 chrome 同步指针态。按钮设 **`data-art-skin="off"`** 时跳过图标、保留文字标签。**1280×720** 底栏横向滚动时图标与 **CLIENT-107** 角标不被 `overflow` 裁切，标签省略、完整文案见 **`title`**；**`aria-expanded`** 仍由 **CLIENT-110** `syncToolbarAriaExpanded` 维护。美术证据只读：`docs/art/samples/art-toolbar-icons-007/`。单测：`artToolbarIconSkin.test.ts`。
 
+### ART-UI-PANEL-STATE-009 工程挂载（面板 loading/empty/error 纸底）
+
+对照 **#482** / **#509** 只读 cherry-pick **3** manifest id / **6** PNG（`ui.panel.loading.v1`、`ui.panel.empty.v1`、`ui.panel.error.v1` 九宫 **320×120**，L/T/R/B **16**）；**不合** art hold / VERIFY Draft（#77 / #82 / #108 / #506 等）。薄封装 **`artPanelStateSkin`**：`resolvePanelStateAssetId` / `PANEL_STATE_ASSET_BY_KIND` 供 **CLIENT-129** `panelStateChrome` 接线；**`data-art-skin="off"`** 回退 **CLIENT-067** 纯文案。证据：`docs/art/samples/art-ui-panel-state-009/`（`INVENTORY.md`、`manifest-index.json`、`hit-proof.json`）。单测：`artPanelStateSkin.test.ts`。
+
 ### ART-UI-FILTER-008 工程挂载（列表筛选 chrome）
 
 从 Draft **#506** @ `38451735` 只读 cherry-pick **9** manifest id / **18** PNG（chip 四态、row 三态 nine-slice、`badge.dot` / `badge.count`）；**不合** #506 / #108 / #77 / #82。运行时薄封装 **`artUiFilterSkin`**：`mountFilterUiSkins` 对 `data-ui-filter-chip` / `data-ui-filter-row` / `data-ui-filter-badge` 接线；chip 精灵 **72×32**、**命中区 CSS ≥44×44**；计数角标 **20×16** 文案 **1–9 / 9+**（`formatFilterBadgeCount`）。**`data-art-skin="off"`** 跳过皮肤。证据：`docs/art/samples/art-ui-filter-008/`（`manifest-index.json`、`hit-proof.json`）。单测：`artUiFilterSkin.test.ts`。
@@ -48,6 +52,7 @@
 | `ui.list.row.v1` / `.hover` / `.selected` | 列表行 nine-slice 三态 |
 | `ui.badge.dot.v1` | 未读/提示圆点 |
 | `ui.badge.count.v1` | 数字角标底图（20×16） |
+| `ui.panel.loading.v1` / `.empty` / `.error` | 面板列表区 loading / empty / error 九宫纸底（**CLIENT-128** `artPanelStateSkin`；运行时 **CLIENT-129**） |
 
 技术栈与引擎备选说明见仓库根 [docs/client-engine.md](../docs/client-engine.md)（**当前**为 Vite + TS + Canvas 2D / DOM，非 Cocos）。
 

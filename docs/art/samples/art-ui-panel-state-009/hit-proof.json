@@ -1,0 +1,28 @@
+{
+  "captured_at": "2026-10-24T00:32:01.788Z",
+  "asset_ids": [
+    "ui.panel.loading.v1",
+    "ui.panel.empty.v1",
+    "ui.panel.error.v1"
+  ],
+  "kind": "nine_slice",
+  "display_logical_px": {
+    "w": 320,
+    "h": 120
+  },
+  "nine_slice_logical_px": {
+    "left": 16,
+    "top": 16,
+    "right": 16,
+    "bottom": 16
+  },
+  "state_to_asset": {
+    "loading": "ui.panel.loading.v1",
+    "empty": "ui.panel.empty.v1",
+    "error": "ui.panel.error.v1"
+  },
+  "runtime_helper": "client/src/engine/artPanelStateSkin.ts — resolvePanelStateAssetId (CLIENT-129 panelStateChrome)",
+  "data_art_skin_off": "CLIENT-129 falls back to panelDensity / CLIENT-067 copy; no sprite mount",
+  "data_panel_state_attr": "data-panel-state=loading|empty|error (CLIENT-129)",
+  "interactive_hit": null
+}
