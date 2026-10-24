@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { ContentPanels } from "@/ui/ContentPanels";
@@ -39,6 +39,40 @@ describe("ContentPanels narrow scroll (CLIENT-095 + CLIENT-119)", () => {
     expect(mount.querySelector('[data-center-panel="shop"] .panel-scroll-body')).toBeTruthy();
     expect(mount.querySelector('[data-role="bag-wallet-gap"]')).toBeTruthy();
     expect(mount.querySelector('[data-role="shop-wallet-gap"]')).toBeTruthy();
+    expect(mount.querySelector('[data-role="bag-category-tabs"]')).toBeTruthy();
+  });
+
+  it("CLIENT-153 bag category tabs filter list without RPC", async () => {
+    sessionStorage.removeItem("bag-category-tab-v1");
+    const mount = document.createElement("div");
+    const session = baseSession();
+    const gateway = {
+      getBoundServerId: () => 1,
+      listPlayerBag: async () => ({
+        items: [
+          { item_cfg_id: 2001, quantity: 2 },
+          { item_cfg_id: 2017, quantity: 1 },
+        ],
+      }),
+    } as unknown as GatewayPort;
+    const panels = new ContentPanels(
+      mount,
+      gateway,
+      () => session,
+      (patch) => Object.assign(session, patch),
+      () => {},
+    );
+    panels.attach();
+    panels.toggleBag();
+    const list = () =>
+      [...mount.querySelectorAll(".bag-stack-row")].map((li) =>
+        li.getAttribute("data-item-cfg-id"),
+      );
+    await vi.waitFor(() => expect(list()).toEqual(["2001", "2017"]));
+    const cultTab = mount.querySelector('[data-bag-category="cultivation"]') as HTMLButtonElement;
+    cultTab.click();
+    expect(list()).toEqual(["2017"]);
+    expect(sessionStorage.getItem("bag-category-tab-v1")).toBe("cultivation");
   });
 
   it("resets bag scroll body when toggling open", () => {

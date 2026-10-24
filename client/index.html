@@ -518,15 +518,18 @@
         display: flex; flex-wrap: wrap; gap: 4px 8px; margin-left: 8px; font-size: 11px;
       }
       .content-panel .bag-slot-pick { display: inline-flex; align-items: center; gap: 2px; }
-      .content-panel .shop-category-tabs {
+      .content-panel .shop-category-tabs,
+      .content-panel .bag-category-tabs {
         display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px;
       }
-      .content-panel .shop-category-tab {
+      .content-panel .shop-category-tab,
+      .content-panel .bag-category-tab {
         margin: 0; padding: 4px 10px; font-size: 12px;
         border: 1px solid #5c4a32; border-radius: 6px; background: #3d3028; color: #f5e6c8;
         cursor: pointer;
       }
-      .content-panel .shop-category-tab.active {
+      .content-panel .shop-category-tab.active,
+      .content-panel .bag-category-tab.active {
         outline: 2px solid #c9a227; background: #4a3a2c;
       }
       .content-panel button.art-btn-primary {
@@ -1821,6 +1824,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-scroll-body {
         padding-bottom: 12px;
       }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-category-tabs,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-category-tabs,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="refresh-shop"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] button[data-action="buy-offer"],
