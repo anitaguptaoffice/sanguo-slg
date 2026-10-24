@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE5",
   "template_cfg_id": 1020,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "3b9b7098d988483e3e507e0de5f1b5996255e1c8",
-  "runtime_code_sha": "3b9b7098d988483e3e507e0de5f1b5996255e1c8",
+  "tip_sha": "d7cc3a62f9115572b3fa2fc77725828f563dd2df",
+  "runtime_code_sha": "d7cc3a62f9115572b3fa2fc77725828f563dd2df",
   "art_head_sha": "9f15a34119c1bcb157399693a5420c0a2787a47a",
   "art_asset_ids": [
     "hero.avatar.1020.v1",
@@ -50,7 +50,16 @@
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 436.96875,
+        "width": 128,
+        "height": 160
+      }
     },
     "1600x900-dpr2": {
       "ok": true,
@@ -91,7 +100,16 @@
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 436.96875,
+        "width": 128,
+        "height": 160
+      }
     },
     "1280x720-dpr1": {
       "ok": true,
@@ -132,23 +150,40 @@
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 174.984375,
+        "width": 128,
+        "height": 0
+      }
     }
   },
   "sameframe": {
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 269167
+      "bytes": 264335
     },
     "probe": {
       "ok": true,
+      "bustInClip": true,
+      "nameInClip": true,
       "bustInViewport": true,
       "nameInViewport": true,
       "nameRightOfBust": true,
       "verticalBandOverlap": true,
       "gapPx": 10,
       "gapNear10px": true,
+      "visibleClip": {
+        "left": 356,
+        "top": 174.984375,
+        "width": 568,
+        "height": 464.21875
+      },
       "name": {
         "text": "甘宁"
       },
@@ -162,7 +197,7 @@
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 471581,
+      "bytes": 471731,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -173,7 +208,7 @@
     },
     "hero-host-1600x900-dpr2.jpg": {
       "quality": 72,
-      "bytes": 986922,
+      "bytes": 984215,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -184,7 +219,7 @@
     },
     "hero-host-1280x720-dpr1.jpg": {
       "quality": 88,
-      "bytes": 259008,
+      "bytes": 246168,
       "viewport": {
         "tag": "1280x720-dpr1",
         "file": "hero-host-1280x720-dpr1.jpg",
@@ -196,8 +231,8 @@
   },
   "notes": [
     "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
-    "Art path-copied from Draft #1193; Draft remains unmerged.",
+    "Art path-copied from Draft #1193 (1019 @ 0b2b3987, 1017/1018/1020 @ 9f15a341); Drafts remain unmerged.",
     "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot."
   ],
-  "captured_at": "2026-10-24T18:31:24.797Z"
+  "captured_at": "2026-10-24T19:03:36.776Z"
 }
