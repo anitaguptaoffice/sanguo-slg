@@ -63,6 +63,10 @@ import {
   formatBattleReportReplayStatusCollapsed,
   formatBattleReportReplayStatusExpanded,
 } from "@/net/battleReportReplayCoord";
+import {
+  applyBattleReportMinimapFocus,
+  parseBattleReportLocation,
+} from "@/net/battleReportMinimapFocus";
 import { MarchEndBattleReportHint } from "@/net/battleReportDeepLink";
 import { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import {
@@ -155,6 +159,7 @@ import {
   layoutPointInMinimapToggle,
   minimapLayoutToWorld,
   formatMinimapCollapsedSelectedMarchStatus,
+  openWorldMinimapExpanded,
   readMinimapCollapsedFromSession,
   writeMinimapCollapsedToSession,
   type MinimapView,
@@ -1092,18 +1097,21 @@ export class MainCityScene implements Scene {
   }
 
   private focusMinimapOnBattleReport(summary: BattleReportSummary): void {
-    const coord = extractBattleReportReplayCoord(summary);
-    if (!coord) {
+    const location = parseBattleReportLocation(summary);
+    if (!location) {
       this.status = "战报缺少有效战场坐标";
       this.renderHud();
       return;
     }
-    this.minimapBattleReportReplay = coord;
+    const expanded = openWorldMinimapExpanded(this.minimapCollapsed);
+    this.minimapCollapsed = expanded.collapsed;
     const bounds = this.currentMinimapWorldBounds();
-    this.minimapView = computeMinimapViewFramingPoints(bounds, [coord]);
-    this.status = this.minimapCollapsed
-      ? formatBattleReportReplayStatusCollapsed(coord)
-      : formatBattleReportReplayStatusExpanded(coord);
+    const applied = applyBattleReportMinimapFocus(location, bounds, this.minimapView);
+    this.minimapBattleReportReplay = applied.replay;
+    this.minimapFocusGrid = applied.focusGrid;
+    this.minimapView = applied.view;
+    this.world?.selectGridAt(location.x, location.y);
+    this.status = applied.status;
     this.renderHud();
   }
 
