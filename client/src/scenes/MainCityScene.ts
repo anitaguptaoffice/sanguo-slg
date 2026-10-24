@@ -502,6 +502,7 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       {
+        assets: this.assets,
         nowMs: () => this.marchClockMs,
         getWorldSelectedGrid: () => this.world?.getSelectedGrid() ?? null,
         onMarchesUpdated: (marches) => {
