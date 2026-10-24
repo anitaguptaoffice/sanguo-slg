@@ -430,6 +430,36 @@ describe("SocialPanels chat & guild", () => {
     expect(statuses.some((s) => s.includes("禁言") && s.includes("61006"))).toBe(true);
   });
 
+  it("restores guild chat draft after closing and reopening chat panel (CLIENT-160)", async () => {
+    const mount = document.createElement("div");
+    const gateway = minimalGateway({
+      createGuild: vi.fn().mockResolvedValue({ guild: { guild_id: 7001, name: "虎贲营" } }),
+      listGuildMembers: vi.fn().mockResolvedValue({
+        guild: { name: "虎贲营" },
+        members: [{ display_name: "副官乙", role: 2, power: 9000, player_id: 10002 }],
+      }),
+      listChatMessages: vi.fn().mockResolvedValue({ messages: [] }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleGuild();
+    (mount.querySelector('[data-field="guild-name"]') as HTMLInputElement).value = "虎贲营";
+    mount.querySelector('[data-action="create-guild"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount
+      .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    mount
+      .querySelector('[data-action="guild-mention"][data-display-name="副官乙"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect((mount.querySelector('[data-field="chat-content"]') as HTMLInputElement).value).toBe("@副官乙 ");
+    expect(sessionStorage.getItem("guild-chat-draft-v1")).toBe("@副官乙 ");
+    panels.toggleChat();
+    panels.toggleChat();
+    expect((mount.querySelector('[data-field="chat-content"]') as HTMLInputElement).value).toBe("@副官乙 ");
+    expect(mount.querySelector('[data-role="chat-input-counter"]')?.textContent).toBe("@副官乙 ".length + "/500");
+  });
+
   it("fills guild chat draft and opens chat panel when mentioning a member", async () => {
     const mount = document.createElement("div");
     const gateway = minimalGateway({

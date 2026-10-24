@@ -925,6 +925,8 @@ cd client && npm install && npm run dev
 1. `make dev` 已入军团 → **军团** 面板点某成员 **提到** → **聊天** 输入框应出现 `@…` 草稿（不自动发送）。
 2. 单测：`socialFormat.test.ts`（`formatGuildMentionDraft`）、`SocialPanels.test.ts`。
 
+**CLIENT-160（聊天草稿记忆与输入扫读）**：**提到** 与输入变更将草稿写入 `sessionStorage` 键 **`guild-chat-draft-v1`**；切换底栏 **聊天** 关闭再打开 **恢复草稿**（不自动发送）。聊天输入区只读 **`chat-input-counter`**（如 `0/500`，上限与 `validateSendChatContent` / 网关 SendChat 一致）；**CLIENT-101** 职务分组与 **提到** 并存。单测：`guildChatDraft.test.ts`、`chatSendValidation.test.ts`、`SocialPanels.test.ts`。
+
 ### 手动验收（邮件附件批量领取 CLIENT-087）
 
 邮件列表含未领附件的行可勾选，点 **批量领取勾选** 顺序调用既有领取 RPC；`batchClaimSummary` 汇总成功/失败条数，失败走 **CLIENT-067** 文案。成功后 **CLIENT-050** HUD 同步与 **CLIENT-068** 战报深链不退化。
