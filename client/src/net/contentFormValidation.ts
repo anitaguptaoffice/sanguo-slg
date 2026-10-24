@@ -1,4 +1,5 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
+import { normalizeMarchHeroGatewayMessage } from "@/net/marchHeroPick";
 import type { BagStack } from "@/net/bagState";
 import type { ShopOfferRow } from "@/net/contentFeedback";
 import { itemLabel } from "@/net/contentFormat";
@@ -137,6 +138,7 @@ const PANEL_GATEWAY_CODE_HINT: Record<PanelGatewayDomain, Partial<Record<number,
     50002: "兵力数量无效",
     50005: "出征参数无效",
     50006: "城内兵力不足",
+    [COMMON_INVALID_PACKET]: "将领不存在或不属于您",
   },
   rank: {
     62001: "排行榜不存在",
@@ -174,7 +176,10 @@ export function formatPanelGatewayError(
   code: number | undefined,
   msg: string,
 ): string {
-  const trimmed = msg?.trim() ?? "";
+  let trimmed = msg?.trim() ?? "";
+  if (domain === "march") {
+    trimmed = normalizeMarchHeroGatewayMessage(trimmed);
+  }
   if (code === undefined) {
     return trimmed || "未知错误";
   }

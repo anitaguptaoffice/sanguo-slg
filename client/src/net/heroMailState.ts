@@ -65,6 +65,7 @@ export type HeroSummary = {
   template_cfg_id?: number;
   level?: number;
   loyalty?: number;
+  status?: number;
 };
 
 export type HeroAttributes = {

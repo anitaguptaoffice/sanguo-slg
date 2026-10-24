@@ -1,4 +1,8 @@
 import { setPanelFormErrorDisplay } from "@/net/contentFormValidation";
+import {
+  type MarchHeroRow,
+  validateMarchHeroSelection,
+} from "@/net/marchHeroPick";
 import type { CityTroopStack } from "@/net/militaryFormat";
 import { WORLD_MAP_EDGE } from "@/ui/worldMinimap";
 
@@ -14,6 +18,9 @@ export type MarchFormValidationInput = {
   cityX?: number;
   cityY?: number;
   cityTroops: CityTroopStack[];
+  heroIdRaw?: string;
+  ownedHeroes?: MarchHeroRow[];
+  localBusyHeroIds?: ReadonlySet<number>;
 };
 
 export type MarchFormValidationOk = {
@@ -21,6 +28,7 @@ export type MarchFormValidationOk = {
   toX: number;
   toY: number;
   marchCount: number;
+  heroId: number;
 };
 
 export type MarchFormValidationFail = {
@@ -95,6 +103,15 @@ export function validateMarchForm(input: MarchFormValidationInput): MarchFormVal
     }
   }
 
+  const heroValidated = validateMarchHeroSelection({
+    heroIdRaw: input.heroIdRaw ?? "",
+    ownedHeroes: input.ownedHeroes ?? [],
+    localBusyHeroIds: input.localBusyHeroIds,
+  });
+  if (!heroValidated.ok) {
+    errors.push(heroValidated.message);
+  }
+
   if (errors.length) {
     return { ok: false, message: errors.join("；") };
   }
@@ -104,6 +121,7 @@ export function validateMarchForm(input: MarchFormValidationInput): MarchFormVal
     toX: toXParsed as number,
     toY: toYParsed as number,
     marchCount,
+    heroId: heroValidated.heroId,
   };
 }
 

@@ -196,6 +196,14 @@ import {
   syncMarchFormTroopReserveLine,
   type ScrollIntelRowForMarchFormContext,
 } from "@/net/marchFormTroopReserve";
+import {
+  collectMarchBusyHeroIdsFromStatus,
+  HERO_STATUS_MARCH,
+  mapListPlayerHeroesForMarch,
+  readMarchHeroIdRaw,
+  syncMarchHeroSelect,
+  type MarchHeroRow,
+} from "@/net/marchHeroPick";
 import { readMarchFormSnapshot } from "@/net/marchFormSummary";
 import {
   createMarchFormCoordSyncTimers,
@@ -368,6 +376,9 @@ export class MainCityScene implements Scene {
   private lastMarch: MarchSummary | null = null;
   private marchQueueBannerTarget: MarchQueueBannerTarget | null = null;
   private marchSubmitState: MarchSubmitState = "idle";
+  private marchFormHeroes: MarchHeroRow[] = [];
+  private marchLocalBusyHeroIds = new Set<number>();
+  private marchHeroListLoading = false;
   private marchFormIntelScrollContext: ScrollIntelRowForMarchFormContext = {
     preferredMarchId: null,
     toX: null,
@@ -562,6 +573,9 @@ export class MainCityScene implements Scene {
         <p class="march-intel-remarch-residual-summary hidden" data-role="march-intel-remarch-residual-summary" aria-live="polite"></p>
         <p class="march-intel-remarch-residual-deep-summary hidden" data-role="march-intel-remarch-residual-deep-summary" aria-live="polite"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
+        <label>带队将领
+          <select data-field="march-hero" aria-label="出征带队将领"></select>
+        </label>
         <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
         <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
@@ -1034,7 +1048,7 @@ export class MainCityScene implements Scene {
       this.onMilitaryRecruitFieldChange(ev);
       this.onMilitaryFormInput(ev);
       const field = (ev.target as HTMLElement).getAttribute("data-field");
-      if (field === "unit" || field === "recruit-count") {
+      if (field === "unit" || field === "recruit-count" || field === "march-hero") {
         this.syncMilitaryPanel();
       }
     });
@@ -1056,6 +1070,7 @@ export class MainCityScene implements Scene {
     void this.hudTodoBadgePoll.pollOnce();
     void this.chatUnreadPoll.pollOnce();
     void this.refreshMinimapMarches();
+    void this.refreshMarchFormHeroes();
     this.syncSlotUpgradeOverlay();
   }
 
@@ -1270,6 +1285,7 @@ export class MainCityScene implements Scene {
       this.militaryPanel.classList.toggle("hidden");
       if (!this.militaryPanel.classList.contains("hidden")) {
         resetCenterPanelViewportScroll(this.militaryPanel);
+        void this.refreshMarchFormHeroes();
       }
       this.syncMilitaryPanel();
     }
@@ -1358,7 +1374,9 @@ export class MainCityScene implements Scene {
 
   private onMilitaryFormInput(ev: Event): void {
     const field = (ev.target as HTMLElement).getAttribute("data-field");
-    if (field !== "to-x" && field !== "to-y" && field !== "march-count") return;
+    if (field !== "to-x" && field !== "to-y" && field !== "march-count" && field !== "march-hero") {
+      return;
+    }
     if (field === "to-x" || field === "to-y") {
       if (!this.suppressMarchTargetHighlightClear) {
         this.marchList.clearRecentMarchHighlight();
@@ -1560,6 +1578,9 @@ export class MainCityScene implements Scene {
       toXRaw: marchSnap.toXRaw,
       toYRaw: marchSnap.toYRaw,
       marchCountRaw: marchSnap.marchCountRaw,
+      heroIdRaw: marchSnap.heroIdRaw,
+      ownedHeroes: this.marchFormHeroes,
+      localBusyHeroIds: this.marchLocalBusyHeroIds,
       cityX: this.session?.cityX,
       cityY: this.session?.cityY,
       cityTroops: this.session?.cityTroops ?? [],
@@ -1624,6 +1645,8 @@ export class MainCityScene implements Scene {
       cityX: this.session?.cityX,
       cityY: this.session?.cityY,
       cityTroops: this.session?.cityTroops ?? [],
+      ownedHeroes: this.marchFormHeroes,
+      localBusyHeroIds: this.marchLocalBusyHeroIds,
       wallet: this.session?.wallet,
       clockMs: this.marchClockMs,
     };
@@ -2438,6 +2461,9 @@ export class MainCityScene implements Scene {
       toXRaw: marchSnap.toXRaw,
       toYRaw: marchSnap.toYRaw,
       marchCountRaw: marchSnap.marchCountRaw,
+      heroIdRaw: marchSnap.heroIdRaw,
+      ownedHeroes: this.marchFormHeroes,
+      localBusyHeroIds: this.marchLocalBusyHeroIds,
       cityX: this.session?.cityX,
       cityY: this.session?.cityY,
       cityTroops: this.session?.cityTroops ?? [],
@@ -2929,12 +2955,40 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private async refreshMarchFormHeroes(): Promise<void> {
+    if (!this.session || this.marchHeroListLoading) return;
+    const sid = this.session.serverId ?? this.gateway.getBoundServerId() ?? 0;
+    if (sid <= 0) return;
+    this.marchHeroListLoading = true;
+    try {
+      const res = (await this.gateway.listPlayerHeroes(sid)) as {
+        heroes?: MarchHeroRow[];
+      };
+      this.marchFormHeroes = mapListPlayerHeroesForMarch(res.heroes);
+      const fromStatus = collectMarchBusyHeroIdsFromStatus(this.marchFormHeroes);
+      for (const id of fromStatus) this.marchLocalBusyHeroIds.add(id);
+      for (const h of this.marchFormHeroes) {
+        const id = h.hero_id ?? 0;
+        if (id > 0 && (h.status ?? 0) === 1) this.marchLocalBusyHeroIds.delete(id);
+      }
+      syncMarchHeroSelect(this.militaryPanel, this.marchFormHeroes, this.marchLocalBusyHeroIds);
+    } catch {
+      // 保留上次列表；出征仍可由网关报错兜底
+    } finally {
+      this.marchHeroListLoading = false;
+      this.syncMilitaryPanel();
+    }
+  }
+
   private async startMarch(): Promise<void> {
     if (!this.session) return;
     const validated = validateMarchForm({
       toXRaw: (this.field("to-x") as HTMLInputElement)?.value ?? "",
       toYRaw: (this.field("to-y") as HTMLInputElement)?.value ?? "",
       marchCountRaw: (this.field("march-count") as HTMLInputElement)?.value ?? "",
+      heroIdRaw: readMarchHeroIdRaw(this.militaryPanel),
+      ownedHeroes: this.marchFormHeroes,
+      localBusyHeroIds: this.marchLocalBusyHeroIds,
       cityX: this.session.cityX,
       cityY: this.session.cityY,
       cityTroops: this.session.cityTroops,
@@ -2944,7 +2998,7 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    const { toX, toY, marchCount } = validated;
+    const { toX, toY, marchCount, heroId } = validated;
     setMarchFormErrorDisplay(this.militaryPanel, null);
     const troops = [{ unit_cfg_id: 1, count: marchCount }];
     this.marchSubmitState = marchSubmitStateMachine(this.marchSubmitState, { type: "SUBMIT" });
@@ -2956,8 +3010,13 @@ export class MainCityScene implements Scene {
         toX,
         toY,
         PURPOSE_ATTACK,
+        heroId,
         troops.map((t) => ({ unit_cfg_id: t.unit_cfg_id ?? 1, count: t.count ?? 0 })),
       )) as { march?: MarchSummary; city_troops?: CityTroopStack[] };
+      this.marchLocalBusyHeroIds.add(heroId);
+      this.marchFormHeroes = this.marchFormHeroes.map((h) =>
+        h.hero_id === heroId ? { ...h, status: HERO_STATUS_MARCH } : h,
+      );
       this.lastMarch = res.march ?? null;
       if (res.city_troops?.length) {
         this.session.cityTroops = mergeCityTroops(this.session.cityTroops, res.city_troops);

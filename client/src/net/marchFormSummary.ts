@@ -5,6 +5,7 @@ import {
   setMarchFormErrorDisplay,
   validateMarchForm,
 } from "@/net/marchFormValidation";
+import { readMarchHeroIdRaw, type MarchHeroRow } from "@/net/marchHeroPick";
 import type { CityTroopStack } from "@/net/militaryFormat";
 import { formatMarchRemainingMs, unitLabel } from "@/net/militaryFormat";
 
@@ -26,6 +27,7 @@ export type MarchFormSnapshot = {
   toXRaw: string;
   toYRaw: string;
   marchCountRaw: string;
+  heroIdRaw: string;
   unitCfgId: number;
   cityX?: number;
   cityY?: number;
@@ -174,10 +176,12 @@ export function readMarchFormSnapshot(
   const marchCountRaw =
     (formRoot?.querySelector('[data-field="march-count"]') as HTMLInputElement | null)?.value ??
     "";
+  const heroIdRaw = readMarchHeroIdRaw(formRoot);
   return {
     toXRaw,
     toYRaw,
     marchCountRaw,
+    heroIdRaw,
     unitCfgId: MARCH_FORM_INFANTRY_UNIT_CFG_ID,
     cityX: opts?.cityX,
     cityY: opts?.cityY,
@@ -211,6 +215,8 @@ export type MarchFormInlineFeedbackContext = {
   cityX?: number;
   cityY?: number;
   cityTroops: CityTroopStack[];
+  ownedHeroes?: MarchHeroRow[];
+  localBusyHeroIds?: ReadonlySet<number>;
   wallet?: ResourceWallet;
   clockMs: number;
 };
@@ -230,6 +236,9 @@ export function syncMarchFormInlineFeedback(
     toXRaw: snap.toXRaw,
     toYRaw: snap.toYRaw,
     marchCountRaw: snap.marchCountRaw,
+    heroIdRaw: snap.heroIdRaw,
+    ownedHeroes: ctx.ownedHeroes,
+    localBusyHeroIds: ctx.localBusyHeroIds,
     cityX: ctx.cityX,
     cityY: ctx.cityY,
     cityTroops: ctx.cityTroops,

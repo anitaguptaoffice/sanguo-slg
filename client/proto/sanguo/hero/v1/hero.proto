@@ -11,6 +11,8 @@ message PlayerHeroSummary {
   int32 template_cfg_id = 2;
   int32 level = 3;
   int32 loyalty = 4;
+  // 将领状态：1=空闲 2=驻守 3=出征 5=城主（与 internal/hero/types.go 对齐；未下发时客户端按未知处理）。
+  int32 status = 5;
 }
 
 message ListPlayerHeroesRequest {

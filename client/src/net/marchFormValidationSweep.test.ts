@@ -9,12 +9,17 @@ import { validateMarchForm, MARCH_FORM_INFANTRY_UNIT_CFG_ID } from "@/net/marchF
 
 describe("formatMarchFormValidationSweepLine (CLIENT-238)", () => {
   const troops = [{ unit_cfg_id: MARCH_FORM_INFANTRY_UNIT_CFG_ID, count: 100 }];
+  const heroExtras = {
+    heroIdRaw: "1",
+    ownedHeroes: [{ hero_id: 1, template_cfg_id: 1001, status: 1 }],
+  };
 
   it("summarizes coord, troop, and target when valid", () => {
     const validation = validateMarchForm({
       toXRaw: "10",
       toYRaw: "20",
       marchCountRaw: "30",
+      ...heroExtras,
       cityX: 60,
       cityY: 60,
       cityTroops: troops,
@@ -36,6 +41,7 @@ describe("formatMarchFormValidationSweepLine (CLIENT-238)", () => {
       toXRaw: "10",
       toYRaw: "20",
       marchCountRaw: "120",
+      ...heroExtras,
       cityX: 60,
       cityY: 60,
       cityTroops: troops,
