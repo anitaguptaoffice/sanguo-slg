@@ -45,6 +45,14 @@ import {
   worldTileIntelEtaResidualCoordsMatch,
   type WorldTileIntelEtaResidualTimers,
 } from "@/ui/worldTileIntelEtaResidual";
+import {
+  createWorldTileIntelEtaCrossResidualTimers,
+  formatWorldTileIntelEtaCrossResidualLine,
+  pulseWorldTileIntelEtaCrossResidualReadonly,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE,
+  type WorldTileIntelEtaCrossResidualTimers,
+} from "@/ui/worldTileIntelEtaCrossResidual";
 import { WORLD_TILE_INFO_CARD_CLASS } from "@/ui/minimapTileFocusLink";
 import {
   applyWorldTileFocusPulse,
@@ -94,6 +102,8 @@ export class WorldPanels {
   private citiesLoadError: string | null = null;
   private readonly intelEtaResidualTimers: WorldTileIntelEtaResidualTimers =
     createWorldTileIntelEtaResidualTimers();
+  private readonly intelEtaCrossResidualTimers: WorldTileIntelEtaCrossResidualTimers =
+    createWorldTileIntelEtaCrossResidualTimers();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -214,6 +224,48 @@ export class WorldPanels {
         Date.now(),
       );
     }
+    this.syncIntelEtaCrossResidualFromMarch(march);
+  }
+
+  /** CLIENT-252：格点 ETA cross residual 次行与军情 ETA 条只读对照脉冲。 */
+  private syncIntelEtaCrossResidualFromMarch(march: MarchSummary | null): void {
+    const card = this.panel.querySelector<HTMLElement>('[data-role="world-tile-info"]');
+    const crossLineEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE}"]`,
+    );
+    const intelRoot = this.options?.getIntelPanelRoot?.() ?? null;
+    if (!card || card.classList.contains("hidden") || !this.selectedGrid || !crossLineEl) {
+      pulseWorldTileIntelEtaCrossResidualReadonly(card, intelRoot, false, {
+        timers: this.intelEtaCrossResidualTimers,
+      });
+      crossLineEl?.classList.add("hidden");
+      if (crossLineEl) crossLineEl.textContent = "";
+      return;
+    }
+    const { x, y } = this.selectedGrid;
+    const marches = this.options?.getMarchesSnapshot?.() ?? [];
+    const crossLine = formatWorldTileIntelEtaCrossResidualLine(
+      marches,
+      { x, y },
+      march,
+      Date.now(),
+    );
+    if (!crossLine) {
+      crossLineEl.textContent = "";
+      crossLineEl.classList.add("hidden");
+      pulseWorldTileIntelEtaCrossResidualReadonly(card, intelRoot, false, {
+        timers: this.intelEtaCrossResidualTimers,
+      });
+      return;
+    }
+    crossLineEl.textContent = crossLine;
+    crossLineEl.classList.remove("hidden");
+    pulseWorldTileIntelEtaCrossResidualReadonly(
+      card,
+      intelRoot,
+      worldTileIntelEtaResidualCoordsMatch({ x, y }, march),
+      { timers: this.intelEtaCrossResidualTimers },
+    );
   }
 
   /** 打开世界面板、选中格点并触发 CLIENT-170 焦点脉冲（无新 world RPC）。 */
@@ -251,6 +303,7 @@ export class WorldPanels {
       <aside class="world-tile-info ${WORLD_TILE_INFO_CARD_CLASS} hidden" data-role="world-tile-info" aria-live="polite">
         <h4>格点信息</h4>
         <p class="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_CLASS}" data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"></p>
+        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE}"></p>
         <p class="world-tile-info-state hidden" data-role="world-tile-info-state"></p>
         <div data-role="world-tile-info-body">
           <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
@@ -352,10 +405,23 @@ export class WorldPanels {
     const residualLineEl = this.panel.querySelector<HTMLElement>(
       `[data-role="${WORLD_TILE_INTEL_ETA_RESIDUAL_LINE_ROLE}"]`,
     );
+    const crossResidualLineEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_ROLE}"]`,
+    );
     const reportBtn = this.panel.querySelector<HTMLButtonElement>(
       '[data-action="view-battle-reports-at-grid"]',
     );
-    if (!card || !dl || !marchEl || !secondaryEl || !hintEl || !stateEl || !bodyEl || !residualLineEl)
+    if (
+      !card ||
+      !dl ||
+      !marchEl ||
+      !secondaryEl ||
+      !hintEl ||
+      !stateEl ||
+      !bodyEl ||
+      !residualLineEl ||
+      !crossResidualLineEl
+    )
       return;
 
     if (!this.selectedGrid) {
@@ -370,12 +436,20 @@ export class WorldPanels {
       marchEl.textContent = "";
       secondaryEl.textContent = "";
       residualLineEl.textContent = "";
+      crossResidualLineEl.textContent = "";
+      crossResidualLineEl.classList.add("hidden");
       reportBtn?.classList.add("hidden");
       pulseWorldTileIntelEtaResidualMutualHighlight(
         card as HTMLElement,
         this.options?.getIntelPanelRoot?.() ?? null,
         false,
         { timers: this.intelEtaResidualTimers },
+      );
+      pulseWorldTileIntelEtaCrossResidualReadonly(
+        card as HTMLElement,
+        this.options?.getIntelPanelRoot?.() ?? null,
+        false,
+        { timers: this.intelEtaCrossResidualTimers },
       );
       return;
     }
@@ -455,6 +529,31 @@ export class WorldPanels {
       worldTileIntelEtaResidualCoordsMatch({ x, y }, selectedIntel),
       { timers: this.intelEtaResidualTimers },
     );
+    const crossLine = formatWorldTileIntelEtaCrossResidualLine(
+      marches,
+      { x, y },
+      selectedIntel,
+      nowMs,
+    );
+    if (crossLine) {
+      crossResidualLineEl.textContent = crossLine;
+      crossResidualLineEl.classList.remove("hidden");
+      pulseWorldTileIntelEtaCrossResidualReadonly(
+        card as HTMLElement,
+        this.options?.getIntelPanelRoot?.() ?? null,
+        worldTileIntelEtaResidualCoordsMatch({ x, y }, selectedIntel),
+        { timers: this.intelEtaCrossResidualTimers },
+      );
+    } else {
+      crossResidualLineEl.textContent = "";
+      crossResidualLineEl.classList.add("hidden");
+      pulseWorldTileIntelEtaCrossResidualReadonly(
+        card as HTMLElement,
+        this.options?.getIntelPanelRoot?.() ?? null,
+        false,
+        { timers: this.intelEtaCrossResidualTimers },
+      );
+    }
     if (reportBtn) {
       if (summary.showBattleReportShortcut) {
         reportBtn.classList.remove("hidden");
