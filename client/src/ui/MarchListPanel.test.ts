@@ -7,6 +7,9 @@ import {
   INTEL_PHASE_CHANGE_FLASH_MS,
 } from "@/net/marchIntelPhaseChangeFlash";
 import {
+  INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS,
+} from "@/net/marchIntelPhaseChangeResidualDeepPulse";
+import {
   INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS,
   INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS,
 } from "@/net/marchIntelPhaseChangeResidualPulse";
@@ -613,10 +616,14 @@ describe("MarchListPanel", () => {
     expect(strip?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(true);
     expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(true);
     expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(true);
+    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
+    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     expect(strip?.textContent).toContain("已到达");
     vi.advanceTimersByTime(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS);
     expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(false);
     expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(false);
+    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
+    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     vi.advanceTimersByTime(INTEL_PHASE_CHANGE_FLASH_MS - INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS);
     expect(row?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(false);
     expect(strip?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(false);
