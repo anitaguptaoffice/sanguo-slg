@@ -1,10 +1,10 @@
 {
   "task": "ART-CENTER-PANEL-012",
-  "runtime_code_sha": "701ce124cb0d0044481a42ecc0addaa48e0fa35f",
-  "screenshot_artifacts_commit_sha": "1522288ae25fafd447a58ad3838505c1c7ac696e",
-  "tip_sha": "701ce124cb0d0044481a42ecc0addaa48e0fa35f",
+  "runtime_code_sha": "1b26424a6a84b510de6af4bbcb1d5f8070d493ff",
+  "screenshot_artifacts_commit_sha": "pending-git-commit — set to the commit that lands JPEGs under docs/art/samples/art-center-panel-012/runtime/",
+  "tip_sha": "1b26424a6a84b510de6af4bbcb1d5f8070d493ff",
   "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
-  "captured_at": "2026-10-24T06:30:21.288Z",
+  "captured_at": "2026-10-24T06:31:58.662Z",
   "asset_id": "ui.panel.hero.v1",
   "texture_paths": {
     "scale_1": "textures/1x/ui/panel_hero.png",
@@ -18,7 +18,7 @@
   "shots": {
     "hero-center-panel-1600x900.jpg": {
       "quality": 88,
-      "bytes": 461486,
+      "bytes": 461241,
       "viewport": {
         "tag": "1600x900",
         "file": "hero-center-panel-1600x900.jpg",
@@ -40,7 +40,7 @@
     },
     "hero-center-panel-1280x720.jpg": {
       "quality": 88,
-      "bytes": 262374,
+      "bytes": 262486,
       "viewport": {
         "tag": "1280x720",
         "file": "hero-center-panel-1280x720.jpg",

@@ -1,6 +1,6 @@
 # INVENTORY — ART-CENTER-PANEL-012 runtime
 
-Runtime code at capture: `701ce124cb0d0044481a42ecc0addaa48e0fa35f` (mock + client; must resolve on GitHub).
+Runtime code at capture: `1b26424a6a84b510de6af4bbcb1d5f8070d493ff` (mock + client; must resolve on GitHub).
 Screenshot JPEGs / probe-log land in a follow-up git commit — after push, set `screenshot_artifacts_commit_sha` in `probe-log.json` to that commit (often same as runtime when captured on a clean checkout).
 Art PNGs from Draft #697 @ `bcf05c7365f92f17142f4ce25a3ba1bdd2b80247` (**not merged**).
 
