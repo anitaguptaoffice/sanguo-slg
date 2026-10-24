@@ -33,6 +33,18 @@ CREATE TABLE IF NOT EXISTS hero_largess_schedule (
 COMMENT ON TABLE hero_largess_schedule IS '将领赏赐冷却；对齐 legacy mem_hero_schedule.last_largess';
 `
 
+const heroExprSessionDDL = `
+CREATE TABLE IF NOT EXISTS hero_expr_session (
+    server_id   INT          NOT NULL,
+    hero_id     BIGINT       NOT NULL,
+    started_at  TIMESTAMPTZ  NOT NULL,
+    ends_at     TIMESTAMPTZ  NOT NULL,
+    hours       INT          NOT NULL,
+    PRIMARY KEY (server_id, hero_id)
+);
+COMMENT ON TABLE hero_expr_session IS '将领历练进行中；对齐 legacy sys_hero_expr';
+`
+
 // PGStore persists heroes per spec/db/005_hero.sql.
 type PGStore struct{ Pool *pgxpool.Pool }
 
@@ -245,6 +257,57 @@ func (p *PGStore) SetLastLargessAt(ctx context.Context, serverID int32, heroID i
 		VALUES ($1, $2, $3)
 		ON CONFLICT (server_id, hero_id) DO UPDATE SET last_largess_at = EXCLUDED.last_largess_at`,
 		serverID, heroID, at,
+	)
+	return err
+}
+
+func (p *PGStore) ensureExprTable(ctx context.Context) error {
+	_, err := p.Pool.Exec(ctx, heroExprSessionDDL)
+	return err
+}
+
+func (p *PGStore) GetExprSession(ctx context.Context, serverID int32, heroID int64) (*ExprSession, error) {
+	if err := p.ensureExprTable(ctx); err != nil {
+		return nil, err
+	}
+	var sess ExprSession
+	err := p.Pool.QueryRow(ctx, `
+		SELECT server_id, hero_id, started_at, ends_at, hours
+		FROM hero_expr_session WHERE server_id = $1 AND hero_id = $2`,
+		serverID, heroID,
+	).Scan(&sess.ServerID, &sess.HeroID, &sess.StartedAt, &sess.EndsAt, &sess.Hours)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &sess, nil
+}
+
+func (p *PGStore) SaveExprSession(ctx context.Context, sess ExprSession) error {
+	if err := p.ensureExprTable(ctx); err != nil {
+		return err
+	}
+	_, err := p.Pool.Exec(ctx, `
+		INSERT INTO hero_expr_session (server_id, hero_id, started_at, ends_at, hours)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (server_id, hero_id) DO UPDATE SET
+			started_at = EXCLUDED.started_at,
+			ends_at = EXCLUDED.ends_at,
+			hours = EXCLUDED.hours`,
+		sess.ServerID, sess.HeroID, sess.StartedAt, sess.EndsAt, sess.Hours,
+	)
+	return err
+}
+
+func (p *PGStore) DeleteExprSession(ctx context.Context, serverID int32, heroID int64) error {
+	if err := p.ensureExprTable(ctx); err != nil {
+		return err
+	}
+	_, err := p.Pool.Exec(ctx, `
+		DELETE FROM hero_expr_session WHERE server_id = $1 AND hero_id = $2`,
+		serverID, heroID,
 	)
 	return err
 }

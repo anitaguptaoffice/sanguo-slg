@@ -30,6 +30,10 @@ const (
 	RouteListPersuadeTargets        = "hero.v1.ListPersuadeTargets"
 	RoutePersuadeHero               = "hero.v1.PersuadeHero"
 	RouteLionizeHero                = "hero.v1.LionizeHero"
+	RouteBeginHeroExpr              = "hero.v1.BeginHeroExpr"
+	RouteCancelHeroExpr             = "hero.v1.CancelHeroExpr"
+	RouteFinishHeroExpr             = "hero.v1.FinishHeroExpr"
+	RouteFasterHeroExpr             = "hero.v1.FasterHeroExpr"
 )
 
 func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
@@ -59,5 +63,9 @@ func heroGatewayHandlers(s *Server) map[string]gateway.RouteHandler {
 		RouteListPersuadeTargets:        s.handleListPersuadeTargets,
 		RoutePersuadeHero:               s.handlePersuadeHero,
 		RouteLionizeHero:                s.handleLionizeHero,
+		RouteBeginHeroExpr:              s.handleBeginHeroExpr,
+		RouteCancelHeroExpr:             s.handleCancelHeroExpr,
+		RouteFinishHeroExpr:             s.handleFinishHeroExpr,
+		RouteFasterHeroExpr:             s.handleFasterHeroExpr,
 	}
 }
