@@ -2041,6 +2041,29 @@
       .template-list li .recruit-afford-secondary,
       .hero-detail .recruit-afford-secondary,
       .hero-list li .hero-list-row-secondary { display: block; font-size: 12px; color: #6b4f1a; margin-top: 2px; }
+      .hero-list li .hero-list-row-loyalty-subline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        color: #7a5a20;
+        margin-top: 2px;
+        line-height: 1.35;
+      }
+      .hero-list li .hero-loyalty-warn-dot {
+        flex-shrink: 0;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #c62828;
+        box-shadow: 0 0 0 1px rgba(198, 40, 40, 0.35);
+      }
+      .hero-detail .hero-detail-consumable-stack-line {
+        font-size: 12px;
+        color: #c9b896;
+        margin: 6px 0 0;
+        line-height: 1.45;
+      }
       .hero-list li .hero-list-row-body { display: block; }
       .content-panel .march-form-error-sibling {
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
@@ -2084,6 +2107,9 @@
       }
       .content-panel[data-center-panel="hero"] .template-list li .recruit-afford-secondary,
       .content-panel[data-center-panel="hero"] .hero-list li .hero-list-row-secondary {
+        color: #5a3d18;
+      }
+      .content-panel[data-center-panel="hero"] .hero-list li .hero-list-row-loyalty-subline {
         color: #5a3d18;
       }
       .content-panel[data-center-panel="hero"] .template-list li.recruit-owned {

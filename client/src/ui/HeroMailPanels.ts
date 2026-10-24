@@ -36,6 +36,14 @@ import {
   resolveHeroListRowSource,
 } from "@/net/heroListRowFormat";
 import {
+  formatHeroListLoyaltySubline,
+  HERO_LIST_LOYALTY_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_SUBLINE_ROLE,
+  HERO_LOYALTY_WARN_DOT_CLASS,
+  normalizeListPlayerHeroSummary,
+  heroListRowShowsLoyaltyWarnDot,
+} from "@/net/heroListLoyaltySubline";
+import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
   readHeroListFilterSession,
@@ -835,7 +843,21 @@ export class HeroMailPanels {
         secondarySpan.textContent = formatHeroListRowSecondary(rowSource, {
           detailAttributes: detailAttrs,
         });
+        const filterCtx = this.heroListFilterContext();
+        const loyaltySubline = document.createElement("span");
+        loyaltySubline.className = HERO_LIST_LOYALTY_SUBLINE_CLASS;
+        loyaltySubline.setAttribute("data-role", HERO_LIST_LOYALTY_SUBLINE_ROLE);
+        if (heroListRowShowsLoyaltyWarnDot(rowSource, filterCtx)) {
+          const dot = document.createElement("span");
+          dot.className = HERO_LOYALTY_WARN_DOT_CLASS;
+          dot.setAttribute("aria-hidden", "true");
+          loyaltySubline.appendChild(dot);
+        }
+        loyaltySubline.appendChild(
+          document.createTextNode(formatHeroListLoyaltySubline(rowSource, filterCtx)),
+        );
         body.appendChild(primarySpan);
+        body.appendChild(loyaltySubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         if (h.hero_id) {
@@ -1328,7 +1350,7 @@ export class HeroMailPanels {
         heroes?: HeroSummary[];
         total_count?: number;
       };
-      this.heroes = res.heroes ?? [];
+      this.heroes = (res.heroes ?? []).map((row) => normalizeListPlayerHeroSummary(row));
       this.heroListLastRefreshedAtMs = Date.now();
       syncHeroListRefreshedAtDisplay(this.heroPanel, this.heroListLastRefreshedAtMs);
       const returnRestore = opts?.restoreSelection ? readHeroListReturnState() : null;
