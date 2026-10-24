@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE3",
   "template_cfg_id": 1011,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "81a6e74c91fe96c821498c78fb97ae1b2902cb8a",
-  "runtime_code_sha": "81a6e74c91fe96c821498c78fb97ae1b2902cb8a",
+  "tip_sha": "cfb0a40f61ac7347dc652489c7bfef3be321061a",
+  "runtime_code_sha": "cfb0a40f61ac7347dc652489c7bfef3be321061a",
   "art_head_sha": "320955f1ff4565b161268640226bf3d4156d4f17",
   "art_asset_ids": [
     "hero.avatar.1011.v1",
@@ -50,7 +50,16 @@
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 436.96875,
+        "width": 128,
+        "height": 160
+      }
     },
     "1600x900-dpr2": {
       "ok": true,
@@ -91,7 +100,16 @@
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 436.96875,
+        "width": 128,
+        "height": 160
+      }
     },
     "1280x720-dpr1": {
       "ok": true,
@@ -132,49 +150,54 @@
       "avatarPathOk": true,
       "bustPathOk": true,
       "scrollReachOk": true,
-      "detailFooterVisible": true
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 174.984375,
+        "width": 128,
+        "height": 0
+      }
     }
   },
   "sameframe": {
     "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
     "jpeg": {
       "quality": 88,
-      "bytes": 268855
+      "bytes": 263932
     },
     "probe": {
-      "ok": false,
-      "status": "FAIL_PENDING_HOST_FIX",
-      "art_freeze_comment_id": "6388032901",
-      "summary": "1280 bust+name sameframe not signed off: legacy probe uses window-only rects; recruit area / scroll ancestors may clip bust (mouth/chest/clothes). Await ancestor∩viewport probe + host scroll fix before PASS. Do not ask art to re-sign clipped shots.",
-      "legacy_window_only_probe": {
-        "ok": true,
-        "bustInViewport": true,
-        "nameInViewport": true,
-        "nameRightOfBust": true,
-        "verticalBandOverlap": true,
-        "gapPx": 10,
-        "gapNear10px": true,
-        "name": {
-          "text": "吕布"
-        },
-        "viewport": {
-          "w": 1280,
-          "h": 720,
-          "dpr": 1
-        }
+      "ok": true,
+      "bustInClip": true,
+      "nameInClip": true,
+      "bustInViewport": true,
+      "nameInViewport": true,
+      "nameRightOfBust": true,
+      "verticalBandOverlap": true,
+      "gapPx": 10,
+      "gapNear10px": true,
+      "visibleClip": {
+        "left": 356,
+        "top": 174.984375,
+        "width": 568,
+        "height": 464.21875
+      },
+      "name": {
+        "text": "吕布"
+      },
+      "viewport": {
+        "w": 1280,
+        "h": 720,
+        "dpr": 1
       }
-    },
-    "signoff": {
-      "ok": false,
-      "status": "FAIL_PENDING_HOST_FIX",
-      "art_freeze_comment_id": "6388032901",
-      "summary": "1280 bust+name sameframe not signed off: legacy probe uses window-only rects; recruit area / scroll ancestors may clip bust (mouth/chest/clothes). Await ancestor∩viewport probe + host scroll fix before PASS. Do not ask art to re-sign clipped shots."
     }
   },
   "shots": {
     "hero-host-1600x900-dpr1.jpg": {
       "quality": 88,
-      "bytes": 475377,
+      "bytes": 471546,
       "viewport": {
         "tag": "1600x900-dpr1",
         "file": "hero-host-1600x900-dpr1.jpg",
@@ -185,7 +208,7 @@
     },
     "hero-host-1600x900-dpr2.jpg": {
       "quality": 72,
-      "bytes": 992436,
+      "bytes": 983712,
       "viewport": {
         "tag": "1600x900-dpr2",
         "file": "hero-host-1600x900-dpr2.jpg",
@@ -196,7 +219,7 @@
     },
     "hero-host-1280x720-dpr1.jpg": {
       "quality": 88,
-      "bytes": 259019,
+      "bytes": 246212,
       "viewport": {
         "tag": "1280x720-dpr1",
         "file": "hero-host-1280x720-dpr1.jpg",
@@ -208,9 +231,8 @@
   },
   "notes": [
     "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster only seeds roster.",
-    "Art path-copied from Draft #1191; Draft remains unmerged.",
-    "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot.",
-    "1280 sameframe: FAIL_PENDING_HOST_FIX per #108 6388032901 — reference JPEG only, not art sign-off."
+    "Art path-copied from Draft #1191 (1009/1010 @ 7c085cd1, 1011/1012 @ 320955f1); Drafts remain unmerged.",
+    "Bust margin-right 10px per production CSS; gapPx probed on detail head same-frame shot."
   ],
-  "captured_at": "2026-10-24T18:35:09.753Z"
+  "captured_at": "2026-10-24T18:51:33.171Z"
 }
