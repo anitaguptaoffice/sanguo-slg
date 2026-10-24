@@ -86,6 +86,12 @@ export type GatewayPort = {
   listHotelRecruitCandidates(serverId: number, cityId: number): Promise<unknown>;
   refreshHotelRecruitPool(serverId: number, cityId: number): Promise<unknown>;
   recruitHotelCandidate(serverId: number, cityId: number, candidateId: number): Promise<unknown>;
+  largessHero(
+    serverId: number,
+    heroId: number,
+    giftKind: number,
+    itemCfgId?: number,
+  ): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
@@ -594,6 +600,23 @@ export class GatewayClient implements GatewayPort {
       "RecruitHotelCandidateRequest",
       { server_id: serverId, city_id: cityId, candidate_id: candidateId },
       RecruitHotelCandidateResponse,
+      true,
+    );
+  }
+
+  async largessHero(serverId: number, heroId: number, giftKind: number, itemCfgId = 0) {
+    requireHeroIdForDetail(heroId);
+    const { LargessHeroResponse } = getTypes();
+    return this.rpc(
+      Routes.LargessHero,
+      "LargessHeroRequest",
+      {
+        server_id: serverId,
+        hero_id: heroId,
+        gift_kind: giftKind,
+        item_cfg_id: itemCfgId,
+      },
+      LargessHeroResponse,
       true,
     );
   }

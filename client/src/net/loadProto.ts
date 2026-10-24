@@ -78,6 +78,7 @@ export const Routes = {
   ListHotelRecruitCandidates: "hero.v1.ListHotelRecruitCandidates",
   RefreshHotelRecruitPool: "hero.v1.RefreshHotelRecruitPool",
   RecruitHotelCandidate: "hero.v1.RecruitHotelCandidate",
+  LargessHero: "hero.v1.LargessHero",
 } as const;
 
 export const ErrorCode = {
@@ -162,6 +163,8 @@ export type ProtoTypes = {
   RefreshHotelRecruitPoolResponse: protobuf.Type;
   RecruitHotelCandidateRequest: protobuf.Type;
   RecruitHotelCandidateResponse: protobuf.Type;
+  LargessHeroRequest: protobuf.Type;
+  LargessHeroResponse: protobuf.Type;
 };
 
 export function getTypes(): ProtoTypes {
@@ -243,5 +246,7 @@ export function getTypes(): ProtoTypes {
     RefreshHotelRecruitPoolResponse: r.lookupType("sanguo.hero.v1.RefreshHotelRecruitPoolResponse"),
     RecruitHotelCandidateRequest: r.lookupType("sanguo.hero.v1.RecruitHotelCandidateRequest"),
     RecruitHotelCandidateResponse: r.lookupType("sanguo.hero.v1.RecruitHotelCandidateResponse"),
+    LargessHeroRequest: r.lookupType("sanguo.hero.v1.LargessHeroRequest"),
+    LargessHeroResponse: r.lookupType("sanguo.hero.v1.LargessHeroResponse"),
   };
 }
