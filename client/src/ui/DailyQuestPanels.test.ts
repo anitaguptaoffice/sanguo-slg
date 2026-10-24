@@ -4,6 +4,7 @@ import type { MainCitySession } from "@/net/bootstrapSession";
 import { DAILY_CHAIN_TAB_SESSION_KEY } from "@/net/dailyQuestChainTab";
 import { DAILY_QUEST_FILTER_SESSION_KEY } from "@/net/dailyQuestListFilter";
 import { DAILY_QUEST_CHAIN_ID } from "@/net/dailyQuestState";
+import * as dailyQuestClaimFeedback from "@/net/dailyQuestClaimFeedback";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 
 function flushPromises(): Promise<void> {
@@ -703,6 +704,94 @@ describe("DailyQuestPanels", () => {
     expect(mount.querySelector('[data-action="daily-locate-first"]')?.hidden).toBe(true);
 
     vi.unstubAllGlobals();
+  });
+
+  it("toggle scrolls first claimable row into view (CLIENT-233)", async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          { quest_cfg_id: 1010, chain_id: 400, state: 2, progress_current: 1, progress_target: 5 },
+          {
+            quest_cfg_id: 1013,
+            chain_id: 400,
+            state: 3,
+            progress_current: 4,
+            progress_target: 4,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    expect(scrollIntoView).toHaveBeenCalled();
+    const scrolledRow = mount.querySelector('li[data-quest-cfg-id="1013"]');
+    expect(scrolledRow).toBeTruthy();
+  });
+
+  it("single claim pulses progress secondary and updates bar (CLIENT-233)", async () => {
+    const pulseSpy = vi.spyOn(dailyQuestClaimFeedback, "pulseDailyQuestClaimProgress");
+    const mount = document.createElement("div");
+    let claimed = false;
+    const questRow = {
+      quest_cfg_id: 1013,
+      quest_code: "daily_wood_1",
+      chain_id: 400,
+      state: 3,
+      progress_current: 4,
+      progress_target: 4,
+    };
+    const claimQuestReward = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockImplementation(async () => ({
+        quests: [{ ...questRow, state: claimed ? 4 : questRow.state }],
+      })),
+      claimQuestReward,
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      getCityState: vi.fn().mockResolvedValue({ wallet: {} }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const claimBtn = mount.querySelector('[data-action="claim-daily"]') as HTMLButtonElement;
+    claimQuestReward.mockImplementation(async () => {
+      claimed = true;
+      return {
+        granted_rewards: { resources: { gold: 1 } },
+        quest: { state: 4, progress_current: 4, progress_target: 4 },
+      };
+    });
+    claimBtn?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(pulseSpy).toHaveBeenCalled();
+    const secondary = mount.querySelector(".daily-quest-row-secondary");
+    expect(secondary?.textContent).toContain("已完成");
+    pulseSpy.mockRestore();
   });
 
   it("renders daily claimable sweep on panel header (CLIENT-193)", async () => {
