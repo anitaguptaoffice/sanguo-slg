@@ -26,8 +26,8 @@ import {
 
 describe("panelDensity", () => {
   it("mail empty copy and unread row class", () => {
-    expect(mailEmptyInboxMessage(MAIL_INBOX_FILTER_UNREAD)).toContain("未读");
-    expect(mailEmptyInboxMessage(0)).toContain("日常");
+    expect(mailEmptyInboxMessage(MAIL_INBOX_FILTER_UNREAD)).toContain("无未读");
+    expect(mailEmptyInboxMessage(0)).toContain("空收件箱");
     expect(mailListRowClassName({ mail_id: 1, status: 0 })).toBe(MAIL_LIST_ROW_UNREAD_CLASS);
     expect(mailListRowClassName({ mail_id: 1, status: 1 })).toBe("");
     expect(

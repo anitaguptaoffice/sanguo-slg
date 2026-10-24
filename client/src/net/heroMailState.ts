@@ -1,4 +1,5 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
+import { formatMailTabEmptyHint, mailInboxFilterToEmptyTab } from "@/net/mailInboxTabFormat";
 import { bagFromListPlayerBagResponse, mergeRewardBundle, mergeWallet, type BagStack } from "@/net/bagState";
 import { formatWalletPrice, itemLabel } from "@/net/contentFormat";
 import {
@@ -26,6 +27,8 @@ export const MAIL_STATUS_CLAIMED = 2;
 
 export const MAIL_INBOX_FILTER_ALL = 0;
 export const MAIL_INBOX_FILTER_UNREAD = 1;
+/** 客户端 tab：ListPlayerMail 仍用 ALL，列表在本地筛未领附件（CLIENT-177）。 */
+export const MAIL_INBOX_FILTER_UNCLAIMED = 3;
 
 const MAIL_STATUS_LABEL: Record<number, string> = {
   0: "未读",
@@ -648,10 +651,7 @@ export function mailListSummary(m: MailRow, maxLen = 48): string {
 }
 
 export function mailEmptyInboxMessage(filter: number): string {
-  if (filter === MAIL_INBOX_FILTER_UNREAD) {
-    return "暂无未读邮件";
-  }
-  return "暂无邮件，完成日常或等待系统发放；GM 发信后点「刷新」";
+  return formatMailTabEmptyHint(mailInboxFilterToEmptyTab(filter));
 }
 
 export function mailListLines(mails: MailRow[]): string[] {

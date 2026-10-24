@@ -46,6 +46,7 @@ describe("HeroMailPanels", () => {
     panels.attach();
     expect(mount.querySelector('[data-action="mail-filter-all"][data-ui-filter-chip]')).toBeTruthy();
     expect(mount.querySelector('[data-action="mail-filter-unread"][data-ui-filter-chip]')).toBeTruthy();
+    expect(mount.querySelector('[data-action="mail-filter-unclaimed"][data-ui-filter-chip]')).toBeTruthy();
     expect(mount.querySelector('[data-role="mail-filter-bar"]')).toBeTruthy();
     expect(mount.querySelector(".mail-inbox-toolbar.panel-filter-chip-bar")).toBeTruthy();
   });
@@ -90,7 +91,8 @@ describe("HeroMailPanels", () => {
     mount.querySelector('[data-action="refresh-mail"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
     const ul = mount.querySelector('[data-role="mail-list"]');
-    expect(ul?.textContent).toContain("暂无邮件");
+    expect(ul?.textContent).toContain("空收件箱");
+    expect(ul?.querySelector("li[data-panel-state='empty']")).toBeTruthy();
   });
 
   it("opening unread mail calls MarkPlayerMailRead", async () => {
