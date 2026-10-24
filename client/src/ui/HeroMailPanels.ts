@@ -15,6 +15,7 @@ import {
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
+import { renderPanelGatewayErrorListRow } from "@/net/panelGatewayError";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagFromListPlayerBagResponse, type BagStack } from "@/net/bagState";
@@ -65,6 +66,18 @@ import {
   writeHeroListFilterSession,
   writeHeroListSortSession,
 } from "@/net/heroListFilter";
+import {
+  captureHeroListFilterChipResidual,
+  formatHeroListFilterChipResidualSweepLine,
+  readHeroListFilterChipResidualSession,
+  syncHeroListFilterChipResidualSweep,
+  type HeroListFilterChipAction,
+} from "@/net/heroListFilterChipResidual";
+import {
+  appendHeroPanelStateResidualSweep,
+  skimHeroDetailPanelStateResidualSweep,
+  type HeroPanelStateResidualContext,
+} from "@/net/heroPanelStateResidualSweep";
 import {
   applyMailClaimResult,
   syncMailRowAfterClaim,
@@ -341,6 +354,9 @@ export class HeroMailPanels {
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
     this.heroListSort = readHeroListSortSession();
+    if (!readHeroListFilterChipResidualSession()) {
+      captureHeroListFilterChipResidual(this.heroListFilter, this.heroListSort);
+    }
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
     this.mount.appendChild(this.heroPanel);
@@ -825,6 +841,12 @@ export class HeroMailPanels {
             <span class="art-filter-chip-label">忠诚↓</span>
           </button>
         </div>
+        <p
+          class="hero-list-filter-chip-residual-sweep hidden"
+          data-role="hero-list-filter-chip-residual-sweep"
+          aria-live="polite"
+          hidden
+        ></p>
         <ul class="hero-list" data-role="hero-list"></ul>
         <div class="hero-detail" data-role="hero-detail"></div>
       </div>
@@ -884,6 +906,22 @@ export class HeroMailPanels {
     return el;
   }
 
+  private heroPanelStateResidualContext(
+    overrides?: Partial<HeroPanelStateResidualContext>,
+  ): HeroPanelStateResidualContext {
+    return {
+      filter: this.heroListFilter,
+      sort: this.heroListSort,
+      listGatewayError: this.heroListLoadError,
+      hasGatewayRetry: false,
+      ...overrides,
+    };
+  }
+
+  private persistHeroListFilterChipResidual(lastChipAction?: HeroListFilterChipAction): void {
+    captureHeroListFilterChipResidual(this.heroListFilter, this.heroListSort, lastChipAction);
+  }
+
   private heroListFilterContext(): HeroListFilterContext | undefined {
     const detail = this.heroDetail;
     const heroId = detail?.hero_id ?? 0;
@@ -920,16 +958,27 @@ export class HeroMailPanels {
       this.heroListSort,
       this.heroListFilterContext(),
     );
-    if (this.heroesRefreshInflight && !this.heroes.length) {
-      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, { assets: this.assets });
-    } else if (!this.heroes.length) {
-      const msg = this.heroListLoadError ?? heroListLines([])[0];
-      const kind = this.heroListLoadError ? "error" : "empty";
-      renderPanelStateListRow(ul, kind, msg, { assets: this.assets });
-    } else if (!visibleHeroes.length) {
-      renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
+    const residualCtx = () => this.heroPanelStateResidualContext();
+    if (!this.heroes.length && this.heroListLoadError) {
+      const li = renderPanelGatewayErrorListRow(ul, this.heroListLoadError, {
+        assets: this.assets,
+        retryAction: "retry-refresh-heroes",
+      });
+      appendHeroPanelStateResidualSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
+    } else if (this.heroesRefreshInflight && !this.heroes.length) {
+      const li = renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
         assets: this.assets,
       });
+      appendHeroPanelStateResidualSweep(li, "loading", residualCtx());
+    } else if (!this.heroes.length) {
+      const msg = heroListLines([])[0];
+      const li = renderPanelStateListRow(ul, "empty", msg, { assets: this.assets });
+      appendHeroPanelStateResidualSweep(li, "empty", residualCtx());
+    } else if (!visibleHeroes.length) {
+      const li = renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
+        assets: this.assets,
+      });
+      appendHeroPanelStateResidualSweep(li, "empty", residualCtx());
     } else {
       for (const h of visibleHeroes) {
         const li = document.createElement("li");
@@ -994,13 +1043,19 @@ export class HeroMailPanels {
     }
     syncListRovingTabindex(ul, "li[data-hero-id]");
     skimHeroPanelStateChrome(this.heroPanel, this.assets);
+    syncHeroListFilterChipResidualSweep(
+      this.heroPanel,
+      formatHeroListFilterChipResidualSweepLine(readHeroListFilterChipResidualSession()),
+    );
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
       } else if (this.heroDetailLoading) {
         detailEl.innerHTML = renderHeroDetailStateLoadingMarkup();
+        skimHeroDetailPanelStateResidualSweep(detailEl, "loading", residualCtx());
       } else if (this.heroDetailError) {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
+        skimHeroDetailPanelStateResidualSweep(detailEl, "error", residualCtx());
       } else {
         const { bag } = this.sessionEconomy();
         const cultivationHtml = renderHeroDetailCultivationUseMarkup(
@@ -1540,6 +1595,7 @@ export class HeroMailPanels {
         this.heroListSort = returnRestore.sort;
         writeHeroListFilterSession(this.heroListFilter);
         writeHeroListSortSession(this.heroListSort);
+        this.persistHeroListFilterChipResidual();
       }
       if (opts?.restoreSelection) {
         const stored = readHeroDetailSelectedSession();
@@ -1625,6 +1681,7 @@ export class HeroMailPanels {
       this.heroListSort = snap.sort;
       writeHeroListFilterSession(snap.filter);
       writeHeroListSortSession(snap.sort);
+      this.persistHeroListFilterChipResidual();
       this.selectedHeroId = pickRestoredHeroId(this.heroes, snap.heroId) ?? snap.heroId;
       applyHeroListReturnScroll(this.heroPanel, snap.scrollTop);
       writeHeroListSelectedSession({
@@ -2233,25 +2290,31 @@ export class HeroMailPanels {
     }
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-heroes") void this.refreshHeroes({ pulseOnSuccess: true });
+    if (a === "refresh-heroes" || a === "retry-refresh-heroes") {
+      void this.refreshHeroes({ pulseOnSuccess: true });
+    }
     if (a === "hero-filter-all") {
       this.heroListFilter = "all";
       writeHeroListFilterSession(this.heroListFilter);
+      this.persistHeroListFilterChipResidual("hero-filter-all");
       this.renderHeroList();
     }
     if (a === "hero-filter-deployable") {
       this.heroListFilter = "deployable";
       writeHeroListFilterSession(this.heroListFilter);
+      this.persistHeroListFilterChipResidual("hero-filter-deployable");
       this.renderHeroList();
     }
     if (a === "hero-sort-level") {
       this.heroListSort = "level_desc";
       writeHeroListSortSession(this.heroListSort);
+      this.persistHeroListFilterChipResidual("hero-sort-level");
       this.renderHeroList();
     }
     if (a === "hero-sort-loyalty") {
       this.heroListSort = "loyalty_desc";
       writeHeroListSortSession(this.heroListSort);
+      this.persistHeroListFilterChipResidual("hero-sort-loyalty");
       this.renderHeroList();
     }
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
