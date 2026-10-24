@@ -1,7 +1,8 @@
 import type { DailyQuestRow } from "@/net/dailyQuestState";
 import type { MailRow } from "@/net/heroMailState";
 import { mailHasUnclaimedAttachments } from "@/net/heroMailState";
-import { DAILY_QUEST_STATE_CLAIMABLE, formatHudBadgeCount } from "@/net/hudTodoBadge";
+import { formatBadgeCount } from "@/engine/artBadgeSkin";
+import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 
 /**
  * CLIENT-077 顶栏待办聚合（中心面板邮件 / 日常 / 队列），与底栏 CLIENT-027·038 角标并存。
@@ -37,7 +38,7 @@ export function sumHudCenterTodoCounts(counts: HudCenterTodoCounts): number {
 }
 
 export function formatHudCenterTodoBadge(counts: HudCenterTodoCounts): string {
-  return formatHudBadgeCount(sumHudCenterTodoCounts(counts));
+  return formatBadgeCount(sumHudCenterTodoCounts(counts));
 }
 
 export function countClaimableDailyQuests(rows: DailyQuestRow[]): number {

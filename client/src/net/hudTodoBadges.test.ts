@@ -3,6 +3,7 @@ import {
   buildHudTodoBadges,
   countMailUnreadAndUnclaimed,
   dailyToolbarBadgeCount,
+  formatHudToolbarBadgeText,
   mailToolbarBadgeCount,
   queueBuildingToolbarBadgeCount,
 } from "@/net/hudTodoBadges";
@@ -76,5 +77,11 @@ describe("hudTodoBadges", () => {
     expect(bundle.toolbar.queue).toBe(1);
     expect(bundle.toolbar.reports).toBe(2);
     expect(bundle.center).toEqual({ mailClaimable: 1, dailyClaimable: 1, buildComplete: 1 });
+  });
+
+  it("formatHudToolbarBadgeText uses CLIENT-126 count cap", () => {
+    expect(formatHudToolbarBadgeText(0)).toBe("");
+    expect(formatHudToolbarBadgeText(8)).toBe("8");
+    expect(formatHudToolbarBadgeText(12)).toBe("9+");
   });
 });

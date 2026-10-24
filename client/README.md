@@ -40,6 +40,8 @@
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。
 
+**CLIENT-126**（#516）：**`artBadgeSkin`** 集中 dot/count（`ui.badge.dot.v1` / `ui.badge.count.v1`）、`formatBadgeCount` / `applyUiCountBadge`（**n≤0 整节点 `hidden` + class 隐藏**，#108）；底栏 `toolbarBadge`、顶栏待办 count、邮件 tab 附件角标共用；1280 窄屏 manifest count **20×16** 不裁切底栏图标。单测：`artBadgeSkin.test.ts`。
+
 | asset id | 用途 |
 |---|---|
 | `ui.chip.filter.v1` / `.hover` / `.pressed` / `.selected` | 筛选 chip 四态 sprite |
