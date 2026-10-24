@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
-import { MAIL_INBOX_FILTER_UNREAD } from "@/net/heroMailState";
+import { MAIL_INBOX_FILTER_UNREAD, type MailRow } from "@/net/heroMailState";
 import {
   MAIL_INBOX_FILTER_SESSION_KEY,
   readMailInboxFilterSession,
@@ -544,6 +544,7 @@ describe("HeroMailPanels", () => {
       undefined,
       undefined,
       undefined,
+      undefined,
       onBag,
     );
     panels.attach();
@@ -610,6 +611,7 @@ describe("HeroMailPanels", () => {
       () => sessionBase(),
       () => {},
       () => {},
+      undefined,
       undefined,
       undefined,
       undefined,
@@ -1351,6 +1353,102 @@ describe("HeroMailPanels", () => {
     expect(hudSnaps.length).toBeGreaterThan(0);
   });
 
+  it("claim all attachments calls RPC for every claimable row on current tab", async () => {
+    const mount = document.createElement("div");
+    const statuses: string[] = [];
+    const inboxSnaps: MailRow[][] = [];
+    const claimPlayerMailAttachments = vi.fn().mockResolvedValue({
+      mail: { mail_id: 30, status: 2 },
+      granted: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+    });
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [
+          {
+            mail_id: 30,
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+          {
+            mail_id: 31,
+            status: 0,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+        ],
+        total_count: 2,
+      }),
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      claimPlayerMailAttachments,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      (msg) => statuses.push(msg),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      (mails) => inboxSnaps.push(mails.slice()),
+    );
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    mount.querySelector('[data-action="claim-mail-all"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(claimPlayerMailAttachments).toHaveBeenCalledTimes(2);
+    expect(claimPlayerMailAttachments.mock.calls[0][1]).toBe(30);
+    expect(claimPlayerMailAttachments.mock.calls[1][1]).toBe(31);
+    expect(statuses.some((s) => s.includes("批量领取") && s.includes("成功 2 封"))).toBe(true);
+    expect(inboxSnaps.length).toBeGreaterThan(0);
+  });
+
+  it("marks failed batch claim rows with mail-claim-error", async () => {
+    const mount = document.createElement("div");
+    const claimPlayerMailAttachments = vi
+      .fn()
+      .mockResolvedValueOnce({
+        mail: { mail_id: 40, status: 2 },
+        granted: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      })
+      .mockRejectedValueOnce(Object.assign(new Error("附件已领"), { code: 40012 }));
+    const gateway: GatewayPort = {
+      listPlayerMail: vi.fn().mockResolvedValue({
+        mails: [
+          {
+            mail_id: 40,
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+          {
+            mail_id: 41,
+            status: 1,
+            attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+          },
+        ],
+        total_count: 2,
+      }),
+      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      claimPlayerMailAttachments,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleMail();
+    await flushPromises();
+    mount.querySelector('[data-action="claim-mail-all"]')?.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    await flushPromises();
+    expect(mount.querySelector('.mail-list [data-mail-id="41"]')?.classList.contains("mail-claim-error")).toBe(
+      true,
+    );
+  });
+
   it("shows 查看战报 when mail body has report_id and opens deep link", async () => {
     const mount = document.createElement("div");
     const onOpenBattleReport = vi.fn();
@@ -1368,6 +1466,7 @@ describe("HeroMailPanels", () => {
       () => sessionBase(),
       () => {},
       () => {},
+      undefined,
       undefined,
       undefined,
       undefined,

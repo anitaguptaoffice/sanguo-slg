@@ -56,6 +56,24 @@ export function orderBatchClaimMailIds(mails: MailRow[], selectedMailIds: Readon
   return ordered;
 }
 
+/** 当前 tab 列表快照上所有未领附件邮件 id（列表顺序；filter 由 `mails` 来源体现）。 */
+export function selectAllUnclaimedMailIds(mails: MailRow[]): number[] {
+  const ordered: number[] = [];
+  for (const m of mails) {
+    const id = m.mail_id ?? 0;
+    if (id > 0 && mailHasUnclaimedAttachments(m)) ordered.push(id);
+  }
+  return ordered;
+}
+
+/** 一键领取全部：校验当前 tab 下可领 id（不发 RPC）。 */
+export function validateClaimAllUnclaimedMail(mails: MailRow[]): ContentFormValidationResult {
+  return validateBatchClaimMailSelection({
+    mails,
+    selectedMailIds: selectAllUnclaimedMailIds(mails),
+  });
+}
+
 /** 汇总顺序领取结果（单测覆盖 batchClaimSummary）。 */
 export function batchClaimSummary(results: MailBatchClaimStepResult[]): BatchClaimSummary {
   let successCount = 0;

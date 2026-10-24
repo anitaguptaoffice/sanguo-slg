@@ -473,6 +473,8 @@ export class MainCityScene implements Scene {
       this.cityStateFetch,
       () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
       (snap) => this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId),
+      (mails, unreadTotal) =>
+        this.hudTodoBadgePoll.applyMailInboxSnapshot(mails, unreadTotal),
       (reportId) => {
         this.marchReportToastActive = false;
         void this.battleReports

@@ -46,6 +46,8 @@
 
 **CLIENT-143（邮件领取同步）**：`ClaimPlayerMailAttachments` 成功后 `syncMailRowAfterClaim` / `syncMailInboxSnapshotAfterClaim` 即时更新列表 **已领** 态；tab 筛选 chip 与底栏 HUD 待办角标共用 `mailInboxSnapshot` + `countMailUnreadAndUnclaimed`（**CLIENT-106** / **CLIENT-134**）。收件箱主行 **主题 + 未读点**；次行 **`mailRowAttachmentIconSummary` + `formatMailRelativeTime`**；批量领取 **CLIENT-087** 成功行 `mail-claim-pulse`。领取失败 **CLIENT-067** `mail-form-error` + 列表 **CLIENT-129** 骨架不退化。单测：`heroMailState.test.ts`（`syncMailRowAfterClaim`）、`panelDensity.test.ts`、`mailClaimFeedback.test.ts`。
 
+**CLIENT-159（邮件一键批量领取）**：收件箱工具栏 **领取全部附件**（`selectAllUnclaimedMailIds` 筛当前 tab 未领附件，顺序 `ClaimPlayerMailAttachments`）；`batchClaimSummary` 汇总 toast，成功行 `mail-claim-pulse`，失败行 `mail-claim-error` + **CLIENT-067**。`HudTodoBadgePoll.applyMailInboxSnapshot` 与面板 tab / **CLIENT-134** 深链共用 `mailInboxSnapshot` 递减（`mailHudBadgeFacetCounts` / `diffHudTodoMailBadgeCounts`）；单封领取 **CLIENT-143** 不退化。单测：`mailBatchClaim.test.ts`、`hudTodoBadges.test.ts`、`hudTodoBadgePoll.test.ts`、`HeroMailPanels.test.ts`。
+
 ### ART-UI-PANEL-STATE-009 面板态运行时（CLIENT-129）
 
 **`panelStateChrome`**：`resolvePanelStateSkin` 将 **loading / empty / error** 映射 **`ui.panel.loading.v1`** / **`ui.panel.empty.v1`** / **`ui.panel.error.v1`**（CLIENT-128 manifest 就绪时 nine-slice 挂到列表占位行）；邮件 / 日常 / 将领列表 / 建造队列 / 军情 / 战报 **首屏拉取** 与 **筛选空结果** 共用 **`data-panel-state=loading|empty|error`** + **`panel-state-chrome`** class（筛选 chip 与 **CLIENT-029** / wave:27 **`data-ui-filter-chip`** 不退化）。面板或列表祖先设 **`data-art-skin="off"`** 时跳过九宫、保留 **`panelDensity` / CLIENT-067** 纯文案回退。单测：`panelStateChrome.test.ts`。
@@ -925,14 +927,18 @@ cd client && npm install && npm run dev
 1. `make dev` 已入军团 → **军团** 面板点某成员 **提到** → **聊天** 输入框应出现 `@…` 草稿（不自动发送）。
 2. 单测：`socialFormat.test.ts`（`formatGuildMentionDraft`）、`SocialPanels.test.ts`。
 
+<<<<<<< HEAD
 **CLIENT-160（聊天草稿记忆与输入扫读）**：**提到** 与输入变更将草稿写入 `sessionStorage` 键 **`guild-chat-draft-v1`**；切换底栏 **聊天** 关闭再打开 **恢复草稿**（不自动发送）。聊天输入区只读 **`chat-input-counter`**（如 `0/500`，上限与 `validateSendChatContent` / 网关 SendChat 一致）；**CLIENT-101** 职务分组与 **提到** 并存。单测：`guildChatDraft.test.ts`、`chatSendValidation.test.ts`、`SocialPanels.test.ts`。
 
 ### 手动验收（邮件附件批量领取 CLIENT-087）
+=======
+### 手动验收（邮件附件批量领取 CLIENT-087 / CLIENT-159）
+>>>>>>> 5d2d2e8 (CLIENT-159: 邮件领取全部附件与 HUD 角标快照同步)
 
-邮件列表含未领附件的行可勾选，点 **批量领取勾选** 顺序调用既有领取 RPC；`batchClaimSummary` 汇总成功/失败条数，失败走 **CLIENT-067** 文案。成功后 **CLIENT-050** HUD 同步与 **CLIENT-068** 战报深链不退化。
+邮件列表含未领附件的行可勾选，点 **批量领取勾选** 或 **领取全部附件**（当前 tab 下全部未领）顺序调用既有领取 RPC；`batchClaimSummary` 汇总成功/失败条数，失败走 **CLIENT-067** 文案且失败行 `mail-claim-error`。成功后 **CLIENT-050** / `applyMailInboxSnapshot` HUD 与 tab 角标同步递减，**CLIENT-068** 战报深链不退化。
 
-1. `make dev` 多封未领附件邮件 → 勾选两封以上 → **批量领取勾选** → 状态栏/面板反馈含汇总条数。
-2. 单测：`mailBatchClaim.test.ts`、`HeroMailPanels.test.ts`。
+1. `make dev` 多封未领附件邮件 → **领取全部附件** 或勾选两封以上 → **批量领取勾选** → 状态栏/面板反馈含汇总条数。
+2. 单测：`mailBatchClaim.test.ts`、`hudTodoBadges.test.ts`、`hudTodoBadgePoll.test.ts`、`HeroMailPanels.test.ts`。
 
 ### 手动验收（战报加载更多与筛选记忆 CLIENT-049）
 

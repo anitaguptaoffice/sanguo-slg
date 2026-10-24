@@ -105,9 +105,15 @@ import {
 import {
   batchClaimSummary,
   orderBatchClaimMailIds,
+  selectAllUnclaimedMailIds,
   validateBatchClaimMailSelection,
+  validateClaimAllUnclaimedMail,
 } from "@/net/mailBatchClaim";
-import { findMailListRow, scheduleMailClaimRowPulse } from "@/net/mailClaimFeedback";
+import {
+  findMailListRow,
+  MAIL_CLAIM_ERROR_CLASS,
+  scheduleMailClaimRowPulse,
+} from "@/net/mailClaimFeedback";
 import {
   compareRecruitAffordability,
   formatRecruitAffordabilitySummaryMarkup,
@@ -183,6 +189,7 @@ export class HeroMailPanels {
   private recruitPool = "standard";
   private claimMailInflight = 0;
   private mailBatchSelected = new Set<number>();
+  private mailBatchClaimFailedIds = new Set<number>();
   private recruitHeroInflight = false;
   private recruitLastError: string | null = null;
   private recruitLastSuccessHeroId: number | null = null;
@@ -201,6 +208,7 @@ export class HeroMailPanels {
     private readonly cityStateFetch?: CityStateFetch,
     private readonly onDailyRecruitLoop?: () => void | Promise<void>,
     private readonly onMailHudSnapshot?: (snap: { count: number; firstId: number }) => void,
+    private readonly onMailInboxSnapshot?: (mails: MailRow[], mailUnreadTotal: number) => void,
     private readonly onOpenBattleReport?: (reportId: number | null) => void | Promise<void>,
     private readonly onOpenHeroCultivationBag?: (itemCfgIds: number[]) => void,
     private readonly onRecruitMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
@@ -295,12 +303,17 @@ export class HeroMailPanels {
   }
 
   private syncBatchClaimButton(): void {
-    const btn = this.mailPanel?.querySelector(
+    const batchBtn = this.mailPanel?.querySelector(
       '[data-action="claim-mail-batch"]',
     ) as HTMLButtonElement | null;
-    if (!btn) return;
+    const allBtn = this.mailPanel?.querySelector(
+      '[data-action="claim-mail-all"]',
+    ) as HTMLButtonElement | null;
     const hasPick = orderBatchClaimMailIds(this.mails, this.mailBatchSelected).length > 0;
-    btn.disabled = this.claimMailInflight !== 0 || !hasPick;
+    const hasAll = selectAllUnclaimedMailIds(this.mails).length > 0;
+    const inflight = this.claimMailInflight !== 0;
+    if (batchBtn) batchBtn.disabled = inflight || !hasPick;
+    if (allBtn) allBtn.disabled = inflight || !hasAll;
   }
 
   private withMailWorldCoordHint(baseStatus: string, mail: MailRow | null): string {
@@ -646,10 +659,11 @@ export class HeroMailPanels {
           <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-unread-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
         </button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取全部附件</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
       <p class="mail-form-error hidden" data-role="mail-form-error" role="alert"></p>
-      <p class="mail-batch-hint" data-role="mail-batch-hint">含未领附件的邮件可勾选，逐封调用领取并汇总结果。</p>
+      <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 含未领附件的邮件可「领取全部」或勾选后批量领取，逐封调用领取并汇总结果。</p>
       <p class="mail-inbox-status" data-role="mail-status"></p>
       <div class="panel-scroll-body" data-role="mail-scroll">
         <ul class="mail-list" data-role="mail-list"></ul>
@@ -925,6 +939,7 @@ export class HeroMailPanels {
       firstId: this.mailUnreadFirstId || pickFirstUnreadMailId(this.mailInboxSnapshot),
     };
     this.applyMailUnreadHud(snap);
+    this.onMailInboxSnapshot?.(this.mailInboxSnapshot, unreadForHud);
     this.setMailFilterButtons();
   }
 
@@ -994,6 +1009,9 @@ export class HeroMailPanels {
         }
         for (const cls of mailListRowClassName(m).split(/\s+/).filter(Boolean)) {
           li.classList.add(cls);
+        }
+        if (m.mail_id && this.mailBatchClaimFailedIds.has(m.mail_id)) {
+          li.classList.add(MAIL_CLAIM_ERROR_CLASS);
         }
         if (m.mail_id && mailHasUnclaimedAttachments(m)) {
           const pick = document.createElement("label");
@@ -1595,11 +1613,28 @@ export class HeroMailPanels {
       this.onStatus(validated.message);
       return;
     }
+    await this.runSequentialMailClaims(ordered, `批量领取 ${ordered.length} 封（逐封）…`);
+  }
+
+  private async claimMailAll(): Promise<void> {
+    if (this.claimMailInflight) return;
+    const validated = validateClaimAllUnclaimedMail(this.mails);
+    if (!validated.ok) {
+      this.setMailFormError(validated.message);
+      this.onStatus(validated.message);
+      return;
+    }
+    const ordered = selectAllUnclaimedMailIds(this.mails);
+    await this.runSequentialMailClaims(ordered, `领取全部附件 ${ordered.length} 封（逐封）…`);
+  }
+
+  private async runSequentialMailClaims(ordered: number[], statusPrefix: string): Promise<void> {
     this.mailListError = "";
     this.setMailFormError(null);
+    this.mailBatchClaimFailedIds.clear();
     this.claimMailInflight = -1;
     this.renderMailList();
-    this.onStatus(`批量领取 ${ordered.length} 封（逐封）…`);
+    this.onStatus(statusPrefix);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     const pulseMailIds: number[] = [];
     try {
@@ -1607,6 +1642,7 @@ export class HeroMailPanels {
         const step = await this.claimMailAttachmentsForId(mailId);
         attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
         if (step.ok) pulseMailIds.push(mailId);
+        else this.mailBatchClaimFailedIds.add(mailId);
         this.renderMailList();
       }
       await this.syncBagFromServer();
@@ -1794,6 +1830,7 @@ export class HeroMailPanels {
       void this.refreshMail();
     }
     if (a === "claim-mail") void this.claimMail();
+    if (a === "claim-mail-all") void this.claimMailAll();
     if (a === "claim-mail-batch") void this.claimMailBatch();
     if (a === "mail-open-battle-report") {
       const reportRaw = btn.dataset.reportId;
