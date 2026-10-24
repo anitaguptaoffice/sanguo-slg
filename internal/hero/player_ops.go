@@ -35,6 +35,8 @@ type HeroDetail struct {
 	ExpectedStats       BaseStats
 	ExpTowardNext       int64
 	UpgradeExpRequired  int64
+	MarchForce          int32
+	MarchForceMax       int32
 }
 
 // InventoryPort loads and commits recruit/largess costs against the content/wallet layer.
@@ -116,10 +118,15 @@ func (s *Service) GetHeroDetail(ctx context.Context, p PlayerRef, heroID int64) 
 		if name == "" {
 			name = "客栈将领"
 		}
+		mf, err := s.MarchForceForHero(ctx, p, h)
+		if err != nil {
+			return HeroDetail{}, err
+		}
 		return HeroDetail{
 			Hero: h, TemplateName: name, TemplateCode: "hotel_random", Rarity: 1,
 			LoyaltyMin: LoyaltyMin, LoyaltyMax: LoyaltyMax,
 			ExpectedStats: BaseStats{Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command},
+			MarchForce: mf.Current, MarchForceMax: mf.Max,
 		}, nil
 	}
 	t, ok := s.Catalog[h.TemplateCfgID]
@@ -138,11 +145,16 @@ func (s *Service) GetHeroDetail(ctx context.Context, p PlayerRef, heroID int64) 
 	if h.Level >= MaxLevelM1 {
 		req = 0
 	}
+	mf, err := s.MarchForceForHero(ctx, p, h)
+	if err != nil {
+		return HeroDetail{}, err
+	}
 	return HeroDetail{
 		Hero: h, TemplateName: t.Name, TemplateCode: t.Code, Rarity: t.Rarity,
 		LoyaltyMin: LoyaltyMin, LoyaltyMax: LoyaltyMax,
 		ExpectedStats: BaseStats{Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command},
 		ExpTowardNext: toward, UpgradeExpRequired: req,
+		MarchForce: mf.Current, MarchForceMax: mf.Max,
 	}, nil
 }
 

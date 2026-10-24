@@ -33,6 +33,17 @@ CREATE TABLE IF NOT EXISTS hero_largess_schedule (
 COMMENT ON TABLE hero_largess_schedule IS '将领赏赐冷却；对齐 legacy mem_hero_schedule.last_largess';
 `
 
+const heroMarchForceDDL = `
+CREATE TABLE IF NOT EXISTS hero_march_force (
+    server_id       INT          NOT NULL,
+    hero_id         BIGINT       NOT NULL,
+    current_force   INT          NOT NULL,
+    last_regen_at   TIMESTAMPTZ  NOT NULL,
+    PRIMARY KEY (server_id, hero_id)
+);
+COMMENT ON TABLE hero_march_force IS '将领出征体力；对齐 legacy mem_hero_blood';
+`
+
 const heroExprSessionDDL = `
 CREATE TABLE IF NOT EXISTS hero_expr_session (
     server_id   INT          NOT NULL,
@@ -307,6 +318,56 @@ func (p *PGStore) DeleteExprSession(ctx context.Context, serverID int32, heroID 
 	}
 	_, err := p.Pool.Exec(ctx, `
 		DELETE FROM hero_expr_session WHERE server_id = $1 AND hero_id = $2`,
+		serverID, heroID,
+	)
+	return err
+}
+
+func (p *PGStore) ensureMarchForceTable(ctx context.Context) error {
+	_, err := p.Pool.Exec(ctx, heroMarchForceDDL)
+	return err
+}
+
+func (p *PGStore) GetMarchForceState(ctx context.Context, serverID int32, heroID int64) (*MarchForceState, error) {
+	if err := p.ensureMarchForceTable(ctx); err != nil {
+		return nil, err
+	}
+	var st MarchForceState
+	err := p.Pool.QueryRow(ctx, `
+		SELECT server_id, hero_id, current_force, last_regen_at
+		FROM hero_march_force WHERE server_id = $1 AND hero_id = $2`,
+		serverID, heroID,
+	).Scan(&st.ServerID, &st.HeroID, &st.Current, &st.LastRegenAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &st, nil
+}
+
+func (p *PGStore) SaveMarchForceState(ctx context.Context, st MarchForceState) error {
+	if err := p.ensureMarchForceTable(ctx); err != nil {
+		return err
+	}
+	_, err := p.Pool.Exec(ctx, `
+		INSERT INTO hero_march_force (server_id, hero_id, current_force, last_regen_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (server_id, hero_id) DO UPDATE SET
+			current_force = EXCLUDED.current_force,
+			last_regen_at = EXCLUDED.last_regen_at`,
+		st.ServerID, st.HeroID, st.Current, st.LastRegenAt,
+	)
+	return err
+}
+
+func (p *PGStore) DeleteMarchForceState(ctx context.Context, serverID int32, heroID int64) error {
+	if err := p.ensureMarchForceTable(ctx); err != nil {
+		return err
+	}
+	_, err := p.Pool.Exec(ctx, `
+		DELETE FROM hero_march_force WHERE server_id = $1 AND hero_id = $2`,
 		serverID, heroID,
 	)
 	return err

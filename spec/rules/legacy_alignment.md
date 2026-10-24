@@ -99,6 +99,16 @@
 | 洗点 | `clearHeroPoint` → `useXiShuiDan`（洗髓丹 `ceil(level/10)`） | `ClearHeroPoint` 清零 adds；**M1 delta**：不扣道具 |
 | 出征 | `isHeroInCity` 拒绝 | 非 `StatusIdle` → `ErrHeroNotInCity` |
 
+## 9. 出征体力（March force / blood）
+
+| 项 | Legacy（#82 `mem_hero_blood` / `GroundFunc::StartTroop`） | M1 实现 |
+|---|---|---|
+| 存储 | `mem_hero_blood` 当前/上限 | `hero_march_force`（`current_force` + `last_regen_at`） |
+| 出征闸 | `StartTroop` 校验体力并扣减 | `ClaimForMarch` / `StartMarch` 扣 `MarchForceMarchCost=10` |
+| 上限 | 等级与爵位相关 | **M1 delta**：`MarchForceMax(level)=min(100, 20+level×4)` |
+| 恢复 | 城内随时间回满、道具/休整 | 空闲/驻守每 **180s** +1；`RestHero` 立即回满（仅 `StatusIdle`） |
+| 休整道具 | 多种丹药 | **M1 delta**：无道具，仅 `RestHero` + 时间恢复 |
+
 ## 7. 将领历练（Hero Expr）
 
 | 项 | Legacy（#82 `HeroFunc.php` / `HeroExpr.php`） | M1 实现 |
@@ -122,3 +132,4 @@
 - `internal/hero/persuade_test.go`：结交好感、达标招入、容量/冷却/好感不足拒绝  
 - `internal/hero/expr_test.go`：历练开始/取消/完成/加速与非 idle 拒绝  
 - `internal/hero/points_test.go`：潜力加点/洗点、出征拒绝、潜力不足  
+- `internal/hero/march_force_test.go`：出征体力扣减/不足拒绝、时间恢复、`RestHero`  

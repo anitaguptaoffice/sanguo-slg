@@ -21,6 +21,9 @@ type Store interface {
 	GetExprSession(ctx context.Context, serverID int32, heroID int64) (*ExprSession, error)
 	SaveExprSession(ctx context.Context, sess ExprSession) error
 	DeleteExprSession(ctx context.Context, serverID int32, heroID int64) error
+	GetMarchForceState(ctx context.Context, serverID int32, heroID int64) (*MarchForceState, error)
+	SaveMarchForceState(ctx context.Context, st MarchForceState) error
+	DeleteMarchForceState(ctx context.Context, serverID int32, heroID int64) error
 	DeleteHero(ctx context.Context, serverID int32, heroID int64) error
 }
 
@@ -30,6 +33,7 @@ type MemStore struct {
 	assignments   map[int64]*Assignment
 	lastLargessAt map[int64]time.Time
 	exprSessions  map[int64]ExprSession
+	marchForce    map[int64]MarchForceState
 }
 
 func NewMemStore() *MemStore {
@@ -38,6 +42,7 @@ func NewMemStore() *MemStore {
 		assignments:   map[int64]*Assignment{},
 		lastLargessAt: map[int64]time.Time{},
 		exprSessions:  map[int64]ExprSession{},
+		marchForce:    map[int64]MarchForceState{},
 	}
 }
 
@@ -145,6 +150,7 @@ func (m *MemStore) DeleteHero(_ context.Context, serverID int32, heroID int64) e
 		delete(m.assignments, heroID)
 		delete(m.lastLargessAt, heroID)
 		delete(m.exprSessions, heroID)
+		delete(m.marchForce, heroID)
 	}
 	return nil
 }
@@ -173,6 +179,34 @@ func (m *MemStore) DeleteExprSession(_ context.Context, sid int32, heroID int64)
 	sess, ok := m.exprSessions[heroID]
 	if ok && sess.ServerID == sid {
 		delete(m.exprSessions, heroID)
+	}
+	return nil
+}
+
+func (m *MemStore) GetMarchForceState(_ context.Context, sid int32, heroID int64) (*MarchForceState, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	st, ok := m.marchForce[heroID]
+	if !ok || st.ServerID != sid {
+		return nil, nil
+	}
+	cp := st
+	return &cp, nil
+}
+
+func (m *MemStore) SaveMarchForceState(_ context.Context, st MarchForceState) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.marchForce[st.HeroID] = st
+	return nil
+}
+
+func (m *MemStore) DeleteMarchForceState(_ context.Context, serverID int32, heroID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	st, ok := m.marchForce[heroID]
+	if ok && st.ServerID == serverID {
+		delete(m.marchForce, heroID)
 	}
 	return nil
 }

@@ -72,6 +72,7 @@ func (s *Server) handleGetHeroDetail(ctx context.Context, pkt *commonv1.ClientPa
 		TemplateCode: detail.TemplateCode, Rarity: int32(detail.Rarity), Level: h.Level, Loyalty: int32(h.Loyalty),
 		LoyaltyMin: detail.LoyaltyMin, LoyaltyMax: detail.LoyaltyMax,
 		Exp: h.Exp, ExpTowardNext: detail.ExpTowardNext, UpgradeExpRequired: detail.UpgradeExpRequired,
+		MarchForce: detail.MarchForce, MarchForceMax: detail.MarchForceMax,
 		Attributes: &herov1.HeroAttributes{
 			Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command,
 		},
@@ -368,7 +369,7 @@ func heroErr(trace string, err error) *commonv1.ServerPacket {
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrHeroNotIdle), errors.Is(err, hero.ErrHeroNotExpr),
 		errors.Is(err, hero.ErrExprNotFound), errors.Is(err, hero.ErrExprNotComplete),
-		errors.Is(err, hero.ErrInvalidExprHours):
+		errors.Is(err, hero.ErrInvalidExprHours), errors.Is(err, hero.ErrInsufficientMarchForce):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrHotelCapacityFull):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())

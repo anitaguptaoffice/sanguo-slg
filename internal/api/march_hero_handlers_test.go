@@ -48,10 +48,9 @@ func TestStartMarchRequiresHeroAndRestoresAfterReturn(t *testing.T) {
 	}
 	domHub.RegisterCity(domCity)
 	srv.RegisterCityForTest(cityID, domCity, 60, 61)
-	heroID := seedIdleHeroForTest(t, srv, 1, playerID)
-
 	sid := "test-session"
 	srv.BindSessionForTest(sid, api.PlayerContext{ServerID: 1, PlayerID: playerID})
+	heroID := seedIdleHeroForTest(t, srv, 1, playerID)
 	router := srv.GatewayRouter()
 	ctx := context.Background()
 
@@ -68,6 +67,25 @@ func TestStartMarchRequiresHeroAndRestoresAfterReturn(t *testing.T) {
 	if missingHero.Code == 0 {
 		t.Fatal("expected error without hero_id")
 	}
+
+	_ = srv.HeroService().Store.SaveMarchForceState(ctx, hero.MarchForceState{
+		ServerID: 1, HeroID: heroID, Current: hero.MarchForceMarchCost - 1,
+		LastRegenAt: clk.Now(),
+	})
+	lowResp := router.Dispatch(ctx, &commonv1.ClientPacket{
+		Route: api.RouteStartMarch, TraceId: "low-force", SessionId: sid,
+		Payload: mustMarshal(&militaryv1.StartMarchRequest{
+			CityId: cityID, ToX: 70, ToY: 71, Purpose: 1, HeroId: heroID,
+			Troops: []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 5}},
+		}),
+	})
+	if lowResp.Code == 0 {
+		t.Fatal("expected error when march force too low")
+	}
+	_ = srv.HeroService().Store.SaveMarchForceState(ctx, hero.MarchForceState{
+		ServerID: 1, HeroID: heroID, Current: hero.MarchForceMax(1),
+		LastRegenAt: clk.Now(),
+	})
 
 	marchPkt := &commonv1.ClientPacket{
 		Route: api.RouteStartMarch, TraceId: "march", SessionId: sid,
