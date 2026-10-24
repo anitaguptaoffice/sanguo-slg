@@ -911,6 +911,12 @@
         background-repeat: no-repeat;
         background-position: center;
         pointer-events: none;
+        z-index: 0;
+      }
+      /* CLIENT-147: paper chip sprite must not paint over count badge skin (label had z-index only). */
+      button.art-filter-chip > [data-ui-filter-badge="count"] {
+        position: relative;
+        z-index: 2;
       }
       button.art-filter-chip .art-filter-chip-label {
         position: relative;

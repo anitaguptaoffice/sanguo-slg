@@ -1,8 +1,8 @@
 {
   "task": "ART-UI-FILTER-008",
   "client_task": "CLIENT-137",
-  "tip_sha": "75c0f953bf3cddde78ad29474896ed6b0804c4d1",
-  "captured_at": "2026-10-24T01:30:42.687Z",
+  "tip_sha": "f60e3e95469826247874bc115398e3283932269f",
+  "captured_at": "2026-10-24T01:42:46.622Z",
   "note": "Full-viewport runtime evidence; chip sprite/click probes; not art-board static PASS.",
   "panels": {
     "mail": {
@@ -12,7 +12,7 @@
         "1600x900": {
           "file": "mail-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 436000,
+          "bytes": 437196,
           "viewport": {
             "tag": "1600x900",
             "width": 1600,
@@ -23,7 +23,7 @@
         "3200x1800": {
           "file": "mail-filters-3200x1800.jpg",
           "quality": 72,
-          "bytes": 925318,
+          "bytes": 926677,
           "viewport": {
             "tag": "3200x1800",
             "width": 1600,
@@ -34,7 +34,7 @@
         "1280x720": {
           "file": "mail-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 248820,
+          "bytes": 245070,
           "viewport": {
             "tag": "1280x720",
             "width": 1280,
@@ -265,7 +265,7 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 69,
+              "height": 70,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
               "skinBarWidthRatio": 1,
@@ -508,7 +508,7 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 69,
+              "height": 70,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
               "skinBarWidthRatio": 1,
@@ -751,7 +751,7 @@
               "index": 0,
               "skinned": true,
               "rowState": "selected",
-              "height": 69,
+              "height": 70,
               "skinBarHeight": 40,
               "skinBarHeightExact": true,
               "skinBarWidthRatio": 1,
@@ -782,7 +782,7 @@
         "1600x900": {
           "file": "daily-filters-1600x900.jpg",
           "quality": 88,
-          "bytes": 434058,
+          "bytes": 434160,
           "viewport": {
             "tag": "1600x900",
             "width": 1600,
@@ -793,7 +793,7 @@
         "3200x1800": {
           "file": "daily-filters-3200x1800.jpg",
           "quality": 76,
-          "bytes": 998337,
+          "bytes": 998566,
           "viewport": {
             "tag": "3200x1800",
             "width": 1600,
@@ -804,7 +804,7 @@
         "1280x720": {
           "file": "daily-filters-1280x720.jpg",
           "quality": 88,
-          "bytes": 248463,
+          "bytes": 244927,
           "viewport": {
             "tag": "1280x720",
             "width": 1280,
@@ -1863,7 +1863,7 @@
   "rowStates": {
     "file": "mail-rows-three-states-1600x900.jpg",
     "quality": 88,
-    "bytes": 451208,
+    "bytes": 451977,
     "rows": [
       {
         "state": "default",
@@ -1894,7 +1894,7 @@
   "badgeNine": {
     "file": "mail-badge-count-nine-1600x900.jpg",
     "quality": 88,
-    "bytes": 432875,
+    "bytes": 432770,
     "badges": {
       "badgeCount": 2,
       "badges": [
@@ -1928,7 +1928,7 @@
   "badgeCountNine": {
     "file": "mail-badge-count-exact-nine-1600x900.jpg",
     "quality": 88,
-    "bytes": 432510,
+    "bytes": 432497,
     "badges": {
       "badgeCount": 2,
       "badges": [
@@ -1964,12 +1964,12 @@
       "nine": {
         "file": "mail-chip-badge-count-skin-nine-crop-1600x900.jpg",
         "quality": 88,
-        "bytes": 1151
+        "bytes": 1312
       },
       "ninePlus": {
         "file": "mail-chip-badge-count-skin-nineplus-crop-1600x900.jpg",
         "quality": 88,
-        "bytes": 1261
+        "bytes": 1315
       }
     },
     "probes": {
@@ -1989,6 +1989,8 @@
               "height": 16
             },
             "intersectionCoversSprite": true,
+            "spriteCenterTopInBadge": true,
+            "spriteCenterTopTag": "SPAN",
             "missingSprite": false
           }
         ]
@@ -2009,6 +2011,8 @@
               "height": 16
             },
             "intersectionCoversSprite": true,
+            "spriteCenterTopInBadge": true,
+            "spriteCenterTopTag": "SPAN",
             "missingSprite": false
           }
         ]
@@ -2339,7 +2343,7 @@
   "jpegVerify": [
     {
       "file": "mail-filters-1600x900.jpg",
-      "bytes": 436000,
+      "bytes": 437196,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2347,7 +2351,7 @@
     },
     {
       "file": "mail-filters-3200x1800.jpg",
-      "bytes": 925318,
+      "bytes": 926677,
       "width": 3200,
       "height": 1800,
       "under1mb": true,
@@ -2355,7 +2359,7 @@
     },
     {
       "file": "mail-filters-1280x720.jpg",
-      "bytes": 248820,
+      "bytes": 245070,
       "width": 1280,
       "height": 720,
       "under1mb": true,
@@ -2363,7 +2367,7 @@
     },
     {
       "file": "daily-filters-1600x900.jpg",
-      "bytes": 434058,
+      "bytes": 434160,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2371,7 +2375,7 @@
     },
     {
       "file": "daily-filters-3200x1800.jpg",
-      "bytes": 998337,
+      "bytes": 998566,
       "width": 3200,
       "height": 1800,
       "under1mb": true,
@@ -2379,7 +2383,7 @@
     },
     {
       "file": "daily-filters-1280x720.jpg",
-      "bytes": 248463,
+      "bytes": 244927,
       "width": 1280,
       "height": 720,
       "under1mb": true,
@@ -2395,7 +2399,7 @@
     },
     {
       "file": "mail-rows-three-states-1600x900.jpg",
-      "bytes": 451208,
+      "bytes": 451977,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2403,7 +2407,7 @@
     },
     {
       "file": "mail-badge-count-nine-1600x900.jpg",
-      "bytes": 432875,
+      "bytes": 432770,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2411,7 +2415,7 @@
     },
     {
       "file": "mail-badge-count-exact-nine-1600x900.jpg",
-      "bytes": 432510,
+      "bytes": 432497,
       "width": 1600,
       "height": 900,
       "under1mb": true,
@@ -2419,7 +2423,7 @@
     },
     {
       "file": "mail-chip-badge-count-skin-nine-crop-1600x900.jpg",
-      "bytes": 1151,
+      "bytes": 1312,
       "width": 40,
       "height": 36,
       "under1mb": true,
@@ -2427,7 +2431,7 @@
     },
     {
       "file": "mail-chip-badge-count-skin-nineplus-crop-1600x900.jpg",
-      "bytes": 1261,
+      "bytes": 1315,
       "width": 40,
       "height": 36,
       "under1mb": true,
