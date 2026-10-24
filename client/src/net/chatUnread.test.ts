@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   CHAT_LAST_READ_TS_STORAGE_KEY,
   chatChannelStorageKey,
+  chatUnreadDividerFlatIndex,
   countChatMessagesAfterTs,
   estimateChatUnread,
+  estimateChatUnreadCount,
   parseChatLastReadMap,
   summarizeChatUnread,
 } from "@/net/chatUnread";
@@ -55,6 +57,24 @@ describe("chatUnread", () => {
         10,
       ),
     ).toBe(1);
+  });
+
+  it("estimateChatUnreadCount matches countChatMessagesAfterTs (CLIENT-161)", () => {
+    const messages = [{ sent_at_ms: 5 }, { sent_at_ms: 15 }, { sent_at_ms: 10 }];
+    expect(estimateChatUnreadCount(messages, 9)).toBe(2);
+    expect(estimateChatUnreadCount(messages, 20)).toBe(0);
+  });
+
+  it("chatUnreadDividerFlatIndex points at first unread in chronological order", () => {
+    const messages = [
+      { sent_at_ms: 100 },
+      { sent_at_ms: 300 },
+      { sent_at_ms: 200 },
+      { sent_at_ms: 400 },
+    ];
+    expect(chatUnreadDividerFlatIndex(messages, 150)).toBe(1);
+    expect(chatUnreadDividerFlatIndex(messages, 400)).toBe(-1);
+    expect(chatUnreadDividerFlatIndex([], 0)).toBe(-1);
   });
 
   it("parses chat-last-read-ts storage map", () => {

@@ -512,6 +512,46 @@ describe("SocialPanels chat & guild", () => {
     expect(mount.querySelector('[data-action="guild-mention"]')).toBeNull();
   });
 
+  it("renders chat-unread-divider and keeps badge until mark read (CLIENT-161)", async () => {
+    const mount = document.createElement("div");
+    const tracker = new ChatUnreadTracker(null);
+    tracker.markChannelRead("world", 1_000);
+    const gateway = minimalGateway({
+      listChatMessages: vi.fn().mockResolvedValue({
+        messages: [
+          {
+            channel: 1,
+            sender_display_name: "旧",
+            sender_player_id: 10001,
+            content: "read",
+            sent_at_ms: 1_000,
+          },
+          {
+            channel: 1,
+            sender_display_name: "新",
+            sender_player_id: 10002,
+            content: "unread",
+            sent_at_ms: 5_000,
+          },
+        ],
+      }),
+    });
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {}, tracker);
+    panels.attach();
+    panels.toggleChat();
+    await flushPromises();
+    expect(mount.querySelector(".chat-unread-divider")).toBeTruthy();
+    expect(mount.querySelector('[data-role="chat-mark-read"]')?.classList.contains("hidden")).toBe(
+      false,
+    );
+    const badge = mount.querySelector('[data-role="chat-tab-badge-1"]');
+    expect(badge?.textContent).toBe("1");
+    mount.querySelector('[data-action="mark-chat-read"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(mount.querySelector(".chat-unread-divider")).toBeNull();
+    expect(badge?.classList.contains("hidden")).toBe(true);
+  });
+
   it("syncs chat tab badge after manual refresh (CLIENT-144 + CLIENT-102)", async () => {
     const mount = document.createElement("div");
     const tracker = new ChatUnreadTracker(null);

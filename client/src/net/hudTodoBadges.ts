@@ -8,6 +8,7 @@ import {
   type HudCenterTodoCounts,
 } from "@/net/hudCenterTodo";
 import { formatBadgeCount } from "@/engine/artBadgeSkin";
+import type { ChatUnreadSummary } from "@/net/chatUnread";
 import { activeBuildingUpgrades } from "@/net/queueState";
 
 /**
@@ -26,6 +27,26 @@ export type HudTodoToolbarBadges = {
   reports: number;
 };
 
+/** CLIENT-161：聊天/军团社交角标（与 ChatUnreadTracker 估算同源，不并入顶栏待办总和）。 */
+export type HudTodoSocialBadges = {
+  /** 底栏「聊天」：世界 + 军团未读之和 */
+  chat: number;
+  /** 聊天面板世界 tab */
+  world: number;
+  /** 底栏「军团」、聊天军团 tab、军团面板入口 */
+  guild: number;
+};
+
+export function hudTodoSocialBadgesFromChatSummary(
+  summary: ChatUnreadSummary,
+): HudTodoSocialBadges {
+  return {
+    chat: Math.max(0, summary.total),
+    world: Math.max(0, summary.world),
+    guild: Math.max(0, summary.guild),
+  };
+}
+
 export type HudTodoBadgesInputs = {
   mailUnreadTotal: number;
   mailClaimablePage: MailRow[];
@@ -33,12 +54,14 @@ export type HudTodoBadgesInputs = {
   buildings?: CityBuilding[];
   buildCompleteCount: number;
   battleReportUnread: number;
+  chatUnread?: ChatUnreadSummary;
   nowMs?: number;
 };
 
 export type HudTodoBadgesBundle = {
   toolbar: HudTodoToolbarBadges;
   center: HudCenterTodoCounts;
+  social: HudTodoSocialBadges;
 };
 
 /** CLIENT-106 兼容：列表快照下未读与未领附件合并条数（同封只计 1）。 */
@@ -100,6 +123,9 @@ export function buildHudTodoBadges(input: HudTodoBadgesInputs): HudTodoBadgesBun
     dailyRows,
     buildCompleteCount: input.buildCompleteCount,
   });
+  const social = input.chatUnread
+    ? hudTodoSocialBadgesFromChatSummary(input.chatUnread)
+    : { chat: 0, world: 0, guild: 0 };
   return {
     toolbar: {
       mail: mailToolbarBadgeCount({
@@ -111,6 +137,7 @@ export function buildHudTodoBadges(input: HudTodoBadgesInputs): HudTodoBadgesBun
       reports: Math.max(0, input.battleReportUnread),
     },
     center,
+    social,
   };
 }
 
