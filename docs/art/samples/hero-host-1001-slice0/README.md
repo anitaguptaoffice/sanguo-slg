@@ -14,3 +14,11 @@ HERO_HOST_EVIDENCE_SAMPLE=hero-host-1001-slice0 \
 ```
 
 产物：`runtime/*.jpg`、`runtime/INVENTORY.md`、`runtime/probe-log.json`、`CHECKLIST.md`。
+
+同帧补图（不替代原 1280 末尾图 / 1600 矩阵）：
+
+```bash
+node scripts/capture-hero-host-1001-bust-name-sameframe-supplement.mjs
+```
+
+→ `runtime/hero-host-1280x720-dpr1-bust-name-sameframe.jpg`、`runtime/probe-log-supplement-bust-name-sameframe.json`。
