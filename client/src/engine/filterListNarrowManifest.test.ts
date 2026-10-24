@@ -8,6 +8,7 @@ import {
   CLIENT_127_PANEL_SCROLL_ROLE_BY_CENTER_ID,
   DAILY_QUEST_PROGRESS_SECONDARY_CLASS,
   FILTER_LIST_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  MAIL_CLAIM_ALL_ATTACHMENTS_ACTION,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -54,6 +55,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(DAILY_QUEST_PROGRESS_SECONDARY_CLASS).toBe("daily-quest-row-progress");
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(`.${DAILY_QUEST_PROGRESS_SECONDARY_CLASS}`);
+  });
+
+  it("CLIENT-163 exposes mail claim-all action for batch toolbar manifest", () => {
+    expect(MAIL_CLAIM_ALL_ATTACHMENTS_ACTION).toBe("claim-mail-all");
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(`data-action="${MAIL_CLAIM_ALL_ATTACHMENTS_ACTION}"`);
   });
 
   it("index.html encodes toolbar clearance and ≥44px chip hits", () => {

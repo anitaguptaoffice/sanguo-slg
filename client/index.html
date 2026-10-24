@@ -205,6 +205,77 @@
       .rank-viewer-bar.rank-my-rank-changed-pulse {
         animation: rank-my-rank-changed-pulse-keyframes 3s ease-out 1;
       }
+      .march-queue-banner {
+        display: block;
+        margin: 0 0 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        line-height: 1.35;
+        color: #f5e6c8;
+        background: #3d3028;
+        border: 1px solid #5c4a32;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+        cursor: pointer;
+      }
+      @keyframes march-queue-banner-pulse-keyframes {
+        0%, 100% { box-shadow: none; }
+        50% { box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.65); }
+      }
+      .march-queue-banner.march-queue-banner-pulse {
+        animation: march-queue-banner-pulse-keyframes 5s ease-out 1;
+      }
+      .military-panel [data-action="view-recruit-queue"] {
+        display: inline-block;
+        margin: 6px 0;
+        font-size: 12px;
+        color: #c9a227;
+        cursor: pointer;
+        text-decoration: underline;
+        overflow-wrap: anywhere;
+        max-width: 100%;
+      }
+      .mail-inbox-toolbar [data-action="claim-mail-all"] {
+        flex: 1 1 7rem;
+        min-width: 0;
+        max-width: 100%;
+      }
+      .guild-chat-draft {
+        display: block;
+        margin: 4px 0 6px;
+        padding: 6px 8px;
+        font-size: 12px;
+        line-height: 1.35;
+        color: #e8dcc8;
+        background: #2a2218;
+        border: 1px dashed #5c4a32;
+        border-radius: 4px;
+        overflow-wrap: anywhere;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .chat-unread-divider {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0;
+        font-size: 11px;
+        color: #c9a227;
+        min-width: 0;
+        max-width: 100%;
+        overflow: hidden;
+      }
+      .chat-unread-divider::before,
+      .chat-unread-divider::after {
+        content: "";
+        flex: 1 1 auto;
+        min-width: 0;
+        border-top: 1px solid #5c4a32;
+      }
       .layout-toolbar {
         position: absolute; left: 0; right: 0; bottom: 0;
         height: calc(56 / 900 * 100%); z-index: 3;
@@ -2034,7 +2105,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-status {
         flex-shrink: 0;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar {
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar.panel-filter-chip-bar {
         min-width: 0;
         max-width: 100%;
       }
@@ -2266,7 +2338,40 @@
         overflow-wrap: anywhere;
       }
       #layout-frame.layout-narrow .military-panel .panel-scroll-body {
-        padding-bottom: 12px;
+        padding-bottom: 64px;
+      }
+      #layout-frame.layout-narrow .military-panel .march-queue-banner,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-queue-banner {
+        flex-shrink: 0;
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .military-panel [data-action="view-recruit-queue"],
+      #layout-frame.layout-narrow .military-panel .military-recruit-queue {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-detail-nav {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+        flex-shrink: 0;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar [data-action="claim-mail-all"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-inbox-toolbar [data-action="claim-mail-batch"] {
+        flex: 1 1 6rem;
+        min-width: 0;
+        max-width: 100%;
+      }
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-filter-tab-badge,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .guild-chat-draft,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-input-counter,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] [data-role="chat-input-counter"],
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-unread-divider,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-chat-draft {
+        min-width: 0; max-width: 100%; flex-shrink: 0; overflow-x: hidden;
       }
       #layout-frame.layout-narrow .military-panel .panel-scroll-body label,
       #layout-frame.layout-narrow .military-panel .panel-scroll-body button[data-action="recruit"],

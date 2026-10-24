@@ -17,7 +17,9 @@ import {
   CLIENT_135_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_145_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_155_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_163_NARROW_MANIFEST_CENTER_PANEL_IDS,
   MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
@@ -207,5 +209,22 @@ describe("narrow layout root class", () => {
       expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
     }
     expect(MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
+  });
+
+  it("CLIENT-163 wave:31 march/mail/social manifest registry at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_163_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "military",
+      "march",
+      "battle-report",
+      "mail",
+      "guild",
+      "chat",
+    ]);
+    for (const id of CLIENT_163_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(56);
   });
 });

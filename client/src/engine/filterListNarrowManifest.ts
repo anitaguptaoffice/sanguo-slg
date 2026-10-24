@@ -52,6 +52,9 @@ export const PANEL_FILTER_CHIP_BAR_CLASS = "panel-filter-chip-bar";
 /** CLIENT-155 / soft-dep CLIENT-150: chain progress secondary line on daily quest rows. */
 export const DAILY_QUEST_PROGRESS_SECONDARY_CLASS = "daily-quest-row-progress";
 
+/** CLIENT-163 / soft-dep CLIENT-159: mail inbox batch toolbar hosts claim-all beside filter chips. */
+export const MAIL_CLAIM_ALL_ATTACHMENTS_ACTION = "claim-mail-all";
+
 export const CLIENT_127_FILTER_CHIP_BAR_SELECTOR_BY_CENTER_ID: Record<
   Client127NarrowFilterListCenterPanelId,
   string

@@ -139,3 +139,12 @@ export {
   HUD_RESOURCE_STRIP_SELECTOR,
   HUD_RESOURCE_SWEEP_SELECTOR,
 } from "@/engine/mainCityWave30NarrowManifest";
+
+/** CLIENT-163: wave:31 出征募兵·军情·战报邻接·邮件批量·军团/聊天草稿窄屏 manifest at 1280×720. */
+export {
+  CLIENT_163_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  type Client163NarrowManifestCenterPanelId,
+  WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  MARCH_QUEUE_BANNER_SELECTOR,
+  MAIL_CLAIM_ALL_ATTACHMENTS_SELECTOR,
+} from "@/engine/wave31MarchMailSocialNarrowManifest";
