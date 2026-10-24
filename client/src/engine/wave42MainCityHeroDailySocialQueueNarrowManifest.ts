@@ -79,8 +79,20 @@ export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_CLASS =
 /** CLIENT-247: hero panel loading/empty/error residual sweep row. */
 export const HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS = "hero-panel-state-residual-sweep";
 
+/** CLIENT-263: hero panel state consolidated deep sweep row (CLIENT-247 baseline). */
+export const HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_CLASS =
+  "hero-panel-state-residual-deep-sweep";
+
 /** CLIENT-247: filter chip session key alongside CLIENT-231 `hero-list-filter-v1`. */
 export const HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY = "hero-list-filter-chip-residual-v1";
+
+/** CLIENT-263: filter chip deep session key alongside CLIENT-247 v1. */
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SESSION_KEY =
+  "hero-list-filter-chip-residual-deep-v1";
+
+/** CLIENT-263: filter chip deep sweep line under filter bar. */
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_CLASS =
+  "hero-list-filter-chip-residual-deep-sweep";
 
 /** CLIENT-248: rank manual refresh cooldown residual stamp line. */
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS = "rank-refresh-cooldown-residual-stamp";
@@ -122,6 +134,8 @@ export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_LINE_SELECTOR = `.content-pan
 export const HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_SELECTOR = `.content-panel[data-center-panel="hero"] .hero-list .${HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS}`;
 export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEP_SWEEP_CLASS}`;
 export const HERO_PANEL_STATE_RESIDUAL_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_SWEEP_CLASS}`;
+export const HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_DEEP_SWEEP_CLASS}`;
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SWEEP_CLASS}`;
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS}`;
 export const RANK_PIN_KEEP_RESIDUAL_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-list li.${RANK_PIN_KEEP_RESIDUAL_RING_CLASS}`;
 export const GUILD_DUTY_HEADER_RESIDUAL_LINE_SELECTOR = `.social-panel[data-center-panel="guild"] .${GUILD_DUTY_HEADER_RESIDUAL_LINE_CLASS}`;
