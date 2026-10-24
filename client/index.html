@@ -978,10 +978,49 @@
         max-width: 100%;
       }
       .art-filter-row.art-filter-row--skinned {
+        padding: 0;
+        margin-bottom: 4px;
+        background: transparent;
         border-radius: 4px;
-        min-height: 40px;
-        padding: 8px 10px;
         list-style: none;
+        overflow: visible;
+        box-sizing: border-box;
+      }
+      .mail-list li.art-filter-row--skinned,
+      .daily-quest-list li.art-filter-row--skinned,
+      .march-list li.art-filter-row--skinned,
+      .battle-report-list li.art-filter-row--skinned {
+        padding: 0;
+        background: transparent;
+        display: block;
+      }
+      .art-filter-row-skin-bar {
+        height: 40px;
+        min-height: 40px;
+        max-height: 40px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 10px;
+        overflow: hidden;
+        border-radius: 4px 4px 0 0;
+      }
+      .art-filter-row-detail {
+        padding: 4px 10px 8px;
+        box-sizing: border-box;
+      }
+      .daily-quest-list li.art-filter-row--skinned {
+        flex-wrap: nowrap;
+      }
+      .art-filter-chip-evidence-staging,
+      .art-filter-row-evidence-staging {
+        margin: 8px 0;
+        overflow: visible;
+      }
+      .art-filter-row-evidence-list {
+        max-height: none !important;
+        overflow: visible !important;
       }
       .art-filter-badge-dot {
         display: inline-flex;

@@ -57,6 +57,12 @@ export const FILTER_CHIP_DISPLAY_W = 72;
 export const FILTER_CHIP_DISPLAY_H = 32;
 export const FILTER_CHIP_HIT_MIN = 44;
 
+/** Nine-slice row chrome logical height (horizontal stretch only). */
+export const FILTER_ROW_SKIN_BAR_HEIGHT = 40;
+
+const FILTER_ROW_DETAIL_SELECTORS =
+  ".mail-row-summary, .daily-quest-row-main, .daily-cross-link-tag, .march-row-meta, .march-row-recent-eta, .march-row-remarch-btn, .battle-report-row-foe, .battle-report-row-time, .battle-report-replay-grid-btn";
+
 export function isArtUiFilter008AssetId(id: string): id is ArtUiFilter008AssetId {
   return (ART_UI_FILTER_008_ASSET_IDS as readonly string[]).includes(id);
 }
@@ -81,6 +87,26 @@ export function resolveFilterRowAssetId(row: HTMLElement): ArtUiFilter008AssetId
 
 function artSkinOff(el: HTMLElement): boolean {
   return el.dataset.artSkin === "off" || el.closest("[data-art-skin='off']") != null;
+}
+
+function ensureFilterRowSkinStructure(row: HTMLElement): HTMLElement {
+  let bar = row.querySelector<HTMLElement>(".art-filter-row-skin-bar");
+  let detail = row.querySelector<HTMLElement>(".art-filter-row-detail");
+  if (bar && detail) return bar;
+  bar = document.createElement("div");
+  bar.className = "art-filter-row-skin-bar";
+  detail = document.createElement("div");
+  detail.className = "art-filter-row-detail";
+  for (const el of Array.from(row.querySelectorAll<HTMLElement>(FILTER_ROW_DETAIL_SELECTORS))) {
+    detail.appendChild(el);
+  }
+  const direct = Array.from(row.children).filter(
+    (c) => c !== bar && c !== detail && !c.classList.contains("art-filter-row-skin-bar"),
+  );
+  for (const child of direct) bar.appendChild(child);
+  row.insertBefore(bar, row.firstChild);
+  row.appendChild(detail);
+  return bar;
 }
 
 function applyNineSliceRowSkin(el: HTMLElement, assets: AssetLoader, assetId: string): void {
@@ -154,10 +180,30 @@ function applyChipSprite(btn: HTMLButtonElement, assets: AssetLoader, state: Fil
   btn.dataset.filterChipState = state;
 }
 
+/** Force a chip skin state (evidence staging / probes); does not rely on :hover/:active alone. */
+export function applyFilterChipVisualState(
+  btn: HTMLButtonElement,
+  assets: AssetLoader,
+  state: FilterChipVisualState,
+): void {
+  btn.dataset.filterChipEvidenceLock = "1";
+  ensureChipStructure(btn);
+  btn.classList.remove("selected", "active");
+  btn.removeAttribute("aria-pressed");
+  btn.removeAttribute("aria-current");
+  if (state === "selected") {
+    btn.classList.add("selected", "active");
+    btn.setAttribute("aria-pressed", "true");
+    btn.setAttribute("aria-current", "true");
+  }
+  applyChipSprite(btn, assets, state);
+}
+
 function wireChipPointerStates(btn: HTMLButtonElement, assets: AssetLoader): void {
   if (btn.dataset.filterChipWired === "1") return;
   btn.dataset.filterChipWired = "1";
   const sync = () => {
+    if (btn.dataset.filterChipEvidenceLock === "1") return;
     if (btn.disabled) {
       applyChipSprite(btn, assets, chipVisualState(btn));
       return;
@@ -206,7 +252,10 @@ export function mountFilterChips(
 function wireFilterRowStates(row: HTMLElement, assets: AssetLoader): void {
   if (row.dataset.filterRowWired === "1") return;
   row.dataset.filterRowWired = "1";
-  const sync = () => applyNineSliceRowSkin(row, assets, resolveFilterRowAssetId(row));
+  const sync = () => {
+    const bar = ensureFilterRowSkinStructure(row);
+    applyNineSliceRowSkin(bar, assets, resolveFilterRowAssetId(row));
+  };
   sync();
   row.addEventListener("mouseenter", () => {
     if (row.classList.contains("selected") || row.getAttribute("aria-selected") === "true") return;
@@ -230,7 +279,8 @@ export function mountFilterRow(row: HTMLElement, assets: AssetLoader): void {
   }
   row.classList.add("art-filter-row", "art-filter-row--skinned");
   if (row.dataset.filterRowMounted === "1") {
-    applyNineSliceRowSkin(row, assets, resolveFilterRowAssetId(row));
+    const bar = ensureFilterRowSkinStructure(row);
+    applyNineSliceRowSkin(bar, assets, resolveFilterRowAssetId(row));
     return;
   }
   row.dataset.filterRowMounted = "1";
