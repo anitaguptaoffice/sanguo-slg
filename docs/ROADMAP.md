@@ -519,20 +519,20 @@ H5 人工验收与 **INTG-026** 网关冒烟对齐，见 [client/README.md](../c
 
 ## Wave 30 H5 主城产出仓库·日常领取闭环·将领列表筛选扫读·双榜刷新加深 — **规划中**
 
-**策略**：在 wave:29 **小地图行军互链 / 军情 ETA 密度 / 战报坐标复盘 / 邮件领取同步 / 军团聊天刷新 / 军事表单校验 / 1280 世界军情战报社交 manifest** 全收口（tip **`924a2834`**，含 DOCS-EXIT-021 [#581](https://github.com/anitaguptaoffice/sanguo-slg/pull/581)；实现 tip **`f60e3e95`**）后，**轮转**避开 wave:26～29 已堆叠的背包商城提交脉冲、筛选 chip 主叙事、主城七槽/HUD 深链、世界行军/军情/战报/邮件社交栈，加深：**HUD 产出速率与仓库余量扫读**（只读 `GetCityState` `production_rates` + `wallet`）、**建造·募兵队列完成反馈与七槽互跳余量**、**日常可领批量/首条领取脉冲与 chain 400 进度可读**、**将领列表筛选排序记忆扫读**（**无**装备槽 / hero 专用升级 RPC）、**双榜我的排名刷新跳动与钉选扫读**、**背包分类 tab/堆叠扫读** 与 **商城货币不足行内态**（勿重复 wave:26 提交脉冲主叙事）、**1280 主城产出·日常·将领·排行组合 manifest**；网关 **INTG-027** 复跑 smoke（保留 INTG-026，扩展 `GetCityState` 余量、`ListPlayerQuests` 进度、`ListPlayerHeroes`、`GetLeaderboard` `my_rank`、`ListPlayerBag` 堆叠）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog 规划（本 PR，`tasks/backlog.yml`）；Issue 映射随合入后 `tasks_sync`（CLIENT-148～155 / INTG-027 / DOCS-EXIT-022）。
+**策略**：在 wave:29 **小地图行军互链 / 军情 ETA 密度 / 战报坐标复盘 / 邮件领取同步 / 军团聊天刷新 / 军事表单校验 / 1280 世界军情战报社交 manifest** 全收口（tip **`924a2834`**，含 DOCS-EXIT-021 [#581](https://github.com/anitaguptaoffice/sanguo-slg/pull/581)；实现 tip **`f60e3e95`**）后，**轮转**避开 wave:26～29 已堆叠的背包商城提交脉冲、筛选 chip 主叙事、主城七槽/HUD 深链、世界行军/军情/战报/邮件社交栈，加深：**HUD 产出速率与仓库余量扫读**（只读 `GetCityState` `production_rates` + `wallet`）、**建造·募兵队列完成反馈与七槽互跳余量**、**日常可领批量/首条领取脉冲与 chain 400 进度可读**、**将领列表筛选排序记忆扫读**（**无**装备槽 / hero 专用升级 RPC）、**双榜我的排名刷新跳动与钉选扫读**、**背包分类 tab/堆叠扫读** 与 **商城货币不足行内态**（勿重复 wave:26 提交脉冲主叙事）、**1280 主城产出·日常·将领·排行组合 manifest**；网关 **INTG-027** 复跑 smoke（保留 INTG-026，扩展 `GetCityState` 余量、`ListPlayerQuests` 进度、`ListPlayerHeroes`、`GetLeaderboard` `my_rank`、`ListPlayerBag` 堆叠）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓。波次 backlog [#583](https://github.com/anitaguptaoffice/sanguo-slg/pull/583)（`0af8f9d6`）合入后由 `tasks_sync` 创建 Issue（[Actions 全量 sync](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/40051454522)）。
 
-| 任务 | 说明 | 状态 |
-|---|---|---|
-| CLIENT-148 | HUD 产出速率与仓库余量扫读巩固 | 待领 |
-| CLIENT-149 | 建造·募兵队列完成脉冲与七槽互跳余量 | 待领 |
-| CLIENT-150 | 日常可领批量/首条定位脉冲与 chain 进度可读 | 待领 |
-| CLIENT-151 | 将领列表筛选排序记忆与行密度扫读 | 待领 |
-| CLIENT-152 | 双榜我的排名刷新跳动与钉选扫读巩固 | 待领 |
-| CLIENT-153 | 背包分类 tab 与堆叠数量扫读 | 待领 |
-| CLIENT-154 | 商城货币不足行内态与购买校验扫读 | 待领 |
-| CLIENT-155 | 1280 主城产出·日常·将领·排行组合 manifest | 待领 |
-| INTG-027 | 网关冒烟（产出余量 + 日常进度 + 将领 + 双榜 + 背包堆叠） | 待领 |
-| DOCS-EXIT-022 | 文档收口（blocked 至本波 CLIENT + INTG 全合） | blocked |
+| Issue | 任务 | 状态 | 说明 |
+|---|---|---|---|
+| [#584](https://github.com/anitaguptaoffice/sanguo-slg/issues/584) | CLIENT-148 | 规划中 | HUD 产出速率与仓库余量扫读巩固 |
+| [#585](https://github.com/anitaguptaoffice/sanguo-slg/issues/585) | CLIENT-149 | 规划中 | 建造·募兵队列完成脉冲与七槽互跳余量 |
+| [#586](https://github.com/anitaguptaoffice/sanguo-slg/issues/586) | CLIENT-150 | 规划中 | 日常可领批量/首条定位脉冲与 chain 进度可读 |
+| [#587](https://github.com/anitaguptaoffice/sanguo-slg/issues/587) | CLIENT-151 | 规划中 | 将领列表筛选排序记忆与行密度扫读 |
+| [#588](https://github.com/anitaguptaoffice/sanguo-slg/issues/588) | CLIENT-152 | 规划中 | 双榜我的排名刷新跳动与钉选扫读巩固 |
+| [#589](https://github.com/anitaguptaoffice/sanguo-slg/issues/589) | CLIENT-153 | 规划中 | 背包分类 tab 与堆叠数量扫读 |
+| [#590](https://github.com/anitaguptaoffice/sanguo-slg/issues/590) | CLIENT-154 | 规划中 | 商城货币不足行内态与购买校验扫读 |
+| [#591](https://github.com/anitaguptaoffice/sanguo-slg/issues/591) | CLIENT-155 | 规划中 | 1280 主城产出·日常·将领·排行组合 manifest |
+| [#592](https://github.com/anitaguptaoffice/sanguo-slg/issues/592) | INTG-027 | 规划中 | 网关冒烟（产出余量 + 日常进度 + 将领 + 双榜 + 背包堆叠） |
+| [#593](https://github.com/anitaguptaoffice/sanguo-slg/issues/593) | DOCS-EXIT-022 | 待依赖 | 全卡合并后文档收口 |
 
 H5 人工验收与 **INTG-027** 网关冒烟对齐，见合入 **DOCS-EXIT-022** 后的 [client/README.md](../client/README.md)（**HUD 产出/仓库扫读 + 队列完成互跳 + 日常领取进度 + 将领列表筛选排序 + 双榜刷新钉选 + 背包分类/商城行内态 + 1280 主城产出日常将领排行 manifest**）。
 
