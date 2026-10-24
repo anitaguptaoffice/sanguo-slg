@@ -40,6 +40,14 @@ import {
   writeMilitaryListFilterSession,
 } from "@/net/militaryListFilter";
 import {
+  ensureMarchListPhaseFilterChips,
+  militaryListPhaseChipReducer,
+  parseMilitaryListPhaseChipPhase,
+  syncMilitaryListPhaseFilterChips,
+} from "@/net/militaryListPhaseChip";
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { mountFilterUiSkins } from "@/engine/artUiFilterSkin";
+import {
   filterMarchesByDestination,
   MARCH_LIST_ROW_DEST_MATCH_CLASS,
   type MarchDestFilterMode,
@@ -48,6 +56,8 @@ import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import { findFirstMarchByDest } from "@/ui/worldMinimap";
 
 export type MarchListPanelOptions = {
+  /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
+  assets?: AssetLoader;
   pollIntervalMs?: number;
   nowMs?: () => number;
   onMarchesUpdated?: (marches: MarchSummary[]) => void;
@@ -79,6 +89,7 @@ export class MarchListPanel {
   private listFilter: MilitaryListFilterV1 = readMilitaryListFilterSession();
   private highlightState: MarchHighlightState | null = null;
   private highlightExpiryTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly assets?: AssetLoader;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -94,6 +105,7 @@ export class MarchListPanel {
     this.getWorldSelectedGrid = options?.getWorldSelectedGrid;
     this.onMarchArrivalReminders = options?.onMarchArrivalReminders;
     this.onRemarchFromRow = options?.onRemarchFromRow;
+    this.assets = options?.assets;
   }
 
   /** 用户手动改出征目标时清除 CLIENT-080 高亮（再出征本身不调用）。 */
@@ -235,6 +247,7 @@ export class MarchListPanel {
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("change", (ev) => this.onFilterChange(ev));
     this.renderFilterControls();
+    this.mountFilterSkins();
   }
 
   detach(): void {
@@ -310,16 +323,12 @@ export class MarchListPanel {
       </fieldset>
       <fieldset class="march-list-filter panel-filter-chip-bar" data-role="march-list-filter">
         <legend>阶段与排序</legend>
-        <label>
-          阶段
-          <select data-action="march-phase-filter" aria-label="军情阶段筛选">
-            <option value="all">全部</option>
-            <option value="pending">待发</option>
-            <option value="outbound">行军中</option>
-            <option value="stationed">驻扎</option>
-            <option value="return">返回</option>
-          </select>
-        </label>
+        <div
+          class="march-list-phase-chips"
+          data-role="march-phase-chips"
+          role="group"
+          aria-label="军情阶段筛选"
+        ></div>
         <label>
           排序
           <select data-action="march-eta-sort" aria-label="军情 ETA 排序">
@@ -335,19 +344,24 @@ export class MarchListPanel {
         <ul class="march-list" data-role="march-list"></ul>
       </div>
     `;
+    const chipHost = el.querySelector('[data-role="march-phase-chips"]') as HTMLElement | null;
+    if (chipHost) ensureMarchListPhaseFilterChips(chipHost);
     return el;
+  }
+
+  private mountFilterSkins(): void {
+    if (!this.assets || !this.panel) return;
+    mountFilterUiSkins(this.panel, this.assets);
   }
 
   private renderFilterControls(): void {
     const listFilterRoot = this.panel?.querySelector('[data-role="march-list-filter"]');
     if (listFilterRoot) {
-      const phaseSelect = listFilterRoot.querySelector(
-        '[data-action="march-phase-filter"]',
-      ) as HTMLSelectElement | null;
+      const chipRoot = listFilterRoot.querySelector('[data-role="march-phase-chips"]');
+      if (chipRoot) syncMilitaryListPhaseFilterChips(chipRoot, this.listFilter.phase);
       const sortSelect = listFilterRoot.querySelector(
         '[data-action="march-eta-sort"]',
       ) as HTMLSelectElement | null;
-      if (phaseSelect) phaseSelect.value = this.listFilter.phase;
       if (sortSelect) sortSelect.value = this.listFilter.etaSort;
     }
 
@@ -365,6 +379,7 @@ export class MarchListPanel {
       if (xEl) xEl.value = String(this.manualDestFilter.x);
       if (yEl) yEl.value = String(this.manualDestFilter.y);
     }
+    this.mountFilterSkins();
   }
 
   private renderList(): void {
@@ -432,6 +447,7 @@ export class MarchListPanel {
 
     for (const m of visible) {
       const li = document.createElement("li");
+      li.setAttribute("data-ui-filter-row", "");
       const body = document.createElement("div");
       body.className = "march-row-body";
       const primary = document.createElement("span");
@@ -446,6 +462,11 @@ export class MarchListPanel {
         m.march_id != null &&
         marchRowShouldBeRecent(m.march_id, this.highlightState, now);
       if (isRecent) {
+        const dot = document.createElement("span");
+        dot.setAttribute("data-ui-filter-badge", "dot");
+        dot.setAttribute("data-role", "march-row-recent-dot");
+        dot.setAttribute("aria-label", "新出征高亮");
+        primary.prepend(dot);
         const etaBrief = formatMarchRowRecentEtaBrief(m, now);
         if (etaBrief) {
           const etaEl = document.createElement("span");
@@ -479,7 +500,10 @@ export class MarchListPanel {
         li.tabIndex = 0;
       }
       if (m.march_id != null && m.march_id === this.selectedMarchId) {
-        li.classList.add("march-list-row-selected");
+        li.classList.add("march-list-row-selected", "selected");
+        li.setAttribute("aria-selected", "true");
+      } else {
+        li.removeAttribute("aria-selected");
       }
       if (filter != null) {
         li.classList.add(MARCH_LIST_ROW_DEST_MATCH_CLASS);
@@ -489,6 +513,7 @@ export class MarchListPanel {
       }
       ul.appendChild(li);
     }
+    this.mountFilterSkins();
   }
 
   private updateRemainingLabels(): void {
@@ -707,22 +732,27 @@ export class MarchListPanel {
 
   private onFilterChange(ev: Event): void {
     const target = ev.target as HTMLElement;
-    const phaseSelect = target.closest('[data-action="march-phase-filter"]');
     const sortSelect = target.closest('[data-action="march-eta-sort"]');
-    if (!phaseSelect && !sortSelect) return;
+    if (!sortSelect) return;
     const root = this.panel.querySelector('[data-role="march-list-filter"]');
-    const phaseEl = root?.querySelector(
-      '[data-action="march-phase-filter"]',
-    ) as HTMLSelectElement | null;
     const sortEl = root?.querySelector(
       '[data-action="march-eta-sort"]',
     ) as HTMLSelectElement | null;
-    const phase = (phaseEl?.value ?? this.listFilter.phase) as MilitaryListFilterV1["phase"];
     const etaSort = (sortEl?.value ?? this.listFilter.etaSort) as MilitaryListFilterV1["etaSort"];
-    this.setListFilter({ phase, etaSort });
+    this.setListFilter({ ...this.listFilter, etaSort });
   }
 
   private onClick(ev: Event): void {
+    const phaseChip = (ev.target as HTMLElement).closest('[data-action="march-phase-filter-chip"]');
+    if (phaseChip) {
+      const phase = parseMilitaryListPhaseChipPhase(phaseChip.getAttribute("data-phase"));
+      if (phase) {
+        const next = militaryListPhaseChipReducer(this.listFilter, { type: "select", phase });
+        this.setListFilter(next);
+      }
+      return;
+    }
+
     const remarchBtn = (ev.target as HTMLElement).closest('[data-action="march-remarch"]');
     if (remarchBtn) {
       ev.stopPropagation();
