@@ -196,6 +196,7 @@ import {
 } from "@/net/reportOutcomeFilterBridge";
 import { createCenterPanelFocusTrap, type CenterPanelFocusTrap } from "@/ui/centerPanelFocusTrap";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import { ensureHeroDetailBustNameInScrollClip } from "@/ui/heroDetailScrollClip";
 import {
   handleListRovingKeyDown,
   syncListRovingTabindex,
@@ -1026,6 +1027,19 @@ export class HeroMailPanels {
     this.mailClaimInlinePulseMailId = mailId;
   }
 
+  /** HERO-HOST: collapse recruit/hotel chrome while detail is open (1280 scroll viewport). */
+  private syncHeroRecruitHostExpanded(): void {
+    const host = this.heroPanel?.querySelector<HTMLDetailsElement>('[data-role="hero-recruit-host"]');
+    if (!host) return;
+    const detailPaneOpen =
+      this.selectedHeroId > 0 &&
+      !this.heroDetailCollapsed &&
+      !this.heroDetailLoading &&
+      !this.heroDetailError &&
+      !!this.heroDetail;
+    host.open = !detailPaneOpen;
+  }
+
   private serverId(): number {
     const s = this.getSession();
     return s?.serverId ?? this.gateway.getBoundServerId() ?? s?.player?.server_id ?? 0;
@@ -1602,35 +1616,38 @@ export class HeroMailPanels {
     el.dataset.centerPanel = "hero";
     el.innerHTML = `
       <h3>将领</h3>
-      <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
       <button type="button" data-action="refresh-heroes">刷新列表</button>
       <p class="hero-list-refresh-status hidden" data-role="hero-list-refreshed-at" aria-label="列表上次刷新"></p>
       <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
-      <button type="button" data-action="refresh-templates">刷新招募模板</button>
-      <label>招募模板
-        <select data-field="template-select"><option value="">（先刷新模板）</option></select>
-      </label>
-      <p class="recruit-wallet-compare-line hidden" data-role="recruit-wallet-compare-line" aria-live="polite"></p>
-      <p class="recruit-wallet-compare-residual-line hidden" data-role="recruit-wallet-compare-residual-line" aria-live="polite"></p>
-      <p class="recruit-cost-preview" data-role="recruit-preview"></p>
-      <p class="recruit-form-inline-hint hidden" data-role="recruit-form-inline-hint" aria-live="polite"></p>
-      <button type="button" class="hidden recruit-goto-bag-item-gap-btn" data-action="recruit-goto-bag-item-gap">打开背包</button>
-      <button type="button" data-action="recruit-hero">招募</button>
-      <p class="recruit-success-toast hidden" data-role="recruit-success-toast" role="status">
-        <span data-role="recruit-success-msg"></span>
-        <button type="button" class="hidden" data-action="recruit-open-hero-detail">打开详情</button>
-      </p>
-      <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
-      <section class="hotel-recruit-section" data-role="hotel-recruit-section" aria-label="客栈招将">
-        <h4>客栈招将</h4>
-        <p class="hotel-recruit-meta" data-role="hotel-recruit-meta"></p>
-        <button type="button" data-action="refresh-hotel-candidates">拉取客栈列表</button>
-        <button type="button" data-action="refresh-hotel-pool">访贤刷新池</button>
-        <p class="recruit-cost-preview hotel-recruit-preview" data-role="hotel-recruit-preview"></p>
-        <button type="button" data-action="recruit-hotel-candidate">招入麾下</button>
-        <p class="march-form-error-sibling hidden" data-role="hotel-recruit-form-error" role="alert"></p>
-        <ul class="hotel-candidate-list template-list" data-role="hotel-candidate-list"></ul>
-      </section>
+      <details class="hero-recruit-host" data-role="hero-recruit-host" open>
+        <summary class="hero-recruit-host-summary">招募 / 客栈</summary>
+        <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
+        <button type="button" data-action="refresh-templates">刷新招募模板</button>
+        <label>招募模板
+          <select data-field="template-select"><option value="">（先刷新模板）</option></select>
+        </label>
+        <p class="recruit-wallet-compare-line hidden" data-role="recruit-wallet-compare-line" aria-live="polite"></p>
+        <p class="recruit-wallet-compare-residual-line hidden" data-role="recruit-wallet-compare-residual-line" aria-live="polite"></p>
+        <p class="recruit-cost-preview" data-role="recruit-preview"></p>
+        <p class="recruit-form-inline-hint hidden" data-role="recruit-form-inline-hint" aria-live="polite"></p>
+        <button type="button" class="hidden recruit-goto-bag-item-gap-btn" data-action="recruit-goto-bag-item-gap">打开背包</button>
+        <button type="button" data-action="recruit-hero">招募</button>
+        <p class="recruit-success-toast hidden" data-role="recruit-success-toast" role="status">
+          <span data-role="recruit-success-msg"></span>
+          <button type="button" class="hidden" data-action="recruit-open-hero-detail">打开详情</button>
+        </p>
+        <p class="march-form-error-sibling hidden" data-role="recruit-form-error" role="alert"></p>
+        <section class="hotel-recruit-section" data-role="hotel-recruit-section" aria-label="客栈招将">
+          <h4>客栈招将</h4>
+          <p class="hotel-recruit-meta" data-role="hotel-recruit-meta"></p>
+          <button type="button" data-action="refresh-hotel-candidates">拉取客栈列表</button>
+          <button type="button" data-action="refresh-hotel-pool">访贤刷新池</button>
+          <p class="recruit-cost-preview hotel-recruit-preview" data-role="hotel-recruit-preview"></p>
+          <button type="button" data-action="recruit-hotel-candidate">招入麾下</button>
+          <p class="march-form-error-sibling hidden" data-role="hotel-recruit-form-error" role="alert"></p>
+          <ul class="hotel-candidate-list template-list" data-role="hotel-candidate-list"></ul>
+        </section>
+      </details>
       <section class="captive-hero-section" data-role="captive-hero-section" aria-label="俘虏招降">
         <h4>俘虏招降</h4>
         <button type="button" data-action="refresh-captive-list">拉取俘虏列表</button>
@@ -1969,16 +1986,19 @@ export class HeroMailPanels {
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
+        this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailLoading) {
         detailEl.innerHTML = renderHeroDetailStateLoadingMarkup();
         skimHeroDetailPanelStateResidualSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "loading", residualCtx());
+        this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailError) {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
         skimHeroDetailPanelStateResidualSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "error", residualCtx());
+        this.syncHeroRecruitHostExpanded();
       } else {
         const { bag, wallet } = this.sessionEconomy();
         const upgradeHtml =
@@ -2024,6 +2044,8 @@ export class HeroMailPanels {
           this.assets,
           this.heroPanel,
         );
+        this.syncHeroRecruitHostExpanded();
+        ensureHeroDetailBustNameInScrollClip(this.heroPanel);
         scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeeperSweep(detailEl, this.heroDetail, bag);
       }
