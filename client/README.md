@@ -1222,6 +1222,8 @@ cd client && npm install && npm run dev
 
 **wave:37（CLIENT-206）**：军事出征表单顶栏 **`march-form-troop-reserve-line`** 用 **`formatMarchFormTroopReserveLine`** 只读对比已选步兵与城内可用余量；超出时行内 **`march-form-reserve-warn`** 可点击 **`scrollIntelRowForMarchForm`** 跳转军情并选中同源 `march_id` 或最近终点匹配行，**出征攻击** 与 **CLIENT-145** `validateMarchForm` 同步 **disabled**（无新 military RPC）。**CLIENT-178** 只读汇总条互跳 **不退化**。单测：`marchFormTroopReserve.test.ts`。
 
+**wave:41（CLIENT-238）出征表单校验汇总与提交后军情刷新戳记残余**：军事面板出征区底栏 **`data-role="march-form-validation-sweep-line"`** 由 **`formatMarchFormValidationSweepLine`** 只读汇总坐标 / 兵力 / 目标三段校验（**CLIENT-048** `march-form-error` 与 **CLIENT-206** 余量顶栏 **不退化**；**非** wave:39 军情交接主叙事重复）。`StartMarch` / `MarchAttack` 成功且 `ListMarches` 刷新后军情顶栏 **`march-submit-intel-refresh-stamp`** 展示 **`formatMarchSubmitIntelRefreshStampLine`** **2s**，新 `march_id` 列表行附加 **`intel-list-refresh-march-pulse`** **2s**（**CLIENT-080/222** `march-row-recent` / `intel-new-march-highlight` **不退化**；**无** CancelMarch）。单测：`marchFormValidationSweep.test.ts`、`marchSubmitIntelRefreshStamp.test.ts`、`MarchListPanel.test.ts`；`cd client && npm test` 绿。
+
 1. `make dev` 合法出征一次 → 观察按钮 **出征中…** 与顶栏 toast → **行军** 面板应自动展开且新行带金色 ETA 前缀与高亮框。
 2. 故意网关失败（断网或非法兵力）→ 表单内错误文案，按钮恢复可点。
 3. 单测：`marchHighlight.test.ts`、`marchSubmitFeedback.test.ts`、`marchFormSummary.test.ts`、`MarchListPanel.test.ts`。

@@ -101,6 +101,10 @@ import {
   MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE,
   MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS,
 } from "@/net/marchSubmitIntelHandoff";
+import {
+  applyMarchSubmitIntelRefreshStamp,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE,
+} from "@/net/marchSubmitIntelRefreshStamp";
 export type MarchListPanelOptions = {
   /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
   assets?: AssetLoader;
@@ -389,12 +393,14 @@ export class MarchListPanel {
         (marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null);
       if (march) this.onSelectionChange?.(march);
       if (marchId != null && marchId > 0) {
+        const nowMs = this.nowMs();
         applyMarchSubmitIntelHandoff(this.panel, marchId, {
           march,
           toX: fallbackToX,
           toY: fallbackToY,
-          nowMs: this.nowMs(),
+          nowMs,
         });
+        applyMarchSubmitIntelRefreshStamp(this.panel, marchId, nowMs, nowMs);
       }
     });
   }
@@ -415,6 +421,7 @@ export class MarchListPanel {
     el.innerHTML = `
       <h3>行军</h3>
       <p class="${MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS} hidden" data-role="${MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE}" aria-live="polite"></p>
+      <p class="hidden" data-role="${MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE}" aria-live="polite"></p>
       <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
       <fieldset class="march-dest-filter" data-role="march-dest-filter">
         <legend>目的格点筛选</legend>

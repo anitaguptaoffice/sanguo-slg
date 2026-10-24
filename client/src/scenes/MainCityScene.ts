@@ -107,6 +107,10 @@ import { syncMarchFormInlineFeedback } from "@/net/marchFormSummary";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
+  formatMarchFormValidationSweepLine,
+  syncMarchFormValidationSweepLine,
+} from "@/net/marchFormValidationSweep";
+import {
   applyMarchIntelRemarchPrefillWithFeedback,
   buildMarchIntelRemarchPrefill,
 } from "@/net/marchIntelRemarch";
@@ -533,6 +537,7 @@ export class MainCityScene implements Scene {
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
         <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
+        <p class="march-form-validation-sweep-line" data-role="march-form-validation-sweep-line" aria-live="polite"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
       </div>
@@ -1519,6 +1524,13 @@ export class MainCityScene implements Scene {
       highlightId,
     );
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
+    syncMarchFormValidationSweepLine(
+      this.militaryPanel,
+      formatMarchFormValidationSweepLine(marchValidated, troopReserve, {
+        toXRaw: marchSnap.toXRaw,
+        toYRaw: marchSnap.toYRaw,
+      }),
+    );
     syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget);
     const queueId = this.marchQueueBannerTarget?.march_id ?? null;
     syncMarchFormReadonlyStripFromInput(this.militaryPanel, {
