@@ -520,6 +520,10 @@ describe("HeroMailPanels", () => {
       ?.dispatchEvent(new Event("click", { bubbles: true }));
     expect(mount.querySelector('[data-role="hero-detail-list-hint"]')).toBeNull();
     expect(mount.querySelector('li[data-hero-id="3"].selected')).toBeTruthy();
+    expect(
+      mount.querySelector('li[data-hero-id="3"]')?.classList.contains("hero-list-return-highlight"),
+    ).toBe(true);
+    expect(readHeroListReturnState()).toBeNull();
     expect(scroll.scrollTop).toBe(64);
     expect(readHeroListFilterSession()).toBe("deployable");
     expect(readHeroListSortSession()).toBe("loyalty_desc");

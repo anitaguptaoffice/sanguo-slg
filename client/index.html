@@ -2115,6 +2115,14 @@
       .bag-list li.bag-row-return-highlight {
         animation: bag-row-return-highlight-keyframes 2s ease-out 1;
       }
+      @keyframes hero-list-return-highlight-keyframes {
+        0%, 100% { box-shadow: none; background: #1a1410; }
+        40% { box-shadow: 0 0 12px rgba(120, 180, 220, 0.75); background: #243038; }
+        75% { box-shadow: 0 0 6px rgba(120, 180, 220, 0.4); background: #1e2830; }
+      }
+      .hero-list li.hero-list-return-highlight {
+        animation: hero-list-return-highlight-keyframes 2s ease-out 1;
+      }
       @keyframes bag-row-used-pulse-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
         35% { box-shadow: 0 0 14px rgba(201, 162, 39, 0.8); background: #2a2418; }

@@ -20,6 +20,7 @@ import {
   HERO_GROWTH_COMPARE_STRIP_CLASS,
   HERO_UPGRADE_PROGRESS_BAR_CLASS,
 } from "@/net/heroGrowthCompareStrip";
+import { HERO_LIST_RETURN_HIGHLIGHT_CLASS } from "@/net/heroListReturnHighlight";
 import {
   formatHeroDetailFromListHint,
   HERO_LIST_RETURN_SESSION_KEY,
@@ -27,8 +28,7 @@ import {
   serializeHeroListReturnState,
 } from "@/net/heroListReturnState";
 
-/** CLIENT-199 列表返回行高亮（`HeroMailPanels` DOM；manifest 登记）。 */
-export const HERO_LIST_RETURN_HIGHLIGHT_CLASS = "hero-list-return-highlight";
+export { HERO_LIST_RETURN_HIGHLIGHT_CLASS };
 import {
   CENTER_PANEL_TAB_PULSE_CLASS,
   formatHudCenterPanelDeepLinkLine,

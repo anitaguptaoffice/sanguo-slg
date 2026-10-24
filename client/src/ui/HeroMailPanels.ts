@@ -210,9 +210,11 @@ import {
   readHeroPanelListScrollTop,
   writeHeroListSelectedSession,
 } from "@/net/heroListSelectedSession";
+import { scheduleHeroRowReturnHighlight } from "@/net/heroListReturnHighlight";
 import {
   applyHeroListReturnScroll,
   captureHeroListReturnPayload,
+  consumeHeroListReturnState,
   formatHeroDetailFromListHint,
   readHeroListReturnState,
   type HeroListReturnPayload,
@@ -1541,7 +1543,8 @@ export class HeroMailPanels {
   }
 
   private restoreHeroListFromReturnState(): void {
-    const snap = readHeroListReturnState();
+    const snap = consumeHeroListReturnState();
+    const highlightHeroId = snap?.heroId ?? 0;
     if (snap) {
       this.heroListFilter = snap.filter;
       this.heroListSort = snap.sort;
@@ -1549,12 +1552,19 @@ export class HeroMailPanels {
       writeHeroListSortSession(snap.sort);
       this.selectedHeroId = pickRestoredHeroId(this.heroes, snap.heroId) ?? snap.heroId;
       applyHeroListReturnScroll(this.heroPanel, snap.scrollTop);
+      writeHeroListSelectedSession({
+        heroId: this.selectedHeroId,
+        scrollTop: snap.scrollTop,
+      });
     }
     this.heroDetailCollapsed = true;
     this.heroDetailListContext = null;
     this.renderHeroList();
     if (this.selectedHeroId > 0) {
       scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
+      if (highlightHeroId > 0) {
+        scheduleHeroRowReturnHighlight(this.heroPanel, highlightHeroId);
+      }
     }
     this.onStatus(snap ? "已返回将领列表" : "列表已展开");
   }

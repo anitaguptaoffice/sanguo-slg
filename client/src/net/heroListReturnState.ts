@@ -107,6 +107,17 @@ export function clearHeroListReturnState(
   }
 }
 
+/** 返回列表后读取并清除 `hero-list-return-v1`（筛选仍由 `hero-list-filter-v1` 记忆）。 */
+export function consumeHeroListReturnState(
+  storage: Pick<Storage, "getItem" | "removeItem"> | null = typeof sessionStorage !== "undefined"
+    ? sessionStorage
+    : null,
+): HeroListReturnPayload | null {
+  const snap = readHeroListReturnState(storage);
+  if (snap) clearHeroListReturnState(storage);
+  return snap;
+}
+
 /** 详情顶栏：来源列表的筛选/排序摘要（CLIENT-199）。 */
 export function formatHeroDetailFromListHint(
   ctx: Pick<HeroListReturnPayload, "filter" | "sort"> | null | undefined,
