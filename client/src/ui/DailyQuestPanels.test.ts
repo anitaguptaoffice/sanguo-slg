@@ -437,6 +437,80 @@ describe("DailyQuestPanels", () => {
     vi.unstubAllGlobals();
   });
 
+  it("wires filter chips, claimable row dot, and hides count badge at 0 (CLIENT-123)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          { quest_cfg_id: 1010, chain_id: 400, state: 2, quest_code: "daily_train_1" },
+          { quest_cfg_id: 1013, chain_id: 400, state: 3, quest_code: "daily_wood_1" },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    expect(mount.querySelectorAll("button[data-ui-filter-chip]")).toHaveLength(4);
+    const claimableBtn = mount.querySelector(
+      '[data-action="daily-filter"][data-filter="claimable"]',
+    ) as HTMLButtonElement;
+    expect(claimableBtn?.getAttribute("aria-pressed")).toBe("false");
+    const countBadge = mount.querySelector('[data-role="daily-claimable-count-badge"]') as HTMLElement;
+    expect(countBadge?.hidden).toBe(false);
+    expect(countBadge?.dataset.filterBadgeCount).toBe("1");
+    const claimRow = mount.querySelector('li[data-quest-cfg-id="1013"]');
+    expect(claimRow?.getAttribute("data-ui-filter-row")).toBe("");
+    expect(claimRow?.querySelector('[data-ui-filter-badge="dot"]')).toBeTruthy();
+    mount
+      .querySelector('[data-action="daily-filter"][data-filter="claimable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(claimableBtn?.getAttribute("aria-pressed")).toBe("true");
+    expect(claimableBtn?.classList.contains("selected")).toBe(true);
+    sessionStorage.removeItem(DAILY_QUEST_FILTER_SESSION_KEY);
+  });
+
+  it("hides claimable filter count badge when no claimable dailies", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [{ quest_cfg_id: 1010, chain_id: 400, state: 2 }],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new DailyQuestPanels(
+      mount,
+      gateway,
+      () =>
+        ({
+          serverId: 1,
+          cityId: 1,
+          cityName: "城",
+          wallet: {},
+          buildings: [],
+          cityTroops: [],
+          bag: [],
+        }) as MainCitySession,
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const countBadge = mount.querySelector('[data-role="daily-claimable-count-badge"]') as HTMLElement;
+    expect(countBadge?.hidden).toBe(true);
+  });
+
   it("openFromTodoBadge highlights first acceptable daily", async () => {
     const mount = document.createElement("div");
     const listPlayerQuests = vi.fn().mockResolvedValue({

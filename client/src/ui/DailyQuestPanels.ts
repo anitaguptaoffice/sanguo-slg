@@ -48,6 +48,12 @@ import {
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { mountFilterUiSkins } from "@/engine/artUiFilterSkin";
+import {
+  dailyQuestClaimableBadgeCount,
+  shouldShowDailyQuestClaimableFilterBadge,
+} from "@/net/dailyQuestFilterUi";
 
 type RewardBundle = {
   items?: { item_cfg_id?: number; quantity?: number }[];
@@ -74,6 +80,7 @@ export class DailyQuestPanels {
     private readonly getQueueBuildings?: () => CityBuilding[] | undefined,
     private readonly queueSlotLabels?: Record<string, string>,
     private readonly getQueueRecruits?: () => RecruitQueueEntry[] | undefined,
+    private readonly assets?: AssetLoader,
   ) {}
 
   attach(): void {
@@ -177,7 +184,10 @@ export class DailyQuestPanels {
         <div class="daily-quest-filters" data-role="daily-filters" role="group" aria-label="日常筛选">
           <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="all" aria-pressed="true">全部</button>
           <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="in_progress" aria-pressed="false">进行中</button>
-          <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="claimable" aria-pressed="false">可领取</button>
+          <button type="button" class="daily-quest-filter-btn daily-quest-filter-claimable" data-ui-filter-chip data-action="daily-filter" data-filter="claimable" aria-pressed="false">
+            可领取
+            <span class="daily-quest-filter-badge-count hidden" data-role="daily-claimable-count-badge" data-ui-filter-badge="count" data-filter-badge-count="0" hidden aria-hidden="true"></span>
+          </button>
           <button type="button" class="daily-quest-filter-btn" data-ui-filter-chip data-action="daily-filter" data-filter="completed" aria-pressed="false">已完成</button>
           <button type="button" class="daily-quest-filter-btn daily-quest-locate-first hidden" data-action="daily-locate-first" hidden>定位首条</button>
         </div>
@@ -203,6 +213,14 @@ export class DailyQuestPanels {
       const f = btn.getAttribute("data-filter") as DailyQuestListFilter;
       return f === this.listFilter;
     });
+    const claimableCount = dailyQuestClaimableBadgeCount(this.rows);
+    const countBadge = this.panel.querySelector<HTMLElement>('[data-role="daily-claimable-count-badge"]');
+    if (countBadge) {
+      const show = shouldShowDailyQuestClaimableFilterBadge(this.rows);
+      countBadge.hidden = !show;
+      countBadge.classList.toggle("hidden", !show);
+      countBadge.dataset.filterBadgeCount = String(claimableCount);
+    }
     const locateBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="daily-locate-first"]');
     const showLocate =
       this.listFilter === "claimable" && pickFirstClaimableDailyQuestCfgIdForFilter(this.rows) > 0;
@@ -284,10 +302,18 @@ export class DailyQuestPanels {
       const recruits = this.getQueueRecruits?.();
       for (const q of displayRows) {
         const li = document.createElement("li");
+        li.setAttribute("data-ui-filter-row", "");
         const id = q.quest_cfg_id ?? 0;
         const state = q.state ?? 0;
         if (state === 4) li.classList.add("daily-quest-row-completed");
-        if (state === DAILY_QUEST_STATE_CLAIMABLE) li.classList.add(DAILY_QUEST_CLAIMABLE_ROW_CLASS);
+        if (state === DAILY_QUEST_STATE_CLAIMABLE) {
+          li.classList.add(DAILY_QUEST_CLAIMABLE_ROW_CLASS);
+          const dot = document.createElement("span");
+          dot.className = "daily-quest-row-claim-dot";
+          dot.setAttribute("data-ui-filter-badge", "dot");
+          dot.setAttribute("aria-hidden", "true");
+          li.appendChild(dot);
+        }
         let line = formatDailyQuestLine(q);
         const queueHint = formatDailyQuestQueueInlineHint(
           q,
@@ -322,6 +348,12 @@ export class DailyQuestPanels {
     if (pre) pre.textContent = formatDailyQuestDetail(selected);
     this.renderNextStep(selected);
     this.renderBattleReportBanner();
+    this.syncDailyFilterUiSkins();
+  }
+
+  private syncDailyFilterUiSkins(): void {
+    if (!this.assets) return;
+    mountFilterUiSkins(this.panel, this.assets);
   }
 
   private renderBattleReportBanner(): void {

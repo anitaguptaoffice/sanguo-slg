@@ -406,6 +406,7 @@ export class MainCityScene implements Scene {
       () => this.session?.buildings,
       SLOT_LABEL,
       () => this.queuePanels?.getRecruitQueueSnapshot() ?? [],
+      this.assets,
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
