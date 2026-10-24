@@ -60,6 +60,10 @@ import {
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { mountFilterBadges, mountFilterRows } from "@/engine/artUiFilterSkin";
 import {
+  PANEL_STATE_LOADING_MESSAGE,
+  renderPanelStateListRow,
+} from "@/engine/panelStateChrome";
+import {
   BATTLE_REPORT_FILTER_EMPTY_TEXT,
   battleReportFilterEmptyClass,
   battleReportListEmptyClass,
@@ -403,35 +407,38 @@ export class BattleReportPanel {
     }
 
     ul.innerHTML = "";
-    if (this.listLoading) {
+    if (this.listLoading && !this.reports.length) {
+      renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
+        assets: this.filterListSkinAssets,
+      });
       this.renderDetail();
       return;
     }
 
     if (this.listError && !this.reports.length) {
-      const li = document.createElement("li");
-      li.className = battleReportListErrorClass();
-      li.textContent = battleReportListErrorListHint();
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, "error", battleReportListErrorListHint(), {
+        legacyClass: battleReportListErrorClass(),
+        assets: this.filterListSkinAssets,
+      });
       this.renderDetail();
       return;
     }
 
     const filtered = this.visibleReports();
     if (!this.reports.length) {
-      const li = document.createElement("li");
-      li.className = battleReportListEmptyClass();
-      li.textContent = battleReportListEmptyMessage();
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, "empty", battleReportListEmptyMessage(), {
+        legacyClass: battleReportListEmptyClass(),
+        assets: this.filterListSkinAssets,
+      });
       this.renderDetail();
       return;
     }
 
     if (!filtered.length) {
-      const li = document.createElement("li");
-      li.className = battleReportFilterEmptyClass();
-      li.textContent = BATTLE_REPORT_FILTER_EMPTY_TEXT;
-      ul.appendChild(li);
+      renderPanelStateListRow(ul, "empty", BATTLE_REPORT_FILTER_EMPTY_TEXT, {
+        legacyClass: battleReportFilterEmptyClass(),
+        assets: this.filterListSkinAssets,
+      });
       this.renderDetail();
       return;
     }

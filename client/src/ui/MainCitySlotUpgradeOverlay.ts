@@ -3,7 +3,7 @@ import type { CityBuilding } from "@/net/bootstrapSession";
 import { buildingBySlot } from "@/net/hudFormat";
 import { QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS } from "@/net/buildQueueComplete";
 import {
-  formatUpgradeRemainingAbbrev,
+  formatSlotOverlayLabel,
   syncUpgradeProgressAnchor,
   type UpgradeProgressAnchor,
   upgradeProgressRatio,
@@ -66,18 +66,16 @@ export class MainCitySlotUpgradeOverlay {
     for (const slot of MAIN_CITY_SLOTS) {
       const building = buildingBySlot(buildings, slot.slot_key);
       const finish = building?.upgrade_finish_at_ms ?? 0;
-      if (finish <= nowMs) continue;
-      const anchor = this.anchors.get(slot.slot_key);
-      if (!anchor) continue;
-      const abbrev = formatUpgradeRemainingAbbrev(finish, nowMs);
-      if (!abbrev) continue;
-      const ratio = upgradeProgressRatio(anchor, nowMs);
-      this.layer.appendChild(this.buildTag(slot, abbrev, ratio));
+      const upgrading = finish > nowMs;
+      const anchor = upgrading ? this.anchors.get(slot.slot_key) : undefined;
+      const ratio = anchor ? upgradeProgressRatio(anchor, nowMs) : null;
+      const label = formatSlotOverlayLabel(building, nowMs);
+      this.layer.appendChild(this.buildTag(slot, label, ratio));
     }
     this.setMutualHighlightSlot(this.mutualHighlightSlotKey);
   }
 
-  private buildTag(slot: MainCitySlotDef, abbrev: string, ratio: number): HTMLElement {
+  private buildTag(slot: MainCitySlotDef, label: string, ratio: number | null): HTMLElement {
     const el = document.createElement("div");
     el.className = TAG_CLASS;
     if (
@@ -94,16 +92,18 @@ export class MainCitySlotUpgradeOverlay {
 
     const time = document.createElement("span");
     time.className = "main-city-slot-upgrade-time";
-    time.textContent = abbrev;
+    time.textContent = label;
 
-    const bar = document.createElement("div");
-    bar.className = "main-city-slot-upgrade-bar";
-    const fill = document.createElement("div");
-    fill.className = "main-city-slot-upgrade-bar-fill";
-    fill.style.width = `${Math.round(ratio * 100)}%`;
-    bar.appendChild(fill);
-
-    el.append(time, bar);
+    el.appendChild(time);
+    if (ratio != null) {
+      const bar = document.createElement("div");
+      bar.className = "main-city-slot-upgrade-bar";
+      const fill = document.createElement("div");
+      fill.className = "main-city-slot-upgrade-bar-fill";
+      fill.style.width = `${Math.round(ratio * 100)}%`;
+      bar.appendChild(fill);
+      el.appendChild(bar);
+    }
     return el;
   }
 }

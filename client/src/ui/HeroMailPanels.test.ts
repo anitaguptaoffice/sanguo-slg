@@ -328,6 +328,7 @@ describe("HeroMailPanels", () => {
       true,
     );
     expect(mount.querySelector('[data-role="hero-cultivation-success"]')?.textContent).toContain("忠诚 70→85");
+    expect(mount.querySelector('li[data-hero-id="3"]')?.textContent).toContain("忠诚 85");
     expect(onStatus).toHaveBeenCalled();
   });
 
@@ -452,6 +453,79 @@ describe("HeroMailPanels", () => {
     const sel = mount.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     expect(sel?.value).toBe("1002");
     expect(mount.querySelector('li[data-template-id="1002"]')?.classList.contains("selected")).toBe(true);
+  });
+
+  it("hero-goto-bag-cultivation opens bag with first consumable via callback", async () => {
+    const mount = document.createElement("div");
+    const onBag = vi.fn();
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 1, template_cfg_id: 1001, level: 1, loyalty: 100 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 1,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 1,
+        loyalty: 100,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        attributes: { force: 72, intel: 75, politics: 88, command: 78 },
+      }),
+      listPlayerBag: vi.fn().mockResolvedValue({
+        items: [{ item_cfg_id: 2017, quantity: 3 }],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onBag,
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="1"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount
+      .querySelector('[data-action="hero-goto-bag-cultivation"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    expect(onBag).toHaveBeenCalledWith([2017]);
+  });
+
+  it("hero detail load failure shows CLIENT-129 error chrome", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 5, template_cfg_id: 1001, level: 1, loyalty: 50 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockRejectedValue(Object.assign(new Error("将领不存在"), { code: 10001 })),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="5"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const detail = mount.querySelector('[data-role="hero-detail"]');
+    expect(detail?.querySelector(".panel-state-error")).toBeTruthy();
+    expect(detail?.textContent).toMatch(/将领不存在|10001/);
   });
 
   it("hero-related-items opens bag highlight via callback", async () => {

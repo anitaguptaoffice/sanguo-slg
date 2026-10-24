@@ -147,6 +147,20 @@ export function formatHeroLine(h: HeroSummary): string {
   return `#${h.hero_id ?? "?"} ${name} · Lv${h.level ?? 1} · 忠诚 ${h.loyalty ?? 0}`;
 }
 
+/** GetHeroDetail / UseConsumable 后把列表行 level/loyalty 与详情区进度条对齐。 */
+export function syncHeroSummaryFromDetail(
+  heroes: HeroSummary[],
+  detail: HeroDetail | null | undefined,
+): HeroSummary[] {
+  const heroId = detail?.hero_id;
+  if (!heroId) return heroes;
+  return heroes.map((h) =>
+    h.hero_id === heroId
+      ? { ...h, level: detail.level ?? h.level, loyalty: detail.loyalty ?? h.loyalty }
+      : h,
+  );
+}
+
 /** 将领养成道具走背包 UseConsumable，详情区展示用（无 hero 专用 RPC）。 */
 export const HERO_DETAIL_TRAINING_HINT =
   "养成：打开底栏「背包」→「使用道具」调用 content.v1.UseConsumable（忠诚度等效果以服务端为准）。";

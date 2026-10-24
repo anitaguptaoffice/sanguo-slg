@@ -1,0 +1,129 @@
+{
+  "task": "ART-UI-PANEL-STATE-009",
+  "source": {
+    "note": "wave:28 engineering-original 3× nine_slice / 6 PNG; art Draft PR pending (do not merge #77/#82/#108/#506)",
+    "engineering_issue": "https://github.com/anitaguptaoffice/sanguo-slg/issues/532",
+    "pattern_prs": [
+      "https://github.com/anitaguptaoffice/sanguo-slg/pull/482",
+      "https://github.com/anitaguptaoffice/sanguo-slg/pull/509"
+    ]
+  },
+  "manifest_asset_count": 49,
+  "panel_state_asset_ids": [
+    "ui.panel.loading.v1",
+    "ui.panel.empty.v1",
+    "ui.panel.error.v1"
+  ],
+  "png_entries": 6,
+  "items": [
+    {
+      "asset_id": "ui.panel.loading.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/panel_loading.png",
+      "bytes": 641,
+      "sha256": "113c7743df0a87ada15e429a37b0c2a9b336db04e715f0822753dd2dde312537",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "kind": "nine_slice",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      }
+    },
+    {
+      "asset_id": "ui.panel.loading.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/panel_loading.png",
+      "bytes": 1282,
+      "sha256": "b69ff308250125980747efadde84006f3825004b36a55b40cec84e81f0957837",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "kind": "nine_slice",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      }
+    },
+    {
+      "asset_id": "ui.panel.empty.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/panel_empty.png",
+      "bytes": 749,
+      "sha256": "0a3c8298bb6cf015dc4008c4449c7ac9aebaea7f09cac22198d17aaa44179b82",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "kind": "nine_slice",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      }
+    },
+    {
+      "asset_id": "ui.panel.empty.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/panel_empty.png",
+      "bytes": 1454,
+      "sha256": "f8e98d4a1c67d592b5c8fee5d8f4959ecc478887648c7ceb258504072668fef0",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "kind": "nine_slice",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      }
+    },
+    {
+      "asset_id": "ui.panel.error.v1",
+      "scale": 1,
+      "path": "textures/1x/ui/panel_error.png",
+      "bytes": 802,
+      "sha256": "fef1f64c6e9890335301f799a7aca37e1e90684c9e36c666642cb2f60b4f5c24",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "kind": "nine_slice",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      }
+    },
+    {
+      "asset_id": "ui.panel.error.v1",
+      "scale": 2,
+      "path": "textures/2x/ui/panel_error.png",
+      "bytes": 1582,
+      "sha256": "1b286631c7dea54cec9466380797333726c5790cd1da396d190d7fa7076bd7cc",
+      "display_size": {
+        "w": 320,
+        "h": 120
+      },
+      "kind": "nine_slice",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      }
+    }
+  ],
+  "generated_at": "2026-10-24T00:32:01.788Z"
+}

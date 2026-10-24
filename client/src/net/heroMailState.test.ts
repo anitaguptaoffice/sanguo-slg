@@ -3,6 +3,7 @@ import {
   applyMailClaimResult,
   formatHeroDetail,
   formatHeroLine,
+  syncHeroSummaryFromDetail,
   formatMailLine,
   formatRecruitTemplateLine,
   heroListLines,
@@ -301,6 +302,19 @@ describe("heroMailState", () => {
     }
     const fallback = resolveHeroDetailUpgradeProgress({ hero_id: 1, level: 2, loyalty: 88 });
     expect(fallback).toEqual({ mode: "fallback", summary: "Lv2 · 忠诚 88" });
+  });
+
+  it("syncHeroSummaryFromDetail updates list row level and loyalty", () => {
+    const heroes = [{ hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 70 }];
+    const next = syncHeroSummaryFromDetail(heroes, {
+      hero_id: 3,
+      level: 3,
+      loyalty: 85,
+      loyalty_min: 0,
+      loyalty_max: 100,
+    });
+    expect(formatHeroLine(next[0])).toContain("Lv3");
+    expect(formatHeroLine(next[0])).toContain("忠诚 85");
   });
 
   it("filterHeroCultivationBagItemIds keeps known consumables with qty", () => {

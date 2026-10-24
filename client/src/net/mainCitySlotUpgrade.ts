@@ -1,6 +1,27 @@
+import type { CityBuilding } from "@/net/bootstrapSession";
 import { formatUpgradeRemaining } from "@/net/hudFormat";
 
 export const QUEUE_BUILD_ROW_ID_PREFIX = "queue-build-row-";
+
+/** 画布槽位 overlay 文案输入（`GetCityState.buildings[]` 子集字段）。 */
+export type SlotOverlayLabelInput = Pick<CityBuilding, "level" | "upgrade_finish_at_ms">;
+
+/**
+ * 七槽扫读标签：`Lv.N`，升级进行中追加 ETA（与 {@link formatUpgradeRemainingAbbrev} 同口径）。
+ * 空闲槽位与 `upgrade_finish_at_ms` 缺省或 ≤ now 一致，仅展示等级。
+ */
+export function formatSlotOverlayLabel(
+  slot: SlotOverlayLabelInput | undefined,
+  nowMs = Date.now(),
+): string {
+  const lv = Math.max(0, slot?.level ?? 0);
+  const finish = slot?.upgrade_finish_at_ms ?? 0;
+  if (finish > nowMs) {
+    const eta = formatUpgradeRemainingAbbrev(finish, nowMs);
+    if (eta) return `Lv${lv} · ${eta}`;
+  }
+  return `Lv${lv}`;
+}
 
 /** 队列建造行 DOM id，与槽位 `slot_key` 一一对应（深链高亮）。 */
 export function queueBuildRowDomId(slotKey: string): string {

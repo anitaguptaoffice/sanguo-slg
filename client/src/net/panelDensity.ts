@@ -105,6 +105,10 @@ export function marchListEmptyClass(): string {
   return "march-list-empty";
 }
 
+export function marchListLoadErrorListHint(): string {
+  return "列表加载失败，请稍后再试";
+}
+
 /** 多行军时列表容器 class（紧凑行高，空态行不使用）。 */
 export function marchListCompactClass(): string {
   return "march-list-compact";
