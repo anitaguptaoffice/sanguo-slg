@@ -218,6 +218,20 @@ import {
   type HudTodoMergedSweepCounts,
   type HudTodoMergedSweepFacet,
 } from "@/net/hudTodoMergedSweep";
+import {
+  findFirstIntelInProgressMarchId,
+  HUD_MILITARY_TODO_FACET_ATTR,
+  HUD_MILITARY_TODO_SWEEP_CLASS,
+  HUD_MILITARY_TODO_SWEEP_LINE_ROLE,
+  buildHudMilitaryTodoSweepCounts,
+  hudMilitaryTodoFacetForToolbarAction,
+  hudMilitaryTodoSweepSegments,
+  resolveToolbarPanelFromHudMilitaryTodo,
+  scheduleHudMilitaryTodoPulse,
+  toolbarPanelActionFromHudMilitaryTodo,
+  type HudMilitaryTodoSweepCounts,
+  type HudMilitaryTodoSweepFacet,
+} from "@/net/hudMilitaryTodoSweep";
 import { isToolbarBadgeDeepLinkClick, setToolbarBadge, toolbarButtonLabel } from "@/ui/toolbarBadge";
 import { syncToolbarAriaExpanded } from "@/ui/toolbarAriaExpanded";
 import { drawWorldMinimap } from "@/ui/drawWorldMinimap";
@@ -443,9 +457,9 @@ export class MainCityScene implements Scene {
       <div class="toolbar-scroll-inner">
       <button type="button" data-action="upgrade-farm" title="升级农田">升级</button>
       <button type="button" data-action="refresh" title="刷新状态">刷新</button>
-      <button type="button" data-action="toggle-military" title="军事"><span class="toolbar-btn-label">军事</span></button>
+      <button type="button" data-action="toggle-military" data-role="military-toolbar-btn" title="军事"><span class="toolbar-btn-label">军事</span></button>
       <button type="button" data-action="toggle-reports" data-role="reports-toolbar-btn"><span class="toolbar-btn-label">战报</span></button>
-      <button type="button" data-action="toggle-marches">行军</button>
+      <button type="button" data-action="toggle-marches" data-role="marches-toolbar-btn">行军</button>
       <button type="button" data-action="toggle-chat" data-role="chat-toolbar-btn"><span class="toolbar-btn-label">聊天</span></button>
       <button type="button" data-action="toggle-guild" data-role="guild-toolbar-btn"><span class="toolbar-btn-label">军团</span></button>
       <button type="button" data-action="toggle-rank">排行</button>
@@ -1140,8 +1154,15 @@ export class MainCityScene implements Scene {
           void this.battleReports
             .openPanelWithDeepLink(target.reportId)
             .then(() => this.renderHud());
+          this.pulseHudMilitaryTodoForFacet("reports");
           return;
         }
+      }
+      const militaryCounts = this.hudMilitaryTodoSweepCounts();
+      const militaryFacet = hudMilitaryTodoFacetForToolbarAction(action ?? "", militaryCounts);
+      if (militaryFacet) {
+        this.openHudMilitaryTodoDeepLink(militaryFacet);
+        return;
       }
     }
     if (action === "upgrade-farm") {
@@ -2068,6 +2089,7 @@ export class MainCityScene implements Scene {
     restoreHudResourceStripExpanded(this.hud, resourceStripExpanded);
     this.appendHudCenterTodoBadge();
     this.appendHudCenterPanelDeepLinkLine();
+    this.appendHudMilitaryTodoSweepLine();
     for (const text of groups) {
       const span = document.createElement("span");
       span.className =
@@ -2146,6 +2168,18 @@ export class MainCityScene implements Scene {
   }
 
   private onHudClick(ev: Event): void {
+    const militaryFacetBtn = (ev.target as HTMLElement).closest(
+      `[${HUD_MILITARY_TODO_FACET_ATTR}]`,
+    );
+    if (militaryFacetBtn instanceof HTMLElement) {
+      const militaryFacet = militaryFacetBtn.getAttribute(
+        HUD_MILITARY_TODO_FACET_ATTR,
+      ) as HudMilitaryTodoSweepFacet | null;
+      if (militaryFacet) {
+        this.openHudMilitaryTodoDeepLink(militaryFacet);
+        return;
+      }
+    }
     const facetBtn = (ev.target as HTMLElement).closest(
       `[${HUD_CENTER_PANEL_DEEPLINK_FACET_ATTR}], [${HUD_TODO_MERGED_SWEEP_FACET_ATTR}]`,
     );
@@ -2196,6 +2230,34 @@ export class MainCityScene implements Scene {
     };
   }
 
+  private hudMilitaryTodoSweepCounts(): HudMilitaryTodoSweepCounts {
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    const marchSnap = readMarchFormSnapshot(this.militaryPanel, {
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      wallet: this.session?.wallet,
+    });
+    const troopReserve = buildMarchFormTroopReserveLine(
+      marchSnap.marchCountRaw,
+      this.session?.cityTroops ?? [],
+    );
+    const marchValidated = validateMarchForm({
+      toXRaw: marchSnap.toXRaw,
+      toYRaw: marchSnap.toYRaw,
+      marchCountRaw: marchSnap.marchCountRaw,
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      cityTroops: this.session?.cityTroops ?? [],
+    });
+    return buildHudMilitaryTodoSweepCounts({
+      marches: this.minimapMarches,
+      battleReportUnread: snap.battleReportUnread,
+      marchSubmitState: this.marchSubmitState,
+      marchFormValidation: marchValidated,
+      troopReserve,
+    });
+  }
+
   private centerPanelDeepLinkCounts(): HudCenterPanelDeepLinkCounts {
     return this.hudTodoMergedSweepCounts();
   }
@@ -2235,6 +2297,33 @@ export class MainCityScene implements Scene {
     this.hud.appendChild(wrap);
   }
 
+  private appendHudMilitaryTodoSweepLine(): void {
+    const counts = this.hudMilitaryTodoSweepCounts();
+    const segments = hudMilitaryTodoSweepSegments(counts);
+    if (!segments.length) return;
+    const wrap = document.createElement("span");
+    wrap.className = `hud-center-panel-deeplink ${HUD_MILITARY_TODO_SWEEP_CLASS}`;
+    wrap.setAttribute("data-role", HUD_MILITARY_TODO_SWEEP_LINE_ROLE);
+    segments.forEach((seg, index) => {
+      if (index > 0) {
+        const sep = document.createElement("span");
+        sep.className = "hud-center-panel-deeplink-sep";
+        sep.textContent = " · ";
+        sep.setAttribute("aria-hidden", "true");
+        wrap.appendChild(sep);
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "hud-center-panel-deeplink-seg";
+      btn.setAttribute(HUD_MILITARY_TODO_FACET_ATTR, seg.facet);
+      btn.setAttribute("title", `打开${seg.label}`);
+      btn.setAttribute("aria-label", `HUD 军事待办：${seg.label}`);
+      btn.textContent = seg.label;
+      wrap.appendChild(btn);
+    });
+    this.hud.appendChild(wrap);
+  }
+
   private pulseCenterPanelToolbarTab(tab: CenterPanelTabFromHudTodo | null): void {
     if (!tab) return;
     const action = centerPanelTabToolbarAction(tab);
@@ -2247,6 +2336,37 @@ export class MainCityScene implements Scene {
     if (!resolveToolbarPanelFromHudTodo(panel, counts)) return;
     const action = toolbarPanelActionFromHudTodo(panel);
     scheduleToolbarPanelDeepLinkPulse(this.toolbarTrigger(action));
+  }
+
+  private pulseHudMilitaryTodoForFacet(facet: HudMilitaryTodoSweepFacet): void {
+    const counts = this.hudMilitaryTodoSweepCounts();
+    const panel = resolveToolbarPanelFromHudMilitaryTodo(facet, counts);
+    if (!panel) return;
+    const action = toolbarPanelActionFromHudMilitaryTodo(panel);
+    scheduleHudMilitaryTodoPulse(this.toolbarTrigger(action));
+  }
+
+  private openHudMilitaryTodoDeepLink(facet: HudMilitaryTodoSweepFacet): void {
+    const counts = this.hudMilitaryTodoSweepCounts();
+    const panel = resolveToolbarPanelFromHudMilitaryTodo(facet, counts);
+    if (!panel) return;
+    const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
+    if (panel === "marches") {
+      const marchId = findFirstIntelInProgressMarchId(this.minimapMarches);
+      this.marchList.selectMarchById(marchId > 0 ? marchId : null, { openPanel: true });
+    } else if (panel === "reports") {
+      this.marchArrivalHudReminder = null;
+      void this.battleReports
+        .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
+        .then(() => this.renderHud());
+    } else if (panel === "military") {
+      this.militaryPanel.classList.remove("hidden");
+      resetCenterPanelViewportScroll(this.militaryPanel);
+      this.syncMilitaryPanel();
+    }
+    this.pulseHudMilitaryTodoForFacet(facet);
+    this.status = `已打开军事待办（${panel}）`;
+    this.renderHud();
   }
 
   private openHudCenterPanelDeepLink(facet: HudCenterPanelDeepLinkFacet): void {
@@ -2458,6 +2578,13 @@ export class MainCityScene implements Scene {
     }
     if (!this.battleReports?.isOpen()) {
       this.updateReportsToolbarBadge(counts.battleReportUnread);
+    }
+    const militaryCounts = this.hudMilitaryTodoSweepCounts();
+    if (!this.marchList?.isOpen()) {
+      this.updateMarchesToolbarBadge(militaryCounts.intelInProgress);
+    }
+    if (this.militaryPanel?.classList.contains("hidden")) {
+      this.updateMilitaryToolbarBadge(militaryCounts.marchSubmittable);
     }
     this.renderHud();
   }
@@ -2839,6 +2966,28 @@ export class MainCityScene implements Scene {
       btn,
       unreadCount,
       unreadCount > 0 ? `${label} · ${unreadCount} 条新战报` : "战报列表",
+      this.assets,
+    );
+  }
+
+  private updateMarchesToolbarBadge(intelInProgress: number): void {
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="marches-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "行军";
+    setToolbarBadge(
+      btn,
+      intelInProgress,
+      intelInProgress > 0 ? `${label} · 军情进行中 ${intelInProgress}` : "军情行军列表",
+      this.assets,
+    );
+  }
+
+  private updateMilitaryToolbarBadge(marchSubmittable: number): void {
+    const btn = this.toolbar?.querySelector<HTMLElement>('[data-role="military-toolbar-btn"]');
+    const label = toolbarButtonLabel(btn) || "军事";
+    setToolbarBadge(
+      btn,
+      marchSubmittable,
+      marchSubmittable > 0 ? `${label} · 出征可提交` : "军事",
       this.assets,
     );
   }
