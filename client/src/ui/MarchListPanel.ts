@@ -81,6 +81,13 @@ import {
   MARCH_INFO_CARD_OPEN_MILITARY_ACTION,
   MARCH_ROW_SELECTED_CLASS,
 } from "@/net/marchInfoCard";
+import {
+  formatMarchIntelPhaseEtaStrip,
+  INTEL_ROW_PHASE_SUBLINE_CLASS,
+  MARCH_INTEL_PHASE_ETA_STRIP_CLASS,
+  MARCH_INTEL_PHASE_ETA_STRIP_ROLE,
+  syncMarchIntelPhaseEtaMutualHighlight,
+} from "@/net/marchIntelPhaseEtaStrip";
 export type MarchListPanelOptions = {
   /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
   assets?: AssetLoader;
@@ -415,6 +422,7 @@ export class MarchListPanel {
         <h4>行军信息</h4>
         <p class="march-info-card-state hidden" data-role="march-info-card-state"></p>
         <div class="march-info-card-body hidden" data-role="march-info-card-body">
+          <p class="${MARCH_INTEL_PHASE_ETA_STRIP_CLASS}" data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"></p>
           <p class="march-info-card-primary" data-role="march-info-card-primary"></p>
           <p class="march-info-card-secondary" data-role="march-info-card-secondary"></p>
           <div class="march-info-card-actions">
@@ -580,11 +588,16 @@ export class MarchListPanel {
           body.appendChild(etaEl);
         }
       }
+      const phaseSubline = document.createElement("span");
+      phaseSubline.className = INTEL_ROW_PHASE_SUBLINE_CLASS;
+      phaseSubline.setAttribute("data-role", INTEL_ROW_PHASE_SUBLINE_CLASS);
+      phaseSubline.textContent = formatMarchIntelPhaseEtaStrip(m, now);
       const meta = document.createElement("span");
       meta.className = "march-row-meta";
       meta.setAttribute("data-role", "march-row-meta");
       meta.textContent = formatMarchIntelSecondaryLine(m, now, this.highlightState);
       body.appendChild(primary);
+      body.appendChild(phaseSubline);
       body.appendChild(meta);
       li.appendChild(body);
       if (isRecent && m.march_id != null) {
@@ -608,6 +621,7 @@ export class MarchListPanel {
       if (m.march_id != null) {
         li.setAttribute("data-march-id", String(m.march_id));
         meta.setAttribute("data-march-id", String(m.march_id));
+        phaseSubline.setAttribute("data-march-id", String(m.march_id));
         li.setAttribute("role", "button");
         li.tabIndex = 0;
       }
@@ -642,7 +656,10 @@ export class MarchListPanel {
     const secondaryEl = this.panel?.querySelector<HTMLElement>(
       '[data-role="march-info-card-secondary"]',
     );
-    if (!card || !stateEl || !bodyEl || !primaryEl || !secondaryEl) return;
+    const phaseEtaStripEl = this.panel?.querySelector<HTMLElement>(
+      `[data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"]`,
+    );
+    if (!card || !stateEl || !bodyEl || !primaryEl || !secondaryEl || !phaseEtaStripEl) return;
 
     const march = this.getSelectedMarch();
     const selected = march != null;
@@ -679,6 +696,7 @@ export class MarchListPanel {
       bodyEl.classList.add("hidden");
       card.classList.add("hidden");
       card.classList.remove(MARCH_ROW_SELECTED_CLASS);
+      syncMarchIntelPhaseEtaMutualHighlight(this.panel, null);
       return;
     }
 
@@ -688,8 +706,10 @@ export class MarchListPanel {
     bodyEl.classList.remove("hidden");
 
     const now = this.nowMs();
+    phaseEtaStripEl.textContent = formatMarchIntelPhaseEtaStrip(march, now);
     primaryEl.textContent = formatMarchInfoCardPrimary(march);
     secondaryEl.textContent = formatMarchInfoCardSecondary(march, now);
+    syncMarchIntelPhaseEtaMutualHighlight(this.panel, march.march_id ?? null);
 
     const remarchBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-remarch"]');
     const viewDestBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-view-dest"]');
@@ -732,12 +752,29 @@ export class MarchListPanel {
       if (!m) continue;
       el.textContent = formatMarchIntelSecondaryLine(m, now, this.highlightState);
     }
+    const sublineNodes = this.panel.querySelectorAll<HTMLElement>(
+      `[data-role="${INTEL_ROW_PHASE_SUBLINE_CLASS}"]`,
+    );
+    for (const el of sublineNodes) {
+      const li = el.closest("li[data-march-id]");
+      const id = Number(li?.getAttribute("data-march-id"));
+      if (Number.isNaN(id)) continue;
+      const m = this.marches.find((row) => row.march_id === id);
+      if (!m) continue;
+      el.textContent = formatMarchIntelPhaseEtaStrip(m, now);
+    }
     const infoSecondary = this.panel.querySelector<HTMLElement>(
       '[data-role="march-info-card-secondary"]',
+    );
+    const phaseEtaStripEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"]`,
     );
     const selected = this.getSelectedMarch();
     if (infoSecondary && selected) {
       infoSecondary.textContent = formatMarchInfoCardSecondary(selected, now);
+    }
+    if (phaseEtaStripEl && selected) {
+      phaseEtaStripEl.textContent = formatMarchIntelPhaseEtaStrip(selected, now);
     }
     const etaNodes = this.panel.querySelectorAll<HTMLElement>(
       `[data-role="${MARCH_ROW_RECENT_ETA_ROLE}"]`,
