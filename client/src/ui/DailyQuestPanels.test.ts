@@ -580,6 +580,8 @@ describe("DailyQuestPanels", () => {
     await flushPromises();
     const secondary = mount.querySelector(".daily-quest-row-secondary");
     expect(secondary?.textContent).toContain("链进度");
+    const fill = mount.querySelector(".daily-quest-progress-fill") as HTMLElement;
+    expect(fill?.style.width).toBe("100%");
     const batchBtn = mount.querySelector('[data-action="claim-daily-batch"]') as HTMLButtonElement;
     expect(batchBtn?.hidden).toBe(false);
     batchBtn?.dispatchEvent(new Event("click", { bubbles: true }));
@@ -701,5 +703,43 @@ describe("DailyQuestPanels", () => {
     expect(mount.querySelector('[data-action="daily-locate-first"]')?.hidden).toBe(true);
 
     vi.unstubAllGlobals();
+  });
+
+  it("renders progress bar and reward line on secondary row (CLIENT-174)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerQuests: vi.fn().mockResolvedValue({
+        quests: [
+          {
+            quest_cfg_id: 1014,
+            quest_code: "daily_train_1",
+            chain_id: 400,
+            state: 2,
+            progress_current: 25,
+            progress_target: 50,
+          },
+        ],
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const session: MainCitySession = {
+      serverId: 1,
+      cityId: 1,
+      cityName: "城",
+      wallet: {},
+      buildings: [],
+      cityTroops: [],
+      bag: [],
+    };
+    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
+    panels.attach();
+    panels.toggle();
+    await flushPromises();
+    const row = mount.querySelector('li[data-quest-cfg-id="1014"]');
+    expect(row?.querySelector(".daily-quest-progress-fill")).toBeTruthy();
+    expect((row?.querySelector(".daily-quest-progress-fill") as HTMLElement)?.style.width).toBe(
+      "50%",
+    );
+    expect(row?.querySelector(".daily-quest-row-reward")?.textContent).toContain("急工符");
   });
 });

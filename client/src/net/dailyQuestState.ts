@@ -15,6 +15,9 @@ export const DAILY_RECRUIT_QUEST_CODE = "daily_recruit_1";
 
 export type DailyQuestRow = QuestRow & {
   chain_id?: number;
+  /** cfg_quest 主奖励道具（ListPlayerQuests 快照或客户端 DATA-002 回退）。 */
+  reward_item_id?: number;
+  quantity?: number;
 };
 
 export function dailyQuestsFromListResponse(res: { quests?: DailyQuestRow[] }): DailyQuestRow[] {

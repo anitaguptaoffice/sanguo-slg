@@ -157,11 +157,33 @@
         animation: hud-resource-pulse 1.2s ease-out 1;
       }
       .daily-quest-row-progress {
-        display: block;
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
         font-size: 11px;
         color: #9a8f7a;
         margin-top: 2px;
         overflow-wrap: anywhere;
+      }
+      .daily-quest-list li .daily-quest-progress {
+        display: block;
+        width: 100%;
+        max-width: 280px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(90, 74, 50, 0.18);
+        overflow: hidden;
+      }
+      .daily-quest-list li .daily-quest-progress-fill {
+        display: block;
+        height: 100%;
+        min-width: 2px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #c9a227, #8b6914);
+      }
+      .daily-quest-list li .daily-quest-row-reward {
+        font-size: 11px;
+        color: #b8a88a;
       }
       .shop-offer-afford-inline {
         display: block;

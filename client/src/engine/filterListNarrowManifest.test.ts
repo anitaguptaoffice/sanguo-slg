@@ -60,6 +60,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(`.${DAILY_QUEST_PROGRESS_SECONDARY_CLASS}`);
   });
 
+  it("CLIENT-174 exposes daily quest fine progress bar hooks for narrow manifest", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(".daily-quest-progress");
+    expect(html).toContain(".daily-quest-progress-fill");
+  });
+
   it("CLIENT-163 exposes mail claim-all action for batch toolbar manifest", () => {
     expect(MAIL_CLAIM_ALL_ATTACHMENTS_ACTION).toBe("claim-mail-all");
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
