@@ -3,6 +3,7 @@ import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
 import { skinToolbarButtons } from "@/engine/artToolbarButtonSkin";
 import { applyUiCountBadge } from "@/engine/artBadgeSkin";
+import { registerArtFilter008EvidenceHooks } from "@/engine/artFilter008EvidenceStaging";
 import { remountPanelFilterChips } from "@/engine/artFilterChipRuntime";
 import { mountToolbarIcons } from "@/engine/artToolbarIconSkin";
 import {
@@ -135,8 +136,10 @@ import {
   applyMarchTargetAndRemember,
   clearMarchTargetFromForm,
   marchTargetStatusMessage,
+  resolveMarchTargetTruth,
   restoreMarchTargetToForm,
   setMarchTargetFieldHighlight,
+  syncMarchTargetSessionFromForm,
   writeMarchTargetSession,
 } from "@/net/marchTargetMemory";
 import {
@@ -676,6 +679,7 @@ export class MainCityScene implements Scene {
     skinQueuePanel(this.queuePanels.getRoot(), this.assets, 520, 320);
     skinMailPanel(this.heroMail.getMailRoot(), this.assets, 520, 320);
     skinDailyPanel(this.dailyQuest.getRoot(), this.assets, 520, 320);
+    registerArtFilter008EvidenceHooks(this.assets);
     remountPanelFilterChips(this.heroMail.getMailRoot(), this.assets);
     remountPanelFilterChips(this.dailyQuest.getRoot(), this.assets);
     remountPanelFilterChips(this.battleReports.getRoot(), this.assets);
@@ -719,6 +723,7 @@ export class MainCityScene implements Scene {
     this.canvas.addEventListener("pointercancel", this.onCanvasPointerBound);
     this.hud.addEventListener("click", this.onHudClickBound);
     restoreMarchTargetToForm(this.militaryPanel);
+    this.syncMinimapFocusFromMarchTarget();
     this.syncMilitaryPanel();
     this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
     void this.hudTodoBadgePoll.pollOnce();
@@ -949,6 +954,7 @@ export class MainCityScene implements Scene {
     if (action === "march") void this.startMarch();
     if (action === "clear-march-target") {
       clearMarchTargetFromForm(this.militaryPanel);
+      this.clearMinimapWorldGridFocus();
       this.intelRemarchTroopsLine = null;
       this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
@@ -965,6 +971,8 @@ export class MainCityScene implements Scene {
         this.marchList.clearRecentMarchHighlight();
         this.intelRemarchTroopsLine = null;
       }
+      syncMarchTargetSessionFromForm(this.militaryPanel);
+      this.syncMinimapFocusFromMarchTarget();
     }
     this.syncMilitaryPanel();
   }
@@ -1287,10 +1295,21 @@ export class MainCityScene implements Scene {
       return;
     }
     this.world?.selectGridAt(world.wx, world.wy);
+    this.focusMinimapOnWorldGrid(world.wx, world.wy);
     this.militaryPanel.classList.remove("hidden");
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
     this.syncMilitaryPanel();
+  }
+
+  /** 军事面板 to_x/to_y 与 marchTargetMemory 对齐后，小地图 focus 环与角标同源。 */
+  private syncMinimapFocusFromMarchTarget(): void {
+    const truth = resolveMarchTargetTruth(this.militaryPanel);
+    if (truth) {
+      this.focusMinimapOnWorldGrid(truth.x, truth.y);
+    } else {
+      this.clearMinimapWorldGridFocus();
+    }
   }
 
   private async refreshMinimapMarches(): Promise<void> {
@@ -1905,6 +1924,8 @@ export class MainCityScene implements Scene {
       collapsed: this.minimapCollapsed,
       battleReportReplay: this.minimapBattleReportReplay,
       nowMs: this.marchClockMs,
+      assets: this.assets,
+      artSkinAnchor: document.getElementById("layout-frame"),
     });
 
     c2d.restore();
