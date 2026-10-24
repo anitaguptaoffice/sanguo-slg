@@ -34,10 +34,6 @@ func TestINTG026Wave29SmokePath(t *testing.T) {
 	runINTG026SmokePath(t, nil)
 }
 
-func runINTG026Wave29Smoke(t *testing.T) {
-	runINTG026SmokePath(t, nil)
-}
-
 func runINTG026SmokePath(t *testing.T, beforeRestart intg026BeforeRestartHook) {
 	pool := openDB(t)
 	ctx := context.Background()
