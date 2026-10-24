@@ -1822,6 +1822,7 @@ export class HeroMailPanels {
         highlightItemId: pick.itemCfgId,
         bagCategory: pick.bagCategory,
         returnHeroId: heroId,
+        openSource: "hero",
       });
       this.onOpenHeroCultivationBag(link);
       this.onStatus(`背包已定位 ${pick.itemCfgId}，请「使用道具」`);
@@ -1849,6 +1850,7 @@ export class HeroMailPanels {
           buildHeroBagDeepLinkQuery({
             highlightItemId: first,
             returnHeroId: this.selectedHeroId,
+            openSource: "hero",
           }),
         );
       }

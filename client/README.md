@@ -614,7 +614,8 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 
 1. 将领详情 **等级经验 / 忠诚** 进度条次行展示 `formatHeroUpgradeItemGap`（道具 `#id` 需/持 vs `ListPlayerBag` 快照）；不足时 **使用养成道具** 保持 disabled + `hero-cultivation-disabled-reason` 缺口文案。
 2. **前往背包使用养成道具**：深链带 `bagCategory` + `highlightItemId` + `returnHeroId`（`serializeHeroBagDeepLinkQuery` / CLIENT-134 模式），打开背包定位 **CLIENT-153** 分类 tab 与高亮堆叠行；**返回将领详情** 保留 `hero_id`。
-3. 单测：`heroUpgradeItemGap.test.ts`、`heroDetailBagDeepLink.test.ts`（query 解析）、`HeroMailPanels.test.ts` / `ContentPanels.test.ts`；`cd client && npm test` 绿。
+3. **CLIENT-175 背包道具扫读**：堆叠行次行 `formatBagItemCfgSummary`（养成/消耗/其他 + 本地 cfg 堆叠上限或简述）；自日常/将领/商城深链打开时展示 `bag-open-source-v1` 来源标签（`daily`/`hero`/`shop`，query 键 `bagOpenSource`）；关闭再开仍保留 **CLIENT-165** `highlightItemId` 高亮；商城「在背包查看所购道具」走 `shop` 来源。单测：`bagItemCfgSummary.test.ts`、`bagOpenSource.test.ts`、`ContentPanels.test.ts`。
+4. 单测：`heroUpgradeItemGap.test.ts`、`heroDetailBagDeepLink.test.ts`（query 解析）、`HeroMailPanels.test.ts` / `ContentPanels.test.ts`；`cd client && npm test` 绿。
 
 ### 手动验收（将领详情忠诚养成深链 CLIENT-133）
 

@@ -1,5 +1,11 @@
 import type { BagStack } from "@/net/bagState";
 import { categorizeBagStackRow, parseBagCategoryTabSessionValue, type BagClientCategory } from "@/net/bagCategory";
+import {
+  appendBagOpenSourceQuery,
+  BAG_OPEN_SOURCE_QUERY_KEY,
+  parseBagOpenSource,
+  type BagOpenSource,
+} from "@/net/bagOpenSource";
 import { pickHeroCultivationUseItemCfgId, validateHeroDetailCultivationUse } from "@/net/heroDetailCultivationUse";
 
 export const HERO_GOTO_BAG_CULTIVATION_LABEL = "前往背包使用养成道具";
@@ -11,6 +17,7 @@ export type HeroBagDeepLinkQuery = {
   bagCategory: BagClientCategory;
   highlightItemId: number;
   returnHeroId: number;
+  openSource?: BagOpenSource;
 };
 
 export type HeroDetailBagDeepLinkPick =
@@ -39,6 +46,7 @@ export function buildHeroBagDeepLinkQuery(input: {
   highlightItemId: number;
   bagCategory?: BagClientCategory;
   returnHeroId?: number;
+  openSource?: BagOpenSource;
 }): HeroBagDeepLinkQuery {
   const highlightItemId = Math.floor(Number(input.highlightItemId) || 0);
   const returnHeroId = Math.floor(Number(input.returnHeroId) || 0);
@@ -51,6 +59,7 @@ export function buildHeroBagDeepLinkQuery(input: {
     bagCategory,
     highlightItemId,
     returnHeroId,
+    openSource: input.openSource,
   };
 }
 
@@ -65,6 +74,9 @@ export function serializeHeroBagDeepLinkQuery(query: HeroBagDeepLinkQuery): stri
   }
   if (query.returnHeroId > 0) {
     params.set("returnHeroId", String(query.returnHeroId));
+  }
+  if (query.openSource) {
+    appendBagOpenSourceQuery(params, query.openSource);
   }
   return params.toString();
 }
@@ -82,10 +94,12 @@ export function parseHeroBagDeepLinkQuery(
     parseBagCategoryTabSessionValue(categoryRaw) ??
     categorizeBagStackRow({ item_cfg_id: Math.floor(highlightItemId), quantity: 1 });
   const returnHeroId = Number(params.get("returnHeroId") ?? params.get("return_hero_id") ?? 0);
+  const openSource = parseBagOpenSource(params.get(BAG_OPEN_SOURCE_QUERY_KEY));
   return buildHeroBagDeepLinkQuery({
     highlightItemId: Math.floor(highlightItemId),
     bagCategory,
     returnHeroId: Number.isFinite(returnHeroId) && returnHeroId > 0 ? Math.floor(returnHeroId) : 0,
+    openSource: openSource ?? undefined,
   });
 }
 

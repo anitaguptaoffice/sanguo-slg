@@ -85,9 +85,16 @@ import {
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
 } from "@/net/useConsumableSubmitFeedback";
+import { formatBagItemCfgSummary } from "@/net/bagItemCfgSummary";
+import {
+  clearBagOpenSourceSession,
+  formatBagOpenSourceTagLabel,
+  readBagOpenSourceSession,
+  writeBagOpenSourceSession,
+  type BagOpenSource,
+} from "@/net/bagOpenSource";
 import {
   buildHeroBagDeepLinkQuery,
-  clearHeroBagDeepLinkQuerySession,
   type HeroBagDeepLinkQuery,
   scrollBagItemRowIntoView,
   writeHeroBagDeepLinkQuerySession,
@@ -137,6 +144,7 @@ export class ContentPanels {
   private bagListLoading = false;
   private bagListError: string | null = null;
   private bagReturnHeroId = 0;
+  private shopLastGrantedItemCfgId = 0;
   private onBagReturnHeroDetail?: (heroId: number) => void;
 
   constructor(
@@ -180,11 +188,18 @@ export class ContentPanels {
   }
 
   toggleBag(): void {
+    const wasHidden = this.bagPanel.classList.contains("hidden");
     this.bagPanel.classList.toggle("hidden");
-    if (!this.bagPanel.classList.contains("hidden")) {
-      resetCenterPanelViewportScroll(this.bagPanel);
-      void this.refreshBag();
+    if (!wasHidden) {
+      this.syncBagOpenSourceTag();
+      return;
     }
+    if (!this.bagHighlightItemId) {
+      clearBagOpenSourceSession();
+    }
+    resetCenterPanelViewportScroll(this.bagPanel);
+    this.syncBagOpenSourceTag();
+    void this.refreshBag();
   }
 
   getBagRoot(): HTMLElement {
@@ -197,13 +212,36 @@ export class ContentPanels {
 
   /** 日常战备：打开背包并高亮指定 item_cfg_id（如 march_ration=2020）。 */
   openBagHighlightItem(itemCfgId: number): void {
-    this.openBagFromHeroDeepLink(
-      buildHeroBagDeepLinkQuery({ highlightItemId: itemCfgId, bagCategory: "all" }),
+    this.openBagWithDeepLink(
+      buildHeroBagDeepLinkQuery({
+        highlightItemId: itemCfgId,
+        bagCategory: "all",
+        openSource: "daily",
+      }),
+      "daily",
+    );
+  }
+
+  /** 商城购买后查看背包（CLIENT-175 来源标签 shop）。 */
+  openBagFromShopDeepLink(itemCfgId: number): void {
+    if (itemCfgId <= 0) return;
+    this.openBagWithDeepLink(
+      buildHeroBagDeepLinkQuery({
+        highlightItemId: itemCfgId,
+        bagCategory: "all",
+        openSource: "shop",
+      }),
+      "shop",
     );
   }
 
   /** 将领养成互链（CLIENT-165）：`bagCategory` / `highlightItemId` / `returnHeroId` 深链。 */
   openBagFromHeroDeepLink(link: HeroBagDeepLinkQuery): void {
+    this.openBagWithDeepLink(link, link.openSource ?? "hero");
+  }
+
+  private openBagWithDeepLink(link: HeroBagDeepLinkQuery, source: BagOpenSource): void {
+    writeBagOpenSourceSession(source);
     const highlightItemId = link.highlightItemId;
     const ids = highlightItemId > 0 ? [highlightItemId] : [];
     this.bagReturnHeroId = link.returnHeroId > 0 ? link.returnHeroId : 0;
@@ -211,7 +249,10 @@ export class ContentPanels {
       this.bagCategory = link.bagCategory;
       writeBagCategoryTabSession(link.bagCategory);
     }
-    writeHeroBagDeepLinkQuerySession(link);
+    writeHeroBagDeepLinkQuerySession({
+      ...link,
+      openSource: link.openSource ?? source,
+    });
     this.bagHighlightItemIds = new Set(ids);
     this.bagHighlightItemId = highlightItemId;
     if (highlightItemId > 0) {
@@ -230,6 +271,7 @@ export class ContentPanels {
         ? `${cat}高亮 item_cfg_id=${highlightItemId}；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。`
         : "暂无养成消耗品；「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量。";
     }
+    this.syncBagOpenSourceTag();
     void this.refreshBag().then(() => {
       if (highlightItemId > 0) scrollBagItemRowIntoView(this.bagPanel, highlightItemId);
     });
@@ -237,7 +279,10 @@ export class ContentPanels {
 
   openBagHighlightItems(itemCfgIds: number[]): void {
     const first = itemCfgIds.find((id) => id > 0) ?? 0;
-    this.openBagFromHeroDeepLink(buildHeroBagDeepLinkQuery({ highlightItemId: first }));
+    this.openBagWithDeepLink(
+      buildHeroBagDeepLinkQuery({ highlightItemId: first, openSource: "hero" }),
+      "hero",
+    );
   }
 
   private syncBagReturnHeroButton(): void {
@@ -255,10 +300,26 @@ export class ContentPanels {
     const heroId = this.bagReturnHeroId;
     if (heroId <= 0) return;
     this.bagReturnHeroId = 0;
-    clearHeroBagDeepLinkQuerySession();
     this.syncBagReturnHeroButton();
     this.bagPanel.classList.add("hidden");
+    this.syncBagOpenSourceTag();
     this.onBagReturnHeroDetail?.(heroId);
+  }
+
+  private syncBagOpenSourceTag(): void {
+    const el = this.bagPanel.querySelector('[data-role="bag-open-source-tag"]') as HTMLElement | null;
+    if (!el) return;
+    const source = readBagOpenSourceSession();
+    const panelOpen = !this.bagPanel.classList.contains("hidden");
+    if (!source || !panelOpen) {
+      el.hidden = true;
+      el.textContent = "";
+      el.removeAttribute("data-bag-open-source");
+      return;
+    }
+    el.hidden = false;
+    el.setAttribute("data-bag-open-source", source);
+    el.textContent = formatBagOpenSourceTagLabel(source);
   }
 
   toggleShop(): void {
@@ -335,6 +396,19 @@ export class ContentPanels {
     }).ok;
   }
 
+  private syncShopViewGrantedBagButton(): void {
+    const btn = this.shopPanel.querySelector<HTMLButtonElement>(
+      '[data-action="shop-view-granted-bag"]',
+    );
+    if (!btn) return;
+    if (this.shopLastGrantedItemCfgId > 0) {
+      btn.classList.remove("hidden");
+      btn.textContent = `在背包查看 #${this.shopLastGrantedItemCfgId}`;
+    } else {
+      btn.classList.add("hidden");
+    }
+  }
+
   private syncShopPurchaseSubmit(): void {
     syncShopPurchaseSubmitButton(
       this.shopPanel,
@@ -390,6 +464,7 @@ export class ContentPanels {
     el.dataset.centerPanel = "bag";
     el.innerHTML = `
       <h3>背包</h3>
+      <span class="bag-open-source-tag hidden" data-role="bag-open-source-tag" hidden></span>
       <p data-role="bag-hint">「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量；领奖/购买仍会先合并到本会话。</p>
       <label>道具
         <select data-field="item-id">
@@ -434,6 +509,7 @@ export class ContentPanels {
       <p class="wallet-gap-line hidden" data-role="shop-wallet-gap" aria-live="polite"></p>
       <p class="shop-form-error hidden" data-role="shop-form-error" role="alert"></p>
       <button type="button" data-action="buy-offer">购买×1</button>
+      <button type="button" class="hidden" data-action="shop-view-granted-bag">在背包查看所购道具</button>
       <div class="panel-scroll-body" data-role="shop-scroll">
         <ul class="shop-list" data-role="shop-list"></ul>
       </div>
@@ -514,6 +590,13 @@ export class ContentPanels {
       li.appendChild(idSpan);
       li.appendChild(nameSpan);
       li.appendChild(qtySpan);
+      const summary = formatBagItemCfgSummary(row);
+      if (summary) {
+        const secondary = document.createElement("span");
+        secondary.className = "bag-stack-secondary";
+        secondary.textContent = summary;
+        li.appendChild(secondary);
+      }
       if (
         row.item_cfg_id === this.selectedItemId &&
         isBatchUseEligibleItem(row.item_cfg_id) &&
@@ -962,6 +1045,9 @@ export class ContentPanels {
       );
       if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
       const granted = res.granted_items?.items?.[0];
+      const grantedCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
+      this.shopLastGrantedItemCfgId = grantedCfgId;
+      this.syncShopViewGrantedBagButton();
       const grantedQty = (granted?.quantity ?? 1) * purchaseCount;
       const panelLine = formatShopPurchaseFeedback(purchaseCount, res.wallet_after, {
         itemCfgId: granted?.item_cfg_id,
@@ -1081,5 +1167,8 @@ export class ContentPanels {
     const a = btn.getAttribute("data-action");
     if (a === "refresh-shop" || a === "retry-refresh-shop") void this.refreshShop();
     if (a === "buy-offer") void this.buyOffer();
+    if (a === "shop-view-granted-bag") {
+      this.openBagFromShopDeepLink(this.shopLastGrantedItemCfgId);
+    }
   }
 }

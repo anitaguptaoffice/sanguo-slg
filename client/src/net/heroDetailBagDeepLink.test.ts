@@ -19,6 +19,18 @@ describe("heroBagDeepLinkQuery (CLIENT-165)", () => {
   it("parseHeroBagDeepLinkQuery rejects missing highlightItemId", () => {
     expect(parseHeroBagDeepLinkQuery("bagCategory=cultivation")).toBeNull();
   });
+
+  it("round-trips bagOpenSource query (CLIENT-175)", () => {
+    const q = {
+      bagCategory: "cultivation" as const,
+      highlightItemId: 2017,
+      returnHeroId: 0,
+      openSource: "daily" as const,
+    };
+    const raw = serializeHeroBagDeepLinkQuery(q);
+    expect(raw).toContain("bagOpenSource=daily");
+    expect(parseHeroBagDeepLinkQuery(raw)).toEqual(q);
+  });
 });
 
 describe("pickHeroDetailBagDeepLink", () => {
