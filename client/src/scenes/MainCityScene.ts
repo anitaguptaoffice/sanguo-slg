@@ -146,6 +146,16 @@ import {
   syncMarchQueueBanner,
   type MarchQueueBannerTarget,
 } from "@/net/marchQueueBanner";
+import {
+  applyMarchFormIntelMutualHighlight,
+  openMarchIntelInfoCardFromMilitary,
+  openMilitaryFromMarchInfoCard as navigateMilitaryFromMarchInfoCard,
+  resolveMarchFormIntelJumpIndex,
+} from "@/net/marchInfoCard";
+import {
+  MARCH_FORM_VIEW_INTEL_INFO_ACTION,
+  syncMarchFormReadonlyStripFromInput,
+} from "@/net/marchFormReadonlyStrip";
 import { ChatUnreadPoll } from "@/net/chatUnreadPoll";
 import { ChatUnreadTracker } from "@/net/chatUnread";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
@@ -359,6 +369,10 @@ export class MainCityScene implements Scene {
     this.militaryPanel.innerHTML = `
       <h3>军事</h3>
       <button type="button" class="march-queue-banner hidden" data-role="march-queue-banner"></button>
+      <div class="march-form-readonly-strip hidden" data-role="march-form-readonly-strip" aria-live="polite">
+        <p class="march-form-readonly-strip-line" data-role="march-form-readonly-strip-line"></p>
+        <button type="button" class="march-form-view-intel-info hidden" data-action="${MARCH_FORM_VIEW_INTEL_INFO_ACTION}">查看军情信息卡</button>
+      </div>
       <p class="military-troops" data-role="troops"></p>
       <div class="panel-scroll-body" data-role="military-scroll">
         <div class="military-recruit-section" data-role="military-recruit-section">
@@ -581,7 +595,9 @@ export class MainCityScene implements Scene {
           this.status = `世界：已定位军情目的格 (${tx},${ty})`;
           this.renderHud();
         },
+        onOpenMilitaryFromInfoCard: (march) => this.handleOpenMilitaryFromMarchInfoCard(march),
         onSelectionChange: (march) => {
+          this.syncMilitaryPanel();
           if (march) {
             const tx = march.to_x;
             const ty = march.to_y;
@@ -1032,6 +1048,11 @@ export class MainCityScene implements Scene {
       if (marchId > 0) this.openMarchIntelPanelHighlight(marchId);
       return;
     }
+    if (action === MARCH_FORM_VIEW_INTEL_INFO_ACTION) {
+      const marchId = Number(btn.getAttribute("data-march-id"));
+      if (marchId > 0) this.openMarchIntelFromFormStrip(marchId);
+      return;
+    }
     if (action === "view-recruit-queue") {
       const qid = Number(btn.dataset.queueId) || this.recruitQueueHighlightId || 0;
       if (qid > 0) this.openRecruitQueueAndHighlight(qid);
@@ -1062,6 +1083,46 @@ export class MainCityScene implements Scene {
       this.syncMinimapFocusFromMarchTarget();
     }
     this.syncMilitaryPanel();
+  }
+
+  private openMarchIntelFromFormStrip(marchId: number): void {
+    const layoutFrame = document.getElementById("layout-frame");
+    openMarchIntelInfoCardFromMilitary(marchId, {
+      openMarchIntel: (id) => {
+        this.marchList.selectMarchById(id, { openPanel: true });
+        this.status = `军情：已打开信息卡并选中行军 #${id}（军事汇总互跳）`;
+        this.renderHud();
+      },
+      highlightIntel: (jump) => {
+        if (layoutFrame) {
+          applyMarchFormIntelMutualHighlight(layoutFrame, jump, "intel-card");
+          applyMarchFormIntelMutualHighlight(layoutFrame, jump, "intel-row");
+        }
+      },
+      scrollInfoCardIntoView: () => {
+        this.marchList
+          .getPanelElement()
+          ?.querySelector('[data-role="march-info-card"]')
+          ?.scrollIntoView?.({ block: "nearest" });
+      },
+    });
+    if (layoutFrame) {
+      const jump = resolveMarchFormIntelJumpIndex(marchId);
+      applyMarchFormIntelMutualHighlight(layoutFrame, jump, "military-strip");
+    }
+    this.syncMilitaryPanel();
+  }
+
+  private handleOpenMilitaryFromMarchInfoCard(march: MarchSummary): void {
+    const layoutFrame = document.getElementById("layout-frame");
+    navigateMilitaryFromMarchInfoCard(march, {
+      openMilitaryWithMarch: (m) => this.openMilitaryFromIntelRemarch(m),
+      highlightMilitaryStrip: (jump) => {
+        if (layoutFrame) applyMarchFormIntelMutualHighlight(layoutFrame, jump, "military-strip");
+      },
+    });
+    this.status = `军事：已从军情信息卡预填目的格（行军 #${march.march_id ?? "?"})`;
+    this.renderHud();
   }
 
   private openMarchIntelPanelHighlight(marchId: number): void {
@@ -1168,6 +1229,18 @@ export class MainCityScene implements Scene {
     );
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
     syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget);
+    const queueId = this.marchQueueBannerTarget?.march_id ?? null;
+    syncMarchFormReadonlyStripFromInput(this.militaryPanel, {
+      intelSelectedMarch: this.marchList.getSelectedMarch(),
+      queueBannerMarchId: queueId,
+      queueBannerMarch:
+        queueId != null ? this.minimapMarches.find((m) => m.march_id === queueId) ?? null : null,
+      formRoot: this.militaryPanel,
+      cityX: this.session?.cityX,
+      cityY: this.session?.cityY,
+      wallet: this.session?.wallet,
+      nowMs: this.marchClockMs,
+    });
   }
 
   private marchFormFeedbackContext() {

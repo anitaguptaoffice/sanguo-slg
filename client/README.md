@@ -943,6 +943,8 @@ cd client && npm install && npm run dev
 
 **wave:31 巩固（CLIENT-156）**：`StartMarch` 成功除 **CLIENT-116** `march-row-recent` 外，**军事** 面板顶栏 **`march-queue-banner`** 展示 `formatMarchQueueBanner` 摘要（**5s** `march-queue-banner-pulse`）；军情新高亮行次行追加 **「已提交」** 戳记（与 **CLIENT-141** ETA/phase 并存）。点击摘要条 `openMarchPanelAndHighlight(march_id)` 打开军情并高亮行；行内 **军事队列** 链回军事顶栏（`resolveMarchQueueJumpIndex` 互跳索引）。loading/empty/error 仍走 **CLIENT-129** `panelStateChrome`。单测：`marchQueueBanner.test.ts`、`MarchListPanel.test.ts`。
 
+**wave:33（CLIENT-178）**：军事面板 **`march-form-readonly-strip`** 用 `formatMarchFormSummaryLine` / 军情选中行军快照扫读 **格点 + 兵力 + ETA**；**查看军情信息卡** 跳转军情列表选中 `march_id` 并高亮 **`march-info-card`**（与 **CLIENT-172** 信息卡 DOM/格式化钩子可叠加）。信息卡 **打开军事** 走 **CLIENT-093** `applyMarchIntelRemarchPrefillWithFeedback`；**CLIENT-156** 队列顶栏与 **CLIENT-145** 表单 summary/error 不退化。单测：`marchFormReadonlyStrip.test.ts`、`marchInfoCard.test.ts`、`marchFormIntelJump.test.ts`。
+
 1. `make dev` 合法出征一次 → 观察按钮 **出征中…** 与顶栏 toast → **行军** 面板应自动展开且新行带金色 ETA 前缀与高亮框。
 2. 故意网关失败（断网或非法兵力）→ 表单内错误文案，按钮恢复可点。
 3. 单测：`marchHighlight.test.ts`、`marchSubmitFeedback.test.ts`、`marchFormSummary.test.ts`、`MarchListPanel.test.ts`。

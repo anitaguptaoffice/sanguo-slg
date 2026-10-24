@@ -73,6 +73,7 @@ import {
   formatMarchInfoCardPrimary,
   formatMarchInfoCardSecondary,
   MARCH_INFO_CARD_CLASS,
+  MARCH_INFO_CARD_OPEN_MILITARY_ACTION,
   MARCH_ROW_SELECTED_CLASS,
 } from "@/net/marchInfoCard";
 export type MarchListPanelOptions = {
@@ -91,6 +92,8 @@ export type MarchListPanelOptions = {
   onOpenMilitaryQueueBanner?: (marchId: number) => void;
   /** CLIENT-172：信息卡「查看目的格点」→ 世界面板焦点。 */
   onViewMarchDestTile?: (march: MarchSummary) => void;
+  /** CLIENT-178：军情信息卡「打开军事」→ CLIENT-093 预填。 */
+  onOpenMilitaryFromInfoCard?: (march: MarchSummary) => void;
 };
 
 export class MarchListPanel {
@@ -109,6 +112,7 @@ export class MarchListPanel {
   private readonly onRemarchFromRow?: (march: MarchSummary) => void;
   private readonly onOpenMilitaryQueueBanner?: (marchId: number) => void;
   private readonly onViewMarchDestTile?: (march: MarchSummary) => void;
+  private readonly onOpenMilitaryFromInfoCard?: (march: MarchSummary) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
@@ -135,6 +139,7 @@ export class MarchListPanel {
     this.onRemarchFromRow = options?.onRemarchFromRow;
     this.onOpenMilitaryQueueBanner = options?.onOpenMilitaryQueueBanner;
     this.onViewMarchDestTile = options?.onViewMarchDestTile;
+    this.onOpenMilitaryFromInfoCard = options?.onOpenMilitaryFromInfoCard;
     this.assets = options?.assets;
   }
 
@@ -309,6 +314,10 @@ export class MarchListPanel {
     return this.panel != null && !this.panel.classList.contains("hidden");
   }
 
+  getPanelElement(): HTMLElement | null {
+    return this.panel ?? null;
+  }
+
   toggle(): void {
     this.panel.classList.toggle("hidden");
     if (this.isOpen()) {
@@ -398,6 +407,7 @@ export class MarchListPanel {
           <div class="march-info-card-actions">
             <button type="button" data-action="march-info-view-dest">查看目的格点</button>
             <button type="button" data-action="march-info-remarch">再出征</button>
+            <button type="button" data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}">打开军事</button>
           </div>
         </div>
       </aside>
@@ -669,10 +679,16 @@ export class MarchListPanel {
 
     const remarchBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-remarch"]');
     const viewDestBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-view-dest"]');
-    const hasDest =
-      Number.isFinite(march.to_x) && Number.isFinite(march.to_y);
+    const openMilitaryBtn = card.querySelector<HTMLButtonElement>(
+      `[data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}"]`,
+    );
+    const hasDest = Number.isFinite(march.to_x) && Number.isFinite(march.to_y);
     viewDestBtn?.toggleAttribute("disabled", !hasDest);
     remarchBtn?.toggleAttribute("disabled", !hasDest);
+    openMilitaryBtn?.toggleAttribute("disabled", !hasDest);
+    if (openMilitaryBtn && march.march_id != null) {
+      openMilitaryBtn.setAttribute("data-march-id", String(march.march_id));
+    }
   }
 
   private applyPhaseChangeRowPulses(): void {
@@ -928,6 +944,19 @@ export class MarchListPanel {
       if (phase) {
         const next = militaryListPhaseChipReducer(this.listFilter, { type: "select", phase });
         this.setListFilter(next);
+      }
+      return;
+    }
+
+    const infoCardBtn = (ev.target as HTMLElement).closest(
+      `[data-action="${MARCH_INFO_CARD_OPEN_MILITARY_ACTION}"]`,
+    );
+    if (infoCardBtn) {
+      ev.stopPropagation();
+      const id = Number(infoCardBtn.getAttribute("data-march-id"));
+      if (!Number.isNaN(id) && id > 0) {
+        const march = this.marches.find((row) => row.march_id === id) ?? null;
+        if (march) this.onOpenMilitaryFromInfoCard?.(march);
       }
       return;
     }
