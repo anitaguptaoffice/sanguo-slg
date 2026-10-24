@@ -626,6 +626,23 @@
         margin-top: 4px; font-size: 12px; cursor: pointer;
       }
       .military-panel .march-form-view-intel-info.hidden { display: none; }
+      .military-panel .march-form-troop-reserve-line {
+        display: block; width: 100%; margin: 0 0 6px; padding: 6px 8px; font-size: 12px;
+        line-height: 1.45; text-align: left; color: #3d4a28;
+        background: rgba(90, 110, 60, 0.08); border: 1px solid rgba(61, 74, 40, 0.2);
+        border-radius: 4px; box-sizing: border-box;
+      }
+      .military-panel .march-form-troop-reserve-line.hidden { display: none; }
+      .military-panel .march-form-troop-reserve-line:disabled {
+        cursor: default; opacity: 1;
+      }
+      .military-panel .march-form-troop-reserve-line.march-form-reserve-warn {
+        color: #8b2a14; background: rgba(180, 70, 40, 0.12);
+        border-color: rgba(140, 50, 20, 0.4); cursor: pointer;
+      }
+      .military-panel .march-form-troop-reserve-line.march-form-reserve-warn:disabled {
+        cursor: pointer;
+      }
       .march-info-card {
         margin: 8px 0; padding: 8px 10px; font-size: 12px; line-height: 1.45;
         background: rgba(201, 162, 39, 0.08); border: 1px solid rgba(201, 162, 39, 0.35);
@@ -2858,6 +2875,7 @@
       #layout-frame.layout-narrow .military-panel .march-form-readonly-strip,
       #layout-frame.layout-narrow .military-panel .march-form-summary,
       #layout-frame.layout-narrow .military-panel .march-form-summary-warn,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-reserve-line,
       #layout-frame.layout-narrow .military-panel .march-form-error,
       #layout-frame.layout-narrow .military-panel .troop-recruit-preview {
         flex-shrink: 0;
