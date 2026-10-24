@@ -3,6 +3,7 @@ import type { AssetLoader } from "@/engine/AssetLoader";
 import { PANEL_STATE_CHROME_CLASS } from "@/engine/panelStateChrome";
 import {
   dispatchPanelGatewayRetryClick,
+  formatGuildChatPanelGatewayListError,
   formatPanelEmptyHint,
   formatPanelGatewayErrorFromUnknownForList,
   formatPanelGatewayListError,
@@ -42,6 +43,17 @@ describe("formatPanelGatewayListError domain prefix", () => {
     expect(formatPanelGatewayErrorFromUnknownForList("shop", err)).toBe(
       "商城：余额不足 [64003]",
     );
+  });
+});
+
+describe("formatGuildChatPanelGatewayListError (CLIENT-200)", () => {
+  it("prefixes guild members and chat list gateway errors", () => {
+    const err = Object.assign(new Error("军团不存在"), { code: 60001 });
+    expect(formatGuildChatPanelGatewayListError("guildMembers", err)).toBe(
+      "军团：军团不存在 [60001]",
+    );
+    const muted = Object.assign(new Error("已被禁言"), { code: 61006 });
+    expect(formatGuildChatPanelGatewayListError("chat", muted)).toBe("聊天：已被禁言 [61006]");
   });
 });
 

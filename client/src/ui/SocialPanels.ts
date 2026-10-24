@@ -35,12 +35,9 @@ import {
   guildRoleLabel,
   formatGuildSummaryText,
   formatSenderLabel,
-  formatSocialChatEmptyMessage,
+  formatGuildPanelEmptyHint,
   formatSocialGatewayError,
-  formatSocialGuildMembersEmptyMessage,
-  formatSocialGuildNotJoinedReadonlyMessage,
   formatSocialGuildTabNavigateLabel,
-  formatSocialPanelListRefreshHint,
   formatSocialRankEmptyMessage,
   groupChatMessagesByLocalDay,
   socialChatEmptyListClass,
@@ -53,7 +50,9 @@ import { formatTimeMs } from "@/net/militaryFormat";
 import { SocialPanelInflight } from "@/net/socialPanelInflight";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import {
+  formatGuildChatPanelGatewayListError,
   formatPanelGatewayErrorFromUnknownForList,
+  GUILD_CHAT_RETRY_INLINE_CLASS,
   renderPanelGatewayErrorListRow,
   renderPanelGatewayErrorTableRow,
 } from "@/net/panelGatewayError";
@@ -634,7 +633,7 @@ export class SocialPanels {
         });
         this.onStatus("聊天已刷新");
       } catch (e) {
-        const msg = formatSocialGatewayError(e);
+        const msg = formatGuildChatPanelGatewayListError("chat", e);
         this.chatListError = msg;
         this.renderChatLog([], ch);
         this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", {
@@ -654,7 +653,7 @@ export class SocialPanels {
     if (channel === CHAT_CHANNEL_GUILD && this.guildId <= 0) {
       const li = document.createElement("li");
       li.className = socialChatEmptyListClass();
-      li.textContent = formatSocialGuildNotJoinedReadonlyMessage();
+      li.textContent = formatGuildPanelEmptyHint("chat", { guildJoined: false });
       const nav = document.createElement("button");
       nav.type = "button";
       nav.className = "social-guild-nav";
@@ -667,11 +666,17 @@ export class SocialPanels {
     }
     const groups = groupChatMessagesByLocalDay(messages);
     if (groups.length === 0) {
+      if (this.chatListError) {
+        renderPanelGatewayErrorListRow(ul, this.chatListError, {
+          legacyClass: socialChatEmptyListClass(),
+          retryAction: "retry-refresh-chat",
+          retryClass: GUILD_CHAT_RETRY_INLINE_CLASS,
+        });
+        return;
+      }
       const li = document.createElement("li");
       li.className = socialChatEmptyListClass();
-      li.textContent = this.chatListError
-        ? formatSocialPanelListRefreshHint()
-        : formatSocialChatEmptyMessage();
+      li.textContent = formatGuildPanelEmptyHint("chat", { guildJoined: true });
       ul.appendChild(li);
       return;
     }
@@ -724,7 +729,7 @@ export class SocialPanels {
       this.guildMembersCache = [];
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
-      li.textContent = `${formatSocialGuildNotJoinedReadonlyMessage()}可在本面板下方创建或加入军团。`;
+      li.textContent = formatGuildPanelEmptyHint("guildMembers", { guildJoined: false });
       ul.appendChild(li);
       return;
     }
@@ -734,12 +739,13 @@ export class SocialPanels {
         renderPanelGatewayErrorListRow(ul, this.guildListError, {
           legacyClass: socialGuildMembersEmptyListClass(),
           retryAction: "retry-refresh-members",
+          retryClass: GUILD_CHAT_RETRY_INLINE_CLASS,
         });
         return;
       }
       const li = document.createElement("li");
       li.className = socialGuildMembersEmptyListClass();
-      li.textContent = formatSocialGuildMembersEmptyMessage();
+      li.textContent = formatGuildPanelEmptyHint("guildMembers", { guildJoined: true });
       ul.appendChild(li);
       return;
     }
@@ -958,7 +964,7 @@ export class SocialPanels {
         });
         this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
       } catch (e) {
-        const msg = formatPanelGatewayErrorFromUnknownForList("guild", e);
+        const msg = formatGuildChatPanelGatewayListError("guildMembers", e);
         this.guildListError = msg;
         this.renderGuildMembersList([]);
         this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", {
