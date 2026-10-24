@@ -2852,6 +2852,19 @@
       .rank-panel .rank-refresh-cooldown-stamp {
         font-size: 11px; color: #b8a88a; margin-left: 6px; white-space: nowrap;
       }
+      .rank-panel .rank-refresh-cooldown-residual-stamp {
+        margin: 4px 0 0; font-size: 11px; line-height: 1.35; color: #9ab0c8;
+        overflow-wrap: anywhere;
+      }
+      .rank-panel .rank-refresh-cooldown-residual-stamp.hidden { display: none; }
+      @keyframes rank-pin-keep-residual-ring-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 rgba(201, 162, 39, 0); }
+        35% { box-shadow: inset 0 0 0 2px rgba(201, 162, 39, 0.95); }
+        70% { box-shadow: inset 0 0 0 1px rgba(201, 162, 39, 0.45); }
+      }
+      .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring td {
+        animation: rank-pin-keep-residual-ring-keyframes 1.5s ease-out 1;
+      }
       .rank-table .rank-empty-retry-inline,
       .rank-panel .rank-empty-retry-inline {
         margin-top: 6px; font-size: 11px; padding: 2px 8px; cursor: pointer;
@@ -3649,6 +3662,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-member-online-summary,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-member-online-summary"],
@@ -3691,6 +3705,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-pin-refresh-residual-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-residual-line {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }

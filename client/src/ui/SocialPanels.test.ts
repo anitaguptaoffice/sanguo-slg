@@ -10,6 +10,8 @@ import {
   RANK_MANUAL_REFRESH_COOLDOWN_MS,
   RANK_MANUAL_REFRESH_SESSION_KEY,
 } from "@/net/rankRefreshCooldown";
+import { formatRankRefreshCooldownResidualStamp } from "@/net/rankRefreshCooldownResidual";
+import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
   LEADERBOARD_RETURN_SCROLL_SESSION_KEY,
@@ -341,6 +343,49 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     expect(btn.disabled).toBe(true);
     resolve({ entries: [], my_rank: 0, my_score: 0 });
     await flushPromises();
+  });
+
+  it("CLIENT-248: manual refresh shows cooldown residual stamp and pin keep ring", async () => {
+    const mount = document.createElement("div");
+    const now = 1_700_000_000_000;
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
+    const getLeaderboard = vi
+      .fn()
+      .mockResolvedValueOnce({
+        entries: [{ rank: 1, display_name: "甲", score: 100 }],
+        my_rank: 2,
+        my_score: 90,
+      })
+      .mockResolvedValueOnce({
+        entries: [{ rank: 1, display_name: "甲", score: 100 }],
+        my_rank: 2,
+        my_score: 91,
+      });
+    const gateway: GatewayPort = {
+      getLeaderboard,
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new SocialPanels(mount, gateway, () => baseSession(), () => {});
+    panels.attach();
+    panels.toggleRank();
+    await flushPromises();
+    try {
+      mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+      await flushPromises();
+      const residual = mount.querySelector('[data-role="rank-refresh-cooldown-residual"]');
+      expect(residual?.textContent).toBe(
+        formatRankRefreshCooldownResidualStamp(now, now, now),
+      );
+      expect(residual?.classList.contains("hidden")).toBe(false);
+      expect(mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_RING_CLASS)).toBe(
+        true,
+      );
+      expect(mount.querySelector('[data-role="rank-refresh-cooldown"]')?.textContent).toBe(
+        formatRankRefreshCooldownStamp(now, now),
+      );
+    } finally {
+      nowSpy.mockRestore();
+    }
   });
 
   it("CLIENT-214: keeps refresh disabled during manual cooldown after refresh completes", async () => {
