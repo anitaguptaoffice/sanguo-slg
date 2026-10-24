@@ -37,8 +37,10 @@ const RESOURCE_KEYS = WALLET_RESOURCE_KEYS;
 /** HUD 产出速率行：粮/木/铁/石（不含币），只读 +/h 摘要。 */
 const PRODUCTION_RATE_KEYS = WALLET_RESOURCE_KEYS.filter(({ key }) => key !== "gold");
 
-/** 比较前后钱包，返回各资源增量（仅大于 0 的字段）。 */
-export function walletResourceIncreases(
+/**
+ * GetCityState / 领奖等前后钱包对比：仅返回严格为正的资源增量（CLIENT-148 / CLIENT-051 事实源）。
+ */
+export function diffWalletPositiveGains(
   before: ResourceWallet | undefined,
   after: ResourceWallet | undefined,
 ): Partial<ResourceWallet> {
@@ -50,12 +52,20 @@ export function walletResourceIncreases(
   return out;
 }
 
+/** @deprecated 使用 {@link diffWalletPositiveGains} */
+export function walletResourceIncreases(
+  before: ResourceWallet | undefined,
+  after: ResourceWallet | undefined,
+): Partial<ResourceWallet> {
+  return diffWalletPositiveGains(before, after);
+}
+
 /** HUD 短时资源增加摘要，如「+粮100 +木50」；无增加时返回 null。 */
 export function formatWalletGainBrief(
   before: ResourceWallet | undefined,
   after: ResourceWallet | undefined,
 ): string | null {
-  const inc = walletResourceIncreases(before, after);
+  const inc = diffWalletPositiveGains(before, after);
   const parts = WALLET_RESOURCE_KEYS
     .filter(({ key }) => (inc[key] ?? 0) > 0)
     .map(({ key, label }) => `+${label}${formatResourceAmount(inc[key])}`);

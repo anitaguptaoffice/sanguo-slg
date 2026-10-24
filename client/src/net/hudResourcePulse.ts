@@ -1,5 +1,5 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
-import { WALLET_RESOURCE_KEYS, walletResourceIncreases } from "@/net/hudFormat";
+import { diffWalletPositiveGains, WALLET_RESOURCE_KEYS } from "@/net/hudFormat";
 
 export const RESOURCE_PULSE_CLASS = "resource-pulse";
 /** HUD 资源增量脉冲时长（≤2s，与 index.html 动画一致）。 */
@@ -10,7 +10,7 @@ export function walletResourcePulseKeys(
   before: ResourceWallet | undefined,
   after: ResourceWallet | undefined,
 ): (keyof ResourceWallet)[] {
-  const inc = walletResourceIncreases(before, after);
+  const inc = diffWalletPositiveGains(before, after);
   return WALLET_RESOURCE_KEYS.filter(({ key }) => (inc[key] ?? 0) > 0).map(({ key }) => key);
 }
 

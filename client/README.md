@@ -430,6 +430,22 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 波次总览与 **DOCS-EXIT-021**（[#567](https://github.com/anitaguptaoffice/sanguo-slg/issues/567)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 29」。main tip **`f60e3e95`**.
 
+## Wave 30 H5 主城产出仓库·日常领取闭环·将领列表筛选扫读·双榜刷新加深（M4 出口 / INTG-027）
+
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-027** 网关冒烟一致）。**范围外**同 Wave 29；**永不合并** art hold / VERIFY Draft（含 **#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506)）。**世界瓦片/图集**仍暂缓；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch`/募兵加速/主城建造新 RPC/战报 proto 扩量。
+
+| 能力 | 验收小节 | 状态 |
+|---|---|---|
+| **HUD 产出速率与仓库余量扫读巩固** | [手动验收（HUD 经济扫读 CLIENT-148）](#手动验收hud-经济扫读-client-148)（[#584](https://github.com/anitaguptaoffice/sanguo-slg/issues/584)） | 进行中 |
+
+### 手动验收（HUD 经济扫读 CLIENT-148）
+
+在 **CLIENT-081** 资源扫读与 **CLIENT-134** 待办深链基础上巩固：`GetCityState` 同行 `production_rates` + `wallet` 驱动顶栏 **hover / focus / 点击展开** 次行 `formatResourceSweepLine(production_rates, wallet)`（四资源 **余量 +/h**；缺 `production_rates` 仅余量）；`diffWalletPositiveGains` 为 **CLIENT-051** `resource-pulse` 与轮询后展开条余量刷新的**同一 wallet 事实源**（`patchSession` / `walletResourcePulseKeys`）；**CLIENT-059** 队列面板总览与资源展开条并存；`HudTodoBadgePoll` **不**嵌套并发 `GetCityState`。
+
+1. `make dev` 进主城：悬停或 Tab 聚焦顶栏资源条 → 次行应含余量与 **+/h**（与网关 `GetCityState` 一致）；点击展开后日常领奖使粮增加 → **resource-pulse** 与展开条粮余量同步更新，展开态不随 `renderHud` 丢失。
+2. 打开 **队列** 面板：顶栏资源扫读与队列总览 **同时**可读；待办角标深链仍只走既有轮询单飞。
+3. 单测：`hudFormat.test.ts`（`formatResourceSweepLine`、`diffWalletPositiveGains`）、`hudResourcePulse.test.ts`、`artResourceHud.test.ts`；`cd client && npm test` 绿。
+
 ### 手动验收（1280 世界军情战报社交 CLIENT-145）
 
 视口 **1280×720** `layout-narrow`：**世界小地图展开区**（窄屏放大 rect）、**军情/战报/排行/军团/聊天** 面板根 `worldIntelSocialNarrowManifest`（与 CLIENT-119/127 同级）；session **marchTargetMemory** 与军情 **再出征** 并存，预填变更时 **march-form-error** / **march-form-summary** 即时重算；军情/战报列表 **↑/↓** roving；`.panel-scroll-body` **padding-bottom: 64px** 清底栏 **56px**；`data-art-skin="off"` 可跳过。单测：`worldIntelSocialNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-145）；`cd client && npm test` 绿。（[#565](https://github.com/anitaguptaoffice/sanguo-slg/issues/565) / [#577](https://github.com/anitaguptaoffice/sanguo-slg/pull/577) `f60e3e95`）

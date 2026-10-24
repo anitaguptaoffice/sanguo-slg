@@ -24,7 +24,11 @@ import {
 } from "@/engine/artPanelSkin";
 import { mountFilterListPanelSkins } from "@/engine/filterListNarrowManifest";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
-import { appendHudResourceStrip } from "@/engine/artResourceHud";
+import {
+  appendHudResourceStrip,
+  readHudResourceStripExpanded,
+  restoreHudResourceStripExpanded,
+} from "@/engine/artResourceHud";
 import {
   applyLayoutTransform,
   canvasToLayout,
@@ -1428,9 +1432,7 @@ export class MainCityScene implements Scene {
       this.hudTodoBadgePoll?.recomputeToolbarCounts();
       this.renderHud();
     }
-    const beforeWallet = this.session.wallet;
     const afterWallet = state.wallet ?? this.session.wallet;
-    const pulseKeys = walletResourcePulseKeys(beforeWallet, afterWallet);
     this.patchSession(
       {
         wallet: afterWallet,
@@ -1439,7 +1441,6 @@ export class MainCityScene implements Scene {
       },
       { flashWalletGain: false },
     );
-    if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
     if (justCompleted.length) {
       this.queuePanels?.notifyBuildJustCompleted(justCompleted);
     }
@@ -1476,8 +1477,10 @@ export class MainCityScene implements Scene {
     groups.push(dprTag);
     if (this.status) groups.push(this.status);
 
+    const resourceStripExpanded = readHudResourceStripExpanded(this.hud);
     this.hud.replaceChildren();
     appendHudResourceStrip(this.hud, s?.wallet, this.assets, s?.productionRates);
+    restoreHudResourceStripExpanded(this.hud, resourceStripExpanded);
     this.appendHudCenterTodoBadge();
     for (const text of groups) {
       const span = document.createElement("span");
