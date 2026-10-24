@@ -14,6 +14,8 @@ import {
   formatMarchLine,
   formatMarchRemainingMs,
   formatMarchRemainingMsAbbrev,
+  formatMarchListPrimaryLine,
+  formatMarchListSecondary,
   formatMarchRowMetaLine,
   formatMarchRowPrimaryLine,
   formatMarchRowRecentEtaBrief,
@@ -110,6 +112,13 @@ describe("militaryFormat", () => {
     expect(formatMarchRowMetaLine(pending, now)).toContain("待发");
     expect(formatMarchRowRecentEtaBrief(marching, now)).toBe("ETA 剩余 30m");
     expect(formatMarchRowRecentEtaBrief(pending, now)).toBe("ETA 待发");
+
+    expect(formatMarchListPrimaryLine(marching)).toContain("(5,5)");
+    expect(formatMarchListPrimaryLine(marching)).toContain("攻击");
+    expect(formatMarchListPrimaryLine(marching)).toContain("#2");
+    expect(formatMarchListSecondary(marching, now)).toBe("剩余 30m · 行军中");
+    expect(formatMarchListSecondary(arrived, now)).toBe("已到达");
+    expect(formatMarchListSecondary(pending, now)).toBe("待发");
   });
 
   it("filters battle reports by outcome client-side", () => {
