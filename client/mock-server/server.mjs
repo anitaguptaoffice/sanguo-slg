@@ -287,6 +287,10 @@ function sessionState() {
     shopPurchased: {},
     heroes: [],
     nextHeroId: 8001,
+    hotelCandidates: [],
+    nextHotelCandidateId: 1,
+    hotelLevel: 2,
+    heroOfficeLevel: 8,
     mails: [
       {
         mail_id: 6001,
@@ -938,6 +942,108 @@ wss.on("connection", (ws) => {
         };
         state.heroes.push(row);
         replyOk(ws, cp.trace_id, T("sanguo.hero.v1.RecruitHeroResponse"), row);
+        return;
+      }
+
+      if (route === "hero.v1.ListHotelRecruitCandidates") {
+        const req = T("sanguo.hero.v1.ListHotelRecruitCandidatesRequest").decode(cp.payload);
+        const cityId = decodeInt64(req.city_id) || state.cityId;
+        if (state.hotelLevel <= 0) {
+          reply(ws, cp.trace_id, 10001, "hero: hotel not built");
+          return;
+        }
+        if (!state.hotelCandidates.length) {
+          for (let i = 0; i < state.hotelLevel; i++) {
+            state.hotelCandidates.push({
+              candidate_id: state.nextHotelCandidateId++,
+              city_id: cityId,
+              display_name: `客栈将${i + 1}`,
+              sex: 1,
+              face_id: (i % 3) + 1,
+              level: 2 + i,
+              attributes: { force: 35 + i * 5, intel: 28, politics: 22, command: 30 },
+              loyalty: 70,
+              gold_cost: 300 + i * 100,
+            });
+          }
+        }
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.ListHotelRecruitCandidatesResponse"), {
+          candidates: state.hotelCandidates,
+          hotel_level: state.hotelLevel,
+          hero_capacity: state.heroOfficeLevel,
+          hero_owned: state.heroes.length,
+        });
+        return;
+      }
+
+      if (route === "hero.v1.RefreshHotelRecruitPool") {
+        const req = T("sanguo.hero.v1.RefreshHotelRecruitPoolRequest").decode(cp.payload);
+        const cityId = decodeInt64(req.city_id) || state.cityId;
+        if (state.hotelLevel <= 0) {
+          reply(ws, cp.trace_id, 10001, "hero: hotel not built");
+          return;
+        }
+        const scrollId = 2004;
+        const have = state.bag[scrollId] ?? 0;
+        if (have < 1) {
+          reply(ws, cp.trace_id, 10001, "hero: insufficient item");
+          return;
+        }
+        state.bag[scrollId] = have - 1;
+        state.hotelCandidates = [];
+        for (let i = 0; i < state.hotelLevel; i++) {
+          state.hotelCandidates.push({
+            candidate_id: state.nextHotelCandidateId++,
+            city_id: cityId,
+            display_name: `新贤${i + 1}`,
+            sex: 1,
+            face_id: 2,
+            level: 3,
+            attributes: { force: 40, intel: 35, politics: 25, command: 32 },
+            loyalty: 70,
+            gold_cost: 250,
+          });
+        }
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.RefreshHotelRecruitPoolResponse"), {
+          candidates: state.hotelCandidates,
+        });
+        return;
+      }
+
+      if (route === "hero.v1.RecruitHotelCandidate") {
+        const req = T("sanguo.hero.v1.RecruitHotelCandidateRequest").decode(cp.payload);
+        const candidateId = decodeInt64(req.candidate_id);
+        if (state.heroes.length >= state.heroOfficeLevel) {
+          reply(ws, cp.trace_id, 10001, "hero: hero capacity full (office level)");
+          return;
+        }
+        const idx = state.hotelCandidates.findIndex((c) => c.candidate_id === candidateId);
+        if (idx < 0) {
+          reply(ws, cp.trace_id, 10001, "hero: hotel candidate not found");
+          return;
+        }
+        const cand = state.hotelCandidates[idx];
+        const cost = cand.gold_cost ?? 0;
+        if ((state.wallet.gold ?? 0) < cost) {
+          reply(ws, cp.trace_id, 10001, "hero: insufficient gold");
+          return;
+        }
+        state.wallet.gold -= cost;
+        state.hotelCandidates.splice(idx, 1);
+        const heroId = state.nextHeroId++;
+        const row = {
+          hero_id: heroId,
+          template_cfg_id: 0,
+          level: cand.level ?? 1,
+          loyalty: cand.loyalty ?? 70,
+        };
+        state.heroes.push(row);
+        replyOk(ws, cp.trace_id, T("sanguo.hero.v1.RecruitHotelCandidateResponse"), {
+          hero_id: heroId,
+          display_name: cand.display_name,
+          level: cand.level ?? 1,
+          loyalty: cand.loyalty ?? 70,
+        });
         return;
       }
 

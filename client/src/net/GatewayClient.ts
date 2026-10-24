@@ -82,6 +82,9 @@ export type GatewayPort = {
     serverId: number,
     opts?: { pool?: string; pageSize?: number; pageOffset?: number },
   ): Promise<unknown>;
+  listHotelRecruitCandidates(serverId: number, cityId: number): Promise<unknown>;
+  refreshHotelRecruitPool(serverId: number, cityId: number): Promise<unknown>;
+  recruitHotelCandidate(serverId: number, cityId: number, candidateId: number): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
   close(): void;
@@ -556,6 +559,39 @@ export class GatewayClient implements GatewayPort {
         page_offset: opts.pageOffset ?? 0,
       },
       ListRecruitTemplatesResponse,
+      true,
+    );
+  }
+
+  async listHotelRecruitCandidates(serverId: number, cityId: number) {
+    const { ListHotelRecruitCandidatesResponse } = getTypes();
+    return this.rpc(
+      Routes.ListHotelRecruitCandidates,
+      "ListHotelRecruitCandidatesRequest",
+      { server_id: serverId, city_id: cityId },
+      ListHotelRecruitCandidatesResponse,
+      true,
+    );
+  }
+
+  async refreshHotelRecruitPool(serverId: number, cityId: number) {
+    const { RefreshHotelRecruitPoolResponse } = getTypes();
+    return this.rpc(
+      Routes.RefreshHotelRecruitPool,
+      "RefreshHotelRecruitPoolRequest",
+      { server_id: serverId, city_id: cityId },
+      RefreshHotelRecruitPoolResponse,
+      true,
+    );
+  }
+
+  async recruitHotelCandidate(serverId: number, cityId: number, candidateId: number) {
+    const { RecruitHotelCandidateResponse } = getTypes();
+    return this.rpc(
+      Routes.RecruitHotelCandidate,
+      "RecruitHotelCandidateRequest",
+      { server_id: serverId, city_id: cityId, candidate_id: candidateId },
+      RecruitHotelCandidateResponse,
       true,
     );
   }
