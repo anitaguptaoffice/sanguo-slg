@@ -1,6 +1,6 @@
 # HERO-HOST-SLICE7 runtime inventory — template 1027
 
-tip_sha / runtime_code_sha: `d4f3b2c5ea295b5203c6ffb45b625b030f3a9973`
+tip_sha / runtime_code_sha: `26b0ec27dcd0a9248914b2c11ad46f482912970c`
 art_head_sha: `dea932332475ed1e3cf4f336693f3d4c12a6d903`
 hero_mail_panels_blob_sha: `356f8e33734ca1374f3cf1ecd61368431293a93c`
 

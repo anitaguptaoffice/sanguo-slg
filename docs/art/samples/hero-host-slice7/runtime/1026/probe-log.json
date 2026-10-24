@@ -2,8 +2,8 @@
   "task": "HERO-HOST-SLICE7",
   "template_cfg_id": 1026,
   "mock_preset": "hero-panel-roster",
-  "tip_sha": "d4f3b2c5ea295b5203c6ffb45b625b030f3a9973",
-  "runtime_code_sha": "d4f3b2c5ea295b5203c6ffb45b625b030f3a9973",
+  "tip_sha": "26b0ec27dcd0a9248914b2c11ad46f482912970c",
+  "runtime_code_sha": "26b0ec27dcd0a9248914b2c11ad46f482912970c",
   "hero_mail_panels_blob_sha": "356f8e33734ca1374f3cf1ecd61368431293a93c",
   "art_head_sha": "dea932332475ed1e3cf4f336693f3d4c12a6d903",
   "art_asset_ids": [
@@ -274,5 +274,5 @@
     "Art path-copied from Draft #1204 @ dea93233; Draft remains unmerged.",
     "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
   ],
-  "captured_at": "2026-10-24T22:16:03.878Z"
+  "captured_at": "2026-10-24T22:18:05.328Z"
 }
