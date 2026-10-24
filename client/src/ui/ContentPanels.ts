@@ -95,7 +95,9 @@ import {
 } from "@/net/walletGap";
 import {
   findBagStackRow,
+  formatBagUseGatewayErrorFromUnknown,
   scheduleBagRowUsedPulse,
+  scheduleBagUseConsumablePulse,
   scheduleBagUseInlinePulse,
   shouldPulseBagStackAfterUse,
   syncUseConsumableSubmitButtons,
@@ -970,6 +972,7 @@ export class ContentPanels {
     const row = findBagStackRow(this.bagPanel, itemId);
     scheduleBagRowUsedPulse(row);
     scheduleBagUseInlinePulse(row);
+    scheduleBagUseConsumablePulse(row);
   }
 
   private async useItem(): Promise<void> {
@@ -1020,7 +1023,7 @@ export class ContentPanels {
         useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
       );
     } catch (e) {
-      const msg = formatPanelGatewayErrorFromUnknown("bag", e);
+      const msg = formatBagUseGatewayErrorFromUnknown(e);
       setBagFormErrorDisplay(this.bagPanel, msg);
       this.setBagFeedback(null);
       this.onStatus(msg);
@@ -1069,7 +1072,7 @@ export class ContentPanels {
           lastRemaining = res.remaining ?? 0;
           attempts.push({ ok: true });
         } catch (e) {
-          attempts.push({ ok: false, message: formatPanelGatewayErrorFromUnknown("bag", e) });
+          attempts.push({ ok: false, message: formatBagUseGatewayErrorFromUnknown(e) });
           break;
         }
       }

@@ -2093,6 +2093,14 @@
       .bag-list li .bag-row-inline-state.bag-use-inline-pulse {
         animation: bag-use-inline-pulse-keyframes 3s ease-out 1;
       }
+      @keyframes bag-use-consumable-pulse-keyframes {
+        0%, 100% { color: #c9b896; transform: scale(1); }
+        35% { color: #f0d878; transform: scale(1.08); text-shadow: 0 0 8px rgba(201, 162, 39, 0.75); }
+        70% { color: #d4bc70; transform: scale(1.02); }
+      }
+      .bag-list li .bag-stack-qty.bag-use-consumable-pulse {
+        animation: bag-use-consumable-pulse-keyframes 2s ease-out 1;
+      }
       .bag-open-source-tag {
         display: inline-block;
         font-size: 11px;
@@ -3447,6 +3455,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-progress,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-row-inline-state,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-use-inline-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-use-consumable-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-item-cfg-summary,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-price-wallet-gap-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-price-vs-wallet,

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   BAG_ROW_USED_PULSE_CLASS,
+  BAG_USE_CONSUMABLE_PULSE_CLASS,
   BAG_USE_INLINE_PULSE_CLASS,
   countBagStackAfterUse,
+  formatBagUseEconomyErrorLine,
+  formatBagUseGatewayErrorFromUnknown,
   scheduleBagRowUsedPulse,
+  scheduleBagUseConsumablePulse,
   scheduleBagUseInlinePulse,
   shouldPulseBagStackAfterUse,
   USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL,
@@ -79,6 +83,37 @@ describe("scheduleBagUseInlinePulse (CLIENT-194)", () => {
     scheduleBagUseInlinePulse(row);
     expect(row.classList.contains(BAG_ROW_USED_PULSE_CLASS)).toBe(false);
     expect(inline.classList.contains(BAG_USE_INLINE_PULSE_CLASS)).toBe(true);
+  });
+});
+
+describe("scheduleBagUseConsumablePulse (CLIENT-232)", () => {
+  it("pulses bag-stack-qty with bag-use-consumable-pulse", () => {
+    const row = document.createElement("li");
+    const qty = document.createElement("span");
+    qty.className = "bag-stack-qty";
+    qty.textContent = "×2";
+    row.appendChild(qty);
+    scheduleBagUseConsumablePulse(row);
+    expect(qty.classList.contains(BAG_USE_CONSUMABLE_PULSE_CLASS)).toBe(true);
+    expect(row.classList.contains(BAG_ROW_USED_PULSE_CLASS)).toBe(false);
+  });
+});
+
+describe("formatBagUseEconomyErrorLine (CLIENT-232)", () => {
+  it("maps item insufficient to CLIENT-067 recruit-style line", () => {
+    const err = Object.assign(new Error("道具不足"), { code: 10001 });
+    expect(formatBagUseEconomyErrorLine(err)).toBe("道具不足 [10001]");
+  });
+
+  it("maps resource insufficient to bag domain CLIENT-067 line", () => {
+    const err = Object.assign(new Error("资源不足"), { code: 40001 });
+    expect(formatBagUseEconomyErrorLine(err)).toBe("资源不足 [40001]");
+  });
+
+  it("returns null for non-economy bag errors", () => {
+    const err = Object.assign(new Error("unknown item"), { code: 10001 });
+    expect(formatBagUseEconomyErrorLine(err)).toBeNull();
+    expect(formatBagUseGatewayErrorFromUnknown(err)).toBe("请求无效：unknown item [10001]");
   });
 });
 
