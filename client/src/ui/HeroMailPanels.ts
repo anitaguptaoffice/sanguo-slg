@@ -75,6 +75,7 @@ import {
   parseRecruitTemplates,
   pickRecruitSelection,
   recruitTemplateListLines,
+  heroTemplateLabel,
   type HeroDetail,
   type HeroSummary,
   type MailRow,
@@ -222,6 +223,10 @@ import {
   type UseConsumableSubmitState,
   useConsumableSubmitStateMachine,
 } from "@/net/useConsumableSubmitFeedback";
+import {
+  mountHeroDetailBust,
+  mountHeroListAvatar,
+} from "@/engine/heroPortraitFrameSkin";
 
 export class HeroMailPanels {
   private heroPanel!: HTMLElement;
@@ -865,6 +870,10 @@ export class HeroMailPanels {
         body.appendChild(loyaltySubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
+        mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
+        if (h.template_cfg_id) {
+          li.dataset.templateCfgId = String(h.template_cfg_id);
+        }
         if (h.hero_id) {
           li.setAttribute("data-hero-id", String(h.hero_id));
           li.style.cursor = "pointer";
@@ -896,6 +905,13 @@ export class HeroMailPanels {
           cultivationHtml,
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
+        );
+        mountHeroDetailBust(
+          detailEl,
+          this.heroDetail?.template_cfg_id,
+          this.heroDetail?.template_name || heroTemplateLabel(this.heroDetail?.template_cfg_id),
+          this.assets,
+          this.heroPanel,
         );
       }
     }

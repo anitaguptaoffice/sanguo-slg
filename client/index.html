@@ -2144,6 +2144,34 @@
         line-height: 1.45;
       }
       .hero-list li .hero-list-row-body { display: block; }
+      .content-panel[data-center-panel="hero"] .hero-list li[data-hero-id] {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+      .content-panel[data-center-panel="hero"] .hero-list-avatar {
+        flex: 0 0 auto;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        object-position: center;
+        background: rgba(255, 0, 255, 0.12);
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail-bust {
+        float: left;
+        width: 128px;
+        height: 160px;
+        object-fit: cover;
+        object-position: center;
+        margin: 0 10px 6px 0;
+        background: rgba(255, 0, 255, 0.1);
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail::after {
+        content: "";
+        display: block;
+        clear: both;
+      }
       .content-panel .march-form-error-sibling {
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
         color: #8b1a1a; background: rgba(139, 26, 26, 0.1); border-radius: 4px;

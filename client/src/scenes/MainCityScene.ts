@@ -948,7 +948,7 @@ export class MainCityScene implements Scene {
   }
 
   update(dt: number): void {
-    if (!this.session) return;
+    if (!this.session || !this.militaryPanel) return;
     this.cityStatePoll?.tick(dt);
     this.hudTodoBadgePoll?.tick(dt);
     this.chatUnreadPoll?.tick(dt);
@@ -965,7 +965,7 @@ export class MainCityScene implements Scene {
         this.marchClockMs = Date.now();
         this.syncMinimapCollapsedMarchStatus();
       }
-      if (!this.militaryPanel.classList.contains("hidden")) {
+      if (this.militaryPanel && !this.militaryPanel.classList.contains("hidden")) {
         this.syncMilitaryPanel();
       }
     }
@@ -1929,7 +1929,7 @@ export class MainCityScene implements Scene {
 
   private isAnyPanelVisible(): boolean {
     if (this.buildingPanel?.isOpen()) return true;
-    if (!this.militaryPanel.classList.contains("hidden")) return true;
+    if (this.militaryPanel && !this.militaryPanel.classList.contains("hidden")) return true;
     if (this.layoutFrame.querySelector(".social-panel:not(.hidden)") !== null) return true;
     return this.layoutFrame.querySelector(".content-panel:not(.hidden)") !== null;
   }

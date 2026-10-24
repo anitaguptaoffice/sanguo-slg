@@ -1,4 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AssetLoader } from "@/engine/AssetLoader";
+import {
+  heroAvatarAssetId,
+  heroBustAssetId,
+  HERO_DETAIL_BUST_ROLE,
+  HERO_LIST_AVATAR_ROLE,
+} from "@/engine/heroPortraitFrameSkin";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import { HeroMailPanels } from "@/ui/HeroMailPanels";
@@ -346,6 +353,77 @@ describe("HeroMailPanels", () => {
     expect(detail?.querySelector(".hero-detail-level")?.textContent).toContain("Lv2");
     expect(detail?.querySelector(".hero-attr-table")).toBeTruthy();
     expect(detail?.textContent).toContain("UseConsumable");
+  });
+
+  it("mounts placeholder avatar/bust frames for template 1001 when art assets load", async () => {
+    const mount = document.createElement("div");
+    const img = { src: "https://example.test/av.png" } as HTMLImageElement;
+    const bustImg = { src: "https://example.test/bu.png" } as HTMLImageElement;
+    const assets = {
+      getArtMeta: vi.fn((id: string) => {
+        if (id === heroAvatarAssetId(1001)) {
+          return { id, display_size: { w: 56, h: 56 }, anchor: { x: 28, y: 48 }, anchor_unit: "pixels" };
+        }
+        if (id === heroBustAssetId(1001)) {
+          return { id, display_size: { w: 128, h: 160 }, anchor: { x: 64, y: 152 }, anchor_unit: "pixels" };
+        }
+        return undefined;
+      }),
+      getImageForAsset: vi.fn((id: string) => {
+        if (id === heroAvatarAssetId(1001)) return { img, scale: 1 };
+        if (id === heroBustAssetId(1001)) return { img: bustImg, scale: 1 };
+        return undefined;
+      }),
+    } as unknown as AssetLoader;
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [
+          { hero_id: 3, template_cfg_id: 1001, level: 2, loyalty: 77 },
+          { hero_id: 4, template_cfg_id: 1002, level: 1, loyalty: 50 },
+        ],
+        total_count: 2,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 3,
+        template_cfg_id: 1001,
+        template_name: "玄德",
+        level: 2,
+        loyalty: 77,
+        attributes: { force: 60, intel: 70, politics: 80, command: 65 },
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => sessionBase(),
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      assets,
+    );
+    panels.attach();
+    panels.toggleHero();
+    mount.querySelector('[data-action="refresh-heroes"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const row1001 = mount.querySelector('li[data-hero-id="3"]');
+    const row1002 = mount.querySelector('li[data-hero-id="4"]');
+    expect(row1001?.querySelector(`[data-role="${HERO_LIST_AVATAR_ROLE}"]`)).toBeTruthy();
+    expect(row1002?.querySelector(`[data-role="${HERO_LIST_AVATAR_ROLE}"]`)).toBeNull();
+    row1001?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const detail = mount.querySelector('[data-role="hero-detail"]');
+    expect(detail?.querySelector(`[data-role="${HERO_DETAIL_BUST_ROLE}"]`)).toBeTruthy();
+    expect(detail?.querySelector(".hero-detail-head")?.previousElementSibling?.getAttribute("data-role")).toBe(
+      HERO_DETAIL_BUST_ROLE,
+    );
   });
 
   it("hero list rows use primary/secondary scan lines (CLIENT-132)", async () => {
