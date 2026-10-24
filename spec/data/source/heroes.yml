@@ -41,40 +41,44 @@ heroes:
     historical_identity: 赵云
     tagline: 银甲护主，七进七出。
 - code: sun_archer
-  name: 落日神弓
+  name: 黄忠
   rarity: 4
   base_stats:
     force: 90
     intel: 68
     politics: 52
     command: 80
+    historical_identity: 黄忠
     tagline: 百步穿杨，镇守要道。
 - code: wind_cavalry
-  name: 疾风铁骑
+  name: 马超
   rarity: 4
   base_stats:
     force: 91
     intel: 55
     politics: 48
     command: 79
+    historical_identity: 马超
     tagline: 西凉铁骑，奔袭如风。
 - code: jade_strategist
-  name: 碧玉谋臣
+  name: 诸葛亮
   rarity: 5
   base_stats:
     force: 48
     intel: 96
     politics: 90
     command: 70
+    historical_identity: 诸葛亮
     tagline: 运筹帷幄，决胜千里。
 - code: fire_general
-  name: 赤焰都督
+  name: 周瑜
   rarity: 5
   base_stats:
     force: 89
     intel: 78
     politics: 60
     command: 92
+    historical_identity: 周瑜
     tagline: 火烧连营，克敌先机。
 - code: north_wall
   name: 北境柱石

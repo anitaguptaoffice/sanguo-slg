@@ -95,7 +95,7 @@
     {
       "template_cfg_id": 1005,
       "code": "sun_archer",
-      "name": "落日神弓",
+      "name": "黄忠",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -118,7 +118,7 @@
     {
       "template_cfg_id": 1006,
       "code": "wind_cavalry",
-      "name": "疾风铁骑",
+      "name": "马超",
       "rarity": 4,
       "pool": "standard",
       "base_stats": {
@@ -141,7 +141,7 @@
     {
       "template_cfg_id": 1007,
       "code": "jade_strategist",
-      "name": "碧玉谋臣",
+      "name": "诸葛亮",
       "rarity": 5,
       "pool": "standard",
       "base_stats": {
@@ -164,7 +164,7 @@
     {
       "template_cfg_id": 1008,
       "code": "fire_general",
-      "name": "赤焰都督",
+      "name": "周瑜",
       "rarity": 5,
       "pool": "elite",
       "base_stats": {

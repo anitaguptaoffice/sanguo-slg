@@ -34,6 +34,10 @@ const HERO_TEMPLATE_LABEL: Record<number, string> = {
   1002: "关羽",
   1003: "张飞",
   1004: "赵云",
+  1005: "黄忠",
+  1006: "马超",
+  1007: "诸葛亮",
+  1008: "周瑜",
 };
 
 export const HERO_RECRUIT_SCROLL_ID = 2004;
@@ -117,6 +121,10 @@ const HERO_TEMPLATE_BASE_STATS: Record<number, HeroAttributes> = {
   1002: { force: 95, intel: 62, politics: 55, command: 82 },
   1003: { force: 92, intel: 45, politics: 40, command: 75 },
   1004: { force: 88, intel: 70, politics: 58, command: 85 },
+  1005: { force: 90, intel: 68, politics: 52, command: 80 },
+  1006: { force: 91, intel: 55, politics: 48, command: 79 },
+  1007: { force: 48, intel: 96, politics: 90, command: 70 },
+  1008: { force: 89, intel: 78, politics: 60, command: 92 },
 };
 
 /** DATA-001 养成消耗品子集（如 hero_exp），不扩 SKU。 */
