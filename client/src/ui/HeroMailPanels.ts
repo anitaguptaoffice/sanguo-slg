@@ -135,9 +135,12 @@ import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 import {
   buildRecruitSuccessFeedback,
   focusRecruitedHeroListRow,
+  refreshRecruitWalletSweepDisplays,
   resolveRecruitSubmitPhase,
+  scheduleRecruitWalletSweepPulse,
   setRecruitSuccessToastDisplay,
   syncRecruitSubmitButton,
+  syncRecruitSubmittingLine,
   walletMaterialDeductPulseKeys,
 } from "@/net/recruitSubmitFeedback";
 import {
@@ -881,7 +884,10 @@ export class HeroMailPanels {
     applyRecruitScrollAnchorSession(this.heroPanel);
   }
 
-  private applyTemplateSelection(templateCfgId: number): void {
+  private applyTemplateSelection(
+    templateCfgId: number,
+    opts?: { skipHeroListRender?: boolean },
+  ): void {
     const displayTemplates = this.recruitTemplatesForDisplay();
     const row = displayTemplates.find((t) => t.template_cfg_id === templateCfgId);
     const pick = pickRecruitSelection(this.recruitTemplates, templateCfgId);
@@ -908,7 +914,7 @@ export class HeroMailPanels {
     });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
-    this.renderHeroList();
+    if (!opts?.skipHeroListRender) this.renderHeroList();
   }
 
   private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
@@ -1445,6 +1451,7 @@ export class HeroMailPanels {
     }
     this.recruitHeroInflight = true;
     this.recruitLastError = null;
+    syncRecruitSubmittingLine(this.heroPanel, true);
     this.syncRecruitButtonState(templateRow);
     this.onStatus(`招募模板 ${tpl}…`);
     try {
@@ -1458,17 +1465,27 @@ export class HeroMailPanels {
         loyalty?: number;
       };
       await this.syncEconomyAfterRecruit();
-      const walletAfter = this.sessionEconomy().wallet;
+      const { wallet: walletAfter, bag: bagAfter } = this.sessionEconomy();
+      refreshRecruitWalletSweepDisplays(
+        this.heroPanel,
+        tpl,
+        templateRow,
+        walletAfter,
+        bagAfter,
+      );
+      scheduleRecruitWalletSweepPulse(this.heroPanel, tpl);
       const pulseKeys = walletMaterialDeductPulseKeys(
         walletBefore,
         walletAfter,
         templateRow?.recruit_cost,
       );
       if (pulseKeys.length) this.onRecruitMaterialPulse?.(pulseKeys);
-      await this.refreshHeroes();
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
-        await this.loadHeroDetail(res.hero_id);
+        writeHeroDetailSelectedSession(res.hero_id);
+      }
+      await this.refreshHeroes();
+      if (res.hero_id) {
         focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
       }
       const feedback = buildRecruitSuccessFeedback(res, templateRow);
@@ -1496,7 +1513,11 @@ export class HeroMailPanels {
       setRecruitAffordabilityErrorDisplay(this.heroPanel, msg);
     } finally {
       this.recruitHeroInflight = false;
-      this.syncRecruitButtonState(this.selectedRecruitTemplateRow());
+      syncRecruitSubmittingLine(this.heroPanel, false);
+      const templateId =
+        this.selectedRecruitTemplateRow()?.template_cfg_id ?? this.selectedTemplateId;
+      if (templateId) this.applyTemplateSelection(templateId, { skipHeroListRender: true });
+      else this.syncRecruitButtonState(undefined);
     }
   }
 

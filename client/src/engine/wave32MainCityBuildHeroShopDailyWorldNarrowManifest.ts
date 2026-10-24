@@ -54,6 +54,12 @@ export const RECRUIT_WALLET_SWEEP_SECONDARY_CLASS = "recruit-afford-secondary";
 export const RECRUIT_COST_DEFICIT_CLASS = "recruit-cost-deficit";
 export { RECRUIT_SCROLL_ANCHOR_SESSION_KEY } from "@/net/recruitScrollAnchor";
 
+/** CLIENT-183: recruit submit inline feedback on preview / wallet sweep line. */
+export {
+  RECRUIT_SUBMITTING_CLASS,
+  RECRUIT_SUCCESS_PULSE_CLASS,
+} from "@/net/recruitSubmitFeedback";
+
 /** CLIENT-168: dual-board list row → hero detail deep link control. */
 export const RANK_OPEN_HERO_DETAIL_ACTION = "rank-view-hero";
 export const RANK_VIEW_HERO_LINK_CLASS = "rank-view-hero-link";

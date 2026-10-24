@@ -1438,6 +1438,14 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 3. 详情 **去招募**：预选 `template_cfg_id`，写入 **`recruit-scroll-anchor-v1`** 并滚动至对应模板行；与 **CLIENT-072** 互跳并存。
 4. 单测：`recruitWalletSweep.test.ts`、`recruitScrollAnchor.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+### 手动验收（将领招募提交行内反馈 CLIENT-183）
+
+在 [CLIENT-114](#手动验收将领招募提交反馈巩固-client-114) 提交态与 [CLIENT-166](#手动验收招募钱包扫读与详情互跳-client-166) 钱包扫读基础上（**非** wave:26 商城购买脉冲；**无** IAP/新 SKU）：
+
+1. 点 **招募**：预览行 `recruit-submitting` + **招募提交中…**（与主钮 **招募中…** 并存）；`RecruitHero` 成功则 `recruit-success-toast` 展示 `formatRecruitSuccessLine`（将领名 + 已扣币种摘要，**不**为摘要去拉额外 hero RPC）。
+2. 成功后 `GetCityState`（或 `cityStateFetch`）刷新会话 **wallet**，列表/预览 **余/需** 次行即时递减，并短暂 **`recruit-success-pulse`（1.5s）**；粮木铁石仍可走顶栏 **CLIENT-051** 脉冲。
+3. 失败仍走 **CLIENT-173** `formatPanelGatewayError` 内联区；单测：`recruitSubmitFeedback.test.ts`、`HeroMailPanels.test.ts`。
+
 ### 手动验收（将领详情养成对比 CLIENT-072）
 
 在 [CLIENT-014](#手动验收将领详情-client-014) / [CLIENT-056](#手动验收将领招募钱包对比-client-056) 基础上：

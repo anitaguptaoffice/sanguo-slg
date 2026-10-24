@@ -1286,6 +1286,9 @@ describe("HeroMailPanels", () => {
     await flushPromises();
     expect(recruitBtn.disabled).toBe(true);
     expect(recruitBtn.textContent).toBe("招募中…");
+    const preview = mount.querySelector('[data-role="recruit-preview"]');
+    expect(preview?.classList.contains("recruit-submitting")).toBe(true);
+    expect(preview?.textContent).toBe("招募提交中…");
     resolveRecruit({
       hero_id: 1,
       template_cfg_id: 1001,
@@ -1385,7 +1388,7 @@ describe("HeroMailPanels", () => {
       getCityState: vi.fn().mockResolvedValue({ wallet: { food: 900 } }),
       getBoundServerId: () => 1,
     } as unknown as GatewayPort;
-    const session: MainCitySession = {
+    let session: MainCitySession = {
       serverId: 1,
       cityId: 1,
       cityName: "城",
@@ -1398,7 +1401,9 @@ describe("HeroMailPanels", () => {
       mount,
       gateway,
       () => session,
-      () => {},
+      (patch) => {
+        session = { ...session, ...patch };
+      },
       (msg) => statuses.push(msg),
       undefined,
       undefined,
@@ -1416,7 +1421,15 @@ describe("HeroMailPanels", () => {
     await flushPromises();
     expect(gateway.recruitHero).toHaveBeenCalled();
     expect(gateway.listPlayerHeroes).toHaveBeenCalledTimes(2);
-    expect(gateway.getHeroDetail).toHaveBeenCalledWith(1, 99);
+    expect(gateway.getHeroDetail).not.toHaveBeenCalled();
+    expect(gateway.getCityState).toHaveBeenCalled();
+    const sweepLine = mount.querySelector(
+      'li[data-template-id="1001"] .recruit-afford-secondary',
+    )?.textContent;
+    expect(sweepLine).toContain("余900");
+    expect(
+      mount.querySelector('[data-role="recruit-preview"]')?.classList.contains("recruit-success-pulse"),
+    ).toBe(true);
     const selected = mount.querySelector('li[data-hero-id="99"].selected');
     expect(selected).toBeTruthy();
     expect(onDaily).toHaveBeenCalled();

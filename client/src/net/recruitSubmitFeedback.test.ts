@@ -2,13 +2,20 @@ import { describe, expect, it, vi } from "vitest";
 import {
   buildRecruitSuccessFeedback,
   focusRecruitedHeroListRow,
+  formatRecruitSuccessLine,
   HERO_ROW_RECRUITED_PULSE_CLASS,
   RECRUIT_SUBMIT_INFLIGHT_LABEL,
+  RECRUIT_SUBMIT_INFLIGHT_PREVIEW,
+  RECRUIT_SUBMITTING_CLASS,
+  RECRUIT_SUCCESS_PULSE_CLASS,
+  RECRUIT_SUCCESS_PULSE_MS,
   recruitSubmitButtonDisabled,
   recruitSubmitButtonLabel,
   resolveRecruitSubmitPhase,
   scheduleHeroRecruitRowPulse,
+  scheduleRecruitWalletSweepPulse,
   syncRecruitSubmitButton,
+  syncRecruitSubmittingLine,
   walletMaterialDeductPulseKeys,
 } from "@/net/recruitSubmitFeedback";
 
@@ -116,14 +123,53 @@ describe("hero recruit row pulse", () => {
   });
 });
 
+describe("formatRecruitSuccessLine", () => {
+  it("includes template name and deduct summary without extra hero RPC fields", () => {
+    const line = formatRecruitSuccessLine(
+      { hero_id: 7, template_cfg_id: 1001, level: 2 },
+      { template_cfg_id: 1001, template_name: "玄德", recruit_cost: { food: 100 } },
+    );
+    expect(line).toBe("招募成功：玄德 · 已扣 粮100");
+    expect(line).not.toContain("#7");
+  });
+});
+
+describe("recruit submitting line (CLIENT-183)", () => {
+  it("syncRecruitSubmittingLine toggles recruit-submitting on preview", () => {
+    const root = document.createElement("div");
+    root.innerHTML = `<p data-role="recruit-preview">预览</p>`;
+    const preview = root.querySelector("[data-role='recruit-preview']")!;
+    syncRecruitSubmittingLine(root, true);
+    expect(preview.classList.contains(RECRUIT_SUBMITTING_CLASS)).toBe(true);
+    expect(preview.textContent).toBe(RECRUIT_SUBMIT_INFLIGHT_PREVIEW);
+    syncRecruitSubmittingLine(root, false);
+    expect(preview.classList.contains(RECRUIT_SUBMITTING_CLASS)).toBe(false);
+  });
+
+  it("scheduleRecruitWalletSweepPulse applies recruit-success-pulse for 1.5s", () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <p data-role="recruit-preview"></p>
+      <ul><li data-template-id="1001"><span class="recruit-afford-secondary"></span></li></ul>
+    `;
+    const secondary = root.querySelector(".recruit-afford-secondary")!;
+    scheduleRecruitWalletSweepPulse(root, 1001);
+    expect(secondary.classList.contains(RECRUIT_SUCCESS_PULSE_CLASS)).toBe(true);
+    vi.advanceTimersByTime(RECRUIT_SUCCESS_PULSE_MS);
+    expect(secondary.classList.contains(RECRUIT_SUCCESS_PULSE_CLASS)).toBe(false);
+    vi.useRealTimers();
+  });
+});
+
 describe("buildRecruitSuccessFeedback", () => {
-  it("includes formatRecruitSuccessStatus text and detail link when hero_id present", () => {
+  it("includes formatRecruitSuccessLine text and detail link when hero_id present", () => {
     const fb = buildRecruitSuccessFeedback(
       { hero_id: 7, template_cfg_id: 1001, level: 2 },
       { template_cfg_id: 1001, template_name: "玄德", recruit_cost: { food: 1 } },
     );
     expect(fb.statusText).toContain("玄德");
-    expect(fb.statusText).toContain("#7");
+    expect(fb.statusText).toContain("已扣");
     expect(fb.showDetailLink).toBe(true);
     expect(fb.heroId).toBe(7);
     const noLink = buildRecruitSuccessFeedback({ template_cfg_id: 1001 }, undefined);

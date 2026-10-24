@@ -1801,6 +1801,17 @@
       }
       .content-panel .march-form-error-sibling.hidden { display: none; }
       .recruit-cost-preview { font-size: 12px; color: #e8dcc8; min-height: 1.2em; }
+      .recruit-cost-preview.recruit-submitting { color: #c9a227; font-style: italic; }
+      @keyframes recruit-success-pulse-keyframes {
+        0%, 100% { background-color: transparent; }
+        45% { background-color: rgba(201, 162, 39, 0.28); }
+      }
+      .recruit-cost-preview.recruit-success-pulse,
+      .template-list li .recruit-afford-secondary.recruit-success-pulse,
+      .hero-detail .recruit-afford-secondary.recruit-success-pulse {
+        animation: recruit-success-pulse-keyframes 1.5s ease-out 1;
+        border-radius: 4px;
+      }
       .recruit-success-toast {
         display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
         margin: 6px 0 0; padding: 6px 8px; font-size: 12px; line-height: 1.45;
