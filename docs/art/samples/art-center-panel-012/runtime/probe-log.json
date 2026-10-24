@@ -1,10 +1,10 @@
 {
   "task": "ART-CENTER-PANEL-012",
-  "runtime_code_sha": "fbd19b897ed4a2d1641fe6e00eae2e0b50e5479d",
-  "screenshot_artifacts_commit_sha": "fbd19b897ed4a2d1641fe6e00eae2e0b50e5479d",
-  "tip_sha": "fbd19b897ed4a2d1641fe6e00eae2e0b50e5479d",
+  "runtime_code_sha": "73e40d066b6b06015adfc19fdd9bd0fafc48fd29",
+  "screenshot_artifacts_commit_sha": "73e40d066b6b06015adfc19fdd9bd0fafc48fd29",
+  "tip_sha": "73e40d066b6b06015adfc19fdd9bd0fafc48fd29",
   "art_asset_source_commit": "bcf05c7365f92f17142f4ce25a3ba1bdd2b80247",
-  "captured_at": "2026-10-24T06:42:51.689Z",
+  "captured_at": "2026-10-24T06:43:10.244Z",
   "asset_id": "ui.panel.hero.v1",
   "texture_paths": {
     "scale_1": "textures/1x/ui/panel_hero.png",
@@ -18,7 +18,7 @@
   "shots": {
     "hero-center-panel-1600x900.jpg": {
       "quality": 88,
-      "bytes": 464699,
+      "bytes": 464748,
       "viewport": {
         "tag": "1600x900",
         "file": "hero-center-panel-1600x900.jpg",
@@ -40,7 +40,7 @@
     },
     "hero-center-panel-1280x720.jpg": {
       "quality": 88,
-      "bytes": 262578,
+      "bytes": 262589,
       "viewport": {
         "tag": "1280x720",
         "file": "hero-center-panel-1280x720.jpg",
