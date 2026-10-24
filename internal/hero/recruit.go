@@ -19,12 +19,13 @@ type RecruitResult struct {
 }
 
 type Service struct {
-	Catalog map[int32]Template
-	Items   map[int32]RecruitItemSpec
-	Store   Store
-	levels  *LevelTable
-	RNG     *rand.Rand
-	clock   func() time.Time
+	Catalog    map[int32]Template
+	Items      map[int32]RecruitItemSpec
+	Store      Store
+	HotelStore HotelStore
+	levels     *LevelTable
+	RNG        *rand.Rand
+	clock      func() time.Time
 }
 
 func NewService() *Service {

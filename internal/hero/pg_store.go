@@ -9,6 +9,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+func nullString(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
+}
+
 // PGStore persists heroes per spec/db/005_hero.sql.
 type PGStore struct{ Pool *pgxpool.Pool }
 
@@ -22,12 +29,13 @@ func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
 	}
 	_, err := p.Pool.Exec(ctx, `
 		INSERT INTO player_hero (
-			server_id, hero_id, player_id, template_cfg_id, level, exp, loyalty,
+			server_id, hero_id, player_id, template_cfg_id, display_name, level, exp, loyalty,
 			force, intel, politics, command, status, created_at
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 		ON CONFLICT (server_id, hero_id) DO UPDATE SET
 			player_id = EXCLUDED.player_id,
 			template_cfg_id = EXCLUDED.template_cfg_id,
+			display_name = EXCLUDED.display_name,
 			level = EXCLUDED.level,
 			exp = EXCLUDED.exp,
 			loyalty = EXCLUDED.loyalty,
@@ -36,7 +44,7 @@ func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
 			politics = EXCLUDED.politics,
 			command = EXCLUDED.command,
 			status = EXCLUDED.status
-	`, h.ServerID, h.HeroID, h.PlayerID, h.TemplateCfgID, h.Level, h.Exp, h.Loyalty,
+	`, h.ServerID, h.HeroID, h.PlayerID, h.TemplateCfgID, nullString(h.DisplayName), h.Level, h.Exp, h.Loyalty,
 		h.Force, h.Intel, h.Politics, h.Command, h.Status, created)
 	return err
 }
@@ -44,12 +52,12 @@ func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
 func (p *PGStore) GetHero(ctx context.Context, serverID int32, heroID int64) (*Hero, error) {
 	var h Hero
 	err := p.Pool.QueryRow(ctx, `
-		SELECT server_id, hero_id, player_id, template_cfg_id, level, exp, loyalty,
+		SELECT server_id, hero_id, player_id, template_cfg_id, COALESCE(display_name,''), level, exp, loyalty,
 		       force, intel, politics, command, status, created_at
 		FROM player_hero
 		WHERE server_id = $1 AND hero_id = $2
 	`, serverID, heroID).Scan(
-		&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.Level, &h.Exp, &h.Loyalty,
+		&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.DisplayName, &h.Level, &h.Exp, &h.Loyalty,
 		&h.Force, &h.Intel, &h.Politics, &h.Command, &h.Status, &h.CreatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -63,7 +71,7 @@ func (p *PGStore) GetHero(ctx context.Context, serverID int32, heroID int64) (*H
 
 func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID int64) ([]*Hero, error) {
 	rows, err := p.Pool.Query(ctx, `
-		SELECT server_id, hero_id, player_id, template_cfg_id, level, exp, loyalty,
+		SELECT server_id, hero_id, player_id, template_cfg_id, COALESCE(display_name,''), level, exp, loyalty,
 		       force, intel, politics, command, status, created_at
 		FROM player_hero
 		WHERE server_id = $1 AND player_id = $2
@@ -77,7 +85,7 @@ func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID
 	for rows.Next() {
 		var h Hero
 		if err := rows.Scan(
-			&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.Level, &h.Exp, &h.Loyalty,
+			&h.ServerID, &h.HeroID, &h.PlayerID, &h.TemplateCfgID, &h.DisplayName, &h.Level, &h.Exp, &h.Loyalty,
 			&h.Force, &h.Intel, &h.Politics, &h.Command, &h.Status, &h.CreatedAt,
 		); err != nil {
 			return nil, err

@@ -964,6 +964,461 @@ func (x *ListRecruitTemplatesResponse) GetTotalCount() int32 {
 	return 0
 }
 
+// route: hero.v1.ListHotelRecruitCandidates
+type HotelRecruitCandidate struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CandidateId   int64                  `protobuf:"varint,1,opt,name=candidate_id,json=candidateId,proto3" json:"candidate_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Sex           int32                  `protobuf:"varint,4,opt,name=sex,proto3" json:"sex,omitempty"`
+	FaceId        int32                  `protobuf:"varint,5,opt,name=face_id,json=faceId,proto3" json:"face_id,omitempty"`
+	Level         int32                  `protobuf:"varint,6,opt,name=level,proto3" json:"level,omitempty"`
+	Attributes    *HeroAttributes        `protobuf:"bytes,7,opt,name=attributes,proto3" json:"attributes,omitempty"`
+	Loyalty       int32                  `protobuf:"varint,8,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	GoldCost      int64                  `protobuf:"varint,9,opt,name=gold_cost,json=goldCost,proto3" json:"gold_cost,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HotelRecruitCandidate) Reset() {
+	*x = HotelRecruitCandidate{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HotelRecruitCandidate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HotelRecruitCandidate) ProtoMessage() {}
+
+func (x *HotelRecruitCandidate) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HotelRecruitCandidate.ProtoReflect.Descriptor instead.
+func (*HotelRecruitCandidate) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *HotelRecruitCandidate) GetCandidateId() int64 {
+	if x != nil {
+		return x.CandidateId
+	}
+	return 0
+}
+
+func (x *HotelRecruitCandidate) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *HotelRecruitCandidate) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *HotelRecruitCandidate) GetSex() int32 {
+	if x != nil {
+		return x.Sex
+	}
+	return 0
+}
+
+func (x *HotelRecruitCandidate) GetFaceId() int32 {
+	if x != nil {
+		return x.FaceId
+	}
+	return 0
+}
+
+func (x *HotelRecruitCandidate) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *HotelRecruitCandidate) GetAttributes() *HeroAttributes {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
+func (x *HotelRecruitCandidate) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
+func (x *HotelRecruitCandidate) GetGoldCost() int64 {
+	if x != nil {
+		return x.GoldCost
+	}
+	return 0
+}
+
+type ListHotelRecruitCandidatesRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListHotelRecruitCandidatesRequest) Reset() {
+	*x = ListHotelRecruitCandidatesRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListHotelRecruitCandidatesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListHotelRecruitCandidatesRequest) ProtoMessage() {}
+
+func (x *ListHotelRecruitCandidatesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListHotelRecruitCandidatesRequest.ProtoReflect.Descriptor instead.
+func (*ListHotelRecruitCandidatesRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListHotelRecruitCandidatesRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *ListHotelRecruitCandidatesRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+type ListHotelRecruitCandidatesResponse struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Candidates    []*HotelRecruitCandidate `protobuf:"bytes,1,rep,name=candidates,proto3" json:"candidates,omitempty"`
+	HotelLevel    int32                    `protobuf:"varint,2,opt,name=hotel_level,json=hotelLevel,proto3" json:"hotel_level,omitempty"`
+	HeroCapacity  int32                    `protobuf:"varint,3,opt,name=hero_capacity,json=heroCapacity,proto3" json:"hero_capacity,omitempty"`
+	HeroOwned     int32                    `protobuf:"varint,4,opt,name=hero_owned,json=heroOwned,proto3" json:"hero_owned,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListHotelRecruitCandidatesResponse) Reset() {
+	*x = ListHotelRecruitCandidatesResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListHotelRecruitCandidatesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListHotelRecruitCandidatesResponse) ProtoMessage() {}
+
+func (x *ListHotelRecruitCandidatesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListHotelRecruitCandidatesResponse.ProtoReflect.Descriptor instead.
+func (*ListHotelRecruitCandidatesResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListHotelRecruitCandidatesResponse) GetCandidates() []*HotelRecruitCandidate {
+	if x != nil {
+		return x.Candidates
+	}
+	return nil
+}
+
+func (x *ListHotelRecruitCandidatesResponse) GetHotelLevel() int32 {
+	if x != nil {
+		return x.HotelLevel
+	}
+	return 0
+}
+
+func (x *ListHotelRecruitCandidatesResponse) GetHeroCapacity() int32 {
+	if x != nil {
+		return x.HeroCapacity
+	}
+	return 0
+}
+
+func (x *ListHotelRecruitCandidatesResponse) GetHeroOwned() int32 {
+	if x != nil {
+		return x.HeroOwned
+	}
+	return 0
+}
+
+// route: hero.v1.RefreshHotelRecruitPool
+type RefreshHotelRecruitPoolRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshHotelRecruitPoolRequest) Reset() {
+	*x = RefreshHotelRecruitPoolRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshHotelRecruitPoolRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshHotelRecruitPoolRequest) ProtoMessage() {}
+
+func (x *RefreshHotelRecruitPoolRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshHotelRecruitPoolRequest.ProtoReflect.Descriptor instead.
+func (*RefreshHotelRecruitPoolRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *RefreshHotelRecruitPoolRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *RefreshHotelRecruitPoolRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+type RefreshHotelRecruitPoolResponse struct {
+	state         protoimpl.MessageState   `protogen:"open.v1"`
+	Candidates    []*HotelRecruitCandidate `protobuf:"bytes,1,rep,name=candidates,proto3" json:"candidates,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RefreshHotelRecruitPoolResponse) Reset() {
+	*x = RefreshHotelRecruitPoolResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RefreshHotelRecruitPoolResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RefreshHotelRecruitPoolResponse) ProtoMessage() {}
+
+func (x *RefreshHotelRecruitPoolResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RefreshHotelRecruitPoolResponse.ProtoReflect.Descriptor instead.
+func (*RefreshHotelRecruitPoolResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *RefreshHotelRecruitPoolResponse) GetCandidates() []*HotelRecruitCandidate {
+	if x != nil {
+		return x.Candidates
+	}
+	return nil
+}
+
+// route: hero.v1.RecruitHotelCandidate
+type RecruitHotelCandidateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ServerId      int32                  `protobuf:"varint,1,opt,name=server_id,json=serverId,proto3" json:"server_id,omitempty"`
+	CityId        int64                  `protobuf:"varint,2,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	CandidateId   int64                  `protobuf:"varint,3,opt,name=candidate_id,json=candidateId,proto3" json:"candidate_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecruitHotelCandidateRequest) Reset() {
+	*x = RecruitHotelCandidateRequest{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecruitHotelCandidateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecruitHotelCandidateRequest) ProtoMessage() {}
+
+func (x *RecruitHotelCandidateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecruitHotelCandidateRequest.ProtoReflect.Descriptor instead.
+func (*RecruitHotelCandidateRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *RecruitHotelCandidateRequest) GetServerId() int32 {
+	if x != nil {
+		return x.ServerId
+	}
+	return 0
+}
+
+func (x *RecruitHotelCandidateRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *RecruitHotelCandidateRequest) GetCandidateId() int64 {
+	if x != nil {
+		return x.CandidateId
+	}
+	return 0
+}
+
+type RecruitHotelCandidateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	HeroId        int64                  `protobuf:"varint,1,opt,name=hero_id,json=heroId,proto3" json:"hero_id,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Level         int32                  `protobuf:"varint,3,opt,name=level,proto3" json:"level,omitempty"`
+	Loyalty       int32                  `protobuf:"varint,4,opt,name=loyalty,proto3" json:"loyalty,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RecruitHotelCandidateResponse) Reset() {
+	*x = RecruitHotelCandidateResponse{}
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RecruitHotelCandidateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecruitHotelCandidateResponse) ProtoMessage() {}
+
+func (x *RecruitHotelCandidateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_hero_v1_hero_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecruitHotelCandidateResponse.ProtoReflect.Descriptor instead.
+func (*RecruitHotelCandidateResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_hero_v1_hero_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *RecruitHotelCandidateResponse) GetHeroId() int64 {
+	if x != nil {
+		return x.HeroId
+	}
+	return 0
+}
+
+func (x *RecruitHotelCandidateResponse) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *RecruitHotelCandidateResponse) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *RecruitHotelCandidateResponse) GetLoyalty() int32 {
+	if x != nil {
+		return x.Loyalty
+	}
+	return 0
+}
+
 var File_sanguo_hero_v1_hero_proto protoreflect.FileDescriptor
 
 var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
@@ -1116,12 +1571,79 @@ var file_sanguo_hero_v1_hero_proto_rawDesc = string([]byte{
 	0x74, 0x65, 0x50, 0x72, 0x65, 0x76, 0x69, 0x65, 0x77, 0x52, 0x09, 0x74, 0x65, 0x6d, 0x70, 0x6c,
 	0x61, 0x74, 0x65, 0x73, 0x12, 0x1f, 0x0a, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x63, 0x6f,
 	0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c,
-	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x4e, 0x5a, 0x4c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e, 0x69, 0x74, 0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66,
-	0x66, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f,
-	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x62, 0x2f,
-	0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x68, 0x65, 0x72, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x68,
-	0x65, 0x72, 0x6f, 0x76, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xae, 0x02, 0x0a, 0x15, 0x48, 0x6f, 0x74, 0x65, 0x6c, 0x52,
+	0x65, 0x63, 0x72, 0x75, 0x69, 0x74, 0x43, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x12,
+	0x21, 0x0a, 0x0c, 0x63, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x63, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65,
+	0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79, 0x49, 0x64, 0x12, 0x21, 0x0a, 0x0c, 0x64,
+	0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x10,
+	0x0a, 0x03, 0x73, 0x65, 0x78, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x73, 0x65, 0x78,
+	0x12, 0x17, 0x0a, 0x07, 0x66, 0x61, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x05, 0x52, 0x06, 0x66, 0x61, 0x63, 0x65, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x6c, 0x65, 0x76,
+	0x65, 0x6c, 0x18, 0x06, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x12,
+	0x3e, 0x0a, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x18, 0x07, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68, 0x65, 0x72,
+	0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x48, 0x65, 0x72, 0x6f, 0x41, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75,
+	0x74, 0x65, 0x73, 0x52, 0x0a, 0x61, 0x74, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x65, 0x73, 0x12,
+	0x18, 0x0a, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x08, 0x20, 0x01, 0x28, 0x05,
+	0x52, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x6f, 0x6c,
+	0x64, 0x5f, 0x63, 0x6f, 0x73, 0x74, 0x18, 0x09, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x67, 0x6f,
+	0x6c, 0x64, 0x43, 0x6f, 0x73, 0x74, 0x22, 0x59, 0x0a, 0x21, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f,
+	0x74, 0x65, 0x6c, 0x52, 0x65, 0x63, 0x72, 0x75, 0x69, 0x74, 0x43, 0x61, 0x6e, 0x64, 0x69, 0x64,
+	0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74, 0x79,
+	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79, 0x49,
+	0x64, 0x22, 0xd0, 0x01, 0x0a, 0x22, 0x4c, 0x69, 0x73, 0x74, 0x48, 0x6f, 0x74, 0x65, 0x6c, 0x52,
+	0x65, 0x63, 0x72, 0x75, 0x69, 0x74, 0x43, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x45, 0x0a, 0x0a, 0x63, 0x61, 0x6e, 0x64,
+	0x69, 0x64, 0x61, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x73,
+	0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68, 0x65, 0x72, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x48, 0x6f,
+	0x74, 0x65, 0x6c, 0x52, 0x65, 0x63, 0x72, 0x75, 0x69, 0x74, 0x43, 0x61, 0x6e, 0x64, 0x69, 0x64,
+	0x61, 0x74, 0x65, 0x52, 0x0a, 0x63, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x73, 0x12,
+	0x1f, 0x0a, 0x0b, 0x68, 0x6f, 0x74, 0x65, 0x6c, 0x5f, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x68, 0x6f, 0x74, 0x65, 0x6c, 0x4c, 0x65, 0x76, 0x65, 0x6c,
+	0x12, 0x23, 0x0a, 0x0d, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x63, 0x61, 0x70, 0x61, 0x63, 0x69, 0x74,
+	0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0c, 0x68, 0x65, 0x72, 0x6f, 0x43, 0x61, 0x70,
+	0x61, 0x63, 0x69, 0x74, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x6f, 0x77,
+	0x6e, 0x65, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x05, 0x52, 0x09, 0x68, 0x65, 0x72, 0x6f, 0x4f,
+	0x77, 0x6e, 0x65, 0x64, 0x22, 0x56, 0x0a, 0x1e, 0x52, 0x65, 0x66, 0x72, 0x65, 0x73, 0x68, 0x48,
+	0x6f, 0x74, 0x65, 0x6c, 0x52, 0x65, 0x63, 0x72, 0x75, 0x69, 0x74, 0x50, 0x6f, 0x6f, 0x6c, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73, 0x65, 0x72, 0x76, 0x65,
+	0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79, 0x49, 0x64, 0x22, 0x68, 0x0a, 0x1f,
+	0x52, 0x65, 0x66, 0x72, 0x65, 0x73, 0x68, 0x48, 0x6f, 0x74, 0x65, 0x6c, 0x52, 0x65, 0x63, 0x72,
+	0x75, 0x69, 0x74, 0x50, 0x6f, 0x6f, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x45, 0x0a, 0x0a, 0x63, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2e, 0x68, 0x65, 0x72,
+	0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x48, 0x6f, 0x74, 0x65, 0x6c, 0x52, 0x65, 0x63, 0x72, 0x75, 0x69,
+	0x74, 0x43, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x52, 0x0a, 0x63, 0x61, 0x6e, 0x64,
+	0x69, 0x64, 0x61, 0x74, 0x65, 0x73, 0x22, 0x77, 0x0a, 0x1c, 0x52, 0x65, 0x63, 0x72, 0x75, 0x69,
+	0x74, 0x48, 0x6f, 0x74, 0x65, 0x6c, 0x43, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x08, 0x73, 0x65, 0x72, 0x76, 0x65,
+	0x72, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x63, 0x69, 0x74, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x63, 0x69, 0x74, 0x79, 0x49, 0x64, 0x12, 0x21, 0x0a, 0x0c,
+	0x63, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x0b, 0x63, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x49, 0x64, 0x22,
+	0x8b, 0x01, 0x0a, 0x1d, 0x52, 0x65, 0x63, 0x72, 0x75, 0x69, 0x74, 0x48, 0x6f, 0x74, 0x65, 0x6c,
+	0x43, 0x61, 0x6e, 0x64, 0x69, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x17, 0x0a, 0x07, 0x68, 0x65, 0x72, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x72, 0x6f, 0x49, 0x64, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x69,
+	0x73, 0x70, 0x6c, 0x61, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0b, 0x64, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x14, 0x0a,
+	0x05, 0x6c, 0x65, 0x76, 0x65, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x6c, 0x65,
+	0x76, 0x65, 0x6c, 0x12, 0x18, 0x0a, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x07, 0x6c, 0x6f, 0x79, 0x61, 0x6c, 0x74, 0x79, 0x42, 0x4e, 0x5a,
+	0x4c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x61, 0x6e, 0x69, 0x74,
+	0x61, 0x67, 0x75, 0x70, 0x74, 0x61, 0x6f, 0x66, 0x66, 0x69, 0x63, 0x65, 0x2f, 0x73, 0x61, 0x6e,
+	0x67, 0x75, 0x6f, 0x2d, 0x73, 0x6c, 0x67, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x62, 0x2f, 0x73, 0x61, 0x6e, 0x67, 0x75, 0x6f, 0x2f, 0x68,
+	0x65, 0x72, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x68, 0x65, 0x72, 0x6f, 0x76, 0x31, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 })
 
 var (
@@ -1136,36 +1658,46 @@ func file_sanguo_hero_v1_hero_proto_rawDescGZIP() []byte {
 	return file_sanguo_hero_v1_hero_proto_rawDescData
 }
 
-var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_sanguo_hero_v1_hero_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_sanguo_hero_v1_hero_proto_goTypes = []any{
-	(*PlayerHeroSummary)(nil),            // 0: sanguo.hero.v1.PlayerHeroSummary
-	(*ListPlayerHeroesRequest)(nil),      // 1: sanguo.hero.v1.ListPlayerHeroesRequest
-	(*ListPlayerHeroesResponse)(nil),     // 2: sanguo.hero.v1.ListPlayerHeroesResponse
-	(*GetHeroDetailRequest)(nil),         // 3: sanguo.hero.v1.GetHeroDetailRequest
-	(*HeroAttributes)(nil),               // 4: sanguo.hero.v1.HeroAttributes
-	(*GetHeroDetailResponse)(nil),        // 5: sanguo.hero.v1.GetHeroDetailResponse
-	(*UpgradeHeroRequest)(nil),           // 6: sanguo.hero.v1.UpgradeHeroRequest
-	(*UpgradeHeroResponse)(nil),          // 7: sanguo.hero.v1.UpgradeHeroResponse
-	(*RecruitHeroRequest)(nil),           // 8: sanguo.hero.v1.RecruitHeroRequest
-	(*RecruitHeroResponse)(nil),          // 9: sanguo.hero.v1.RecruitHeroResponse
-	(*RecruitTemplatePreview)(nil),       // 10: sanguo.hero.v1.RecruitTemplatePreview
-	(*ListRecruitTemplatesRequest)(nil),  // 11: sanguo.hero.v1.ListRecruitTemplatesRequest
-	(*ListRecruitTemplatesResponse)(nil), // 12: sanguo.hero.v1.ListRecruitTemplatesResponse
-	(*v1.ResourceWallet)(nil),            // 13: sanguo.common.v1.ResourceWallet
-	(*v1.RewardItem)(nil),                // 14: sanguo.common.v1.RewardItem
+	(*PlayerHeroSummary)(nil),                  // 0: sanguo.hero.v1.PlayerHeroSummary
+	(*ListPlayerHeroesRequest)(nil),            // 1: sanguo.hero.v1.ListPlayerHeroesRequest
+	(*ListPlayerHeroesResponse)(nil),           // 2: sanguo.hero.v1.ListPlayerHeroesResponse
+	(*GetHeroDetailRequest)(nil),               // 3: sanguo.hero.v1.GetHeroDetailRequest
+	(*HeroAttributes)(nil),                     // 4: sanguo.hero.v1.HeroAttributes
+	(*GetHeroDetailResponse)(nil),              // 5: sanguo.hero.v1.GetHeroDetailResponse
+	(*UpgradeHeroRequest)(nil),                 // 6: sanguo.hero.v1.UpgradeHeroRequest
+	(*UpgradeHeroResponse)(nil),                // 7: sanguo.hero.v1.UpgradeHeroResponse
+	(*RecruitHeroRequest)(nil),                 // 8: sanguo.hero.v1.RecruitHeroRequest
+	(*RecruitHeroResponse)(nil),                // 9: sanguo.hero.v1.RecruitHeroResponse
+	(*RecruitTemplatePreview)(nil),             // 10: sanguo.hero.v1.RecruitTemplatePreview
+	(*ListRecruitTemplatesRequest)(nil),        // 11: sanguo.hero.v1.ListRecruitTemplatesRequest
+	(*ListRecruitTemplatesResponse)(nil),       // 12: sanguo.hero.v1.ListRecruitTemplatesResponse
+	(*HotelRecruitCandidate)(nil),              // 13: sanguo.hero.v1.HotelRecruitCandidate
+	(*ListHotelRecruitCandidatesRequest)(nil),  // 14: sanguo.hero.v1.ListHotelRecruitCandidatesRequest
+	(*ListHotelRecruitCandidatesResponse)(nil), // 15: sanguo.hero.v1.ListHotelRecruitCandidatesResponse
+	(*RefreshHotelRecruitPoolRequest)(nil),     // 16: sanguo.hero.v1.RefreshHotelRecruitPoolRequest
+	(*RefreshHotelRecruitPoolResponse)(nil),    // 17: sanguo.hero.v1.RefreshHotelRecruitPoolResponse
+	(*RecruitHotelCandidateRequest)(nil),       // 18: sanguo.hero.v1.RecruitHotelCandidateRequest
+	(*RecruitHotelCandidateResponse)(nil),      // 19: sanguo.hero.v1.RecruitHotelCandidateResponse
+	(*v1.ResourceWallet)(nil),                  // 20: sanguo.common.v1.ResourceWallet
+	(*v1.RewardItem)(nil),                      // 21: sanguo.common.v1.RewardItem
 }
 var file_sanguo_hero_v1_hero_proto_depIdxs = []int32{
 	0,  // 0: sanguo.hero.v1.ListPlayerHeroesResponse.heroes:type_name -> sanguo.hero.v1.PlayerHeroSummary
 	4,  // 1: sanguo.hero.v1.GetHeroDetailResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
 	4,  // 2: sanguo.hero.v1.UpgradeHeroResponse.attributes:type_name -> sanguo.hero.v1.HeroAttributes
-	13, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
-	14, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
+	20, // 3: sanguo.hero.v1.RecruitTemplatePreview.recruit_cost:type_name -> sanguo.common.v1.ResourceWallet
+	21, // 4: sanguo.hero.v1.RecruitTemplatePreview.recruit_item:type_name -> sanguo.common.v1.RewardItem
 	10, // 5: sanguo.hero.v1.ListRecruitTemplatesResponse.templates:type_name -> sanguo.hero.v1.RecruitTemplatePreview
-	6,  // [6:6] is the sub-list for method output_type
-	6,  // [6:6] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	4,  // 6: sanguo.hero.v1.HotelRecruitCandidate.attributes:type_name -> sanguo.hero.v1.HeroAttributes
+	13, // 7: sanguo.hero.v1.ListHotelRecruitCandidatesResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
+	13, // 8: sanguo.hero.v1.RefreshHotelRecruitPoolResponse.candidates:type_name -> sanguo.hero.v1.HotelRecruitCandidate
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_hero_v1_hero_proto_init() }
@@ -1179,7 +1711,7 @@ func file_sanguo_hero_v1_hero_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_hero_v1_hero_proto_rawDesc), len(file_sanguo_hero_v1_hero_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

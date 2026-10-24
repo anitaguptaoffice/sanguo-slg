@@ -33,8 +33,22 @@
 
 **决策**：M4 仍用 `domestic.md` 简化式；建筑升级耗时/消耗参照 `BuildingFunc::doGetSimpleBuildingInfo` 读 `cfg_building_level`，实现侧用 `params.yml` 的 `cost_growth` / `time_growth` 指数曲线（见 domestic 单测）。
 
+## 4. 客栈招将池（Hero / Hotel）
+
+| 项 | Legacy（#82 `HotelFunc.php`） | M1 实现 |
+|---|---|---|
+| 客栈建筑 | `ID_BUILDING_HOTEL`（bid=10）决定池容量与刷将等级上限 | `building_cfg_id=8`（`hotel` 槽位，读 `city_building`） |
+| 招贤馆容量 | `cityHasHeroPosition`：`ID_BUILDING_OFFICE`（bid=11）等级 **>** 该城 `sys_city_hero` 条数 | `building_cfg_id=1`（官府/主殿）等级 **>** 玩家 `player_hero` 总数（M1 无城池驻将字段，容量按玩家全局计） |
+| 候选表 | `sys_recruit_hero` 随机名/脸/三维比值 | `city_hotel_recruit`；事务/智力/武力映射 `politics`/`intel`/`force` |
+| 刷池 | `doGetRecruitHero` 时间块淘汰 + 补至客栈等级；`resetRecruitHero` 消耗招贤令（gid=141） | `ListHotelRecruitCandidates` 懒刷新时间块；`RefreshHotelRecruitPool` 消耗 **访贤简帖** `item_cfg_id=2004`（M1 代招贤令）全量重刷 |
+| 招募 | `recruitHero` 扣城池 `gold` → `sys_city_hero` | `RecruitHotelCandidate` 扣 `player_wallet.gold` → `player_hero`（`template_cfg_id=0` + `display_name`） |
+| 并行通道 | 活动/模板将 | 保留 `hero.v1.RecruitHero` 模板+卷轴路径，与客栈池互不替代 |
+
+**决策**：跟原版 **客栈池** 而非「仅模板抽卡+容量」；美术 roster 1009+ 冻结与本服逻辑分轨。活动将 `generateHeroFromConfig`、结交/游说、野兵 rumor **不在** HERO-hotel-001。
+
 ## 验证
 
 - `internal/military/march/legacy_align_test.go`：legacy 欧氏 + 6000 对拍常量  
 - `internal/military/battle/legacy_pk_test.go`：PKDamage 样本  
 - `internal/domestic/production_align_test.go`：`domestic.md` 一小时产出  
+- `internal/hero/hotel_test.go`：客栈招募与招贤馆容量拒绝  
