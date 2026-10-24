@@ -2720,6 +2720,35 @@
       #layout-frame.layout-narrow .military-panel .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-187 wave:34 主城将领排行社交 HUD 组合 manifest; hero-list-selected-v1; CLIENT-180 槽位/队列动画见上文 */
+      .daily-quest-list li.daily-queue-anchor-highlight {
+        outline: 2px solid #c9a227; outline-offset: 1px;
+      }
+      /* CLIENT-183 招募脉冲动画见上文 recruit-success-pulse-keyframes */
+      .leaderboard-top-density-line {
+        font-size: 11px; line-height: 1.35; color: #b8a88a;
+        margin: 4px 0 6px; overflow-wrap: anywhere; min-width: 0;
+      }
+      /* CLIENT-185 chat-unread-separator 基础样式见上文 */
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag.city-slot-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-slot-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.daily-queue-anchor-highlight,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list li.daily-queue-anchor-highlight,
+      #layout-frame.layout-narrow #hud .hud-resource-sweep,
+      #layout-frame.layout-narrow #hud [data-role="hud-production-wallet-line"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="hero-list-refreshed-at"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list.hero-list-refresh-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-afford-secondary.recruit-submitting,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-afford-secondary.recruit-success-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-top-density-row td,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .leaderboard-top-density-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-viewer-bar,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-members li.guild-role-group-header,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-role-group-toggle,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.chat-unread-separator,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.chat-unread-divider {
+        min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere;
+      }
       #layout-frame.layout-narrow .main-city-toolbar button.toolbar-chrome-btn--with-icon {
         flex: 0 0 auto;
         min-width: 0;
