@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  formatDomesticQueueEtaSegmentLabel,
-  formatNextQueueFinishPreviewLine,
-} from "@/net/nextQueueFinishPreview";
+import { formatNextQueueFinishPreviewLine } from "@/net/nextQueueFinishPreview";
 
 describe("formatNextQueueFinishPreviewLine (CLIENT-218)", () => {
   const now = 1_700_000_000_000;
@@ -54,15 +51,5 @@ describe("formatNextQueueFinishPreviewLine (CLIENT-218)", () => {
 
   it("returns null when no active queue", () => {
     expect(formatNextQueueFinishPreviewLine([], [], {}, [], now)).toBeNull();
-  });
-});
-
-describe("formatDomesticQueueEtaSegmentLabel (CLIENT-212 soft stub)", () => {
-  const now = new Date("2024-06-15T10:00:00").getTime();
-
-  it("segments remaining time read-only", () => {
-    expect(formatDomesticQueueEtaSegmentLabel(now + 30 * 60_000, now)).toBe("<1h");
-    expect(formatDomesticQueueEtaSegmentLabel(now + 3 * 3600_000, now)).toBe("今日内");
-    expect(formatDomesticQueueEtaSegmentLabel(now + 3 * 86_400_000, now)).toBe(">1d");
   });
 });

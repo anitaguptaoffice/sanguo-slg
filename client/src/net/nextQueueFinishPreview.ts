@@ -10,29 +10,12 @@ import {
 } from "@/net/dailyQuestQueueMatch";
 import { formatUpgradeRemaining } from "@/net/hudFormat";
 import { formatTimeMs, unitLabel } from "@/net/militaryFormat";
+import { formatDomesticQueueEtaSegmentLabel } from "@/net/domesticQueueEtaSegment";
 import type { RecruitQueueEntry } from "@/net/queueState";
 
 /** CLIENT-218：队列顶栏下一完成 ETA 只读预览行。 */
 export const QUEUE_NEXT_FINISH_PREVIEW_CLASS = "queue-next-finish-preview";
 export const QUEUE_NEXT_FINISH_PREVIEW_ACTION = "queue-open-daily-anchor";
-
-/**
- * CLIENT-212 软依赖：ETA 分段只读标签（未合入主树时本卡自带 stub，合入后可改为 re-export）。
- */
-export function formatDomesticQueueEtaSegmentLabel(
-  finishAtMs: number,
-  nowMs = Date.now(),
-): string | null {
-  const finish = finishAtMs ?? 0;
-  if (finish <= nowMs) return null;
-  const remainingSec = Math.ceil((finish - nowMs) / 1000);
-  if (remainingSec < 3600) return "<1h";
-  const endOfToday = new Date(nowMs);
-  endOfToday.setHours(23, 59, 59, 999);
-  if (finish <= endOfToday.getTime()) return "今日内";
-  if (remainingSec > 86_400) return ">1d";
-  return null;
-}
 
 export type NextQueueFinishPreview = {
   line: string;
