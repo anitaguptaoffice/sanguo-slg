@@ -16,5 +16,8 @@ export const HERO_PANEL_INK_BODY_COLOR = "#e8dcc8";
 /** Labels / secondary on hero-detail ink surface. */
 export const HERO_PANEL_INK_MUTED_COLOR = "#c9b896";
 
+/** Deficit / gap hints on hero-detail ink surface (#1a1410). */
+export const HERO_PANEL_INK_DEFICIT_COLOR = "#f0a8a0";
+
 /** Owned recruit row accent on paper (darker than legacy #a8c4a0). */
 export const HERO_PANEL_PAPER_OWNED_COLOR = "#3d5c38";

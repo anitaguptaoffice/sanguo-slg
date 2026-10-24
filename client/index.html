@@ -1974,6 +1974,25 @@
         outline: 2px dashed #e8a090;
         box-shadow: 0 0 10px rgba(232, 160, 144, 0.35);
       }
+      /* ART-012 QA: hero center panel — nine-slice host scrolls via panel-scroll-body (wide + narrow). */
+      .content-panel[data-center-panel="hero"] {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .content-panel[data-center-panel="hero"] > :not(.panel-scroll-body) {
+        flex-shrink: 0;
+      }
+      .content-panel[data-center-panel="hero"] .panel-scroll-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+      }
+      .content-panel[data-center-panel="hero"] .template-list,
+      .content-panel[data-center-panel="hero"] .hero-list {
+        max-height: none;
+        overflow: visible;
+      }
       /* CLIENT-188 / ART-012 QA: paper vs hero-detail ink — scoped to ui.panel.hero.v1 host only */
       .content-panel[data-center-panel="hero"] [data-role="hero-hint"],
       .content-panel[data-center-panel="hero"] .hero-list-refresh-status,
@@ -1997,6 +2016,17 @@
       }
       .content-panel[data-center-panel="hero"] .hero-detail {
         color: #e8dcc8;
+        max-height: none;
+        overflow-y: visible;
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail .hero-upgrade-item-gap.hero-upgrade-item-gap-warn,
+      .content-panel[data-center-panel="hero"] .hero-detail [data-role="hero-upgrade-item-gap"].hero-upgrade-item-gap-warn {
+        color: #f0a8a0;
+        font-weight: 600;
+      }
+      .content-panel[data-center-panel="hero"] .hero-detail .hero-cultivation-disabled-reason {
+        color: #f0a8a0;
+        background: rgba(0, 0, 0, 0.22);
       }
       .content-panel[data-center-panel="hero"] .hero-detail .recruit-afford-primary {
         color: #f5e6c8;
