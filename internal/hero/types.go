@@ -55,6 +55,7 @@ type Template struct {
 type Hero struct {
 	ServerID, TemplateCfgID, Level int32
 	HeroID, PlayerID, Exp          int64
+	DisplayName                    string
 	Loyalty                        int
 	Force, Intel, Politics, Command int32
 	Status                         int16

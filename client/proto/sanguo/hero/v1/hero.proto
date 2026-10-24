@@ -105,3 +105,52 @@ message ListRecruitTemplatesResponse {
   repeated RecruitTemplatePreview templates = 1;
   int32 total_count = 2;
 }
+
+// route: hero.v1.ListHotelRecruitCandidates
+message HotelRecruitCandidate {
+  int64 candidate_id = 1;
+  int64 city_id = 2;
+  string display_name = 3;
+  int32 sex = 4;
+  int32 face_id = 5;
+  int32 level = 6;
+  HeroAttributes attributes = 7;
+  int32 loyalty = 8;
+  int64 gold_cost = 9;
+}
+
+message ListHotelRecruitCandidatesRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+}
+
+message ListHotelRecruitCandidatesResponse {
+  repeated HotelRecruitCandidate candidates = 1;
+  int32 hotel_level = 2;
+  int32 hero_capacity = 3;
+  int32 hero_owned = 4;
+}
+
+// route: hero.v1.RefreshHotelRecruitPool
+message RefreshHotelRecruitPoolRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+}
+
+message RefreshHotelRecruitPoolResponse {
+  repeated HotelRecruitCandidate candidates = 1;
+}
+
+// route: hero.v1.RecruitHotelCandidate
+message RecruitHotelCandidateRequest {
+  int32 server_id = 1;
+  int64 city_id = 2;
+  int64 candidate_id = 3;
+}
+
+message RecruitHotelCandidateResponse {
+  int64 hero_id = 1;
+  string display_name = 2;
+  int32 level = 3;
+  int32 loyalty = 4;
+}

@@ -102,6 +102,17 @@ func (s *Service) GetHeroDetail(ctx context.Context, p PlayerRef, heroID int64) 
 	if h == nil || h.PlayerID != p.PlayerID {
 		return HeroDetail{}, ErrHeroNotFound
 	}
+	if h.TemplateCfgID == TemplateCfgIDHotelRandom {
+		name := h.DisplayName
+		if name == "" {
+			name = "客栈将领"
+		}
+		return HeroDetail{
+			Hero: h, TemplateName: name, TemplateCode: "hotel_random", Rarity: 1,
+			LoyaltyMin: LoyaltyMin, LoyaltyMax: LoyaltyMax,
+			ExpectedStats: BaseStats{Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command},
+		}, nil
+	}
 	t, ok := s.Catalog[h.TemplateCfgID]
 	if !ok {
 		return HeroDetail{}, ErrUnknownTemplate
