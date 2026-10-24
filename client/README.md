@@ -454,6 +454,14 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 波次总览与 **DOCS-EXIT-022**（[#593](https://github.com/anitaguptaoffice/sanguo-slg/issues/593) / [#604](https://github.com/anitaguptaoffice/sanguo-slg/pull/604)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 30」。实现合入后 main tip **`6978ebacaa3c91cc6556e93a10a1d227706e6c06`**（#602 CLIENT-155）。
 
+## Wave 31 H5 出征募兵·战报邻接·邮件批量·社交草稿未读（INTG-028）
+
+范围与 Wave 30 相同；**世界瓦片/图集**仍暂缓。实现卡 **CLIENT-156～163**（本卡 **CLIENT-163** manifest）。
+
+### 手动验收（1280 wave:31 组合 manifest CLIENT-163）
+
+视口 **1280×720** `layout-narrow`：**军事出征/募兵**、**军情**、**战报** `battle-report-detail-nav`、**邮件** 批量工具栏（`claim-mail-batch` / `claim-mail-all`）、**军团/聊天** `guild-chat-draft` / `chat-input-counter` / `chat-unread-divider`；邮件 tab 角标 `mail-filter-tab-badge`（**CLIENT-162**） 与 **CLIENT-145/155** 同级；`.panel-scroll-body` **`padding-bottom: 64px`**；`march-queue-banner` 与未读分隔线窄屏 **无横向溢出**；`data-art-skin="off"` 可跳过。单测：`wave31MarchMailSocialNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`；`cd client && npm test` 绿。（[#613](https://github.com/anitaguptaoffice/sanguo-slg/issues/613)）
+
 ### 手动验收（HUD 经济扫读 CLIENT-148）
 
 在 **CLIENT-081** 资源扫读与 **CLIENT-134** 待办深链基础上巩固：`GetCityState` 同行 `production_rates` + `wallet` 驱动顶栏 **hover / focus / 点击展开** 次行 `formatResourceSweepLine(production_rates, wallet)`（四资源 **余量 +/h**；缺 `production_rates` 仅余量）；`diffWalletPositiveGains` 为 **CLIENT-051** `resource-pulse` 与轮询后展开条余量刷新的**同一 wallet 事实源**（`patchSession` / `walletResourcePulseKeys`）；**CLIENT-059** 队列面板总览与资源展开条并存；`HudTodoBadgePoll` **不**嵌套并发 `GetCityState`。
