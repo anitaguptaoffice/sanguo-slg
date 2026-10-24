@@ -118,6 +118,18 @@ import {
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
 import {
+  applyBattleReportCoordsReadonlySelect,
+  BATTLE_REPORT_COORD_COPY_BAR_CLASS,
+  BATTLE_REPORT_COORD_COPY_TEXT_ROLE,
+  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS,
+  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS,
+  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_SUBLINE_CLASS,
+  COPY_REPORT_COORDS_READONLY_ACTION,
+  formatBattleReportCoordsCopyText,
+  formatBattleReportSideTemplateResidualLine,
+  shouldShowBattleReportCoordCopyBar,
+} from "@/net/battleReportDetailTemplateResidual";
+import {
   battleReportReplayGridLinkLabel,
   battleReportWorldTileGrid,
 } from "@/ui/worldTileInfoFromBattleReport";
@@ -615,6 +627,27 @@ export class BattleReportPanel {
       detailEl.appendChild(outcomeBand);
     }
 
+    if (summary) {
+      const residual = formatBattleReportSideTemplateResidualLine({
+        summary,
+        detail: this.detailView,
+      });
+      const residualBar = document.createElement("div");
+      residualBar.className = BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS;
+      residualBar.setAttribute("aria-label", "攻守模板摘要");
+      const residualLine = document.createElement("p");
+      residualLine.className = BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS;
+      residualLine.textContent = residual.templateLine;
+      residualBar.appendChild(residualLine);
+      if (residual.casualtySubline) {
+        const residualSub = document.createElement("p");
+        residualSub.className = BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_SUBLINE_CLASS;
+        residualSub.textContent = residual.casualtySubline;
+        residualBar.appendChild(residualSub);
+      }
+      detailEl.appendChild(residualBar);
+    }
+
     const roundSummaryText = formatBattleReportRoundSummaryStrip(this.detailView);
     if (roundSummaryText) {
       const roundStrip = document.createElement("div");
@@ -709,6 +742,21 @@ export class BattleReportPanel {
         ? formatBattleReportLocationFields(location)
         : "location_x/location_y 未知";
       locationArea.appendChild(xy);
+      if (location && shouldShowBattleReportCoordCopyBar(summary)) {
+        const copyBar = document.createElement("button");
+        copyBar.type = "button";
+        copyBar.className = BATTLE_REPORT_COORD_COPY_BAR_CLASS;
+        copyBar.setAttribute("data-action", COPY_REPORT_COORDS_READONLY_ACTION);
+        copyBar.setAttribute(
+          "aria-label",
+          `只读复制坐标 ${formatBattleReportCoordsCopyText(location)}`,
+        );
+        const copyText = document.createElement("span");
+        copyText.setAttribute("data-role", BATTLE_REPORT_COORD_COPY_TEXT_ROLE);
+        copyText.textContent = formatBattleReportCoordsCopyText(location);
+        copyBar.appendChild(copyText);
+        locationArea.appendChild(copyBar);
+      }
       if (location) {
         const mapBtn = document.createElement("button");
         mapBtn.type = "button";
@@ -1148,6 +1196,11 @@ export class BattleReportPanel {
     } else if (action === "expand-rounds") {
       this.roundsTableExpanded = true;
       this.renderDetail();
+    } else if (action === COPY_REPORT_COORDS_READONLY_ACTION) {
+      const textEl = btn.querySelector<HTMLElement>(
+        `[data-role="${BATTLE_REPORT_COORD_COPY_TEXT_ROLE}"]`,
+      );
+      if (textEl) applyBattleReportCoordsReadonlySelect(textEl);
     } else if (action === "view-on-map" && this.detailSummary) {
       this.panelOpts?.onViewOnMap?.(this.detailSummary);
     } else if (action === BATTLE_REPORT_COORD_REPLAY_ACTION && this.detailSummary) {

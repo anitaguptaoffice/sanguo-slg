@@ -1123,6 +1123,33 @@
       .battle-report-round-summary-strip .report-round-summary-intel-link {
         flex: 0 0 auto; font-size: 11px; padding: 3px 8px;
       }
+      .battle-report-side-template-residual {
+        margin: 0 0 8px; padding: 6px 10px; border-radius: 4px;
+        font-size: 12px; line-height: 1.45; color: #d8ccb4;
+        background: rgba(28, 22, 16, 0.9); border: 1px solid #3d3028;
+      }
+      .battle-report-side-template-residual-line {
+        margin: 0; font-weight: 600; color: #e8dcc8;
+      }
+      .battle-report-side-template-residual-subline {
+        margin: 4px 0 0; font-size: 11px; color: #c9b896;
+      }
+      .battle-report-coord-copy-bar {
+        display: inline-flex; align-items: center; margin-right: 6px;
+        padding: 3px 8px; font-size: 11px; font-family: inherit;
+        color: #e8dcc8; background: #2a2218; border: 1px solid #5a4a38;
+        border-radius: 4px; cursor: pointer;
+      }
+      .battle-report-coord-copy-bar .battle-report-coord-copy-selected,
+      .battle-report-coord-copy-selected {
+        background: rgba(201, 162, 39, 0.35);
+        outline: 1px solid #c9a227;
+        animation: battle-report-coord-copy-selected-keyframes 1.5s ease-out 1;
+      }
+      @keyframes battle-report-coord-copy-selected-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.55); }
+        100% { box-shadow: 0 0 0 6px rgba(201, 162, 39, 0); }
+      }
       .battle-report-detail-nav {
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
       }
