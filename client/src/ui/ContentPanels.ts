@@ -29,10 +29,17 @@ import {
   validateBatchUseConsumableSlots,
 } from "@/net/bagBatchUse";
 import {
-  bagEmptyListClass,
-  bagEmptyListMessage,
-  formatBagStackRowLabel,
-} from "@/net/panelDensity";
+  BAG_CATEGORY_TABS,
+  bagCategoryListEmptyMessage,
+  countBagRowsByCategory,
+  filterBagRowsByCategory,
+  formatBagStackQty,
+  readBagCategoryTabSession,
+  writeBagCategoryTabSession,
+  type BagClientCategory,
+} from "@/net/bagCategory";
+import { bagEmptyListClass, formatBagStackRowLabel } from "@/net/panelDensity";
+import { renderPanelStateListRow } from "@/engine/panelStateChrome";
 import {
   countShopOffersByCategory,
   filterShopOffersByCategory,
@@ -92,6 +99,7 @@ export class ContentPanels {
   private bagHighlightItemId = 0;
   private bagHighlightItemIds = new Set<number>();
   private shopCategory: ShopOfferClientCategory = "all";
+  private bagCategory: BagClientCategory = readBagCategoryTabSession();
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
   private useConsumableSubmitState: UseConsumableSubmitState = "idle";
@@ -326,6 +334,7 @@ export class ContentPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item-batch">批量使用勾选格</button>
       </div>
       <p class="bag-batch-hint" data-role="bag-batch-hint">同道具可多格勾选，逐次调用 UseConsumable×1 并汇总结果。</p>
+      <div class="bag-category-tabs" data-role="bag-category-tabs" role="tablist"></div>
       <div class="panel-scroll-body" data-role="bag-scroll">
         <ul class="bag-list" data-role="bag-list"></ul>
       </div>
@@ -368,16 +377,43 @@ export class ContentPanels {
     }
   }
 
+  private visibleBagStacks(): BagStack[] {
+    const bag = this.getSession()?.bag ?? [];
+    return filterBagRowsByCategory(bag, this.bagCategory);
+  }
+
+  private renderBagCategoryTabs(): void {
+    const host = this.bagPanel.querySelector('[data-role="bag-category-tabs"]');
+    if (!host) return;
+    host.innerHTML = "";
+    const bag = this.getSession()?.bag ?? [];
+    const counts = countBagRowsByCategory(bag);
+    for (const tab of BAG_CATEGORY_TABS) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "bag-category-tab";
+      btn.setAttribute("data-bag-category", tab.id);
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-selected", tab.id === this.bagCategory ? "true" : "false");
+      if (tab.id === this.bagCategory) btn.classList.add("active");
+      const n = tab.id === "all" ? counts.all : counts[tab.id];
+      btn.textContent = n > 0 ? `${tab.label} (${n})` : tab.label;
+      host.appendChild(btn);
+    }
+  }
+
   private renderBagList(): void {
+    this.renderBagCategoryTabs();
     const ul = this.bagPanel.querySelector('[data-role="bag-list"]');
     if (!ul) return;
     ul.innerHTML = "";
     const bag = this.getSession()?.bag ?? [];
-    for (const row of bag) {
+    const visible = this.visibleBagStacks();
+    for (const row of visible) {
       const li = document.createElement("li");
       li.className = "bag-stack-row";
       if (row.item_cfg_id) li.setAttribute("data-item-cfg-id", String(row.item_cfg_id));
-      const { idCell, name, qtyCell } = formatBagStackRowLabel(row);
+      const { idCell, name } = formatBagStackRowLabel(row);
       const idSpan = document.createElement("span");
       idSpan.className = "bag-stack-id";
       idSpan.textContent = idCell;
@@ -386,7 +422,7 @@ export class ContentPanels {
       nameSpan.textContent = name;
       const qtySpan = document.createElement("span");
       qtySpan.className = "bag-stack-qty";
-      qtySpan.textContent = `×${qtyCell.trim()}`;
+      qtySpan.textContent = formatBagStackQty(row.quantity);
       li.appendChild(idSpan);
       li.appendChild(nameSpan);
       li.appendChild(qtySpan);
@@ -423,11 +459,9 @@ export class ContentPanels {
       }
       ul.appendChild(li);
     }
-    if (!bag.length) {
-      const li = document.createElement("li");
-      li.className = bagEmptyListClass();
-      li.textContent = bagEmptyListMessage();
-      ul.appendChild(li);
+    if (!visible.length) {
+      const msg = bagCategoryListEmptyMessage(this.bagCategory, bag.length > 0);
+      renderPanelStateListRow(ul, "empty", msg, { legacyClass: bagEmptyListClass() });
     }
     this.syncBagWalletGap();
   }
@@ -856,6 +890,16 @@ export class ContentPanels {
   }
 
   private onBagClick(ev: Event): void {
+    const catBtn = (ev.target as HTMLElement).closest("[data-bag-category]");
+    if (catBtn) {
+      const next = catBtn.getAttribute("data-bag-category") as BagClientCategory | null;
+      if (next && next !== this.bagCategory) {
+        this.bagCategory = next;
+        writeBagCategoryTabSession(next);
+        this.renderBagList();
+      }
+      return;
+    }
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");

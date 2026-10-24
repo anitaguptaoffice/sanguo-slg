@@ -1132,7 +1132,8 @@ cd client && npm install && npm run dev
 5. **商城**：「刷新货架」→ offer 1001 →「购买×1」。成功行内追加 `已购 +1`，面板反馈含 `钱包 粮 … 币 …`（与顶栏 HUD 同 `formatResourceHudGroup` 格式）；限购行仍显示 `限购 n/m`；**CLIENT-057** 起余额不足/售罄/限购在 `shop-form-error` 内联中文提示且不发 RPC；网关失败经 **CLIENT-067** `formatPanelGatewayError`（如 `余额不足 [64003]`）。**CLIENT-113**：`PurchaseShopOffer` 往返时购买钮 **disabled + 购买中…**；成功状态栏 `formatShopPurchaseSuccess(offer_id)`，粮/木/铁/石扣费触发顶栏 **CLIENT-051** 脉冲，背包行即时刷新；失败仍见 `shop-form-error` 与 **CLIENT-092** `shop-wallet-gap`。
 6. **背包使用**：数量为 0 或道具不在背包快照时 `bag-form-error` 内联提示（不发 RPC）；成功清空错误区、金色 `panel-feedback` 展示效果，失败保留 `bag-form-error`（与 **CLIENT-048** / **CLIENT-067** 军事 `march-form-error` 口径一致）。**CLIENT-112**：「使用道具」/「批量使用勾选格」提交中 **disabled + 使用中…**；成功 `formatUseConsumableEffectSummary` + 列表行 `bag-row-used-pulse`（3s）+ 钱包增量 **CLIENT-051** 脉冲；失败保留道具选中与批量勾选。
 7. **CLIENT-092 缺口对比**：商城选中 offer / 背包选中消耗品时，`shop-wallet-gap` / `bag-wallet-gap` 只读展示 `formatWalletGapLine`（粮/木/铁/石 需/余）；不足资源名带 `resource-gap-warn`，与 **CLIENT-057** 预校验内联错误并存。
-8. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`；全量 `cd client && npm test`。
+8. **CLIENT-153 背包分类**：**全部 / 消耗品 / 养成** tab（`sessionStorage` 键 `bag-category-tab-v1`）；切换仅客户端过滤 `ListPlayerBag` 会话快照、**不新 RPC**；行内 **cfg 名 + `bag-stack-qty`（`formatBagStackQty`）** 堆叠扫读；真空/筛选无匹配走 **CLIENT-029** + **CLIENT-129** `renderPanelStateListRow`；**CLIENT-112** 使用提交脉冲不退化。
+9. 单测：`contentFeedback.test.ts`、`contentFormValidation.test.ts`、`walletGap.test.ts`、`useConsumableSubmitFeedback.test.ts`、`purchaseSubmitFeedback.test.ts`、`bagCategory.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（HUD 资源变动，CLIENT-018）
 
@@ -1198,7 +1199,7 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 1. `make dev` 或 mock 进主城。**邮件**：空收件箱显示「暂无邮件，完成日常…」；有信时每行两行（标题+时间 / 附件或已读角标），未读行左侧金条背景；底栏未读角标与 CLIENT-027 一致。
 2. **战报**：列表加载失败时状态栏与列表内「重试」提示，与真空列表「暂无战报…」区分；有数据时行首 outcome 色块 + 对手摘要 + 时间；筛选无结果时保留筛选条且列表提示「无匹配战报」。
-3. **背包**：空列表引导「商城」「日常」；道具行 `item_cfg_id` 与数量列对齐；使用失败时金色反馈在列表**下方**，不遮挡道具行。
+3. **背包**：空列表引导「商城」「日常」；道具行 `item_cfg_id` 与数量列对齐；**CLIENT-153** 分类 tab 与 `bag-stack-qty` 堆叠扫读见 [CLIENT-020](#手动验收背包与商城反馈-client-020) 第 8 步；使用失败时金色反馈在列表**下方**，不遮挡道具行。
 4. 单测：`panelDensity.test.ts`、`BattleReportPanel.test.ts`、`HeroMailPanels.test.ts`；全量 `cd client && npm test`。
 
 ### 手动验收（社交扫读 CLIENT-030）
