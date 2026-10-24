@@ -48,6 +48,9 @@ export type MarchTargetSink = {
   onFilled?: (x: number, y: number) => void;
 };
 
+export const WORLD_TILE_FOCUS_PULSE_CLASS = "world-tile-focus-pulse";
+export const WORLD_TILE_FOCUS_PULSE_MS = 2000;
+
 export type WorldPanelsOptions = {
   /** 世界列表点选格点变化（用于军情列表目的格筛选）。 */
   onGridSelectionChange?: (grid: { x: number; y: number } | null) => void;
@@ -162,6 +165,31 @@ export class WorldPanels {
   refreshMarchDestCounts(): void {
     this.renderList();
     this.renderInfoCard();
+  }
+
+  /** 打开世界面板、选中格点并触发 CLIENT-170 焦点脉冲（无新 world RPC）。 */
+  openAndFocusTile(x: number, y: number): void {
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    const opening = this.panel.classList.contains("hidden");
+    if (opening) {
+      this.panel.classList.remove("hidden");
+      resetCenterPanelViewportScroll(this.panel);
+      void this.refreshList();
+    }
+    this.selectGridAt(x, y);
+    this.scheduleWorldTileFocusPulse();
+  }
+
+  private scheduleWorldTileFocusPulse(): void {
+    const card = this.panel.querySelector<HTMLElement>('[data-role="world-tile-info"]');
+    if (!card) return;
+    card.classList.remove(WORLD_TILE_FOCUS_PULSE_CLASS);
+    void card.offsetWidth;
+    card.classList.add(WORLD_TILE_FOCUS_PULSE_CLASS);
+    window.setTimeout(
+      () => card.classList.remove(WORLD_TILE_FOCUS_PULSE_CLASS),
+      WORLD_TILE_FOCUS_PULSE_MS,
+    );
   }
 
   private buildPanel(): HTMLElement {

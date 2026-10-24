@@ -159,6 +159,55 @@ describe("MarchListPanel", () => {
     ).toBe(true);
   });
 
+  it("shows march-info-card and march-row-selected when row selected (CLIENT-172)", async () => {
+    const gateway = {
+      listMarches: vi.fn().mockResolvedValue({
+        marches: [
+          {
+            march_id: 5,
+            phase: 2,
+            purpose: 1,
+            from_x: 0,
+            from_y: 0,
+            to_x: 12,
+            to_y: 34,
+            arrive_at_ms: Date.now() + 90_000,
+            troops: [{ unit_cfg_id: 1, count: 50 }],
+          },
+        ],
+        total: 1,
+      }),
+    };
+    const onViewMarchDestTile = vi.fn();
+    const onRemarchFromRow = vi.fn();
+    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {}, {
+      onViewMarchDestTile,
+      onRemarchFromRow,
+    });
+    panel.attach();
+    panel.toggle();
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+
+    mount.querySelector('.march-list li[data-march-id="5"]')!.click();
+    const card = mount.querySelector(".march-info-card");
+    expect(card?.classList.contains("hidden")).toBe(false);
+    expect(card?.classList.contains("march-row-selected")).toBe(true);
+    expect(mount.querySelector(".march-info-card-primary")?.textContent).toContain("(0,0) → (12,34)");
+    expect(mount.querySelector(".march-info-card-secondary")?.textContent).toContain("步兵×50");
+
+    mount.querySelector('[data-action="march-info-view-dest"]')!.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(onViewMarchDestTile).toHaveBeenCalledWith(
+      expect.objectContaining({ march_id: 5, to_x: 12, to_y: 34 }),
+    );
+
+    mount.querySelector('[data-action="march-info-remarch"]')!.dispatchEvent(
+      new Event("click", { bubbles: true }),
+    );
+    expect(onRemarchFromRow).toHaveBeenCalled();
+  });
+
   it("selects march row and highlights on click", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({
