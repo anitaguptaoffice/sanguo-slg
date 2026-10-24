@@ -20,6 +20,7 @@ import {
   marchListLoadErrorListHint,
 } from "@/net/panelDensity";
 import {
+  applyPanelStateChrome,
   PANEL_STATE_LOADING_MESSAGE,
   renderPanelStateListRow,
 } from "@/engine/panelStateChrome";
@@ -68,7 +69,12 @@ import {
   formatMarchIntelSecondaryLine,
   MARCH_INTEL_TO_QUEUE_BANNER_ACTION,
 } from "@/net/marchQueueBanner";
-
+import {
+  formatMarchInfoCardPrimary,
+  formatMarchInfoCardSecondary,
+  MARCH_INFO_CARD_CLASS,
+  MARCH_ROW_SELECTED_CLASS,
+} from "@/net/marchInfoCard";
 export type MarchListPanelOptions = {
   /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
   assets?: AssetLoader;
@@ -83,6 +89,8 @@ export type MarchListPanelOptions = {
   onRemarchFromRow?: (march: MarchSummary) => void;
   /** CLIENT-156：军情新出征行 → 军事队列顶栏摘要互跳。 */
   onOpenMilitaryQueueBanner?: (marchId: number) => void;
+  /** CLIENT-172：信息卡「查看目的格点」→ 世界面板焦点。 */
+  onViewMarchDestTile?: (march: MarchSummary) => void;
 };
 
 export class MarchListPanel {
@@ -100,6 +108,7 @@ export class MarchListPanel {
   private readonly onMarchArrivalReminders?: (reminders: MarchArrivalReminder[]) => void;
   private readonly onRemarchFromRow?: (march: MarchSummary) => void;
   private readonly onOpenMilitaryQueueBanner?: (marchId: number) => void;
+  private readonly onViewMarchDestTile?: (march: MarchSummary) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
@@ -125,6 +134,7 @@ export class MarchListPanel {
     this.onMarchArrivalReminders = options?.onMarchArrivalReminders;
     this.onRemarchFromRow = options?.onRemarchFromRow;
     this.onOpenMilitaryQueueBanner = options?.onOpenMilitaryQueueBanner;
+    this.onViewMarchDestTile = options?.onViewMarchDestTile;
     this.assets = options?.assets;
   }
 
@@ -379,6 +389,18 @@ export class MarchListPanel {
       </fieldset>
       <button type="button" data-action="refresh-marches">刷新列表</button>
       <p class="report-panel-status" data-role="march-list-status"></p>
+      <aside class="${MARCH_INFO_CARD_CLASS} hidden" data-role="march-info-card" aria-live="polite">
+        <h4>行军信息</h4>
+        <p class="march-info-card-state hidden" data-role="march-info-card-state"></p>
+        <div class="march-info-card-body hidden" data-role="march-info-card-body">
+          <p class="march-info-card-primary" data-role="march-info-card-primary"></p>
+          <p class="march-info-card-secondary" data-role="march-info-card-secondary"></p>
+          <div class="march-info-card-actions">
+            <button type="button" data-action="march-info-view-dest">查看目的格点</button>
+            <button type="button" data-action="march-info-remarch">再出征</button>
+          </div>
+        </div>
+      </aside>
       <div class="panel-scroll-body" data-role="march-scroll">
         <ul class="march-list" data-role="march-list"></ul>
       </div>
@@ -566,9 +588,10 @@ export class MarchListPanel {
         li.tabIndex = 0;
       }
       if (m.march_id != null && m.march_id === this.selectedMarchId) {
-        li.classList.add("march-list-row-selected", "selected");
+        li.classList.add("march-list-row-selected", MARCH_ROW_SELECTED_CLASS, "selected");
         li.setAttribute("aria-selected", "true");
       } else {
+        li.classList.remove(MARCH_ROW_SELECTED_CLASS);
         li.removeAttribute("aria-selected");
       }
       if (filter != null) {
@@ -582,6 +605,74 @@ export class MarchListPanel {
     this.applyPhaseChangeRowPulses();
     syncListRovingTabindex(ul as HTMLElement, "li[data-march-id]");
     this.mountFilterSkins();
+    this.renderMarchInfoCard();
+  }
+
+  private renderMarchInfoCard(): void {
+    const card = this.panel?.querySelector<HTMLElement>('[data-role="march-info-card"]');
+    const stateEl = this.panel?.querySelector<HTMLElement>('[data-role="march-info-card-state"]');
+    const bodyEl = this.panel?.querySelector<HTMLElement>('[data-role="march-info-card-body"]');
+    const primaryEl = this.panel?.querySelector<HTMLElement>(
+      '[data-role="march-info-card-primary"]',
+    );
+    const secondaryEl = this.panel?.querySelector<HTMLElement>(
+      '[data-role="march-info-card-secondary"]',
+    );
+    if (!card || !stateEl || !bodyEl || !primaryEl || !secondaryEl) return;
+
+    const march = this.getSelectedMarch();
+    const selected = march != null;
+    card.classList.toggle("hidden", !selected && !this.listLoading && !this.listError);
+    card.classList.toggle(MARCH_ROW_SELECTED_CLASS, selected);
+    if (march?.march_id != null) {
+      card.setAttribute("data-march-id", String(march.march_id));
+    } else {
+      card.removeAttribute("data-march-id");
+    }
+
+    if (this.listLoading && !march) {
+      stateEl.classList.remove("hidden");
+      stateEl.textContent = PANEL_STATE_LOADING_MESSAGE;
+      applyPanelStateChrome(stateEl, "loading", this.assets);
+      bodyEl.classList.add("hidden");
+      card.classList.remove("hidden");
+      return;
+    }
+
+    if (this.listError && !march) {
+      stateEl.classList.remove("hidden");
+      stateEl.textContent = marchListLoadErrorListHint();
+      applyPanelStateChrome(stateEl, "error", this.assets);
+      bodyEl.classList.add("hidden");
+      card.classList.remove("hidden");
+      return;
+    }
+
+    if (!march) {
+      stateEl.textContent = "";
+      stateEl.classList.add("hidden");
+      stateEl.removeAttribute("data-panel-state");
+      bodyEl.classList.add("hidden");
+      card.classList.add("hidden");
+      card.classList.remove(MARCH_ROW_SELECTED_CLASS);
+      return;
+    }
+
+    stateEl.textContent = "";
+    stateEl.classList.add("hidden");
+    stateEl.removeAttribute("data-panel-state");
+    bodyEl.classList.remove("hidden");
+
+    const now = this.nowMs();
+    primaryEl.textContent = formatMarchInfoCardPrimary(march);
+    secondaryEl.textContent = formatMarchInfoCardSecondary(march, now);
+
+    const remarchBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-remarch"]');
+    const viewDestBtn = card.querySelector<HTMLButtonElement>('[data-action="march-info-view-dest"]');
+    const hasDest =
+      Number.isFinite(march.to_x) && Number.isFinite(march.to_y);
+    viewDestBtn?.toggleAttribute("disabled", !hasDest);
+    remarchBtn?.toggleAttribute("disabled", !hasDest);
   }
 
   private applyPhaseChangeRowPulses(): void {
@@ -602,6 +693,13 @@ export class MarchListPanel {
       const m = this.marches.find((row) => row.march_id === id);
       if (!m) continue;
       el.textContent = formatMarchIntelSecondaryLine(m, now, this.highlightState);
+    }
+    const infoSecondary = this.panel.querySelector<HTMLElement>(
+      '[data-role="march-info-card-secondary"]',
+    );
+    const selected = this.getSelectedMarch();
+    if (infoSecondary && selected) {
+      infoSecondary.textContent = formatMarchInfoCardSecondary(selected, now);
     }
     const etaNodes = this.panel.querySelectorAll<HTMLElement>(
       `[data-role="${MARCH_ROW_RECENT_ETA_ROLE}"]`,
@@ -841,6 +939,34 @@ export class MarchListPanel {
       ev.stopPropagation();
       const id = Number(toBannerBtn.getAttribute("data-march-id"));
       if (!Number.isNaN(id) && id > 0) this.onOpenMilitaryQueueBanner?.(id);
+      return;
+    }
+
+    const infoViewDest = (ev.target as HTMLElement).closest('[data-action="march-info-view-dest"]');
+    if (infoViewDest) {
+      ev.stopPropagation();
+      const march = this.getSelectedMarch();
+      if (march) this.onViewMarchDestTile?.(march);
+      return;
+    }
+
+    const infoRemarch = (ev.target as HTMLElement).closest('[data-action="march-info-remarch"]');
+    if (infoRemarch) {
+      ev.stopPropagation();
+      const march = this.getSelectedMarch();
+      if (march) this.onRemarchFromRow?.(march);
+      return;
+    }
+
+    const infoCard = (ev.target as HTMLElement).closest('[data-role="march-info-card"]');
+    if (infoCard && !(ev.target as HTMLElement).closest("button")) {
+      const id = this.selectedMarchId;
+      if (id != null) {
+        const row = this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
+        row?.scrollIntoView?.({ block: "nearest" });
+        row?.classList.add(MARCH_ROW_SELECTED_CLASS);
+        infoCard.classList.add(MARCH_ROW_SELECTED_CLASS);
+      }
       return;
     }
 

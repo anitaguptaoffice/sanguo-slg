@@ -28,6 +28,13 @@ export type MarchSummary = {
   report_id?: number;
   /** ListMarches 当前军团编制（CLIENT-093 上次兵力摘要）。 */
   troops?: CityTroopStack[];
+  /** 可选：网关 JSON 扩展，行军将领展示名（CLIENT-172 信息卡）。 */
+  hero_id?: number;
+  hero_name?: string;
+  hero_template_name?: string;
+  leader_hero_id?: number;
+  leader_hero_name?: string;
+  leader_hero_template_name?: string;
   /** 可选：目的格玩家展示名（ListMarches JSON 扩展，CLIENT-108）。 */
   to_player_name?: string;
   destination_player_name?: string;

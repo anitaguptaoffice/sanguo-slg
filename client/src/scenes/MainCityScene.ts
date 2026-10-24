@@ -568,6 +568,19 @@ export class MainCityScene implements Scene {
         onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
         onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
         onOpenMilitaryQueueBanner: (marchId) => this.openMilitaryQueueBannerHighlight(marchId),
+        onViewMarchDestTile: (march) => {
+          const tx = march.to_x;
+          const ty = march.to_y;
+          if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
+            this.status = "该行缺少有效目的格点";
+            this.renderHud();
+            return;
+          }
+          this.world.openAndFocusTile(tx!, ty!);
+          this.focusMinimapOnWorldGrid(tx!, ty!);
+          this.status = `世界：已定位军情目的格 (${tx},${ty})`;
+          this.renderHud();
+        },
         onSelectionChange: (march) => {
           if (march) {
             const tx = march.to_x;

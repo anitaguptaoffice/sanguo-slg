@@ -1451,6 +1451,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **wave:29（CLIENT-141）**：军情列表 **主行** = 目的格点 + 模板摘要（目的 / `#id` / 编制）；**次行** = `formatMarchRemainingMs` 剩余 ETA + `formatMarchPhase` 中文阶段。`ListMarches` 刷新后 `detectMarchPhaseChanges` 对 phase 变化的行附加 **`march-phase-changed`** 脉冲 3s；**CLIENT-124** 筛选 chip 与 **最早到达** 默认排序（`eta_asc`，`default` 同义）并存；loading/empty/error 仍走 **CLIENT-129**。单测：`formatMarchListSecondary`、`marchPhaseListRefresh.test.ts`、`MarchListPanel.test.ts`。
 
+**wave:33（CLIENT-172）**：军情选中行军行展示只读 **`march-info-card`**（主行 `formatMarchInfoCardPrimary`、次行 `formatMarchEtaLine` + 兵力/将领摘要）；**查看目的格点** 打开世界面板并 **`world-tile-focus-pulse`**（CLIENT-170）；**再出征** 走 **CLIENT-093**（无 CancelMarch）；列表↔卡片 **`march-row-selected`** 双向高亮；loading/error 仍 **CLIENT-129**。单测：`marchInfoCard.test.ts`、`MarchListPanel.test.ts`、`WorldPanels.test.ts`。
+
 ### 手动验收（军情格点筛选 CLIENT-069）
 
 在 [CLIENT-061](#手动验收世界坐标-client-015) 双向高亮与 [CLIENT-058](#手动验收小地图目的点-eta-client-058) ETA 角标基础上，降低多行军扫读成本（**无 CancelMarch/撤回**；筛选仅客户端过滤 `ListMarches` 快照，不新 RPC）。

@@ -219,6 +219,26 @@ describe("WorldPanels", () => {
     expect(reportGrid).toEqual({ x: 60, y: 60, hint: 42 });
   });
 
+  it("openAndFocusTile selects grid and pulses world-tile-info (CLIENT-170/172)", () => {
+    vi.useFakeTimers();
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerCities: vi.fn().mockResolvedValue({
+        cities: [{ city_id: 1, name: "主城", x: 60, y: 60 }],
+      }),
+    } as unknown as GatewayPort;
+    const panels = new WorldPanels(mount, gateway, () => null, { marchFormRoot: null }, () => {});
+    panels.attach();
+    panels.openAndFocusTile(11, 22);
+    const card = mount.querySelector('[data-role="world-tile-info"]');
+    expect(card?.classList.contains("hidden")).toBe(false);
+    expect(card?.getAttribute("data-grid-x")).toBe("11");
+    expect(card?.classList.contains("world-tile-focus-pulse")).toBe(true);
+    vi.advanceTimersByTime(2000);
+    expect(card?.classList.contains("world-tile-focus-pulse")).toBe(false);
+    vi.useRealTimers();
+  });
+
   it("shows CLIENT-129 loading on info card while cities refresh", async () => {
     const mount = document.createElement("div");
     let resolveCities: (v: unknown) => void = () => {};
