@@ -171,6 +171,29 @@ describe("mountFilterRow", () => {
     row.classList.add("selected");
     expect(resolveFilterRowAssetId(row)).toBe(ROW_FILTER_ASSET_BY_STATE.selected);
   });
+
+  it("keeps daily quest title in the 40px skin bar; cross-links in detail", () => {
+    const row = document.createElement("li");
+    row.dataset.uiFilterRow = "";
+    const dot = document.createElement("span");
+    dot.className = "daily-quest-row-claim-dot";
+    dot.dataset.uiFilterBadge = "dot";
+    const main = document.createElement("span");
+    main.className = "daily-quest-row-main";
+    main.textContent = "征收粮食 5000/5000";
+    const tag = document.createElement("button");
+    tag.type = "button";
+    tag.className = "daily-cross-link-tag";
+    tag.textContent = "邮件";
+    row.append(dot, main, tag);
+    mountFilterRow(row, mockAssets());
+    const bar = row.querySelector(".art-filter-row-skin-bar");
+    const detail = row.querySelector(".art-filter-row-detail");
+    expect(bar?.contains(main)).toBe(true);
+    expect(bar?.contains(dot)).toBe(true);
+    expect(detail?.contains(tag)).toBe(true);
+    expect(detail?.contains(main)).toBe(false);
+  });
 });
 
 describe("applyFilterChipVisualState", () => {

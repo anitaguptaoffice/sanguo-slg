@@ -1,5 +1,4 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
-import { applyUiCountBadge } from "@/engine/artBadgeSkin";
 import {
   PANEL_STATE_LOADING_MESSAGE,
   renderPanelStateListRow,
@@ -787,11 +786,7 @@ export class HeroMailPanels {
       const count = spec.action === "mail-filter-all" ? unclaimedCount : unreadForTab;
       countEl.dataset.filterBadgeCount = String(count);
       if (loader) {
-        applyUiCountBadge(countEl, count, {
-          assets: loader,
-          hiddenClass: "hidden",
-          fallbackText: () => spec.countBadge,
-        });
+        mountFilterBadgeCount(countEl, loader, count);
       } else {
         countEl.textContent = spec.countBadge;
         const show = Boolean(spec.countBadge);

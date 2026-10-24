@@ -26,6 +26,10 @@ Chip **CSS hit wrap ≥44×44** while sprite stays **72×32** — see `hit-proof
 
 `cd client && node scripts/capture-art-ui-filter-008-evidence.mjs`
 
+运行时全视口 + 探针（含 #578 日常行条与 chip `badge_count` 皮肤 crop）：
+
+`cd client && node scripts/capture-art-ui-filter-008-runtime-evidence.mjs`
+
 ## Tests
 
 `artUiFilterSkin.test.ts`; full suite `cd client && npm test`.
