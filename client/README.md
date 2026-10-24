@@ -1414,6 +1414,8 @@ VITE_GATEWAY_WS_URL=ws://127.0.0.1:19090/ws npm run dev
 
 **wave:36（CLIENT-196）主城队列剩余时间与进度条可读扫读加深**：建造/募兵队列行次行展示 **`formatQueueRemainingEtaLine`**（剩余秒数 + `upgrade_finish_at_ms`/`finish_at_ms` 完成时刻只读摘要）与 **`queue-row-progress-bar`** 细进度条（**CLIENT-164** `formatUpgradeRemaining` / `queue-row-countdown` / `queue-row-progress-fill` **不退化**）；七槽 overlay **`queue-row-slot-highlight`**（**CLIENT-180**）与队列完成 **HUD** `hud-resource-sweep` 脉冲（**CLIENT-181**）并存；无新 domestic RPC / 募兵加速。单测：`queueRemainingEtaLine.test.ts`、`queueRemainingProgress.test.ts`、`QueuePanels.test.ts`。
 
+**wave:36（CLIENT-197）队列完成焦点环互链**：建造/募兵完成（`detectBuildJustCompleted` / `detectRecruitQueueJustCompleted` 同源 **CLIENT-181** 检测，无新 toast）时，对应七槽 overlay **`city-slot-complete-focus-ring` 2s** + 队列只读行 **`queue-row-complete-pulse` 2s**（`queue-row-complete-readonly` 标记完成待领取/已结束；与 **CLIENT-149** 3s 脉冲及 **CLIENT-164** 剩余进度行可叠加）。点击完成队列行仍 **`scrollCitySlotIntoView` + `city-slot-pulse`（CLIENT-180 不退化）**；`sessionStorage` 键 **`queue-complete-focus-ring-v1`** 去重。单测：`queueCompleteFocusRing.test.ts`、`QueuePanels.test.ts`。
+
 1. `make dev` 下联调，主城底栏 **「队列」**（mock 无募兵队列）。
 2. 升级农田等使 `upgrade_finish_at_ms > now`：列表含槽位、目标等级、`formatUpgradeRemaining` 剩余时间与完成时刻；打开面板时 1s 刷新，关闭即停。
 3. 军事募兵若返回 `queue_id`/`finish_at_ms`：列表显示兵种/数量/倒计时；完成后提示刷新兵力，可点「刷新内政」或「刷新状态」并打开军事。

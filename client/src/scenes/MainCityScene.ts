@@ -231,6 +231,10 @@ import {
   refreshHudProductionWalletLine,
   type QueueCompleteHudEvent,
 } from "@/net/hudQueueCompletePulse";
+import {
+  collectCitySlotKeysForQueueCompleteFocus,
+  scheduleCitySlotCompleteFocusRing,
+} from "@/net/queueCompleteFocusRing";
 import { scheduleHudResourcePulse, walletResourcePulseKeys } from "@/net/hudResourcePulse";
 
 const SLOT_LABEL: Record<string, string> = {
@@ -776,8 +780,11 @@ export class MainCityScene implements Scene {
       (entry) => this.openMilitaryRecruitFromQueueRow(entry),
       (slotKey) =>
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey),
-      (queueIds) =>
-        this.applyQueueCompleteHudPulse(queueIds.map((id) => ({ kind: "recruit", queueId: id }))),
+      (queueIds) => {
+        const events = queueIds.map((id) => ({ kind: "recruit" as const, queueId: id }));
+        this.applyQueueCompleteHudPulse(events);
+        this.applyQueueCompleteFocusRing(events);
+      },
     );
     this.queuePanels.attach();
     this.buildingPanel = new MainCityBuildingPanel(
@@ -1787,11 +1794,18 @@ export class MainCityScene implements Scene {
       },
       { flashWalletGain: false },
     );
+    const buildCompleteEvents = justCompleted.map((slotKey) => ({
+      kind: "build" as const,
+      slotKey,
+    }));
     if (justCompleted.length) {
       this.queuePanels?.notifyBuildJustCompleted(justCompleted);
-      this.applyQueueCompleteHudPulse(justCompleted.map((slotKey) => ({ kind: "build", slotKey })));
+      this.applyQueueCompleteHudPulse(buildCompleteEvents);
     }
     this.syncSlotUpgradeOverlay();
+    if (buildCompleteEvents.length) {
+      this.applyQueueCompleteFocusRing(buildCompleteEvents);
+    }
     this.slotUpgradeOverlay?.setMutualHighlightSlot(
       this.queuePanels?.getHighlightedBuildSlotKey() ?? null,
     );
@@ -1811,6 +1825,16 @@ export class MainCityScene implements Scene {
     const pulseKeys = collectHudPulseKeysForQueueCompletes(events, sessionStorage);
     refreshHudProductionWalletLine(this.hud, this.session.productionRates, this.session.wallet);
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
+  }
+
+  /** CLIENT-197：队列完成 → 七槽 `city-slot-complete-focus-ring` 2s。 */
+  private applyQueueCompleteFocusRing(events: readonly QueueCompleteHudEvent[]): void {
+    const slotKeys = collectCitySlotKeysForQueueCompleteFocus(events, sessionStorage);
+    if (!slotKeys.length) return;
+    const layer = this.slotUpgradeOverlay?.getOverlayLayer();
+    for (const key of slotKeys) {
+      scheduleCitySlotCompleteFocusRing(layer, key);
+    }
   }
 
   private renderHud(): void {

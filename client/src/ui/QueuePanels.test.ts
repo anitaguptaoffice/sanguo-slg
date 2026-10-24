@@ -8,6 +8,10 @@ import {
   RECRUIT_QUEUE_MATRIX_SLOT_KEY,
 } from "@/net/recruitQueueComplete";
 import { QUEUE_ROW_SLOT_HIGHLIGHT_CLASS } from "@/net/citySlotQueueLink";
+import {
+  QUEUE_ROW_COMPLETE_PULSE_CLASS,
+  QUEUE_ROW_COMPLETE_READONLY_CLASS,
+} from "@/net/queueCompleteFocusRing";
 import { queueRecruitRowDomId, RECRUIT_ROW_PULSE_CLASS } from "@/net/recruitTroopSubmitFeedback";
 import { DAILY_QUEUE_ANCHOR_HIGHLIGHT_CLASS } from "@/net/dailyQueueAnchor";
 import {
@@ -99,6 +103,22 @@ describe("QueuePanels", () => {
     expect(row?.classList.contains(QUEUE_ROW_SLOT_HIGHLIGHT_CLASS)).toBe(true);
   });
 
+  it("notifyBuildJustCompleted adds queue-row-complete-pulse on complete todo row (CLIENT-197)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", level: 3, upgrade_finish_at_ms: 0 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const panel = new QueuePanels(mount, gateway, () => session, { farm: "农田" }, () => {}, () => {}, () => {});
+    panel.attach();
+    panel.setBuildCompleteTodoSlots(["farm"]);
+    panel.toggle();
+    panel.notifyBuildJustCompleted(["farm"]);
+    const row = mount.querySelector('li[data-slot-key="farm"]');
+    expect(row?.classList.contains(QUEUE_ROW_COMPLETE_PULSE_CLASS)).toBe(true);
+    expect(row?.classList.contains(QUEUE_ROW_COMPLETE_READONLY_CLASS)).toBe(true);
+  });
+
   it("notifyBuildJustCompleted adds pulse class on complete todo row", () => {
     const mount = document.createElement("div");
     const now = Date.now();
@@ -113,6 +133,39 @@ describe("QueuePanels", () => {
     const row = mount.querySelector('li[data-slot-key="farm"]');
     expect(row?.classList.contains("queue-build-complete-pulse")).toBe(true);
     expect(row?.textContent).toContain("Lv3");
+  });
+
+  it("completed recruit row is readonly and gains queue-row-complete-pulse (CLIENT-197)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onLocate = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      {},
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onLocate,
+    );
+    panel.attach();
+    panel.toggle();
+    panel.addRecruitEntry({ queue_id: 7, unit_cfg_id: 1, count: 10, finish_at_ms: now - 1000 });
+    panel.notifyRecruitJustCompleted([7]);
+    const row = mount.querySelector(`#${queueRecruitRowDomId(7)}`) as HTMLElement;
+    expect(row?.classList.contains(QUEUE_ROW_COMPLETE_READONLY_CLASS)).toBe(true);
+    expect(row?.classList.contains(QUEUE_ROW_COMPLETE_PULSE_CLASS)).toBe(true);
+    row.click();
+    expect(onLocate).toHaveBeenCalledWith(RECRUIT_QUEUE_MATRIX_SLOT_KEY);
   });
 
   it("notifyRecruitJustCompleted adds queue-recruit-complete-pulse on recruit line", () => {
