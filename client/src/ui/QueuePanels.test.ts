@@ -658,6 +658,57 @@ describe("QueuePanels", () => {
     expect(onDeepestDeepestDeeperRing).toHaveBeenCalledWith("farm");
   });
 
+  it("renders preview residual deepest-deepest-deepest line and rings slot on click (CLIENT-341)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onDeepestDeepestDeepestRing = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onDeepestDeepestDeepestRing,
+    );
+    panel.attach();
+    panel.toggle();
+    const deepestDeepestDeepest = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deepest-deepest-line"]',
+    ) as HTMLElement;
+    expect(deepestDeepestDeepest?.textContent).toMatch(/巩固再加深四层/);
+    expect(deepestDeepestDeepest?.textContent).toMatch(/槽位\(农田\)/);
+    expect(deepestDeepestDeepest?.getAttribute("data-action")).toBe(
+      "domestic-slot-preview-cross-link-residual-deepest-deepest-deepest-ring",
+    );
+    expect(deepestDeepestDeepest?.getAttribute("data-slot-key")).toBe("farm");
+    const deepestDeepestDeeper = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deepest-deeper-line"]',
+    ) as HTMLElement;
+    expect(deepestDeepestDeeper?.textContent).toMatch(/巩固再加深三层/);
+    deepestDeepestDeepest?.click();
+    expect(onDeepestDeepestDeepestRing).toHaveBeenCalledWith("farm");
+  });
+
   it("renders preview residual line and pulses slot on click (CLIENT-245)", () => {
     const mount = document.createElement("div");
     const now = Date.now();

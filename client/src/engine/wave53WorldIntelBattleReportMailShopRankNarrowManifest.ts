@@ -36,6 +36,7 @@ import {
   queryClient323PanelRoot,
   type Client323NarrowManifestCenterPanelId,
 } from "@/engine/wave51WorldIntelBattleReportMailShopRankNarrowManifest";
+export { panelScrollClearsBottomToolbar };
 import {
   BAG_SHOP_CATEGORY_SCAN_RING_CLASS,
   BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_RING_CLASS,
