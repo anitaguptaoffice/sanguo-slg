@@ -305,9 +305,13 @@ import {
 } from "@/net/minimapViewportIntelScrollResidualDeepest";
 import {
   createMinimapViewportIntelScrollResidualDeepestDeeperTimers,
-  syncMinimapViewportIntelScrollResidualDeepestDeeper,
   type MinimapViewportIntelScrollResidualDeepestDeeperTimers,
 } from "@/net/minimapViewportIntelScrollResidualDeepestDeeper";
+import {
+  createMinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers,
+  syncMinimapViewportIntelScrollResidualDeepestDeepestDeeper,
+  type MinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers,
+} from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeeper";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -494,6 +498,8 @@ export class MainCityScene implements Scene {
     createMinimapViewportIntelScrollResidualDeepestTimers();
   private readonly minimapViewportIntelScrollResidualDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeeperTimers =
     createMinimapViewportIntelScrollResidualDeepestDeeperTimers();
+  private readonly minimapViewportIntelScrollResidualDeepestDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers =
+    createMinimapViewportIntelScrollResidualDeepestDeepestDeeperTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -1798,7 +1804,7 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportIntelScrollResidualDeepestDeeper(
+    const synced = syncMinimapViewportIntelScrollResidualDeepestDeepestDeeper(
       {
         march,
         bounds,
@@ -1813,6 +1819,8 @@ export class MainCityScene implements Scene {
         residualDeeperTimers: this.minimapViewportIntelScrollResidualDeeperTimers,
         residualDeepestTimers: this.minimapViewportIntelScrollResidualDeepestTimers,
         residualDeepestDeeperTimers: this.minimapViewportIntelScrollResidualDeepestDeeperTimers,
+        residualDeepestDeepestDeeperTimers:
+          this.minimapViewportIntelScrollResidualDeepestDeepestDeeperTimers,
       },
     );
     if (synced.applied) {
