@@ -15,28 +15,31 @@ func (s *Server) hydratePlayerCities(ctx context.Context, pc PlayerContext) {
 	}
 	for _, wc := range cities {
 		s.cityCoords[wc.CityID] = cityCoord{x: wc.X, y: wc.Y}
-		if s.cities[wc.CityID] != nil {
-			s.ensureMilitaryCity(s.cities[wc.CityID])
+		if snapshot := s.citySnapshot(wc.CityID); snapshot != nil {
+			s.ensureMilitaryCity(snapshot)
 			continue
 		}
 		cs, err := s.domestic.LoadCity(ctx, wc.CityID, pc.PlayerID)
 		if err != nil {
 			continue
 		}
-		s.cities[wc.CityID] = cs
-		s.ensureMilitaryCity(cs)
+		s.cacheCity(wc.CityID, cs)
+		s.ensureMilitaryCity(s.citySnapshot(wc.CityID))
 	}
 }
 
-func (s *Server) registerNewCity(dom *domestic.CityState, x, y int) {
-	s.cityCoords[dom.ID] = cityCoord{x: x, y: y}
-	s.ensureMilitaryCity(dom)
+func (s *Server) registerNewCity(cityID int64, x, y int) {
+	s.cityCoords[cityID] = cityCoord{x: x, y: y}
+	s.ensureMilitaryCity(s.citySnapshot(cityID))
 }
 
 // RegisterCityForTest exposes in-memory city wiring for handler tests.
 func (s *Server) RegisterCityForTest(cityID int64, c *domestic.CityState, x, y int) {
-	s.cities[cityID] = c
-	s.registerNewCity(c, x, y)
+	if s.domestic != nil && s.citySnapshot(cityID) == nil {
+		s.domestic.RegisterCity(c)
+	}
+	s.cacheCity(cityID, c)
+	s.registerNewCity(cityID, x, y)
 }
 
 // BindSessionForTest binds a player context without going through login.
@@ -56,7 +59,7 @@ func (s *Server) SetHeroServiceForTest(svc *hero.Service) {
 func (s *Server) SeedCityTroopsForTest(cityID int64, unitCfgID, count int32) {
 	mc := s.military.City(cityID)
 	if mc == nil {
-		dom := s.cities[cityID]
+		dom := s.citySnapshot(cityID)
 		if dom == nil {
 			return
 		}

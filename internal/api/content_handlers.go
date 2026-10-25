@@ -108,8 +108,9 @@ func (s *Server) applyDomesticBuildSpeedup(playerID int64, sec int64) {
 		return
 	}
 	var fallback int64
-	for cityID, city := range s.cities {
-		if city.PlayerID != playerID {
+	for _, cityID := range s.cachedCityIDs() {
+		city := s.citySnapshot(cityID)
+		if city == nil || city.PlayerID != playerID {
 			continue
 		}
 		if fallback == 0 {

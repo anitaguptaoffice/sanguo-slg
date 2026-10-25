@@ -21,7 +21,7 @@ func (s *Server) heroCityOwnership(ctx context.Context, pc PlayerContext) hero.C
 }
 
 func (s *Server) playerOwnsCity(ctx context.Context, pc PlayerContext, cityID int64) bool {
-	if city := s.cities[cityID]; city != nil && city.PlayerID == pc.PlayerID {
+	if city := s.citySnapshot(cityID); city != nil && city.PlayerID == pc.PlayerID {
 		return true
 	}
 	if s.domestic != nil {

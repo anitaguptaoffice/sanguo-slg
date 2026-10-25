@@ -33,7 +33,7 @@ func (s *Server) handleRecruitTroop(ctx context.Context, pkt *commonv1.ClientPac
 	if !s.ownsCity(ctx, pc, req.GetCityId()) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	dom := s.cities[req.GetCityId()]
+	dom := s.citySnapshot(req.GetCityId())
 	if dom == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
@@ -90,7 +90,7 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if !s.ownsCity(ctx, pc, req.GetCityId()) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	dom := s.cities[req.GetCityId()]
+	dom := s.citySnapshot(req.GetCityId())
 	if dom == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
@@ -287,7 +287,7 @@ func troopStacksProto(all map[int32]int32, touched []march.TroopStack) []*apicom
 }
 
 func (s *Server) ownsCity(ctx context.Context, pc PlayerContext, cityID int64) bool {
-	if dom := s.cities[cityID]; dom != nil && dom.PlayerID != 0 && dom.PlayerID == pc.PlayerID {
+	if dom := s.citySnapshot(cityID); dom != nil && dom.PlayerID != 0 && dom.PlayerID == pc.PlayerID {
 		return true
 	}
 	cities, err := s.world.Store.PlayerCities(ctx, pc.ServerID, pc.PlayerID)
