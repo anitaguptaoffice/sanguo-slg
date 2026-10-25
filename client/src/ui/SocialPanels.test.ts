@@ -1029,6 +1029,11 @@ describe("SocialPanels chat & guild", () => {
         "guild-chat-unread-divider-residual-deepest-deepest-deepest-deeper-sweep",
       ),
     ).toBe(true);
+    expect(
+      separator?.classList.contains(
+        "guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-deeper-sweep",
+      ),
+    ).toBe(true);
     expect(separator?.textContent).toBe("1 条未读");
     const unreadRow = mount.querySelector(".chat-log li.chat-msg:last-child");
     expect(unreadRow?.classList.contains("guild-chat-unread-first-msg-sweep-ring")).toBe(true);

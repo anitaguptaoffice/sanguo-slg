@@ -97,13 +97,16 @@ import {
   GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS,
 } from "@/net/guildDutyHeaderResidualDeepestDeepestDeepest";
 import {
-  formatGuildDutyHeaderResidualDeepestDeepestDeepestDeeperLine,
   GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
 } from "@/net/guildDutyHeaderResidualDeepestDeepestDeepestDeeper";
 import {
-  chatUnreadSeparatorResidualDeepestDeepestDeepestDeeperDomClassName,
-  scheduleGuildChatUnreadFirstMsgDeepestDeepestDeepestDeeperSweepRing,
-} from "@/net/guildChatUnreadDividerResidualDeepestDeepestDeepestDeeper";
+  formatGuildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeperLine,
+  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
+} from "@/net/guildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeper";
+import {
+  chatUnreadSeparatorResidualDeepestDeepestDeepestDeepestDeeperDomClassName,
+  scheduleGuildChatUnreadFirstMsgDeepestDeepestDeepestDeepestDeeperSweepRing,
+} from "@/net/guildChatUnreadDividerResidualDeepestDeepestDeepestDeepestDeeper";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 import { hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -855,7 +858,7 @@ export class SocialPanels {
         const row = this.buildChatMessageRow(m);
         ul.appendChild(row);
         if (isFirstUnreadRow) {
-          scheduleGuildChatUnreadFirstMsgDeepestDeepestDeepestDeeperSweepRing(row);
+          scheduleGuildChatUnreadFirstMsgDeepestDeepestDeepestDeepestDeeperSweepRing(row);
         }
         flatIndex += 1;
       }
@@ -866,7 +869,7 @@ export class SocialPanels {
 
   private buildChatUnreadSeparator(unreadCount: number): HTMLLIElement {
     const li = document.createElement("li");
-    li.className = chatUnreadSeparatorResidualDeepestDeepestDeepestDeeperDomClassName();
+    li.className = chatUnreadSeparatorResidualDeepestDeepestDeepestDeepestDeeperDomClassName();
     li.setAttribute("role", "separator");
     const sweep = formatChatUnreadSweepLine(unreadCount);
     li.setAttribute("aria-label", sweep);
@@ -934,10 +937,10 @@ export class SocialPanels {
       count.setAttribute("aria-hidden", "true");
       count.textContent = formatGuildRoleGroupCountLabel(group.members.length);
       const residual = document.createElement("span");
-      residual.className = `${GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS}`;
+      residual.className = `${GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS}`;
       residual.setAttribute("data-role", GUILD_ROLE_GROUP_HEADER_LINE_ROLE);
       residual.setAttribute("aria-hidden", "true");
-      residual.textContent = formatGuildDutyHeaderResidualDeepestDeepestDeepestDeeperLine({
+      residual.textContent = formatGuildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeperLine({
         label: group.label,
         expanded,
         members: group.members,
