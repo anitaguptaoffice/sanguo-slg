@@ -90,7 +90,8 @@ type Objective struct {
 
 // ProgressCounter is stored in player_quest.progress JSON.
 type ProgressCounter struct {
-	Count int32 `json:"count"`
+	Count                 int32 `json:"count"`
+	ServerVerifiedVersion int32 `json:"server_verified_version,omitempty"`
 }
 
 // PlayerQuestRow is player_quest persistence shape.

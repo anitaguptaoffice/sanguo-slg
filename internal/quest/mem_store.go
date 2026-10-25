@@ -25,7 +25,7 @@ func (m *MemStore) GetPlayerQuest(_ context.Context, serverID int32, playerID in
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	row, ok := m.rows[questKey(serverID, playerID, questCfgID)]
-	return row, ok, nil
+	return cloneQuestRow(row), ok, nil
 }
 
 func (m *MemStore) ListPlayerQuests(_ context.Context, serverID int32, playerID int64) ([]PlayerQuestRow, error) {
@@ -35,7 +35,7 @@ func (m *MemStore) ListPlayerQuests(_ context.Context, serverID int32, playerID 
 	prefix := fmt.Sprintf("%d:%d:", serverID, playerID)
 	for k, row := range m.rows {
 		if len(k) > len(prefix) && k[:len(prefix)] == prefix {
-			out = append(out, row)
+			out = append(out, cloneQuestRow(row))
 		}
 	}
 	return out, nil
@@ -44,6 +44,17 @@ func (m *MemStore) ListPlayerQuests(_ context.Context, serverID int32, playerID 
 func (m *MemStore) UpsertPlayerQuest(_ context.Context, row PlayerQuestRow) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.rows[questKey(row.ServerID, row.PlayerID, row.QuestCfgID)] = row
+	if err := validateProof(row); err != nil {
+		return err
+	}
+	key := questKey(row.ServerID, row.PlayerID, row.QuestCfgID)
+	if isTutorialID(row.QuestCfgID) {
+		var err error
+		row, err = mergeTutorialRow(m.rows[key], row)
+		if err != nil {
+			return err
+		}
+	}
+	m.rows[key] = cloneQuestRow(row)
 	return nil
 }
