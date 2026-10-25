@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 )
 
 // Grant queue status values align with reward_grant_queue.status (spec/db/m4_003_mail_reward.sql).
@@ -78,6 +79,9 @@ func resourceDeltaFromMap(m map[string]int64) (ResourceWallet, error) {
 		case "stone":
 			d.Stone = n
 		case "gold", "silver":
+			if n > math.MaxInt64-d.Gold {
+				return ResourceWallet{}, ErrInvalidReward
+			}
 			d.Gold += n
 		default:
 			return ResourceWallet{}, fmt.Errorf("content: unknown resource key %q", k)
@@ -90,6 +94,22 @@ func resourceDeltaFromMap(m map[string]int64) (ResourceWallet, error) {
 // When idempotencyKey is non-empty, a repeat call returns the first result with Duplicate=true.
 func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (GrantResult, error) {
 	ctx := context.Background()
+	if store, ok := s.store.(interface {
+		grantAtomic(context.Context, PlayerRef, RewardPackage, string, *Catalog) (GrantResult, error)
+	}); ok {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+		out, err := store.grantAtomic(ctx, p, pkg, idempotencyKey, s.catalog)
+		if err != nil {
+			return GrantResult{}, err
+		}
+		b := newBag()
+		for _, st := range out.Bag {
+			b.Stacks[st.ItemCfgID] = st.Quantity
+		}
+		s.bags[p], s.wallets[p] = b, out.Wallet
+		return out, nil
+	}
 	if idempotencyKey != "" {
 		dup, err := s.lookupIdempotentGrant(ctx, p, idempotencyKey)
 		if err != nil {
