@@ -125,6 +125,10 @@
   function prepareHeroHostEvidenceChrome() {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     if (!panel) return;
+    if (panel instanceof HTMLElement) {
+      panel.scrollTop = 0;
+      panel.scrollLeft = 0;
+    }
     const host = panel.querySelector('[data-role="hero-recruit-host"]');
     if (host instanceof HTMLDetailsElement) host.open = false;
   }
@@ -250,6 +254,39 @@
     }
   }
 
+  /** 1280 narrow: captive/persuade/coming action buttons fully inside visible clip chain (not section overflow). */
+  function probeCaptureSectionActionButtonsInClip(panel) {
+    const sectionRoles = ["captive-hero-section", "persuade-section", "coming-hero-section"];
+    const buttons = [];
+    let ok = true;
+    for (const role of sectionRoles) {
+      const section = panel?.querySelector(`[data-role="${role}"]`);
+      if (!(section instanceof HTMLElement) || section.hidden) {
+        ok = false;
+        buttons.push({ role, missing: true });
+        continue;
+      }
+      for (const btn of section.querySelectorAll("button[data-action]")) {
+        if (!(btn instanceof HTMLElement) || btn.hidden) continue;
+        const style = getComputedStyle(btn);
+        if (style.display === "none" || style.visibility === "hidden") continue;
+        const br = btn.getBoundingClientRect();
+        const clip = effectiveVisibleClip(btn);
+        const inClip =
+          br.width > 0 && br.height > 0 && rectFullyInClip(br, clip, 1);
+        if (!inClip) ok = false;
+        buttons.push({
+          role,
+          action: btn.getAttribute("data-action"),
+          inClip,
+          width: br.width,
+          height: br.height,
+        });
+      }
+    }
+    return { ok: ok && buttons.length > 0, buttons };
+  }
+
   function probeBustNameSameFrame() {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     const scroll = panel?.querySelector(".panel-scroll-body");
@@ -337,6 +374,8 @@
       return el instanceof HTMLElement && !el.hidden;
     });
 
+    const captureSectionButtonsInClip = probeCaptureSectionActionButtonsInClip(panel);
+
     const avatarRect = avatar?.getBoundingClientRect();
     const listNameRect = listRowPrimary?.getBoundingClientRect();
 
@@ -421,6 +460,7 @@
       ok:
         heroDetailLoaded &&
         captureSectionsVisible &&
+        captureSectionButtonsInClip.ok &&
         listAvatarVisible &&
         nameReadable &&
         !!bust &&
@@ -441,6 +481,7 @@
       listAvatarFrameOk,
       listRowPrimaryText: listRowPrimary?.textContent?.trim() ?? null,
       captureSectionsVisible,
+      captureSectionButtonsInClip,
       dpr,
       uiScale,
       avatar: avatar

@@ -100,6 +100,11 @@ export function rectsFullyVisibleInClip(
   return rects.every((r) => axisRectWidth(r) > 0 && axisRectHeight(r) > 0 && axisRectFullyContains(r, clip, eps));
 }
 
+function resetHeroPanelOuterScroll(panel: HTMLElement): void {
+  panel.scrollTop = 0;
+  panel.scrollLeft = 0;
+}
+
 function clampScrollTop(scroll: HTMLElement, top: number): number {
   const max = Math.max(0, scroll.scrollHeight - scroll.clientHeight);
   return Math.max(0, Math.min(top, max));
@@ -121,6 +126,7 @@ export function ensureHeroDetailBustNameInScrollClip(
 ): void {
   const panel = heroPanel instanceof HTMLElement ? heroPanel : null;
   if (!panel) return;
+  resetHeroPanelOuterScroll(panel);
   const scroll = panel.querySelector<HTMLElement>('[data-role="hero-scroll"]');
   const bust = panel.querySelector<HTMLElement>('[data-role="hero-detail-bust"]');
   const name = panel.querySelector<HTMLElement>(".hero-detail-name");
@@ -161,6 +167,7 @@ export function ensureHeroDetailFooterInScrollClip(
 ): void {
   const panel = heroPanel instanceof HTMLElement ? heroPanel : null;
   if (!panel) return;
+  resetHeroPanelOuterScroll(panel);
   const scroll = panel.querySelector<HTMLElement>('[data-role="hero-scroll"]');
   const hint = panel.querySelector<HTMLElement>(".hero-detail-hint");
   if (!scroll || !hint) return;
@@ -195,6 +202,7 @@ export function ensureHeroListRowAvatarNameInScrollClip(
 ): void {
   const panel = heroPanel instanceof HTMLElement ? heroPanel : null;
   if (!panel || templateCfgId <= 0) return;
+  resetHeroPanelOuterScroll(panel);
   const scroll = panel.querySelector<HTMLElement>('[data-role="hero-scroll"]');
   const listRow = panel.querySelector<HTMLElement>(
     `.hero-list li[data-template-cfg-id="${templateCfgId}"].selected, .hero-list li[data-template-cfg-id="${templateCfgId}"][aria-selected="true"], .hero-list li[data-template-cfg-id="${templateCfgId}"]`,
