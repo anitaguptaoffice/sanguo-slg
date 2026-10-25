@@ -29,6 +29,10 @@ import {
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS,
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_MS,
 } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepest";
+import {
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS,
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_MS,
+} from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepestDeeper";
 
 describe("panelReturnSourceHighlightResidualDeepestDeepestDeepest (CLIENT-352)", () => {
   it("highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepest pulses tab class for 2.5s", () => {
@@ -59,7 +63,7 @@ describe("panelReturnSourceHighlightResidualDeepestDeepestDeepest (CLIENT-352)",
     ).toBe(false);
   });
 
-  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 through CLIENT-352 classes", () => {
+  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 through CLIENT-368 classes", () => {
     const root = document.createElement("div");
     const tab = document.createElement("button");
     tab.setAttribute("data-shop-category", "resource");
@@ -90,6 +94,9 @@ describe("panelReturnSourceHighlightResidualDeepestDeepestDeepest (CLIENT-352)",
     expect(
       tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS),
     ).toBe(true);
+    expect(
+      tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS),
+    ).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_MS)).toBe(
       true,
@@ -108,6 +115,11 @@ describe("panelReturnSourceHighlightResidualDeepestDeepestDeepest (CLIENT-352)",
     ).toBe(true);
     expect(
       timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_MS),
+    ).toBe(true);
+    expect(
+      timeouts.some(
+        (t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_MS,
+      ),
     ).toBe(true);
   });
 });

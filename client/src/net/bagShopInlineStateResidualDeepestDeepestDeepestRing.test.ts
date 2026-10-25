@@ -29,6 +29,10 @@ import {
   BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_MS,
   scheduleBagShopInlineStateResidualDeepestDeepestDeepestRing,
 } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestRing";
+import {
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_MS,
+} from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestDeeperRing";
 
 describe("bagShopInlineStateResidualDeepestDeepestDeepestRing (CLIENT-352)", () => {
   it("scheduleBagShopInlineStateResidualDeepestDeepestDeepestRing adds class then removes after 2s", () => {
@@ -54,7 +58,7 @@ describe("bagShopInlineStateResidualDeepestDeepestDeepestRing (CLIENT-352)", () 
     ).toBe(false);
   });
 
-  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-352 rings", () => {
+  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-368 rings", () => {
     const el = document.createElement("span");
     const timeouts: Array<{ fn: () => void; ms: number }> = [];
     const windowObj = {
@@ -78,6 +82,9 @@ describe("bagShopInlineStateResidualDeepestDeepestDeepestRing (CLIENT-352)", () 
     expect(
       el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS),
     ).toBe(true);
+    expect(
+      el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
+    ).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_RING_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_MS)).toBe(true);
@@ -92,6 +99,11 @@ describe("bagShopInlineStateResidualDeepestDeepestDeepestRing (CLIENT-352)", () 
     ).toBe(true);
     expect(
       timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_MS),
+    ).toBe(true);
+    expect(
+      timeouts.some(
+        (t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_MS,
+      ),
     ).toBe(true);
   });
 });
