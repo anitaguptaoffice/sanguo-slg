@@ -2,6 +2,7 @@ import {
   highlightPanelReturnSourceCategoryResidual,
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_MS,
 } from "@/net/panelReturnSourceHighlightResidual";
+import { highlightPanelReturnSourceCategoryResidualDeeper } from "@/net/panelReturnSourceHighlightResidualDeeper";
 
 /** CLIENT-272：自排行/军情返回时分类 tab/chip **加深** 高亮（2.5s；CLIENT-256 2s **并存**）。 */
 export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS =
@@ -42,7 +43,7 @@ export function highlightPanelReturnSourceCategoryResidualDeep(
   return true;
 }
 
-/** CLIENT-256 残余高亮 + CLIENT-272 加深高亮（CLIENT-211 行返回不退化）。 */
+/** CLIENT-256 残余高亮 + CLIENT-272 加深高亮 + CLIENT-288 巩固再加深（CLIENT-211 行返回不退化）。 */
 export function pulsePanelReturnSourceCategoryResidualHighlights(
   tab: HTMLElement | null | undefined,
   panelRoot: ParentNode | null | undefined,
@@ -55,6 +56,7 @@ export function pulsePanelReturnSourceCategoryResidualHighlights(
     PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_MS,
   );
   highlightPanelReturnSourceCategoryResidualDeep(tab, panelRoot, windowObj);
+  highlightPanelReturnSourceCategoryResidualDeeper(tab, panelRoot, windowObj);
   return highlighted;
 }
 
