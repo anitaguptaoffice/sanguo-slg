@@ -938,6 +938,31 @@ H5 人工验收与 **INTG-043** 网关冒烟对齐，见 [client/README.md](../c
 
 **明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649) / [#674](https://github.com/anitaguptaoffice/sanguo-slg/pull/674) / [#697](https://github.com/anitaguptaoffice/sanguo-slg/pull/697) / [#942](https://github.com/anitaguptaoffice/sanguo-slg/pull/942) / [#983](https://github.com/anitaguptaoffice/sanguo-slg/pull/983) / [#1017](https://github.com/anitaguptaoffice/sanguo-slg/pull/1017) / [#1069](https://github.com/anitaguptaoffice/sanguo-slg/pull/1069)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU**。
 
+## Wave 47 H5 世界小地图视口军情scroll-sync残余巩固再加深·出征戳记兵力余量再加深·战报键盘坐标复制再加深·邮件HUD附件再加深·背包商城返回再加深·排行招募扫读再加深·军情phase预填再加深·1280组合manifest巩固再加深 — **进行中**
+
+**策略**：在 wave:46 **主城队列 ETA 完成焦点巩固再加深 / 将领养成扫读再加深 / 双榜钉选再加深 / 军团聊天再加深 / 日常 chain·队列·HUD 深链再加深 / 1280 主城将领日常社交队列 manifest 巩固再加深** 全收口（main tip **`12f06e78230fce6cf017f399fbcbb26d10778f98`**，[#1237](https://github.com/anitaguptaoffice/sanguo-slg/pull/1237) `12f06e78` squash；此前 DOCS-EXIT-038 [#1169](https://github.com/anitaguptaoffice/sanguo-slg/pull/1169) `b7731d29`；工程 tip **`d613ec59`**，INTG-043 [#1128](https://github.com/anitaguptaoffice/sanguo-slg/pull/1128)；实现 tip **`55beaf6b`**，CLIENT-283 [#1133](https://github.com/anitaguptaoffice/sanguo-slg/pull/1133)；基线 wave:45 **`296a26ed`**）后，**轮转**避开 wave:46 主城·将领·双榜·军团·日常 HUD **主叙事**与 wave:45 CLIENT-268～275 **首版巩固加深**重复堆叠，在 wave:45 已合巩固加深之上再加深一层 **世界·军情·出征·战报·邮件·商城/背包·排行 栈**：**小地图视口与军情列表 scroll-sync 残余巩固再加深与格点 ETA 对照再加深**（**非** wave:45 CLIENT-268 首版巩固加深标题复刻；**非** wave:39 双向高亮环）、**出征刷新戳记与兵力余量只读对照残余巩固再加深**、**战报密度键盘相邻导航与坐标只读复制条残余巩固再加深**、**邮件附件领取与 HUD 角标同步残余巩固再加深**（**非** wave:46 CLIENT-282 日常 chain/HUD 深链主叙事）、**背包商城行内态与返回来源高亮残余巩固再加深**（无新 SKU）、**排行列表密度扫读与招募行内摘要残余巩固再加深**（**非** wave:46 CLIENT-280 双榜钉选保持主叙事）、**军情 phase 变更扫读与再出征表单预填残余巩固再加深**、**1280 世界·军情·战报·邮件·商城·排行组合 manifest 巩固再加深**（**非** wave:46 CLIENT-283 主城栈）；网关 **INTG-047** 在 **INTG-043** 上扩展 smoke（保留 INTG-043，扩展 `ListMarches` scroll-sync **residual deeper** hint、`MarchAttack` 兵力余量/刷新戳记 **deeper** hint、`ListBattleReports` 相邻导航 **deeper** hint、`ListPlayerMail`/HUD **deeper** hint、`ListPlayerBag`/商城长度 **deeper** hint、双榜密度 **residual deeper** hint，空列表 skip+hint；**不跑 H5**）。**仍** DATA-002；**不**开 DATA-003 / `cfg_act*` / 不可逆消费扩量；**不**做 `CancelMarch` 与募兵加速；**不**开主城建造/募兵新 RPC 或战报 proto 扩量；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**勿**将 **ART-012** 登记为 wave:47 实现卡 ID。实现卡 **CLIENT-284～291**，**勿占用 CLIENT-064/136/137/146/147**；**INTG-044/045/046** 为武将功勋/经验/体力旁路，**本波不复用**。
+
+| Issue | 任务 | 状态 | 合并参考 |
+|---|---|---|---|
+| （待 `tasks_sync`） | CLIENT-284 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-285 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-286 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-287 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-288 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-289 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-290 | 待开工 | — |
+| （待 `tasks_sync`） | CLIENT-291 | 待开工 | — |
+| （待 `tasks_sync`） | INTG-047 | 待开工 | — |
+| （待 `tasks_sync`） | DOCS-EXIT-039 | blocked | — |
+
+H5 人工验收与 **INTG-047** 网关冒烟对齐（实现阶段），见 `tasks/backlog.yml` wave:47 各卡 acceptance；文档收口 **DOCS-EXIT-039**（`sync_status: blocked`）。
+
+**基线** main tip **`12f06e78230fce6cf017f399fbcbb26d10778f98`**（wave:46 全收口含 DOCS-EXIT-038 与武将宿主工程栈 #1233–#1236 后）。
+
+**美术旁路（非 wave:47 backlog 实现卡）**：**CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012**——均 **非** wave:47 实现卡。wave:47 实现卡 **CLIENT-284～291**（自 **CLIENT-284** 起），**勿占用 CLIENT-064/136/137/146/147**。
+
+**明确不做**：合并或复制 art hold PR（**#77** / **#82** / **#108** / #100 / #126 / [#444](https://github.com/anitaguptaoffice/sanguo-slg/pull/444) / [#481](https://github.com/anitaguptaoffice/sanguo-slg/pull/481) / [#506](https://github.com/anitaguptaoffice/sanguo-slg/pull/506) / [#637](https://github.com/anitaguptaoffice/sanguo-slg/pull/637) / [#649](https://github.com/anitaguptaoffice/sanguo-slg/pull/649) / [#674](https://github.com/anitaguptaoffice/sanguo-slg/pull/674) / [#697](https://github.com/anitaguptaoffice/sanguo-slg/pull/697) / [#942](https://github.com/anitaguptaoffice/sanguo-slg/pull/942) / [#983](https://github.com/anitaguptaoffice/sanguo-slg/pull/983) / [#1017](https://github.com/anitaguptaoffice/sanguo-slg/pull/1017) / [#1069](https://github.com/anitaguptaoffice/sanguo-slg/pull/1069) / [#1191](https://github.com/anitaguptaoffice/sanguo-slg/pull/1191) / [#1192](https://github.com/anitaguptaoffice/sanguo-slg/pull/1192) / [#1193](https://github.com/anitaguptaoffice/sanguo-slg/pull/1193) / [#1203](https://github.com/anitaguptaoffice/sanguo-slg/pull/1203) / [#1204](https://github.com/anitaguptaoffice/sanguo-slg/pull/1204) / [#1205](https://github.com/anitaguptaoffice/sanguo-slg/pull/1205) / [#1206](https://github.com/anitaguptaoffice/sanguo-slg/pull/1206) / [#1207](https://github.com/anitaguptaoffice/sanguo-slg/pull/1207)）或 VERIFY [#239](https://github.com/anitaguptaoffice/sanguo-slg/pull/239)（Draft）；**DATA-003**；`cfg_act*`；新道具/商城 SKU；不可逆消费扩量；`CancelMarch`/行军与募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽**或 hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU**。
+
 ## 不做
 
 跨服战、赛季、实时 PvP、移动原生、多语言——v1.0 范围外。
