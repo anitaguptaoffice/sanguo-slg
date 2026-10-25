@@ -751,6 +751,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/背包/日常/军团** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:40 DOM 钩子（软依赖 **CLIENT-228～234**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227** manifest 不退化。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。（[#857](https://github.com/anitaguptaoffice/sanguo-slg/issues/857) / [#864](https://github.com/anitaguptaoffice/sanguo-slg/pull/864) `fe533816`）
 
+## Wave 49 H5 世界小地图军情 scroll-sync 残余巩固再加深一层（CLIENT-300 起）
+
+在 [Wave 48](#wave-48-h5-主城队列-eta-完成焦点残余巩固再加深一层队列预览槽位互链再加深一层将领养成扫读再加深一层panelstate-筛选再加深一层双榜钉选再加深一层军团聊天再加深一层日常-hud-深链再加深一层1280-组合-manifest-巩固再加深一层m4-出口--intg-048) 主城栈基础上 **轮转回**世界/军情栈；**仍** DATA-002；**无**新 world RPC；范围外同 Wave 47/48。
+
+**wave:49（CLIENT-300）小地图视口锚点与军情列表 scroll-sync 残余巩固再加深一层**：军情行变更时 **`syncMinimapViewportIntelScrollResidualDeepest`** 在 **CLIENT-284** `syncMinimapViewportIntelScrollResidualDeeper` 与 **`minimap-intel-scroll-sync-residual-deeper-ring` 1.5s** 之上叠加 **`minimap-intel-scroll-sync-residual-deepest-ring` 1.5s**（**CLIENT-220** `minimap-intel-sync-ring` **不退化**；**非** wave:47 CLIENT-284 首版巩固再加深标题复刻主叙事）；格点信息卡 **`formatWorldTileIntelEtaCrossResidualDeepestLine`** / `world-tile-intel-eta-cross-residual-deepest-line` **巩固再加深一层第五行** **`world-tile-intel-eta-cross-residual-deepest-pulse` 1.5s** 只读对照（**CLIENT-284** `formatWorldTileIntelEtaCrossResidualDeeperLine` / deeper 脉冲 **不退化**；**无**新 world RPC）。单测：`minimapViewportIntelScrollResidualDeepest.test.ts`、`worldTileIntelEtaCrossResidualDeepest.test.ts`；`cd client && npm test` 绿。（Closes [#1400](https://github.com/anitaguptaoffice/sanguo-slg/issues/1400)）
+
 ## Wave 48 H5 主城队列 ETA 完成焦点残余巩固再加深一层（CLIENT-292 起）
 
 在 [Wave 47](#wave-47-h5-世界小地图军情-scroll-sync-残余巩固再加深出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifest-巩固再加深m4-出口--intg-047) 世界栈基础上 **轮转回**主城/将领/队列栈；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 47。

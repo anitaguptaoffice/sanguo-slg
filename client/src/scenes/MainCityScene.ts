@@ -289,9 +289,13 @@ import {
 } from "@/net/minimapViewportIntelScrollResidualDeep";
 import {
   createMinimapViewportIntelScrollResidualDeeperTimers,
-  syncMinimapViewportIntelScrollResidualDeeper,
   type MinimapViewportIntelScrollResidualDeeperTimers,
 } from "@/net/minimapViewportIntelScrollResidualDeeper";
+import {
+  createMinimapViewportIntelScrollResidualDeepestTimers,
+  syncMinimapViewportIntelScrollResidualDeepest,
+  type MinimapViewportIntelScrollResidualDeepestTimers,
+} from "@/net/minimapViewportIntelScrollResidualDeepest";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -472,6 +476,8 @@ export class MainCityScene implements Scene {
     createMinimapViewportIntelScrollResidualDeepTimers();
   private readonly minimapViewportIntelScrollResidualDeeperTimers: MinimapViewportIntelScrollResidualDeeperTimers =
     createMinimapViewportIntelScrollResidualDeeperTimers();
+  private readonly minimapViewportIntelScrollResidualDeepestTimers: MinimapViewportIntelScrollResidualDeepestTimers =
+    createMinimapViewportIntelScrollResidualDeepestTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -1754,7 +1760,7 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportIntelScrollResidualDeeper(
+    const synced = syncMinimapViewportIntelScrollResidualDeepest(
       {
         march,
         bounds,
@@ -1767,6 +1773,7 @@ export class MainCityScene implements Scene {
         residualTimers: this.minimapViewportIntelScrollResidualTimers,
         residualDeepTimers: this.minimapViewportIntelScrollResidualDeepTimers,
         residualDeeperTimers: this.minimapViewportIntelScrollResidualDeeperTimers,
+        residualDeepestTimers: this.minimapViewportIntelScrollResidualDeepestTimers,
       },
     );
     if (synced.applied) {

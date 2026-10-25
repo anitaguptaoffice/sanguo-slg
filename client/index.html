@@ -2626,6 +2626,23 @@
         animation: minimap-intel-scroll-sync-residual-deep-ring-keyframes 1.5s ease-out 1,
           minimap-intel-scroll-sync-residual-deeper-ring-keyframes 1.5s ease-out 1;
       }
+      @keyframes minimap-intel-scroll-sync-residual-deepest-ring-keyframes {
+        0% { outline-offset: 0; outline: 2px solid rgba(210, 245, 255, 0); }
+        38% { outline-offset: 6px; outline: 2px solid rgba(210, 245, 255, 0.85); }
+        100% { outline-offset: 0; outline: 2px solid rgba(210, 245, 255, 0); }
+      }
+      #layout-frame.minimap-intel-scroll-sync-residual-deepest-ring {
+        animation: minimap-intel-scroll-sync-residual-deepest-ring-keyframes 1.5s ease-out 1;
+      }
+      .march-list li.minimap-intel-scroll-sync-residual-deepest-ring {
+        box-shadow: inset 0 0 0 2px rgba(210, 245, 255, 0.88);
+        animation: minimap-intel-scroll-sync-residual-deepest-ring-keyframes 1.5s ease-out 1;
+      }
+      #layout-frame.minimap-intel-scroll-sync-residual-deeper-ring.minimap-intel-scroll-sync-residual-deepest-ring,
+      .march-list li.minimap-intel-scroll-sync-residual-deeper-ring.minimap-intel-scroll-sync-residual-deepest-ring {
+        animation: minimap-intel-scroll-sync-residual-deeper-ring-keyframes 1.5s ease-out 1,
+          minimap-intel-scroll-sync-residual-deepest-ring-keyframes 1.5s ease-out 1;
+      }
       .world-tile-intel-eta-cross-residual-deep-line {
         margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #8eb8d8;
       }
@@ -2647,6 +2664,17 @@
       }
       .world-tile-intel-eta-cross-residual-deeper-line.world-tile-intel-eta-cross-residual-deeper-pulse {
         animation: world-tile-intel-eta-cross-residual-deeper-pulse-keyframes 1.5s ease-out 1;
+      }
+      .world-tile-intel-eta-cross-residual-deepest-line {
+        margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #6ea4c8;
+      }
+      .world-tile-intel-eta-cross-residual-deepest-line.hidden { display: none; }
+      @keyframes world-tile-intel-eta-cross-residual-deepest-pulse-keyframes {
+        0%, 100% { background-color: transparent; }
+        50% { background-color: rgba(210, 245, 255, 0.3); }
+      }
+      .world-tile-intel-eta-cross-residual-deepest-line.world-tile-intel-eta-cross-residual-deepest-pulse {
+        animation: world-tile-intel-eta-cross-residual-deepest-pulse-keyframes 1.5s ease-out 1;
       }
       .world-tile-intel-eta-cross-residual-line {
         margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #9cc8e8;
@@ -4710,10 +4738,13 @@
       }
       /* CLIENT-291 wave:47 世界军情战报邮件商城排行组合 manifest 巩固再加深 */
       /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); data-action prefill-march-form-from-intel-residual-deeper (CLIENT-290) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-viewport-intel-sync-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deeper-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deep-line,
@@ -4917,10 +4948,13 @@
       }
       /* CLIENT-275 wave:45 世界军情战报邮件商城排行组合 manifest 巩固 */
       /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); data-action prefill-march-form-from-intel-residual-deep (CLIENT-274) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-viewport-intel-sync-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deeper-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deep-line,
@@ -5073,11 +5107,13 @@
       /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); data-action prefill-march-form-from-intel-residual (CLIENT-258) */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-viewport-intel-sync-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deep-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deeper-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-phase-change-residual-pulse,
@@ -5234,9 +5270,11 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deepest-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deeper-ring,
+      #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deepest-ring,
       #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-line,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp,
