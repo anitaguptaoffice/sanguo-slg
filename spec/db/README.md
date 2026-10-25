@@ -52,3 +52,13 @@ M4 及以后里程碑使用独立 `m4_*.sql` 等前缀，避免与并行 DDL 冲
 | `m4_003_mail_reward.sql` | 邮件、待发奖队列 |
 
 逻辑引用：`cfg_shop_offer.item_cfg_id` → `cfg_item`；发奖 JSON 与 `cfg_quest.rewards` / `player_mail.attachments` 同 schema（见 `spec/rules/content.md`）。
+
+## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
+
+`007_domestic_production_checkpoint.sql` adds a dedicated city accrual clock and
+four bounded remainders. [Contract and rollout requirements](PRODUCTION_CHECKPOINT.md)
+are review prerequisites; the schema alone does not repair any runtime behavior.
+Existing cities require the separately gated, atomic all-city backfill in
+`migrations/007_backfill_city_production_checkpoint.sql` before consumer activation;
+run its isolated PostgreSQL acceptance checks with
+`DATABASE_URL=... bash spec/db/tests/production_checkpoint_backfill.sh`.
