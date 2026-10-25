@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -128,7 +130,7 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 
 func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 	ctx := context.Background()
-	pool := walletBoundaryPool(t)
+	pool := walletBoundaryPool(t, true)
 	now := time.Unix(1700000000, 0)
 	h := domestic.NewHub(func() time.Time { return now })
 	store := domestic.NewPGStore(pool)
@@ -137,7 +139,11 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 		Wallet: domestic.Resources{Food: 1000, Wood: 1000, Iron: 1000, Stone: 1000}}
 	h.RegisterCity(c)
 	m := march.NewHub(func() time.Time { return now })
-	s := NewServer(nil, pool, nil, h, m)
+	worldStore := world.NewPGStore(pool)
+	if err := worldStore.CreateCity(ctx, world.City{ServerID: 1, CityID: c.ID, PlayerID: c.PlayerID, Name: "wallet-test", X: 1, Y: 1}); err != nil {
+		t.Fatal(err)
+	}
+	s := NewServer(nil, pool, world.NewService(worldStore), h, m)
 	s.cities[c.ID] = c
 	s.sessions.Bind("wallet-test", PlayerContext{ServerID: 1, PlayerID: c.PlayerID})
 	payload, err := marshal(&militaryv1.RecruitTroopRequest{CityId: c.ID, UnitCfgId: 1, Count: 1})
@@ -145,14 +151,14 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 	pkt := &commonv1.ClientPacket{SessionId: "wallet-test", Payload: payload}
-	// Failure after validation but before wallet commit must not publish a job.
+	// Cancellation can fail authoritative ownership lookup before military registration.
 	canceled, cancel := context.WithCancel(ctx)
 	cancel()
 	resp, err := s.handleRecruitTroop(canceled, pkt)
-	if err != nil || resp.Code == 0 {
+	if err != nil || resp == nil || resp.Code != int32(commonv1.ErrorCode_WORLD_CITY_NOT_FOUND) {
 		t.Fatalf("canceled recruit: %+v %v", resp, err)
 	}
-	if len(m.City(c.ID).RecruitJobs) != 0 || !m.Scheduler().NextDue().IsZero() {
+	if mc := m.SnapshotCity(c.ID); (mc != nil && len(mc.RecruitJobs) != 0) || !m.Scheduler().NextDue().IsZero() {
 		t.Fatal("failed wallet commit queued or scheduled recruitment")
 	}
 	// Fail at COMMIT (not merely before the callback), after the staged debit.
@@ -164,10 +170,10 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 	resp, err = s.handleRecruitTroop(ctx, pkt)
-	if err != nil || resp.Code == 0 {
+	if err != nil || resp == nil || resp.Code != int32(commonv1.ErrorCode_COMMON_INTERNAL) || !strings.Contains(resp.Msg, "injected commit failure") {
 		t.Fatalf("commit-failed recruit: %+v %v", resp, err)
 	}
-	if c.Wallet.Food != 1000 || len(m.City(c.ID).RecruitJobs) != 0 || !m.Scheduler().NextDue().IsZero() {
+	if mc := m.SnapshotCity(c.ID); mc == nil || c.Wallet.Food != 1000 || len(mc.RecruitJobs) != 0 || !m.Scheduler().NextDue().IsZero() {
 		t.Fatal("failed commit published wallet, job or schedule")
 	}
 	var persisted int64
@@ -181,7 +187,7 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 	resp, err = s.handleRecruitTroop(ctx, pkt)
-	if err != nil || resp.Code != 0 {
+	if err != nil || resp == nil || resp.Code != 0 {
 		t.Fatalf("recruit: %+v %v", resp, err)
 	}
 	cost := march.DefaultUnitCatalog()[1].RecruitCost
@@ -189,7 +195,7 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 	if err != nil || loaded.Wallet.Food != 1500-cost.Food {
 		t.Fatalf("recruit debit lost/duplicated credit: %+v %v", loaded, err)
 	}
-	if len(m.City(c.ID).RecruitJobs) != 1 {
+	if mc := m.SnapshotCity(c.ID); mc == nil || len(mc.RecruitJobs) != 1 {
 		t.Fatal("expected one committed job")
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -27,7 +28,7 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 	domHub := domestic.NewHub(clk.Now)
 	milHub := march.NewHub(clk.Now)
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	srv := api.NewServer(log, nil, nil, domHub, milHub)
+	srv := api.NewServer(log, nil, world.NewService(handlerOwnershipStore{}), domHub, milHub)
 	srv.SetClock(clk.Now)
 
 	const cityID = 42
@@ -87,7 +88,7 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 			ToY:     71,
 			Purpose: 1,
 			HeroId:  heroID,
-			Troops: []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 20}},
+			Troops:  []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 20}},
 		}),
 	}
 	marchResp := router.Dispatch(ctx, marchPkt)
@@ -109,7 +110,7 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 		Route:     api.RouteListMarches,
 		TraceId:   "list",
 		SessionId: sid,
-		Payload: mustMarshal(&militaryv1.ListMarchesRequest{CityId: cityID}),
+		Payload:   mustMarshal(&militaryv1.ListMarchesRequest{CityId: cityID}),
 	}
 	listResp := router.Dispatch(ctx, listPkt)
 	if listResp.Code != 0 {
@@ -130,4 +131,14 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 	if !found {
 		t.Fatalf("list marches missing march_id=%d total=%d", wantID, listOut.GetTotal())
 	}
+}
+
+// Explicit shard-scoped ownership for the in-memory handler fixture.
+type handlerOwnershipStore struct{ world.Store }
+
+func (handlerOwnershipStore) PlayerCities(_ context.Context, sid int32, pid int64) ([]world.City, error) {
+	if sid == 1 && pid == 99 {
+		return []world.City{{ServerID: 1, CityID: 42, PlayerID: 99}}, nil
+	}
+	return nil, nil
 }

@@ -10,6 +10,7 @@ import (
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 )
 
 func TestGetCityStateConcurrentDomesticTick(t *testing.T) {
@@ -21,6 +22,7 @@ func TestGetCityStateConcurrentDomesticTick(t *testing.T) {
 	h.RegisterCity(c)
 	s := NewServer(nil, nil, nil, h, nil)
 	s.cacheCity(77, c)
+	s.world = ownershipWorld(world.City{ServerID: 1, CityID: 77, PlayerID: 5151})
 	s.sessions.Bind("snapshot-test", PlayerContext{ServerID: 1, PlayerID: 5151})
 	payload, err := marshal(&domesticv1.GetCityStateRequest{CityId: 77})
 	if err != nil {
