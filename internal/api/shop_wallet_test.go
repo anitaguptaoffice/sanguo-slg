@@ -23,15 +23,16 @@ func TestPgShopWalletSpend(t *testing.T) {
 		t.Fatal(err)
 	}
 	const playerID = 4242
-	_, err := pool.Exec(ctx, `
-		INSERT INTO account (account_id, login_name, password_hash)
-		VALUES (9001, 'wallet-test', 'x') ON CONFLICT DO NOTHING`)
+	var accountID int64
+	err := pool.QueryRow(ctx, `
+		INSERT INTO account (login_name, password_hash)
+		VALUES ('wallet-test', 'x') RETURNING account_id`).Scan(&accountID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	_, err = pool.Exec(ctx, `
 		INSERT INTO player (server_id, player_id, account_id, display_name)
-		VALUES (1, $1, 9001, 'wallet-test') ON CONFLICT DO NOTHING`, playerID)
+		VALUES (1, $1, $2, 'wallet-test') ON CONFLICT DO NOTHING`, playerID, accountID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,5 +55,9 @@ func TestPgShopWalletSpend(t *testing.T) {
 	_, err = store.Spend(ctx, p, content.ResourceWallet{Gold: 100})
 	if !errors.Is(err, shop.ErrInsufficientBalance) {
 		t.Fatalf("expected insufficient, got %v", err)
+	}
+	var persistedGold int64
+	if err := pool.QueryRow(ctx, "SELECT gold FROM player_wallet WHERE server_id=1 AND player_id=$1", playerID).Scan(&persistedGold); err != nil || persistedGold != 40 {
+		t.Fatalf("persisted gold after rejected spend: %d err=%v", persistedGold, err)
 	}
 }
