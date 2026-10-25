@@ -122,6 +122,12 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS,
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ROLE,
 } from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepest";
+import {
+  formatNextQueueFinishPreviewResidualDeepestDeepestDeepestDeeperLine,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE,
+} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeeper";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -184,6 +190,7 @@ export class QueuePanels {
     private readonly onPreviewCrossLinkResidualDeepestDeeperRing?: (slotKey: string) => void,
     private readonly onPreviewCrossLinkResidualDeepestDeepestDeeperRing?: (slotKey: string) => void,
     private readonly onPreviewCrossLinkResidualDeepestDeepestDeepestRing?: (slotKey: string) => void,
+    private readonly onPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing?: (slotKey: string) => void,
   ) {}
 
   attach(): void {
@@ -518,6 +525,7 @@ export class QueuePanels {
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ACTION}" role="button" tabindex="0" hidden></p>
+      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
@@ -603,6 +611,7 @@ export class QueuePanels {
     residualDeepestDeeperEl: Element | null,
     residualDeepestDeepestDeeperEl: Element | null,
     residualDeepestDeepestDeepestEl: Element | null,
+    residualDeepestDeepestDeepestDeeperEl: Element | null,
     nowMs: number,
   ): void {
     if (!(previewEl instanceof HTMLElement)) return;
@@ -663,6 +672,14 @@ export class QueuePanels {
       dailyRows,
       nowMs,
     );
+    const residualDeepestDeepestDeepestDeeper =
+      formatNextQueueFinishPreviewResidualDeepestDeepestDeepestDeeperLine(
+        this.buildings(),
+        this.recruits,
+        this.slotLabels,
+        dailyRows,
+        nowMs,
+      );
     if (!preview) {
       previewEl.hidden = true;
       previewEl.classList.add("hidden");
@@ -717,6 +734,13 @@ export class QueuePanels {
         residualDeepestDeepestDeepestEl.textContent = "";
         residualDeepestDeepestDeepestEl.removeAttribute("data-slot-key");
         residualDeepestDeepestDeepestEl.removeAttribute("title");
+      }
+      if (residualDeepestDeepestDeepestDeeperEl instanceof HTMLElement) {
+        residualDeepestDeepestDeepestDeeperEl.hidden = true;
+        residualDeepestDeepestDeepestDeeperEl.classList.add("hidden");
+        residualDeepestDeepestDeepestDeeperEl.textContent = "";
+        residualDeepestDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
+        residualDeepestDeepestDeepestDeeperEl.removeAttribute("title");
       }
       return;
     }
@@ -835,6 +859,21 @@ export class QueuePanels {
         residualDeepestDeepestDeepestEl.title = `最深四层链七槽 ${residualDeepestDeepestDeepest.slotKey}（巩固再加深四层）`;
       }
     }
+    if (residualDeepestDeepestDeepestDeeperEl instanceof HTMLElement) {
+      if (!residualDeepestDeepestDeepestDeeper) {
+        residualDeepestDeepestDeepestDeeperEl.hidden = true;
+        residualDeepestDeepestDeepestDeeperEl.classList.add("hidden");
+        residualDeepestDeepestDeepestDeeperEl.textContent = "";
+        residualDeepestDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
+        residualDeepestDeepestDeepestDeeperEl.removeAttribute("title");
+      } else {
+        residualDeepestDeepestDeepestDeeperEl.hidden = false;
+        residualDeepestDeepestDeepestDeeperEl.classList.remove("hidden");
+        residualDeepestDeepestDeepestDeeperEl.textContent = residualDeepestDeepestDeepestDeeper.line;
+        residualDeepestDeepestDeepestDeeperEl.dataset.slotKey = residualDeepestDeepestDeepestDeeper.slotKey;
+        residualDeepestDeepestDeepestDeeperEl.title = `最深五层链七槽 ${residualDeepestDeepestDeepestDeeper.slotKey}（巩固再加深五层）`;
+      }
+    }
   }
 
   private render(): void {
@@ -863,6 +902,9 @@ export class QueuePanels {
     const previewResidualDeepestDeepestDeepestEl = this.panel.querySelector(
       `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_ROLE}"]`,
     );
+    const previewResidualDeepestDeepestDeepestDeeperEl = this.panel.querySelector(
+      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ROLE}"]`,
+    );
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
     const now = Date.now();
@@ -890,6 +932,7 @@ export class QueuePanels {
       previewResidualDeepestDeeperEl,
       previewResidualDeepestDeepestDeeperEl,
       previewResidualDeepestDeepestDeepestEl,
+      previewResidualDeepestDeepestDeepestDeeperEl,
       now,
     );
     this.renderBuildSlotMatrix(now);
@@ -1190,6 +1233,16 @@ export class QueuePanels {
         } else {
           this.openAndHighlightBuildSlot(slotKey);
         }
+      }
+      return;
+    }
+    const residualDeepestDeepestDeepestDeeperAnchor = target.closest(
+      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_ACTION}"]`,
+    );
+    if (residualDeepestDeepestDeepestDeeperAnchor instanceof HTMLElement) {
+      const slotKey = residualDeepestDeepestDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
+      if (slotKey) {
+        this.onPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing?.(slotKey);
       }
       return;
     }
