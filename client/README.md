@@ -785,6 +785,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:57（CLIENT-364）小地图视口锚点与军情列表 scroll-sync 残余巩固再加深五层**：军情行变更时 **`syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeper`** 在 **CLIENT-348** `syncMinimapViewportIntelScrollResidualDeepestDeepestDeepest` 与 **`minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring` 1.5s** 之上叠加 **`minimap-intel-scroll-sync-residual-deepest-deepest-deepest-deeper-ring` 1.5s**（**CLIENT-220** `minimap-intel-sync-ring` **不退化**；**非** wave:55 CLIENT-348 首版巩固再加深四层标题复刻主叙事）；格点信息卡 **`formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperLine`** / `world-tile-intel-eta-cross-residual-deepest-deepest-deepest-deeper-line` **巩固再加深五层第六行** **`world-tile-intel-eta-cross-residual-deepest-deepest-deepest-deeper-pulse` 1.5s** 只读对照（**CLIENT-348** `formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestLine` / deepest-deepest-deepest 脉冲 **不退化**；**无**新 world RPC）。单测：`minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeper.test.ts`、`worldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeper.test.ts`；`cd client && npm test` 绿。（Closes [#1649](https://github.com/anitaguptaoffice/sanguo-slg/issues/1649)）
 
+## Wave 57 H5 邮件附件领取与 HUD 邮件日常角标同步残余巩固再加深五层（CLIENT-367）
+
+在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层出征戳记兵力余量再加深四层战报键盘坐标复制再加深四层邮件-hud-附件再加深四层背包商城返回再加深四层排行招募扫读再加深四层军情-phase-预填再加深四层1280-组合-manifest-巩固再加深四层m4-出口--intg-055) **CLIENT-351** 邮件 HUD 附件栈基础上 **巩固再加深五层**；主叙事 **非** wave:56 **CLIENT-362** 日常 chain/HUD 深链重复；**仍** DATA-002。
+
+**wave:57（CLIENT-367）邮件 HUD 附件领取与角标同步残余巩固再加深五层**：`ClaimPlayerMailAttachments` 成功后 **`syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepestDeeper`** 在 **CLIENT-351** 同步基础上叠加列表行 **`mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse`** **3s**（**CLIENT-050/106/209** **不退化**）；邮件行 **`formatMailAttachmentClaimResidualDeepestDeepestDeepestDeeperSubline`** / **`mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline`** 在 **CLIENT-351** 巩固再加深四层第七行上展示附件类型 ↔ 领取结果只读 **巩固再加深五层** 第八行（**非** wave:56 **CLIENT-362** 日常 chain/HUD 深链主叙事）。单测：`mailClaimHudBadgeSync.test.ts`、`mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSubline.test.ts`；`cd client && npm test` 绿。（Closes [#1652](https://github.com/anitaguptaoffice/sanguo-slg/issues/1652)）
+
 ## Wave 56 H5 主城队列 ETA 完成焦点残余巩固再加深五层（CLIENT-356）
 
 在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层client-348-起) 世界/军情栈基础上 **轮转回**主城队列栈做 **残余巩固再加深五层**；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 54/55。

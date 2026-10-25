@@ -85,6 +85,13 @@ export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS =
 export const MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS =
   "mail-attachment-claim-residual-deepest-deepest-deepest-subline";
 
+/** CLIENT-367: mail claim → HUD badge residual deepest-deepest-deepest-deeper pulse after CLIENT-351 sync. */
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS =
+  "mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse";
+
+export const MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS =
+  "mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline";
+
 /** CLIENT-352: bag/shop inline state residual deepest-deepest-deepest ring. */
 export const BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS =
   "bag-shop-inline-state-residual-deepest-deepest-deepest-ring";

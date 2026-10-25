@@ -2912,6 +2912,13 @@
       .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse {
         animation: mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse-keyframes 3s ease-out 1;
       }
+      @keyframes mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        28% { box-shadow: 0 0 32px rgba(245, 255, 235, 0.8); outline: 1px solid rgba(245, 255, 235, 0.66); }
+      }
+      .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse {
+        animation: mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse-keyframes 3s ease-out 1;
+      }
       .mail-list li .mail-attachment-claim-residual-subline {
         display: block;
         font-size: 0.85em;
@@ -2960,6 +2967,13 @@
         opacity: 1;
         margin-top: 2px;
         color: #d8f0d0;
+      }
+      .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline {
+        display: block;
+        font-size: 0.7em;
+        opacity: 1;
+        margin-top: 2px;
+        color: #e0f8d8;
       }
       .mail-list li.mail-claim-error {
         outline: 1px solid #c45c4a;
@@ -5823,7 +5837,9 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deepest-deepest-deepest,
@@ -5858,8 +5874,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deepest-deepest-deeper-ring,
@@ -5962,6 +5980,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deep-pulse,
@@ -5970,6 +5989,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
@@ -6122,6 +6142,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deep-pulse,
@@ -6130,6 +6151,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
@@ -6243,6 +6265,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deep-pulse,
@@ -6251,6 +6274,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
@@ -6336,8 +6360,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deepest-deepest-deepest-ring,
@@ -7052,6 +7078,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deep-pulse,
@@ -7060,6 +7087,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
@@ -7270,8 +7298,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
@@ -7279,6 +7309,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
@@ -7495,8 +7526,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
@@ -7504,6 +7537,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
