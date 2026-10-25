@@ -14,8 +14,9 @@ import (
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content/mail"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
@@ -249,7 +250,7 @@ func smokeINTG022ListPlayerQuestsChain400TodoGateway(t *testing.T, c *websocket.
 	if tgt < 1 {
 		intg022Failf(t, "list player quests progress", "quest_cfg_id=%d progress_target=%d", first.GetQuestCfgId(), tgt)
 	}
-	if cur < 0 || cur > tgt {
+	if !smokeQuestProgressConsistent(cur, tgt, first.GetState()) {
 		intg022Failf(t, "list player quests progress", "quest_cfg_id=%d progress_current=%d progress_target=%d", first.GetQuestCfgId(), cur, tgt)
 	}
 	var claimable, progressComplete int32
@@ -305,4 +306,62 @@ func smokeINTG022ListPlayerCitiesXYNameGateway(t *testing.T, c *websocket.Conn, 
 func intg022Failf(t *testing.T, step string, format string, args ...any) {
 	t.Helper()
 	t.Fatalf("%s | step=%q | %s", smokeINTG022CfgHint, step, fmt.Sprintf(format, args...))
+}
+
+// The protocol exposes a raw count, not a capped percentage. Production stores
+// overshoot and transitions at >= target; completed/claimable 60/50 is valid.
+func smokeQuestProgressConsistent(current, target int32, state questv1.PlayerQuestState) bool {
+	if target < 1 || current < 0 {
+		return false
+	}
+	switch state {
+	case questv1.PlayerQuestState_PLAYER_QUEST_STATE_IN_PROGRESS:
+		return current < target
+	case questv1.PlayerQuestState_PLAYER_QUEST_STATE_CLAIMABLE, questv1.PlayerQuestState_PLAYER_QUEST_STATE_COMPLETED:
+		return current >= target
+	default:
+		return true
+	}
+}
+
+func TestSmokeQuestProgressPreservesOvershoot(t *testing.T) {
+	ctx := context.Background()
+	svc := quest.NewService(quest.NewMemStore(), quest.NewMemCatalog([]quest.QuestCfg{{
+		QuestCfgID: 1014, Code: "daily_train_1", QuestType: quest.QuestTypeDaily,
+		ChainID: quest.DailyChainID, Repeatable: true, UnlockLevel: 1,
+		Objectives: []quest.Objective{{Type: "train_troops", UnitCode: "any", Count: 50}},
+	}}), nil, nil)
+	actor := quest.Actor{ServerID: 1, PlayerID: 1}
+	if _, _, err := svc.AcceptQuest(ctx, actor, 1014); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []int32{20, 40, 60} {
+		view, _, err := svc.ReportQuestProgress(ctx, actor, 1014, false, 20)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if view.ProgressCurrent != want || view.ProgressTarget != 50 {
+			t.Fatalf("raw progress got=%d/%d want=%d/50", view.ProgressCurrent, view.ProgressTarget, want)
+		}
+		if !smokeQuestProgressConsistent(view.ProgressCurrent, view.ProgressTarget, questv1.PlayerQuestState(view.State)) {
+			t.Fatalf("valid raw progress rejected: %+v", view)
+		}
+		if want == 60 && view.State != quest.PlayerQuestStateClaimable {
+			t.Fatalf("overshoot must be claimable: %+v", view)
+		}
+	}
+	for _, tc := range []struct {
+		current, target int32
+		state           questv1.PlayerQuestState
+	}{
+		{-1, 50, questv1.PlayerQuestState_PLAYER_QUEST_STATE_IN_PROGRESS},
+		{0, 0, questv1.PlayerQuestState_PLAYER_QUEST_STATE_IN_PROGRESS},
+		{60, 50, questv1.PlayerQuestState_PLAYER_QUEST_STATE_IN_PROGRESS},
+		{40, 50, questv1.PlayerQuestState_PLAYER_QUEST_STATE_CLAIMABLE},
+		{40, 50, questv1.PlayerQuestState_PLAYER_QUEST_STATE_COMPLETED},
+	} {
+		if smokeQuestProgressConsistent(tc.current, tc.target, tc.state) {
+			t.Fatalf("invalid progress accepted: %+v", tc)
+		}
+	}
 }

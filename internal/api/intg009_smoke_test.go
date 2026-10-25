@@ -12,13 +12,13 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -105,8 +105,8 @@ func smokeValidWorldTileCoord(v int32) bool {
 // smokeStartMarchListMarchesGateway starts a march and asserts ListMarches contains it with destination coords.
 func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) (marchID int64, cityID int64, toX int32, toY int32, departAtMs int64, arriveAtMs int64) {
 	t.Helper()
-	cityX := int32(12 + (playerID % 20))
-	cityY := int32(14 + (playerID % 18))
+	tile := smokeBuildableCityTile(t)
+	cityX, cityY := tile.X, tile.Y
 	smokeStep(t, fmt.Sprintf("MIL: gateway CreateCity x=%d y=%d for march smoke", cityX, cityY))
 	createResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteCreateCity, TraceId: "i9-city", SessionId: sid, ServerId: intg006ServerID,

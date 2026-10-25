@@ -1,7 +1,9 @@
 package content
 
 import (
+	"context"
 	"fmt"
+	"math"
 )
 
 // UseResult describes what happened when a consumable was used.
@@ -29,6 +31,24 @@ func (s *Service) Use(p PlayerRef, itemCfgID int32, count int32) (UseResult, err
 		grants, err := parseResourceGrants(def, count)
 		if err != nil {
 			return UseResult{}, err
+		}
+		if store, ok := s.store.(interface {
+			useResourceAtomic(context.Context, PlayerRef, int32, int32, ResourceWallet) (int32, ResourceWallet, error)
+		}); ok {
+			s.mu.Lock()
+			defer s.mu.Unlock()
+			rem, wallet, err := store.useResourceAtomic(context.Background(), p, itemCfgID, count, resourceWalletFromGrants(grants))
+			if err != nil {
+				return UseResult{}, err
+			}
+			bag := s.bagFor(p)
+			if rem == 0 {
+				delete(bag.Stacks, itemCfgID)
+			} else {
+				bag.Stacks[itemCfgID] = rem
+			}
+			s.wallets[p] = wallet
+			return UseResult{ItemCfgID: itemCfgID, Remaining: rem, Grants: &grants}, nil
 		}
 		rem, err := s.Remove(p, itemCfgID, count)
 		if err != nil {
@@ -106,6 +126,9 @@ func parseTrainTroop(def ItemDef, count int32) (TrainTroopEffect, error) {
 }
 
 func parseResourceGrants(def ItemDef, count int32) (ResourceGrants, error) {
+	if count <= 0 {
+		return ResourceGrants{}, ErrInvalidQuantity
+	}
 	raw, ok := def.Meta["grants"]
 	if !ok {
 		return ResourceGrants{}, fmt.Errorf("content: item %d missing meta.grants", def.ID)
@@ -119,6 +142,9 @@ func parseResourceGrants(def ItemDef, count int32) (ResourceGrants, error) {
 		n, err := asInt64(v)
 		if err != nil {
 			return ResourceGrants{}, fmt.Errorf("content: item %d grants.%s: %w", def.ID, k, err)
+		}
+		if n < 0 || n > math.MaxInt64/int64(count) {
+			return ResourceGrants{}, ErrInvalidReward
 		}
 		switch k {
 		case "food":

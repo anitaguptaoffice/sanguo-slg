@@ -40,3 +40,7 @@ GetCityState refreshes its snapshot after settlement. The API city registry is
 locked separately and never supplies mutable state to readers.
 TestGetCityStateConcurrentDomesticTick races 300 response reads against 300
 scheduler ticks and verifies nested building maps do not alias Hub state.
+
+TestContentGrantThroughAPIWalletLifecycle exercises the actual persistent content
+service, duplicate reward keys, API refresh/spend/production, domestic reload,
+and duplicate replay from a fresh content service; final food remains 1420.
