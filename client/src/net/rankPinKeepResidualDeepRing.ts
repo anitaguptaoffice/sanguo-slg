@@ -3,6 +3,7 @@ import { highlightRankPinKeepResidualDeepestRing } from "@/net/rankPinKeepResidu
 import { highlightRankPinKeepResidualDeepestDeeperRing } from "@/net/rankPinKeepResidualDeepestDeeperRing";
 import { highlightRankPinKeepResidualDeepestDeepestDeeperRing } from "@/net/rankPinKeepResidualDeepestDeepestDeeperRing";
 import { highlightRankPinKeepResidualDeepestDeepestDeepestRing } from "@/net/rankPinKeepResidualDeepestDeepestDeepestRing";
+import { highlightRankPinKeepResidualDeepestDeepestDeepestDeeperRing } from "@/net/rankPinKeepResidualDeepestDeepestDeepestDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_RING_MS } from "@/net/rankPinKeepResidualRing";
 
 /** CLIENT-264：手动刷新后钉选行 2s 深环（与 CLIENT-248 `rank-pin-keep-residual-ring` 并存）。 */
@@ -44,7 +45,7 @@ export function highlightRankPinKeepResidualDeepRing(
   return true;
 }
 
-/** 手动刷新成功：CLIENT-248 1.5s 环 + CLIENT-264 2s 深环 + CLIENT-280 2.5s 更深环 + CLIENT-296 2.5s 最深环 + CLIENT-312 3s 更深二层环 + CLIENT-328 3s 更深三层环 + CLIENT-344 3s 更深四层环。 */
+/** 手动刷新成功：CLIENT-248 1.5s 环 + CLIENT-264 2s 深环 + CLIENT-280 2.5s 更深环 + CLIENT-296 2.5s 最深环 + CLIENT-312 3s 更深二层环 + CLIENT-328 3s 更深三层环 + CLIENT-344 3s 更深四层环 + CLIENT-360 3s 更深五层环。 */
 export function pulseRankPinKeepResidualRingsAfterManualRefresh(
   rankPanelRoot: ParentNode | null | undefined,
   highlightResidualRing: (
@@ -60,4 +61,5 @@ export function pulseRankPinKeepResidualRingsAfterManualRefresh(
   highlightRankPinKeepResidualDeepestDeeperRing(rankPanelRoot);
   highlightRankPinKeepResidualDeepestDeepestDeeperRing(rankPanelRoot);
   highlightRankPinKeepResidualDeepestDeepestDeepestRing(rankPanelRoot);
+  highlightRankPinKeepResidualDeepestDeepestDeepestDeeperRing(rankPanelRoot);
 }
