@@ -108,7 +108,7 @@ func (p *PGStore) UpsertPlayerQuest(ctx context.Context, row PlayerQuestRow) err
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	// A provisional unaccepted row serializes concurrent first writes too.
 	_, err = tx.Exec(ctx, `INSERT INTO player_quest (server_id,player_id,quest_cfg_id,updated_at)
 		VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, row.ServerID, row.PlayerID, row.QuestCfgID, row.UpdatedAt)
