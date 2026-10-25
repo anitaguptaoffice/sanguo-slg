@@ -444,7 +444,7 @@ export class DailyQuestPanels {
   }
 
   private renderList(): void {
-    const ul = this.panel.querySelector('[data-role="daily-list"]');
+    const ul = this.panel.querySelector<HTMLElement>('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
     this.renderDailyChainTabs();

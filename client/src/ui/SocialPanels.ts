@@ -746,8 +746,8 @@ export class SocialPanels {
       error: opts.error ?? null,
       stale: clock.stale,
     });
-    const status = panel.querySelector(`[data-role="${key}-refresh-status"]`);
-    const spinner = panel.querySelector(`[data-role="${key}-refresh-spinner"]`);
+    const status = panel.querySelector<HTMLElement>(`[data-role="${key}-refresh-status"]`);
+    const spinner = panel.querySelector<HTMLElement>(`[data-role="${key}-refresh-spinner"]`);
     const text = panel.querySelector(`[data-role="${key}-refresh-status-text"]`);
     const retry = panel.querySelector(`[data-role="${key}-refresh-retry"]`);
     if (text) text.textContent = meta.statusText;
@@ -806,7 +806,7 @@ export class SocialPanels {
   }
 
   private renderChatLog(messages: ChatMessageRow[], channel = this.selectedChatChannel()): void {
-    const ul = this.chatPanel.querySelector('[data-role="chat-log"]');
+    const ul = this.chatPanel.querySelector<HTMLElement>('[data-role="chat-log"]');
     if (!ul) return;
     this.lastRenderedChatMessages = messages;
     ul.innerHTML = "";
@@ -888,7 +888,7 @@ export class SocialPanels {
   }
 
   private renderGuildMembersList(members: GuildMemberRow[]): void {
-    const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
+    const ul = this.guildPanel.querySelector<HTMLElement>('[data-role="guild-members"]');
     if (!ul) return;
     ul.innerHTML = "";
     if (!this.guildId) {
@@ -1340,7 +1340,7 @@ export class SocialPanels {
   }
 
   private renderRankListGatewayError(): void {
-    const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
+    const tbody = this.rankPanel.querySelector<HTMLElement>('[data-role="rank-list"]');
     if (!tbody || !this.rankListError) return;
     tbody.innerHTML = "";
     const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
@@ -1373,7 +1373,7 @@ export class SocialPanels {
       snapEl.textContent = meta ?? "";
       snapEl.classList.toggle("hidden", !meta);
     }
-    const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
+    const tbody = this.rankPanel.querySelector<HTMLElement>('[data-role="rank-list"]');
     if (tbody) {
       tbody.innerHTML = "";
       const entries = res.entries ?? [];

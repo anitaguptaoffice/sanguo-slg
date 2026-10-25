@@ -733,7 +733,7 @@ export class ContentPanels {
   }
 
   private renderQuestList(): void {
-    const ul = this.questPanel.querySelector('[data-role="quest-list"]');
+    const ul = this.questPanel.querySelector<HTMLElement>('[data-role="quest-list"]');
     if (!ul) return;
     ul.innerHTML = "";
     for (const q of this.questRows) {
@@ -770,7 +770,7 @@ export class ContentPanels {
 
   private renderBagList(): void {
     this.renderBagCategoryTabs();
-    const ul = this.bagPanel.querySelector('[data-role="bag-list"]');
+    const ul = this.bagPanel.querySelector<HTMLElement>('[data-role="bag-list"]');
     if (!ul) return;
     ul.innerHTML = "";
     const bag = this.getSession()?.bag ?? [];
@@ -902,7 +902,7 @@ export class ContentPanels {
   private renderShopList(): void {
     this.renderShopCategoryTabs();
     const visible = this.visibleShopOffers();
-    const ul = this.shopPanel.querySelector('[data-role="shop-list"]');
+    const ul = this.shopPanel.querySelector<HTMLElement>('[data-role="shop-list"]');
     const sel = this.shopPanel.querySelector('[data-field="offer-id"]') as HTMLSelectElement;
     if (!ul || !sel) return;
     ul.innerHTML = "";
@@ -1161,7 +1161,7 @@ export class ContentPanels {
     );
     const sid = this.serverId();
     const quantityBefore = bagStackQuantity(bag, itemId);
-    const attempts: { ok: true } | { ok: false; message: string }[] = [];
+    const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     let lastRemaining = quantityBefore;
     try {
       for (let i = 0; i < slotCount; i += 1) {

@@ -776,7 +776,7 @@ export class MainCityScene implements Scene {
       (mails, unreadTotal) =>
         this.hudTodoBadgePoll.applyMailInboxSnapshot(mails, unreadTotal),
       (reportId) => {
-        this.marchReportToastActive = false;
+        this.marchArrivalHudReminder = null;
         void this.battleReports
           .openPanelWithDeepLink(reportId ?? undefined)
           .then(() => this.renderHud());
@@ -918,7 +918,7 @@ export class MainCityScene implements Scene {
           if (march) {
             const tx = march.to_x;
             const ty = march.to_y;
-            if (Number.isFinite(tx) && Number.isFinite(ty)) {
+            if (typeof tx === "number" && typeof ty === "number" && Number.isFinite(tx) && Number.isFinite(ty)) {
               this.world.setMarchDestHighlight({ x: tx, y: ty });
               this.syncMinimapViewportForIntelSelection(march);
             } else {
@@ -1361,7 +1361,7 @@ export class MainCityScene implements Scene {
         const social = hudTodoSocialBadgesFromChatSummary(
           this.chatUnreadTracker.getSummary(this.social.getGuildId()),
         );
-        if (social.chatToolbar > 0) {
+        if (social.chat > 0) {
           if (!this.social.isChatOpen()) this.social.toggleChat();
           this.pulseToolbarPanelDeepLink("social");
           return;
@@ -2058,7 +2058,7 @@ export class MainCityScene implements Scene {
     this.minimapBattleReportReplay = null;
   }
 
-  private layoutFromPointerEvent(ev: PointerEvent): { x: number; y: number } {
+  private layoutFromPointerEvent(ev: Pick<MouseEvent, "clientX" | "clientY">): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
     const cssX = ev.clientX - rect.left;
     const cssY = ev.clientY - rect.top;
@@ -2154,7 +2154,7 @@ export class MainCityScene implements Scene {
         const march = this.minimapMarches.find((m) => m.march_id === marchId);
         const tx = march?.to_x;
         const ty = march?.to_y;
-        if (Number.isFinite(tx) && Number.isFinite(ty)) {
+        if (typeof tx === "number" && typeof ty === "number" && Number.isFinite(tx) && Number.isFinite(ty)) {
           this.pulseIntelRowFromMinimapTile(tx!, ty!, marchId);
         }
         this.status = `小地图选中行军 #${marchId}`;
