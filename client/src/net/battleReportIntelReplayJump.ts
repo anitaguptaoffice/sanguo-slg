@@ -10,7 +10,7 @@ import {
 import {
   openWorldMinimapExpanded,
   type MinimapView,
-  type MinimapWorldBounds,
+  type WorldBounds as MinimapWorldBounds,
 } from "@/ui/worldMinimap";
 
 export const BATTLE_REPORT_COORD_REPLAY_ACTION = "battle-report-coord-replay";

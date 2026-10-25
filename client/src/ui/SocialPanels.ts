@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
@@ -326,7 +327,7 @@ export class SocialPanels {
     if (!wasHidden) {
       this.persistChatInputDraft();
     }
-    this.chatPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.chatPanel);
     if (!this.chatPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.chatPanel);
       this.hydrateChatRefreshClockFromSession();
@@ -336,7 +337,7 @@ export class SocialPanels {
   }
 
   toggleGuild(): void {
-    this.guildPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.guildPanel);
     if (!this.guildPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.guildPanel);
       this.hydrateGuildRefreshClockFromSession();
@@ -349,14 +350,14 @@ export class SocialPanels {
   openGuildPanel(): void {
     this.chatPanel.classList.add("hidden");
     this.rankPanel.classList.add("hidden");
-    this.guildPanel.classList.remove("hidden");
+    openCenterPanel(this.guildPanel);
     resetCenterPanelViewportScroll(this.guildPanel);
     this.syncGuildSummary();
     this.renderGuildMembersList([]);
   }
 
   toggleRank(): void {
-    this.rankPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.rankPanel);
     if (!this.rankPanel.classList.contains("hidden")) {
       const pending = readLeaderboardReturnScroll();
       if (pending) {
@@ -384,7 +385,7 @@ export class SocialPanels {
       '[data-field="rank-type"]',
     ) as HTMLSelectElement | null;
     if (typeSelect) typeSelect.value = String(LB_PLAYER_POWER);
-    this.rankPanel.classList.remove("hidden");
+    openCenterPanel(this.rankPanel);
     resetCenterPanelViewportScroll(this.rankPanel);
     void this.refreshRank().then(() => this.scrollRankHighlightIntoView());
   }
@@ -518,7 +519,7 @@ export class SocialPanels {
   private openGuildChatChannel(): void {
     this.rankPanel.classList.add("hidden");
     this.guildPanel.classList.add("hidden");
-    this.chatPanel.classList.remove("hidden");
+    openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
     const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
     if (sel) sel.value = String(CHAT_CHANNEL_GUILD);
@@ -746,8 +747,8 @@ export class SocialPanels {
       error: opts.error ?? null,
       stale: clock.stale,
     });
-    const status = panel.querySelector(`[data-role="${key}-refresh-status"]`);
-    const spinner = panel.querySelector(`[data-role="${key}-refresh-spinner"]`);
+    const status = panel.querySelector<HTMLElement>(`[data-role="${key}-refresh-status"]`);
+    const spinner = panel.querySelector<HTMLElement>(`[data-role="${key}-refresh-spinner"]`);
     const text = panel.querySelector(`[data-role="${key}-refresh-status-text"]`);
     const retry = panel.querySelector(`[data-role="${key}-refresh-retry"]`);
     if (text) text.textContent = meta.statusText;
@@ -806,7 +807,7 @@ export class SocialPanels {
   }
 
   private renderChatLog(messages: ChatMessageRow[], channel = this.selectedChatChannel()): void {
-    const ul = this.chatPanel.querySelector('[data-role="chat-log"]');
+    const ul = this.chatPanel.querySelector<HTMLElement>('[data-role="chat-log"]');
     if (!ul) return;
     this.lastRenderedChatMessages = messages;
     ul.innerHTML = "";
@@ -888,7 +889,7 @@ export class SocialPanels {
   }
 
   private renderGuildMembersList(members: GuildMemberRow[]): void {
-    const ul = this.guildPanel.querySelector('[data-role="guild-members"]');
+    const ul = this.guildPanel.querySelector<HTMLElement>('[data-role="guild-members"]');
     if (!ul) return;
     ul.innerHTML = "";
     if (!this.guildId) {
@@ -1011,7 +1012,7 @@ export class SocialPanels {
   private openChatWithGuildMentionDraft(displayName: string): void {
     this.guildPanel.classList.add("hidden");
     this.rankPanel.classList.add("hidden");
-    this.chatPanel.classList.remove("hidden");
+    openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
     const channel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement;
     if (channel) channel.value = String(CHAT_CHANNEL_GUILD);
@@ -1340,7 +1341,7 @@ export class SocialPanels {
   }
 
   private renderRankListGatewayError(): void {
-    const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
+    const tbody = this.rankPanel.querySelector<HTMLElement>('[data-role="rank-list"]');
     if (!tbody || !this.rankListError) return;
     tbody.innerHTML = "";
     const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
@@ -1373,7 +1374,7 @@ export class SocialPanels {
       snapEl.textContent = meta ?? "";
       snapEl.classList.toggle("hidden", !meta);
     }
-    const tbody = this.rankPanel.querySelector('[data-role="rank-list"]');
+    const tbody = this.rankPanel.querySelector<HTMLElement>('[data-role="rank-list"]');
     if (tbody) {
       tbody.innerHTML = "";
       const entries = res.entries ?? [];

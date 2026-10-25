@@ -35,9 +35,29 @@ message GetCityStateRequest {
   int64 city_id = 1;
 }
 
+// Complete ready-troop row; deliberately excludes queued, marching and wounded.
+message ReadyTroopCount {
+  // Positive configured unit ID.
+  int32 unit_cfg_id = 1;
+  // Positive resident count available for military debit in the running Hub.
+  int32 count = 2;
+}
+
+message CityGarrisonSnapshot {
+  // Full set from ONE atomic Hub snapshot, unique IDs in ascending order.
+  // Missing IDs mean zero only when this enclosing snapshot is present.
+  repeated ReadyTroopCount troops = 1;
+}
+
 message GetCityStateResponse {
   // 当前资源钱包。
   sanguo.common.v1.ResourceWallet wallet = 1;
   // 城内建筑列表。
   repeated sanguo.common.v1.CityBuilding buildings = 2;
+  // Already shipped as field 3 in API extra.proto (CLIENT-059 / INTG-017).
+  // Per-hour production; canonical drift repair, not a new wire allocation.
+  sanguo.common.v1.ResourceWallet production_rates = 3;
+  // Absent: unknown/unavailable. Present empty: authoritative zero ready troops.
+  // Running-state snapshot only, NOT a persistence or cross-domain atomicity claim.
+  CityGarrisonSnapshot garrison = 4;
 }

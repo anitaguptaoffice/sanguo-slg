@@ -105,7 +105,7 @@ export function isLargessOnCooldown(nextLargessAtMs: number | null | undefined, 
 export function formatLargessCooldownLine(nextLargessAtMs: number | null | undefined, nowMs: number): string {
   const rem = largessCooldownRemainingMs(nextLargessAtMs, nowMs);
   if (rem <= 0) return "";
-  const text = formatUpgradeRemaining(nextLargessAtMs, nowMs);
+  const text = formatUpgradeRemaining(nextLargessAtMs ?? undefined, nowMs);
   return text ? `赏赐冷却 ${text}` : `赏赐冷却中`;
 }
 

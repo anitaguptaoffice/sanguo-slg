@@ -252,3 +252,23 @@ describe("pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperR
     vi.useRealTimers();
   });
 });
+
+
+it("restarts the newest pulse timer on repeated selection", () => {
+  vi.useFakeTimers();
+  const card = document.createElement("aside");
+  card.innerHTML = '<p data-role="world-tile-intel-eta-cross-residual-deepest-deepest-deepest-deepest-deeper-line">ETA</p>';
+  const timers = createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperTimers();
+  const pulse = () => pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperReadonly(
+    card, null, true, { deepestDeepestDeepestDeepestDeeperTimers: timers },
+  );
+  try {
+    pulse();
+    const previous = timers.deepestDeepestDeepestDeepestDeeperPulseTimer;
+    expect(pulse).not.toThrow();
+    expect(timers.deepestDeepestDeepestDeepestDeeperPulseTimer).not.toBe(previous);
+  } finally {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  }
+});

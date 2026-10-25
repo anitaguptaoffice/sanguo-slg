@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   PANEL_STATE_LOADING_MESSAGE,
@@ -257,7 +258,6 @@ import {
   mailInboxFilterToEmptyTab,
   resolveMailListPlayerMailFilter,
 } from "@/net/mailInboxTabFormat";
-import type { DailyQuestRow } from "@/net/dailyQuestState";
 import { mailPanelTabBadgeCounts, mailToolbarBadgeCount } from "@/net/hudTodoBadges";
 import {
   MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
@@ -710,6 +710,7 @@ export class HeroMailPanels {
   private captiveSummonPreview: CaptiveSummonPreview | null = null;
   private captiveListInflight = false;
   private captiveTryInflight = false;
+  private captivePreviewRequest = 0;
   private captiveSummonInflight = false;
   private captiveReleaseInflight = false;
   private persuadeTargets: PersuadeTarget[] = [];
@@ -722,6 +723,7 @@ export class HeroMailPanels {
   private comingAcceptPreview: ComingAcceptPreview | null = null;
   private comingListInflight = false;
   private comingTryInflight = false;
+  private comingPreviewRequest = 0;
   private comingAcceptInflight = false;
   private comingRejectInflight = false;
   private heroesRefreshInflight = false;
@@ -782,6 +784,9 @@ export class HeroMailPanels {
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
     this.mount.appendChild(this.heroPanel);
+    if (this.heroPanel.closest(".layout-narrow")) {
+      this.heroPanel.querySelectorAll<HTMLDetailsElement>(".hero-capture-info").forEach((el) => { el.open = false; });
+    }
     this.mount.appendChild(this.mailPanel);
     this.heroPanel.addEventListener("click", (ev) => this.onHeroClick(ev));
     this.mailPanel.addEventListener("click", (ev) => this.onMailClick(ev));
@@ -944,7 +949,7 @@ export class HeroMailPanels {
   }
 
   toggleHero(): void {
-    this.heroPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.heroPanel);
     if (!this.heroPanel.classList.contains("hidden")) {
       void this.refreshRecruitTemplates();
       void this.refreshHeroes({ restoreSelection: true });
@@ -959,7 +964,7 @@ export class HeroMailPanels {
   /** CLIENT-097：排行深链 — 打开将领面板并 GetHeroDetail（只读）。 */
   async openHeroDetailDeepLink(heroId: number): Promise<void> {
     this.mailPanel.classList.add("hidden");
-    this.heroPanel.classList.remove("hidden");
+    openCenterPanel(this.heroPanel);
     resetCenterPanelViewportScroll(this.heroPanel);
     if (!this.heroes.length) await this.refreshHeroes();
     let id = heroId;
@@ -980,7 +985,7 @@ export class HeroMailPanels {
   }
 
   toggleMail(): void {
-    this.mailPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.mailPanel);
     if (!this.mailPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.mailPanel);
       this.onUnreadCount?.(0);
@@ -991,7 +996,7 @@ export class HeroMailPanels {
   /** 仅打开邮件面板（不 toggle 关闭）。 */
   openMailPanel(): void {
     if (this.isMailOpen()) return;
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     void this.refreshMail();
@@ -999,7 +1004,7 @@ export class HeroMailPanels {
 
   /** 战报深链：打开收件箱并高亮指定邮件（不自动领取附件）。 */
   openAndHighlightMail(mailId: number): void {
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     const mailReturn = takeMailReturnFromReportBridge();
@@ -1022,7 +1027,7 @@ export class HeroMailPanels {
   /** 战报深链：打开将领面板并加载详情（CLIENT-100）。 */
   openAndHighlightHero(heroId: number): void {
     if (!heroId) return;
-    this.heroPanel.classList.remove("hidden");
+    openCenterPanel(this.heroPanel);
     resetCenterPanelViewportScroll(this.heroPanel);
     this.selectedHeroId = heroId;
     void this.refreshHeroes().then(() => {
@@ -1052,7 +1057,7 @@ export class HeroMailPanels {
       filterTabCounts?: { unreadForTab: number; unclaimedCount: number };
     },
   ): void {
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     const mailFilter = opts?.mailFilter ?? MAIL_INBOX_FILTER_UNREAD;
@@ -1084,7 +1089,7 @@ export class HeroMailPanels {
     opts?: { skipScroll?: boolean },
   ): boolean {
     const wasOpen = this.isMailOpen();
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     this.mailFilter = MAIL_INBOX_FILTER_ALL;
     writeMailInboxFilterSession(this.mailFilter);
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;
@@ -1409,6 +1414,15 @@ export class HeroMailPanels {
     }
   }
 
+  private syncCaptureDisclosure(role: string, name?: string): void {
+    const summary = this.heroPanel.querySelector<HTMLElement>(`[data-role="${role}"] .hero-capture-info > summary`);
+    if (summary) {
+      summary.textContent = `目标与费用：${name || "未选择"}`;
+      summary.title = summary.textContent;
+      summary.setAttribute("aria-label", `${summary.closest("section")?.getAttribute("aria-label") || ""}：${summary.textContent}`);
+    }
+  }
+
   private selectedCaptiveHero(): CaptiveHeroRow | undefined {
     return this.captiveHeroes.find((c) => c.hero_id === this.selectedCaptiveHeroId);
   }
@@ -1431,6 +1445,7 @@ export class HeroMailPanels {
   private syncCaptiveHeroUi(): void {
     const { wallet, bag } = this.sessionEconomy();
     renderCaptiveHeroList(this.heroPanel, this.captiveHeroes, this.selectedCaptiveHeroId);
+    this.syncCaptureDisclosure("captive-hero-section", this.selectedCaptiveHero()?.display_name);
     syncCaptiveSummonPreview(
       this.heroPanel,
       this.selectedCaptiveHero(),
@@ -1444,7 +1459,7 @@ export class HeroMailPanels {
       this.heroPanel,
       this.captiveSummonInflight,
       this.captiveTryInflight,
-      afford.ok && (this.selectedCaptiveHeroId ?? 0) > 0,
+      afford.ok && this.captiveSummonPreview?.hero_id === this.selectedCaptiveHeroId && (this.selectedCaptiveHeroId ?? 0) > 0,
     );
     syncCaptiveReleaseButton(
       this.heroPanel,
@@ -1484,21 +1499,25 @@ export class HeroMailPanels {
     const heroId = captive?.hero_id ?? 0;
     const cityId = captive?.city_id || this.cityId();
     if (!heroId || !cityId) return;
-    if (this.captiveTryInflight) return;
+    const request = ++this.captivePreviewRequest;
     this.captiveTryInflight = true;
     this.captiveSummonPreview = null;
     this.syncCaptiveHeroUi();
     const sid = this.serverId();
     try {
       const res = await this.gateway.trySummonCaptive(sid, cityId, heroId);
+      if (request !== this.captivePreviewRequest || heroId !== this.selectedCaptiveHeroId) return;
       this.captiveSummonPreview = parseTrySummonCaptiveResponse(res);
     } catch (e) {
+      if (request !== this.captivePreviewRequest || heroId !== this.selectedCaptiveHeroId) return;
       const msg = formatCaptiveHeroGatewayError(e);
       setCaptiveHeroFormError(this.heroPanel, msg);
       this.onStatus(msg);
     } finally {
-      this.captiveTryInflight = false;
-      this.syncCaptiveHeroUi();
+      if (request === this.captivePreviewRequest) {
+        this.captiveTryInflight = false;
+        this.syncCaptiveHeroUi();
+      }
     }
   }
 
@@ -1507,7 +1526,7 @@ export class HeroMailPanels {
     const captive = this.selectedCaptiveHero();
     const { wallet, bag } = this.sessionEconomy();
     const afford = canAffordCaptiveSummon(this.captiveSummonPreview, wallet, bag);
-    if (!afford.ok) {
+    if (!afford.ok || this.captiveSummonPreview?.hero_id !== captive?.hero_id) {
       setCaptiveHeroFormError(this.heroPanel, afford.reason ?? "无法招降");
       this.onStatus(afford.reason ?? "无法招降");
       return;
@@ -1598,6 +1617,7 @@ export class HeroMailPanels {
     const { wallet, bag } = this.sessionEconomy();
     syncPersuadeMeta(this.heroPanel, this.persuadeTargets.length);
     renderPersuadeTargetList(this.heroPanel, this.persuadeTargets, this.selectedPersuadeNpcId);
+    this.syncCaptureDisclosure("persuade-section", this.selectedPersuadeTarget()?.display_name);
     syncPersuadePreview(this.heroPanel, this.selectedPersuadeTarget(), wallet, bag);
     syncPersuadeListRefreshButton(this.heroPanel, this.persuadeListInflight);
     syncPersuadePrimaryButton(
@@ -1700,6 +1720,7 @@ export class HeroMailPanels {
 
   private syncComingHeroUi(): void {
     renderComingHeroList(this.heroPanel, this.comingHeroes, this.selectedComingHeroId);
+    this.syncCaptureDisclosure("coming-hero-section", this.selectedComingHero()?.display_name);
     syncComingAcceptPreview(this.heroPanel, this.selectedComingHero(), this.comingAcceptPreview);
     const canSubmit = canConfirmComingAccept(this.comingAcceptPreview, this.selectedComingHeroId ?? 0);
     syncComingListRefreshButton(this.heroPanel, this.comingListInflight);
@@ -1748,19 +1769,23 @@ export class HeroMailPanels {
     const cityId = coming?.city_id || this.cityId();
     const sid = this.serverId();
     if (!heroId || !cityId) return;
-    if (this.comingTryInflight) return;
+    const request = ++this.comingPreviewRequest;
     this.comingTryInflight = true;
     this.comingAcceptPreview = null;
     this.syncComingHeroUi();
     try {
       const res = await this.gateway.tryAcceptComing(sid, cityId, heroId);
+      if (request !== this.comingPreviewRequest || heroId !== this.selectedComingHeroId) return;
       this.comingAcceptPreview = parseTryAcceptComingResponse(res);
     } catch (e) {
+      if (request !== this.comingPreviewRequest || heroId !== this.selectedComingHeroId) return;
       const msg = formatComingHeroGatewayError(e);
       setComingHeroFormError(this.heroPanel, msg);
     } finally {
-      this.comingTryInflight = false;
-      this.syncComingHeroUi();
+      if (request === this.comingPreviewRequest) {
+        this.comingTryInflight = false;
+        this.syncComingHeroUi();
+      }
     }
   }
 
@@ -1882,29 +1907,44 @@ export class HeroMailPanels {
         <section class="captive-hero-section" data-role="captive-hero-section" aria-label="俘虏招降">
           <h4>俘虏招降</h4>
           <button type="button" data-action="refresh-captive-list">拉取俘虏列表</button>
-          <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
           <button type="button" data-action="captive-summon-confirm">确认招降</button>
           <button type="button" data-action="captive-release">释放俘虏</button>
           <p class="march-form-error-sibling hidden" data-role="captive-hero-form-error" role="alert"></p>
+          <details class="hero-capture-info" open>
+            <summary tabindex="0" aria-label="俘虏招降：目标与费用">目标与费用</summary>
+            <div class="hero-capture-info-body">
+          <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
           <ul class="captive-hero-list template-list" data-role="captive-hero-list"></ul>
+            </div>
+          </details>
         </section>
         <section class="persuade-section hotel-recruit-section" data-role="persuade-section" aria-label="名将结交游说">
           <h4>名将结交/游说</h4>
-          <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
           <button type="button" data-action="refresh-persuade-targets">拉取结交目标</button>
-          <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
           <button type="button" data-action="persuade-primary">结交/游说</button>
           <p class="march-form-error-sibling hidden" data-role="persuade-form-error" role="alert"></p>
+          <details class="hero-capture-info" open>
+            <summary tabindex="0" aria-label="结交游说：目标与费用">目标与费用</summary>
+            <div class="hero-capture-info-body">
+          <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
+          <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
           <ul class="persuade-target-list hotel-candidate-list template-list" data-role="persuade-target-list"></ul>
+            </div>
+          </details>
         </section>
         <section class="coming-hero-section" data-role="coming-hero-section" aria-label="来投将领">
           <h4>来投将领</h4>
           <button type="button" data-action="refresh-coming-list">拉取来投列表</button>
-          <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
           <button type="button" data-action="coming-accept-confirm">确认接受</button>
           <button type="button" data-action="coming-reject">拒绝来投</button>
           <p class="march-form-error-sibling hidden" data-role="coming-hero-form-error" role="alert"></p>
+          <details class="hero-capture-info" open>
+            <summary tabindex="0" aria-label="来投将领：目标与费用">目标与费用</summary>
+            <div class="hero-capture-info-body">
+          <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
           <ul class="coming-hero-list template-list" data-role="coming-hero-list"></ul>
+            </div>
+          </details>
         </section>
       </div>
       <div class="panel-scroll-body" data-role="hero-scroll">
@@ -2110,8 +2150,8 @@ export class HeroMailPanels {
   }
 
   private renderHeroList(): void {
-    const ul = this.heroPanel.querySelector('[data-role="hero-list"]');
-    const detailEl = this.heroPanel.querySelector('[data-role="hero-detail"]');
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
+    const detailEl = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-detail"]');
     if (!ul) return;
     ul.innerHTML = "";
     this.syncHeroListFilterChipDom();
@@ -2121,7 +2161,8 @@ export class HeroMailPanels {
       this.heroListSort,
       this.heroListFilterContext(),
     );
-    const residualCtx = () => this.heroPanelStateResidualContext();
+    const residualCtx = (overrides?: Partial<HeroPanelStateResidualContext>) =>
+      this.heroPanelStateResidualContext(overrides);
     if (!this.heroes.length && this.heroListLoadError) {
       const li = renderPanelGatewayErrorListRow(ul, this.heroListLoadError, {
         assets: this.assets,
@@ -2540,7 +2581,7 @@ export class HeroMailPanels {
   }
 
   private renderTemplateList(): void {
-    const ul = this.heroPanel.querySelector('[data-role="template-list"]');
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
     if (!ul || !sel) return;
@@ -2745,7 +2786,7 @@ export class HeroMailPanels {
       row ? formatRecruitWalletCompareResidualLine(wallet, row, bag) : null,
     );
     this.syncRecruitFormInlineState(row);
-    const ul = this.heroPanel.querySelector('[data-role="template-list"]');
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     ul?.querySelectorAll("li[data-template-id]").forEach((li) => {
       li.classList.toggle("selected", Number(li.getAttribute("data-template-id")) === templateCfgId);
     });
@@ -2975,7 +3016,7 @@ export class HeroMailPanels {
   }
 
   private renderMailList(): void {
-    const ul = this.mailPanel.querySelector('[data-role="mail-list"]');
+    const ul = this.mailPanel.querySelector<HTMLElement>('[data-role="mail-list"]');
     const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
     const detailWrap = this.mailPanel.querySelector('[data-role="mail-detail"]');
     const titleEl = this.mailPanel.querySelector('[data-role="mail-detail-title"]');
@@ -3234,7 +3275,7 @@ export class HeroMailPanels {
   private mountMailListRowSkins(assets?: AssetLoader): void {
     const loader = assets ?? this.assets;
     if (!loader || !this.mailPanel) return;
-    const ul = this.mailPanel.querySelector('[data-role="mail-list"]');
+    const ul = this.mailPanel.querySelector<HTMLElement>('[data-role="mail-list"]');
     if (!ul) return;
     for (const row of Array.from(ul.querySelectorAll<HTMLElement>("li[data-ui-filter-row]"))) {
       mountFilterRow(row, loader);
@@ -4527,6 +4568,14 @@ export class HeroMailPanels {
   private onHeroClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
     const btnAction = btn?.getAttribute("data-action");
+    if (btnAction && ["captive-summon-confirm", "captive-release", "persuade-primary", "coming-accept-confirm", "coming-reject"].includes(btnAction)) {
+      const info = btn?.closest("section")?.querySelector<HTMLDetailsElement>(".hero-capture-info");
+      if (info && !info.open) {
+        info.open = true;
+        this.onStatus("请核对目标与消耗，再点击操作按钮确认");
+        return;
+      }
+    }
     if (btnAction === "recruit-view-hero") {
       const heroId = Number(btn?.getAttribute("data-hero-id"));
       if (heroId > 0) void this.loadHeroDetail(heroId);

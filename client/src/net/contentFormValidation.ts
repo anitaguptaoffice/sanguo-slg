@@ -101,7 +101,7 @@ export function validateUseConsumable(input: UseConsumableValidationInput): Cont
 export type PanelFormDomain = "recruit" | "shop" | "bag" | "march";
 
 /** 列表首屏拉取域（CLIENT-173）；与 PanelFormDomain 共用 `formatPanelGatewayError` code 映射。 */
-export type PanelListGatewayDomain = "rank" | "guild" | "buildQueue";
+export type PanelListGatewayDomain = "rank" | "guild" | "buildQueue" | "world";
 
 export type PanelGatewayDomain = PanelFormDomain | PanelListGatewayDomain;
 
@@ -157,6 +157,9 @@ const PANEL_GATEWAY_CODE_HINT: Record<PanelGatewayDomain, Partial<Record<number,
     61004: "私聊目标不存在",
     61005: "军团频道需要先加入军团",
     61006: "已被禁言",
+    [COMMON_INVALID_PACKET]: "请求无效",
+  },
+  world: {
     [COMMON_INVALID_PACKET]: "请求无效",
   },
   buildQueue: {

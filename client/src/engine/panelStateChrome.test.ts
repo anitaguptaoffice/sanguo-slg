@@ -51,6 +51,10 @@ describe("applyPanelStateChrome", () => {
     expect(li.classList.contains(PANEL_STATE_CHROME_CLASS)).toBe(true);
     expect(li.classList.contains("panel-state-chrome--skinned")).toBe(true);
     expect(li.style.borderImageSource).toContain("url(");
+    expect(li.style.borderImageSlice).not.toContain("fill");
+    expect(li.style.backgroundColor).toBe("rgb(247, 238, 217)");
+    expect(li.style.color).toBe("rgb(59, 43, 27)");
+    expect(li.textContent).toBe("");
   });
 
   it("skips nine-slice when data-art-skin=off", () => {
@@ -62,6 +66,29 @@ describe("applyPanelStateChrome", () => {
     expect(li.getAttribute("data-panel-state")).toBe("error");
     expect(li.classList.contains("panel-state-chrome--skinned")).toBe(false);
     expect(isPanelStateArtSkinOff(li)).toBe(true);
+  });
+
+  it("updates error ink and removes owned skin styles when switched off", () => {
+    const li = document.createElement("li");
+    const assets = mockPanelStateAssets();
+    applyPanelStateChrome(li, "empty", assets);
+    applyPanelStateChrome(li, "error", assets);
+    expect(li.style.color).toBe("rgb(139, 48, 41)");
+    li.dataset.artSkin = "off";
+    applyPanelStateChrome(li, "loading", assets);
+    expect(li.dataset.panelState).toBe("loading");
+    expect(li.classList.contains("panel-state-chrome--skinned")).toBe(false);
+    expect(li.style.borderImageSource).toBe("");
+    expect(li.style.background).toBe("");
+    expect(li.style.color).toBe("");
+  });
+
+  it("clears stale skin when an asset becomes unavailable", () => {
+    const li = document.createElement("li");
+    applyPanelStateChrome(li, "loading", mockPanelStateAssets());
+    applyPanelStateChrome(li, "empty");
+    expect(li.style.borderImageSlice).toBe("");
+    expect(li.classList.contains("panel-state-chrome--skinned")).toBe(false);
   });
 
   it("falls back to text-only when assets missing", () => {
@@ -77,6 +104,14 @@ describe("applyPanelStateChrome", () => {
 });
 
 describe("renderPanelStateListRow", () => {
+  it("respects a list ancestor skin-off before applying the generated row", () => {
+    const ul = document.createElement("ul");
+    ul.dataset.artSkin = "off";
+    const li = renderPanelStateListRow(ul, "empty", "暂无数据", { assets: mockPanelStateAssets() });
+    expect(li.style.borderImageSource).toBe("");
+    expect(li.classList.contains("panel-state-chrome--skinned")).toBe(false);
+    expect(li.textContent).toBe("暂无数据");
+  });
   it("preserves legacy list classes for panelDensity hooks", () => {
     const ul = document.createElement("ul");
     const li = renderPanelStateListRow(ul, "empty", "暂无数据", {

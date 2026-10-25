@@ -65,7 +65,8 @@ export function clearMinimapMarchFocusSession(
 /** 写入小地图/列表焦点：不修改 `march-highlight-id`。 */
 export function syncMinimapMarchFocusSession(
   marchId: number | null,
-  storage: Pick<Storage, "getItem" | "setItem" | "removeItem">,
+  storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null =
+    typeof sessionStorage !== "undefined" ? sessionStorage : null,
 ): void {
   if (marchId == null) {
     clearMinimapMarchFocusSession(storage);
