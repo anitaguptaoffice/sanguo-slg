@@ -813,6 +813,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:54（CLIENT-344）双榜刷新冷却戳记与钉选保持残余巩固再加深四层**：**CLIENT-328** 巩固再加深三层第四行下只读 **`formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp`** / **`rank-refresh-cooldown-residual-deepest-deepest-deepest-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深四层** 第四行；**CLIENT-328/214** **不退化**；**无**新 rank RPC；**非** wave:53 **CLIENT-337** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deepest-deepest-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeepestDeepest.test.ts`、`rankPinKeepResidualDeepestDeepestDeepestRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1590](https://github.com/anitaguptaoffice/sanguo-slg/issues/1590)）
 
+## Wave 56 H5 双榜刷新冷却戳记与钉选保持残余巩固再加深五层（CLIENT-360）
+
+在 [Wave 54](#wave-54-h5-双榜刷新冷却戳记与钉选保持残余巩固再加深四层client-344) **CLIENT-344** 双榜钉选保持栈基础上 **巩固再加深五层**；主叙事 **非** wave:55 **CLIENT-353** 排行招募密度扫读重复；**仍** DATA-002；**无**新 rank RPC；范围外同 Wave 54/55。
+
+**wave:56（CLIENT-360）双榜刷新冷却戳记与钉选保持残余巩固再加深五层**：**CLIENT-344** 巩固再加深四层第四行下只读 **`formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp`** / **`rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深五层** 第四行；**CLIENT-344/214** **不退化**；**无**新 rank RPC；**非** wave:55 **CLIENT-353** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deepest-deepest-deeper-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeepestDeepestDeeper.test.ts`、`rankPinKeepResidualDeepestDeepestDeepestDeeperRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1632](https://github.com/anitaguptaoffice/sanguo-slg/issues/1632)）
+
 ## Wave 52 H5 将领列表忠诚次行与详情养成道具扫读残余巩固再加深三层（CLIENT-326）
 
 在 [Wave 50](#wave-50-h5-主城队列-eta-完成焦点残余巩固再加深二层队列预览槽位互链再加深二层将领养成扫读再加深二层panelstate-筛选再加深二层双榜钉选再加深二层军团聊天再加深二层日常-hud-深链再加深二层1280-组合-manifest-巩固再加深二层m4-出口--intg-050) **CLIENT-310** 将领养成扫读栈基础上 **巩固再加深三层**；主叙事 **非** wave:51 **CLIENT-321** 排行招募密度栈；**仍** DATA-002；**无** hero 专用升级 RPC；**非** ART-012 / #983/#108/#697 像素任务。

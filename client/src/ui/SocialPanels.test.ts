@@ -18,12 +18,14 @@ import { formatRankRefreshCooldownResidualDeepestStamp } from "@/net/rankRefresh
 import { formatRankRefreshCooldownResidualDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeeper";
 import { formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
 import { formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepest";
+import { formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepestDeeper";
 import { RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS } from "@/net/rankPinKeepResidualDeepRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeepestRing";
+import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeepestDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
@@ -490,6 +492,18 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
         mount
           .querySelector(".rank-pin-row")
           ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS),
+      ).toBe(true);
+      const deepestDeepestDeepestDeeper = mount.querySelector(
+        '[data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper"]',
+      );
+      expect(deepestDeepestDeepestDeeper?.textContent).toBe(
+        formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp(now, now, 1, now),
+      );
+      expect(deepestDeepestDeepestDeeper?.classList.contains("hidden")).toBe(false);
+      expect(
+        mount
+          .querySelector(".rank-pin-row")
+          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
       ).toBe(true);
     } finally {
       nowSpy.mockRestore();
