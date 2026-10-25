@@ -953,7 +953,7 @@ H5 人工验收与 **INTG-043** 网关冒烟对齐，见 [client/README.md](../c
 | [#1289](https://github.com/anitaguptaoffice/sanguo-slg/issues/1289) | CLIENT-290 | 已完成 | [#1312](https://github.com/anitaguptaoffice/sanguo-slg/pull/1312)（`57ef8259`） |
 | [#1290](https://github.com/anitaguptaoffice/sanguo-slg/issues/1290) | CLIENT-291 | 已完成 | [#1311](https://github.com/anitaguptaoffice/sanguo-slg/pull/1311)（`aa9c123e`） |
 | [#1291](https://github.com/anitaguptaoffice/sanguo-slg/issues/1291) | INTG-047 | 已完成 | [#1304](https://github.com/anitaguptaoffice/sanguo-slg/pull/1304)（`0330d0a2`） |
-| [#1292](https://github.com/anitaguptaoffice/sanguo-slg/issues/1292) | DOCS-EXIT-039 | 进行中 | — |
+| [#1292](https://github.com/anitaguptaoffice/sanguo-slg/issues/1292) | DOCS-EXIT-039 | 进行中 | [#1376](https://github.com/anitaguptaoffice/sanguo-slg/pull/1376) |
 
 H5 人工验收与 **INTG-047** 网关冒烟对齐，见 [client/README.md](../client/README.md#wave-47-h5-世界小地图军情-scroll-sync-残余巩固再加深出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifest-巩固再加深m4-出口--intg-047)（**小地图军情 scroll-sync 残余巩固再加深 + 出征刷新戳记兵力余量巩固再加深 + 战报键盘相邻导航坐标复制巩固再加深 + 邮件 HUD 附件领取巩固再加深 + 背包商城返回高亮巩固再加深 + 排行招募扫读巩固再加深 + 军情 phase 再出征预填巩固再加深 + 1280 世界军情战报邮件商城排行 manifest 巩固再加深**）。
 
