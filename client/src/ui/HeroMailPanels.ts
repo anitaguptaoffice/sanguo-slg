@@ -268,8 +268,12 @@ import {
   MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_ROLE,
 } from "@/net/mailAttachmentClaimResidualDeepestSubline";
 import {
-  pulseMailClaimHudSyncAfterClaimResidualDeepest,
-  syncHudMailQuestBadgeAfterClaimResidualDeepest,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
+} from "@/net/mailAttachmentClaimResidualDeepestDeeperSubline";
+import {
+  pulseMailClaimHudSyncAfterClaimResidualDeepestDeeper,
+  syncHudMailQuestBadgeAfterClaimResidualDeepestDeeper,
 } from "@/net/mailClaimHudBadgeSync";
 import {
   compareRecruitAffordability,
@@ -558,6 +562,8 @@ export class HeroMailPanels {
   private mailAttachmentClaimResidualDeeperSublineByMailId = new Map<number, string>();
   /** CLIENT-303：列表行附件领取残余巩固再加深一层第四行（按 mail_id 记忆）。 */
   private mailAttachmentClaimResidualDeepestSublineByMailId = new Map<number, string>();
+  /** CLIENT-319：列表行附件领取残余巩固再加深二层第五行（按 mail_id 记忆）。 */
+  private mailAttachmentClaimResidualDeepestDeeperSublineByMailId = new Map<number, string>();
   private mailClaimInlinePulseMailId = 0;
   /** CLIENT-209：与 HUD 深链轮询同源的日常 chain 400 快照（只读扫读，无新 RPC）。 */
   private mailHudTodoDailyRows: DailyQuestRow[] = [];
@@ -1020,7 +1026,7 @@ export class HeroMailPanels {
     if (!this.mailPanel) return;
     const row = findMailListRow(this.mailPanel, mailId);
     scheduleMailClaimRowPulse(row);
-    pulseMailClaimHudSyncAfterClaimResidualDeepest(row);
+    pulseMailClaimHudSyncAfterClaimResidualDeepestDeeper(row);
     this.bumpMailClaimHudTodoSweepLinkage();
   }
 
@@ -1038,7 +1044,7 @@ export class HeroMailPanels {
     granted?: MailClaimGrantedPayload,
     mailBeforeClaim?: MailRow,
   ): void {
-    const sync = syncHudMailQuestBadgeAfterClaimResidualDeepest(
+    const sync = syncHudMailQuestBadgeAfterClaimResidualDeepestDeeper(
       {
         mailUnreadTotal: this.mailUnreadTotal,
         mailInboxSnapshot: this.mailInboxSnapshot,
@@ -1073,6 +1079,12 @@ export class HeroMailPanels {
       this.mailAttachmentClaimResidualDeepestSublineByMailId.set(
         mailId,
         sync.attachmentClaimResidualDeepestSubline,
+      );
+    }
+    if (sync.attachmentClaimResidualDeepestDeeperSubline && mailId > 0) {
+      this.mailAttachmentClaimResidualDeepestDeeperSublineByMailId.set(
+        mailId,
+        sync.attachmentClaimResidualDeepestDeeperSubline,
       );
     }
   }
@@ -2714,6 +2726,21 @@ export class HeroMailPanels {
           );
           residualDeepestSpan.textContent = residualDeepestSubline;
           li.appendChild(residualDeepestSpan);
+        }
+        const residualDeepestDeeperSubline =
+          m.mail_id != null
+            ? this.mailAttachmentClaimResidualDeepestDeeperSublineByMailId.get(m.mail_id)
+            : undefined;
+        if (residualDeepestDeeperSubline) {
+          const residualDeepestDeeperSpan = document.createElement("span");
+          residualDeepestDeeperSpan.className =
+            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS;
+          residualDeepestDeeperSpan.setAttribute(
+            "data-role",
+            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
+          );
+          residualDeepestDeeperSpan.textContent = residualDeepestDeeperSubline;
+          li.appendChild(residualDeepestDeeperSpan);
         }
         ul.appendChild(li);
       }

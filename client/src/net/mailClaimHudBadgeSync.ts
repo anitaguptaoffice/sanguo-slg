@@ -7,6 +7,7 @@ import { formatMailAttachmentClaimResidualSubline } from "@/net/mailAttachmentCl
 import { formatMailAttachmentClaimResidualDeepSubline } from "@/net/mailAttachmentClaimResidualDeepSubline";
 import { formatMailAttachmentClaimResidualDeeperSubline } from "@/net/mailAttachmentClaimResidualDeeperSubline";
 import { formatMailAttachmentClaimResidualDeepestSubline } from "@/net/mailAttachmentClaimResidualDeepestSubline";
+import { formatMailAttachmentClaimResidualDeepestDeeperSubline } from "@/net/mailAttachmentClaimResidualDeepestDeeperSubline";
 import {
   formatMailTabUnreadSweepLine,
   type MailTabUnreadSweepTab,
@@ -35,6 +36,11 @@ export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_MS = 3000;
 export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_PULSE_CLASS =
   "mail-claim-hud-sync-residual-deepest-pulse";
 export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_PULSE_MS = 3000;
+
+/** CLIENT-319：CLIENT-303 残余巩固再加深一层脉冲之上的 **巩固再加深二层** HUD 脉冲（3s；CLIENT-050/106/209 角标推导仍走 residual deepest-deeper sync）。 */
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS =
+  "mail-claim-hud-sync-residual-deepest-deeper-pulse";
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_MS = 3000;
 
 export type HudMailQuestBadgeSyncInput = {
   mailUnreadTotal: number;
@@ -74,6 +80,12 @@ export type HudMailQuestBadgeResidualDeeperSyncResult = HudMailQuestBadgeResidua
 export type HudMailQuestBadgeResidualDeepestSyncResult = HudMailQuestBadgeResidualDeeperSyncResult & {
   attachmentClaimResidualDeepestSubline: string | null;
 };
+
+/** CLIENT-319：在 CLIENT-303 同步结果上附带附件领取残余巩固再加深二层第五行文案。 */
+export type HudMailQuestBadgeResidualDeepestDeeperSyncResult =
+  HudMailQuestBadgeResidualDeepestSyncResult & {
+    attachmentClaimResidualDeepestDeeperSubline: string | null;
+  };
 
 /**
  * 邮件附件领取成功后刷新收件箱快照并推导 HUD 邮件未读/未领附件与日常可领计数（无新 RPC）。
@@ -242,6 +254,34 @@ export function syncHudMailQuestBadgeAfterClaimResidualDeepest(
   return { ...residualDeeper, attachmentClaimResidualDeepestSubline };
 }
 
+/**
+ * CLIENT-319：CLIENT-303 `syncHudMailQuestBadgeAfterClaimResidualDeepest` + 附件类型/领取结果残余 **巩固再加深二层** 第五行（无新 RPC）。
+ */
+export function syncHudMailQuestBadgeAfterClaimResidualDeepestDeeper(
+  input: HudMailQuestBadgeSyncInput,
+  mailId: number,
+  rowAfter: MailRow,
+  mailFilterTab: MailTabUnreadSweepTab = "all",
+  granted?: MailClaimGrantedPayload,
+  mailBeforeClaim?: MailRow,
+): HudMailQuestBadgeResidualDeepestDeeperSyncResult {
+  const residualDeepest = syncHudMailQuestBadgeAfterClaimResidualDeepest(
+    input,
+    mailId,
+    rowAfter,
+    mailFilterTab,
+    granted,
+    mailBeforeClaim,
+  );
+  const before =
+    mailBeforeClaim ??
+    input.mailInboxSnapshot.find((m) => m.mail_id === mailId) ??
+    rowAfter;
+  const attachmentClaimResidualDeepestDeeperSubline =
+    formatMailAttachmentClaimResidualDeepestDeeperSubline(before, granted);
+  return { ...residualDeepest, attachmentClaimResidualDeepestDeeperSubline };
+}
+
 export function scheduleMailClaimHudSyncPulse(row: HTMLElement | null | undefined): void {
   if (!row) return;
   row.classList.remove(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS);
@@ -324,4 +364,24 @@ export function pulseMailClaimHudSyncAfterClaimResidualDeepest(
 ): void {
   pulseMailClaimHudSyncAfterClaimResidualDeeper(row);
   scheduleMailClaimHudSyncResidualDeepestPulse(row);
+}
+
+export function scheduleMailClaimHudSyncResidualDeepestDeeperPulse(
+  row: HTMLElement | null | undefined,
+): void {
+  if (!row) return;
+  row.classList.remove(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS);
+  void row.offsetWidth;
+  row.classList.add(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS);
+  window.setTimeout(() => {
+    row.classList.remove(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS);
+  }, MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_MS);
+}
+
+/** CLIENT-319：CLIENT-241/255/271/287/303 脉冲栈 + 巩固再加深二层 HUD 脉冲（CLIENT-050/106/209 **不退化**）。 */
+export function pulseMailClaimHudSyncAfterClaimResidualDeepestDeeper(
+  row: HTMLElement | null | undefined,
+): void {
+  pulseMailClaimHudSyncAfterClaimResidualDeepest(row);
+  scheduleMailClaimHudSyncResidualDeepestDeeperPulse(row);
 }
