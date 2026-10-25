@@ -433,6 +433,12 @@ export {
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
 } from "@/engine/wave56MainCityHeroDailySocialQueueNarrowManifest";
 
+/** CLIENT-361: wave:56 军团职务头与聊天未读分隔扫读巩固再加深五层（345 deepest-deepest-deepest 基线 **不退化**）。 */
+export {
+  GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
+  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
+} from "@/engine/wave54MainCityHeroDailySocialQueueNarrowManifest";
+
 /** CLIENT-347: wave:54 manifest 巩固再加深四层（340～346 residual deepest-deepest-deepest 钩子见 wave:52 再导出）。 */
 export {
   DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
