@@ -765,6 +765,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:52（CLIENT-324）主城队列 ETA 分段完成焦点与七槽 ring 残余巩固再加深三层**：队列行在 **CLIENT-308** 巩固再加深二层第五行下追加 **`formatDomesticQueueEtaSegmentResidualDeepestDeepestDeeperLabel`**（**`domestic-queue-eta-segment-residual-deepest-deepest-deeper-label`** 巩固再加深三层分段阈值 + **`domestic-queue-eta-segment-residual-deepest-deepest-deeper-finish`** 完成倒计时只读第六行；**CLIENT-212/244/260/276/292/308** **不退化**；**非** wave:50 CLIENT-308 首版巩固再加深二层标题复刻主叙事）；队列完成时七槽叠加 **`domestic-queue-complete-focus-residual-deepest-deepest-deeper-ring` 3.5s**（与 **CLIENT-308** `domestic-queue-complete-focus-residual-deepest-deeper-ring` **并存不退化**；**无**主城建造新 RPC）。单测：`domesticQueueEtaSegmentResidualDeepestDeepestDeeper.test.ts`、`domesticQueueCompleteFocusResidualDeepestDeepestDeeperRing.test.ts`、`queueRemainingProgress.test.ts`；`cd client && npm test` 绿。（Closes [#1544](https://github.com/anitaguptaoffice/sanguo-slg/issues/1544)）
 
+## Wave 52 H5 将领列表忠诚次行与详情养成道具扫读残余巩固再加深三层（CLIENT-326）
+
+在 [Wave 50](#wave-50-h5-主城队列-eta-完成焦点残余巩固再加深二层队列预览槽位互链再加深二层将领养成扫读再加深二层panelstate-筛选再加深二层双榜钉选再加深二层军团聊天再加深二层日常-hud-深链再加深二层1280-组合-manifest-巩固再加深二层m4-出口--intg-050) **CLIENT-310** 将领养成扫读栈基础上 **巩固再加深三层**；主叙事 **非** wave:51 **CLIENT-321** 排行招募密度栈；**仍** DATA-002；**无** hero 专用升级 RPC；**非** ART-012 / #983/#108/#697 像素任务。
+
+**wave:52（CLIENT-326）将领列表忠诚次行与详情养成道具扫读残余巩固再加深三层**：列表 **`formatHeroListLoyaltyResidualDeepestDeepestDeeperSubline`** / **`hero-list-row-loyalty-residual-deepest-deepest-deeper-subline`**（忠诚 + 经验进度只读巩固再加深三层第四行；**CLIENT-294** `hero-list-row-loyalty-residual-deepest-subline` **不退化**；**无** hero 专用升级 RPC）；详情 **`formatHeroDetailConsumableStackResidualDeepestDeepestDeeperSweep`** / **`hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep`** + **`hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep-ring` 3s** 只读扫读（养成堆叠 + **`pickHeroDetailBagDeepLink`** 背包深链 hint；**CLIENT-230** 壳与 **CLIENT-310** 再加深二层扫读 **不退化**；**非** ART-012 / #983/#108/#697 像素任务）。单测：`heroListLoyaltyResidualDeepestDeepestDeeperSubline.test.ts`、`heroDetailConsumableStackResidualDeepestDeepestDeeperSweep.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1546](https://github.com/anitaguptaoffice/sanguo-slg/issues/1546)）
+
 ## Wave 51 H5 世界小地图军情 scroll-sync 残余巩固再加深二层（CLIENT-316 起）
 
 在 [Wave 50](#wave-50-h5-主城队列-eta-完成焦点残余巩固再加深二层client-308-起) 主城栈基础上 **轮转回**世界/军情栈做 **scroll-sync 与格点 ETA 对照残余巩固再加深二层**；**仍** DATA-002；**无**新 world RPC；范围外同 Wave 49/50。
