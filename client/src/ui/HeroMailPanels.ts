@@ -311,6 +311,11 @@ import {
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
 } from "@/net/recruitTemplateInlineResidualDeepestSummary";
 import {
+  formatRecruitTemplateInlineResidualDeepestDeeperSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeeperSummary";
+import {
   formatRecruitTemplateInlineResidualSummary,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
@@ -2282,12 +2287,26 @@ export class HeroMailPanels {
       const residualDeepestSummary = formatRecruitTemplateInlineResidualDeepestSummary(wallet, t, bag);
       residualDeepestSpan.textContent = residualDeepestSummary ?? "";
       residualDeepestSpan.hidden = !residualDeepestSummary;
+      const residualDeepestDeeperSpan = document.createElement("span");
+      residualDeepestDeeperSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_CLASS;
+      residualDeepestDeeperSpan.setAttribute(
+        "data-role",
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
+      );
+      const residualDeepestDeeperSummary = formatRecruitTemplateInlineResidualDeepestDeeperSummary(
+        wallet,
+        t,
+        bag,
+      );
+      residualDeepestDeeperSpan.textContent = residualDeepestDeeperSummary ?? "";
+      residualDeepestDeeperSpan.hidden = !residualDeepestDeeperSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
       li.appendChild(residualSpan);
       li.appendChild(residualDeepSpan);
       li.appendChild(residualDeeperSpan);
       li.appendChild(residualDeepestSpan);
+      li.appendChild(residualDeepestDeeperSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
