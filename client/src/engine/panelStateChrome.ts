@@ -37,6 +37,15 @@ export function isPanelStateArtSkinOff(el: HTMLElement): boolean {
   return false;
 }
 
+function clearPanelStateSkin(el: HTMLElement): void {
+  if (!el.classList.contains("panel-state-chrome--skinned")) return;
+  el.classList.remove("panel-state-chrome--skinned");
+  for (const property of ["border-style", "border-width", "border-image-source", "border-image-slice",
+    "border-image-width", "border-image-repeat", "background", "background-color", "box-sizing", "color", "font-style"]) {
+    el.style.removeProperty(property);
+  }
+}
+
 function applyPanelStateNineSlice(el: HTMLElement, assets: AssetLoader, assetId: string): void {
   const pack = assets.getImageForAsset(assetId);
   const meta = assets.getArtMeta(assetId);
@@ -48,10 +57,14 @@ function applyPanelStateNineSlice(el: HTMLElement, assets: AssetLoader, assetId:
   el.style.borderStyle = "solid";
   el.style.borderWidth = `${slice.top}px ${slice.right}px ${slice.bottom}px ${slice.left}px`;
   el.style.borderImageSource = `url(${url})`;
-  el.style.borderImageSlice = `${slice.top * scale} ${slice.right * scale} ${slice.bottom * scale} ${slice.left * scale} fill`;
+  el.style.borderImageSlice = `${slice.top * scale} ${slice.right * scale} ${slice.bottom * scale} ${slice.left * scale}`;
   el.style.borderImageWidth = `${slice.top}px ${slice.right}px ${slice.bottom}px ${slice.left}px`;
   el.style.borderImageRepeat = "stretch";
-  el.style.background = "transparent";
+  // These assets contain centered status artwork, not a tileable center.
+  // Stretch only the frame: the live, accessible message supplies the state.
+  el.style.background = "#f7eed9";
+  el.style.color = el.dataset.panelState === "error" ? "#8b3029" : "#3b2b1b";
+  el.style.fontStyle = "normal";
   el.style.boxSizing = "border-box";
 }
 
@@ -61,6 +74,7 @@ export function applyPanelStateChrome(
   kind: PanelStateKind,
   assets?: AssetLoader,
 ): void {
+  clearPanelStateSkin(el);
   el.setAttribute("data-panel-state", kind);
   el.classList.add(PANEL_STATE_CHROME_CLASS);
   if (isPanelStateArtSkinOff(el) || !assets) return;
@@ -80,7 +94,8 @@ export function renderPanelStateListRow(
     }
   }
   li.textContent = message;
-  applyPanelStateChrome(li, kind, options?.assets);
+  // Attach before resolving ancestor skin-off flags.
   ul.appendChild(li);
+  applyPanelStateChrome(li, kind, options?.assets);
   return li;
 }
