@@ -95,6 +95,15 @@ export function renderPersuadeTargetList(
   }
   for (const t of targets) {
     const li = document.createElement("li");
+    li.tabIndex = 0;
+    li.setAttribute("role", "button");
+    li.setAttribute("aria-pressed", String(t.npc_cfg_id === selectedId));
+    li.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault(); li.click();
+        ul.querySelector<HTMLElement>(`[data-npc-cfg-id="${t.npc_cfg_id}"]`)?.focus();
+      }
+    });
     li.className = "persuade-target-row hotel-candidate-row";
     li.dataset.npcCfgId = String(t.npc_cfg_id);
     if (t.npc_cfg_id === selectedId) li.classList.add("hotel-candidate-selected");

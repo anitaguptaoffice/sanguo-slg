@@ -91,7 +91,7 @@ export function pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestD
 
   const deepestDeepestDeepestDeepestDeeperTimers = options?.deepestDeepestDeepestDeepestDeeperTimers;
   if (deepestDeepestDeepestDeepestDeeperTimers?.deepestDeepestDeepestDeepestDeeperPulseTimer) {
-    clearTimeout(deepestDeepestDeepestDeepestDeepestDeeperTimers.deepestDeepestDeepestDeepestDeeperPulseTimer);
+    clearTimeout(deepestDeepestDeepestDeepestDeeperTimers.deepestDeepestDeepestDeepestDeeperPulseTimer);
     deepestDeepestDeepestDeepestDeeperTimers.deepestDeepestDeepestDeepestDeeperPulseTimer = null;
   }
   clearWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeepestDeeperPulse(worldTileCard);

@@ -216,7 +216,7 @@ export function ensureHeroListRowAvatarNameInScrollClip(
   scroll.scrollTop = clampScrollTop(scroll, elementTopInScrollContainer(scroll, listRow) - 80);
   for (let pass = 0; pass < 64; pass++) {
     let clip = effectiveVisibleClipForTargets([listRow]);
-    if (axisRectHeight(clip) < 8) {
+    if (!clip || axisRectHeight(clip) < 8) {
       const scrollRect = scroll.getBoundingClientRect();
       const avatarRect = avatar.getBoundingClientRect();
       scroll.scrollTop = clampScrollTop(

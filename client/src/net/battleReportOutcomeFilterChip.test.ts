@@ -40,12 +40,13 @@ describe("battleReportOutcomeFilterChip", () => {
   });
 
   it("filterBattleReportsForPanelList ANDs time window and outcome", () => {
+    // The today filter follows the local calendar, not UTC midnight.
     const reports: BattleReportSummary[] = [
-      { report_id: 1, outcome: 1, created_at_ms: Date.UTC(2024, 5, 10) },
-      { report_id: 2, outcome: 2, created_at_ms: Date.UTC(2024, 5, 10) },
-      { report_id: 3, outcome: 1, created_at_ms: Date.UTC(2024, 4, 1) },
+      { report_id: 1, outcome: 1, created_at_ms: new Date(2024, 5, 10, 9).getTime() },
+      { report_id: 2, outcome: 2, created_at_ms: new Date(2024, 5, 10, 9).getTime() },
+      { report_id: 3, outcome: 1, created_at_ms: new Date(2024, 4, 1, 9).getTime() },
     ];
-    const now = Date.UTC(2024, 5, 10, 12);
+    const now = new Date(2024, 5, 10, 12).getTime();
     const onlyWinsToday = filterBattleReportsForPanelList(reports, {
       outcomeFilter: "win",
       timeWindowFilter: "today",
