@@ -1,0 +1,172 @@
+{
+  "task": "HERO-HOST-1280-CAPTURE-BUTTONS",
+  "template_cfg_id": 1001,
+  "mock_preset": "hero-panel-roster",
+  "fix_merge_sha": "12f06e78230fce6cf017f399fbcbb26d10778f98",
+  "evidence_head_sha": "c4088d19acfadca7b7c1dbf474afa9568f7787d4",
+  "tip_sha": "c4088d19acfadca7b7c1dbf474afa9568f7787d4",
+  "runtime_code_sha": "c4088d19acfadca7b7c1dbf474afa9568f7787d4",
+  "hero_mail_panels_blob_sha": "95a2471ac35f39b7992d6be948a677242ae5cb4b",
+  "index_html_blob_sha": "a7fc8292eea0c1b4aaafbeb8261e2cf46b58c029",
+  "probes": {
+    "1280x720-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1001,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "刘备",
+      "listAvatarVisible": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": false,
+      "listRowPrimaryText": "刘备 · Lv12 · 忠诚 88",
+      "captureSectionsVisible": true,
+      "captureSectionButtonsInClip": {
+        "ok": true,
+        "buttons": [
+          {
+            "role": "captive-hero-section",
+            "action": "refresh-captive-list",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "captive-hero-section",
+            "action": "captive-summon-confirm",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "captive-hero-section",
+            "action": "captive-release",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "persuade-section",
+            "action": "refresh-persuade-targets",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "persuade-section",
+            "action": "persuade-primary",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "coming-hero-section",
+            "action": "refresh-coming-list",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "coming-hero-section",
+            "action": "coming-accept-confirm",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          },
+          {
+            "role": "coming-hero-section",
+            "action": "coming-reject",
+            "inClip": true,
+            "width": 177.328125,
+            "height": 15.25
+          }
+        ]
+      },
+      "dpr": 1,
+      "uiScale": 0.8,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1001.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1001.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 502,
+        "bustRight": 492
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 342.828125,
+        "width": 128,
+        "height": 160
+      },
+      "listVisibleClip": {
+        "left": 374,
+        "top": 338.796875,
+        "width": 550,
+        "height": 0
+      }
+    }
+  },
+  "shots": {
+    "hero-host-1280x720-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 266030,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "sectionsFile": "hero-host-1280x720-dpr1-capture-sections.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    },
+    "hero-host-1280x720-dpr1-capture-sections.jpg": {
+      "quality": 88,
+      "bytes": 24471,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "sectionsFile": "hero-host-1280x720-dpr1-capture-sections.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      },
+      "crop": "hero-capture-sections-row"
+    }
+  },
+  "notes": [
+    "Post-fix regression for #1237: 1280 narrow captive/persuade/coming action buttons fully in visible clip.",
+    "Not Slice10 character-batch captures; do not conflate with hero-host-slice10/runtime/* @ pre-fix tips.",
+    "#108 handoff: probes['1280x720-dpr1'].captureSectionButtonsInClip.ok must be true.",
+    "Vite dev capture run on fix-merge checkout (main tip dev graph broken on wave49 imports); index.html from tip c4088d19acfadca7b7c1dbf474afa9568f7787d4"
+  ],
+  "captured_at": "2026-10-25T11:51:08.786Z",
+  "capture_runtime_checkout_sha": "12f06e78230fce6cf017f399fbcbb26d10778f98"
+}
