@@ -376,6 +376,7 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
       const inline = mount.querySelector(".bag-row-inline-state");
       expect(inline?.classList.contains("bag-shop-inline-state-residual-ring")).toBe(true);
       expect(inline?.classList.contains("bag-shop-inline-state-residual-deep-ring")).toBe(true);
+      expect(inline?.classList.contains("bag-shop-inline-state-residual-deeper-ring")).toBe(true);
     });
     const consumableTab = mount.querySelector(
       '[data-bag-category="consumable"]',
@@ -389,6 +390,7 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
       const tab = mount.querySelector('[data-bag-category="consumable"]');
       expect(tab?.classList.contains("panel-return-source-highlight-residual")).toBe(true);
       expect(tab?.classList.contains("panel-return-source-highlight-residual-deep")).toBe(true);
+      expect(tab?.classList.contains("panel-return-source-highlight-residual-deeper")).toBe(true);
     });
   });
 
@@ -423,6 +425,7 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
       const afford = mount.querySelector(".shop-offer-afford-inline");
       expect(afford?.classList.contains("bag-shop-inline-state-residual-ring")).toBe(true);
       expect(afford?.classList.contains("bag-shop-inline-state-residual-deep-ring")).toBe(true);
+      expect(afford?.classList.contains("bag-shop-inline-state-residual-deeper-ring")).toBe(true);
     });
   });
 });

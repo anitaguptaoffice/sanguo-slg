@@ -9,6 +9,7 @@ import {
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_MS,
   pulsePanelReturnSourceCategoryResidualHighlights,
 } from "@/net/panelReturnSourceHighlightResidualDeep";
+import { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeeper";
 
 describe("panelReturnSourceHighlightResidualDeep (CLIENT-272)", () => {
   it("highlightPanelReturnSourceCategoryResidualDeep pulses tab class for 2.5s", () => {
@@ -33,7 +34,7 @@ describe("panelReturnSourceHighlightResidualDeep (CLIENT-272)", () => {
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS)).toBe(false);
   });
 
-  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 and CLIENT-272 classes", () => {
+  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256, CLIENT-272, and CLIENT-288 classes", () => {
     const root = document.createElement("div");
     const tab = document.createElement("button");
     tab.setAttribute("data-shop-category", "resource");
@@ -51,6 +52,7 @@ describe("panelReturnSourceHighlightResidualDeep (CLIENT-272)", () => {
     expect(pulsePanelReturnSourceCategoryResidualHighlights(tab, root, windowObj)).toBe(true);
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_CLASS)).toBe(true);
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS)).toBe(true);
+    expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_MS)).toBe(true);
   });

@@ -2,6 +2,7 @@ import {
   BAG_SHOP_INLINE_STATE_RESIDUAL_RING_MS,
   scheduleBagShopInlineStateResidualRing,
 } from "@/net/bagShopInlineStateResidual";
+import { scheduleBagShopInlineStateResidualDeeperRing } from "@/net/bagShopInlineStateResidualDeeperRing";
 
 /** CLIENT-272：行内态残余 **加深** 环（2s；与 CLIENT-256 1.5s 环 **并存**）。 */
 export const BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_CLASS =
@@ -42,7 +43,7 @@ export function scheduleBagShopInlineStateResidualDeepRing(
   return true;
 }
 
-/** CLIENT-256 残余环 + CLIENT-272 加深环（CLIENT-194/092 行内文案不退化）。 */
+/** CLIENT-256 残余环 + CLIENT-272 加深环 + CLIENT-288 巩固再加深环（CLIENT-194/092 行内文案不退化）。 */
 export function pulseBagShopInlineStateResidualRings(
   target: HTMLElement | null | undefined,
   panelRoot: ParentNode | null | undefined = null,
@@ -55,6 +56,7 @@ export function pulseBagShopInlineStateResidualRings(
     BAG_SHOP_INLINE_STATE_RESIDUAL_RING_MS,
   );
   scheduleBagShopInlineStateResidualDeepRing(target, panelRoot, windowObj);
+  scheduleBagShopInlineStateResidualDeeperRing(target, panelRoot, windowObj);
   return scheduled;
 }
 

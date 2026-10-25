@@ -2694,6 +2694,26 @@
         animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1,
           bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1;
       }
+      /* CLIENT-288 bag/shop inline state residual deeper ring (CLIENT-272 deep retained) */
+      @keyframes bag-shop-inline-state-residual-deeper-ring-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        42% { box-shadow: 0 0 18px rgba(180, 70, 30, 1); outline: 3px solid rgba(180, 70, 30, 1); }
+        78% { box-shadow: 0 0 8px rgba(180, 70, 30, 0.65); outline: 2px solid rgba(180, 70, 30, 0.7); }
+      }
+      .bag-list li .bag-shop-inline-state-residual-deeper-ring,
+      .bag-list li.bag-shop-inline-state-residual-deeper-ring,
+      .shop-list li .bag-shop-inline-state-residual-deeper-ring,
+      .shop-list li.bag-shop-inline-state-residual-deeper-ring {
+        animation: bag-shop-inline-state-residual-deeper-ring-keyframes 2s ease-out 1;
+      }
+      .bag-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring,
+      .bag-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring,
+      .shop-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring,
+      .shop-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring {
+        animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1,
+          bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1,
+          bag-shop-inline-state-residual-deeper-ring-keyframes 2s ease-out 1;
+      }
       @keyframes panel-return-source-highlight-residual-keyframes {
         0%, 100% { box-shadow: none; outline: none; }
         40% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.8); outline: 2px solid rgba(120, 180, 120, 0.85); }
@@ -2716,6 +2736,22 @@
       .shop-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep {
         animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1,
           panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1;
+      }
+      /* CLIENT-288 panel return source residual deeper highlight (CLIENT-272 deep retained) */
+      @keyframes panel-return-source-highlight-residual-deeper-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        48% { box-shadow: 0 0 20px rgba(60, 140, 60, 0.95); outline: 3px solid rgba(60, 140, 60, 0.95); }
+        82% { box-shadow: 0 0 10px rgba(60, 140, 60, 0.6); outline: 2px solid rgba(60, 140, 60, 0.7); }
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual-deeper,
+      .shop-category-tabs .panel-return-source-highlight-residual-deeper {
+        animation: panel-return-source-highlight-residual-deeper-keyframes 2.5s ease-out 1;
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep.panel-return-source-highlight-residual-deeper,
+      .shop-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep.panel-return-source-highlight-residual-deeper {
+        animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1,
+          panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1,
+          panel-return-source-highlight-residual-deeper-keyframes 2.5s ease-out 1;
       }
       @keyframes hero-list-return-highlight-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
@@ -4523,12 +4559,16 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deeper,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual,
@@ -4637,8 +4677,12 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-shop-inline-state-residual-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li .bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li .bag-shop-inline-state-residual-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deeper,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deep,
