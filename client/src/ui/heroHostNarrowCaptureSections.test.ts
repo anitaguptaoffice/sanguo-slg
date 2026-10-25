@@ -19,9 +19,8 @@ describe("hero host narrow capture sections (HERO-HOST-SCROLL-CLIP)", () => {
     );
   });
 
-  it("documents tucking list/preview chrome in narrow tri-column band", () => {
-    expect(indexHtml).toMatch(
-      /layout-narrow[\s\S]*captive-hero-list[\s\S]*display:\s*none/,
-    );
+  it("exposes lists and previews through an expandable narrow disclosure", () => {
+    expect(indexHtml).toContain(".hero-capture-info[open] > .hero-capture-info-body");
+    expect(indexHtml).not.toMatch(/(?:captive-hero-list|persuade-target-list|coming-hero-list)[^{]*\{[^}]*display:\s*none/);
   });
 });
