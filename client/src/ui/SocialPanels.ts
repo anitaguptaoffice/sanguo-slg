@@ -83,14 +83,15 @@ import {
   GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS,
 } from "@/net/guildDutyHeaderResidual";
 import { GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS } from "@/net/guildDutyHeaderResidualDeep";
+import { GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS } from "@/net/guildDutyHeaderResidualDeeper";
 import {
-  formatGuildDutyHeaderResidualDeeperLine,
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeeper";
+  formatGuildDutyHeaderResidualDeepestLine,
+  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS,
+} from "@/net/guildDutyHeaderResidualDeepest";
 import {
-  chatUnreadSeparatorResidualDeeperDomClassName,
-  scheduleGuildChatUnreadFirstMsgDeeperSweepRing,
-} from "@/net/guildChatUnreadDividerResidualDeeper";
+  chatUnreadSeparatorResidualDeepestDomClassName,
+  scheduleGuildChatUnreadFirstMsgDeepestSweepRing,
+} from "@/net/guildChatUnreadDividerResidualDeepest";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 import { hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -798,7 +799,7 @@ export class SocialPanels {
         const row = this.buildChatMessageRow(m);
         ul.appendChild(row);
         if (isFirstUnreadRow) {
-          scheduleGuildChatUnreadFirstMsgDeeperSweepRing(row);
+          scheduleGuildChatUnreadFirstMsgDeepestSweepRing(row);
         }
         flatIndex += 1;
       }
@@ -809,7 +810,7 @@ export class SocialPanels {
 
   private buildChatUnreadSeparator(unreadCount: number): HTMLLIElement {
     const li = document.createElement("li");
-    li.className = chatUnreadSeparatorResidualDeeperDomClassName();
+    li.className = chatUnreadSeparatorResidualDeepestDomClassName();
     li.setAttribute("role", "separator");
     const sweep = formatChatUnreadSweepLine(unreadCount);
     li.setAttribute("aria-label", sweep);
@@ -877,10 +878,10 @@ export class SocialPanels {
       count.setAttribute("aria-hidden", "true");
       count.textContent = formatGuildRoleGroupCountLabel(group.members.length);
       const residual = document.createElement("span");
-      residual.className = `${GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS}`;
+      residual.className = `${GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS}`;
       residual.setAttribute("data-role", GUILD_ROLE_GROUP_HEADER_LINE_ROLE);
       residual.setAttribute("aria-hidden", "true");
-      residual.textContent = formatGuildDutyHeaderResidualDeeperLine({
+      residual.textContent = formatGuildDutyHeaderResidualDeepestLine({
         label: group.label,
         expanded,
         members: group.members,

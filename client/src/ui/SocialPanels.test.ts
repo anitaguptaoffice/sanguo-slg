@@ -853,9 +853,9 @@ describe("SocialPanels chat & guild", () => {
     ).toContain("在线");
     expect(
       mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
-    ).toContain("巩固再加深");
+    ).toContain("巩固再加深一层");
     expect(
-      mount.querySelector(".guild-duty-header-residual-deeper-line"),
+      mount.querySelector(".guild-duty-header-residual-deepest-line"),
     ).toBeTruthy();
     mount
       .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
@@ -911,6 +911,9 @@ describe("SocialPanels chat & guild", () => {
       true,
     );
     expect(separator?.classList.contains("guild-chat-unread-divider-residual-deeper-sweep")).toBe(
+      true,
+    );
+    expect(separator?.classList.contains("guild-chat-unread-divider-residual-deepest-sweep")).toBe(
       true,
     );
     expect(separator?.textContent).toBe("1 条未读");
