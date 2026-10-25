@@ -118,7 +118,7 @@ export function validateMarchForm(input: MarchFormValidationInput): MarchFormVal
     }
   }
 
-  if (errors.length) {
+  if (errors.length || !heroValidated.ok) {
     return { ok: false, message: errors.join("；") };
   }
 

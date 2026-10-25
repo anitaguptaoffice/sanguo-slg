@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import { formatDailyQuestQueueInlineHint } from "@/net/dailyQuestQueueMatch";
 import type { RecruitQueueEntry } from "@/net/queueState";
@@ -170,7 +171,7 @@ export class DailyQuestPanels {
 
   /** 队列面板深链：打开日常并滚动到指定 quest 行。 */
   openAndFocusQuest(questCfgId: number): void {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     void this.refreshList(questCfgId).then(() => {
       scrollDailyQuestCfgRowIntoView(this.panel, questCfgId);
@@ -178,7 +179,7 @@ export class DailyQuestPanels {
   }
 
   toggle(): void {
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (!this.panel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.panel);
       this.renderBattleReportBanner();
@@ -198,7 +199,7 @@ export class DailyQuestPanels {
     preferredCfgId = 0,
     opts?: { listFilter?: DailyQuestListFilter; claimableCount?: number },
   ): void {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     if (opts?.listFilter) {
       this.listFilter = opts.listFilter;
@@ -219,7 +220,7 @@ export class DailyQuestPanels {
   /** CLIENT-077：顶栏待办聚合深链 — 首条可领奖日常（state=3）。 */
   openFromCenterTodoClaimable(preferredCfgId = 0, opts?: { skipScroll?: boolean }): boolean {
     const wasOpen = this.isOpen();
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     void this.refreshList(preferredCfgId, "center-claimable").then(() => {
       const id = this.selectedCfgId;
       if (id <= 0 || opts?.skipScroll) return;
@@ -444,7 +445,7 @@ export class DailyQuestPanels {
   }
 
   private renderList(): void {
-    const ul = this.panel.querySelector('[data-role="daily-list"]');
+    const ul = this.panel.querySelector<HTMLElement>('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
     this.renderDailyChainTabs();

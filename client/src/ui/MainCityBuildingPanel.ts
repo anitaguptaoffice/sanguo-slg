@@ -1,3 +1,4 @@
+import { openCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import {
   buildSubmitButtonDisabled,
@@ -75,7 +76,7 @@ export class MainCityBuildingPanel {
 
   selectSlot(slotKey: string, opts?: { dismissTrigger?: HTMLElement | null }): void {
     this.selectedSlotKey = slotKey.trim() || null;
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     this.render();
     resetCenterPanelViewportScroll(this.panel);

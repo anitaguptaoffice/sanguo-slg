@@ -2981,3 +2981,9 @@ cd client && npm test && npm run build
 - `src/ui/` — 聊天/军团/排行、任务/日常/战报/行军、背包/商城/将领/邮件 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock
+
+### CLIENT-REPAIR-007：首次招募库存依赖
+
+打开将领面板先通过现有 `ListPlayerBag` 获取真实库存；未完成时显示加载状态并禁用招募，不把未知背包解释为 0。失败可直接重试，快速重复打开共享请求；关闭、卸载或切换账号后的过期返回不会覆盖当前库存。加载完成后才按现有资源/道具规则判断，确实无招募书仍不可招募。招募提交在异步日常预检前上锁，防止连续点击重复扣费。此修复不提供首本招募书，不改掉落、奖励、商城或协议。
+
+回归：`npx vitest run src/ui/recruitInventoryLoading.test.ts src/ui/HeroMailPanels.test.ts`；原生浏览器验收需使用实际持有招募书的账号直接打开将领面板，不能先打开背包规避首开路径。

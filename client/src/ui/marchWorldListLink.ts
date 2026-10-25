@@ -28,6 +28,8 @@ export function manhattanGridDistance(
   toY: number | undefined,
 ): number | null {
   if (
+    typeof fromX !== "number" || typeof fromY !== "number" ||
+    typeof toX !== "number" || typeof toY !== "number" ||
     !Number.isFinite(fromX) ||
     !Number.isFinite(fromY) ||
     !Number.isFinite(toX) ||
