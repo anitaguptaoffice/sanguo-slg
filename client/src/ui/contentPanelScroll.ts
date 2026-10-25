@@ -32,7 +32,7 @@ export function panelScrollBody(root: HTMLElement): HTMLElement | null {
 /** Reset letterbox viewport and panel list scroll (prefers `.panel-scroll-body`). */
 export function resetCenterPanelViewportScroll(panel: HTMLElement): void {
   resetGameViewportScroll();
+  resetContentPanelScroll(panel);
   const body = panelScrollBody(panel);
   if (body) resetContentPanelScroll(body);
-  else resetContentPanelScroll(panel);
 }

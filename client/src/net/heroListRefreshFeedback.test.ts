@@ -48,15 +48,20 @@ describe("heroListRefreshFeedback", () => {
     expect(el.classList.contains("hidden")).toBe(true);
   });
 
-  it("scrollHeroListRowIntoView targets hero list row", () => {
+  it("scrollHeroListRowIntoView scrolls hero-scroll instead of panel scrollIntoView", () => {
     const root = document.createElement("div");
+    root.scrollTop = 50;
+    const scroll = document.createElement("div");
+    scroll.setAttribute("data-role", "hero-scroll");
+    scroll.style.height = "120px";
+    scroll.style.overflow = "auto";
     const row = document.createElement("li");
     row.setAttribute("data-hero-id", "12");
-    const scrolled = vi.fn();
-    row.scrollIntoView = scrolled;
-    root.appendChild(row);
+    row.setAttribute("data-template-cfg-id", "1001");
+    scroll.appendChild(row);
+    root.appendChild(scroll);
     expect(scrollHeroListRowIntoView(root, 12)).toBe(true);
-    expect(scrolled).toHaveBeenCalledWith({ block: "nearest" });
+    expect(root.scrollTop).toBe(0);
   });
 
   it("setHeroListFormErrorDisplay shows CLIENT-067 style inline errors", () => {

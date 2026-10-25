@@ -1,4 +1,6 @@
 import { formatHeroListRefreshedAt } from "@/net/formatHeroListRefreshedAt";
+import { ensureHeroListRowAvatarNameInScrollClip } from "@/ui/heroDetailScrollClip";
+import { resetContentPanelScroll } from "@/ui/queuePanelScroll";
 
 export const HERO_LIST_INFLIGHT_ATTR = "data-hero-list-inflight";
 
@@ -52,8 +54,17 @@ export function syncHeroListRefreshedAtDisplay(
 export function scrollHeroListRowIntoView(panel: ParentNode | null | undefined, heroId: number): boolean {
   if (!panel || heroId <= 0) return false;
   const row = panel.querySelector<HTMLElement>(`li[data-hero-id="${heroId}"]`);
-  if (!row || typeof row.scrollIntoView !== "function") return false;
-  row.scrollIntoView({ block: "nearest" });
+  if (!row) return false;
+  if (panel instanceof HTMLElement) resetContentPanelScroll(panel);
+  const templateCfgId = Number(row.getAttribute("data-template-cfg-id"));
+  if (templateCfgId > 0) {
+    ensureHeroListRowAvatarNameInScrollClip(panel, templateCfgId);
+    return true;
+  }
+  const scroll = panel.querySelector<HTMLElement>('[data-role="hero-scroll"]');
+  if (!(scroll instanceof HTMLElement)) return false;
+  const rowTop = row.getBoundingClientRect().top - scroll.getBoundingClientRect().top + scroll.scrollTop;
+  scroll.scrollTop = Math.max(0, rowTop - 48);
   return true;
 }
 

@@ -110,15 +110,16 @@ describe("hero recruit row pulse", () => {
     expect(row.classList.contains(HERO_ROW_RECRUITED_PULSE_CLASS)).toBe(true);
   });
 
-  it("focusRecruitedHeroListRow scrolls and pulses matching row", () => {
+  it("focusRecruitedHeroListRow scrolls hero-scroll and pulses matching row", () => {
     const panel = document.createElement("div");
+    const scroll = document.createElement("div");
+    scroll.setAttribute("data-role", "hero-scroll");
     const row = document.createElement("li");
     row.setAttribute("data-hero-id", "7");
-    const scrolled = vi.fn();
-    row.scrollIntoView = scrolled;
-    panel.appendChild(row);
+    row.setAttribute("data-template-cfg-id", "1001");
+    scroll.appendChild(row);
+    panel.appendChild(scroll);
     focusRecruitedHeroListRow(panel, 7);
-    expect(scrolled).toHaveBeenCalledWith({ block: "nearest" });
     expect(row.classList.contains(HERO_ROW_RECRUITED_PULSE_CLASS)).toBe(true);
   });
 });

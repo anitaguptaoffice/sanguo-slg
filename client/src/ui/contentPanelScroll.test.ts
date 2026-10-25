@@ -33,13 +33,15 @@ describe("contentPanelScroll (CLIENT-070 + CLIENT-078 + CLIENT-095 + CLIENT-103 
     }
   });
 
-  it("resets scroll on panel-scroll-body when present", () => {
+  it("resets scroll on panel root and panel-scroll-body when present", () => {
     const panel = document.createElement("div");
+    panel.scrollTop = 40;
     const body = document.createElement("div");
     body.className = "panel-scroll-body";
     body.scrollTop = 90;
     panel.appendChild(body);
     resetCenterPanelViewportScroll(panel);
+    expect(panel.scrollTop).toBe(0);
     expect(body.scrollTop).toBe(0);
   });
 

@@ -838,8 +838,7 @@ export class HeroMailPanels {
     this.selectedHeroId = heroId;
     void this.refreshHeroes().then(() => {
       void this.loadHeroDetail(heroId).then(() => {
-        const row = this.heroPanel.querySelector(`li[data-hero-id="${heroId}"]`);
-        row?.scrollIntoView?.({ block: "nearest" });
+        scrollHeroListRowIntoView(this.heroPanel, heroId);
       });
     });
   }
@@ -1648,33 +1647,35 @@ export class HeroMailPanels {
           <ul class="hotel-candidate-list template-list" data-role="hotel-candidate-list"></ul>
         </section>
       </details>
-      <section class="captive-hero-section" data-role="captive-hero-section" aria-label="俘虏招降">
-        <h4>俘虏招降</h4>
-        <button type="button" data-action="refresh-captive-list">拉取俘虏列表</button>
-        <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
-        <button type="button" data-action="captive-summon-confirm">确认招降</button>
-        <button type="button" data-action="captive-release">释放俘虏</button>
-        <p class="march-form-error-sibling hidden" data-role="captive-hero-form-error" role="alert"></p>
-        <ul class="captive-hero-list template-list" data-role="captive-hero-list"></ul>
-      </section>
-      <section class="persuade-section hotel-recruit-section" data-role="persuade-section" aria-label="名将结交游说">
-        <h4>名将结交/游说</h4>
-        <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
-        <button type="button" data-action="refresh-persuade-targets">拉取结交目标</button>
-        <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
-        <button type="button" data-action="persuade-primary">结交/游说</button>
-        <p class="march-form-error-sibling hidden" data-role="persuade-form-error" role="alert"></p>
-        <ul class="persuade-target-list hotel-candidate-list template-list" data-role="persuade-target-list"></ul>
-      </section>
-      <section class="coming-hero-section" data-role="coming-hero-section" aria-label="来投将领">
-        <h4>来投将领</h4>
-        <button type="button" data-action="refresh-coming-list">拉取来投列表</button>
-        <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
-        <button type="button" data-action="coming-accept-confirm">确认接受</button>
-        <button type="button" data-action="coming-reject">拒绝来投</button>
-        <p class="march-form-error-sibling hidden" data-role="coming-hero-form-error" role="alert"></p>
-        <ul class="coming-hero-list template-list" data-role="coming-hero-list"></ul>
-      </section>
+      <div class="hero-capture-sections-row" data-role="hero-capture-sections-row">
+        <section class="captive-hero-section" data-role="captive-hero-section" aria-label="俘虏招降">
+          <h4>俘虏招降</h4>
+          <button type="button" data-action="refresh-captive-list">拉取俘虏列表</button>
+          <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
+          <button type="button" data-action="captive-summon-confirm">确认招降</button>
+          <button type="button" data-action="captive-release">释放俘虏</button>
+          <p class="march-form-error-sibling hidden" data-role="captive-hero-form-error" role="alert"></p>
+          <ul class="captive-hero-list template-list" data-role="captive-hero-list"></ul>
+        </section>
+        <section class="persuade-section hotel-recruit-section" data-role="persuade-section" aria-label="名将结交游说">
+          <h4>名将结交/游说</h4>
+          <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
+          <button type="button" data-action="refresh-persuade-targets">拉取结交目标</button>
+          <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
+          <button type="button" data-action="persuade-primary">结交/游说</button>
+          <p class="march-form-error-sibling hidden" data-role="persuade-form-error" role="alert"></p>
+          <ul class="persuade-target-list hotel-candidate-list template-list" data-role="persuade-target-list"></ul>
+        </section>
+        <section class="coming-hero-section" data-role="coming-hero-section" aria-label="来投将领">
+          <h4>来投将领</h4>
+          <button type="button" data-action="refresh-coming-list">拉取来投列表</button>
+          <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
+          <button type="button" data-action="coming-accept-confirm">确认接受</button>
+          <button type="button" data-action="coming-reject">拒绝来投</button>
+          <p class="march-form-error-sibling hidden" data-role="coming-hero-form-error" role="alert"></p>
+          <ul class="coming-hero-list template-list" data-role="coming-hero-list"></ul>
+        </section>
+      </div>
       <div class="panel-scroll-body" data-role="hero-scroll">
         <ul class="template-list" data-role="template-list"></ul>
         <div
