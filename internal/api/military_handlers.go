@@ -37,21 +37,22 @@ func (s *Server) handleRecruitTroop(ctx context.Context, pkt *commonv1.ClientPac
 	if dom == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	accrue(dom, domestic.DefaultCatalog(), s.now())
 	s.ensureMilitaryCity(dom)
-
-	res, err := s.military.Recruit(march.RecruitRequest{
-		CityID:    req.GetCityId(),
-		UnitCfgID: req.GetUnitCfgId(),
-		Count:     req.GetCount(),
+	res, err := s.military.RecruitWithWallet(march.RecruitRequest{
+		CityID: req.GetCityId(), UnitCfgID: req.GetUnitCfgId(), Count: req.GetCount(),
+	}, func(cost march.Resources) (march.Resources, error) {
+		wallet, err := s.domestic.WithWallet(ctx, dom.ID, func(have domestic.Resources) (domestic.Resources, error) {
+			if !have.Sub(marchWalletToDom(cost)) {
+				return have, march.ErrInsufficientRes
+			}
+			return have, nil
+		})
+		return domWalletToMarch(wallet), err
 	})
 	if err != nil {
 		return s.mapMarchRecruitErr(pkt.GetTraceId(), err), nil
 	}
-	mc := s.military.City(req.GetCityId())
-	if mc != nil {
-		s.syncDomesticWalletFromMarch(dom, mc.Wallet)
-	}
+	mc := s.military.SnapshotCity(req.GetCityId())
 
 	finishMS := int64(0)
 	if !res.FinishAt.IsZero() {
@@ -66,7 +67,7 @@ func (s *Server) handleRecruitTroop(ctx context.Context, pkt *commonv1.ClientPac
 			UnitCfgId: req.GetUnitCfgId(),
 			Count:     count,
 		},
-		Wallet:     walletProto(dom.Wallet),
+		Wallet:     walletProto(marchWalletToDom(res.Wallet)),
 		QueueId:    res.QueueID,
 		FinishAtMs: finishMS,
 	})
@@ -100,11 +101,13 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if errPkt != nil {
 		return errPkt, nil
 	}
+	if _, err := s.domestic.SettleCity(ctx, dom.ID); err != nil {
+		return nil, err
+	}
 	if err := s.claimMarchHero(ctx, pc, req.GetHeroId()); err != nil {
 		return s.mapMarchHeroErr(pkt.GetTraceId(), err), nil
 	}
-	accrue(dom, domestic.DefaultCatalog(), s.now())
-	mc := s.ensureMilitaryCity(dom)
+	s.ensureMilitaryCity(dom)
 	coord, ok := s.cityCoords[req.GetCityId()]
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
@@ -132,7 +135,7 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	s.bindMarchHeroServer(order.ID, pc.ServerID)
 	data, err := marshal(&militaryv1.StartMarchResponse{
 		March:      marchSummaryProto(req.GetCityId(), order, stacks),
-		CityTroops: troopStacksProto(mc.Troops, stacks),
+		CityTroops: troopStacksProto(s.military.SnapshotCity(dom.ID).Troops, stacks),
 	})
 	if err != nil {
 		return nil, err

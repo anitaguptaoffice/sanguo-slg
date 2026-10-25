@@ -97,6 +97,7 @@ func (s *Server) handleClaimPlayerMailAttachments(ctx context.Context, pkt *comm
 	if err != nil {
 		return mailErr(pkt.GetTraceId(), err), nil
 	}
+	s.refreshDomesticWalletAfterCommit(ctx, pc.ServerID, pc.PlayerID)
 	bag := make([]*contentv1.PlayerItemStack, 0, len(res.Grant.Bag))
 	for _, st := range res.Grant.Bag {
 		bag = append(bag, &contentv1.PlayerItemStack{ItemCfgId: st.ItemCfgID, Quantity: st.Quantity})
