@@ -70,7 +70,7 @@ func openContentTestDB(t *testing.T) *pgxpool.Pool {
 
 func applyContentSchema(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
-	if err := db.ApplySpecs(context.Background(), pool, "spec/db"); err != nil {
+	if err := db.ApplySpecs(context.Background(), pool, "../../spec/db"); err != nil {
 		t.Fatal(err)
 	}
 }
