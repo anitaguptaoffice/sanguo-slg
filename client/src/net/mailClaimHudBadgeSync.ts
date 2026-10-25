@@ -119,7 +119,7 @@ export type HudMailQuestBadgeResidualDeepestDeepestDeeperSyncResult =
 
 /** CLIENT-351：在 CLIENT-335 同步结果上附带附件领取残余巩固再加深四层第七行文案。 */
 export type HudMailQuestBadgeResidualDeepestDeepestDeepestSyncResult =
-  HudMailQuestBadgeResidualDeepestDeeperSyncResult & {
+  HudMailQuestBadgeResidualDeepestDeepestDeeperSyncResult & {
     attachmentClaimResidualDeepestDeepestDeepestSubline: string | null;
   };
 

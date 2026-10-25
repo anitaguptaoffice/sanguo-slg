@@ -28,7 +28,7 @@ export function readRankManualLastRefreshMs(
 export function writeRankManualLastRefreshMs(
   boardType: number,
   atMs: number,
-  storage: Pick<Storage, "setItem"> | null = typeof sessionStorage !== "undefined"
+  storage: Pick<Storage, "getItem" | "setItem"> | null = typeof sessionStorage !== "undefined"
     ? sessionStorage
     : null,
 ): void {

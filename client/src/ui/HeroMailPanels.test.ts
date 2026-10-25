@@ -8,7 +8,7 @@ import {
 } from "@/engine/heroPortraitFrameSkin";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
-import { HeroMailPanels } from "@/ui/HeroMailPanels";
+import { HeroMailPanels as RealHeroMailPanels } from "@/ui/HeroMailPanels";
 import { MAIL_INBOX_FILTER_UNREAD, type MailRow } from "@/net/heroMailState";
 import {
   MAIL_INBOX_FILTER_SESSION_KEY,
@@ -138,6 +138,17 @@ import {
   MAIL_BATTLE_CATEGORY_TAB_SESSION_KEY,
 } from "@/net/mailBattleCategory";
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
+
+// Legacy panel fixtures model an already loaded bag; expose it through the new dependency.
+class HeroMailPanels extends RealHeroMailPanels {
+  constructor(...args: ConstructorParameters<typeof RealHeroMailPanels>) {
+    const [, gateway, getSession] = args;
+    if (!gateway.listPlayerBag) {
+      gateway.listPlayerBag = vi.fn(async () => ({ items: getSession()?.bag ?? [] }));
+    }
+    super(...args);
+  }
+}
 
 function flushPromises(): Promise<void> {
   return new Promise((r) => setTimeout(r, 0));
@@ -2959,7 +2970,9 @@ describe("HeroMailPanels", () => {
         level: 1,
         loyalty: 100,
       }),
-      listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
+      listPlayerBag: vi.fn()
+        .mockResolvedValueOnce({ items: [{ item_cfg_id: 2004, quantity: 1 }] })
+        .mockResolvedValue({ items: [] }),
       getCityState: vi.fn().mockResolvedValue({ wallet: { food: 900 } }),
       getBoundServerId: () => 1,
     } as unknown as GatewayPort;

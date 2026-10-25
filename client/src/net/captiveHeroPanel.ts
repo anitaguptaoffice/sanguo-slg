@@ -81,6 +81,15 @@ export function renderCaptiveHeroList(
   }
   for (const c of captives) {
     const li = document.createElement("li");
+    li.tabIndex = 0;
+    li.setAttribute("role", "button");
+    li.setAttribute("aria-pressed", String(c.hero_id === selectedHeroId));
+    li.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault(); li.click();
+        ul.querySelector<HTMLElement>(`[data-captive-id="${c.hero_id}"]`)?.focus();
+      }
+    });
     li.className = "captive-hero-row";
     li.dataset.captiveId = String(c.hero_id);
     if (c.hero_id === selectedHeroId) li.classList.add("captive-hero-selected");
