@@ -737,6 +737,54 @@ describe("HeroMailPanels", () => {
     panels.detach();
   });
 
+  it("hero list loyalty residual deepest subline and consumable deepest sweep (CLIENT-294)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 2, template_cfg_id: 1002, level: 9, loyalty: 10, morale: 40 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 2,
+        template_cfg_id: 1002,
+        level: 9,
+        loyalty: 10,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        exp_current: 12,
+        exp_to_next: 80,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => ({
+        ...sessionBase(),
+        bag: [{ item_cfg_id: 2017, quantity: 2 }],
+      }),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="2"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const deepest = mount.querySelector('[data-role="hero-list-loyalty-residual-deepest-subline"]');
+    expect(deepest?.textContent).toContain("忠诚巩固再加深一层");
+    expect(deepest?.textContent).toContain("经验 12/80");
+    expect(mount.querySelector('[data-role="hero-list-loyalty-residual-deeper-subline"]')).toBeTruthy();
+    const deepestSweep = mount.querySelector(
+      '[data-role="hero-detail-consumable-stack-residual-deepest-sweep"]',
+    );
+    expect(deepestSweep?.textContent).toContain("堆叠巩固再加深一层");
+    expect(
+      deepestSweep?.classList.contains("hero-detail-consumable-stack-residual-deepest-sweep-ring"),
+    ).toBe(true);
+    panels.detach();
+  });
+
   it("hero list loyalty residual subline shows warn dot and threshold scan (CLIENT-246)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
