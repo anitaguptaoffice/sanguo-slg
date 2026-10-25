@@ -37,6 +37,11 @@ import {
   formatDomesticQueueEtaSegmentResidualDeepestDeepestDeeperLabel,
 } from "@/net/domesticQueueEtaSegmentResidualDeepestDeepestDeeper";
 import {
+  DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_FINISH_CLASS,
+  DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LABEL_CLASS,
+  formatDomesticQueueEtaSegmentResidualDeepestDeepestDeepestLabel,
+} from "@/net/domesticQueueEtaSegmentResidualDeepestDeepestDeepest";
+import {
   computeQueueRowProgressBarWidthPercent,
   formatQueueRemainingEtaLine,
   QUEUE_ROW_ETA_LINE_CLASS,
@@ -149,6 +154,16 @@ export function renderQueueRemainingProgressMarkup(
                   `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LABEL_CLASS}">${escapeHtml(etaDeepestDeepestDeeper.consolidate)}</span>`,
                   `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPER_FINISH_CLASS}">${escapeHtml(etaDeepestDeepestDeeper.finishCountdown)}</span>`,
                 );
+                const etaDeepestDeepestDeepest =
+                  finishAtMs != null && finishAtMs > 0
+                    ? formatDomesticQueueEtaSegmentResidualDeepestDeepestDeepestLabel(finishAtMs, nowMs)
+                    : null;
+                if (etaDeepestDeepestDeepest) {
+                  parts.push(
+                    `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LABEL_CLASS}">${escapeHtml(etaDeepestDeepestDeepest.consolidate)}</span>`,
+                    `<span class="${DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_FINISH_CLASS}">${escapeHtml(etaDeepestDeepestDeepest.finishCountdown)}</span>`,
+                  );
+                }
               }
             }
           }
