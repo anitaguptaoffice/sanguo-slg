@@ -527,6 +527,10 @@ export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_C
 export { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestPulse";
 export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS } from "@/net/marchIntelRemarchResidualDeepestDeepestDeepest";
 
+/** CLIENT-370: wave:57 军情 phase 变更与再出征预填残余巩固再加深五层（CLIENT-354 四层 **不退化**）。 */
+export { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse";
+export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS } from "@/net/marchIntelRemarchResidualDeepestDeepestDeepestDeeper";
+
 /** CLIENT-355: wave:55 manifest 巩固再加深四层（348～354 residual deepest-deepest-deepest 钩子见 wave:53 再导出；bag/panel 四层由 CLIENT-352 再导出）。 */
 export {
   BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS,

@@ -1,5 +1,6 @@
 import { scheduleIntelPhaseChangeResidualDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeeperPulse";
+import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestPulse";
@@ -47,7 +48,7 @@ export function scheduleIntelPhaseChangeResidualDeepPulse(
 }
 
 /**
- * phase 变更扫读：CLIENT-258 残余 + CLIENT-274 深脉冲 + CLIENT-290 巩固再加深 + CLIENT-306 巩固再加深一层 + CLIENT-322 巩固再加深二层 + CLIENT-338 巩固再加深三层 + CLIENT-354 巩固再加深四层（CLIENT-221 flash / wave:39 主脉冲 **不重复堆叠**）。
+ * phase 变更扫读：CLIENT-258 残余 + CLIENT-274 深脉冲 + CLIENT-290 巩固再加深 + CLIENT-306 巩固再加深一层 + CLIENT-322 巩固再加深二层 + CLIENT-338 巩固再加深三层 + CLIENT-354 巩固再加深四层 + CLIENT-370 巩固再加深五层（CLIENT-221 flash / wave:39 主脉冲 **不重复堆叠**）。
  */
 export function pulseIntelPhaseChangeResidualOnPhaseChange(el: HTMLElement | null | undefined): void {
   scheduleIntelPhaseChangeResidualPulse(el);
@@ -57,6 +58,7 @@ export function pulseIntelPhaseChangeResidualOnPhaseChange(el: HTMLElement | nul
   scheduleIntelPhaseChangeResidualDeepestDeeperPulse(el);
   scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse(el);
   scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse(el);
+  scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse(el);
 }
 
 export function resetIntelPhaseChangeResidualDeepPulseTimersForTests(): void {
