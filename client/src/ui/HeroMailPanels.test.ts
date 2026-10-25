@@ -91,6 +91,7 @@ import {
   MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS,
   MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS,
   MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS,
 } from "@/net/mailClaimHudBadgeSync";
 import {
   MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE,
@@ -98,6 +99,7 @@ import {
 import { MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_ROLE } from "@/net/mailAttachmentClaimResidualDeepSubline";
 import { MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_ROLE } from "@/net/mailAttachmentClaimResidualDeeperSubline";
 import { MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_ROLE } from "@/net/mailAttachmentClaimResidualDeepestSubline";
+import { MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE } from "@/net/mailAttachmentClaimResidualDeepestDeeperSubline";
 import {
   MAIL_BATTLE_CATEGORY_SWEEP_ROLE,
   MAIL_BATTLE_CATEGORY_TAB_SESSION_KEY,
@@ -226,6 +228,9 @@ describe("HeroMailPanels", () => {
     expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
     expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(true);
+    expect(row?.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(
+      true,
+    );
     expect(
       row?.querySelector(`[data-role="${MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE}"]`)?.textContent,
     ).toContain("附件残余");
@@ -240,6 +245,10 @@ describe("HeroMailPanels", () => {
       row?.querySelector(`[data-role="${MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_ROLE}"]`)
         ?.textContent,
     ).toContain("巩固再加深一层");
+    expect(
+      row?.querySelector(`[data-role="${MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE}"]`)
+        ?.textContent,
+    ).toContain("巩固再加深二层");
     const combined = mount.querySelector(`[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`);
     expect(combined?.textContent).toContain("未领附件 1");
     expect(combined?.textContent).toContain("日常可领 1 · #42");
