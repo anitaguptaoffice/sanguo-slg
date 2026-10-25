@@ -365,6 +365,11 @@ import {
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
 } from "@/net/recruitTemplateInlineResidualDeepestDeepestDeeperSummary";
 import {
+  formatRecruitTemplateInlineResidualDeepestDeepestDeepestSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeepestSummary";
+import {
   formatRecruitTemplateInlineResidualSummary,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
@@ -2464,6 +2469,17 @@ export class HeroMailPanels {
         formatRecruitTemplateInlineResidualDeepestDeepestDeeperSummary(wallet, t, bag);
       residualDeepestDeepestDeeperSpan.textContent = residualDeepestDeepestDeeperSummary ?? "";
       residualDeepestDeepestDeeperSpan.hidden = !residualDeepestDeepestDeeperSummary;
+      const residualDeepestDeepestDeepestSpan = document.createElement("span");
+      residualDeepestDeepestDeepestSpan.className =
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS;
+      residualDeepestDeepestDeepestSpan.setAttribute(
+        "data-role",
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_ROLE,
+      );
+      const residualDeepestDeepestDeepestSummary =
+        formatRecruitTemplateInlineResidualDeepestDeepestDeepestSummary(wallet, t, bag);
+      residualDeepestDeepestDeepestSpan.textContent = residualDeepestDeepestDeepestSummary ?? "";
+      residualDeepestDeepestDeepestSpan.hidden = !residualDeepestDeepestDeepestSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
       li.appendChild(residualSpan);
@@ -2472,6 +2488,7 @@ export class HeroMailPanels {
       li.appendChild(residualDeepestSpan);
       li.appendChild(residualDeepestDeeperSpan);
       li.appendChild(residualDeepestDeepestDeeperSpan);
+      li.appendChild(residualDeepestDeepestDeepestSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
