@@ -88,6 +88,17 @@
       .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deeper-ring {
         animation: domestic-queue-complete-focus-residual-deeper-ring-keyframes 3s ease-out 1;
       }
+      @keyframes domestic-queue-complete-focus-residual-deepest-ring-keyframes {
+        0%, 100% { outline: none; box-shadow: none; }
+        28% { outline: 4px solid #ffe070; box-shadow: 0 0 22px rgba(255, 224, 112, 0.82); }
+      }
+      .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deepest-ring {
+        animation: domestic-queue-complete-focus-residual-deepest-ring-keyframes 3s ease-out 1;
+      }
+      .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deeper-ring.domestic-queue-complete-focus-residual-deepest-ring {
+        animation: domestic-queue-complete-focus-residual-deeper-ring-keyframes 3s ease-out 1,
+          domestic-queue-complete-focus-residual-deepest-ring-keyframes 3s ease-out 1;
+      }
       @keyframes domestic-slot-return-ring-keyframes {
         0%, 100% { outline: none; box-shadow: none; }
         40% { outline: 2px solid #c9a227; box-shadow: 0 0 10px rgba(201, 162, 39, 0.55); }
@@ -4495,6 +4506,7 @@
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deeper-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag.domestic-queue-complete-focus-residual-deepest-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-slot-margin,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-eta-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-label,
@@ -4503,6 +4515,8 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deep-finish,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deeper-label,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deeper-finish,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deepest-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .domestic-queue-eta-segment-residual-deepest-finish,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li .queue-row-progress-bar,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.queue-row-complete-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-growth-compare-strip,
@@ -4672,11 +4686,16 @@
       /* sessionStorage key hero-list-filter-chip-residual-deeper-v1 (CLIENT-279); wave:44 hero-list-filter-chip-residual-deep-v1 (CLIENT-263) 不退化 */
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deeper-label,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deeper-finish,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deepest-label,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deepest-finish,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deep-label,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .domestic-queue-eta-segment-residual-deep-finish,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-deepest-ring,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deeper-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deepest-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deeper-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deep-ring,
