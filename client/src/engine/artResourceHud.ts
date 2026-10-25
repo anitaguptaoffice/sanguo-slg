@@ -75,7 +75,7 @@ export function wireHudResourceSweep(
   strip.setAttribute("title", line);
   strip.setAttribute("aria-label", `主城资源，${line}`);
 
-  let sweep = strip.querySelector('[data-role="hud-resource-sweep"]');
+  let sweep = strip.querySelector<HTMLElement>('[data-role="hud-resource-sweep"]');
   if (!sweep) {
     sweep = document.createElement("span");
     sweep.className = "hud-resource-sweep";

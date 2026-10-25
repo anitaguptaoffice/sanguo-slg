@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel, captureCenterPanelIntent } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { clearHudBarChrome, clearToolbarBarChrome, skinHudBar, skinToolbarBar, wrapToolbarButtonsForHit } from "@/engine/artChromeSkin";
@@ -776,7 +777,7 @@ export class MainCityScene implements Scene {
       (mails, unreadTotal) =>
         this.hudTodoBadgePoll.applyMailInboxSnapshot(mails, unreadTotal),
       (reportId) => {
-        this.marchReportToastActive = false;
+        this.marchArrivalHudReminder = null;
         void this.battleReports
           .openPanelWithDeepLink(reportId ?? undefined)
           .then(() => this.renderHud());
@@ -918,7 +919,7 @@ export class MainCityScene implements Scene {
           if (march) {
             const tx = march.to_x;
             const ty = march.to_y;
-            if (Number.isFinite(tx) && Number.isFinite(ty)) {
+            if (typeof tx === "number" && typeof ty === "number" && Number.isFinite(tx) && Number.isFinite(ty)) {
               this.world.setMarchDestHighlight({ x: tx, y: ty });
               this.syncMinimapViewportForIntelSelection(march);
             } else {
@@ -958,7 +959,7 @@ export class MainCityScene implements Scene {
       {
         marchFormRoot: this.militaryPanel,
         onFilled: (x, y) => {
-          this.militaryPanel.classList.remove("hidden");
+          openCenterPanel(this.militaryPanel);
           setMarchTargetFieldHighlight(this.militaryPanel, false);
           this.renderHud();
           this.syncMilitaryPanel();
@@ -1326,7 +1327,7 @@ export class MainCityScene implements Scene {
       case "train_troops":
         this.queuePanels.open();
         this.queuePanels.flashDailyQueueAnchorHighlight(queueAnchorTarget);
-        this.militaryPanel.classList.remove("hidden");
+        openCenterPanel(this.militaryPanel);
         this.syncMilitaryPanel();
         this.status = "已打开「队列」与「军事」募兵（练兵日常 QUEST-003）";
         break;
@@ -1361,7 +1362,7 @@ export class MainCityScene implements Scene {
         const social = hudTodoSocialBadgesFromChatSummary(
           this.chatUnreadTracker.getSummary(this.social.getGuildId()),
         );
-        if (social.chatToolbar > 0) {
+        if (social.chat > 0) {
           if (!this.social.isChatOpen()) this.social.toggleChat();
           this.pulseToolbarPanelDeepLink("social");
           return;
@@ -1430,7 +1431,7 @@ export class MainCityScene implements Scene {
     }
     if (action === "refresh") void this.refreshState();
     if (action === "toggle-military") {
-      this.militaryPanel.classList.toggle("hidden");
+      toggleCenterPanel(this.militaryPanel);
       if (!this.militaryPanel.classList.contains("hidden")) {
         resetCenterPanelViewportScroll(this.militaryPanel);
         void this.refreshMarchFormHeroes();
@@ -1641,7 +1642,7 @@ export class MainCityScene implements Scene {
     const layoutFrame = document.getElementById("layout-frame");
     openMilitaryQueueBannerAndHighlight(marchId, {
       openMilitaryPanel: () => {
-        this.militaryPanel.classList.remove("hidden");
+        openCenterPanel(this.militaryPanel);
         resetCenterPanelViewportScroll(this.militaryPanel);
       },
       highlightMilitaryBanner: (jump) => {
@@ -1662,7 +1663,7 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    this.militaryPanel.classList.remove("hidden");
+    openCenterPanel(this.militaryPanel);
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
     const prefill = prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper(
@@ -1840,7 +1841,7 @@ export class MainCityScene implements Scene {
     if (!target) return;
     writeRecruitHighlightQueueSession(target.queue_id);
     this.recruitQueueHighlightId = target.queue_id;
-    this.militaryPanel.classList.remove("hidden");
+    openCenterPanel(this.militaryPanel);
     resetCenterPanelViewportScroll(this.militaryPanel);
     applyRecruitQueueJumpToMilitaryPanel(this.militaryPanel, target);
     this.queuePanels.highlightRecruitQueue(target.queue_id);
@@ -2058,7 +2059,7 @@ export class MainCityScene implements Scene {
     this.minimapBattleReportReplay = null;
   }
 
-  private layoutFromPointerEvent(ev: PointerEvent): { x: number; y: number } {
+  private layoutFromPointerEvent(ev: Pick<MouseEvent, "clientX" | "clientY">): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
     const cssX = ev.clientX - rect.left;
     const cssY = ev.clientY - rect.top;
@@ -2154,7 +2155,7 @@ export class MainCityScene implements Scene {
         const march = this.minimapMarches.find((m) => m.march_id === marchId);
         const tx = march?.to_x;
         const ty = march?.to_y;
-        if (Number.isFinite(tx) && Number.isFinite(ty)) {
+        if (typeof tx === "number" && typeof ty === "number" && Number.isFinite(tx) && Number.isFinite(ty)) {
           this.pulseIntelRowFromMinimapTile(tx!, ty!, marchId);
         }
         this.status = `小地图选中行军 #${marchId}`;
@@ -2352,7 +2353,7 @@ export class MainCityScene implements Scene {
     }
     this.world?.selectGridAt(world.wx, world.wy, { source: "minimap" });
     this.focusMinimapOnWorldGrid(world.wx, world.wy);
-    this.militaryPanel.classList.remove("hidden");
+    openCenterPanel(this.militaryPanel);
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
     this.syncMilitaryPanel();
@@ -2823,7 +2824,7 @@ export class MainCityScene implements Scene {
         .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
         .then(() => this.renderHud());
     } else if (panel === "military") {
-      this.militaryPanel.classList.remove("hidden");
+      openCenterPanel(this.militaryPanel);
       resetCenterPanelViewportScroll(this.militaryPanel);
       this.syncMilitaryPanel();
     }
@@ -3243,6 +3244,7 @@ export class MainCityScene implements Scene {
       return;
     }
     const { toX, toY, marchCount, heroId } = validated;
+    const presentMarchResult = captureCenterPanelIntent(this.militaryPanel);
     setMarchFormErrorDisplay(this.militaryPanel, null);
     const troops = [{ unit_cfg_id: 1, count: marchCount }];
     this.marchSubmitState = marchSubmitStateMachine(this.marchSubmitState, { type: "SUBMIT" });
@@ -3285,6 +3287,7 @@ export class MainCityScene implements Scene {
       }
       syncMarchQueueBanner(this.militaryPanel, this.marchQueueBannerTarget, { pulse: true });
       this.marchList.notifyMarchStarted(this.lastMarch?.march_id, {
+        openPanel: presentMarchResult(),
         march: this.lastMarch,
         toX,
         toY,

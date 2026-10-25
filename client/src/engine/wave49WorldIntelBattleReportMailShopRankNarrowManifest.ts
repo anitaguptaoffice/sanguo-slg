@@ -72,7 +72,7 @@ import {
   WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_PULSE_CLASS,
   WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS,
   WORLD_TILE_INTEL_ETA_RESIDUAL_RING_CLASS,
-} from "@/engine/wave43WorldIntelBattleReportMailShopRankNarrowManifest";
+} from "@/engine/wave47WorldIntelBattleReportMailShopRankNarrowManifest";
 
 /** Bottom toolbar (56px) + focus-ring slack — same as CLIENT-291 / CLIENT-299. */
 export const WAVE49_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX = 64;

@@ -29,7 +29,7 @@ export function formatMarchIntelLastTroopsSummary(march: MarchSummary): string |
 export function buildMarchIntelRemarchPrefill(march: MarchSummary): MarchIntelRemarchPrefill | null {
   const toX = march.to_x;
   const toY = march.to_y;
-  if (!Number.isFinite(toX) || !Number.isFinite(toY)) return null;
+  if (typeof toX !== "number" || typeof toY !== "number" || !Number.isFinite(toX) || !Number.isFinite(toY)) return null;
   return {
     toX: Math.trunc(toX),
     toY: Math.trunc(toY),
