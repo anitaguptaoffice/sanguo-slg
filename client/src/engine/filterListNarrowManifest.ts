@@ -384,3 +384,10 @@ export {
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
 } from "@/net/recruitTemplateInlineResidualDeepestSummary";
+
+/** CLIENT-306: wave:49 manifest 军情 phase / 再出征预填 residual deepest（CLIENT-300～305 钩子见并行 PR）。 */
+export {
+  INTEL_MARCH_PREFILL_RESIDUAL_DEEPEST_LINE_CLASS,
+  INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS,
+  PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEPEST_ACTION,
+} from "@/engine/wave49WorldIntelBattleReportMailShopRankNarrowManifest";

@@ -48,6 +48,7 @@ describe("scheduleIntelPhaseChangeResidualDeeperPulse (CLIENT-290)", () => {
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(true);
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
+    expect(row.classList.contains("intel-phase-change-residual-deepest-pulse")).toBe(true);
   });
 
   it("deeper pulse duration covers CLIENT-274 deep and CLIENT-258 residual pulses", () => {

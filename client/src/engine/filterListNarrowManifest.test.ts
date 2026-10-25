@@ -199,6 +199,9 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_LINE_CLASS,
   RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS,
   RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_CLASS,
+  INTEL_MARCH_PREFILL_RESIDUAL_DEEPEST_LINE_CLASS,
+  INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS,
+  PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEPEST_ACTION,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -391,6 +394,14 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_DEEPEST_SWEEP_CLASS);
     expect(html).toContain(QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_CLASS);
     expect(html).toContain(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_PULSE_CLASS);
+  });
+
+  it("CLIENT-306 exposes wave:49 world intel phase remarch prefill residual deepest hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS);
+    expect(html).toContain(INTEL_MARCH_PREFILL_RESIDUAL_DEEPEST_LINE_CLASS);
+    expect(html).toContain(PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEPEST_ACTION);
+    expect(html).toContain("march-intel-remarch-residual-deepest-summary");
   });
 
   it("CLIENT-283 exposes wave:46 main-city hero daily social queue narrow hooks consolidate deeper", () => {
