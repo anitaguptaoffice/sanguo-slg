@@ -5,8 +5,10 @@ import {
   DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_CLASS,
   DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS,
   DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
+  DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS,
   formatQuestChainQueueHudResidualDeepSubline,
   formatQuestChainQueueHudResidualDeeperSubline,
+  formatQuestChainQueueHudResidualDeepestDeepestDeepestSubline,
   formatQuestChainQueueHudResidualDeepestDeepestDeeperSubline,
   formatQuestChainQueueHudResidualDeepestDeeperSubline,
   formatQuestChainQueueHudResidualDeepestSubline,
@@ -289,6 +291,53 @@ describe("formatQuestChainQueueHudResidualDeepestDeepestDeeperSubline (CLIENT-33
   it("exports deepest-deepest-deeper subline DOM class", () => {
     expect(DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS).toBe(
       "daily-quest-chain-queue-hud-residual-deepest-deepest-deeper-subline",
+    );
+  });
+});
+
+describe("formatQuestChainQueueHudResidualDeepestDeepestDeepestSubline (CLIENT-346)", () => {
+  const now = 1_700_000_000_000;
+
+  it("consolidates chain type with queue ETA on deepest-deepest-deepest line for claimable rows", () => {
+    const line = formatQuestChainQueueHudResidualDeepestDeepestDeepestSubline(
+      {
+        quest_cfg_id: 1013,
+        chain_id: 400,
+        state: 3,
+        progress_current: 4,
+        progress_target: 4,
+      },
+      [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 90_000 }],
+      [],
+      { farm: "农田" },
+      [],
+      now,
+    );
+    expect(line).toContain("巩固再加深四层");
+    expect(line).toContain("主线");
+    expect(line).toContain("队列下一完成");
+    expect(line).toContain("↔");
+    expect(line).toContain("对照");
+    expect(line).toContain("巩固再加深三层");
+    expect(line).toContain("深链巩固");
+  });
+
+  it("returns null when no active queue", () => {
+    expect(
+      formatQuestChainQueueHudResidualDeepestDeepestDeepestSubline(
+        { quest_cfg_id: 1013, chain_id: 400, state: 3 },
+        [],
+        [],
+        {},
+        [],
+        now,
+      ),
+    ).toBeNull();
+  });
+
+  it("exports deepest-deepest-deepest subline DOM class", () => {
+    expect(DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS).toBe(
+      "daily-quest-chain-queue-hud-residual-deepest-deepest-deepest-subline",
     );
   });
 });
