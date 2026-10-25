@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
+import { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeeperPulse";
 import {
   CENTER_PANEL_TAB_PULSE_CLASS,
   CLIENT_127_FILTER_CHIP_BAR_SELECTOR_BY_CENTER_ID,
@@ -543,6 +544,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS);
     expect(html).toContain("march-intel-remarch-residual-deepest-deeper-summary");
+  });
+
+  it("CLIENT-338 exposes wave:53 intel phase remarch prefill residual deepest-deepest-deeper hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+    expect(html).toContain("march-intel-remarch-residual-deepest-deepest-deeper-summary");
   });
 
   it("CLIENT-283 exposes wave:46 main-city hero daily social queue narrow hooks consolidate deeper", () => {
