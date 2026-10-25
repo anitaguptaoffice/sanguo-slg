@@ -6,9 +6,9 @@ import {
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE,
 } from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeeperSweep";
-import { HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE } from "@/net/heroPanelStateResidualDeepestDeepestDeepestSweep";
+import { HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE } from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeepestSweep";
 
-describe("heroPanelStateResidualDeepestDeepestDeepestDeeperSweep (CLIENT-359)", () => {
+describe("heroPanelStateResidualDeepestDeepestDeepestDeeperSweep (CLIENT-375)", () => {
   it("formatHeroPanelStateResidualDeepestDeepestDeepestDeeperSweepLine consolidates deepest-deepest-deepest sweep and gateway hint", () => {
     const ctx = { filter: "deployable" as const, sort: "loyalty_desc" as const };
     expect(formatHeroPanelStateResidualDeepestDeepestDeepestDeeperSweepLine("loading", ctx)).toContain(
@@ -25,24 +25,27 @@ describe("heroPanelStateResidualDeepestDeepestDeepestDeeperSweep (CLIENT-359)", 
     expect(err).toContain("panelState巩固再加深五层");
     expect(err).toContain("网关重试 hint");
     expect(err).toContain("CLIENT-173");
-    expect(err).toContain("CLIENT-343");
+    expect(err).toContain("CLIENT-375");
   });
 
-  it("formatHeroPanelGatewayRetryDeepestDeepestDeepestDeeperHint extends deepest-deepest-deepest hint", () => {
+  it("formatHeroPanelGatewayRetryDeepestDeepestDeepestDeeperHint extends deepest-deepest-deepest-deepest hint", () => {
     expect(
       formatHeroPanelGatewayRetryDeepestDeepestDeepestDeeperHint({
         filter: "all",
         sort: "level_desc",
         hasGatewayRetry: true,
       }),
-    ).toContain("CLIENT-343");
+    ).toContain("CLIENT-375");
   });
 
-  it("appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep mounts class after deepest-deepest-deepest sweep", () => {
+  it("appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep mounts class after deepest-deepest-deepest-deepest sweep", () => {
     const host = document.createElement("li");
-    const deepestDeepestDeepest = document.createElement("p");
-    deepestDeepestDeepest.setAttribute("data-role", HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE);
-    host.appendChild(deepestDeepestDeepest);
+    const deepestDeepestDeepestDeepest = document.createElement("p");
+    deepestDeepestDeepestDeepest.setAttribute(
+      "data-role",
+      HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE,
+    );
+    host.appendChild(deepestDeepestDeepestDeepest);
     appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(host, "loading", {
       filter: "all",
       sort: "level_desc",
@@ -53,6 +56,6 @@ describe("heroPanelStateResidualDeepestDeepestDeepestDeeperSweep (CLIENT-359)", 
     expect(el?.classList.contains(HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS)).toBe(
       true,
     );
-    expect(deepestDeepestDeepest.nextElementSibling).toBe(el);
+    expect(deepestDeepestDeepestDeepest.nextElementSibling).toBe(el);
   });
 });

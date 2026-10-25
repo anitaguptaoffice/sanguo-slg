@@ -1,7 +1,7 @@
 import {
-  captureHeroListFilterChipResidualDeepestDeepestDeepest,
-  formatHeroListFilterChipResidualDeepestDeepestDeepestSweepLine,
-} from "@/net/heroListFilterChipResidualDeepestDeepestDeepest";
+  captureHeroListFilterChipResidualDeepestDeepestDeepestDeepest,
+  formatHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweepLine,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeepest";
 import {
   parseHeroListFilterChipResidual,
   serializeHeroListFilterChipResidual,
@@ -10,7 +10,7 @@ import {
 } from "@/net/heroListFilterChipResidual";
 import type { HeroListFilter, HeroListSort } from "@/net/heroListFilter";
 
-/** sessionStorage：筛选 chip 巩固再加深五层残余记忆（CLIENT-359；与 `hero-list-filter-chip-residual-deepest-deepest-deepest-v1` / CLIENT-343 并存）。 */
+/** sessionStorage：筛选 chip 巩固再加深五层残余记忆（CLIENT-375；与 `hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-v1` / CLIENT-375 并存）。 */
 export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SESSION_KEY =
   "hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-v1";
 
@@ -59,7 +59,7 @@ export function captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper(
     ? sessionStorage
     : null,
 ): void {
-  captureHeroListFilterChipResidualDeepestDeepestDeepest(filter, sort, lastChipAction, storage);
+  captureHeroListFilterChipResidualDeepestDeepestDeepestDeepest(filter, sort, lastChipAction, storage);
   writeHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession(
     {
       filter,
@@ -74,9 +74,11 @@ export function captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper(
 export function formatHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweepLine(
   payload: HeroListFilterChipResidualPayload | null | undefined,
 ): string | null {
-  const deepestDeepestDeepest = formatHeroListFilterChipResidualDeepestDeepestDeepestSweepLine(payload);
-  if (!deepestDeepestDeepest) return null;
-  return `筛选巩固再加深五层 · ${deepestDeepestDeepest} · 与 hero-list-filter-chip-residual-deepest-deepest-deepest-v1 并存 · CLIENT-231 返回高亮不退化`;
+  const deepestDeepestDeepestDeepest = formatHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweepLine(
+    payload,
+  );
+  if (!deepestDeepestDeepestDeepest) return null;
+  return `筛选巩固再加深五层 · ${deepestDeepestDeepestDeepest} · 与 hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-v1 并存 · CLIENT-231 返回高亮不退化`;
 }
 
 export function syncHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweep(
