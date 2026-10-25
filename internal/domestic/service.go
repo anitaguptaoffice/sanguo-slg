@@ -130,7 +130,10 @@ func settleProduction(c *CityState, cat map[int32]BuildingSpec, now time.Time) {
 		d[sp.ProdRes] += oh / 3600 * sec
 	}
 	clamp := func(st int64, add float64) int64 {
-		return int64(math.Floor(math.Min(math.Max(cap, float64(st)), math.Max(0, float64(st)+add))))
+		if st >= int64(cap) {
+			return st
+		}
+		return int64(math.Floor(math.Min(cap, math.Max(0, float64(st)+add))))
 	}
 	w := c.Wallet
 	w.Food, w.Wood, w.Stone, w.Iron = clamp(w.Food, d[0]), clamp(w.Wood, d[1]), clamp(w.Stone, d[2]), clamp(w.Iron, d[3])

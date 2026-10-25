@@ -89,12 +89,19 @@ func TestPGWalletAuthority(t *testing.T) {
 	if _, err := p.Exec(ctx, "ALTER TABLE city_building DROP CONSTRAINT reject_save"); err != nil {
 		t.Fatal(err)
 	}
+	now = now.Add(time.Hour)
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
-		wg.Add(2)
+		wg.Add(3)
 		go func() {
 			defer wg.Done()
 			if _, e := p.Exec(ctx, "UPDATE player_wallet SET food=food+1"); e != nil {
+				t.Error(e)
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			if _, e := h.WithWallet(ctx, 1, func(w Resources) (Resources, error) { w.Food--; return w, nil }); e != nil {
 				t.Error(e)
 			}
 		}()
@@ -107,13 +114,30 @@ func TestPGWalletAuthority(t *testing.T) {
 	}
 	wg.Wait()
 	w, err = h.WithWallet(ctx, 1, func(w Resources) (Resources, error) { w.Food -= 100; return w, nil })
-	if err != nil || w.Food != 1530 {
+	if err != nil || w.Food != 1640 {
 		t.Fatal(w, err)
 	}
 	loaded, err := h.store.LoadCity(ctx, 1, 1, 42)
-	if err != nil || loaded.Wallet.Food != 1530 {
+	if err != nil || loaded.Wallet.Food != 1640 {
 		t.Fatal(loaded, err)
 	}
+	for _, balance := range []int64{math.MaxInt64, 1<<53 + 1, 100000} {
+		if _, err := p.Exec(ctx, "UPDATE player_wallet SET food=$1", balance); err != nil {
+			t.Fatal(err)
+		}
+		for _, elapsed := range []time.Duration{0, time.Hour} {
+			now = now.Add(elapsed)
+			w, _, err := h.SettleCityWithProduction(ctx, 1)
+			if err != nil || w.Food != balance {
+				t.Fatal(balance, w, err)
+			}
+			reloaded, err := h.store.LoadCity(ctx, 1, 1, 42)
+			if err != nil || reloaded.Wallet.Food != balance {
+				t.Fatal(reloaded, err)
+			}
+		}
+	}
+
 }
 
 func TestProductionDoesNotDestroyRewardAboveCap(t *testing.T) {
