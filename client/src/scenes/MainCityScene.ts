@@ -297,9 +297,13 @@ import {
 } from "@/net/minimapViewportIntelScrollResidualDeeper";
 import {
   createMinimapViewportIntelScrollResidualDeepestTimers,
-  syncMinimapViewportIntelScrollResidualDeepest,
   type MinimapViewportIntelScrollResidualDeepestTimers,
 } from "@/net/minimapViewportIntelScrollResidualDeepest";
+import {
+  createMinimapViewportIntelScrollResidualDeepestDeeperTimers,
+  syncMinimapViewportIntelScrollResidualDeepestDeeper,
+  type MinimapViewportIntelScrollResidualDeepestDeeperTimers,
+} from "@/net/minimapViewportIntelScrollResidualDeepestDeeper";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -483,6 +487,8 @@ export class MainCityScene implements Scene {
     createMinimapViewportIntelScrollResidualDeeperTimers();
   private readonly minimapViewportIntelScrollResidualDeepestTimers: MinimapViewportIntelScrollResidualDeepestTimers =
     createMinimapViewportIntelScrollResidualDeepestTimers();
+  private readonly minimapViewportIntelScrollResidualDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeeperTimers =
+    createMinimapViewportIntelScrollResidualDeepestDeeperTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -1776,7 +1782,7 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportIntelScrollResidualDeepest(
+    const synced = syncMinimapViewportIntelScrollResidualDeepestDeeper(
       {
         march,
         bounds,
@@ -1790,6 +1796,7 @@ export class MainCityScene implements Scene {
         residualDeepTimers: this.minimapViewportIntelScrollResidualDeepTimers,
         residualDeeperTimers: this.minimapViewportIntelScrollResidualDeeperTimers,
         residualDeepestTimers: this.minimapViewportIntelScrollResidualDeepestTimers,
+        residualDeepestDeeperTimers: this.minimapViewportIntelScrollResidualDeepestDeeperTimers,
       },
     );
     if (synced.applied) {
