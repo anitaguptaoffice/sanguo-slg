@@ -77,10 +77,17 @@ export function prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDee
   return prefill;
 }
 
-/** CLIENT-382 软依赖：无军事面板时安全 no-op。 */
+/** CLIENT-387 manifest 软依赖：无军事面板或 wave:59 摘要节点时安全 no-op。 */
 export function stubPrefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper(
   formRoot: ParentNode | null | undefined,
 ): boolean {
+  if (
+    formRoot?.querySelector(
+      `[data-role="${MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE}"]`,
+    )
+  ) {
+    return true;
+  }
   if (
     !formRoot?.querySelector(
       `[data-role="${MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE}"]`,
