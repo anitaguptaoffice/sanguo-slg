@@ -931,6 +931,11 @@ describe("DailyQuestPanels", () => {
     );
     expect(deepestDeeper?.textContent).toContain("巩固再加深二层");
     expect(deepestDeeper?.textContent).toContain("队列下一完成");
+    const deepestDeepestDeeper = row?.querySelector(
+      ".daily-quest-chain-queue-hud-residual-deepest-deepest-deeper-subline",
+    );
+    expect(deepestDeepestDeeper?.textContent).toContain("巩固再加深三层");
+    expect(deepestDeepestDeeper?.textContent).toContain("队列下一完成");
     vi.restoreAllMocks();
   });
 
