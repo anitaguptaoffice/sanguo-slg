@@ -182,6 +182,11 @@ import {
   syncRankRefreshCooldownResidualDeepestDeepestDeeperStamp,
 } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
 import {
+  formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp,
+  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_STAMP_ROLE,
+  syncRankRefreshCooldownResidualDeepestDeepestDeepestStamp,
+} from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepest";
+import {
   appendRankListDensityScanResidualDeepSubline,
   formatRankListDensityScanResidualDeepLine,
 } from "@/net/rankListDensityScanResidualDeep";
@@ -660,6 +665,7 @@ export class SocialPanels {
       <p class="rank-refresh-cooldown-residual-deepest-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_ROLE}" aria-live="polite"></p>
       <p class="rank-refresh-cooldown-residual-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
       <p class="rank-refresh-cooldown-residual-deepest-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
+      <p class="rank-refresh-cooldown-residual-deepest-deepest-deepest-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_STAMP_ROLE}" aria-live="polite"></p>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -1257,6 +1263,15 @@ export class SocialPanels {
     syncRankRefreshCooldownResidualDeepestDeepestDeeperStamp(
       this.rankPanel,
       formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp(
+        lastRefreshMs,
+        lastManualMs,
+        manualCount,
+        nowMs,
+      ) || null,
+    );
+    syncRankRefreshCooldownResidualDeepestDeepestDeepestStamp(
+      this.rankPanel,
+      formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp(
         lastRefreshMs,
         lastManualMs,
         manualCount,
