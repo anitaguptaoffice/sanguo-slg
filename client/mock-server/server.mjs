@@ -236,6 +236,10 @@ function applyEvidencePreset(state, preset) {
       { hero_id: 8022, template_cfg_id: 1022, level: 9, loyalty: 77, exp: 5000 },
       { hero_id: 8023, template_cfg_id: 1023, level: 11, loyalty: 84, exp: 5000 },
       { hero_id: 8024, template_cfg_id: 1024, level: 12, loyalty: 86, exp: 5000 },
+      { hero_id: 8025, template_cfg_id: 1025, level: 10, loyalty: 83, exp: 5000 },
+      { hero_id: 8026, template_cfg_id: 1026, level: 9, loyalty: 79, exp: 5000 },
+      { hero_id: 8027, template_cfg_id: 1027, level: 11, loyalty: 85, exp: 5000 },
+      { hero_id: 8028, template_cfg_id: 1028, level: 12, loyalty: 87, exp: 5000 },
     ];
     return;
   }
