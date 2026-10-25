@@ -4,6 +4,31 @@
 
 CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-059 / INTG-058 / INTG-057 / INTG-056 / INTG-055 / INTG-054 / INTG-053 / INTG-052 / INTG-051 / INTG-050 / INTG-049 / INTG-048 / INTG-047 / INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
 
+## API-TEST-REPAIR-001：真实 PG 测试夹具
+
+使用专用测试数据库；连接角色需要创建/删除 schema 的权限。API 的
+`openDB` 为每个测试创建独立 schema，清理时删除；模拟重启沿用相同
+`search_path`，不会重新建空 schema 伪装持久化通过。勿对生产库运行测试。
+
+修复仅限测试：建城坐标从生产确定性地图中选择可建地块；M2 初始化
+DATA-002/英雄依赖；共享 DATA-002 网关调用生产已有的
+`WireM2Combat` / `AttachBattleReports`。累计波次请求按默认网关
+20/s 节奏发送，保留限流配置和全部既有断言，不重试可能产生副作用的请求。
+基础建设测试使用确定性时钟推进一分钟验证整数粮食增长，并先完成大厅升级再升级农田。
+累计波次的重启快照在所有场景动作后、重启前采集；任务状态、禁言和英雄预期不放宽。
+任务协议的 `progress_current` 是原始计数；现有服务以 `>= target` 转为可领，
+不截断超额进度。保留训练 60 / 目标 50 的夹具，以状态一致性替代错误的
+`current <= target` 假设，并单独回归 20→40→60 的超额行为。
+
+```bash
+DATABASE_URL='postgres://USER@127.0.0.1:5432/DEDICATED_TEST_DB?sslmode=disable' \
+  go test -race -count=1 -v ./internal/api \
+  -run '^(TestLoginCreateCityUpgradeFlow|TestM2BattleReportSmokePath|TestINTG006Data002SmokePath|TestINTG045HeroL6L8SmokePath|TestINTG059Wave59SmokePath)$'
+```
+
+这是 PG/WebSocket API 夹具回归，不是浏览器 H5 全流程验收。原有可选空数据
+hint/skip 必须从日志单独报告，不能把测试函数 PASS 解读成全部功能覆盖。
+
 ## Wave 59 网关冒烟（INTG-059，推荐）
 
 在 INTG-058 全量断言之上扩展 **小地图军情 scroll-sync 残余巩固再加深五层**（`military.v1.ListMarches` 首条 `phase`/`to_x`/`to_y` + 视口 scroll-sync **residual deepest-deepest-deepest-deepest-deeper** 锚点 hint + 军情 phase 再出征预填 **residual deepest-deepest-deepest-deepest-deeper**，CLIENT-380/386）、**出征兵力余量与刷新戳记残余巩固再加深五层**（`military.v1.StartMarch` ≡ `MarchAttack` 同源，`march_id` + `city_troops` 余量 + `intel_list_refresh_stamp_ms` **residual deepest-deepest-deepest-deepest-deeper** hint，CLIENT-381）、**战报键盘相邻导航与坐标复制残余巩固再加深五层**（`military.v1.ListBattleReports` 首条 `outcome`/坐标 + 相邻条 j/k **deepest-deepest-deepest-deepest-deeper** hint，CLIENT-382）、**邮件 HUD 附件残余巩固再加深五层**（`content.v1.ListPlayerMail` 未领附件计数 + 首条 `mail_id` + HUD **deepest-deepest-deepest-deepest-deeper** hint，CLIENT-383）、**背包商城返回高亮残余巩固再加深五层**（`content.v1.ListPlayerBag` 消耗品分类首条 + `shop.v1.ListShopShelf` 列表长度 **residual deepest-deepest-deepest-deepest-deeper** hint，CLIENT-384）、**排行密度与招募扫读残余巩固再加深五层**（`rank.v1.GetLeaderboard` ≡ `ListPowerRank`/`ListKillRank` 列表长度 + 首行 `score` 密度 **residual deepest-deepest-deepest-deepest-deeper** hint + `hero.v1.ListRecruitTemplates` 长度，CLIENT-385；**非** wave:58 双榜钉选主叙事）、**日常可领 HUD 残余巩固再加深五层**（`quest.v1.ListPlayerQuests` `chain_id=400` 可领条数 **residual deepest-deepest-deepest-deepest-deeper** hint，CLIENT-383 HUD）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量；**不跑 H5**。
