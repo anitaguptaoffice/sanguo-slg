@@ -104,6 +104,12 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_CLASS,
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE,
 } from "@/net/nextQueueFinishPreviewResidualDeepest";
+import {
+  formatNextQueueFinishPreviewResidualDeepestDeeperLine,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE,
+} from "@/net/nextQueueFinishPreviewResidualDeepestDeeper";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -163,6 +169,7 @@ export class QueuePanels {
     private readonly onPreviewCrossLinkResidualDeepRing?: (slotKey: string) => void,
     private readonly onPreviewCrossLinkResidualDeeperRing?: (slotKey: string) => void,
     private readonly onPreviewCrossLinkResidualDeepestRing?: (slotKey: string) => void,
+    private readonly onPreviewCrossLinkResidualDeepestDeeperRing?: (slotKey: string) => void,
   ) {}
 
   attach(): void {
@@ -494,6 +501,7 @@ export class QueuePanels {
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEP_ACTION}" role="button" tabindex="0" hidden></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ACTION}" role="button" tabindex="0" hidden></p>
+      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
@@ -576,6 +584,7 @@ export class QueuePanels {
     residualDeepEl: Element | null,
     residualDeeperEl: Element | null,
     residualDeepestEl: Element | null,
+    residualDeepestDeeperEl: Element | null,
     nowMs: number,
   ): void {
     if (!(previewEl instanceof HTMLElement)) return;
@@ -615,6 +624,13 @@ export class QueuePanels {
       dailyRows,
       nowMs,
     );
+    const residualDeepestDeeper = formatNextQueueFinishPreviewResidualDeepestDeeperLine(
+      this.buildings(),
+      this.recruits,
+      this.slotLabels,
+      dailyRows,
+      nowMs,
+    );
     if (!preview) {
       previewEl.hidden = true;
       previewEl.classList.add("hidden");
@@ -648,6 +664,13 @@ export class QueuePanels {
         residualDeepestEl.textContent = "";
         residualDeepestEl.removeAttribute("data-slot-key");
         residualDeepestEl.removeAttribute("title");
+      }
+      if (residualDeepestDeeperEl instanceof HTMLElement) {
+        residualDeepestDeeperEl.hidden = true;
+        residualDeepestDeeperEl.classList.add("hidden");
+        residualDeepestDeeperEl.textContent = "";
+        residualDeepestDeeperEl.removeAttribute("data-slot-key");
+        residualDeepestDeeperEl.removeAttribute("title");
       }
       return;
     }
@@ -721,6 +744,21 @@ export class QueuePanels {
         residualDeepestEl.title = `最深链七槽 ${residualDeepest.slotKey}（巩固再加深一层）`;
       }
     }
+    if (residualDeepestDeeperEl instanceof HTMLElement) {
+      if (!residualDeepestDeeper) {
+        residualDeepestDeeperEl.hidden = true;
+        residualDeepestDeeperEl.classList.add("hidden");
+        residualDeepestDeeperEl.textContent = "";
+        residualDeepestDeeperEl.removeAttribute("data-slot-key");
+        residualDeepestDeeperEl.removeAttribute("title");
+      } else {
+        residualDeepestDeeperEl.hidden = false;
+        residualDeepestDeeperEl.classList.remove("hidden");
+        residualDeepestDeeperEl.textContent = residualDeepestDeeper.line;
+        residualDeepestDeeperEl.dataset.slotKey = residualDeepestDeeper.slotKey;
+        residualDeepestDeeperEl.title = `最深二层链七槽 ${residualDeepestDeeper.slotKey}（巩固再加深二层）`;
+      }
+    }
   }
 
   private render(): void {
@@ -739,6 +777,9 @@ export class QueuePanels {
     );
     const previewResidualDeepestEl = this.panel.querySelector(
       `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE}"]`,
+    );
+    const previewResidualDeepestDeeperEl = this.panel.querySelector(
+      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}"]`,
     );
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
@@ -764,6 +805,7 @@ export class QueuePanels {
       previewResidualDeepEl,
       previewResidualDeeperEl,
       previewResidualDeepestEl,
+      previewResidualDeepestDeeperEl,
       now,
     );
     this.renderBuildSlotMatrix(now);
@@ -1064,6 +1106,16 @@ export class QueuePanels {
         } else {
           this.openAndHighlightBuildSlot(slotKey);
         }
+      }
+      return;
+    }
+    const residualDeepestDeeperAnchor = target.closest(
+      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION}"]`,
+    );
+    if (residualDeepestDeeperAnchor instanceof HTMLElement) {
+      const slotKey = residualDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
+      if (slotKey) {
+        this.onPreviewCrossLinkResidualDeepestDeeperRing?.(slotKey);
       }
       return;
     }

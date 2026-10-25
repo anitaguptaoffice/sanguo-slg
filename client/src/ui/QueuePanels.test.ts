@@ -561,6 +561,54 @@ describe("QueuePanels", () => {
     expect(onDeepestRing).toHaveBeenCalledWith("farm");
   });
 
+  it("renders preview residual deepest-deeper line and deepest-deeper-rings slot on click (CLIENT-309)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onDeepestDeeperRing = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onDeepestDeeperRing,
+    );
+    panel.attach();
+    panel.toggle();
+    const deepestDeeper = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deeper-line"]',
+    ) as HTMLElement;
+    expect(deepestDeeper?.textContent).toMatch(/巩固再加深二层/);
+    expect(deepestDeeper?.textContent).toMatch(/槽位\(农田\)/);
+    expect(deepestDeeper?.getAttribute("data-action")).toBe(
+      "domestic-slot-preview-cross-link-residual-deepest-deeper-ring",
+    );
+    const deepest = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-line"]',
+    ) as HTMLElement;
+    expect(deepest?.textContent).toMatch(/巩固再加深一层/);
+    deepestDeeper?.click();
+    expect(onDeepestDeeperRing).toHaveBeenCalledWith("farm");
+  });
+
   it("renders preview residual line and pulses slot on click (CLIENT-245)", () => {
     const mount = document.createElement("div");
     const now = Date.now();

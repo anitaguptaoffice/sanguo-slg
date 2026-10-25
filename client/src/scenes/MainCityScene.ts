@@ -50,6 +50,7 @@ import { pulseDomesticSlotCompleteMarginResidualRing } from "@/net/nextQueueFini
 import { pulseDomesticSlotPreviewCrossLinkResidualDeepRing } from "@/net/nextQueueFinishPreviewResidualDeep";
 import { pulseDomesticSlotPreviewCrossLinkResidualDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeeper";
 import { pulseDomesticSlotPreviewCrossLinkResidualDeepestRing } from "@/net/nextQueueFinishPreviewResidualDeepest";
+import { pulseDomesticSlotPreviewCrossLinkResidualDeepestDeeperRing } from "@/net/nextQueueFinishPreviewResidualDeepestDeeper";
 import {
   captureDomesticSlotScrollAnchor,
   restoreDomesticSlotScrollAnchor,
@@ -1027,6 +1028,13 @@ export class MainCityScene implements Scene {
       (slotKey) => {
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestRing(
+          this.slotUpgradeOverlay?.getOverlayLayer(),
+          slotKey,
+        );
+      },
+      (slotKey) => {
+        scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
+        pulseDomesticSlotPreviewCrossLinkResidualDeepestDeeperRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
           slotKey,
         );
