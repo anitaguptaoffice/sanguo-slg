@@ -285,6 +285,11 @@ import {
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_ROLE,
 } from "@/net/recruitTemplateInlineResidualDeeperSummary";
 import {
+  formatRecruitTemplateInlineResidualDeepestSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestSummary";
+import {
   formatRecruitTemplateInlineResidualSummary,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
@@ -2197,11 +2202,21 @@ export class HeroMailPanels {
       const residualDeeperSummary = formatRecruitTemplateInlineResidualDeeperSummary(wallet, t, bag);
       residualDeeperSpan.textContent = residualDeeperSummary ?? "";
       residualDeeperSpan.hidden = !residualDeeperSummary;
+      const residualDeepestSpan = document.createElement("span");
+      residualDeepestSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_CLASS;
+      residualDeepestSpan.setAttribute(
+        "data-role",
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
+      );
+      const residualDeepestSummary = formatRecruitTemplateInlineResidualDeepestSummary(wallet, t, bag);
+      residualDeepestSpan.textContent = residualDeepestSummary ?? "";
+      residualDeepestSpan.hidden = !residualDeepestSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
       li.appendChild(residualSpan);
       li.appendChild(residualDeepSpan);
       li.appendChild(residualDeeperSpan);
+      li.appendChild(residualDeepestSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";

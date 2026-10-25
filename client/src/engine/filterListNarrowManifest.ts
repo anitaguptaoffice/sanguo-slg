@@ -374,3 +374,13 @@ export {
   RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS,
   RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_CLASS,
 } from "@/engine/wave48MainCityHeroDailySocialQueueNarrowManifest";
+
+/** CLIENT-305: wave:49 排行招募扫读残余巩固再加深一层（289 deeper 基线 **不退化**）。 */
+export {
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_CLASS,
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_ROLE,
+} from "@/net/rankListDensityScanResidualDeepest";
+export {
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestSummary";
