@@ -795,6 +795,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:54（CLIENT-342）将领列表忠诚次行与详情养成道具扫读残余巩固再加深四层**：列表 **`formatHeroListLoyaltyResidualDeepestDeepestDeepestSubline`** / **`hero-list-row-loyalty-residual-deepest-deepest-deepest-subline`**（忠诚 + 经验进度只读巩固再加深四层第四行；**CLIENT-326** `hero-list-row-loyalty-residual-deepest-deepest-deeper-subline` **不退化**；**无** hero 专用升级 RPC）；详情 **`formatHeroDetailConsumableStackResidualDeepestDeepestDeepestSweep`** / **`hero-detail-consumable-stack-residual-deepest-deepest-deepest-sweep`** + **`hero-detail-consumable-stack-residual-deepest-deepest-deepest-sweep-ring` 3s** 只读扫读（养成堆叠 + **`pickHeroDetailBagDeepLink`** 背包深链 hint；**CLIENT-230** 壳与 **CLIENT-326** 再加深三层扫读 **不退化**；**非** ART-012 / #983/#108/#697 像素任务）。单测：`heroListLoyaltyResidualDeepestDeepestDeepestSubline.test.ts`、`heroDetailConsumableStackResidualDeepestDeepestDeepestSweep.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1588](https://github.com/anitaguptaoffice/sanguo-slg/issues/1588)）
 
+## Wave 54 H5 双榜刷新冷却戳记与钉选保持残余巩固再加深四层（CLIENT-344）
+
+在 [Wave 52](#wave-52-h5-双榜刷新冷却戳记与钉选保持残余巩固再加深三层client-328) **CLIENT-328** 双榜钉选保持栈基础上 **巩固再加深四层**；主叙事 **非** wave:53 **CLIENT-337** 排行招募密度扫读重复；**仍** DATA-002；**无**新 rank RPC；范围外同 Wave 52/53。
+
+**wave:54（CLIENT-344）双榜刷新冷却戳记与钉选保持残余巩固再加深四层**：**CLIENT-328** 巩固再加深三层第四行下只读 **`formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp`** / **`rank-refresh-cooldown-residual-deepest-deepest-deepest-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深四层** 第四行；**CLIENT-328/214** **不退化**；**无**新 rank RPC；**非** wave:53 **CLIENT-337** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deepest-deepest-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeepestDeepest.test.ts`、`rankPinKeepResidualDeepestDeepestDeepestRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1590](https://github.com/anitaguptaoffice/sanguo-slg/issues/1590)）
+
 ## Wave 52 H5 将领列表忠诚次行与详情养成道具扫读残余巩固再加深三层（CLIENT-326）
 
 在 [Wave 50](#wave-50-h5-主城队列-eta-完成焦点残余巩固再加深二层队列预览槽位互链再加深二层将领养成扫读再加深二层panelstate-筛选再加深二层双榜钉选再加深二层军团聊天再加深二层日常-hud-深链再加深二层1280-组合-manifest-巩固再加深二层m4-出口--intg-050) **CLIENT-310** 将领养成扫读栈基础上 **巩固再加深三层**；主叙事 **非** wave:51 **CLIENT-321** 排行招募密度栈；**仍** DATA-002；**无** hero 专用升级 RPC；**非** ART-012 / #983/#108/#697 像素任务。

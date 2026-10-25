@@ -17,11 +17,13 @@ import { formatRankRefreshCooldownResidualDeeperStamp } from "@/net/rankRefreshC
 import { formatRankRefreshCooldownResidualDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepest";
 import { formatRankRefreshCooldownResidualDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeeper";
 import { formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
+import { formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepest";
 import { RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS } from "@/net/rankPinKeepResidualDeepRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeeperRing";
+import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeepestRing";
 import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
@@ -471,6 +473,18 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
         mount
           .querySelector(".rank-pin-row")
           ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
+      ).toBe(true);
+      const deepestDeepestDeepest = mount.querySelector(
+        '[data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest"]',
+      );
+      expect(deepestDeepestDeepest?.textContent).toBe(
+        formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp(now, now, 1, now),
+      );
+      expect(deepestDeepestDeepest?.classList.contains("hidden")).toBe(false);
+      expect(
+        mount
+          .querySelector(".rank-pin-row")
+          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS),
       ).toBe(true);
     } finally {
       nowSpy.mockRestore();
