@@ -4,6 +4,8 @@ PostgreSQL 16+。**分片键 `server_id`**：账号中心与 `cfg_*` 全局表�
 
 待独立评审：[自然招募原子提交与将领创建身份契约](recruit_atomicity.md)（SPEC-RECRUIT-ATOMIC-001；非已上线保证）。
 
+将领 ID 有序迁移候选及停写/恢复门禁：[SPEC-RECRUIT-ID](recruit_id_sequence.md)。
+
 ## ER（逻辑引用，跨域不设 FK）
 
 - `account` → `player`（同服唯一角色）→ `player_wallet` / `player_city` / `player_hero`
