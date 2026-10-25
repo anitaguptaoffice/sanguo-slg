@@ -11,6 +11,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -80,7 +81,7 @@ func TestWalletBoundaryExternalCreditSpendSettleReload(t *testing.T) {
 	}
 }
 
-func walletBoundaryPool(t *testing.T) *pgxpool.Pool {
+func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 	t.Helper()
 	url := os.Getenv("DATABASE_URL")
 	if url == "" {
@@ -109,6 +110,12 @@ func walletBoundaryPool(t *testing.T) *pgxpool.Pool {
 		_, _ = admin.Exec(ctx, "DROP SCHEMA "+schema+" CASCADE")
 		admin.Close()
 	})
+	if len(fullSchema) > 0 && fullSchema[0] {
+		if err := db.ApplySpecs(ctx, pool, "../../spec/db"); err != nil {
+			t.Fatal(err)
+		}
+		return pool
+	}
 	sql, err := os.ReadFile("../../spec/db/003_domestic.sql")
 	if err != nil {
 		t.Fatal(err)
@@ -184,5 +191,57 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 	}
 	if len(m.City(c.ID).RecruitJobs) != 1 {
 		t.Fatal("expected one committed job")
+	}
+}
+
+func TestContentGrantThroughAPIWalletLifecycle(t *testing.T) {
+	ctx := context.Background()
+	pool := walletBoundaryPool(t, true)
+	now := time.Unix(1700000000, 0)
+	h := domestic.NewHub(func() time.Time { return now })
+	store := domestic.NewPGStore(pool)
+	h.UseStore(store, 1, 0)
+	c := &domestic.CityState{ID: 77, PlayerID: 5151, LastSettleAt: now,
+		Wallet:    domestic.Resources{Food: 1000},
+		Buildings: map[string]*domestic.BuildingInstance{"farm": {CfgID: 2, Level: 1}}}
+	h.RegisterCity(c)
+	s := NewServer(nil, pool, nil, h, nil)
+	s.cacheCity(77, c)
+	cat, err := content.EmbeddedCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rewards := content.NewService(cat)
+	rewards.UseStore(content.NewPGStore(pool))
+	player := content.PlayerRef{ServerID: 1, PlayerID: 5151}
+	pkg := content.RewardPackage{Resources: map[string]int64{"food": 500}}
+	for i := 0; i < 2; i++ {
+		grant, err := rewards.Grant(player, pkg, "api-ledger")
+		if err != nil || grant.Duplicate != (i == 1) {
+			t.Fatalf("grant replay: %+v %v", grant, err)
+		}
+		s.refreshDomesticWalletAfterCommit(ctx, 1, 5151)
+	}
+	if _, err := s.ShopWalletStore().Spend(ctx, player, content.ResourceWallet{Food: 200}); err != nil {
+		t.Fatal(err)
+	}
+	now = now.Add(time.Hour)
+	if err := s.accrueCityWithQuest(ctx, 1, s.citySnapshot(77)); err != nil {
+		t.Fatal(err)
+	}
+	restarted := domestic.NewHub(func() time.Time { return now })
+	restarted.UseStore(store, 1, 0)
+	loaded, err := restarted.LoadCity(ctx, 77, 5151)
+	if err != nil || loaded.Wallet.Food != 1420 {
+		t.Fatalf("grant/spend/production/reload: %+v %v", loaded, err)
+	}
+	freshRewards := content.NewService(cat)
+	freshRewards.UseStore(content.NewPGStore(pool))
+	replay, err := freshRewards.Grant(player, pkg, "api-ledger")
+	if err != nil || !replay.Duplicate {
+		t.Fatalf("restart replay: %+v %v", replay, err)
+	}
+	if wallet, err := restarted.RefreshWallet(ctx, 77); err != nil || wallet.Food != 1420 {
+		t.Fatalf("restart duplicate changed balance: %+v %v", wallet, err)
 	}
 }
