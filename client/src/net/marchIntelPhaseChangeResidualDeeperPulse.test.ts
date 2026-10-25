@@ -7,6 +7,8 @@ import {
   resetIntelPhaseChangeResidualDeeperPulseTimersForTests,
   scheduleIntelPhaseChangeResidualDeeperPulse,
 } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
+import { resetIntelPhaseChangeResidualDeepestDeeperPulseTimersForTests } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
+import { resetIntelPhaseChangeResidualDeepestPulseTimersForTests } from "@/net/marchIntelPhaseChangeResidualDeepestPulse";
 import {
   INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS,
   pulseIntelPhaseChangeResidualOnPhaseChange,
@@ -16,6 +18,8 @@ import { INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS } from "@/net/marchIntelPhaseCh
 
 describe("scheduleIntelPhaseChangeResidualDeeperPulse (CLIENT-290)", () => {
   afterEach(() => {
+    resetIntelPhaseChangeResidualDeepestDeeperPulseTimersForTests();
+    resetIntelPhaseChangeResidualDeepestPulseTimersForTests();
     resetIntelPhaseChangeResidualDeeperPulseTimersForTests();
     resetIntelPhaseChangeResidualDeepPulseTimersForTests();
     vi.useRealTimers();
@@ -49,6 +53,7 @@ describe("scheduleIntelPhaseChangeResidualDeeperPulse (CLIENT-290)", () => {
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
     expect(row.classList.contains("intel-phase-change-residual-deepest-pulse")).toBe(true);
+    expect(row.classList.contains("intel-phase-change-residual-deepest-deeper-pulse")).toBe(true);
   });
 
   it("deeper pulse duration covers CLIENT-274 deep and CLIENT-258 residual pulses", () => {

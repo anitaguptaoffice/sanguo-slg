@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS,
+  resetIntelPhaseChangeResidualDeepestDeeperPulseTimersForTests,
+} from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
+import {
   INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS,
   INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_MS,
   resetIntelPhaseChangeResidualDeeperPulseTimersForTests,
@@ -20,6 +24,7 @@ import { INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS } from "@/net/marchIntelPhaseCh
 
 describe("scheduleIntelPhaseChangeResidualDeepestPulse (CLIENT-306)", () => {
   afterEach(() => {
+    resetIntelPhaseChangeResidualDeepestDeeperPulseTimersForTests();
     resetIntelPhaseChangeResidualDeepestPulseTimersForTests();
     resetIntelPhaseChangeResidualDeeperPulseTimersForTests();
     resetIntelPhaseChangeResidualDeepPulseTimersForTests();
@@ -54,6 +59,7 @@ describe("scheduleIntelPhaseChangeResidualDeepestPulse (CLIENT-306)", () => {
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
     expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(true);
+    expect(row.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(true);
   });
 
   it("deepest pulse duration covers CLIENT-290 deeper pulse", () => {
