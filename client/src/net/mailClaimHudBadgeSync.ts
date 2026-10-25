@@ -8,6 +8,7 @@ import { formatMailAttachmentClaimResidualDeepSubline } from "@/net/mailAttachme
 import { formatMailAttachmentClaimResidualDeeperSubline } from "@/net/mailAttachmentClaimResidualDeeperSubline";
 import { formatMailAttachmentClaimResidualDeepestSubline } from "@/net/mailAttachmentClaimResidualDeepestSubline";
 import { formatMailAttachmentClaimResidualDeepestDeeperSubline } from "@/net/mailAttachmentClaimResidualDeepestDeeperSubline";
+import { formatMailAttachmentClaimResidualDeepestDeepestDeeperSubline } from "@/net/mailAttachmentClaimResidualDeepestDeepestDeeperSubline";
 import {
   formatMailTabUnreadSweepLine,
   type MailTabUnreadSweepTab,
@@ -41,6 +42,11 @@ export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_PULSE_MS = 3000;
 export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS =
   "mail-claim-hud-sync-residual-deepest-deeper-pulse";
 export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_MS = 3000;
+
+/** CLIENT-335：CLIENT-319 残余巩固再加深二层脉冲之上的 **巩固再加深三层** HUD 脉冲（3s；CLIENT-050/106/209 角标推导仍走 residual deepest-deepest-deeper sync）。 */
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS =
+  "mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse";
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_MS = 3000;
 
 export type HudMailQuestBadgeSyncInput = {
   mailUnreadTotal: number;
@@ -85,6 +91,12 @@ export type HudMailQuestBadgeResidualDeepestSyncResult = HudMailQuestBadgeResidu
 export type HudMailQuestBadgeResidualDeepestDeeperSyncResult =
   HudMailQuestBadgeResidualDeepestSyncResult & {
     attachmentClaimResidualDeepestDeeperSubline: string | null;
+  };
+
+/** CLIENT-335：在 CLIENT-319 同步结果上附带附件领取残余巩固再加深三层第六行文案。 */
+export type HudMailQuestBadgeResidualDeepestDeepestDeeperSyncResult =
+  HudMailQuestBadgeResidualDeepestDeeperSyncResult & {
+    attachmentClaimResidualDeepestDeepestDeeperSubline: string | null;
   };
 
 /**
@@ -282,6 +294,34 @@ export function syncHudMailQuestBadgeAfterClaimResidualDeepestDeeper(
   return { ...residualDeepest, attachmentClaimResidualDeepestDeeperSubline };
 }
 
+/**
+ * CLIENT-335：CLIENT-319 `syncHudMailQuestBadgeAfterClaimResidualDeepestDeeper` + 附件类型/领取结果残余 **巩固再加深三层** 第六行（无新 RPC）。
+ */
+export function syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeeper(
+  input: HudMailQuestBadgeSyncInput,
+  mailId: number,
+  rowAfter: MailRow,
+  mailFilterTab: MailTabUnreadSweepTab = "all",
+  granted?: MailClaimGrantedPayload,
+  mailBeforeClaim?: MailRow,
+): HudMailQuestBadgeResidualDeepestDeepestDeeperSyncResult {
+  const residualDeepestDeeper = syncHudMailQuestBadgeAfterClaimResidualDeepestDeeper(
+    input,
+    mailId,
+    rowAfter,
+    mailFilterTab,
+    granted,
+    mailBeforeClaim,
+  );
+  const before =
+    mailBeforeClaim ??
+    input.mailInboxSnapshot.find((m) => m.mail_id === mailId) ??
+    rowAfter;
+  const attachmentClaimResidualDeepestDeepestDeeperSubline =
+    formatMailAttachmentClaimResidualDeepestDeepestDeeperSubline(before, granted);
+  return { ...residualDeepestDeeper, attachmentClaimResidualDeepestDeepestDeeperSubline };
+}
+
 export function scheduleMailClaimHudSyncPulse(row: HTMLElement | null | undefined): void {
   if (!row) return;
   row.classList.remove(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS);
@@ -384,4 +424,24 @@ export function pulseMailClaimHudSyncAfterClaimResidualDeepestDeeper(
 ): void {
   pulseMailClaimHudSyncAfterClaimResidualDeepest(row);
   scheduleMailClaimHudSyncResidualDeepestDeeperPulse(row);
+}
+
+export function scheduleMailClaimHudSyncResidualDeepestDeepestDeeperPulse(
+  row: HTMLElement | null | undefined,
+): void {
+  if (!row) return;
+  row.classList.remove(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+  void row.offsetWidth;
+  row.classList.add(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+  window.setTimeout(() => {
+    row.classList.remove(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+  }, MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_MS);
+}
+
+/** CLIENT-335：CLIENT-241/255/271/287/303/319 脉冲栈 + 巩固再加深三层 HUD 脉冲（CLIENT-050/106/209 **不退化**）。 */
+export function pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeeper(
+  row: HTMLElement | null | undefined,
+): void {
+  pulseMailClaimHudSyncAfterClaimResidualDeepestDeeper(row);
+  scheduleMailClaimHudSyncResidualDeepestDeepestDeeperPulse(row);
 }
