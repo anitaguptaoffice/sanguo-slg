@@ -52,9 +52,9 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 	}
 	data, err := marshal(&domesticv1.StartBuildingUpgradeResponse{
 		Building: &apicommon.CityBuilding{
-			SlotKey:             req.GetSlotKey(),
-			BuildingCfgId:       req.GetBuildingCfgId(),
-			Level:               level,
+			SlotKey:           req.GetSlotKey(),
+			BuildingCfgId:     req.GetBuildingCfgId(),
+			Level:             level,
 			UpgradeFinishAtMs: finishMS,
 		},
 		Wallet:     walletProto(res.Wallet),
@@ -86,6 +86,10 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	if city == nil || city.PlayerID != pc.PlayerID {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
+	garrison, err := s.readyGarrison(city.ID, pc.PlayerID)
+	if err != nil {
+		return nil, err
+	}
 	if err := s.accrueCityWithQuest(ctx, pc.ServerID, city); err != nil {
 		return nil, err
 	}
@@ -102,17 +106,18 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 			finishMS = t.UnixMilli()
 		}
 		buildings = append(buildings, &apicommon.CityBuilding{
-			SlotKey:             slot,
-			BuildingCfgId:       inst.CfgID,
-			Level:               inst.Level,
-			UpgradeFinishAtMs:   finishMS,
+			SlotKey:           slot,
+			BuildingCfgId:     inst.CfgID,
+			Level:             inst.Level,
+			UpgradeFinishAtMs: finishMS,
 		})
 	}
 	prod := cityProductionRatesPerHour(city, domestic.DefaultCatalog())
 	data, err := marshal(&domesticv1.GetCityStateResponse{
-		Wallet:           walletProto(city.Wallet),
-		Buildings:        buildings,
-		ProductionRates:  walletProto(prod),
+		Wallet:          walletProto(city.Wallet),
+		Buildings:       buildings,
+		ProductionRates: walletProto(prod),
+		Garrison:        garrison,
 	})
 	if err != nil {
 		return nil, err
