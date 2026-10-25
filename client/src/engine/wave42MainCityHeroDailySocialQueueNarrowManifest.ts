@@ -106,6 +106,18 @@ export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SESSION_KEY =
 export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SWEEP_CLASS =
   "hero-list-filter-chip-residual-deeper-sweep";
 
+/** CLIENT-295: hero panel state consolidated deepest sweep row (CLIENT-279 baseline). */
+export const HERO_PANEL_STATE_RESIDUAL_DEEPEST_SWEEP_CLASS =
+  "hero-panel-state-residual-deepest-sweep";
+
+/** CLIENT-295: filter chip deepest session key alongside CLIENT-279 deeper v1. */
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_SESSION_KEY =
+  "hero-list-filter-chip-residual-deepest-v1";
+
+/** CLIENT-295: filter chip deepest sweep line under filter bar. */
+export const HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_SWEEP_CLASS =
+  "hero-list-filter-chip-residual-deepest-sweep";
+
 /** CLIENT-248: rank manual refresh cooldown residual stamp line. */
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_CLASS = "rank-refresh-cooldown-residual-stamp";
 
