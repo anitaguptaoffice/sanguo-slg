@@ -42,6 +42,10 @@ import {
   readHeroListFilterChipResidualDeepSession,
 } from "@/net/heroListFilterChipResidualDeep";
 import {
+  HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY,
+  readHeroListFilterChipResidualDeepestDeepestDeepestSession,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeepest";
+import {
   HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SESSION_KEY,
   readHeroListFilterChipResidualDeepestDeepestDeeperSession,
 } from "@/net/heroListFilterChipResidualDeepestDeepestDeeper";
@@ -57,6 +61,10 @@ import {
   HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SESSION_KEY,
   readHeroListFilterChipResidualDeeperSession,
 } from "@/net/heroListFilterChipResidualDeeper";
+import {
+  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS,
+  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE,
+} from "@/net/heroPanelStateResidualDeepestDeepestDeepestSweep";
 import {
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE,
@@ -1095,6 +1103,60 @@ describe("HeroMailPanels", () => {
     sessionStorage.removeItem(HERO_LIST_RETURN_SESSION_KEY);
     sessionStorage.removeItem(HERO_DETAIL_SELECTED_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
+  });
+
+  it("hero-panel-state-residual-deepest-deepest-deepest-sweep and filter chip deepest-deepest-deepest session (CLIENT-343)", async () => {
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_SORT_SESSION_KEY);
+    const mount = document.createElement("div");
+    const err = Object.assign(new Error("网关超时"), { code: 10001 });
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockRejectedValue(err),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(mount, gateway, () => sessionBase(), () => {}, () => {});
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    await flushPromises();
+    const deepestDeepestDeepestResidual = mount.querySelector(
+      `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE}"].${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS}`,
+    );
+    expect(deepestDeepestDeepestResidual?.textContent).toContain("panelState巩固再加深四层");
+    expect(deepestDeepestDeepestResidual?.textContent).toContain("CLIENT-327");
+    expect(
+      mount.querySelector(
+        `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE}"].${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS}`,
+      ),
+    ).toBeTruthy();
+    mount
+      .querySelector('[data-action="hero-filter-deployable"]')
+      ?.dispatchEvent(new Event("click", { bubbles: true }));
+    expect(readHeroListFilterChipResidualDeepestDeepestDeepestSession()?.lastChipAction).toBe(
+      "hero-filter-deployable",
+    );
+    expect(
+      sessionStorage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY),
+    ).toBeTruthy();
+    expect(
+      mount.querySelector(
+        '[data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-sweep"]',
+      )?.textContent,
+    ).toContain("筛选巩固再加深四层");
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEP_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY);
   });
 
   it("hero-panel-state-residual-deepest-deepest-deeper-sweep and filter chip deepest-deepest-deeper session (CLIENT-327)", async () => {
