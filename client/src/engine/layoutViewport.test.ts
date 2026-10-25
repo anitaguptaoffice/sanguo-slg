@@ -38,6 +38,7 @@ import {
   CLIENT_291_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_299_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_315_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_307_NARROW_MANIFEST_CENTER_PANEL_IDS,
   MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE31_MARCH_MAIL_SOCIAL_BOTTOM_TOOLBAR_CLEARANCE_PX,
@@ -60,6 +61,7 @@ import {
   WAVE48_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE50_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE49_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WAVE51_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
 } from "@/engine/layoutViewport";
 import { LAYOUT_FRAME, MIN_CONTENT_VIEWPORT } from "@/engine/mainCitySlots";
@@ -507,6 +509,31 @@ describe("narrow layout root class", () => {
     expect(WAVE48_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(
       56,
     );
+  });
+
+  it("CLIENT-323 wave:51 world intel battle report mail shop rank manifest consolidate deepest-deeper at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "world",
+      "march",
+      "military",
+      "battle-report",
+      "mail",
+      "bag",
+      "shop",
+      "rank",
+      "hero",
+    ]);
+    expect(CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS).not.toContain("building");
+    expect(CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS).not.toContain("queue");
+    expect(CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS).not.toContain("daily");
+    for (const id of CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(
+      WAVE51_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
+    ).toBeGreaterThanOrEqual(56);
   });
 
   it("CLIENT-315 wave:50 main-city hero daily social queue manifest consolidate deepest-deeper at 1280×720", () => {
