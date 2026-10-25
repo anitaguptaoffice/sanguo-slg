@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
@@ -215,6 +216,11 @@ export class ContentPanels {
     this.mount.appendChild(this.questPanel);
     this.mount.appendChild(this.bagPanel);
     this.mount.appendChild(this.shopPanel);
+    this.bagPanel.addEventListener("center-panel-suspend", () => {
+      this.persistBagCategoryScrollPosition();
+      this.bagOpenGeneration++;
+    });
+    this.shopPanel.addEventListener("center-panel-suspend", () => { this.shopOpenGeneration++; });
     this.questPanel.addEventListener("click", (ev) => this.onQuestClick(ev));
     this.bagPanel.addEventListener("click", (ev) => this.onBagClick(ev));
     this.shopPanel.addEventListener("click", (ev) => this.onShopClick(ev));
@@ -231,13 +237,14 @@ export class ContentPanels {
   }
 
   toggleQuest(): void {
-    this.questPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.questPanel);
     if (!this.questPanel.classList.contains("hidden")) void this.refreshQuests();
   }
 
   toggleBag(): void {
     const wasHidden = this.bagPanel.classList.contains("hidden");
-    this.bagPanel.classList.toggle("hidden");
+    const returnFromShop = !this.shopPanel.classList.contains("hidden");
+    toggleCenterPanel(this.bagPanel);
     if (!wasHidden) {
       this.persistBagCategoryScrollPosition();
       if (!this.shopPanel.classList.contains("hidden")) {
@@ -251,7 +258,6 @@ export class ContentPanels {
     }
     this.stashPanelReturnSourceHighlightOnOpen("bag");
     const bagOpenGeneration = ++this.bagOpenGeneration;
-    const returnFromShop = !this.shopPanel.classList.contains("hidden");
     const shopReturnItemId = returnFromShop ? consumeBagShopReturnHighlight() : null;
     this.syncBagCategoryScrollMemoryFromSession();
     const deepLinkHighlight = this.bagHighlightItemId > 0;
@@ -407,7 +413,7 @@ export class ContentPanels {
       const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
       if (sel) sel.value = String(highlightItemId);
     }
-    this.bagPanel.classList.remove("hidden");
+    openCenterPanel(this.bagPanel);
     resetCenterPanelViewportScroll(this.bagPanel);
     this.syncBagReturnHeroButton();
     const hint = this.bagPanel.querySelector('[data-role="bag-hint"]');
@@ -475,11 +481,12 @@ export class ContentPanels {
 
   toggleShop(): void {
     const wasHidden = this.shopPanel.classList.contains("hidden");
-    this.shopPanel.classList.toggle("hidden");
+    const returnFromBag = !this.bagPanel.classList.contains("hidden");
+    toggleCenterPanel(this.shopPanel);
     if (!wasHidden) return;
     this.stashPanelReturnSourceHighlightOnOpen("shop");
     const shopOpenGeneration = ++this.shopOpenGeneration;
-    if (!this.bagPanel.classList.contains("hidden")) {
+    if (returnFromBag) {
       this.persistBagCategoryScrollPosition();
       captureBagLastViewedForShopReturn(this.selectedItemId);
     }

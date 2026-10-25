@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   PANEL_STATE_LOADING_MESSAGE,
@@ -948,7 +949,7 @@ export class HeroMailPanels {
   }
 
   toggleHero(): void {
-    this.heroPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.heroPanel);
     if (!this.heroPanel.classList.contains("hidden")) {
       void this.refreshRecruitTemplates();
       void this.refreshHeroes({ restoreSelection: true });
@@ -963,7 +964,7 @@ export class HeroMailPanels {
   /** CLIENT-097：排行深链 — 打开将领面板并 GetHeroDetail（只读）。 */
   async openHeroDetailDeepLink(heroId: number): Promise<void> {
     this.mailPanel.classList.add("hidden");
-    this.heroPanel.classList.remove("hidden");
+    openCenterPanel(this.heroPanel);
     resetCenterPanelViewportScroll(this.heroPanel);
     if (!this.heroes.length) await this.refreshHeroes();
     let id = heroId;
@@ -984,7 +985,7 @@ export class HeroMailPanels {
   }
 
   toggleMail(): void {
-    this.mailPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.mailPanel);
     if (!this.mailPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.mailPanel);
       this.onUnreadCount?.(0);
@@ -995,7 +996,7 @@ export class HeroMailPanels {
   /** 仅打开邮件面板（不 toggle 关闭）。 */
   openMailPanel(): void {
     if (this.isMailOpen()) return;
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     void this.refreshMail();
@@ -1003,7 +1004,7 @@ export class HeroMailPanels {
 
   /** 战报深链：打开收件箱并高亮指定邮件（不自动领取附件）。 */
   openAndHighlightMail(mailId: number): void {
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     const mailReturn = takeMailReturnFromReportBridge();
@@ -1026,7 +1027,7 @@ export class HeroMailPanels {
   /** 战报深链：打开将领面板并加载详情（CLIENT-100）。 */
   openAndHighlightHero(heroId: number): void {
     if (!heroId) return;
-    this.heroPanel.classList.remove("hidden");
+    openCenterPanel(this.heroPanel);
     resetCenterPanelViewportScroll(this.heroPanel);
     this.selectedHeroId = heroId;
     void this.refreshHeroes().then(() => {
@@ -1056,7 +1057,7 @@ export class HeroMailPanels {
       filterTabCounts?: { unreadForTab: number; unclaimedCount: number };
     },
   ): void {
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     resetCenterPanelViewportScroll(this.mailPanel);
     this.onUnreadCount?.(0);
     const mailFilter = opts?.mailFilter ?? MAIL_INBOX_FILTER_UNREAD;
@@ -1088,7 +1089,7 @@ export class HeroMailPanels {
     opts?: { skipScroll?: boolean },
   ): boolean {
     const wasOpen = this.isMailOpen();
-    this.mailPanel.classList.remove("hidden");
+    openCenterPanel(this.mailPanel);
     this.mailFilter = MAIL_INBOX_FILTER_ALL;
     writeMailInboxFilterSession(this.mailFilter);
     if (preferredMailId > 0) this.selectedMailId = preferredMailId;

@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { selectDeepLinkBattleReportId } from "@/net/battleReportDeepLink";
@@ -236,7 +237,7 @@ export class BattleReportPanel {
 
   toggle(): void {
     const wasHidden = this.panel.classList.contains("hidden");
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (wasHidden && this.isOpen()) {
       resetCenterPanelViewportScroll(this.panel);
       void this.openAndSyncUnread();
@@ -245,14 +246,14 @@ export class BattleReportPanel {
 
   /** 行军结束提示等入口：打开列表并清零未读基线。 */
   openPanel(): void {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     void this.openAndSyncUnread();
   }
 
   /** 行军结束深链：刷新列表后选中 hint 或最近战报并加载详情。 */
   async openPanelWithDeepLink(hintReportId?: number | null): Promise<void> {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     this.applyOutcomeFilterBridgeFromMail();
     await this.refreshList();
@@ -283,7 +284,7 @@ export class BattleReportPanel {
   ): Promise<void> {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     this.locationFilter = { x, y };
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     await this.refreshList();
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);

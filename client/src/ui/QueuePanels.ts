@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagStackQuantity } from "@/net/bagState";
@@ -231,7 +232,7 @@ export class QueuePanels {
 
   toggle(): void {
     const wasOpen = this.isOpen();
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (this.isOpen()) {
       resetQueuePanelViewportScroll(this.panel);
       this.tickAccum = 0;
@@ -246,7 +247,7 @@ export class QueuePanels {
 
   /** 打开队列面板（日常练兵/建造引导）。 */
   open(): void {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetQueuePanelViewportScroll(this.panel);
     this.tickAccum = 0;
     this.render();
@@ -285,7 +286,7 @@ export class QueuePanels {
     this.highlightedRecruitQueueId = null;
     this.highlightedBuildSlotKey = slotKey.trim() || null;
     this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     this.tickAccum = 0;
     this.render();
     resetQueuePanelViewportScroll(this.panel);
@@ -330,7 +331,7 @@ export class QueuePanels {
     this.highlightedBuildSlotKey = id ? RECRUIT_QUEUE_MATRIX_SLOT_KEY : null;
     this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
     if (opts?.open) {
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       this.tickAccum = 0;
     }
     if (this.isOpen() || opts?.open) {
