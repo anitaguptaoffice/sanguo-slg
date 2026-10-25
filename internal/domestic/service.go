@@ -82,6 +82,8 @@ type CityState struct {
 	LastSettleAt time.Time
 	Buildings    map[string]*BuildingInstance
 	BuildJobs    []*BuildJob
+	walletBase   Resources
+	walletSaved  bool
 	nextJobID    int64
 }
 type UpgradeResult struct {
@@ -128,6 +130,9 @@ func settleProduction(c *CityState, cat map[int32]BuildingSpec, now time.Time) {
 		d[sp.ProdRes] += oh / 3600 * sec
 	}
 	clamp := func(st int64, add float64) int64 {
+		if st >= int64(cap) {
+			return st
+		}
 		return int64(math.Floor(math.Min(cap, math.Max(0, float64(st)+add))))
 	}
 	w := c.Wallet
@@ -380,31 +385,21 @@ func (h *Hub) rescheduleJobsLocked(cityID int64, c *CityState) {
 }
 
 func (h *Hub) persistCity(cityID int64) {
-	if h.store == nil {
-		return
-	}
+	_, _ = h.SettleCity(context.Background(), cityID)
+}
+
+func (h *Hub) maybeFlushAll() {
 	h.mu.Lock()
-	c := h.cities[cityID]
-	if c == nil || c.PlayerID == 0 {
+	if h.store == nil || h.flushEvery <= 0 {
 		h.mu.Unlock()
 		return
 	}
 	now := h.now()
-	settleProduction(c, h.cat, now)
-	h.mu.Unlock()
-	_ = h.store.SaveCity(context.Background(), h.serverID, c, h.cat, now)
-}
-
-func (h *Hub) maybeFlushAll() {
-	if h.store == nil || h.flushEvery <= 0 {
-		return
-	}
-	now := h.now()
 	if !h.lastFlush.IsZero() && now.Sub(h.lastFlush) < h.flushEvery {
+		h.mu.Unlock()
 		return
 	}
 	h.lastFlush = now
-	h.mu.Lock()
 	ids := make([]int64, 0, len(h.cities))
 	for id, c := range h.cities {
 		if c.PlayerID != 0 {
@@ -418,20 +413,25 @@ func (h *Hub) maybeFlushAll() {
 }
 func (h *Hub) onDone(cityID, jobID int64) {
 	h.mu.Lock()
-	city := h.cities[cityID]
-	if city == nil {
-		h.mu.Unlock()
+	defer h.mu.Unlock()
+	var next *BuildJob
+	err := h.updateCityLocked(context.Background(), cityID, func(city *CityState) error {
+		settleProduction(city, h.cat, h.now())
+		var err error
+		next, err = completeBuild(city, h.cat, jobID, h.now())
+		return err
+	})
+	if err != nil {
+		if !errors.Is(err, ErrCityNotFound) && !errors.Is(err, ErrJobNotFound) {
+			h.sched.add(h.now().Add(time.Second), func() { h.onDone(cityID, jobID) })
+		}
 		return
 	}
-	now := h.now()
-	settleProduction(city, h.cat, now)
-	next, _ := completeBuild(city, h.cat, jobID, now)
-	h.mu.Unlock()
 	if next != nil {
 		h.sched.add(next.FinishAt, func() { h.onDone(cityID, next.ID) })
 	}
-	h.persistCity(cityID)
 }
+
 // HasPendingBuildJob reports whether the city has a waiting or active build queue entry.
 func HasPendingBuildJob(c *CityState) bool {
 	return pickBuildSpeedupTarget(c) != nil
@@ -461,11 +461,11 @@ func pickBuildSpeedupTarget(c *CityState) *BuildJob {
 }
 
 type buildSpeedupOutcome struct {
-	AppliedSec   int64
-	JobID        int64
-	CompleteNow  bool
-	ScheduleAt   time.Time
-	Schedule     bool
+	AppliedSec  int64
+	JobID       int64
+	CompleteNow bool
+	ScheduleAt  time.Time
+	Schedule    bool
 }
 
 func speedupBuildJob(c *CityState, now time.Time, sec int64) buildSpeedupOutcome {
@@ -525,15 +525,16 @@ func (h *Hub) ApplyBuildSpeedup(cityID int64, sec int64) int64 {
 		return 0
 	}
 	h.mu.Lock()
-	city := h.cities[cityID]
-	if city == nil {
-		h.mu.Unlock()
+	var out buildSpeedupOutcome
+	err := h.updateCityLocked(context.Background(), cityID, func(city *CityState) error {
+		settleProduction(city, h.cat, h.now())
+		out = speedupBuildJob(city, h.now(), sec)
+		return nil
+	})
+	h.mu.Unlock()
+	if err != nil {
 		return 0
 	}
-	now := h.now()
-	settleProduction(city, h.cat, now)
-	out := speedupBuildJob(city, now, sec)
-	h.mu.Unlock()
 	if out.AppliedSec <= 0 {
 		return 0
 	}
@@ -542,21 +543,20 @@ func (h *Hub) ApplyBuildSpeedup(cityID int64, sec int64) int64 {
 	} else if out.Schedule {
 		h.sched.add(out.ScheduleAt, func() { h.onDone(cityID, out.JobID) })
 	}
-	h.persistCity(cityID)
 	return out.AppliedSec
 }
 
 func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (UpgradeResult, error) {
 	h.mu.Lock()
-	city := h.cities[cityID]
-	if city == nil {
-		h.mu.Unlock()
-		return UpgradeResult{}, ErrCityNotFound
-	}
-	now := h.now()
-	settleProduction(city, h.cat, now)
-	res, job, err := startUpgrade(city, h.cat, now, slot, cfgID)
-	h.mu.Unlock()
+	defer h.mu.Unlock()
+	var res UpgradeResult
+	var job *BuildJob
+	err := h.updateCityLocked(context.Background(), cityID, func(city *CityState) error {
+		var err error
+		settleProduction(city, h.cat, h.now())
+		res, job, err = startUpgrade(city, h.cat, h.now(), slot, cfgID)
+		return err
+	})
 	if err != nil {
 		return UpgradeResult{}, err
 	}
@@ -565,6 +565,7 @@ func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (Upgr
 	}
 	return res, nil
 }
+
 func (h *Hub) Tick() int {
 	n := h.sched.poll(h.now())
 	h.maybeFlushAll()
