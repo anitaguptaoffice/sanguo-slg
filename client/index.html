@@ -2954,6 +2954,27 @@
           bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1,
           bag-shop-inline-state-residual-deeper-ring-keyframes 2s ease-out 1;
       }
+      /* CLIENT-304 bag/shop inline state residual deepest ring (CLIENT-288 deeper retained) */
+      @keyframes bag-shop-inline-state-residual-deepest-ring-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        44% { box-shadow: 0 0 20px rgba(160, 50, 20, 1); outline: 3px solid rgba(160, 50, 20, 1); }
+        80% { box-shadow: 0 0 10px rgba(160, 50, 20, 0.7); outline: 2px solid rgba(160, 50, 20, 0.75); }
+      }
+      .bag-list li .bag-shop-inline-state-residual-deepest-ring,
+      .bag-list li.bag-shop-inline-state-residual-deepest-ring,
+      .shop-list li .bag-shop-inline-state-residual-deepest-ring,
+      .shop-list li.bag-shop-inline-state-residual-deepest-ring {
+        animation: bag-shop-inline-state-residual-deepest-ring-keyframes 2s ease-out 1;
+      }
+      .bag-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring,
+      .bag-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring,
+      .shop-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring,
+      .shop-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring {
+        animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1,
+          bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1,
+          bag-shop-inline-state-residual-deeper-ring-keyframes 2s ease-out 1,
+          bag-shop-inline-state-residual-deepest-ring-keyframes 2s ease-out 1;
+      }
       @keyframes panel-return-source-highlight-residual-keyframes {
         0%, 100% { box-shadow: none; outline: none; }
         40% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.8); outline: 2px solid rgba(120, 180, 120, 0.85); }
@@ -2992,6 +3013,23 @@
         animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1,
           panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1,
           panel-return-source-highlight-residual-deeper-keyframes 2.5s ease-out 1;
+      }
+      /* CLIENT-304 panel return source residual deepest highlight (CLIENT-288 deeper retained) */
+      @keyframes panel-return-source-highlight-residual-deepest-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        50% { box-shadow: 0 0 22px rgba(40, 120, 40, 1); outline: 3px solid rgba(40, 120, 40, 1); }
+        84% { box-shadow: 0 0 12px rgba(40, 120, 40, 0.65); outline: 2px solid rgba(40, 120, 40, 0.75); }
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual-deepest,
+      .shop-category-tabs .panel-return-source-highlight-residual-deepest {
+        animation: panel-return-source-highlight-residual-deepest-keyframes 2.5s ease-out 1;
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep.panel-return-source-highlight-residual-deeper.panel-return-source-highlight-residual-deepest,
+      .shop-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep.panel-return-source-highlight-residual-deeper.panel-return-source-highlight-residual-deepest {
+        animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1,
+          panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1,
+          panel-return-source-highlight-residual-deeper-keyframes 2.5s ease-out 1,
+          panel-return-source-highlight-residual-deepest-keyframes 2.5s ease-out 1;
       }
       @keyframes hero-list-return-highlight-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
@@ -4850,14 +4888,18 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deepest,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deepest,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deep,
@@ -5063,14 +5105,18 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deepest,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deepest,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deep,
@@ -5223,10 +5269,14 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-shop-inline-state-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li .bag-shop-inline-state-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li .bag-shop-inline-state-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li .bag-shop-inline-state-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li .bag-shop-inline-state-residual-deep-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deepest,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deepest,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-return-source-highlight-residual-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .panel-return-source-highlight-residual,

@@ -13,6 +13,7 @@ import {
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS,
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_MS,
 } from "@/net/panelReturnSourceHighlightResidualDeeper";
+import { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepest";
 
 describe("panelReturnSourceHighlightResidualDeeper (CLIENT-288)", () => {
   it("highlightPanelReturnSourceCategoryResidualDeeper pulses tab class for 2.5s", () => {
@@ -56,6 +57,7 @@ describe("panelReturnSourceHighlightResidualDeeper (CLIENT-288)", () => {
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_CLASS)).toBe(true);
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS)).toBe(true);
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS)).toBe(true);
+    expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_CLASS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_MS)).toBe(true);
