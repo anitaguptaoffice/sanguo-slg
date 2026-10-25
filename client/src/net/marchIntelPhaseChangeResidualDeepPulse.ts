@@ -1,3 +1,4 @@
+import { scheduleIntelPhaseChangeResidualDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
 import {
   INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS,
   scheduleIntelPhaseChangeResidualPulse,
@@ -42,11 +43,12 @@ export function scheduleIntelPhaseChangeResidualDeepPulse(
 }
 
 /**
- * phase 变更扫读：CLIENT-258 残余脉冲 + CLIENT-274 2s 深脉冲（CLIENT-221 flash / wave:39 主脉冲 **不重复堆叠**）。
+ * phase 变更扫读：CLIENT-258 残余 + CLIENT-274 深脉冲 + CLIENT-290 巩固再加深（CLIENT-221 flash / wave:39 主脉冲 **不重复堆叠**）。
  */
 export function pulseIntelPhaseChangeResidualOnPhaseChange(el: HTMLElement | null | undefined): void {
   scheduleIntelPhaseChangeResidualPulse(el);
   scheduleIntelPhaseChangeResidualDeepPulse(el);
+  scheduleIntelPhaseChangeResidualDeeperPulse(el);
 }
 
 export function resetIntelPhaseChangeResidualDeepPulseTimersForTests(): void {
