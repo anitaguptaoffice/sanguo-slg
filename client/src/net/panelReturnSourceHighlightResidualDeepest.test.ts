@@ -17,6 +17,7 @@ import {
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_CLASS,
   PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_MS,
 } from "@/net/panelReturnSourceHighlightResidualDeepest";
+import { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeeper";
 
 describe("panelReturnSourceHighlightResidualDeepest (CLIENT-304)", () => {
   it("highlightPanelReturnSourceCategoryResidualDeepest pulses tab class for 2.5s", () => {
@@ -41,7 +42,7 @@ describe("panelReturnSourceHighlightResidualDeepest (CLIENT-304)", () => {
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_CLASS)).toBe(false);
   });
 
-  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 through CLIENT-304 classes", () => {
+  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 through CLIENT-320 classes", () => {
     const root = document.createElement("div");
     const tab = document.createElement("button");
     tab.setAttribute("data-shop-category", "resource");
@@ -61,6 +62,9 @@ describe("panelReturnSourceHighlightResidualDeepest (CLIENT-304)", () => {
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS)).toBe(true);
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS)).toBe(true);
     expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_CLASS)).toBe(true);
+    expect(tab.classList.contains(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPER_CLASS)).toBe(
+      true,
+    );
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_MS)).toBe(true);

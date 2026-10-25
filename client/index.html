@@ -3108,6 +3108,28 @@
           bag-shop-inline-state-residual-deeper-ring-keyframes 2s ease-out 1,
           bag-shop-inline-state-residual-deepest-ring-keyframes 2s ease-out 1;
       }
+      /* CLIENT-320 bag/shop inline state residual deepest-deeper ring (CLIENT-304 deepest retained) */
+      @keyframes bag-shop-inline-state-residual-deepest-deeper-ring-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        46% { box-shadow: 0 0 22px rgba(140, 30, 10, 1); outline: 3px solid rgba(140, 30, 10, 1); }
+        82% { box-shadow: 0 0 12px rgba(140, 30, 10, 0.75); outline: 2px solid rgba(140, 30, 10, 0.8); }
+      }
+      .bag-list li .bag-shop-inline-state-residual-deepest-deeper-ring,
+      .bag-list li.bag-shop-inline-state-residual-deepest-deeper-ring,
+      .shop-list li .bag-shop-inline-state-residual-deepest-deeper-ring,
+      .shop-list li.bag-shop-inline-state-residual-deepest-deeper-ring {
+        animation: bag-shop-inline-state-residual-deepest-deeper-ring-keyframes 2s ease-out 1;
+      }
+      .bag-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring.bag-shop-inline-state-residual-deepest-deeper-ring,
+      .bag-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring.bag-shop-inline-state-residual-deepest-deeper-ring,
+      .shop-list li .bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring.bag-shop-inline-state-residual-deepest-deeper-ring,
+      .shop-list li.bag-shop-inline-state-residual-ring.bag-shop-inline-state-residual-deep-ring.bag-shop-inline-state-residual-deeper-ring.bag-shop-inline-state-residual-deepest-ring.bag-shop-inline-state-residual-deepest-deeper-ring {
+        animation: bag-shop-inline-state-residual-ring-keyframes 1.5s ease-out 1,
+          bag-shop-inline-state-residual-deep-ring-keyframes 2s ease-out 1,
+          bag-shop-inline-state-residual-deeper-ring-keyframes 2s ease-out 1,
+          bag-shop-inline-state-residual-deepest-ring-keyframes 2s ease-out 1,
+          bag-shop-inline-state-residual-deepest-deeper-ring-keyframes 2s ease-out 1;
+      }
       @keyframes panel-return-source-highlight-residual-keyframes {
         0%, 100% { box-shadow: none; outline: none; }
         40% { box-shadow: 0 0 12px rgba(120, 180, 120, 0.8); outline: 2px solid rgba(120, 180, 120, 0.85); }
@@ -3163,6 +3185,24 @@
           panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1,
           panel-return-source-highlight-residual-deeper-keyframes 2.5s ease-out 1,
           panel-return-source-highlight-residual-deepest-keyframes 2.5s ease-out 1;
+      }
+      /* CLIENT-320 panel return source residual deepest-deeper highlight (CLIENT-304 deepest retained) */
+      @keyframes panel-return-source-highlight-residual-deepest-deeper-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        52% { box-shadow: 0 0 24px rgba(20, 100, 20, 1); outline: 3px solid rgba(20, 100, 20, 1); }
+        86% { box-shadow: 0 0 14px rgba(20, 100, 20, 0.7); outline: 2px solid rgba(20, 100, 20, 0.8); }
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual-deepest-deeper,
+      .shop-category-tabs .panel-return-source-highlight-residual-deepest-deeper {
+        animation: panel-return-source-highlight-residual-deepest-deeper-keyframes 2.5s ease-out 1;
+      }
+      .bag-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep.panel-return-source-highlight-residual-deeper.panel-return-source-highlight-residual-deepest.panel-return-source-highlight-residual-deepest-deeper,
+      .shop-category-tabs .panel-return-source-highlight-residual.panel-return-source-highlight-residual-deep.panel-return-source-highlight-residual-deeper.panel-return-source-highlight-residual-deepest.panel-return-source-highlight-residual-deepest-deeper {
+        animation: panel-return-source-highlight-residual-keyframes 2s ease-out 1,
+          panel-return-source-highlight-residual-deep-keyframes 2.5s ease-out 1,
+          panel-return-source-highlight-residual-deeper-keyframes 2.5s ease-out 1,
+          panel-return-source-highlight-residual-deepest-keyframes 2.5s ease-out 1,
+          panel-return-source-highlight-residual-deepest-deeper-keyframes 2.5s ease-out 1;
       }
       @keyframes hero-list-return-highlight-keyframes {
         0%, 100% { box-shadow: none; background: #1a1410; }
