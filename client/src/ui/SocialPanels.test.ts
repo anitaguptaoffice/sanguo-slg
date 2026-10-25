@@ -16,10 +16,12 @@ import { formatRankRefreshCooldownResidualDeepStamp } from "@/net/rankRefreshCoo
 import { formatRankRefreshCooldownResidualDeeperStamp } from "@/net/rankRefreshCooldownResidualDeeper";
 import { formatRankRefreshCooldownResidualDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepest";
 import { formatRankRefreshCooldownResidualDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeeper";
+import { formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
 import { RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS } from "@/net/rankPinKeepResidualDeepRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeeperRing";
+import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeeperRing";
 import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
@@ -452,6 +454,18 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
         mount
           .querySelector(".rank-pin-row")
           ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS),
+      ).toBe(true);
+      const deepestDeepestDeeper = mount.querySelector(
+        '[data-role="rank-refresh-cooldown-residual-deepest-deepest-deeper"]',
+      );
+      expect(deepestDeepestDeeper?.textContent).toBe(
+        formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp(now, now, 1, now),
+      );
+      expect(deepestDeepestDeeper?.classList.contains("hidden")).toBe(false);
+      expect(
+        mount
+          .querySelector(".rank-pin-row")
+          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
       ).toBe(true);
     } finally {
       nowSpy.mockRestore();
