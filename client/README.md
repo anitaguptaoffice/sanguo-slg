@@ -110,6 +110,8 @@
 
 **wave:57（CLIENT-370）军情 phase 变更扫读与再出征表单预填残余巩固再加深五层**：`ListMarches` phase 变化行与选中行军信息卡阶段条在 **CLIENT-354** `intel-phase-change-residual-deepest-deepest-deepest-pulse` 上叠加 **`intel-phase-change-residual-deepest-deepest-deepest-deeper-pulse` 2s** **巩固再加深五层**同步扫读（**CLIENT-221** flash、**CLIENT-220** 小地图互选、**CLIENT-354/338/322/306/290/274/258** **不退化**；**非** wave:39 phase 主脉冲重复堆叠；**非** wave:56 主城队列主叙事）。军情行 **再出征** 走 **`prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeeper`**，军事面板 **`march-intel-remarch-residual-deepest-deepest-deepest-deeper-summary`** 只读 **巩固再加深五层** 目标坐标/兵力摘要（可附带 **CLIENT-253** 底栏余量 hint；**CLIENT-366** 出征刷新戳记可 stub；**CLIENT-354/338/322/306/290/253** **不退化**；**无** CancelMarch）。单测：`marchIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse.test.ts`、`marchIntelRemarchResidualDeepestDeepestDeepestDeeper.test.ts`、`MarchListPanel.test.ts`；`cd client && npm test` 绿。（Closes [#1655](https://github.com/anitaguptaoffice/sanguo-slg/issues/1655)）
 
+**wave:59（CLIENT-386）军情 phase 变更扫读与再出征表单预填残余巩固再加深五层**：`ListMarches` phase 变化行与选中行军信息卡阶段条在 **CLIENT-370** `intel-phase-change-residual-deepest-deepest-deepest-deeper-pulse` 上叠加 **`intel-phase-change-residual-deepest-deepest-deepest-deepest-deeper-pulse` 2s** **巩固再加深五层**同步扫读（**CLIENT-221** flash、**CLIENT-220** 小地图互选、**CLIENT-370/354/338/322/306/290/274/258** **不退化**；**非** wave:39 phase 主脉冲重复堆叠；**非** wave:58 主城队列主叙事）。军情行 **再出征** 走 **`prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper`**，军事面板 **`march-intel-remarch-residual-deepest-deepest-deepest-deepest-deeper-summary`** 只读 **巩固再加深五层** 目标坐标/兵力摘要（可附带 **CLIENT-253** 底栏余量 hint；**CLIENT-382** 出征刷新戳记可 stub；**CLIENT-370/354/338/322/306/290/253** **不退化**；**无** CancelMarch）。单测：`marchIntelPhaseChangeResidualDeepestDeepestDeepestDeepestDeeperPulse.test.ts`、`marchIntelRemarchResidualDeepestDeepestDeepestDeepestDeeper.test.ts`、`MarchListPanel.test.ts`；`cd client && npm test` 绿。（Closes [#1697](https://github.com/anitaguptaoffice/sanguo-slg/issues/1697)）
+
 ### ART-UI-FILTER-008 运行时 chip（CLIENT-121）
 
 **`artFilterChipRuntime`** + **`remountPanelFilterChips`**：邮件（全部/未读）、日常四态、战报 outcome 筛选按钮带 **`data-ui-filter-chip`**，主城 **`MainCityScene`** 在面板九宫挂载后接线四态 sprite；选中同步 **`aria-pressed` / `aria-current`** 与 **`.selected`**，**`:focus-visible`** 金环；**`data-art-skin="off"`** 仍走纯文字 chip 且保留 **≥44×44** 命中区。单测：`artFilterChipRuntime.test.ts`（含 `probeFilterChipHitMeetsMin` / `readFilterChipCssMinHit` 探针，不单扫 CSS 字符串）。
@@ -824,6 +826,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层client-348-起) **CLIENT-354** 军情 phase 再出征预填栈基础上 **巩固再加深五层**（**residual-deepest-deepest-deepest-deeper**）；主叙事 **非** wave:56 主城队列栈重复；**仍** DATA-002；**无** CancelMarch；范围外同 Wave 55/56。
 
 正文 **wave:57（CLIENT-370）** bullet 见上文 [军情 phase 栈](#wave-55client-354军情-phase-变更扫读与再出征表单预填残余巩固再加深四层) 紧邻段落。（Closes [#1655](https://github.com/anitaguptaoffice/sanguo-slg/issues/1655)）
+
+## Wave 59 H5 军情 phase 变更扫读与再出征表单预填残余巩固再加深五层（CLIENT-386）
+
+在 [Wave 57](#wave-57-h5-军情-phase-变更扫读与再出征表单预填残余巩固再加深五层client-370) **CLIENT-370** 军情 phase 再出征预填栈基础上 **巩固再加深五层**（**residual-deepest-deepest-deepest-deepest-deeper**）；主叙事 **非** wave:58 主城队列栈重复；**仍** DATA-002；**无** CancelMarch；范围外同 Wave 57/58。
+
+正文 **wave:59（CLIENT-386）** bullet 见上文 [军情 phase 栈](#wave-55client-354军情-phase-变更扫读与再出征表单预填残余巩固再加深四层) 紧邻 **CLIENT-370** 段落。（Closes [#1697](https://github.com/anitaguptaoffice/sanguo-slg/issues/1697)）
 
 ## Wave 58 H5 主城队列 ETA 完成焦点残余巩固再加深五层（CLIENT-372）
 

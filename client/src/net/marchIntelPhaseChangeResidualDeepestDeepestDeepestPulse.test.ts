@@ -81,6 +81,9 @@ describe("scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse (CLIENT-354
     expect(
       row.classList.contains("intel-phase-change-residual-deepest-deepest-deepest-deeper-pulse"),
     ).toBe(true);
+    expect(
+      row.classList.contains("intel-phase-change-residual-deepest-deepest-deepest-deepest-deeper-pulse"),
+    ).toBe(true);
   });
 
   it("deepest-deepest-deepest pulse duration covers CLIENT-338 deepest-deepest-deeper pulse", () => {
