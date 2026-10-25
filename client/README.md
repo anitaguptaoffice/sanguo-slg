@@ -927,11 +927,21 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 ## Wave 56 H5 主城七槽队列 ETA 完成焦点残余巩固再加深五层·队列预览槽位互链再加深五层·将领养成扫读再加深五层·panelState 筛选 chip 再加深五层·双榜钉选再加深五层·军团聊天再加深五层·日常 chain 队列 HUD 深链再加深五层·1280 主城将领日常社交队列组合 manifest 巩固再加深五层（M4 出口 / INTG-056）
 
-在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-056** 网关冒烟一致）。在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层出征戳记兵力余量再加深四层战报键盘坐标复制再加深四层邮件-hud-附件再加深四层背包商城返回再加深四层排行招募扫读再加深四层军情-phase-预填再加深四层1280-组合-manifest-巩固再加深四层m4-出口--intg-055) 世界/军情栈基础上 **轮转回**主城/将领/队列/日常/社交/HUD 栈做 **残余巩固再加深五层**（**residual-deepest-deepest-deepest-deepest**：主城队列 ETA/完成焦点、队列预览槽位互链、将领养成道具扫读、panelState 与筛选 chip、双榜钉选刷新、军团聊天扫读、日常 chain·队列·HUD 底栏深链、1280 主城/将领/日常/社交/队列 manifest）；**非** wave:55 CLIENT-355 世界军情战报邮件商城排行 manifest 面板集。**范围外**同 Wave 55；**仍** DATA-002；实现卡 **CLIENT-356～363**（自 **CLIENT-356** 起）。
+在 `make dev` 下联调的最短人工路径（与 [`tools/smoke/README.md`](../tools/smoke/README.md) **INTG-056** 网关冒烟一致）。在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层出征戳记兵力余量再加深四层战报键盘坐标复制再加深四层邮件-hud-附件再加深四层背包商城返回再加深四层排行招募扫读再加深四层军情-phase-预填再加深四层1280-组合-manifest-巩固再加深四层m4-出口--intg-055) 世界/军情栈基础上 **轮转回**主城/将领/队列/日常/社交/HUD 栈做 **残余巩固再加深五层**（**residual-deepest-deepest-deepest-deeper**：主城队列 ETA/完成焦点、队列预览槽位互链、将领养成道具扫读、panelState 与筛选 chip、双榜钉选刷新、军团聊天扫读、日常 chain·队列·HUD 底栏深链、1280 主城/将领/日常/社交/队列 manifest）；**非** wave:55 CLIENT-355 世界军情战报邮件商城排行 manifest 面板集。**范围外**同 Wave 55；**仍** DATA-002；**仍不做** DATA-003 / `cfg_act*` / 不可逆消费扩量；`CancelMarch`/募兵加速；主城建造/募兵**新 RPC**；战报 proto 扩量；将领**装备槽** / hero 专用升级 RPC；**世界瓦片/图集**仍暂缓；**花钱类/IAP/新商城 SKU** 不做；**勿**将 **ART-012** 登记为本波实现卡 ID。实现卡 **CLIENT-356～363**（自 **CLIENT-356** 起）。
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 主城将领日常社交队列组合 manifest 巩固再加深五层** | [手动验收（1280 wave:56 组合 manifest 巩固再加深五层 CLIENT-363）](#手动验收1280-wave56-组合-manifest-巩固再加深五层-client-363)（[#1635](https://github.com/anitaguptaoffice/sanguo-slg/issues/1635)） | 进行中 |
+| **主城队列 ETA 分段完成焦点与七槽 ring 残余巩固再加深五层** | 正文 **wave:56（CLIENT-356）** bullet（[#1628](https://github.com/anitaguptaoffice/sanguo-slg/issues/1628) / [#1639](https://github.com/anitaguptaoffice/sanguo-slg/pull/1639) `a584b590`） | 已合 |
+| **队列下一完成预览与七槽互链残余巩固再加深五层** | 正文 **wave:56（CLIENT-357）** bullet（[#1629](https://github.com/anitaguptaoffice/sanguo-slg/issues/1629) / [#1645](https://github.com/anitaguptaoffice/sanguo-slg/pull/1645) `859af0ce`） | 已合 |
+| **将领列表忠诚次行与详情养成道具扫读残余巩固再加深五层** | 正文 **wave:56（CLIENT-358）** bullet（[#1630](https://github.com/anitaguptaoffice/sanguo-slg/issues/1630) / [#1640](https://github.com/anitaguptaoffice/sanguo-slg/pull/1640) `2e29ff6b`） | 已合 |
+| **将领 panelState 与列表筛选 chip 记忆抛光再加深五层** | 正文 **wave:56（CLIENT-359）** bullet（[#1631](https://github.com/anitaguptaoffice/sanguo-slg/issues/1631) / [#1643](https://github.com/anitaguptaoffice/sanguo-slg/pull/1643) `51360259`） | 已合 |
+| **双榜刷新冷却戳记与钉选保持残余巩固再加深五层** | 正文 **wave:56（CLIENT-360）** bullet（[#1632](https://github.com/anitaguptaoffice/sanguo-slg/issues/1632) / [#1642](https://github.com/anitaguptaoffice/sanguo-slg/pull/1642) `562d5f96`） | 已合 |
+| **军团职务分组头与聊天未读分隔扫读残余巩固再加深五层** | 正文 **wave:56（CLIENT-361）** bullet（[#1633](https://github.com/anitaguptaoffice/sanguo-slg/issues/1633) / [#1644](https://github.com/anitaguptaoffice/sanguo-slg/pull/1644) `157bc7ab`） | 已合 |
+| **日常 chain 队列互链与 HUD 待办底栏深链残余巩固再加深五层** | 正文 **wave:56（CLIENT-362）** bullet（[#1634](https://github.com/anitaguptaoffice/sanguo-slg/issues/1634) / [#1641](https://github.com/anitaguptaoffice/sanguo-slg/pull/1641) `12161353`） | 已合 |
+| **1280 主城将领日常社交队列组合 manifest 巩固再加深五层** | [手动验收（1280 wave:56 组合 manifest 巩固再加深五层 CLIENT-363）](#手动验收1280-wave56-组合-manifest-巩固再加深五层-client-363)（[#1635](https://github.com/anitaguptaoffice/sanguo-slg/issues/1635) / [#1646](https://github.com/anitaguptaoffice/sanguo-slg/pull/1646) `997fc9e0`） | 已合 |
+| **网关冒烟**（主城队列 ETA/完成焦点 + 将领养成扫读 + 双榜钉选 + 军团聊天 + 日常 chain·队列·HUD 深链 **residual deepest-deepest-deepest-deeper** hints） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 56** / `TestINTG056Wave56SmokePath`（[#1636](https://github.com/anitaguptaoffice/sanguo-slg/issues/1636) / [#1638](https://github.com/anitaguptaoffice/sanguo-slg/pull/1638) `59d77bba`） | 已合 |
+
+**推荐串联**（在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层出征戳记兵力余量再加深四层战报键盘坐标复制再加深四层邮件-hud-附件再加深四层背包商城返回再加深四层排行招募扫读再加深四层军情-phase-预填再加深四层1280-组合-manifest-巩固再加深四层m4-出口--intg-055) 世界栈基础上 **轮转**回主城栈）：**队列** ETA/完成焦点 **巩固再加深五层**（**CLIENT-356**）→ **队列预览** 槽位互链 **巩固再加深五层**（**CLIENT-357**）→ **将领** 养成道具扫读 **巩固再加深五层**（**CLIENT-358**）→ **panelState/筛选 chip** **抛光再加深五层**（**CLIENT-359**）→ **双榜** 钉选刷新 **巩固再加深五层**（**CLIENT-360**）→ **军团/聊天** 扫读 **巩固再加深五层**（**CLIENT-361**）→ **日常 chain·队列·HUD** 深链 **巩固再加深五层**（**CLIENT-362**）→ 视口 **1280×720** 主城将领日常社交队列 manifest **巩固再加深五层**（**CLIENT-363**）；网关字段见 `tools/smoke/README.md` **INTG-056**。
 
 ### 手动验收（1280 wave:56 组合 manifest 巩固再加深五层 CLIENT-363）
 
@@ -941,6 +951,8 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 1. 视口 **1280×720**：**主城/队列/将领/双榜/军团/聊天/日常** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:56 DOM 钩子（软依赖 **CLIENT-356～362**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227/235/243/251/259/267/275/283/291/299/307/315/323/331/339/347/355** manifest 不退化。单测：`wave56MainCityHeroDailySocialQueueNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-363）；`cd client && npm test` 绿。（Closes [#1635](https://github.com/anitaguptaoffice/sanguo-slg/issues/1635)）
+
+**硬约束**：**仍** DATA-002；**无** DATA-003 / `cfg_act*` / 不可逆消费扩量；**无** CancelMarch / 募兵加速 / 主城建造新 RPC / 战报 proto 扩量；世界瓦片/图集仍暂缓；**无** IAP / 新商城 SKU；**勿**将 **ART-012** 登记为本波实现卡 ID；**美术旁路**（**非** wave:56 backlog 实现卡）：**CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012**——**非**本波 backlog；**永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983/#1017/#1069/#1191/#1192/#1193/#1203/#1204/#1205/#1206/#1207 等 art hold / VERIFY draft PR。
 
 ## Wave 55 H5 世界小地图军情 scroll-sync 残余巩固再加深四层·出征戳记兵力余量再加深四层·战报键盘坐标复制再加深四层·邮件 HUD 附件再加深四层·背包商城返回再加深四层·排行招募扫读再加深四层·军情 phase 预填再加深四层·1280 组合 manifest 巩固再加深四层（M4 出口 / INTG-055）
 
