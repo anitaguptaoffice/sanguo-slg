@@ -38,6 +38,7 @@ import {
   CLIENT_291_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_299_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_315_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  CLIENT_331_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_323_NARROW_MANIFEST_CENTER_PANEL_IDS,
   CLIENT_307_NARROW_MANIFEST_CENTER_PANEL_IDS,
   MAIN_CITY_WAVE30_BOTTOM_TOOLBAR_CLEARANCE_PX,
@@ -60,6 +61,7 @@ import {
   WAVE47_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE48_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE50_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX,
+  WAVE52_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE49_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WAVE51_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
   WORLD_MINIMAP_NARROW_EXPANDED_LAYOUT_RECT,
@@ -534,6 +536,29 @@ describe("narrow layout root class", () => {
     expect(
       WAVE51_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX,
     ).toBeGreaterThanOrEqual(56);
+  });
+
+  it("CLIENT-331 wave:52 main-city hero daily social queue manifest consolidate deepest-deepest-deeper at 1280×720", () => {
+    const vp = computeLayoutViewport(MIN_CONTENT_VIEWPORT.w, MIN_CONTENT_VIEWPORT.h);
+    expect(isNarrowLayoutViewport(vp)).toBe(true);
+    expect(CLIENT_331_NARROW_MANIFEST_CENTER_PANEL_IDS).toEqual([
+      "building",
+      "queue",
+      "hero",
+      "rank",
+      "guild",
+      "chat",
+      "daily",
+    ]);
+    expect(CLIENT_331_NARROW_MANIFEST_CENTER_PANEL_IDS).not.toContain("world");
+    expect(CLIENT_331_NARROW_MANIFEST_CENTER_PANEL_IDS).not.toContain("march");
+    expect(NARROW_SCROLL_SIDEBAR_PANEL_IDS).toContain("building");
+    for (const id of ["queue", "hero", "rank", "guild", "chat", "daily"] as const) {
+      expect(NARROW_SCROLL_CENTER_PANEL_IDS).toContain(id);
+    }
+    expect(WAVE52_MAIN_CITY_HERO_DAILY_SOCIAL_QUEUE_BOTTOM_TOOLBAR_CLEARANCE_PX).toBeGreaterThanOrEqual(
+      56,
+    );
   });
 
   it("CLIENT-315 wave:50 main-city hero daily social queue manifest consolidate deepest-deeper at 1280×720", () => {
