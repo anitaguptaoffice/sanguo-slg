@@ -18,6 +18,7 @@ import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/bagShop
 import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeeperRing";
 import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
 import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestRing";
+import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestDeeperRing";
 
 describe("bagShopInlineStateResidualDeep (CLIENT-272)", () => {
   it("scheduleBagShopInlineStateResidualDeepRing adds class then removes after 2s", () => {
@@ -37,7 +38,7 @@ describe("bagShopInlineStateResidualDeep (CLIENT-272)", () => {
     expect(el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_CLASS)).toBe(false);
   });
 
-  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 ring through CLIENT-352 deepest-deepest-deepest ring", () => {
+  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 ring through CLIENT-368 deepest-deepest-deepest-deeper ring", () => {
     const el = document.createElement("span");
     el.className = BAG_ROW_INLINE_STATE_CLASS;
     const timeouts: Array<{ fn: () => void; ms: number }> = [];
@@ -61,6 +62,9 @@ describe("bagShopInlineStateResidualDeep (CLIENT-272)", () => {
     ).toBe(true);
     expect(
       el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS),
+    ).toBe(true);
+    expect(
+      el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
     ).toBe(true);
     const ringTimeout = timeouts.find((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_RING_MS);
     const deepTimeout = timeouts.find((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_MS);
