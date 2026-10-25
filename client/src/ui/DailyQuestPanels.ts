@@ -72,6 +72,7 @@ import {
 import {
   appendQuestChainQueueHudResidualDeepSubline,
   appendQuestChainQueueHudResidualDeeperSubline,
+  appendQuestChainQueueHudResidualDeepestDeepestDeepestDeeperSubline,
   appendQuestChainQueueHudResidualDeepestDeepestDeepestSubline,
   appendQuestChainQueueHudResidualDeepestDeepestDeeperSubline,
   appendQuestChainQueueHudResidualDeepestDeeperSubline,
@@ -561,6 +562,15 @@ export class DailyQuestPanels {
             now,
           );
           appendQuestChainQueueHudResidualDeepestDeepestDeepestSubline(
+            li,
+            q,
+            buildings,
+            recruits,
+            slotLabels,
+            this.rows,
+            now,
+          );
+          appendQuestChainQueueHudResidualDeepestDeepestDeepestDeeperSubline(
             li,
             q,
             buildings,

@@ -173,6 +173,21 @@ export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLIN
 export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS =
   "hud-todo-toolbar-deep-link-residual-deepest-deepest-deepest-pulse";
 
+/** CLIENT-362: daily chain + queue ETA HUD residual deepest-deepest-deepest-deeper subline (manifest selector). */
+export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS =
+  "quest-chain-queue-hud-residual-deepest-deepest-deepest-deeper-subline";
+
+/** CLIENT-362: DOM class aligned with daily-quest row renderers (parallel CLIENT-362 net). */
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS =
+  "daily-quest-chain-queue-hud-residual-deepest-deepest-deepest-deeper-subline";
+
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE =
+  "daily-quest-chain-queue-hud-residual-deepest-deepest-deepest-deeper-subline";
+
+/** CLIENT-362: HUD todo toolbar deep-link residual deepest-deepest-deepest-deeper pulse. */
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS =
+  "hud-todo-toolbar-deep-link-residual-deepest-deepest-deepest-deeper-pulse";
+
 /** Wave:48 baselines that must not regress alongside wave:50 residual deepest-deeper hooks. */
 export {
   DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_RING_CLASS,
