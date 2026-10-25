@@ -867,9 +867,17 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 世界军情战报邮件商城排行组合 manifest 巩固再加深三层** | [手动验收（1280 wave:53 组合 manifest 巩固再加深三层 CLIENT-339）](#手动验收1280-wave53-组合-manifest-巩固再加深三层-client-339)（Closes [#1572](https://github.com/anitaguptaoffice/sanguo-slg/issues/1572)） | 本 PR |
+| **小地图视口锚点与军情列表 scroll-sync 残余巩固再加深三层** | 正文 **wave:53（CLIENT-332）** bullet（[#1565](https://github.com/anitaguptaoffice/sanguo-slg/issues/1565) / [#1579](https://github.com/anitaguptaoffice/sanguo-slg/pull/1579) `e37d1a81`） | 已合 |
+| **出征表单刷新戳记与兵力余量只读对照残余巩固再加深三层** | 正文 **wave:53（CLIENT-333）** bullet（[#1566](https://github.com/anitaguptaoffice/sanguo-slg/issues/1566) / [#1577](https://github.com/anitaguptaoffice/sanguo-slg/pull/1577) `8868f2f7`） | 已合 |
+| **战报列表密度键盘相邻导航与详情坐标复制条残余巩固再加深三层** | 正文 **wave:53（CLIENT-334）** bullet（[#1567](https://github.com/anitaguptaoffice/sanguo-slg/issues/1567) / [#1582](https://github.com/anitaguptaoffice/sanguo-slg/pull/1582) `4fb43407`） | 已合 |
+| **邮件附件领取与 HUD 邮件日常角标同步残余巩固再加深三层** | 正文 **wave:53（CLIENT-335）** bullet（[#1568](https://github.com/anitaguptaoffice/sanguo-slg/issues/1568) / [#1576](https://github.com/anitaguptaoffice/sanguo-slg/pull/1576) `579b94fc`） | 已合 |
+| **背包商城行内态与面板返回来源高亮残余巩固再加深三层** | 正文 **wave:53（CLIENT-336）** bullet（[#1569](https://github.com/anitaguptaoffice/sanguo-slg/issues/1569) / [#1581](https://github.com/anitaguptaoffice/sanguo-slg/pull/1581) `ad931c50`） | 已合 |
+| **排行列表密度扫读与招募模板行内摘要残余巩固再加深三层** | 正文 **wave:53（CLIENT-337）** bullet（[#1570](https://github.com/anitaguptaoffice/sanguo-slg/issues/1570) / [#1580](https://github.com/anitaguptaoffice/sanguo-slg/pull/1580) `c28fd965`） | 已合 |
+| **军情 phase 变更扫读与再出征表单预填残余巩固再加深三层** | 正文 **wave:53（CLIENT-338）** bullet（[#1571](https://github.com/anitaguptaoffice/sanguo-slg/issues/1571) / [#1578](https://github.com/anitaguptaoffice/sanguo-slg/pull/1578) `e3dcacf8`） | 已合 |
+| **1280 世界军情战报邮件商城排行组合 manifest 巩固再加深三层** | [手动验收（1280 wave:53 组合 manifest 巩固再加深三层 CLIENT-339）](#手动验收1280-wave53-组合-manifest-巩固再加深三层-client-339)（[#1572](https://github.com/anitaguptaoffice/sanguo-slg/issues/1572) / [#1583](https://github.com/anitaguptaoffice/sanguo-slg/pull/1583) `0bb05e3b`） | 已合 |
+| **网关冒烟**（世界军情 scroll-sync + 出征戳记兵力余量 + 战报键盘坐标 + 邮件 HUD 附件 + 背包商城返回 + 排行招募扫读 + 军情 phase 预填 **residual deepest-deepest-deeper** hints） | [`tools/smoke/README.md`](../tools/smoke/README.md) **Wave 53** / `TestINTG053Wave53SmokePath`（[#1573](https://github.com/anitaguptaoffice/sanguo-slg/issues/1573) / [#1575](https://github.com/anitaguptaoffice/sanguo-slg/pull/1575) `3f276fe8`） | 已合 |
 
-**推荐串联**（在 [Wave 52](#wave-52-h5-主城七槽队列-eta-完成焦点残余巩固再加深三层队列预览槽位互链再加深三层将领养成扫读再加深三层panelstate-筛选-chip-再加深三层双榜钉选再加深三层军团聊天再加深三层日常-chain-队列-hud-深链再加深三层1280-主城将领日常社交队列组合-manifest-巩固再加深三层m4-出口--intg-052) 主城栈基础上 **轮转**回世界栈）：视口 **1280×720** 世界军情战报邮件商城排行 manifest **巩固再加深三层**（**CLIENT-339**；软依赖 **CLIENT-332～338**）；网关字段见 `tools/smoke/README.md` **INTG-053**。
+**推荐串联**（在 [Wave 52](#wave-52-h5-主城七槽队列-eta-完成焦点残余巩固再加深三层队列预览槽位互链再加深三层将领养成扫读再加深三层panelstate-筛选-chip-再加深三层双榜钉选再加深三层军团聊天再加深三层日常-chain-队列-hud-深链再加深三层1280-主城将领日常社交队列组合-manifest-巩固再加深三层m4-出口--intg-052) 主城栈基础上 **轮转**回世界栈）：**世界** scroll-sync **巩固再加深三层**（**CLIENT-332**）→ **出征** 刷新戳记与兵力余量 **巩固再加深三层**（**CLIENT-333**）→ **战报** 键盘相邻导航与坐标复制 **巩固再加深三层**（**CLIENT-334**）→ **邮件** HUD 附件领取 **巩固再加深三层**（**CLIENT-335**）→ **背包/商城** 返回高亮 **巩固再加深三层**（**CLIENT-336**）→ **排行/招募** 扫读 **巩固再加深三层**（**CLIENT-337**）→ **军情** phase 再出征预填 **巩固再加深三层**（**CLIENT-338**）→ 视口 **1280×720** 世界军情战报邮件商城排行 manifest **巩固再加深三层**（**CLIENT-339**）；网关字段见 `tools/smoke/README.md` **INTG-053**。
 
 ### 手动验收（1280 wave:53 组合 manifest 巩固再加深三层 CLIENT-339）
 
@@ -879,6 +887,8 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227/235/243/251/259/267/275/283/291/299/307/315/323/331** manifest 不退化。单测：`wave53WorldIntelBattleReportMailShopRankNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-339）；`cd client && npm test` 绿。（Closes [#1572](https://github.com/anitaguptaoffice/sanguo-slg/issues/1572)）
 
 **硬约束**：**仍** DATA-002；**无** DATA-003 / `cfg_act*` / 不可逆消费扩量；**无** CancelMarch / 募兵加速 / 主城建造新 RPC / 战报 proto 扩量；世界瓦片/图集仍暂缓；**无** IAP / 新商城 SKU；**勿**将 **ART-012** 登记为本波实现卡 ID；**永不合并** #77/#82/#100/#108/#126/#444/#481/#506/#637/#649/#674/#697/#942/#983/#1017/#1069/#1191/#1192/#1193/#1203/#1204/#1205/#1206/#1207 等 art hold / VERIFY draft PR。
+
+**美术旁路**（**非** wave:53 backlog 实现卡）：**CLIENT-064**、**CLIENT-136**、**CLIENT-137**、**CLIENT-146**、**CLIENT-147**、**ART-012**——**非**本波 backlog；Draft [#697](https://github.com/anitaguptaoffice/sanguo-slg/pull/697) **不合**）。实现卡 **CLIENT-332～339**（自 **CLIENT-332** 起）。波次总览与 **DOCS-EXIT-045**（[#1574](https://github.com/anitaguptaoffice/sanguo-slg/issues/1574)）见 [`docs/ROADMAP.md`](../docs/ROADMAP.md)「Wave 53」。**工程全收口** tip **`3f276fe81fc8e4cbd5347f20ddf75a352af58e15`**（INTG-053 [#1575](https://github.com/anitaguptaoffice/sanguo-slg/pull/1575) `3f276fe8`）；**实现全收口** tip **`0bb05e3b3fe6807571a17fdc453884626f3bc55b`**（#1583 CLIENT-339）；基线 wave:52 **全收口** tip **`8121d2a44aebd98dfcf8ad49322371f63f24cfde`**（DOCS-EXIT-044 [#1563](https://github.com/anitaguptaoffice/sanguo-slg/pull/1563) `8121d2a4`；工程 tip **`cdf2654b`** #1554 INTG-052；实现 tip **`4d2956c8`** #1562 CLIENT-331）。波次 backlog [#1564](https://github.com/anitaguptaoffice/sanguo-slg/pull/1564)（`ab2bc196`）。
 
 ## Wave 52 H5 主城七槽队列 ETA 完成焦点残余巩固再加深三层·队列预览槽位互链再加深三层·将领养成扫读再加深三层·panelState 筛选 chip 再加深三层·双榜钉选再加深三层·军团聊天再加深三层·日常 chain 队列 HUD 深链再加深三层·1280 主城将领日常社交队列组合 manifest 巩固再加深三层（M4 出口 / INTG-052）
 
