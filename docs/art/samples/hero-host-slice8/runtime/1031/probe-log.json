@@ -1,0 +1,286 @@
+{
+  "task": "HERO-HOST-SLICE8",
+  "template_cfg_id": 1031,
+  "mock_preset": "hero-panel-roster",
+  "tip_sha": "28c1d9ac92cfa45e5f957a96c572270ddfedb6c6",
+  "runtime_code_sha": "28c1d9ac92cfa45e5f957a96c572270ddfedb6c6",
+  "hero_mail_panels_blob_sha": "356f8e33734ca1374f3cf1ecd61368431293a93c",
+  "art_head_sha": "181b0191b834b2e0c3a983a7911690552fe143f0",
+  "art_asset_ids": [
+    "hero.avatar.1031.v1",
+    "hero.bust.1031.v1"
+  ],
+  "static_face_percent_min_required": 60,
+  "probes": {
+    "1600x900-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1031,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "张郃",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "张郃 · Lv11 · 忠诚 86",
+      "captureSectionsVisible": true,
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1031.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1031.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 2772.046875,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 657.765625,
+        "width": 568,
+        "height": 150.234375
+      }
+    },
+    "1600x900-dpr2": {
+      "ok": true,
+      "template_cfg_id": 1031,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "张郃",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "张郃 · Lv11 · 忠诚 86",
+      "captureSectionsVisible": true,
+      "dpr": 2,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/avatar/1031.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/bust/1031.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": false,
+      "usesAvatar2x": true,
+      "usesBust1x": false,
+      "usesBust2x": true,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 2778.046875,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 663.765625,
+        "width": 568,
+        "height": 144.234375
+      }
+    },
+    "1280x720-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1031,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "张郃",
+      "listAvatarVisible": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": false,
+      "listRowPrimaryText": "张郃 · Lv11 · 忠诚 86",
+      "captureSectionsVisible": true,
+      "dpr": 1,
+      "uiScale": 0.8,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1031.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1031.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 502,
+        "bustRight": 492
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 374.15625,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 374,
+        "top": 374.15625,
+        "width": 550,
+        "height": 0
+      }
+    }
+  },
+  "sameframe": {
+    "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
+    "jpeg": {
+      "quality": 88,
+      "bytes": 249137
+    },
+    "probe": {
+      "ok": true,
+      "bustInClip": true,
+      "nameInClip": true,
+      "bustInViewport": true,
+      "nameInViewport": true,
+      "nameRightOfBust": true,
+      "verticalBandOverlap": true,
+      "gapPx": 10,
+      "gapNear10px": true,
+      "visibleClip": {
+        "left": 356,
+        "top": 374.15625,
+        "width": 568,
+        "height": 301.046875
+      },
+      "name": {
+        "text": "张郃"
+      },
+      "viewport": {
+        "w": 1280,
+        "h": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "shots": {
+    "hero-host-1600x900-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 463124,
+      "viewport": {
+        "tag": "1600x900-dpr1",
+        "file": "hero-host-1600x900-dpr1.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-host-1600x900-dpr2.jpg": {
+      "quality": 72,
+      "bytes": 969826,
+      "viewport": {
+        "tag": "1600x900-dpr2",
+        "file": "hero-host-1600x900-dpr2.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-host-1280x720-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 248090,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "notes": [
+    "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster seeds roster incl. 1029–1032.",
+    "Art path-copied from Draft #1205 @ 181b0191; Draft remains unmerged.",
+    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible.",
+    "Provenance: base_host_sha 035abdda48bdfab8bac44837c72afea76e9eae68 is Slice7 host layout (#1233); capture-hero-host-slice8-evidence.mjs, mock 1029–1032 roster, and Slice8 PNGs are not present at that commit.",
+    "tip_sha / evidence_head_sha / runtime_code_sha name the signed-off eng evidence commit (28c1d9ac92cfa45e5f957a96c572270ddfedb6c6) containing capture-hero-host-slice8-evidence.mjs, mock seeds, and runtime JPEGs.",
+    "capture_script_blob_sha 0dbec076dfb0bcfdcc26e73ebacc92314df9590c and mock_blob_sha 5da72c80ae94fe397b7b554890170501844dacb4 are git blob ids at evidence_head_sha; capture_script_blob_sha_at_pr_head undefined is the metadata-revision script blob at PR HEAD (not the capture-time script); hero_mail_panels_blob_sha 356f8e33734ca1374f3cf1ecd61368431293a93c matches base_host layout."
+  ],
+  "captured_at": "2026-10-24T22:50:22.132Z",
+  "base_host_sha": "035abdda48bdfab8bac44837c72afea76e9eae68",
+  "evidence_head_sha": "28c1d9ac92cfa45e5f957a96c572270ddfedb6c6",
+  "capture_script_blob_sha": "0dbec076dfb0bcfdcc26e73ebacc92314df9590c",
+  "mock_blob_sha": "5da72c80ae94fe397b7b554890170501844dacb4",
+  "capture_script_blob_sha_at_pr_head": "55de52015769d9dcd1c11ce6b5c087b3068953bc"
+}
