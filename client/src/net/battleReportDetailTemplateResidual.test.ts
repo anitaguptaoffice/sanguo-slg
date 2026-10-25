@@ -4,6 +4,7 @@ import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPER_SWEEP_CLASS } from "@/net/
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepestSweep";
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepestDeeperSweep";
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepestDeepestDeeperSweep";
+import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepestDeepestDeepestSweep";
 import {
   applyBattleReportCoordCopyBarResidualSweep,
   applyBattleReportCoordsReadonlySelect,
@@ -116,6 +117,9 @@ describe("battleReportDetailTemplateResidual (CLIENT-240)", () => {
     ).toBe(true);
     expect(
       bar.classList.contains(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS),
+    ).toBe(true);
+    expect(
+      bar.classList.contains(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS),
     ).toBe(true);
     expect(addRange).toHaveBeenCalled();
     expect(getSelection).toHaveBeenCalled();

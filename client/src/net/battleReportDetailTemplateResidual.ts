@@ -24,6 +24,10 @@ import {
   applyBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep,
   formatBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep,
 } from "@/net/battleReportCoordCopyBarResidualDeepestDeepestDeeperSweep";
+import {
+  applyBattleReportCoordCopyBarResidualDeepestDeepestDeepestSweep,
+  formatBattleReportCoordCopyBarResidualDeepestDeepestDeepestSweep,
+} from "@/net/battleReportCoordCopyBarResidualDeepestDeepestDeepestSweep";
 
 export const BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS =
   "battle-report-side-template-residual";
@@ -148,6 +152,8 @@ export function applyBattleReportCoordsReadonlySelect(
   const barEl = textEl.closest<HTMLElement>(`.${BATTLE_REPORT_COORD_COPY_BAR_CLASS}`);
   if (barEl) {
     const copyText = textEl.textContent ?? "";
+    const deepestDeepestDeepestSweepHint =
+      formatBattleReportCoordCopyBarResidualDeepestDeepestDeepestSweep(copyText);
     const deepestDeepestDeeperSweepHint =
       formatBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep(copyText);
     const deepestDeeperSweepHint = formatBattleReportCoordCopyBarResidualDeepestDeeperSweep(copyText);
@@ -155,7 +161,9 @@ export function applyBattleReportCoordsReadonlySelect(
     const deeperSweepHint = formatBattleReportCoordCopyBarResidualDeeperSweep(copyText);
     const deepSweepHint = formatBattleReportCoordCopyBarResidualDeepSweep(copyText);
     const sweepHint = formatBattleReportCoordCopyBarResidualSweep(copyText);
-    if (deepestDeepestDeeperSweepHint) {
+    if (deepestDeepestDeepestSweepHint) {
+      barEl.setAttribute("aria-label", deepestDeepestDeepestSweepHint);
+    } else if (deepestDeepestDeeperSweepHint) {
       barEl.setAttribute("aria-label", deepestDeepestDeeperSweepHint);
     } else if (deepestDeeperSweepHint) {
       barEl.setAttribute("aria-label", deepestDeeperSweepHint);
@@ -172,6 +180,7 @@ export function applyBattleReportCoordsReadonlySelect(
     applyBattleReportCoordCopyBarResidualDeepestSweep(barEl);
     applyBattleReportCoordCopyBarResidualDeepestDeeperSweep(barEl);
     applyBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep(barEl);
+    applyBattleReportCoordCopyBarResidualDeepestDeepestDeepestSweep(barEl);
   }
   coordCopySelectTimer = setTimeout(() => {
     coordCopySelectTimer = null;
