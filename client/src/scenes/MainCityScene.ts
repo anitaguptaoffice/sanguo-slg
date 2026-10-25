@@ -130,8 +130,11 @@ import {
 } from "@/net/marchIntelRemarchResidualDeeper";
 import {
   clearMarchIntelRemarchResidualDeepestDeeperSummary,
-  prefillMarchFormFromIntelResidualDeepestDeeper,
 } from "@/net/marchIntelRemarchResidualDeepestDeeper";
+import {
+  clearMarchIntelRemarchResidualDeepestDeepestDeeperSummary,
+  prefillMarchFormFromIntelResidualDeepestDeepestDeeper,
+} from "@/net/marchIntelRemarchResidualDeepestDeepestDeeper";
 import {
   clearMarchIntelRemarchResidualDeepestSummary,
 } from "@/net/marchIntelRemarchResidualDeepest";
@@ -623,6 +626,7 @@ export class MainCityScene implements Scene {
         <p class="march-intel-remarch-residual-deeper-summary hidden" data-role="march-intel-remarch-residual-deeper-summary" aria-live="polite"></p>
         <p class="march-intel-remarch-residual-deepest-summary hidden" data-role="march-intel-remarch-residual-deepest-summary" aria-live="polite"></p>
         <p class="march-intel-remarch-residual-deepest-deeper-summary hidden" data-role="march-intel-remarch-residual-deepest-deeper-summary" aria-live="polite"></p>
+        <p class="march-intel-remarch-residual-deepest-deepest-deeper-summary hidden" data-role="march-intel-remarch-residual-deepest-deepest-deeper-summary" aria-live="polite"></p>
         <button type="button" data-action="clear-march-target">清除出征目标记忆</button>
         <label>带队将领
           <select data-field="march-hero" aria-label="出征带队将领"></select>
@@ -1452,6 +1456,7 @@ export class MainCityScene implements Scene {
       clearMarchIntelRemarchResidualDeeperSummary(this.militaryPanel);
       clearMarchIntelRemarchResidualDeepestSummary(this.militaryPanel);
       clearMarchIntelRemarchResidualDeepestDeeperSummary(this.militaryPanel);
+      clearMarchIntelRemarchResidualDeepestDeepestDeeperSummary(this.militaryPanel);
       this.marchList.clearRecentMarchHighlight();
       this.status = "已清除出征目标记忆，表单恢复默认坐标";
       this.renderHud();
@@ -1473,6 +1478,7 @@ export class MainCityScene implements Scene {
         clearMarchIntelRemarchResidualDeeperSummary(this.militaryPanel);
       clearMarchIntelRemarchResidualDeepestSummary(this.militaryPanel);
       clearMarchIntelRemarchResidualDeepestDeeperSummary(this.militaryPanel);
+      clearMarchIntelRemarchResidualDeepestDeepestDeeperSummary(this.militaryPanel);
       }
       syncMarchTargetSessionFromForm(this.militaryPanel);
       this.syncMinimapFocusFromMarchTarget();
@@ -1593,7 +1599,7 @@ export class MainCityScene implements Scene {
     this.militaryPanel.classList.remove("hidden");
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
-    const prefill = prefillMarchFormFromIntelResidualDeepestDeeper(
+    const prefill = prefillMarchFormFromIntelResidualDeepestDeepestDeeper(
       this.militaryPanel,
       march,
       this.marchFormFeedbackContext(),
