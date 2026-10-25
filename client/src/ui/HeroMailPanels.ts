@@ -416,6 +416,11 @@ import {
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
 } from "@/net/recruitTemplateInlineResidualDeepestDeepestDeepestDeeperSummary";
 import {
+  formatRecruitTemplateInlineResidualDeepestDeepestDeepestDeepestDeeperSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeepestDeepestDeeperSummary";
+import {
   formatRecruitTemplateInlineResidualSummary,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
@@ -2650,6 +2655,19 @@ export class HeroMailPanels {
       residualDeepestDeepestDeepestDeeperSpan.textContent =
         residualDeepestDeepestDeepestDeeperSummary ?? "";
       residualDeepestDeepestDeepestDeeperSpan.hidden = !residualDeepestDeepestDeepestDeeperSummary;
+      const residualDeepestDeepestDeepestDeepestDeeperSpan = document.createElement("span");
+      residualDeepestDeepestDeepestDeepestDeeperSpan.className =
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS;
+      residualDeepestDeepestDeepestDeepestDeeperSpan.setAttribute(
+        "data-role",
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
+      );
+      const residualDeepestDeepestDeepestDeepestDeeperSummary =
+        formatRecruitTemplateInlineResidualDeepestDeepestDeepestDeepestDeeperSummary(wallet, t, bag);
+      residualDeepestDeepestDeepestDeepestDeeperSpan.textContent =
+        residualDeepestDeepestDeepestDeepestDeeperSummary ?? "";
+      residualDeepestDeepestDeepestDeepestDeeperSpan.hidden =
+        !residualDeepestDeepestDeepestDeepestDeeperSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
       li.appendChild(residualSpan);
@@ -2660,6 +2678,7 @@ export class HeroMailPanels {
       li.appendChild(residualDeepestDeepestDeeperSpan);
       li.appendChild(residualDeepestDeepestDeepestSpan);
       li.appendChild(residualDeepestDeepestDeepestDeeperSpan);
+      li.appendChild(residualDeepestDeepestDeepestDeepestDeeperSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
