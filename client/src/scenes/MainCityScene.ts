@@ -329,9 +329,13 @@ import {
 } from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeepest";
 import {
   createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers,
-  syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeper,
   type MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers,
 } from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeper";
+import {
+  createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers,
+  syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeper,
+  type MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers,
+} from "@/net/minimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeper";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -527,6 +531,8 @@ export class MainCityScene implements Scene {
     createMinimapViewportIntelScrollResidualDeepestDeepestDeepestTimers();
   private readonly minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers =
     createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers();
+  private readonly minimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers: MinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers =
+    createMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -1864,7 +1870,7 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeeper(
+    const synced = syncMinimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeper(
       {
         march,
         bounds,
@@ -1885,6 +1891,8 @@ export class MainCityScene implements Scene {
           this.minimapViewportIntelScrollResidualDeepestDeepestDeepestTimers,
         residualDeepestDeepestDeepestDeeperTimers:
           this.minimapViewportIntelScrollResidualDeepestDeepestDeepestDeeperTimers,
+        residualDeepestDeepestDeepestDeepestDeeperTimers:
+          this.minimapViewportIntelScrollResidualDeepestDeepestDeepestDeepestDeeperTimers,
       },
     );
     if (synced.applied) {
