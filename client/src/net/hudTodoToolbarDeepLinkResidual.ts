@@ -38,6 +38,11 @@ export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_C
   "hud-todo-toolbar-deep-link-residual-deepest-deepest-deepest-pulse";
 export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_MS = 3000;
 
+/** CLIENT-362：CLIENT-346 最深四层脉冲上的 3s **巩固再加深五层** 脉冲（与 CLIENT-266/241 角标同步 **并存**）。 */
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS =
+  "hud-todo-toolbar-deep-link-residual-deepest-deepest-deepest-deeper-pulse";
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_MS = 3000;
+
 export function scheduleHudTodoToolbarDeepLinkResidualPulse(
   el: HTMLElement | null | undefined,
 ): void {
@@ -122,7 +127,19 @@ export function scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeepestPulse
   }, HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_MS);
 }
 
-/** 打开底栏面板：CLIENT-216 主脉冲 + CLIENT-250～298 残余环栈 + CLIENT-314/330/346 最深脉冲栈。 */
+export function scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeepestDeeperPulse(
+  el: HTMLElement | null | undefined,
+): void {
+  if (!el) return;
+  el.classList.remove(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+  void el.offsetWidth;
+  el.classList.add(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+  window.setTimeout(() => {
+    el.classList.remove(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
+  }, HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_MS);
+}
+
+/** 打开底栏面板：CLIENT-216 主脉冲 + CLIENT-250～298 残余环栈 + CLIENT-314/330/346/362 最深脉冲栈。 */
 export function pulseHudTodoToolbarDeepLinkResidual(el: HTMLElement | null | undefined): void {
   scheduleToolbarPanelDeepLinkPulse(el);
   scheduleHudTodoToolbarDeepLinkResidualPulse(el);
@@ -132,4 +149,5 @@ export function pulseHudTodoToolbarDeepLinkResidual(el: HTMLElement | null | und
   scheduleHudTodoToolbarDeepLinkResidualDeepestDeeperPulse(el);
   scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeeperPulse(el);
   scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeepestPulse(el);
+  scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeepestDeeperPulse(el);
 }
