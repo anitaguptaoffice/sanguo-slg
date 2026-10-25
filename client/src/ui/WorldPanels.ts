@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   applyPanelStateChrome,
@@ -197,14 +198,14 @@ export class WorldPanels {
   }
 
   toggle(): void {
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (!this.panel.classList.contains("hidden")) void this.refreshList();
   }
 
   /** CLIENT-108/109：外部深链打开世界面板（不关闭已打开状态）。 */
   openPanel(): void {
     if (!this.panel.classList.contains("hidden")) return;
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     void this.refreshList();
   }
@@ -526,7 +527,7 @@ export class WorldPanels {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     const opening = this.panel.classList.contains("hidden");
     if (opening) {
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       resetCenterPanelViewportScroll(this.panel);
       void this.refreshList();
     }

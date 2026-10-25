@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { selectDeepLinkBattleReportId } from "@/net/battleReportDeepLink";
@@ -236,7 +237,7 @@ export class BattleReportPanel {
 
   toggle(): void {
     const wasHidden = this.panel.classList.contains("hidden");
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (wasHidden && this.isOpen()) {
       resetCenterPanelViewportScroll(this.panel);
       void this.openAndSyncUnread();
@@ -245,14 +246,14 @@ export class BattleReportPanel {
 
   /** 行军结束提示等入口：打开列表并清零未读基线。 */
   openPanel(): void {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     void this.openAndSyncUnread();
   }
 
   /** 行军结束深链：刷新列表后选中 hint 或最近战报并加载详情。 */
   async openPanelWithDeepLink(hintReportId?: number | null): Promise<void> {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     this.applyOutcomeFilterBridgeFromMail();
     await this.refreshList();
@@ -283,7 +284,7 @@ export class BattleReportPanel {
   ): Promise<void> {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
     this.locationFilter = { x, y };
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     await this.refreshList();
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
@@ -424,7 +425,7 @@ export class BattleReportPanel {
   }
 
   private renderList(): void {
-    const ul = this.panel.querySelector('[data-role="report-list"]');
+    const ul = this.panel.querySelector<HTMLElement>('[data-role="report-list"]');
     const statusEl = this.panel.querySelector('[data-role="report-list-status"]');
     const loadMore = this.panel.querySelector('[data-role="load-more"]');
     const retryList = this.panel.querySelector('[data-role="retry-list"]');
@@ -468,7 +469,7 @@ export class BattleReportPanel {
     ul.innerHTML = "";
     if (this.listLoading && !this.reports.length) {
       renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -477,7 +478,7 @@ export class BattleReportPanel {
     if (this.listError && !this.reports.length) {
       renderPanelStateListRow(ul, "error", battleReportListErrorListHint(), {
         legacyClass: battleReportListErrorClass(),
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -487,7 +488,7 @@ export class BattleReportPanel {
     if (!this.reports.length) {
       renderPanelStateListRow(ul, "empty", battleReportListEmptyMessage(), {
         legacyClass: battleReportListEmptyClass(),
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -496,7 +497,7 @@ export class BattleReportPanel {
     if (!filtered.length) {
       renderPanelStateListRow(ul, "empty", BATTLE_REPORT_FILTER_EMPTY_TEXT, {
         legacyClass: battleReportFilterEmptyClass(),
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -602,7 +603,7 @@ export class BattleReportPanel {
   }
 
   private renderDetail(): void {
-    const detailEl = this.panel.querySelector('[data-role="report-detail"]');
+    const detailEl = this.panel.querySelector<HTMLElement>('[data-role="report-detail"]');
     const detailStatus = this.panel.querySelector('[data-role="report-detail-status"]');
     const retryDetail = this.panel.querySelector('[data-role="retry-detail"]');
     if (!detailEl) return;

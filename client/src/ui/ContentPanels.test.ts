@@ -340,7 +340,7 @@ describe("ContentPanels bag shop return highlight (CLIENT-210)", () => {
     itemSel.dispatchEvent(new Event("change", { bubbles: true }));
     panels.toggleShop();
     await vi.waitFor(() => expect(gateway.listShopShelf).toHaveBeenCalled());
-    panels.toggleBag();
+    // Shop suspends bag: a single toggle returns to the retained selection.
     panels.toggleBag();
     await vi.waitFor(() =>
       expect(

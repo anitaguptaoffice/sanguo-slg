@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { applyUseResult, bagStackQuantity } from "@/net/bagState";
@@ -17,7 +18,7 @@ import {
   queueRecruitRowDomId,
   scheduleRecruitRowPulse,
 } from "@/net/recruitTroopSubmitFeedback";
-import { formatUseConsumableEffectSummary } from "@/net/contentFeedback";
+import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import {
   formatPanelGatewayErrorFromUnknownForList,
   renderPanelGatewayErrorListRow,
@@ -231,7 +232,7 @@ export class QueuePanels {
 
   toggle(): void {
     const wasOpen = this.isOpen();
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (this.isOpen()) {
       resetQueuePanelViewportScroll(this.panel);
       this.tickAccum = 0;
@@ -246,7 +247,7 @@ export class QueuePanels {
 
   /** 打开队列面板（日常练兵/建造引导）。 */
   open(): void {
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     resetQueuePanelViewportScroll(this.panel);
     this.tickAccum = 0;
     this.render();
@@ -285,7 +286,7 @@ export class QueuePanels {
     this.highlightedRecruitQueueId = null;
     this.highlightedBuildSlotKey = slotKey.trim() || null;
     this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
-    this.panel.classList.remove("hidden");
+    openCenterPanel(this.panel);
     this.tickAccum = 0;
     this.render();
     resetQueuePanelViewportScroll(this.panel);
@@ -330,7 +331,7 @@ export class QueuePanels {
     this.highlightedBuildSlotKey = id ? RECRUIT_QUEUE_MATRIX_SLOT_KEY : null;
     this.onBuildSlotHighlightChange?.(this.highlightedBuildSlotKey);
     if (opts?.open) {
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       this.tickAccum = 0;
     }
     if (this.isOpen() || opts?.open) {
@@ -498,7 +499,7 @@ export class QueuePanels {
   /** CLIENT-117：募兵提交成功后队列募兵行 3s 脉冲。 */
   pulseRecruitRow(queueId: number): void {
     const id = queueRecruitRowDomId(queueId);
-    scheduleRecruitRowPulse(this.panel.querySelector(`#${CSS.escape(id)}`));
+    scheduleRecruitRowPulse(this.panel.querySelector<HTMLElement>(`#${CSS.escape(id)}`));
   }
 
   /** 日常面板只读募兵队列快照（与 render 同源，不新 RPC）。 */
@@ -920,7 +921,7 @@ export class QueuePanels {
   }
 
   private render(): void {
-    const buildUl = this.panel.querySelector('[data-role="queue-build-list"]');
+    const buildUl = this.panel.querySelector<HTMLElement>('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
     const previewEl = this.panel.querySelector('[data-role="queue-next-finish-preview"]');
