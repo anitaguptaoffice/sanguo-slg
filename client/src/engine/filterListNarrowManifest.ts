@@ -427,6 +427,12 @@ export {
   WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS,
 } from "@/engine/wave53WorldIntelBattleReportMailShopRankNarrowManifest";
 
+/** CLIENT-359: wave:56 将领 panelState 与筛选 chip 残余巩固再加深五层（343 deepest-deepest-deepest 基线 **不退化**）。 */
+export {
+  HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SESSION_KEY,
+  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
+} from "@/engine/wave56MainCityHeroDailySocialQueueNarrowManifest";
+
 /** CLIENT-347: wave:54 manifest 巩固再加深四层（340～346 residual deepest-deepest-deepest 钩子见 wave:52 再导出）。 */
 export {
   DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
