@@ -7,6 +7,10 @@
 // ParseRewardJSON, ProcessGrant for reward_grant_queue sync consumption).
 // With PGStore, Grant commits player_item, player_wallet and reward idempotency
 // atomically. Replays validate player and payload; pending GM rows retain their ID.
+// Zero-resource grants keep existing wallet balances and updated_at unchanged;
+// wallet locking and atomic bag/receipt writes still apply. New wallets initialize
+// normally. Actual resource deltas retain existing timestamp semantics; this does
+// not resolve general offline-accrual checkpoint coupling for resource writes.
 // LoadPlayer restores the durable wallet as well as the bag.
 //
 // Resource-pack Use also commits stock and wallet together, reading durable stock
