@@ -1333,11 +1333,25 @@
         100% { box-shadow: inset 0 0 0 24px rgba(201, 162, 39, 0); }
       }
       .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring {
+      .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring {
         animation: report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring-keyframes 2.5s ease-out 1;
       }
       .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring {
+      .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring {
         animation: report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring-keyframes 2.5s ease-out 1,
           report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring-keyframes 2.5s ease-out 1;
+      }
+      /* CLIENT-382 adjacent keyboard nav residual deepest-deepest-deepest-deepest-deeper ring (CLIENT-366 deepest-deepest-deepest-deeper ring retained) */
+      @keyframes report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring-keyframes {
+        0% { box-shadow: inset 0 0 0 0 rgba(201, 162, 39, 1); }
+        100% { box-shadow: inset 0 0 0 26px rgba(201, 162, 39, 0); }
+      }
+      .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring {
+        animation: report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring-keyframes 2.5s ease-out 1;
+      }
+      .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring {
+        animation: report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring-keyframes 2.5s ease-out 1,
+          report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring-keyframes 2.5s ease-out 1;
       }
       .battle-report-list li[data-report-id].art-filter-row--skinned {
         background: transparent;
@@ -1521,12 +1535,24 @@
       }
       /* CLIENT-366 coord copy bar residual deepest-deepest-deepest-deeper sweep (CLIENT-350 deepest-deepest-deepest sweep retained) */
       @keyframes battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep-keyframes {
+      @keyframes battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep-keyframes {
         0% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.96); }
         100% { box-shadow: 0 0 0 24px rgba(201, 162, 39, 0); }
       }
       .battle-report-coord-copy-bar.battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep {
+      .battle-report-coord-copy-bar.battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep {
         animation: battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep-keyframes 2.5s ease-out 1;
+        animation: battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep-keyframes 2.5s ease-out 1;
         border-color: #faf0a4;
+      }
+      /* CLIENT-382 coord copy bar residual deepest-deepest-deepest-deepest-deeper sweep (CLIENT-366 deepest-deepest-deepest-deeper sweep retained) */
+      @keyframes battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.98); }
+        100% { box-shadow: 0 0 0 26px rgba(201, 162, 39, 0); }
+      }
+      .battle-report-coord-copy-bar.battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep {
+        animation: battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep-keyframes 2.5s ease-out 1;
+        border-color: #fcf4ac;
       }
       .battle-report-detail-nav {
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
@@ -6025,7 +6051,9 @@
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deeper,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deepest-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deepest-deepest-deepest-deeper-ring,
@@ -6052,8 +6080,10 @@
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deepest-deeper,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deepest-deepest-deepest-subline,
@@ -6100,9 +6130,11 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
@@ -6205,6 +6237,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deeper-ring,
@@ -6213,6 +6246,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deeper-sweep,
@@ -6378,6 +6412,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deeper-ring,
@@ -6386,6 +6421,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deeper-sweep,
@@ -6622,9 +6658,11 @@
       #layout-frame.layout-narrow .military-panel [data-action="prefill-march-form-from-intel-residual-deepest-deepest-deepest"],
       #layout-frame.layout-narrow .military-panel [data-action="prefill-march-form-from-intel-residual-deepest-deepest-deeper"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
@@ -6681,9 +6719,11 @@
       #layout-frame.layout-narrow .military-panel [data-action="prefill-march-form-from-intel-residual-deepest-deepest-deeper"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deepest-deepest-deepest-deeper-pulse,
