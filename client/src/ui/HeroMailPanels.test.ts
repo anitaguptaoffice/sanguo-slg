@@ -66,6 +66,13 @@ import {
   readHeroListFilterChipResidualDeeperSession,
 } from "@/net/heroListFilterChipResidualDeeper";
 import {
+  HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeepest";
+import {
+  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS,
+  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE,
+} from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeepestSweep";
+import {
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS,
   HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE,
 } from "@/net/heroPanelStateResidualDeepestDeepestDeepestSweep";
@@ -1167,8 +1174,9 @@ describe("HeroMailPanels", () => {
     sessionStorage.removeItem(HERO_LIST_SELECTED_SESSION_KEY);
   });
 
-  it("hero-panel-state-residual-deepest-deepest-deepest-deeper-sweep and filter chip deepest-deepest-deepest-deeper session (CLIENT-359)", async () => {
+  it("hero-panel-state-residual-deepest-deepest-deepest-deeper-sweep and filter chip deepest-deepest-deepest-deeper session (CLIENT-375)", async () => {
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPER_SESSION_KEY);
@@ -1193,7 +1201,12 @@ describe("HeroMailPanels", () => {
       `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE}"].${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS}`,
     );
     expect(deepestDeepestDeepestDeeperResidual?.textContent).toContain("panelState巩固再加深五层");
-    expect(deepestDeepestDeepestDeeperResidual?.textContent).toContain("CLIENT-343");
+    expect(deepestDeepestDeepestDeeperResidual?.textContent).toContain("CLIENT-375");
+    expect(
+      mount.querySelector(
+        `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE}"].${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS}`,
+      ),
+    ).toBeTruthy();
     expect(
       mount.querySelector(
         `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE}"].${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_CLASS}`,
@@ -1209,11 +1222,15 @@ describe("HeroMailPanels", () => {
       sessionStorage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SESSION_KEY),
     ).toBeTruthy();
     expect(
+      sessionStorage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY),
+    ).toBeTruthy();
+    expect(
       mount.querySelector(
         '[data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep"]',
       )?.textContent,
     ).toContain("筛选巩固再加深五层");
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SESSION_KEY);
+    sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SESSION_KEY);
     sessionStorage.removeItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPER_SESSION_KEY);

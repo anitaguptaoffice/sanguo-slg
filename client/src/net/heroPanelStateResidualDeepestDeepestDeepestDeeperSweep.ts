@@ -1,12 +1,12 @@
 import type { PanelStateKind } from "@/engine/panelStateChrome";
 import {
-  formatHeroPanelGatewayRetryDeepestDeepestDeepestHint,
-  formatHeroPanelStateResidualDeepestDeepestDeepestSweepLine,
-  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE,
-} from "@/net/heroPanelStateResidualDeepestDeepestDeepestSweep";
+  formatHeroPanelGatewayRetryDeepestDeepestDeepestDeepestHint,
+  formatHeroPanelStateResidualDeepestDeepestDeepestDeepestSweepLine,
+  HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE,
+} from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeepestSweep";
 import type { HeroPanelStateResidualContext } from "@/net/heroPanelStateResidualSweep";
 
-/** CLIENT-359：将领 panelState loading/empty/error 只读巩固再加深五层行（CLIENT-343 **不退化**）。 */
+/** CLIENT-375：将领 panelState loading/empty/error 只读巩固再加深五层行（CLIENT-375 deepest-deepest-deepest-deepest **不退化**）。 */
 export const HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS =
   "hero-panel-state-residual-deepest-deepest-deepest-deeper-sweep";
 export const HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE =
@@ -15,30 +15,33 @@ export const HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE
 export function formatHeroPanelGatewayRetryDeepestDeepestDeepestDeeperHint(
   ctx: HeroPanelStateResidualContext,
 ): string | null {
-  const deepestDeepestDeepest = formatHeroPanelGatewayRetryDeepestDeepestDeepestHint(ctx);
-  if (!deepestDeepestDeepest) return null;
-  return `${deepestDeepestDeepest} · CLIENT-343 不退化`;
+  const deepestDeepestDeepestDeepest = formatHeroPanelGatewayRetryDeepestDeepestDeepestDeepestHint(ctx);
+  if (!deepestDeepestDeepestDeepest) return null;
+  return `${deepestDeepestDeepestDeepest} · CLIENT-375 不退化`;
 }
 
 export function formatHeroPanelStateResidualDeepestDeepestDeepestDeeperSweepLine(
   kind: PanelStateKind,
   ctx: HeroPanelStateResidualContext,
 ): string | null {
-  const deepestDeepestDeepest = formatHeroPanelStateResidualDeepestDeepestDeepestSweepLine(kind, ctx);
-  if (!deepestDeepestDeepest) return null;
+  const deepestDeepestDeepestDeepest = formatHeroPanelStateResidualDeepestDeepestDeepestDeepestSweepLine(
+    kind,
+    ctx,
+  );
+  if (!deepestDeepestDeepestDeepest) return null;
   const gatewayDeepestDeepestDeepestDeeper = formatHeroPanelGatewayRetryDeepestDeepestDeepestDeeperHint(ctx);
   switch (kind) {
     case "loading":
       return gatewayDeepestDeepestDeepestDeeper
-        ? `panelState巩固再加深五层 · ${deepestDeepestDeepest} · ${gatewayDeepestDeepestDeepestDeeper}`
-        : `panelState巩固再加深五层 · ${deepestDeepestDeepest}`;
+        ? `panelState巩固再加深五层 · ${deepestDeepestDeepestDeepest} · ${gatewayDeepestDeepestDeepestDeeper}`
+        : `panelState巩固再加深五层 · ${deepestDeepestDeepestDeepest}`;
     case "empty":
-      return `panelState巩固再加深五层 · ${deepestDeepestDeepest}`;
+      return `panelState巩固再加深五层 · ${deepestDeepestDeepestDeepest}`;
     case "error": {
       const hint =
         gatewayDeepestDeepestDeepestDeeper ??
-        "网关重试 hint：刷新列表或行内重试 · CLIENT-173 行内重试不退化 · CLIENT-343 不退化";
-      return `panelState巩固再加深五层 · ${deepestDeepestDeepest} · ${hint}`;
+        "网关重试 hint：刷新列表或行内重试 · CLIENT-173 行内重试不退化 · CLIENT-375 不退化";
+      return `panelState巩固再加深五层 · ${deepestDeepestDeepestDeepest} · ${hint}`;
     }
     default:
       return null;
@@ -60,11 +63,11 @@ export function appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(
   p.setAttribute("data-role", HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_ROLE);
   p.setAttribute("aria-live", "polite");
   p.textContent = line;
-  const deepestDeepestDeepestEl = host.querySelector(
-    `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE}"]`,
+  const deepestDeepestDeepestDeepestEl = host.querySelector(
+    `[data-role="${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SWEEP_ROLE}"]`,
   );
-  if (deepestDeepestDeepestEl?.nextSibling) {
-    host.insertBefore(p, deepestDeepestDeepestEl.nextSibling);
+  if (deepestDeepestDeepestDeepestEl?.nextSibling) {
+    host.insertBefore(p, deepestDeepestDeepestDeepestEl.nextSibling);
   } else {
     host.appendChild(p);
   }

@@ -31,6 +31,10 @@ import {
 } from "@/net/heroListFilterChipResidualDeep";
 import { HERO_LIST_FILTER_CHIP_RESIDUAL_SESSION_KEY } from "@/net/heroListFilterChipResidual";
 import { HERO_LIST_FILTER_SESSION_KEY } from "@/net/heroListFilter";
+import {
+  HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY,
+  readHeroListFilterChipResidualDeepestDeepestDeepestDeepestSession,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeepest";
 
 function mockStorage(): Storage {
   const map = new Map<string, string>();
@@ -48,7 +52,7 @@ function mockStorage(): Storage {
   } as Storage;
 }
 
-describe("heroListFilterChipResidualDeepestDeepestDeepestDeeper (CLIENT-359)", () => {
+describe("heroListFilterChipResidualDeepestDeepestDeepestDeeper (CLIENT-375)", () => {
   let storage: Storage;
 
   beforeEach(() => {
@@ -67,6 +71,9 @@ describe("heroListFilterChipResidualDeepestDeepestDeepestDeeper (CLIENT-359)", (
       storage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SESSION_KEY),
     ).toBeTruthy();
     expect(
+      storage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY),
+    ).toBeTruthy();
+    expect(
       storage.getItem(HERO_LIST_FILTER_CHIP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SESSION_KEY),
     ).toBeTruthy();
     expect(
@@ -82,6 +89,9 @@ describe("heroListFilterChipResidualDeepestDeepestDeepestDeeper (CLIENT-359)", (
     );
     expect(deepestDeepestDeepestDeeper?.filter).toBe("deployable");
     expect(deepestDeepestDeepestDeeper?.lastChipAction).toBe("hero-filter-deployable");
+    expect(readHeroListFilterChipResidualDeepestDeepestDeepestDeepestSession(storage)?.filter).toBe(
+      "deployable",
+    );
     expect(readHeroListFilterChipResidualDeepestDeepestDeepestSession(storage)?.filter).toBe(
       "deployable",
     );
@@ -105,7 +115,7 @@ describe("heroListFilterChipResidualDeepestDeepestDeepestDeeper (CLIENT-359)", (
       readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession(storage),
     );
     expect(line).toContain("筛选巩固再加深五层");
-    expect(line).toContain("hero-list-filter-chip-residual-deepest-deepest-deepest-v1");
+    expect(line).toContain("hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-v1");
     expect(line).toContain("CLIENT-231");
     expect(line).toContain("等级↓");
   });

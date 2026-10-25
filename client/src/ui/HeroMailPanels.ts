@@ -129,6 +129,11 @@ import {
   type HeroListFilterChipAction,
 } from "@/net/heroListFilterChipResidual";
 import {
+  formatHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweepLine,
+  readHeroListFilterChipResidualDeepestDeepestDeepestDeepestSession,
+  syncHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweep,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeepest";
+import {
   formatHeroListFilterChipResidualDeepestDeepestDeepestSweepLine,
   readHeroListFilterChipResidualDeepestDeepestDeepestSession,
   syncHeroListFilterChipResidualDeepestDeepestDeepestSweep,
@@ -166,6 +171,10 @@ import {
   readHeroListFilterChipResidualDeepSession,
   syncHeroListFilterChipResidualDeepSweep,
 } from "@/net/heroListFilterChipResidualDeep";
+import {
+  appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep,
+  skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeepestSweep,
+} from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeepestSweep";
 import {
   appendHeroPanelStateResidualDeepestDeepestDeepestSweep,
   skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep,
@@ -1958,6 +1967,12 @@ export class HeroMailPanels {
           hidden
         ></p>
         <p
+          class="hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-sweep hidden"
+          data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-sweep"
+          aria-live="polite"
+          hidden
+        ></p>
+        <p
           class="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep hidden"
           data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep"
           aria-live="polite"
@@ -2091,6 +2106,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
     } else if (this.heroesRefreshInflight && !this.heroes.length) {
       const li = renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
@@ -2103,6 +2119,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "loading", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "loading", residualCtx());
     } else if (!this.heroes.length) {
       const msg = heroListLines([])[0];
@@ -2114,6 +2131,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else if (!visibleHeroes.length) {
       const li = renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
@@ -2126,6 +2144,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else {
       for (const h of visibleHeroes) {
@@ -2349,6 +2368,12 @@ export class HeroMailPanels {
         readHeroListFilterChipResidualDeepestDeepestDeepestSession(),
       ),
     );
+    syncHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweep(
+      this.heroPanel,
+      formatHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweepLine(
+        readHeroListFilterChipResidualDeepestDeepestDeepestDeepestSession(),
+      ),
+    );
     syncHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweep(
       this.heroPanel,
       formatHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweepLine(
@@ -2368,6 +2393,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep(detailEl, "loading", residualCtx());
+        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeepestSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailError) {
@@ -2379,6 +2405,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep(detailEl, "error", residualCtx());
+        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeepestSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else {
