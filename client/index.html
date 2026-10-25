@@ -3460,6 +3460,24 @@
         background: #4a0c0c;
         opacity: 0.95;
       }
+      .hero-list li .hero-list-row-loyalty-residual-deepest-deepest-deeper-subline {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 6px;
+        color: #4e4638;
+        margin-top: 1px;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+      }
+      .hero-list li .hero-loyalty-residual-deepest-deepest-deeper-warn-dot {
+        flex-shrink: 0;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: #3a0808;
+        opacity: 0.96;
+      }
       .hero-detail .hero-detail-consumable-stack-residual-deep-sweep {
         font-size: 10px;
         color: #8a7d68;
@@ -3522,6 +3540,22 @@
       .hero-detail .hero-detail-consumable-stack-residual-deepest-deeper-sweep.hero-detail-consumable-stack-residual-deepest-deeper-sweep-ring {
         animation: hero-detail-consumable-stack-residual-deepest-deeper-sweep-keyframes 3s ease-out 1;
         border-left: 2px solid #604820;
+        padding-left: 6px;
+      }
+      .hero-detail .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep {
+        font-size: 6px;
+        color: #4a4236;
+        margin: 2px 0 0;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+      @keyframes hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(80, 60, 28, 0.6); }
+        100% { box-shadow: 0 0 0 16px rgba(80, 60, 28, 0); }
+      }
+      .hero-detail .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep.hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep-ring {
+        animation: hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep-keyframes 3s ease-out 1;
+        border-left: 2px solid #503c1c;
         padding-left: 6px;
       }
       .hero-detail .hero-detail-consumable-stack-line {
@@ -5086,18 +5120,22 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li .hero-list-row-loyalty-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deeper-subline"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li .hero-list-row-loyalty-residual-deepest-deepest-deeper-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deepest-deeper-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-warn-dot,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-residual-warn-dot,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-residual-deep-warn-dot,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-residual-deeper-warn-dot,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-residual-deepest-warn-dot,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-residual-deepest-deeper-warn-dot,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-loyalty-residual-deepest-deepest-deeper-warn-dot,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual"],
@@ -5521,9 +5559,12 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deeper-subline"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deepest-deeper-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deepest-deeper-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-sweep,
@@ -5583,10 +5624,13 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deeper-subline"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deepest-deeper-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deepest-deeper-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deeper-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-deeper-sweep,
@@ -5661,11 +5705,14 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deeper-subline"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deepest-deeper-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deepest-deeper-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deep-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-deeper-sweep,
@@ -5847,10 +5894,13 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deeper-subline"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deepest-deepest-deeper-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deepest-deepest-deeper-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-sweep,
@@ -6020,11 +6070,13 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list .hero-list-row-loyalty-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list .hero-list-row-loyalty-residual-deepest-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list .hero-list-row-loyalty-residual-deepest-deeper-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list .hero-list-row-loyalty-residual-deepest-deepest-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deeper-sweep,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-detail-consumable-stack-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deeper-sweep,
