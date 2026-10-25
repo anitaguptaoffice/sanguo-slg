@@ -609,6 +609,55 @@ describe("QueuePanels", () => {
     expect(onDeepestDeeperRing).toHaveBeenCalledWith("farm");
   });
 
+  it("renders preview residual deepest-deepest-deeper line and rings slot on click (CLIENT-325)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onDeepestDeepestDeeperRing = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onDeepestDeepestDeeperRing,
+    );
+    panel.attach();
+    panel.toggle();
+    const deepestDeepestDeeper = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deepest-deeper-line"]',
+    ) as HTMLElement;
+    expect(deepestDeepestDeeper?.textContent).toMatch(/巩固再加深三层/);
+    expect(deepestDeepestDeeper?.textContent).toMatch(/槽位\(农田\)/);
+    expect(deepestDeepestDeeper?.getAttribute("data-action")).toBe(
+      "domestic-slot-preview-cross-link-residual-deepest-deepest-deeper-ring",
+    );
+    const deepestDeeper = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deeper-line"]',
+    ) as HTMLElement;
+    expect(deepestDeeper?.textContent).toMatch(/巩固再加深二层/);
+    deepestDeepestDeeper?.click();
+    expect(onDeepestDeepestDeeperRing).toHaveBeenCalledWith("farm");
+  });
+
   it("renders preview residual line and pulses slot on click (CLIENT-245)", () => {
     const mount = document.createElement("div");
     const now = Date.now();
