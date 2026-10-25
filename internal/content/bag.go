@@ -39,27 +39,41 @@ func NewService(cat *Catalog) *Service {
 	}
 }
 
-// UseStore enables PostgreSQL persistence for bags and grant idempotency.
+// UseStore enables persistence; PG grants atomically store bags, wallets and idempotency.
 func (s *Service) UseStore(store Store) {
 	s.store = store
 }
 
-// LoadPlayer hydrates the in-memory bag from PostgreSQL (no-op without a store).
+// LoadPlayer hydrates the bag and, where supported, wallet (no-op without a store).
 func (s *Service) LoadPlayer(ctx context.Context, p PlayerRef) error {
 	if s.store == nil {
 		return nil
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	stacks, err := s.store.LoadBag(ctx, p)
 	if err != nil {
 		return err
 	}
-	s.mu.Lock()
+	var wallet ResourceWallet
+	var hasWallet bool
+	if reader, ok := s.store.(interface {
+		loadWallet(context.Context, PlayerRef) (ResourceWallet, error)
+	}); ok {
+		wallet, err = reader.loadWallet(ctx, p)
+		hasWallet = true
+		if err != nil {
+			return err
+		}
+	}
+	if hasWallet {
+		s.wallets[p] = wallet
+	}
 	b := newBag()
 	for _, st := range stacks {
 		b.Stacks[st.ItemCfgID] = st.Quantity
 	}
 	s.bags[p] = b
-	s.mu.Unlock()
 	return nil
 }
 

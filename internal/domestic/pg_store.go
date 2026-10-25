@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"math"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -26,6 +27,11 @@ type buildPayload struct {
 
 // SaveCity writes wallet snapshot, buildings, and pending build queue rows.
 func (p *PGStore) SaveCity(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time) error {
+	return p.saveCity(ctx, sid, c, cat, now, nil)
+}
+
+// saveCity holds the authoritative wallet row lock through the local operation.
+func (p *PGStore) saveCity(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time, mutate func(*CityState) error) error {
 	if c == nil || c.PlayerID == 0 {
 		return errors.New("domestic: city missing player_id")
 	}
@@ -35,16 +41,35 @@ func (p *PGStore) SaveCity(ctx context.Context, sid int32, c *CityState, cat map
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	_, err = tx.Exec(ctx, `
-		INSERT INTO player_wallet (server_id, player_id, food, wood, iron, stone, gold, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,0,$7)
-		ON CONFLICT (server_id, player_id) DO UPDATE SET
-			food=EXCLUDED.food, wood=EXCLUDED.wood, iron=EXCLUDED.iron,
-			stone=EXCLUDED.stone, updated_at=EXCLUDED.updated_at`,
-		sid, c.PlayerID, c.Wallet.Food, c.Wallet.Wood, c.Wallet.Iron, c.Wallet.Stone, now)
+	work := cloneCity(c)
+	_, err = tx.Exec(ctx, `INSERT INTO player_wallet (server_id,player_id,food,wood,iron,stone,gold,updated_at)
+ VALUES ($1,$2,$3,$4,$5,$6,0,$7) ON CONFLICT DO NOTHING`, sid, c.PlayerID, c.Wallet.Food, c.Wallet.Wood, c.Wallet.Iron, c.Wallet.Stone, now)
 	if err != nil {
 		return err
 	}
+	var authoritative Resources
+	err = tx.QueryRow(ctx, `SELECT food,wood,stone,iron FROM player_wallet WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, c.PlayerID).Scan(&authoritative.Food, &authoritative.Wood, &authoritative.Stone, &authoritative.Iron)
+	if err != nil {
+		return err
+	}
+	if c.walletSaved {
+		authoritative, err = reconcileWallet(authoritative, c.Wallet, c.walletBase)
+		if err != nil {
+			return err
+		}
+	}
+	work.Wallet = authoritative
+	if mutate != nil {
+		if err = mutate(work); err != nil {
+			return err
+		}
+	}
+	_, err = tx.Exec(ctx, `UPDATE player_wallet SET food=$3,wood=$4,stone=$5,iron=$6,updated_at=$7 WHERE server_id=$1 AND player_id=$2`, sid, c.PlayerID, work.Wallet.Food, work.Wallet.Wood, work.Wallet.Stone, work.Wallet.Iron, work.LastSettleAt)
+	if err != nil {
+		return err
+	}
+	original := c
+	c = work
 
 	_, err = tx.Exec(ctx, `DELETE FROM city_building WHERE server_id=$1 AND city_id=$2`, sid, c.ID)
 	if err != nil {
@@ -91,7 +116,12 @@ func (p *PGStore) SaveCity(ctx context.Context, sid int32, c *CityState, cat map
 		}
 	}
 
-	return tx.Commit(ctx)
+	if err = tx.Commit(ctx); err != nil {
+		return err
+	}
+	c.walletBase, c.walletSaved = c.Wallet, true
+	*original = *c
+	return nil
 }
 
 // LoadCity restores wallet, buildings, and build queue for one city.
@@ -164,6 +194,7 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 	if err := qrows.Err(); err != nil {
 		return nil, err
 	}
+	c.walletBase, c.walletSaved = c.Wallet, true
 	c.nextJobID = maxID
 	return c, nil
 }
@@ -189,4 +220,20 @@ func jobStartAt(cat map[int32]BuildingSpec, job *BuildJob) time.Time {
 		return job.FinishAt
 	}
 	return start
+}
+
+// Both snapshots are nonnegative; reject overflow and concurrent overspend.
+func reconcileWallet(current, local, base Resources) (Resources, error) {
+	a, b, d := []*int64{&current.Food, &current.Wood, &current.Stone, &current.Iron}, []int64{local.Food, local.Wood, local.Stone, local.Iron}, []int64{base.Food, base.Wood, base.Stone, base.Iron}
+	for i, v := range a {
+		if b[i] < 0 || d[i] < 0 || *v < 0 {
+			return Resources{}, ErrInsufficientRes
+		}
+		delta := b[i] - d[i]
+		if (delta > 0 && *v > math.MaxInt64-delta) || (delta < 0 && *v < -delta) {
+			return Resources{}, ErrInsufficientRes
+		}
+		*v += delta
+	}
+	return current, nil
 }
