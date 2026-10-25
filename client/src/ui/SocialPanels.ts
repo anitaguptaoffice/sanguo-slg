@@ -174,6 +174,11 @@ import {
   syncRankRefreshCooldownResidualDeepestDeeperStamp,
 } from "@/net/rankRefreshCooldownResidualDeepestDeeper";
 import {
+  formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp,
+  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE,
+  syncRankRefreshCooldownResidualDeepestDeepestDeeperStamp,
+} from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
+import {
   appendRankListDensityScanResidualDeepSubline,
   formatRankListDensityScanResidualDeepLine,
 } from "@/net/rankListDensityScanResidualDeep";
@@ -647,6 +652,7 @@ export class SocialPanels {
       <p class="rank-refresh-cooldown-residual-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
       <p class="rank-refresh-cooldown-residual-deepest-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_ROLE}" aria-live="polite"></p>
       <p class="rank-refresh-cooldown-residual-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
+      <p class="rank-refresh-cooldown-residual-deepest-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -1235,6 +1241,15 @@ export class SocialPanels {
     syncRankRefreshCooldownResidualDeepestDeeperStamp(
       this.rankPanel,
       formatRankRefreshCooldownResidualDeepestDeeperStamp(
+        lastRefreshMs,
+        lastManualMs,
+        manualCount,
+        nowMs,
+      ) || null,
+    );
+    syncRankRefreshCooldownResidualDeepestDeepestDeeperStamp(
+      this.rankPanel,
+      formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp(
         lastRefreshMs,
         lastManualMs,
         manualCount,

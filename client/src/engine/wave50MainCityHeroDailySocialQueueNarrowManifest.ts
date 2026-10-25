@@ -112,6 +112,14 @@ export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_CLASS =
 export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS =
   "rank-pin-keep-residual-deepest-deeper-ring";
 
+/** CLIENT-328: rank manual refresh cooldown residual deepest-deepest-deeper stamp. */
+export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_CLASS =
+  "rank-refresh-cooldown-residual-deepest-deepest-deeper-stamp";
+
+/** CLIENT-328: pin row keep highlight after refresh deepest-deepest-deeper ring. */
+export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS =
+  "rank-pin-keep-residual-deepest-deepest-deeper-ring";
+
 /** CLIENT-313: guild duty group header residual deepest-deeper line. */
 export const GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS =
   "guild-duty-header-residual-deepest-deeper-line";
@@ -177,7 +185,9 @@ export const HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_SELECTOR = `.cont
 export const HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEPEST_DEEPER_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_DETAIL_CONSUMABLE_STACK_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS}`;
 export const HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPER_SWEEP_SELECTOR = `.content-panel[data-center-panel="hero"] .${HERO_PANEL_STATE_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS}`;
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_CLASS}`;
+export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_SELECTOR = `.content-panel[data-center-panel="rank"] .${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_CLASS}`;
 export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-list li.${RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS}`;
+export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_SELECTOR = `.content-panel[data-center-panel="rank"] .rank-list li.${RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS}, .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.${RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS}`;
 export const GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_SELECTOR = `.social-panel[data-center-panel="guild"] .${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS}`;
 export const GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_DEEPEST_DEEPER_SWEEP_SELECTOR = `.social-panel[data-center-panel="chat"] .chat-log li.${GUILD_CHAT_UNREAD_DIVIDER_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS}`;
 export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_SELECTOR = `.content-panel[data-center-panel="daily"] .daily-quest-list .${QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS}, .content-panel[data-center-panel="daily"] .daily-quest-list li .${DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS}`;
