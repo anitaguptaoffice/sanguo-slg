@@ -801,6 +801,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:52（CLIENT-328）双榜刷新冷却戳记与钉选保持残余巩固再加深三层**：**CLIENT-312** 巩固再加深二层第四行下只读 **`formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp`** / **`rank-refresh-cooldown-residual-deepest-deepest-deeper-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deepest-deeper"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深三层** 第四行；**CLIENT-296/214** **不退化**；**无**新 rank RPC；**非** wave:51 **CLIENT-321** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deepest-deeper-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeepestDeeper.test.ts`、`rankPinKeepResidualDeepestDeepestDeeperRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1548](https://github.com/anitaguptaoffice/sanguo-slg/issues/1548)）
 
+## Wave 56 H5 将领列表忠诚次行与详情养成道具扫读残余巩固再加深五层（CLIENT-358）
+
+在 [Wave 54](#wave-54-h5-将领列表忠诚次行与详情养成道具扫读残余巩固再加深四层client-342) **CLIENT-342** 将领养成扫读栈基础上 **巩固再加深五层**；主叙事 **非** wave:55 **CLIENT-353** 排行招募密度栈；**仍** DATA-002；**无** hero 专用升级 RPC；**非** ART-012 / #983/#108/#697 像素任务。
+
+**wave:56（CLIENT-358）将领列表忠诚次行与详情养成道具扫读残余巩固再加深五层**：列表 **`formatHeroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline`** / **`hero-list-row-loyalty-residual-deepest-deepest-deepest-deeper-subline`**（忠诚 + 经验进度只读巩固再加深五层第四行；**CLIENT-342** `hero-list-row-loyalty-residual-deepest-deepest-deepest-subline` **不退化**；**无** hero 专用升级 RPC）；详情 **`formatHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep`** / **`hero-detail-consumable-stack-residual-deepest-deepest-deepest-deeper-sweep`** + **`hero-detail-consumable-stack-residual-deepest-deepest-deepest-deeper-sweep-ring` 3s** 只读扫读（养成堆叠 + **`pickHeroDetailBagDeepLink`** 背包深链 hint；**CLIENT-230** 壳与 **CLIENT-342** 再加深四层扫读 **不退化**；**非** ART-012 / #983/#108/#697 像素任务）。单测：`heroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline.test.ts`、`heroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1630](https://github.com/anitaguptaoffice/sanguo-slg/issues/1630)）
+
 ## Wave 54 H5 将领列表忠诚次行与详情养成道具扫读残余巩固再加深四层（CLIENT-342）
 
 在 [Wave 52](#wave-52-h5-将领列表忠诚次行与详情养成道具扫读残余巩固再加深三层client-326) **CLIENT-326** 将领养成扫读栈基础上 **巩固再加深四层**；主叙事 **非** wave:53 **CLIENT-337** 排行招募密度栈；**仍** DATA-002；**无** hero 专用升级 RPC；**非** ART-012 / #983/#108/#697 像素任务。

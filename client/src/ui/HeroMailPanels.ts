@@ -97,12 +97,20 @@ import {
   HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_WARN_DOT_CLASS,
   heroListRowShowsLoyaltyResidualDeepestDeepestDeepestWarnDot,
 } from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestSubline";
+import {
+  formatHeroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
+  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS,
+  heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeeperWarnDot,
+} from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline";
 import { scheduleHeroDetailConsumableStackResidualDeepSweep } from "@/net/heroDetailConsumableStackResidualDeepSweep";
 import { scheduleHeroDetailConsumableStackResidualDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeeperSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeeperSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeeperSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestSweep";
+import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep";
 import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
@@ -2223,6 +2231,25 @@ export class HeroMailPanels {
             formatHeroListLoyaltyResidualDeepestDeepestDeepestSubline(rowSource, filterCtx),
           ),
         );
+        const loyaltyResidualDeepestDeepestDeepestDeeperSubline = document.createElement("span");
+        loyaltyResidualDeepestDeepestDeepestDeeperSubline.className =
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
+        loyaltyResidualDeepestDeepestDeepestDeeperSubline.setAttribute(
+          "data-role",
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
+        );
+        if (heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeeperWarnDot(rowSource, filterCtx)) {
+          const deepestDeepestDeepestDeeperDot = document.createElement("span");
+          deepestDeepestDeepestDeeperDot.className =
+            HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS;
+          deepestDeepestDeepestDeeperDot.setAttribute("aria-hidden", "true");
+          loyaltyResidualDeepestDeepestDeepestDeeperSubline.appendChild(deepestDeepestDeepestDeeperDot);
+        }
+        loyaltyResidualDeepestDeepestDeepestDeeperSubline.appendChild(
+          document.createTextNode(
+            formatHeroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline(rowSource, filterCtx),
+          ),
+        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
         body.appendChild(loyaltyResidualSubline);
@@ -2232,6 +2259,7 @@ export class HeroMailPanels {
         body.appendChild(loyaltyResidualDeepestDeeperSubline);
         body.appendChild(loyaltyResidualDeepestDeepestDeeperSubline);
         body.appendChild(loyaltyResidualDeepestDeepestDeepestSubline);
+        body.appendChild(loyaltyResidualDeepestDeepestDeepestDeeperSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
@@ -2364,6 +2392,11 @@ export class HeroMailPanels {
           bag,
         );
         scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestSweep(
+          detailEl,
+          this.heroDetail,
+          bag,
+        );
+        scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep(
           detailEl,
           this.heroDetail,
           bag,
