@@ -516,7 +516,6 @@ export class MainCityScene implements Scene {
       },
       onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
     });
-    this.renderHud();
     skinHudBar(this.hud, this.assets);
     this.toolbar = document.createElement("div");
     this.toolbar.className = "main-city-toolbar layout-toolbar";
@@ -1085,6 +1084,7 @@ export class MainCityScene implements Scene {
     );
     this.syncMinimapFocusFromMarchTarget();
     this.syncMilitaryPanel();
+    this.renderHud();
     this.queuePanels?.setBuildCompleteTodoSlots(this.buildCompleteTodos.pendingSlotKeys());
     void this.hudTodoBadgePoll.pollOnce();
     void this.chatUnreadPoll.pollOnce();
@@ -2517,16 +2517,14 @@ export class MainCityScene implements Scene {
 
   private hudTodoMergedSweepCounts(): HudTodoMergedSweepCounts {
     const snap = this.hudTodoBadgePoll.getDeepLinkSnapshot();
-    const social = this.social
-      ? hudTodoSocialBadgesFromChatSummary(
-          this.chatUnreadTracker.getSummary(this.social.getGuildId()),
-        )
-      : { chat: 0, world: 0, guild: 0 };
+    const social = hudTodoSocialBadgesFromChatSummary(
+      this.chatUnreadTracker.getSummary(this.social?.getGuildId() ?? null),
+    );
     return {
       mailClaimable: snap.mailClaimable,
       dailyClaimable: snap.dailyClaimable,
       queueBuilding: snap.queueBuilding,
-      chatUnread: social.chat ?? 0,
+      chatUnread: social.chat,
     };
   }
 
