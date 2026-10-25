@@ -73,6 +73,18 @@ export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS =
 export const DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEPEST_DEEPER_RING_CLASS =
   "domestic-slot-preview-cross-link-residual-deepest-deeper-ring";
 
+/** CLIENT-325: next-finish preview residual deepest-deepest-deeper summary line. */
+export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS =
+  "queue-next-finish-preview-residual-deepest-deepest-deeper-line";
+
+/** CLIENT-325: preview row → slot cross-link residual deepest-deepest-deeper ring. */
+export const DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS =
+  "domestic-slot-preview-cross-link-residual-deepest-deepest-deeper-ring";
+
+/** CLIENT-324 stub / CLIENT-325: complete-focus seven-slot residual deepest-deepest-deeper ring (3.5s). */
+export const DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS =
+  "domestic-queue-complete-focus-residual-deepest-deepest-deeper-ring";
+
 /** CLIENT-310: hero list loyalty + XP residual deepest-deeper subline. */
 export const HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS =
   "hero-list-row-loyalty-residual-deepest-deeper-subline";

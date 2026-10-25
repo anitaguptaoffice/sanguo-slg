@@ -110,6 +110,12 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS,
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE,
 } from "@/net/nextQueueFinishPreviewResidualDeepestDeeper";
+import {
+  formatNextQueueFinishPreviewResidualDeepestDeepestDeeperLine,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE,
+} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeeper";
 
 export const QUEUE_DAILY_NEXT_BUTTON_LABEL = "日常：下一步";
 
@@ -170,6 +176,7 @@ export class QueuePanels {
     private readonly onPreviewCrossLinkResidualDeeperRing?: (slotKey: string) => void,
     private readonly onPreviewCrossLinkResidualDeepestRing?: (slotKey: string) => void,
     private readonly onPreviewCrossLinkResidualDeepestDeeperRing?: (slotKey: string) => void,
+    private readonly onPreviewCrossLinkResidualDeepestDeepestDeeperRing?: (slotKey: string) => void,
   ) {}
 
   attach(): void {
@@ -502,6 +509,7 @@ export class QueuePanels {
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_ACTION}" role="button" tabindex="0" hidden></p>
       <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
+      <p class="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS} hidden" data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE}" data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION}" role="button" tabindex="0" hidden></p>
       <div class="queue-build-matrix" data-role="queue-build-matrix" aria-label="七槽建造状态"></div>
       <p class="queue-panel-hint">内政升级与募兵排队（打开时每秒刷新）。进行中建造可使用短促工符加速。</p>
       <div class="content-panel-actions">
@@ -585,6 +593,7 @@ export class QueuePanels {
     residualDeeperEl: Element | null,
     residualDeepestEl: Element | null,
     residualDeepestDeeperEl: Element | null,
+    residualDeepestDeepestDeeperEl: Element | null,
     nowMs: number,
   ): void {
     if (!(previewEl instanceof HTMLElement)) return;
@@ -631,6 +640,13 @@ export class QueuePanels {
       dailyRows,
       nowMs,
     );
+    const residualDeepestDeepestDeeper = formatNextQueueFinishPreviewResidualDeepestDeepestDeeperLine(
+      this.buildings(),
+      this.recruits,
+      this.slotLabels,
+      dailyRows,
+      nowMs,
+    );
     if (!preview) {
       previewEl.hidden = true;
       previewEl.classList.add("hidden");
@@ -671,6 +687,13 @@ export class QueuePanels {
         residualDeepestDeeperEl.textContent = "";
         residualDeepestDeeperEl.removeAttribute("data-slot-key");
         residualDeepestDeeperEl.removeAttribute("title");
+      }
+      if (residualDeepestDeepestDeeperEl instanceof HTMLElement) {
+        residualDeepestDeepestDeeperEl.hidden = true;
+        residualDeepestDeepestDeeperEl.classList.add("hidden");
+        residualDeepestDeepestDeeperEl.textContent = "";
+        residualDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
+        residualDeepestDeepestDeeperEl.removeAttribute("title");
       }
       return;
     }
@@ -759,6 +782,21 @@ export class QueuePanels {
         residualDeepestDeeperEl.title = `最深二层链七槽 ${residualDeepestDeeper.slotKey}（巩固再加深二层）`;
       }
     }
+    if (residualDeepestDeepestDeeperEl instanceof HTMLElement) {
+      if (!residualDeepestDeepestDeeper) {
+        residualDeepestDeepestDeeperEl.hidden = true;
+        residualDeepestDeepestDeeperEl.classList.add("hidden");
+        residualDeepestDeepestDeeperEl.textContent = "";
+        residualDeepestDeepestDeeperEl.removeAttribute("data-slot-key");
+        residualDeepestDeepestDeeperEl.removeAttribute("title");
+      } else {
+        residualDeepestDeepestDeeperEl.hidden = false;
+        residualDeepestDeepestDeeperEl.classList.remove("hidden");
+        residualDeepestDeepestDeeperEl.textContent = residualDeepestDeepestDeeper.line;
+        residualDeepestDeepestDeeperEl.dataset.slotKey = residualDeepestDeepestDeeper.slotKey;
+        residualDeepestDeepestDeeperEl.title = `最深三层链七槽 ${residualDeepestDeepestDeeper.slotKey}（巩固再加深三层）`;
+      }
+    }
   }
 
   private render(): void {
@@ -780,6 +818,9 @@ export class QueuePanels {
     );
     const previewResidualDeepestDeeperEl = this.panel.querySelector(
       `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPER_ROLE}"]`,
+    );
+    const previewResidualDeepestDeepestDeeperEl = this.panel.querySelector(
+      `[data-role="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE}"]`,
     );
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
@@ -806,6 +847,7 @@ export class QueuePanels {
       previewResidualDeeperEl,
       previewResidualDeepestEl,
       previewResidualDeepestDeeperEl,
+      previewResidualDeepestDeepestDeeperEl,
       now,
     );
     this.renderBuildSlotMatrix(now);
@@ -1106,6 +1148,16 @@ export class QueuePanels {
         } else {
           this.openAndHighlightBuildSlot(slotKey);
         }
+      }
+      return;
+    }
+    const residualDeepestDeepestDeeperAnchor = target.closest(
+      `[data-action="${QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ACTION}"]`,
+    );
+    if (residualDeepestDeepestDeeperAnchor instanceof HTMLElement) {
+      const slotKey = residualDeepestDeepestDeeperAnchor.getAttribute("data-slot-key")?.trim();
+      if (slotKey) {
+        this.onPreviewCrossLinkResidualDeepestDeepestDeeperRing?.(slotKey);
       }
       return;
     }

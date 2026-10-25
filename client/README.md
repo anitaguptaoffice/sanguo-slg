@@ -802,6 +802,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:50（CLIENT-309）队列下一完成预览与七槽互链残余巩固再加深二层**：在 **CLIENT-293** 巩固再加深一层行下追加 **`formatNextQueueFinishPreviewResidualDeepestDeeperLine`** / **`queue-next-finish-preview-residual-deepest-deeper-line`**（双队列类型 + 槽位标签 + 下一完成 ETA 只读 **巩固再加深二层** 摘要；**CLIENT-293/277/261/245/218 不退化**；**非** wave:48 CLIENT-293 首版巩固再加深一层主叙事重复）；点击 **`data-action="domestic-slot-preview-cross-link-residual-deepest-deeper-ring"`** 定位七槽并 **`domestic-slot-preview-cross-link-residual-deepest-deeper-ring` 3s** 更深环（叠 **CLIENT-293** 最深环与 **CLIENT-308** `domestic-queue-complete-focus-residual-deepest-deeper-ring` **不退化**；**无**新 domestic RPC）。单测：`nextQueueFinishPreviewResidualDeepestDeeper.test.ts`、`domesticQueueCompleteFocusResidualDeepestDeeperRing.test.ts`、`QueuePanels.test.ts`；`cd client && npm test` 绿。（Closes [#1502](https://github.com/anitaguptaoffice/sanguo-slg/issues/1502)）
 
+## Wave 52 H5 主城队列预览槽位互链残余巩固再加深三层（CLIENT-325）
+
+在 [Wave 50](#wave-50-h5-主城队列预览槽位互链残余巩固再加深二层client-309) 队列预览互链栈基础上 **残余巩固再加深三层**；主叙事 **非** wave:50 CLIENT-309 首版巩固再加深二层标题复刻 / wave:51 世界军情战报栈重复；**仍** DATA-002；**无**新 domestic RPC；范围外同 Wave 50/51。
+
+**wave:52（CLIENT-325）队列下一完成预览与七槽互链残余巩固再加深三层**：在 **CLIENT-309** 巩固再加深二层行下追加 **`formatNextQueueFinishPreviewResidualDeepestDeepestDeeperLine`** / **`queue-next-finish-preview-residual-deepest-deepest-deeper-line`**（双队列类型 + 槽位标签 + 下一完成 ETA 只读 **巩固再加深三层** 摘要；**CLIENT-293/277/261/245/218 不退化**；**非** wave:50 CLIENT-309 首版巩固再加深二层主叙事重复）；点击 **`data-action="domestic-slot-preview-cross-link-residual-deepest-deepest-deeper-ring"`** 定位七槽并 **`domestic-slot-preview-cross-link-residual-deepest-deepest-deeper-ring` 3.5s** 更深环（叠 **CLIENT-309** 最深二层环与 **CLIENT-324** `domestic-queue-complete-focus-residual-deepest-deepest-deeper-ring` **不退化**；**无**新 domestic RPC）。单测：`nextQueueFinishPreviewResidualDeepestDeepestDeeper.test.ts`、`QueuePanels.test.ts`；`cd client && npm test` 绿。（Closes [#1545](https://github.com/anitaguptaoffice/sanguo-slg/issues/1545)）
+
 ## Wave 49 H5 战报列表密度键盘相邻导航与详情坐标复制条残余巩固再加深一层（CLIENT-302）
 
 在 [Wave 47](#wave-47-h5-世界小地图军情-scroll-sync-残余巩固再加深出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifest-巩固再加深m4-出口--intg-047) 战报键盘/坐标栈基础上 **巩固再加深一层**；主叙事 **非** wave:48 主城/将领/日常 HUD 栈重复；**仍** DATA-002；**无**战报 proto 扩量；范围外同 Wave 47/48。
