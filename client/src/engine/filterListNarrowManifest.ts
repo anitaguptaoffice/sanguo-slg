@@ -439,6 +439,10 @@ export {
   RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_CLASS,
 } from "@/engine/wave52MainCityHeroDailySocialQueueNarrowManifest";
 
+/** CLIENT-336: wave:53 背包商城行内态与返回来源高亮残余巩固再加深三层（320 deepest-deeper 基线 **不退化**；1280 组合 manifest 软依赖 **CLIENT-339**）。 */
+export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
+export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeeper";
+
 /** CLIENT-323: wave:51 manifest 巩固再加深二层（316～322 residual deepest-deeper 钩子见 wave:49 再导出）；CLIENT-334 deepest-deepest-deeper 战报钩子（CLIENT-339 soft-dep manifest 收口）。 */
 export {
   BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_CLASS,
@@ -472,4 +476,7 @@ export {
   RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_DEEPER_CLASS,
   RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_DEEPER_ROLE,
 } from "@/net/rankListDensityScanResidualDeepestDeeper";
-export { RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE } from "@/net/recruitTemplateInlineResidualDeepestDeeperSummary";
+export {
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeeperSummary";

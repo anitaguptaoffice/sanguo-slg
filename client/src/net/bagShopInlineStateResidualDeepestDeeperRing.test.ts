@@ -21,6 +21,10 @@ import {
   BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_MS,
   scheduleBagShopInlineStateResidualDeepestDeeperRing,
 } from "@/net/bagShopInlineStateResidualDeepestDeeperRing";
+import {
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_MS,
+} from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
 
 describe("bagShopInlineStateResidualDeepestDeeperRing (CLIENT-320)", () => {
   it("scheduleBagShopInlineStateResidualDeepestDeeperRing adds class then removes after 2s", () => {
@@ -44,7 +48,7 @@ describe("bagShopInlineStateResidualDeepestDeeperRing (CLIENT-320)", () => {
     );
   });
 
-  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-320 rings", () => {
+  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-336 rings", () => {
     const el = document.createElement("span");
     const timeouts: Array<{ fn: () => void; ms: number }> = [];
     const windowObj = {
@@ -62,6 +66,9 @@ describe("bagShopInlineStateResidualDeepestDeeperRing (CLIENT-320)", () => {
     expect(el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_CLASS)).toBe(
       true,
     );
+    expect(
+      el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
+    ).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_RING_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_MS)).toBe(true);
@@ -70,6 +77,9 @@ describe("bagShopInlineStateResidualDeepestDeeperRing (CLIENT-320)", () => {
     );
     expect(
       timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_MS),
+    ).toBe(true);
+    expect(
+      timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_MS),
     ).toBe(true);
   });
 });

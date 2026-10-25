@@ -381,6 +381,9 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
       expect(
         inline?.classList.contains("bag-shop-inline-state-residual-deepest-deeper-ring"),
       ).toBe(true);
+      expect(
+        inline?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deeper-ring"),
+      ).toBe(true);
     });
     const consumableTab = mount.querySelector(
       '[data-bag-category="consumable"]',
@@ -398,6 +401,9 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
       expect(tab?.classList.contains("panel-return-source-highlight-residual-deepest")).toBe(true);
       expect(
         tab?.classList.contains("panel-return-source-highlight-residual-deepest-deeper"),
+      ).toBe(true);
+      expect(
+        tab?.classList.contains("panel-return-source-highlight-residual-deepest-deepest-deeper"),
       ).toBe(true);
     });
   });
@@ -437,6 +443,9 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
       expect(afford?.classList.contains("bag-shop-inline-state-residual-deepest-ring")).toBe(true);
       expect(
         afford?.classList.contains("bag-shop-inline-state-residual-deepest-deeper-ring"),
+      ).toBe(true);
+      expect(
+        afford?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deeper-ring"),
       ).toBe(true);
     });
   });
