@@ -945,6 +945,12 @@ describe("SocialPanels chat & guild", () => {
     expect(
       mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
     ).toContain("巩固再加深四层");
+    expect(
+      mount.querySelector(".guild-duty-header-residual-deepest-deepest-deepest-deeper-line"),
+    ).toBeTruthy();
+    expect(
+      mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
+    ).toContain("巩固再加深五层");
     mount
       .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
       ?.dispatchEvent(new Event("click", { bubbles: true }));
@@ -1012,6 +1018,11 @@ describe("SocialPanels chat & guild", () => {
     ).toBe(true);
     expect(
       separator?.classList.contains("guild-chat-unread-divider-residual-deepest-deepest-deepest-sweep"),
+    ).toBe(true);
+    expect(
+      separator?.classList.contains(
+        "guild-chat-unread-divider-residual-deepest-deepest-deepest-deeper-sweep",
+      ),
     ).toBe(true);
     expect(separator?.textContent).toBe("1 条未读");
     const unreadRow = mount.querySelector(".chat-log li.chat-msg:last-child");

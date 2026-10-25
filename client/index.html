@@ -4602,6 +4602,16 @@
         border-top-color: #ffffff;
         box-shadow: 0 0 22px rgba(255, 255, 255, 0.75);
       }
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-deepest-deepest-sweep::before,
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-deepest-deepest-sweep::after {
+        border-top-color: #ffffff;
+        box-shadow: 0 0 26px rgba(255, 255, 255, 0.85);
+      }
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-deepest-deepest-deeper-sweep::before,
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-deepest-deepest-deeper-sweep::after {
+        border-top-color: #ffffff;
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.95);
+      }
       .chat-msg.guild-chat-unread-first-msg-sweep-ring {
         outline: 2px solid #c9a227; outline-offset: 1px;
         animation: guild-chat-unread-first-msg-sweep-ring-keyframes 1.2s ease-out 1;
@@ -4625,6 +4635,14 @@
       .chat-msg.guild-chat-unread-first-msg-deepest-deepest-deeper-sweep-ring {
         outline: 2px solid #ffffff; outline-offset: 6px;
         animation: guild-chat-unread-first-msg-deepest-deepest-deeper-sweep-ring-keyframes 2.5s ease-out 1;
+      }
+      .chat-msg.guild-chat-unread-first-msg-deepest-deepest-deepest-sweep-ring {
+        outline: 2px solid #ffffff; outline-offset: 7px;
+        animation: guild-chat-unread-first-msg-deepest-deepest-deepest-sweep-ring-keyframes 2.5s ease-out 1;
+      }
+      .chat-msg.guild-chat-unread-first-msg-deepest-deepest-deepest-deeper-sweep-ring {
+        outline: 2px solid #ffffff; outline-offset: 8px;
+        animation: guild-chat-unread-first-msg-deepest-deepest-deepest-deeper-sweep-ring-keyframes 2.5s ease-out 1;
       }
       @keyframes guild-chat-unread-first-msg-sweep-ring-keyframes {
         0% { outline-color: #f0c674; }
@@ -4650,6 +4668,14 @@
         0% { outline-color: #ffffff; outline-width: 7px; }
         100% { outline-color: transparent; outline-width: 2px; }
       }
+      @keyframes guild-chat-unread-first-msg-deepest-deepest-deepest-sweep-ring-keyframes {
+        0% { outline-color: #ffffff; outline-width: 8px; }
+        100% { outline-color: transparent; outline-width: 2px; }
+      }
+      @keyframes guild-chat-unread-first-msg-deepest-deepest-deepest-deeper-sweep-ring-keyframes {
+        0% { outline-color: #ffffff; outline-width: 9px; }
+        100% { outline-color: transparent; outline-width: 2px; }
+      }
       .guild-duty-header-residual-deep-line {
         color: #d4c4a0;
       }
@@ -4664,6 +4690,12 @@
       }
       .guild-duty-header-residual-deepest-deepest-deeper-line {
         color: #faf6ee;
+      }
+      .guild-duty-header-residual-deepest-deepest-deepest-line {
+        color: #fcfaf6;
+      }
+      .guild-duty-header-residual-deepest-deepest-deepest-deeper-line {
+        color: #ffffff;
       }
       .guild-role-chip {
         flex: 0 0 auto; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; line-height: 1.35;
@@ -6260,8 +6292,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deepest-deeper-ring,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-deepest-deepest-deeper-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-deepest-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-deepest-deeper-line,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deepest-deepest-deepest-subline,
