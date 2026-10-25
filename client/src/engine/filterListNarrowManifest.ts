@@ -531,6 +531,12 @@ export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS } fr
 export { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse";
 export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS } from "@/net/marchIntelRemarchResidualDeepestDeepestDeepestDeeper";
 
+/** CLIENT-373: wave:58 队列下一完成预览与七槽互链残余巩固再加深五层（357 deepest-deepest-deepest-deeper 基线 **不退化**）。 */
+export {
+  DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
+  QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
+} from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeepestDeeper";
+
 /** CLIENT-371: wave:57 manifest 巩固再加深五层（364/368/370 由上文 @/net 再导出；其余 deepest-deepest-deepest-deeper 钩子见 wave:57 manifest）。 */
 export {
   BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
