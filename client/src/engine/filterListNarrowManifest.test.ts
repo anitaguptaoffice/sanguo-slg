@@ -720,6 +720,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS);
   });
 
+  it("CLIENT-378 exposes wave:58 daily chain queue HUD deep-link residual deepest-deepest-deepest-deepest", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS);
+    expect(html).toContain(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS);
+  });
+
   it("CLIENT-348 exposes wave:55 minimap intel scroll-sync and world tile ETA cross residual deepest-deepest-deepest", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS);
