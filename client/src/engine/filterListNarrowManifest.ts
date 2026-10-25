@@ -413,6 +413,13 @@ export {
   RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_CLASS,
 } from "@/engine/wave50MainCityHeroDailySocialQueueNarrowManifest";
 
+/** CLIENT-364: wave:57 小地图军情 scroll-sync 巩固再加深五层（CLIENT-371 manifest stub 见 wave:57 再导出）。 */
+export {
+  MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS,
+} from "@/engine/wave57WorldIntelBattleReportMailShopRankNarrowManifest";
+
 /** CLIENT-363: wave:56 manifest 巩固再加深五层（356～362 residual deepest-deepest-deepest-deepest 钩子见 wave:54 再导出）。 */
 export {
   DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
