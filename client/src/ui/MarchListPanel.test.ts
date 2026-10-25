@@ -450,7 +450,7 @@ describe("MarchListPanel", () => {
     ).toBeTruthy();
   });
 
-  it("notifyMarchStarted applies residual deeper intel refresh stamp and list row pulse (CLIENT-285)", async () => {
+  it("notifyMarchStarted applies residual deepest intel refresh stamp and list row pulse (CLIENT-301)", async () => {
     vi.useFakeTimers();
     const arriveAt = Date.now() + 30 * 60_000;
     const gateway = {
@@ -468,6 +468,7 @@ describe("MarchListPanel", () => {
       expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-deep")).toBe(true);
       expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deep")).toBe(true);
       expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deeper")).toBe(true);
+      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deepest")).toBe(true);
     });
     const row = mount.querySelector('.march-list li[data-march-id="88"]');
     expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(true);
@@ -479,6 +480,9 @@ describe("MarchListPanel", () => {
     expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deeper-pulse")).toBe(
       true,
     );
+    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deepest-pulse")).toBe(
+      true,
+    );
     vi.advanceTimersByTime(3000);
     expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(false);
     expect(subline?.classList.contains("intel-list-refresh-march-subline-pulse")).toBe(false);
@@ -486,6 +490,9 @@ describe("MarchListPanel", () => {
       false,
     );
     expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deeper-pulse")).toBe(
+      false,
+    );
+    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deepest-pulse")).toBe(
       false,
     );
     expect(mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]')?.classList.contains("hidden")).toBe(

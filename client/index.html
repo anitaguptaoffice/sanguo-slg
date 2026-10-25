@@ -1527,6 +1527,17 @@
         .march-form-troop-margin-residual-deeper-line {
         color: #b08848;
       }
+      .military-panel .march-form-troop-margin-residual-deepest-line {
+        font-size: 7px;
+        font-weight: 800;
+        color: #5a7868;
+        letter-spacing: 0.04em;
+      }
+      .military-panel .march-form-troop-margin-residual-deepest-line.hidden { display: none; }
+      .military-panel .march-form-troop-margin-residual-line.march-form-troop-margin-residual-warn
+        .march-form-troop-margin-residual-deepest-line {
+        color: #a07838;
+      }
       .march-submit-intel-refresh-stamp.march-submit-intel-refresh-stamp-residual-deep {
         color: #e8f8ff;
         font-size: 12px;
@@ -1551,6 +1562,24 @@
       .intel-row-phase-subline.intel-list-refresh-march-subline-residual-deeper-pulse {
         animation: intel-list-refresh-march-subline-residual-deeper-pulse-keyframes 3s ease-out 1;
         font-weight: 700;
+      }
+      .march-submit-intel-refresh-stamp.march-submit-intel-refresh-stamp-residual-deepest {
+        color: #fcfeff;
+        font-size: 12px;
+        text-shadow: 0 0 14px rgba(198, 245, 255, 0.75);
+      }
+      @keyframes intel-list-refresh-march-subline-residual-deepest-pulse-keyframes {
+        0% { color: #ffffff; text-shadow: 0 0 14px rgba(235, 250, 255, 1); }
+        100% { color: #b8a88a; text-shadow: none; }
+      }
+      .intel-row-phase-subline.intel-list-refresh-march-subline-residual-deepest-pulse {
+        animation: intel-list-refresh-march-subline-residual-deepest-pulse-keyframes 3s ease-out 1;
+        font-weight: 800;
+      }
+      .intel-row-phase-subline.intel-list-refresh-march-subline-residual-deeper-pulse.intel-list-refresh-march-subline-residual-deepest-pulse {
+        animation:
+          intel-list-refresh-march-subline-residual-deeper-pulse-keyframes 3s ease-out 1,
+          intel-list-refresh-march-subline-residual-deepest-pulse-keyframes 3s ease-out 1;
       }
       @keyframes march-phase-changed-pulse-keyframes {
         0% { background-color: rgba(158, 197, 255, 0.35); }
@@ -4757,10 +4786,12 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-phase-change-residual-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-list-refresh-march-residual-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-list-refresh-march-deep-pulse,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deepest-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deeper-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deep-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-line,
       #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
+      #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deeper,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deep,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp,
@@ -4969,9 +5000,11 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-list-refresh-march-residual-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.intel-list-refresh-march-deep-pulse,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deep-line,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deepest-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deeper-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-line,
       #layout-frame.layout-narrow .military-panel .march-form-validation-sweep-line,
+      #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deeper,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deep,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp,
@@ -5128,8 +5161,10 @@
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-deep,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deep,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deeper,
+      #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deep-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deeper-line,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deepest-line,
       #layout-frame.layout-narrow .military-panel .intel-march-prefill-residual-line,
       #layout-frame.layout-narrow .military-panel [data-action="prefill-march-form-from-intel-residual"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-density-row,
@@ -5281,11 +5316,14 @@
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-deep,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deep,
       #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deeper,
+      #layout-frame.layout-narrow .military-panel .march-submit-intel-refresh-stamp-residual-deepest,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deep-line,
       #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deeper-line,
+      #layout-frame.layout-narrow .military-panel .march-form-troop-margin-residual-deepest-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .intel-row-phase-subline.intel-list-refresh-march-subline-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .intel-row-phase-subline.intel-list-refresh-march-subline-residual-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .intel-row-phase-subline.intel-list-refresh-march-subline-residual-deeper-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .intel-row-phase-subline.intel-list-refresh-march-subline-residual-deepest-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-density-row,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-focus-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-list li.report-list-keyboard-adjacent-nav-residual-ring,
