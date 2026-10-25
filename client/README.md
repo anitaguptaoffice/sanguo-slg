@@ -755,6 +755,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:48（CLIENT-292）主城队列 ETA 分段完成焦点与七槽 ring 残余巩固再加深一层**：队列行在 **CLIENT-276** 巩固再加深第四行下追加 **`formatDomesticQueueEtaSegmentResidualDeepestLabel`**（**`domestic-queue-eta-segment-residual-deepest-label`** 巩固再加深一层分段相位 + **`domestic-queue-eta-segment-residual-deepest-finish`** 完成倒计时只读第四行；**CLIENT-212/244/260/276** **不退化**；**非** wave:46 CLIENT-276 首版巩固标题复刻主叙事）；队列完成时七槽叠加 **`domestic-queue-complete-focus-residual-deepest-ring` 3s**（与 **CLIENT-276** `domestic-queue-complete-focus-residual-deeper-ring` **并存不退化**；**无**主城建造新 RPC）。单测：`domesticQueueEtaSegmentResidualDeepest.test.ts`、`domesticQueueCompleteFocusResidualDeepestRing.test.ts`、`queueRemainingProgress.test.ts`；`cd client && npm test` 绿。（Closes [#1379](https://github.com/anitaguptaoffice/sanguo-slg/issues/1379)）
 
+## Wave 48 H5 主城队列预览槽位互链残余巩固再加深一层（CLIENT-293 起）
+
+在 [Wave 46](#wave-46-h5-主城队列-eta-完成焦点残余巩固再加深队列预览槽位互链再加深将领养成扫读再加深panelstate-筛选再加深双榜钉选再加深军团聊天再加深日常-hud-深链再加深1280-组合-manifest-巩固再加深m4-出口--intg-043) 主城栈基础上 **轮转回**队列预览互链栈做 **残余巩固再加深一层**；**仍** DATA-002；**无**新 domestic RPC；范围外同 Wave 46/47。
+
+**wave:48（CLIENT-293）队列下一完成预览与七槽互链残余巩固再加深一层**：在 **CLIENT-277** 巩固再加深行下追加 **`formatNextQueueFinishPreviewResidualDeepestLine`** / **`queue-next-finish-preview-residual-deepest-line`**（双队列类型 + 槽位标签 + 下一完成 ETA 只读 **巩固再加深一层** 摘要；**CLIENT-277/261/245/218 不退化**；**非** wave:46 CLIENT-277 首版巩固主叙事重复）；点击 **`data-action="domestic-slot-preview-cross-link-residual-deepest-ring"`** 定位七槽并 **`domestic-slot-preview-cross-link-residual-deepest-ring` 2.5s** 最深环（叠 **CLIENT-277** 更深环与 **CLIENT-292** `domestic-queue-complete-focus-residual-deepest-ring` **不退化**；**无**新 domestic RPC）。单测：`nextQueueFinishPreviewResidualDeepest.test.ts`、`QueuePanels.test.ts`；`cd client && npm test` 绿。（Closes [#1380](https://github.com/anitaguptaoffice/sanguo-slg/issues/1380)）
+
 ## Wave 47 H5 世界小地图军情 scroll-sync 残余巩固再加深（CLIENT-284 起）
 
 在 [Wave 46](#wave-46-h5-主城队列-eta-完成焦点残余巩固再加深队列预览槽位互链再加深将领养成扫读再加深panelstate-筛选再加深双榜钉选再加深军团聊天再加深日常-hud-深链再加深1280-组合-manifest-巩固再加深m4-出口--intg-043) 主城栈基础上 **轮转回**世界/军情栈；**仍** DATA-002；**无**新 world RPC；范围外同 Wave 46。

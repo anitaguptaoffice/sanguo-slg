@@ -1977,6 +1977,13 @@
       .main-city-slot-upgrade-tag.domestic-slot-preview-cross-link-residual-deeper-ring {
         animation: domestic-slot-preview-cross-link-residual-deeper-ring-keyframes 2.5s ease-out 1;
       }
+      @keyframes domestic-slot-preview-cross-link-residual-deepest-ring-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(42, 92, 58, 0.98); outline: 3px solid rgba(42, 92, 58, 0.9); }
+        100% { box-shadow: 0 0 0 14px rgba(42, 92, 58, 0); outline: 3px solid rgba(42, 92, 58, 0); }
+      }
+      .main-city-slot-upgrade-tag.domestic-slot-preview-cross-link-residual-deepest-ring {
+        animation: domestic-slot-preview-cross-link-residual-deepest-ring-keyframes 2.5s ease-out 1;
+      }
       @keyframes domestic-queue-complete-focus-residual-deep-ring-keyframes {
         0% { box-shadow: 0 0 0 0 rgba(56, 118, 168, 0.85); }
         100% { box-shadow: 0 0 0 8px rgba(56, 118, 168, 0); }
@@ -4581,8 +4588,12 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="queue-open-daily-anchor"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deeper-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deepest-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="domestic-slot-complete-margin-residual-ring"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="domestic-slot-preview-cross-link-residual-deep-ring"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="domestic-slot-preview-cross-link-residual-deeper-ring"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] [data-action="domestic-slot-preview-cross-link-residual-deepest-ring"],
       #layout-frame.layout-narrow #hud .hud-todo-merged-sweep,
       #layout-frame.layout-narrow #hud [data-role="hud-todo-merged-sweep-line"],
       #layout-frame.layout-narrow #hud .hud-military-todo-sweep,
@@ -4700,10 +4711,17 @@
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deeper-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deepest-line,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deeper-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deeper-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deepest-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-deepest-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deepest-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deepest-ring,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deep-ring,
@@ -4834,10 +4852,21 @@
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deeper-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-queue-complete-focus-residual-deepest-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-queue-complete-focus-residual-deepest-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-queue-complete-focus-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deep-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deeper-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-next-finish-preview-residual-deepest-line,
       #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deep-ring,
       #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deep-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deeper-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deeper-ring,
+      #layout-frame.layout-narrow .main-city-slot-overlay .domestic-slot-preview-cross-link-residual-deepest-ring,
+      #layout-frame.layout-narrow .main-city-slot-upgrade-tag .domestic-slot-preview-cross-link-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="queue"] .queue-list li.domestic-slot-preview-cross-link-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li [data-role="hero-list-loyalty-residual-deep-subline"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-list li.hero-list-row-loyalty-residual-deeper-subline,
