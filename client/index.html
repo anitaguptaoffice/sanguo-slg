@@ -3673,6 +3673,11 @@
         border-top-color: #ffe08a;
         box-shadow: 0 0 10px rgba(255, 224, 138, 0.45);
       }
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-sweep::before,
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-sweep::after {
+        border-top-color: #fff4c8;
+        box-shadow: 0 0 14px rgba(255, 244, 200, 0.55);
+      }
       .chat-msg.guild-chat-unread-first-msg-sweep-ring {
         outline: 2px solid #c9a227; outline-offset: 1px;
         animation: guild-chat-unread-first-msg-sweep-ring-keyframes 1.2s ease-out 1;
@@ -3684,6 +3689,10 @@
       .chat-msg.guild-chat-unread-first-msg-deeper-sweep-ring {
         outline: 2px solid #ffe08a; outline-offset: 3px;
         animation: guild-chat-unread-first-msg-deeper-sweep-ring-keyframes 2s ease-out 1;
+      }
+      .chat-msg.guild-chat-unread-first-msg-deepest-sweep-ring {
+        outline: 2px solid #fff8d8; outline-offset: 4px;
+        animation: guild-chat-unread-first-msg-deepest-sweep-ring-keyframes 2s ease-out 1;
       }
       @keyframes guild-chat-unread-first-msg-sweep-ring-keyframes {
         0% { outline-color: #f0c674; }
@@ -3697,11 +3706,18 @@
         0% { outline-color: #fff0b0; outline-width: 4px; }
         100% { outline-color: transparent; outline-width: 2px; }
       }
+      @keyframes guild-chat-unread-first-msg-deepest-sweep-ring-keyframes {
+        0% { outline-color: #fffce0; outline-width: 5px; }
+        100% { outline-color: transparent; outline-width: 2px; }
+      }
       .guild-duty-header-residual-deep-line {
         color: #d4c4a0;
       }
       .guild-duty-header-residual-deeper-line {
         color: #e0d0b0;
+      }
+      .guild-duty-header-residual-deepest-line {
+        color: #ece0c8;
       }
       .guild-role-chip {
         flex: 0 0 auto; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; line-height: 1.35;
@@ -4809,8 +4825,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deep-ring,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deeper-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deeper-subline,
@@ -4962,8 +4980,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-ring td,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deep-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deeper-sweep,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .daily-quest-chain-queue-hud-residual-deeper-subline,
       #layout-frame.layout-narrow #hud .hud-todo-toolbar-deep-link-residual-deep-pulse,
@@ -5108,9 +5128,11 @@
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deep-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deeper-sweep,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .daily-quest-chain-queue-hud-residual-deeper-subline,
