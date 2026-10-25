@@ -1466,6 +1466,16 @@ dev 空邮件/空日常：角标 **0 隐藏**，不抛错。单测：`hudTodoBad
 
 **wave:52（CLIENT-327）将领 panelState 与列表筛选 chip 记忆残余抛光再加深三层**：列表/详情 loading·empty·error 在 **CLIENT-311** `hero-panel-state-residual-deepest-deeper-sweep` 下追加只读 **`hero-panel-state-residual-deepest-deepest-deeper-sweep`**（`formatHeroPanelStateResidualDeepestDeepestDeeperSweepLine`：巩固再加深三层文案 + **`formatHeroPanelGatewayRetryDeepestDeepestDeeperHint`** 网关重试 hint；**CLIENT-173** `panel-gateway-retry` / **CLIENT-067** `hero-list-form-error` / **CLIENT-311** **不退化**）。筛选 chip 点击写入 **`hero-list-filter-chip-residual-deepest-deepest-deeper-v1`**（与 **`hero-list-filter-chip-residual-deepest-deeper-v1`**、**`hero-list-filter-chip-residual-deepest-v1`**、**`hero-list-filter-v1`**、**`hero-list-return-v1`** 并存）；筛选条下 **`hero-list-filter-chip-residual-deepest-deepest-deeper-sweep`** 展示巩固再加深三层记忆摘要（**CLIENT-231** 返回高亮 / **CLIENT-199** `hero-list-selected-v1` **不退化**）。单测：`heroPanelStateResidualDeepestDeepestDeeperSweep.test.ts`、`heroListFilterChipResidualDeepestDeepestDeeper.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
 
+**wave:54（CLIENT-343）将领 panelState 与列表筛选 chip 记忆残余抛光再加深四层**：列表/详情 loading·empty·error 在 **CLIENT-327** `hero-panel-state-residual-deepest-deepest-deeper-sweep` 下追加只读 **`hero-panel-state-residual-deepest-deepest-deepest-sweep`**（`formatHeroPanelStateResidualDeepestDeepestDeepestSweepLine`：巩固再加深四层文案 + **`formatHeroPanelGatewayRetryDeepestDeepestDeepestHint`** 网关重试 hint；**CLIENT-173** `panel-gateway-retry` / **CLIENT-067** `hero-list-form-error` / **CLIENT-327** **不退化**）。筛选 chip 点击写入 **`hero-list-filter-chip-residual-deepest-deepest-deepest-v1`**（与 **`hero-list-filter-chip-residual-deepest-deepest-deeper-v1`**、**`hero-list-filter-chip-residual-deepest-deeper-v1`**、**`hero-list-filter-v1`**、**`hero-list-return-v1`** 并存）；筛选条下 **`hero-list-filter-chip-residual-deepest-deepest-deepest-sweep`** 展示巩固再加深四层记忆摘要（**CLIENT-231** 返回高亮 / **CLIENT-199** `hero-list-selected-v1` **不退化**）。单测：`heroPanelStateResidualDeepestDeepestDeepestSweep.test.ts`、`heroListFilterChipResidualDeepestDeepestDeepest.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。
+
+### 手动验收（将领 panelState 与列表筛选 chip 记忆残余抛光再加深四层 CLIENT-343）
+
+在 [CLIENT-327](#手动验收将领-panelstate-与列表筛选-chip-记忆残余抛光再加深三层-client-327) 巩固再加深三层扫读与 [CLIENT-231](#手动验收将领列表返回高亮与筛选-chip-记忆抛光-client-231) / [CLIENT-199](#手动验收将领列表详情筛选记忆扫读-client-199) 记忆 **不退化** 前提下：
+
+1. 将领列表/详情 **loading / empty / error** 占位在 **`hero-panel-state-residual-deepest-deepest-deeper-sweep`** 下追加 **`hero-panel-state-residual-deepest-deepest-deepest-sweep`**（巩固再加深四层文案 + gateway 重试 hint）；首屏失败仍走 **CLIENT-173** 行内重试与顶栏表单错误。
+2. 筛选 chip 写入 **`hero-list-filter-chip-residual-deepest-deepest-deepest-v1`**，筛选条 **`hero-list-filter-chip-residual-deepest-deepest-deepest-sweep`** 展示巩固再加深四层摘要；**`hero-list-return-highlight`** 与 **`hero-list-selected-v1`** 仍正常。
+3. 单测：`heroPanelStateResidualDeepestDeepestDeepestSweep.test.ts`、`heroListFilterChipResidualDeepestDeepestDeepest.test.ts`、`HeroMailPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1589](https://github.com/anitaguptaoffice/sanguo-slg/issues/1589)）
+
 ### 手动验收（将领 panelState 与列表筛选 chip 记忆残余抛光再加深三层 CLIENT-327）
 
 在 [CLIENT-311](#手动验收将领-panelstate-与列表筛选-chip-记忆残余抛光再加深二层-client-311) 巩固再加深二层扫读与 [CLIENT-231](#手动验收将领列表返回高亮与筛选-chip-记忆抛光-client-231) / [CLIENT-199](#手动验收将领列表详情筛选记忆扫读-client-199) 记忆 **不退化** 前提下：
