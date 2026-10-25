@@ -2,7 +2,7 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-047 / INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
 
 ## 功勋/经验/体力出征 L9–L11 网关冒烟（INTG-046，推荐）
 
@@ -15,6 +15,20 @@ GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG046HeroL9L11SmokePath'
 ```
 
 失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-046:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
+
+## Wave 47 网关冒烟（INTG-047，推荐）
+
+在 INTG-043 全量断言之上扩展 **小地图军情 scroll-sync 残余巩固再加深**（`military.v1.ListMarches` 首条 `phase`/`to_x`/`to_y` + 视口 scroll-sync **residual deeper** 锚点 hint，CLIENT-284/290）、**出征兵力余量与刷新戳记残余巩固再加深**（`military.v1.StartMarch` ≡ `MarchAttack` 同源，`march_id` + `city_troops` 余量 + `intel_list_refresh_stamp_ms` **residual deeper** hint，CLIENT-285）、**战报键盘相邻导航与坐标复制残余巩固再加深**（`military.v1.ListBattleReports` 首条 `outcome`/坐标 + 相邻条 **residual deeper** hint，CLIENT-286）、**邮件 HUD 附件残余巩固再加深**（`content.v1.ListPlayerMail` 未领附件计数 + 首条 `mail_id` + HUD **residual deeper** hint，CLIENT-287）、**背包商城返回高亮残余巩固再加深**（`content.v1.ListPlayerBag` 消耗品分类首条 + `shop.v1.ListShopShelf` 列表长度 **residual deeper** hint，CLIENT-288）、**排行密度与招募扫读残余巩固再加深**（`rank.v1.GetLeaderboard` ≡ `ListPowerRank`/`ListKillRank` 列表长度 + 首行 `score` 密度 **residual deeper** hint + `hero.v1.ListRecruitTemplates` 长度，CLIENT-289；**非**钉选专用 RPC）、**日常可领 HUD 残余巩固再加深**（`quest.v1.ListPlayerQuests` `chain_id=400` 可领条数 **residual deeper** hint，CLIENT-287 HUD）、**军情 phase 再出征预填残余巩固再加深**（`ListMarches` 多行 `phase` + `prefill_to_x`/`to_y` **residual deeper** hint，CLIENT-290/291）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量；**不跑 H5**。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速/主城建造新 RPC/战报 proto 扩量/新商城 SKU/IAP。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG047Wave47SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-047:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## 俘虏/结交/来投 L6–L8 网关冒烟（INTG-045，推荐）
 
