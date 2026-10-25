@@ -283,9 +283,13 @@ import {
 } from "@/net/minimapViewportIntelScrollResidual";
 import {
   createMinimapViewportIntelScrollResidualDeepTimers,
-  syncMinimapViewportIntelScrollResidualDeep,
   type MinimapViewportIntelScrollResidualDeepTimers,
 } from "@/net/minimapViewportIntelScrollResidualDeep";
+import {
+  createMinimapViewportIntelScrollResidualDeeperTimers,
+  syncMinimapViewportIntelScrollResidualDeeper,
+  type MinimapViewportIntelScrollResidualDeeperTimers,
+} from "@/net/minimapViewportIntelScrollResidualDeeper";
 import {
   applyMinimapFocusPulseClass,
   highlightMinimapMarchEnd,
@@ -463,6 +467,8 @@ export class MainCityScene implements Scene {
     createMinimapViewportIntelScrollResidualTimers();
   private readonly minimapViewportIntelScrollResidualDeepTimers: MinimapViewportIntelScrollResidualDeepTimers =
     createMinimapViewportIntelScrollResidualDeepTimers();
+  private readonly minimapViewportIntelScrollResidualDeeperTimers: MinimapViewportIntelScrollResidualDeeperTimers =
+    createMinimapViewportIntelScrollResidualDeeperTimers();
   private minimapViewportGestureActive = false;
   /** 与军情列表 {@link MarchListPanel} 共用的行军 ETA 时钟（毫秒）。 */
   private marchClockMs = Date.now();
@@ -1734,7 +1740,7 @@ export class MainCityScene implements Scene {
 
   private syncMinimapViewportForIntelSelection(march: MarchSummary): void {
     const bounds = this.currentMinimapWorldBounds();
-    const synced = syncMinimapViewportIntelScrollResidualDeep(
+    const synced = syncMinimapViewportIntelScrollResidualDeeper(
       {
         march,
         bounds,
@@ -1746,6 +1752,7 @@ export class MainCityScene implements Scene {
         viewportTimers: this.minimapViewportIntelSyncTimers,
         residualTimers: this.minimapViewportIntelScrollResidualTimers,
         residualDeepTimers: this.minimapViewportIntelScrollResidualDeepTimers,
+        residualDeeperTimers: this.minimapViewportIntelScrollResidualDeeperTimers,
       },
     );
     if (synced.applied) {
