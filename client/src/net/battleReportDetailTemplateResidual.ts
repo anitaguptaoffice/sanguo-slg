@@ -20,6 +20,10 @@ import {
   applyBattleReportCoordCopyBarResidualDeepestDeeperSweep,
   formatBattleReportCoordCopyBarResidualDeepestDeeperSweep,
 } from "@/net/battleReportCoordCopyBarResidualDeepestDeeperSweep";
+import {
+  applyBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep,
+  formatBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep,
+} from "@/net/battleReportCoordCopyBarResidualDeepestDeepestDeeperSweep";
 
 export const BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS =
   "battle-report-side-template-residual";
@@ -144,12 +148,16 @@ export function applyBattleReportCoordsReadonlySelect(
   const barEl = textEl.closest<HTMLElement>(`.${BATTLE_REPORT_COORD_COPY_BAR_CLASS}`);
   if (barEl) {
     const copyText = textEl.textContent ?? "";
+    const deepestDeepestDeeperSweepHint =
+      formatBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep(copyText);
     const deepestDeeperSweepHint = formatBattleReportCoordCopyBarResidualDeepestDeeperSweep(copyText);
     const deepestSweepHint = formatBattleReportCoordCopyBarResidualDeepestSweep(copyText);
     const deeperSweepHint = formatBattleReportCoordCopyBarResidualDeeperSweep(copyText);
     const deepSweepHint = formatBattleReportCoordCopyBarResidualDeepSweep(copyText);
     const sweepHint = formatBattleReportCoordCopyBarResidualSweep(copyText);
-    if (deepestDeeperSweepHint) {
+    if (deepestDeepestDeeperSweepHint) {
+      barEl.setAttribute("aria-label", deepestDeepestDeeperSweepHint);
+    } else if (deepestDeeperSweepHint) {
       barEl.setAttribute("aria-label", deepestDeeperSweepHint);
     } else if (deepestSweepHint) {
       barEl.setAttribute("aria-label", deepestSweepHint);
@@ -163,6 +171,7 @@ export function applyBattleReportCoordsReadonlySelect(
     applyBattleReportCoordCopyBarResidualDeeperSweep(barEl);
     applyBattleReportCoordCopyBarResidualDeepestSweep(barEl);
     applyBattleReportCoordCopyBarResidualDeepestDeeperSweep(barEl);
+    applyBattleReportCoordCopyBarResidualDeepestDeepestDeeperSweep(barEl);
   }
   coordCopySelectTimer = setTimeout(() => {
     coordCopySelectTimer = null;
