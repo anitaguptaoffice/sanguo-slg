@@ -77,6 +77,15 @@ export function renderComingHeroList(
   }
   for (const c of coming) {
     const li = document.createElement("li");
+    li.tabIndex = 0;
+    li.setAttribute("role", "button");
+    li.setAttribute("aria-pressed", String(c.hero_id === selectedHeroId));
+    li.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault(); li.click();
+        ul.querySelector<HTMLElement>(`[data-coming-id="${c.hero_id}"]`)?.focus();
+      }
+    });
     li.className = "coming-hero-row";
     li.dataset.comingId = String(c.hero_id);
     if (c.hero_id === selectedHeroId) li.classList.add("coming-hero-selected");

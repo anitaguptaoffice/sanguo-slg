@@ -2981,3 +2981,28 @@ cd client && npm test && npm run build
 - `src/ui/` — 聊天/军团/排行、任务/日常/战报/行军、背包/商城/将领/邮件 DOM 面板
 - `proto/` — 与后端 INTG 对齐的扩展 proto（不写入 `spec/`）
 - `mock-server/` — 登录 + 军事桩 WebSocket mock
+
+### CLIENT-REPAIR-007：首次招募库存依赖
+
+打开将领面板先通过现有 `ListPlayerBag` 获取真实库存；未完成时显示加载状态并禁用招募，不把未知背包解释为 0。失败可直接重试，快速重复打开共享请求；关闭、卸载或切换账号后的过期返回不会覆盖当前库存。加载完成后才按现有资源/道具规则判断，确实无招募书仍不可招募。招募提交在异步日常预检前上锁，防止连续点击重复扣费。此修复不提供首本招募书，不改掉落、奖励、商城或协议。
+
+回归：`npx vitest run src/ui/recruitInventoryLoading.test.ts src/ui/HeroMailPanels.test.ts`；原生浏览器验收需使用实际持有招募书的账号直接打开将领面板，不能先打开背包规避首开路径。
+
+### CLIENT-REPAIR-008 — 军事募兵队列对比度
+
+军事侧栏不属于 `.content-panel`，因此深色募兵行原先继承纸底深字。
+仅为 `.military-panel .military-recruit-queue li.queue-list-row` 指定现有浅字
+`#e8dcc8`；不改变布局、选中轮廓、按钮、PNG、RPC 或兵力数值。
+普通深底 `#1a1410` 与完成脉冲深底均按正常文本 AA ≥4.5:1 回归。
+
+验证：`npm test -- src/net/militaryQueueContrast.test.ts src/net/recruitTroopSubmitFeedback.test.ts`、
+`npm run build`；`node scripts/verify-military-queue-contrast.mjs <evidence-dir>`
+在真实客户端 DOM/CSS 上使用 **mock gateway** 排队，原生点击与输入，检查
+1280×720 / 1600×900、skin-on/off、排队/选中/输入错误/完成后列表隐藏。
+skin-off 通过渲染前设置正式 `data-art-skin="off"` 开关，不覆盖截图样式。
+军事列表无独立错误行；错误文案属于表单。完成快照在生产同步中移除，
+脚本推进浏览器时钟仅验证 UI 清理，**不证明服务端募兵结算或持久化通过**。
+
+本轮实测队列正常/选中/表单报错时均为 **13.46:1**，12 张行截图可找到
+精确前景/背景像素。skin-off 时侧栏其他文字仍直接叠加场景，属于独立
+背景回退问题，不宣称整个无皮肤面板完成视觉验收。

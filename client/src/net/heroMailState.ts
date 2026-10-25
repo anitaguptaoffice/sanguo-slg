@@ -93,6 +93,9 @@ const MAIL_STATUS_LABEL: Record<number, string> = {
 };
 
 export type HeroSummary = {
+  /** Optional enrichment from the loaded hero detail, not required list fields. */
+  template_name?: string;
+  exp?: number;
   hero_id?: number;
   template_cfg_id?: number;
   level?: number;
