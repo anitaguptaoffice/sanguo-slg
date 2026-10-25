@@ -797,6 +797,9 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    ++this.recruitBagGeneration;
+    this.recruitBagRequest = null;
+    this.recruitBagKey = null;
     this.clearHeroLargessCooldownTimer();
     this.heroPanel?.removeEventListener("keydown", this.onHeroListKeyDown);
     this.heroFocusTrap?.dispose();
@@ -840,6 +843,52 @@ export class HeroMailPanels {
     this.syncCaptiveHeroUi();
     this.syncPersuadeUi();
     this.syncComingHeroUi();
+  }
+
+  private recruitBagKey: string | null = null;
+  private recruitBagRequest: { key: string; promise: Promise<void> } | null = null;
+  private recruitBagError: string | null = null;
+  private recruitBagGeneration = 0;
+
+  private recruitSessionKey(): string | null {
+    const session = this.getSession();
+    return session ? `${session.serverId}:${session.player?.player_id}:${session.cityId}` : null;
+  }
+
+  private recruitBagReady(): boolean {
+    return this.recruitBagKey !== null && this.recruitBagKey === this.recruitSessionKey();
+  }
+
+  /** Unknown inventory must never be presented as an empty inventory. */
+  private ensureRecruitBag(): Promise<void> {
+    const key = this.recruitSessionKey();
+    if (!key || this.recruitBagReady()) return Promise.resolve();
+    if (this.recruitBagRequest?.key === key) return this.recruitBagRequest.promise;
+    const generation = ++this.recruitBagGeneration;
+    const sid = this.serverId();
+    this.recruitBagError = null;
+    const promise = (async () => {
+      try {
+        const res = await Promise.resolve().then(() => this.gateway.listPlayerBag(sid)) as {
+          items?: { item_cfg_id?: number; quantity?: number }[];
+        };
+        if (generation !== this.recruitBagGeneration || key !== this.recruitSessionKey() ||
+            this.heroPanel.classList.contains("hidden")) return;
+        this.recruitBagKey = key;
+        this.onSessionPatch({ bag: bagFromListPlayerBagResponse(res.items) });
+      } catch {
+        if (generation !== this.recruitBagGeneration || key !== this.recruitSessionKey()) return;
+        this.recruitBagError = "背包加载失败，请重试";
+      } finally {
+        if (generation === this.recruitBagGeneration) {
+          this.recruitBagRequest = null;
+          if (!this.heroPanel.classList.contains("hidden")) this.renderTemplateList();
+        }
+      }
+    })();
+    this.recruitBagRequest = { key, promise };
+    this.renderTemplateList();
+    return promise;
   }
 
   private sessionEconomy(): { wallet: ResourceWallet; bag: BagStack[] } {
@@ -898,6 +947,7 @@ export class HeroMailPanels {
   }
 
   private recruitAffordSummaryForHeroDetail(): string {
+    if (!this.recruitBagReady()) return this.recruitBagError ?? "正在加载背包…";
     const tplId = this.heroDetail?.template_cfg_id;
     if (!tplId) return "";
     const template = this.recruitTemplatesForDisplay().find((t) => t.template_cfg_id === tplId);
@@ -951,6 +1001,8 @@ export class HeroMailPanels {
   toggleHero(): void {
     toggleCenterPanel(this.heroPanel);
     if (!this.heroPanel.classList.contains("hidden")) {
+      this.recruitBagKey = null;
+      void this.ensureRecruitBag();
       void this.refreshRecruitTemplates();
       void this.refreshHeroes({ restoreSelection: true });
       void this.refreshHotelCandidates();
@@ -965,6 +1017,7 @@ export class HeroMailPanels {
   async openHeroDetailDeepLink(heroId: number): Promise<void> {
     this.mailPanel.classList.add("hidden");
     openCenterPanel(this.heroPanel);
+    void this.ensureRecruitBag();
     resetCenterPanelViewportScroll(this.heroPanel);
     if (!this.heroes.length) await this.refreshHeroes();
     let id = heroId;
@@ -1886,6 +1939,7 @@ export class HeroMailPanels {
         <p class="recruit-cost-preview" data-role="recruit-preview"></p>
         <p class="recruit-form-inline-hint hidden" data-role="recruit-form-inline-hint" aria-live="polite"></p>
         <button type="button" class="hidden recruit-goto-bag-item-gap-btn" data-action="recruit-goto-bag-item-gap">打开背包</button>
+        <button type="button" class="hidden" data-action="retry-recruit-bag">重试加载背包</button>
         <button type="button" data-action="recruit-hero">招募</button>
         <p class="recruit-success-toast hidden" data-role="recruit-success-toast" role="status">
           <span data-role="recruit-success-msg"></span>
@@ -2587,6 +2641,17 @@ export class HeroMailPanels {
     if (!ul || !sel) return;
     ul.innerHTML = "";
     sel.innerHTML = "";
+    const retry = this.heroPanel.querySelector('[data-action="retry-recruit-bag"]');
+    retry?.classList.toggle("hidden", !this.recruitBagError);
+    if (!this.recruitBagReady()) {
+      const message = this.recruitBagError ?? "正在加载背包，稍后检查招募条件…";
+      const li = document.createElement("li");
+      li.textContent = message;
+      ul.appendChild(li);
+      if (preview) preview.textContent = message;
+      this.syncRecruitButtonState(undefined);
+      return;
+    }
     const displayTemplates = this.recruitTemplatesForDisplay();
     const lines = recruitTemplateListLines(displayTemplates);
     if (!displayTemplates.length) {
@@ -2814,6 +2879,13 @@ export class HeroMailPanels {
     templateRow: RecruitTemplatePreview | undefined,
     inlineHint?: ReturnType<typeof formatRecruitFormInlineHint>,
   ): void {
+    if (!this.recruitBagReady()) {
+      syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
+      setRecruitAffordabilityErrorDisplay(this.heroPanel, this.recruitBagError);
+      const hintEl = this.heroPanel.querySelector('[data-role="recruit-form-inline-hint"]');
+      if (hintEl) hintEl.textContent = this.recruitBagError ?? "正在加载背包，稍后检查招募条件…";
+      return;
+    }
     const hint =
       inlineHint ??
       formatRecruitFormInlineHint(templateRow, this.sessionEconomy().wallet, this.sessionEconomy().bag);
@@ -4129,6 +4201,7 @@ export class HeroMailPanels {
   }
 
   private async syncEconomyAfterRecruit(): Promise<void> {
+    const key = this.recruitSessionKey();
     const session = this.getSession();
     if (!session) return;
     let bag: BagStack[] = session.bag;
@@ -4153,11 +4226,11 @@ export class HeroMailPanels {
         /* 保留会话钱包 */
       }
     }
-    this.onSessionPatch({ bag, wallet });
+    if (key === this.recruitSessionKey()) this.onSessionPatch({ bag, wallet });
   }
 
   private async recruitHero(): Promise<void> {
-    if (this.recruitHeroInflight) return;
+    if (this.recruitHeroInflight || !this.recruitBagReady()) return;
     const sid = this.serverId();
     const tpl = this.selectedTemplateId;
     const itemId = this.recruitItemId;
@@ -4176,13 +4249,18 @@ export class HeroMailPanels {
     }
     setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
     setRecruitSuccessToastDisplay(this.heroPanel, null);
+    this.recruitHeroInflight = true;
+    const recruitKey = this.recruitSessionKey();
     let dailyBefore: DailyQuestRow | null = null;
     try {
       dailyBefore = await this.fetchDailyRecruitRow();
     } catch {
       /* 日常列表失败不阻断招募 */
     }
-    this.recruitHeroInflight = true;
+    if (recruitKey !== this.recruitSessionKey() || this.heroPanel.classList.contains("hidden")) {
+      this.recruitHeroInflight = false;
+      return;
+    }
     this.recruitLastError = null;
     syncRecruitSubmittingLine(this.heroPanel, true);
     this.syncRecruitFormInlineState(templateRow);
@@ -4197,7 +4275,9 @@ export class HeroMailPanels {
         level?: number;
         loyalty?: number;
       };
+      if (recruitKey !== this.recruitSessionKey()) return;
       await this.syncEconomyAfterRecruit();
+      if (recruitKey !== this.recruitSessionKey()) return;
       const { wallet: walletAfter, bag: bagAfter } = this.sessionEconomy();
       refreshRecruitWalletSweepDisplays(
         this.heroPanel,
@@ -4670,6 +4750,7 @@ export class HeroMailPanels {
       this.persistHeroListFilterChipResidual("hero-sort-loyalty");
       this.renderHeroList();
     }
+    if (a === "retry-recruit-bag") void this.ensureRecruitBag();
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
     if (a === "refresh-hotel-candidates") void this.refreshHotelCandidates();
     if (a === "refresh-hotel-pool") void this.refreshHotelPool();
