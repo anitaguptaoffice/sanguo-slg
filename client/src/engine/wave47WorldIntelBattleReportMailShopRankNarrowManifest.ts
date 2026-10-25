@@ -1,0 +1,282 @@
+import type { AssetLoader } from "@/engine/AssetLoader";
+import {
+  PANEL_ASSET_BAG,
+  PANEL_ASSET_BATTLE_REPORT,
+  PANEL_ASSET_DEFAULT,
+  PANEL_ASSET_HERO,
+  PANEL_ASSET_MARCH,
+  PANEL_ASSET_MILITARY,
+  PANEL_ASSET_RANK,
+  PANEL_ASSET_SHOP,
+  PANEL_ASSET_WORLD,
+} from "@/engine/artPanelSkin";
+import { TOOLBAR_HEIGHT } from "@/engine/mainCitySlots";
+import {
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_CLASS,
+  BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEP_SWEEP_CLASS,
+  CLIENT_275_NARROW_MANIFEST_CENTER_PANEL_IDS,
+  INTEL_MARCH_PREFILL_RESIDUAL_DEEP_LINE_CLASS,
+  INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS,
+  MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEP_LINE_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_CLASS,
+  MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEP_RING_CLASS,
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS,
+  PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEP_ACTION,
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEP_LINE_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS,
+  REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEP_RING_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_PULSE_CLASS,
+} from "@/engine/wave45WorldIntelBattleReportMailShopRankNarrowManifest";
+import {
+  BAG_SHOP_CATEGORY_SCAN_RING_CLASS,
+  BAG_SHOP_INLINE_STATE_RESIDUAL_RING_CLASS,
+  BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS,
+  COPY_REPORT_COORDS_READONLY_ACTION,
+  INTEL_MARCH_PREFILL_RESIDUAL_LINE_CLASS,
+  INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_PULSE_CLASS,
+  MARCH_FORM_TROOP_MARGIN_RESIDUAL_LINE_CLASS,
+  MARCH_FORM_VALIDATION_SWEEP_LINE_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_DEEP_CLASS,
+  MINIMAP_INTEL_SCROLL_SYNC_DEEP_RING_CLASS,
+  MINIMAP_VIEWPORT_ANCHOR_SESSION_KEY,
+  MINIMAP_VIEWPORT_INTEL_SYNC_RING_CLASS,
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_CLASS,
+  PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_ACTION,
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_LINE_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
+  REPORT_LIST_DENSITY_ROW_CLASS,
+  REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS,
+  REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_RESIDUAL_RING_CLASS,
+} from "@/engine/wave43WorldIntelBattleReportMailShopRankNarrowManifest";
+
+/** Bottom toolbar (56px) + focus-ring slack — same as CLIENT-275 / CLIENT-283. */
+export const WAVE47_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX = 64;
+
+/**
+ * CLIENT-291: wave:47 世界·军情·战报·邮件·商城·排行组合窄屏 manifest 巩固再加深 at 1280×720.
+ * Soft-deps CLIENT-284～290 wire DOM into these selectors (**非** wave:46 CLIENT-283 主城栈面板集).
+ */
+export const CLIENT_291_NARROW_MANIFEST_CENTER_PANEL_IDS = CLIENT_275_NARROW_MANIFEST_CENTER_PANEL_IDS;
+
+export type Client291NarrowManifestCenterPanelId =
+  (typeof CLIENT_291_NARROW_MANIFEST_CENTER_PANEL_IDS)[number];
+
+/** CLIENT-284: minimap scroll-sync residual deeper ring on CLIENT-268 residual deep ring. */
+export const MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPER_RING_CLASS =
+  "minimap-intel-scroll-sync-residual-deeper-ring";
+
+/** CLIENT-284: world tile ETA cross-read residual deeper line (CLIENT-268 baseline). */
+export const WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_CLASS =
+  "world-tile-intel-eta-cross-residual-deeper-line";
+
+export const WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_PULSE_CLASS =
+  "world-tile-intel-eta-cross-residual-deeper-pulse";
+
+/** CLIENT-285: march form troop margin residual deeper read-only line. */
+export const MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEPER_LINE_CLASS =
+  "march-form-troop-margin-residual-deeper-line";
+
+/** CLIENT-285: post-MarchAttack intel refresh stamp residual deeper (3s). */
+export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPER_CLASS =
+  "march-submit-intel-refresh-stamp-residual-deeper";
+
+/** CLIENT-286: battle report keyboard adjacent nav residual deeper ring. */
+export const REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPER_RING_CLASS =
+  "report-list-keyboard-adjacent-nav-residual-deeper-ring";
+
+/** CLIENT-286: coord copy bar residual deeper sweep. */
+export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPER_SWEEP_CLASS =
+  "battle-report-coord-copy-bar-residual-deeper-sweep";
+
+/** CLIENT-287: mail claim → HUD badge residual deeper pulse after CLIENT-271 sync. */
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS =
+  "mail-claim-hud-sync-residual-deeper-pulse";
+
+export const MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_CLASS =
+  "mail-attachment-claim-residual-deeper-subline";
+
+/** CLIENT-288: bag/shop inline state residual deeper ring. */
+export const BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_CLASS =
+  "bag-shop-inline-state-residual-deeper-ring";
+
+/** CLIENT-288: panel return source highlight residual deeper. */
+export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS =
+  "panel-return-source-highlight-residual-deeper";
+
+/** CLIENT-289: rank list density scan residual deeper line. */
+export const RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPER_LINE_CLASS =
+  "rank-list-density-scan-residual-deeper-line";
+
+/** CLIENT-289: recruit template inline summary residual deeper line. */
+export const RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_CLASS =
+  "recruit-template-inline-residual-deeper-summary";
+
+/** CLIENT-290: intel phase change residual deeper pulse (CLIENT-274 baseline). */
+export const INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS =
+  "intel-phase-change-residual-deeper-pulse";
+
+/** CLIENT-290: remarch prefill residual deeper readonly summary on military form. */
+export const INTEL_MARCH_PREFILL_RESIDUAL_DEEPER_LINE_CLASS =
+  "intel-march-prefill-residual-deeper-line";
+
+export const PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEPER_ACTION =
+  "prefill-march-form-from-intel-residual-deeper";
+
+/** Wave:45 / wave:43 baselines that must not regress alongside wave:47 residual deeper hooks. */
+export {
+  BAG_SHOP_CATEGORY_SCAN_RING_CLASS,
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_CLASS,
+  BAG_SHOP_INLINE_STATE_RESIDUAL_RING_CLASS,
+  BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEP_SWEEP_CLASS,
+  BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS,
+  COPY_REPORT_COORDS_READONLY_ACTION,
+  INTEL_MARCH_PREFILL_RESIDUAL_DEEP_LINE_CLASS,
+  INTEL_MARCH_PREFILL_RESIDUAL_LINE_CLASS,
+  INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS,
+  INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS,
+  MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEP_LINE_CLASS,
+  MARCH_FORM_TROOP_MARGIN_RESIDUAL_LINE_CLASS,
+  MARCH_FORM_VALIDATION_SWEEP_LINE_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_DEEP_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_CLASS,
+  MINIMAP_INTEL_SCROLL_SYNC_DEEP_RING_CLASS,
+  MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEP_RING_CLASS,
+  MINIMAP_VIEWPORT_ANCHOR_SESSION_KEY,
+  MINIMAP_VIEWPORT_INTEL_SYNC_RING_CLASS,
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_CLASS,
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS,
+  PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_ACTION,
+  PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEP_ACTION,
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEP_LINE_CLASS,
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_LINE_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
+  REPORT_LIST_DENSITY_ROW_CLASS,
+  REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEP_RING_CLASS,
+  REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS,
+  REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEP_PULSE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_RESIDUAL_RING_CLASS,
+};
+
+export const MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPER_RING_SELECTOR = `.${MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPER_RING_CLASS}`;
+export const WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_SELECTOR = `.${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPER_LINE_CLASS}`;
+export const MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEPER_LINE_SELECTOR = `.military-panel .${MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEPER_LINE_CLASS}`;
+export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPER_SELECTOR = `.military-panel .${MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPER_CLASS}`;
+export const REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPER_RING_SELECTOR = `.battle-report-list li.${REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPER_RING_CLASS}`;
+export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPER_SWEEP_SELECTOR = `.${BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPER_SWEEP_CLASS}`;
+export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_SELECTOR = `.mail-list li .${MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS}`;
+export const MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_SELECTOR = `.mail-list li .${MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_CLASS}`;
+export const BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_SELECTOR = `.bag-list li.${BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_CLASS}, .shop-offer-list li.${BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_CLASS}`;
+export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_SELECTOR = `.${PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPER_CLASS}`;
+export const RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPER_LINE_SELECTOR = `.${RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPER_LINE_CLASS}`;
+export const RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_SELECTOR = `.${RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_CLASS}`;
+export const INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_SELECTOR = `.march-list li.${INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS}`;
+export const INTEL_MARCH_PREFILL_RESIDUAL_DEEPER_LINE_SELECTOR = `.military-panel .${INTEL_MARCH_PREFILL_RESIDUAL_DEEPER_LINE_CLASS}`;
+
+export const CLIENT_291_PANEL_ASSET_BY_CENTER_ID: Record<
+  Client291NarrowManifestCenterPanelId,
+  string
+> = {
+  world: PANEL_ASSET_WORLD,
+  march: PANEL_ASSET_MARCH,
+  military: PANEL_ASSET_MILITARY,
+  "battle-report": PANEL_ASSET_BATTLE_REPORT,
+  mail: PANEL_ASSET_DEFAULT,
+  bag: PANEL_ASSET_BAG,
+  shop: PANEL_ASSET_SHOP,
+  rank: PANEL_ASSET_RANK,
+  hero: PANEL_ASSET_HERO,
+};
+
+export const CLIENT_291_PANEL_SCROLL_ROLE_BY_CENTER_ID: Record<
+  Client291NarrowManifestCenterPanelId,
+  string
+> = {
+  world: "world-scroll",
+  march: "march-scroll",
+  military: "military-scroll",
+  "battle-report": "battle-report-scroll",
+  mail: "mail-scroll",
+  bag: "bag-scroll",
+  shop: "shop-scroll",
+  rank: "rank-scroll",
+  hero: "hero-scroll",
+};
+
+export function panelScrollClearsBottomToolbar(paddingBottomPx: number): boolean {
+  return paddingBottomPx >= TOOLBAR_HEIGHT;
+}
+
+export function isWave47WorldIntelBattleReportMailShopRankArtSkinOff(el: HTMLElement): boolean {
+  return el.dataset.artSkin === "off" || el.closest("[data-art-skin='off']") != null;
+}
+
+export function queryClient291PanelRoot(
+  doc: ParentNode,
+  panelId: Client291NarrowManifestCenterPanelId,
+): HTMLElement | null {
+  if (doc instanceof HTMLElement && doc.dataset.centerPanel === panelId) {
+    return doc;
+  }
+  if (panelId === "military") {
+    return doc.querySelector<HTMLElement>(`.military-panel[data-center-panel="military"]`);
+  }
+  return doc.querySelector<HTMLElement>(`[data-center-panel="${panelId}"]`);
+}
+
+/** Safe no-op when CLIENT-284～290 sibling DOM is not mounted yet. */
+export function pulseWave47ResidualNarrowHook(root: ParentNode, selector: string): void {
+  const el = root.querySelector<HTMLElement>(selector);
+  if (!el) return;
+  el.classList.add("wave47-narrow-hook-pulse");
+  window.setTimeout(() => el.classList.remove("wave47-narrow-hook-pulse"), 0);
+}
+
+export type IntelMarchPrefillResidualDeeper = {
+  toX: number;
+  toY: number;
+  troopsSummary: string;
+};
+
+/**
+ * CLIENT-290 stub: tolerates missing military form / prefill line until sibling PR lands.
+ */
+export function prefillMarchFormFromIntelResidualDeeper(
+  doc: ParentNode,
+  prefill: IntelMarchPrefillResidualDeeper,
+): boolean {
+  const military = queryClient291PanelRoot(doc, "military");
+  if (!military) return false;
+  const line =
+    military.querySelector<HTMLElement>(`.${INTEL_MARCH_PREFILL_RESIDUAL_DEEPER_LINE_CLASS}`) ??
+    military.querySelector<HTMLElement>(
+      `[data-action="${PREFILL_MARCH_FORM_FROM_INTEL_RESIDUAL_DEEPER_ACTION}"]`,
+    );
+  if (!line) return false;
+  line.textContent = `${prefill.toX},${prefill.toY} · ${prefill.troopsSummary}`;
+  pulseWave47ResidualNarrowHook(military, INTEL_MARCH_PREFILL_RESIDUAL_DEEPER_LINE_SELECTOR);
+  return true;
+}
+
+/** No-op skin hook; nine-slice wired in MainCityScene / panel components. */
+export function mountClient291PanelSkins(_root: HTMLElement, _assets: AssetLoader): void {
+  if (_root && isWave47WorldIntelBattleReportMailShopRankArtSkinOff(_root)) return;
+}
