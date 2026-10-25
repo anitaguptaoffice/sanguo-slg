@@ -419,3 +419,13 @@ export {
   RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_ROLE,
 } from "@/net/rankListDensityScanResidualDeepest";
 export { RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE } from "@/net/recruitTemplateInlineResidualDeepestSummary";
+
+/** CLIENT-321: wave:51 排行招募扫读残余巩固再加深二层（305 deepest 基线 **不退化**）。 */
+export {
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_DEEPER_CLASS,
+  RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_DEEPER_ROLE,
+} from "@/net/rankListDensityScanResidualDeepestDeeper";
+export {
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeeperSummary";
