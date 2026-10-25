@@ -76,9 +76,17 @@ import {
   HERO_LOYALTY_RESIDUAL_DEEPEST_WARN_DOT_CLASS,
   heroListRowShowsLoyaltyResidualDeepestWarnDot,
 } from "@/net/heroListLoyaltyResidualDeepestSubline";
+import {
+  formatHeroListLoyaltyResidualDeepestDeeperSubline,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
+  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPER_WARN_DOT_CLASS,
+  heroListRowShowsLoyaltyResidualDeepestDeeperWarnDot,
+} from "@/net/heroListLoyaltyResidualDeepestDeeperSubline";
 import { scheduleHeroDetailConsumableStackResidualDeepSweep } from "@/net/heroDetailConsumableStackResidualDeepSweep";
 import { scheduleHeroDetailConsumableStackResidualDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeeperSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestSweep";
+import { scheduleHeroDetailConsumableStackResidualDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeeperSweep";
 import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
@@ -2050,12 +2058,31 @@ export class HeroMailPanels {
         loyaltyResidualDeepestSubline.appendChild(
           document.createTextNode(formatHeroListLoyaltyResidualDeepestSubline(rowSource, filterCtx)),
         );
+        const loyaltyResidualDeepestDeeperSubline = document.createElement("span");
+        loyaltyResidualDeepestDeeperSubline.className =
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS;
+        loyaltyResidualDeepestDeeperSubline.setAttribute(
+          "data-role",
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
+        );
+        if (heroListRowShowsLoyaltyResidualDeepestDeeperWarnDot(rowSource, filterCtx)) {
+          const deepestDeeperDot = document.createElement("span");
+          deepestDeeperDot.className = HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPER_WARN_DOT_CLASS;
+          deepestDeeperDot.setAttribute("aria-hidden", "true");
+          loyaltyResidualDeepestDeeperSubline.appendChild(deepestDeeperDot);
+        }
+        loyaltyResidualDeepestDeeperSubline.appendChild(
+          document.createTextNode(
+            formatHeroListLoyaltyResidualDeepestDeeperSubline(rowSource, filterCtx),
+          ),
+        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
         body.appendChild(loyaltyResidualSubline);
         body.appendChild(loyaltyResidualDeepSubline);
         body.appendChild(loyaltyResidualDeeperSubline);
         body.appendChild(loyaltyResidualDeepestSubline);
+        body.appendChild(loyaltyResidualDeepestDeeperSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
@@ -2165,6 +2192,7 @@ export class HeroMailPanels {
         scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeeperSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeepestSweep(detailEl, this.heroDetail, bag);
+        scheduleHeroDetailConsumableStackResidualDeepestDeeperSweep(detailEl, this.heroDetail, bag);
       }
     }
   }

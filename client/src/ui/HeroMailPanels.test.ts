@@ -808,6 +808,58 @@ describe("HeroMailPanels", () => {
     panels.detach();
   });
 
+  it("hero list loyalty residual deepest-deeper subline and consumable deepest-deeper sweep (CLIENT-310)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 2, template_cfg_id: 1002, level: 9, loyalty: 10, morale: 40 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 2,
+        template_cfg_id: 1002,
+        level: 9,
+        loyalty: 10,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        exp_current: 12,
+        exp_to_next: 80,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => ({
+        ...sessionBase(),
+        bag: [{ item_cfg_id: 2017, quantity: 2 }],
+      }),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="2"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const deepestDeeper = mount.querySelector(
+      '[data-role="hero-list-loyalty-residual-deepest-deeper-subline"]',
+    );
+    expect(deepestDeeper?.textContent).toContain("忠诚巩固再加深二层");
+    expect(deepestDeeper?.textContent).toContain("经验 12/80");
+    expect(mount.querySelector('[data-role="hero-list-loyalty-residual-deepest-subline"]')).toBeTruthy();
+    const deepestDeeperSweep = mount.querySelector(
+      '[data-role="hero-detail-consumable-stack-residual-deepest-deeper-sweep"]',
+    );
+    expect(deepestDeeperSweep?.textContent).toContain("堆叠巩固再加深二层");
+    expect(
+      deepestDeeperSweep?.classList.contains(
+        "hero-detail-consumable-stack-residual-deepest-deeper-sweep-ring",
+      ),
+    ).toBe(true);
+    panels.detach();
+  });
+
   it("hero list loyalty residual subline shows warn dot and threshold scan (CLIENT-246)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
