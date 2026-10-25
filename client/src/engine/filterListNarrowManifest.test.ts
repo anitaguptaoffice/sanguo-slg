@@ -580,6 +580,13 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     expect(html).toContain(RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS);
   });
 
+  it("CLIENT-376 exposes wave:58 rank cooldown stamp and pin keep residual deepest-deepest-deepest-deeper hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_STAMP_CLASS);
+    expect(html).toContain(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS);
+    expect(html).toContain("CLIENT-376 wave:58");
+  });
+
   it("CLIENT-307 exposes wave:49 world intel battle report mail shop rank narrow hooks consolidate deepest", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPEST_RING_CLASS);

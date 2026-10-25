@@ -867,6 +867,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:54（CLIENT-344）双榜刷新冷却戳记与钉选保持残余巩固再加深四层**：**CLIENT-328** 巩固再加深三层第四行下只读 **`formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp`** / **`rank-refresh-cooldown-residual-deepest-deepest-deepest-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深四层** 第四行；**CLIENT-328/214** **不退化**；**无**新 rank RPC；**非** wave:53 **CLIENT-337** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deepest-deepest-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeepestDeepest.test.ts`、`rankPinKeepResidualDeepestDeepestDeepestRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1590](https://github.com/anitaguptaoffice/sanguo-slg/issues/1590)）
 
+## Wave 58 H5 双榜刷新冷却戳记与钉选保持残余巩固再加深五层（CLIENT-376）
+
+在 [Wave 57](#wave-57-h5-世界小地图军情-scroll-sync-残余巩固再加深五层client-364-起) 世界/军情/战报/邮件/商城/排行栈 **轮转回**主城双榜栈 **巩固再加深五层**（**residual deepest-deepest-deepest-deeper**）；主叙事 **非** wave:57 **CLIENT-369** 排行招募密度扫读重复；**仍** DATA-002；**无**新 rank RPC；范围外同 Wave 56/57。
+
+**wave:58（CLIENT-376）双榜刷新冷却戳记与钉选保持残余巩固再加深五层**：**CLIENT-360** 巩固再加深五层第四行下只读 **`formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp`** / **`rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深五层** 第四行；**CLIENT-360/214** **不退化**；**无**新 rank RPC；**非** wave:57 **CLIENT-369** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deepest-deepest-deeper-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeepestDeepestDeeper.test.ts`、`rankPinKeepResidualDeepestDeepestDeepestDeeperRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1674](https://github.com/anitaguptaoffice/sanguo-slg/issues/1674)）
+
 ## Wave 56 H5 双榜刷新冷却戳记与钉选保持残余巩固再加深五层（CLIENT-360）
 
 在 [Wave 54](#wave-54-h5-双榜刷新冷却戳记与钉选保持残余巩固再加深四层client-344) **CLIENT-344** 双榜钉选保持栈基础上 **巩固再加深五层**；主叙事 **非** wave:55 **CLIENT-353** 排行招募密度扫读重复；**仍** DATA-002；**无**新 rank RPC；范围外同 Wave 54/55。

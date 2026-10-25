@@ -400,7 +400,7 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     await flushPromises();
   });
 
-  it("CLIENT-248: manual refresh shows cooldown residual stamp and pin keep ring", async () => {
+  it("CLIENT-248 / CLIENT-376: manual refresh shows cooldown residual stamp and pin keep ring", async () => {
     const mount = document.createElement("div");
     const now = 1_700_000_000_000;
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);

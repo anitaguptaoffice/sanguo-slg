@@ -537,6 +537,9 @@ export {
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
 } from "@/net/nextQueueFinishPreviewResidualDeepestDeepestDeepestDeepestDeeper";
 
+/** CLIENT-376: wave:58 双榜刷新冷却戳记与钉选保持残余巩固再加深五层（stamp class / pin ring 见 CLIENT-347 wave:54 再导出；`data-role` 由 @/net 再导出）。 */
+export { RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepestDeeper";
+
 /** CLIENT-371: wave:57 manifest 巩固再加深五层（364/368/370 由上文 @/net 再导出；其余 deepest-deepest-deepest-deeper 钩子见 wave:57 manifest）。 */
 export {
   BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
