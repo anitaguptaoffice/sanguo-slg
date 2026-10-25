@@ -332,8 +332,12 @@ import {
   MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_ROLE,
 } from "@/net/mailAttachmentClaimResidualDeepestDeepestDeepestSubline";
 import {
-  pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeepest,
-  syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepest,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
+  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
+} from "@/net/mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSubline";
+import {
+  pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeepestDeeper,
+  syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepestDeeper,
 } from "@/net/mailClaimHudBadgeSync";
 import {
   compareRecruitAffordability,
@@ -642,6 +646,11 @@ export class HeroMailPanels {
   /** CLIENT-335：列表行附件领取残余巩固再加深三层第六行（按 mail_id 记忆）。 */
   private mailAttachmentClaimResidualDeepestDeepestDeeperSublineByMailId = new Map<number, string>();
   private mailAttachmentClaimResidualDeepestDeepestDeepestSublineByMailId = new Map<
+    number,
+    string
+  >();
+  /** CLIENT-367：列表行附件领取残余巩固再加深五层第八行（按 mail_id 记忆）。 */
+  private mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSublineByMailId = new Map<
     number,
     string
   >();
@@ -1107,7 +1116,7 @@ export class HeroMailPanels {
     if (!this.mailPanel) return;
     const row = findMailListRow(this.mailPanel, mailId);
     scheduleMailClaimRowPulse(row);
-    pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeepest(row);
+    pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeepestDeeper(row);
     this.bumpMailClaimHudTodoSweepLinkage();
   }
 
@@ -1125,7 +1134,7 @@ export class HeroMailPanels {
     granted?: MailClaimGrantedPayload,
     mailBeforeClaim?: MailRow,
   ): void {
-    const sync = syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepest(
+    const sync = syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepestDeeper(
       {
         mailUnreadTotal: this.mailUnreadTotal,
         mailInboxSnapshot: this.mailInboxSnapshot,
@@ -1178,6 +1187,12 @@ export class HeroMailPanels {
       this.mailAttachmentClaimResidualDeepestDeepestDeepestSublineByMailId.set(
         mailId,
         sync.attachmentClaimResidualDeepestDeepestDeepestSubline,
+      );
+    }
+    if (sync.attachmentClaimResidualDeepestDeepestDeepestDeeperSubline && mailId > 0) {
+      this.mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSublineByMailId.set(
+        mailId,
+        sync.attachmentClaimResidualDeepestDeepestDeepestDeeperSubline,
       );
     }
   }
@@ -3031,6 +3046,24 @@ export class HeroMailPanels {
           );
           residualDeepestDeepestDeepestSpan.textContent = residualDeepestDeepestDeepestSubline;
           li.appendChild(residualDeepestDeepestDeepestSpan);
+        }
+        const residualDeepestDeepestDeepestDeeperSubline =
+          m.mail_id != null
+            ? this.mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSublineByMailId.get(
+                m.mail_id,
+              )
+            : undefined;
+        if (residualDeepestDeepestDeepestDeeperSubline) {
+          const residualDeepestDeepestDeepestDeeperSpan = document.createElement("span");
+          residualDeepestDeepestDeepestDeeperSpan.className =
+            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
+          residualDeepestDeepestDeepestDeeperSpan.setAttribute(
+            "data-role",
+            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
+          );
+          residualDeepestDeepestDeepestDeeperSpan.textContent =
+            residualDeepestDeepestDeepestDeeperSubline;
+          li.appendChild(residualDeepestDeepestDeepestDeeperSpan);
         }
         ul.appendChild(li);
       }
