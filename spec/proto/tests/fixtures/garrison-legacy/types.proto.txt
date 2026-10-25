@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package sanguo.common.v1;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/common/v1;commonv1";
+
+// 分服标识，对应 game_server.server_id。
+message ServerShard {
+  // 游戏服 ID。
+  int32 server_id = 1;
+  // 展示名，对应 game_server.display_name。
+  string display_name = 2;
+  // 服状态：0=维护 1=流畅 2=火爆 3=停服（与 DDL 一致）。
+  int32 status = 3;
+}
+
+// 选服列表项：在 ServerShard 基础上附带开服时间与账号在该服的角色情况。
+message GameServerInfo {
+  ServerShard shard = 1;
+  // 开服时间（Unix 毫秒）；未开服为 0。
+  int64 opened_at_ms = 2;
+  // 在线人数近似值（选服 UI 展示）。
+  int32 online_count = 3;
+  // 当前登录账号在该服是否已有角色。
+  bool has_player = 4;
+}
+
+// 玩家角色摘要，对应 player 表字段子集。
+message PlayerProfile {
+  // 分服 ID。
+  int32 server_id = 1;
+  // 角色 ID。
+  int64 player_id = 2;
+  // 角色名。
+  string display_name = 3;
+  // 君主等级。
+  int32 level = 4;
+  // 战力快照。
+  int64 power = 5;
+}
+
+// 五资 + 金币，对应 player_wallet。
+message ResourceWallet {
+  int64 food = 1;
+  int64 wood = 2;
+  int64 iron = 3;
+  int64 stone = 4;
+  int64 gold = 5;
+}
+
+// 城池建筑实例，对应 city_building。
+message CityBuilding {
+  // 槽位或建筑实例键，对应 city_building.slot_key。
+  string slot_key = 1;
+  // 建筑配置 ID。
+  int32 building_cfg_id = 2;
+  // 当前等级。
+  int32 level = 3;
+  // 升级完成时间（Unix 毫秒）；0 表示未在升级。
+  int64 upgrade_finish_at_ms = 4;
+}
+
+// 城池驻防兵力一行，对应 city_troop。
+message CityTroopStack {
+  // 兵种配置 ID。
+  int32 unit_cfg_id = 1;
+  // 可用数量。
+  int32 count = 2;
+  // 伤兵数量。
+  int32 wounded = 3;
+}
+
+// 玩家城池列表项，对应 player_city。
+message PlayerCitySummary {
+  int64 city_id = 1;
+  string name = 2;
+  int32 x = 3;
+  int32 y = 4;
+  // 是否主城。
+  bool is_capital = 5;
+  // 城墙等级。
+  int32 wall_level = 6;
+  // 士气 0–100。
+  int32 morale = 7;
+}
+
+// 道具奖励一行（与 player_item / cfg_item 对齐）。
+message RewardItem {
+  int32 item_cfg_id = 1;
+  int32 quantity = 2;
+}
+
+// 奖励包：配置表 reward_pack_id 或显式条目，供任务/商城/GM 发奖共用。
+message RewardBundle {
+  // 配置奖励包 ID；仅引用配置时可只填此项。
+  string reward_pack_id = 1;
+  repeated RewardItem items = 2;
+  // 额外资源（与 reward_pack 配置合并时由服务端解析）。
+  ResourceWallet resources = 3;
+}
