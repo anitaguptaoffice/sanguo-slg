@@ -2,6 +2,8 @@
 
 PostgreSQL 16+。**分片键 `server_id`**：账号中心与 `cfg_*` 全局表无 `server_id`；玩家态/地图态表均含 `server_id`。
 
+待独立评审：[自然招募原子提交与将领创建身份契约](recruit_atomicity.md)（SPEC-RECRUIT-ATOMIC-001；非已上线保证）。
+
 ## ER（逻辑引用，跨域不设 FK）
 
 - `account` → `player`（同服唯一角色）→ `player_wallet` / `player_city` / `player_hero`

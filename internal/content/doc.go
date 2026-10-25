@@ -9,7 +9,11 @@
 // atomically. Replays validate player and payload; pending GM rows retain their ID.
 // LoadPlayer restores the durable wallet as well as the bag.
 //
-// This boundary does not make API quest hooks, consumable effects, or legacy
+// Resource-pack Use also commits stock and wallet together, reading durable stock
+// and publishing caches only after commit. Repeat requests are new uses when stock
+// remains; Use has no request idempotency key. Other effect types are unchanged.
+//
+// This boundary does not make API quest hooks, other consumable effects, or legacy
 // absolute SaveStack writes from separate services transactional. Callers must
 // also reconcile domestic wallet caches before later snapshot flushes; a successful
 // grant alone is not a guarantee that an unrelated stale snapshot cannot overwrite it.

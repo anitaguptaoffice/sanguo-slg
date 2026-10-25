@@ -13,6 +13,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -49,6 +50,7 @@ func TestUseSpeedupShortensBuildAndGetCityState(t *testing.T) {
 	}
 	domHub.RegisterCity(domCity)
 	srv.RegisterCityForTest(cityID, domCity, 10, 11)
+	srv.world = ownershipWorld(world.City{ServerID: 1, CityID: cityID, PlayerID: playerID})
 
 	p := content.PlayerRef{ServerID: 1, PlayerID: playerID}
 	if _, err := srv.contentSvc.Add(p, 2003, 1); err != nil {

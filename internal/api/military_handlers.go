@@ -287,15 +287,17 @@ func troopStacksProto(all map[int32]int32, touched []march.TroopStack) []*apicom
 }
 
 func (s *Server) ownsCity(ctx context.Context, pc PlayerContext, cityID int64) bool {
-	if dom := s.citySnapshot(cityID); dom != nil && dom.PlayerID != 0 && dom.PlayerID == pc.PlayerID {
-		return true
+	// Domestic snapshots have no shard identity. Only the world store can
+	// authorize a city in the authenticated shard; unavailable data fails closed.
+	if cityID <= 0 || pc.PlayerID <= 0 || pc.ServerID <= 0 || s.world == nil || s.world.Store == nil {
+		return false
 	}
 	cities, err := s.world.Store.PlayerCities(ctx, pc.ServerID, pc.PlayerID)
 	if err != nil {
 		return false
 	}
 	for _, c := range cities {
-		if c.CityID == cityID {
+		if c.CityID == cityID && c.ServerID == pc.ServerID && c.PlayerID == pc.PlayerID {
 			return true
 		}
 	}
