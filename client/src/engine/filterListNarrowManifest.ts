@@ -557,6 +557,10 @@ export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS } fr
 export { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse";
 export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS } from "@/net/marchIntelRemarchResidualDeepestDeepestDeepestDeeper";
 
+/** CLIENT-386: wave:59 军情 phase 变更与再出征预填残余巩固再加深五层（CLIENT-370 五层 **不退化**）。 */
+export { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeepestDeeperPulse";
+export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS } from "@/net/marchIntelRemarchResidualDeepestDeepestDeepestDeepestDeeper";
+
 /** CLIENT-373: wave:58 队列下一完成预览与七槽互链残余巩固再加深五层（357 deepest-deepest-deepest-deeper 基线 **不退化**）。 */
 export {
   DOMESTIC_SLOT_PREVIEW_CROSS_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
