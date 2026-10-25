@@ -51,6 +51,10 @@ func (s *Service) LoadPlayer(ctx context.Context, p PlayerRef) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	return s.loadPlayerUnlocked(ctx, p)
+}
+
+func (s *Service) loadPlayerUnlocked(ctx context.Context, p PlayerRef) error {
 	stacks, err := s.store.LoadBag(ctx, p)
 	if err != nil {
 		return err

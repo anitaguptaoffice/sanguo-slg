@@ -2,6 +2,9 @@ package content
 
 import "errors"
 
+// ErrGrantContextUnsupported prevents pretending legacy Store writes are atomic.
+var ErrGrantContextUnsupported = errors.New("content: cancelable grants require an atomic store")
+
 var (
 	ErrUnknownItem       = errors.New("content: unknown item_cfg_id")
 	ErrInvalidQuantity   = errors.New("content: quantity must be positive")
