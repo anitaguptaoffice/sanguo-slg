@@ -122,6 +122,14 @@ export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_CLASS =
 /** CLIENT-296: pin row keep highlight after refresh deepest ring. */
 export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS = "rank-pin-keep-residual-deepest-ring";
 
+/** CLIENT-312: rank manual refresh cooldown residual deepest-deeper stamp. */
+export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_CLASS =
+  "rank-refresh-cooldown-residual-deepest-deeper-stamp";
+
+/** CLIENT-312: pin row keep highlight after refresh deepest-deeper ring. */
+export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS =
+  "rank-pin-keep-residual-deepest-deeper-ring";
+
 /** CLIENT-297: guild duty group header residual deepest line. */
 export const GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS = "guild-duty-header-residual-deepest-line";
 
