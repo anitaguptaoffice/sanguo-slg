@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEP_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepSweep";
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPER_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeeperSweep";
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepestSweep";
+import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS } from "@/net/battleReportCoordCopyBarResidualDeepestDeeperSweep";
 import {
   applyBattleReportCoordCopyBarResidualSweep,
   applyBattleReportCoordsReadonlySelect,
@@ -109,6 +110,9 @@ describe("battleReportDetailTemplateResidual (CLIENT-240)", () => {
     expect(bar.classList.contains(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_SWEEP_CLASS)).toBe(
       true,
     );
+    expect(
+      bar.classList.contains(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS),
+    ).toBe(true);
     expect(addRange).toHaveBeenCalled();
     expect(getSelection).toHaveBeenCalled();
 
