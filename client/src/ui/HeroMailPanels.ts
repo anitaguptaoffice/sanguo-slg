@@ -129,13 +129,17 @@ import {
   type HeroListFilterChipAction,
 } from "@/net/heroListFilterChipResidual";
 import {
-  captureHeroListFilterChipResidualDeepestDeepestDeepest,
   formatHeroListFilterChipResidualDeepestDeepestDeepestSweepLine,
   readHeroListFilterChipResidualDeepestDeepestDeepestSession,
   syncHeroListFilterChipResidualDeepestDeepestDeepestSweep,
 } from "@/net/heroListFilterChipResidualDeepestDeepestDeepest";
 import {
-  captureHeroListFilterChipResidualDeepestDeepestDeeper,
+  captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper,
+  formatHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweepLine,
+  readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession,
+  syncHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweep,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeeper";
+import {
   formatHeroListFilterChipResidualDeepestDeepestDeeperSweepLine,
   readHeroListFilterChipResidualDeepestDeepestDeeperSession,
   syncHeroListFilterChipResidualDeepestDeepestDeeperSweep,
@@ -166,6 +170,10 @@ import {
   appendHeroPanelStateResidualDeepestDeepestDeepestSweep,
   skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep,
 } from "@/net/heroPanelStateResidualDeepestDeepestDeepestSweep";
+import {
+  appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep,
+  skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep,
+} from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeeperSweep";
 import {
   appendHeroPanelStateResidualDeepestDeepestDeeperSweep,
   skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep,
@@ -723,8 +731,8 @@ export class HeroMailPanels {
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
     this.heroListSort = readHeroListSortSession();
-    if (!readHeroListFilterChipResidualDeepestDeepestDeepestSession()) {
-      captureHeroListFilterChipResidualDeepestDeepestDeepest(this.heroListFilter, this.heroListSort);
+    if (!readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession()) {
+      captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper(this.heroListFilter, this.heroListSort);
     }
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
@@ -1929,6 +1937,12 @@ export class HeroMailPanels {
           aria-live="polite"
           hidden
         ></p>
+        <p
+          class="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep hidden"
+          data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep"
+          aria-live="polite"
+          hidden
+        ></p>
         <ul class="hero-list" data-role="hero-list"></ul>
         <div class="hero-detail" data-role="hero-detail"></div>
       </div>
@@ -2001,7 +2015,7 @@ export class HeroMailPanels {
   }
 
   private persistHeroListFilterChipResidual(lastChipAction?: HeroListFilterChipAction): void {
-    captureHeroListFilterChipResidualDeepestDeepestDeepest(
+    captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper(
       this.heroListFilter,
       this.heroListSort,
       lastChipAction,
@@ -2057,6 +2071,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
     } else if (this.heroesRefreshInflight && !this.heroes.length) {
       const li = renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
         assets: this.assets,
@@ -2068,6 +2083,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "loading", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "loading", residualCtx());
     } else if (!this.heroes.length) {
       const msg = heroListLines([])[0];
       const li = renderPanelStateListRow(ul, "empty", msg, { assets: this.assets });
@@ -2078,6 +2094,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else if (!visibleHeroes.length) {
       const li = renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
         assets: this.assets,
@@ -2089,6 +2106,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else {
       for (const h of visibleHeroes) {
         const li = document.createElement("li");
@@ -2311,6 +2329,12 @@ export class HeroMailPanels {
         readHeroListFilterChipResidualDeepestDeepestDeepestSession(),
       ),
     );
+    syncHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweep(
+      this.heroPanel,
+      formatHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweepLine(
+        readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession(),
+      ),
+    );
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
@@ -2324,6 +2348,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep(detailEl, "loading", residualCtx());
+        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailError) {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
@@ -2334,6 +2359,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep(detailEl, "error", residualCtx());
+        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else {
         const { bag, wallet } = this.sessionEconomy();
