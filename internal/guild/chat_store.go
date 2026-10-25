@@ -2,33 +2,21 @@ package guild
 
 import (
 	"context"
-	"sync"
+	"errors"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/chat"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // guildChatStore decorates chat.Store with per-guild channel allocation (m3_003 ref_id=guild_id).
 type guildChatStore struct {
 	inner chat.Store
-
-	mu          sync.Mutex
-	nextChannel map[int32]int64
-	guildChan   map[guildChannelKey]int64
-}
-
-type guildChannelKey struct {
-	serverID int32
-	guildID  int64
 }
 
 // WrapChatStore returns a chat.Store that supports EnsureGuildChannel via EnsureGuildChannel.
 func WrapChatStore(inner chat.Store) *guildChatStore {
-	return &guildChatStore{
-		inner:       inner,
-		nextChannel: make(map[int32]int64),
-		guildChan:   make(map[guildChannelKey]int64),
-	}
+	return &guildChatStore{inner: inner}
 }
 
 func (g *guildChatStore) EnsureWorldChannel(ctx context.Context, serverID int32) (int64, error) {
@@ -55,25 +43,26 @@ func (g *guildChatStore) MutedUntilMS(ctx context.Context, serverID int32, playe
 	return g.inner.MutedUntilMS(ctx, serverID, playerID)
 }
 
-func (g *guildChatStore) EnsureGuildChannel(_ context.Context, serverID int32, guildID int64) (int64, error) {
-	if guildID == 0 {
+func (g *guildChatStore) EnsureGuildChannel(ctx context.Context, serverID int32, guildID int64) (int64, error) {
+	if guildID <= 0 {
 		return 0, ErrGuildRequired
 	}
-	key := guildChannelKey{serverID: serverID, guildID: guildID}
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	if id, ok := g.guildChan[key]; ok {
-		return id, nil
+	switch inner := g.inner.(type) {
+	case *chat.PGStore:
+		return ensureGuildChannelPG(ctx, inner.Pool, serverID, guildID)
+	case *chat.MemStore:
+		// MemStore allocates world/private IDs upwards from 1. Guild IDs are
+		// positive, so their negation is disjoint and stable across wrappers.
+		// This synthetic namespace is memory-only; PG always resolves real rows.
+		return -guildID, nil
+	default:
+		return 0, ErrChatStoreUnsupported
 	}
-	g.nextChannel[serverID]++
-	id := g.nextChannel[serverID]
-	g.guildChan[key] = id
-	return id, nil
 }
 
 // EnsureGuildChannel resolves or creates the chat channel row for a legion.
 func EnsureGuildChannel(ctx context.Context, store chat.Store, serverID int32, guildID int64) (int64, error) {
-	if guildID == 0 {
+	if guildID <= 0 {
 		return 0, ErrGuildRequired
 	}
 	if wrapped, ok := store.(*guildChatStore); ok {
@@ -86,33 +75,35 @@ func EnsureGuildChannel(ctx context.Context, store chat.Store, serverID int32, g
 }
 
 func ensureGuildChannelPG(ctx context.Context, pool *pgxpool.Pool, serverID int32, guildID int64) (int64, error) {
-	var id int64
-	err := pool.QueryRow(ctx, `
-		SELECT channel_id FROM chat_channel
-		WHERE server_id = $1 AND channel_type = $2 AND ref_id = $3
-	`, serverID, chat.ChannelTypeGuild, guildID).Scan(&id)
-	if err == nil {
-		return id, nil
+	for attempt := 0; attempt < 16; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return 0, err
+		}
+		var id int64
+		err := pool.QueryRow(ctx, `SELECT channel_id FROM chat_channel
+   WHERE server_id=$1 AND channel_type=$2 AND ref_id=$3`,
+			serverID, chat.ChannelTypeGuild, guildID).Scan(&id)
+		if err == nil {
+			return id, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return 0, err
+		}
+		// Both the per-server channel key and per-guild identity are unique.
+		// A concurrent world/private/guild allocation may win either key; retry
+		// resolution rather than reuse its ID or surface a transient collision.
+		err = pool.QueryRow(ctx, `INSERT INTO chat_channel
+   (server_id, channel_id, channel_type, ref_id)
+   SELECT $1, COALESCE(MAX(channel_id),0)+1, $2, $3
+   FROM chat_channel WHERE server_id=$1
+   ON CONFLICT DO NOTHING RETURNING channel_id`,
+			serverID, chat.ChannelTypeGuild, guildID).Scan(&id)
+		if err == nil {
+			return id, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return 0, err
+		}
 	}
-	tx, err := pool.Begin(ctx)
-	if err != nil {
-		return 0, err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-	if err := tx.QueryRow(ctx, `
-		SELECT COALESCE(MAX(channel_id), 0) + 1 FROM chat_channel WHERE server_id = $1
-	`, serverID).Scan(&id); err != nil {
-		return 0, err
-	}
-	_, err = tx.Exec(ctx, `
-		INSERT INTO chat_channel (server_id, channel_id, channel_type, ref_id)
-		VALUES ($1, $2, $3, $4)
-	`, serverID, id, chat.ChannelTypeGuild, guildID)
-	if err != nil {
-		return 0, err
-	}
-	if err := tx.Commit(ctx); err != nil {
-		return 0, err
-	}
-	return ensureGuildChannelPG(ctx, pool, serverID, guildID)
+	return 0, ErrChatChannelBusy
 }
