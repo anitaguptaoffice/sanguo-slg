@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
 import {
@@ -284,7 +285,7 @@ export class MarchListPanel {
     }
     this.renderFilterControls();
     if (!this.isOpen()) {
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       resetCenterPanelViewportScroll(this.panel);
       void this.refreshList();
       this.startPoll();
@@ -299,7 +300,7 @@ export class MarchListPanel {
     if (!match?.march_id) return false;
     this.setSelectedMarchId(match.march_id);
     if (!this.isOpen()) {
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       void this.refreshList();
       this.startPoll();
     }
@@ -310,7 +311,7 @@ export class MarchListPanel {
     if (opts?.openPanel && marchId != null && !this.isOpen()) {
       syncMinimapMarchFocusSession(marchId);
       this.selectedMarchId = marchId;
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       void this.refreshList();
       this.startPoll();
       const march = this.marches.find((m) => m.march_id === marchId) ?? null;
@@ -364,7 +365,7 @@ export class MarchListPanel {
   }
 
   toggle(): void {
-    this.panel.classList.toggle("hidden");
+    toggleCenterPanel(this.panel);
     if (this.isOpen()) {
       resetCenterPanelViewportScroll(this.panel);
       void this.refreshList();
@@ -380,7 +381,7 @@ export class MarchListPanel {
    */
   notifyMarchStarted(
     marchId?: number | null,
-    opts?: { march?: MarchSummary | null; toX?: number; toY?: number },
+    opts?: { march?: MarchSummary | null; toX?: number; toY?: number; openPanel?: boolean },
   ): void {
     const fallbackToX = opts?.toX ?? 0;
     const fallbackToY = opts?.toY ?? 0;
@@ -389,9 +390,9 @@ export class MarchListPanel {
       syncMinimapMarchFocusSession(marchId);
       this.selectedMarchId = marchId;
     }
-    const opening = !this.isOpen();
+    const opening = opts?.openPanel !== false && !this.isOpen();
     if (opening) {
-      this.panel.classList.remove("hidden");
+      openCenterPanel(this.panel);
       resetCenterPanelViewportScroll(this.panel);
       this.startPoll();
     }

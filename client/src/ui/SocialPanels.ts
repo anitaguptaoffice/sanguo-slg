@@ -1,3 +1,4 @@
+import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
@@ -326,7 +327,7 @@ export class SocialPanels {
     if (!wasHidden) {
       this.persistChatInputDraft();
     }
-    this.chatPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.chatPanel);
     if (!this.chatPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.chatPanel);
       this.hydrateChatRefreshClockFromSession();
@@ -336,7 +337,7 @@ export class SocialPanels {
   }
 
   toggleGuild(): void {
-    this.guildPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.guildPanel);
     if (!this.guildPanel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.guildPanel);
       this.hydrateGuildRefreshClockFromSession();
@@ -349,14 +350,14 @@ export class SocialPanels {
   openGuildPanel(): void {
     this.chatPanel.classList.add("hidden");
     this.rankPanel.classList.add("hidden");
-    this.guildPanel.classList.remove("hidden");
+    openCenterPanel(this.guildPanel);
     resetCenterPanelViewportScroll(this.guildPanel);
     this.syncGuildSummary();
     this.renderGuildMembersList([]);
   }
 
   toggleRank(): void {
-    this.rankPanel.classList.toggle("hidden");
+    toggleCenterPanel(this.rankPanel);
     if (!this.rankPanel.classList.contains("hidden")) {
       const pending = readLeaderboardReturnScroll();
       if (pending) {
@@ -384,7 +385,7 @@ export class SocialPanels {
       '[data-field="rank-type"]',
     ) as HTMLSelectElement | null;
     if (typeSelect) typeSelect.value = String(LB_PLAYER_POWER);
-    this.rankPanel.classList.remove("hidden");
+    openCenterPanel(this.rankPanel);
     resetCenterPanelViewportScroll(this.rankPanel);
     void this.refreshRank().then(() => this.scrollRankHighlightIntoView());
   }
@@ -518,7 +519,7 @@ export class SocialPanels {
   private openGuildChatChannel(): void {
     this.rankPanel.classList.add("hidden");
     this.guildPanel.classList.add("hidden");
-    this.chatPanel.classList.remove("hidden");
+    openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
     const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
     if (sel) sel.value = String(CHAT_CHANNEL_GUILD);
@@ -1011,7 +1012,7 @@ export class SocialPanels {
   private openChatWithGuildMentionDraft(displayName: string): void {
     this.guildPanel.classList.add("hidden");
     this.rankPanel.classList.add("hidden");
-    this.chatPanel.classList.remove("hidden");
+    openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
     const channel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement;
     if (channel) channel.value = String(CHAT_CHANNEL_GUILD);
