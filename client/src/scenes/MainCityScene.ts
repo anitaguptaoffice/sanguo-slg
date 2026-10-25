@@ -117,9 +117,9 @@ import {
   syncMarchFormInlineFeedback,
 } from "@/net/marchFormSummary";
 import {
-  formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeeperLine,
-  syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeeperLine,
-} from "@/net/marchFormTroopMarginResidualDeepestDeepestDeepestDeeper";
+  formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
+  syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
+} from "@/net/marchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeper";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
@@ -678,6 +678,7 @@ export class MainCityScene implements Scene {
           <span class="march-form-troop-margin-residual-deepest-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deeper-line"></span>
           <span class="march-form-troop-margin-residual-deepest-deepest-deepest-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deepest-line"></span>
           <span class="march-form-troop-margin-residual-deepest-deepest-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deepest-deeper-line"></span>
+          <span class="march-form-troop-margin-residual-deepest-deepest-deepest-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deepest-deepest-deepest-deeper-line"></span>
         </p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
@@ -1772,9 +1773,9 @@ export class MainCityScene implements Scene {
       }),
     );
     const marchSummary = formatMarchFormSummary(marchSnap, this.marchClockMs);
-    syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeeperLine(
+    syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine(
       this.militaryPanel,
-      formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeeperLine(
+      formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine(
         troopReserve,
         marchSummary,
         this.session?.wallet,
