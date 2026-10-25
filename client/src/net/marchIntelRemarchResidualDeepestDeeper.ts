@@ -74,7 +74,7 @@ export function prefillMarchFormFromIntelResidualDeepestDeeper(
   return prefill;
 }
 
-/** CLIENT-317 软依赖：无军事面板时安全 no-op。 */
+/** CLIENT-317 / CLIENT-333 软依赖：无军事面板时安全 no-op（CLIENT-339 出征刷新戳记可 stub）。 */
 export function stubPrefillMarchFormFromIntelResidualDeepestDeeper(
   formRoot: ParentNode | null | undefined,
 ): boolean {
