@@ -400,6 +400,7 @@ import { scheduleDomesticQueueCompleteFocusResidualDeepestDeeperRing } from "@/n
 import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeeperRing";
 import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestRing";
 import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing";
+import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing";
 import { scheduleDomesticQueueCompleteFocusResidualRing } from "@/net/domesticQueueCompleteFocusResidualRing";
 import {
   collectCitySlotKeysForQueueCompleteFocus,
@@ -2489,6 +2490,7 @@ export class MainCityScene implements Scene {
       scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeeperRing(layer, key);
       scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestRing(layer, key);
       scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing(layer, key);
+      scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing(layer, key);
       const label = formatDomesticQueueCompleteSlotMarginLabel(
         buildingBySlot(buildings, key),
         nowMs,

@@ -807,6 +807,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 正文 **wave:57（CLIENT-370）** bullet 见上文 [军情 phase 栈](#wave-55client-354军情-phase-变更扫读与再出征表单预填残余巩固再加深四层) 紧邻段落。（Closes [#1655](https://github.com/anitaguptaoffice/sanguo-slg/issues/1655)）
 
+## Wave 58 H5 主城队列 ETA 完成焦点残余巩固再加深五层（CLIENT-372）
+
+在 [Wave 57](#wave-57-h5-世界小地图军情-scroll-sync-残余巩固再加深五层client-364-起) 世界/军情/战报/邮件/商城/排行栈基础上 **轮转回**主城队列栈做 **残余巩固再加深五层**；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 56/57。
+
+**wave:58（CLIENT-372）主城队列 ETA 分段完成焦点与七槽 ring 残余巩固再加深五层**：队列行在 **CLIENT-356** 巩固再加深五层第八行下追加 **`formatDomesticQueueEtaSegmentResidualDeepestDeepestDeepestDeepestLabel`**（**`domestic-queue-eta-segment-residual-deepest-deepest-deepest-deepest-label`** 巩固再加深五层分段阈值 + **`domestic-queue-eta-segment-residual-deepest-deepest-deepest-deepest-finish`** 完成倒计时只读第九行；**CLIENT-212/244/260/276/292/308/324/340/356** **不退化**；**非** wave:56 CLIENT-356 首版巩固再加深五层标题复刻主叙事）；队列完成时七槽叠加 **`domestic-queue-complete-focus-residual-deepest-deepest-deepest-deepest-ring` 3.5s**（与 **CLIENT-356** `domestic-queue-complete-focus-residual-deepest-deepest-deepest-deeper-ring` **并存不退化**；**无**主城建造新 RPC）。单测：`domesticQueueEtaSegmentResidualDeepestDeepestDeepestDeepest.test.ts`、`domesticQueueCompleteFocusResidualDeepestDeepestDeepestDeepestRing.test.ts`、`queueRemainingProgress.test.ts`；`cd client && npm test` 绿。（Closes [#1670](https://github.com/anitaguptaoffice/sanguo-slg/issues/1670)）
+
 ## Wave 56 H5 主城队列 ETA 完成焦点残余巩固再加深五层（CLIENT-356）
 
 在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层client-348-起) 世界/军情栈基础上 **轮转回**主城队列栈做 **残余巩固再加深五层**；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 54/55。
