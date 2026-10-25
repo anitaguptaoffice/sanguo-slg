@@ -382,6 +382,7 @@ import { scheduleDomesticQueueCompleteFocusResidualDeeperRing } from "@/net/dome
 import { scheduleDomesticQueueCompleteFocusResidualDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestRing";
 import { scheduleDomesticQueueCompleteFocusResidualDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeeperRing";
 import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeeperRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeeperRing";
+import { scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestRing } from "@/net/domesticQueueCompleteFocusResidualDeepestDeepestDeepestRing";
 import { scheduleDomesticQueueCompleteFocusResidualRing } from "@/net/domesticQueueCompleteFocusResidualRing";
 import {
   collectCitySlotKeysForQueueCompleteFocus,
@@ -2424,7 +2425,7 @@ export class MainCityScene implements Scene {
     if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
   }
 
-  /** CLIENT-197 / CLIENT-212 / CLIENT-244 / CLIENT-260 / CLIENT-276 / CLIENT-292 / CLIENT-308 / CLIENT-324：队列完成 → 七槽焦点环 + 残余/深/更深/最深/最深再加深二层/三层环 + 完成态余量扫读。 */
+  /** CLIENT-197 / CLIENT-212 / CLIENT-244 / CLIENT-260 / CLIENT-276 / CLIENT-292 / CLIENT-308 / CLIENT-324 / CLIENT-340：队列完成 → 七槽焦点环 + 残余/深/更深/最深/最深再加深二层/三层/四层环 + 完成态余量扫读。 */
   private applyQueueCompleteFocusRing(events: readonly QueueCompleteHudEvent[]): void {
     const slotKeys = collectCitySlotKeysForQueueCompleteFocus(events, sessionStorage);
     if (!slotKeys.length) return;
@@ -2439,6 +2440,7 @@ export class MainCityScene implements Scene {
       scheduleDomesticQueueCompleteFocusResidualDeepestRing(layer, key);
       scheduleDomesticQueueCompleteFocusResidualDeepestDeeperRing(layer, key);
       scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeeperRing(layer, key);
+      scheduleDomesticQueueCompleteFocusResidualDeepestDeepestDeepestRing(layer, key);
       const label = formatDomesticQueueCompleteSlotMarginLabel(
         buildingBySlot(buildings, key),
         nowMs,
