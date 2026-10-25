@@ -99,6 +99,53 @@
     return inter.width >= minW && inter.height >= minH;
   }
 
+  const CAPTURE_SECTION_ROLES = [
+    "captive-hero-section",
+    "persuade-section",
+    "coming-hero-section",
+  ];
+
+  function visibleCaptureSectionButtons(panel) {
+    const out = [];
+    for (const role of CAPTURE_SECTION_ROLES) {
+      const sec = panel?.querySelector(`[data-role="${role}"]`);
+      if (!(sec instanceof HTMLElement)) continue;
+      for (const btn of sec.querySelectorAll("button")) {
+        if (!(btn instanceof HTMLButtonElement)) continue;
+        if (btn.classList.contains("hidden")) continue;
+        const style = getComputedStyle(btn);
+        if (style.display === "none" || style.visibility === "hidden") continue;
+        const r = btn.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) continue;
+        out.push(btn);
+      }
+    }
+    return out;
+  }
+
+  /** 1280 narrow: captive/persuade/coming action buttons fully inside clip chain (not half-cut by section overflow). */
+  function probeCaptureSectionActionButtonsInClip() {
+    const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
+    const buttons = visibleCaptureSectionButtons(panel);
+    if (buttons.length < 6) {
+      return { ok: false, buttonCount: buttons.length, failures: [{ reason: "expected_at_least_6_buttons" }] };
+    }
+    const failures = [];
+    for (const btn of buttons) {
+      const clip = effectiveVisibleClip(btn);
+      const br = btn.getBoundingClientRect();
+      if (!rectFullyInClip(br, clip, 1)) {
+        failures.push({
+          action: btn.getAttribute("data-action"),
+          section: btn.closest("[data-role]")?.getAttribute("data-role"),
+          bottom: br.bottom,
+          clipBottom: clip.bottom,
+        });
+      }
+    }
+    return { ok: failures.length === 0, buttonCount: buttons.length, failures };
+  }
+
   function findTargetHeroListRow(templateCfgId) {
     const panel = document.querySelector('.content-panel[data-center-panel="hero"]');
     const selectedRow = panel?.querySelector(
@@ -328,14 +375,17 @@
     const nameRect = name?.getBoundingClientRect();
     const bustClip = bust ? effectiveVisibleClip(bust) : null;
 
-    const captureSectionsVisible = [
-      "captive-hero-section",
-      "persuade-section",
-      "coming-hero-section",
-    ].every((role) => {
+    const captureSectionsVisible = CAPTURE_SECTION_ROLES.every((role) => {
       const el = panel?.querySelector(`[data-role="${role}"]`);
       return el instanceof HTMLElement && !el.hidden;
     });
+
+    const layoutNarrow =
+      document.getElementById("layout-frame")?.classList.contains("layout-narrow") ?? false;
+    const captureSectionButtonsProbe = layoutNarrow
+      ? probeCaptureSectionActionButtonsInClip()
+      : { ok: true, skipped: true };
+    const captureSectionButtonsInClip = captureSectionButtonsProbe.ok;
 
     const avatarRect = avatar?.getBoundingClientRect();
     const listNameRect = listRowPrimary?.getBoundingClientRect();
@@ -421,6 +471,7 @@
       ok:
         heroDetailLoaded &&
         captureSectionsVisible &&
+        captureSectionButtonsInClip &&
         listAvatarVisible &&
         nameReadable &&
         !!bust &&
@@ -441,6 +492,8 @@
       listAvatarFrameOk,
       listRowPrimaryText: listRowPrimary?.textContent?.trim() ?? null,
       captureSectionsVisible,
+      captureSectionButtonsInClip,
+      captureSectionButtonsProbe,
       dpr,
       uiScale,
       avatar: avatar
@@ -509,5 +562,6 @@
     scrollHeroListRowForPortraitViewport,
     probeBustNameSameFrame,
     probeHeroPortraitFrames,
+    probeCaptureSectionActionButtonsInClip,
   };
 })();

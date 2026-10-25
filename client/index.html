@@ -3657,8 +3657,20 @@
         padding: 3px 4px;
         vertical-align: top;
         box-sizing: border-box;
-        max-height: 4.8em;
-        overflow: hidden;
+        overflow: visible;
+      }
+      /* HERO-HOST-SCROLL-CLIP: hide list/preview chrome in tri-column row so action buttons stay fully visible (not max-height clipped). */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .captive-hero-section .captive-hero-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .captive-hero-section .captive-hero-list,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .persuade-section .persuade-meta,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .persuade-section .persuade-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .persuade-section .persuade-target-list,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .coming-hero-section .coming-hero-preview,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .coming-hero-section .coming-hero-list,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .captive-hero-section [data-role="captive-hero-form-error"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .persuade-section [data-role="persuade-form-error"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .coming-hero-section [data-role="coming-hero-form-error"] {
+        display: none;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .captive-hero-section h4,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] > .persuade-section h4,
