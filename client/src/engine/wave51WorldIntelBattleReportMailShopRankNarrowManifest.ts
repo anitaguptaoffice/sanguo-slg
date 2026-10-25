@@ -125,9 +125,17 @@ export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPER_CLASS =
 export const REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPER_RING_CLASS =
   "report-list-keyboard-adjacent-nav-residual-deepest-deeper-ring";
 
+/** CLIENT-334: battle report keyboard adjacent nav residual deepest-deepest-deeper ring (CLIENT-339 soft-dep: wave:53 manifest consolidate). */
+export const REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS =
+  "report-list-keyboard-adjacent-nav-residual-deepest-deepest-deeper-ring";
+
 /** CLIENT-318: coord copy bar residual deepest-deeper sweep. */
 export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPER_SWEEP_CLASS =
   "battle-report-coord-copy-bar-residual-deepest-deeper-sweep";
+
+/** CLIENT-334: coord copy bar residual deepest-deepest-deeper sweep (CLIENT-339 soft-dep: wave:53 manifest consolidate). */
+export const BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS =
+  "battle-report-coord-copy-bar-residual-deepest-deepest-deeper-sweep";
 
 /** CLIENT-319: mail claim → HUD badge residual deepest-deeper pulse after CLIENT-303 sync. */
 export const MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS =

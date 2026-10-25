@@ -117,7 +117,7 @@ import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
-import { pulseBattleReportListKeyboardAdjacentNavResidualRings } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeeper";
+import { pulseBattleReportListKeyboardAdjacentNavResidualRings } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeepestDeeper";
 import {
   applyBattleReportCoordsReadonlySelect,
   BATTLE_REPORT_COORD_COPY_BAR_CLASS,
