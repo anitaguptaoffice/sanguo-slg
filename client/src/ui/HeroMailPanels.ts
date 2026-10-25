@@ -113,6 +113,12 @@ import {
   type HeroListFilterChipAction,
 } from "@/net/heroListFilterChipResidual";
 import {
+  captureHeroListFilterChipResidualDeepestDeepestDeeper,
+  formatHeroListFilterChipResidualDeepestDeepestDeeperSweepLine,
+  readHeroListFilterChipResidualDeepestDeepestDeeperSession,
+  syncHeroListFilterChipResidualDeepestDeepestDeeperSweep,
+} from "@/net/heroListFilterChipResidualDeepestDeepestDeeper";
+import {
   captureHeroListFilterChipResidualDeepestDeeper,
   formatHeroListFilterChipResidualDeepestDeeperSweepLine,
   readHeroListFilterChipResidualDeepestDeeperSession,
@@ -134,6 +140,10 @@ import {
   readHeroListFilterChipResidualDeepSession,
   syncHeroListFilterChipResidualDeepSweep,
 } from "@/net/heroListFilterChipResidualDeep";
+import {
+  appendHeroPanelStateResidualDeepestDeepestDeeperSweep,
+  skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep,
+} from "@/net/heroPanelStateResidualDeepestDeepestDeeperSweep";
 import {
   appendHeroPanelStateResidualDeepestDeeperSweep,
   skimHeroDetailPanelStateResidualDeepestDeeperSweep,
@@ -663,8 +673,8 @@ export class HeroMailPanels {
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
     this.heroListSort = readHeroListSortSession();
-    if (!readHeroListFilterChipResidualDeepestDeeperSession()) {
-      captureHeroListFilterChipResidualDeepestDeeper(this.heroListFilter, this.heroListSort);
+    if (!readHeroListFilterChipResidualDeepestDeepestDeeperSession()) {
+      captureHeroListFilterChipResidualDeepestDeepestDeeper(this.heroListFilter, this.heroListSort);
     }
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
@@ -1845,6 +1855,12 @@ export class HeroMailPanels {
           aria-live="polite"
           hidden
         ></p>
+        <p
+          class="hero-list-filter-chip-residual-deepest-deepest-deeper-sweep hidden"
+          data-role="hero-list-filter-chip-residual-deepest-deepest-deeper-sweep"
+          aria-live="polite"
+          hidden
+        ></p>
         <ul class="hero-list" data-role="hero-list"></ul>
         <div class="hero-detail" data-role="hero-detail"></div>
       </div>
@@ -1917,7 +1933,7 @@ export class HeroMailPanels {
   }
 
   private persistHeroListFilterChipResidual(lastChipAction?: HeroListFilterChipAction): void {
-    captureHeroListFilterChipResidualDeepestDeeper(
+    captureHeroListFilterChipResidualDeepestDeepestDeeper(
       this.heroListFilter,
       this.heroListSort,
       lastChipAction,
@@ -1971,6 +1987,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
+      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
     } else if (this.heroesRefreshInflight && !this.heroes.length) {
       const li = renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
         assets: this.assets,
@@ -1980,6 +1997,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeeperSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestSweep(li, "loading", residualCtx());
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "loading", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "loading", residualCtx());
     } else if (!this.heroes.length) {
       const msg = heroListLines([])[0];
       const li = renderPanelStateListRow(ul, "empty", msg, { assets: this.assets });
@@ -1988,6 +2006,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else if (!visibleHeroes.length) {
       const li = renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
         assets: this.assets,
@@ -1997,6 +2016,7 @@ export class HeroMailPanels {
       appendHeroPanelStateResidualDeeperSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestSweep(li, "empty", residualCtx());
       appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
+      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else {
       for (const h of visibleHeroes) {
         const li = document.createElement("li");
@@ -2167,6 +2187,12 @@ export class HeroMailPanels {
         readHeroListFilterChipResidualDeepestDeeperSession(),
       ),
     );
+    syncHeroListFilterChipResidualDeepestDeepestDeeperSweep(
+      this.heroPanel,
+      formatHeroListFilterChipResidualDeepestDeepestDeeperSweepLine(
+        readHeroListFilterChipResidualDeepestDeepestDeeperSession(),
+      ),
+    );
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
@@ -2178,6 +2204,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestSweep(detailEl, "loading", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "loading", residualCtx());
+        skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailError) {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
@@ -2186,6 +2213,7 @@ export class HeroMailPanels {
         skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestSweep(detailEl, "error", residualCtx());
         skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "error", residualCtx());
+        skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else {
         const { bag, wallet } = this.sessionEconomy();
