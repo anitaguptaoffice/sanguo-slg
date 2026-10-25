@@ -753,6 +753,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 1. 视口 **1280×720**：底栏 **队列/将领/背包/日常/军团** 与 **建造侧栏** 长列表在 `.panel-scroll-body` 内滚动且末行不被底栏遮挡；上述 wave:40 DOM 钩子（软依赖 **CLIENT-228～234**）在窄屏下不换行溢出。
 2. 视口 **1600×900**：`#layout-frame` **无** `layout-narrow`；**CLIENT-111/119/127/135/145/155/163/171/179/187/195/203/211/219/227** manifest 不退化。单测：`wave40MainCityHeroBagDailyGuildNarrowManifest.test.ts`、`filterListNarrowManifest.test.ts`、`layoutViewport.test.ts`（CLIENT-235）；`cd client && npm test` 绿。（[#857](https://github.com/anitaguptaoffice/sanguo-slg/issues/857) / [#864](https://github.com/anitaguptaoffice/sanguo-slg/pull/864) `fe533816`）
 
+## Wave 50 H5 主城队列 ETA 完成焦点残余巩固再加深二层（CLIENT-308 起）
+
+在 [Wave 49](#wave-49-h5-世界小地图军情-scroll-sync-残余巩固再加深一层出征戳记兵力余量战报键盘坐标邮件-hud-附件背包商城返回排行招募扫读军情-phase-预填1280-组合-manifest-巩固再加深一层m4-出口--intg-049) 世界栈基础上 **轮转回**主城/将领/队列栈做 **残余巩固再加深二层**；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 48/49。
+
+**wave:50（CLIENT-308）主城队列 ETA 分段完成焦点与七槽 ring 残余巩固再加深二层**：队列行在 **CLIENT-292** 巩固再加深一层第四行下追加 **`formatDomesticQueueEtaSegmentResidualDeepestDeeperLabel`**（**`domestic-queue-eta-segment-residual-deepest-deeper-label`** 巩固再加深二层分段阈值 + **`domestic-queue-eta-segment-residual-deepest-deeper-finish`** 完成倒计时只读第五行；**CLIENT-212/244/260/276/292** **不退化**；**非** wave:48 CLIENT-292 首版巩固再加深一层标题复刻主叙事）；队列完成时七槽叠加 **`domestic-queue-complete-focus-residual-deepest-deeper-ring` 3.5s**（与 **CLIENT-292** `domestic-queue-complete-focus-residual-deepest-ring` **并存不退化**；**无**主城建造新 RPC）。单测：`domesticQueueEtaSegmentResidualDeepestDeeper.test.ts`、`domesticQueueCompleteFocusResidualDeepestDeeperRing.test.ts`、`queueRemainingProgress.test.ts`；`cd client && npm test` 绿。（Closes [#1501](https://github.com/anitaguptaoffice/sanguo-slg/issues/1501)）
+
 ## Wave 49 H5 世界小地图军情 scroll-sync 残余巩固再加深一层（CLIENT-300 起）
 
 在 [Wave 48](#wave-48-h5-主城队列-eta-完成焦点残余巩固再加深一层队列预览槽位互链再加深一层将领养成扫读再加深一层panelstate-筛选再加深一层双榜钉选再加深一层军团聊天再加深一层日常-hud-深链再加深一层1280-组合-manifest-巩固再加深一层m4-出口--intg-048) 主城栈基础上 **轮转回**世界/军情栈；**仍** DATA-002；**无**新 world RPC；范围外同 Wave 47/48。
