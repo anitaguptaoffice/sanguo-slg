@@ -777,6 +777,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 **wave:55（CLIENT-348）小地图视口锚点与军情列表 scroll-sync 残余巩固再加深四层**：军情行变更时 **`syncMinimapViewportIntelScrollResidualDeepestDeepestDeepest`** 在 **CLIENT-332** `syncMinimapViewportIntelScrollResidualDeepestDeepestDeeper` 与 **`minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring` 1.5s** 之上叠加 **`minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring` 1.5s**（**CLIENT-220** `minimap-intel-sync-ring` **不退化**；**非** wave:53 CLIENT-332 首版巩固再加深三层标题复刻主叙事）；格点信息卡 **`formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestLine`** / `world-tile-intel-eta-cross-residual-deepest-deepest-deepest-line` **巩固再加深四层第五行** **`world-tile-intel-eta-cross-residual-deepest-deepest-deepest-pulse` 1.5s** 只读对照（**CLIENT-332** `formatWorldTileIntelEtaCrossResidualDeepestDeepestDeeperLine` / deepest-deepest-deeper 脉冲 **不退化**；**无**新 world RPC）。单测：`minimapViewportIntelScrollResidualDeepestDeepestDeepest.test.ts`、`worldTileIntelEtaCrossResidualDeepestDeepestDeepest.test.ts`；`cd client && npm test` 绿。（Closes [#1607](https://github.com/anitaguptaoffice/sanguo-slg/issues/1607)）
 
+## Wave 56 H5 主城队列 ETA 完成焦点残余巩固再加深五层（CLIENT-356）
+
+在 [Wave 55](#wave-55-h5-世界小地图军情-scroll-sync-残余巩固再加深四层client-348-起) 世界/军情栈基础上 **轮转回**主城队列栈做 **残余巩固再加深五层**；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 54/55。
+
+**wave:56（CLIENT-356）主城队列 ETA 分段完成焦点与七槽 ring 残余巩固再加深五层**：队列行在 **CLIENT-340** 巩固再加深四层第七行下追加 **`formatDomesticQueueEtaSegmentResidualDeepestDeepestDeepestDeeperLabel`**（**`domestic-queue-eta-segment-residual-deepest-deepest-deepest-deeper-label`** 巩固再加深五层分段阈值 + **`domestic-queue-eta-segment-residual-deepest-deepest-deepest-deeper-finish`** 完成倒计时只读第八行；**CLIENT-212/244/260/276/292/308/324/340** **不退化**；**非** wave:54 CLIENT-340 首版巩固再加深四层标题复刻主叙事）；队列完成时七槽叠加 **`domestic-queue-complete-focus-residual-deepest-deepest-deepest-deeper-ring` 3.5s**（与 **CLIENT-340** `domestic-queue-complete-focus-residual-deepest-deepest-deepest-ring` **并存不退化**；**无**主城建造新 RPC）。单测：`domesticQueueEtaSegmentResidualDeepestDeepestDeepestDeeper.test.ts`、`domesticQueueCompleteFocusResidualDeepestDeepestDeepestDeeperRing.test.ts`、`queueRemainingProgress.test.ts`；`cd client && npm test` 绿。（Closes [#1628](https://github.com/anitaguptaoffice/sanguo-slg/issues/1628)）
+
 ## Wave 54 H5 主城队列 ETA 完成焦点残余巩固再加深四层（CLIENT-340 起）
 
 在 [Wave 53](#wave-53-h5-世界小地图军情-scroll-sync-残余巩固再加深三层client-332-起) 世界/军情栈基础上 **轮转回**主城/将领/队列栈做 **残余巩固再加深四层**；**仍** DATA-002；**无**主城建造新 RPC；范围外同 Wave 52/53。

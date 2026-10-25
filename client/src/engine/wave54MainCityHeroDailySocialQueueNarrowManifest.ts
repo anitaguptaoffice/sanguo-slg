@@ -55,6 +55,17 @@ export const DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_FINISH_
 export const DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS =
   "domestic-queue-complete-focus-residual-deepest-deepest-deepest-ring";
 
+/** CLIENT-356: queue ETA segment residual deepest-deepest-deepest-deeper label + finish countdown eighth line. */
+export const DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LABEL_CLASS =
+  "domestic-queue-eta-segment-residual-deepest-deepest-deepest-deeper-label";
+
+export const DOMESTIC_QUEUE_ETA_SEGMENT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_FINISH_CLASS =
+  "domestic-queue-eta-segment-residual-deepest-deepest-deepest-deeper-finish";
+
+/** CLIENT-356: complete-focus seven-slot residual deepest-deepest-deepest-deeper ring (3.5s). */
+export const DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS =
+  "domestic-queue-complete-focus-residual-deepest-deepest-deepest-deeper-ring";
+
 /** CLIENT-341: next-finish preview residual deepest-deepest-deepest summary line. */
 export const QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS =
   "queue-next-finish-preview-residual-deepest-deepest-deepest-line";
