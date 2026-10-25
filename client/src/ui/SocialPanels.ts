@@ -210,6 +210,10 @@ import {
   formatRankListDensityScanResidualDeepestDeepestDeeperLine,
 } from "@/net/rankListDensityScanResidualDeepestDeepestDeeper";
 import {
+  appendRankListDensityScanResidualDeepestDeepestDeepestSubline,
+  formatRankListDensityScanResidualDeepestDeepestDeepestLine,
+} from "@/net/rankListDensityScanResidualDeepestDeepestDeepest";
+import {
   appendRankListDensityScanResidualSubline,
   formatRankListDensityScanResidualLine,
   lookupPreviousLeaderboardRank,
@@ -1390,6 +1394,14 @@ export class SocialPanels {
               densityTd,
               formatRankListDensityScanResidualDeepestDeepestDeeperLine(boardType, entry, prevRank),
             );
+            appendRankListDensityScanResidualDeepestDeepestDeepestSubline(
+              densityTd,
+              formatRankListDensityScanResidualDeepestDeepestDeepestLine(
+                boardType,
+                entry,
+                prevRank,
+              ),
+            );
             densityTr.appendChild(densityTd);
             tbody.appendChild(densityTr);
           }
@@ -1439,6 +1451,14 @@ export class SocialPanels {
             appendRankListDensityScanResidualDeepestDeepestDeeperSubline(
               viewerTd,
               formatRankListDensityScanResidualDeepestDeepestDeeperLine(
+                boardType,
+                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
+                this.rankDensityScanPrevMyRank,
+              ),
+            );
+            appendRankListDensityScanResidualDeepestDeepestDeepestSubline(
+              viewerTd,
+              formatRankListDensityScanResidualDeepestDeepestDeepestLine(
                 boardType,
                 { rank: res.my_rank, score: res.my_score ?? fallbackScore },
                 this.rankDensityScanPrevMyRank,
