@@ -14,8 +14,10 @@ import { formatRankRefreshCooldownResidualStamp } from "@/net/rankRefreshCooldow
 import { RANK_MANUAL_REFRESH_COUNT_SESSION_KEY } from "@/net/rankManualRefreshCountSession";
 import { formatRankRefreshCooldownResidualDeepStamp } from "@/net/rankRefreshCooldownResidualDeep";
 import { formatRankRefreshCooldownResidualDeeperStamp } from "@/net/rankRefreshCooldownResidualDeeper";
+import { formatRankRefreshCooldownResidualDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepest";
 import { RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS } from "@/net/rankPinKeepResidualDeepRing";
 import { RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeeperRing";
+import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestRing";
 import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
@@ -418,6 +420,14 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
       expect(deeper?.classList.contains("hidden")).toBe(false);
       expect(
         mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS),
+      ).toBe(true);
+      const deepest = mount.querySelector('[data-role="rank-refresh-cooldown-residual-deepest"]');
+      expect(deepest?.textContent).toBe(
+        formatRankRefreshCooldownResidualDeepestStamp(now, now, 1, now),
+      );
+      expect(deepest?.classList.contains("hidden")).toBe(false);
+      expect(
+        mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS),
       ).toBe(true);
     } finally {
       nowSpy.mockRestore();
