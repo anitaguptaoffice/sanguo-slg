@@ -527,7 +527,7 @@ export class MarchListPanel {
   }
 
   private renderList(): void {
-    const ul = this.panel.querySelector('[data-role="march-list"]');
+    const ul = this.panel.querySelector<HTMLElement>('[data-role="march-list"]');
     const statusEl = this.panel.querySelector('[data-role="march-list-status"]');
     if (!ul) return;
 

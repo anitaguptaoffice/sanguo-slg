@@ -257,7 +257,6 @@ import {
   mailInboxFilterToEmptyTab,
   resolveMailListPlayerMailFilter,
 } from "@/net/mailInboxTabFormat";
-import type { DailyQuestRow } from "@/net/dailyQuestState";
 import { mailPanelTabBadgeCounts, mailToolbarBadgeCount } from "@/net/hudTodoBadges";
 import {
   MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
@@ -2110,8 +2109,8 @@ export class HeroMailPanels {
   }
 
   private renderHeroList(): void {
-    const ul = this.heroPanel.querySelector('[data-role="hero-list"]');
-    const detailEl = this.heroPanel.querySelector('[data-role="hero-detail"]');
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
+    const detailEl = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-detail"]');
     if (!ul) return;
     ul.innerHTML = "";
     this.syncHeroListFilterChipDom();
@@ -2121,7 +2120,8 @@ export class HeroMailPanels {
       this.heroListSort,
       this.heroListFilterContext(),
     );
-    const residualCtx = () => this.heroPanelStateResidualContext();
+    const residualCtx = (overrides?: Partial<HeroPanelStateResidualContext>) =>
+      this.heroPanelStateResidualContext(overrides);
     if (!this.heroes.length && this.heroListLoadError) {
       const li = renderPanelGatewayErrorListRow(ul, this.heroListLoadError, {
         assets: this.assets,
@@ -2540,7 +2540,7 @@ export class HeroMailPanels {
   }
 
   private renderTemplateList(): void {
-    const ul = this.heroPanel.querySelector('[data-role="template-list"]');
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
     if (!ul || !sel) return;
@@ -2745,7 +2745,7 @@ export class HeroMailPanels {
       row ? formatRecruitWalletCompareResidualLine(wallet, row, bag) : null,
     );
     this.syncRecruitFormInlineState(row);
-    const ul = this.heroPanel.querySelector('[data-role="template-list"]');
+    const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     ul?.querySelectorAll("li[data-template-id]").forEach((li) => {
       li.classList.toggle("selected", Number(li.getAttribute("data-template-id")) === templateCfgId);
     });
@@ -2975,7 +2975,7 @@ export class HeroMailPanels {
   }
 
   private renderMailList(): void {
-    const ul = this.mailPanel.querySelector('[data-role="mail-list"]');
+    const ul = this.mailPanel.querySelector<HTMLElement>('[data-role="mail-list"]');
     const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
     const detailWrap = this.mailPanel.querySelector('[data-role="mail-detail"]');
     const titleEl = this.mailPanel.querySelector('[data-role="mail-detail-title"]');
@@ -3234,7 +3234,7 @@ export class HeroMailPanels {
   private mountMailListRowSkins(assets?: AssetLoader): void {
     const loader = assets ?? this.assets;
     if (!loader || !this.mailPanel) return;
-    const ul = this.mailPanel.querySelector('[data-role="mail-list"]');
+    const ul = this.mailPanel.querySelector<HTMLElement>('[data-role="mail-list"]');
     if (!ul) return;
     for (const row of Array.from(ul.querySelectorAll<HTMLElement>("li[data-ui-filter-row]"))) {
       mountFilterRow(row, loader);

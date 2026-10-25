@@ -424,7 +424,7 @@ export class BattleReportPanel {
   }
 
   private renderList(): void {
-    const ul = this.panel.querySelector('[data-role="report-list"]');
+    const ul = this.panel.querySelector<HTMLElement>('[data-role="report-list"]');
     const statusEl = this.panel.querySelector('[data-role="report-list-status"]');
     const loadMore = this.panel.querySelector('[data-role="load-more"]');
     const retryList = this.panel.querySelector('[data-role="retry-list"]');
@@ -468,7 +468,7 @@ export class BattleReportPanel {
     ul.innerHTML = "";
     if (this.listLoading && !this.reports.length) {
       renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -477,7 +477,7 @@ export class BattleReportPanel {
     if (this.listError && !this.reports.length) {
       renderPanelStateListRow(ul, "error", battleReportListErrorListHint(), {
         legacyClass: battleReportListErrorClass(),
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -487,7 +487,7 @@ export class BattleReportPanel {
     if (!this.reports.length) {
       renderPanelStateListRow(ul, "empty", battleReportListEmptyMessage(), {
         legacyClass: battleReportListEmptyClass(),
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -496,7 +496,7 @@ export class BattleReportPanel {
     if (!filtered.length) {
       renderPanelStateListRow(ul, "empty", BATTLE_REPORT_FILTER_EMPTY_TEXT, {
         legacyClass: battleReportFilterEmptyClass(),
-        assets: this.filterListSkinAssets,
+        assets: this.panelOpts?.filterListSkinAssets,
       });
       this.renderDetail();
       return;
@@ -602,7 +602,7 @@ export class BattleReportPanel {
   }
 
   private renderDetail(): void {
-    const detailEl = this.panel.querySelector('[data-role="report-detail"]');
+    const detailEl = this.panel.querySelector<HTMLElement>('[data-role="report-detail"]');
     const detailStatus = this.panel.querySelector('[data-role="report-detail-status"]');
     const retryDetail = this.panel.querySelector('[data-role="retry-detail"]');
     if (!detailEl) return;

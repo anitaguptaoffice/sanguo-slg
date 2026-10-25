@@ -82,18 +82,18 @@ export type GatewayPort = {
   claimPlayerMailAttachments(serverId: number, mailId: number): Promise<unknown>;
   listPlayerHeroes(serverId: number, opts?: { pageSize?: number; pageOffset?: number }): Promise<unknown>;
   getHeroDetail(serverId: number, heroId: number): Promise<unknown>;
-  upgradeHero(serverId: number, heroId: number): Promise<unknown>;
+  upgradeHero(serverId: number, heroId: number): Promise<ReturnType<typeof parseUpgradeHeroResponse>>;
   addHeroPoint(
     serverId: number,
     heroId: number,
     targets: { force: number; intel: number; politics: number },
-  ): Promise<unknown>;
-  clearHeroPoint(serverId: number, heroId: number): Promise<unknown>;
-  beginHeroExpr(serverId: number, heroId: number, hours: number): Promise<unknown>;
-  cancelHeroExpr(serverId: number, heroId: number): Promise<unknown>;
-  finishHeroExpr(serverId: number, heroId: number): Promise<unknown>;
-  fasterHeroExpr(serverId: number, heroId: number): Promise<unknown>;
-  restHero(serverId: number, heroId: number): Promise<unknown>;
+  ): Promise<ReturnType<typeof parseHeroPointResponse>>;
+  clearHeroPoint(serverId: number, heroId: number): Promise<ReturnType<typeof parseHeroPointResponse>>;
+  beginHeroExpr(serverId: number, heroId: number, hours: number): Promise<ReturnType<typeof parseBeginHeroExprResponse>>;
+  cancelHeroExpr(serverId: number, heroId: number): Promise<ReturnType<typeof parseCancelHeroExprResponse>>;
+  finishHeroExpr(serverId: number, heroId: number): Promise<ReturnType<typeof parseHeroExprFinishResponse>>;
+  fasterHeroExpr(serverId: number, heroId: number): Promise<ReturnType<typeof parseHeroExprFinishResponse>>;
+  restHero(serverId: number, heroId: number): Promise<ReturnType<typeof parseRestHeroResponse>>;
   recruitHero(
     serverId: number,
     templateCfgId: number,

@@ -17,7 +17,7 @@ import {
   queueRecruitRowDomId,
   scheduleRecruitRowPulse,
 } from "@/net/recruitTroopSubmitFeedback";
-import { formatUseConsumableEffectSummary } from "@/net/contentFeedback";
+import { formatUseConsumableEffectSummary, gatewayErrorMessage } from "@/net/contentFeedback";
 import {
   formatPanelGatewayErrorFromUnknownForList,
   renderPanelGatewayErrorListRow,
@@ -498,7 +498,7 @@ export class QueuePanels {
   /** CLIENT-117：募兵提交成功后队列募兵行 3s 脉冲。 */
   pulseRecruitRow(queueId: number): void {
     const id = queueRecruitRowDomId(queueId);
-    scheduleRecruitRowPulse(this.panel.querySelector(`#${CSS.escape(id)}`));
+    scheduleRecruitRowPulse(this.panel.querySelector<HTMLElement>(`#${CSS.escape(id)}`));
   }
 
   /** 日常面板只读募兵队列快照（与 render 同源，不新 RPC）。 */
@@ -920,7 +920,7 @@ export class QueuePanels {
   }
 
   private render(): void {
-    const buildUl = this.panel.querySelector('[data-role="queue-build-list"]');
+    const buildUl = this.panel.querySelector<HTMLElement>('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
     const previewEl = this.panel.querySelector('[data-role="queue-next-finish-preview"]');
