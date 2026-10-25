@@ -16,6 +16,10 @@ import {
   applyBattleReportCoordCopyBarResidualDeepestSweep,
   formatBattleReportCoordCopyBarResidualDeepestSweep,
 } from "@/net/battleReportCoordCopyBarResidualDeepestSweep";
+import {
+  applyBattleReportCoordCopyBarResidualDeepestDeeperSweep,
+  formatBattleReportCoordCopyBarResidualDeepestDeeperSweep,
+} from "@/net/battleReportCoordCopyBarResidualDeepestDeeperSweep";
 
 export const BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS =
   "battle-report-side-template-residual";
@@ -140,11 +144,14 @@ export function applyBattleReportCoordsReadonlySelect(
   const barEl = textEl.closest<HTMLElement>(`.${BATTLE_REPORT_COORD_COPY_BAR_CLASS}`);
   if (barEl) {
     const copyText = textEl.textContent ?? "";
+    const deepestDeeperSweepHint = formatBattleReportCoordCopyBarResidualDeepestDeeperSweep(copyText);
     const deepestSweepHint = formatBattleReportCoordCopyBarResidualDeepestSweep(copyText);
     const deeperSweepHint = formatBattleReportCoordCopyBarResidualDeeperSweep(copyText);
     const deepSweepHint = formatBattleReportCoordCopyBarResidualDeepSweep(copyText);
     const sweepHint = formatBattleReportCoordCopyBarResidualSweep(copyText);
-    if (deepestSweepHint) {
+    if (deepestDeeperSweepHint) {
+      barEl.setAttribute("aria-label", deepestDeeperSweepHint);
+    } else if (deepestSweepHint) {
       barEl.setAttribute("aria-label", deepestSweepHint);
     } else if (deeperSweepHint) {
       barEl.setAttribute("aria-label", deepSweepHint);
@@ -155,6 +162,7 @@ export function applyBattleReportCoordsReadonlySelect(
     applyBattleReportCoordCopyBarResidualDeepSweep(barEl);
     applyBattleReportCoordCopyBarResidualDeeperSweep(barEl);
     applyBattleReportCoordCopyBarResidualDeepestSweep(barEl);
+    applyBattleReportCoordCopyBarResidualDeepestDeeperSweep(barEl);
   }
   coordCopySelectTimer = setTimeout(() => {
     coordCopySelectTimer = null;

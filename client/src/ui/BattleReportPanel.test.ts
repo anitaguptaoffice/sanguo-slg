@@ -21,6 +21,7 @@ import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS } from "@/net/bat
 import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEP_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeep";
 import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPER_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeeper";
 import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepest";
+import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeeper";
 import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS } from "@/net/battleReportDetailTemplateResidual";
 import { OPEN_INTEL_FOR_REPORT_ACTION } from "@/net/battleReportRoundSummaryIntelLink";
 import {
@@ -1119,6 +1120,9 @@ describe("BattleReportPanel", () => {
     ).toBe(true);
     expect(
       row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_RING_CLASS),
+    ).toBe(true);
+    expect(
+      row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPER_RING_CLASS),
     ).toBe(true);
 
     const root = mount.querySelector(".battle-report-panel") as HTMLElement;
