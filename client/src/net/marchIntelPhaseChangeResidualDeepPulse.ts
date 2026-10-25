@@ -1,5 +1,6 @@
 import { scheduleIntelPhaseChangeResidualDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeeperPulse";
+import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestPulse";
 import {
@@ -46,7 +47,7 @@ export function scheduleIntelPhaseChangeResidualDeepPulse(
 }
 
 /**
- * phase 变更扫读：CLIENT-258 残余 + CLIENT-274 深脉冲 + CLIENT-290 巩固再加深 + CLIENT-306 巩固再加深一层 + CLIENT-322 巩固再加深二层 + CLIENT-338 巩固再加深三层（CLIENT-221 flash / wave:39 主脉冲 **不重复堆叠**）。
+ * phase 变更扫读：CLIENT-258 残余 + CLIENT-274 深脉冲 + CLIENT-290 巩固再加深 + CLIENT-306 巩固再加深一层 + CLIENT-322 巩固再加深二层 + CLIENT-338 巩固再加深三层 + CLIENT-354 巩固再加深四层（CLIENT-221 flash / wave:39 主脉冲 **不重复堆叠**）。
  */
 export function pulseIntelPhaseChangeResidualOnPhaseChange(el: HTMLElement | null | undefined): void {
   scheduleIntelPhaseChangeResidualPulse(el);
@@ -55,6 +56,7 @@ export function pulseIntelPhaseChangeResidualOnPhaseChange(el: HTMLElement | nul
   scheduleIntelPhaseChangeResidualDeepestPulse(el);
   scheduleIntelPhaseChangeResidualDeepestDeeperPulse(el);
   scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse(el);
+  scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse(el);
 }
 
 export function resetIntelPhaseChangeResidualDeepPulseTimersForTests(): void {

@@ -16,6 +16,7 @@ import {
 import { scheduleIntelPhaseChangeResidualDeepPulse } from "@/net/marchIntelPhaseChangeResidualDeepPulse";
 import { scheduleIntelPhaseChangeResidualDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeeperPulse";
+import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestPulse";
 import { scheduleIntelPhaseChangeResidualDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
 import { scheduleIntelPhaseChangeResidualDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestPulse";
 import { scheduleIntelPhaseChangeResidualPulse } from "@/net/marchIntelPhaseChangeResidualPulse";
@@ -811,6 +812,7 @@ export class MarchListPanel {
       scheduleIntelPhaseChangeResidualDeepestPulse(li);
       scheduleIntelPhaseChangeResidualDeepestDeeperPulse(li);
       scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse(li);
+      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse(li);
     }
     if (this.selectedMarchId != null && changedIds.has(this.selectedMarchId)) {
       const strip = this.panel.querySelector<HTMLElement>(
@@ -823,6 +825,7 @@ export class MarchListPanel {
       scheduleIntelPhaseChangeResidualDeepestPulse(strip);
       scheduleIntelPhaseChangeResidualDeepestDeeperPulse(strip);
       scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse(strip);
+      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse(strip);
     }
     this.pendingPhaseChangePulseIds = [];
   }
