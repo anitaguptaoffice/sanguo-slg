@@ -2332,6 +2332,13 @@
       .mail-list li.mail-claim-hud-sync-residual-deep-pulse {
         animation: mail-claim-hud-sync-residual-deep-pulse-keyframes 3s ease-out 1;
       }
+      @keyframes mail-claim-hud-sync-residual-deeper-pulse-keyframes {
+        0%, 100% { box-shadow: none; outline: none; }
+        30% { box-shadow: 0 0 22px rgba(200, 220, 180, 0.65); outline: 1px solid rgba(200, 220, 180, 0.5); }
+      }
+      .mail-list li.mail-claim-hud-sync-residual-deeper-pulse {
+        animation: mail-claim-hud-sync-residual-deeper-pulse-keyframes 3s ease-out 1;
+      }
       .mail-list li .mail-attachment-claim-residual-subline {
         display: block;
         font-size: 0.85em;
@@ -2345,6 +2352,13 @@
         opacity: 0.92;
         margin-top: 2px;
         color: #b0c8a8;
+      }
+      .mail-list li .mail-attachment-claim-residual-deeper-subline {
+        display: block;
+        font-size: 0.8em;
+        opacity: 0.94;
+        margin-top: 2px;
+        color: #b8d0b0;
       }
       .mail-list li.mail-claim-error {
         outline: 1px solid #c45c4a;
@@ -4575,9 +4589,11 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] .battle-report-coord-copy-bar-residual-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="battle-report"] [data-action="copy-report-coords-readonly"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-residual-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-deep-ring,
@@ -4692,8 +4708,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deep-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-inline-state-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-inline-state-residual-ring,
@@ -4823,8 +4841,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-claim-hud-sync-deep-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deep-pulse,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li.mail-claim-hud-sync-residual-deeper-pulse,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deep-subline,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="mail"] .mail-list li .mail-attachment-claim-residual-deeper-subline,
       #layout-frame.layout-narrow .content-panel[data-center-panel="bag"] .bag-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-offer-list li.bag-shop-category-scan-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-pin-refresh-residual-line,
