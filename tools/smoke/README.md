@@ -2,7 +2,21 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-052 / INTG-051 / INTG-050 / INTG-049 / INTG-048 / INTG-047 / INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-053 / INTG-052 / INTG-051 / INTG-050 / INTG-049 / INTG-048 / INTG-047 / INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 53 网关冒烟（INTG-053，推荐）
+
+在 INTG-052 全量断言之上扩展 **小地图军情 scroll-sync 残余巩固再加深三层**（`military.v1.ListMarches` 首条 `phase`/`to_x`/`to_y` + 视口 scroll-sync **residual deepest-deepest-deeper** 锚点 hint + 军情 phase 再出征预填 **residual deepest-deepest-deeper**，CLIENT-332/338）、**出征兵力余量与刷新戳记残余巩固再加深三层**（`military.v1.StartMarch` ≡ `MarchAttack` 同源，`march_id` + `city_troops` 余量 + `intel_list_refresh_stamp_ms` **residual deepest-deepest-deeper** hint，CLIENT-333）、**战报键盘相邻导航与坐标复制残余巩固再加深三层**（`military.v1.ListBattleReports` 首条 `outcome`/坐标 + 相邻条 **deepest-deepest-deeper** hint，CLIENT-334）、**邮件 HUD 附件残余巩固再加深三层**（`content.v1.ListPlayerMail` 未领附件计数 + 首条 `mail_id` + HUD **deepest-deepest-deeper** hint，CLIENT-335）、**背包商城返回高亮残余巩固再加深三层**（`content.v1.ListPlayerBag` 消耗品分类首条 + `shop.v1.ListShopShelf` 列表长度 **residual deepest-deepest-deeper** hint，CLIENT-336）、**排行密度与招募扫读残余巩固再加深三层**（`rank.v1.GetLeaderboard` ≡ `ListPowerRank`/`ListKillRank` 列表长度 + 首行 `score` 密度 **residual deepest-deepest-deeper** hint + `hero.v1.ListRecruitTemplates` 长度，CLIENT-337；**非** wave:52 双榜钉选主叙事）、**日常可领 HUD 残余巩固再加深三层**（`quest.v1.ListPlayerQuests` `chain_id=400` 可领条数 **residual deepest-deepest-deeper** hint，CLIENT-335 HUD）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量；**不跑 H5**。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速/主城建造新 RPC/战报 proto 扩量/新商城 SKU/IAP。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG053Wave53SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-053:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 52 网关冒烟（INTG-052，推荐）
 
