@@ -2,7 +2,21 @@
 
 依赖本地 PostgreSQL（与 `make dev` 相同栈）。未设置 `DATABASE_URL` 时集成测会自动 skip。
 
-CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-051 / INTG-050 / INTG-049 / INTG-048 / INTG-047 / INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+CI 默认 `go test ./...` 不带 `DATABASE_URL`，集成测跳过；带 `-short` 时跳过 INTG-052 / INTG-051 / INTG-050 / INTG-049 / INTG-048 / INTG-047 / INTG-046 / INTG-045 / INTG-044 / INTG-043 / INTG-042 / INTG-041 / INTG-040 / INTG-039 / INTG-038 / INTG-037 / INTG-036 / INTG-035 / INTG-034 / INTG-033 / INTG-032 / INTG-031 / INTG-030 / INTG-029 / INTG-028 / INTG-027 / INTG-026 / INTG-025 / INTG-024 / INTG-023 / INTG-022 / INTG-021 / INTG-020 / INTG-019 / INTG-018 / INTG-017 / INTG-016 / INTG-015 / INTG-014 / INTG-013 / INTG-012 / INTG-011 / INTG-010 / INTG-009 / INTG-008 / INTG-007 / INTG-006 / INTG-005 长测（含进程重启模拟）。
+
+## Wave 52 网关冒烟（INTG-052，推荐）
+
+在 INTG-051 全量断言之上扩展 **主城七槽队列 ETA/完成焦点残余巩固再加深三层**（`domestic.v1.GetCityState` 七槽 `building_cfg_id` + `build_queue`/`recruit_queue` 首条 `upgrade_finish_at_ms` + ETA 分段/完成态 **residual deepest-deepest-deeper** hint，CLIENT-324/325）、**将领养成扫读残余巩固再加深三层**（`hero.v1.ListPlayerHeroes` 首条 `hero_id`/`level` + 忠诚/`GetHeroDetail` `exp` **residual deepest-deepest-deeper** hint + `content.v1.ListPlayerBag` 养成 `item_id`/`count`，CLIENT-326/327）、**双榜钉选刷新残余巩固再加深三层**（`rank.v1.GetLeaderboard` ≡ `ListPowerRank`/`ListKillRank` 列表长度 + 首条 `player_id` + `my_rank`/`snapshot_refreshed_at_ms` 钉选刷新 **residual deepest-deepest-deeper** hint，CLIENT-328；**非** wave:51 排行密度/招募扫读主叙事）、**军团职务与聊天扫读再加深三层**（`guild.v1.ListGuildMembers` 职务/战力 **residual deepest-deepest-deeper** hint + `chat.v1.ListChatMessages` 军团频道首条 id/长度未读分隔 **residual deepest-deepest-deeper** hint，CLIENT-329）、**日常 chain 与队列 ETA 互链及 HUD 待办底栏深链再加深三层**（`quest.v1.ListPlayerQuests` 可领条数 + chain 类型 hint + 与 `GetCityState` 队列 ETA **residual deepest-deepest-deeper** 对照，CLIENT-330）。空数据 **skip** + hint；**不**测 `CancelMarch`；**无** proto/SKU 扩量；**不跑 H5**。
+
+**本波仍不做** `CancelMarch`/行军与募兵加速/主城建造新 RPC/战报 proto 扩量/新商城 SKU/IAP。
+
+```bash
+make dev-up
+export DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable'
+GOTOOLCHAIN=go1.23.0 go test ./internal/api -run 'TestINTG052Wave52SmokePath' -count=1 -v
+```
+
+失败时测试会打印 `DATA-002 cfg:`、`INTG-007:` … `INTG-052:` 固定 id 行，便于对照 `spec/data/CORE_SUBSET.md`。
 
 ## Wave 51 网关冒烟（INTG-051，推荐）
 
