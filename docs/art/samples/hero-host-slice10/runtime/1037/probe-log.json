@@ -1,0 +1,282 @@
+{
+  "task": "HERO-HOST-SLICE10",
+  "template_cfg_id": 1037,
+  "mock_preset": "hero-panel-roster",
+  "evidence_head_sha": "41aa4898a3d050d80b12c2b9fe7e4d135e52bf44",
+  "tip_sha": "41aa4898a3d050d80b12c2b9fe7e4d135e52bf44",
+  "runtime_code_sha": "41aa4898a3d050d80b12c2b9fe7e4d135e52bf44",
+  "base_host_sha": "a23b7ade43cf0711ddc778f5589046a547c23a5d",
+  "hero_mail_panels_blob_sha": "356f8e33734ca1374f3cf1ecd61368431293a93c",
+  "mock_server_blob_sha": "57afa95ef46e1b18af6f234be5c4908dc9a67c42",
+  "art_head_sha": "c62723ae2c9fd4b466b5a90036673f1d71a067ef",
+  "art_asset_ids": [
+    "hero.avatar.1037.v1",
+    "hero.bust.1037.v1"
+  ],
+  "static_face_percent_min_required": 60,
+  "probes": {
+    "1600x900-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1037,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "\u9093\u827e",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "\u9093\u827e \u00b7 Lv10 \u00b7 \u5fe0\u8bda 84",
+      "captureSectionsVisible": true,
+      "dpr": 1,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1037.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1037.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 2347.796875,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 657.765625,
+        "width": 568,
+        "height": 150.234375
+      }
+    },
+    "1600x900-dpr2": {
+      "ok": true,
+      "template_cfg_id": 1037,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "\u9093\u827e",
+      "listAvatarVisible": true,
+      "listAvatarInClip": true,
+      "listNameInClip": true,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": true,
+      "listRowPrimaryText": "\u9093\u827e \u00b7 Lv10 \u00b7 \u5fe0\u8bda 84",
+      "captureSectionsVisible": true,
+      "dpr": 2,
+      "uiScale": 1,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/avatar/1037.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "2",
+        "srcTail": "2x/hero/bust/1037.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 662,
+        "bustRight": 652
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": false,
+      "usesAvatar2x": true,
+      "usesBust1x": false,
+      "usesBust2x": true,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 524,
+        "top": 2353.796875,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 516,
+        "top": 663.765625,
+        "width": 568,
+        "height": 144.234375
+      }
+    },
+    "1280x720-dpr1": {
+      "ok": true,
+      "template_cfg_id": 1037,
+      "heroDetailLoaded": true,
+      "nameReadable": true,
+      "detailName": "\u9093\u827e",
+      "listAvatarVisible": true,
+      "listAvatarInClip": false,
+      "listNameInClip": false,
+      "listAvatarRoundMask": true,
+      "listRowTemplateOk": true,
+      "listAvatarFrameOk": false,
+      "listRowPrimaryText": "\u9093\u827e \u00b7 Lv10 \u00b7 \u5fe0\u8bda 84",
+      "captureSectionsVisible": true,
+      "dpr": 1,
+      "uiScale": 0.8,
+      "avatar": {
+        "cssWidth": 56,
+        "cssHeight": 56,
+        "borderRadius": "50%",
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/avatar/1037.png"
+      },
+      "bust": {
+        "cssWidth": 128,
+        "cssHeight": 160,
+        "artTextureScale": "1",
+        "srcTail": "1x/hero/bust/1037.png",
+        "float": "left",
+        "marginRight": "10px"
+      },
+      "layout": {
+        "nameBesideBust": false,
+        "gapPx": 10,
+        "nameBesideBustGapOk": true,
+        "headLeft": 502,
+        "bustRight": 492
+      },
+      "texturePickOk": true,
+      "usesAvatar1x": true,
+      "usesAvatar2x": false,
+      "usesBust1x": true,
+      "usesBust2x": false,
+      "avatarPathOk": true,
+      "bustPathOk": true,
+      "scrollReachOk": true,
+      "detailFooterVisible": true,
+      "detailFooterTopInScroll": true,
+      "detailFooterBottomInScroll": true,
+      "bustNameInClip": false,
+      "visibleClip": {
+        "left": 364,
+        "top": 374.15625,
+        "width": 128,
+        "height": 0
+      },
+      "listVisibleClip": {
+        "left": 374,
+        "top": 374.15625,
+        "width": 550,
+        "height": 0
+      }
+    }
+  },
+  "sameframe": {
+    "shot": "hero-host-1280x720-dpr1-bust-name-sameframe.jpg",
+    "jpeg": {
+      "quality": 88,
+      "bytes": 249635
+    },
+    "probe": {
+      "ok": true,
+      "bustInClip": true,
+      "nameInClip": true,
+      "bustInViewport": true,
+      "nameInViewport": true,
+      "nameRightOfBust": true,
+      "verticalBandOverlap": true,
+      "gapPx": 10,
+      "gapNear10px": true,
+      "visibleClip": {
+        "left": 356,
+        "top": 374.15625,
+        "width": 568,
+        "height": 301.046875
+      },
+      "name": {
+        "text": "\u9093\u827e"
+      },
+      "viewport": {
+        "w": 1280,
+        "h": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "shots": {
+    "hero-host-1600x900-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 463154,
+      "viewport": {
+        "tag": "1600x900-dpr1",
+        "file": "hero-host-1600x900-dpr1.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 1
+      }
+    },
+    "hero-host-1600x900-dpr2.jpg": {
+      "quality": 72,
+      "bytes": 969261,
+      "viewport": {
+        "tag": "1600x900-dpr2",
+        "file": "hero-host-1600x900-dpr2.jpg",
+        "width": 1600,
+        "height": 900,
+        "dpr": 2
+      }
+    },
+    "hero-host-1280x720-dpr1.jpg": {
+      "quality": 88,
+      "bytes": 248490,
+      "viewport": {
+        "tag": "1280x720-dpr1",
+        "file": "hero-host-1280x720-dpr1.jpg",
+        "width": 1280,
+        "height": 720,
+        "dpr": 1
+      }
+    }
+  },
+  "notes": [
+    "Production main-city hero panel (HeroMailPanels); mock preset hero-panel-roster seeds roster incl. 1037\u20131040.",
+    "Art path-copied from Draft #1207 @ c62723ae; Draft remains unmerged.",
+    "base_host_sha is Slice9 eng mount HEAD (#1235); do not conflate with evidence_head_sha / tip_sha.",
+    "1600 captures scroll hero-scroll until target list avatar (56px round) + row primary name are clip-visible."
+  ],
+  "captured_at": "2026-10-24T23:15:25.088Z"
+}
