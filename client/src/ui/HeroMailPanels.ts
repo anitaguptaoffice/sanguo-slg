@@ -104,6 +104,13 @@ import {
   HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS,
   heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeeperWarnDot,
 } from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline";
+import {
+  formatHeroListLoyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
+  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
+  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS,
+  heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeepestDeeperWarnDot,
+} from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline";
 import { scheduleHeroDetailConsumableStackResidualDeepSweep } from "@/net/heroDetailConsumableStackResidualDeepSweep";
 import { scheduleHeroDetailConsumableStackResidualDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeeperSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestSweep";
@@ -111,6 +118,7 @@ import { scheduleHeroDetailConsumableStackResidualDeepestDeeperSweep } from "@/n
 import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeeperSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestSweep";
 import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep";
+import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestDeepestDeeperSweep";
 import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
@@ -2288,6 +2296,29 @@ export class HeroMailPanels {
             formatHeroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline(rowSource, filterCtx),
           ),
         );
+        const loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline = document.createElement("span");
+        loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.className =
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
+        loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.setAttribute(
+          "data-role",
+          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
+        );
+        if (
+          heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeepestDeeperWarnDot(rowSource, filterCtx)
+        ) {
+          const deepestDeepestDeepestDeepestDeeperDot = document.createElement("span");
+          deepestDeepestDeepestDeepestDeeperDot.className =
+            HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS;
+          deepestDeepestDeepestDeepestDeeperDot.setAttribute("aria-hidden", "true");
+          loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.appendChild(
+            deepestDeepestDeepestDeepestDeeperDot,
+          );
+        }
+        loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.appendChild(
+          document.createTextNode(
+            formatHeroListLoyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline(rowSource, filterCtx),
+          ),
+        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
         body.appendChild(loyaltyResidualSubline);
@@ -2298,6 +2329,7 @@ export class HeroMailPanels {
         body.appendChild(loyaltyResidualDeepestDeepestDeeperSubline);
         body.appendChild(loyaltyResidualDeepestDeepestDeepestSubline);
         body.appendChild(loyaltyResidualDeepestDeepestDeepestDeeperSubline);
+        body.appendChild(loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
@@ -2443,6 +2475,11 @@ export class HeroMailPanels {
           bag,
         );
         scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep(
+          detailEl,
+          this.heroDetail,
+          bag,
+        );
+        scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeepestDeeperSweep(
           detailEl,
           this.heroDetail,
           bag,

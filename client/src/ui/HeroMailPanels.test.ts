@@ -1065,6 +1065,60 @@ describe("HeroMailPanels", () => {
     panels.detach();
   });
 
+  it("hero list loyalty residual deepest-deepest-deepest-deepest-deeper subline and consumable deepest-deepest-deepest-deepest-deeper sweep (CLIENT-374)", async () => {
+    const mount = document.createElement("div");
+    const gateway: GatewayPort = {
+      listPlayerHeroes: vi.fn().mockResolvedValue({
+        heroes: [{ hero_id: 2, template_cfg_id: 1002, level: 9, loyalty: 10, morale: 40 }],
+        total_count: 1,
+      }),
+      getHeroDetail: vi.fn().mockResolvedValue({
+        hero_id: 2,
+        template_cfg_id: 1002,
+        level: 9,
+        loyalty: 10,
+        loyalty_min: 0,
+        loyalty_max: 100,
+        exp_current: 12,
+        exp_to_next: 80,
+      }),
+      getBoundServerId: () => 1,
+    } as unknown as GatewayPort;
+    const panels = new HeroMailPanels(
+      mount,
+      gateway,
+      () => ({
+        ...sessionBase(),
+        bag: [{ item_cfg_id: 2017, quantity: 2 }],
+      }),
+      () => {},
+      () => {},
+    );
+    panels.attach();
+    panels.toggleHero();
+    await flushPromises();
+    mount.querySelector('li[data-hero-id="2"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+    await flushPromises();
+    const deepestDeepestDeepestDeepestDeeper = mount.querySelector(
+      '[data-role="hero-list-loyalty-residual-deepest-deepest-deepest-deepest-deeper-subline"]',
+    );
+    expect(deepestDeepestDeepestDeepestDeeper?.textContent).toContain("忠诚巩固再加深五层");
+    expect(deepestDeepestDeepestDeepestDeeper?.textContent).toContain("经验 12/80");
+    expect(
+      mount.querySelector('[data-role="hero-list-loyalty-residual-deepest-deepest-deepest-deeper-subline"]'),
+    ).toBeTruthy();
+    const deepestDeepestDeepestDeepestDeeperSweep = mount.querySelector(
+      '[data-role="hero-detail-consumable-stack-residual-deepest-deepest-deepest-deepest-deeper-sweep"]',
+    );
+    expect(deepestDeepestDeepestDeepestDeeperSweep?.textContent).toContain("堆叠巩固再加深五层");
+    expect(
+      deepestDeepestDeepestDeepestDeeperSweep?.classList.contains(
+        "hero-detail-consumable-stack-residual-deepest-deepest-deepest-deepest-deeper-sweep-ring",
+      ),
+    ).toBe(true);
+    panels.detach();
+  });
+
   it("hero list loyalty residual subline shows warn dot and threshold scan (CLIENT-246)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
