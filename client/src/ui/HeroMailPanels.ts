@@ -709,6 +709,7 @@ export class HeroMailPanels {
   private captiveSummonPreview: CaptiveSummonPreview | null = null;
   private captiveListInflight = false;
   private captiveTryInflight = false;
+  private captivePreviewRequest = 0;
   private captiveSummonInflight = false;
   private captiveReleaseInflight = false;
   private persuadeTargets: PersuadeTarget[] = [];
@@ -721,6 +722,7 @@ export class HeroMailPanels {
   private comingAcceptPreview: ComingAcceptPreview | null = null;
   private comingListInflight = false;
   private comingTryInflight = false;
+  private comingPreviewRequest = 0;
   private comingAcceptInflight = false;
   private comingRejectInflight = false;
   private heroesRefreshInflight = false;
@@ -781,6 +783,9 @@ export class HeroMailPanels {
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
     this.mount.appendChild(this.heroPanel);
+    if (this.heroPanel.closest(".layout-narrow")) {
+      this.heroPanel.querySelectorAll<HTMLDetailsElement>(".hero-capture-info").forEach((el) => { el.open = false; });
+    }
     this.mount.appendChild(this.mailPanel);
     this.heroPanel.addEventListener("click", (ev) => this.onHeroClick(ev));
     this.mailPanel.addEventListener("click", (ev) => this.onMailClick(ev));
@@ -1408,6 +1413,15 @@ export class HeroMailPanels {
     }
   }
 
+  private syncCaptureDisclosure(role: string, name?: string): void {
+    const summary = this.heroPanel.querySelector<HTMLElement>(`[data-role="${role}"] .hero-capture-info > summary`);
+    if (summary) {
+      summary.textContent = `目标与费用：${name || "未选择"}`;
+      summary.title = summary.textContent;
+      summary.setAttribute("aria-label", `${summary.closest("section")?.getAttribute("aria-label") || ""}：${summary.textContent}`);
+    }
+  }
+
   private selectedCaptiveHero(): CaptiveHeroRow | undefined {
     return this.captiveHeroes.find((c) => c.hero_id === this.selectedCaptiveHeroId);
   }
@@ -1430,6 +1444,7 @@ export class HeroMailPanels {
   private syncCaptiveHeroUi(): void {
     const { wallet, bag } = this.sessionEconomy();
     renderCaptiveHeroList(this.heroPanel, this.captiveHeroes, this.selectedCaptiveHeroId);
+    this.syncCaptureDisclosure("captive-hero-section", this.selectedCaptiveHero()?.display_name);
     syncCaptiveSummonPreview(
       this.heroPanel,
       this.selectedCaptiveHero(),
@@ -1443,7 +1458,7 @@ export class HeroMailPanels {
       this.heroPanel,
       this.captiveSummonInflight,
       this.captiveTryInflight,
-      afford.ok && (this.selectedCaptiveHeroId ?? 0) > 0,
+      afford.ok && this.captiveSummonPreview?.hero_id === this.selectedCaptiveHeroId && (this.selectedCaptiveHeroId ?? 0) > 0,
     );
     syncCaptiveReleaseButton(
       this.heroPanel,
@@ -1483,21 +1498,25 @@ export class HeroMailPanels {
     const heroId = captive?.hero_id ?? 0;
     const cityId = captive?.city_id || this.cityId();
     if (!heroId || !cityId) return;
-    if (this.captiveTryInflight) return;
+    const request = ++this.captivePreviewRequest;
     this.captiveTryInflight = true;
     this.captiveSummonPreview = null;
     this.syncCaptiveHeroUi();
     const sid = this.serverId();
     try {
       const res = await this.gateway.trySummonCaptive(sid, cityId, heroId);
+      if (request !== this.captivePreviewRequest || heroId !== this.selectedCaptiveHeroId) return;
       this.captiveSummonPreview = parseTrySummonCaptiveResponse(res);
     } catch (e) {
+      if (request !== this.captivePreviewRequest || heroId !== this.selectedCaptiveHeroId) return;
       const msg = formatCaptiveHeroGatewayError(e);
       setCaptiveHeroFormError(this.heroPanel, msg);
       this.onStatus(msg);
     } finally {
-      this.captiveTryInflight = false;
-      this.syncCaptiveHeroUi();
+      if (request === this.captivePreviewRequest) {
+        this.captiveTryInflight = false;
+        this.syncCaptiveHeroUi();
+      }
     }
   }
 
@@ -1506,7 +1525,7 @@ export class HeroMailPanels {
     const captive = this.selectedCaptiveHero();
     const { wallet, bag } = this.sessionEconomy();
     const afford = canAffordCaptiveSummon(this.captiveSummonPreview, wallet, bag);
-    if (!afford.ok) {
+    if (!afford.ok || this.captiveSummonPreview?.hero_id !== captive?.hero_id) {
       setCaptiveHeroFormError(this.heroPanel, afford.reason ?? "无法招降");
       this.onStatus(afford.reason ?? "无法招降");
       return;
@@ -1597,6 +1616,7 @@ export class HeroMailPanels {
     const { wallet, bag } = this.sessionEconomy();
     syncPersuadeMeta(this.heroPanel, this.persuadeTargets.length);
     renderPersuadeTargetList(this.heroPanel, this.persuadeTargets, this.selectedPersuadeNpcId);
+    this.syncCaptureDisclosure("persuade-section", this.selectedPersuadeTarget()?.display_name);
     syncPersuadePreview(this.heroPanel, this.selectedPersuadeTarget(), wallet, bag);
     syncPersuadeListRefreshButton(this.heroPanel, this.persuadeListInflight);
     syncPersuadePrimaryButton(
@@ -1699,6 +1719,7 @@ export class HeroMailPanels {
 
   private syncComingHeroUi(): void {
     renderComingHeroList(this.heroPanel, this.comingHeroes, this.selectedComingHeroId);
+    this.syncCaptureDisclosure("coming-hero-section", this.selectedComingHero()?.display_name);
     syncComingAcceptPreview(this.heroPanel, this.selectedComingHero(), this.comingAcceptPreview);
     const canSubmit = canConfirmComingAccept(this.comingAcceptPreview, this.selectedComingHeroId ?? 0);
     syncComingListRefreshButton(this.heroPanel, this.comingListInflight);
@@ -1747,19 +1768,23 @@ export class HeroMailPanels {
     const cityId = coming?.city_id || this.cityId();
     const sid = this.serverId();
     if (!heroId || !cityId) return;
-    if (this.comingTryInflight) return;
+    const request = ++this.comingPreviewRequest;
     this.comingTryInflight = true;
     this.comingAcceptPreview = null;
     this.syncComingHeroUi();
     try {
       const res = await this.gateway.tryAcceptComing(sid, cityId, heroId);
+      if (request !== this.comingPreviewRequest || heroId !== this.selectedComingHeroId) return;
       this.comingAcceptPreview = parseTryAcceptComingResponse(res);
     } catch (e) {
+      if (request !== this.comingPreviewRequest || heroId !== this.selectedComingHeroId) return;
       const msg = formatComingHeroGatewayError(e);
       setComingHeroFormError(this.heroPanel, msg);
     } finally {
-      this.comingTryInflight = false;
-      this.syncComingHeroUi();
+      if (request === this.comingPreviewRequest) {
+        this.comingTryInflight = false;
+        this.syncComingHeroUi();
+      }
     }
   }
 
@@ -1881,29 +1906,44 @@ export class HeroMailPanels {
         <section class="captive-hero-section" data-role="captive-hero-section" aria-label="俘虏招降">
           <h4>俘虏招降</h4>
           <button type="button" data-action="refresh-captive-list">拉取俘虏列表</button>
-          <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
           <button type="button" data-action="captive-summon-confirm">确认招降</button>
           <button type="button" data-action="captive-release">释放俘虏</button>
           <p class="march-form-error-sibling hidden" data-role="captive-hero-form-error" role="alert"></p>
+          <details class="hero-capture-info" open>
+            <summary tabindex="0" aria-label="俘虏招降：目标与费用">目标与费用</summary>
+            <div class="hero-capture-info-body">
+          <p class="recruit-cost-preview captive-hero-preview" data-role="captive-hero-preview"></p>
           <ul class="captive-hero-list template-list" data-role="captive-hero-list"></ul>
+            </div>
+          </details>
         </section>
         <section class="persuade-section hotel-recruit-section" data-role="persuade-section" aria-label="名将结交游说">
           <h4>名将结交/游说</h4>
-          <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
           <button type="button" data-action="refresh-persuade-targets">拉取结交目标</button>
-          <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
           <button type="button" data-action="persuade-primary">结交/游说</button>
           <p class="march-form-error-sibling hidden" data-role="persuade-form-error" role="alert"></p>
+          <details class="hero-capture-info" open>
+            <summary tabindex="0" aria-label="结交游说：目标与费用">目标与费用</summary>
+            <div class="hero-capture-info-body">
+          <p class="persuade-meta hotel-recruit-meta" data-role="persuade-meta"></p>
+          <p class="recruit-cost-preview persuade-preview hotel-recruit-preview" data-role="persuade-preview"></p>
           <ul class="persuade-target-list hotel-candidate-list template-list" data-role="persuade-target-list"></ul>
+            </div>
+          </details>
         </section>
         <section class="coming-hero-section" data-role="coming-hero-section" aria-label="来投将领">
           <h4>来投将领</h4>
           <button type="button" data-action="refresh-coming-list">拉取来投列表</button>
-          <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
           <button type="button" data-action="coming-accept-confirm">确认接受</button>
           <button type="button" data-action="coming-reject">拒绝来投</button>
           <p class="march-form-error-sibling hidden" data-role="coming-hero-form-error" role="alert"></p>
+          <details class="hero-capture-info" open>
+            <summary tabindex="0" aria-label="来投将领：目标与费用">目标与费用</summary>
+            <div class="hero-capture-info-body">
+          <p class="recruit-cost-preview coming-hero-preview" data-role="coming-hero-preview"></p>
           <ul class="coming-hero-list template-list" data-role="coming-hero-list"></ul>
+            </div>
+          </details>
         </section>
       </div>
       <div class="panel-scroll-body" data-role="hero-scroll">
@@ -4527,6 +4567,14 @@ export class HeroMailPanels {
   private onHeroClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
     const btnAction = btn?.getAttribute("data-action");
+    if (btnAction && ["captive-summon-confirm", "captive-release", "persuade-primary", "coming-accept-confirm", "coming-reject"].includes(btnAction)) {
+      const info = btn?.closest("section")?.querySelector<HTMLDetailsElement>(".hero-capture-info");
+      if (info && !info.open) {
+        info.open = true;
+        this.onStatus("请核对目标与消耗，再点击操作按钮确认");
+        return;
+      }
+    }
     if (btnAction === "recruit-view-hero") {
       const heroId = Number(btn?.getAttribute("data-hero-id"));
       if (heroId > 0) void this.loadHeroDetail(heroId);
