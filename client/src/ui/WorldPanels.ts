@@ -90,11 +90,18 @@ import {
 import {
   createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers,
   formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestLine,
-  pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestReadonly,
   WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS,
   WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE,
   type WorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers,
 } from "@/ui/worldTileIntelEtaCrossResidualDeepestDeepestDeepest";
+import {
+  createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
+  formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperLine,
+  pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperReadonly,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE,
+  type WorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
+} from "@/ui/worldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeper";
 import { WORLD_TILE_INFO_CARD_CLASS } from "@/ui/minimapTileFocusLink";
 import {
   applyWorldTileFocusPulse,
@@ -158,6 +165,8 @@ export class WorldPanels {
     createWorldTileIntelEtaCrossResidualDeepestDeepestDeeperTimers();
   private readonly intelEtaCrossResidualDeepestDeepestDeepestTimers: WorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers =
     createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestTimers();
+  private readonly intelEtaCrossResidualDeepestDeepestDeepestDeeperTimers: WorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers =
+    createWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperTimers();
 
   constructor(
     private readonly mount: HTMLElement,
@@ -305,6 +314,9 @@ export class WorldPanels {
     const crossDeepestDeepestDeepestLineEl = this.panel.querySelector<HTMLElement>(
       `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE}"]`,
     );
+    const crossDeepestDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
+    );
     const intelRoot = this.options?.getIntelPanelRoot?.() ?? null;
     const pulseOpts = {
       timers: this.intelEtaCrossResidualTimers,
@@ -314,9 +326,10 @@ export class WorldPanels {
       deepestDeeperTimers: this.intelEtaCrossResidualDeepestDeeperTimers,
       deepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeeperTimers,
       deepestDeepestDeepestTimers: this.intelEtaCrossResidualDeepestDeepestDeepestTimers,
+      deepestDeepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
     };
     if (!card || card.classList.contains("hidden") || !this.selectedGrid || !crossLineEl) {
-      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestReadonly(
+      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperReadonly(
         card,
         intelRoot,
         false,
@@ -336,6 +349,9 @@ export class WorldPanels {
       if (crossDeepestDeepestDeeperLineEl) crossDeepestDeepestDeeperLineEl.textContent = "";
       crossDeepestDeepestDeepestLineEl?.classList.add("hidden");
       if (crossDeepestDeepestDeepestLineEl) crossDeepestDeepestDeepestLineEl.textContent = "";
+      crossDeepestDeepestDeepestDeeperLineEl?.classList.add("hidden");
+      if (crossDeepestDeepestDeepestDeeperLineEl)
+        crossDeepestDeepestDeepestDeeperLineEl.textContent = "";
       return;
     }
     const { x, y } = this.selectedGrid;
@@ -378,6 +394,13 @@ export class WorldPanels {
       march,
       nowMs,
     );
+    const crossDeepestDeepestDeepestDeeperLine =
+      formatWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperLine(
+        marches,
+        { x, y },
+        march,
+        nowMs,
+      );
     if (!crossLine) {
       crossLineEl.textContent = "";
       crossLineEl.classList.add("hidden");
@@ -393,7 +416,15 @@ export class WorldPanels {
       if (crossDeepestDeepestDeeperLineEl) crossDeepestDeepestDeeperLineEl.textContent = "";
       crossDeepestDeepestDeepestLineEl?.classList.add("hidden");
       if (crossDeepestDeepestDeepestLineEl) crossDeepestDeepestDeepestLineEl.textContent = "";
-      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestReadonly(card, intelRoot, false, pulseOpts);
+      crossDeepestDeepestDeepestDeeperLineEl?.classList.add("hidden");
+      if (crossDeepestDeepestDeepestDeeperLineEl)
+        crossDeepestDeepestDeepestDeeperLineEl.textContent = "";
+      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperReadonly(
+        card,
+        intelRoot,
+        false,
+        pulseOpts,
+      );
       return;
     }
     crossLineEl.textContent = crossLine;
@@ -440,7 +471,14 @@ export class WorldPanels {
       crossDeepestDeepestDeepestLineEl.textContent = "";
       crossDeepestDeepestDeepestLineEl.classList.add("hidden");
     }
-    pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestReadonly(
+    if (crossDeepestDeepestDeepestDeeperLine && crossDeepestDeepestDeepestDeeperLineEl) {
+      crossDeepestDeepestDeepestDeeperLineEl.textContent = crossDeepestDeepestDeepestDeeperLine;
+      crossDeepestDeepestDeepestDeeperLineEl.classList.remove("hidden");
+    } else if (crossDeepestDeepestDeepestDeeperLineEl) {
+      crossDeepestDeepestDeepestDeeperLineEl.textContent = "";
+      crossDeepestDeepestDeepestDeeperLineEl.classList.add("hidden");
+    }
+    pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperReadonly(
       card,
       intelRoot,
       worldTileIntelEtaResidualCoordsMatch({ x, y }, march),
@@ -490,6 +528,7 @@ export class WorldPanels {
         <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPER_LINE_ROLE}"></p>
         <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"></p>
         <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE}"></p>
+        <p class="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} hidden" data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"></p>
         <p class="world-tile-info-state hidden" data-role="world-tile-info-state"></p>
         <div data-role="world-tile-info-body">
           <dl class="world-tile-info-lines" data-role="world-tile-info-lines"></dl>
@@ -612,6 +651,9 @@ export class WorldPanels {
     const crossResidualDeepestDeepestDeepestLineEl = this.panel.querySelector<HTMLElement>(
       `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_ROLE}"]`,
     );
+    const crossResidualDeepestDeepestDeepestDeeperLineEl = this.panel.querySelector<HTMLElement>(
+      `[data-role="${WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_ROLE}"]`,
+    );
     const reportBtn = this.panel.querySelector<HTMLButtonElement>(
       '[data-action="view-battle-reports-at-grid"]',
     );
@@ -630,7 +672,8 @@ export class WorldPanels {
       !crossResidualDeepestLineEl ||
       !crossResidualDeepestDeeperLineEl ||
       !crossResidualDeepestDeepestDeeperLineEl ||
-      !crossResidualDeepestDeepestDeepestLineEl
+      !crossResidualDeepestDeepestDeepestLineEl ||
+      !crossResidualDeepestDeepestDeepestDeeperLineEl
     )
       return;
 
@@ -660,6 +703,8 @@ export class WorldPanels {
       crossResidualDeepestDeepestDeeperLineEl.classList.add("hidden");
       crossResidualDeepestDeepestDeepestLineEl.textContent = "";
       crossResidualDeepestDeepestDeepestLineEl.classList.add("hidden");
+      crossResidualDeepestDeepestDeepestDeeperLineEl.textContent = "";
+      crossResidualDeepestDeepestDeepestDeeperLineEl.classList.add("hidden");
       reportBtn?.classList.add("hidden");
       pulseWorldTileIntelEtaResidualMutualHighlight(
         card as HTMLElement,
@@ -667,7 +712,7 @@ export class WorldPanels {
         false,
         { timers: this.intelEtaResidualTimers },
       );
-      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestReadonly(
+      pulseWorldTileIntelEtaCrossResidualDeepestDeepestDeepestDeeperReadonly(
         card as HTMLElement,
         this.options?.getIntelPanelRoot?.() ?? null,
         false,
@@ -679,6 +724,7 @@ export class WorldPanels {
           deepestDeeperTimers: this.intelEtaCrossResidualDeepestDeeperTimers,
           deepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeeperTimers,
           deepestDeepestDeepestTimers: this.intelEtaCrossResidualDeepestDeepestDeepestTimers,
+          deepestDeepestDeepestDeeperTimers: this.intelEtaCrossResidualDeepestDeepestDeepestDeeperTimers,
         },
       );
       return;
