@@ -8,6 +8,7 @@ import { highlightPanelReturnSourceCategoryResidualDeepestDeeper } from "@/net/p
 import { highlightPanelReturnSourceCategoryResidualDeepestDeepestDeeper } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeeper";
 import { highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepest } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepest";
 import { highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepestDeeper } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepestDeeper";
+import { highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepestDeepestDeeper } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepestDeepestDeeper";
 
 /** CLIENT-272：自排行/军情返回时分类 tab/chip **加深** 高亮（2.5s；CLIENT-256 2s **并存**）。 */
 export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS =
@@ -48,7 +49,7 @@ export function highlightPanelReturnSourceCategoryResidualDeep(
   return true;
 }
 
-/** CLIENT-256 残余高亮 + CLIENT-272 加深 + CLIENT-288 再深 + CLIENT-304 巩固再加深一层 + CLIENT-320 巩固再加深二层 + CLIENT-336 巩固再加深三层 + CLIENT-352 巩固再加深四层 + CLIENT-368 巩固再加深五层（CLIENT-211 行返回不退化）。 */
+/** CLIENT-256 残余高亮 + CLIENT-272 加深 + CLIENT-288 再深 + CLIENT-304 巩固再加深一层 + CLIENT-320 巩固再加深二层 + CLIENT-336 巩固再加深三层 + CLIENT-352 巩固再加深四层 + CLIENT-368 巩固再加深五层 + CLIENT-384 巩固再加深五层（CLIENT-211 行返回不退化）。 */
 export function pulsePanelReturnSourceCategoryResidualHighlights(
   tab: HTMLElement | null | undefined,
   panelRoot: ParentNode | null | undefined,
@@ -67,6 +68,7 @@ export function pulsePanelReturnSourceCategoryResidualHighlights(
   highlightPanelReturnSourceCategoryResidualDeepestDeepestDeeper(tab, panelRoot, windowObj);
   highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepest(tab, panelRoot, windowObj);
   highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepestDeeper(tab, panelRoot, windowObj);
+  highlightPanelReturnSourceCategoryResidualDeepestDeepestDeepestDeepestDeeper(tab, panelRoot, windowObj);
   return highlighted;
 }
 

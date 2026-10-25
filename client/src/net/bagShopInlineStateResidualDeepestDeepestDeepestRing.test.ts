@@ -58,7 +58,7 @@ describe("bagShopInlineStateResidualDeepestDeepestDeepestRing (CLIENT-352)", () 
     ).toBe(false);
   });
 
-  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-368 rings", () => {
+  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-384 rings", () => {
     const el = document.createElement("span");
     const timeouts: Array<{ fn: () => void; ms: number }> = [];
     const windowObj = {

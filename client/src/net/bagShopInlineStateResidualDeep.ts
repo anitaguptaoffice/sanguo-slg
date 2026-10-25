@@ -8,6 +8,7 @@ import { scheduleBagShopInlineStateResidualDeepestDeeperRing } from "@/net/bagSh
 import { scheduleBagShopInlineStateResidualDeepestDeepestDeeperRing } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
 import { scheduleBagShopInlineStateResidualDeepestDeepestDeepestRing } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestRing";
 import { scheduleBagShopInlineStateResidualDeepestDeepestDeepestDeeperRing } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestDeeperRing";
+import { scheduleBagShopInlineStateResidualDeepestDeepestDeepestDeepestDeeperRing } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestDeepestDeeperRing";
 
 /** CLIENT-272：行内态残余 **加深** 环（2s；与 CLIENT-256 1.5s 环 **并存**）。 */
 export const BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_CLASS =
@@ -48,7 +49,7 @@ export function scheduleBagShopInlineStateResidualDeepRing(
   return true;
 }
 
-/** CLIENT-256 残余环 + CLIENT-272 加深环 + CLIENT-288 再深环 + CLIENT-304 巩固再加深一层环 + CLIENT-320 巩固再加深二层环 + CLIENT-336 巩固再加深三层环 + CLIENT-352 巩固再加深四层环 + CLIENT-368 巩固再加深五层环（CLIENT-194/092 行内文案不退化）。 */
+/** CLIENT-256 残余环 + CLIENT-272 加深环 + CLIENT-288 再深环 + CLIENT-304 巩固再加深一层环 + CLIENT-320 巩固再加深二层环 + CLIENT-336 巩固再加深三层环 + CLIENT-352 巩固再加深四层环 + CLIENT-368 巩固再加深五层环 + CLIENT-384 巩固再加深五层环（CLIENT-194/092 行内文案不退化）。 */
 export function pulseBagShopInlineStateResidualRings(
   target: HTMLElement | null | undefined,
   panelRoot: ParentNode | null | undefined = null,
@@ -67,6 +68,7 @@ export function pulseBagShopInlineStateResidualRings(
   scheduleBagShopInlineStateResidualDeepestDeepestDeeperRing(target, panelRoot, windowObj);
   scheduleBagShopInlineStateResidualDeepestDeepestDeepestRing(target, panelRoot, windowObj);
   scheduleBagShopInlineStateResidualDeepestDeepestDeepestDeeperRing(target, panelRoot, windowObj);
+  scheduleBagShopInlineStateResidualDeepestDeepestDeepestDeepestDeeperRing(target, panelRoot, windowObj);
   return scheduled;
 }
 
