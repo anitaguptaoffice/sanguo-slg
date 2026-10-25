@@ -710,6 +710,60 @@ describe("QueuePanels", () => {
     expect(onDeepestDeepestDeepestDeeperRing).toHaveBeenCalledWith("farm");
   });
 
+  it("renders preview residual deepest-deepest-deepest-deepest-deeper line and rings slot on click (CLIENT-373)", () => {
+    const mount = document.createElement("div");
+    const now = Date.now();
+    const session = baseSession();
+    session.buildings = [{ slot_key: "farm", building_cfg_id: 2, level: 1, upgrade_finish_at_ms: now + 120_000 }];
+    const gateway = { getCityState: vi.fn(), getBoundServerId: vi.fn() } as unknown as GatewayPort;
+    const onDeepestDeepestDeepestDeepestDeeperRing = vi.fn();
+    const panel = new QueuePanels(
+      mount,
+      gateway,
+      () => session,
+      { farm: "农田" },
+      () => {},
+      () => {},
+      () => {},
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      onDeepestDeepestDeepestDeepestDeeperRing,
+    );
+    panel.attach();
+    panel.toggle();
+    const deepestDeepestDeepestDeepestDeeper = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deepest-deepest-deepest-deeper-line"]',
+    ) as HTMLElement;
+    expect(deepestDeepestDeepestDeepestDeeper?.textContent).toMatch(/巩固再加深五层/);
+    expect(deepestDeepestDeepestDeepestDeeper?.textContent).toMatch(/最深六层链/);
+    expect(deepestDeepestDeepestDeepestDeeper?.textContent).toMatch(/槽位\(农田\)/);
+    expect(deepestDeepestDeepestDeepestDeeper?.getAttribute("data-action")).toBe(
+      "domestic-slot-preview-cross-link-residual-deepest-deepest-deepest-deepest-deeper-ring",
+    );
+    expect(deepestDeepestDeepestDeepestDeeper?.getAttribute("data-slot-key")).toBe("farm");
+    const deepestDeepestDeepestDeeper = mount.querySelector(
+      '[data-role="queue-next-finish-preview-residual-deepest-deepest-deepest-deeper-line"]',
+    ) as HTMLElement;
+    expect(deepestDeepestDeepestDeeper?.textContent).toMatch(/最深五层链/);
+    deepestDeepestDeepestDeepestDeeper?.click();
+    expect(onDeepestDeepestDeepestDeepestDeeperRing).toHaveBeenCalledWith("farm");
+  });
+
   it("renders preview residual deepest-deepest-deepest line and rings slot on click (CLIENT-341)", () => {
     const mount = document.createElement("div");
     const now = Date.now();
