@@ -302,6 +302,11 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
         ".rank-top-density-row [data-role='rank-list-density-scan-residual-deeper-line']",
       )?.textContent,
     ).toContain("扫读巩固再加深");
+    expect(
+      mount.querySelector(
+        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-line']",
+      )?.textContent,
+    ).toContain("扫读巩固再加深一层");
     expect(mount.querySelector(".rank-pin-row")?.querySelector(".rank-pin-primary")?.textContent).toContain(
       "我的排名 #2",
     );
