@@ -3727,6 +3727,11 @@
         overflow-wrap: anywhere;
       }
       .rank-panel .rank-refresh-cooldown-residual-deepest-stamp.hidden { display: none; }
+      .rank-panel .rank-refresh-cooldown-residual-deepest-deeper-stamp {
+        margin: 2px 0 0; font-size: 8px; line-height: 1.35; color: #5a7498;
+        overflow-wrap: anywhere;
+      }
+      .rank-panel .rank-refresh-cooldown-residual-deepest-deeper-stamp.hidden { display: none; }
       @keyframes rank-pin-keep-residual-ring-keyframes {
         0%, 100% { box-shadow: inset 0 0 0 0 rgba(201, 162, 39, 0); }
         35% { box-shadow: inset 0 0 0 2px rgba(201, 162, 39, 0.95); }
@@ -3763,6 +3768,14 @@
       .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-ring td {
         animation: rank-pin-keep-residual-deepest-ring-keyframes 2.5s ease-out 1;
       }
+      @keyframes rank-pin-keep-residual-deepest-deeper-ring-keyframes {
+        0%, 100% { box-shadow: inset 0 0 0 0 rgba(74, 100, 136, 0); }
+        46% { box-shadow: inset 0 0 0 6px rgba(74, 100, 136, 0.94); }
+        82% { box-shadow: inset 0 0 0 4px rgba(74, 100, 136, 0.6); }
+      }
+      .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-deeper-ring td {
+        animation: rank-pin-keep-residual-deepest-deeper-ring-keyframes 3s ease-out 1;
+      }
       .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring.rank-pin-keep-residual-deep-ring.rank-pin-keep-residual-deeper-ring td {
         animation: rank-pin-keep-residual-ring-keyframes 1.5s ease-out 1,
           rank-pin-keep-residual-deep-ring-keyframes 2s ease-out 1,
@@ -3773,6 +3786,13 @@
           rank-pin-keep-residual-deep-ring-keyframes 2s ease-out 1,
           rank-pin-keep-residual-deeper-ring-keyframes 2.5s ease-out 1,
           rank-pin-keep-residual-deepest-ring-keyframes 2.5s ease-out 1;
+      }
+      .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring.rank-pin-keep-residual-deep-ring.rank-pin-keep-residual-deeper-ring.rank-pin-keep-residual-deepest-ring.rank-pin-keep-residual-deepest-deeper-ring td {
+        animation: rank-pin-keep-residual-ring-keyframes 1.5s ease-out 1,
+          rank-pin-keep-residual-deep-ring-keyframes 2s ease-out 1,
+          rank-pin-keep-residual-deeper-ring-keyframes 2.5s ease-out 1,
+          rank-pin-keep-residual-deepest-ring-keyframes 2.5s ease-out 1,
+          rank-pin-keep-residual-deepest-deeper-ring-keyframes 3s ease-out 1;
       }
       .rank-table .rank-empty-retry-inline,
       .rank-panel .rank-empty-retry-inline {
@@ -4808,6 +4828,7 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deep"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deeper"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deepest"],
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deepest-deeper"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .shop-wallet-compare-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-member-online-summary,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] [data-role="guild-member-online-summary"],
@@ -5069,8 +5090,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deeper-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deeper-ring,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
@@ -5132,9 +5155,11 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-panel-state-residual-deep-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deep-ring,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
@@ -5302,10 +5327,13 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-ring td,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-deeper-ring td,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-line,
@@ -5463,11 +5491,14 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deep-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-ring td,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-deeper-ring td,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deep-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deeper-line,
@@ -5554,10 +5585,12 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deep-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-stamp,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-refresh-cooldown-residual-deepest-deeper-stamp,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deep-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deeper-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-ring td,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-table tr.rank-pin-row.rank-pin-keep-residual-deepest-deeper-ring td,
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .recruit-wallet-compare-residual-line {
         min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box; overflow-wrap: anywhere; flex-shrink: 0;
       }

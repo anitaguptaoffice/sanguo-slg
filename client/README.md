@@ -757,6 +757,12 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 在 [Wave 48](#wave-48-h5-主城队列-eta-完成焦点残余巩固再加深一层队列预览槽位互链再加深一层将领养成扫读再加深一层panelstate-筛选再加深一层双榜钉选再加深一层军团聊天再加深一层日常-hud-深链再加深一层1280-组合-manifest-巩固再加深一层m4-出口--intg-048) 主城栈基础上 **轮转回**世界/军情栈；**仍** DATA-002；**无**新 world RPC；范围外同 Wave 47/48。
 
+## Wave 50 H5 双榜刷新冷却戳记与钉选保持残余巩固再加深二层（CLIENT-312）
+
+在 [Wave 48](#wave-48-h5-主城栈残余巩固再加深一层client-292299--intg-048) **CLIENT-296** 双榜钉选保持栈基础上 **巩固再加深二层**；主叙事 **非** wave:49 **CLIENT-305** 排行招募密度扫读重复；**仍** DATA-002；**无**新 rank RPC；范围外同 Wave 48/49。
+
+**wave:50（CLIENT-312）双榜刷新冷却戳记与钉选保持残余巩固再加深二层**：**CLIENT-296** 巩固再加深一层第三行下只读 **`formatRankRefreshCooldownResidualDeepestDeeperStamp`** / **`rank-refresh-cooldown-residual-deepest-deeper-stamp`** / `data-role="rank-refresh-cooldown-residual-deepest-deeper"`（冷却窗口内合并 **冷却剩余** + **上次刷新** + **手动刷新次数** 只读 **巩固再加深二层** 第四行；**CLIENT-296/214** **不退化**；**无**新 rank RPC；**非** wave:49 **CLIENT-305** 排行密度/招募摘要主叙事）；手动刷新成功后钉选行叠加 **`rank-pin-keep-residual-deepest-deeper-ring` 3s**（**CLIENT-264** 环 **不退化**）。单测：`rankRefreshCooldownResidualDeepestDeeper.test.ts`、`rankPinKeepResidualDeepestDeeperRing.test.ts`、`SocialPanels.test.ts`；`cd client && npm test` 绿。（Closes [#1505](https://github.com/anitaguptaoffice/sanguo-slg/issues/1505)）
+
 **wave:49（CLIENT-300）小地图视口锚点与军情列表 scroll-sync 残余巩固再加深一层**：军情行变更时 **`syncMinimapViewportIntelScrollResidualDeepest`** 在 **CLIENT-284** `syncMinimapViewportIntelScrollResidualDeeper` 与 **`minimap-intel-scroll-sync-residual-deeper-ring` 1.5s** 之上叠加 **`minimap-intel-scroll-sync-residual-deepest-ring` 1.5s**（**CLIENT-220** `minimap-intel-sync-ring` **不退化**；**非** wave:47 CLIENT-284 首版巩固再加深标题复刻主叙事）；格点信息卡 **`formatWorldTileIntelEtaCrossResidualDeepestLine`** / `world-tile-intel-eta-cross-residual-deepest-line` **巩固再加深一层第五行** **`world-tile-intel-eta-cross-residual-deepest-pulse` 1.5s** 只读对照（**CLIENT-284** `formatWorldTileIntelEtaCrossResidualDeeperLine` / deeper 脉冲 **不退化**；**无**新 world RPC）。单测：`minimapViewportIntelScrollResidualDeepest.test.ts`、`worldTileIntelEtaCrossResidualDeepest.test.ts`；`cd client && npm test` 绿。（Closes [#1400](https://github.com/anitaguptaoffice/sanguo-slg/issues/1400)）
 
 ## Wave 48 H5 主城队列 ETA 完成焦点残余巩固再加深一层（CLIENT-292 起）
