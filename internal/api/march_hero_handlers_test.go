@@ -14,6 +14,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -37,7 +38,7 @@ func TestStartMarchRequiresHeroAndRestoresAfterReturn(t *testing.T) {
 	domHub := domestic.NewHub(clk.Now)
 	milHub := march.NewHub(clk.Now)
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	srv := api.NewServer(log, nil, nil, domHub, milHub)
+	srv := api.NewServer(log, nil, world.NewService(handlerOwnershipStore{}), domHub, milHub)
 	srv.SetClock(clk.Now)
 
 	const cityID = 42

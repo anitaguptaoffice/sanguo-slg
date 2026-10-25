@@ -94,7 +94,8 @@ func (s *Server) refreshDomesticWalletAfterCommit(ctx context.Context, serverID 
 	if s == nil || s.domestic == nil || s.players == nil || s.players.Pool == nil {
 		return
 	}
-	for _, city := range s.cities {
+	for _, cityID := range s.cachedCityIDs() {
+		city := s.citySnapshot(cityID)
 		if city == nil || city.PlayerID != playerID {
 			continue
 		}

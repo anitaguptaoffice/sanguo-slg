@@ -2,31 +2,33 @@ package api_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
+	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
+	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
-	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
-	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -40,17 +42,21 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
+	applyData002CoreSubsetSeeds(t, ctx, pool)
 	store := world.NewPGStore(pool)
 	if err := world.InitServerMap(ctx, store, 1); err != nil {
 		t.Fatal(err)
 	}
 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	domHub := domestic.NewHub(time.Now)
-	milHub := march.NewHub(time.Now)
+	clk := &integrationClock{t: time.Unix(1_700_000_000, 0)}
+	domHub := domestic.NewHub(clk.Now)
+	milHub := march.NewHub(clk.Now)
 	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, milHub)
-	go apiSrv.RunDomesticScheduler(ctx)
-	go apiSrv.RunMilitaryScheduler(ctx)
+	apiSrv.SetClock(clk.Now)
+	if err := apiSrv.WireM4Content(ctx); err != nil {
+		t.Fatal(err)
+	}
 
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
@@ -87,7 +93,7 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 		Route:     api.RouteCreateCity,
 		TraceId:   "c1",
 		SessionId: sid,
-		Payload:   mustMarshal(&worldv1.CreateCityRequest{ServerId: 1, Name: "Home", X: 60, Y: 60}),
+		Payload:   mustMarshal(&worldv1.CreateCityRequest{ServerId: 1, Name: "Home", X: smokeBuildableCityTile(t).X, Y: smokeBuildableCityTile(t).Y}),
 	})
 	if createResp.Code != 0 {
 		t.Fatalf("create city: %+v", createResp)
@@ -106,7 +112,9 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	})
 	var st0 domesticv1.GetCityStateResponse
 	_ = proto.Unmarshal(before.Data, &st0)
-	time.Sleep(2 * time.Second)
+	// At 120 food/hour, two wall-clock seconds need not accrue a whole unit.
+	clk.set(clk.Now().Add(time.Minute))
+	domHub.Tick()
 	after := mustSend(t, c, &commonv1.ClientPacket{
 		Route:     api.RouteGetCityState,
 		TraceId:   "g2",
@@ -118,6 +126,26 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	if st1.GetWallet().GetFood() <= st0.GetWallet().GetFood() {
 		t.Fatalf("expected food accrual, before=%d after=%d", st0.GetWallet().GetFood(), st1.GetWallet().GetFood())
 	}
+
+	// Farm level 2 requires hall level 2 under the existing building rules.
+	hall := mustSend(t, c, &commonv1.ClientPacket{
+		Route: api.RouteStartBuildingUpgrade, TraceId: "hall1", SessionId: sid,
+		Payload: mustMarshal(&domesticv1.StartBuildingUpgradeRequest{
+			CityId: cityID, SlotKey: "hall", BuildingCfgId: 1,
+		}),
+	})
+	if hall.Code != 0 {
+		t.Fatalf("hall prerequisite upgrade: %+v", hall)
+	}
+	var hallUpgrade domesticv1.StartBuildingUpgradeResponse
+	if err := proto.Unmarshal(hall.Data, &hallUpgrade); err != nil {
+		t.Fatal(err)
+	}
+	if hallUpgrade.GetFinishAtMs() <= clk.Now().UnixMilli() {
+		t.Fatal("missing hall upgrade finish")
+	}
+	clk.set(time.UnixMilli(hallUpgrade.GetFinishAtMs()).Add(time.Second))
+	domHub.Tick()
 
 	up := mustSend(t, c, &commonv1.ClientPacket{
 		Route:     api.RouteStartBuildingUpgrade,
@@ -188,6 +216,7 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
+	applyData002CoreSubsetSeeds(t, ctx, pool)
 	store := world.NewPGStore(pool)
 	if err := world.InitServerMap(ctx, store, 1); err != nil {
 		t.Fatal(err)
@@ -201,8 +230,9 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, milHub)
 	apiSrv.SetClock(clk.Now)
 	apiSrv.AttachBattleReports(reportSvc)
-	go apiSrv.RunDomesticScheduler(ctx)
-	go apiSrv.RunMilitaryScheduler(ctx)
+	if err := apiSrv.WireM4Content(ctx); err != nil {
+		t.Fatal(err)
+	}
 
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
@@ -238,7 +268,7 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 		Route:     api.RouteCreateCity,
 		TraceId:   "c1",
 		SessionId: sid,
-		Payload:   mustMarshal(&worldv1.CreateCityRequest{ServerId: 1, Name: "Camp", X: 3, Y: 3}),
+		Payload:   mustMarshal(&worldv1.CreateCityRequest{ServerId: 1, Name: "Camp", X: smokeBuildableCityTile(t).X, Y: smokeBuildableCityTile(t).Y}),
 	})
 	if createResp.Code != 0 {
 		t.Fatalf("create city: %+v", createResp)
@@ -330,18 +360,64 @@ func (c *integrationClock) Now() time.Time { return c.t }
 
 func (c *integrationClock) set(nt time.Time) { c.t = nt }
 
+// openDB gives each API test an isolated schema. Reopened pools use the same
+// search_path so restart assertions exercise persisted state, not a fresh fixture.
 func openDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
 		t.Skip("DATABASE_URL not set")
 	}
 	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
+	admin, err := db.Open(ctx, dsn)
 	if err != nil {
 		t.Fatal(err)
 	}
+	schema := fmt.Sprintf("api_test_%d", time.Now().UnixNano())
+	if _, err := admin.Exec(ctx, "CREATE SCHEMA "+schema); err != nil {
+		admin.Close()
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		defer admin.Close()
+		if _, err := admin.Exec(context.Background(), "DROP SCHEMA "+schema+" CASCADE"); err != nil {
+			t.Errorf("drop isolated test schema: %v", err)
+		}
+	})
+	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
+		u, err := url.Parse(dsn)
+		if err != nil {
+			t.Fatal(err)
+		}
+		q := u.Query()
+		q.Set("search_path", schema)
+		u.RawQuery = q.Encode()
+		dsn = u.String()
+	} else {
+		dsn += " search_path=" + schema
+	}
+	t.Setenv("DATABASE_URL", dsn)
+	pool, err := db.Open(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(pool.Close)
 	return pool
+}
+
+type smokeCityTile struct{ X, Y int32 }
+
+// Match the deterministic production map generator; never mutate terrain just
+// to make a fixture pass. Leave room for nearby march targets.
+func smokeBuildableCityTile(t *testing.T) smokeCityTile {
+	t.Helper()
+	for _, cell := range world.GenerateChunk(1, 0, 0) {
+		if cell.Buildable() && cell.X >= 10 && cell.Y >= 10 && cell.X < 40 && cell.Y < 40 {
+			return smokeCityTile{int32(cell.X), int32(cell.Y)}
+		}
+	}
+	t.Fatal("no buildable city tile in deterministic production map")
+	return smokeCityTile{}
 }
 
 func dial(t *testing.T, url string) *websocket.Conn {
@@ -355,6 +431,16 @@ func dial(t *testing.T, url string) *websocket.Conn {
 
 func mustSend(t *testing.T, c *websocket.Conn, pkt *commonv1.ClientPacket) *commonv1.ServerPacket {
 	t.Helper()
+	// Cumulative wave smokes issue hundreds of requests. Respect the unchanged
+	// production gateway rate rather than disabling its limiter or retrying
+	// potentially mutating packets after a rate-limit response.
+	time.Sleep(time.Duration(float64(time.Second) / gateway.DefaultConfig().MessagesPerSecond))
+	if err := c.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.SetReadDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		t.Fatal(err)
+	}
 	frame, err := proto.Marshal(pkt)
 	if err != nil {
 		t.Fatal(err)

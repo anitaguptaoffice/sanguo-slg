@@ -31,3 +31,16 @@ commit but before queue publication is not restart-atomic; durable queue/outbox
 work is outside this internal-boundary repair and requires its own contract.
 TestWalletBoundaryRecruitCommitFailureDoesNotQueue covers live-process commit
 failure, not crash recovery.
+
+## API-REPAIR-002: read isolation
+
+Handlers read domestic state only through SnapshotCity (deep copy under Hub
+lock), including ownership checks, reward refresh selection and build speedups.
+GetCityState refreshes its snapshot after settlement. The API city registry is
+locked separately and never supplies mutable state to readers.
+TestGetCityStateConcurrentDomesticTick races 300 response reads against 300
+scheduler ticks and verifies nested building maps do not alias Hub state.
+
+TestContentGrantThroughAPIWalletLifecycle exercises the actual persistent content
+service, duplicate reward keys, API refresh/spend/production, domestic reload,
+and duplicate replay from a fresh content service; final food remains 1420.

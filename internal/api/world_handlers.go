@@ -69,8 +69,8 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 		},
 	}
 	s.domestic.RegisterCity(cityState)
-	s.cities[cityID] = cityState
-	s.registerNewCity(cityState, x, y)
+	s.cacheCity(cityID, cityState)
+	s.registerNewCity(cityID, x, y)
 	summary := &apicommon.PlayerCitySummary{
 		CityId: cityID, Name: name, X: int32(x), Y: int32(y),
 		IsCapital: true, WallLevel: 1, Morale: 100,
