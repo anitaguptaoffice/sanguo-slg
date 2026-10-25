@@ -51,6 +51,7 @@ export function createCenterPanelFocusTrap(
 
   function setOpen(open: boolean, trig?: HTMLElement | null, restoreFocusOnClose = true): void {
     if (open) {
+      if (root.classList.contains("hidden")) return;
       if (trig !== undefined) trigger = trig;
       restoreFocus = restoreFocusOnClose;
       if (!active) {
@@ -68,7 +69,11 @@ export function createCenterPanelFocusTrap(
     trigger = null;
   }
 
+  const suspend = () => setOpen(false, null, false);
+  root.addEventListener("center-panel-suspend", suspend);
+
   function dispose(): void {
+    root.removeEventListener("center-panel-suspend", suspend);
     document.removeEventListener("keydown", onKeyDown, true);
     active = false;
     trigger = null;

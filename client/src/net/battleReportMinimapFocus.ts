@@ -7,7 +7,7 @@ import type { BattleReportSummary } from "@/net/militaryFormat";
 import {
   computeMinimapViewFramingPoints,
   type MinimapView,
-  type MinimapWorldBounds,
+  type WorldBounds as MinimapWorldBounds,
 } from "@/ui/worldMinimap";
 
 /** 战报战场格点（与世界格点、summary `location_x/y` 对齐）。 */

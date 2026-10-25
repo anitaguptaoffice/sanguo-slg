@@ -75,7 +75,7 @@ export function readPanelReturnSourceSession(
 }
 
 export function clearPanelReturnSourceSession(
-  storage: Pick<Storage, "setItem" | "removeItem"> | null = typeof sessionStorage !== "undefined"
+  storage: Pick<Storage, "removeItem"> | null = typeof sessionStorage !== "undefined"
     ? sessionStorage
     : null,
 ): void {
