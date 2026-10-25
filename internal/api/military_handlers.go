@@ -245,20 +245,25 @@ func marchSummaryProto(cityID int64, o *march.MarchOrder, troops []march.TroopSt
 	if o == nil {
 		return nil
 	}
+	// The wire contract exposes a return deadline only while returning.
+	var returnFinishAtMs int64
+	if o.Phase == march.PhaseReturning && !o.ReturnFinishAt.IsZero() {
+		returnFinishAtMs = o.ReturnFinishAt.UnixMilli()
+	}
 	return &militaryv1.MarchSummary{
-		MarchId:           o.ID,
-		ArmyId:            o.ArmyID,
-		OriginCityId:      cityID,
-		FromX:             int32(o.FromX),
-		FromY:             int32(o.FromY),
-		ToX:               int32(o.ToX),
-		ToY:               int32(o.ToY),
-		Purpose:           int32(o.Purpose),
-		Phase:             marchPhaseProto(o.Phase),
-		DepartAtMs:        o.DepartAt.UnixMilli(),
-		ArriveAtMs:        o.ArriveAt.UnixMilli(),
-		ReturnFinishAtMs:  o.ReturnFinishAt.UnixMilli(),
-		Troops:            troopStacksProtoFromMarch(troops),
+		MarchId:          o.ID,
+		ArmyId:           o.ArmyID,
+		OriginCityId:     cityID,
+		FromX:            int32(o.FromX),
+		FromY:            int32(o.FromY),
+		ToX:              int32(o.ToX),
+		ToY:              int32(o.ToY),
+		Purpose:          int32(o.Purpose),
+		Phase:            marchPhaseProto(o.Phase),
+		DepartAtMs:       o.DepartAt.UnixMilli(),
+		ArriveAtMs:       o.ArriveAt.UnixMilli(),
+		ReturnFinishAtMs: returnFinishAtMs,
+		Troops:           troopStacksProtoFromMarch(troops),
 	}
 }
 
