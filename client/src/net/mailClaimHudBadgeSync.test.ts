@@ -7,14 +7,19 @@ import {
   MAIL_CLAIM_HUD_SYNC_PULSE_MS,
   MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS,
   MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_MS,
+  MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS,
+  MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_MS,
   pulseMailClaimHudSyncAfterClaimDeep,
   pulseMailClaimHudSyncAfterClaimResidualDeep,
+  pulseMailClaimHudSyncAfterClaimResidualDeeper,
   scheduleMailClaimHudSyncDeepPulse,
   scheduleMailClaimHudSyncPulse,
   scheduleMailClaimHudSyncResidualDeepPulse,
+  scheduleMailClaimHudSyncResidualDeeperPulse,
   syncHudMailQuestBadgeAfterClaim,
   syncHudMailQuestBadgeAfterClaimDeep,
   syncHudMailQuestBadgeAfterClaimResidualDeep,
+  syncHudMailQuestBadgeAfterClaimResidualDeeper,
 } from "@/net/mailClaimHudBadgeSync";
 
 describe("syncHudMailQuestBadgeAfterClaim (CLIENT-241)", () => {
@@ -164,5 +169,53 @@ describe("mail-claim-hud-sync-residual-deep-pulse (CLIENT-271)", () => {
     expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS)).toBe(true);
     expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS)).toBe(true);
     expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
+  });
+});
+
+describe("syncHudMailQuestBadgeAfterClaimResidualDeeper (CLIENT-287)", () => {
+  it("extends CLIENT-271 sync with attachment claim residual deeper subline", () => {
+    const inbox = [
+      {
+        mail_id: 7,
+        status: 1,
+        attachments: { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      },
+    ];
+    const res = syncHudMailQuestBadgeAfterClaimResidualDeeper(
+      { mailUnreadTotal: 0, mailInboxSnapshot: inbox, dailyChainRows: [] },
+      7,
+      { ...inbox[0], mail_id: 7, status: 2, has_unclaimed_attachments: false },
+      "all",
+      { items: [{ item_cfg_id: 2001, quantity: 1 }] },
+      inbox[0],
+    );
+    expect(res.unclaimedTab).toBe(0);
+    expect(res.attachmentClaimResidualSubline).toContain("附件残余");
+    expect(res.attachmentClaimResidualDeepSubline).toContain("附件残余加深");
+    expect(res.attachmentClaimResidualDeeperSubline).toContain("巩固再加深");
+    expect(res.attachmentClaimResidualDeeperSubline).toContain("↔");
+  });
+});
+
+describe("mail-claim-hud-sync-residual-deeper-pulse (CLIENT-287)", () => {
+  it("scheduleMailClaimHudSyncResidualDeeperPulse toggles class for 3s", () => {
+    vi.useFakeTimers();
+    const li = document.createElement("li");
+    scheduleMailClaimHudSyncResidualDeeperPulse(li);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
+    vi.advanceTimersByTime(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_MS - 1);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("pulseMailClaimHudSyncAfterClaimResidualDeeper stacks CLIENT-271 and residual deeper pulse", () => {
+    const li = document.createElement("li");
+    pulseMailClaimHudSyncAfterClaimResidualDeeper(li);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_PULSE_CLASS)).toBe(true);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_DEEP_PULSE_CLASS)).toBe(true);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
+    expect(li.classList.contains(MAIL_CLAIM_HUD_SYNC_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
   });
 });
