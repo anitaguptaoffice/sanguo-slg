@@ -338,6 +338,11 @@ import {
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
 } from "@/net/recruitTemplateInlineResidualDeepestDeeperSummary";
 import {
+  formatRecruitTemplateInlineResidualDeepestDeepestDeeperSummary,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeeperSummary";
+import {
   formatRecruitTemplateInlineResidualSummary,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
   RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
@@ -2373,6 +2378,17 @@ export class HeroMailPanels {
       );
       residualDeepestDeeperSpan.textContent = residualDeepestDeeperSummary ?? "";
       residualDeepestDeeperSpan.hidden = !residualDeepestDeeperSummary;
+      const residualDeepestDeepestDeeperSpan = document.createElement("span");
+      residualDeepestDeepestDeeperSpan.className =
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS;
+      residualDeepestDeepestDeeperSpan.setAttribute(
+        "data-role",
+        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
+      );
+      const residualDeepestDeepestDeeperSummary =
+        formatRecruitTemplateInlineResidualDeepestDeepestDeeperSummary(wallet, t, bag);
+      residualDeepestDeepestDeeperSpan.textContent = residualDeepestDeepestDeeperSummary ?? "";
+      residualDeepestDeepestDeeperSpan.hidden = !residualDeepestDeepestDeeperSummary;
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
       li.appendChild(residualSpan);
@@ -2380,6 +2396,7 @@ export class HeroMailPanels {
       li.appendChild(residualDeeperSpan);
       li.appendChild(residualDeepestSpan);
       li.appendChild(residualDeepestDeeperSpan);
+      li.appendChild(residualDeepestDeepestDeeperSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
