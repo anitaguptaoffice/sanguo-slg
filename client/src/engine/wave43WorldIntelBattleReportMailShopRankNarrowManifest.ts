@@ -72,6 +72,14 @@ export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEP_CLASS =
 export const MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEP_LINE_CLASS =
   "march-form-troop-margin-residual-deep-line";
 
+/** CLIENT-285: march form troop margin residual deeper fourth line. */
+export const MARCH_FORM_TROOP_MARGIN_RESIDUAL_DEEPER_LINE_CLASS =
+  "march-form-troop-margin-residual-deeper-line";
+
+/** CLIENT-285: residual deeper refresh stamp on CLIENT-269 stamp (3s). */
+export const MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPER_CLASS =
+  "march-submit-intel-refresh-stamp-residual-deeper";
+
 export const INTEL_LIST_REFRESH_MARCH_DEEP_PULSE_CLASS = "intel-list-refresh-march-deep-pulse";
 
 /** CLIENT-254: adjacent report list keyboard nav residual ring. */
