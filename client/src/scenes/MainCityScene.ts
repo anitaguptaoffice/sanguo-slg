@@ -113,9 +113,9 @@ import {
   syncMarchFormInlineFeedback,
 } from "@/net/marchFormSummary";
 import {
-  formatMarchFormTroopMarginResidualDeepestLine,
-  syncMarchFormTroopMarginResidualDeepestLine,
-} from "@/net/marchFormTroopMarginResidualDeepest";
+  formatMarchFormTroopMarginResidualDeepestDeeperLine,
+  syncMarchFormTroopMarginResidualDeepestDeeperLine,
+} from "@/net/marchFormTroopMarginResidualDeepestDeeper";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
@@ -626,6 +626,7 @@ export class MainCityScene implements Scene {
           <span class="march-form-troop-margin-residual-deep-line hidden" data-role="march-form-troop-margin-residual-deep-line"></span>
           <span class="march-form-troop-margin-residual-deeper-line hidden" data-role="march-form-troop-margin-residual-deeper-line"></span>
           <span class="march-form-troop-margin-residual-deepest-line hidden" data-role="march-form-troop-margin-residual-deepest-line"></span>
+          <span class="march-form-troop-margin-residual-deepest-deeper-line hidden" data-role="march-form-troop-margin-residual-deepest-deeper-line"></span>
         </p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
         <p class="military-march" data-role="march"></p>
@@ -1684,9 +1685,9 @@ export class MainCityScene implements Scene {
       }),
     );
     const marchSummary = formatMarchFormSummary(marchSnap, this.marchClockMs);
-    syncMarchFormTroopMarginResidualDeepestLine(
+    syncMarchFormTroopMarginResidualDeepestDeeperLine(
       this.militaryPanel,
-      formatMarchFormTroopMarginResidualDeepestLine(
+      formatMarchFormTroopMarginResidualDeepestDeeperLine(
         troopReserve,
         marchSummary,
         this.session?.wallet,
