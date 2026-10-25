@@ -12,6 +12,8 @@
 
 ## 文档索引
 
+工程停工与美术接手优先序见 [HANDOVER-2026-10-26.md](../HANDOVER-2026-10-26.md)。
+
 | 文档 | 内容 |
 |---|---|
 | [layout-landscape.md](./layout-landscape.md) | 外框 1600×900、舞台 1600×788、缩放策略 |
