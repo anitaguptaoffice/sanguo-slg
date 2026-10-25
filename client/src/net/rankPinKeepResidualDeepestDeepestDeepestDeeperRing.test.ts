@@ -33,7 +33,7 @@ import {
   RANK_PIN_KEEP_RESIDUAL_RING_CLASS,
 } from "@/net/rankPinKeepResidualRing";
 
-describe("highlightRankPinKeepResidualDeepestDeepestDeepestDeeperRing (CLIENT-360)", () => {
+describe("highlightRankPinKeepResidualDeepestDeepestDeepestDeeperRing (CLIENT-360 / CLIENT-376)", () => {
   it("adds deepest-deepest-deepest-deeper ring class then removes after 3s", () => {
     const root = document.createElement("div");
     const table = document.createElement("table");

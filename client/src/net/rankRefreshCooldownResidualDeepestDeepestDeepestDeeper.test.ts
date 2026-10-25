@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepestDeeper";
 import { RANK_MANUAL_REFRESH_COOLDOWN_MS } from "@/net/rankRefreshCooldown";
 
-describe("formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp (CLIENT-360)", () => {
+describe("formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp (CLIENT-360 / CLIENT-376)", () => {
   const now = 1_700_000_000_000;
 
   it("returns empty when no manual cooldown", () => {

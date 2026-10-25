@@ -45,7 +45,7 @@ export function highlightRankPinKeepResidualDeepRing(
   return true;
 }
 
-/** 手动刷新成功：CLIENT-248 1.5s 环 + CLIENT-264 2s 深环 + CLIENT-280 2.5s 更深环 + CLIENT-296 2.5s 最深环 + CLIENT-312 3s 更深二层环 + CLIENT-328 3s 更深三层环 + CLIENT-344 3s 更深四层环 + CLIENT-360 3s 更深五层环。 */
+/** 手动刷新成功：CLIENT-248 1.5s 环 + CLIENT-264 2s 深环 + CLIENT-280 2.5s 更深环 + CLIENT-296 2.5s 最深环 + CLIENT-312 3s 更深二层环 + CLIENT-328 3s 更深三层环 + CLIENT-344 3s 更深四层环 + CLIENT-360/376 3s 更深五层环。 */
 export function pulseRankPinKeepResidualRingsAfterManualRefresh(
   rankPanelRoot: ParentNode | null | undefined,
   highlightResidualRing: (

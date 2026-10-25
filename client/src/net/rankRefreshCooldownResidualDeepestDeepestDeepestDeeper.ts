@@ -7,7 +7,7 @@ import {
 } from "@/net/rankRefreshCooldown";
 import { formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepest";
 
-/** CLIENT-360：双榜顶栏冷却 + 上次刷新 + 手动次数只读巩固再加深五层第四行（CLIENT-344/214 不退化）。 */
+/** CLIENT-360 / CLIENT-376（wave:58 轮转回主城栈巩固）：双榜顶栏冷却 + 上次刷新 + 手动次数只读巩固再加深五层第四行（CLIENT-344/214 不退化；**非** wave:57 CLIENT-369 排行密度主叙事）。 */
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE =
   "rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper";
 export const RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_STAMP_CLASS =

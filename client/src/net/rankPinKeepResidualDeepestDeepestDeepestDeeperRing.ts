@@ -1,4 +1,4 @@
-/** CLIENT-360：手动刷新后钉选行 3s 更深环（与 CLIENT-248/264/280/296/312/328/344 环 **并存**）。 */
+/** CLIENT-360 / CLIENT-376（wave:58 轮转回主城栈巩固）：手动刷新后钉选行 3s 更深环（与 CLIENT-248/264/280/296/312/328/344 环 **并存**）。 */
 export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS =
   "rank-pin-keep-residual-deepest-deepest-deepest-deeper-ring";
 export const RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_MS = 3000;
