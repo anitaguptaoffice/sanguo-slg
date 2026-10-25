@@ -110,7 +110,7 @@ import {
   MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS,
 } from "@/net/marchSubmitIntelHandoff";
 import {
-  applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeepestDeeper,
+  applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeepestDeepestDeeper,
   MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE,
 } from "@/net/marchSubmitIntelRefreshStamp";
 export type MarchListPanelOptions = {
@@ -408,7 +408,7 @@ export class MarchListPanel {
           toY: fallbackToY,
           nowMs,
         });
-        applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeepestDeeper(
+        applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeepestDeepestDeeper(
           this.panel,
           marchId,
           nowMs,

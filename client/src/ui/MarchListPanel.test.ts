@@ -485,6 +485,11 @@ describe("MarchListPanel", () => {
           "march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deeper",
         ),
       ).toBe(true);
+      expect(
+        stamp?.classList.contains(
+          "march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deepest-deeper",
+        ),
+      ).toBe(true);
     });
     const row = mount.querySelector('.march-list li[data-march-id="88"]');
     expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(true);
@@ -515,6 +520,11 @@ describe("MarchListPanel", () => {
     expect(
       subline?.classList.contains(
         "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-deeper-pulse",
+      ),
+    ).toBe(true);
+    expect(
+      subline?.classList.contains(
+        "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-deepest-deeper-pulse",
       ),
     ).toBe(true);
     vi.advanceTimersByTime(3000);
