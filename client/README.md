@@ -893,7 +893,7 @@ Vite + TypeScript 跑通引擎初始化、场景切换、占位资源与 **WebSo
 
 | 能力 | 验收小节 | 状态 |
 |---|---|---|
-| **1280 主城将领日常社交队列组合 manifest 巩固再加深四层** | [手动验收（1280 wave:54 组合 manifest 巩固再加深四层 CLIENT-347）](#手动验收1280-wave54-组合-manifest-巩固再加深四层-client-347)（[#1593](https://github.com/anitaguptaoffice/sanguo-slg/issues/1593)） | 进行中 |
+| **1280 主城将领日常社交队列组合 manifest 巩固再加深四层** | [手动验收（1280 wave:54 组合 manifest 巩固再加深四层 CLIENT-347）](#手动验收1280-wave54-组合-manifest-巩固再加深四层-client-347)（[#1593](https://github.com/anitaguptaoffice/sanguo-slg/issues/1593) / [#1601](https://github.com/anitaguptaoffice/sanguo-slg/pull/1601) `39bfa38b`） | 已合 |
 
 ### 手动验收（1280 wave:54 组合 manifest 巩固再加深四层 CLIENT-347）
 
