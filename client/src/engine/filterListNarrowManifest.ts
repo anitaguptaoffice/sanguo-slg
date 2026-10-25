@@ -545,6 +545,10 @@ export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS } 
 export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestDeeperRing";
 export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepestDeeper";
 
+/** CLIENT-384: wave:59 背包商城行内态与返回来源高亮残余巩固再加深五层（368 deepest-deepest-deepest-deeper 基线 **不退化**；1280 组合 manifest 软依赖 **CLIENT-387**）。 */
+export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestDeepestDeeperRing";
+export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepestDeepestDeeper";
+
 /** CLIENT-354: wave:55 军情 phase 变更与再出征预填残余巩固再加深四层（CLIENT-338 三层 **不退化**）。 */
 export { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestPulse";
 export { MARCH_INTEL_REMARCH_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS } from "@/net/marchIntelRemarchResidualDeepestDeepestDeepest";

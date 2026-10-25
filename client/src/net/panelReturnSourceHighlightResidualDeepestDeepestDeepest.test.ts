@@ -63,7 +63,7 @@ describe("panelReturnSourceHighlightResidualDeepestDeepestDeepest (CLIENT-352)",
     ).toBe(false);
   });
 
-  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 through CLIENT-368 classes", () => {
+  it("pulsePanelReturnSourceCategoryResidualHighlights stacks CLIENT-256 through CLIENT-384 classes", () => {
     const root = document.createElement("div");
     const tab = document.createElement("button");
     tab.setAttribute("data-shop-category", "resource");
