@@ -292,6 +292,8 @@ import {
   QUEUE_NEXT_FINISH_PREVIEW_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS,
   RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
   RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_STAMP_CLASS,
+  BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
+  PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS,
   isFilterListArtSkinOff,
   mountFilterListPanelSkins,
   PANEL_FILTER_CHIP_BAR_CLASS,
@@ -477,6 +479,12 @@ describe("filterListNarrowManifest (CLIENT-127)", () => {
     const html = readFileSync(join(repoRoot, "index.html"), "utf8");
     expect(html).toContain(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS);
     expect(html).toContain(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS);
+  });
+
+  it("CLIENT-352 exposes wave:55 bag shop inline state and panel return deepest-deepest-deepest hooks", () => {
+    const html = readFileSync(join(repoRoot, "index.html"), "utf8");
+    expect(html).toContain(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS);
+    expect(html).toContain(PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS);
   });
 
   it("CLIENT-337 exposes wave:53 rank recruit scan residual deepest-deepest-deeper hooks", () => {
