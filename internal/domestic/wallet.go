@@ -93,3 +93,14 @@ func (h *Hub) SettleCityWithProduction(ctx context.Context, id int64) (wallet, p
 	}
 	return h.cities[id].Wallet, production, nil
 }
+
+// SnapshotCity returns an isolated view; callers must not read live registered cities.
+func (h *Hub) SnapshotCity(id int64) (*CityState, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	c := h.cities[id]
+	if c == nil {
+		return nil, ErrCityNotFound
+	}
+	return cloneCity(c), nil
+}
