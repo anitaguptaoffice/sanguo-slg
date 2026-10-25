@@ -420,6 +420,13 @@ export {
   WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS,
 } from "@/engine/wave53WorldIntelBattleReportMailShopRankNarrowManifest";
 
+/** CLIENT-348: wave:55 小地图军情 scroll-sync 巩固再加深四层（CLIENT-355 manifest stub 见 wave:55 再导出）。 */
+export {
+  MINIMAP_INTEL_SCROLL_SYNC_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS,
+  WORLD_TILE_INTEL_ETA_CROSS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS,
+} from "@/engine/wave55WorldIntelBattleReportMailShopRankNarrowManifest";
+
 /** CLIENT-347: wave:54 manifest 巩固再加深四层（340～346 residual deepest-deepest-deepest 钩子见 wave:52 再导出）。 */
 export {
   DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
@@ -458,11 +465,7 @@ export {
   RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_CLASS,
 } from "@/engine/wave52MainCityHeroDailySocialQueueNarrowManifest";
 
-/** CLIENT-346: wave:54 日常 chain·队列·HUD 深链残余巩固再加深四层（330 deepest-deepest-deeper 基线 **不退化**；1280 组合 manifest 软依赖 **CLIENT-347**）。 */
-export {
-  HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_PULSE_CLASS,
-  QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS,
-} from "@/engine/wave52MainCityHeroDailySocialQueueNarrowManifest";
+/** CLIENT-346: wave:54 日常 chain·队列·HUD 深链残余巩固再加深四层 — 见 CLIENT-347 `wave54MainCityHeroDailySocialQueueNarrowManifest` 再导出（避免重复 export）。 */
 
 /** CLIENT-336: wave:53 背包商城行内态与返回来源高亮残余巩固再加深三层（320 deepest-deeper 基线 **不退化**；1280 组合 manifest 软依赖 **CLIENT-339**）。 */
 export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
@@ -522,4 +525,7 @@ export {
   RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS,
   RANK_LIST_DENSITY_SCAN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_ROLE,
 } from "@/net/rankListDensityScanResidualDeepestDeepestDeeper";
-export { RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE } from "@/net/recruitTemplateInlineResidualDeepestDeepestDeeperSummary";
+export {
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS,
+  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
+} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeeperSummary";

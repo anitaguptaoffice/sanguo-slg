@@ -113,7 +113,6 @@ import {
 } from "@/engine/wave49WorldIntelBattleReportMailShopRankNarrowManifest";
 
 /** Bottom toolbar (56px) + focus-ring slack — same as CLIENT-323 / CLIENT-331. */
-export { panelScrollClearsBottomToolbar };
 
 export const WAVE53_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX = 64;
 
@@ -322,8 +321,6 @@ export const CLIENT_339_PANEL_SCROLL_ROLE_BY_CENTER_ID: Record<
   rank: "rank-scroll",
   hero: "hero-scroll",
 };
-
-export { panelScrollClearsBottomToolbar };
 
 export function wave53PanelScrollClearsBottomToolbar(paddingBottomPx: number): boolean {
   return panelScrollClearsBottomToolbar(paddingBottomPx) && paddingBottomPx >= TOOLBAR_HEIGHT;

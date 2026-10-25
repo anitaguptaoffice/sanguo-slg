@@ -3084,6 +3084,34 @@
       .world-tile-intel-eta-cross-residual-deepest-deepest-deeper-line.world-tile-intel-eta-cross-residual-deepest-deepest-deeper-pulse {
         animation: world-tile-intel-eta-cross-residual-deepest-deepest-deeper-pulse-keyframes 1.5s ease-out 1;
       }
+      @keyframes minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring-keyframes {
+        0% { outline-offset: 0; outline: 2px solid rgba(220, 248, 255, 0); }
+        38% { outline-offset: 9px; outline: 2px solid rgba(220, 248, 255, 0.96); }
+        100% { outline-offset: 0; outline: 2px solid rgba(220, 248, 255, 0); }
+      }
+      #layout-frame.minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring {
+        animation: minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring-keyframes 1.5s ease-out 1;
+      }
+      .march-list li.minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring {
+        box-shadow: inset 0 0 0 2px rgba(220, 248, 255, 0.97);
+        animation: minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring-keyframes 1.5s ease-out 1;
+      }
+      #layout-frame.minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring.minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring,
+      .march-list li.minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring.minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring {
+        animation: minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring-keyframes 1.5s ease-out 1,
+          minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring-keyframes 1.5s ease-out 1;
+      }
+      .world-tile-intel-eta-cross-residual-deepest-deepest-deepest-line {
+        margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #3a728c;
+      }
+      .world-tile-intel-eta-cross-residual-deepest-deepest-deepest-line.hidden { display: none; }
+      @keyframes world-tile-intel-eta-cross-residual-deepest-deepest-deepest-pulse-keyframes {
+        0%, 100% { background-color: transparent; }
+        50% { background-color: rgba(228, 252, 255, 0.42); }
+      }
+      .world-tile-intel-eta-cross-residual-deepest-deepest-deepest-line.world-tile-intel-eta-cross-residual-deepest-deepest-deepest-pulse {
+        animation: world-tile-intel-eta-cross-residual-deepest-deepest-deepest-pulse-keyframes 1.5s ease-out 1;
+      }
       .world-tile-intel-eta-cross-residual-line {
         margin: 2px 0 6px; font-size: 11px; line-height: 1.4; color: #9cc8e8;
       }
@@ -5466,6 +5494,11 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="shop"] .panel-scroll-body {
         padding-bottom: 64px;
       }
+      /* CLIENT-355 wave:55 世界军情战报邮件商城排行组合 manifest 巩固再加深四层 */
+      /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring (CLIENT-348) */
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-deepest-deepest-line,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-intel-eta-cross-residual-deepest-deepest-deepest-pulse,
       /* CLIENT-339 wave:53 世界军情战报邮件商城排行组合 manifest 巩固再加深三层 */
       /* sessionStorage key minimap-viewport-intel-anchor-v1 (CLIENT-236); data-action prefill-march-form-from-intel-residual-deepest-deepest-deeper (CLIENT-338); data-action prefill-march-form-from-intel-residual-deepest-deeper (CLIENT-322) 不退化 */
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring,
@@ -6703,12 +6736,14 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deeper-ring,
+      #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="march"] .march-list li.minimap-intel-scroll-sync-residual-deepest-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-deep-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deep-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deeper-ring,
+      #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deepest-deepest-deeper-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deepest-deeper-ring,
       #layout-frame.layout-narrow.minimap-intel-scroll-sync-residual-deepest-ring,
