@@ -519,6 +519,8 @@ export {
 
 /** CLIENT-362: wave:56 日常 chain·队列·HUD 深链残余巩固再加深五层 — 见 CLIENT-347 `wave54MainCityHeroDailySocialQueueNarrowManifest` 再导出（346 deepest-deepest-deepest 基线 **不退化**）。 */
 
+/** CLIENT-378: wave:58 日常 chain·队列·HUD 深链残余巩固再加深五层 — net 层 `questChainQueueHudResidual` / `hudTodoToolbarDeepLinkResidual`；manifest 见 CLIENT-363 `wave56MainCityHeroDailySocialQueueNarrowManifest`（362 deepest-deepest-deepest-deeper 基线 **不退化**）。 */
+
 /** CLIENT-336: wave:53 背包商城行内态与返回来源高亮残余巩固再加深三层（320 deepest-deeper 基线 **不退化**；1280 组合 manifest 软依赖 **CLIENT-339**）。 */
 export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
 export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeeper";
