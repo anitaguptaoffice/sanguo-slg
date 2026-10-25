@@ -323,8 +323,6 @@ export const CLIENT_339_PANEL_SCROLL_ROLE_BY_CENTER_ID: Record<
   hero: "hero-scroll",
 };
 
-export { panelScrollClearsBottomToolbar };
-
 export function wave53PanelScrollClearsBottomToolbar(paddingBottomPx: number): boolean {
   return panelScrollClearsBottomToolbar(paddingBottomPx) && paddingBottomPx >= TOOLBAR_HEIGHT;
 }
