@@ -126,6 +126,9 @@ message ClaimQuestRewardResponse {
   PlayerQuestProgress quest = 1;
   QuestChainStatus chain = 2;
   sanguo.common.v1.RewardBundle granted_rewards = 3;
+  // Persisted player level; 0 means unknown/legacy, never a level reset.
+  // Clients apply positive values monotonically only for the same actor/session.
+  int32 player_level = 4;
 }
 
 // route: quest.v1.GetQuestChainStatus
