@@ -1,3 +1,4 @@
+import { decodeGatewayResponse } from "@/net/decodeGatewayResponse";
 import { GATEWAY_WS_URL } from "@/config";
 import {
   parseBeginHeroExprResponse,
@@ -957,7 +958,7 @@ export class GatewayClient implements GatewayPort {
       (err as Error & { code: number }).code = sp.code;
       throw err;
     }
-    return responseType.decode(sp.data);
+    return decodeGatewayResponse(responseType, sp.data);
   }
 
   private sendAndWait(packet: Uint8Array, traceId: string): Promise<ArrayBuffer> {
