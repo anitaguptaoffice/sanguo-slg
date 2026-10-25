@@ -6,6 +6,8 @@ import {
   HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_MS,
   HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS,
   HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPER_PULSE_MS,
+  HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS,
+  HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_MS,
   HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_PULSE_CLASS,
   HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_PULSE_MS,
   HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_PULSE_CLASS,
@@ -14,6 +16,7 @@ import {
   scheduleHudTodoToolbarDeepLinkResidualDeepPulse,
   scheduleHudTodoToolbarDeepLinkResidualDeeperPulse,
   scheduleHudTodoToolbarDeepLinkResidualDeepestDeeperPulse,
+  scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeeperPulse,
   scheduleHudTodoToolbarDeepLinkResidualDeepestPulse,
   scheduleHudTodoToolbarDeepLinkResidualPulse,
 } from "@/net/hudTodoToolbarDeepLinkResidual";
@@ -106,6 +109,25 @@ describe("scheduleHudTodoToolbarDeepLinkResidualDeepestDeeperPulse (CLIENT-314)"
   });
 });
 
+describe("scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeeperPulse (CLIENT-330)", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it(`applies ${HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS} for ${HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_MS}ms`, () => {
+    vi.useFakeTimers();
+    const btn = document.createElement("button");
+    scheduleHudTodoToolbarDeepLinkResidualDeepestDeepestDeeperPulse(btn);
+    expect(
+      btn.classList.contains(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS),
+    ).toBe(true);
+    vi.advanceTimersByTime(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_MS);
+    expect(
+      btn.classList.contains(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS),
+    ).toBe(false);
+  });
+});
+
 describe("pulseHudTodoToolbarDeepLinkResidual (CLIENT-250)", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -126,6 +148,9 @@ describe("pulseHudTodoToolbarDeepLinkResidual (CLIENT-250)", () => {
     );
     expect(
       btn.classList.contains(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS),
+    ).toBe(true);
+    expect(
+      btn.classList.contains(HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS),
     ).toBe(true);
   });
 });
