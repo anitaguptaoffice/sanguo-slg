@@ -36,7 +36,6 @@ import {
   queryClient323PanelRoot,
   type Client323NarrowManifestCenterPanelId,
 } from "@/engine/wave51WorldIntelBattleReportMailShopRankNarrowManifest";
-export { panelScrollClearsBottomToolbar };
 import {
   BAG_SHOP_CATEGORY_SCAN_RING_CLASS,
   BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_RING_CLASS,
@@ -113,6 +112,7 @@ import {
 } from "@/engine/wave49WorldIntelBattleReportMailShopRankNarrowManifest";
 
 /** Bottom toolbar (56px) + focus-ring slack — same as CLIENT-323 / CLIENT-331. */
+export { panelScrollClearsBottomToolbar };
 
 export const WAVE53_WORLD_INTEL_BATTLE_REPORT_MAIL_SHOP_RANK_BOTTOM_TOOLBAR_CLEARANCE_PX = 64;
 

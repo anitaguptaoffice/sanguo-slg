@@ -471,6 +471,10 @@ export {
 export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
 export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeeper";
 
+/** CLIENT-352: wave:55 背包商城行内态与返回来源高亮残余巩固再加深四层（336 deepest-deepest-deeper 基线 **不退化**；1280 组合 manifest 软依赖 **CLIENT-355**）。 */
+export { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeepestRing";
+export { PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_CLASS } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeepest";
+
 /** CLIENT-339: wave:53 manifest 巩固再加深三层（332～338 residual deepest-deepest-deeper 钩子见 wave:51 再导出；bag/panel 三层由 CLIENT-336 @/net 再导出）。 */
 export {
   BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SWEEP_CLASS,
