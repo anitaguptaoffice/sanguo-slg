@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	contentv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/content/v1"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	rankv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/rank/v1"
@@ -23,9 +23,9 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
+	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
-	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -120,6 +120,7 @@ func reopenDBPool(t *testing.T) *pgxpool.Pool {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(pool.Close)
 	return pool
 }
 
@@ -161,7 +162,10 @@ func startData002SmokeGateway(t *testing.T, log *slog.Logger, pool *pgxpool.Pool
 	syncClk := &api.SmokeSyncClock{T: time.Now()}
 	domHub := domestic.NewHub(syncClk.Now)
 	domHub.UseStore(domestic.NewPGStore(pool), intg006ServerID, 0)
-	apiSrv := api.NewServer(log, pool, world.NewService(worldStore), domHub, march.NewHub(syncClk.Now))
+	milHub := march.NewHub(syncClk.Now)
+	reports := api.WireM2Combat(intg006ServerID, pool, milHub)
+	apiSrv := api.NewServer(log, pool, world.NewService(worldStore), domHub, milHub)
+	apiSrv.AttachBattleReports(reports)
 	apiSrv.SetClock(syncClk.Now)
 	apiSrv.BindSmokeSyncClock(syncClk)
 	if err := apiSrv.WireM4Content(ctx); err != nil {

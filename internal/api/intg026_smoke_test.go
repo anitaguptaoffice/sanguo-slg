@@ -13,8 +13,8 @@ import (
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -127,6 +127,25 @@ func runINTG026SmokePath(t *testing.T, beforeRestart intg026BeforeRestartHook) {
 	if beforeRestart != nil {
 		beforeRestart(t, ctx, c, apiSrv, pool, sid, playerID, cityID)
 	}
+
+	// Later wave scenarios legitimately grant/consume items, grant gold and buy
+	// offers after the original INTG-008 snapshot. Capture the exact final
+	// persisted values before restart; never read the expected values after it.
+	// Keep the original quest, mute and hero expectations, and all scenario
+	// assertions above, rather than treating an old wallet as the final wallet.
+	finalState, err := readData002Snapshot(ctx, pool, playerID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if finalState.QuestState != want.Base.QuestState {
+		t.Fatalf("quest changed before restart: got=%d want=%d", finalState.QuestState, want.Base.QuestState)
+	}
+	want.Base.Bag2001 = finalState.Bag2001
+	want.Bag2001 = finalState.Bag2001
+	want.Base.Bag2003 = finalState.Bag2003
+	want.Base.Gold = finalState.Gold
+	want.Base.ShopDailyBought = finalState.ShopDailyBought
+	t.Logf("pre-restart final wallet/item snapshot: %+v", finalState)
 
 	ts.Close()
 	_ = c.Close()
