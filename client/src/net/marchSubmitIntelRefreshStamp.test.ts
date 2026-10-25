@@ -6,6 +6,7 @@ import {
   applyMarchSubmitIntelRefreshStampResidualDeeper,
   applyMarchSubmitIntelRefreshStampResidualDeepest,
   applyMarchSubmitIntelRefreshStampResidualDeepestDeeper,
+  applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeeper,
   formatMarchSubmitIntelRefreshStampLine,
   INTEL_LIST_REFRESH_MARCH_PULSE_CLASS,
   INTEL_LIST_REFRESH_MARCH_SUBLINE_PULSE_CLASS,
@@ -25,7 +26,10 @@ import {
   MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_MS,
   MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPER_CLASS,
   MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPER_MS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS,
+  MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_MS,
   MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE,
+  INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS,
 } from "@/net/marchSubmitIntelRefreshStamp";
 import { INTEL_ROW_PHASE_SUBLINE_CLASS } from "@/net/marchIntelPhaseEtaStrip";
 
@@ -241,6 +245,45 @@ describe("marchSubmitIntelRefreshStamp (CLIENT-238)", () => {
     ).toBe(false);
     expect(
       subline.classList.contains(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS),
+    ).toBe(false);
+    vi.useRealTimers();
+  });
+
+  it("applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeeper extends stamp and subline deepest-deepest-deeper pulse for 3s (CLIENT-333)", () => {
+    vi.useFakeTimers();
+    const root = document.createElement("div");
+    root.innerHTML = `
+      <p class="hidden" data-role="${MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE}"></p>
+      <ul class="march-list">
+        <li data-march-id="16">
+          <span class="${INTEL_ROW_PHASE_SUBLINE_CLASS}">行军中</span>
+        </li>
+      </ul>
+    `;
+    const stamp = root.querySelector(`[data-role="${MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE}"]`)!;
+    const subline = root.querySelector(`.${INTEL_ROW_PHASE_SUBLINE_CLASS}`)!;
+
+    applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeeper(root, 16, Date.now());
+    expect(stamp.classList.contains(MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPER_CLASS)).toBe(
+      true,
+    );
+    expect(
+      stamp.classList.contains(MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS),
+    ).toBe(true);
+    expect(subline.classList.contains(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(
+      true,
+    );
+    expect(
+      subline.classList.contains(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS),
+    ).toBe(true);
+
+    vi.advanceTimersByTime(MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_MS);
+    expect(stamp.classList.contains("hidden")).toBe(true);
+    expect(
+      stamp.classList.contains(MARCH_SUBMIT_INTEL_REFRESH_STAMP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_CLASS),
+    ).toBe(false);
+    expect(
+      subline.classList.contains(INTEL_LIST_REFRESH_MARCH_SUBLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_PULSE_CLASS),
     ).toBe(false);
     vi.useRealTimers();
   });
