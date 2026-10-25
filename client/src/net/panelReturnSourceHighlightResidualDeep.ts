@@ -5,6 +5,7 @@ import {
 import { highlightPanelReturnSourceCategoryResidualDeeper } from "@/net/panelReturnSourceHighlightResidualDeeper";
 import { highlightPanelReturnSourceCategoryResidualDeepest } from "@/net/panelReturnSourceHighlightResidualDeepest";
 import { highlightPanelReturnSourceCategoryResidualDeepestDeeper } from "@/net/panelReturnSourceHighlightResidualDeepestDeeper";
+import { highlightPanelReturnSourceCategoryResidualDeepestDeepestDeeper } from "@/net/panelReturnSourceHighlightResidualDeepestDeepestDeeper";
 
 /** CLIENT-272：自排行/军情返回时分类 tab/chip **加深** 高亮（2.5s；CLIENT-256 2s **并存**）。 */
 export const PANEL_RETURN_SOURCE_HIGHLIGHT_RESIDUAL_DEEP_CLASS =
@@ -45,7 +46,7 @@ export function highlightPanelReturnSourceCategoryResidualDeep(
   return true;
 }
 
-/** CLIENT-256 残余高亮 + CLIENT-272 加深 + CLIENT-288 再深 + CLIENT-304 巩固再加深一层 + CLIENT-320 巩固再加深二层（CLIENT-211 行返回不退化）。 */
+/** CLIENT-256 残余高亮 + CLIENT-272 加深 + CLIENT-288 再深 + CLIENT-304 巩固再加深一层 + CLIENT-320 巩固再加深二层 + CLIENT-336 巩固再加深三层（CLIENT-211 行返回不退化）。 */
 export function pulsePanelReturnSourceCategoryResidualHighlights(
   tab: HTMLElement | null | undefined,
   panelRoot: ParentNode | null | undefined,
@@ -61,6 +62,7 @@ export function pulsePanelReturnSourceCategoryResidualHighlights(
   highlightPanelReturnSourceCategoryResidualDeeper(tab, panelRoot, windowObj);
   highlightPanelReturnSourceCategoryResidualDeepest(tab, panelRoot, windowObj);
   highlightPanelReturnSourceCategoryResidualDeepestDeeper(tab, panelRoot, windowObj);
+  highlightPanelReturnSourceCategoryResidualDeepestDeepestDeeper(tab, panelRoot, windowObj);
   return highlighted;
 }
 

@@ -15,6 +15,7 @@ import {
 } from "@/net/bagShopInlineStateResidualDeep";
 import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestRing";
 import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeeperRing";
+import { BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/bagShopInlineStateResidualDeepestDeepestDeeperRing";
 
 describe("bagShopInlineStateResidualDeeperRing (CLIENT-288)", () => {
   it("scheduleBagShopInlineStateResidualDeeperRing adds class then removes after 2s", () => {
@@ -34,7 +35,7 @@ describe("bagShopInlineStateResidualDeeperRing (CLIENT-288)", () => {
     expect(el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_CLASS)).toBe(false);
   });
 
-  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-320 rings", () => {
+  it("pulseBagShopInlineStateResidualRings stacks CLIENT-256 through CLIENT-336 rings", () => {
     const el = document.createElement("span");
     const timeouts: Array<{ fn: () => void; ms: number }> = [];
     const windowObj = {
@@ -52,6 +53,9 @@ describe("bagShopInlineStateResidualDeeperRing (CLIENT-288)", () => {
     expect(el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPER_RING_CLASS)).toBe(
       true,
     );
+    expect(
+      el.classList.contains(BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
+    ).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_RING_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEP_RING_MS)).toBe(true);
     expect(timeouts.some((t) => t.ms === BAG_SHOP_INLINE_STATE_RESIDUAL_DEEPER_RING_MS)).toBe(true);
