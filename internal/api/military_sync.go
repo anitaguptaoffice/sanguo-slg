@@ -20,6 +20,9 @@ func marchWalletToDom(w march.Resources) domestic.Resources {
 // ensureMilitaryCity registers a military city once. Wallet mutations belong to
 // RecruitWithWallet, never to an unlocked cache-snapshot assignment.
 func (s *Server) ensureMilitaryCity(dom *domestic.CityState) *march.CityState {
+	if dom == nil || s.military == nil {
+		return nil
+	}
 	return s.military.EnsureCity(&march.CityState{
 		ID: dom.ID, PlayerID: dom.PlayerID, Troops: make(map[int32]int32),
 	})

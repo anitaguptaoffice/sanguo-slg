@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
@@ -37,6 +38,7 @@ type clockFunc func() time.Time
 
 // Server wires account, world, and domestic behind the WebSocket gateway.
 type Server struct {
+	citiesMu sync.RWMutex
 	log      *slog.Logger
 	account  *account.Service
 	players  *PlayerStore

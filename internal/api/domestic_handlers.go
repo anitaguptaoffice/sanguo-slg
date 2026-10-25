@@ -32,7 +32,7 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 		}
 		return nil, err
 	}
-	city := s.cities[req.GetCityId()]
+	city := s.citySnapshot(req.GetCityId())
 	level := int32(1)
 	if city != nil {
 		if inst := city.Buildings[req.GetSlotKey()]; inst != nil {
@@ -57,7 +57,7 @@ func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.C
 	if err != nil {
 		return nil, err
 	}
-	if city := s.cities[req.GetCityId()]; city != nil {
+	if city := s.citySnapshot(req.GetCityId()); city != nil {
 		s.questFlushBuildCompletions(ctx, pc.ServerID, city.PlayerID, city)
 	}
 	return okResp(pkt.GetTraceId(), data), nil
@@ -72,13 +72,14 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	city := s.cities[req.GetCityId()]
+	city := s.citySnapshot(req.GetCityId())
 	if city == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
 	if err := s.accrueCityWithQuest(ctx, pc.ServerID, city); err != nil {
 		return nil, err
 	}
+	city = s.citySnapshot(req.GetCityId())
 	s.questFlushBuildCompletions(ctx, pc.ServerID, city.PlayerID, city)
 	finishBySlot := domestic.ActiveUpgradeFinishBySlot(city)
 	buildings := make([]*apicommon.CityBuilding, 0, len(city.Buildings))

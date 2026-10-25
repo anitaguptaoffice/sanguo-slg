@@ -160,6 +160,8 @@ func TestHeroGatewaySetAndClearCityChief(t *testing.T) {
 			cityID: {ID: cityID, PlayerID: 7},
 		},
 	}
+	s.domestic = domestic.NewHub(nil)
+	s.domestic.RegisterCity(s.cities[cityID])
 	s.sessions.Bind("sess-chief", PlayerContext{ServerID: 1, PlayerID: 7})
 	h := &hero.Hero{ServerID: 1, HeroID: 11, PlayerID: 7, TemplateCfgID: 1001, Status: hero.StatusIdle, Loyalty: 90}
 	if err := heroSvc.Store.SaveHero(ctx, h); err != nil {
