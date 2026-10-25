@@ -4810,6 +4810,11 @@
         border-top-color: #ffffff;
         box-shadow: 0 0 30px rgba(255, 255, 255, 0.95);
       }
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-deeper-sweep::before,
+      .chat-unread-separator.guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-deeper-sweep::after {
+        border-top-color: #ffffff;
+        box-shadow: 0 0 34px rgba(255, 255, 255, 1);
+      }
       .chat-msg.guild-chat-unread-first-msg-sweep-ring {
         outline: 2px solid #c9a227; outline-offset: 1px;
         animation: guild-chat-unread-first-msg-sweep-ring-keyframes 1.2s ease-out 1;
@@ -4841,6 +4846,10 @@
       .chat-msg.guild-chat-unread-first-msg-deepest-deepest-deepest-deeper-sweep-ring {
         outline: 2px solid #ffffff; outline-offset: 8px;
         animation: guild-chat-unread-first-msg-deepest-deepest-deepest-deeper-sweep-ring-keyframes 2.5s ease-out 1;
+      }
+      .chat-msg.guild-chat-unread-first-msg-deepest-deepest-deepest-deepest-deeper-sweep-ring {
+        outline: 2px solid #ffffff; outline-offset: 9px;
+        animation: guild-chat-unread-first-msg-deepest-deepest-deepest-deepest-deeper-sweep-ring-keyframes 2.5s ease-out 1;
       }
       @keyframes guild-chat-unread-first-msg-sweep-ring-keyframes {
         0% { outline-color: #f0c674; }
@@ -4874,6 +4883,10 @@
         0% { outline-color: #ffffff; outline-width: 9px; }
         100% { outline-color: transparent; outline-width: 2px; }
       }
+      @keyframes guild-chat-unread-first-msg-deepest-deepest-deepest-deepest-deeper-sweep-ring-keyframes {
+        0% { outline-color: #ffffff; outline-width: 10px; }
+        100% { outline-color: transparent; outline-width: 2px; }
+      }
       .guild-duty-header-residual-deep-line {
         color: #d4c4a0;
       }
@@ -4893,6 +4906,12 @@
         color: #fcfaf6;
       }
       .guild-duty-header-residual-deepest-deepest-deepest-deeper-line {
+        color: #ffffff;
+      }
+      /* CLIENT-377 wave:58 军团职务头与聊天未读分隔扫读巩固再加深五层 */
+      /* manifest: guild-duty-header-residual-deepest-deepest-deepest-deepest-deepest-line */
+      /* manifest: guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-deepest-sweep */
+      .guild-duty-header-residual-deepest-deepest-deepest-deepest-deeper-line {
         color: #ffffff;
       }
       .guild-role-chip {
@@ -6620,8 +6639,10 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] [data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest"],
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deepest-deepest-deepest-ring,
       #layout-frame.layout-narrow .content-panel[data-center-panel="rank"] .rank-list li.rank-pin-keep-residual-deepest-deepest-deepest-ring,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-deepest-deepest-deepest-deeper-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-deepest-deepest-deepest-line,
       #layout-frame.layout-narrow .social-panel[data-center-panel="guild"] .guild-duty-header-residual-deepest-deepest-deepest-line,
+      #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-deeper-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .social-panel[data-center-panel="chat"] .chat-log li.guild-chat-unread-divider-residual-deepest-deepest-deepest-sweep,
       #layout-frame.layout-narrow .content-panel[data-center-panel="daily"] .daily-quest-list .quest-chain-queue-hud-residual-deepest-deepest-deepest-deepest-subline,
