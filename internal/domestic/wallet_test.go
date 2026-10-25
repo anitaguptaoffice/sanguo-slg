@@ -36,7 +36,6 @@ func TestWalletOperationRollback(t *testing.T) {
 		t.Fatal(c.Wallet, err)
 	}
 }
-
 func TestPGWalletAuthority(t *testing.T) {
 	pool := openDomesticTestDB(t)
 	ctx := context.Background()
@@ -56,7 +55,11 @@ func TestPGWalletAuthority(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer p.Close()
-	defer p.Exec(ctx, "DROP SCHEMA "+schema+" CASCADE")
+	defer func() {
+		if _, err := p.Exec(ctx, "DROP SCHEMA "+schema+" CASCADE"); err != nil {
+			t.Error(err)
+		}
+	}()
 	applyDomesticSchema(t, p)
 	now := time.Unix(1700000000, 0)
 	h := NewHub(func() time.Time { return now })
@@ -83,7 +86,9 @@ func TestPGWalletAuthority(t *testing.T) {
 	if err == nil || c.Wallet.Food != 1620 {
 		t.Fatal(c.Wallet, err)
 	}
-	p.Exec(ctx, "ALTER TABLE city_building DROP CONSTRAINT reject_save")
+	if _, err := p.Exec(ctx, "ALTER TABLE city_building DROP CONSTRAINT reject_save"); err != nil {
+		t.Fatal(err)
+	}
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		wg.Add(2)
