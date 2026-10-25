@@ -32,6 +32,12 @@ export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_CLASS =
 export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_ROLE =
   "daily-quest-chain-queue-hud-residual-deepest-subline";
 
+/** CLIENT-314：可领日常行 chain·队列·HUD 深链 **巩固再加深二层** 第五行（CLIENT-298/218 **不退化**）。 */
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS =
+  "daily-quest-chain-queue-hud-residual-deepest-deeper-subline";
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE =
+  "daily-quest-chain-queue-hud-residual-deepest-deeper-subline";
+
 export function formatQuestChainQueueHudResidualQueueEtaSnippet(
   finishAtMs: number,
   nowMs: number,
@@ -169,6 +175,70 @@ export function formatQuestChainQueueHudResidualDeepestSubline(
     chainHint ?? dailyQuestChainTabLabel(q.chain_id ?? DAILY_QUEST_CHAIN_ID);
   const deepenLayer = `巩固再加深一层 · ${chainPart} ↔ ${eta}`;
   return `${deepenLayer} · 对照 ${deeper}`;
+}
+
+/**
+ * 可领日常行：CLIENT-298 巩固再加深一层第四行 + chain 类型 ↔ 队列下一完成 ETA **巩固再加深二层** 第五行。
+ */
+export function formatQuestChainQueueHudResidualDeepestDeeperSubline(
+  q: DailyQuestRow,
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[] | undefined,
+  slotLabels: Record<string, string>,
+  dailyRows: QuestRow[],
+  nowMs = Date.now(),
+): string | null {
+  const deepest = formatQuestChainQueueHudResidualDeepestSubline(
+    q,
+    buildings,
+    recruits,
+    slotLabels,
+    dailyRows,
+    nowMs,
+  );
+  if (!deepest) return null;
+  const chainHint = formatQuestChainTypeSubline(q);
+  const residual = formatQuestChainQueueHudResidualSubline(
+    q,
+    buildings,
+    recruits,
+    slotLabels,
+    dailyRows,
+    nowMs,
+  );
+  if (!residual) return null;
+  const eta = residual.includes(" · ")
+    ? residual.slice(residual.indexOf(" · ") + 3)
+    : residual;
+  const chainPart =
+    chainHint ?? dailyQuestChainTabLabel(q.chain_id ?? DAILY_QUEST_CHAIN_ID);
+  const deepenLayer = `巩固再加深二层 · ${chainPart} ↔ ${eta}`;
+  return `${deepenLayer} · 对照 ${deepest}`;
+}
+
+export function appendQuestChainQueueHudResidualDeepestDeeperSubline(
+  li: HTMLElement,
+  q: DailyQuestRow,
+  buildings: CityBuilding[] | undefined,
+  recruits: RecruitQueueEntry[] | undefined,
+  slotLabels: Record<string, string>,
+  dailyRows: QuestRow[],
+  nowMs = Date.now(),
+): void {
+  const text = formatQuestChainQueueHudResidualDeepestDeeperSubline(
+    q,
+    buildings,
+    recruits,
+    slotLabels,
+    dailyRows,
+    nowMs,
+  );
+  if (!text) return;
+  const span = document.createElement("span");
+  span.className = DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS;
+  span.setAttribute("data-role", DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE);
+  span.textContent = text;
+  li.appendChild(span);
 }
 
 export function appendQuestChainQueueHudResidualDeepestSubline(
