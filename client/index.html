@@ -1176,6 +1176,14 @@
       .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deeper-ring {
         animation: report-list-keyboard-adjacent-nav-residual-deeper-ring-keyframes 2.5s ease-out 1;
       }
+      /* CLIENT-302 adjacent keyboard nav residual deepest ring (CLIENT-286 deeper ring retained) */
+      @keyframes report-list-keyboard-adjacent-nav-residual-deepest-ring-keyframes {
+        0% { box-shadow: inset 0 0 0 0 rgba(201, 162, 39, 0.96); }
+        100% { box-shadow: inset 0 0 0 14px rgba(201, 162, 39, 0); }
+      }
+      .battle-report-list li.report-list-keyboard-adjacent-nav-residual-deepest-ring {
+        animation: report-list-keyboard-adjacent-nav-residual-deepest-ring-keyframes 2.5s ease-out 1;
+      }
       .battle-report-list li[data-report-id].art-filter-row--skinned {
         background: transparent;
       }
@@ -1319,6 +1327,15 @@
       .battle-report-coord-copy-bar.battle-report-coord-copy-bar-residual-deeper-sweep {
         animation: battle-report-coord-copy-bar-residual-deeper-sweep-keyframes 2.5s ease-out 1;
         border-color: #e0c04a;
+      }
+      /* CLIENT-302 coord copy bar residual deepest sweep (CLIENT-286 deeper sweep retained) */
+      @keyframes battle-report-coord-copy-bar-residual-deepest-sweep-keyframes {
+        0% { box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.86); }
+        100% { box-shadow: 0 0 0 16px rgba(201, 162, 39, 0); }
+      }
+      .battle-report-coord-copy-bar.battle-report-coord-copy-bar-residual-deepest-sweep {
+        animation: battle-report-coord-copy-bar-residual-deepest-sweep-keyframes 2.5s ease-out 1;
+        border-color: #ebd65a;
       }
       .battle-report-detail-nav {
         display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
