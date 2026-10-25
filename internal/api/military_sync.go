@@ -17,22 +17,10 @@ func marchWalletToDom(w march.Resources) domestic.Resources {
 	return domestic.Resources{Food: w.Food, Wood: w.Wood, Stone: w.Stone, Iron: w.Iron}
 }
 
-// ensureMilitaryCity registers march city state and mirrors wallet from domestic (source of truth).
+// ensureMilitaryCity registers a military city once. Wallet mutations belong to
+// RecruitWithWallet, never to an unlocked cache-snapshot assignment.
 func (s *Server) ensureMilitaryCity(dom *domestic.CityState) *march.CityState {
-	mc := s.military.City(dom.ID)
-	if mc == nil {
-		mc = &march.CityState{
-			ID:       dom.ID,
-			PlayerID: dom.PlayerID,
-			Troops:   make(map[int32]int32),
-		}
-		s.military.RegisterCity(mc)
-	}
-	mc.PlayerID = dom.PlayerID
-	mc.Wallet = domWalletToMarch(dom.Wallet)
-	return mc
-}
-
-func (s *Server) syncDomesticWalletFromMarch(dom *domestic.CityState, w march.Resources) {
-	dom.Wallet = marchWalletToDom(w)
+	return s.military.EnsureCity(&march.CityState{
+		ID: dom.ID, PlayerID: dom.PlayerID, Troops: make(map[int32]int32),
+	})
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -71,7 +70,7 @@ func (w *pgShopWallet) Spend(ctx context.Context, player content.PlayerRef, cost
 	if err := tx.Commit(ctx); err != nil {
 		return content.ResourceWallet{}, err
 	}
-	w.srv.syncDomesticWalletFromShard(player.ServerID, player.PlayerID, after)
+	w.srv.refreshDomesticWalletAfterCommit(ctx, player.ServerID, player.PlayerID)
 	return after, nil
 }
 
@@ -88,20 +87,20 @@ func (w *pgShopWallet) readWallet(ctx context.Context, player content.PlayerRef)
 	return have, err
 }
 
-func (s *Server) syncDomesticWalletFromShard(serverID int32, playerID int64, w content.ResourceWallet) {
-	if s == nil {
+// refreshDomesticWalletAfterCommit never turns an already committed debit/grant
+// into a failed operation: callers must not retry money movement on cache failure.
+// The next domestic operation refreshes again before settling or spending.
+func (s *Server) refreshDomesticWalletAfterCommit(ctx context.Context, serverID int32, playerID int64) {
+	if s == nil || s.domestic == nil || s.players == nil || s.players.Pool == nil {
 		return
 	}
-	res := domestic.Resources{Food: w.Food, Wood: w.Wood, Iron: w.Iron, Stone: w.Stone}
 	for _, city := range s.cities {
 		if city == nil || city.PlayerID != playerID {
 			continue
 		}
-		city.Wallet = res
-		if s.military != nil {
-			if mc := s.military.City(city.ID); mc != nil {
-				mc.Wallet = domWalletToMarch(res)
-			}
+		if _, err := s.domestic.RefreshWallet(ctx, city.ID); err != nil {
+			s.log.Error("wallet committed; domestic refresh deferred", "server_id", serverID,
+				"player_id", playerID, "city_id", city.ID, "error", err)
 		}
 	}
 }

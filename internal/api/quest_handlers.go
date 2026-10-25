@@ -119,6 +119,7 @@ func (s *Server) handleClaimQuestReward(ctx context.Context, pkt *commonv1.Clien
 	if err != nil {
 		return questErr(pkt.GetTraceId(), err), nil
 	}
+	s.refreshDomesticWalletAfterCommit(ctx, pc.ServerID, pc.PlayerID)
 	data, err := marshal(&questv1.ClaimQuestRewardResponse{
 		Quest:           questProgressToProto(q),
 		Chain:           questChainToProto(chain),

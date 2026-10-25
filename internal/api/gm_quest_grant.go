@@ -21,7 +21,7 @@ func (s *Server) GmGrantRewardWithQuestHooks(ctx context.Context, audit GmAudit,
 	if err != nil {
 		return res, grant, err
 	}
-	s.syncDomesticWalletFromShard(serverID, playerID, after)
+	s.refreshDomesticWalletAfterCommit(ctx, serverID, playerID)
 	s.questAfterResourceGain(ctx, serverID, playerID, walletToDomestic(before), walletToDomestic(after))
 	return res, grant, nil
 }

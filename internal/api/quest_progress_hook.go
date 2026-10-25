@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
@@ -64,13 +63,18 @@ func resourceDeltas(before, after domestic.Resources) map[string]int64 {
 	}
 }
 
-func (s *Server) accrueCityWithQuest(ctx context.Context, serverID int32, city *domestic.CityState, cat map[int32]domestic.BuildingSpec, now time.Time) {
+func (s *Server) accrueCityWithQuest(ctx context.Context, serverID int32, city *domestic.CityState) error {
 	if city == nil {
-		return
+		return domestic.ErrCityNotFound
 	}
-	before := city.Wallet
-	accrue(city, cat, now)
-	s.questAfterResourceGain(ctx, serverID, city.PlayerID, before, city.Wallet)
+	// Domestic reports production measured under the same wallet row lock;
+	// concurrent external grants must not count as production a second time.
+	_, production, err := s.domestic.SettleCityWithProduction(ctx, city.ID)
+	if err != nil {
+		return err
+	}
+	s.questAfterResourceGain(ctx, serverID, city.PlayerID, domestic.Resources{}, production)
+	return nil
 }
 
 func (s *Server) questAfterTrainTroops(ctx context.Context, serverID int32, playerID int64, unitCfgID, count int32) {

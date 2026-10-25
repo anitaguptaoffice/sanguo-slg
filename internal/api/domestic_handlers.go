@@ -76,7 +76,9 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	if city == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	s.accrueCityWithQuest(ctx, pc.ServerID, city, domestic.DefaultCatalog(), s.now())
+	if err := s.accrueCityWithQuest(ctx, pc.ServerID, city); err != nil {
+		return nil, err
+	}
 	s.questFlushBuildCompletions(ctx, pc.ServerID, city.PlayerID, city)
 	finishBySlot := domestic.ActiveUpgradeFinishBySlot(city)
 	buildings := make([]*apicommon.CityBuilding, 0, len(city.Buildings))
