@@ -135,6 +135,21 @@ export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPER_SUBLINE_ROLE =
 export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPER_PULSE_CLASS =
   "hud-todo-toolbar-deep-link-residual-deeper-pulse";
 
+/** CLIENT-298: daily chain + queue ETA HUD residual deepest subline (manifest selector). */
+export const QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_CLASS =
+  "quest-chain-queue-hud-residual-deepest-subline";
+
+/** CLIENT-298: DOM class aligned with daily-quest row renderers (parallel CLIENT-298 net). */
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_CLASS =
+  "daily-quest-chain-queue-hud-residual-deepest-subline";
+
+export const DAILY_QUEST_CHAIN_QUEUE_HUD_RESIDUAL_DEEPEST_SUBLINE_ROLE =
+  "daily-quest-chain-queue-hud-residual-deepest-subline";
+
+/** CLIENT-298: HUD todo toolbar deep-link residual deepest pulse. */
+export const HUD_TODO_TOOLBAR_DEEP_LINK_RESIDUAL_DEEPEST_PULSE_CLASS =
+  "hud-todo-toolbar-deep-link-residual-deepest-pulse";
+
 /** Wave:44 / wave:42 baselines that must not regress alongside wave:46 residual deeper hooks. */
 export {
   DOMESTIC_QUEUE_COMPLETE_FOCUS_RESIDUAL_DEEP_RING_CLASS,
