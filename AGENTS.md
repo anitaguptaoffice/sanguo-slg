@@ -1,6 +1,6 @@
 # AGENTS.md
 
-多 agent 协作约定。任何接入本仓库的 agent 必须先读这份文件，再读 `tasks/backlog.yml` 里自己那张卡。
+多 agent 协作约定。任何接入本仓库的 agent 必须先读这份文件，再读自己的权威任务卡（`tasks/backlog.yml`；接手阶段限定手工卡见第二节）。
 
 **复刻项目**：原版资料只读，用法与边界见 [`docs/reference.md`](docs/reference.md)。**禁止合并** PR #77、#82。实现时规则看 `server/`、流程看 `swf/`、数值看 `db/`、视觉看 `art/`；不要把原版代码、文案或美术复制进主树（`internal/`、`client/assets` 等）。
 
@@ -8,7 +8,7 @@
 
 | 内容 | 位置 | 谁可以改 |
 |---|---|---|
-| 任务卡 | `tasks/backlog.yml` | 仅人工 / 编排者 |
+| 任务卡 | `tasks/backlog.yml`；第二节限定手工卡以其 GitHub issue 为真源 | 仅人工 / 编排者 |
 | 接口契约 | `spec/proto/` `spec/db/` | 只能通过独立 PR 修改，需 review |
 | 规则说明 | `spec/rules/` | 对应域 agent |
 | 代码 | `internal/<domain>/` | 该域 agent，其他人只读 |
@@ -16,6 +16,19 @@
 **跨域改动一律禁止。** 需要别的域配合时，提 issue 或在 PR 里说明，不要直接改别人的目录。
 
 ## 二、领任务
+
+### 接手阶段限定手工注册（普通单域卡）
+
+- 仅对用户已授权的本项目后续工程修复、已确认的原创美术及其独立接入，由编排者在 GitHub 手工建立自包含任务 issue；遵守 [接手约定](docs/SUCCESSOR-POLICY-2026-10-26.md) 的范围与保留限制。不新增 wave，不恢复旧 bot；此入口不授予全仓自动改动、范围外功能、部署或新的外部权限。
+- 这类卡以其唯一 GitHub issue 为**权威注册**，无需再写入 backlog 或触发同步；这是第一节与 [任务说明](tasks/README.md) 中 backlog 真源规则的限定例外，优先于“所有卡必须来自 backlog”的泛称。backlog 已登记卡仍以 backlog 为真源，不能用手工副本覆盖；注册前核对 backlog 与现有 issue 的 ID、scope 和负责人，避免重复卡及并发写入冲突。
+- issue 标题用 `[全局唯一任务 ID] 标题`；正文必须写明授权依据、目标、单一 domain / owner_dir、精确文件 scope / out_of_scope、改动 ≤400 行、输入契约与参照链接、依赖任务 / PR 及解除阻断条件、可验证验收、负责人和状态。无依赖须明确写无；字段不全不得开工。
+- 领卡前确认依赖与同域并发写入者，记录唯一负责人；同文件或共享写入边界有冲突时先协调、阻断依赖卡。状态沿用第六节标签，并在 issue 保持负责人和状态一致；无 wave 的手工卡按 ID / domain 查询，不使用下方 wave:1 筛选来判断是否存在。
+- issue 与 draft PR 双向链接，PR 关联 `Closes #...`；保留原始 source commit / tree、修正 commit、最终 PR head / 合并 commit 的映射和精确测试证据（无既有源时明确写新实现）。本地工作或源 commit 不等于已注册，不追认旧历史已履行领卡 / PR 流程。
+- 一卡一 PR、单域、≤400 行及第四至七节要求不变；所有 `spec/` 变更（含 rules-only）先走独立 SPEC-only PR、独立 review，满足适用契约冻结 / 通知门槛后再推进依赖实现。每个最终组件及依赖组合均须审阅和验证，不发布已知有缺陷的中间态；共同启用的写入者须协调兼容性与回滚边界。
+- 精确最终 head 须通过独立 review、全部必需 CI 与适用单测 / 集成 / 真实验收；基线或内容变更重核 review 并重跑受影响验证。合并后核验 main / push CI；源码合并不等于部署或生产验收，迁移、排空等部署门槛单独保留。历史 reference / art / VERIFY hold（含 #77 / #82 / #108）不合并，也不借新卡搬运规避。
+- 此入口只调整注册组织方式，不修改 `tasks/backlog.yml`、同步工具 / 工作流、CODEOWNERS、分支保护、权限或安全门槛；不触发旧波次同步。第三节一次性接收栈及其累计 diff 例外不扩展至这些普通卡；遇到真实门槛阻断仍报告并解决，不以本节作豁免。
+
+以下命令仅示例 backlog 的 wave:1 领卡；手工卡使用其准确 issue 编号，仍遵守认领和状态规则。
 
 ```bash
 # 看有哪些可领的

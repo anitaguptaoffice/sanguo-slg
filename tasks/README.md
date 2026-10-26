@@ -2,16 +2,23 @@
 
 > **接手阶段（2026-10-26）**：旧 bot 的 wave:59 停工不禁止新编排者建立独立工程 / 美术卡或 contract。仍由编排者维护任务真源，保留 scope、依赖与审阅测试门槛；详见 [接手阶段工作约定](../docs/SUCCESSOR-POLICY-2026-10-26.md)，尤其是旧 `tasks-sync` 手动入口与全量同步风险。下文波次表保留历史记录。
 
-`backlog.yml` 是任务清单的唯一真源。改完执行：
+## 任务注册真源与优先级
+
+- `backlog.yml` 是其中已登记任务的唯一真源；[AGENTS 第二节](../AGENTS.md#二领任务) 的**接手阶段限定手工注册**是明确例外：仅用户已授权的本项目后续工程修复、已确认原创美术及其独立接入，以编排者建立的唯一 GitHub issue 为权威任务卡，无需写入 backlog。该限定规则优先于历史“backlog 是全部任务唯一真源”的泛称，其余既有要求不变。
+- 手工卡不新增 wave、不触发同步；注册前核对 backlog / 现有 issue，不能重复 ID、覆盖 backlog 卡或与其他负责人并发冲突。标题 `[任务 ID] 标题`；正文自包含授权依据、目标、单一 domain / owner_dir、精确 scope / out_of_scope、≤400 行、输入契约和参照链接、依赖 / 解除阻断条件、可验证验收、负责人 / 状态。状态使用下述标签，按 ID / domain 查找。
+- issue 与 draft PR 双向链接，记录 source commit / tree、修正来源、最终 head / 合并 commit 与验证证据；无既有源注明新实现。不追认历史合规。一卡一 PR、单域 ≤400 行、独立 SPEC-first / review、契约冻结、必需 CI / 适用测试、并发写入协调和完整依赖验收均不放宽，不发布已知坏中间态。源码合并与部署验收分开；原版只读及历史 reference / art / VERIFY hold 保持。
+- 本例外不修改 backlog、同步工具 / 工作流、CODEOWNERS、保护或权限，不授权全仓改动、新范围或安全豁免；字段细则和阻断处理以 AGENTS 为准，工作范围仍受 [接手约定](../docs/SUCCESSOR-POLICY-2026-10-26.md) 约束。
+
+以下同步说明仅适用于 backlog 管理，不是手工卡的注册步骤。现有工作流在 backlog 合入 main 时无波次过滤；手动入口固定 wave:19 且尝试关闭 #306–325。不要为新卡编辑 backlog、手动 dispatch 或全量重放旧波次；先按接手约定核对目标与影响范围。已有 backlog 的同步工具示例：
 
 ```bash
 python3 tools/tasks_sync.py            # 同步到 GitHub Issues
 python3 tools/tasks_sync.py --dry-run  # 先看会改什么
 ```
 
-同步是幂等的：按 `[ID]` 前缀匹配，已存在的只更新内容与标签，不会重复创建。
+同步按 `[ID]` 前缀匹配已查询到的 issue；当前查询有 500 条上限，可能漏认旧卡并重复创建，`--dry-run` 不查询现有 issue，不能证明无重复（见接手约定 §4）。
 
-## 字段
+## backlog 字段（手工卡不要求 wave）
 
 | 字段 | 必填 | 说明 |
 |---|---|---|
@@ -38,7 +45,7 @@ status:in-progress ──提 PR──▶  status:review
 status:review   ──合并────▶  status:done
 ```
 
-状态靠标签维护，不改 YAML。YAML 只描述"任务是什么"，GitHub 描述"做到哪了"。
+状态靠标签维护，不改 YAML。backlog 卡由 YAML 描述"任务是什么"、GitHub 描述"做到哪了"；限定手工卡的任务定义与进度均由其权威 issue 维护。
 
 ## 写卡的三条硬要求
 
