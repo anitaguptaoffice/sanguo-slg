@@ -3,8 +3,10 @@
 This card is **not independently deployable**. Activate the complete compatible
 hotel/coming/captive/lionize writer set only after sibling coordinators, metadata
 schema, client unknown-outcome handling and coordinated-release review. Existing
-sibling gameplay is not disabled by this work. The old shared HotelCityPort is
-still used by those sibling handlers, not by the new hotel coordinator.
+sibling gameplay is not disabled by this work. Hotel handlers use `hotelAtomic`;
+coming/captive/lionize handlers use `familyAtomic` with the same captured hotel
+dependencies. The unused legacy API HotelCityPort adapter has been removed; the
+HERO domain port and its rule fixtures remain unchanged.
 
 Private startup wiring binds the exact API pool/schema, HERO and WORLD service/
 store identities, immutable DOM level capability, and a private CONTENT item
