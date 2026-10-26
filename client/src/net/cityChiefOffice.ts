@@ -3,7 +3,7 @@ import type { HeroSummary } from "@/net/heroMailState";
 import { heroTemplateLabel } from "@/net/heroMailState";
 import { normalizeListPlayerHeroSummary } from "@/net/heroListLoyaltySubline";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
-import type { MarchSummary } from "@/net/militaryFormat";
+import { MARCH_PHASE_RETURNED, type MarchSummary } from "@/net/militaryFormat";
 
 export type CityChiefView = {
   city_id?: number;
@@ -38,7 +38,8 @@ export function heroIdsOnActiveMarch(marches: MarchSummary[] | null | undefined)
   const ids = new Set<number>();
   for (const m of marches ?? []) {
     const phase = m.phase ?? 0;
-    if (phase === 3) continue;
+    // Returned history is not local busy evidence; the server still validates hero availability.
+    if (phase === 3 || phase === MARCH_PHASE_RETURNED) continue;
     const heroId = m.hero_id ?? m.leader_hero_id ?? 0;
     if (heroId > 0) ids.add(heroId);
   }
