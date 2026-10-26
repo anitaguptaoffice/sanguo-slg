@@ -51,6 +51,7 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	clk := &integrationClock{t: time.Unix(1_700_000_000, 0)}
 	domHub := domestic.NewHub(clk.Now)
+	domHub.UseStore(domestic.NewPGStore(pool), 1, 0)
 	milHub := march.NewHub(clk.Now)
 	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, milHub)
 	apiSrv.SetClock(clk.Now)
@@ -225,6 +226,7 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 	clk := &integrationClock{t: time.Unix(1_700_100_000, 0)}
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	domHub := domestic.NewHub(clk.Now)
+	domHub.UseStore(domestic.NewPGStore(pool), 1, 0)
 	milHub := march.NewHub(clk.Now)
 	reportSvc := api.WireM2Combat(1, pool, milHub)
 	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, milHub)

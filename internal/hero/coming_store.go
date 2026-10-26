@@ -22,24 +22,24 @@ COMMENT ON TABLE player_hero_coming IS '来投元数据；对齐 legacy sys_city
 // MemComingStore is an in-memory coming metadata store.
 type MemComingStore struct {
 	mu   sync.RWMutex
-	rows map[int64]ComingRecord
+	rows map[heroKey]ComingRecord
 }
 
 func NewMemComingStore() *MemComingStore {
-	return &MemComingStore{rows: map[int64]ComingRecord{}}
+	return &MemComingStore{rows: map[heroKey]ComingRecord{}}
 }
 
-func (m *MemComingStore) PutComing(_ context.Context, _ int32, heroID int64, rec ComingRecord) error {
+func (m *MemComingStore) PutComing(_ context.Context, serverID int32, heroID int64, rec ComingRecord) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.rows[heroID] = rec
+	m.rows[heroKey{serverID, heroID}] = rec
 	return nil
 }
 
-func (m *MemComingStore) GetComing(_ context.Context, _ int32, heroID int64) (*ComingRecord, error) {
+func (m *MemComingStore) GetComing(_ context.Context, serverID int32, heroID int64) (*ComingRecord, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	rec, ok := m.rows[heroID]
+	rec, ok := m.rows[heroKey{serverID, heroID}]
 	if !ok {
 		return nil, nil
 	}
@@ -47,10 +47,10 @@ func (m *MemComingStore) GetComing(_ context.Context, _ int32, heroID int64) (*C
 	return &cp, nil
 }
 
-func (m *MemComingStore) DeleteComing(_ context.Context, _ int32, heroID int64) error {
+func (m *MemComingStore) DeleteComing(_ context.Context, serverID int32, heroID int64) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	delete(m.rows, heroID)
+	delete(m.rows, heroKey{serverID, heroID})
 	return nil
 }
 

@@ -1,3 +1,4 @@
+import { canUseBagItem, bagUseCapabilityHint } from "./bagUseCapability";
 import type { BagStack } from "@/net/bagState";
 import type { ContentFormValidationResult } from "@/net/contentFormValidation";
 import { itemLabel } from "@/net/contentFormat";
@@ -5,11 +6,8 @@ import { itemLabel } from "@/net/contentFormat";
 /** 单次批量 UI 最多勾选格数（逐次 UseConsumable count=1）。 */
 export const BATCH_USE_SLOT_CAP = 20;
 
-/** 不可逆/养成类道具不展示批量格勾选（不引导扩量）。 */
-export const BATCH_USE_EXCLUDED_ITEM_CFG_IDS = new Set([2004, 2005, 2006]);
-
 export function isBatchUseEligibleItem(itemCfgId: number): boolean {
-  return itemCfgId > 0 && !BATCH_USE_EXCLUDED_ITEM_CFG_IDS.has(itemCfgId);
+  return canUseBagItem(itemCfgId);
 }
 
 export type BatchUseStepResult = { ok: true } | { ok: false; message: string };
@@ -33,7 +31,7 @@ export function validateBatchUseConsumableSlots(input: {
   const { itemCfgId, slotCount, bag } = input;
 
   if (!isBatchUseEligibleItem(itemCfgId)) {
-    errors.push(`${itemLabel(itemCfgId)} 不支持批量使用`);
+    errors.push(`${itemLabel(itemCfgId)} 不支持批量使用；${bagUseCapabilityHint(itemCfgId)}`);
   }
 
   if (!Number.isFinite(slotCount) || !Number.isInteger(slotCount) || slotCount <= 0) {

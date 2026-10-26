@@ -49,10 +49,12 @@ func TestSureAcceptComingCapacityFull(t *testing.T) {
 	ctx := context.Background()
 	svc, city, p, heroID := comingTestSetup(t)
 	city.officeLevel = 1
-	_ = svc.Store.SaveHero(ctx, &Hero{
-		ServerID: 1, HeroID: 200, PlayerID: 42,
+	if err := svc.Store.CreateHero(ctx, &Hero{
+		ServerID: 1, PlayerID: 42,
 		TemplateCfgID: TemplateCfgIDHotelRandom, Level: 1, Status: StatusIdle, Loyalty: 70,
-	})
+	}); err != nil {
+		t.Fatal(err)
+	}
 	_, err := svc.SureAcceptComing(ctx, p, CityRef{CityID: 99}, heroID, city)
 	if err != ErrHotelCapacityFull {
 		t.Fatalf("expected capacity full, got %v", err)

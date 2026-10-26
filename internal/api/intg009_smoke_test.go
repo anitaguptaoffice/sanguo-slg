@@ -29,6 +29,7 @@ const (
 	smokeDailyTrainQuestCfgID = int32(1014)
 	smokeDailyBuildQuestCfgID = int32(1032)
 	smokeDailyTrainUnlockLvl  = int32(6)
+	smokeDailyTrainItemReward = int32(1) // Unchanged DATA-002 daily1014 item2003 reward.
 	smokeDailyBuildUnlockLvl  = int32(13)
 	smokeMarchTroopUnitCfgID  = int32(1)
 )
@@ -78,7 +79,7 @@ func runINTG009Wave12Smoke(t *testing.T) {
 	baseSnap := runData002M4Steps(t, ctx, c, apiSrv, pool, sid, playerID)
 	ext := runINTG008DeepenSteps(t, ctx, c, apiSrv, pool, sid, playerID, baseSnap)
 	marchID, _, _, _, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
-	smokeQuest003TrainOrBuildOptional(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Bag2003 += smokeQuest003TrainOrBuildOptional(t, ctx, c, apiSrv, pool, sid, playerID)
 
 	ts.Close()
 	_ = c.Close()
@@ -189,16 +190,18 @@ func smokeStartMarchListMarchesGateway(t *testing.T, c *websocket.Conn, apiSrv *
 	return marchID, cityID, toX, toY, departAtMs, arriveAtMs
 }
 
-// smokeQuest003TrainOrBuildOptional advances daily_train_1 or daily_build_1 when QUEST-003 hooks are live; never fails the main path.
-func smokeQuest003TrainOrBuildOptional(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) {
+// smokeQuest003TrainOrBuildOptional preserves optional quest availability, but
+// a successful train claim must grant the exact canonical item2003 reward.
+func smokeQuest003TrainOrBuildOptional(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) int32 {
 	t.Helper()
 	if smokeQuest003TryTrainDaily(t, ctx, c, apiSrv, pool, sid, playerID) {
-		return
+		return smokeDailyTrainItemReward
 	}
 	if smokeQuest003TryBuildDaily(t, ctx, c, pool, sid, playerID) {
-		return
+		return 0 // daily1032 rewards item2011, not the tracked item2003.
 	}
 	t.Log("QUEST-003 optional: daily_train_1 / daily_build_1 not claimable (non-blocking; see tools/smoke/README.md)")
+	return 0
 }
 
 func smokeQuest003TryTrainDaily(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) bool {
@@ -236,6 +239,7 @@ func smokeQuest003TryTrainDaily(t *testing.T, ctx context.Context, c *websocket.
 			return false
 		}
 	}
+	beforeBag := smokeDailyTrainBagBeforeClaim(t, ctx, pool, playerID)
 	claimResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteClaimQuestReward, TraceId: "i9-train-c", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&questv1.ClaimQuestRewardRequest{ServerId: intg006ServerID, QuestCfgId: smokeDailyTrainQuestCfgID}),
@@ -244,8 +248,35 @@ func smokeQuest003TryTrainDaily(t *testing.T, ctx context.Context, c *websocket.
 		t.Logf("QUEST-003 optional train skipped: claim code=%d msg=%s", claimResp.Code, claimResp.Msg)
 		return false
 	}
+	smokeAssertDailyTrainBagClaim(t, ctx, pool, playerID, beforeBag)
 	t.Log("QUEST-003 optional: daily_train_1 claimed")
 	return true
+}
+
+func smokeDailyTrainBagBeforeClaim(t *testing.T, ctx context.Context, pool *pgxpool.Pool, playerID int64) int32 {
+	t.Helper()
+	var beforeBag int32
+	var canonicalReward bool
+	err := pool.QueryRow(ctx, `SELECT
+		COALESCE((SELECT quantity FROM player_item WHERE server_id=$1 AND player_id=$2 AND item_cfg_id=$3),0),
+		rewards->'items' = '[{"item_cfg_id":2003,"qty":1}]'::jsonb
+		FROM cfg_quest WHERE quest_cfg_id=$4`,
+		intg006ServerID, playerID, smokeItemGrantCfgID, smokeDailyTrainQuestCfgID).Scan(&beforeBag, &canonicalReward)
+	if err != nil || !canonicalReward {
+		intg009Failf(t, "canonical train reward", "want item_cfg_id=%d qty=%d matched=%v err=%v", smokeItemGrantCfgID, smokeDailyTrainItemReward, canonicalReward, err)
+	}
+	return beforeBag
+}
+
+func smokeAssertDailyTrainBagClaim(t *testing.T, ctx context.Context, pool *pgxpool.Pool, playerID int64, beforeBag int32) {
+	t.Helper()
+	var afterBag int32
+	err := pool.QueryRow(ctx, `SELECT quantity FROM player_item WHERE server_id=$1 AND player_id=$2 AND item_cfg_id=$3`,
+		intg006ServerID, playerID, smokeItemGrantCfgID).Scan(&afterBag)
+	if err != nil || afterBag-beforeBag != smokeDailyTrainItemReward {
+		intg009Failf(t, "exact train claim credit", "item_cfg_id=%d qty=%d -> %d want delta=%d err=%v", smokeItemGrantCfgID, beforeBag, afterBag, smokeDailyTrainItemReward, err)
+	}
+	t.Logf("verified daily claim quest_cfg_id=%d item_cfg_id=%d qty=%d -> %d delta=%d", smokeDailyTrainQuestCfgID, smokeItemGrantCfgID, beforeBag, afterBag, smokeDailyTrainItemReward)
 }
 
 func smokeQuest003TryBuildDaily(t *testing.T, ctx context.Context, c *websocket.Conn, pool *pgxpool.Pool, sid string, playerID int64) bool {

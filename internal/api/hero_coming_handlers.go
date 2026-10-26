@@ -24,16 +24,15 @@ func (s *Server) handleListComingHeroes(ctx context.Context, pkt *commonv1.Clien
 	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	rows, meta, err := s.heroSvc.ListComingHeroes(ctx, p)
+	rows, meta, err := s.familyOffers(ctx, pc, hero.StatusComing)
 	if err != nil {
-		return nil, err
+		return comingErr(pkt.GetTraceId(), err), nil
 	}
 	out := make([]*herov1.ComingHeroSummary, 0, len(rows))
 	for _, h := range rows {
 		cityID := int64(0)
 		if rec, ok := meta[h.HeroID]; ok {
-			cityID = rec.CityID
+			cityID = rec
 		}
 		out = append(out, &herov1.ComingHeroSummary{
 			HeroId: h.HeroID, CityId: cityID, TemplateCfgId: h.TemplateCfgID, DisplayName: h.DisplayName,
@@ -62,11 +61,10 @@ func (s *Server) handleTryAcceptComing(ctx context.Context, pkt *commonv1.Client
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetHeroId() == 0 {
+	if req.GetHeroId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	res, err := s.heroSvc.TryAcceptComing(ctx, p, req.GetCityId(), req.GetHeroId())
+	res, err := s.comingAtomic(ctx, pc, req.GetCityId(), req.GetHeroId(), comingPreview)
 	if err != nil {
 		return comingErr(pkt.GetTraceId(), err), nil
 	}
@@ -91,11 +89,10 @@ func (s *Server) handleSureAcceptComing(ctx context.Context, pkt *commonv1.Clien
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetHeroId() == 0 {
+	if req.GetHeroId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	res, err := s.heroSvc.SureAcceptComing(ctx, p, hero.CityRef{CityID: req.GetCityId()}, req.GetHeroId(), s.heroHotelCityPort())
+	res, err := s.comingAtomic(ctx, pc, req.GetCityId(), req.GetHeroId(), comingAccept)
 	if err != nil {
 		return comingErr(pkt.GetTraceId(), err), nil
 	}
@@ -121,11 +118,10 @@ func (s *Server) handleRejectComing(ctx context.Context, pkt *commonv1.ClientPac
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetHeroId() == 0 {
+	if req.GetHeroId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	if err := s.heroSvc.RejectComing(ctx, p, req.GetCityId(), req.GetHeroId()); err != nil {
+	if _, err := s.comingAtomic(ctx, pc, req.GetCityId(), req.GetHeroId(), comingReject); err != nil {
 		return comingErr(pkt.GetTraceId(), err), nil
 	}
 	data, err := marshal(&herov1.RejectComingResponse{HeroId: req.GetHeroId()})
@@ -144,6 +140,6 @@ func comingErr(trace string, err error) *commonv1.ServerPacket {
 	case errors.Is(err, hero.ErrHeroNotFound):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	default:
-		return heroErr(trace, err)
+		return familyErr(trace, err)
 	}
 }

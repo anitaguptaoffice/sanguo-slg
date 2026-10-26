@@ -23,3 +23,16 @@ func QuestClaimIdempotencyKey(playerID int64, questCfgID int32) string {
 type RewardGranter interface {
 	GrantQuestReward(ctx context.Context, req GrantRequest) (RewardBundle, error)
 }
+
+// GrantReceipt is an exact, durable successful payment, not proof of an action.
+type GrantReceipt struct {
+	GrantID int64
+	Rewards RewardBundle
+}
+
+// RewardReceiptReader must validate server/player, fixed key, successful status
+// and the exact producer-canonical package. Mismatches/errors must not be absence.
+// Implementations must never grant, mutate state or hydrate grant caches here.
+type RewardReceiptReader interface {
+	FindQuestRewardReceipt(context.Context, GrantRequest) (GrantReceipt, bool, error)
+}

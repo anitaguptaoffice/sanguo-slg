@@ -109,6 +109,10 @@ export function skinMilitaryPanel(
   logicalH = 320,
 ): void {
   skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_MILITARY);
+  // Key preview inks to the installed paper fill, not a requested skin mode.
+  // Missing assets/off keep the readable dark fallback; an existing fill stays paper.
+  el.toggleAttribute("data-military-paper-skin", Boolean(el.style.borderImageSource)
+    && el.style.borderImageSource !== "none" && el.style.borderImageSlice.includes("fill"));
 }
 
 export function skinHeroPanel(
@@ -200,6 +204,9 @@ export function skinBattleReportPanel(
   logicalH = 360,
 ): void {
   skinNineSlicePanel(el, assets, logicalW, logicalH, PANEL_ASSET_BATTLE_REPORT);
+  // Choose label inks from an installed paper fill, including retained fills after art-off.
+  el.toggleAttribute("data-report-paper-skin", Boolean(el.style.borderImageSource)
+    && el.style.borderImageSource !== "none" && el.style.borderImageSlice.includes("fill"));
 }
 
 export function skinShopPanel(

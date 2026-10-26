@@ -39,17 +39,13 @@ func (s *Service) InjectComing(ctx context.Context, p PlayerRef, in InjectComing
 	if in.CityID <= 0 {
 		return nil, ErrInvalidRecruit
 	}
-	maxID, err := s.Store.MaxHeroID(ctx, p.ServerID)
-	if err != nil {
-		return nil, err
-	}
 	loyalty := in.Loyalty
 	if loyalty <= 0 {
 		loyalty = 70
 	}
 	now := s.now()
 	h := &Hero{
-		ServerID: p.ServerID, HeroID: maxID + 1, PlayerID: p.PlayerID,
+		ServerID: p.ServerID, PlayerID: p.PlayerID,
 		TemplateCfgID: in.TemplateCfgID, DisplayName: in.DisplayName,
 		Level: in.Level, Loyalty: loyalty,
 		Force: in.Force, Intel: in.Intel, Politics: in.Politics, Command: in.Command,
@@ -58,7 +54,7 @@ func (s *Service) InjectComing(ctx context.Context, p PlayerRef, in InjectComing
 	if h.Level < 1 {
 		h.Level = 1
 	}
-	if err := s.Store.SaveHero(ctx, h); err != nil {
+	if err := s.Store.CreateHero(ctx, h); err != nil {
 		return nil, err
 	}
 	if err := s.ComingStore.PutComing(ctx, p.ServerID, h.HeroID, ComingRecord{CityID: in.CityID}); err != nil {

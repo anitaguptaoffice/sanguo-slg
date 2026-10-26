@@ -20,7 +20,9 @@ func TestDomesticCore(t *testing.T) {
 	h := NewHub(now)
 	c = &CityState{ID: 1, LastSettleAt: clock, Wallet: Resources{1e4, 1e4, 1e4, 1e4},
 		Buildings: map[string]*BuildingInstance{"hall": {1, 3}, "farm": {2, 1}}}
-	h.RegisterCity(c)
+	if err := h.RegisterCity(c); err != nil {
+		t.Fatal(err)
+	}
 	settleProduction(c, cat, clock.Add(time.Hour))
 	if c.Wallet.Food == 0 {
 		t.Fatal("accrual")
@@ -54,7 +56,9 @@ func TestApplyBuildSpeedupShortensActiveJob(t *testing.T) {
 		ID: 1, LastSettleAt: clock, Wallet: Resources{1e4, 1e4, 1e4, 1e4},
 		Buildings: map[string]*BuildingInstance{"hall": {1, 3}, "farm": {2, 1}},
 	}
-	h.RegisterCity(c)
+	if err := h.RegisterCity(c); err != nil {
+		t.Fatal(err)
+	}
 	res, err := h.StartBuildingUpgrade(1, "farm", 2)
 	if err != nil || !res.InProgress {
 		t.Fatal("start build")

@@ -2,6 +2,7 @@ package domestic
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,7 +28,10 @@ func TestPGStoreRoundTripQueuedBuild(t *testing.T) {
 		Wallet:    Resources{1e4, 1e4, 1e4, 1e4},
 		Buildings: map[string]*BuildingInstance{"hall": {1, 3}, "farm": {2, 1}},
 	}
-	h1.RegisterCity(c)
+	seedDomesticOwner(t, pool, c)
+	if err := h1.RegisterNewCity(ctx, c); err != nil {
+		t.Fatal(err)
+	}
 
 	res, err := h1.StartBuildingUpgrade(9001, "farm", 2)
 	if err != nil || !res.InProgress {
@@ -89,13 +93,29 @@ func openDomesticTestDB(t *testing.T) *pgxpool.Pool {
 
 func applyDomesticSchema(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
-	root := filepath.Join("..", "..", "spec", "db", "003_domestic.sql")
-	sql, err := os.ReadFile(root)
-	if err != nil {
-		t.Fatalf("read schema: %v", err)
+	for _, name := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_008_work_queue_id_sequence.sql"} {
+		sql, err := os.ReadFile(filepath.Join("..", "..", "spec", "db", name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := pool.Exec(context.Background(), string(sql)); err != nil {
+			t.Fatal(err)
+		}
 	}
-	_, err = pool.Exec(context.Background(), string(sql))
+}
+
+func seedDomesticOwner(t *testing.T, pool *pgxpool.Pool, c *CityState) {
+	t.Helper()
+	var accountID int64
+	err := pool.QueryRow(context.Background(), `INSERT INTO account(login_name,password_hash) VALUES ($1,'unused') RETURNING account_id`, fmt.Sprintf("domestic_%d_%d", c.PlayerID, c.ID)).Scan(&accountID)
 	if err != nil {
-		t.Fatalf("apply schema: %v", err)
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(context.Background(), `INSERT INTO player(server_id,player_id,account_id,display_name) VALUES (1,$1,$2,'fixture') ON CONFLICT DO NOTHING`, c.PlayerID, accountID); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := pool.Exec(context.Background(), `INSERT INTO player_city (server_id,city_id,player_id,name,x,y) VALUES (1,$1,$2,'fixture',$3,1)`, c.ID, c.PlayerID, int32(c.ID)); err != nil {
+		t.Fatal(err)
 	}
 }

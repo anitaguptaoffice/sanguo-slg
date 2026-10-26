@@ -108,7 +108,7 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		return s.mapMarchHeroErr(pkt.GetTraceId(), err), nil
 	}
 	s.ensureMilitaryCity(dom)
-	coord, ok := s.cityCoords[req.GetCityId()]
+	coord, ok := s.cityCoordinate(req.GetCityId())
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
 	}
@@ -152,17 +152,17 @@ func (s *Server) handleListMarches(ctx context.Context, pkt *commonv1.ClientPack
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetCityId() != 0 && !s.ownsCity(ctx, pc, req.GetCityId()) {
+	if !s.domesticCityScope(pc.ServerID) || (req.GetCityId() != 0 && !s.ownsCity(ctx, pc, req.GetCityId())) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
 	refs, total := s.listPlayerMarches(pc.PlayerID, req.GetCityId(), req.GetLimit(), req.GetOffset())
 	out := make([]*militaryv1.MarchSummary, 0, len(refs))
 	for _, ref := range refs {
-		order := s.military.March(ref.marchID)
+		order, troops := s.military.SnapshotMarch(ref.marchID)
 		if order == nil {
 			continue
 		}
-		out = append(out, marchSummaryProto(ref.cityID, order, ref.troops))
+		out = append(out, marchSummaryProto(ref.cityID, order, troops))
 	}
 	data, err := marshal(&militaryv1.ListMarchesResponse{Marches: out, Total: total})
 	if err != nil {
@@ -182,7 +182,14 @@ func parseMarchTroops(trace string, in []*apicommon.CityTroopStack) ([]march.Tro
 		}
 		out = append(out, march.TroopStack{UnitCfgID: st.GetUnitCfgId(), Count: st.GetCount()})
 	}
-	return out, nil
+	normalized, err := march.NormalizeMarchTroops(march.DefaultUnitCatalog(), out)
+	if errors.Is(err, march.ErrUnknownUnit) {
+		return nil, errResp(trace, commonv1.ErrorCode_MILITARY_INVALID_UNIT, "unknown unit")
+	}
+	if err != nil {
+		return nil, errResp(trace, commonv1.ErrorCode_MILITARY_INVALID_TROOP_COUNT, "invalid troop count")
+	}
+	return normalized, nil
 }
 
 func (s *Server) mapMarchRecruitErr(trace string, err error) *commonv1.ServerPacket {
@@ -245,20 +252,25 @@ func marchSummaryProto(cityID int64, o *march.MarchOrder, troops []march.TroopSt
 	if o == nil {
 		return nil
 	}
+	// The wire contract exposes a return deadline only while returning.
+	var returnFinishAtMs int64
+	if o.Phase == march.PhaseReturning && !o.ReturnFinishAt.IsZero() {
+		returnFinishAtMs = o.ReturnFinishAt.UnixMilli()
+	}
 	return &militaryv1.MarchSummary{
-		MarchId:           o.ID,
-		ArmyId:            o.ArmyID,
-		OriginCityId:      cityID,
-		FromX:             int32(o.FromX),
-		FromY:             int32(o.FromY),
-		ToX:               int32(o.ToX),
-		ToY:               int32(o.ToY),
-		Purpose:           int32(o.Purpose),
-		Phase:             marchPhaseProto(o.Phase),
-		DepartAtMs:        o.DepartAt.UnixMilli(),
-		ArriveAtMs:        o.ArriveAt.UnixMilli(),
-		ReturnFinishAtMs:  o.ReturnFinishAt.UnixMilli(),
-		Troops:            troopStacksProtoFromMarch(troops),
+		MarchId:          o.ID,
+		ArmyId:           o.ArmyID,
+		OriginCityId:     cityID,
+		FromX:            int32(o.FromX),
+		FromY:            int32(o.FromY),
+		ToX:              int32(o.ToX),
+		ToY:              int32(o.ToY),
+		Purpose:          int32(o.Purpose),
+		Phase:            marchPhaseProto(o.Phase),
+		DepartAtMs:       o.DepartAt.UnixMilli(),
+		ArriveAtMs:       o.ArriveAt.UnixMilli(),
+		ReturnFinishAtMs: returnFinishAtMs,
+		Troops:           troopStacksProtoFromMarch(troops),
 	}
 }
 
@@ -289,7 +301,7 @@ func troopStacksProto(all map[int32]int32, touched []march.TroopStack) []*apicom
 func (s *Server) ownsCity(ctx context.Context, pc PlayerContext, cityID int64) bool {
 	// Domestic snapshots have no shard identity. Only the world store can
 	// authorize a city in the authenticated shard; unavailable data fails closed.
-	if cityID <= 0 || pc.PlayerID <= 0 || pc.ServerID <= 0 || s.world == nil || s.world.Store == nil {
+	if cityID <= 0 || pc.PlayerID <= 0 || !s.domesticCityScope(pc.ServerID) || s.world == nil || s.world.Store == nil {
 		return false
 	}
 	cities, err := s.world.Store.PlayerCities(ctx, pc.ServerID, pc.PlayerID)

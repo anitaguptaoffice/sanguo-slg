@@ -36,6 +36,7 @@ func (s *Server) questAfterRecruitHero(ctx context.Context, serverID int32, play
 	_ = s.questSvc.ApplyProgressEvent(ctx, quest.Actor{ServerID: serverID, PlayerID: playerID}, quest.ProgressEvent{
 		Kind: quest.EventRecruitHero,
 	})
+	_ = s.questSvc.ReconcileTutorial(ctx, quest.Actor{ServerID: serverID, PlayerID: playerID})
 }
 
 func (s *Server) questAfterResourceGain(ctx context.Context, serverID int32, playerID int64, before, after domestic.Resources) {
@@ -100,6 +101,10 @@ func (s *Server) questAfterBuildLevel(ctx context.Context, serverID int32, playe
 	_ = s.questSvc.ApplyProgressEvent(ctx, quest.Actor{ServerID: serverID, PlayerID: playerID}, quest.ProgressEvent{
 		Kind: quest.EventBuildLevel, BuildingCfgID: buildingCfgID, BuildLevel: level, Delta: 1,
 	})
+	_ = s.questSvc.ReconcileTutorial(ctx, quest.Actor{ServerID: serverID, PlayerID: playerID})
+	if buildingCfgID == 7 {
+		s.questAfterWallHint(ctx, serverID, playerID)
+	}
 }
 
 func (s *Server) questAfterUseItem(ctx context.Context, serverID int32, playerID int64, itemCode string, count int32) {
@@ -109,6 +114,9 @@ func (s *Server) questAfterUseItem(ctx context.Context, serverID int32, playerID
 	_ = s.questSvc.ApplyProgressEvent(ctx, quest.Actor{ServerID: serverID, PlayerID: playerID}, quest.ProgressEvent{
 		Kind: quest.EventUseItem, ItemCode: itemCode, Delta: count,
 	})
+	// A successful build speedup may have committed a completed level.
+	_ = s.questSvc.ReconcileTutorial(ctx, quest.Actor{ServerID: serverID, PlayerID: playerID})
+	s.questAfterWallHint(ctx, serverID, playerID)
 }
 
 type slotBuildingSnap struct {
@@ -134,6 +142,10 @@ func (s *Server) questFlushBuildCompletions(ctx context.Context, serverID int32,
 	}
 	before := snapshotBuildingLevels(city)
 	s.domestic.Tick()
+	city = s.citySnapshot(city.ID)
+	if city == nil {
+		return
+	}
 	after := snapshotBuildingLevels(city)
 	for slot, a := range after {
 		b, ok := before[slot]

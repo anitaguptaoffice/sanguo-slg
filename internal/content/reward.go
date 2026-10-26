@@ -93,12 +93,28 @@ func resourceDeltaFromMap(m map[string]int64) (ResourceWallet, error) {
 // Grant applies a reward package to the player's wallet and bag.
 // When idempotencyKey is non-empty, a repeat call returns the first result with Duplicate=true.
 func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (GrantResult, error) {
-	ctx := context.Background()
-	if store, ok := s.store.(interface {
+	return s.GrantContext(context.Background(), p, pkg, idempotencyKey)
+}
+
+// GrantContext is Grant with cancelable lock acquisition and PG operations.
+// A commit error can have an unknown outcome: retry the same key and package.
+// Legacy non-atomic stores only support non-cancelable contexts. In-memory grants
+// finish synchronously after the final cancellation check before mutation.
+func (s *Service) GrantContext(ctx context.Context, p PlayerRef, pkg RewardPackage, idempotencyKey string) (GrantResult, error) {
+	if err := ctx.Err(); err != nil {
+		return GrantResult{}, err
+	}
+	store, atomic := s.store.(interface {
 		grantAtomic(context.Context, PlayerRef, RewardPackage, string, *Catalog) (GrantResult, error)
-	}); ok {
-		s.mu.Lock()
-		defer s.mu.Unlock()
+	})
+	if s.store != nil && !atomic && ctx.Done() != nil {
+		return GrantResult{}, ErrGrantContextUnsupported
+	}
+	if err := s.lockGrantContext(ctx); err != nil {
+		return GrantResult{}, err
+	}
+	defer s.mu.Unlock()
+	if atomic {
 		out, err := store.grantAtomic(ctx, p, pkg, idempotencyKey, s.catalog)
 		if err != nil {
 			return GrantResult{}, err
@@ -111,7 +127,7 @@ func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (
 		return out, nil
 	}
 	if idempotencyKey != "" {
-		dup, err := s.lookupIdempotentGrant(ctx, p, idempotencyKey)
+		dup, err := s.lookupIdempotentGrantUnlocked(ctx, p, idempotencyKey)
 		if err != nil {
 			return GrantResult{}, err
 		}
@@ -130,16 +146,8 @@ func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (
 		}
 	}
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if idempotencyKey != "" {
-		key := idempotencyKeyFor(p.ServerID, idempotencyKey)
-		if rec, ok := s.idempotency[key]; ok {
-			out := rec.result
-			out.Duplicate = true
-			return out, nil
-		}
+	if err := ctx.Err(); err != nil {
+		return GrantResult{}, err
 	}
 
 	for _, row := range pkg.Items {
@@ -178,11 +186,10 @@ func (s *Service) Grant(p PlayerRef, pkg RewardPackage, idempotencyKey string) (
 	return res, nil
 }
 
-func (s *Service) lookupIdempotentGrant(ctx context.Context, p PlayerRef, idempotencyKey string) (*GrantResult, error) {
+// Caller holds s.mu, including during legacy store hydration.
+func (s *Service) lookupIdempotentGrantUnlocked(ctx context.Context, p PlayerRef, idempotencyKey string) (*GrantResult, error) {
 	key := idempotencyKeyFor(p.ServerID, idempotencyKey)
-	s.mu.RLock()
 	rec, ok := s.idempotency[key]
-	s.mu.RUnlock()
 	if ok {
 		out := rec.result
 		out.Duplicate = true
@@ -195,17 +202,15 @@ func (s *Service) lookupIdempotentGrant(ctx context.Context, p PlayerRef, idempo
 	if err != nil || !found {
 		return nil, err
 	}
-	if err := s.LoadPlayer(ctx, p); err != nil {
+	if err := s.loadPlayerUnlocked(ctx, p); err != nil {
 		return nil, err
 	}
-	s.mu.RLock()
 	out := GrantResult{
 		GrantID:   grantID,
 		Duplicate: true,
 		Wallet:    s.walletFor(p),
 		Bag:       s.listUnlocked(p),
 	}
-	s.mu.RUnlock()
 	return &out, nil
 }
 

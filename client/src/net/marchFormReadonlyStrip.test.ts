@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { formatMarchFormSummary } from "@/net/marchFormSummary";
 import {
   formatMarchFormSummaryLine,
   formatMarchReadonlyLineFromMarch,
@@ -8,6 +9,19 @@ import {
 } from "@/net/marchFormReadonlyStrip";
 
 describe("marchFormReadonlyStrip (CLIENT-178)", () => {
+  it.each([3, 400, 5000])("removes the complete food estimate and qualifier with %i held", (food) => {
+    const snapshot = {
+      toXRaw: "160", toYRaw: "60", marchCountRaw: "200", heroIdRaw: "1",
+      unitCfgId: 1, cityX: 60, cityY: 60, wallet: { food },
+    };
+    expect(formatMarchFormSummary(snapshot, 0).summaryLine).toContain(
+      "途粮约 400（仅估算，当前出征不扣粮）",
+    );
+    expect(formatMarchFormSummaryLine(snapshot, 0)).toBe(
+      "目标 (160,60) · 步兵×200 · 剩余 120m",
+    );
+  });
+
   it("formatMarchFormSummaryLine and march snapshot line", () => {
     const line = formatMarchFormSummaryLine(
       {

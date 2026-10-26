@@ -3,7 +3,6 @@ package hero
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"time"
 )
 
@@ -57,7 +56,7 @@ func HeroSalary(h *Hero) int64 {
 
 func goldLargessCost(salary int64) int64 { return salary * 5 }
 
-func goldLargessGain(salary int64, loyalty int, rng *rand.Rand) (int, error) {
+func goldLargessGain(salary int64, loyalty int, rng randomIntn) (int, error) {
 	if loyalty >= LoyaltyMax {
 		return 0, ErrLoyaltyMax
 	}
@@ -94,7 +93,7 @@ func largessCooldownRemaining(now, last time.Time) time.Duration {
 }
 
 // Largess applies largessHero rules on an in-memory player state (no persistence).
-func Largess(ps *PlayerState, goods map[int32]int32, lastLargess time.Time, rng *rand.Rand, now time.Time, req LargessRequest) (LargessResult, error) {
+func Largess(ps *PlayerState, goods map[int32]int32, lastLargess time.Time, rng randomIntn, now time.Time, req LargessRequest) (LargessResult, error) {
 	if req.HeroID == 0 {
 		return LargessResult{}, ErrHeroNotFound
 	}
@@ -197,7 +196,7 @@ func (s *Service) LargessPlayer(ctx context.Context, p PlayerRef, inv InventoryP
 		ServerID: p.ServerID, PlayerID: p.PlayerID,
 		Wallet: wallet, Items: items, Heroes: []*Hero{h},
 	}
-	res, err := Largess(ps, DefaultLargessGoods, last, s.RNG, s.now(), req)
+	res, err := Largess(ps, DefaultLargessGoods, last, s.random(), s.now(), req)
 	if err != nil {
 		return LargessResult{}, err
 	}

@@ -19,7 +19,9 @@ func TestGetCityStateConcurrentDomesticTick(t *testing.T) {
 	c := &domestic.CityState{ID: 77, PlayerID: 5151, LastSettleAt: now.Add(-time.Hour),
 		Wallet:    domestic.Resources{Food: 1000},
 		Buildings: map[string]*domestic.BuildingInstance{"farm": {CfgID: 2, Level: 1}}}
-	h.RegisterCity(c)
+	if err := h.RegisterCity(c); err != nil {
+		t.Fatal(err)
+	}
 	s := NewServer(nil, nil, nil, h, nil)
 	s.cacheCity(77, c)
 	s.world = ownershipWorld(world.City{ServerID: 1, CityID: 77, PlayerID: 5151})

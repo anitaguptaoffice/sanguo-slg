@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 // MemStore is an in-memory Store for unit tests.
@@ -25,7 +26,12 @@ func (m *MemStore) GetPlayerQuest(_ context.Context, serverID int32, playerID in
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	row, ok := m.rows[questKey(serverID, playerID, questCfgID)]
-	return row, ok, nil
+	if ok {
+		if err := validateProof(row); err != nil {
+			return PlayerQuestRow{}, false, err
+		}
+	}
+	return cloneQuestRow(row), ok, nil
 }
 
 func (m *MemStore) ListPlayerQuests(_ context.Context, serverID int32, playerID int64) ([]PlayerQuestRow, error) {
@@ -35,15 +41,44 @@ func (m *MemStore) ListPlayerQuests(_ context.Context, serverID int32, playerID 
 	prefix := fmt.Sprintf("%d:%d:", serverID, playerID)
 	for k, row := range m.rows {
 		if len(k) > len(prefix) && k[:len(prefix)] == prefix {
-			out = append(out, row)
+			if err := validateProof(row); err != nil {
+				return nil, err
+			}
+			out = append(out, cloneQuestRow(row))
 		}
 	}
 	return out, nil
 }
 
 func (m *MemStore) UpsertPlayerQuest(_ context.Context, row PlayerQuestRow) error {
+	return m.upsertPlayerQuest(row, false)
+}
+
+func (m *MemStore) verifyLegacyWall(_ context.Context, actor Actor, now time.Time) error {
+	return m.upsertPlayerQuest(legacyWallProposal(actor, now), true)
+}
+
+func (m *MemStore) upsertPlayerQuest(row PlayerQuestRow, legacy bool) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.rows[questKey(row.ServerID, row.PlayerID, row.QuestCfgID)] = row
+	if err := validateProof(row); err != nil {
+		return err
+	}
+	key := questKey(row.ServerID, row.PlayerID, row.QuestCfgID)
+	if isTutorialID(row.QuestCfgID) {
+		var err error
+		row, err = mergeTutorialRow(m.rows[key], row)
+		if err != nil {
+			return err
+		}
+	}
+	if row.QuestCfgID == 1006 {
+		var err error
+		row, err = mergeWallRow(m.rows[key], row, legacy)
+		if err != nil {
+			return err
+		}
+	}
+	m.rows[key] = cloneQuestRow(row)
 	return nil
 }

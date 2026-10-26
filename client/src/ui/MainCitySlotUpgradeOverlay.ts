@@ -13,8 +13,9 @@ const LAYER_CLASS = "main-city-slot-upgrade-layer";
 const TAG_CLASS = "main-city-slot-upgrade-tag";
 
 export class MainCitySlotUpgradeOverlay {
-  private layer!: HTMLElement;
+  private layer: HTMLElement | undefined;
   private readonly anchors = new Map<string, UpgradeProgressAnchor>();
+  private readonly tags = new Map<string, HTMLElement>();
   private mutualHighlightSlotKey: string | null = null;
 
   constructor(private readonly mount: HTMLElement) {}
@@ -35,6 +36,8 @@ export class MainCitySlotUpgradeOverlay {
   }
 
   attach(): void {
+    if (this.layer?.parentNode) return;
+    this.tags.clear();
     this.layer = document.createElement("div");
     this.layer.className = LAYER_CLASS;
     this.layer.setAttribute("aria-hidden", "true");
@@ -43,7 +46,9 @@ export class MainCitySlotUpgradeOverlay {
 
   detach(): void {
     this.layer?.remove();
+    this.layer = undefined;
     this.anchors.clear();
+    this.tags.clear();
   }
 
   sync(buildings: CityBuilding[] | undefined, nowMs = Date.now()): void {
@@ -66,7 +71,6 @@ export class MainCitySlotUpgradeOverlay {
       if (!activeKeys.has(key)) this.anchors.delete(key);
     }
 
-    this.layer.replaceChildren();
     for (const slot of MAIN_CITY_SLOTS) {
       const building = buildingBySlot(buildings, slot.slot_key);
       const finish = building?.upgrade_finish_at_ms ?? 0;
@@ -74,12 +78,35 @@ export class MainCitySlotUpgradeOverlay {
       const anchor = upgrading ? this.anchors.get(slot.slot_key) : undefined;
       const ratio = anchor ? upgradeProgressRatio(anchor, nowMs) : null;
       const label = formatSlotOverlayLabel(building, nowMs);
-      this.layer.appendChild(this.buildTag(slot, label, ratio));
+      let tag = this.tags.get(slot.slot_key);
+      if (!tag) {
+        tag = this.buildTag(slot);
+        this.tags.set(slot.slot_key, tag);
+        this.layer.appendChild(tag);
+      }
+      const time = tag.querySelector<HTMLElement>(".main-city-slot-upgrade-time")!;
+      if (time.textContent !== label) time.textContent = label;
+      let bar = tag.querySelector<HTMLElement>(".main-city-slot-upgrade-bar");
+      if (ratio == null) {
+        bar?.remove();
+      } else {
+        if (!bar) {
+          bar = document.createElement("div");
+          bar.className = "main-city-slot-upgrade-bar";
+          const fill = document.createElement("div");
+          fill.className = "main-city-slot-upgrade-bar-fill";
+          bar.appendChild(fill);
+          tag.appendChild(bar);
+        }
+        const fill = bar.firstElementChild as HTMLElement;
+        const width = `${Math.round(ratio * 100)}%`;
+        if (fill.style.width !== width) fill.style.width = width;
+      }
     }
     this.setMutualHighlightSlot(this.mutualHighlightSlotKey);
   }
 
-  private buildTag(slot: MainCitySlotDef, label: string, ratio: number | null): HTMLElement {
+  private buildTag(slot: MainCitySlotDef): HTMLElement {
     const el = document.createElement("div");
     el.className = TAG_CLASS;
     if (
@@ -96,18 +123,8 @@ export class MainCitySlotUpgradeOverlay {
 
     const time = document.createElement("span");
     time.className = "main-city-slot-upgrade-time";
-    time.textContent = label;
 
     el.appendChild(time);
-    if (ratio != null) {
-      const bar = document.createElement("div");
-      bar.className = "main-city-slot-upgrade-bar";
-      const fill = document.createElement("div");
-      fill.className = "main-city-slot-upgrade-bar-fill";
-      fill.style.width = `${Math.round(ratio * 100)}%`;
-      bar.appendChild(fill);
-      el.appendChild(bar);
-    }
     return el;
   }
 }

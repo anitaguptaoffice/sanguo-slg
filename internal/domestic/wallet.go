@@ -24,7 +24,7 @@ func (h *Hub) updateCityLocked(ctx context.Context, id int64, fn func(*CityState
 		return ErrCityNotFound
 	}
 	if h.store != nil && c.PlayerID != 0 {
-		return h.store.saveCity(ctx, h.serverID, c, h.cat, h.now(), fn)
+		return h.store.saveCity(ctx, h.serverID, c, h.cat, h.now(), fn, false)
 	}
 	next := cloneCity(c)
 	if fn != nil {

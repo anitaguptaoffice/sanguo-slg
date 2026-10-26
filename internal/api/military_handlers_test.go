@@ -41,8 +41,12 @@ func TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder(t *testing.T) {
 			"hall": {CfgID: 1, Level: 1},
 		},
 	}
-	domHub.RegisterCity(domCity)
-	srv.RegisterCityForTest(cityID, domCity, 60, 61)
+	if err := domHub.RegisterCity(domCity); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.RegisterCityForTest(cityID, domCity, 60, 61); err != nil {
+		t.Fatal(err)
+	}
 	heroID := seedIdleHeroForTest(t, srv, 1, playerID)
 
 	sid := "test-session"

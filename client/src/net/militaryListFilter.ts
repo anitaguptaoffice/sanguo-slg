@@ -1,4 +1,4 @@
-import type { MarchSummary } from "@/net/militaryFormat";
+import { marchEtaDeadline, type MarchSummary } from "@/net/militaryFormat";
 
 /** sessionStorage：军情列表阶段筛选与 ETA 排序（CLIENT-109，仅客户端）。 */
 export const MILITARY_LIST_FILTER_SESSION_KEY = "military-list-filter-v1";
@@ -136,7 +136,7 @@ export function marchMatchesMilitaryListPhaseFilter(
 export function marchListEtaSortKey(march: MarchSummary, _nowMs: number): number {
   const p = march.phase ?? 0;
   if (p === 2 || p === 4) {
-    const arrive = march.arrive_at_ms;
+    const arrive = marchEtaDeadline(march);
     if (arrive != null && Number.isFinite(arrive)) return arrive;
     return Number.POSITIVE_INFINITY;
   }

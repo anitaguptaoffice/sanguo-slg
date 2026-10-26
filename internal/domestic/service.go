@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"math/big"
 	"sort"
 	"sync"
 	"time"
@@ -85,6 +86,9 @@ type CityState struct {
 	walletBase   Resources
 	walletSaved  bool
 	nextJobID    int64
+	// Resource-nanoseconds modulo one hour; cloned with the transactional city.
+	// Persistence requires the separate production checkpoint contract.
+	productionRemainder [4]int64
 }
 type UpgradeResult struct {
 	JobID      int64
@@ -103,6 +107,11 @@ func mainHallLvl(c *CityState) int32 {
 }
 
 func settleProduction(c *CityState, cat map[int32]BuildingSpec, now time.Time) {
+	// Invalid wallets must not mint capped credit via an overflowing cap-balance.
+	// Store-backed callers reject them; the pure calculation leaves them untouched.
+	if c.Wallet.Food < 0 || c.Wallet.Wood < 0 || c.Wallet.Stone < 0 || c.Wallet.Iron < 0 {
+		return
+	}
 	if c.LastSettleAt.IsZero() {
 		c.LastSettleAt = now
 		return
@@ -114,30 +123,42 @@ func settleProduction(c *CityState, cat map[int32]BuildingSpec, now time.Time) {
 	if el <= 0 {
 		return
 	}
-	sec, mh := el.Seconds(), mainHallLvl(c)
+	mh := mainHallLvl(c)
 	bonus := 1.0
 	if mh > 1 {
-		bonus = 1 + prodBonus*float64(mh-1)
+		bonus += prodBonus * float64(mh-1)
 	}
-	cap := float64(whCapBase + whCapPerLvl*int64(mh))
-	var d [4]float64
+	cap := int64(whCapBase) + whCapPerLvl*int64(mh)
+	var earned [4]big.Int
 	for _, inst := range c.Buildings {
 		sp, ok := cat[inst.CfgID]
-		if !ok || sp.ProdPerHour < 1 || inst.Level < 1 {
+		if !ok || sp.ProdPerHour < 1 || inst.Level < 1 || sp.ProdRes < 0 || sp.ProdRes >= 4 {
 			continue
 		}
-		oh := math.Floor(float64(sp.ProdPerHour) * float64(inst.Level) * bonus)
-		d[sp.ProdRes] += oh / 3600 * sec
+		// Preserve the existing per-building hourly formula; accumulate its integer
+		// result exactly, even when rates or elapsed products exceed int64.
+		rate, _ := new(big.Float).SetFloat64(math.Floor(float64(sp.ProdPerHour) * float64(inst.Level) * bonus)).Int(nil)
+		earned[sp.ProdRes].Add(&earned[sp.ProdRes], rate)
 	}
-	clamp := func(st int64, add float64) int64 {
-		if st >= int64(cap) {
-			return st
+	elapsed, denominator := big.NewInt(int64(el)), big.NewInt(int64(time.Hour))
+	wallet := []*int64{&c.Wallet.Food, &c.Wallet.Wood, &c.Wallet.Stone, &c.Wallet.Iron}
+	for i, balance := range wallet {
+		if *balance >= cap {
+			c.productionRemainder[i] = 0 // Never bank production while storage is full.
+			continue                     // Preserve rewards above the production cap, including MaxInt64.
 		}
-		return int64(math.Floor(math.Min(cap, math.Max(0, float64(st)+add))))
+		earned[i].Mul(&earned[i], elapsed)
+		earned[i].Add(&earned[i], big.NewInt(c.productionRemainder[i]))
+		var whole, remainder big.Int
+		whole.QuoRem(&earned[i], denominator, &remainder)
+		if whole.Cmp(big.NewInt(cap-*balance)) >= 0 {
+			*balance, c.productionRemainder[i] = cap, 0
+		} else {
+			*balance += whole.Int64()
+			c.productionRemainder[i] = remainder.Int64()
+		}
 	}
-	w := c.Wallet
-	w.Food, w.Wood, w.Stone, w.Iron = clamp(w.Food, d[0]), clamp(w.Wood, d[1]), clamp(w.Stone, d[2]), clamp(w.Iron, d[3])
-	c.Wallet, c.LastSettleAt = w, now
+	c.LastSettleAt = now
 }
 
 func slotB(c *CityState, slot string) *BuildingInstance {
@@ -197,6 +218,10 @@ func upDur(sp BuildingSpec, lvl int32) time.Duration {
 }
 
 func startUpgrade(c *CityState, cat map[int32]BuildingSpec, now time.Time, slot string, cfgID int32) (UpgradeResult, *BuildJob, error) {
+	return startUpgradeWithAllocator(c, cat, now, slot, cfgID, func() (int64, error) { c.nextJobID++; return c.nextJobID, nil })
+}
+
+func startUpgradeWithAllocator(c *CityState, cat map[int32]BuildingSpec, now time.Time, slot string, cfgID int32, allocate func() (int64, error)) (UpgradeResult, *BuildJob, error) {
 	sp, ok := cat[cfgID]
 	if !ok {
 		return UpgradeResult{}, nil, ErrUnknownBuilding
@@ -214,9 +239,12 @@ func startUpgrade(c *CityState, cat map[int32]BuildingSpec, now time.Time, slot 
 	if !w.Sub(cost) {
 		return UpgradeResult{}, nil, ErrInsufficientRes
 	}
+	id, err := allocate()
+	if err != nil {
+		return UpgradeResult{}, nil, err
+	}
 	c.Wallet = w
-	c.nextJobID++
-	job := &BuildJob{ID: c.nextJobID, Slot: slot, CfgID: cfgID, Target: tgt, Status: QueueWaiting}
+	job := &BuildJob{ID: id, Slot: slot, CfgID: cfgID, Target: tgt, Status: QueueWaiting}
 	dur := upDur(sp, tgt)
 	active, last := 0, time.Time{}
 	for _, j := range c.BuildJobs {
@@ -341,13 +369,54 @@ func (h *Hub) UseStore(store *PGStore, serverID int32, flushEvery time.Duration)
 		flushEvery = 30 * time.Second
 	}
 	h.flushEvery = flushEvery
+	if store != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = store.bindQueueIdentity(ctx, serverID)
+	}
 }
 
-func (h *Hub) RegisterCity(c *CityState) {
+// RegisterCity is the legacy memory-only registration port.
+// Durable creation must use RegisterNewCity and propagate its error.
+func (h *Hub) RegisterCity(c *CityState) error {
 	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.store != nil {
+		return ErrNewCityRegistrationRequired
+	}
+	if c == nil {
+		return ErrCityNotFound
+	}
 	h.registerCityLocked(c)
-	h.mu.Unlock()
-	h.persistCity(c.ID)
+	settleProduction(c, h.cat, h.now())
+	return nil
+}
+
+// RegisterNewCity initializes a genuinely new city's durable checkpoint at the
+// operation time. Call only after fresh world creation, never as load fallback.
+func (h *Hub) RegisterNewCity(ctx context.Context, c *CityState) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if c == nil || c.ID <= 0 {
+		return ErrCityNotFound
+	}
+	if h.cities[c.ID] != nil {
+		return ErrCityAlreadyRegistered
+	}
+	work, now := cloneCity(c), h.now()
+	work.LastSettleAt, work.productionRemainder = now, [4]int64{}
+	work.walletBase, work.walletSaved = Resources{}, false
+	if _, err := reconcileWallet(work.Wallet, Resources{}, Resources{}); err != nil {
+		return err
+	}
+	if h.store != nil {
+		if err := h.store.saveCity(ctx, h.serverID, work, h.cat, now, nil, true); err != nil {
+			return err
+		}
+	}
+	*c = *work
+	h.registerCityLocked(c)
+	return nil
 }
 
 func (h *Hub) registerCityLocked(c *CityState) {
@@ -363,6 +432,8 @@ func (h *Hub) registerCityLocked(c *CityState) {
 
 // LoadCity loads state from PG and registers the city (re-schedules active build jobs).
 func (h *Hub) LoadCity(ctx context.Context, cityID, playerID int64) (*CityState, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	if h.store == nil {
 		return nil, errors.New("domestic: persistence not configured")
 	}
@@ -370,9 +441,7 @@ func (h *Hub) LoadCity(ctx context.Context, cityID, playerID int64) (*CityState,
 	if err != nil {
 		return nil, err
 	}
-	h.mu.Lock()
 	h.registerCityLocked(c)
-	h.mu.Unlock()
 	return c, nil
 }
 
@@ -551,12 +620,20 @@ func (h *Hub) StartBuildingUpgrade(cityID int64, slot string, cfgID int32) (Upgr
 	defer h.mu.Unlock()
 	var res UpgradeResult
 	var job *BuildJob
-	err := h.updateCityLocked(context.Background(), cityID, func(city *CityState) error {
-		var err error
-		settleProduction(city, h.cat, h.now())
-		res, job, err = startUpgrade(city, h.cat, h.now(), slot, cfgID)
-		return err
-	})
+	var err error
+	if h.store != nil {
+		city := h.cities[cityID]
+		if city == nil {
+			return UpgradeResult{}, ErrCityNotFound
+		}
+		res, job, err = h.store.startBuildingUpgrade(context.Background(), h.serverID, city, h.cat, h.now(), slot, cfgID)
+	} else {
+		err = h.updateCityLocked(context.Background(), cityID, func(city *CityState) error {
+			settleProduction(city, h.cat, h.now())
+			res, job, err = startUpgrade(city, h.cat, h.now(), slot, cfgID)
+			return err
+		})
+	}
 	if err != nil {
 		return UpgradeResult{}, err
 	}

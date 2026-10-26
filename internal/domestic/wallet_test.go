@@ -30,7 +30,9 @@ func TestWalletReconcile(t *testing.T) {
 func TestWalletOperationRollback(t *testing.T) {
 	h := NewHub(nil)
 	c := &CityState{ID: 1, Wallet: Resources{Food: 1000}}
-	h.RegisterCity(c)
+	if err := h.RegisterCity(c); err != nil {
+		t.Fatal(err)
+	}
 	_, err := h.WithWallet(context.Background(), 1, func(w Resources) (Resources, error) { return Resources{}, errors.New("reject") })
 	if err == nil || c.Wallet.Food != 1000 {
 		t.Fatal(c.Wallet, err)
@@ -65,7 +67,10 @@ func TestPGWalletAuthority(t *testing.T) {
 	h := NewHub(func() time.Time { return now })
 	h.UseStore(NewPGStore(p), 1, time.Second)
 	c := &CityState{ID: 1, PlayerID: 42, Wallet: Resources{Food: 1000}, LastSettleAt: now, Buildings: map[string]*BuildingInstance{"farm": {2, 1}}}
-	h.RegisterCity(c)
+	seedDomesticOwner(t, p, c)
+	if err := h.RegisterNewCity(ctx, c); err != nil {
+		t.Fatal(err)
+	}
 	if _, err = p.Exec(ctx, "UPDATE player_wallet SET food=food+500"); err != nil {
 		t.Fatal(err)
 	}

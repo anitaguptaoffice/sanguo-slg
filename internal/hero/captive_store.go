@@ -24,24 +24,24 @@ COMMENT ON TABLE player_hero_captive IS '俘虏元数据；对齐 legacy sys_her
 // MemCaptiveStore is an in-memory captive metadata store.
 type MemCaptiveStore struct {
 	mu   sync.RWMutex
-	rows map[int64]CaptiveRecord
+	rows map[heroKey]CaptiveRecord
 }
 
 func NewMemCaptiveStore() *MemCaptiveStore {
-	return &MemCaptiveStore{rows: map[int64]CaptiveRecord{}}
+	return &MemCaptiveStore{rows: map[heroKey]CaptiveRecord{}}
 }
 
-func (m *MemCaptiveStore) PutCaptive(_ context.Context, _ int32, heroID int64, rec CaptiveRecord) error {
+func (m *MemCaptiveStore) PutCaptive(_ context.Context, serverID int32, heroID int64, rec CaptiveRecord) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.rows[heroID] = rec
+	m.rows[heroKey{serverID, heroID}] = rec
 	return nil
 }
 
-func (m *MemCaptiveStore) GetCaptive(_ context.Context, _ int32, heroID int64) (*CaptiveRecord, error) {
+func (m *MemCaptiveStore) GetCaptive(_ context.Context, serverID int32, heroID int64) (*CaptiveRecord, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	rec, ok := m.rows[heroID]
+	rec, ok := m.rows[heroKey{serverID, heroID}]
 	if !ok {
 		return nil, nil
 	}
@@ -49,10 +49,10 @@ func (m *MemCaptiveStore) GetCaptive(_ context.Context, _ int32, heroID int64) (
 	return &cp, nil
 }
 
-func (m *MemCaptiveStore) DeleteCaptive(_ context.Context, _ int32, heroID int64) error {
+func (m *MemCaptiveStore) DeleteCaptive(_ context.Context, serverID int32, heroID int64) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	delete(m.rows, heroID)
+	delete(m.rows, heroKey{serverID, heroID})
 	return nil
 }
 

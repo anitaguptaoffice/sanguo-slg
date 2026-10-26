@@ -16,8 +16,8 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/guild"
 	guildv1 "github.com/anitaguptaoffice/sanguo-slg/internal/guild/pb/sanguo/guild/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -64,9 +64,9 @@ func runINTG010Wave13Smoke(t *testing.T) {
 	baseSnap := runData002M4Steps(t, ctx, c, apiSrv, pool, sid, playerID)
 	ext := runINTG008DeepenSteps(t, ctx, c, apiSrv, pool, sid, playerID, baseSnap)
 	marchID, _, _, _, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
-	smokeQuest003TrainOrBuildOptional(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Bag2003 += smokeQuest003TrainOrBuildOptional(t, ctx, c, apiSrv, pool, sid, playerID)
 
-	smokeINTG010DualLeaderboardGateway(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Gold = smokeINTG010DualLeaderboardGateway(t, ctx, c, apiSrv, pool, sid, playerID)
 	consumed := smokeINTG010UseConsumableGateway(t, c, sid)
 	smokeINTG010SocialOptional(t, c, sid)
 
@@ -90,7 +90,7 @@ func runINTG010Wave13Smoke(t *testing.T) {
 	runData002M3Subset(t, ctx, c2, apiSrv2, pool2, sid2, playerID)
 }
 
-func smokeINTG010DualLeaderboardGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) {
+func smokeINTG010DualLeaderboardGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) int64 {
 	t.Helper()
 	smokeStep(t, "INTG-010: seed power + RefreshRanks for PLAYER_POWER leaderboard")
 	_, err := pool.Exec(ctx, `UPDATE player SET power = 3200 WHERE server_id = $1 AND player_id = $2`, intg006ServerID, playerID)
@@ -102,10 +102,11 @@ func smokeINTG010DualLeaderboardGateway(t *testing.T, ctx context.Context, c *we
 	}
 	smokeAssertLeaderboardGateway(t, c, sid, rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_POWER, playerID)
 
+	const rankSeedGold = int64(0)
 	smokeStep(t, "INTG-010: seed wallet + RefreshRanks for PLAYER_RESOURCE leaderboard")
 	_, err = pool.Exec(ctx, `
-		UPDATE player_wallet SET food = 8000, wood = 7000, iron = 1000, stone = 500, gold = 0
-		WHERE server_id = $1 AND player_id = $2`, intg006ServerID, playerID)
+		UPDATE player_wallet SET food = 8000, wood = 7000, iron = 1000, stone = 500, gold = $3
+		WHERE server_id = $1 AND player_id = $2`, intg006ServerID, playerID, rankSeedGold)
 	if err != nil {
 		intg010Failf(t, "seed wallet for resource rank", "err=%v", err)
 	}
@@ -113,6 +114,14 @@ func smokeINTG010DualLeaderboardGateway(t *testing.T, ctx context.Context, c *we
 		intg010Failf(t, "refresh ranks resource", "err=%v", err)
 	}
 	smokeAssertLeaderboardGateway(t, c, sid, rankv1.LeaderboardType_LEADERBOARD_TYPE_PLAYER_RESOURCE, playerID)
+	var afterGold int64
+	err = pool.QueryRow(ctx, `SELECT gold FROM player_wallet WHERE server_id=$1 AND player_id=$2`,
+		intg006ServerID, playerID).Scan(&afterGold)
+	if err != nil || afterGold != rankSeedGold {
+		intg010Failf(t, "exact rank wallet seed", "gold=%d want=%d err=%v", afterGold, rankSeedGold, err)
+	}
+	t.Logf("verified resource-rank wallet seed gold=%d", rankSeedGold)
+	return rankSeedGold
 }
 
 func smokeAssertLeaderboardGateway(t *testing.T, c *websocket.Conn, sid string, lbType rankv1.LeaderboardType, viewerPlayerID int64) {

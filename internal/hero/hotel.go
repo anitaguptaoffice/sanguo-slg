@@ -3,7 +3,6 @@ package hero
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"time"
 )
 
@@ -30,6 +29,7 @@ var (
 
 // HotelCandidate is one row in the per-city recruit pool.
 type HotelCandidate struct {
+	ServerID    int32 // Authoritative scope populated by transaction snapshots/plans.
 	CandidateID int64
 	CityID      int64
 	DisplayName string
@@ -82,7 +82,7 @@ func hotelMaxLevel(hotelLevel int32) int32 {
 	return cap
 }
 
-func rollHotelHeroLevel(rng *rand.Rand, hotelLevel int32) int32 {
+func rollHotelHeroLevel(rng randomIntn, hotelLevel int32) int32 {
 	maxL := hotelMaxLevel(hotelLevel)
 	if maxL < 1 {
 		return 1
@@ -114,7 +114,7 @@ func goldNeedForHotelHero(level int32, force, intel, politics int32) int64 {
 var hotelFamilyNames = []string{"赵", "钱", "孙", "李", "周", "吴", "郑", "王", "冯", "陈", "褚", "卫", "蒋", "沈", "韩", "杨"}
 var hotelGivenNames = []string{"武", "文", "德", "义", "忠", "信", "平", "安", "成", "远", "亮", "雄", "勇", "谋", "策", "云"}
 
-func randomHotelName(rng *rand.Rand, sex int16) string {
+func randomHotelName(rng randomIntn, sex int16) string {
 	f := hotelFamilyNames[rng.Intn(len(hotelFamilyNames))]
 	g := hotelGivenNames[rng.Intn(len(hotelGivenNames))]
 	if sex == 0 {
@@ -124,7 +124,7 @@ func randomHotelName(rng *rand.Rand, sex int16) string {
 }
 
 // GenerateHotelCandidate rolls one recruit row (legacy generateRecruitHero subset).
-func GenerateHotelCandidate(rng *rand.Rand, cityID int64, hotelLevel int32, candidateID int64, now time.Time) *HotelCandidate {
+func GenerateHotelCandidate(rng randomIntn, cityID int64, hotelLevel int32, candidateID int64, now time.Time) *HotelCandidate {
 	sex := int16(1)
 	if rng.Intn(10) == 0 {
 		sex = 0
@@ -178,10 +178,7 @@ func (s *Service) ListHotelCandidates(ctx context.Context, p PlayerRef, city Cit
 	if hotelLevel <= 0 {
 		return nil, ErrHotelNotBuilt
 	}
-	rng := s.RNG
-	if rng == nil {
-		rng = rand.New(rand.NewSource(1))
-	}
+	rng := s.random()
 	if err := SyncHotelPool(ctx, hs, rng, p.ServerID, city.CityID, hotelLevel, s.now()); err != nil {
 		return nil, err
 	}
@@ -203,15 +200,12 @@ func (s *Service) RefreshHotelPoolPaid(ctx context.Context, p PlayerRef, city Ci
 	if err := cityPort.SpendItem(ctx, p, HotelRefreshItemCfgID, 1); err != nil {
 		return err
 	}
-	rng := s.RNG
-	if rng == nil {
-		rng = rand.New(rand.NewSource(1))
-	}
+	rng := s.random()
 	return RefreshHotelPool(ctx, hs, rng, p.ServerID, city.CityID, hotelLevel, s.now())
 }
 
 // SyncHotelPool applies timed eviction and fills pool to hotel level.
-func SyncHotelPool(ctx context.Context, hs HotelStore, rng *rand.Rand, serverID int32, cityID int64, hotelLevel int32, now time.Time) error {
+func SyncHotelPool(ctx context.Context, hs HotelStore, rng randomIntn, serverID int32, cityID int64, hotelLevel int32, now time.Time) error {
 	if hotelLevel <= 0 {
 		return ErrHotelNotBuilt
 	}
@@ -262,7 +256,7 @@ func SyncHotelPool(ctx context.Context, hs HotelStore, rng *rand.Rand, serverID 
 }
 
 // RefreshHotelPool wipes and regenerates pool (legacy resetRecruitHero / regenerateRecruitHero).
-func RefreshHotelPool(ctx context.Context, hs HotelStore, rng *rand.Rand, serverID int32, cityID int64, hotelLevel int32, now time.Time) error {
+func RefreshHotelPool(ctx context.Context, hs HotelStore, rng randomIntn, serverID int32, cityID int64, hotelLevel int32, now time.Time) error {
 	if hotelLevel <= 0 {
 		return ErrHotelNotBuilt
 	}
@@ -327,19 +321,15 @@ func (s *Service) RecruitHotelCandidate(ctx context.Context, p PlayerRef, city C
 		}
 		return RecruitHotelResult{}, err
 	}
-	maxID, err := s.Store.MaxHeroID(ctx, p.ServerID)
-	if err != nil {
-		return RecruitHotelResult{}, err
-	}
 	now := s.now()
 	h := &Hero{
-		ServerID: p.ServerID, HeroID: maxID + 1, PlayerID: p.PlayerID,
+		ServerID: p.ServerID, PlayerID: p.PlayerID,
 		TemplateCfgID: TemplateCfgIDHotelRandom, DisplayName: cand.DisplayName,
 		Level: cand.Level, Loyalty: cand.Loyalty,
 		Force: cand.Force, Intel: cand.Intel, Politics: cand.Politics, Command: cand.Command,
 		Status: StatusIdle, CreatedAt: now,
 	}
-	if err := s.Store.SaveHero(ctx, h); err != nil {
+	if err := s.Store.CreateHero(ctx, h); err != nil {
 		return RecruitHotelResult{}, err
 	}
 	if err := hs.DeleteCandidate(ctx, p.ServerID, city.CityID, candidateID); err != nil {

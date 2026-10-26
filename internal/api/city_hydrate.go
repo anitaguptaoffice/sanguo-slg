@@ -9,37 +9,52 @@ import (
 
 // hydratePlayerCities loads world/domestic snapshots and registers military cities for the session.
 func (s *Server) hydratePlayerCities(ctx context.Context, pc PlayerContext) {
+	if pc.PlayerID <= 0 || !s.domesticCityScope(pc.ServerID) || s.world == nil || s.world.Store == nil {
+		return
+	}
 	cities, err := s.world.Store.PlayerCities(ctx, pc.ServerID, pc.PlayerID)
 	if err != nil {
 		return
 	}
 	for _, wc := range cities {
-		s.cityCoords[wc.CityID] = cityCoord{x: wc.X, y: wc.Y}
+		if wc.ServerID != pc.ServerID || wc.PlayerID != pc.PlayerID {
+			continue
+		}
 		if snapshot := s.citySnapshot(wc.CityID); snapshot != nil {
+			if snapshot.PlayerID != pc.PlayerID {
+				continue
+			}
+			s.cacheCity(wc.CityID, snapshot)
+			s.cacheCityCoord(wc.CityID, wc.X, wc.Y)
 			s.ensureMilitaryCity(snapshot)
 			continue
 		}
 		cs, err := s.domestic.LoadCity(ctx, wc.CityID, pc.PlayerID)
 		if err != nil {
+			s.log.ErrorContext(ctx, "city hydrate failed", "server_id", pc.ServerID, "city_id", wc.CityID, "error", err)
 			continue
 		}
+		s.cacheCityCoord(wc.CityID, wc.X, wc.Y)
 		s.cacheCity(wc.CityID, cs)
 		s.ensureMilitaryCity(s.citySnapshot(wc.CityID))
 	}
 }
 
 func (s *Server) registerNewCity(cityID int64, x, y int) {
-	s.cityCoords[cityID] = cityCoord{x: x, y: y}
+	s.cacheCityCoord(cityID, x, y)
 	s.ensureMilitaryCity(s.citySnapshot(cityID))
 }
 
 // RegisterCityForTest exposes in-memory city wiring for handler tests.
-func (s *Server) RegisterCityForTest(cityID int64, c *domestic.CityState, x, y int) {
+func (s *Server) RegisterCityForTest(cityID int64, c *domestic.CityState, x, y int) error {
 	if s.domestic != nil && s.citySnapshot(cityID) == nil {
-		s.domestic.RegisterCity(c)
+		if err := s.domestic.RegisterCity(c); err != nil {
+			return err
+		}
 	}
 	s.cacheCity(cityID, c)
 	s.registerNewCity(cityID, x, y)
+	return nil
 }
 
 // BindSessionForTest binds a player context without going through login.

@@ -110,6 +110,7 @@ import {
 } from "@/net/marchArrival";
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
+import { garrisonPatch, readyGarrison } from "@/net/garrisonState";
 import { CityStateFetch } from "@/net/cityStateFetch";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
@@ -556,7 +557,8 @@ export class MainCityScene implements Scene {
     this.hud = ctx.hud;
     this.gateway = ctx.gateway;
     this.layoutFrame = ctx.layoutFrame;
-    this.cityStateFetch = new CityStateFetch(this.gateway, () => this.session?.cityId ?? null);
+    this.cityStateFetch = new CityStateFetch(this.gateway, () => this.session?.cityId ?? null,
+      () => `${this.gateway.getSessionId()}:${this.session?.serverId}:${this.session?.player.player_id}`);
     this.cityStatePoll = new CityStatePoll({
       fetch: this.cityStateFetch,
       isPanelVisible: () => this.isAnyPanelVisible(),
@@ -1063,6 +1065,8 @@ export class MainCityScene implements Scene {
         );
       },
       (queueIds) => {
+        this.cityStateFetch.clear();
+        void this.refreshState(); // Read completion; never infer ready troops from a deadline.
         const events = queueIds.map((id) => ({ kind: "recruit" as const, queueId: id }));
         this.applyQueueCompleteHudPulse(events);
         this.applyQueueCompleteFocusRing(events);
@@ -1688,7 +1692,7 @@ export class MainCityScene implements Scene {
     const marchEl = this.militaryPanel.querySelector('[data-role="march"]');
     const hintEl = this.militaryPanel.querySelector('[data-role="march-target-hint"]');
     if (troopsEl) {
-      troopsEl.textContent = `城内兵力：${formatTroopStacks(this.session?.cityTroops)}`;
+      troopsEl.textContent = `城内兵力：${this.session?.garrisonStatus === "ready" ? formatTroopStacks(this.session.cityTroops) : "待同步（请刷新）"}`;
     }
     if (marchEl) {
       marchEl.textContent = this.lastMarch ? formatMarchHint(this.lastMarch) : "暂无行军";
@@ -1713,8 +1717,9 @@ export class MainCityScene implements Scene {
     });
     const troopReserve = buildMarchFormTroopReserveLine(
       marchSnap.marchCountRaw,
-      this.session?.cityTroops ?? [],
+      readyGarrison(this.session),
     );
+    if (troopReserve && this.session?.garrisonStatus !== "ready") troopReserve.line = "城内可用兵力待同步（请刷新）";
     syncMarchFormTroopReserveLine(this.militaryPanel, troopReserve);
     const stripModel = resolveMarchFormReadonlyStripModel({
       intelSelectedMarch: this.marchList.getSelectedMarch(),
@@ -1746,7 +1751,7 @@ export class MainCityScene implements Scene {
       localBusyHeroIds: this.marchLocalBusyHeroIds,
       cityX: this.session?.cityX,
       cityY: this.session?.cityY,
-      cityTroops: this.session?.cityTroops ?? [],
+      cityTroops: readyGarrison(this.session),
     });
     syncMarchSubmitButton(
       this.militaryPanel,
@@ -1807,7 +1812,7 @@ export class MainCityScene implements Scene {
     return {
       cityX: this.session?.cityX,
       cityY: this.session?.cityY,
-      cityTroops: this.session?.cityTroops ?? [],
+      cityTroops: readyGarrison(this.session),
       ownedHeroes: this.marchFormHeroes,
       localBusyHeroIds: this.marchLocalBusyHeroIds,
       wallet: this.session?.wallet,
@@ -2443,8 +2448,10 @@ export class MainCityScene implements Scene {
     wallet?: ResourceWallet;
     buildings?: CityBuilding[];
     production_rates?: ResourceWallet;
+    garrison?: unknown;
   }): void {
     if (!this.session) return;
+    if (!this.cityStateFetch.isCurrent(state)) return;
     const prevBuildings = this.session.buildings;
     const nowMs = Date.now();
     let justCompleted: string[] = [];
@@ -2458,6 +2465,7 @@ export class MainCityScene implements Scene {
     const afterWallet = state.wallet ?? this.session.wallet;
     this.patchSession(
       {
+        ...garrisonPatch(this.session, state.garrison),
         wallet: afterWallet,
         buildings: state.buildings ?? this.session.buildings,
         productionRates: state.production_rates ?? this.session.productionRates,
@@ -2485,6 +2493,7 @@ export class MainCityScene implements Scene {
     wallet?: ResourceWallet;
     buildings?: CityBuilding[];
     production_rates?: ResourceWallet;
+    garrison?: unknown;
   }): void {
     this.applyCityStateFromFetch(state);
   }
@@ -2530,7 +2539,7 @@ export class MainCityScene implements Scene {
       this.walletGainBrief = null;
     }
     const p = s?.player;
-    const troopHint = formatTroopStacks(s?.cityTroops);
+    const troopHint = s?.garrisonStatus === "ready" ? formatTroopStacks(s.cityTroops) : "待同步";
     const dprTag = `art ${this.assets.getTextureScale()}× @${this.assets.getDevicePixelRatio().toFixed(1)}dpr`;
     const groups: string[] = [
       `${s?.cityName ?? "主城"} · ${p?.display_name ?? "君主"} Lv${p?.level ?? 1}`,
@@ -2700,7 +2709,7 @@ export class MainCityScene implements Scene {
     });
     const troopReserve = buildMarchFormTroopReserveLine(
       marchSnap.marchCountRaw,
-      this.session?.cityTroops ?? [],
+      readyGarrison(this.session),
     );
     const marchValidated = validateMarchForm({
       toXRaw: marchSnap.toXRaw,
@@ -2711,7 +2720,7 @@ export class MainCityScene implements Scene {
       localBusyHeroIds: this.marchLocalBusyHeroIds,
       cityX: this.session?.cityX,
       cityY: this.session?.cityY,
-      cityTroops: this.session?.cityTroops ?? [],
+      cityTroops: readyGarrison(this.session),
     });
     return buildHudMilitaryTodoSweepCounts({
       marches: this.minimapMarches,
@@ -3055,6 +3064,7 @@ export class MainCityScene implements Scene {
 
   private async refreshState(): Promise<void> {
     if (!this.session) return;
+    const session = this.session;
     this.status = "刷新中…";
     this.renderHud();
     try {
@@ -3062,13 +3072,11 @@ export class MainCityScene implements Scene {
         wallet?: ResourceWallet;
         buildings?: CityBuilding[];
         production_rates?: ResourceWallet;
+        garrison?: unknown;
       } | null;
+      if (this.session !== session) return;
       if (state) {
-        this.applyCityStateFromFetch({
-          wallet: state.wallet,
-          buildings: state.buildings ?? [],
-          production_rates: state.production_rates,
-        });
+        this.applyCityStateFromFetch(state);
       }
       await this.syncSessionCityCoords();
       await this.refreshMinimapMarches();
@@ -3145,6 +3153,8 @@ export class MainCityScene implements Scene {
     });
     this.syncMilitaryPanel();
     this.renderHud();
+    const session = this.session;
+    this.cityStateFetch.clear();
     let pulseQueueId: number | null = null;
     try {
       const res = (await this.gateway.recruitTroop(this.session.cityId, unitCfgId, count)) as {
@@ -3153,6 +3163,8 @@ export class MainCityScene implements Scene {
         queue_id?: number;
         finish_at_ms?: number;
       };
+      if (this.session !== session) return;
+      this.cityStateFetch.clear();
       if (res.wallet) this.session.wallet = res.wallet;
       const pulseKeys = walletRecruitTroopDeductPulseKeys(
         walletBefore,
@@ -3236,7 +3248,7 @@ export class MainCityScene implements Scene {
       localBusyHeroIds: this.marchLocalBusyHeroIds,
       cityX: this.session.cityX,
       cityY: this.session.cityY,
-      cityTroops: this.session.cityTroops,
+      cityTroops: readyGarrison(this.session),
     });
     if (!validated.ok) {
       setMarchFormErrorDisplay(this.militaryPanel, validated.message);
@@ -3244,6 +3256,8 @@ export class MainCityScene implements Scene {
       return;
     }
     const { toX, toY, marchCount, heroId } = validated;
+    const session = this.session;
+    this.cityStateFetch.clear();
     const presentMarchResult = captureCenterPanelIntent(this.militaryPanel);
     setMarchFormErrorDisplay(this.militaryPanel, null);
     const troops = [{ unit_cfg_id: 1, count: marchCount }];
@@ -3259,6 +3273,8 @@ export class MainCityScene implements Scene {
         heroId,
         troops.map((t) => ({ unit_cfg_id: t.unit_cfg_id ?? 1, count: t.count ?? 0 })),
       )) as { march?: MarchSummary; city_troops?: CityTroopStack[] };
+      if (this.session !== session) return;
+      this.cityStateFetch.clear();
       this.marchLocalBusyHeroIds.add(heroId);
       this.marchFormHeroes = this.marchFormHeroes.map((h) =>
         h.hero_id === heroId ? { ...h, status: HERO_STATUS_MARCH } : h,
@@ -3267,10 +3283,7 @@ export class MainCityScene implements Scene {
       if (res.city_troops?.length) {
         this.session.cityTroops = mergeCityTroops(this.session.cityTroops, res.city_troops);
       } else {
-        this.session.cityTroops = mergeCityTroops(this.session.cityTroops, troops.map((t) => ({
-          unit_cfg_id: t.unit_cfg_id,
-          count: 0,
-        })));
+        this.session.garrisonStatus = "stale"; // Missing debit data is not authoritative zero.
       }
       writeMarchTargetSession(toX, toY);
       setMarchFormErrorDisplay(this.militaryPanel, null);
@@ -3293,7 +3306,11 @@ export class MainCityScene implements Scene {
         toY,
       });
       void this.refreshMinimapMarches();
+      await this.refreshState();
     } catch (e) {
+      if (this.session !== session) return;
+      this.cityStateFetch.clear();
+      this.session.garrisonStatus = "stale";
       const msg = formatPanelGatewayErrorFromUnknown("march", e);
       setMarchFormErrorDisplay(this.militaryPanel, msg);
       this.status = msg;

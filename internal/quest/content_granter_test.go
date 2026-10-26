@@ -2,6 +2,7 @@ package quest
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
@@ -45,5 +46,23 @@ func TestContentGranterGrant(t *testing.T) {
 	qty2, _ := svc.Get(p, 2001)
 	if qty2 != 1 {
 		t.Fatalf("idempotent grant should not stack items: %d", qty2)
+	}
+}
+
+func TestContentGranterHonorsCanceledContext(t *testing.T) {
+	cat, err := content.EmbeddedCatalog()
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc := content.NewService(cat)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	req := GrantRequest{ServerID: 1, PlayerID: 98, IdempotencyKey: "quest:98:1002:claim",
+		Rewards: RewardBundle{Items: []RewardItem{{ItemCfgID: 2004, Quantity: 1}}}}
+	if _, err := NewContentGranter(svc).GrantQuestReward(ctx, req); !errors.Is(err, context.Canceled) {
+		t.Fatalf("canceled grant: %v", err)
+	}
+	if qty, err := svc.Get(content.PlayerRef{ServerID: 1, PlayerID: 98}, 2004); err != nil || qty != 0 {
+		t.Fatalf("canceled grant changed bag: %d %v", qty, err)
 	}
 }

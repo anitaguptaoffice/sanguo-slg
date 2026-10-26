@@ -14,8 +14,8 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -25,6 +25,7 @@ import (
 const (
 	smokeDailyRecruitQuestCfgID = int32(1015)
 	smokeDailyRecruitUnlockLvl  = int32(7)
+	smokeDailyRecruitGoldReward = int64(40) // Unchanged DATA-002 daily1015 silver reward.
 )
 
 const smokeINTG008CfgHint = smokeINTG007CfgHint + "; INTG-008: ListRecruitTemplates; daily_food via GM grant hook; daily_recruit_1 quest_cfg_id=1015"
@@ -92,8 +93,10 @@ func runINTG008DeepenSteps(t *testing.T, ctx context.Context, c *websocket.Conn,
 	bag2001 := base.Bag2001
 	bag2001 += smokeGmSendMailAndClaim(t, ctx, c, pool, apiSrv, sid, playerID)
 	smokeListRecruitTemplatesGateway(t, c, sid)
-	dailyFoodState := smokeDailyFoodChainGrantHook(t, ctx, c, apiSrv, pool, sid, playerID)
-	heroTpl, dailyRecruitState := smokeDailyRecruitChain(t, ctx, c, apiSrv, pool, sid, playerID)
+	dailyFoodState, foodGold := smokeDailyFoodChainGrantHook(t, ctx, c, apiSrv, pool, sid, playerID)
+	heroTpl, dailyRecruitState, recruitGold := smokeDailyRecruitChain(t, ctx, c, apiSrv, pool, sid, playerID)
+	// The M4 snapshot predates both verified canonical daily rewards.
+	base.Gold += foodGold + recruitGold
 	return intg008PersistSnapshot{
 		intg007PersistSnapshot: intg007PersistSnapshot{
 			Base:            base,
@@ -142,7 +145,7 @@ func smokeListRecruitTemplatesGateway(t *testing.T, c *websocket.Conn, sid strin
 	}
 }
 
-func smokeDailyFoodChainGrantHook(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) int16 {
+func smokeDailyFoodChainGrantHook(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) (state int16, goldReward int64) {
 	t.Helper()
 	smokeStep(t, fmt.Sprintf("QUEST-002: unlock + accept daily_food_1 quest_cfg_id=%d", smokeDailyFoodQuestCfgID))
 	_, err := pool.Exec(ctx, `UPDATE player SET level = 5 WHERE server_id = $1 AND player_id = $2`, intg006ServerID, playerID)
@@ -166,6 +169,7 @@ func smokeDailyFoodChainGrantHook(t *testing.T, ctx context.Context, c *websocke
 		intg008Failf(t, "gm grant food for daily", "err=%v", err)
 	}
 
+	beforeGold := smokeDailyGoldBeforeClaim(t, ctx, pool, playerID, smokeDailyFoodQuestCfgID, smokeDailyFoodGoldReward)
 	smokeStep(t, "QUEST-002: claim daily_food_1 reward")
 	claimResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteClaimQuestReward, TraceId: "i8-daily-c", SessionId: sid, ServerId: intg006ServerID,
@@ -175,7 +179,7 @@ func smokeDailyFoodChainGrantHook(t *testing.T, ctx context.Context, c *websocke
 		intg008Failf(t, "claim daily quest", "quest_cfg_id=%d code=%d msg=%s", smokeDailyFoodQuestCfgID, claimResp.Code, claimResp.Msg)
 	}
 
-	var state int16
+	goldReward = smokeAssertDailyGoldClaim(t, ctx, pool, playerID, smokeDailyFoodQuestCfgID, beforeGold, smokeDailyFoodGoldReward)
 	err = pool.QueryRow(ctx, `
 		SELECT state FROM player_quest
 		WHERE server_id=$1 AND player_id=$2 AND quest_cfg_id=$3`,
@@ -186,10 +190,10 @@ func smokeDailyFoodChainGrantHook(t *testing.T, ctx context.Context, c *websocke
 	if state != 3 {
 		intg008Failf(t, "daily quest state after claim", "quest_cfg_id=%d state=%d want=3", smokeDailyFoodQuestCfgID, state)
 	}
-	return state
+	return state, goldReward
 }
 
-func smokeDailyRecruitChain(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) (heroTemplateID int32, recruitDailyState int16) {
+func smokeDailyRecruitChain(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) (heroTemplateID int32, recruitDailyState int16, goldReward int64) {
 	t.Helper()
 	smokeStep(t, fmt.Sprintf("QUEST-002: daily_recruit_1 quest_cfg_id=%d", smokeDailyRecruitQuestCfgID))
 	_, err := pool.Exec(ctx, `UPDATE player SET level = $3 WHERE server_id = $1 AND player_id = $2`,
@@ -226,6 +230,7 @@ func smokeDailyRecruitChain(t *testing.T, ctx context.Context, c *websocket.Conn
 		intg008Failf(t, "recruit hero", "template_cfg_id=%d code=%d msg=%s", smokeHeroTemplateCfgID, recruitResp.Code, recruitResp.Msg)
 	}
 
+	beforeGold := smokeDailyGoldBeforeClaim(t, ctx, pool, playerID, smokeDailyRecruitQuestCfgID, smokeDailyRecruitGoldReward)
 	smokeStep(t, "QUEST-002: claim daily_recruit_1 reward")
 	claimResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteClaimQuestReward, TraceId: "i8-recruit-c", SessionId: sid, ServerId: intg006ServerID,
@@ -235,6 +240,7 @@ func smokeDailyRecruitChain(t *testing.T, ctx context.Context, c *websocket.Conn
 		intg008Failf(t, "claim daily recruit quest", "quest_cfg_id=%d code=%d msg=%s", smokeDailyRecruitQuestCfgID, claimResp.Code, claimResp.Msg)
 	}
 
+	goldReward = smokeAssertDailyGoldClaim(t, ctx, pool, playerID, smokeDailyRecruitQuestCfgID, beforeGold, smokeDailyRecruitGoldReward)
 	var state int16
 	err = pool.QueryRow(ctx, `
 		SELECT state FROM player_quest
@@ -261,11 +267,38 @@ func smokeDailyRecruitChain(t *testing.T, ctx context.Context, c *websocket.Conn
 	}
 	for _, h := range listOut.GetHeroes() {
 		if h.GetTemplateCfgId() == smokeHeroTemplateCfgID {
-			return smokeHeroTemplateCfgID, state
+			return smokeHeroTemplateCfgID, state, goldReward
 		}
 	}
 	intg008Failf(t, "list player heroes", "template_cfg_id=%d not found total=%d", smokeHeroTemplateCfgID, listOut.GetTotalCount())
-	return 0, state
+	return 0, state, goldReward
+}
+
+// Read the pre-claim balance and verify the canonical reward independently of
+// the observed credit. Never derive an expected restart balance from actual state.
+func smokeDailyGoldBeforeClaim(t *testing.T, ctx context.Context, pool *pgxpool.Pool, playerID int64, questID int32, wantGold int64) int64 {
+	t.Helper()
+	var beforeGold, canonicalGold int64
+	err := pool.QueryRow(ctx, `SELECT w.gold,(q.rewards->'resources'->>'silver')::bigint
+		FROM player_wallet w CROSS JOIN cfg_quest q
+		WHERE w.server_id=$1 AND w.player_id=$2 AND q.quest_cfg_id=$3`,
+		intg006ServerID, playerID, questID).Scan(&beforeGold, &canonicalGold)
+	if err != nil || canonicalGold != wantGold {
+		intg008Failf(t, "canonical daily reward", "quest_cfg_id=%d gold=%d want=%d err=%v", questID, canonicalGold, wantGold, err)
+	}
+	return beforeGold
+}
+
+func smokeAssertDailyGoldClaim(t *testing.T, ctx context.Context, pool *pgxpool.Pool, playerID int64, questID int32, beforeGold, wantGold int64) int64 {
+	t.Helper()
+	var afterGold int64
+	err := pool.QueryRow(ctx, `SELECT gold FROM player_wallet WHERE server_id=$1 AND player_id=$2`,
+		intg006ServerID, playerID).Scan(&afterGold)
+	if err != nil || afterGold-beforeGold != wantGold {
+		intg008Failf(t, "exact daily claim credit", "quest_cfg_id=%d gold=%d -> %d want delta=%d err=%v", questID, beforeGold, afterGold, wantGold, err)
+	}
+	t.Logf("verified daily claim quest_cfg_id=%d gold=%d -> %d delta=%d", questID, beforeGold, afterGold, wantGold)
+	return wantGold
 }
 
 // smokeQuest003Optional tries train/build/use quest hooks when QUEST-003 lands; never fails the main path.

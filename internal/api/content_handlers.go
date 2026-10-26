@@ -32,6 +32,7 @@ func (s *Server) handleListPlayerBag(ctx context.Context, pkt *commonv1.ClientPa
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
 	}
 	p := content.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	notice := s.starterScrollNotice(ctx, pc)
 	if err := s.contentSvc.LoadPlayer(ctx, p); err != nil {
 		return nil, err
 	}
@@ -44,7 +45,9 @@ func (s *Server) handleListPlayerBag(ctx context.Context, pkt *commonv1.ClientPa
 	if err != nil {
 		return nil, err
 	}
-	return okResp(pkt.GetTraceId(), data), nil
+	resp := okResp(pkt.GetTraceId(), data)
+	resp.Msg = notice
+	return resp, nil
 }
 
 func (s *Server) handleUseConsumable(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -62,6 +65,33 @@ func (s *Server) handleUseConsumable(ctx context.Context, pkt *commonv1.ClientPa
 	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
 	}
+	// Classify from the exact service catalog before hydration or any debit.
+	// Memory fixtures must bind explicitly too; a default catalog is not proof.
+	bound := s.contentCatalog
+	if bound == nil || bound.catalog == nil || bound.service != s.contentSvc {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "道具配置不可用，未扣除道具"), nil
+	}
+	def, ok := bound.catalog.Items[req.GetItemCfgId()]
+	if !ok {
+		return contentErr(pkt.GetTraceId(), content.ErrUnknownItem), nil
+	}
+	switch def.Type {
+	case content.ItemTypeRecruit:
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "招募道具不支持直接使用，未扣除道具；请使用将领招募入口"), nil
+	case content.ItemTypeTrainTroop:
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "练兵道具暂不支持直接使用，未扣除道具"), nil
+	case content.ItemTypeSpeedup:
+		if !buildSpeedupDefinition(def) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "此加速道具没有可用的建造效果，未扣除道具"), nil
+		}
+	case content.ItemTypeResourcePack:
+		// Resource grants are applied atomically by content.Use.
+	default:
+		return contentErr(pkt.GetTraceId(), content.ErrNotConsumable), nil
+	}
+	if !s.buildSpeedupScopeAvailable(pc.ServerID, req.GetItemCfgId()) {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "city scope unavailable"), nil
+	}
 	count := req.GetCount()
 	if count <= 0 {
 		count = 1
@@ -75,7 +105,7 @@ func (s *Server) handleUseConsumable(ctx context.Context, pkt *commonv1.ClientPa
 		return contentErr(pkt.GetTraceId(), err), nil
 	}
 	if res.Speedup != nil && speedupAppliesToBuild(res.Speedup.AppliesTo) {
-		s.applyDomesticBuildSpeedup(pc.PlayerID, res.Speedup.Seconds)
+		s.applyDomesticBuildSpeedup(pc.ServerID, pc.PlayerID, res.Speedup.Seconds)
 	}
 	summary, speedup := consumableEffectSummary(res)
 	data, err := marshal(&contentv1.UseConsumableResponse{
@@ -103,8 +133,8 @@ func speedupAppliesToBuild(appliesTo []string) bool {
 	return false
 }
 
-func (s *Server) applyDomesticBuildSpeedup(playerID int64, sec int64) {
-	if s.domestic == nil || sec <= 0 {
+func (s *Server) applyDomesticBuildSpeedup(serverID int32, playerID int64, sec int64) {
+	if !s.domesticCityScope(serverID) || sec <= 0 {
 		return
 	}
 	var fallback int64
@@ -151,12 +181,6 @@ func consumableEffectSummary(res content.UseResult) (string, int64) {
 		sec := res.Speedup.Seconds
 		return fmt.Sprintf("加速 %d 秒", sec), sec
 	}
-	if res.Recruit != nil {
-		return fmt.Sprintf("招募池 %s ×%d（占位）", res.Recruit.HeroPool, res.Recruit.Draws), 0
-	}
-	if res.Train != nil {
-		return fmt.Sprintf("训练 %s ×%d（占位）", res.Train.UnitCode, res.Train.Count), 0
-	}
 	return "已消耗道具", 0
 }
 
@@ -173,4 +197,38 @@ func contentErr(trace string, err error) *commonv1.ServerPacket {
 	default:
 		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
 	}
+}
+
+// WireM4Content binds the exact catalog used by this service. Alternate service
+// wiring cannot substitute an unapplied effect or bypass build scope checks.
+type contentCatalogBinding struct {
+	service *content.Service
+	catalog *content.Catalog
+}
+
+func (s *Server) buildSpeedupScopeAvailable(serverID int32, itemID int32) bool {
+	if s.players == nil || s.players.Pool == nil || s.domesticCityScope(serverID) {
+		return true // Explicit local fixtures, or the configured persistent Hub.
+	}
+	bound := s.contentCatalog
+	if bound == nil || bound.catalog == nil || bound.service != s.contentSvc {
+		return false
+	}
+	return !buildSpeedupDefinition(bound.catalog.Items[itemID])
+}
+
+func buildSpeedupDefinition(def content.ItemDef) bool {
+	if def.Type != content.ItemTypeSpeedup {
+		return false
+	}
+	applies, _ := def.Meta["applies_to"].([]any)
+	hasBuild := false
+	for _, target := range applies {
+		name, valid := target.(string)
+		if !valid {
+			return false // CONTENT rejects mixed metadata; reject before hydration too.
+		}
+		hasBuild = hasBuild || name == "build"
+	}
+	return hasBuild
 }
