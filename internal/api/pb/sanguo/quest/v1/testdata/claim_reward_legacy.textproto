@@ -1,0 +1,14 @@
+quest {
+  quest_cfg_id: 1002 quest_code: "tutorial_hero" chain_id: 100 chain_order: 2
+  prev_quest_cfg_id: 1001 next_quest_cfg_id: 1003 state: PLAYER_QUEST_STATE_COMPLETED
+  progress_current: 1 progress_target: 1 accepted_at_ms: 1793037000123 updated_at_ms: 1793037000456
+  reward_preview { items { item_cfg_id: 2004 quantity: 1 } }
+}
+chain {
+  chain_id: 100 chain_name: "main" chain_state: QUEST_CHAIN_STATE_IN_PROGRESS
+  total_quest_count: 5 completed_quest_count: 2 active_quest_cfg_id: 1003 next_available_quest_cfg_id: 1003
+}
+granted_rewards {
+  reward_pack_id: "quest_1002" items { item_cfg_id: 2004 quantity: 1 }
+  resources { food: 9007199254740993 wood: 202 iron: 303 stone: 404 gold: 505 }
+}

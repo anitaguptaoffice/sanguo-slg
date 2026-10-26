@@ -7,6 +7,7 @@ import (
 	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 )
 
 func (s *Server) handleListHotelRecruitCandidates(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -21,22 +22,16 @@ func (s *Server) handleListHotelRecruitCandidates(ctx context.Context, pkt *comm
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetCityId() == 0 {
+	if req.GetCityId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	city := hero.CityRef{CityID: req.GetCityId()}
-	port := s.heroHotelCityPort()
-	rows, err := s.heroSvc.ListHotelCandidates(ctx, p, city, s.heroSvc.HotelStore, port)
+	snapshot, err := s.hotelAtomic(ctx, pc, req.GetCityId(), 0, hotelList)
 	if err != nil {
 		return hotelErr(pkt.GetTraceId(), err), nil
 	}
-	hotelLevel, _ := port.HotelLevel(ctx, pc.ServerID, req.GetCityId())
-	officeLevel, _ := port.OfficeLevel(ctx, pc.ServerID, req.GetCityId())
-	heroes, _ := s.heroSvc.ListPlayerHeroes(ctx, p, hero.ListQuery{})
-	out := hotelCandidatesToProto(rows)
 	data, err := marshal(&herov1.ListHotelRecruitCandidatesResponse{
-		Candidates: out, HotelLevel: hotelLevel, HeroCapacity: officeLevel, HeroOwned: int32(heroes.Total),
+		Candidates: hotelCandidatesToProto(snapshot.candidates), HotelLevel: snapshot.levels.Hotel,
+		HeroCapacity: snapshot.levels.Office, HeroOwned: int32(snapshot.owned),
 	})
 	if err != nil {
 		return nil, err
@@ -56,20 +51,14 @@ func (s *Server) handleRefreshHotelRecruitPool(ctx context.Context, pkt *commonv
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetCityId() == 0 {
+	if req.GetCityId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	city := hero.CityRef{CityID: req.GetCityId()}
-	port := s.heroHotelCityPort()
-	if err := s.heroSvc.RefreshHotelPoolPaid(ctx, p, city, s.heroSvc.HotelStore, port); err != nil {
+	snapshot, err := s.hotelAtomic(ctx, pc, req.GetCityId(), 0, hotelRefresh)
+	if err != nil {
 		return hotelErr(pkt.GetTraceId(), err), nil
 	}
-	rows, err := s.heroSvc.HotelStore.ListCandidates(ctx, pc.ServerID, req.GetCityId())
-	if err != nil {
-		return nil, err
-	}
-	data, err := marshal(&herov1.RefreshHotelRecruitPoolResponse{Candidates: hotelCandidatesToProto(rows)})
+	data, err := marshal(&herov1.RefreshHotelRecruitPoolResponse{Candidates: hotelCandidatesToProto(snapshot.candidates)})
 	if err != nil {
 		return nil, err
 	}
@@ -88,19 +77,16 @@ func (s *Server) handleRecruitHotelCandidate(ctx context.Context, pkt *commonv1.
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetCityId() == 0 || req.GetCandidateId() == 0 {
+	if req.GetCityId() <= 0 || req.GetCandidateId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id and candidate_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	res, err := s.heroSvc.RecruitHotelCandidate(ctx, p, hero.CityRef{CityID: req.GetCityId()},
-		s.heroSvc.HotelStore, s.heroHotelCityPort(), req.GetCandidateId())
+	snapshot, err := s.hotelAtomic(ctx, pc, req.GetCityId(), req.GetCandidateId(), hotelRecruit)
 	if err != nil {
 		return hotelErr(pkt.GetTraceId(), err), nil
 	}
-	s.questAfterRecruitHero(ctx, pc.ServerID, pc.PlayerID)
 	data, err := marshal(&herov1.RecruitHotelCandidateResponse{
-		HeroId: res.Hero.HeroID, DisplayName: res.Hero.DisplayName,
-		Level: res.Hero.Level, Loyalty: int32(res.Hero.Loyalty),
+		HeroId: snapshot.hero.HeroID, DisplayName: snapshot.hero.DisplayName,
+		Level: snapshot.hero.Level, Loyalty: int32(snapshot.hero.Loyalty),
 	})
 	if err != nil {
 		return nil, err
@@ -124,11 +110,17 @@ func hotelCandidatesToProto(rows []*hero.HotelCandidate) []*herov1.HotelRecruitC
 
 func hotelErr(trace string, err error) *commonv1.ServerPacket {
 	switch {
+	case errors.Is(err, errRecruitActor), errors.Is(err, world.ErrCityNotOwned):
+		return errResp(trace, commonv1.ErrorCode_COMMON_UNAUTHORIZED, "player or city unavailable")
+	case errors.Is(err, hero.ErrHotelTransactionRequired), errors.Is(err, errHotelWallet):
+		return errResp(trace, commonv1.ErrorCode_COMMON_UNAVAILABLE, "atomic hotel unavailable")
+	case errors.Is(err, errHotelOutcome):
+		return errResp(trace, commonv1.ErrorCode_COMMON_UNAVAILABLE, "hotel outcome unavailable; reload state")
 	case errors.Is(err, hero.ErrHotelNotBuilt), errors.Is(err, hero.ErrHotelCandidateMissing):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	case errors.Is(err, hero.ErrHotelCapacityFull), errors.Is(err, hero.ErrInsufficientGold), errors.Is(err, hero.ErrInsufficientItem):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	default:
-		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
+		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, "hotel outcome unavailable; reload state")
 	}
 }

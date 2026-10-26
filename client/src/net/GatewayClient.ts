@@ -1,3 +1,4 @@
+import { rememberSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { decodeGatewayResponse } from "@/net/decodeGatewayResponse";
 import { GATEWAY_WS_URL } from "@/config";
 import {
@@ -129,6 +130,7 @@ export type GatewayPort = {
   clearCityChief(serverId: number, cityId: number): Promise<unknown>;
   getBoundServerId(): number;
   getSessionId(): string;
+  getSessionGeneration?(): number;
   close(): void;
 };
 
@@ -136,12 +138,17 @@ export class GatewayClient implements GatewayPort {
   private ws: WebSocket | null = null;
   private sessionId = "";
   private boundServerId = 0;
+  private sessionGeneration = 0;
 
   constructor(private readonly url = GATEWAY_WS_URL) {}
 
   connect(handlers: GatewayHandlers = {}): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(this.url);
+      this.sessionGeneration++;
+      this.sessionId = "";
+      this.boundServerId = 0;
+      const ws = new WebSocket(this.url);
+      this.ws = ws;
       this.ws.binaryType = "arraybuffer";
       this.ws.onopen = () => {
         handlers.onOpen?.();
@@ -151,9 +158,17 @@ export class GatewayClient implements GatewayPort {
         handlers.onError?.(e);
         reject(e);
       };
-      this.ws.onclose = () => handlers.onClose?.();
+      this.ws.onclose = () => {
+        if (this.ws !== ws) return;
+        this.sessionGeneration++;
+        this.sessionId = "";
+        this.boundServerId = 0;
+        handlers.onClose?.();
+      };
     });
   }
+
+  getSessionGeneration(): number { return this.sessionGeneration; }
 
   getSessionId(): string {
     return this.sessionId;
@@ -169,6 +184,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   async login(loginName: string, password: string, serverId: number) {
+    const generation = ++this.sessionGeneration;
     const { LoginResponse } = getTypes();
     const data = (await this.rpc(
       Routes.Login,
@@ -177,6 +193,7 @@ export class GatewayClient implements GatewayPort {
       LoginResponse,
       false,
     )) as { session_id: string };
+    if (generation !== this.sessionGeneration) throw new Error("会话已变更，请重新进入游戏");
     this.sessionId = data.session_id;
     this.boundServerId = serverId;
     return data;
@@ -195,6 +212,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   async enterGameServer(serverId: number) {
+    const generation = ++this.sessionGeneration;
     const { EnterGameServerResponse } = getTypes();
     const data = (await this.rpc(
       Routes.EnterGameServer,
@@ -203,6 +221,7 @@ export class GatewayClient implements GatewayPort {
       EnterGameServerResponse,
       true,
     )) as { session_id?: string; server_id?: number };
+    if (generation !== this.sessionGeneration) throw new Error("会话已变更，请重新进入游戏");
     if (data.session_id) this.sessionId = data.session_id;
     this.boundServerId = data.server_id ?? serverId;
     return data;
@@ -940,6 +959,9 @@ export class GatewayClient implements GatewayPort {
     const types = getTypes();
     const RequestType = types[requestTypeName] as protobuf.Type;
     const { ClientPacket, ServerPacket } = types;
+    const generation = this.sessionGeneration;
+    const session = this.sessionId;
+    const server = this.boundServerId;
     const traceId = crypto.randomUUID();
     const payload = RequestType.encode(RequestType.create(fields)).finish();
     const packet = ClientPacket.encode(
@@ -952,13 +974,20 @@ export class GatewayClient implements GatewayPort {
       }),
     ).finish();
     const reply = await this.sendAndWait(packet, traceId);
+    if (generation !== this.sessionGeneration || (withSession && (session !== this.sessionId || server !== this.boundServerId))) {
+      throw new Error("会话已变更，请重新进入游戏");
+    }
     const sp = ServerPacket.decode(new Uint8Array(reply)) as unknown as ServerPacketShape;
     if (sp.code !== 0) {
       const err = new Error(sp.msg || `gateway error code=${sp.code}`);
       (err as Error & { code: number }).code = sp.code;
       throw err;
     }
-    return decodeGatewayResponse(responseType, sp.data);
+    const response = decodeGatewayResponse(responseType, sp.data);
+    if (withSession && generation === this.sessionGeneration && session === this.sessionId && server === this.boundServerId) {
+      rememberSuccessfulReadNotice(response, route, sp.msg);
+    }
+    return response;
   }
 
   private sendAndWait(packet: Uint8Array, traceId: string): Promise<ArrayBuffer> {
@@ -983,6 +1012,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   close(): void {
+    this.sessionGeneration++;
     this.ws?.close();
     this.ws = null;
     this.sessionId = "";

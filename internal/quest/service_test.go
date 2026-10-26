@@ -18,10 +18,15 @@ func (m *mockGranter) GrantQuestReward(_ context.Context, req GrantRequest) (Rew
 	return req.Rewards, nil
 }
 
+func (m *mockGranter) FindQuestRewardReceipt(context.Context, GrantRequest) (GrantReceipt, bool, error) {
+	return GrantReceipt{}, false, nil
+}
+
 func tutorialCatalog() *MemCatalog {
 	return NewMemCatalog([]QuestCfg{
 		{
 			QuestCfgID:  1001,
+			QuestType:   1,
 			Code:        "tutorial_build_hall",
 			ChainID:     100,
 			SortInChain: 1,
@@ -34,6 +39,7 @@ func tutorialCatalog() *MemCatalog {
 		},
 		{
 			QuestCfgID:     1002,
+			QuestType:      1,
 			Code:           "tutorial_recruit",
 			ChainID:        100,
 			PrevQuestCfgID: 1001,
@@ -100,6 +106,9 @@ func TestProgressToClaimableAndClaim(t *testing.T) {
 		t.Fatalf("state %v", q.State)
 	}
 
+	svc.SetTutorialFactsProvider(func(context.Context, Actor) (TutorialFacts, error) {
+		return TutorialFacts{CompletedBuildingLevels: map[int32]int32{1: 2}}, nil
+	})
 	claimed, chain, granted, err := svc.ClaimQuestReward(ctx, actor, 1001)
 	if err != nil {
 		t.Fatal(err)

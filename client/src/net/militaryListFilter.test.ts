@@ -29,7 +29,7 @@ function mockStorage(): Storage {
 
 const marches: MarchSummary[] = [
   { march_id: 1, phase: 2, arrive_at_ms: 3000 },
-  { march_id: 2, phase: 4, arrive_at_ms: 1000 },
+  { march_id: 2, phase: 4, arrive_at_ms: 500, return_finish_at_ms: 1000 },
   { march_id: 3, phase: 3, arrive_at_ms: 5000 },
   { march_id: 4, phase: 1, arrive_at_ms: 2000 },
 ];

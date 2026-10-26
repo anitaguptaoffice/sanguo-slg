@@ -46,23 +46,23 @@ func TestClaimForMarchRejectsLowForce(t *testing.T) {
 	ctx := context.Background()
 	p := PlayerRef{ServerID: 1, PlayerID: 9}
 	h := &Hero{
-		ServerID: 1, HeroID: 2, PlayerID: 9, TemplateCfgID: 1001,
+		ServerID: 1, PlayerID: 9, TemplateCfgID: 1001,
 		Level: 1, Status: StatusIdle, Loyalty: LoyaltyDefault,
 	}
-	if err := svc.Store.SaveHero(ctx, h); err != nil {
+	if err := svc.Store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	low := MarchForceState{
-		ServerID: 1, HeroID: 2, Current: MarchForceMarchCost - 1,
+		ServerID: 1, HeroID: h.HeroID, Current: MarchForceMarchCost - 1,
 		LastRegenAt: now,
 	}
 	if err := svc.Store.SaveMarchForceState(ctx, low); err != nil {
 		t.Fatal(err)
 	}
-	if err := svc.ClaimForMarch(ctx, p, 2); err != ErrInsufficientMarchForce {
+	if err := svc.ClaimForMarch(ctx, p, h.HeroID); err != ErrInsufficientMarchForce {
 		t.Fatalf("want insufficient march force, got %v", err)
 	}
-	got, _ := svc.Store.GetHero(ctx, 1, 2)
+	got, _ := svc.Store.GetHero(ctx, 1, h.HeroID)
 	if got.Status != StatusIdle {
 		t.Fatalf("status=%d want idle", got.Status)
 	}
@@ -72,16 +72,16 @@ func TestRestHeroRefillsForce(t *testing.T) {
 	svc := NewService()
 	ctx := context.Background()
 	p := PlayerRef{ServerID: 1, PlayerID: 1}
-	h := &Hero{ServerID: 1, HeroID: 3, PlayerID: 1, Level: 3, Status: StatusIdle}
-	if err := svc.Store.SaveHero(ctx, h); err != nil {
+	h := &Hero{ServerID: 1, PlayerID: 1, Level: 3, Status: StatusIdle}
+	if err := svc.Store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	if err := svc.Store.SaveMarchForceState(ctx, MarchForceState{
-		ServerID: 1, HeroID: 3, Current: 5, LastRegenAt: time.Now(),
+		ServerID: 1, HeroID: h.HeroID, Current: 5, LastRegenAt: time.Now(),
 	}); err != nil {
 		t.Fatal(err)
 	}
-	view, err := svc.RestHero(ctx, p, 3)
+	view, err := svc.RestHero(ctx, p, h.HeroID)
 	if err != nil {
 		t.Fatal(err)
 	}

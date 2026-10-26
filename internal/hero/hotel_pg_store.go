@@ -105,12 +105,12 @@ func (p *PGHotelStore) SetLastPoolTick(ctx context.Context, serverID int32, city
 }
 
 func (p *PGHotelStore) NextCandidateID(ctx context.Context, serverID int32, cityID int64) (int64, error) {
-	var max int64
-	err := p.Pool.QueryRow(ctx, `
-		SELECT COALESCE(MAX(candidate_id), 0) FROM city_hotel_recruit WHERE server_id=$1 AND city_id=$2`,
-		serverID, cityID).Scan(&max)
+	// Candidate identities are reserved across all cities/shards before persistence.
+	// The reviewed migration owns setup; never fall back to MAX or reuse hero IDs.
+	var id int64
+	err := p.Pool.QueryRow(ctx, `SELECT nextval('city_hotel_candidate_id_seq')`).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
-	return max + 1, nil
+	return id, nil
 }

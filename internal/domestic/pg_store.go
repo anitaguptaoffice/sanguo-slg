@@ -5,16 +5,24 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
-	"time"
+	"sync"
 
 	"github.com/jackc/pgx/v5"
+	"time"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const queueTypeBuild int16 = 1
 
 // PGStore persists domestic state (spec/db/003_domestic.sql).
-type PGStore struct{ Pool *pgxpool.Pool }
+type PGStore struct {
+	Pool          *pgxpool.Pool
+	queueMu       sync.Mutex
+	queueBound    bool
+	queueIdentity *queueIdentity
+	queueErr      error
+}
 
 // NewPGStore wraps a pool.
 func NewPGStore(p *pgxpool.Pool) *PGStore { return &PGStore{Pool: p} }
@@ -27,13 +35,29 @@ type buildPayload struct {
 
 // SaveCity writes wallet snapshot, buildings, and pending build queue rows.
 func (p *PGStore) SaveCity(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time) error {
-	return p.saveCity(ctx, sid, c, cat, now, nil)
+	return p.saveCity(ctx, sid, c, cat, now, nil, false)
 }
 
 // saveCity holds the authoritative wallet row lock through the local operation.
-func (p *PGStore) saveCity(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time, mutate func(*CityState) error) error {
+func (p *PGStore) saveCity(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time, mutate func(*CityState) error, create bool) error {
+	return p.saveCityWithWorld(ctx, sid, c, cat, now, mutate, create, nil)
+}
+
+func (p *PGStore) saveCityWithWorld(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time, mutate func(*CityState) error, create bool, insertWorld NewCityWorldParticipant) error {
+	return p.saveCityInTx(ctx, sid, c, cat, now, func(work *CityState, _ pgx.Tx) error {
+		if mutate != nil {
+			return mutate(work)
+		}
+		return nil
+	}, create, insertWorld)
+}
+
+func (p *PGStore) saveCityInTx(ctx context.Context, sid int32, c *CityState, cat map[int32]BuildingSpec, now time.Time, mutate func(*CityState, pgx.Tx) error, create bool, insertWorld NewCityWorldParticipant) error {
 	if c == nil || c.PlayerID == 0 {
 		return errors.New("domestic: city missing player_id")
+	}
+	if insertWorld != nil && (!create || c.ID != 0) {
+		return ErrAtomicCityCreation
 	}
 	tx, err := p.Pool.Begin(ctx)
 	if err != nil {
@@ -42,14 +66,35 @@ func (p *PGStore) saveCity(ctx context.Context, sid int32, c *CityState, cat map
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	work := cloneCity(c)
-	_, err = tx.Exec(ctx, `INSERT INTO player_wallet (server_id,player_id,food,wood,iron,stone,gold,updated_at)
+	if create {
+		if _, err := reconcileWallet(c.Wallet, Resources{}, Resources{}); err != nil {
+			return err
+		}
+		_, err = tx.Exec(ctx, `INSERT INTO player_wallet (server_id,player_id,food,wood,iron,stone,gold,updated_at)
  VALUES ($1,$2,$3,$4,$5,$6,0,$7) ON CONFLICT DO NOTHING`, sid, c.PlayerID, c.Wallet.Food, c.Wallet.Wood, c.Wallet.Iron, c.Wallet.Stone, now)
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
+
 	var authoritative Resources
 	err = tx.QueryRow(ctx, `SELECT food,wood,stone,iron FROM player_wallet WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, c.PlayerID).Scan(&authoritative.Food, &authoritative.Wood, &authoritative.Stone, &authoritative.Iron)
 	if err != nil {
+		return err
+	}
+	if _, err := reconcileWallet(authoritative, Resources{}, Resources{}); err != nil {
+		return err
+	}
+	if insertWorld != nil {
+		work.ID, err = insertWorld(ctx, tx)
+		if err != nil {
+			return err
+		}
+		if work.ID <= 0 {
+			return ErrAtomicCityCreation
+		}
+	}
+	if err := loadProductionCheckpoint(ctx, tx, sid, work, create, now); err != nil {
 		return err
 	}
 	if c.walletSaved {
@@ -60,12 +105,15 @@ func (p *PGStore) saveCity(ctx context.Context, sid int32, c *CityState, cat map
 	}
 	work.Wallet = authoritative
 	if mutate != nil {
-		if err = mutate(work); err != nil {
+		if err = mutate(work, tx); err != nil {
 			return err
 		}
 	}
-	_, err = tx.Exec(ctx, `UPDATE player_wallet SET food=$3,wood=$4,stone=$5,iron=$6,updated_at=$7 WHERE server_id=$1 AND player_id=$2`, sid, c.PlayerID, work.Wallet.Food, work.Wallet.Wood, work.Wallet.Stone, work.Wallet.Iron, work.LastSettleAt)
+	_, err = tx.Exec(ctx, `UPDATE player_wallet SET food=$3,wood=$4,stone=$5,iron=$6,updated_at=$7 WHERE server_id=$1 AND player_id=$2`, sid, c.PlayerID, work.Wallet.Food, work.Wallet.Wood, work.Wallet.Stone, work.Wallet.Iron, now)
 	if err != nil {
+		return err
+	}
+	if err := saveProductionCheckpoint(ctx, tx, sid, work); err != nil {
 		return err
 	}
 	original := c
@@ -126,24 +174,26 @@ func (p *PGStore) saveCity(ctx context.Context, sid int32, c *CityState, cat map
 
 // LoadCity restores wallet, buildings, and build queue for one city.
 func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int64) (*CityState, error) {
-	var w Resources
-	var updated time.Time
-	err := p.Pool.QueryRow(ctx, `
-		SELECT food, wood, iron, stone, updated_at FROM player_wallet
-		WHERE server_id=$1 AND player_id=$2`, sid, playerID).
-		Scan(&w.Food, &w.Wood, &w.Iron, &w.Stone, &updated)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+	tx, err := p.Pool.Begin(ctx)
+	if err != nil {
 		return nil, err
 	}
-	if errors.Is(err, pgx.ErrNoRows) {
-		updated = time.Time{}
+	defer func() { _ = tx.Rollback(ctx) }()
+	var w Resources
+	err = tx.QueryRow(ctx, `SELECT food,wood,iron,stone FROM player_wallet
+ WHERE server_id=$1 AND player_id=$2 FOR UPDATE`, sid, playerID).Scan(&w.Food, &w.Wood, &w.Iron, &w.Stone)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := reconcileWallet(w, Resources{}, Resources{}); err != nil {
+		return nil, err
+	}
+	c := &CityState{ID: cityID, PlayerID: playerID, Wallet: w, Buildings: make(map[string]*BuildingInstance)}
+	if err := loadProductionCheckpoint(ctx, tx, sid, c, false, time.Time{}); err != nil {
+		return nil, err
 	}
 
-	c := &CityState{
-		ID: cityID, PlayerID: playerID, Wallet: w, LastSettleAt: updated,
-		Buildings: make(map[string]*BuildingInstance),
-	}
-	rows, err := p.Pool.Query(ctx, `
+	rows, err := tx.Query(ctx, `
 		SELECT slot_key, building_cfg_id, level FROM city_building
 		WHERE server_id=$1 AND city_id=$2`, sid, cityID)
 	if err != nil {
@@ -162,7 +212,7 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 		return nil, err
 	}
 
-	qrows, err := p.Pool.Query(ctx, `
+	qrows, err := tx.Query(ctx, `
 		SELECT queue_id, payload, start_at, finish_at, status FROM work_queue
 		WHERE server_id=$1 AND city_id=$2 AND queue_type=$3 AND status IN (0,1)
 		ORDER BY finish_at`, sid, cityID, queueTypeBuild)
@@ -192,6 +242,9 @@ func (p *PGStore) LoadCity(ctx context.Context, sid int32, cityID, playerID int6
 		}
 	}
 	if err := qrows.Err(); err != nil {
+		return nil, err
+	}
+	if err := tx.Commit(ctx); err != nil {
 		return nil, err
 	}
 	c.walletBase, c.walletSaved = c.Wallet, true

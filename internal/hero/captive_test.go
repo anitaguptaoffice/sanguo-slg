@@ -95,10 +95,12 @@ func TestSureSummonCaptiveCapacityFull(t *testing.T) {
 	svc, city, inv, p, heroID := captiveTestSetup(t)
 	city.officeLevel = 1
 	for i := 0; i < 1; i++ {
-		_ = svc.Store.SaveHero(ctx, &Hero{
-			ServerID: 1, HeroID: int64(100 + i), PlayerID: 42,
+		if err := svc.Store.CreateHero(ctx, &Hero{
+			ServerID: 1, PlayerID: 42,
 			TemplateCfgID: TemplateCfgIDHotelRandom, Level: 1, Status: StatusIdle, Loyalty: 70,
-		})
+		}); err != nil {
+			t.Fatal(err)
+		}
 	}
 	_, err := svc.SureSummonCaptive(ctx, p, CityRef{CityID: 99}, heroID, city, inv)
 	if err != ErrHotelCapacityFull {

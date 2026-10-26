@@ -24,10 +24,9 @@ func (s *Server) handleListPersuadeTargets(ctx context.Context, pkt *commonv1.Cl
 	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	rows, err := s.heroSvc.ListPersuadeTargets(ctx, p)
+	rows, err := s.familyTargets(ctx, pc)
 	if err != nil {
-		return nil, err
+		return persuadeErr(pkt.GetTraceId(), err), nil
 	}
 	out := make([]*herov1.PersuadeTargetSummary, 0, len(rows))
 	for _, v := range rows {
@@ -61,11 +60,10 @@ func (s *Server) handlePersuadeHero(ctx context.Context, pkt *commonv1.ClientPac
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetNpcCfgId() == 0 || req.GetCityId() == 0 {
+	if req.GetNpcCfgId() <= 0 || req.GetCityId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id and npc_cfg_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	res, err := s.heroSvc.PersuadeHero(ctx, p, hero.CityRef{CityID: req.GetCityId()}, req.GetNpcCfgId(), s.heroHotelCityPort(), s.heroInventoryPort())
+	res, err := s.persuadeAtomic(ctx, pc, req.GetCityId(), req.GetNpcCfgId())
 	if err != nil {
 		return persuadeErr(pkt.GetTraceId(), err), nil
 	}
@@ -91,11 +89,10 @@ func (s *Server) handleLionizeHero(ctx context.Context, pkt *commonv1.ClientPack
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetNpcCfgId() == 0 || req.GetCityId() == 0 {
+	if req.GetNpcCfgId() <= 0 || req.GetCityId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "city_id and npc_cfg_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	res, err := s.heroSvc.LionizeHero(ctx, p, hero.CityRef{CityID: req.GetCityId()}, req.GetNpcCfgId(), s.heroHotelCityPort())
+	res, err := s.lionizeAtomic(ctx, pc, req.GetCityId(), req.GetNpcCfgId())
 	if err != nil {
 		return persuadeErr(pkt.GetTraceId(), err), nil
 	}
@@ -125,6 +122,6 @@ func persuadeErr(trace string, err error) *commonv1.ServerPacket {
 		errors.Is(err, hero.ErrInvalidRecruit):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	default:
-		return heroErr(trace, err)
+		return familyErr(trace, err)
 	}
 }

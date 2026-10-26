@@ -1,3 +1,5 @@
+import { positivePlayerLevel } from "./tutorialPlayerLevel";
+import { garrisonPatch } from "@/net/garrisonState";
 import { ErrorCode } from "@/net/loadProto";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { BagStack } from "@/net/bagState";
@@ -44,6 +46,7 @@ export type MainCitySession = {
   cityY?: number;
   buildings: CityBuilding[];
   cityTroops: CityTroopStack[];
+  garrisonStatus?: "unknown" | "stale" | "ready";
   bag: BagStack[];
 };
 
@@ -87,12 +90,27 @@ export async function bootstrapMainCity(
     }
   }
 
-  await gateway.enterGameServer(serverId);
+  const entered = await gateway.enterGameServer(serverId) as LoginResult;
+  const generation = gateway.getSessionGeneration?.();
+  const token = gateway.getSessionId?.();
+  const assertCurrent = () => {
+    if (generation !== gateway.getSessionGeneration?.() || token !== gateway.getSessionId?.()) {
+      throw new Error("会话已变更，请重新进入游戏");
+    }
+  };
+  // Fresh profile initializes this actor. Never carry a prior actor's maximum level.
+  const profile = entered.player ?? login.player ?? {};
+  if (profile.server_id && profile.server_id !== serverId) throw new Error("角色与游戏服不匹配");
+  if (entered.player?.player_id && login.player?.player_id && entered.player.player_id !== login.player.player_id) {
+    throw new Error("角色已变更，请重新进入游戏");
+  }
 
   const list = (await gateway.listPlayerCities()) as { cities?: CitySummary[] };
+  assertCurrent();
   let city = list.cities?.find((c) => c.is_capital) ?? list.cities?.[0];
   if (!city?.city_id) {
     const created = (await gateway.createCity(serverId, "主城", 60, 60)) as { city?: CitySummary };
+    assertCurrent();
     city = created.city;
   }
   if (!city?.city_id) {
@@ -103,19 +121,21 @@ export async function bootstrapMainCity(
     wallet?: ResourceWallet;
     buildings?: CityBuilding[];
     production_rates?: ResourceWallet;
+    garrison?: unknown;
   };
 
+  assertCurrent();
   return {
     serverId,
-    player: login.player ?? {},
-    wallet: state.wallet ?? login.wallet ?? {},
+    player: { ...profile, level: positivePlayerLevel(profile.level) ?? 1 },
+    wallet: state.wallet ?? entered.wallet ?? login.wallet ?? {},
     productionRates: state.production_rates,
     cityId: city.city_id,
     cityName: city.name ?? "主城",
     cityX: city.x ?? 60,
     cityY: city.y ?? 60,
     buildings: state.buildings ?? [],
-    cityTroops: [],
+    ...garrisonPatch({ cityTroops: [], garrisonStatus: "unknown" }, state.garrison),
     bag: [],
   };
 }

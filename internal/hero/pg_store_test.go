@@ -9,10 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func TestPGStoreRecruitSurvivesRestart(t *testing.T) {
-	pool := openHeroTestDB(t)
+func TestPGStoreCreateSurvivesRestart(t *testing.T) {
+	pool := identityStore(t).Pool
 	ctx := context.Background()
-	applyHeroSchema(t, pool)
 	store := NewPGStore(pool)
 
 	ps := &PlayerState{
@@ -22,8 +21,12 @@ func TestPGStoreRecruitSurvivesRestart(t *testing.T) {
 	}
 	svc1 := NewService()
 	svc1.UseStore(store)
-	res, err := svc1.RecruitAndPersist(ctx, ps, RecruitRequest{TemplateCfgID: 1002})
+	res, err := Recruit(ps, svc1.Catalog, svc1.Items, svc1.RNG, svc1.now(), RecruitRequest{TemplateCfgID: 1002})
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := store.CreateHero(ctx, res.Hero); err != nil {
 		t.Fatal(err)
 	}
 
@@ -49,12 +52,13 @@ func openHeroTestDB(t *testing.T) *pgxpool.Pool {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(pool.Close)
 	return pool
 }
 
 func applyHeroSchema(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
-	if err := db.ApplySpecs(context.Background(), pool, "spec/db"); err != nil {
+	if err := db.ApplySpecs(context.Background(), pool, "../../spec/db"); err != nil {
 		t.Fatal(err)
 	}
 }

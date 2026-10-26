@@ -1,9 +1,9 @@
 package api
 
 import (
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 )
 
 // devQuestCatalog matches spec/data/source/quests.yml (QUEST-001 tutorial chain).
@@ -11,6 +11,7 @@ func devQuestCatalog() *quest.MemCatalog {
 	return quest.NewMemCatalog([]quest.QuestCfg{
 		{
 			QuestCfgID:  1001,
+			QuestType:   1,
 			Code:        "tutorial_build_hall",
 			ChainID:     100,
 			SortInChain: 1,
@@ -23,6 +24,7 @@ func devQuestCatalog() *quest.MemCatalog {
 		},
 		{
 			QuestCfgID:     1002,
+			QuestType:      1,
 			Code:           "tutorial_recruit",
 			ChainID:        100,
 			PrevQuestCfgID: 1001,

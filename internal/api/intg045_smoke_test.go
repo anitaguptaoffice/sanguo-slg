@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/gorilla/websocket"
@@ -40,25 +40,13 @@ func smokeINTG045BeforeRestartGateway(t *testing.T, ctx context.Context, c *webs
 		t.Logf("INTG-045: skip L6–L8 (no city_id — see tools/smoke/README.md)")
 		return
 	}
-	smokeINTG045EnsureHallHeadroom(t, ctx, pool, cityID)
-	smokeINTG045L6CaptiveGateway(t, ctx, c, apiSrv, sid, playerID, cityID)
-	smokeINTG045L7ComingGateway(t, ctx, c, apiSrv, sid, playerID, cityID)
-	smokeINTG045L8PersuadeGateway(t, ctx, c, apiSrv, sid, playerID, cityID)
+	smokeINTG045UpgradeOffice(t, ctx, c, apiSrv, pool, sid, playerID, cityID, 2)
+	smokeINTG045L6CaptiveGateway(t, ctx, c, apiSrv, pool, sid, playerID, cityID)
+	smokeINTG045L7ComingGateway(t, ctx, c, apiSrv, pool, sid, playerID, cityID)
+	smokeINTG045L8PersuadeGateway(t, ctx, c, apiSrv, pool, sid, playerID, cityID)
 }
 
-func smokeINTG045EnsureHallHeadroom(t *testing.T, ctx context.Context, pool *pgxpool.Pool, cityID int64) {
-	t.Helper()
-	smokeINTG044SeedHotelBuildings(t, ctx, pool, cityID)
-	_, err := pool.Exec(ctx, `
-		UPDATE city_building SET level = GREATEST(level, 20)
-		WHERE server_id = $1 AND city_id = $2 AND slot_key = 'hall'`,
-		intg006ServerID, cityID)
-	if err != nil {
-		t.Logf("INTG-045: hall headroom seed optional err=%v", err)
-	}
-}
-
-func smokeINTG045L6CaptiveGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64, cityID int64) {
+func smokeINTG045L6CaptiveGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64, cityID int64) {
 	t.Helper()
 	heroSvc := apiSrv.HeroService()
 	if heroSvc == nil || heroSvc.CaptiveStore == nil {
@@ -138,6 +126,16 @@ func smokeINTG045L6CaptiveGateway(t *testing.T, ctx context.Context, c *websocke
 	t.Logf("INTG-045: SureSummonCaptive ok hero_id=%d level=%d loyalty=%d sure_summon_l6_hint=client_derived",
 		sureOut.GetHeroId(), sureOut.GetLevel(), sureOut.GetLoyalty())
 
+	smokeINTG045AssertOwned(t, ctx, apiSrv, playerID, 2)
+	smokeINTG045AssertIdle(t, ctx, apiSrv, playerID, summonH.HeroID, 10, 50)
+	if sureOut.GetHeroId() != summonH.HeroID {
+		t.Fatal("summon returned a different hero")
+	}
+	if rec, err := heroSvc.CaptiveStore.GetCaptive(ctx, intg006ServerID, summonH.HeroID); err != nil || rec != nil {
+		t.Fatalf("summoned captive metadata remains: rec=%+v err=%v", rec, err)
+	}
+	smokeINTG045AssertOffice(t, ctx, c, pool, sid, cityID, 2)
+
 	smokeStep(t, fmt.Sprintf("INTG-045 L6: gateway SureSummonCaptive reject not captive hero_id=%d", summonH.HeroID))
 	repeatResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteSureSummonCaptive, TraceId: "i45-cap-sure-repeat", SessionId: sid, ServerId: intg006ServerID,
@@ -175,7 +173,7 @@ func smokeINTG045GrantCaptiveSummonWallet(t *testing.T, ctx context.Context, api
 	}
 }
 
-func smokeINTG045L7ComingGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64, cityID int64) {
+func smokeINTG045L7ComingGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64, cityID int64) {
 	t.Helper()
 	heroSvc := apiSrv.HeroService()
 	if heroSvc == nil || heroSvc.ComingStore == nil {
@@ -248,6 +246,23 @@ func smokeINTG045L7ComingGateway(t *testing.T, ctx context.Context, c *websocket
 	t.Logf("INTG-045: TryAcceptComing hero_id=%d summary_len=%d try_accept_l7_hint=client_derived",
 		acceptH.HeroID, len(tryOut.GetSummary()))
 
+	// At office2/owned2 the unchanged capacity policy must reject without mutation.
+	smokeINTG045AssertOwned(t, ctx, apiSrv, playerID, 2)
+	smokeINTG045AssertOffice(t, ctx, c, pool, sid, cityID, 2)
+	beforeFull := smokeINTG045CapacityState(t, ctx, pool, playerID, cityID)
+	fullResp := mustSend(t, c, &commonv1.ClientPacket{
+		Route: api.RouteSureAcceptComing, TraceId: "i45-com-full", SessionId: sid, ServerId: intg006ServerID,
+		Payload: mustMarshal(&herov1.SureAcceptComingRequest{ServerId: intg006ServerID, CityId: cityID, HeroId: acceptH.HeroID}),
+	})
+	if fullResp.Code != int32(commonv1.ErrorCode_COMMON_INVALID_PACKET) || fullResp.Msg != hero.ErrHotelCapacityFull.Error() {
+		t.Fatalf("full office acceptance: code=%d msg=%q", fullResp.Code, fullResp.Msg)
+	}
+	if after := smokeINTG045CapacityState(t, ctx, pool, playerID, cityID); after != beforeFull {
+		t.Fatalf("full office rejection mutated state: before=%s after=%s", beforeFull, after)
+	}
+	t.Log("INTG-045: verified full office2/owned2 rejection; heroes, metadata, wallet, bag and buildings unchanged")
+	smokeINTG045UpgradeOffice(t, ctx, c, apiSrv, pool, sid, playerID, cityID, 3)
+
 	smokeStep(t, fmt.Sprintf("INTG-045 L7: gateway SureAcceptComing hero_id=%d", acceptH.HeroID))
 	sureResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteSureAcceptComing, TraceId: "i45-com-sure", SessionId: sid, ServerId: intg006ServerID,
@@ -262,9 +277,17 @@ func smokeINTG045L7ComingGateway(t *testing.T, ctx context.Context, c *websocket
 	}
 	t.Logf("INTG-045: SureAcceptComing ok hero_id=%d level=%d loyalty=%d sure_accept_l7_hint=client_derived",
 		sureOut.GetHeroId(), sureOut.GetLevel(), sureOut.GetLoyalty())
+	smokeINTG045AssertOwned(t, ctx, apiSrv, playerID, 3)
+	smokeINTG045AssertIdle(t, ctx, apiSrv, playerID, acceptH.HeroID, 11, 70)
+	if sureOut.GetHeroId() != acceptH.HeroID {
+		t.Fatal("accept returned a different hero")
+	}
+	if rec, err := heroSvc.ComingStore.GetComing(ctx, intg006ServerID, acceptH.HeroID); err != nil || rec != nil {
+		t.Fatalf("accepted coming metadata remains: rec=%+v err=%v", rec, err)
+	}
 }
 
-func smokeINTG045L8PersuadeGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64, cityID int64) {
+func smokeINTG045L8PersuadeGateway(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64, cityID int64) {
 	t.Helper()
 	heroSvc := apiSrv.HeroService()
 	if heroSvc == nil || heroSvc.LionizeStore == nil {
@@ -331,11 +354,15 @@ func smokeINTG045L8PersuadeGateway(t *testing.T, ctx context.Context, c *websock
 	t.Logf("INTG-045: LionizeHero insufficient-friend reject npc_cfg_id=%d code=%d msg=%s lionize_friend_l8_hint=client_derived",
 		npcBefriend, hireEarlyResp.Code, hireEarlyResp.Msg)
 
-	smokeINTG045GrantPersuadeItems(t, ctx, apiSrv, playerID)
+	smokeINTG045GrantPersuadeItems(t, ctx, apiSrv, pool, playerID)
 	base := time.Now().UTC()
 	heroSvc.SetClock(func() time.Time { return base })
 
+	if befriendOut.GetFriend() != hero.LionizeInitialFriend || befriendOut.GetState() != int32(hero.LionizeStateBefriended) {
+		t.Fatalf("befriending result=%+v", &befriendOut)
+	}
 	for step := 0; step < 2; step++ {
+		bagBefore := smokeINTG045PersuadeQuantity(t, ctx, pool, playerID)
 		heroSvc.SetClock(func() time.Time {
 			return base.Add(time.Duration(step+1) * time.Duration(hero.PersuadeCooldownSeconds+1) * time.Second)
 		})
@@ -353,8 +380,15 @@ func smokeINTG045L8PersuadeGateway(t *testing.T, ctx context.Context, c *websock
 		}
 		t.Logf("INTG-045: PersuadeHero npc_cfg_id=%d friend=%d delta=%d persuade_step_l8_hint=client_derived",
 			npcBefriend, persuadeOut.GetFriend(), persuadeOut.GetFriendDelta())
+		wantFriend := int32(hero.LionizeInitialFriend + (step+1)*hero.PersuadeFriendDelta)
+		bagAfter := smokeINTG045PersuadeQuantity(t, ctx, pool, playerID)
+		if persuadeOut.GetFriend() != wantFriend || persuadeOut.GetFriendDelta() != hero.PersuadeFriendDelta || bagAfter != bagBefore-hero.PersuadeItemQty {
+			t.Fatalf("persuade step=%d result=%+v want friend=%d bag=%d->%d", step+1, &persuadeOut, wantFriend, bagBefore, bagAfter)
+		}
+		t.Logf("INTG-045: verified persuade step=%d item2004=%d->%d friend=%d", step+1, bagBefore, bagAfter, wantFriend)
 	}
 
+	smokeINTG045UpgradeOffice(t, ctx, c, apiSrv, pool, sid, playerID, cityID, 4)
 	smokeStep(t, fmt.Sprintf("INTG-045 L8: gateway LionizeHero hire npc_cfg_id=%d", npcBefriend))
 	hireResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteLionizeHero, TraceId: "i45-lion-hire", SessionId: sid, ServerId: intg006ServerID,
@@ -369,6 +403,11 @@ func smokeINTG045L8PersuadeGateway(t *testing.T, ctx context.Context, c *websock
 	}
 	t.Logf("INTG-045: LionizeHero hire npc_cfg_id=%d hero_id=%d recruited=%v lionize_hire_l8_hint=client_derived",
 		npcBefriend, hireOut.GetHeroId(), hireOut.GetRecruited())
+	if !hireOut.GetRecruited() || hireOut.GetHeroId() == 0 {
+		t.Fatal("lionize did not recruit")
+	}
+	smokeINTG045AssertOwned(t, ctx, apiSrv, playerID, 4)
+	smokeINTG045AssertOffice(t, ctx, c, pool, sid, cityID, 4)
 }
 
 func smokeINTG045GrantLionizeGold(t *testing.T, ctx context.Context, apiSrv *api.Server, playerID int64) {
@@ -382,15 +421,41 @@ func smokeINTG045GrantLionizeGold(t *testing.T, ctx context.Context, apiSrv *api
 	}
 }
 
-func smokeINTG045GrantPersuadeItems(t *testing.T, ctx context.Context, apiSrv *api.Server, playerID int64) {
+func smokeINTG045PersuadeQuantity(t *testing.T, ctx context.Context, pool *pgxpool.Pool, playerID int64) int32 {
 	t.Helper()
-	audit := api.GmAudit{OperatorID: "smoke", OperatorName: "smoke", Reason: "intg045-persuade", TicketID: "T-i45-per"}
-	_, _, err := apiSrv.Gm().GrantReward(ctx, "", audit, intg006ServerID, playerID, content.RewardPackage{
-		Items: []content.RewardItem{{ItemCfgID: hero.PersuadeItemCfgID, Qty: 5}},
-	}, "intg045-persuade-items")
-	if err != nil {
-		intg045Failf(t, "gm grant persuade items", "err=%v", err)
+	var qty int32
+	if err := pool.QueryRow(ctx, `SELECT COALESCE((SELECT quantity FROM player_item WHERE server_id=$1 AND player_id=$2 AND item_cfg_id=$3),0)`, intg006ServerID, playerID, hero.PersuadeItemCfgID).Scan(&qty); err != nil {
+		t.Fatal(err)
 	}
+	return qty
+}
+
+func smokeINTG045GrantPersuadeItems(t *testing.T, ctx context.Context, apiSrv *api.Server, pool *pgxpool.Pool, playerID int64) {
+	t.Helper()
+	// Two planned persuades need two books total, not five more books atop the
+	// earlier recruit fixtures. Canonical max_stack10 must remain unchanged.
+	var maxStack int32
+	if err := pool.QueryRow(ctx, `SELECT max_stack FROM cfg_item WHERE item_cfg_id=$1`, hero.PersuadeItemCfgID).Scan(&maxStack); err != nil || maxStack != 10 {
+		t.Fatalf("persuade max_stack=%d err=%v", maxStack, err)
+	}
+	before := smokeINTG045PersuadeQuantity(t, ctx, pool, playerID)
+	need := int32(2 * hero.PersuadeItemQty)
+	if before < 0 || before > maxStack || need > maxStack {
+		t.Fatalf("persuade inventory=%d need=%d max=%d", before, need, maxStack)
+	}
+	grantQty := max(int32(0), need-before)
+	if grantQty > 0 {
+		audit := api.GmAudit{OperatorID: "smoke", OperatorName: "smoke", Reason: "intg045-persuade", TicketID: "T-i45-per"}
+		_, grant, err := apiSrv.Gm().GrantReward(ctx, "", audit, intg006ServerID, playerID, content.RewardPackage{Items: []content.RewardItem{{ItemCfgID: hero.PersuadeItemCfgID, Qty: grantQty}}}, "intg045-persuade-items")
+		if err != nil || grant.Duplicate {
+			t.Fatalf("persuade shortfall grant=%d duplicate=%v err=%v", grantQty, grant.Duplicate, err)
+		}
+	}
+	after := smokeINTG045PersuadeQuantity(t, ctx, pool, playerID)
+	if after != before+grantQty || after < need {
+		t.Fatalf("persuade provision=%d->%d want grant=%d need=%d", before, after, grantQty, need)
+	}
+	t.Logf("INTG-045: verified persuade provision item2004=%d->%d grant=%d need=%d max_stack=%d", before, after, grantQty, need, maxStack)
 }
 
 func intg045Failf(t *testing.T, step string, format string, args ...any) {

@@ -146,14 +146,14 @@ func (s *Server) handleRecruitHero(ctx context.Context, pkt *commonv1.ClientPack
 		ItemCfgID:     req.GetItemCfgId(),
 		Pool:          req.GetPool(),
 	}
-	res, err := s.heroSvc.RecruitPlayer(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, s.heroInventoryPort(), recruitReq)
+	h, err := s.recruitHeroAtomic(ctx, pc, recruitReq)
 	if err != nil {
-		return heroErr(pkt.GetTraceId(), err), nil
+		return s.recruitError(pkt.GetTraceId(), err), nil
 	}
 	s.questAfterRecruitHero(ctx, pc.ServerID, pc.PlayerID)
 	data, err := marshal(&herov1.RecruitHeroResponse{
-		HeroId: res.Hero.HeroID, TemplateCfgId: res.Hero.TemplateCfgID,
-		Level: res.Hero.Level, Loyalty: int32(res.Hero.Loyalty),
+		HeroId: h.HeroID, TemplateCfgId: h.TemplateCfgID,
+		Level: h.Level, Loyalty: int32(h.Loyalty),
 	})
 	if err != nil {
 		return nil, err

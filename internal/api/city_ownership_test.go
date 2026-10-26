@@ -53,7 +53,9 @@ func TestDomesticCityOwnership(t *testing.T) {
 			s.questSvc = quest.NewService(qs, quest.NewMemCatalog([]quest.QuestCfg{{QuestCfgID: 1012, QuestType: quest.QuestTypeDaily, ChainID: quest.DailyChainID, Repeatable: true, UnlockLevel: 1, Objectives: []quest.Objective{{Type: "collect_resource", Resource: "food", Count: 100}}}}), nil, nil)
 			s.questSvc.SetClock(s.now)
 			for _, c := range store.cities {
-				hub.RegisterCity(&domestic.CityState{ID: c.CityID, PlayerID: c.PlayerID, LastSettleAt: now, Wallet: domestic.Resources{Food: 50000, Wood: 50000, Iron: 50000, Stone: 50000}, Buildings: map[string]*domestic.BuildingInstance{"hall": {CfgID: 1, Level: 3}, "farm": {CfgID: 2, Level: 1}}})
+				if err := hub.RegisterCity(&domestic.CityState{ID: c.CityID, PlayerID: c.PlayerID, LastSettleAt: now, Wallet: domestic.Resources{Food: 50000, Wood: 50000, Iron: 50000, Stone: 50000}, Buildings: map[string]*domestic.BuildingInstance{"hall": {CfgID: 1, Level: 3}, "farm": {CfgID: 2, Level: 1}}}); err != nil {
+					t.Fatal(err)
+				}
 				if _, _, err := s.questSvc.AcceptQuest(context.Background(), quest.Actor{ServerID: c.ServerID, PlayerID: c.PlayerID}, 1012); err != nil {
 					t.Fatal(err)
 				}
@@ -126,7 +128,9 @@ func TestDomesticCityOwnership(t *testing.T) {
 			if out := call("a", 1, 777); out.Code != int32(commonv1.ErrorCode_WORLD_CITY_NOT_FOUND) {
 				t.Fatalf("unloaded city: %v", out)
 			}
-			hub.RegisterCity(&domestic.CityState{ID: 777, PlayerID: 56})
+			if err := hub.RegisterCity(&domestic.CityState{ID: 777, PlayerID: 56}); err != nil {
+				t.Fatal(err)
+			}
 			if out := call("a", 1, 777); out.Code != int32(commonv1.ErrorCode_WORLD_CITY_NOT_FOUND) {
 				t.Fatalf("stale owner: %v", out)
 			}

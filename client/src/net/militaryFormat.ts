@@ -23,6 +23,8 @@ export type MarchSummary = {
   to_y?: number;
   depart_at_ms?: number;
   arrive_at_ms?: number;
+  /** Authoritative return deadline; never substitute the outbound arrival. */
+  return_finish_at_ms?: number;
   purpose?: number;
   /** 可选：服务端或 mock 在到达后回填，用于战报深链（CLIENT-025/085）。 */
   report_id?: number;
@@ -66,7 +68,7 @@ const MARCH_PHASE_LABEL: Record<number, string> = {
   1: "待发",
   2: "行军中",
   3: "已到达",
-  4: "撤回中",
+  4: "返程中",
 };
 
 /** 军情列表 phase chip 文案（扫读口径：去程/驻扎/返回，与 formatMarchPhase 长文案并存）。 */
@@ -315,13 +317,27 @@ export function formatMarchListPrimaryLine(m: MarchSummary): string {
   return summary ? `${dest} · ${summary}` : dest;
 }
 
-/** 军情列表次行：arrive_at_ms 剩余 ETA + phase 中文标签（CLIENT-141）。 */
+/** Select the active leg without inventing a missing return deadline. */
+export function marchEtaDeadline(m: MarchSummary): number | undefined {
+  if (m.phase !== 4) return m.arrive_at_ms;
+  const deadline = m.return_finish_at_ms;
+  return deadline != null && Number.isFinite(deadline) && deadline > 0 ? deadline : undefined;
+}
+
+/** Keep existing minute/soon clock conventions, but unknown return time stays unknown. */
+export function formatMarchEta(m: MarchSummary, nowMs: number, abbreviated = false): string {
+  const deadline = marchEtaDeadline(m);
+  if (m.phase === 4 && deadline == null) return abbreviated ? "未知" : "时间未知";
+  return abbreviated ? formatMarchRemainingMsAbbrev(nowMs, deadline) : formatMarchRemainingMs(nowMs, deadline);
+}
+
+/** 军情列表次行：当前行程剩余 ETA + phase 中文标签（CLIENT-141）。 */
 export function formatMarchListSecondary(m: MarchSummary, nowMs: number): string {
   const phase = m.phase ?? 0;
   const phaseLabel = formatMarchPhase(phase);
   const etaPart =
     phase === 2 || phase === 4
-      ? formatMarchRemainingMs(nowMs, m.arrive_at_ms)
+      ? formatMarchEta(m, nowMs)
       : phaseLabel;
   if (etaPart === phaseLabel) return phaseLabel;
   return `${etaPart} · ${phaseLabel}`;
@@ -337,7 +353,7 @@ export function formatMarchRowPrimaryLine(m: MarchSummary): string {
 
 /**
  * 相对到达 ETA（仅依据时刻差）。
- * 行军中/撤回中由 {@link formatMarchRowMetaLine} 拼接；待发/已到达等仍用 {@link formatMarchPhase}。
+ * 行军中/返程中由 {@link formatMarchRowMetaLine} 拼接；待发/已到达等仍用 {@link formatMarchPhase}。
  */
 export function formatMarchRemainingMs(nowMs: number, arrive_at_ms: number | undefined): string {
   if (!arrive_at_ms) return "即将到达";
@@ -358,11 +374,11 @@ export function formatMarchRemainingMsAbbrev(nowMs: number, arrive_at_ms: number
 /** 行军列表次行：出发/到达绝对时刻 + 剩余时间或阶段文案。 */
 export function formatMarchRowMetaLine(m: MarchSummary, nowMs: number): string {
   const depart = formatTimeMs(m.depart_at_ms);
-  const arrive = formatTimeMs(m.arrive_at_ms);
-  const timing = `出发 ${depart} · 到达 ${arrive}`;
+  const arrive = formatTimeMs(marchEtaDeadline(m));
+  const timing = `出发 ${depart} · ${m.phase === 4 ? "回城" : "到达"} ${arrive}`;
   const phase = m.phase ?? 0;
   if (phase === 2 || phase === 4) {
-    return `${timing} · ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+    return `${timing} · ${formatMarchEta(m, nowMs)}`;
   }
   return `${timing} · ${formatMarchPhase(m.phase)}`;
 }
@@ -377,7 +393,7 @@ export const MARCH_ROW_RECENT_ETA_ROLE = "march-row-recent-eta";
 export function formatMarchRowRecentEtaBrief(m: MarchSummary, nowMs: number): string | null {
   const phase = m.phase ?? 0;
   if (phase === 2 || phase === 4) {
-    return `ETA ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+    return `ETA ${formatMarchEta(m, nowMs)}`;
   }
   const phaseLabel = formatMarchPhase(phase);
   if (!phaseLabel) return null;
@@ -408,8 +424,8 @@ export function formatMarchHint(march: MarchSummary | undefined): string {
   if (!march?.march_id) return "";
   const dest = `(${march.to_x ?? "?"},${march.to_y ?? "?"})`;
   const phase = formatMarchPhase(march.phase);
-  const arrive = formatTimeMs(march.arrive_at_ms);
-  return `行军 #${march.march_id} → ${dest} · ${phase} · 预计到达 ${arrive}`;
+  const arrive = formatTimeMs(marchEtaDeadline(march));
+  return `行军 #${march.march_id} → ${dest} · ${phase} · 预计${march.phase === 4 ? "回城" : "到达"} ${arrive}`;
 }
 
 export function formatBattleOutcome(outcome: number | undefined): string {

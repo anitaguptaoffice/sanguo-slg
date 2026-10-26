@@ -21,12 +21,15 @@ func (s *Server) heroCityOwnership(ctx context.Context, pc PlayerContext) hero.C
 }
 
 func (s *Server) playerOwnsCity(ctx context.Context, pc PlayerContext, cityID int64) bool {
+	if !s.ownsCity(ctx, pc, cityID) {
+		return false
+	}
 	if city := s.citySnapshot(cityID); city != nil && city.PlayerID == pc.PlayerID {
 		return true
 	}
 	if s.domestic != nil {
 		c, err := s.domestic.LoadCity(ctx, cityID, pc.PlayerID)
-		return err == nil && c != nil
+		return err == nil && c != nil && c.PlayerID == pc.PlayerID
 	}
 	return false
 }

@@ -188,16 +188,7 @@ func runData002M4Steps(t *testing.T, ctx context.Context, c *websocket.Conn, api
 		smokeFailf(t, "accept quest", "code=%d msg=%s", acceptResp.Code, acceptResp.Msg)
 	}
 
-	smokeStep(t, "report quest progress")
-	progResp := mustSend(t, c, &commonv1.ClientPacket{
-		Route: api.RouteReportQuestProgress, TraceId: "d2-p", SessionId: sid, ServerId: intg006ServerID,
-		Payload: mustMarshal(&questv1.ReportQuestProgressRequest{
-			ServerId: intg006ServerID, QuestCfgId: smokeQuestCfgID, Absolute: true, ProgressValue: 2,
-		}),
-	})
-	if progResp.Code != 0 {
-		smokeFailf(t, "report progress", "code=%d msg=%s", progResp.Code, progResp.Msg)
-	}
+	smokeCompleteAcceptedHall(t, ctx, c, apiSrv, pool, sid, playerID)
 
 	smokeStep(t, "claim quest reward into bag (PG player_item)")
 	claimResp := mustSend(t, c, &commonv1.ClientPacket{

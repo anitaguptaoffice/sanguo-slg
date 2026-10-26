@@ -969,3 +969,22 @@ describe("QueuePanels", () => {
     expect(panelStatus.length).toBeGreaterThan(0);
   });
 });
+
+
+it("open queue observes completion once before re-entrant pulse rendering", () => {
+  const session = baseSession(), mount = document.createElement("div"), completed = vi.fn();
+  const now = Date.now();
+  const clock = vi.spyOn(Date, "now").mockReturnValue(now);
+  const panel = new QueuePanels(mount, {} as GatewayPort, () => session, {},
+    () => {}, () => {}, () => {}, undefined, undefined, undefined, undefined,
+    undefined, undefined, undefined, completed);
+  try {
+    panel.attach(); panel.toggle();
+    panel.addRecruitEntry({ queue_id: 9, unit_cfg_id: 1, count: 1, finish_at_ms: now + 30000 });
+    clock.mockReturnValue(now + 30001);
+    expect(() => panel.tick(1)).not.toThrow();
+    panel.tick(1);
+    expect(completed).toHaveBeenCalledExactlyOnceWith([9]);
+    expect(session.cityTroops).toEqual([]); // Completion itself cannot manufacture troops.
+  } finally { clock.mockRestore(); }
+});

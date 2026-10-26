@@ -35,6 +35,7 @@ func TestUseSpeedupShortensBuildAndGetCityState(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv.contentSvc = content.NewService(cat)
+	srv.contentCatalog = &contentCatalogBinding{service: srv.contentSvc, catalog: cat}
 
 	const cityID = 7
 	const playerID = 55
@@ -48,8 +49,12 @@ func TestUseSpeedupShortensBuildAndGetCityState(t *testing.T) {
 		},
 		LastSettleAt: clk.t,
 	}
-	domHub.RegisterCity(domCity)
-	srv.RegisterCityForTest(cityID, domCity, 10, 11)
+	if err := domHub.RegisterCity(domCity); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.RegisterCityForTest(cityID, domCity, 10, 11); err != nil {
+		t.Fatal(err)
+	}
 	srv.world = ownershipWorld(world.City{ServerID: 1, CityID: cityID, PlayerID: playerID})
 
 	p := content.PlayerRef{ServerID: 1, PlayerID: playerID}
@@ -155,6 +160,7 @@ func TestUseSpeedupWithoutActiveBuildStillConsumes(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv.contentSvc = content.NewService(cat)
+	srv.contentCatalog = &contentCatalogBinding{service: srv.contentSvc, catalog: cat}
 
 	const cityID = 8
 	const playerID = 56
@@ -166,8 +172,12 @@ func TestUseSpeedupWithoutActiveBuildStillConsumes(t *testing.T) {
 		},
 		LastSettleAt: clk.t,
 	}
-	domHub.RegisterCity(domCity)
-	srv.RegisterCityForTest(cityID, domCity, 12, 13)
+	if err := domHub.RegisterCity(domCity); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.RegisterCityForTest(cityID, domCity, 12, 13); err != nil {
+		t.Fatal(err)
+	}
 
 	p := content.PlayerRef{ServerID: 1, PlayerID: playerID}
 	if _, err := srv.contentSvc.Add(p, 2003, 1); err != nil {

@@ -63,11 +63,14 @@ export function layoutFrameCssSize(vp: LayoutViewport): { width: number; height:
 /** Position the DOM layout frame inside a full-viewport root (offsets from letterboxing). */
 export function applyLayoutFrameStyles(frame: HTMLElement, vp: LayoutViewport): void {
   const { width, height } = layoutFrameCssSize(vp);
-  frame.style.width = `${width}px`;
-  frame.style.height = `${height}px`;
-  frame.style.left = `${vp.offsetX}px`;
-  frame.style.top = `${vp.offsetY}px`;
-  frame.style.setProperty("--ui-scale", String(vp.uiScale));
+  // Called each animation frame as well as by ResizeObserver. Identical custom
+  // property writes still invalidate style in Chromium; retain external repairs.
+  if (frame.style.width !== `${width}px`) frame.style.width = `${width}px`;
+  if (frame.style.height !== `${height}px`) frame.style.height = `${height}px`;
+  if (frame.style.left !== `${vp.offsetX}px`) frame.style.left = `${vp.offsetX}px`;
+  if (frame.style.top !== `${vp.offsetY}px`) frame.style.top = `${vp.offsetY}px`;
+  const scale = String(vp.uiScale);
+  if (frame.style.getPropertyValue("--ui-scale") !== scale) frame.style.setProperty("--ui-scale", scale);
 }
 
 /** Minimum uiScale so a layout-space hit box of `layoutPx` stays ≥ `minCssPx` on screen. */

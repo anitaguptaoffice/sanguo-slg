@@ -67,37 +67,28 @@ func (p *PGStore) ensurePointAddColumns(ctx context.Context) error {
 	return err
 }
 
+// SaveHero updates only an existing identity; owner/status transitions remain supported.
 func (p *PGStore) SaveHero(ctx context.Context, h *Hero) error {
+	if h == nil {
+		return ErrHeroNotFound
+	}
 	if err := p.ensurePointAddColumns(ctx); err != nil {
 		return err
 	}
-	created := h.CreatedAt
-	if created.IsZero() {
-		created = time.Now()
+	tag, err := p.Pool.Exec(ctx, `
+		UPDATE player_hero SET player_id=$3, template_cfg_id=$4, display_name=$5,
+			level=$6, exp=$7, loyalty=$8, force=$9, intel=$10, politics=$11, command=$12,
+			force_add=$13, intel_add=$14, politics_add=$15, status=$16
+		WHERE server_id=$1 AND hero_id=$2`,
+		h.ServerID, h.HeroID, h.PlayerID, h.TemplateCfgID, nullString(h.DisplayName), h.Level, h.Exp, h.Loyalty,
+		h.Force, h.Intel, h.Politics, h.Command, h.ForceAdd, h.IntelAdd, h.PoliticsAdd, h.Status)
+	if err != nil {
+		return err
 	}
-	_, err := p.Pool.Exec(ctx, `
-		INSERT INTO player_hero (
-			server_id, hero_id, player_id, template_cfg_id, display_name, level, exp, loyalty,
-			force, intel, politics, command, force_add, intel_add, politics_add, status, created_at
-		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-		ON CONFLICT (server_id, hero_id) DO UPDATE SET
-			player_id = EXCLUDED.player_id,
-			template_cfg_id = EXCLUDED.template_cfg_id,
-			display_name = EXCLUDED.display_name,
-			level = EXCLUDED.level,
-			exp = EXCLUDED.exp,
-			loyalty = EXCLUDED.loyalty,
-			force = EXCLUDED.force,
-			intel = EXCLUDED.intel,
-			politics = EXCLUDED.politics,
-			command = EXCLUDED.command,
-			force_add = EXCLUDED.force_add,
-			intel_add = EXCLUDED.intel_add,
-			politics_add = EXCLUDED.politics_add,
-			status = EXCLUDED.status
-	`, h.ServerID, h.HeroID, h.PlayerID, h.TemplateCfgID, nullString(h.DisplayName), h.Level, h.Exp, h.Loyalty,
-		h.Force, h.Intel, h.Politics, h.Command, h.ForceAdd, h.IntelAdd, h.PoliticsAdd, h.Status, created)
-	return err
+	if tag.RowsAffected() != 1 {
+		return ErrHeroNotFound
+	}
+	return nil
 }
 
 func (p *PGStore) GetHero(ctx context.Context, serverID int32, heroID int64) (*Hero, error) {
@@ -150,14 +141,6 @@ func (p *PGStore) ListPlayerHeroes(ctx context.Context, serverID int32, playerID
 		out = append(out, &h)
 	}
 	return out, rows.Err()
-}
-
-func (p *PGStore) MaxHeroID(ctx context.Context, serverID int32) (int64, error) {
-	var max int64
-	err := p.Pool.QueryRow(ctx, `
-		SELECT COALESCE(MAX(hero_id), 0) FROM player_hero WHERE server_id = $1
-	`, serverID).Scan(&max)
-	return max, err
 }
 
 func (p *PGStore) SaveAssignment(ctx context.Context, a *Assignment) error {

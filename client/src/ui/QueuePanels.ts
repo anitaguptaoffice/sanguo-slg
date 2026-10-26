@@ -962,11 +962,12 @@ export class QueuePanels {
       this.recruits,
       now,
     );
+    // Pulse rendering is re-entrant: advance detection before notifying completion.
+    this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
     if (recruitJustCompleted.length) {
       this.notifyRecruitJustCompleted(recruitJustCompleted);
       this.onRecruitQueueJustCompleted?.(recruitJustCompleted);
     }
-    this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
     if (overviewEl) {
       overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }

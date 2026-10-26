@@ -111,7 +111,7 @@ function formatMarchResourceWarnLine(
   if (foodNeed <= 0) return null;
   const have = wallet?.food ?? 0;
   if (have >= foodNeed) return null;
-  return `粮余量不足（途耗约 ${formatResourceAmount(foodNeed)}，持 ${formatResourceAmount(have)}）`;
+  return `粮持有量低于途粮估算（约 ${formatResourceAmount(foodNeed)}，持 ${formatResourceAmount(have)}）`;
 }
 
 /**
@@ -154,7 +154,7 @@ export function formatMarchFormSummary(
 
   const resourceWarnLine = formatMarchResourceWarnLine(snapshot.wallet, foodNeed);
   const foodHint =
-    foodNeed > 0 ? ` · 途粮约 ${formatResourceAmount(foodNeed)}` : "";
+    foodNeed > 0 ? ` · 途粮约 ${formatResourceAmount(foodNeed)}（仅估算，当前出征不扣粮）` : "";
   const summaryLine = `出征汇总：目标 ${target} · ${troopPart} · ${etaPart}${foodHint}`;
 
   return {

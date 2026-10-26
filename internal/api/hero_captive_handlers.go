@@ -24,16 +24,15 @@ func (s *Server) handleListCaptiveHeroes(ctx context.Context, pkt *commonv1.Clie
 	if req.GetServerId() != 0 && req.GetServerId() != pc.ServerID {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "server_id mismatch"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	rows, meta, err := s.heroSvc.ListCaptiveHeroes(ctx, p)
+	rows, meta, err := s.familyOffers(ctx, pc, hero.StatusCaptive)
 	if err != nil {
-		return nil, err
+		return captiveErr(pkt.GetTraceId(), err), nil
 	}
 	out := make([]*herov1.CaptiveHeroSummary, 0, len(rows))
 	for _, h := range rows {
 		cityID := int64(0)
 		if rec, ok := meta[h.HeroID]; ok {
-			cityID = rec.CityID
+			cityID = rec
 		}
 		out = append(out, &herov1.CaptiveHeroSummary{
 			HeroId: h.HeroID, CityId: cityID, TemplateCfgId: h.TemplateCfgID, DisplayName: h.DisplayName,
@@ -62,11 +61,10 @@ func (s *Server) handleTrySummonCaptive(ctx context.Context, pkt *commonv1.Clien
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetHeroId() == 0 {
+	if req.GetHeroId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	res, err := s.heroSvc.TrySummonCaptive(ctx, p, req.GetCityId(), req.GetHeroId())
+	res, err := s.captiveAtomic(ctx, pc, req.GetCityId(), req.GetHeroId(), captivePreview)
 	if err != nil {
 		return captiveErr(pkt.GetTraceId(), err), nil
 	}
@@ -95,12 +93,10 @@ func (s *Server) handleSureSummonCaptive(ctx context.Context, pkt *commonv1.Clie
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetHeroId() == 0 {
+	if req.GetHeroId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	city := hero.CityRef{CityID: req.GetCityId()}
-	res, err := s.heroSvc.SureSummonCaptive(ctx, p, city, req.GetHeroId(), s.heroHotelCityPort(), s.heroInventoryPort())
+	res, err := s.captiveAtomic(ctx, pc, req.GetCityId(), req.GetHeroId(), captiveSummon)
 	if err != nil {
 		return captiveErr(pkt.GetTraceId(), err), nil
 	}
@@ -126,11 +122,10 @@ func (s *Server) handleReleaseCaptive(ctx context.Context, pkt *commonv1.ClientP
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if req.GetHeroId() == 0 {
+	if req.GetHeroId() <= 0 || (req.GetServerId() != 0 && req.GetServerId() != pc.ServerID) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "hero_id required"), nil
 	}
-	p := hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
-	if err := s.heroSvc.ReleaseCaptive(ctx, p, req.GetCityId(), req.GetHeroId()); err != nil {
+	if _, err := s.captiveAtomic(ctx, pc, req.GetCityId(), req.GetHeroId(), captiveRelease); err != nil {
 		return captiveErr(pkt.GetTraceId(), err), nil
 	}
 	data, err := marshal(&herov1.ReleaseCaptiveResponse{HeroId: req.GetHeroId()})
@@ -149,6 +144,6 @@ func captiveErr(trace string, err error) *commonv1.ServerPacket {
 	case errors.Is(err, hero.ErrHeroNotFound):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
 	default:
-		return heroErr(trace, err)
+		return familyErr(trace, err)
 	}
 }

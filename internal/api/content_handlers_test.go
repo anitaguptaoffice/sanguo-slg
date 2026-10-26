@@ -22,8 +22,9 @@ func TestContentBagGatewayHandlers(t *testing.T) {
 	}
 
 	s := &Server{
-		sessions:   NewSessionRegistry(),
-		contentSvc: svc,
+		sessions:       NewSessionRegistry(),
+		contentSvc:     svc,
+		contentCatalog: &contentCatalogBinding{service: svc, catalog: cat},
 	}
 	s.sessions.Bind("sess-1", PlayerContext{ServerID: 1, PlayerID: 42})
 

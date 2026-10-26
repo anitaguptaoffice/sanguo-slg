@@ -78,17 +78,13 @@ func (s *Service) InjectCaptive(ctx context.Context, p PlayerRef, in InjectCapti
 	if in.CityID <= 0 {
 		return nil, ErrInvalidRecruit
 	}
-	maxID, err := s.Store.MaxHeroID(ctx, p.ServerID)
-	if err != nil {
-		return nil, err
-	}
 	loyalty := in.Loyalty
 	if loyalty <= 0 {
 		loyalty = 50
 	}
 	now := s.now()
 	h := &Hero{
-		ServerID: p.ServerID, HeroID: maxID + 1, PlayerID: p.PlayerID,
+		ServerID: p.ServerID, PlayerID: p.PlayerID,
 		TemplateCfgID: in.TemplateCfgID, DisplayName: in.DisplayName,
 		Level: in.Level, Loyalty: loyalty,
 		Force: in.Force, Intel: in.Intel, Politics: in.Politics, Command: in.Command,
@@ -99,7 +95,7 @@ func (s *Service) InjectCaptive(ctx context.Context, p PlayerRef, in InjectCapti
 	}
 	rec := CaptiveRecord{CityID: in.CityID}
 	ensureSummonRequirements(h, &rec)
-	if err := s.Store.SaveHero(ctx, h); err != nil {
+	if err := s.Store.CreateHero(ctx, h); err != nil {
 		return nil, err
 	}
 	if err := s.CaptiveStore.PutCaptive(ctx, p.ServerID, h.HeroID, rec); err != nil {

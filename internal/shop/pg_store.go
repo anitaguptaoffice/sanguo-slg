@@ -27,53 +27,52 @@ func (p *PGStore) StockRemaining(ctx context.Context, serverID, offerID, total i
 	if err != nil {
 		return 0, err
 	}
-	rem := total - int32(sold)
-	if rem < 0 {
-		return 0, nil
-	}
-	return rem, nil
+	return remainingStock(total, sold), nil
 }
 
+// TakeStock is a legacy stock-only wrapper, NOT an atomic purchase. It shares
+// the allocator with transaction participants, including unlimited ledger rows.
 func (p *PGStore) TakeStock(ctx context.Context, serverID int32, playerID int64, offerID, total, qty int32) error {
-	if total < 0 {
-		return nil
+	if p == nil || p.Pool == nil {
+		return ErrPurchaseTransactionRequired
+	}
+	if serverID <= 0 || playerID <= 0 || offerID <= 0 || total < -1 {
+		return ErrInvalidPurchase
+	}
+	if qty <= 0 {
+		return ErrInvalidPurchaseCount
 	}
 	tx, err := p.Pool.Begin(ctx)
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
-	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1::bigint, $2::bigint)`, int64(serverID), int64(offerID)); err != nil {
-		return err
+	defer func() {
+		cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), time.Second)
+		defer cancel()
+		_ = tx.Rollback(cleanup)
+	}()
+	if total >= 0 {
+		if err := lockOfferInTx(ctx, tx, serverID, offerID); err != nil {
+			return err
+		}
+		sold, err := soldQuantityInTx(ctx, tx, serverID, offerID)
+		if err != nil {
+			return err
+		}
+		if int64(qty) > int64(total)-sold {
+			return ErrSoldOut
+		}
 	}
-	var sold int64
-	if err := tx.QueryRow(ctx, `
-		SELECT COALESCE(SUM(quantity), 0)::bigint
-		FROM player_shop_purchase
-		WHERE server_id = $1 AND offer_cfg_id = $2`,
-		serverID, offerID,
-	).Scan(&sold); err != nil {
-		return err
-	}
-	if sold+int64(qty) > int64(total) {
-		return ErrSoldOut
-	}
-	var purchaseID int64
-	if err := tx.QueryRow(ctx, `
-		SELECT COALESCE(MAX(purchase_id), 0) + 1
-		FROM player_shop_purchase
-		WHERE server_id = $1`, serverID,
-	).Scan(&purchaseID); err != nil {
-		return err
-	}
-	_, err = tx.Exec(ctx, `
-		INSERT INTO player_shop_purchase (
-			server_id, purchase_id, player_id, offer_cfg_id, quantity, cost_snapshot
-		) VALUES ($1, $2, $3, $4, $5, '{}'::jsonb)`,
-		serverID, purchaseID, playerID, offerID, qty,
-	)
+	purchaseID, err := nextPurchaseIDInTx(ctx, tx, serverID)
 	if err != nil {
+		return err
+	}
+	if _, err = tx.Exec(ctx, `INSERT INTO player_shop_purchase
+  (server_id,purchase_id,player_id,offer_cfg_id,quantity,cost_snapshot)
+  VALUES($1,$2,$3,$4,$5,'{}'::jsonb)`, serverID, purchaseID, playerID, offerID, qty); err != nil {
+		return err
+	}
+	if err = ctx.Err(); err != nil {
 		return err
 	}
 	return tx.Commit(ctx)
@@ -108,9 +107,8 @@ func (p *PGStore) PurchasedCount(ctx context.Context, serverID int32, playerID i
 	if err != nil {
 		return 0, err
 	}
-	day := startOfDay(now)
 	if limit == PurchaseLimitDaily {
-		if !startOfDay(dailyPeriod).Equal(day) {
+		if !sameCalendarDay(dailyPeriod, now) {
 			return 0, nil
 		}
 		return dailyBought, nil

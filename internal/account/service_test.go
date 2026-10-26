@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -47,6 +48,22 @@ func TestRegisterLoginRefreshMultiServer(t *testing.T) {
 		t.Fatal("expected distinct sessions per login")
 	}
 
+	// Account login reads the wallet; bootstrap belongs to the API layer. The
+	// legacy players above have no wallet rows and must receive zero balances.
+	for _, login := range []*accountv1.LoginResponse{login1, login2} {
+		wallet := login.GetWallet()
+		if wallet == nil || wallet.GetFood() != 0 || wallet.GetWood() != 0 || wallet.GetIron() != 0 || wallet.GetStone() != 0 || wallet.GetGold() != 0 {
+			t.Fatalf("login server %d wallet: %+v; want zero balances", login.GetPlayer().GetServerId(), wallet)
+		}
+	}
+	var walletRows int
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM player_wallet WHERE (server_id, player_id) IN ((1, 1001), (2, 2002))`).Scan(&walletRows); err != nil {
+		t.Fatal(err)
+	}
+	if walletRows != 0 {
+		t.Fatalf("account login unexpectedly created %d wallet rows", walletRows)
+	}
+
 	refreshed, err := svc.RefreshSession(ctx, login1.GetSessionId())
 	if err != nil {
 		t.Fatal(err)
@@ -72,14 +89,16 @@ func openTestDB(t *testing.T) *pgxpool.Pool {
 
 func applyAccountSchema(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
-	root := filepath.Join("..", "..", "spec", "db", "001_account.sql")
-	sql, err := os.ReadFile(root)
-	if err != nil {
-		t.Fatalf("read schema: %v", err)
-	}
-	_, err = pool.Exec(context.Background(), string(sql))
-	if err != nil {
-		t.Fatalf("apply schema: %v", err)
+	// Login reads player_wallet, which is defined by the domestic migration.
+	for _, name := range []string{"001_account.sql", "003_domestic.sql"} {
+		path := filepath.Join("..", "..", "spec", "db", name)
+		sql, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read schema %s: %v", name, err)
+		}
+		if _, err := pool.Exec(context.Background(), string(sql)); err != nil {
+			t.Fatalf("apply schema %s: %v", name, err)
+		}
 	}
 }
 

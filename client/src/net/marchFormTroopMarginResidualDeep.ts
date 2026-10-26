@@ -41,7 +41,7 @@ export function formatMarchFormTroopMarginResidualDeepLine(
   const foodHave = wallet?.food ?? 0;
   const walletSnippet =
     foodNeed > 0
-      ? `粮持 ${formatResourceAmount(foodHave)} / 途耗 ${formatResourceAmount(foodNeed)}`
+      ? `粮持 ${formatResourceAmount(foodHave)} / 途粮估算 ${formatResourceAmount(foodNeed)}（不扣粮）`
       : `粮持 ${formatResourceAmount(foodHave)} · 途耗待算`;
 
   const deepLine = `余量深对照 · ${marginSnippet} ↔ ${walletSnippet}`;

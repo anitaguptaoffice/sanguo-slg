@@ -53,10 +53,6 @@ func (s *Service) LoadPlayerState(ctx context.Context, p PlayerRef, inv Inventor
 	if err != nil {
 		return nil, err
 	}
-	maxID, err := s.Store.MaxHeroID(ctx, p.ServerID)
-	if err != nil {
-		return nil, err
-	}
 	var wallet Resources
 	var items map[int32]int32
 	if inv != nil {
@@ -70,7 +66,7 @@ func (s *Service) LoadPlayerState(ctx context.Context, p PlayerRef, inv Inventor
 	}
 	return &PlayerState{
 		ServerID: p.ServerID, PlayerID: p.PlayerID,
-		Wallet: wallet, Items: items, Heroes: heroes, nextHeroID: maxID,
+		Wallet: wallet, Items: items, Heroes: heroes,
 	}, nil
 }
 
@@ -158,8 +154,12 @@ func (s *Service) GetHeroDetail(ctx context.Context, p PlayerRef, heroID int64) 
 	}, nil
 }
 
-// RecruitPlayer runs recruit logic, persists the hero, and commits inventory spend.
+// RecruitPlayer is a memory-only convenience, with no cross-domain atomicity.
+// Durable callers must use the API-owned plan/debit/CreateHeroInTx transaction.
 func (s *Service) RecruitPlayer(ctx context.Context, p PlayerRef, inv InventoryPort, req RecruitRequest) (RecruitResult, error) {
+	if _, ok := s.Store.(*MemStore); !ok {
+		return RecruitResult{}, ErrRecruitTransactionRequired
+	}
 	if inv == nil {
 		return RecruitResult{}, errors.New("hero: inventory port required")
 	}
@@ -169,11 +169,11 @@ func (s *Service) RecruitPlayer(ctx context.Context, p PlayerRef, inv InventoryP
 	}
 	walletBefore := ps.Wallet
 	itemsBefore := cloneItems(ps.Items)
-	res, err := Recruit(ps, s.Catalog, s.Items, s.RNG, s.now(), req)
+	res, err := Recruit(ps, s.Catalog, s.Items, s.random(), s.now(), req)
 	if err != nil {
 		return RecruitResult{}, err
 	}
-	if err := s.Store.SaveHero(ctx, res.Hero); err != nil {
+	if err := s.Store.CreateHero(ctx, res.Hero); err != nil {
 		return RecruitResult{}, err
 	}
 	if err := inv.ApplyRecruitSpend(ctx, p, walletBefore, itemsBefore, res.Wallet, res.Items); err != nil {

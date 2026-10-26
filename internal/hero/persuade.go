@@ -209,20 +209,16 @@ func (s *Service) LionizeHero(ctx context.Context, p PlayerRef, city CityRef, np
 		if !ok {
 			return LionizeHeroResult{}, ErrUnknownTemplate
 		}
-		maxID, err := s.Store.MaxHeroID(ctx, p.ServerID)
-		if err != nil {
-			return LionizeHeroResult{}, err
-		}
 		now := s.now()
 		st := StatsAtLevel(tpl, 1)
 		h := &Hero{
-			ServerID: p.ServerID, HeroID: maxID + 1, PlayerID: p.PlayerID,
+			ServerID: p.ServerID, PlayerID: p.PlayerID,
 			TemplateCfgID: tpl.TemplateCfgID, DisplayName: tpl.Name,
 			Level: 1, Loyalty: LoyaltyDefault,
 			Force: st.Force, Intel: st.Intel, Politics: st.Politics, Command: st.Command,
 			Status: StatusIdle, CreatedAt: now,
 		}
-		if err := s.Store.SaveHero(ctx, h); err != nil {
+		if err := s.Store.CreateHero(ctx, h); err != nil {
 			return LionizeHeroResult{}, err
 		}
 		rec.State = LionizeStateRecruited

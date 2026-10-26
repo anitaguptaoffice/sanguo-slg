@@ -11,6 +11,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// playerCreationLockNamespace separates the per-shard MAX+1 allocator from other locks.
+const playerCreationLockNamespace int32 = 0x504c4159 // PLAY
+
 // PlayerStore creates shard characters and wallets (integration layer only).
 type PlayerStore struct {
 	Pool *pgxpool.Pool
@@ -27,26 +30,52 @@ func (s *PlayerStore) EnsurePlayer(ctx context.Context, serverID int32, accountI
 	if !isNoRows(err) {
 		return 0, err
 	}
-	playerID, err = s.nextPlayerID(ctx, serverID)
+	// Keep existing players (including legacy missing wallets) unchanged. New
+	// characters and their initial wallets become visible in one commit.
+	tx, err := s.Pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+	if err != nil {
+		return 0, err
+	}
+	defer func(rollback func(context.Context) error, ctx context.Context) {
+		_ = rollback(ctx)
+	}(tx.Rollback, context.Background())
+	if _, err = tx.Exec(ctx, `SELECT pg_advisory_xact_lock($1::integer,$2::integer)`, playerCreationLockNamespace, serverID); err != nil {
+		return 0, err
+	}
+	// Read again after the lock: another creator may have committed meanwhile.
+	err = tx.QueryRow(ctx, `SELECT player_id FROM player WHERE server_id = $1 AND account_id = $2`, serverID, accountID).Scan(&playerID)
+	if err == nil {
+		return playerID, nil
+	}
+	if !isNoRows(err) {
+		return 0, err
+	}
+	err = tx.QueryRow(ctx, `SELECT COALESCE(MAX(player_id), 1000) + 1 FROM player WHERE server_id = $1`, serverID).Scan(&playerID)
 	if err != nil {
 		return 0, err
 	}
 	if displayName == "" {
 		displayName = fmt.Sprintf("Lord-%d", playerID)
 	}
-	_, err = s.Pool.Exec(ctx, `
+	_, err = tx.Exec(ctx, `
 		INSERT INTO player (server_id, player_id, account_id, display_name)
 		VALUES ($1, $2, $3, $4)`,
 		serverID, playerID, accountID, displayName)
 	if err != nil {
 		return 0, err
 	}
-	_, err = s.Pool.Exec(ctx, `
+	_, err = tx.Exec(ctx, `
 		INSERT INTO player_wallet (server_id, player_id, food, wood, iron, stone, gold)
 		VALUES ($1, $2, 8000, 8000, 5000, 5000, 0)
 		ON CONFLICT (server_id, player_id) DO NOTHING`,
 		serverID, playerID)
-	return playerID, err
+	if err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(ctx); err != nil {
+		return 0, err
+	}
+	return playerID, nil
 }
 
 func (s *PlayerStore) AccountIDByCredentials(ctx context.Context, loginName, password string) (int64, error) {
@@ -71,20 +100,6 @@ func (s *PlayerStore) AccountIDForSession(ctx context.Context, sessionID string)
 		SELECT account_id FROM account_session WHERE session_id = $1::uuid`, sessionID).
 		Scan(&accountID)
 	return accountID, err
-}
-
-func (s *PlayerStore) nextPlayerID(ctx context.Context, serverID int32) (int64, error) {
-	var id int64
-	err := s.Pool.QueryRow(ctx, `
-		SELECT COALESCE(MAX(player_id), 1000) + 1 FROM player WHERE server_id = $1`, serverID).Scan(&id)
-	return id, err
-}
-
-func (s *PlayerStore) nextCityID(ctx context.Context, serverID int32) (int64, error) {
-	var id int64
-	err := s.Pool.QueryRow(ctx, `
-		SELECT COALESCE(MAX(city_id), 0) + 1 FROM player_city WHERE server_id = $1`, serverID).Scan(&id)
-	return id, err
 }
 
 func isNoRows(err error) bool {

@@ -98,7 +98,7 @@ func (s *MemStore) counterLocked(serverID int32, playerID int64, offerID int32, 
 		s.counters[k] = pc
 	}
 	day := startOfDay(now)
-	if !pc.dailyPeriod.Equal(day) {
+	if !sameCalendarDay(pc.dailyPeriod, day) {
 		pc.dailyPeriod = day
 		pc.dailyBought = 0
 	}
@@ -108,4 +108,12 @@ func (s *MemStore) counterLocked(serverID int32, playerID int64, offerID int32, 
 func startOfDay(t time.Time) time.Time {
 	y, m, d := t.Date()
 	return time.Date(y, m, d, 0, 0, 0, 0, t.Location())
+}
+
+// sameCalendarDay compares civil date labels, not instants. PostgreSQL DATE
+// decodes at UTC midnight, while the service clock can use any location.
+func sameCalendarDay(a, b time.Time) bool {
+	ay, am, ad := a.Date()
+	by, bm, bd := b.Date()
+	return ay == by && am == bm && ad == bd
 }

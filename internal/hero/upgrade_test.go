@@ -53,21 +53,21 @@ func TestUpgradePlayerPersists(t *testing.T) {
 	ctx := context.Background()
 	svc := NewService()
 	h := &Hero{
-		ServerID: 1, HeroID: 9, PlayerID: 7, TemplateCfgID: 1001,
+		ServerID: 1, PlayerID: 7, TemplateCfgID: 1001,
 		Level: 1, Exp: 200, Status: StatusIdle, Loyalty: LoyaltyDefault,
 	}
 	ApplyStatsForLevel(h, DefaultCatalog()[1001], 1)
-	if err := svc.Store.SaveHero(ctx, h); err != nil {
+	if err := svc.Store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
-	res, err := svc.UpgradePlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 7}, 9)
+	res, err := svc.UpgradePlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 7}, h.HeroID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if res.Hero.Level != 2 {
 		t.Fatalf("level %d", res.Hero.Level)
 	}
-	got, _ := svc.Store.GetHero(ctx, 1, 9)
+	got, _ := svc.Store.GetHero(ctx, 1, h.HeroID)
 	if got.Level != 2 {
 		t.Fatalf("persisted level %d", got.Level)
 	}

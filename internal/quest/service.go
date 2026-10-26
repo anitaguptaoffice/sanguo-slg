@@ -15,6 +15,8 @@ type Service struct {
 	granter RewardGranter
 	level   LevelProvider
 	now     func() time.Time
+
+	tutorialFacts TutorialFactsProvider
 }
 
 // NewService wires dependencies. granter may be nil only in tests that skip claim.
@@ -39,6 +41,17 @@ func (s *Service) SetClock(fn func() time.Time) {
 }
 
 func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32) (PlayerQuestProgress, QuestChainStatus, error) {
+	if questCfgID == 1006 {
+		if cfg, ok := s.catalog.Get(questCfgID); ok {
+			if err := wallConfig(cfg); err != nil {
+				return PlayerQuestProgress{}, QuestChainStatus{}, err
+			}
+			// Repair paid missing-row history before Accept can add a timestamp.
+			if err := s.RecoverWall(ctx, actor); err != nil {
+				return PlayerQuestProgress{}, QuestChainStatus{}, err
+			}
+		}
+	}
 	cfg, row, has, err := s.getPlayerQuestFresh(ctx, actor, questCfgID)
 	if err != nil {
 		return PlayerQuestProgress{}, QuestChainStatus{}, err
@@ -74,7 +87,18 @@ func (s *Service) AcceptQuest(ctx context.Context, actor Actor, questCfgID int32
 	if err := s.store.UpsertPlayerQuest(ctx, row); err != nil {
 		return PlayerQuestProgress{}, QuestChainStatus{}, err
 	}
-	view := s.buildProgress(cfg, row, true)
+	row, has, err = s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, questCfgID)
+	if err == nil {
+		if questCfgID == 1006 {
+			row, has, err = s.recoverWallRow(ctx, actor, cfg)
+		} else {
+			row, err = s.reconcileTutorialRow(ctx, actor, cfg, row, has)
+		}
+	}
+	if err != nil {
+		return PlayerQuestProgress{}, QuestChainStatus{}, err
+	}
+	view := s.buildProgress(cfg, row, has)
 	chain := s.chainStatus(ctx, actor, cfg.ChainID)
 	return view, chain, nil
 }
@@ -121,6 +145,12 @@ func (s *Service) ClaimQuestReward(ctx context.Context, actor Actor, questCfgID 
 	if !ok {
 		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, ErrQuestNotFound
 	}
+	if isTutorialID(questCfgID) {
+		return s.claimTutorialReward(ctx, actor, cfg)
+	}
+	if questCfgID == 1006 {
+		return s.claimWallReward(ctx, actor, cfg)
+	}
 	row, has, err := s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, questCfgID)
 	if err != nil {
 		return PlayerQuestProgress{}, QuestChainStatus{}, RewardBundle{}, err
@@ -158,10 +188,14 @@ func (s *Service) ClaimQuestReward(ctx context.Context, actor Actor, questCfgID 
 }
 
 func (s *Service) GetQuestChainStatus(ctx context.Context, actor Actor, chainID int32) (QuestChainStatus, []PlayerQuestProgress, error) {
-	chain := s.chainStatus(ctx, actor, chainID)
 	quests := s.catalog.ListByChain(chainID)
 	var views []PlayerQuestProgress
 	for _, cfg := range quests {
+		if cfg.QuestCfgID == 1006 {
+			if err := s.RecoverWall(ctx, actor); err != nil {
+				return QuestChainStatus{}, nil, err
+			}
+		}
 		row, has, err := s.store.GetPlayerQuest(ctx, actor.ServerID, actor.PlayerID, cfg.QuestCfgID)
 		if err != nil {
 			return QuestChainStatus{}, nil, err
@@ -174,13 +208,17 @@ func (s *Service) GetQuestChainStatus(ctx context.Context, actor Actor, chainID 
 				has = false
 			}
 		}
+		row, err = s.reconcileTutorialRow(ctx, actor, cfg, row, has)
+		if err != nil {
+			return QuestChainStatus{}, nil, err
+		}
 		if !has {
 			views = append(views, s.buildProgress(cfg, PlayerQuestRow{}, false))
 			continue
 		}
 		views = append(views, s.buildProgress(cfg, row, true))
 	}
-	return chain, views, nil
+	return s.chainStatus(ctx, actor, chainID), views, nil
 }
 
 func (s *Service) checkUnlock(ctx context.Context, actor Actor, cfg QuestCfg) error {
@@ -209,6 +247,10 @@ func (s *Service) checkPrerequisite(ctx context.Context, actor Actor, cfg QuestC
 }
 
 func (s *Service) buildProgress(cfg QuestCfg, row PlayerQuestRow, hasRow bool) PlayerQuestProgress {
+	// Never advertise legacy counts as newly verified wall progress.
+	if cfg.QuestCfgID == 1006 && row.Progress.ServerVerifiedVersion == 0 && (row.State == StateInProgress || row.State == StateClaimable) {
+		row.State, row.Progress.Count = StateInProgress, 0
+	}
 	target := ProgressTargetFor(cfg.Objectives)
 	var acceptedMs, updatedMs int64
 	if row.AcceptedAt != nil {

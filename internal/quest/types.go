@@ -4,10 +4,10 @@ import "time"
 
 // DB player_quest.state (spec/db).
 const (
-	StateUnaccepted  int16 = 0
-	StateInProgress  int16 = 1
-	StateClaimable   int16 = 2
-	StateCompleted   int16 = 3
+	StateUnaccepted int16 = 0
+	StateInProgress int16 = 1
+	StateClaimable  int16 = 2
+	StateCompleted  int16 = 3
 )
 
 // PlayerQuestState mirrors sanguo.quest.v1.PlayerQuestState (wire values).
@@ -64,17 +64,17 @@ type RewardBundle struct {
 
 // QuestCfg is a row from cfg_quest (plus M4 columns).
 type QuestCfg struct {
-	QuestCfgID      int32
-	Code            string
-	QuestType       int16
-	ChainID         int32
-	PrevQuestCfgID  int32
-	SortInChain     int16
-	Objectives      []Objective
-	Rewards         RewardBundle
-	UnlockLevel     int32
-	Repeatable      bool
-	NextQuestCfgID  int32 // derived from catalog
+	QuestCfgID     int32
+	Code           string
+	QuestType      int16
+	ChainID        int32
+	PrevQuestCfgID int32
+	SortInChain    int16
+	Objectives     []Objective
+	Rewards        RewardBundle
+	UnlockLevel    int32
+	Repeatable     bool
+	NextQuestCfgID int32 // derived from catalog
 }
 
 // Objective is one entry from cfg_quest.objectives JSON.
@@ -90,7 +90,9 @@ type Objective struct {
 
 // ProgressCounter is stored in player_quest.progress JSON.
 type ProgressCounter struct {
-	Count int32 `json:"count"`
+	Count                  int32 `json:"count"`
+	ServerVerifiedVersion  int32 `json:"server_verified_version,omitempty"`
+	LegacyNoPayoutVerified bool  `json:"legacy_no_payout_verified,omitempty"`
 }
 
 // PlayerQuestRow is player_quest persistence shape.
@@ -108,18 +110,18 @@ type PlayerQuestRow struct {
 
 // PlayerQuestProgress is the API view (quest.v1.PlayerQuestProgress).
 type PlayerQuestProgress struct {
-	QuestCfgID       int32
-	QuestCode        string
-	ChainID          int32
-	ChainOrder       int32
-	PrevQuestCfgID   int32
-	NextQuestCfgID   int32
-	State            PlayerQuestState
-	ProgressCurrent  int32
-	ProgressTarget   int32
-	AcceptedAtMs     int64
-	UpdatedAtMs      int64
-	RewardPreview    RewardBundle
+	QuestCfgID      int32
+	QuestCode       string
+	ChainID         int32
+	ChainOrder      int32
+	PrevQuestCfgID  int32
+	NextQuestCfgID  int32
+	State           PlayerQuestState
+	ProgressCurrent int32
+	ProgressTarget  int32
+	AcceptedAtMs    int64
+	UpdatedAtMs     int64
+	RewardPreview   RewardBundle
 }
 
 // QuestChainStatus mirrors quest.v1.QuestChainStatus.

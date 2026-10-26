@@ -44,8 +44,8 @@ func TestLargessCooldownBlocksSecondGift(t *testing.T) {
 func TestLargessGoldSpendAndPersistCD(t *testing.T) {
 	store := NewMemStore()
 	ctx := context.Background()
-	h := &Hero{HeroID: 9, PlayerID: 7, ServerID: 1, Level: 1, Loyalty: 20, Status: StatusIdle}
-	if err := store.SaveHero(ctx, h); err != nil {
+	h := &Hero{PlayerID: 7, ServerID: 1, Level: 1, Loyalty: 20, Status: StatusIdle}
+	if err := store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	svc := NewService()
@@ -55,18 +55,18 @@ func TestLargessGoldSpendAndPersistCD(t *testing.T) {
 	svc.SetClock(func() time.Time { return fixed })
 
 	inv := &largessTestInventory{gold: 10_000, items: map[int32]int32{}}
-	res, err := svc.LargessPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 7}, inv, LargessRequest{HeroID: 9, Kind: LargessGiftGold})
+	res, err := svc.LargessPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 7}, inv, LargessRequest{HeroID: h.HeroID, Kind: LargessGiftGold})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if res.GoldSpent != 100 || res.LoyaltyDelta < 1 {
 		t.Fatalf("gold=%d delta=%d loyalty=%d", res.GoldSpent, res.LoyaltyDelta, res.Hero.Loyalty)
 	}
-	last, err := store.LastLargessAt(ctx, 1, 9)
+	last, err := store.LastLargessAt(ctx, 1, h.HeroID)
 	if err != nil || !last.Equal(fixed) {
 		t.Fatalf("last largess: %v err=%v", last, err)
 	}
-	_, err = svc.LargessPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 7}, inv, LargessRequest{HeroID: 9, Kind: LargessGiftGold})
+	_, err = svc.LargessPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 7}, inv, LargessRequest{HeroID: h.HeroID, Kind: LargessGiftGold})
 	if err != ErrLargessCooldown {
 		t.Fatalf("expected cooldown, got %v", err)
 	}

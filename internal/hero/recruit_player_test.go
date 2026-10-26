@@ -85,13 +85,21 @@ func TestListPlayerHeroesPagination(t *testing.T) {
 	svc := NewService()
 	ctx := context.Background()
 	for i := 0; i < 3; i++ {
-		h := &Hero{ServerID: 1, PlayerID: 9, HeroID: int64(i + 1), TemplateCfgID: 1001, Level: 1, Loyalty: 100}
-		if err := svc.Store.SaveHero(ctx, h); err != nil {
+		h := &Hero{ServerID: 1, PlayerID: 9, TemplateCfgID: 1001, Level: 1, Loyalty: 100}
+		if err := svc.Store.CreateHero(ctx, h); err != nil {
 			t.Fatal(err)
 		}
 	}
 	page, err := svc.ListPlayerHeroes(ctx, PlayerRef{ServerID: 1, PlayerID: 9}, ListQuery{Limit: 2, Offset: 1})
 	if err != nil || page.Total != 3 || len(page.Heroes) != 2 {
 		t.Fatalf("page %+v err=%v", page, err)
+	}
+}
+
+func TestRecruitPlayerDurableRejectsBeforePorts(t *testing.T) {
+	s := NewService()
+	s.UseStore(&PGStore{}) // A pool access would panic; nil inventory is not consulted.
+	if _, err := s.RecruitPlayer(context.Background(), PlayerRef{}, nil, RecruitRequest{}); err != ErrRecruitTransactionRequired {
+		t.Fatalf("durable bypass was not rejected first: %v", err)
 	}
 }
