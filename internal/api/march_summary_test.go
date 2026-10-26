@@ -26,6 +26,7 @@ func TestMarchSummaryReturnDeadline(t *testing.T) {
 		{"unspecified", "", militaryv1.MarchPhase_MARCH_PHASE_UNSPECIFIED},
 		{"unknown", "future", militaryv1.MarchPhase_MARCH_PHASE_UNSPECIFIED},
 		{"returning", march.PhaseReturning, militaryv1.MarchPhase_MARCH_PHASE_RETURNING},
+		{"returned", march.PhaseReturned, militaryv1.MarchPhase_MARCH_PHASE_RETURNED},
 	}
 	times := []struct {
 		name  string

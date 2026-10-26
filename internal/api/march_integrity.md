@@ -19,3 +19,19 @@ Tests exercise real gateway packet decoding, malformed-input rejection before
 hero/force effects, checked duplicate ordering/copy isolation, and consistent
 outbound200/return166/zero/no-battle/home snapshots with unchanged return ETA.
 The arrival callback is an isolated fixture, not a new native battle claim.
+
+Reviewed returned-home contract: explicit `PhaseReturned` maps to wire5 only after
+MIL settles survivors at home. History keeps identity, route, purpose, timestamps
+and current survivor composition; `return_finish_at_ms` is zero outside returning.
+Pending stays pending even with old timestamps; unknown domain phases map to
+unspecified, never to pending or returned. List totals still include retained
+history and are computed before the unchanged city/actor-filtered pagination.
+
+The returned-history tests exercise the actual gateway and MIL completion path,
+including PostgreSQL ownership, shard denials, pagination and repeat tick/read
+idempotence. The successful hero fixture now supplies a battle outcome and checks
+busy while returning, then idle after survivor settlement. These bounded synthetic
+clock tests are engineering evidence, not natural same-process acceptance. They
+neither add durability nor repair existing ignored hero-release errors; returned5
+is not an atomic/durable hero-idle promise. Server emission requires the coordinated
+MIL/API/client review and rollout gate in `spec/proto/MARCH-RETURNED.md`.

@@ -2,6 +2,8 @@ import type { ResourceWallet } from "@/net/bootstrapSession";
 import {
   formatMarchListDestCell,
   formatMarchEta,
+  formatMarchPhase,
+  MARCH_PHASE_RETURNED,
   formatTroopStacks,
   type MarchSummary,
 } from "@/net/militaryFormat";
@@ -52,6 +54,9 @@ export function formatMarchReadonlyLineFromMarch(m: MarchSummary, nowMs: number)
   const tile = formatMarchListDestCell(m);
   const troops = formatTroopStacks(m.troops);
   const troopPart = troops && troops !== "无" ? troops : "兵力—";
+  if (m.phase === MARCH_PHASE_RETURNED) {
+    return `${tile} · ${troopPart} · ${formatMarchPhase(m.phase)}`;
+  }
   const phase = m.phase ?? 0;
   const etaHint =
     phase === 2 || phase === 4

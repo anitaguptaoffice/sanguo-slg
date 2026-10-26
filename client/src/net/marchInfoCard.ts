@@ -1,6 +1,7 @@
 import {
   formatMarchCoordPair,
   formatMarchPhase,
+  MARCH_PHASE_RETURNED,
   formatMarchEta,
   formatTroopStacks,
   type MarchSummary,
@@ -14,6 +15,7 @@ export const MARCH_FORM_INTEL_MUTUAL_HIGHLIGHT_CLASS = "march-form-intel-mutual-
 
 /** 信息卡次行 ETA 口径（与 CLIENT-141 / CLIENT-047 剩余时间同源）。 */
 export function formatMarchEtaLine(m: MarchSummary, nowMs: number): string {
+  if (m.phase === MARCH_PHASE_RETURNED) return formatMarchPhase(m.phase);
   const phase = m.phase ?? 0;
   if (phase === 2 || phase === 4) {
     return `ETA ${formatMarchEta(m, nowMs)}`;

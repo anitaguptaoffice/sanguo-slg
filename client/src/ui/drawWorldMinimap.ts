@@ -27,6 +27,7 @@ import {
   findFirstMarchByDest,
   formatMinimapDestEtaLabel,
   marchHasRouteOnMinimap,
+  marchShowsDestOnMinimap,
   minimapDestShowsEtaBadge,
   minimapMarchRouteStroke,
   minimapPhaseCaption,
@@ -173,6 +174,7 @@ export function drawWorldMinimap(
   const stackDestKeys: { wx: number; wy: number }[] = [];
   c2d.font = "10px system-ui";
   for (const m of opts.marches) {
+    if (!marchShowsDestOnMinimap(m)) continue;
     const wx = m.to_x;
     const wy = m.to_y;
     if (wx == null || wy == null) continue;

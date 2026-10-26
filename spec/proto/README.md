@@ -2,6 +2,8 @@
 
 H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约真源在本目录；生成代码输出到仓库根 `gen/`（不提交），由 `protoc` 生成。
 
+待独立评审：[行军已回城终态与兼容门禁](MARCH-RETURNED.md)（SPEC-MARCH-RETURNED-001；不代表消费者已实现）。
+
 ## 分包
 
 | 路径 | 域 | 主要 route |

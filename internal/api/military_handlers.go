@@ -243,6 +243,8 @@ func marchPhaseProto(p march.MarchPhase) militaryv1.MarchPhase {
 		return militaryv1.MarchPhase_MARCH_PHASE_ARRIVED
 	case march.PhaseReturning:
 		return militaryv1.MarchPhase_MARCH_PHASE_RETURNING
+	case march.PhaseReturned:
+		return militaryv1.MarchPhase_MARCH_PHASE_RETURNED
 	default:
 		return militaryv1.MarchPhase_MARCH_PHASE_UNSPECIFIED
 	}
