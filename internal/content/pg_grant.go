@@ -14,6 +14,9 @@ import (
 // Retry unique-ID races with the GM producer, which also allocates MAX(id)+1.
 func (p *PGStore) grantAtomic(ctx context.Context, player PlayerRef, pkg RewardPackage, key string, cat *Catalog) (GrantResult, error) {
 	for attempt := 0; attempt < 8; attempt++ {
+		if err := ctx.Err(); err != nil {
+			return GrantResult{}, err
+		}
 		result, err := p.grantTx(ctx, player, pkg, key, cat)
 		if !isUniqueViolation(err) {
 			return result, err
@@ -125,6 +128,9 @@ func (p *PGStore) grantTx(ctx context.Context, player PlayerRef, pkg RewardPacka
 		out.Bag = append(out.Bag, Stack{ItemCfgID: id, Quantity: qty})
 	}
 	sort.Slice(out.Bag, func(i, j int) bool { return out.Bag[i].ItemCfgID < out.Bag[j].ItemCfgID })
+	if err = ctx.Err(); err != nil {
+		return GrantResult{}, err
+	}
 	if err = tx.Commit(ctx); err != nil {
 		return GrantResult{}, err
 	}

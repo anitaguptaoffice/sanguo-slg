@@ -8,6 +8,12 @@
 // With PGStore, Grant commits player_item, player_wallet and reward idempotency
 // atomically. Replays validate player and payload; pending GM rows retain their ID.
 // LoadPlayer restores the durable wallet as well as the bag.
+// GrantContext bounds service-lock waits and PG transactions without detached work.
+// Cancellation observed before mutation leaves state unchanged; commit errors
+// do not prove rollback.
+// Recover uncertain outcomes with the same key/package, never a replacement key.
+// Cancelable contexts are rejected for legacy non-atomic stores; Grant preserves
+// their background-context behavior, without adding transactional guarantees.
 //
 // Resource-pack Use also commits stock and wallet together, reading durable stock
 // and publishing caches only after commit. Repeat requests are new uses when stock
