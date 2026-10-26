@@ -6,10 +6,10 @@ import (
 )
 
 var (
-	ErrInvalidMarch     = errors.New("march: invalid march order")
-	ErrMarchNotFound    = errors.New("march: order not found")
-	ErrInvalidPhase     = errors.New("march: invalid phase transition")
-	ErrNoTroopsToMarch     = errors.New("march: empty troop stack")
+	ErrInvalidMarch       = errors.New("march: invalid march order")
+	ErrMarchNotFound      = errors.New("march: order not found")
+	ErrInvalidPhase       = errors.New("march: invalid phase transition")
+	ErrNoTroopsToMarch    = errors.New("march: empty troop stack")
 	ErrInsufficientTroops = errors.New("march: insufficient city troops")
 )
 
@@ -77,12 +77,12 @@ func BeginReturn(o *MarchOrder, now time.Time) error {
 	return nil
 }
 
-// MarkReturnComplete clears returning phase (army back at origin).
+// MarkReturnComplete transitions returning → returned after home troop settlement.
 func MarkReturnComplete(o *MarchOrder) error {
 	if o.Phase != PhaseReturning {
 		return ErrInvalidPhase
 	}
-	o.Phase = PhasePending
+	o.Phase = PhaseReturned
 	o.ReturnFinishAt = time.Time{}
 	return nil
 }

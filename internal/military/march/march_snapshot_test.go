@@ -57,8 +57,8 @@ func TestSnapshotMarchCurrentTroopsAndIsolation(t *testing.T) {
 					t.Fatal("return event")
 				}
 				order, troops = h.SnapshotMarch(created.ID)
-				if order.Phase != PhasePending || !order.ReturnFinishAt.IsZero() || !reflect.DeepEqual(troops, tc.troops) || h.SnapshotCity(42).Troops[1] != 266 {
-					t.Fatal("completed snapshot must preserve existing runtime semantics")
+				if order.Phase != PhaseReturned || !order.ReturnFinishAt.IsZero() || !reflect.DeepEqual(troops, tc.troops) || h.SnapshotCity(42).Troops[1] != 266 {
+					t.Fatal("returned snapshot must retain authoritative survivors as history")
 				}
 			}
 		})

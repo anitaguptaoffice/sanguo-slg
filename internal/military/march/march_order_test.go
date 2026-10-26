@@ -11,7 +11,7 @@ func TestMarchPhaseMachine(t *testing.T) {
 	order, err := BeginMarch(cat, now, StartMarchRequest{
 		ArmyID: 1,
 		FromX:  0, FromY: 0,
-		ToX:    10, ToY: 0,
+		ToX: 10, ToY: 0,
 		Troops: []TroopStack{{UnitCfgID: 1, Count: 100}},
 	})
 	if err != nil {
@@ -36,7 +36,7 @@ func TestMarchPhaseMachine(t *testing.T) {
 	if err := MarkReturnComplete(order); err != nil {
 		t.Fatal(err)
 	}
-	if order.Phase != PhasePending {
-		t.Fatal("back home idle")
+	if order.Phase != PhaseReturned || !order.ReturnFinishAt.IsZero() {
+		t.Fatal("back home returned")
 	}
 }
