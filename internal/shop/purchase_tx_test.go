@@ -62,7 +62,7 @@ func TestPurchaseTxRollbackCommitAndBinding(t *testing.T) {
 		}
 		plan, id, err := stagePurchase(ctx, tx, svc, store, actor, 1001, 2)
 		if err != nil {
-			tx.Rollback(ctx)
+			_ = tx.Rollback(ctx) // Best-effort cleanup before reporting the staging failure.
 			t.Fatal(err)
 		}
 		if id != 1 || plan.Offer().PurchasedCount != 2 {

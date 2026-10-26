@@ -117,7 +117,9 @@ func TestPurchaseTxCounterExhaustionDoesNotWrite(t *testing.T) {
 			t.Fatal(err)
 		}
 		_, _, err = stagePurchase(ctx, tx, svc, store, content.PlayerRef{ServerID: server, PlayerID: 1}, 1001, 1)
-		tx.Rollback(ctx)
+		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil {
+			t.Fatalf("%s rollback: %v", kind, rollbackErr)
+		}
 		if !errors.Is(err, ErrPurchaseOverflow) {
 			t.Fatalf("%s err=%v", kind, err)
 		}
@@ -169,11 +171,14 @@ func TestPurchaseTxCancellationAtParticipantLocks(t *testing.T) {
 				cancel()
 			}
 			_, _, err = stagePurchase(timed, tx, svc, store, content.PlayerRef{ServerID: server, PlayerID: 1}, 1001, 1)
-			tx.Rollback(ctx)
+			// Cancellation may close the connection; rollback is best-effort cleanup.
+			_ = tx.Rollback(ctx)
 			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, context.Canceled) {
 				t.Fatalf("wait=%v", err)
 			}
-			blocker.Rollback(ctx)
+			if rollbackErr := blocker.Rollback(ctx); rollbackErr != nil {
+				t.Fatalf("release blocker: %v", rollbackErr)
+			}
 			var rows, total int
 			if err = pool.QueryRow(ctx, `SELECT count(*) FROM player_shop_purchase WHERE server_id=$1`, server).Scan(&rows); err != nil || rows != 0 {
 				t.Fatalf("rows=%d err=%v", rows, err)
