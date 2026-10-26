@@ -4,6 +4,18 @@ PostgreSQL 16+。**分片键 `server_id`**：账号中心与 `cfg_*` 全局表�
 
 待独立评审：[自然招募原子提交与将领创建身份契约](recruit_atomicity.md)（SPEC-RECRUIT-ATOMIC-001；非已上线保证）。
 
+将领 ID 有序迁移候选及停写/恢复门禁：[SPEC-RECRUIT-ID](recruit_id_sequence.md)。
+
+既有 work_queue 共享 JS-safe 身份分配与停写/恢复门禁：[SPEC-QUEUE-ID](../rules/queue_identity.md)。
+仅契约前置，不启用新队列类型；隔离 PG 校验：
+`QUEUE_ID_TEST_DSN=<disposable DSN> python3 spec/db/tests/queue_id.py`。
+同一显式隔离 DSN 下继续运行 `python3 spec/db/tests/queue_id_metadata.py` 与
+`go run ./spec/db/tests/queue_id_loader`，分别验证拒绝错误元数据/影子对象及真实 ApplySpecs 重放。
+Loader 需显式隔离管理员 DSN：会创建并清理自己的 NOLOGIN 测试角色和数据库，
+验证非超级用户数据库所有者在未改动 public 上的真实 ApplySpecs；不 GRANT/ALTER OWNER。
+
+既有来投/俘虏/名将元数据独立契约候选及迁移门禁：[SPEC-HERO-METADATA](hero_metadata.md)。
+
 ## ER（逻辑引用，跨域不设 FK）
 
 - `account` → `player`（同服唯一角色）→ `player_wallet` / `player_city` / `player_hero`
@@ -62,3 +74,9 @@ Existing cities require the separately gated, atomic all-city backfill in
 `migrations/007_backfill_city_production_checkpoint.sql` before consumer activation;
 run its isolated PostgreSQL acceptance checks with
 `DATABASE_URL=... bash spec/db/tests/production_checkpoint_backfill.sh`.
+
+Catalog-shadow correction for `m4_005`/`m4_006`/`m4_007`: trusted validation uses
+`pg_catalog, pg_temp` with the temporary schema explicitly last, not implicit-first.
+Exact cycling-sequence and wrong-default spoofs are tested with an explicit private DSN:
+`SPEC_CATALOG_SHADOW_TEST_DSN=... python3 spec/db/tests/stable_catalog_shadow.py`.
+This changes no schema, economics, legacy adoption or runtime activation policy.
