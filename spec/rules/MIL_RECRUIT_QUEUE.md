@@ -1,0 +1,71 @@
+# MIL Recruit queue contract
+
+任务：[SPEC-DURABLE-RECRUIT-SEMANTICS-001 / #1801](https://github.com/anitaguptaoffice/sanguo-slg/issues/1801)。
+基线：`851ea623b4de59db7cd50ba114fa371632545056`；遵循已接收的 [SLG 应用命令边界](SLG_COMMAND_BOUNDARY.md)。
+本文件与 [MIL_RECRUIT_COMMAND.md](MIL_RECRUIT_COMMAND.md) 共同构成一个配对语义契约，须联合审阅、联合冻结；不能单独宣称完整。
+以下规定约束后续设计与实现，不是已实现保证、运行时验收结果或启用许可；纯计算 planner 不变，也不证明持久接受。
+物理 receipt DDL、catalog canonical encoding / distribution、具体 Go 端口和 transport 仍须后续独立 SPEC 冻结；本文不执行或宣称恢复测试通过。
+
+## 1. Authority and existing representation
+
+Use existing type3 `work_queue` rows and shared `work_queue_id_seq`, not another queue service. Schema-global safe-positive IDs 1..9007199254740991; schema-qualified allocation only after city serialization. Gaps allowed. Shared allocator catalog/highwater/restore/fencing requirements remain unchanged. Existing exact-shape DOM binding permits no unreviewed extra queue constraints: enforce the following invariants in supplied-tx MIL participants under the city lock, NOT by adding a check/index/trigger to generic work_queue in this card. Preserve DOM type1 pending-row load/delete behavior and terminal type3 rows.
+
+Admission/completion must validate the COMPLETE pending type3 set for exact server/city, including every row regardless of owner or payload validity. Do not filter wrong-owner/malformed rows out of the validation result. Require owner matches authenticated authoritative WORLD owner and marker owner. Read all city_troop rows, not only units1–4. All other same-city stock/queue writers must acquire the same WORLD city FOR UPDATE serialization lock before mutation. Locking four existing stock rows cannot prevent a fifth insertion without this writer discipline. Fresh creation has its separate insert-only transaction/proof; it is not an exception authorizing concurrent legacy writes.
+
+Exactly four unique stock rows units1–4, nonnegative int32 ready/wounded, matching fresh-origin/version1/cohort marker are required. Missing/partial/extra/invalid rows are unavailable, never zero/read-repaired. Marker ownership/cohort transfer and legacy adoption remain unsupported. No SQL-to-mutating-Hub mirror. Recruit-only activation fences every noncompatible stock writer, including old recruit callbacks, march debit/return, GM/import and test tools; routed StartMarch must reject before hero/force/stock effects.
+
+## 2. Complete queue invariant and capacity
+
+- Pending means status0 waiting or status1 active. Empty set is valid. A nonempty set has EXACTLY ONE active row; it has the smallest queue_id of the pending set. All remaining rows are waiting in increasing queue_id FIFO. Waiting-only, multiple active, active after an older waiting ID, wrong owner/city/link/payload are unavailable. No auto-promotion, skipping corrupt oldest work or repair.
+- One active slot remains `RecruitSlots=1`. Existing recruit code has no finite waiting-list cap; do not introduce one as gameplay. Implementation may stream validation in ordered pages under the city lock, but cannot treat a partial page as the complete pending set or accept after a partial sum. Operational resource failure returns unavailable without writes, not a new queue-full business rule.
+- Retained done2 rows are excluded from pending totals but remain exact historical identities. New durable lifecycle supports waiting0→active1→done2 only. Canceled3 is a recognized legacy SQL status, not a legal new command transition: never scan/complete/adopt it. Unclassified legacy/canceled type3 rows block cohort admission unless an independently reviewed inventory proves they are outside the new cohort; no invented cancellation/refund. A new receipt linked to canceled is inconsistent/unavailable.
+- For EACH unit, calculate with checked arithmetic `ready + sum(count of ALL accepted active/waiting jobs) + proposedCount <= MaxInt32`. Validate existing aggregate even for other units and before completing a job. This reserves REPRESENTABLE completion capacity, not a new game-balance troop cap. Example ready=MaxInt32-1 and active1 permits no further waiting1. Wounded never enters this sum.
+- Accepted jobs have strictly positive count; no aggregate overflow, truncation or wrap. Completion moves count from pending liability to ready, preserving the aggregate; one-unit checked credit is still required. Other ready writers/march remain fenced until compatible capacity contracts exist. This bounded recruit-only contract does not promise future arbitrary writers can share this invariant unchanged.
+
+## 3. Exact accepted rule evidence / immutable job identity
+
+EVERY retained Recruit job retains immutable reverse command identity regardless of current status, including done/canceled/unknown status, `(server_id, authenticated player_id, operation=RecruitTroop, 16-byte CommandID)`. Exact-key reverse lookup covers ALL retained statuses, not only pending jobs; this identity retention does not authorize canceled/unknown lifecycle transitions or legacy adoption. Its physical encoding/indexes belong to future SPEC/metadata compatibility work; do not add generic queue constraints now.
+
+Logical accepted job fields: reverse scoped command identity, server, player, city, queue ID, type3, unit, count, exact paid food/wood/iron/stone, positive integral duration seconds, accepted catalog version and rule digest. No gold charge. All are immutable through promotion/completion. They match the one linked acceptance receipt exactly (see paired command proposal).
+
+Proposed payload version1 exact keys:
+`v, unit_cfg_id, count, cost_paid, duration_sec, catalog_version, rule_digest`.
+`cost_paid` has exactly `food, wood, iron, stone`. Reject extra/missing keys, duplicates in original JSON input before normalization, strings-as-numbers, fractions, negatives, out-of-range integers, unknown versions/units, empty/unknown catalog evidence. JSONB cannot retain duplicate-key evidence: persistence accepts only a typed producer representation, and untrusted raw JSON must be strict-decoded BEFORE JSONB conversion. Readback still rejects malformed normalized values. This revises the previously dormant payload direction; no delivered parser or generic SQL table is silently migrated.
+
+Catalog version is a nonempty immutable deployment-manifest identifier with exact byte equality; rule_digest is the manifest's canonical SHA-256 digest for the accepted unit's full recruit rule (unit ID, four per-unit costs, seconds per unit). Registry access is to a trusted retained server configuration artifact, NOT arbitrary job JSON, client input or current-only catalog. Verify version→digest→exact rule, then checked multiplication yields exact count/cost/duration. Retain every referenced version with receipts/jobs and restore it with them. Unknown/unavailable version or mismatched digest is unavailable, not repricing, guessed free completion or using today's catalog. Current catalog only chooses NEW acceptance. Exact canonical manifest encoding/version identifier grammar and owner-controlled distribution/retention artifact need a bounded DATA/SPEC contract before rule-evidence port implementation; no schema/protocol is invented for that registry here.
+
+## 4. Canonical time and immutable acceptance versus live queue
+
+Canonical timestamps: finite UTC millisecond instants in inclusive `0001-01-01T00:00:00.000Z` through `9999-12-31T23:59:59.999Z`. This application representation fits Go calendar display, PostgreSQL timestamp and exact signed Unix-milliseconds transport. Drop submillisecond precision by UTC calendar/millisecond floor, not floating point; canonicalize BEFORE persistence and receipt creation. Duration is positive integral seconds, checked for int64 seconds multiplication, Go nanosecond duration conversion, and timestamp addition remaining in the chosen range. No leap-second special gameplay or clamp/saturation.
+
+After all authoritative row locks and complete validation reads, sample database `clock_timestamp()` once in the same tx; canonicalize it as processing instant T. Do not use transaction-start `now()` or application time sampled before lock waits. For completion, due is `active.finish_at <= T`, inclusive; sample/recheck only after locks. A clock step backward that makes a previously discovered job early produces no effects; keep pending and retry on later scans. No monotonic catch-up clock invented. Impossible/noncanonical persisted instants fail closed.
+
+Admission with empty pending set creates active, start=T, finish=T+duration. Otherwise creates waiting with estimated start=max(T, maximum existing pending finish), finish=start+duration. This preserves existing `lastFinishAt` semantics and does not assume queue ID order implies chronological estimates after delays.
+
+Receipt stores immutable ACCEPTED status/start/finish. For initially active job, live start/finish never change. For initially waiting job, its live start/finish remain its accepted estimates until promotion; promotion writes actual start=T and finish=T+STORED duration, exactly once. Status becomes active, then done. Done preserves last actual start/finish. Remaining younger waiting jobs retain their original estimates; do not silently recalculate/catch up their timestamps. Their estimates may precede the newly promoted active finish after downtime; this is valid. FIFO is queue-ID order, not sorting live finish_at. Receipt accepted timestamps never change and must not be compared to promoted live timestamps for equality.
+
+Clock reversal does not authorize completing early. When admission has existing pending work, max(T, pending finishes) preserves existing estimate behavior. When no pending work exists, T is the actual newly sampled clock; do not invent a monotonic historical acceptance timestamp requirement. Accepted ordering remains allocated-under-city-lock queue IDs.
+
+## 5. Atomic completion and recovery
+
+Discovery is unlocked and returns candidate identities only. Acquire common lock order from paired contract; re-read current WORLD owner, readiness, ALL pending jobs, all stock and exact receipt/job/rule evidence. Validate oldest waiting job AND its proposed T+duration BEFORE any credit/done/promotion writes. If any required state/time/capacity validation fails, leave whole transition unchanged/unavailable; do not complete current job then strand promotion or skip invalid oldest.
+
+Done-history reporting uses the paired command contract's historical actor/shard authentication and link validation, NOT current owner/readiness admission predicates. If target is valid done: no credit or promotion. If valid active but early: no effects. If valid active and due: checked-add its count, mark done, promote exactly the oldest waiting row using T in ONE caller-owned transaction. A waiting target is not an active completion and changes nothing; canceled/unknown/missing/inconsistent target is unavailable, not done. All writes conditional on locked expected state; any affected-row mismatch rolls back. No claim-bit commit before actual effects. Receipt remains immutable. Completion does not replay admission quest/cache effects.
+
+Startup and periodic scanner query only active type3 rows due by a canonical discovery clock, never SQL status2 or waiting estimates. Use bounded batches ordered by `(finish_at, server_id, queue_id)` and keyset cursor; no OFFSET or queue-row locks during discovery. Cursor advances after each candidate attempt even when candidate is unavailable; continue past it to healthy candidates. End-of-pass resets cursor for subsequent pass so failed/transient jobs retry and newly due earlier keys are not lost. Candidate error records scoped diagnostics, not destructive deletion, adoption or a new durable quarantine schema. Restart begins a fresh pass. Query/source failure aborts that pass without claiming completion; repeat later. Per-attempt cancellation/timeout must not stall an entire pass indefinitely. Exact batch size/timeout/backoff are nonsemantic runtime configuration, to be bounded and tested; no promise to skip validation to meet latency.
+
+## 6. Essential future validation / no execution claimed
+
+- Empty pending, one active, active+waiting; zero/two active; waiting-only; older waiting before active; terminal mixtures and canceled/unclassified legacy denial.
+- Full pending scan across page boundary; wrong owner/malformed row on final page cannot be ignored. DOM type1/type2 rows unaffected; done type3 retained.
+- ready=MaxInt32-1, active1, new1 denied; multiunit sum; pending sum overflow; wound preserved; unrelated writer attempting fifth stock row must follow city barrier or be fenced.
+- All accepted immutable rule fields versus trusted retained version; current catalog replacement/removal does not invalidate retained older evidence; missing retained version is unavailable.
+- Done job with missing receipt followed by same-key retry is unavailable, never a second debit; job reverse-key mismatch versus receipt rejects.
+- Active due equality; lock-wait crosses deadline; submillisecond SQL/receipt/wire round trip; timestamp maximum and promotion overflow; backward clock yields early/no effects.
+- Active plus two overdue waiting estimates: only active credits, oldest starts at T; younger keeps original estimate and remains waiting. Corrupt oldest or promotion overflow leaves ALL unchanged.
+- Kill after credit, after done, AFTER PROMOTION mutation before commit, and after completion commit. Verify ready/done/promoted state all rollback or all persist; no second promotion on duplicate.
+- Completion in-flight readback with original tx COMMIT and ROLLBACK branches, distinct from ack-lost-after-confirmed-commit. Fresh process actually exits/restarts.
+- Scanner first malformed/unknown/blocked candidate followed by healthy cities across batch boundary: healthy progresses; skipped candidate retries next pass; new earlier due row observed next pass; restart independent of login/heap.
+- Same actor/two cities and two workers honor shared wallet ordering; no deadlocks from candidate queue locks. Reject source drift and ended capability.
+
+No new gameplay/protocol, schema alteration or live activation follows from approval of this prose. Follow-on SPEC receipt DDL, trusted rule evidence, transaction participant, complete integration and process-crash evidence remain explicit cards.
