@@ -1,3 +1,5 @@
+import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
+import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel, captureCenterPanelIntent } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
@@ -501,6 +503,7 @@ export class MainCityScene implements Scene {
   private walletGainUntilMs = 0;
   private layoutFrame!: HTMLElement;
   private minimapMarches: MarchSummary[] = [];
+  private marchSnapshotGeneration = 0;
   private minimapView: MinimapView = { ...DEFAULT_MINIMAP_VIEW };
   private minimapMarchRefreshAccum = 0;
   private minimapPanPointerId: number | null = null;
@@ -547,6 +550,7 @@ export class MainCityScene implements Scene {
   private readonly onHudClickBound = (ev: Event) => this.onHudClick(ev);
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
+    this.marchSnapshotGeneration++;
     this.assets = ctx.assets;
     this.getViewport = ctx.getViewport;
     this.canvas = ctx.canvas;
@@ -877,13 +881,7 @@ export class MainCityScene implements Scene {
         assets: this.assets,
         nowMs: () => this.marchClockMs,
         getWorldSelectedGrid: () => this.world?.getSelectedGrid() ?? null,
-        onMarchesUpdated: (marches) => {
-          this.minimapMarches = marches;
-          if (this.activeDomesticSlotKey === CITY_CHIEF_HALL_SLOT_KEY) {
-            this.cityOfficePanel?.setMarchingHeroIds(heroIdsOnActiveMarch(marches));
-          }
-          this.world?.refreshMarchDestCounts();
-        },
+        onMarchesUpdated: (marches) => this.applyMarchesSnapshot(marches),
         onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
         onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
         onOpenMilitaryQueueBanner: (marchId) => this.openMilitaryQueueBannerHighlight(marchId),
@@ -1275,6 +1273,7 @@ export class MainCityScene implements Scene {
   }
 
   leave(): void {
+    this.marchSnapshotGeneration++;
     this.cityStateFetch?.clear();
     this.hudTodoBadgePoll?.reset();
     this.chatUnreadPoll?.reset();
@@ -2377,15 +2376,35 @@ export class MainCityScene implements Scene {
   private async refreshMinimapMarches(): Promise<void> {
     const cityId = this.session?.cityId;
     if (!cityId) return;
+    const current = beginMarchSnapshotRead(this.gateway, () => this.session?.cityId);
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
     try {
       const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
         marches?: MarchSummary[];
       };
-      this.minimapMarches = res.marches ?? [];
-      this.marchList?.syncMinimapMarchFocusFromSnapshot(this.minimapMarches);
-      this.world?.refreshMarchDestCounts();
+      if (!actor() || generation !== this.marchSnapshotGeneration || !current(true)) return;
+      const marches = res.marches ?? [];
+      this.marchList?.syncMinimapMarchFocusFromSnapshot(marches);
+      this.applyMarchesSnapshot(marches);
     } catch {
       /* 小地图只读：失败时保留上次数据 */
+    }
+  }
+
+  private applyMarchesSnapshot(marches: MarchSummary[]): void {
+    this.minimapMarches = marches;
+    const lastId = this.lastMarch?.march_id;
+    const last = lastId != null ? marches.find(m => m.march_id === lastId) : undefined;
+    if (last) this.lastMarch = last;
+    if (this.activeDomesticSlotKey === CITY_CHIEF_HALL_SLOT_KEY) {
+      this.cityOfficePanel?.setMarchingHeroIds(heroIdsOnActiveMarch(marches));
+    }
+    this.world?.refreshMarchDestCounts();
+    if (this.militaryPanel && this.marchList) this.syncMilitaryPanel();
+    if (this.hud) {
+      this.syncMinimapCollapsedMarchStatus();
+      this.renderHud();
     }
   }
 

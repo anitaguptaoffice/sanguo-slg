@@ -37,3 +37,20 @@ both canvas fallback and sprite paths. A selected history row still shows its tw
 explicit origin/destination focus points and `已回城` caption, not an active marker.
 `drawWorldMinimapReturned.test.ts` records actual canvas calls for returned/127,
 mixed pending, all existing active1–4, sprite/fallback and selected-history focus.
+
+## CLIENT-MARCH-RETURNED-003 — authoritative snapshot propagation
+
+Both panel and background ListMarches reads now update the current matching
+last-started row, closed-panel history/selection, world counts, chief busy hints
+and military/HUD readouts. Absence never manufactures returned or hero-idle state.
+Their shared latest-applied request watermark rejects late older replies but lets
+slow successful reads apply while a newer request is pending; no phase ordering or
+clock heuristic. Session/city/generation and scene/panel lifecycle guards reject
+stale owners. Arrival tracking independently rejects late replies after newer
+observed5, reset/track, or city switch without starving slow successful polls.
+Actual MainCity + closed-panel tests exercise readouts and cross-reader ordering.
+
+Snapshot propagation also preserves the existing2→3/4 destination-arrival reminder
+before replacing the panel comparison snapshot. Shared session dedupe prevents a
+repeat on panel reread;4→5/direct2→5/initial5 remain silent. This is not a new return
+notification or a claim that phase3 implies returned home.
