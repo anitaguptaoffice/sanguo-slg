@@ -35,6 +35,8 @@ enum MarchPhase {
   MARCH_PHASE_MARCHING = 2;
   MARCH_PHASE_ARRIVED = 3;
   MARCH_PHASE_RETURNING = 4;
+  // 服务端已完成回城兵力结算；终态，仅保留历史，不是待发或通用结束态。
+  MARCH_PHASE_RETURNED = 5;
 }
 
 // 行军单摘要，对应 march_order + field_army 对外视图。
@@ -51,6 +53,7 @@ message MarchSummary {
   int32 to_y = 7;
   // 行军目的：1=攻击 2=增援 3=采集（与 march_order.purpose 一致）。
   int32 purpose = 8;
+  // 服务端权威阶段；不得用时间戳推断 RETURNED。详见 MARCH-RETURNED.md。
   MarchPhase phase = 9;
   // 出发与预计到达时间（Unix 毫秒）。
   int64 depart_at_ms = 10;
@@ -83,7 +86,7 @@ message StartMarchResponse {
 }
 
 // route: military.v1.ListMarches
-// 拉取当前玩家在会话服内的行军单（进行中与近期）。
+// 拉取当前玩家在会话服内的行军单（进行中与近期，含 RETURNED 历史）。
 message ListMarchesRequest {
   // 可选：仅返回与该城池相关的行军。
   int64 city_id = 1;
@@ -94,6 +97,7 @@ message ListMarchesRequest {
 
 message ListMarchesResponse {
   repeated MarchSummary marches = 1;
+  // 分页前匹配的行军记录总数（含近期历史），不是进行中数量。
   int32 total = 2;
 }
 
