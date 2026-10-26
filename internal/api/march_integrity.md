@@ -26,3 +26,12 @@ and current survivor composition; `return_finish_at_ms` is zero outside returnin
 Pending stays pending even with old timestamps; unknown domain phases map to
 unspecified, never to pending or returned. List totals still include retained
 history and are computed before the unchanged city/actor-filtered pagination.
+
+The returned-history tests exercise the actual gateway and MIL completion path,
+including PostgreSQL ownership, shard denials, pagination and repeat tick/read
+idempotence. The successful hero fixture now supplies a battle outcome and checks
+busy while returning, then idle after survivor settlement. These bounded synthetic
+clock tests are engineering evidence, not natural same-process acceptance. They
+neither add durability nor repair existing ignored hero-release errors; returned5
+is not an atomic/durable hero-idle promise. Server emission requires the coordinated
+MIL/API/client review and rollout gate in `spec/proto/MARCH-RETURNED.md`.

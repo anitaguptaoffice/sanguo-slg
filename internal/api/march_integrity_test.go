@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"math"
 	"reflect"
 	"testing"
@@ -132,10 +133,26 @@ func TestMarchListUsesConsistentCurrentSurvivors(t *testing.T) {
 					t.Fatal("response alias")
 				}
 				now = time.UnixMilli(row.ReturnFinishAtMs)
-				hub.Tick()
+				if before := call(); before.Marches[0].Phase != militaryv1.MarchPhase_MARCH_PHASE_RETURNING || hub.SnapshotCity(7).Troops[1] != 100 {
+					t.Fatal("deadline/read manufactured settlement")
+				}
+				if hub.Tick() != 1 {
+					t.Fatal("return not processed")
+				}
 				home := call()
-				if home.Marches[0].ReturnFinishAtMs != 0 || home.Marches[0].Troops[0].Count != 166 || hub.SnapshotCity(7).Troops[1] != 266 {
+				if home.Total != 1 || home.Marches[0].Phase != militaryv1.MarchPhase_MARCH_PHASE_RETURNED || home.Marches[0].ReturnFinishAtMs != 0 || home.Marches[0].Troops[0].Count != 166 || hub.SnapshotCity(7).Troops[1] != 266 {
 					t.Fatalf("home %+v", home)
+				}
+				wire, err := marshal(home)
+				if err != nil {
+					t.Fatal(err)
+				}
+				t.Logf("settled ListMarchesResponse Go wire fixture base64=%s", base64.StdEncoding.EncodeToString(wire))
+				for i := 0; i < 3; i++ {
+					now = now.Add(time.Hour)
+					if hub.Tick() != 0 || call().Marches[0].Troops[0].Count != 166 || hub.SnapshotCity(7).Troops[1] != 266 {
+						t.Fatal("repeat tick/read recredited survivors")
+					}
 				}
 			}
 		})
