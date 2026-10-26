@@ -1,13 +1,16 @@
+import { isKnownShopRejection, readShopCurrentState, SHOP_CURRENT_STATE_ONLY, SHOP_RELOAD_FAILED, SHOP_UNKNOWN_OUTCOME, type ShopOffer } from "@/net/shopOutcome";
+import { BAG_USE_UNKNOWN, useBagItemWithAssets } from "@/net/bagUseAssets";
+import { beginAssetRead, claimQuestWithAssets, refreshQuestAssets, QUEST_ASSETS_PENDING } from "@/net/questClaimAssets";
+import { bagUseCapabilityHint } from "@/net/bagUseCapability";
+import { captureActor } from "@/net/actorContext";
+import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
 import {
-  applyUseResult,
   bagStackQuantity,
   type BagStack,
   bagFromListPlayerBagResponse,
-  mergeRewardBundle,
-  mergeWallet,
 } from "@/net/bagState";
 import {
   formatShopOfferListLine,
@@ -20,7 +23,7 @@ import {
   setBagFormErrorDisplay,
   setShopFormErrorDisplay,
   validatePurchaseShopOffer,
-  validateUseConsumable,
+  validateBagUseConsumable,
 } from "@/net/contentFormValidation";
 import { formatQuestLine, formatWalletPrice, itemLabel } from "@/net/contentFormat";
 import {
@@ -100,10 +103,8 @@ import {
 } from "@/net/shopOfferCategory";
 import {
   formatShopPurchaseSuccess,
-  purchaseSubmitStateMachine,
   syncShopPurchaseSubmitButton,
   walletShopPurchaseDeductPulseKeys,
-  type PurchaseSubmitState,
 } from "@/net/purchaseSubmitFeedback";
 import {
   applyWalletGapBar,
@@ -150,21 +151,13 @@ type QuestProgress = {
   progress_target?: number;
 };
 
-type ShopOffer = {
-  offer_id?: number;
-  shelf_name?: string;
-  item_cfg_id?: number;
-  quantity_per_purchase?: number;
-  price_resources?: ResourceWallet;
-  purchase_limit?: number;
-  purchased_count?: number;
-  sold_out?: boolean;
-};
-
 export class ContentPanels {
   private questPanel!: HTMLElement;
   private bagPanel!: HTMLElement;
   private shopPanel!: HTMLElement;
+  private questReadVersion = 0;
+  private questClaimInflight = false;
+  private bagReadVersion = 0;
   private questRows: QuestProgress[] = [];
   private shopOffers: ShopOffer[] = [];
   private selectedQuestId = 1001;
@@ -181,9 +174,11 @@ export class ContentPanels {
   /** 最近一次购买成功时行内追加文案（offer_id → 摘要）。 */
   private shopPurchaseFlash = new Map<number, string>();
   private useConsumableSubmitState: UseConsumableSubmitState = "idle";
+  private bagUseState?: { current: () => boolean; needsReload: boolean };
   /** CLIENT-079：当前选中道具的批量格勾选（0-based 格序号）。 */
   private bagBatchCheckedSlots = new Set<number>();
-  private shopPurchaseSubmitState: PurchaseSubmitState = "idle";
+  private shopReadVersion = 0;
+  private shopState?: { current: () => boolean; busy: string; needsReload: boolean; unknown: boolean; outcome: string; warning: string };
   private shopListLoading = false;
   private shopListError: string | null = null;
   private bagListLoading = false;
@@ -226,11 +221,14 @@ export class ContentPanels {
     this.shopPanel.addEventListener("click", (ev) => this.onShopClick(ev));
     this.questPanel.addEventListener("change", (ev) => this.onQuestSelect(ev));
     this.bagPanel.addEventListener("change", (ev) => this.onBagSelect(ev));
+    this.syncBagItemSelect();
     this.syncUseConsumableSubmitUi();
     this.shopPanel.addEventListener("change", (ev) => this.onShopSelect(ev));
   }
 
   detach(): void {
+    this.shopState = undefined;
+    ++this.shopReadVersion;
     this.questPanel?.remove();
     this.bagPanel?.remove();
     this.shopPanel?.remove();
@@ -409,9 +407,7 @@ export class ContentPanels {
     this.bagHighlightItemId = highlightItemId;
     if (highlightItemId > 0) {
       this.selectedItemId = highlightItemId;
-      this.ensureBagSelectOption(highlightItemId);
-      const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
-      if (sel) sel.value = String(highlightItemId);
+      this.syncBagItemSelect();
     }
     openCenterPanel(this.bagPanel);
     resetCenterPanelViewportScroll(this.bagPanel);
@@ -563,6 +559,7 @@ export class ContentPanels {
   }
 
   private syncBagWalletGap(): void {
+    this.syncUseConsumableSubmitUi();
     const count = Number(
       (this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1,
     );
@@ -630,12 +627,38 @@ export class ContentPanels {
     }
   }
 
+  private shopContext() {
+    if (!this.shopState?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const state = { current: () => this.shopState === state && actor() && this.shopPanel.parentNode === this.mount,
+        busy: "", needsReload: false, unknown: false, outcome: "", warning: "" };
+      this.shopState = state;
+      this.shopOffers = [];
+      this.shopPurchaseFlash.clear();
+      this.shopLastGrantedItemCfgId = 0;
+      this.shopListError = null;
+    }
+    return this.shopState;
+  }
+
   private syncShopPurchaseSubmit(): void {
-    syncShopPurchaseSubmitButton(
-      this.shopPanel,
-      this.shopPurchaseSubmitState,
-      this.shopPurchaseCanAfford(),
-    );
+    const state = this.shopContext();
+    syncShopPurchaseSubmitButton(this.shopPanel, state.busy === "buy" ? "submitting" : "idle",
+      !state.busy && !state.needsReload && !this.shopListError && this.shopPurchaseCanAfford());
+    const buy = this.shopPanel.querySelector<HTMLButtonElement>('[data-action="buy-offer"]');
+    if (buy && state.unknown && !state.busy) buy.textContent = "新购买×1（非重试）";
+    for (const button of this.shopPanel.querySelectorAll<HTMLButtonElement>('[data-action="refresh-shop"], [data-action="retry-refresh-shop"], [data-action="reload-shop-state"]')) {
+      button.disabled = !!state.busy;
+    }
+    const reload = this.shopPanel.querySelector<HTMLElement>('[data-action="reload-shop-state"]');
+    if (reload) reload.hidden = !state.outcome && !state.needsReload;
+    this.setShopFeedback(state.outcome || null);
+    setShopFormErrorDisplay(this.shopPanel, state.warning || null);
+    this.syncShopViewGrantedBagButton();
+  }
+
+  private shopStatus(message: string): void {
+    if (!this.shopPanel.classList.contains("hidden")) this.onStatus(message);
   }
 
   private setBagFeedback(text: string | null): void {
@@ -664,7 +687,7 @@ export class ContentPanels {
 
   private buildQuestPanel(): HTMLElement {
     const el = document.createElement("div");
-    el.className = "content-panel hidden";
+    el.className = "content-panel quest-panel hidden";
     el.innerHTML = `
       <h3>任务</h3>
       <label>任务 ID
@@ -672,7 +695,6 @@ export class ContentPanels {
       </label>
       <button type="button" data-action="refresh-quests">刷新列表</button>
       <button type="button" data-action="accept-quest">接取</button>
-      <button type="button" data-action="report-quest">上报进度(绝对值2)</button>
       <button type="button" data-action="claim-quest">领奖</button>
       <ul class="quest-list" data-role="quest-list"></ul>
     `;
@@ -686,13 +708,9 @@ export class ContentPanels {
     el.innerHTML = `
       <h3>背包</h3>
       <span class="bag-open-source-tag hidden" data-role="bag-open-source-tag" hidden></span>
-      <p data-role="bag-hint">「刷新背包」经 content.v1.ListPlayerBag 拉服务端全量；领奖/购买仍会先合并到本会话。</p>
+      <p data-role="bag-hint">「刷新背包」拉取服务端全量；任务领奖后刷新权威背包与钱包，重复回复不叠加奖励。</p>
       <label>道具
-        <select data-field="item-id">
-          <option value="2001">2001 谷袋·初备</option>
-          <option value="2003">2003 急工符·五刻</option>
-          <option value="2020">2020 远征干粮</option>
-        </select>
+        <select data-field="item-id"></select>
       </label>
       <label>数量 <input type="number" data-field="use-count" min="1" value="1" /></label>
       <p class="wallet-gap-line hidden" data-role="bag-wallet-gap" aria-live="polite"></p>
@@ -703,6 +721,7 @@ export class ContentPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item">使用道具</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="use-item-batch">批量使用勾选格</button>
       </div>
+      <p class="panel-feedback bag-panel-feedback" data-role="bag-use-capability" aria-live="polite" hidden></p>
       <p class="bag-batch-hint" data-role="bag-batch-hint">同道具可多格勾选，逐次调用 UseConsumable×1 并汇总结果。</p>
       <div class="bag-category-tabs" data-role="bag-category-tabs" role="tablist"></div>
       <div class="panel-scroll-body" data-role="bag-scroll">
@@ -719,8 +738,9 @@ export class ContentPanels {
     el.dataset.centerPanel = "shop";
     el.innerHTML = `
       <h3>商城</h3>
-      <p data-role="shop-hint">扣费结果以 wallet_after 为准（ECON-001 真钱包）。</p>
-      <p class="panel-feedback" data-role="shop-feedback" hidden></p>
+      <p data-role="shop-hint">购买回执与当前资产分开显示；状态刷新不会重发购买。</p>
+      <p class="panel-feedback" data-role="shop-feedback" role="status" aria-live="polite" hidden></p>
+      <button type="button" data-action="reload-shop-state" hidden>重新加载当前状态</button>
       <div class="shop-category-tabs" data-role="shop-category-tabs" role="tablist"></div>
       <p class="shop-tab-currency-sweep hidden" data-role="shop-tab-currency-sweep" aria-live="polite"></p>
       <p class="shop-wallet-compare-line hidden" data-role="shop-wallet-compare-line" aria-live="polite"></p>
@@ -776,6 +796,7 @@ export class ContentPanels {
   }
 
   private renderBagList(): void {
+    this.syncBagItemSelect();
     this.renderBagCategoryTabs();
     const ul = this.bagPanel.querySelector<HTMLElement>('[data-role="bag-list"]');
     if (!ul) return;
@@ -985,68 +1006,89 @@ export class ContentPanels {
   }
 
   private async refreshQuests(): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession);
+    const version = ++this.questReadVersion;
+    const current = () => actor() && version === this.questReadVersion && this.questPanel.parentNode === this.mount;
+    renderSuccessfulReadNotice(this.questPanel);
     const sid = this.serverId();
     this.onStatus("拉取任务…");
     try {
       const res = (await this.gateway.listPlayerQuests(sid, { includeCompleted: true })) as {
         quests?: QuestProgress[];
       };
+      if (!current()) return;
+      renderSuccessfulReadNotice(this.questPanel, res);
       this.questRows = res.quests ?? [];
       this.renderQuestList();
       this.onStatus(`任务 ${this.questRows.length} 条`);
     } catch (e) {
+      if (!current()) return;
       this.onStatus(gatewayErrorMessage(e));
     }
   }
 
   private async acceptQuest(): Promise<void> {
+    const current = captureActor(this.gateway, this.getSession);
     const sid = this.serverId();
     const id = this.selectedQuestId;
     this.onStatus(`接取任务 ${id}…`);
     try {
       await this.gateway.acceptQuest(sid, id);
+      if (!current()) return;
       await this.refreshQuests();
+      if (!current()) return;
       this.onStatus(`已接取 #${id}`);
     } catch (e) {
-      this.onStatus(gatewayErrorMessage(e));
-    }
-  }
-
-  private async reportQuest(): Promise<void> {
-    const sid = this.serverId();
-    const id = this.selectedQuestId;
-    this.onStatus(`上报任务 ${id} 进度…`);
-    try {
-      await this.gateway.reportQuestProgress(sid, id, true, 2);
-      await this.refreshQuests();
-      this.onStatus("进度已上报");
-    } catch (e) {
+      if (!current()) return;
       this.onStatus(gatewayErrorMessage(e));
     }
   }
 
   private async claimQuest(): Promise<void> {
-    const sid = this.serverId();
+    if (this.questClaimInflight) return;
+    const current = captureActor(this.gateway, this.getSession);
     const id = this.selectedQuestId;
+    const button = this.questPanel.querySelector<HTMLButtonElement>('[data-action="claim-quest"]');
+    this.questClaimInflight = true;
+    if (button) button.disabled = true;
     this.onStatus(`领奖 ${id}…`);
     try {
-      const res = (await this.gateway.claimQuestReward(sid, id)) as {
-        granted_rewards?: { items?: { item_cfg_id?: number; quantity?: number }[]; resources?: ResourceWallet };
-      };
-      const session = this.getSession();
-      if (session) {
-        const bag = mergeRewardBundle(session.bag, res.granted_rewards);
-        const wallet = mergeWallet(session.wallet, res.granted_rewards?.resources);
-        this.onSessionPatch({ bag, wallet });
-      }
+      const res = await claimQuestWithAssets(this.gateway, id, this.getSession, this.onSessionPatch);
+      if (!res || !current()) return;
       await this.refreshQuests();
-      this.onStatus("任务奖励已领取");
+      if (current()) this.onStatus("任务奖励已领取，资产已同步");
     } catch (e) {
-      this.onStatus(gatewayErrorMessage(e));
+      if (current()) this.onStatus(gatewayErrorMessage(e));
+    } finally {
+      this.questClaimInflight = false;
+      if (button) button.disabled = false;
     }
   }
 
   private async refreshBag(): Promise<void> {
+    const state = this.bagUseContext();
+    if (state.needsReload) {
+      if (this.useConsumableSubmitState === "submitting") return;
+      this.setUseConsumableSubmitState("submitting");
+      try {
+        if (!await refreshQuestAssets(this.gateway, this.getSession, this.onSessionPatch, state.current)) return;
+        state.needsReload = false;
+        setBagFormErrorDisplay(this.bagPanel, null);
+        this.renderBagList();
+        this.onStatus("当前背包与钱包已同步；上次使用结果请核对，未重发使用请求。");
+      } catch {
+        if (state.current()) setBagFormErrorDisplay(this.bagPanel, QUEST_ASSETS_PENDING);
+      } finally {
+        if (state.current()) this.setUseConsumableSubmitState("idle");
+      }
+      return;
+    }
+    const actor = captureActor(this.gateway, this.getSession);
+    const latest = beginAssetRead(this.gateway);
+    const previousBag = this.getSession()?.bag;
+    const version = ++this.bagReadVersion;
+    const current = () => actor() && version === this.bagReadVersion && this.bagPanel.parentNode === this.mount;
+    renderSuccessfulReadNotice(this.bagPanel);
     const sid = this.serverId();
     this.bagListLoading = true;
     this.bagListError = null;
@@ -1056,6 +1098,13 @@ export class ContentPanels {
       const res = (await this.gateway.listPlayerBag(sid)) as {
         items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      if (!current()) return;
+      if (!latest() || this.getSession()?.bag !== previousBag) {
+        this.bagListLoading = false;
+        this.renderBagList();
+        return;
+      }
+      renderSuccessfulReadNotice(this.bagPanel, res);
       const stacks = bagFromListPlayerBagResponse(res.items);
       this.patchBag(stacks);
       this.bagListLoading = false;
@@ -1063,6 +1112,7 @@ export class ContentPanels {
       this.renderBagList();
       this.onStatus(`背包 ${stacks.length} 种道具（content.v1）`);
     } catch (e) {
+      if (!current()) return;
       this.bagListLoading = false;
       this.bagListError = formatPanelGatewayErrorFromUnknownForList("bag", e);
       this.renderBagList();
@@ -1070,8 +1120,27 @@ export class ContentPanels {
     }
   }
 
+  private bagUseContext() {
+    if (!this.bagUseState?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const state = { current: () => this.bagUseState === state && actor() && this.bagPanel.parentNode === this.mount, needsReload: false };
+      this.bagUseState = state;
+      this.useConsumableSubmitState = "idle";
+      this.setBagFeedback(null);
+      setBagFormErrorDisplay(this.bagPanel, null);
+    }
+    return this.bagUseState;
+  }
+
   private syncUseConsumableSubmitUi(): void {
+    const state = this.bagUseContext();
     syncUseConsumableSubmitButtons(this.bagPanel, this.useConsumableSubmitState);
+    const hint = bagUseCapabilityHint(this.selectedItemId);
+    const guidance = this.bagPanel.querySelector<HTMLElement>('[data-role="bag-use-capability"]');
+    if (guidance) { guidance.hidden = !hint; guidance.textContent = hint ?? ""; }
+    if (hint || state.needsReload) for (const button of this.bagPanel.querySelectorAll<HTMLButtonElement>('[data-action="use-item"], [data-action="use-item-batch"]')) {
+      button.disabled = true;
+    }
   }
 
   private setUseConsumableSubmitState(next: UseConsumableSubmitState): void {
@@ -1090,12 +1159,12 @@ export class ContentPanels {
   }
 
   private async useItem(): Promise<void> {
-    if (this.useConsumableSubmitState === "submitting") return;
-    const sid = this.serverId();
+    const state = this.bagUseContext();
+    if (this.useConsumableSubmitState === "submitting" || state.needsReload) return;
     const count = Number((this.bagPanel.querySelector('[data-field="use-count"]') as HTMLInputElement)?.value ?? 1);
     const itemId = this.selectedItemId;
     const bag = this.getSession()?.bag ?? [];
-    const validated = validateUseConsumable({
+    const validated = validateBagUseConsumable({
       itemCfgId: itemId,
       count,
       bag,
@@ -1115,20 +1184,12 @@ export class ContentPanels {
     this.setBagFeedback(null);
     const quantityBefore = bagStackQuantity(bag, itemId);
     try {
-      const res = (await this.gateway.useConsumable(sid, itemId, count)) as {
-        remaining?: number;
-        wallet_after?: ResourceWallet;
-        effect_summary?: string;
-        speedup_seconds?: number;
-      };
-      const session = this.getSession();
-      const walletBefore = session?.wallet;
-      if (session) {
-        const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
-        const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
-        this.onSessionPatch({ bag: nextBag, wallet });
-      }
-      setBagFormErrorDisplay(this.bagPanel, null);
+      const walletBefore = this.getSession()?.wallet;
+      const result = await useBagItemWithAssets(this.gateway, itemId, count, this.getSession, this.onSessionPatch, state.current);
+      if (!result || !state.current()) return;
+      const res = result.response;
+      state.needsReload = !result.synced;
+      setBagFormErrorDisplay(this.bagPanel, result.synced ? null : QUEST_ASSETS_PENDING);
       const summary = formatUseConsumableEffectSummary(itemId, res, walletBefore, res.wallet_after);
       this.setBagFeedback(summary);
       this.onStatus(summary);
@@ -1137,9 +1198,11 @@ export class ContentPanels {
         useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
       );
     } catch (e) {
-      const msg = formatBagUseGatewayErrorFromUnknown(e);
+      if (!state.current()) return;
+      state.needsReload = true;
+      const msg = `${formatBagUseGatewayErrorFromUnknown(e)}；${BAG_USE_UNKNOWN}`;
       setBagFormErrorDisplay(this.bagPanel, msg);
-      this.setBagFeedback(null);
+      this.setBagFeedback(BAG_USE_UNKNOWN);
       this.onStatus(msg);
       this.setUseConsumableSubmitState(
         useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "FAIL" }),
@@ -1148,7 +1211,8 @@ export class ContentPanels {
   }
 
   private async useItemBatch(): Promise<void> {
-    if (this.useConsumableSubmitState === "submitting") return;
+    const state = this.bagUseContext();
+    if (this.useConsumableSubmitState === "submitting" || state.needsReload) return;
     const itemId = this.selectedItemId;
     const slotCount = this.countSelectedBagBatchSlots(itemId);
     const bag = this.getSession()?.bag ?? [];
@@ -1166,27 +1230,24 @@ export class ContentPanels {
     this.setUseConsumableSubmitState(
       useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUBMIT" }),
     );
-    const sid = this.serverId();
     const quantityBefore = bagStackQuantity(bag, itemId);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     let lastRemaining = quantityBefore;
     try {
       for (let i = 0; i < slotCount; i += 1) {
         try {
-          const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
-            remaining?: number;
-            wallet_after?: ResourceWallet;
-          };
-          const session = this.getSession();
-          if (session) {
-            const nextBag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
-            const wallet = res.wallet_after ? { ...res.wallet_after } : session.wallet;
-            this.onSessionPatch({ bag: nextBag, wallet });
-          }
+          if (!state.current()) return;
+          const result = await useBagItemWithAssets(this.gateway, itemId, 1, this.getSession, this.onSessionPatch, state.current);
+          if (!result || !state.current()) return;
+          const res = result.response;
+          state.needsReload = !result.synced;
           lastRemaining = res.remaining ?? 0;
           attempts.push({ ok: true });
+          if (state.needsReload) break;
         } catch (e) {
-          attempts.push({ ok: false, message: formatBagUseGatewayErrorFromUnknown(e) });
+          if (!state.current()) return;
+          state.needsReload = true;
+          attempts.push({ ok: false, message: `${formatBagUseGatewayErrorFromUnknown(e)}；${BAG_USE_UNKNOWN}` });
           break;
         }
       }
@@ -1198,7 +1259,7 @@ export class ContentPanels {
           useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "FAIL" }),
         );
       } else {
-        setBagFormErrorDisplay(this.bagPanel, null);
+        setBagFormErrorDisplay(this.bagPanel, state.needsReload ? QUEST_ASSETS_PENDING : null);
         this.setUseConsumableSubmitState(
           useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
         );
@@ -1213,7 +1274,7 @@ export class ContentPanels {
         this.renderBagList();
       }
     } finally {
-      if (this.useConsumableSubmitState === "submitting") {
+      if (state.current() && this.useConsumableSubmitState === "submitting") {
         this.setUseConsumableSubmitState(
           useConsumableSubmitStateMachine(this.useConsumableSubmitState, { type: "SUCCESS" }),
         );
@@ -1222,105 +1283,121 @@ export class ContentPanels {
   }
 
   private async refreshShop(): Promise<void> {
-    const sid = this.serverId();
+    const state = this.shopContext();
+    if (!state.current() || !this.getSession()) return;
+    if (state.busy) { this.syncShopPurchaseSubmit(); return; }
+    if (state.needsReload) return this.reloadShopState();
+    const version = ++this.shopReadVersion;
+    state.busy = "list";
     this.shopListLoading = true;
     this.shopListError = null;
     this.renderShopList();
-    this.onStatus("拉取货架…");
     try {
-      const res = (await this.gateway.listShopShelf(sid)) as { offers?: ShopOffer[] };
+      const res = await this.gateway.listShopShelf(this.serverId()) as { offers?: ShopOffer[] };
+      if (!state.current() || version !== this.shopReadVersion) return;
       this.shopOffers = res.offers ?? [];
-      this.shopListLoading = false;
-      this.shopListError = null;
-      this.renderShopList();
-      this.onStatus(`货架 ${this.shopOffers.length} 个商品`);
+      this.shopStatus(state.outcome || `货架 ${this.shopOffers.length} 个商品`);
     } catch (e) {
-      this.shopListLoading = false;
+      if (!state.current() || version !== this.shopReadVersion) return;
       this.shopListError = formatPanelGatewayErrorFromUnknownForList("shop", e);
-      this.renderShopList();
-      this.onStatus(this.shopListError);
+      this.shopStatus(this.shopListError);
+    } finally {
+      if (state.current() && version === this.shopReadVersion) {
+        state.busy = "";
+        this.shopListLoading = false;
+        this.renderShopList();
+      }
+    }
+  }
+
+  private async reloadShopState(owned = false): Promise<void> {
+    const state = this.shopContext();
+    if (!state.current() || (state.busy && !owned) || !this.getSession() || this.shopPanel.classList.contains("hidden")) return;
+    const version = ++this.shopReadVersion;
+    state.busy = "reload";
+    state.needsReload = true;
+    this.syncShopPurchaseSubmit();
+    try {
+      const snapshot = await readShopCurrentState(this.gateway, this.getSession, state.current);
+      if (!snapshot || !state.current()) return;
+      if (!snapshot.fresh() || version !== this.shopReadVersion) throw new Error(SHOP_RELOAD_FAILED);
+      this.onSessionPatch({ bag: snapshot.bag, wallet: snapshot.wallet });
+      this.shopOffers = snapshot.offers;
+      this.shopListError = null;
+      state.needsReload = false;
+      state.warning = SHOP_CURRENT_STATE_ONLY;
+      renderSuccessfulReadNotice(this.bagPanel, snapshot.bagRes);
+      this.renderBagList();
+    } catch {
+      if (!state.current()) return;
+      state.warning = SHOP_RELOAD_FAILED;
+    } finally {
+      if (state.current()) {
+        state.busy = "";
+        this.renderShopList();
+        this.shopStatus([state.outcome, state.warning].filter(Boolean).join("；"));
+      }
     }
   }
 
   private async buyOffer(): Promise<void> {
-    if (this.shopPurchaseSubmitState === "submitting") return;
-    const sid = this.serverId();
+    const state = this.shopContext();
+    if (!state.current() || state.busy || state.needsReload || !this.getSession() || this.shopPanel.classList.contains("hidden")) return;
     const offerId = this.selectedOfferId;
     const purchaseCount = 1;
     const offer = this.shopOffers.find((o) => o.offer_id === offerId);
-    const session = this.getSession();
-    const walletBefore = session?.wallet;
-    const validated = validatePurchaseShopOffer({
-      offer,
-      offerId,
-      purchaseCount,
-      wallet: session?.wallet,
-    });
+    const walletBefore = this.getSession()?.wallet;
+    const validated = validatePurchaseShopOffer({ offer, offerId, purchaseCount, wallet: walletBefore });
     if (!validated.ok) {
-      setShopFormErrorDisplay(this.shopPanel, validated.message);
-      this.onStatus(validated.message);
+      state.warning = validated.message;
+      this.shopStatus(validated.message);
       this.syncShopPurchaseSubmit();
       return;
     }
-    setShopFormErrorDisplay(this.shopPanel, null);
-    this.shopPurchaseSubmitState = purchaseSubmitStateMachine(this.shopPurchaseSubmitState, {
-      type: "SUBMIT",
-    });
-    this.syncShopPurchaseSubmit();
-    this.setShopFeedback(null);
+    state.busy = "buy";
+    state.needsReload = true;
+    state.unknown = false;
+    state.outcome = state.warning = "";
+    this.shopPurchaseFlash.delete(offerId);
+    this.shopLastGrantedItemCfgId = 0;
+    beginAssetRead(this.gateway); // Older bag/wallet reads must not overwrite a submitted purchase.
+    ++this.shopReadVersion;
+    this.renderShopList();
+    let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
     try {
-      const res = (await this.gateway.purchaseShopOffer(sid, offerId, purchaseCount)) as {
-        granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] };
-        wallet_after?: ResourceWallet;
-        offer?: ShopOffer;
-      };
-      const sessionAfter = this.getSession();
-      const walletAfter = res.wallet_after
-        ? { ...res.wallet_after }
-        : sessionAfter?.wallet;
-      if (sessionAfter) {
-        const bag = mergeRewardBundle(sessionAfter.bag, res.granted_items);
-        const wallet = walletAfter ?? sessionAfter.wallet;
-        this.onSessionPatch({ bag, wallet });
-        this.renderBagList();
-      }
-      const pulseKeys = walletShopPurchaseDeductPulseKeys(
-        walletBefore,
-        walletAfter,
-        offer?.price_resources,
-        purchaseCount,
-      );
-      if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
-      const granted = res.granted_items?.items?.[0];
-      const grantedCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
-      this.shopLastGrantedItemCfgId = grantedCfgId;
-      this.syncShopViewGrantedBagButton();
-      const grantedQty = (granted?.quantity ?? 1) * purchaseCount;
-      const panelLine = formatShopPurchaseFeedback(purchaseCount, res.wallet_after, {
-        itemCfgId: granted?.item_cfg_id,
-        grantedQty,
-      });
-      const toast = formatShopPurchaseSuccess(offerId);
-      setShopFormErrorDisplay(this.shopPanel, null);
-      this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
-      this.setShopFeedback(panelLine);
-      this.shopPurchaseSubmitState = purchaseSubmitStateMachine(this.shopPurchaseSubmitState, {
-        type: "SUCCESS",
-      });
-      await this.refreshShop();
-      this.onStatus(toast);
+      res = await this.gateway.purchaseShopOffer(this.serverId(), offerId, purchaseCount) as typeof res;
     } catch (e) {
-      const msg = formatPanelGatewayErrorFromUnknown("shop", e);
-      setShopFormErrorDisplay(this.shopPanel, msg);
-      this.setShopFeedback(null);
-      this.onStatus(msg);
-      this.shopPurchaseSubmitState = purchaseSubmitStateMachine(this.shopPurchaseSubmitState, {
-        type: "FAIL",
-      });
-    } finally {
+      if (!state.current()) return;
+      const known = isKnownShopRejection(e);
+      if (!known) beginAssetRead(this.gateway); // Invalidate reads started during an unconfirmed purchase.
+      state.unknown = !known;
+      state.outcome = known ? "" : SHOP_UNKNOWN_OUTCOME;
+      state.warning = known ? formatPanelGatewayErrorFromUnknown("shop", e) : SHOP_RELOAD_FAILED;
+      state.needsReload = !known;
+      state.busy = "";
       this.syncShopPurchaseSubmit();
-      this.syncShopWalletGap();
+      this.shopStatus(state.outcome || state.warning);
+      return; // Never replay, compensate or infer rollback from an unavailable response.
     }
+    if (!state.current()) return;
+    beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
+    const granted = res.granted_items?.items?.[0];
+    this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
+    state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {
+      itemCfgId: granted?.item_cfg_id, grantedQty: granted?.quantity,
+    })}`; // granted_items already contains total quantity, not quantity per purchase.
+    state.warning = SHOP_RELOAD_FAILED;
+    this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
+    this.syncShopPurchaseSubmit();
+    if (this.shopPanel.classList.contains("hidden")) {
+      state.busy = "";
+      this.syncShopPurchaseSubmit();
+      return; // Closing never cancels the sent action or starts background recovery.
+    }
+    const pulseKeys = walletShopPurchaseDeductPulseKeys(walletBefore, res.wallet_after, offer?.price_resources, purchaseCount);
+    if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
+    this.shopStatus(state.outcome);
+    await this.reloadShopState(true);
   }
 
   private onQuestSelect(ev: Event): void {
@@ -1365,7 +1442,6 @@ export class ContentPanels {
     const a = btn.getAttribute("data-action");
     if (a === "refresh-quests") void this.refreshQuests();
     if (a === "accept-quest") void this.acceptQuest();
-    if (a === "report-quest") void this.reportQuest();
     if (a === "claim-quest") void this.claimQuest();
   }
 
@@ -1387,15 +1463,22 @@ export class ContentPanels {
     if (a === "use-item-batch") void this.useItemBatch();
   }
 
-  private ensureBagSelectOption(itemCfgId: number): void {
-    const sel = this.bagPanel.querySelector('[data-field="item-id"]') as HTMLSelectElement | null;
+  /** Keep selection stable, even at zero stock; never silently retarget a use. */
+  private syncBagItemSelect(): void {
+    const sel = this.bagPanel.querySelector<HTMLSelectElement>('[data-field="item-id"]');
     if (!sel) return;
-    const exists = [...sel.options].some((o) => Number(o.value) === itemCfgId);
-    if (exists) return;
-    const opt = document.createElement("option");
-    opt.value = String(itemCfgId);
-    opt.textContent = `${itemCfgId} ${itemLabel(itemCfgId)}`;
-    sel.appendChild(opt);
+    const bag = this.getSession()?.bag ?? [];
+    const ids = new Set([2001, 2003, 2020, this.selectedItemId]);
+    for (const row of bag) {
+      if (Number.isSafeInteger(row.item_cfg_id) && row.item_cfg_id > 0 && row.quantity > 0) ids.add(row.item_cfg_id);
+    }
+    sel.replaceChildren(...[...ids].sort((a, b) => a - b).map(id => {
+      const option = document.createElement("option");
+      option.value = String(id);
+      option.textContent = `${id} ${itemLabel(id)} · 持有 ${bagStackQuantity(bag, id)}`;
+      return option;
+    }));
+    sel.value = String(this.selectedItemId);
   }
 
   private onShopClick(ev: Event): void {
@@ -1411,6 +1494,7 @@ export class ContentPanels {
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-shop" || a === "retry-refresh-shop") void this.refreshShop();
+    if (a === "reload-shop-state") void this.reloadShopState();
     if (a === "buy-offer") void this.buyOffer();
     if (a === "shop-view-granted-bag") {
       this.openBagFromShopDeepLink(this.shopLastGrantedItemCfgId);

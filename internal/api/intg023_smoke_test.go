@@ -15,8 +15,8 @@ import (
 	shopv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/shop/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
@@ -83,14 +83,17 @@ func runINTG023Wave26Smoke(t *testing.T) {
 
 	speedupUsed := smokeINTG011BuildSpeedupGateway(t, ctx, c, apiSrv, sid, playerID)
 	smokeINTG022GetCityStateInProgressBuildSlotsGateway(t, c, sid, playerID)
-	smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Bag2003 += smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
 	smokeINTG022ListPlayerQuestsChain400TodoGateway(t, c, sid, playerID)
 
-	smokeINTG021DualLeaderboardMyRankScoreGateway(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Gold = smokeINTG021DualLeaderboardMyRankScoreGateway(t, ctx, c, apiSrv, pool, sid, playerID)
 	bagBeforeUse := smokeINTG023ListPlayerBagGateway(t, c, sid, playerID)
 	consumed2001 := smokeINTG010UseConsumableGateway(t, c, sid)
 	smokeINTG023VerifyBagStackAfterUseOptional(t, c, sid, playerID, smokeItemRewardCfgID, bagBeforeUse, consumed2001)
-	smokeINTG023PurchaseShopOfferOptional(t, ctx, c, apiSrv, sid, playerID)
+	shopGold, shopItems, shopBought := smokeINTG023PurchaseShopOfferOptional(t, ctx, c, apiSrv, sid, playerID)
+	ext.Base.Gold += shopGold
+	ext.Bag2001 += shopItems
+	ext.Base.ShopDailyBought += shopBought
 	smokeINTG010SocialOptional(t, c, sid)
 	smokeINTG021ListGuildMembersRoleGateway(t, ctx, pool, c, sid, playerID)
 	smokeINTG021RecruitHeroOptional(t, ctx, c, apiSrv, sid, playerID)
@@ -205,33 +208,45 @@ func smokeINTG023VerifyBagStackAfterUseOptional(t *testing.T, c *websocket.Conn,
 		itemCfgID, beforeQty, after, consumed)
 }
 
-// smokeINTG023PurchaseShopOfferOptional grants wallet gold then attempts one purchase; failures are non-fatal.
-func smokeINTG023PurchaseShopOfferOptional(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) {
+// smokeINTG023PurchaseShopOfferOptional preserves optional availability while
+// asserting successful mutations and returning only their intended deltas.
+func smokeINTG023PurchaseShopOfferOptional(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, sid string, playerID int64) (gold int64, items, bought int32) {
 	t.Helper()
 	smokeStep(t, "INTG-023 optional: shop.v1.PurchaseShopOffer after GM wallet grant (non-blocking)")
 	const seedGold = int64(200)
+	const shopCost = int64(10) // Unchanged DATA-002 offer1001 silver price.
+	const shopQty = int32(1)
 	audit := api.GmAudit{OperatorID: "smoke", OperatorName: "smoke", Reason: "intg-023", TicketID: "T-i23-shop"}
-	_, _, err := apiSrv.Gm().GrantReward(ctx, "", audit, intg006ServerID, playerID, content.RewardPackage{
+	beforeGold := smokeINTG023PersistedGold(t, ctx, apiSrv, playerID, audit)
+	_, grant, err := apiSrv.Gm().GrantReward(ctx, "", audit, intg006ServerID, playerID, content.RewardPackage{
 		Resources: map[string]int64{"gold": seedGold},
 	}, "intg-023-shop-wallet")
 	if err != nil {
 		t.Logf("INTG-023 optional PurchaseShopOffer skipped: gm grant wallet err=%v", err)
-		return
+		return 0, 0, 0
 	}
+	afterGrant := smokeINTG023PersistedGold(t, ctx, apiSrv, playerID, audit)
+	if grant.Duplicate || afterGrant-beforeGold != seedGold {
+		intg023Failf(t, "exact shop funding credit", "gold=%d -> %d want delta=%d duplicate=%v", beforeGold, afterGrant, seedGold, grant.Duplicate)
+	}
+	t.Logf("verified shop funding gold=%d -> %d delta=%d", beforeGold, afterGrant, seedGold)
 	listResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteListShopShelf, TraceId: "i23-shop-list", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&shopv1.ListShopShelfRequest{ServerId: intg006ServerID}),
 	})
 	var offerCfgID int32
+	var beforeOffer *shopv1.ShopOffer
 	if listResp.Code == 0 {
 		var listOut shopv1.ListShopShelfResponse
 		if err := proto.Unmarshal(listResp.Data, &listOut); err == nil && len(listOut.GetOffers()) > 0 {
-			offerCfgID = listOut.GetOffers()[0].GetOfferId()
+			beforeOffer = listOut.GetOffers()[0]
+			offerCfgID = beforeOffer.GetOfferId()
 		}
 	}
 	if offerCfgID == 0 {
 		offerCfgID = smokeShopOfferCfgID
 	}
+	beforeBag := smokeINTG023ListPlayerBagGateway(t, c, sid, playerID)[smokeItemRewardCfgID]
 	buyResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RoutePurchaseShopOffer, TraceId: "i23-shop-buy", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&shopv1.PurchaseShopOfferRequest{
@@ -241,7 +256,39 @@ func smokeINTG023PurchaseShopOfferOptional(t *testing.T, ctx context.Context, c 
 	t.Logf("INTG-023: PurchaseShopOffer offer_cfg_id=%d code=%d msg=%s", offerCfgID, buyResp.Code, buyResp.Msg)
 	if buyResp.Code != 0 {
 		t.Logf("INTG-023 optional PurchaseShopOffer failed (non-blocking); see offer_cfg_id=%d", offerCfgID)
+		return seedGold, 0, 0 // Funding succeeded even when purchase did not.
 	}
+	price := beforeOffer.GetPriceResources()
+	if beforeOffer.GetOfferId() != smokeShopOfferCfgID || beforeOffer.GetItemCfgId() != smokeItemRewardCfgID || beforeOffer.GetQuantityPerPurchase() != shopQty ||
+		price.GetGold() != shopCost || price.GetFood() != 0 || price.GetWood() != 0 || price.GetIron() != 0 || price.GetStone() != 0 || len(beforeOffer.GetPriceItems()) != 0 ||
+		beforeOffer.GetLimitType() != shopv1.PurchaseLimitType_PURCHASE_LIMIT_TYPE_DAILY {
+		intg023Failf(t, "canonical shop offer", "want offer=%d item=%d qty=%d gold=%d daily limit; got=%v", smokeShopOfferCfgID, smokeItemRewardCfgID, shopQty, shopCost, beforeOffer)
+	}
+	var out shopv1.PurchaseShopOfferResponse
+	if err := proto.Unmarshal(buyResp.Data, &out); err != nil {
+		intg023Failf(t, "decode shop purchase", "err=%v", err)
+	}
+	granted := out.GetGrantedItems().GetItems()
+	if len(granted) != 1 || granted[0].GetItemCfgId() != smokeItemRewardCfgID || granted[0].GetQuantity() != shopQty {
+		intg023Failf(t, "exact shop grant", "items=%v", granted)
+	}
+	afterGold := smokeINTG023PersistedGold(t, ctx, apiSrv, playerID, audit)
+	afterBag := smokeINTG023ListPlayerBagGateway(t, c, sid, playerID)[smokeItemRewardCfgID]
+	if afterGold-afterGrant != -shopCost || out.GetWalletAfter().GetGold() != afterGold || afterBag-beforeBag != shopQty ||
+		out.GetOffer().GetOfferId() != smokeShopOfferCfgID || out.GetOffer().GetPurchasedCount()-beforeOffer.GetPurchasedCount() != 1 {
+		intg023Failf(t, "exact shop purchase effects", "gold=%d -> %d bag=%d -> %d bought=%d -> %d response=%v", afterGrant, afterGold, beforeBag, afterBag, beforeOffer.GetPurchasedCount(), out.GetOffer().GetPurchasedCount(), &out)
+	}
+	t.Logf("verified shop purchase offer=%d gold delta=-%d item%d delta=%d daily_bought delta=1", smokeShopOfferCfgID, shopCost, smokeItemRewardCfgID, shopQty)
+	return seedGold - shopCost, shopQty, 1
+}
+
+func smokeINTG023PersistedGold(t *testing.T, ctx context.Context, apiSrv *api.Server, playerID int64, audit api.GmAudit) int64 {
+	t.Helper()
+	_, info, err := apiSrv.Gm().LookupPlayer(ctx, "", audit, intg006ServerID, playerID, "")
+	if err != nil {
+		intg023Failf(t, "read persisted shop wallet", "err=%v", err)
+	}
+	return info.Wallet.Gold
 }
 
 // smokeINTG023GetHeroDetailFirstHeroGateway logs hero_id, level, and loyalty for CLIENT-114/115; skips when no heroes.

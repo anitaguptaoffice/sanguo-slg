@@ -9,18 +9,18 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"google.golang.org/protobuf/proto"
 )
 
 func TestHeroGatewayRecruitAndList(t *testing.T) {
 	ctx := context.Background()
-	cat, err := content.EmbeddedCatalog()
-	if err != nil {
-		t.Fatal(err)
-	}
-	contentSvc := content.NewService(cat)
+	pool := walletBoundaryPool(t, true)
+	seedRecruitActor(t, pool, 42, hero.Resources{}, 0)
+	s := recruitServer(t, pool, 42)
+	contentSvc := s.contentSvc
 	p := content.PlayerRef{ServerID: 1, PlayerID: 42}
-	_, err = contentSvc.Grant(p, content.RewardPackage{
+	_, err := contentSvc.Grant(p, content.RewardPackage{
 		Resources: map[string]int64{"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000},
 		Items:     []content.RewardItem{{ItemCfgID: hero.RecruitScrollID, Qty: 2}},
 	}, "test:hero")
@@ -28,8 +28,6 @@ func TestHeroGatewayRecruitAndList(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	heroSvc := hero.NewService()
-	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: heroSvc}
 	s.sessions.Bind("sess-hero", PlayerContext{ServerID: 1, PlayerID: 42})
 
 	recruitResp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
@@ -73,21 +71,19 @@ func TestHeroGatewayRecruitAndList(t *testing.T) {
 
 func TestHeroGatewayUpgradeHero(t *testing.T) {
 	ctx := context.Background()
-	cat, err := content.EmbeddedCatalog()
-	if err != nil {
-		t.Fatal(err)
-	}
-	contentSvc := content.NewService(cat)
+	pool := walletBoundaryPool(t, true)
+	seedRecruitActor(t, pool, 50, hero.Resources{}, 0)
+	s := recruitServer(t, pool, 50)
+	contentSvc := s.contentSvc
 	p := content.PlayerRef{ServerID: 1, PlayerID: 50}
-	_, err = contentSvc.Grant(p, content.RewardPackage{
+	_, err := contentSvc.Grant(p, content.RewardPackage{
 		Resources: map[string]int64{"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000},
 		Items:     []content.RewardItem{{ItemCfgID: hero.RecruitScrollID, Qty: 1}},
 	}, "test:hero-upgrade")
 	if err != nil {
 		t.Fatal(err)
 	}
-	heroSvc := hero.NewService()
-	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: heroSvc}
+	heroSvc := s.heroSvc
 	s.sessions.Bind("sess-up", PlayerContext{ServerID: 1, PlayerID: 50})
 
 	recruitResp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
@@ -156,21 +152,24 @@ func TestHeroGatewaySetAndClearCityChief(t *testing.T) {
 	s := &Server{
 		sessions: NewSessionRegistry(),
 		heroSvc:  heroSvc,
+		world:    ownershipWorld(world.City{ServerID: 1, CityID: cityID, PlayerID: 7}),
 		cities: map[int64]*domestic.CityState{
 			cityID: {ID: cityID, PlayerID: 7},
 		},
 	}
 	s.domestic = domestic.NewHub(nil)
-	s.domestic.RegisterCity(s.cities[cityID])
+	if err := s.domestic.RegisterCity(s.cities[cityID]); err != nil {
+		t.Fatal(err)
+	}
 	s.sessions.Bind("sess-chief", PlayerContext{ServerID: 1, PlayerID: 7})
-	h := &hero.Hero{ServerID: 1, HeroID: 11, PlayerID: 7, TemplateCfgID: 1001, Status: hero.StatusIdle, Loyalty: 90}
-	if err := heroSvc.Store.SaveHero(ctx, h); err != nil {
+	h := &hero.Hero{ServerID: 1, PlayerID: 7, TemplateCfgID: 1001, Status: hero.StatusIdle, Loyalty: 90}
+	if err := heroSvc.Store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 
 	setResp, err := s.handleSetCityChief(ctx, &commonv1.ClientPacket{
 		TraceId: "t-chief-set", SessionId: "sess-chief", ServerId: 1,
-		Payload: mustProto(&herov1.SetCityChiefRequest{ServerId: 1, CityId: cityID, HeroId: 11}),
+		Payload: mustProto(&herov1.SetCityChiefRequest{ServerId: 1, CityId: cityID, HeroId: h.HeroID}),
 	})
 	if err != nil || setResp.Code != 0 {
 		t.Fatalf("set chief: err=%v resp=%+v", err, setResp)
@@ -179,7 +178,7 @@ func TestHeroGatewaySetAndClearCityChief(t *testing.T) {
 	if err := proto.Unmarshal(setResp.Data, &setOut); err != nil {
 		t.Fatal(err)
 	}
-	if setOut.GetHeroId() != 11 || setOut.GetProductionBonus() <= 0 {
+	if setOut.GetHeroId() != h.HeroID || setOut.GetProductionBonus() <= 0 {
 		t.Fatalf("set out %+v", &setOut)
 	}
 
@@ -202,13 +201,12 @@ func TestHeroGatewaySetAndClearCityChief(t *testing.T) {
 
 func TestHeroGatewayLargessGoldAndCooldown(t *testing.T) {
 	ctx := context.Background()
-	cat, err := content.EmbeddedCatalog()
-	if err != nil {
-		t.Fatal(err)
-	}
-	contentSvc := content.NewService(cat)
+	pool := walletBoundaryPool(t, true)
+	seedRecruitActor(t, pool, 55, hero.Resources{}, 0)
+	s := recruitServer(t, pool, 55)
+	contentSvc := s.contentSvc
 	p := content.PlayerRef{ServerID: 1, PlayerID: 55}
-	_, err = contentSvc.Grant(p, content.RewardPackage{
+	_, err := contentSvc.Grant(p, content.RewardPackage{
 		Resources: map[string]int64{
 			"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000, "gold": 50000,
 		},
@@ -217,8 +215,7 @@ func TestHeroGatewayLargessGoldAndCooldown(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	heroSvc := hero.NewService()
-	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: heroSvc}
+	heroSvc := s.heroSvc
 	s.sessions.Bind("sess-largess", PlayerContext{ServerID: 1, PlayerID: 55})
 
 	recruitResp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
@@ -271,21 +268,19 @@ func TestHeroGatewayLargessGoldAndCooldown(t *testing.T) {
 
 func TestHeroGatewayAddAndClearHeroPoint(t *testing.T) {
 	ctx := context.Background()
-	cat, err := content.EmbeddedCatalog()
-	if err != nil {
-		t.Fatal(err)
-	}
-	contentSvc := content.NewService(cat)
+	pool := walletBoundaryPool(t, true)
+	seedRecruitActor(t, pool, 61, hero.Resources{}, 0)
+	s := recruitServer(t, pool, 61)
+	contentSvc := s.contentSvc
 	p := content.PlayerRef{ServerID: 1, PlayerID: 61}
-	_, err = contentSvc.Grant(p, content.RewardPackage{
+	_, err := contentSvc.Grant(p, content.RewardPackage{
 		Resources: map[string]int64{"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000},
 		Items:     []content.RewardItem{{ItemCfgID: hero.RecruitScrollID, Qty: 1}},
 	}, "test:hero-points")
 	if err != nil {
 		t.Fatal(err)
 	}
-	heroSvc := hero.NewService()
-	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: heroSvc}
+	heroSvc := s.heroSvc
 	s.sessions.Bind("sess-points", PlayerContext{ServerID: 1, PlayerID: 61})
 
 	recruitResp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
@@ -362,19 +357,17 @@ func TestHeroGatewayAddAndClearHeroPoint(t *testing.T) {
 
 func TestHeroGatewayRecruitInsufficientItem(t *testing.T) {
 	ctx := context.Background()
-	cat, err := content.EmbeddedCatalog()
-	if err != nil {
-		t.Fatal(err)
-	}
-	contentSvc := content.NewService(cat)
+	pool := walletBoundaryPool(t, true)
+	seedRecruitActor(t, pool, 99, hero.Resources{}, 0)
+	s := recruitServer(t, pool, 99)
+	contentSvc := s.contentSvc
 	p := content.PlayerRef{ServerID: 1, PlayerID: 99}
-	_, err = contentSvc.Grant(p, content.RewardPackage{
+	_, err := contentSvc.Grant(p, content.RewardPackage{
 		Resources: map[string]int64{"food": 20000, "wood": 20000, "stone": 20000, "iron": 20000},
 	}, "test:hero-poor")
 	if err != nil {
 		t.Fatal(err)
 	}
-	s := &Server{sessions: NewSessionRegistry(), contentSvc: contentSvc, heroSvc: hero.NewService()}
 	s.sessions.Bind("sess-poor", PlayerContext{ServerID: 1, PlayerID: 99})
 
 	resp, err := s.handleRecruitHero(ctx, &commonv1.ClientPacket{
@@ -384,7 +377,7 @@ func TestHeroGatewayRecruitInsufficientItem(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Code == 0 {
-		t.Fatal("expected error response")
+	if resp.Code != int32(commonv1.ErrorCode_COMMON_INVALID_PACKET) || resp.Msg != hero.ErrInsufficientItem.Error() {
+		t.Fatalf("expected insufficient-item business error: %+v", resp)
 	}
 }

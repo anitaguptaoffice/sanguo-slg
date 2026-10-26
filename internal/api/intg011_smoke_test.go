@@ -10,13 +10,13 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	contentv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/content/v1"
-	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
+	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -73,9 +73,9 @@ func runINTG011Wave14Smoke(t *testing.T) {
 	marchID, _, _, _, _, _ := smokeStartMarchListMarchesGateway(t, c, apiSrv, sid, playerID)
 
 	speedupUsed := smokeINTG011BuildSpeedupGateway(t, ctx, c, apiSrv, sid, playerID)
-	smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Bag2003 += smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
 
-	smokeINTG010DualLeaderboardGateway(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Gold = smokeINTG010DualLeaderboardGateway(t, ctx, c, apiSrv, pool, sid, playerID)
 	consumed2001 := smokeINTG010UseConsumableGateway(t, c, sid)
 	smokeINTG010SocialOptional(t, c, sid)
 	smokeINTG011DailyMarchOptional(t, ctx, c, apiSrv, pool, sid, playerID)
@@ -186,16 +186,17 @@ func smokeGatewayGetCityState(t *testing.T, c *websocket.Conn, sid string, cityI
 	return &out
 }
 
-func smokeINTG011DailyTrainOrBuildMandatory(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) {
+func smokeINTG011DailyTrainOrBuildMandatory(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) int32 {
 	t.Helper()
 	if smokeINTG011TryTrainDailyMandatory(t, ctx, c, apiSrv, pool, sid, playerID) {
-		return
+		return smokeDailyTrainItemReward
 	}
 	if smokeINTG011TryBuildDailyMandatory(t, ctx, c, apiSrv, pool, sid, playerID) {
-		return
+		return 0 // daily1032 rewards item2011, not the tracked item2003.
 	}
 	intg011Failf(t, "daily quest chain", "quest_cfg_id=%d and quest_cfg_id=%d not claimable",
 		smokeDailyTrainQuestCfgID, smokeDailyBuildQuestCfgID)
+	return 0
 }
 
 func smokeINTG011TryTrainDailyMandatory(t *testing.T, ctx context.Context, c *websocket.Conn, apiSrv *api.Server, pool *pgxpool.Pool, sid string, playerID int64) bool {
@@ -232,6 +233,7 @@ func smokeINTG011TryTrainDailyMandatory(t *testing.T, ctx context.Context, c *we
 			return false
 		}
 	}
+	beforeBag := smokeDailyTrainBagBeforeClaim(t, ctx, pool, playerID)
 	claimResp := mustSend(t, c, &commonv1.ClientPacket{
 		Route: api.RouteClaimQuestReward, TraceId: "i11-train-c", SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&questv1.ClaimQuestRewardRequest{ServerId: intg006ServerID, QuestCfgId: smokeDailyTrainQuestCfgID}),
@@ -240,6 +242,7 @@ func smokeINTG011TryTrainDailyMandatory(t *testing.T, ctx context.Context, c *we
 		t.Logf("INTG-011: daily_train_1 claim failed quest_cfg_id=%d code=%d msg=%s", smokeDailyTrainQuestCfgID, claimResp.Code, claimResp.Msg)
 		return false
 	}
+	smokeAssertDailyTrainBagClaim(t, ctx, pool, playerID, beforeBag)
 	t.Logf("INTG-011: daily_train_1 claimed quest_cfg_id=%d", smokeDailyTrainQuestCfgID)
 	return true
 }
@@ -290,7 +293,7 @@ func smokeINTG011TryBuildDailyMandatory(t *testing.T, ctx context.Context, c *we
 func smokeINTG011GatewayStartUpgrade(t *testing.T, c *websocket.Conn, sid string, cityID int64, slot string, buildingCfgID int32) bool {
 	t.Helper()
 	upResp := mustSend(t, c, &commonv1.ClientPacket{
-		Route: api.RouteStartBuildingUpgrade, TraceId: "i11-bup-"+slot, SessionId: sid, ServerId: intg006ServerID,
+		Route: api.RouteStartBuildingUpgrade, TraceId: "i11-bup-" + slot, SessionId: sid, ServerId: intg006ServerID,
 		Payload: mustMarshal(&domesticv1.StartBuildingUpgradeRequest{
 			CityId: cityID, SlotKey: slot, BuildingCfgId: buildingCfgID,
 		}),

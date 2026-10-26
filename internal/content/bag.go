@@ -49,8 +49,14 @@ func (s *Service) LoadPlayer(ctx context.Context, p PlayerRef) error {
 	if s.store == nil {
 		return nil
 	}
-	s.mu.Lock()
+	if err := s.lockGrantContext(ctx); err != nil {
+		return err
+	}
 	defer s.mu.Unlock()
+	return s.loadPlayerUnlocked(ctx, p)
+}
+
+func (s *Service) loadPlayerUnlocked(ctx context.Context, p PlayerRef) error {
 	stacks, err := s.store.LoadBag(ctx, p)
 	if err != nil {
 		return err
@@ -105,7 +111,10 @@ func (s *Service) itemDef(id int32) (ItemDef, error) {
 func (s *Service) List(p PlayerRef) []Stack {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	b := s.bagFor(p)
+	b := s.bags[p]
+	if b == nil {
+		return []Stack{}
+	}
 	out := make([]Stack, 0, len(b.Stacks))
 	for id, qty := range b.Stacks {
 		if qty > 0 {
@@ -123,7 +132,10 @@ func (s *Service) Get(p PlayerRef, itemCfgID int32) (int32, error) {
 	}
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.bagFor(p).Stacks[itemCfgID], nil
+	if b := s.bags[p]; b != nil {
+		return b.Stacks[itemCfgID], nil
+	}
+	return 0, nil
 }
 
 func (s *Service) distinctCount(b *Bag, ignoreID int32) int {
@@ -137,7 +149,11 @@ func (s *Service) distinctCount(b *Bag, ignoreID int32) int {
 }
 
 // Add increases stack quantity, enforcing max_stack and distinct-item capacity.
+// PG callers must use Grant; cache-derived absolute writes are offline-only.
 func (s *Service) Add(p PlayerRef, itemCfgID int32, delta int32) (int32, error) {
+	if _, pg := s.store.(*PGStore); pg {
+		return 0, ErrOfflineStackWrite
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.addUnlocked(p, itemCfgID, delta)
@@ -180,7 +196,12 @@ func (s *Service) listUnlocked(p PlayerRef) []Stack {
 }
 
 // Set sets absolute quantity (0 removes the stack). Used for admin/sync CRUD.
+// PG absolute replacement requires a separately authorized offline maintenance
+// operation with competing writers stopped; it is not exposed by this service.
 func (s *Service) Set(p PlayerRef, itemCfgID int32, qty int32) error {
+	if _, pg := s.store.(*PGStore); pg {
+		return ErrOfflineStackWrite
+	}
 	if qty < 0 {
 		return ErrInvalidQuantity
 	}
@@ -211,16 +232,39 @@ func (s *Service) Set(p PlayerRef, itemCfgID int32, qty int32) error {
 	return nil
 }
 
-// Remove decreases quantity; deletes the row when quantity reaches zero.
+// Remove decreases quantity. PG uses a conditional durable delta and retains
+// zero rows; the in-memory path removes empty stacks as before.
 func (s *Service) Remove(p PlayerRef, itemCfgID int32, delta int32) (int32, error) {
+	return s.RemoveContext(context.Background(), p, itemCfgID, delta)
+}
+
+// RemoveContext bounds lock acquisition and PG operations. Unlike the PG path,
+// legacy Store writes do not provide transactional guarantees.
+// A PG commit error may have an unknown outcome; this method never retries it.
+func (s *Service) RemoveContext(ctx context.Context, p PlayerRef, itemCfgID int32, delta int32) (int32, error) {
 	if delta <= 0 {
 		return 0, ErrInvalidQuantity
 	}
 	if _, err := s.itemDef(itemCfgID); err != nil {
 		return 0, err
 	}
-	s.mu.Lock()
+	if err := s.lockGrantContext(ctx); err != nil {
+		return 0, err
+	}
 	defer s.mu.Unlock()
+	if store, ok := s.store.(*PGStore); ok {
+		remaining, err := store.removeItemAtomic(ctx, p, itemCfgID, delta)
+		if err != nil {
+			return 0, err
+		}
+		b := s.bagFor(p)
+		if remaining == 0 {
+			delete(b.Stacks, itemCfgID)
+		} else {
+			b.Stacks[itemCfgID] = remaining
+		}
+		return remaining, nil
+	}
 	b := s.bagFor(p)
 	cur := b.Stacks[itemCfgID]
 	if cur < delta {
@@ -232,7 +276,7 @@ func (s *Service) Remove(p PlayerRef, itemCfgID int32, delta int32) (int32, erro
 	} else {
 		b.Stacks[itemCfgID] = next
 	}
-	if err := s.persistStack(context.Background(), p, itemCfgID, next); err != nil {
+	if err := s.persistStack(ctx, p, itemCfgID, next); err != nil {
 		return 0, err
 	}
 	return next, nil

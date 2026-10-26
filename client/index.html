@@ -1124,6 +1124,12 @@
       .content-panel h3 {
         margin-bottom: 8px; font-size: 15px; color: #2a1f14; font-weight: 700;
       }
+      /* CLT-QUEST-CONTRAST-001: unskinned quest panel retains its dark surface. */
+      .content-panel.quest-panel,
+      .content-panel.quest-panel h3,
+      .content-panel.quest-panel label {
+        color: #e8dcc8;
+      }
       .content-panel .panel-feedback {
         margin: 8px 0; padding: 8px; background: #1a1410; border-radius: 4px;
         border-left: 3px solid #c9a227; color: #f0c674; font-size: 12px; line-height: 1.4;
@@ -8366,6 +8372,92 @@
       #layout-frame.layout-narrow .main-city-toolbar .toolbar-scroll {
         padding-top: 0;
         padding-bottom: 0;
+      }
+      /* CLIENT-REPORT-TROOP-SCAN: keep summary cells readable on their dark surface. */
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-troop-scan {
+        font-size: 14px; line-height: 1.5;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-troop-scan th,
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-troop-scan td {
+        font-size: inherit; line-height: inherit; overflow-wrap: anywhere;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-troop-scan td {
+        color: #e8dcc8; background-color: #221a14;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .report-panel-status {
+        color: #e8a87c; background-color: #1a1410;
+        font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"][data-report-paper-skin] .report-panel-status {
+        color: #8b3a18; background-color: transparent;
+      }
+      /* CLIENT-REPORT-NARRATIVE: known surfaces for the remaining report text only. */
+      #layout-frame .content-panel[data-center-panel="battle-report"] > h3,
+      #layout-frame .content-panel[data-center-panel="battle-report"] > [data-role="report-hint"],
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-filters > span,
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-time-chip-group > span {
+        color: #e8dcc8; background-color: #1a1410;
+        font-size: 14px; line-height: 1.5; overflow-wrap: anywhere;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"][data-report-paper-skin] > h3,
+      #layout-frame .content-panel[data-center-panel="battle-report"][data-report-paper-skin] > [data-role="report-hint"],
+      #layout-frame .content-panel[data-center-panel="battle-report"][data-report-paper-skin] .battle-report-filters > span,
+      #layout-frame .content-panel[data-center-panel="battle-report"][data-report-paper-skin] .battle-report-time-chip-group > span {
+        color: #3d2e1f; background-color: transparent;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] > h3 { font-size: 15px; }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .report-detail > pre {
+        color: #e8dcc8; background-color: #1a1410;
+        font-size: 14px; line-height: 1.5;
+        white-space: pre-wrap; overflow-wrap: anywhere; padding-inline: 0.25em;
+      }
+      /* CLIENT-REPORT-READABILITY: explicit ink on every native rounds-table surface. */
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-rounds-table {
+        font-size: 14px; line-height: 1.5;
+        color: #e8dcc8; background: #1a1410;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-rounds-table th,
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-rounds-table td {
+        color: #e8dcc8; background: #1a1410;
+        font-size: inherit; line-height: inherit; overflow-wrap: anywhere;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-rounds-table th {
+        background: #2a221c;
+      }
+      #layout-frame .content-panel[data-center-panel="battle-report"] .battle-report-rounds-table tr.battle-report-round-row-highlight td {
+        background: #3d4a28;
+      }
+      /* END CLIENT-REPORT-READABILITY */
+      /* MILITARY-HINT-READABILITY: keep every preview row legible on the paper skin.
+         These DOM pixels are not multiplied by the canvas/layout --ui-scale. */
+      #layout-frame .military-panel .march-form-troop-margin-residual-line {
+        font-size: 14px;
+        line-height: 1.5;
+        font-weight: 400;
+        color: #e8dcc8;
+        background-color: #1a1410;
+        gap: 6px;
+      }
+      #layout-frame .military-panel .march-form-troop-margin-residual-line > span {
+        font: inherit;
+        color: inherit;
+        letter-spacing: normal;
+        min-width: 0;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        /* Reserve one glyph for CJK end punctuation rather than clipping its overhang. */
+        padding-inline-end: 1em;
+      }
+      #layout-frame .military-panel .march-form-troop-margin-residual-line.march-form-troop-margin-residual-warn {
+        color: #e8b86a;
+      }
+      #layout-frame .military-panel[data-military-paper-skin] .march-form-troop-margin-residual-line {
+        color: #3d2e1f;
+        background-color: transparent;
+      }
+      #layout-frame .military-panel[data-military-paper-skin] .march-form-troop-margin-residual-line.march-form-troop-margin-residual-warn {
+        color: #8b3a18;
       }
     </style>
   </head>

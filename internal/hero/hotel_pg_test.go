@@ -23,9 +23,8 @@ func seedHotelCityBuildings(t *testing.T, pool *pgxpool.Pool, serverID int32, ci
 }
 
 func TestRecruitHotelCandidatePG(t *testing.T) {
-	pool := openHeroTestDB(t)
+	pool := identityStore(t).Pool
 	ctx := context.Background()
-	applyHeroSchema(t, pool)
 	serverID := int32(1)
 	playerID := int64(88001)
 	cityID := int64(88002)

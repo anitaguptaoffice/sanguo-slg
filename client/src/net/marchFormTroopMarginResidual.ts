@@ -47,7 +47,7 @@ export function formatMarchFormTroopMarginResidualLine(
   const foodHave = wallet?.food ?? 0;
   let subline: string;
   if (foodNeed > 0) {
-    subline = `钱包粮 持 ${formatResourceAmount(foodHave)} / 途耗约 ${formatResourceAmount(foodNeed)}`;
+    subline = `钱包粮 持 ${formatResourceAmount(foodHave)} / 途粮估算 ${formatResourceAmount(foodNeed)}（不扣粮）`;
     if (foodHave < foodNeed) hasWarn = true;
   } else {
     subline = `钱包粮 持 ${formatResourceAmount(foodHave)} · 途耗待算`;

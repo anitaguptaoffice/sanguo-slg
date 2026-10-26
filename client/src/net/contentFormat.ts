@@ -19,6 +19,52 @@ const ITEM_LABEL: Record<number, string> = {
   2058: "赏赐礼·陆拾",
 };
 
+/** Readonly DATA-002 name fallback; established UI labels above remain stable.
+ * Mirrors internal/content/seed/catalog.json, with drift coverage in contentFormat.test.ts. */
+const CATALOG_ITEM_LABEL: Readonly<Record<number, string>> = Object.freeze({
+  2007: "常备粮垛",
+  2008: "常备木料",
+  2009: "粗炼铁箱",
+  2010: "薄银袋",
+  2011: "中程工符",
+  2012: "锦绣访贤帖",
+  2013: "弓队集训牌",
+  2014: "攻城组件箱",
+  2015: "青纹补给匣",
+  2016: "蓝纹军需匣",
+  2018: "城防条石包",
+  2019: "庆功席帖",
+  2021: "赋税凭条",
+  2022: "操典摘抄",
+  2023: "使节礼单",
+  2024: "锻炉炭束",
+  2025: "伤兵药囊",
+  2026: "舆图残卷",
+  2027: "军旗纹章",
+  2028: "盟约抄件",
+  2029: "功勋铜章",
+  2030: "祈福灯盏",
+  2031: "粮栈转运袋",
+  2032: "梁木货箱",
+  2033: "矿砂货箱",
+  2034: "银铤卷",
+  2035: "长程工符",
+  2036: "整日工符",
+  2037: "广纳贤帖",
+  2038: "步阵大教令",
+  2039: "骑队大调符",
+  2040: "弓队大集训牌",
+  2041: "重型攻城组件",
+  2042: "野战粮包",
+  2043: "楔木加固包",
+  2044: "铁锭捆",
+  2045: "井渠修缮包",
+  2046: "道桥碎石",
+  2047: "烽烟信号弹",
+  2048: "盾胚料",
+  2049: "弩车缆绳",
+});
+
 const QUEST_STATE_LABEL: Record<number, string> = {
   0: "—",
   1: "可接",
@@ -29,7 +75,7 @@ const QUEST_STATE_LABEL: Record<number, string> = {
 
 export function itemLabel(itemCfgId: number | undefined): string {
   if (!itemCfgId) return "?";
-  return ITEM_LABEL[itemCfgId] ?? `道具#${itemCfgId}`;
+  return ITEM_LABEL[itemCfgId] ?? CATALOG_ITEM_LABEL[itemCfgId] ?? `道具#${itemCfgId}`;
 }
 
 export function questStateLabel(state: number | undefined): string {

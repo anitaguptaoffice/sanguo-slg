@@ -107,7 +107,6 @@ type PlayerState struct {
 	Wallet     Resources
 	Items      map[int32]int32
 	Heroes     []*Hero
-	nextHeroID int64
 }
 
 type RecruitItemSpec struct {

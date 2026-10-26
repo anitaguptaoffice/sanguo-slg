@@ -16,7 +16,7 @@ describe("formatMarchFormTroopMarginResidualLine (CLIENT-253)", () => {
     );
     expect(residual?.line).toContain("兵力余量警示");
     expect(residual?.subline).toContain("持");
-    expect(residual?.subline).toContain("途耗约");
+    expect(residual?.subline).toBe("钱包粮 持 200 / 途粮估算 500（不扣粮）");
     expect(residual?.hasWarn).toBe(true);
   });
 

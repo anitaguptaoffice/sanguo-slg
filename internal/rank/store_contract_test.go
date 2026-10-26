@@ -23,12 +23,20 @@ func TestPGStoreContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if meta.BatchID != 2 || meta.EntryCount != 2 {
+	if meta.BatchID != 2 || meta.EntryCount != 1 {
 		t.Fatalf("reload meta %+v", meta)
 	}
 	page, total, err := store2.ListEntries(ctx, 1, RankPlayerPower, meta.BatchID, 0, 10)
-	if err != nil || total != 2 || len(page) != 2 || page[0].SubjectID != 2 {
-		t.Fatalf("reload list total=%d page=%+v err=%v", total, page, err)
+	if err != nil || total != 1 || len(page) != 1 || page[0] != (Entry{Position: 1, SubjectID: 9, Score: 999}) {
+		t.Fatalf("reload latest list total=%d page=%+v err=%v", total, page, err)
+	}
+
+	// Reopening must preserve both the latest replacement and the older batch.
+	page, total, err = store2.ListEntries(ctx, 1, RankPlayerPower, 1, 0, 10)
+	wantFirst := Entry{Position: 1, SubjectID: 2, DisplayName: "b", Score: 200, GuildName: "G"}
+	wantSecond := Entry{Position: 2, SubjectID: 1, DisplayName: "a", Score: 100}
+	if err != nil || total != 2 || len(page) != 2 || page[0] != wantFirst || page[1] != wantSecond {
+		t.Fatalf("reload older list total=%d page=%+v err=%v", total, page, err)
 	}
 }
 

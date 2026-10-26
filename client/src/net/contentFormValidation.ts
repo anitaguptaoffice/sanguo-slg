@@ -1,3 +1,4 @@
+import { bagUseCapabilityHint } from "./bagUseCapability";
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import { normalizeMarchHeroGatewayMessage } from "@/net/marchHeroPick";
 import type { BagStack } from "@/net/bagState";
@@ -95,6 +96,18 @@ export function validateUseConsumable(input: UseConsumableValidationInput): Cont
     return { ok: false, message: errors.join("；") };
   }
   return { ok: true };
+}
+
+/** Bag-only capability gate; dedicated hero flows retain their existing validation. */
+export function validateBagUseConsumable(input: UseConsumableValidationInput): ContentFormValidationResult {
+  const message = bagUseCapabilityHint(input.itemCfgId);
+  if (message) return { ok: false, message };
+  const validated = validateUseConsumable(input);
+  if (!validated.ok) return validated;
+  const quantity = input.bag.find(row => row.item_cfg_id === input.itemCfgId)?.quantity ?? 0;
+  return input.count > quantity
+    ? { ok: false, message: `使用数量超过持有数量（当前 ×${quantity}）` }
+    : validated;
 }
 
 /** 招募/商城/背包/军事四类面板内联错误区（CLIENT-067）。 */

@@ -5,16 +5,16 @@ import (
 	"errors"
 
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 )
 
 const (
-	RouteListPlayerQuests   = "quest.v1.ListPlayerQuests"
-	RouteAcceptQuest        = "quest.v1.AcceptQuest"
+	RouteListPlayerQuests    = "quest.v1.ListPlayerQuests"
+	RouteAcceptQuest         = "quest.v1.AcceptQuest"
 	RouteReportQuestProgress = "quest.v1.ReportQuestProgress"
-	RouteClaimQuestReward   = "quest.v1.ClaimQuestReward"
+	RouteClaimQuestReward    = "quest.v1.ClaimQuestReward"
 	RouteGetQuestChainStatus = "quest.v1.GetQuestChainStatus"
 )
 
@@ -31,6 +31,9 @@ func (s *Server) handleListPlayerQuests(ctx context.Context, pkt *commonv1.Clien
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
 	actor := quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	if _, err := s.recoverWallAndLevel(ctx, actor); err != nil {
+		return questErr(pkt.GetTraceId(), err), nil
+	}
 	filter := quest.ListQuestsFilter{IncludeCompleted: req.GetIncludeCompleted()}
 	if req.GetChainId() != 0 {
 		filter.ChainIDs = []int32{req.GetChainId()}
@@ -42,7 +45,12 @@ func (s *Server) handleListPlayerQuests(ctx context.Context, pkt *commonv1.Clien
 	}
 	views, chainViews, err := s.questSvc.ListPlayerQuests(ctx, actor, filter)
 	if err != nil {
-		return nil, err
+		return questErr(pkt.GetTraceId(), err), nil
+	}
+	// Service reads can themselves recover a concurrently committed receipt.
+	// Persist its completed-proof floor before returning that recovered view.
+	if _, err := s.reconcileTutorialLevel(ctx, actor); err != nil {
+		return questErr(pkt.GetTraceId(), err), nil
 	}
 	quests := make([]*questv1.PlayerQuestProgress, 0, len(views))
 	for _, v := range views {
@@ -56,7 +64,9 @@ func (s *Server) handleListPlayerQuests(ctx context.Context, pkt *commonv1.Clien
 	if err != nil {
 		return nil, err
 	}
-	return okResp(pkt.GetTraceId(), data), nil
+	resp := okResp(pkt.GetTraceId(), data)
+	resp.Msg = s.starterScrollNotice(ctx, pc)
+	return resp, nil
 }
 
 func (s *Server) handleAcceptQuest(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -68,7 +78,13 @@ func (s *Server) handleAcceptQuest(ctx context.Context, pkt *commonv1.ClientPack
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	q, chain, err := s.questSvc.AcceptQuest(ctx, quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetQuestCfgId())
+	actor := quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	if req.GetQuestCfgId() == 1006 {
+		if err := s.requireWallActor(ctx, actor); err != nil {
+			return questErr(pkt.GetTraceId(), err), nil
+		}
+	}
+	q, chain, err := s.questSvc.AcceptQuest(ctx, actor, req.GetQuestCfgId())
 	if err != nil {
 		return questErr(pkt.GetTraceId(), err), nil
 	}
@@ -83,7 +99,7 @@ func (s *Server) handleAcceptQuest(ctx context.Context, pkt *commonv1.ClientPack
 }
 
 func (s *Server) handleReportQuestProgress(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
-	pc, errPkt := s.playerCtx(ctx, pkt)
+	_, errPkt := s.playerCtx(ctx, pkt)
 	if errPkt != nil {
 		return errPkt, nil
 	}
@@ -91,19 +107,9 @@ func (s *Server) handleReportQuestProgress(ctx context.Context, pkt *commonv1.Cl
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	q, chain, err := s.questSvc.ReportQuestProgress(ctx, quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID},
-		req.GetQuestCfgId(), req.GetAbsolute(), req.GetProgressValue())
-	if err != nil {
-		return questErr(pkt.GetTraceId(), err), nil
-	}
-	data, err := marshal(&questv1.ReportQuestProgressResponse{
-		Quest: questProgressToProto(q),
-		Chain: questChainToProto(chain),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return okResp(pkt.GetTraceId(), data), nil
+	// There is no approved client self-report allowlist. Trusted gameplay hooks
+	// continue to call the quest service internally; this RPC cannot mint counts.
+	return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "quest progress is server verified"), nil
 }
 
 func (s *Server) handleClaimQuestReward(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -115,15 +121,33 @@ func (s *Server) handleClaimQuestReward(ctx context.Context, pkt *commonv1.Clien
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	q, chain, granted, err := s.questSvc.ClaimQuestReward(ctx, quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetQuestCfgId())
+	actor := quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	// Current actor validation is not fact/level reconciliation. Preserve the
+	// unchanged phase-1 receipt-first path; only the new wall path adds this guard.
+	if req.GetQuestCfgId() == 1006 {
+		if err := s.requireWallActor(ctx, actor); err != nil {
+			return questErr(pkt.GetTraceId(), err), nil
+		}
+	}
+	// Never reconcile before the service has checked the exact paid receipt.
+	q, chain, granted, claimErr := s.questSvc.ClaimQuestReward(ctx, actor, req.GetQuestCfgId())
+	if claimErr != nil && !errors.Is(claimErr, quest.ErrAlreadyCompleted) {
+		return questErr(pkt.GetTraceId(), claimErr), nil
+	}
+	// The reward is committed even if the subsequent level repair fails.
+	s.refreshDomesticWalletAfterCommit(ctx, pc.ServerID, pc.PlayerID)
+	level, err := s.reconcileTutorialLevel(ctx, actor)
 	if err != nil {
 		return questErr(pkt.GetTraceId(), err), nil
 	}
-	s.refreshDomesticWalletAfterCommit(ctx, pc.ServerID, pc.PlayerID)
+	if claimErr != nil {
+		return questErr(pkt.GetTraceId(), claimErr), nil
+	}
 	data, err := marshal(&questv1.ClaimQuestRewardResponse{
-		Quest:           questProgressToProto(q),
-		Chain:           questChainToProto(chain),
-		GrantedRewards:  rewardBundleToProto(granted),
+		Quest:          questProgressToProto(q),
+		Chain:          questChainToProto(chain),
+		GrantedRewards: rewardBundleToProto(granted),
+		PlayerLevel:    level,
 	})
 	if err != nil {
 		return nil, err
@@ -144,22 +168,31 @@ func (s *Server) handleGetQuestChainStatus(ctx context.Context, pkt *commonv1.Cl
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	st, views, err := s.questSvc.GetQuestChainStatus(ctx, quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetChainId())
+	actor := quest.Actor{ServerID: pc.ServerID, PlayerID: pc.PlayerID}
+	if _, err := s.recoverWallAndLevel(ctx, actor); err != nil {
+		return questErr(pkt.GetTraceId(), err), nil
+	}
+	st, views, err := s.questSvc.GetQuestChainStatus(ctx, actor, req.GetChainId())
 	if err != nil {
-		return nil, err
+		return questErr(pkt.GetTraceId(), err), nil
+	}
+	if _, err := s.reconcileTutorialLevel(ctx, actor); err != nil {
+		return questErr(pkt.GetTraceId(), err), nil
 	}
 	pbViews := make([]*questv1.PlayerQuestProgress, 0, len(views))
 	for _, v := range views {
 		pbViews = append(pbViews, questProgressToProto(v))
 	}
 	data, err := marshal(&questv1.GetQuestChainStatusResponse{
-		Chain:        questChainToProto(st),
-		ChainQuests:  pbViews,
+		Chain:       questChainToProto(st),
+		ChainQuests: pbViews,
 	})
 	if err != nil {
 		return nil, err
 	}
-	return okResp(pkt.GetTraceId(), data), nil
+	resp := okResp(pkt.GetTraceId(), data)
+	resp.Msg = s.starterScrollNotice(ctx, pc)
+	return resp, nil
 }
 
 func questErr(trace string, err error) *commonv1.ServerPacket {
@@ -168,13 +201,17 @@ func questErr(trace string, err error) *commonv1.ServerPacket {
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, "quest not found")
 	case errors.Is(err, quest.ErrPrerequisiteNotMet):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, "prerequisite not met")
-	case errors.Is(err, quest.ErrAlreadyAccepted), errors.Is(err, quest.ErrAlreadyCompleted):
-		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
-	case errors.Is(err, quest.ErrNotInProgress), errors.Is(err, quest.ErrNotClaimable):
-		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, err.Error())
+	case errors.Is(err, quest.ErrAlreadyAccepted):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, quest.ErrAlreadyAccepted.Error())
+	case errors.Is(err, quest.ErrAlreadyCompleted):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, quest.ErrAlreadyCompleted.Error())
+	case errors.Is(err, quest.ErrNotInProgress):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, quest.ErrNotInProgress.Error())
+	case errors.Is(err, quest.ErrNotClaimable):
+		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, quest.ErrNotClaimable.Error())
 	case errors.Is(err, quest.ErrLevelTooLow):
 		return errResp(trace, commonv1.ErrorCode_COMMON_INVALID_PACKET, "level too low")
 	default:
-		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, err.Error())
+		return errResp(trace, commonv1.ErrorCode_COMMON_INTERNAL, "quest operation failed")
 	}
 }

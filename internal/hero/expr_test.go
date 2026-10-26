@@ -33,8 +33,8 @@ func TestBeginExprRejectsNotIdle(t *testing.T) {
 func TestCancelAndFinishExprFlow(t *testing.T) {
 	store := NewMemStore()
 	ctx := context.Background()
-	h := &Hero{ServerID: 1, HeroID: 8, PlayerID: 2, Level: 3, Status: StatusIdle, Exp: 10}
-	if err := store.SaveHero(ctx, h); err != nil {
+	h := &Hero{ServerID: 1, PlayerID: 2, Level: 3, Status: StatusIdle, Exp: 10}
+	if err := store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	svc := NewService()
@@ -43,7 +43,7 @@ func TestCancelAndFinishExprFlow(t *testing.T) {
 	svc.SetClock(func() time.Time { return start })
 
 	inv := &exprTestInventory{gold: 500}
-	begin, err := svc.BeginExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, inv, 8, 1)
+	begin, err := svc.BeginExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, inv, h.HeroID, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,22 +51,22 @@ func TestCancelAndFinishExprFlow(t *testing.T) {
 		t.Fatalf("status=%d", begin.Hero.Status)
 	}
 
-	_, err = svc.FinishExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, 8)
+	_, err = svc.FinishExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, h.HeroID)
 	if err != ErrExprNotComplete {
 		t.Fatalf("early finish: %v", err)
 	}
 
-	h2, err := svc.CancelExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, 8)
+	h2, err := svc.CancelExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, h.HeroID)
 	if err != nil || h2.Status != StatusIdle {
 		t.Fatalf("cancel: hero=%v err=%v", h2, err)
 	}
 
-	_, err = svc.BeginExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, inv, 8, 1)
+	_, err = svc.BeginExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, inv, h.HeroID, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
 	svc.SetClock(func() time.Time { return start.Add(time.Duration(ExprSecondsPerHour) * time.Second) })
-	fin, err := svc.FinishExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, 8)
+	fin, err := svc.FinishExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 2}, h.HeroID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,8 +82,8 @@ func TestCancelAndFinishExprFlow(t *testing.T) {
 func TestFasterExprCompletesEarly(t *testing.T) {
 	store := NewMemStore()
 	ctx := context.Background()
-	h := &Hero{ServerID: 1, HeroID: 4, PlayerID: 1, Level: 2, Status: StatusIdle}
-	if err := store.SaveHero(ctx, h); err != nil {
+	h := &Hero{ServerID: 1, PlayerID: 1, Level: 2, Status: StatusIdle}
+	if err := store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	svc := NewService()
@@ -91,10 +91,10 @@ func TestFasterExprCompletesEarly(t *testing.T) {
 	now := time.Unix(1_900_000_000, 0)
 	svc.SetClock(func() time.Time { return now })
 	inv := &exprTestInventory{gold: 1000}
-	if _, err := svc.BeginExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 1}, inv, 4, 1); err != nil {
+	if _, err := svc.BeginExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 1}, inv, h.HeroID, 1); err != nil {
 		t.Fatal(err)
 	}
-	res, err := svc.FasterExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 1}, 4)
+	res, err := svc.FasterExprPlayer(ctx, PlayerRef{ServerID: 1, PlayerID: 1}, h.HeroID)
 	if err != nil {
 		t.Fatal(err)
 	}

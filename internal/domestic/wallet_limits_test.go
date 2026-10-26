@@ -27,7 +27,9 @@ func TestProductionIntegerPrecision(t *testing.T) {
 
 func TestSnapshotCityConcurrent(t *testing.T) {
 	h := NewHub(nil)
-	h.RegisterCity(&CityState{ID: 1, Wallet: Resources{Food: 1000}, Buildings: map[string]*BuildingInstance{"hall": {1, 1}}, BuildJobs: []*BuildJob{{ID: 1}}})
+	if err := h.RegisterCity(&CityState{ID: 1, Wallet: Resources{Food: 1000}, Buildings: map[string]*BuildingInstance{"hall": {1, 1}}, BuildJobs: []*BuildJob{{ID: 1}}}); err != nil {
+		t.Fatal(err)
+	}
 	var wg sync.WaitGroup
 	for i := 0; i < 20; i++ {
 		wg.Add(2)

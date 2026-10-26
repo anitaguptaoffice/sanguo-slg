@@ -22,7 +22,9 @@ func TestWalletRefreshWithoutPersistenceDoesNotOverwrite(t *testing.T) {
 	h := domestic.NewHub(nil)
 	s := NewServer(nil, nil, nil, h, nil)
 	c := &domestic.CityState{ID: 77, PlayerID: 5151, Wallet: domestic.Resources{Food: 100}}
-	h.RegisterCity(c)
+	if err := h.RegisterCity(c); err != nil {
+		t.Fatal(err)
+	}
 	s.cities[c.ID] = c
 	s.refreshDomesticWalletAfterCommit(context.Background(), 1, c.PlayerID)
 	if c.Wallet.Food != 100 {
@@ -40,7 +42,7 @@ func TestWalletBoundaryExternalCreditSpendSettleReload(t *testing.T) {
 	c := &domestic.CityState{ID: 77, PlayerID: 5151, LastSettleAt: now,
 		Wallet:    domestic.Resources{Food: 1000, Wood: 1000, Iron: 1000, Stone: 1000},
 		Buildings: map[string]*domestic.BuildingInstance{"farm": {CfgID: 2, Level: 1}}}
-	h.RegisterCity(c)
+	registerWalletBoundaryCity(t, pool, h, c)
 	s := NewServer(nil, pool, nil, h, nil)
 	s.cities[c.ID] = c
 	// Simulate a committed content/quest/mail credit. Never import that snapshot
@@ -118,12 +120,14 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 		}
 		return pool
 	}
-	sql, err := os.ReadFile("../../spec/db/003_domestic.sql")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = pool.Exec(ctx, string(sql)); err != nil {
-		t.Fatal(err)
+	for _, file := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_008_work_queue_id_sequence.sql"} {
+		sql, err := os.ReadFile("../../spec/db/" + file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = pool.Exec(ctx, string(sql)); err != nil {
+			t.Fatal(err)
+		}
 	}
 	return pool
 }
@@ -137,12 +141,9 @@ func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
 	h.UseStore(store, 1, 0)
 	c := &domestic.CityState{ID: 77, PlayerID: 5151, LastSettleAt: now,
 		Wallet: domestic.Resources{Food: 1000, Wood: 1000, Iron: 1000, Stone: 1000}}
-	h.RegisterCity(c)
+	registerWalletBoundaryCity(t, pool, h, c)
 	m := march.NewHub(func() time.Time { return now })
 	worldStore := world.NewPGStore(pool)
-	if err := worldStore.CreateCity(ctx, world.City{ServerID: 1, CityID: c.ID, PlayerID: c.PlayerID, Name: "wallet-test", X: 1, Y: 1}); err != nil {
-		t.Fatal(err)
-	}
 	s := NewServer(nil, pool, world.NewService(worldStore), h, m)
 	s.cities[c.ID] = c
 	s.sessions.Bind("wallet-test", PlayerContext{ServerID: 1, PlayerID: c.PlayerID})
@@ -210,7 +211,7 @@ func TestContentGrantThroughAPIWalletLifecycle(t *testing.T) {
 	c := &domestic.CityState{ID: 77, PlayerID: 5151, LastSettleAt: now,
 		Wallet:    domestic.Resources{Food: 1000},
 		Buildings: map[string]*domestic.BuildingInstance{"farm": {CfgID: 2, Level: 1}}}
-	h.RegisterCity(c)
+	registerWalletBoundaryCity(t, pool, h, c)
 	s := NewServer(nil, pool, nil, h, nil)
 	s.cacheCity(77, c)
 	cat, err := content.EmbeddedCatalog()
@@ -249,5 +250,17 @@ func TestContentGrantThroughAPIWalletLifecycle(t *testing.T) {
 	}
 	if wallet, err := restarted.RefreshWallet(ctx, 77); err != nil || wallet.Food != 1420 {
 		t.Fatalf("restart duplicate changed balance: %+v %v", wallet, err)
+	}
+}
+
+func registerWalletBoundaryCity(t *testing.T, pool *pgxpool.Pool, h *domestic.Hub, c *domestic.CityState) {
+	t.Helper()
+	seedRegistrationPlayer(t, pool, c.PlayerID, c.Wallet)
+	ctx := context.Background()
+	if err := world.NewPGStore(pool).CreateCity(ctx, world.City{ServerID: 1, CityID: c.ID, PlayerID: c.PlayerID, Name: "wallet-test", X: 1, Y: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if err := h.RegisterNewCity(ctx, c); err != nil {
+		t.Fatal(err)
 	}
 }

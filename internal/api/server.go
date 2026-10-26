@@ -15,13 +15,13 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -38,33 +38,38 @@ type clockFunc func() time.Time
 
 // Server wires account, world, and domestic behind the WebSocket gateway.
 type Server struct {
-	citiesMu sync.RWMutex
-	log      *slog.Logger
-	account  *account.Service
-	players  *PlayerStore
-	world    *world.Service
-	domestic   *domestic.Hub
-	military   *march.Hub
-	reports    *report.Service
-	sessions   *SessionRegistry
-	gm         *GmService
-	shard         *shard.Handlers
-	m3            *assembly.M3
-	m4            *assembly.M4
-	rankSvc       *rank.Service
-	rankSch       *rank.Scheduler
-	questSvc      *quest.Service
-	shopSvc       *shop.Service
-	contentSvc    *content.Service
-	mailSvc       *mail.Service
-	heroSvc       *hero.Service
-	questChainIDs []int32
-	cities        map[int64]*domestic.CityState
-	cityCoords    map[int64]cityCoord
-	playerMarches map[int64][]playerMarchRef
-	marchHeroByID map[int64]marchHeroBinding
-	nextArmyID    int64
-	now           clockFunc
+	citiesMu       sync.RWMutex
+	log            *slog.Logger
+	account        *account.Service
+	players        *PlayerStore
+	world          *world.Service
+	domestic       *domestic.Hub
+	military       *march.Hub
+	reports        *report.Service
+	sessions       *SessionRegistry
+	gm             *GmService
+	shard          *shard.Handlers
+	m3             *assembly.M3
+	m4             *assembly.M4
+	rankSvc        *rank.Service
+	rankSch        *rank.Scheduler
+	questSvc       *quest.Service
+	shopSvc        *shop.Service
+	shopPurchase   *shopPurchaseDependencies
+	contentSvc     *content.Service
+	contentCatalog *contentCatalogBinding
+	mailSvc        *mail.Service
+	heroSvc        *hero.Service
+	recruit        *recruitDependencies
+	hotel          *hotelDependencies
+	family         *familyDependencies
+	questChainIDs  []int32
+	cities         map[int64]*domestic.CityState
+	cityCoords     map[int64]cityCoord
+	playerMarches  map[int64][]playerMarchRef
+	marchHeroByID  map[int64]marchHeroBinding
+	nextArmyID     int64
+	now            clockFunc
 	smokeSyncClock *SmokeSyncClock
 }
 
@@ -158,6 +163,9 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)
 	handlers[RouteListBattleReports] = s.handleListBattleReports
 	for route, h := range s.shard.GatewayHandlers() {
+		if route == shard.RouteEnterGameServer {
+			h = s.wrapStarterEntry(h)
+		}
 		handlers[route] = h
 	}
 	for route, h := range s.m3.GatewayHandlers() {
@@ -211,6 +219,16 @@ func (s *Server) wrapLogin(inner gateway.RouteHandler) gateway.RouteHandler {
 			s.bindFromLoginResponse(ctx, respPkt, serverID)
 			var resp accountv1.LoginResponse
 			if err := unmarshal(respPkt.GetData(), &resp); err == nil && resp.GetPlayer() != nil {
+				if err := s.refreshTutorialProfile(ctx, resp.Player); err != nil {
+					return questErr(pkt.GetTraceId(), err), nil
+				}
+				respPkt.Data, err = marshal(&resp)
+				if err != nil {
+					return nil, err
+				}
+				respPkt.Msg = s.starterScrollNotice(ctx, PlayerContext{
+					ServerID: serverID, PlayerID: resp.GetPlayer().GetPlayerId(),
+				})
 				obs.EmitGameplayEvent(s.log, pkt.GetTraceId(), obs.EventLogin, obs.PlayerRef{
 					ServerID: serverID,
 					PlayerID: resp.GetPlayer().GetPlayerId(),

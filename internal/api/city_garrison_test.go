@@ -17,10 +17,13 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func garrisonServer() *Server {
+func garrisonServer(t *testing.T) *Server {
+	t.Helper()
 	now := time.Unix(1700000000, 0)
 	hub := domestic.NewHub(func() time.Time { return now })
-	hub.RegisterCity(&domestic.CityState{ID: 7, PlayerID: 55, LastSettleAt: now, Buildings: map[string]*domestic.BuildingInstance{}})
+	if err := hub.RegisterCity(&domestic.CityState{ID: 7, PlayerID: 55, LastSettleAt: now, Buildings: map[string]*domestic.BuildingInstance{}}); err != nil {
+		t.Fatal(err)
+	}
 	s := NewServer(nil, nil, ownershipWorld(world.City{ServerID: 1, CityID: 7, PlayerID: 55}), hub, march.NewHub(func() time.Time { return now }))
 	s.sessions.Bind("owner", PlayerContext{ServerID: 1, PlayerID: 55})
 	return s
@@ -48,7 +51,7 @@ func TestCityGarrisonPresenceAndValidation(t *testing.T) {
 		{name: "invalid-zero-row", city: &march.CityState{ID: 7, PlayerID: 55, Troops: map[int32]int32{0: 0}}, invalid: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			s := garrisonServer()
+			s := garrisonServer(t)
 			if tc.unavailable {
 				s.military = nil
 			} else if tc.city != nil {
@@ -96,7 +99,7 @@ func TestCityGarrisonPresenceAndValidation(t *testing.T) {
 }
 
 func TestCityGarrisonAuthorizationBeforeRead(t *testing.T) {
-	s := garrisonServer()
+	s := garrisonServer(t)
 	// Poison the military state: denied requests must never reach validation.
 	s.military.EnsureCity(&march.CityState{ID: 7, PlayerID: 55, Troops: map[int32]int32{1: -1}})
 	s.sessions.Bind("foreign", PlayerContext{ServerID: 1, PlayerID: 56})
@@ -182,7 +185,7 @@ func TestCityGarrisonPostgresOwnership(t *testing.T) {
 	if err := store.CreateCity(ctx, world.City{ServerID: 1, CityID: 7, PlayerID: 55, Name: "garrison-test", X: 1, Y: 1}); err != nil {
 		t.Fatal(err)
 	}
-	s := garrisonServer()
+	s := garrisonServer(t)
 	s.world = world.NewService(store)
 	s.military.EnsureCity(&march.CityState{ID: 7, PlayerID: 55, Troops: map[int32]int32{1: 1}})
 	out, err := garrisonCall(s)

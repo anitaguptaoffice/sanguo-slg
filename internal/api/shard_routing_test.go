@@ -47,7 +47,9 @@ func TestListGameServersAndServerIDBinding(t *testing.T) {
 	}
 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	apiSrv := api.NewServer(log, pool, world.NewService(store), domestic.NewHub(time.Now), march.NewHub(time.Now))
+	domHub := domestic.NewHub(time.Now)
+	domHub.UseStore(domestic.NewPGStore(pool), 1, 0)
+	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, march.NewHub(time.Now))
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
 	gw := gateway.NewServer(log, gwCfg, gateway.AccessControl{}, account.SessionValidator{Svc: apiSrv.AccountService()}, apiSrv.GatewayRouter())

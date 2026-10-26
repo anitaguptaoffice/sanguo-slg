@@ -126,10 +126,19 @@ func (h *Hub) onRecruitComplete(ev Event) {
 	}
 }
 
-// CreateMarch runs pending → marching and schedules arrival.
+// CreateMarch validates and plans before deducting ready troops and scheduling arrival.
 func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	troops, err := NormalizeMarchTroops(h.catalog, req.Troops)
+	if err != nil {
+		return nil, err
+	}
+	req.Troops = troops
+	order, err := BeginMarch(h.catalog, h.now(), req)
+	if err != nil {
+		return nil, err
+	}
 	if req.OriginCityID != 0 {
 		city := h.cities[req.OriginCityID]
 		if city == nil {
@@ -143,11 +152,6 @@ func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 		for _, st := range req.Troops {
 			city.Troops[st.UnitCfgID] -= st.Count
 		}
-	}
-	now := h.now()
-	order, err := BeginMarch(h.catalog, now, req)
-	if err != nil {
-		return nil, err
 	}
 	h.nextMarch++
 	order.ID = h.nextMarch

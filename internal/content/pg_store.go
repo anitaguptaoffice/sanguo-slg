@@ -39,20 +39,11 @@ func (p *PGStore) LoadBag(ctx context.Context, player PlayerRef) ([]Stack, error
 	return out, rows.Err()
 }
 
-func (p *PGStore) SaveStack(ctx context.Context, player PlayerRef, itemCfgID int32, qty int32) error {
-	if qty <= 0 {
-		_, err := p.Pool.Exec(ctx, `
-			DELETE FROM player_item
-			WHERE server_id = $1 AND player_id = $2 AND item_cfg_id = $3
-		`, player.ServerID, player.PlayerID, itemCfgID)
-		return err
-	}
-	_, err := p.Pool.Exec(ctx, `
-		INSERT INTO player_item (server_id, player_id, item_cfg_id, quantity)
-		VALUES ($1, $2, $3, $4)
-		ON CONFLICT (server_id, player_id, item_cfg_id) DO UPDATE SET quantity = EXCLUDED.quantity
-	`, player.ServerID, player.PlayerID, itemCfgID, qty)
-	return err
+// SaveStack deliberately rejects online absolute replacements, including deletes.
+// Use Grant or conditional debits. Offline maintenance must explicitly stop all
+// competing inventory writers and must not reuse this runtime Store method.
+func (p *PGStore) SaveStack(context.Context, PlayerRef, int32, int32) error {
+	return ErrOfflineStackWrite
 }
 
 func (p *PGStore) FindSuccessfulGrant(ctx context.Context, serverID int32, idempotencyKey string) (int64, bool, error) {

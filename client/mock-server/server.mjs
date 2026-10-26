@@ -631,6 +631,9 @@ wss.on("connection", (ws) => {
           wallet: state.wallet,
           buildings: state.buildings ?? [{ slot_key: "farm", building_cfg_id: 2, level: 1 }],
           production_rates: state.productionRates ?? { food: 120, wood: 100, iron: 40, stone: 80 },
+          garrison: { troops: Object.entries(state.troops).filter(([, count]) => count > 0)
+            .map(([id, count]) => ({ unit_cfg_id: Number(id), count }))
+            .sort((a, b) => a.unit_cfg_id - b.unit_cfg_id) },
         });
         return;
       }

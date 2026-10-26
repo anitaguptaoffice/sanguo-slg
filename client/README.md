@@ -2215,7 +2215,7 @@ cd client && npm install && npm run dev
 4. 合法坐标与数量出征成功 → 错误区清空；若网关失败，同区域展示 `err.message`（不只状态栏）。
 5. 与 **CLIENT-041** 选点、**CLIENT-043** 目标记忆并存。单测：`marchFormValidation.test.ts`。
 
-军事面板出征区 **`march-form-summary`**（**CLIENT-089**）：随 `to_x`/`to_y` 与出征步兵输入即时刷新，只读展示目标格点、兵力合计与 `formatMarchRemainingMs` 同源 ETA（由城格 + 表单推算单程耗时，不发 `StartMarch`）；途粮不足时汇总条带 `resource-warn` 且 `march-form-summary-warn` 一行提示，不自动打开商城。单测：`marchFormSummary.test.ts`。
+军事面板出征区 **`march-form-summary`**（**CLIENT-089**）：随 `to_x`/`to_y` 与出征步兵输入即时刷新，只读展示目标格点、兵力合计与 `formatMarchRemainingMs` 同源 ETA（由城格 + 表单推算单程耗时，不发 `StartMarch`）；途粮标注「仅估算，当前出征不扣粮」，与当前 `StartMarch` 仅扣城内出征兵力的契约一致。粮持有量低于途粮估算时仍保留 `resource-warn` 和一行比较提示，但不表示出征缺粮、不影响提交校验、不自动打开商城；底栏及更深余量对照同样标注估算与不扣粮，只读扫读短条仍省略整个途粮片段。单测：`marchFormSummary.test.ts`、`marchFormTroopMarginResidual*.test.ts`、`marchFormReadonlyStrip.test.ts`。
 
 ### 手动验收（出征提交反馈 CLIENT-080）
 
@@ -3006,3 +3006,96 @@ skin-off 通过渲染前设置正式 `data-art-skin="off"` 开关，不覆盖截
 本轮实测队列正常/选中/表单报错时均为 **13.46:1**，12 张行截图可找到
 精确前景/背景像素。skin-off 时侧栏其他文字仍直接叠加场景，属于独立
 背景回退问题，不宣称整个无皮肤面板完成视觉验收。
+
+### CLIENT-REPAIR-009 ready garrison
+
+GetCityState field 4 uses the merged GARRISON-READ contract directly from spec/proto
+(no duplicate client DTO). Bootstrap, native refresh and ordinary polling read the
+full ready-only snapshot; recruit queue completion requests a real refresh, never
+manufactures troops from ETA. Missing/invalid snapshots keep only stale cached rows,
+show pending sync and disable march; a present empty snapshot clears ready troops.
+Reads deduplicate by server/player/city and are invalidated around recruit/march
+responses. This is running-server state, **not** military PostgreSQL/restart durability.
+Gate: binary presence/validation + stale-read tests, full client tests/build; real
+Go/H5 recruit completion -> native refresh -> legal march remains integration gate.
+
+### CLIENT-NOTICE — onboarding success notices
+
+Only ordinary `ListPlayerBag` / `ListPlayerQuests` reads expose successful
+`ServerPacket.msg`. A dedicated polite text-only status is capped at 240 characters;
+login/entry/claims never open a notice dialog. The notice is not grant evidence,
+eligibility, or a retry protocol. Missing text does not imply delivery: inspect the
+real bag. Requests capture server/player/session generation; actor switches,
+logout/relogin, newer reads and detached panels discard delayed display updates.
+
+### CLIENT-CLAIM-ASSETS — authoritative claim recovery
+
+Tutorial and daily claims (including batch/replayed receipts) never add
+`granted_rewards` to local assets. Success and recoverable claim failures read the
+authenticated bag and city wallet, then replace both only while actor/session and
+snapshot ownership still match. Failed/overlapped refresh leaves prior assets and
+an explicit pending error; retry ordinary refresh, not a guessed reward delta.
+The obsolete absolute-count Report button is removed; trusted server actions and
+ordinary quest refresh advance tutorial objectives. No new RPC or automatic claim.
+
+### CLIENT-LEVEL — persisted level and explicit profile recovery
+
+Only successful Claim `player_level` field4, a positive int32, increases the same
+actor/session's level monotonically. Zero/absent/negative/malformed values do not
+change level; a fresh login/entry profile initializes its own actor independently.
+Actual Go fixtures are copied from API-WIRE-ONBOARD-001 `99f77f9` (levels 0,1,5,20,
+int32 bounds), including safe-food8000 Go companions and deliberate unsafe-int64
+rejection, with the frozen legacy reply from e767d1b; the client loads canonical
+spec directly, not a second quest schema.
+
+AlreadyCompleted and level-persistence errors have no success level payload. We
+keep the error, recover authoritative assets where possible, and tell the player:
+**refresh the page, select the intended server, and explicitly press Enter Game**.
+That existing login/entry path reads PlayerProfile. No background `enterGameServer`,
+password retention, error-text/quest-count inference, or automatic claim is added.
+Late login/entry/claim replies after logout, reconnect or another login are rejected
+before they can rebind a newer session. A shared asset epoch also invalidates
+pre-claim city-wallet reads before late consumers can overwrite recovery.
+These tests do not prove art completion or
+the full DATA-002 natural chain beyond the bounded level5 contract.
+
+### CLIENT-BAG-CAPABILITY — direct-use safety
+
+`bagUseCapability.ts` is a readonly UI capability mirror of the existing DATA-002
+server catalog, not new data/IDs or a protocol. Generic bag single/batch use only
+permits resource grants implemented by `internal/content/consumable.go` and existing
+build speedups. Recruit/train and unsupported/unknown effects fail closed before
+RPC, with explicit no-submission/no-deduction guidance. Dedicated hero recruitment
+and the existing return-to-hero-detail route are unchanged. Catalog drift is checked
+by `bagUseCapability.test.ts`; `ContentPanels.bagSafety.test.ts` covers alternate IDs,
+both buttons, direct event dispatch and the return route. These are client fixtures,
+not proof of PostgreSQL debit/effect atomicity.
+
+### CLIENT-BAG-ASYNC — actor/snapshot and uncertain-outcome safety
+
+Bag single/batch use captures the actor/session generation and shares the asset-read
+epoch. Late receipts cannot patch a new actor or overwrite newer bag/wallet snapshots;
+overtaken receipts reconcile through the existing guarded current-state refresh.
+Confirmed use feedback is retained if that refresh fails. A failed/unknown use reply
+stops the batch, states that deduction may have occurred, and disables further use
+until **刷新背包** reconciles both bag and wallet; refresh never resubmits a mutation.
+Single/batch clicks share one in-flight lock. `ContentPanels.bagAsync.test.ts` uses
+deferred responses for actor/relogin, stale reads, overlap, timeout and refresh-failure
+regressions. Client fixtures do not prove backend transaction or PG durability behavior.
+
+### CLIENT-OWNED-BAG-SELECTOR
+背包原生道具下拉框同步持有道具及数量，支持直接选择 2002/2007 等已有能力道具；消耗/刷新后保留当前选择，零库存不自动切换目标。缺失的 DATA-002 名称只读对齐 canonical metadata，已有名称不改。能力限制、将领返回、异步归属保护与批量校验保持不变；单次使用也拦截超库存数量。验证与边界见 [QA 说明](qa/CLIENT-OWNED-BAG-SELECTOR.md)。
+
+### CLT-ASSET-SETTLEMENT — bag mutation read boundaries
+
+- Bag use invalidates asset reads at submission and terminal RPC settlement, including unknown outcomes and the last/partial batch item. The settlement guard is actor/session-owned and one-shot; it preserves the existing receipt/reference freshness check before advancing the epoch. No mutation retry or optimistic grant is introduced.
+
+- Hotel paid refresh/recruit also invalidate intervening reads before hidden success/unknown returns. Closing starts no recovery; reopening preserves the explicit current-state reload control, which never replays the mutation. Old actor or same-token session responses cannot invalidate current reads.
+
+- Template/captive recruitment and persuade/befriend/hire now share the actor-owned submission/settlement boundary. Post-recruit bag/wallet reads are an atomic, current-actor snapshot and cannot reuse a pre-settlement city single-flight. Recruit bag readiness also distinguishes same-token session generations. No optimistic asset/level update or mutation retry is added.
+
+- `assetSettlementProtocol.test.ts` drives the production panels, `GatewayClient` protobuf request/response codec, and production `CityStateFetch` through all seven affected mutation routes (success and unknown). The transport is a deterministic fixture, not backend transaction or native-play acceptance.
+
+### CLIENT-WALL-RECOVERY — bounded 1006 profile guidance
+
+- Extend the existing failed-claim profile-reentry hint from quests 1001–1005 to 1006 only. Completed 1006 retains the existing explicit Claim control; claims never infer level 6 from its ID/state or add grant receipts locally. Positive server scalar levels remain monotonic and actor/session guarded; bag/wallet remain authoritative replacements. This client-only change does not activate server wall proof or level policy.

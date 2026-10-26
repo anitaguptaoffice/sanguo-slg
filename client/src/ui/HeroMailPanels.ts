@@ -1,3 +1,7 @@
+import { captureActor } from "@/net/actorContext";
+import { beginAssetMutation } from "@/net/assetMutation";
+import { beginAssetRead, captureAssetRead } from "@/net/questClaimAssets";
+import { HOTEL_UNKNOWN_OUTCOME, HOTEL_CURRENT_STATE_ONLY, HOTEL_RELOAD_FAILED, readHotelCurrentState } from "@/net/hotelOutcome";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
@@ -701,9 +705,8 @@ export class HeroMailPanels {
   private hotelCandidates: HotelRecruitCandidate[] = [];
   private hotelMeta: HotelRecruitPoolMeta = {};
   private selectedHotelCandidateId = 0;
-  private hotelListInflight = false;
-  private hotelRefreshInflight = false;
-  private hotelRecruitInflight = false;
+  private hotelState: { current: () => boolean; busy: string; needsReload: boolean; outcome: string; warning: string } | null = null;
+  private heroReadGeneration = 0;
   private captiveHeroesAll: CaptiveHeroRow[] = [];
   private captiveHeroes: CaptiveHeroRow[] = [];
   private selectedCaptiveHeroId = 0;
@@ -797,6 +800,8 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    this.hotelState = null;
+    ++this.heroReadGeneration;
     ++this.recruitBagGeneration;
     this.recruitBagRequest = null;
     this.recruitBagKey = null;
@@ -852,7 +857,7 @@ export class HeroMailPanels {
 
   private recruitSessionKey(): string | null {
     const session = this.getSession();
-    return session ? `${session.serverId}:${session.player?.player_id}:${session.cityId}` : null;
+    return session ? `${this.gateway.getSessionGeneration?.()}:${this.gateway.getSessionId?.()}:${session.serverId}:${session.player?.player_id}:${session.cityId}` : null;
   }
 
   private recruitBagReady(): boolean {
@@ -865,6 +870,8 @@ export class HeroMailPanels {
     if (!key || this.recruitBagReady()) return Promise.resolve();
     if (this.recruitBagRequest?.key === key) return this.recruitBagRequest.promise;
     const generation = ++this.recruitBagGeneration;
+    const actor = captureActor(this.gateway, this.getSession);
+    const assetsCurrent = captureAssetRead(this.gateway);
     const sid = this.serverId();
     this.recruitBagError = null;
     const promise = (async () => {
@@ -872,12 +879,12 @@ export class HeroMailPanels {
         const res = await Promise.resolve().then(() => this.gateway.listPlayerBag(sid)) as {
           items?: { item_cfg_id?: number; quantity?: number }[];
         };
-        if (generation !== this.recruitBagGeneration || key !== this.recruitSessionKey() ||
+        if (!actor() || !assetsCurrent() || generation !== this.recruitBagGeneration || key !== this.recruitSessionKey() ||
             this.heroPanel.classList.contains("hidden")) return;
         this.recruitBagKey = key;
         this.onSessionPatch({ bag: bagFromListPlayerBagResponse(res.items) });
       } catch {
-        if (generation !== this.recruitBagGeneration || key !== this.recruitSessionKey()) return;
+        if (!actor() || generation !== this.recruitBagGeneration || key !== this.recruitSessionKey()) return;
         this.recruitBagError = "背包加载失败，请重试";
       } finally {
         if (generation === this.recruitBagGeneration) {
@@ -1351,120 +1358,162 @@ export class HeroMailPanels {
     this.syncHotelRecruitUi();
   }
 
+  private hotelContext() {
+    if (!this.hotelState?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const state = { current: () => this.hotelState === state && actor() && this.heroPanel.parentNode === this.mount,
+        busy: "", needsReload: false, outcome: "", warning: "" };
+      this.hotelState = state;
+      this.hotelCandidates = [];
+      this.hotelMeta = {};
+      this.selectedHotelCandidateId = 0;
+    }
+    return this.hotelState;
+  }
+
   private syncHotelRecruitUi(): void {
+    const state = this.hotelContext();
     const { wallet, bag } = this.sessionEconomy();
-    const refreshHint = formatHotelRefreshItemHint(bag);
     syncHotelRecruitMeta(this.heroPanel, this.hotelMeta);
     renderHotelCandidateList(this.heroPanel, this.hotelCandidates, this.selectedHotelCandidateId);
-    syncHotelRecruitPreview(this.heroPanel, this.selectedHotelCandidate(), wallet, refreshHint);
+    syncHotelRecruitPreview(this.heroPanel, this.selectedHotelCandidate(), wallet, formatHotelRefreshItemHint(bag));
     const afford = canAffordHotelCandidate(this.selectedHotelCandidate(), wallet, this.hotelMeta);
-    syncHotelListRefreshButton(this.heroPanel, this.hotelListInflight);
-    syncHotelRefreshPoolButton(this.heroPanel, this.hotelRefreshInflight, bag);
-    syncHotelRecruitSubmitButton(
-      this.heroPanel,
-      this.hotelRecruitInflight,
-      afford.ok && (this.selectedHotelCandidateId ?? 0) > 0,
-    );
+    syncHotelListRefreshButton(this.heroPanel, state.busy === "list");
+    syncHotelRefreshPoolButton(this.heroPanel, state.busy === "refresh", bag);
+    syncHotelRecruitSubmitButton(this.heroPanel, state.busy === "recruit", afford.ok);
+    for (const action of ["refresh-hotel-candidates", "refresh-hotel-pool", "recruit-hotel-candidate"]) {
+      const btn = this.heroPanel.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (btn) btn.disabled ||= !!state.busy || state.needsReload;
+    }
+    const outcome = this.heroPanel.querySelector<HTMLElement>('[data-role="hotel-outcome"]');
+    if (outcome) { outcome.textContent = state.outcome; outcome.classList.toggle("hidden", !state.outcome); }
+    setHotelRecruitFormError(this.heroPanel, state.warning || null);
+    const reload = this.heroPanel.querySelector<HTMLButtonElement>('[data-action="reload-hotel-state"]');
+    if (reload) {
+      reload.classList.toggle("hidden", !state.outcome && !state.needsReload);
+      reload.disabled = !!state.busy;
+      reload.textContent = state.busy === "reload" ? "加载当前状态中…" : "重新加载当前状态";
+    }
+  }
+
+  private hotelStatus(message: string): void {
+    if (!this.heroPanel.classList.contains("hidden")) this.onStatus(message);
   }
 
   private async refreshHotelCandidates(): Promise<void> {
-    if (this.hotelListInflight) return;
-    const sid = this.serverId();
-    const cityId = this.cityId();
-    if (!cityId) {
-      setHotelRecruitFormError(this.heroPanel, "尚未进入城池，无法拉取客栈列表");
-      return;
-    }
-    this.hotelListInflight = true;
-    setHotelRecruitFormError(this.heroPanel, null);
+    const state = this.hotelContext();
+    if (state.busy || state.needsReload || !this.cityId()) { this.syncHotelRecruitUi(); return; }
+    state.busy = "list";
+    if (!state.outcome) state.warning = "";
     this.syncHotelRecruitUi();
-    this.onStatus("拉取客栈候选…");
     try {
-      const res = await this.gateway.listHotelRecruitCandidates(sid, cityId);
+      const res = await this.gateway.listHotelRecruitCandidates(this.serverId(), this.cityId());
+      if (!state.current()) return;
       this.applyHotelPoolPayload(res);
-      this.onStatus(`客栈候选 ${this.hotelCandidates.length} 名`);
     } catch (e) {
-      const msg = formatHotelRecruitGatewayError(e);
-      setHotelRecruitFormError(this.heroPanel, msg);
-      this.onStatus(msg);
+      if (!state.current()) return;
+      state.warning = formatHotelRecruitGatewayError(e);
+      this.hotelStatus(state.warning);
     } finally {
-      this.hotelListInflight = false;
-      this.syncHotelRecruitUi();
+      if (state.current()) { state.busy = ""; this.syncHotelRecruitUi(); }
     }
   }
 
-  private async refreshHotelPool(): Promise<void> {
-    if (this.hotelRefreshInflight) return;
-    const sid = this.serverId();
-    const cityId = this.cityId();
-    if (!cityId) {
-      setHotelRecruitFormError(this.heroPanel, "尚未进入城池，无法刷新客栈池");
-      return;
-    }
-    this.hotelRefreshInflight = true;
-    setHotelRecruitFormError(this.heroPanel, null);
+  private async reloadHotelState(includePool = true, owned = false): Promise<void> {
+    const state = this.hotelContext();
+    if ((state.busy && !owned) || !this.getSession() || !this.cityId() ||
+        (!owned && this.heroPanel.classList.contains("hidden"))) return;
+    state.busy = "reload";
+    state.needsReload = true;
+    const generation = ++this.heroReadGeneration;
+    ++this.recruitBagGeneration;
+    this.recruitBagRequest = null;
+    this.cityStateFetch?.clear();
     this.syncHotelRecruitUi();
-    this.onStatus("访贤刷新客栈池…");
     try {
-      const res = await this.gateway.refreshHotelRecruitPool(sid, cityId);
-      this.applyHotelPoolPayload(res);
-      await this.syncEconomyAfterRecruit();
-      this.onStatus(`客栈池已刷新（${this.hotelCandidates.length} 名候选）`);
-    } catch (e) {
-      const msg = formatHotelRecruitGatewayError(e);
-      setHotelRecruitFormError(this.heroPanel, msg);
-      this.onStatus(msg);
+      const snapshot = await readHotelCurrentState(this.gateway, this.getSession, state.current, includePool);
+      if (!snapshot || !state.current()) return;
+      if (!snapshot.fresh() || generation !== this.heroReadGeneration) throw new Error(HOTEL_RELOAD_FAILED);
+      this.onSessionPatch({ bag: snapshot.bag, wallet: snapshot.wallet });
+      this.recruitBagKey = this.recruitSessionKey();
+      this.heroes = snapshot.heroes.map(normalizeListPlayerHeroSummary);
+      this.heroListLoadError = null;
+      this.renderHeroList();
+      this.renderTemplateList();
+      if (snapshot.pool) this.applyHotelPoolPayload(snapshot.pool);
+      state.needsReload = false;
+      state.warning = HOTEL_CURRENT_STATE_ONLY;
+    } catch {
+      if (!state.current()) return;
+      state.warning = HOTEL_RELOAD_FAILED;
     } finally {
-      this.hotelRefreshInflight = false;
-      this.syncHotelRecruitUi();
-    }
-  }
-
-  private async recruitHotelCandidate(): Promise<void> {
-    if (this.hotelRecruitInflight) return;
-    const candidate = this.selectedHotelCandidate();
-    const { wallet } = this.sessionEconomy();
-    const afford = canAffordHotelCandidate(candidate, wallet, this.hotelMeta);
-    if (!afford.ok) {
-      setHotelRecruitFormError(this.heroPanel, afford.reason ?? "无法招入");
-      this.onStatus(afford.reason ?? "无法招入");
-      return;
-    }
-    const sid = this.serverId();
-    const cityId = this.cityId();
-    const candidateId = candidate?.candidate_id ?? 0;
-    if (!cityId || !candidateId) {
-      setHotelRecruitFormError(this.heroPanel, "请先选择客栈候选");
-      return;
-    }
-    this.hotelRecruitInflight = true;
-    setHotelRecruitFormError(this.heroPanel, null);
-    this.syncHotelRecruitUi();
-    this.onStatus(`招入 ${candidate?.display_name ?? "候选"}…`);
-    try {
-      const res = (await this.gateway.recruitHotelCandidate(sid, cityId, candidateId)) as {
-        hero_id?: number;
-        display_name?: string;
-      };
-      await this.syncEconomyAfterRecruit();
-      if (res.hero_id) {
-        this.selectedHeroId = res.hero_id;
-        writeHeroDetailSelectedSession(res.hero_id);
+      if (state.current()) {
+        state.busy = "";
+        this.syncHotelRecruitUi();
+        this.hotelStatus([state.outcome, state.warning].filter(Boolean).join("；"));
       }
-      await this.refreshHeroes();
-      if (res.hero_id) focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
-      const listRes = await this.gateway.listHotelRecruitCandidates(sid, cityId);
-      this.applyHotelPoolPayload(listRes, { keepSelection: false });
-      const name = res.display_name?.trim() || candidate?.display_name || "新将领";
-      this.onStatus(`已招入 ${name}${res.hero_id ? `（#${res.hero_id}）` : ""}`);
-    } catch (e) {
-      const msg = formatHotelRecruitGatewayError(e);
-      setHotelRecruitFormError(this.heroPanel, msg);
-      this.onStatus(msg);
-    } finally {
-      this.hotelRecruitInflight = false;
-      this.syncHotelRecruitUi();
     }
+  }
+
+  private async refreshHotelPool(): Promise<void> { await this.submitHotelAction("refresh"); }
+  private async recruitHotelCandidate(): Promise<void> { await this.submitHotelAction("recruit"); }
+
+  private async submitHotelAction(action: "recruit" | "refresh"): Promise<void> {
+    const state = this.hotelContext();
+    if (state.busy || state.needsReload || !this.cityId() || this.heroPanel.classList.contains("hidden")) return;
+    const candidate = this.selectedHotelCandidate();
+    const afford = canAffordHotelCandidate(candidate, this.sessionEconomy().wallet, this.hotelMeta);
+    if (action === "recruit" && !afford.ok) {
+      state.warning = afford.reason ?? "无法招入";
+      this.syncHotelRecruitUi();
+      return;
+    }
+    state.busy = action;
+    state.needsReload = true;
+    state.outcome = state.warning = "";
+    const settle = beginAssetMutation(this.gateway, state.current);
+    ++this.recruitBagGeneration;
+    this.recruitBagRequest = null;
+    this.syncHotelRecruitUi();
+    let res: { hero_id?: number; display_name?: string };
+    try {
+      res = await (action === "recruit"
+        ? this.gateway.recruitHotelCandidate(this.serverId(), this.cityId(), candidate!.candidate_id)
+        : this.gateway.refreshHotelRecruitPool(this.serverId(), this.cityId())) as { hero_id?: number; display_name?: string };
+    } catch (e) {
+      settle();
+      if (!state.current()) return;
+      const mapped = formatHotelRecruitGatewayError(e);
+      const known = /hero: (hotel not built|hotel candidate not found|hero capacity full|insufficient gold|insufficient item)/.test(String(e));
+      state.outcome = known ? "" : HOTEL_UNKNOWN_OUTCOME;
+      state.warning = known ? mapped : HOTEL_CURRENT_STATE_ONLY;
+      state.needsReload = !known;
+      state.busy = "";
+      this.syncHotelRecruitUi();
+      this.hotelStatus(state.outcome || state.warning);
+      return; // Never replay a purchase, including after an unavailable/timeout response.
+    }
+    settle();
+    if (!state.current()) return;
+    // The successful action response is retained independently of every subsequent read.
+    state.outcome = action === "recruit"
+      ? `已招入 ${res.display_name?.trim() || candidate?.display_name || "新将领"}${res.hero_id ? `（#${res.hero_id}）` : ""}`
+      : "客栈池已刷新";
+    try {
+      if (action === "recruit") {
+        if (res.hero_id) { this.selectedHeroId = res.hero_id; writeHeroDetailSelectedSession(res.hero_id); }
+        this.hotelCandidates = this.hotelCandidates.filter(c => c.candidate_id !== candidate!.candidate_id);
+      } else this.applyHotelPoolPayload(res);
+    } catch { /* Preserve confirmed outcome; current-state reload repairs presentation. */ }
+    state.warning = "请重新加载当前状态核对将领、钱包和背包。";
+    this.syncHotelRecruitUi();
+    this.hotelStatus(state.outcome);
+    if (this.heroPanel.classList.contains("hidden")) {
+      state.busy = "";
+      this.syncHotelRecruitUi();
+      return; // Closing does not cancel a submitted action or authorize background recovery.
+    }
+    await this.reloadHotelState(action === "recruit", true);
   }
 
   private syncCaptureDisclosure(role: string, name?: string): void {
@@ -1595,29 +1644,38 @@ export class HeroMailPanels {
     setCaptiveHeroFormError(this.heroPanel, null);
     this.syncCaptiveHeroUi();
     this.onStatus(`招降 ${captive?.display_name ?? "俘虏"}…`);
+    const current = captureActor(this.gateway, this.getSession);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       const res = (await this.gateway.sureSummonCaptive(sid, cityId, heroId)) as {
         hero_id?: number;
         display_name?: string;
       };
-      await this.syncEconomyAfterRecruit();
+      settle();
+      if (!current()) return;
+      await this.syncEconomyAfterRecruit(current);
+      if (!current()) return;
       if (res.hero_id) {
         this.selectedHeroId = res.hero_id;
         writeHeroDetailSelectedSession(res.hero_id);
       }
       await this.refreshHeroes();
+      if (!current()) return;
       if (res.hero_id) focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
       const listRes = await this.gateway.listCaptiveHeroes(sid);
+      if (!current()) return;
       this.applyCaptiveListPayload(listRes, { keepSelection: false });
       const name = res.display_name?.trim() || captive?.display_name || "新将领";
       this.onStatus(`已招降 ${name}${res.hero_id ? `（#${res.hero_id}）` : ""}`);
     } catch (e) {
+      settle();
+      if (!current()) return;
       const msg = formatCaptiveHeroGatewayError(e);
       setCaptiveHeroFormError(this.heroPanel, msg);
       this.onStatus(msg);
     } finally {
       this.captiveSummonInflight = false;
-      this.syncCaptiveHeroUi();
+      if (current()) this.syncCaptiveHeroUi();
     }
   }
 
@@ -1717,11 +1775,15 @@ export class HeroMailPanels {
     this.persuadePrimaryInflight = true;
     setPersuadeFormError(this.heroPanel, null);
     this.syncPersuadeUi();
+    const current = captureActor(this.gateway, this.getSession);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       if (action === "persuade") {
         const res = (await this.gateway.persuadeHero(sid, cityId, npcId)) as {
           friend_delta?: number;
         };
+        settle();
+        if (!current()) return;
         const delta = res.friend_delta != null ? Number(res.friend_delta) : 0;
         this.onStatus(`游说成功，友好+${delta}`);
       } else if (action === "befriend" || action === "hire") {
@@ -1730,6 +1792,8 @@ export class HeroMailPanels {
           recruited?: boolean;
           display_name?: string;
         };
+        settle();
+        if (!current()) return;
         const name = res.display_name ?? target?.display_name ?? "名将";
         if (res.recruited) {
           this.onStatus(`已招入 ${name}`);
@@ -1740,15 +1804,19 @@ export class HeroMailPanels {
           this.onStatus("名将结交操作完成");
         }
       }
+      if (!current()) return;
       const listRes = await this.gateway.listPersuadeTargets(sid);
+      if (!current()) return;
       this.applyPersuadeListPayload(listRes, { keepSelection: true });
     } catch (e) {
+      settle();
+      if (!current()) return;
       const msg = formatPersuadeGatewayError(e);
       setPersuadeFormError(this.heroPanel, msg);
       this.onStatus(msg);
     } finally {
       this.persuadePrimaryInflight = false;
-      this.syncPersuadeUi();
+      if (current()) this.syncPersuadeUi();
     }
   }
 
@@ -1953,7 +2021,9 @@ export class HeroMailPanels {
           <button type="button" data-action="refresh-hotel-pool">访贤刷新池</button>
           <p class="recruit-cost-preview hotel-recruit-preview" data-role="hotel-recruit-preview"></p>
           <button type="button" data-action="recruit-hotel-candidate">招入麾下</button>
+          <p class="hidden" data-role="hotel-outcome" role="status" aria-live="polite"></p>
           <p class="march-form-error-sibling hidden" data-role="hotel-recruit-form-error" role="alert"></p>
+          <button type="button" class="hidden" data-action="reload-hotel-state">重新加载当前状态</button>
           <ul class="hotel-candidate-list template-list" data-role="hotel-candidate-list"></ul>
         </section>
       </details>
@@ -3367,6 +3437,9 @@ export class HeroMailPanels {
     pulseOnSuccess?: boolean;
   }): Promise<void> {
     if (this.heroesRefreshInflight) return;
+    const actor = captureActor(this.gateway, this.getSession);
+    const generation = ++this.heroReadGeneration;
+    const current = () => actor() && generation === this.heroReadGeneration && this.heroPanel.parentNode === this.mount;
     this.heroesRefreshInflight = true;
     syncHeroListRefreshButton(this.heroPanel, true);
     setHeroListFormErrorDisplay(this.heroPanel, null);
@@ -3379,6 +3452,7 @@ export class HeroMailPanels {
         heroes?: HeroSummary[];
         total_count?: number;
       };
+      if (!current()) return;
       this.heroes = (res.heroes ?? []).map((row) => normalizeListPlayerHeroSummary(row));
       this.heroListLastRefreshedAtMs = Date.now();
       syncHeroListRefreshedAtDisplay(this.heroPanel, this.heroListLastRefreshedAtMs);
@@ -3435,6 +3509,7 @@ export class HeroMailPanels {
       }
       this.onStatus(`将领 ${this.heroes.length}/${res.total_count ?? this.heroes.length} 名`);
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       setHeroListFormErrorDisplay(this.heroPanel, msg);
       if (!this.heroes.length) {
@@ -4200,33 +4275,21 @@ export class HeroMailPanels {
     return findDailyRecruitQuest(rows);
   }
 
-  private async syncEconomyAfterRecruit(): Promise<void> {
-    const key = this.recruitSessionKey();
+  private async syncEconomyAfterRecruit(current = captureActor(this.gateway, this.getSession)): Promise<void> {
     const session = this.getSession();
-    if (!session) return;
-    let bag: BagStack[] = session.bag;
-    let wallet: ResourceWallet = session.wallet;
-    const sid = this.serverId();
+    if (!session || !current()) return;
+    const { bag, wallet, serverId, cityId } = session;
+    const latest = beginAssetRead(this.gateway);
     try {
-      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
-        items?: { item_cfg_id?: number; quantity?: number }[];
-      };
-      bag = bagFromListPlayerBagResponse(bagRes.items);
-    } catch {
-      /* 保留会话背包 */
-    }
-    if (this.cityStateFetch) {
-      const state = await this.cityStateFetch.fetch();
-      if (state?.wallet) wallet = state.wallet;
-    } else {
-      try {
-        const state = (await this.gateway.getCityState(session.cityId)) as { wallet?: ResourceWallet };
-        if (state.wallet) wallet = state.wallet;
-      } catch {
-        /* 保留会话钱包 */
-      }
-    }
-    if (key === this.recruitSessionKey()) this.onSessionPatch({ bag, wallet });
+      const [bagRes, state] = await Promise.all([
+        this.gateway.listPlayerBag(serverId) as Promise<{ items?: { item_cfg_id?: number; quantity?: number }[] }>,
+        this.cityStateFetch ? this.cityStateFetch.fetch()
+          : this.gateway.getCityState(cityId) as Promise<{ wallet?: ResourceWallet }>,
+      ]);
+      if (!current() || !latest() || (this.getSession()?.bag !== bag || this.getSession()?.wallet !== wallet) || !state?.wallet ||
+          (this.cityStateFetch && !this.cityStateFetch.isCurrent(state))) return;
+      this.onSessionPatch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: state.wallet });
+    } catch { /* Preserve both prior snapshots if the aggregate read fails. */ }
   }
 
   private async recruitHero(): Promise<void> {
@@ -4251,13 +4314,14 @@ export class HeroMailPanels {
     setRecruitSuccessToastDisplay(this.heroPanel, null);
     this.recruitHeroInflight = true;
     const recruitKey = this.recruitSessionKey();
+    const current = captureActor(this.gateway, this.getSession);
     let dailyBefore: DailyQuestRow | null = null;
     try {
       dailyBefore = await this.fetchDailyRecruitRow();
     } catch {
       /* 日常列表失败不阻断招募 */
     }
-    if (recruitKey !== this.recruitSessionKey() || this.heroPanel.classList.contains("hidden")) {
+    if (!current() || recruitKey !== this.recruitSessionKey() || this.heroPanel.classList.contains("hidden")) {
       this.recruitHeroInflight = false;
       return;
     }
@@ -4265,6 +4329,7 @@ export class HeroMailPanels {
     syncRecruitSubmittingLine(this.heroPanel, true);
     this.syncRecruitFormInlineState(templateRow);
     this.onStatus(`招募模板 ${tpl}…`);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       const res = (await this.gateway.recruitHero(sid, tpl, {
         itemCfgId: itemId,
@@ -4275,9 +4340,10 @@ export class HeroMailPanels {
         level?: number;
         loyalty?: number;
       };
-      if (recruitKey !== this.recruitSessionKey()) return;
-      await this.syncEconomyAfterRecruit();
-      if (recruitKey !== this.recruitSessionKey()) return;
+      settle();
+      if (!current() || recruitKey !== this.recruitSessionKey()) return;
+      await this.syncEconomyAfterRecruit(current);
+      if (!current() || recruitKey !== this.recruitSessionKey()) return;
       const { wallet: walletAfter, bag: bagAfter } = this.sessionEconomy();
       refreshRecruitWalletSweepDisplays(
         this.heroPanel,
@@ -4298,6 +4364,7 @@ export class HeroMailPanels {
         writeHeroDetailSelectedSession(res.hero_id);
       }
       await this.refreshHeroes();
+      if (!current()) return;
       if (res.hero_id) {
         focusRecruitedHeroListRow(this.heroPanel, res.hero_id);
       }
@@ -4312,12 +4379,15 @@ export class HeroMailPanels {
       } catch {
         /* 忽略日常刷新失败 */
       }
+      if (!current()) return;
       this.recruitLastSuccessHeroId = res.hero_id ?? null;
       this.recruitLastError = null;
       setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
       setRecruitSuccessToastDisplay(this.heroPanel, { ...feedback, statusText: status });
       this.onStatus(status);
     } catch (e) {
+      settle();
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.recruitLastError = msg;
       this.recruitLastSuccessHeroId = null;
@@ -4326,6 +4396,7 @@ export class HeroMailPanels {
       setRecruitAffordabilityErrorDisplay(this.heroPanel, msg);
     } finally {
       this.recruitHeroInflight = false;
+      if (!current()) return;
       syncRecruitSubmittingLine(this.heroPanel, false);
       const templateId =
         this.selectedRecruitTemplateRow()?.template_cfg_id ?? this.selectedTemplateId;
@@ -4752,6 +4823,7 @@ export class HeroMailPanels {
     }
     if (a === "retry-recruit-bag") void this.ensureRecruitBag();
     if (a === "refresh-templates") void this.refreshRecruitTemplates();
+    if (a === "reload-hotel-state") void this.reloadHotelState();
     if (a === "refresh-hotel-candidates") void this.refreshHotelCandidates();
     if (a === "refresh-hotel-pool") void this.refreshHotelPool();
     if (a === "recruit-hotel-candidate") void this.recruitHotelCandidate();

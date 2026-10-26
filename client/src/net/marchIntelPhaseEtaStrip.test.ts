@@ -31,10 +31,10 @@ describe("formatMarchIntelPhaseEtaStrip (CLIENT-205)", () => {
   it("uses return phase label for phase 4", () => {
     const m: MarchSummary = {
       phase: 4,
-      arrive_at_ms: now + 120_000,
+      return_finish_at_ms: now + 120_000,
     };
     const line = formatMarchIntelPhaseEtaStrip(m, now);
-    expect(line).toContain("撤回中");
+    expect(line).toContain("返程中");
     expect(line).toContain("剩 120s");
   });
 });

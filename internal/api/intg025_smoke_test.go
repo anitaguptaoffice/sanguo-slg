@@ -12,8 +12,8 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
@@ -87,15 +87,18 @@ func runINTG025Wave28Smoke(t *testing.T) {
 	speedupUsed := smokeINTG011BuildSpeedupGateway(t, ctx, c, apiSrv, sid, playerID)
 	smokeINTG022GetCityStateInProgressBuildSlotsGateway(t, c, sid, playerID)
 	smokeINTG025GetCityStateSevenSlotsProductionRatesGateway(t, c, sid, playerID)
-	smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Bag2003 += smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
 	smokeINTG022ListPlayerQuestsChain400TodoGateway(t, c, sid, playerID)
 	smokeINTG024ListPlayerQuestsChain400ClaimableGateway(t, c, sid, playerID)
 
-	smokeINTG021DualLeaderboardMyRankScoreGateway(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Gold = smokeINTG021DualLeaderboardMyRankScoreGateway(t, ctx, c, apiSrv, pool, sid, playerID)
 	bagBeforeUse := smokeINTG023ListPlayerBagGateway(t, c, sid, playerID)
 	consumed2001 := smokeINTG010UseConsumableGateway(t, c, sid)
 	smokeINTG023VerifyBagStackAfterUseOptional(t, c, sid, playerID, smokeItemRewardCfgID, bagBeforeUse, consumed2001)
-	smokeINTG023PurchaseShopOfferOptional(t, ctx, c, apiSrv, sid, playerID)
+	shopGold, shopItems, shopBought := smokeINTG023PurchaseShopOfferOptional(t, ctx, c, apiSrv, sid, playerID)
+	ext.Base.Gold += shopGold
+	ext.Bag2001 += shopItems
+	ext.Base.ShopDailyBought += shopBought
 	smokeINTG010SocialOptional(t, c, sid)
 	smokeINTG021ListGuildMembersRoleGateway(t, ctx, pool, c, sid, playerID)
 	smokeINTG021RecruitHeroOptional(t, ctx, c, apiSrv, sid, playerID)

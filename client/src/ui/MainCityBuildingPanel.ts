@@ -8,6 +8,7 @@ import {
 import { buildingBySlot } from "@/net/hudFormat";
 import { formatBuildUpgradeCostLine } from "@/net/buildUpgradeCostLine";
 import { previewUpgradeCost } from "@/net/previewUpgradeCost";
+import { buildUpgradePrerequisiteHint } from "@/net/buildUpgradePrerequisite";
 import {
   applyPanelStateChrome,
   PANEL_STATE_CHROME_CLASS,
@@ -42,8 +43,9 @@ export class MainCityBuildingPanel {
       <div class="panel-scroll-body" data-role="building-scroll">
         <p class="building-level-line" data-role="build-level"></p>
         <p class="building-upgrade-preview" data-role="build-preview"></p>
+        <p class="build-form-error hidden" data-role="build-prerequisite" id="build-prerequisite" role="status"></p>
         <p class="build-form-error hidden" data-role="build-form-error" role="alert"></p>
-        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" disabled>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="confirm-upgrade" aria-describedby="build-prerequisite" disabled>
           确认升级
         </button>
       </div>
@@ -116,8 +118,11 @@ export class MainCityBuildingPanel {
     const titleEl = this.panel.querySelector('[data-role="build-title"]');
     const levelEl = this.panel.querySelector('[data-role="build-level"]');
     const previewEl = this.panel.querySelector('[data-role="build-preview"]');
+    const prerequisiteEl = this.panel.querySelector('[data-role="build-prerequisite"]');
     const btn = this.panel.querySelector<HTMLButtonElement>('[data-action="confirm-upgrade"]');
-    if (!slotKey || !titleEl || !levelEl || !previewEl || !btn) return;
+    if (!slotKey || !titleEl || !levelEl || !previewEl || !prerequisiteEl || !btn) return;
+    prerequisiteEl.textContent = "";
+    prerequisiteEl.classList.add("hidden");
 
     const label = this.slotLabels[slotKey] ?? slotKey;
     titleEl.textContent = label;
@@ -166,8 +171,13 @@ export class MainCityBuildingPanel {
     );
     previewEl.textContent = costLine.textLine;
     previewEl.innerHTML = costLine.htmlLine;
+    const prerequisite = buildUpgradePrerequisiteHint(
+      preview.buildingCfgId, preview.targetLevel, session.buildings,
+    );
+    prerequisiteEl.textContent = prerequisite ?? "";
+    prerequisiteEl.classList.toggle("hidden", !prerequisite);
     const submitState = this.getSubmitState();
-    btn.disabled = buildSubmitButtonDisabled(submitState, preview.canAfford, false);
+    btn.disabled = buildSubmitButtonDisabled(submitState, preview.canAfford && !prerequisite, false);
     btn.textContent = buildSubmitButtonLabel(submitState);
     if (submitState !== "error") {
       this.setFormError(preview.insufficientHint);
@@ -177,6 +187,8 @@ export class MainCityBuildingPanel {
   private onClick(ev: Event): void {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn || btn.getAttribute("data-action") !== "confirm-upgrade") return;
+    // State may have hydrated/changed since the last paint; never submit an old preview.
+    this.render();
     const slotKey = this.selectedSlotKey;
     if (!slotKey || btn.disabled) return;
     const building = this.buildingForSlot(slotKey);

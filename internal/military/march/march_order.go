@@ -33,11 +33,12 @@ func BeginMarch(
 	now time.Time,
 	req StartMarchRequest,
 ) (*MarchOrder, error) {
-	if len(req.Troops) == 0 {
-		return nil, ErrNoTroopsToMarch
+	troops, err := NormalizeMarchTroops(catalog, req.Troops)
+	if err != nil {
+		return nil, err
 	}
 	dist := GridDistance(req.FromX, req.FromY, req.ToX, req.ToY)
-	speed := EffectiveMarchSpeed(catalog, req.Troops)
+	speed := EffectiveMarchSpeed(catalog, troops)
 	sec := MarchDurationSec(dist, speed)
 	depart := now
 	arrive := depart.Add(time.Duration(sec) * time.Second)

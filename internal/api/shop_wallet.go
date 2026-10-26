@@ -91,7 +91,7 @@ func (w *pgShopWallet) readWallet(ctx context.Context, player content.PlayerRef)
 // into a failed operation: callers must not retry money movement on cache failure.
 // The next domestic operation refreshes again before settling or spending.
 func (s *Server) refreshDomesticWalletAfterCommit(ctx context.Context, serverID int32, playerID int64) {
-	if s == nil || s.domestic == nil || s.players == nil || s.players.Pool == nil {
+	if !s.domesticCityScope(serverID) || s.players == nil || s.players.Pool == nil {
 		return
 	}
 	for _, cityID := range s.cachedCityIDs() {

@@ -1,0 +1,136 @@
+{
+  "at": 1792986937918,
+  "method": "getBattleReport",
+  "args": [
+    1
+  ],
+  "value": {
+    "report": {
+      "summary": {
+        "report_id": 1,
+        "attacker_player_id": 1001,
+        "defender_player_id": 0,
+        "defender_city_id": 0,
+        "location_x": 5,
+        "location_y": 5,
+        "outcome": 1,
+        "created_at_ms": 1792986865818
+      },
+      "detail": {
+        "rounds": [
+          {
+            "attacker_troops": {
+              "infantry": 194
+            },
+            "defender_troops": {
+              "archer": 37,
+              "infantry": 111
+            },
+            "round": 1,
+            "attacker_to_def_hp": 1032,
+            "defender_to_att_hp": 564
+          },
+          {
+            "attacker_troops": {
+              "infantry": 188
+            },
+            "defender_troops": {
+              "archer": 34,
+              "infantry": 102
+            },
+            "round": 2,
+            "attacker_to_def_hp": 1071,
+            "defender_to_att_hp": 535
+          },
+          {
+            "attacker_troops": {
+              "infantry": 183
+            },
+            "defender_troops": {
+              "archer": 31,
+              "infantry": 93
+            },
+            "round": 3,
+            "attacker_to_def_hp": 1017,
+            "defender_to_att_hp": 479
+          },
+          {
+            "attacker_troops": {
+              "infantry": 178
+            },
+            "defender_troops": {
+              "infantry": 84,
+              "archer": 28
+            },
+            "round": 4,
+            "attacker_to_def_hp": 1025,
+            "defender_to_att_hp": 424
+          },
+          {
+            "attacker_troops": {
+              "infantry": 174
+            },
+            "defender_troops": {
+              "archer": 25,
+              "infantry": 75
+            },
+            "round": 5,
+            "attacker_to_def_hp": 1016,
+            "defender_to_att_hp": 362
+          },
+          {
+            "attacker_troops": {
+              "infantry": 171
+            },
+            "defender_troops": {
+              "archer": 22,
+              "infantry": 66
+            },
+            "round": 6,
+            "attacker_to_def_hp": 1064,
+            "defender_to_att_hp": 299
+          },
+          {
+            "attacker_troops": {
+              "infantry": 168
+            },
+            "defender_troops": {
+              "archer": 19,
+              "infantry": 56
+            },
+            "round": 7,
+            "attacker_to_def_hp": 1112,
+            "defender_to_att_hp": 237
+          },
+          {
+            "attacker_troops": {
+              "infantry": 166
+            },
+            "defender_troops": {
+              "archer": 15,
+              "infantry": 46
+            },
+            "round": 8,
+            "attacker_to_def_hp": 1124,
+            "defender_to_att_hp": 186
+          }
+        ],
+        "attacker_casualties": {
+          "infantry": 34
+        },
+        "defender_casualties": {
+          "infantry": 74,
+          "archer": 25
+        },
+        "final_attacker": {
+          "infantry": 166
+        },
+        "final_defender": {
+          "archer": 15,
+          "infantry": 46
+        },
+        "result": "attacker_win"
+      }
+    }
+  }
+}

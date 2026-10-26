@@ -1,7 +1,7 @@
 import {
   formatMarchCoordPair,
   formatMarchPhase,
-  formatMarchRemainingMs,
+  formatMarchEta,
   formatTroopStacks,
   type MarchSummary,
 } from "@/net/militaryFormat";
@@ -16,7 +16,7 @@ export const MARCH_FORM_INTEL_MUTUAL_HIGHLIGHT_CLASS = "march-form-intel-mutual-
 export function formatMarchEtaLine(m: MarchSummary, nowMs: number): string {
   const phase = m.phase ?? 0;
   if (phase === 2 || phase === 4) {
-    return `ETA ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+    return `ETA ${formatMarchEta(m, nowMs)}`;
   }
   return `ETA ${formatMarchPhase(phase)}`;
 }

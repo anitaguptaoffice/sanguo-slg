@@ -155,7 +155,8 @@ func openTestDB(t *testing.T) *pgxpool.Pool {
 
 func applyMilitarySchema(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
-	root := filepath.Join("..", "..", "spec", "db", "004_military.sql")
+	// Go tests run from this package directory, internal/military/report.
+	root := filepath.Join("..", "..", "..", "spec", "db", "004_military.sql")
 	sql, err := os.ReadFile(root)
 	if err != nil {
 		t.Fatalf("read schema: %v", err)

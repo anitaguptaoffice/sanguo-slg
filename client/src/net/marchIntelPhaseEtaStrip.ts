@@ -1,6 +1,7 @@
 import {
   formatMarchPhase,
-  formatMarchRemainingMs,
+  formatMarchEta,
+  marchEtaDeadline,
   formatTimeMs,
   type MarchSummary,
 } from "@/net/militaryFormat";
@@ -19,22 +20,22 @@ export const MARCH_INTEL_PHASE_ETA_STRIP_ROLE = "march-info-card-phase-eta-strip
 
 /**
  * 军情信息卡顶栏 / 列表次行：phase 只读标签 + 剩余 ETA 秒数与到达时刻摘要
- *（CLIENT-172 `arrive_at_ms` / `formatMarchRemainingMs` 口径）。
+ *（当前行程权威截止时刻 / `formatMarchEta` 口径）。
  */
 export function formatMarchIntelPhaseEtaStrip(m: MarchSummary, nowMs: number): string {
   const phase = m.phase ?? 0;
   const phaseLabel = formatMarchPhase(phase);
   if (phase !== 2 && phase !== 4) return phaseLabel;
 
-  const arrive = m.arrive_at_ms ?? 0;
+  const arrive = marchEtaDeadline(m) ?? 0;
   const parts: string[] = [phaseLabel];
   if (arrive > nowMs) {
     const sec = Math.max(0, Math.ceil((arrive - nowMs) / 1000));
     parts.push(`剩 ${sec}s`);
   }
-  const rem = formatMarchRemainingMs(nowMs, m.arrive_at_ms);
+  const rem = formatMarchEta(m, nowMs);
   if (rem) parts.push(rem);
-  if (arrive > 0) parts.push(`到达 ${formatTimeMs(arrive)}`);
+  if (arrive > 0) parts.push(`${phase === 4 ? "回城" : "到达"} ${formatTimeMs(arrive)}`);
   return parts.join(" · ");
 }
 

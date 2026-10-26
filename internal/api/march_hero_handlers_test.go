@@ -24,10 +24,10 @@ func seedIdleHeroForTest(t *testing.T, srv *api.Server, serverID int32, playerID
 	srv.SetHeroServiceForTest(svc)
 	ctx := context.Background()
 	h := &hero.Hero{
-		ServerID: serverID, HeroID: 501, PlayerID: playerID, TemplateCfgID: 1001,
+		ServerID: serverID, PlayerID: playerID, TemplateCfgID: 1001,
 		Level: 1, Loyalty: hero.LoyaltyDefault, Status: hero.StatusIdle, CreatedAt: time.Now(),
 	}
-	if err := svc.Store.SaveHero(ctx, h); err != nil {
+	if err := svc.Store.CreateHero(ctx, h); err != nil {
 		t.Fatal(err)
 	}
 	return h.HeroID
@@ -47,8 +47,12 @@ func TestStartMarchRequiresHeroAndRestoresAfterReturn(t *testing.T) {
 		ID: cityID, PlayerID: playerID,
 		Wallet: domestic.Resources{Food: 10_000, Wood: 10_000, Iron: 5000, Stone: 5000},
 	}
-	domHub.RegisterCity(domCity)
-	srv.RegisterCityForTest(cityID, domCity, 60, 61)
+	if err := domHub.RegisterCity(domCity); err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.RegisterCityForTest(cityID, domCity, 60, 61); err != nil {
+		t.Fatal(err)
+	}
 	sid := "test-session"
 	srv.BindSessionForTest(sid, api.PlayerContext{ServerID: 1, PlayerID: playerID})
 	heroID := seedIdleHeroForTest(t, srv, 1, playerID)

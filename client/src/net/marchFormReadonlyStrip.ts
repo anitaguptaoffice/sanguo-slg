@@ -1,7 +1,7 @@
 import type { ResourceWallet } from "@/net/bootstrapSession";
 import {
   formatMarchListDestCell,
-  formatMarchRemainingMs,
+  formatMarchEta,
   formatTroopStacks,
   type MarchSummary,
 } from "@/net/militaryFormat";
@@ -55,8 +55,8 @@ export function formatMarchReadonlyLineFromMarch(m: MarchSummary, nowMs: number)
   const phase = m.phase ?? 0;
   const etaHint =
     phase === 2 || phase === 4
-      ? formatMarchRemainingMs(nowMs, m.arrive_at_ms)
-      : `ETA ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+      ? formatMarchEta(m, nowMs)
+      : `ETA ${formatMarchEta(m, nowMs)}`;
   return `${tile} · ${troopPart} · ${etaHint}`;
 }
 

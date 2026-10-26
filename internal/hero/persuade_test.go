@@ -79,9 +79,11 @@ func TestLionizeHireCapacityFull(t *testing.T) {
 	cityRef := CityRef{CityID: 100}
 	npcID := int32(1003)
 
-	_ = svc.Store.SaveHero(ctx, &Hero{
-		ServerID: 1, HeroID: 900, PlayerID: 77, TemplateCfgID: 9999, Level: 1, Status: StatusIdle, Loyalty: 70,
-	})
+	if err := svc.Store.CreateHero(ctx, &Hero{
+		ServerID: 1, PlayerID: 77, TemplateCfgID: 9999, Level: 1, Status: StatusIdle, Loyalty: 70,
+	}); err != nil {
+		t.Fatal(err)
+	}
 	_, err := svc.LionizeHero(ctx, p, cityRef, npcID, city)
 	if err != nil {
 		t.Fatal(err)

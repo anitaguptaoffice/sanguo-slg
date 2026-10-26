@@ -28,20 +28,20 @@ const (
 
 type Offer struct {
 	OfferID, ShelfID, SortOrder, ItemCfgID, QuantityPerPurchase int32
-	ShelfName                                                 string
-	PriceResources                                            content.ResourceWallet
-	PriceItems                                                []content.RewardItem
-	StockTotal, StockRemaining, PurchaseLimit, PurchasedCount int32
-	LimitType                                                 PurchaseLimitType
-	LimitResetsAtMs                                           int64
-	SoldOut                                                   bool
+	ShelfName                                                   string
+	PriceResources                                              content.ResourceWallet
+	PriceItems                                                  []content.RewardItem
+	StockTotal, StockRemaining, PurchaseLimit, PurchasedCount   int32
+	LimitType                                                   PurchaseLimitType
+	LimitResetsAtMs                                             int64
+	SoldOut                                                     bool
 }
 
 type CatalogEntry struct {
 	OfferID, ShelfID, SortOrder, ItemCfgID, QuantityPerPurchase int32
-	ShelfName string
-	Price     content.RewardPackage
-	ServerStockLimit, DailyLimit, TotalLimit *int32
+	ShelfName                                                   string
+	Price                                                       content.RewardPackage
+	ServerStockLimit, DailyLimit, TotalLimit                    *int32
 }
 
 type Catalog struct {
@@ -66,23 +66,24 @@ func NewService(cat Catalog, store Store, payments *Payments, pool *pgxpool.Pool
 			store = NewMemStore()
 		}
 	}
-	return &Service{catalog: cat, store: store, payments: payments, now: time.Now}
+	return &Service{catalog: cloneCatalog(cat), store: store, payments: payments, now: time.Now}
 }
 
+// ListShopShelf preserves the legacy signature while propagating read failures.
 func (s *Service) ListShopShelf(serverID int32, shelfID int32, playerID int64) ([]Offer, int64, error) {
-	ctx := context.Background()
-	now := s.now()
-	out := make([]Offer, 0, len(s.catalog.Offers))
-	for _, e := range s.catalog.Offers {
-		if shelfID != 0 && e.ShelfID != shelfID {
-			continue
-		}
-		out = append(out, s.viewOffer(ctx, serverID, playerID, e, now))
-	}
-	return out, s.catalog.Version, nil
+	return s.ListShopShelfContext(context.Background(), serverID, shelfID, playerID)
 }
 
+// Purchase is a non-atomic legacy helper for concrete memory fixtures only.
+// Durable/custom stores must use the caller-owned transaction participants.
+// Activate this guard together with the API coordinator route; drain old writers.
 func (s *Service) Purchase(serverID int32, playerID int64, offerID int32, count int32) (Offer, []content.RewardItem, content.ResourceWallet, error) {
+	if s == nil {
+		return Offer{}, nil, content.ResourceWallet{}, ErrPurchaseTransactionRequired
+	}
+	if store, ok := s.store.(*MemStore); !ok || store == nil {
+		return Offer{}, nil, content.ResourceWallet{}, ErrPurchaseTransactionRequired
+	}
 	if count <= 0 {
 		return Offer{}, nil, content.ResourceWallet{}, ErrInvalidPurchaseCount
 	}

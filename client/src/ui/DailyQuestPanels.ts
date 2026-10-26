@@ -1,15 +1,12 @@
+import { claimQuestWithAssets, refreshQuestAssets } from "@/net/questClaimAssets";
+import { captureActor } from "@/net/actorContext";
+import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
-import type { CityBuilding, MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
+import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import { formatDailyQuestQueueInlineHint } from "@/net/dailyQuestQueueMatch";
 import type { RecruitQueueEntry } from "@/net/queueState";
 import type { CityStateFetch } from "@/net/cityStateFetch";
 import type { GatewayPort } from "@/net/GatewayClient";
-import {
-  bagFromListPlayerBagResponse,
-  mergeRewardBundle,
-  mergeWallet,
-  type BagStack,
-} from "@/net/bagState";
 import {
   DAILY_QUEST_CHAIN_ID,
   dailyQuestsFromListResponse,
@@ -95,11 +92,6 @@ import {
   writeDailyChainTabSession,
 } from "@/net/dailyQuestChainTab";
 
-type RewardBundle = {
-  items?: { item_cfg_id?: number; quantity?: number }[];
-  resources?: ResourceWallet;
-};
-
 export class DailyQuestPanels {
   private panel!: HTMLElement;
   /** 当前 chain tab 下的列表行。 */
@@ -110,8 +102,10 @@ export class DailyQuestPanels {
   private selectedCfgId = 0;
   private listFilter: DailyQuestListFilter = "all";
   private listLoading = false;
+  private listReadVersion = 0;
   private listError: string | null = null;
   private claimBatchInflight = false;
+  private claimInflight = false;
   /** CLIENT-134：角标深链打开前「可领取」chip 数字与 HUD 快照对齐。 */
   private dailyClaimableCountOverride: number | null = null;
 
@@ -311,7 +305,7 @@ export class DailyQuestPanels {
     if (batchBtn) {
       batchBtn.hidden = !showBatch;
       batchBtn.classList.toggle("hidden", !showBatch);
-      batchBtn.disabled = this.claimBatchInflight || !showBatch;
+      batchBtn.disabled = this.claimBatchInflight || this.claimInflight || !showBatch;
     }
   }
 
@@ -659,6 +653,10 @@ export class DailyQuestPanels {
     focusCfgId?: number,
     pickMode: "default" | "todo-badge" | "center-claimable" = "default",
   ): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession);
+    const version = ++this.listReadVersion;
+    const current = () => actor() && version === this.listReadVersion && this.panel.parentNode === this.mount;
+    renderSuccessfulReadNotice(this.panel);
     const sid = this.serverId();
     this.listLoading = true;
     this.listError = null;
@@ -669,6 +667,8 @@ export class DailyQuestPanels {
         chainId: 0,
         includeCompleted: true,
       });
+      if (!current()) return;
+      renderSuccessfulReadNotice(this.panel, res);
       const catalogRows = filterDailyQuestRowsToCatalogChains(
         dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] }),
       );
@@ -696,47 +696,21 @@ export class DailyQuestPanels {
       this.publishDailyChainSnapshot();
       this.onStatus(`日常 ${this.rows.length} 条`);
     } catch (e) {
+      if (!current()) return;
       const msg = (e as Error).message || "日常列表加载失败，请点「刷新列表」重试";
       this.listError = msg;
       this.rows = [];
       this.renderList();
       this.onStatus(msg);
     } finally {
+      if (!current()) return;
       this.listLoading = false;
       this.renderList();
     }
   }
 
-  private async syncBagAndWallet(granted?: RewardBundle): Promise<void> {
-    const session = this.getSession();
-    if (!session) return;
-    let bag: BagStack[] = session.bag;
-    let wallet = session.wallet;
-    if (granted) {
-      bag = mergeRewardBundle(bag, granted);
-      wallet = mergeWallet(wallet, granted.resources);
-    }
-    const sid = this.serverId();
-    try {
-      const bagRes = (await this.gateway.listPlayerBag(sid)) as {
-        items?: { item_cfg_id?: number; quantity?: number }[];
-      };
-      bag = bagFromListPlayerBagResponse(bagRes.items);
-    } catch {
-      /* 保留合并结果 */
-    }
-    try {
-      const state = this.cityStateFetch
-        ? await this.cityStateFetch.fetch()
-        : ((await this.gateway.getCityState(session.cityId)) as { wallet?: ResourceWallet });
-      if (state?.wallet) wallet = state.wallet;
-    } catch {
-      /* 保留合并结果 */
-    }
-    this.onSessionPatch({ bag, wallet });
-  }
-
   private async acceptDaily(): Promise<void> {
+    const current = captureActor(this.gateway, this.getSession);
     const id = this.selectedCfgId;
     if (!id) {
       this.onStatus("请先选中一条日常");
@@ -746,28 +720,34 @@ export class DailyQuestPanels {
     this.onStatus(`接取日常 #${id}…`);
     try {
       await this.gateway.acceptQuest(sid, id);
-      await this.syncBagAndWallet();
+      if (!current()) return;
+      await refreshQuestAssets(this.gateway, this.getSession, this.onSessionPatch);
+      if (!current()) return;
       await this.refreshList();
+      if (!current()) return;
       this.onStatus(`已接取日常 #${id}`);
     } catch (e) {
+      if (!current()) return;
       this.onStatus((e as Error).message);
     }
   }
 
   private async claimDaily(): Promise<void> {
+    if (this.claimInflight || this.claimBatchInflight) return;
+    const current = captureActor(this.gateway, this.getSession);
     const id = this.selectedCfgId;
     if (!id) {
       this.onStatus("请先选中一条日常");
       return;
     }
-    const sid = this.serverId();
+    this.claimInflight = true;
+    const button = this.panel.querySelector<HTMLButtonElement>('[data-action="claim-daily"]');
+    if (button) button.disabled = true;
     this.setDailyFormError(null);
     this.onStatus(`领取日常 #${id}…`);
     try {
-      const res = (await this.gateway.claimQuestReward(sid, id)) as {
-        granted_rewards?: RewardBundle;
-        quest?: DailyQuestRow;
-      };
+      const res = await claimQuestWithAssets(this.gateway, id, this.getSession, this.onSessionPatch) as { quest?: DailyQuestRow } | null;
+      if (!res || !current()) return;
       this.rows = applyDailyQuestRowAfterClaim(this.rows, id, res.quest);
       this.catalogQuestRows = applyDailyQuestRowAfterClaim(this.catalogQuestRows, id, res.quest);
       this.publishDailyChainSnapshot();
@@ -775,20 +755,25 @@ export class DailyQuestPanels {
       const rowAfter = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${id}"]`);
       scheduleQuestClaimRowPulse(rowAfter);
       pulseDailyQuestClaimProgress(this.panel, id);
-      await this.syncBagAndWallet(res.granted_rewards);
       await this.refreshList();
+      if (!current()) return;
       this.publishDailyChainSnapshot();
       this.pulseDailyClaimableSweep();
       this.onStatus("日常奖励已领取");
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("bag", e);
       this.setDailyFormError(msg);
       this.onStatus(msg);
+    } finally {
+      this.claimInflight = false;
+      if (button) button.disabled = false;
     }
   }
 
   private async claimDailyBatch(): Promise<void> {
-    if (this.claimBatchInflight) return;
+    if (this.claimBatchInflight || this.claimInflight) return;
+    const current = captureActor(this.gateway, this.getSession);
     const validated = validateBatchClaimDailySelection(this.rows);
     if (!validated.ok) {
       this.setDailyFormError(validated.message);
@@ -796,7 +781,6 @@ export class DailyQuestPanels {
       return;
     }
     const ordered = orderBatchClaimDailyQuestIds(this.rows);
-    const sid = this.serverId();
     this.setDailyFormError(null);
     this.claimBatchInflight = true;
     this.renderList();
@@ -809,10 +793,8 @@ export class DailyQuestPanels {
           `li[data-quest-cfg-id="${questCfgId}"]`,
         );
         try {
-          const res = (await this.gateway.claimQuestReward(sid, questCfgId)) as {
-            granted_rewards?: RewardBundle;
-            quest?: DailyQuestRow;
-          };
+          const res = await claimQuestWithAssets(this.gateway, questCfgId, this.getSession, this.onSessionPatch) as { quest?: DailyQuestRow } | null;
+          if (!res || !current()) return;
           attempts.push({ ok: true });
           pulseCfgIds.push(questCfgId);
           this.rows = applyDailyQuestRowAfterClaim(this.rows, questCfgId, res.quest);
@@ -826,12 +808,13 @@ export class DailyQuestPanels {
           scheduleQuestClaimRowPulse(rowBefore);
           pulseDailyQuestClaimProgress(this.panel, questCfgId);
         } catch (e) {
+          if (!current()) return;
           const msg = formatPanelGatewayErrorFromUnknown("bag", e);
           attempts.push({ ok: false, message: msg });
         }
       }
-      await this.syncBagAndWallet();
       await this.refreshList();
+      if (!current()) return;
       this.publishDailyChainSnapshot();
       const summary = dailyBatchClaimSummary(attempts);
       if (summary.lastError) {
@@ -841,6 +824,7 @@ export class DailyQuestPanels {
       if (pulseCfgIds.length) this.pulseDailyClaimableSweep();
     } finally {
       this.claimBatchInflight = false;
+      if (!current()) return;
       this.renderList();
       for (const cfgId of pulseCfgIds) {
         const row = this.panel.querySelector<HTMLElement>(`li[data-quest-cfg-id="${cfgId}"]`);

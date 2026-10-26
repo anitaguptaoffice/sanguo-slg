@@ -3,6 +3,7 @@ package hero
 import (
 	"context"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -27,7 +28,9 @@ type Service struct {
 	LionizeStore LionizeStore
 	HotelStore   HotelStore
 	levels       *LevelTable
+	// RNG is configured only before concurrent service use; draws use rngMu.
 	RNG          *rand.Rand
+	rngMu        sync.Mutex
 	clock        func() time.Time
 }
 
@@ -66,12 +69,17 @@ func (s *Service) UseStore(store Store) {
 	}
 }
 
+// RecruitAndPersist is only a memory-rule convenience, not a durable asset commit.
+// Durable recruitment requires the API transaction coordinator, not caller state.
 func (s *Service) RecruitAndPersist(ctx context.Context, ps *PlayerState, req RecruitRequest) (RecruitResult, error) {
-	res, err := Recruit(ps, s.Catalog, s.Items, s.RNG, time.Now(), req)
+	if _, ok := s.Store.(*MemStore); !ok {
+		return RecruitResult{}, ErrRecruitTransactionRequired
+	}
+	res, err := Recruit(ps, s.Catalog, s.Items, s.random(), time.Now(), req)
 	if err != nil {
 		return RecruitResult{}, err
 	}
-	return res, s.Store.SaveHero(ctx, res.Hero)
+	return res, s.Store.CreateHero(ctx, res.Hero)
 }
 
 func (s *Service) SetHeroLoyalty(ctx context.Context, h *Hero, v int) error {
@@ -99,11 +107,11 @@ func deductItem(ps *PlayerState, id, qty int32) error {
 	return nil
 }
 
+// spawnHero produces a draft without an identity; only Store.CreateHero can assign it.
 func spawnHero(ps *PlayerState, t Template, now time.Time) *Hero {
-	ps.nextHeroID++
 	st := StatsAtLevel(t, 1)
 	h := &Hero{
-		ServerID: ps.ServerID, HeroID: ps.nextHeroID, PlayerID: ps.PlayerID,
+		ServerID: ps.ServerID, PlayerID: ps.PlayerID,
 		TemplateCfgID: t.TemplateCfgID, Level: 1, Loyalty: LoyaltyDefault,
 		Force: st.Force, Intel: st.Intel, Politics: st.Politics, Command: st.Command,
 		Status: StatusIdle, CreatedAt: now,
@@ -112,7 +120,12 @@ func spawnHero(ps *PlayerState, t Template, now time.Time) *Hero {
 	return h
 }
 
-func Recruit(ps *PlayerState, cat map[int32]Template, items map[int32]RecruitItemSpec, rng *rand.Rand, now time.Time, req RecruitRequest) (RecruitResult, error) {
+// Recruit is a mutating memory-rule helper, not a durable transaction. Its
+// caller owns the input state and random source; production uses PlanRecruit.
+func Recruit(ps *PlayerState, cat map[int32]Template, items map[int32]RecruitItemSpec, rng randomIntn, now time.Time, req RecruitRequest) (RecruitResult, error) {
+	if ps == nil || req.TemplateCfgID < 0 {
+		return RecruitResult{}, ErrInvalidRecruit
+	}
 	if ps.Items == nil {
 		ps.Items = map[int32]int32{}
 	}
@@ -121,15 +134,23 @@ func Recruit(ps *PlayerState, cat map[int32]Template, items map[int32]RecruitIte
 		if !ok {
 			return RecruitResult{}, ErrUnknownTemplate
 		}
+		if err := validateRecruitCost(t, req.TemplateCfgID); err != nil {
+			return RecruitResult{}, err
+		}
 		if ownsTemplate(ps, t.TemplateCfgID) {
 			return RecruitResult{}, ErrAlreadyOwned
+		}
+		if t.RecruitItem.Quantity <= 0 {
+			return RecruitResult{}, ErrInvalidRecruit
+		}
+		if !validRecruitItem(items, t.RecruitItem.ItemCfgID) {
+			return RecruitResult{}, ErrRecruitItemType
 		}
 		w := ps.Wallet
 		if !w.Sub(t.RecruitCost) {
 			return RecruitResult{}, ErrInsufficientRes
 		}
 		if err := deductItem(ps, t.RecruitItem.ItemCfgID, t.RecruitItem.Quantity); err != nil {
-			ps.Wallet = w
 			return RecruitResult{}, err
 		}
 		ps.Wallet = w
@@ -140,8 +161,8 @@ func Recruit(ps *PlayerState, cat map[int32]Template, items map[int32]RecruitIte
 	if itemID == 0 {
 		itemID = RecruitScrollID
 	}
-	spec, ok := items[itemID]
-	if !ok || spec.ItemType != 3 {
+	spec := items[itemID]
+	if !validRecruitItem(items, itemID) {
 		return RecruitResult{}, ErrRecruitItemType
 	}
 	pool := req.Pool
@@ -157,7 +178,14 @@ func Recruit(ps *PlayerState, cat map[int32]Template, items map[int32]RecruitIte
 	if len(cands) == 0 {
 		return RecruitResult{}, ErrEmptyPool
 	}
-	t := cat[cands[rng.Intn(len(cands))]]
+	if rng == nil {
+		return RecruitResult{}, ErrInvalidRecruit
+	}
+	id := cands[rng.Intn(len(cands))]
+	t := cat[id]
+	if err := validateRecruitCost(t, id); err != nil {
+		return RecruitResult{}, err
+	}
 	if ps.Items[itemID] < 1 {
 		return RecruitResult{}, ErrInsufficientItem
 	}

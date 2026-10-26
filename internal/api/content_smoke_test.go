@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	contentv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/content/v1"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	shopv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/shop/v1"
@@ -21,8 +21,8 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"google.golang.org/protobuf/proto"
 )
@@ -49,7 +49,12 @@ func TestM4ContentSmokePath(t *testing.T) {
 	}
 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	apiSrv := api.NewServer(log, pool, world.NewService(store), domestic.NewHub(time.Now), march.NewHub(time.Now))
+	syncClock := &api.SmokeSyncClock{T: time.Now()}
+	domHub := domestic.NewHub(syncClock.Now)
+	domHub.UseStore(domestic.NewPGStore(pool), 1, 0)
+	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, march.NewHub(syncClock.Now))
+	apiSrv.SetClock(syncClock.Now)
+	apiSrv.BindSmokeSyncClock(syncClock)
 	if err := apiSrv.WireM4Content(ctx); err != nil {
 		t.Fatal(err)
 	}
@@ -93,16 +98,7 @@ func TestM4ContentSmokePath(t *testing.T) {
 		t.Fatalf("accept quest: code=%d msg=%s", acceptResp.Code, acceptResp.Msg)
 	}
 
-	smokeStep(t, "report quest progress")
-	progResp := mustSend(t, c, &commonv1.ClientPacket{
-		Route: api.RouteReportQuestProgress, TraceId: "m4-p", SessionId: sid, ServerId: 1,
-		Payload: mustMarshal(&questv1.ReportQuestProgressRequest{
-			ServerId: 1, QuestCfgId: 1001, Absolute: true, ProgressValue: 2,
-		}),
-	})
-	if progResp.Code != 0 {
-		t.Fatalf("report progress: %+v", progResp)
-	}
+	smokeCompleteAcceptedHall(t, ctx, c, apiSrv, pool, sid, playerID)
 
 	smokeStep(t, "claim quest reward")
 	claimResp := mustSend(t, c, &commonv1.ClientPacket{
@@ -149,6 +145,11 @@ func TestM4ContentSmokePath(t *testing.T) {
 	})
 	if buyResp.Code != 0 {
 		t.Fatalf("purchase: code=%d msg=%s", buyResp.Code, buyResp.Msg)
+	}
+	// Atomic SHOP deliberately evicts cached assets after commit. Rehydrate
+	// from durable state before using Get, which is a cache-only accessor.
+	if err := apiSrv.ContentService().LoadPlayer(ctx, p); err != nil {
+		t.Fatalf("reload durable bag after shop: %v", err)
 	}
 	qty, err = apiSrv.ContentService().Get(p, 2001)
 	if err != nil || qty != 2 {

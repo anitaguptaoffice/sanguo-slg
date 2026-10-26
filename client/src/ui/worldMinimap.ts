@@ -1,8 +1,7 @@
 import type { MarchSummary } from "@/net/militaryFormat";
 import {
   formatMarchPhase,
-  formatMarchRemainingMs,
-  formatMarchRemainingMsAbbrev,
+  formatMarchEta,
 } from "@/net/militaryFormat";
 
 /** 世界格点地图边长（与 WORLD-001 一致，用于默认视野）。 */
@@ -393,7 +392,7 @@ const MINIMAP_PHASE_SHORT_LABEL: Record<number, string> = {
   3: "达",
 };
 
-/** 待发/已到达等小地图角标阶段简写（行军中/撤回中用剩余分钟数字）。 */
+/** 待发/已到达等小地图角标阶段简写（行军中/返程中用剩余分钟数字）。 */
 export function minimapMarchPhaseShortLabel(phase: number | undefined): string {
   const p = phase ?? 0;
   return MINIMAP_PHASE_SHORT_LABEL[p] ?? formatMarchPhase(phase);
@@ -404,11 +403,11 @@ export function minimapDestShowsEtaBadge(m: MarchSummary): boolean {
   return marchShowsDestOnMinimap(m);
 }
 
-/** 小地图目的点角标文案；行军中/撤回中与军情列表共用 nowMs 与 {@link formatMarchRemainingMs} 口径。 */
+/** 小地图目的点角标文案；行军中/返程中与军情列表共用 nowMs 与 {@link formatMarchRemainingMs} 口径。 */
 export function formatMinimapDestEtaLabel(m: MarchSummary, nowMs: number): string {
   const phase = m.phase ?? 0;
   if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
-    return formatMarchRemainingMsAbbrev(nowMs, m.arrive_at_ms);
+    return formatMarchEta(m, nowMs, true);
   }
   return minimapMarchPhaseShortLabel(phase);
 }
@@ -422,7 +421,7 @@ export function formatMinimapCollapsedSelectedMarchStatus(m: MarchSummary, nowMs
   const dest = `(${m.to_x ?? "?"},${m.to_y ?? "?"})`;
   const phase = m.phase ?? 0;
   if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
-    return `行军 #${id} → ${dest} · ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+    return `行军 #${id} → ${dest} · ${formatMarchEta(m, nowMs)}`;
   }
   return `行军 #${id} → ${dest} · ${minimapMarchPhaseShortLabel(phase)}`;
 }
@@ -449,7 +448,7 @@ export function clampMinimapEtaLabelLayout(
 export function minimapPhaseCaption(m: MarchSummary, nowMs: number): string {
   const phase = m.phase ?? 0;
   if (phase === MARCH_PHASE_MARCHING || phase === MARCH_PHASE_RETURNING) {
-    return `${formatMarchPhase(phase)} · ${formatMarchRemainingMs(nowMs, m.arrive_at_ms)}`;
+    return `${formatMarchPhase(phase)} · ${formatMarchEta(m, nowMs)}`;
   }
   return formatMarchPhase(phase);
 }

@@ -179,7 +179,7 @@ describe("worldMinimap", () => {
     expect(formatMinimapDestEtaLabel(marching, now)).toBe("30");
     expect(formatMinimapDestEtaLabel({ ...marching, phase: 1 }, now)).toBe("待");
     expect(formatMinimapDestEtaLabel({ ...marching, phase: 3 }, now)).toBe("达");
-    expect(formatMinimapDestEtaLabel({ ...marching, phase: 4 }, now)).toBe("30");
+    expect(formatMinimapDestEtaLabel({ ...marching, phase: 4, return_finish_at_ms: marching.arrive_at_ms }, now)).toBe("30");
     expect(minimapDestEtaBadgeLabel(marching, now)).toBe(formatMinimapDestEtaLabel(marching, now));
     expect(formatMarchRemainingMs(now, arrive)).toBe("剩余 30m");
     expect(minimapMarchPhaseShortLabel(1)).toBe("待");

@@ -81,10 +81,10 @@ func runINTG022Wave25Smoke(t *testing.T) {
 
 	speedupUsed := smokeINTG011BuildSpeedupGateway(t, ctx, c, apiSrv, sid, playerID)
 	smokeINTG022GetCityStateInProgressBuildSlotsGateway(t, c, sid, playerID)
-	smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Bag2003 += smokeINTG011DailyTrainOrBuildMandatory(t, ctx, c, apiSrv, pool, sid, playerID)
 	smokeINTG022ListPlayerQuestsChain400TodoGateway(t, c, sid, playerID)
 
-	smokeINTG021DualLeaderboardMyRankScoreGateway(t, ctx, c, apiSrv, pool, sid, playerID)
+	ext.Base.Gold = smokeINTG021DualLeaderboardMyRankScoreGateway(t, ctx, c, apiSrv, pool, sid, playerID)
 	consumed2001 := smokeINTG010UseConsumableGateway(t, c, sid)
 	smokeINTG010SocialOptional(t, c, sid)
 	smokeINTG021ListGuildMembersRoleGateway(t, ctx, pool, c, sid, playerID)
