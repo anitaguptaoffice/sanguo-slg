@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -21,14 +22,23 @@ func NewPGStore(p *pgxpool.Pool) *PGStore {
 }
 
 func (p *PGStore) GetPlayerQuest(ctx context.Context, serverID int32, playerID int64, questCfgID int32) (PlayerQuestRow, bool, error) {
+	return getPlayerQuest(ctx, p.Pool, serverID, playerID, questCfgID, "")
+}
+
+type questDB interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+	Exec(context.Context, string, ...any) (pgconn.CommandTag, error)
+}
+
+func getPlayerQuest(ctx context.Context, q questDB, serverID int32, playerID int64, questCfgID int32, lock string) (PlayerQuestRow, bool, error) {
 	var row PlayerQuestRow
 	var progressRaw []byte
 	var accepted, completed, claimed *time.Time
-	err := p.Pool.QueryRow(ctx, `
+	err := q.QueryRow(ctx, `
 		SELECT server_id, player_id, quest_cfg_id, state, progress,
 		       accepted_at, completed_at, reward_claimed_at, updated_at
 		FROM player_quest
-		WHERE server_id=$1 AND player_id=$2 AND quest_cfg_id=$3`,
+		WHERE server_id=$1 AND player_id=$2 AND quest_cfg_id=$3`+lock,
 		serverID, playerID, questCfgID,
 	).Scan(
 		&row.ServerID, &row.PlayerID, &row.QuestCfgID, &row.State, &progressRaw,
@@ -40,10 +50,15 @@ func (p *PGStore) GetPlayerQuest(ctx context.Context, serverID int32, playerID i
 		}
 		return PlayerQuestRow{}, false, err
 	}
-	_ = json.Unmarshal(progressRaw, &row.Progress)
+	if err := json.Unmarshal(progressRaw, &row.Progress); err != nil {
+		return PlayerQuestRow{}, false, err
+	}
 	row.AcceptedAt = accepted
 	row.CompletedAt = completed
 	row.RewardClaimedAt = claimed
+	if err := validateProof(row); err != nil {
+		return PlayerQuestRow{}, false, err
+	}
 	return row, true, nil
 }
 
@@ -68,21 +83,58 @@ func (p *PGStore) ListPlayerQuests(ctx context.Context, serverID int32, playerID
 		); err != nil {
 			return nil, err
 		}
-		_ = json.Unmarshal(progressRaw, &row.Progress)
+		if err := json.Unmarshal(progressRaw, &row.Progress); err != nil {
+			return nil, err
+		}
 		row.AcceptedAt = accepted
 		row.CompletedAt = completed
 		row.RewardClaimedAt = claimed
+		if err := validateProof(row); err != nil {
+			return nil, err
+		}
 		out = append(out, row)
 	}
 	return out, rows.Err()
 }
 
 func (p *PGStore) UpsertPlayerQuest(ctx context.Context, row PlayerQuestRow) error {
+	if err := validateProof(row); err != nil {
+		return err
+	}
+	if !isTutorialID(row.QuestCfgID) {
+		return upsertPlayerQuest(ctx, p.Pool, row)
+	}
+	tx, err := p.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	// A provisional unaccepted row serializes concurrent first writes too.
+	_, err = tx.Exec(ctx, `INSERT INTO player_quest (server_id,player_id,quest_cfg_id,updated_at)
+		VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING`, row.ServerID, row.PlayerID, row.QuestCfgID, row.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	old, _, err := getPlayerQuest(ctx, tx, row.ServerID, row.PlayerID, row.QuestCfgID, " FOR UPDATE")
+	if err != nil {
+		return err
+	}
+	row, err = mergeTutorialRow(old, row)
+	if err != nil {
+		return err
+	}
+	if err := upsertPlayerQuest(ctx, tx, row); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+func upsertPlayerQuest(ctx context.Context, q questDB, row PlayerQuestRow) error {
 	progressRaw, err := json.Marshal(row.Progress)
 	if err != nil {
 		return err
 	}
-	_, err = p.Pool.Exec(ctx, `
+	_, err = q.Exec(ctx, `
 		INSERT INTO player_quest (
 			server_id, player_id, quest_cfg_id, state, progress,
 			accepted_at, completed_at, reward_claimed_at, updated_at
