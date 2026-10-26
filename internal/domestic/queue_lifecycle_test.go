@@ -135,7 +135,7 @@ func TestPGQueueConcurrentPoolsCitiesPlayersAndShards(t *testing.T) {
 func TestPGQueueRetainedJobsFlushRestartAndEmptyNonreuse(t *testing.T) {
 	pool, ctx := productionTestPool(t), context.Background()
 	clock := time.Unix(1700000000, 0)
-	h, c := queueCity(t, pool, 1, 10, 42, &clock)
+	_, c := queueCity(t, pool, 1, 10, 42, &clock)
 	// Imported retained rows use real historic identities, not test expectations
 	// rewritten to mask a collision. Supply their highwater to approved migration.
 	productionSQL(t, pool, `INSERT INTO work_queue VALUES
@@ -147,8 +147,8 @@ func TestPGQueueRetainedJobsFlushRestartAndEmptyNonreuse(t *testing.T) {
 	if err := pool.QueryRow(ctx, `SELECT jsonb_agg(to_jsonb(q) ORDER BY queue_id)::text FROM work_queue q WHERE queue_id IN(8123,8124)`).Scan(&before); err != nil {
 		t.Fatal(err)
 	}
-	// Old h has not admitted/scheduled a job. A replacement loads retained state.
-	h = NewHub(func() time.Time { return clock })
+	// The initial Hub has not admitted/scheduled a job. A replacement loads retained state.
+	h := NewHub(func() time.Time { return clock })
 	h.UseStore(NewPGStore(queuePeerPool(t, pool)), 1, 0)
 	c, err := h.LoadCity(ctx, c.ID, c.PlayerID)
 	if err != nil {

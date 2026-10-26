@@ -102,7 +102,8 @@ func TestPGProductionTwoCitiesAndExternalWalletWrites(t *testing.T) {
 	start := time.Unix(1700000000, 987654321)
 	now := start
 	h := productionHub(pool, &now)
-	a, b := productionCity(t, h, 1, 42), productionCity(t, h, 2, 42)
+	productionCity(t, h, 1, 42)
+	productionCity(t, h, 2, 42)
 	now = start.Add(5 * time.Second)
 	if _, err := h.SettleCity(ctx, 1); err != nil {
 		t.Fatal(err)
@@ -118,11 +119,11 @@ func TestPGProductionTwoCitiesAndExternalWalletWrites(t *testing.T) {
 	}
 	productionSQL(t, pool, "UPDATE player_wallet SET food=food-100,updated_at=$1", now.Add(24*time.Hour))
 	h = productionHub(pool, &now)
-	a, err = h.LoadCity(ctx, 1, 42)
+	a, err := h.LoadCity(ctx, 1, 42)
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err = h.LoadCity(ctx, 2, 42)
+	b, err := h.LoadCity(ctx, 2, 42)
 	if err != nil {
 		t.Fatal(err)
 	}
