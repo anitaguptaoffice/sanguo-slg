@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "release_id": "STABLE-20261026",
   "repository": "anitaguptaoffice/sanguo-slg",
   "purpose": "One-time intake of the already-delivered frozen repair stack under AGENTS policy PR #1788. Source-only integration; no deployment or production-readiness claim.",
@@ -12,12 +12,14 @@
     "public_snapshot_url": "https://github.com/anitaguptaoffice/sanguo-slg/commit/0ca191a5a0ecaa74f12eadfe98030b97f6d47747",
     "runtime_base": "60ca922ec5a26e6a425876c088bb04403395e9ad",
     "runtime_base_tree": "fde15454c217109c45d3269e9ea87f35dd16d6eb",
-    "approved_code_candidate": "2d1572cf130dbe46d136f3cd4ab11b2553b5884a",
-    "approved_code_tree": "1d5237a9e479502de3cd2077baab134f81508d5d",
-    "internal_tree": "3ed7c5f295526ad8389595998a0c65763f55ad70",
+    "approved_code_candidate": "27c63bf0b5dad19aff9fa3131c2ccea0749528c4",
+    "approved_code_tree": "980597c2b99c958b81e9682c7a3edab397cfc9b3",
+    "internal_tree": "d48f8f9b900b1027d3ebe7ddc2f9d3b539888988",
     "client_tree": "c0ceeee26c31de0819624c5697211f3f1a24ee80",
     "preserved_spec_tree": "d1b28c77591b76af67215b18cd5950ed15cea56d",
-    "preserved_agents_blob": "078ba3e6546562bff427c0a09dee5e4fa0e6e8e9"
+    "preserved_agents_blob": "078ba3e6546562bff427c0a09dee5e4fa0e6e8e9",
+    "initial_approved_code_candidate": "2d1572cf130dbe46d136f3cd4ab11b2553b5884a",
+    "initial_approved_code_tree": "1d5237a9e479502de3cd2077baab134f81508d5d"
   },
   "public_document_delta": {
     "path": "docs/releases/STABLE-20261026-manifest.json",
@@ -3343,14 +3345,60 @@
       "review_scope": "Preserve cleanup registration-time receiver/context/path evaluation; explicit best-effort discarded errors. No SQL/assertion/gameplay change.",
       "review_record_sha256": "c3e384316ff4796d8fde7f6d5e9add46921ddff60fec85c4d09dd1b745dc1054",
       "review_note": "Independent six-domain cleanup static review plus author execution retained."
+    },
+    {
+      "card_id": "API-HOTEL-UNUSED-001",
+      "commit": "e2719f609b73db16211a7412f9132feb44ff14d7",
+      "parent": "0f95eca19e9c76bf460f09254a3f9c09f9f18932",
+      "tree": "440d153edf97f06d0bc8b67bc6160b737f99c7ee",
+      "composed_commit": "57df098735f6488dd06f9bf801e9c2b956fb1cda",
+      "domain": "internal/api",
+      "paths": [
+        "internal/api/HOTEL_TRANSACTIONS.md",
+        "internal/api/hero_hotel_city.go"
+      ],
+      "changed_text_lines": 81,
+      "review_record_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+      "scope": "Remove unreachable legacy adapter and correct stale documentation; active captured transactional bindings and HERO contract unchanged."
+    },
+    {
+      "card_id": "SHOP-ROLLBACK-ERRCHECK-001",
+      "commit": "46b0f5f420dd89cd0f78cc415b080a3105b37720",
+      "parent": "0f95eca19e9c76bf460f09254a3f9c09f9f18932",
+      "tree": "326b4cdde02816b9540a5bce591ea40cc4c5f08f",
+      "composed_commit": "aa3bfc4044ce252aca586479355ddd9703efc3a4",
+      "domain": "internal/shop",
+      "paths": [
+        "internal/shop/purchase_concurrency_test.go",
+        "internal/shop/purchase_tx_test.go"
+      ],
+      "changed_text_lines": 13,
+      "review_record_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+      "scope": "Four test-only rollback handling corrections; canceled/fatal cleanup remains best-effort; successful rollback/blocker release now asserted."
+    },
+    {
+      "card_id": "DOM-FIXTURE-ASSIGNMENTS-001",
+      "commit": "42278bc6a59fc4b9f44bb819dc85fd732fb1559a",
+      "parent": "0f95eca19e9c76bf460f09254a3f9c09f9f18932",
+      "tree": "5c719af3a1f16fcd0a4dda759f42e391d79f4a36",
+      "composed_commit": "27c63bf0b5dad19aff9fa3131c2ccea0749528c4",
+      "domain": "internal/domestic",
+      "paths": [
+        "internal/domestic/production_persistence_matrix_test.go",
+        "internal/domestic/queue_lifecycle_test.go"
+      ],
+      "changed_text_lines": 13,
+      "review_record_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+      "scope": "Two test-only initial assignments removed while retaining constructor calls, order, side effects, replacement load and assertions."
     }
   ],
   "composition": {
-    "changed_implementation_paths": 437,
-    "explicit_post_snapshot_correction_paths": 22,
-    "rule": "internal equals a12def3686e9fbd08808df75d5189ec9b7596014 except CONTENT pg_grant_context_test.go from 9979cccf245bd6b4386418331868090390c97493; client equals frozen867; all other code paths equal main60ca. The six-commit cleanup chain does not include separate9979.",
-    "all_path_mode_blob_audit_sha256": "243ac095866d80538996df9bb8be3760233840cea62e642f4ccf2aadcd831024",
-    "unexplained_path_differences": 0
+    "changed_implementation_paths": 438,
+    "explicit_post_snapshot_correction_paths": 25,
+    "rule": "Initial approved2d code plus the exact six-path overlay in post_publication_corrections. All other implementation bytes remain initial2d; all non-implementation/non-manifest roots remain main60ca. Original seven cleanup sources and three later CI corrections are distinct.",
+    "unexplained_path_differences": 0,
+    "initial_all_path_mode_blob_audit_sha256": "243ac095866d80538996df9bb8be3760233840cea62e642f4ccf2aadcd831024",
+    "initial_audit_source": "2d1572cf130dbe46d136f3cd4ab11b2553b5884a"
   },
   "review_records": [
     {
@@ -21738,3060 +21786,2630 @@
       "path": "client/README.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "ca8485cad69d9fd63963636962a785495aa8209e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ca8485cad69d9fd63963636962a785495aa8209e"
     },
     {
       "path": "client/docs/hotel-outcome.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "09888f529b8b7802de331fed65e743bebd0593b0",
-      "explicit_post_stable_lint_correction": false
+      "sha": "09888f529b8b7802de331fed65e743bebd0593b0"
     },
     {
       "path": "client/index.html",
       "mode": "100644",
       "type": "blob",
-      "sha": "4846c30a2aeecd979380db9d53daca4b695e2874",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4846c30a2aeecd979380db9d53daca4b695e2874"
     },
     {
       "path": "client/mock-server/server.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "4799c31aa74388ebec4a53bc73248ae91232c1df",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4799c31aa74388ebec4a53bc73248ae91232c1df"
     },
     {
       "path": "client/qa/CLIENT-OWNED-BAG-SELECTOR.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "ddab79fa8cf77166eabfa5fbc4dc8abbc4cda5e0",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ddab79fa8cf77166eabfa5fbc4dc8abbc4cda5e0"
     },
     {
       "path": "client/qa/CLIENT-REPORT-NARRATIVE.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "2fed1f8b894190945931603b9adf7cb224e8b4f2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2fed1f8b894190945931603b9adf7cb224e8b4f2"
     },
     {
       "path": "client/qa/CLIENT-REPORT-READABILITY.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "8c35a588233b3f72becececcb366553a2df5e6b6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8c35a588233b3f72becececcb366553a2df5e6b6"
     },
     {
       "path": "client/qa/CLIENT-REPORT-TROOP-SCAN.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "e66580afddf917cfc3e98fa8767c5d7e07089019",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e66580afddf917cfc3e98fa8767c5d7e07089019"
     },
     {
       "path": "client/qa/CLIENT-RETURN-ETA.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "ab20ac1d8b9dbbc1b3e46294a72a296d83a9be3a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ab20ac1d8b9dbbc1b3e46294a72a296d83a9be3a"
     },
     {
       "path": "client/qa/CLT-LAYOUT-IDEMPOTENT-001.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "66ac8a763c07df4b153e2316f9ae42a381ea469f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "66ac8a763c07df4b153e2316f9ae42a381ea469f"
     },
     {
       "path": "client/qa/CLT-QUEST-CONTRAST-001.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "42665aa28299c7e5446b332c36ae1676a95d8fde",
-      "explicit_post_stable_lint_correction": false
+      "sha": "42665aa28299c7e5446b332c36ae1676a95d8fde"
     },
     {
       "path": "client/qa/CLT-RENDERER-LIFECYCLE-001.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "53e4ed89645d9f7f8c4ad8f323b1da00b20a92b8",
-      "explicit_post_stable_lint_correction": false
+      "sha": "53e4ed89645d9f7f8c4ad8f323b1da00b20a92b8"
     },
     {
       "path": "client/qa/CLT-RENDERER-LIFECYCLE-002.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "8011d561db7193a245cf3eea2c2d209800d8212d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8011d561db7193a245cf3eea2c2d209800d8212d"
     },
     {
       "path": "client/qa/CLT-SHOP-OUTCOME.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "ca308417e3360063cadd9febbd2274c62ecbaabb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ca308417e3360063cadd9febbd2274c62ecbaabb"
     },
     {
       "path": "client/qa/CLT-UPGRADE-PREREQUISITE-001.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "42aa638af30358909a4586cf49016e98604c6053",
-      "explicit_post_stable_lint_correction": false
+      "sha": "42aa638af30358909a4586cf49016e98604c6053"
     },
     {
       "path": "client/qa/MILITARY-HINT-READABILITY.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "358427c594a584b035d075dbd0de1674b08fe516",
-      "explicit_post_stable_lint_correction": false
+      "sha": "358427c594a584b035d075dbd0de1674b08fe516"
     },
     {
       "path": "client/qa/fixtures/native-report1-detail.json",
       "mode": "100644",
       "type": "blob",
-      "sha": "b9ef1efb1a41499addf2ecf8fdee60d0236c3214",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b9ef1efb1a41499addf2ecf8fdee60d0236c3214"
     },
     {
       "path": "client/qa/militaryReadability.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "7100673715751403264743a14ecf1d814ae1d329",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7100673715751403264743a14ecf1d814ae1d329"
     },
     {
       "path": "client/qa/ownedBagSelector.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "17e9dd961dd463ec1048b4eb3831b3f858b03e05",
-      "explicit_post_stable_lint_correction": false
+      "sha": "17e9dd961dd463ec1048b4eb3831b3f858b03e05"
     },
     {
       "path": "client/qa/questContrast.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "89c41043ecf5930225fa1a57434892e303086ae9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "89c41043ecf5930225fa1a57434892e303086ae9"
     },
     {
       "path": "client/qa/reportNarrativeReadability.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "110ce520634d68574e9999c98876b8007672c534",
-      "explicit_post_stable_lint_correction": false
+      "sha": "110ce520634d68574e9999c98876b8007672c534"
     },
     {
       "path": "client/qa/reportReadability.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "28550a84e5f74becacba2a46f38393a7cd1e5242",
-      "explicit_post_stable_lint_correction": false
+      "sha": "28550a84e5f74becacba2a46f38393a7cd1e5242"
     },
     {
       "path": "client/qa/reportTroopScanReadability.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "d3e06401cfe3db9e5c2e6452dfb06a5f43106d2a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d3e06401cfe3db9e5c2e6452dfb06a5f43106d2a"
     },
     {
       "path": "client/qa/shopOutcome.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "876f2e8b475996c9ec44d024a4671a3e1c06688a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "876f2e8b475996c9ec44d024a4671a3e1c06688a"
     },
     {
       "path": "client/qa/upgradePrerequisite.browser.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "c852593f728cc2979654bc419f4b3e4e65b6b4e5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c852593f728cc2979654bc419f4b3e4e65b6b4e5"
     },
     {
       "path": "client/scripts/verify-hotel-outcome.mjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "e4e4835646c286737803735780cc0bb3a06c08f7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e4e4835646c286737803735780cc0bb3a06c08f7"
     },
     {
       "path": "client/src/engine/artPanelSkin.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "15ab21385254735f75319c2462620f42dce6d690",
-      "explicit_post_stable_lint_correction": false
+      "sha": "15ab21385254735f75319c2462620f42dce6d690"
     },
     {
       "path": "client/src/engine/layoutFrameStyles.stability.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "0ff76633ca6e183f07967156fd779c34ec2488f3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0ff76633ca6e183f07967156fd779c34ec2488f3"
     },
     {
       "path": "client/src/engine/layoutViewport.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "14f978d568ac3d4404d2f42db5c70a753e64ac23",
-      "explicit_post_stable_lint_correction": false
+      "sha": "14f978d568ac3d4404d2f42db5c70a753e64ac23"
     },
     {
       "path": "client/src/net/GatewayClient.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "b8e920f1901323e08e22136f024d37d5efb0726d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b8e920f1901323e08e22136f024d37d5efb0726d"
     },
     {
       "path": "client/src/net/GatewaySessionGeneration.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "602ad90de6d89ef1c2a94c7489c2ec4c1ec000ae",
-      "explicit_post_stable_lint_correction": false
+      "sha": "602ad90de6d89ef1c2a94c7489c2ec4c1ec000ae"
     },
     {
       "path": "client/src/net/actorContext.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "4888eba49ec176c866fab32d398d86e78d616e8e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4888eba49ec176c866fab32d398d86e78d616e8e"
     },
     {
       "path": "client/src/net/assetMutation.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "e57feeea4d4b608cd9431b9978f006f106919f7d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e57feeea4d4b608cd9431b9978f006f106919f7d"
     },
     {
       "path": "client/src/net/assetMutation.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "a229f636481b868f971c836c1d4097e2a03ada79",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a229f636481b868f971c836c1d4097e2a03ada79"
     },
     {
       "path": "client/src/net/bagBatchUse.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "932d4a337ef3456026ca45151bce3e5d13fd7f5d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "932d4a337ef3456026ca45151bce3e5d13fd7f5d"
     },
     {
       "path": "client/src/net/bagUseAssets.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d8e4c58c0a1b7d59b1014bc2ec037ce9c723e2aa",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d8e4c58c0a1b7d59b1014bc2ec037ce9c723e2aa"
     },
     {
       "path": "client/src/net/bagUseCapability.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "8e6df4e71e7ca6ef73414eb92be279f3e8af4e92",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8e6df4e71e7ca6ef73414eb92be279f3e8af4e92"
     },
     {
       "path": "client/src/net/bagUseCapability.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "eef36fb5bbe1aab99ca579805cdfd5c0a7221bad",
-      "explicit_post_stable_lint_correction": false
+      "sha": "eef36fb5bbe1aab99ca579805cdfd5c0a7221bad"
     },
     {
       "path": "client/src/net/bootstrapSession.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "a949c462c9392642e67bedea9676f30a07c317d7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a949c462c9392642e67bedea9676f30a07c317d7"
     },
     {
       "path": "client/src/net/bootstrapSession.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "a42c383003e86eb07ae33013142d3b2f73399f67",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a42c383003e86eb07ae33013142d3b2f73399f67"
     },
     {
       "path": "client/src/net/buildUpgradePrerequisite.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "c935d5addde3786ec3ff146dcf3a0910c2a5cfc9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c935d5addde3786ec3ff146dcf3a0910c2a5cfc9"
     },
     {
       "path": "client/src/net/cityStateFetch.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "6ec7b140850f757b11130ae3e67314d37cd6106d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6ec7b140850f757b11130ae3e67314d37cd6106d"
     },
     {
       "path": "client/src/net/cityStateFetch.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d333e6dbb82b2dbfbf143f70006d9951e8c8a686",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d333e6dbb82b2dbfbf143f70006d9951e8c8a686"
     },
     {
       "path": "client/src/net/contentFormValidation.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "8af0601f44407d617bb6da47f24013e83795968f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8af0601f44407d617bb6da47f24013e83795968f"
     },
     {
       "path": "client/src/net/contentFormat.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "4ca4b1f6a42ac3fe46942a7aad08558c17251e3b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4ca4b1f6a42ac3fe46942a7aad08558c17251e3b"
     },
     {
       "path": "client/src/net/contentFormat.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "1f681b9e6f3d2c541203d5fab2a4cf4d0588199c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1f681b9e6f3d2c541203d5fab2a4cf4d0588199c"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/claim_reward_legacy.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "f425e64ce9d717814d975cc49f2e8f613ccc644a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f425e64ce9d717814d975cc49f2e8f613ccc644a"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-level--2147483648.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "1ce96ed2cea506298690b7088052b1b994b8a4c2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1ce96ed2cea506298690b7088052b1b994b8a4c2"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-level-0.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "f425e64ce9d717814d975cc49f2e8f613ccc644a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f425e64ce9d717814d975cc49f2e8f613ccc644a"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-level-1.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "d17eca49c869500c55198d7be23c6d265c9a56ed",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d17eca49c869500c55198d7be23c6d265c9a56ed"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-level-20.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "3961767c30c5c656dfb59618526bde122e067fc5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3961767c30c5c656dfb59618526bde122e067fc5"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-level-2147483647.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "c6e6721c43b4e8e90170d7bb6c1fd6f2e8a60c14",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c6e6721c43b4e8e90170d7bb6c1fd6f2e8a60c14"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-level-5.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "80f205539c0da977933e2dcf9001313e9284ea64",
-      "explicit_post_stable_lint_correction": false
+      "sha": "80f205539c0da977933e2dcf9001313e9284ea64"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-safe-level--2147483648.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "89c5351c0a5a8cac7d48495408ff2a2782e76634",
-      "explicit_post_stable_lint_correction": false
+      "sha": "89c5351c0a5a8cac7d48495408ff2a2782e76634"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-safe-level-0.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "e28d960342ddb7679aa9760de1b91fb7c3e91551",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e28d960342ddb7679aa9760de1b91fb7c3e91551"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-safe-level-1.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "1633618d184733bff04be996155036f3def93c0f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1633618d184733bff04be996155036f3def93c0f"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-safe-level-20.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "8df41c0fc761c21ad4a6d21ef3053bcf941ae372",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8df41c0fc761c21ad4a6d21ef3053bcf941ae372"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-safe-level-2147483647.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "b942beb1d408e85c7bfd9380e5d4a3c15f3b6f6c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b942beb1d408e85c7bfd9380e5d4a3c15f3b6f6c"
     },
     {
       "path": "client/src/net/fixtures/tutorial-level/go-safe-level-5.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "5c7d7c14569491deb38a235e8c9a61feaa3785f5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5c7d7c14569491deb38a235e8c9a61feaa3785f5"
     },
     {
       "path": "client/src/net/garrisonState.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "7ad3654d61bf5208eb7d4d7f6e0cef195be80e8f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7ad3654d61bf5208eb7d4d7f6e0cef195be80e8f"
     },
     {
       "path": "client/src/net/garrisonState.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "3c9a593fbf826c0229c16828aa026ecb331f4d01",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3c9a593fbf826c0229c16828aa026ecb331f4d01"
     },
     {
       "path": "client/src/net/hotelOutcome.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "228340003abf0dad39eee2611b161c793bf16878",
-      "explicit_post_stable_lint_correction": false
+      "sha": "228340003abf0dad39eee2611b161c793bf16878"
     },
     {
       "path": "client/src/net/hotelOutcome.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "ac1390889cbe850cc8e3eeb66f2fdc9574099b7c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ac1390889cbe850cc8e3eeb66f2fdc9574099b7c"
     },
     {
       "path": "client/src/net/marchFormReadonlyStrip.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "47a5a5659303b4e362014a42f34ac78a92c4d228",
-      "explicit_post_stable_lint_correction": false
+      "sha": "47a5a5659303b4e362014a42f34ac78a92c4d228"
     },
     {
       "path": "client/src/net/marchFormReadonlyStrip.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "f031ec7bb25c534e025e212d18c62ee0f56b309e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f031ec7bb25c534e025e212d18c62ee0f56b309e"
     },
     {
       "path": "client/src/net/marchFormSummary.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "17b5f5f7aec658ea515c952fab4fac55ededce84",
-      "explicit_post_stable_lint_correction": false
+      "sha": "17b5f5f7aec658ea515c952fab4fac55ededce84"
     },
     {
       "path": "client/src/net/marchFormSummary.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "a572482fd2826e4b66aae1b9e72bc2f2c4d05257",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a572482fd2826e4b66aae1b9e72bc2f2c4d05257"
     },
     {
       "path": "client/src/net/marchFormTroopMarginResidual.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "238df230e7d58ce2b0b406d0e0eddd4624033fb7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "238df230e7d58ce2b0b406d0e0eddd4624033fb7"
     },
     {
       "path": "client/src/net/marchFormTroopMarginResidual.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "4d159cc0f8b775140c0cc9ca2168e51d14e87c9d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4d159cc0f8b775140c0cc9ca2168e51d14e87c9d"
     },
     {
       "path": "client/src/net/marchFormTroopMarginResidualDeep.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d40143eefc9d577465fda37c15b4dba405f7dff0",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d40143eefc9d577465fda37c15b4dba405f7dff0"
     },
     {
       "path": "client/src/net/marchFormTroopMarginResidualDeep.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "fb97871bc9ba20f9365829719f99dd5c59d06a35",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fb97871bc9ba20f9365829719f99dd5c59d06a35"
     },
     {
       "path": "client/src/net/marchInfoCard.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "ce9b6f4236039d0f102e3e2191a3b00ef97447d9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ce9b6f4236039d0f102e3e2191a3b00ef97447d9"
     },
     {
       "path": "client/src/net/marchIntelPhaseEtaStrip.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "05df457b49947e27f075e6e4b7e53f80a8187ebb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "05df457b49947e27f075e6e4b7e53f80a8187ebb"
     },
     {
       "path": "client/src/net/marchIntelPhaseEtaStrip.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "c833048cd44c16f097f9362c5c4093bd03760929",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c833048cd44c16f097f9362c5c4093bd03760929"
     },
     {
       "path": "client/src/net/militaryFormat.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "b5825f9db52252011f45db771f5d01141d7c3915",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b5825f9db52252011f45db771f5d01141d7c3915"
     },
     {
       "path": "client/src/net/militaryListFilter.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "26b1041bfaf8aa7956261b26b2830cc126589332",
-      "explicit_post_stable_lint_correction": false
+      "sha": "26b1041bfaf8aa7956261b26b2830cc126589332"
     },
     {
       "path": "client/src/net/militaryListFilter.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d5a88cab9c56f1d6b681fa5507a67cc2abaf62a8",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d5a88cab9c56f1d6b681fa5507a67cc2abaf62a8"
     },
     {
       "path": "client/src/net/questClaimAssets.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "fd478e5d0cc90f00f1217e9690c3b82250c6f8ee",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fd478e5d0cc90f00f1217e9690c3b82250c6f8ee"
     },
     {
       "path": "client/src/net/questClaimAssets.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "ed11409a211e3615ea08a5b0484b3f33c95f057f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ed11409a211e3615ea08a5b0484b3f33c95f057f"
     },
     {
       "path": "client/src/net/shopOutcome.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "585ae752acaa78bfbe7fcd95b77b696a02ffb6d4",
-      "explicit_post_stable_lint_correction": false
+      "sha": "585ae752acaa78bfbe7fcd95b77b696a02ffb6d4"
     },
     {
       "path": "client/src/net/shopOutcome.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "ffd9795a451b31a5713d57b43f9ae4f3db31e24b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ffd9795a451b31a5713d57b43f9ae4f3db31e24b"
     },
     {
       "path": "client/src/net/successfulReadNotice.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "c7c396098f3942a999884fe2a1ab770630c1ba3e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c7c396098f3942a999884fe2a1ab770630c1ba3e"
     },
     {
       "path": "client/src/net/successfulReadNotice.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "4734f5fda4f051bbd0a64b8ae6d974c4c66410c2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4734f5fda4f051bbd0a64b8ae6d974c4c66410c2"
     },
     {
       "path": "client/src/net/tutorialPlayerLevel.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "aeedeef7776fccc84f2197284a05b6870f3c6033",
-      "explicit_post_stable_lint_correction": false
+      "sha": "aeedeef7776fccc84f2197284a05b6870f3c6033"
     },
     {
       "path": "client/src/net/tutorialPlayerLevel.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d34e64b5d0f3496a911c976408beca4d051b5560",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d34e64b5d0f3496a911c976408beca4d051b5560"
     },
     {
       "path": "client/src/scenes/MainCityScene.militaryReadability.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "bbdee432aefbdc8a088def9171ce64e8921ee2f0",
-      "explicit_post_stable_lint_correction": false
+      "sha": "bbdee432aefbdc8a088def9171ce64e8921ee2f0"
     },
     {
       "path": "client/src/scenes/MainCityScene.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "55017a1cb9edec881e18c1432fb4b14bcabef1d1",
-      "explicit_post_stable_lint_correction": false
+      "sha": "55017a1cb9edec881e18c1432fb4b14bcabef1d1"
     },
     {
       "path": "client/src/ui/ContentPanels.bagAsync.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "e8b66fea9b713f45780c163ea32690086fd329b5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e8b66fea9b713f45780c163ea32690086fd329b5"
     },
     {
       "path": "client/src/ui/ContentPanels.bagSafety.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "0c3e6fc2421cd727774b6b19fda5275822092adb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0c3e6fc2421cd727774b6b19fda5275822092adb"
     },
     {
       "path": "client/src/ui/ContentPanels.bagSelection.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "e2adc52bbcc502dd3ca6e261e3d46e957ab31c25",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e2adc52bbcc502dd3ca6e261e3d46e957ab31c25"
     },
     {
       "path": "client/src/ui/ContentPanels.questContrast.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "8d4af41853446dda52f9c0685c94318a25e05b38",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8d4af41853446dda52f9c0685c94318a25e05b38"
     },
     {
       "path": "client/src/ui/ContentPanels.shopOutcome.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "9c59bbdd250f1f3f0c064d884f9369a649121d78",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9c59bbdd250f1f3f0c064d884f9369a649121d78"
     },
     {
       "path": "client/src/ui/ContentPanels.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "cfa59a73e06015e1a180f52fa048800c8d0a3e0c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "cfa59a73e06015e1a180f52fa048800c8d0a3e0c"
     },
     {
       "path": "client/src/ui/DailyQuestPanels.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "255165331895272797e4e5ead4925921b7c1e7ab",
-      "explicit_post_stable_lint_correction": false
+      "sha": "255165331895272797e4e5ead4925921b7c1e7ab"
     },
     {
       "path": "client/src/ui/HeroMailPanels.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "9e2e5f589ba134695abfcaf3d855750c4069f909",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9e2e5f589ba134695abfcaf3d855750c4069f909"
     },
     {
       "path": "client/src/ui/MainCityBuildingPanel.prerequisite.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d5b95f944c39c9836249a4ac4e25892751c17182",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d5b95f944c39c9836249a4ac4e25892751c17182"
     },
     {
       "path": "client/src/ui/MainCityBuildingPanel.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d849533bb636731e06237e9f77e4b51f081dfe04",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d849533bb636731e06237e9f77e4b51f081dfe04"
     },
     {
       "path": "client/src/ui/MainCitySlotUpgradeOverlay.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "057ed93b43b1d97685c8206048bd027212a15d14",
-      "explicit_post_stable_lint_correction": false
+      "sha": "057ed93b43b1d97685c8206048bd027212a15d14"
     },
     {
       "path": "client/src/ui/MainCitySlotUpgradeOverlay.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d22ba5fd1211bc1ba024757a5ba6f277127c0d4b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d22ba5fd1211bc1ba024757a5ba6f277127c0d4b"
     },
     {
       "path": "client/src/ui/QueuePanels.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "9ecf797adc2a41fbe14b34dd5263c730df94ed6c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9ecf797adc2a41fbe14b34dd5263c730df94ed6c"
     },
     {
       "path": "client/src/ui/QueuePanels.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "21463f9b45e0167d65f40f80c4c61caef3f7abad",
-      "explicit_post_stable_lint_correction": false
+      "sha": "21463f9b45e0167d65f40f80c4c61caef3f7abad"
     },
     {
       "path": "client/src/ui/assetSettlementProtocol.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "333d66f3c4e44281d856028525a003a496d48803",
-      "explicit_post_stable_lint_correction": false
+      "sha": "333d66f3c4e44281d856028525a003a496d48803"
     },
     {
       "path": "client/src/ui/battleReportNarrativeReadability.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "c633c06e0de58d857a1c52921bd6aa19ceeb01ec",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c633c06e0de58d857a1c52921bd6aa19ceeb01ec"
     },
     {
       "path": "client/src/ui/battleReportReadability.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "d8854a3e63b0383c71660e832d58e7f5795f061e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d8854a3e63b0383c71660e832d58e7f5795f061e"
     },
     {
       "path": "client/src/ui/battleReportTroopScanReadability.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "e8a5a3fb7703ea9d38ca16173ebc9bf4f4088552",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e8a5a3fb7703ea9d38ca16173ebc9bf4f4088552"
     },
     {
       "path": "client/src/ui/familySettlement.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "96be8c5caac559dd71bbde74574c0947022b538d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "96be8c5caac559dd71bbde74574c0947022b538d"
     },
     {
       "path": "client/src/ui/hotelOutcome.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "36e75934cf75ef44ab8982cfc343222e7083d956",
-      "explicit_post_stable_lint_correction": false
+      "sha": "36e75934cf75ef44ab8982cfc343222e7083d956"
     },
     {
       "path": "client/src/ui/marchReturnEta.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "64efe594351dd5f1eaacbc22cb288a124571330e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "64efe594351dd5f1eaacbc22cb288a124571330e"
     },
     {
       "path": "client/src/ui/worldMinimap.test.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "c1cc9c60de72b7aa400d3f1d638913ba19016ebc",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c1cc9c60de72b7aa400d3f1d638913ba19016ebc"
     },
     {
       "path": "client/src/ui/worldMinimap.ts",
       "mode": "100644",
       "type": "blob",
-      "sha": "b9491762b38afac213dca4c1a0cd4cfb02556510",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b9491762b38afac213dca4c1a0cd4cfb02556510"
     },
     {
       "path": "internal/account/service_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "053968d7a165ce8a491e19bc1685a9f46c6b6de3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "053968d7a165ce8a491e19bc1685a9f46c6b6de3"
     },
     {
       "path": "internal/api/CITY-REGISTRATION.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "71bd68ceb24d18d9eb4cc031256ba1531186e54c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "71bd68ceb24d18d9eb4cc031256ba1531186e54c"
     },
     {
       "path": "internal/api/CITY-SCOPE.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "ef87bacf2f4c5d1511c9dd1b52dda1901e2d13fa",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ef87bacf2f4c5d1511c9dd1b52dda1901e2d13fa"
     },
     {
       "path": "internal/api/CONSUMABLE_GUARD.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "925c662d6fabdfcdd8224f0f200d611083d77cde",
-      "explicit_post_stable_lint_correction": false
+      "sha": "925c662d6fabdfcdd8224f0f200d611083d77cde"
     },
     {
       "path": "internal/api/FAMILY_TRANSACTIONS.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "6e303ab7c37f229bba686332f615ce3e55181b1a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6e303ab7c37f229bba686332f615ce3e55181b1a"
     },
     {
       "path": "internal/api/HOTEL_TRANSACTIONS.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "5aef1644ae6479fdde4a70912017b48f91811b32",
-      "explicit_post_stable_lint_correction": false
+      "sha": "47924a900d185ee8d2c08940dab26a7835daf449"
     },
     {
       "path": "internal/api/MARCH-TIMESTAMP-REPAIR.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "7a8c19df7dd9356b49992440034aa15daacafe7c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7a8c19df7dd9356b49992440034aa15daacafe7c"
     },
     {
       "path": "internal/api/PLAYER_BOOTSTRAP.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "cb67d1dbaa75a25ece9b927257a54d164d861ff5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "cb67d1dbaa75a25ece9b927257a54d164d861ff5"
     },
     {
       "path": "internal/api/RECRUIT_TRANSACTIONS.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "108dd2dca70cd951d66622afb7c005396d5a5108",
-      "explicit_post_stable_lint_correction": false
+      "sha": "108dd2dca70cd951d66622afb7c005396d5a5108"
     },
     {
       "path": "internal/api/TUTORIAL-LEVEL-WIRE.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "7852cbbad1f3db7bf000c52245246fa2f55565df",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7852cbbad1f3db7bf000c52245246fa2f55565df"
     },
     {
       "path": "internal/api/city_atomic_recovery_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "0885bd150f2661fbd264bf74a0894b1211e2ef5b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0885bd150f2661fbd264bf74a0894b1211e2ef5b"
     },
     {
       "path": "internal/api/city_atomic_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "cf439c32167aecf4250272680c7f73b7f7993fc3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "cf439c32167aecf4250272680c7f73b7f7993fc3"
     },
     {
       "path": "internal/api/city_garrison_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "563c19e9ff573de86bdc91b3881f43639d1309a3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "563c19e9ff573de86bdc91b3881f43639d1309a3"
     },
     {
       "path": "internal/api/city_hydrate.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ef043470353c88a35d14e8a44e8a4f3d4158914e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ef043470353c88a35d14e8a44e8a4f3d4158914e"
     },
     {
       "path": "internal/api/city_ownership_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2eebbaf5332f77643483afab8687e62dce072463",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2eebbaf5332f77643483afab8687e62dce072463"
     },
     {
       "path": "internal/api/city_registration_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6c2ba8f8573046b070aaa1316d0373dbd186fd65",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6c2ba8f8573046b070aaa1316d0373dbd186fd65"
     },
     {
       "path": "internal/api/city_scope_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "fe438aa259ef0816a482703bea42de721592fe36",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fe438aa259ef0816a482703bea42de721592fe36"
     },
     {
       "path": "internal/api/city_snapshot.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f036c25e444207ea4fcb47b4ea39c800ace65e11",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f036c25e444207ea4fcb47b4ea39c800ace65e11"
     },
     {
       "path": "internal/api/city_snapshot_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e005a03dc774714dede701919420d245c00fc638",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e005a03dc774714dede701919420d245c00fc638"
     },
     {
       "path": "internal/api/consumable_guard_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "07bc9e8fe82c9eff0671615a41b802da06d88f4a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "07bc9e8fe82c9eff0671615a41b802da06d88f4a"
     },
     {
       "path": "internal/api/content_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "89a94e6b3c6bbe038bd3ba6a48a3b7639cf6686d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "89a94e6b3c6bbe038bd3ba6a48a3b7639cf6686d"
     },
     {
       "path": "internal/api/content_handlers_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7e99eb5b009bf4ce8869c62e619c9827d9318a70",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7e99eb5b009bf4ce8869c62e619c9827d9318a70"
     },
     {
       "path": "internal/api/content_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "157ea2139230e254c39ad470491ff264d1bc9a08",
-      "explicit_post_stable_lint_correction": false
+      "sha": "157ea2139230e254c39ad470491ff264d1bc9a08"
     },
     {
       "path": "internal/api/doc.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "43812dd459eb911dd174904cca3f3ccf1d3b0182",
-      "explicit_post_stable_lint_correction": false
+      "sha": "43812dd459eb911dd174904cca3f3ccf1d3b0182"
     },
     {
       "path": "internal/api/domestic_handlers_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "439af5e4c1ab9706bb3f1b637fa08a73b477c619",
-      "explicit_post_stable_lint_correction": false
+      "sha": "439af5e4c1ab9706bb3f1b637fa08a73b477c619"
     },
     {
       "path": "internal/api/hero_captive_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4f285b80933917b8da12f79bf3228e862d64ea0b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4f285b80933917b8da12f79bf3228e862d64ea0b"
     },
     {
       "path": "internal/api/hero_captive_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2445a80ab625ebd0929b8fc5b3953460d6b2a68f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2445a80ab625ebd0929b8fc5b3953460d6b2a68f"
     },
     {
       "path": "internal/api/hero_city_ownership.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "666c5b1f8280c32981f9c51078ba2e9e07515a36",
-      "explicit_post_stable_lint_correction": false
+      "sha": "666c5b1f8280c32981f9c51078ba2e9e07515a36"
     },
     {
       "path": "internal/api/hero_coming_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2a63e5b7a29c891588118345e56cfc864f18b8e5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2a63e5b7a29c891588118345e56cfc864f18b8e5"
     },
     {
       "path": "internal/api/hero_coming_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1f878fa0e01a72e2f465f782ede8426c6630d1ec",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1f878fa0e01a72e2f465f782ede8426c6630d1ec"
     },
     {
       "path": "internal/api/hero_family_boundary_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "40d00c24329e48157459db0cc3d96530a7b920a6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "40d00c24329e48157459db0cc3d96530a7b920a6"
     },
     {
       "path": "internal/api/hero_family_catalog_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9bf6e83d937c910e197ab3002e7e30981df73d3f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9bf6e83d937c910e197ab3002e7e30981df73d3f"
     },
     {
       "path": "internal/api/hero_family_concurrency_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ecbb7ad88da4141cbc7c6446ef5667ecf2ca28bf",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ecbb7ad88da4141cbc7c6446ef5667ecf2ca28bf"
     },
     {
       "path": "internal/api/hero_family_failure_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8546baf04a47eb0fae47fccab29d39fb8b73caad",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8546baf04a47eb0fae47fccab29d39fb8b73caad"
     },
     {
       "path": "internal/api/hero_family_fixture_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e392ea98a36c8d998845fb6792bbcdacc17dc104",
-      "explicit_post_stable_lint_correction": true
+      "sha": "e392ea98a36c8d998845fb6792bbcdacc17dc104"
     },
     {
       "path": "internal/api/hero_family_lionize_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8132604c7f9affe451cb7f7d4bb25ecb12b5cde7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8132604c7f9affe451cb7f7d4bb25ecb12b5cde7"
     },
     {
       "path": "internal/api/hero_family_natural_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "365209e6e3b9c8b6fa6cff288a3825c7e6935b42",
-      "explicit_post_stable_lint_correction": false
+      "sha": "365209e6e3b9c8b6fa6cff288a3825c7e6935b42"
     },
     {
       "path": "internal/api/hero_family_owner_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8a74abfabbf7f9ab89a319f1d5b885a11427f537",
-      "explicit_post_stable_lint_correction": true
+      "sha": "8a74abfabbf7f9ab89a319f1d5b885a11427f537"
     },
     {
       "path": "internal/api/hero_family_success_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5c97762fc8378e7879b117d42f593b7fef680c6c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5c97762fc8378e7879b117d42f593b7fef680c6c"
     },
     {
       "path": "internal/api/hero_family_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "dbe0e47f4a94b371fbd42ac25bb529d9a3a660be",
-      "explicit_post_stable_lint_correction": false
+      "sha": "dbe0e47f4a94b371fbd42ac25bb529d9a3a660be"
     },
     {
       "path": "internal/api/hero_family_views.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "39fc1c0be46ee138b7efb4a9962b58abd57e723a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "39fc1c0be46ee138b7efb4a9962b58abd57e723a"
     },
     {
       "path": "internal/api/hero_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e661de24bdcc77b52107ed874e88ba93a632f46b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e661de24bdcc77b52107ed874e88ba93a632f46b"
     },
     {
       "path": "internal/api/hero_handlers_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9820e8958cd316d44a01da462d3d7c175b959d84",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9820e8958cd316d44a01da462d3d7c175b959d84"
     },
     {
       "path": "internal/api/hero_hotel_boundary_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f3574fd086c73137819a4fc1cdb314387f39628f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f3574fd086c73137819a4fc1cdb314387f39628f"
+    },
+    {
+      "path": "internal/api/hero_hotel_city.go",
+      "mode": null,
+      "type": null,
+      "sha": null,
+      "change": "deleted"
     },
     {
       "path": "internal/api/hero_hotel_concurrency_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "759bc1e319ef3b1cf9dc474014aa07fc8a8b244c",
-      "explicit_post_stable_lint_correction": true
+      "sha": "759bc1e319ef3b1cf9dc474014aa07fc8a8b244c"
     },
     {
       "path": "internal/api/hero_hotel_failure_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2008bc37e1ecc57a5f9397a5338a6ea6dd946669",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2008bc37e1ecc57a5f9397a5338a6ea6dd946669"
     },
     {
       "path": "internal/api/hero_hotel_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a5b72e77eb53e76be1f9adf016ae25e83856c9b4",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a5b72e77eb53e76be1f9adf016ae25e83856c9b4"
     },
     {
       "path": "internal/api/hero_hotel_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "fb19d3b072dd74b348baf2f4e25cd1891dc00887",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fb19d3b072dd74b348baf2f4e25cd1891dc00887"
     },
     {
       "path": "internal/api/hero_hotel_recruit_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "254d380af7673569c8ffa0924665d0acc3d603cd",
-      "explicit_post_stable_lint_correction": false
+      "sha": "254d380af7673569c8ffa0924665d0acc3d603cd"
     },
     {
       "path": "internal/api/hero_hotel_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e731f5afbc4566a34ff99e06a9af9e2c54d8902c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e731f5afbc4566a34ff99e06a9af9e2c54d8902c"
     },
     {
       "path": "internal/api/hero_lionize_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "374751f3c01513701e9bc997e821f44f6b9fc8d3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "374751f3c01513701e9bc997e821f44f6b9fc8d3"
     },
     {
       "path": "internal/api/hero_persuade_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5dd25c14a00ef2a9a44b89c99216212be5026eff",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5dd25c14a00ef2a9a44b89c99216212be5026eff"
     },
     {
       "path": "internal/api/hero_recruit_boundary_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3a753ce4c5c39c65a5683e40b0c3f4ea631ccfb3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3a753ce4c5c39c65a5683e40b0c3f4ea631ccfb3"
     },
     {
       "path": "internal/api/hero_recruit_conflict_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f1395e90a406662b99c2bb792a4c5dbab44a2af0",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f1395e90a406662b99c2bb792a4c5dbab44a2af0"
     },
     {
       "path": "internal/api/hero_recruit_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4b18c2c8db0f02e75522d0feca815423ed08d77b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4b18c2c8db0f02e75522d0feca815423ed08d77b"
     },
     {
       "path": "internal/api/hero_recruit_race_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9babc5eeee86d3f81f0b48df447b7f954c52b51d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9babc5eeee86d3f81f0b48df447b7f954c52b51d"
     },
     {
       "path": "internal/api/hero_recruit_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "55bf04494f382c1299b627096dfc1c6220c0c87c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "55bf04494f382c1299b627096dfc1c6220c0c87c"
     },
     {
       "path": "internal/api/hero_recruit_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5c2df505fdbc3c06774f1faa5c2f2972c84ce735",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5c2df505fdbc3c06774f1faa5c2f2972c84ce735"
     },
     {
       "path": "internal/api/integration_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "69d00517bcf77742fb6a88eb9eccbef4b3f1d5d7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "69d00517bcf77742fb6a88eb9eccbef4b3f1d5d7"
     },
     {
       "path": "internal/api/intg006_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e64ccdfc4f24bc314d1b8467dd396f9d1d2cbe25",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e64ccdfc4f24bc314d1b8467dd396f9d1d2cbe25"
     },
     {
       "path": "internal/api/intg007_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "50f49b26c4266d62701bf2dc3ff1a2ade732a27c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "50f49b26c4266d62701bf2dc3ff1a2ade732a27c"
     },
     {
       "path": "internal/api/intg008_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d9cef7fd45beaa53c2c6f448bfe095b2c1753481",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d9cef7fd45beaa53c2c6f448bfe095b2c1753481"
     },
     {
       "path": "internal/api/intg009_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d2ac7ab1ee8f2037bd47c7caceea0eb3a9e1f99e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d2ac7ab1ee8f2037bd47c7caceea0eb3a9e1f99e"
     },
     {
       "path": "internal/api/intg010_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "510e999906e6b191c60ce5ba161fd65cf1963375",
-      "explicit_post_stable_lint_correction": false
+      "sha": "510e999906e6b191c60ce5ba161fd65cf1963375"
     },
     {
       "path": "internal/api/intg011_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a4fdb9738f72c38803710d695fb02e4e1ff95cbd",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a4fdb9738f72c38803710d695fb02e4e1ff95cbd"
     },
     {
       "path": "internal/api/intg012_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f05208ccc892f241d49cee1eda1317bc00198362",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f05208ccc892f241d49cee1eda1317bc00198362"
     },
     {
       "path": "internal/api/intg013_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1c91611699fa5a5c3c7f460246274ffe58734fef",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1c91611699fa5a5c3c7f460246274ffe58734fef"
     },
     {
       "path": "internal/api/intg014_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c5988add051a06e93a19bd268f28829e2c7eb137",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c5988add051a06e93a19bd268f28829e2c7eb137"
     },
     {
       "path": "internal/api/intg015_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d1c98e817b2baca8684c56a189ee75eb5cfdcbd9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d1c98e817b2baca8684c56a189ee75eb5cfdcbd9"
     },
     {
       "path": "internal/api/intg016_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "55ddf7d7ed2df97f9f1d777971faf115027f65bb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "55ddf7d7ed2df97f9f1d777971faf115027f65bb"
     },
     {
       "path": "internal/api/intg017_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f083f9c93b85b3d3aa91f37993bf8ce92ae9260c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f083f9c93b85b3d3aa91f37993bf8ce92ae9260c"
     },
     {
       "path": "internal/api/intg018_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "82961a31cf03e19a6af9a8c5ad976dcb7f99e695",
-      "explicit_post_stable_lint_correction": false
+      "sha": "82961a31cf03e19a6af9a8c5ad976dcb7f99e695"
     },
     {
       "path": "internal/api/intg019_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "bce370a941074993f23a1d2381a74c42da909eb0",
-      "explicit_post_stable_lint_correction": false
+      "sha": "bce370a941074993f23a1d2381a74c42da909eb0"
     },
     {
       "path": "internal/api/intg020_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "674d0e051e944402ef4a7613c5e6eaa99184dac9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "674d0e051e944402ef4a7613c5e6eaa99184dac9"
     },
     {
       "path": "internal/api/intg021_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "eb589a8ed07dd5cffe448243ba2616e7c0eea226",
-      "explicit_post_stable_lint_correction": false
+      "sha": "eb589a8ed07dd5cffe448243ba2616e7c0eea226"
     },
     {
       "path": "internal/api/intg022_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "fbcafe7037b203da4b00cff77c05e220ba2b3480",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fbcafe7037b203da4b00cff77c05e220ba2b3480"
     },
     {
       "path": "internal/api/intg023_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "dc58964c2ef86b2e50036e2df5e624ac03ee4adf",
-      "explicit_post_stable_lint_correction": false
+      "sha": "dc58964c2ef86b2e50036e2df5e624ac03ee4adf"
     },
     {
       "path": "internal/api/intg024_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "11b6c0a092fc102ec596367aa440511f536fef50",
-      "explicit_post_stable_lint_correction": false
+      "sha": "11b6c0a092fc102ec596367aa440511f536fef50"
     },
     {
       "path": "internal/api/intg025_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1ea019855770ae29360ae5b733000638c70ff1bc",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1ea019855770ae29360ae5b733000638c70ff1bc"
     },
     {
       "path": "internal/api/intg045_capacity_fixture_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "486c457e87f30a242460e9b29ab70d97d7e14a36",
-      "explicit_post_stable_lint_correction": false
+      "sha": "486c457e87f30a242460e9b29ab70d97d7e14a36"
     },
     {
       "path": "internal/api/intg045_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "777a1e1f7ba7b15589dcb2f8ba8c34caa171c45e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "777a1e1f7ba7b15589dcb2f8ba8c34caa171c45e"
     },
     {
       "path": "internal/api/m3_smoke_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ab0393e02be0573745d49322c7cd28dfd2c509f5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ab0393e02be0573745d49322c7cd28dfd2c509f5"
     },
     {
       "path": "internal/api/m4_devdata.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "93ad589f8cd295ab1ce258c60232c4df67c9a6fc",
-      "explicit_post_stable_lint_correction": false
+      "sha": "93ad589f8cd295ab1ce258c60232c4df67c9a6fc"
     },
     {
       "path": "internal/api/m4_wire.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "439243ee61919b5391bc4f68cf0c089b9c14e1fc",
-      "explicit_post_stable_lint_correction": false
+      "sha": "439243ee61919b5391bc4f68cf0c089b9c14e1fc"
     },
     {
       "path": "internal/api/march_hero_handlers_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3bdc687258e7fd57e56fb9e3cc23943653a482d2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3bdc687258e7fd57e56fb9e3cc23943653a482d2"
     },
     {
       "path": "internal/api/march_integrity.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "990e6790dcb23be90f70306a251c6de9ec1331a3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "990e6790dcb23be90f70306a251c6de9ec1331a3"
     },
     {
       "path": "internal/api/march_integrity_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "df34b501715dbc88b5082bba660a1e5201a86d7e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "df34b501715dbc88b5082bba660a1e5201a86d7e"
     },
     {
       "path": "internal/api/march_summary_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b45ecf1541394226f4c7746507d2b1b0f0399d75",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b45ecf1541394226f4c7746507d2b1b0f0399d75"
     },
     {
       "path": "internal/api/military_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2a65df0e12aae895ee2a7cb2e40bd455670f569d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2a65df0e12aae895ee2a7cb2e40bd455670f569d"
     },
     {
       "path": "internal/api/military_handlers_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "97eec8c61726c205c93f93126e3d2b20a27ab384",
-      "explicit_post_stable_lint_correction": false
+      "sha": "97eec8c61726c205c93f93126e3d2b20a27ab384"
     },
     {
       "path": "internal/api/pb/sanguo/quest/v1/claim_reward_wire_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "caad914af52590e3427e0c26d99edbee926c0603",
-      "explicit_post_stable_lint_correction": false
+      "sha": "caad914af52590e3427e0c26d99edbee926c0603"
     },
     {
       "path": "internal/api/pb/sanguo/quest/v1/quest.pb.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ea123e7ec783117f0d5e4d997206f1666c848cde",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ea123e7ec783117f0d5e4d997206f1666c848cde"
     },
     {
       "path": "internal/api/pb/sanguo/quest/v1/testdata/claim_reward_legacy.bin",
       "mode": "100644",
       "type": "blob",
-      "sha": "f425e64ce9d717814d975cc49f2e8f613ccc644a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f425e64ce9d717814d975cc49f2e8f613ccc644a"
     },
     {
       "path": "internal/api/pb/sanguo/quest/v1/testdata/claim_reward_legacy.pb",
       "mode": "100644",
       "type": "blob",
-      "sha": "a7b8cec5e605c6d30d92e7189c912195da054bba",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a7b8cec5e605c6d30d92e7189c912195da054bba"
     },
     {
       "path": "internal/api/pb/sanguo/quest/v1/testdata/claim_reward_legacy.textproto",
       "mode": "100644",
       "type": "blob",
-      "sha": "212dfc5b8939bdb519f07e165e9dd759bbce245f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "212dfc5b8939bdb519f07e165e9dd759bbce245f"
     },
     {
       "path": "internal/api/pb/sanguo/quest/v1/testdata/claim_reward_wire.cjs",
       "mode": "100644",
       "type": "blob",
-      "sha": "5ee6dde39bb46b50fd4b1c4a7e6e6b702416f85a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5ee6dde39bb46b50fd4b1c4a7e6e6b702416f85a"
     },
     {
       "path": "internal/api/player_bootstrap_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "741367ecb2a5b0c335812e3da51d3eefade18d03",
-      "explicit_post_stable_lint_correction": true
+      "sha": "741367ecb2a5b0c335812e3da51d3eefade18d03"
     },
     {
       "path": "internal/api/player_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "821396a6c7a8ba2ffe0fec7a073540cc7be49003",
-      "explicit_post_stable_lint_correction": true
+      "sha": "821396a6c7a8ba2ffe0fec7a073540cc7be49003"
     },
     {
       "path": "internal/api/proto/sanguo/quest/v1/quest.proto",
       "mode": "100644",
       "type": "blob",
-      "sha": "625463128c6876d130b8f218d21b216c250ca50c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "625463128c6876d130b8f218d21b216c250ca50c"
     },
     {
       "path": "internal/api/quest_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7ea5353cd705c0a6f1f110b2541dbe689d297a76",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7ea5353cd705c0a6f1f110b2541dbe689d297a76"
     },
     {
       "path": "internal/api/quest_level.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "20fd898db48d49229299e35b41a7548924858fd9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "20fd898db48d49229299e35b41a7548924858fd9"
     },
     {
       "path": "internal/api/quest_level_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "daad7258576000b89db144d18ee49aab82082832",
-      "explicit_post_stable_lint_correction": false
+      "sha": "daad7258576000b89db144d18ee49aab82082832"
     },
     {
       "path": "internal/api/quest_progress_hook.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "176bfa48da494f8ccf8e788df3442ac3e799174a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "176bfa48da494f8ccf8e788df3442ac3e799174a"
     },
     {
       "path": "internal/api/quest_smoke_fixture_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a250a8faee962937cd6a7e3330220ac68a640ae8",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a250a8faee962937cd6a7e3330220ac68a640ae8"
     },
     {
       "path": "internal/api/quest_tutorial_facts.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "773b045d0800d1d579760b269e0c286dce305c67",
-      "explicit_post_stable_lint_correction": false
+      "sha": "773b045d0800d1d579760b269e0c286dce305c67"
     },
     {
       "path": "internal/api/quest_tutorial_facts_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6ddcc5d4e10cd2924ed7a3960c62ccb2f0d525b5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6ddcc5d4e10cd2924ed7a3960c62ccb2f0d525b5"
     },
     {
       "path": "internal/api/quest_wall_actor_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a3c7ab200a476a110fa6314050b4a1df5f313c3d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a3c7ab200a476a110fa6314050b4a1df5f313c3d"
     },
     {
       "path": "internal/api/quest_wall_catalog_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6c3087fbd44a275a688402eca1f74efa2e57f777",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6c3087fbd44a275a688402eca1f74efa2e57f777"
     },
     {
       "path": "internal/api/quest_wall_level.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a1a880a8c5ca1782ea5470e5ed63f5ad189892d2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a1a880a8c5ca1782ea5470e5ed63f5ad189892d2"
     },
     {
       "path": "internal/api/quest_wall_level.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "4f96c0063192dda30312bba399d4f44e82dd2650",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4f96c0063192dda30312bba399d4f44e82dd2650"
     },
     {
       "path": "internal/api/quest_wall_level_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "154edc088431c7638e00cc6f49773ea04b3f198f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "154edc088431c7638e00cc6f49773ea04b3f198f"
     },
     {
       "path": "internal/api/quest_wall_read_order_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6c9736127b030cce66558628182ac6a21bb94719",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6c9736127b030cce66558628182ac6a21bb94719"
     },
     {
       "path": "internal/api/quest_wall_recovery_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7fa8ad9deaf552497bd8aef15dba036eef11836e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7fa8ad9deaf552497bd8aef15dba036eef11836e"
     },
     {
       "path": "internal/api/server.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d5fea907c2f37a999e8110aae8a38cdecd225935",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d5fea907c2f37a999e8110aae8a38cdecd225935"
     },
     {
       "path": "internal/api/shard_routing_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ed2cab06cfa5ada462ab9288e78c8fbcfb6c89e7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ed2cab06cfa5ada462ab9288e78c8fbcfb6c89e7"
     },
     {
       "path": "internal/api/shop_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f7ea4690a43594fc9664d130fe5175619a074a60",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f7ea4690a43594fc9664d130fe5175619a074a60"
     },
     {
       "path": "internal/api/shop_purchase_concurrency_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "576f1a704016a38dce070ceaba8c21f31763b619",
-      "explicit_post_stable_lint_correction": true
+      "sha": "576f1a704016a38dce070ceaba8c21f31763b619"
     },
     {
       "path": "internal/api/shop_purchase_failure_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f76c1e437bb692e618d089cb0088ac1ae264e886",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f76c1e437bb692e618d089cb0088ac1ae264e886"
     },
     {
       "path": "internal/api/shop_purchase_gateway_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6055473ffd608689d02624f2835bbbe51250aa61",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6055473ffd608689d02624f2835bbbe51250aa61"
     },
     {
       "path": "internal/api/shop_purchase_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9a07bb9ad2dd118dba2d9623019707f76931b25b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9a07bb9ad2dd118dba2d9623019707f76931b25b"
     },
     {
       "path": "internal/api/shop_purchase_transaction.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "d278ea4e72d313714601689bd8af01b81b66ad9d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d278ea4e72d313714601689bd8af01b81b66ad9d"
     },
     {
       "path": "internal/api/shop_purchase_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "08991908468314e445cec391c34a5740556e15a1",
-      "explicit_post_stable_lint_correction": false
+      "sha": "08991908468314e445cec391c34a5740556e15a1"
     },
     {
       "path": "internal/api/shop_purchase_wallet.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c46c4e9ea9e5416870d704e0bfcb2219fd6e3b43",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c46c4e9ea9e5416870d704e0bfcb2219fd6e3b43"
     },
     {
       "path": "internal/api/shop_purchase_wallet_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3a10ed3873b1140c679d8c04e6f63e3ff7329ff4",
-      "explicit_post_stable_lint_correction": true
+      "sha": "3a10ed3873b1140c679d8c04e6f63e3ff7329ff4"
     },
     {
       "path": "internal/api/shop_wallet.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "66b7fb56f4f124789763e85fecaca95d19c44b1b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "66b7fb56f4f124789763e85fecaca95d19c44b1b"
     },
     {
       "path": "internal/api/shop_wallet_internal_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9c025027106ba5d394ed197c6cc37a15dbdff13b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9c025027106ba5d394ed197c6cc37a15dbdff13b"
     },
     {
       "path": "internal/api/starter_bootstrap_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c50220b5ee99722c2b6bf6334152ded87b981281",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c50220b5ee99722c2b6bf6334152ded87b981281"
     },
     {
       "path": "internal/api/starter_entry.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5b74408c1f2970e5f8c4e03d33d180b42f2cd581",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5b74408c1f2970e5f8c4e03d33d180b42f2cd581"
     },
     {
       "path": "internal/api/starter_scroll.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "24a2cd5fbe2083f3f4827238fdb9d8e86647b84e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "24a2cd5fbe2083f3f4827238fdb9d8e86647b84e"
     },
     {
       "path": "internal/api/starter_scroll_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3dc16e54826df9a3b7ae3ca98048dbb1a10dbd6e",
-      "explicit_post_stable_lint_correction": true
+      "sha": "3dc16e54826df9a3b7ae3ca98048dbb1a10dbd6e"
     },
     {
       "path": "internal/api/world_handlers.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "eeaedd3487bbf3a2d407959612ff560da20a3ceb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "eeaedd3487bbf3a2d407959612ff560da20a3ceb"
     },
     {
       "path": "internal/chat/pg_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "70a1ed79eee48d5cfe75025a8764b06e940f42ce",
-      "explicit_post_stable_lint_correction": false
+      "sha": "70a1ed79eee48d5cfe75025a8764b06e940f42ce"
     },
     {
       "path": "internal/content/bag.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "12ca066d1d78243e198fd33bd4f49114465b0ce9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "12ca066d1d78243e198fd33bd4f49114465b0ce9"
     },
     {
       "path": "internal/content/doc.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f964e10b000514bf7e2ffec9d5e264204618e98a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f964e10b000514bf7e2ffec9d5e264204618e98a"
     },
     {
       "path": "internal/content/errors.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5e431fd8b7b3dc2ee580b331bf6084eae2b897d9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5e431fd8b7b3dc2ee580b331bf6084eae2b897d9"
     },
     {
       "path": "internal/content/grant_context.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "eae217f0cc0c6bb9cb9027e5759dbeba09af2099",
-      "explicit_post_stable_lint_correction": false
+      "sha": "eae217f0cc0c6bb9cb9027e5759dbeba09af2099"
     },
     {
       "path": "internal/content/grant_context_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1882f8d4d57807786caae0f8b707691ed72048ad",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1882f8d4d57807786caae0f8b707691ed72048ad"
     },
     {
       "path": "internal/content/item_grant_collision_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e4ffcc2a0788ad2e2f6d2161ee64638a81600dba",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e4ffcc2a0788ad2e2f6d2161ee64638a81600dba"
     },
     {
       "path": "internal/content/item_grant_concurrency_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "42be6856649756cb1a65f05d8e2b088f667558c6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "42be6856649756cb1a65f05d8e2b088f667558c6"
     },
     {
       "path": "internal/content/item_grant_failure_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5ab824c9d80813158ba0ab4c7ea9e65855c3592d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5ab824c9d80813158ba0ab4c7ea9e65855c3592d"
     },
     {
       "path": "internal/content/item_grant_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "15afc177b0e8dab03abb4420e637e030792e98aa",
-      "explicit_post_stable_lint_correction": false
+      "sha": "15afc177b0e8dab03abb4420e637e030792e98aa"
     },
     {
       "path": "internal/content/item_grant_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7a70427e7fd03f52d42f7be036f708e7df1dfa3d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7a70427e7fd03f52d42f7be036f708e7df1dfa3d"
     },
     {
       "path": "internal/content/item_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f7a1e77e7b82bf4e4366fac44c640fe53187ade1",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f7a1e77e7b82bf4e4366fac44c640fe53187ade1"
     },
     {
       "path": "internal/content/item_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "38d741b6161634c9b3626c1323afe8c8fa39d389",
-      "explicit_post_stable_lint_correction": false
+      "sha": "38d741b6161634c9b3626c1323afe8c8fa39d389"
     },
     {
       "path": "internal/content/item_write_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "996ad791307996c276a19ee320d5b46f9248f7f5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "996ad791307996c276a19ee320d5b46f9248f7f5"
     },
     {
       "path": "internal/content/pg_grant.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2f8573cc08083894da3530c7329a691273c79547",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2f8573cc08083894da3530c7329a691273c79547"
     },
     {
       "path": "internal/content/pg_grant_clock_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e981a794420aa27b714f2bb0f43ad1bb0f6b7102",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e981a794420aa27b714f2bb0f43ad1bb0f6b7102"
     },
     {
       "path": "internal/content/pg_grant_context_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1c2e6c472f757cdd0756472c91eeebd3368162d8",
-      "explicit_post_stable_lint_correction": true
+      "sha": "1c2e6c472f757cdd0756472c91eeebd3368162d8"
     },
     {
       "path": "internal/content/pg_item_debit.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8032d3d39fda9b68a2de553b9713991b04a7c390",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8032d3d39fda9b68a2de553b9713991b04a7c390"
     },
     {
       "path": "internal/content/pg_item_failure_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "27729b2b0f8af9c206d9647003a21bef548fc2e7",
-      "explicit_post_stable_lint_correction": true
+      "sha": "27729b2b0f8af9c206d9647003a21bef548fc2e7"
     },
     {
       "path": "internal/content/pg_item_race_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "679f963ef282796dd2f22f3ac3053a5b2caf2f4f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "679f963ef282796dd2f22f3ac3053a5b2caf2f4f"
     },
     {
       "path": "internal/content/pg_item_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d87e65db27814ad84235f30f1a92e5ef91420c43",
-      "explicit_post_stable_lint_correction": true
+      "sha": "d87e65db27814ad84235f30f1a92e5ef91420c43"
     },
     {
       "path": "internal/content/pg_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4ee924aa2c177e833390a0d0127bfb96da2a436b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4ee924aa2c177e833390a0d0127bfb96da2a436b"
     },
     {
       "path": "internal/content/receipt.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b55ebd1c2863a33b0c456c54744af74fa24e3907",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b55ebd1c2863a33b0c456c54744af74fa24e3907"
     },
     {
       "path": "internal/content/receipt_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7a79167395c70feda3da00c4364aa6d56512bd36",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7a79167395c70feda3da00c4364aa6d56512bd36"
     },
     {
       "path": "internal/content/reward.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "0936dd603f71f07b20fbabfe646a638ca0a7d8ac",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0936dd603f71f07b20fbabfe646a638ca0a7d8ac"
     },
     {
       "path": "internal/domestic/CITY-ATOMIC.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "6ef132edfbb926716fa2d67c6a0bdf67406bddd9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6ef132edfbb926716fa2d67c6a0bdf67406bddd9"
     },
     {
       "path": "internal/domestic/HOTEL-LEVELS-TX.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "9862e7d544a3aed399af6c6eefe516da71a121e3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9862e7d544a3aed399af6c6eefe516da71a121e3"
     },
     {
       "path": "internal/domestic/QUEUE-IDENTITY.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "6e3e8c2bce94fa603d990615e6cb98e7522059d2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6e3e8c2bce94fa603d990615e6cb98e7522059d2"
     },
     {
       "path": "internal/domestic/WALLET_PERSISTENCE.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "26a058096b20af968d32f54fac63ce202bb4c455",
-      "explicit_post_stable_lint_correction": false
+      "sha": "26a058096b20af968d32f54fac63ce202bb4c455"
     },
     {
       "path": "internal/domestic/city_atomic.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "45b969091bc6e26ba42795f77415b50fedfae4eb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "45b969091bc6e26ba42795f77415b50fedfae4eb"
     },
     {
       "path": "internal/domestic/city_atomic_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4e1b92e162f36c578eeaaac03882116b0294fda5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4e1b92e162f36c578eeaaac03882116b0294fda5"
     },
     {
       "path": "internal/domestic/hotel_levels_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5e7ca30a08c2fe98942c16e43319f4d33e3935fa",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5e7ca30a08c2fe98942c16e43319f4d33e3935fa"
     },
     {
       "path": "internal/domestic/hotel_levels_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8bcaa136cd5e1a650bf4bb46848164abec93e368",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8bcaa136cd5e1a650bf4bb46848164abec93e368"
     },
     {
       "path": "internal/domestic/pg_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f70920211376cd33913b8219c2c69253ee62e950",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f70920211376cd33913b8219c2c69253ee62e950"
     },
     {
       "path": "internal/domestic/pg_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a28ac2577b39a8cd47da56e39fb22f1906837c92",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a28ac2577b39a8cd47da56e39fb22f1906837c92"
     },
     {
       "path": "internal/domestic/production_fraction_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "dbf143b2cabebebce88c1ac92ba713d800c7e3f1",
-      "explicit_post_stable_lint_correction": false
+      "sha": "dbf143b2cabebebce88c1ac92ba713d800c7e3f1"
     },
     {
       "path": "internal/domestic/production_persistence_matrix_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "628c52ab1031f2aaa7b3306dc205335cd8d2533b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "883ae9436cb1c10fed7609a6fd7a65d77ed87c11"
     },
     {
       "path": "internal/domestic/production_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9e2ed05789ef4916b840c45c957fc158684c7784",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9e2ed05789ef4916b840c45c957fc158684c7784"
     },
     {
       "path": "internal/domestic/production_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "66d91e8caa41636ae2b90568dec19508dfd4d574",
-      "explicit_post_stable_lint_correction": false
+      "sha": "66d91e8caa41636ae2b90568dec19508dfd4d574"
     },
     {
       "path": "internal/domestic/queue_failure_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6bf3ad5cfe740fd655088fc322652400d44fdd8e",
-      "explicit_post_stable_lint_correction": true
+      "sha": "6bf3ad5cfe740fd655088fc322652400d44fdd8e"
     },
     {
       "path": "internal/domestic/queue_identity.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "866eccd3fa113713abfc3592d1b9751fa6675e24",
-      "explicit_post_stable_lint_correction": true
+      "sha": "866eccd3fa113713abfc3592d1b9751fa6675e24"
     },
     {
       "path": "internal/domestic/queue_identity_pg_test.sh",
       "mode": "100755",
       "type": "blob",
-      "sha": "a75052fbb09b07f6a75a0a9ede3f05a446470528",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a75052fbb09b07f6a75a0a9ede3f05a446470528"
     },
     {
       "path": "internal/domestic/queue_identity_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "bacb88273607133d30acd10e5f0c9441af3aff71",
-      "explicit_post_stable_lint_correction": false
+      "sha": "bacb88273607133d30acd10e5f0c9441af3aff71"
     },
     {
       "path": "internal/domestic/queue_lifecycle_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e5061643223cfa8e9af3a96e302ecc318ea1ee3f",
-      "explicit_post_stable_lint_correction": true
+      "sha": "4b33fa8f271dd2118f659abec125c21d359ef6b6"
     },
     {
       "path": "internal/domestic/queue_metadata_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "509b3366ef5fd5a41b065fc9e29baa1554fd8f49",
-      "explicit_post_stable_lint_correction": false
+      "sha": "509b3366ef5fd5a41b065fc9e29baa1554fd8f49"
     },
     {
       "path": "internal/domestic/queue_owner_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d975acb642739a8a9f8c304377a17a360f10fcee",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d975acb642739a8a9f8c304377a17a360f10fcee"
     },
     {
       "path": "internal/domestic/queue_restart_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7d60fbadf1306ab585d51df27d7a2452c8b30607",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7d60fbadf1306ab585d51df27d7a2452c8b30607"
     },
     {
       "path": "internal/domestic/queue_upgrade.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1f907b32a37f7ae1e8e86d7962b5f21c14d79aa6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1f907b32a37f7ae1e8e86d7962b5f21c14d79aa6"
     },
     {
       "path": "internal/domestic/service.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "af66056711f9bfc56c89211461c72d6af7c6f96c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "af66056711f9bfc56c89211461c72d6af7c6f96c"
     },
     {
       "path": "internal/domestic/service_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "518b3cd86264a96c5c8eaa425fff10ba429fdebd",
-      "explicit_post_stable_lint_correction": false
+      "sha": "518b3cd86264a96c5c8eaa425fff10ba429fdebd"
     },
     {
       "path": "internal/domestic/wallet.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e6be66dec6ec5f30ceef7467a028dd5858a2adeb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e6be66dec6ec5f30ceef7467a028dd5858a2adeb"
     },
     {
       "path": "internal/domestic/wallet_limits_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "70c3f81314e8e2dcfb6cd91a202a5d67aa2a4475",
-      "explicit_post_stable_lint_correction": false
+      "sha": "70c3f81314e8e2dcfb6cd91a202a5d67aa2a4475"
     },
     {
       "path": "internal/domestic/wallet_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4162e9d9e2371d070db501b78b9faab1ab88c65d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4162e9d9e2371d070db501b78b9faab1ab88c65d"
     },
     {
       "path": "internal/hero/FAMILY_TRANSACTIONS.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "13943997b7e298c8e45d6e9ccdb2b9757aadb549",
-      "explicit_post_stable_lint_correction": false
+      "sha": "13943997b7e298c8e45d6e9ccdb2b9757aadb549"
     },
     {
       "path": "internal/hero/HOTEL_TRANSACTIONS.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "e496a5fc21f983d2c8625ff0f73096bece0e48b3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e496a5fc21f983d2c8625ff0f73096bece0e48b3"
     },
     {
       "path": "internal/hero/IDENTITY.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "ea4b287aafb3dace4b92264a1d113ebde4894bc1",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ea4b287aafb3dace4b92264a1d113ebde4894bc1"
     },
     {
       "path": "internal/hero/captive.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6c77e0a8ba633dc94f1c70de51a1b0e1790dc135",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6c77e0a8ba633dc94f1c70de51a1b0e1790dc135"
     },
     {
       "path": "internal/hero/captive_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "af1975452c09280019d94ffe917391134217da48",
-      "explicit_post_stable_lint_correction": false
+      "sha": "af1975452c09280019d94ffe917391134217da48"
     },
     {
       "path": "internal/hero/captive_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4907160f4af1fc793a6cc7227d64bf7ac6bfdb32",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4907160f4af1fc793a6cc7227d64bf7ac6bfdb32"
     },
     {
       "path": "internal/hero/coming.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a62baf6b6a0cb2a512503a2e5d1c7b163f0dd5ed",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a62baf6b6a0cb2a512503a2e5d1c7b163f0dd5ed"
     },
     {
       "path": "internal/hero/coming_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2c30fbdf06a549c073e24aadeb825ed09c826af8",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2c30fbdf06a549c073e24aadeb825ed09c826af8"
     },
     {
       "path": "internal/hero/coming_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3e15590132c10021dccfe35d3350981ce46c9056",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3e15590132c10021dccfe35d3350981ce46c9056"
     },
     {
       "path": "internal/hero/create.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "28db302677208410e82265bbe9cf6dd08590606c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "28db302677208410e82265bbe9cf6dd08590606c"
     },
     {
       "path": "internal/hero/create_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6614a7f2404df8e963f9363c51917675fe5955a9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6614a7f2404df8e963f9363c51917675fe5955a9"
     },
     {
       "path": "internal/hero/creator_identity_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4c45f363621b46bfbf37b56c152b8de71d77a90c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4c45f363621b46bfbf37b56c152b8de71d77a90c"
     },
     {
       "path": "internal/hero/doc.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "0f51cedffa5dd26f40f73b3d60733265e51a3eba",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0f51cedffa5dd26f40f73b3d60733265e51a3eba"
     },
     {
       "path": "internal/hero/expr_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3798d4576a2e088cef492aef32c764dcab6e6222",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3798d4576a2e088cef492aef32c764dcab6e6222"
     },
     {
       "path": "internal/hero/family_hero_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "03f05f9d84ebdd0a18028361a0c13e76e6cae5c6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "03f05f9d84ebdd0a18028361a0c13e76e6cae5c6"
     },
     {
       "path": "internal/hero/family_hero_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1d232d3893a27bb9db05ac03bd278873e2449d9d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1d232d3893a27bb9db05ac03bd278873e2449d9d"
     },
     {
       "path": "internal/hero/family_injection_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5123829e47d99ced3259243ab98bc58370cac854",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5123829e47d99ced3259243ab98bc58370cac854"
     },
     {
       "path": "internal/hero/family_injection_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e90880d6dcfc801db743a9766d40b48508cc3928",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e90880d6dcfc801db743a9766d40b48508cc3928"
     },
     {
       "path": "internal/hero/family_metadata_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6aabdd6d0b00c6a84bdc1774583f2d0be384547c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6aabdd6d0b00c6a84bdc1774583f2d0be384547c"
     },
     {
       "path": "internal/hero/family_metadata_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "13747c8265689c7fe305d412862fc407ba6d0983",
-      "explicit_post_stable_lint_correction": false
+      "sha": "13747c8265689c7fe305d412862fc407ba6d0983"
     },
     {
       "path": "internal/hero/family_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9fc60333d8274e0a5bcbd44597a00451e9afdcf8",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9fc60333d8274e0a5bcbd44597a00451e9afdcf8"
     },
     {
       "path": "internal/hero/family_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "32bb8a5b46f01f500aa7d97f88f81155844b2fa7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "32bb8a5b46f01f500aa7d97f88f81155844b2fa7"
     },
     {
       "path": "internal/hero/family_tx_edges_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f71fe4cd2155ac0513b1bc5e49684d3af4c2822a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f71fe4cd2155ac0513b1bc5e49684d3af4c2822a"
     },
     {
       "path": "internal/hero/family_view_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4f0aebde9840bc4ce34399d7536481a5cb600f31",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4f0aebde9840bc4ce34399d7536481a5cb600f31"
     },
     {
       "path": "internal/hero/family_view_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b9daf8cfc4efa02bb82b0920ddce39af4e9ee3af",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b9daf8cfc4efa02bb82b0920ddce39af4e9ee3af"
     },
     {
       "path": "internal/hero/hotel.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f47c4eee2c53ec18ad72be4f09fe80b5e2593586",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f47c4eee2c53ec18ad72be4f09fe80b5e2593586"
     },
     {
       "path": "internal/hero/hotel_candidate_id_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8bcb46ce7b35e4be05c8aac36d5350f67d790885",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8bcb46ce7b35e4be05c8aac36d5350f67d790885"
     },
     {
       "path": "internal/hero/hotel_pg_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "07442d8931d5bdc7481e88d0c36c74c82e0b826d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "07442d8931d5bdc7481e88d0c36c74c82e0b826d"
     },
     {
       "path": "internal/hero/hotel_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "cd989ce73fc235c9854ac574b573022dee41390c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "cd989ce73fc235c9854ac574b573022dee41390c"
     },
     {
       "path": "internal/hero/hotel_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d047585a556025aaa64fd898808f1741ace8965b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d047585a556025aaa64fd898808f1741ace8965b"
     },
     {
       "path": "internal/hero/hotel_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "93d5adabc847172f1ceb5eeb4a3169af08972c7e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "93d5adabc847172f1ceb5eeb4a3169af08972c7e"
     },
     {
       "path": "internal/hero/hotel_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "45fc3a68600856c99602c56967e7eae01be7c170",
-      "explicit_post_stable_lint_correction": false
+      "sha": "45fc3a68600856c99602c56967e7eae01be7c170"
     },
     {
       "path": "internal/hero/hotel_tx_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "dded6d72a8c16c3b8a0e6250935f07168d13ca7b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "dded6d72a8c16c3b8a0e6250935f07168d13ca7b"
     },
     {
       "path": "internal/hero/hotel_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "de7bbcf3e878660e1454b24b187d030c08901569",
-      "explicit_post_stable_lint_correction": false
+      "sha": "de7bbcf3e878660e1454b24b187d030c08901569"
     },
     {
       "path": "internal/hero/largess.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "24b52725b4cef4fd76dd997da011331195f11b73",
-      "explicit_post_stable_lint_correction": false
+      "sha": "24b52725b4cef4fd76dd997da011331195f11b73"
     },
     {
       "path": "internal/hero/largess_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e65aa0e7d873d0c69490977e0574397beb00e0a9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e65aa0e7d873d0c69490977e0574397beb00e0a9"
     },
     {
       "path": "internal/hero/lionize_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "53e4f1be4f82646fe66a8512ce662ea905e8ecac",
-      "explicit_post_stable_lint_correction": false
+      "sha": "53e4f1be4f82646fe66a8512ce662ea905e8ecac"
     },
     {
       "path": "internal/hero/lionize_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9bbf8df2faa2c0a9cd8d2b70fe4103076ad5d773",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9bbf8df2faa2c0a9cd8d2b70fe4103076ad5d773"
     },
     {
       "path": "internal/hero/lionize_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "67406b4f9d8ff44475b34a43e8a96c2d9310d42c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "67406b4f9d8ff44475b34a43e8a96c2d9310d42c"
     },
     {
       "path": "internal/hero/lionize_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b3cfba3bef5146e800852b69f409e72b0ecdbefa",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b3cfba3bef5146e800852b69f409e72b0ecdbefa"
     },
     {
       "path": "internal/hero/march_force_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8362dc086779c8382fbfe8448f7be05ac512474b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8362dc086779c8382fbfe8448f7be05ac512474b"
     },
     {
       "path": "internal/hero/march_status_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e2f45fca6d42f283bb6e430013f5183812a74b5d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e2f45fca6d42f283bb6e430013f5183812a74b5d"
     },
     {
       "path": "internal/hero/metadata_shard_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e4c6702b265173d6f7e3572b173f3fe6745d3cb5",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e4c6702b265173d6f7e3572b173f3fe6745d3cb5"
     },
     {
       "path": "internal/hero/office_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "820b78778d2c99578f1bd515c7bf7bc349f5f18d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "820b78778d2c99578f1bd515c7bf7bc349f5f18d"
     },
     {
       "path": "internal/hero/persuade.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5fbc0f5abe819c624562d1c565d3f42bed0a2839",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5fbc0f5abe819c624562d1c565d3f42bed0a2839"
     },
     {
       "path": "internal/hero/persuade_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5feba7b5cc1eb426c7f6380048f7117e6d493476",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5feba7b5cc1eb426c7f6380048f7117e6d493476"
     },
     {
       "path": "internal/hero/pg_create.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "22137b5b2a9686f1cf2e88b9b6e37ded6a09b0cc",
-      "explicit_post_stable_lint_correction": false
+      "sha": "22137b5b2a9686f1cf2e88b9b6e37ded6a09b0cc"
     },
     {
       "path": "internal/hero/pg_create_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "21e2bd261baa7d6d904403b40525700dcbcf459b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "21e2bd261baa7d6d904403b40525700dcbcf459b"
     },
     {
       "path": "internal/hero/pg_identity_failures_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d2e9a15db7dd448c5bdb52e68d1aeb99a623a3fe",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d2e9a15db7dd448c5bdb52e68d1aeb99a623a3fe"
     },
     {
       "path": "internal/hero/pg_identity_transitions_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c1dee4998b7bdce5e9c3b58e141c5baf6abaf304",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c1dee4998b7bdce5e9c3b58e141c5baf6abaf304"
     },
     {
       "path": "internal/hero/pg_recruit_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4fb3027aa9114e12e652ba93d522195e009fbf6f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4fb3027aa9114e12e652ba93d522195e009fbf6f"
     },
     {
       "path": "internal/hero/pg_recruit_player_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "62622ff550e1869e9bab45cdacc7247d3c6c953f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "62622ff550e1869e9bab45cdacc7247d3c6c953f"
     },
     {
       "path": "internal/hero/pg_recruit_read.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "47c46d87870767374d1610a373fecdae011e1447",
-      "explicit_post_stable_lint_correction": false
+      "sha": "47c46d87870767374d1610a373fecdae011e1447"
     },
     {
       "path": "internal/hero/pg_recruit_read_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a85289008d388b07f1c20642cab122eeeab80d2d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a85289008d388b07f1c20642cab122eeeab80d2d"
     },
     {
       "path": "internal/hero/pg_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ddd8b68b346e83f63a0ac36a2a1e1c82b7e0c103",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ddd8b68b346e83f63a0ac36a2a1e1c82b7e0c103"
     },
     {
       "path": "internal/hero/pg_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "53e0622cf5ff12dd57ff84ff2ccefb73e864977f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "53e0622cf5ff12dd57ff84ff2ccefb73e864977f"
     },
     {
       "path": "internal/hero/player_ops.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8612c403851c9162dfb57dd18efb383102409ae1",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8612c403851c9162dfb57dd18efb383102409ae1"
     },
     {
       "path": "internal/hero/random.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1845ca69d198f3d7a9443baa3159e45b47b89572",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1845ca69d198f3d7a9443baa3159e45b47b89572"
     },
     {
       "path": "internal/hero/random_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "21679fa2ce62cd9ae73d1872c23003578fbb950e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "21679fa2ce62cd9ae73d1872c23003578fbb950e"
     },
     {
       "path": "internal/hero/recruit.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "41a9350f2cfef4bf4840f66e049d030bd2e9b41f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "41a9350f2cfef4bf4840f66e049d030bd2e9b41f"
     },
     {
       "path": "internal/hero/recruit_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f9aac83363a0639fb3da6b0f52b1088210f8c778",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f9aac83363a0639fb3da6b0f52b1088210f8c778"
     },
     {
       "path": "internal/hero/recruit_plan_concurrency_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "fe8a72e0d1c6b84cbd0f4fa8510cc77721eaeaab",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fe8a72e0d1c6b84cbd0f4fa8510cc77721eaeaab"
     },
     {
       "path": "internal/hero/recruit_plan_config_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "48ee711dead3de633c7d56510812ee0de599551b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "48ee711dead3de633c7d56510812ee0de599551b"
     },
     {
       "path": "internal/hero/recruit_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "9fba2599d5b17191bd0b843bef4f8bf75c62544d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "9fba2599d5b17191bd0b843bef4f8bf75c62544d"
     },
     {
       "path": "internal/hero/recruit_player_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1240c501d2898d4529392da28a38fb9fadb50d46",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1240c501d2898d4529392da28a38fb9fadb50d46"
     },
     {
       "path": "internal/hero/shard_identity_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4e6a0e9d90126c187376bd797363f638bd7da075",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4e6a0e9d90126c187376bd797363f638bd7da075"
     },
     {
       "path": "internal/hero/store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "df7c57835adbcd82b29048d5c563c43767a7b745",
-      "explicit_post_stable_lint_correction": false
+      "sha": "df7c57835adbcd82b29048d5c563c43767a7b745"
     },
     {
       "path": "internal/hero/testdata/candidate_id_restart/main.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5d0e12e7d7c67b7ce1d44b79f748cb3da6d1f8ad",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5d0e12e7d7c67b7ce1d44b79f748cb3da6d1f8ad"
     },
     {
       "path": "internal/hero/types.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "22d0a67543b0d223c031b369a5bd758a68b2bc51",
-      "explicit_post_stable_lint_correction": false
+      "sha": "22d0a67543b0d223c031b369a5bd758a68b2bc51"
     },
     {
       "path": "internal/hero/upgrade_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "2378a190bbf5d2e13c69e7a4c09ac1b4b6bfb1f4",
-      "explicit_post_stable_lint_correction": false
+      "sha": "2378a190bbf5d2e13c69e7a4c09ac1b4b6bfb1f4"
     },
     {
       "path": "internal/military/march/doc.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ca2d07f20c19f5e821b4ccae5854769edabca5eb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ca2d07f20c19f5e821b4ccae5854769edabca5eb"
     },
     {
       "path": "internal/military/march/hub.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4d5f6cc6f29709a3c53718a806f851c2cc6c844c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4d5f6cc6f29709a3c53718a806f851c2cc6c844c"
     },
     {
       "path": "internal/military/march/march_input_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "732bf72938f85bdbe23beda16d86084c8ca02c3b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "732bf72938f85bdbe23beda16d86084c8ca02c3b"
     },
     {
       "path": "internal/military/march/march_order.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f06e8b2bbf7d2a7d9d176b2edf921a47f9f1caba",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f06e8b2bbf7d2a7d9d176b2edf921a47f9f1caba"
     },
     {
       "path": "internal/military/march/march_snapshot.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "753471d40f3d2769d007f39d5c3d2b502bfd3baf",
-      "explicit_post_stable_lint_correction": false
+      "sha": "753471d40f3d2769d007f39d5c3d2b502bfd3baf"
     },
     {
       "path": "internal/military/march/march_snapshot_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d9e6d2b2aa84920a813f6aa3dc353b9451771b62",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d9e6d2b2aa84920a813f6aa3dc353b9451771b62"
     },
     {
       "path": "internal/military/march/troop_normalize.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d06a5ee6e05024c1a5a4f7c81c133d78d8b3c9c6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d06a5ee6e05024c1a5a4f7c81c133d78d8b3c9c6"
     },
     {
       "path": "internal/military/report/service_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f36febb10d2b4ed377e0e225d23252f2c7f7d559",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f36febb10d2b4ed377e0e225d23252f2c7f7d559"
     },
     {
       "path": "internal/quest/claim_tutorial.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6c65ba8e7b9eebe2e11e62260fb1ba7c8a0d20ff",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6c65ba8e7b9eebe2e11e62260fb1ba7c8a0d20ff"
     },
     {
       "path": "internal/quest/claim_tutorial_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "62b74d9dc2c39db4d63b2c2e0cf765dbc007c35e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "62b74d9dc2c39db4d63b2c2e0cf765dbc007c35e"
     },
     {
       "path": "internal/quest/claim_tutorial_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5dc502c3453cbda1f42b65e86dae1f788791b437",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5dc502c3453cbda1f42b65e86dae1f788791b437"
     },
     {
       "path": "internal/quest/claim_wall.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b1379bf05f5663228322e31f9454d4cb35486251",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b1379bf05f5663228322e31f9454d4cb35486251"
     },
     {
       "path": "internal/quest/claim_wall_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7b34e86fb432970390d868bba49618a9b3f69189",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7b34e86fb432970390d868bba49618a9b3f69189"
     },
     {
       "path": "internal/quest/claim_wall_receipt_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d4b5bcb6071fecff4bd48fcc26b040a2334b0c3f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d4b5bcb6071fecff4bd48fcc26b040a2334b0c3f"
     },
     {
       "path": "internal/quest/claim_wall_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b20d54365bed9826d86fa2b9ea0c9abbefba92c3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b20d54365bed9826d86fa2b9ea0c9abbefba92c3"
     },
     {
       "path": "internal/quest/content_granter.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "a1c839e6731c1e71451d44c8623042bf2de95495",
-      "explicit_post_stable_lint_correction": false
+      "sha": "a1c839e6731c1e71451d44c8623042bf2de95495"
     },
     {
       "path": "internal/quest/content_granter_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "fea08131aed1003667c0813bb4099fcacd3a3833",
-      "explicit_post_stable_lint_correction": false
+      "sha": "fea08131aed1003667c0813bb4099fcacd3a3833"
     },
     {
       "path": "internal/quest/doc.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b530a37bb477f9930dfbd4c228a3937aeb8864c9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b530a37bb477f9930dfbd4c228a3937aeb8864c9"
     },
     {
       "path": "internal/quest/mem_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "982b6c6b93cee45030cd36e74b88dee457d353f7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "982b6c6b93cee45030cd36e74b88dee457d353f7"
     },
     {
       "path": "internal/quest/pg_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d724217b61197bb257b243e8685286d6956197a7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "d724217b61197bb257b243e8685286d6956197a7"
     },
     {
       "path": "internal/quest/pg_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "39209226bcfe07a76a75f887aebd4755d13e4918",
-      "explicit_post_stable_lint_correction": false
+      "sha": "39209226bcfe07a76a75f887aebd4755d13e4918"
     },
     {
       "path": "internal/quest/proof.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "3564e3d60d0c07e68c85224c4fdf08a5b24e6a53",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3564e3d60d0c07e68c85224c4fdf08a5b24e6a53"
     },
     {
       "path": "internal/quest/proof_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "24bf9ce07af66e190e211c0bed25560687ec2322",
-      "explicit_post_stable_lint_correction": false
+      "sha": "24bf9ce07af66e190e211c0bed25560687ec2322"
     },
     {
       "path": "internal/quest/reward.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "0121220c88106c3804b93de9b2f13986840a36a4",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0121220c88106c3804b93de9b2f13986840a36a4"
     },
     {
       "path": "internal/quest/service.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ccbfa1eaf542f02b7b9a871d04a9664232a2476e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ccbfa1eaf542f02b7b9a871d04a9664232a2476e"
     },
     {
       "path": "internal/quest/service_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "388173f4a1f02e5fb21d1f53685781d8379f5574",
-      "explicit_post_stable_lint_correction": false
+      "sha": "388173f4a1f02e5fb21d1f53685781d8379f5574"
     },
     {
       "path": "internal/quest/store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b0ba3ea220b1dba9359a0cf27f6401d41c200390",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b0ba3ea220b1dba9359a0cf27f6401d41c200390"
     },
     {
       "path": "internal/quest/tutorial.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7e817ed09104612c5dad4fc255ac31bafa665e91",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7e817ed09104612c5dad4fc255ac31bafa665e91"
     },
     {
       "path": "internal/quest/tutorial_level.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "4f9aa273c97d4bd5b401c3a4a7c795997c16b545",
-      "explicit_post_stable_lint_correction": false
+      "sha": "4f9aa273c97d4bd5b401c3a4a7c795997c16b545"
     },
     {
       "path": "internal/quest/tutorial_level_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ca6594bf65ee221650ff56c0dd41580b152b5782",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ca6594bf65ee221650ff56c0dd41580b152b5782"
     },
     {
       "path": "internal/quest/tutorial_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c2bdd1d9f8239691cd88b9280a11777a1d1b7d7b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c2bdd1d9f8239691cd88b9280a11777a1d1b7d7b"
     },
     {
       "path": "internal/quest/types.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "83fa44fb4d1a2c2e4a70320d6da8a4a2ef310a45",
-      "explicit_post_stable_lint_correction": false
+      "sha": "83fa44fb4d1a2c2e4a70320d6da8a4a2ef310a45"
     },
     {
       "path": "internal/quest/wall.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "84a02cb396286b947f4cab05a6d2d4ff73f7dbd4",
-      "explicit_post_stable_lint_correction": false
+      "sha": "84a02cb396286b947f4cab05a6d2d4ff73f7dbd4"
     },
     {
       "path": "internal/quest/wall.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "c86a3c22435671544371d81489b1f02321b9f929",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c86a3c22435671544371d81489b1f02321b9f929"
     },
     {
       "path": "internal/quest/wall_catalog_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "29821cfa7ff83c86823069e43dc93f2eaeb93fe3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "29821cfa7ff83c86823069e43dc93f2eaeb93fe3"
     },
     {
       "path": "internal/quest/wall_fault_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "7256426eaed11a6ef5c1258e73c1d50e374a18a6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "7256426eaed11a6ef5c1258e73c1d50e374a18a6"
     },
     {
       "path": "internal/quest/wall_gates_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "696c3bbd5b11a7d093af30239a656f738411fac6",
-      "explicit_post_stable_lint_correction": false
+      "sha": "696c3bbd5b11a7d093af30239a656f738411fac6"
     },
     {
       "path": "internal/quest/wall_recovery.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "0eabf791cb177bb1331e64a198d0225255db45e7",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0eabf791cb177bb1331e64a198d0225255db45e7"
     },
     {
       "path": "internal/quest/wall_recovery_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "6d781d44816594c9125f7f43c37f120894fe4353",
-      "explicit_post_stable_lint_correction": false
+      "sha": "6d781d44816594c9125f7f43c37f120894fe4353"
     },
     {
       "path": "internal/quest/wall_recovery_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "e11d1298f5196ce1bd2f3d09656ebc455f86c660",
-      "explicit_post_stable_lint_correction": false
+      "sha": "e11d1298f5196ce1bd2f3d09656ebc455f86c660"
     },
     {
       "path": "internal/quest/wall_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "bab5d2ec6b09b508e98d05a65475309ea72cb59d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "bab5d2ec6b09b508e98d05a65475309ea72cb59d"
     },
     {
       "path": "internal/quest/wall_store_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5911b043cee273f0a4761b3f2664f73af05cdb4a",
-      "explicit_post_stable_lint_correction": true
+      "sha": "5911b043cee273f0a4761b3f2664f73af05cdb4a"
     },
     {
       "path": "internal/quest/wall_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "458d58e51cc494845670d0bba40a79fd5c008df2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "458d58e51cc494845670d0bba40a79fd5c008df2"
     },
     {
       "path": "internal/quest/wall_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ae0a5884d1b50f2c2c57e6f01c324c841bcd6385",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ae0a5884d1b50f2c2c57e6f01c324c841bcd6385"
     },
     {
       "path": "internal/rank/pg_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "96844bb68f45e3f8430b8055272b73ca3273e6cc",
-      "explicit_post_stable_lint_correction": false
+      "sha": "96844bb68f45e3f8430b8055272b73ca3273e6cc"
     },
     {
       "path": "internal/rank/store_contract_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ac7ab9bd20ce775b498022952dbe1fe9d1bbf2ae",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ac7ab9bd20ce775b498022952dbe1fe9d1bbf2ae"
     },
     {
       "path": "internal/shop/README.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "829a18f0391f0f5b724b15d9f7eb62828de17d8c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "829a18f0391f0f5b724b15d9f7eb62828de17d8c"
     },
     {
       "path": "internal/shop/calendar_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "1002e76d938e7951bb7b9c71a632435cb3b20a36",
-      "explicit_post_stable_lint_correction": false
+      "sha": "1002e76d938e7951bb7b9c71a632435cb3b20a36"
     },
     {
       "path": "internal/shop/legacy_purchase_guard_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "befbadade8cb52dee4aed6b227ff2d1e1d382e48",
-      "explicit_post_stable_lint_correction": false
+      "sha": "befbadade8cb52dee4aed6b227ff2d1e1d382e48"
     },
     {
       "path": "internal/shop/list_context.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "b9c8097d5d98c302d8056e11a883cffa957f5fe2",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b9c8097d5d98c302d8056e11a883cffa957f5fe2"
     },
     {
       "path": "internal/shop/list_context_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "047bed27d2e1044c4cce7475198510cf2c410ee3",
-      "explicit_post_stable_lint_correction": false
+      "sha": "047bed27d2e1044c4cce7475198510cf2c410ee3"
     },
     {
       "path": "internal/shop/mem_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "be333a1e643e074344ed34a9f6b58e93063094bb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "be333a1e643e074344ed34a9f6b58e93063094bb"
     },
     {
       "path": "internal/shop/pg_stock_lock_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f93aea8c4f8bb9145a4b2e03e46352388a3ce8cc",
-      "explicit_post_stable_lint_correction": true
+      "sha": "f93aea8c4f8bb9145a4b2e03e46352388a3ce8cc"
     },
     {
       "path": "internal/shop/pg_store.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "0d220fd8ff4c7572d43b75e315d7075851fe3f63",
-      "explicit_post_stable_lint_correction": false
+      "sha": "0d220fd8ff4c7572d43b75e315d7075851fe3f63"
     },
     {
       "path": "internal/shop/pg_store_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "bb213d42e2b4c6ed60d4bc1ecda03899e7ce6161",
-      "explicit_post_stable_lint_correction": true
+      "sha": "bb213d42e2b4c6ed60d4bc1ecda03899e7ce6161"
     },
     {
       "path": "internal/shop/purchase_allocator_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f3cd4188d0bd6da0c79e409df21a4b171cad477b",
-      "explicit_post_stable_lint_correction": true
+      "sha": "f3cd4188d0bd6da0c79e409df21a4b171cad477b"
     },
     {
       "path": "internal/shop/purchase_clock_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f6b6543156a4d9b895205ef3764bbab3adf87391",
-      "explicit_post_stable_lint_correction": true
+      "sha": "f6b6543156a4d9b895205ef3764bbab3adf87391"
     },
     {
       "path": "internal/shop/purchase_concurrency_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "d7e0b4921e06a8533223dbe1fc7d8459b8452f86",
-      "explicit_post_stable_lint_correction": true
+      "sha": "5e15d0d6b9b09fb50001eb426424ce51c4092c92"
     },
     {
       "path": "internal/shop/purchase_intent.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c80e38578910fd62014d25625afda604697d7c4d",
-      "explicit_post_stable_lint_correction": false
+      "sha": "c80e38578910fd62014d25625afda604697d7c4d"
     },
     {
       "path": "internal/shop/purchase_intent_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "68af19e4265f6749599995a575513c7936292f40",
-      "explicit_post_stable_lint_correction": false
+      "sha": "68af19e4265f6749599995a575513c7936292f40"
     },
     {
       "path": "internal/shop/purchase_plan.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ecbb10eb9e137c8fa13a2a988c74c3c23cb24c62",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ecbb10eb9e137c8fa13a2a988c74c3c23cb24c62"
     },
     {
       "path": "internal/shop/purchase_plan_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "dfcea19c2a66c0f93e7cda3c4163437a5baee739",
-      "explicit_post_stable_lint_correction": false
+      "sha": "dfcea19c2a66c0f93e7cda3c4163437a5baee739"
     },
     {
       "path": "internal/shop/purchase_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "ed9225533e5b79777f79843fcc26fdf671dab34b",
-      "explicit_post_stable_lint_correction": false
+      "sha": "ed9225533e5b79777f79843fcc26fdf671dab34b"
     },
     {
       "path": "internal/shop/purchase_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "c9dd2554c2401f29d15a0835d67c23d42cf8d982",
-      "explicit_post_stable_lint_correction": true
+      "sha": "913243004d8109d0216d6ea55a73ec6baf085ac2"
     },
     {
       "path": "internal/shop/service.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "5809f637c27d90375016b4c842455f112c42c86c",
-      "explicit_post_stable_lint_correction": false
+      "sha": "5809f637c27d90375016b4c842455f112c42c86c"
     },
     {
       "path": "internal/world/CITY-CREATION.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "b08a8d32b9c8a1fc7ea0120a08f31c68f8d61d9a",
-      "explicit_post_stable_lint_correction": false
+      "sha": "b08a8d32b9c8a1fc7ea0120a08f31c68f8d61d9a"
     },
     {
       "path": "internal/world/CITY-OWNERSHIP-TX.md",
       "mode": "100644",
       "type": "blob",
-      "sha": "3009bcf850a22b6e69546447e4e4f8b7a5cc785e",
-      "explicit_post_stable_lint_correction": false
+      "sha": "3009bcf850a22b6e69546447e4e4f8b7a5cc785e"
     },
     {
       "path": "internal/world/city_creation.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "83247c63025accdc680d679fca5d6fac6afff5c8",
-      "explicit_post_stable_lint_correction": false
+      "sha": "83247c63025accdc680d679fca5d6fac6afff5c8"
     },
     {
       "path": "internal/world/city_creation_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "39cdafeabc5f9a041d93574dac335f372f733d6f",
-      "explicit_post_stable_lint_correction": true
+      "sha": "39cdafeabc5f9a041d93574dac335f372f733d6f"
     },
     {
       "path": "internal/world/city_creation_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "f407cbd298d011db9cf4202fb15b1ce51582b58f",
-      "explicit_post_stable_lint_correction": false
+      "sha": "f407cbd298d011db9cf4202fb15b1ce51582b58f"
     },
     {
       "path": "internal/world/city_owner_tx.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "8c6e0566c6850af0eaf8be1fd223db57ac2c8177",
-      "explicit_post_stable_lint_correction": false
+      "sha": "8c6e0566c6850af0eaf8be1fd223db57ac2c8177"
     },
     {
       "path": "internal/world/city_owner_tx_pg_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "32d3da50e3267570fe8af3103401d8459ede3dbb",
-      "explicit_post_stable_lint_correction": false
+      "sha": "32d3da50e3267570fe8af3103401d8459ede3dbb"
     },
     {
       "path": "internal/world/city_owner_tx_test.go",
       "mode": "100644",
       "type": "blob",
-      "sha": "32b621f2ee0edb63216d8f7b0821c542629e4af9",
-      "explicit_post_stable_lint_correction": false
+      "sha": "32b621f2ee0edb63216d8f7b0821c542629e4af9"
     }
   ],
   "special_lineage_reconciliation": [
@@ -24810,14 +24428,18 @@
   "review_coverage": {
     "implementation_sources": 174,
     "sources_with_scoped_records": 174,
-    "final_changed_paths": 437,
-    "paths_with_exact_scoped_or_reviewed_composition_coverage": 437,
+    "final_changed_paths": 438,
+    "paths_with_exact_scoped_or_reviewed_composition_coverage": 438,
     "unresolved_provenance_gaps": 0,
-    "aggregation_limit": "Inventory and patch equivalence are not new code approval. New gap-closing static reviews are explicitly dated/scoped; no test rerun is implied. Final manifest/composition review and remote exact-head CI remain separate gates."
+    "aggregation_limit": "Inventory and patch equivalence are not new code approval. New gap-closing static reviews are explicitly dated/scoped; no test rerun is implied. Final manifest/composition review and remote exact-head CI remain separate gates.",
+    "original_final_changed_paths": 437,
+    "explicit_runtime_correction_count": 10,
+    "correction_overlay_paths": 6,
+    "revision2_note": "432 original changed paths untouched; five prior changed paths have explicit correction review, plus one legacy main adapter deletion. Original source174 component coverage retained; final overlay/source equivalence separately reviewed."
   },
   "validation": [
     {
-      "id": "final-offline-go",
+      "id": "initial-code-offline-go",
       "source": "2d1572cf130dbe46d136f3cd4ab11b2553b5884a",
       "result": "PASS",
       "commands": [
@@ -24874,6 +24496,40 @@
       "result": "PASS bounded existing acceptance",
       "scope": "Wall1006 reached level6 with claim/relogin/restart persistence; genuine combat baseline passed.",
       "limits": "Fixture-specific bounded acceptance, not full-game or production readiness. Military durability and natural hero availability limits below remain."
+    },
+    {
+      "id": "first-published-head-ci",
+      "source": "61788e23517e37b0922ba3825c9c64c725b1236d",
+      "run_id": 40309940713,
+      "result": "FAIL lint",
+      "client_build_test": "success",
+      "go_build": "success",
+      "go_unit_tests": "success",
+      "smoke_boot": "skipped",
+      "limits": "Revision2 must pass fresh exact-head CI; this failure is retained, not waived."
+    },
+    {
+      "id": "shop-rollback-correction-focused-pg",
+      "source": "46b0f5f420dd89cd0f78cc415b080a3105b37720",
+      "result": "PASS normal and race",
+      "tests": [
+        "TestPurchaseTxCounterExhaustionDoesNotWrite",
+        "TestPurchaseTxCancellationAtParticipantLocks",
+        "TestPurchaseTxRollbackCommitAndBinding"
+      ],
+      "skips": 0,
+      "normal_seconds": 0.412,
+      "race_seconds": 1.421,
+      "normal_log_sha256": "34a736a92cc9eb57ab71a2c59094f72881ea381bcf407cb4c08760cda0419f17",
+      "race_log_sha256": "a17836566af637d770f6628e9ad1231d1191a299db83e3246b4cc066e95139f3",
+      "limits": "Fresh disposable PostgreSQL cluster, separate normal/race databases, cleaned afterwards. Author execution; independent ROOT source/log review. Not whole SHOP or full API suite."
+    },
+    {
+      "id": "api-dom-ci-correction",
+      "result": "PASS bounded author checks",
+      "review_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+      "scope": "API focused hotel/family boundary tests + compilation/vet; DOM five non-DB production tests + vet; all diffs/gofmt clean.",
+      "limits": "No new API/DOM PG or full local golangci run; final exact-head CI remains required."
     }
   ],
   "integration_limits": [
@@ -24893,9 +24549,222 @@
     "Backlog waves, Tasks sync, workflow/permission/branch-protection/approval changes"
   ],
   "remaining_release_gates": [
-    "Independent exact final public-manifest and code-preserving-delta review",
-    "Self-contained manual intake registration and draft PR under approved policy; no backlog synchronization",
+    "Independent revision2 exact final composition/public-manifest review; original reviewed bytes preserved except explicit corrections",
+    "Update existing intake1791 with three single-domain corrections; no new issue/wave/backlog synchronization",
+    "Fast-forward same draftPR1792 with expected-head lease, preserving failed original61788 and frozen source",
     "Fresh remote head/base/scope review, all required exact-head CI green, no unresolved findings",
     "Authorized expected-head merge followed by main tree identity and main-push CI verification"
-  ]
+  ],
+  "revision_history": [
+    {
+      "revision": 1,
+      "published_head": "61788e23517e37b0922ba3825c9c64c725b1236d",
+      "tree": "c84b248945f2324b6f6ae0c3fca80009c21ebc90",
+      "manifest_sha256": "cf87ed47afe3a0c546430e609b9ff022a8430e953ee113eac31289f952e0b78a",
+      "ci_run": 40309940713,
+      "result": "FAIL: lint found four unchecked SHOP Rollbacks, one unreachable legacy API adapter, two DOM overwritten test assignments. Client/build/unit tests passed; wiring smoke skipped. This failed run is not erased or claimed green."
+    },
+    {
+      "revision": 2,
+      "change": "Three independently reviewed single-domain corrections plus public manifest update; original snapshot and first PR head retained."
+    }
+  ],
+  "historical_mapping_reference": {
+    "candidate": "2d1572cf130dbe46d136f3cd4ab11b2553b5884a",
+    "tree": "1d5237a9e479502de3cd2077baab134f81508d5d",
+    "sections": [
+      "review_records",
+      "single_domain_groups",
+      "source_review_coverage",
+      "source_reconciliation",
+      "component_source_alias_records"
+    ],
+    "meaning": "The final_blob fields in these retained original component mappings refer to the initial approved code candidate, not revision2. The explicit post_publication_corrections overlay and current final_path_mode_blobs define revision2. Original source commits and review evidence remain immutable."
+  },
+  "post_publication_corrections": {
+    "base_local_release": "0f95eca19e9c76bf460f09254a3f9c09f9f18932",
+    "base_published_release": "61788e23517e37b0922ba3825c9c64c725b1236d",
+    "corrected_code_candidate": "27c63bf0b5dad19aff9fa3131c2ccea0749528c4",
+    "corrected_code_tree": "980597c2b99c958b81e9682c7a3edab397cfc9b3",
+    "records": [
+      {
+        "id": "API-HOTEL-UNUSED-001",
+        "domain": "internal/api",
+        "report_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+        "reviewed_head": "e2719f609b73db16211a7412f9132feb44ff14d7",
+        "verdict": "Independent scoped static/composition approval; targeted execution limits below retained.",
+        "scoped_paths": [
+          {
+            "path": "internal/api/HOTEL_TRANSACTIONS.md",
+            "reviewed_blob": "47924a900d185ee8d2c08940dab26a7835daf449",
+            "final_blob": "47924a900d185ee8d2c08940dab26a7835daf449",
+            "equals_final": true,
+            "final_absent": false
+          },
+          {
+            "path": "internal/api/hero_hotel_city.go",
+            "reviewed_blob": null,
+            "final_blob": null,
+            "equals_final": true,
+            "final_absent": true
+          }
+        ],
+        "limits": "Not whole-domain review, full API/PG rerun, deployment, or exact remote lint approval."
+      },
+      {
+        "id": "SHOP-ROLLBACK-ERRCHECK-001",
+        "domain": "internal/shop",
+        "report_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+        "reviewed_head": "46b0f5f420dd89cd0f78cc415b080a3105b37720",
+        "verdict": "Independent scoped static/composition approval; targeted execution limits below retained.",
+        "scoped_paths": [
+          {
+            "path": "internal/shop/purchase_concurrency_test.go",
+            "reviewed_blob": "5e15d0d6b9b09fb50001eb426424ce51c4092c92",
+            "final_blob": "5e15d0d6b9b09fb50001eb426424ce51c4092c92",
+            "equals_final": true,
+            "final_absent": false
+          },
+          {
+            "path": "internal/shop/purchase_tx_test.go",
+            "reviewed_blob": "913243004d8109d0216d6ea55a73ec6baf085ac2",
+            "final_blob": "913243004d8109d0216d6ea55a73ec6baf085ac2",
+            "equals_final": true,
+            "final_absent": false
+          }
+        ],
+        "limits": "Not whole-domain review, full API/PG rerun, deployment, or exact remote lint approval."
+      },
+      {
+        "id": "DOM-FIXTURE-ASSIGNMENTS-001",
+        "domain": "internal/domestic",
+        "report_sha256": "3c8baf0d54517dd9aaf2e019979ac0fb25bd8af18f50dc871f771d7fab9c874c",
+        "reviewed_head": "42278bc6a59fc4b9f44bb819dc85fd732fb1559a",
+        "verdict": "Independent scoped static/composition approval; targeted execution limits below retained.",
+        "scoped_paths": [
+          {
+            "path": "internal/domestic/production_persistence_matrix_test.go",
+            "reviewed_blob": "883ae9436cb1c10fed7609a6fd7a65d77ed87c11",
+            "final_blob": "883ae9436cb1c10fed7609a6fd7a65d77ed87c11",
+            "equals_final": true,
+            "final_absent": false
+          },
+          {
+            "path": "internal/domestic/queue_lifecycle_test.go",
+            "reviewed_blob": "4b33fa8f271dd2118f659abec125c21d359ef6b6",
+            "final_blob": "4b33fa8f271dd2118f659abec125c21d359ef6b6",
+            "equals_final": true,
+            "final_absent": false
+          }
+        ],
+        "limits": "Not whole-domain review, full API/PG rerun, deployment, or exact remote lint approval."
+      }
+    ],
+    "path_overlay": [
+      {
+        "path": "internal/api/HOTEL_TRANSACTIONS.md",
+        "before": {
+          "path": "internal/api/HOTEL_TRANSACTIONS.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "5aef1644ae6479fdde4a70912017b48f91811b32"
+        },
+        "after": {
+          "path": "internal/api/HOTEL_TRANSACTIONS.md",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "47924a900d185ee8d2c08940dab26a7835daf449"
+        },
+        "change": "modified",
+        "correction_source": "e2719f609b73db16211a7412f9132feb44ff14d7",
+        "review_record": "API-HOTEL-UNUSED-001"
+      },
+      {
+        "path": "internal/api/hero_hotel_city.go",
+        "before": {
+          "path": "internal/api/hero_hotel_city.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "b8d456ebe247168bd69b1c1e782a5e341ce35a54"
+        },
+        "after": null,
+        "change": "deleted",
+        "correction_source": "e2719f609b73db16211a7412f9132feb44ff14d7",
+        "review_record": "API-HOTEL-UNUSED-001"
+      },
+      {
+        "path": "internal/shop/purchase_concurrency_test.go",
+        "before": {
+          "path": "internal/shop/purchase_concurrency_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "d7e0b4921e06a8533223dbe1fc7d8459b8452f86"
+        },
+        "after": {
+          "path": "internal/shop/purchase_concurrency_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "5e15d0d6b9b09fb50001eb426424ce51c4092c92"
+        },
+        "change": "modified",
+        "correction_source": "46b0f5f420dd89cd0f78cc415b080a3105b37720",
+        "review_record": "SHOP-ROLLBACK-ERRCHECK-001"
+      },
+      {
+        "path": "internal/shop/purchase_tx_test.go",
+        "before": {
+          "path": "internal/shop/purchase_tx_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "c9dd2554c2401f29d15a0835d67c23d42cf8d982"
+        },
+        "after": {
+          "path": "internal/shop/purchase_tx_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "913243004d8109d0216d6ea55a73ec6baf085ac2"
+        },
+        "change": "modified",
+        "correction_source": "46b0f5f420dd89cd0f78cc415b080a3105b37720",
+        "review_record": "SHOP-ROLLBACK-ERRCHECK-001"
+      },
+      {
+        "path": "internal/domestic/production_persistence_matrix_test.go",
+        "before": {
+          "path": "internal/domestic/production_persistence_matrix_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "628c52ab1031f2aaa7b3306dc205335cd8d2533b"
+        },
+        "after": {
+          "path": "internal/domestic/production_persistence_matrix_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "883ae9436cb1c10fed7609a6fd7a65d77ed87c11"
+        },
+        "change": "modified",
+        "correction_source": "42278bc6a59fc4b9f44bb819dc85fd732fb1559a",
+        "review_record": "DOM-FIXTURE-ASSIGNMENTS-001"
+      },
+      {
+        "path": "internal/domestic/queue_lifecycle_test.go",
+        "before": {
+          "path": "internal/domestic/queue_lifecycle_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "e5061643223cfa8e9af3a96e302ecc318ea1ee3f"
+        },
+        "after": {
+          "path": "internal/domestic/queue_lifecycle_test.go",
+          "mode": "100644",
+          "type": "blob",
+          "sha": "4b33fa8f271dd2118f659abec125c21d359ef6b6"
+        },
+        "change": "modified",
+        "correction_source": "42278bc6a59fc4b9f44bb819dc85fd732fb1559a",
+        "review_record": "DOM-FIXTURE-ASSIGNMENTS-001"
+      }
+    ],
+    "scope": "Exactly six implementation paths; API legacy-file absence explicit. No client/SPEC/AGENTS/workflow/backlog/permission change. No original assertions removed."
+  }
 }
