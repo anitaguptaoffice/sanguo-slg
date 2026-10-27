@@ -8,16 +8,16 @@ import (
 
 // Hub coordinates recruit queues, march orders, and the scheduler for one game shard.
 type Hub struct {
-	mu        sync.Mutex
-	scheduler *Scheduler
-	catalog   map[int32]UnitSpec
-	cities    map[int64]*CityState
-	marches   map[int64]*MarchOrder
-	marchCtx  map[int64]marchRuntime
-	nextMarch int64
-	onArrive  MarchArrivalHandler
+	mu         sync.Mutex
+	scheduler  *Scheduler
+	catalog    map[int32]UnitSpec
+	cities     map[int64]*CityState
+	marches    map[int64]*MarchOrder
+	marchCtx   map[int64]marchRuntime
+	nextMarch  int64
+	onArrive   MarchArrivalHandler
 	onFinished MarchFinishedHandler
-	now       func() time.Time
+	now        func() time.Time
 }
 
 // MarchFinishedHandler runs after a march ends (arrival without return, or return complete).
@@ -164,9 +164,9 @@ func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 	}
 
 	h.scheduler.Schedule(Event{
-		Kind:   EventMarchArrive,
-		DueAt:  order.ArriveAt,
-		RefID:  order.ID,
+		Kind:  EventMarchArrive,
+		DueAt: order.ArriveAt,
+		RefID: order.ID,
 		Handler: func(ev Event) {
 			h.onMarchArrive(ev)
 		},
@@ -181,7 +181,9 @@ func (h *Hub) onMarchArrive(ev Event) {
 	if o == nil {
 		return
 	}
-	_ = MarkArrived(o)
+	if err := MarkArrived(o); err != nil {
+		return
+	}
 	ctx := h.marchCtx[ev.RefID]
 	scheduledReturn := false
 	if h.onArrive != nil && ctx.PlayerID != 0 {
@@ -200,9 +202,9 @@ func (h *Hub) onMarchArrive(ev Event) {
 				if err := BeginReturn(o, now); err == nil {
 					scheduledReturn = true
 					h.scheduler.Schedule(Event{
-						Kind:   EventMarchReturnDone,
-						DueAt:  o.ReturnFinishAt,
-						RefID:  o.ID,
+						Kind:  EventMarchReturnDone,
+						DueAt: o.ReturnFinishAt,
+						RefID: o.ID,
 						Handler: func(ev Event) {
 							h.onMarchReturn(ev)
 						},
@@ -229,9 +231,9 @@ func (h *Hub) Recall(marchID int64) error {
 		return err
 	}
 	h.scheduler.Schedule(Event{
-		Kind:   EventMarchReturnDone,
-		DueAt:  o.ReturnFinishAt,
-		RefID:  o.ID,
+		Kind:  EventMarchReturnDone,
+		DueAt: o.ReturnFinishAt,
+		RefID: o.ID,
 		Handler: func(ev Event) {
 			h.onMarchReturn(ev)
 		},
@@ -243,21 +245,28 @@ func (h *Hub) onMarchReturn(ev Event) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	o := h.marches[ev.RefID]
-	if o == nil {
+	if o == nil || o.Phase != PhaseReturning {
 		return
 	}
-	rt := h.marchCtx[ev.RefID]
-	if rt.OriginCityID != 0 {
-		city := h.cities[rt.OriginCityID]
-		if city != nil {
-			for _, st := range rt.Troops {
-				if st.Count > 0 {
-					city.Troops[st.UnitCfgID] += st.Count
-				}
-			}
-		}
+	rt, ok := h.marchCtx[ev.RefID]
+	if !ok || rt.OriginCityID == 0 {
+		return
 	}
-	_ = MarkReturnComplete(o)
+	city := h.cities[rt.OriginCityID]
+	if city == nil || city.Troops == nil {
+		return
+	}
+	// Validate the entire credit before changing any balance or publishing returned.
+	balances, ok := planReturnCredit(h.catalog, city.Troops, rt.Troops)
+	if !ok {
+		return
+	}
+	// The phase check, survivor credit and terminal publication share this lock.
+	// Retain runtime troops as history; they are not additional ready troops.
+	for id, count := range balances {
+		city.Troops[id] = int32(count)
+	}
+	_ = MarkReturnComplete(o) // Returning was checked before any credit.
 	h.emitMarchFinished(ev.RefID)
 }
 
