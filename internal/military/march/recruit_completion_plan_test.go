@@ -79,7 +79,7 @@ func TestRecruitCompletionDueAndNoEffect(t *testing.T) {
 }
 
 func TestRecruitCompletionStoredDurationAndCapacity(t *testing.T) {
-	scope, stock, rows, c := completionFixture(t)
+	scope, stock, rows, _ := completionFixture(t)
 	// A new current price/time cannot change the accepted successor's duration.
 	old := evidenceFixture(t)
 	next := old
@@ -89,7 +89,7 @@ func TestRecruitCompletionStoredDurationAndCapacity(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c, err = NewRecruitCatalog([]RecruitManifest{old, next}, next.Version)
+	c, err := NewRecruitCatalog([]RecruitManifest{old, next}, next.Version)
 	if err != nil {
 		t.Fatal(err)
 	}
