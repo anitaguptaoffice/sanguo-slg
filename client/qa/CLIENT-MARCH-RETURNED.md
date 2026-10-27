@@ -77,3 +77,11 @@ Browser reload is a component/sessionStorage fixture, **not native relogin or
 natural elapsed-time return acceptance**. Production default remains5s; unrelated
 background minimap discovery is intentionally retained. Coordinated activation
 and natural same-process lifecycle acceptance remain external gates.
+
+## CLIENT-RETURNED-READABILITY-001 — march history readability
+
+March-specific CSS lets skinned row bars grow for multiline content and provides
+opaque, legible phase/detail surfaces and 14px history text in both skins. The
+existing returned neutral strip retains its colors. Component browser QA loads
+assets for paper rows and checks row-bar fit, text size and contrast. Full
+MainCityScene visual QA still checks the real scrolling and clipping hierarchy.
