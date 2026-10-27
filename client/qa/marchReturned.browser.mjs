@@ -53,7 +53,11 @@ async function install(page, historyOnly = false, skin = "fallback") {
       return Uint8Array.from(types.ServerPacket.encode({ code: 0, data }).finish()).buffer;
     };
     writeBattleReportReplaySession({ reportId: 91, wx: 5, wy: 5 });
+    const { AssetLoader } = await import('/src/engine/AssetLoader.ts');
+    const assets = skin === 'paper' ? new AssetLoader() : undefined;
+    if (assets) await assets.loadAll(1);
     const panel = new MarchListPanel(frame, gateway, () => 31, () => {}, {
+      assets,
       pollIntervalMs: 200, // Fixture-only polling interval, unchanged production default is 5s.
       onMarchArrivalReminders: rows => reminders.push(...rows), onMarchesUpdated: rows => {
         decoded = rows; canvasFills = 0; ctx.clearRect(0, 0, 1600, 900);
@@ -64,9 +68,8 @@ async function install(page, historyOnly = false, skin = "fallback") {
     });
     panel.attach(); panel.toggle();
     if (skin === 'paper') {
-      const { AssetLoader } = await import('/src/engine/AssetLoader.ts');
       const { skinMarchIntelPanel } = await import('/src/engine/artPanelSkin.ts');
-      const assets = new AssetLoader(); await assets.loadAll(1); skinMarchIntelPanel(panel.getRoot(), assets);
+      skinMarchIntelPanel(panel.getRoot(), assets);
       if (!panel.getRoot().style.borderImageSource.includes('url')) throw Error('Paper skin did not install');
     }
     window.fixture = { panel, setHistory() { rows = base.filter(m => m.phase !== 1); },
@@ -78,14 +81,16 @@ async function install(page, historyOnly = false, skin = "fallback") {
             .map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((a, v, i) => a + v * [.2126, .7152, .0722][i], 0);
           const a = lum(s.color), b = lum(s.backgroundColor);
           return { color: s.color, background: s.backgroundColor, contrast: (Math.max(a, b) + .05) / (Math.min(a, b) + .05),
-          parentColor: getComputedStyle(el.parentElement).color, classes: el.className }; };
+          fontSize: s.fontSize, parentColor: getComputedStyle(el.parentElement).color, classes: el.className }; };
         return { goPhases: go.marches.map(m => m.phase), phases: decoded.map(m => m.phase), calls, reminders, replay, remarch, canvasFills,
           active: countIntelInProgressMarches(decoded), markers: collectMinimapDestMarkers(decoded).length,
           world: buildWorldInfoCardSummary({ cell: { x: 5, y: 5 }, cities: [], marches: decoded }).marchCount,
           selected: panel.getSelectedMarchId(),
           rows: [...root.querySelectorAll('.march-list li[data-march-id]')].map(el => ({ id: el.dataset.marchId,
             text: el.textContent, returnedStyle: el.querySelector('.march-phase-returned') != null,
-            phaseStyle: style(el.querySelector('.intel-row-phase-subline')) })),
+            phaseStyle: style(el.querySelector('.intel-row-phase-subline')),
+            primaryStyle: style(el.querySelector('.march-row-primary')),
+            metaStyle: style(el.querySelector('.march-row-meta')) })),
           card: root.querySelector('[data-role="march-info-card-secondary"]').textContent,
           stripStyle: style(root.querySelector('[data-role="march-info-card-phase-eta-strip"]')),
           overflow: [...root.querySelectorAll('.panel-scroll-body, .march-info-card')].map(el => el.scrollWidth - el.clientWidth),
@@ -109,6 +114,17 @@ try {
     await page.goto(url); await install(page, false, skin);
     const snap = () => page.evaluate(() => window.fixture.snapshot());
     const refresh = () => page.locator('[data-action="refresh-marches"]').click();
+    // A serialized 'none' must use fallback ink, not the paper palette.
+    const inks = await page.evaluate(() => {
+      const root = window.fixture.panel.getRoot(), title = root.querySelector('h3');
+      const before = getComputedStyle(title).color, saved = root.style.borderImageSource;
+      root.style.borderImageSource = 'none';
+      const none = getComputedStyle(title).color;
+      root.style.borderImageSource = saved;
+      return { before, none };
+    });
+    assert.equal(inks.before, skin === 'paper' ? 'rgb(42, 31, 20)' : 'rgb(245, 230, 200)');
+    assert.equal(inks.none, 'rgb(245, 230, 200)');
     let mixed = await snap();
     assert.deepEqual(mixed.goPhases, [5, 1, 4, 127]); assert.deepEqual(mixed.phases, [5, 1, 127]);
     assert.equal(mixed.active, 1); assert.equal(mixed.world, 1); assert.equal(mixed.markers, 1); assert.equal(mixed.canvasFills, 1);
@@ -125,6 +141,17 @@ try {
     assert.equal(history.selected, 11); assert.equal(history.active, 0); assert.equal(history.world, 0); assert.equal(history.markers, 0); assert.equal(history.canvasFills, 0);
     assert.match(history.card, /已回城/); assert.doesNotMatch(history.card, /剩余|即将|ETA/);
     assert.ok(history.rows.find(r => r.id === '11').returnedStyle);
+    const returnedRow = history.rows.find(r => r.id === '11');
+    for (const rowStyle of [returnedRow.primaryStyle, returnedRow.phaseStyle, returnedRow.metaStyle]) {
+      assert.equal(rowStyle.fontSize, '14px');
+    }
+    // The unskinned list has an opaque row surface; its primary must remain legible.
+    assert.equal(returnedRow.primaryStyle.color, skin === 'paper' ? 'rgb(61, 46, 31)' : 'rgb(245, 230, 200)');
+    if (skin === 'paper') {
+      const bar = page.locator('.march-list li[data-march-id="11"] .art-filter-row-skin-bar');
+      assert.equal(await bar.count(), 1);
+      assert.ok(await bar.evaluate(el => el.scrollHeight <= el.clientHeight + 1), 'skinned row text fits its bar');
+    }
     for (const style of [history.rows.find(r => r.id === '11').phaseStyle, history.stripStyle]) {
       assert.equal(style.color, 'rgb(210, 210, 210)'); assert.equal(style.background, 'rgb(56, 56, 56)'); assert.ok(style.contrast >= 4.5);
     }
@@ -148,6 +175,32 @@ try {
     await page.screenshot({ path: `${out}/${width}-${skin}-reload.png` });
     assert.ok([...history.overflow, ...reloaded.overflow].every(n => n <= 1), 'no horizontal component overflow');
     report.cases.push({ width, height, skin, mixed, history, reloaded, transitions, returnedTimerStop: true, repeatedRefreshes: 3 });
+    await page.close();
+  }
+  // Real loader sees a manifest without row variants; no painted row means dark fallback.
+  for (const [width, height] of [[1280, 720], [1600, 900]]) {
+    const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+    page.on('pageerror', error => report.errors.push(String(error)));
+    await page.route('**/src/main.ts', route => route.fulfill({ contentType: 'text/javascript', body: '// Isolated component fixture.' }));
+    await page.route('**/assets/art/v1/manifest.json', async route => {
+      const response = await route.fetch(); const manifest = await response.json();
+      manifest.assets = manifest.assets.filter(asset => !asset.id.startsWith('ui.list.row.'));
+      await route.fulfill({ response, json: manifest });
+    });
+    await page.goto(url); await install(page, true, 'paper');
+    const row = page.locator('.march-list li[data-march-id="11"]');
+    for (const state of ['default', 'hover', 'selected']) {
+      if (state === 'hover') await row.hover();
+      if (state === 'selected') await row.click();
+      const surface = await row.evaluate(el => {
+        const bar = el.querySelector('.art-filter-row-skin-bar');
+        return { asset: bar.dataset.filterRowAsset ?? null, background: getComputedStyle(bar).backgroundColor,
+          foreground: getComputedStyle(el.querySelector('.march-row-primary')).color };
+      });
+      assert.deepEqual(surface, { asset: null, background: 'rgb(26, 20, 16)', foreground: 'rgb(245, 230, 200)' });
+    }
+    await page.screenshot({ path: `${out}/${width}-missing-row.png` });
+    report.cases.push({ width, height, skin: 'paper', missingRowVariants: true });
     await page.close();
   }
   assert.deepEqual(report.errors, []); report.status = 'passed';
