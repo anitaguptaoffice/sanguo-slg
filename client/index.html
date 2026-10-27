@@ -8428,6 +8428,32 @@
         background: #3d4a28;
       }
       /* END CLIENT-REPORT-READABILITY */
+      /* CLIENT-RETURNED-READABILITY-001: keep march history readable in both skins. */
+      .march-intel-panel { color: #f5e6c8; }
+      .march-intel-panel h3 { color: #f5e6c8; }
+      .march-intel-panel label, .march-intel-panel legend { color: inherit; }
+      .march-intel-panel[style*="border-image-source: url("] { color: #3d2e1f; }
+      .march-intel-panel[style*="border-image-source: url("] h3 { color: #2a1f14; }
+      .march-intel-panel .march-list li[data-march-id] { color: #f5e6c8; }
+      .march-intel-panel .march-list li.art-filter-row--skinned > .art-filter-row-skin-bar { color: #f5e6c8; background: #1a1410; }
+      .march-intel-panel .march-list li.art-filter-row--skinned > .art-filter-row-skin-bar[data-filter-row-asset] { color: #3d2e1f; }
+      .march-intel-panel .march-list .art-filter-row-skin-bar {
+        height: auto; min-height: 40px; max-height: none; overflow: visible;
+        padding-top: 4px; padding-bottom: 4px;
+      }
+      .march-intel-panel .march-list .art-filter-row-detail {
+        background: #2a2218; color: #f5e6c8; border-radius: 0 0 4px 4px;
+      }
+      .march-intel-panel .march-list .march-row-primary,
+      .march-intel-panel .march-list .march-row-meta,
+      .march-intel-panel .march-list .intel-row-phase-subline { font-size: 14px; line-height: 1.4; }
+      .march-intel-panel .march-list .march-row-meta { color: #f5e6c8; }
+      .march-intel-panel .march-list .intel-row-phase-subline {
+        color: #f5e6c8; background: #383838; border-radius: 3px; padding: 1px 4px;
+      }
+      .march-intel-panel .march-list .intel-row-phase-subline.march-phase-returned {
+        color: #d2d2d2;
+      }
       /* MILITARY-HINT-READABILITY: keep every preview row legible on the paper skin.
          These DOM pixels are not multiplied by the canvas/layout --ui-scale. */
       #layout-frame .military-panel .march-form-troop-margin-residual-line {
