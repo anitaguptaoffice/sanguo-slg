@@ -10,6 +10,7 @@ const (
 	PhaseMarching  MarchPhase = "marching"
 	PhaseArrived   MarchPhase = "arrived"
 	PhaseReturning MarchPhase = "returning"
+	PhaseReturned  MarchPhase = "returned"
 )
 
 // QueueStatus mirrors work_queue.status for recruit jobs.
@@ -76,7 +77,7 @@ type RecruitJob struct {
 	FinishAt  time.Time
 }
 
-// MarchOrder tracks one army movement through pending → marching → arrived → returning.
+// MarchOrder tracks one army movement through pending → marching → arrived → returning → returned.
 type MarchOrder struct {
 	ID      int64
 	ArmyID  int64
