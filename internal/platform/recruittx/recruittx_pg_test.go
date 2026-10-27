@@ -34,7 +34,7 @@ func TestPostgresAtomicLifetime(t *testing.T) {
 	wrong, _ := NewBinding(pool)
 	o, err := b.Begin(ctx)
 	check(t, err == nil, fmt.Sprint(err))
-	defer rollback(o)
+	defer func(owner *Owner) { _ = rollback(owner) }(o)
 	a := o.Access()
 	var first, second int64
 	check(t, a.Scan(ctx, b, "SELECT txid_current()", nil, &first) == nil, "first identity")
@@ -50,7 +50,7 @@ func TestPostgresAtomicLifetime(t *testing.T) {
 	check(t, err != nil, "post-end write")
 	o, err = b.Begin(ctx)
 	check(t, err == nil, fmt.Sprint(err))
-	defer rollback(o)
+	defer func(owner *Owner) { _ = rollback(owner) }(o)
 	_, err = o.Access().Exec(ctx, b, "INSERT INTO recruit_tx_lifetime VALUES(3)")
 	check(t, err == nil, fmt.Sprint(err))
 	check(t, o.Rollback(ctx) == nil, "rollback failed")
