@@ -83,5 +83,6 @@ and natural same-process lifecycle acceptance remain external gates.
 March-specific CSS lets skinned row bars grow for multiline content and provides
 opaque, legible phase/detail surfaces and 14px history text in both skins. The
 existing returned neutral strip retains its colors. Component browser QA loads
-assets for paper rows and checks row-bar fit, text size and contrast. Full
+assets for paper rows and checks row-bar fit, text size and contrast; it also
+loads a manifest with row variants omitted to verify dark fallback in three states. Full
 MainCityScene visual QA still checks the real scrolling and clipping hierarchy.

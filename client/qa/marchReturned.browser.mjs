@@ -177,6 +177,32 @@ try {
     report.cases.push({ width, height, skin, mixed, history, reloaded, transitions, returnedTimerStop: true, repeatedRefreshes: 3 });
     await page.close();
   }
+  // Real loader sees a manifest without row variants; no painted row means dark fallback.
+  for (const [width, height] of [[1280, 720], [1600, 900]]) {
+    const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+    page.on('pageerror', error => report.errors.push(String(error)));
+    await page.route('**/src/main.ts', route => route.fulfill({ contentType: 'text/javascript', body: '// Isolated component fixture.' }));
+    await page.route('**/assets/art/v1/manifest.json', async route => {
+      const response = await route.fetch(); const manifest = await response.json();
+      manifest.assets = manifest.assets.filter(asset => !asset.id.startsWith('ui.list.row.'));
+      await route.fulfill({ response, json: manifest });
+    });
+    await page.goto(url); await install(page, true, 'paper');
+    const row = page.locator('.march-list li[data-march-id="11"]');
+    for (const state of ['default', 'hover', 'selected']) {
+      if (state === 'hover') await row.hover();
+      if (state === 'selected') await row.click();
+      const surface = await row.evaluate(el => {
+        const bar = el.querySelector('.art-filter-row-skin-bar');
+        return { asset: bar.dataset.filterRowAsset ?? null, background: getComputedStyle(bar).backgroundColor,
+          foreground: getComputedStyle(el.querySelector('.march-row-primary')).color };
+      });
+      assert.deepEqual(surface, { asset: null, background: 'rgb(26, 20, 16)', foreground: 'rgb(245, 230, 200)' });
+    }
+    await page.screenshot({ path: `${out}/${width}-missing-row.png` });
+    report.cases.push({ width, height, skin: 'paper', missingRowVariants: true });
+    await page.close();
+  }
   assert.deepEqual(report.errors, []); report.status = 'passed';
 } catch (error) { report.status = 'failed'; report.failure = String(error); throw error; }
 finally {
