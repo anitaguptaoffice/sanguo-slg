@@ -261,6 +261,13 @@
       .march-phase-chip-stationed { background: #3d4a30; color: #b8d89f; }
       .march-phase-chip-return { background: #4a3d30; color: #e8c090; }
       .march-phase-chip-pending { background: #3d3830; color: #c9b88a; }
+      .march-phase-chip-returned { background: #383838; color: #d2d2d2; }
+      .march-intel-panel .intel-row-phase-subline.march-phase-returned,
+      .march-intel-panel .march-intel-phase-eta-strip.march-phase-returned {
+        color: #d2d2d2;
+        /* Preserve phase-change outlines without sacrificing label contrast on pulse/paper fills. */
+        background-color: #383838 !important;
+      }
       .march-phase-chip-unknown { background: #333; color: #aaa; }
       #hud .hud-center-todo-count {
         min-width: 14px;

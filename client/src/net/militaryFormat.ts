@@ -63,12 +63,16 @@ export type BattleReportSummary = {
   defender_hero_id?: number;
 };
 
+/** Server-confirmed home settlement, retained as history; never inferred from time. */
+export const MARCH_PHASE_RETURNED = 5;
+
 const MARCH_PHASE_LABEL: Record<number, string> = {
   0: "未知",
   1: "待发",
   2: "行军中",
   3: "已到达",
   4: "返程中",
+  [MARCH_PHASE_RETURNED]: "已回城",
 };
 
 /** 军情列表 phase chip 文案（扫读口径：去程/驻扎/返回，与 formatMarchPhase 长文案并存）。 */
@@ -78,6 +82,7 @@ const MARCH_PHASE_CHIP_LABEL: Record<number, string> = {
   2: "去程",
   3: "驻扎",
   4: "返回",
+  [MARCH_PHASE_RETURNED]: "已回城",
 };
 
 const MARCH_PHASE_CHIP_CLASS: Record<number, string> = {
@@ -85,6 +90,7 @@ const MARCH_PHASE_CHIP_CLASS: Record<number, string> = {
   2: "march-phase-chip-outbound",
   3: "march-phase-chip-stationed",
   4: "march-phase-chip-return",
+  [MARCH_PHASE_RETURNED]: "march-phase-chip-returned",
 };
 
 const MARCH_PURPOSE_LABEL: Record<number, string> = {
@@ -326,6 +332,7 @@ export function marchEtaDeadline(m: MarchSummary): number | undefined {
 
 /** Keep existing minute/soon clock conventions, but unknown return time stays unknown. */
 export function formatMarchEta(m: MarchSummary, nowMs: number, abbreviated = false): string {
+  if (m.phase === MARCH_PHASE_RETURNED) return formatMarchPhase(m.phase);
   const deadline = marchEtaDeadline(m);
   if (m.phase === 4 && deadline == null) return abbreviated ? "未知" : "时间未知";
   return abbreviated ? formatMarchRemainingMsAbbrev(nowMs, deadline) : formatMarchRemainingMs(nowMs, deadline);
@@ -391,6 +398,7 @@ export const MARCH_ROW_RECENT_ETA_ROLE = "march-row-recent-eta";
  * 用于 `march-row-recent` 行的只读前缀，完整时刻仍见 {@link formatMarchRowMetaLine}。
  */
 export function formatMarchRowRecentEtaBrief(m: MarchSummary, nowMs: number): string | null {
+  if (m.phase === MARCH_PHASE_RETURNED) return formatMarchPhase(m.phase);
   const phase = m.phase ?? 0;
   if (phase === 2 || phase === 4) {
     return `ETA ${formatMarchEta(m, nowMs)}`;
@@ -424,6 +432,7 @@ export function formatMarchHint(march: MarchSummary | undefined): string {
   if (!march?.march_id) return "";
   const dest = `(${march.to_x ?? "?"},${march.to_y ?? "?"})`;
   const phase = formatMarchPhase(march.phase);
+  if (march.phase === MARCH_PHASE_RETURNED) return `行军 #${march.march_id} → ${dest} · ${phase}`;
   const arrive = formatTimeMs(marchEtaDeadline(march));
   return `行军 #${march.march_id} → ${dest} · ${phase} · 预计${march.phase === 4 ? "回城" : "到达"} ${arrive}`;
 }

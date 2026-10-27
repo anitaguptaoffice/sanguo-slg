@@ -3,7 +3,7 @@ import {
   detectNewMarchArrivalReminders,
   type MarchArrivalReminder,
 } from "@/net/marchArrival";
-import { marchNeedsPoll, MARCH_LIST_POLL_MS, type MarchSummary } from "@/net/militaryFormat";
+import { marchNeedsPoll, MARCH_LIST_POLL_MS, MARCH_PHASE_RETURNED, type MarchSummary } from "@/net/militaryFormat";
 
 export type MarchArrivalPollOptions = {
   listMarches: (cityId: number | undefined) => Promise<MarchSummary[]>;
@@ -15,6 +15,9 @@ export type MarchArrivalPollOptions = {
 /** 出征后在主城后台轮询 ListMarches，检测行军结束。 */
 export class MarchArrivalPoll {
   private accumSec = 0;
+  private generation = 0;
+  private requestVersion = 0;
+  private appliedVersion = 0;
   private lastMarches: MarchSummary[] = [];
   private readonly pendingIds = new Set<number>();
   private readonly intervalSec: number;
@@ -24,6 +27,7 @@ export class MarchArrivalPoll {
   }
 
   reset(): void {
+    this.generation++;
     this.accumSec = 0;
     this.lastMarches = [];
     this.pendingIds.clear();
@@ -31,10 +35,15 @@ export class MarchArrivalPoll {
 
   trackMarch(marchId: number | undefined, seed?: MarchSummary): void {
     if (!marchId) return;
-    this.pendingIds.add(marchId);
+    this.generation++;
     if (seed?.march_id === marchId) {
       this.lastMarches = upsertMarch(this.lastMarches, seed);
+      if (seed.phase === MARCH_PHASE_RETURNED) {
+        this.pendingIds.delete(marchId);
+        return;
+      }
     }
+    this.pendingIds.add(marchId);
   }
 
   needsPoll(): boolean {
@@ -50,6 +59,8 @@ export class MarchArrivalPoll {
   }
 
   async pollOnce(): Promise<void> {
+    const generation = this.generation;
+    const version = ++this.requestVersion;
     const cityId = this.opts.getCityId();
     let next: MarchSummary[];
     try {
@@ -57,10 +68,18 @@ export class MarchArrivalPoll {
     } catch {
       return;
     }
+    if (generation !== this.generation || cityId !== this.opts.getCityId() || version < this.appliedVersion) return;
+    this.appliedVersion = version;
     const prev = this.lastMarches;
     const reminders = detectNewMarchArrivalReminders(prev, next, this.pendingIds);
     for (const ev of detectMarchCompletions(prev, next, this.pendingIds)) {
       this.pendingIds.delete(ev.marchId);
+    }
+    // Home settlement ends tracking, but is not a new destination-arrival reminder.
+    for (const row of next) {
+      if (row.phase === MARCH_PHASE_RETURNED && row.march_id != null) {
+        this.pendingIds.delete(row.march_id);
+      }
     }
     this.lastMarches = next;
     if (reminders.length) this.opts.onCompletions(reminders);
