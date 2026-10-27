@@ -28,3 +28,12 @@ Consumer audit:
 `marchReturned.test.ts` includes real protobuf decoding plus a synthetic Go codec
 fixture generated with API binding ca091599. Neither is natural real-time acceptance.
 Activation remains blocked on coordinated MIL/API/client reviews and lifecycle gates.
+
+## CLIENT-MARCH-RETURNED-002 — renderer correction
+
+Independent review found the actual `drawWorldMinimap` destination-dot loop bypassed
+its shared active allowlist. The loop now filters before deduplication/draw, covering
+both canvas fallback and sprite paths. A selected history row still shows its two
+explicit origin/destination focus points and `已回城` caption, not an active marker.
+`drawWorldMinimapReturned.test.ts` records actual canvas calls for returned/127,
+mixed pending, all existing active1–4, sprite/fallback and selected-history focus.
