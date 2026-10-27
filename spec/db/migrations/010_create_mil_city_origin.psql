@@ -1,0 +1,33 @@
+-- Manual source entry, never ApplySpecs. See MIL_CITY_ORIGIN.md.
+\set ON_ERROR_STOP on
+\if :{?city_origin_schema}
+\else
+    DO $$ BEGIN RAISE EXCEPTION 'explicit city_origin_schema required'; END $$;
+\endif
+BEGIN ISOLATION LEVEL READ COMMITTED;
+SET LOCAL search_path = pg_catalog, pg_temp;
+SET LOCAL TIME ZONE 'UTC';
+SET LOCAL datestyle = 'ISO, YMD';
+SELECT :'city_origin_schema' = '' OR :'city_origin_schema' ~ '^pg_'
+    OR :'city_origin_schema' = 'information_schema'
+    OR (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema') IS NULL
+    OR current_setting('server_version_num')::integer / 10000 <> 17
+    OR EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema')
+        AND relname = 'mil_city_origin') AS reject_entry \gset
+\if :reject_entry
+    DO $$ BEGIN RAISE EXCEPTION 'city origin create requires PG17, explicit non-system schema and absent marker'; END $$;
+\endif
+CREATE TABLE :"city_origin_schema".mil_city_origin (
+    server_id integer NOT NULL CONSTRAINT mil_city_origin_server_id_check CHECK(server_id > 0),
+    city_id bigint NOT NULL CONSTRAINT mil_city_origin_city_id_check CHECK(city_id > 0),
+    owner_player_id bigint NOT NULL CONSTRAINT mil_city_origin_owner_player_id_check CHECK(owner_player_id > 0),
+    cohort_id bytea NOT NULL CONSTRAINT mil_city_origin_cohort_id_check
+        CHECK(octet_length(cohort_id) = 16 AND cohort_id <> decode(repeat('00',16),'hex')),
+    format_version smallint NOT NULL CONSTRAINT mil_city_origin_format_version_check CHECK(format_version = 1),
+    created_at timestamptz NOT NULL CONSTRAINT mil_city_origin_created_at_check
+        CHECK(isfinite(created_at) AND created_at >= '0001-01-01T00:00:00Z'
+            AND created_at < '10000-01-01T00:00:00Z' AND date_trunc('milliseconds',created_at) = created_at),
+    CONSTRAINT mil_city_origin_pkey PRIMARY KEY(server_id,city_id)
+);
+\ir helpers/mil_city_origin_guard.sql
+COMMIT;

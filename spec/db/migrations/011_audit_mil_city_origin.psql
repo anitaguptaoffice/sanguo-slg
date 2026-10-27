@@ -1,0 +1,21 @@
+-- Manual metadata-only audit; no repair or application-role certification.
+\set ON_ERROR_STOP on
+\if :{?city_origin_schema}
+\else
+    DO $$ BEGIN RAISE EXCEPTION 'explicit city_origin_schema required'; END $$;
+\endif
+BEGIN ISOLATION LEVEL READ COMMITTED;
+SET LOCAL search_path = pg_catalog, pg_temp;
+SET LOCAL TIME ZONE 'UTC';
+SET LOCAL datestyle = 'ISO, YMD';
+SELECT :'city_origin_schema' = '' OR :'city_origin_schema' ~ '^pg_'
+    OR :'city_origin_schema' = 'information_schema'
+    OR current_setting('server_version_num')::integer / 10000 <> 17
+    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema')
+        AND relname = 'mil_city_origin' AND relkind = 'r') AS reject_entry \gset
+\if :reject_entry
+    DO $$ BEGIN RAISE EXCEPTION 'city origin audit requires PG17 and existing marker; no repair'; END $$;
+\endif
+LOCK TABLE :"city_origin_schema".mil_city_origin IN SHARE MODE;
+\ir helpers/mil_city_origin_guard.sql
+COMMIT;
