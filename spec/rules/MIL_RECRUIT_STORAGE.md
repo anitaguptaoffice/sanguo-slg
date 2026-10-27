@@ -61,7 +61,7 @@ The existing [m4_008](../db/m4_008_work_queue_id_sequence.sql) rejects every add
 
 Scan all retained IDs from BOTH new tables in all states, including origin without queue/receipt. Receipt orphan, invalid FK or corrupt identity fails closed before `setval`; never ignore it. Under an external fence/drain of all allocators, writers and concurrent DDL, calculate `H = max(queue rows, origin rows, receipt rows, independently documented external retained references/highwater)`. Preserve greater existing sequence state, fail at exhaustion and move only forward after all validation. Sequence remains schema-qualified bigint, 1..9007199254740991, increment/cache 1, no cycle, owned by none. `setval` may survive rollback: never lower or recreate the sequence as rollback. Restore queue, origin, receipt, sequence, catalog and reference/fence evidence coherently, then repeat the forward-only audit even with a migration ledger.
 
-The future design must prove each entry state before SQL is authored:
+The future design must prove each entry state before production migration SQL is finalized or released, or executed in a target database. Separately authorized isolated, disposable prototypes may establish that proof; they do not authorize release or target-environment rollout:
 
 1. **Precreate:** old m4_008 must run before origin exists; install a reviewed replacement or compatible coordinator/ordering before creation.
 2. **Body completed, ledger absent:** ApplySpecs may replay m4_008 and its current body rejects origin. Permit replay only with a reviewed compatible amendment that validates and inventories both exact new relations; otherwise fail closed.
