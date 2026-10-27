@@ -16,6 +16,15 @@ DECLARE
     found_min pg_catalog.int8;
     last_id pg_catalog.int8;
     called pg_catalog.bool;
+    origin_id pg_catalog.oid;
+    receipt_id pg_catalog.oid;
+    recruit_id pg_catalog.oid;
+    definitions pg_catalog.text[];
+    expected_definitions pg_catalog.text[];
+    fk record;
+    corrupt pg_catalog.bool;
+    runtime_timezone pg_catalog.text := pg_catalog.current_setting('TimeZone');
+    runtime_datestyle pg_catalog.text := pg_catalog.current_setting('DateStyle');
     ceiling CONSTANT pg_catalog.int8 := 9007199254740991;
 BEGIN
     -- Explicitly put pg_temp last: otherwise its relations precede pg_catalog.
@@ -92,10 +101,145 @@ BEGIN
            AND NOT EXISTS (SELECT FROM unnest(x.indcollation::oid[]) coll WHERE coll <> 0)) THEN
         RAISE EXCEPTION 'queue identity: incompatible work_queue primary key';
     END IF;
+    -- SPEC-RECRUIT-ALLOCATOR-GUARD-001: recognize only the reviewed physical pair.
+    -- This body is skipped by an existing filename ledger; not an upgrade hook.
+    SELECT oid INTO origin_id FROM pg_class WHERE relnamespace = namespace_id AND relname = 'mil_recruit_origin';
+    SELECT oid INTO receipt_id FROM pg_class WHERE relnamespace = namespace_id AND relname = 'mil_recruit_receipt';
+    IF (origin_id IS NULL) <> (receipt_id IS NULL) THEN
+        RAISE EXCEPTION 'queue identity: partial recruit storage';
+    END IF;
+    IF origin_id IS NOT NULL THEN
+        IF NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = namespace_id
+            AND relname = 'work_queue_id_seq' AND relkind = 'S') THEN
+            RAISE EXCEPTION 'queue identity: recruit storage requires existing sequence';
+        END IF;
+        -- Reject non-tables before LOCK; revalidate exact identities after locks.
+        IF (SELECT count(*) FROM pg_class WHERE oid IN (origin_id,receipt_id) AND relkind = 'r') <> 2 THEN
+            RAISE EXCEPTION 'queue identity: incompatible recruit relations';
+        END IF;
+        EXECUTE format('LOCK TABLE ONLY %I.mil_recruit_origin, ONLY %I.mil_recruit_receipt IN SHARE ROW EXCLUSIVE MODE', ns, ns);
+        PERFORM set_config('TimeZone', 'UTC', true);
+        PERFORM set_config('DateStyle', 'ISO, YMD', true);
+        FOREACH recruit_id IN ARRAY ARRAY[origin_id,receipt_id] LOOP
+            IF NOT EXISTS (SELECT FROM pg_class c JOIN pg_am a ON a.oid = c.relam
+                WHERE c.oid = recruit_id AND c.relnamespace = namespace_id
+                AND c.relname = CASE WHEN recruit_id = origin_id THEN 'mil_recruit_origin' ELSE 'mil_recruit_receipt' END
+                AND c.relkind = 'r' AND c.relpersistence = 'p' AND c.relowner = owner_id
+                AND a.amname = 'heap' AND c.reloftype = 0 AND NOT c.relispartition
+                AND NOT c.relrowsecurity AND NOT c.relforcerowsecurity)
+                OR EXISTS (SELECT FROM pg_inherits WHERE inhrelid = recruit_id OR inhparent = recruit_id)
+                OR EXISTS (SELECT FROM pg_policy WHERE polrelid = recruit_id)
+                OR EXISTS (SELECT FROM pg_rewrite WHERE ev_class = recruit_id)
+                OR NOT has_table_privilege(recruit_id, 'SELECT') THEN
+                RAISE EXCEPTION 'queue identity: incompatible recruit ownership/metadata';
+            END IF;
+            SELECT array_agg(attname::text ORDER BY attnum) names,
+                array_agg(atttypid ORDER BY attnum) types INTO cfg
+                FROM pg_attribute WHERE attrelid = recruit_id AND attnum > 0;
+            IF cfg.names IS DISTINCT FROM (CASE WHEN recruit_id = origin_id
+                THEN ARRAY['server_id','queue_id','player_id','operation','command_id']
+                ELSE ARRAY['server_id','queue_id','intent_version','city_id','unit_cfg_id','count','food_paid','wood_paid',
+                    'iron_paid','stone_paid','duration_sec','catalog_version','rule_digest','accepted_at',
+                    'initial_start_at','initial_finish_at','initial_status'] END)
+                OR cfg.types IS DISTINCT FROM (CASE WHEN recruit_id = origin_id
+                THEN ARRAY['int4'::regtype::oid,'int8'::regtype::oid,'int8'::regtype::oid,'int2'::regtype::oid,'bytea'::regtype::oid]
+                ELSE ARRAY['int4'::regtype::oid,'int8'::regtype::oid,'int2'::regtype::oid,'int8'::regtype::oid,
+                    'int4'::regtype::oid,'int4'::regtype::oid,'int8'::regtype::oid,'int8'::regtype::oid,
+                    'int8'::regtype::oid,'int8'::regtype::oid,'int8'::regtype::oid,'bytea'::regtype::oid,
+                    'bytea'::regtype::oid,'timestamptz'::regtype::oid,'timestamptz'::regtype::oid,
+                    'timestamptz'::regtype::oid,'int2'::regtype::oid] END)
+                OR EXISTS (SELECT FROM pg_attribute WHERE attrelid = recruit_id AND attnum > 0
+                    AND (NOT attnotnull OR attisdropped OR attidentity <> '' OR attgenerated <> '' OR atttypmod <> -1
+                        OR attndims <> 0 OR attcollation <> 0 OR NOT attislocal OR attinhcount <> 0))
+                OR EXISTS (SELECT FROM pg_attrdef WHERE adrelid = recruit_id) THEN
+                RAISE EXCEPTION 'queue identity: incompatible recruit columns';
+            END IF;
+            -- Static reviewed PostgreSQL 17 definitions, never a mutable DB template.
+            SELECT array_agg(pg_get_constraintdef(oid) ORDER BY pg_get_constraintdef(oid)) INTO definitions
+                FROM pg_constraint WHERE conrelid = recruit_id;
+            SELECT array_agg(value ORDER BY value) INTO expected_definitions FROM unnest(
+                CASE WHEN recruit_id = origin_id THEN ARRAY[
+                    'PRIMARY KEY (server_id, queue_id)', 'UNIQUE (server_id, player_id, operation, command_id)',
+                    'CHECK (((queue_id >= 1) AND (queue_id <= ''9007199254740991''::bigint)))',
+                    'CHECK ((operation = 1))',
+                    'CHECK (((octet_length(command_id) = 16) AND (command_id <> decode(repeat(''00''::text, 16), ''hex''::text))))']
+                ELSE ARRAY[
+                    'PRIMARY KEY (server_id, queue_id)',
+                    format('FOREIGN KEY (server_id, queue_id) REFERENCES %I.mil_recruit_origin(server_id, queue_id) ON UPDATE RESTRICT ON DELETE RESTRICT',ns),
+                    'CHECK (((queue_id >= 1) AND (queue_id <= ''9007199254740991''::bigint)))',
+                    'CHECK ((intent_version = 1))', 'CHECK (((unit_cfg_id >= 1) AND (unit_cfg_id <= 4)))',
+                    'CHECK ((count > 0))', 'CHECK ((food_paid >= 0))', 'CHECK ((wood_paid >= 0))',
+                    'CHECK ((iron_paid >= 0))', 'CHECK ((stone_paid >= 0))', 'CHECK ((duration_sec > 0))',
+                    'CHECK ((octet_length(catalog_version) > 0))', 'CHECK ((octet_length(rule_digest) = 32))',
+                    'CHECK ((initial_status = ANY (ARRAY[0, 1])))',
+                    'CHECK ((isfinite(accepted_at) AND (accepted_at >= ''0001-01-01 00:00:00+00''::timestamp with time zone) AND (accepted_at < ''10000-01-01 00:00:00+00''::timestamp with time zone) AND (date_trunc(''milliseconds''::text, accepted_at) = accepted_at)))',
+                    'CHECK ((isfinite(initial_start_at) AND (initial_start_at >= ''0001-01-01 00:00:00+00''::timestamp with time zone) AND (initial_start_at < ''10000-01-01 00:00:00+00''::timestamp with time zone) AND (date_trunc(''milliseconds''::text, initial_start_at) = initial_start_at)))',
+                    'CHECK ((isfinite(initial_finish_at) AND (initial_finish_at >= ''0001-01-01 00:00:00+00''::timestamp with time zone) AND (initial_finish_at < ''10000-01-01 00:00:00+00''::timestamp with time zone) AND (date_trunc(''milliseconds''::text, initial_finish_at) = initial_finish_at)))'] END) value;
+            IF definitions IS DISTINCT FROM expected_definitions
+                OR EXISTS (SELECT FROM pg_constraint WHERE conrelid = recruit_id AND
+                    (condeferrable OR condeferred OR NOT convalidated OR NOT conislocal OR coninhcount <> 0
+                     OR connamespace <> namespace_id OR (contype = 'c' AND connoinherit) OR conparentid <> 0)) THEN
+                RAISE EXCEPTION 'queue identity: incompatible recruit constraints';
+            END IF;
+            IF (SELECT count(*) FROM pg_index WHERE indrelid = recruit_id) <> (CASE WHEN recruit_id = origin_id THEN 2 ELSE 1 END) THEN
+                RAISE EXCEPTION 'queue identity: unexpected recruit index';
+            END IF;
+            FOR pk IN SELECT * FROM pg_constraint WHERE conrelid = recruit_id AND contype IN ('p','u') LOOP
+                IF NOT EXISTS (SELECT FROM pg_index x JOIN pg_class c ON c.oid = x.indexrelid JOIN pg_am a ON a.oid = c.relam
+                    WHERE x.indexrelid = pk.conindid AND x.indrelid = recruit_id AND c.relnamespace = namespace_id
+                    AND c.relowner = owner_id AND c.relkind = 'i' AND c.relpersistence = 'p' AND a.amname = 'btree'
+                    AND x.indisprimary = (pk.contype = 'p') AND x.indisunique AND x.indimmediate
+                    AND x.indisvalid AND x.indisready AND x.indislive AND NOT x.indisexclusion
+                    AND NOT x.indnullsnotdistinct AND x.indpred IS NULL AND x.indexprs IS NULL
+                    AND x.indnkeyatts = cardinality(pk.conkey) AND x.indnatts = cardinality(pk.conkey)
+                    AND ARRAY(SELECT unnest(x.indkey::smallint[])) = pk.conkey
+                    AND NOT EXISTS (SELECT FROM unnest(x.indclass::oid[]) WITH ORDINALITY op(id,n)
+                        JOIN pg_opclass oc ON oc.oid = op.id
+                        JOIN pg_attribute att ON att.attrelid = recruit_id AND att.attnum = pk.conkey[op.n::integer]
+                        WHERE NOT oc.opcdefault OR oc.opcintype <> att.atttypid OR oc.opcnamespace <> 'pg_catalog'::regnamespace)
+                    AND NOT EXISTS (SELECT FROM unnest(x.indoption::smallint[]) opt WHERE opt <> 0)
+                    AND NOT EXISTS (SELECT FROM unnest(x.indcollation::oid[]) coll WHERE coll <> 0)) THEN
+                    RAISE EXCEPTION 'queue identity: incompatible recruit index';
+                END IF;
+            END LOOP;
+        END LOOP;
+        SELECT * INTO STRICT fk FROM pg_constraint WHERE conrelid = receipt_id AND contype = 'f';
+        IF fk.confrelid <> origin_id OR fk.conkey <> ARRAY[1,2]::smallint[] OR fk.confkey <> ARRAY[1,2]::smallint[]
+            OR fk.confupdtype <> 'r' OR fk.confdeltype <> 'r' OR fk.confmatchtype <> 's'
+            OR (SELECT count(*) FROM pg_trigger WHERE tgrelid IN (origin_id,receipt_id)) <> 4
+            OR EXISTS (SELECT FROM pg_trigger WHERE tgrelid IN (origin_id,receipt_id) AND
+                (NOT tgisinternal OR tgconstraint <> fk.oid OR tgenabled <> 'O' OR tgdeferrable OR tginitdeferred
+                OR tgnargs <> 0 OR octet_length(tgargs) <> 0 OR tgqual IS NOT NULL OR tgattr::text <> ''
+                OR tgparentid <> 0 OR tgoldtable IS NOT NULL OR tgnewtable IS NOT NULL
+                OR NOT ((tgrelid = origin_id AND tgconstrrelid = receipt_id AND
+                    ((tgfoid = 'pg_catalog."RI_FKey_restrict_del"'::regproc AND tgtype = 9)
+                    OR (tgfoid = 'pg_catalog."RI_FKey_restrict_upd"'::regproc AND tgtype = 17)))
+                OR (tgrelid = receipt_id AND tgconstrrelid = origin_id AND
+                    ((tgfoid = 'pg_catalog."RI_FKey_check_ins"'::regproc AND tgtype = 5)
+                    OR (tgfoid = 'pg_catalog."RI_FKey_check_upd"'::regproc AND tgtype = 17)))))) THEN
+            RAISE EXCEPTION 'queue identity: incompatible recruit FK/triggers';
+        END IF;
+        EXECUTE format('SELECT EXISTS (SELECT FROM %1$I.mil_recruit_receipt r LEFT JOIN %1$I.mil_recruit_origin o '
+            'USING (server_id,queue_id) WHERE o.queue_id IS NULL) OR EXISTS '
+            '(SELECT queue_id FROM %1$I.mil_recruit_origin GROUP BY queue_id HAVING count(*) > 1) OR EXISTS '
+            '(SELECT FROM %1$I.mil_recruit_origin o JOIN %1$I.work_queue q USING (queue_id) '
+            'WHERE q.server_id <> o.server_id OR q.player_id <> o.player_id OR q.queue_type <> 3) OR EXISTS '
+            '(SELECT FROM %1$I.mil_recruit_receipt r JOIN %1$I.work_queue q USING (queue_id) '
+            'WHERE q.server_id <> r.server_id OR q.city_id IS DISTINCT FROM r.city_id)', ns) INTO corrupt;
+        IF corrupt THEN RAISE EXCEPTION 'queue identity: corrupt recruit identity'; END IF;
+        -- Retained origin-only IDs still reserve the namespace; this is not an activation audit.
+        EXECUTE format('SELECT min(queue_id),max(queue_id) FROM (SELECT queue_id FROM %1$I.mil_recruit_origin '
+            'UNION ALL SELECT queue_id FROM %1$I.mil_recruit_receipt) ids',ns) INTO found_min,found_max;
+        IF found_min <= 0 OR found_max > ceiling THEN RAISE EXCEPTION 'queue identity: invalid recruit ID'; END IF;
+        highwater := greatest(highwater,COALESCE(found_max,0));
+        PERFORM set_config('TimeZone', runtime_timezone, true);
+        PERFORM set_config('DateStyle', runtime_datestyle, true);
+    END IF;
     IF EXISTS (SELECT FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid
         WHERE c.relnamespace = namespace_id AND c.relkind IN ('r','p','v','m','f')
         AND NOT a.attisdropped AND a.attname IN ('queue_id','queue_ids')
-        AND (c.oid, a.attname) <> (obj, 'queue_id')) THEN
+        AND (c.oid, a.attname) <> (obj, 'queue_id')
+        AND NOT (origin_id IS NOT NULL AND c.oid IN (origin_id,receipt_id) AND a.attname = 'queue_id')) THEN
         RAISE EXCEPTION 'queue identity: unreviewed queue reference';
     END IF;
     EXECUTE format('SELECT min(queue_id), max(queue_id) FROM %I.work_queue', ns) INTO found_min, found_max;
