@@ -1,7 +1,7 @@
 # MIL Recruit physical storage identity — review proposal
 
-task_id：`SPEC-DURABLE-RECRUIT-STORAGE-001`；任务：[#1827](https://github.com/anitaguptaoffice/sanguo-slg/issues/1827)。
-基线：main `9d1377d2380612c31c8ae23ddc698b5cbede2c5d`，tree `9e76b1f4cbd9de0a48c41ab405076f059604e0ac`。
+task_id：`SPEC-DURABLE-RECRUIT-ROLLOUT-001`；任务：[#1830](https://github.com/anitaguptaoffice/sanguo-slg/issues/1830)；存储提案来源：[#1827](https://github.com/anitaguptaoffice/sanguo-slg/issues/1827) / PR #1828。
+本次基线：main `bced7eea867a4697bbaa8728f831546af5b3de65`，tree `396ed78ae4272efeb55c40181b6919ded0d2de42`。首版源基线为 `9d1377d2380612c31c8ae23ddc698b5cbede2c5d`。
 依赖：[#1797 / PR #1798](https://github.com/anitaguptaoffice/sanguo-slg/issues/1797) 的 [应用命令边界](SLG_COMMAND_BOUNDARY.md)，[#1801 / PR #1802](https://github.com/anitaguptaoffice/sanguo-slg/issues/1801) 的 [招募队列](MIL_RECRUIT_QUEUE.md) 与 [招募命令](MIL_RECRUIT_COMMAND.md)，以及 [共享队列身份](queue_identity.md)、[维护脚本](../db/m4_008_work_queue_id_sequence.sql) 和 [DOM 绑定](../../internal/domestic/queue_identity.go)。
 
 This is a proposed physical storage contract and gate for later implementation, subject to independent SPEC review and applicable freeze/notification. The merged semantic contracts remain authoritative. It does not claim durable Recruit is implemented, tested or active, and authorizes no SQL, migration, runtime wiring, privilege change or deployment. The dormant arithmetic planner in [#1799](https://github.com/anitaguptaoffice/sanguo-slg/issues/1799) / PR #1800 is not durability evidence. No legacy adoption, DATA-003 or protocol change is in scope.
@@ -57,19 +57,66 @@ A proposed separately retained, tamper-evident activation certificate is issued 
 
 ## 3. Allocator inventory and lifecycle
 
-The existing [m4_008](../db/m4_008_work_queue_id_sequence.sql) rejects every additional same-schema `queue_id` or `queue_ids` column. Before origin is created or any ApplySpecs replay sees it, a separately reviewed amendment must explicitly inventory both `mil_recruit_origin.queue_id` AND `mil_recruit_receipt.queue_id`. Renaming or arbitrary exemptions do not satisfy this requirement. Validate exact relations/columns, origin PK/unique/checks, receipt PK/FK/checks, namespace, owner, persistence, access method, privileges, index properties and absence of unexpected inheritance/RLS/rules/triggers other than the exact FK RI triggers. Reject lookalikes, extra references, wrong metadata, invalid IDs and unknown opaque/cross-schema references until externally inventoried.
+The existing [m4_008](../db/m4_008_work_queue_id_sequence.sql) rejects every additional same-schema `queue_id` or `queue_ids` column. Before either relation is created or any ApplySpecs replay sees it, a separately reviewed amendment must explicitly inventory both `mil_recruit_origin.queue_id` AND `mil_recruit_receipt.queue_id`. Renaming or arbitrary exemptions do not satisfy this requirement. Validate exact relations/columns, origin PK/unique/checks, receipt PK/FK/checks, namespace, owner, persistence, access method, privileges, index properties and absence of unexpected inheritance/RLS/rules/triggers other than the exact FK RI triggers. Reject lookalikes, extra references, wrong metadata, invalid IDs and unknown opaque/cross-schema references until externally inventoried.
 
 Scan all retained IDs from BOTH new tables in all states, including origin without queue/receipt. Receipt orphan, invalid FK or corrupt identity fails closed before `setval`; never ignore it. Under an external fence/drain of all allocators, writers and concurrent DDL, calculate `H = max(queue rows, origin rows, receipt rows, independently documented external retained references/highwater)`. Preserve greater existing sequence state, fail at exhaustion and move only forward after all validation. Sequence remains schema-qualified bigint, 1..9007199254740991, increment/cache 1, no cycle, owned by none. `setval` may survive rollback: never lower or recreate the sequence as rollback. Restore queue, origin, receipt, sequence, catalog and reference/fence evidence coherently, then repeat the forward-only audit even with a migration ledger.
 
 The future design must prove each entry state before production migration SQL is finalized or released, or executed in a target database. Separately authorized isolated, disposable prototypes may establish that proof; they do not authorize release or target-environment rollout:
 
-1. **Precreate:** old m4_008 must run before origin exists; install a reviewed replacement or compatible coordinator/ordering before creation.
+1. **Precreate:** complete the queue identity prerequisite while both new relations are absent; install the reviewed m4_008 amendment and explicit manual entry points before creating either relation.
 2. **Body completed, ledger absent:** ApplySpecs may replay m4_008 and its current body rejects origin. Permit replay only with a reviewed compatible amendment that validates and inventories both exact new relations; otherwise fail closed.
 3. **Ledger present:** ledger proves neither current shape nor highwater nor restored provenance; perform explicit maintenance audit.
 4. **Restore or partial restore:** verify coherent snapshot, retained references and sequence against external monotonic evidence. Missing ledger/evidence or uncertain/lowered provenance closes the cohort; do not create missing halves or adopt data.
-5. **Unknown or wrong preexisting origin:** reject it; never adopt by name through `IF NOT EXISTS`.
+5. **Unknown or wrong preexisting relation:** reject either malformed relation; never adopt by name through `IF NOT EXISTS`.
 
-Whether to amend historical migration bytes or introduce a narrowly reviewed preflight/replay coordinator is unresolved. Prove all five states and checksum/old-deployment compatibility before choosing; do not assume ApplySpecs permits rewriting an already-ledgered file. This proposal changes neither migration nor binding.
+### Selected source/rollout path (SPEC-DURABLE-RECRUIT-ROLLOUT-001)
+
+Select a narrowly reviewed m4_008 amendment plus explicit manual creation and
+ledger-independent audit entry points under `spec/db/migrations/`. This follows
+the existing [manual migration pattern](../db/migrations/007_backfill_city_production_checkpoint.sql),
+not a new Go migration framework. This rule change implements no SQL or binding.
+
+The actual [ApplySpecs runner](../../internal/platform/db/migrate.go) records only
+filenames, skips reading applied files, and sends the SQL body and ledger insert
+separately. It does not store or verify a body checksum and skips subdirectories.
+Consequently, changing historical bytes is technically replayable when the ledger
+is absent, but is NOT an upgrade/audit for a ledger-present database. An authorized
+release must independently verify the exact reviewed script/release identity.
+Never fabricate, remove or rewrite ledger rows merely to bypass a failing check.
+
+- Keep new-relation creation outside the top-level SQL glob and normal startup.
+  Separate creation from auditing an existing pair; neither is a runtime fallback.
+  A reviewed creation entry must verify its prerequisite and then validate the
+  created pair in its transaction before commit. If the pair already exists,
+  use the independently authorized audit/replay path, not name-based adoption.
+- With neither new relation present, preserve the original queue/sequence
+  precreate behavior. A partial pair, wrong object or unknown reference fails.
+  Recognize a complete pair only after its exact reviewed catalog shape has
+  passed; exempt the two verified relation OIDs/columns, not arbitrary names.
+  The production checker must not trust a mutable template inside the target DB.
+- An existing pair without its schema-local sequence is a partial state: reject
+  before the original body's sequence-creation branch. Do not reconstruct it from
+  rows or a default external highwater. Missing-ledger replay on an existing pair
+  must pass the same complete metadata, retained-identity and forward-only audit.
+- Under the externally verified writer/allocator/DDL fence, lock the reviewed
+  queue and present pair in a deterministic order, recheck metadata after locks,
+  and validate current rows and H in the same maintenance transaction before
+  the final sequence advance. Table locks do not fence independent nextval calls.
+  Detect orphan/mismatch predicates exactly, never by suffix/parsing shortcuts;
+  uncertainty or failed checks prevent setval and do not trigger repair.
+- Run the ledger-independent audit for relevant maintenance and restoration even
+  when the migration filename is recorded. Bind it to the exact reviewed body;
+  an old runner with a ledger can silently skip that body's checks, while an old
+  missing-ledger replay rejects new references. Neither establishes compatible
+  old-writer coexistence: fence/drain incompatible binaries before manual creation
+  and certify all resumed writers separately. Test both old-runner states.
+
+The isolated evidence in [#1829](https://github.com/anitaguptaoffice/sanguo-slg/issues/1829)
+informs this choice, not production readiness. Its mutable catalog template,
+synthetic provenance flags and initially defective audit helpers are not a
+publishable guard. Exact DDL/catalog expressions, implementation and permission
+checks, source/replay compatibility tests, external provenance and through-commit
+fence enforcement remain separate reviewed gates. No target execution is approved.
 
 ## 4. Transaction and recovery requirements
 
