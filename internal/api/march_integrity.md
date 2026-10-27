@@ -19,3 +19,10 @@ Tests exercise real gateway packet decoding, malformed-input rejection before
 hero/force effects, checked duplicate ordering/copy isolation, and consistent
 outbound200/return166/zero/no-battle/home snapshots with unchanged return ETA.
 The arrival callback is an isolated fixture, not a new native battle claim.
+
+Reviewed returned-home contract: explicit `PhaseReturned` maps to wire5 only after
+MIL settles survivors at home. History keeps identity, route, purpose, timestamps
+and current survivor composition; `return_finish_at_ms` is zero outside returning.
+Pending stays pending even with old timestamps; unknown domain phases map to
+unspecified, never to pending or returned. List totals still include retained
+history and are computed before the unchanged city/actor-filtered pagination.
