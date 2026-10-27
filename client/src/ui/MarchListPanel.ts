@@ -1,3 +1,4 @@
+import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
@@ -7,6 +8,7 @@ import {
   MARCH_ROW_RECENT_ETA_ROLE,
   marchNeedsPoll,
   MARCH_LIST_POLL_MS,
+  MARCH_PHASE_RETURNED,
   MARCH_LIST_REMAINING_TICK_MS,
   type MarchSummary,
 } from "@/net/militaryFormat";
@@ -141,6 +143,9 @@ export class MarchListPanel {
   private panel!: HTMLElement;
   private marches: MarchSummary[] = [];
   private listError = "";
+  private listRequestGeneration = 0;
+  private listAppliedGeneration = 0;
+  private listMountGeneration = 0;
   private listLoading = false;
   private listPollTimer: ReturnType<typeof setInterval> | null = null;
   private remainingTickTimer: ReturnType<typeof setInterval> | null = null;
@@ -337,6 +342,7 @@ export class MarchListPanel {
   }
 
   detach(): void {
+    this.listMountGeneration++;
     this.stopPoll();
     this.clearHighlightExpiryTimer();
     this.panel?.removeEventListener("keydown", this.onListKeyDownBound);
@@ -581,7 +587,7 @@ export class MarchListPanel {
       renderPanelStateListRow(
         ul,
         "empty",
-        `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条进行中${phaseHint}）`,
+        `格点 (${filter.x},${filter.y}) 暂无指向行军（共 ${this.marches.length} 条行军记录${phaseHint}）`,
         { legacyClass: marchListEmptyClass(), assets: this.assets },
       );
       return;
@@ -642,6 +648,7 @@ export class MarchListPanel {
       }
       const phaseSubline = document.createElement("span");
       phaseSubline.className = INTEL_ROW_PHASE_SUBLINE_CLASS;
+      phaseSubline.classList.toggle("march-phase-returned", m.phase === MARCH_PHASE_RETURNED);
       phaseSubline.setAttribute("data-role", INTEL_ROW_PHASE_SUBLINE_CLASS);
       phaseSubline.textContent = formatMarchIntelPhaseEtaStrip(m, now);
       const meta = document.createElement("span");
@@ -772,6 +779,7 @@ export class MarchListPanel {
     bodyEl.classList.remove("hidden");
 
     const now = this.nowMs();
+    phaseEtaStripEl.classList.toggle("march-phase-returned", march.phase === MARCH_PHASE_RETURNED);
     phaseEtaStripEl.textContent = formatMarchIntelPhaseEtaStrip(march, now);
     const coordLine = formatMarchIntelEtaResidualCoordLine(march);
     if (coordLine) {
@@ -909,6 +917,14 @@ export class MarchListPanel {
   }
 
   private async refreshList(): Promise<void> {
+    const generation = ++this.listRequestGeneration;
+    const mountGeneration = this.listMountGeneration;
+    const fresh = beginMarchSnapshotRead(this.gateway, this.getCityId);
+    const current = (apply = false) => {
+      if (generation < this.listAppliedGeneration || mountGeneration !== this.listMountGeneration || !fresh(apply)) return false;
+      if (apply) this.listAppliedGeneration = generation;
+      return true;
+    };
     this.listError = "";
     this.listLoading = true;
     this.renderList();
@@ -920,6 +936,7 @@ export class MarchListPanel {
         marches?: MarchSummary[];
         total?: number;
       };
+      if (!current(true)) return;
       const nextMarches = res.marches ?? [];
       this.pendingPhaseChangePulseIds = detectMarchPhaseChange(prevSnapshot, nextMarches);
       const reminders = detectNewMarchArrivalReminders(prevSnapshot, nextMarches, new Set());
@@ -929,11 +946,17 @@ export class MarchListPanel {
       this.onStatus(`行军 ${this.marches.length}/${res.total ?? 0} 条`);
       this.syncPollTimers();
     } catch (e) {
+      if (!current()) return;
       this.marches = [];
       this.lastListSnapshot = [];
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
       this.stopPoll();
+    } finally {
+      if (generation === this.listRequestGeneration && !fresh()) {
+        this.listLoading = false;
+        this.renderList();
+      }
     }
     if (
       this.selectedMarchId != null &&
@@ -949,9 +972,18 @@ export class MarchListPanel {
     this.renderList();
   }
 
-  /** 小地图 ListMarches 快照到达后恢复焦点（面板可未打开）。 */
+  /** 同步小地图的权威列表，避免关闭面板后旧阶段覆盖军事/世界只读摘要。 */
   syncMinimapMarchFocusFromSnapshot(marches: MarchSummary[]): void {
+    const reminders = detectNewMarchArrivalReminders(this.lastListSnapshot, marches, new Set());
+    if (reminders.length) this.onMarchArrivalReminders?.(reminders);
+    this.pendingPhaseChangePulseIds = detectMarchPhaseChange(this.marches, marches);
+    this.marches = marches;
+    this.lastListSnapshot = marches.map(m => ({ ...m }));
+    this.listLoading = false;
+    this.listError = "";
     this.applyMinimapMarchFocusRestore(marches);
+    this.syncPollTimers();
+    this.renderList();
   }
 
   /** 会话内恢复小地图↔军情焦点（CLIENT-090）；不覆盖用户已选行。 */
