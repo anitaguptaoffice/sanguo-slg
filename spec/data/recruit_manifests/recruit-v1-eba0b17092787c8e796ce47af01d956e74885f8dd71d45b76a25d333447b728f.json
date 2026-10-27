@@ -1,0 +1,46 @@
+{
+  "format": 1,
+  "version": "recruit-v1:eba0b17092787c8e796ce47af01d956e74885f8dd71d45b76a25d333447b728f",
+  "rules": [
+    {
+      "unit_cfg_id": 1,
+      "cost_per_unit": {
+        "food": 40,
+        "wood": 20,
+        "iron": 0,
+        "stone": 0
+      },
+      "seconds_per_unit": 30
+    },
+    {
+      "unit_cfg_id": 2,
+      "cost_per_unit": {
+        "food": 80,
+        "wood": 40,
+        "iron": 20,
+        "stone": 0
+      },
+      "seconds_per_unit": 45
+    },
+    {
+      "unit_cfg_id": 3,
+      "cost_per_unit": {
+        "food": 50,
+        "wood": 60,
+        "iron": 0,
+        "stone": 0
+      },
+      "seconds_per_unit": 35
+    },
+    {
+      "unit_cfg_id": 4,
+      "cost_per_unit": {
+        "food": 100,
+        "wood": 80,
+        "iron": 30,
+        "stone": 40
+      },
+      "seconds_per_unit": 60
+    }
+  ]
+}
