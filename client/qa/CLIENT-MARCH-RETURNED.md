@@ -54,3 +54,26 @@ Snapshot propagation also preserves the existing2→3/4 destination-arrival remi
 before replacing the panel comparison snapshot. Shared session dedupe prevents a
 repeat on panel reread;4→5/direct2→5/initial5 remain silent. This is not a new return
 notification or a claim that phase3 implies returned home.
+
+## CLIENT-MARCH-RETURNED-005 — display and component acceptance
+
+Returned strip/subline uses an opaque neutral #383838 surface and #d2d2d2 ink
+(7.75:1), independent of inherited paper/dark text. Phase-change outline pulses
+remain, while pulse fills cannot make terminal text unreadable. No PNG/asset edits.
+
+`marchReturnedPanel.test.ts` verifies production GatewayClient binary handling,
+selected-history/report-session links, separate optional report_id extension,
+4→5/direct2→5/initial5, mixedpending and repeated refresh, timers and reattach.
+`marchReturned.test.ts` additionally decodes actual MIL settlement→API handler
+wire with166 survivors and return deadline0 (synthetic engineering settlement).
+
+`QA_OUT=/tmp/returned node qa/marchReturned.browser.mjs` runs sandboxed native
+Chromium at1280×720 and1600×900 with fallback and installed paper skin. It decodes
+Go5/1/4/127, uses production GatewayClient/Panel/rendering, verifies active/world
+counts1→0, real canvas destination draws1→0, neutral contrast, no terminal timer,
+selection/history after reload, repeat refresh, unknown127 and report-session link.
+Its200ms polling is fixture-only, not a changed production/gameplay duration.
+Browser reload is a component/sessionStorage fixture, **not native relogin or
+natural elapsed-time return acceptance**. Production default remains5s; unrelated
+background minimap discovery is intentionally retained. Coordinated activation
+and natural same-process lifecycle acceptance remain external gates.
