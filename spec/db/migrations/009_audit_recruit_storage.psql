@@ -1,0 +1,18 @@
+-- SPEC-RECRUIT-STORAGE-ENTRY-001. Manual psql entry; never ApplySpecs.
+-- Fresh authorized session only, external writer/allocator/DDL fence required.
+-- Independently verify release identity and target before execution; see RECRUIT_STORAGE.md.
+\set ON_ERROR_STOP on
+BEGIN ISOLATION LEVEL READ COMMITTED;
+SELECT pg_catalog.current_schema() AS recruit_schema,
+    pg_catalog.current_setting('search_path') AS recruit_path \gset
+SET LOCAL search_path = pg_catalog, pg_temp;
+SELECT (SELECT count(*) FROM pg_class WHERE relnamespace = to_regnamespace(:'recruit_schema')
+    AND relname IN ('mil_recruit_origin','mil_recruit_receipt') AND relkind = 'r') <> 2
+    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = to_regnamespace(:'recruit_schema')
+    AND relname = 'work_queue_id_seq' AND relkind = 'S') AS reject_entry \gset
+\if :reject_entry
+    DO $$ BEGIN RAISE EXCEPTION 'recruit audit: existing pair and sequence required; no repair'; END $$;
+\endif
+SELECT set_config('search_path', :'recruit_path', true);
+\ir ../m4_008_work_queue_id_sequence.sql
+COMMIT;

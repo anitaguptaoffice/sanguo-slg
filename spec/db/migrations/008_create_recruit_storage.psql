@@ -1,0 +1,39 @@
+-- SPEC-RECRUIT-STORAGE-ENTRY-001. Manual psql entry; never ApplySpecs.
+-- Fresh authorized session only, external writer/allocator/DDL fence required.
+-- Independently verify release identity and target before execution; see RECRUIT_STORAGE.md.
+\set ON_ERROR_STOP on
+BEGIN ISOLATION LEVEL READ COMMITTED;
+SELECT pg_catalog.current_schema() AS recruit_schema,
+    pg_catalog.current_setting('search_path') AS recruit_path \gset
+SET LOCAL search_path = pg_catalog, pg_temp;
+SELECT EXISTS (SELECT FROM pg_class WHERE relnamespace = to_regnamespace(:'recruit_schema')
+    AND relname IN ('mil_recruit_origin','mil_recruit_receipt'))
+    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = to_regnamespace(:'recruit_schema')
+    AND relname = 'work_queue_id_seq' AND relkind = 'S') AS reject_entry \gset
+\if :reject_entry
+    DO $$ BEGIN RAISE EXCEPTION 'recruit create: pair must be absent and sequence already prepared'; END $$;
+\endif
+SELECT set_config('search_path', :'recruit_path', true);
+\ir ../m4_008_work_queue_id_sequence.sql
+-- Guard leaves a catalog-only path. Names below target the captured schema explicitly.
+CREATE TABLE :"recruit_schema".mil_recruit_origin(server_id integer NOT NULL,
+    queue_id bigint NOT NULL CHECK(queue_id >= 1 AND queue_id <= 9007199254740991), player_id bigint NOT NULL,
+    operation smallint NOT NULL CHECK(operation = 1),
+    command_id bytea NOT NULL CHECK(octet_length(command_id) = 16 AND command_id <> decode(repeat('00',16),'hex')),
+    PRIMARY KEY(server_id,queue_id), UNIQUE(server_id,player_id,operation,command_id));
+CREATE TABLE :"recruit_schema".mil_recruit_receipt(server_id integer NOT NULL,
+    queue_id bigint NOT NULL CHECK(queue_id >= 1 AND queue_id <= 9007199254740991),
+    intent_version smallint NOT NULL CHECK(intent_version = 1), city_id bigint NOT NULL,
+    unit_cfg_id integer NOT NULL CHECK(unit_cfg_id >= 1 AND unit_cfg_id <= 4), count integer NOT NULL CHECK(count > 0),
+    food_paid bigint NOT NULL CHECK(food_paid >= 0), wood_paid bigint NOT NULL CHECK(wood_paid >= 0),
+    iron_paid bigint NOT NULL CHECK(iron_paid >= 0), stone_paid bigint NOT NULL CHECK(stone_paid >= 0),
+    duration_sec bigint NOT NULL CHECK(duration_sec > 0), catalog_version bytea NOT NULL CHECK(octet_length(catalog_version) > 0),
+    rule_digest bytea NOT NULL CHECK(octet_length(rule_digest) = 32),
+    accepted_at timestamptz NOT NULL CHECK(isfinite(accepted_at) AND accepted_at >= '0001-01-01T00:00:00Z' AND accepted_at < '10000-01-01T00:00:00Z' AND date_trunc('milliseconds',accepted_at) = accepted_at),
+    initial_start_at timestamptz NOT NULL CHECK(isfinite(initial_start_at) AND initial_start_at >= '0001-01-01T00:00:00Z' AND initial_start_at < '10000-01-01T00:00:00Z' AND date_trunc('milliseconds',initial_start_at) = initial_start_at),
+    initial_finish_at timestamptz NOT NULL CHECK(isfinite(initial_finish_at) AND initial_finish_at >= '0001-01-01T00:00:00Z' AND initial_finish_at < '10000-01-01T00:00:00Z' AND date_trunc('milliseconds',initial_finish_at) = initial_finish_at),
+    initial_status smallint NOT NULL CHECK(initial_status IN (0,1)), PRIMARY KEY(server_id,queue_id),
+    FOREIGN KEY(server_id,queue_id) REFERENCES :"recruit_schema".mil_recruit_origin(server_id,queue_id) ON UPDATE RESTRICT ON DELETE RESTRICT);
+SELECT set_config('search_path', :'recruit_path', true);
+\ir ../m4_008_work_queue_id_sequence.sql
+COMMIT;
