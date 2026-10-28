@@ -65,6 +65,23 @@ M4 及以后里程碑使用独立 `m4_*.sql` 等前缀，避免与并行 DDL 冲
 
 逻辑引用：`cfg_shop_offer.item_cfg_id` → `cfg_item`；发奖 JSON 与 `cfg_quest.rewards` / `player_mail.attachments` 同 schema（见 `spec/rules/content.md`）。
 
+## March persistence identity (SPEC-MARCH-PERSIST-001)
+
+[契约与恢复规则](../rules/MARCH_PERSISTENCE.md) 与
+`m4_009_march_identity.sql` 冻结行军持久化的最小身份/恢复面：三条 JS-safe 序列
+（`march_order_march_id_seq`、`field_army_army_id_seq`、
+`battle_report_report_id_seq`，上限 `9007199254740991`，OWNED BY NONE），
+`march_order.origin_city_id` / `return_finish_at` 可空新列，返回期限部分索引
+`idx_march_return`，以及 status 1/2/3/4 语义（3 由原“撤回”明确重定义为
+returning；原值无 writer）。归属仍为
+`march_order.army_id → field_army.owner_player_id`，不新增 player 列或 FK。
+
+仅契约前置：不新增 Go writer、不写行、不加 `NOT NULL`、不做数据迁移/回填。
+`ApplySpecs` 的 body 与 ledger 分开执行，缺 ledger 的重放必须幂等且不重置序列；
+运行期禁止 `setval`/provision/repair，首个 writer 另行做 watermark 审计。
+影响域/卡：MIL M1/M2/M5、API M3/M6、HERO M4 及未来 APP activation；本文件不授权
+任何实现。
+
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
 `007_domestic_production_checkpoint.sql` adds a dedicated city accrual clock and
