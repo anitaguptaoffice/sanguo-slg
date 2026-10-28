@@ -112,12 +112,15 @@ evidence, and activation is blocked until the card lands.
 
 ## WORLD city barrier
 
-The `player_city FOR UPDATE` barrier applies to `city_troop` reads, debits,
-credits and same-city capacity checks. It does not wrap hero-row or march/army-row
-writes. The first slice writes no `city_troop`, so it takes no WORLD lock and does
-not claim the barrier invariant. A future stock-authoritative writer uses the
-fixed pin order ACCOUNT → DOM wallet → WORLD city → MIL relations, with no Hub
-mutex held while PG locks are held.
+March-only or hero-only writes do not themselves require the city barrier, and
+the first slice takes no WORLD lock because it writes no `city_troop`. A
+transaction that touches `city_troop` acquires `player_city FOR UPDATE` and keeps
+that barrier held through every subsequent march/army-row write until transaction
+end, including the terminal status write; there is no early release or commit
+between stock credit and terminal. That transaction uses the frozen pin order
+ACCOUNT → DOM wallet → WORLD city → MIL relations, with no Hub mutex held while PG
+locks are held. It belongs to the separately reviewed durable stock-credit card
+that gates activation; this contract does not define that card's schema.
 
 ## Retention, restore and unknown states
 
