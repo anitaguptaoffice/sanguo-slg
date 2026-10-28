@@ -158,6 +158,16 @@ func TestPGRecruitPreparePendingAndRejects(t *testing.T) {
 			}
 		})
 	}
+	t.Run("uint32 max version", func(t *testing.T) {
+		o, a, ctx := baseOwner(t, b)
+		participant, err := NewRecruitParticipant(ctx, b, a, p, catalog)
+		baseOK(t, err)
+		baseOK(t, participant.Pin(ctx, a))
+		if _, err = participant.Prepare(ctx, a, scope, RecruitIntent{Version: ^uint32(0), CityID: 100, UnitCfgID: 1, Count: 1}); !errors.Is(err, ErrRecruitUnsupportedVersion) {
+			t.Fatal(err)
+		}
+		baseOK(t, o.Rollback(ctx))
+	})
 }
 
 func preparePending(t *testing.T) (*RecruitCatalog, historyRow, historyRow) {
