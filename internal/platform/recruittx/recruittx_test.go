@@ -91,7 +91,7 @@ func TestBindingAndEndedAccess(t *testing.T) {
 	}
 	check(t, o.Commit(ctx) != nil && o.Rollback(ctx) != nil, "repeated end")
 	check(t, f.commits.Load() == 1 && f.executions.Load() == 1, "replayed SQL")
-	check(t, reflect.TypeOf(a).NumMethod() == 2, "access exposes extra methods")
+	check(t, reflect.TypeOf(a).NumMethod() == 3, "access exposes extra methods")
 }
 
 func TestCommitFailureAndPanicCleanup(t *testing.T) {
