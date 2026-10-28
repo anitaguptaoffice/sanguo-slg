@@ -264,6 +264,17 @@ function applyEvidencePreset(state, preset) {
     ];
     return;
   }
+  if (preset === "hero-panel-roster-long") {
+    state.heroes = Array.from({ length: 14 }, (_, i) => ({
+      hero_id: 8100 + i,
+      template_cfg_id: i % 2 === 0 ? 1001 : 1002,
+      level: 8 + i,
+      loyalty: 55 + i,
+      exp: 5000,
+    }));
+    state.bag = { 2020: 6, 2004: 4, 2001: 12 };
+    return;
+  }
 }
 
 const server = http.createServer((req, res) => {
