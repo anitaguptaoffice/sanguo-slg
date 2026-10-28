@@ -120,6 +120,31 @@ func TestPGRecruitKeyLookupFind(t *testing.T) {
 	if _, _, err := participant.Find(ctx, a, hit); !errors.Is(err, ErrRecruitUnavailable) {
 		t.Fatal("source drift", err)
 	}
+	if !participant.source.retired.Load() || participant.source != copied.source || !copied.source.retired.Load() {
+		t.Fatal("drift retirement not shared")
+	}
+	// Retirement is irreversible: roll back the replacement (DDL is
+	// transactional), prove a fresh participant on the restored source works,
+	// then require the retired value and its copy to keep failing closed.
+	baseOK(t, o.Rollback(ctx))
+	_, a2, ctx2 := baseOwner(t, b)
+	fresh, err := NewRecruitParticipant(ctx2, b, a2, p, catalog)
+	baseOK(t, err)
+	baseOK(t, fresh.Pin(ctx2, a2))
+	if q, found, err := fresh.Find(ctx2, a2, hit); err != nil || !found || q != 10 {
+		t.Fatal("restored source", q, found, err)
+	}
+	if err := participant.Pin(ctx2, a2); !errors.Is(err, ErrFreshCitySource) {
+		t.Fatal("retired pin", err)
+	}
+	for _, rp := range []*RecruitParticipant{participant, &copied} {
+		if _, _, err := rp.Find(ctx2, a2, hit); !errors.Is(err, ErrRecruitUnavailable) {
+			t.Fatal("retired find", err)
+		}
+		if ok, err := rp.ReverseAbsent(ctx2, a2, hit); ok || !errors.Is(err, ErrRecruitUnavailable) {
+			t.Fatal("retired reverse", ok, err)
+		}
+	}
 }
 
 func TestPGRecruitKeyLookupUnavailable(t *testing.T) {
