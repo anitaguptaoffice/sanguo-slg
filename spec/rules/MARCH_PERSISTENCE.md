@@ -3,8 +3,10 @@
 Status: **contract review prerequisite; not runtime activation.** This document and
 `spec/db/m4_009_march_identity.sql` freeze the minimal persistence contract needed
 to close the restart-loss gap (G3). No Go writer, production caller, data migration
-or backfill is introduced here. Baseline `1f450937c7808829ec76bc2ce3f505b0e6a9cd5a`;
-design decisions are in `results/march-persistence-design.md` §2–7.
+or backfill is introduced here. Baseline `1f450937c7808829ec76bc2ce3f505b0e6a9cd5a`.
+Design decisions are in the M0 design note `results/march-persistence-design.md`
+(orchestration worktree); its earlier return-credit `exactly-once` discussion is
+superseded by the known loss window and activation gate below.
 
 ## Lifecycle and transitions
 
@@ -69,7 +71,9 @@ not hidden by a fake refund.
   `is_called`, `max(persisted id) <= last_value`; when not called,
   `max(persisted id) < last_value`; and `last_value` stays within the ceiling. A
   lower/behind sequence fails closed and needs a separately reviewed maintenance
-  action.
+  action. A fully consumed sequence (`last_value=9007199254740991`,
+  `is_called=true`) is accepted at replay as a valid non-resettable state;
+  `NO CYCLE` fails the next allocation. Replay acceptance is not capacity.
 - Restore preserves sequence identity; a missing ApplySpecs ledger row must replay
   the file without lowering or resetting a sequence.
 
@@ -83,17 +87,28 @@ crash after insert and before the response may duplicate the march on client
 retry because `StartMarchRequest` has no command key. Retry idempotency is not
 claimed.
 
-**Arrival.** Report insert, `march_order` status/deadline, `army_troop` survivors
-and `field_army` position/status commit in one transaction. A report row exists
-if and only if that transition committed. If no battle runs, transition to
-returning with full survivors; never finish an order with troops still only in
-memory. Report/arrival errors are surfaced and retried or quarantined; they are
-never swallowed.
+**Arrival.** For a battle arrival, the `battle_report` row, `march_order`
+status/deadline, `army_troop` survivors and `field_army` position/status commit in
+one transaction: both the report and the transition commit or neither does. A
+no-battle arrival writes no report row and transitions to returning with full
+survivors; never finish an order with troops still only in memory. Report/arrival
+errors are surfaced and retried or quarantined; they are never swallowed.
 
-**Return.** Credit the process garrison, then write terminal status; restore
-completes returning orders before serving sessions. This is exactly-once while
-the home garrison is memory-only. When `city_troop` becomes the stock authority,
-credit and terminal status must share one transaction instead.
+**Return.** The durable terminal `returned` status is the commit point. The first
+slice credits the volatile process garrison, then writes terminal status; that
+credit is not in the transaction. A crash around the credit/terminal write can
+discard the credited troops; if terminal already committed, restore never replays
+the order and they are never re-credited. If not committed, restore may attempt a
+fresh credit but cannot recover the prior volatile one. This is a known loss
+window, not a solved invariant: the slice guarantees only an at-most-once terminal
+transition, never crash-safe or exactly-once stock.
+
+**Activation gate.** The return/arrival path must stay disabled (`StartMarch` gate
+and route cutover) until a separately reviewed durable stock-credit card makes
+`city_troop` the authoritative garrison and commits stock and terminal status in
+one caller-owned transaction. This contract does not define that card's stock
+rows, barrier, FK, retention or receipt; restore ordering alone is not sufficient
+evidence, and activation is blocked until the card lands.
 
 ## WORLD city barrier
 
@@ -109,8 +124,9 @@ mutex held while PG locks are held.
 - Orders and their army/troop rows are retained as history after `returned`; no
   delete on return. `battle_report` retention is unchanged.
 - Restore runs before the gateway accepts sessions and fails closed on an
-  incomplete read. It re-schedules future marching/returning deadlines and
-  resolves overdue ones exactly once.
+  incomplete read. It re-schedules future deadlines and resolves overdue ones
+  under the at-most-once terminal rule: a committed terminal transition is never
+  repeated, but a volatile credit lost with a crashed process is not recoverable.
 - A committed arrival is never replayed. An `arrived`/status 2 row, a report
   without its matching transition, an army without a march or a march without an
   army are quarantined for audit, not guessed.
@@ -122,25 +138,29 @@ mutex held while PG locks are held.
 
 `onMarchArrive` and the report/return callbacks must not convert a persistence
 error into "no battle" or `emitMarchFinished`. An error leaves the march in an
-explicit recoverable state with its troops, hero and report identity attributed;
-it never silently drops survivors or re-credits them.
+explicit recoverable state; it must not silently drop survivors or claim a credit
+not made. This does not close the volatile-credit crash window above.
 
 ## Non-goals
 
-Home-garrison durability and `city_troop` backfill; `StartMarch` retry
-idempotency/command keys; quest delivery; client UX; multi-instance semantics
-without the APP lease; reinforce/gather battle semantics; cancellation; any
-`spec/proto` change; any Go implementation in this contract PR.
+Home-garrison durability, `city_troop` backfill and durable return stock credit /
+exactly-once settlement; activation before the separately reviewed stock-credit
+card; `StartMarch` retry idempotency/command keys; quest delivery; client UX;
+multi-instance semantics without the APP lease; reinforce/gather battle semantics;
+cancellation; any `spec/proto` change; any Go implementation in this contract PR.
 
 ## Affected domains and cards
 
 - MIL `internal/military/march`: M1 store, M2 restore, M5 arrival transaction.
 - API `internal/api`: M3 restore wiring/readiness, M6 `StartMarch` gate.
 - HERO `internal/hero`: M4 orphan-hero reconciler.
-- Future APP activation card: composition, lease, route cutover, gate enablement.
+- Future APP activation card: composition, lease, route cutover, gate enablement;
+  blocked until the durable stock-credit card above commits stock and terminal
+  status in one caller-owned transaction.
 - Dependency: this is M0; it unblocks M1–M6 but authorizes none of them. The MIL
   package remains serialized behind #1920, #1924 and #1925.
 
 Replay/acceptance evidence: fresh PostgreSQL 17 ApplySpecs, ledger-missing replay
 without sequence reset, populated-row immutability, wrong-owner/config/shadow
-rejection, and `git diff --check`. No data migration, no `NOT NULL`, no self-review.
+rejection, and `git diff --check`. No data migration, no `NOT NULL`, no
+crash-safe stock-credit claim, no self-review.

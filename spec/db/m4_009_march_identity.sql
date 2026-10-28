@@ -15,7 +15,6 @@ DECLARE
     seq pg_catalog.oid;
     cfg record;
     last_id pg_catalog.int8;
-    called pg_catalog.bool;
     ceiling CONSTANT pg_catalog.int8 := 9007199254740991;
 BEGIN
     -- Trusted catalog lookup; never adopt a relation from a later or temp schema.
@@ -118,9 +117,11 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_catalog.pg_index x
         JOIN pg_catalog.pg_class i ON i.oid = x.indexrelid
         JOIN pg_catalog.pg_class t ON t.oid = x.indrelid
+        JOIN pg_catalog.pg_am am ON am.oid = i.relam
         WHERE t.relnamespace = namespace_id AND t.relname = 'march_order'
             AND i.relnamespace = namespace_id AND i.relname = 'idx_march_return'
             AND i.relkind = 'i' AND i.relpersistence = 'p' AND i.relowner = owner_id
+            AND am.amname = 'btree'
             AND x.indisvalid AND x.indisready AND x.indislive
             AND NOT x.indisunique AND NOT x.indisexclusion AND x.indpred IS NOT NULL
             AND x.indexprs IS NULL AND x.indnkeyatts = 3 AND x.indnatts = 3
@@ -128,6 +129,16 @@ BEGIN
                 FROM pg_catalog.unnest(x.indkey::pg_catalog.int2[]) WITH ORDINALITY k(attnum, ord)
                 JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum)
                 = ARRAY['server_id', 'status', 'return_finish_at']
+            AND NOT EXISTS (SELECT FROM pg_catalog.unnest(x.indoption::pg_catalog.int2[]) o WHERE o <> 0)
+            AND NOT EXISTS (SELECT FROM pg_catalog.unnest(x.indcollation::pg_catalog.oid[]) c WHERE c <> 0)
+            AND (SELECT pg_catalog.count(*) FROM
+                pg_catalog.unnest(x.indkey::pg_catalog.int2[]) WITH ORDINALITY k(attnum, ord)
+                JOIN pg_catalog.pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum
+                JOIN pg_catalog.unnest(x.indclass::pg_catalog.oid[]) WITH ORDINALITY oc(opcoid, ord)
+                    ON oc.ord = k.ord
+                JOIN pg_catalog.pg_opclass opc ON opc.oid = oc.opcoid
+                WHERE opc.opcnamespace = 'pg_catalog'::pg_catalog.regnamespace
+                    AND opc.opcdefault AND opc.opcintype = a.atttypid AND opc.oid = oc.opcoid) = 3
             AND pg_catalog.regexp_replace(pg_catalog.regexp_replace(
                 pg_catalog.pg_get_expr(x.indpred, x.indrelid),
                 '::(smallint|integer|bigint)', '', 'g'), '[()[:space:]]', '', 'g') = 'status=3') THEN
@@ -162,13 +173,15 @@ BEGIN
            OR cfg.seqcache <> 1 OR cfg.seqstart <> 1 THEN
             RAISE EXCEPTION 'march identity: incompatible % configuration', seq_name;
         END IF;
-        EXECUTE pg_catalog.format('SELECT last_value, is_called FROM %I.%I', ns, seq_name)
-            INTO last_id, called;
-        IF last_id < 1 OR last_id > ceiling OR (last_id = ceiling AND called) THEN
-            RAISE EXCEPTION 'march identity: % exhausted/invalid', seq_name;
+        EXECUTE pg_catalog.format('SELECT last_value FROM %I.%I', ns, seq_name)
+            INTO last_id;
+        -- A fully consumed sequence is valid replay history; NO CYCLE fails the
+        -- next allocation. Replay acceptance is not allocation capacity.
+        IF last_id < 1 OR last_id > ceiling THEN
+            RAISE EXCEPTION 'march identity: % invalid last_value', seq_name;
         END IF;
-        -- No setval here: a downstream writer audits and fails closed if a
-        -- persisted ID is at or above last_value. Advancing is not this file's job.
+        -- No setval here: a downstream writer audits against persisted IDs and
+        -- fails closed if the sequence is behind. Advancing is not this file's job.
     END LOOP;
 
     -- Runtime resolution must not fall back to another schema or a temp decoy.
