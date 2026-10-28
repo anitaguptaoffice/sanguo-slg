@@ -45,6 +45,23 @@ sql 'DROP TABLE mil_origin_entry_test.mil_city_origin_pkey'
 entry "$audit"
 assert "SELECT count(*)=6 FROM pg_attribute WHERE attrelid='mil_origin_entry_test.mil_city_origin'::regclass AND attnum>0"
 reject "$create" 'create requires PG17'
+# Literal whitespace is semantic SQL data, not cosmetic formatting. Empty fixture
+# allows the invalid date_trunc unit to exist without evaluating it on rows.
+assert 'SELECT count(*)=0 FROM mil_origin_entry_test.mil_city_origin'
+sql "ALTER TABLE mil_origin_entry_test.mil_city_origin DROP CONSTRAINT mil_city_origin_created_at_check;
+ ALTER TABLE mil_origin_entry_test.mil_city_origin ADD CONSTRAINT mil_city_origin_created_at_check CHECK
+ (isfinite(created_at) AND created_at >= '0001-01-01T00:00:00Z' AND created_at < '10000-01-01T00:00:00Z'
+ AND date_trunc('milli seconds',created_at)=created_at)"
+reject "$audit" 'metadata mismatch'
+assert "SELECT position('milli seconds' in pg_get_constraintdef(oid))>0
+ AND (SELECT count(*) FROM mil_origin_entry_test.mil_city_origin)=0 FROM pg_constraint
+ WHERE conrelid='mil_origin_entry_test.mil_city_origin'::regclass AND conname='mil_city_origin_created_at_check'"
+# Restore only our test-owned fixture; the auditor must never do this repair.
+sql "ALTER TABLE mil_origin_entry_test.mil_city_origin DROP CONSTRAINT mil_city_origin_created_at_check;
+ ALTER TABLE mil_origin_entry_test.mil_city_origin ADD CONSTRAINT mil_city_origin_created_at_check CHECK
+ (isfinite(created_at) AND created_at >= '0001-01-01T00:00:00Z' AND created_at < '10000-01-01T00:00:00Z'
+ AND date_trunc('milliseconds',created_at)=created_at)"
+entry "$audit"
 cohort="decode(repeat('01',16),'hex')"
 valid_time="'2026-10-27T00:00:00.123Z'"
 badrow "0,10,42,$cohort,1,$valid_time" 'mil_city_origin_server_id_check'

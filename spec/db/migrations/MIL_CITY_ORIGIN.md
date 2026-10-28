@@ -22,7 +22,11 @@ not an audit of cohort contents, restore history, city allocator or writer fence
 The helper is not a standalone runtime binding or an automatic migration.
 
 Guard uses fixed PG17 column/constraint/index constants, never a mutable sibling
-reference table. Wrong/partial shape fails closed. No grants, owner changes,
+reference table. PG17 canonical constraint deparse is compared exactly under C
+collation; whitespace inside SQL string literals must never be stripped. For
+example, `milli seconds` is not `milliseconds`. The regression verifies rejection
+without repair, then explicitly restores only its owned fixture.
+Wrong/partial shape fails closed. No grants, owner changes,
 RLS/trigger disabling, SECURITY DEFINER or fallback creation. Observed owner/OID
 and maintenance role are diagnostic only; actual application-role privileges,
 source profile, coherent provenance and through-commit fence remain separate.
