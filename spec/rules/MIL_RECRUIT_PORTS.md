@@ -199,14 +199,22 @@ post-barrier statement. A surviving origin/job without its matching receipt is
 unavailable, not eligible for Debit. Epoch provenance and writer/retention fences
 are essential to interpreting dual absence; both-side deletion cannot be detected.
 
-Prepare is called only after WORLD Lock. It locks and validates marker, ALL stock
-ascending unit ID, then complete pending type3 queues ascending queue ID, then
+Prepare is called only after the same-transaction WORLD city owner lock
+(`world.RecruitCityLocker.Lock`; see the exact shard/player/city `FOR UPDATE`
+contract above). It locks and validates marker, ALL stock ascending unit ID, then
+complete pending type3 queues ascending queue ID, then
 reads relevant immutable origin/receipt evidence without row locks under the
 certified immutability/retention fence. It takes no existing receipt row locks
 before inserting its freshly allocated queue identity. It validates the full set and all
 linked origin/receipt/retained catalog evidence, including wrong-owner/malformed
-rows; validates readiness and aggregate representable capacity, current catalog
-and plan. No repair, fallback, legacy adoption or partial-page success. After all
+rows. Readiness is exactly that WORLD-locked owner plus the march-side set in
+`MIL_FRESH_COHORT.md` §4: exact marker scope/owner/cohort/format 1 and exactly
+four legal nonnegative stock rows; a missing marker, wrong owner/cohort/format,
+or missing/extra/negative stock is unavailable. This slice has no separate
+readiness port or input, and none may be invented; proof of APP call-graph order
+remains a separate activation obligation. Prepare then validates aggregate
+representable capacity, current catalog and plan. No repair, fallback, legacy
+adoption or partial-page success. After all
 locks/reads, it samples database `clock_timestamp()` once and floors to canonical
 UTC milliseconds, checks range, scheduling and arithmetic; allocates a safe shared
 queue ID under city serialization. It returns the private plan and copied exact
