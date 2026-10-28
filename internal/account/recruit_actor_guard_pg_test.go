@@ -73,9 +73,10 @@ func TestPGRecruitActorGuardConstructorIdentity(t *testing.T) {
 func TestPGRecruitActorGuardConstructorProjection(t *testing.T) {
 	_, b, p := actorIndexFixture(t)
 	o, a, ctx := actorOwner(t, b)
+	// Missing/extra fail exact inventory; duplicate fails OID collision, all before reused validators.
 	for name, alter := range map[string]func(freshsource.Profile){
 		"missing":   func(p freshsource.Profile) { delete(p.Objects, "idx_player_account") },
-		"extra":     func(p freshsource.Profile) { p.Objects["surprise"] = freshsource.ObjectIdentity{OID: 1 << 30} },
+		"extra":     func(p freshsource.Profile) { p.Objects["surprise"] = p.Objects["account"] },
 		"duplicate": func(p freshsource.Profile) { p.Objects["player"] = p.Objects["account"] },
 	} {
 		bad, _ := freshsource.Snapshot(p)
