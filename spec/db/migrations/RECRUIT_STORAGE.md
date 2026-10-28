@@ -17,7 +17,11 @@ identity/highwater evidence separately. Missing evidence blocks target execution
 
 Use a fresh dedicated PostgreSQL 17 `psql -X` connection, not `\i` inside an existing
 transaction. Set the intended application schema/search_path through the approved
-connection configuration. Never include credentials in command history or logs.
+connection configuration. Captured `current_schema()` is literal name data: entry
+preconditions compare `pg_namespace.nspname::text` under C collation, never reparse
+it as an SQL identifier. Mixed-case/quoted targets cannot borrow another schema's
+pair or sequence. A missing target pair/sequence must fail before the shared guard
+can run its separately intended precreation path. Never include credentials in command history or logs.
 Run the selected entry with `-v ON_ERROR_STOP=1 -f <absolute entry path>`; `\ir`
 resolves the guard relative to the entry, not the working directory. These are psql
 scripts, not SQL strings for Pool.Exec or normal application startup.

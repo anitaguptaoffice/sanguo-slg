@@ -1,7 +1,7 @@
 -- Included only by the manual wrappers inside their transaction/catalog path.
 -- Exact PG17 constants, not a mutable reference table. No business-row audit.
 WITH target AS (
-    SELECT c.* FROM pg_class c WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema')
+    SELECT c.* FROM pg_class c WHERE c.relnamespace = (SELECT oid FROM pg_namespace WHERE nspname::text COLLATE pg_catalog."C" = :'city_origin_schema'::text COLLATE pg_catalog."C")
         AND c.relname = 'mil_city_origin'
 ), expected(name, definition) AS (VALUES
     ('mil_city_origin_pkey', 'PRIMARY KEY (server_id, city_id)'),
@@ -56,4 +56,4 @@ SELECT current_database() AS database_name, current_user AS maintenance_role,
     n.nspname AS schema_name, pg_get_userbyid(n.nspowner) AS schema_owner,
     c.oid AS relation_oid, pg_get_userbyid(c.relowner) AS table_owner
 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
-WHERE n.nspname=:'city_origin_schema' AND c.relname='mil_city_origin';
+WHERE n.nspname::text COLLATE pg_catalog."C" = :'city_origin_schema'::text COLLATE pg_catalog."C" AND c.relname='mil_city_origin';

@@ -7,6 +7,8 @@ create="$root/spec/db/migrations/010_create_mil_city_origin.psql"
 audit="$root/spec/db/migrations/011_audit_mil_city_origin.psql"
 schema=mil_origin_entry_test
 quoted_created=0
+long_created=0
+long_schema=$(printf 'a%.0s' {1..63})
 assertions=0
 rejections=0
 sql() { psql -X -v ON_ERROR_STOP=1 -Atq -c "$1"; }
@@ -32,6 +34,7 @@ sql 'CREATE SCHEMA mil_origin_entry_test'
 cleanup() {
     sql 'DROP SCHEMA mil_origin_entry_test CASCADE' >/dev/null
     if [[ $quoted_created == 1 ]]; then sql 'DROP SCHEMA "mil_origin_""quoted" CASCADE' >/dev/null; fi
+    if [[ $long_created == 1 ]]; then sql "DROP SCHEMA \"$long_schema\" CASCADE" >/dev/null; fi
 }
 trap cleanup EXIT
 reject "$audit" 'audit requires PG17 and existing marker'
@@ -120,6 +123,19 @@ SQL
 )
 [[ $(tail -n1 <<<"$restored") == t ]] || { echo 'caller settings not restored'; exit 1; }
 assertions=$((assertions+1))
+# A nonexistent overlong argument must never target its existing 63-byte prefix.
+sql "CREATE SCHEMA \"$long_schema\""
+long_created=1
+schema="${long_schema}_extra"
+reject "$create" 'create requires PG17'
+assert "SELECT NOT EXISTS(SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+ WHERE n.nspname::text COLLATE pg_catalog.\"C\"='$long_schema'::text COLLATE pg_catalog.\"C\" AND c.relname='mil_city_origin')"
+schema=$long_schema
+entry "$create"
+entry "$audit"
+schema="${long_schema}_extra"
+reject "$audit" 'audit requires PG17 and existing marker'
+assert "SELECT count(*)=0 FROM \"$long_schema\".mil_city_origin"
 schema=pg_catalog
 reject "$create" 'create requires PG17'
 reject "$audit" 'audit requires PG17'

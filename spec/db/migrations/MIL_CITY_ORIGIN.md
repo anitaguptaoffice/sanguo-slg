@@ -7,7 +7,10 @@ not run at startup, create marker rows, initialize troops or activate a cohort.
 Run only in a fresh maintenance session against an independently verified and
 separately authorized database/schema, with reviewed release files and a writer /
 DDL drain. Never infer target approval from a successful CI run or this README.
-Pass the exact trusted application schema explicitly; no default target:
+Pass the exact trusted application schema explicitly; no default target. Namespace
+lookup compares text under C collation before identifier SQL: unknown/overlong
+arguments cannot be folded or truncated into a different existing target. Valid
+quoted names are used literally, not reparsed as identifier syntax:
 
     psql -X -v city_origin_schema=YOUR_VERIFIED_SCHEMA -f 010_create_mil_city_origin.psql
     psql -X -v city_origin_schema=YOUR_VERIFIED_SCHEMA -f 011_audit_mil_city_origin.psql

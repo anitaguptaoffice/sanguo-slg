@@ -6,9 +6,9 @@ BEGIN ISOLATION LEVEL READ COMMITTED;
 SELECT pg_catalog.current_schema() AS recruit_schema,
     pg_catalog.current_setting('search_path') AS recruit_path \gset
 SET LOCAL search_path = pg_catalog, pg_temp;
-SELECT EXISTS (SELECT FROM pg_class WHERE relnamespace = to_regnamespace(:'recruit_schema')
+SELECT EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname::text COLLATE pg_catalog."C" = :'recruit_schema'::text COLLATE pg_catalog."C")
     AND relname IN ('mil_recruit_origin','mil_recruit_receipt'))
-    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = to_regnamespace(:'recruit_schema')
+    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname::text COLLATE pg_catalog."C" = :'recruit_schema'::text COLLATE pg_catalog."C")
     AND relname = 'work_queue_id_seq' AND relkind = 'S') AS reject_entry \gset
 \if :reject_entry
     DO $$ BEGIN RAISE EXCEPTION 'recruit create: pair must be absent and sequence already prepared'; END $$;
