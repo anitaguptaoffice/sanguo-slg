@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
   CHAT_SEND_MAX_CONTENT_LENGTH,

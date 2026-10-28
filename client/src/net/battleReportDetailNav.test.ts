@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
   BATTLE_REPORT_ROUND_JUMP_CHIP_MAX,

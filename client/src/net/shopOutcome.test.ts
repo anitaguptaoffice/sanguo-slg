@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
 import { isKnownShopRejection, readShopCurrentState, SHOP_RELOAD_FAILED } from "./shopOutcome";
 import { beginAssetRead } from "./questClaimAssets";
