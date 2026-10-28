@@ -11,7 +11,7 @@ SET LOCAL datestyle = 'ISO, YMD';
 SELECT :'city_origin_schema' = '' OR :'city_origin_schema' ~ '^pg_'
     OR :'city_origin_schema' = 'information_schema'
     OR current_setting('server_version_num')::integer / 10000 <> 17
-    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema')
+    OR NOT EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname::text COLLATE pg_catalog."C" = :'city_origin_schema'::text COLLATE pg_catalog."C")
         AND relname = 'mil_city_origin' AND relkind = 'r') AS reject_entry \gset
 \if :reject_entry
     DO $$ BEGIN RAISE EXCEPTION 'city origin audit requires PG17 and existing marker; no repair'; END $$;

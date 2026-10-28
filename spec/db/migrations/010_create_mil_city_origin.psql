@@ -10,9 +10,9 @@ SET LOCAL TIME ZONE 'UTC';
 SET LOCAL datestyle = 'ISO, YMD';
 SELECT :'city_origin_schema' = '' OR :'city_origin_schema' ~ '^pg_'
     OR :'city_origin_schema' = 'information_schema'
-    OR (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema') IS NULL
+    OR (SELECT oid FROM pg_namespace WHERE nspname::text COLLATE pg_catalog."C" = :'city_origin_schema'::text COLLATE pg_catalog."C") IS NULL
     OR current_setting('server_version_num')::integer / 10000 <> 17
-    OR EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname=:'city_origin_schema')
+    OR EXISTS (SELECT FROM pg_class WHERE relnamespace = (SELECT oid FROM pg_namespace WHERE nspname::text COLLATE pg_catalog."C" = :'city_origin_schema'::text COLLATE pg_catalog."C")
         AND relname = 'mil_city_origin') AS reject_entry \gset
 \if :reject_entry
     DO $$ BEGIN RAISE EXCEPTION 'city origin create requires PG17, explicit non-system schema and absent marker'; END $$;
