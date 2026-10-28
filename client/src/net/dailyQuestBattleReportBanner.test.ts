@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
   DAILY_BATTLE_REPORT_BANNER_TEXT,

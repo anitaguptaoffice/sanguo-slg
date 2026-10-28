@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
   MINIMAP_MARCH_STACK_BADGE_CLASS,

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
   DOMESTIC_QUEUE_ETA_SEGMENT_LABEL_CLASS,

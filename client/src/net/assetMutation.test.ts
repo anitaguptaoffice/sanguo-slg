@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { expect, it } from "vitest";
 import { captureActor } from "./actorContext";
 import { beginAssetMutation } from "./assetMutation";

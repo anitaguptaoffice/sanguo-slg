@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest";
 import {
   INTEL_ROW_MINIMAP_SYNC_HIGHLIGHT_CLASS,
