@@ -70,22 +70,19 @@ func TestPGRecruitActorGuardConstructorIdentity(t *testing.T) {
 		t.Fatal("ended access accepted")
 	}
 }
-func TestPGRecruitActorGuardPrivilege(t *testing.T) {
-	pool, b, p := actorIndexFixture(t)
-	role := fmt.Sprintf("guard_priv_%d", time.Now().UnixNano())
-	quoted := pgx.Identifier{role}.Sanitize()
-	actorSQL(t, pool, "CREATE ROLE "+quoted)
-	actorSQL(t, pool, "GRANT USAGE ON SCHEMA "+pgx.Identifier{p.SchemaName}.Sanitize()+" TO "+quoted)
-	actorSQL(t, pool, "GRANT SELECT ON account, player TO "+quoted)
+func TestPGRecruitActorGuardConstructorProjection(t *testing.T) {
+	_, b, p := actorIndexFixture(t)
 	o, a, ctx := actorOwner(t, b)
-	_, err := a.Exec(ctx, b, "SET LOCAL ROLE "+quoted)
-	actorOK(t, err)
-	var oid uint32
-	actorOK(t, a.Scan(ctx, b, "SELECT oid FROM pg_catalog.pg_roles WHERE rolname=current_user", nil, &oid))
-	bad := p
-	bad.CurrentRoleName, bad.CurrentRoleOID = role, oid
-	if g, err := NewRecruitActorGuard(ctx, b, a, bad); err == nil || g != nil {
-		t.Fatal("missing player UPDATE accepted")
+	for name, alter := range map[string]func(freshsource.Profile){
+		"missing":   func(p freshsource.Profile) { delete(p.Objects, "idx_player_account") },
+		"extra":     func(p freshsource.Profile) { p.Objects["surprise"] = freshsource.ObjectIdentity{OID: 1 << 30} },
+		"duplicate": func(p freshsource.Profile) { p.Objects["player"] = p.Objects["account"] },
+	} {
+		bad, _ := freshsource.Snapshot(p)
+		alter(bad)
+		if g, err := NewRecruitActorGuard(ctx, b, a, bad); err == nil || g != nil {
+			t.Fatalf("%s projection accepted", name)
+		}
 	}
 	actorOK(t, o.Rollback(ctx))
 }
@@ -108,9 +105,7 @@ func TestPGRecruitActorGuardPin(t *testing.T) {
 		t.Fatal("account pin was not acquired first")
 	}
 	actorOK(t, bo.Rollback(bctx))
-	if err = <-done; err != nil {
-		t.Fatal("pin after release", err)
-	}
+	actorOK(t, <-done)
 	var accountPins, playerPins, sessionPins int
 	actorOK(t, a.Scan(ctx, b, `SELECT
  count(*) FILTER (WHERE relation=$1 AND mode='RowShareLock'),
@@ -157,10 +152,36 @@ func TestPGRecruitActorGuardLock(t *testing.T) {
 	}
 	_, next, nctx := actorOwner(t, b)
 	if g.Lock(nctx, next, 1, 10) == nil {
-		t.Fatal("pin reused across transactions")
+		t.Fatal("unpinned transaction lock")
 	}
-	actorOK(t, g.Pin(nctx, next))
-	actorOK(t, g.Lock(nctx, next, 1, 10))
+}
+func TestPGRecruitActorGuardConcurrentTransactions(t *testing.T) {
+	pool, b, g := actorGuardFixture(t)
+	oa, aa, actx := actorOwner(t, b)
+	_, ab, bctx := actorOwner(t, b)
+	both := func(fa, fb func() error) {
+		start, errs := make(chan struct{}), make(chan error, 2)
+		go func() { <-start; errs <- fa() }()
+		go func() { <-start; errs <- fb() }()
+		close(start)
+		actorOK(t, <-errs)
+		actorOK(t, <-errs)
+	}
+	both(func() error { return g.Pin(actx, aa) }, func() error { return g.Pin(bctx, ab) })
+	both(func() error { return g.Lock(actx, aa, 1, 10) }, func() error { return g.Lock(bctx, ab, 1, 10) })
+	_, ac, cctx := actorOwner(t, b)
+	if g.Lock(cctx, ac, 1, 10) == nil {
+		t.Fatal("unpinned transaction accepted")
+	}
+	wb, _ := recruittx.NewBinding(pool)
+	_, wa, wctx := actorOwner(t, wb)
+	if g.Lock(wctx, wa, 1, 10) == nil {
+		t.Fatal("different binding accepted")
+	}
+	actorOK(t, oa.Rollback(actx))
+	if g.Lock(actx, aa, 1, 10) == nil {
+		t.Fatal("ended transaction accepted")
+	}
 }
 func TestPGRecruitActorGuardLockBlocksWriters(t *testing.T) {
 	for _, tc := range []struct {

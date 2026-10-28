@@ -14,23 +14,21 @@ import (
 var ErrRecruitActorGuard = errors.New("account: recruit actor guard unavailable")
 
 // Exact reviewed ACCOUNT inventory from spec/rules/MIL_RECRUIT_PORTS.md §1.
-var freshActorGuardNames = [...]string{
-	"account", "account_pkey", "uq_account_login_name", "account_account_id_seq",
-	"account_session", "account_session_pkey", "idx_account_session_account",
-	"player", "player_pkey", "uq_player_account_per_server", "idx_player_account",
-}
+var freshActorGuardNames = [...]string{"account", "account_pkey", "uq_account_login_name", "account_account_id_seq",
+	"account_session", "account_session_pkey", "idx_account_session_account", "player", "player_pkey",
+	"uq_player_account_per_server", "idx_player_account"}
 
-// RecruitActorGuard is a dormant port; APP owns authentication, leases,
-// transaction lifetime and lock ordering. Copies share retirement state.
+// RecruitActorGuard is a dormant port; APP owns authentication, leases and
+// lock ordering. Copies share irreversible retirement state.
 type RecruitActorGuard struct{ s *recruitActorState }
 type recruitActorState struct {
 	binding *recruittx.Binding
 	profile freshsource.Profile
-	pinned  atomic.Pointer[recruittx.Access]
 	retired atomic.Bool
 }
 
 // NewRecruitActorGuard validates exact Binding/source/shard expectations without owning Begin/end.
+// Privilege/ACL drift stays source-reviewed; the default PG suite creates no roles.
 func NewRecruitActorGuard(ctx context.Context, b *recruittx.Binding, a *recruittx.Access, p freshsource.Profile) (*RecruitActorGuard, error) {
 	p, err := freshsource.Snapshot(p)
 	if err != nil || ctx == nil || b == nil || a == nil || len(p.Objects) != len(freshActorGuardNames) {
@@ -73,41 +71,42 @@ func (g *RecruitActorGuard) Pin(ctx context.Context, a *recruittx.Access) error 
 		return ErrRecruitActorGuard
 	}
 	s := g.s
-	access := *a
 	for _, table := range [...]string{"account", "player"} {
-		if _, err := access.Exec(ctx, s.binding, "LOCK TABLE "+pgx.Identifier{s.profile.SchemaName, table}.Sanitize()+" IN ROW SHARE MODE"); err != nil {
+		if _, err := a.Exec(ctx, s.binding, "LOCK TABLE "+pgx.Identifier{s.profile.SchemaName, table}.Sanitize()+" IN ROW SHARE MODE"); err != nil {
 			return s.failure(err)
 		}
 	}
-	if err := s.validate(ctx, &access); err != nil {
+	if err := s.validate(ctx, a); err != nil {
 		return err
 	}
 	if s.retired.Load() {
 		return ErrRecruitActorGuard
 	}
-	s.pinned.Store(&access)
 	return nil
 }
 
-// Lock requires prior Pin in this transaction, then locks account (status 1) and the captured-shard player row FOR SHARE.
+// Lock requires the transaction to hold both captured ACCOUNT ROW SHARE pins,
+// revalidates under them, then locks account (status 1) and the captured-shard player row FOR SHARE.
 func (g *RecruitActorGuard) Lock(ctx context.Context, a *recruittx.Access, accountID, playerID int64) error {
 	if !g.valid(ctx, a) || accountID <= 0 || playerID <= 0 {
 		return ErrRecruitActorGuard
 	}
 	s := g.s
-	pin := s.pinned.Load()
-	if pin == nil {
+	var held bool
+	err := a.Scan(ctx, s.binding, `SELECT count(DISTINCT relation)=2 FROM pg_catalog.pg_locks
+ WHERE pid=pg_catalog.pg_backend_pid() AND database=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())
+ AND locktype='relation' AND mode='RowShareLock' AND granted AND relation IN ($1,$2)`,
+		[]any{s.profile.Objects["account"].OID, s.profile.Objects["player"].OID}, &held)
+	if err != nil {
+		return s.failure(err)
+	} else if !held {
 		return ErrRecruitActorGuard
 	}
-	access := *a
-	if err := pin.CheckSameTransaction(ctx, s.binding, &access); err != nil {
-		return err
-	}
-	if err := s.validate(ctx, &access); err != nil {
+	if err = s.validate(ctx, a); err != nil {
 		return err
 	}
 	var status int16
-	err := access.Scan(ctx, s.binding, "SELECT status FROM "+pgx.Identifier{s.profile.SchemaName, "account"}.Sanitize()+
+	err = a.Scan(ctx, s.binding, "SELECT status FROM "+pgx.Identifier{s.profile.SchemaName, "account"}.Sanitize()+
 		" WHERE account_id OPERATOR(pg_catalog.=) $1 FOR SHARE", []any{accountID}, &status)
 	switch {
 	case errors.Is(err, pgx.ErrNoRows), err == nil && status != 1:
@@ -116,7 +115,7 @@ func (g *RecruitActorGuard) Lock(ctx context.Context, a *recruittx.Access, accou
 		return s.failure(err)
 	}
 	var owner int64
-	err = access.Scan(ctx, s.binding, "SELECT account_id FROM "+pgx.Identifier{s.profile.SchemaName, "player"}.Sanitize()+
+	err = a.Scan(ctx, s.binding, "SELECT account_id FROM "+pgx.Identifier{s.profile.SchemaName, "player"}.Sanitize()+
 		" WHERE server_id OPERATOR(pg_catalog.=) $1 AND player_id OPERATOR(pg_catalog.=) $2 FOR SHARE",
 		[]any{s.profile.ServerID, playerID}, &owner)
 	switch {

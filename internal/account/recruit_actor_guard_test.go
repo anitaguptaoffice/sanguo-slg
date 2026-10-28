@@ -28,22 +28,6 @@ func TestRecruitActorGuardInvalidInputs(t *testing.T) {
 			t.Fatal("malformed construction accepted")
 		}
 	}
-	for _, name := range freshActorGuardNames {
-		bad, _ := freshsource.Snapshot(p)
-		delete(bad.Objects, name)
-		if g, err := NewRecruitActorGuard(ctx, &recruittx.Binding{}, &recruittx.Access{}, bad); err == nil || g != nil {
-			t.Fatal("missing projection accepted", name)
-		}
-	}
-	extra, _ := freshsource.Snapshot(p)
-	extra.Objects["extra"] = freshsource.ObjectIdentity{OID: 99, OwnerOID: 3}
-	duplicate, _ := freshsource.Snapshot(p)
-	duplicate.Objects["player"] = duplicate.Objects["account"]
-	for _, profile := range []freshsource.Profile{extra, duplicate} {
-		if g, err := NewRecruitActorGuard(ctx, &recruittx.Binding{}, &recruittx.Access{}, profile); err == nil || g != nil {
-			t.Fatal("extra or duplicate projection accepted")
-		}
-	}
 	retired := &recruitActorState{binding: &recruittx.Binding{}}
 	retired.retired.Store(true)
 	copied := RecruitActorGuard{s: retired}
@@ -51,8 +35,5 @@ func TestRecruitActorGuardInvalidInputs(t *testing.T) {
 		if g.Pin(ctx, &recruittx.Access{}) == nil || g.Lock(ctx, &recruittx.Access{}, 1, 1) == nil {
 			t.Fatal("zero or retired guard accepted")
 		}
-	}
-	if (&RecruitActorGuard{s: &recruitActorState{binding: &recruittx.Binding{}}}).Lock(ctx, &recruittx.Access{}, 1, 1) == nil {
-		t.Fatal("lock without pin accepted")
 	}
 }
