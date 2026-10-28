@@ -36,8 +36,9 @@ type RecruitIntent struct {
 }
 
 // Find reads the scoped origin joined to its receipt as one unlocked hint
-// statement. It takes no business locks, checks no readiness and writes nothing.
-// An origin without its receipt and duplicate matches are unavailable.
+// statement after verifying the five frozen pins and captured source in this
+// transaction. It checks no readiness and writes nothing. An origin without its
+// receipt and duplicate matches are unavailable.
 func (p *RecruitParticipant) Find(ctx context.Context, a *recruittx.Access, scope RecruitScope) (int64, bool, error) {
 	s, err := p.recruitLookup(ctx, a, scope)
 	if err != nil {
@@ -58,9 +59,10 @@ func (p *RecruitParticipant) Find(ctx context.Context, a *recruittx.Access, scop
 	return queueID, true, nil
 }
 
-// ReverseAbsent runs its own unlocked statement and reports true only when the
-// exact scoped origin and its matching receipt are both absent. Any surviving
-// origin, with or without its receipt, is unavailable rather than absent.
+// ReverseAbsent runs its own unlocked statement after the same pin/source gate
+// and reports true only when the exact scoped origin and its matching receipt
+// are both absent. Any surviving origin, with or without its receipt, is
+// unavailable rather than absent.
 func (p *RecruitParticipant) ReverseAbsent(ctx context.Context, a *recruittx.Access, scope RecruitScope) (bool, error) {
 	s, err := p.recruitLookup(ctx, a, scope)
 	if err != nil {
@@ -85,7 +87,29 @@ func (p *RecruitParticipant) recruitLookup(ctx context.Context, a *recruittx.Acc
 	if scope.ServerID <= 0 || scope.ServerID != p.source.profile.ServerID || scope.PlayerID <= 0 || scope.CommandID == (RecruitCommandID{}) {
 		return nil, ErrRecruitUnavailable
 	}
-	return p.source, nil
+	s := p.source
+	copyAccess := *a
+	ids := []uint32{s.profile.Objects["mil_city_origin"].OID, s.profile.Objects["city_troop"].OID, s.profile.Objects["work_queue"].OID, s.profile.Objects["mil_recruit_origin"].OID, s.profile.Objects["mil_recruit_receipt"].OID}
+	var pins int
+	err := copyAccess.Scan(ctx, s.binding, `SELECT pg_catalog.count(*) FROM pg_catalog.unnest($1::pg_catalog.oid[]) e(oid)
+ WHERE EXISTS(SELECT FROM pg_catalog.pg_locks l WHERE l.pid OPERATOR(pg_catalog.=) pg_catalog.pg_backend_pid()
+ AND l.granted AND l.locktype OPERATOR(pg_catalog.=) 'relation' AND l.relation OPERATOR(pg_catalog.=) e.oid
+ AND l.mode OPERATOR(pg_catalog.=) 'RowExclusiveLock')`, []any{ids}, &pins)
+	if err != nil {
+		return nil, errors.Join(ErrRecruitUnavailable, s.failure(err))
+	}
+	// The five frozen pins must already be held by this transaction; absence is
+	// a caller-precondition failure, not source drift and not eligible absence.
+	if pins != 5 {
+		return nil, ErrRecruitUnavailable
+	}
+	if err = s.failure(validateRecruitSource(ctx, &copyAccess, s)); err != nil {
+		return nil, errors.Join(ErrRecruitUnavailable, err)
+	}
+	if s.retired.Load() {
+		return nil, ErrRecruitUnavailable
+	}
+	return s, nil
 }
 
 func recruitHintQuery(s *freshMilitarySource, columns string) string {
