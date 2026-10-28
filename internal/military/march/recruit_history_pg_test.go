@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -57,21 +56,61 @@ func TestPGRecruitHistory(t *testing.T) {
 	pool, b, p := freshSourceFixture(t)
 	row, catalog, first, second := historyDefaults(t)
 	row.seed(t, pool)
-	o, a, ctx := baseOwner(t, b)
+	_, a, ctx := baseOwner(t, b)
 	participant, err := NewRecruitParticipant(ctx, b, a, p, catalog)
 	baseOK(t, err)
 	baseOK(t, participant.Pin(ctx, a))
 	scope := RecruitScope{ServerID: 1, PlayerID: 1, CommandID: row.command}
 	intent := RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: 2}
-	snap := `SELECT (SELECT count(*) FROM work_queue)||','||(SELECT count(*) FROM mil_recruit_origin)||','||
-		(SELECT count(*) FROM mil_recruit_receipt)||','||(SELECT last_value||','||is_called FROM work_queue_id_seq)`
+	third := first
+	third.Rules[0].Cost.Food++
+	third.Version, err = RecruitManifestVersion(third.Rules)
+	baseOK(t, err)
+	evidence, err := catalog.evidence(first.Version, 1)
+	baseOK(t, err)
+	countThree, err := encodeRecruitPayload(evidence, RecruitRequest{CityID: 100, UnitCfgID: 1, Count: 3})
+	baseOK(t, err)
+	cases := []struct {
+		name   string
+		mutate func(*historyRow)
+	}{
+		{"payload count", func(h *historyRow) { h.payload = countThree }},
+		{"receipt count", func(h *historyRow) { h.count = 3 }},
+		{"receipt digest", func(h *historyRow) { h.digest = [32]byte{0xbb} }},
+		{"receipt version", func(h *historyRow) { h.version = []byte(second.Version) }},
+		{"unknown version", func(h *historyRow) {
+			h.payload = bytes.Replace(h.payload, []byte(first.Version), []byte(third.Version), 1)
+			h.version = []byte(third.Version)
+		}},
+		{"missing receipt", func(h *historyRow) { h.omitReceipt = true }},
+		{"queue city", func(h *historyRow) { h.qCity = 101 }},
+		{"canceled", func(h *historyRow) { h.status = 3 }},
+		{"sub-ms queue", func(h *historyRow) {
+			h.initial, h.status = 0, 2
+			h.rstart, h.rfinish = h.accepted.Add(time.Minute), h.accepted.Add(2*time.Minute)
+			h.qstart = h.accepted.Add(3*time.Minute + 123456789*time.Nanosecond)
+			h.qfinish = h.qstart.Add(time.Minute)
+		}},
+	}
+	for i, tc := range cases {
+		h := *row
+		h.queueID, h.command = int64(60+i), RecruitCommandID{byte(20 + i)}
+		tc.mutate(&h)
+		h.seed(t, pool)
+	}
+	promoted := *row
+	promoted.queueID, promoted.command = 41, RecruitCommandID{2}
+	promoted.initial, promoted.status = 0, 2
+	promoted.rstart, promoted.rfinish = row.accepted.Add(time.Minute), row.accepted.Add(2*time.Minute)
+	promoted.qstart, promoted.qfinish = row.accepted.Add(3*time.Minute), row.accepted.Add(4*time.Minute)
+	promoted.seed(t, pool)
+	snap := `md5(concat_ws('|',(SELECT string_agg(row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM work_queue t),(SELECT string_agg(row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM mil_recruit_origin t),(SELECT string_agg(row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM mil_recruit_receipt t),(SELECT last_value||','||is_called FROM work_queue_id_seq)))`
 	var before, after string
-	baseOK(t, a.Scan(ctx, b, snap, nil, &before))
-	got, err := participant.History(ctx, a, scope, intent, 40)
+	baseOK(t, a.Scan(ctx, b, "SELECT "+snap, nil, &before))
 	want := RecruitAcceptance{QueueID: 40, CityID: 100, UnitCfgID: 1, Count: 2, Cost: row.cost, DurationSeconds: 60,
-		CatalogVersion: string(row.version), RuleDigest: row.digest, AcceptedAt: row.accepted, InitialStatus: 1,
-		InitialStartAt: row.rstart, InitialFinishAt: row.rfinish}
-	if err != nil || got != want {
+		CatalogVersion: string(row.version), RuleDigest: row.digest, AcceptedAt: row.accepted, InitialStatus: 1, InitialStartAt: row.rstart, InitialFinishAt: row.rfinish}
+	if got, err := participant.History(ctx, a, scope, intent, 40); err != nil || got != want ||
+		got.AcceptedAt.Location() != time.UTC || got.AcceptedAt.Nanosecond() != 123000000 {
 		t.Fatalf("history %#v %v", got, err)
 	}
 	for _, changed := range []RecruitIntent{
@@ -90,104 +129,74 @@ func TestPGRecruitHistory(t *testing.T) {
 	}{
 		{RecruitScope{2, 1, row.command}, 40}, {RecruitScope{1, 0, row.command}, 40}, {RecruitScope{1, 2, row.command}, 40},
 		{RecruitScope{1, 1, RecruitCommandID{}}, 40}, {RecruitScope{1, 1, RecruitCommandID{9}}, 40},
-		{scope, 0}, {scope, 9007199254740992}, {scope, 41},
+		{scope, 0}, {scope, 9007199254740992}, {scope, 42},
 	} {
 		if _, err := participant.History(ctx, a, bad.scope, intent, bad.id); !errors.Is(err, ErrRecruitUnavailable) {
 			t.Fatal("invalid", bad, err)
 		}
 	}
-	baseOK(t, a.Scan(ctx, b, snap, nil, &after))
+	if got, err := participant.History(ctx, a, RecruitScope{1, 1, promoted.command}, intent, 41); err != nil ||
+		got.InitialStatus != 0 || !got.InitialStartAt.Equal(promoted.rstart) || !got.InitialFinishAt.Equal(promoted.rfinish) {
+		t.Fatal("promoted history", got, err)
+	}
+	for i := range cases {
+		bad := RecruitScope{ServerID: 1, PlayerID: 1, CommandID: RecruitCommandID{byte(20 + i)}}
+		for _, count := range []int32{2, 3} {
+			if _, err := participant.History(ctx, a, bad, RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: count}, int64(60+i)); !errors.Is(err, ErrRecruitUnavailable) {
+				t.Fatal(cases[i].name, count, err)
+			}
+		}
+	}
+	baseOK(t, a.Scan(ctx, b, "SELECT "+snap, nil, &after))
 	if after != before {
 		t.Fatal("history wrote", before, after)
 	}
-	third := first
-	third.Rules[0].Cost.Food++
-	third.Version, err = RecruitManifestVersion(third.Rules)
-	baseOK(t, err)
-	evidence, err := catalog.evidence(first.Version, 1)
-	baseOK(t, err)
-	countThree, err := encodeRecruitPayload(evidence, RecruitRequest{CityID: 100, UnitCfgID: 1, Count: 3})
-	baseOK(t, err)
-	cases := []struct {
-		name   string
-		mutate func(*historyRow)
-	}{
-		{"payload count", func(h *historyRow) { h.payload = countThree }},
-		{"receipt digest", func(h *historyRow) { h.digest = [32]byte{0xbb} }},
-		{"receipt version", func(h *historyRow) { h.version = []byte(second.Version) }},
-		{"unknown version", func(h *historyRow) {
-			h.payload = bytes.Replace(h.payload, []byte(first.Version), []byte(third.Version), 1)
-			h.version = []byte(third.Version)
-		}},
-		{"missing receipt", func(h *historyRow) { h.omitReceipt = true }},
-		{"queue city", func(h *historyRow) { h.qCity = 101 }},
-		{"canceled", func(h *historyRow) { h.status = 3 }},
-		{"waiting estimate moved", func(h *historyRow) {
-			h.initial, h.status = 0, 0
-			h.rstart = h.accepted.Add(time.Minute)
-			h.rfinish = h.rstart.Add(time.Minute)
-			h.qstart, h.qfinish = h.rstart.Add(time.Second), h.rfinish
-		}},
+	var raw time.Time
+	baseOK(t, a.Scan(ctx, b, "SELECT set_config('TimeZone','Asia/Tokyo',true),accepted_at FROM mil_recruit_receipt WHERE queue_id=40", nil, &before, &raw))
+	if before != "Asia/Tokyo" || raw.UTC() != row.accepted {
+		t.Fatal("non-UTC readback", before, raw)
 	}
-	for i, tc := range cases {
-		h := *row
-		h.queueID, h.command = int64(60+i), RecruitCommandID{byte(20 + i)}
-		tc.mutate(&h)
-		h.seed(t, pool)
-		bad := RecruitScope{ServerID: 1, PlayerID: 1, CommandID: h.command}
-		if _, err := participant.History(ctx, a, bad, intent, h.queueID); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal(tc.name, err)
-		}
-	}
-	other, err := recruittx.NewBinding(pool)
-	baseOK(t, err)
-	oo, oa, octx := baseOwner(t, other)
-	if _, err := participant.History(octx, oa, scope, intent, 40); !errors.Is(err, ErrRecruitUnavailable) {
-		t.Fatal("wrong binding", err)
-	}
-	baseOK(t, oo.Rollback(octx))
-	eo, ea, ectx := baseOwner(t, b)
-	baseOK(t, eo.Rollback(ectx))
-	if _, err := participant.History(ectx, ea, scope, intent, 40); !errors.Is(err, ErrRecruitUnavailable) {
-		t.Fatal("ended access", err)
-	}
-	baseOK(t, o.Rollback(ctx))
-	participant.source.retired.Store(true)
-	o, a, ctx = baseOwner(t, b)
-	if _, err := participant.History(ctx, a, scope, intent, 40); !errors.Is(err, ErrRecruitUnavailable) {
-		t.Fatal("retired source", err)
-	}
-	baseOK(t, o.Rollback(ctx))
 }
 
-func TestPGRecruitHistoryWaitsForQueueLock(t *testing.T) {
+func TestPGRecruitHistoryLockOrder(t *testing.T) {
 	pool, b, p := freshSourceFixture(t)
 	row, catalog, _, _ := historyDefaults(t)
 	row.seed(t, pool)
-	o1, a1, ctx1 := baseOwner(t, b)
-	participant, err := NewRecruitParticipant(ctx1, b, a1, p, catalog)
+	_, a, ctx := baseOwner(t, b)
+	participant, err := NewRecruitParticipant(ctx, b, a, p, catalog)
 	baseOK(t, err)
+	baseOK(t, participant.Pin(ctx, a))
 	scope := RecruitScope{ServerID: 1, PlayerID: 1, CommandID: row.command}
 	intent := RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: 2}
-	baseOK(t, participant.Pin(ctx1, a1))
-	if _, err := participant.History(ctx1, a1, scope, intent, 40); err != nil {
-		t.Fatal(err)
+	obs := `SELECT count(*) FILTER (WHERE relation=(SELECT oid FROM pg_class WHERE relnamespace=$1 AND relname='work_queue') AND granted), count(*) FILTER (WHERE relation=(SELECT oid FROM pg_class WHERE relnamespace=$1 AND relname='mil_recruit_receipt') AND granted),cardinality(pg_blocking_pids($2)),(SELECT xmax::text::bigint FROM work_queue WHERE queue_id=40)=$3 FROM pg_locks WHERE pid=$2 AND locktype='tuple'`
+	check := func(table string, wantQueue, wantReceipt int, wantLocked bool) {
+		ob, ab, ctxb := baseOwner(t, b)
+		var one, pid int
+		baseOK(t, ab.Scan(ctxb, b, "SELECT 1 FROM "+table+" WHERE queue_id=40 FOR UPDATE", nil, &one))
+		o2, a2, ctx2 := baseOwner(t, b)
+		baseOK(t, participant.Pin(ctx2, a2))
+		var xid int64
+		baseOK(t, a2.Scan(ctx2, b, "SELECT txid_current()", nil, &xid))
+		baseOK(t, a2.Scan(ctx2, b, "SELECT pg_backend_pid()", nil, &pid))
+		errc := make(chan error, 1)
+		go func() { _, err := participant.History(ctx2, a2, scope, intent, 40); errc <- err }()
+		var q, r, blocked int
+		var locked bool
+		for i := 0; i < 500; i++ {
+			baseOK(t, pool.QueryRow(context.Background(), obs, p.SchemaOID, pid, xid).Scan(&q, &r, &blocked, &locked))
+			if blocked > 0 && q == wantQueue && r == wantReceipt && locked == wantLocked {
+				break
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+		observed := blocked > 0 && q == wantQueue && r == wantReceipt && locked == wantLocked
+		baseOK(t, ob.Rollback(ctxb))
+		herr := <-errc
+		baseOK(t, o2.Rollback(ctx2))
+		if !observed || herr != nil {
+			t.Fatalf("%s waitQueue=%d waitReceipt=%d blocked=%d queueLocked=%v err=%v", table, q, r, blocked, locked, herr)
+		}
 	}
-	o2, a2, ctx2 := baseOwner(t, b)
-	baseOK(t, participant.Pin(ctx2, a2))
-	short, cancel := context.WithTimeout(ctx2, 250*time.Millisecond)
-	start := time.Now()
-	_, err = participant.History(short, a2, scope, intent, 40)
-	cancel()
-	if !errors.Is(err, ErrRecruitUnavailable) || time.Since(start) < 200*time.Millisecond {
-		t.Fatal("queue lock not waited", err)
-	}
-	_ = o2.Rollback(ctx2)
-	baseOK(t, o1.Rollback(ctx1))
-	o3, a3, ctx3 := baseOwner(t, b)
-	defer func() { _ = o3.Rollback(ctx3) }()
-	baseOK(t, participant.Pin(ctx3, a3))
-	if _, err := participant.History(ctx3, a3, scope, intent, 40); err != nil {
-		t.Fatal("post-rollback", err)
-	}
+	check("work_queue", 1, 0, false)
+	check("mil_recruit_receipt", 0, 1, true)
 }

@@ -11,8 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// RecruitAcceptance is immutable historical fact copied from one committed
-// receipt, never a current wallet, stock or readiness snapshot.
+// RecruitAcceptance is immutable committed receipt fact, never current wallet, stock or readiness.
 type RecruitAcceptance struct {
 	QueueID, CityID                 int64
 	UnitCfgID, Count                int32
@@ -43,31 +42,28 @@ type recruitHistoryReceipt struct {
 	intentVersion, initialStatus         int16
 }
 
-// History locks queue then receipt, re-reads origin/queue/receipt, and returns
-// only fully verified acceptance without city/stock locks or mutation.
+// History locks queue then receipt and returns only fully verified acceptance without mutation.
 func (p *RecruitParticipant) History(ctx context.Context, a *recruittx.Access, scope RecruitScope, intent RecruitIntent, queueID int64) (RecruitAcceptance, error) {
-	var zero RecruitAcceptance
-	if !validRecruitHistoryQueueID(queueID) {
-		return zero, ErrRecruitUnavailable
+	if queueID < 1 || queueID > 9007199254740991 {
+		return RecruitAcceptance{}, ErrRecruitUnavailable
 	}
 	s, err := p.recruitLookup(ctx, a, scope)
 	if err != nil {
-		return zero, err
+		return RecruitAcceptance{}, err
 	}
-	var q recruitHistoryQueue
+	q, r := recruitHistoryQueue{}, recruitHistoryReceipt{}
 	if err = recruitHistoryRead(ctx, a, s, recruitHistorySQL(s, "work_queue", historyQueueCols, " FOR UPDATE"), []any{scope.ServerID, queueID},
 		&q.serverID, &q.queueID, &q.playerID, &q.cityID, &q.queueType, &q.payload, &q.startAt, &q.finishAt, &q.status); err != nil {
-		return zero, err
+		return RecruitAcceptance{}, err
 	}
-	var r recruitHistoryReceipt
 	if err = recruitHistoryRead(ctx, a, s, recruitHistorySQL(s, "mil_recruit_receipt", historyReceiptCols, " FOR UPDATE"), []any{scope.ServerID, queueID},
 		&r.serverID, &r.queueID, &r.intentVersion, &r.cityID, &r.unitCfgID, &r.count, &r.food, &r.wood,
 		&r.iron, &r.stone, &r.durationSec, &r.catalogVersion, &r.ruleDigest, &r.acceptedAt, &r.startAt, &r.finishAt, &r.initialStatus); err != nil {
-		return zero, err
+		return RecruitAcceptance{}, err
 	}
 	playerID, operation, command := int64(0), int16(0), []byte(nil)
 	if err = recruitHistoryRead(ctx, a, s, recruitHistorySQL(s, "mil_recruit_origin", historyOriginCols, ""), []any{scope.ServerID, queueID}, &playerID, &operation, &command); err != nil {
-		return zero, err
+		return RecruitAcceptance{}, err
 	}
 	// pgx yields timestamptz in process location; stored instants are UTC millis.
 	q.startAt, q.finishAt = q.startAt.UTC(), q.finishAt.UTC()
@@ -76,21 +72,20 @@ func (p *RecruitParticipant) History(ctx context.Context, a *recruittx.Access, s
 		q.queueType != 3 || r.serverID != int64(scope.ServerID) || r.queueID != queueID || r.cityID != *q.cityID ||
 		r.intentVersion != 1 || (r.initialStatus != 0 && r.initialStatus != 1) ||
 		playerID != scope.PlayerID || operation != 1 || !bytes.Equal(command, scope.CommandID[:]) {
-		return zero, ErrRecruitUnavailable
+		return RecruitAcceptance{}, ErrRecruitUnavailable
 	}
-	// Only the four typed intent fields are caller input. A same-key accepted
-	// record with different input is conflict even if retained or current
-	// catalog evidence is unavailable; corrupt linkage remains unavailable.
-	if intent.Version != uint32(r.intentVersion) || intent.CityID != r.cityID ||
-		intent.UnitCfgID != r.unitCfgID || intent.Count != r.count {
-		return zero, ErrRecruitConflict
-	}
+	// Evidence consistency precedes intent: corrupt/missing linkage or retained rule is unavailable.
 	payload, err := decodeRecruitPayload(q.payload, p.catalog)
 	if err != nil || payload.Unit != r.unitCfgID || payload.Count != r.count ||
 		payload.Cost != (recruitPayloadCost{Food: r.food, Wood: r.wood, Iron: r.iron, Stone: r.stone}) ||
 		payload.Seconds != r.durationSec || payload.Catalog != string(r.catalogVersion) ||
 		payload.Digest != hex.EncodeToString(r.ruleDigest) || !recruitHistoryEvolution(q, r) {
-		return zero, ErrRecruitUnavailable
+		return RecruitAcceptance{}, ErrRecruitUnavailable
+	}
+	// Only an intact record reaches intent comparison; today's city/catalog is never consulted.
+	if intent.Version != uint32(r.intentVersion) || intent.CityID != r.cityID ||
+		intent.UnitCfgID != r.unitCfgID || intent.Count != r.count {
+		return RecruitAcceptance{}, ErrRecruitConflict
 	}
 	return recruitHistoryAcceptance(q, r), nil
 }
@@ -106,20 +101,12 @@ func recruitHistoryRead(ctx context.Context, a *recruittx.Access, s *freshMilita
 	return nil
 }
 
-func validRecruitHistoryQueueID(queueID int64) bool {
-	return queueID >= 1 && queueID <= 9007199254740991
-}
-
-// recruitHistoryEvolution accepts only the frozen waiting->active->done path.
-// Always-active jobs keep their accepted schedule; promoted jobs keep exactly
-// one actual schedule of stored duration. No current-time or owner check.
+// recruitHistoryEvolution accepts only waiting->active->done with exact stored-duration schedules.
 func recruitHistoryEvolution(q recruitHistoryQueue, r recruitHistoryReceipt) bool {
-	if q.cityID == nil || r.durationSec <= 0 || !validRecruitTime(q.startAt) || !validRecruitTime(q.finishAt) ||
-		!validRecruitTime(r.acceptedAt) || !validRecruitTime(r.startAt) || !validRecruitTime(r.finishAt) {
+	if q.cityID == nil || r.durationSec <= 0 || !validRecruitTime(q.startAt) || !validRecruitTime(q.finishAt) || !validRecruitTime(r.acceptedAt) || !validRecruitTime(r.startAt) || !validRecruitTime(r.finishAt) {
 		return false
 	}
-	finish, err := recruitFinish(r.startAt, r.durationSec)
-	if err != nil || !finish.Equal(r.finishAt) {
+	if finish, err := recruitFinish(r.startAt, r.durationSec); err != nil || !finish.Equal(r.finishAt) {
 		return false
 	}
 	switch r.initialStatus {
@@ -148,19 +135,15 @@ func recruitHistoryEvolution(q recruitHistoryQueue, r recruitHistoryReceipt) boo
 func recruitHistoryAcceptance(q recruitHistoryQueue, r recruitHistoryReceipt) RecruitAcceptance {
 	var digest [32]byte
 	copy(digest[:], r.ruleDigest)
-	return RecruitAcceptance{
-		QueueID: q.queueID, CityID: r.cityID, UnitCfgID: r.unitCfgID, Count: r.count,
-		Cost:            Resources{Food: r.food, Wood: r.wood, Iron: r.iron, Stone: r.stone},
-		DurationSeconds: r.durationSec, CatalogVersion: string(r.catalogVersion), RuleDigest: digest,
-		AcceptedAt: r.acceptedAt, InitialStatus: r.initialStatus, InitialStartAt: r.startAt, InitialFinishAt: r.finishAt,
-	}
+	return RecruitAcceptance{QueueID: q.queueID, CityID: r.cityID, UnitCfgID: r.unitCfgID, Count: r.count,
+		Cost: Resources{Food: r.food, Wood: r.wood, Iron: r.iron, Stone: r.stone}, DurationSeconds: r.durationSec,
+		CatalogVersion: string(r.catalogVersion), RuleDigest: digest, AcceptedAt: r.acceptedAt, InitialStatus: r.initialStatus,
+		InitialStartAt: r.startAt, InitialFinishAt: r.finishAt}
 }
 
-const (
-	historyQueueCols   = `server_id,queue_id,player_id,city_id,queue_type,payload,start_at,finish_at,status`
-	historyReceiptCols = `server_id,queue_id,intent_version,city_id,unit_cfg_id,count,food_paid,wood_paid,iron_paid,stone_paid,duration_sec,catalog_version,rule_digest,accepted_at,initial_start_at,initial_finish_at,initial_status`
-	historyOriginCols  = `player_id,operation,command_id`
-)
+const historyQueueCols = `server_id,queue_id,player_id,city_id,queue_type,payload,start_at,finish_at,status`
+const historyReceiptCols = `server_id,queue_id,intent_version,city_id,unit_cfg_id,count,food_paid,wood_paid,iron_paid,stone_paid,duration_sec,catalog_version,rule_digest,accepted_at,initial_start_at,initial_finish_at,initial_status`
+const historyOriginCols = `player_id,operation,command_id`
 
 func recruitHistorySQL(s *freshMilitarySource, table, cols, suffix string) string {
 	return `SELECT ` + cols + ` FROM ` + pgx.Identifier{s.profile.SchemaName, table}.Sanitize() +
