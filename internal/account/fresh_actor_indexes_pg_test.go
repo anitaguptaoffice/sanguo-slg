@@ -95,6 +95,8 @@ func TestPGFreshActorIndexesDrift(t *testing.T) {
 		"include":             "DROP INDEX idx_player_account; CREATE INDEX idx_player_account ON player(account_id) INCLUDE(power)",
 		"predicate":           "DROP INDEX idx_player_account; CREATE INDEX idx_player_account ON player(account_id) WHERE power>0",
 		"collation":           "DROP INDEX uq_account_login_name; CREATE UNIQUE INDEX uq_account_login_name ON account(login_name COLLATE pg_catalog.\"C\")",
+		"descending order":    "DROP INDEX uq_account_login_name; CREATE UNIQUE INDEX uq_account_login_name ON account(login_name DESC)",
+		"nondefault opclass":  "DROP INDEX uq_account_login_name; CREATE UNIQUE INDEX uq_account_login_name ON account(login_name text_pattern_ops)",
 		"extra check":         "ALTER TABLE account ADD CONSTRAINT extra CHECK(status>0)",
 		"deferrable primary":  "ALTER TABLE player DROP CONSTRAINT player_pkey; ALTER TABLE player ADD PRIMARY KEY(server_id,player_id) DEFERRABLE",
 		"sequence cache":      "ALTER SEQUENCE account_account_id_seq CACHE 2",
@@ -114,7 +116,7 @@ func TestPGFreshActorIndexesDrift(t *testing.T) {
 			actorSQL(t, pool, ddl)
 			// This owned negative fixture deliberately expects the replacement identity
 			// to isolate structural rejection. Production must never recapture a source.
-			replaced := map[string]string{"wrong keys": "uq_player_account_per_server", "nonunique": "uq_account_login_name", "expression": "uq_account_login_name", "include": "idx_player_account", "predicate": "idx_player_account", "collation": "uq_account_login_name", "deferrable primary": "player_pkey"}
+			replaced := map[string]string{"wrong keys": "uq_player_account_per_server", "nonunique": "uq_account_login_name", "expression": "uq_account_login_name", "include": "idx_player_account", "predicate": "idx_player_account", "collation": "uq_account_login_name", "descending order": "uq_account_login_name", "nondefault opclass": "uq_account_login_name", "deferrable primary": "player_pkey"}
 			if index, ok := replaced[name]; ok {
 				var id freshsource.ObjectIdentity
 				actorOK(t, pool.QueryRow(context.Background(), `SELECT oid,relowner FROM pg_catalog.pg_class WHERE relnamespace=$1 AND relname=$2`, p.SchemaOID, index).Scan(&id.OID, &id.OwnerOID))
@@ -125,5 +127,30 @@ func TestPGFreshActorIndexesDrift(t *testing.T) {
 				t.Fatal("index/sequence drift accepted")
 			}
 		})
+	}
+}
+
+// A failed concurrent unique build leaves a live but invalid index. Recapture
+// that replacement identity so only validity, not a stale OID, decides.
+func TestPGFreshActorIndexesInvalid(t *testing.T) {
+	pool, b, p := actorIndexFixture(t)
+	o, a, ctx := actorOwner(t, b)
+	actorOK(t, validateFreshActorIndexes(ctx, a, b, p))
+	actorOK(t, o.Rollback(ctx))
+	actorSQL(t, pool, `DROP INDEX uq_account_login_name; INSERT INTO account(login_name,password_hash) VALUES('dupe','h'),('dupe','h')`)
+	if _, err := pool.Exec(context.Background(), `CREATE UNIQUE INDEX CONCURRENTLY uq_account_login_name ON account(login_name)`); err == nil {
+		t.Fatal("fixture must leave an invalid index")
+	}
+	var healthy bool
+	actorOK(t, pool.QueryRow(context.Background(), `SELECT indisvalid AND indisready AND indislive FROM pg_catalog.pg_index WHERE indexrelid=$1::pg_catalog.regclass`, pgx.Identifier{p.SchemaName, "uq_account_login_name"}.Sanitize()).Scan(&healthy))
+	if healthy {
+		t.Fatal("fixture index is not invalid")
+	}
+	var id freshsource.ObjectIdentity
+	actorOK(t, pool.QueryRow(context.Background(), `SELECT oid,relowner FROM pg_catalog.pg_class WHERE relnamespace=$1 AND relname='uq_account_login_name'`, p.SchemaOID).Scan(&id.OID, &id.OwnerOID))
+	p.Objects["uq_account_login_name"] = id
+	_, a, ctx = actorOwner(t, b)
+	if validateFreshActorIndexes(ctx, a, b, p) == nil {
+		t.Fatal("invalid index accepted")
 	}
 }
