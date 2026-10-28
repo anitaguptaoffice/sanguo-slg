@@ -34,8 +34,8 @@ SELECT NOT COALESCE((SELECT
         FROM pg_constraint WHERE conrelid = c.oid)
     AND NOT EXISTS (SELECT FROM expected e LEFT JOIN pg_constraint k
         ON k.conrelid = c.oid AND k.conname = e.name
-        WHERE k.oid IS NULL OR regexp_replace(pg_get_constraintdef(k.oid), '[[:space:]]+', '', 'g')
-            <> regexp_replace(e.definition, '[[:space:]]+', '', 'g'))
+        WHERE k.oid IS NULL OR pg_get_constraintdef(k.oid) COLLATE pg_catalog."C"
+            <> e.definition COLLATE pg_catalog."C")
     AND (SELECT count(*) = 1 AND bool_and(i.indisprimary AND i.indisunique AND i.indisvalid
         AND i.indisready AND i.indislive AND i.indimmediate AND NOT i.indisexclusion
         AND i.indnkeyatts = 2 AND i.indnatts = 2 AND i.indkey::text = '1 2'
