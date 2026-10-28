@@ -3,12 +3,14 @@ package account
 import (
 	"bytes"
 	"context"
+	"errors"
 	"math"
 	"testing"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -105,7 +107,11 @@ func TestPGFreshActorIndexesDrift(t *testing.T) {
 		"sequence maximum":    "ALTER SEQUENCE account_account_id_seq MAXVALUE 9999",
 		"sequence cycle":      "ALTER SEQUENCE account_account_id_seq CYCLE",
 		"sequence start":      "ALTER SEQUENCE account_account_id_seq START WITH 2",
-		"sequence consumer":   "CREATE TABLE extra_consumer(id bigint DEFAULT nextval('account_account_id_seq'))",
+		// Default consumers are checked through pg_attrdef. PG17 has no safe DDL
+		// for a wrong internal pg_depend link: ALTER SEQUENCE ... OWNED BY fails
+		// with 0A000 for identity sequences and DROP IDENTITY removes the
+		// sequence, so that specific check stays source-reviewed only.
+		"sequence consumer": "CREATE TABLE extra_consumer(id bigint DEFAULT nextval('account_account_id_seq'))",
 	}
 	for name, ddl := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -122,35 +128,51 @@ func TestPGFreshActorIndexesDrift(t *testing.T) {
 				actorOK(t, pool.QueryRow(context.Background(), `SELECT oid,relowner FROM pg_catalog.pg_class WHERE relnamespace=$1 AND relname=$2`, p.SchemaOID, index).Scan(&id.OID, &id.OwnerOID))
 				p.Objects[index] = id
 			}
+			// A deferrable primary key adds an internal unique_key_recheck trigger,
+			// so the reused FK/RI volume check rejects it before index metadata.
+			want := errFreshActorIndexes
+			if name == "deferrable primary" {
+				want = errFreshActorFK
+			}
 			_, a, ctx = actorOwner(t, b)
-			if validateFreshActorIndexes(ctx, a, b, p) == nil {
-				t.Fatal("index/sequence drift accepted")
+			if err := validateFreshActorIndexes(ctx, a, b, p); !errors.Is(err, want) {
+				t.Fatalf("want %v, got %v", want, err)
 			}
 		})
 	}
 }
 
-// A failed concurrent unique build leaves a live but invalid index. Recapture
-// that replacement identity so only validity, not a stale OID, decides.
+// A failed concurrent unique build leaves a live, invalid index. The fixture
+// asserts the duplicate-key SQLSTATE and the replacement identity, then binds
+// that identity so only metadata flags can reject it. On PG17 the failure also
+// leaves indisready=false, so this proves the validator's conjunctive validity
+// check, not indisvalid in isolation.
 func TestPGFreshActorIndexesInvalid(t *testing.T) {
 	pool, b, p := actorIndexFixture(t)
 	o, a, ctx := actorOwner(t, b)
 	actorOK(t, validateFreshActorIndexes(ctx, a, b, p))
 	actorOK(t, o.Rollback(ctx))
 	actorSQL(t, pool, `DROP INDEX uq_account_login_name; INSERT INTO account(login_name,password_hash) VALUES('dupe','h'),('dupe','h')`)
-	if _, err := pool.Exec(context.Background(), `CREATE UNIQUE INDEX CONCURRENTLY uq_account_login_name ON account(login_name)`); err == nil {
-		t.Fatal("fixture must leave an invalid index")
-	}
-	var healthy bool
-	actorOK(t, pool.QueryRow(context.Background(), `SELECT indisvalid AND indisready AND indislive FROM pg_catalog.pg_index WHERE indexrelid=$1::pg_catalog.regclass`, pgx.Identifier{p.SchemaName, "uq_account_login_name"}.Sanitize()).Scan(&healthy))
-	if healthy {
-		t.Fatal("fixture index is not invalid")
+	_, err := pool.Exec(context.Background(), `CREATE UNIQUE INDEX CONCURRENTLY uq_account_login_name ON account(login_name)`)
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) || pgErr.Code != "23505" {
+		t.Fatalf("concurrent unique build: want SQLSTATE 23505, got %v", err)
 	}
 	var id freshsource.ObjectIdentity
-	actorOK(t, pool.QueryRow(context.Background(), `SELECT oid,relowner FROM pg_catalog.pg_class WHERE relnamespace=$1 AND relname='uq_account_login_name'`, p.SchemaOID).Scan(&id.OID, &id.OwnerOID))
+	var namespace, relation uint32
+	var keys string
+	var unique, valid, ready, live bool
+	actorOK(t, pool.QueryRow(context.Background(), `SELECT c.oid,c.relowner,c.relnamespace,i.indrelid,i.indkey::pg_catalog.text,i.indisunique,i.indisvalid,i.indisready,i.indislive
+ FROM pg_catalog.pg_class c JOIN pg_catalog.pg_index i ON i.indexrelid=c.oid
+ WHERE c.relnamespace=$1 AND c.relname='uq_account_login_name' AND c.relkind='i'`, p.SchemaOID).
+		Scan(&id.OID, &id.OwnerOID, &namespace, &relation, &keys, &unique, &valid, &ready, &live))
+	if namespace != p.SchemaOID || relation != p.Objects["account"].OID || keys != "2" || !unique || valid || !live {
+		t.Fatalf("invalid fixture identity/shape: ns=%d rel=%d keys=%q unique=%t valid=%t ready=%t live=%t", namespace, relation, keys, unique, valid, ready, live)
+	}
+	t.Logf("failed concurrent index flags: indisvalid=%t indisready=%t indislive=%t", valid, ready, live)
 	p.Objects["uq_account_login_name"] = id
 	_, a, ctx = actorOwner(t, b)
-	if validateFreshActorIndexes(ctx, a, b, p) == nil {
-		t.Fatal("invalid index accepted")
+	if err := validateFreshActorIndexes(ctx, a, b, p); !errors.Is(err, errFreshActorIndexes) {
+		t.Fatalf("invalid index: want %v, got %v", errFreshActorIndexes, err)
 	}
 }
