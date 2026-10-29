@@ -26,7 +26,7 @@ func restoreSourceSnap(t *testing.T, pool *pgxpool.Pool, schema string) string {
 	return strings.Join(parts, ";")
 }
 
-const restoreSeedSQL = `INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y,hero_ids) VALUES(1,500,70,2,1,1,'{11}'),(1,501,70,2,1,1,'{12,13}'),(1,502,70,3,1,1,'{14}'),(1,503,70,3,1,1,'{15}'),(1,504,70,1,1,1,'{16}');INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,origin_city_id,return_finish_at) VALUES(1,500,500,1,1,2,2,1,now()-interval '10 min',now()+interval '2 hours',1,100,NULL),(1,501,501,1,1,2,2,1,now()-interval '2 hours',now()-interval '1 hour',1,100,NULL),(1,502,502,1,1,2,2,1,now()-interval '3 hours',now()-interval '2 hours',3,100,now()+interval '1 hour'),(1,503,503,1,1,2,2,1,now()-interval '4 hours',now()-interval '3 hours',3,100,now()-interval '30 min'),(1,504,504,1,1,2,2,1,now()-interval '5 hours',now()-interval '4 hours',4,100,now()-interval '2 hours');INSERT INTO army_troop VALUES(1,500,1,5),(1,501,2,3),(1,502,1,2),(1,502,2,4),(1,503,3,1),(1,504,1,1);INSERT INTO player_hero(server_id,hero_id,player_id,template_cfg_id,status) VALUES(1,11,70,11,3),(1,12,70,12,3),(1,13,70,13,3),(1,14,70,14,3),(1,15,70,15,3),(1,16,70,16,3),(1,17,70,17,3),(1,18,70,18,1);`
+const restoreSeedSQL = `INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y,hero_ids) VALUES(1,500,70,2,1,1,'{11}'),(1,501,70,2,1,1,'{12,13}'),(1,502,70,3,1,1,'{14}'),(1,503,70,3,1,1,'{15}'),(1,504,70,1,1,1,'{16}');INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,origin_city_id,return_finish_at) VALUES(1,500,500,1,1,2,2,1,now()-interval '10 min',now()+interval '2 hours',1,100,NULL),(1,501,501,1,1,2,2,1,now()-interval '2 hours',now()-interval '1 hour',1,100,NULL),(1,502,502,1,1,2,2,1,now()-interval '3 hours',now()-interval '2 hours',3,100,now()+interval '1 hour'),(1,503,503,1,1,2,2,1,now()-interval '4 hours',now()-interval '3 hours',3,100,now()-interval '30 min'),(1,504,504,1,1,2,2,1,now()-interval '5 hours',now()-interval '4 hours',4,100,now()-interval '2 hours');INSERT INTO army_troop VALUES(1,500,1,5),(1,501,2,3),(1,502,1,2),(1,502,2,4),(1,503,3,1),(1,504,1,1);INSERT INTO player_hero(server_id,hero_id,player_id,template_cfg_id,status) VALUES(1,11,70,11,3),(1,12,70,12,3),(1,13,70,13,3),(1,14,70,14,3),(1,15,70,15,3),(1,16,70,16,3),(1,17,70,17,3),(1,18,70,18,1);INSERT INTO battle_report(server_id,report_id,attacker_player_id,location_x,location_y,outcome,detail) VALUES(1,900,70,2,2,1,'{"rounds":1}');`
 
 func TestPGMarchRestore(t *testing.T) {
 	pool, _, p, _ := marchStoreFixture(t)
@@ -38,6 +38,11 @@ func TestPGMarchRestore(t *testing.T) {
 	baseOK(t, err)
 	t.Cleanup(ipool.Close)
 	before, seq := restoreSourceSnap(t, ipool, p.SchemaName), marchStoreSeq(t, ipool, p)
+	var reports int64
+	baseOK(t, ipool.QueryRow(context.Background(), `SELECT count(*) FROM `+pgx.Identifier{p.SchemaName, "battle_report"}.Sanitize()).Scan(&reports))
+	if reports != 1 {
+		t.Fatalf("valid fixture battle_report rows=%d", reports)
+	}
 	r, err := NewMarchRestore(context.Background(), pool, p)
 	baseOK(t, err)
 	now := time.Now()
@@ -106,12 +111,28 @@ func TestPGMarchRestoreEmptyOnce(t *testing.T) {
 	baseOK(t, h.ActivateRestore())
 }
 
+// A committed value-preserving UPDATE must be visible for every table the
+// restore evidence names; a zero-row update would make the evidence vacuous.
 func TestPGRestoreSnapDetectsNoopWrite(t *testing.T) {
 	pool, _, p, _ := marchStoreFixture(t)
 	baseSQL(t, pool, restoreSeedSQL)
-	before := restoreSourceSnap(t, pool, p.SchemaName)
-	baseSQL(t, pool, `UPDATE `+pgx.Identifier{p.SchemaName, "field_army"}.Sanitize()+` SET status=status WHERE army_id=500`)
-	if after := restoreSourceSnap(t, pool, p.SchemaName); after == before {
-		t.Fatal("value-preserving write invisible to the snapshot")
+	for _, tc := range []struct{ table, set, where string }{
+		{"march_order", "status=status", "march_id=500"},
+		{"field_army", "status=status", "army_id=500"},
+		{"army_troop", "count=count", "army_id=500 AND unit_cfg_id=1"},
+		{"battle_report", "outcome=outcome", "report_id=900"},
+		{"player_hero", "status=status", "hero_id=11"},
+	} {
+		t.Run(tc.table, func(t *testing.T) {
+			before := restoreSourceSnap(t, pool, p.SchemaName)
+			tag, err := pool.Exec(context.Background(), `UPDATE `+pgx.Identifier{p.SchemaName, tc.table}.Sanitize()+` SET `+tc.set+` WHERE `+tc.where)
+			baseOK(t, err)
+			if tag.RowsAffected() != 1 {
+				t.Fatalf("no-op write affected %d rows", tag.RowsAffected())
+			}
+			if after := restoreSourceSnap(t, pool, p.SchemaName); after == before {
+				t.Fatalf("%s: value-preserving write invisible to the snapshot", tc.table)
+			}
+		})
 	}
 }

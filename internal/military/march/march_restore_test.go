@@ -1,6 +1,7 @@
 package march
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"testing"
@@ -143,5 +144,52 @@ func TestRestoreActivationBarrier(t *testing.T) {
 	baseOK(t, h.ActivateRestore())
 	if h.scheduler.PollDue(d) != 1 || h.March(10).Phase == PhaseMarching {
 		t.Fatal("activation did not publish the overdue event")
+	}
+}
+
+// A restored overdue arrival must keep the remaining travel: the return is due
+// at the original arrival plus travel, not at activation plus travel.
+func TestRestoreOverdueArrivalKeepsRemainingReturn(t *testing.T) {
+	now := time.Date(2026, 10, 29, 12, 0, 0, 0, time.UTC)
+	for _, tc := range []struct {
+		name   string
+		arrive time.Time
+	}{
+		{"overdue", now.Add(-time.Minute)},
+		{"on time", now},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := restoreInput{
+				orders: []restoreRow{{10, 20, 1, 1, 1, 2, 3, 1, tc.arrive.Add(-time.Hour), tc.arrive, nil,
+					restorePtr(int64(100)), restorePtr(int64(7)), restorePtr(int64(2)), []int64{11}}},
+				troops: []restoreTroop{{20, 1, 5}}, heroes: []restoreHero{{11, 7, 3}},
+			}
+			_, items, stacks, err := validateRestore(1, DefaultUnitCatalog(), in.orders, in.troops, in.heroes, 0)
+			baseOK(t, err)
+			h := NewHub(func() time.Time { return now })
+			arrivals := 0
+			h.SetMarchArrivalHandler(func(context.Context, MarchArrivalEvent) (MarchArrivalOutcome, error) {
+				arrivals++
+				return MarchArrivalOutcome{BattleRan: true, ReportID: 7, RemainingTroops: []TroopStack{{1, 4}}}, nil
+			})
+			h.RegisterCity(&CityState{ID: 100, PlayerID: 7, Troops: map[int32]int32{}})
+			baseOK(t, installRestore(h, items, stacks))
+			baseOK(t, h.ActivateRestore())
+			if n := h.scheduler.PollDue(now); n != 1 || arrivals != 1 {
+				t.Fatalf("arrival poll=%d handler=%d", n, arrivals)
+			}
+			travel := time.Duration(MarchDurationSec(GridDistance(1, 1, 2, 3), h.March(10).Speed)) * time.Second
+			want := tc.arrive.Add(travel)
+			if travel != 144*time.Second {
+				t.Fatalf("travel %v want 144s", travel)
+			}
+			order := h.March(10)
+			if order.Phase != PhaseReturning || !order.ReturnFinishAt.Equal(want) || !h.scheduler.NextDue().Equal(want) {
+				t.Fatalf("return %v next %v want %v", order.ReturnFinishAt, h.scheduler.NextDue(), want)
+			}
+			if h.scheduler.PollDue(want) != 1 || h.March(10).Phase != PhaseReturned || h.City(100).Troops[1] != 4 {
+				t.Fatal("return event did not settle on the next poll")
+			}
+		})
 	}
 }

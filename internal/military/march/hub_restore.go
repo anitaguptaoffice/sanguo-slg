@@ -56,7 +56,10 @@ func installRestore(h *Hub, items []restoreRow, stacks map[int64][]TroopStack) e
 
 // ActivateRestore publishes the staged restore events exactly once. The caller
 // must finish binding RestoreResult and start the scheduler only after this
-// returns, so no overdue handler can observe a half-published snapshot.
+// returns, so no overdue handler can observe a half-published snapshot. Overdue
+// arrivals keep their frozen deadline: onMarchArrive starts the return clock at
+// the original arrival, so the return is due at arrival+travel, not at
+// activation+travel.
 func (h *Hub) ActivateRestore() error {
 	if h == nil {
 		return ErrMarchRestore

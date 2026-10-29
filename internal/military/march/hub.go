@@ -176,6 +176,10 @@ func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 	return cloneMarch(order), nil
 }
 
+// onMarchArrive resolves one scheduled arrival. The return clock starts at the
+// event's frozen due time, not at handler time: a restored or late arrival keeps
+// only its remaining travel and the return stays due at arrive+travel, while an
+// on-time live arrival differs only by scheduler tick latency.
 func (h *Hub) onMarchArrive(ev Event) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -200,8 +204,11 @@ func (h *Hub) onMarchArrive(ev Event) {
 			ctx.Troops = cloneStacks(res.RemainingTroops)
 			h.marchCtx[ev.RefID] = ctx
 			if troopStackTotal(ctx.Troops) > 0 {
-				now := h.now()
-				if err := BeginReturn(o, now); err == nil {
+				base := ev.DueAt
+				if base.IsZero() {
+					base = h.now() // manually dispatched event without a deadline
+				}
+				if err := BeginReturn(o, base); err == nil {
 					scheduledReturn = true
 					h.scheduler.Schedule(Event{
 						Kind:  EventMarchReturnDone,
