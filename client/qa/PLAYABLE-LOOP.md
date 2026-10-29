@@ -6,7 +6,7 @@ Provisioning is documented fixture setup, not UI coverage: before the loop the r
 
 ## Run
 
-    node client/qa/playableLoop.browser.mjs --restart-cmd '<restart the gateway>' --city-x 6 --city-y 6 --out /tmp/opencode/playable-loop
+    node client/qa/playableLoop.browser.mjs --restart-cmd 'systemctl --user restart my-disposable-gateway' --city-x 6 --city-y 6 --out /tmp/opencode/playable-loop
 
 `--exploratory` records blocked steps without claiming acceptance (exit 0). `--help` lists options.
 ## Assertions and evidence
@@ -16,6 +16,10 @@ Every snapshot re-logs in and re-reads `listPlayerCities`/`getCityState`, so mea
 
 Recruit queue identity/status across reload/re-entry is not verified: the queue list is client-local (`QueuePanels.recruits`, populated only at recruit submit; no server hydration or queue read RPC), so an empty DOM queue after re-entry is not evidence of a lost order. `result.json` records the after-reload/after-restart DOM queues as observations plus `reload_persistence.queue_identity_observability` and `g3.recruit.queue_identity_observability`; the harness gates only the persisted effect (single credit, no duplicate debit).
 
-Only restart-window disconnects scoped to the observed `gatewayWs` origin move to `restart_induced`: HTTP 502/503 on `/ws` or `/healthz`, and console/page errors whose text names that gateway host:port and matches refused/reset/empty-response/WS-close. Generic 502/503, generic net errors and any frontend/Vite asset error stay in `errors` and fail `runtime-errors`; the rule is recorded in `result.json`. The harness refuses non-loopback `--base-url`/`--health-url`, the fixed QA ports and QA-named/QA-port `--restart-cmd` values at startup (`UsageError`, exit 2), and records the guard plus its self-checks in `result.json.isolation`; an arbitrary shell command cannot be proven safe, so a disposable stack is still required.
+Only restart-window disconnects scoped to the observed `gatewayWs` origin move to `restart_induced`: HTTP 502/503 on `/ws` or `/healthz`, and console/page errors whose text names that gateway host:port and matches refused/reset/empty-response/WS-close. Generic 502/503, generic net errors and any frontend/Vite asset error stay in `errors` and fail `runtime-errors`; the rule is recorded in `result.json`.
+
+Isolation is enforced before the first mutation (`UsageError`, exit 2): `--base-url`/`--health-url` must be http(s) loopback without the fixed QA ports; the observed gateway WS must be ws(s) loopback, avoid those ports and match the `--health-url` authority; and `page.url()` after each navigation must stay on the `--base-url` authority. `result.json.isolation` records these guards and an executable self-check (including fixtures that never open the forbidden socket), and `restart_events` records the parsed argv.
+
+Only structured `--restart-cmd` targets are accepted: `systemctl [--user] restart <unit>` or `docker restart <container>`, executed as argv with `shell:false`. Arbitrary shell, quotes, globs, substitutions, unknown commands and fixed-QA port/marker targets are refused; a disposable target/stack is still required.
 
 `--out` receives `result.json`, per-step screenshots, `browser.log` and `network.log`. Exit: `0` pass/exploratory, `1` failed/blocked, `2` usage/config, `3` internal. On current `main`, G3 fails (the recruit effect is never credited and the in-flight march is gone) and `stable-state-restart` reports troop loss after restart; `--exploratory` records those as `blocked`.
