@@ -55,6 +55,7 @@ func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub)
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	srv.AttachBattleReports(reportSvc)
+	srv.AttachMilitaryDurable(ComposeMilitary(ctx, a.Log, a.DB, a.Config.MILFreshProfileFile))
 	if err := srv.WireM4Content(ctx); err != nil {
 		a.Log.Error("m4 content wire failed", "err", err)
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 	"time"
@@ -15,9 +16,11 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/assembly"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
@@ -60,6 +63,7 @@ type Server struct {
 	contentCatalog *contentCatalogBinding
 	mailSvc        *mail.Service
 	heroSvc        *hero.Service
+	milDurable     *MilitaryDurable
 	recruit        *recruitDependencies
 	hotel          *hotelDependencies
 	family         *familyDependencies
@@ -72,6 +76,57 @@ type Server struct {
 	now            clockFunc
 	smokeSyncClock *SmokeSyncClock
 }
+
+// ErrMilitaryDurable rejects incomplete startup composition inputs.
+var ErrMilitaryDurable = errors.New("api: invalid military durable handle")
+
+// MilitaryDurable is the immutable startup-composed MIL source.
+type MilitaryDurable struct {
+	binding *recruittx.Binding
+	profile freshsource.Profile
+	recruit march.RecruitParticipant
+	fresh   march.FreshCityParticipant
+}
+
+// NewMilitaryDurable copies the expectations and participant values before
+// exposing the handle; callers cannot overwrite the composed state.
+func NewMilitaryDurable(b *recruittx.Binding, p freshsource.Profile, recruit *march.RecruitParticipant, fresh *march.FreshCityParticipant) (*MilitaryDurable, error) {
+	snapshot, err := freshsource.Snapshot(p)
+	if err != nil || b == nil || recruit == nil || fresh == nil {
+		return nil, ErrMilitaryDurable
+	}
+	return &MilitaryDurable{binding: b, profile: snapshot, recruit: *recruit, fresh: *fresh}, nil
+}
+
+// Binding returns the shared transaction binding.
+func (m *MilitaryDurable) Binding() *recruittx.Binding { return m.binding }
+
+// Profile returns a defensive copy of the startup expectations.
+func (m *MilitaryDurable) Profile() freshsource.Profile {
+	if p, err := freshsource.Snapshot(m.profile); err == nil {
+		return p
+	}
+	return freshsource.Profile{}
+}
+
+// Recruit and FreshCity return defensive copies of the stored participants.
+// Copies share the binding, immutable catalog and retirement state, so queue
+// and retirement semantics are unchanged.
+func (m *MilitaryDurable) Recruit() *march.RecruitParticipant {
+	recruit := m.recruit
+	return &recruit
+}
+
+func (m *MilitaryDurable) FreshCity() *march.FreshCityParticipant {
+	fresh := m.fresh
+	return &fresh
+}
+
+// AttachMilitaryDurable sets the durable MIL source (nil disables).
+func (s *Server) AttachMilitaryDurable(h *MilitaryDurable) { s.milDurable = h }
+
+// MilitaryDurable returns the durable MIL source, or nil when disabled.
+func (s *Server) MilitaryDurable() *MilitaryDurable { return s.milDurable }
 
 // AccountService exposes the account domain service for gateway session validation.
 func (s *Server) AccountService() *account.Service {
