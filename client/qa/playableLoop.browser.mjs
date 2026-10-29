@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Real-browser acceptance for the playable loop (see PLAYABLE-LOOP.md): real Vite
-// frontend, real Go gateway, real Chromium; the one-account/one-city fixture uses real
-// gateway RPC. Exit: 0 pass/exploratory done, 1 failed/blocked, 2 usage/config, 3 internal.
+// Real-browser acceptance for the playable loop (see PLAYABLE-LOOP.md): real Vite, Go gateway,
+// Chromium; one-account/one-city fixture via real RPC. Exit: 0 pass/exploratory, 1 failed/blocked, 2 usage, 3 internal.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -16,25 +15,43 @@ march lost on gateway restart" gap; --exploratory never claims acceptance.
   --max-wait SEC      Longest ETA to wait for (default 300)
   --city-x N --city-y N  RPC-provision the one-city fixture at N,N (e.g. 6 6); the
                       default (60,60) UI spawn leaves the (5,5) battle step blocked
-CHROMIUM_PATH selects the browser. Disposable freshly initialized DB only; never reset or
-point it at the shared QA demo DB. RPC provisioning is fixture setup, not UI registration
-coverage.`;
+CHROMIUM_PATH selects the browser. Loopback URLs only; fixed QA ports 15173/18580/55450/56390
+are refused. Disposable freshly initialized DB only; never reset or point it at the shared QA DB.
+RPC provisioning is fixture setup, not UI registration coverage.`;
 if (process.argv.includes('--help') || process.argv.includes('-h')) { console.log(HELP); process.exit(0); }
 class UsageError extends Error {} class Skip extends Error {}
 const FLAGS = { '--base-url': 'baseUrl', '--health-url': 'healthUrl', '--out': 'out', '--restart-cmd': 'restartCmd', '--max-wait': 'maxWaitSec', '--city-x': 'cityX', '--city-y': 'cityY' }, NUMERIC = new Set(['maxWaitSec', 'cityX', 'cityY']);
+const QA_PORTS = [15173, 18580, 55450, 56390], QA_MARKERS = /sanguo-qa|qa-gateway|qa-gw|slg-qa/i;
+function guardUrl(url, flag) {
+  let u; try { u = new URL(url); } catch { throw new UsageError(`${flag} is not a valid URL: ${url}`); }
+  const port = Number(u.port || (u.protocol === 'https:' ? 443 : 80));
+  if (!['http:', 'https:'].includes(u.protocol) || !['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname)) throw new UsageError(`${flag} must use an http(s) loopback host (127.0.0.1, localhost, [::1]): ${url}`);
+  if (QA_PORTS.includes(port)) throw new UsageError(`${flag} targets fixed QA port ${port}; refusing the shared QA baseline (frontend 15173, gateway 18580, PG 55450, Redis 56390)`);
+  return port;
+}
+function guardRestart(cmd) {
+  const port = QA_PORTS.find((p) => new RegExp(`(^|\\D)${p}(\\D|$)`).test(cmd));
+  if (port) throw new UsageError(`--restart-cmd names fixed QA port ${port}; refusing the shared QA baseline`);
+  if (QA_MARKERS.test(cmd)) throw new UsageError('--restart-cmd names a fixed QA unit/name marker; refusing the shared QA baseline');
+  return true;
+}
+function isolationSelfCheck() {
+  const attempt = (fn) => { try { fn(); return 'accept'; } catch (e) { if (e instanceof UsageError) return 'reject'; throw e; } };
+  const cases = [['accept disposable loopback', 'http://127.0.0.1:15183', () => guardUrl('http://127.0.0.1:15183', '--base-url'), 'accept'], ['reject QA frontend 15173', 'http://127.0.0.1:15173', () => guardUrl('http://127.0.0.1:15173', '--base-url'), 'reject'], ['reject QA gateway 18580', 'http://127.0.0.1:18580/healthz', () => guardUrl('http://127.0.0.1:18580/healthz', '--health-url'), 'reject'], ['reject non-loopback', 'http://10.0.0.1:8080', () => guardUrl('http://10.0.0.1:8080', '--base-url'), 'reject'], ['reject QA restart port 15173', 'restart.sh 15173', () => guardRestart('restart.sh 15173'), 'reject'], ['reject QA restart name', 'sanguo-qa', () => guardRestart('systemctl restart sanguo-qa'), 'reject'], ['accept disposable restart', 'restart.sh', () => guardRestart('restart.sh'), 'accept']];
+  return cases.map(([name, entry, fn, expect]) => ({ name, entry, expect, actual: attempt(fn) }));
+}
 function parseArgs(args) {
   const cfg = { baseUrl: 'http://127.0.0.1:5273', healthUrl: 'http://127.0.0.1:8080/healthz', out: '/tmp/opencode/playable-loop', restartCmd: null, restartWaitSec: 900, maxWaitSec: 300, settleSec: 15, cityX: null, cityY: null, chromium: process.env.CHROMIUM_PATH || null, exploratory: false, login: 'demo', password: 'demo123', serverId: 1 };
   for (let i = 0; i < args.length; i++) {
-    const flag = args[i];
-    if (flag === '--exploratory') { cfg.exploratory = true; continue; }
-    const key = FLAGS[flag]; if (!key) throw new UsageError(`unknown argument: ${flag} (see --help)`);
-    const raw = args[++i]; if (raw == null || raw.startsWith('--')) throw new UsageError(`${flag} requires a value`);
-    const value = NUMERIC.has(key) ? Number(raw) : raw;
-    if (NUMERIC.has(key) && (!Number.isFinite(value) || value <= 0)) throw new UsageError(`${flag} expects a positive number`);
+    const flag = args[i]; if (flag === '--exploratory') { cfg.exploratory = true; continue; }
+    const key = FLAGS[flag], raw = args[++i]; if (!key) throw new UsageError(`unknown argument: ${flag} (see --help)`);
+    if (raw == null || raw.startsWith('--')) throw new UsageError(`${flag} requires a value`);
+    const value = NUMERIC.has(key) ? Number(raw) : raw; if (NUMERIC.has(key) && (!Number.isFinite(value) || value <= 0)) throw new UsageError(`${flag} expects a positive number`);
     cfg[key] = key === 'baseUrl' ? String(value).replace(/\/$/, '') : value;
   }
   if ((cfg.cityX == null) !== (cfg.cityY == null)) throw new UsageError('--city-x and --city-y must be passed together');
   if (!cfg.exploratory && !cfg.restartCmd) throw new UsageError('acceptance mode requires --restart-cmd');
+  cfg.basePort = guardUrl(cfg.baseUrl, '--base-url'); cfg.healthPort = guardUrl(cfg.healthUrl, '--health-url'); if (cfg.restartCmd) guardRestart(cfg.restartCmd);
   return cfg;
 }
 let CFG; try { CFG = parseArgs(process.argv.slice(2)); } catch (e) { console.error(`config error: ${e.message}`); process.exit(2); }
@@ -42,20 +59,18 @@ const OUT = resolve(CFG.out); mkdirSync(OUT, { recursive: true });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), nowIso = () => new Date().toISOString(), logLines = [], networkLines = [];
 const log = (...p) => { const line = `${nowIso()} ${p.join(' ')}`; logLines.push(line); console.log(line); };
 const gitRev = () => { try { return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: import.meta.dirname, encoding: 'utf8' }).trim(); } catch { return 'unknown'; } };
-// Restart-window policy: only transient disconnects attributable to the observed
-// gateway are moved to restart_induced; everything else stays in errors.
+// Restart-window policy: only disconnects attributable to the observed gateway move to restart_induced.
 const RESTART_ERROR_RULE = {
-  window: 'restart command start through 2s after post-restart re-entry',
-  scope: 'gateway origin/host derived from the observed gatewayWs',
-  http_whitelist: 'HTTP 502/503 only for the gateway origin and path /ws or /healthz',
-  console_whitelist: 'console/pageerror only when the text names the gateway host:port and matches refused/reset/empty-response/WS-close',
+  window: 'restart command start through 2s after post-restart re-entry', scope: 'gateway origin/host derived from the observed gatewayWs',
+  http_whitelist: 'HTTP 502/503 only for the gateway origin and path /ws or /healthz', console_whitelist: 'console/pageerror only when the text names the gateway host:port and matches refused/reset/empty-response/WS-close',
   other: 'all other console/page/HTTP errors go to errors and fail acceptance',
 };
 const report = {
   card: 'CLIENT-PLAYABLE-E2E-001', harness: 'client/qa/playableLoop.browser.mjs', mode: CFG.exploratory ? 'exploratory' : 'acceptance', source: gitRev(), started_at: nowIso(),
   config: { base_url: CFG.baseUrl, health_url: CFG.healthUrl, out: OUT, gateway_ws: null, restart_cmd_configured: Boolean(CFG.restartCmd), restart_wait_sec: CFG.restartWaitSec, max_wait_sec: CFG.maxWaitSec, settle_sec: CFG.settleSec, city_placement: CFG.cityX == null ? 'ui-default' : { x: CFG.cityX, y: CFG.cityY } },
-  provisioning: null, account: null, city: null, hall: null, recruit: null, hero: null, battle_report: null, reload_persistence: null, g3: {}, stable_restart_checks: [], snapshots: [],
-  errors: [], restart_induced: [], restart_error_policy: RESTART_ERROR_RULE, restart_events: [], websockets: [], passed: false, exit_code: null,
+  isolation: { loopback_only: true, refused_ports: QA_PORTS, base_port: CFG.basePort, health_port: CFG.healthPort, restart_cmd_checked: Boolean(CFG.restartCmd), self_check: [] },
+  provisioning: null, account: null, city: null, hall: null, recruit: null, hero: null, battle_report: null, reload_persistence: null, g3: {}, stable_restart_checks: [], snapshots: [], errors: [], restart_induced: [],
+  restart_error_policy: RESTART_ERROR_RULE, restart_events: [], websockets: [], passed: false, exit_code: null,
 };
 let browser = null, page = null, gatewayWs = null, observedWs = null, favicon404 = false, cityId = 0, heroId = 0, restartWindow = false, gatewayOrigin = null, gatewayHostPort = null;
 const ok = (cond, msg) => { if (!cond) throw new Error(msg); };
@@ -74,8 +89,7 @@ const gatewayEndpoint = (url) => { try { const u = new URL(url); return u.host =
 function restartDisconnect(entry) {
   if (!restartWindow || !gatewayOrigin) return false;
   if (entry.kind === 'http') return (entry.status === 502 || entry.status === 503) && gatewayEndpoint(entry.url);
-  const t = entry.text ?? '';
-  if (!['console', 'pageerror'].includes(entry.kind) || !gatewayHostPort || !t.includes(gatewayHostPort)) return false;
+  const t = entry.text ?? ''; if (!['console', 'pageerror'].includes(entry.kind) || !gatewayHostPort || !t.includes(gatewayHostPort)) return false;
   return /net::ERR_(?:CONNECTION_REFUSED|CONNECTION_RESET|EMPTY_RESPONSE)|WebSocket.*(?:closed before the connection is established|failed:.*Unexpected response code: 50[23]|ERR_CONNECTION_(?:REFUSED|RESET)|ERR_EMPTY_RESPONSE)/i.test(t);
 }
 function recordIssue(entry) {
@@ -89,20 +103,15 @@ function recordIssue(entry) {
 const unexpectedErrors = () => report.errors.filter((e) => !(favicon404 && e.kind === 'console' && e.text === FAVICON_CONSOLE));
 async function openPanel(action, marker) { if (!(await page.locator(`${marker}:visible`).count())) await click(action); await page.locator(`${marker}:visible`).first().waitFor(); }
 function parseEta(line, base = Date.now()) { const m = /剩\s*(\d+:)?(\d+):(\d\d)/.exec(line); if (!m) return null; return base + ((m[1] ? Number(m[1].slice(0, -1)) * 3600 : 0) + Number(m[2]) * 60 + Number(m[3])) * 1000; }
-async function pollUntil(fn, timeoutMs) {
-  const deadline = Date.now() + timeoutMs; let last = null;
+async function pollUntil(fn, timeoutMs) { const deadline = Date.now() + timeoutMs; let last = null;
   while (Date.now() < deadline) { try { const v = await fn(); if (v) return v; } catch (e) { last = e; } await sleep(2000); }
   if (last) log('poll last error', String(last.message ?? last)); return null;
 }
-async function waitHealthy(timeoutMs = CFG.restartWaitSec * 1000) {
-  const deadline = Date.now() + timeoutMs; let last = 'no attempt';
-  while (Date.now() < deadline) {
-    try { const res = await fetch(CFG.healthUrl, { signal: AbortSignal.timeout(3000) }); if (res.ok) return; last = `HTTP ${res.status}`; } catch (e) { last = e.message; } await sleep(1000);
-  }
+async function waitHealthy(timeoutMs = CFG.restartWaitSec * 1000) { const deadline = Date.now() + timeoutMs; let last = 'no attempt';
+  while (Date.now() < deadline) { try { const res = await fetch(CFG.healthUrl, { signal: AbortSignal.timeout(3000) }); if (res.ok) return; last = `HTTP ${res.status}`; } catch (e) { last = e.message; } await sleep(1000); }
   throw new Error(`gateway health timeout at ${CFG.healthUrl} (${last})`);
 }
-async function connectRpc() {
-  if (!gatewayWs) throw new UsageError('gateway WebSocket URL not observed; check VITE_GATEWAY_WS_URL');
+async function connectRpc() { if (!gatewayWs) throw new UsageError('gateway WebSocket URL not observed; check VITE_GATEWAY_WS_URL');
   await page.evaluate(async (url) => { window.__qaRpc?.close(); const { GatewayClient } = await import('/src/net/GatewayClient.ts'); const c = new GatewayClient(url); await c.connect(); window.__qaRpc = c; }, gatewayWs);
 }
 const rpc = (method, ...args) => page.evaluate(([m, a]) => window.__qaRpc[m](...a), [method, args]);
@@ -114,19 +123,16 @@ async function enterGame() {
   await page.locator('[data-action="toggle-military"]:visible').waitFor();
   await page.waitForFunction(() => /Lv\d/.test(document.getElementById('hud')?.textContent ?? ''), null, { timeout: 60000 });
 }
-async function clickHall() {
-  const p = await page.evaluate(async () => {
+async function clickHall() { const p = await page.evaluate(async () => {
     const { computeLayoutViewport, layoutToCanvas } = await import('/src/engine/layoutViewport.ts');
-    const r = document.getElementById('game').getBoundingClientRect(), pt = layoutToCanvas(800, 240, computeLayoutViewport(r.width, r.height));
-    return { x: r.left + pt.x, y: r.top + pt.y };
+    const r = document.getElementById('game').getBoundingClientRect(), pt = layoutToCanvas(800, 240, computeLayoutViewport(r.width, r.height)); return { x: r.left + pt.x, y: r.top + pt.y };
   });
   await page.mouse.click(p.x, p.y); await page.locator('[data-role="build-title"]:visible').waitFor();
 }
 async function recruit(count) {
   await openPanel('toggle-military', '[data-action="recruit"]'); await ui('[data-field="unit"]').selectOption('1'); await fill('recruit-count', count); await click('recruit');
   const row = page.locator('[data-role="military-recruit-queue-list"]:visible li').last(); await row.waitFor();
-  const line = (await row.innerText()).trim(), q = queueFromLine(line); ok(q && line.includes(`步兵×${count}`), `unexpected recruit queue row: "${line}"`);
-  return { count, queue_id: q.queue_id, queue_line: line, finish_at_ms: q.finish_at_ms, wallet_after_submit: walletOf(await cityState()) };
+  const line = (await row.innerText()).trim(), q = queueFromLine(line); ok(q && line.includes(`步兵×${count}`), `unexpected recruit queue row: "${line}"`); return { count, queue_id: q.queue_id, queue_line: line, finish_at_ms: q.finish_at_ms, wallet_after_submit: walletOf(await cityState()) };
 }
 async function ensureTroops(minimum) {
   const have = troopsOf(await cityState()); if (have >= minimum) return have;
@@ -144,8 +150,7 @@ async function marchTo(toX, toY, count) {
   const march = await pollUntil(async () => { const rows = (await rpc('listMarches', cityId)).marches ?? []; return rows.find((m) => !before.has(m.march_id)) ?? null; }, 30000);
   ok(march, 'march submitted but ListMarches never listed a new order'); return march;
 }
-// Queue rows render the stable line "[募兵] <unit>×<count> · #<id> · 剩 <m:ss> · <clock>";
-// only id/status/unit/count are compared, the ticking remainder is not.
+// Queue rows: "[募兵] <unit>×<count> · #<id> · 剩 <m:ss> · <clock>"; only id/status/unit/count are compared.
 function queueFromLine(line) {
   const m = /\[募兵\]\s*(.+?)×(\d+)\s*·\s*#(\d+)/.exec(line), finish_at_ms = parseEta(line);
   return m && finish_at_ms ? { queue_id: Number(m[3]), unit_name: m[1], unit_cfg_id: 1, count: Number(m[2]), status: 'queued', finish_at_ms, line } : null;
@@ -155,15 +160,14 @@ async function pendingQueues() {
   return rows.map((r) => { const q = queueFromLine(r.line); return q && { ...q, queue_id: r.queue_id }; }).filter((q) => q && q.finish_at_ms > Date.now());
 }
 const QUEUE_IDENTITY_LIMITATION = 'not observable after page re-entry: client-local QueuePanels.recruits, no server hydration/read RPC';
-// Observation only: recruit queues are client-local and vanish from the DOM on every
-// page entry, so a missing row is never evidence that the server lost the order.
+// Observation only: client-local queues vanish from the DOM on page entry, so a missing row proves nothing.
 function queueObservation(before, after) {
   const facts = (q) => ({ queue_id: q.queue_id, count: q.count, finish_at_ms: q.finish_at_ms });
   return { gate: false, limitation: QUEUE_IDENTITY_LIMITATION, before: before.map(facts), after: after.map(facts) };
 }
 function assertIdentity(label, id) {
   const expected = { player_id: report.account?.player_id ?? 0, server_id: CFG.serverId, city_id: report.city?.city_id ?? 0, x: report.city?.x, y: report.city?.y };
-  ok(id.player_id === expected.player_id && id.server_id === expected.server_id && id.city_id === expected.city_id && id.city_count === 1 && id.city.x === expected.x && id.city.y === expected.y, `identity mismatch after ${label}: measured ${JSON.stringify(id)}; expected fixture ${JSON.stringify(expected)}`);
+  ok(id.player_id === expected.player_id && id.server_id === expected.server_id && id.city_id === expected.city_id && id.city_count === 1 && id.session_valid === true && id.city.x === expected.x && id.city.y === expected.y, `identity mismatch after ${label}: measured ${JSON.stringify(id)}; expected fixture ${JSON.stringify(expected)}`);
   return { ...id, expected };
 }
 // Every snapshot measures login, city list and city state live; the report is only the expectation.
@@ -173,10 +177,8 @@ async function snapshot(label) {
   const state = await cityState(city.city_id), hall = hallOf(state), identity = assertIdentity(label, { login: CFG.login, player_id: session.player?.player_id ?? 0, server_id: session.player?.server_id ?? 0, session_valid: Boolean(session.session_id && session.session_expires_at_ms > Date.now()), city_id: city.city_id, city_count: cities.length, city: { x: city.x, y: city.y, name: city.name } });
   const heroes = (await rpc('listPlayerHeroes', CFG.serverId)).heroes ?? [], reports = (await rpc('listBattleReports', 50, 0)).reports ?? [], marches = (await rpc('listMarches', cityId)).marches ?? [];
   const snap = {
-    label, at: Date.now(), identity, hall: hall ? { level: hall.level, upgrade_finish_at_ms: hall.upgrade_finish_at_ms } : null,
-    hero_ids: sortBy(heroes, 'hero_id').map((h) => h.hero_id), report_ids: sortBy(reports, 'report_id').map((r) => r.report_id), wallet: walletOf(state), production_rates: state.production_rates ?? {},
-    troops: sortBy(state.garrison?.troops ?? [], 'unit_cfg_id').map((t) => ({ unit_cfg_id: t.unit_cfg_id, count: t.count })), recruit_queues: await pendingQueues(),
-    marches: sortBy(marches, 'march_id').map((m) => ({ march_id: m.march_id, phase: m.phase, arrive_at_ms: m.arrive_at_ms, to: [m.to_x, m.to_y], troops: m.troops ?? [] })),
+    label, at: Date.now(), identity, hall: hall ? { level: hall.level, upgrade_finish_at_ms: hall.upgrade_finish_at_ms } : null, hero_ids: sortBy(heroes, 'hero_id').map((h) => h.hero_id), report_ids: sortBy(reports, 'report_id').map((r) => r.report_id), wallet: walletOf(state), production_rates: state.production_rates ?? {},
+    troops: sortBy(state.garrison?.troops ?? [], 'unit_cfg_id').map((t) => ({ unit_cfg_id: t.unit_cfg_id, count: t.count })), recruit_queues: await pendingQueues(), marches: sortBy(marches, 'march_id').map((m) => ({ march_id: m.march_id, phase: m.phase, arrive_at_ms: m.arrive_at_ms, to: [m.to_x, m.to_y], troops: m.troops ?? [] })),
   };
   report.snapshots.push(snap); return snap;
 }
@@ -209,11 +211,9 @@ function compareRestart(before, after) {
   return { label: before.label, ok: !stable.length && !troopLoss.length && !reportLoss.length && wallet.ok && marches.ok, stable_diff: stable, troop_loss: troopLoss, report_loss: reportLoss, wallet, marches, queues, troops: { before: before.troops, after: after.troops }, recruit_queues: { before: before.recruit_queues, after: after.recruit_queues } };
 }
 async function restartAndReenter(label, beforeSnap) {
-  if (!CFG.restartCmd) throw new Skip('--restart-cmd not configured; cannot exercise the gateway restart');
-  const event = { label, started_at: nowIso(), command: CFG.restartCmd }; report.restart_events.push(event); restartWindow = true; log('restart', label);
+  if (!CFG.restartCmd) throw new Skip('--restart-cmd not configured; cannot exercise the gateway restart'); const event = { label, started_at: nowIso(), command: CFG.restartCmd }; report.restart_events.push(event); restartWindow = true; log('restart', label);
   try {
-    const proc = spawnSync(CFG.restartCmd, { shell: true, encoding: 'utf8', timeout: CFG.restartWaitSec * 1000 + 60000 });
-    event.exit_code = proc.status; event.stdout_tail = (proc.stdout ?? '').slice(-2000); event.stderr_tail = (proc.stderr ?? '').slice(-2000);
+    const proc = spawnSync(CFG.restartCmd, { shell: true, encoding: 'utf8', timeout: CFG.restartWaitSec * 1000 + 60000 }); event.exit_code = proc.status; event.stdout_tail = (proc.stdout ?? '').slice(-2000); event.stderr_tail = (proc.stderr ?? '').slice(-2000);
     if (proc.status !== 0) throw new Error(`restart command failed (exit ${proc.status}): ${event.stderr_tail.trim()}`);
     await waitHealthy(); event.healthy_at = nowIso(); await enterGame(); event.reentered_at = nowIso();
     const afterSnap = await snapshot(`${label}-after-restart`); report.stable_restart_checks.push(compareRestart(beforeSnap, afterSnap));
@@ -222,8 +222,7 @@ async function restartAndReenter(label, beforeSnap) {
 }
 
 const steps = []; function need(id) { const dep = steps.find((s) => s.id === id); if (!dep || dep.status !== 'passed') throw new Skip(`depends on "${id}" (${dep?.status ?? 'not run'})`); }
-async function step(id, title, fn) {
-  const rec = { id, title, status: 'running', started_at: nowIso() }; steps.push(rec); log('step', id, 'start');
+async function step(id, title, fn) { const rec = { id, title, status: 'running', started_at: nowIso() }; steps.push(rec); log('step', id, 'start');
   try { rec.detail = (await fn()) ?? null; rec.status = 'passed'; } catch (e) { rec.status = e instanceof Skip || CFG.exploratory ? 'blocked' : 'failed'; rec.error = e instanceof Skip ? e.message : String(e.stack ?? e); log('step', id, rec.status, rec.error); }
   finally { rec.finished_at = nowIso(); await page?.screenshot({ path: `${OUT}/${String(steps.length).padStart(2, '0')}-${id}.png` }).catch(() => {}); }
   return rec.status === 'passed';
@@ -362,6 +361,7 @@ async function main() {
     const cases = [[{ kind: 'http', status: 503, url: 'https://vite.example/src/main.ts' }, false], [{ kind: 'http', status: 503, url: `http://${gatewayHostPort}/ws` }, true], [{ kind: 'http', status: 502, url: `http://${gatewayHostPort}/rpc` }, false], [{ kind: 'console', text: `WebSocket connection to '${gatewayWs}' failed: net::ERR_CONNECTION_REFUSED` }, true], [{ kind: 'console', text: `Failed to load resource: ${gatewayHostPort} 503` }, false]];
     const rule_self_check = cases.map(([entry, expect]) => ({ entry, expect, actual: restartDisconnect(entry) })); restartWindow = prevWindow;
     ok(rule_self_check.every((c) => c.actual === c.expect), `restart whitelist scoping self-check failed: ${JSON.stringify(rule_self_check.filter((c) => c.actual !== c.expect))}`);
+    const isolation = isolationSelfCheck(); report.isolation.self_check = isolation; ok(isolation.every((c) => c.actual === c.expect), `isolation self-check failed: ${JSON.stringify(isolation.filter((c) => c.actual !== c.expect))}`);
     const errors = unexpectedErrors(); if (errors.length) throw new Error(`${errors.length} unexpected browser/network error(s); see result.json .errors and browser.log: ${JSON.stringify(errors.slice(0, 3))}`);
     return { unexpected: 0, errors, restart_induced: report.restart_induced, whitelist: RESTART_ERROR_RULE, rule_self_check };
   });
