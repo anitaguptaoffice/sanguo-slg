@@ -67,7 +67,9 @@ function isolationSelfCheck() {
     [['reject page redirect 15173', 'http://127.0.0.1:15173/', () => guardPage('http://127.0.0.1:15173/', 'http://127.0.0.1:15186'), 'reject'], ['reject page foreign authority', 'http://127.0.0.1:15199/', () => guardPage('http://127.0.0.1:15199/', 'http://127.0.0.1:15186'), 'reject'], ['accept page same authority', 'http://127.0.0.1:15186/', () => guardPage('http://127.0.0.1:15186/', 'http://127.0.0.1:15186'), 'accept']],
     [['reject systemctl substitution', 'systemctl restart sanguo-$(printf qa)', () => parseRestart('systemctl restart sanguo-$(printf qa)'), 'reject'], ['reject systemctl glob', 'systemctl restart sanguo-*', () => parseRestart('systemctl restart sanguo-*'), 'reject'], ['reject structured QA port', 'systemctl restart 15173.service', () => parseRestart('systemctl restart 15173.service'), 'reject'], ['reject structured leading-zero port', 'systemctl restart 015173', () => parseRestart('systemctl restart 015173'), 'reject'], ['reject structured embedded port', 'docker restart 9115173', () => parseRestart('docker restart 9115173'), 'reject'], ['reject unknown restart.sh leading zero', 'restart.sh 015173', () => parseRestart('restart.sh 015173'), 'reject'], ['reject unknown restart.sh embedded port', 'restart.sh 9115173', () => parseRestart('restart.sh 9115173'), 'reject'], ['reject QA-named docker', 'docker restart qa-gw', () => parseRestart('docker restart qa-gw'), 'reject'], ['accept docker disposable', 'docker restart sanguo-review-pg', () => parseRestart('docker restart sanguo-review-pg'), 'accept', null, ['docker', 'restart', 'sanguo-review-pg']]],
   ].flat();
-  return cases.map(([name, entry, fn, expect, , value_expect]) => { const r = run(fn); return { name, entry, expect, actual: r.ok ? 'accept' : 'reject', value: r.ok ? r.value : null, value_expect: value_expect ?? null, shell: NO_SHELL.shell }; });
+  const late = (() => { let performed = false, rejected = false, prev = wsViolation; wsViolation = 'late contradictory /ws after a step check';
+    try { act(() => { performed = true; }); } catch (e) { rejected = e instanceof UsageError; } finally { wsViolation = prev; } return { name: 'reject late violation before direct UI action', entry: 'row.click/mouse.click/selectOption via act', expect: 'reject', actual: rejected && !performed ? 'reject' : 'accept', value: { performed }, value_expect: null, shell: NO_SHELL.shell }; })();
+  return [...cases.map(([name, entry, fn, expect, , value_expect]) => { const r = run(fn); return { name, entry, expect, actual: r.ok ? 'accept' : 'reject', value: r.ok ? r.value : null, value_expect: value_expect ?? null, shell: NO_SHELL.shell }; }), late];
 }
 const selfCheckOk = (cases) => cases.every((c) => c.actual === c.expect && c.shell === false && (!c.value_expect || JSON.stringify(c.value) === JSON.stringify(c.value_expect)));
 function parseArgs(args) {
@@ -101,8 +103,9 @@ let browser = null, page = null, gatewayWs = null, wsUrls = [], wsViolation = nu
 const ok = (cond, msg) => { if (!cond) throw new Error(msg); };
 const ui = (sel) => page.locator(`${sel}:visible`).first();
 const text = async (sel) => (await ui(sel).innerText()).trim();
-const click = (action) => { checkGateways(); return page.locator(`[data-action="${action}"]:visible`).first().click(); };
-const fill = (field, value) => { checkGateways(); return ui(`[data-field="${field}"]`).fill(String(value)); };
+const act = (fn) => { checkGateways(); return fn(); };
+const click = (action) => act(() => page.locator(`[data-action="${action}"]:visible`).first().click());
+const fill = (field, value) => act(() => ui(`[data-field="${field}"]`).fill(String(value)));
 const hallOf = (s) => (s.buildings ?? []).find((b) => b.slot_key === 'hall');
 const troopsOf = (s) => (s?.garrison?.troops ?? []).find((t) => t.unit_cfg_id === 1)?.count ?? 0;
 const walletOf = (s) => s?.wallet ?? {};
@@ -136,21 +139,21 @@ async function waitHealthy(timeoutMs = CFG.restartWaitSec * 1000) { const deadli
 }
 async function connectRpc() { if (!gatewayWs) throw new UsageError('gateway WebSocket URL not observed; check VITE_GATEWAY_WS_URL'); checkGateways();
   await page.evaluate(async (url) => { window.__qaRpc?.close(); const { GatewayClient } = await import('/src/net/GatewayClient.ts'); const c = new GatewayClient(url); await c.connect(); window.__qaRpc = c; }, gatewayWs); }
-const rpc = (method, ...args) => { checkGateways(); return page.evaluate(([m, a]) => window.__qaRpc[m](...a), [method, args]); };
+const rpc = (method, ...args) => act(() => page.evaluate(([m, a]) => window.__qaRpc[m](...a), [method, args]));
 async function loginRpc() { await connectRpc(); const session = await rpc('login', CFG.login, CFG.password, CFG.serverId); ok(session.player?.player_id, 'RPC login returned no player'); return session; }
 async function cityState(id = cityId) { const state = await rpc('getCityState', id); ok(state?.wallet, 'GetCityState returned no wallet'); return state; }
 async function enterGame() {
   await page.goto(CFG.baseUrl, { waitUntil: 'domcontentloaded' }); guardPage(page.url(), CFG.baseUrl);
-  const row = page.locator(`li[data-server-id="${CFG.serverId}"]`); await row.waitFor(); await row.click(); await click('enter-game');
+  const row = page.locator(`li[data-server-id="${CFG.serverId}"]`); await row.waitFor(); await act(() => row.click()); await click('enter-game');
   await page.locator('[data-action="toggle-military"]:visible').waitFor();
   await page.waitForFunction(() => /Lv\d/.test(document.getElementById('hud')?.textContent ?? ''), null, { timeout: 60000 });
 }
 async function clickHall() { const p = await page.evaluate(async () => {
     const { computeLayoutViewport, layoutToCanvas } = await import('/src/engine/layoutViewport.ts');
     const r = document.getElementById('game').getBoundingClientRect(), pt = layoutToCanvas(800, 240, computeLayoutViewport(r.width, r.height)); return { x: r.left + pt.x, y: r.top + pt.y };
-  }); await page.mouse.click(p.x, p.y); await page.locator('[data-role="build-title"]:visible').waitFor(); }
+  }); await act(() => page.mouse.click(p.x, p.y)); await page.locator('[data-role="build-title"]:visible').waitFor(); }
 async function recruit(count) {
-  await openPanel('toggle-military', '[data-action="recruit"]'); await ui('[data-field="unit"]').selectOption('1'); await fill('recruit-count', count); await click('recruit');
+  await openPanel('toggle-military', '[data-action="recruit"]'); await act(() => ui('[data-field="unit"]').selectOption('1')); await fill('recruit-count', count); await click('recruit');
   const row = page.locator('[data-role="military-recruit-queue-list"]:visible li').last(); await row.waitFor(); const line = (await row.innerText()).trim(), q = queueFromLine(line); ok(q && line.includes(`步兵×${count}`), `unexpected recruit queue row: "${line}"`); return { count, queue_id: q.queue_id, queue_line: line, finish_at_ms: q.finish_at_ms, wallet_after_submit: walletOf(await cityState()) }; }
 async function ensureTroops(minimum) {
   const have = troopsOf(await cityState()); if (have >= minimum) return have;
@@ -159,7 +162,7 @@ async function ensureTroops(minimum) {
 async function marchTo(toX, toY, count) {
   await openPanel('toggle-military', '[data-action="march"]');
   const line = await pollUntil(async () => { await click('refresh'); const t = await page.evaluate(() => document.querySelector('[data-role="troops"]')?.textContent ?? ''); return /步兵×\d+/.test(t) ? t : null; }, 36000); if (!line) throw new Error(`UI garrison never became ready: "${await text('[data-role="troops"]')}"`);
-  await page.waitForFunction(() => { const s = document.querySelector('[data-field="march-hero"]'); return Boolean(s && [...s.options].some((o) => o.value && !o.disabled)); }, null, { timeout: 60000 }); await ui('[data-field="march-hero"]').selectOption(String(heroId)); await fill('to-x', toX); await fill('to-y', toY); await fill('march-count', count);
+  await page.waitForFunction(() => { const s = document.querySelector('[data-field="march-hero"]'); return Boolean(s && [...s.options].some((o) => o.value && !o.disabled)); }, null, { timeout: 60000 }); await act(() => ui('[data-field="march-hero"]').selectOption(String(heroId))); await fill('to-x', toX); await fill('to-y', toY); await fill('march-count', count);
   const before = new Set(((await rpc('listMarches', cityId)).marches ?? []).map((m) => m.march_id)); await click('march');
   if (await page.locator('[data-role="march-form-error"]:visible').count()) throw new Error(`march rejected: ${await text('[data-role="march-form-error"]')}`);
   const march = await pollUntil(async () => { const rows = (await rpc('listMarches', cityId)).marches ?? []; return rows.find((m) => !before.has(m.march_id)) ?? null; }, 30000);
@@ -223,14 +226,12 @@ async function restartAndReenter(label, beforeSnap) {
     await sleep(2000); return { event, afterSnap };
   } finally { restartWindow = false; }
 }
-
 const steps = []; function need(id) { const dep = steps.find((s) => s.id === id); if (!dep || dep.status !== 'passed') throw new Skip(`depends on "${id}" (${dep?.status ?? 'not run'})`); }
 async function step(id, title, fn) { checkGateways(); const rec = { id, title, status: 'running', started_at: nowIso() }; steps.push(rec); log('step', id, 'start');
   try { rec.detail = (await fn()) ?? null; rec.status = 'passed'; } catch (e) { rec.status = e instanceof Skip || CFG.exploratory ? 'blocked' : 'failed'; rec.error = e instanceof Skip ? e.message : String(e.stack ?? e); log('step', id, rec.status, rec.error); }
   finally { rec.finished_at = nowIso(); await page?.screenshot({ path: `${OUT}/${String(steps.length).padStart(2, '0')}-${id}.png` }).catch(() => {}); }
   return rec.status === 'passed';
 }
-
 async function main() {
   const isolation = isolationSelfCheck(); report.isolation.self_check = isolation;
   if (!selfCheckOk(isolation)) throw new UsageError(`isolation self-check failed: ${JSON.stringify(isolation.filter((c) => !selfCheckOk([c])))}`);
@@ -296,7 +297,7 @@ async function main() {
     need('enter-city'); const heroWalletBefore = walletOf(await cityState()); await openPanel('toggle-hero', '[data-field="template-select"]');
     await page.waitForFunction(() => document.querySelectorAll('[data-field="template-select"] option').length > 1);
     const select = ui('[data-field="template-select"]'), values = await select.locator('option').evaluateAll((opts) => opts.map((o) => o.value).filter(Boolean));
-    await select.selectOption(values.includes('1001') ? '1001' : values[0]); await click('recruit-hero');
+    await act(() => select.selectOption(values.includes('1001') ? '1001' : values[0])); await click('recruit-hero');
     const heroes = await pollUntil(async () => { const rows = (await rpc('listPlayerHeroes', CFG.serverId)).heroes ?? []; return rows.length ? rows : null; }, 60000);
     ok(heroes, 'hero recruit returned no owned hero within 60s'); heroId = heroes[0].hero_id;
     report.hero = { hero_id: heroId, template_cfg_id: heroes[0].template_cfg_id, status: heroes[0].status, owned: heroes.length, wallet_before: heroWalletBefore, wallet_after: walletOf(await cityState()) }; return report.hero; });
@@ -307,7 +308,7 @@ async function main() {
     const startedMs = Date.now(); await ensureTroops(2); const march = await marchTo(5, 5, 2);
     const row = await pollUntil(async () => { const rows = (await rpc('listBattleReports', 20, 0)).reports ?? []; return rows.find((r) => r.location_x === 5 && r.location_y === 5 && r.created_at_ms >= startedMs) ?? null; }, march.arrive_at_ms - Date.now() + CFG.settleSec * 1000 + 60000);
     ok(row, `no battle report at (5,5) after march #${march.march_id} (arrive_at_ms=${march.arrive_at_ms})`); report.battle_report = row; await openPanel('toggle-reports', '[data-role="report-list"]');
-    const li = page.locator(`li[data-report-id="${row.report_id}"]`); if (!(await li.count())) await click('refresh-reports'); await li.waitFor(); await li.click({ position: { x: 4, y: 4 } });
+    const li = page.locator(`li[data-report-id="${row.report_id}"]`); if (!(await li.count())) await click('refresh-reports'); await li.waitFor(); await act(() => li.click({ position: { x: 4, y: 4 } }));
     await page.locator('[data-role="report-detail"] pre').waitFor(); const detail = await text('[data-role="report-detail"]');
     ok(/第 \d+ 回合/.test(detail) && /攻方伤亡/.test(detail), `battle report detail lacks rounds/casualties: ${detail.slice(0, 200)}`);
     return { march_id: march.march_id, arrive_at_ms: march.arrive_at_ms, report: row, detail_chars: detail.length, detail_round_line: /第 [\d–]+ 回合[^\n]*/.exec(detail)?.[0] ?? null }; });
