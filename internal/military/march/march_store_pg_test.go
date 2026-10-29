@@ -60,7 +60,6 @@ func TestMarchSequenceAuditArithmetic(t *testing.T) {
 	mustErr(t, err, ErrMarchStore)
 }
 func marchStoreFixture(t *testing.T) (*pgxpool.Pool, *recruittx.Binding, freshsource.Profile, *MarchStore) {
-	t.Helper()
 	pool, b, p := freshSourceFixture(t)
 	cmd := exec.Command("psql", "-X", "-v", "ON_ERROR_STOP=1", "-v", "target="+p.SchemaName, "-d", os.Getenv("DATABASE_URL"))
 	cmd.Stdin = strings.NewReader("SELECT pg_catalog.set_config('search_path',pg_catalog.format('%I,pg_catalog', :'target'),false);\n\\ir ../../../spec/db/m4_009_march_identity.sql\n\\ir ../../../spec/db/005_hero.sql\n")
@@ -205,7 +204,8 @@ func TestPGMarchStoreRejectsNoRows(t *testing.T) {
 func TestPGMarchStoreAccessAndProfile(t *testing.T) {
 	pool, b, p, store := marchStoreFixture(t)
 	o, a, ctx := baseOwner(t, b)
-	_, err := store.Create(nil, a, marchStoreSample())
+	var nilCtx context.Context
+	_, err := store.Create(nilCtx, a, marchStoreSample())
 	mustErr(t, err, ErrMarchStore)
 	_, err = store.Create(ctx, nil, marchStoreSample())
 	mustErr(t, err, ErrMarchStore)
@@ -222,7 +222,7 @@ func TestPGMarchStoreAccessAndProfile(t *testing.T) {
 	mustErr(t, err, ErrMarchStore)
 	_, err = NewMarchStore(ctx, b, freshsource.Profile{})
 	mustErr(t, err, ErrMarchStore)
-	_, err = NewMarchStore(nil, b, p)
+	_, err = NewMarchStore(nilCtx, b, p)
 	mustErr(t, err, ErrMarchStore)
 	obj, n, schema, server := p.Objects["work_queue_id_seq"], len(p.Objects), p.SchemaName, p.ServerID
 	priv, err := NewMarchStore(ctx, b, p)
