@@ -10,6 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// ErrNotInserted reports an insert that affected no row, for example a NULL trigger.
+var ErrNotInserted = errors.New("report: insert affected no row")
+
 // PGStore persists reports in PostgreSQL (spec/db/004_military.sql).
 type PGStore struct {
 	Pool *pgxpool.Pool
@@ -21,6 +24,26 @@ func NewPGStore(p *pgxpool.Pool) *PGStore {
 }
 
 func (p *PGStore) Insert(ctx context.Context, rec Record) error {
+	if p == nil || p.Pool == nil {
+		return ErrNoTxStore
+	}
+	return insertReport(ctx, p.Pool, "battle_report", rec)
+}
+
+// InsertTx writes the report through the caller's transaction using a
+// schema-qualified table; it never begins, ends or allocates an ID.
+func (p *PGStore) InsertTx(ctx context.Context, tx pgx.Tx, schema string, rec Record) error {
+	if p == nil || tx == nil || schema == "" {
+		return ErrNoTxStore
+	}
+	return insertReport(ctx, tx, pgx.Identifier{schema, "battle_report"}.Sanitize(), rec)
+}
+
+type statementRunner interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+}
+
+func insertReport(ctx context.Context, db statementRunner, table string, rec Record) error {
 	detail, err := encodeDetail(rec.Detail)
 	if err != nil {
 		return err
@@ -36,8 +59,8 @@ func (p *PGStore) Insert(ctx context.Context, rec Record) error {
 	if created.IsZero() {
 		created = time.Now()
 	}
-	_, err = p.Pool.Exec(ctx, `
-		INSERT INTO battle_report (
+	tag, err := db.Exec(ctx, `
+		INSERT INTO `+table+` (
 			server_id, report_id, attacker_player_id, defender_player_id, defender_city_id,
 			location_x, location_y, outcome, detail, created_at
 		) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
@@ -49,6 +72,9 @@ func (p *PGStore) Insert(ctx context.Context, rec Record) error {
 			return ErrDuplicate
 		}
 		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrNotInserted
 	}
 	return nil
 }
