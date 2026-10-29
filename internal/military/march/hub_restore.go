@@ -1,14 +1,16 @@
 package march
 
-// installRestore publishes a validated plan atomically under the Hub mutex;
-// every event is scheduled only after all orders and contexts are visible.
+// installRestore publishes a validated plan atomically under the Hub mutex. It
+// stages the restore events instead of scheduling them: handlers cannot run
+// until ActivateRestore, which the caller invokes only after it has published
+// the returned bindings and before it starts the scheduler.
 func installRestore(h *Hub, items []restoreRow, stacks map[int64][]TroopStack) error {
 	if h == nil || h.scheduler == nil {
 		return ErrMarchRestore
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if len(h.marches) != 0 || len(h.marchCtx) != 0 {
+	if h.restored || len(h.marches) != 0 || len(h.marchCtx) != 0 {
 		return ErrMarchRestore
 	}
 	catalog := h.catalog
@@ -47,6 +49,25 @@ func installRestore(h *Hub, items []restoreRow, stacks map[int64][]TroopStack) e
 		}
 	}
 	h.nextMarch = next
+	h.restored = true
+	h.restoreEv = events
+	return nil
+}
+
+// ActivateRestore publishes the staged restore events exactly once. The caller
+// must finish binding RestoreResult and start the scheduler only after this
+// returns, so no overdue handler can observe a half-published snapshot.
+func (h *Hub) ActivateRestore() error {
+	if h == nil {
+		return ErrMarchRestore
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if !h.restored || h.restoreEv == nil {
+		return ErrMarchRestore
+	}
+	events := h.restoreEv
+	h.restoreEv = nil
 	for _, ev := range events {
 		h.scheduler.Schedule(ev)
 	}

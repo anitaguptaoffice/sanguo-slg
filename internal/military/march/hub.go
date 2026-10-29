@@ -17,6 +17,8 @@ type Hub struct {
 	nextMarch  int64
 	onArrive   MarchArrivalHandler
 	onFinished MarchFinishedHandler
+	restored   bool    // one durable installation per Hub, including an empty snapshot
+	restoreEv  []Event // validated restore events staged until ActivateRestore
 	now        func() time.Time
 }
 

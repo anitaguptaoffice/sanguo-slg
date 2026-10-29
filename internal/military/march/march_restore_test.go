@@ -2,6 +2,7 @@ package march
 
 import (
 	"errors"
+	"sync"
 	"testing"
 	"time"
 )
@@ -48,6 +49,7 @@ func TestMarchRestoreRejects(t *testing.T) {
 		"heroes missing":    func(in *restoreInput) { in.orders[0].Heroes = nil },
 		"hero zero":         func(in *restoreInput) { in.orders[0].Heroes[0] = 0 },
 		"hero duplicate":    func(in *restoreInput) { in.orders[0].Heroes[1] = 11 },
+		"hero two armies":   func(in *restoreInput) { in.orders[1].Owner = restorePtr(int64(7)); in.orders[1].Heroes = []int64{11} },
 		"hero unknown":      func(in *restoreInput) { in.orders[0].Heroes[0] = 99 },
 		"hero owner":        func(in *restoreInput) { in.heroes[0].Player = 8 },
 		"hero idle":         func(in *restoreInput) { in.heroes[0].Status = 2 },
@@ -81,6 +83,10 @@ func TestMarchRestorePlanAndInstall(t *testing.T) {
 	}
 	h := NewHub(func() time.Time { return depart })
 	baseOK(t, installRestore(h, items, stacks))
+	if len(h.scheduler.events) != 0 || len(h.restoreEv) != 2 || h.scheduler.PollDue(depart) != 0 {
+		t.Fatal("restore events published before activation")
+	}
+	baseOK(t, h.ActivateRestore())
 	ev := h.scheduler.events
 	if h.nextMarch != 30 || len(h.marches) != 2 || h.marches[10].Phase != PhaseMarching || h.marches[30].Phase != PhaseReturning ||
 		h.marches[10].Speed != 50 || h.marches[30].Speed != 100 || h.marches[30].ReturnFinishAt != *in.orders[1].ReturnAt ||
@@ -89,7 +95,53 @@ func TestMarchRestorePlanAndInstall(t *testing.T) {
 		ev[1].ev.DueAt != *in.orders[1].ReturnAt || h.scheduler.NextDue() != arrive {
 		t.Fatalf("mapping %#v", h.marches)
 	}
-	if installRestore(h, items, stacks) == nil || len(h.marches) != 2 || len(h.scheduler.events) != 2 {
-		t.Fatal("reinstalled")
+	if installRestore(h, items, stacks) == nil || h.ActivateRestore() == nil || len(h.marches) != 2 || len(h.scheduler.events) != 2 {
+		t.Fatal("reinstalled or activated twice")
+	}
+}
+
+func TestRestoreEmptyOnce(t *testing.T) {
+	h := NewHub(time.Now)
+	baseOK(t, installRestore(h, nil, nil))
+	if err := installRestore(h, nil, nil); !errors.Is(err, ErrMarchRestore) {
+		t.Fatalf("empty restore repeated: %v", err)
+	}
+	if h.nextMarch != 0 || len(h.marches) != 0 || len(h.marchCtx) != 0 {
+		t.Fatal("empty snapshot changed hub")
+	}
+	baseOK(t, h.ActivateRestore())
+	if h.ActivateRestore() == nil {
+		t.Fatal("activation repeated")
+	}
+}
+
+func TestRestoreActivationBarrier(t *testing.T) {
+	d := time.Date(2026, 10, 29, 12, 0, 0, 0, time.UTC)
+	in := restoreInput{
+		orders: []restoreRow{{10, 20, 1, 1, 2, 3, 4, 1, d.Add(-2 * time.Hour), d.Add(-time.Hour), nil,
+			restorePtr(int64(100)), restorePtr(int64(7)), restorePtr(int64(2)), []int64{11}}},
+		troops: []restoreTroop{{20, 1, 5}}, heroes: []restoreHero{{11, 7, 3}},
+	}
+	_, items, stacks, err := validateRestore(1, DefaultUnitCatalog(), in.orders, in.troops, in.heroes, 0)
+	baseOK(t, err)
+	h := NewHub(func() time.Time { return d })
+	baseOK(t, installRestore(h, items, stacks))
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if n := h.scheduler.PollDue(d); n != 0 {
+				t.Errorf("overdue handler ran before activation: %d", n)
+			}
+		}()
+	}
+	wg.Wait()
+	if !h.scheduler.NextDue().IsZero() || h.March(10).Phase != PhaseMarching {
+		t.Fatal("overdue event published before activation")
+	}
+	baseOK(t, h.ActivateRestore())
+	if h.scheduler.PollDue(d) != 1 || h.March(10).Phase == PhaseMarching {
+		t.Fatal("activation did not publish the overdue event")
 	}
 }

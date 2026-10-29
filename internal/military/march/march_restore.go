@@ -54,7 +54,9 @@ func NewMarchRestore(ctx context.Context, pool *pgxpool.Pool, p freshsource.Prof
 	return &MarchRestore{pool: pool, profile: p}, nil
 }
 
-// Restore validates the whole snapshot before publishing any Hub state.
+// Restore validates the whole snapshot before publishing any Hub state. Events
+// are staged, not scheduled: the caller must bind RestoreResult and then call
+// Hub.ActivateRestore before it starts the scheduler.
 func (r *MarchRestore) Restore(ctx context.Context, h *Hub) (RestoreResult, error) {
 	if r == nil || r.pool == nil || ctx == nil || h == nil {
 		return RestoreResult{}, ErrMarchRestore
@@ -155,6 +157,9 @@ func validateRestore(server int32, catalog map[int32]UnitSpec, orders []restoreR
 				return fail()
 			}
 			seen[id] = true
+			if claimed[id] {
+				return fail()
+			}
 			h, ok := byID[id]
 			if !ok || h.Player != *o.Owner || h.Status != 3 {
 				return fail()
