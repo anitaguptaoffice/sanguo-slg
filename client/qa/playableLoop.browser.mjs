@@ -154,16 +154,12 @@ async function pendingQueues() {
   const rows = await page.$$eval('[data-role="military-recruit-queue-list"] li[data-queue-id]', (lis) => lis.map((li) => ({ queue_id: Number(li.dataset.queueId), line: li.textContent?.trim() ?? '' })));
   return rows.map((r) => { const q = queueFromLine(r.line); return q && { ...q, queue_id: r.queue_id }; }).filter((q) => q && q.finish_at_ms > Date.now());
 }
-function queueCheck(before, after) {
-  const facts = (q) => ({ queue_id: q.queue_id, status: q.status, unit_cfg_id: q.unit_cfg_id, count: q.count }), issues = [];
-  if (!before.length) issues.push('no in-flight recruit queue in before snapshot');
-  for (const q of before) {
-    const n = after.find((x) => x.queue_id === q.queue_id);
-    if (!n) { issues.push(`queue ${q.queue_id} missing`); continue; }
-    if (JSON.stringify(facts(q)) !== JSON.stringify(facts(n))) issues.push(`queue ${q.queue_id} facts changed`);
-    if (Math.abs(n.finish_at_ms - q.finish_at_ms) > 5000) issues.push(`queue ${q.queue_id} finish drift ${n.finish_at_ms - q.finish_at_ms}ms > 5000ms`);
-  }
-  return { ok: !issues.length, issues, tolerance_ms: 5000, before: before.map(facts), after: after.map(facts) };
+const QUEUE_IDENTITY_LIMITATION = 'not observable after page re-entry: client-local QueuePanels.recruits, no server hydration/read RPC';
+// Observation only: recruit queues are client-local and vanish from the DOM on every
+// page entry, so a missing row is never evidence that the server lost the order.
+function queueObservation(before, after) {
+  const facts = (q) => ({ queue_id: q.queue_id, count: q.count, finish_at_ms: q.finish_at_ms });
+  return { gate: false, limitation: QUEUE_IDENTITY_LIMITATION, before: before.map(facts), after: after.map(facts) };
 }
 function assertIdentity(label, id) {
   const expected = { player_id: report.account?.player_id ?? 0, server_id: CFG.serverId, city_id: report.city?.city_id ?? 0, x: report.city?.x, y: report.city?.y };
@@ -205,11 +201,11 @@ function marchCheck(before, after, returnedOnly = false) {
   return { ok: !issues.length, issues, before: [...a.values()].map((m) => ({ march_id: m.march_id, phase: m.phase })), after: [...b.values()].map((m) => ({ march_id: m.march_id, phase: m.phase })) };
 }
 function compareReload(before, after) {
-  const d = diffs(stableOf(before), stableOf(after)), wallet = walletCheck(before, after), marches = marchCheck(before, after), queues = queueCheck(before.recruit_queues, after.recruit_queues);
-  return { ok: !d.length && wallet.ok && marches.ok && queues.ok, diff: d, wallet, marches, queues };
+  const d = diffs(stableOf(before), stableOf(after)), wallet = walletCheck(before, after), marches = marchCheck(before, after), queues = queueObservation(before.recruit_queues, after.recruit_queues);
+  return { ok: !d.length && wallet.ok && marches.ok, diff: d, wallet, marches, queues };
 }
 function compareRestart(before, after) {
-  const stable = diffs(stableOf(before), stableOf(after)).filter((d) => !['troops', 'report_ids'].includes(d.field)), troopLoss = before.troops.filter((t) => (after.troops.find((n) => n.unit_cfg_id === t.unit_cfg_id)?.count ?? 0) < t.count), reportLoss = before.report_ids.filter((id) => !after.report_ids.includes(id)), wallet = walletCheck(before, after), marches = marchCheck(before, after, true), queues = queueCheck(before.recruit_queues, after.recruit_queues);
+  const stable = diffs(stableOf(before), stableOf(after)).filter((d) => !['troops', 'report_ids'].includes(d.field)), troopLoss = before.troops.filter((t) => (after.troops.find((n) => n.unit_cfg_id === t.unit_cfg_id)?.count ?? 0) < t.count), reportLoss = before.report_ids.filter((id) => !after.report_ids.includes(id)), wallet = walletCheck(before, after), marches = marchCheck(before, after, true), queues = queueObservation(before.recruit_queues, after.recruit_queues);
   return { label: before.label, ok: !stable.length && !troopLoss.length && !reportLoss.length && wallet.ok && marches.ok, stable_diff: stable, troop_loss: troopLoss, report_loss: reportLoss, wallet, marches, queues, troops: { before: before.troops, after: after.troops }, recruit_queues: { before: before.recruit_queues, after: after.recruit_queues } };
 }
 async function restartAndReenter(label, beforeSnap) {
@@ -317,30 +313,31 @@ async function main() {
     ok(/第 \d+ 回合/.test(detail) && /攻方伤亡/.test(detail), `battle report detail lacks rounds/casualties: ${detail.slice(0, 200)}`);
     return { march_id: march.march_id, arrive_at_ms: march.arrive_at_ms, report: row, detail_chars: detail.length, detail_round_line: /第 [\d–]+ 回合[^\n]*/.exec(detail)?.[0] ?? null };
   });
-  // Reload coverage includes a live in-flight recruit queue: stable queue facts and
-  // a bounded ETA must survive; empty-vs-empty is not coverage.
-  await step('reload-persistence', 'reload keeps full state and an in-flight recruit queue', async () => {
+  // Reload coverage starts a real in-flight recruit (empty-vs-empty is not coverage).
+  // After re-entry only the observable effect is gated: exactly one credit within the
+  // ETA. The DOM queue is client-local, so it is recorded as an observation only.
+  await step('reload-persistence', 'reload keeps stable state and an in-flight recruit credits exactly once', async () => {
     need('battle'); const troopsBefore = troopsOf(await cityState()), queued = await recruit(1);
     const before = await snapshot('before-reload'); ok(before.recruit_queues.length > 0, 'reload coverage requires a non-empty in-flight recruit queue');
-    await enterGame(); const after = await snapshot('after-reload'); const compared = compareReload(before, after);
+    await enterGame(); const after = await snapshot('after-reload'); const compared = compareReload(before, after), expected = troopsBefore + queued.count;
     await clickHall(); const levelText = await text('[data-role="build-level"]'); ok(/Lv2/.test(levelText), `build panel shows "${levelText}" after reload, expected Lv2`);
-    const landed = await pollUntil(async () => { const s = await cityState(); return troopsOf(s) >= troopsBefore + 1 ? s : null; }, etaBudget(queued.finish_at_ms));
-    report.reload_persistence = { before: before.label, after: after.label, queued, compared, build_panel: levelText, wallet: after.wallet, landed_troops: landed ? troopsOf(landed) : null };
-    if (!compared.ok || !landed) throw new Error(`reload persistence failed: ${JSON.stringify({ diff: compared.diff, queues: compared.queues, wallet: compared.wallet.issues, marches: compared.marches.issues, landed: Boolean(landed) })}`);
+    const landed = await pollUntil(async () => { const s = await cityState(); return troopsOf(s) >= expected ? s : null; }, etaBudget(queued.finish_at_ms));
+    report.reload_persistence = { before: before.label, after: after.label, queued, compared, build_panel: levelText, wallet: after.wallet, expected_troops: expected, landed_troops: landed ? troopsOf(landed) : null, queue_identity_observability: QUEUE_IDENTITY_LIMITATION, dom_queue_after_reload: { gate: false, queues: after.recruit_queues } };
+    if (!compared.ok) throw new Error(`reload stable state failed: ${JSON.stringify({ diff: compared.diff, wallet: compared.wallet.issues, marches: compared.marches.issues })}`);
+    if (!landed) throw new Error(`reload persistence effect gap: queued recruit #${queued.queue_id} (count=${queued.count}, finish_at_ms=${queued.finish_at_ms}) was never credited after reload; troops_before=${troopsBefore}, expected=${expected}, actual=${troopsOf(await cityState())}`);
+    await sleep(3000); const settled = troopsOf(await cityState());
+    ok(settled === expected, `reload persistence effect gap: queued recruit #${queued.queue_id} was credited more than once after reload; expected=${expected}, settled=${settled}`);
     return report.reload_persistence;
   });
-  await step('g3-recruit-restart', 'G3: an in-flight recruit queue must survive a gateway restart and grant troops', async () => {
-    need('enter-city'); const stateBefore = await cityState(); const before = troopsOf(stateBefore); const started = await recruit(4); const snap = await snapshot('before-recruit-restart');
-    report.g3.recruit = { ...started, troops_before: before, expected_after: before + 4, wallet_before: walletOf(stateBefore), queue: snap.recruit_queues }; ok(snap.recruit_queues.length > 0, 'G3 restart coverage requires a non-empty in-flight recruit queue');
-    const { afterSnap } = await restartAndReenter('mid-flight recruit', snap), queue = queueCheck(snap.recruit_queues, afterSnap.recruit_queues);
-    report.g3.recruit.queue_after_restart = afterSnap.recruit_queues; report.g3.recruit.queue_check = queue;
-    if (!queue.ok) throw new Error(`G3 recruit queue gap: in-flight recruit queue ${JSON.stringify(queue.before)} was not preserved across the gateway restart (${JSON.stringify(queue.issues)}); after=${JSON.stringify(queue.after)}. Recruit queues live only in gateway memory (internal/military/march/hub.go), so the persisted resource debit has no matching order.`);
-    const landed = await pollUntil(async () => { const s = await cityState(); return troopsOf(s) >= before + 4 ? s : null; }, etaBudget(started.finish_at_ms));
-    if (!landed) {
-      const s = await cityState();
-      throw new Error(`G3 recruit gap: recruit of 4 infantry (queue "${started.queue_line}", finish_at_ms=${started.finish_at_ms}) did not grant troops after the gateway restart. infantry before=${before}, after=${troopsOf(s)}, garrison=${JSON.stringify(s.garrison ?? null)}, wallet_before=${JSON.stringify(walletOf(stateBefore))}, wallet_after_restart=${JSON.stringify(walletOf(s))}. Recruit queues live only in memory (internal/military/march/hub.go); the resource debit is persisted.`);
-    }
-    report.g3.recruit.landed_troops = troopsOf(landed); return { queue_id: started.queue_id, troops: troopsOf(landed) };
+  await step('g3-recruit-restart', 'G3: an in-flight recruit credits exactly once across a gateway restart', async () => {
+    need('enter-city'); const stateBefore = await cityState(); const before = troopsOf(stateBefore), started = await recruit(4), snap = await snapshot('before-recruit-restart'), expected = before + 4;
+    report.g3.recruit = { ...started, troops_before: before, expected_after: expected, wallet_before: walletOf(stateBefore), queue: snap.recruit_queues, queue_identity_observability: QUEUE_IDENTITY_LIMITATION }; ok(snap.recruit_queues.length > 0, 'G3 restart coverage requires a non-empty in-flight recruit queue');
+    const { afterSnap } = await restartAndReenter('mid-flight recruit', snap); report.g3.recruit.dom_queue_after_restart = { gate: false, queues: afterSnap.recruit_queues };
+    const landed = await pollUntil(async () => { const s = await cityState(); return troopsOf(s) >= expected ? s : null; }, etaBudget(started.finish_at_ms));
+    if (!landed) throw new Error(`G3 recruit effect gap: queued recruit #${started.queue_id} (count=4, finish_at_ms=${started.finish_at_ms}) was never credited after the gateway restart; troops_before=${before}, expected=${expected}, actual=${troopsOf(await cityState())}. The post-restart DOM queue is observational only (${QUEUE_IDENTITY_LIMITATION}).`);
+    await sleep(3000); const settled = troopsOf(await cityState());
+    ok(settled === expected, `G3 recruit effect gap: queued recruit #${started.queue_id} was credited more than once after restart; expected=${expected}, settled=${settled}`);
+    report.g3.recruit.landed_troops = settled; return { queue_id: started.queue_id, troops: settled };
   });
   await step('g3-march-restart', 'G3: an in-flight march must keep its order and ETA after a gateway restart', async () => {
     need('recruit-hero'); await ensureTroops(2); const march = await marchTo(report.city.x + 2, report.city.y + 2, 2); const snap = await snapshot('before-march-restart');
