@@ -60,7 +60,6 @@ func (p *RecruitParticipant) recruitCandidateRead(ctx context.Context, a *recrui
 	return x, err
 }
 
-// recruitCandidateSource repeats the copied-Access pin/source gate for a candidate.
 func (p *RecruitParticipant) recruitCandidateSource(ctx context.Context, a *recruittx.Access, c RecruitCandidate) (*freshMilitarySource, error) {
 	if p == nil || p.source == nil || p.source.binding == nil || p.catalog == nil || ctx == nil || a == nil || p.source.retired.Load() ||
 		c.ServerID <= 0 || c.ServerID != p.source.profile.ServerID || c.PlayerID <= 0 || c.CityID <= 0 || c.QueueID < 1 || c.QueueID > 9007199254740991 {
@@ -101,9 +100,7 @@ func recruitCandidateIdentity(q recruitHistoryQueue, c RecruitCandidate) bool {
 	return q.serverID == c.ServerID && q.queueID == c.QueueID && q.playerID == c.PlayerID && q.cityID != nil && *q.cityID == c.CityID && q.queueType == 3
 }
 
-func recruitCandidateCommand(b []byte) bool {
-	return len(b) == 16 && !bytes.Equal(b, make([]byte, 16))
-}
+func recruitCandidateCommand(b []byte) bool { return len(b) == 16 && !bytes.Equal(b, make([]byte, 16)) }
 
 func recruitCandidateEvidence(p *RecruitParticipant, x recruitCandidateRow, c RecruitCandidate) bool {
 	if !recruitCandidateIdentity(x.q, c) || x.q.status < 0 || x.q.status > 2 || x.playerID != c.PlayerID || x.operation != 1 ||

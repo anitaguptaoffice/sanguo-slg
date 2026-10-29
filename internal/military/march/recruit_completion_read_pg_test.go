@@ -11,12 +11,22 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const completionSnapSQL = `SELECT md5(pg_catalog.concat_ws('|',(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM work_queue t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM mil_recruit_origin t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM mil_recruit_receipt t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.unit_cfg_id) FROM city_troop t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.city_id) FROM mil_city_origin t),(SELECT count(*) FROM player_wallet),(SELECT last_value||','||is_called FROM work_queue_id_seq)))`
+const completionSnapSQL = `SELECT md5(pg_catalog.concat_ws('|',(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY t.queue_id) FROM work_queue t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY t.queue_id) FROM mil_recruit_origin t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY t.queue_id) FROM mil_recruit_receipt t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY t.server_id,t.city_id,t.unit_cfg_id) FROM city_troop t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY t.server_id,t.city_id) FROM mil_city_origin t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY t.server_id,t.player_id) FROM player_wallet t),(SELECT last_value||','||is_called FROM work_queue_id_seq)))`
 
-func completionState(t *testing.T, ctx context.Context, a *recruittx.Access, b *recruittx.Binding) (state string) {
+func completionState(t *testing.T, pool *pgxpool.Pool) (state string) {
 	t.Helper()
-	baseOK(t, a.Scan(ctx, b, completionSnapSQL, nil, &state))
+	baseOK(t, pool.QueryRow(context.Background(), completionSnapSQL).Scan(&state))
 	return state
+}
+
+func completionNoWrite(t *testing.T, pool *pgxpool.Pool, o *recruittx.Owner, ctx context.Context, run func()) {
+	t.Helper()
+	before := completionState(t, pool)
+	run()
+	baseOK(t, o.Commit(ctx))
+	if completionState(t, pool) != before {
+		t.Fatal("completion read wrote")
+	}
 }
 
 func completionUnavailable(t *testing.T, err error) {
@@ -40,6 +50,7 @@ func completionPG(t *testing.T, rows ...historyRow) (*pgxpool.Pool, *recruittx.B
 	t.Helper()
 	pool, b, p := freshSourceFixture(t)
 	prepareBase(t, pool, p)
+	baseSQL(t, pool, "INSERT INTO player_wallet(server_id,player_id,food,wood,iron,stone,gold) VALUES(1,1,80,40,1,1,7)")
 	for _, row := range rows {
 		row.seed(t, pool)
 	}
@@ -60,47 +71,36 @@ func TestPGRecruitCompletionHint(t *testing.T) {
 	pool, b, p := completionPG(t, active, waiting, done)
 	o, a, ctx, participant := completionParticipant(t, b, p, catalog)
 	cand := RecruitCandidate{1, done.player, done.qCity, done.queueID}
-	before := completionState(t, ctx, a, b)
-	for _, tc := range []struct {
-		row  historyRow
-		want int16
-	}{{waiting, 0}, {active, 1}, {done, 2}} {
-		got, err := participant.CompletionHint(ctx, a, RecruitCandidate{1, tc.row.player, tc.row.qCity, tc.row.queueID})
-		if err != nil || got != tc.want {
-			t.Fatalf("hint %d = %d, %v", tc.row.queueID, got, err)
+	completionNoWrite(t, pool, o, ctx, func() {
+		for _, tc := range []struct {
+			row  historyRow
+			want int16
+		}{{waiting, 0}, {active, 1}, {done, 2}} {
+			got, err := participant.CompletionHint(ctx, a, RecruitCandidate{1, tc.row.player, tc.row.qCity, tc.row.queueID})
+			if err != nil || got != tc.want {
+				t.Fatalf("hint %d = %d, %v", tc.row.queueID, got, err)
+			}
 		}
-	}
-	if completionState(t, ctx, a, b) != before {
-		t.Fatal("hint mutated rows")
-	}
-	ids := []uint32{p.Objects["mil_city_origin"].OID, p.Objects["city_troop"].OID, p.Objects["work_queue"].OID, p.Objects["mil_recruit_origin"].OID, p.Objects["mil_recruit_receipt"].OID}
-	var tuple, stronger int
-	baseOK(t, a.Scan(ctx, b, `SELECT count(*) FILTER (WHERE locktype='tuple'),count(*) FILTER (WHERE mode NOT IN ('RowExclusiveLock','AccessShareLock')) FROM pg_catalog.pg_locks WHERE pid=pg_catalog.pg_backend_pid() AND relation=ANY($1::pg_catalog.oid[])`, []any{ids}, &tuple, &stronger))
-	if tuple != 0 || stronger != 0 {
-		t.Fatalf("hint locks tuple=%d stronger=%d", tuple, stronger)
-	}
+		ids := []uint32{p.Objects["mil_city_origin"].OID, p.Objects["city_troop"].OID, p.Objects["work_queue"].OID, p.Objects["mil_recruit_origin"].OID, p.Objects["mil_recruit_receipt"].OID}
+		var tuple, stronger int
+		baseOK(t, a.Scan(ctx, b, `SELECT count(*) FILTER (WHERE locktype='tuple'),count(*) FILTER (WHERE mode NOT IN ('RowExclusiveLock','AccessShareLock')) FROM pg_catalog.pg_locks WHERE pid=pg_catalog.pg_backend_pid() AND relation=ANY($1::pg_catalog.oid[])`, []any{ids}, &tuple, &stronger))
+		if tuple != 0 || stronger != 0 {
+			t.Fatalf("hint locks tuple=%d stronger=%d", tuple, stronger)
+		}
+	})
 	wrong, err := recruittx.NewBinding(pool)
 	baseOK(t, err)
 	wo, wa, wctx := baseOwner(t, wrong)
 	_, err = participant.CompletionHint(wctx, wa, cand)
 	completionUnavailable(t, err)
 	baseOK(t, wo.Rollback(wctx))
-	eo, ea, ectx := baseOwner(t, b)
-	baseOK(t, eo.Rollback(ectx))
-	_, err = participant.CompletionHint(ectx, ea, cand)
+	_, err = participant.CompletionHint(ctx, a, cand)
 	completionUnavailable(t, err)
-	baseOK(t, o.Rollback(ctx))
 }
 
 func TestPGRecruitCompletionReadRejects(t *testing.T) {
 	catalog, active, waiting, done := completionRows(t)
 	base := RecruitCandidate{1, active.player, active.qCity, active.queueID}
-	waitingCand := RecruitCandidate{1, waiting.player, waiting.qCity, waiting.queueID}
-	doneCand := RecruitCandidate{1, done.player, done.qCity, done.queueID}
-	player, city, queue, server := base, base, base, base
-	player.PlayerID, city.CityID, queue.QueueID, server.ServerID = 2, 101, 999, 2
-	donePlayer, doneCity, doneQueue := doneCand, doneCand, doneCand
-	donePlayer.PlayerID, doneCity.CityID, doneQueue.QueueID = 2, done.qCity+1, done.queueID+100
 	cases := []struct {
 		name string
 		row  *historyRow
@@ -121,42 +121,38 @@ func TestPGRecruitCompletionReadRejects(t *testing.T) {
 		{"hint canceled", &active, `UPDATE work_queue SET status=3`, base, false},
 		{"hint unknown status", &active, `UPDATE work_queue SET status=4`, base, false},
 		{"hint schedule", &active, `UPDATE work_queue SET start_at=start_at+interval '1 second'`, base, false},
-		{"hint wrong player", &active, "", player, false},
-		{"hint wrong city", &active, "", city, false},
-		{"hint wrong queue", &active, "", queue, false},
-		{"hint wrong server", &active, "", server, false},
-		{"hint source drift", &active, `ALTER TABLE mil_recruit_origin DROP CONSTRAINT mil_recruit_origin_command_id_check; UPDATE mil_recruit_origin SET command_id=decode(repeat('00',16),'hex')`, base, false},
-		{"done waiting", &waiting, "", waitingCand, true},
+		{"hint wrong player", &active, "", RecruitCandidate{1, 2, active.qCity, active.queueID}, false},
+		{"hint wrong city", &active, "", RecruitCandidate{1, active.player, 101, active.queueID}, false},
+		{"hint wrong queue", &active, "", RecruitCandidate{1, active.player, active.qCity, 999}, false},
+		{"hint wrong server", &active, "", RecruitCandidate{2, active.player, active.qCity, active.queueID}, false},
+		{"done waiting", &waiting, "", RecruitCandidate{1, waiting.player, waiting.qCity, waiting.queueID}, true},
 		{"done active", &active, "", base, true},
-		{"done missing receipt", &done, `DELETE FROM mil_recruit_receipt`, doneCand, true},
-		{"done receipt digest", &done, `UPDATE mil_recruit_receipt SET rule_digest=decode(repeat('bb',32),'hex')`, doneCand, true},
-		{"done origin player", &done, `UPDATE mil_recruit_origin SET player_id=2`, doneCand, true},
-		{"done schedule", &done, `UPDATE work_queue SET finish_at=finish_at+interval '1 second'`, doneCand, true},
-		{"done wrong player", &done, "", donePlayer, true},
-		{"done wrong city", &done, "", doneCity, true},
-		{"done wrong queue", &done, "", doneQueue, true},
+		{"done missing receipt", &done, `DELETE FROM mil_recruit_receipt`, RecruitCandidate{1, done.player, done.qCity, done.queueID}, true},
+		{"done receipt digest", &done, `UPDATE mil_recruit_receipt SET rule_digest=decode(repeat('bb',32),'hex')`, RecruitCandidate{1, done.player, done.qCity, done.queueID}, true},
+		{"done origin player", &done, `UPDATE mil_recruit_origin SET player_id=2`, RecruitCandidate{1, done.player, done.qCity, done.queueID}, true},
+		{"done schedule", &done, `UPDATE work_queue SET finish_at=finish_at+interval '1 second'`, RecruitCandidate{1, done.player, done.qCity, done.queueID}, true},
+		{"done wrong player", &done, "", RecruitCandidate{1, 2, done.qCity, done.queueID}, true},
+		{"done wrong city", &done, "", RecruitCandidate{1, done.player, done.qCity + 1, done.queueID}, true},
+		{"done wrong queue", &done, "", RecruitCandidate{1, done.player, done.qCity, done.queueID + 100}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			pool, b, p := completionPG(t)
-			o, a, ctx, participant := completionParticipant(t, b, p, catalog)
 			if tc.row != nil {
 				tc.row.seed(t, pool)
 			}
 			if tc.sql != "" {
-				execPrep(t, ctx, a, b, tc.sql)
+				baseSQL(t, pool, tc.sql)
 			}
-			if tc.done {
-				before := completionState(t, ctx, a, b)
-				completionUnavailable(t, participant.DoneHistory(ctx, a, tc.cand))
-				if completionState(t, ctx, a, b) != before {
-					t.Fatal("rejected done history mutated rows")
+			o, a, ctx, participant := completionParticipant(t, b, p, catalog)
+			completionNoWrite(t, pool, o, ctx, func() {
+				if tc.done {
+					completionUnavailable(t, participant.DoneHistory(ctx, a, tc.cand))
+				} else {
+					_, err := participant.CompletionHint(ctx, a, tc.cand)
+					completionUnavailable(t, err)
 				}
-			} else {
-				_, err := participant.CompletionHint(ctx, a, tc.cand)
-				completionUnavailable(t, err)
-			}
-			baseOK(t, o.Rollback(ctx))
+			})
 		})
 	}
 }
@@ -164,12 +160,12 @@ func TestPGRecruitCompletionReadRejects(t *testing.T) {
 func TestPGRecruitDoneHistory(t *testing.T) {
 	catalog, _, _, done := completionRows(t)
 	pool, b, p := completionPG(t, done)
+	baseSQL(t, pool, "DELETE FROM mil_city_origin")
 	cand := RecruitCandidate{1, done.player, done.qCity, done.queueID}
 	holder, ha, hctx := baseOwner(t, b)
 	var one int
 	baseOK(t, ha.Scan(hctx, b, `SELECT 1 FROM mil_recruit_receipt WHERE server_id=1 AND queue_id=$1 FOR UPDATE`, []any{done.queueID}, &one))
 	o, a, ctx, participant := completionParticipant(t, b, p, catalog)
-	before := completionState(t, ctx, a, b)
 	pid, xid := 0, int64(0)
 	baseOK(t, a.Scan(ctx, b, `SELECT pg_catalog.pg_backend_pid()`, nil, &pid))
 	baseOK(t, a.Scan(ctx, b, `SELECT txid_current()`, nil, &xid))
@@ -191,17 +187,11 @@ func TestPGRecruitDoneHistory(t *testing.T) {
 		t.Fatalf("lock order blocked=%d queue=%d receipt=%d locked=%v", blocked, q, r, locked)
 	}
 	baseOK(t, holder.Rollback(hctx))
-	if err := <-errc; err != nil {
-		t.Fatal(err)
-	}
-	if completionState(t, ctx, a, b) != before {
-		t.Fatal("done history mutated rows")
-	}
-	execPrep(t, ctx, a, b, `DELETE FROM mil_city_origin`)
-	if err := participant.DoneHistory(ctx, a, cand); err != nil {
-		t.Fatal("done history required current ownership", err)
-	}
-	baseOK(t, o.Rollback(ctx))
+	completionNoWrite(t, pool, o, ctx, func() {
+		if err := <-errc; err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func TestPGRecruitDoneHistoryChanged(t *testing.T) {
@@ -229,9 +219,10 @@ func TestPGRecruitDoneHistoryChanged(t *testing.T) {
 		t.Fatal("done history did not wait for the queue lock")
 	}
 	baseOK(t, changer.Commit(cctx))
-	completionUnavailable(t, <-errc)
-	if got, err := participant.CompletionHint(ctx, a, cand); err != nil || got != 1 {
-		t.Fatal("changed hint", got, err)
-	}
-	baseOK(t, o.Rollback(ctx))
+	completionNoWrite(t, pool, o, ctx, func() {
+		completionUnavailable(t, <-errc)
+		if got, err := participant.CompletionHint(ctx, a, cand); err != nil || got != 1 {
+			t.Fatal("changed hint", got, err)
+		}
+	})
 }

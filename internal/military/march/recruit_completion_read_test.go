@@ -35,8 +35,19 @@ func TestRecruitCompletionReadInvalidHandles(t *testing.T) {
 		check("retired hint", err)
 		check("retired done", handle.DoneHistory(context.Background(), &recruittx.Access{}, c))
 	}
-	command := RecruitCommandID{1}
-	if recruitCandidateCommand(make([]byte, 16)) || recruitCandidateCommand(make([]byte, 15)) || !recruitCandidateCommand(command[:]) {
+	if !recruitCandidateCommand([]byte{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}) || recruitCandidateCommand(make([]byte, 16)) || recruitCandidateCommand(make([]byte, 15)) {
 		t.Fatal("command")
+	}
+}
+
+func TestRecruitCompletionReadEvidenceCommand(t *testing.T) {
+	h, catalog, _, _ := historyDefaults(t)
+	x := recruitCandidateRow{q: recruitHistoryQueue{serverID: 1, queueID: h.queueID, playerID: h.player, cityID: &h.qCity, queueType: 3, status: h.status, payload: h.payload, startAt: h.qstart, finishAt: h.qfinish}, playerID: h.player, operation: 1, command: h.command[:], r: recruitHistoryReceipt{serverID: 1, queueID: h.queueID, intentVersion: 1, cityID: h.qCity, unitCfgID: 1, count: h.count, food: h.cost.Food, wood: h.cost.Wood, iron: h.cost.Iron, stone: h.cost.Stone, durationSec: h.duration, catalogVersion: h.version, ruleDigest: h.digest[:], acceptedAt: h.accepted, startAt: h.rstart, finishAt: h.rfinish, initialStatus: h.initial}}
+	c, p := RecruitCandidate{1, h.player, h.qCity, h.queueID}, &RecruitParticipant{catalog: catalog}
+	for _, command := range [][]byte{h.command[:], make([]byte, 16), make([]byte, 15)} {
+		x.command = command
+		if got := recruitCandidateEvidence(p, x, c); got != (len(command) == 16 && command[0] != 0) {
+			t.Fatal("command", len(command))
+		}
 	}
 }
