@@ -201,7 +201,7 @@ function marchCheck(before, after, returnedOnly = false) {
   return { ok: !issues.length, issues, before: [...a.values()].map((m) => ({ march_id: m.march_id, phase: m.phase })), after: [...b.values()].map((m) => ({ march_id: m.march_id, phase: m.phase })) };
 }
 function compareReload(before, after) {
-  const d = diffs(stableOf(before), stableOf(after)), wallet = walletCheck(before, after), marches = marchCheck(before, after), queues = queueObservation(before.recruit_queues, after.recruit_queues);
+  const d = diffs(stableOf(before), stableOf(after)).filter((x) => x.field !== 'troops'), wallet = walletCheck(before, after), marches = marchCheck(before, after), queues = queueObservation(before.recruit_queues, after.recruit_queues);
   return { ok: !d.length && wallet.ok && marches.ok, diff: d, wallet, marches, queues };
 }
 function compareRestart(before, after) {
@@ -322,7 +322,7 @@ async function main() {
     await enterGame(); const after = await snapshot('after-reload'); const compared = compareReload(before, after), expected = troopsBefore + queued.count;
     await clickHall(); const levelText = await text('[data-role="build-level"]'); ok(/Lv2/.test(levelText), `build panel shows "${levelText}" after reload, expected Lv2`);
     const landed = await pollUntil(async () => { const s = await cityState(); return troopsOf(s) >= expected ? s : null; }, etaBudget(queued.finish_at_ms));
-    report.reload_persistence = { before: before.label, after: after.label, queued, compared, build_panel: levelText, wallet: after.wallet, expected_troops: expected, landed_troops: landed ? troopsOf(landed) : null, queue_identity_observability: QUEUE_IDENTITY_LIMITATION, dom_queue_after_reload: { gate: false, queues: after.recruit_queues } };
+    report.reload_persistence = { before: before.label, after: after.label, queued, compared, build_panel: levelText, wallet: after.wallet, expected_troops: expected, landed_troops: landed ? troopsOf(landed) : null, observed: { troops_before: before.troops, troops_after: after.troops, queues_before: before.recruit_queues, queues_after: after.recruit_queues }, queue_identity_observability: QUEUE_IDENTITY_LIMITATION, dom_queue_after_reload: { gate: false, queues: after.recruit_queues } };
     if (!compared.ok) throw new Error(`reload stable state failed: ${JSON.stringify({ diff: compared.diff, wallet: compared.wallet.issues, marches: compared.marches.issues })}`);
     if (!landed) throw new Error(`reload persistence effect gap: queued recruit #${queued.queue_id} (count=${queued.count}, finish_at_ms=${queued.finish_at_ms}) was never credited after reload; troops_before=${troopsBefore}, expected=${expected}, actual=${troopsOf(await cityState())}`);
     await sleep(3000); const settled = troopsOf(await cityState());
