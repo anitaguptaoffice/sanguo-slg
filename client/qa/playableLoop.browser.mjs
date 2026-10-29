@@ -57,7 +57,7 @@ function parseRestart(cmd) {
   if (!target || !RESTART_TOKEN.test(target) || QA_MARKERS.test(target) || FIXED_PORT_TEXT.some((p) => target.includes(p))) throw new UsageError('--restart-cmd must be "systemctl [--user] restart <unit>" or "docker restart <container>" with a disposable target; shell syntax, globs and fixed QA identifiers are refused');
   return argv;
 }
-function isolationSelfCheck() {
+async function isolationSelfCheck() {
   const run = (fn) => { try { return { ok: true, value: fn() }; } catch (e) { if (e instanceof UsageError) return { ok: false }; throw e; } };
   const cases = [
     [['accept disposable loopback', 'http://127.0.0.1:15186', () => guardUrl('http://127.0.0.1:15186', '--base-url'), 'accept'], ['reject QA frontend 15173', 'http://127.0.0.1:15173', () => guardUrl('http://127.0.0.1:15173', '--base-url'), 'reject'], ['reject QA gateway 18580', 'http://127.0.0.1:18580/healthz', () => guardUrl('http://127.0.0.1:18580/healthz', '--health-url'), 'reject'], ['reject non-loopback', 'http://10.0.0.1:8080', () => guardUrl('http://10.0.0.1:8080', '--base-url'), 'reject']],
@@ -67,9 +67,12 @@ function isolationSelfCheck() {
     [['reject page redirect 15173', 'http://127.0.0.1:15173/', () => guardPage('http://127.0.0.1:15173/', 'http://127.0.0.1:15186'), 'reject'], ['reject page foreign authority', 'http://127.0.0.1:15199/', () => guardPage('http://127.0.0.1:15199/', 'http://127.0.0.1:15186'), 'reject'], ['accept page same authority', 'http://127.0.0.1:15186/', () => guardPage('http://127.0.0.1:15186/', 'http://127.0.0.1:15186'), 'accept']],
     [['reject systemctl substitution', 'systemctl restart sanguo-$(printf qa)', () => parseRestart('systemctl restart sanguo-$(printf qa)'), 'reject'], ['reject systemctl glob', 'systemctl restart sanguo-*', () => parseRestart('systemctl restart sanguo-*'), 'reject'], ['reject structured QA port', 'systemctl restart 15173.service', () => parseRestart('systemctl restart 15173.service'), 'reject'], ['reject structured leading-zero port', 'systemctl restart 015173', () => parseRestart('systemctl restart 015173'), 'reject'], ['reject structured embedded port', 'docker restart 9115173', () => parseRestart('docker restart 9115173'), 'reject'], ['reject unknown restart.sh leading zero', 'restart.sh 015173', () => parseRestart('restart.sh 015173'), 'reject'], ['reject unknown restart.sh embedded port', 'restart.sh 9115173', () => parseRestart('restart.sh 9115173'), 'reject'], ['reject QA-named docker', 'docker restart qa-gw', () => parseRestart('docker restart qa-gw'), 'reject'], ['accept docker disposable', 'docker restart sanguo-review-pg', () => parseRestart('docker restart sanguo-review-pg'), 'accept', null, ['docker', 'restart', 'sanguo-review-pg']]],
   ].flat();
-  const late = (() => { let performed = false, rejected = false, prev = wsViolation; wsViolation = 'late contradictory /ws after a step check';
-    try { act(() => { performed = true; }); } catch (e) { rejected = e instanceof UsageError; } finally { wsViolation = prev; } return { name: 'reject late violation before direct UI action', entry: 'row.click/mouse.click/selectOption via act', expect: 'reject', actual: rejected && !performed ? 'reject' : 'accept', value: { performed }, value_expect: null, shell: NO_SHELL.shell }; })();
-  return [...cases.map(([name, entry, fn, expect, , value_expect]) => { const r = run(fn); return { name, entry, expect, actual: r.ok ? 'accept' : 'reject', value: r.ok ? r.value : null, value_expect: value_expect ?? null, shell: NO_SHELL.shell }; }), late];
+  return [...cases.map(([name, entry, fn, expect, , value_expect]) => { const r = run(fn); return { name, entry, expect, actual: r.ok ? 'accept' : 'reject', value: r.ok ? r.value : null, value_expect: value_expect ?? null, shell: NO_SHELL.shell }; }), await lateHelperCase()];
+}
+// Real formerly-unwrapped call site: stub `page` and run clickHall's own act wrapper; after a successful baseline, set a late socket violation and require zero interactions.
+async function lateHelperCase() {
+  const prev = page, prevViolation = wsViolation, calls = [], stub = { evaluate: async () => ({ x: 1, y: 2 }), mouse: { click: async () => calls.push('mouse.click') }, locator: () => ({ waitFor: async () => calls.push('waitFor') }) };
+  try { page = stub; await clickHall(); const baseline = calls.length; calls.length = 0; wsViolation = 'late contradictory /ws after a step check'; let rejected = false; try { await clickHall(); } catch (e) { rejected = e instanceof UsageError; } return { name: 'reject late violation inside the real clickHall helper', entry: `clickHall page.mouse.click after ${baseline} baseline interactions`, expect: 'reject', actual: rejected && baseline === 2 && !calls.length ? 'reject' : 'accept', value: { performed: calls.length }, value_expect: null, shell: NO_SHELL.shell }; } finally { page = prev; wsViolation = prevViolation; }
 }
 const selfCheckOk = (cases) => cases.every((c) => c.actual === c.expect && c.shell === false && (!c.value_expect || JSON.stringify(c.value) === JSON.stringify(c.value_expect)));
 function parseArgs(args) {
@@ -111,8 +114,7 @@ const troopsOf = (s) => (s?.garrison?.troops ?? []).find((t) => t.unit_cfg_id ==
 const walletOf = (s) => s?.wallet ?? {};
 const etaBudget = (finishAtMs) => Math.max(30000, finishAtMs + CFG.settleSec * 1000 - Date.now() + 30000);
 const sortBy = (rows, key) => [...rows].sort((a, b) => a[key] - b[key]);
-// Only the configured gateway, only its known endpoints; a frontend asset 503 or a
-// generic "502/503" console line is never treated as restart noise.
+// Only the configured gateway, only its known endpoints; a frontend asset 503 or a generic "502/503" console line is never treated as restart noise.
 const gatewayEndpoint = (url) => { try { const u = new URL(url); return u.host === gatewayHostPort && (u.pathname === '/ws' || u.pathname === '/healthz'); } catch { return false; } };
 function restartDisconnect(entry) {
   if (!restartWindow || !gatewayOrigin) return false;
@@ -233,7 +235,7 @@ async function step(id, title, fn) { checkGateways(); const rec = { id, title, s
   return rec.status === 'passed';
 }
 async function main() {
-  const isolation = isolationSelfCheck(); report.isolation.self_check = isolation;
+  const isolation = await isolationSelfCheck(); report.isolation.self_check = isolation;
   if (!selfCheckOk(isolation)) throw new UsageError(`isolation self-check failed: ${JSON.stringify(isolation.filter((c) => !selfCheckOk([c])))}`);
   await waitHealthy(20000).catch((e) => { throw new UsageError(`gateway not ready at ${CFG.healthUrl}: ${e.message}`); });
   const { chromium } = await import('playwright');
@@ -257,7 +259,6 @@ async function main() {
   report.config.gateway_ws = gatewayWs; report.config.gateway_origin = gatewayOrigin; report.isolation.gateway_ws = gatewayWs; report.isolation.page_url = page.url();
   report.restart_error_policy.gateway = { origin: gatewayOrigin, host: gatewayHostPort, endpoints: ['/ws', '/healthz'] };
   ensureOut();
-
   await step('fresh-account', 'register a fresh account (stack must be pristine)', async () => {
     await connectRpc(); let registered;
     try { registered = await rpc('register', CFG.login, CFG.password); } catch (e) {
@@ -363,7 +364,6 @@ async function main() {
   const failed = steps.some((s) => s.status === 'failed'), blocked = steps.some((s) => s.status === 'blocked');
   report.passed = !failed && !blocked; report.exit_code = failed || (blocked && !CFG.exploratory) ? 1 : 0;
 }
-
 try { await main(); } catch (e) { report.failure = String(e.stack ?? e); report.exit_code = e instanceof UsageError ? 2 : 3; if (e instanceof UsageError) console.error(`config error: ${e.message}`); else log('fatal', report.failure); }
 finally {
   report.finished_at = nowIso(); report.errors = unexpectedErrors(); report.steps = steps;
