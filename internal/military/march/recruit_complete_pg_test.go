@@ -11,27 +11,22 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const completionCash = `md5(pg_catalog.concat_ws('|',(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.queue_id) FROM mil_recruit_receipt t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text,'|' ORDER BY t.server_id,t.player_id) FROM player_wallet t)))`
-
 const completionObserved = `SELECT pg_catalog.concat_ws('|',(SELECT count FROM city_troop WHERE unit_cfg_id=1),(SELECT wounded FROM city_troop WHERE unit_cfg_id=1),(SELECT status FROM work_queue WHERE queue_id=40),(SELECT status FROM work_queue WHERE queue_id=41),(SELECT status FROM work_queue WHERE queue_id=43),(SELECT CASE WHEN start_at=$1 AND finish_at=$2 THEN 'y' ELSE 'n' END FROM work_queue WHERE queue_id=43),(SELECT (SELECT count FROM city_troop WHERE unit_cfg_id=1)+(SELECT sum((payload->>'count')::int) FROM work_queue WHERE status IN (0,1))),(` + completionCash + `))`
 
 func completionScalar(t *testing.T, pool *pgxpool.Pool, q string, args ...any) (out string) {
 	baseOK(t, pool.QueryRow(context.Background(), q, args...).Scan(&out))
 	return out
 }
-
 func completionCandidate(h historyRow) RecruitCandidate {
 	return RecruitCandidate{ServerID: 1, PlayerID: h.player, CityID: h.qCity, QueueID: h.queueID}
 }
-
 func completionWant(t *testing.T, got RecruitCompletion, err error, want RecruitCompletion) {
-	if want == 0 && errors.Is(err, ErrRecruitUnavailable) {
-		return
-	}
-	if err != nil || got != want {
+	if want == 0 && !errors.Is(err, ErrRecruitUnavailable) || want != 0 && (err != nil || got != want) {
 		t.Fatalf("complete = %d, %v, want %d", got, err, want)
 	}
 }
@@ -65,14 +60,12 @@ func TestPGRecruitComplete(t *testing.T) {
 	// Both callers take the same WORLD city lock; the second must block until the first commits.
 	o2, a2, ctx2, second := completionParticipant(t, b, p, catalog)
 	baseOK(t, a2.Scan(ctx2, b, `SELECT pg_catalog.pg_backend_pid()`, nil, &pid2))
-	type outcome struct {
-		got RecruitCompletion
-		err error
-	}
-	out := make(chan outcome, 1)
+	out := make(chan RecruitCompletion, 1)
+	errs := make(chan error, 1)
 	go func() {
 		g, e := completeUnderCityLock(ctx2, a2, b, second, completionCandidate(active))
-		out <- outcome{g, e}
+		out <- g
+		errs <- e
 	}()
 	blocked := false
 	for deadline := time.Now().Add(5 * time.Second); !blocked && time.Now().Before(deadline); time.Sleep(10 * time.Millisecond) {
@@ -85,14 +78,12 @@ func TestPGRecruitComplete(t *testing.T) {
 	}
 	t.Logf("city lock: backend %d blocked by %d", pid2, pid1)
 	baseOK(t, o.Commit(ctx))
-	r := <-out
-	completionWant(t, r.got, r.err, RecruitAlreadyDone)
+	completionWant(t, <-out, <-errs, RecruitAlreadyDone)
 	baseOK(t, o2.Commit(ctx2))
 	t0, t1 = t0.UTC().Truncate(time.Millisecond), t1.UTC().Truncate(time.Millisecond)
 	var start, finish time.Time
 	baseOK(t, pool.QueryRow(ctx, `SELECT start_at,finish_at FROM work_queue WHERE queue_id=41`).Scan(&start, &finish))
-	start = start.UTC().Truncate(time.Millisecond)
-	if t1.Sub(t0) >= time.Second || start.Before(t0) || start.After(t1) || !finish.UTC().Equal(start.Add(time.Minute)) {
+	if start = start.UTC().Truncate(time.Millisecond); t1.Sub(t0) >= time.Second || start.Before(t0) || start.After(t1) || !finish.UTC().Equal(start.Add(time.Minute)) {
 		t.Fatalf("promotion start=%v finish=%v sampled bound=[%v,%v]", start, finish, t0, t1)
 	}
 	if state := completionScalar(t, pool, completionObserved, last.qstart, last.qfinish); state != "7|1|2|1|0|y|11|"+before {
@@ -153,6 +144,32 @@ func TestPGRecruitCompleteOutcomes(t *testing.T) {
 	}
 }
 
+func TestPGRecruitCompleteSQLFailure(t *testing.T) {
+	catalog, active, waiting, _ := completionRows(t)
+	pool, b, p := completionPG(t, active, waiting)
+	// Complete revalidates the frozen source, so the trigger is created after planning, in the same transaction.
+	for _, trigger := range []string{`CREATE TRIGGER fail_credit BEFORE UPDATE ON city_troop FOR EACH ROW EXECUTE FUNCTION fail_write()`, `CREATE TRIGGER fail_promotion BEFORE UPDATE ON work_queue FOR EACH ROW WHEN (OLD.queue_id=41 AND NEW.status=1) EXECUTE FUNCTION fail_write()`} {
+		before := completionState(t, pool)
+		o, a, ctx, participant := completionParticipant(t, b, p, catalog)
+		st, err := participant.recruitCompletionLocked(ctx, a, completionCandidate(active))
+		baseOK(t, err)
+		_, err = a.Exec(ctx, b, `CREATE FUNCTION fail_write() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN RAISE EXCEPTION 'injected SQL failure'; END$$; `+trigger)
+		baseOK(t, err)
+		var pgErr *pgconn.PgError
+		err = participant.recruitCompletionApply(ctx, a, completionCandidate(active), st)
+		if !errors.Is(err, ErrRecruitUnavailable) || !errors.As(err, &pgErr) || pgErr.Code != "P0001" || pgErr.Message != "injected SQL failure" {
+			t.Fatalf("injected failure not reached: %v", err)
+		}
+		if _, err = a.Exec(ctx, b, `SELECT 1`); err == nil {
+			t.Fatal("SQL failure did not abort")
+		}
+		baseOK(t, o.Rollback(ctx))
+		if completionState(t, pool) != before {
+			t.Fatal("SQL failure persisted a write")
+		}
+	}
+}
+
 func TestPGRecruitCompleteGuards(t *testing.T) {
 	catalog, active, waiting, _ := completionRows(t)
 	for _, tc := range []struct {
@@ -165,10 +182,7 @@ func TestPGRecruitCompleteGuards(t *testing.T) {
 	} {
 		pool, b, p := completionPG(t, active, waiting)
 		before := completionScalar(t, pool, completionSnapSQL)
-		o, a, ctx := baseOwner(t, b)
-		participant, err := NewRecruitParticipant(ctx, b, a, p, catalog)
-		baseOK(t, err)
-		baseOK(t, participant.Pin(ctx, a))
+		o, a, ctx, participant := completionParticipant(t, b, p, catalog)
 		st, err := participant.recruitCompletionLocked(ctx, a, completionCandidate(active))
 		baseOK(t, err)
 		_, err = a.Exec(ctx, b, tc.inject)
@@ -179,11 +193,7 @@ func TestPGRecruitCompleteGuards(t *testing.T) {
 		if _, err = a.Exec(ctx, b, `SELECT 1`); tc.aborted != (err != nil) {
 			t.Fatalf("guard %q poison: %v", tc.inject, err)
 		}
-		if tc.aborted {
-			_ = o.Commit(ctx)
-		} else {
-			baseOK(t, o.Rollback(ctx))
-		}
+		baseOK(t, o.Rollback(ctx))
 		if after := completionScalar(t, pool, completionSnapSQL); after != before {
 			t.Fatalf("guards %q persisted a write", tc.inject)
 		}
@@ -211,21 +221,15 @@ func (t *completionTrace) TraceQueryEnd(context.Context, *pgx.Conn, pgx.TraceQue
 
 func TestPGRecruitCompleteClockOnce(t *testing.T) {
 	catalog, active, waiting, _ := completionRows(t)
-	_, _, p := completionPG(t, active, waiting)
-	cfg, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
-	baseOK(t, err)
-	tr := &completionTrace{}
-	cfg.ConnConfig.RuntimeParams["search_path"] = pgx.Identifier{p.SchemaName}.Sanitize()
+	pool, _, p := completionPG(t, active, waiting)
+	cfg, tr := pool.Config(), &completionTrace{}
 	cfg.ConnConfig.Tracer = tr
 	tp, err := pgxpool.NewWithConfig(context.Background(), cfg)
 	baseOK(t, err)
 	t.Cleanup(tp.Close)
 	tb, err := recruittx.NewBinding(tp)
 	baseOK(t, err)
-	o, a, ctx := baseOwner(t, tb)
-	participant, err := NewRecruitParticipant(ctx, tb, a, p, catalog)
-	baseOK(t, err)
-	baseOK(t, participant.Pin(ctx, a))
+	o, a, ctx, participant := completionParticipant(t, tb, p, catalog)
 	got, err := participant.Complete(ctx, a, completionCandidate(active))
 	completionWant(t, got, err, RecruitCompleted)
 	baseOK(t, o.Commit(ctx))
