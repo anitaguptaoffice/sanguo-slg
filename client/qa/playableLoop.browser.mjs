@@ -45,6 +45,13 @@ function guardGateway(wsUrl, healthUrl) {
   if (u.host !== health.host) throw new UsageError(`gateway WebSocket authority ${u.host} does not match --health-url authority ${health.host}; refusing an undeclared gateway`);
   return { origin: u.origin, host: u.host, port };
 }
+function guardGateways(actualUrls, declaredFixture, healthUrl) {
+  const urls = [...new Set(actualUrls.filter((u) => { try { return new URL(u).pathname === '/ws'; } catch { return false; } }))];
+  if (!urls.length) throw new UsageError(`no actual gateway WebSocket observed${declaredFixture ? ` (page-declared ${declaredFixture} is inert)` : ''}; refusing to proceed without a real connection`);
+  const guards = urls.map((url) => guardGateway(url, healthUrl));
+  return { urls, first: guards[0] };
+}
+function checkGateways() { if (wsViolation) throw new UsageError(wsViolation); if (gatewayWs) guardGateways(wsUrls, null, CFG.healthUrl); }
 function parseRestart(cmd) {
   const argv = typeof cmd === 'string' ? cmd.trim().split(/\s+/) : [], target = argv[0] === 'systemctl' && argv[1] === 'restart' && argv.length === 3 ? argv[2] : argv[0] === 'systemctl' && argv[1] === '--user' && argv[2] === 'restart' && argv.length === 4 ? argv[3] : argv[0] === 'docker' && argv[1] === 'restart' && argv.length === 3 ? argv[2] : null;
   if (!target || !RESTART_TOKEN.test(target) || QA_MARKERS.test(target) || FIXED_PORT_TEXT.some((p) => target.includes(p))) throw new UsageError('--restart-cmd must be "systemctl [--user] restart <unit>" or "docker restart <container>" with a disposable target; shell syntax, globs and fixed QA identifiers are refused');
@@ -56,6 +63,7 @@ function isolationSelfCheck() {
     [['accept disposable loopback', 'http://127.0.0.1:15186', () => guardUrl('http://127.0.0.1:15186', '--base-url'), 'accept'], ['reject QA frontend 15173', 'http://127.0.0.1:15173', () => guardUrl('http://127.0.0.1:15173', '--base-url'), 'reject'], ['reject QA gateway 18580', 'http://127.0.0.1:18580/healthz', () => guardUrl('http://127.0.0.1:18580/healthz', '--health-url'), 'reject'], ['reject non-loopback', 'http://10.0.0.1:8080', () => guardUrl('http://10.0.0.1:8080', '--base-url'), 'reject']],
     [['reject QA restart port 15173', 'restart.sh 15173', () => parseRestart('restart.sh 15173'), 'reject'], ['reject QA restart name', 'systemctl restart sanguo-qa', () => parseRestart('systemctl restart sanguo-qa'), 'reject'], ['accept disposable restart', 'systemctl --user restart sanguo-review-e2e', () => parseRestart('systemctl --user restart sanguo-review-e2e'), 'accept', null, ['systemctl', '--user', 'restart', 'sanguo-review-e2e']]],
     [['reject observed gateway ws 18580', 'ws://127.0.0.1:18580/ws', () => guardGateway('ws://127.0.0.1:18580/ws', 'http://127.0.0.1:18595/healthz'), 'reject'], ['reject ws/health authority mismatch', 'ws://127.0.0.1:15187/ws', () => guardGateway('ws://127.0.0.1:15187/ws', 'http://127.0.0.1:18595/healthz'), 'reject'], ['reject non-loopback ws', 'ws://10.0.0.1:18595/ws', () => guardGateway('ws://10.0.0.1:18595/ws', 'http://127.0.0.1:18595/healthz'), 'reject'], ['accept gateway matching health', 'ws://127.0.0.1:18595/ws', () => guardGateway('ws://127.0.0.1:18595/ws', 'http://127.0.0.1:18595/healthz'), 'accept']],
+    [['reject reviewer contradiction (page-declared A approved, actual B)', 'A=ws://127.0.0.1:18621/ws B=ws://127.0.0.1:15216/ws', () => guardGateways(['ws://127.0.0.1:15216/ws'], 'ws://127.0.0.1:18621/ws', 'http://127.0.0.1:18621/healthz'), 'reject'], ['reject later contradictory /ws socket', 'ws://127.0.0.1:18621/ws + ws://127.0.0.1:15216/ws', () => guardGateways(['ws://127.0.0.1:18621/ws', 'ws://127.0.0.1:15216/ws'], null, 'http://127.0.0.1:18621/healthz'), 'reject'], ['reject page-declared-only ws without an actual socket', 'declared ws://127.0.0.1:18621/ws, actual none', () => guardGateways([], 'ws://127.0.0.1:18621/ws', 'http://127.0.0.1:18621/healthz'), 'reject'], ['accept actual ws, page-declared value ignored', 'declared ws://127.0.0.1:15216/ws, actual ws://127.0.0.1:18621/ws', () => guardGateways(['ws://127.0.0.1:18621/ws'], 'ws://127.0.0.1:15216/ws', 'http://127.0.0.1:18621/healthz'), 'accept']],
     [['reject page redirect 15173', 'http://127.0.0.1:15173/', () => guardPage('http://127.0.0.1:15173/', 'http://127.0.0.1:15186'), 'reject'], ['reject page foreign authority', 'http://127.0.0.1:15199/', () => guardPage('http://127.0.0.1:15199/', 'http://127.0.0.1:15186'), 'reject'], ['accept page same authority', 'http://127.0.0.1:15186/', () => guardPage('http://127.0.0.1:15186/', 'http://127.0.0.1:15186'), 'accept']],
     [['reject systemctl substitution', 'systemctl restart sanguo-$(printf qa)', () => parseRestart('systemctl restart sanguo-$(printf qa)'), 'reject'], ['reject systemctl glob', 'systemctl restart sanguo-*', () => parseRestart('systemctl restart sanguo-*'), 'reject'], ['reject structured QA port', 'systemctl restart 15173.service', () => parseRestart('systemctl restart 15173.service'), 'reject'], ['reject structured leading-zero port', 'systemctl restart 015173', () => parseRestart('systemctl restart 015173'), 'reject'], ['reject structured embedded port', 'docker restart 9115173', () => parseRestart('docker restart 9115173'), 'reject'], ['reject unknown restart.sh leading zero', 'restart.sh 015173', () => parseRestart('restart.sh 015173'), 'reject'], ['reject unknown restart.sh embedded port', 'restart.sh 9115173', () => parseRestart('restart.sh 9115173'), 'reject'], ['reject QA-named docker', 'docker restart qa-gw', () => parseRestart('docker restart qa-gw'), 'reject'], ['accept docker disposable', 'docker restart sanguo-review-pg', () => parseRestart('docker restart sanguo-review-pg'), 'accept', null, ['docker', 'restart', 'sanguo-review-pg']]],
   ].flat();
@@ -89,12 +97,12 @@ const report = {
   isolation: { loopback_only: true, refused_ports: QA_PORTS, base_port: CFG.basePort, health_port: CFG.healthPort, restart_cmd_checked: Boolean(CFG.restartCmd), gateway_ws: null, page_url: null, self_check: [] },
   provisioning: null, account: null, city: null, hall: null, recruit: null, hero: null, battle_report: null, reload_persistence: null, g3: {}, stable_restart_checks: [], snapshots: [], errors: [], restart_induced: [], restart_error_policy: RESTART_ERROR_RULE, restart_events: [], websockets: [], passed: false, exit_code: null,
 };
-let browser = null, page = null, gatewayWs = null, observedWs = null, favicon404 = false, cityId = 0, heroId = 0, restartWindow = false, gatewayOrigin = null, gatewayHostPort = null;
+let browser = null, page = null, gatewayWs = null, wsUrls = [], wsViolation = null, favicon404 = false, cityId = 0, heroId = 0, restartWindow = false, gatewayOrigin = null, gatewayHostPort = null;
 const ok = (cond, msg) => { if (!cond) throw new Error(msg); };
 const ui = (sel) => page.locator(`${sel}:visible`).first();
 const text = async (sel) => (await ui(sel).innerText()).trim();
-const click = (action) => page.locator(`[data-action="${action}"]:visible`).first().click();
-const fill = (field, value) => ui(`[data-field="${field}"]`).fill(String(value));
+const click = (action) => { checkGateways(); return page.locator(`[data-action="${action}"]:visible`).first().click(); };
+const fill = (field, value) => { checkGateways(); return ui(`[data-field="${field}"]`).fill(String(value)); };
 const hallOf = (s) => (s.buildings ?? []).find((b) => b.slot_key === 'hall');
 const troopsOf = (s) => (s?.garrison?.troops ?? []).find((t) => t.unit_cfg_id === 1)?.count ?? 0;
 const walletOf = (s) => s?.wallet ?? {};
@@ -126,9 +134,9 @@ async function pollUntil(fn, timeoutMs) { const deadline = Date.now() + timeoutM
 async function waitHealthy(timeoutMs = CFG.restartWaitSec * 1000) { const deadline = Date.now() + timeoutMs; let last = 'no attempt';
   while (Date.now() < deadline) { try { const res = await fetch(CFG.healthUrl, { signal: AbortSignal.timeout(3000) }); if (res.ok) return; last = `HTTP ${res.status}`; } catch (e) { last = e.message; } await sleep(1000); } throw new Error(`gateway health timeout at ${CFG.healthUrl} (${last})`);
 }
-async function connectRpc() { if (!gatewayWs) throw new UsageError('gateway WebSocket URL not observed; check VITE_GATEWAY_WS_URL');
+async function connectRpc() { if (!gatewayWs) throw new UsageError('gateway WebSocket URL not observed; check VITE_GATEWAY_WS_URL'); checkGateways();
   await page.evaluate(async (url) => { window.__qaRpc?.close(); const { GatewayClient } = await import('/src/net/GatewayClient.ts'); const c = new GatewayClient(url); await c.connect(); window.__qaRpc = c; }, gatewayWs); }
-const rpc = (method, ...args) => page.evaluate(([m, a]) => window.__qaRpc[m](...a), [method, args]);
+const rpc = (method, ...args) => { checkGateways(); return page.evaluate(([m, a]) => window.__qaRpc[m](...a), [method, args]); };
 async function loginRpc() { await connectRpc(); const session = await rpc('login', CFG.login, CFG.password, CFG.serverId); ok(session.player?.player_id, 'RPC login returned no player'); return session; }
 async function cityState(id = cityId) { const state = await rpc('getCityState', id); ok(state?.wallet, 'GetCityState returned no wallet'); return state; }
 async function enterGame() {
@@ -217,7 +225,7 @@ async function restartAndReenter(label, beforeSnap) {
 }
 
 const steps = []; function need(id) { const dep = steps.find((s) => s.id === id); if (!dep || dep.status !== 'passed') throw new Skip(`depends on "${id}" (${dep?.status ?? 'not run'})`); }
-async function step(id, title, fn) { const rec = { id, title, status: 'running', started_at: nowIso() }; steps.push(rec); log('step', id, 'start');
+async function step(id, title, fn) { checkGateways(); const rec = { id, title, status: 'running', started_at: nowIso() }; steps.push(rec); log('step', id, 'start');
   try { rec.detail = (await fn()) ?? null; rec.status = 'passed'; } catch (e) { rec.status = e instanceof Skip || CFG.exploratory ? 'blocked' : 'failed'; rec.error = e instanceof Skip ? e.message : String(e.stack ?? e); log('step', id, rec.status, rec.error); }
   finally { rec.finished_at = nowIso(); await page?.screenshot({ path: `${OUT}/${String(steps.length).padStart(2, '0')}-${id}.png` }).catch(() => {}); }
   return rec.status === 'passed';
@@ -235,14 +243,16 @@ async function main() {
   const cdp = await page.context().newCDPSession(page); await cdp.send('Network.enable');
   // Chromium fetches /favicon.ico outside page response events; CDP is the only place to see it.
   cdp.on('Network.responseReceived', (e) => { if (e.response.status === 404 && /\/favicon\.ico(?:[?#]|$)/.test(e.response.url)) favicon404 = true; });
-  page.on('websocket', (s) => { try { report.websockets.push({ at: nowIso(), url: s.url() }); if (new URL(s.url()).pathname === '/ws' && !observedWs) observedWs = s.url(); } catch { /* ignore malformed URLs */ } });
+  page.on('websocket', (s) => { try { const url = s.url(); wsUrls.push(url); report.websockets.push({ at: nowIso(), url }); if (new URL(url).pathname === '/ws') guardGateway(url, CFG.healthUrl); } catch (e) { wsViolation = wsViolation ?? e.message; } });
   try { await page.goto(CFG.baseUrl, { waitUntil: 'domcontentloaded' }); } catch (e) { throw new UsageError(`frontend not reachable at ${CFG.baseUrl}: ${e.message}`); }
   guardPage(page.url(), CFG.baseUrl);
-  // Fixture-only: a static page may declare the observed WS without opening it; it is still validated below.
-  const fixtureWs = await page.evaluate(() => window.__qaGatewayWsFixture ?? null).catch(() => null);
-  if (fixtureWs) gatewayWs = fixtureWs; else { await page.locator(`li[data-server-id="${CFG.serverId}"]`).waitFor({ timeout: 60000 }); gatewayWs = observedWs; }
-  if (!gatewayWs) throw new UsageError('could not observe the gateway WebSocket URL');
-  ({ origin: gatewayOrigin, host: gatewayHostPort } = guardGateway(gatewayWs, CFG.healthUrl));
+  await sleep(250); // let the page open (or fail to open) its first WebSocket before checking
+  const row = page.locator(`li[data-server-id="${CFG.serverId}"]`);
+  for (let i = 0; i < 600 && !wsViolation && !(await row.count()); i++) await sleep(100);
+  if (wsViolation) throw new UsageError(wsViolation);
+  await row.waitFor({ timeout: 60000 }).catch((e) => { throw new UsageError(`no actual gateway WebSocket observed (${String(e.message).split('\n')[0]})`); });
+  const gateways = guardGateways(wsUrls, null, CFG.healthUrl); gatewayWs = gateways.urls[0];
+  ({ origin: gatewayOrigin, host: gatewayHostPort } = gateways.first);
   report.config.gateway_ws = gatewayWs; report.config.gateway_origin = gatewayOrigin; report.isolation.gateway_ws = gatewayWs; report.isolation.page_url = page.url();
   report.restart_error_policy.gateway = { origin: gatewayOrigin, host: gatewayHostPort, endpoints: ['/ws', '/healthz'] };
   ensureOut();
