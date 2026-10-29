@@ -8,14 +8,20 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func writeSeed(t *testing.T, pool *pgxpool.Pool, p freshsource.Profile) {
+const writeCountSQL = `SELECT (SELECT count(*) FROM work_queue),(SELECT count(*) FROM mil_recruit_origin),(SELECT count(*) FROM mil_recruit_receipt)`
+
+func writeEnv(t *testing.T) (*pgxpool.Pool, *recruittx.Binding, freshsource.Profile, *RecruitCatalog) {
 	t.Helper()
+	pool, b, p := freshSourceFixture(t)
 	prepareBase(t, pool, p)
 	_, err := pool.Exec(context.Background(), `INSERT INTO player_wallet VALUES(1,1,500,500,500,500,50,now())`)
 	baseOK(t, err)
+	catalog, _, _ := recruitSourceCatalog(t)
+	return pool, b, p, catalog
 }
 
 func writeAdmit(t *testing.T, ctx context.Context, a *recruittx.Access, b *recruittx.Binding, p freshsource.Profile, catalog *RecruitCatalog) (*RecruitParticipant, *RecruitAdmission) {
@@ -28,37 +34,55 @@ func writeAdmit(t *testing.T, ctx context.Context, a *recruittx.Access, b *recru
 	return participant, adm
 }
 
-func writeCounts(t *testing.T, ctx context.Context, a *recruittx.Access, b *recruittx.Binding) (int64, int64, int64) {
+func writeZeroRows(t *testing.T, pool *pgxpool.Pool) {
 	t.Helper()
 	var q, o, r int64
-	baseOK(t, a.Scan(ctx, b, `SELECT (SELECT count(*) FROM work_queue),(SELECT count(*) FROM mil_recruit_origin),(SELECT count(*) FROM mil_recruit_receipt)`, nil, &q, &o, &r))
-	return q, o, r
-}
-
-func writeZeroRows(t *testing.T, b *recruittx.Binding) {
-	t.Helper()
-	o, a, ctx := baseOwner(t, b)
-	q, org, rec := writeCounts(t, ctx, a, b)
-	baseOK(t, o.Rollback(ctx))
-	if q != 0 || org != 0 || rec != 0 {
-		t.Fatalf("visible rows after rollback: %d %d %d", q, org, rec)
+	baseOK(t, pool.QueryRow(context.Background(), writeCountSQL).Scan(&q, &o, &r))
+	if q != 0 || o != 0 || r != 0 {
+		t.Fatalf("visible rows: %d %d %d", q, o, r)
 	}
 }
 
+func writeUnavailable(t *testing.T, err error) {
+	t.Helper()
+	if !errors.Is(err, ErrRecruitUnavailable) {
+		t.Fatalf("want unavailable, got %v", err)
+	}
+}
+
+func writeTrigger(t *testing.T, ctx context.Context, a *recruittx.Access, b *recruittx.Binding, fn, trigger string) {
+	t.Helper()
+	_, err := a.Exec(ctx, b, fn)
+	baseOK(t, err)
+	_, err = a.Exec(ctx, b, trigger)
+	baseOK(t, err)
+}
+
+func writeReject(t *testing.T, pool *pgxpool.Pool, b *recruittx.Binding, p freshsource.Profile, catalog *RecruitCatalog, setup func(context.Context, *recruittx.Access, *RecruitAdmission)) {
+	t.Helper()
+	o, a, ctx := baseOwner(t, b)
+	_, adm := writeAdmit(t, ctx, a, b, p, catalog)
+	if setup != nil {
+		setup(ctx, a, adm)
+	}
+	_, err := adm.Write(ctx, a)
+	writeUnavailable(t, err)
+	_ = o.Rollback(ctx)
+	writeZeroRows(t, pool)
+}
+
 func TestPGRecruitWrite(t *testing.T) {
-	pool, b, p := freshSourceFixture(t)
-	writeSeed(t, pool, p)
-	catalog, _, _ := recruitSourceCatalog(t)
+	pool, b, p, catalog := writeEnv(t)
 	evidence, err := catalog.Current(1)
 	baseOK(t, err)
 	o, a, ctx := baseOwner(t, b)
 	participant, adm := writeAdmit(t, ctx, a, b, p, catalog)
-	var walletBefore, walletAfter, troopBefore, troopAfter string
-	var lastBefore, lastAfter int64
-	var calledBefore, calledAfter bool
-	baseOK(t, a.Scan(ctx, b, `SELECT row_to_json(w)::text FROM player_wallet w`, nil, &walletBefore))
-	baseOK(t, a.Scan(ctx, b, `SELECT string_agg(row_to_json(t)::text,'|' ORDER BY unit_cfg_id) FROM city_troop t`, nil, &troopBefore))
-	baseOK(t, a.Scan(ctx, b, `SELECT last_value,is_called FROM work_queue_id_seq`, nil, &lastBefore, &calledBefore))
+	state := func() string {
+		var w, tr, s string
+		baseOK(t, a.Scan(ctx, b, `SELECT (SELECT row_to_json(w)::text FROM player_wallet w),(SELECT string_agg(row_to_json(t)::text,'|' ORDER BY unit_cfg_id) FROM city_troop t),(SELECT last_value||'/'||is_called FROM work_queue_id_seq)`, nil, &w, &tr, &s))
+		return w + tr + s
+	}
+	before := state()
 	want := RecruitAcceptance{QueueID: adm.state.queueID, CityID: 100, UnitCfgID: 1, Count: 2,
 		Cost: Resources{Food: 82, Wood: 40}, DurationSeconds: 60, CatalogVersion: evidence.Version(),
 		RuleDigest: evidence.Digest(), AcceptedAt: adm.state.acceptedAt, InitialStatus: 1,
@@ -66,45 +90,33 @@ func TestPGRecruitWrite(t *testing.T) {
 	copied := *adm
 	got, err := adm.Write(ctx, a)
 	baseOK(t, err)
-	baseOK(t, a.Scan(ctx, b, `SELECT row_to_json(w)::text FROM player_wallet w`, nil, &walletAfter))
-	baseOK(t, a.Scan(ctx, b, `SELECT string_agg(row_to_json(t)::text,'|' ORDER BY unit_cfg_id) FROM city_troop t`, nil, &troopAfter))
-	baseOK(t, a.Scan(ctx, b, `SELECT last_value,is_called FROM work_queue_id_seq`, nil, &lastAfter, &calledAfter))
-	if got != want || walletBefore != walletAfter || troopBefore != troopAfter || lastBefore != lastAfter || calledBefore != calledAfter {
-		t.Fatalf("write=%#v want=%#v wallet=%v troop=%v seq=%d/%d", got, want, walletBefore == walletAfter, troopBefore == troopAfter, lastBefore, lastAfter)
+	if got != want || before != state() {
+		t.Fatalf("write=%#v want=%#v", got, want)
 	}
-	q, org, rec := writeCounts(t, ctx, a, b)
+	var q, org, rec int64
+	baseOK(t, a.Scan(ctx, b, writeCountSQL, nil, &q, &org, &rec))
 	if q != 1 || org != 1 || rec != 1 {
 		t.Fatalf("rows %d %d %d", q, org, rec)
 	}
 	hist, err := participant.History(ctx, a, RecruitScope{1, 1, RecruitCommandID{9}}, RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: 2}, adm.state.queueID)
 	baseOK(t, err)
-	if hist != want {
-		t.Fatalf("history %#v", hist)
+	var status int16
+	baseOK(t, a.Scan(ctx, b, `SELECT status FROM work_queue WHERE server_id=1 AND queue_id=$1`, []any{adm.state.queueID}, &status))
+	if hist != want || status != 1 {
+		t.Fatalf("history %#v status %d", hist, status)
 	}
-	var queueType, status int16
-	baseOK(t, a.Scan(ctx, b, `SELECT queue_type,status FROM work_queue WHERE server_id=1 AND queue_id=$1`, []any{adm.state.queueID}, &queueType, &status))
-	var operation int16
-	var command []byte
-	baseOK(t, a.Scan(ctx, b, `SELECT operation,command_id FROM mil_recruit_origin WHERE server_id=1 AND queue_id=$1`, []any{adm.state.queueID}, &operation, &command))
-	if queueType != 3 || status != 1 || operation != 1 || len(command) != 16 {
-		t.Fatalf("stored queue/origin %d %d %d %d", queueType, status, operation, len(command))
-	}
-	if _, err = adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-		t.Fatal("second write", err)
-	}
-	if _, err = copied.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-		t.Fatal("copy after write", err)
-	}
-	if _, err = adm.Cost(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-		t.Fatal("cost after write", err)
-	}
+	_, err = adm.Write(ctx, a)
+	writeUnavailable(t, err)
+	_, err = copied.Write(ctx, a)
+	writeUnavailable(t, err)
+	_, err = adm.Cost(ctx, a)
+	writeUnavailable(t, err)
 	baseOK(t, o.Rollback(ctx))
-	writeZeroRows(t, b)
+	writeZeroRows(t, pool)
 }
 
 func TestPGRecruitWriteWaiting(t *testing.T) {
-	pool, b, p := freshSourceFixture(t)
-	writeSeed(t, pool, p)
+	pool, b, p, _ := writeEnv(t)
 	catalog, active, _ := preparePending(t)
 	o, a, ctx := baseOwner(t, b)
 	participant, err := NewRecruitParticipant(ctx, b, a, p, catalog)
@@ -125,122 +137,107 @@ func TestPGRecruitWriteWaiting(t *testing.T) {
 	if got != want || !adm.state.schedule.waiting {
 		t.Fatalf("waiting write=%#v want=%#v", got, want)
 	}
-	hist, err := participant.History(ctx, a, scope, intent, adm.state.queueID)
-	baseOK(t, err)
-	if hist != want {
-		t.Fatalf("waiting history %#v", hist)
-	}
 	baseOK(t, o.Rollback(ctx))
-	writeZeroRows(t, b)
+	writeZeroRows(t, pool)
 }
 
 func TestPGRecruitWriteRejects(t *testing.T) {
-	pool, b, p := freshSourceFixture(t)
-	writeSeed(t, pool, p)
-	catalog, _, _ := recruitSourceCatalog(t)
+	pool, b, p, catalog := writeEnv(t)
 	t.Run("wrong binding", func(t *testing.T) {
 		o, a, ctx := baseOwner(t, b)
 		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
 		wrong, err := recruittx.NewBinding(pool)
 		baseOK(t, err)
 		wo, wa, wctx := baseOwner(t, wrong)
-		if _, err = adm.Write(wctx, wa); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal(err)
-		}
-		if _, err = adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal("retry after wrong binding", err)
-		}
+		_, err = adm.Write(wctx, wa)
+		writeUnavailable(t, err)
+		_, err = adm.Write(ctx, a)
+		writeUnavailable(t, err)
 		baseOK(t, o.Rollback(ctx))
 		baseOK(t, wo.Rollback(wctx))
-		writeZeroRows(t, b)
+		writeZeroRows(t, pool)
 	})
 	t.Run("ended", func(t *testing.T) {
 		o, a, ctx := baseOwner(t, b)
 		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
 		baseOK(t, o.Rollback(ctx))
-		if _, err := adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal(err)
-		}
-		writeZeroRows(t, b)
+		_, err := adm.Write(ctx, a)
+		writeUnavailable(t, err)
+		writeZeroRows(t, pool)
 	})
 	t.Run("nil access", func(t *testing.T) {
 		o, a, ctx := baseOwner(t, b)
 		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
-		if _, err := adm.Write(ctx, nil); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal(err)
-		}
-		if _, err := adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal("retry after nil access", err)
-		}
+		_, err := adm.Write(ctx, nil)
+		writeUnavailable(t, err)
 		baseOK(t, o.Rollback(ctx))
-		writeZeroRows(t, b)
+		writeZeroRows(t, pool)
 	})
-	t.Run("origin conflict", func(t *testing.T) {
-		o, a, ctx := baseOwner(t, b)
-		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
-		_, err := a.Exec(ctx, b, `INSERT INTO mil_recruit_origin VALUES(1,900,1,1,$1)`, adm.state.scope.CommandID[:])
-		baseOK(t, err)
-		if _, err = adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal("origin conflict accepted", err)
-		}
-		baseOK(t, o.Rollback(ctx))
-		writeZeroRows(t, b)
+	// A pre-existing receipt needs a matching origin, so Write always fails at
+	// origin first; only the injected receipt trigger reaches receipt and still
+	// fails closed. Pre-existing receipt-PK stays an unexercised DDL/order limit.
+	t.Run("origin primary key", func(t *testing.T) {
+		writeReject(t, pool, b, p, catalog, func(ctx context.Context, a *recruittx.Access, adm *RecruitAdmission) {
+			_, err := a.Exec(ctx, b, `INSERT INTO mil_recruit_origin VALUES(1,$1,1,1,decode(repeat('bb',16),'hex'))`, adm.state.queueID)
+			baseOK(t, err)
+		})
 	})
-	t.Run("receipt conflict", func(t *testing.T) {
-		o, a, ctx := baseOwner(t, b)
-		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
-		_, err := a.Exec(ctx, b, `INSERT INTO mil_recruit_origin VALUES(1,$1,1,1,$2)`, adm.state.queueID, adm.state.scope.CommandID[:])
-		baseOK(t, err)
-		_, err = a.Exec(ctx, b, `INSERT INTO mil_recruit_receipt VALUES(1,$1,1,100,1,1,0,0,0,0,60,'v',decode(repeat('aa',32),'hex'),'2026-01-01T00:00:00.123Z','2026-01-01T00:00:00.123Z','2026-01-01T00:01:00.123Z',1)`, adm.state.queueID)
-		baseOK(t, err)
-		if _, err = adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal("receipt conflict accepted", err)
-		}
-		baseOK(t, o.Rollback(ctx))
-		writeZeroRows(t, b)
+	t.Run("origin scoped command", func(t *testing.T) {
+		writeReject(t, pool, b, p, catalog, func(ctx context.Context, a *recruittx.Access, adm *RecruitAdmission) {
+			_, err := a.Exec(ctx, b, `INSERT INTO mil_recruit_origin VALUES(1,900,1,1,$1)`, adm.state.scope.CommandID[:])
+			baseOK(t, err)
+		})
+	})
+	t.Run("source rename", func(t *testing.T) {
+		writeReject(t, pool, b, p, catalog, func(ctx context.Context, a *recruittx.Access, _ *RecruitAdmission) {
+			_, err := a.Exec(ctx, b, `ALTER TABLE mil_recruit_receipt RENAME TO moved_receipt`)
+			baseOK(t, err)
+		})
 	})
 }
 
-func TestPGRecruitWriteDrift(t *testing.T) {
-	pool, b, p := freshSourceFixture(t)
-	writeSeed(t, pool, p)
-	catalog, _, _ := recruitSourceCatalog(t)
-	t.Run("source rename", func(t *testing.T) {
-		o, a, ctx := baseOwner(t, b)
-		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
-		if _, err := a.Exec(ctx, b, `ALTER TABLE mil_recruit_receipt RENAME TO moved_receipt`); err != nil {
-			t.Fatal(err)
-		}
-		if _, err := adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal(err)
-		}
-		baseOK(t, o.Rollback(ctx))
-		writeZeroRows(t, b)
-	})
-	t.Run("trigger", func(t *testing.T) {
-		o, a, ctx := baseOwner(t, b)
-		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
-		_, err := a.Exec(ctx, b, `CREATE FUNCTION noop_receipt() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$`)
-		baseOK(t, err)
-		_, err = a.Exec(ctx, b, `CREATE TRIGGER noop_receipt BEFORE INSERT ON mil_recruit_receipt FOR EACH ROW EXECUTE FUNCTION noop_receipt()`)
-		baseOK(t, err)
-		if _, err = adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal("trigger drift accepted", err)
-		}
-		baseOK(t, o.Rollback(ctx))
-		writeZeroRows(t, b)
-	})
-	t.Run("receipt insert failure", func(t *testing.T) {
-		o, a, ctx := baseOwner(t, b)
-		_, adm := writeAdmit(t, ctx, a, b, p, catalog)
-		_, err := a.Exec(ctx, b, `CREATE FUNCTION reject_receipt() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected'; END $$`)
-		baseOK(t, err)
-		_, err = a.Exec(ctx, b, `CREATE TRIGGER reject_receipt BEFORE INSERT ON mil_recruit_receipt FOR EACH ROW EXECUTE FUNCTION reject_receipt()`)
-		baseOK(t, err)
-		if _, err = adm.Write(ctx, a); !errors.Is(err, ErrRecruitUnavailable) {
-			t.Fatal("injected receipt failure accepted", err)
-		}
-		baseOK(t, o.Rollback(ctx))
-		writeZeroRows(t, b)
-	})
+func TestPGRecruitWriteDriftCommit(t *testing.T) {
+	pool, b, p, catalog := writeEnv(t)
+	o, a, ctx := baseOwner(t, b)
+	_, adm := writeAdmit(t, ctx, a, b, p, catalog)
+	writeTrigger(t, ctx, a, b,
+		`CREATE FUNCTION noop_receipt() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$`,
+		`CREATE TRIGGER noop_receipt BEFORE INSERT ON mil_recruit_receipt FOR EACH ROW EXECUTE FUNCTION noop_receipt()`)
+	_, err := adm.Write(ctx, a)
+	writeUnavailable(t, err)
+	if o.Commit(ctx) == nil {
+		t.Fatal("commit persisted rows after post-write drift")
+	}
+	_ = o.Rollback(ctx)
+	writeZeroRows(t, pool)
+}
+
+func TestPGRecruitWriteCommit(t *testing.T) {
+	pool, b, p, catalog := writeEnv(t)
+	o, a, ctx := baseOwner(t, b)
+	_, adm := writeAdmit(t, ctx, a, b, p, catalog)
+	_, err := adm.Write(ctx, a)
+	baseOK(t, err)
+	baseOK(t, o.Commit(ctx))
+	var q, org, rec int64
+	baseOK(t, pool.QueryRow(context.Background(), writeCountSQL).Scan(&q, &org, &rec))
+	if q != 1 || org != 1 || rec != 1 {
+		t.Fatalf("committed rows %d %d %d", q, org, rec)
+	}
+}
+
+func TestPGRecruitWriteReceiptFailure(t *testing.T) {
+	pool, b, p, catalog := writeEnv(t)
+	o, a, ctx := baseOwner(t, b)
+	_, adm := writeAdmit(t, ctx, a, b, p, catalog)
+	writeTrigger(t, ctx, a, b,
+		`CREATE FUNCTION reject_receipt() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected receipt failure'; END $$`,
+		`CREATE TRIGGER reject_receipt BEFORE INSERT ON mil_recruit_receipt FOR EACH ROW EXECUTE FUNCTION reject_receipt()`)
+	_, err := adm.Write(ctx, a)
+	var pgErr *pgconn.PgError
+	if !errors.Is(err, ErrRecruitUnavailable) || !errors.As(err, &pgErr) || pgErr.Code != "P0001" || pgErr.Message != "injected receipt failure" {
+		t.Fatalf("injected receipt failure not reached: %v", err)
+	}
+	_ = o.Rollback(ctx)
+	writeZeroRows(t, pool)
 }

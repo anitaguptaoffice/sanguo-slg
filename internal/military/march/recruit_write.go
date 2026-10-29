@@ -10,9 +10,12 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+var errRecruitWriteReadback = errors.New("march: recruit write readback mismatch")
+
 // Write inserts the prepared type3 job, reverse origin and immutable receipt in
 // the caller's live transaction. The first call consumes the admission; every
-// error requires the caller to roll back, and no later retry is possible.
+// error is fail-closed, and post-write logical failures abort the caller-owned
+// transaction, so no later commit can persist a partial write.
 func (h *RecruitAdmission) Write(ctx context.Context, a *recruittx.Access) (RecruitAcceptance, error) {
 	if h == nil || h.state == nil || !h.state.used.CompareAndSwap(false, true) {
 		return RecruitAcceptance{}, ErrRecruitUnavailable
@@ -50,13 +53,22 @@ func (h *RecruitAdmission) Write(ctx context.Context, a *recruittx.Access) (Recr
 		status = 0
 	}
 	table := func(name string) string { return pgx.Identifier{s.profile.SchemaName, name}.Sanitize() }
+	// abort poisons the caller-owned transaction after a post-write logical
+	// failure so a partial write cannot be committed; no cleanup or repair.
+	abort := func(cause error) error {
+		_, err := copyAccess.Exec(context.WithoutCancel(ctx), s.binding, "SELECT 1/0")
+		if err == nil {
+			err = errors.New("march: recruit abort statement unexpectedly succeeded")
+		}
+		return errors.Join(ErrRecruitUnavailable, cause, err)
+	}
 	exec := func(query string, args ...any) error {
 		tag, err := copyAccess.Exec(ctx, s.binding, query, args...)
 		if err != nil {
 			return errors.Join(ErrRecruitUnavailable, s.failure(err))
 		}
 		if tag.RowsAffected() != 1 {
-			return ErrRecruitUnavailable
+			return abort(errors.New("march: recruit insert affected an unexpected row count"))
 		}
 		return nil
 	}
@@ -74,10 +86,11 @@ func (h *RecruitAdmission) Write(ctx context.Context, a *recruittx.Access) (Recr
 		st.acceptedAt, st.schedule.start, st.schedule.finish, status); err != nil {
 		return RecruitAcceptance{}, err
 	}
-	// Revalidate the pinned source after the writes as well: any privilege,
-	// dependency or trigger drift leaves these rows uncommittable.
+	// Revalidate the pinned source after all three writes; any privilege,
+	// dependency or trigger drift aborts this transaction, so the written
+	// rows cannot be committed.
 	if err = s.failure(validateRecruitSource(ctx, &copyAccess, s)); err != nil {
-		return RecruitAcceptance{}, errors.Join(ErrRecruitUnavailable, err)
+		return RecruitAcceptance{}, abort(err)
 	}
 	q, r := recruitHistoryQueue{}, recruitHistoryReceipt{}
 	var playerID int64
@@ -92,10 +105,13 @@ func (h *RecruitAdmission) Write(ctx context.Context, a *recruittx.Access) (Recr
 		&q.playerID, &q.cityID, &q.queueType, &q.payload, &q.startAt, &q.finishAt, &q.status, &playerID, &operation, &command,
 		&r.serverID, &r.queueID, &r.intentVersion, &r.cityID, &r.unitCfgID, &r.count, &r.food, &r.wood, &r.iron, &r.stone,
 		&r.durationSec, &r.catalogVersion, &r.ruleDigest, &r.acceptedAt, &r.startAt, &r.finishAt, &r.initialStatus); err != nil {
-		return RecruitAcceptance{}, err
+		return RecruitAcceptance{}, abort(err)
 	}
 	payload, err := decodeRecruitPayload(q.payload, p.catalog)
-	if err != nil || payload.Unit != st.intent.UnitCfgID || payload.Count != st.intent.Count ||
+	if err != nil {
+		return RecruitAcceptance{}, abort(err)
+	}
+	if payload.Unit != st.intent.UnitCfgID || payload.Count != st.intent.Count ||
 		payload.Cost != (recruitPayloadCost{Food: cost.Food, Wood: cost.Wood, Iron: cost.Iron, Stone: cost.Stone}) ||
 		payload.Seconds != st.plan.DurationSeconds() || payload.Catalog != st.evidence.Version() ||
 		payload.Digest != hex.EncodeToString(digest[:]) || q.playerID != st.scope.PlayerID || q.cityID == nil ||
@@ -107,7 +123,7 @@ func (h *RecruitAdmission) Write(ctx context.Context, a *recruittx.Access) (Recr
 		r.durationSec != st.plan.DurationSeconds() || !bytes.Equal(r.catalogVersion, []byte(st.evidence.Version())) ||
 		!bytes.Equal(r.ruleDigest, digest[:]) || !r.acceptedAt.Equal(st.acceptedAt) || !r.startAt.Equal(st.schedule.start) ||
 		!r.finishAt.Equal(st.schedule.finish) || r.initialStatus != status {
-		return RecruitAcceptance{}, ErrRecruitUnavailable
+		return RecruitAcceptance{}, abort(errRecruitWriteReadback)
 	}
 	r.acceptedAt, r.startAt, r.finishAt = r.acceptedAt.UTC(), r.startAt.UTC(), r.finishAt.UTC()
 	return recruitHistoryAcceptance(recruitHistoryQueue{queueID: r.queueID}, r), nil
