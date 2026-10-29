@@ -10,6 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// ErrNotInserted reports an insert that affected no row, for example a NULL trigger.
+var ErrNotInserted = errors.New("report: insert affected no row")
+
 // PGStore persists reports in PostgreSQL (spec/db/004_military.sql).
 type PGStore struct {
 	Pool *pgxpool.Pool
@@ -56,7 +59,7 @@ func insertReport(ctx context.Context, db statementRunner, table string, rec Rec
 	if created.IsZero() {
 		created = time.Now()
 	}
-	_, err = db.Exec(ctx, `
+	tag, err := db.Exec(ctx, `
 		INSERT INTO `+table+` (
 			server_id, report_id, attacker_player_id, defender_player_id, defender_city_id,
 			location_x, location_y, outcome, detail, created_at
@@ -69,6 +72,9 @@ func insertReport(ctx context.Context, db statementRunner, table string, rec Rec
 			return ErrDuplicate
 		}
 		return err
+	}
+	if tag.RowsAffected() != 1 {
+		return ErrNotInserted
 	}
 	return nil
 }

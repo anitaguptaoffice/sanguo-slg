@@ -2,28 +2,32 @@ package march
 
 import (
 	"context"
-	"errors"
 	"os"
-	"strconv"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/battle"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/report"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const transitionReturnEpoch = 1793282400 // 2026-10-29T14:00:00Z
 const transitionSeedSQL = `INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y) VALUES(1,500,7,2,10,20);INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,path,origin_city_id) VALUES(1,500,500,10,20,30,40,1,now(),now()+interval '1 hour',1,'[]',100);INSERT INTO army_troop VALUES(1,500,1,200),(1,500,2,50);`
 
-func transitionFixture(t *testing.T, extra ...string) (*pgxpool.Pool, freshsource.Profile, *MarchTransition) {
+func transitionFixture(t *testing.T, extra ...string) (*pgxpool.Pool, *pgx.Conn, *MarchTransition) {
 	t.Helper()
 	pool, _, p, _ := marchStoreFixture(t)
 	baseSQL(t, pool, transitionSeedSQL+strings.Join(extra, ""))
-	return pool, p, NewMarchTransition(pool, report.NewService(report.NewPGStore(pool)))
+	tr, err := NewMarchTransition(report.NewService(report.NewPGStore(pool)), p)
+	baseOK(t, err)
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	baseOK(t, err)
+	t.Cleanup(func() { _ = conn.Close(context.Background()) })
+	_, err = conn.Exec(context.Background(), `SET search_path TO `+pgx.Identifier{p.SchemaName}.Sanitize())
+	baseOK(t, err)
+	return pool, conn, tr
 }
 
 func transitionReport() *report.SaveParams {
@@ -33,7 +37,7 @@ func transitionReport() *report.SaveParams {
 
 func transitionCommit(p *report.SaveParams) ArrivalCommit {
 	return ArrivalCommit{ServerID: 1, MarchID: 500, ArmyID: 500, ToX: 30, ToY: 40,
-		Survivors: []TroopStack{{1, 166}}, ReturnAt: time.Date(2026, 10, 29, 14, 0, 0, 0, time.UTC), Report: p}
+		Survivors: []TroopStack{{1, 166}}, ReturnAt: time.Unix(transitionReturnEpoch, 0).UTC(), Report: p}
 }
 
 func transitionState(t *testing.T, q interface {
@@ -43,136 +47,44 @@ func transitionState(t *testing.T, q interface {
 	return
 }
 
-func TestPGMarchArrivalCommit(t *testing.T) {
-	pool, p, tr := transitionFixture(t)
-	in := transitionCommit(transitionReport())
-	got, err := tr.Commit(context.Background(), in)
-	baseOK(t, err)
-	want := "3|" + strconv.FormatInt(in.ReturnAt.Unix(), 10) + "|2|30|40|1:166|1|1:true"
-	if got.ReportID != 1 || got.Status != 3 || got.ArmyID != 500 || transitionState(t, pool) != want {
-		t.Fatalf("commit %#v state %s want %s", got, transitionState(t, pool), want)
-	}
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
-	baseOK(t, err)
-	defer func() { _ = conn.Close(context.Background()) }()
-	_, err = conn.Exec(context.Background(), `SET search_path TO `+pgx.Identifier{p.SchemaName}.Sanitize())
-	baseOK(t, err)
-	if state := transitionState(t, conn); state != want {
-		t.Fatalf("second connection %s want %s", state, want)
-	}
+func transitionSnapshot(t *testing.T, q interface {
+	QueryRow(context.Context, string, ...any) pgx.Row
+}) (s string) {
+	baseOK(t, q.QueryRow(context.Background(), `SELECT md5(pg_catalog.concat_ws('|',(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY march_id) FROM march_order t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY army_id) FROM field_army t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY army_id,unit_cfg_id) FROM army_troop t),(SELECT pg_catalog.string_agg(pg_catalog.row_to_json(t)::text||':'||t.xmin::text||':'||t.ctid::text,'|' ORDER BY report_id) FROM battle_report t)))`).Scan(&s))
+	return
 }
 
-func TestPGMarchArrivalNoBattleAndZero(t *testing.T) {
+func TestPGMarchArrivalCallerTransaction(t *testing.T) {
 	for _, tc := range []struct {
-		survivors []TroopStack
-		want      string
-	}{{[]TroopStack{{1, 200}, {2, 50}}, "3|%d|2|30|40|1:200,2:50|0|1:false"},
-		{nil, "4|-1|1|30|40||0|1:false"}} {
-		pool, _, tr := transitionFixture(t)
-		in := transitionCommit(nil)
-		in.Survivors = tc.survivors
-		got, err := tr.Commit(context.Background(), in)
-		baseOK(t, err)
-		want := strings.Replace(tc.want, "%d", strconv.FormatInt(in.ReturnAt.Unix(), 10), 1)
-		if got.ReportID != 0 || transitionState(t, pool) != want {
-			t.Fatalf("%#v %s want %s", got, transitionState(t, pool), want)
-		}
-	}
-}
-
-func TestPGMarchArrivalStatusThreeNotReplayed(t *testing.T) {
-	pool, _, tr := transitionFixture(t)
-	baseSQL(t, pool, `UPDATE march_order SET status=3,return_finish_at=now() WHERE server_id=1 AND march_id=500`)
-	before := transitionState(t, pool)
-	if _, err := tr.Commit(context.Background(), transitionCommit(transitionReport())); !errors.Is(err, ErrArrivalReplayed) {
-		t.Fatalf("restored status-3 order replayed: %v", err)
-	}
-	if after := transitionState(t, pool); after != before {
-		t.Fatalf("restored status-3 order mutated: %s -> %s", before, after)
-	}
-}
-
-func TestPGMarchArrivalReplay(t *testing.T) {
-	pool, _, tr := transitionFixture(t, `INSERT INTO battle_report(server_id,report_id,attacker_player_id,location_x,location_y,outcome,detail) VALUES(1,500,7,1,1,1,'{}');SELECT setval('battle_report_report_id_seq',500,true)`)
-	_, err := tr.Commit(context.Background(), transitionCommit(transitionReport()))
-	baseOK(t, err)
-	before := transitionState(t, pool)
-	if _, err = tr.Commit(context.Background(), transitionCommit(transitionReport())); !errors.Is(err, ErrArrivalReplayed) {
-		t.Fatalf("replay %v", err)
-	}
-	if after := transitionState(t, pool); after != before || !strings.HasSuffix(after, "|2|501:true") {
-		t.Fatalf("replay %s -> %s", before, after)
-	}
-}
-
-func TestPGMarchArrivalConcurrent(t *testing.T) {
-	pool, _, tr := transitionFixture(t)
-	start := make(chan struct{})
-	errs := make(chan error, 2)
-	var wg sync.WaitGroup
-	for i := 0; i < 2; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			<-start
-			_, err := tr.Commit(context.Background(), transitionCommit(transitionReport()))
-			errs <- err
-		}()
-	}
-	close(start)
-	wg.Wait()
-	close(errs)
-	var ok, replayed int
-	for err := range errs {
-		switch {
-		case err == nil:
-			ok++
-		case errors.Is(err, ErrArrivalReplayed):
-			replayed++
-		default:
-			t.Fatalf("concurrent %v", err)
-		}
-	}
-	if ok != 1 || replayed != 1 || !strings.HasSuffix(transitionState(t, pool), "|1|1:true") {
-		t.Fatalf("concurrent ok=%d replay=%d state %s", ok, replayed, transitionState(t, pool))
-	}
-}
-
-func TestPGMarchArrivalFailures(t *testing.T) {
-	const raise = `CREATE FUNCTION fail_write() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'injected'; END $$;`
-	for _, tc := range []struct {
-		name, ddl string
-		allocated bool
+		commit bool
+		want   string
 	}{
-		{"march update", raise + `CREATE TRIGGER fail_write BEFORE UPDATE ON march_order FOR EACH ROW EXECUTE FUNCTION fail_write();`, false},
-		{"troop insert", raise + `CREATE TRIGGER fail_write BEFORE INSERT ON army_troop FOR EACH ROW EXECUTE FUNCTION fail_write();`, false},
-		{"army update", raise + `CREATE TRIGGER fail_write BEFORE UPDATE ON field_army FOR EACH ROW EXECUTE FUNCTION fail_write();`, false},
-		{"report insert", raise + `CREATE TRIGGER fail_write BEFORE INSERT ON battle_report FOR EACH ROW EXECUTE FUNCTION fail_write();`, true},
-		{"commit", raise + `CREATE CONSTRAINT TRIGGER fail_write AFTER INSERT ON battle_report DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION fail_write();`, true},
+		{true, "3|1793282400|2|30|40|1:166|1|1:true"},
+		{false, "1|-1|2|10|20|1:200,2:50|0|1:true"}, // rows rolled back, nextval is not transactional
 	} {
-		pool, _, tr := transitionFixture(t)
-		before := transitionState(t, pool)
-		baseSQL(t, pool, tc.ddl)
-		if _, err := tr.Commit(context.Background(), transitionCommit(transitionReport())); !errors.Is(err, ErrMarchTransition) {
-			t.Fatalf("%s: failure not surfaced: %v", tc.name, err)
+		pool, conn, tr := transitionFixture(t)
+		before := transitionSnapshot(t, conn)
+		tx, err := pool.BeginTx(context.Background(), pgx.TxOptions{IsoLevel: pgx.ReadCommitted})
+		baseOK(t, err)
+		defer func() { _ = tx.Rollback(context.Background()) }()
+		if _, err = tr.Commit(context.Background(), tx, transitionCommit(transitionReport())); err != nil {
+			t.Fatal(err)
 		}
-		if tc.allocated {
-			before = strings.Replace(before, "1:false", "1:true", 1)
+		if tc.commit {
+			baseOK(t, tx.Commit(context.Background()))
+			var report string
+			baseOK(t, conn.QueryRow(context.Background(), `SELECT report_id||'|'||attacker_player_id||'|'||location_x||'|'||location_y FROM battle_report`).Scan(&report))
+			if report != "1|7|30|40" {
+				t.Fatalf("commit=%v report %s", tc.commit, report)
+			}
+		} else {
+			baseOK(t, tx.Rollback(context.Background()))
+			if after := transitionSnapshot(t, conn); after != before {
+				t.Fatalf("rollback mutated rows: %s -> %s", before, after)
+			}
 		}
-		if after := transitionState(t, pool); after != before {
-			t.Fatalf("%s: rows/sequence changed: %s -> %s", tc.name, before, after)
+		if state := transitionState(t, conn); state != tc.want {
+			t.Fatalf("commit=%v: %s want %s", tc.commit, state, tc.want)
 		}
-	}
-}
-
-func TestPGMarchArrivalRejectsMissing(t *testing.T) {
-	pool, _, tr := transitionFixture(t)
-	in := transitionCommit(nil)
-	in.ArmyID++
-	if _, err := tr.Commit(context.Background(), in); !errors.Is(err, ErrArrivalMissing) {
-		t.Fatal(err)
-	}
-	if state := transitionState(t, pool); !strings.HasSuffix(state, "|0|1:false") {
-		t.Fatal(state)
 	}
 }

@@ -54,8 +54,7 @@ func (s *Service) Save(ctx context.Context, p SaveParams) (Record, error) {
 	return rec, nil
 }
 
-// SaveTx persists a report through the caller's transaction. The caller owns
-// the transaction, the schema binding and the report ID allocation.
+// SaveTx persists a report through the caller's transaction and schema binding.
 func (s *Service) SaveTx(ctx context.Context, tx pgx.Tx, schema string, p SaveParams) (Record, error) {
 	if s == nil {
 		return Record{}, ErrNoTxStore
