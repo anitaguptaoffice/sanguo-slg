@@ -11,6 +11,9 @@ type Config struct {
 	HTTPAddr    string
 	DatabaseURL string
 	RedisAddr   string
+	// MILFreshProfileFile is the reviewed MIL startup profile path. Empty
+	// leaves the durable military path disabled.
+	MILFreshProfileFile string
 }
 
 // Load reads configuration from environment variables with local-dev defaults.
@@ -20,6 +23,8 @@ func Load() (Config, error) {
 		HTTPAddr:    envOr("HTTP_ADDR", ":8080"),
 		DatabaseURL: envOr("DATABASE_URL", "postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable"),
 		RedisAddr:   envOr("REDIS_ADDR", "localhost:6379"),
+
+		MILFreshProfileFile: os.Getenv("MIL_FRESH_PROFILE_FILE"),
 	}
 	if cfg.HTTPAddr == "" {
 		return Config{}, fmt.Errorf("HTTP_ADDR must not be empty")
