@@ -1,0 +1,22 @@
+Independent candidate-art review — ART-ITEM-ICONS-001 / #1966
+Review: independent of asset generation/export
+Date: 2026-11-02 UTC
+Result: PASS for candidate asset delivery; no unresolved visual/identity/export blocker.
+
+Scope/evidence:
+- Reviewed final 7x7 contact sheet in numeric 2001–2049 order; directly inspected every 64px icon across three review batches, plus first-six 128px exports.
+- All 49 subject identities agree with items.json. No visible baked words, quantity labels, external quality/UI frames, or clipping. Silhouettes and resource/unit families remain recognizable at 64px.
+- 2017 uses selected 2017-v2.png abstract jade crystal (no western helmet). Regenerated canonical 2035 is adequately scaled and readable; prior scale concern resolved.
+- Independently verified all 49 source hashes and 98 output hashes against INVENTORY.csv; all 98 output hashes also agree with QA.json. Verified manifest ID/code/path/dimension/anchor mappings against items.json.
+- All sources are 1254x1254. All exports have correct 64x64/128x128 RGBA dimensions, reported alpha range/bbox, and fully transparent outer borders.
+- Independently reproduced all 98 outputs using whole source canvas -> 56/112px downsample -> centered transparent 64/128px extent. Maximum absolute RGBA channel difference is 1 (quantization-level). No evidence of upscale, crop, or repaint.
+
+Exact reviewed inventory (pins all 49 source and 98 output hashes):
+INVENTORY.csv SHA256 c7169601229c85ced98eb8a900db0dcbfe3c9d23cfb0079f65aedc92f47e7e89
+manifest.candidate.json SHA256 2b22999712b7f00a8c950dd06db6d0a9b0d4d628eb01efd858fea5217ca6fa40
+QA.json at review SHA256 2c36f9be30d635b696bee023095cce22e320a24d302ad99ff8dc6907e8e3f864
+QA.visual_review still describes only first six reviewed; coordinator notified to refresh that documentation field to reference this final review. Changing only review-status prose does not alter pinned image acceptance.
+
+Nonblocking polish: 2023 gift-list packet is context-dependent; 2039 paired horses lose fine detail at64px. Similar material variants rely on silhouette/container differences rather than readable numeric tiers, as intended by no-text requirement.
+
+Limitations: This is candidate asset review, NOT runtime acceptance, game integration, frozen host-size/key/fallback contract, runtime screenshot validation, merge approval, or proof that unrelated missing-art categories are complete. Proposed64/128px specification still requires host agreement. No images were modified by this reviewer.
