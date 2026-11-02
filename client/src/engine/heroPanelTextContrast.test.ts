@@ -10,6 +10,7 @@ import {
   HERO_PANEL_INK_MUTED_COLOR,
   HERO_PANEL_PAPER_MUTED_COLOR,
   HERO_PANEL_PAPER_OWNED_COLOR,
+  HERO_PANEL_PAPER_PRIMARY_COLOR,
   HERO_PANEL_PAPER_SECONDARY_COLOR,
 } from "@/engine/heroPanelTextContrast";
 
@@ -22,6 +23,8 @@ describe("heroPanelTextContrast (CLIENT-188)", () => {
     expect(html).toContain(HERO_PANEL_CONTRAST_SCOPE_SELECTOR.slice(1));
     expect(html).toContain(HERO_PANEL_PAPER_MUTED_COLOR);
     expect(html).toContain(HERO_PANEL_PAPER_SECONDARY_COLOR);
+    expect(html).toContain(HERO_PANEL_PAPER_PRIMARY_COLOR);
+    expect(html).toMatch(/CLIENT-188[\s\S]*hero-list-row-primary[\s\S]*#f5e6c8/);
     expect(html).toContain(HERO_PANEL_INK_BODY_COLOR);
     expect(html).toContain(HERO_PANEL_INK_MUTED_COLOR);
     expect(html).toContain(HERO_PANEL_INK_DEFICIT_COLOR);
