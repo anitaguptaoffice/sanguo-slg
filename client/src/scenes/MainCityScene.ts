@@ -741,6 +741,7 @@ export class MainCityScene implements Scene {
       (keys) => {
         if (keys.length) scheduleHudResourcePulse(this.hud, keys);
       },
+      this.assets,
     );
     this.content.attach();
     this.dailyQuest = new DailyQuestPanels(
