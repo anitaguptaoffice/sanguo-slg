@@ -57,9 +57,11 @@ export function previewRecruitCost(
   const spec = troopRecruitSpecForCfgId(troopCfgId);
   if (!spec) return null;
   const count = Math.floor(qty);
-  if (count <= 0) return null;
+  if (!Number.isSafeInteger(count) || count <= 0) return null;
   const cost = scaleTroopRecruitCost(spec.recruitCostPerUnit, count);
   const timeSec = spec.secPerUnit * count;
+  // Reject precision loss before formatting or affordability comparisons.
+  if (![timeSec, ...Object.values(cost)].every(Number.isSafeInteger)) return null;
   const insufficientHint = formatUpgradeInsufficientHint(wallet, cost);
   const canAfford = insufficientHint == null;
   return {
