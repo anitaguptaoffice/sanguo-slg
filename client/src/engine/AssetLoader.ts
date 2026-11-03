@@ -67,23 +67,27 @@ export class AssetLoader {
   private async preloadManifestImages(manifest: ArtManifestV1): Promise<void> {
     const viteBase = import.meta.env.BASE_URL ?? "/";
     const packBase = manifest.base_url || "/assets/art/v1/";
-    const toLoad: ArtScaleVariant[] = [];
+    // A path shared with a required asset must remain required, regardless of order.
+    const toLoad = new Map<string, { variant: ArtScaleVariant; required: boolean }>();
+    const add = (variant: ArtScaleVariant, required: boolean) => {
+      const previous = toLoad.get(variant.path);
+      toLoad.set(variant.path, { variant, required: required || (previous?.required ?? false) });
+    };
     for (const asset of manifest.assets) {
       const v = pickScaleVariant(asset.variants, this.devicePixelRatio);
-      if (v) toLoad.push(v);
+      const optionalItem = asset.kind === "icon" && /^item\.icon\.[0-9]+\.v1$/.test(asset.id);
+      if (v) add(v, !optionalItem);
       if (asset.button_states) {
         for (const states of Object.values(asset.button_states)) {
           const sv = pickScaleVariant(states, this.devicePixelRatio);
-          if (sv) toLoad.push(sv);
+          if (sv) add(sv, true);
         }
       }
     }
-    const seen = new Set<string>();
     const loads: Promise<void>[] = [];
-    for (const variant of toLoad) {
-      if (seen.has(variant.path)) continue;
-      seen.add(variant.path);
-      loads.push(this.loadImage(variant.path, variant, packBase, viteBase));
+    for (const { variant, required } of toLoad.values()) {
+      const load = this.loadImage(variant.path, variant, packBase, viteBase);
+      loads.push(required ? load : load.catch(() => undefined));
     }
     await Promise.all(loads);
   }
