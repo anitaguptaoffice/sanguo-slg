@@ -996,18 +996,35 @@ export class GatewayClient implements GatewayPort {
       throw new Error("gateway not connected");
     }
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error("gateway timeout")), 15_000);
+      const cleanup = () => {
+        clearTimeout(timer);
+        ws.removeEventListener("message", onMessage);
+        ws.removeEventListener("close", onClose);
+      };
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error("gateway timeout"));
+      }, 15_000);
+      const onClose = () => {
+        cleanup();
+        reject(new Error("gateway disconnected"));
+      };
       const onMessage = (ev: MessageEvent) => {
         const buf = ev.data as ArrayBuffer;
         const { ServerPacket } = getTypes();
         const sp = ServerPacket.decode(new Uint8Array(buf)) as unknown as { trace_id?: string };
         if (sp.trace_id !== traceId) return;
-        clearTimeout(timer);
-        ws.removeEventListener("message", onMessage);
+        cleanup();
         resolve(buf);
       };
       ws.addEventListener("message", onMessage);
-      ws.send(packet);
+      ws.addEventListener("close", onClose);
+      try {
+        ws.send(packet);
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
     });
   }
 
