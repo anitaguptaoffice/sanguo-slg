@@ -3143,6 +3143,10 @@ export class HeroMailPanels {
         this.mailListRpcPage = this.mailListRpcPage.map((m) => m.mail_id === mailId ? next : m);
       }
     }
+    if (!previous && this.mailFilter === MAIL_INBOX_FILTER_UNREAD && this.mailListLoading && !mailIsUnread(patch)) {
+      // Refresh discarded the old cache: restart after the mutation, not from a pre-read snapshot.
+      void this.refreshMail();
+    }
     this.mailInboxSnapshot = upsertMailRow(this.mailInboxSnapshot, { ...patch, mail_id: mailId });
     this.setMailFilterButtons();
   }

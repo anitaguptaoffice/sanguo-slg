@@ -6,7 +6,7 @@ Task: https://github.com/anitaguptaoffice/sanguo-slg/issues/2002
 
 The inbox initially loads 50 raw server rows. “加载更早邮件” appends the next page until the server total is reached or an empty page is returned. Selection is retained; repeated IDs are updated without duplicate rows. Failed appends retain rows and retry the same offset. Refresh and server-backed tab changes restart at the first page. Local attachment/category filters do not change the raw offset, so an empty filtered page can still offer older mail.
 
-“领取已加载附件” acts only on eligible rows loaded in the current tab. Loading does not claim attachments or mark mail read. Reading/claiming a loaded unread row adjusts the unread offset and invalidates an in-flight page based on the old offset. Newer reads, actor changes, and detached panels reject stale responses. Commands already sent to the server cannot be canceled.
+“领取已加载附件” acts only on eligible rows loaded in the current tab. Loading does not claim attachments or mark mail read. Reading/claiming a loaded unread row adjusts the unread offset and invalidates an in-flight page based on the old offset. A read/claim completed during an unread refresh restarts that list request after the mutation. Newer list reads, actor changes, and detached panels reject stale pagination-list responses. Commands already sent to the server cannot be canceled.
 
 ## Dependency and limits
 

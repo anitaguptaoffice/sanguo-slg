@@ -118,3 +118,20 @@ describe('claim pagination regressions', () => {
     } finally { s.panels.detach(); }
   });
 });
+describe('refresh mutation reconciliation', () => {
+  it('does not accept an unread refresh snapshot taken before a local read', async () => {
+    const s = await setup(); try {
+      const unreadRows = Array.from({length:50},(_,i)=>row(100-i,0));
+      s.page.mockImplementation((opts) => Promise.resolve({mails:opts.filter===1 ? unreadRows : [],total_count:opts.filter===1?51:0}));
+      s.click('mail-filter-unread'); await flush();
+      const pending = deferred(); s.page.mockReturnValueOnce(pending.promise); s.click('refresh-mail');
+      s.page.mockImplementation((opts) => Promise.resolve({ mails: opts.filter === 1 ? unreadRows.filter((m) => m.mail_id !== 90) : [], total_count: opts.filter === 1 ? 50 : 0 }));
+      s.panels.getMailRoot().querySelector<HTMLElement>('li[data-mail-id="90"]')!.click(); await flush();
+      expect(s.ids()).not.toContain(90);
+      pending.resolve({mails:unreadRows,total_count:51}); await flush();
+      expect(s.ids()).not.toContain(90);
+      s.page.mockResolvedValueOnce({ mails: [row(50, 0)], total_count: 50 }); s.click("load-more-mail"); await flush();
+      expect(s.page).toHaveBeenCalledWith({ filter: 1, pageSize: 50, pageOffset: 49 }); expect(s.ids()).toContain(50);
+    } finally { s.panels.detach(); }
+  });
+});
