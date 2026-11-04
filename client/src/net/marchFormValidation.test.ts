@@ -86,7 +86,7 @@ describe("validateMarchForm", () => {
   it("rejects march when session cached hero march force is too low", () => {
     sessionStorage.setItem(
       HERO_MARCH_FORCE_SESSION_KEY,
-      JSON.stringify({ "7": { current: 5, max: 40, updatedAtMs: 1 } }),
+      JSON.stringify({ "7": { current: 5, max: 40, updatedAtMs: Date.now() } }),
     );
     const r = validateMarchForm({
       ...base,

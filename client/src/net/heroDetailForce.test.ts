@@ -49,7 +49,7 @@ describe("heroDetailForce (CLIENT-hero-force-001)", () => {
     const storage = {
       getItem: (key: string) =>
         key === HERO_MARCH_FORCE_SESSION_KEY
-          ? JSON.stringify({ "3": { current: 5, max: 40, updatedAtMs: 1 } })
+          ? JSON.stringify({ "3": { current: 5, max: 40, updatedAtMs: Date.now() } })
           : null,
       setItem: () => {},
     };
