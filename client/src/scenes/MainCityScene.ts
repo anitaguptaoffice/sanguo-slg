@@ -464,6 +464,7 @@ export class MainCityScene implements Scene {
   };
   private buildSubmitState: BuildSubmitState = "idle";
   private buildSubmitOwner: (() => boolean) | null = null;
+  private recruitSubmitOwner: (() => boolean) | null = null;
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
   /** 募兵队列↔军事互跳高亮 queue_id（CLIENT-157，与 session 同步）。 */
   private recruitQueueHighlightId: number | null = null;
@@ -561,6 +562,8 @@ export class MainCityScene implements Scene {
     this.marchSnapshotGeneration++;
     this.buildSubmitOwner = null;
     this.buildSubmitState = "idle";
+    this.recruitSubmitOwner = null;
+    this.recruitTroopSubmitState = "idle";
     this.resetMarchHeroTracking();
     this.assets = ctx.assets;
     this.getViewport = ctx.getViewport;
@@ -1282,6 +1285,8 @@ export class MainCityScene implements Scene {
     this.marchSnapshotGeneration++;
     this.buildSubmitOwner = null;
     this.buildSubmitState = "idle";
+    this.recruitSubmitOwner = null;
+    this.recruitTroopSubmitState = "idle";
     this.resetMarchHeroTracking();
     this.cityStateFetch?.clear();
     this.hudTodoBadgePoll?.reset();
@@ -3240,7 +3245,7 @@ export class MainCityScene implements Scene {
   }
 
   private async recruit(): Promise<void> {
-    if (!this.session) return;
+    if (!this.session || this.recruitSubmitOwner?.()) return;
     const preview = syncTroopRecruitFormPreview(this.militaryPanel, this.session.wallet);
     if (!preview?.canAfford) {
       setTroopRecruitFormError(this.militaryPanel, preview?.insufficientHint ?? "资源不足");
@@ -3248,6 +3253,13 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
+    const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => this.recruitSubmitOwner === current && this.session === session &&
+      actor() && generation === this.marchSnapshotGeneration;
+    this.recruitSubmitOwner = current;
+    this.recruitTroopSubmitState = "idle";
     const unitCfgId = preview.troopCfgId;
     const count = preview.qty;
     const walletBefore = this.session.wallet;
@@ -3257,7 +3269,6 @@ export class MainCityScene implements Scene {
     });
     this.syncMilitaryPanel();
     this.renderHud();
-    const session = this.session;
     this.cityStateFetch.clear();
     let pulseQueueId: number | null = null;
     try {
@@ -3267,7 +3278,7 @@ export class MainCityScene implements Scene {
         queue_id?: number;
         finish_at_ms?: number;
       };
-      if (this.session !== session) return;
+      if (!current()) return;
       this.cityStateFetch.clear();
       if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
       const pulseKeys = walletRecruitTroopDeductPulseKeys(
@@ -3299,12 +3310,15 @@ export class MainCityScene implements Scene {
         }
       }
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.recruitTroopSubmitState = recruitTroopSubmitStateMachine(this.recruitTroopSubmitState, {
         type: "FAIL",
       });
       setTroopRecruitFormError(this.militaryPanel, msg);
       this.status = msg;
+    } finally {
+      if (this.recruitSubmitOwner === current) this.recruitSubmitOwner = null;
     }
     this.renderHud();
     this.syncMilitaryPanel();
