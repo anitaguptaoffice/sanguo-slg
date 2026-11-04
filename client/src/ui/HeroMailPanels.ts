@@ -1,3 +1,4 @@
+import { heroMarchForceSessionRevision } from "@/net/heroMarchForceSession";
 import { captureActor } from "@/net/actorContext";
 import { beginAssetMutation } from "@/net/assetMutation";
 import { beginAssetRead, captureAssetRead } from "@/net/questClaimAssets";
@@ -743,6 +744,7 @@ export class HeroMailPanels {
   private heroLargessNextAtByHeroId = new Map<number, number>();
   private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
   private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
+  private heroRestRequests = new Map<number, { actor: () => boolean; detail: HeroDetail; forceChanged: boolean }>();
   private heroUpgradeRequests = new Map<number, { actor: () => boolean }>();
   private heroPointSubmitState: UseConsumableSubmitState = "idle";
   private heroForceSubmitState: UseConsumableSubmitState = "idle";
@@ -2288,6 +2290,7 @@ export class HeroMailPanels {
 
   private renderHeroList(): void {
     this.syncHeroUpgradePendingState();
+    this.syncHeroRestPendingState();
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
     const detailEl = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-detail"]');
     if (!ul) return;
@@ -3924,9 +3927,32 @@ export class HeroMailPanels {
     }
   }
 
+  private syncHeroRestPendingState(): void {
+    const pending = this.heroRestRequests.get(this.selectedHeroId);
+    const detail = this.heroDetail;
+    // Upgrade can change the visible cap without writing the force cache. Remember that observation.
+    if (pending?.actor() && detail?.hero_id === this.selectedHeroId &&
+        (detail.level !== pending.detail.level || detail.march_force !== pending.detail.march_force ||
+         detail.march_force_max !== pending.detail.march_force_max)) pending.forceChanged = true;
+    if (this.heroRestRequests.get(this.selectedHeroId)?.actor()) this.heroForceSubmitState = "submitting";
+    else if (this.heroForceSubmitState === "submitting") this.heroForceSubmitState = "idle";
+  }
+
   private async restHeroForceSelected(): Promise<void> {
-    if (this.heroForceSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
+    if (this.heroRestRequests.get(this.selectedHeroId)?.actor()) return;
     const heroId = this.selectedHeroId;
+    const detailBefore = this.heroDetail;
+    const request = { actor: captureActor(this.gateway, this.getSession), detail: detailBefore, forceChanged: false };
+    this.heroRestRequests.set(heroId, request);
+    const revision = heroMarchForceSessionRevision(heroId);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => request.actor() && presentation() && generation === this.heroDetailReadGeneration &&
+      this.selectedHeroId === heroId && this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed &&
+      this.heroPanel.parentNode === this.mount;
+    const release = () => { if (this.heroRestRequests.get(heroId) === request) this.heroRestRequests.delete(heroId); };
+    this.heroForceSubmitState = "idle";
     this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
       type: "SUBMIT",
     });
@@ -3937,10 +3963,21 @@ export class HeroMailPanels {
     this.onStatus("将领休整…");
     try {
       const res = await this.gateway.restHero(sid, heroId);
-      const detailAfter = applyRestHeroToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      persistHeroMarchForceFromDetail(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      release();
+      if (res.hero_id !== heroId) throw new Error("休整结果与所选将领不一致，请刷新详情");
+      if (!request.actor()) return;
+      const detailAfter = applyRestHeroToDetail(detailBefore, res);
+      const cacheUnchanged = !request.forceChanged && revision === heroMarchForceSessionRevision(heroId);
+      if (cacheUnchanged) persistHeroMarchForceFromDetail(detailAfter);
+      if (!current() || !cacheUnchanged) {
+        if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+            this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
+      this.heroDetail = applyRestHeroToDetail(this.heroDetail, res);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
       this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
         type: "SUCCESS",
       });
@@ -3952,6 +3989,8 @@ export class HeroMailPanels {
       );
       this.onStatus(statusText);
     } catch (e) {
+      release();
+      if (!current()) return;
       this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
         type: "FAIL",
       });
@@ -3960,7 +3999,11 @@ export class HeroMailPanels {
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      syncHeroDetailForceControls(this.heroPanel, this.heroForceSubmitState, this.heroDetail);
+      release();
+      if (request.actor() && this.selectedHeroId === heroId && this.heroPanel.parentNode === this.mount) {
+        this.syncHeroRestPendingState();
+        syncHeroDetailForceControls(this.heroPanel, this.heroForceSubmitState, this.heroDetail);
+      }
     }
   }
 

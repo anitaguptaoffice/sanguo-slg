@@ -9,6 +9,17 @@ export type HeroMarchForceSessionEntry = {
 
 export type HeroMarchForceSessionMap = Record<string, HeroMarchForceSessionEntry>;
 
+// In-memory observation order avoids timestamp collisions and clock rollback.
+const revisions = new WeakMap<object, Map<number, number>>();
+export function heroMarchForceSessionRevision(heroId: number, storage: object | null = typeof sessionStorage !== "undefined" ? sessionStorage : null): number {
+  return storage ? revisions.get(storage)?.get(heroId) ?? 0 : 0;
+}
+function advanceRevision(storage: object, heroId: number): void {
+  let map = revisions.get(storage);
+  if (!map) { map = new Map(); revisions.set(storage, map); }
+  map.set(heroId, (map.get(heroId) ?? 0) + 1);
+}
+
 function parseSessionMap(raw: string | null): HeroMarchForceSessionMap {
   if (!raw) return {};
   try {
@@ -47,6 +58,7 @@ export function writeHeroMarchForceSession(
   const map = parseSessionMap(storage.getItem(HERO_MARCH_FORCE_SESSION_KEY));
   map[String(heroId)] = { current, max, updatedAtMs: Date.now() };
   storage.setItem(HERO_MARCH_FORCE_SESSION_KEY, JSON.stringify(map));
+  advanceRevision(storage, heroId);
 }
 
 export function clearHeroMarchForceSession(
@@ -59,4 +71,5 @@ export function clearHeroMarchForceSession(
   const map = parseSessionMap(storage.getItem(HERO_MARCH_FORCE_SESSION_KEY));
   delete map[String(heroId)];
   storage.setItem(HERO_MARCH_FORCE_SESSION_KEY, JSON.stringify(map));
+  advanceRevision(storage, heroId);
 }
