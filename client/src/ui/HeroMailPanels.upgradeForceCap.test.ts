@@ -68,3 +68,27 @@ it('does not regress newer authority when an old upgrade completes after detail 
  resolveFirst(upgraded(2)); await flush();
  expect(root.textContent).toContain('出征体力 28/32'); expect(rest().disabled).toBe(false);
 });
+
+it('does not enable rest on a full low-level hero after a different high-level hero upgrade reply', async () => {
+ let resolveFirst!: (r:ReturnType<typeof upgraded>) => void;
+ const gateway = {
+   getBoundServerId: () => 1,
+   listPlayerBag: vi.fn(async () => ({items:[]})),
+   listPlayerHeroes: vi.fn(async () => ({heroes:[{hero_id:7, template_cfg_id:1001, level:4},{hero_id:9, template_cfg_id:1001, level:2}],total_count:2})),
+   getHeroDetail: vi.fn(async (_sid:number,id:number) => ({hero_id:id, level:id===7?4:2, march_force:28, march_force_max:id===7?36:28, exp_toward_next:1000, upgrade_exp_required:100})),
+   upgradeHero: vi.fn(() => new Promise<ReturnType<typeof upgraded>>(r => {resolveFirst=r})),
+   restHero: vi.fn(async () => ({hero_id:9, march_force:32, march_force_max:32})),
+ };
+ const root = document.createElement('div'); document.body.append(root);
+ const session = {serverId:1, cityId:1, player:{player_id:1}, wallet:{}, buildings:[], cityTroops:[], bag:[]};
+ panel = new HeroMailPanels(root, gateway as never, () => session as never, () => {}, () => {});
+ panel.attach(); panel.toggleHero(); await flush();
+ root.querySelector<HTMLElement>('li[data-hero-id="7"]')!.click(); await flush();
+ root.querySelector<HTMLButtonElement>('[data-action="hero-upgrade"]')!.click(); await flush();
+ root.querySelector<HTMLElement>('li[data-hero-id="9"]')!.click(); await flush();
+ const rest = () => root.querySelector<HTMLButtonElement>('[data-action="hero-force-rest"]')!;
+ expect(root.textContent).toContain('出征体力 28/28'); expect(rest().disabled).toBe(true);
+ resolveFirst(upgraded(5)); await flush();
+ expect(root.textContent).toContain('出征体力 28/28'); expect(rest().disabled).toBe(true);
+ rest().click(); await flush(); expect(gateway.restHero).not.toHaveBeenCalled();
+});

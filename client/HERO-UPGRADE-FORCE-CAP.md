@@ -27,3 +27,7 @@ Independent review found an initial !== condition could lower a fresher Lv3 cap 
 older Lv2 reply arrived. An actual-panel delayed-response regression proved it; refresh
 only on a forward level transition now preserves the accepted higher cap. Broader
 pre-existing response ownership/level replacement is outside this helper-only card.
+
+The cap inference also requires a matching hero ID (or an absent old identity). A delayed
+higher-level response for a different hero must not inflate the currently selected hero's
+cap or enable unnecessary rest. A second real-panel red/green test covers that switch.
