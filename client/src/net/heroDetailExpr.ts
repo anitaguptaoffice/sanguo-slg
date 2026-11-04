@@ -155,6 +155,11 @@ export function applyHeroExprFinishToDetail(
     hero_id: res.hero_id,
     status: res.status,
     exp: res.exp,
+    // Settlement does not change level; preserve its threshold using authoritative total EXP.
+    // A repeated response has a zero delta, unlike adding exp_gained again.
+    exp_current: base.hero_id === res.hero_id && base.exp != null && base.exp_current != null &&
+      Number.isFinite(base.exp) && Number.isFinite(base.exp_current) && Number.isFinite(res.exp)
+      ? base.exp_current + (res.exp - base.exp) : base.exp_current,
     expr_ends_at_ms: undefined,
     expr_hours: undefined,
   };
