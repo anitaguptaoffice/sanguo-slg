@@ -43,7 +43,7 @@ import {
   scheduleQuestClaimRowPulse,
   scrollQuestClaimableIntoView,
 } from "@/net/dailyQuestClaimFeedback";
-import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
+import { DAILY_QUEST_STATE_ACCEPTABLE, DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import type { AssetLoader } from "@/engine/AssetLoader";
@@ -144,6 +144,7 @@ export class DailyQuestPanels {
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.renderList();
   }
 
   detach(): void {
@@ -470,10 +471,26 @@ export class DailyQuestPanels {
     }
   }
 
+  private syncSingleQuestActions(): void {
+    const selected = this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId);
+    const accept = this.panel.querySelector<HTMLButtonElement>('[data-action="accept-daily"]');
+    const claim = this.panel.querySelector<HTMLButtonElement>('[data-action="claim-daily"]');
+    if (accept) accept.disabled = this.listLoading || this.acceptInflight || selected?.state !== DAILY_QUEST_STATE_ACCEPTABLE;
+    if (claim) claim.disabled = this.listLoading || this.claimInflight || this.claimBatchInflight || selected?.state !== DAILY_QUEST_STATE_CLAIMABLE;
+  }
+
   private renderList(): void {
     const ul = this.panel.querySelector<HTMLElement>('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
+    const displayRows = this.visibleRows();
+    if (!displayRows.some(r => r.quest_cfg_id === this.selectedCfgId)) {
+      this.selectedCfgId = pickDefaultDailyQuest(displayRows)?.quest_cfg_id ?? 0;
+    }
+    const selected = displayRows.find(r => r.quest_cfg_id === this.selectedCfgId) ?? null;
+    if (pre) pre.textContent = formatDailyQuestDetail(selected);
+    this.renderNextStep(selected);
+    this.syncSingleQuestActions();
     this.renderDailyChainTabs();
     this.updateFilterButtons();
     this.renderDailyClaimableSweep();
@@ -492,7 +509,6 @@ export class DailyQuestPanels {
       });
       return;
     }
-    const displayRows = this.visibleRows();
     if (!displayRows.length) {
       const msg = this.rows.length
         ? dailyQuestListEmptyMessage(this.listFilter)
@@ -634,9 +650,6 @@ export class DailyQuestPanels {
         ul.appendChild(li);
       }
     }
-    const selected = this.rows.find((r) => r.quest_cfg_id === this.selectedCfgId) ?? null;
-    if (pre) pre.textContent = formatDailyQuestDetail(selected);
-    this.renderNextStep(selected);
     this.renderBattleReportBanner();
     this.syncDailyFilterUiSkins();
   }
@@ -722,8 +735,14 @@ export class DailyQuestPanels {
         const claimId = pickFirstClaimableDailyQuestCfgId(this.rows);
         if (claimId > 0) pick = this.rows.find((r) => r.quest_cfg_id === claimId) ?? null;
       }
-      if (!pick) pick = pickDefaultDailyQuest(this.rows);
-      if (pick?.quest_cfg_id) this.selectedCfgId = pick.quest_cfg_id;
+      if (pick && !this.visibleRows().some(r => r.quest_cfg_id === pick?.quest_cfg_id)) {
+        // Explicit queue/HUD intent takes precedence over a remembered incompatible filter.
+        this.listFilter = "all";
+        writeDailyQuestListFilterSession(this.listFilter);
+      }
+      if (!pick) pick = this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId) ??
+        pickDefaultDailyQuest(this.visibleRows());
+      this.selectedCfgId = pick?.quest_cfg_id ?? 0;
       this.renderList();
       this.publishDailyChainSnapshot();
       this.onStatus(`日常 ${this.rows.length} 条`);
@@ -742,7 +761,8 @@ export class DailyQuestPanels {
   }
 
   private async acceptDaily(): Promise<void> {
-    if (this.acceptInflight) return;
+    if (this.acceptInflight || this.listLoading ||
+      this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId)?.state !== DAILY_QUEST_STATE_ACCEPTABLE) return;
     const current = this.captureCurrentPanel();
     const mounted = this.capturePanel();
     const id = this.selectedCfgId;
@@ -769,13 +789,14 @@ export class DailyQuestPanels {
     } finally {
       if (mounted()) {
         this.acceptInflight = false;
-        if (button) button.disabled = false;
+        this.syncSingleQuestActions();
       }
     }
   }
 
   private async claimDaily(): Promise<void> {
-    if (this.claimInflight || this.claimBatchInflight) return;
+    if (this.claimInflight || this.claimBatchInflight || this.listLoading ||
+      this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId)?.state !== DAILY_QUEST_STATE_CLAIMABLE) return;
     const current = this.captureCurrentPanel();
     const mounted = this.capturePanel();
     const id = this.selectedCfgId;
@@ -811,7 +832,7 @@ export class DailyQuestPanels {
     } finally {
       if (!mounted()) return;
       this.claimInflight = false;
-      if (button) button.disabled = false;
+      this.syncSingleQuestActions();
     }
   }
 
