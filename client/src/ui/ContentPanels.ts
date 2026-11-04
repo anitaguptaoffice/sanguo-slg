@@ -1347,6 +1347,7 @@ export class ContentPanels {
     const purchaseCount = 1;
     const offer = this.shopOffers.find((o) => o.offer_id === offerId);
     const walletBefore = this.getSession()?.wallet;
+    const bagBefore = this.getSession()?.bag;
     const validated = validatePurchaseShopOffer({ offer, offerId, purchaseCount, wallet: walletBefore });
     if (!validated.ok) {
       state.warning = validated.message;
@@ -1360,7 +1361,7 @@ export class ContentPanels {
     state.outcome = state.warning = "";
     this.shopPurchaseFlash.delete(offerId);
     this.shopLastGrantedItemCfgId = 0;
-    beginAssetRead(this.gateway); // Older bag/wallet reads must not overwrite a submitted purchase.
+    const receiptCurrent = beginAssetRead(this.gateway); // Capture freshness before dispatch.
     ++this.shopReadVersion;
     this.renderShopList();
     let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
@@ -1380,7 +1381,12 @@ export class ContentPanels {
       return; // Never replay, compensate or infer rollback from an unavailable response.
     }
     if (!state.current()) return;
+    const freshWallet = receiptCurrent() && this.getSession()?.wallet === walletBefore &&
+      this.getSession()?.bag === bagBefore;
     beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
+    // This full successful receipt includes gold; city-state reads do not. Never merge granted-item deltas.
+    if (freshWallet && res.wallet_after) this.onSessionPatch({ wallet: { ...res.wallet_after } });
+    if (!state.current()) return;
     const granted = res.granted_items?.items?.[0];
     this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
     state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {

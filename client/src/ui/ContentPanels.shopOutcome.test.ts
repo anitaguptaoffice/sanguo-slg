@@ -1,3 +1,5 @@
+import { getProtoRoot } from "@/net/loadProto";
+import { decodeGatewayResponse } from "@/net/decodeGatewayResponse";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
@@ -42,13 +44,13 @@ describe("SHOP purchase outcome ownership", () => {
     const f = await setup(); f.click("buy-offer"); f.request.resolve(f.success); await f.settle();
     expect(f.purchase).toHaveBeenCalledWith(1, 1001, 1);
     expect(f.session().bag).toEqual([{ item_cfg_id: 2001, quantity: 3 }, { item_cfg_id: 2004, quantity: 1 }]);
-    expect(f.session().wallet).toEqual({ gold: 100, food: 90 }); expect(f.shelf).toHaveBeenCalledTimes(2);
+    expect(f.session().wallet).toEqual({ gold: 90, food: 90 }); expect(f.shelf).toHaveBeenCalledTimes(2);
     expect(f.text("feedback")).toContain("购买成功"); expect(f.text("feedback")).toContain("×3");
   });
   it("keeps confirmed success after read failure and retries only all three reads", async () => {
     const f = await setup(); f.city.mockRejectedValueOnce(new Error("read unavailable"));
     f.click("buy-offer"); f.request.resolve(f.success); await f.settle();
-    expect(f.patch).not.toHaveBeenCalled(); expect(f.text("feedback")).toContain("购买成功");
+    expect(f.patch).toHaveBeenCalledTimes(1); expect(f.session().wallet.gold).toBe(90); expect(f.text("feedback")).toContain("购买成功");
     expect(f.text("form-error")).toContain("待同步"); expect(f.button("buy-offer").disabled).toBe(true);
     f.click("reload-shop-state"); await f.settle();
     expect(f.purchase).toHaveBeenCalledTimes(1); expect(f.bag).toHaveBeenCalledTimes(2);
@@ -90,7 +92,7 @@ describe("SHOP interrupted and superseded DOM flows", () => {
     const f = await setup(); f.click("buy-offer"); f.panels.toggleShop(); f.panels.toggleShop();
     expect(f.purchase).toHaveBeenCalledTimes(1); expect(f.shelf).toHaveBeenCalledTimes(1);
     f.panels.toggleShop(); f.request.resolve(f.success); await f.settle();
-    expect(f.bag).not.toHaveBeenCalled(); expect(f.patch).not.toHaveBeenCalled(); expect(f.status).not.toHaveBeenCalled();
+    expect(f.bag).not.toHaveBeenCalled(); expect(f.patch).toHaveBeenCalledWith({ wallet: { gold: 90 } }); expect(f.status).not.toHaveBeenCalled();
     f.panels.toggleShop(); await f.settle();
     expect(f.purchase).toHaveBeenCalledTimes(1); expect(f.city).toHaveBeenCalledTimes(1);
     expect(f.text("feedback")).toContain("购买成功");
@@ -104,7 +106,7 @@ describe("SHOP interrupted and superseded DOM flows", () => {
   });
   it.each(["epoch", "bag", "wallet"])("preserves newer %s snapshot during post-purchase reload", async change => {
     const f = await setup(), read = deferred<{ items: { item_cfg_id: number; quantity: number }[] }>();
-    f.bag.mockReturnValueOnce(read.promise); f.click("buy-offer"); f.request.resolve(f.success); await f.settle();
+    f.bag.mockReturnValueOnce(read.promise); f.click("buy-offer"); f.request.resolve(f.success); await f.settle(); f.patch.mockClear();
     if (change === "epoch") beginAssetRead(f.gateway);
     if (change === "bag") f.session().bag = [{ item_cfg_id: 2004, quantity: 9 }];
     if (change === "wallet") f.session().wallet = { gold: 900 };
@@ -125,7 +127,7 @@ describe("SHOP interrupted and superseded DOM flows", () => {
     f.request.resolve(f.success); await f.settle();
     expect(f.patch).not.toHaveBeenCalled(); expect(f.button("buy-offer").disabled).toBe(true);
     expect(f.purchase).toHaveBeenCalledTimes(2); next.resolve(f.success); await f.settle();
-    expect(f.patch).toHaveBeenCalledTimes(1);
+    expect(f.patch).toHaveBeenCalledTimes(2);
   });
   it("ignores an old shelf read after actor switch and a newer read", async () => {
     const f = await setup(), old = deferred<Awaited<ReturnType<typeof f.shelf>>>();
@@ -137,7 +139,7 @@ describe("SHOP interrupted and superseded DOM flows", () => {
   it("ignores a pending aggregate after unmount and does not submit from detached controls", async () => {
     const f = await setup(), read = deferred<Awaited<ReturnType<typeof f.bag>>>();
     f.bag.mockReturnValueOnce(read.promise); f.click("buy-offer"); f.request.resolve(f.success); await f.settle();
-    const buy = f.button("buy-offer"); f.panels.detach(); f.status.mockClear();
+    const buy = f.button("buy-offer"); f.panels.detach(); f.status.mockClear(); f.patch.mockClear();
     read.resolve({ items: [] }); await f.settle(); buy.disabled = false; buy.click();
     expect(f.patch).not.toHaveBeenCalled(); expect(f.status).not.toHaveBeenCalled(); expect(f.purchase).toHaveBeenCalledTimes(1);
   });
@@ -192,4 +194,29 @@ describe("SHOP settlement invalidates reads started during the request", () => {
       await f.settle(); expect(current()).toBe(true); expect(f.patch).not.toHaveBeenCalled();
     }
   });
+});
+
+function purchaseWire(gold: number) {
+ const type = getProtoRoot().lookupType("sanguo.shop.v1.PurchaseShopOfferResponse");
+ return decodeGatewayResponse(type, type.encode(type.fromObject({ wallet_after: { gold, food: 20, wood: 30, iron: 40, stone: 50 }, granted_items: { items: [{ item_cfg_id: 2001, quantity: 3 }] } })).finish());
+}
+it.each([90, 0])("confirmed production-wire purchase wallet gold %s survives city reload", async gold => {
+ const f = await setup(); f.click("buy-offer"); f.request.resolve(purchaseWire(gold)); await f.settle();
+ expect(f.session().wallet.gold).toBe(gold); expect(f.session().wallet.food).toBe(90); expect(f.purchase).toHaveBeenCalledTimes(1); f.panels.detach();
+});
+it("confirmed receipt survives read failure without automatic purchase replay", async () => {
+ const f = await setup(); f.city.mockRejectedValueOnce(new Error("offline")); f.click("buy-offer"); f.request.resolve(purchaseWire(90)); await f.settle(); expect(f.session().wallet.gold).toBe(90); expect(f.button("buy-offer").disabled).toBe(true);
+ f.click("reload-shop-state"); await f.settle(); expect(f.session().wallet.gold).toBe(90); expect(f.purchase).toHaveBeenCalledTimes(1); f.panels.detach();
+});
+it("closing retains fresh confirmed wallet without opening panels or starting reads", async () => {
+ const f = await setup(); f.click("buy-offer"); f.panels.toggleShop(); f.status.mockClear(); f.request.resolve(purchaseWire(90)); await f.settle(); expect(f.session().wallet.gold).toBe(90); expect(f.bag).not.toHaveBeenCalled(); expect(f.city).not.toHaveBeenCalled(); expect(f.status).not.toHaveBeenCalled(); f.panels.detach();
+});
+
+it.each(["epoch", "wallet", "bag", "actor", "relogin", "detach"])("does not apply a receipt after %s changes while the command is pending", async change => {
+ const f = await setup(); f.click("buy-offer"); f.panels.toggleShop();
+ if (change === "epoch") beginAssetRead(f.gateway); else if (change === "wallet") f.session().wallet = { gold: 0 }; else if (change === "bag") f.session().bag = []; else if (change === "actor") f.switchActor(); else if (change === "relogin") f.relogin(); else f.panels.detach();
+ f.patch.mockClear(); f.request.resolve(purchaseWire(90)); await f.settle(); expect(f.patch).not.toHaveBeenCalled(); expect(f.session().wallet.gold).toBe(change === "wallet" ? 0 : 100); expect(f.purchase).toHaveBeenCalledTimes(1); f.panels.detach();
+});
+it("missing wallet receipt retains prior gold, not an invented deduction", async () => {
+ const f = await setup(); f.click("buy-offer"); f.request.resolve({ granted_items: f.success.granted_items }); await f.settle(); expect(f.session().wallet.gold).toBe(100); expect(f.purchase).toHaveBeenCalledTimes(1); f.panels.detach();
 });
