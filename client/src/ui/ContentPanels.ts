@@ -342,7 +342,7 @@ export class ContentPanels {
 
   private syncShopInlineStateResidualRing(): void {
     const wallet = this.sessionWallet();
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId) ?? null;
+    const offer = this.selectedVisibleShopOffer() ?? null;
     if (!shouldBagShopInlineStateResidualRing("shop", null, wallet, offer)) return;
     const li = this.shopPanel.querySelector<HTMLElement>(
       `li[data-offer-id="${this.selectedOfferId}"]`,
@@ -574,7 +574,7 @@ export class ContentPanels {
 
   private syncShopWalletGap(): void {
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    const offer = this.selectedVisibleShopOffer();
     applyShopPurchaseAffordDisplay(
       this.shopPanel,
       offer?.price_resources,
@@ -605,7 +605,7 @@ export class ContentPanels {
 
   private shopPurchaseCanAfford(): boolean {
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    const offer = this.selectedVisibleShopOffer();
     return validatePurchaseShopOffer({
       offer,
       offerId: this.selectedOfferId,
@@ -916,6 +916,11 @@ export class ContentPanels {
     }
   }
 
+  private selectedVisibleShopOffer(): ShopOffer | undefined {
+    if (this.shopListLoading || this.shopListError) return undefined;
+    return this.visibleShopOffers().find(o => o.offer_id === this.selectedOfferId);
+  }
+
   private visibleShopOffers(): ShopOffer[] {
     return filterShopOffersByCategory(this.shopOffers, this.shopCategory);
   }
@@ -988,8 +993,8 @@ export class ContentPanels {
       sel.appendChild(opt);
     }
     const stillVisible = visible.some((o) => o.offer_id === this.selectedOfferId);
-    if (!stillVisible && visible[0]?.offer_id) {
-      this.selectedOfferId = visible[0].offer_id ?? this.selectedOfferId;
+    if (!stillVisible) {
+      this.selectedOfferId = visible[0]?.offer_id ?? 0;
     }
     if (visible[0]?.offer_id) {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
@@ -1345,7 +1350,7 @@ export class ContentPanels {
     if (!state.current() || state.busy || state.needsReload || !this.getSession() || this.shopPanel.classList.contains("hidden")) return;
     const offerId = this.selectedOfferId;
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === offerId);
+    const offer = this.selectedVisibleShopOffer();
     const walletBefore = this.getSession()?.wallet;
     const bagBefore = this.getSession()?.bag;
     const validated = validatePurchaseShopOffer({ offer, offerId, purchaseCount, wallet: walletBefore });
