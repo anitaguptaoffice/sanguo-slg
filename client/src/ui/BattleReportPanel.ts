@@ -1,3 +1,4 @@
+import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
@@ -190,6 +191,8 @@ export class BattleReportPanel {
   private detailError = "";
   private listLoading = false;
   private detailLoading = false;
+  private detailRequestVersion = 0;
+  private attached = false;
   /** 上一封/下一封切换后把焦点拉回详情顶栏导航（CLIENT-094）。 */
   private focusDetailNavAfterRender = false;
   /** CLIENT-254/270：列表重绘后补相邻键盘导航残余环 + 深环。 */
@@ -207,6 +210,8 @@ export class BattleReportPanel {
   }
 
   attach(): void {
+    this.detailRequestVersion++;
+    this.attached = true;
     const savedFilter = readBattleReportOutcomeFilterSession();
     if (savedFilter) this.outcomeFilter = savedFilter;
     const savedTimeWindow = readBattleReportTimeWindowFilterSession();
@@ -219,6 +224,8 @@ export class BattleReportPanel {
   }
 
   detach(): void {
+    this.attached = false;
+    this.detailRequestVersion++;
     this.clearMapReplay();
     this.panel?.removeEventListener("keydown", this.onKeyDownBound);
   }
@@ -1060,6 +1067,12 @@ export class BattleReportPanel {
     reportId: number,
     opts?: { preserveRoundNav?: boolean },
   ): Promise<void> {
+    if (!this.attached) return;
+    const version = ++this.detailRequestVersion;
+    const panel = this.panel;
+    const actor = captureActor(this.gateway, () => null);
+    const current = () => this.attached && this.panel === panel &&
+      version === this.detailRequestVersion && this.selectedReportId === reportId && actor();
     if (reportId !== this.selectedReportId) this.clearMapReplay();
     const preserveRoundNav = opts?.preserveRoundNav === true;
     const preservedRound = preserveRoundNav ? this.highlightedRound : 0;
@@ -1083,6 +1096,7 @@ export class BattleReportPanel {
           detail?: BattleReportDetailView;
         };
       };
+      if (!current()) return;
       this.detailSummary = res.report?.summary;
       this.detailResult = res.report?.detail?.result ?? "";
       this.detailView = res.report?.detail;
@@ -1106,6 +1120,7 @@ export class BattleReportPanel {
       }
       this.onStatus("战报已加载");
     } catch (e) {
+      if (!current()) return;
       this.detailError = `详情加载失败：${(e as Error).message}`;
       this.detailText = "";
       this.detailRounds = [];
@@ -1114,6 +1129,7 @@ export class BattleReportPanel {
       this.detailResult = "";
       this.onStatus(this.detailError);
     }
+    if (!current()) return;
     this.detailLoading = false;
     this.renderList();
     if (this.focusDetailNavAfterRender) {
