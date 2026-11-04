@@ -253,7 +253,9 @@ export class SocialPanels {
   private rankPanel!: HTMLElement;
   private guildId = 0;
   private guildName = "";
-  private readonly chatListInflight = new SocialPanelInflight<void>();
+  private chatReadVersion = 0;
+  private chatReadDestinationKey = "";
+  private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
   private readonly rankListInflight = new SocialPanelInflight<void>();
   private readonly guildListInflight = new SocialPanelInflight<void>();
   private readonly refreshClock = {
@@ -298,6 +300,8 @@ export class SocialPanels {
 
   attach(): void {
     this.chatSendPending = null;
+    ++this.chatReadVersion;
+    this.chatRead = null;
     this.chatPanel = this.buildChatPanel();
     this.guildPanel = this.buildGuildPanel();
     this.rankPanel = this.buildRankPanel();
@@ -318,6 +322,8 @@ export class SocialPanels {
 
   detach(): void {
     this.chatSendPending = null;
+    ++this.chatReadVersion;
+    this.chatRead = null;
     if (this.rankCooldownTimer != null) {
       clearTimeout(this.rankCooldownTimer);
       this.rankCooldownTimer = null;
@@ -454,7 +460,23 @@ export class SocialPanels {
     );
   }
 
+  private invalidateChatRead(): void {
+    const ch = this.selectedChatChannel();
+    const key = JSON.stringify([this.serverId(), ch, this.chatListOpts(ch)]);
+    if (key === this.chatReadDestinationKey) return;
+    this.chatReadDestinationKey = key;
+    ++this.chatReadVersion;
+    this.chatRead = null;
+    this.lastRenderedChatMessages = [];
+    this.chatListError = "";
+    this.chatListGatewayFailureCount = 0;
+    this.chatPanel.querySelector('[data-role="chat-log"]')?.replaceChildren();
+    this.chatPanel.querySelector('[data-role="chat-mark-read"]')?.classList.add("hidden");
+    this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", { busy: false });
+  }
+
   private syncChatChannelUi(ch: number): void {
+    this.invalidateChatRead();
     this.chatPanel.querySelector(".private-target")?.classList.toggle("hidden", ch !== CHAT_CHANNEL_PRIVATE);
     this.chatPanel.querySelector('[data-role="guild-chat-hint"]')?.classList.toggle("hidden", ch !== CHAT_CHANNEL_GUILD);
   }
@@ -613,7 +635,15 @@ export class SocialPanels {
       { passive: true },
     );
     const chatInput = el.querySelector('[data-field="chat-content"]') as HTMLInputElement | null;
-    el.querySelector('[data-field="peer-id"]')?.addEventListener("input", () => { ++this.chatDraftVersion; });
+    el.querySelector('[data-field="peer-id"]')?.addEventListener("input", () => {
+      ++this.chatDraftVersion;
+      if (this.selectedChatChannel() === CHAT_CHANNEL_PRIVATE) this.invalidateChatRead();
+    });
+    el.querySelector('[data-field="peer-id"]')?.addEventListener("change", () => {
+      if (this.selectedChatChannel() === CHAT_CHANNEL_PRIVATE && !el.classList.contains("hidden")) {
+        void this.refreshChat();
+      }
+    });
     chatInput?.addEventListener("input", () => {
       ++this.chatDraftVersion;
       this.syncChatInputCounter();
@@ -772,20 +802,34 @@ export class SocialPanels {
   private async refreshChat(canApply: () => boolean = () => true, onDiscard?: () => void): Promise<void> {
     const sid = this.serverId();
     const ch = this.selectedChatChannel();
+    const opts = this.chatListOpts(ch);
+    const key = JSON.stringify([sid, ch, opts]);
+    this.invalidateChatRead();
+    if (this.chatRead?.key === key && this.chatRead.current()) return this.chatRead.promise;
+    const version = ++this.chatReadVersion;
+    const panel = this.chatPanel;
+    const actor = captureActor(this.gateway, this.getSession);
+    const owns = () => version === this.chatReadVersion && actor() &&
+      this.chatPanel === panel && panel.parentNode === this.mount;
+    const current = () => owns() && canApply() && this.selectedChatChannel() === ch &&
+      JSON.stringify(this.chatListOpts(ch)) === JSON.stringify(opts);
     if (ch === CHAT_CHANNEL_GUILD && this.guildId <= 0) {
+      this.chatRead = null;
       this.chatListError = "";
       this.renderChatLog([], ch);
+      this.syncPanelRefreshUi(panel, "chat", "refresh-chat", { busy: false });
       return;
     }
-    return this.chatListInflight.run(async () => {
+    const promise = Promise.resolve().then(async () => {
+      if (!current()) return;
       this.syncPanelRefreshUi(this.chatPanel, "chat", "refresh-chat", { busy: true });
       this.onStatus("拉取聊天…");
       try {
         const res = (await this.gateway.listChatMessages(sid, ch, {
-          ...this.chatListOpts(ch),
+          ...opts,
           limit: 30,
         })) as { messages?: ChatMessageRow[] };
-        if (!canApply()) { onDiscard?.(); return; }
+        if (!current()) return;
         this.chatListError = "";
         this.chatListGatewayFailureCount = 0;
         const messages = res.messages ?? [];
@@ -800,7 +844,7 @@ export class SocialPanels {
         });
         this.onStatus("聊天已刷新");
       } catch (e) {
-        if (!canApply()) { onDiscard?.(); return; }
+        if (!current()) return;
         this.chatListGatewayFailureCount += 1;
         const base = formatGuildChatPanelGatewayListError("chat", e);
         const backoffSec = guildChatGatewayBackoffSeconds(this.chatListGatewayFailureCount);
@@ -812,8 +856,18 @@ export class SocialPanels {
           error: gatewayErrorMessage(e),
         });
         this.onStatus(msg);
+      } finally {
+        if (owns()) {
+          if (!current()) {
+            onDiscard?.();
+            this.syncPanelRefreshUi(panel, "chat", "refresh-chat", { busy: false });
+          }
+          this.chatRead = null;
+        }
       }
     });
+    this.chatRead = { key, current, promise };
+    return promise;
   }
 
   private renderChatLog(messages: ChatMessageRow[], channel = this.selectedChatChannel()): void {
