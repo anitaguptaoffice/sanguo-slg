@@ -1,3 +1,4 @@
+import { readMarchListSnapshot } from "@/net/marchListSnapshot";
 import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
 import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel, captureCenterPanelIntent } from "@/ui/centerPanelForeground";
@@ -588,12 +589,7 @@ export class MainCityScene implements Scene {
     });
     this.marchArrivalPoll = new MarchArrivalPoll({
       getCityId: () => this.session?.cityId,
-      listMarches: async (cityId) => {
-        const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-          marches?: MarchSummary[];
-        };
-        return res.marches ?? [];
-      },
+      listMarches: (cityId) => this.readMarchesForArrival(cityId),
       onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
     });
     skinHudBar(this.hud, this.assets);
@@ -2373,6 +2369,13 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private async readMarchesForArrival(cityId: number | undefined): Promise<MarchSummary[]> {
+    const generation = this.marchSnapshotGeneration;
+    const res = await readMarchListSnapshot(this.gateway, cityId,
+      () => this.session?.cityId === cityId && this.marchSnapshotGeneration === generation);
+    return res.marches;
+  }
+
   private async refreshMinimapMarches(): Promise<void> {
     const cityId = this.session?.cityId;
     if (!cityId) return;
@@ -2380,9 +2383,8 @@ export class MainCityScene implements Scene {
     const actor = captureActor(this.gateway, () => this.session);
     const generation = this.marchSnapshotGeneration;
     try {
-      const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-        marches?: MarchSummary[];
-      };
+      const res = await readMarchListSnapshot(this.gateway, cityId,
+        () => actor() && generation === this.marchSnapshotGeneration && current());
       if (!actor() || generation !== this.marchSnapshotGeneration || !current(true)) return;
       const marches = res.marches ?? [];
       this.marchList?.syncMinimapMarchFocusFromSnapshot(marches);

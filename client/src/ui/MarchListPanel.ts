@@ -1,3 +1,4 @@
+import { readMarchListSnapshot } from "@/net/marchListSnapshot";
 import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
@@ -932,10 +933,7 @@ export class MarchListPanel {
     const cityId = this.getCityId();
     const prevSnapshot = this.lastListSnapshot;
     try {
-      const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-        marches?: MarchSummary[];
-        total?: number;
-      };
+      const res = await readMarchListSnapshot(this.gateway, cityId, current);
       if (!current(true)) return;
       const nextMarches = res.marches ?? [];
       this.pendingPhaseChangePulseIds = detectMarchPhaseChange(prevSnapshot, nextMarches);
@@ -947,11 +945,12 @@ export class MarchListPanel {
       this.syncPollTimers();
     } catch (e) {
       if (!current()) return;
-      this.marches = [];
-      this.lastListSnapshot = [];
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
       this.stopPoll();
+      this.listLoading = false;
+      this.renderList();
+      return;
     } finally {
       if (generation === this.listRequestGeneration && !fresh()) {
         this.listLoading = false;
