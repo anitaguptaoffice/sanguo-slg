@@ -254,6 +254,7 @@ export class SocialPanels {
   private guildId = 0;
   private guildName = "";
   private chatReadVersion = 0;
+  private chatReadDestinationKey = "";
   private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
   private readonly rankListInflight = new SocialPanelInflight<void>();
   private readonly guildListInflight = new SocialPanelInflight<void>();
@@ -460,6 +461,10 @@ export class SocialPanels {
   }
 
   private invalidateChatRead(): void {
+    const ch = this.selectedChatChannel();
+    const key = JSON.stringify([this.serverId(), ch, this.chatListOpts(ch)]);
+    if (key === this.chatReadDestinationKey) return;
+    this.chatReadDestinationKey = key;
     ++this.chatReadVersion;
     this.chatRead = null;
     this.lastRenderedChatMessages = [];
@@ -799,6 +804,7 @@ export class SocialPanels {
     const ch = this.selectedChatChannel();
     const opts = this.chatListOpts(ch);
     const key = JSON.stringify([sid, ch, opts]);
+    this.invalidateChatRead();
     if (this.chatRead?.key === key && this.chatRead.current()) return this.chatRead.promise;
     const version = ++this.chatReadVersion;
     const panel = this.chatPanel;

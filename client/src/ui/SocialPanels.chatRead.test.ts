@@ -114,4 +114,13 @@ describe("chat read ownership", () => {
     old.resolve(messages("stale unread")); await flush(); expect(publish).not.toHaveBeenCalled(); panels.detach();
   });
 
+  it("clicking the already-selected tab retains same-target single flight", async () => {
+    const { panels, gateway, mount } = setup(); const pending = deferred();
+    gateway.listChatMessages.mockReturnValueOnce(pending.promise as never);
+    panels.toggleChat(); await flush();
+    mount.querySelector<HTMLButtonElement>('[data-action="pick-chat-channel"][data-chat-channel="1"]')!.click(); await flush();
+    expect(gateway.listChatMessages).toHaveBeenCalledTimes(1);
+    pending.resolve(messages("world")); await flush(); panels.detach();
+  });
+
 });
