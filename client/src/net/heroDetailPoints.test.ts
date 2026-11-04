@@ -6,6 +6,7 @@ import {
   heroPointAddDisabled,
   heroPointClearDisabled,
   heroPointRemaining,
+  heroPointSnapshotFromResult,
   heroPointUsed,
   mergeHeroPointSnapshot,
   parseHeroPointResponse,
@@ -80,4 +81,12 @@ describe("heroDetailPoints (CLIENT-hero-points-001)", () => {
     expect(html).toContain("剩余");
     expect(heroPointRemaining({ ...baseDetail, potential_remaining: 3 })).toBe(3);
   });
+});
+
+it("response budget, not current/captured level, anchors allocation and clear snapshots", () => {
+ const allocation = heroPointSnapshotFromResult({ hero_id: 7, potential_remaining: 1, force_add: 2, intel_add: 0, politics_add: 0 });
+ expect(allocation?.level).toBe(3); expect(mergeHeroPointSnapshot({ hero_id: 7, level: 4 }, allocation).potential_remaining).toBe(2);
+ const cleared = heroPointSnapshotFromResult({ hero_id: 7, potential_remaining: 3, force_add: 0, intel_add: 0, politics_add: 0 });
+ expect(mergeHeroPointSnapshot({ hero_id: 7, level: 4 }, cleared).potential_remaining).toBe(4);
+ expect(heroPointSnapshotFromResult({ hero_id: 7, potential_remaining: -1, force_add: 0, intel_add: 0, politics_add: 0 })).toBeNull();
 });

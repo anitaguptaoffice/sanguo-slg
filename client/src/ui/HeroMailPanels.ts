@@ -579,6 +579,7 @@ import {
   formatHeroPointClearSuccessStatus,
   formatHeroPointGatewayErrorFromUnknown,
   heroPointSnapshotFromDetail,
+  heroPointSnapshotFromResult,
   mergeHeroPointSnapshot,
   renderHeroDetailPointsMarkup,
   setHeroPointFormErrorDisplay,
@@ -746,11 +747,12 @@ export class HeroMailPanels {
   private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
   private heroRestRequests = new Map<number, { actor: () => boolean; detail: HeroDetail; forceChanged: boolean }>();
   private heroUpgradeRequests = new Map<number, { actor: () => boolean }>();
+  private heroPointRequests = new Map<number, { actor: () => boolean }>();
   private heroPointSubmitState: UseConsumableSubmitState = "idle";
   private heroForceSubmitState: UseConsumableSubmitState = "idle";
   private heroPointSnapshotByHeroId = new Map<
     number,
-    ReturnType<typeof heroPointSnapshotFromDetail>
+    { actor: () => boolean; snapshot: ReturnType<typeof heroPointSnapshotFromDetail> }
   >();
   private heroExprSubmitState: UseConsumableSubmitState = "idle";
   private heroExprHoursPref = 1;
@@ -2291,6 +2293,7 @@ export class HeroMailPanels {
   private renderHeroList(): void {
     this.syncHeroUpgradePendingState();
     this.syncHeroRestPendingState();
+    this.syncHeroPointPendingState();
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
     const detailEl = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-detail"]');
     if (!ul) return;
@@ -3600,7 +3603,7 @@ export class HeroMailPanels {
     const snap = heroPointSnapshotFromDetail(detail);
     const heroId = detail?.hero_id;
     if (!heroId || !snap) return;
-    this.heroPointSnapshotByHeroId.set(heroId, snap);
+    this.heroPointSnapshotByHeroId.set(heroId, { actor: captureActor(this.gateway, this.getSession), snapshot: snap });
   }
 
   private persistHeroExprSnapshot(detail: HeroDetail | null | undefined): void {
@@ -3791,7 +3794,8 @@ export class HeroMailPanels {
       const parsed = parseGetHeroDetailResponse(res);
       if (parsed?.hero_id !== heroId) throw new Error("将领详情与所选将领不一致，请重试");
       this.heroDetail = mergeHeroExprSnapshot(
-        mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId) ?? null),
+        mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId)?.actor()
+          ? this.heroPointSnapshotByHeroId.get(heroId)!.snapshot : null),
         this.heroExprSnapshotByHeroId.get(heroId) ?? null,
       );
       this.persistHeroPointSnapshot(this.heroDetail);
@@ -3886,44 +3890,75 @@ export class HeroMailPanels {
     }
   }
 
+  private syncHeroPointPendingState(): void {
+    if (this.heroPointRequests.get(this.selectedHeroId)?.actor()) this.heroPointSubmitState = "submitting";
+    else if (this.heroPointSubmitState === "submitting") this.heroPointSubmitState = "idle";
+  }
+
   private async addHeroPointForStat(stat: HeroPointAllocStat): Promise<void> {
-    if (this.heroPointSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    await this.submitHeroPoints(stat);
+  }
+
+  private async submitHeroPoints(stat: HeroPointAllocStat | null): Promise<void> {
+    if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
-    const targets = buildAddHeroPointTargets(this.heroDetail, stat);
-    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-      type: "SUBMIT",
-    });
+    if (this.heroPointRequests.get(heroId)?.actor()) return;
+    const request = { actor: captureActor(this.gateway, this.getSession) };
+    this.heroPointRequests.set(heroId, request);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => request.actor() && presentation() && generation === this.heroDetailReadGeneration &&
+      this.selectedHeroId === heroId && this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed &&
+      this.heroPanel.parentNode === this.mount;
+    const release = () => { if (this.heroPointRequests.get(heroId) === request) this.heroPointRequests.delete(heroId); };
+    const targets = stat ? buildAddHeroPointTargets(this.heroDetail, stat) : null;
+    this.heroPointSubmitState = "submitting";
     setHeroPointFormErrorDisplay(this.heroPanel, null);
     setHeroPointSuccessDisplay(this.heroPanel, null);
     syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
-    const sid = this.serverId();
-    this.onStatus("潜力加点…");
+    this.onStatus(stat ? "潜力加点…" : "潜力洗点…");
     try {
-      const res = await this.gateway.addHeroPoint(sid, heroId, targets);
-      const detailAfter = applyHeroPointResultToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroPointSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "SUCCESS",
-      });
+      const res = stat && targets
+        ? await this.gateway.addHeroPoint(this.serverId(), heroId, targets)
+        : await this.gateway.clearHeroPoint(this.serverId(), heroId);
+      release();
+      if (res.hero_id !== heroId) throw new Error("潜力结果与所选将领不一致，请刷新详情");
+      const snapshot = heroPointSnapshotFromResult(res);
+      if (!snapshot) throw new Error("潜力结果无效，请刷新详情");
+      if (!request.actor()) return;
+      // GetHeroDetail omits adds/remaining: preserve this receipt before any navigation check or reread.
+      this.heroPointSnapshotByHeroId.set(heroId, { actor: request.actor, snapshot });
+      if (!current() || snapshot.level !== this.heroDetail?.level) {
+        if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+            this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
+      this.heroDetail = applyHeroPointResultToDetail(this.heroDetail, res);
+      // A confirmed allocation also supersedes older upgrade/rest presentation snapshots.
+      ++this.heroDetailReadGeneration;
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
+      this.heroPointSubmitState = "idle";
       this.renderHeroList();
-      const statusText = formatHeroPointAddSuccessStatus(stat);
+      const statusText = stat ? formatHeroPointAddSuccessStatus(stat) : formatHeroPointClearSuccessStatus(this.heroDetail);
       setHeroPointSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
-        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
-      );
+      scheduleHeroDetailStatPulse(this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null);
       this.onStatus(statusText);
     } catch (e) {
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "FAIL",
-      });
+      release();
+      if (!current()) return;
+      this.heroPointSubmitState = "error";
       const msg = formatHeroPointGatewayErrorFromUnknown(e);
       setHeroPointFormErrorDisplay(this.heroPanel, msg);
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+      release();
+      if (request.actor() && this.selectedHeroId === heroId && this.heroPanel.parentNode === this.mount) {
+        this.syncHeroPointPendingState();
+        syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+      }
     }
   }
 
@@ -4008,43 +4043,7 @@ export class HeroMailPanels {
   }
 
   private async clearHeroPointsSelected(): Promise<void> {
-    if (this.heroPointSubmitState === "submitting" || !this.selectedHeroId) return;
-    const heroId = this.selectedHeroId;
-    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-      type: "SUBMIT",
-    });
-    setHeroPointFormErrorDisplay(this.heroPanel, null);
-    setHeroPointSuccessDisplay(this.heroPanel, null);
-    syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
-    const sid = this.serverId();
-    this.onStatus("潜力洗点…");
-    try {
-      const res = await this.gateway.clearHeroPoint(sid, heroId);
-      const detailAfter = applyHeroPointResultToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroPointSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "SUCCESS",
-      });
-      this.renderHeroList();
-      const statusText = formatHeroPointClearSuccessStatus(detailAfter);
-      setHeroPointSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
-        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
-      );
-      this.onStatus(statusText);
-    } catch (e) {
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "FAIL",
-      });
-      const msg = formatHeroPointGatewayErrorFromUnknown(e);
-      setHeroPointFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
-      this.onStatus(msg);
-    } finally {
-      syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
-    }
+    await this.submitHeroPoints(null);
   }
 
   private syncHeroExprControlsNow(): void {
