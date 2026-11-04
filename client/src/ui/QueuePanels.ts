@@ -1,3 +1,4 @@
+import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
@@ -156,6 +157,10 @@ export class QueuePanels {
   private recruits: RecruitQueueEntry[] = [];
   private tickAccum = 0;
   private speedupBusy = false;
+  private speedupOwner: (() => boolean) | null = null;
+  private lifecycleVersion = 0;
+  private cityReadVersion = 0;
+  private cityReadOwner: (() => boolean) | null = null;
   private readonly completedRecruitIds = new Set<number>();
   private highlightedBuildSlotKey: string | null = null;
   private highlightedRecruitQueueId: number | null = null;
@@ -204,6 +209,13 @@ export class QueuePanels {
   ) {}
 
   attach(): void {
+    ++this.lifecycleVersion;
+    ++this.cityReadVersion;
+    this.cityReadOwner = null;
+    this.speedupOwner = null;
+    this.speedupBusy = false;
+    this.buildListLoading = false;
+    this.buildListError = null;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
@@ -212,6 +224,11 @@ export class QueuePanels {
   }
 
   detach(): void {
+    ++this.lifecycleVersion;
+    ++this.cityReadVersion;
+    this.cityReadOwner = null;
+    this.speedupOwner = null;
+    this.speedupBusy = false;
     this.panel?.removeEventListener("keydown", this.onListKeyDown);
     this.focusTrap?.dispose();
     this.focusTrap = null;
@@ -921,6 +938,12 @@ export class QueuePanels {
   }
 
   private render(): void {
+    this.speedupBusy = this.speedupOwner?.() ?? false;
+    if (this.cityReadOwner && !this.cityReadOwner()) {
+      this.cityReadOwner = null;
+      this.buildListLoading = false;
+      this.buildListError = null;
+    }
     const buildUl = this.panel.querySelector<HTMLElement>('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
@@ -1181,8 +1204,10 @@ export class QueuePanels {
   }
 
   private async checkRecruitCompletions(): Promise<void> {
+    const current = this.captureQueueContext();
     const now = Date.now();
     for (const entry of this.recruits) {
+      if (!current()) return;
       if (isRecruitQueueActive(entry, now)) continue;
       if (this.completedRecruitIds.has(entry.queue_id)) continue;
       this.completedRecruitIds.add(entry.queue_id);
@@ -1195,9 +1220,20 @@ export class QueuePanels {
     }
   }
 
-  private async refreshCityState(): Promise<void> {
+  private captureQueueContext(): () => boolean {
+    const actor = captureActor(this.gateway, this.getSession);
+    const version = this.lifecycleVersion;
+    const panel = this.panel;
+    return () => actor() && version === this.lifecycleVersion && this.panel === panel && panel?.parentElement === this.mount;
+  }
+
+  private async refreshCityState(reportSuccess = false): Promise<void> {
     const session = this.getSession();
-    if (!session) return;
+    const context = this.captureQueueContext();
+    if (!session || !context()) return;
+    const version = ++this.cityReadVersion;
+    const current = () => context() && version === this.cityReadVersion;
+    this.cityReadOwner = current;
     this.buildListLoading = true;
     this.buildListError = null;
     this.render();
@@ -1207,20 +1243,28 @@ export class QueuePanels {
         wallet?: MainCitySession["wallet"];
         production_rates?: MainCitySession["productionRates"];
       };
+      if (!current()) return;
       if (state.buildings) session.buildings = state.buildings;
       if (state.wallet) session.wallet = state.wallet;
       if (state.production_rates) session.productionRates = state.production_rates;
       this.onAfterCityRefresh();
+      if (reportSuccess && current()) this.setPanelStatus("已刷新内政状态");
     } catch (e) {
+      if (!current()) return;
       this.buildListError = formatPanelGatewayErrorFromUnknownForList("buildQueue", e);
       this.setPanelStatus(this.buildListError);
     } finally {
-      this.buildListLoading = false;
-      this.render();
+      if (current()) {
+        this.buildListLoading = false;
+        this.render();
+      }
     }
   }
 
   private async useBuildSpeedup(): Promise<void> {
+    if (this.speedupOwner?.()) return;
+    const current = this.captureQueueContext();
+    if (!this.getSession() || !current()) return;
     const now = Date.now();
     if (!this.canUseBuildSpeedup(now)) {
       const msg =
@@ -1233,6 +1277,7 @@ export class QueuePanels {
     }
     const sid = this.serverId();
     const itemId = BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID;
+    this.speedupOwner = current;
     this.speedupBusy = true;
     this.render();
     this.onStatus(`队列：${SPEEDUP_BUTTON_LABEL}…`);
@@ -1242,6 +1287,7 @@ export class QueuePanels {
         effect_summary?: string;
         speedup_seconds?: number;
       };
+      if (!current()) return;
       const session = this.getSession();
       if (session) {
         session.bag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
@@ -1251,12 +1297,16 @@ export class QueuePanels {
       this.onStatus(summary);
       await this.refreshCityState();
     } catch (e) {
+      if (!current()) return;
       const msg = gatewayErrorMessage(e);
       this.setPanelStatus(msg);
       this.onStatus(msg);
     } finally {
-      this.speedupBusy = false;
-      this.render();
+      if (this.speedupOwner === current) {
+        this.speedupOwner = null;
+        this.speedupBusy = false;
+        if (current()) this.render();
+      }
     }
   }
 
@@ -1415,7 +1465,7 @@ export class QueuePanels {
     }
     const action = btn.getAttribute("data-action");
     if (action === "refresh-queue" || action === "retry-refresh-queue-build") {
-      void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
+      void this.refreshCityState(true);
     } else if (action === "speedup-build") {
       void this.useBuildSpeedup();
     } else if (action === "daily-build-next" || action === QUEUE_NEXT_FINISH_PREVIEW_ACTION) {
