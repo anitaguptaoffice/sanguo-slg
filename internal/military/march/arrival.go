@@ -14,6 +14,7 @@ type MarchArrivalEvent struct {
 
 // MarchArrivalOutcome carries battle results back into the hub state machine.
 type MarchArrivalOutcome struct {
+	Durable         bool // true also on failure; Hub quarantines rather than finishing
 	ReportID        int64
 	RemainingTroops []TroopStack
 	BattleRan       bool
