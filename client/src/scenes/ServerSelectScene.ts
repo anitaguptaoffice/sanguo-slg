@@ -15,11 +15,21 @@ export class ServerSelectScene implements Scene {
   private servers: GameServerRow[] = [];
   private selectedId = 0;
   private status = "";
+  private lifecycle = 0;
+  private active = false;
+  private listBusy = false;
+  private entering = false;
   private hudStatusEl: HTMLElement | null = null;
   private triggerBtn: HTMLButtonElement | null = null;
   private focusTrap: OverlayFocusTrap | null = null;
 
   async enter(ctx: SceneContext): Promise<void> {
+    const lifecycle = ++this.lifecycle;
+    this.active = true;
+    this.servers = [];
+    this.selectedId = 0;
+    this.listBusy = true;
+    this.status = "连接网关…";
     this.hud = ctx.hud;
     this.mountHudChrome();
     this.panel = document.createElement("div");
@@ -50,17 +60,24 @@ export class ServerSelectScene implements Scene {
     this.triggerBtn?.addEventListener("click", () => this.togglePanel());
     this.focusTrap.open();
     this.syncHudTriggerExpanded();
-    this.setHudStatus("连接网关…");
+    this.syncPanel();
     try {
       await ctx.gateway.connect();
+      if (!this.isCurrent(lifecycle)) return;
+      this.listBusy = false;
       await this.loadServers(ctx.gateway);
     } catch (e) {
+      if (!this.isCurrent(lifecycle)) return;
+      this.listBusy = false;
       this.status = `连接失败: ${(e as Error).message}`;
       this.syncPanel();
     }
   }
 
   leave(): void {
+    this.active = false;
+    this.lifecycle++;
+    this.listBusy = false;
     this.focusTrap?.dispose();
     this.focusTrap = null;
     this.panel?.remove();
@@ -92,22 +109,38 @@ export class ServerSelectScene implements Scene {
     this.syncHudTriggerExpanded();
   }
 
+  private isCurrent(lifecycle: number): boolean {
+    return this.active && lifecycle === this.lifecycle;
+  }
+
+  private canEnter(server: GameServerRow): boolean {
+    return Number.isInteger(server.server_id) && (server.server_id ?? 0) > 0 &&
+      (server.status === 1 || server.status === 2);
+  }
+
   private async loadServers(gateway: SceneContext["gateway"]): Promise<void> {
+    if (!this.active || this.listBusy) return;
+    const lifecycle = this.lifecycle;
+    this.listBusy = true;
     this.status = "拉取服务器列表…";
     this.syncPanel();
     try {
       const res = (await gateway.listGameServers(1, 50)) as { servers?: unknown[] };
+      if (!this.isCurrent(lifecycle)) return;
       const raw = res.servers ?? [];
       this.servers = raw.map((s) => parseGameServerInfo(s as Parameters<typeof parseGameServerInfo>[0]));
-      if (!this.selectedId && this.servers[0]?.server_id) {
-        this.selectedId = this.servers[0].server_id!;
+      if (!this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) {
+        this.selectedId = this.servers.find(s => this.canEnter(s))?.server_id ?? 0;
       }
       this.status = `共 ${this.servers.length} 个服`;
     } catch (e) {
-      this.status = (e as Error).message;
-      this.servers = [{ server_id: 1, display_name: "S1", status: 1, online_count: 0, has_player: false }];
-      this.selectedId = 1;
+      if (!this.isCurrent(lifecycle)) return;
+      this.status = `拉取失败: ${(e as Error).message}`;
+      this.servers = [];
+      this.selectedId = 0;
     }
+    if (!this.isCurrent(lifecycle)) return;
+    this.listBusy = false;
     this.syncPanel();
   }
 
@@ -122,23 +155,27 @@ export class ServerSelectScene implements Scene {
         const id = s.server_id ?? 0;
         li.textContent = formatServerLine(s);
         li.dataset.serverId = String(id);
-        if (id === this.selectedId) li.classList.add("selected");
-        if (s.status === 0 || s.status === 3) li.classList.add("disabled");
+        if (id === this.selectedId && this.canEnter(s)) li.classList.add("selected");
+        if (!this.canEnter(s) || this.listBusy || this.entering) li.classList.add("disabled");
         ul.appendChild(li);
       }
     }
     if (statusEl) statusEl.textContent = this.status;
-    if (enterBtn) enterBtn.disabled = !this.selectedId;
+    if (enterBtn) enterBtn.disabled = this.listBusy || this.entering ||
+      !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s));
+    const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
+    if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
     const hudBusy =
       /^(连接|拉取|进入服)/.test(this.status) || this.status.includes("失败");
     this.setHudStatus(hudBusy ? this.status : "请选择游戏服");
   }
 
   private onClick(ev: Event, ctx: SceneContext): void {
+    if (!this.active || this.listBusy || this.entering) return;
     const li = (ev.target as HTMLElement).closest("li[data-server-id]");
     if (li) {
       const id = Number(li.getAttribute("data-server-id"));
-      if (!Number.isNaN(id)) {
+      if (this.servers.some(s => s.server_id === id && this.canEnter(s))) {
         this.selectedId = id;
         this.syncPanel();
       }
@@ -152,7 +189,11 @@ export class ServerSelectScene implements Scene {
   }
 
   private async enterGame(ctx: SceneContext): Promise<void> {
-    if (!this.selectedId) return;
+    if (!this.active || this.listBusy || this.entering ||
+      !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+    const lifecycle = this.lifecycle;
+    const serverId = this.selectedId;
+    this.entering = true;
     this.status = `进入服 #${this.selectedId}…`;
     this.syncPanel();
     try {
@@ -160,12 +201,18 @@ export class ServerSelectScene implements Scene {
         ctx.gateway,
         DEFAULT_LOGIN,
         DEFAULT_PASSWORD,
-        this.selectedId,
+        serverId,
       );
+      if (!this.isCurrent(lifecycle)) return;
       await ctx.switchScene("mainCity", session);
     } catch (e) {
+      if (!this.isCurrent(lifecycle)) return;
       this.status = `进服失败: ${(e as Error).message}`;
       this.syncPanel();
+    } finally {
+      // Leaving cannot cancel an already submitted bootstrap; keep it single-flight on re-entry.
+      this.entering = false;
+      if (this.active) this.syncPanel();
     }
   }
 }
