@@ -59,11 +59,11 @@ describe("queue actor lifecycle", () => {
       pending.resolve({ remaining: 4 }); await flush(); s.button("speedup-build").click(); await flush(); expect(s.gateway.useConsumable).toHaveBeenCalledTimes(2);
     } finally { s.panel.detach(); }
   });
-  it("shows current speedup failure, preserves bag, and allows explicit retry", async () => {
+  it("shows unknown speedup failure, preserves bag, and blocks direct replay", async () => {
     const s = setup(); try {
       s.gateway.useConsumable.mockRejectedValueOnce(new Error("failed now")); s.button("speedup-build").click(); await flush();
-      expect(s.current().bag[0].quantity).toBe(5); expect(s.gateway.getCityState).not.toHaveBeenCalled(); expect(s.button("speedup-build").disabled).toBe(false);
-      expect(s.status.mock.calls.flat().join(" ")).toContain("failed now"); s.button("speedup-build").click(); await flush(); expect(s.current().bag[0].quantity).toBe(4);
+      expect(s.current().bag[0].quantity).toBe(5); expect(s.gateway.getCityState).not.toHaveBeenCalled(); expect(s.button("speedup-build").disabled).toBe(true);
+      expect(s.status.mock.calls.flat().join(" ")).toContain("failed now"); s.button("speedup-build").click(); await flush(); expect(s.current().bag[0].quantity).toBe(5); expect(s.gateway.useConsumable).toHaveBeenCalledTimes(1);
     } finally { s.panel.detach(); }
   });
   it.each(["actor", "relogin", "city", "remount"])("rejects old city state after %s", async (change) => {
