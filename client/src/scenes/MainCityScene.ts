@@ -1564,6 +1564,7 @@ export class MainCityScene implements Scene {
       this.syncIntelListFromMarchFormCoords();
     }
     this.syncMilitaryPanel();
+    if (field === "march-unit") this.renderHud();
   }
 
   private syncIntelListFromMarchFormCoords(): void {

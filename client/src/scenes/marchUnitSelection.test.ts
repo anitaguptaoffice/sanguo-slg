@@ -79,4 +79,15 @@ describe("selected existing unit march flow", () => {
     expect(s.root.querySelector('[data-role="march-form-summary"]')!.textContent).toContain("步兵×30");
   });
 
+  it("unit selection immediately redraws HUD readiness in both directions", () => {
+    const s = setup(2, 29), select = s.root.querySelector<HTMLSelectElement>('[data-field="march-unit"]')!;
+    s.scene.minimapMarches = []; s.scene.hudTodoBadgePoll = { getDeepLinkSnapshot: () => ({ battleReportUnread: 0 }) };
+    const hud = document.createElement("span");
+    s.scene.renderHud = () => { hud.textContent = String(s.scene.hudMilitaryTodoSweepCounts().marchSubmittable); };
+    select.value = "1"; s.scene.renderHud(); expect(hud.textContent).toBe("1");
+    select.addEventListener("change", (ev) => s.scene.onMilitaryFormInput(ev));
+    select.value = "2"; select.dispatchEvent(new Event("change")); expect(hud.textContent).toBe("0");
+    select.value = "1"; select.dispatchEvent(new Event("change")); expect(hud.textContent).toBe("1");
+  });
+
 });
