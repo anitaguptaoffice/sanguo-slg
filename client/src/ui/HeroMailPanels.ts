@@ -2,7 +2,7 @@ import { captureActor } from "@/net/actorContext";
 import { beginAssetMutation } from "@/net/assetMutation";
 import { beginAssetRead, captureAssetRead } from "@/net/questClaimAssets";
 import { HOTEL_UNKNOWN_OUTCOME, HOTEL_CURRENT_STATE_ONLY, HOTEL_RELOAD_FAILED, readHotelCurrentState } from "@/net/hotelOutcome";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   PANEL_STATE_LOADING_MESSAGE,
@@ -658,6 +658,7 @@ export class HeroMailPanels {
   private selectedMailId = 0;
   private heroDetail: HeroDetail | null = null;
   private heroDetailLoading = false;
+  private heroDetailReadGeneration = 0;
   private heroDetailError: string | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
@@ -800,6 +801,8 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    this.heroesRefreshInflight = false;
+    this.invalidateHeroDetailRead();
     this.hotelState = null;
     ++this.heroReadGeneration;
     ++this.recruitBagGeneration;
@@ -814,6 +817,9 @@ export class HeroMailPanels {
   }
 
   private closeHeroFromKeyboard(): void {
+    ++this.heroReadGeneration;
+    this.heroesRefreshInflight = false;
+    this.invalidateHeroDetailRead();
     this.heroPanel.classList.add("hidden");
   }
 
@@ -1006,6 +1012,9 @@ export class HeroMailPanels {
   }
 
   toggleHero(): void {
+    ++this.heroReadGeneration;
+    this.heroesRefreshInflight = false;
+    this.invalidateHeroDetailRead();
     toggleCenterPanel(this.heroPanel);
     if (!this.heroPanel.classList.contains("hidden")) {
       this.recruitBagKey = null;
@@ -1026,7 +1035,9 @@ export class HeroMailPanels {
     openCenterPanel(this.heroPanel);
     void this.ensureRecruitBag();
     resetCenterPanelViewportScroll(this.heroPanel);
+    const current = this.beginHeroDetailNavigation(heroId);
     if (!this.heroes.length) await this.refreshHeroes();
+    if (!current()) return;
     let id = heroId;
     if (id <= 0) {
       id = this.heroes.find((h) => (h.hero_id ?? 0) > 0)?.hero_id ?? 0;
@@ -1036,8 +1047,8 @@ export class HeroMailPanels {
       this.onStatus("暂无将领可查看");
       return;
     }
-    await this.loadHeroDetail(id);
-    this.syncHeroPanelFocusTrap();
+    await this.loadHeroDetail(id, { current });
+    if (current()) this.syncHeroPanelFocusTrap();
   }
 
   isMailOpen(): boolean {
@@ -1089,10 +1100,11 @@ export class HeroMailPanels {
     if (!heroId) return;
     openCenterPanel(this.heroPanel);
     resetCenterPanelViewportScroll(this.heroPanel);
-    this.selectedHeroId = heroId;
+    const current = this.beginHeroDetailNavigation(heroId);
     void this.refreshHeroes().then(() => {
-      void this.loadHeroDetail(heroId).then(() => {
-        scrollHeroListRowIntoView(this.heroPanel, heroId);
+      if (!current()) return;
+      void this.loadHeroDetail(heroId, { current }).then(() => {
+        if (current()) scrollHeroListRowIntoView(this.heroPanel, heroId);
       });
     });
   }
@@ -3437,6 +3449,9 @@ export class HeroMailPanels {
     pulseOnSuccess?: boolean;
   }): Promise<void> {
     if (this.heroesRefreshInflight) return;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const detailGeneration = this.heroDetailReadGeneration;
+    const restoreSelection = () => opts?.restoreSelection && detailGeneration === this.heroDetailReadGeneration;
     const actor = captureActor(this.gateway, this.getSession);
     const generation = ++this.heroReadGeneration;
     const current = () => actor() && generation === this.heroReadGeneration && this.heroPanel.parentNode === this.mount;
@@ -3456,18 +3471,18 @@ export class HeroMailPanels {
       this.heroes = (res.heroes ?? []).map((row) => normalizeListPlayerHeroSummary(row));
       this.heroListLastRefreshedAtMs = Date.now();
       syncHeroListRefreshedAtDisplay(this.heroPanel, this.heroListLastRefreshedAtMs);
-      const returnRestore = opts?.restoreSelection ? readHeroListReturnState() : null;
+      const returnRestore = restoreSelection() ? readHeroListReturnState() : null;
       const listScrollRestore =
         returnRestore ??
-        (opts?.restoreSelection ? readHeroListSelectedSession() : null);
-      if (opts?.restoreSelection && returnRestore) {
+        (restoreSelection() ? readHeroListSelectedSession() : null);
+      if (restoreSelection() && returnRestore) {
         this.heroListFilter = returnRestore.filter;
         this.heroListSort = returnRestore.sort;
         writeHeroListFilterSession(this.heroListFilter);
         writeHeroListSortSession(this.heroListSort);
         this.persistHeroListFilterChipResidual();
       }
-      if (opts?.restoreSelection) {
+      if (restoreSelection()) {
         const stored = readHeroDetailSelectedSession();
         const listPick = pickRestoredHeroId(this.heroes, listScrollRestore?.heroId ?? null);
         const detailPick = pickRestoredHeroId(this.heroes, stored);
@@ -3478,7 +3493,7 @@ export class HeroMailPanels {
           this.heroDetailListContext = null;
         }
       } else if (
-        this.selectedHeroId > 0 &&
+        detailGeneration === this.heroDetailReadGeneration && this.selectedHeroId > 0 &&
         !this.heroes.some((h) => h.hero_id === this.selectedHeroId)
       ) {
         this.selectedHeroId = 0;
@@ -3486,17 +3501,20 @@ export class HeroMailPanels {
       }
       this.renderHeroList();
       this.renderTemplateList();
-      if (opts?.restoreSelection && this.selectedHeroId > 0 && !this.heroDetailCollapsed) {
-        await this.loadHeroDetail(this.selectedHeroId, {
+      if (restoreSelection() && this.selectedHeroId > 0 && !this.heroDetailCollapsed) {
+        const detailRequest = this.loadHeroDetail(this.selectedHeroId, {
           skipListSelectionWrite: true,
           fromHeroList: !!returnRestore,
         });
+        const restoredGeneration = this.heroDetailReadGeneration;
+        await detailRequest;
+        if (!current() || !presentation() || restoredGeneration !== this.heroDetailReadGeneration) return;
         if (listScrollRestore && listScrollRestore.heroId === this.selectedHeroId) {
           applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
         } else {
           scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
         }
-      } else if (opts?.restoreSelection && listScrollRestore) {
+      } else if (restoreSelection() && listScrollRestore) {
         applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
         if (this.selectedHeroId > 0) {
           scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
@@ -3518,6 +3536,7 @@ export class HeroMailPanels {
       }
       this.onStatus(msg);
     } finally {
+      if (generation !== this.heroReadGeneration) return;
       this.heroesRefreshInflight = false;
       syncHeroListRefreshButton(this.heroPanel, false);
     }
@@ -3677,6 +3696,7 @@ export class HeroMailPanels {
   }
 
   private restoreHeroListFromReturnState(): void {
+    this.invalidateHeroDetailRead();
     const snap = consumeHeroListReturnState();
     const highlightHeroId = snap?.heroId ?? 0;
     if (snap) {
@@ -3704,10 +3724,38 @@ export class HeroMailPanels {
     this.onStatus(snap ? "已返回将领列表" : "列表已展开");
   }
 
+  private invalidateHeroDetailRead(): void {
+    ++this.heroDetailReadGeneration;
+    this.heroDetailLoading = false;
+    this.heroDetail = null;
+  }
+
+  private beginHeroDetailNavigation(heroId: number): () => boolean {
+    const current = this.beginHeroDetailRead();
+    this.selectedHeroId = heroId;
+    this.heroDetail = null;
+    this.heroDetailError = null;
+    this.heroDetailLoading = true;
+    this.heroDetailCollapsed = false;
+    this.renderHeroList();
+    return current;
+  }
+
+  private beginHeroDetailRead(): () => boolean {
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const generation = ++this.heroDetailReadGeneration;
+    const actor = captureActor(this.gateway, this.getSession);
+    return () => presentation() && actor() && generation === this.heroDetailReadGeneration &&
+      this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden");
+  }
+
   private async loadHeroDetail(
     heroId: number,
-    opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean },
+    opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean; current?: () => boolean },
   ): Promise<void> {
+    const owner = opts?.current ?? this.beginHeroDetailRead();
+    if (!owner()) return;
+    const current = () => owner() && this.selectedHeroId === heroId && !this.heroDetailCollapsed;
     const sid = this.serverId();
     this.selectedHeroId = heroId;
     this.heroDetailCollapsed = false;
@@ -3727,13 +3775,16 @@ export class HeroMailPanels {
     this.resetHeroPointSubmitFeedback();
     this.resetHeroForceSubmitFeedback();
     this.resetHeroExprSubmitFeedback();
+    this.heroDetail = null;
     this.heroDetailLoading = true;
     this.heroDetailError = null;
     this.renderHeroList();
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
+      if (!current()) return;
       const parsed = parseGetHeroDetailResponse(res);
+      if (parsed?.hero_id !== heroId) throw new Error("将领详情与所选将领不一致，请重试");
       this.heroDetail = mergeHeroExprSnapshot(
         mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId) ?? null),
         this.heroExprSnapshotByHeroId.get(heroId) ?? null,
@@ -3746,10 +3797,12 @@ export class HeroMailPanels {
       this.heroDetailError = null;
       this.onStatus("详情已加载");
     } catch (e) {
+      if (!current()) return;
       this.heroDetail = null;
       this.heroDetailError = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.onStatus(this.heroDetailError);
     } finally {
+      if (!current()) return;
       this.heroDetailLoading = false;
       this.renderHeroList();
     }
