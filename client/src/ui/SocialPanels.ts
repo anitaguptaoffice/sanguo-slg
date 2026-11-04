@@ -257,7 +257,9 @@ export class SocialPanels {
   private chatReadDestinationKey = "";
   private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
   private readonly rankListInflight = new SocialPanelInflight<void>();
-  private readonly guildListInflight = new SocialPanelInflight<void>();
+  private guildListInflight = new SocialPanelInflight<void>();
+  private guildMembershipPending: object | null = null;
+  private guildReadVersion = 0;
   private readonly refreshClock = {
     chat: { lastUpdatedMs: 0, stale: false },
     rank: { lastUpdatedMs: 0, stale: false },
@@ -300,6 +302,9 @@ export class SocialPanels {
 
   attach(): void {
     this.chatSendPending = null;
+    this.guildMembershipPending = null;
+    ++this.guildReadVersion;
+    this.guildListInflight = new SocialPanelInflight<void>();
     ++this.chatReadVersion;
     this.chatRead = null;
     this.chatPanel = this.buildChatPanel();
@@ -322,6 +327,9 @@ export class SocialPanels {
 
   detach(): void {
     this.chatSendPending = null;
+    this.guildMembershipPending = null;
+    ++this.guildReadVersion;
+    this.guildListInflight = new SocialPanelInflight<void>();
     ++this.chatReadVersion;
     this.chatRead = null;
     if (this.rankCooldownTimer != null) {
@@ -1157,47 +1165,51 @@ export class SocialPanels {
     }
   }
 
-  private async createGuild(): Promise<void> {
-    const sid = this.serverId();
-    const name = (this.guildPanel.querySelector('[data-field="guild-name"]') as HTMLInputElement)?.value?.trim();
-    if (!name) {
-      this.onStatus("请输入军团名");
-      return;
-    }
-    this.onStatus("创建军团…");
-    try {
-      const res = (await this.gateway.createGuild(sid, name)) as {
-        guild?: { guild_id?: number; name?: string };
-      };
-      this.guildId = res.guild?.guild_id ?? 0;
-      this.guildName = res.guild?.name ?? name;
-      this.syncGuildSummary();
-      await this.refreshMembers();
-      this.onStatus(`已创建「${this.guildName}」`);
-    } catch (e) {
-      this.onStatus(formatSocialGatewayError(e));
-    }
-  }
+  private createGuild(): Promise<void> { return this.submitGuildMembership("create"); }
+  private joinGuild(): Promise<void> { return this.submitGuildMembership("join"); }
 
-  private async joinGuild(): Promise<void> {
+  private async submitGuildMembership(action: "create" | "join"): Promise<void> {
+    if (this.guildMembershipPending) return;
     const sid = this.serverId();
-    const gid = Number((this.guildPanel.querySelector('[data-field="join-guild-id"]') as HTMLInputElement)?.value);
-    if (!gid) {
-      this.onStatus("请输入军团 ID");
-      return;
+    const panel = this.guildPanel;
+    const name = (panel.querySelector('[data-field="guild-name"]') as HTMLInputElement)?.value?.trim();
+    const gid = Number((panel.querySelector('[data-field="join-guild-id"]') as HTMLInputElement)?.value);
+    if (action === "create" && !name) { this.onStatus("请输入军团名"); return; }
+    if (action === "join" && (!Number.isSafeInteger(gid) || gid <= 0)) {
+      this.onStatus("请输入有效的正整数军团 ID"); return;
     }
-    this.onStatus("加入军团…");
+    const actor = captureActor(this.gateway, this.getSession);
+    const current = () => actor() && this.guildPanel === panel && panel.parentNode === this.mount;
+    const operation = {};
+    this.guildMembershipPending = operation;
+    const buttons = panel.querySelectorAll<HTMLButtonElement>('[data-action="create-guild"], [data-action="join-guild"]');
+    buttons.forEach((button) => { button.disabled = true; });
+    this.onStatus(action === "create" ? "创建军团…" : "加入军团…");
     try {
-      const res = (await this.gateway.joinGuild(sid, gid)) as {
+      const res = (await (action === "create" ? this.gateway.createGuild(sid, name!) : this.gateway.joinGuild(sid, gid))) as {
         guild?: { guild_id?: number; name?: string };
       };
-      this.guildId = res.guild?.guild_id ?? gid;
-      this.guildName = res.guild?.name ?? `军团#${gid}`;
+      if (!current()) return;
+      ++this.guildReadVersion;
+      this.guildListInflight = new SocialPanelInflight<void>();
+      this.guildId = res.guild?.guild_id ?? (action === "join" ? gid : 0);
+      this.guildName = res.guild?.name ?? (action === "create" ? name! : `军团#${gid}`);
+      this.guildMembersCache = [];
+      this.guildMemberTotalCount = 0;
+      this.guildMemberOnlineCountHint = undefined;
+      this.guildListError = "";
+      this.renderGuildMembersList([]);
+      this.invalidateChatRead();
       this.syncGuildSummary();
       await this.refreshMembers();
-      this.onStatus(`已加入「${this.guildName}」`);
+      if (current()) this.onStatus(`已${action === "create" ? "创建" : "加入"}「${this.guildName}」`);
     } catch (e) {
-      this.onStatus(formatSocialGatewayError(e));
+      if (current()) this.onStatus(formatSocialGatewayError(e));
+    } finally {
+      if (this.guildMembershipPending === operation) {
+        this.guildMembershipPending = null;
+        buttons.forEach((button) => { button.disabled = false; });
+      }
     }
   }
 
@@ -1238,16 +1250,23 @@ export class SocialPanels {
       return;
     }
     const sid = this.serverId();
+    const gid = this.guildId;
+    const panel = this.guildPanel;
+    const version = this.guildReadVersion;
+    const actor = captureActor(this.gateway, this.getSession);
+    const current = () => actor() && this.guildPanel === panel && panel.parentNode === this.mount &&
+      this.guildId === gid && this.guildReadVersion === version;
     return this.guildListInflight.run(async () => {
       this.syncPanelRefreshUi(this.guildPanel, "guild", "refresh-members", { busy: true });
       this.onStatus("拉取成员…");
       try {
-        const res = (await this.gateway.listGuildMembers(sid, this.guildId, 1)) as {
+        const res = (await this.gateway.listGuildMembers(sid, gid, 1)) as {
           guild?: { name?: string; member_count?: number; online_count?: number };
           members?: GuildMemberRow[];
           total_count?: number;
           online_count?: number;
         };
+        if (!current()) return;
         if (res.guild?.name) this.guildName = res.guild.name;
         const members = res.members ?? [];
         this.guildMemberTotalCount =
@@ -1267,6 +1286,7 @@ export class SocialPanels {
         });
         this.onStatus(`成员 ${res.members?.length ?? 0} 人`);
       } catch (e) {
+        if (!current()) return;
         const msg = formatGuildChatPanelGatewayListError("guildMembers", e);
         this.guildListError = msg;
         this.renderGuildMembersList([]);
