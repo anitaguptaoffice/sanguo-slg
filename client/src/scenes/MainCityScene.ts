@@ -461,6 +461,7 @@ export class MainCityScene implements Scene {
     toY: null,
   };
   private buildSubmitState: BuildSubmitState = "idle";
+  private buildSubmitOwner: (() => boolean) | null = null;
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
   /** 募兵队列↔军事互跳高亮 queue_id（CLIENT-157，与 session 同步）。 */
   private recruitQueueHighlightId: number | null = null;
@@ -555,6 +556,8 @@ export class MainCityScene implements Scene {
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.marchSnapshotGeneration++;
+    this.buildSubmitOwner = null;
+    this.buildSubmitState = "idle";
     this.resetMarchHeroTracking();
     this.assets = ctx.assets;
     this.getViewport = ctx.getViewport;
@@ -1274,6 +1277,8 @@ export class MainCityScene implements Scene {
 
   leave(): void {
     this.marchSnapshotGeneration++;
+    this.buildSubmitOwner = null;
+    this.buildSubmitState = "idle";
     this.resetMarchHeroTracking();
     this.cityStateFetch?.clear();
     this.hudTodoBadgePoll?.reset();
@@ -2446,12 +2451,13 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async syncSessionCityCoords(): Promise<void> {
+  private async syncSessionCityCoords(current: () => boolean = () => true): Promise<void> {
     if (!this.session) return;
     try {
       const list = (await this.gateway.listPlayerCities()) as {
         cities?: { city_id?: number; x?: number; y?: number }[];
       };
+      if (!current()) return;
       const city = list.cities?.find((c) => c.city_id === this.session?.cityId);
       if (city) {
         this.session.cityX = city.x ?? this.session.cityX;
@@ -3117,8 +3123,8 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
-  private async refreshState(): Promise<void> {
-    if (!this.session) return;
+  private async refreshState(current: () => boolean = () => true): Promise<void> {
+    if (!this.session || !current()) return;
     const session = this.session;
     this.status = "刷新中…";
     this.renderHud();
@@ -3129,14 +3135,17 @@ export class MainCityScene implements Scene {
         production_rates?: ResourceWallet;
         garrison?: unknown;
       } | null;
-      if (this.session !== session) return;
+      if (this.session !== session || !current()) return;
       if (state) {
         this.applyCityStateFromFetch(state);
       }
-      await this.syncSessionCityCoords();
+      await this.syncSessionCityCoords(current);
+      if (!current()) return;
       await this.refreshMinimapMarches();
+      if (!current()) return;
       this.status = "已刷新";
     } catch (e) {
+      if (!current()) return;
       this.status = (e as Error).message;
     }
     this.renderHud();
@@ -3149,6 +3158,14 @@ export class MainCityScene implements Scene {
 
   private async startBuildingUpgrade(slotKey: string, buildingCfgId: number): Promise<void> {
     if (!this.session) return;
+    if (this.buildSubmitOwner?.()) return;
+    const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => this.buildSubmitOwner === current && this.session === session &&
+      actor() && generation === this.marchSnapshotGeneration;
+    this.buildSubmitOwner = current;
+    this.buildSubmitState = "idle";
     const building = buildingBySlot(this.session.buildings, slotKey);
     const level = building?.level ?? 0;
     const preview = previewUpgradeCost(slotKey, level, this.session.wallet);
@@ -3167,6 +3184,7 @@ export class MainCityScene implements Scene {
         wallet?: ResourceWallet;
         building?: CityBuilding;
       };
+      if (!current()) return;
       if (res.wallet) this.session.wallet = res.wallet;
       const walletAfter = this.session.wallet;
       const pulseKeys = walletBuildDeductPulseKeys(walletBefore, walletAfter, preview?.cost);
@@ -3176,16 +3194,20 @@ export class MainCityScene implements Scene {
         if (idx >= 0) this.session.buildings[idx] = res.building;
         else this.session.buildings.push(res.building);
       }
+      await this.refreshState(current);
+      if (!current()) return;
       this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "SUCCESS" });
-      await this.refreshState();
       this.status = formatBuildSubmitSuccess(slotKey, targetLevel, SLOT_LABEL);
       this.buildingPanel.sync();
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "FAIL" });
       this.buildingPanel.setFormError(msg);
       this.status = msg;
       this.buildingPanel.sync();
+    } finally {
+      if (this.buildSubmitOwner === current) this.buildSubmitOwner = null;
     }
     this.renderHud();
   }
