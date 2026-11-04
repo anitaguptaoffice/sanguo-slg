@@ -743,6 +743,7 @@ export class HeroMailPanels {
   private heroLargessNextAtByHeroId = new Map<number, number>();
   private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
   private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
+  private heroUpgradeRequests = new Map<number, { actor: () => boolean }>();
   private heroPointSubmitState: UseConsumableSubmitState = "idle";
   private heroForceSubmitState: UseConsumableSubmitState = "idle";
   private heroPointSnapshotByHeroId = new Map<
@@ -2286,6 +2287,7 @@ export class HeroMailPanels {
   }
 
   private renderHeroList(): void {
+    this.syncHeroUpgradePendingState();
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
     const detailEl = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-detail"]');
     if (!ul) return;
@@ -3808,10 +3810,28 @@ export class HeroMailPanels {
     }
   }
 
+  private syncHeroUpgradePendingState(): void {
+    if (this.heroUpgradeRequests.get(this.selectedHeroId)?.actor()) {
+      this.heroUpgradeSubmitState = "submitting";
+    } else if (this.heroUpgradeSubmitState === "submitting") {
+      this.heroUpgradeSubmitState = "idle";
+    }
+  }
+
   private async upgradeSelectedHero(): Promise<void> {
-    if (this.heroUpgradeSubmitState === "submitting" || !this.selectedHeroId) return;
+    if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
+    if (this.heroUpgradeRequests.get(this.selectedHeroId)?.actor()) return;
     const heroId = this.selectedHeroId;
     const detailBefore = this.heroDetail;
+    const request = { actor: captureActor(this.gateway, this.getSession) };
+    this.heroUpgradeRequests.set(heroId, request);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => request.actor() && presentation() &&
+      generation === this.heroDetailReadGeneration && this.selectedHeroId === heroId &&
+      this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed && this.heroPanel.parentNode === this.mount;
+    const release = () => { if (this.heroUpgradeRequests.get(heroId) === request) this.heroUpgradeRequests.delete(heroId); };
+    this.heroUpgradeSubmitState = "idle";
     this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
       type: "SUBMIT",
     });
@@ -3822,6 +3842,15 @@ export class HeroMailPanels {
     this.onStatus("将领升级…");
     try {
       const res = await this.gateway.upgradeHero(sid, heroId);
+      release();
+      if (res.hero_id !== heroId) throw new Error("升级结果与所选将领不一致，请刷新详情");
+      if (!current()) {
+        if (request.actor() && this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+            this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
       const detailAfter = applyUpgradeHeroToDetail(this.heroDetail, res);
       this.heroDetail = detailAfter;
       this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
@@ -3836,6 +3865,8 @@ export class HeroMailPanels {
       );
       this.onStatus(statusText);
     } catch (e) {
+      release();
+      if (!current()) return;
       this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
         type: "FAIL",
       });
@@ -3844,7 +3875,11 @@ export class HeroMailPanels {
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
+      release();
+      if (request.actor() && this.selectedHeroId === heroId && this.heroPanel.parentNode === this.mount) {
+        this.syncHeroUpgradePendingState();
+        syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
+      }
     }
   }
 
