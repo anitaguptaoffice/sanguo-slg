@@ -65,11 +65,12 @@ export function formatMarchFormTroopReserveLine(
 export function buildMarchFormTroopReserveLine(
   marchCountRaw: string,
   cityTroops: CityTroopStack[],
+  unitCfgId = MARCH_FORM_INFANTRY_UNIT_CFG_ID,
 ): MarchFormTroopReserveLineResult | null {
   const selected = parsePositiveIntMarchCount(marchCountRaw);
   if (selected == null) return null;
-  const available = availableInfantryInCity(cityTroops);
-  return formatMarchFormTroopReserveLine(selected, available);
+  const available = cityTroops.find((t) => t.unit_cfg_id === unitCfgId)?.count ?? 0;
+  return formatMarchFormTroopReserveLine(selected, available, unitCfgId);
 }
 
 /** 与 CLIENT-145 `validateMarchForm` 兵力口径一致：余量不足则禁用出征提交。 */
