@@ -90,10 +90,24 @@ export function applyHeroPointResultToDetail(
   };
 }
 
+export type HeroPointSnapshot = Pick<HeroDetail, "level" | "potential_remaining" | "force_add" | "intel_add" | "politics_add">;
+
+/** Preserve allocated-point debt even if an older lower-level detail arrives late. */
+export function heroPointRemainingAtLevel(snapshot: HeroPointSnapshot, level: number | undefined): number | undefined {
+  if (snapshot.potential_remaining == null) return undefined;
+  if (snapshot.level == null || level == null) return snapshot.potential_remaining;
+  const adds = [snapshot.force_add, snapshot.intel_add, snapshot.politics_add];
+  if (adds.every(value => value != null && Number.isFinite(value) && value >= 0)) {
+    const used = Math.max(heroPointUsed(snapshot), heroPointBudget(snapshot.level) - snapshot.potential_remaining);
+    return Math.max(0, heroPointBudget(level) - used);
+  }
+  return Math.max(0, snapshot.potential_remaining + heroPointBudget(level) - heroPointBudget(snapshot.level));
+}
+
 /** 详情加载后合并会话内已知的潜力快照（GetHeroDetail 不下发 adds）。 */
 export function mergeHeroPointSnapshot(
   detail: HeroDetail,
-  snapshot: Pick<HeroDetail, "potential_remaining" | "force_add" | "intel_add" | "politics_add"> | null | undefined,
+  snapshot: HeroPointSnapshot | null | undefined,
 ): HeroDetail {
   if (!snapshot) {
     const budget = heroPointBudget(detail.level);
@@ -110,15 +124,18 @@ export function mergeHeroPointSnapshot(
     force_add: snapshot.force_add ?? detail.force_add ?? 0,
     intel_add: snapshot.intel_add ?? detail.intel_add ?? 0,
     politics_add: snapshot.politics_add ?? detail.politics_add ?? 0,
-    potential_remaining: snapshot.potential_remaining ?? detail.potential_remaining,
+    potential_remaining: snapshot.potential_remaining == null
+      ? detail.potential_remaining
+      : heroPointRemainingAtLevel(snapshot, detail.level),
   };
 }
 
 export function heroPointSnapshotFromDetail(
   detail: HeroDetail | null | undefined,
-): Pick<HeroDetail, "potential_remaining" | "force_add" | "intel_add" | "politics_add"> | null {
+): HeroPointSnapshot | null {
   if (!detail?.hero_id) return null;
   return {
+    level: detail.level,
     potential_remaining: heroPointRemaining(detail),
     force_add: detail.force_add ?? 0,
     intel_add: detail.intel_add ?? 0,
