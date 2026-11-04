@@ -3,6 +3,7 @@ import { formatResourceAmount } from "@/net/hudFormat";
 import {
   MARCH_FORM_INFANTRY_UNIT_CFG_ID,
   setMarchFormErrorDisplay,
+  readMarchUnitCfgId,
   validateMarchForm,
 } from "@/net/marchFormValidation";
 import { readMarchHeroIdRaw, type MarchHeroRow } from "@/net/marchHeroPick";
@@ -182,7 +183,7 @@ export function readMarchFormSnapshot(
     toYRaw,
     marchCountRaw,
     heroIdRaw,
-    unitCfgId: MARCH_FORM_INFANTRY_UNIT_CFG_ID,
+    unitCfgId: readMarchUnitCfgId(formRoot),
     cityX: opts?.cityX,
     cityY: opts?.cityY,
     wallet: opts?.wallet,
@@ -236,6 +237,7 @@ export function syncMarchFormInlineFeedback(
     toXRaw: snap.toXRaw,
     toYRaw: snap.toYRaw,
     marchCountRaw: snap.marchCountRaw,
+    unitCfgId: snap.unitCfgId,
     heroIdRaw: snap.heroIdRaw,
     ownedHeroes: ctx.ownedHeroes,
     localBusyHeroIds: ctx.localBusyHeroIds,

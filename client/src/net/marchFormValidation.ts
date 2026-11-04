@@ -4,6 +4,7 @@ import {
   type MarchHeroRow,
   validateMarchHeroSelection,
 } from "@/net/marchHeroPick";
+import { unitLabel } from "@/net/militaryFormat";
 import type { CityTroopStack } from "@/net/militaryFormat";
 import { WORLD_MAP_EDGE } from "@/ui/worldMinimap";
 
@@ -12,10 +13,17 @@ export const WORLD_MAP_COORD_MAX = WORLD_MAP_EDGE - 1;
 
 export const MARCH_FORM_INFANTRY_UNIT_CFG_ID = 1;
 
+/** Missing selector preserves the legacy infantry fixture; invalid selections remain invalid. */
+export function readMarchUnitCfgId(formRoot: ParentNode | null | undefined): number {
+  const select = formRoot?.querySelector<HTMLSelectElement>('[data-field="march-unit"]');
+  return select ? Number(select.value) : MARCH_FORM_INFANTRY_UNIT_CFG_ID;
+}
+
 export type MarchFormValidationInput = {
   toXRaw: string;
   toYRaw: string;
   marchCountRaw: string;
+  unitCfgId?: number;
   cityX?: number;
   cityY?: number;
   cityTroops: CityTroopStack[];
@@ -65,6 +73,9 @@ function availableTroopCount(cityTroops: CityTroopStack[], unitCfgId: number): n
 /** 出征表单客户端校验（不发 RPC）。 */
 export function validateMarchForm(input: MarchFormValidationInput): MarchFormValidationResult {
   const errors: string[] = [];
+  const unitCfgId = input.unitCfgId ?? MARCH_FORM_INFANTRY_UNIT_CFG_ID;
+  if (![1, 2, 3, 4].includes(unitCfgId)) errors.push("请选择有效的出征兵种");
+  const unitName = unitCfgId === 1 ? "步兵" : `${unitLabel(unitCfgId)}兵力`;
 
   const toXParsed = parseWorldMapCoord(input.toXRaw, "X");
   const toYParsed = parseWorldMapCoord(input.toYRaw, "Y");
@@ -74,18 +85,18 @@ export function validateMarchForm(input: MarchFormValidationInput): MarchFormVal
   const marchTrimmed = input.marchCountRaw.trim();
   let marchCount = 0;
   if (marchTrimmed === "") {
-    errors.push("出征步兵不能为空");
+    errors.push(`出征${unitName}不能为空`);
   } else {
     const n = Number(marchTrimmed);
     if (!Number.isFinite(n) || !Number.isInteger(n)) {
-      errors.push("出征步兵须为整数");
+      errors.push(`出征${unitName}须为整数`);
     } else if (n <= 0) {
-      errors.push("出征步兵须大于 0");
+      errors.push(`出征${unitName}须大于 0`);
     } else {
       marchCount = n;
-      const available = availableTroopCount(input.cityTroops, MARCH_FORM_INFANTRY_UNIT_CFG_ID);
+      const available = availableTroopCount(input.cityTroops, unitCfgId);
       if (n > available) {
-        errors.push(`出征步兵不能超过城内可用（当前 ${available}）`);
+        errors.push(`出征${unitName}不能超过城内可用（当前 ${available}）`);
       }
     }
   }
