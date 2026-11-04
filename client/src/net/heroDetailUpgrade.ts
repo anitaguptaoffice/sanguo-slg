@@ -1,4 +1,4 @@
-import { heroPointBudget } from "@/net/heroDetailPoints";
+import { heroPointRemainingAtLevel } from "@/net/heroDetailPoints";
 import type { HeroAttributes, HeroDetail } from "@/net/heroMailState";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import {
@@ -68,8 +68,8 @@ export function applyUpgradeHeroToDetail(
     hero_id: res.hero_id,
     level: res.level,
     // Upgrading changes the budget, not the already allocated points.
-    potential_remaining: base.potential_remaining == null ? undefined : Math.max(0,
-      base.potential_remaining + heroPointBudget(res.level) - heroPointBudget(base.level ?? res.previous_level),
+    potential_remaining: heroPointRemainingAtLevel(
+      { ...base, level: base.level ?? res.previous_level }, res.level,
     ),
     exp: res.exp,
     exp_current: res.exp_current,

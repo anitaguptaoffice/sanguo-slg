@@ -88,4 +88,31 @@ describe("hero upgrade potential", () => {
     expect(mergeHeroPointSnapshot({ hero_id: 7, level: 1 }, heroPointSnapshotFromDetail(before)).potential_remaining).toBe(0);
   });
 
+  it("does not recreate spent points after a lower-level detail reanchors the cache", () => {
+    const spent = { hero_id: 7, level: 3, potential_remaining: 0, force_add: 3, intel_add: 0, politics_add: 0 };
+    const older = mergeHeroPointSnapshot({ hero_id: 7, level: 2 }, heroPointSnapshotFromDetail(spent));
+    expect(older.potential_remaining).toBe(0);
+    const restored = mergeHeroPointSnapshot({ hero_id: 7, level: 3 }, heroPointSnapshotFromDetail(older));
+    expect(restored.potential_remaining).toBe(0);
+    expect(applyUpgradeHeroToDetail(older, upgradeResult(3)).potential_remaining).toBe(0);
+  });
+
+});
+
+it("keeps spent points unavailable after a delayed lower-level detail and current reload", async () => {
+  const f = await setup(); f.point().click(); await flush();
+  const oldDetail = await f.gateway.getHeroDetail.mock.results[0].value;
+  let resolve!: (value: typeof oldDetail) => void;
+  f.gateway.getHeroDetail.mockImplementationOnce(() => new Promise(r => { resolve = r; }));
+  const oldReload = f.reopen(); await f.reopen();
+  await f.upgrade(); f.point().click(); await flush(); expect(f.summary()).toContain("剩余 0/2");
+  resolve(oldDetail); await oldReload; await f.reopen();
+  expect(f.summary()).toContain("剩余 0/2"); expect(f.point().disabled).toBe(true);
+});
+
+it("does not inflate a legacy balance when defaulted adds understate its spent points", () => {
+  const cached = heroPointSnapshotFromDetail({ hero_id: 7, level: 5, potential_remaining: 1, force_add: 2 });
+  expect(mergeHeroPointSnapshot({ hero_id: 7, level: 6 }, cached).potential_remaining).toBe(2);
+  const before = { hero_id: 7, ...cached };
+  expect(applyUpgradeHeroToDetail(before, { hero_id: 7, level: 6, previous_level: 5, exp: 0, exp_current: 0, exp_to_next: 100 }).potential_remaining).toBe(2);
 });

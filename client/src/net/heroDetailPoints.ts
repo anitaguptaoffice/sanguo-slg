@@ -92,6 +92,18 @@ export function applyHeroPointResultToDetail(
 
 export type HeroPointSnapshot = Pick<HeroDetail, "level" | "potential_remaining" | "force_add" | "intel_add" | "politics_add">;
 
+/** Preserve allocated-point debt even if an older lower-level detail arrives late. */
+export function heroPointRemainingAtLevel(snapshot: HeroPointSnapshot, level: number | undefined): number | undefined {
+  if (snapshot.potential_remaining == null) return undefined;
+  if (snapshot.level == null || level == null) return snapshot.potential_remaining;
+  const adds = [snapshot.force_add, snapshot.intel_add, snapshot.politics_add];
+  if (adds.every(value => value != null && Number.isFinite(value) && value >= 0)) {
+    const used = Math.max(heroPointUsed(snapshot), heroPointBudget(snapshot.level) - snapshot.potential_remaining);
+    return Math.max(0, heroPointBudget(level) - used);
+  }
+  return Math.max(0, snapshot.potential_remaining + heroPointBudget(level) - heroPointBudget(snapshot.level));
+}
+
 /** 详情加载后合并会话内已知的潜力快照（GetHeroDetail 不下发 adds）。 */
 export function mergeHeroPointSnapshot(
   detail: HeroDetail,
@@ -114,8 +126,7 @@ export function mergeHeroPointSnapshot(
     politics_add: snapshot.politics_add ?? detail.politics_add ?? 0,
     potential_remaining: snapshot.potential_remaining == null
       ? detail.potential_remaining
-      : Math.max(0, snapshot.potential_remaining + (snapshot.level != null && detail.level != null
-        ? heroPointBudget(detail.level) - heroPointBudget(snapshot.level) : 0)),
+      : heroPointRemainingAtLevel(snapshot, detail.level),
   };
 }
 
