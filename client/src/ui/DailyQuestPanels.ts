@@ -106,6 +106,7 @@ export class DailyQuestPanels {
   private listError: string | null = null;
   private claimBatchInflight = false;
   private claimInflight = false;
+  private acceptInflight = false;
   /** CLIENT-134：角标深链打开前「可领取」chip 数字与 HUD 快照对齐。 */
   private dailyClaimableCountOverride: number | null = null;
 
@@ -128,6 +129,16 @@ export class DailyQuestPanels {
   ) {}
 
   attach(): void {
+    this.detach();
+    this.rows = [];
+    this.catalogQuestRows = [];
+    this.selectedCfgId = 0;
+    this.listLoading = false;
+    this.listError = null;
+    this.claimInflight = false;
+    this.claimBatchInflight = false;
+    this.acceptInflight = false;
+    this.dailyClaimableCountOverride = null;
     this.listFilter = readDailyQuestListFilterSession() ?? "all";
     this.activeChainId = readDailyChainTabSession();
     this.panel = this.buildPanel();
@@ -136,7 +147,20 @@ export class DailyQuestPanels {
   }
 
   detach(): void {
+    ++this.listReadVersion;
     this.panel?.remove();
+  }
+
+  /** A new mount is a different UI owner, even when the authenticated actor is unchanged. */
+  private capturePanel(): () => boolean {
+    const panel = this.panel;
+    return () => this.panel === panel && panel.parentNode === this.mount;
+  }
+
+  private captureCurrentPanel(): () => boolean {
+    const actor = captureActor(this.gateway, this.getSession);
+    const mounted = this.capturePanel();
+    return () => actor() && mounted();
   }
 
   isOpen(): boolean {
@@ -167,7 +191,9 @@ export class DailyQuestPanels {
   openAndFocusQuest(questCfgId: number): void {
     openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
+    const current = this.captureCurrentPanel();
     void this.refreshList(questCfgId).then(() => {
+      if (!current()) return;
       scrollDailyQuestCfgRowIntoView(this.panel, questCfgId);
     });
   }
@@ -177,7 +203,9 @@ export class DailyQuestPanels {
     if (!this.panel.classList.contains("hidden")) {
       resetCenterPanelViewportScroll(this.panel);
       this.renderBattleReportBanner();
+      const current = this.captureCurrentPanel();
       void this.refreshList(undefined, "default").then(() => {
+        if (!current()) return;
         scrollQuestClaimableIntoView(this.panel, this.rows, this.listFilter);
       });
     }
@@ -201,7 +229,9 @@ export class DailyQuestPanels {
     }
     this.dailyClaimableCountOverride =
       opts?.claimableCount != null ? Math.max(0, opts.claimableCount) : null;
+    const current = this.captureCurrentPanel();
     void this.refreshList(preferredCfgId, "todo-badge").then(() => {
+      if (!current()) return;
       this.dailyClaimableCountOverride = null;
       const id = this.selectedCfgId;
       if (id > 0) {
@@ -215,7 +245,9 @@ export class DailyQuestPanels {
   openFromCenterTodoClaimable(preferredCfgId = 0, opts?: { skipScroll?: boolean }): boolean {
     const wasOpen = this.isOpen();
     openCenterPanel(this.panel);
+    const current = this.captureCurrentPanel();
     void this.refreshList(preferredCfgId, "center-claimable").then(() => {
+      if (!current()) return;
       const id = this.selectedCfgId;
       if (id <= 0 || opts?.skipScroll) return;
       scrollCenterTodoTarget(this.panel, centerTodoScrollTargetId("daily", id));
@@ -653,7 +685,7 @@ export class DailyQuestPanels {
     focusCfgId?: number,
     pickMode: "default" | "todo-badge" | "center-claimable" = "default",
   ): Promise<void> {
-    const actor = captureActor(this.gateway, this.getSession);
+    const actor = this.captureCurrentPanel();
     const version = ++this.listReadVersion;
     const current = () => actor() && version === this.listReadVersion && this.panel.parentNode === this.mount;
     renderSuccessfulReadNotice(this.panel);
@@ -710,13 +742,18 @@ export class DailyQuestPanels {
   }
 
   private async acceptDaily(): Promise<void> {
-    const current = captureActor(this.gateway, this.getSession);
+    if (this.acceptInflight) return;
+    const current = this.captureCurrentPanel();
+    const mounted = this.capturePanel();
     const id = this.selectedCfgId;
     if (!id) {
       this.onStatus("请先选中一条日常");
       return;
     }
     const sid = this.serverId();
+    this.acceptInflight = true;
+    const button = this.panel.querySelector<HTMLButtonElement>('[data-action="accept-daily"]');
+    if (button) button.disabled = true;
     this.onStatus(`接取日常 #${id}…`);
     try {
       await this.gateway.acceptQuest(sid, id);
@@ -729,12 +766,18 @@ export class DailyQuestPanels {
     } catch (e) {
       if (!current()) return;
       this.onStatus((e as Error).message);
+    } finally {
+      if (mounted()) {
+        this.acceptInflight = false;
+        if (button) button.disabled = false;
+      }
     }
   }
 
   private async claimDaily(): Promise<void> {
     if (this.claimInflight || this.claimBatchInflight) return;
-    const current = captureActor(this.gateway, this.getSession);
+    const current = this.captureCurrentPanel();
+    const mounted = this.capturePanel();
     const id = this.selectedCfgId;
     if (!id) {
       this.onStatus("请先选中一条日常");
@@ -766,6 +809,7 @@ export class DailyQuestPanels {
       this.setDailyFormError(msg);
       this.onStatus(msg);
     } finally {
+      if (!mounted()) return;
       this.claimInflight = false;
       if (button) button.disabled = false;
     }
@@ -773,7 +817,8 @@ export class DailyQuestPanels {
 
   private async claimDailyBatch(): Promise<void> {
     if (this.claimBatchInflight || this.claimInflight) return;
-    const current = captureActor(this.gateway, this.getSession);
+    const current = this.captureCurrentPanel();
+    const mounted = this.capturePanel();
     const validated = validateBatchClaimDailySelection(this.rows);
     if (!validated.ok) {
       this.setDailyFormError(validated.message);
@@ -823,6 +868,7 @@ export class DailyQuestPanels {
       this.onStatus(summary.summaryText);
       if (pulseCfgIds.length) this.pulseDailyClaimableSweep();
     } finally {
+      if (!mounted()) return;
       this.claimBatchInflight = false;
       if (!current()) return;
       this.renderList();
