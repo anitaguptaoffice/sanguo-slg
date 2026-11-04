@@ -759,7 +759,7 @@ export class HeroMailPanels {
   private heroExprHoursPref = 1;
   private heroExprSnapshotByHeroId = new Map<
     number,
-    ReturnType<typeof heroExprSnapshotFromDetail>
+    { actor: () => boolean; snapshot: ReturnType<typeof heroExprSnapshotFromDetail> }
   >();
   private heroExprCountdownTimer: ReturnType<typeof setInterval> | null = null;
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
@@ -3615,7 +3615,7 @@ export class HeroMailPanels {
       this.heroExprSnapshotByHeroId.delete(heroId);
       return;
     }
-    this.heroExprSnapshotByHeroId.set(heroId, snap);
+    this.heroExprSnapshotByHeroId.set(heroId, { actor: captureActor(this.gateway, this.getSession), snapshot: snap });
   }
 
   private clearHeroExprCountdownTimer(): void {
@@ -3797,7 +3797,8 @@ export class HeroMailPanels {
       this.heroDetail = mergeHeroExprSnapshot(
         mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId)?.actor()
           ? this.heroPointSnapshotByHeroId.get(heroId)!.snapshot : null),
-        this.heroExprSnapshotByHeroId.get(heroId) ?? null,
+        this.heroExprSnapshotByHeroId.get(heroId)?.actor()
+          ? this.heroExprSnapshotByHeroId.get(heroId)!.snapshot : null,
       );
       this.persistHeroPointSnapshot(this.heroDetail);
       persistHeroMarchForceFromDetail(this.heroDetail);
@@ -4097,105 +4098,69 @@ export class HeroMailPanels {
     }
   }
 
-  private async cancelHeroExprSelected(): Promise<void> {
-    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
-    const heroId = this.selectedHeroId;
-    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
-    setHeroExprFormErrorDisplay(this.heroPanel, null);
-    setHeroExprSuccessDisplay(this.heroPanel, null);
-    this.syncHeroExprControlsNow();
-    const sid = this.serverId();
-    this.onStatus("取消历练…");
-    try {
-      const res = await this.gateway.cancelHeroExpr(sid, heroId);
-      const detailAfter = applyCancelHeroExprToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroExprSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
-      this.clearHeroExprCountdownTimer();
-      this.renderHeroList();
-      const statusText = formatHeroExprCancelSuccessStatus();
-      setHeroExprSuccessDisplay(this.heroPanel, statusText);
-      this.onStatus(statusText);
-    } catch (e) {
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
-      const msg = formatHeroExprGatewayErrorFromUnknown(e);
-      setHeroExprFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
-      this.onStatus(msg);
-    } finally {
-      this.syncHeroExprControlsNow();
-    }
-  }
+  private async cancelHeroExprSelected(): Promise<void> { await this.settleHeroExprSelected("cancel"); }
+  private async finishHeroExprSelected(): Promise<void> { await this.settleHeroExprSelected("finish"); }
+  private async fasterHeroExprSelected(): Promise<void> { await this.settleHeroExprSelected("faster"); }
 
-  private async finishHeroExprSelected(): Promise<void> {
-    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
+  private async settleHeroExprSelected(action: "cancel" | "finish" | "faster"): Promise<void> {
+    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId ||
+      this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
-    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
+    const detailBefore = this.heroDetail;
+    const actor = captureActor(this.gateway, this.getSession);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => actor() && presentation() && generation === this.heroDetailReadGeneration &&
+      this.selectedHeroId === heroId && this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed &&
+      this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden");
+    this.heroExprSubmitState = "submitting";
     setHeroExprFormErrorDisplay(this.heroPanel, null);
     setHeroExprSuccessDisplay(this.heroPanel, null);
     this.syncHeroExprControlsNow();
     const sid = this.serverId();
-    this.onStatus("领取历练经验…");
+    this.onStatus(action === "cancel" ? "取消历练…" : action === "finish" ? "领取历练经验…" : "加速历练…");
     try {
-      const res = await this.gateway.finishHeroExpr(sid, heroId);
-      const detailAfter = applyHeroExprFinishToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
+      const res = await (action === "cancel" ? this.gateway.cancelHeroExpr(sid, heroId) :
+        action === "finish" ? this.gateway.finishHeroExpr(sid, heroId) : this.gateway.fasterHeroExpr(sid, heroId));
+      if (!actor()) return;
+      if (res.hero_id !== heroId) throw new Error("历练结果与所选将领不一致，请刷新详情");
+      const finish = res as Parameters<typeof applyHeroExprFinishToDetail>[1];
+      const base = this.heroDetail?.hero_id === heroId ? this.heroDetail : detailBefore;
+      const detailAfter = action === "cancel" ? applyCancelHeroExprToDetail(base, res) :
+        applyHeroExprFinishToDetail(base, finish);
       this.persistHeroExprSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
+      // Settlement changes only status/EXP, never another action's level or loyalty.
+      this.heroes = this.heroes.map(h => h.hero_id === heroId ? { ...h, status: res.status,
+        ...(action !== "cancel" ? { exp: Math.max(h.exp ?? 0, detailAfter.exp ?? 0) } : {}) } : h);
+      if (!current()) {
+        if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+          this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          // A newer detail read may predate settlement. Read fresh state; never replay the command.
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
+      this.heroExprSubmitState = "idle";
+      this.heroDetail = detailAfter;
       this.clearHeroExprCountdownTimer();
       this.renderHeroList();
-      const statusText = formatHeroExprFinishSuccessStatus(res);
+      const statusText = action === "cancel" ? formatHeroExprCancelSuccessStatus() :
+        action === "finish" ? formatHeroExprFinishSuccessStatus(finish) : formatHeroExprFasterSuccessStatus(finish);
       setHeroExprSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
+      if (action !== "cancel") scheduleHeroDetailStatPulse(
         this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
       );
       this.onStatus(statusText);
     } catch (e) {
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
+      if (!current()) return;
+      this.heroExprSubmitState = "error";
       const msg = formatHeroExprGatewayErrorFromUnknown(e);
       setHeroExprFormErrorDisplay(this.heroPanel, msg);
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      this.syncHeroExprControlsNow();
-    }
-  }
-
-  private async fasterHeroExprSelected(): Promise<void> {
-    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
-    const heroId = this.selectedHeroId;
-    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
-    setHeroExprFormErrorDisplay(this.heroPanel, null);
-    setHeroExprSuccessDisplay(this.heroPanel, null);
-    this.syncHeroExprControlsNow();
-    const sid = this.serverId();
-    this.onStatus("加速历练…");
-    try {
-      const res = await this.gateway.fasterHeroExpr(sid, heroId);
-      const detailAfter = applyHeroExprFinishToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroExprSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
-      this.clearHeroExprCountdownTimer();
-      this.renderHeroList();
-      const statusText = formatHeroExprFasterSuccessStatus(res);
-      setHeroExprSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
-        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
-      );
-      this.onStatus(statusText);
-    } catch (e) {
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
-      const msg = formatHeroExprGatewayErrorFromUnknown(e);
-      setHeroExprFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
-      this.onStatus(msg);
-    } finally {
-      this.syncHeroExprControlsNow();
+      if (this.heroExprSubmitState === "submitting") this.heroExprSubmitState = "idle";
+      if (this.heroPanel.parentNode === this.mount) this.syncHeroExprControlsNow();
     }
   }
 
