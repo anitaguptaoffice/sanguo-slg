@@ -256,7 +256,10 @@ export class SocialPanels {
   private chatReadVersion = 0;
   private chatReadDestinationKey = "";
   private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
-  private readonly rankListInflight = new SocialPanelInflight<void>();
+  private rankReadVersion = 0;
+  private rankRead: { boardType: number; current: () => boolean; promise: Promise<void> } | null = null;
+  private rankSnapshotOwner: (() => boolean) | null = null;
+  private rankDisplayedType = 0;
   private guildListInflight = new SocialPanelInflight<void>();
   private guildMembershipPending: object | null = null;
   private guildReadVersion = 0;
@@ -301,6 +304,11 @@ export class SocialPanels {
   }
 
   attach(): void {
+    ++this.rankReadVersion;
+    this.rankRead = null;
+    this.rankSnapshotByType.clear();
+    this.rankSnapshotOwner = null;
+    this.rankDisplayedType = 0;
     this.chatSendPending = null;
     this.guildMembershipPending = null;
     ++this.guildReadVersion;
@@ -317,6 +325,7 @@ export class SocialPanels {
     this.guildPanel.addEventListener("click", (ev) => this.onGuildClick(ev));
     this.rankPanel.addEventListener("click", (ev) => this.onRankClick(ev));
     this.rankPanel.querySelector('[data-field="rank-type"]')?.addEventListener("change", () => {
+      ++this.rankReadVersion;
       this.showRankRefreshDensity = false;
       if (!this.rankPanel.classList.contains("hidden")) {
         this.syncRankRefreshCooldownUi(this.selectedLeaderboardType());
@@ -326,6 +335,11 @@ export class SocialPanels {
   }
 
   detach(): void {
+    ++this.rankReadVersion;
+    this.rankRead = null;
+    this.rankSnapshotByType.clear();
+    this.rankSnapshotOwner = null;
+    this.rankDisplayedType = 0;
     this.chatSendPending = null;
     this.guildMembershipPending = null;
     ++this.guildReadVersion;
@@ -390,7 +404,11 @@ export class SocialPanels {
         this.pendingReturnScroll = null;
       }
       this.hydrateRankRefreshClockFromSession();
-      void this.refreshRank().then(() => this.applyPendingReturnScroll());
+      const read = this.refreshRank();
+      const version = this.rankReadVersion;
+      void read.then(() => {
+        if (version === this.rankReadVersion && this.rankSnapshotOwner?.() && !this.rankPanel.classList.contains("hidden")) this.applyPendingReturnScroll();
+      });
     }
   }
 
@@ -406,7 +424,11 @@ export class SocialPanels {
     if (typeSelect) typeSelect.value = String(LB_PLAYER_POWER);
     openCenterPanel(this.rankPanel);
     resetCenterPanelViewportScroll(this.rankPanel);
-    void this.refreshRank().then(() => this.scrollRankHighlightIntoView());
+    const read = this.refreshRank();
+    const version = this.rankReadVersion;
+    void read.then(() => {
+      if (version === this.rankReadVersion && this.rankSnapshotOwner?.() && !this.rankPanel.classList.contains("hidden")) this.scrollRankHighlightIntoView();
+    });
   }
 
   private scrollRankHighlightIntoView(): void {
@@ -1340,7 +1362,7 @@ export class SocialPanels {
     const refreshBtn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="refresh-rank"]');
     const retryBtn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="retry-refresh-rank"]');
     const inCooldown = remaining > 0;
-    const busy = this.rankListInflight.isBusy();
+    const busy = this.rankRead?.current() ?? false;
     if (refreshBtn) refreshBtn.disabled = busy || inCooldown;
     for (const btn of this.rankPanel.querySelectorAll<HTMLButtonElement>(
       `.rank-empty-retry-inline[data-action="retry-refresh-rank"]`,
@@ -1810,7 +1832,27 @@ export class SocialPanels {
         return;
       }
     }
-    return this.rankListInflight.run(async () => {
+    if (this.rankRead?.boardType === boardType && this.rankRead.current()) return this.rankRead.promise;
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.rankPanel;
+    const version = ++this.rankReadVersion;
+    const current = () => actor() && this.rankPanel === panel && panel.parentElement === this.mount &&
+      version === this.rankReadVersion && this.selectedLeaderboardType() === boardType;
+    if (this.rankSnapshotOwner && !this.rankSnapshotOwner()) {
+      this.rankSnapshotByType.clear();
+      this.rankDisplayedType = 0;
+      this.cachedViewerHeroIds = [];
+    }
+    this.rankSnapshotOwner = actor;
+    if (this.rankDisplayedType !== boardType) {
+      this.rankDisplayedType = boardType;
+      this.refreshClock.rank.lastUpdatedMs = readRankLastRefreshMs(boardType);
+      this.rankListError = null;
+      this.showRankRefreshDensity = false;
+      this.renderLeaderboardPage(this.rankSnapshotByType.get(boardType) ?? { entries: [] }, boardType);
+    }
+    const promise = Promise.resolve().then(async () => {
+      if (!current()) return;
       const hadSnapshot = this.rankSnapshotByType.has(boardType);
       if (hadSnapshot) {
         captureLeaderboardPinBeforeRefresh(this.rankPanel, boardType);
@@ -1823,7 +1865,10 @@ export class SocialPanels {
         this.rankDensityScanPrevEntries = prevSnapshot?.entries ?? [];
         this.rankDensityScanPrevMyRank = prevSnapshot?.my_rank;
         const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
-        this.cachedViewerHeroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
+        if (!current()) return;
+        const heroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
+        if (!current()) return;
+        this.cachedViewerHeroIds = heroIds;
         this.pendingRankPinPulse = detectLeaderboardMyRankChange(prevSnapshot?.my_rank, res.my_rank);
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
@@ -1856,6 +1901,7 @@ export class SocialPanels {
         }
         this.onStatus("排行榜已刷新");
       } catch (e) {
+        if (!current()) return;
         const msg = formatPanelGatewayErrorFromUnknownForList("rank", e);
         const refreshErr = gatewayErrorMessage(e);
         const cached = this.rankSnapshotByType.get(boardType);
@@ -1877,7 +1923,14 @@ export class SocialPanels {
         }
         this.onStatus(msg);
       }
+    }).finally(() => {
+      if (this.rankRead?.promise === promise) {
+        this.rankRead = null;
+        if (current()) this.syncRankRefreshCooldownUi(boardType);
+      }
     });
+    this.rankRead = { boardType, current, promise };
+    return promise;
   }
 
   private onChatClick(ev: Event): void {
