@@ -11,6 +11,9 @@ import {
 /** 与 internal/hero/march_force.go MarchForceMarchCost 对齐。 */
 export const HERO_MARCH_FORCE_MARCH_COST = 10;
 
+/** Cache authority expires after one recovery period; this does not predict regeneration. */
+export const HERO_MARCH_FORCE_SNAPSHOT_MAX_AGE_MS = 180_000;
+
 /** 与 internal/hero/march_force.go MarchForceMax 对齐（无网关 max 时降级）。 */
 export function heroMarchForceMaxFromLevel(level: number | undefined): number {
   const lv = level != null && level >= 1 ? level : 1;
@@ -139,6 +142,9 @@ export function validateMarchHeroMarchForce(
 ): { ok: true } | { ok: false; message: string } {
   const snap = readHeroMarchForceSession(heroId, storage);
   if (!snap) return { ok: true };
+  const ageMs = Date.now() - snap.updatedAtMs;
+  if (!Number.isFinite(snap.updatedAtMs) || snap.updatedAtMs <= 0 ||
+    !Number.isFinite(ageMs) || ageMs < 0 || ageMs >= HERO_MARCH_FORCE_SNAPSHOT_MAX_AGE_MS) return { ok: true };
   if (snap.current < HERO_MARCH_FORCE_MARCH_COST) {
     return {
       ok: false,
