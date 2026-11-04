@@ -304,6 +304,17 @@ export class MarchListPanel {
   selectMarchByDest(destX: number, destY: number): boolean {
     const match = findFirstMarchByDest(this.marches, destX, destY);
     if (!match?.march_id) return false;
+    const dest = this.resolveDestFilter();
+    if ((dest && (dest.x !== destX || dest.y !== destY)) ||
+      (this.destFilterMode === "world" && !dest)) {
+      this.destFilterMode = "manual";
+      this.manualDestFilter = { x: destX, y: destY };
+    }
+    if (!applyMilitaryListClientFilters([match], this.listFilter, this.nowMs()).length) {
+      this.listFilter = { ...this.listFilter, phase: "all" };
+      writeMilitaryListFilterSession(this.listFilter);
+    }
+    this.renderFilterControls();
     this.setSelectedMarchId(match.march_id);
     if (!this.isOpen()) {
       openCenterPanel(this.panel);
