@@ -44,3 +44,27 @@ it("does not replace a same-level authoritative cap on a duplicate response", ()
   const detail = { hero_id: 7, level: 2, march_force: 28, march_force_max: 31 };
   expect(applyUpgradeHeroToDetail(detail, upgraded(2))).toMatchObject({ march_force: 28, march_force_max: 31 });
 });
+
+it('does not regress newer authority when an old upgrade completes after detail sees server progression', async () => {
+ let level = 1; let resolveFirst!: (r:ReturnType<typeof upgraded>) => void;
+ const gateway = {
+   getBoundServerId: () => 1,
+   listPlayerBag: vi.fn(async () => ({items:[]})),
+   listPlayerHeroes: vi.fn(async () => ({heroes:[{hero_id:7, template_cfg_id:1001, level}],total_count:1})),
+   getHeroDetail: vi.fn(async () => ({hero_id:7, level, march_force: level >= 3 ? 28 : 24, march_force_max:20 + 4*level, exp_toward_next:1000, upgrade_exp_required:100})),
+   upgradeHero: vi.fn(() => { level++; const result=upgraded(level); return level===2 ? new Promise<ReturnType<typeof upgraded>>(r => {resolveFirst=r}) : Promise.resolve(result); }),
+   restHero: vi.fn(async () => ({hero_id:7, march_force:32, march_force_max:32})),
+ };
+ const root = document.createElement('div'); document.body.append(root);
+ const session = {serverId:1, cityId:1, player:{player_id:1}, wallet:{}, buildings:[], cityTroops:[], bag:[]};
+ panel = new HeroMailPanels(root, gateway as never, () => session as never, () => {}, () => {});
+ panel.attach(); panel.toggleHero(); await flush();
+ const reopen = async () => { root.querySelector<HTMLElement>('li[data-hero-id="7"]')!.click(); await flush(); };
+ const clickUpgrade = async () => { root.querySelector<HTMLButtonElement>('[data-action="hero-upgrade"]')!.click(); await flush(); };
+ const rest = () => root.querySelector<HTMLButtonElement>('[data-action="hero-force-rest"]')!;
+ await reopen(); await clickUpgrade(); level = 3; await reopen();
+ expect(gateway.upgradeHero).toHaveBeenCalledTimes(1);
+ expect(root.textContent).toContain('出征体力 28/32'); expect(rest().disabled).toBe(false);
+ resolveFirst(upgraded(2)); await flush();
+ expect(root.textContent).toContain('出征体力 28/32'); expect(rest().disabled).toBe(false);
+});

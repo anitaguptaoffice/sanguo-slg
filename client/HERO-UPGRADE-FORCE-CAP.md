@@ -5,11 +5,11 @@ march_force_max. UpgradeHero returns the new level/EXP/attributes but no stamina
 Previously merging a Lv2 response into Lv1 detail kept 24/24 and disabled rest, although
 RestMarchForceOnce on the server would fill to 28 at the new level.
 
-When the detail level changes, reuse heroMarchForceMaxFromLevel from heroDetailForce.ts
+When the detail level advances, reuse heroMarchForceMaxFromLevel from heroDetailForce.ts
 to replace the old-level cap. Do not copy the formula or grant any current stamina.
 The existing helper matches internal/hero/march_force.go MarchForceMax: 20 + 4 * level,
 capped at 100. UpgradeHeroOnce only changes hero level/stats; stamina is separate state.
-Unknown current stays unknown. A duplicate same-level response preserves any newer
+Unknown current stays unknown. An older or duplicate same-level response preserves any newer
 explicit cap from detail/rest. Authoritative detail/rest responses continue to replace it.
 
 This is the existing M1 derived fallback, not a new protocol guarantee. If the server's
@@ -22,3 +22,8 @@ The repaired flow shows 24/28, permits the existing RestHero request, and accept
 from its response. Parameterized tests cover every level 2–20, spent/unknown stamina and
 duplicate results. These are mocked-gateway integration tests, not browser/live gameplay.
 Independent review, full client tests/build and exact-head CI remain PR gates.
+
+Independent review found an initial !== condition could lower a fresher Lv3 cap when an
+older Lv2 reply arrived. An actual-panel delayed-response regression proved it; refresh
+only on a forward level transition now preserves the accepted higher cap. Broader
+pre-existing response ownership/level replacement is outside this helper-only card.

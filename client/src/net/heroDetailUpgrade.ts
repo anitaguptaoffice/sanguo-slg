@@ -69,7 +69,7 @@ export function applyUpgradeHeroToDetail(
     hero_id: res.hero_id,
     level: res.level,
     // The old detail cap belongs to its old level; upgrading does not refill current stamina.
-    march_force_max: res.level !== base.level ? heroMarchForceMaxFromLevel(res.level) : base.march_force_max,
+    march_force_max: res.level > (base.level ?? res.previous_level) ? heroMarchForceMaxFromLevel(res.level) : base.march_force_max,
     // Upgrading changes the budget, not the already allocated points.
     potential_remaining: heroPointRemainingAtLevel(
       { ...base, level: base.level ?? res.previous_level }, res.level,
