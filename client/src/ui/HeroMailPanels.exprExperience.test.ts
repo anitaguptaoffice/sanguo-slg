@@ -74,9 +74,25 @@ describe("experience after training settlement", () => {
     expect(applyHeroExprFinishToDetail(before, { ...result, exp: Infinity }).exp_current).toBe(80);
     expect(applyHeroExprFinishToDetail({ ...before, hero_id: 9 }, result).exp_current).toBe(80);
   });
-  it("preserves protocol negative progress and reconciles lower authoritative totals without clamping", () => {
+  it("preserves negative protocol progress and ignores older lower totals", () => {
     expect(applyHeroExprFinishToDetail({ ...before, exp_current: -100 }, result).exp_current).toBe(-60);
-    expect(applyHeroExprFinishToDetail(before, { ...result, exp: 200 }).exp_current).toBe(0);
+    const older = applyHeroExprFinishToDetail(before, { ...result, exp: 200 });
+    expect(older.exp).toBe(280); expect(older.exp_current).toBe(80);
+    expect(applyHeroExprFinishToDetail(older, { ...result, exp: 320 }).exp_current).toBe(120);
   });
 
+});
+
+it.each(["finish", "faster"] as const)("%s cannot roll back newer same-hero experience while settlement is pending", async action => {
+  const f = await setup(action, 40);
+  const request = action === "finish" ? f.gateway.finishHeroExpr : f.gateway.fasterHeroExpr;
+  let resolve!: (value: { hero_id: number; status: number; exp: number; exp_gained: number }) => void;
+  request.mockReturnValueOnce(new Promise(r => { resolve = r; }));
+  const pending = f.finish();
+  const prior = await f.gateway.getHeroDetail.mock.results[0].value;
+  f.gateway.getHeroDetail.mockResolvedValue({ ...prior, level: 3, exp: 520, exp_toward_next: 220, upgrade_exp_required: 200 });
+  f.mount.querySelector<HTMLElement>('li[data-hero-id="7"]')!.click(); await flush();
+  expect(f.button("upgrade").disabled).toBe(false);
+  resolve({ hero_id: 7, status: 1, exp: 320, exp_gained: 40 }); await pending; await flush();
+  expect(f.button("upgrade").disabled).toBe(false);
 });
