@@ -188,6 +188,7 @@ export class BattleReportPanel {
   private roundsTableExpanded = false;
   private highlightedRound = 0;
   private listError = "";
+  private listNeedsRefresh = false;
   private detailError = "";
   private listLoading = false;
   private listRequestVersion = 0;
@@ -473,9 +474,11 @@ export class BattleReportPanel {
         !this.listLoading && this.reports.length > 0 && this.total > 0;
       btn.hidden = !showPager;
       if (showPager) {
-        const canMore = hasMoreBattleReports(this.reports.length, this.total);
+        const canMore = !this.listNeedsRefresh && hasMoreBattleReports(this.reports.length, this.total);
         btn.disabled = !canMore;
-        btn.textContent = canMore
+        btn.textContent = this.listNeedsRefresh
+          ? "请刷新列表后继续"
+          : canMore
           ? BATTLE_REPORT_LOAD_MORE_LABEL
           : battleReportAllLoadedLabel(this.total);
       }
@@ -1015,6 +1018,7 @@ export class BattleReportPanel {
     this.listLoading = true;
     this.reports = [];
     this.total = 0;
+    this.listNeedsRefresh = false;
     this.renderList();
     this.onStatus("拉取战报…");
     try {
@@ -1041,7 +1045,7 @@ export class BattleReportPanel {
   }
 
   private async loadMoreReports(): Promise<void> {
-    if (!this.attached || this.listLoading || !hasMoreBattleReports(this.reports.length, this.total)) return;
+    if (!this.attached || this.listLoading || this.listNeedsRefresh || !hasMoreBattleReports(this.reports.length, this.total)) return;
     const current = this.beginListRead();
     this.listError = "";
     this.listLoading = true;
@@ -1055,9 +1059,23 @@ export class BattleReportPanel {
       };
       if (!current()) return;
       const batch = res.reports ?? [];
-      this.reports = [...this.reports, ...batch];
-      this.total = res.total ?? this.total;
-      this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
+      // Offset pages are not snapshots. Never append an overlapping page:
+      // duplicate IDs would make adjacent navigation return the same report.
+      const ids = new Set(this.reports.map((r) => r.report_id));
+      const overlaps = batch.some((r) => {
+        if (ids.has(r.report_id)) return true;
+        ids.add(r.report_id);
+        return false;
+      });
+      if (!batch.length || overlaps) {
+        this.listNeedsRefresh = true;
+        this.listError = "战报分页已变化或未取得新记录，请刷新列表";
+        this.onStatus(this.listError);
+      } else {
+        this.reports = [...this.reports, ...batch];
+        this.total = res.total ?? this.total;
+        this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
+      }
     } catch (e) {
       if (!current()) return;
       this.listError = `加载更多失败：${(e as Error).message}`;
