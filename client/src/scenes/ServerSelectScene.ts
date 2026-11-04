@@ -18,17 +18,21 @@ export class ServerSelectScene implements Scene {
   private lifecycle = 0;
   private active = false;
   private listBusy = false;
+  private connected = false;
+  private connectionVersion = 0;
+  private listVersion = 0;
   private entering = false;
   private hudStatusEl: HTMLElement | null = null;
   private triggerBtn: HTMLButtonElement | null = null;
   private focusTrap: OverlayFocusTrap | null = null;
 
   async enter(ctx: SceneContext): Promise<void> {
-    const lifecycle = ++this.lifecycle;
+    ++this.lifecycle;
     this.active = true;
     this.servers = [];
     this.selectedId = 0;
-    this.listBusy = true;
+    this.listBusy = false;
+    this.connected = false;
     this.status = "连接网关…";
     this.hud = ctx.hud;
     this.mountHudChrome();
@@ -61,22 +65,15 @@ export class ServerSelectScene implements Scene {
     this.focusTrap.open();
     this.syncHudTriggerExpanded();
     this.syncPanel();
-    try {
-      await ctx.gateway.connect();
-      if (!this.isCurrent(lifecycle)) return;
-      this.listBusy = false;
-      await this.loadServers(ctx.gateway);
-    } catch (e) {
-      if (!this.isCurrent(lifecycle)) return;
-      this.listBusy = false;
-      this.status = `连接失败: ${(e as Error).message}`;
-      this.syncPanel();
-    }
+    await this.loadServers(ctx.gateway);
   }
 
   leave(): void {
     this.active = false;
     this.lifecycle++;
+    this.connectionVersion++;
+    this.listVersion++;
+    this.connected = false;
     this.listBusy = false;
     this.focusTrap?.dispose();
     this.focusTrap = null;
@@ -118,15 +115,44 @@ export class ServerSelectScene implements Scene {
       (server.status === 1 || server.status === 2);
   }
 
+  private connectGateway(gateway: SceneContext["gateway"], lifecycle: number): Promise<void> {
+    const version = ++this.connectionVersion;
+    const current = () => this.isCurrent(lifecycle) && version === this.connectionVersion;
+    return new Promise((resolve, reject) => {
+      const interrupted = () => {
+        if (current()) {
+          this.connectionVersion++;
+          this.listVersion++;
+          this.connected = false;
+          this.listBusy = false;
+          this.servers = [];
+          this.selectedId = 0;
+          this.status = "连接已中断，请刷新列表重试";
+          this.syncPanel();
+        }
+        // Gateway connect may remain pending if the socket closes before open.
+        reject(new Error("gateway disconnected"));
+      };
+      gateway.connect({ onClose: interrupted, onError: interrupted }).then(() => {
+        if (current()) this.connected = true;
+        resolve();
+      }, reject);
+    });
+  }
+
   private async loadServers(gateway: SceneContext["gateway"]): Promise<void> {
     if (!this.active || this.listBusy) return;
     const lifecycle = this.lifecycle;
+    const version = ++this.listVersion;
+    const current = () => this.isCurrent(lifecycle) && version === this.listVersion;
     this.listBusy = true;
-    this.status = "拉取服务器列表…";
+    this.status = this.connected ? "拉取服务器列表…" : "连接网关…";
     this.syncPanel();
     try {
+      if (!this.connected) await this.connectGateway(gateway, lifecycle);
+      if (!current()) return;
       const res = (await gateway.listGameServers(1, 50)) as { servers?: unknown[] };
-      if (!this.isCurrent(lifecycle)) return;
+      if (!current()) return;
       const raw = res.servers ?? [];
       this.servers = raw.map((s) => parseGameServerInfo(s as Parameters<typeof parseGameServerInfo>[0]));
       if (!this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) {
@@ -134,12 +160,12 @@ export class ServerSelectScene implements Scene {
       }
       this.status = `共 ${this.servers.length} 个服`;
     } catch (e) {
-      if (!this.isCurrent(lifecycle)) return;
-      this.status = `拉取失败: ${(e as Error).message}`;
+      if (!current()) return;
+      this.status = `${this.connected ? "拉取" : "连接"}失败: ${(e as Error).message}`;
       this.servers = [];
       this.selectedId = 0;
     }
-    if (!this.isCurrent(lifecycle)) return;
+    if (!current()) return;
     this.listBusy = false;
     this.syncPanel();
   }
@@ -161,7 +187,7 @@ export class ServerSelectScene implements Scene {
       }
     }
     if (statusEl) statusEl.textContent = this.status;
-    if (enterBtn) enterBtn.disabled = this.listBusy || this.entering ||
+    if (enterBtn) enterBtn.disabled = !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s));
     const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
@@ -189,7 +215,7 @@ export class ServerSelectScene implements Scene {
   }
 
   private async enterGame(ctx: SceneContext): Promise<void> {
-    if (!this.active || this.listBusy || this.entering ||
+    if (!this.active || !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
     const lifecycle = this.lifecycle;
     const serverId = this.selectedId;
@@ -203,7 +229,7 @@ export class ServerSelectScene implements Scene {
         DEFAULT_PASSWORD,
         serverId,
       );
-      if (!this.isCurrent(lifecycle)) return;
+      if (!this.isCurrent(lifecycle) || !this.connected) return;
       await ctx.switchScene("mainCity", session);
     } catch (e) {
       if (!this.isCurrent(lifecycle)) return;
