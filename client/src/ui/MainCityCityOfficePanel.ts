@@ -124,7 +124,9 @@ export class MainCityCityOfficePanel {
       return;
     }
 
-    currentEl.textContent = formatCityChiefCurrentLine(this.chief, this.heroes);
+    currentEl.textContent = this.phase === "uncertain"
+      ? (this.chief ? `${formatCityChiefCurrentLine(this.chief, this.heroes)}（上次记录，待核实）` : "城主状态待核实")
+      : formatCityChiefCurrentLine(this.chief, this.heroes);
     bonusEl.textContent = formatCityChiefProductionBonusStub(this.chief);
     const prev = sel.value;
     sel.innerHTML = "";

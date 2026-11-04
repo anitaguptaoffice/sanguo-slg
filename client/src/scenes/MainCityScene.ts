@@ -396,6 +396,7 @@ import {
   formatCityChiefGatewayError,
   heroIdsOnActiveMarch,
   loadCityOfficeBundle,
+  parseCityChiefView,
   runClearCityChief,
   runSetCityChief,
 } from "@/net/cityChiefOffice";
@@ -482,6 +483,7 @@ export class MainCityScene implements Scene {
   private domesticSlotStrip!: MainCityDomesticSlotStrip;
   private buildingPanel!: MainCityBuildingPanel;
   private cityOfficePanel!: MainCityCityOfficePanel;
+  private cityOfficeContext?: { current: () => boolean; version: number; busy: boolean; uncertain: boolean };
   private activeDomesticSlotKey: string | null = null;
   private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
@@ -2225,60 +2227,84 @@ export class MainCityScene implements Scene {
     if (showHall) void this.refreshCityOfficePanel();
   }
 
+  private getCityOfficeContext() {
+    if (!this.cityOfficeContext?.current()) {
+      const actor = captureActor(this.gateway, () => this.session);
+      const generation = this.marchSnapshotGeneration;
+      const panel = this.cityOfficePanel;
+      const context = { current: (): boolean => this.cityOfficeContext === context &&
+        actor() && panel === this.cityOfficePanel && generation === this.marchSnapshotGeneration,
+        version: 0, busy: false, uncertain: false };
+      this.cityOfficeContext = context;
+    }
+    return this.cityOfficeContext;
+  }
+
   private async refreshCityOfficePanel(): Promise<void> {
     const session = this.session;
     if (!session?.cityId || !this.cityOfficePanel) return;
+    const context = this.getCityOfficeContext();
+    if (context.busy) return;
+    const version = ++context.version;
+    const current = () => context.current() && context.version === version;
     this.cityOfficePanel.setPhase("loading");
     this.cityOfficePanel.setFormError(null);
     try {
-      const bundle = await loadCityOfficeBundle(
-        this.gateway,
-        session.serverId,
-        session.cityId,
-        this.minimapMarches,
-      );
+      const bundle = await loadCityOfficeBundle(this.gateway, session.serverId, session.cityId, this.minimapMarches);
+      if (!current()) return;
+      context.uncertain = false;
       this.cityOfficePanel.setMarchingHeroIds(bundle.marchingHeroIds);
       this.cityOfficePanel.setHeroes(bundle.heroes);
       this.cityOfficePanel.setChiefView(bundle.chief);
     } catch (e) {
-      this.cityOfficePanel.setFormError(formatCityChiefGatewayError(e));
+      if (!current()) return;
+      context.uncertain = true;
+      this.cityOfficePanel.setFormError(`${formatCityChiefGatewayError(e)}；状态待核实，请重新打开官府刷新`);
     } finally {
-      this.cityOfficePanel.setPhase("idle");
+      if (current()) this.cityOfficePanel.setPhase(context.uncertain ? "uncertain" : "idle");
     }
   }
 
   private async appointCityChief(heroId: number): Promise<void> {
-    const session = this.session;
-    if (!session?.cityId || heroId <= 0 || !this.cityOfficePanel) return;
-    this.cityOfficePanel.setPhase("appointing");
-    this.cityOfficePanel.setFormError(null);
-    const { chief, error } = await runSetCityChief(
-      this.gateway,
-      session.serverId,
-      session.cityId,
-      heroId,
-    );
-    this.cityOfficePanel.setChiefView(chief);
-    if (error) this.cityOfficePanel.setFormError(error);
-    else this.status = "城主已任命";
-    this.cityOfficePanel.setPhase("idle");
-    this.renderHud();
+    if (heroId > 0) await this.submitCityChief(heroId);
   }
 
   private async clearCityChief(): Promise<void> {
+    await this.submitCityChief(null);
+  }
+
+  private async submitCityChief(heroId: number | null): Promise<void> {
     const session = this.session;
     if (!session?.cityId || !this.cityOfficePanel) return;
-    this.cityOfficePanel.setPhase("clearing");
+    const context = this.getCityOfficeContext();
+    if (context.busy || context.uncertain) return;
+    context.busy = true;
+    const version = ++context.version;
+    const current = () => context.current() && context.version === version;
+    this.cityOfficePanel.setPhase(heroId === null ? "clearing" : "appointing");
     this.cityOfficePanel.setFormError(null);
-    const { chief, error } = await runClearCityChief(
-      this.gateway,
-      session.serverId,
-      session.cityId,
-    );
-    this.cityOfficePanel.setChiefView(chief);
-    if (error) this.cityOfficePanel.setFormError(error);
-    else this.status = "城主已卸任";
-    this.cityOfficePanel.setPhase("idle");
+    const { chief, error } = heroId === null
+      ? await runClearCityChief(this.gateway, session.serverId, session.cityId)
+      : await runSetCityChief(this.gateway, session.serverId, session.cityId, heroId);
+    if (!current()) return;
+    if (chief) this.cityOfficePanel.setChiefView(chief);
+    if (error) {
+      // An error can follow a committed/partial mutation. Never replay it or infer vacancy.
+      context.uncertain = true;
+      try {
+        const recovered = await this.gateway.getCityChief(session.serverId, session.cityId);
+        if (!current()) return;
+        this.cityOfficePanel.setChiefView(parseCityChiefView(recovered));
+        context.uncertain = false;
+      } catch {
+        if (!current()) return;
+      }
+      this.cityOfficePanel.setFormError(error + (context.uncertain
+        ? "；结果待核实，请重新打开官府刷新，勿重复提交"
+        : "；已重新读取当前城主状态"));
+    } else this.status = heroId === null ? "城主已卸任" : "城主已任命";
+    context.busy = false;
+    this.cityOfficePanel.setPhase(context.uncertain ? "uncertain" : "idle");
     this.renderHud();
   }
 
