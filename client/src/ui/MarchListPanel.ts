@@ -79,7 +79,7 @@ import {
   handleListRovingKeyDown,
   syncListRovingTabindex,
 } from "@/ui/listRovingTabindex";
-import { findFirstMarchByDest } from "@/ui/worldMinimap";
+import { findFirstMarchByDest, WORLD_MAP_EDGE } from "@/ui/worldMinimap";
 import {
   formatMarchIntelSecondaryLine,
   MARCH_INTEL_TO_QUEUE_BANNER_ACTION,
@@ -1244,10 +1244,13 @@ export class MarchListPanel {
     if (btn.getAttribute("data-action") === "refresh-marches") void this.refreshList();
     if (btn.getAttribute("data-action") === "apply-march-dest-filter") {
       const root = this.panel.querySelector('[data-role="march-dest-filter"]');
-      const x = Number((root?.querySelector('[data-field="filter-to-x"]') as HTMLInputElement)?.value);
-      const y = Number((root?.querySelector('[data-field="filter-to-y"]') as HTMLInputElement)?.value);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        this.onStatus("请输入有效的目的格点坐标");
+      const xRaw = (root?.querySelector('[data-field="filter-to-x"]') as HTMLInputElement)?.value.trim() ?? "";
+      const yRaw = (root?.querySelector('[data-field="filter-to-y"]') as HTMLInputElement)?.value.trim() ?? "";
+      const x = Number(xRaw);
+      const y = Number(yRaw);
+      if (!xRaw || !yRaw || !Number.isInteger(x) || !Number.isInteger(y) ||
+          x < 0 || y < 0 || x >= WORLD_MAP_EDGE || y >= WORLD_MAP_EDGE) {
+        this.onStatus(`请输入 0～${WORLD_MAP_EDGE - 1} 之间的整数目的格点坐标`);
         return;
       }
       this.destFilterMode = "manual";
