@@ -190,6 +190,7 @@ export class BattleReportPanel {
   private listError = "";
   private detailError = "";
   private listLoading = false;
+  private listRequestVersion = 0;
   private detailLoading = false;
   private detailRequestVersion = 0;
   private attached = false;
@@ -210,6 +211,7 @@ export class BattleReportPanel {
   }
 
   attach(): void {
+    this.listRequestVersion++;
     this.detailRequestVersion++;
     this.attached = true;
     const savedFilter = readBattleReportOutcomeFilterSession();
@@ -225,6 +227,7 @@ export class BattleReportPanel {
 
   detach(): void {
     this.attached = false;
+    this.listRequestVersion++;
     this.detailRequestVersion++;
     this.clearMapReplay();
     this.panel?.removeEventListener("keydown", this.onKeyDownBound);
@@ -263,11 +266,13 @@ export class BattleReportPanel {
     openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     this.applyOutcomeFilterBridgeFromMail();
-    await this.refreshList();
+    const detailVersion = this.detailRequestVersion;
+    const current = await this.refreshList();
+    if (!current?.() || !this.isOpen()) return;
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
     const reportId = selectDeepLinkBattleReportId(this.reports, hintReportId);
-    if (reportId > 0) await this.openReport(reportId);
+    if (reportId > 0 && detailVersion === this.detailRequestVersion) await this.openReport(reportId);
   }
 
   getLocationFilter(): { x: number; y: number } | null {
@@ -293,13 +298,15 @@ export class BattleReportPanel {
     this.locationFilter = { x, y };
     openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
-    await this.refreshList();
+    const detailVersion = this.detailRequestVersion;
+    const current = await this.refreshList();
+    if (!current?.() || !this.isOpen()) return;
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
     this.updateLocationFilterUi();
     this.renderList();
     const reportId = selectDeepLinkBattleReportId(this.reports, hintReportId ?? null);
-    if (reportId > 0) await this.openReport(reportId);
+    if (reportId > 0 && detailVersion === this.detailRequestVersion) await this.openReport(reportId);
   }
 
   getReportsSnapshot(): BattleReportSummary[] {
@@ -307,7 +314,8 @@ export class BattleReportPanel {
   }
 
   private async openAndSyncUnread(): Promise<void> {
-    await this.refreshList();
+    const current = await this.refreshList();
+    if (!current?.() || !this.isOpen()) return;
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
   }
@@ -992,7 +1000,17 @@ export class BattleReportPanel {
     }
   }
 
-  private async refreshList(): Promise<void> {
+  private beginListRead(): () => boolean {
+    const version = ++this.listRequestVersion;
+    const panel = this.panel;
+    const actor = captureActor(this.gateway, () => null);
+    return () => this.attached && this.panel === panel && version === this.listRequestVersion && actor();
+  }
+
+  private async refreshList(): Promise<(() => boolean) | null> {
+    if (!this.attached) return null;
+    const current = this.beginListRead();
+    let succeeded = false;
     this.listError = "";
     this.listLoading = true;
     this.reports = [];
@@ -1004,21 +1022,27 @@ export class BattleReportPanel {
         reports?: BattleReportSummary[];
         total?: number;
       };
+      if (!current()) return null;
+      succeeded = true;
       this.reports = res.reports ?? [];
       this.total = res.total ?? this.reports.length;
       this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
     } catch (e) {
+      if (!current()) return null;
       this.reports = [];
       this.total = 0;
       this.listError = `列表加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
     }
+    if (!current()) return null;
     this.listLoading = false;
     this.renderList();
+    return succeeded ? current : null;
   }
 
   private async loadMoreReports(): Promise<void> {
-    if (this.listLoading || !hasMoreBattleReports(this.reports.length, this.total)) return;
+    if (!this.attached || this.listLoading || !hasMoreBattleReports(this.reports.length, this.total)) return;
+    const current = this.beginListRead();
     this.listError = "";
     this.listLoading = true;
     const offset = this.reports.length;
@@ -1029,14 +1053,17 @@ export class BattleReportPanel {
         reports?: BattleReportSummary[];
         total?: number;
       };
+      if (!current()) return;
       const batch = res.reports ?? [];
       this.reports = [...this.reports, ...batch];
       this.total = res.total ?? this.total;
       this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
     } catch (e) {
+      if (!current()) return;
       this.listError = `加载更多失败：${(e as Error).message}`;
       this.onStatus(this.listError);
     }
+    if (!current()) return;
     this.listLoading = false;
     this.renderList();
   }
