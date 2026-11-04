@@ -1,3 +1,4 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
@@ -1245,7 +1246,7 @@ export class QueuePanels {
       };
       if (!current()) return;
       if (state.buildings) session.buildings = state.buildings;
-      if (state.wallet) session.wallet = state.wallet;
+      if (state.wallet) session.wallet = mergeCityResourceWallet(session.wallet, state.wallet);
       if (state.production_rates) session.productionRates = state.production_rates;
       this.onAfterCityRefresh();
       if (reportSuccess && current()) this.setPanelStatus("已刷新内政状态");

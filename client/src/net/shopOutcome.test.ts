@@ -10,7 +10,7 @@ function fixture() {
   let current = true;
   const gateway = {
     listPlayerBag: vi.fn(async () => ({ items: [{ item_cfg_id: 2004, quantity: 1 }, { item_cfg_id: 2001, quantity: 3 }] })),
-    getCityState: vi.fn(async () => ({ wallet: { gold: 10 } })),
+    getCityState: vi.fn(async () => ({ wallet: { food: 10, gold: 0 } })),
     listShopShelf: vi.fn(async () => ({ offers: [{ offer_id: 1001, purchased_count: 3 }] })),
   };
   return { session, gateway, switchActor: () => { current = false; },
@@ -23,7 +23,7 @@ describe("SHOP authoritative current-state read", () => {
     expect(f.gateway.listPlayerBag).toHaveBeenCalledWith(2);
     expect(f.gateway.getCityState).toHaveBeenCalledWith(9);
     expect(f.gateway.listShopShelf).toHaveBeenCalledWith(2);
-    expect(result).toMatchObject({ bag: [{ item_cfg_id: 2001, quantity: 3 }, { item_cfg_id: 2004, quantity: 1 }], wallet: { gold: 10 }, offers: [{ purchased_count: 3 }] });
+    expect(result).toMatchObject({ bag: [{ item_cfg_id: 2001, quantity: 3 }, { item_cfg_id: 2004, quantity: 1 }], wallet: { gold: 20, food: 10 }, offers: [{ purchased_count: 3 }] });
     expect(f.session.bag[0].quantity).toBe(4); expect(f.session.wallet.gold).toBe(20);
   });
   it.each(["epoch", "bag", "wallet", "actor"])("rejects stale %s at the consumption boundary", async change => {

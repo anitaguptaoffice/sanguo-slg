@@ -4,10 +4,10 @@ import type { MainCitySession } from "@/net/bootstrapSession";
 import { QueuePanels } from "./QueuePanels";
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 function deferred() { let resolve!: (value: unknown) => void, reject!: (e: Error) => void; const promise = new Promise((ok, fail) => { resolve = ok; reject = fail; }); return { promise, resolve, reject }; }
-const session = (player = 1, city = 1): MainCitySession => ({ serverId: 1, player: { player_id: player }, cityId: city, cityName: "city", buildings: [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: Date.now() + 120000 }], wallet: { gold: 10 }, bag: [{ item_cfg_id: 2003, quantity: 5 }], cityTroops: [] });
+const session = (player = 1, city = 1): MainCitySession => ({ serverId: 1, player: { player_id: player }, cityId: city, cityName: "city", buildings: [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: Date.now() + 120000 }], wallet: { gold: 10, food: 10 }, bag: [{ item_cfg_id: 2003, quantity: 5 }], cityTroops: [] });
 function setup() {
   let current = session(), generation = 1; const mount = document.createElement("div"), status = vi.fn(), after = vi.fn(), military = vi.fn();
-  const gateway = { getBoundServerId: () => current.serverId, getSessionGeneration: () => generation, useConsumable: vi.fn().mockResolvedValue({ remaining: 4 }), getCityState: vi.fn().mockResolvedValue({ wallet: { gold: 20 } }) };
+  const gateway = { getBoundServerId: () => current.serverId, getSessionGeneration: () => generation, useConsumable: vi.fn().mockResolvedValue({ remaining: 4 }), getCityState: vi.fn().mockResolvedValue({ wallet: { food: 20, gold: 0 } }) };
   const panel = new QueuePanels(mount, gateway as unknown as GatewayPort, () => current, { farm: "farm" }, status, after, military); panel.attach(); panel.open();
   const button = (action: string) => mount.querySelector<HTMLButtonElement>(`[data-action="${action}"]`)!;
   return { panel, mount, gateway, status, after, military, button, current: () => current, switchActor: () => { current = session(2, 2); generation++; }, relogin: () => { generation++; }, switchCity: () => { current.cityId = 2; } };
@@ -22,7 +22,7 @@ describe("queue actor lifecycle", () => {
   it("only applies the newest overlapping city refresh", async () => {
     const s = setup(); try {
       const pending = deferred(); s.gateway.getCityState.mockReturnValueOnce(pending.promise); s.button("refresh-queue").click(); s.button("refresh-queue").click(); await flush();
-      pending.resolve({ wallet: { gold: 1 } }); await flush(); expect(s.current().wallet.gold).toBe(20); expect(s.after).toHaveBeenCalledTimes(1);
+      pending.resolve({ wallet: { food: 1, gold: 0 } }); await flush(); expect(s.current().wallet.food).toBe(20); expect(s.after).toHaveBeenCalledTimes(1);
     } finally { s.panel.detach(); }
   });
   it("does not replace refresh failure with a success message", async () => {
@@ -73,8 +73,8 @@ describe("queue actor lifecycle", () => {
       if (change === "relogin") s.relogin();
       if (change === "city") s.switchCity();
       if (change === "remount") { s.panel.detach(); s.panel.attach(); s.panel.open(); }
-      pending.resolve({ wallet: { gold: 1 }, production_rates: { food: 99 }, buildings: [] }); await flush();
-      expect(s.current().wallet.gold).toBe(10); expect(s.current().buildings).toHaveLength(1); expect(s.current().productionRates).toBeUndefined(); expect(s.after).not.toHaveBeenCalled();
+      pending.resolve({ wallet: { food: 1, gold: 0 }, production_rates: { food: 99 }, buildings: [] }); await flush();
+      expect(s.current().wallet.food).toBe(10); expect(s.current().buildings).toHaveLength(1); expect(s.current().productionRates).toBeUndefined(); expect(s.after).not.toHaveBeenCalled();
     } finally { s.panel.detach(); }
   });
   it("keeps a newer refresh loading when the older refresh fails", async () => {
@@ -83,7 +83,7 @@ describe("queue actor lifecycle", () => {
       s.button("refresh-queue").click(); s.button("refresh-queue").click(); old.reject(new Error("old offline")); await flush();
       expect(s.mount.querySelector('[data-role="queue-build-list"]')!.textContent).not.toContain("old offline"); expect(s.after).not.toHaveBeenCalled();
       expect(s.mount.querySelector('[data-role="queue-build-list"] [data-panel-state="loading"]')).not.toBeNull();
-      fresh.resolve({ wallet: { gold: 25 } }); await flush(); expect(s.current().wallet.gold).toBe(25); expect(s.after).toHaveBeenCalledTimes(1);
+      fresh.resolve({ wallet: { food: 25, gold: 0 } }); await flush(); expect(s.current().wallet.food).toBe(25); expect(s.after).toHaveBeenCalledTimes(1);
       expect(s.mount.querySelector('[data-role="queue-status"]')!.textContent).toBe("已刷新内政状态");
     } finally { s.panel.detach(); }
   });
@@ -91,7 +91,7 @@ describe("queue actor lifecycle", () => {
     const s = setup(); try {
       s.gateway.getCityState.mockRejectedValueOnce(new Error("read offline")); s.button("speedup-build").click(); await flush();
       expect(s.current().bag[0].quantity).toBe(4); expect(s.gateway.useConsumable).toHaveBeenCalledTimes(1);
-      s.button("refresh-queue").click(); await flush(); expect(s.gateway.useConsumable).toHaveBeenCalledTimes(1); expect(s.current().wallet.gold).toBe(20);
+      s.button("refresh-queue").click(); await flush(); expect(s.gateway.useConsumable).toHaveBeenCalledTimes(1); expect(s.current().wallet.food).toBe(20);
     } finally { s.panel.detach(); }
   });
 });
@@ -100,8 +100,8 @@ describe("queue stale loading ownership", () => {
     const s = setup(); try {
       const pending = deferred(); s.gateway.getCityState.mockReturnValueOnce(pending.promise); s.button("refresh-queue").click();
       if (change === "actor") s.switchActor(); else if (change === "relogin") s.relogin(); else s.switchCity();
-      s.panel.open(); pending.resolve({ wallet: { gold: 30 } }); await flush(); s.panel.tick(1);
-      expect(s.current().wallet.gold).toBe(10); expect(s.mount.querySelector('[data-panel-state="loading"]')).toBeNull(); expect(s.button("speedup-build")).not.toBeNull();
+      s.panel.open(); pending.resolve({ wallet: { food: 30, gold: 0 } }); await flush(); s.panel.tick(1);
+      expect(s.current().wallet.food).toBe(10); expect(s.mount.querySelector('[data-panel-state="loading"]')).toBeNull(); expect(s.button("speedup-build")).not.toBeNull();
     } finally { s.panel.detach(); }
   });
   it("clears an old actor's read error when rendering the new actor", async () => {

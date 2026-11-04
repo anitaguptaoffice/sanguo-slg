@@ -17,7 +17,7 @@ async function setup() {
   let generation = 1;
   const request = deferred(), purchase = vi.fn().mockReturnValue(request.promise);
   const bag = vi.fn(async () => ({ items: [{ item_cfg_id: 2001, quantity: 3 }, { item_cfg_id: 2004, quantity: 1 }] }));
-  const city = vi.fn(async () => ({ wallet: { gold: 90 } }));
+  const city = vi.fn(async () => ({ wallet: { food: 90 } }));
   const shelf = vi.fn(async () => ({ offers: [{ offer_id: 1001, item_cfg_id: 2001,
     quantity_per_purchase: 3, price_resources: { gold: 10 }, purchase_limit: 10, purchased_count: 0 }] }));
   const gateway = { getBoundServerId: () => 1, getSessionId: () => "token", getSessionGeneration: () => generation,
@@ -42,7 +42,7 @@ describe("SHOP purchase outcome ownership", () => {
     const f = await setup(); f.click("buy-offer"); f.request.resolve(f.success); await f.settle();
     expect(f.purchase).toHaveBeenCalledWith(1, 1001, 1);
     expect(f.session().bag).toEqual([{ item_cfg_id: 2001, quantity: 3 }, { item_cfg_id: 2004, quantity: 1 }]);
-    expect(f.session().wallet).toEqual({ gold: 90 }); expect(f.shelf).toHaveBeenCalledTimes(2);
+    expect(f.session().wallet).toEqual({ gold: 100, food: 90 }); expect(f.shelf).toHaveBeenCalledTimes(2);
     expect(f.text("feedback")).toContain("购买成功"); expect(f.text("feedback")).toContain("×3");
   });
   it("keeps confirmed success after read failure and retries only all three reads", async () => {
@@ -180,7 +180,7 @@ describe("SHOP settlement invalidates reads started during the request", () => {
     const cityReads = new CityStateFetch(f.gateway, () => 11, () => "session");
     const read = cityReads.fetch(); f.panels.toggleShop();
     if (outcome === "success") f.request.resolve(f.success); else f.request.reject(new Error("timeout"));
-    await f.settle(); old.resolve({ wallet: { gold: 100 } });
+    await f.settle(); old.resolve({ wallet: { food: 100 } });
     expect(await read).toBeNull(); expect(f.city).toHaveBeenCalledTimes(1);
   });
   it.each(["actor", "session"])("does not invalidate new %s reads when obsolete actions settle", async kind => {

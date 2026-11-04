@@ -9,19 +9,19 @@ function setup() {
  Object.assign(scene,{session,gateway,buildingPanel:{setFormError:vi.fn(),sync:vi.fn(),detach:vi.fn()},hud:document.createElement("div"),renderHud:vi.fn(),syncMilitaryPanel:vi.fn(),refreshState:vi.fn().mockResolvedValue(undefined),cityStateFetch:{clear:vi.fn()},marchList:{detach:vi.fn()}});
  return {scene,gateway,relogin(){token="b";generation++;}};
 }
-const response={wallet:{gold:5,wood:5,stone:5,food:5},building:{slot_key:"hall",building_cfg_id:1,level:2}};
+const response={wallet:{gold:0,wood:5,stone:5,food:5},building:{slot_key:"hall",building_cfg_id:1,level:2}};
 it.each(["city","player","server","relogin","leave"])("ignores old build success after %s",async change=>{
  const f=setup(),d=deferred();f.gateway.startBuildingUpgrade.mockReturnValueOnce(d.promise);const request=f.scene.startBuildingUpgrade("hall",1);
  if(change==="relogin")f.relogin();else if(change==="leave")f.scene.leave();else if(change==="city")f.scene.session.cityId=2;else if(change==="server")f.scene.session.serverId=2;else f.scene.session.player.player_id=2;
  f.scene.status="new view";d.resolve(response);await request;
- expect(f.scene.session.wallet.gold).toBe(900);expect(f.scene.session.buildings[0].level).toBe(1);expect(f.scene.status).toBe("new view");expect(f.scene.refreshState).not.toHaveBeenCalled();
+ expect(f.scene.session.wallet.food).toBe(900);expect(f.scene.session.buildings[0].level).toBe(1);expect(f.scene.status).toBe("new view");expect(f.scene.refreshState).not.toHaveBeenCalled();
 });
 it.each(["resolve","reject"])("old %s cannot release newer actor pending build",async settle=>{
  const f=setup(),old=deferred(),next=deferred();f.gateway.startBuildingUpgrade.mockReturnValueOnce(old.promise).mockReturnValueOnce(next.promise);
  const a=f.scene.startBuildingUpgrade("hall",1);f.relogin();const b=f.scene.startBuildingUpgrade("hall",1);
  if(settle==="resolve")old.resolve(response);else old.reject(new Error("old failure"));await a;
- expect(f.scene.buildSubmitState).toBe("submitting");expect(f.scene.session.wallet.gold).toBe(900);
- next.resolve(response);await b;expect(f.scene.session.wallet.gold).toBe(5);expect(f.scene.buildSubmitState).toBe("idle");
+ expect(f.scene.buildSubmitState).toBe("submitting");expect(f.scene.session.wallet.food).toBe(900);
+ next.resolve(response);await b;expect(f.scene.session.wallet.food).toBe(5);expect(f.scene.buildSubmitState).toBe("idle");
 });
 it("preserves valid success and failure and rejects duplicate pending commands",async()=>{
  const f=setup(),d=deferred();f.gateway.startBuildingUpgrade.mockReturnValueOnce(d.promise);const a=f.scene.startBuildingUpgrade("hall",1);await f.scene.startBuildingUpgrade("hall",1);
