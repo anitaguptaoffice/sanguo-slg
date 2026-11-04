@@ -1,3 +1,4 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { positivePlayerLevel } from "./tutorialPlayerLevel";
 import { garrisonPatch } from "@/net/garrisonState";
 import { ErrorCode } from "@/net/loadProto";
@@ -128,7 +129,7 @@ export async function bootstrapMainCity(
   return {
     serverId,
     player: { ...profile, level: positivePlayerLevel(profile.level) ?? 1 },
-    wallet: state.wallet ?? entered.wallet ?? login.wallet ?? {},
+    wallet: mergeCityResourceWallet(entered.wallet ?? login.wallet ?? {}, state.wallet),
     productionRates: state.production_rates,
     cityId: city.city_id,
     cityName: city.name ?? "主城",

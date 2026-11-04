@@ -1,3 +1,4 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { readMarchListSnapshot } from "@/net/marchListSnapshot";
 import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
 import { captureActor } from "@/net/actorContext";
@@ -2525,7 +2526,7 @@ export class MainCityScene implements Scene {
       this.hudTodoBadgePoll?.recomputeToolbarCounts();
       this.renderHud();
     }
-    const afterWallet = state.wallet ?? this.session.wallet;
+    const afterWallet = mergeCityResourceWallet(this.session.wallet, state.wallet);
     this.patchSession(
       {
         ...garrisonPatch(this.session, state.garrison),
@@ -3185,7 +3186,7 @@ export class MainCityScene implements Scene {
         building?: CityBuilding;
       };
       if (!current()) return;
-      if (res.wallet) this.session.wallet = res.wallet;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
       const walletAfter = this.session.wallet;
       const pulseKeys = walletBuildDeductPulseKeys(walletBefore, walletAfter, preview?.cost);
       if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
@@ -3242,7 +3243,7 @@ export class MainCityScene implements Scene {
       };
       if (this.session !== session) return;
       this.cityStateFetch.clear();
-      if (res.wallet) this.session.wallet = res.wallet;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
       const pulseKeys = walletRecruitTroopDeductPulseKeys(
         walletBefore,
         this.session.wallet,

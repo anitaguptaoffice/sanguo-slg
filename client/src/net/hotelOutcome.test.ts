@@ -10,7 +10,7 @@ function fixture() {
   const gateway = {
     listPlayerHeroes: vi.fn(async () => ({ heroes: [{ hero_id: 42 }] })),
     listPlayerBag: vi.fn(async () => ({ items: [{ item_cfg_id: 2004, quantity: 3 }] })),
-    getCityState: vi.fn(async () => ({ wallet: { gold: 10, food: 50 } })),
+    getCityState: vi.fn(async () => ({ wallet: { gold: 0, food: 50 } })),
     listHotelRecruitCandidates: vi.fn(async () => ({ candidates: [] })),
   };
   return { session, gateway, read: (pool = true) => readHotelCurrentState(gateway as unknown as GatewayPort, () => session, () => true, pool) };
@@ -23,7 +23,7 @@ describe("hotel current-state snapshots", () => {
     expect(f.gateway.listPlayerBag).toHaveBeenCalledWith(2);
     expect(f.gateway.getCityState).toHaveBeenCalledWith(9);
     expect(f.gateway.listHotelRecruitCandidates).toHaveBeenCalledWith(2, 9);
-    expect(result).toMatchObject({ heroes: [{ hero_id: 42 }], wallet: { gold: 10, food: 50 }, pool: { candidates: [] } });
+    expect(result).toMatchObject({ heroes: [{ hero_id: 42 }], wallet: { gold: 20, food: 50 }, pool: { candidates: [] } });
     expect(result?.fresh()).toBe(true); expect(f.session.wallet.gold).toBe(20);
   });
   it("does not repeat the pool read after a confirmed paid-refresh snapshot", async () => {

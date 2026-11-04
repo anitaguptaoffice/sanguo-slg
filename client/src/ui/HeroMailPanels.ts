@@ -1,3 +1,4 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { heroMarchForceSessionRevision } from "@/net/heroMarchForceSession";
 import { captureActor } from "@/net/actorContext";
 import { beginAssetMutation } from "@/net/assetMutation";
@@ -4418,7 +4419,7 @@ export class HeroMailPanels {
       ]);
       if (!current() || !latest() || (this.getSession()?.bag !== bag || this.getSession()?.wallet !== wallet) || !state?.wallet ||
           (this.cityStateFetch && !this.cityStateFetch.isCurrent(state))) return;
-      this.onSessionPatch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: state.wallet });
+      this.onSessionPatch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: mergeCityResourceWallet(wallet, state.wallet) });
     } catch { /* Preserve both prior snapshots if the aggregate read fails. */ }
   }
 

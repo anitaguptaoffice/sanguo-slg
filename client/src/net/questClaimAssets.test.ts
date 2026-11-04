@@ -13,7 +13,7 @@ function fixture() {
     getSessionId: () => "same-token", getSessionGeneration: () => generation, getBoundServerId: () => 1,
     claimQuestReward: vi.fn().mockResolvedValue({ granted_rewards: { items: [{ item_cfg_id: 2004, quantity: 999 }], resources: { gold: 999 } } }),
     listPlayerBag: vi.fn().mockResolvedValue({ items: [{ item_cfg_id: 2004, quantity: 2 }] }),
-    getCityState: vi.fn().mockResolvedValue({ wallet: { gold: 10 } }),
+    getCityState: vi.fn().mockResolvedValue({ wallet: { food: 10, gold: 0 } }),
     listPlayerQuests: vi.fn().mockResolvedValue({ quests: [] }), reportQuestProgress: vi.fn(),
   } as unknown as GatewayPort;
   const get = () => session;
@@ -27,11 +27,11 @@ function delayed<T>() {
   return { promise, resolve };
 }
 
-it("replayed claim receipts replace authoritative bag and wallet without adding rewards", async () => {
+it("replayed claim receipts replace bag/city resources and preserve last known gold without adding rewards", async () => {
   const f = fixture();
   await f.claim(); await f.claim();
   expect(f.get().bag).toEqual([{ item_cfg_id: 2004, quantity: 2 }]);
-  expect(f.get().wallet).toEqual({ gold: 10 });
+  expect(f.get().wallet).toEqual({ gold: 5, food: 10 });
   expect(f.gateway.listPlayerBag).toHaveBeenCalledTimes(2);
   expect(f.gateway.getCityState).toHaveBeenCalledWith(1);
 });
@@ -41,7 +41,7 @@ it.each(["listPlayerBag", "getCityState"] as const)("failed %s keeps prior snaps
   await expect(f.claim()).rejects.toThrow(QUEST_ASSETS_PENDING);
   expect(f.get()).toBe(before); expect(f.patch).not.toHaveBeenCalled();
   await f.claim();
-  expect(f.get().wallet.gold).toBe(10);
+  expect(f.get().wallet.food).toBe(10);
 });
 it("already-completed error remains an error even after authoritative recovery", async () => {
   const f = fixture();
@@ -64,7 +64,7 @@ it("drops late asset reads after actor switch", async () => {
   const f = fixture(); const pending = delayed<object>();
   vi.mocked(f.gateway.getCityState).mockReturnValue(pending.promise);
   const run = refreshQuestAssets(f.gateway, f.get, f.patch);
-  f.switchActor(); pending.resolve({ wallet: { gold: 999 } });
+  f.switchActor(); pending.resolve({ wallet: { food: 999 } });
   expect(await run).toBe(false); expect(f.patch).not.toHaveBeenCalled();
 });
 it.each(["newer read", "newer wallet", "newer bag"])("does not overwrite %s while refresh is pending", async change => {
@@ -73,7 +73,7 @@ it.each(["newer read", "newer wallet", "newer bag"])("does not overwrite %s whil
   const run = refreshQuestAssets(f.gateway, f.get, f.patch);
   if (change === "newer read") beginAssetRead(f.gateway);
   else f.patch(change === "newer wallet" ? { wallet: { gold: 100 } } : { bag: [] });
-  f.patch.mockClear(); pending.resolve({ wallet: { gold: 10 } });
+  f.patch.mockClear(); pending.resolve({ wallet: { food: 10, gold: 0 } });
   await expect(run).rejects.toThrow(QUEST_ASSETS_PENDING);
   expect(f.patch).not.toHaveBeenCalled();
 });
@@ -89,24 +89,24 @@ it("tutorial UI has no Report shortcut and double claim clicks cannot submit twi
   pending.resolve({ granted_rewards: { resources: { gold: 999 } } });
   await vi.waitFor(() => expect(button.disabled).toBe(false));
   expect(f.gateway.reportQuestProgress).not.toHaveBeenCalled();
-  expect(f.get().wallet.gold).toBe(10); panel.detach();
+  expect(f.get().wallet.food).toBe(10); panel.detach();
 });
 
 it("invalidates a city read started during Claim before its delayed pre-commit wallet can apply", async () => {
   const { CityStateFetch } = await import("./cityStateFetch");
   const f = fixture(); const claim = delayed<object>(); const city = delayed<object>();
   vi.mocked(f.gateway.claimQuestReward).mockReturnValueOnce(claim.promise);
-  vi.mocked(f.gateway.getCityState).mockReturnValueOnce(city.promise).mockResolvedValue({ wallet: { gold: 10 } });
+  vi.mocked(f.gateway.getCityState).mockReturnValueOnce(city.promise).mockResolvedValue({ wallet: { food: 10, gold: 0 } });
   const fetcher = new CityStateFetch(f.gateway, () => 1);
   const recovering = f.claim();
   const preCommitCityRead = fetcher.fetch();
   claim.resolve({ player_level: 2, granted_rewards: { resources: { gold: 999 } } });
   await recovering;
-  expect(f.get().wallet.gold).toBe(10);
-  city.resolve({ wallet: { gold: 5 } });
+  expect(f.get().wallet.food).toBe(10);
+  city.resolve({ wallet: { food: 5 } });
   const stale = await preCommitCityRead;
   if (stale && fetcher.isCurrent(stale)) f.patch({ wallet: stale.wallet });
-  expect(stale).toBeNull(); expect(f.get().wallet.gold).toBe(10);
+  expect(stale).toBeNull(); expect(f.get().wallet.food).toBe(10);
 });
 
 
@@ -115,7 +115,7 @@ it.each([1001, 1002, 1003, 1004, 1005, 1006, 1007])("quest %i rejection gives on
   vi.mocked(f.gateway.claimQuestReward).mockRejectedValue(Object.assign(new Error("already completed"), {code:63007}));
   await expect(f.claim(id)).rejects.toMatchObject({code:63007,
     message:id <= 1006 ? expect.stringContaining(PROFILE_REENTRY_HINT) : "already completed"});
-  expect(f.get().player.level).toBe(1); expect(f.get().bag[0].quantity).toBe(2); expect(f.get().wallet.gold).toBe(10);
+  expect(f.get().player.level).toBe(1); expect(f.get().bag[0].quantity).toBe(2); expect(f.get().wallet.food).toBe(10);
   expect(f.gateway.claimQuestReward).toHaveBeenCalledTimes(1);
 });
 it.each([undefined, 0, 6, 20])("wall claim uses only authoritative positive scalar %s, never completed state or grant", async level => {
@@ -124,7 +124,7 @@ it.each([undefined, 0, 6, 20])("wall claim uses only authoritative positive scal
     granted_rewards:{resources:{gold:9999},items:[{item_cfg_id:2018,quantity:999}]}});
   await f.claim(1006);
   expect(f.get().player.level).toBe(level && level > 5 ? level : 5);
-  expect(f.get().wallet).toEqual({gold:10}); expect(f.get().bag).toEqual([{item_cfg_id:2004,quantity:2}]);
+  expect(f.get().wallet).toEqual({gold:5,food:10}); expect(f.get().bag).toEqual([{item_cfg_id:2004,quantity:2}]);
 });
 it.each(["switchActor", "relogin"] as const)("wall completion after %s cannot patch or recover another session", async change => {
   const f = fixture(), pending = delayed<object>();
@@ -147,6 +147,6 @@ it("completed wall remains explicitly claimable in the existing UI without doubl
   expect(f.gateway.claimQuestReward).toHaveBeenCalledExactlyOnceWith(1,1006);
   panels.toggleQuest(); panels.toggleQuest(); pending.resolve({quest:{quest_cfg_id:1006,state:4}});
   await vi.waitFor(() => expect(button.disabled).toBe(false));
-  expect(f.get().player.level).toBe(5); expect(f.get().wallet.gold).toBe(10);
+  expect(f.get().player.level).toBe(5); expect(f.get().wallet.food).toBe(10);
   expect(f.gateway.claimQuestReward).toHaveBeenCalledTimes(1); panels.detach();
 });
