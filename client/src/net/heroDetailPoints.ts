@@ -92,6 +92,16 @@ export function applyHeroPointResultToDetail(
 
 export type HeroPointSnapshot = Pick<HeroDetail, "level" | "potential_remaining" | "force_add" | "intel_add" | "politics_add">;
 
+/** M1 response budget = level (internal/hero/points.go). This is not a visible level update. */
+export function heroPointSnapshotFromResult(res: HeroPointResult): HeroPointSnapshot | null {
+  const values = [res.potential_remaining, res.force_add, res.intel_add, res.politics_add];
+  if (values.some(value => !Number.isSafeInteger(value) || value < 0)) return null;
+  const level = values.reduce((sum, value) => sum + value, 0);
+  if (!Number.isSafeInteger(level)) return null;
+  return { level, potential_remaining: res.potential_remaining, force_add: res.force_add,
+    intel_add: res.intel_add, politics_add: res.politics_add };
+}
+
 /** Preserve allocated-point debt even if an older lower-level detail arrives late. */
 export function heroPointRemainingAtLevel(snapshot: HeroPointSnapshot, level: number | undefined): number | undefined {
   if (snapshot.potential_remaining == null) return undefined;
