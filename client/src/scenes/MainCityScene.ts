@@ -464,6 +464,7 @@ export class MainCityScene implements Scene {
   };
   private buildSubmitState: BuildSubmitState = "idle";
   private buildSubmitOwner: (() => boolean) | null = null;
+  private pendingBuilds = new Map<string, { cfgId: number; targetLevel: number; current: () => boolean }>();
   private recruitSubmitOwner: (() => boolean) | null = null;
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
   /** 募兵队列↔军事互跳高亮 queue_id（CLIENT-157，与 session 同步）。 */
@@ -561,6 +562,7 @@ export class MainCityScene implements Scene {
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.marchSnapshotGeneration++;
     this.buildSubmitOwner = null;
+    this.pendingBuilds.clear();
     this.buildSubmitState = "idle";
     this.recruitSubmitOwner = null;
     this.recruitTroopSubmitState = "idle";
@@ -1043,7 +1045,9 @@ export class MainCityScene implements Scene {
         this.status = msg;
         this.renderHud();
       },
-      () => {
+      (buildings) => {
+        this.reconcilePendingBuilds(buildings);
+        this.buildingPanel?.sync();
         this.renderHud();
       },
       () => this.syncMilitaryPanel(),
@@ -1151,6 +1155,7 @@ export class MainCityScene implements Scene {
       () => this.buildSubmitState,
       (root) => skinDefaultPanel(root, this.assets, 380, 300),
       () => this.buildingDismissTrigger(),
+      (slotKey) => this.isBuildPending(slotKey),
     );
     this.buildingPanel.attach();
     this.cityOfficePanel = new MainCityCityOfficePanel({
@@ -1284,6 +1289,7 @@ export class MainCityScene implements Scene {
   leave(): void {
     this.marchSnapshotGeneration++;
     this.buildSubmitOwner = null;
+    this.pendingBuilds.clear();
     this.buildSubmitState = "idle";
     this.recruitSubmitOwner = null;
     this.recruitTroopSubmitState = "idle";
@@ -2547,6 +2553,7 @@ export class MainCityScene implements Scene {
   }): void {
     if (!this.session) return;
     if (!this.cityStateFetch.isCurrent(state)) return;
+    this.reconcilePendingBuilds(state.buildings);
     const prevBuildings = this.session.buildings;
     const nowMs = Date.now();
     let justCompleted: string[] = [];
@@ -3188,14 +3195,31 @@ export class MainCityScene implements Scene {
     this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "CLEAR_ERROR" });
   }
 
+  private isBuildPending(slotKey: string): boolean {
+    const pending = this.pendingBuilds.get(slotKey);
+    if (pending && !pending.current()) this.pendingBuilds.delete(slotKey);
+    return this.pendingBuilds.has(slotKey);
+  }
+
+  // Only genuine city reads can confirm completion. Start receipts may contain
+  // provisional level1; timestamps omit waiting jobs and are not completion proof.
+  private reconcilePendingBuilds(buildings?: CityBuilding[]): void {
+    for (const [slotKey, pending] of this.pendingBuilds) {
+      const building = buildings?.find((b) => b.slot_key === slotKey && b.building_cfg_id === pending.cfgId);
+      if (!pending.current() || (building && (building.level ?? 0) >= pending.targetLevel)) {
+        this.pendingBuilds.delete(slotKey);
+      }
+    }
+  }
+
   private async startBuildingUpgrade(slotKey: string, buildingCfgId: number): Promise<void> {
     if (!this.session) return;
-    if (this.buildSubmitOwner?.()) return;
+    if (this.buildSubmitOwner?.() || this.isBuildPending(slotKey)) return;
     const session = this.session;
     const actor = captureActor(this.gateway, () => this.session);
     const generation = this.marchSnapshotGeneration;
-    const current = () => this.buildSubmitOwner === current && this.session === session &&
-      actor() && generation === this.marchSnapshotGeneration;
+    const ownsScene = () => this.session === session && actor() && generation === this.marchSnapshotGeneration;
+    const current = () => this.buildSubmitOwner === current && ownsScene();
     this.buildSubmitOwner = current;
     this.buildSubmitState = "idle";
     const building = buildingBySlot(this.session.buildings, slotKey);
@@ -3217,6 +3241,7 @@ export class MainCityScene implements Scene {
         building?: CityBuilding;
       };
       if (!current()) return;
+      this.pendingBuilds.set(slotKey, { cfgId: buildingCfgId, targetLevel, current: ownsScene });
       if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
       const walletAfter = this.session.wallet;
       const pulseKeys = walletBuildDeductPulseKeys(walletBefore, walletAfter, preview?.cost);

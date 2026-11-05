@@ -188,7 +188,7 @@ export class QueuePanels {
     private readonly getSession: () => MainCitySession | null,
     private readonly slotLabels: Record<string, string>,
     private readonly onStatus: (msg: string) => void,
-    private readonly onAfterCityRefresh: () => void,
+    private readonly onAfterCityRefresh: (buildings?: CityBuilding[]) => void,
     private readonly onMilitarySync: () => void,
     private readonly getDailyChainRows?: () => DailyQuestRow[],
     private readonly onOpenDailyBuildQuest?: (questCfgId: number) => void,
@@ -1267,7 +1267,7 @@ export class QueuePanels {
         this.getSession()!.wallet = mergeCityResourceWallet(wallet, state.wallet);
       }
       if (state.production_rates) session.productionRates = state.production_rates;
-      this.onAfterCityRefresh();
+      this.onAfterCityRefresh(state.buildings);
       if (reportSuccess && current()) this.setPanelStatus("已刷新内政状态");
     } catch (e) {
       if (!current()) return;

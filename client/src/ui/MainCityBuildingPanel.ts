@@ -32,6 +32,7 @@ export class MainCityBuildingPanel {
     private readonly getSubmitState: () => BuildSubmitState,
     private readonly reskin?: MainCityBuildingPanelReskin,
     private readonly defaultDismissTrigger?: () => HTMLElement | null,
+    private readonly isUpgradePending?: (slotKey: string) => boolean,
   ) {}
 
   attach(): void {
@@ -132,6 +133,13 @@ export class MainCityBuildingPanel {
     const upgrading = (building?.upgrade_finish_at_ms ?? 0) > now;
 
     levelEl.textContent = level > 0 ? `当前 Lv${level}` : "未建造";
+
+    if (this.isUpgradePending?.(slotKey)) {
+      previewEl.textContent = "建造已提交，等待城市状态确认完成";
+      btn.disabled = true;
+      this.setFormError(null);
+      return;
+    }
 
     if (upgrading) {
       previewEl.textContent = "升级进行中，见「队列」面板";
