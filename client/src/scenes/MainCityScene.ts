@@ -967,7 +967,7 @@ export class MainCityScene implements Scene {
       {
         marchFormRoot: this.militaryPanel,
         onFilled: (x, y) => {
-          openCenterPanel(this.militaryPanel);
+          this.openMilitaryPanel();
           setMarchTargetFieldHighlight(this.militaryPanel, false);
           this.renderHud();
           this.syncMilitaryPanel();
@@ -1344,7 +1344,7 @@ export class MainCityScene implements Scene {
       case "train_troops":
         this.queuePanels.open();
         this.queuePanels.flashDailyQueueAnchorHighlight(queueAnchorTarget);
-        openCenterPanel(this.militaryPanel);
+        this.openMilitaryPanel();
         this.syncMilitaryPanel();
         this.status = "已打开「队列」与「军事」募兵（练兵日常 QUEST-003）";
         break;
@@ -1659,7 +1659,7 @@ export class MainCityScene implements Scene {
     const layoutFrame = document.getElementById("layout-frame");
     openMilitaryQueueBannerAndHighlight(marchId, {
       openMilitaryPanel: () => {
-        openCenterPanel(this.militaryPanel);
+        this.openMilitaryPanel();
         resetCenterPanelViewportScroll(this.militaryPanel);
       },
       highlightMilitaryBanner: (jump) => {
@@ -1680,7 +1680,7 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
     const prefill = prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper(
@@ -1859,7 +1859,7 @@ export class MainCityScene implements Scene {
     if (!target) return;
     writeRecruitHighlightQueueSession(target.queue_id);
     this.recruitQueueHighlightId = target.queue_id;
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     applyRecruitQueueJumpToMilitaryPanel(this.militaryPanel, target);
     this.queuePanels.highlightRecruitQueue(target.queue_id);
@@ -2395,7 +2395,7 @@ export class MainCityScene implements Scene {
     }
     this.world?.selectGridAt(world.wx, world.wy, { source: "minimap" });
     this.focusMinimapOnWorldGrid(world.wx, world.wy);
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
     this.syncMilitaryPanel();
@@ -2926,7 +2926,7 @@ export class MainCityScene implements Scene {
         .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
         .then(() => this.renderHud());
     } else if (panel === "military") {
-      openCenterPanel(this.militaryPanel);
+      this.openMilitaryPanel();
       resetCenterPanelViewportScroll(this.militaryPanel);
       this.syncMilitaryPanel();
     }
@@ -3328,6 +3328,12 @@ export class MainCityScene implements Scene {
       );
       scheduleRecruitRowPulse(milRow instanceof HTMLElement ? milRow : null);
     }
+  }
+
+  /** Every explicit entry refreshes the roster; never poll from render/sync. */
+  private openMilitaryPanel(): void {
+    openCenterPanel(this.militaryPanel);
+    void this.refreshMarchFormHeroes();
   }
 
   private async refreshMarchFormHeroes(): Promise<void> {
