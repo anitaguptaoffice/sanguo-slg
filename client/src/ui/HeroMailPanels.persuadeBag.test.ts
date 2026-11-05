@@ -129,6 +129,20 @@ it.each(["actor", "city", "server", "connection", "token", "boundServer", "sessi
   expect(f.button("refresh-persuade-targets").disabled).toBe(false);
 });
 
+it("same-actor session replacement before confirmation cannot invalidate or patch the replacement", async () => {
+  const f = await setup(), mutation = deferred(); f.gateway.persuadeHero.mockReturnValueOnce(mutation.promise);
+  f.start(); f.change("session"); f.status.mockClear(); const epoch = captureAssetRead(f.port);
+  mutation.resolve({ friend_delta: 10 }); await flush();
+  expect(f.patch).not.toHaveBeenCalled(); expect(f.status).not.toHaveBeenCalled(); expect(epoch()).toBe(true);
+  expect(f.gateway.listPlayerBag).toHaveBeenCalledTimes(1);
+});
+
+it("rejected persuasion retains its mapped error and never reads inventory", async () => {
+  const f = await setup(); f.gateway.persuadeHero.mockRejectedValueOnce(new Error("hero: persuade on cooldown"));
+  f.start(); await flush(); expect(f.text("form-error")).toContain("游说冷却");
+  expect(f.gateway.listPlayerBag).toHaveBeenCalledTimes(1); expect(f.text("meta")).not.toContain("游说成功");
+});
+
 it.each(["confirmation", "bag"])("detach/re-entry rejects an old %s without clearing the new request", async phase => {
   const f = await setup(3), old = deferred();
   if (phase === "confirmation") f.gateway.persuadeHero.mockReturnValueOnce(old.promise);
