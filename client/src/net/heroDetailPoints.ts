@@ -59,19 +59,19 @@ export function parseHeroPointResponse(raw: unknown): HeroPointResult {
   };
 }
 
-export function heroPointUsed(detail: HeroDetail | null | undefined): number {
-  if (!detail) return 0;
-  const f = detail.force_add ?? 0;
-  const i = detail.intel_add ?? 0;
-  const p = detail.politics_add ?? 0;
-  return f + i + p;
+/** Missing allocation fields are unknown, not proof that nothing was allocated. */
+export function heroPointUsed(detail: HeroDetail | null | undefined): number | undefined {
+  const adds = [detail?.force_add, detail?.intel_add, detail?.politics_add];
+  if (!adds.every(value => value != null && Number.isSafeInteger(value) && value >= 0)) return undefined;
+  return (adds as number[]).reduce((sum, value) => sum + value, 0);
 }
 
-export function heroPointRemaining(detail: HeroDetail | null | undefined): number {
+export function heroPointRemaining(detail: HeroDetail | null | undefined): number | undefined {
   if (!detail?.hero_id) return 0;
   if (detail.potential_remaining != null) return Math.max(0, detail.potential_remaining);
   const budget = heroPointBudget(detail.level);
-  return Math.max(0, budget - heroPointUsed(detail));
+  const used = heroPointUsed(detail);
+  return used == null ? undefined : Math.max(0, budget - used);
 }
 
 export function applyHeroPointResultToDetail(
@@ -106,9 +106,9 @@ export function heroPointSnapshotFromResult(res: HeroPointResult): HeroPointSnap
 export function heroPointRemainingAtLevel(snapshot: HeroPointSnapshot, level: number | undefined): number | undefined {
   if (snapshot.potential_remaining == null) return undefined;
   if (snapshot.level == null || level == null) return snapshot.potential_remaining;
-  const adds = [snapshot.force_add, snapshot.intel_add, snapshot.politics_add];
-  if (adds.every(value => value != null && Number.isFinite(value) && value >= 0)) {
-    const used = Math.max(heroPointUsed(snapshot), heroPointBudget(snapshot.level) - snapshot.potential_remaining);
+  const allocated = heroPointUsed(snapshot);
+  if (allocated != null) {
+    const used = Math.max(allocated, heroPointBudget(snapshot.level) - snapshot.potential_remaining);
     return Math.max(0, heroPointBudget(level) - used);
   }
   return Math.max(0, snapshot.potential_remaining + heroPointBudget(level) - heroPointBudget(snapshot.level));
@@ -119,21 +119,12 @@ export function mergeHeroPointSnapshot(
   detail: HeroDetail,
   snapshot: HeroPointSnapshot | null | undefined,
 ): HeroDetail {
-  if (!snapshot) {
-    const budget = heroPointBudget(detail.level);
-    return {
-      ...detail,
-      force_add: detail.force_add ?? 0,
-      intel_add: detail.intel_add ?? 0,
-      politics_add: detail.politics_add ?? 0,
-      potential_remaining: detail.potential_remaining ?? budget,
-    };
-  }
+  if (!snapshot) return { ...detail };
   return {
     ...detail,
-    force_add: snapshot.force_add ?? detail.force_add ?? 0,
-    intel_add: snapshot.intel_add ?? detail.intel_add ?? 0,
-    politics_add: snapshot.politics_add ?? detail.politics_add ?? 0,
+    force_add: snapshot.force_add ?? detail.force_add,
+    intel_add: snapshot.intel_add ?? detail.intel_add,
+    politics_add: snapshot.politics_add ?? detail.politics_add,
     potential_remaining: snapshot.potential_remaining == null
       ? detail.potential_remaining
       : heroPointRemainingAtLevel(snapshot, detail.level),
@@ -143,13 +134,13 @@ export function mergeHeroPointSnapshot(
 export function heroPointSnapshotFromDetail(
   detail: HeroDetail | null | undefined,
 ): HeroPointSnapshot | null {
-  if (!detail?.hero_id) return null;
+  if (!detail?.hero_id || (detail.potential_remaining == null && heroPointUsed(detail) == null)) return null;
   return {
     level: detail.level,
     potential_remaining: heroPointRemaining(detail),
-    force_add: detail.force_add ?? 0,
-    intel_add: detail.intel_add ?? 0,
-    politics_add: detail.politics_add ?? 0,
+    force_add: detail.force_add,
+    intel_add: detail.intel_add,
+    politics_add: detail.politics_add,
   };
 }
 
@@ -182,7 +173,7 @@ export function heroPointAddDisabled(
   if (useConsumableSubmitButtonsDisabled(submitState)) return true;
   if (!detail?.hero_id) return true;
   if (heroPointIdleRequiredReason(detail) != null) return true;
-  return heroPointRemaining(detail) <= 0;
+  return heroPointRemaining(detail) === 0;
 }
 
 export function heroPointClearDisabled(
@@ -192,20 +183,20 @@ export function heroPointClearDisabled(
   if (useConsumableSubmitButtonsDisabled(submitState)) return true;
   if (!detail?.hero_id) return true;
   if (heroPointIdleRequiredReason(detail) != null) return true;
-  return heroPointUsed(detail) <= 0;
+  return heroPointUsed(detail) === 0;
 }
 
 export function heroPointAddDisabledReason(detail: HeroDetail | null | undefined): string {
   const idle = heroPointIdleRequiredReason(detail);
   if (idle) return idle;
-  if (heroPointRemaining(detail) <= 0) return "潜力点已用尽";
+  if (heroPointRemaining(detail) === 0) return "潜力点已用尽";
   return "";
 }
 
 export function heroPointClearDisabledReason(detail: HeroDetail | null | undefined): string {
   const idle = heroPointIdleRequiredReason(detail);
   if (idle) return idle;
-  if (heroPointUsed(detail) <= 0) return "尚未分配潜力点";
+  if (heroPointUsed(detail) === 0) return "尚未分配潜力点";
   return "";
 }
 
@@ -213,6 +204,7 @@ export function formatHeroPointAllocSummary(detail: HeroDetail | null | undefine
   if (!detail?.hero_id) return "";
   const rem = heroPointRemaining(detail);
   const budget = heroPointBudget(detail.level);
+  if (rem == null || heroPointUsed(detail) == null) return "潜力分配未知 · 加点与洗点以服务端结果为准";
   const f = detail.force_add ?? 0;
   const i = detail.intel_add ?? 0;
   const p = detail.politics_add ?? 0;

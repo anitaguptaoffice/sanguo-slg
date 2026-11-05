@@ -7,6 +7,9 @@ import {
   heroPointClearDisabled,
   heroPointRemaining,
   heroPointSnapshotFromResult,
+  heroPointSnapshotFromDetail,
+  heroPointRemainingAtLevel,
+  formatHeroPointAllocSummary,
   heroPointUsed,
   mergeHeroPointSnapshot,
   parseHeroPointResponse,
@@ -36,10 +39,10 @@ describe("heroDetailPoints (CLIENT-hero-points-001)", () => {
     expect(applyHeroPointResultToDetail(baseDetail, res).attributes?.force).toBe(71);
   });
 
-  it("mergeHeroPointSnapshot defaults remaining to level budget", () => {
+  it("mergeHeroPointSnapshot preserves unknown allocation", () => {
     const merged = mergeHeroPointSnapshot({ hero_id: 1, level: 4 }, null);
-    expect(merged.potential_remaining).toBe(4);
-    expect(heroPointUsed(merged)).toBe(0);
+    expect(merged.potential_remaining).toBeUndefined();
+    expect(heroPointUsed(merged)).toBeUndefined();
   });
 
   it("buildAddHeroPointTargets increments selected stat", () => {
@@ -56,7 +59,8 @@ describe("heroDetailPoints (CLIENT-hero-points-001)", () => {
   });
 
   it("heroPointClearDisabled without allocated points", () => {
-    expect(heroPointClearDisabled("idle", mergeHeroPointSnapshot(baseDetail, null))).toBe(true);
+    expect(heroPointClearDisabled("idle", mergeHeroPointSnapshot(baseDetail, null))).toBe(false);
+    expect(heroPointClearDisabled("idle", { ...baseDetail, force_add: 0, intel_add: 0, politics_add: 0 })).toBe(true);
     expect(
       heroPointClearDisabled("idle", { ...baseDetail, force_add: 1, intel_add: 0, politics_add: 0 }),
     ).toBe(false);
@@ -89,4 +93,28 @@ it("response budget, not current/captured level, anchors allocation and clear sn
  const cleared = heroPointSnapshotFromResult({ hero_id: 7, potential_remaining: 3, force_add: 0, intel_add: 0, politics_add: 0 });
  expect(mergeHeroPointSnapshot({ hero_id: 7, level: 4 }, cleared).potential_remaining).toBe(4);
  expect(heroPointSnapshotFromResult({ hero_id: 7, potential_remaining: -1, force_add: 0, intel_add: 0, politics_add: 0 })).toBeNull();
+});
+
+it("unknown and partial allocation never become a zero snapshot", () => {
+  for (const detail of [{ hero_id: 7, level: 3 }, { hero_id: 7, level: 3, force_add: 0 }]) {
+    expect(heroPointSnapshotFromDetail(detail)).toBeNull();
+    expect(heroPointRemaining(detail)).toBeUndefined();
+    expect(heroPointClearDisabled("idle", detail)).toBe(false);
+    expect(heroPointAddDisabled("idle", detail)).toBe(false);
+    expect(formatHeroPointAllocSummary(detail)).toContain("未知");
+  }
+});
+it("known exhausted and zero allocations keep their exact behavior", () => {
+  const exhausted = { hero_id: 7, level: 3, potential_remaining: 0, force_add: 3, intel_add: 0, politics_add: 0 };
+  const empty = { ...exhausted, potential_remaining: 3, force_add: 0 };
+  expect(heroPointAddDisabled("idle", exhausted)).toBe(true);
+  expect(heroPointClearDisabled("idle", exhausted)).toBe(false);
+  expect(heroPointClearDisabled("idle", empty)).toBe(true);
+  expect(heroPointSnapshotFromDetail(empty)).toMatchObject({ potential_remaining: 3, force_add: 0 });
+  expect(heroPointClearDisabled("submitting", { hero_id: 7, level: 3 })).toBe(true);
+  expect(heroPointClearDisabled("idle", { hero_id: 7, status: HERO_STATUS_MARCH })).toBe(true);
+});
+
+it("incomplete legacy snapshots use known remaining without treating fractional adds as valid", () => {
+  expect(heroPointRemainingAtLevel({ level: 3, potential_remaining: 1, force_add: 0.5, intel_add: 0, politics_add: 0 }, 4)).toBe(2);
 });

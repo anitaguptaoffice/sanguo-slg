@@ -60,9 +60,9 @@ describe("hero upgrade potential", () => {
     expect(f.summary()).toContain("剩余 1/3"); await f.upgrade(); await f.reopen();
     expect(f.summary()).toContain("剩余 2/4"); expect(f.summary()).toContain("武+2");
   });
-  it("retains unspent starting potential while leveling", async () => {
-    const f = await setup(); await f.upgrade(); expect(f.summary()).toContain("剩余 2/2");
-    await f.reopen(); expect(f.summary()).toContain("剩余 2/2");
+  it("does not invent initial allocation knowledge while leveling", async () => {
+    const f = await setup(); await f.upgrade(); expect(f.summary()).toContain("潜力分配未知");
+    await f.reopen(); expect(f.summary()).toContain("潜力分配未知");
   });
   const upgradeResult = (level: number): UpgradeHeroResult => ({ hero_id: 7, level, previous_level: level - 1, exp: 100, exp_current: 0, exp_to_next: 200 });
   it("anchors snapshots to their level and leaves old unversioned snapshots compatible", () => {
