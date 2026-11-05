@@ -662,6 +662,7 @@ export class HeroMailPanels {
   private heroDetail: HeroDetail | null = null;
   private heroDetailLoading = false;
   private heroDetailReadGeneration = 0;
+  private heroBagLinkGeneration = 0;
   private heroDetailError: string | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
@@ -3734,12 +3735,14 @@ export class HeroMailPanels {
   }
 
   private invalidateHeroDetailRead(): void {
+    ++this.heroBagLinkGeneration;
     ++this.heroDetailReadGeneration;
     this.heroDetailLoading = false;
     this.heroDetail = null;
   }
 
   private beginHeroDetailNavigation(heroId: number): () => boolean {
+    ++this.heroBagLinkGeneration;
     const current = this.beginHeroDetailRead();
     this.selectedHeroId = heroId;
     this.heroDetail = null;
@@ -3762,6 +3765,8 @@ export class HeroMailPanels {
     heroId: number,
     opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean; current?: () => boolean },
   ): Promise<void> {
+    // Receipt reconciliation refreshes data, not the player's navigation intent.
+    if (!opts?.skipListSelectionWrite) ++this.heroBagLinkGeneration;
     const owner = opts?.current ?? this.beginHeroDetailRead();
     if (!owner()) return;
     const current = () => owner() && this.selectedHeroId === heroId && !this.heroDetailCollapsed;
@@ -4966,6 +4971,7 @@ export class HeroMailPanels {
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {
+    ++this.heroBagLinkGeneration;
     const tplId = this.heroDetail?.template_cfg_id;
     if (!tplId) {
       this.onStatus("请先点选将领加载详情");
@@ -4994,7 +5000,20 @@ export class HeroMailPanels {
     this.onStatus(`背包已高亮招募所需道具 ${itemCfgId}，请查看持有数量`);
   }
 
+  /** A bag read may complete after newer navigation, but must not navigate for it. */
+  private beginHeroBagLink(): () => boolean {
+    const request = ++this.heroBagLinkGeneration;
+    const heroId = this.selectedHeroId;
+    const actor = captureActor(this.gateway, this.getSession);
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    return () => request === this.heroBagLinkGeneration &&
+      heroId === this.selectedHeroId && !this.heroDetailCollapsed && actor() && presentation() &&
+      this.heroPanel.parentNode === this.mount;
+  }
+
   private async openHeroBagCultivationDeepLink(): Promise<void> {
+    const current = this.beginHeroBagLink();
+    if (!current()) return;
     const heroId = this.selectedHeroId;
     let items = this.sessionEconomy().bag;
     const sid = this.serverId();
@@ -5004,11 +5023,13 @@ export class HeroMailPanels {
       };
       items = bagFromListPlayerBagResponse(bagRes.items);
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("bag", e);
       setHeroCultivationFormErrorDisplay(this.heroPanel, msg);
       this.onStatus(msg);
       return;
     }
+    if (!current()) return;
     const pick = pickHeroDetailBagDeepLink(heroId, items);
     if (!pick.ok) {
       setHeroCultivationFormErrorDisplay(this.heroPanel, pick.errorMessage);
@@ -5032,6 +5053,9 @@ export class HeroMailPanels {
   }
 
   private async openRelatedCultivationItems(): Promise<void> {
+    const current = this.beginHeroBagLink();
+    if (!current()) return;
+    const heroId = this.selectedHeroId;
     const sid = this.serverId();
     let items = this.sessionEconomy().bag;
     try {
@@ -5042,6 +5066,7 @@ export class HeroMailPanels {
     } catch {
       /* 使用会话背包快照 */
     }
+    if (!current()) return;
     const ids = filterHeroCultivationBagItemIds(items);
     if (this.onOpenHeroCultivationBag) {
       const first = ids[0] ?? 0;
@@ -5049,7 +5074,7 @@ export class HeroMailPanels {
         this.onOpenHeroCultivationBag(
           buildHeroBagDeepLinkQuery({
             highlightItemId: first,
-            returnHeroId: this.selectedHeroId,
+            returnHeroId: heroId,
             openSource: "hero",
           }),
         );
