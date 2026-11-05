@@ -26,7 +26,7 @@ export class ServerSelectScene implements Scene {
   private triggerBtn: HTMLButtonElement | null = null;
   private focusTrap: OverlayFocusTrap | null = null;
 
-  async enter(ctx: SceneContext): Promise<void> {
+  async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     ++this.lifecycle;
     this.active = true;
     this.servers = [];
@@ -50,6 +50,13 @@ export class ServerSelectScene implements Scene {
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入游戏</button>
       <p class="server-select-status" data-role="status"></p>
     `;
+    if ((data as { fromMainCity?: boolean } | null)?.fromMainCity === true) {
+      const notice = document.createElement("p");
+      notice.dataset.role = "return-result-notice";
+      notice.setAttribute("role", "status");
+      notice.textContent = "已返回选服。已提交的操作不会撤销；未收到的结果请重新进入后核实，勿重复提交。";
+      this.panel.appendChild(notice);
+    }
     this.panel.classList.add("layout-overlay-center");
     ctx.layoutFrame.appendChild(this.panel);
     skinDefaultPanel(this.panel, ctx.assets, 560, 360);

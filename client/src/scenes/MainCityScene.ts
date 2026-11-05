@@ -449,6 +449,9 @@ export class MainCityScene implements Scene {
   private militaryPanel!: HTMLElement;
   private gateway!: SceneContext["gateway"];
   private status = "";
+  private sceneActive = false;
+  private returningToServers = false;
+  private returnToServers: (() => void) | null = null;
   private lastMarch: MarchSummary | null = null;
   private marchQueueBannerTarget: MarchQueueBannerTarget | null = null;
   private marchSubmitState: MarchSubmitState = "idle";
@@ -495,7 +498,7 @@ export class MainCityScene implements Scene {
   private cityStateFetch!: CityStateFetch;
   private cityStatePoll!: CityStatePoll;
   private hudTodoBadgePoll!: HudTodoBadgePoll;
-  private readonly chatUnreadTracker = new ChatUnreadTracker();
+  private chatUnreadTracker = new ChatUnreadTracker();
   private chatUnreadPoll!: ChatUnreadPoll;
   private readonly buildCompleteTodos = new BuildCompleteTodoTracker();
   /** Last focused bottom-toolbar toggle (CLIENT-135 Esc focus return). */
@@ -505,8 +508,8 @@ export class MainCityScene implements Scene {
   private hudCenterPanelDeepLinkRefreshStamp = 0;
   private mailTabHudSyncPulsePending = false;
   private marchArrivalPoll!: MarchArrivalPoll;
-  private readonly battleReportUnread = new BattleReportUnreadSession();
-  private readonly marchEndReportHint = new MarchEndBattleReportHint();
+  private battleReportUnread = new BattleReportUnreadSession();
+  private marchEndReportHint = new MarchEndBattleReportHint();
   private marchArrivalHudReminder: MarchArrivalReminder | null = null;
   private walletGainBrief: string | null = null;
   private walletGainUntilMs = 0;
@@ -560,6 +563,36 @@ export class MainCityScene implements Scene {
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.marchSnapshotGeneration++;
+    this.sceneActive = true;
+    this.returningToServers = false;
+    const lifecycle = this.marchSnapshotGeneration;
+    const currentScene = () => this.sceneActive && lifecycle === this.marchSnapshotGeneration;
+    this.chatUnreadTracker = new ChatUnreadTracker();
+    this.battleReportUnread = new BattleReportUnreadSession();
+    this.marchEndReportHint = new MarchEndBattleReportHint();
+    this.lastMarch = this.marchQueueBannerTarget = this.marchArrivalHudReminder = null;
+    this.recruitQueueHighlightId = this.intelRemarchTroopsLine = this.activeDomesticSlotKey = null;
+    this.lastToolbarFocus = null;
+    this.marchFormIntelScrollContext = { preferredMarchId: null, toX: null, toY: null };
+    this.minimapMarches = [];
+    this.minimapBattleReportReplay = this.minimapFocusGrid = this.minimapMarchEndHighlight = this.minimapIntelSyncRing = null;
+    this.minimapView = { ...DEFAULT_MINIMAP_VIEW };
+    this.minimapPanPointerId = this.minimapPanLastLayout = this.minimapPanStartLayout = null;
+    this.walletGainBrief = null;
+    this.walletGainUntilMs = this.minimapFocusPulseUntilMs = this.hudCenterPanelDeepLinkRefreshStamp = 0;
+    this.status = this.hitDebug = "";
+    this.mailTabHudSyncPulsePending = this.minimapViewportGestureActive = false;
+    this.returnToServers = () => {
+      if (!this.sceneActive || this.returningToServers || lifecycle !== this.marchSnapshotGeneration) return;
+      if (!window.confirm("返回选服会断开当前连接。已提交的操作不会撤销；尚未收到结果的操作可能已成功，请重新进入后核实，勿重复提交。是否返回选服？")) return;
+      this.returningToServers = true;
+      ctx.gateway.close();
+      void ctx.switchScene("serverSelect", { fromMainCity: true }).catch(() => {
+        if (!this.sceneActive && this.marchSnapshotGeneration === lifecycle + 1) {
+          ctx.hud.textContent = "返回选服失败，请刷新页面。已提交的操作不会撤销，请重新进入后核实结果。";
+        }
+      });
+    };
     this.buildSubmitOwner = null;
     this.buildSubmitState = "idle";
     this.recruitSubmitOwner = null;
@@ -573,14 +606,25 @@ export class MainCityScene implements Scene {
     this.buildCompleteTodos.onCityBuildings(this.session?.buildings);
     this.lastCenterTodoScrollKey = null;
     this.hud = ctx.hud;
-    this.gateway = ctx.gateway;
+    // Detached panels retain this facade: they cannot continue a multi-step command
+    // sequence through the shared gateway after returning or entering another actor.
+    this.gateway = new Proxy(ctx.gateway, {
+      get(target, key) {
+        const value = Reflect.get(target, key, target);
+        if (typeof value !== "function") return value;
+        if (["getSessionId", "getSessionGeneration", "getBoundServerId"].includes(String(key))) return value.bind(target);
+        return (...args: unknown[]) => currentScene()
+          ? Reflect.apply(value, target, args)
+          : Promise.reject(new Error("场景已离开，请重新进入后核实操作结果"));
+      },
+    });
     this.layoutFrame = ctx.layoutFrame;
     this.cityStateFetch = new CityStateFetch(this.gateway, () => this.session?.cityId ?? null,
       () => `${this.gateway.getSessionId()}:${this.session?.serverId}:${this.session?.player.player_id}`);
     this.cityStatePoll = new CityStatePoll({
       fetch: this.cityStateFetch,
       isPanelVisible: () => this.isAnyPanelVisible(),
-      onState: (state) => this.applyCityStatePoll(state),
+      onState: (state) => { if (currentScene()) this.applyCityStatePoll(state); },
     });
     this.hudTodoBadgePoll = new HudTodoBadgePoll({
       gateway: this.gateway,
@@ -598,12 +642,12 @@ export class MainCityScene implements Scene {
       isDailySuppressed: () => this.dailyQuest?.isOpen() ?? false,
       isReportsSuppressed: () => this.battleReports?.isOpen() ?? false,
       isQueueSuppressed: () => this.queuePanels?.isOpen() ?? false,
-      onCounts: (counts) => this.applyHudTodoBadgeCounts(counts),
+      onCounts: (counts) => { if (currentScene()) this.applyHudTodoBadgeCounts(counts); },
     });
     this.marchArrivalPoll = new MarchArrivalPoll({
       getCityId: () => this.session?.cityId,
       listMarches: (cityId) => this.readMarchesForArrival(cityId),
-      onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
+      onCompletions: (reminders) => { if (currentScene()) this.applyMarchArrivalHudReminders(reminders); },
     });
     skinHudBar(this.hud, this.assets);
     this.toolbar = document.createElement("div");
@@ -611,6 +655,7 @@ export class MainCityScene implements Scene {
     this.toolbar.innerHTML = `
       <div class="toolbar-scroll" data-role="toolbar-scroll">
       <div class="toolbar-scroll-inner">
+      <button type="button" data-action="return-server-select" title="断开当前连接并返回选服；已提交的操作不会撤销">返回选服</button>
       <button type="button" data-action="upgrade-farm" title="升级农田">升级</button>
       <button type="button" data-action="refresh" title="刷新状态">刷新</button>
       <button type="button" data-action="toggle-military" data-role="military-toolbar-btn" title="军事"><span class="toolbar-btn-label">军事</span></button>
@@ -715,12 +760,13 @@ export class MainCityScene implements Scene {
     this.domesticSlotStrip.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
-    this.chatUnreadTracker.onCounts = () => this.applyChatUnreadCounts();
+    this.chatUnreadTracker.onCounts = () => { if (currentScene()) this.applyChatUnreadCounts(); };
     this.social = new SocialPanels(
       parent,
       this.gateway,
       () => this.session,
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
@@ -742,12 +788,14 @@ export class MainCityScene implements Scene {
       parent,
       this.gateway,
       () => this.session,
-      (patch) => this.patchSession(patch),
+      (patch) => { if (currentScene()) this.patchSession(patch); },
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
       (keys) => {
+        if (!currentScene()) return;
         if (keys.length) scheduleHudResourcePulse(this.hud, keys);
       },
     );
@@ -756,8 +804,9 @@ export class MainCityScene implements Scene {
       parent,
       this.gateway,
       () => this.session,
-      (patch) => this.patchSession(patch),
+      (patch) => { if (currentScene()) this.patchSession(patch); },
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
@@ -770,33 +819,37 @@ export class MainCityScene implements Scene {
       SLOT_LABEL,
       () => this.queuePanels?.getRecruitQueueSnapshot() ?? [],
       this.assets,
-      (rows) => this.hudTodoBadgePoll.applyDailyChainRowsSnapshot(rows),
+      (rows) => { if (currentScene()) this.hudTodoBadgePoll.applyDailyChainRowsSnapshot(rows); },
     );
     this.dailyQuest.attach();
     this.heroMail = new HeroMailPanels(
       parent,
       this.gateway,
       () => this.session,
-      (patch) => this.patchSession(patch),
+      (patch) => { if (currentScene()) this.patchSession(patch); },
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
       () => {
-        if (!this.heroMail?.isMailOpen()) this.hudTodoBadgePoll.recomputeToolbarCounts();
+        if (currentScene() && !this.heroMail?.isMailOpen()) this.hudTodoBadgePoll.recomputeToolbarCounts();
       },
       this.cityStateFetch,
-      () => this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID),
-      (snap) => this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId),
-      (mails, unreadTotal) =>
-        this.hudTodoBadgePoll.applyMailInboxSnapshot(mails, unreadTotal),
+      () => currentScene() ? this.dailyQuest.refreshChainList(DAILY_RECRUIT_QUEST_CFG_ID) : undefined,
+      (snap) => { if (currentScene()) this.hudTodoBadgePoll.applyMailUnreadSnapshot(snap.count, snap.firstId); },
+      (mails, unreadTotal) => {
+        if (currentScene()) this.hudTodoBadgePoll.applyMailInboxSnapshot(mails, unreadTotal);
+      },
       (reportId) => {
+        if (!currentScene()) return;
         this.marchArrivalHudReminder = null;
         void this.battleReports
           .openPanelWithDeepLink(reportId ?? undefined)
           .then(() => this.renderHud());
       },
       (link) => {
+        if (!currentScene()) return;
         if (link.recruitItemGap) {
           this.content.openBagFromRecruitItemGapDeepLink(link);
           this.status =
@@ -812,6 +865,7 @@ export class MainCityScene implements Scene {
         this.renderHud();
       },
       (keys) => {
+        if (!currentScene()) return;
         if (keys.length) scheduleHudResourcePulse(this.hud, keys);
       },
       this.assets,
@@ -827,12 +881,13 @@ export class MainCityScene implements Scene {
       parent,
       this.gateway,
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
       {
         unreadSession: this.battleReportUnread,
-        onUnreadChange: (count) => this.updateReportsToolbarBadge(count),
+        onUnreadChange: (count) => { if (currentScene()) this.updateReportsToolbarBadge(count); },
         onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
         onCoordReplay: (summary) => this.replayBattleReportOnMinimap(summary),
         onViewIntelNearReport: (summary) => this.openIntelNearBattleReport(summary),
@@ -840,6 +895,7 @@ export class MainCityScene implements Scene {
           canOfferBattleReportIntelJump(this.minimapMarches, summary),
         onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
         onOpenRelatedMail: (mailId) => {
+          if (!currentScene()) return;
           this.heroMail.openAndHighlightMail(mailId);
           this.renderHud();
         },
@@ -849,6 +905,7 @@ export class MainCityScene implements Scene {
           return this.hudTodoBadgePoll.getDeepLinkSnapshot().dailyChainRows;
         },
         onOpenRelatedDaily: (questCfgId) => {
+          if (!currentScene()) return;
           this.dailyQuest.openAndFocusQuest(questCfgId);
           this.status = "已打开「日常」并定位对应日课（只读，不自动领奖）";
           this.renderHud();
@@ -858,16 +915,19 @@ export class MainCityScene implements Scene {
           viewerHeroes: this.heroMail.getHeroesSnapshot(),
         }),
         onOpenBattleReportHero: (heroId) => {
+          if (!currentScene()) return;
           this.heroMail.openAndHighlightHero(heroId);
           this.status = `已打开「将领」详情 #${heroId}（战报互链）`;
           this.renderHud();
         },
         onOpenBattleReportRank: (playerId) => {
+          if (!currentScene()) return;
           this.social.openPowerRankHighlightEntity(playerId);
           this.status = `已打开「排行」并高亮玩家#${playerId}`;
           this.renderHud();
         },
         onBattleReportReadonlyHint: (message) => {
+          if (!currentScene()) return;
           this.status = message;
           this.renderHud();
         },
@@ -882,6 +942,7 @@ export class MainCityScene implements Scene {
       this.gateway,
       () => this.session?.cityId,
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
@@ -889,11 +950,12 @@ export class MainCityScene implements Scene {
         assets: this.assets,
         nowMs: () => this.marchClockMs,
         getWorldSelectedGrid: () => this.world?.getSelectedGrid() ?? null,
-        onMarchesUpdated: (marches) => this.applyMarchesSnapshot(marches),
-        onMarchArrivalReminders: (reminders) => this.applyMarchArrivalHudReminders(reminders),
+        onMarchesUpdated: (marches) => { if (currentScene()) this.applyMarchesSnapshot(marches); },
+        onMarchArrivalReminders: (reminders) => { if (currentScene()) this.applyMarchArrivalHudReminders(reminders); },
         onRemarchFromRow: (march) => this.openMilitaryFromIntelRemarch(march),
         onOpenMilitaryQueueBanner: (marchId) => this.openMilitaryQueueBannerHighlight(marchId),
         onViewMarchDestTile: (march) => {
+          if (!currentScene()) return;
           const tx = march.to_x;
           const ty = march.to_y;
           if (!Number.isFinite(tx) || !Number.isFinite(ty)) {
@@ -908,12 +970,14 @@ export class MainCityScene implements Scene {
         },
         onOpenMilitaryFromInfoCard: (march) => this.handleOpenMilitaryFromMarchInfoCard(march),
         onReplayBattleReportFromInfoCard: (_march, reportId) => {
+          if (!currentScene()) return;
           if (!this.battleReports.isOpen()) this.battleReports.openPanel();
           void this.battleReports.openPanelWithDeepLink(reportId).then(() => this.renderHud());
           this.status = `战报：已定位 #${reportId}（军情复盘互链）`;
           this.renderHud();
         },
         onSelectionChange: (march) => {
+          if (!currentScene()) return;
           this.syncMilitaryPanel();
           this.world?.syncIntelEtaResidualHighlightFromMarch(march);
           highlightMarchFormCoordsFromIntel(this.militaryPanel, march, {
@@ -967,6 +1031,7 @@ export class MainCityScene implements Scene {
       {
         marchFormRoot: this.militaryPanel,
         onFilled: (x, y) => {
+          if (!currentScene()) return;
           this.openMilitaryPanel();
           setMarchTargetFieldHighlight(this.militaryPanel, false);
           this.renderHud();
@@ -989,6 +1054,7 @@ export class MainCityScene implements Scene {
       },
       {
         onGridSelectionChange: (grid) => {
+          if (!currentScene()) return;
           this.marchList.syncWorldGridSelection(grid);
           this.world?.syncIntelEtaResidualHighlightFromMarch(this.marchList.getSelectedMarch());
           if (grid) {
@@ -1004,6 +1070,7 @@ export class MainCityScene implements Scene {
           return fromPanel.length ? fromPanel : this.minimapMarches;
         },
         onMarchCountClick: (grid) => {
+          if (!currentScene()) return;
           const opened = this.marchList.selectMarchByDest(grid.x, grid.y);
           if (opened) {
             this.pulseIntelRowFromMinimapTile(grid.x, grid.y);
@@ -1014,6 +1081,7 @@ export class MainCityScene implements Scene {
           this.renderHud();
         },
         onViewMarchesAtGrid: (grid) => {
+          if (!currentScene()) return;
           this.marchList.openIntelViewForGrid(grid.x, grid.y);
           this.pulseIntelRowFromMinimapTile(grid.x, grid.y);
           this.status = `军情：已筛选目的格 (${grid.x},${grid.y})`;
@@ -1021,9 +1089,11 @@ export class MainCityScene implements Scene {
         },
         getBattleReportsSnapshot: () => this.battleReports.getReportsSnapshot(),
         onCenterMinimapAtGrid: (grid) => {
+          if (!currentScene()) return;
           this.applyMinimapFocusFromWorldTileCard(grid);
         },
         onViewBattleReportsAtGrid: (grid, hintReportId) => {
+          if (!currentScene()) return;
           void this.battleReports.openListFilteredByGrid(grid.x, grid.y, hintReportId);
           this.status = `战报：已筛选战场格点 (${grid.x},${grid.y})`;
           this.renderHud();
@@ -1040,6 +1110,7 @@ export class MainCityScene implements Scene {
       () => this.session,
       SLOT_LABEL,
       (msg) => {
+        if (!currentScene()) return;
         this.status = msg;
         this.renderHud();
       },
@@ -1053,6 +1124,7 @@ export class MainCityScene implements Scene {
         return this.hudTodoBadgePoll.getDeepLinkSnapshot().dailyChainRows;
       },
       (questCfgId) => {
+        if (!currentScene()) return;
         this.dailyQuest.openAndFocusQuest(questCfgId);
         this.status = "已打开「日常」并定位对应建造日课";
         this.renderHud();
@@ -1062,6 +1134,7 @@ export class MainCityScene implements Scene {
       () => this.toolbarTrigger("toggle-queue"),
       (entry) => this.openMilitaryRecruitFromQueueRow(entry),
       (slotKey) => {
+        if (!currentScene()) return;
         const building = buildingBySlot(this.session?.buildings, slotKey);
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         highlightDomesticSlotForQueueRow(
@@ -1079,6 +1152,7 @@ export class MainCityScene implements Scene {
       },
       (open) => this.onQueuePanelVisibilityChange(open),
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotCompleteMarginResidualRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1086,6 +1160,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1093,6 +1168,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeeperRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1100,6 +1176,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1107,6 +1184,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestDeeperRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1114,6 +1192,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeeperRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1121,6 +1200,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1128,6 +1208,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestDeeperRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1135,6 +1216,7 @@ export class MainCityScene implements Scene {
         );
       },
       (slotKey) => {
+        if (!currentScene()) return;
         scrollCitySlotIntoView(this.slotUpgradeOverlay?.getOverlayLayer(), slotKey);
         pulseDomesticSlotPreviewCrossLinkResidualDeepestDeepestDeepestDeepestDeeperRing(
           this.slotUpgradeOverlay?.getOverlayLayer(),
@@ -1282,6 +1364,8 @@ export class MainCityScene implements Scene {
   }
 
   leave(): void {
+    this.sceneActive = false;
+    this.returnToServers = null;
     this.marchSnapshotGeneration++;
     this.buildSubmitOwner = null;
     this.buildSubmitState = "idle";
@@ -1374,6 +1458,10 @@ export class MainCityScene implements Scene {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const action = btn.getAttribute("data-action");
+    if (action === "return-server-select") {
+      if (this.toolbar.contains(btn)) this.returnToServers?.();
+      return;
+    }
     if (isToolbarBadgeDeepLinkClick(ev)) {
       if (action === "toggle-chat") {
         const social = hudTodoSocialBadgesFromChatSummary(
@@ -2628,6 +2716,7 @@ export class MainCityScene implements Scene {
   }
 
   private renderHud(): void {
+    if (!this.sceneActive) return;
     const s = this.session;
     const now = Date.now();
     if (this.walletGainBrief && now > this.walletGainUntilMs) {
@@ -3002,8 +3091,11 @@ export class MainCityScene implements Scene {
   }
 
   private wireSocialRankDeepLinks(): void {
+    const generation = this.marchSnapshotGeneration;
+    const current = () => this.sceneActive && generation === this.marchSnapshotGeneration;
     this.social.setRankDeepLinkHandlers({
       getViewerHeroIds: async () => {
+        if (!current()) return [];
         const sid = this.session?.serverId ?? this.gateway.getBoundServerId() ?? 0;
         if (sid <= 0) return [];
         try {
@@ -3016,12 +3108,15 @@ export class MainCityScene implements Scene {
         }
       },
       onOpenHeroDetail: (heroId) => {
+        if (!current()) return;
         this.openRankHeroDeepLink(heroId);
       },
       onOpenWorldAtGrid: (gridX, gridY) => {
+        if (!current()) return;
         this.openWorldFromRankDeepLink(gridX, gridY);
       },
       onOpenWorldViewer: () => {
+        if (!current()) return;
         this.openWorldFromRankDeepLink(this.session?.cityX ?? Number.NaN, this.session?.cityY ?? Number.NaN);
       },
     });
@@ -3090,11 +3185,12 @@ export class MainCityScene implements Scene {
   }
 
   private async seedMarchEndBattleReportHint(): Promise<void> {
+    const generation = this.marchSnapshotGeneration;
     try {
       const res = (await this.gateway.listBattleReports(10, 0)) as {
         reports?: { report_id?: number }[];
       };
-      this.marchEndReportHint.setFromReports(res.reports ?? []);
+      if (this.sceneActive && generation === this.marchSnapshotGeneration) this.marchEndReportHint.setFromReports(res.reports ?? []);
     } catch {
       // 战报尚未落库时深链回退为刷新后选最近一条
     }
@@ -3158,6 +3254,10 @@ export class MainCityScene implements Scene {
   private async refreshState(current: () => boolean = () => true): Promise<void> {
     if (!this.session || !current()) return;
     const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const owned = () => this.session === session && actor() &&
+      generation === this.marchSnapshotGeneration && current();
     this.status = "刷新中…";
     this.renderHud();
     try {
@@ -3167,17 +3267,17 @@ export class MainCityScene implements Scene {
         production_rates?: ResourceWallet;
         garrison?: unknown;
       } | null;
-      if (this.session !== session || !current()) return;
+      if (!owned()) return;
       if (state) {
         this.applyCityStateFromFetch(state);
       }
-      await this.syncSessionCityCoords(current);
-      if (!current()) return;
+      await this.syncSessionCityCoords(owned);
+      if (!owned()) return;
       await this.refreshMinimapMarches();
-      if (!current()) return;
+      if (!owned()) return;
       this.status = "已刷新";
     } catch (e) {
-      if (!current()) return;
+      if (!owned()) return;
       this.status = (e as Error).message;
     }
     this.renderHud();
