@@ -723,8 +723,8 @@ export class HeroMailPanels {
   private captiveReleaseInflight = false;
   private persuadeTargets: PersuadeTarget[] = [];
   private selectedPersuadeNpcId = 0;
-  private persuadeListInflight = false;
-  private persuadePrimaryInflight = false;
+  private persuadeGeneration = 0;
+  private persuadeState: { current: () => boolean; session: MainCitySession | null; primary: boolean; list: boolean; pending: boolean; outcome: string; warning: string } | null = null;
   private comingHeroesAll: ComingHeroRow[] = [];
   private comingHeroes: ComingHeroRow[] = [];
   private selectedComingHeroId = 0;
@@ -808,6 +808,8 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    ++this.persuadeGeneration;
+    this.persuadeState = null;
     this.heroesRefreshInflight = false;
     this.invalidateHeroDetailRead();
     this.hotelState = null;
@@ -1727,6 +1729,33 @@ export class HeroMailPanels {
     }
   }
 
+  private persuadeContext() {
+    if (!this.persuadeState?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const panel = this.heroPanel, generation = this.persuadeGeneration;
+      const state = { current: () => this.persuadeState === state && actor() && (!state.session || this.getSession() === state.session) &&
+        this.heroPanel === panel && panel.parentNode === this.mount && generation === this.persuadeGeneration,
+        session: null as MainCitySession | null, primary: false, list: false, pending: false, outcome: "", warning: "" };
+      this.persuadeState = state;
+      this.persuadeTargets = [];
+      this.selectedPersuadeNpcId = 0;
+    }
+    return this.persuadeState;
+  }
+
+  private async syncPersuadeBag(state: NonNullable<HeroMailPanels["persuadeState"]>): Promise<void> {
+    const session = this.getSession();
+    if (!session || !state.current()) return;
+    const bag = session.bag, latest = beginAssetRead(this.gateway);
+    try {
+      const res = await this.gateway.listPlayerBag(session.serverId) as { items?: BagStack[] };
+      if (!state.current() || !latest() || this.getSession()?.bag !== bag) return;
+      const snapshot = bagFromListPlayerBagResponse(res.items);
+      state.pending = false;
+      if (JSON.stringify(snapshot) !== JSON.stringify(bag)) this.onSessionPatch({ bag: snapshot });
+    } catch { /* Confirmed consumption survives failed reads; only explicit reads retry. */ }
+  }
+
   private selectedPersuadeTarget(): PersuadeTarget | undefined {
     return this.persuadeTargets.find((t) => t.npc_cfg_id === this.selectedPersuadeNpcId);
   }
@@ -1744,57 +1773,78 @@ export class HeroMailPanels {
   }
 
   private syncPersuadeUi(): void {
+    const state = this.persuadeContext();
     const { wallet, bag } = this.sessionEconomy();
     syncPersuadeMeta(this.heroPanel, this.persuadeTargets.length);
     renderPersuadeTargetList(this.heroPanel, this.persuadeTargets, this.selectedPersuadeNpcId);
     this.syncCaptureDisclosure("persuade-section", this.selectedPersuadeTarget()?.display_name);
     syncPersuadePreview(this.heroPanel, this.selectedPersuadeTarget(), wallet, bag);
-    syncPersuadeListRefreshButton(this.heroPanel, this.persuadeListInflight);
+    syncPersuadeListRefreshButton(this.heroPanel, state.list || state.primary);
     syncPersuadePrimaryButton(
       this.heroPanel,
-      this.persuadePrimaryInflight,
+      state.primary || state.list,
       this.selectedPersuadeTarget(),
       wallet,
       bag,
     );
+    const pending = state.pending ? "背包待同步，请拉取结交目标重试" : "";
+    setPersuadeFormError(this.heroPanel, [pending, state.warning].filter(Boolean).join("；") || null);
+    const meta = this.heroPanel.querySelector('[data-role="persuade-meta"]');
+    if (meta && state.outcome) meta.textContent += `；${state.outcome}`;
+    if (state.pending && resolvePersuadePrimaryAction(this.selectedPersuadeTarget()) === "persuade") {
+      const button = this.heroPanel.querySelector<HTMLButtonElement>('[data-action="persuade-primary"]');
+      if (button) { button.disabled = true; button.title = pending; }
+      const preview = this.heroPanel.querySelector('[data-role="persuade-preview"]');
+      if (preview) preview.textContent = `${this.selectedPersuadeTarget()?.display_name} · ${pending}`;
+    }
   }
 
-  private async refreshPersuadeTargets(): Promise<void> {
-    if (this.persuadeListInflight) return;
+  private async refreshPersuadeTargets(owned = false): Promise<void> {
+    const state = this.persuadeContext();
+    if (state.list || (state.primary && !owned)) return;
     const sid = this.serverId();
-    this.persuadeListInflight = true;
-    setPersuadeFormError(this.heroPanel, null);
+    state.list = true;
+    state.warning = "";
     this.syncPersuadeUi();
-    this.onStatus("拉取结交目标…");
     try {
+      if (state.pending) await this.syncPersuadeBag(state);
+      if (!state.current()) return;
       const res = await this.gateway.listPersuadeTargets(sid);
-      this.applyPersuadeListPayload(res);
-      this.onStatus(`结交目标 ${this.persuadeTargets.length} 名`);
+      if (!state.current()) return;
+      this.applyPersuadeListPayload(res, { keepSelection: owned || !!state.outcome });
     } catch (e) {
-      const msg = formatPersuadeGatewayError(e);
-      setPersuadeFormError(this.heroPanel, msg);
-      this.onStatus(msg);
+      if (!state.current()) return;
+      state.warning = `结交目标待刷新：${formatPersuadeGatewayError(e)}`;
     } finally {
-      this.persuadeListInflight = false;
-      this.syncPersuadeUi();
+      if (state.current()) {
+        state.list = false;
+        this.syncPersuadeUi();
+        if (!owned || state.outcome || state.pending || state.warning) {
+          this.onStatus([state.outcome, state.pending ? "背包待同步，请拉取结交目标重试" : "", state.warning]
+            .filter(Boolean).join("；") || `结交目标 ${this.persuadeTargets.length} 名`);
+        }
+      }
     }
   }
 
   private async runPersuadePrimary(): Promise<void> {
-    if (this.persuadePrimaryInflight) return;
+    const state = this.persuadeContext();
+    if (state.primary || state.list) return;
     const target = this.selectedPersuadeTarget();
     const npcId = target?.npc_cfg_id ?? 0;
     const action = resolvePersuadePrimaryAction(target);
+    if (action === "persuade" && state.pending) return;
     const sid = this.serverId();
     const cityId = this.cityId();
     if (!cityId || !npcId) {
       setPersuadeFormError(this.heroPanel, "尚未进入城池或未选择结交目标");
       return;
     }
-    this.persuadePrimaryInflight = true;
-    setPersuadeFormError(this.heroPanel, null);
+    state.session = this.getSession();
+    state.primary = true;
+    state.outcome = state.warning = "";
     this.syncPersuadeUi();
-    const current = captureActor(this.gateway, this.getSession);
+    const current = state.current;
     const settle = beginAssetMutation(this.gateway, current);
     try {
       if (action === "persuade") {
@@ -1804,7 +1854,10 @@ export class HeroMailPanels {
         settle();
         if (!current()) return;
         const delta = res.friend_delta != null ? Number(res.friend_delta) : 0;
-        this.onStatus(`游说成功，友好+${delta}`);
+        state.outcome = `${target?.display_name}游说成功，友好+${delta}`;
+        state.pending = true;
+        this.syncPersuadeUi();
+        this.onStatus(state.outcome);
       } else if (action === "befriend" || action === "hire") {
         const res = (await this.gateway.lionizeHero(sid, cityId, npcId)) as {
           befriended?: boolean;
@@ -1824,18 +1877,15 @@ export class HeroMailPanels {
         }
       }
       if (!current()) return;
-      const listRes = await this.gateway.listPersuadeTargets(sid);
-      if (!current()) return;
-      this.applyPersuadeListPayload(listRes, { keepSelection: true });
+      await this.refreshPersuadeTargets(true);
     } catch (e) {
       settle();
       if (!current()) return;
       const msg = formatPersuadeGatewayError(e);
-      setPersuadeFormError(this.heroPanel, msg);
+      state.warning = msg;
       this.onStatus(msg);
     } finally {
-      this.persuadePrimaryInflight = false;
-      if (current()) this.syncPersuadeUi();
+      if (current()) { state.primary = false; this.syncPersuadeUi(); }
     }
   }
 
