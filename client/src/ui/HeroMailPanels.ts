@@ -581,6 +581,7 @@ import {
   formatHeroPointGatewayErrorFromUnknown,
   heroPointSnapshotFromDetail,
   heroPointSnapshotFromResult,
+  heroPointUnsupportedReason,
   mergeHeroPointSnapshot,
   renderHeroDetailPointsMarkup,
   setHeroPointFormErrorDisplay,
@@ -3960,6 +3961,12 @@ export class HeroMailPanels {
     if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
     if (this.heroPointRequests.get(heroId)?.actor()) return;
+    const unsupported = heroPointUnsupportedReason(this.heroDetail);
+    if (unsupported) {
+      setHeroPointFormErrorDisplay(this.heroPanel, unsupported);
+      this.onStatus(unsupported);
+      return;
+    }
     const request = { actor: captureActor(this.gateway, this.getSession) };
     this.heroPointRequests.set(heroId, request);
     const generation = this.heroDetailReadGeneration;
