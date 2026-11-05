@@ -153,6 +153,11 @@ export function heroPointIdleRequiredReason(detail: HeroDetail | null | undefine
   return null;
 }
 
+/** Only GetHeroDetail's explicit marker proves the server's ownedTemplateHero restriction. */
+export function heroPointUnsupportedReason(detail: HeroDetail | null | undefined): string | null {
+  return detail?.template_code === "hotel_random" ? "随机客栈将领暂不支持潜力加点或洗点" : null;
+}
+
 export function buildAddHeroPointTargets(
   detail: HeroDetail,
   stat: HeroPointAllocStat,
@@ -171,9 +176,7 @@ export function heroPointAddDisabled(
   detail: HeroDetail | null | undefined,
 ): boolean {
   if (useConsumableSubmitButtonsDisabled(submitState)) return true;
-  if (!detail?.hero_id) return true;
-  if (heroPointIdleRequiredReason(detail) != null) return true;
-  return heroPointRemaining(detail) === 0;
+  return heroPointAddDisabledReason(detail) !== "";
 }
 
 export function heroPointClearDisabled(
@@ -181,12 +184,12 @@ export function heroPointClearDisabled(
   detail: HeroDetail | null | undefined,
 ): boolean {
   if (useConsumableSubmitButtonsDisabled(submitState)) return true;
-  if (!detail?.hero_id) return true;
-  if (heroPointIdleRequiredReason(detail) != null) return true;
-  return heroPointUsed(detail) === 0;
+  return heroPointClearDisabledReason(detail) !== "";
 }
 
 export function heroPointAddDisabledReason(detail: HeroDetail | null | undefined): string {
+  const unsupported = heroPointUnsupportedReason(detail);
+  if (unsupported) return unsupported;
   const idle = heroPointIdleRequiredReason(detail);
   if (idle) return idle;
   if (heroPointRemaining(detail) === 0) return "潜力点已用尽";
@@ -194,6 +197,8 @@ export function heroPointAddDisabledReason(detail: HeroDetail | null | undefined
 }
 
 export function heroPointClearDisabledReason(detail: HeroDetail | null | undefined): string {
+  const unsupported = heroPointUnsupportedReason(detail);
+  if (unsupported) return unsupported;
   const idle = heroPointIdleRequiredReason(detail);
   if (idle) return idle;
   if (heroPointUsed(detail) === 0) return "尚未分配潜力点";
@@ -202,6 +207,8 @@ export function heroPointClearDisabledReason(detail: HeroDetail | null | undefin
 
 export function formatHeroPointAllocSummary(detail: HeroDetail | null | undefined): string {
   if (!detail?.hero_id) return "";
+  const unsupported = heroPointUnsupportedReason(detail);
+  if (unsupported) return unsupported;
   const rem = heroPointRemaining(detail);
   const budget = heroPointBudget(detail.level);
   if (rem == null || heroPointUsed(detail) == null) return "潜力分配未知 · 加点与洗点以服务端结果为准";

@@ -11,6 +11,9 @@ import {
   heroPointRemainingAtLevel,
   formatHeroPointAllocSummary,
   heroPointUsed,
+  heroPointUnsupportedReason,
+  heroPointAddDisabledReason,
+  heroPointClearDisabledReason,
   mergeHeroPointSnapshot,
   parseHeroPointResponse,
   renderHeroDetailPointsMarkup,
@@ -117,4 +120,24 @@ it("known exhausted and zero allocations keep their exact behavior", () => {
 
 it("incomplete legacy snapshots use known remaining without treating fractional adds as valid", () => {
   expect(heroPointRemainingAtLevel({ level: 3, potential_remaining: 1, force_add: 0.5, intel_add: 0, politics_add: 0 }, 4)).toBe(2);
+});
+
+it("only the explicit hotel marker proves unsupported potential operations", () => {
+  for (const template_cfg_id of [undefined, 0, 1001]) {
+    const detail = { hero_id: 7, level: 3, template_cfg_id, template_code: "hotel_random" };
+    const reason = heroPointUnsupportedReason(detail);
+    expect(reason).toBe("随机客栈将领暂不支持潜力加点或洗点");
+    expect(heroPointAddDisabled("idle", detail)).toBe(true);
+    expect(heroPointClearDisabled("idle", detail)).toBe(true);
+    expect(heroPointAddDisabledReason(detail)).toBe(reason);
+    expect(heroPointClearDisabledReason(detail)).toBe(reason);
+    expect(formatHeroPointAllocSummary(detail)).toBe(reason);
+    expect(heroPointSnapshotFromDetail(detail)).toBeNull();
+    for (const template_code of [undefined, "", "xuan_de_lord", "HOTEL_RANDOM"]) {
+      const unknown = { ...detail, template_code };
+      expect(heroPointUnsupportedReason(unknown)).toBeNull();
+      expect(heroPointAddDisabled("idle", unknown)).toBe(false);
+      expect(heroPointClearDisabled("idle", unknown)).toBe(false);
+    }
+  }
 });
