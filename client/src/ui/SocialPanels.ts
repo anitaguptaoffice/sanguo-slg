@@ -1208,9 +1208,25 @@ export class SocialPanels {
     buttons.forEach((button) => { button.disabled = true; });
     this.onStatus(action === "create" ? "创建军团…" : "加入军团…");
     try {
-      const res = (await (action === "create" ? this.gateway.createGuild(sid, name!) : this.gateway.joinGuild(sid, gid))) as {
-        guild?: { guild_id?: number; name?: string };
-      };
+      let restored = false;
+      let res: { guild?: { guild_id?: number; name?: string } };
+      try {
+        res = await (action === "create" ? this.gateway.createGuild(sid, name!) : this.gateway.joinGuild(sid, gid)) as typeof res;
+      } catch (error) {
+        // GUILD_ALREADY_MEMBER proves membership somewhere, never in the requested guild.
+        if (action !== "join" || (error as { code?: number })?.code !== 60002 || !current()) throw error;
+        const playerId = this.getSession()?.player?.player_id;
+        if (!Number.isSafeInteger(playerId) || !playerId || playerId <= 0) throw error;
+        const roster = await this.gateway.listGuildMembers(sid, gid, 1) as {
+          guild?: { guild_id?: number; server_id?: number; name?: string };
+          members?: GuildMemberRow[];
+        };
+        if (!current()) return;
+        if (roster.guild?.guild_id !== gid || roster.guild.server_id !== sid ||
+          !roster.members?.some(member => member.player_id === playerId)) throw error;
+        res = roster;
+        restored = true;
+      }
       if (!current()) return;
       ++this.guildReadVersion;
       this.guildListInflight = new SocialPanelInflight<void>();
@@ -1224,7 +1240,7 @@ export class SocialPanels {
       this.invalidateChatRead();
       this.syncGuildSummary();
       await this.refreshMembers();
-      if (current()) this.onStatus(`已${action === "create" ? "创建" : "加入"}「${this.guildName}」`);
+      if (current()) this.onStatus(`已${restored ? "恢复军团" : action === "create" ? "创建" : "加入"}「${this.guildName}」`);
     } catch (e) {
       if (current()) this.onStatus(formatSocialGatewayError(e));
     } finally {
