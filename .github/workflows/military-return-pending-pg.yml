@@ -47,7 +47,9 @@ jobs:
           files=$(gofmt -l internal/military/march/recruit_pending_read.go \
             internal/military/march/recruit_prepare.go internal/military/march/recruit_pending_read_pg_test.go \
             internal/military/march/return_catalog.go internal/military/march/return_catalog_test.go \
-            internal/military/march/return_catalog_pg_test.go)
+            internal/military/march/return_catalog_pg_test.go \
+            internal/military/march/return_source.go internal/military/march/return_source_test.go \
+            internal/military/march/return_source_pg_test.go)
           if [[ -n "$files" ]]; then
             printf 'Unformatted MARCH source:\n%s\n' "$files"
             while IFS= read -r file; do
@@ -72,8 +74,8 @@ jobs:
           import sys
 
           package = "github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
-          # Frozen #2105/#2109 inventory: all 166 top-level tests,
-          # plus 31 Prepare/raw-reader and 39 return-catalog drift scenarios.
+          # Frozen #2105/#2109/#2113 inventory: all 170 top-level tests,
+          # plus 31 Prepare/raw-reader, 39 catalog drift and four ordered-pin scenarios.
           expected = {
               "TestArrivalWithoutReturnRetainsExistingPhase",
               "TestConcurrentReturnSettlement",
@@ -250,6 +252,13 @@ jobs:
               "TestPGReturnCatalogPrivileges",
               "TestPGReturnCatalogReadOnly",
               "TestPGReturnCatalogSourceAndSettings",
+              "TestPGReturnSourceOrderedPins",
+              "TestPGReturnSourceOrderedPins/cancel",
+              "TestPGReturnSourceOrderedPins/clean",
+              "TestPGReturnSourceOrderedPins/new9",
+              "TestPGReturnSourceOrderedPins/old14",
+              "TestPGReturnSourceProfiles",
+              "TestPGReturnSourceSnapshotsAndAccess",
               "TestPlanRecruitConcurrentReadOnly",
               "TestPlanRecruitDefaults",
               "TestPlanRecruitDurationBoundaries",
@@ -306,6 +315,7 @@ jobs:
               "TestReturnCreditRejectsInvalidTotalsWithoutPartialMutation",
               "TestReturnMissingPrerequisitesDoNotSettle",
               "TestReturnSettlementOnceAndRetainedHistory",
+              "TestReturnSourceInvalidAndCauses",
               "TestReturnTransitionRejectsNonReturning",
               "TestSchedulerPollDueOrder",
               "TestSchedulerRunFiresWithinOneSecond",
