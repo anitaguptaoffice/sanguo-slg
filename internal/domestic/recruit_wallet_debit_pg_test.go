@@ -100,8 +100,11 @@ func TestPGRecruitDebit(t *testing.T) {
 			locked, err := w.Lock(ctx, access, 5)
 			must(t, err)
 			end(t, ctx, owner, commit)
-			if err = locked.Debit(ctx, access, Resources{Food: 1}); !errors.Is(err, recruittx.ErrInactive) {
-				t.Fatal("ended before first debit", commit, err)
+			// Owner end cancels its context, so cancellation can race with the
+			// ended-state check. Both errors must reject this unused handle.
+			// commit selects Commit or Rollback; Debit returns only an error.
+			if err = locked.Debit(ctx, access, Resources{Food: 1}); err == nil || (!errors.Is(err, recruittx.ErrInactive) && !errors.Is(err, context.Canceled)) {
+				t.Fatalf("ended before first debit (commit=%t): %v", commit, err)
 			}
 			if got, gold := wallet(t, ctx, b, nil, 5); got != (Resources{Food: 100, Wood: 90, Iron: 80, Stone: 70}) || gold != 9 {
 				t.Fatal(got, gold)
