@@ -43,7 +43,7 @@ func TestPGRecruitActorHintReadOnlyScopeAndIDs(t *testing.T) {
  (SELECT pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) ORDER BY account_id) FROM account x),
  (SELECT pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) ORDER BY server_id,player_id) FROM player x),
  (SELECT pg_catalog.jsonb_agg(pg_catalog.to_jsonb(x) ORDER BY session_id) FROM account_session x),
- (SELECT pg_catalog.to_jsonb(x) FROM account_account_id_seq x),
+ (SELECT pg_catalog.jsonb_build_array(last_value,log_cnt,is_called) FROM account_account_id_seq),
  pg_catalog.current_setting('search_path'),pg_catalog.current_setting('TimeZone'),pg_catalog.current_setting('DateStyle'),pg_catalog.current_setting('transaction_read_only'))`
 	var before, after []byte
 	actorOK(t, a.Scan(ctx, b, snapshot, nil, &before))
