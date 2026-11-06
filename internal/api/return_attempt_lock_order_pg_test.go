@@ -119,7 +119,7 @@ func (r *returnOrderPG) frozen(t *testing.T, pins, rows int) {
 			gotPins = append(gotPins, q.sql)
 		} else if strings.Contains(q.sql, " FROM "+pgx.Identifier{r.f.profile.SchemaName}.Sanitize()+".") {
 			// Sequence source validation is metadata, not business-row access.
-			if q.sql != "SELECT last_value,is_called FROM "+pgx.Identifier{r.f.profile.SchemaName, "work_queue_id_seq"}.Sanitize() {
+			if q.sql != "SELECT last_value,is_called FROM "+(pgx.Identifier{r.f.profile.SchemaName, "work_queue_id_seq"}).Sanitize() {
 				gotRows = append(gotRows, q.sql)
 			}
 		} else if strings.HasPrefix(q.sql, "UPDATE ") || strings.HasPrefix(q.sql, "INSERT ") || strings.HasPrefix(q.sql, "DELETE ") {
