@@ -8,8 +8,16 @@ import (
 
 func TestReturnBackendOwnershipFailClosed(t *testing.T) {
 	owner, sentinel := net.Pipe()
-	defer owner.Close()
-	defer sentinel.Close()
+	defer func() {
+		if err := owner.Close(); err != nil {
+			t.Errorf("close owned test pipe: %v", err)
+		}
+	}()
+	defer func() {
+		if err := sentinel.Close(); err != nil {
+			t.Errorf("close sentinel test pipe: %v", err)
+		}
+	}()
 	for _, b := range []*returnOwnedBackend{nil, {}, {transport: owner}, {pid: 1, transport: owner}, {pid: 1, started: "missing transport"}} {
 		if b.close() == nil {
 			t.Fatal("missing ownership accepted")
