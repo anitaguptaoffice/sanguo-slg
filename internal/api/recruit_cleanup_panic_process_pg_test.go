@@ -219,7 +219,7 @@ func TestPGRecruitGenerationConstructorCleanupPanic(t *testing.T) {
 	defer stop()
 	observer, err := pgx.Connect(clean, dsn)
 	returnLifetimeCheck(t, err == nil, "owned cleanup unverified: observer connection failed", err, childErr)
-	defer observer.Close(clean)
+	defer func() { returnPGOK(t, observer.Close(clean)) }()
 	complete := witnesses == 1 && evidence.Schema == owned.Schema && evidence.Original.same(owned.Original) &&
 		slices.EqualFunc(evidence.Spares, owned.Spares, recruitPanicBackend.same) && len(evidence.Spares) > 0 && evidence.Verified == recruitPanicComplete
 	failed := childErr != nil || ctx.Err() != nil || !complete || strings.Contains(string(output), "WARNING: DATA RACE") ||
