@@ -1,0 +1,288 @@
+name: March return PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  march-pg-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - name: Verify PostgreSQL 17 and host toolchain
+        shell: bash
+        run: |
+          go version
+          command -v psql
+          psql --version
+          version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
+      - name: Check pending-reader source formatting
+        shell: bash
+        run: |
+          files=$(gofmt -l internal/military/march/recruit_pending_read.go \
+            internal/military/march/recruit_prepare.go internal/military/march/recruit_pending_read_pg_test.go)
+          if [[ -n "$files" ]]; then
+            printf 'Unformatted MARCH source:\n%s\n' "$files"
+            exit 1
+          fi
+      - name: Run full MARCH regressions (ordinary and race)
+        shell: bash
+        run: |
+          for mode in ordinary race; do
+            flags=()
+            if [[ "$mode" == race ]]; then flags=(-race); fi
+            # Each mode owns a fresh database; PG fixtures isolate their schemas.
+            docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+              -v ON_ERROR_STOP=1 -c "CREATE DATABASE march_$mode"
+            log="$RUNNER_TEMP/march-$mode.json"
+            DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/march_$mode?sslmode=disable" \
+            go test ./internal/military/march "${flags[@]}" -count=1 -timeout=10m -json | tee "$log"
+            python3 - "$log" "$mode" <<'PY'
+          import json
+          import sys
+
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+          # Frozen #2105 inventory: all 157 existing and 4 new top-level tests,
+          # plus 19 Prepare and 12 new raw-reader validation scenarios.
+          expected = {
+              "TestArrivalWithoutReturnRetainsExistingPhase",
+              "TestConcurrentReturnSettlement",
+              "TestEffectiveMarchSpeedBottleneck",
+              "TestEnsureCityAndSnapshotsAreIsolated",
+              "TestFreshMilitaryBaseInvalidAndConstants",
+              "TestFreshMilitaryQueueInvalidAndConstants",
+              "TestFreshMilitaryRetainedInvalidAndConstants",
+              "TestFreshMilitarySourceInvalid",
+              "TestGridDistance",
+              "TestHubMarchArrivesOnSchedule",
+              "TestHubMarchCompetingDuplicateRequests",
+              "TestHubMarchDuplicateOverdraw",
+              "TestHubMarchValidStacksPreserveTimingAndCopy",
+              "TestHubRecruitSchedulerIntegration",
+              "TestInitializedCityInvalid",
+              "TestLegacyMarchDurationMatchesReferenceFormula",
+              "TestM1MarchDurationUsesChebyshevCalibration",
+              "TestMarchCreateValidation",
+              "TestMarchDurationScalesWithSpeed",
+              "TestMarchInvalidTroopsDoNotPublish",
+              "TestMarchPhaseMachine",
+              "TestMarchRestorePlanAndInstall",
+              "TestMarchRestoreRejects",
+              "TestMarchSequenceAuditArithmetic",
+              "TestNormalizeMarchTroops",
+              "TestPGApplyDueFailureRollback",
+              "TestPGApplyDueMixedCity",
+              "TestPGApplyDueOutcomes",
+              "TestPGApplyDueRejectsDrift",
+              "TestPGApplyDueWorldLock",
+              "TestPGApplyDueWorldOwner",
+              "TestPGDueKeysetAndApply",
+              "TestPGDueKeysetBlockedPages",
+              "TestPGDueRecruitsNoRowLock",
+              "TestPGFreshMilitaryBaseMetadataDrift",
+              "TestPGFreshMilitaryBaseSourceAndSettings",
+              "TestPGFreshMilitaryInitializeAtomic",
+              "TestPGFreshMilitaryInitializeInvalidProof",
+              "TestPGFreshMilitaryInitializeProofAliases",
+              "TestPGFreshMilitaryInitializeRejectsHistory",
+              "TestPGFreshMilitaryQueueMetadataDrift",
+              "TestPGFreshMilitaryQueueSourceAndSettings",
+              "TestPGFreshMilitaryRetainedMetadataDrift",
+              "TestPGFreshMilitaryRetainedSourceAndSettings",
+              "TestPGFreshMilitarySourcePinAndCopies",
+              "TestPGFreshMilitarySourceProfile",
+              "TestPGFreshMilitarySourceSequenceDrift",
+              "TestPGMarchArrivalCallerTransaction",
+              "TestPGMarchArrivalCanceledCleanup",
+              "TestPGMarchArrivalConcurrent",
+              "TestPGMarchArrivalFailpoints",
+              "TestPGMarchArrivalLockedStackContention",
+              "TestPGMarchArrivalNoBattleAndZeroBattle",
+              "TestPGMarchArrivalNoBattleEmpty",
+              "TestPGMarchArrivalPostReportFailure",
+              "TestPGMarchArrivalRejectsMissing",
+              "TestPGMarchArrivalRejectsNoBattleMismatch",
+              "TestPGMarchArrivalReplay",
+              "TestPGMarchArrivalSavepointLogicalFailures",
+              "TestPGMarchArrivalSequenceAudit",
+              "TestPGMarchArrivalSequenceDecoy",
+              "TestPGMarchArrivalStatusThreeNotReplayed",
+              "TestPGMarchRestore",
+              "TestPGMarchRestoreEmptyOnce",
+              "TestPGMarchStoreAccessAndProfile",
+              "TestPGMarchStoreCreate",
+              "TestPGMarchStoreFailures",
+              "TestPGMarchStoreRejectsNoRows",
+              "TestPGMarchStoreSequence",
+              "TestPGRecruitComplete",
+              "TestPGRecruitCompleteClockOnce",
+              "TestPGRecruitCompleteGuards",
+              "TestPGRecruitCompleteMilLock",
+              "TestPGRecruitCompleteOutcomes",
+              "TestPGRecruitCompleteSQLFailure",
+              "TestPGRecruitCompletionHint",
+              "TestPGRecruitCompletionReadRejects",
+              "TestPGRecruitDoneHistory",
+              "TestPGRecruitDoneHistoryChanged",
+              "TestPGRecruitHistory",
+              "TestPGRecruitHistoryLockOrder",
+              "TestPGRecruitKeyLookupFind",
+              "TestPGRecruitKeyLookupUnavailable",
+              "TestPGRecruitPendingReadAccess",
+              "TestPGRecruitPendingReadRawSnapshot",
+              "TestPGRecruitPendingReadRawSnapshot/complete_raw_set",
+              "TestPGRecruitPendingReadRawSnapshot/malformed_payload",
+              "TestPGRecruitPendingReadRawSnapshot/missing_evidence",
+              "TestPGRecruitPendingReadRawSnapshot/reserved_capacity",
+              "TestPGRecruitPendingReadRawSnapshot/valid",
+              "TestPGRecruitPendingReadRawSnapshot/wrong_owner",
+              "TestPGRecruitPendingReadRejects",
+              "TestPGRecruitPendingReadRejects/SQL_failure_after_stock",
+              "TestPGRecruitPendingReadRejects/extra_stock",
+              "TestPGRecruitPendingReadRejects/missing_marker",
+              "TestPGRecruitPendingReadRejects/missing_stock",
+              "TestPGRecruitPendingReadRejects/wrong_cohort",
+              "TestPGRecruitPendingReadRejects/wrong_owner",
+              "TestPGRecruitPendingReadRetainsLocks",
+              "TestPGRecruitPrepare",
+              "TestPGRecruitPrepareLockOrder",
+              "TestPGRecruitPrepareNoWriteAndTime",
+              "TestPGRecruitPrepareNoWriteAndTime/empty_pending",
+              "TestPGRecruitPrepareNoWriteAndTime/row_updates_detected",
+              "TestPGRecruitPrepareNoWriteAndTime/waiting_pending",
+              "TestPGRecruitPreparePendingAndRejects",
+              "TestPGRecruitPreparePendingAndRejects/capacity",
+              "TestPGRecruitPreparePendingAndRejects/catalog_version",
+              "TestPGRecruitPreparePendingAndRejects/live_start",
+              "TestPGRecruitPreparePendingAndRejects/marker_cohort",
+              "TestPGRecruitPreparePendingAndRejects/marker_owner",
+              "TestPGRecruitPreparePendingAndRejects/missing_marker",
+              "TestPGRecruitPreparePendingAndRejects/missing_receipt",
+              "TestPGRecruitPreparePendingAndRejects/origin_owner",
+              "TestPGRecruitPreparePendingAndRejects/receipt_city",
+              "TestPGRecruitPreparePendingAndRejects/receipt_digest",
+              "TestPGRecruitPreparePendingAndRejects/stock_extra",
+              "TestPGRecruitPreparePendingAndRejects/stock_missing",
+              "TestPGRecruitPreparePendingAndRejects/two_active",
+              "TestPGRecruitPreparePendingAndRejects/uint32_max_version",
+              "TestPGRecruitPreparePendingAndRejects/version_over_capacity",
+              "TestPGRecruitPreparePendingAndRejects/waiting_only",
+              "TestPGRecruitSourceCatalogAndProfileValidation",
+              "TestPGRecruitSourceExhaustionAndDrift",
+              "TestPGRecruitSourcePinsAndSnapshots",
+              "TestPGRecruitWrite",
+              "TestPGRecruitWriteCommit",
+              "TestPGRecruitWriteDriftCommit",
+              "TestPGRecruitWriteReceiptFailure",
+              "TestPGRecruitWriteRejects",
+              "TestPGRecruitWriteWaiting",
+              "TestPGRestoreSnapDetectsNoopWrite",
+              "TestPlanRecruitConcurrentReadOnly",
+              "TestPlanRecruitDefaults",
+              "TestPlanRecruitDurationBoundaries",
+              "TestPlanRecruitImmutable",
+              "TestPlanRecruitResourceBoundaries",
+              "TestPlanRecruitValidation",
+              "TestRecruitCanonicalTime",
+              "TestRecruitCatalogSnapshotAndHistory",
+              "TestRecruitCommitFailureConcurrentCompletion",
+              "TestRecruitCompletionDueAndNoEffect",
+              "TestRecruitCompletionFailClosed",
+              "TestRecruitCompletionReadEvidenceCommand",
+              "TestRecruitCompletionReadInvalidHandles",
+              "TestRecruitCompletionStoredDurationAndCapacity",
+              "TestRecruitDeductsAndCompletes",
+              "TestRecruitDueInputValidation",
+              "TestRecruitEvidenceCheckedPlan",
+              "TestRecruitFIFOQueue",
+              "TestRecruitHistoryAcceptanceCopies",
+              "TestRecruitHistoryEvolution",
+              "TestRecruitInsufficientResources",
+              "TestRecruitKeyLookupValidation",
+              "TestRecruitManifestDecodeBounds",
+              "TestRecruitManifestDecodeGolden",
+              "TestRecruitManifestDecodeOriginalTokens",
+              "TestRecruitManifestDecodeShape",
+              "TestRecruitPayloadArithmeticLimits",
+              "TestRecruitPayloadEvidence",
+              "TestRecruitPayloadOriginalJSON",
+              "TestRecruitPayloadRoundTrip",
+              "TestRecruitPendingAggregate",
+              "TestRecruitPendingRejectRows",
+              "TestRecruitPendingRejectStock",
+              "TestRecruitPendingValid",
+              "TestRecruitPrepareInvalidHandle",
+              "TestRecruitPrepareSingleClockSource",
+              "TestRecruitPrepareValidation",
+              "TestRecruitRuleGolden",
+              "TestRecruitRuleValidation",
+              "TestRecruitScheduleBounds",
+              "TestRecruitSchedulePlacement",
+              "TestRecruitSourceInvalid",
+              "TestRecruitWithWalletConcurrentAuthoritativeBalance",
+              "TestRecruitWithWalletFailureDoesNotPublish",
+              "TestRecruitWithWalletPreservesFIFO",
+              "TestRecruitWithWalletValidatesBeforeCommit",
+              "TestRecruitWriteInvalidHandles",
+              "TestRestoreActivationBarrier",
+              "TestRestoreEmptyOnce",
+              "TestRestoreOverdueArrivalKeepsRemainingReturn",
+              "TestReturnCreditMaxBoundaryAndEmptySurvivors",
+              "TestReturnCreditOverflowAfterValidRecruit",
+              "TestReturnCreditRejectsInvalidTotalsWithoutPartialMutation",
+              "TestReturnMissingPrerequisitesDoNotSettle",
+              "TestReturnSettlementOnceAndRetainedHistory",
+              "TestReturnTransitionRejectsNonReturning",
+              "TestSchedulerPollDueOrder",
+              "TestSchedulerRunFiresWithinOneSecond",
+              "TestSnapshotMarchConcurrentArrivalConsistency",
+              "TestSnapshotMarchCurrentTroopsAndIsolation",
+          }
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          bad = [
+              (event.get("Package"), event.get("Test"), event["Action"])
+              for event in events if event["Action"] in {"skip", "fail"}
+          ]
+          passed = {
+              event["Test"] for event in events
+              if event["Action"] == "pass" and event.get("Package") == package and event.get("Test")
+          }
+          package_pass = any(
+              event["Action"] == "pass" and event.get("Package") == package and not event.get("Test")
+              for event in events
+          )
+          missing = sorted(expected - passed)
+          if bad or missing or not package_pass:
+              raise SystemExit(f"MARCH PG gate failed: bad={bad}, missing={missing}, package_pass={package_pass}")
+          top_level = sum("/" not in name for name in passed)
+          print(f"{sys.argv[2]}: {top_level} top-level / {len(passed)} including subtests PASS; zero skips/failures")
+          print(f"Verified all {len(expected)} required MARCH tests/scenarios:")
+          print("\n".join(sorted(expected)))
+          PY
+          done
