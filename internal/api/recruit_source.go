@@ -30,6 +30,7 @@ type recruitGenerationState struct {
 	bundle            *recruitParticipants
 	phase             string
 	cause             error
+	attempts          map[*recruitAttempt]struct{}
 }
 type recruitParticipants struct {
 	actor    *account.RecruitActorGuard
