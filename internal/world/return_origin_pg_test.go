@@ -9,6 +9,15 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 )
 
+func rejectEndedReturnOrigin(t *testing.T, l *RecruitCityLocker, ctx context.Context, a *recruittx.Access, player, city int64) {
+	t.Helper()
+	got, err := l.LockReturnOrigin(ctx, a, player, city)
+	// Owner end cancels the lifetime; cancellation can win admission's gate check.
+	if got != (ReturnOrigin{}) || err == nil || (!errors.Is(err, recruittx.ErrInactive) && !errors.Is(err, context.Canceled)) {
+		t.Fatalf("ended origin=%+v error=%v want zero/ErrInactive or context.Canceled", got, err)
+	}
+}
+
 func TestPGReturnOriginValidationAndNoWrites(t *testing.T) {
 	pool, b, l := recruitCityFixture(t) // Quoted schema and mutated caller profile.
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -66,7 +75,7 @@ func TestPGReturnOriginValidationAndNoWrites(t *testing.T) {
 	if err := o.Commit(ctx); err != nil {
 		t.Fatal(err)
 	}
-	rejectReturnOrigin(t, l, ctx, &copyAccess, 7, 10, recruittx.ErrInactive)
+	rejectEndedReturnOrigin(t, l, ctx, &copyAccess, 7, 10)
 	if after := snapshot(); after != before {
 		t.Fatal("city/map rows or explicit sequence fields changed")
 	}
@@ -155,7 +164,7 @@ func TestPGReturnOriginWriterWaitsForEnd(t *testing.T) {
 			if err != nil {
 				t.Fatal("writer did not resume", err)
 			}
-			rejectReturnOrigin(t, l, ctx, a, 8, 10, recruittx.ErrInactive)
+			rejectEndedReturnOrigin(t, l, ctx, a, 8, 10)
 			_, fresh := sequenceOwner(t, b, ctx)
 			if err := l.Pin(ctx, fresh); err != nil {
 				t.Fatal(err)
