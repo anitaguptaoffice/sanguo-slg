@@ -1,9 +1,11 @@
 # SPEC-RETURN-CREDIT-001 — durable return credit
 
 Task [#2093](https://github.com/anitaguptaoffice/sanguo-slg/issues/2093).
-Status: **proposal for independent review, not implemented or activated**.
+Status: **independently reviewed proposal, not yet adopted.**
+Adoption takes effect only if and when PR #2094 is merged. No merge is claimed here.
+Not implemented or activated.
 Base: `aa6afe52d8372a396c45c82df3386da94097a80f`.
-This rules-only proposal selects the missing return-specific boundary for #1953.
+This rules-only contract selects the missing return-specific boundary for #1953.
 It adds no Go, wire route, schema, receipt table, migration or runtime flag.
 Approval of prose is not source enrollment, test execution or rollout permission.
 

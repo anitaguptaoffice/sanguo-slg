@@ -70,5 +70,5 @@ Startup and periodic scanner query only active type3 rows due by a canonical dis
 
 No new gameplay/protocol, schema alteration or live activation follows from approval of this prose. Follow-on SPEC receipt DDL, trusted rule evidence, transaction participant, complete integration and process-crash evidence remain explicit cards.
 
-The proposed [return-credit contract](MIL_RETURN_CREDIT.md) preserves accepted pending
+The [return-credit contract](MIL_RETURN_CREDIT.md) preserves accepted pending
 capacity. It does not yet certify any march/return writer or lift the fence above.
