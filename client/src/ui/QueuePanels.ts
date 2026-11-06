@@ -1,7 +1,11 @@
+import { BAG_USE_UNKNOWN, useBagItemWithAssets } from "@/net/bagUseAssets";
+import { beginAssetRead, refreshQuestAssets, QUEST_ASSETS_PENDING } from "@/net/questClaimAssets";
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
+import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
-import { applyUseResult, bagStackQuantity } from "@/net/bagState";
+import { bagStackQuantity } from "@/net/bagState";
 import {
   QUEUE_BUILD_COMPLETE_PULSE_MS,
   QUEUE_BUILD_SLOT_MUTUAL_HIGHLIGHT_CLASS,
@@ -156,6 +160,11 @@ export class QueuePanels {
   private recruits: RecruitQueueEntry[] = [];
   private tickAccum = 0;
   private speedupBusy = false;
+  private speedupReloadOwner: (() => boolean) | null = null;
+  private speedupOwner: (() => boolean) | null = null;
+  private lifecycleVersion = 0;
+  private cityReadVersion = 0;
+  private cityReadOwner: (() => boolean) | null = null;
   private readonly completedRecruitIds = new Set<number>();
   private highlightedBuildSlotKey: string | null = null;
   private highlightedRecruitQueueId: number | null = null;
@@ -204,6 +213,13 @@ export class QueuePanels {
   ) {}
 
   attach(): void {
+    ++this.lifecycleVersion;
+    ++this.cityReadVersion;
+    this.cityReadOwner = null;
+    this.speedupOwner = null;
+    this.speedupBusy = false;
+    this.buildListLoading = false;
+    this.buildListError = null;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
@@ -212,6 +228,11 @@ export class QueuePanels {
   }
 
   detach(): void {
+    ++this.lifecycleVersion;
+    ++this.cityReadVersion;
+    this.cityReadOwner = null;
+    this.speedupOwner = null;
+    this.speedupBusy = false;
     this.panel?.removeEventListener("keydown", this.onListKeyDown);
     this.focusTrap?.dispose();
     this.focusTrap = null;
@@ -921,6 +942,13 @@ export class QueuePanels {
   }
 
   private render(): void {
+    this.speedupBusy = this.speedupOwner?.() ?? false;
+    if (this.speedupReloadOwner && !this.speedupReloadOwner()) this.speedupReloadOwner = null;
+    if (this.cityReadOwner && !this.cityReadOwner()) {
+      this.cityReadOwner = null;
+      this.buildListLoading = false;
+      this.buildListError = null;
+    }
     const buildUl = this.panel.querySelector<HTMLElement>('[data-role="queue-build-list"]');
     const recruitUl = this.panel.querySelector('[data-role="queue-recruit-list"]');
     const overviewEl = this.panel.querySelector('[data-role="queue-overview"]');
@@ -994,7 +1022,7 @@ export class QueuePanels {
       this.militarySection.classList.add("hidden");
       return;
     }
-    const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy;
+    const speedupEnabled = this.canUseBuildSpeedup(now) && !this.speedupBusy && !this.speedupReloadOwner;
     const buildRows = sortBuildQueueRows(this.buildings(), now);
     const recruitLines = this.recruits.map((r) => formatRecruitQueueLine(r, now));
     const completeSlots = this.buildCompleteTodoSlots.filter(
@@ -1181,8 +1209,10 @@ export class QueuePanels {
   }
 
   private async checkRecruitCompletions(): Promise<void> {
+    const current = this.captureQueueContext();
     const now = Date.now();
     for (const entry of this.recruits) {
+      if (!current()) return;
       if (isRecruitQueueActive(entry, now)) continue;
       if (this.completedRecruitIds.has(entry.queue_id)) continue;
       this.completedRecruitIds.add(entry.queue_id);
@@ -1195,32 +1225,67 @@ export class QueuePanels {
     }
   }
 
-  private async refreshCityState(): Promise<void> {
+  private captureQueueContext(): () => boolean {
+    const actor = captureActor(this.gateway, this.getSession);
+    const version = this.lifecycleVersion;
+    const panel = this.panel;
+    return () => actor() && version === this.lifecycleVersion && this.panel === panel && panel?.parentElement === this.mount;
+  }
+
+  private async refreshCityState(reportSuccess = false): Promise<void> {
     const session = this.getSession();
-    if (!session) return;
+    const context = this.captureQueueContext();
+    if (!session || !context()) return;
+    const version = ++this.cityReadVersion;
+    const current = () => context() && version === this.cityReadVersion;
+    this.cityReadOwner = current;
     this.buildListLoading = true;
     this.buildListError = null;
     this.render();
+    const recovering = reportSuccess && !!this.speedupReloadOwner?.();
     try {
+      if (recovering) {
+        if (this.speedupOwner?.()) return;
+        if (!await refreshQuestAssets(this.gateway, this.getSession,
+          (patch) => Object.assign(this.getSession()!, patch), current)) return;
+        if (!current()) return;
+      }
+      const { bag, wallet } = this.getSession()!;
+      const freshAssets = beginAssetRead(this.gateway);
       const state = (await this.gateway.getCityState(session.cityId)) as {
         buildings?: CityBuilding[];
         wallet?: MainCitySession["wallet"];
         production_rates?: MainCitySession["productionRates"];
       };
+      if (!current()) return;
+      if (recovering && (!freshAssets() || this.getSession()?.bag !== bag || this.getSession()?.wallet !== wallet)) {
+        throw new Error(QUEST_ASSETS_PENDING);
+      }
+      if (recovering) this.speedupReloadOwner = null;
       if (state.buildings) session.buildings = state.buildings;
-      if (state.wallet) session.wallet = state.wallet;
+      if (state.wallet && freshAssets() && this.getSession()?.bag === bag && this.getSession()?.wallet === wallet) {
+        this.getSession()!.wallet = mergeCityResourceWallet(wallet, state.wallet);
+      }
       if (state.production_rates) session.productionRates = state.production_rates;
       this.onAfterCityRefresh();
+      if (reportSuccess && current()) this.setPanelStatus("已刷新内政状态");
     } catch (e) {
+      if (!current()) return;
       this.buildListError = formatPanelGatewayErrorFromUnknownForList("buildQueue", e);
       this.setPanelStatus(this.buildListError);
     } finally {
-      this.buildListLoading = false;
-      this.render();
+      if (current()) {
+        this.buildListLoading = false;
+        this.render();
+      }
     }
   }
 
   private async useBuildSpeedup(): Promise<void> {
+    if (this.speedupOwner?.() || this.speedupReloadOwner?.()) return;
+    const context = this.captureQueueContext();
+    const current = () => context() && this.speedupOwner === current;
+    if (!this.getSession() || !context()) return;
     const now = Date.now();
     if (!this.canUseBuildSpeedup(now)) {
       const msg =
@@ -1231,32 +1296,34 @@ export class QueuePanels {
       this.onStatus(msg);
       return;
     }
-    const sid = this.serverId();
     const itemId = BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID;
+    this.speedupOwner = current;
     this.speedupBusy = true;
     this.render();
     this.onStatus(`队列：${SPEEDUP_BUTTON_LABEL}…`);
     try {
-      const res = (await this.gateway.useConsumable(sid, itemId, 1)) as {
-        remaining?: number;
-        effect_summary?: string;
-        speedup_seconds?: number;
-      };
-      const session = this.getSession();
-      if (session) {
-        session.bag = applyUseResult(session.bag, itemId, res.remaining ?? 0);
-      }
+      const result = await useBagItemWithAssets(this.gateway, itemId, 1, this.getSession,
+        (patch) => Object.assign(this.getSession()!, patch), current);
+      if (!result || !current()) return;
+      this.speedupReloadOwner = result.synced ? null : context;
+      const res = result.response;
       const summary = formatUseConsumableEffectSummary(itemId, res);
       this.setPanelStatus(summary);
       this.onStatus(summary);
-      await this.refreshCityState();
+      if (result.synced) await this.refreshCityState();
+      else this.setPanelStatus(`${summary}；${QUEST_ASSETS_PENDING}，请刷新队列核对`);
     } catch (e) {
-      const msg = gatewayErrorMessage(e);
+      if (!current()) return;
+      this.speedupReloadOwner = context;
+      const msg = `${gatewayErrorMessage(e)}；${BAG_USE_UNKNOWN} 请刷新队列核对当前状态。`;
       this.setPanelStatus(msg);
       this.onStatus(msg);
     } finally {
-      this.speedupBusy = false;
-      this.render();
+      if (this.speedupOwner === current) {
+        this.speedupOwner = null;
+        this.speedupBusy = false;
+        if (context()) this.render();
+      }
     }
   }
 
@@ -1415,7 +1482,7 @@ export class QueuePanels {
     }
     const action = btn.getAttribute("data-action");
     if (action === "refresh-queue" || action === "retry-refresh-queue-build") {
-      void this.refreshCityState().then(() => this.setPanelStatus("已刷新内政状态"));
+      void this.refreshCityState(true);
     } else if (action === "speedup-build") {
       void this.useBuildSpeedup();
     } else if (action === "daily-build-next" || action === QUEUE_NEXT_FINISH_PREVIEW_ACTION) {

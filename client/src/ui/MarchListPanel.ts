@@ -1,5 +1,7 @@
+import { readMarchListSnapshot } from "@/net/marchListSnapshot";
 import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureActor } from "@/net/actorContext";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
 import {
@@ -79,7 +81,7 @@ import {
   handleListRovingKeyDown,
   syncListRovingTabindex,
 } from "@/ui/listRovingTabindex";
-import { findFirstMarchByDest } from "@/ui/worldMinimap";
+import { findFirstMarchByDest, WORLD_MAP_EDGE } from "@/ui/worldMinimap";
 import {
   formatMarchIntelSecondaryLine,
   MARCH_INTEL_TO_QUEUE_BANNER_ACTION,
@@ -165,6 +167,7 @@ export class MarchListPanel {
   ) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
+  private pendingIdReveal: { id: number; current: () => boolean } | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
   private manualDestFilter: { x: number; y: number } | null = null;
   private listFilter: MilitaryListFilterV1 = readMilitaryListFilterSession();
@@ -229,6 +232,7 @@ export class MarchListPanel {
 
   /** 世界城池列表点选时联动「世界选中格」筛选（客户端快照，无新 RPC）。 */
   syncWorldGridSelection(grid: { x: number; y: number } | null): void {
+    this.pendingIdReveal = null;
     if (grid != null) {
       this.destFilterMode = "world";
     } else if (this.destFilterMode === "world") {
@@ -240,6 +244,7 @@ export class MarchListPanel {
 
   /** @deprecated 使用 syncWorldGridSelection / setDestFilterMode */
   setDestFilter(x: number | null, y: number | null): void {
+    this.pendingIdReveal = null;
     if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
       this.destFilterMode = "all";
       this.manualDestFilter = null;
@@ -252,6 +257,7 @@ export class MarchListPanel {
   }
 
   setDestFilterMode(mode: MarchDestFilterMode): void {
+    this.pendingIdReveal = null;
     this.destFilterMode = mode;
     if (mode !== "manual") this.manualDestFilter = null;
     this.renderFilterControls();
@@ -274,6 +280,7 @@ export class MarchListPanel {
     destY: number,
     opts?: { preferWorldSelection?: boolean },
   ): void {
+    this.pendingIdReveal = null;
     if (!Number.isFinite(destX) || !Number.isFinite(destY)) return;
     const worldGrid = this.getWorldSelectedGrid?.() ?? null;
     const useWorld =
@@ -303,6 +310,7 @@ export class MarchListPanel {
   selectMarchByDest(destX: number, destY: number): boolean {
     const match = findFirstMarchByDest(this.marches, destX, destY);
     if (!match?.march_id) return false;
+    this.revealMarchFilters(match);
     this.setSelectedMarchId(match.march_id);
     if (!this.isOpen()) {
       openCenterPanel(this.panel);
@@ -312,18 +320,56 @@ export class MarchListPanel {
     return true;
   }
 
+  private revealMarchFilters(match: MarchSummary): void {
+    const dest = this.resolveDestFilter();
+    if ((dest && (dest.x !== match.to_x || dest.y !== match.to_y)) ||
+      (this.destFilterMode === "world" && !dest)) {
+      if (Number.isFinite(match.to_x) && Number.isFinite(match.to_y)) {
+        this.destFilterMode = "manual";
+        this.manualDestFilter = { x: match.to_x!, y: match.to_y! };
+      } else {
+        this.destFilterMode = "all";
+        this.manualDestFilter = null;
+      }
+    }
+    if (!applyMilitaryListClientFilters([match], this.listFilter, this.nowMs()).length) {
+      this.listFilter = { ...this.listFilter, phase: "all" };
+      writeMilitaryListFilterSession(this.listFilter);
+    }
+    this.renderFilterControls();
+  }
+
+  private resolvePendingIdReveal(): void {
+    const pending = this.pendingIdReveal;
+    if (!pending) return;
+    if (!pending.current()) { this.pendingIdReveal = null; return; }
+    const match = this.marches.find(m => m.march_id === pending.id);
+    if (!match) return; // Only an authoritative snapshot can supply the target.
+    this.revealMarchFilters(match);
+    this.setSelectedMarchId(pending.id); // Consumes this one-shot intent.
+  }
+
   selectMarchById(marchId: number | null, opts?: { openPanel?: boolean }): void {
-    if (opts?.openPanel && marchId != null && !this.isOpen()) {
-      syncMinimapMarchFocusSession(marchId);
-      this.selectedMarchId = marchId;
-      openCenterPanel(this.panel);
-      void this.refreshList();
-      this.startPoll();
-      const march = this.marches.find((m) => m.march_id === marchId) ?? null;
-      this.onSelectionChange?.(march);
+    this.pendingIdReveal = null;
+    if (!opts?.openPanel || marchId == null || !Number.isSafeInteger(marchId) || marchId <= 0) {
+      this.setSelectedMarchId(marchId);
       return;
     }
-    this.setSelectedMarchId(marchId);
+    const opening = !this.isOpen();
+    if (opening) openCenterPanel(this.panel);
+    const actor = captureActor(this.gateway, () => null);
+    const presentation = captureCenterPanelIntent(this.panel);
+    const mountGeneration = this.listMountGeneration, city = this.getCityId();
+    const pending = { id: marchId, current: () => actor() && presentation() &&
+      mountGeneration === this.listMountGeneration && city === this.getCityId() && this.isOpen() };
+    this.pendingIdReveal = pending;
+    this.setSelectedMarchId(marchId, true);
+    if (this.pendingIdReveal !== pending || !pending.current()) return;
+    this.resolvePendingIdReveal();
+    if (opening || this.pendingIdReveal) {
+      void this.refreshList();
+      this.startPoll();
+    }
   }
 
   private readonly onListKeyDownBound = (ev: KeyboardEvent): void => {
@@ -336,12 +382,16 @@ export class MarchListPanel {
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("change", (ev) => this.onFilterChange(ev));
+    this.panel.addEventListener("input", (ev) => {
+      if ((ev.target as HTMLElement).closest('[data-role="march-dest-filter"]')) this.pendingIdReveal = null;
+    });
     this.panel.addEventListener("keydown", this.onListKeyDownBound);
     this.renderFilterControls();
     this.mountFilterSkins();
   }
 
   detach(): void {
+    this.pendingIdReveal = null;
     this.listMountGeneration++;
     this.stopPoll();
     this.clearHighlightExpiryTimer();
@@ -389,6 +439,7 @@ export class MarchListPanel {
     marchId?: number | null,
     opts?: { march?: MarchSummary | null; toX?: number; toY?: number; openPanel?: boolean },
   ): void {
+    this.pendingIdReveal = null;
     const fallbackToX = opts?.toX ?? 0;
     const fallbackToY = opts?.toY ?? 0;
     if (marchId != null && marchId > 0) {
@@ -897,7 +948,8 @@ export class MarchListPanel {
     }
   }
 
-  private setSelectedMarchId(marchId: number | null): void {
+  private setSelectedMarchId(marchId: number | null, preserveIdReveal = false): void {
+    if (!preserveIdReveal) this.pendingIdReveal = null;
     syncMinimapMarchFocusSession(marchId);
     const nextHighlight = resolveMarchHighlightOnRowSelect(
       marchId,
@@ -932,10 +984,7 @@ export class MarchListPanel {
     const cityId = this.getCityId();
     const prevSnapshot = this.lastListSnapshot;
     try {
-      const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-        marches?: MarchSummary[];
-        total?: number;
-      };
+      const res = await readMarchListSnapshot(this.gateway, cityId, current);
       if (!current(true)) return;
       const nextMarches = res.marches ?? [];
       this.pendingPhaseChangePulseIds = detectMarchPhaseChange(prevSnapshot, nextMarches);
@@ -947,11 +996,12 @@ export class MarchListPanel {
       this.syncPollTimers();
     } catch (e) {
       if (!current()) return;
-      this.marches = [];
-      this.lastListSnapshot = [];
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
       this.stopPoll();
+      this.listLoading = false;
+      this.renderList();
+      return;
     } finally {
       if (generation === this.listRequestGeneration && !fresh()) {
         this.listLoading = false;
@@ -965,6 +1015,7 @@ export class MarchListPanel {
       this.selectedMarchId = null;
       this.onSelectionChange?.(null);
     }
+    this.resolvePendingIdReveal();
     this.syncHighlightFromSession();
     this.tryRestoreMinimapMarchFocus();
     this.onMarchesUpdated?.(this.marches);
@@ -981,6 +1032,7 @@ export class MarchListPanel {
     this.lastListSnapshot = marches.map(m => ({ ...m }));
     this.listLoading = false;
     this.listError = "";
+    this.resolvePendingIdReveal();
     this.applyMinimapMarchFocusRestore(marches);
     this.syncPollTimers();
     this.renderList();
@@ -1104,6 +1156,7 @@ export class MarchListPanel {
   }
 
   private setListFilter(next: MilitaryListFilterV1): void {
+    this.pendingIdReveal = null;
     if (
       next.phase === this.listFilter.phase &&
       next.etaSort === this.listFilter.etaSort
@@ -1243,11 +1296,15 @@ export class MarchListPanel {
     if (!btn) return;
     if (btn.getAttribute("data-action") === "refresh-marches") void this.refreshList();
     if (btn.getAttribute("data-action") === "apply-march-dest-filter") {
+      this.pendingIdReveal = null;
       const root = this.panel.querySelector('[data-role="march-dest-filter"]');
-      const x = Number((root?.querySelector('[data-field="filter-to-x"]') as HTMLInputElement)?.value);
-      const y = Number((root?.querySelector('[data-field="filter-to-y"]') as HTMLInputElement)?.value);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) {
-        this.onStatus("请输入有效的目的格点坐标");
+      const xRaw = (root?.querySelector('[data-field="filter-to-x"]') as HTMLInputElement)?.value.trim() ?? "";
+      const yRaw = (root?.querySelector('[data-field="filter-to-y"]') as HTMLInputElement)?.value.trim() ?? "";
+      const x = Number(xRaw);
+      const y = Number(yRaw);
+      if (!xRaw || !yRaw || !Number.isInteger(x) || !Number.isInteger(y) ||
+          x < 0 || y < 0 || x >= WORLD_MAP_EDGE || y >= WORLD_MAP_EDGE) {
+        this.onStatus(`请输入 0～${WORLD_MAP_EDGE - 1} 之间的整数目的格点坐标`);
         return;
       }
       this.destFilterMode = "manual";

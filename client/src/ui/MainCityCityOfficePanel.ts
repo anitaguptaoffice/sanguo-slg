@@ -18,6 +18,7 @@ export type MainCityCityOfficePanelHandlers = {
 
 export class MainCityCityOfficePanel {
   private section!: HTMLElement;
+  private selectionTouched = false;
   private phase: CityChiefSubmitPhase = "idle";
   private chief: CityChiefView | null = null;
   private heroes: HeroSummary[] = [];
@@ -26,6 +27,7 @@ export class MainCityCityOfficePanel {
   constructor(private readonly handlers: MainCityCityOfficePanelHandlers) {}
 
   mountInto(buildingPanelRoot: HTMLElement): void {
+    this.selectionTouched = false;
     const scroll = buildingPanelRoot.querySelector('[data-role="building-scroll"]');
     if (!scroll) return;
     this.section = document.createElement("div");
@@ -41,7 +43,13 @@ export class MainCityCityOfficePanel {
       '<p class="march-form-error-sibling hidden" data-role="city-chief-form-error" role="alert"></p>';
     scroll.insertBefore(this.section, scroll.firstChild);
     this.section.addEventListener("click", (ev) => this.onClick(ev));
-    this.section.addEventListener("change", () => this.setFormError(null));
+    this.section.addEventListener("change", (ev) => {
+      const select = ev.target as HTMLSelectElement;
+      if (select.dataset.role !== "city-chief-hero-select" || select.disabled) return;
+      this.selectionTouched = true;
+      this.setFormError(null);
+      this.render();
+    });
     this.render();
   }
 
@@ -50,6 +58,7 @@ export class MainCityCityOfficePanel {
     const show = slotKey === "hall";
     this.section.classList.toggle("hidden", !show);
     if (!show) this.setFormError(null);
+    else this.render();
   }
 
   setPhase(phase: CityChiefSubmitPhase): void {
@@ -115,7 +124,9 @@ export class MainCityCityOfficePanel {
       return;
     }
 
-    currentEl.textContent = formatCityChiefCurrentLine(this.chief, this.heroes);
+    currentEl.textContent = this.phase === "uncertain"
+      ? (this.chief ? `${formatCityChiefCurrentLine(this.chief, this.heroes)}（上次记录，待核实）` : "城主状态待核实")
+      : formatCityChiefCurrentLine(this.chief, this.heroes);
     bonusEl.textContent = formatCityChiefProductionBonusStub(this.chief);
     const prev = sel.value;
     sel.innerHTML = "";
@@ -135,8 +146,11 @@ export class MainCityCityOfficePanel {
       sel.appendChild(opt);
     }
     const chiefId = this.chief?.hero_id ?? 0;
-    if (chiefId > 0 && [...sel.options].some((o) => o.value === String(chiefId))) sel.value = String(chiefId);
-    else if (prev && [...sel.options].some((o) => o.value === prev)) sel.value = prev;
+    if (this.selectionTouched) {
+      sel.value = [...sel.options].some((o) => o.value === prev) ? prev : "";
+    } else if (chiefId > 0 && [...sel.options].some((o) => o.value === String(chiefId))) {
+      sel.value = String(chiefId);
+    }
 
     const selectedId = this.getSelectedHeroId();
     appointBtn.disabled = cityChiefAppointButtonDisabled(this.phase, selectedId, this.marchingHeroIds);

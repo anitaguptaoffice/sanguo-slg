@@ -2,9 +2,11 @@ package combat
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"reflect"
 	"strings"
 	"testing"
@@ -238,5 +240,87 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 				t.Fatal("restart replayed combat or wrote persistent return/city credit")
 			}
 		})
+	}
+}
+
+// The arrival process exits without deferred cleanup after acknowledged COMMIT.
+// Its successor has no shared Go memory, only the same isolated test database.
+func TestPGDurableResolverProcessRestart(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	now := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
+	if raw := os.Getenv("ARRIVAL_PROCESS_PROFILE"); raw != "" {
+		var profile freshsource.Profile
+		arrivalPGOK(t, json.Unmarshal([]byte(raw), &profile))
+		cfg, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
+		arrivalPGOK(t, err)
+		cfg.ConnConfig.RuntimeParams["search_path"] = pgx.Identifier{profile.SchemaName}.Sanitize()
+		pool, err := pgxpool.NewWithConfig(ctx, cfg)
+		arrivalPGOK(t, err)
+		defer pool.Close()
+		hub := march.NewHub(func() time.Time { return now })
+		service := report.NewService(report.NewPGStore(pool))
+		transition, err := march.NewMarchTransition(service, profile)
+		arrivalPGOK(t, err)
+		resolver := NewResolver(1, service, M2FixtureGarrisons(), nil)
+		arrivalPGOK(t, resolver.EnableDurableArrival(pool.BeginTx, transition))
+		calls := 0
+		hub.SetMarchArrivalHandler(func(ctx context.Context, ev march.MarchArrivalEvent) (march.MarchArrivalOutcome, error) {
+			calls++
+			return resolver.HubHandler()(ctx, ev)
+		})
+		restore, err := march.NewMarchRestore(ctx, pool, profile)
+		arrivalPGOK(t, err)
+		result, err := restore.Restore(ctx, hub)
+		arrivalPGOK(t, err)
+		if len(result.Marches) != 1 {
+			t.Fatal("missing live march")
+		}
+		arrivalPGOK(t, hub.ActivateRestore())
+		if os.Getenv("ARRIVAL_PROCESS_PHASE") == "commit" {
+			if hub.Tick() != 1 || calls != 1 || hub.MarchArrivalError(500) != nil || hub.March(500).Phase != march.PhaseReturning {
+				t.Fatal("arrival not committed")
+			}
+			os.Exit(17) // Deliberate abrupt process exit after commit; no pool cleanup.
+		}
+		order, troops := hub.SnapshotMarch(500)
+		var deadline time.Time
+		arrivalPGOK(t, pool.QueryRow(ctx, "SELECT return_finish_at FROM march_order WHERE march_id=500").Scan(&deadline))
+		if order.Phase != march.PhaseReturning || len(troops) == 0 || !order.ReturnFinishAt.Equal(deadline) || hub.Tick() != 0 || calls != 0 {
+			t.Fatal("new process lost frozen return or replayed arrival")
+		}
+		return
+	}
+	pool, observer, profile := arrivalPGFixture(t)
+	arrive := now.Add(-time.Second)
+	arrivalPGSQL(t, pool, `INSERT INTO city_troop VALUES(1,100,1,123,4); INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y,hero_ids) VALUES(1,500,7,2,0,0,'{11}'); INSERT INTO player_hero(server_id,hero_id,player_id,template_cfg_id,status) VALUES(1,11,7,1,3); INSERT INTO army_troop VALUES(1,500,1,2000)`)
+	arrivalPGSQL(t, pool, `INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,origin_city_id) VALUES(1,500,500,0,0,5,5,1,$1,$2,1,100)`, arrive.Add(-time.Hour), arrive)
+	raw, err := json.Marshal(profile)
+	arrivalPGOK(t, err)
+	stock := arrivalPGSnapshot(t, observer, "city_troop")
+	var committed string
+	for _, phase := range []string{"commit", "restore"} {
+		cmd := exec.CommandContext(ctx, os.Args[0], "-test.run=^TestPGDurableResolverProcessRestart$", "-test.v")
+		cmd.Env = append(os.Environ(), "ARRIVAL_PROCESS_PROFILE="+string(raw), "ARRIVAL_PROCESS_PHASE="+phase, "GORACE=halt_on_error=1 exitcode=66 log_path=stderr")
+		out, err := cmd.CombinedOutput()
+		t.Logf("%s child output: %s", phase, out)
+		if strings.Contains(string(out), "WARNING: DATA RACE") {
+			t.Fatalf("child race detected: %s", out)
+		}
+		if cmd.ProcessState != nil {
+			t.Logf("%s child pid=%d parent pid=%d", phase, cmd.ProcessState.Pid(), os.Getpid())
+		}
+		if phase == "commit" {
+			var exit *exec.ExitError
+			if !errors.As(err, &exit) || exit.ExitCode() != 17 {
+				t.Fatalf("commit process: %v %s", err, out)
+			}
+			committed = arrivalPGSnapshot(t, observer, "march_order", "field_army", "army_troop", "battle_report")
+		} else if err != nil || arrivalPGSnapshot(t, observer, "march_order", "field_army", "army_troop", "battle_report") != committed {
+			t.Fatalf("restore process changed committed state: %v %s", err, out)
+		}
+		if arrivalPGSnapshot(t, observer, "city_troop") != stock {
+			t.Fatal("process restart changed persistent city stock")
+		}
 	}
 }

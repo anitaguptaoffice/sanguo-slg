@@ -214,7 +214,7 @@ describe("DailyQuestPanels", () => {
         granted_rewards: { resources: { gold: 75 }, items: [{ item_cfg_id: 2001, quantity: 1 }] },
       }),
       listPlayerBag: vi.fn().mockResolvedValue({ items: [{ item_cfg_id: 2001, quantity: 3 }] }),
-      getCityState: vi.fn().mockResolvedValue({ wallet: { food: 9000, gold: 75 } }),
+      getCityState: vi.fn().mockResolvedValue({ wallet: { food: 9000, gold: 0 } }),
       getBoundServerId: () => 1,
     } as unknown as GatewayPort;
     const session: MainCitySession = {
@@ -244,7 +244,7 @@ describe("DailyQuestPanels", () => {
     expect(gateway.claimQuestReward).toHaveBeenCalledWith(1, 1012);
     expect(patched?.bag).toEqual([{ item_cfg_id: 2001, quantity: 3 }]);
     expect(patched?.wallet?.food).toBe(9000);
-    expect(patched?.wallet?.gold).toBe(75);
+    expect(patched?.wallet?.gold).toBe(10); // City state cannot reconcile the gold reward.
     const row = mount.querySelector('li[data-quest-cfg-id="1012"]');
     expect(row?.classList.contains("daily-quest-claimable")).toBe(true);
   });

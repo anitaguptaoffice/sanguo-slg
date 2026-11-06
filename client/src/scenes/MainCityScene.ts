@@ -1,3 +1,5 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
+import { readMarchListSnapshot } from "@/net/marchListSnapshot";
 import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
 import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel, captureCenterPanelIntent } from "@/ui/centerPanelForeground";
@@ -81,6 +83,7 @@ import {
   formatTroopStacks,
   marchNeedsPoll,
   MARCH_LIST_REMAINING_TICK_MS,
+  MARCH_PHASE_RETURNED,
   mergeCityTroops,
   unitLabel,
   type BattleReportSummary,
@@ -393,6 +396,7 @@ import {
   formatCityChiefGatewayError,
   heroIdsOnActiveMarch,
   loadCityOfficeBundle,
+  parseCityChiefView,
   runClearCityChief,
   runSetCityChief,
 } from "@/net/cityChiefOffice";
@@ -450,6 +454,8 @@ export class MainCityScene implements Scene {
   private marchSubmitState: MarchSubmitState = "idle";
   private marchFormHeroes: MarchHeroRow[] = [];
   private marchLocalBusyHeroIds = new Set<number>();
+  private marchLocalHeroOrders = new Map<number, number>();
+  private marchHeroActor: (() => boolean) | null = null;
   private marchHeroListLoading = false;
   private marchFormIntelScrollContext: ScrollIntelRowForMarchFormContext = {
     preferredMarchId: null,
@@ -457,6 +463,8 @@ export class MainCityScene implements Scene {
     toY: null,
   };
   private buildSubmitState: BuildSubmitState = "idle";
+  private buildSubmitOwner: (() => boolean) | null = null;
+  private recruitSubmitOwner: (() => boolean) | null = null;
   private recruitTroopSubmitState: RecruitTroopSubmitState = "idle";
   /** 募兵队列↔军事互跳高亮 queue_id（CLIENT-157，与 session 同步）。 */
   private recruitQueueHighlightId: number | null = null;
@@ -476,6 +484,7 @@ export class MainCityScene implements Scene {
   private domesticSlotStrip!: MainCityDomesticSlotStrip;
   private buildingPanel!: MainCityBuildingPanel;
   private cityOfficePanel!: MainCityCityOfficePanel;
+  private cityOfficeContext?: { current: () => boolean; version: number; busy: boolean; uncertain: boolean };
   private activeDomesticSlotKey: string | null = null;
   private slotOverlayRefreshAccum = 0;
   private assets!: AssetLoader;
@@ -551,6 +560,11 @@ export class MainCityScene implements Scene {
 
   async enter(ctx: SceneContext, data?: unknown): Promise<void> {
     this.marchSnapshotGeneration++;
+    this.buildSubmitOwner = null;
+    this.buildSubmitState = "idle";
+    this.recruitSubmitOwner = null;
+    this.recruitTroopSubmitState = "idle";
+    this.resetMarchHeroTracking();
     this.assets = ctx.assets;
     this.getViewport = ctx.getViewport;
     this.canvas = ctx.canvas;
@@ -588,12 +602,7 @@ export class MainCityScene implements Scene {
     });
     this.marchArrivalPoll = new MarchArrivalPoll({
       getCityId: () => this.session?.cityId,
-      listMarches: async (cityId) => {
-        const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-          marches?: MarchSummary[];
-        };
-        return res.marches ?? [];
-      },
+      listMarches: (cityId) => this.readMarchesForArrival(cityId),
       onCompletions: (reminders) => this.applyMarchArrivalHudReminders(reminders),
     });
     skinHudBar(this.hud, this.assets);
@@ -958,7 +967,7 @@ export class MainCityScene implements Scene {
       {
         marchFormRoot: this.militaryPanel,
         onFilled: (x, y) => {
-          openCenterPanel(this.militaryPanel);
+          this.openMilitaryPanel();
           setMarchTargetFieldHighlight(this.militaryPanel, false);
           this.renderHud();
           this.syncMilitaryPanel();
@@ -1274,6 +1283,11 @@ export class MainCityScene implements Scene {
 
   leave(): void {
     this.marchSnapshotGeneration++;
+    this.buildSubmitOwner = null;
+    this.buildSubmitState = "idle";
+    this.recruitSubmitOwner = null;
+    this.recruitTroopSubmitState = "idle";
+    this.resetMarchHeroTracking();
     this.cityStateFetch?.clear();
     this.hudTodoBadgePoll?.reset();
     this.chatUnreadPoll?.reset();
@@ -1330,7 +1344,7 @@ export class MainCityScene implements Scene {
       case "train_troops":
         this.queuePanels.open();
         this.queuePanels.flashDailyQueueAnchorHighlight(queueAnchorTarget);
-        openCenterPanel(this.militaryPanel);
+        this.openMilitaryPanel();
         this.syncMilitaryPanel();
         this.status = "已打开「队列」与「军事」募兵（练兵日常 QUEST-003）";
         break;
@@ -1645,7 +1659,7 @@ export class MainCityScene implements Scene {
     const layoutFrame = document.getElementById("layout-frame");
     openMilitaryQueueBannerAndHighlight(marchId, {
       openMilitaryPanel: () => {
-        openCenterPanel(this.militaryPanel);
+        this.openMilitaryPanel();
         resetCenterPanelViewportScroll(this.militaryPanel);
       },
       highlightMilitaryBanner: (jump) => {
@@ -1666,7 +1680,7 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
     const prefill = prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper(
@@ -1845,7 +1859,7 @@ export class MainCityScene implements Scene {
     if (!target) return;
     writeRecruitHighlightQueueSession(target.queue_id);
     this.recruitQueueHighlightId = target.queue_id;
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     applyRecruitQueueJumpToMilitaryPanel(this.militaryPanel, target);
     this.queuePanels.highlightRecruitQueue(target.queue_id);
@@ -2218,60 +2232,84 @@ export class MainCityScene implements Scene {
     if (showHall) void this.refreshCityOfficePanel();
   }
 
+  private getCityOfficeContext() {
+    if (!this.cityOfficeContext?.current()) {
+      const actor = captureActor(this.gateway, () => this.session);
+      const generation = this.marchSnapshotGeneration;
+      const panel = this.cityOfficePanel;
+      const context = { current: (): boolean => this.cityOfficeContext === context &&
+        actor() && panel === this.cityOfficePanel && generation === this.marchSnapshotGeneration,
+        version: 0, busy: false, uncertain: false };
+      this.cityOfficeContext = context;
+    }
+    return this.cityOfficeContext;
+  }
+
   private async refreshCityOfficePanel(): Promise<void> {
     const session = this.session;
     if (!session?.cityId || !this.cityOfficePanel) return;
+    const context = this.getCityOfficeContext();
+    if (context.busy) return;
+    const version = ++context.version;
+    const current = () => context.current() && context.version === version;
     this.cityOfficePanel.setPhase("loading");
     this.cityOfficePanel.setFormError(null);
     try {
-      const bundle = await loadCityOfficeBundle(
-        this.gateway,
-        session.serverId,
-        session.cityId,
-        this.minimapMarches,
-      );
+      const bundle = await loadCityOfficeBundle(this.gateway, session.serverId, session.cityId, this.minimapMarches);
+      if (!current()) return;
+      context.uncertain = false;
       this.cityOfficePanel.setMarchingHeroIds(bundle.marchingHeroIds);
       this.cityOfficePanel.setHeroes(bundle.heroes);
       this.cityOfficePanel.setChiefView(bundle.chief);
     } catch (e) {
-      this.cityOfficePanel.setFormError(formatCityChiefGatewayError(e));
+      if (!current()) return;
+      context.uncertain = true;
+      this.cityOfficePanel.setFormError(`${formatCityChiefGatewayError(e)}；状态待核实，请重新打开官府刷新`);
     } finally {
-      this.cityOfficePanel.setPhase("idle");
+      if (current()) this.cityOfficePanel.setPhase(context.uncertain ? "uncertain" : "idle");
     }
   }
 
   private async appointCityChief(heroId: number): Promise<void> {
-    const session = this.session;
-    if (!session?.cityId || heroId <= 0 || !this.cityOfficePanel) return;
-    this.cityOfficePanel.setPhase("appointing");
-    this.cityOfficePanel.setFormError(null);
-    const { chief, error } = await runSetCityChief(
-      this.gateway,
-      session.serverId,
-      session.cityId,
-      heroId,
-    );
-    this.cityOfficePanel.setChiefView(chief);
-    if (error) this.cityOfficePanel.setFormError(error);
-    else this.status = "城主已任命";
-    this.cityOfficePanel.setPhase("idle");
-    this.renderHud();
+    if (heroId > 0) await this.submitCityChief(heroId);
   }
 
   private async clearCityChief(): Promise<void> {
+    await this.submitCityChief(null);
+  }
+
+  private async submitCityChief(heroId: number | null): Promise<void> {
     const session = this.session;
     if (!session?.cityId || !this.cityOfficePanel) return;
-    this.cityOfficePanel.setPhase("clearing");
+    const context = this.getCityOfficeContext();
+    if (context.busy || context.uncertain) return;
+    context.busy = true;
+    const version = ++context.version;
+    const current = () => context.current() && context.version === version;
+    this.cityOfficePanel.setPhase(heroId === null ? "clearing" : "appointing");
     this.cityOfficePanel.setFormError(null);
-    const { chief, error } = await runClearCityChief(
-      this.gateway,
-      session.serverId,
-      session.cityId,
-    );
-    this.cityOfficePanel.setChiefView(chief);
-    if (error) this.cityOfficePanel.setFormError(error);
-    else this.status = "城主已卸任";
-    this.cityOfficePanel.setPhase("idle");
+    const { chief, error } = heroId === null
+      ? await runClearCityChief(this.gateway, session.serverId, session.cityId)
+      : await runSetCityChief(this.gateway, session.serverId, session.cityId, heroId);
+    if (!current()) return;
+    if (chief) this.cityOfficePanel.setChiefView(chief);
+    if (error) {
+      // An error can follow a committed/partial mutation. Never replay it or infer vacancy.
+      context.uncertain = true;
+      try {
+        const recovered = await this.gateway.getCityChief(session.serverId, session.cityId);
+        if (!current()) return;
+        this.cityOfficePanel.setChiefView(parseCityChiefView(recovered));
+        context.uncertain = false;
+      } catch {
+        if (!current()) return;
+      }
+      this.cityOfficePanel.setFormError(error + (context.uncertain
+        ? "；结果待核实，请重新打开官府刷新，勿重复提交"
+        : "；已重新读取当前城主状态"));
+    } else this.status = heroId === null ? "城主已卸任" : "城主已任命";
+    context.busy = false;
+    this.cityOfficePanel.setPhase(context.uncertain ? "uncertain" : "idle");
     this.renderHud();
   }
 
@@ -2357,7 +2395,7 @@ export class MainCityScene implements Scene {
     }
     this.world?.selectGridAt(world.wx, world.wy, { source: "minimap" });
     this.focusMinimapOnWorldGrid(world.wx, world.wy);
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
     this.syncMilitaryPanel();
@@ -2373,6 +2411,13 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private async readMarchesForArrival(cityId: number | undefined): Promise<MarchSummary[]> {
+    const generation = this.marchSnapshotGeneration;
+    const res = await readMarchListSnapshot(this.gateway, cityId,
+      () => this.session?.cityId === cityId && this.marchSnapshotGeneration === generation);
+    return res.marches;
+  }
+
   private async refreshMinimapMarches(): Promise<void> {
     const cityId = this.session?.cityId;
     if (!cityId) return;
@@ -2380,9 +2425,8 @@ export class MainCityScene implements Scene {
     const actor = captureActor(this.gateway, () => this.session);
     const generation = this.marchSnapshotGeneration;
     try {
-      const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-        marches?: MarchSummary[];
-      };
+      const res = await readMarchListSnapshot(this.gateway, cityId,
+        () => actor() && generation === this.marchSnapshotGeneration && current());
       if (!actor() || generation !== this.marchSnapshotGeneration || !current(true)) return;
       const marches = res.marches ?? [];
       this.marchList?.syncMinimapMarchFocusFromSnapshot(marches);
@@ -2392,7 +2436,38 @@ export class MainCityScene implements Scene {
     }
   }
 
+  private resetMarchHeroTracking(): void {
+    this.marchLocalBusyHeroIds = new Set();
+    this.marchLocalHeroOrders = new Map();
+    this.marchFormHeroes = [];
+    this.marchHeroListLoading = false;
+    this.marchHeroActor = null;
+    this.marchSubmitState = "idle";
+  }
+
+  private ensureMarchHeroActor(): void {
+    if (this.marchHeroActor && !this.marchHeroActor()) this.resetMarchHeroTracking();
+    this.marchHeroActor ??= captureActor(this.gateway, () => this.session);
+    this.marchLocalHeroOrders ??= new Map();
+  }
+
+  private reconcileReturnedMarchHeroes(marches: MarchSummary[]): void {
+    this.ensureMarchHeroActor();
+    let changed = false;
+    for (const [heroId, marchId] of this.marchLocalHeroOrders) {
+      const matching = marches.filter(m => m.march_id === marchId);
+      if (!matching.length || matching.some(m => m.phase !== MARCH_PHASE_RETURNED)) continue;
+      this.marchLocalHeroOrders.delete(heroId);
+      this.marchLocalBusyHeroIds.delete(heroId);
+      this.marchFormHeroes = this.marchFormHeroes.map(h => h.hero_id === heroId && h.status === HERO_STATUS_MARCH
+        ? { ...h, status: 0 } : h); // Remove our synthetic busy hint, never invent authoritative idle.
+      changed = true;
+    }
+    if (changed) syncMarchHeroSelect(this.militaryPanel, this.marchFormHeroes, this.marchLocalBusyHeroIds);
+  }
+
   private applyMarchesSnapshot(marches: MarchSummary[]): void {
+    this.reconcileReturnedMarchHeroes(marches);
     this.minimapMarches = marches;
     const lastId = this.lastMarch?.march_id;
     const last = lastId != null ? marches.find(m => m.march_id === lastId) : undefined;
@@ -2408,12 +2483,13 @@ export class MainCityScene implements Scene {
     }
   }
 
-  private async syncSessionCityCoords(): Promise<void> {
+  private async syncSessionCityCoords(current: () => boolean = () => true): Promise<void> {
     if (!this.session) return;
     try {
       const list = (await this.gateway.listPlayerCities()) as {
         cities?: { city_id?: number; x?: number; y?: number }[];
       };
+      if (!current()) return;
       const city = list.cities?.find((c) => c.city_id === this.session?.cityId);
       if (city) {
         this.session.cityX = city.x ?? this.session.cityX;
@@ -2481,7 +2557,7 @@ export class MainCityScene implements Scene {
       this.hudTodoBadgePoll?.recomputeToolbarCounts();
       this.renderHud();
     }
-    const afterWallet = state.wallet ?? this.session.wallet;
+    const afterWallet = mergeCityResourceWallet(this.session.wallet, state.wallet);
     this.patchSession(
       {
         ...garrisonPatch(this.session, state.garrison),
@@ -2850,7 +2926,7 @@ export class MainCityScene implements Scene {
         .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
         .then(() => this.renderHud());
     } else if (panel === "military") {
-      openCenterPanel(this.militaryPanel);
+      this.openMilitaryPanel();
       resetCenterPanelViewportScroll(this.militaryPanel);
       this.syncMilitaryPanel();
     }
@@ -3079,8 +3155,8 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
-  private async refreshState(): Promise<void> {
-    if (!this.session) return;
+  private async refreshState(current: () => boolean = () => true): Promise<void> {
+    if (!this.session || !current()) return;
     const session = this.session;
     this.status = "刷新中…";
     this.renderHud();
@@ -3091,14 +3167,17 @@ export class MainCityScene implements Scene {
         production_rates?: ResourceWallet;
         garrison?: unknown;
       } | null;
-      if (this.session !== session) return;
+      if (this.session !== session || !current()) return;
       if (state) {
         this.applyCityStateFromFetch(state);
       }
-      await this.syncSessionCityCoords();
+      await this.syncSessionCityCoords(current);
+      if (!current()) return;
       await this.refreshMinimapMarches();
+      if (!current()) return;
       this.status = "已刷新";
     } catch (e) {
+      if (!current()) return;
       this.status = (e as Error).message;
     }
     this.renderHud();
@@ -3111,6 +3190,14 @@ export class MainCityScene implements Scene {
 
   private async startBuildingUpgrade(slotKey: string, buildingCfgId: number): Promise<void> {
     if (!this.session) return;
+    if (this.buildSubmitOwner?.()) return;
+    const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => this.buildSubmitOwner === current && this.session === session &&
+      actor() && generation === this.marchSnapshotGeneration;
+    this.buildSubmitOwner = current;
+    this.buildSubmitState = "idle";
     const building = buildingBySlot(this.session.buildings, slotKey);
     const level = building?.level ?? 0;
     const preview = previewUpgradeCost(slotKey, level, this.session.wallet);
@@ -3129,7 +3216,8 @@ export class MainCityScene implements Scene {
         wallet?: ResourceWallet;
         building?: CityBuilding;
       };
-      if (res.wallet) this.session.wallet = res.wallet;
+      if (!current()) return;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
       const walletAfter = this.session.wallet;
       const pulseKeys = walletBuildDeductPulseKeys(walletBefore, walletAfter, preview?.cost);
       if (pulseKeys.length) scheduleHudResourcePulse(this.hud, pulseKeys);
@@ -3138,22 +3226,26 @@ export class MainCityScene implements Scene {
         if (idx >= 0) this.session.buildings[idx] = res.building;
         else this.session.buildings.push(res.building);
       }
+      await this.refreshState(current);
+      if (!current()) return;
       this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "SUCCESS" });
-      await this.refreshState();
       this.status = formatBuildSubmitSuccess(slotKey, targetLevel, SLOT_LABEL);
       this.buildingPanel.sync();
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.buildSubmitState = buildSubmitStateMachine(this.buildSubmitState, { type: "FAIL" });
       this.buildingPanel.setFormError(msg);
       this.status = msg;
       this.buildingPanel.sync();
+    } finally {
+      if (this.buildSubmitOwner === current) this.buildSubmitOwner = null;
     }
     this.renderHud();
   }
 
   private async recruit(): Promise<void> {
-    if (!this.session) return;
+    if (!this.session || this.recruitSubmitOwner?.()) return;
     const preview = syncTroopRecruitFormPreview(this.militaryPanel, this.session.wallet);
     if (!preview?.canAfford) {
       setTroopRecruitFormError(this.militaryPanel, preview?.insufficientHint ?? "资源不足");
@@ -3161,6 +3253,13 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
+    const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => this.recruitSubmitOwner === current && this.session === session &&
+      actor() && generation === this.marchSnapshotGeneration;
+    this.recruitSubmitOwner = current;
+    this.recruitTroopSubmitState = "idle";
     const unitCfgId = preview.troopCfgId;
     const count = preview.qty;
     const walletBefore = this.session.wallet;
@@ -3170,7 +3269,6 @@ export class MainCityScene implements Scene {
     });
     this.syncMilitaryPanel();
     this.renderHud();
-    const session = this.session;
     this.cityStateFetch.clear();
     let pulseQueueId: number | null = null;
     try {
@@ -3180,9 +3278,9 @@ export class MainCityScene implements Scene {
         queue_id?: number;
         finish_at_ms?: number;
       };
-      if (this.session !== session) return;
+      if (!current()) return;
       this.cityStateFetch.clear();
-      if (res.wallet) this.session.wallet = res.wallet;
+      if (res.wallet) this.session.wallet = mergeCityResourceWallet(this.session.wallet, res.wallet);
       const pulseKeys = walletRecruitTroopDeductPulseKeys(
         walletBefore,
         this.session.wallet,
@@ -3212,12 +3310,15 @@ export class MainCityScene implements Scene {
         }
       }
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.recruitTroopSubmitState = recruitTroopSubmitStateMachine(this.recruitTroopSubmitState, {
         type: "FAIL",
       });
       setTroopRecruitFormError(this.militaryPanel, msg);
       this.status = msg;
+    } finally {
+      if (this.recruitSubmitOwner === current) this.recruitSubmitOwner = null;
     }
     this.renderHud();
     this.syncMilitaryPanel();
@@ -3229,26 +3330,41 @@ export class MainCityScene implements Scene {
     }
   }
 
+  /** Every explicit entry refreshes the roster; never poll from render/sync. */
+  private openMilitaryPanel(): void {
+    openCenterPanel(this.militaryPanel);
+    void this.refreshMarchFormHeroes();
+  }
+
   private async refreshMarchFormHeroes(): Promise<void> {
+    this.ensureMarchHeroActor();
     if (!this.session || this.marchHeroListLoading) return;
     const sid = this.session.serverId ?? this.gateway.getBoundServerId() ?? 0;
     if (sid <= 0) return;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => actor() && generation === this.marchSnapshotGeneration;
     this.marchHeroListLoading = true;
     try {
       const res = (await this.gateway.listPlayerHeroes(sid)) as {
         heroes?: MarchHeroRow[];
       };
+      if (!current()) return;
       this.marchFormHeroes = mapListPlayerHeroesForMarch(res.heroes);
       const fromStatus = collectMarchBusyHeroIdsFromStatus(this.marchFormHeroes);
       for (const id of fromStatus) this.marchLocalBusyHeroIds.add(id);
       for (const h of this.marchFormHeroes) {
         const id = h.hero_id ?? 0;
-        if (id > 0 && (h.status ?? 0) === 1) this.marchLocalBusyHeroIds.delete(id);
+        if (id > 0 && (h.status ?? 0) === 1) {
+          this.marchLocalBusyHeroIds.delete(id);
+          this.marchLocalHeroOrders.delete(id);
+        }
       }
       syncMarchHeroSelect(this.militaryPanel, this.marchFormHeroes, this.marchLocalBusyHeroIds);
     } catch {
       // 保留上次列表；出征仍可由网关报错兜底
     } finally {
+      if (!current()) return;
       this.marchHeroListLoading = false;
       this.syncMilitaryPanel();
     }
@@ -3256,6 +3372,7 @@ export class MainCityScene implements Scene {
 
   private async startMarch(): Promise<void> {
     if (!this.session) return;
+    this.ensureMarchHeroActor();
     const validated = validateMarchForm({
       toXRaw: (this.field("to-x") as HTMLInputElement)?.value ?? "",
       toYRaw: (this.field("to-y") as HTMLInputElement)?.value ?? "",
@@ -3274,6 +3391,9 @@ export class MainCityScene implements Scene {
     }
     const { toX, toY, marchCount, heroId } = validated;
     const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => actor() && generation === this.marchSnapshotGeneration;
     this.cityStateFetch.clear();
     const presentMarchResult = captureCenterPanelIntent(this.militaryPanel);
     setMarchFormErrorDisplay(this.militaryPanel, null);
@@ -3290,9 +3410,11 @@ export class MainCityScene implements Scene {
         heroId,
         troops.map((t) => ({ unit_cfg_id: t.unit_cfg_id ?? 1, count: t.count ?? 0 })),
       )) as { march?: MarchSummary; city_troops?: CityTroopStack[] };
-      if (this.session !== session) return;
+      if (this.session !== session || !current()) return;
       this.cityStateFetch.clear();
       this.marchLocalBusyHeroIds.add(heroId);
+      const marchId = res.march?.march_id;
+      if (marchId != null && Number.isSafeInteger(marchId) && marchId > 0) this.marchLocalHeroOrders.set(heroId, marchId);
       this.marchFormHeroes = this.marchFormHeroes.map((h) =>
         h.hero_id === heroId ? { ...h, status: HERO_STATUS_MARCH } : h,
       );
@@ -3325,13 +3447,14 @@ export class MainCityScene implements Scene {
       void this.refreshMinimapMarches();
       await this.refreshState();
     } catch (e) {
-      if (this.session !== session) return;
+      if (this.session !== session || !current()) return;
       this.cityStateFetch.clear();
       this.session.garrisonStatus = "stale";
       const msg = formatPanelGatewayErrorFromUnknown("march", e);
       setMarchFormErrorDisplay(this.militaryPanel, msg);
       this.status = msg;
     } finally {
+      if (!current()) return;
       this.marchSubmitState = marchSubmitStateMachine(this.marchSubmitState, { type: "SETTLE" });
     }
     this.renderHud();

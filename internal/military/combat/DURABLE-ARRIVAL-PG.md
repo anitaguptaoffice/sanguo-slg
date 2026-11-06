@@ -21,8 +21,8 @@ are allowed by PostgreSQL and are not mistaken for partial row commits.
 Run from the repository root with Go >=1.23 and the owned PG17 URL exported:
 
 ```sh
-go test -count=1 -v ./internal/military/combat -run '^TestPGDurableResolverHubRestore$'
-go test -race -count=1 -v ./internal/military/combat -run '^TestPGDurableResolverHubRestore$'
+go test -count=1 -v ./internal/military/combat -run '^TestPGDurableResolver(HubRestore|ProcessRestart)$'
+go test -race -count=1 -v ./internal/military/combat -run '^TestPGDurableResolver(HubRestore|ProcessRestart)$'
 go test -count=1 ./internal/military/combat ./internal/military/march ./internal/military/report
 go test -race -count=1 ./internal/military/combat ./internal/military/march ./internal/military/report
 ```
@@ -40,3 +40,16 @@ applicable ordinary/race tests and required CI pass with real PG17 evidence.
 The commit failpoint proves a definite server-side rollback, not an uncertain
 network outcome; uncertain commits still require persisted-state reconciliation.
 No activation/deployment or durable return-credit acceptance is claimed.
+
+## Independent process acceptance
+
+`TestPGDurableResolverProcessRestart` uses two separate copies of the test binary.
+The first resolves a real battle and exits abruptly with code 17 after confirmed
+commit, bypassing deferred connection cleanup. The second process restores the
+frozen return and must not call the arrival resolver. An independent parent
+connection checks row identity/content and unchanged city stock across both.
+Run it normally and with `-race`; children inherit the instrumented test binary.
+Child GORACE halts on a race with exit 66 (never accepted as deliberate exit 17);
+the parent also rejects race diagnostics instead of discarding them.
+This is not physical PostgreSQL restart or uncertain-network COMMIT evidence.
+Existing held branches stay unchanged until final validation and review complete.

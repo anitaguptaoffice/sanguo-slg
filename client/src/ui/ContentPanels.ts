@@ -342,7 +342,7 @@ export class ContentPanels {
 
   private syncShopInlineStateResidualRing(): void {
     const wallet = this.sessionWallet();
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId) ?? null;
+    const offer = this.selectedVisibleShopOffer() ?? null;
     if (!shouldBagShopInlineStateResidualRing("shop", null, wallet, offer)) return;
     const li = this.shopPanel.querySelector<HTMLElement>(
       `li[data-offer-id="${this.selectedOfferId}"]`,
@@ -574,7 +574,7 @@ export class ContentPanels {
 
   private syncShopWalletGap(): void {
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    const offer = this.selectedVisibleShopOffer();
     applyShopPurchaseAffordDisplay(
       this.shopPanel,
       offer?.price_resources,
@@ -605,7 +605,7 @@ export class ContentPanels {
 
   private shopPurchaseCanAfford(): boolean {
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    const offer = this.selectedVisibleShopOffer();
     return validatePurchaseShopOffer({
       offer,
       offerId: this.selectedOfferId,
@@ -916,6 +916,11 @@ export class ContentPanels {
     }
   }
 
+  private selectedVisibleShopOffer(): ShopOffer | undefined {
+    if (this.shopListLoading || this.shopListError) return undefined;
+    return this.visibleShopOffers().find(o => o.offer_id === this.selectedOfferId);
+  }
+
   private visibleShopOffers(): ShopOffer[] {
     return filterShopOffersByCategory(this.shopOffers, this.shopCategory);
   }
@@ -988,8 +993,8 @@ export class ContentPanels {
       sel.appendChild(opt);
     }
     const stillVisible = visible.some((o) => o.offer_id === this.selectedOfferId);
-    if (!stillVisible && visible[0]?.offer_id) {
-      this.selectedOfferId = visible[0].offer_id ?? this.selectedOfferId;
+    if (!stillVisible) {
+      this.selectedOfferId = visible[0]?.offer_id ?? 0;
     }
     if (visible[0]?.offer_id) {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
@@ -1345,8 +1350,9 @@ export class ContentPanels {
     if (!state.current() || state.busy || state.needsReload || !this.getSession() || this.shopPanel.classList.contains("hidden")) return;
     const offerId = this.selectedOfferId;
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === offerId);
+    const offer = this.selectedVisibleShopOffer();
     const walletBefore = this.getSession()?.wallet;
+    const bagBefore = this.getSession()?.bag;
     const validated = validatePurchaseShopOffer({ offer, offerId, purchaseCount, wallet: walletBefore });
     if (!validated.ok) {
       state.warning = validated.message;
@@ -1360,7 +1366,7 @@ export class ContentPanels {
     state.outcome = state.warning = "";
     this.shopPurchaseFlash.delete(offerId);
     this.shopLastGrantedItemCfgId = 0;
-    beginAssetRead(this.gateway); // Older bag/wallet reads must not overwrite a submitted purchase.
+    const receiptCurrent = beginAssetRead(this.gateway); // Capture freshness before dispatch.
     ++this.shopReadVersion;
     this.renderShopList();
     let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
@@ -1380,7 +1386,12 @@ export class ContentPanels {
       return; // Never replay, compensate or infer rollback from an unavailable response.
     }
     if (!state.current()) return;
+    const freshWallet = receiptCurrent() && this.getSession()?.wallet === walletBefore &&
+      this.getSession()?.bag === bagBefore;
     beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
+    // This full successful receipt includes gold; city-state reads do not. Never merge granted-item deltas.
+    if (freshWallet && res.wallet_after) this.onSessionPatch({ wallet: { ...res.wallet_after } });
+    if (!state.current()) return;
     const granted = res.granted_items?.items?.[0];
     this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
     state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {
