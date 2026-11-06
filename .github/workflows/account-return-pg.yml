@@ -1,0 +1,133 @@
+name: Account return PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  account-pg-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - name: Verify PostgreSQL 17 and Go toolchain
+        shell: bash
+        run: |
+          go version
+          version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
+      - name: Check AccountHint source formatting
+        shell: bash
+        run: |
+          files=$(gofmt -l internal/account/recruit_actor_hint.go \
+            internal/account/recruit_actor_hint_test.go internal/account/recruit_actor_hint_pg_test.go internal/account/doc.go)
+          if [[ -n "$files" ]]; then
+            printf 'Unformatted ACCOUNT source:\n%s\n' "$files"
+            exit 1
+          fi
+      - name: Run full ACCOUNT regressions (ordinary and race)
+        shell: bash
+        run: |
+          for mode in ordinary race; do
+            flags=()
+            if [[ "$mode" == race ]]; then flags=(-race); fi
+            # Legacy auth fixtures use public; each mode owns a fresh database.
+            docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+              -v ON_ERROR_STOP=1 -c "CREATE DATABASE account_$mode"
+            log="$RUNNER_TEMP/account-$mode.json"
+            DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/account_$mode?sslmode=disable" \
+            go test ./internal/account "${flags[@]}" -count=1 -timeout=5m -json | tee "$log"
+            python3 - "$log" "$mode" <<'PY'
+          import json
+          import sys
+
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/account"
+          # Frozen #2097 inventory: all 25 existing and 7 new top-level tests,
+          # plus the three new drift and four existing writer-blocking scenarios.
+          expected = {
+              "TestFreshActorFKRejectsMissingInputs",
+              "TestFreshActorIndexesRejectsMissingInputs",
+              "TestFreshActorTablesRejectMissingInputs",
+              "TestGatewayLoginInvalidPayload",
+              "TestGatewayRegisterMarshalRoundTrip",
+              "TestHashPasswordNeverPlaintext",
+              "TestLoginErrMapping",
+              "TestPGFreshActorFKDrift",
+              "TestPGFreshActorFKIdentity",
+              "TestPGFreshActorFKNamesNotAuthority",
+              "TestPGFreshActorIndexesDrift",
+              "TestPGFreshActorIndexesIdentityAndReadOnly",
+              "TestPGFreshActorIndexesInvalid",
+              "TestPGFreshActorTablesMetadataDrift",
+              "TestPGFreshActorTablesSourceAndSettings",
+              "TestPGRecruitActorGuardConcurrentTransactions",
+              "TestPGRecruitActorGuardConstructorDrift",
+              "TestPGRecruitActorGuardConstructorIdentity",
+              "TestPGRecruitActorGuardConstructorProjection",
+              "TestPGRecruitActorGuardLock",
+              "TestPGRecruitActorGuardLockBlocksWriters",
+              "TestPGRecruitActorGuardLockBlocksWriters/reassignment/false",
+              "TestPGRecruitActorGuardLockBlocksWriters/reassignment/true",
+              "TestPGRecruitActorGuardLockBlocksWriters/status/false",
+              "TestPGRecruitActorGuardLockBlocksWriters/status/true",
+              "TestPGRecruitActorGuardPin",
+              "TestPGRecruitActorHintCapturedShard",
+              "TestPGRecruitActorHintLockAccountBeforePlayer",
+              "TestPGRecruitActorHintPinsBindingAndLifetime",
+              "TestPGRecruitActorHintReadOnlyScopeAndIDs",
+              "TestPGRecruitActorHintReassignmentRequiresRestart",
+              "TestPGRecruitActorHintSourceDriftRetiresCopies",
+              "TestPGRecruitActorHintSourceDriftRetiresCopies/identity",
+              "TestPGRecruitActorHintSourceDriftRetiresCopies/settings",
+              "TestPGRecruitActorHintSourceDriftRetiresCopies/table",
+              "TestRecruitActorGuardInvalidInputs",
+              "TestRecruitActorHintInvalidHandles",
+              "TestRegisterLoginRefreshMultiServer",
+              "TestRegisterRejectsEmptyFields",
+          }
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          bad = [
+              (event.get("Package"), event.get("Test"), event["Action"])
+              for event in events if event["Action"] in {"skip", "fail"}
+          ]
+          passed = {
+              event["Test"] for event in events
+              if event["Action"] == "pass" and event.get("Package") == package and event.get("Test")
+          }
+          package_pass = any(
+              event["Action"] == "pass" and event.get("Package") == package and not event.get("Test")
+              for event in events
+          )
+          missing = sorted(expected - passed)
+          if bad or missing or not package_pass:
+              raise SystemExit(f"ACCOUNT PG gate failed: bad={bad}, missing={missing}, package_pass={package_pass}")
+          top_level = sum("/" not in name for name in passed)
+          print(f"{sys.argv[2]}: {top_level} top-level / {len(passed)} including subtests PASS; zero skips/failures")
+          print(f"Verified all {len(expected)} required ACCOUNT tests/scenarios:")
+          print("\n".join(sorted(expected)))
+          PY
+          done
