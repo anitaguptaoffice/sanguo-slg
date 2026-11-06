@@ -51,7 +51,10 @@ jobs:
             internal/military/march/return_source.go internal/military/march/return_source_test.go \
             internal/military/march/return_source_pg_test.go \
             internal/military/march/return_locked.go internal/military/march/return_locked_test.go \
-            internal/military/march/return_locked_pg_test.go)
+            internal/military/march/return_locked_pg_test.go \
+            internal/military/march/return_atomic.go internal/military/march/return_atomic_test.go \
+            internal/military/march/return_atomic_pg_test.go internal/military/march/return_atomic_concurrency_pg_test.go \
+            internal/military/march/return_atomic_guards_pg_test.go)
           if [[ -n "$files" ]]; then
             printf 'Unformatted MARCH source:\n%s\n' "$files"
             while IFS= read -r file; do
@@ -76,8 +79,8 @@ jobs:
           import sys
 
           package = "github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
-          # Frozen #2105/#2109/#2113/#2117/#2119 inventory: all 175 top-level tests,
-          # plus 31 Prepare/raw-reader, 39 catalog drift, four ordered-pin and 41 locked-state scenarios.
+          # Frozen inventory through #2125/#2126/#2128: all 187 top-level tests,
+          # plus 115 prior and 103 atomic/serialization/public-guard named scenarios.
           expected = {
               "TestArrivalWithoutReturnRetainsExistingPhase",
               "TestConcurrentReturnSettlement",
@@ -211,6 +214,38 @@ jobs:
               "TestPGRecruitWriteRejects",
               "TestPGRecruitWriteWaiting",
               "TestPGRestoreSnapDetectsNoopWrite",
+              "TestPGReturnAtomicAccessAndDrift",
+              "TestPGReturnAtomicDeferredCommitFailure",
+              "TestPGReturnAtomicDue",
+              "TestPGReturnAtomicHelperZeroRows",
+              "TestPGReturnAtomicOuterAbort",
+              "TestPGReturnAtomicPublicRejectedBranches",
+              "TestPGReturnAtomicPublicRejectedBranches/complete_annihilated",
+              "TestPGReturnAtomicPublicRejectedBranches/complete_credited",
+              "TestPGReturnAtomicPublicRejectedBranches/complete_early",
+              "TestPGReturnAtomicPublicRejectedBranches/readback_annihilated",
+              "TestPGReturnAtomicPublicRejectedBranches/readback_credited",
+              "TestPGReturnAtomicPublicRejectedBranches/readback_early",
+              "TestPGReturnAtomicPublicRejectedBranches/readback_still",
+              "TestPGReturnAtomicReadOnly",
+              "TestPGReturnAtomicReadOnly/annihilation",
+              "TestPGReturnAtomicReadOnly/credited",
+              "TestPGReturnAtomicReadOnly/early",
+              "TestPGReturnAtomicReadOnly/readback",
+              "TestPGReturnAtomicReadOnly/readback_early",
+              "TestPGReturnAtomicRejectedEvidence",
+              "TestPGReturnAtomicRejectedEvidence/DELETE_FROM_army_troop_WHERE_unit_cfg_id=1;_UPDATE_city_troop_SET_count=2147483644_WHERE_unit_cfg_id=1",
+              "TestPGReturnAtomicRejectedEvidence/DELETE_FROM_mil_recruit_receipt_WHERE_queue_id=41",
+              "TestPGReturnAtomicRejectedEvidence/UPDATE_city_troop_SET_count=2147483640_WHERE_unit_cfg_id=1",
+              "TestPGReturnAtomicRejectedEvidence/UPDATE_mil_recruit_receipt_SET_rule_digest=decode(repeat('bb',32),'hex')_WHERE_queue_id=41",
+              "TestPGReturnAtomicRejectedEvidence/UPDATE_work_queue_SET_payload='{\"v\":0}'_WHERE_queue_id=41",
+              "TestPGReturnAtomicRejectedEvidence/UPDATE_work_queue_SET_payload=jsonb_set(payload,'{catalog_version}','\"unknown\"')_WHERE_queue_id=41;_UPDATE_mil_recruit_receipt_SET_catalog_version=convert_to('unknown','UTF8')_WHERE_queue_id=41",
+              "TestPGReturnAtomicRejectedEvidence/UPDATE_work_queue_SET_player_id=2_WHERE_queue_id=41",
+              "TestPGReturnAtomicRejectedEvidence/UPDATE_work_queue_SET_status=1_WHERE_queue_id=41",
+              "TestPGReturnAtomicSerialization",
+              "TestPGReturnAtomicSerialization/complete_commit",
+              "TestPGReturnAtomicSerialization/readback_commit",
+              "TestPGReturnAtomicSerialization/readback_rollback",
               "TestPGReturnCatalogMetadataDrift",
               "TestPGReturnCatalogMetadataDrift/RLS",
               "TestPGReturnCatalogMetadataDrift/array_default",
@@ -355,6 +390,9 @@ jobs:
               "TestRestoreActivationBarrier",
               "TestRestoreEmptyOnce",
               "TestRestoreOverdueArrivalKeepsRemainingReturn",
+              "TestReturnAtomicAllPendingAndStoredRules",
+              "TestReturnAtomicCapacity",
+              "TestReturnAtomicInvalid",
               "TestReturnCatalogInvalidAndConstants",
               "TestReturnCreditMaxBoundaryAndEmptySurvivors",
               "TestReturnCreditOverflowAfterValidRecruit",
@@ -370,6 +408,30 @@ jobs:
               "TestSnapshotMarchConcurrentArrivalConsistency",
               "TestSnapshotMarchCurrentTroopsAndIsolation",
           }
+          # Fixed public guard matrix: seven branches and 80 mandatory leaf cases.
+          # Factor repeated names to stay below GitHub's 21,000-character run limit.
+          guard_common = (
+              "missing_stock", "extra_stock", "unknown_stock_unit", "army_status",
+              "army_position", "empty_heroes", "missing_origin",
+          )
+          guard_survivors = (
+              "missing_survivors", "missing_deadline", "invalid_deadline",
+              "unknown_survivor", "zero_survivor",
+          )
+          guard_annihilated = ("unexpected_survivors", "unexpected_deadline", "false_returning")
+          guard_branches = {
+              "complete_early": guard_survivors,
+              "complete_credited": guard_survivors,
+              "complete_annihilated": guard_annihilated,
+              "readback_still": guard_survivors,
+              "readback_early": guard_survivors,
+              "readback_credited": guard_survivors,
+              "readback_annihilated": guard_annihilated,
+          }
+          expected.update(
+              f"TestPGReturnAtomicPublicRejectedBranches/{branch}/{fault}"
+              for branch, specific in guard_branches.items() for fault in guard_common + specific
+          )
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
           bad = [
