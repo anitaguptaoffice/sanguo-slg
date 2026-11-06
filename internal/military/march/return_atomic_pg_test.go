@@ -157,7 +157,7 @@ func TestPGReturnAtomicRejectedEvidence(t *testing.T) {
 		"DELETE FROM mil_recruit_receipt WHERE queue_id=41",
 		"UPDATE mil_recruit_receipt SET rule_digest=decode(repeat('bb',32),'hex') WHERE queue_id=41",
 		`UPDATE work_queue SET payload=jsonb_set(payload,'{catalog_version}','"unknown"') WHERE queue_id=41; UPDATE mil_recruit_receipt SET catalog_version=convert_to('unknown','UTF8') WHERE queue_id=41`,
-		"UPDATE city_troop SET count=2147483640 WHERE unit_cfg_id=1", // R+S fits, R+P+S does not.
+		"UPDATE city_troop SET count=2147483640 WHERE unit_cfg_id=1",                                             // R+S fits, R+P+S does not.
 		"DELETE FROM army_troop WHERE unit_cfg_id=1; UPDATE city_troop SET count=2147483644 WHERE unit_cfg_id=1", // Non-survivor R+P overflow.
 	} {
 		t.Run(sql, func(t *testing.T) {
