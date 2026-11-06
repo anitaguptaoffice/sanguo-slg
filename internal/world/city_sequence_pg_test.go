@@ -59,8 +59,13 @@ func TestPGCitySequenceLifetime(t *testing.T) {
 	if err = o.Rollback(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if id, err := s.next(ctx, a); !errors.Is(err, recruittx.ErrInactive) || id != 0 {
-		t.Fatal("ended", id, err)
+	// Rollback ends admission and cancels the owner context; either rejection
+	// can win before SQL. The caller context must still be healthy.
+	if err = ctx.Err(); err != nil {
+		t.Fatal("caller context after rollback", err)
+	}
+	if id, err := s.next(ctx, a); err == nil || (!errors.Is(err, recruittx.ErrInactive) && !errors.Is(err, context.Canceled)) || id != 0 {
+		t.Fatalf("ended id=%d error=%v want zero/ErrInactive or context.Canceled", id, err)
 	}
 	o2, a2 := sequenceOwner(t, b, ctx)
 	if id, err := s.next(ctx, a2); err != nil || id != 2 {
