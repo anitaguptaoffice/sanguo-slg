@@ -1,0 +1,161 @@
+name: Recruit transaction panic PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  recruit-tx-pg-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      GOTOOLCHAIN: local
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.12"
+          cache: true
+      - name: Verify exact Go toolchain and PostgreSQL 17
+        shell: bash
+        run: |
+          set -euo pipefail
+          go version
+          test "$(go env GOVERSION)" = go1.23.12
+          test "$(go env GOTOOLCHAIN)" = local
+          command -v psql
+          psql --version
+          version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
+      - name: Check changed PLATFORM Go formatting without rewriting
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=$(gofmt -l internal/platform/recruittx/recruittx.go \
+            internal/platform/recruittx/commit_panic_test.go \
+            internal/platform/recruittx/commit_panic_pg_test.go)
+          if [[ -n "$files" ]]; then
+            printf 'Unformatted PLATFORM source:\n%s\n' "$files"
+            while IFS= read -r file; do gofmt -d "$file"; done <<< "$files"
+            exit 1
+          fi
+      # Temporary proof step: remove before final review and fresh final CI.
+      - name: Witness original panic masking on isolated unchanged baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          baseline=419fed8b5b2e36c706799909bc1eb506e0973d94
+          git fetch --no-tags --depth=1 origin "$baseline"
+          witness=$(mktemp -d "$RUNNER_TEMP/recruit-tx-red.XXXXXX")
+          trap 'rm -rf "$witness"' EXIT
+          git archive "$baseline" go.mod go.sum internal/platform/recruittx | tar -x -C "$witness"
+          cp internal/platform/recruittx/commit_panic_test.go "$witness/internal/platform/recruittx/"
+          test "$(git hash-object "$witness/internal/platform/recruittx/commit_panic_test.go")" = \
+            "$(git hash-object internal/platform/recruittx/commit_panic_test.go)"
+          git diff --exit-code -- internal/platform/recruittx
+          log="$RUNNER_TEMP/recruit-tx-baseline-red.json"
+          set +e
+          (cd "$witness" && go test ./internal/platform/recruittx -count=1 -timeout=1m \
+            -run '^TestOwnerCommitPanicIdentity$/^panic_cleanup_panic$' -json) | tee "$log"
+          status=${PIPESTATUS[0]}
+          set -e
+          python3 - "$log" "$status" <<'PY'
+          import json
+          import sys
+
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
+          parent = "TestOwnerCommitPanicIdentity"
+          target = parent + "/panic_cleanup_panic"
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          runs = {e.get("Test") for e in events if e["Action"] == "run" and e.get("Package") == package}
+          fails = {e.get("Test") for e in events if e["Action"] == "fail" and e.get("Package") == package}
+          output = "".join(e.get("Output", "") for e in events if e.get("Test") == target)
+          skipped = [e for e in events if e["Action"] == "skip"]
+          identity = "panic identity: got cleanup panic" in output and "want original commit panic" in output
+          if sys.argv[2] != "1" or runs != {parent, target} or fails != {None, parent, target} or skipped or not identity:
+              raise SystemExit(f"Not a valid baseline red: status={sys.argv[2]}, runs={runs}, fails={fails}, identity={identity}, skips={skipped}")
+          print("Baseline red VERIFIED: unchanged new test executed against old source and witnessed original panic masking.")
+          PY
+      - name: Run full PLATFORM package ordinary and race with zero skips
+        shell: bash
+        run: |
+          set -euo pipefail
+          for mode in ordinary race; do
+            flags=()
+            if [[ "$mode" == race ]]; then flags=(-race); fi
+            # Separate databases; every fixture is limited to this disposable service.
+            docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+              -v ON_ERROR_STOP=1 -c "CREATE DATABASE recruit_tx_$mode"
+            log="$RUNNER_TEMP/recruit-tx-$mode.json"
+            RECRUIT_TX_TEST_DSN="postgres://sanguo:sanguo@localhost:5432/recruit_tx_$mode?sslmode=disable" \
+            go test ./internal/platform/recruittx "${flags[@]}" -count=1 -timeout=3m -json | tee "$log"
+            python3 - "$log" "$mode" <<'PY'
+          import json
+          import sys
+
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
+          # Frozen #2147 inventory: 8 existing + 2 new top-level tests, 11 named scenarios.
+          expected = {
+              "TestBindingAndEndedAccess",
+              "TestCommitFailureAndPanicCleanup",
+              "TestIdentityAliasesAndSubstitution",
+              "TestIdentityChecksRaceWithEnd",
+              "TestIdentityLifetimeAndGate",
+              "TestPostgresAtomicLifetime",
+              "TestPostgresTransactionIdentity",
+              "TestScanGateAndOriginalContext",
+              "TestOwnerCommitPanicIdentity",
+              "TestOwnerCommitPanicIdentity/panic_cleanup_ok",
+              "TestOwnerCommitPanicIdentity/panic_cleanup_error",
+              "TestOwnerCommitPanicIdentity/panic_cleanup_closed",
+              "TestOwnerCommitPanicIdentity/panic_cleanup_panic",
+              "TestOwnerCommitPanicIdentity/error_cleanup_ok",
+              "TestOwnerCommitPanicIdentity/error_cleanup_error",
+              "TestOwnerCommitPanicIdentity/error_cleanup_closed",
+              "TestOwnerCommitPanicIdentity/cleanup_only_panic",
+              "TestOwnerCommitPanicIdentity/success_no_cleanup",
+              "TestPostgresOwnerCommitDoublePanic",
+              "TestPostgresOwnerCommitDoublePanic/commit_start_still_live",
+              "TestPostgresOwnerCommitDoublePanic/commit_end_already_committed",
+          }
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          bad = [e for e in events if e["Action"] in {"skip", "fail"}]
+          passed = {e["Test"] for e in events if e["Action"] == "pass" and e.get("Package") == package and e.get("Test")}
+          package_pass = any(e["Action"] == "pass" and e.get("Package") == package and not e.get("Test") for e in events)
+          missing = sorted(expected - passed)
+          if bad or missing or not package_pass:
+              raise SystemExit(f"PLATFORM PG gate failed: bad={bad}, missing={missing}, package_pass={package_pass}")
+          print(f"{sys.argv[2]}: {sum('/' not in name for name in passed)} top-level / {len(passed)} including subtests PASS; zero skips/failures")
+          print(f"Verified all {len(expected)} required PLATFORM tests/scenarios:")
+          print("\n".join(sorted(expected)))
+          PY
+          done
+      - name: Retain exact run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recruit-tx-panic-test-json
+          path: ${{ runner.temp }}/recruit-tx-*.json
+          if-no-files-found: warn
+          retention-days: 14
