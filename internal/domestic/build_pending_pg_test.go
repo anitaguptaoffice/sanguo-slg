@@ -50,7 +50,7 @@ func TestPGPendingBuildConcurrentStaleHubs(t *testing.T) {
 		for i, err := range errs {
 			if err == nil {
 				success++
-			} else if !errors.Is(err, ErrInvalidUpgrade) || !reflect.DeepEqual(states[i], before[i]) {
+			} else if !errors.Is(err, ErrInvalidUpgrade) || !reflect.DeepEqual(cloneCity(states[i]), before[i]) {
 				t.Fatalf("loser %d mutated or unexpected error: %v", i, err)
 			}
 		}
