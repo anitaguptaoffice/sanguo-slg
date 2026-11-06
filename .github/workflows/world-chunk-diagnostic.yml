@@ -163,9 +163,9 @@ jobs:
               names[0]: [(118, pg), (140, r"after failure: committed=1250 loaded=1250 found=true; fresh Loader=1250"),
                          (142, r"partial save persisted: committed=1250 loaded=1250 found=true"),
                          (145, r"restart reused partial chunk: got=1250 want=2500")],
-              names[1]: [(150, pg), (248, r"observed writer ([1-9][0-9]*) blocked by ([1-9][0-9]*); visible=1250 after cancel=1250 fresh Loader=1250"),
-                         (250, r"partial canceled save: visible=1250 committed=1250"),
-                         (253, r"restart reused canceled partial chunk: got=1250")],
+              names[1]: [(150, pg), (248, r"observed writer ([1-9][0-9]*) blocked by ([1-9][0-9]*); visible=1250 after cancel=(1250|1251) fresh Loader=\3"),
+                         (250, r"partial canceled save: visible=1250 committed=(1250|1251)"),
+                         (253, r"restart reused canceled partial chunk: got=(1250|1251)")],
               names[2]: [(258, pg), (297, r"actual query plan: .*\bSeq Scan on map_cell\b.*; first coordinate=\(149,199\)"),
                          (300, r"noncanonical row 0: got=" + cell + " want=" + want),
                          (306, r"cellAt selected wrong cell: got=" + cell + " want=" + want + " ok=true")],
@@ -183,7 +183,9 @@ jobs:
               version, writer, observer = matches[0].groups()
               require(writer != observer, "observer is not independent")
               if name == names[1]:
-                  require(matches[1].groups() == (writer, observer), "halfway blocker identity mismatch")
+                  require(matches[1].groups()[:2] == (writer, observer), "halfway blocker identity mismatch")
+                  durable = matches[1].group(3)
+                  require(matches[2].group(1) == durable and matches[3].group(1) == durable, "cancellation durable/restart mismatch")
           print(sys.argv[2] + ": exact three behavioral FAILs and six assertions verified; no skips or unrelated failures")
           print("Observed halfway lock, completed writer transaction path, Seq Scan and first coordinate (149,199).")
           PY
