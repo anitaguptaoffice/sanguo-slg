@@ -58,44 +58,6 @@ jobs:
             while IFS= read -r file; do gofmt -d "$file"; done <<< "$files"
             exit 1
           fi
-      # Temporary proof step: remove before final review and fresh final CI.
-      - name: Witness original panic masking on isolated unchanged baseline
-        shell: bash
-        run: |
-          set -euo pipefail
-          baseline=419fed8b5b2e36c706799909bc1eb506e0973d94
-          git fetch --no-tags --depth=1 origin "$baseline"
-          witness=$(mktemp -d "$RUNNER_TEMP/recruit-tx-red.XXXXXX")
-          trap 'rm -rf "$witness"' EXIT
-          git archive "$baseline" go.mod go.sum internal/platform/recruittx | tar -x -C "$witness"
-          cp internal/platform/recruittx/commit_panic_test.go "$witness/internal/platform/recruittx/"
-          test "$(git hash-object "$witness/internal/platform/recruittx/commit_panic_test.go")" = \
-            "$(git hash-object internal/platform/recruittx/commit_panic_test.go)"
-          git diff --exit-code -- internal/platform/recruittx
-          log="$RUNNER_TEMP/recruit-tx-baseline-red.json"
-          set +e
-          (cd "$witness" && go test ./internal/platform/recruittx -count=1 -timeout=1m \
-            -run '^TestOwnerCommitPanicIdentity$/^panic_cleanup_panic$' -json) | tee "$log"
-          status=${PIPESTATUS[0]}
-          set -e
-          python3 - "$log" "$status" <<'PY'
-          import json
-          import sys
-
-          package = "github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
-          parent = "TestOwnerCommitPanicIdentity"
-          target = parent + "/panic_cleanup_panic"
-          with open(sys.argv[1], encoding="utf-8") as stream:
-              events = [json.loads(line) for line in stream if line.strip()]
-          runs = {e.get("Test") for e in events if e["Action"] == "run" and e.get("Package") == package}
-          fails = {e.get("Test") for e in events if e["Action"] == "fail" and e.get("Package") == package}
-          output = "".join(e.get("Output", "") for e in events if e.get("Test") == target)
-          skipped = [e for e in events if e["Action"] == "skip"]
-          identity = "panic identity: got cleanup panic" in output and "want original commit panic" in output
-          if sys.argv[2] != "1" or runs != {parent, target} or fails != {None, parent, target} or skipped or not identity:
-              raise SystemExit(f"Not a valid baseline red: status={sys.argv[2]}, runs={runs}, fails={fails}, identity={identity}, skips={skipped}")
-          print("Baseline red VERIFIED: unchanged new test executed against old source and witnessed original panic masking.")
-          PY
       - name: Run full PLATFORM package ordinary and race with zero skips
         shell: bash
         run: |
