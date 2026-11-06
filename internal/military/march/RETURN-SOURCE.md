@@ -13,3 +13,14 @@ flag perturbations use disposable owned PG17 and are rolled back, never producti
 Run all MARCH tests ordinary and race with DATABASE_URL, zero unexpected skips;
 mandatory new tests: `TestReturnCatalogInvalidAndConstants`,
 `TestPGReturnCatalog{SourceAndSettings,MetadataDrift,Privileges,ReadOnly}`.
+
+## MIL-RETURN-SOURCE-001 (#2113)
+`NewReturnParticipant` privately snapshots exact23 identities and RecruitCatalog;
+one shared source retains common14/new9 drift retirement across participant copies.
+`Pin` copies Access, takes eight ROW EXCLUSIVE pins in adopted order, then validates
+both projections, without rows, allocation or transaction end. Exhaustion is valid.
+Tests: `TestReturnSourceInvalidAndCauses`, `TestPGReturnSourceProfiles`,
+`TestPGReturnSourceSnapshotsAndAccess`, `TestPGReturnSourceOrderedPins`.
+Eight independent blockers witness every prefix; final-stage drift and cancellation,
+retained pins, independently lockable seeded rows and unchanged sequences are checked.
+Official Go/PG17 ordinary/race execution remains required; no enrollment or activation.
