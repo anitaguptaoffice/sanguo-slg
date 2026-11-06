@@ -207,7 +207,6 @@ jobs:
       OLD_SOURCE: 41b3aef34a74fb239f70d319356c7e7071cd0401
       NEW_SOURCE: f6f20832ce147265529cdd8ac6f50510fedbfaef
       FIXTURE_SHA256: 0b3005a0c9764c8a80d192afe774c90f82b86286f2d67126279649fa79b2f92b
-      PG_CONTAINER: ${{ job.services.postgres.id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -217,6 +216,8 @@ jobs:
           go-version: "1.23.12"
           cache: true
       - name: Materialize immutable paired sources and fixture
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         shell: bash
         run: |
           evidence="$RUNNER_TEMP/chunk-benchmark"
@@ -261,6 +262,8 @@ jobs:
             cmp "$RUNNER_TEMP/chunk-source-old/internal/world/$path" "$RUNNER_TEMP/chunk-source-new/internal/world/$path"
           done
       - name: Run five alternating old and new benchmark pairs
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
         timeout-minutes: 10
         shell: bash
         run: |
