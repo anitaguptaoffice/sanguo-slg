@@ -8,7 +8,7 @@ on:
 jobs:
   api-pg-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 135
     permissions:
       contents: read
     strategy:
@@ -68,18 +68,16 @@ jobs:
         run: |
           flags=()
           if [[ "$MODE" == race ]]; then flags=(-race); fi
-          # Each matrix job owns its PG service; its test mode owns a new database.
-          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
-            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
-          log="$RUNNER_TEMP/api-$MODE.json"
-          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_$MODE?sslmode=disable" \
-          go test ./internal/api/... "${flags[@]}" -count=1 -timeout=30m -json | tee "$log"
-          python3 - "$log" "$MODE" <<'PY'
+          gate="$RUNNER_TEMP/api-gate.py"
+          cat > "$gate" <<'PY'
           import json
           import sys
 
+          phase = sys.argv[3]
+          if phase not in {"preflight", "full"}:
+              raise SystemExit("Unknown API test phase")
           root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          # Fixed baseline inventory plus independently reviewed return-source tests.
+          # Full: 225 baseline + 24 new outcomes; preflight requires the same 24 new outcomes.
           expected = {
               "TestCityGarrisonAuthorizationBeforeRead",
               "TestCityGarrisonConcurrentCompletionSnapshot",
@@ -332,11 +330,16 @@ jobs:
           required = {(root, name) for name in expected}
           required.add((root + "/pb/sanguo/domestic/v1", "TestGarrisonWireCompatibility"))
           required.add((root + "/pb/sanguo/quest/v1", "TestClaimRewardWireCompatibility"))
-          tested_packages = {package for package, _ in required}
           no_tests = {
               root + f"/pb/sanguo/{domain}/v1"
               for domain in ("content", "hero", "military", "rank", "shop", "world")
           }
+          if phase == "preflight":
+              required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))}
+              no_tests = set()
+          if len(required) != (24 if phase == "preflight" else 249):
+              raise SystemExit("Frozen API inventory changed")
+          tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
           observed = {event.get("Package") for event in events}
@@ -375,9 +378,22 @@ jobs:
           if bad or missing or unfinished or observed != tested_packages | no_tests:
               raise SystemExit(f"API PG gate failed: bad={bad}, missing={missing}, unfinished={unfinished}, observed={observed}")
           top_level = sum("/" not in name for _, name in passed)
-          print(f"{sys.argv[2]}: {top_level} top-level / {len(passed)} including subtests PASS")
-          print(f"Verified {len(required)} required tests/scenarios and all three tested-package PASS events")
-          print("Zero skipped tests or failures; six protobuf packages have no test files (Go package-only skip)")
+          print(f"{sys.argv[2]}/{phase}: {top_level} top-level / {len(passed)} including subtests PASS")
+          print(f"Verified {len(required)} required tests/scenarios and all {len(tested_packages)} tested-package PASS events")
+          print(f"Zero skipped tests or failures; {len(no_tests)} packages have no test files (Go package-only skip)")
           print("Optional t.Log branches are not full gameplay coverage; their actual output is preserved above")
           print("\n".join(f"{package}: {name}" for package, name in sorted(required)))
           PY
+          # Preflight and full acceptance own different disposable databases.
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
+          log="$RUNNER_TEMP/api-preflight-$MODE.json"
+          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration)' -count=1 -timeout=5m -json | tee "$log"
+          python3 "$gate" "$log" "$MODE" preflight
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
+          log="$RUNNER_TEMP/api-$MODE.json"
+          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_$MODE?sslmode=disable" \
+          go test ./internal/api/... "${flags[@]}" -count=1 -timeout=120m -json | tee "$log"
+          python3 "$gate" "$log" "$MODE" full
