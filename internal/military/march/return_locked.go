@@ -12,7 +12,7 @@ var ErrReturnUnavailable = errors.New("march: return transition unavailable")
 
 // These copied values are not authorization or proof of same-transaction origin.
 type ReturnCandidate struct {
-	ServerID                        int32
+	ServerID                          int32
 	PlayerID, CityID, MarchID, ArmyID int64
 }
 type ReturnOrigin struct {
@@ -29,16 +29,16 @@ const (
 )
 
 type returnLockedSnapshot struct {
-	pending                     recruitPendingSnapshot
-	phase                       returnPhase
-	armyID, owner               int64
-	cityID                      *int64
+	pending                      recruitPendingSnapshot
+	phase                        returnPhase
+	armyID, owner                int64
+	cityID                       *int64
 	status, armyStatus, purpose  int16
 	fromX, fromY, toX, toY, x, y int32
-	depart, arrive              time.Time
-	returnAt                    *time.Time
-	heroes                      []int64
-	units, counts               []int32
+	depart, arrive               time.Time
+	returnAt                     *time.Time
+	heroes                       []int64
+	units, counts                []int32
 }
 
 func validReturnScope(server int32, c ReturnCandidate, o ReturnOrigin) bool {
