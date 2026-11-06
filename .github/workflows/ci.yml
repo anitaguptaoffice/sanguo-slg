@@ -65,17 +65,20 @@ jobs:
           make build-gm
       - name: Unit tests
         run: make test
-      - name: Building pending PostgreSQL regressions (ordinary and race)
+      - name: Domestic PostgreSQL regressions (ordinary and race)
         shell: bash
-        env:
-          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
         run: |
           for mode in ordinary race; do
             flags=()
             if [[ "$mode" == race ]]; then flags=(-race); fi
-            log="$RUNNER_TEMP/build-pending-$mode.json"
+            # Legacy fixtures use public; isolate the two runs in disposable DBs.
+            docker exec "${{ job.services.postgres.id }}" psql -U sanguo -d sanguo \
+              -v ON_ERROR_STOP=1 -c "CREATE DATABASE domestic_$mode"
+            log="$RUNNER_TEMP/domestic-$mode.json"
+            # Physical restart has a separate two-phase harness; do not claim it.
+            DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/domestic_$mode?sslmode=disable" \
             go test ./internal/domestic "${flags[@]}" -count=1 -timeout=5m \
-              -run '^Test(BuildPending|PGPendingBuild)' -json | tee "$log"
+              -skip '^TestPGQueuePhysicalRestart$' -json | tee "$log"
             python3 - "$log" <<'PY'
           import json
           import sys
