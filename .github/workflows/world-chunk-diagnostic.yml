@@ -1,0 +1,209 @@
+name: World chunk diagnostic - NEVER MERGE
+
+on:
+  pull_request:
+    branches: [diagnostic/WORLD-CHUNK-PERSISTENCE-PG-001]
+    paths: [.github/workflows/world-chunk-diagnostic.yml]
+
+# CI-WORLD-CHUNK-DIAGNOSTIC-001 / #2166. Expected red is NOT a repair.
+# #2165 and this stacked diagnostic Draft must NEVER MERGE.
+jobs:
+  frozen-old-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [ordinary, race]
+    env:
+      OLD: 41b3aef34a74fb239f70d319356c7e7071cd0401
+      ORIGINAL: 0d5fd7a7d2a5cbf6b3f6d11a78d08f6f1ff4af4e
+      ARTIFACT: e52fe0e0a1f9e18fbea6c75307301aad6ccd800b
+      FIXTURE: internal/world/testdata/chunk_persistence/persist_chunk_pg_test.go.txt
+      FROZEN: 34c60427bf1567d72f8b12fc00be546af203fd8acb499e7a01c077609a1de58e
+      GOTOOLCHAIN: local
+      GOFLAGS: -mod=readonly
+      MODE: ${{ matrix.mode }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.12"
+          cache: true
+      - name: Archive exact old source and verify frozen composition
+        id: prepare
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/chunk-evidence"
+          source="$RUNNER_TEMP/chunk-old-source"
+          mkdir "$evidence" "$source"
+          [[ "$BASE_SHA" == "$ARTIFACT" ]]
+          [[ "$(git rev-parse "$ARTIFACT^{tree}")" == 167166e55e11a566bde16050810257b1d77a5aa7 ]]
+          [[ "$(git rev-list --parents -n 1 "$ARTIFACT")" == "$ARTIFACT $ORIGINAL" ]]
+          [[ "$(git rev-list --parents -n 1 "$ORIGINAL")" == "$ORIGINAL $OLD" ]]
+          git merge-base --is-ancestor "$ARTIFACT" HEAD
+          [[ "$(git diff --name-only "$ARTIFACT" HEAD)" == .github/workflows/world-chunk-diagnostic.yml ]]
+          [[ "$(git diff --numstat "$ARTIFACT" HEAD | awk '{print $1+$2}')" -le 400 ]]
+          [[ -z "$(git status --porcelain)" ]]
+          git diff --exit-code "$OLD" HEAD -- internal spec go.mod go.sum \
+            ":(exclude)$FIXTURE" ':(exclude)internal/world/CHUNK-PERSISTENCE-PG.md'
+          [[ "$(git rev-parse "$ARTIFACT:$FIXTURE")" == 3db887d2a3bc6c87299948d72c5dba16ddaa6bf7 ]]
+          printf '%s  %s\n' "$FROZEN" "$FIXTURE" | sha256sum -c -
+          [[ "$(wc -l < "$FIXTURE")" == 308 ]]
+          git log -1 --format='%H %T %P' > "$evidence/head.txt"
+          printf 'old=%s\nartifact=%s\n' "$OLD" "$ARTIFACT" >> "$evidence/head.txt"
+          git archive "$OLD" | tar -x -C "$source"
+          # Record every original regular file before activating the one fixture.
+          (cd "$source"; find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$evidence/original.sha256"
+          for path in internal/world/persist.go internal/world/chunk.go internal/world/service.go; do
+            [[ "$(git hash-object "$source/$path")" == "$(git rev-parse "$OLD:$path")" ]]
+            printf '%s %s\n' "$(git rev-parse "$OLD:$path")" "$path"
+          done | tee "$evidence/production-blobs.txt"
+          test ! -e "$source/internal/world/persist_chunk_pg_test.go"
+          cp "$FIXTURE" "$source/internal/world/persist_chunk_pg_test.go"
+          printf '%s  %s\n' "$FROZEN" "$source/internal/world/persist_chunk_pg_test.go" | sha256sum -c -
+      - name: Verify official versions and read-only formatting
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/chunk-evidence"
+          [[ "$(go env GOVERSION)" == go1.23.12 ]]
+          go version | tee "$evidence/go-version.txt"
+          version=$(docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -Atc 'SHOW server_version_num')
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -c 'SELECT version()' | tee "$evidence/postgres-version.txt"
+          target="$RUNNER_TEMP/chunk-old-source/internal/world/persist_chunk_pg_test.go"
+          gofmt -d "$target" | tee "$evidence/gofmt.diff"
+          test ! -s "$evidence/gofmt.diff"
+          printf '%s  %s\n' "$FROZEN" "$target" | sha256sum -c -
+      - name: Run three immutable behavioral witnesses
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/chunk-evidence"
+          cd "$RUNNER_TEMP/chunk-old-source"
+          go mod download > "$evidence/modules.stdout" 2> "$evidence/modules.stderr"
+          docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -v ON_ERROR_STOP=1 \
+            -c "CREATE DATABASE chunk_$MODE"
+          flags=()
+          if [[ "$MODE" == race ]]; then flags=(-race); fi
+          set +e
+          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/chunk_$MODE?sslmode=disable" \
+            go test ./internal/world "${flags[@]}" -count=1 -timeout=3m \
+            -run '^(TestPGChunkSaveFailureAtomicRestart|TestPGChunkSaveCancellationAtomic|TestPGChunkLoadCanonicalHeapOrder)$' \
+            -json > "$evidence/tests.json" 2> "$evidence/tests.stderr"
+          rc=$?
+          set -e
+          printf '%s\n' "$rc" > "$evidence/test-exit.txt"
+          cat "$evidence/tests.json"
+          cat "$evidence/tests.stderr" >&2
+          python3 - "$evidence" "$MODE" <<'PY'
+          import collections
+          import json
+          import pathlib
+          import re
+          import sys
+
+          root = pathlib.Path(sys.argv[1])
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/world"
+          names = ["TestPGChunkSaveFailureAtomicRestart", "TestPGChunkSaveCancellationAtomic", "TestPGChunkLoadCanonicalHeapOrder"]
+          def require(condition, message):
+              if not condition:
+                  raise SystemExit("INVALID DIAGNOSTIC: " + message)
+          require(root.joinpath("test-exit.txt").read_text().strip() == "1", "go test must exit 1")
+          require(not root.joinpath("tests.stderr").read_text(), "unexpected go test stderr")
+          events = [json.loads(line) for line in root.joinpath("tests.json").read_text().splitlines()]
+          actions = collections.defaultdict(list)
+          outputs = collections.defaultdict(str)
+          for event in events:
+              require(event.get("Package") == package, "unexpected package")
+              name, action = event.get("Test"), event.get("Action")
+              require(name is None or name in names, "unexpected test or subtest")
+              require(action in {"start", "run", "output", "fail"}, "skip/pass/panic or invalid action")
+              if action == "output":
+                  outputs[name] += event["Output"]
+              else:
+                  actions[name].append(action)
+          require(actions[None] == ["start", "fail"], "package must start then fail exactly once")
+          for name in names:
+              require(actions[name] == ["run", "fail"], "missing/duplicate run or FAIL: " + name)
+          require(re.fullmatch(r"FAIL\n(?:FAIL\t" + re.escape(package) + r"\t[0-9.]+s\n)?", outputs[None]), "unexpected package output")
+          # Source locations are immutable, so an unrelated t.Fatal/t.Error cannot pass.
+          pg = r'PG=(17[0-9]{4}) writer=([1-9][0-9]*) observer=([1-9][0-9]*) schema="world_chunk_[0-9a-f]{24}"'
+          cell = r'\{X:149 Y:199 Terrain:[0-9]+ ResourceType:[0-9]+ ResourceLevel:[0-9]+\}'
+          want = r'\{X:100 Y:150 Terrain:[0-9]+ ResourceType:[0-9]+ ResourceLevel:[0-9]+\}'
+          expected = {
+              names[0]: [(118, pg), (140, r"after failure: committed=1250 loaded=1250 found=true; fresh Loader=1250"),
+                         (142, r"partial save persisted: committed=1250 loaded=1250 found=true"),
+                         (145, r"restart reused partial chunk: got=1250 want=2500")],
+              names[1]: [(150, pg), (248, r"observed writer ([1-9][0-9]*) blocked by ([1-9][0-9]*); visible=1250 after cancel=(1250|1251) fresh Loader=\3"),
+                         (250, r"partial canceled save: visible=1250 committed=(1250|1251)"),
+                         (253, r"restart reused canceled partial chunk: got=(1250|1251)")],
+              names[2]: [(258, pg), (297, r"actual query plan: .*\bSeq Scan on map_cell\b.*; first coordinate=\(149,199\)"),
+                         (300, r"noncanonical row 0: got=" + cell + " want=" + want),
+                         (306, r"cellAt selected wrong cell: got=" + cell + " want=" + want + " ok=true")],
+          }
+          for name, diagnostics in expected.items():
+              lines = outputs[name].splitlines()
+              require(len(lines) == len(diagnostics) + 2, "extra/missing output: " + name)
+              require(lines[0] == "=== RUN   " + name, "missing RUN header: " + name)
+              require(re.fullmatch(r"--- FAIL: " + name + r" \([0-9.]+s\)", lines[-1]), "missing FAIL footer: " + name)
+              matches = []
+              for line, (number, pattern) in zip(lines[1:-1], diagnostics):
+                  match = re.fullmatch(r"    persist_chunk_pg_test.go:" + str(number) + ": " + pattern, line)
+                  require(match, "unexpected diagnostic: " + line)
+                  matches.append(match)
+              version, writer, observer = matches[0].groups()
+              require(writer != observer, "observer is not independent")
+              if name == names[1]:
+                  require(matches[1].groups()[:2] == (writer, observer), "halfway blocker identity mismatch")
+                  durable = matches[1].group(3)
+                  require(matches[2].group(1) == durable and matches[3].group(1) == durable, "cancellation durable/restart mismatch")
+          print(sys.argv[2] + ": exact three behavioral FAILs and six assertions verified; no skips or unrelated failures")
+          print("Observed halfway lock, completed writer transaction path, Seq Scan and first coordinate (149,199).")
+          PY
+      - name: Recheck original files and fixture after execution
+        if: always() && steps.prepare.outcome == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/chunk-old-source"
+          sha256sum --quiet -c "$RUNNER_TEMP/chunk-evidence/original.sha256"
+          printf '%s  %s\n' "$FROZEN" internal/world/persist_chunk_pg_test.go | sha256sum -c -
+          cd "$GITHUB_WORKSPACE"
+          [[ -z "$(git status --porcelain)" ]]
+      - name: Keep immutable provenance, format diff and raw witness logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-chunk-diagnostic-${{ matrix.mode }}-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/chunk-evidence/
+          if-no-files-found: error
+          retention-days: 14
