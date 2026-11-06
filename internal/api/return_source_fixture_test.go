@@ -164,7 +164,7 @@ func returnPGSnapshot(t *testing.T, ctx context.Context, observer *pgx.Conn, p f
 	for _, object := range names {
 		expr := "jsonb_build_array(t,t.xmin::text,t.ctid::text) ORDER BY t.ctid"
 		if object.Kind == "S" {
-			expr = "to_jsonb(t)"
+			expr = "jsonb_build_array(t.last_value,t.log_cnt,t.is_called)"
 		}
 		var value string
 		returnPGOK(t, observer.QueryRow(ctx, "SELECT COALESCE(jsonb_agg("+expr+")::text,'[]') FROM "+pgx.Identifier{p.SchemaName, object.Name}.Sanitize()+" t").Scan(&value))
