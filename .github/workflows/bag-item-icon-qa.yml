@@ -11,6 +11,16 @@ jobs:
   bag-item-icon-browser:
     runs-on: ubuntu-22.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ed32cae751646723ac242849f16a9acb034c8eb4
+            mode: candidate
+            baseline: 'false'
+          - target: 835d036e58c12b1fdc0aad69f1e02049481db364
+            mode: baseline
+            baseline: 'true'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,7 +28,7 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: ed32cae751646723ac242849f16a9acb034c8eb4
+          ref: ${{ matrix.target }}
           path: target
           persist-credentials: false
       - uses: actions/checkout@v4
@@ -40,10 +50,11 @@ jobs:
       - name: Verify fixed inputs and run localhost fixture
         working-directory: target/client
         env:
+          QA_BASELINE: ${{ matrix.baseline }}
           QA_OUT: ${{ github.workspace }}/evidence
           QA_ITEM_ROOT: ${{ github.workspace }}/candidate/docs/art/samples/art-item-icons-001/textures
         run: |
-          test "$(git rev-parse HEAD)" = ed32cae751646723ac242849f16a9acb034c8eb4
+          test "$(git rev-parse HEAD)" = ${{ matrix.target }}
           test "$(git -C ../../candidate rev-parse HEAD)" = 91f3080ac50cc1abb961dac9f50e99c9266a2b6e
           cp ../../qa-source/client/qa/bagItemIcon.browser.mjs qa/bagItemIcon.browser.mjs
           node qa/bagItemIcon.browser.mjs
@@ -51,7 +62,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: bag-item-icon-browser-${{ github.sha }}
+          name: bag-item-icon-browser-${{ matrix.mode }}-${{ github.sha }}
           path: evidence/
           if-no-files-found: warn
           retention-days: 14

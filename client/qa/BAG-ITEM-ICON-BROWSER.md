@@ -43,3 +43,12 @@ candidate assets. A screenshot review is required in addition to assertions.
 No production-art delivery is implied, and #1973 remains held until its applicable
 requirements and independent evidence review are satisfied. No historical hold
 PR is merged by this job. Results are not claimed before the job actually runs.
+
+## Baseline comparison
+The same fixture also captures six baseline screenshots at #1973 parent
+835d036e58c12b1fdc0aad69f1e02049481db364, without optional item icons.
+This isolates whether observed dark header text and short 1600px list viewport
+already exist in the component/CSS fixture. It cannot establish full-host parity.
+The candidate run still performs every interaction assertion. Baseline captures
+are visual controls, not interaction PASS claims. Art production delivery and
+full-host/server acceptance remain separate requirements.

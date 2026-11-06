@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 
 import {mkdirSync,writeFileSync,openSync} from 'node:fs';
 
-import {spawn} from 'node:child_process';
+import {spawn,execFileSync} from 'node:child_process';
 
 import {resolve} from 'node:path';
 
@@ -13,7 +13,8 @@ const client=resolve(import.meta.dirname,'..'),out=resolve(process.env.QA_OUT ??
 const assetRoot=resolve(process.env.QA_ITEM_ROOT ?? '../candidate/docs/art/samples/art-item-icons-001/textures');
 mkdirSync(out,{recursive:true});
 
-const report={head:'ed32cae751646723ac242849f16a9acb034c8eb4',boundary:'One Chromium launch;  localhost isolated component/mock only, candidate PNG route injection, no production connection or asset delivery',cases:[],errors:[]};
+const baseline=process.env.QA_BASELINE==='true';
+const report={head:execFileSync('git',['rev-parse','HEAD'],{cwd:client}).toString().trim(),baseline,boundary:'One Chromium launch;  localhost isolated component/mock only, candidate PNG route injection, no production connection or asset delivery',cases:[],errors:[]};
 
 const entry=`import {ContentPanels} from '/src/ui/ContentPanels.ts';import {computeLayoutViewport,applyLayoutFrameStyles,syncLayoutViewportRootClass} from '/src/engine/layoutViewport.ts';
 const mount=document.getElementById('layout-frame');mount.replaceChildren();const vp=computeLayoutViewport(innerWidth,innerHeight);applyLayoutFrameStyles(mount,vp);syncLayoutViewportRootClass(mount,vp);
@@ -39,6 +40,8 @@ return r.continue()});
 const page=await context.newPage();
 page.on('pageerror',e=>report.errors.push(String(e)));
 await page.goto(url);
+await page.locator('[data-item-cfg-id="2001"]').waitFor();
+if(baseline){assert.equal(await page.locator('.bag-item-icon').count(),0);await page.screenshot({path:out+'/'+width+'-dpr'+dpr+'-baseline.png'});report.cases.push({width,height,dpr,checks:['same fixture baseline, no optional icons']});await context.close();continue;}
 const icon=page.locator('[data-item-cfg-id="2001"] .bag-item-icon');
 await icon.waitFor();
 await page.waitForFunction(()=>[...document.querySelectorAll('.bag-item-icon')].every(x=>x.complete&&x.naturalWidth>0));
