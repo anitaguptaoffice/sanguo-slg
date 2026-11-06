@@ -1,0 +1,142 @@
+name: World return PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  world-pg-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - name: Verify PostgreSQL 17 and Go toolchain
+        shell: bash
+        run: |
+          go version
+          version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
+      - name: Check ReturnOrigin source formatting
+        shell: bash
+        run: |
+          files=$(gofmt -l internal/world/return_origin.go \
+            internal/world/return_origin_test.go internal/world/return_origin_pg_test.go internal/world/doc.go)
+          if [[ -n "$files" ]]; then
+            printf 'Unformatted WORLD source:\n%s\n' "$files"
+            exit 1
+          fi
+      - name: Run full WORLD regressions (ordinary and race)
+        shell: bash
+        run: |
+          for mode in ordinary race; do
+            flags=()
+            if [[ "$mode" == race ]]; then flags=(-race); fi
+            # Each mode owns a fresh database; PG fixtures isolate their schemas.
+            docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+              -v ON_ERROR_STOP=1 -c "CREATE DATABASE world_$mode"
+            log="$RUNNER_TEMP/world-$mode.json"
+            DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/world_$mode?sslmode=disable" \
+            go test ./internal/world "${flags[@]}" -count=1 -timeout=5m -json | tee "$log"
+            python3 - "$log" "$mode" <<'PY'
+          import json
+          import sys
+
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/world"
+          # Frozen #2101 inventory: all 34 existing and 6 new top-level tests,
+          # plus six lock-release and two source-pin schema scenarios.
+          expected = {
+              "TestCityOwnerInTxRejectsBeforeSQL",
+              "TestCityOwnerInTxUsesOnlySuppliedTransaction",
+              "TestCitySequenceInvalidHandles",
+              "TestCreateCityInTxGuardsAndConflictClassification",
+              "TestCreateCityInTxRejectsInvalidRequestsBeforeSQL",
+              "TestCreateCityInTxUsesSuppliedTxOnly",
+              "TestFreshCityZeroProof",
+              "TestFreshSourceInvalidHandles",
+              "TestPGCityOwnerInTxBlocksOwnerUpdateUntilCallerEnds",
+              "TestPGCityOwnerInTxBlocksOwnerUpdateUntilCallerEnds/commit",
+              "TestPGCityOwnerInTxBlocksOwnerUpdateUntilCallerEnds/rollback",
+              "TestPGCityOwnerInTxCancellationWhileWaiting",
+              "TestPGCityOwnerInTxGuardsAndRollback",
+              "TestPGCitySequenceConcurrent",
+              "TestPGCitySequenceDrift",
+              "TestPGCitySequenceLifetime",
+              "TestPGCitySequenceSchemaAndBounds",
+              "TestPGCreateCityParticipantAuthoritativeGuards",
+              "TestPGCreateCityParticipantCallerOwnsCommit",
+              "TestPGCreateCityParticipantCannotOverwriteLegacyID",
+              "TestPGCreateCityParticipantConcurrentAllocation",
+              "TestPGCreateCityParticipantDeferredCommitAndShardIsolation",
+              "TestPGFreshCityConcurrentCoordinate",
+              "TestPGFreshCityProofAliases",
+              "TestPGFreshCityRejectsBeforeCreation",
+              "TestPGFreshCityRollbackAndReadback",
+              "TestPGFreshSourceBindingAndPin",
+              "TestPGFreshSourceBindingAndPin/ordinary",
+              "TestPGFreshSourceBindingAndPin/quoted",
+              "TestPGFreshSourceCatalogDrift",
+              "TestPGFreshSourceIndependentExpectations",
+              "TestPGFreshSourcePreservesUnsafeSearchPath",
+              "TestPGRecruitCityConstructorRejectsWrongExpectations",
+              "TestPGRecruitCityLockValidation",
+              "TestPGRecruitCityOwnerUpdateWaitsForEnd",
+              "TestPGRecruitCityOwnerUpdateWaitsForEnd/commit",
+              "TestPGRecruitCityOwnerUpdateWaitsForEnd/rollback",
+              "TestPGRecruitCityRetirementSharedAcrossCopies",
+              "TestPGReturnOriginCancellationKeepsSourceAndCallerOwnership",
+              "TestPGReturnOriginDriftRetirement",
+              "TestPGReturnOriginValidationAndNoWrites",
+              "TestPGReturnOriginWaitReadsLockedSnapshot",
+              "TestPGReturnOriginWriterWaitsForEnd",
+              "TestPGReturnOriginWriterWaitsForEnd/commit",
+              "TestPGReturnOriginWriterWaitsForEnd/rollback",
+              "TestRecruitCityInvalidHandles",
+              "TestReturnOriginInvalidHandles",
+              "TestWorldM1",
+          }
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          bad = [
+              (event.get("Package"), event.get("Test"), event["Action"])
+              for event in events if event["Action"] in {"skip", "fail"}
+          ]
+          passed = {
+              event["Test"] for event in events
+              if event["Action"] == "pass" and event.get("Package") == package and event.get("Test")
+          }
+          package_pass = any(
+              event["Action"] == "pass" and event.get("Package") == package and not event.get("Test")
+              for event in events
+          )
+          missing = sorted(expected - passed)
+          if bad or missing or not package_pass:
+              raise SystemExit(f"WORLD PG gate failed: bad={bad}, missing={missing}, package_pass={package_pass}")
+          top_level = sum("/" not in name for name in passed)
+          print(f"{sys.argv[2]}: {top_level} top-level / {len(passed)} including subtests PASS; zero skips/failures")
+          print(f"Verified all {len(expected)} required WORLD tests/scenarios:")
+          print("\n".join(sorted(expected)))
+          PY
+          done
