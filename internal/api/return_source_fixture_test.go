@@ -183,6 +183,7 @@ type returnPGTrace struct {
 	queries []returnPGQuery
 }
 type returnPGTraceKey struct{}
+
 func (r *returnPGTrace) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	r.mu.Lock()
 	defer r.mu.Unlock()
