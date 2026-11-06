@@ -65,6 +65,68 @@ jobs:
           make build-gm
       - name: Unit tests
         run: make test
+      # Temporary red witness for #2086; remove after recording this run.
+      - name: Verify pre-fix duplicate-charge regression witness
+        shell: bash
+        env:
+          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+        run: |
+          baseline="$RUNNER_TEMP/build-pending-baseline"
+          git fetch --depth=1 origin e96ace75099a65797918ad0a34b1e182d8f7aa44
+          git worktree add --detach "$baseline" e96ace75099a65797918ad0a34b1e182d8f7aa44
+          cp internal/domestic/build_pending{,_pg}_test.go "$baseline/internal/domestic/"
+          log="$RUNNER_TEMP/build-pending-baseline.json"
+          if (cd "$baseline" && go test ./internal/domestic -count=1 -timeout=5m \
+              -run '^Test(BuildPending|PGPendingBuild)' -json) | tee "$log"; then
+            echo "Expected old implementation to fail the new regressions"
+            exit 1
+          fi
+          python3 - "$log" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          required_failures = {"TestBuildPendingRejectsWithoutMutation", "TestPGPendingBuildConcurrentStaleHubs"}
+          failed = {event.get("Test") for event in events if event["Action"] == "fail"}
+          skipped = [event for event in events if event["Action"] == "skip"]
+          if skipped or not required_failures.issubset(failed) or None not in failed:
+              raise SystemExit("Baseline did not demonstrate both real duplicate-charge regressions")
+          print("Verified baseline red witness: both memory and real-PG concurrent duplicate regressions failed")
+          PY
+      - name: Building pending PostgreSQL regressions (ordinary and race)
+        shell: bash
+        env:
+          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+        run: |
+          for mode in ordinary race; do
+            flags=()
+            if [[ "$mode" == race ]]; then flags=(-race); fi
+            log="$RUNNER_TEMP/build-pending-$mode.json"
+            go test ./internal/domestic "${flags[@]}" -count=1 -timeout=5m \
+              -run '^Test(BuildPending|PGPendingBuild)' -json | tee "$log"
+            python3 - "$log" <<'PY'
+          import json
+          import sys
+
+          expected = {
+              "TestBuildPendingRejectsWithoutMutation",
+              "TestBuildPendingAllowsOtherSlotsAndCompletedUpgrade",
+              "TestPGPendingBuildConcurrentStaleHubs",
+              "TestPGPendingBuildFirstConstructionAndCompletion",
+              "TestPGPendingBuildRollbackDoesNotReserveSlot",
+          }
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          skipped = [event.get("Test", "package") for event in events if event["Action"] == "skip"]
+          failed = [event.get("Test", "package") for event in events if event["Action"] == "fail"]
+          passed = {event.get("Test") for event in events if event["Action"] == "pass"}
+          missing = sorted(expected - passed)
+          if skipped or failed or missing or None not in passed:
+              raise SystemExit(f"PG gate failed: skipped={skipped}, failed={failed}, missing={missing}")
+          print(f"Verified all {len(expected)} building-pending tests with zero skips: {sys.argv[1]}")
+          PY
+          done
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
