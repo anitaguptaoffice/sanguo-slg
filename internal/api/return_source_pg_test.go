@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -17,33 +19,6 @@ var returnPGPins = strings.Fields("account player player_wallet player_city mil_
 
 func returnPGRecorded(t *testing.T, trace *returnPGTrace, p freshsource.Profile, pinned bool) {
 	t.Helper()
-	begin, rollback, reads := 0, 0, 0
-	var pid uint32
-	var pins []string
-	for _, q := range trace.events() {
-		if pid == 0 {
-			pid = q.pid
-		}
-		if q.pid != pid || q.err != nil {
-			t.Fatal("unexpected backend or SQL error", q.pid, q.err)
-		}
-		sql := strings.ToLower(strings.TrimSpace(q.sql))
-		switch {
-		case sql == "begin isolation level read committed":
-			begin++
-		case sql == "rollback":
-			rollback++
-		case strings.HasPrefix(sql, "lock table "):
-			pins = append(pins, q.sql)
-		case strings.Fields(sql)[0] == "select", strings.Fields(sql)[0] == "with":
-			reads++
-		default:
-			t.Fatal("unexpected validation SQL", q.sql)
-		}
-		if strings.Contains(sql, "nextval(") || strings.Contains(sql, "setval(") {
-			t.Fatal("source validation allocated or reset a sequence")
-		}
-	}
 	var want []string
 	if pinned {
 		for i, name := range returnPGPins {
@@ -57,9 +32,47 @@ func returnPGRecorded(t *testing.T, trace *returnPGTrace, p freshsource.Profile,
 			want = append(want, prefix+pgx.Identifier{p.SchemaName, name}.Sanitize()+" IN "+mode+" MODE")
 		}
 	}
+	begin, rollback, reads := 0, 0, 0
+	var pid uint32
+	var pins []string
+	for _, q := range trace.events() {
+		if pid == 0 {
+			pid = q.pid
+		}
+		if q.pid != pid || q.err != nil {
+			t.Fatal("unexpected backend or SQL error", q.pid, q.err)
+		}
+		switch {
+		case q.sql == "begin isolation level read committed":
+			begin++
+		case q.sql == "rollback":
+			rollback++
+		case slices.Contains(want, q.sql):
+			pins = append(pins, q.sql)
+		case returnSQLReviewedRead(q.sql, p):
+			reads++
+		default:
+			t.Fatalf("unexpected validation SQL: %q", q.sql)
+		}
+	}
 	if begin != 1 || rollback != 1 || reads == 0 || !reflect.DeepEqual(pins, want) {
 		t.Fatalf("transaction/SQL record: begin=%d rollback=%d reads=%d pins=%v want=%v", begin, rollback, reads, pins, want)
 	}
+}
+
+// Closed byte-for-byte set, not a SQL parser or a SELECT/WITH prefix heuristic.
+func returnSQLReviewedRead(sql string, p freshsource.Profile) bool {
+	sequence := "SELECT last_value,is_called FROM " + pgx.Identifier{p.SchemaName, "work_queue_id_seq"}.Sanitize()
+	if sql == sequence {
+		return true
+	}
+	digest := fmt.Sprintf("%x", sha256.Sum256([]byte(sql)))
+	for _, source := range returnSQLReviewed {
+		if digest == source.digest {
+			return true
+		}
+	}
+	return false
 }
 
 func returnPGReleased(t *testing.T, ctx context.Context, observer *pgx.Conn, p freshsource.Profile) {
