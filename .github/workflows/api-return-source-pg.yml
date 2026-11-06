@@ -1,0 +1,399 @@
+name: API return PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api-pg-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 135
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [ordinary, race]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - name: Verify PostgreSQL 17 and host toolchain
+        shell: bash
+        run: |
+          go version
+          command -v psql
+          psql --version
+          version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
+      - name: Check API return source formatting
+        shell: bash
+        run: |
+          files=$(gofmt -l internal/api/return_source.go \
+            internal/api/return_source_fixture_test.go \
+            internal/api/return_source_lifetime_pg_test.go \
+            internal/api/return_source_pg_test.go \
+            internal/api/return_source_pins_pg_test.go \
+            internal/api/return_source_test.go)
+          if [[ -n "$files" ]]; then
+            printf 'Unformatted API source:\n%s\n' "$files"
+            while IFS= read -r file; do
+              gofmt -d "$file"
+            done <<< "$files"
+            exit 1
+          fi
+      - name: Run full API regressions without short mode
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          flags=()
+          if [[ "$MODE" == race ]]; then flags=(-race); fi
+          gate="$RUNNER_TEMP/api-gate.py"
+          cat > "$gate" <<'PY'
+          import json
+          import sys
+
+          phase = sys.argv[3]
+          if phase not in {"preflight", "full"}:
+              raise SystemExit("Unknown API test phase")
+          root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
+          # Full: 225 baseline + 24 new outcomes; preflight requires the same 24 new outcomes.
+          expected = {
+              "TestCityGarrisonAuthorizationBeforeRead",
+              "TestCityGarrisonConcurrentCompletionSnapshot",
+              "TestCityGarrisonPostgresOwnership",
+              "TestCityGarrisonPresenceAndValidation",
+              "TestCityProductionRatesPerHourMatchesDomesticFormula",
+              "TestCityScopePGAlternateContentCatalogCannotBypass",
+              "TestCityScopePGConfiguredShardStillWorks",
+              "TestCityScopePGRejectsForeignShardAndPool",
+              "TestConsumableGuardMemoryFixturesRequireBinding",
+              "TestConsumableGuardPGAllUnappliedTypesBeforeHydration",
+              "TestConsumableGuardPGRejectsUntrustedWiring",
+              "TestConsumableGuardPGSpeedupRequiresBuildConsumer",
+              "TestConsumableGuardPGSupportedEffectsRemainApplied",
+              "TestContentBagGatewayHandlers",
+              "TestContentGrantThroughAPIWalletLifecycle",
+              "TestCreateCityAtomicConcurrentRequests",
+              "TestCreateCityAtomicDOMFailureAndCancellation",
+              "TestCreateCityAtomicDefaultsAndParticipantFailure",
+              "TestCreateCityAtomicDependenciesFailClosed",
+              "TestCreateCityAtomicStarterWalletOnlyOnce",
+              "TestCreateCityAtomicUnknownCommitAndReload",
+              "TestCreateCityRegistrationCommitFailureBoundary",
+              "TestCreateCityRegistrationLegacyOrphanFailClosed",
+              "TestCreateCityRegistrationReload",
+              "TestCreateCityRegistrationShardGuard",
+              "TestDomesticCityOwnership",
+              "TestFamilyAtomicPGAllWriteFailuresRollback",
+              "TestFamilyAtomicPGCancellationRollsBackEveryPhase",
+              "TestFamilyAtomicPGCaptivePlansCostsAndNoItemCases",
+              "TestFamilyAtomicPGCaptiveReplansAfterStalePreview",
+              "TestFamilyAtomicPGComingViewsAcceptRejectAndRestart",
+              "TestFamilyAtomicPGConcurrentTerminalTransitions",
+              "TestFamilyAtomicPGCrossFamilySingleRemainingCapacity",
+              "TestFamilyAtomicPGDefaultCatalogRejectsUnregisteredItemWithoutDebit",
+              "TestFamilyAtomicPGDoesNotTakeHubWhileHoldingWallet",
+              "TestFamilyAtomicPGLionizeBefriendHasNoCapacityGate",
+              "TestFamilyAtomicPGLionizeConcurrentProgress",
+              "TestFamilyAtomicPGLionizeExistingTemplateEligibility",
+              "TestFamilyAtomicPGLionizeFullProgressExactCostsAndRestart",
+              "TestFamilyAtomicPGLostAcknowledgementNeverReplaysOrPublishes",
+              "TestFamilyAtomicPGMetadataSchemaMissingHasNoLazyDDLFallback",
+              "TestFamilyAtomicPGOnlyCallerConnectionBeforeCommit",
+              "TestFamilyAtomicPGOrdersNaturalWithoutInventingCapacityRule",
+              "TestFamilyAtomicPGOwnerUpdatesWaitAndRecheckIncludingLists",
+              "TestFamilyAtomicPGPostcommitFailureAndReloadRemainSuccess",
+              "TestFamilyAtomicPGRejectsActorScopeAndRewiredMetadata",
+              "TestFamilyAtomicPGRejectsBusinessFailuresWithoutEffects",
+              "TestFamilyErrorsNeverExposePrivateFailures",
+              "TestFreshAdmissionCancelWaitLeavesLeasePending",
+              "TestFreshAdmissionCloseAcquireRace",
+              "TestFreshAdmissionCloseAndCopies",
+              "TestFreshAdmissionConcurrentOneShot",
+              "TestFreshAdmissionInvalidAndCancellation",
+              "TestFreshAdmissionUnknownNeverDrains",
+              "TestGetAndListBattleReports",
+              "TestGetCityStateConcurrentDomesticTick",
+              "TestGmAuthorize",
+              "TestGmLookupAndGrant",
+              "TestGmMutePersistsAndBlocksChat",
+              "TestGmSessionKickBinding",
+              "TestHeroCityOwnershipRequiresWorldEvenWithCache",
+              "TestHeroGatewayAddAndClearHeroPoint",
+              "TestHeroGatewayLargessGoldAndCooldown",
+              "TestHeroGatewayListRecruitTemplates",
+              "TestHeroGatewayRecruitAndList",
+              "TestHeroGatewayRecruitInsufficientItem",
+              "TestHeroGatewaySetAndClearCityChief",
+              "TestHeroGatewayUpgradeHero",
+              "TestHotelAtomicPGAllWriteFailuresRollback",
+              "TestHotelAtomicPGCancellationHasNoPartialEffects",
+              "TestHotelAtomicPGConcurrentPoolsAndSingleFee",
+              "TestHotelAtomicPGDistinctParticipantPoolsFailClosed",
+              "TestHotelAtomicPGDoesNotWaitForHubWhileHoldingWallet",
+              "TestHotelAtomicPGExposedCacheStoreCannotRedirectTransaction",
+              "TestHotelAtomicPGInsufficientAssetsCapacityAndSelectedRow",
+              "TestHotelAtomicPGLostCommitAcknowledgementNeverReplays",
+              "TestHotelAtomicPGOrdersAgainstNaturalWithoutNewCapacityRule",
+              "TestHotelAtomicPGOwnerChangeWaitsAndIsRechecked",
+              "TestHotelAtomicPGPostcommitFailureRemainsSuccess",
+              "TestHotelAtomicPGRejectsActorScopeAndWiringBeforeWrites",
+              "TestHotelAtomicPGSingleConnectionAndTransactionOptions",
+              "TestHotelAtomicPGSnapshotCostIdentityAndRestart",
+              "TestHotelAtomicPGSnapshotNotPostcommitReload",
+              "TestHotelErrorsSanitizeAndMemoryIsNotPG",
+              "TestINTG005Wave7SmokePath",
+              "TestINTG006Data002SmokePath",
+              "TestINTG007M4DeepSmokePath",
+              "TestINTG008Wave11SmokePath",
+              "TestINTG009Wave12SmokePath",
+              "TestINTG010Wave13SmokePath",
+              "TestINTG011Wave14SmokePath",
+              "TestINTG012Wave15SmokePath",
+              "TestINTG013Wave16SmokePath",
+              "TestINTG014Wave17SmokePath",
+              "TestINTG015Wave18SmokePath",
+              "TestINTG016Wave19SmokePath",
+              "TestINTG017Wave20SmokePath",
+              "TestINTG018Wave21SmokePath",
+              "TestINTG019Wave22SmokePath",
+              "TestINTG020Wave23SmokePath",
+              "TestINTG021Wave24SmokePath",
+              "TestINTG022Wave25SmokePath",
+              "TestINTG023Wave26SmokePath",
+              "TestINTG024Wave27SmokePath",
+              "TestINTG025Wave28SmokePath",
+              "TestINTG026Wave29SmokePath",
+              "TestINTG027Wave30SmokePath",
+              "TestINTG028Wave31SmokePath",
+              "TestINTG029Wave32SmokePath",
+              "TestINTG030Wave33SmokePath",
+              "TestINTG031Wave34SmokePath",
+              "TestINTG032Wave35SmokePath",
+              "TestINTG033Wave36SmokePath",
+              "TestINTG034Wave37SmokePath",
+              "TestINTG035Wave38SmokePath",
+              "TestINTG036Wave39SmokePath",
+              "TestINTG037Wave40SmokePath",
+              "TestINTG038Wave41SmokePath",
+              "TestINTG039Wave42SmokePath",
+              "TestINTG040Wave43SmokePath",
+              "TestINTG041Wave44SmokePath",
+              "TestINTG042Wave45SmokePath",
+              "TestINTG043Wave46SmokePath",
+              "TestINTG044HeroL1L5SmokePath",
+              "TestINTG045HeroL6L8SmokePath",
+              "TestINTG046HeroL9L11SmokePath",
+              "TestINTG047Wave47SmokePath",
+              "TestINTG048Wave48SmokePath",
+              "TestINTG049Wave49SmokePath",
+              "TestINTG050Wave50SmokePath",
+              "TestINTG051Wave51SmokePath",
+              "TestINTG052Wave52SmokePath",
+              "TestINTG053Wave53SmokePath",
+              "TestINTG054Wave54SmokePath",
+              "TestINTG055Wave55SmokePath",
+              "TestINTG056Wave56SmokePath",
+              "TestINTG057Wave57SmokePath",
+              "TestINTG058Wave58SmokePath",
+              "TestINTG059Wave59SmokePath",
+              "TestListGameServersAndServerIDBinding",
+              "TestLoginCreateCityUpgradeFlow",
+              "TestM2BattleReportSmokePath",
+              "TestM3SocialSmokePath",
+              "TestM4ContentSmokePath",
+              "TestMailGatewayHandlers",
+              "TestMarchListUsesConsistentCurrentSurvivors",
+              "TestMarchSummaryNilOrder",
+              "TestMarchSummaryReturnDeadline",
+              "TestMarchTroopParsingNormalizesBeforeHeroClaim",
+              "TestMilitaryDurableParticipantConcurrentCopies",
+              "TestMilitaryDurableParticipantCopies",
+              "TestPGReturnGenerationCanceledPin",
+              "TestPGReturnGenerationCanceledPin/cancel_request_ended",
+              "TestPGReturnGenerationCanceledPin/default_unknown",
+              "TestPGReturnGenerationCaptureAndAssembly",
+              "TestPGReturnGenerationClosedPoolQuarantine",
+              "TestPGReturnGenerationConstructorPanic",
+              "TestPGReturnGenerationOrderedPins",
+              "TestPGReturnGenerationRejectsDomainSources",
+              "TestPGReturnGenerationRejectsDomainSources/account/oid",
+              "TestPGReturnGenerationRejectsDomainSources/account/owner",
+              "TestPGReturnGenerationRejectsDomainSources/account/shape",
+              "TestPGReturnGenerationRejectsDomainSources/domestic/oid",
+              "TestPGReturnGenerationRejectsDomainSources/domestic/owner",
+              "TestPGReturnGenerationRejectsDomainSources/domestic/shape",
+              "TestPGReturnGenerationRejectsDomainSources/military/oid",
+              "TestPGReturnGenerationRejectsDomainSources/military/owner",
+              "TestPGReturnGenerationRejectsDomainSources/military/shape",
+              "TestPGReturnGenerationRejectsDomainSources/world/oid",
+              "TestPGReturnGenerationRejectsDomainSources/world/owner",
+              "TestPGReturnGenerationRejectsDomainSources/world/shape",
+              "TestPGReturnGenerationRollbackFailureQuarantine",
+              "TestPgShopWalletSpend",
+              "TestPlayerBootstrapConcurrentPG",
+              "TestPlayerBootstrapExhaustionPG",
+              "TestPlayerBootstrapLockScopePG",
+              "TestPlayerBootstrapPreservesExistingPG",
+              "TestPlayerBootstrapRollbackAndRetryPG",
+              "TestRecruitAtomicPGAcrossPlayersUniqueIdentity",
+              "TestRecruitAtomicPGCancellationBoundaries",
+              "TestRecruitAtomicPGConcurrentBudget",
+              "TestRecruitAtomicPGConcurrentTemplateConstraint",
+              "TestRecruitAtomicPGExactCostAndRestart",
+              "TestRecruitAtomicPGIdentityCollisionIsNotTemplateRejection",
+              "TestRecruitAtomicPGPostCommitInvalidationFailureStillSuccess",
+              "TestRecruitAtomicPGRejectsWithoutMutation",
+              "TestRecruitAtomicPGSQLFailuresRollbackAllAssets",
+              "TestRecruitAtomicPGStaleServicesRemoveGrantRace",
+              "TestRecruitAtomicPGUnconfirmedCommitNeverReplays",
+              "TestRecruitErrorsDoNotExposeSQL",
+              "TestRecruitRequiresAtomicDependencies",
+              "TestRecruitTroopDebitsWalletAndStartMarchCreatesOrder",
+              "TestReturnSourceCaptureAndProjections",
+              "TestReturnSourceOneShotContextAndClose",
+              "TestReturnSourceRejectsInvalidCapture",
+              "TestReturnedMarchHistoryPaginationAndAuthorization",
+              "TestReturnedMarchWireContract",
+              "TestReviewerWallSecondReadLevelFailureIsExplicit",
+              "TestSessionRegistryPlayerLookup",
+              "TestShopAtomicErrorMessagesAreFixed",
+              "TestShopAtomicGatewayPGRejectAndUnknownNoSuccessEvent",
+              "TestShopAtomicGatewayPGShelfReadFailsClosed",
+              "TestShopAtomicGatewayPGSuccessAndCountDefault",
+              "TestShopAtomicPGCancellationAfterRealWrites",
+              "TestShopAtomicPGConfirmedCommitSurvivesRefreshFailure",
+              "TestShopAtomicPGDefaultPurchaseReceiptAndRestart",
+              "TestShopAtomicPGDependencyActorAndCapacityRejects",
+              "TestShopAtomicPGDifferentOffersShareItemsAndAllocator",
+              "TestShopAtomicPGFailureRollsBackEveryComponent",
+              "TestShopAtomicPGIndependentInstancesDailyCap",
+              "TestShopAtomicPGIndependentPlayersLastStock",
+              "TestShopAtomicPGMixedCurrencyAndFreePurchase",
+              "TestShopAtomicPGProvenanceBeforeBegin",
+              "TestShopAtomicPGUnknownCommitIsNotReplayed",
+              "TestShopAtomicPGWalletWaitCancellation",
+              "TestShopPurchaseWalletPGCallerOwnership",
+              "TestSmokeQuestProgressPreservesOvershoot",
+              "TestStartMarchRequiresHeroAndReleasesAfterBattleReturn",
+              "TestStarterScrollFailuresAndRoutesPG",
+              "TestStarterScrollPolicyPG",
+              "TestStarterScrollSnapshotAndTimeoutPG",
+              "TestStarterScrollWaitsForBootstrapPG",
+              "TestTutorialFactsPersistedIsolationPG",
+              "TestTutorialLevelBoundedIsolatedAndReadRecoveryPG",
+              "TestTutorialLevelClaimPersistencePG",
+              "TestTutorialLevelFailureDuplicateAndReceiptRecoveryPG",
+              "TestTutorialLevelLoginAndProfileFreshnessPG",
+              "TestTutorialProviderFailureSafeResponses",
+              "TestTutorialPublicProgressRejectedAndTrustedDailyPreserved",
+              "TestTutorialReconciliationHooksAndReadsPG",
+              "TestUseSpeedupShortensBuildAndGetCityState",
+              "TestUseSpeedupWithoutActiveBuildStillConsumes",
+              "TestWallActorPGPreflightIsScopedAndCancelable",
+              "TestWallActorPGStaleSessionCannotRepairOrphanHistory",
+              "TestWallCatalogExplicitEmptyAndMemoryDevelopmentFallback",
+              "TestWallCatalogPGWiringDoesNotHideMalformedConfiguration",
+              "TestWallLevelPGCorruptLegacyReceiptCannotVerifyFloor",
+              "TestWallLevelPGLegacyRequiresExplicitNoPayoutClaim",
+              "TestWallLevelPGOwnedCompletedBuildingAndClaim",
+              "TestWallLevelPGPaidMissingHistoryReadAndExplicitClaim",
+              "TestWallLevelPGReadPathsAndCollateralGates",
+              "TestWallLevelPGReceiptAndLevelWriteFailureRecovery",
+              "TestWallLevelPGSecondReadRecoveryRefreshesFloor",
+              "TestWalletBoundaryExternalCreditSpendSettleReload",
+              "TestWalletBoundaryRecruitCommitFailureDoesNotQueue",
+              "TestWalletRefreshWithoutPersistenceDoesNotOverwrite",
+              "TestWalletToDomesticMapsFields",
+          }
+          required = {(root, name) for name in expected}
+          required.add((root + "/pb/sanguo/domestic/v1", "TestGarrisonWireCompatibility"))
+          required.add((root + "/pb/sanguo/quest/v1", "TestClaimRewardWireCompatibility"))
+          no_tests = {
+              root + f"/pb/sanguo/{domain}/v1"
+              for domain in ("content", "hero", "military", "rank", "shop", "world")
+          }
+          if phase == "preflight":
+              required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))}
+              no_tests = set()
+          if len(required) != (24 if phase == "preflight" else 249):
+              raise SystemExit("Frozen API inventory changed")
+          tested_packages = {package for package, _ in required}
+          with open(sys.argv[1], encoding="utf-8") as stream:
+              events = [json.loads(line) for line in stream if line.strip()]
+          observed = {event.get("Package") for event in events}
+          passed = {
+              (event.get("Package"), event["Test"]) for event in events
+              if event["Action"] == "pass" and event.get("Test")
+          }
+          bad = [
+              event for event in events
+              if event["Action"] == "fail" or event["Action"] == "skip"
+              and (event.get("Test") or event.get("Package") not in no_tests)
+              or event.get("Package") in no_tests and "Test" in event
+          ]
+          for package in tested_packages | no_tests:
+              terminal = [
+                  event["Action"] for event in events
+                  if event.get("Package") == package and not event.get("Test")
+                  and event["Action"] in {"pass", "skip", "fail"}
+              ]
+              wanted = ["skip"] if package in no_tests else ["pass"]
+              if terminal != wanted:
+                  bad.append({"package": package, "terminal": terminal})
+              if package in no_tests and not any(
+                  event.get("Package") == package and "Test" not in event
+                  and event["Action"] == "output"
+                  and event.get("Output") == f"?   \t{package}\t[no test files]\n"
+                  for event in events
+              ):
+                  bad.append({"package": package, "missing_no_test_files_output": True})
+          started = {
+              (event.get("Package"), event["Test"]) for event in events
+              if event["Action"] == "run" and event.get("Test")
+          }
+          unfinished = sorted(started - passed)
+          missing = sorted(required - passed)
+          if bad or missing or unfinished or observed != tested_packages | no_tests:
+              raise SystemExit(f"API PG gate failed: bad={bad}, missing={missing}, unfinished={unfinished}, observed={observed}")
+          top_level = sum("/" not in name for _, name in passed)
+          print(f"{sys.argv[2]}/{phase}: {top_level} top-level / {len(passed)} including subtests PASS")
+          print(f"Verified {len(required)} required tests/scenarios and all {len(tested_packages)} tested-package PASS events")
+          print(f"Zero skipped tests or failures; {len(no_tests)} packages have no test files (Go package-only skip)")
+          print("Optional t.Log branches are not full gameplay coverage; their actual output is preserved above")
+          print("\n".join(f"{package}: {name}" for package, name in sorted(required)))
+          PY
+          # Preflight and full acceptance own different disposable databases.
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
+          log="$RUNNER_TEMP/api-preflight-$MODE.json"
+          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration)' -count=1 -timeout=5m -json | tee "$log"
+          python3 "$gate" "$log" "$MODE" preflight
+          docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
+          log="$RUNNER_TEMP/api-$MODE.json"
+          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_$MODE?sslmode=disable" \
+          go test ./internal/api/... "${flags[@]}" -count=1 -timeout=120m -json | tee "$log"
+          python3 "$gate" "$log" "$MODE" full
