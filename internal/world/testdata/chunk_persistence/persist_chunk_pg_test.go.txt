@@ -84,7 +84,7 @@ func chunkPersistencePG(t *testing.T) (context.Context, *pgxpool.Pool, *pgx.Conn
 	}
 	chunkSQL(t, ctx, observer, string(ddl))
 	var version int
-	if err := observer.QueryRow(ctx, "SHOW server_version_num").Scan(&version); err != nil || version/10000 != 17 {
+	if err := observer.QueryRow(ctx, "SELECT current_setting('server_version_num')::int").Scan(&version); err != nil || version/10000 != 17 {
 		t.Fatal("PostgreSQL 17 required", version, err)
 	}
 	var writerPID, observerPID int

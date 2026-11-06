@@ -5,8 +5,14 @@ DIAGNOSTIC ONLY / NEVER MERGE, even if ordinary CI is green. No production repai
 Tests-first base: `41b3aef34a74fb239f70d319356c7e7071cd0401`.
 Original checkpoint: `7c81811b02e65ba1e03af53fd743f0b370fa5d1c`,
 tree `5f4c1fb3375a881db3e04c96be2819af4fe499f3`.
-The 308-line Go artifact is unchanged, blob `1aa6c2fd0a8844fa8f0afc27b411a0eae6fcac96`,
+Original failed artifact: blob `1aa6c2fd0a8844fa8f0afc27b411a0eae6fcac96`,
 SHA256 `ef0d63891afc0ba0e5823884d5f23caac23314f06224f0c4430e8c9149a16a37`.
+Corrected 308-line artifact: blob `3db887d2a3bc6c87299948d72c5dba16ddaa6bf7`,
+SHA256 `34c60427bf1567d72f8b12fc00be546af203fd8acb499e7a01c077609a1de58e`.
+Only version SQL changed from SHOW text to `SELECT current_setting('server_version_num')::int`.
+All test names, behavioral assertions, transaction-end checks and query-plan evidence
+are unchanged. Original published checkpoint `0d5fd7a7d2a5cbf6b3f6d11a78d08f6f1ff4af4e`
+remains in history; corrections are forward-only.
 It is stored as `testdata/chunk_persistence/persist_chunk_pg_test.go.txt`, outside
 normal Go package tests. Do not activate it on this diagnostic branch. Runtime
 reproduction is pending; normal WORLD CI does not execute this ignored artifact.
@@ -35,7 +41,12 @@ wrong-cell assertions. Also require the observed halfway lock and sequential que
 plan logs. Compile errors, skips, unrelated failures, missing tests, or a green
 baseline do not establish the intended reproduction. Preserve PostgreSQL/Go versions,
 backend IDs, actual plans, logs, original production hashes and immutable tree IDs.
-Local authoring has no usable Go/PG runtime; no compile, gofmt or runtime PASS is claimed.
+[Original diagnostic run 42291835125](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/42291835125)
+verified Go1.23.12/PG17.11, compilation, formatting and archived source integrity.
+All three fixtures stopped at version setup because SHOW returned text OID25, which
+cannot scan into int. No intended behavioral assertion was reached in either mode.
+This is a fixture failure, not bug reproduction. Corrected execution remains pending;
+local authoring has no usable Go/PG runtime and claims no local runtime PASS.
 
 ## Evidence and limits
 
