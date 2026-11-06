@@ -41,11 +41,13 @@ jobs:
           [[ "$version" =~ ^[0-9]+$ ]]
           (( version / 10000 == 17 ))
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
-      - name: Check pending-reader source formatting
+      - name: Check MARCH source formatting
         shell: bash
         run: |
           files=$(gofmt -l internal/military/march/recruit_pending_read.go \
-            internal/military/march/recruit_prepare.go internal/military/march/recruit_pending_read_pg_test.go)
+            internal/military/march/recruit_prepare.go internal/military/march/recruit_pending_read_pg_test.go \
+            internal/military/march/return_catalog.go internal/military/march/return_catalog_test.go \
+            internal/military/march/return_catalog_pg_test.go)
           if [[ -n "$files" ]]; then
             printf 'Unformatted MARCH source:\n%s\n' "$files"
             exit 1
@@ -67,8 +69,8 @@ jobs:
           import sys
 
           package = "github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
-          # Frozen #2105 inventory: all 157 existing and 4 new top-level tests,
-          # plus 19 Prepare and 12 new raw-reader validation scenarios.
+          # Frozen #2105/#2109 inventory: all 166 top-level tests,
+          # plus 31 Prepare/raw-reader and 39 return-catalog drift scenarios.
           expected = {
               "TestArrivalWithoutReturnRetainsExistingPhase",
               "TestConcurrentReturnSettlement",
@@ -202,6 +204,49 @@ jobs:
               "TestPGRecruitWriteRejects",
               "TestPGRecruitWriteWaiting",
               "TestPGRestoreSnapDetectsNoopWrite",
+              "TestPGReturnCatalogMetadataDrift",
+              "TestPGReturnCatalogMetadataDrift/RLS",
+              "TestPGReturnCatalogMetadataDrift/array_default",
+              "TestPGReturnCatalogMetadataDrift/array_dimensions",
+              "TestPGReturnCatalogMetadataDrift/array_nullability",
+              "TestPGReturnCatalogMetadataDrift/array_type",
+              "TestPGReturnCatalogMetadataDrift/clock_default",
+              "TestPGReturnCatalogMetadataDrift/deadline_default",
+              "TestPGReturnCatalogMetadataDrift/deadline_nullable",
+              "TestPGReturnCatalogMetadataDrift/default",
+              "TestPGReturnCatalogMetadataDrift/deferred_PK",
+              "TestPGReturnCatalogMetadataDrift/direction",
+              "TestPGReturnCatalogMetadataDrift/dropped_column",
+              "TestPGReturnCatalogMetadataDrift/expression",
+              "TestPGReturnCatalogMetadataDrift/extra_column",
+              "TestPGReturnCatalogMetadataDrift/extra_index",
+              "TestPGReturnCatalogMetadataDrift/include",
+              "TestPGReturnCatalogMetadataDrift/indimmediate",
+              "TestPGReturnCatalogMetadataDrift/indisexclusion",
+              "TestPGReturnCatalogMetadataDrift/indislive",
+              "TestPGReturnCatalogMetadataDrift/indisready",
+              "TestPGReturnCatalogMetadataDrift/indisreplident",
+              "TestPGReturnCatalogMetadataDrift/indisvalid",
+              "TestPGReturnCatalogMetadataDrift/indnullsnotdistinct",
+              "TestPGReturnCatalogMetadataDrift/inheritance",
+              "TestPGReturnCatalogMetadataDrift/keys",
+              "TestPGReturnCatalogMetadataDrift/missing",
+              "TestPGReturnCatalogMetadataDrift/opclass",
+              "TestPGReturnCatalogMetadataDrift/options",
+              "TestPGReturnCatalogMetadataDrift/origin_nullable",
+              "TestPGReturnCatalogMetadataDrift/persistence",
+              "TestPGReturnCatalogMetadataDrift/policy",
+              "TestPGReturnCatalogMetadataDrift/predicate",
+              "TestPGReturnCatalogMetadataDrift/replica_identity",
+              "TestPGReturnCatalogMetadataDrift/rule",
+              "TestPGReturnCatalogMetadataDrift/trigger",
+              "TestPGReturnCatalogMetadataDrift/type",
+              "TestPGReturnCatalogMetadataDrift/unique",
+              "TestPGReturnCatalogMetadataDrift/unvalidated",
+              "TestPGReturnCatalogMetadataDrift/weak_check",
+              "TestPGReturnCatalogPrivileges",
+              "TestPGReturnCatalogReadOnly",
+              "TestPGReturnCatalogSourceAndSettings",
               "TestPlanRecruitConcurrentReadOnly",
               "TestPlanRecruitDefaults",
               "TestPlanRecruitDurationBoundaries",
@@ -252,6 +297,7 @@ jobs:
               "TestRestoreActivationBarrier",
               "TestRestoreEmptyOnce",
               "TestRestoreOverdueArrivalKeepsRemainingReturn",
+              "TestReturnCatalogInvalidAndConstants",
               "TestReturnCreditMaxBoundaryAndEmptySurvivors",
               "TestReturnCreditOverflowAfterValidRecruit",
               "TestReturnCreditRejectsInvalidTotalsWithoutPartialMutation",
