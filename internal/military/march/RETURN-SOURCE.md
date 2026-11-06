@@ -43,3 +43,20 @@ Mandatory tests: `TestReturnLockedScopeAndInvalid`, `TestReturnLockedGraphReject
 Both exact component and combined trees require independent review, official
 scoped gofmt and full MARCH PG17 ordinary/race with zero skips/failures before
 integration. Repaired main, all required CI and postmerge main remain gates.
+
+## MIL-RETURN-ATOMIC-001 (#2125)
+Dormant `Complete`/`Readback` capture Access at entry and use the same bound
+transaction throughout. Both retain the existing full lock order; terminals skip
+clock/admission, and status3 samples PG clock once without rounding. Early and
+Readback never decode current pending admission or write. Due Complete validates
+all stored pending rules/evidence and R+P+S before conditional R+S/march/army writes.
+Nonlocking actual rereads verify every stock row and retained graph before Applied.
+No transaction ownership, abort SQL, updated_at changes, queue mutation, hero or
+Hub publication exists. APP must rollback ANY error; Applied is only provisional.
+Tests-first commit `44de7fd` was not executed locally: Go/gofmt unavailable; missing
+new methods are not behavior-red evidence. Mandatory unit tests:
+`TestReturnAtomicInvalid`, `TestReturnAtomicCapacity`,
+`TestReturnAtomicAllPendingAndStoredRules`. Separate #2126 real PG evidence and CI
+combination gates, official Go/gofmt, full MARCH ordinary/race, exact-head independent
+review and postmerge main verification remain required before source integration.
+This does not implement APP unknown-outcome recovery, enrollment or activation.
