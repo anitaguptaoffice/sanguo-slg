@@ -52,7 +52,7 @@ assert.ok(b.width>0&&b.x>=0&&b.x+b.width<=width);
 assert.equal(await page.locator('[data-item-cfg-id="9999"] .bag-item-icon').count(),0);
 
 assert.equal((await page.locator('[data-item-cfg-id="2001"] .bag-stack-id').innerText()).trim(),'2001');
-assert.equal((await page.locator('[data-item-cfg-id="2001"] .bag-stack-qty').innerText()).trim(),'1');
+assert.equal((await page.locator('[data-item-cfg-id="2001"] .bag-stack-qty').innerText()).trim(),'×1');
 
 await page.screenshot({path:out+'/'+width+'-dpr'+dpr+'-on.png'});
 
