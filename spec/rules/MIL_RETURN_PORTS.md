@@ -1,17 +1,19 @@
 # SPEC-RETURN-PORTS-001 — proposed return transaction ports
 
 Task [#2095](https://github.com/anitaguptaoffice/sanguo-slg/issues/2095).
-Status: **isolated proposal, not frozen, implemented or activated**.
-Depends on the UNMERGED [return-credit proposal](MIL_RETURN_CREDIT.md), PR #2094
-head `aa9365318d17381c7a7f9b68d3c3049c343ae296`. Neither proposal is production
-contract authority until its independent SPEC review and applicable freeze/notification
-steps complete. AGENTS.md requires these gates BEFORE dependent implementation.
+Status: **independently reviewed proposal, not yet adopted.**
+Adoption takes effect only if and when PR #2096 is merged. No merge is claimed here.
+Not implemented or activated. Depends on the adopted
+[return-credit contract](MIL_RETURN_CREDIT.md), PR #2094 merged as
+`e2dff4987acca09c73187f29a8479c15d540248a`.
+AGENTS.md requires independent SPEC review and applicable freeze/notification
+steps BEFORE dependent implementation. Adoption does not enable production.
 This document prepares interfaces and regression obligations, not executable tests.
 No Go, DDL, wire protocol, deployment, held-stack modification or hold release occurs.
 
 Inputs also remain [Recruit ports](MIL_RECRUIT_PORTS.md),
 [lifetime](MIL_RECRUIT_TX_LIFETIME.md), [boundary](SLG_COMMAND_BOUNDARY.md).
-If review changes #2094, re-review this proposal and all affected cases before adoption.
+If a later contract changes #2094 semantics, re-review affected ports and cases.
 
 ## 1. Construction and source agreement
 
@@ -219,7 +221,7 @@ Future independently registered implementation cards must demonstrate:
 
 This SPEC PR can only validate prose/scope/links and repository CI. It cannot claim the
 above runtime, concurrent, process or recovery tests passed. #1953 stays blocked until
-both proposals are adopted/notified and exact single-domain component scopes are ready.
+both contracts are adopted/notified and exact single-domain component scopes are ready.
 Separate ACCOUNT, WORLD, MIL, APP, HERO/hydration implementations and final combined source/writer
 compatibility audit remain required; no component or isolated fixture enables production.
 Existing #1980/#1983 and historical holds remain unchanged. No freeze waiver is implied.

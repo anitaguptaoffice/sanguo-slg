@@ -168,5 +168,5 @@ without sequence reset, populated-row immutability, wrong-owner/config/shadow
 rejection, and `git diff --check`. No data migration, no `NOT NULL`, no
 crash-safe stock-credit claim, no self-review.
 
-Return-credit compatibility is proposed separately in [MIL_RETURN_CREDIT](MIL_RETURN_CREDIT.md).
-That rules-only proposal does not implement, activate or waive this document's gates.
+Return-credit compatibility is defined separately in [MIL_RETURN_CREDIT](MIL_RETURN_CREDIT.md).
+That rules-only contract does not implement, activate or waive this document's gates.
