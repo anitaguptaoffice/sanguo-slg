@@ -49,7 +49,9 @@ jobs:
             internal/military/march/return_catalog.go internal/military/march/return_catalog_test.go \
             internal/military/march/return_catalog_pg_test.go \
             internal/military/march/return_source.go internal/military/march/return_source_test.go \
-            internal/military/march/return_source_pg_test.go)
+            internal/military/march/return_source_pg_test.go \
+            internal/military/march/return_locked.go internal/military/march/return_locked_test.go \
+            internal/military/march/return_locked_pg_test.go)
           if [[ -n "$files" ]]; then
             printf 'Unformatted MARCH source:\n%s\n' "$files"
             while IFS= read -r file; do
@@ -74,8 +76,8 @@ jobs:
           import sys
 
           package = "github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
-          # Frozen #2105/#2109/#2113 inventory: all 170 top-level tests,
-          # plus 31 Prepare/raw-reader, 39 catalog drift and four ordered-pin scenarios.
+          # Frozen #2105/#2109/#2113/#2117/#2119 inventory: all 175 top-level tests,
+          # plus 31 Prepare/raw-reader, 39 catalog drift, four ordered-pin and 41 locked-state scenarios.
           expected = {
               "TestArrivalWithoutReturnRetainsExistingPhase",
               "TestConcurrentReturnSettlement",
@@ -252,6 +254,50 @@ jobs:
               "TestPGReturnCatalogPrivileges",
               "TestPGReturnCatalogReadOnly",
               "TestPGReturnCatalogSourceAndSettings",
+              "TestPGReturnLockedAccess",
+              "TestPGReturnLockedOrder",
+              "TestPGReturnLockedStates",
+              "TestPGReturnLockedStates/#00",
+              "TestPGReturnLockedStates/ALTER_TABLE_city_troop_DROP_CONSTRAINT_city_troop_count_check;_UPDATE_city_troop_SET_count=-1",
+              "TestPGReturnLockedStates/ALTER_TABLE_city_troop_DROP_CONSTRAINT_city_troop_wounded_check;_UPDATE_city_troop_SET_wounded=-1",
+              "TestPGReturnLockedStates/DELETE_FROM_army_troop",
+              "TestPGReturnLockedStates/DELETE_FROM_city_troop_WHERE_unit_cfg_id=4",
+              "TestPGReturnLockedStates/DELETE_FROM_field_army",
+              "TestPGReturnLockedStates/DELETE_FROM_march_order",
+              "TestPGReturnLockedStates/DELETE_FROM_mil_city_origin",
+              "TestPGReturnLockedStates/INSERT_INTO_city_troop_VALUES(1,100,5,0,0)",
+              "TestPGReturnLockedStates/UPDATE_army_troop_SET_count=0_WHERE_unit_cfg_id=1",
+              "TestPGReturnLockedStates/UPDATE_army_troop_SET_server_id=2",
+              "TestPGReturnLockedStates/UPDATE_army_troop_SET_unit_cfg_id=5_WHERE_unit_cfg_id=4",
+              "TestPGReturnLockedStates/UPDATE_city_troop_SET_unit_cfg_id=5_WHERE_unit_cfg_id=4",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_hero_ids='{}'",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_hero_ids=ARRAY[-1]",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_hero_ids=ARRAY[0]",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_hero_ids=ARRAY[1,1]",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_hero_ids=ARRAY[NULL]::bigint[]",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_owner_player_id=2",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_server_id=2",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_status=3",
+              "TestPGReturnLockedStates/UPDATE_field_army_SET_x=0",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_army_id=2",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_depart_at=arrive_at",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_from_x=1",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_origin_city_id=101",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_origin_city_id=NULL",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_purpose=4",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_return_finish_at='infinity'",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_return_finish_at=NULL",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_return_finish_at=arrive_at",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_server_id=2",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_status=2",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_status=4,return_finish_at=NULL;_UPDATE_field_army_SET_status=1",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_status=4,return_finish_at=NULL;_UPDATE_field_army_SET_status=1;_DELETE_FROM_army_troop",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_status=4;_UPDATE_field_army_SET_status=1",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_status=4;_UPDATE_field_army_SET_status=1,x=0,y=0",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_status=4;_UPDATE_field_army_SET_status=1,x=0,y=0;_DELETE_FROM_army_troop",
+              "TestPGReturnLockedStates/UPDATE_march_order_SET_to_y=500",
+              "TestPGReturnLockedStates/UPDATE_mil_city_origin_SET_cohort_id=decode(repeat('04',16),'hex')",
+              "TestPGReturnLockedStates/UPDATE_mil_city_origin_SET_owner_player_id=2",
               "TestPGReturnSourceOrderedPins",
               "TestPGReturnSourceOrderedPins/cancel",
               "TestPGReturnSourceOrderedPins/clean",
@@ -313,6 +359,8 @@ jobs:
               "TestReturnCreditMaxBoundaryAndEmptySurvivors",
               "TestReturnCreditOverflowAfterValidRecruit",
               "TestReturnCreditRejectsInvalidTotalsWithoutPartialMutation",
+              "TestReturnLockedGraphRejects",
+              "TestReturnLockedScopeAndInvalid",
               "TestReturnMissingPrerequisitesDoNotSettle",
               "TestReturnSettlementOnceAndRetainedHistory",
               "TestReturnSourceInvalidAndCauses",
