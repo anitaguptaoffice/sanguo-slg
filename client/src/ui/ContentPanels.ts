@@ -7,6 +7,7 @@ import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   bagStackQuantity,
   type BagStack,
@@ -198,6 +199,7 @@ export class ContentPanels {
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
     private readonly onShopMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
+    private readonly artAssets?: Pick<AssetLoader, "getImageForAsset">,
   ) {}
 
   setBagReturnHeroDetailHandler(handler: (heroId: number) => void): void {
@@ -827,6 +829,20 @@ export class ContentPanels {
       const nameSpan = document.createElement("span");
       nameSpan.className = "bag-stack-name";
       nameSpan.textContent = name;
+      const itemId = row.item_cfg_id;
+      if (Number.isSafeInteger(itemId) && (itemId ?? 0) > 0 &&
+          !this.bagPanel.closest("[data-art-skin='off']")) {
+        const image = this.artAssets?.getImageForAsset(`item.icon.${itemId}.v1`);
+        if (image?.img.src) {
+          const icon = document.createElement("img");
+          icon.className = "bag-item-icon";
+          icon.alt = "";
+          icon.setAttribute("aria-hidden", "true");
+          icon.onerror = () => icon.remove();
+          icon.src = image.img.src;
+          nameSpan.prepend(icon);
+        }
+      }
       const qtySpan = document.createElement("span");
       qtySpan.className = "bag-stack-qty";
       qtySpan.textContent = formatBagStackQty(row.quantity);
