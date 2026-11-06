@@ -82,7 +82,7 @@ jobs:
           if [[ "$MODE" == race ]]; then flags=(-race); fi
           helper=internal/api/return_source_pg_test.go
           test_file=internal/api/return_source_sql_test.go
-          [[ "$(git hash-object "$test_file")" == 9eb4dd7cbba43771555838942f6140c3d7aa3aca ]]
+          [[ "$(git hash-object "$test_file")" == a4e6a572857d2d65676810bcfac06339258663fc ]]
           original=419fed8b5b2e36c706799909bc1eb506e0973d94
           git fetch --no-tags --depth=1 origin "$original"
           [[ "$(git rev-parse "$original:$helper")" == 94891293c6f74edf40bb0038299c16eca907fa68 ]]
@@ -90,7 +90,7 @@ jobs:
           # Complete compile closure: module manifests, internal packages and embedded seeds.
           # The selected synthetic case also reads frozen SQL literals under internal/.
           git archive HEAD go.mod go.sum internal | tar -x -C "$witness"
-          [[ "$(git hash-object "$witness/$test_file")" == 9eb4dd7cbba43771555838942f6140c3d7aa3aca ]]
+          [[ "$(git hash-object "$witness/$test_file")" == a4e6a572857d2d65676810bcfac06339258663fc ]]
           git show "$original:$helper" > "$witness/$helper"
           [[ "$(git hash-object "$witness/$helper")" == 94891293c6f74edf40bb0038299c16eca907fa68 ]]
           log="$RUNNER_TEMP/api-return-sql-original-$MODE.json"
