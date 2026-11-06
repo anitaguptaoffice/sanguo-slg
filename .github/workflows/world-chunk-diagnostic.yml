@@ -19,9 +19,10 @@ jobs:
         mode: [ordinary, race]
     env:
       OLD: 41b3aef34a74fb239f70d319356c7e7071cd0401
-      ARTIFACT: 0d5fd7a7d2a5cbf6b3f6d11a78d08f6f1ff4af4e
+      ORIGINAL: 0d5fd7a7d2a5cbf6b3f6d11a78d08f6f1ff4af4e
+      ARTIFACT: e52fe0e0a1f9e18fbea6c75307301aad6ccd800b
       FIXTURE: internal/world/testdata/chunk_persistence/persist_chunk_pg_test.go.txt
-      FROZEN: ef0d63891afc0ba0e5823884d5f23caac23314f06224f0c4430e8c9149a16a37
+      FROZEN: 34c60427bf1567d72f8b12fc00be546af203fd8acb499e7a01c077609a1de58e
       GOTOOLCHAIN: local
       GOFLAGS: -mod=readonly
       MODE: ${{ matrix.mode }}
@@ -59,15 +60,16 @@ jobs:
           source="$RUNNER_TEMP/chunk-old-source"
           mkdir "$evidence" "$source"
           [[ "$BASE_SHA" == "$ARTIFACT" ]]
-          [[ "$(git rev-parse "$ARTIFACT^{tree}")" == 78511de5aebb26d34ca00423fa5787fedcd8e66c ]]
-          [[ "$(git rev-list --parents -n 1 "$ARTIFACT")" == "$ARTIFACT $OLD" ]]
+          [[ "$(git rev-parse "$ARTIFACT^{tree}")" == 167166e55e11a566bde16050810257b1d77a5aa7 ]]
+          [[ "$(git rev-list --parents -n 1 "$ARTIFACT")" == "$ARTIFACT $ORIGINAL" ]]
+          [[ "$(git rev-list --parents -n 1 "$ORIGINAL")" == "$ORIGINAL $OLD" ]]
           git merge-base --is-ancestor "$ARTIFACT" HEAD
           [[ "$(git diff --name-only "$ARTIFACT" HEAD)" == .github/workflows/world-chunk-diagnostic.yml ]]
           [[ "$(git diff --numstat "$ARTIFACT" HEAD | awk '{print $1+$2}')" -le 400 ]]
           [[ -z "$(git status --porcelain)" ]]
           git diff --exit-code "$OLD" HEAD -- internal spec go.mod go.sum \
             ":(exclude)$FIXTURE" ':(exclude)internal/world/CHUNK-PERSISTENCE-PG.md'
-          [[ "$(git rev-parse "$ARTIFACT:$FIXTURE")" == 1aa6c2fd0a8844fa8f0afc27b411a0eae6fcac96 ]]
+          [[ "$(git rev-parse "$ARTIFACT:$FIXTURE")" == 3db887d2a3bc6c87299948d72c5dba16ddaa6bf7 ]]
           printf '%s  %s\n' "$FROZEN" "$FIXTURE" | sha256sum -c -
           [[ "$(wc -l < "$FIXTURE")" == 308 ]]
           git log -1 --format='%H %T %P' > "$evidence/head.txt"
