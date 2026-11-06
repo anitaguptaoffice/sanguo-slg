@@ -158,9 +158,13 @@ func (o *Owner) Commit(ctx context.Context) (err error) {
 	committed := false
 	defer func() {
 		if !committed {
+			if original := recover(); original != nil {
+				// Even a cleanup panic must not replace the original Commit panic.
+				defer func() { panic(original) }()
+			}
 			err = errors.Join(err, s.cleanup(call))
 		}
-	}() // also runs on panic; the panic continues after bounded cleanup
+	}() // bounded cleanup is only an attempt; it cannot establish the outcome
 	if err = s.tx.Commit(call); err != nil {
 		return errors.Join(ErrOutcomeUnknown, err)
 	}
