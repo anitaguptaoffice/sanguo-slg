@@ -144,11 +144,14 @@ func TestPGQueueGrantedRuntimeRoleAndMissingUsage(t *testing.T) {
 	now := time.Unix(1700000000, 0)
 	_, c := queueCity(t, pool, 1, 1, 42, &now)
 	role := fmt.Sprintf("queue_runtime_%d", time.Now().UnixNano())
-	productionSQL(t, pool, "CREATE ROLE "+role+" LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE")
+	// Disposable fixture credential, never a production account or secret.
+	const password = "queue-test-fixture-only"
+	productionSQL(t, pool, "CREATE ROLE "+role+" LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD '"+password+"'")
 	schema := pool.Config().ConnConfig.RuntimeParams["search_path"]
 	productionSQL(t, pool, fmt.Sprintf("GRANT USAGE ON SCHEMA %s TO %s; GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA %s TO %s; GRANT SELECT,USAGE ON SEQUENCE work_queue_id_seq TO %s", schema, role, schema, role, role))
 	cfg := pool.Config()
 	cfg.ConnConfig.User = role
+	cfg.ConnConfig.Password = password
 	peer, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
