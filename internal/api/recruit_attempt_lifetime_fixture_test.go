@@ -86,7 +86,7 @@ func newRecruitAttemptLifetimePG(t *testing.T, mode string) (*recruitAttemptLife
 	}
 	r.armed = true // Initialization is complete before the goroutine starts.
 	return &recruitAttemptLifetimePG{ctx: ctx, observer: observer, profile: p, g: g, trace: r,
-		scope: march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{9}},
+		scope:  march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{9}},
 		intent: march.RecruitIntent{Version: 1, CityID: 1, UnitCfgID: 3, Count: 2}}, r
 }
 
