@@ -21,11 +21,12 @@ import (
 // can leave its successful wallet read. Both gates observe real transaction SQL.
 type recruitReturnTrace struct {
 	*returnLifetimeTrace
-	walletSQL string
-	pauseWallet bool
+	walletSQL                   string
+	pauseWallet                 bool
 	walletReached, walletResume chan struct{}
-	walletOnce, walletReleased sync.Once
+	walletOnce, walletReleased  sync.Once
 }
+
 func (r *recruitReturnTrace) releaseWallet() { r.walletReleased.Do(func() { close(r.walletResume) }) }
 func (r *recruitReturnTrace) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
 	r.returnPGTrace.TraceQueryEnd(ctx, conn, data)
@@ -41,18 +42,18 @@ func (r *recruitReturnTrace) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, 
 }
 
 type recruitReturnCall struct {
-	done chan struct{}
-	recruit recruitAttemptResult
+	done     chan struct{}
+	recruit  recruitAttemptResult
 	returned returnAttemptResult
-	fault any
+	fault    any
 }
 type recruitReturnPG struct {
 	*returnAttemptPG
 	recruit *recruitGeneration
-	trace *recruitReturnTrace
-	scope march.RecruitScope
-	intent march.RecruitIntent
-	calls []*recruitReturnCall
+	trace   *recruitReturnTrace
+	scope   march.RecruitScope
+	intent  march.RecruitIntent
+	calls   []*recruitReturnCall
 }
 
 func newRecruitReturnPG(t *testing.T, ready int32) *recruitReturnPG {
@@ -63,7 +64,7 @@ func newRecruitReturnPG(t *testing.T, ready int32) *recruitReturnPG {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	f := &recruitReturnPG{returnAttemptPG: &returnAttemptPG{ctx: ctx, pool: pool, observer: observer, binding: binding,
 		profile: profile, catalog: recruitAttemptPGCatalog(t), due: returnAttemptDue}, trace: trace,
-		scope: march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{9}},
+		scope:  march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{9}},
 		intent: march.RecruitIntent{Version: 1, CityID: 1, UnitCfgID: 1, Count: 2}}
 	t.Cleanup(func() {
 		cancel()
@@ -157,16 +158,6 @@ func (f *recruitReturnPG) join(t *testing.T, call *recruitReturnCall) {
 		t.Fatal("actual interoperating call panicked", call.fault)
 	}
 }
-func (f *recruitReturnPG) events(pid uint32) []returnPGQuery {
-	var out []returnPGQuery
-	for _, q := range f.trace.events() {
-		if q.pid == pid {
-			out = append(out, q)
-		}
-	}
-	return out
-}
-
 func (f *recruitReturnPG) locked(t *testing.T) {
 	t.Helper()
 	for _, row := range []struct{ table, predicate string }{
@@ -183,31 +174,6 @@ func (f *recruitReturnPG) locked(t *testing.T) {
 		var pg *pgconn.PgError
 		if !errors.As(err, &pg) || pg.Code != "55P03" {
 			t.Fatal("leading real operation did not retain the exact row lock", row, err)
-		}
-	}
-}
-
-func (f *recruitReturnPG) waitWallet(t *testing.T, leader uint32) uint32 {
-	t.Helper()
-	ctx, cancel := context.WithTimeout(f.ctx, 10*time.Second)
-	defer cancel()
-	for {
-		var pids []int32
-		returnPGOK(t, f.observer.QueryRow(ctx, `SELECT COALESCE(array_agg(pid),'{}'::int[]) FROM pg_catalog.pg_stat_activity
-WHERE datname=current_database() AND usename=current_user AND query=$1 AND wait_event_type='Lock'
-AND pg_catalog.pg_blocking_pids(pid)=ARRAY[$2::int]`, f.trace.walletSQL, leader).Scan(&pids))
-		if len(pids) == 1 {
-			pid := uint32(pids[0])
-			if pid == leader || pid == f.observer.PgConn().PID() || leader == f.observer.PgConn().PID() || len(f.events(pid)) == 0 {
-				t.Fatal("lock witness is not the other actual operation", pid, leader)
-			}
-			t.Logf("actual follower=%d waits at shared wallet on leader=%d; observer=%d", pid, leader, f.observer.PgConn().PID())
-			return pid
-		}
-		select {
-		case <-ctx.Done():
-			t.Fatal("no independent actual wallet wait witness", pids)
-		case <-time.After(10 * time.Millisecond):
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -14,10 +15,14 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// Independent RULE_EVIDENCE SHA-256 vector for this fixture's unit1 rule:
+// (unit, food, wood, iron, stone, seconds) = (1, 2, 3, 5, 7, 11).
+const recruitReturnPGDigest = "8306893080ef1340b9cf6f693256cc3f85c2166189e3db07027ec43943163ab0"
+
 func TestPGRecruitReturnInteroperability(t *testing.T) {
 	for _, tc := range []struct {
-		name string
-		ready int32
+		name                  string
+		ready                 int32
 		recruitFirst, applied bool
 	}{
 		{"real pending exact capacity", math.MaxInt32 - 9, true, true},
@@ -148,7 +153,7 @@ func recruitReturnEffects(t *testing.T, f *recruitReturnPG, ready int32, applied
 	}
 	if a.QueueID != 100 || a.CityID != 1 || a.UnitCfgID != 1 || a.Count != 2 ||
 		a.Cost != (march.Resources{Food: 4, Wood: 6, Iron: 10, Stone: 14}) || a.DurationSeconds != 22 ||
-		a.CatalogVersion != recruitAttemptPGVersion || fmt.Sprintf("%x", a.RuleDigest) != recruitAttemptPGDigest ||
+		a.CatalogVersion != recruitAttemptPGVersion || fmt.Sprintf("%x", a.RuleDigest) != recruitReturnPGDigest ||
 		a.InitialStatus != 1 || a.AcceptedAt.IsZero() || a.AcceptedAt.Location() != time.UTC ||
 		a.AcceptedAt.Nanosecond()%1000000 != 0 || a.InitialStartAt != a.AcceptedAt ||
 		a.InitialFinishAt != a.InitialStartAt.Add(22*time.Second) {
@@ -168,7 +173,7 @@ AND r.catalog_version=convert_to($1,'UTF8') AND encode(r.rule_digest,'hex')=$2 A
 AND r.accepted_at=$3 AND r.initial_start_at=$3 AND r.initial_finish_at=$4 AND r.accepted_at<=clock_timestamp()
 AND q.start_at=r.initial_start_at AND q.finish_at=r.initial_finish_at
 AND q.payload=jsonb_build_object('v',1,'unit_cfg_id',1,'count',2,'cost_paid',jsonb_build_object('food',4,'wood',6,'iron',10,'stone',14),
-'duration_sec',22,'catalog_version',$1::text,'rule_digest',$2::text))`, recruitAttemptPGVersion, recruitAttemptPGDigest, a.AcceptedAt, a.InitialFinishAt).Scan(&exact))
+'duration_sec',22,'catalog_version',$1::text,'rule_digest',$2::text))`, recruitAttemptPGVersion, recruitReturnPGDigest, a.AcceptedAt, a.InitialFinishAt).Scan(&exact))
 	if !exact {
 		t.Fatal("independent paid job/origin/receipt/allocator evidence differs")
 	}
@@ -256,5 +261,40 @@ func recruitReturnRejectionRecorded(t *testing.T, events []returnPGQuery, pid, o
 	bad[world], bad[pending] = bad[pending], bad[world]
 	if recruitReturnRejectionValid(bad, pid, observer, p) {
 		t.Fatal("rejection witness accepted reordered WORLD/capacity stages")
+	}
+}
+
+func (f *recruitReturnPG) events(pid uint32) []returnPGQuery {
+	var out []returnPGQuery
+	for _, q := range f.trace.events() {
+		if q.pid == pid {
+			out = append(out, q)
+		}
+	}
+	return out
+}
+
+func (f *recruitReturnPG) waitWallet(t *testing.T, leader uint32) uint32 {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(f.ctx, 10*time.Second)
+	defer cancel()
+	for {
+		var pids []int32
+		returnPGOK(t, f.observer.QueryRow(ctx, `SELECT COALESCE(array_agg(pid),'{}'::int[]) FROM pg_catalog.pg_stat_activity
+WHERE datname=current_database() AND usename=current_user AND query=$1 AND wait_event_type='Lock'
+AND pg_catalog.pg_blocking_pids(pid)=ARRAY[$2::int]`, f.trace.walletSQL, leader).Scan(&pids))
+		if len(pids) == 1 {
+			pid := uint32(pids[0])
+			if pid == leader || pid == f.observer.PgConn().PID() || leader == f.observer.PgConn().PID() || len(f.events(pid)) == 0 {
+				t.Fatal("lock witness is not the other actual operation", pid, leader)
+			}
+			t.Logf("actual follower=%d waits at shared wallet on leader=%d; observer=%d", pid, leader, f.observer.PgConn().PID())
+			return pid
+		}
+		select {
+		case <-ctx.Done():
+			t.Fatal("no independent actual wallet wait witness", pids)
+		case <-time.After(10 * time.Millisecond):
+		}
 	}
 }

@@ -22,31 +22,31 @@ var errReturnNetwork = errors.New("fixture COMMIT transport cut")
 var errReturnNetworkFrame = errors.New("fixture unexpected or incomplete protocol frame")
 
 type returnNetworkWitness struct {
-	pid uint32
+	pid                  uint32
 	forwarded, tag, idle bool
-	withheld int
-	err error
+	withheld             int
+	err                  error
 }
 type returnNetwork struct {
-	mu sync.Mutex
-	transports []net.Conn
-	connections []*pgconn.PgConn
-	pid atomic.Uint32
-	armed atomic.Bool
+	mu              sync.Mutex
+	transports      []net.Conn
+	connections     []*pgconn.PgConn
+	pid             atomic.Uint32
+	armed           atomic.Bool
 	cut, fragmented bool
-	ctx, guard context.Context
-	reached chan returnNetworkWitness
-	resume chan struct{}
-	released sync.Once
-	result returnAttemptResult
-	fault any
+	ctx, guard      context.Context
+	reached         chan returnNetworkWitness
+	resume          chan struct{}
+	released        sync.Once
+	result          returnAttemptResult
+	fault           any
 }
 type returnNetworkWire struct {
-	n *returnNetwork
-	r io.Reader
-	w io.Writer
+	n    *returnNetwork
+	r    io.Reader
+	w    io.Writer
 	conn net.Conn
-	ack bool // Owned by the single pgx connection caller, never the watchdog.
+	ack  bool // Owned by the single pgx connection caller, never the watchdog.
 }
 
 func (n *returnNetwork) configure(cfg *pgxpool.Config) {
@@ -184,7 +184,7 @@ func (n *returnNetwork) ended(t *testing.T, f *returnAttemptPG, pid uint32) {
 		select {
 		case <-ctx.Done():
 			t.Fatal("cut backend or locks remain")
-		case <-time.After(10*time.Millisecond):
+		case <-time.After(10 * time.Millisecond):
 		}
 	}
 }

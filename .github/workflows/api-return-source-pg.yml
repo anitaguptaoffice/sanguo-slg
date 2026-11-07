@@ -92,6 +92,9 @@ jobs:
             internal/api/return_attempt_pg_test.go \
             internal/api/return_attempt_serialization_pg_test.go \
             internal/api/return_attempt_test.go \
+            internal/api/intg006_smoke_test.go \
+            internal/api/smoke_daily_clock_export_test.go \
+            internal/api/smoke_daily_clock_pg_test.go \
             internal/platform/recruittx/commit_panic_pg_test.go \
             internal/platform/recruittx/commit_panic_test.go \
             internal/platform/recruittx/recruittx.go)
@@ -102,66 +105,6 @@ jobs:
             done <<< "$files"
             exit 1
           fi
-      # Temporary baseline witness: remove after official proof, then re-review and rerun final CI.
-      - name: Prove original Return SQL helper accepts the rejected CTE
-        shell: bash
-        env:
-          MODE: ${{ matrix.mode }}
-        run: |
-          flags=()
-          if [[ "$MODE" == race ]]; then flags=(-race); fi
-          helper=internal/api/return_source_pg_test.go
-          test_file=internal/api/return_source_sql_test.go
-          [[ "$(git hash-object "$test_file")" == a4e6a572857d2d65676810bcfac06339258663fc ]]
-          original=419fed8b5b2e36c706799909bc1eb506e0973d94
-          git fetch --no-tags --depth=1 origin "$original"
-          [[ "$(git rev-parse "$original:$helper")" == 94891293c6f74edf40bb0038299c16eca907fa68 ]]
-          witness=$(mktemp -d "$RUNNER_TEMP/api-return-sql-original-$MODE.XXXXXX")
-          # Complete compile closure: module manifests, internal packages and embedded seeds.
-          # The selected synthetic case also reads frozen SQL literals under internal/.
-          git archive HEAD go.mod go.sum internal | tar -x -C "$witness"
-          [[ "$(git hash-object "$witness/$test_file")" == a4e6a572857d2d65676810bcfac06339258663fc ]]
-          git show "$original:$helper" > "$witness/$helper"
-          [[ "$(git hash-object "$witness/$helper")" == 94891293c6f74edf40bb0038299c16eca907fa68 ]]
-          log="$RUNNER_TEMP/api-return-sql-original-$MODE.json"
-          set +e
-          (cd "$witness" && env -u DATABASE_URL -u SLG_RETURN_SQL_CHILD go test ./internal/api "${flags[@]}" \
-            -run '^TestReturnSQLRecorded$/^reject$/^cte_update$' -count=1 -timeout=2m -json) | tee "$log"
-          status=("${PIPESTATUS[@]}")
-          set -e
-          git diff --exit-code -- "$helper" "$test_file"
-          [[ "${status[0]}" == 1 && "${status[1]}" == 0 ]]
-          python3 - "$log" <<'PY'
-          import json
-          import re
-          import sys
-
-          root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          parent = "TestReturnSQLRecorded"
-          target = parent + "/reject/cte_update"
-          wanted = {parent, target}
-          with open(sys.argv[1], encoding="utf-8") as stream:
-              events = [json.loads(line) for line in stream if line.strip()]
-          if {event.get("Package") for event in events} != {root}:
-              raise SystemExit("Original-helper witness reached an unrelated package")
-          if {event["Test"] for event in events if event.get("Test")} != wanted:
-              raise SystemExit("Original-helper witness reached unexpected or missing tests")
-          for test in wanted:
-              started = [event for event in events if event.get("Test") == test and event["Action"] == "run"]
-              terminal = [event["Action"] for event in events if event.get("Test") == test and event["Action"] in {"pass", "skip", "fail"}]
-              if len(started) != 1 or terminal != ["fail"]:
-                  raise SystemExit("Original-helper witness did not fail in the selected parent and child")
-          terminal = [event["Action"] for event in events if not event.get("Test") and event["Action"] in {"pass", "skip", "fail"}]
-          if terminal != ["fail"]:
-              raise SystemExit("Original-helper witness lacks its failed package terminal")
-          output = "".join(event.get("Output", "") for event in events if event.get("Test") == target and event["Action"] == "output")
-          diagnostic = r"(?m)^\s+return_source_sql_test\.go:[0-9]+: unsafe SQL was accepted or rejection was unrelated: <nil>\n\s+RETURN_SQL_ACCEPTED\n\s+PASS\n"
-          if len(re.findall(diagnostic, output)) != 1:
-              raise SystemExit("Missing actual old acceptance; unrelated failures are not a behavioral witness")
-          if any(word in "".join(event.get("Output", "") for event in events) for word in ("panic:", "fatal error:", "WARNING: DATA RACE", "build failed")):
-              raise SystemExit("Original-helper witness has an unrelated runtime or build failure")
-          print("Original helper accepted synthetic cte_update: exact unchanged parent/child failed as required")
-          PY
       - name: Prepare frozen API evidence checker
         shell: bash
         run: |
@@ -599,6 +542,28 @@ jobs:
           required.update((root, name) for name in confirmed_lifetime)
           if len(required) != (192 if phase == "preflight" else 417):
               raise SystemExit("Final military-attempt inventory changed")
+          # Preserve the final-main calendar outcomes alongside every prior frozen set.
+          calendar_required = {(root, name) for name in (
+              "TestSmokeDailyCalendarClockPG",
+              "TestSmokeDailyCalendarClockPG/default_calendar_restart",
+              "TestSmokeDailyCalendarClockPG/explicit_UTC_midnight",
+          )}
+          if required & calendar_required:
+              raise SystemExit("Calendar evidence duplicates the prior frozen inventory")
+          required |= calendar_required
+          if len(required) != (195 if phase == "preflight" else 420):
+              raise SystemExit("Final-main API union inventory changed")
+          # Approved fixture-boundary repair adds three real shared-backend consumers.
+          backend_required = {(root, name) for name in (
+              "TestReturnBackendJoinBoundaries",
+              "TestReturnBackendCloseOncePreservesError",
+              "TestPGReturnBackendCaptureAndCleanupIsolation",
+          )}
+          if required & backend_required:
+              raise SystemExit("Backend boundary evidence duplicates the frozen inventory")
+          required |= backend_required
+          if len(required) != (198 if phase == "preflight" else 423):
+              raise SystemExit("Backend boundary union inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
@@ -654,6 +619,116 @@ jobs:
           print("Optional t.Log branches are not full gameplay coverage; their actual output is preserved above")
           print("\n".join(f"{package}: {name}" for package, name in sorted(required)))
           PY
+      - name: Verify isolated backend behavioral witnesses
+        timeout-minutes: 5
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          python3 - <<'PY_BACKEND'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          mode = os.environ["MODE"]
+          assert mode in {"ordinary", "race"}
+          root = Path.cwd()
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
+          fixture = "internal/api/return_attempt_lifetime_fixture_test.go"
+          tests_file = "internal/api/return_attempt_backend_cleanup_test.go"
+          flags = ["-race"] if mode == "race" else []
+          targets = ["TestReturnBackendJoinBoundaries", "TestReturnBackendCloseOncePreservesError",
+                     "TestPGReturnBackendCaptureAndCleanupIsolation"]
+          # Four precise assertion witnesses only. Bounded-readonly timeout variants are unproven.
+          mutations = [
+              ("join", targets[0], "case <-timer.C:\n\t\treturn false", "case <-timer.C:\n\t\treturn true",
+               "unfinished caller reported joined"),
+              ("capture", targets[2], "b.pid == 0 || b.transport == nil || r.backends[b.pid] != nil",
+               "b.pid == 0 || b.transport == nil", "duplicate capture replaced original ownership"),
+              ("once", targets[1], "b.once.Do(func() { b.err = b.transport.Close() })",
+               "b.err = b.transport.Close()", "owned transport closed more than once"),
+              ("error", targets[1], "return b.err", "return nil", "original close failure lost"),
+          ]
+
+          mutation_hashes = {
+              "join": "da6353b9ea4972a0d50ebaad0d8c54c20d689f3aaed6859f5bb1fd9f57020b9e",
+              "capture": "4284fdfff97203d47c692f5e89e73923efdba527fe0c4b95dc6a5beba7063737",
+              "once": "1e610d6a8806095747d208f4a3bfc446c4fa3c44c133fa2a1ba3ba392e1c9695",
+              "error": "0981e23a8fb1f4dfcc2cfeccb466ed497f64668dd02dc1aa53173a4171923b02",
+          }
+
+          def git(*args, cwd=root):
+              return subprocess.check_output(["git", *args], cwd=cwd, text=True).strip()
+
+          assert not git("status", "--porcelain")
+          head = git("rev-parse", "HEAD")
+          assert git("rev-parse", f"HEAD:{fixture}") == "d238706891236c1261c5bff89d59af2c5ad3025f"
+          assert git("rev-parse", f"HEAD:{tests_file}") == "280977c4373facccbcbbd38f06cfeb42aaea3912"
+
+          def run(case, phase, directory, environment, names, needle=""):
+              selector = "^(" + "|".join(names) + ")$" if names else "^$"
+              args = ["go", "test", "./internal/api", *flags, "-run", selector,
+                      "-count=1", "-timeout=60s", "-json"]
+              print(f"BACKEND_WITNESS {mode}/{case}/{phase} START {args}", flush=True)
+              result = subprocess.run(args, cwd=directory, env=environment, text=True,
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=90)
+              Path(os.environ["RUNNER_TEMP"], f"backend-{mode}-{case}-{phase}.json").write_text(result.stdout)
+              print(result.stdout, end="", flush=True)
+              assert result.returncode == (1 if needle else 0), (case, phase, result.returncode)
+              events = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+              assert events and {e.get("Package") for e in events} == {package}
+              assert not any(e["Action"] == "skip" for e in events)
+              assert {e["Test"] for e in events if e.get("Test")} == set(names)
+              terminal = "fail" if needle else "pass"
+              for name in names:
+                  actions = [e["Action"] for e in events if e.get("Test") == name and e["Action"] != "output"]
+                  assert actions == ["run", terminal], (case, name, actions)
+              package_ends = [e["Action"] for e in events if not e.get("Test") and e["Action"] in {"pass", "fail"}]
+              assert package_ends == [terminal], (case, package_ends)
+              forbidden = ("panic:", "fatal error:", "[build failed]", "test timed out", "deadline exceeded",
+                           "sqlstate", "failed to connect", "connection refused", "unexpected eof")
+              assert not any(text in result.stdout.lower() for text in forbidden)
+              assert (case == "once" and phase == "negative") or "WARNING: DATA RACE" not in result.stdout
+              if needle:
+                  assert any(e.get("Test") == names[0] and needle in e.get("Output", "") for e in events)
+              print(f"BACKEND_WITNESS {mode}/{case}/{phase} VERIFIED", flush=True)
+
+          def exercise(case, names, mutation=None):
+              directory = Path(os.environ["RUNNER_TEMP"], f"backend-checkout-{mode}-{case}")
+              database = f"backend_witness_{mode}_{case}"
+              subprocess.run(["docker", "exec", os.environ["PG_CONTAINER"], "psql", "-X", "-U", "sanguo",
+                              "-d", "sanguo", "-v", "ON_ERROR_STOP=1", "-c", f"CREATE DATABASE {database}"], check=True)
+              git("worktree", "add", "--detach", str(directory), head)
+              path = directory / fixture
+              original = path.read_text()
+              environment = dict(os.environ, DATABASE_URL=f"postgres://sanguo:sanguo@localhost:5432/{database}?sslmode=disable")
+              try:
+                  assert not git("status", "--porcelain", cwd=directory)
+                  if mutation:
+                      _, _, before, after, needle = mutation
+                      assert original.count(before) == 1
+                      path.write_text(original.replace(before, after, 1))
+                      assert hashlib.sha256(path.read_bytes()).hexdigest() == mutation_hashes[case]
+                      assert git("diff", "--name-only", cwd=directory) == fixture
+                      print(git("diff", "--", fixture, cwd=directory), flush=True)
+                      run(case, "compile", directory, environment, [])
+                      run(case, "negative", directory, environment, names, needle)
+                  else:
+                      run(case, "positive", directory, environment, names)
+              finally:
+                  path.write_text(original)
+                  assert not git("status", "--porcelain", cwd=directory)
+                  git("worktree", "remove", str(directory))
+              assert git("rev-parse", "HEAD") == head and not git("status", "--porcelain")
+
+          exercise("positive", targets)
+          for mutation in mutations:
+              exercise(mutation[0], [mutation[1]], mutation)
+          print(f"BACKEND_WITNESS {mode}: clean positive and four precise behavioral negatives verified")
+          PY_BACKEND
       - name: Run full API regressions without short mode
         shell: bash
         env:
@@ -667,7 +742,7 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
