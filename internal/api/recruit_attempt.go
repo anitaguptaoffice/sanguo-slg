@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
@@ -129,29 +128,8 @@ func (g *recruitGeneration) admit(ctx context.Context, accountID int64, scope ma
 	var owner *recruittx.Owner
 	phase, began := "admitted", false
 	defer func() {
-		fault := recover()
-		var cleanupFault any
-		if fault != nil {
-			r.cause = errors.Join(r.cause, fmt.Errorf("recruit attempt panic at %s: %v", phase, fault))
-		}
-		retire := recruitAttemptCloses(r.cause)
-		if r.outcome != recruitConfirmed {
-			unknown := errors.Is(r.cause, recruittx.ErrOutcomeUnknown) || phase == "commit" && fault != nil
-			if owner != nil {
-				r.cleanup, cleanupFault = rollbackRecruitValidation(owner)
-			}
-			r.outcome = recruitKnownEnded
-			if unknown || began && (owner == nil || r.cleanup != nil) {
-				r.outcome = recruitUnknown
-			}
-		}
-		a.finish(lease, phase, &r, retire, fault, cleanupFault)
-		if fault != nil {
-			panic(fault)
-		}
-		if cleanupFault != nil {
-			panic(cleanupFault)
-		}
+		fault := recover() // Must remain directly in the deferred caller.
+		a.end(lease, owner, phase, began, &r, fault)
 	}()
 	phase, began = "begin", true
 	if owner, r.cause = s.binding.Begin(ctx); r.cause != nil {
