@@ -33,19 +33,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23.x"
+          go-version: "1.23.12"
           cache: true
       - name: Verify PostgreSQL 17 and host toolchain
         shell: bash
         run: |
           go version
+          [[ "$(go env GOVERSION)" == go1.23.12 ]]
+          git rev-parse HEAD HEAD^{tree}
           command -v psql
           psql --version
           version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
           [[ "$version" =~ ^[0-9]+$ ]]
           (( version / 10000 == 17 ))
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
-      - name: Check API return source formatting
+      - name: Check API source and SQL evidence formatting
         shell: bash
         run: |
           files=$(gofmt -l internal/api/return_source.go \
@@ -54,9 +56,48 @@ jobs:
             internal/api/return_source_pg_test.go \
             internal/api/return_source_pins_pg_test.go \
             internal/api/return_source_test.go \
+            internal/api/return_source_sql_test.go \
+            internal/api/recruit_source.go \
+            internal/api/recruit_source_test.go \
+            internal/api/recruit_source_fixture_test.go \
+            internal/api/recruit_source_pg_test.go \
+            internal/api/recruit_source_lifetime_pg_test.go \
+            internal/api/recruit_source_pins_pg_test.go \
+            internal/api/recruit_source_access_pg_test.go \
+            internal/api/recruit_cleanup_panic_process_pg_test.go \
+            internal/api/recruit_attempt.go \
+            internal/api/recruit_attempt_fixture_test.go \
+            internal/api/recruit_attempt_failures_fixture_test.go \
+            internal/api/recruit_attempt_failures_pg_test.go \
+            internal/api/recruit_attempt_serialization_pg_test.go \
+            internal/api/recruit_attempt_network_fixture_test.go \
+            internal/api/recruit_attempt_network_pg_test.go \
+            internal/api/recruit_attempt_lifetime_fixture_test.go \
+            internal/api/recruit_attempt_lifetime_pg_test.go \
+            internal/api/recruit_attempt_pg_test.go \
+            internal/api/recruit_attempt_test.go \
+            internal/api/recruit_return_interop_fixture_pg_test.go \
+            internal/api/recruit_return_interop_fixture_test.go \
+            internal/api/recruit_return_interop_pg_test.go \
+            internal/api/return_attempt.go \
+            internal/api/return_attempt_backend_cleanup_pg_test.go \
+            internal/api/return_attempt_backend_cleanup_test.go \
+            internal/api/return_attempt_failures_pg_test.go \
+            internal/api/return_attempt_fixture_test.go \
+            internal/api/return_attempt_lifetime_fixture_test.go \
+            internal/api/return_attempt_lifetime_pg_test.go \
+            internal/api/return_attempt_lock_order_pg_test.go \
+            internal/api/return_attempt_network_fixture_test.go \
+            internal/api/return_attempt_network_pg_test.go \
+            internal/api/return_attempt_pg_test.go \
+            internal/api/return_attempt_serialization_pg_test.go \
+            internal/api/return_attempt_test.go \
             internal/api/intg006_smoke_test.go \
             internal/api/smoke_daily_clock_export_test.go \
-            internal/api/smoke_daily_clock_pg_test.go)
+            internal/api/smoke_daily_clock_pg_test.go \
+            internal/platform/recruittx/commit_panic_pg_test.go \
+            internal/platform/recruittx/commit_panic_test.go \
+            internal/platform/recruittx/recruittx.go)
           if [[ -n "$files" ]]; then
             printf 'Unformatted API source:\n%s\n' "$files"
             while IFS= read -r file; do
@@ -64,13 +105,9 @@ jobs:
             done <<< "$files"
             exit 1
           fi
-      - name: Run full API regressions without short mode
+      - name: Prepare frozen API evidence checker
         shell: bash
-        env:
-          MODE: ${{ matrix.mode }}
         run: |
-          flags=()
-          if [[ "$MODE" == race ]]; then flags=(-race); fi
           gate="$RUNNER_TEMP/api-gate.py"
           cat > "$gate" <<'PY'
           import json
@@ -80,7 +117,7 @@ jobs:
           if phase not in {"preflight", "full"}:
               raise SystemExit("Unknown API test phase")
           root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          # Full: 249 existing + 3 calendar outcomes; preflight: 24 existing + 3 calendar outcomes.
+          # Preserve the frozen 249 full / 24 focused Return outcomes unchanged.
           expected = {
               "TestCityGarrisonAuthorizationBeforeRead",
               "TestCityGarrisonConcurrentCompletionSnapshot",
@@ -298,9 +335,6 @@ jobs:
               "TestShopAtomicPGUnknownCommitIsNotReplayed",
               "TestShopAtomicPGWalletWaitCancellation",
               "TestShopPurchaseWalletPGCallerOwnership",
-              "TestSmokeDailyCalendarClockPG",
-              "TestSmokeDailyCalendarClockPG/default_calendar_restart",
-              "TestSmokeDailyCalendarClockPG/explicit_UTC_midnight",
               "TestSmokeQuestProgressPreservesOvershoot",
               "TestStartMarchRequiresHeroAndReleasesAfterBattleReturn",
               "TestStarterScrollFailuresAndRoutesPG",
@@ -333,6 +367,73 @@ jobs:
               "TestWalletRefreshWithoutPersistenceDoesNotOverwrite",
               "TestWalletToDomesticMapsFields",
           }
+          PY
+      - name: Complete frozen API evidence checker
+        shell: bash
+        run: |
+          gate="$RUNNER_TEMP/api-gate.py"
+          cat >> "$gate" <<'PY'
+          # Recruit d4ec3d7, basic b7f2e69, lifetime b1d6d1c, Access ccbd09ec, process ccdd2b943.
+          recruit = {
+              "TestRecruitSourceCaptureAndProjections",
+              "TestRecruitSourceRejectsInvalidCapture",
+              "TestRecruitSourceOneShotContextAndClose",
+              "TestPGRecruitGenerationCaptureAndAssembly",
+              "TestPGRecruitGenerationRejectsDomainSources",
+              "TestPGRecruitGenerationRejectsSourceIdentity",
+              "TestPGRecruitGenerationRejectsMissingCatalogBeforeBegin",
+              "TestRecruitGenerationSQLAllowlist",
+              "TestPGRecruitGenerationOrderedPins",
+              "TestPGRecruitGenerationCanceledPin",
+              "TestPGRecruitGenerationBeginFailureQuarantine",
+              "TestPGRecruitGenerationConstructorPanic",
+              "TestPGRecruitGenerationRollbackBoundary",
+              "TestPGRecruitBundleCopiedAccessLifetime",
+              "TestPGRecruitBundleRejectsAccessSubstitution",
+              "TestPGRecruitGenerationConstructorCleanupPanic",
+              "TestRecruitPanicAbsenceRejectsInvalidIdentity",
+          }
+          recruit.update(
+              f"TestPGRecruitGenerationRejectsDomainSources/{domain}/{mode}"
+              for domain in ("account", "domestic", "world", "military")
+              for mode in ("oid", "owner", "shape")
+          )
+          recruit_groups = {
+              "TestPGRecruitGenerationRejectsSourceIdentity": (
+                  "database_name", "database_oid", "schema_name", "schema_oid", "schema_owner",
+                  "current_role_name", "current_role_oid", "session_role_name", "session_role_oid",
+              ),
+              "TestPGRecruitGenerationRejectsMissingCatalogBeforeBegin": ("nil", "zero"),
+              "TestPGRecruitGenerationCanceledPin": ("default_unknown", "cancel_request_ended"),
+              "TestPGRecruitGenerationConstructorPanic": ("confirmed_cleanup", "failed_cleanup"),
+              "TestPGRecruitGenerationRollbackBoundary": ("close_during_validation", "rollback_failure"),
+              "TestPGRecruitBundleCopiedAccessLifetime": ("commit", "rollback"),
+              "TestPGRecruitBundleRejectsAccessSubstitution": ("foreign_binding", "zero_access"),
+          }
+          recruit.update(f"{parent}/{child}" for parent, children in recruit_groups.items() for child in children)
+          # Return SQL test blob a4e6a572 (official formatting): 19 positive and 27 negative named controls.
+          sql_groups = {
+              "accept": (
+                  "freshActorHeader", "freshActorTableCatalog", "freshActorFKCatalog",
+                  "freshActorIndexCatalog", "freshActorIdentityCatalog", "recruitWalletCatalog",
+                  "citySequenceMetadata", "freshSourceCatalog", "validateFreshSource",
+                  "freshBaseHeader", "freshBaseCatalog", "freshQueueCatalog", "freshRetainedCatalog",
+                  "freshRetainedFK", "freshMilitarySequence", "validateRecruitSource", "returnCatalogSQL",
+                  "sequence", "pins",
+              ),
+              "reject": (
+                  "cte_insert", "cte_update", "cte_delete", "cte_merge", "multiple",
+                  "nextval_space", "nextval_newline", "nextval_comment", "setval",
+                  "lock_update", "lock_no_key_update", "lock_share", "lock_key_share", "unknown_read",
+                  "function_write", "wrong_schema", "wrong_sequence", "unqualified_sequence",
+                  "sequence_suffix", "catalog_suffix", "catalog_comment", "wrong_pin_schema",
+                  "wrong_pin_mode", "pin_suffix", "begin_suffix", "rollback_suffix", "empty",
+              ),
+          }
+          sql = {"TestReturnSQLRecorded"}
+          sql.update(f"TestReturnSQLRecorded/{group}/{child}" for group, children in sql_groups.items() for child in children)
+          if len(recruit) != 50 or len(sql) != 47 or expected & (recruit | sql) or recruit & sql:
+              raise SystemExit("Frozen new API inventory changed")
           required = {(root, name) for name in expected}
           required.add((root + "/pb/sanguo/domestic/v1", "TestGarrisonWireCompatibility"))
           required.add((root + "/pb/sanguo/quest/v1", "TestClaimRewardWireCompatibility"))
@@ -341,11 +442,128 @@ jobs:
               for domain in ("content", "hero", "military", "rank", "shop", "world")
           }
           if phase == "preflight":
-              required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))
-                          or item[1].split("/", 1)[0] == "TestSmokeDailyCalendarClockPG"}
+              required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))}
               no_tests = set()
-          if len(required) != (27 if phase == "preflight" else 252):
+          if len(required) != (24 if phase == "preflight" else 249):
               raise SystemExit("Frozen API inventory changed")
+          required.update((root, name) for name in recruit | sql)
+          if len(required) != (121 if phase == "preflight" else 346):
+              raise SystemExit("Combined API inventory changed")
+          # Actual Return.complete / Recruit.admit source 6221308e, not runtime activation.
+          attempts = {
+              "TestPGRecruitAttemptAdmissionAndReplay",
+              "TestPGRecruitReturnFixtureIsolationAndPoolReuse",
+              "TestPGRecruitReturnInteroperability",
+              "TestPGReturnAttemptCanceledBeforeAdmission",
+              "TestPGReturnAttemptCanceledPin",
+              "TestPGReturnAttemptConfirmedLifetime",
+              "TestPGReturnAttemptDeferredCommitFailure",
+              "TestPGReturnAttemptDueAndPendingCapacity",
+              "TestPGReturnAttemptDuplicateWalletWorldSerialization",
+              "TestPGReturnAttemptFailedRollback",
+              "TestPGReturnAttemptNetworkUncertainty",
+              "TestPGReturnAttemptPanicLifetime",
+              "TestPGReturnAttemptPinAndActorOrder",
+              "TestPGReturnAttemptReadOnlyStates",
+              "TestPGReturnAttemptRejectsReassignedHint",
+              "TestPGReturnBackendCleanupOwnership",
+              "TestRecruitAttemptBookkeeping",
+              "TestRecruitAttemptCost",
+              "TestRecruitAttemptDiagnostics",
+              "TestRecruitAttemptPGSQLClassification",
+              "TestRecruitAttemptPreflight",
+              "TestReturnAttemptBookkeeping",
+              "TestReturnAttemptErrorPolicy",
+              "TestReturnAttemptObservation",
+              "TestReturnAttemptPreflight",
+              "TestReturnBackendOwnershipFailClosed",
+              "TestReturnNetworkAcknowledgementFraming",
+          }
+          attempt_groups = {
+              "TestPGReturnAttemptDueAndPendingCapacity": (
+                  "due", "exact_capacity_including_pending", "ready_plus_survivors_fits_but_pending_overflows",
+              ),
+              "TestPGReturnAttemptReadOnlyStates": ("early", "annihilation"),
+              "TestPGReturnAttemptCanceledPin": ("cancel_request_false", "cancel_request_true"),
+              "TestPGReturnAttemptPanicLifetime": (
+                  "precommit", "commit_start", "commit_end", "distinct_concurrent_unknowns",
+              ),
+              "TestPGReturnAttemptConfirmedLifetime": ("close", "missing_record"),
+              "TestPGReturnAttemptPinAndActorOrder": ("due", "terminal"),
+              "TestPGReturnAttemptNetworkUncertainty": (
+                  "lost_acknowledgement", "fragmented_lost_acknowledgement", "cut_before_commit",
+              ),
+              "TestPGReturnAttemptDuplicateWalletWorldSerialization": ("due", "early", "credited", "annihilated"),
+              "TestPGRecruitAttemptAdmissionAndReplay": (
+                  "same_command", "changed_current_owner", "missing_current_readiness",
+              ),
+              "TestPGRecruitReturnInteroperability": (
+                  "real_pending_exact_capacity", "real_pending_prevents_overflow", "return_credit_prevents_new_recruit",
+              ),
+          }
+          # These are in-process tests: real wire loss and tracer panic remain distinct.
+          # Their named PASS outcomes include fixture cleanup; no child events or logs are invented.
+          attempts.update(f"{parent}/{child}" for parent, children in attempt_groups.items() for child in children)
+          if len(attempts) != 55 or attempts & {name for _, name in required}:
+              raise SystemExit("Frozen actual-attempt inventory changed")
+          required.update((root, name) for name in attempts)
+          if len(required) != (176 if phase == "preflight" else 401):
+              raise SystemExit("Combined actual-attempt inventory changed")
+          # Approved composition e9542480 adds #2187 failures, #2190 serialization,
+          # and #2191 real wire uncertainty. Later lifetime/recovery work is excluded.
+          companions = {
+              "TestPGRecruitAttemptBusinessFailures",
+              "TestPGRecruitAttemptWriteSQLFailure",
+              "TestPGRecruitAttemptDeferredCommitFailure",
+              "TestPGRecruitAttemptConcurrentCommandReplay",
+              "TestPGRecruitAttemptNetworkUncertainty",
+          }
+          companion_groups = {
+              "TestPGRecruitAttemptBusinessFailures": ("unsupported_version", "insufficient_funds"),
+              "TestPGRecruitAttemptConcurrentCommandReplay": ("same_intent", "conflicting_count"),
+              "TestPGRecruitAttemptNetworkUncertainty": (
+                  "normal_reply", "lost_acknowledgement", "fragmented_lost_acknowledgement", "cut_before_commit",
+              ),
+          }
+          companions.update(f"{parent}/{child}" for parent, children in companion_groups.items() for child in children)
+          if len(companions) != 13 or companions & {name for _, name in required}:
+              raise SystemExit("Frozen Recruit companion inventory changed")
+          required.update((root, name) for name in companions)
+          if len(required) != (189 if phase == "preflight" else 414):
+              raise SystemExit("Combined military-attempt inventory changed")
+          # Final pre-runtime composition ac5c96eb adds only #2193 confirmed lifetime.
+          confirmed_lifetime = {
+              "TestPGRecruitAttemptConfirmedLifetime",
+              "TestPGRecruitAttemptConfirmedLifetime/close",
+              "TestPGRecruitAttemptConfirmedLifetime/missing_record",
+          }
+          if len(confirmed_lifetime) != 3 or confirmed_lifetime & {name for _, name in required}:
+              raise SystemExit("Frozen confirmed-lifetime inventory changed")
+          required.update((root, name) for name in confirmed_lifetime)
+          if len(required) != (192 if phase == "preflight" else 417):
+              raise SystemExit("Final military-attempt inventory changed")
+          # Preserve the final-main calendar outcomes alongside every prior frozen set.
+          calendar_required = {(root, name) for name in (
+              "TestSmokeDailyCalendarClockPG",
+              "TestSmokeDailyCalendarClockPG/default_calendar_restart",
+              "TestSmokeDailyCalendarClockPG/explicit_UTC_midnight",
+          )}
+          if required & calendar_required:
+              raise SystemExit("Calendar evidence duplicates the prior frozen inventory")
+          required |= calendar_required
+          if len(required) != (195 if phase == "preflight" else 420):
+              raise SystemExit("Final-main API union inventory changed")
+          # Approved fixture-boundary repair adds three real shared-backend consumers.
+          backend_required = {(root, name) for name in (
+              "TestReturnBackendJoinBoundaries",
+              "TestReturnBackendCloseOncePreservesError",
+              "TestPGReturnBackendCaptureAndCleanupIsolation",
+          )}
+          if required & backend_required:
+              raise SystemExit("Backend boundary evidence duplicates the frozen inventory")
+          required |= backend_required
+          if len(required) != (198 if phase == "preflight" else 423):
+              raise SystemExit("Backend boundary union inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
@@ -384,6 +602,16 @@ jobs:
           missing = sorted(required - passed)
           if bad or missing or unfinished or observed != tested_packages | no_tests:
               raise SystemExit(f"API PG gate failed: bad={bad}, missing={missing}, unfinished={unfinished}, observed={observed}")
+          # The isolated child has no root Go test events. Require the parent's final
+          # confirmation after its structured witness and independent cleanup checks.
+          cleanup_confirmation = "verified primary/live/unknown/retained slot, actual pool closing and isolated teardown; not graceful drain"
+          cleanup_outputs = [
+              event for event in events
+              if event.get("Package") == root and event.get("Test") == "TestPGRecruitGenerationConstructorCleanupPanic"
+              and event["Action"] == "output" and event.get("Output", "").rstrip().endswith(": " + cleanup_confirmation)
+          ]
+          if len(cleanup_outputs) != 1:
+              raise SystemExit("Missing or duplicate parent confirmation of isolated cleanup-panic evidence")
           top_level = sum("/" not in name for _, name in passed)
           print(f"{sys.argv[2]}/{phase}: {top_level} top-level / {len(passed)} including subtests PASS")
           print(f"Verified {len(required)} required tests/scenarios and all {len(tested_packages)} tested-package PASS events")
@@ -391,12 +619,130 @@ jobs:
           print("Optional t.Log branches are not full gameplay coverage; their actual output is preserved above")
           print("\n".join(f"{package}: {name}" for package, name in sorted(required)))
           PY
+      - name: Verify isolated backend behavioral witnesses
+        timeout-minutes: 5
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          python3 - <<'PY_BACKEND'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+
+          mode = os.environ["MODE"]
+          assert mode in {"ordinary", "race"}
+          root = Path.cwd()
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
+          fixture = "internal/api/return_attempt_lifetime_fixture_test.go"
+          tests_file = "internal/api/return_attempt_backend_cleanup_test.go"
+          flags = ["-race"] if mode == "race" else []
+          targets = ["TestReturnBackendJoinBoundaries", "TestReturnBackendCloseOncePreservesError",
+                     "TestPGReturnBackendCaptureAndCleanupIsolation"]
+          # Four precise assertion witnesses only. Bounded-readonly timeout variants are unproven.
+          mutations = [
+              ("join", targets[0], "case <-timer.C:\n\t\treturn false", "case <-timer.C:\n\t\treturn true",
+               "unfinished caller reported joined"),
+              ("capture", targets[2], "b.pid == 0 || b.transport == nil || r.backends[b.pid] != nil",
+               "b.pid == 0 || b.transport == nil", "duplicate capture replaced original ownership"),
+              ("once", targets[1], "b.once.Do(func() { b.err = b.transport.Close() })",
+               "b.err = b.transport.Close()", "owned transport closed more than once"),
+              ("error", targets[1], "return b.err", "return nil", "original close failure lost"),
+          ]
+
+          mutation_hashes = {
+              "join": "da6353b9ea4972a0d50ebaad0d8c54c20d689f3aaed6859f5bb1fd9f57020b9e",
+              "capture": "4284fdfff97203d47c692f5e89e73923efdba527fe0c4b95dc6a5beba7063737",
+              "once": "1e610d6a8806095747d208f4a3bfc446c4fa3c44c133fa2a1ba3ba392e1c9695",
+              "error": "0981e23a8fb1f4dfcc2cfeccb466ed497f64668dd02dc1aa53173a4171923b02",
+          }
+
+          def git(*args, cwd=root):
+              return subprocess.check_output(["git", *args], cwd=cwd, text=True).strip()
+
+          assert not git("status", "--porcelain")
+          head = git("rev-parse", "HEAD")
+          assert git("rev-parse", f"HEAD:{fixture}") == "d238706891236c1261c5bff89d59af2c5ad3025f"
+          assert git("rev-parse", f"HEAD:{tests_file}") == "280977c4373facccbcbbd38f06cfeb42aaea3912"
+
+          def run(case, phase, directory, environment, names, needle=""):
+              selector = "^(" + "|".join(names) + ")$" if names else "^$"
+              args = ["go", "test", "./internal/api", *flags, "-run", selector,
+                      "-count=1", "-timeout=60s", "-json"]
+              print(f"BACKEND_WITNESS {mode}/{case}/{phase} START {args}", flush=True)
+              result = subprocess.run(args, cwd=directory, env=environment, text=True,
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=90)
+              Path(os.environ["RUNNER_TEMP"], f"backend-{mode}-{case}-{phase}.json").write_text(result.stdout)
+              print(result.stdout, end="", flush=True)
+              assert result.returncode == (1 if needle else 0), (case, phase, result.returncode)
+              events = [json.loads(line) for line in result.stdout.splitlines() if line.strip()]
+              assert events and {e.get("Package") for e in events} == {package}
+              assert not any(e["Action"] == "skip" for e in events)
+              assert {e["Test"] for e in events if e.get("Test")} == set(names)
+              terminal = "fail" if needle else "pass"
+              for name in names:
+                  actions = [e["Action"] for e in events if e.get("Test") == name and e["Action"] != "output"]
+                  assert actions == ["run", terminal], (case, name, actions)
+              package_ends = [e["Action"] for e in events if not e.get("Test") and e["Action"] in {"pass", "fail"}]
+              assert package_ends == [terminal], (case, package_ends)
+              forbidden = ("panic:", "fatal error:", "[build failed]", "test timed out", "deadline exceeded",
+                           "sqlstate", "failed to connect", "connection refused", "unexpected eof")
+              assert not any(text in result.stdout.lower() for text in forbidden)
+              assert (case == "once" and phase == "negative") or "WARNING: DATA RACE" not in result.stdout
+              if needle:
+                  assert any(e.get("Test") == names[0] and needle in e.get("Output", "") for e in events)
+              print(f"BACKEND_WITNESS {mode}/{case}/{phase} VERIFIED", flush=True)
+
+          def exercise(case, names, mutation=None):
+              directory = Path(os.environ["RUNNER_TEMP"], f"backend-checkout-{mode}-{case}")
+              database = f"backend_witness_{mode}_{case}"
+              subprocess.run(["docker", "exec", os.environ["PG_CONTAINER"], "psql", "-X", "-U", "sanguo",
+                              "-d", "sanguo", "-v", "ON_ERROR_STOP=1", "-c", f"CREATE DATABASE {database}"], check=True)
+              git("worktree", "add", "--detach", str(directory), head)
+              path = directory / fixture
+              original = path.read_text()
+              environment = dict(os.environ, DATABASE_URL=f"postgres://sanguo:sanguo@localhost:5432/{database}?sslmode=disable")
+              try:
+                  assert not git("status", "--porcelain", cwd=directory)
+                  if mutation:
+                      _, _, before, after, needle = mutation
+                      assert original.count(before) == 1
+                      path.write_text(original.replace(before, after, 1))
+                      assert hashlib.sha256(path.read_bytes()).hexdigest() == mutation_hashes[case]
+                      assert git("diff", "--name-only", cwd=directory) == fixture
+                      print(git("diff", "--", fixture, cwd=directory), flush=True)
+                      run(case, "compile", directory, environment, [])
+                      run(case, "negative", directory, environment, names, needle)
+                  else:
+                      run(case, "positive", directory, environment, names)
+              finally:
+                  path.write_text(original)
+                  assert not git("status", "--porcelain", cwd=directory)
+                  git("worktree", "remove", str(directory))
+              assert git("rev-parse", "HEAD") == head and not git("status", "--porcelain")
+
+          exercise("positive", targets)
+          for mutation in mutations:
+              exercise(mutation[0], [mutation[1]], mutation)
+          print(f"BACKEND_WITNESS {mode}: clean positive and four precise behavioral negatives verified")
+          PY_BACKEND
+      - name: Run full API regressions without short mode
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          flags=()
+          if [[ "$MODE" == race ]]; then flags=(-race); fi
+          gate="$RUNNER_TEMP/api-gate.py"
           # Preflight and full acceptance own different disposable databases.
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestSmokeDailyCalendarClockPG$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
