@@ -10,6 +10,7 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -21,10 +22,20 @@ type recruitCompleteReturnPG struct {
 	owned    *returnBackendSet
 }
 
-func newRecruitCompleteReturnPG(t *testing.T) *recruitCompleteReturnPG {
+func newRecruitCompleteReturnPG(t *testing.T, decorate ...func(*recruitPromotionTrace) pgx.QueryTracer) *recruitCompleteReturnPG {
 	t.Helper()
 	trace, owned := new(recruitPromotionTrace), new(returnBackendSet)
-	pool, observer, binding, p := returnPGFixture(t, trace, func(c *pgxpool.Config) {
+	var tracer pgx.QueryTracer = trace
+	if len(decorate) > 1 || (len(decorate) == 1 && decorate[0] == nil) {
+		t.Fatal("expected at most one pre-pool tracer decorator")
+	}
+	if len(decorate) == 1 {
+		tracer = decorate[0](trace)
+		if tracer == nil {
+			t.Fatal("nil pre-pool tracer")
+		}
+	}
+	pool, observer, binding, p := returnPGFixture(t, tracer, func(c *pgxpool.Config) {
 		c.MaxConns = 2
 		owned.configure(c)
 	})
