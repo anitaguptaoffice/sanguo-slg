@@ -38,8 +38,12 @@ func TestPGRecruitCompletionEarlyAndWaiting(t *testing.T) {
 		}
 		accepted[i], candidates[i] = r.confirmed, recruitNoeffectReceipt(t, ctx, observer, i, earliest, r.confirmed)
 	}
-	if accepted[1].InitialStartAt != accepted[0].InitialFinishAt {
-		t.Fatal("paid waiter did not retain the actual active finish estimate")
+	waitingStart := accepted[0].InitialFinishAt
+	if accepted[1].AcceptedAt.After(waitingStart) {
+		waitingStart = accepted[1].AcceptedAt
+	}
+	if accepted[1].InitialStartAt != waitingStart {
+		t.Fatal("paid waiter did not retain max(admission time, pending finish)")
 	}
 	var exact bool
 	returnPGOK(t, observer.QueryRow(ctx, `SELECT
