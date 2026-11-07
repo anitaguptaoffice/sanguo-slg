@@ -98,15 +98,18 @@ func TestPGRecruitCompletionConfirmedLifetime(t *testing.T) {
 			after := recruitReturnRowsCheckpoint(t, f, state, lower, upper)
 			recruitConfirmedState(t, f.recruit, 1, false, 1)
 			var original *recruitAttempt
+			var before recruitAttempt
 			f.recruit.s.mu.Lock()
 			for a := range f.recruit.s.attempts {
 				original = a
 			}
-			before := *original
+			if original != nil {
+				before = *original
+			}
 			f.recruit.s.mu.Unlock()
 			want := recruitAttempt{generation: f.recruit.s, accountID: 1, queueID: state.candidate.QueueID,
 				isCompletion: true, candidate: state.candidate, phase: "admitted"}
-			if !reflect.DeepEqual(before, want) {
+			if original == nil || !reflect.DeepEqual(before, want) {
 				t.Fatal("original completion record identity or provisional result differs")
 			}
 			lost := mode == "missing_record"
