@@ -158,16 +158,6 @@ func (f *recruitReturnPG) join(t *testing.T, call *recruitReturnCall) {
 		t.Fatal("actual interoperating call panicked", call.fault)
 	}
 }
-func (f *recruitReturnPG) events(pid uint32) []returnPGQuery {
-	var out []returnPGQuery
-	for _, q := range f.trace.events() {
-		if q.pid == pid {
-			out = append(out, q)
-		}
-	}
-	return out
-}
-
 func (f *recruitReturnPG) locked(t *testing.T) {
 	t.Helper()
 	for _, row := range []struct{ table, predicate string }{
@@ -184,31 +174,6 @@ func (f *recruitReturnPG) locked(t *testing.T) {
 		var pg *pgconn.PgError
 		if !errors.As(err, &pg) || pg.Code != "55P03" {
 			t.Fatal("leading real operation did not retain the exact row lock", row, err)
-		}
-	}
-}
-
-func (f *recruitReturnPG) waitWallet(t *testing.T, leader uint32) uint32 {
-	t.Helper()
-	ctx, cancel := context.WithTimeout(f.ctx, 10*time.Second)
-	defer cancel()
-	for {
-		var pids []int32
-		returnPGOK(t, f.observer.QueryRow(ctx, `SELECT COALESCE(array_agg(pid),'{}'::int[]) FROM pg_catalog.pg_stat_activity
-WHERE datname=current_database() AND usename=current_user AND query=$1 AND wait_event_type='Lock'
-AND pg_catalog.pg_blocking_pids(pid)=ARRAY[$2::int]`, f.trace.walletSQL, leader).Scan(&pids))
-		if len(pids) == 1 {
-			pid := uint32(pids[0])
-			if pid == leader || pid == f.observer.PgConn().PID() || leader == f.observer.PgConn().PID() || len(f.events(pid)) == 0 {
-				t.Fatal("lock witness is not the other actual operation", pid, leader)
-			}
-			t.Logf("actual follower=%d waits at shared wallet on leader=%d; observer=%d", pid, leader, f.observer.PgConn().PID())
-			return pid
-		}
-		select {
-		case <-ctx.Done():
-			t.Fatal("no independent actual wallet wait witness", pids)
-		case <-time.After(10 * time.Millisecond):
 		}
 	}
 }
