@@ -3678,13 +3678,19 @@ export class HeroMailPanels {
   }
 
   private ensureHeroExprCountdownTimer(): void {
+    const panel = this.heroPanel;
+    const displayed = () => panel.parentNode === this.mount && !panel.classList.contains("hidden");
     const inExpr = isHeroExprInProgress(this.heroDetail);
-    if (!inExpr) {
+    if (!displayed() || !inExpr) {
       this.clearHeroExprCountdownTimer();
       return;
     }
     if (this.heroExprCountdownTimer != null) return;
     this.heroExprCountdownTimer = window.setInterval(() => {
+      if (panel !== this.heroPanel || !displayed() || !isHeroExprInProgress(this.heroDetail)) {
+        this.clearHeroExprCountdownTimer();
+        return;
+      }
       const { wallet } = this.sessionEconomy();
       syncHeroDetailExprControls(
         this.heroPanel,
@@ -3694,9 +3700,6 @@ export class HeroMailPanels {
         this.heroExprHoursPref,
         Date.now(),
       );
-      if (!isHeroExprInProgress(this.heroDetail)) {
-        this.clearHeroExprCountdownTimer();
-      }
     }, 1000);
   }
 
@@ -3786,6 +3789,7 @@ export class HeroMailPanels {
   }
 
   private invalidateHeroDetailRead(): void {
+    this.clearHeroExprCountdownTimer();
     ++this.heroBagLinkGeneration;
     ++this.heroDetailReadGeneration;
     this.heroDetailLoading = false;
