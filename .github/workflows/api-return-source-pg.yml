@@ -33,19 +33,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23.x"
+          go-version: "1.23.12"
           cache: true
       - name: Verify PostgreSQL 17 and host toolchain
         shell: bash
         run: |
           go version
+          [[ "$(go env GOVERSION)" == go1.23.12 ]]
+          git rev-parse HEAD HEAD^{tree}
           command -v psql
           psql --version
           version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
           [[ "$version" =~ ^[0-9]+$ ]]
           (( version / 10000 == 17 ))
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
-      - name: Check API return source formatting
+      - name: Check API source and SQL evidence formatting
         shell: bash
         run: |
           files=$(gofmt -l internal/api/return_source.go \
@@ -54,6 +56,15 @@ jobs:
             internal/api/return_source_pg_test.go \
             internal/api/return_source_pins_pg_test.go \
             internal/api/return_source_test.go \
+            internal/api/return_source_sql_test.go \
+            internal/api/recruit_source.go \
+            internal/api/recruit_source_test.go \
+            internal/api/recruit_source_fixture_test.go \
+            internal/api/recruit_source_pg_test.go \
+            internal/api/recruit_source_lifetime_pg_test.go \
+            internal/api/recruit_source_pins_pg_test.go \
+            internal/api/recruit_source_access_pg_test.go \
+            internal/api/recruit_cleanup_panic_process_pg_test.go \
             internal/api/intg006_smoke_test.go \
             internal/api/smoke_daily_clock_export_test.go \
             internal/api/smoke_daily_clock_pg_test.go)
@@ -64,13 +75,9 @@ jobs:
             done <<< "$files"
             exit 1
           fi
-      - name: Run full API regressions without short mode
+      - name: Prepare frozen API evidence checker
         shell: bash
-        env:
-          MODE: ${{ matrix.mode }}
         run: |
-          flags=()
-          if [[ "$MODE" == race ]]; then flags=(-race); fi
           gate="$RUNNER_TEMP/api-gate.py"
           cat > "$gate" <<'PY'
           import json
@@ -80,7 +87,7 @@ jobs:
           if phase not in {"preflight", "full"}:
               raise SystemExit("Unknown API test phase")
           root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          # Full: 249 existing + 3 calendar outcomes; preflight: 24 existing + 3 calendar outcomes.
+          # Preserve all 249/24 Return outcomes plus the three reviewed calendar outcomes.
           expected = {
               "TestCityGarrisonAuthorizationBeforeRead",
               "TestCityGarrisonConcurrentCompletionSnapshot",
@@ -333,6 +340,67 @@ jobs:
               "TestWalletRefreshWithoutPersistenceDoesNotOverwrite",
               "TestWalletToDomesticMapsFields",
           }
+          # Recruit d4ec3d7, basic b7f2e69, lifetime b1d6d1c, Access ccbd09ec, process ccdd2b943.
+          recruit = {
+              "TestRecruitSourceCaptureAndProjections",
+              "TestRecruitSourceRejectsInvalidCapture",
+              "TestRecruitSourceOneShotContextAndClose",
+              "TestPGRecruitGenerationCaptureAndAssembly",
+              "TestPGRecruitGenerationRejectsDomainSources",
+              "TestPGRecruitGenerationRejectsSourceIdentity",
+              "TestPGRecruitGenerationRejectsMissingCatalogBeforeBegin",
+              "TestRecruitGenerationSQLAllowlist",
+              "TestPGRecruitGenerationOrderedPins",
+              "TestPGRecruitGenerationCanceledPin",
+              "TestPGRecruitGenerationBeginFailureQuarantine",
+              "TestPGRecruitGenerationConstructorPanic",
+              "TestPGRecruitGenerationRollbackBoundary",
+              "TestPGRecruitBundleCopiedAccessLifetime",
+              "TestPGRecruitBundleRejectsAccessSubstitution",
+              "TestPGRecruitGenerationConstructorCleanupPanic",
+              "TestRecruitPanicAbsenceRejectsInvalidIdentity",
+          }
+          recruit.update(
+              f"TestPGRecruitGenerationRejectsDomainSources/{domain}/{mode}"
+              for domain in ("account", "domestic", "world", "military")
+              for mode in ("oid", "owner", "shape")
+          )
+          recruit_groups = {
+              "TestPGRecruitGenerationRejectsSourceIdentity": (
+                  "database_name", "database_oid", "schema_name", "schema_oid", "schema_owner",
+                  "current_role_name", "current_role_oid", "session_role_name", "session_role_oid",
+              ),
+              "TestPGRecruitGenerationRejectsMissingCatalogBeforeBegin": ("nil", "zero"),
+              "TestPGRecruitGenerationCanceledPin": ("default_unknown", "cancel_request_ended"),
+              "TestPGRecruitGenerationConstructorPanic": ("confirmed_cleanup", "failed_cleanup"),
+              "TestPGRecruitGenerationRollbackBoundary": ("close_during_validation", "rollback_failure"),
+              "TestPGRecruitBundleCopiedAccessLifetime": ("commit", "rollback"),
+              "TestPGRecruitBundleRejectsAccessSubstitution": ("foreign_binding", "zero_access"),
+          }
+          recruit.update(f"{parent}/{child}" for parent, children in recruit_groups.items() for child in children)
+          # Return SQL test blob 9eb4dd7: 19 positive and 27 negative named controls.
+          sql_groups = {
+              "accept": (
+                  "freshActorHeader", "freshActorTableCatalog", "freshActorFKCatalog",
+                  "freshActorIndexCatalog", "freshActorIdentityCatalog", "recruitWalletCatalog",
+                  "citySequenceMetadata", "freshSourceCatalog", "validateFreshSource",
+                  "freshBaseHeader", "freshBaseCatalog", "freshQueueCatalog", "freshRetainedCatalog",
+                  "freshRetainedFK", "freshMilitarySequence", "validateRecruitSource", "returnCatalogSQL",
+                  "sequence", "pins",
+              ),
+              "reject": (
+                  "cte_insert", "cte_update", "cte_delete", "cte_merge", "multiple",
+                  "nextval_space", "nextval_newline", "nextval_comment", "setval",
+                  "lock_update", "lock_no_key_update", "lock_share", "lock_key_share", "unknown_read",
+                  "function_write", "wrong_schema", "wrong_sequence", "unqualified_sequence",
+                  "sequence_suffix", "catalog_suffix", "catalog_comment", "wrong_pin_schema",
+                  "wrong_pin_mode", "pin_suffix", "begin_suffix", "rollback_suffix", "empty",
+              ),
+          }
+          sql = {"TestReturnSQLRecorded"}
+          sql.update(f"TestReturnSQLRecorded/{group}/{child}" for group, children in sql_groups.items() for child in children)
+          if len(recruit) != 50 or len(sql) != 47 or expected & (recruit | sql) or recruit & sql:
+              raise SystemExit("Frozen new API inventory changed")
           required = {(root, name) for name in expected}
           required.add((root + "/pb/sanguo/domestic/v1", "TestGarrisonWireCompatibility"))
           required.add((root + "/pb/sanguo/quest/v1", "TestClaimRewardWireCompatibility"))
@@ -346,6 +414,9 @@ jobs:
               no_tests = set()
           if len(required) != (27 if phase == "preflight" else 252):
               raise SystemExit("Frozen API inventory changed")
+          required.update((root, name) for name in recruit | sql)
+          if len(required) != (124 if phase == "preflight" else 349):
+              raise SystemExit("Combined API inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
@@ -384,6 +455,16 @@ jobs:
           missing = sorted(required - passed)
           if bad or missing or unfinished or observed != tested_packages | no_tests:
               raise SystemExit(f"API PG gate failed: bad={bad}, missing={missing}, unfinished={unfinished}, observed={observed}")
+          # The isolated child has no root Go test events. Require the parent's final
+          # confirmation after its structured witness and independent cleanup checks.
+          cleanup_confirmation = "verified primary/live/unknown/retained slot, actual pool closing and isolated teardown; not graceful drain"
+          cleanup_outputs = [
+              event for event in events
+              if event.get("Package") == root and event.get("Test") == "TestPGRecruitGenerationConstructorCleanupPanic"
+              and event["Action"] == "output" and event.get("Output", "").rstrip().endswith(": " + cleanup_confirmation)
+          ]
+          if len(cleanup_outputs) != 1:
+              raise SystemExit("Missing or duplicate parent confirmation of isolated cleanup-panic evidence")
           top_level = sum("/" not in name for _, name in passed)
           print(f"{sys.argv[2]}/{phase}: {top_level} top-level / {len(passed)} including subtests PASS")
           print(f"Verified {len(required)} required tests/scenarios and all {len(tested_packages)} tested-package PASS events")
@@ -391,12 +472,20 @@ jobs:
           print("Optional t.Log branches are not full gameplay coverage; their actual output is preserved above")
           print("\n".join(f"{package}: {name}" for package, name in sorted(required)))
           PY
+      - name: Run full API regressions without short mode
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          flags=()
+          if [[ "$MODE" == race ]]; then flags=(-race); fi
+          gate="$RUNNER_TEMP/api-gate.py"
           # Preflight and full acceptance own different disposable databases.
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestSmokeDailyCalendarClockPG$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestSmokeDailyCalendarClockPG$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
