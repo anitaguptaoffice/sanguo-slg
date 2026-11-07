@@ -70,6 +70,17 @@ jobs:
             internal/api/recruit_complete_attempt_test.go \
             internal/api/recruit_complete_fixture_test.go \
             internal/api/recruit_complete_pg_test.go \
+            internal/api/recruit_complete_noeffect_fixture_test.go \
+            internal/api/recruit_complete_noeffect_pg_test.go \
+            internal/api/recruit_complete_history_fixture_test.go \
+            internal/api/recruit_complete_history_pg_test.go \
+            internal/api/recruit_complete_promotion_fixture_test.go \
+            internal/api/recruit_complete_promotion_pg_test.go \
+            internal/api/recruit_complete_return_fixture_test.go \
+            internal/api/recruit_complete_return_fixture_pg_test.go \
+            internal/api/recruit_complete_return_sql_test.go \
+            internal/api/recruit_complete_return_sql_pg_test.go \
+            internal/api/recruit_complete_return_observed_fixture_test.go \
             internal/api/recruit_attempt_end.go \
             internal/api/recruit_attempt_end_test.go \
             internal/api/recruit_attempt_fixture_test.go \
@@ -608,6 +619,30 @@ jobs:
           required |= completion_required
           if len(required) != (240 if phase == "preflight" else 465):
               raise SystemExit("Completion union inventory changed")
+          # Approved progress source da44dad: NOEFFECT, HISTORY, PROMOTION and
+          # paired Return SQL/OBSERVED evidence. This remains validation-only.
+          progress_roots = {
+              "TestRecruitCompletionNoeffectSQLWitness",
+              "TestPGRecruitCompletionEarlyAndWaiting",
+              "TestRecruitCompletionHistorySQLWitness",
+              "TestPGRecruitCompletionHistoryAndReplay",
+              "TestRecruitCompletionPromotionSQLWitness",
+              "TestPGRecruitCompletionPromotesOldest",
+              "TestPGRecruitCompletionReturnPairedFixture",
+              "TestRecruitCompletionReturnSQLWitness",
+              "TestPGRecruitCompletionReturnSQLAppliedAndTerminal",
+              "TestRecruitCompletionReturnObservedWitness",
+          }
+          progress_required = {(root, name) for name in progress_roots}
+          progress_required.update((root, f"TestPGRecruitCompletionHistoryAndReplay/{name}") for name in (
+              "complete", "done", "admission_replay", "owner_done", "owner_replay",
+              "readiness_done", "readiness_replay",
+          ))
+          if len(progress_required) != 17 or required & progress_required:
+              raise SystemExit("Completion progress evidence duplicates or changes the frozen inventory")
+          required |= progress_required
+          if len(required) != (257 if phase == "preflight" else 482):
+              raise SystemExit("Completion progress union inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
@@ -786,7 +821,7 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$|TestRecruitCompletion|TestPGRecruitCompletionPaidDue$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$|TestRecruitCompletion|TestPGRecruitCompletionPaidDue$|TestPGRecruitCompletionEarlyAndWaiting$|TestPGRecruitCompletionHistoryAndReplay$|TestPGRecruitCompletionPromotesOldest$|TestPGRecruitCompletionReturnPairedFixture$|TestPGRecruitCompletionReturnSQLAppliedAndTerminal$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
