@@ -90,7 +90,7 @@ func recruitNoeffectOrder(admission bool) []string {
 	if admission {
 		return append(want, strings.Fields("account-proof actor player wallet-proof wallet military-proof find military-proof reverse city-proof city military-proof marker stock pending evidence clock allocate debit wallet-read job origin receipt readback commit")...)
 	}
-	return append(want, strings.Fields("account-proof account-hint account-proof actor player wallet-proof wallet military-proof candidate city-proof city military-proof marker stock pending receipt-lock evidence military-proof candidate clock commit")...)
+	return append(want, strings.Fields("account-hint-proof account-hint account-proof actor player wallet-proof wallet completion-proof candidate city-proof city completion-proof marker stock pending receipt-lock evidence completion-proof candidate clock commit")...)
 }
 
 func recruitNoeffectRecorded(events []returnPGQuery, observer uint32, p freshsource.Profile, admission bool) error {
@@ -140,6 +140,26 @@ func TestRecruitCompletionNoeffectSQLWitness(t *testing.T) {
 			if recruitNoeffectStages(invalid, admission) {
 				t.Fatal("missing/extra/write/reordered stages accepted")
 			}
+		}
+	}
+	valid := recruitNoeffectOrder(false)
+	swappedProof := append([]string(nil), valid...)
+	swappedProof[10], swappedProof[12] = swappedProof[12], swappedProof[10]
+	missingProof := append(append([]string(nil), valid[:10]...), valid[11:]...)
+	duplicateProof := append(append([]string(nil), valid[:11]...), valid[10:]...)
+	for _, invalid := range [][]string{swappedProof, missingProof, duplicateProof} {
+		if recruitNoeffectStages(invalid, false) {
+			t.Fatal("missing/duplicate/reordered completion proof accepted")
+		}
+	}
+	for _, replacement := range []struct {
+		at    int
+		stage string
+	}{{10, "account-proof"}, {17, "military-proof"}} {
+		alias := append([]string(nil), valid...)
+		alias[replacement.at] = replacement.stage
+		if recruitNoeffectStages(alias, false) {
+			t.Fatal("different port proof substituted", replacement)
 		}
 	}
 	p := freshsource.Profile{SchemaName: "noeffect"}

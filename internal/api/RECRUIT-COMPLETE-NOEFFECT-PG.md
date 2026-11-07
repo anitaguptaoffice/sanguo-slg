@@ -1,9 +1,12 @@
 # Actual Recruit Early and Waiting on PostgreSQL
 
-API-RECRUIT-COMPLETE-NOEFFECT-PG-001 / #2227. Base is actual basic Draft #2226
+API-RECRUIT-COMPLETE-NOEFFECT-PG-001 / #2227. Original base is actual basic Draft #2226
 head `2ced90f794d16f75a7e3c14fcc23da18ab692ba3`, tree
 `b384c5f1ab9879f7e9d370270b58afdf6a03310c`. Only these new APP tests/document
 change; all source, existing fixtures and basic witnesses remain untouched.
+Current validation base is normally forwarded basic proof correction #2226 head
+`aeab44939135afe8ff699b1669feef95cb1ce16a`, tree
+`0c6e394b0ae1769f07187291bc43dd91c00580f5`; original provenance is preserved.
 
 `TestPGRecruitCompletionEarlyAndWaiting` invokes real paid admission twice:
 unit4/count1 becomes active with its production44-second schedule; unit1/count1
@@ -32,6 +35,13 @@ The generation remains open for the second call and then closes/drains cleanly.
 helper is consumed in this prefix. Ordinary and race runs must use owned PG17
 and execute the actual PG root without skips. Official Go1.23.12 formatting,
 compile/lint, runtime and required CI remain pending; static review is not a run.
+
+Run42360423301 ordinary128367430876 failed at Early's AccountHint SQL witness
+before its final durable snapshot and before Waiting executed; inherited basic
+also failed at its proof witness. The corrected base distinguishes exact proof
+bytes; this card independently corrects completion-only stage order and negative
+controls. Admission stages and actual PG scenario remain unchanged. Those failed
+results remain failed; fresh complete ordinary/race assertions are required.
 
 No claim for overdue waiting, clock reversal, history/replay, promotion, rejection,
 rollback/failure/unknown/lifetime/network/process, completion-versus-Return or
