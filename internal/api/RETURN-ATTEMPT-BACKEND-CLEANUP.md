@@ -16,3 +16,23 @@ Local Go/PG unavailable: no installation, compile, gofmt, runtime red or PASS cl
 Required: dependent PG evidence, official Go/owned PG ordinary/race for ownership, lifetime, duplicate serialization,
 lock-order suites and full applicable API acceptance; independent final review and all CI.
 No remote publication/merge, wiring or deployment. Earlier source approvals remain historical.
+
+## Prefix-local ownership evidence (2026-11-07)
+
+The lifetime-only tracer/scenario helpers now travel with #2153 / PR #2198.
+This card retains the shared backend ownership helpers and their own consumers.
+`TestReturnBackendJoinBoundaries` checks unfinished and completed caller joins.
+`TestReturnBackendCloseOncePreservesError` checks concurrent exact-transport close
+happens once and preserves its original error for every caller.
+`TestPGReturnBackendCaptureAndCleanupIsolation` uses the real #2146 fixture:
+- capture retains the original PID/start/transport and rejects replacement;
+- the independent observer is never registered as an owned cleanup target;
+- stale lifetime metadata does not match another transaction using the same PID;
+- canceled, already-joined caller cleanup rolls back abandoned writes using an
+  independent context and leaves the separate observer connection usable.
+These are additional helper invariants, not substitutes for #2171's concurrent
+capture, forced-query fallback and backend-disappearance PostgreSQL coverage.
+Meaningful mutation targets are duplicate-capture rejection, close-once/error
+preservation, join classification, backend_start filtering, and cleanup closure.
+New tests and mutations have not run locally. Official Go/lint, owned PG17
+ordinary/race, applicable full API and exact-prefix CI remain mandatory.
