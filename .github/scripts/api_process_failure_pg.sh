@@ -124,6 +124,7 @@ version=$(psql_owned -Atc 'SHOW server_version_num')
 command -v psql
 git rev-parse HEAD HEAD^{tree} > "$out/source.txt"
 git diff --exit-code
+PYTHONDONTWRITEBYTECODE=1 python3 .github/scripts/test_evidence_artifacts.py > "$out/artifact-tool-controls.txt" 2>&1
 python3 .github/scripts/test_process_failure_evidence.py > "$out/validator-unit-controls.txt"
 psql_owned -Atc "SELECT name || '=' || setting FROM pg_settings WHERE name IN
   ('logging_collector','log_destination','log_statement','log_directory','log_filename',
