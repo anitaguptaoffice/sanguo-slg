@@ -23,6 +23,7 @@ type returnOwnedBackend struct {
 	once      sync.Once
 	err       error
 }
+
 func (b *returnOwnedBackend) close() error {
 	if b == nil || b.pid == 0 || b.started == "" || b.transport == nil {
 		return errors.New("missing original backend ownership")
@@ -33,10 +34,12 @@ func (b *returnOwnedBackend) close() error {
 	}
 	return b.err
 }
+
 type returnBackendSet struct {
 	mu       sync.Mutex
 	backends map[uint32]*returnOwnedBackend
 }
+
 func (r *returnBackendSet) configure(cfg *pgxpool.Config) {
 	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
