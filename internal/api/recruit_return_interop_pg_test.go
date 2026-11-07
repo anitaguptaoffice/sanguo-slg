@@ -14,6 +14,10 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// Independent RULE_EVIDENCE SHA-256 vector for this fixture's unit1 rule:
+// (unit, food, wood, iron, stone, seconds) = (1, 2, 3, 5, 7, 11).
+const recruitReturnPGDigest = "8306893080ef1340b9cf6f693256cc3f85c2166189e3db07027ec43943163ab0"
+
 func TestPGRecruitReturnInteroperability(t *testing.T) {
 	for _, tc := range []struct {
 		name                  string
@@ -148,7 +152,7 @@ func recruitReturnEffects(t *testing.T, f *recruitReturnPG, ready int32, applied
 	}
 	if a.QueueID != 100 || a.CityID != 1 || a.UnitCfgID != 1 || a.Count != 2 ||
 		a.Cost != (march.Resources{Food: 4, Wood: 6, Iron: 10, Stone: 14}) || a.DurationSeconds != 22 ||
-		a.CatalogVersion != recruitAttemptPGVersion || fmt.Sprintf("%x", a.RuleDigest) != recruitAttemptPGDigest ||
+		a.CatalogVersion != recruitAttemptPGVersion || fmt.Sprintf("%x", a.RuleDigest) != recruitReturnPGDigest ||
 		a.InitialStatus != 1 || a.AcceptedAt.IsZero() || a.AcceptedAt.Location() != time.UTC ||
 		a.AcceptedAt.Nanosecond()%1000000 != 0 || a.InitialStartAt != a.AcceptedAt ||
 		a.InitialFinishAt != a.InitialStartAt.Add(22*time.Second) {
@@ -168,7 +172,7 @@ AND r.catalog_version=convert_to($1,'UTF8') AND encode(r.rule_digest,'hex')=$2 A
 AND r.accepted_at=$3 AND r.initial_start_at=$3 AND r.initial_finish_at=$4 AND r.accepted_at<=clock_timestamp()
 AND q.start_at=r.initial_start_at AND q.finish_at=r.initial_finish_at
 AND q.payload=jsonb_build_object('v',1,'unit_cfg_id',1,'count',2,'cost_paid',jsonb_build_object('food',4,'wood',6,'iron',10,'stone',14),
-'duration_sec',22,'catalog_version',$1::text,'rule_digest',$2::text))`, recruitAttemptPGVersion, recruitAttemptPGDigest, a.AcceptedAt, a.InitialFinishAt).Scan(&exact))
+'duration_sec',22,'catalog_version',$1::text,'rule_digest',$2::text))`, recruitAttemptPGVersion, recruitReturnPGDigest, a.AcceptedAt, a.InitialFinishAt).Scan(&exact))
 	if !exact {
 		t.Fatal("independent paid job/origin/receipt/allocator evidence differs")
 	}
