@@ -256,7 +256,12 @@ func recruitFailureProcess(t *testing.T, mode string) {
 	returnPGOK(t, err)
 	stdin, err := cmd.StdinPipe()
 	returnPGOK(t, err)
-	defer stdin.Close()
+	// Explicit release or Wait may already have closed this owned pipe.
+	defer func() {
+		if err := stdin.Close(); err != nil && !errors.Is(err, os.ErrClosed) {
+			t.Error("close child stdin:", err)
+		}
+	}()
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	returnPGOK(t, cmd.Start())
