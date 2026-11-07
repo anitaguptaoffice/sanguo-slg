@@ -15,6 +15,8 @@ import (
 // Frozen source b5c14218, schema qualifier removed. These are reviewed bytes,
 // never learned from a runtime trace or generated from source by the tests.
 var recruitCompleteSQL = map[string]string{
+	"2889a3e527cd491fe8fd2f3ec2c60afef166755da69d6c2c4de987f5fe218453": "account-hint-proof",
+	"5c70b8e256d9b5e41ee6e0f55273ab4af129d9bbe77203d3310778ceb0279732": "completion-proof",
 	"4235480dc2dbad1b5b4b81f36e525bd8ed97ee54a5715fd31193136786a5b370": "account-hint",
 	"430fd70026111f86d4b74ab595d8bc93f85a531078ca1d190afa740a6a538b8b": "candidate",
 	"2f7e37be61acbfef29a3aa2e09ec71ef5e86363adb4822ea2aadb3ceea12f0af": "receipt-lock",
@@ -44,7 +46,7 @@ func recruitCompleteOrder() []string {
 	for _, name := range recruitPGPinNames {
 		want = append(want, "pin:"+name)
 	}
-	return append(want, strings.Fields("account-proof account-hint account-proof actor player wallet-proof wallet military-proof candidate city-proof city military-proof marker stock pending receipt-lock evidence military-proof candidate clock credit done commit")...)
+	return append(want, strings.Fields("account-hint-proof account-hint account-proof actor player wallet-proof wallet completion-proof candidate city-proof city completion-proof marker stock pending receipt-lock evidence completion-proof candidate clock credit done commit")...)
 }
 
 func recruitCompleteRecorded(events []returnPGQuery, observer uint32, p freshsource.Profile) error {
@@ -96,6 +98,29 @@ CASE WHEN unit_cfg_id=1 THEN NULL ELSE xmin::text END,CASE WHEN unit_cfg_id=1 TH
 
 func TestRecruitCompletionSQLWitness(t *testing.T) {
 	p := freshsource.Profile{SchemaName: `complete_"Q`}
+	hintProof := `SELECT pg_catalog.count(DISTINCT relation) OPERATOR(pg_catalog.=) 2 FROM pg_catalog.pg_locks
+ WHERE pid OPERATOR(pg_catalog.=) pg_catalog.pg_backend_pid()
+ AND database OPERATOR(pg_catalog.=) (SELECT oid FROM pg_catalog.pg_database WHERE datname OPERATOR(pg_catalog.=) pg_catalog.current_database())
+ AND locktype OPERATOR(pg_catalog.=) 'relation' AND mode OPERATOR(pg_catalog.=) 'RowShareLock' AND granted
+ AND relation IN ($1,$2)`
+	actorProof := `SELECT count(DISTINCT relation)=2 FROM pg_catalog.pg_locks
+ WHERE pid=pg_catalog.pg_backend_pid() AND database=(SELECT oid FROM pg_catalog.pg_database WHERE datname=current_database())
+ AND locktype='relation' AND mode='RowShareLock' AND granted AND relation IN ($1,$2)`
+	completionProof := `SELECT pg_catalog.count(*) FROM pg_catalog.unnest($1::pg_catalog.oid[]) e(oid) WHERE EXISTS(SELECT FROM pg_catalog.pg_locks l WHERE l.pid OPERATOR(pg_catalog.=) pg_catalog.pg_backend_pid() AND l.granted AND l.locktype OPERATOR(pg_catalog.=) 'relation' AND l.relation OPERATOR(pg_catalog.=) e.oid AND l.mode OPERATOR(pg_catalog.=) 'RowExclusiveLock')`
+	admissionProof := `SELECT pg_catalog.count(*) FROM pg_catalog.unnest($1::pg_catalog.oid[]) e(oid)
+ WHERE EXISTS(SELECT FROM pg_catalog.pg_locks l WHERE l.pid OPERATOR(pg_catalog.=) pg_catalog.pg_backend_pid()
+ AND l.granted AND l.locktype OPERATOR(pg_catalog.=) 'relation' AND l.relation OPERATOR(pg_catalog.=) e.oid
+ AND l.mode OPERATOR(pg_catalog.=) 'RowExclusiveLock')`
+	for sql, want := range map[string]string{hintProof: "account-hint-proof", actorProof: "account-proof", completionProof: "completion-proof", admissionProof: "military-proof"} {
+		if stage, ok := recruitCompleteStage(sql, p); !ok || stage != want {
+			t.Fatal("distinct frozen proof misclassified", want, stage)
+		}
+		for _, suffix := range []string{"; SELECT 1", "\n"} {
+			if stage, ok := recruitCompleteStage(sql+suffix, p); ok {
+				t.Fatal("altered proof bytes accepted", want, stage)
+			}
+		}
+	}
 	hint := "SELECT account_id FROM " + pgx.Identifier{p.SchemaName, "player"}.Sanitize() + " WHERE server_id OPERATOR(pg_catalog.=) $1 AND player_id OPERATOR(pg_catalog.=) $2"
 	if stage, ok := recruitCompleteStage(hint, p); !ok || stage != "account-hint" {
 		t.Fatal("exact account hint rejected", stage)
@@ -114,9 +139,23 @@ func TestRecruitCompletionSQLWitness(t *testing.T) {
 	}
 	swapped := append([]string(nil), valid...)
 	swapped[len(swapped)-2], swapped[len(swapped)-3] = swapped[len(swapped)-3], swapped[len(swapped)-2]
-	for _, invalid := range [][]string{valid[1:], valid[:len(valid)-1], append(append([]string(nil), valid...), "commit"), swapped} {
+	swappedProof := append([]string(nil), valid...)
+	swappedProof[10], swappedProof[12] = swappedProof[12], swappedProof[10]
+	missingProof := append(append([]string(nil), valid[:10]...), valid[11:]...)
+	duplicateProof := append(append([]string(nil), valid[:11]...), valid[10:]...)
+	for _, invalid := range [][]string{valid[1:], valid[:len(valid)-1], append(append([]string(nil), valid...), "commit"), swapped, swappedProof, missingProof, duplicateProof} {
 		if recruitCompleteStagesValid(invalid, 1) {
 			t.Fatal("missing/extra/out-of-order completion stage accepted")
+		}
+	}
+	for _, replacement := range []struct {
+		at    int
+		stage string
+	}{{10, "account-proof"}, {17, "military-proof"}} {
+		alias := append([]string(nil), valid...)
+		alias[replacement.at] = replacement.stage
+		if recruitCompleteStagesValid(alias, 1) {
+			t.Fatal("different port proof substituted", replacement)
 		}
 	}
 	for _, pid := range []uint32{0, 7} {
