@@ -27,3 +27,13 @@ bounded fallback teardown targets only observed fixture PIDs with live transacti
 Local go is not Go: no compilation, gofmt, runtime or behavioral-red pass claimed.
 Official Go/PG17 ordinary and race, full applicable API runs, independent exact-head
 and dependency-combination review, and required CI remain mandatory before release.
+
+## Consumer-aligned publication boundary (2026-11-07)
+
+The existing lifetime-only tracer, result and helper declarations are moved
+byte-for-byte from the shared fixture into this card's existing scenario file.
+Their test names, SQL, assertions and runtime behavior are unchanged.
+Shared backend ownership helpers remain in #2170 with independent consumers;
+this card still requires the safe #2170/#2171 dependency combination.
+This relocation has no local Go or runtime PASS. Exact-prefix lint, official
+formatting, owned PG ordinary/race and full combined acceptance remain required.
