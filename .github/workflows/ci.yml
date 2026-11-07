@@ -59,6 +59,31 @@ jobs:
         with:
           go-version: "1.23.x"
           cache: true
+      - name: Check Recruit cleanup Go formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          go version
+          gofmt="$(go env GOROOT)/bin/gofmt"
+          test -x "$gofmt"
+          go version "$gofmt"
+          git rev-parse HEAD HEAD^{tree}
+          git ls-files -z -- 'internal/api/recruit_cleanup*.go' > "$RUNNER_TEMP/recruit-cleanup-files"
+          mapfile -d '' -t files < "$RUNNER_TEMP/recruit-cleanup-files"
+          test "${#files[@]}" -gt 0
+          git ls-files --error-unmatch -- internal/api/recruit_cleanup_failure_guard_test.go \
+            internal/api/recruit_cleanup_panic_process_pg_test.go > /dev/null
+          git diff --cached --exit-code HEAD -- 'internal/api/recruit_cleanup*.go'
+          git diff --exit-code HEAD -- 'internal/api/recruit_cleanup*.go'
+          git ls-tree -r HEAD -- "${files[@]}"
+          sha256sum -- "${files[@]}"
+          unformatted="$("$gofmt" -l "${files[@]}")"
+          if [[ -n "$unformatted" ]]; then
+            printf 'Unformatted Recruit cleanup sources:\n%s\n' "$unformatted"
+            "$gofmt" -d "${files[@]}"
+            exit 1
+          fi
+          printf 'Verified official Go formatting for %s tracked Recruit cleanup sources\n' "${#files[@]}"
       - name: Build binaries
         run: |
           make build
