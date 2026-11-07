@@ -1,0 +1,34 @@
+name: API process failure PostgreSQL
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  process-failure-pg:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [ordinary, race]
+    env:
+      GOTOOLCHAIN: local
+      PYTHONDONTWRITEBYTECODE: "1"
+      MODE: ${{ matrix.mode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.12"
+          cache: true
+      - name: Verify actual children and complete server evidence
+        run: bash .github/scripts/api_process_failure_pg.sh
+      - name: Preserve full evidence, including unsuccessful runs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: process-failure-${{ matrix.mode }}-${{ github.sha }}
+          path: ${{ runner.temp }}/process-failure-evidence
+          if-no-files-found: error
