@@ -53,7 +53,7 @@ UPDATE city_troop SET count=2147483644 WHERE unit_cfg_id=1; SELECT setval('work_
 (SELECT ARRAY[food,wood,iron,stone,gold]=ARRAY[0,0,0,0,0]::bigint[] FROM player_wallet WHERE server_id=1 AND player_id=1)
 AND (SELECT count(*) FROM player_wallet)=1
 AND (SELECT count(*) FROM work_queue)=4 AND (SELECT count(*) FROM mil_recruit_origin)=3 AND (SELECT count(*) FROM mil_recruit_receipt)=3
-AND (SELECT array_agg(queue_id ORDER BY queue_id)=ARRAY[100,101,102]::bigint[] AND array_agg(status ORDER BY queue_id)=ARRAY[1,0,0] FROM work_queue WHERE queue_type=3)
+AND (SELECT array_agg(queue_id ORDER BY queue_id)=ARRAY[100,101,102]::bigint[] AND array_agg(status ORDER BY queue_id)=ARRAY[1,0,0]::smallint[] FROM work_queue WHERE queue_type=3)
 AND (SELECT last_value=102 AND is_called FROM work_queue_id_seq)
 AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483644,12,13,14] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] FROM city_troop WHERE server_id=1 AND city_id=1)
 AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owner_player_id=1 AND format_version=1 AND cohort_id=decode('03000000000000000000000000000000','hex'))`).Scan(&exact))
@@ -122,7 +122,7 @@ AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owne
 		}
 	}
 	returnPGOK(t, observer.QueryRow(ctx, `SELECT
-(SELECT array_agg(status ORDER BY queue_id)=ARRAY[2,1,0] FROM work_queue WHERE queue_type=3)
+(SELECT array_agg(status ORDER BY queue_id)=ARRAY[2,1,0]::smallint[] FROM work_queue WHERE queue_type=3)
 AND EXISTS (SELECT FROM work_queue WHERE server_id=1 AND queue_id=101 AND start_at=$1 AND finish_at=$2)
 AND (SELECT array_agg(count ORDER BY unit_cfg_id)=ARRAY[2147483645,12,13,14] AND array_agg(wounded ORDER BY unit_cfg_id)=ARRAY[1,2,3,4] FROM city_troop WHERE server_id=1 AND city_id=1)
 AND (SELECT count::bigint+(SELECT sum((payload->>'count')::bigint) FROM work_queue WHERE queue_type=3 AND status IN(0,1))=2147483647 FROM city_troop WHERE server_id=1 AND city_id=1 AND unit_cfg_id=1)`, processing, finish).Scan(&exact))
