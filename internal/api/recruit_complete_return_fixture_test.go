@@ -85,6 +85,7 @@ WHERE d.datname=current_database() AND n.nspname=current_schema() AND r.rolname=
 
 func (f *recruitCompleteReturnPG) paid(t *testing.T, i int) (march.RecruitAcceptance, march.RecruitCandidate) {
 	t.Helper()
+	queueOne := f.queueOne(t)
 	var lower time.Time
 	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT clock_timestamp()").Scan(&lower))
 	scope := march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{byte(9 + i)}}
@@ -126,7 +127,17 @@ AND q.payload=jsonb_build_object('v',1,'unit_cfg_id',1,'count',2,'cost_paid',jso
 	if !exact {
 		t.Fatal("paid pair payload/origin/schedule mismatch")
 	}
+	if queueOne != f.queueOne(t) {
+		t.Fatal("paid admission changed unrelated queue1 values or row identity")
+	}
 	return a, c
+}
+
+func (f *recruitCompleteReturnPG) queueOne(t *testing.T) string {
+	t.Helper()
+	var row string
+	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT jsonb_build_array(q,q.xmin::text,q.ctid::text)::text FROM work_queue q WHERE server_id=1 AND queue_id=1").Scan(&row))
+	return row
 }
 
 func recruitCompleteReturnChanges(t *testing.T, before, after map[string]string, changed map[string]bool) {
