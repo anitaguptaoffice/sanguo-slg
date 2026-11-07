@@ -118,6 +118,7 @@ type recruitReturnForward struct {
 	starts, ends int
 	sql, tags    []string
 	args         [][]any
+	errors       []error
 }
 type recruitReturnForwardKey struct{}
 type recruitReturnCallerKey struct{}
@@ -131,6 +132,7 @@ func (s *recruitReturnForward) TraceQueryEnd(ctx context.Context, c *pgx.Conn, d
 	if ctx.Value(recruitReturnForwardKey{}) == c {
 		s.ends++
 		s.tags = append(s.tags, d.CommandTag.String())
+		s.errors = append(s.errors, d.Err)
 	}
 }
 
@@ -183,6 +185,16 @@ func recruitReturnObservedControls(t *testing.T, f *recruitCompleteReturnPG) {
 	_, wrongFault := other.snapshot()
 	if !fault || !wrongFault {
 		t.Fatal("foreign token or wrong End connection accepted")
+	}
+	sentinel := fmt.Errorf("observer End sentinel")
+	errorSpy := new(recruitReturnForward)
+	errored := &recruitReturnObservedTrace{inner: errorSpy, credit: "credit"}
+	errorCtx := errored.TraceQueryStart(f.ctx, c, pgx.TraceQueryStartData{SQL: "credit"})
+	errored.TraceQueryEnd(errorCtx, c, pgx.TraceQueryEndData{CommandTag: pgconn.NewCommandTag("UPDATE 1"), Err: sentinel})
+	q, fault = errored.snapshot()
+	if fault || len(q) != 1 || !q[0].ended || q[0].tag != "UPDATE 1" || q[0].err != sentinel ||
+		len(errorSpy.errors) != 1 || errorSpy.errors[0] != sentinel {
+		t.Fatal("End error identity was flattened or not forwarded")
 	}
 }
 

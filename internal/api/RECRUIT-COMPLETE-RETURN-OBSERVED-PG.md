@@ -25,7 +25,8 @@ Pure witness controls cover types, values, order, identity, errors and tags.
 Isolated direct-callback controls use a real held PG connection and passive spy,
 never execute their supplied SQL, and never enter business evidence. They check
 Start/snapshot copies, reversed token ends, duplicate/foreign/missing tokens,
-wrong End connection and callback/context forwarding. Slots release on failure.
+wrong End connection, exact error identity and callback/context forwarding.
+Slots release on failure.
 
 Changed root: TestPGRecruitCompletionReturnPairedFixture. New root:
 TestRecruitCompletionReturnObservedWitness. Format all three changed Go files.
