@@ -160,7 +160,7 @@ func TestRecruitPanicAbsenceRejectsInvalidIdentity(t *testing.T) {
 
 func TestPGRecruitGenerationConstructorCleanupPanic(t *testing.T) {
 	if os.Getenv(recruitPanicChild) == "1" {
-		recruitCleanupPanicChild(t)
+		recruitPanicGuardedChild(t, recruitCleanupPanicChild)
 		return
 	}
 	dsn := os.Getenv("DATABASE_URL")
