@@ -32,6 +32,7 @@ jobs:
       QA_PRODUCT_TREE: ${{ matrix.tree }}
       QA_PRODUCT_PARENTS: ${{ matrix.parents }}
       QA_RUNTIME_HEAD: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+      QA_GEOMETRY_HEAD: 283160ae6f9970ff396383ae6815ed9783c64753
     services:
       postgres:
         image: postgres:17
@@ -71,6 +72,12 @@ jobs:
           ref: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
           path: runtime-source
           persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_GEOMETRY_HEAD }}
+          path: geometry-source
+          fetch-depth: 2
+          persist-credentials: false
       - name: Assert exact independently reviewed inputs
         working-directory: target
         run: |
@@ -82,6 +89,11 @@ jobs:
           test "$(git -C ../runtime-source rev-parse HEAD)" = "$QA_RUNTIME_HEAD"
           test "$(git -C ../runtime-source rev-parse HEAD^{tree})" = dc151c5513ea2a2d937e45d4dee12d9f59792c7e
           test -z "$(git -C ../runtime-source status --porcelain)"
+          test "$(git -C ../geometry-source rev-parse HEAD)" = "$QA_GEOMETRY_HEAD"
+          test "$(git -C ../geometry-source rev-parse HEAD^{tree})" = 5a731de39fec4e35ea120f83492f8d5c93bf4841
+          test "$(git -C ../geometry-source show -s --format=%P HEAD)" = 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+          test -z "$(git -C ../geometry-source status --porcelain)"
+          git -C ../geometry-source show -s --format='{"head":"%H","tree":"%T","parents":"%P"}' HEAD > ../evidence/geometry-provenance.json
       - uses: actions/setup-go@v5
         with:
           go-version: '1.23.12'
@@ -97,8 +109,11 @@ jobs:
           set -euo pipefail
           cp ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs .
           cp ../../qa-source/.github/scripts/live_hero_layout.mjs .qa-live-hero-layout.mjs
+          cp ../../geometry-source/.github/scripts/live_hero_layout_geometry.mjs .
           cmp live_hero_layout_runtime.mjs ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs
           node ../../runtime-source/.github/scripts/live_hero_layout_runtime.test.mjs | tee ../../evidence/runtime-tests.log
+          cmp live_hero_layout_geometry.mjs ../../geometry-source/.github/scripts/live_hero_layout_geometry.mjs
+          node ../../geometry-source/.github/scripts/live_hero_layout_geometry.test.mjs | tee ../../evidence/geometry-helper-tests.log
           node .qa-live-hero-layout.mjs --self-test | tee ../../evidence/geometry-tests.log
       - name: Build actual server and test complete client
         timeout-minutes: 10
