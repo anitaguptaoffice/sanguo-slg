@@ -21,11 +21,12 @@ import (
 // can leave its successful wallet read. Both gates observe real transaction SQL.
 type recruitReturnTrace struct {
 	*returnLifetimeTrace
-	walletSQL string
-	pauseWallet bool
+	walletSQL                   string
+	pauseWallet                 bool
 	walletReached, walletResume chan struct{}
-	walletOnce, walletReleased sync.Once
+	walletOnce, walletReleased  sync.Once
 }
+
 func (r *recruitReturnTrace) releaseWallet() { r.walletReleased.Do(func() { close(r.walletResume) }) }
 func (r *recruitReturnTrace) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
 	r.returnPGTrace.TraceQueryEnd(ctx, conn, data)
@@ -41,18 +42,18 @@ func (r *recruitReturnTrace) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, 
 }
 
 type recruitReturnCall struct {
-	done chan struct{}
-	recruit recruitAttemptResult
+	done     chan struct{}
+	recruit  recruitAttemptResult
 	returned returnAttemptResult
-	fault any
+	fault    any
 }
 type recruitReturnPG struct {
 	*returnAttemptPG
 	recruit *recruitGeneration
-	trace *recruitReturnTrace
-	scope march.RecruitScope
-	intent march.RecruitIntent
-	calls []*recruitReturnCall
+	trace   *recruitReturnTrace
+	scope   march.RecruitScope
+	intent  march.RecruitIntent
+	calls   []*recruitReturnCall
 }
 
 func newRecruitReturnPG(t *testing.T, ready int32) *recruitReturnPG {
@@ -63,7 +64,7 @@ func newRecruitReturnPG(t *testing.T, ready int32) *recruitReturnPG {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	f := &recruitReturnPG{returnAttemptPG: &returnAttemptPG{ctx: ctx, pool: pool, observer: observer, binding: binding,
 		profile: profile, catalog: recruitAttemptPGCatalog(t), due: returnAttemptDue}, trace: trace,
-		scope: march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{9}},
+		scope:  march.RecruitScope{ServerID: 1, PlayerID: 1, CommandID: march.RecruitCommandID{9}},
 		intent: march.RecruitIntent{Version: 1, CityID: 1, UnitCfgID: 1, Count: 2}}
 	t.Cleanup(func() {
 		cancel()

@@ -20,6 +20,7 @@ const (
 	returnConfirmed
 	returnUnknown
 )
+
 type returnAttemptResult struct {
 	outcome                    returnAttemptOutcome
 	confirmed                  march.ReturnObservation
