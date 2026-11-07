@@ -148,7 +148,7 @@ try {
   await page.keyboard.press('Space'); await selected(1002);
   assert.ok(await select(1002).evaluate(el => el === document.activeElement), 'Native activation retains focus');
   report.focus = await select(1002).evaluate(el => ({ outline: getComputedStyle(el).outline, focused: el.matches(':focus-visible') }));
-  assert.equal(report.focus.focused, true); assert.notMatch(report.focus.outline, /\b0px\b|\bnone\b/);
+  assert.equal(report.focus.focused, true); assert.doesNotMatch(report.focus.outline, /\b0px\b|\bnone\b/);
   await page.screenshot({ path: path.join(out, 'keyboard-selection.png') });
   await select(1003).click(); await selected(1003);
   await input.fill('1001'); await page.keyboard.press('Tab'); await selected(1001);
