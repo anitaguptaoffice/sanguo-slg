@@ -16,8 +16,8 @@ import (
 
 func TestPGRecruitReturnInteroperability(t *testing.T) {
 	for _, tc := range []struct {
-		name string
-		ready int32
+		name                  string
+		ready                 int32
 		recruitFirst, applied bool
 	}{
 		{"real pending exact capacity", math.MaxInt32 - 9, true, true},
