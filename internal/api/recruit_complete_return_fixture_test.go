@@ -30,6 +30,28 @@ func newRecruitCompleteReturnPG(t *testing.T) *recruitCompleteReturnPG {
 	})
 	f := &recruitCompleteReturnPG{returnAttemptPG: &returnAttemptPG{ctx: returnPGContext(t), pool: pool,
 		observer: observer, binding: binding, profile: p, catalog: recruitAttemptPGCatalog(t), due: returnAttemptDue}, trace: trace, owned: owned}
+	t.Cleanup(func() {
+		clean, stop := context.WithTimeout(context.Background(), 8*time.Second)
+		defer stop()
+		var ends []error
+		if f.recruit != nil {
+			ends = append(ends, f.recruit.close(), f.recruit.s.admission.waitDrained(clean))
+		}
+		if f.generation != nil {
+			ends = append(ends, f.generation.close(), f.generation.s.admission.waitDrained(clean))
+		}
+		for _, err := range ends {
+			if err != nil {
+				t.Error("paired generation cleanup", err)
+			}
+		}
+	})
+	t.Cleanup(func() {
+		// Initialize/admit are synchronous; later asynchronous-call cleanups run first.
+		joined := make(chan struct{})
+		close(joined)
+		owned.cleanup(t, f.returnAttemptPG, joined)
+	})
 	var version int
 	returnPGOK(t, observer.QueryRow(f.ctx, "SELECT current_setting('server_version_num')::int").Scan(&version))
 	if version < 170000 || version >= 180000 {
@@ -65,15 +87,6 @@ WHERE d.datname=current_database() AND n.nspname=current_schema() AND r.rolname=
 	returnPGOK(t, err)
 	f.recruit, err = newRecruitGeneration(binding, r, f.catalog)
 	returnPGOK(t, err)
-	t.Cleanup(func() {
-		clean, stop := context.WithTimeout(context.Background(), 8*time.Second)
-		defer stop()
-		for _, err := range []error{f.recruit.close(), f.generation.close(), f.recruit.s.admission.waitDrained(clean), f.generation.s.admission.waitDrained(clean)} {
-			if err != nil {
-				t.Error("paired generation cleanup", err)
-			}
-		}
-	})
 	returnPGOK(t, f.recruit.initialize(f.ctx))
 	returnPGOK(t, f.generation.initialize(f.ctx))
 	if !reflect.DeepEqual(f.recruit.s.profile, r) || !reflect.DeepEqual(f.generation.s.profile, p) ||
