@@ -114,7 +114,6 @@ def check(out):
     raw = files["evidence.json"]
     require(raw.endswith(b"\n"), "truncated collector log")
     records = [json.loads(line) for line in raw.splitlines()]
-    require(any(r.get("message") == "database system is ready to accept connections" for r in records), "missing startup boundary")
     sessions = {}
     statements = []
     protocol = []
@@ -139,7 +138,18 @@ def check(out):
     require(len(drain_records) == len(shutdown) == 1 and records.index(shutdown[0]) < records.index(drain_records[0]), "collector EOF/flush record missing")
     require(sum(r.get("message") == "logger shutting down" for r in records) == 1, "unexpected collector lifecycle")
     eof = drain_records[0]
-    fallback = f"PROCESS_FALLBACK {eof['pid']} {eof['session_id']} DEBUG:  logger shutting down\n"
+    redirects = [r for r in records if r.get("message") == "ending log output to stderr"]
+    ready = [r for r in records if r.get("message") == "database system is ready to accept connections"]
+    require(len(redirects) == len(ready) == 1, "missing/duplicate startup boundary")
+    start = redirects[0]
+    hint = 'Future log output will go to log destination "jsonlog".'
+    require(start["pid"] == ready[0]["pid"] == postmaster["pid"] and
+            start["session_id"] == ready[0]["session_id"] == shutdown[0]["session_id"] and
+            start.get("error_severity") == "LOG" and start.get("backend_type") == "postmaster" and
+            start.get("hint") == hint and records.index(start) < records.index(ready[0]), "unbound startup fallback")
+    prefix = f"PROCESS_FALLBACK {start['pid']} {start['session_id']} "
+    fallback = prefix + "LOG:  ending log output to stderr\n" + prefix + "HINT:  " + hint + "\n"
+    fallback += f"PROCESS_FALLBACK {eof['pid']} {eof['session_id']} DEBUG:  logger shutting down\n"
     require(files["evidence.log"] == fallback.encode(), "unexpected or missing logger fallback")
     for rows in sessions.values():
         require(len({r["dbname"] for r in rows if r.get("dbname")}) <= 1, "session database changed")
@@ -155,7 +165,7 @@ def check(out):
         require(len(hits) == 1, "missing statement/DROP positive control " + boundary)
         boundaries.append(records.index(hits[0]))
     begin, end_boundary = boundaries
-    require(begin < end_boundary, "logging control order")
+    require(records.index(ready[0]) < begin < end_boundary, "startup/logging control order")
     require(all(begin < records.index(row) < end_boundary for row, _ in statements
                 if row.get("dbname", "").startswith("process_")), "test statement outside log boundaries")
     require(any(i > end_boundary and r.get("message") == "database system is shut down"
