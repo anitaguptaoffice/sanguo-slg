@@ -1,0 +1,136 @@
+name: Live hero default layout acceptance
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-hero-layout.yml'
+      - '.github/scripts/live_hero_layout.mjs'
+      - '.github/scripts/LIVE_HERO_LAYOUT.md'
+permissions:
+  contents: read
+jobs:
+  live-hero-layout:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        width: [1280, 1600]
+        product: [standalone, reentry]
+        include:
+          - product: standalone
+            head: a7cd2a0fdee5dc2f88c90c1b8f5049afd40dcbe4
+            tree: 3b0acf7b911042976ebb8873e7ffdac909740c25
+            parents: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+          - product: reentry
+            head: 3bbd4391009b6cc4caa0125d6bed70a209177f39
+            tree: cd6154376dc0c35cb63eef237833e8b774161fe4
+            parents: a020369eb4f58e835522934c662ab1fd3d4161e3
+    env:
+      QA_WIDTH: ${{ matrix.width }}
+      QA_PRODUCT: ${{ matrix.product }}
+      QA_PRODUCT_HEAD: ${{ matrix.head }}
+      QA_PRODUCT_TREE: ${{ matrix.tree }}
+      QA_PRODUCT_PARENTS: ${{ matrix.parents }}
+      QA_RUNTIME_HEAD: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: live_hero_layout
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d live_hero_layout"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Initialize failure evidence
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          printf '{"passed":false,"phase":"setup; inspect job logs"}\n' > evidence/preflight.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: qa-source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.head }}
+          path: target
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+          path: runtime-source
+          persist-credentials: false
+      - name: Assert exact independently reviewed inputs
+        working-directory: target
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$QA_PRODUCT_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$QA_PRODUCT_TREE"
+          test "$(git show -s --format=%P HEAD)" = "$QA_PRODUCT_PARENTS"
+          test -z "$(git status --porcelain)"
+          test "$(git -C ../runtime-source rev-parse HEAD)" = "$QA_RUNTIME_HEAD"
+          test "$(git -C ../runtime-source rev-parse HEAD^{tree})" = dc151c5513ea2a2d937e45d4dee12d9f59792c7e
+          test -z "$(git -C ../runtime-source status --porcelain)"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache-dependency-path: target/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: target/client/package-lock.json
+      - name: Run complete runtime and geometry negative controls
+        working-directory: target/client
+        run: |
+          set -euo pipefail
+          cp ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs .
+          cp ../../qa-source/.github/scripts/live_hero_layout.mjs .qa-live-hero-layout.mjs
+          cmp live_hero_layout_runtime.mjs ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs
+          node ../../runtime-source/.github/scripts/live_hero_layout_runtime.test.mjs | tee ../../evidence/runtime-tests.log
+          node .qa-live-hero-layout.mjs --self-test | tee ../../evidence/geometry-tests.log
+      - name: Build actual server and test complete client
+        timeout-minutes: 10
+        working-directory: target
+        env:
+          GOTOOLCHAIN: local
+          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+        run: |
+          set -euo pipefail
+          go build -o "$RUNNER_TEMP/live-hero-layout-server" ./cmd/server 2>&1 | tee ../evidence/build-server.log
+          cd client
+          npm ci 2>&1 | tee ../../evidence/install.log
+          npm test 2>&1 | tee ../../evidence/client-tests.log
+          npm run build 2>&1 | tee ../../evidence/client-build.log
+          npx --no-install playwright install --with-deps chromium
+      - name: Verify every required native UI case
+        working-directory: target/client
+        env:
+          QA_OUT: ${{ github.workspace }}/evidence
+          QA_SERVER: ${{ runner.temp }}/live-hero-layout-server
+          DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/live_hero_layout?sslmode=disable
+          REDIS_ADDR: 127.0.0.1:6379
+          PGHOST: 127.0.0.1
+          PGUSER: sanguo
+          PGPASSWORD: sanguo
+          PGDATABASE: live_hero_layout
+        run: node .qa-live-hero-layout.mjs
+      - name: Preserve all evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-hero-layout-${{ matrix.product }}-${{ matrix.width }}-${{ github.event.pull_request.head.sha }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
