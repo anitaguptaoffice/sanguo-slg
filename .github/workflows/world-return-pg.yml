@@ -29,21 +29,40 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23.x"
+          go-version: "1.23.12"
           cache: true
       - name: Verify PostgreSQL 17 and Go toolchain
         shell: bash
         run: |
+          mkdir -p "$RUNNER_TEMP/world-evidence"
+          exec > >(tee "$RUNNER_TEMP/world-evidence/versions.txt") 2>&1
           go version
+          [[ "$(go env GOVERSION)" == go1.23.12 ]]
           version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
           [[ "$version" =~ ^[0-9]+$ ]]
           (( version / 10000 == 17 ))
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c "SELECT version()"
-      - name: Check ReturnOrigin source formatting
+      - name: Record exact WORLD provenance
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/world-evidence"
+          {
+            git log -1 --format='actual_commit=%H%ntree=%T%nparents=%P'
+            printf 'requested_head=%s\n' "$REQUESTED_HEAD"
+            git ls-tree HEAD internal/world .github/workflows/world-return-pg.yml
+            sha256sum internal/world/*.go .github/workflows/world-return-pg.yml
+            go version
+          } | tee "$RUNNER_TEMP/world-evidence/provenance.txt"
+        env:
+          REQUESTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Check ReturnOrigin and chunk source formatting
         shell: bash
         run: |
           files=$(gofmt -l internal/world/return_origin.go \
-            internal/world/return_origin_test.go internal/world/return_origin_pg_test.go internal/world/doc.go)
+            internal/world/return_origin_test.go internal/world/return_origin_pg_test.go internal/world/doc.go \
+            internal/world/persist.go internal/world/persist_chunk_atomic_test.go \
+            internal/world/persist_chunk_pg_test.go internal/world/persist_chunk_compat_pg_test.go \
+            | tee "$RUNNER_TEMP/world-evidence/gofmt.txt")
           if [[ -n "$files" ]]; then
             printf 'Unformatted WORLD source:\n%s\n' "$files"
             exit 1
@@ -57,9 +76,10 @@ jobs:
             # Each mode owns a fresh database; PG fixtures isolate their schemas.
             docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
               -v ON_ERROR_STOP=1 -c "CREATE DATABASE world_$mode"
-            log="$RUNNER_TEMP/world-$mode.json"
+            log="$RUNNER_TEMP/world-evidence/world-$mode.json"
             DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/world_$mode?sslmode=disable" \
-            go test ./internal/world "${flags[@]}" -count=1 -timeout=5m -json | tee "$log"
+            go test ./internal/world "${flags[@]}" -count=1 -timeout=5m -json \
+              2> >(tee "${log%.json}.stderr" >&2) | tee "$log"
             python3 - "$log" "$mode" <<'PY'
           import json
           import sys
@@ -117,6 +137,21 @@ jobs:
               "TestReturnOriginInvalidHandles",
               "TestWorldM1",
           }
+          # #2186 adds nine top-level tests and every lifecycle scenario.
+          expected |= {
+              "TestSaveChunkEmptyNoPool",
+              "TestSaveChunkBatchPreservesInput",
+              "TestSaveChunkTransactionLifecycle",
+              "TestSaveChunkTransactionLifecycle/success",
+              "TestSaveChunkTransactionLifecycle/batch_failure",
+              "TestSaveChunkTransactionLifecycle/commit_failure",
+              "TestPGChunkSaveFailureAtomicRestart",
+              "TestPGChunkSaveCancellationAtomic",
+              "TestPGChunkLoadCanonicalHeapOrder",
+              "TestPGChunkCompatibilitySparseAndLegacy",
+              "TestPGChunkCompatibilityUpdateRollbackAndCommit",
+              "TestPGChunkCompatibilityRefreshBoundary",
+          }
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
           bad = [
@@ -140,3 +175,183 @@ jobs:
           print("\n".join(sorted(expected)))
           PY
           done
+      - name: Preserve full WORLD raw evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-pg-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/world-evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  world-chunk-benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      OLD_SOURCE: 41b3aef34a74fb239f70d319356c7e7071cd0401
+      NEW_SOURCE: f6f20832ce147265529cdd8ac6f50510fedbfaef
+      FIXTURE_SHA256: 0b3005a0c9764c8a80d192afe774c90f82b86286f2d67126279649fa79b2f92b
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.12"
+          cache: true
+      - name: Materialize immutable paired sources and fixture
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        shell: bash
+        run: |
+          evidence="$RUNNER_TEMP/chunk-benchmark"
+          mkdir -p "$evidence"
+          exec > >(tee "$evidence/provenance.txt") 2>&1
+          git log -1 --format='workflow_commit=%H%ntree=%T%nparents=%P'
+          git ls-tree HEAD .github/workflows/world-return-pg.yml internal/world/persist_chunk_compat_pg_test.go
+          uname -a
+          lscpu
+          free -h
+          go version
+          go env GOVERSION GOOS GOARCH CGO_ENABLED GOAMD64 GOFLAGS
+          [[ "$(go env GOVERSION)" == go1.23.12 ]]
+          version=$(docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -Atc "SHOW server_version_num")
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -c "SELECT version()"
+          docker inspect --format='postgres_image={{.Image}}' "$PG_CONTAINER"
+          fixture=internal/world/persist_chunk_compat_pg_test.go
+          printf '%s  %s\n' "$FIXTURE_SHA256" "$fixture" | sha256sum -c -
+          [[ -z "$(gofmt -l "$fixture")" ]]
+          for variant in old new; do
+            ref="$OLD_SOURCE"
+            if [[ "$variant" == new ]]; then ref="$NEW_SOURCE"; fi
+            git log -1 --format="$variant commit=%H tree=%T parents=%P" "$ref"
+            dir="$RUNNER_TEMP/chunk-source-$variant"
+            git worktree add --detach "$dir" "$ref"
+            [[ -z "$(git -C "$dir" status --porcelain)" ]]
+            # No diagnostic fixture/workflow or other source mutation is allowed.
+            [[ ! -e "$dir/$fixture" ]]
+            cp "$fixture" "$dir/$fixture"
+            cmp "$fixture" "$dir/$fixture"
+            git -C "$dir" diff --exit-code
+            [[ "$(git -C "$dir" ls-files --others --exclude-standard)" == "$fixture" ]]
+            (cd "$dir" && sha256sum internal/world/*.go spec/db/002_world.sql go.mod go.sum) > "$evidence/$variant-files.sha256"
+            # Populate compiler/module caches before bounded measurement begins.
+            (cd "$dir" && go test -run '^$' ./internal/world)
+          done
+          # The measured implementation must match the reviewed composition.
+          cmp internal/world/persist.go "$RUNNER_TEMP/chunk-source-new/internal/world/persist.go"
+          for path in generate.go chunk.go service.go; do
+            cmp "$RUNNER_TEMP/chunk-source-old/internal/world/$path" "$RUNNER_TEMP/chunk-source-new/internal/world/$path"
+          done
+      - name: Run five alternating old and new benchmark pairs
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          evidence="$RUNNER_TEMP/chunk-benchmark"
+          # count=1 across five pairs gives five samples per source/case, not 25.
+          for pair in 1 2 3 4 5; do
+            for variant in old new; do
+              db="chunk_bench_${pair}_${variant}"
+              docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -v ON_ERROR_STOP=1 -c "CREATE DATABASE $db"
+              printf '%s %s %s\n' "$pair" "$variant" "$(date -u +%FT%TZ)" | tee -a "$evidence/order.txt"
+              (
+                cd "$RUNNER_TEMP/chunk-source-$variant"
+                DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/$db?sslmode=disable" \
+                go test -json -v -run '^$' -bench '^BenchmarkPGChunkSave$' \
+                  -benchtime=5x -count=1 -timeout=10m ./internal/world
+              ) 2> >(tee "$evidence/$pair-$variant.stderr" >&2) | tee "$evidence/$pair-$variant.json"
+              docker exec "$PG_CONTAINER" psql -X -U sanguo -d "$db" -Atc \
+                "SELECT count(*) FROM pg_namespace WHERE nspname LIKE 'world_compat_%'" | grep -qx 0
+              docker exec "$PG_CONTAINER" psql -X -U sanguo -d sanguo -v ON_ERROR_STOP=1 -c "DROP DATABASE $db"
+            done
+          done
+          for variant in old new; do
+            (cd "$RUNNER_TEMP/chunk-source-$variant" && sha256sum -c "$evidence/$variant-files.sha256")
+          done
+      - name: Validate every raw benchmark sample
+        shell: bash
+        run: |
+          python3 - "$RUNNER_TEMP/chunk-benchmark" <<'PY' | tee "$RUNNER_TEMP/chunk-benchmark/summary.txt"
+          import json
+          import math
+          import re
+          import statistics
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          package = "github.com/anitaguptaoffice/sanguo-slg/internal/world"
+          order = [line.split()[:2] for line in (root / "order.txt").read_text().splitlines()]
+          wanted = [[str(pair), variant] for pair in range(1, 6) for variant in ("old", "new")]
+          if order != wanted:
+              raise SystemExit(f"Wrong sample order: {order}")
+          samples = {(variant, case): [] for variant in ("old", "new") for case in ("insert", "update")}
+          metrics = {"ns/op", "query_callbacks/op", "batch_callbacks/op", "batch_statements/op", "explicit_commit_callbacks/op"}
+          for pair, variant in wanted:
+              events = [json.loads(line) for line in (root / f"{pair}-{variant}.json").read_text().splitlines()]
+              if any(event.get("Action") in {"skip", "fail"} or event.get("Package") != package for event in events):
+                  raise SystemExit(f"Unexpected event/failure/skip: {pair}-{variant}")
+              if not any(e.get("Action") == "pass" and not e.get("Test") for e in events):
+                  raise SystemExit(f"Missing package pass: {pair}-{variant}")
+              if any(e.get("Test", "").startswith("Test") for e in events):
+                  raise SystemExit("Unexpected correctness tests in timed run")
+              output = "".join(e.get("Output", "") for e in events)
+              if re.search(r"(?m)(?:^|\s)(?:SKIP|FAIL|panic:|WARNING: DATA RACE)(?:\s|$)", output):
+                  raise SystemExit("Unexpected benchmark failure output")
+              witnesses = re.findall(r'PG=(\d+) writer=(\d+) observer=(\d+) schema="(world_compat_[0-9a-f]+)"', output)
+              if len({w[3] for w in witnesses}) < 2 or any(int(v)//10000 != 17 or writer == observer for v, writer, observer, _ in witnesses):
+                  raise SystemExit(f"Missing independent PG17 fixture witnesses: {pair}-{variant}")
+              seen = set()
+              for line in output.splitlines():
+                  match = re.fullmatch(r"BenchmarkPGChunkSave/(insert|update)(?:-\d+)?\s+(\d+)\s+(.+)", line)
+                  if not match:
+                      # Enumeration prints a name alone; every result needs parsing.
+                      if line.startswith("Benchmark") and len(line.split()) > 1:
+                          raise SystemExit(f"Unexpected or malformed benchmark result: {line}")
+                      continue
+                  case, iterations, raw = match.groups()
+                  fields = raw.split()
+                  values = dict(zip(fields[1::2], map(float, fields[::2])))
+                  if case in seen or iterations != "5" or len(fields) != 2*len(metrics) or set(values) != metrics:
+                      raise SystemExit(f"Wrong sample case/iterations/metrics: {line}")
+                  if any(not math.isfinite(v) or v < 0 for v in values.values()) or values["ns/op"] <= 0:
+                      raise SystemExit(f"Invalid metric: {line}")
+                  seen.add(case)
+                  samples[variant, case].append(values)
+              if seen != {"insert", "update"}:
+                  raise SystemExit(f"Missing benchmark samples: {pair}-{variant}")
+          print("Five alternating pairs; five measured SaveChunk calls per sample; all package/observer gates passed.")
+          print("Callbacks are pgx observations, NOT network round trips or implicit server commits.")
+          for (variant, case), rows in samples.items():
+              timings = [row["ns/op"] for row in rows]
+              print(variant, case, f"n={len(rows)} min={min(timings)} median={statistics.median(timings)} max={max(timings)} ns/op")
+              print(json.dumps(rows, sort_keys=True))
+          PY
+      - name: Preserve paired benchmark raw evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-chunk-benchmark-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/chunk-benchmark
+          if-no-files-found: error
+          retention-days: 30
