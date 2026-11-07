@@ -18,8 +18,11 @@ The unchanged ordered promotion SQL oracle retains the source lock-order proof.
 
 Real controls reject unlocked-as-locked, held-as-unlocked, absent targets, wrong
 markers, another PostgreSQL error and an actual statement_timeout57014. Each
-probe has a three-second operation/cleanup bound and150ms server statement bound;
-the six-probe group has an eight-second bound. Timeout is never a lock witness.
+probe has separate three-second operation and cleanup bounds, plus a150ms server
+statement bound. The six-probe group has an eight-second observation deadline;
+its final independent rollback may take another three seconds. Timeout is never
+a lock witness. This clarifies the original321-line checkpoint's bound wording;
+the correction preserves independent cleanup and all business/probe semantics.
 
 Only after joined clean RecruitCompleted and actual COMMIT is the checkpoint
 confirmed: R=M-9/P2, conserved R+P=M-7, queue100 done/101 active, actual T/T+22s.

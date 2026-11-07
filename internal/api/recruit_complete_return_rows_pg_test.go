@@ -22,6 +22,7 @@ func TestPGRecruitCompletionReturnRows(t *testing.T) {
 	queries := recruitReturnRowQueries(f.profile.SchemaName)
 	probeAll := func(locked bool) {
 		t.Helper()
+		// Observation has 8s; a final independent rollback may take another 3s.
 		ctx, cancel := context.WithTimeout(f.ctx, 8*time.Second)
 		defer cancel()
 		for _, query := range queries {
