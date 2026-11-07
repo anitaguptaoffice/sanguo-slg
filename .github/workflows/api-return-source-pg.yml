@@ -81,6 +81,10 @@ jobs:
             internal/api/recruit_complete_return_sql_test.go \
             internal/api/recruit_complete_return_sql_pg_test.go \
             internal/api/recruit_complete_return_observed_fixture_test.go \
+            internal/api/recruit_complete_return_rows_fixture_test.go \
+            internal/api/recruit_complete_return_rows_pg_test.go \
+            internal/api/recruit_complete_confirmed_lifetime_fixture_test.go \
+            internal/api/recruit_complete_confirmed_lifetime_pg_test.go \
             internal/api/recruit_attempt_end.go \
             internal/api/recruit_attempt_end_test.go \
             internal/api/recruit_attempt_fixture_test.go \
@@ -643,6 +647,20 @@ jobs:
           required |= progress_required
           if len(required) != (257 if phase == "preflight" else 482):
               raise SystemExit("Completion progress union inventory changed")
+          # ROWS and confirmed-success lifetime extend the frozen progress gate.
+          lifetime_roots = {
+              "TestPGRecruitCompletionReturnRows",
+              "TestPGRecruitCompletionConfirmedLifetime",
+          }
+          lifetime_required = {(root, name) for name in lifetime_roots}
+          lifetime_required.update((root, f"TestPGRecruitCompletionConfirmedLifetime/{name}") for name in (
+              "control", "missing_record",
+          ))
+          if len(lifetime_required) != 4 or required & lifetime_required:
+              raise SystemExit("Completion lifetime evidence duplicates or changes the frozen inventory")
+          required |= lifetime_required
+          if len(required) != (261 if phase == "preflight" else 486):
+              raise SystemExit("Completion lifetime union inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
@@ -821,7 +839,7 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$|TestRecruitCompletion|TestPGRecruitCompletionPaidDue$|TestPGRecruitCompletionEarlyAndWaiting$|TestPGRecruitCompletionHistoryAndReplay$|TestPGRecruitCompletionPromotesOldest$|TestPGRecruitCompletionReturnPairedFixture$|TestPGRecruitCompletionReturnSQLAppliedAndTerminal$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$|TestRecruitCompletion|TestPGRecruitCompletionPaidDue$|TestPGRecruitCompletionEarlyAndWaiting$|TestPGRecruitCompletionHistoryAndReplay$|TestPGRecruitCompletionPromotesOldest$|TestPGRecruitCompletionReturnPairedFixture$|TestPGRecruitCompletionReturnSQLAppliedAndTerminal$|TestPGRecruitCompletionReturnRows$|TestPGRecruitCompletionConfirmedLifetime$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
