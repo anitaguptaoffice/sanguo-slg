@@ -135,7 +135,14 @@ try {
     assert.equal(await panel.locator('[aria-pressed="true"]').count(), 1);
   }
   await input.focus();
-  for (let i = 0; i < 12 && !(await select(1002).evaluate(el => el === document.activeElement)); i++) await page.keyboard.press('Tab');
+  const tabBudget = await panel.locator('button, input, select, textarea, [tabindex]').count() + 1;
+  report.tabStops = [];
+  for (let i = 0; i < tabBudget && !(await select(1002).evaluate(el => el === document.activeElement)); i++) {
+    await page.keyboard.press('Tab');
+    const stop = await panel.evaluate(el => ({ inside: el.contains(document.activeElement),
+      action: document.activeElement?.getAttribute('data-action'), questId: document.activeElement?.getAttribute('data-quest-id') }));
+    report.tabStops.push(stop); assert.equal(stop.inside, true, 'Native Tab stays inside the quest panel');
+  }
   assert.ok(await select(1002).evaluate(el => el === document.activeElement), '1002 reachable with Tab');
   await page.keyboard.press('Enter'); await selected(1002);
   await page.keyboard.press('Space'); await selected(1002);
