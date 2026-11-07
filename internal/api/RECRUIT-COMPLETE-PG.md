@@ -38,6 +38,13 @@ The inherited cleanup formatting defect was corrected by #2219 head
 `faeeae65f2f38b4f4a97332da06bb710880c6a81` and included by normal forward;
 fresh official formatting and runtime CI for this final composition remain pending.
 
+API return run42359108049 failed ordinary/race at the SQL witness before final
+durable post-Commit snapshots. The oracle omitted AccountHint's distinct proof;
+static audit also found completion's distinct MIL proof. Both exact frozen bytes
+now have separate stages from Actor.Lock/admission, with substitution, suffix,
+missing/duplicate/order controls. No production SQL or match normalization changed.
+Those failed runs remain failed; fresh full PG assertions are still required.
+
 Unproven here: early/waiting/promotion, done/history/admission replay, rejection,
 failure rollback, actor changes, serialization, cancellation/panic/unknown/network,
 process checkpoints, actual completion-versus-Return, shared controller and full
