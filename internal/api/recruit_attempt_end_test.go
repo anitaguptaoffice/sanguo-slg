@@ -53,7 +53,7 @@ func TestRecruitAttemptEndClassification(t *testing.T) {
 			bundle := &recruitParticipants{}
 			g.s.bundle = bundle
 			a := &recruitAttempt{generation: g.s, accountID: 1, queueID: 12,
-				scope: march.RecruitScope{ServerID: 7, PlayerID: 2, CommandID: march.RecruitCommandID{1}},
+				scope:  march.RecruitScope{ServerID: 7, PlayerID: 2, CommandID: march.RecruitCommandID{1}},
 				intent: march.RecruitIntent{CityID: 13}}
 			identity := *a
 			other := *a
