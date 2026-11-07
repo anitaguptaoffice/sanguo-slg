@@ -64,7 +64,10 @@ jobs:
             internal/api/recruit_source_lifetime_pg_test.go \
             internal/api/recruit_source_pins_pg_test.go \
             internal/api/recruit_source_access_pg_test.go \
-            internal/api/recruit_cleanup_panic_process_pg_test.go)
+            internal/api/recruit_cleanup_panic_process_pg_test.go \
+            internal/api/intg006_smoke_test.go \
+            internal/api/smoke_daily_clock_export_test.go \
+            internal/api/smoke_daily_clock_pg_test.go)
           if [[ -n "$files" ]]; then
             printf 'Unformatted API source:\n%s\n' "$files"
             while IFS= read -r file; do
@@ -84,7 +87,7 @@ jobs:
           if phase not in {"preflight", "full"}:
               raise SystemExit("Unknown API test phase")
           root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          # Preserve the frozen 249 full / 24 focused Return outcomes unchanged.
+          # Preserve all 249/24 Return outcomes plus the three reviewed calendar outcomes.
           expected = {
               "TestCityGarrisonAuthorizationBeforeRead",
               "TestCityGarrisonConcurrentCompletionSnapshot",
@@ -302,6 +305,9 @@ jobs:
               "TestShopAtomicPGUnknownCommitIsNotReplayed",
               "TestShopAtomicPGWalletWaitCancellation",
               "TestShopPurchaseWalletPGCallerOwnership",
+              "TestSmokeDailyCalendarClockPG",
+              "TestSmokeDailyCalendarClockPG/default_calendar_restart",
+              "TestSmokeDailyCalendarClockPG/explicit_UTC_midnight",
               "TestSmokeQuestProgressPreservesOvershoot",
               "TestStartMarchRequiresHeroAndReleasesAfterBattleReturn",
               "TestStarterScrollFailuresAndRoutesPG",
@@ -403,12 +409,13 @@ jobs:
               for domain in ("content", "hero", "military", "rank", "shop", "world")
           }
           if phase == "preflight":
-              required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))}
+              required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))
+                          or item[1].split("/", 1)[0] == "TestSmokeDailyCalendarClockPG"}
               no_tests = set()
-          if len(required) != (24 if phase == "preflight" else 249):
+          if len(required) != (27 if phase == "preflight" else 252):
               raise SystemExit("Frozen API inventory changed")
           required.update((root, name) for name in recruit | sql)
-          if len(required) != (121 if phase == "preflight" else 346):
+          if len(required) != (124 if phase == "preflight" else 349):
               raise SystemExit("Combined API inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
@@ -478,7 +485,7 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestSmokeDailyCalendarClockPG$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
