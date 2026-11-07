@@ -66,6 +66,10 @@ jobs:
             internal/api/recruit_source_access_pg_test.go \
             internal/api/recruit_cleanup_panic_process_pg_test.go \
             internal/api/recruit_attempt.go \
+            internal/api/recruit_complete_attempt.go \
+            internal/api/recruit_complete_attempt_test.go \
+            internal/api/recruit_complete_fixture_test.go \
+            internal/api/recruit_complete_pg_test.go \
             internal/api/recruit_attempt_end.go \
             internal/api/recruit_attempt_end_test.go \
             internal/api/recruit_attempt_fixture_test.go \
@@ -585,6 +589,25 @@ jobs:
           required |= end_required
           if len(required) != (217 if phase == "preflight" else 442):
               raise SystemExit("Recruit end union inventory changed")
+          # Actual dormant completion adds to every inherited acceptance gate.
+          completion_roots = {
+              "TestRecruitCompletionPreflight",
+              "TestRecruitCompletionDisposition",
+              "TestRecruitCompletionBookkeeping",
+              "TestRecruitCompletionSQLWitness",
+              "TestPGRecruitCompletionPaidDue",
+          }
+          completion_required = {(root, name) for name in completion_roots}
+          completion_required.update(
+              (root, f"TestRecruitCompletionBookkeeping/{outcome}/{loss}")
+              for outcome in ("completed", "done", "early", "waiting", "unknown", "unavailable")
+              for loss in ("none", "record", "lease")
+          )
+          if len(completion_required) != 23 or required & completion_required:
+              raise SystemExit("Completion evidence duplicates or changes the frozen inventory")
+          required |= completion_required
+          if len(required) != (240 if phase == "preflight" else 465):
+              raise SystemExit("Completion union inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
               events = [json.loads(line) for line in stream if line.strip()]
@@ -763,7 +786,7 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestRecruitSource|TestPGRecruitGeneration|TestPGRecruitBundleCopiedAccessLifetime|TestPGRecruitBundleRejectsAccessSubstitution|TestRecruitGenerationSQLAllowlist|TestReturnSQLRecorded|TestRecruitPanicAbsenceRejectsInvalidIdentity|TestReturnAttempt|TestPGReturnAttempt|TestRecruitAttempt|TestPGRecruitAttempt|TestPGRecruitReturn|TestReturnNetworkAcknowledgementFraming|TestReturnBackendOwnershipFailClosed|TestPGReturnBackendCleanupOwnership|TestSmokeDailyCalendarClockPG$|TestReturnBackendJoinBoundaries$|TestReturnBackendCloseOncePreservesError$|TestPGReturnBackendCaptureAndCleanupIsolation$|TestRecruitCompletion|TestPGRecruitCompletionPaidDue$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
