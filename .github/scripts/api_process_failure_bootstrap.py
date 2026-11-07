@@ -19,6 +19,7 @@ def bootstrap(out):
     child = subprocess.Popen([str(out / "green.test"),
                               "-test.run=^TestPGRecruitGenerationConstructorCleanupPanic$",
                               "-test.v", "-test.timeout=30s"], env=env, stdin=subprocess.PIPE,
+                             cwd=Path(__file__).resolve().parents[2] / "internal/api",
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
     lines = queue.Queue()
     captured = []

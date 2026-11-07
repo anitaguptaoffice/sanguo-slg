@@ -2,6 +2,7 @@
 set -euo pipefail
 : "${MODE:?}" "${RUNNER_TEMP:?}"
 [[ "$MODE" == ordinary || "$MODE" == race ]]
+[[ "$RUNNER_TEMP" == /* ]]
 out="$RUNNER_TEMP/process-failure-evidence"
 mkdir -p "$out"
 exec > >(tee "$out/runner.log") 2>&1
@@ -137,9 +138,9 @@ if [[ "$MODE" == race ]]; then flags=(-race); fi
 go test ./internal/api "${flags[@]}" -c -o "$out/green.test"
 export DATABASE_URL="$base/process_green?sslmode=disable"
 pattern='^(TestRecruitCleanupFailureGuard|TestRecruitCleanupFailureRunner|TestRecruitFailureOwnershipRejectsIncomplete|TestRecruitFailureAbsenceRequiresReap|TestPGRecruitFailureAbsenceRejectsLiveBackend|TestPGRecruitCleanupFailureProcess|TestRecruitPanicAbsenceRejectsInvalidIdentity)$'
-go tool test2json -t -p api "$out/green.test" -test.v -test.count=1 -test.timeout=8m -test.run="$pattern" > "$out/green.json"
+(cd internal/api && go tool test2json -t -p api "$out/green.test" -test.v -test.count=1 -test.timeout=8m -test.run="$pattern") > "$out/green.json"
 export DATABASE_URL="$base/process_success?sslmode=disable"
-go tool test2json -t -p api "$out/green.test" -test.v -test.count=1 -test.timeout=2m -test.run='^TestPGRecruitGenerationConstructorCleanupPanic$' > "$out/success.json"
+(cd internal/api && go tool test2json -t -p api "$out/green.test" -test.v -test.count=1 -test.timeout=2m -test.run='^TestPGRecruitGenerationConstructorCleanupPanic$') > "$out/success.json"
 export DATABASE_URL="$base/process_bootstrap?sslmode=disable"
 python3 .github/scripts/api_process_failure_bootstrap.py bootstrap "$out"
 for attempt in {1..100}; do
@@ -166,7 +167,7 @@ diff -u internal/api/recruit_cleanup_panic_process_pg_test.go "$red/internal/api
 sha256sum "$out/green.test" "$out/red.test" > "$out/binaries.sha256"
 export DATABASE_URL="$base/process_red?sslmode=disable"
 set +e
-go tool test2json -t -p api "$out/red.test" -test.v -test.count=1 -test.timeout=2m -test.run='^TestPGRecruitCleanupFailureProcess$/^original_fatal$' > "$out/red.json"
+(cd "$red/internal/api" && go tool test2json -t -p api "$out/red.test" -test.v -test.count=1 -test.timeout=2m -test.run='^TestPGRecruitCleanupFailureProcess$/^original_fatal$') > "$out/red.json"
 red_status=$?
 set -e
 test "$red_status" = 1
