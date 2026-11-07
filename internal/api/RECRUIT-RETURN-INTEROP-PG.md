@@ -1,0 +1,32 @@
+# Actual Recruit/Return interoperability evidence
+
+Card #2169 now owns only this doc and its scenario test. Independent fixture prerequisite #2172 owns its fixture, standalone tests and documentation; there is no reverse dependency.
+Corrected dependency base: de15d9c202d0aecde701bf631069a03bada51865 / tree fb1929665a868e331b27f84abf951b5e9cccd7a9.
+Original rejected source 8ab480d87da92149b3d859f83d521186b9a5817b remains CHANGES REQUIRED. Only its scenario was transferred, then corrected; that branch was not merged or published.
+Original tests-first 8f117f6 and corrective tests-first ad330983cf42a2b07173c07e74cf792e351b16fb were not executed; missing-helper references are not a behavioral red.
+`TestPGRecruitReturnInteroperability` invokes actual admit/complete with the same captured schema, binding, cohort and paid catalog, but distinct dormant owners.
+Passive pre-COMMIT/post-wallet observation gates allow exact NOWAIT probes, a real second-operation wallet wait and an independent committed leader checkpoint.
+Recruit-first tests real pending2+survivors7 at exact int32 capacity and one above; Return-first proves credited stock rejects Count2 before allocation/debit.
+The rejected Recruit trace is a closed ordered Begin/pins/actor/wallet/Find/reverse/WORLD/marker/stock/pending/Rollback path with only reviewed in-transaction metadata reads. Unknown/suffixed SQL, missing WORLD/pending and swapped stages are explicitly rejected using mutated trace data, never executed SQL.
+Independent queue1 snapshots preserve every original value plus xmin/ctid across accepted admission and Return. Full scenario/retained/sequence snapshots, paid acceptance linkage and terminal assertions precede mutation-free History and credited-terminal retries.
+Recruit capacity failure intentionally closes its dormant owner with a retained known-ended record and no pending lease; no unknown clearing or substitute generation.
+Fixture cleanup independently proves joins, drain, lock release and actual simultaneous two-slot read/acquire/release. No historical PID termination is used.
+No production/helper/schema/workflow change or runtime installation/execution. Official Go1.23.12/PG17.11 ordinary/race, full packages, #2170 safety corrections, independent exact-head component+combination review and required CI remain pending.
+Shared controller, completion, V2 wire/journal, recovery, fencing, enrollment, activation and natural end-to-end acceptance are not certified. No publication/merge/deployment.
+
+## Unit1 golden-digest correction (2026-11-07)
+
+Historical real PostgreSQL red: ordinary jobs [128218565107](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/42312949892/job/128218565107), [128218798958](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/42313021403/job/128218798958) and [128219110633](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/42313113596/job/128219110633) each fail `real_pending_exact_capacity` and `real_pending_prevents_overflow` with `unexpected immutable acceptance`; no historical failure is relabeled green.
+The fixture requests unit1, whose per-unit rule is `(1,2,3,5,7,11)`. The old shared expected digest instead describes unit3 `(3,6,9,15,21,33)`; count2 is not part of the per-unit rule encoding.
+Independent Python standard-library reproduction from [RULE_EVIDENCE](../../spec/rules/MIL_RECRUIT_RULE_EVIDENCE.md): `hashlib.sha256(b'sanguo/recruit-rule/v1\x00' + struct.pack('>I5Q', 1, 2, 3, 5, 7, 11)).hexdigest()` over exactly67 bytes yields `8306893080ef1340b9cf6f693256cc3f85c2166189e3db07027ec43943163ab0`. A separate `int.to_bytes` concatenation agrees; no production helper or observed acceptance supplies the expected value.
+The corresponding unit3 reproduction gives unchanged `69921906a221d82ed9d74fb220d2166b401cdb35c0a4b8aec960185e68000a5e`; all four explicit fixture rules also reproduce existing manifest version `recruit-v1:ee84843ef35d958c0b8fbfc5ae4a2bd0236f385fcc215d9fca3b028b740225b4` over295 bytes.
+Only the interop-specific strict digest constant and its two uses change: immutable acceptance and independently queried receipt/payload. Existing paid balance, capacity, wait, schedule, historical replay, allocator, MVCC and retained-state assertions remain unchanged; the shared unit3 helper stays untouched.
+Source mapping: original corrected scenario `c3be43128941755d7301e5fdf9b556e35e0535cd`; official-format own source `ff037683d81e2490e767a843e48bc14d7b6e17a8`; correction parent/current Draft #2205 `c26ceadefa6fcfbf564468cf0b40df51caf77a02`. These two card blobs also match final stack `f321695bded957e7cb09b261e1c4b571b602eef0` before this correction. Earlier rejected source and failed runs remain provenance.
+Local correction verification is Python vector/hash reproduction and exact static scope/diff checks only. No local Go/gofmt/build/PG/race execution or installation occurred; independent final review and new exact-head official ordinary/race, full-package and required CI remain mandatory before acceptance. Draft publication is for validation only; propagation is separately coordinated, with no activation, merge or deployment.
+
+## Scenario-owned observer helpers (2026-11-07)
+
+After the [official #2204 prefix lint failure](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/42339830884/job/128304828312), card #2169 owns `(*recruitReturnPG).events` and `waitWallet` beside their first actual scenario consumers, with the required `context` import.
+The two method bodies move verbatim from prerequisite #2172; their bounded exact-SQL wallet wait, independent backend identity checks and event filtering remain unchanged. #2172 has meaningful standalone evidence without this scenario.
+All existing scenario tests, SQL literals, assertions and the corrected unit1 `8306893080ef1340b9cf6f693256cc3f85c2166189e3db07027ec43943163ab0` digest remain intact; no new test name, path or lint suppression is introduced.
+Local checks establish exact relocation and whole-tree scope equivalence only, not a Go/gofmt/lint or PostgreSQL pass. New exact-head component/combination review, official ordinary/race and required CI remain mandatory before acceptance; no activation, merge or deployment.
