@@ -18,6 +18,7 @@ const (
 	recruitConfirmed
 	recruitUnknown
 )
+
 type recruitAttemptResult struct {
 	outcome                    recruitAttemptOutcome
 	confirmed                  march.RecruitAcceptance
@@ -25,7 +26,7 @@ type recruitAttemptResult struct {
 }
 type recruitAttempt struct {
 	generation          *recruitGenerationState
-	accountID, queueID   int64
+	accountID, queueID  int64
 	scope               march.RecruitScope
 	intent              march.RecruitIntent
 	phase               string
