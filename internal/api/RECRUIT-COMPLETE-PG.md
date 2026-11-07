@@ -3,6 +3,10 @@
 Card API-RECRUIT-COMPLETE-BASIC-PG-001, issue #2223, APP only. Original source
 `b5c14218133ceaac12f260e5a7af98bb05a6a53e`, tree
 `d047052ef09146793e0299e028b4da946be3618f`, depends on #2221 and cleanup #2219.
+Current validation base is actual source Draft #2224 head
+`9c6a2227c9b1c8574561ac84680e334a9d4451a1`, tree
+`629d4f8ef0621a5d57caa5f9c01803193948a97a`. Normal forward preserves the original
+test/source checkpoint; the three-file test scope and business semantics remain.
 No production route, scanner, participant, SQL implementation or shared fixture changes.
 
 `TestPGRecruitCompletionPaidDue` uses the mature owned PG17 fixture and its
@@ -30,7 +34,9 @@ test-time source-derived allowlist. Every helper is used by this prefix.
 Official Go1.23.12 formatting/lint/compile, PG17 ordinary/race and required exact-
 head CI remain pending; local static inspection is not runtime proof. Missing
 DATABASE_URL retains the existing fixture skip, which cannot count as acceptance.
-The inherited upstream formatting failure must be corrected before publication.
+The inherited cleanup formatting defect was corrected by #2219 head
+`faeeae65f2f38b4f4a97332da06bb710880c6a81` and included by normal forward;
+fresh official formatting and runtime CI for this final composition remain pending.
 
 Unproven here: early/waiting/promotion, done/history/admission replay, rejection,
 failure rollback, actor changes, serialization, cancellation/panic/unknown/network,
