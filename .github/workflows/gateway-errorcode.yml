@@ -13,7 +13,7 @@ jobs:
       contents: read
     env:
       BASELINE: 5313ed8fd3d6e3eaca936cba51d8a19e5550f9ac
-      SOURCE: 50b74b7048caf98dd6bce649303f82f09bd4625e
+      SOURCE: d268ed9669707875c35ead9ded2194af97480751
       GOTOOLCHAIN: local
     steps:
       - name: Initialize evidence directory
