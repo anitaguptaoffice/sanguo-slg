@@ -1,0 +1,127 @@
+name: ACCOUNT identity codegen diagnostic NEVER MERGE
+
+on:
+  pull_request:
+
+jobs:
+  account-codegen-diagnostic:
+    if: github.head_ref == 'feat/CI-ACCOUNT-IDENTITY-CODEGEN-001'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      BASELINE: 722d56bf10a5edc555873c0e4dac7a9545c9c60b
+      CANDIDATE: 33575215f9f66e9d535db40840e918afe5a2bcba
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Install official generator and record exact tool provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/account-codegen-evidence"
+          sudo apt-get update
+          apt-cache policy protobuf-compiler | tee "$RUNNER_TEMP/account-codegen-evidence/apt.txt"
+          sudo apt-get install --no-install-recommends -y protobuf-compiler=3.21.12-8.2ubuntu0.4
+          GOBIN="$RUNNER_TEMP/account-codegen-bin" go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.5
+          echo "$RUNNER_TEMP/account-codegen-bin" >> "$GITHUB_PATH"
+          {
+            go version
+            go env GOVERSION GOTOOLCHAIN GOPROXY GOSUMDB
+            protoc --version
+            dpkg-query -W protobuf-compiler libprotobuf32t64 libprotoc32t64
+            "$RUNNER_TEMP/account-codegen-bin/protoc-gen-go" --version
+            go version -m "$RUNNER_TEMP/account-codegen-bin/protoc-gen-go"
+            sha256sum "$(command -v go)" "$(command -v protoc)" "$RUNNER_TEMP/account-codegen-bin/protoc-gen-go"
+          } | tee "$RUNNER_TEMP/account-codegen-evidence/tools.txt"
+          test "$(go env GOVERSION)" = go1.23.12
+          test "$(go env GOTOOLCHAIN)" = local
+          test "$(protoc --version)" = 'libprotoc 3.21.12'
+          test "$("$RUNNER_TEMP/account-codegen-bin/protoc-gen-go" --version)" = 'protoc-gen-go v1.36.5'
+      - name: Generate canonical frozen baseline and candidate independently
+        shell: bash
+        run: |
+          set -euo pipefail
+          export EVIDENCE="$RUNNER_TEMP/account-codegen-evidence"
+          {
+            git rev-parse HEAD HEAD^{tree} "$BASELINE" "$BASELINE^{tree}" "$CANDIDATE" "$CANDIDATE^{tree}"
+            git diff --stat "$BASELINE" "$CANDIDATE"
+          } | tee "$EVIDENCE/source.txt"
+          for variant in baseline candidate; do
+            ref="$BASELINE"
+            if [[ "$variant" == candidate ]]; then ref="$CANDIDATE"; fi
+            root="$(mktemp -d "$RUNNER_TEMP/account-$variant.XXXXXX")"
+            printf '%s\n' "$root" > "$EVIDENCE/$variant-root.txt"
+            mkdir -p "$EVIDENCE/$variant"
+            git archive "$ref" | tar -x -C "$root"
+            cp -a "$root/spec/proto" "$EVIDENCE/$variant/canonical-inputs"
+            cp "$root/internal/account/pb/README.md" "$EVIDENCE/$variant/README.md"
+            for binding in account common; do
+              file=account.pb.go
+              if [[ "$binding" == common ]]; then file=types.pb.go; fi
+              cp "$root/internal/account/pb/sanguo/$binding/v1/$file" "$EVIDENCE/$variant/$binding-tracked.pb.go"
+            done
+            (
+              set -x
+              cd "$root"
+              protoc -I spec/proto \
+                --go_out=internal/account/pb --go_opt=paths=source_relative \
+                --go_opt=Msanguo/common/v1/types.proto=github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1 \
+                spec/proto/sanguo/common/v1/types.proto \
+                spec/proto/sanguo/account/v1/account.proto
+            ) 2>&1 | tee "$EVIDENCE/$variant/generation.txt"
+            cp "$root/internal/account/pb/sanguo/account/v1/account.pb.go" "$EVIDENCE/$variant/account.pb.go"
+            cp "$root/internal/account/pb/sanguo/common/v1/types.pb.go" "$EVIDENCE/$variant/types.pb.go"
+          done
+          python3 - <<'PY'
+          import os, pathlib, subprocess
+          e = pathlib.Path(os.environ['EVIDENCE'])
+          pairs = [
+              ('baseline-account-drift', 'baseline/account-tracked.pb.go', 'baseline/account.pb.go'),
+              ('baseline-common-drift', 'baseline/common-tracked.pb.go', 'baseline/types.pb.go'),
+              ('complete-account-change', 'candidate/account-tracked.pb.go', 'candidate/account.pb.go'),
+              ('candidate-common-drift', 'candidate/common-tracked.pb.go', 'candidate/types.pb.go'),
+              ('common-between-snapshots', 'baseline/types.pb.go', 'candidate/types.pb.go'),
+          ]
+          for name, before, after in pairs:
+              for suffix, flags in [('diff', []), ('numstat', ['--numstat'])]:
+                  result = subprocess.run(['git', 'diff', '--no-index', *flags, '--', str(e/before), str(e/after)], capture_output=True)
+                  assert result.returncode in (0, 1), result.stderr
+                  (e/(name+'.'+suffix)).write_bytes(result.stdout)
+          checks = {name: (e/a).read_bytes() == (e/b).read_bytes() for name, a, b in pairs if name != 'complete-account-change'}
+          (e/'byte-equality.txt').write_text('\n'.join(f'{name}={ok}' for name, ok in checks.items())+'\n')
+          assert all(checks.values()), checks
+          PY
+          git diff --exit-code HEAD
+      - name: Compile generated overlay against actual ACCOUNT PLATFORM and API
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/account-codegen-evidence"
+          root="$(cat "$evidence/candidate-root.txt")"
+          cd "$root"
+          go test -count=1 -run '^$' ./internal/account/... ./internal/platform/... ./internal/api/... \
+            2>&1 | tee "$evidence/candidate-compile.txt"
+          echo 'Compile only at frozen SPEC snapshot; no new identity tests or runtime acceptance claimed.' \
+            | tee "$evidence/acceptance-limit.txt"
+      - name: Hash all retained evidence including failures
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/account-codegen-evidence"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: account-identity-codegen-evidence
+          path: ${{ runner.temp }}/account-codegen-evidence
+          if-no-files-found: error
+          retention-days: 14
