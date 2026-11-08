@@ -29,7 +29,7 @@ function snapshot(s) {
 }
 function focused(s, name, open) {
   snapshot(s);
-  assert.equal(s.active, name);
+  if (name) assert.ok((Array.isArray(name) ? name : [name]).includes(s.active), 'unexpected focus');
   assert.equal(s.open, open);
   if (roles.includes(name)) assert.ok(s.nodes[name].visible && s.nodes[name].enabled, 'unusable focused node');
 }
@@ -67,7 +67,7 @@ function arm(t) {
 }
 export function validate(stage, value, expected = {}) {
   if (stage === 'identity') {
-    assert.equal(value.schemaVersion, 1); assert.ok(['baseline', 'fixed'].includes(value.variant));
+    assert.equal(value.schemaVersion, 2); assert.ok(['baseline', 'fixed'].includes(value.variant));
     assert.ok([1280, 1600].includes(value.viewport.width)); assert.equal(value.viewport.height, value.viewport.width === 1280 ? 720 : 900);
     assert.deepEqual(value.provenance, expected); assert.equal(value.provenance.product, 'standalone');
     for (const name of ['qa', 'runtime', 'product']) {
@@ -80,9 +80,7 @@ export function validate(stage, value, expected = {}) {
     assert.equal(value.response.route, 'hero.v1.GetHeroDetail'); assert.equal(value.response.code, 0);
     assert.equal(value.response.detail.hero_id, value.hero); assert.equal(value.loaded, true); assert.equal(value.closed, true);
   } else if (stage === 'before-input') {
-    snapshot(value);
-    if (expected[0]) focused(value, expected[0], expected[1]);
-    assert.equal(value.open, expected[1]);
+    focused(value, ...expected);
   } else if (stage === 'input') {
     input(value, ...expected);
   } else if (stage === 'arm') {
@@ -107,26 +105,30 @@ export function validate(stage, value, expected = {}) {
     assert.ok(eligible.length);
     const first = eligible[0];
     assert.equal(first.code, 0); assert.equal(t.responseId, first.id); ordered([t.arm.right.wall, first.sentAt, first.receivedAt]);
-    assert.ok(t.close && t.frame);
-    snapshot(t.close);
-    snapshot(t.frame);
-    ordered([first.sentAt, t.close.wall, t.frame.wall]); ordered([t.arm.before.mono, t.close.mono, t.frame.mono]);
-    assert.ok(t.frame.mono - t.arm.before.mono <= 12000); assert.ok(t.frame.wall - t.arm.before.wall <= 12000);
-    assert.ok(!eligible[1] || eligible[1].sentAt > t.frame.wall, 'second poll overlaps closure');
+    assert.ok(t.close && t.frame); assert.equal(t.settled.length, 2);
+    const samples = [t.frame, ...t.settled], last = samples.at(-1);
     const target = t.name === 'outside' ? 'outside' : expected.variant === 'fixed' ? 'summary' : 'BODY';
-    focused(t.frame, target, false); assert.equal(t.close.open, false);
-    assert.equal(t.close.value, t.arm.before.value); assert.equal(t.frame.value, t.arm.before.value);
+    snapshot(t.close); assert.equal(t.close.open, false); assert.equal(t.close.value, t.arm.before.value);
+    samples.forEach((sample, index) => {
+      focused(sample, !index && target === 'BODY' ? [t.name, 'BODY'] : target, false);
+      assert.equal(sample.value, t.arm.before.value);
+      if (index) assert.ok(sample.mono > samples[index - 1].mono);
+    });
+    ordered([first.sentAt, t.close.wall, ...samples.map(sample => sample.wall)]);
+    ordered([t.arm.before.mono, t.close.mono, ...samples.map(sample => sample.mono)]);
+    assert.ok(last.mono - t.arm.before.mono <= 12000 && last.wall - t.arm.before.wall <= 12000);
+    assert.ok(!eligible[1] || eligible[1].sentAt > last.wall, 'second poll overlaps settling samples');
+    assert.ok(t.trace.some(event => event.kind === 'toggle' && event.target === 'host' && event.snapshot.open === false && event.snapshot.mono >= t.close.mono && event.snapshot.mono <= t.settled[0].mono && event.snapshot.wall >= t.close.wall && event.snapshot.wall <= t.settled[0].wall), 'missing enclosed closed toggle');
     assert.equal(t.outcome, expected.variant === 'baseline' && t.name !== 'outside' ? 'expected-baseline-defect' : 'scoped-focus-pass');
     assert.ok(t.trace.length && t.trace.length <= 256); let mono = t.arm.before.mono, wall = t.arm.before.wall;
     for (const event of t.trace) {
-      assert.ok(['focusin', 'focusout', 'toggle', 'mutation', 'close', 'frame'].includes(event.kind));
+      assert.ok(['focusin', 'focusout', 'toggle', 'mutation', 'close', 'frame', 'settled'].includes(event.kind));
       assert.ok(categories.includes(event.target) && categories.includes(event.related)); snapshot(event.snapshot);
       ordered([mono, event.snapshot.mono]); ordered([wall, event.snapshot.wall]); mono = event.snapshot.mono; wall = event.snapshot.wall;
     }
-    const closes = t.trace.filter(event => event.kind === 'close'), frames = t.trace.filter(event => event.kind === 'frame');
-    assert.equal(closes.length, 1); assert.equal(frames.length, 1);
-    assert.ok(t.trace.indexOf(closes[0]) < t.trace.indexOf(frames[0]));
-    assert.deepEqual(closes[0].snapshot, t.close); assert.deepEqual(frames[0].snapshot, t.frame);
+    const milestones = t.trace.filter(event => ['close', 'frame', 'settled'].includes(event.kind));
+    assert.deepEqual(milestones.map(event => [event.kind, event.snapshot]),
+      [['close', t.close], ['frame', t.frame], ...t.settled.map(snapshot => ['settled', snapshot])]);
   } else if (stage === 'proof-boundary') {
     value.forEach(boundary);
     assert.ok(value[0].rows.every(row => row.receivedAt !== undefined && row.receivedAt <= value[0].wall));
@@ -184,8 +186,8 @@ export function installProbe() {
       inPanel: !!node && panel.contains(node), inHost: !!node && nodes.host.contains(node), direct: name !== 'summary' || node?.parentElement === nodes.host,
       visible: !!node?.getClientRects().length && getComputedStyle(node).visibility !== 'hidden' && getComputedStyle(node).display !== 'none', enabled: !!node && !node.matches(':disabled'),
     }])) });
-  let armed = false, disposed = false, overflow = false, close, frame, raf, timer, observer, ready, resolve;
-  const trace = [], listeners = [];
+  let armed = false, disposed = false, overflow = false, close, raf, timer, observer, ready, resolve;
+  const trace = [], listeners = [], samples = [];
   const record = (kind, target = null, related = null, snapshot = snap()) => {
     if (disposed || !armed) return;
     if (trace.length === 256) { overflow = true; return; }
@@ -194,7 +196,12 @@ export function installProbe() {
   const detect = () => {
     if (!armed || disposed || close || nodes.host.open) return;
     close = snap(); record('close', nodes.host, null, close);
-    raf = requestAnimationFrame(() => { if (!disposed) { frame = snap(); record('frame', nodes.host, null, frame); resolve(true); } });
+    const sample = () => {
+      if (disposed || !armed) return;
+      samples.push(snap()); record(samples.length === 1 ? 'frame' : 'settled', nodes.host, null, samples.at(-1));
+      if (samples.length < 3) raf = requestAnimationFrame(sample); else resolve(true);
+    };
+    raf = requestAnimationFrame(sample);
   };
   const dispose = () => {
     disposed = true;
@@ -216,9 +223,9 @@ export function installProbe() {
     return { snapshot: snap, arm: () => {
       armed = true;
       ready = new Promise(done => { resolve = done; });
-      timer = setTimeout(() => { armed = false; resolve(false); }, 12000);
+      timer = setTimeout(() => { armed = false; cancelAnimationFrame(raf); resolve(false); }, 12000);
       return snap();
     }, wait: () => ready,
-      read: () => structuredClone({ trace, close, frame, overflow, complete: !!frame }), dispose };
+      read: () => structuredClone({ trace, close, frame: samples[0], settled: samples.slice(1), overflow, complete: samples.length === 3 }), dispose };
   } catch (error) { dispose(); throw error; }
 }

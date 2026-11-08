@@ -38,7 +38,7 @@ async function verify(h, life) {
   const { guard, operation: op, write } = life, variant = process.env.QA_FOCUS_VARIANT;
   const identity = { product: process.env.QA_PRODUCT, productObject: gitObject('..'), runtimeObject: gitObject('../../runtime-source'), qaObject: gitObject('../../qa-source') };
   const expected = { product: 'standalone', productObject: { ...objects[variant], clean: true }, runtimeObject: { ...objects.runtime, clean: true }, qaObject: { ...identity.qaObject, head: process.env.QA_HEAD, clean: true } };
-  const session = { schemaVersion: 1, variant, viewport: { width: report.width, height: report.height }, provenance: identity, trials: [], directions: [], screenshots: [] };
+  const session = { schemaVersion: 2, variant, viewport: { width: report.width, height: report.height }, provenance: identity, trials: [], directions: [], screenshots: [] };
   const publish = () => write(() => { report.focus = freeze(structuredClone(session)); save(); });
   const unbindPage = bindStop(life, page, 'close');
   const boundary = () => { guard(); const rows = report.requests.map(({ id, route, sentAt, receivedAt, code }) => ({ id, route, sentAt, receivedAt, code })); return { wall: Date.now(), rows, watermark: rows.at(-1)?.id ?? 0 }; };
@@ -84,7 +84,7 @@ async function verify(h, life) {
             const left = boundary(), before = await op(() => handle.evaluate(probe => probe.arm()));
             const after = await snapshot(handle), right = boundary(); write(() => t.arm = { left, before, after, right }); pure('arm', t);
             const response = await op(() => responseAfter(async () => { guard(); }, cityRoute));
-            if (!await op(() => handle.evaluate(probe => probe.wait()))) throw new InfrastructureError('First close/frame wait exhausted');
+            if (!await op(() => handle.evaluate(probe => probe.wait()))) throw new InfrastructureError('Fixed three-frame observation exhausted');
             const evidence = await op(() => handle.evaluate(probe => probe.read()));
             write(() => Object.assign(t, evidence, { responseId: response.id, requests: boundary().rows, outcome: variant === 'baseline' && name !== 'outside' ? 'expected-baseline-defect' : 'scoped-focus-pass' }));
             pure('trial', t, session); write(() => session.trials.push(freeze(structuredClone(t)))); publish();

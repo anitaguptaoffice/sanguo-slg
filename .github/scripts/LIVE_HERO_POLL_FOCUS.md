@@ -28,3 +28,9 @@ locked sandbox Chromium and always-upload artifacts, including failures.
 Exact component/combined review and object mapping precede any publication/run.
 Independent raw-archive audit follows. Focus results do not clear layout/wheel,
 training #2267, source #2282, historical holds, current-main integration or deploy.
+
+Session schema2 prospectively adds two fixed rAF settling samples after rawframe1.
+No retry/sleep: baseline samples2/3 mustBODY, fixed/outside retain their targets.
+Closed-toggle enclosure and all3 samples remain within the original12sec/poll.
+Agreement is only at sampled instants, not universal cleanup/continuous stability.
+First run42457795891 stays2 scoped fixed PASS/2 baseline FAIL; no relabeling.
