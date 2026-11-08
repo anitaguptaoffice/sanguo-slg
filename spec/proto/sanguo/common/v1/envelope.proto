@@ -84,6 +84,8 @@ enum ErrorCode {
   MILITARY_INSUFFICIENT_TROOPS = 50006;
   // 战报不存在或当前玩家无权查看。
   MILITARY_BATTLE_REPORT_NOT_FOUND = 50007;
+  // Accepted scoped Recruit key exists with a different exact typed intent.
+  MILITARY_RECRUIT_INTENT_CONFLICT = 50008;
 
   // --- 军团 60000–60999 ---
   // 军团不存在或不属于当前服。
