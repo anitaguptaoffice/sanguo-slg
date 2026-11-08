@@ -29,6 +29,8 @@ baseline(state('a'.repeat(499)), 0);
 reject(() => baseline(state(MIXED), 0)); reject(() => baseline(state('a'.repeat(499)), 1));
 reject(() => inputState(state('a'.repeat(499)), MIXED));
 assert.equal(checkDelivery(rows()).response.message.message_id, 42);
+const persisted = rows(); persisted[1].response.messages[0].sender_display_name = '';
+assert.deepEqual(checkDelivery(persisted).displayNameComparison, { sent: 'synthetic', listed: '', equal: false });
 const mutations = [
   data => data.splice(0, 1), data => data.push(structuredClone(data[0])),
   data => data[0].code = 1, data => data[0].receivedAt = undefined,
@@ -36,7 +38,7 @@ const mutations = [
   data => data[0].request.channel = 2, data => data[0].request.recipient_player_id = 9,
   data => data[0].request.guild_id = 9, data => data[0].response.limits.max_content_length = 499,
   data => data[0].response.message.message_id = 0, data => data[0].response.message.message_id = 1.5,
-  data => data[0].response.message.content = 'lost', data => data[0].response.message.sender_player_id = 19,
+  data => data[0].response.message.sent_at_ms = 0, data => data[0].response.message.content = 'lost', data => data[0].response.message.sender_player_id = 19,
   data => data[0].response.message.server_id = 2, data => data[0].response.message.channel = 3,
   data => data[0].response.message.recipient_player_id = 9, data => data[0].response.message.guild_id = 9,
   data => data.splice(1, 1), data => data.push(structuredClone(data[1])),

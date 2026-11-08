@@ -15,6 +15,11 @@ Trusted passive input and read-only CDP brackets prove strict-before-reply order
 Too-fast/ambiguous overlap is UNOBSERVED and fails the full gate; do not rerun for luck.
 No delays/interception/mocks/RPC injection, local browser or production access.
 Natural waits follow observed service limits inside the runtime's five-minute bound.
-Runtime actual7fa66533/tree5bd98f92 and unchanged helper actual7dc5939/tree dc151c55
+Runtime actual6889bc77/tree4e48ea43 and unchanged helper actual7dc5939/tree dc151c55
 are separately pinned/copied/compared, with complete pure controls before native work.
 Record full actual/local mappings and independent combination review before publication.
+
+Compare every stable persisted message identity/content/destination/time field.
+Send/List display names can differ because PGStore does not persist that optional label;
+record both values explicitly without treating them as authoritative identity.
+Run42430915505 failed at first mixed delivery; no pending attempt was consumed.

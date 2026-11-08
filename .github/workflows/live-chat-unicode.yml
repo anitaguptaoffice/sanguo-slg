@@ -32,9 +32,9 @@ jobs:
       QA_PRODUCT_TREE: ${{ matrix.tree }}
       QA_PRODUCT_PARENTS: ${{ matrix.parents }}
       QA_HELPER_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
-      QA_RUNTIME_HEAD: 7fa66533ff3c6effa991cb0d266e791f4c66a8b8
-      QA_RUNTIME_TREE: 5bd98f9267417a4370ad6bf54758e574795694c1
-      QA_RUNTIME_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+      QA_RUNTIME_HEAD: 6889bc773a52957a6135986d8d48c913517f5cd0
+      QA_RUNTIME_TREE: 4e48ea432483beb57801d2e4ea3fa12526a8968e
+      QA_RUNTIME_PARENTS: 7fa66533ff3c6effa991cb0d266e791f4c66a8b8
     services:
       postgres:
         image: postgres:17

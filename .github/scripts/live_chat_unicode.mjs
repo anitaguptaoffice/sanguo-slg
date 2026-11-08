@@ -25,7 +25,13 @@ export function delivery(rows, content, owner, rendered) {
   const list = lists[0]; destination(list.request); assert.equal(list.code, 0);
   assert.ok(Number.isFinite(list.receivedAt) && list.receivedAt >= list.sentAt);
   const matches = list.response.messages.filter(m => m.message_id === message.message_id); assert.equal(matches.length, 1);
-  assert.deepEqual(matches[0], message); assert.ok(rendered.includes(`: ${content}`)); return send;
+  assert.ok(Number.isSafeInteger(message.sent_at_ms) && message.sent_at_ms > 0);
+  for (const key of ['message_id', 'sender_player_id', 'content', 'server_id', 'channel', 'recipient_player_id', 'guild_id', 'sent_at_ms']) {
+    assert.equal(matches[0][key], message[key], `Persisted message field ${key}`);
+  }
+  send.displayNameComparison = { sent: message.sender_display_name, listed: matches[0].sender_display_name,
+    equal: message.sender_display_name === matches[0].sender_display_name };
+  assert.ok(rendered.includes(`: ${content}`)); return send;
 }
 export function inventory(cases, requests) {
   assert.deepEqual(cases, CASES.map(([name]) => name));
