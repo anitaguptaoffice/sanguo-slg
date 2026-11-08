@@ -1,0 +1,174 @@
+name: Recruit V2 codegen diagnostic NEVER MERGE
+
+on:
+  pull_request:
+
+jobs:
+  codegen-diagnostic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      BASELINE: cbdd409b66f48942071f8b793494d5f4af14d6a9
+      CANDIDATE: 90abcc2b12de455ba0b9ab8e10f5567956ca6174
+      GOTOOLCHAIN: local
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Install official toolchain and retain provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/codegen-evidence"
+          sudo apt-get update
+          apt-cache policy protobuf-compiler | tee "$RUNNER_TEMP/codegen-evidence/apt.txt"
+          sudo apt-get install --no-install-recommends -y protobuf-compiler
+          GOBIN="$RUNNER_TEMP/codegen-bin" go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.5
+          echo "$RUNNER_TEMP/codegen-bin" >> "$GITHUB_PATH"
+          {
+            go version
+            go env GOVERSION GOTOOLCHAIN
+            protoc --version
+            dpkg-query -W protobuf-compiler libprotobuf32t64 libprotoc32t64
+            "$RUNNER_TEMP/codegen-bin/protoc-gen-go" --version
+            go version -m "$RUNNER_TEMP/codegen-bin/protoc-gen-go"
+            sha256sum "$(command -v protoc)" "$RUNNER_TEMP/codegen-bin/protoc-gen-go"
+          } | tee "$RUNNER_TEMP/codegen-evidence/tools.txt"
+          test "$(go env GOVERSION)" = go1.23.12
+          test "$(go env GOTOOLCHAIN)" = local
+          test "$(protoc --version)" = 'libprotoc 3.21.12'
+          test "$("$RUNNER_TEMP/codegen-bin/protoc-gen-go" --version)" = 'protoc-gen-go v1.36.5'
+      - name: Generate baseline and candidate without changing tracked source
+        shell: bash
+        run: |
+          set -euo pipefail
+          export EVIDENCE="$RUNNER_TEMP/codegen-evidence"
+          {
+            git rev-parse HEAD HEAD^{tree} "$BASELINE" "$BASELINE^{tree}" "$CANDIDATE" "$CANDIDATE^{tree}"
+            git diff --stat "$BASELINE" "$CANDIDATE"
+          } | tee "$EVIDENCE/source.txt"
+          test "$(git rev-parse "$CANDIDATE^{tree}")" = 5fb566a7ff41eb8349e296142d68330ee597fd60
+          for variant in baseline candidate; do
+            ref="$BASELINE"
+            if [ "$variant" = candidate ]; then ref="$CANDIDATE"; fi
+            root="$RUNNER_TEMP/codegen-$variant"
+            mkdir -p "$root" "$EVIDENCE/$variant"
+            git archive "$ref" | tar -x -C "$root"
+            cp -a "$root/spec/proto" "$EVIDENCE/$variant/canonical-inputs"
+            cp "$root/internal/api/pb/sanguo/military/v1/military.pb.go" "$EVIDENCE/$variant/api-tracked.pb.go"
+            cp "$root/internal/platform/gateway/pb/sanguo/common/v1/envelope.pb.go" "$EVIDENCE/$variant/platform-tracked.pb.go"
+            # Only the temporary API mirror is adapted to its existing package.
+            ROOT="$root" VARIANT="$variant" python3 - <<'PY'
+          import os, pathlib, re
+          root = pathlib.Path(os.environ['ROOT'])
+          path = pathlib.Path('sanguo/military/v1/military.proto')
+          canonical = (root / 'spec/proto' / path).read_text()
+          mirror = root / 'internal/api/proto' / path
+          original = mirror.read_text()
+          package = re.findall(r'^option go_package = .*;$', original, re.M)
+          assert len(package) == 1
+          adapted, count = re.subn(r'^option go_package = .*;$', package[0], canonical, flags=re.M)
+          assert count == 1
+          if os.environ['VARIANT'] == 'baseline':
+              assert adapted == original, 'baseline canonical/API mirror drift'
+          mirror.write_text(adapted)
+          PY
+            cp "$root/internal/api/proto/sanguo/military/v1/military.proto" "$EVIDENCE/$variant/api-input.proto"
+            (
+              cd "$root"
+              protoc -I internal/api/proto -I spec/proto \
+                --go_out=internal/api/pb --go_opt=paths=source_relative \
+                --go_opt=Msanguo/common/v1/types.proto=github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1 \
+                internal/api/proto/sanguo/military/v1/military.proto
+              protoc -I spec/proto --go_out=internal/platform/gateway/pb --go_opt=paths=source_relative \
+                spec/proto/sanguo/common/v1/envelope.proto
+            )
+            cp "$root/internal/api/pb/sanguo/military/v1/military.pb.go" "$EVIDENCE/$variant/api-generated.pb.go"
+            cp "$root/internal/platform/gateway/pb/sanguo/common/v1/envelope.pb.go" "$EVIDENCE/$variant/platform-generated.pb.go"
+          done
+          python3 - <<'PY'
+          import os, pathlib, subprocess
+          e = pathlib.Path(os.environ['EVIDENCE'])
+          pairs = []
+          for domain in ('api', 'platform'):
+              pairs.extend([
+                  (domain + '-baseline-drift', e/'baseline'/f'{domain}-tracked.pb.go', e/'baseline'/f'{domain}-generated.pb.go'),
+                  (domain + '-contract-delta', e/'baseline'/f'{domain}-generated.pb.go', e/'candidate'/f'{domain}-generated.pb.go'),
+                  (domain + '-delivery-delta', e/'candidate'/f'{domain}-tracked.pb.go', e/'candidate'/f'{domain}-generated.pb.go')])
+          pairs.append(('api-mirror-delta', e/'baseline/api-input.proto', e/'candidate/api-input.proto'))
+          for name, before, after in pairs:
+              for mode, suffix in (('--patch', '.diff'), ('--numstat', '.numstat')):
+                  r = subprocess.run(['git', 'diff', '--no-index', mode, '--', str(before), str(after)], capture_output=True)
+                  assert r.returncode in (0, 1), r.stderr
+                  (e/(name+suffix)).write_bytes(r.stdout)
+                  if suffix == '.numstat':
+                      print(name, r.stdout.decode().strip() or '0 additions / 0 deletions')
+          # A separate header-only comparison explains historical compiler drift;
+          # the raw old output, complete diff and numstat above remain untouched.
+          compatible = True
+          for domain in ('api', 'platform'):
+              before = (e/'baseline'/f'{domain}-tracked.pb.go').read_text().splitlines()
+              after = (e/'baseline'/f'{domain}-generated.pb.go').read_text().splitlines()
+              strip = lambda lines: [x for x in lines if not x.startswith('// \tprotoc        ')]
+              matches = strip(before) == strip(after)
+              print(domain, 'baseline identical except compiler header:', matches)
+              compatible = compatible and matches
+          assert compatible, 'non-header baseline drift blocks generated adoption'
+          PY
+          git diff --exit-code HEAD
+      - name: Compile each isolated output domain and test binding packages
+        # Preserve the failed baseline gate; collect compile evidence independently.
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set +e
+          set -uo pipefail
+          status=0
+          for variant in baseline candidate; do
+            for domain in api platform; do
+              root="$RUNNER_TEMP/codegen-$variant-$domain"
+              if [ "$domain" = api ]; then
+                target=internal/api/pb/sanguo/military/v1/military.pb.go
+                packages=./internal/api/...
+                bindings=./internal/api/pb/...
+              else
+                target=internal/platform/gateway/pb/sanguo/common/v1/envelope.pb.go
+                packages=./internal/platform/...
+                bindings=./internal/platform/gateway/pb/...
+              fi
+              (
+                set -euo pipefail
+                mkdir -p "$root"
+                git archive "$BASELINE" | tar -x -C "$root"
+                cp "$RUNNER_TEMP/codegen-evidence/$variant/$domain-generated.pb.go" "$root/$target"
+                cmp "$RUNNER_TEMP/codegen-evidence/$variant/$domain-generated.pb.go" "$root/$target"
+                cd "$root"
+                go test -count=1 -run '^$' "$packages"
+                go test -count=1 -json "$bindings"
+              ) 2>&1 | tee "$RUNNER_TEMP/codegen-evidence/$variant/$domain-tests.txt"
+              code=$?
+              echo "$code" > "$RUNNER_TEMP/codegen-evidence/$variant/$domain-tests.exit" || exit 1
+              if [ "$code" -ne 0 ]; then status=1; fi
+            done
+          done
+          exit "$status"
+      - name: Hash and preserve full evidence even on failure
+        if: always()
+        shell: bash
+        run: |
+          cd "$RUNNER_TEMP/codegen-evidence"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          cat *numstat || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recruit-v2-codegen-diagnostic
+          path: ${{ runner.temp }}/codegen-evidence
+          if-no-files-found: error
+          retention-days: 14
