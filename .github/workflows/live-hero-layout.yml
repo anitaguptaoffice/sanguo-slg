@@ -18,13 +18,13 @@ jobs:
         product: [standalone, reentry]
         include:
           - product: standalone
-            head: a7cd2a0fdee5dc2f88c90c1b8f5049afd40dcbe4
-            tree: 3b0acf7b911042976ebb8873e7ffdac909740c25
-            parents: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+            head: 8377286caa24e39defb2d8bbaa867c07f4b948bb
+            tree: 46a579e4baac2e40ec38223384ec630b26b8389e
+            parents: a7cd2a0fdee5dc2f88c90c1b8f5049afd40dcbe4
           - product: reentry
-            head: 3bbd4391009b6cc4caa0125d6bed70a209177f39
-            tree: cd6154376dc0c35cb63eef237833e8b774161fe4
-            parents: a020369eb4f58e835522934c662ab1fd3d4161e3
+            head: 162f9c7265ad6e6cdeabf297444bc497905914a2
+            tree: 73c7c8561041d6716af8d62889daec412544239a
+            parents: 3bbd4391009b6cc4caa0125d6bed70a209177f39
     env:
       QA_WIDTH: ${{ matrix.width }}
       QA_PRODUCT: ${{ matrix.product }}
