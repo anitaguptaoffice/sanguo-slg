@@ -110,7 +110,15 @@ export async function verify(h) {
   await act(() => ul.hover()); await act(() => page.mouse.wheel(0, -1600)); await pause(100);
   await act(() => action('toggle-guild-role-group').click()); value = await capture('mouse-collapsed');
   gate('mouse collapsed text', () => checkText(value, report.product, false));
-  await act(() => page.keyboard.press('Tab')); value = await act(() => panel.evaluate(inspect));
+  if (!baseline) {
+    focusGate(value, false);
+    await act(() => page.keyboard.press('Shift+Tab')); value = await capture('keyboard-predecessor');
+    assert.equal(value.focusAction, 'refresh-members');
+    assert.equal(await act(() => action('refresh-members').isVisible()), true);
+    assert.equal(await act(() => action('refresh-members').isEnabled()), true);
+  }
+  await act(() => page.keyboard.press('Tab')); value = await capture('keyboard-return');
+  if (!baseline) focusGate(value, false);
   for (let n = 0; n < 30 && value.focusAction !== 'toggle-guild-role-group'; n++) { await act(() => page.keyboard.press('Tab')); value = await act(() => panel.evaluate(inspect)); }
   assert.equal(value.focusAction, 'toggle-guild-role-group', 'Role toggle must be keyboard reachable');
   await act(() => page.keyboard.press('Enter')); value = await capture('keyboard-expanded');

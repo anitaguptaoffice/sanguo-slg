@@ -19,3 +19,5 @@ A corrected summary requires its own opaque image-free backing; range visibility
 Baseline resultKind=baseline-defect-control and nativeAcceptance=false. Exactly the known summary-artwork, BODY focus-loss and Escape-stays-open defects must be positively witnessed, without extra failures.
 Only baseline may use ordinary toolbar closure after that witness, then it must still complete reopen, the second real list, final economy and cleanup. Fixed has no exemptions or recovery.
 A successful baseline control is not native product acceptance. All four new screenshots must be independently reviewed; no old-head rerun before approved new product combination pins.
+
+Run42440568601 retains incomplete fixed1280 evidence: its31-Tab whole-document budget stopped at refresh-members. Fixed now proves native Shift+Tab to that visible enabled predecessor, then Tab to the exact preserved role1 toggle; both states are captured, with all later gates unchanged.
