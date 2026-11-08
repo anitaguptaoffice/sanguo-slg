@@ -2820,7 +2820,7 @@ export class HeroMailPanels {
           this.heroPanel,
         );
         this.syncHeroRecruitHostExpanded();
-        ensureHeroDetailBustNameInScrollClip(this.heroPanel);
+        if (!synced) ensureHeroDetailBustNameInScrollClip(this.heroPanel);
         scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeeperSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeepestSweep(detailEl, this.heroDetail, bag);
