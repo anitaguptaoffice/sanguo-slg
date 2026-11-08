@@ -31,6 +31,8 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.x"
@@ -69,11 +71,15 @@ jobs:
         env:
           MODE: ${{ matrix.mode }}
         run: |
+          RECRUIT_BINDINGS_STATE="$(python3 .github/scripts/check_recruit_v2_bindings_json.py --state)"
+          export RECRUIT_BINDINGS_STATE
+          test "$RECRUIT_BINDINGS_STATE" = legacy || test "$RECRUIT_BINDINGS_STATE" = v2
           flags=()
           if [[ "$MODE" == race ]]; then flags=(-race); fi
           gate="$RUNNER_TEMP/api-gate.py"
           cat > "$gate" <<'PY'
           import json
+          import os
           import sys
 
           phase = sys.argv[3]
@@ -336,15 +342,27 @@ jobs:
           required = {(root, name) for name in expected}
           required.add((root + "/pb/sanguo/domestic/v1", "TestGarrisonWireCompatibility"))
           required.add((root + "/pb/sanguo/quest/v1", "TestClaimRewardWireCompatibility"))
+          adopted = os.environ["RECRUIT_BINDINGS_STATE"] == "v2"
+          required.update((root + "/pb/sanguo/military/v1", name) for name in ({
+              "TestRecruitV2Descriptors",
+              "TestRecruitV2Descriptors/RecruitTroopV2Request",
+              "TestRecruitV2Descriptors/RecruitTroopV2Response",
+              "TestRecruitV2Descriptors/RecruitAcceptance",
+              "TestRecruitV2ExactIntegerBoundaries",
+              "TestRecruitV2WireAndPresence",
+              "TestRecruitV2UnknownFieldsAndOpaqueBytes",
+          } if adopted else set()))
           no_tests = {
               root + f"/pb/sanguo/{domain}/v1"
-              for domain in ("content", "hero", "military", "rank", "shop", "world")
+              for domain in ("content", "hero", "rank", "shop", "world")
           }
+          if not adopted:
+              no_tests.add(root + "/pb/sanguo/military/v1")
           if phase == "preflight":
               required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))
                           or item[1].split("/", 1)[0] == "TestSmokeDailyCalendarClockPG"}
               no_tests = set()
-          if len(required) != (27 if phase == "preflight" else 252):
+          if len(required) != (27 if phase == "preflight" else 259 if adopted else 252):
               raise SystemExit("Frozen API inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
