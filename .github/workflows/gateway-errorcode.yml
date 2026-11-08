@@ -1,0 +1,128 @@
+name: Gateway ErrorCode validation
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  gateway-errorcode:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    env:
+      BASELINE: 5313ed8fd3d6e3eaca936cba51d8a19e5550f9ac
+      SOURCE: d268ed9669707875c35ead9ded2194af97480751
+      GOTOOLCHAIN: local
+    steps:
+      - name: Initialize evidence directory
+        run: echo "EVIDENCE=$RUNNER_TEMP/gateway-evidence" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Install official generators and record provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE"
+          sudo apt-get update
+          apt-cache policy protobuf-compiler | tee "$EVIDENCE/apt.txt"
+          sudo apt-get install --no-install-recommends -y protobuf-compiler
+          GOBIN="$RUNNER_TEMP/gateway-bin" go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.5
+          echo "$RUNNER_TEMP/gateway-bin" >> "$GITHUB_PATH"
+          {
+            go version
+            go env GOVERSION GOTOOLCHAIN
+            protoc --version
+            dpkg-query -W protobuf-compiler libprotobuf32t64 libprotoc32t64
+            "$RUNNER_TEMP/gateway-bin/protoc-gen-go" --version
+            go version -m "$RUNNER_TEMP/gateway-bin/protoc-gen-go"
+            sha256sum "$(command -v go)" "$(go env GOROOT)/bin/gofmt" "$(command -v protoc)" "$RUNNER_TEMP/gateway-bin/protoc-gen-go"
+          } | tee "$EVIDENCE/tools.txt"
+          test "$(go env GOVERSION)" = go1.23.12
+          test "$(go env GOTOOLCHAIN)" = local
+          test "$(protoc --version)" = 'libprotoc 3.21.12'
+          test "$("$RUNNER_TEMP/gateway-bin/protoc-gen-go" --version)" = 'protoc-gen-go v1.36.5'
+      - name: Verify exact source and regenerate canonical output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD HEAD^{tree} "$SOURCE" "$SOURCE^{tree}" "$BASELINE" "$BASELINE^{tree}" | tee "$EVIDENCE/source.txt"
+          test "$(git rev-parse "$SOURCE^{tree}")" = 6ce5326b92ff3c4d2ecb485a3ffcdcf23082b01c
+          git merge-base --is-ancestor "$SOURCE" HEAD
+          git ls-tree -r HEAD -- internal/platform/gateway spec/proto go.mod go.sum | tee "$EVIDENCE/input-tree.txt"
+          git ls-files -z -- internal/platform/gateway spec/proto go.mod go.sum | xargs -0 sha256sum > "$EVIDENCE/input-sha256.txt"
+          target=internal/platform/gateway/pb/sanguo/common/v1
+          mkdir -p "$RUNNER_TEMP/gateway-generated" "$RUNNER_TEMP/gateway-baseline"
+          git archive "$BASELINE" | tar -x -C "$RUNNER_TEMP/gateway-baseline"
+          cp "$target/envelope_contract_test.go" "$RUNNER_TEMP/gateway-baseline/$target/"
+          git show "$SOURCE:$target/envelope_contract_test.go" > "$EVIDENCE/source-test.go"
+          cmp "$EVIDENCE/source-test.go" "$target/envelope_contract_test.go"
+          cp spec/proto/sanguo/common/v1/envelope.proto "$EVIDENCE/canonical.proto"
+          cp "$target/envelope.pb.go" "$EVIDENCE/tracked.pb.go"
+          protoc -I spec/proto --go_out="$RUNNER_TEMP/gateway-generated" --go_opt=paths=source_relative spec/proto/sanguo/common/v1/envelope.proto
+          cp "$RUNNER_TEMP/gateway-generated/sanguo/common/v1/envelope.pb.go" "$EVIDENCE/generated.pb.go"
+          cmp "$EVIDENCE/generated.pb.go" "$EVIDENCE/tracked.pb.go"
+          echo 'a7518f5a2a853d427f4cbbbd922257f46d6c04341df87996ee7f1e423a83eaab  generated.pb.go' | (cd "$EVIDENCE" && sha256sum -c -)
+          test -z "$(gofmt -l "$target/envelope_contract_test.go" "$target/envelope.pb.go")"
+          git diff --exit-code HEAD
+          python3 -m unittest discover -s .github/scripts -p test_gateway_errorcode_check.py -v
+      - name: Prove baseline compiles then fails canonical cardinality
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/gateway-baseline"
+          go test -count=1 -timeout=2m -run '^$' ./internal/platform/gateway/... 2>&1 | tee "$EVIDENCE/baseline-compile.txt"
+          set +e
+          go test -count=1 -timeout=2m -json -run '^TestEnvelopeCanonicalErrorCodes$' ./internal/platform/gateway/pb/sanguo/common/v1 > "$EVIDENCE/baseline.json" 2> "$EVIDENCE/baseline.stderr"
+          code=$?
+          set -e
+          echo "$code" > "$EVIDENCE/baseline.exit"
+          cd "$GITHUB_WORKSPACE"
+          python3 .github/scripts/gateway_errorcode_check.py baseline "$EVIDENCE/baseline.json" "$EVIDENCE/baseline.exit" . | tee "$EVIDENCE/baseline-summary.json"
+      - name: Full fixed ordinary gateway tests including stress
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE"
+          # 8 existing roots: 3000 stress connections / 200 concurrent, 2s drain.
+          # Socket reads lack individual deadlines: bound whole package at 5m.
+          set +e
+          go test -count=1 -timeout=5m -json ./internal/platform/gateway/... > "$EVIDENCE/fixed.json" 2> "$EVIDENCE/fixed.stderr"
+          code=$?
+          set -e
+          echo "$code" > "$EVIDENCE/fixed.exit"
+          python3 .github/scripts/gateway_errorcode_check.py fixed "$EVIDENCE/fixed.json" "$EVIDENCE/fixed.exit" . | tee "$EVIDENCE/fixed-summary.json"
+      - name: Full fixed race gateway tests including stress
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE"
+          # Race instrumentation gets twice the ordinary budget; no -short/-run.
+          set +e
+          go test -race -count=1 -timeout=10m -json ./internal/platform/gateway/... > "$EVIDENCE/race.json" 2> "$EVIDENCE/race.stderr"
+          code=$?
+          set -e
+          echo "$code" > "$EVIDENCE/race.exit"
+          python3 .github/scripts/gateway_errorcode_check.py fixed "$EVIDENCE/race.json" "$EVIDENCE/race.exit" . | tee "$EVIDENCE/race-summary.json"
+      - name: Preserve hashes even when a gate fails
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$EVIDENCE"
+          cd "$EVIDENCE"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gateway-errorcode-evidence
+          path: ${{ runner.temp }}/gateway-evidence
+          if-no-files-found: error
+          retention-days: 14
