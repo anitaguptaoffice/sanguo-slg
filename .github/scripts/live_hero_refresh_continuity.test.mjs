@@ -28,10 +28,15 @@ for (const variant of ['baseline', 'fixed']) {
     if (failing === 'later') assert.ok(!h.calls.includes('replacement'));
   }
   for (const change of [h => { h.f.before.active.tag = 'BODY'; }, h => { h.f.before.active.inPanel = false; },
-    h => { h.f.before.active.connected = false; }, h => { delete h.io.requests[0].code; delete h.io.requests[0].receivedAt; }]) {
+    h => { h.f.before.active.connected = false; }, h => { delete h.f.before.geometry; }, h => { delete h.io.requests[0].code; delete h.io.requests[0].receivedAt; }]) {
     const h = harness(variant); change(h); await assert.rejects(observeRefresh(h.io, variant, 7)); negatives++;
     assert.ok(!h.calls.includes('poll')); assert.ok(h.calls.includes('dispose')); assert.ok(h.io.phase.before);
   }
+}
+for (const variant of ['baseline', 'fixed']) {
+  const h = harness(variant); delete h.f.after[1].geometry;
+  await assert.rejects(observeRefresh(h.io, variant, 7)); negatives++;
+  assert.equal(h.calls.filter(c => c === 'poll').length, 1); assert.ok(h.io.phase.events && h.io.phase.requestRows); assert.equal(h.calls.at(-1), 'dispose');
 }
 const dom = new JSDOM('<ul data-role="hero-scroll"><li data-hero-id="7"></li></ul>', { runScripts: 'outside-only' });
 const old = dom.window.document.querySelector('li');

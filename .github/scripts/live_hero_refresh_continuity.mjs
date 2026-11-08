@@ -18,18 +18,24 @@ async function verify(h) {
   assert.equal(provenance.product.head, report.productHead); assert.equal(provenance.product.tree, report.tree);
   assert.deepEqual(provenance.product.parents, report.parents.split(' '));
   assert.equal(provenance.qa.head, report.qaHead); assert.equal(provenance.runtime.head, report.runtimeHead);
-  const evidence = report.refresh = { schema: 1, variant, hero, viewport: { width: report.width, height: report.height }, provenance, complete: false };
-  report.refreshInputs = []; report.refreshGeometry = []; report.refreshRasters = [];
+  const evidence = report.refresh = { schema: 2, variant, hero, viewport: { width: report.width, height: report.height }, provenance, complete: false };
+  report.refreshInputs = []; report.refreshGeometry = []; report.refreshRasters = evidence.rasters = [];
   const roster = panel.locator(rosterSelector), row = panel.locator(`li[data-hero-id="${hero}"]`);
   const gold = panel.locator('input[data-action="hero-largess-kind"][value="gold"]');
   const item = panel.locator('input[data-action="hero-largess-kind"][value="item"]');
   let observer, rows;
   const stage = value => { report.phase = value; save(); };
-  const samples = heldId => observer.evaluate(async (o, id) => {
-    const frames = [o.snapshot(id)];
-    for (let i = 0; i < 2; i++) { await new Promise(requestAnimationFrame); frames.push(o.snapshot(id)); }
+  const sample = async heldId => {
+    const frame = await observer.evaluate((o, id) => o.snapshot(id), heldId);
+    (report.refreshObservations ??= []).push(frame); save();
+    const geometry = { gold: await gold.evaluate(inspect), roster: await roster.evaluate(inspect) };
+    return { ...frame, geometryAfter: await observer.evaluate((o, id) => o.snapshot(id), heldId), geometry };
+  };
+  const samples = async heldId => {
+    const frames = evidence.refresh.after = [await sample(heldId)]; save();
+    for (let i = 0; i < 2; i++) { await page.evaluate(() => new Promise(requestAnimationFrame)); frames.push(await sample(heldId)); save(); }
     return frames;
-  }, heldId);
+  };
   async function wheel(delta, label) {
     for (let attempt = 0; attempt < 3; attempt++) {
       await settled();
@@ -62,11 +68,11 @@ async function verify(h) {
     await target.click();
   }
   async function capture(label, heldId = null) {
-    const before = await observer.evaluate((o, id) => o.snapshot(id), heldId);
+    const before = await sample(heldId);
     const geometry = { gold: await gold.evaluate(inspect), item: await item.evaluate(inspect), roster: await roster.evaluate(inspect) };
     const entry = { label, before, geometry }; report.refreshRasters.push(entry); save();
     await screenshot(label);
-    entry.after = await observer.evaluate((o, id) => o.snapshot(id), heldId); save();
+    entry.after = await sample(heldId); save();
   }
   stage('native actual hero detail entry');
   await reach(row.locator('.hero-list-row-primary'), row.locator('[data-role="hero-list-avatar"]'), 'detail-entry');
@@ -84,7 +90,7 @@ async function verify(h) {
     try {
       await settled(); await capture('natural-refresh-before');
       await observeRefresh({ phase, requests: report.requests, save, now: Date.now, responseAfter, settled,
-        readBefore: () => observer.evaluate(o => o.snapshot()),
+        readBefore: () => sample(null),
         retainRow: async () => { rows = await row.evaluateHandle(installRowWitness, hero); },
         readRow: () => rows.evaluate(o => o.snapshot()),
         awaitReplacement: async () => { const handle = await page.waitForFunction(o => o.detached(), rows); await handle.dispose(); },
