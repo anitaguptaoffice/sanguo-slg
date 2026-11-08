@@ -1,0 +1,174 @@
+name: Recruit V2 API bindings
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  recruit-v2-bindings:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      GOTOOLCHAIN: local
+      BASELINE: 34bfa7c6a56ed4c0c44598ffe98c871bf15da85c
+      PKG: ./internal/api/pb/sanguo/military/v1
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate adoption state before any conditional acceptance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/check_recruit_v2_bindings_json.py --self-test
+          state="$(python3 .github/scripts/check_recruit_v2_bindings_json.py --state)"
+          echo "BINDINGS_STATE=$state" >> "$GITHUB_ENV"
+          echo "State=$state; legacy is pre-adoption, NOT V2 acceptance; full API gate remains required"
+      - uses: actions/setup-go@v5
+        if: env.BINDINGS_STATE == 'v2'
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Install official tools and record exact provenance
+        if: env.BINDINGS_STATE == 'v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/recruit-bindings"
+          echo "EVIDENCE=$RUNNER_TEMP/recruit-bindings" >> "$GITHUB_ENV"
+          sudo apt-get update
+          apt-cache policy protobuf-compiler | tee "$RUNNER_TEMP/recruit-bindings/apt.txt"
+          sudo apt-get install --no-install-recommends -y protobuf-compiler
+          GOBIN="$RUNNER_TEMP/recruit-bin" go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.5
+          echo "$RUNNER_TEMP/recruit-bin" >> "$GITHUB_PATH"
+          {
+            go version
+            go env GOVERSION GOTOOLCHAIN
+            protoc --version
+            dpkg-query -W protobuf-compiler libprotobuf32t64 libprotoc32t64
+            "$RUNNER_TEMP/recruit-bin/protoc-gen-go" --version
+            go version -m "$RUNNER_TEMP/recruit-bin/protoc-gen-go"
+            sha256sum "$(command -v protoc)" "$RUNNER_TEMP/recruit-bin/protoc-gen-go"
+          } | tee "$RUNNER_TEMP/recruit-bindings/tools.txt"
+          test "$(go env GOVERSION)" = go1.23.12
+          test "$(go env GOTOOLCHAIN)" = local
+          test "$(protoc --version)" = 'libprotoc 3.21.12'
+          test "$("$RUNNER_TEMP/recruit-bin/protoc-gen-go" --version)" = 'protoc-gen-go v1.36.5'
+      - name: Record source and enforce tracked formatting
+        if: env.BINDINGS_STATE == 'v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            git rev-parse HEAD HEAD^{tree} "$BASELINE" "$BASELINE^{tree}"
+            git ls-files -z -- spec/proto internal/api/proto internal/api/pb \
+              .github/workflows/recruit-v2-bindings.yml .github/scripts/check_recruit_v2_bindings_json.py \
+              go.mod go.sum | xargs -0 sha256sum
+          } | tee "$EVIDENCE/source.txt"
+          git ls-files --error-unmatch "${PKG#./}/military.pb.go" "${PKG#./}/recruit_v2_contract_test.go"
+          gofmt="$(go env GOROOT)/bin/gofmt"
+          go version "$gofmt" | tee "$EVIDENCE/gofmt-version.txt"
+          "$gofmt" -d "$PKG"/*.go | tee "$EVIDENCE/gofmt.diff"
+          test ! -s "$EVIDENCE/gofmt.diff"
+          python3 .github/scripts/check_recruit_v2_bindings_json.py --self-test
+      - name: Regenerate full baseline and candidate without modifying checkout
+        if: env.BINDINGS_STATE == 'v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variant in baseline candidate; do
+            ref="$BASELINE"
+            if [[ "$variant" == candidate ]]; then ref=HEAD; fi
+            root="$RUNNER_TEMP/recruit-$variant"
+            mkdir -p "$root" "$EVIDENCE/$variant"
+            git archive "$ref" | tar -x -C "$root"
+            cp "$root/$PKG/military.pb.go" "$EVIDENCE/$variant/tracked.pb.go"
+            ROOT="$root" VARIANT="$variant" python3 - <<'PY'
+          import os, pathlib, re
+          root = pathlib.Path(os.environ['ROOT'])
+          path = 'sanguo/military/v1/military.proto'
+          mirror = root / 'internal/api/proto' / path
+          original = mirror.read_text()
+          # The frozen baseline predates mirror adoption, not canonical SPEC.
+          if os.environ['VARIANT'] == 'candidate':
+              canonical = (root / 'spec/proto' / path).read_text()
+              package = re.findall(r'^option go_package = .*;$', original, re.M)
+              assert len(package) == 1
+              adapted, count = re.subn(r'^option go_package = .*;$', package[0], canonical, flags=re.M)
+              assert count == 1 and adapted == original, 'canonical/API mirror drift'
+              mirror.write_text(adapted)
+          PY
+            cp "$root/internal/api/proto/sanguo/military/v1/military.proto" "$EVIDENCE/$variant/input.proto"
+            (
+              cd "$root"
+              protoc -I internal/api/proto -I spec/proto \
+                --go_out=internal/api/pb --go_opt=paths=source_relative \
+                --go_opt=Msanguo/common/v1/types.proto=github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1 \
+                internal/api/proto/sanguo/military/v1/military.proto
+            )
+            cp "$root/$PKG/military.pb.go" "$EVIDENCE/$variant/generated.pb.go"
+          done
+          python3 - <<'PY'
+          import os, pathlib, subprocess
+          e = pathlib.Path(os.environ['EVIDENCE'])
+          for name, before, after in (
+              ('baseline-drift', e/'baseline/tracked.pb.go', e/'baseline/generated.pb.go'),
+              ('complete-change', e/'baseline/tracked.pb.go', e/'candidate/generated.pb.go'),
+              ('candidate-drift', e/'candidate/tracked.pb.go', e/'candidate/generated.pb.go')):
+              result = subprocess.run(['git', 'diff', '--no-index', '--', str(before), str(after)], capture_output=True)
+              assert result.returncode in (0, 1), result.stderr
+              (e/(name+'.diff')).write_bytes(result.stdout)
+          before = (e/'baseline/tracked.pb.go').read_bytes()
+          after = (e/'baseline/generated.pb.go').read_bytes()
+          assert before.replace(b'// \tprotoc        v3.13.0\n', b'// \tprotoc        v3.21.12\n', 1) == after, 'non-header baseline drift'
+          assert (e/'candidate/tracked.pb.go').read_bytes() == (e/'candidate/generated.pb.go').read_bytes(), 'whole generated artifact mismatch'
+          PY
+          git diff --exit-code HEAD
+      - name: Preserve honest new API tests-first baseline compile result
+        if: env.BINDINGS_STATE == 'v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/recruit-baseline"
+          # Restore actual old binding, not regenerated source, then copy only tests.
+          cp "$EVIDENCE/baseline/tracked.pb.go" "$root/$PKG/military.pb.go"
+          cp "$PKG/recruit_v2_contract_test.go" "$root/$PKG/"
+          set +e
+          (cd "$root" && go test -count=1 -run '^$' "$PKG") > "$EVIDENCE/baseline-compile.txt" 2>&1
+          status=$?
+          set -e
+          cat "$EVIDENCE/baseline-compile.txt"
+          test "$status" -ne 0
+          grep -Eq 'undefined: (RecruitTroopV2Request|RecruitTroopV2Response|RecruitAcceptance)' "$EVIDENCE/baseline-compile.txt"
+          printf 'exit=%s; new-API tests-first compile failure, NOT behavioral regression\n' "$status" | tee "$EVIDENCE/baseline-result.txt"
+      - name: Compile and run complete actual bindings ordinary and race
+        if: env.BINDINGS_STATE == 'v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          go test -count=1 -run '^$' "$PKG" 2>&1 | tee "$EVIDENCE/compile.txt"
+          for mode in ordinary race; do
+            flags=()
+            if [[ "$mode" == race ]]; then flags=(-race); fi
+            go test "${flags[@]}" -count=1 -json "$PKG" \
+              2> "$EVIDENCE/$mode.stderr" | tee "$EVIDENCE/$mode.json"
+            python3 .github/scripts/check_recruit_v2_bindings_json.py "$EVIDENCE/$mode.json"
+          done
+          git diff --exit-code HEAD
+      - name: Hash all evidence
+        if: always() && env.BINDINGS_STATE == 'v2'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/recruit-bindings"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always() && env.BINDINGS_STATE == 'v2'
+        with:
+          name: recruit-v2-bindings-evidence
+          path: ${{ runner.temp }}/recruit-bindings
+          if-no-files-found: error
+          retention-days: 14
