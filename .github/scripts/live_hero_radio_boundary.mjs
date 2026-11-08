@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { withHeroRuntime } from './live_hero_layout_runtime.mjs';
 import { inspect, visibleTarget, hasFullVisibility, wheelPlan, wheelReady, targetDelta } from './live_hero_layout_geometry.mjs';
-import { installRadioObserver, validateRadioPrecondition, validateRadioTrial, validateCompletion } from './live_hero_radio_observer.mjs';
+import { installRadioCollector } from './live_hero_radio_collector.mjs';
+import { validateRadioPrecondition, validateRadioTrial, validateCompletion } from './live_hero_radio_replay.mjs';
 
 const panelSelector = '[data-center-panel="hero"]';
 const rosterSelector = '[data-role="hero-scroll"]';
@@ -24,7 +25,7 @@ async function verify(h) {
   assert.equal(provenance.product.head, report.productHead); assert.equal(provenance.product.tree, report.tree);
   assert.deepEqual(provenance.product.parents, report.parents.split(' '));
   assert.equal(provenance.qa.head, report.qaHead); assert.equal(provenance.runtime.head, report.runtimeHead);
-  const radio = report.radio = { schema: 1, variant, viewport: { width: report.width, height: report.height }, provenance, trials: [], complete: false };
+  const radio = report.radio = { schema: 2, variant, viewport: { width: report.width, height: report.height }, provenance, trials: [], complete: false };
   report.radioInputs = []; report.radioGeometry = []; report.radioRasters = [];
   const roster = panel.locator(rosterSelector), row = panel.locator(`li[data-hero-id="${hero}"]`);
   const gold = panel.locator('input[data-action="hero-largess-kind"][value="gold"]');
@@ -73,7 +74,7 @@ async function verify(h) {
   await reach(row.locator('.hero-list-row-primary'), row.locator('[data-role="hero-list-avatar"]'), 'detail-entry');
   const detail = await responseAfter(() => click(row.locator('.hero-list-row-primary'), 'actual-name'), 'hero.v1.GetHeroDetail');
   assert.equal(detail.detail.hero_id, hero); await gold.waitFor(); await settled();
-  observer = await page.evaluateHandle(installRadioObserver, { panelSelector, maxEvents: 256 });
+  observer = await page.evaluateHandle(installRadioCollector, { panelSelector, maxEvents: 256 });
   try {
     for (let index = 1; index <= 3; index++) {
       stage(`radio boundary trial ${index}`);
@@ -94,7 +95,7 @@ async function verify(h) {
             for (let i = 0; i < 2; i++) { await new Promise(requestAnimationFrame); frames.push(o.snapshot(heldId)); }
             return frames;
           }, before.active.id);
-          trial.events = await observer.evaluate((o, start) => { const read = o.readEvents(); return { events: read.events.slice(start), overflow: read.overflow }; }, cursor);
+          trial.events = await observer.evaluate((o, start) => { const read = o.readEvents(); return { ...read, events: read.events.slice(start) }; }, cursor);
           save(); validateRadioTrial(trial, { variant, direction });
           await capture(`trial-${index}-${direction}-after`, before.active.id);
           await settled();
@@ -105,7 +106,7 @@ async function verify(h) {
     assertOrder(radio.trials, variant); radio.complete = true; save();
     validateCompletion(radio, { variant, width: report.width, provenance });
   } finally {
-    report.radioObserverEvents = await observer.evaluate(o => o.readEvents()); save();
+    report.radioCollectorEvents = await observer.evaluate(o => o.readEvents()); save();
     await observer.evaluate(o => o.dispose()); await observer.dispose();
   }
 }
@@ -117,13 +118,13 @@ if (process.argv.includes('--self-test')) {
   }
   assert.throws(() => assertOrder([], 'unknown'));
   const descriptor = (id, extra = {}) => ({ id, tag: 'INPUT', type: 'radio', name: 'hero-largess-kind', value: 'gold', checked: true,
-    disabled: false, effectiveDisabled: false, tabIndex: 0, formId: null, scopeId: 1, connected: true, inPanel: true,
-    rect: { x: 10, y: 10, width: 20, height: 20 }, ancestors: [],
+    disabled: false, effectiveDisabled: false, tabIndex: 0, tabIndexAttribute: null, formId: null, scopeId: 1, connected: true, inPanel: true,
+    rect: { x: 10, y: 10, width: 20, height: 20 }, ancestors: [{ id: 5, tag: 'SECTION', hidden: false, inert: false, ariaHidden: null, display: 'block', visibility: 'visible', open: null, inSummary: null }],
     own: { hidden: false, inert: false, ariaHidden: null, display: 'block', visibility: 'visible', open: null }, ...extra });
   const first = descriptor(2, { tag: 'BUTTON', type: 'button', name: '', value: '', checked: false });
   const gold = descriptor(3), item = descriptor(4, { value: 'item', checked: false });
-  const before = direction => structuredClone({ schema: 1, at: 1, mono: 1, rootId: 5, overflow: false,
-    active: structuredClone(direction === 'forward' ? gold : first), held: null, candidates: [first, gold, item],
+  const before = direction => structuredClone({ schema: 2, at: 1, mono: 1, rootId: 5, overflow: false, failure: null,
+    active: structuredClone(direction === 'forward' ? gold : first), held: null, candidates: [first, gold, item], radios: [gold, item],
     eligibleIds: [2, 3, 4], intendedIds: [2, 3], details: [], submit: descriptor(6, { tag: 'BUTTON', type: 'button', disabled: true, effectiveDisabled: true }) });
   const invalid = [
     b => { b.active = descriptor(99, { tag: 'BODY', type: '', inPanel: false }); },
@@ -136,6 +137,10 @@ if (process.argv.includes('--self-test')) {
     b => { b.candidates[2].formId = 99; },
     b => { b.submit.disabled = false; },
     b => { b.overflow = true; },
+    b => { b.schema = 1; },
+    b => { b.failure = 'collector failed'; },
+    b => { b.radios = []; },
+    b => { delete b.candidates[1].tabIndexAttribute; },
   ];
   for (const [variant, direction] of [['baseline', 'forward'], ['fixed', 'forward'], ['fixed', 'reverse']]) {
     let dispatched = 0;
@@ -148,5 +153,5 @@ if (process.argv.includes('--self-test')) {
       assert.equal(dispatched, 0, 'Invalid immediate before must never call native Tab');
     }
   }
-  console.log('PASS exact trial ordering and production dispatch guard: 3 valid paths, 30 zero-input negatives; no browser/services');
+  console.log('PASS exact trial ordering and production dispatch guard: 3 valid paths, 42 zero-input negatives including all original 30; no browser/services');
 } else await withHeroRuntime(verify);

@@ -38,9 +38,12 @@ jobs:
       QA_GEOMETRY_HEAD: 283160ae6f9970ff396383ae6815ed9783c64753
       QA_GEOMETRY_TREE: 5a731de39fec4e35ea120f83492f8d5c93bf4841
       QA_GEOMETRY_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
-      QA_OBSERVER_HEAD: c1a06166bc5ce04b0b20538f31a3a89473353478
-      QA_OBSERVER_TREE: e7377bb85b57ac34ab466caa71b1419f575e2f53
-      QA_OBSERVER_PARENTS: 7b22856de9b80af8489f484b51bb6831a6d64b22
+      QA_COLLECTOR_HEAD: 3d62c3d100108b3f2430164ed7b140e4e6330011
+      QA_COLLECTOR_TREE: ac58ad83d44af9b4797f35cf76b180a3b7cad276
+      QA_COLLECTOR_PARENTS: cbdd409b66f48942071f8b793494d5f4af14d6a9
+      QA_REPLAY_HEAD: df9a0968a7d98cffbf2e78d3712b5e99f4c34f2e
+      QA_REPLAY_TREE: 4993ee8ff66861a766894a2e14ef5d6b854b4710
+      QA_REPLAY_PARENTS: cbdd409b66f48942071f8b793494d5f4af14d6a9
       QA_OUT: ${{ github.workspace }}/evidence
       QA_PROVENANCE: ${{ github.workspace }}/evidence/radio-provenance.json
     services:
@@ -92,8 +95,14 @@ jobs:
           persist-credentials: false
       - uses: actions/checkout@v4
         with:
-          ref: ${{ env.QA_OBSERVER_HEAD }}
-          path: observer-source
+          ref: ${{ env.QA_COLLECTOR_HEAD }}
+          path: collector-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_REPLAY_HEAD }}
+          path: replay-source
           fetch-depth: 2
           persist-credentials: false
       - name: Verify exact reviewed inputs before copying any files
@@ -104,7 +113,7 @@ jobs:
           python3 - <<'PY'
           import json, os, re, subprocess
           provenance = {}
-          for name, directory in [('qa', 'qa-source'), ('product', 'target'), ('runtime', 'runtime-source'), ('geometry', 'geometry-source'), ('observer', 'observer-source')]:
+          for name, directory in [('qa', 'qa-source'), ('product', 'target'), ('runtime', 'runtime-source'), ('geometry', 'geometry-source'), ('collector', 'collector-source'), ('replay', 'replay-source')]:
               def git(*args): return subprocess.check_output(['git', '-C', directory, *args], text=True).strip()
               actual = {'head': git('rev-parse', 'HEAD'), 'tree': git('rev-parse', 'HEAD^{tree}'), 'parents': git('show', '-s', '--format=%P', 'HEAD').split(), 'clean': not git('status', '--porcelain')}
               expected_head = os.environ['QA_HEAD' if name == 'qa' else f'QA_{name.upper()}_HEAD']
@@ -138,16 +147,22 @@ jobs:
           npm run build 2>&1 | tee ../../evidence/client-build.log
           cp ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs .
           cp ../../geometry-source/.github/scripts/live_hero_layout_geometry.mjs .
-          cp ../../observer-source/.github/scripts/live_hero_radio_observer.mjs .
+          cp ../../collector-source/.github/scripts/live_hero_radio_collector.mjs .
+          cp ../../replay-source/.github/scripts/live_hero_radio_replay.mjs .
           cp ../../qa-source/.github/scripts/live_hero_radio_boundary.mjs .qa-live-hero-radio.mjs
           cmp live_hero_layout_runtime.mjs ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs
           cmp live_hero_layout_geometry.mjs ../../geometry-source/.github/scripts/live_hero_layout_geometry.mjs
-          cmp live_hero_radio_observer.mjs ../../observer-source/.github/scripts/live_hero_radio_observer.mjs
+          cmp live_hero_radio_collector.mjs ../../collector-source/.github/scripts/live_hero_radio_collector.mjs
+          cmp live_hero_radio_replay.mjs ../../replay-source/.github/scripts/live_hero_radio_replay.mjs
           cmp .qa-live-hero-radio.mjs ../../qa-source/.github/scripts/live_hero_radio_boundary.mjs
           node ../../runtime-source/.github/scripts/live_hero_layout_runtime.test.mjs | tee ../../evidence/runtime-tests.log
           node ../../geometry-source/.github/scripts/live_hero_layout_geometry.test.mjs | tee ../../evidence/geometry-tests.log
-          ln -s ../../target/client/node_modules ../../observer-source/client/node_modules
-          node ../../observer-source/.github/scripts/live_hero_radio_observer.test.mjs | tee ../../evidence/observer-tests.log
+          cp ../../replay-source/.github/scripts/live_hero_radio_replay{,.test}.mjs ../../collector-source/.github/scripts/
+          cmp ../../collector-source/.github/scripts/live_hero_radio_replay.mjs ../../replay-source/.github/scripts/live_hero_radio_replay.mjs
+          cmp ../../collector-source/.github/scripts/live_hero_radio_replay.test.mjs ../../replay-source/.github/scripts/live_hero_radio_replay.test.mjs
+          ln -s ../../target/client/node_modules ../../collector-source/client/node_modules
+          node ../../collector-source/.github/scripts/live_hero_radio_collector.test.mjs | tee ../../evidence/collector-tests.log
+          node ../../collector-source/.github/scripts/live_hero_radio_replay.test.mjs | tee ../../evidence/replay-tests.log
           node .qa-live-hero-radio.mjs --self-test | tee ../../evidence/runner-tests.log
           npx --no-install playwright install --with-deps chromium
       - name: Verify all native radio boundary trials
