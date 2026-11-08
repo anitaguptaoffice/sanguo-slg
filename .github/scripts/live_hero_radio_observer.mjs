@@ -100,11 +100,9 @@ function snapshot(value) {
   for (const detail of value.details) { id(detail.id); assert.equal(typeof detail.open, 'boolean'); }
 }
 const group = (a, b) => a.type === 'radio' && b.type === 'radio' && a.name && a.name === b.name && a.formId === b.formId && a.scopeId === b.scopeId;
-export function validateRadioTrial(trial, { variant, direction }) {
+export function validateRadioPrecondition(before, { variant, direction }) {
   assert.ok(['baseline', 'fixed'].includes(variant)); assert.ok(['forward', 'reverse'].includes(direction));
-  assert.ok(variant === 'fixed' || direction === 'forward'); assert.equal(trial.direction, direction);
-  assert.ok(Number.isSafeInteger(trial.index) && trial.index >= 1 && trial.index <= 3);
-  const before = trial.before; snapshot(before); assert.equal(trial.after.length, 3); trial.after.forEach(snapshot);
+  assert.ok(variant === 'fixed' || direction === 'forward'); snapshot(before); usable(before.active);
   node(before.submit); assert.equal(before.submit.disabled, true);
   const eligible = before.candidates.filter(n => n.type !== 'radio' || n.tabIndex >= 0 && !n.effectiveDisabled && [n.own, ...n.ancestors].every(s => !s.hidden && !s.inert && s.display !== 'none' && (s.open !== false || s.inSummary === true)));
   assert.deepEqual(before.eligibleIds, eligible.map(n => n.id));
@@ -121,7 +119,13 @@ export function validateRadioTrial(trial, { variant, direction }) {
   assert.equal(before.intendedIds.at(-1), gold.id); assert.ok(!before.intendedIds.includes(item.id));
   const first = before.candidates.find(n => n.id === before.intendedIds[0]); usable(first);
   const original = direction === 'forward' ? gold : first, expected = direction === 'forward' ? first : gold;
-  assert.equal(before.active.id, original.id); assert.equal(trial.events.overflow, false);
+  assert.equal(before.active.id, original.id);
+  return { original, expected };
+}
+export function validateRadioTrial(trial, { variant, direction }) {
+  const before = trial.before, { original, expected } = validateRadioPrecondition(before, { variant, direction });
+  assert.equal(trial.direction, direction); assert.ok(Number.isSafeInteger(trial.index) && trial.index >= 1 && trial.index <= 3);
+  assert.equal(trial.after.length, 3); trial.after.forEach(snapshot); assert.equal(trial.events.overflow, false);
   let previous = 0;
   for (const event of trial.events.events) {
     id(event.id); assert.ok(event.id > previous); previous = event.id;

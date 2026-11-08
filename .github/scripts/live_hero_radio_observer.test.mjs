@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { installRadioObserver, validateRadioTrial, validateCompletion } from './live_hero_radio_observer.mjs';
+import { installRadioObserver, validateRadioPrecondition, validateRadioTrial, validateCompletion } from './live_hero_radio_observer.mjs';
 const { JSDOM } = createRequire(new URL('../../client/package.json', import.meta.url))('jsdom');
 const clone = value => JSON.parse(JSON.stringify(value));
 const html = '<section id="panel"><button id="first">first</button><input type="radio" name="hero-largess-kind" value="gold" checked><input type="radio" name="hero-largess-kind" value="item"><button data-action="hero-largess-submit" disabled>submit</button></section>';
@@ -103,6 +103,26 @@ function trial(variant = 'fixed', direction = 'forward') {
   return { index: 1, direction, before, after, events: { events: [event, { id: 2, type: 'focusout', at: 3, mono: 3, trusted: true, target: originalNode, active: clone(after[0].active) }, ...(variant === 'fixed' ? [{ id: 3, type: 'focusin', at: 3, mono: 3, trusted: true, target: clone(after[0].active), active: clone(after[0].active) }] : [])], overflow: false } };
 }
 for (const [variant, direction] of [['baseline', 'forward'], ['fixed', 'forward'], ['fixed', 'reverse']]) validateRadioTrial(trial(variant, direction), { variant, direction });
+const guardChanges = [s => { s.active.tag = 'BODY'; s.active.inPanel = false; }, s => { s.active = null; },
+  s => { s.active.inPanel = false; }, s => { s.active.connected = false; }, s => { s.active.id = 999; },
+  s => { s.active.own.visibility = 'hidden'; }, s => { s.candidates[1].checked = false; },
+  s => { s.candidates[2].name = 'other'; }, s => { s.overflow = true; }, s => delete s.active.rect];
+for (const direction of ['forward', 'reverse']) for (const change of guardChanges) {
+  const value = trial('fixed', direction); change(value.before);
+  assert.throws(() => validateRadioPrecondition(value.before, { variant: 'fixed', direction }));
+  assert.throws(() => validateRadioTrial(value, { variant: 'fixed', direction }), 'post-validation must reuse same guard');
+}
+for (const [variant, direction] of [['baseline', 'forward'], ['fixed', 'forward'], ['fixed', 'reverse']]) {
+  const value = trial(variant, direction), checked = validateRadioPrecondition(value.before, { variant, direction });
+  assert.equal(checked.original.id, value.before.active.id); validateRadioTrial(value, { variant, direction });
+}
+const guardLive = fixture(); guardLive.gold.focus();
+validateRadioPrecondition(clone(guardLive.observer.snapshot()), { variant: 'fixed', direction: 'forward' });
+guardLive.gold.blur();
+assert.throws(() => validateRadioPrecondition(clone(guardLive.observer.snapshot()), { variant: 'fixed', direction: 'forward' }), 'actual BODY rejected');
+guardLive.gold.focus(); guardLive.item.checked = true;
+assert.throws(() => validateRadioPrecondition(clone(guardLive.observer.snapshot()), { variant: 'fixed', direction: 'forward' }), 'actual changed group rejected');
+guardLive.observer.dispose(); guardLive.w.close();
 const mutations = [
   t => delete t.before.active.checked,
   t => delete t.before.candidates[1].formId,
@@ -170,4 +190,4 @@ for (const variant of ['baseline', 'fixed']) validateCompletion(complete(variant
 for (const change of [r => r.trials.pop(), r => r.trials.push(r.trials[0]), r => r.trials.reverse(), r => { r.trials[0].direction = 'other'; }, r => { r.viewport.height = 900; }, r => { r.complete = false; }, r => { r.provenance.product.head = 'd'.repeat(40); }]) {
   const value = complete(); change(value); assert.throws(() => validateCompletion(value, { variant: 'fixed', width: 1280, provenance }));
 }
-console.log(`PASS installed read-only observer, baseline/fixed forward/reverse and ${mutations.length + 10} negative controls; no native browser/services`);
+console.log(`PASS installed read-only observer, baseline/fixed forward/reverse and ${mutations.length + 10} original negative controls plus ${guardChanges.length * 2 + 2} precondition/shared guards; no native browser/services`);
