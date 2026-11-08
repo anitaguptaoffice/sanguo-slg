@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { visibleTarget } from './live_hero_layout_geometry.mjs';
 
 const finite = value => assert.ok(Number.isFinite(value), 'Missing finite number');
 const id = value => assert.ok(Number.isSafeInteger(value) && value > 0, 'Missing node identity');
@@ -59,7 +60,70 @@ const ordered = (a, b) => { clock(a); clock(b); assert.ok(a.at <= b.at && a.mono
 const identity = value => [value.id, value.tag, value.type, value.name, value.value, value.checked, value.formId, value.scopeId];
 export function validateBefore(value) {
   const gold = boundary(value); usable(value.active);
-  assert.deepEqual(identity(value.active), identity(gold)); return gold.id;
+  assert.deepEqual(identity(value.active), identity(gold)); validateGeometry(value);
+  focusFrame(value.geometryAfter, value, 'fixed', false); return gold.id;
+}
+function geometry(value) {
+  finite(value.at); assert.equal(typeof value.name, 'string');
+  assert.ok(value.open === null || typeof value.open === 'boolean');
+  for (const entry of [value, ...value.ancestors]) {
+    assert.equal(typeof entry.name, 'string');
+    for (const key of ['x', 'y', 'width', 'height']) finite(entry.rect[key]);
+    for (const key of ['scrollTop', 'clientHeight', 'scrollHeight']) { finite(entry[key]); assert.ok(entry[key] >= 0); }
+    assert.ok(entry.scrollTop <= Math.max(0, entry.scrollHeight - entry.clientHeight) + 1);
+  }
+  for (const entry of value.ancestors) for (const key of ['overflowX', 'overflowY', 'display', 'visibility', 'position', 'zIndex']) assert.equal(typeof entry[key], 'string');
+  for (const key of ['left', 'top', 'right', 'bottom']) finite(value.visible[key]);
+  assert.ok(value.ancestors.length > 0); assert.deepEqual(value.ancestors[0].rect, value.rect); assert.equal(value.ancestors[0].name, value.name);
+  for (const key of ['scrollTop', 'clientHeight', 'scrollHeight']) assert.equal(value[key], value.ancestors[0][key]);
+  const positive = value.visible.right > value.visible.left && value.visible.bottom > value.visible.top;
+  if (positive) assert.ok(value.visible.left >= value.rect.x && value.visible.top >= value.rect.y && value.visible.right <= value.rect.x + value.rect.width && value.visible.bottom <= value.rect.y + value.rect.height);
+  assert.equal(value.points.length, positive ? 9 : 0);
+  value.points.forEach((point, index) => {
+    finite(point.x); finite(point.y); assert.equal(typeof point.reachesTarget, 'boolean');
+    assert.ok(point.hit === null || typeof point.hit === 'string');
+    const x = value.visible.left + (value.visible.right - value.visible.left) * [0.1, 0.5, 0.9][index % 3];
+    const y = value.visible.top + (value.visible.bottom - value.visible.top) * [0.1, 0.5, 0.9][Math.floor(index / 3)];
+    assert.ok(Math.abs(point.x - x) < 0.001 && Math.abs(point.y - y) < 0.001);
+    if (point.reachesTarget) assert.ok(point.hit);
+  });
+}
+export function validateGeometry(frame, anchor = null, requireVisible = true) {
+  const gold = boundary(frame), prior = boundary(frame.geometryAfter);
+  ordered(frame, frame.geometryAfter); assert.deepEqual(identity(prior), identity(gold));
+  assert.equal(frame.geometryAfter.rootId, frame.rootId); assert.deepEqual(frame.geometryAfter.details, frame.details);
+  assert.deepEqual(prior.ancestors.map(n => n.id), gold.ancestors.map(n => n.id));
+  const { gold: target, roster } = frame.geometry; geometry(target); geometry(roster);
+  for (const value of [target, roster]) assert.ok(frame.at <= value.at && value.at <= frame.geometryAfter.at);
+  assert.match(target.name, /^input#.* hero-largess-kind$/); assert.match(roster.name, / hero-scroll$/);
+  for (const key of ['x', 'y', 'width', 'height']) {
+    assert.ok(Math.abs(target.rect[key] - gold.rect[key]) <= 1 && Math.abs(target.rect[key] - prior.rect[key]) <= 1);
+  }
+  if (frame.held) {
+    node(frame.geometryAfter.held); assert.deepEqual([identity(frame.geometryAfter.held), frame.geometryAfter.held.connected, frame.geometryAfter.held.inPanel], [identity(frame.held), frame.held.connected, frame.held.inPanel]);
+  }
+  assert.equal(target.ancestors.length, gold.ancestors.length + 1);
+  target.ancestors.slice(1).forEach((entry, i) => assert.ok(entry.name.startsWith(gold.ancestors[i].tag.toLowerCase() + '#')));
+  const owners = target.ancestors.map((entry, i) => [entry, i]).filter(([entry]) => entry.name === roster.name);
+  assert.equal(owners.length, 1); const [owner, index] = owners[0]; assert.ok(index > 0);
+  assert.ok(/auto|scroll/.test(owner.overflowY));
+  for (const key of ['scrollTop', 'scrollHeight', 'clientHeight']) assert.ok(Math.abs(owner[key] - roster[key]) <= 1);
+  for (const key of ['x', 'y', 'width', 'height']) assert.ok(Math.abs(owner.rect[key] - roster.rect[key]) <= 1);
+  assert.ok(target.at <= roster.at);
+  if (requireVisible) visibleTarget(target, true);
+  if (anchor) {
+    const oldGold = boundary(anchor);
+    assert.deepEqual(gold.ancestors.map(n => n.id), oldGold.ancestors.map(n => n.id));
+    assert.deepEqual(target.ancestors.map(n => n.name), anchor.geometry.gold.ancestors.map(n => n.name));
+    target.ancestors.forEach((entry, i) => {
+      const old = anchor.geometry.gold.ancestors[i];
+      const expected = Math.min(old.scrollTop, Math.max(0, entry.scrollHeight - entry.clientHeight));
+      const movement = entry.scrollTop - expected, extentChange = entry.scrollHeight - old.scrollHeight;
+      const anchored = Math.abs((target.rect.y - entry.rect.y) - (anchor.geometry.gold.rect.y - old.rect.y)) <= 1;
+      const bounded = movement >= Math.min(0, extentChange) - 1 && movement <= Math.max(0, extentChange) + 1;
+      assert.ok(Math.abs(movement) <= 1 || anchored && bounded, 'Only unchanged/clamped scroll or extent-bounded focus anchoring');
+    });
+  }
 }
 export function correlateCity(arm, rows, returned, returnedAt) {
   finite(arm.at); natural(arm.count); id(arm.lastId); finite(returnedAt);
@@ -93,6 +157,20 @@ function rowPoint(point, hero) {
   assert.equal(point.roster.role, 'hero-scroll'); assert.equal(point.roster.connected, true);
   assert.equal(point.replacement.connected, true); assert.ok(point.replacement.ancestorIds.includes(point.roster.id));
 }
+function focusFrame(frame, before, variant, heldRequired = true) {
+  const gold = boundary(frame), original = before.active.id;
+  assert.equal(frame.rootId, before.rootId); assert.deepEqual(frame.details, before.details);
+  assert.deepEqual(identity(gold).slice(1), identity(before.active).slice(1));
+  if (heldRequired) { node(frame.held); assert.equal(frame.held.id, original); }
+  if (variant === 'fixed') {
+    usable(frame.active); assert.deepEqual(identity(frame.active), identity(before.active)); assert.equal(gold.id, original);
+    if (heldRequired) { usable(frame.held); assert.deepEqual(identity(frame.held), identity(before.active)); }
+  } else {
+    assert.equal(frame.active.tag, 'BODY'); assert.equal(frame.active.connected, true); assert.equal(frame.active.inPanel, false);
+    assert.equal(frame.held.connected, false); assert.equal(frame.held.inPanel, false); assert.notEqual(gold.id, original);
+    assert.deepEqual(identity(frame.held).slice(0, -1), identity(before.active).slice(0, -1));
+  }
+}
 export function validateRefresh(phase, variant, hero) {
   assert.ok(['baseline', 'fixed'].includes(variant)); id(hero); clock(phase.windowStart); natural(phase.cursor);
   const original = validateBefore(phase.before); ordered(phase.windowStart, phase.before);
@@ -104,22 +182,12 @@ export function validateRefresh(phase, variant, hero) {
   assert.equal(start.original.id, start.replacement.id); assert.equal(start.original.connected, true);
   assert.equal(end.original.id, start.original.id); assert.equal(end.original.connected, false);
   assert.notEqual(end.replacement.id, start.original.id); assert.equal(end.roster.id, start.roster.id);
-  ordered(phase.before, start); ordered(start, end); ordered(end, phase.settled);
+  ordered(phase.before.geometryAfter, start); ordered(start, end); ordered(end, phase.settled);
   assert.ok(start.at <= phase.arm.at && phase.arm.at <= end.at && phase.response.returnedAt <= phase.settled.at);
   let previous = phase.settled;
   for (const frame of phase.after) {
-    const gold = boundary(frame); node(frame.held); ordered(previous, frame); previous = frame;
-    assert.equal(frame.rootId, phase.before.rootId); assert.deepEqual(frame.details, phase.before.details);
-    assert.equal(frame.held.id, original);
-    assert.deepEqual(identity(gold).slice(1), identity(phase.before.active).slice(1));
-    if (variant === 'fixed') {
-      usable(frame.active); usable(frame.held);
-      for (const value of [gold, frame.active, frame.held]) assert.deepEqual(identity(value), identity(phase.before.active));
-    } else {
-      assert.equal(frame.active.tag, 'BODY'); assert.equal(frame.active.connected, true); assert.equal(frame.active.inPanel, false);
-      assert.equal(frame.held.connected, false); assert.equal(frame.held.inPanel, false); assert.notEqual(gold.id, original);
-      assert.deepEqual(identity(frame.held).slice(0, -1), identity(phase.before.active).slice(0, -1));
-    }
+    validateGeometry(frame, variant === 'fixed' ? phase.before : null, variant === 'fixed'); ordered(previous, frame); previous = frame.geometryAfter;
+    for (const point of [frame, frame.geometryAfter]) focusFrame(point, phase.before, variant);
   }
   ordered(previous, phase.eventsEnd);
   let eventId = phase.cursor, eventTime = phase.windowStart;
@@ -133,7 +201,7 @@ export function validateRefresh(phase, variant, hero) {
   assert.ok(phase.events.events.length <= (variant === 'baseline' ? 1 : 0));
 }
 export function validateCompletion(report, { variant, width, provenance }) {
-  assert.equal(report.schema, 1); assert.equal(report.variant, variant); assert.equal(report.complete, true);
+  assert.equal(report.schema, 2); assert.equal(report.variant, variant); assert.equal(report.complete, true);
   assert.ok([1280, 1600].includes(width)); assert.deepEqual(report.viewport, { width, height: width === 1280 ? 720 : 900 });
   assert.deepEqual(report.provenance, provenance);
   for (const name of ['qa', 'assertions', 'observer', 'runtime', 'geometry', 'product']) {
@@ -141,4 +209,13 @@ export function validateCompletion(report, { variant, width, provenance }) {
     for (const sha of [entry.head, entry.tree, ...entry.parents]) assert.match(sha, /^[a-f0-9]{40}$/);
   }
   validateRefresh(report.refresh, variant, report.hero);
+  assert.deepEqual(report.rasters.map(r => r.label), ['natural-refresh-before', 'natural-refresh-after']);
+  ordered(report.refresh.windowStart, report.rasters[0].before); ordered(report.rasters[0].after.geometryAfter, report.refresh.before);
+  ordered(report.refresh.eventsEnd, report.rasters[1].before);
+  report.rasters.forEach(raster => ordered(raster.before.geometryAfter, raster.after));
+  for (const raster of report.rasters) for (const frame of [raster.before, raster.after]) {
+    const before = raster.label.endsWith('-before'), fixed = variant === 'fixed';
+    validateGeometry(frame, fixed ? report.refresh.before : null, fixed || before);
+    for (const point of [frame, frame.geometryAfter]) focusFrame(point, report.refresh.before, before ? 'fixed' : variant, !before);
+  }
 }
