@@ -4,8 +4,9 @@ import { execFileSync, spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import path from 'node:path';
 import { redact, commandTimeout, deadlineRace, acquireOwned, stopOwned, stopBrowser } from './live_hero_layout_runtime.mjs';
+export const BOOTSTRAP_HERO_READ = 'hero.v1.ListPlayerHeroes';
 export const SEND = 'chat.v1.SendChatMessage', LIST = 'chat.v1.ListChatMessages';
-const allowed = new Set(['account.v1.ListGameServers', 'account.v1.Login', 'account.v1.Register', 'account.v1.EnterGameServer',
+const allowed = new Set([BOOTSTRAP_HERO_READ, 'account.v1.ListGameServers', 'account.v1.Login', 'account.v1.Register', 'account.v1.EnterGameServer',
   'world.v1.ListPlayerCities', 'world.v1.CreateCity', 'domestic.v1.GetCityState', 'content.v1.ListPlayerMail',
   'quest.v1.ListPlayerQuests', 'military.v1.ListBattleReports', 'military.v1.ListMarches', 'content.v1.ListPlayerBag', LIST, SEND]);
 export async function guarded(signal, action) {
@@ -19,26 +20,44 @@ export function observer(decode, requests) {
   const pending = new Map(), seen = new Set();
   return { pending, sent(bytes, timestamp) {
     const packet = decode('common.v1.ClientPacket', bytes);
-    assert.ok(allowed.has(packet.route), 'Unapproved route');
+    const safeRoute = typeof packet.route === 'string' && packet.route.length <= 96 && /^[a-z]+\.v[0-9]+\.[A-Za-z]{1,64}$/.test(packet.route) ? packet.route : '[invalid route]';
+    assert.ok(allowed.has(packet.route), `Unapproved route ${safeRoute} (request rejected)`);
     assert.ok(packet.trace_id && !seen.has(packet.trace_id), 'Missing/duplicate trace'); seen.add(packet.trace_id);
     const row = { id: requests.length + 1, route: packet.route, sentAt: timestamp };
     if ([SEND, LIST].includes(row.route)) { row.request = decode(`${row.route}Request`, packet.payload); destination(row.request); }
+    if (row.route === BOOTSTRAP_HERO_READ) {
+      assert.ok(!requests.some(r => r.route === BOOTSTRAP_HERO_READ), 'Repeated bootstrap hero read');
+      row.request = decode(`${row.route}Request`, packet.payload);
+      assert.deepEqual(row.request, { server_id: 1, page_size: 50, page_offset: 0 });
+    }
     if (row.route === SEND) assert.ok(requests.filter(r => r.route === SEND).length < 6, 'Extra send');
     pending.set(packet.trace_id, row); requests.push(row);
   }, received(bytes, timestamp) {
     const packet = decode('common.v1.ServerPacket', bytes), row = pending.get(packet.trace_id);
-    assert.ok(row, 'Unmatched response'); assert.ok(timestamp >= row.sentAt, 'Reply before request');
+    assert.ok(row, 'Unmatched response (tracked=false)'); assert.ok(timestamp >= row.sentAt, 'Reply before request');
     pending.delete(packet.trace_id); Object.assign(row, { code: packet.code, receivedAt: timestamp });
+    if (row.route === BOOTSTRAP_HERO_READ) {
+      assert.equal(packet.code, 0); const result = decode(`${row.route}Response`, packet.data);
+      assert.ok(Array.isArray(result.heroes) && result.heroes.length <= 50);
+      assert.ok(Number.isSafeInteger(result.total_count) && result.total_count >= result.heroes.length);
+      row.heroCount = result.heroes.length;
+    }
     if (!packet.code && [SEND, LIST].includes(row.route)) row.response = decode(`${row.route}Response`, packet.data);
     if (!packet.code && ['account.v1.Login', 'account.v1.EnterGameServer'].includes(row.route)) {
       row.owner = decode(`${row.route}Response`, packet.data).player.player_id;
     }
   } };
 }
+export function bootstrapRead(requests) {
+  const rows = requests.filter(r => r.route === BOOTSTRAP_HERO_READ); assert.equal(rows.length, 1);
+  const row = rows[0]; assert.equal(row.code, 0); assert.ok(Number.isFinite(row.receivedAt));
+  assert.deepEqual(row.request, { server_id: 1, page_size: 50, page_offset: 0 });
+  assert.ok(Number.isInteger(row.heroCount) && row.heroCount >= 0 && row.heroCount <= 50);
+}
 export function validateTraffic(requests, mode) {
   assert.ok(['baseline', 'fixed'].includes(mode));
   assert.ok(requests.every(r => allowed.has(r.route) && Number.isFinite(r.receivedAt)));
-  for (const name of ['account.v1.Register', 'account.v1.EnterGameServer', 'world.v1.CreateCity']) {
+  for (const name of [BOOTSTRAP_HERO_READ, 'account.v1.Register', 'account.v1.EnterGameServer', 'world.v1.CreateCity']) {
     assert.deepEqual(requests.filter(r => r.route === name).map(r => r.code), [0]);
   }
   assert.equal(requests.filter(r => r.route === SEND).length, mode === 'fixed' ? 6 : 0);
@@ -141,6 +160,7 @@ export async function withChatRuntime(check) {
     await ready('http://127.0.0.1:5173', start(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '5173', '--strictPort'], 'client', client));
     const protobuf = (await import('protobufjs')).default, { chromium } = await import('playwright'), root = new protobuf.Root();
     for (const file of ['common/v1/envelope.proto', 'common/v1/types.proto', 'account/v1/account.proto', 'chat/v1/chat.proto']) protobuf.parse(readFileSync(path.join(repo, 'spec/proto/sanguo', file), 'utf8'), root, { keepCase: true });
+    protobuf.parse(readFileSync(path.join(repo, 'internal/api/proto/sanguo/hero/v1/hero.proto'), 'utf8'), root, { keepCase: true });
     root.resolveAll();
     const decode = (name, bytes) => { const type = root.lookupType(`sanguo.${name}`); return type.toObject(type.decode(bytes), { longs: Number, defaults: true }); };
     const traffic = observer(decode, report.requests);
@@ -183,13 +203,13 @@ export async function withChatRuntime(check) {
     }
     report.phase = 'fresh account'; await act(() => page.goto('http://127.0.0.1:5173'));
     await act(() => page.locator('.server-list li[data-server-id="1"]').click());
-    await act(() => action('enter-game').click()); await act(() => action('toggle-chat').waitFor()); await settled();
+    await act(() => action('enter-game').click()); await act(() => action('toggle-chat').waitFor()); await settled(); assert.deepEqual(report.errors, [], 'Bootstrap traffic failed');
     for (const route of ['account.v1.Register', 'world.v1.CreateCity', 'domestic.v1.GetCityState']) assert.ok(report.requests.some(r => r.route === route && r.code === 0));
     const owners = report.requests.filter(r => r.owner !== undefined); assert.equal(owners.length, 2);
     const owner = owners[0].owner; assert.ok(Number.isSafeInteger(owner) && owner > 0); assert.ok(owners.every(r => r.owner === owner));
     for (const table of ['account', 'player', 'player_wallet', 'player_city']) assert.equal(sql(`SELECT count(*) FROM ${table}`), '1');
     const screenshot = label => act(() => page.screenshot({ path: path.join(out, `${label}.png`), timeout: 5000 }));
-    await act(() => action('toggle-chat').click()); await settled(); report.phase = 'native cases';
+    await act(() => action('toggle-chat').click()); await settled(); assert.deepEqual(report.errors, [], 'Bootstrap traffic failed'); bootstrapRead(report.requests); report.phase = 'native cases';
     await act(() => check({ page, panel, action, report, owner, act, pause, eventually, settled, calibrate, screenshot, save }));
     await settled(); report.inputs = await act(() => page.evaluate(() => window.__chatEvidence));
     const networkEnd = (await act(() => cdp.send('Performance.getMetrics'))).metrics.find(m => m.name === 'Timestamp').value;

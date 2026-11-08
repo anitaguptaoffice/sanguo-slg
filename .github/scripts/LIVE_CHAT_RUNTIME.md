@@ -18,3 +18,8 @@ Trusted document-bubble input snapshots follow production target handlers.
 Page/CDP monotonic clocks use before/after brackets; strict pending ordering only.
 Missed or ambiguous pending overlap remains UNOBSERVED, never a passing substitute.
 Pure tests do not run a browser. Native/full CI and exact combined review remain separate.
+
+Normal entry requires exactly one validated server1/page50/offset0 ListPlayerHeroes read.
+Its production schema and success are checked; every other hero route stays forbidden.
+Unknown routes record only safe bounded names; bootstrap errors stop before scenario actions.
+The earlier generic unknown-route artifacts remain failure evidence, not route identification.

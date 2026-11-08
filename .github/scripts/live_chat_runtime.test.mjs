@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { SEND, LIST, observer, destination, validateTraffic, clockBracket, pendingWitness, validateEnvironment, provenance, guarded, finishOwned } from './live_chat_runtime.mjs';
+import { bootstrapRead, BOOTSTRAP_HERO_READ, SEND, LIST, observer, destination, validateTraffic, clockBracket, pendingWitness, validateEnvironment, provenance, guarded, finishOwned } from './live_chat_runtime.mjs';
 let checks = 0;
 const reject = fn => { assert.throws(fn); checks++; };
 const good = { server_id: 1, channel: 1, recipient_player_id: 0, guild_id: 0 };
@@ -9,7 +9,7 @@ const response = (trace = 'a', code = 0) => ({ trace_id: trace, code, data: { me
 const make = () => { const requests = []; return { requests, wire: observer((_, value) => value, requests) }; };
 for (const [key, value] of [['server_id', 2], ['server_id', 0], ['channel', 2], ['channel', 3], ['guild_id', 1], ['peer_player_id', 1], ['recipient_player_id', 1]]) reject(() => destination({ ...good, [key]: value }));
 destination(good); destination({ server_id: 1, channel: 1 });
-for (const route of ['hero.v1.RecruitHero', 'hero.v1.ListPlayerHeroes', 'military.v1.CreateMarch', 'guild.v1.JoinGuild', 'unknown']) reject(() => make().wire.sent(packet('a', route), 1));
+for (const route of ['hero.v1.RecruitHero', 'hero.v1.GetHeroDetail', 'military.v1.CreateMarch', 'guild.v1.JoinGuild', 'unknown']) reject(() => make().wire.sent(packet('a', route), 1));
 for (const route of [SEND, LIST]) {
   const { requests, wire } = make(); wire.sent(packet('a', route), 1); wire.received(response(), 2);
   assert.equal(wire.pending.size, 0); assert.equal(requests.length, 1); assert.equal(requests[0].code, 0);
@@ -31,10 +31,33 @@ for (const trace of ['', undefined]) reject(() => make().wire.sent({ ...packet()
   assert.equal(requests[0].owner, 2); assert.equal(requests[0].request, undefined); assert.equal(requests[0].response, undefined);
   wire.sent(packet('failed', 'account.v1.Login'), 3); wire.received(response('failed', 20001), 4); assert.equal(requests[1].owner, undefined);
 }
-const base = ['account.v1.Register', 'account.v1.EnterGameServer', 'world.v1.CreateCity'].map(route => ({ route, code: 0, receivedAt: 2 }));
+const heroRequest = { server_id: 1, page_size: 50, page_offset: 0 };
+for (const [key, value] of [['server_id', 2], ['page_size', 49], ['page_size', 51], ['page_offset', 1], ['extra', 1]]) {
+  reject(() => make().wire.sent(packet('hero', BOOTSTRAP_HERO_READ, { ...heroRequest, [key]: value }), 1));
+}
+for (const result of [{ heroes: null, total_count: 0 }, { heroes: [], total_count: -1 }, { heroes: Array(51).fill({}), total_count: 51 }]) {
+  const { wire } = make(); wire.sent(packet('hero', BOOTSTRAP_HERO_READ, heroRequest), 1);
+  reject(() => wire.received({ trace_id: 'hero', code: 0, data: result }, 2));
+}
+{
+  const { wire, requests } = make(); wire.sent(packet('hero', BOOTSTRAP_HERO_READ, heroRequest), 1);
+  wire.received({ trace_id: 'hero', code: 0, data: { heroes: [], total_count: 0 } }, 2);
+  bootstrapRead(requests); assert.equal(requests[0].heroCount, 0); assert.equal(requests[0].response, undefined);
+  reject(() => wire.sent(packet('hero2', BOOTSTRAP_HERO_READ, heroRequest), 3));
+  const failure = make(); failure.wire.sent(packet('hero', BOOTSTRAP_HERO_READ, heroRequest), 1);
+  reject(() => failure.wire.received({ trace_id: 'hero', code: 1 }, 2));
+  assert.throws(() => make().wire.sent(packet('secret', 'hero.v1.RecruitHero'), 1), /hero.v1.RecruitHero.*request rejected/);
+  assert.throws(() => make().wire.sent(packet('secret', 'secret-token/invalid'), 1), /\[invalid route\]/);
+  assert.throws(() => make().wire.sent(packet('secret', 'a'.repeat(100) + '.v1.Read'), 1), /\[invalid route\]/);
+  reject(() => bootstrapRead([])); reject(() => bootstrapRead([...requests, requests[0]]));
+  for (const [key, value] of [['code', 1], ['receivedAt', undefined], ['heroCount', undefined], ['request', {}]]) {
+    reject(() => bootstrapRead([{ ...requests[0], [key]: value }]));
+  }
+}
+const base = [BOOTSTRAP_HERO_READ, 'account.v1.Register', 'account.v1.EnterGameServer', 'world.v1.CreateCity'].map(route => ({ route, code: 0, receivedAt: 2 }));
 const sends = Array.from({ length: 6 }, () => ({ route: SEND, request: { ...good }, code: 0, receivedAt: 3 }));
 validateTraffic(base, 'baseline'); validateTraffic([...base, ...sends], 'fixed');
-for (const name of ['account.v1.Register', 'account.v1.EnterGameServer', 'world.v1.CreateCity']) {
+for (const name of [BOOTSTRAP_HERO_READ, 'account.v1.Register', 'account.v1.EnterGameServer', 'world.v1.CreateCity']) {
   reject(() => validateTraffic(base.filter(r => r.route !== name), 'baseline'));
   reject(() => validateTraffic([...base, base.find(r => r.route === name)], 'baseline'));
   reject(() => validateTraffic(base.map(r => r.route === name ? { ...r, code: 1 } : r), 'baseline'));
@@ -85,6 +108,6 @@ for (const failure of ['prior-exit', 'kill-throws', 'none']) {
   assert.equal(report.passed, false); assert.deepEqual(report.errors, ['browser failed']);
 }
 const source = readFileSync(new URL('./live_chat_runtime.mjs', import.meta.url), 'utf8');
-for (const required of ['chromiumSandbox: true', 'acquireOwned', 'deadlineRace', 'Network.webSocketFrameSent', 'Network.webSocketFrameReceived', "timeDomain: 'timeTicks'", 'event.isTrusted', 'document.addEventListener', 'networkStart', 'networkEnd']) assert.ok(source.includes(required), required);
+for (const required of ['chromiumSandbox: true', 'acquireOwned', 'deadlineRace', 'Network.webSocketFrameSent', 'Network.webSocketFrameReceived', "timeDomain: 'timeTicks'", 'event.isTrusted', 'document.addEventListener', 'networkStart', 'networkEnd', 'bootstrapRead(report.requests)', "assert.deepEqual(report.errors, [], 'Bootstrap traffic failed')"]) assert.ok(source.includes(required), required);
 for (const forbidden of ['withHeroRuntime(', 'page.route(', 'routeWebSocket(', 'dispatchEvent(', '.fill(', 'new WebSocket(']) assert.ok(!source.includes(forbidden), forbidden);
 console.log(`PASS ${checks} rejection controls plus protocol, timing, lifecycle and provenance positives; no browser or service started`);
