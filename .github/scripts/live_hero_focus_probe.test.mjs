@@ -20,16 +20,16 @@ function input(key, before, after, open, time, wasOpen = true) {
 }
 function trial(name = 'templates', variant = 'fixed') {
   const focus = name === 'outside' ? 'outside' : variant === 'fixed' ? 'summary' : 'BODY';
-  const close = snap(focus, false, 110), frame = snap(focus, false, 111);
+  const close = snap(focus, false, 110), frame = snap(focus, false, 111), settled = [snap(focus, false, 113), snap(focus, false, 114)];
   const inputs = preparation[name].map((key, index) => input(key, index < 2 ? 'summary' : 'templates', index === 0 ? 'summary' : name === 'outside' ? 'outside' : index === 1 ? 'templates' : 'select', true, 10 + index * 5, index !== 0));
   return { name, inputs, arm: { before: snap(name, true, 91), after: snap(name, true, 92), left: boundary(90), right: boundary(93) }, requests: [row(1, 1, 2), row(2, 100, 112)], responseId: 2,
-    close, frame, trace: [{ kind: 'close', target: 'host', related: 'null', snapshot: close }, { kind: 'frame', target: 'host', related: 'null', snapshot: frame }], overflow: false, complete: true,
+    close, frame, settled, trace: [{ kind: 'close', target: 'host', related: 'null', snapshot: close }, { kind: 'frame', target: 'host', related: 'null', snapshot: frame }, { kind: 'toggle', target: 'host', related: 'null', snapshot: snap(focus, false, 112) }, ...settled.map(snapshot => ({ kind: 'settled', target: 'host', related: 'null', snapshot }))], overflow: false, complete: true,
     outcome: variant === 'baseline' && name !== 'outside' ? 'expected-baseline-defect' : 'scoped-focus-pass' };
 }
 const directionFixture = directions.map((key, i) => ({ ...input(key, ['outside', 'summary', 'summary', 'summary', 'captive'][i], ['summary', 'summary', 'summary', 'captive', 'summary'][i], i === 1, 200 + i * 10, i === 2), left: boundary(200 + i * 10), right: boundary(203 + i * 10) }));
 const object = { head: 'a'.repeat(40), tree: 'b'.repeat(40), parents: ['c'.repeat(40)], clean: true };
 const provenance = { product: 'standalone', qaObject: object, productObject: object, runtimeObject: object };
-const session = { schemaVersion: 1, variant: 'fixed', viewport: { width: 1280, height: 720 }, provenance,
+const session = { schemaVersion: 2, variant: 'fixed', viewport: { width: 1280, height: 720 }, provenance,
   preparation: { hero: 7, response: { route: 'hero.v1.GetHeroDetail', code: 0, detail: { hero_id: 7 } }, loaded: true, closed: true }, trials: trials.map(name => trial(name)), directions: directionFixture };
 negative('N40-before-input-interrupted', 'before-input', snap('summary', false, 1), x => {}, ['summary', true]);
 negative('N46-before-input-pending', 'proof-boundary', [boundary(10), boundary(11)], x => { delete x[0].rows[0].code; delete x[0].rows[0].receivedAt; });
@@ -72,7 +72,7 @@ for (const [id, mutate] of Object.entries({ missing: x => delete x.response.deta
 const brackets = {
   B01: x => delete x.inputs[0].start, B02: x => delete x.inputs[0].end, B03: x => x.inputs[0].start = NaN, B04: x => x.inputs[0].end = Infinity,
   B05: x => x.inputs[0].end = 0, B06: x => x.inputs[0].start = 0, B07: x => x.inputs[0].end = 100, B08: x => x.inputs.reverse(),
-  B09: x => x.arm.left.wall = 94, B10: x => x.frame.mono = NaN, B11: x => x.frame.mono = 13000,
+  B09: x => x.arm.left.wall = 94, B10: x => x.frame.mono = NaN, B11: x => { x.frame.mono = 13000; x.settled.forEach((sample, i) => sample.mono = 13001 + i); },
   B12: x => { const event = snap('summary', false, 110); event.mono = 109; x.trace.splice(1, 0, { kind: 'focusin', target: 'summary', related: 'BODY', snapshot: event }); },
   B13: x => { const event = snap('summary', false, 110); event.wall = 109; x.trace.splice(1, 0, { kind: 'focusin', target: 'summary', related: 'BODY', snapshot: event }); },
 };
@@ -80,6 +80,20 @@ for (const [id, mutate] of Object.entries(brackets)) bad(id, mutate);
 check('positive-transient-BODY', () => { const x = trial(); x.trace.unshift({ kind: 'focusout', target: 'templates', related: 'null', snapshot: snap('BODY', true, 100) }); validate('trial', x, { variant: 'fixed' }); });
 check('positive-intermediate-event', () => { const x = trial(); x.trace.splice(1, 0, { kind: 'focusin', target: 'summary', related: 'BODY', snapshot: snap('summary', false, 110) }); validate('trial', x, { variant: 'fixed' }); });
 check('positive-equal-boundaries', () => { const x = trial(); x.arm.after.wall = x.arm.before.wall; x.arm.after.mono = x.arm.before.mono; validate('trial', x, { variant: 'fixed' }); });
+for (const index of [0, 1]) bad(`T01-missing-${index}`, x => x.settled.splice(index, 1));
+for (const [kind, change] of Object.entries({ extra: x => x.settled.push(x.settled[0]), reversed: x => x.settled.reverse(), duplicate: x => x.settled[1] = x.settled[0] })) bad(`T02-${kind}`, change);
+for (const [id, variant, name, wrong] of [['T03', 'baseline', 'templates', ['templates', 'summary']], ['T04', 'fixed', 'templates', ['BODY', 'other']], ['T05', 'fixed', 'outside', ['BODY', 'summary']]]) for (const index of [0, 1]) for (const active of wrong) bad(`${id}-${index}-${active}`, x => x.settled[index].active = active, trial(name, variant), variant);
+for (const active of ['summary', 'outside']) bad(`T06-${active}`, x => x.frame.active = active, trial('templates', 'baseline'), 'baseline');
+const toggleFailures = { missing: x => x.trace.splice(2, 1), target: x => x.trace[2].target = 'summary', open: x => x.trace[2].snapshot.open = true,
+  early: x => x.trace[2].snapshot = snap('summary', false, 109), late: x => x.trace[2].snapshot = snap('summary', false, 115) };
+for (const [name, change] of Object.entries(toggleFailures)) bad(`T07-${name}`, change);
+for (const value of [undefined, NaN, Infinity, 111, 110]) bad(`T08-mono-${value}`, x => x.settled[0].mono = value);
+bad('T08-wall', x => x.settled[1].wall = 112);
+for (const clock of ['mono', 'wall']) bad(`T09-${clock}`, x => x.settled[1][clock] = 12092);
+for (const time of [113, 114]) bad(`T10-second-poll-${time}`, x => x.requests.push(row(3, time, 115)));
+for (const index of [0, 1]) for (const field of ['same', 'connected', 'value']) bad(`T11-${index}-${field}`, x => field === 'value' ? x.settled[index].value = 'changed' : x.settled[index].nodes.summary[field] = false);
+check('T-positive-delayed-baseline', () => { const x = trial('templates', 'baseline'); x.frame.active = 'templates'; validate('trial', x, { variant: 'baseline' }); });
+check('T-positive-toggle-boundary', () => { const x = trial(); x.trace[2].snapshot = snap('summary', false, 113); validate('trial', x, { variant: 'fixed' }); });
 let released = 0, cleaned = 0, stopped = false;
 const handle = { evaluate: async fn => fn({ dispose: () => cleaned++ }), dispose: async () => released++ };
 await withProbe(async () => handle, async () => {}, () => {}, () => {});
@@ -92,23 +106,30 @@ for (const operation of ['evaluate', 'dispose']) {
 }
 // Exercise actual browser installer without launching a browser or mutating product code.
 function browser(failObserve = false) {
-  let clock = 1, frame, disconnected = 0, removed = 0;
+  let clock = 1, frame, timer, scheduled = 0, disconnected = 0, removed = 0; const listeners = {};
   const nodes = Object.fromEntries(names.map(name => [name, { name, isConnected: true, open: true, value: '1017', parentElement: null, getClientRects: () => [1], matches: () => false,
     contains(other) { return name === 'panel' || ['host', 'summary', 'templates', 'select'].includes(other?.name) && name === 'host'; },
-    addEventListener() {}, removeEventListener() { removed++; } }]));
+    addEventListener(event, fn) { listeners[event] = fn; }, removeEventListener() { removed++; } }]));
   nodes.summary.parentElement = nodes.host;
   const map = { '[data-role="hero-recruit-host"]': nodes.host, '[data-role="hero-recruit-host"] > summary': nodes.summary, '[data-action="refresh-templates"]': nodes.templates, '[data-field="template-select"]': nodes.select, '[data-action="refresh-heroes"]': nodes.outside, '[data-action="refresh-captive-list"]': nodes.captive };
   nodes.panel.querySelector = selector => map[selector];
   const document = { body: {}, activeElement: nodes.templates, querySelector: () => nodes.panel, addEventListener() {}, removeEventListener() { removed++; } };
   const state = { document, performance: { now: () => clock }, Date: { now: () => clock }, getComputedStyle: () => ({ visibility: 'visible', display: 'block' }), structuredClone,
-    setTimeout: () => 1, clearTimeout() {}, requestAnimationFrame: fn => { frame = fn; return 1; }, cancelAnimationFrame() {},
+    setTimeout: fn => { timer = fn; return 1; }, clearTimeout() {}, requestAnimationFrame: fn => { scheduled++; frame = fn; return scheduled; }, cancelAnimationFrame() {},
     MutationObserver: class { constructor(fn) { state.mutate = fn; } observe() { if (failObserve) throw Error('install interrupted'); } disconnect() { disconnected++; } } };
-  return { state, nodes, next: () => { clock++; }, frame: () => frame(), counts: () => [disconnected, removed] };
+  return { state, nodes, next: () => { clock++; }, frame: () => frame(), timeout: () => timer(), scheduled: () => scheduled, toggle: () => listeners.toggle({ target: nodes.host }), counts: () => [disconnected, removed] };
 }
 const broken = browser(true);
 check('N57-partial-install', () => { assert.throws(() => runInNewContext(`(${installProbe})()`, broken.state)); assert.deepEqual(broken.counts(), [1, 3]); });
 const b = browser(), probe = runInNewContext(`(${installProbe})()`, b.state);
 probe.arm(); b.next(); b.nodes.host.open = false; b.state.document.activeElement = b.nodes.summary; b.state.mutate(); b.next(); b.frame();
-check('positive-actual-first-close-frame', () => { const saved = probe.read(); assert.equal(saved.close.wall, 2); assert.equal(saved.frame.wall, 3); b.next(); b.state.mutate(); assert.equal(probe.read().close.wall, 2); assert.equal(saved.trace.length, 3); });
+check('positive-actual-first-close-frame', () => { const saved = probe.read(); assert.equal(saved.close.wall, 2); assert.equal(saved.frame.wall, 3); assert.equal(saved.complete, false); assert.equal(saved.trace.length, 3); });
+b.next(); b.toggle(); b.next(); b.frame(); b.next(); b.frame();
+check('T12-three-fixed-frames', () => { assert.equal(JSON.stringify(probe.read().settled.map(s => s.wall)), JSON.stringify([5, 6])); assert.equal(probe.read().complete, true); assert.equal(b.scheduled(), 3); });
 probe.dispose(); check('positive-actual-cleanup', () => assert.deepEqual(b.counts(), [1, 3]));
+for (const action of ['dispose', 'timeout']) {
+  const b = browser(), p = runInNewContext(`(${installProbe})()`, b.state); p.arm(); b.nodes.host.open = false; b.state.mutate(); b.next(); b.frame();
+  action === 'dispose' ? p.dispose() : b.timeout(); b.next(); b.frame();
+  check(`T12-${action}-mid-chain`, () => { assert.equal(p.read().settled.length, 0); assert.equal(b.scheduled(), 2); assert.equal(p.read().complete, false); }); assert.equal(await p.wait(), false); p.dispose();
+}
 console.log(`${checks} observer actual-helper controls passed`);
