@@ -18,13 +18,13 @@ jobs:
         variant: [baseline, fixed]
         include:
           - variant: baseline
-            head: 5154d2a44da69e22baa1188e8a3019603b9e6601
-            tree: fa138bedcbf624580e2aad280696e83a83870460
-            parents: 436316db6279f5471a5d3cc3a0a4fa30165baeec
-          - variant: fixed
-            head: c640f478e80421f6a14bf2e3c3486defb0b4d036
-            tree: 0bef3c0655adc39bdde1c73499828acaa4b62855
+            head: d9c84df4b99794f6a8743bcfc7406ef09971bfaf
+            tree: 168afef7629f86ec028bc2882ee74b15220d9b3a
             parents: 5154d2a44da69e22baa1188e8a3019603b9e6601
+          - variant: fixed
+            head: 55f0253b2246616b4d1e5f3c8b902a798236a36e
+            tree: 2ecf0f945fc333183805693268806d404f018fc4
+            parents: d9c84df4b99794f6a8743bcfc7406ef09971bfaf
     env:
       QA_WIDTH: ${{ matrix.width }}
       QA_VARIANT: ${{ matrix.variant }}
