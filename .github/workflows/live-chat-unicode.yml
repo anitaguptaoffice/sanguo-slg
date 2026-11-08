@@ -110,6 +110,22 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: target/client/package-lock.json
+      - name: Build actual server and test complete client
+        timeout-minutes: 10
+        working-directory: target
+        env:
+          GOTOOLCHAIN: local
+          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+        run: |
+          set -euo pipefail
+          # Product test discovery must run before any standalone QA module staging.
+          test -z "$(find client -maxdepth 1 -name 'live_*.mjs' -print)"
+          go build -o "$RUNNER_TEMP/live-chat-unicode-server" ./cmd/server 2>&1 | tee ../evidence/build-server.log
+          cd client
+          npm ci 2>&1 | tee ../../evidence/install.log
+          npm test 2>&1 | tee ../../evidence/client-tests.log
+          npm run build 2>&1 | tee ../../evidence/client-build.log
+          npx --no-install playwright install --with-deps chromium
       - name: Run complete immutable helper and chat negative controls
         working-directory: target/client
         run: |
@@ -129,20 +145,6 @@ jobs:
           node live_hero_layout_runtime.test.mjs | tee ../../evidence/helper-tests.log
           node live_chat_runtime.test.mjs | tee ../../evidence/runtime-tests.log
           node live_chat_unicode.test.mjs | tee ../../evidence/scenario-tests.log
-      - name: Build actual server and test complete client
-        timeout-minutes: 10
-        working-directory: target
-        env:
-          GOTOOLCHAIN: local
-          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
-        run: |
-          set -euo pipefail
-          go build -o "$RUNNER_TEMP/live-chat-unicode-server" ./cmd/server 2>&1 | tee ../evidence/build-server.log
-          cd client
-          npm ci 2>&1 | tee ../../evidence/install.log
-          npm test 2>&1 | tee ../../evidence/client-tests.log
-          npm run build 2>&1 | tee ../../evidence/client-build.log
-          npx --no-install playwright install --with-deps chromium
       - name: Verify every required native UI case
         working-directory: target/client
         env:
