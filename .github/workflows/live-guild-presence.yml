@@ -19,13 +19,13 @@ jobs:
         width: [1280, 1600]
         include:
           - product: baseline
-            head: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
-            tree: cb3162ade8e15a9ab361b8f2d54ced1f5ea36d40
-            parents: e2b60dda830d9b25f15fcfced4da4acc090a8f1c
+            head: 5302dcfb86e46d0a5f900eaafb37eaa255fac5f4
+            tree: 3a7eb9626e345ae54dd760bfc43eee2351a29284
+            parents: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
           - product: fixed
-            head: 0f3a5f0349564bf57824051c5c8eb1ffb9e04b5b
-            tree: b60d02245443e89fb64cc71ae9aab578f6c63d1d
-            parents: 00b292a9c1f7ab3ec5d6c868c8667cbcf03681bc
+            head: 1ae318cf46321985a89b4e2cae06ea3d9527fb80
+            tree: ed2662eeb2328b05784e4dc8e66fc9493eb426f0
+            parents: 45604e74e0fda67cc0a7992e8a70df484b3e2db4 eb81a2be4724dc796918126351765edc57b1e0dd
     env:
       QA_WIDTH: ${{ matrix.width }}
       QA_QA_HEAD: ${{ github.event.pull_request.head.sha }}

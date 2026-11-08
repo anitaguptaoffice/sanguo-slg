@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { pathToFileURL } from 'node:url';
 import { withGuildRuntime, economy, membership, CREATE, LIST } from './live_guild_presence_runtime.mjs';
 export function productPins(env) {
-  const pins = { baseline: ['757e43a9f40d7c92ded6a536ec334de94d69ff6f', 'cb3162ade8e15a9ab361b8f2d54ced1f5ea36d40'],
-    fixed: ['0f3a5f0349564bf57824051c5c8eb1ffb9e04b5b', 'b60d02245443e89fb64cc71ae9aab578f6c63d1d'] };
+  const pins = { baseline: ['5302dcfb86e46d0a5f900eaafb37eaa255fac5f4', '3a7eb9626e345ae54dd760bfc43eee2351a29284'],
+    fixed: ['1ae318cf46321985a89b4e2cae06ea3d9527fb80', 'ed2662eeb2328b05784e4dc8e66fc9493eb426f0'] };
   assert.ok(pins[env.QA_PRODUCT]); assert.deepEqual([env.QA_PRODUCT_HEAD, env.QA_PRODUCT_TREE], pins[env.QA_PRODUCT]);
 }
 export function checkText(state, mode, expanded, empty = false) {

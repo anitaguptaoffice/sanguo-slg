@@ -33,7 +33,7 @@ check('every wrapped fragment must be readable', () => assert.equal(readable({ .
 check('invalid mode cannot manufacture acceptance', () => assert.throws(() => checkText(state('fixed'), 'unknown', true)));
 
 check('product labels bind immutable heads and trees', () => {
-  const env = { QA_PRODUCT: 'fixed', QA_PRODUCT_HEAD: '0f3a5f0349564bf57824051c5c8eb1ffb9e04b5b', QA_PRODUCT_TREE: 'b60d02245443e89fb64cc71ae9aab578f6c63d1d' };
+  const env = { QA_PRODUCT: 'fixed', QA_PRODUCT_HEAD: '1ae318cf46321985a89b4e2cae06ea3d9527fb80', QA_PRODUCT_TREE: 'ed2662eeb2328b05784e4dc8e66fc9493eb426f0' };
   productPins(env); assert.throws(() => productPins({ ...env, QA_PRODUCT: 'baseline' })); assert.throws(() => productPins({ ...env, QA_PRODUCT_TREE: 'a'.repeat(40) }));
 });
 
