@@ -137,7 +137,6 @@ import {
   type LeaderboardReturnScrollPayload,
 } from "@/net/leaderboardReturnScroll";
 import {
-  CHAT_SEND_MAX_CONTENT_LENGTH,
   formatChatInputCounter,
   validateSendChatContent,
 } from "@/net/chatSendValidation";
@@ -640,7 +639,7 @@ export class SocialPanels {
         <ul class="chat-log" data-role="chat-log"></ul>
       </div>
       <label class="chat-input-label">内容
-        <input type="text" data-field="chat-content" maxlength="${CHAT_SEND_MAX_CONTENT_LENGTH}" placeholder="输入消息" aria-describedby="chat-input-counter" />
+        <input type="text" data-field="chat-content" placeholder="输入消息" aria-describedby="chat-input-counter" />
         <span class="chat-input-counter" id="chat-input-counter" data-role="chat-input-counter" aria-live="polite"></span>
       </label>
       <button type="button" data-action="send-chat">发送</button>
