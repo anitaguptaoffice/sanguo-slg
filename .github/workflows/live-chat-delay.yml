@@ -1,7 +1,7 @@
 name: Controlled fixed-delay chat acceptance
 on:
   pull_request:
-    types: [opened]
+    types: [synchronize]
     paths:
       - '.github/workflows/live-chat-delay.yml'
       - '.github/scripts/live_chat_delay_acceptance.mjs'
@@ -11,7 +11,7 @@ permissions:
   contents: read
 jobs:
   controlled-chat:
-    if: github.run_attempt == 1 && github.head_ref == 'fix/ci-chat-delay-acceptance-001' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.action == 'synchronize' && github.event.number == 2300 && github.event.before == 'c83f03bdb54c45ffcb20e3a812ef13149c3a187c' && github.event.after == github.event.pull_request.head.sha && github.run_attempt == 1 && github.head_ref == 'fix/ci-chat-delay-acceptance-001' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     strategy:
@@ -91,6 +91,7 @@ jobs:
           test ! -e qa-source/.github/workflows/live-chat-unicode.yml
           git -C qa-source show -s --format='{"head":"%H","tree":"%T","parents":"%P"}' HEAD > evidence/qa-provenance.json
           while read -r dir head tree parents stem; do
+            [[ -n "$dir" ]] || continue
             git -C qa-source fetch --no-tags origin "$head"
             git -C qa-source worktree add --detach "../$dir" "$head"
             test "$(git -C "$dir" rev-parse HEAD)" = "$head"
@@ -129,6 +130,7 @@ jobs:
         run: |
           set -euo pipefail
           while read -r dir head tree parents stem; do
+            [[ -n "$dir" ]] || continue
             for suffix in .mjs .test.mjs; do
               cp "../../$dir/.github/scripts/$stem$suffix" .
               cmp "$stem$suffix" "../../$dir/.github/scripts/$stem$suffix"
