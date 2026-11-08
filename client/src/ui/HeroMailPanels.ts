@@ -858,8 +858,8 @@ export class HeroMailPanels {
   /** 会话钱包/背包变更时刷新招募可负担对比（与 HUD 快照一致）。 */
   refreshRecruitAffordability(): void {
     if (!this.heroPanel || this.heroPanel.classList.contains("hidden")) return;
-    this.renderTemplateList();
-    this.renderHeroList();
+    this.renderTemplateList(true);
+    this.renderHeroList(true);
     this.syncHotelRecruitUi();
     this.syncCaptiveHeroUi();
     this.syncPersuadeUi();
@@ -2351,7 +2351,72 @@ export class HeroMailPanels {
     if (loader) remountPanelFilterChips(this.heroPanel, loader);
   }
 
-  private renderHeroList(): void {
+  private detailRefreshCache: { root: HTMLElement; detail: HeroDetail | null; key: string } | null = null;
+
+  private syncDetailEconomy(root: HTMLElement, markup: string): boolean {
+    const fresh = document.createElement("div");
+    fresh.innerHTML = markup;
+    const writes: (() => void)[] = [];
+    const texts = [".recruit-afford-primary", ".recruit-afford-secondary", '[data-role="hero-upgrade-item-gap"]',
+      ".hero-cultivation-item-hint", '[data-role="hero-cultivation-disabled-reason"]',
+      ...["gold-hint", "item-hint", "cd", "disabled-reason"].map(role => `[data-role="hero-largess-${role}"]`)];
+    for (const selector of texts) {
+      const current = [...root.querySelectorAll<HTMLElement>(selector)];
+      const next = [...fresh.querySelectorAll<HTMLElement>(selector)];
+      if (current.length !== next.length) return false;
+      for (let i = 0; i < next.length; i++) {
+        const a = current[i], b = next[i];
+        if (a.tagName !== b.tagName || a.dataset.kind !== b.dataset.kind) return false;
+        writes.push(() => {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          for (const cls of ["hidden", "recruit-cost-deficit", "hero-upgrade-item-gap-warn"]) {
+            a.classList.toggle(cls, b.classList.contains(cls));
+          }
+        });
+      }
+    }
+    for (const role of ["hero-detail-consumable-stack-line", "hero-detail-consumable-stack-residual-line"]) {
+      const a = root.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const b = fresh.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const anchor = root.querySelector('[data-role="recruit-afford-summary"], .hero-attr-table');
+      if (!anchor) return false;
+      writes.push(() => {
+        if (!b) a?.remove();
+        else if (!a) anchor.before(b);
+        else {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          a.classList.toggle("hero-detail-consumable-stack-residual-deficit", b.classList.contains("hero-detail-consumable-stack-residual-deficit"));
+        }
+      });
+    }
+    for (const action of ["hero-use-cultivation-item", "hero-largess-submit"]) {
+      const a = root.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      const b = fresh.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (!a || !b) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.textContent !== b.textContent) a.textContent = b.textContent; });
+    }
+    const select = root.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    const nextSelect = fresh.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    if (!select || !nextSelect || select.options.length !== nextSelect.options.length) return false;
+    for (let i = 0; i < select.options.length; i++) {
+      const a = select.options[i], b = nextSelect.options[i];
+      if (a.value !== b.value) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.text !== b.text) a.text = b.text; });
+    }
+    const controls = 'input[data-action="hero-largess-kind"], button[data-action^="hero-expr-"]';
+    const current = [...root.querySelectorAll<HTMLElement>(controls)];
+    const next = [...fresh.querySelectorAll<HTMLElement>(controls)];
+    if (current.length !== next.length || current.some((a, i) =>
+      ["type", "name"].some(key => a.getAttribute(key) !== next[i].getAttribute(key)) ||
+      a.tagName !== next[i].tagName || a.dataset.action !== next[i].dataset.action ||
+      a.dataset.hours !== next[i].dataset.hours || a.getAttribute("value") !== next[i].getAttribute("value"))) return false;
+    for (const write of writes) write();
+    syncHeroDetailExprControls(root, this.heroExprSubmitState, this.heroDetail,
+      this.sessionEconomy().wallet, this.heroExprHoursPref, Date.now());
+    return true;
+  }
+
+  private renderHeroList(economyRefresh = false): void {
     this.syncHeroUpgradePendingState();
     this.syncHeroRestPendingState();
     this.syncHeroPointPendingState();
@@ -2679,6 +2744,7 @@ export class HeroMailPanels {
       ),
     );
     if (detailEl) {
+      if (!this.selectedHeroId || this.heroDetailCollapsed || this.heroDetailLoading || this.heroDetailError) this.detailRefreshCache = null;
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
         this.syncHeroRecruitHostExpanded();
@@ -2734,7 +2800,7 @@ export class HeroMailPanels {
           this.getHeroLargessNextAtMs(),
           Date.now(),
         );
-        detailEl.innerHTML = renderHeroDetailMarkup(
+        const markup = renderHeroDetailMarkup(
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
@@ -2743,8 +2809,18 @@ export class HeroMailPanels {
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
         );
+        const key = JSON.stringify([this.selectedHeroId, this.heroDetail, this.recruitTemplateForHeroDetail(),
+          this.heroDetailListContext, this.heroUpgradeSubmitState, this.heroForceSubmitState,
+          this.heroPointSubmitState, this.heroExprSubmitState, this.heroCultivationSubmitState,
+          this.heroLargessSubmitState, this.heroLargessGiftMode, this.heroLargessItemCfgId,
+          this.recruitBagReady(), this.recruitBagError]);
+        const cache = this.detailRefreshCache;
+        const synced = economyRefresh && cache?.root === detailEl && cache.detail === this.heroDetail &&
+          cache.key === key && this.syncDetailEconomy(detailEl, markup);
+        if (!synced) detailEl.innerHTML = markup;
+        this.detailRefreshCache = { root: detailEl, detail: this.heroDetail, key };
         this.ensureHeroLargessCooldownTimer();
-        mountHeroDetailBust(
+        if (!synced) mountHeroDetailBust(
           detailEl,
           this.heroDetail?.template_cfg_id,
           this.heroDetail?.template_name || heroTemplateLabel(this.heroDetail?.template_cfg_id),
@@ -2785,7 +2861,7 @@ export class HeroMailPanels {
     return mergeRecruitTemplateOwnership(this.recruitTemplates, this.heroes);
   }
 
-  private renderTemplateList(): void {
+  private renderTemplateList(economyRefresh = false): void {
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
@@ -2965,13 +3041,13 @@ export class HeroMailPanels {
     }
     const pickId = this.selectedTemplateId || displayTemplates[0]?.template_cfg_id || 0;
     if (pickId) sel.value = String(pickId);
-    this.applyTemplateSelection(pickId);
+    this.applyTemplateSelection(pickId, { economyRefresh });
     applyRecruitScrollAnchorSession(this.heroPanel);
   }
 
   private applyTemplateSelection(
     templateCfgId: number,
-    opts?: { skipHeroListRender?: boolean },
+    opts?: { skipHeroListRender?: boolean; economyRefresh?: boolean },
   ): void {
     const displayTemplates = this.recruitTemplatesForDisplay();
     const row = displayTemplates.find((t) => t.template_cfg_id === templateCfgId);
@@ -3008,7 +3084,7 @@ export class HeroMailPanels {
     });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
-    if (!opts?.skipHeroListRender) this.renderHeroList();
+    if (!opts?.skipHeroListRender) this.renderHeroList(opts?.economyRefresh);
   }
 
   private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
