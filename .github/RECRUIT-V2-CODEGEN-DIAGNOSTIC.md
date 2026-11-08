@@ -27,7 +27,8 @@ remaining-budget estimate, not approval to omit meaningful tests.
 
 Isolated API/platform overlays each compile their domain against baseline source
 and run binding package tests. Compile-only -run '^$' is not runtime acceptance;
-packages without tests are not test passes. This diagnostic adds no V2 behavior
+packages without tests are not test passes. Compilation still runs after baseline
+drift failure to retain diagnostic evidence; the failed gate keeps the run red. This diagnostic adds no V2 behavior
 or new V2 wire assertions. A future binding card needs those tests and independent
 review. Failures retain artifacts and remain failures, not compatible outputs.
 

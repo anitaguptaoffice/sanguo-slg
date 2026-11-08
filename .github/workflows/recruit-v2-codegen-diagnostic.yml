@@ -123,7 +123,8 @@ jobs:
           PY
           git diff --exit-code HEAD
       - name: Compile each isolated output domain and test binding packages
-        if: success()
+        # Preserve the failed baseline gate; collect compile evidence independently.
+        if: ${{ !cancelled() }}
         shell: bash
         run: |
           set +e
