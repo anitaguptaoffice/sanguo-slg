@@ -11,7 +11,7 @@ permissions:
   contents: read
 jobs:
   controlled-chat:
-    if: github.event.action == 'synchronize' && github.event.number == 2300 && github.event.before == 'c83f03bdb54c45ffcb20e3a812ef13149c3a187c' && github.event.after == github.event.pull_request.head.sha && github.run_attempt == 1 && github.head_ref == 'fix/ci-chat-delay-acceptance-001' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.action == 'synchronize' && github.event.number == 2300 && github.event.before == 'd62c0cdc56e8dce3c23f3f70da4ef9cf7f2238e3' && github.event.after == github.event.pull_request.head.sha && github.run_attempt == 1 && github.head_ref == 'fix/ci-chat-delay-acceptance-001' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-22.04
     timeout-minutes: 20
     strategy:
@@ -44,6 +44,7 @@ jobs:
         scenario-source f48b1d64ccd1149d3f5b6e165f28c456b30965e3 c802f7903c5e47c30ac8eb52b7e45a0fde1ac047 bf66e3aa10e6e66bbac3b35b87627c2aaf61ac26 live_chat_unicode
         tcp-source d512df7415f9cee85efb55d73b5ff6238d0783b8 03fc214f3837cca2b3fab56dd2627ecba416afe7 757e43a9f40d7c92ded6a536ec334de94d69ff6f live_chat_tcp_delay
         delay-server-source bd5a2060675f0e1127beb786320b377245645e70 9a1c9c800f726a01dcfa4627147e462f4fd4dbef 757e43a9f40d7c92ded6a536ec334de94d69ff6f live_chat_delay_server
+        controlled-scenario-source 5100ca17508e5f87049bb2ed909e0b886cf89aa0 1932a423a4cd94eb62cd319e03d76ef343936d01 757e43a9f40d7c92ded6a536ec334de94d69ff6f live_chat_controlled_scenario
     services:
       postgres:
         image: postgres:17

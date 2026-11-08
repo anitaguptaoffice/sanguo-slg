@@ -3,8 +3,9 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { withChatRuntime, SEND } from './live_chat_runtime.mjs';
-import { scenario, MIXED, CASES, overlap } from './live_chat_unicode.mjs';
+import { withChatRuntime, SEND, LIST } from './live_chat_runtime.mjs';
+import { MIXED, CASES, overlap } from './live_chat_unicode.mjs';
+import { scenario, readbacks } from './live_chat_controlled_scenario.mjs';
 import { PROFILE } from './live_chat_tcp_delay.mjs';
 export function relayEvidence(relay) {
   assert.equal(relay.profile, PROFILE); assert.equal(relay.stopped, true); assert.equal(relay.pending, 0); assert.deepEqual(relay.errors, []);
@@ -27,9 +28,10 @@ export function relayEvidence(relay) {
     });
   });
 }
-export function controlled(report, signals, db, launchers, binaryHash) {
+export function controlled(report, signals, db, launchers, binaryHash, owner) {
   assert.equal(report.passed, true); assert.ok(['baseline', 'fixed'].includes(report.product)); assert.match(binaryHash, /^[a-f0-9]{64}$/);
-  assert.deepEqual(report.errors, []);
+  assert.deepEqual(report.errors, []); assert.ok(Number.isSafeInteger(owner) && owner > 0);
+  readbacks(report.requests, owner, true);
   const children = report.cleanup.filter(c => ['bootstrap', 'server'].includes(c.name)); assert.equal(children.length, 2); assert.equal(launchers.length, 2);
   for (const child of children) {
     assert.deepEqual([child.owned, child.aliveBeforeStop, child.requestedSignal, child.exitCode, child.signal], [true, true, 'SIGTERM', 0, null]);
@@ -73,7 +75,7 @@ export async function run() {
             value: event.target.value, disabled: document.querySelector('[data-center-panel="chat"] [data-action="send-chat"]').disabled });
         });
       }));
-      result.fixedNativeStarted = ctx.report.product === 'fixed';
+      result.owner = ctx.owner; result.fixedNativeStarted = ctx.report.product === 'fixed';
       try { await scenario(ctx); } finally { result.signals = await ctx.act(() => ctx.page.evaluate(() => window.__controlledSignals)); save(); }
     });
     result.originalPassed = report.passed; result.pendingSendObserved = report.requests.filter(r => r.route === SEND).length === 6;
@@ -85,7 +87,8 @@ export async function run() {
       floor(extract(epoch FROM m.created_at)*1000)::bigint AS sent_at_ms FROM chat_message m JOIN chat_channel c USING(server_id,channel_id)) x`;
     result.database = JSON.parse(execFileSync('psql', ['-X', '-v', 'ON_ERROR_STOP=1', '-Atc', sql], { encoding: 'utf8', timeout: Math.max(1, Math.min(5000, deadline - Date.now())) }));
     result.launchers = readdirSync(out).filter(f => /^delay-server-\d+-\d+\.json$/.test(f)).map(f => JSON.parse(readFileSync(path.join(out, f))));
-    controlled(report, result.signals || [], result.database, result.launchers, process.env.QA_ACTUAL_SERVER_SHA);
+    controlled(report, result.signals || [], result.database, result.launchers, process.env.QA_ACTUAL_SERVER_SHA, result.owner);
+    result.readbacks = report.requests.filter(r => r.route === LIST).map(r => ({ id: r.id, comparisons: r.displayNameComparisons }));
     result.controlledAcceptance = report.product === 'fixed'; result.controlledBaseline = report.product === 'baseline';
   } catch { result.failure = 'Controlled gate incomplete; inspect original report and layered evidence'; process.exitCode = 1; }
   finally { save(); }
