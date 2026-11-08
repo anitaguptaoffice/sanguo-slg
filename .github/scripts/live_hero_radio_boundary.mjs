@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { withHeroRuntime } from './live_hero_layout_runtime.mjs';
 import { inspect, visibleTarget, hasFullVisibility, wheelPlan, wheelReady, targetDelta } from './live_hero_layout_geometry.mjs';
-import { installRadioObserver, validateRadioTrial, validateCompletion } from './live_hero_radio_observer.mjs';
+import { installRadioObserver, validateRadioPrecondition, validateRadioTrial, validateCompletion } from './live_hero_radio_observer.mjs';
 
 const panelSelector = '[data-center-panel="hero"]';
 const rosterSelector = '[data-role="hero-scroll"]';
@@ -11,6 +11,10 @@ const trialOrder = variant => [1, 2, 3].flatMap(index => (variant === 'fixed' ? 
 function assertOrder(trials, variant) {
   assert.ok(variants.includes(variant));
   assert.deepEqual(trials.map(t => [t.index, t.direction]), trialOrder(variant));
+}
+async function dispatchTab(trial, variant, dispatch) {
+  validateRadioPrecondition(trial.before, { variant, direction: trial.direction });
+  return dispatch();
 }
 async function verify(h) {
   const { page, panel, hero, report, save, settled, responseAfter, screenshot } = h;
@@ -82,10 +86,9 @@ async function verify(h) {
         const reverse = direction === 'reverse';
         if (reverse) await page.keyboard.down('Shift');
         try {
-          const before = await observer.evaluate(o => o.snapshot());
-          const cursor = await observer.evaluate(o => o.readEvents().events.length);
+          const { before, cursor } = await observer.evaluate(o => ({ cursor: o.readEvents().events.length, before: o.snapshot() }));
           const trial = { index, direction, before, after: [], events: null }; radio.trials.push(trial); save();
-          await page.keyboard.press('Tab');
+          await dispatchTab(trial, variant, () => page.keyboard.press('Tab'));
           trial.after = await observer.evaluate(async (o, heldId) => {
             const frames = [o.snapshot(heldId)];
             for (let i = 0; i < 2; i++) { await new Promise(requestAnimationFrame); frames.push(o.snapshot(heldId)); }
@@ -113,5 +116,37 @@ if (process.argv.includes('--self-test')) {
     for (const wrong of [valid.slice(1), [...valid, valid[0]], [...valid].reverse(), [...valid.slice(1), { index: 4, direction: 'forward' }]]) assert.throws(() => assertOrder(wrong, variant));
   }
   assert.throws(() => assertOrder([], 'unknown'));
-  console.log('PASS exact native trial ordering; no browser or services started');
+  const descriptor = (id, extra = {}) => ({ id, tag: 'INPUT', type: 'radio', name: 'hero-largess-kind', value: 'gold', checked: true,
+    disabled: false, effectiveDisabled: false, tabIndex: 0, formId: null, scopeId: 1, connected: true, inPanel: true,
+    rect: { x: 10, y: 10, width: 20, height: 20 }, ancestors: [],
+    own: { hidden: false, inert: false, ariaHidden: null, display: 'block', visibility: 'visible', open: null }, ...extra });
+  const first = descriptor(2, { tag: 'BUTTON', type: 'button', name: '', value: '', checked: false });
+  const gold = descriptor(3), item = descriptor(4, { value: 'item', checked: false });
+  const before = direction => structuredClone({ schema: 1, at: 1, mono: 1, rootId: 5, overflow: false,
+    active: structuredClone(direction === 'forward' ? gold : first), held: null, candidates: [first, gold, item],
+    eligibleIds: [2, 3, 4], intendedIds: [2, 3], details: [], submit: descriptor(6, { tag: 'BUTTON', type: 'button', disabled: true, effectiveDisabled: true }) });
+  const invalid = [
+    b => { b.active = descriptor(99, { tag: 'BODY', type: '', inPanel: false }); },
+    b => { b.active.inPanel = false; },
+    b => { b.active.connected = false; },
+    b => { b.active.id = 98; },
+    b => { b.active.rect.width = 0; },
+    b => { b.active.own.visibility = 'hidden'; },
+    b => { b.candidates[1].checked = false; },
+    b => { b.candidates[2].formId = 99; },
+    b => { b.submit.disabled = false; },
+    b => { b.overflow = true; },
+  ];
+  for (const [variant, direction] of [['baseline', 'forward'], ['fixed', 'forward'], ['fixed', 'reverse']]) {
+    let dispatched = 0;
+    const dispatch = () => { dispatched++; return 'native-dispatch'; };
+    assert.equal(await dispatchTab({ before: before(direction), direction }, variant, dispatch), 'native-dispatch');
+    assert.equal(dispatched, 1);
+    for (const change of invalid) {
+      const value = before(direction); change(value); dispatched = 0;
+      await assert.rejects(() => dispatchTab({ before: value, direction }, variant, dispatch));
+      assert.equal(dispatched, 0, 'Invalid immediate before must never call native Tab');
+    }
+  }
+  console.log('PASS exact trial ordering and production dispatch guard: 3 valid paths, 30 zero-input negatives; no browser/services');
 } else await withHeroRuntime(verify);
