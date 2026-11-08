@@ -1986,8 +1986,14 @@ export class SocialPanels {
       const roleKey = Number(btn.getAttribute("data-role-key"));
       if (!Number.isFinite(roleKey)) return;
       const next = !this.isGuildRoleGroupExpanded(roleKey);
+      const restoreFocus = this.guildPanel.ownerDocument.activeElement === btn;
       this.guildRoleGroupExpanded.set(roleKey, next);
       this.renderGuildMembersList(this.guildMembersCache);
+      if (restoreFocus) {
+        this.guildPanel.querySelector<HTMLButtonElement>(
+          `[data-action="toggle-guild-role-group"][data-role-key="${roleKey}"]`,
+        )?.focus({ preventScroll: true });
+      }
     }
     if (a === "open-guild-chat-channel") this.openGuildChatChannel();
   }
