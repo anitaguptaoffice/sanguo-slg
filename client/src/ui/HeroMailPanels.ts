@@ -616,6 +616,8 @@ import {
   formatHeroExprCancelSuccessStatus,
   formatHeroExprFasterSuccessStatus,
   formatHeroExprFinishSuccessStatus,
+  formatHeroExprFinishError,
+  heroExprFinishDisabled,
   formatHeroExprGatewayErrorFromUnknown,
   heroExprSnapshotFromDetail,
   isHeroExprInProgress,
@@ -4257,6 +4259,7 @@ export class HeroMailPanels {
       this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
     const detailBefore = this.heroDetail;
+    if (action === "finish" && heroExprFinishDisabled(this.heroExprSubmitState, detailBefore, Date.now())) return;
     const actor = captureActor(this.gateway, this.getSession);
     const generation = this.heroDetailReadGeneration;
     const presentation = captureCenterPanelIntent(this.heroPanel);
@@ -4269,12 +4272,14 @@ export class HeroMailPanels {
     this.syncHeroExprControlsNow();
     const sid = this.serverId();
     this.onStatus(action === "cancel" ? "取消历练…" : action === "finish" ? "领取历练经验…" : "加速历练…");
+    let confirmedFinish: string | null = null;
     try {
       const res = await (action === "cancel" ? this.gateway.cancelHeroExpr(sid, heroId) :
         action === "finish" ? this.gateway.finishHeroExpr(sid, heroId) : this.gateway.fasterHeroExpr(sid, heroId));
       if (!actor()) return;
       if (res.hero_id !== heroId) throw new Error("历练结果与所选将领不一致，请刷新详情");
       const finish = res as Parameters<typeof applyHeroExprFinishToDetail>[1];
+      if (action === "finish") confirmedFinish = formatHeroExprFinishSuccessStatus(finish);
       const base = this.heroDetail?.hero_id === heroId ? this.heroDetail : detailBefore;
       const detailAfter = action === "cancel" ? applyCancelHeroExprToDetail(base, res) :
         applyHeroExprFinishToDetail(base, finish);
@@ -4286,7 +4291,11 @@ export class HeroMailPanels {
         if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
           this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
           // A newer detail read may predate settlement. Read fresh state; never replay the command.
-          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+          const refreshCurrent = this.beginHeroDetailRead();
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true, current: refreshCurrent });
+          if (confirmedFinish && refreshCurrent() && this.heroDetailError) {
+            this.onStatus(`${confirmedFinish}。详情刷新未完成，请重新打开详情。`);
+          }
         }
         return;
       }
@@ -4303,10 +4312,15 @@ export class HeroMailPanels {
       this.onStatus(statusText);
     } catch (e) {
       if (!current()) return;
-      this.heroExprSubmitState = "error";
-      const msg = formatHeroExprGatewayErrorFromUnknown(e);
-      setHeroExprFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
+      this.heroExprSubmitState = confirmedFinish ? "idle" : "error";
+      const msg = confirmedFinish ? `${confirmedFinish}。详情显示未完成，请重新打开详情。` :
+        action === "finish" ? formatHeroExprFinishError(e) : formatHeroExprGatewayErrorFromUnknown(e);
+      // A local presentation failure cannot turn an acknowledged Finish into a failed command.
+      if (confirmedFinish) setHeroExprSuccessDisplay(this.heroPanel, msg);
+      else {
+        this.renderHeroList();
+        setHeroExprFormErrorDisplay(this.heroPanel, msg);
+      }
       this.onStatus(msg);
     } finally {
       if (this.heroExprSubmitState === "submitting") this.heroExprSubmitState = "idle";
