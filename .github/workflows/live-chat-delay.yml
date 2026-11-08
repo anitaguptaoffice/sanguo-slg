@@ -1,0 +1,164 @@
+name: Controlled fixed-delay chat acceptance
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - '.github/workflows/live-chat-delay.yml'
+      - '.github/scripts/live_chat_delay_acceptance.mjs'
+      - '.github/scripts/live_chat_delay_acceptance.test.mjs'
+      - '.github/scripts/LIVE_CHAT_DELAY_ACCEPTANCE.md'
+permissions:
+  contents: read
+jobs:
+  controlled-chat:
+    if: github.run_attempt == 1 && github.head_ref == 'fix/ci-chat-delay-acceptance-001' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        product: [baseline, fixed]
+        include:
+          - product: baseline
+            head: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+            tree: cb3162ade8e15a9ab361b8f2d54ced1f5ea36d40
+            parents: e2b60dda830d9b25f15fcfced4da4acc090a8f1c
+          - product: fixed
+            head: 95b66a8ab7e46cc0f2e52f51d494a5ec3195d489
+            tree: 3a7eb9626e345ae54dd760bfc43eee2351a29284
+            parents: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+    env:
+      QA_NETWORK_PROFILE: localtcp-s2c500-c2s0-v1
+      QA_QA_HEAD: ${{ github.event.pull_request.head.sha }}
+      QA_PRODUCT: ${{ matrix.product }}
+      QA_PRODUCT_HEAD: ${{ matrix.head }}
+      QA_PRODUCT_TREE: ${{ matrix.tree }}
+      QA_PRODUCT_PARENTS: ${{ matrix.parents }}
+      QA_HELPER_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+      QA_RUNTIME_HEAD: 6889bc773a52957a6135986d8d48c913517f5cd0
+      QA_RUNTIME_TREE: 4e48ea432483beb57801d2e4ea3fa12526a8968e
+      QA_RUNTIME_PARENTS: 7fa66533ff3c6effa991cb0d266e791f4c66a8b8
+      QA_DEPS: |
+        runtime-source 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79 dc151c5513ea2a2d937e45d4dee12d9f59792c7e 757e43a9f40d7c92ded6a536ec334de94d69ff6f live_hero_layout_runtime
+        chat-runtime-source 6889bc773a52957a6135986d8d48c913517f5cd0 4e48ea432483beb57801d2e4ea3fa12526a8968e 7fa66533ff3c6effa991cb0d266e791f4c66a8b8 live_chat_runtime
+        scenario-source f48b1d64ccd1149d3f5b6e165f28c456b30965e3 c802f7903c5e47c30ac8eb52b7e45a0fde1ac047 bf66e3aa10e6e66bbac3b35b87627c2aaf61ac26 live_chat_unicode
+        tcp-source d512df7415f9cee85efb55d73b5ff6238d0783b8 03fc214f3837cca2b3fab56dd2627ecba416afe7 757e43a9f40d7c92ded6a536ec334de94d69ff6f live_chat_tcp_delay
+        delay-server-source bd5a2060675f0e1127beb786320b377245645e70 9a1c9c800f726a01dcfa4627147e462f4fd4dbef 757e43a9f40d7c92ded6a536ec334de94d69ff6f live_chat_delay_server
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: live_chat_unicode
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d live_chat_unicode"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Initialize failed controlled evidence
+        run: |
+          mkdir -p evidence
+          printf '{"controlledAcceptance":false,"phase":"setup"}\n' > evidence/controlled-report.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: qa-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.head }}
+          path: target
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable components and trigger isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C qa-source rev-parse HEAD)" = "$QA_QA_HEAD"
+          test -z "$(git -C qa-source status --porcelain)"
+          test "$(git -C target rev-parse HEAD)" = "$QA_PRODUCT_HEAD"
+          test "$(git -C target rev-parse HEAD^{tree})" = "$QA_PRODUCT_TREE"
+          test "$(git -C target show -s --format=%P HEAD)" = "$QA_PRODUCT_PARENTS"
+          test -z "$(git -C target status --porcelain)"
+          test ! -e qa-source/.github/workflows/live-chat-unicode.yml
+          git -C qa-source show -s --format='{"head":"%H","tree":"%T","parents":"%P"}' HEAD > evidence/qa-provenance.json
+          while read -r dir head tree parents stem; do
+            git -C qa-source fetch --no-tags origin "$head"
+            git -C qa-source worktree add --detach "../$dir" "$head"
+            test "$(git -C "$dir" rev-parse HEAD)" = "$head"
+            test "$(git -C "$dir" rev-parse HEAD^{tree})" = "$tree"
+            test "$(git -C "$dir" show -s --format=%P HEAD)" = "$parents"
+            test -z "$(git -C "$dir" status --porcelain)"
+            git -C "$dir" show -s --format='{"head":"%H","tree":"%T","parents":"%P"}' HEAD > "evidence/$dir-provenance.json"
+          done <<< "$QA_DEPS"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache-dependency-path: target/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: target/client/package-lock.json
+      - name: Build unchanged product and test full client before QA staging
+        working-directory: target
+        env:
+          GOTOOLCHAIN: local
+          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+        run: |
+          set -euo pipefail
+          test -z "$(find client -maxdepth 1 -name 'live_*.mjs' -print)"
+          go build -o "$RUNNER_TEMP/live-chat-unicode-server" ./cmd/server 2>&1 | tee ../evidence/build-server.log
+          sha256sum "$RUNNER_TEMP/live-chat-unicode-server" > ../evidence/server-sha256.txt
+          echo "QA_ACTUAL_SERVER_SHA=$(cut -d ' ' -f1 ../evidence/server-sha256.txt)" >> "$GITHUB_ENV"
+          cd client
+          npm ci 2>&1 | tee ../../evidence/install.log
+          npm test 2>&1 | tee ../../evidence/client-tests.log
+          npm run build 2>&1 | tee ../../evidence/client-build.log
+          npx --no-install playwright install --with-deps chromium
+      - name: Compare every staged dependency and run every control suite
+        working-directory: target/client
+        run: |
+          set -euo pipefail
+          while read -r dir head tree parents stem; do
+            for suffix in .mjs .test.mjs; do
+              cp "../../$dir/.github/scripts/$stem$suffix" .
+              cmp "$stem$suffix" "../../$dir/.github/scripts/$stem$suffix"
+            done
+            node "$stem.test.mjs" | tee "../../evidence/$stem-tests.log"
+          done <<< "$QA_DEPS"
+          for suffix in .mjs .test.mjs; do
+            cp "../../qa-source/.github/scripts/live_chat_delay_acceptance$suffix" .
+            cmp "live_chat_delay_acceptance$suffix" "../../qa-source/.github/scripts/live_chat_delay_acceptance$suffix"
+          done
+          test -x live_chat_delay_server.mjs
+          node live_chat_delay_acceptance.test.mjs | tee ../../evidence/controlled-tests.log
+      - name: Execute one fixed-network native trial with unchanged original gates
+        working-directory: target/client
+        env:
+          QA_OUT: ${{ github.workspace }}/evidence
+          QA_SERVER: ${{ github.workspace }}/target/client/live_chat_delay_server.mjs
+          QA_ACTUAL_SERVER: ${{ runner.temp }}/live-chat-unicode-server
+          DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/live_chat_unicode?sslmode=disable
+          REDIS_ADDR: 127.0.0.1:6379
+          PGHOST: 127.0.0.1
+          PGUSER: sanguo
+          PGPASSWORD: sanguo
+          PGDATABASE: live_chat_unicode
+        run: node live_chat_delay_acceptance.mjs
+      - name: Preserve every success and failure artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: controlled-chat-${{ matrix.product }}-${{ github.event.pull_request.head.sha }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
