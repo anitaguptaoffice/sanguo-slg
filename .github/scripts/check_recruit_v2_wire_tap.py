@@ -14,11 +14,22 @@ EXPECTED = (
     "missing success and malformed frames remain distinguishable",
     "legacy request and response golden bytes unchanged",
 )
+ACCOUNT_IDENTITY = (
+    "one additive field; all baseline account and common descriptors unchanged",
+    "fixed legacy bytes and old/new interoperability preserve all old fields",
+    "missing and explicit zero both lack usable identity, without breaking entry wire",
+    "positive int64 identities use exact tag6 fixtures without Number narrowing",
+    "negative int64 values are representable, not valid authenticated identities",
+    "truncated field6 varints reject rather than inventing identity",
+)
 SUMMARY = {"tests": 7, "suites": 0, "pass": 7, "fail": 0,
            "cancelled": 0, "skipped": 0, "todo": 0}
 
 
-def validate(text):
+def validate(text, expected=EXPECTED):
+    count = len(expected)
+    plan = f"1..{count}"
+    summary = {**SUMMARY, "tests": count, "pass": count}
     lines = text.splitlines()
     if not lines or lines[0] != "TAP version 13" or sum(
             line.startswith("TAP version") for line in lines) != 1:
@@ -29,65 +40,75 @@ def validate(text):
     if any(not re.fullmatch(r"ok \d+ - .+", line) for line in result_lines):
         raise ValueError("malformed or nested result")
     results = re.findall(r"^ok (\d+) - (.+)$", text, re.M)
-    wanted = [(str(i), name) for i, name in enumerate(EXPECTED, 1)]
+    wanted = [(str(i), name) for i, name in enumerate(expected, 1)]
     if results != wanted:
         raise ValueError(f"contract inventory differs: {results!r}")
     plans = [line for line in lines if re.match(r"^\s*\d+\.\.", line)]
-    if plans != ["1..7"]:
+    if plans != [plan]:
         raise ValueError(f"missing or invalid final plan: {plans!r}")
-    if lines.index("1..7") < lines.index("ok 7 - " + EXPECTED[-1]):
+    if lines.index(plan) < lines.index(f"ok {count} - " + expected[-1]):
         raise ValueError("plan is not final")
-    for key, expected in SUMMARY.items():
+    for key, value in summary.items():
         values = [line for line in lines if re.match(r"^# " + key + r"\b", line)]
-        if values != [f"# {key} {expected}"] or lines.index(values[0]) < lines.index("1..7"):
+        if values != [f"# {key} {value}"] or lines.index(values[0]) < lines.index(plan):
             raise ValueError(f"invalid {key} summary: {values!r}")
     return len(results)
 
 
-def fixture():
+def fixture(expected=EXPECTED):
+    count = len(expected)
+    summary = {**SUMMARY, "tests": count, "pass": count}
     return "\n".join(["TAP version 13"] +
-                     [f"ok {i} - {name}" for i, name in enumerate(EXPECTED, 1)] +
-                     ["1..7"] + [f"# {k} {v}" for k, v in SUMMARY.items()])
+                     [f"ok {i} - {name}" for i, name in enumerate(expected, 1)] +
+                     [f"1..{count}"] + [f"# {k} {v}" for k, v in summary.items()])
 
 
 class EvidenceGateTests(unittest.TestCase):
     def test_complete(self):
-        self.assertEqual(validate(fixture()), 7)
+        for expected in (EXPECTED, ACCOUNT_IDENTITY):
+            self.assertEqual(validate(fixture(expected), expected), len(expected))
 
     def test_negative_controls(self):
-        good = fixture()
-        cases = {
-            "missing": good.replace("ok 1 - " + EXPECTED[0] + "\n", ""),
-            "duplicate": good.replace("ok 2 - " + EXPECTED[1], "ok 1 - " + EXPECTED[0]),
-            "renamed": good.replace(EXPECTED[0], "different test"),
-            "failed": good.replace("ok 1 -", "not ok 1 -"),
-            "skipped": good.replace(EXPECTED[0], EXPECTED[0] + " # SKIP"),
-            "todo": good.replace(EXPECTED[0], EXPECTED[0] + " # TODO"),
-            "cancelled": good.replace("# cancelled 0", "# cancelled 1"),
-            "truncated": good.split("1..7")[0],
-            "plan": good.replace("1..7", "1..6"),
-            "extra": good.replace("1..7", "ok 8 - surprise\n1..7"),
-            "bail": good + "\nBail out! stopped",
-            "summary": good + "\n# pass 7",
-            "header": good.replace("TAP version 13\n", ""),
-            "header_order": good.replace("TAP version 13\n", "") + "\nTAP version 13",
-            "malformed_result": good + "\nok 8",
-            "malformed_duplicate": good + "\nok 1",
-            "malformed_summary": good + "\n# fail nope",
-            "early_summary": good.replace("# pass 7", "") .replace("1..7", "# pass 7\n1..7"),
-            "nested_result": good + "\n  ok 8 - nested",
-            "malformed_plan": good + "\n1..nope",
-        }
-        for name, text in cases.items():
-            with self.subTest(name=name), self.assertRaises(ValueError):
-                validate(text)
+        for expected in (EXPECTED, ACCOUNT_IDENTITY):
+            good = fixture(expected)
+            count = len(expected)
+            plan = f"1..{count}"
+            cases = {
+                "missing": good.replace("ok 1 - " + expected[0] + "\n", ""),
+                "duplicate": good.replace("ok 2 - " + expected[1], "ok 1 - " + expected[0]),
+                "renamed": good.replace(expected[0], "different test"),
+                "failed": good.replace("ok 1 -", "not ok 1 -"),
+                "skipped": good.replace(expected[0], expected[0] + " # SKIP"),
+                "todo": good.replace(expected[0], expected[0] + " # TODO"),
+                "cancelled": good.replace("# cancelled 0", "# cancelled 1"),
+                "truncated": good.split(plan)[0],
+                "plan": good.replace(plan, "1..0"),
+                "extra": good.replace(plan, f"ok {count + 1} - surprise\n{plan}"),
+                "bail": good + "\nBail out! stopped",
+                "summary": good + f"\n# pass {count}",
+                "header": good.replace("TAP version 13\n", ""),
+                "header_order": good.replace("TAP version 13\n", "") + "\nTAP version 13",
+                "malformed_result": good + "\nok 8",
+                "malformed_duplicate": good + "\nok 1",
+                "malformed_summary": good + "\n# fail nope",
+                "early_summary": good.replace(f"# pass {count}", "") .replace(plan, f"# pass {count}\n{plan}"),
+                "nested_result": good + "\n  ok 8 - nested",
+                "malformed_plan": good + "\n1..nope",
+            }
+            for name, text in cases.items():
+                with self.subTest(suite=len(expected), name=name), self.assertRaises(ValueError):
+                    validate(text, expected)
+
 
 
 if __name__ == "__main__":
     if sys.argv[1:] == ["--self-test"]:
         unittest.main(argv=[sys.argv[0]])
+    elif len(sys.argv) == 3 and sys.argv[1] == "--account-identity":
+        count = validate(Path(sys.argv[2]).read_text(encoding="utf-8"), ACCOUNT_IDENTITY)
+        print(f"Verified {count} exact account identity tests; zero skips/failures/todo")
     elif len(sys.argv) == 2:
         count = validate(Path(sys.argv[1]).read_text(encoding="utf-8"))
         print(f"Verified {count} exact Recruit V2 contract tests; zero skips/failures/todo")
     else:
-        raise SystemExit("usage: check_recruit_v2_wire_tap.py TAP_FILE | --self-test")
+        raise SystemExit("usage: check_recruit_v2_wire_tap.py [--account-identity] TAP_FILE | --self-test")

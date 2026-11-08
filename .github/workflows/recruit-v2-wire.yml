@@ -46,6 +46,7 @@ jobs:
               | xargs -0 sha256sum
           } | tee "$RUNNER_TEMP/recruit-v2-source.txt"
           git ls-files --error-unmatch spec/proto/recruit_v2_contract.test.cjs \
+            spec/proto/account_identity_contract.test.cjs \
             spec/proto/validate.sh spec/proto/sanguo/military/v1/military.proto \
             spec/proto/sanguo/common/v1/envelope.proto
           # The existing canonical validator writes only a descriptor to /dev/null.
@@ -60,6 +61,16 @@ jobs:
             node --test --test-reporter=tap spec/proto/recruit_v2_contract.test.cjs \
             | tee "$RUNNER_TEMP/recruit-v2-contract.tap"
           python3 .github/scripts/check_recruit_v2_wire_tap.py "$RUNNER_TEMP/recruit-v2-contract.tap"
+          git diff --exit-code HEAD
+      - name: Run exact account identity contract suite with zero skips
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH="$GITHUB_WORKSPACE/client/node_modules" \
+            node --test --test-reporter=tap spec/proto/account_identity_contract.test.cjs \
+            | tee "$RUNNER_TEMP/recruit-v2-account-identity.tap"
+          python3 .github/scripts/check_recruit_v2_wire_tap.py --account-identity \
+            "$RUNNER_TEMP/recruit-v2-account-identity.tap"
           git diff --exit-code HEAD
       - name: Retain compiler and contract evidence
         if: always()
