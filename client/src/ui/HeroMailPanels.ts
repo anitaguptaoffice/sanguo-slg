@@ -3241,6 +3241,12 @@ export class HeroMailPanels {
       '[data-action="mail-open-battle-report"]',
     ) as HTMLButtonElement | null;
     if (!ul) return;
+    const focused = document.activeElement;
+    const focusRow = focused instanceof HTMLElement && ul.contains(focused)
+      ? focused.closest<HTMLElement>("li[data-mail-id]") : null;
+    const focusId = focusRow?.dataset.mailId;
+    const focusIndex = focusRow ? Array.from(ul.children).indexOf(focusRow) : -1;
+    const focusRole = focused?.getAttribute("data-role");
     this.setMailFilterButtons();
     ul.innerHTML = "";
     if (statusEl) {
@@ -3293,7 +3299,9 @@ export class HeroMailPanels {
           pick.appendChild(document.createTextNode("勾选"));
           li.appendChild(pick);
         }
-        const titleSpan = document.createElement("span");
+        const titleSpan = document.createElement("button");
+        titleSpan.type = "button";
+        titleSpan.setAttribute("data-role", "mail-open");
         titleSpan.className = "mail-row-title";
         if (mailRowShowsUnreadDot(m)) {
           const dot = document.createElement("span");
@@ -3472,6 +3480,14 @@ export class HeroMailPanels {
       if (claimBtn instanceof HTMLButtonElement) {
         claimBtn.disabled = this.claimMailInflight !== 0;
       }
+    }
+    if (focusId && (focusRole === "mail-open" || focusRole === "mail-batch-checkbox")) {
+      const rows = Array.from(ul.querySelectorAll<HTMLElement>("li[data-mail-id]"));
+      const same = rows.find(row => row.dataset.mailId === focusId);
+      const target = same?.querySelector<HTMLElement>(`[data-role="${focusRole}"]`) ??
+        (same ?? rows[Math.min(focusIndex, rows.length - 1)])?.querySelector<HTMLElement>('[data-role="mail-open"]') ??
+        this.mailPanel.querySelector<HTMLElement>('[data-action="mail-filter-unread"]');
+      target?.focus({ preventScroll: true });
     }
     this.syncMailClaimInlineFeedback(sel?.mail_id ?? 0);
     this.pruneMailBatchSelection();
