@@ -23,9 +23,9 @@ jobs:
             tree: cb3162ade8e15a9ab361b8f2d54ced1f5ea36d40
             parents: e2b60dda830d9b25f15fcfced4da4acc090a8f1c
           - product: fixed
-            head: 00b292a9c1f7ab3ec5d6c868c8667cbcf03681bc
-            tree: 1949038fc542b545a229de4bcf96c86580a08514
-            parents: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+            head: 0f3a5f0349564bf57824051c5c8eb1ffb9e04b5b
+            tree: b60d02245443e89fb64cc71ae9aab578f6c63d1d
+            parents: 00b292a9c1f7ab3ec5d6c868c8667cbcf03681bc
     env:
       QA_WIDTH: ${{ matrix.width }}
       QA_QA_HEAD: ${{ github.event.pull_request.head.sha }}

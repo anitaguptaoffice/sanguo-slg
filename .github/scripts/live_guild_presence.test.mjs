@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { checkText, readable, productPins } from './live_guild_presence.mjs';
+import { checkText, readable, productPins, paintSurface, fixedSummary, baselineSummary, focusGate, expectedDefects } from './live_guild_presence.mjs';
 let count = 0;
 const check = (name, fn) => { fn(); count++; console.log(`PASS ${name}`); };
 function state(mode, expanded = true) {
@@ -21,10 +21,11 @@ for (const mode of ['baseline', 'fixed']) {
     assert.throws(() => checkText(state(mode), mode, true, true));
   });
 }
-const sample = { font: 10, opacity: 1, contrast: 4.5, rects: [{ width: 40, height: 12, visible: true, hit: true }] };
+const surface = { color: 'rgb(36, 23, 15)', image: 'none', borderImage: 'none', slice: '100%', opacity: 1, filter: 'none', backdrop: 'none', blend: 'normal', mask: 'none', pseudo: false };
+const sample = { font: 10, opacity: 1, ink: 'rgb(255, 243, 214)', chain: [surface], rects: [{ width: 40, height: 12, visible: true, hit: true }] };
 check('visible full text at minimum contrast is readable', () => assert.equal(readable(sample), true));
 check('reject clipped, occluded, invisible, tiny, empty or low-contrast text', () => {
-  for (const change of [{ font: 9 }, { opacity: 0 }, { opacity: .5 }, { contrast: 4.49 }, { rects: [] },
+  for (const change of [{ font: 9 }, { opacity: 0 }, { opacity: .5 }, { ink: 'rgb(37, 24, 16)' }, { rects: [] },
     { rects: [{ ...sample.rects[0], visible: false }] }, { rects: [{ ...sample.rects[0], hit: false }] },
     { rects: [{ ...sample.rects[0], width: 0 }] }, { rects: [{ ...sample.rects[0], height: 0 }] }]) assert.equal(readable({ ...sample, ...change }), false);
 });
@@ -32,7 +33,36 @@ check('every wrapped fragment must be readable', () => assert.equal(readable({ .
 check('invalid mode cannot manufacture acceptance', () => assert.throws(() => checkText(state('fixed'), 'unknown', true)));
 
 check('product labels bind immutable heads and trees', () => {
-  const env = { QA_PRODUCT: 'fixed', QA_PRODUCT_HEAD: '00b292a9c1f7ab3ec5d6c868c8667cbcf03681bc', QA_PRODUCT_TREE: '1949038fc542b545a229de4bcf96c86580a08514' };
+  const env = { QA_PRODUCT: 'fixed', QA_PRODUCT_HEAD: '0f3a5f0349564bf57824051c5c8eb1ffb9e04b5b', QA_PRODUCT_TREE: 'b60d02245443e89fb64cc71ae9aab578f6c63d1d' };
   productPins(env); assert.throws(() => productPins({ ...env, QA_PRODUCT: 'baseline' })); assert.throws(() => productPins({ ...env, QA_PRODUCT_TREE: 'a'.repeat(40) }));
+});
+
+const transparent = { ...surface, color: 'rgba(0, 0, 0, 0)' };
+const artwork = { ...transparent, panel: 'guild', slice: '24 24 24 24 fill', borderImage: 'url("http://127.0.0.1:5173/assets/art/v1/textures/1x/ui/panel_default.png")' };
+const baseline = { ...sample, ink: 'rgb(245, 230, 200)', chain: [transparent, artwork, surface] };
+check('actual filled-artwork regression never borrows dark body background', () => {
+  assert.equal(paintSurface(baseline).reason, 'artwork'); assert.equal(readable(baseline), false); baselineSummary(baseline);
+  assert.equal(readable({ ...sample, chain: [surface, artwork] }), true); fixedSummary(sample);
+  assert.throws(() => fixedSummary({ ...sample, chain: [transparent, surface, artwork] }));
+  assert.equal(readable({ ...sample, chain: [transparent, surface, artwork] }), true);
+});
+check('unsupported paints and compositing effects fail closed', () => {
+  for (const change of [{ image: 'url(art.png)' }, { borderImage: 'url(art.png)' }, { color: 'rgba(36, 23, 15, 0.5)' },
+    { color: 'color(srgb 0 0 0)' }, { color: 'rgb(999, 0, 0)' }, { opacity: .5 }, { filter: 'brightness(.5)' },
+    { backdrop: 'blur(2px)' }, { blend: 'multiply' }, { mask: 'url(mask.png)' }, { pseudo: true }])
+    assert.equal(readable({ ...sample, chain: [{ ...surface, ...change }] }), false);
+  assert.equal(readable({ ...sample, ink: 'rgba(255, 243, 214, 0.5)' }), false);
+  assert.equal(readable({ ...sample, chain: [transparent] }), false);
+});
+check('baseline permits only exact independently witnessed defects', () => {
+  for (const mutate of [s => s.ink = 'rgb(255, 255, 255)', s => s.chain[1].panel = 'hero', s => s.chain[1].borderImage = 'url(other.png)', s => s.chain[1].slice = '24', s => s.chain[0].filter = 'blur(1px)']) {
+    const changed = structuredClone(baseline); mutate(changed); assert.throws(() => baselineSummary(changed));
+  }
+  focusGate({ focusInPanel: false, focusTag: 'BODY' }, true); focusGate({ focusInPanel: true, focusAction: 'toggle-guild-role-group', focusRole: '1' }, false);
+  assert.throws(() => focusGate({ focusInPanel: true, focusAction: 'refresh-members', focusRole: '1' }, false));
+  assert.throws(() => focusGate({ focusInPanel: true, focusAction: 'toggle-guild-role-group', focusRole: '2' }, false));
+  assert.throws(() => focusGate({ focusInPanel: false, focusTag: 'BUTTON' }, true)); assert.throws(() => focusGate({ focusInPanel: false }, false));
+  const known = ['summary-artwork-contrast', 'role-toggle-body-focus', 'escape-remains-open']; expectedDefects(known);
+  assert.throws(() => expectedDefects(known.slice(0, 2))); assert.throws(() => expectedDefects([...known, 'extra']));
 });
 console.log(`PASS ${count} scenario negative-control groups; not native rendering evidence`);
