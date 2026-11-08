@@ -15,8 +15,9 @@ jobs:
       BASELINE: 5313ed8fd3d6e3eaca936cba51d8a19e5550f9ac
       SOURCE: 00951b0d22d72d311fbdee21e20b91fcb8910b7e
       GOTOOLCHAIN: local
-      EVIDENCE: ${{ runner.temp }}/gateway-evidence
     steps:
+      - name: Initialize evidence directory
+        run: echo "EVIDENCE=$RUNNER_TEMP/gateway-evidence" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
