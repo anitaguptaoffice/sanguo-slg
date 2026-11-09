@@ -1,0 +1,143 @@
+name: PLATFORM authenticated identity PostgreSQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  platform-identity-pg:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    env:
+      GOTOOLCHAIN: local
+      OLD_PRODUCER: b75cfcab02cd8543263aacf993ce1cd886a38001
+      PKG: ./internal/platform/shard
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - name: Verify exact tools, source and genuine formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          e="$RUNNER_TEMP/platform-identity"
+          mkdir -p "$e"
+          echo "EVIDENCE=$e" >> "$GITHUB_ENV"
+          gofmt="$(go env GOROOT)/bin/gofmt"
+          {
+            go version
+            go env GOVERSION GOTOOLCHAIN
+            go version "$gofmt"
+            sha256sum "$(command -v go)" "$gofmt"
+            docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -c 'SELECT version()'
+          } | tee "$e/tools.txt"
+          test "$(go env GOVERSION)" = go1.23.12
+          test "$(go env GOTOOLCHAIN)" = local
+          go version "$gofmt" | grep -E ' go1\.23\.12$'
+          version=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo -Atc 'SHOW server_version_num')
+          [[ "$version" =~ ^[0-9]+$ ]]
+          (( version / 10000 == 17 ))
+          test -z "$(git status --porcelain --untracked-files=all)"
+          git rev-parse HEAD HEAD^{tree} "$OLD_PRODUCER" "$OLD_PRODUCER^{tree}" | tee "$e/source.txt"
+          git ls-tree -r HEAD > "$e/tree.txt"
+          git ls-files -z -- internal/platform/shard internal/account spec/db/001_account.sql \
+            spec/db/003_domestic.sql go.mod go.sum .github | xargs -0 sha256sum > "$e/source-sha256.txt"
+          files=(internal/platform/shard/{handlers.go,handlers_identity_pg_test.go,doc.go})
+          git ls-files --error-unmatch "${files[@]}"
+          "$gofmt" -d "${files[@]}" | tee "$e/gofmt.diff"
+          test ! -s "$e/gofmt.diff"
+          python3 .github/scripts/check_platform_identity_json.py --self-test | tee "$e/checker-self-test.txt"
+      - name: Prepare identical adopted binding/tests with the old producer only
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/platform-identity-baseline"
+          mkdir -p "$root"
+          git archive HEAD | tar -x -C "$root"
+          git show "$OLD_PRODUCER:internal/platform/shard/handlers.go" > "$root/internal/platform/shard/handlers.go"
+          {
+            git rev-parse "$OLD_PRODUCER:internal/platform/shard/handlers.go"
+            sha256sum "$root/internal/platform/shard/handlers.go"
+            cmp internal/platform/shard/handlers_identity_pg_test.go "$root/internal/platform/shard/handlers_identity_pg_test.go"
+            diff -r internal/account "$root/internal/account"
+            diff -r spec "$root/spec"
+          } | tee "$EVIDENCE/baseline-source.txt"
+          test "$(git hash-object "$root/internal/platform/shard/handlers.go")" = "$(git rev-parse "$OLD_PRODUCER:internal/platform/shard/handlers.go")"
+          test "$(git hash-object internal/platform/shard/handlers.go)" != "$(git hash-object "$root/internal/platform/shard/handlers.go")"
+          # A missing AccountId build error is NOT a behavioral baseline.
+          (cd "$root" && go test -count=1 -run '^$' "$PKG") 2>&1 | tee "$EVIDENCE/baseline-compile.txt"
+          go test -count=1 -run '^$' "$PKG" 2>&1 | tee "$EVIDENCE/candidate-compile.txt"
+      - name: Run complete baseline and candidate shard packages ordinary and race
+        shell: bash
+        run: |
+          set -euo pipefail
+          checker="$GITHUB_WORKSPACE/.github/scripts/check_platform_identity_json.py"
+          for variant in baseline candidate; do
+            root="$GITHUB_WORKSPACE"
+            check_flags=()
+            if [[ "$variant" == baseline ]]; then
+              root="$RUNNER_TEMP/platform-identity-baseline"
+              check_flags=(--baseline)
+            fi
+            for mode in ordinary race; do
+              flags=()
+              if [[ "$mode" == race ]]; then flags=(-race); fi
+              database="identity_${variant}_${mode}"
+              docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
+                -v ON_ERROR_STOP=1 -c "CREATE DATABASE $database"
+              export SHARD_IDENTITY_TEST_DSN="postgres://sanguo:sanguo@localhost:5432/$database?sslmode=disable"
+              log="$EVIDENCE/$variant-$mode"
+              set +e
+              (cd "$root" && go test "${flags[@]}" -count=1 -timeout=5m -json "$PKG") > "$log.json" 2> "$log.stderr"
+              status=$?
+              set -e
+              cat "$log.json" "$log.stderr"
+              echo "$status" | tee "$log.exit"
+              if [[ "$variant" == baseline ]]; then test "$status" = 1; else test "$status" = 0; fi
+              if grep -Eq 'WARNING: DATA RACE|race detected during execution of test|panic:|fatal error:|\[build failed\]' "$log.stderr"; then
+                echo 'Unexpected race/panic/build failure on stderr'; exit 1
+              fi
+              python3 "$checker" "$log.json" "${check_flags[@]}" | tee "$log.check.txt"
+              schemas=$(docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d "$database" \
+                -Atc "SELECT count(*) FROM pg_namespace WHERE nspname LIKE 'shard_identity_%'")
+              echo "remaining_fixture_schemas=$schemas" | tee "$log.cleanup.txt"
+              test "$schemas" = 0
+            done
+          done
+          git diff --exit-code HEAD
+      - name: Hash evidence including failures
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/platform-identity"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: platform-identity-pg-evidence
+          path: ${{ runner.temp }}/platform-identity
+          if-no-files-found: error
+          retention-days: 14
