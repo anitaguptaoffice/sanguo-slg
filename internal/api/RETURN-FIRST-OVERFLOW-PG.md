@@ -5,8 +5,8 @@ It neither replaces the unconfirmed CI registration nor changes that frozen CI i
 No production, old helper, Binding/profile, contract, workflow or hold changes.
 
 `TestPGReturnOverflowUnblocksRecruitCompletion` changes synthetic retained unit1
-survivors from7 to8 before either real paid admission. Unchanged ROWS helpers create
-R=M−11/P4 and two real paid22-second jobs; no paid schedule or receipt is fabricated.
+survivors from 7 to 8 before either real paid admission. Unchanged ROWS helpers create
+R=M−11/P4 and two real paid 22-second jobs; no paid schedule or receipt is fabricated.
 Actual Return leads and pauses at its clock QueryStart with the common locks held.
 A distinct actual Recruit completion backend must wait on its exact wallet SQL,
 confirmed by PostgreSQL blocking PIDs, source trace and original transport identity.
@@ -14,7 +14,7 @@ confirmed by PostgreSQL blocking PIDs, source trace and original transport ident
 Return fails capacity at R+P+S=M+1 and performs actual independent five-second
 Background rollback. No gate pauses that cleanup. The rejection must be known-ended,
 non-source failure, with zero observation and no diagnostic, lease or generation leak.
-The new closed77-query oracle requires clock then rollback and forbids evidence,
+The new closed 77-query oracle requires clock then rollback and forbids evidence,
 credit and Commit. Its dedicated End validator requires one genuine ROLLBACK tag.
 Synthetic oracle/protocol negative controls are not substitutes for the real consumer.
 
