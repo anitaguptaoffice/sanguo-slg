@@ -57,6 +57,7 @@ jobs:
             internal/api/return_source_pins_pg_test.go \
             internal/api/return_source_test.go \
             internal/api/intg006_smoke_test.go \
+            internal/api/authenticated_entry_pg_test.go \
             internal/api/smoke_daily_clock_export_test.go \
             internal/api/smoke_daily_clock_pg_test.go)
           if [[ -n "$files" ]]; then
@@ -86,8 +87,28 @@ jobs:
           if phase not in {"preflight", "full"}:
               raise SystemExit("Unknown API test phase")
           root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          # Full: 249 existing + 3 calendar outcomes; preflight: 24 existing + 3 calendar outcomes.
+          # Preserve 259 adopted / 252 legacy full and 27 preflight, plus 20 entry outcomes.
           expected = {
+              "TestAuthenticatedEntryWirePG",
+              "TestAuthenticatedEntryWirePG/starter_pending_refresh",
+              "TestAuthenticatedEntryWirePG/profile_failure",
+              "TestAuthenticatedEntryWirePG/starter_granted_retry",
+              "TestAuthenticatedEntryWirePG/refresh_session",
+              "TestAuthenticatedEntryWirePG/credential_relogin",
+              "TestAuthenticatedEntryWirePG/shard_switch",
+              "TestAuthenticatedEntryWirePG/other_account_max",
+              "TestAuthenticatedEntryWirePG/zero_wallet",
+              "TestAuthenticatedEntryWirePG/missing_wallet",
+              "TestAuthenticatedEntryWirePG/missing",
+              "TestAuthenticatedEntryWirePG/malformed",
+              "TestAuthenticatedEntryWirePG/absent",
+              "TestAuthenticatedEntryWirePG/expired",
+              "TestAuthenticatedEntryWirePG/revoked",
+              "TestAuthenticatedEntryWirePG/authenticated_unknown_route",
+              "TestAuthenticatedEntryWirePG/bad_payload",
+              "TestAuthenticatedEntryWirePG/missing_server",
+              "TestAuthenticatedEntryWirePG/unavailable_server",
+              "TestAuthenticatedEntryWirePG/no_player",
               "TestCityGarrisonAuthorizationBeforeRead",
               "TestCityGarrisonConcurrentCompletionSnapshot",
               "TestCityGarrisonPostgresOwnership",
@@ -360,9 +381,9 @@ jobs:
               no_tests.add(root + "/pb/sanguo/military/v1")
           if phase == "preflight":
               required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))
-                          or item[1].split("/", 1)[0] == "TestSmokeDailyCalendarClockPG"}
+                          or item[1].split("/", 1)[0] in {"TestSmokeDailyCalendarClockPG", "TestAuthenticatedEntryWirePG"}}
               no_tests = set()
-          if len(required) != (27 if phase == "preflight" else 259 if adopted else 252):
+          if len(required) != (47 if phase == "preflight" else 279 if adopted else 272):
               raise SystemExit("Frozen API inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
@@ -414,7 +435,7 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestSmokeDailyCalendarClockPG$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestSmokeDailyCalendarClockPG$|TestAuthenticatedEntryWirePG$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
