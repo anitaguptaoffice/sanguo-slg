@@ -116,7 +116,11 @@ func TestRecruitCompletionFirstRouting(t *testing.T) {
 					t.Fatal("bad End reached inner recorder")
 				}
 			}
-			if !r.fault && len(r.pending) == 0 {
+			if bad == "omitted" {
+				if r.fault || len(r.pending) != 1 || b.starts != 3 {
+					t.Fatal("omitted real End was not retained as incomplete evidence")
+				}
+			} else if !r.fault {
 				t.Fatal("invalid route/token was accepted", bad)
 			}
 		})
