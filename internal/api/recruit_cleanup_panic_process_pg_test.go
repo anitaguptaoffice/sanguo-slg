@@ -160,7 +160,7 @@ func TestRecruitPanicAbsenceRejectsInvalidIdentity(t *testing.T) {
 
 func TestPGRecruitGenerationConstructorCleanupPanic(t *testing.T) {
 	if os.Getenv(recruitPanicChild) == "1" {
-		recruitCleanupPanicChild(t)
+		recruitPanicGuardedChild(t, recruitCleanupPanicChild)
 		return
 	}
 	dsn := os.Getenv("DATABASE_URL")
@@ -245,6 +245,10 @@ func TestPGRecruitGenerationConstructorCleanupPanic(t *testing.T) {
 }
 
 func recruitCleanupPanicChild(t *testing.T) {
+	recruitPanicFailureSetup(t)
+	if recruitPanicFailurePoint(t, "pre") {
+		return
+	}
 	trace := &recruitCleanupPanicTrace{returnLifetimeTrace: returnLifetimeTracer(""),
 		primary: errors.New("Recruit primary constructor panic"), cleanup: errors.New("Recruit cleanup rollback panic")}
 	trace.release() // Empty SQL from an incidental pool Ping must not block the trace gate.
@@ -252,6 +256,7 @@ func recruitCleanupPanicChild(t *testing.T) {
 		cfg.MaxConns, cfg.MinConns, cfg.MinIdleConns = 2, 0, 0
 		cfg.MaxConnLifetime, cfg.MaxConnIdleTime, cfg.HealthCheckPeriod = time.Hour, time.Hour, time.Hour
 		cfg.ConnConfig.Tracer, cfg.AfterConnect = trace, trace.afterConnect
+		recruitPanicFailurePoint(t, "bootstrap")
 	})
 	trace.observer, trace.evidence.Schema = observer, profile.SchemaName
 	recruitPanicEmit(recruitPanicOwned, trace.evidence)
@@ -287,11 +292,13 @@ func recruitCleanupPanicChild(t *testing.T) {
 	returnLifetimeCheck(t, live && state == "idle in transaction" && trace.conn.PgConn().TxStatus() == 'T', "cleanup panic did not leave live transaction", live, state)
 	returnLifetimeCheck(t, trace.pool.Stat().AcquiredConns() == 1, "cleanup panic did not retain pool slot")
 	returnLifetimeCheck(t, maps.Equal(before, returnPGSnapshot(t, ctx, observer, profile)), "panic changed fixture before teardown")
+	recruitPanicFailurePoint(t, "original")
 	// Prewarm the second slot. Every successful probe is immediately released.
 	spare, err := trace.pool.Acquire(ctx)
 	returnPGOK(t, err)
 	spare.Release()
 	returnLifetimeCheck(t, trace.pool.Stat().AcquiredConns() == 1 && trace.pool.Stat().IdleConns() == 1, "spare capacity not available")
+	recruitPanicFailurePoint(t, "spare")
 	clean, stop := context.WithTimeout(context.Background(), 5*time.Second)
 	defer stop()
 	// Close the held transport, never a remote backend selected by historical PID.
@@ -302,6 +309,7 @@ func recruitCleanupPanicChild(t *testing.T) {
 		t.Fatal("original CleanupDone exceeded bound")
 	}
 	returnPGOK(t, recruitPanicAbsence(clean, observer, id))
+	recruitPanicFailurePoint(t, "raw-close")
 	recruitPGReleased(t, ctx, observer, profile)
 	returnLifetimeCheck(t, maps.Equal(before, returnPGSnapshot(t, ctx, observer, profile)), "teardown changed fixture rows/allocators")
 	recruitLifetimeClosed(t, g, trace.returnLifetimeTrace, 1)

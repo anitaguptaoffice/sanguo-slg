@@ -137,7 +137,6 @@ import {
   type LeaderboardReturnScrollPayload,
 } from "@/net/leaderboardReturnScroll";
 import {
-  CHAT_SEND_MAX_CONTENT_LENGTH,
   formatChatInputCounter,
   validateSendChatContent,
 } from "@/net/chatSendValidation";
@@ -290,6 +289,8 @@ export class SocialPanels {
   private lastRenderedChatMessages: ChatMessageRow[] = [];
   private chatSendPending: object | null = null;
   private chatDraftVersion = 0;
+  // null means not restored yet; an empty string is an authoritative cleared draft.
+  private chatDraftContent: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -578,6 +579,7 @@ export class SocialPanels {
     this.guildPanel.classList.add("hidden");
     openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
+    this.restoreChatInputDraftFromSession();
     const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
     if (sel) sel.value = String(CHAT_CHANNEL_GUILD);
     this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
@@ -640,7 +642,7 @@ export class SocialPanels {
         <ul class="chat-log" data-role="chat-log"></ul>
       </div>
       <label class="chat-input-label">内容
-        <input type="text" data-field="chat-content" maxlength="${CHAT_SEND_MAX_CONTENT_LENGTH}" placeholder="输入消息" aria-describedby="chat-input-counter" />
+        <input type="text" data-field="chat-content" placeholder="输入消息" aria-describedby="chat-input-counter" />
         <span class="chat-input-counter" id="chat-input-counter" data-role="chat-input-counter" aria-live="polite"></span>
       </label>
       <button type="button" data-action="send-chat">发送</button>
@@ -695,17 +697,15 @@ export class SocialPanels {
   }
 
   private persistChatInputDraft(): void {
-    persistGuildChatDraft(this.chatContentInput()?.value ?? "");
+    this.chatDraftContent = this.chatContentInput()?.value ?? "";
+    persistGuildChatDraft(this.chatDraftContent);
   }
 
   private restoreChatInputDraftFromSession(): void {
-    const draft = restoreGuildChatDraft();
     const input = this.chatContentInput();
-    if (!input || !draft) {
-      this.syncChatInputCounter();
-      return;
-    }
-    input.value = draft;
+    if (!input) return;
+    this.chatDraftContent ??= restoreGuildChatDraft();
+    input.value = this.chatDraftContent;
     this.syncChatInputCounter();
   }
 
@@ -1170,7 +1170,7 @@ export class SocialPanels {
       const input = this.chatContentInput();
       if (input?.value === raw && this.chatDraftVersion === draftVersion && sameDestination()) {
         input.value = "";
-        persistGuildChatDraft("");
+        this.persistChatInputDraft();
         this.syncChatInputCounter();
       }
       if (sameDestination()) await this.refreshChat(() => current() && sameDestination(), () => {
@@ -1986,8 +1986,14 @@ export class SocialPanels {
       const roleKey = Number(btn.getAttribute("data-role-key"));
       if (!Number.isFinite(roleKey)) return;
       const next = !this.isGuildRoleGroupExpanded(roleKey);
+      const restoreFocus = this.guildPanel.ownerDocument.activeElement === btn;
       this.guildRoleGroupExpanded.set(roleKey, next);
       this.renderGuildMembersList(this.guildMembersCache);
+      if (restoreFocus) {
+        this.guildPanel.querySelector<HTMLButtonElement>(
+          `[data-action="toggle-guild-role-group"][data-role-key="${roleKey}"]`,
+        )?.focus({ preventScroll: true });
+      }
     }
     if (a === "open-guild-chat-channel") this.openGuildChatChannel();
   }

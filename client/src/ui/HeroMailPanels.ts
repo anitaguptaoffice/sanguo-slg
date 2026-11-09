@@ -4669,7 +4669,7 @@ export class HeroMailPanels {
     await this.markMailRead(mailId);
   }
 
-  private async syncBagFromServer(): Promise<BagStack[] | null> {
+  private async syncBagFromServer(current = captureActor(this.gateway, this.getSession)): Promise<BagStack[] | null> {
     const session = this.getSession();
     if (!session) return null;
     const sid = this.serverId();
@@ -4677,6 +4677,7 @@ export class HeroMailPanels {
       const bagRes = (await this.gateway.listPlayerBag(sid)) as {
         items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      if (!current()) return null;
       const bag = bagFromListPlayerBagResponse(bagRes.items);
       this.onSessionPatch({ bag });
       return bag;
@@ -4699,6 +4700,8 @@ export class HeroMailPanels {
   > {
     const sid = this.serverId();
     const mailBeforeClaim = this.mails.find((m) => m.mail_id === mailId);
+    const current = captureActor(this.gateway, this.getSession);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
@@ -4709,13 +4712,15 @@ export class HeroMailPanels {
         wallet_after?: MainCitySession["wallet"];
         bag_items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      const freshAssets = settle();
+      if (!current()) return { ok: false, message: "" };
       const session = this.getSession();
       const claimPatch = session
         ? applyMailClaimResult(this.mails, mailId, res, session)
         : null;
       const nextMails = claimPatch?.mails ?? syncMailRowAfterClaim(this.mails, mailId, res);
       this.applyMailsAfterClaim(nextMails, mailId);
-      if (claimPatch) {
+      if (claimPatch && freshAssets) {
         this.onSessionPatch({ bag: claimPatch.bag, wallet: claimPatch.wallet });
       }
       this.mailBatchSelected.delete(mailId);
@@ -4729,6 +4734,8 @@ export class HeroMailPanels {
       return { ok: true, granted: res.granted };
     } catch (e) {
       return { ok: false, message: gatewayErrorMessage(e) };
+    } finally {
+      settle(); // Errors also invalidate reads, even after the panel is hidden.
     }
   }
 
@@ -4744,15 +4751,19 @@ export class HeroMailPanels {
     this.claimMailInflight = mailId;
     this.renderMailList();
     this.onStatus(`领取附件 #${mailId}…`);
+    const current = captureActor(this.gateway, this.getSession);
     const step = await this.claimMailAttachmentsForId(mailId);
     let pulseMailId = 0;
     try {
+      if (!current()) return;
       if (step.ok) {
         pulseMailId = mailId;
         this.rememberMailClaimInlineSuccess(mailId, step.granted);
         this.renderMailList();
-        await this.syncBagFromServer();
+        await this.syncBagFromServer(current);
+        if (!current()) return;
         const snap = await this.pullMailUnreadSnapshot();
+        if (!current()) return;
         this.mailUnreadTotal = snap.count;
         this.mailUnreadFirstId = snap.firstId;
         this.applyMailBadgeCountsFromSnapshot();
@@ -4765,8 +4776,10 @@ export class HeroMailPanels {
       }
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      if (current()) {
+        this.renderMailList();
+        if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      }
     }
   }
 
@@ -4803,16 +4816,21 @@ export class HeroMailPanels {
     this.onStatus(statusPrefix);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     const pulseMailIds: number[] = [];
+    const current = captureActor(this.gateway, this.getSession);
     try {
       for (const mailId of ordered) {
+        if (!current()) return;
         const step = await this.claimMailAttachmentsForId(mailId);
+        if (!current()) return;
         attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
         if (step.ok) pulseMailIds.push(mailId);
         else this.mailBatchClaimFailedIds.add(mailId);
         this.renderMailList();
       }
-      await this.syncBagFromServer();
+      await this.syncBagFromServer(current);
+      if (!current()) return;
       const snap = await this.pullMailUnreadSnapshot();
+      if (!current()) return;
       this.mailUnreadTotal = snap.count;
       this.mailUnreadFirstId = snap.firstId;
       this.applyMailBadgeCountsFromSnapshot();
@@ -4824,8 +4842,10 @@ export class HeroMailPanels {
       this.onStatus(summary.summaryText);
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      if (current()) {
+        this.renderMailList();
+        for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      }
     }
   }
 

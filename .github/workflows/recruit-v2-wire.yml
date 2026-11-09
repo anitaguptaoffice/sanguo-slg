@@ -1,0 +1,82 @@
+name: Recruit V2 wire contract
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  recruit-v2-wire:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Install locked client codec dependencies
+        working-directory: client
+        run: npm ci
+      - name: Install distribution protobuf compiler
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Official runner distribution repositories only; no downloaded installer.
+          sudo apt-get update
+          apt-cache policy protobuf-compiler
+          sudo apt-get install --no-install-recommends -y protobuf-compiler
+          {
+            node --version
+            npm --version
+            protoc --version
+            dpkg-query -W protobuf-compiler libprotobuf32t64 libprotoc32t64
+          } | tee "$RUNNER_TEMP/recruit-v2-tools.txt"
+      - name: Record checked-out source and validate every canonical schema
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            git rev-parse HEAD HEAD^{tree}
+            git ls-files -z -- spec/proto client/package-lock.json \
+              .github/workflows/recruit-v2-wire.yml .github/scripts/check_recruit_v2_wire_tap.py \
+              | xargs -0 sha256sum
+          } | tee "$RUNNER_TEMP/recruit-v2-source.txt"
+          git ls-files --error-unmatch spec/proto/recruit_v2_contract.test.cjs \
+            spec/proto/account_identity_contract.test.cjs \
+            spec/proto/validate.sh spec/proto/sanguo/military/v1/military.proto \
+            spec/proto/sanguo/common/v1/envelope.proto
+          # The existing canonical validator writes only a descriptor to /dev/null.
+          bash spec/proto/validate.sh 2>&1 | tee "$RUNNER_TEMP/recruit-v2-protoc.txt"
+      - name: Verify evidence gate negative controls
+        run: python3 .github/scripts/check_recruit_v2_wire_tap.py --self-test
+      - name: Run exact Recruit V2 contract suite with zero skips
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH="$GITHUB_WORKSPACE/client/node_modules" \
+            node --test --test-reporter=tap spec/proto/recruit_v2_contract.test.cjs \
+            | tee "$RUNNER_TEMP/recruit-v2-contract.tap"
+          python3 .github/scripts/check_recruit_v2_wire_tap.py "$RUNNER_TEMP/recruit-v2-contract.tap"
+          git diff --exit-code HEAD
+      - name: Run exact account identity contract suite with zero skips
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH="$GITHUB_WORKSPACE/client/node_modules" \
+            node --test --test-reporter=tap spec/proto/account_identity_contract.test.cjs \
+            | tee "$RUNNER_TEMP/recruit-v2-account-identity.tap"
+          python3 .github/scripts/check_recruit_v2_wire_tap.py --account-identity \
+            "$RUNNER_TEMP/recruit-v2-account-identity.tap"
+          git diff --exit-code HEAD
+      - name: Retain compiler and contract evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recruit-v2-wire-evidence
+          path: ${{ runner.temp }}/recruit-v2-*
+          if-no-files-found: warn
+          retention-days: 14

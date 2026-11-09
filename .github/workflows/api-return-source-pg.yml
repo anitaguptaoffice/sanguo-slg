@@ -31,6 +31,8 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.x"
@@ -55,6 +57,7 @@ jobs:
             internal/api/return_source_pins_pg_test.go \
             internal/api/return_source_test.go \
             internal/api/intg006_smoke_test.go \
+            internal/api/authenticated_entry_pg_test.go \
             internal/api/smoke_daily_clock_export_test.go \
             internal/api/smoke_daily_clock_pg_test.go)
           if [[ -n "$files" ]]; then
@@ -64,24 +67,50 @@ jobs:
             done <<< "$files"
             exit 1
           fi
+      - name: Verify parallel runner controls
+        run: python3 -m unittest discover -s .github/scripts -p test_api_pg_parallel.py -v
       - name: Run full API regressions without short mode
         shell: bash
         env:
           MODE: ${{ matrix.mode }}
         run: |
+          RECRUIT_BINDINGS_STATE="$(python3 .github/scripts/check_recruit_v2_bindings_json.py --state)"
+          export RECRUIT_BINDINGS_STATE
+          test "$RECRUIT_BINDINGS_STATE" = legacy || test "$RECRUIT_BINDINGS_STATE" = v2
           flags=()
           if [[ "$MODE" == race ]]; then flags=(-race); fi
           gate="$RUNNER_TEMP/api-gate.py"
           cat > "$gate" <<'PY'
           import json
+          import os
           import sys
 
           phase = sys.argv[3]
           if phase not in {"preflight", "full"}:
               raise SystemExit("Unknown API test phase")
           root = "github.com/anitaguptaoffice/sanguo-slg/internal/api"
-          # Full: 249 existing + 3 calendar outcomes; preflight: 24 existing + 3 calendar outcomes.
+          # Preserve 259 adopted / 252 legacy full and 27 preflight, plus 20 entry outcomes.
           expected = {
+              "TestAuthenticatedEntryWirePG",
+              "TestAuthenticatedEntryWirePG/starter_pending_refresh",
+              "TestAuthenticatedEntryWirePG/profile_failure",
+              "TestAuthenticatedEntryWirePG/starter_granted_retry",
+              "TestAuthenticatedEntryWirePG/refresh_session",
+              "TestAuthenticatedEntryWirePG/credential_relogin",
+              "TestAuthenticatedEntryWirePG/shard_switch",
+              "TestAuthenticatedEntryWirePG/other_account_max",
+              "TestAuthenticatedEntryWirePG/zero_wallet",
+              "TestAuthenticatedEntryWirePG/missing_wallet",
+              "TestAuthenticatedEntryWirePG/missing",
+              "TestAuthenticatedEntryWirePG/malformed",
+              "TestAuthenticatedEntryWirePG/absent",
+              "TestAuthenticatedEntryWirePG/expired",
+              "TestAuthenticatedEntryWirePG/revoked",
+              "TestAuthenticatedEntryWirePG/authenticated_unknown_route",
+              "TestAuthenticatedEntryWirePG/bad_payload",
+              "TestAuthenticatedEntryWirePG/missing_server",
+              "TestAuthenticatedEntryWirePG/unavailable_server",
+              "TestAuthenticatedEntryWirePG/no_player",
               "TestCityGarrisonAuthorizationBeforeRead",
               "TestCityGarrisonConcurrentCompletionSnapshot",
               "TestCityGarrisonPostgresOwnership",
@@ -336,15 +365,27 @@ jobs:
           required = {(root, name) for name in expected}
           required.add((root + "/pb/sanguo/domestic/v1", "TestGarrisonWireCompatibility"))
           required.add((root + "/pb/sanguo/quest/v1", "TestClaimRewardWireCompatibility"))
+          adopted = os.environ["RECRUIT_BINDINGS_STATE"] == "v2"
+          required.update((root + "/pb/sanguo/military/v1", name) for name in ({
+              "TestRecruitV2Descriptors",
+              "TestRecruitV2Descriptors/RecruitTroopV2Request",
+              "TestRecruitV2Descriptors/RecruitTroopV2Response",
+              "TestRecruitV2Descriptors/RecruitAcceptance",
+              "TestRecruitV2ExactIntegerBoundaries",
+              "TestRecruitV2WireAndPresence",
+              "TestRecruitV2UnknownFieldsAndOpaqueBytes",
+          } if adopted else set()))
           no_tests = {
               root + f"/pb/sanguo/{domain}/v1"
-              for domain in ("content", "hero", "military", "rank", "shop", "world")
+              for domain in ("content", "hero", "rank", "shop", "world")
           }
+          if not adopted:
+              no_tests.add(root + "/pb/sanguo/military/v1")
           if phase == "preflight":
               required = {item for item in required if item[1].startswith(("TestReturnSource", "TestPGReturnGeneration"))
-                          or item[1].split("/", 1)[0] == "TestSmokeDailyCalendarClockPG"}
+                          or item[1].split("/", 1)[0] in {"TestSmokeDailyCalendarClockPG", "TestAuthenticatedEntryWirePG"}}
               no_tests = set()
-          if len(required) != (27 if phase == "preflight" else 252):
+          if len(required) != (47 if phase == "preflight" else 279 if adopted else 272):
               raise SystemExit("Frozen API inventory changed")
           tested_packages = {package for package, _ in required}
           with open(sys.argv[1], encoding="utf-8") as stream:
@@ -367,6 +408,8 @@ jobs:
                   and event["Action"] in {"pass", "skip", "fail"}
               ]
               wanted = ["skip"] if package in no_tests else ["pass"]
+              if phase == "full" and package == root:
+                  wanted = ["pass"] * 4  # Four independently audited, disjoint root shards.
               if terminal != wanted:
                   bad.append({"package": package, "terminal": terminal})
               if package in no_tests and not any(
@@ -396,11 +439,58 @@ jobs:
             -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_preflight_$MODE"
           log="$RUNNER_TEMP/api-preflight-$MODE.json"
           DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_preflight_$MODE?sslmode=disable" \
-          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestSmokeDailyCalendarClockPG$)' -count=1 -timeout=5m -json | tee "$log"
+          go test ./internal/api "${flags[@]}" -run '^(TestReturnSource|TestPGReturnGeneration|TestSmokeDailyCalendarClockPG$|TestAuthenticatedEntryWirePG$)' -count=1 -timeout=5m -json | tee "$log"
           python3 "$gate" "$log" "$MODE" preflight
+          # DB names alone do not isolate pg_locks / pg_stat_activity witnesses.
+          # Reuse the verified PG17 image, but give each root shard its own cluster.
+          image=$(docker inspect "${{ job.services.postgres.id }}" --format '{{.Image}}')
+          for shard in 0 1 2 3; do
+            docker run --detach --name "api-$MODE-$shard" \
+              -p "127.0.0.1:$((15432 + shard)):5432" \
+              -e POSTGRES_USER=sanguo -e POSTGRES_PASSWORD=sanguo \
+              -e POSTGRES_DB="api_${MODE}_$shard" "$image"
+          done
+          for shard in 0 1 2 3; do
+            ready=false
+            for attempt in {1..30}; do
+              if docker exec "api-$MODE-$shard" pg_isready -h 127.0.0.1 -U sanguo -d "api_${MODE}_$shard"; then
+                ready=true; break
+              fi
+              sleep 1
+            done
+            "$ready"
+            version=$(docker exec "api-$MODE-$shard" psql -X -h 127.0.0.1 -U sanguo -d "api_${MODE}_$shard" -Atc "SHOW server_version_num")
+            [[ "$version" =~ ^[0-9]+$ ]] && (( version / 10000 == 17 ))
+          done
           docker exec "${{ job.services.postgres.id }}" psql -X -U sanguo -d sanguo \
-            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_$MODE"
-          log="$RUNNER_TEMP/api-$MODE.json"
-          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/api_$MODE?sslmode=disable" \
-          go test ./internal/api/... "${flags[@]}" -count=1 -timeout=120m -json | tee "$log"
-          python3 "$gate" "$log" "$MODE" full
+            -v ON_ERROR_STOP=1 -c "CREATE DATABASE api_${MODE}_4"
+          evidence="$RUNNER_TEMP/api-parallel-$MODE"
+          python3 .github/scripts/api_pg_parallel.py "$MODE" "$evidence"
+          python3 "$gate" "$evidence/full.json" "$MODE" full
+      - name: Preserve diagnostics and remove owned shard clusters
+        if: always()
+        shell: bash
+        env:
+          MODE: ${{ matrix.mode }}
+        run: |
+          set -euo pipefail
+          diagnostics="$RUNNER_TEMP/api-clusters-$MODE"
+          mkdir -p "$diagnostics"
+          status=0
+          for shard in 0 1 2 3; do
+            name="api-$MODE-$shard"
+            if docker container inspect "$name" > /dev/null 2>&1; then
+              docker logs "$name" > "$diagnostics/$shard.log" 2>&1 || status=1
+              docker rm --force "$name" || status=1
+            fi
+          done
+          exit "$status"
+      - name: Preserve parallel evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-parallel-${{ matrix.mode }}-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/api-parallel-${{ matrix.mode }}
+            ${{ runner.temp }}/api-clusters-${{ matrix.mode }}
+          if-no-files-found: error
