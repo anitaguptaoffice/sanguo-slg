@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { ServerSelectScene, permitsExistingAccountLogin } from "./ServerSelectScene";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import type { SceneContext } from "@/engine/SceneManager";
@@ -130,3 +132,24 @@ it.each([
   ["ws://[::1]:8080/ws", true], ["ws://game.example/ws", false], ["https://game.example/ws", false],
   ["wss://name:secret@game.example/ws", false], ["not a URL", false],
 ])("credential transport boundary %s", (url, allowed) => expect(permitsExistingAccountLogin(url as string)).toBe(allowed));
+
+it.each([false, true])("does not expose native password failures (action error=%s)", async actionError => {
+  const modulePath = "../../qa/existingAccount.browser.mjs";
+  const { runExistingAccountScenario } = await import(modulePath);
+  const artifactDir = await mkdtemp(`${tmpdir()}/existing-entry-redaction-`);
+  const secret = "disposable-redaction-fixture";
+  const control: any = {
+    on() {}, off() {}, locator: () => control, async goto() {}, async waitFor() {},
+    viewportSize: () => ({ width: 1280, height: 720 }),
+    async inputValue() { if (actionError) throw new Error(`fill('${secret}') failed`); return secret; },
+  };
+  const a = { accountId: 1, playerId: 2, cityId: 3, serverId: 1, login: "fixture-a", password: secret };
+  try {
+    const error = await runExistingAccountScenario({ page: control, baseUrl: "http://localhost", protoRoot: {}, artifactDir,
+      accounts: { a, b: { ...a, accountId: 4, playerId: 5, cityId: 6 } } }).catch((e: Error) => e);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).not.toContain(secret);
+    expect(error.message).toContain(actionError ? "[redacted]" : "password was not cleared");
+    expect(await readFile(`${artifactDir}/existing-account.json`, "utf8")).not.toContain(secret);
+  } finally { await rm(artifactDir, { recursive: true, force: true }); }
+});

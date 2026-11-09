@@ -63,7 +63,7 @@ export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, pr
   const open = async () => {
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
     await page.locator(`li[data-server-id="${accounts.a.serverId}"]:not(.disabled)`).waitFor();
-    assert.equal(await password.inputValue(), '', 'password retained after reload');
+    assert.ok((await password.inputValue()) === '', 'password was not cleared after reload');
   };
   const capture = async name => {
     assert.ok(!(await password.count()) || !(await password.inputValue()), 'refuse secret-bearing screenshot');
@@ -89,7 +89,7 @@ export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, pr
       await page.waitForFunction(city => document.getElementById('hud')?.textContent.includes(city), account.cityName);
     } else {
       await page.waitForFunction(text => document.querySelector('.server-select-panel [data-role="status"]')?.textContent.includes(text), expectedOutcome === 'empty' ? '首次建城流程尚未开放' : '登录未完成');
-      assert.equal(await password.inputValue(), '');
+      assert.ok((await password.inputValue()) === '', 'password was not cleared after failure');
       assert.equal(await page.locator('[data-action="toggle-military"]').count(), 0, 'unexpected gameplay entry');
     }
     const observed = rows.slice(start), logins = observed.filter(row => row.route === 'account.v1.Login');
@@ -117,7 +117,7 @@ export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, pr
     assert.ok(accounts.a.accountId !== accounts.b.accountId && accounts.a.playerId !== accounts.b.playerId && accounts.a.cityId !== accounts.b.cityId, 'fixtures must be distinct');
     await open(); await capture('form');
     await password.fill(accounts.a.password); await page.keyboard.press('Escape');
-    assert.equal(await password.inputValue(), '');
+    assert.ok((await password.inputValue()) === '', 'password was not cleared on dismissal');
     assert.equal(await page.locator('[data-role="server-select-trigger"]').evaluate(el => el === document.activeElement), true);
     await page.locator('[data-role="server-select-trigger"]').click();
     await enter('account-a', accounts.a, 'city');
@@ -133,6 +133,12 @@ export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, pr
     assert.ok(!rows.some(row => ['account.v1.Register', 'world.v1.CreateCity'].includes(row.route)), 'browser attempted provisioning');
     assert.deepEqual(failures, [], 'browser or decode error');
     return { viewport: page.viewportSize(), outcomes, requests: rows };
+  } catch (error) {
+    let message = String(error?.message ?? error);
+    for (const account of Object.values(accounts)) {
+      for (const secret of [account.password, account.login]) if (secret) message = message.split(secret).join('[redacted]');
+    }
+    throw new Error(message);
   } finally {
     if (offline) await page.context().setOffline(false);
     page.off('websocket', onSocket); page.off('pageerror', onError);
