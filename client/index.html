@@ -1024,6 +1024,10 @@
         background: transparent; border: none; border-radius: 0;
         box-sizing: border-box; color: #3d2e1f;
       }
+      .server-select-panel form { display: grid; gap: 8px; margin: 12px 0; }
+      .server-select-panel form label { display: grid; grid-template-columns: 48px 1fr; align-items: center; }
+      .server-select-panel form input { box-sizing: border-box; min-width: 0; min-height: 44px; padding: 8px; }
+      .server-select-panel form input:focus-visible { outline: 2px solid #c9a227; outline-offset: 2px; }
       .social-panel {
         position: absolute; left: 50%; transform: translateX(-50%);
         top: calc(56 / 900 * 100%); bottom: calc(56 / 900 * 100%);
