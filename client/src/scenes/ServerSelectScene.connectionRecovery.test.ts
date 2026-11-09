@@ -73,9 +73,9 @@ it("disconnect during bootstrap prevents scene transition and never replays it",
   resolve({serverId:1}); await flush(); expect(s.ctx.switchScene).not.toHaveBeenCalled(); expect(s.button("enter-game").disabled).toBe(true);
   s.button("refresh-servers").click(); await flush(); expect(bootstrapMainCity).toHaveBeenCalledTimes(1); expect(s.button("enter-game").disabled).toBe(false);
 });
-it("real GatewayClient and protobuf transport recover through explicit Refresh", async () => {
+it.each(["close", "silent timeout"])("real GatewayClient/protobuf recovers through explicit Refresh after %s", async ending => {
   const {GatewayClient}=await import("@/net/GatewayClient"); const {getTypes}=await import("@/net/loadProto");
-  const sockets: Socket[]=[];
+  const sockets: Socket[]=[], routes: string[]=[];
   class Socket extends EventTarget {
     static OPEN=1; readyState=0; binaryType="";
     onopen?:()=>void; onclose?:()=>void; onerror?:(e:Event)=>void;
@@ -84,18 +84,28 @@ it("real GatewayClient and protobuf transport recover through explicit Refresh",
     close(){this.readyState=3;this.onclose?.();this.dispatchEvent(new Event("close"));}
     send(bytes:Uint8Array){
       const t=getTypes(), request=t.ClientPacket.decode(bytes) as any;
+      routes.push(request.route);
       const data=t.ListGameServersResponse.encode(t.ListGameServersResponse.create({servers:[{shard:{server_id:1,status:1,display_name:"Real S1"}}]})).finish();
       const packet=t.ServerPacket.encode(t.ServerPacket.create({trace_id:request.trace_id,code:0,data})).finish();
       this.dispatchEvent(new MessageEvent("message",{data:Uint8Array.from(packet).buffer}));
     }
   }
-  vi.stubGlobal("WebSocket",Socket);
+  vi.useFakeTimers(); vi.stubGlobal("WebSocket",Socket);
   try {
-    const s=setup(); s.ctx.gateway=new GatewayClient("ws://test.invalid"); const first=s.scene.enter(s.ctx);
-    sockets[0].close(); await first; expect(s.button("enter-game").disabled).toBe(true);
+    const s=setup(); s.ctx.gateway=new GatewayClient("ws://test.invalid"); let done=false;
+    const first=s.scene.enter(s.ctx).then(()=>{done=true;});
+    expect(s.button("refresh-servers").disabled).toBe(true);
+    if (ending === "close") sockets[0].close(); else await vi.advanceTimersByTimeAsync(15_000);
+    await flush(); expect(done).toBe(true); await first;
+    expect(s.button("enter-game").disabled).toBe(true); expect(s.button("refresh-servers").disabled).toBe(false);
+    expect(routes).toEqual([]); expect(sockets).toHaveLength(1); expect(bootstrapMainCity).not.toHaveBeenCalled();
     s.button("refresh-servers").click(); expect(sockets).toHaveLength(2); sockets[1].open(); await flush();
     expect(s.layoutFrame.textContent).toContain("Real S1"); expect(s.button("enter-game").disabled).toBe(false);
+    sockets[0].open(); sockets[0].onerror?.(new Event("error")); sockets[0].close(); await flush();
+    expect(s.button("enter-game").disabled).toBe(false); expect(sockets).toHaveLength(2);
     sockets[1].close(); expect(s.button("enter-game").disabled).toBe(true);
     s.button("refresh-servers").click(); expect(sockets).toHaveLength(3); sockets[2].open(); await flush(); expect(s.button("enter-game").disabled).toBe(false);
-  } finally { vi.unstubAllGlobals(); }
+    expect(routes).toEqual(["account.v1.ListGameServers", "account.v1.ListGameServers"]);
+    expect(bootstrapMainCity).not.toHaveBeenCalled(); s.ctx.gateway.close();
+  } finally { vi.clearAllTimers(); vi.useRealTimers(); vi.unstubAllGlobals(); }
 });
