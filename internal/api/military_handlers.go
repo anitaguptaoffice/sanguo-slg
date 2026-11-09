@@ -131,8 +131,7 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		}
 		return s.mapMarchCreateErr(pkt.GetTraceId(), err), nil
 	}
-	s.recordPlayerMarch(pc.PlayerID, req.GetCityId(), order.ID, req.GetHeroId(), stacks)
-	s.bindMarchHeroServer(order.ID, pc.ServerID)
+	s.registerStartedMarch(pc, req.GetCityId(), order.ID, req.GetHeroId(), stacks)
 	data, err := marshal(&militaryv1.StartMarchResponse{
 		March:      marchSummaryProto(req.GetCityId(), order, stacks),
 		CityTroops: troopStacksProto(s.military.SnapshotCity(dom.ID).Troops, stacks),

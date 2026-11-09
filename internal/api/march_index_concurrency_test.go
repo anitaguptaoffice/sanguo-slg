@@ -36,8 +36,7 @@ func TestMarchIndexConcurrentMemoryAccess(t *testing.T) {
 			for n := 0; n < perWorker; n++ {
 				id := s.allocateMarchArmyID()
 				ids <- id
-				s.recordPlayerMarch(player, 7, id, id, []march.TroopStack{{UnitCfgID: 1, Count: 3}})
-				s.bindMarchHeroServer(id, int32(player))
+				s.recordPlayerMarch(PlayerContext{ServerID: int32(player), PlayerID: player}, 7, id, id, []march.TroopStack{{UnitCfgID: 1, Count: 3}})
 				if b, ok := s.lookupMarchHero(id); !ok || b.playerID != player || b.heroID != id || b.serverID != int32(player) {
 					t.Errorf("binding lost: id=%d binding=%+v found=%v", id, b, ok)
 				}
@@ -50,8 +49,10 @@ func TestMarchIndexConcurrentMemoryAccess(t *testing.T) {
 					}
 				}
 				if id%2 == 0 {
-					s.clearMarchHero(id)
-					s.bindMarchHeroServer(id, 99) // A late bind must not recreate a removed entry.
+					s.takeMarchHero(id)
+					if _, ok := s.takeMarchHero(id); ok {
+						t.Error("a second consumer recreated a removed binding")
+					}
 				}
 			}
 		}(int64(worker%4 + 1))
@@ -86,9 +87,9 @@ func TestMarchIndexSnapshotBoundaries(t *testing.T) {
 	var s Server
 	input := []march.TroopStack{{UnitCfgID: 1, Count: 4}}
 	for id := int64(1); id <= 105; id++ {
-		s.recordPlayerMarch(1, 7+id%2, id, id, input)
+		s.recordPlayerMarch(PlayerContext{ServerID: 1, PlayerID: 1}, 7+id%2, id, id, input)
 	}
-	s.recordPlayerMarch(2, 7, 106, 106, input)
+	s.recordPlayerMarch(PlayerContext{ServerID: 1, PlayerID: 2}, 7, 106, 106, input)
 	input[0].Count = -1
 	for _, tc := range []struct {
 		name          string
@@ -196,9 +197,8 @@ func TestMarchIndexGatewayAndHubFinishConcurrency(t *testing.T) {
 		defer close(listed)
 		<-start
 		for i := int64(1000); i < 1100; i++ {
-			s.recordPlayerMarch(56, 8, i, i, nil)
-			s.bindMarchHeroServer(i, 1)
-			s.clearMarchHero(i)
+			s.recordPlayerMarch(PlayerContext{ServerID: 1, PlayerID: 56}, 8, i, i, nil)
+			s.takeMarchHero(i)
 			resp := router.Dispatch(ctx, &commonv1.ClientPacket{Route: RouteListMarches, SessionId: "owner", ServerId: 1,
 				Payload: mustProto(&militaryv1.ListMarchesRequest{CityId: 7, Limit: count})})
 			var out militaryv1.ListMarchesResponse
