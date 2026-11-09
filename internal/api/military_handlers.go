@@ -101,6 +101,10 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if errPkt != nil {
 		return errPkt, nil
 	}
+	coord, ok := s.cityCoordinate(req.GetCityId())
+	if !ok {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
+	}
 	if _, err := s.domestic.SettleCity(ctx, dom.ID); err != nil {
 		return nil, err
 	}
@@ -108,10 +112,6 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		return s.mapMarchHeroErr(pkt.GetTraceId(), err), nil
 	}
 	s.ensureMilitaryCity(dom)
-	coord, ok := s.cityCoordinate(req.GetCityId())
-	if !ok {
-		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
-	}
 	s.nextArmyID++
 	order, err := s.military.CreateMarch(march.StartMarchRequest{
 		ArmyID:       s.nextArmyID,
