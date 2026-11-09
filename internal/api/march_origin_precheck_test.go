@@ -218,7 +218,9 @@ func TestMarchOriginPrecheckPGLazyLoadRecovery(t *testing.T) {
 	hub.UseStore(domestic.NewPGStore(peer), 1, 0)
 	listing := &originListingFailure{Store: world.NewPGStore(peer)}
 	fresh := NewServer(nil, peer, world.NewService(listing), hub, march.NewHub(func() time.Time { return later }))
-	fresh.wireHeroService(peer)
+	if err := fresh.WireM4Content(ctx); err != nil {
+		t.Fatal(err)
+	}
 	h := originHero(t, fresh, later)
 	fresh.BindSession("owner", 1, 55, 0)
 	id := city.City.CityId
