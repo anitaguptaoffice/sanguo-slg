@@ -136,9 +136,7 @@ export function persistHeroMarchForceFromDetail(detail: HeroDetail | null | unde
 
 export function validateMarchHeroMarchForce(
   heroId: number,
-  storage: Pick<Storage, "getItem"> | null = typeof sessionStorage !== "undefined"
-    ? sessionStorage
-    : null,
+  storage?: Pick<Storage, "getItem"> | null,
 ): { ok: true } | { ok: false; message: string } {
   const snap = readHeroMarchForceSession(heroId, storage);
   if (!snap) return { ok: true };
