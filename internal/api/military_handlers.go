@@ -112,9 +112,9 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		return s.mapMarchHeroErr(pkt.GetTraceId(), err), nil
 	}
 	s.ensureMilitaryCity(dom)
-	s.nextArmyID++
+	armyID := s.allocateMarchArmyID()
 	order, err := s.military.CreateMarch(march.StartMarchRequest{
-		ArmyID:       s.nextArmyID,
+		ArmyID:       armyID,
 		OriginCityID: req.GetCityId(),
 		PlayerID:     pc.PlayerID,
 		HeroID:       req.GetHeroId(),
