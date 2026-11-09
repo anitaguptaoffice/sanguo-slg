@@ -17,6 +17,7 @@ The pre-pool router binds a transaction's connection to one immutable trace stre
 Fresh-context rollback retains that connection owner. No router mutex spans a callback/gate.
 `TestRecruitCompletionFirstRouting` controls reject missing, duplicate, foreign and wrong-
 connection Ends plus unknown/mismatched roles, while checking original contexts/errors.
+Outstanding Start tokens must drain to zero; the omitted-End control cannot pass that check.
 Opaque callback controls are not PostgreSQL evidence. Both asynchronous callers register
 cancellation, gate release, bounded joins and exact-owned transport cleanup before starting.
 

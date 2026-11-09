@@ -14,16 +14,17 @@ type recruitFirstRole struct{}
 type recruitFirstKey struct{}
 type recruitFirstToken struct {
 	owner *recruitFirstTrace
-	conn *pgx.Conn
+	conn  *pgx.Conn
 	inner pgx.QueryTracer
-	sql string
+	sql   string
 	ended bool
 }
 type recruitFirstTrace struct {
-	mu sync.Mutex
+	mu      sync.Mutex
 	streams [2]pgx.QueryTracer
-	owners map[*pgx.Conn]int
-	fault bool
+	owners  map[*pgx.Conn]int
+	pending map[*recruitFirstToken]struct{}
+	fault   bool
 }
 
 func (r *recruitFirstTrace) TraceQueryStart(ctx context.Context, c *pgx.Conn, d pgx.TraceQueryStartData) context.Context {
@@ -47,6 +48,10 @@ func (r *recruitFirstTrace) TraceQueryStart(ctx context.Context, c *pgx.Conn, d 
 		r.owners[c] = role
 	}
 	q := &recruitFirstToken{owner: r, conn: c, inner: r.streams[role], sql: d.SQL}
+	if r.pending == nil {
+		r.pending = make(map[*recruitFirstToken]struct{})
+	}
+	r.pending[q] = struct{}{}
 	r.mu.Unlock()
 	return context.WithValue(q.inner.TraceQueryStart(ctx, c, d), recruitFirstKey{}, q)
 }
@@ -54,12 +59,14 @@ func (r *recruitFirstTrace) TraceQueryStart(ctx context.Context, c *pgx.Conn, d 
 func (r *recruitFirstTrace) TraceQueryEnd(ctx context.Context, c *pgx.Conn, d pgx.TraceQueryEndData) {
 	r.mu.Lock()
 	q, ok := ctx.Value(recruitFirstKey{}).(*recruitFirstToken)
-	if !ok || q == nil || q.owner != r || q.conn != c || q.ended {
+	_, pending := r.pending[q]
+	if !ok || q == nil || !pending || q.owner != r || q.conn != c || q.ended {
 		r.fault = true
 		r.mu.Unlock()
 		return // Never forward malformed tokens into an inner recorder.
 	}
 	q.ended = true
+	delete(r.pending, q)
 	if (q.sql == "commit" && d.Err == nil) || q.sql == "rollback" {
 		delete(r.owners, c)
 	}
@@ -68,7 +75,7 @@ func (r *recruitFirstTrace) TraceQueryEnd(ctx context.Context, c *pgx.Conn, d pg
 }
 
 func TestRecruitCompletionFirstRouting(t *testing.T) {
-	for _, bad := range []string{"missing", "duplicate", "foreign", "connection", "role", "mismatch"} {
+	for _, bad := range []string{"missing", "duplicate", "foreign", "connection", "role", "mismatch", "omitted"} {
 		t.Run(bad, func(t *testing.T) {
 			a, b := new(recruitReturnForward), new(recruitReturnForward)
 			r := &recruitFirstTrace{streams: [2]pgx.QueryTracer{a, b}}
@@ -92,6 +99,8 @@ func TestRecruitCompletionFirstRouting(t *testing.T) {
 					t.Fatal("connection-owned rollback, original context or error was lost")
 				}
 				switch bad {
+				case "omitted":
+					start(ctx, "select") // A genuine Start never receives an End.
 				case "missing":
 					q = context.Background()
 				case "foreign":
@@ -100,12 +109,14 @@ func TestRecruitCompletionFirstRouting(t *testing.T) {
 					q = start(ctx, "select")
 					c = other
 				}
-				r.TraceQueryEnd(q, c, pgx.TraceQueryEndData{})
+				if bad != "omitted" {
+					r.TraceQueryEnd(q, c, pgx.TraceQueryEndData{})
+				}
 				if b.ends != 2 {
 					t.Fatal("bad End reached inner recorder")
 				}
 			}
-			if !r.fault {
+			if !r.fault && len(r.pending) == 0 {
 				t.Fatal("invalid route/token was accepted", bad)
 			}
 		})

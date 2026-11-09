@@ -92,8 +92,11 @@ AND pg_catalog.pg_blocking_pids(pid)=ARRAY[$2::int]`, lagTrace.walletSQL, leader
 	}
 	t.Logf("actual Return backend %d waits at wallet on Recruit backend %d", follower, leader)
 	lead.commit.release()
-	if !returnBackendJoin(lead.done, 8*time.Second) || lead.fault != nil {
-		t.Fatal("actual Recruit caller did not join cleanly", lead.fault)
+	if !returnBackendJoin(lead.done, 8*time.Second) {
+		t.Fatal("actual Recruit caller did not join")
+	}
+	if lead.fault != nil {
+		t.Fatal("actual Recruit caller panicked", lead.fault)
 	}
 	recruitAttemptPGConfirmed(t, lead.result)
 	if lead.result.completion != march.RecruitCompleted || lead.result.confirmed != (march.RecruitAcceptance{}) {
@@ -119,8 +122,11 @@ AND pg_catalog.pg_blocking_pids(pid)=ARRAY[$2::int]`, lagTrace.walletSQL, leader
 	default:
 	}
 	lagTrace.release()
-	if !returnBackendJoin(lag.done, 8*time.Second) || lag.fault != nil {
-		t.Fatal("actual Return caller did not join cleanly", lag.fault)
+	if !returnBackendJoin(lag.done, 8*time.Second) {
+		t.Fatal("actual Return caller did not join")
+	}
+	if lag.fault != nil {
+		t.Fatal("actual Return caller panicked", lag.fault)
 	}
 	returnAttemptConfirmed(t, f.returnAttemptPG, lag.returned, march.ReturnApplied, f.due)
 	returnPGOK(t, recruitReturnSQLRecorded(lagTrace.events(), f.observer.PgConn().PID(), set, true))
@@ -171,9 +177,9 @@ AND (SELECT count::bigint+(SELECT sum((payload->>'count')::bigint) FROM work_que
 	pending := f.recruit.s.admission.s.pending
 	f.recruit.s.admission.s.mu.Unlock()
 	router.mu.Lock()
-	fault, routes := router.fault, len(router.owners)
+	fault, routes, queries := router.fault, len(router.owners), len(router.pending)
 	router.mu.Unlock()
-	if closed || attempts != 0 || pending != 0 || fault || routes != 0 {
+	if closed || attempts != 0 || pending != 0 || fault || routes != 0 || queries != 0 {
 		t.Fatal("completion retained attempts/leases/routes or invalid trace evidence")
 	}
 	returnPGOK(t, f.recruit.close())
