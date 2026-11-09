@@ -3,6 +3,7 @@ import { positivePlayerLevel } from "./tutorialPlayerLevel";
 import { garrisonPatch } from "@/net/garrisonState";
 import { ErrorCode } from "@/net/loadProto";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { AuthenticatedIdentity } from "./authenticatedIdentity";
 import type { BagStack } from "@/net/bagState";
 
 export type ResourceWallet = {
@@ -35,6 +36,8 @@ export type CityTroopStack = {
 };
 
 export type MainCitySession = {
+  /** Live authority check, not a retained account snapshot or V2 capability. */
+  getAuthenticatedIdentity?(): AuthenticatedIdentity | null;
   serverId: number;
   player: PlayerProfile;
   wallet: ResourceWallet;
@@ -92,6 +95,7 @@ export async function bootstrapMainCity(
   }
 
   const entered = await gateway.enterGameServer(serverId) as LoginResult;
+  const identity = gateway.getAuthenticatedIdentity?.();
   const generation = gateway.getSessionGeneration?.();
   const token = gateway.getSessionId?.();
   const assertCurrent = () => {
@@ -127,6 +131,12 @@ export async function bootstrapMainCity(
 
   assertCurrent();
   return {
+    getAuthenticatedIdentity(this: MainCitySession) {
+      return identity && gateway.getAuthenticatedIdentity?.() === identity &&
+        gateway.getSessionGeneration?.() === generation && identity.generation === generation &&
+        identity.serverId === this.serverId && identity.serverId === this.player.server_id &&
+        identity.playerId === this.player.player_id ? identity : null;
+    },
     serverId,
     player: { ...profile, level: positivePlayerLevel(profile.level) ?? 1 },
     wallet: mergeCityResourceWallet(entered.wallet ?? login.wallet ?? {}, state.wallet),
