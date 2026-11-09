@@ -12,6 +12,7 @@ import { parseRestHeroResponse } from "@/net/heroDetailForce";
 import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMailState";
 import { getTypes, Routes } from "@/net/loadProto";
 import type protobuf from "protobufjs";
+import type { AuthenticatedIdentity } from "./authenticatedIdentity";
 
 export type GatewayHandlers = {
   onOpen?: () => void;
@@ -131,6 +132,7 @@ export type GatewayPort = {
   getBoundServerId(): number;
   getSessionId(): string;
   getSessionGeneration?(): number;
+  getAuthenticatedIdentity?(): AuthenticatedIdentity | null;
   close(): void;
 };
 
@@ -139,11 +141,13 @@ export class GatewayClient implements GatewayPort {
   private sessionId = "";
   private boundServerId = 0;
   private sessionGeneration = 0;
+  private authenticatedIdentity: AuthenticatedIdentity | null = null;
 
   constructor(private readonly url = GATEWAY_WS_URL) {}
 
   connect(handlers: GatewayHandlers = {}): Promise<void> {
     return new Promise((resolve, reject) => {
+      this.authenticatedIdentity = null;
       this.sessionGeneration++;
       this.sessionId = "";
       this.boundServerId = 0;
@@ -160,6 +164,7 @@ export class GatewayClient implements GatewayPort {
       };
       this.ws.onclose = () => {
         if (this.ws !== ws) return;
+        this.authenticatedIdentity = null;
         this.sessionGeneration++;
         this.sessionId = "";
         this.boundServerId = 0;
@@ -167,6 +172,8 @@ export class GatewayClient implements GatewayPort {
       };
     });
   }
+
+  getAuthenticatedIdentity(): AuthenticatedIdentity | null { return this.authenticatedIdentity; }
 
   getSessionGeneration(): number { return this.sessionGeneration; }
 
@@ -184,6 +191,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   async login(loginName: string, password: string, serverId: number) {
+    this.authenticatedIdentity = null;
     const generation = ++this.sessionGeneration;
     const { LoginResponse } = getTypes();
     const data = (await this.rpc(
@@ -212,7 +220,9 @@ export class GatewayClient implements GatewayPort {
   }
 
   async enterGameServer(serverId: number) {
+    this.authenticatedIdentity = null;
     const generation = ++this.sessionGeneration;
+    const authenticated = this.sessionId !== "";
     const { EnterGameServerResponse } = getTypes();
     const data = (await this.rpc(
       Routes.EnterGameServer,
@@ -220,10 +230,17 @@ export class GatewayClient implements GatewayPort {
       { server_id: serverId },
       EnterGameServerResponse,
       true,
-    )) as { session_id?: string; server_id?: number };
+    )) as { session_id?: string; server_id?: number; account_id?: string | null;
+      player?: { server_id?: number; player_id?: number } };
     if (generation !== this.sessionGeneration) throw new Error("会话已变更，请重新进入游戏");
     if (data.session_id) this.sessionId = data.session_id;
     this.boundServerId = data.server_id ?? serverId;
+    if (authenticated && data.account_id && Number.isInteger(serverId) && serverId > 0 &&
+        data.server_id === serverId && data.player?.server_id === serverId &&
+        Number.isSafeInteger(data.player.player_id) && data.player.player_id! > 0) {
+      this.authenticatedIdentity = Object.freeze({ accountId: data.account_id, serverId,
+        playerId: data.player.player_id!, generation });
+    }
     return data;
   }
 
@@ -1029,6 +1046,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   close(): void {
+    this.authenticatedIdentity = null;
     this.sessionGeneration++;
     this.ws?.close();
     this.ws = null;
