@@ -142,28 +142,58 @@ export class GatewayClient implements GatewayPort {
   private boundServerId = 0;
   private sessionGeneration = 0;
   private authenticatedIdentity: AuthenticatedIdentity | null = null;
+  private cancelConnect: (() => void) | null = null;
 
   constructor(private readonly url = GATEWAY_WS_URL) {}
 
   connect(handlers: GatewayHandlers = {}): Promise<void> {
     return new Promise((resolve, reject) => {
+      this.cancelConnect?.();
+      const previous = this.ws;
+      this.ws = null;
+      previous?.close();
       this.authenticatedIdentity = null;
       this.sessionGeneration++;
       this.sessionId = "";
       this.boundServerId = 0;
       const ws = new WebSocket(this.url);
       this.ws = ws;
-      this.ws.binaryType = "arraybuffer";
-      this.ws.onopen = () => {
-        handlers.onOpen?.();
+      ws.binaryType = "arraybuffer";
+      let pending = true;
+      const current = () => this.ws === ws;
+      const clearAttempt = () => {
+        clearTimeout(timer);
+        if (this.cancelConnect === cancel) this.cancelConnect = null;
+      };
+      const fail = (reason: unknown) => {
+        if (!pending || !current()) return;
+        pending = false;
+        clearAttempt();
+        this.ws = null; // Fence queued events before cancelling the owned handshake.
+        reject(reason);
+        ws.close();
+      };
+      const cancel = () => fail(new Error("网关连接已取消"));
+      const timer = setTimeout(() => fail(new Error("网关连接超时，请刷新列表重试")), 15_000);
+      this.cancelConnect = cancel;
+      ws.onopen = () => {
+        if (!current() || !pending) return;
+        pending = false;
+        clearAttempt();
         resolve();
+        handlers.onOpen?.();
       };
-      this.ws.onerror = (e) => {
+      ws.onerror = (e) => {
+        if (!current()) return;
+        fail(e);
         handlers.onError?.(e);
-        reject(e);
       };
-      this.ws.onclose = () => {
-        if (this.ws !== ws) return;
+      ws.onclose = () => {
+        if (!current()) return;
+        pending = false;
+        clearAttempt();
+        this.ws = null;
+        reject(new Error("网关连接已中断"));
         this.authenticatedIdentity = null;
         this.sessionGeneration++;
         this.sessionId = "";
@@ -1046,6 +1076,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   close(): void {
+    this.cancelConnect?.();
     this.authenticatedIdentity = null;
     this.sessionGeneration++;
     this.ws?.close();
