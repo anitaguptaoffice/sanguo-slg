@@ -36,8 +36,8 @@ Mode identity comes from the unchanged workflow invocation, not an inferred
 JSON property. Streams are checked separately; concatenating them fails.
 
 Official setup-go GOROOT/bin/gofmt checks four catalog, five lifecycle and six
-FCT1 Go files (15 total). Identity additionally records the literal JSON fixture
-(16 source files total), without passing that fixture to gofmt.
+FCT1 Go files plus three captured-template files (18 total). Identity additionally
+records the literal JSON fixture (19 source files total), never passed to gofmt.
 The artifact records its identity, Go version, checkout commit/tree/parents,
 source hashes, formatting list/diff and both complete raw JSON streams.
 if: always() retains available evidence after failures; it never overrides them.
@@ -64,7 +64,7 @@ SOURCE_HASHES originally pinned those five lifecycle byte sequences; FCT1 adds
 six further Go pins and a separate literal-fixture pin. Every ordinary/race CLI
 invocation first verifies those source bytes in its own checkout. The formatter
 identity also requires tracked, clean index/worktree bytes and records the full
-checkout commit/tree/parents. Review all nine identities with both complete raw
+checkout commit/tree/parents. Review all required identities with both complete raw
 streams from that same job. Source or test-name changes require renewed source
 and combination review, updated pins/inventory, and new-head ordinary/race logs.
 A hash match alone is not execution evidence; missing sources or names fail.
@@ -98,7 +98,7 @@ diffs and tree records. Parent identities come from raw headers even in shallow
 checkouts; unavailable parent objects do not require extra fetches or permissions.
 These V2 controls correct reproduced V1 failures; the prior artifacts remain intact.
 
-The current identity audit requires exactly 16 unique tracked paths and exact 100644
+The current identity audit requires exactly 19 unique tracked paths and exact 100644
 blob records from the captured commit. It recomputes each Git blob ID and SHA256
 from the actual regular, non-executable, non-symlink file, then compares complete
 record sets. Missing, duplicate, extra, malformed, wrong-path or stale records
@@ -111,7 +111,7 @@ all bytes including trailing newlines. This binds its tree and parent header to
 that identity, rejecting successful-but-truncated output. The temporary raw object
 is not an additional artifact member or an execution claim.
 
-## Complete FCT1 source and audit extension
+## Complete FCT1 source and audit extension (prior stage)
 
 setup-go remains configured as 1.23.x, not an exact 1.23.12 pin. Record and review
 the actual Go/formatter version from each official job; local Go is not that proof.
@@ -135,8 +135,8 @@ AllTruncations children; they are not falsely counted as 902 named Go outcomes.
 No passing log discovers or authorizes a new name. Unknown codec/fuzz roots,
 children or seeds, missing/duplicate runs/passes, skips, failures and textual
 Output replacements fail. Existing required inventories and strict parsing stay
-unchanged. All 339 reviewed names must appear in each full DOM ordinary/race
-stream; other actual DOM tests must finish normally too. The observed full-suite
+unchanged. The prior FCT1 stage required all 339 names in each DOM ordinary/race
+stream; captured-template additions below raise that union to 389. The full-suite
 count comes from that exact run, not the old 431-outcome lifecycle evidence.
 
 The full PG17 commands, physical-restart exclusion, five artifact members,
@@ -147,3 +147,26 @@ All four components require exact-combination independent review and official
 Go/PG17 CI with zero skips/failures before any merge. Local non-PG combination
 streams are expected to fail this gate on existing skipped PG tests; do not filter
 those events into passing evidence or reuse old lifecycle-only acceptance.
+
+## Captured-template methods extension
+
+The new complete matrix adds 12 roots and 38 children: 33 pure outcomes and 17
+real-constructor PG outcomes. It is a fixed source-derived 50-name inventory,
+not a list harvested from passing logs. Full required union is now 389 names;
+all other actual DOM names still require valid complete run/pass transitions.
+The three new source/test files have exact source SHA-256 pins. Formatter and
+same-job Git/source identity cover 18 Go files and 19 total paths, with the
+unchanged literal FCT1 JSON fixture remaining identity-only. Source/PG companion
+and this gate form one acceptance set; no source-only merge is authorized here.
+
+The closed family audit rejects every new missing, skipped, failed, duplicated,
+unknown child/root and Output-forged outcome; generic finite JSON, full stream,
+parent/child and source/identity checks remain in force. The full ordinary/race
+PG commands, existing gates, physical-restart exclusion, five retained artifact
+members, workflow permissions and services are unchanged. An environment-skipped
+local Go stream must fail this gate, never become synthetic PASS evidence.
+
+This matrix validates actual constructor data methods, not APP semantic support,
+retained receipt readback, admission close/poison, uncertain commit classification,
+WORLD durable storage or first-city restart acceptance. Those remain independent
+blocked deliverables. No PG service ran in this outside candidate preparation.
