@@ -85,7 +85,7 @@ func forcePGWaitLock(t *testing.T, ctx context.Context, observer *pgxpool.Pool, 
 		var found bool
 		err := observer.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity
    WHERE datname=current_database() AND pid=$1 AND application_name=$2 AND wait_event_type='Lock'
-   AND regexp_replace(trim(query), '\s+', ' ', 'g')=$3 AND pg_blocking_pids(pid)=ARRAY[$4]::int[])`, pid, app, forcePGHeroLock, blocker).Scan(&found)
+   AND trim(regexp_replace(query, '\s+', ' ', 'g'))=$3 AND pg_blocking_pids(pid)=ARRAY[$4]::int[])`, pid, app, forcePGHeroLock, blocker).Scan(&found)
 		claimPGCheck(t, err == nil, "lock observer:", err)
 		if found {
 			t.Logf("hero lock: app=%s PID=%d blocker=%d SQL=%s", app, pid, blocker, forcePGHeroLock)
@@ -207,7 +207,7 @@ func TestHeroMarchForcePGInterleavings(t *testing.T) {
 							claimPGWant(t, ctx, observer, h.HeroID, debit) // Committed 14 BEFORE stale writer resumes.
 							var unlocked bool
 							err := observer.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity
-                             WHERE pid=$1 AND application_name=$2 AND regexp_replace(trim(query), '\s+', ' ', 'g')=$3
+                             WHERE pid=$1 AND application_name=$2 AND trim(regexp_replace(query, '\s+', ' ', 'g'))=$3
                              AND cardinality(pg_blocking_pids(pid))=0)`, pids[1], names[1], controlSQL).Scan(&unlocked)
 							claimPGCheck(t, err == nil && unlocked, "fallback SELECT evidence:", err)
 							t.Logf("fallback app=%s PID=%d blockers=[] SQL=%s; committed debit=14", names[1], pids[1], controlSQL)
@@ -352,6 +352,8 @@ func TestHeroMarchForcePGGateway(t *testing.T) {
 			s, pool, now, _ := registrationServer(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 			defer cancel()
+			err := s.WireM4Content(ctx)
+			claimPGCheck(t, err == nil, "production M4 route wiring:", err)
 			now = now.Truncate(time.Microsecond)
 			created, err := s.handleCreateCity(ctx, registrationPacket(t, 1))
 			var city worldv1.CreateCityResponse
