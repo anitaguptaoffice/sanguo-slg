@@ -16,6 +16,7 @@ export function permitsExistingAccountLogin(url: string): boolean {
 
 const DEFAULT_LOGIN = "demo";
 const DEFAULT_PASSWORD = "demo123";
+const REGISTER_UNKNOWN = "注册结果尚未确认，账号可能已创建；本页不会重复注册。可重新输入凭据并明确点击登录核实。首次建城尚未开放。";
 
 export class ServerSelectScene implements Scene {
   readonly name = "serverSelect";
@@ -31,6 +32,9 @@ export class ServerSelectScene implements Scene {
   private connectionVersion = 0;
   private listVersion = 0;
   private entering = false;
+  private registrationAttempted = false;
+  private registrationNotice = "";
+  private registrationView = 0;
   private hudStatusEl: HTMLElement | null = null;
   private triggerBtn: HTMLButtonElement | null = null;
   private focusTrap: OverlayFocusTrap | null = null;
@@ -53,16 +57,18 @@ export class ServerSelectScene implements Scene {
     this.panel.setAttribute("aria-labelledby", "server-select-title");
     this.panel.innerHTML = `
       <h2 id="server-select-title">选择游戏服</h2>
-      <p class="server-select-hint">账号 ${DEFAULT_LOGIN} · 选服后进入主城</p>
+      <p class="server-select-hint">演示账号 ${DEFAULT_LOGIN} 与个人账号分开进入</p>
       <ul class="server-list" data-role="server-list"></ul>
       <form data-role="existing-account" autocomplete="off">
-        <p>登录已有账号，仅进入已有城池；不注册账号或自动建城。</p>
+        <p>登录已有账号仅进入已有城池。注册只创建账号，不会登录或建城；首次建城尚未开放。</p>
         <label>账号 <input name="login" autocomplete="off" required></label>
         <label>密码 <input name="password" type="password" autocomplete="off" required></label>
         <button type="submit" data-action="login-existing" disabled>登录已有账号</button>
+        <button type="button" data-action="register-account" disabled>注册新账号（不建城）</button>
       </form>
+      <p data-role="registration-status" role="status"></p>
       <button type="button" data-action="refresh-servers">刷新列表</button>
-      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入游戏</button>
+      <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入演示账号</button>
       <p class="server-select-status" data-role="status"></p>
     `;
     this.panel.classList.add("layout-overlay-center");
@@ -80,6 +86,7 @@ export class ServerSelectScene implements Scene {
       root: this.panel,
       trigger: this.triggerBtn,
       onClose: () => {
+        this.registrationView++;
         this.clearPassword();
         this.syncPanel();
         this.syncHudTriggerExpanded();
@@ -95,6 +102,7 @@ export class ServerSelectScene implements Scene {
   leave(): void {
     this.active = false;
     this.lifecycle++;
+    this.registrationView++;
     this.connectionVersion++;
     this.listVersion++;
     this.connected = false;
@@ -217,6 +225,7 @@ export class ServerSelectScene implements Scene {
       }
     }
     if (statusEl) statusEl.textContent = this.status;
+    this.panel.querySelector<HTMLElement>('[data-role="registration-status"]')!.textContent = this.registrationNotice;
     if (enterBtn) enterBtn.disabled = !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s));
     const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!;
@@ -224,6 +233,8 @@ export class ServerSelectScene implements Scene {
     login.disabled = password.disabled = this.entering;
     this.panel.querySelector<HTMLButtonElement>('[data-action="login-existing"]')!.disabled =
       !!enterBtn?.disabled || !login.value.trim() || !password.value;
+    this.panel.querySelector<HTMLButtonElement>('[data-action="register-account"]')!.disabled =
+      this.registrationAttempted || !this.connected || this.listBusy || this.entering || !login.value.trim() || !password.value;
     const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
     const hudBusy =
@@ -247,6 +258,40 @@ export class ServerSelectScene implements Scene {
     const action = btn.getAttribute("data-action");
     if (action === "refresh-servers") void this.loadServers(ctx.gateway);
     if (action === "enter-game") void this.enterGame(ctx);
+    if (action === "register-account") void this.registerAccount(ctx);
+  }
+
+  private async registerAccount(ctx: SceneContext): Promise<void> {
+    if (!this.active || !this.focusTrap?.isActive() || !this.connected || this.listBusy || this.entering || this.registrationAttempted) return;
+    const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
+    const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
+    if (!login || !password) return;
+    this.clearPassword();
+    if (!permitsExistingAccountLogin(GATEWAY_WS_URL)) {
+      this.registrationNotice = "注册账号需要加密网关连接；本机开发网关除外";
+      this.syncPanel();
+      return;
+    }
+    const lifecycle = this.lifecycle, view = this.registrationView;
+    const generation = ctx.gateway.getSessionGeneration?.();
+    this.registrationAttempted = true;
+    this.registrationNotice = REGISTER_UNKNOWN;
+    this.entering = true;
+    this.syncPanel();
+    try {
+      const result = await ctx.gateway.register(login, password) as { account_id?: unknown };
+      if (!this.isCurrent(lifecycle) || view !== this.registrationView || !this.connected ||
+        generation !== ctx.gateway.getSessionGeneration?.()) return;
+      // A valid receipt confirms creation only, never an authenticated identity.
+      if (/^[1-9][0-9]*$/.test(String(result?.account_id ?? ""))) {
+        this.registrationNotice = "账号已注册，尚未登录或建城；首次建城尚未开放。可重新输入密码并点击登录已有账号。";
+      }
+    } catch {
+      // Even a failed response may follow a committed insert. Never retry or expose RPC errors.
+    } finally {
+      this.entering = false;
+      if (this.active) this.syncPanel();
+    }
   }
 
   private async enterGame(ctx: SceneContext, existing = false): Promise<void> {
