@@ -52,6 +52,8 @@ it("requires a separate explicit registration click and never authenticates or c
   f.fill(); f.button("login-existing").click(); await flush();
   expect(f.gateway.login).toHaveBeenCalledTimes(1); expect(f.gateway.listPlayerCities).toHaveBeenCalledTimes(1);
   expect(f.layoutFrame.textContent).toContain("首次建城流程尚未开放");
+  expect(f.layoutFrame.textContent).toContain("本次注册未登录或建城");
+  expect(f.layoutFrame.textContent).not.toContain("尚未登录");
   expect(f.gateway.createCity).not.toHaveBeenCalled(); expect(f.ctx.switchScene).not.toHaveBeenCalled();
 });
 it("implicit form submission is login, never registration", async () => {

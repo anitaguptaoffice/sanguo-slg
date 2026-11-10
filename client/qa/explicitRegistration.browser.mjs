@@ -141,7 +141,10 @@ export async function runExplicitRegistrationScenario({ page, baseUrl, gatewayUr
     assert.equal(await password.inputValue(), ''); assert.equal(await button('register-account').isDisabled(), true);
     const actor = { accountId: receipt.accountId };
     await checkpoint('registered', actor); await noStorage(); await capture('registered'); pass('registered');
-    actor.playerId = await login('logged-in', fresh); await checkpoint('logged-in', actor);
+    actor.playerId = await login('logged-in', fresh);
+    assert.ok((await notice.innerText()).includes('本次注册未登录或建城'));
+    assert.ok(!(await notice.innerText()).includes('尚未登录'));
+    await checkpoint('logged-in', actor);
     await open('duplicate-name'); await fill(fresh); const duplicateStart = requests.length;
     await button('register-account').click();
     await page.waitForFunction(() => !document.querySelector('input[name="login"]').disabled);
