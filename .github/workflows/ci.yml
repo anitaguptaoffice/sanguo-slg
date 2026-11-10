@@ -109,7 +109,10 @@ jobs:
                  internal/domestic/fresh_template_codec_golden_test.go
                  internal/domestic/fresh_template_codec_negative_test.go
                  internal/domestic/fresh_template_codec_oracle_test.go
-                 internal/domestic/fresh_template_codec_test.go)
+                 internal/domestic/fresh_template_codec_test.go
+                 internal/domestic/fresh_template_source.go
+                 internal/domestic/fresh_template_source_test.go
+                 internal/domestic/fresh_template_source_pg_test.go)
           identity_files=("${files[@]}"
                           spec/rules/fixtures/fresh_city_template_codec_v1.json)
           {

@@ -137,7 +137,33 @@ CODEC_FAMILIES = {
 CODEC_EXPECTED = set(CODEC_FAMILIES) | {
     f"{root}/{leaf}" for root, leaves in CODEC_FAMILIES.items() for leaf in leaves
 }
-REQUIRED = EXPECTED | LEGACY | SOURCE_EXPECTED | CODEC_EXPECTED
+# Complete captured-source method matrix, independent of successful output.
+TEMPLATE_SOURCE_PREFIXES = ("TestFreshTemplateSource", "TestPGFreshTemplateSource")
+TEMPLATE_CATALOG_CHANGES = {
+    "time", "food", "wood", "stone", "iron", "rate", "resource", "removed", "added", "id",
+}
+TEMPLATE_SOURCE_FAMILIES = {
+    "TestFreshTemplateSourceIsolation": set(),
+    "TestFreshTemplateSourceCatalogEquality": TEMPLATE_CATALOG_CHANGES,
+    "TestFreshTemplateSourceCapturedOnly": set(),
+    "TestFreshTemplateSourceInvalidHandles": {
+        "binding", "hub", "store", "pool", "shard", "catalog", "retired", "overcount",
+    },
+    "TestFreshTemplateSourceRejectsData": {
+        "digest", "version", "metadata", "label", "truncated", "trailing", "magic", "oversize",
+    },
+    "TestFreshTemplateSourceEmptyAndLabels": set(),
+    "TestFreshTemplateSourceConcurrentCopies": set(),
+    "TestPGFreshTemplateSourceDataOnly": {"ordinary", "quoted"},
+    "TestPGFreshTemplateSourceNoHubGate": set(),
+    "TestPGFreshTemplateSourceReleaseCatalog": TEMPLATE_CATALOG_CHANGES,
+    "TestPGFreshTemplateSourceRetainedData": set(),
+    "TestPGFreshTemplateSourceRetirement": set(),
+}
+TEMPLATE_SOURCE_EXPECTED = set(TEMPLATE_SOURCE_FAMILIES) | {
+    f"{root}/{leaf}" for root, leaves in TEMPLATE_SOURCE_FAMILIES.items() for leaf in leaves
+}
+REQUIRED = EXPECTED | LEGACY | SOURCE_EXPECTED | CODEC_EXPECTED | TEMPLATE_SOURCE_EXPECTED
 # Changing these bytes requires source review and an explicitly updated inventory.
 SOURCE_HASHES = {
     "fresh_source.go":
@@ -162,6 +188,12 @@ SOURCE_HASHES = {
         "9e0b5823a82a8afd2af6dd1b04b170dc45d3b31bc3c86db79ed1af5d66075fb0",
     "fresh_template_codec_test.go":
         "b2cb708728fcfa9d74f1d602293868aa6de96d27e286602a9dda7bc9c4245af9",
+    "fresh_template_source.go":
+        "116db710ab48a1035b5a52701fe0ae190f969bfc719035730c06f7e3df4d67ab",
+    "fresh_template_source_test.go":
+        "e94dab9bc808d3b4e229bc3b6755657c1cce93e13d82c40c0012247534f0ea93",
+    "fresh_template_source_pg_test.go":
+        "e9ff92eae89768d2d8013ce3bd6c3a5897a3e4c888d6848b49f8bbe9d906c57d",
 }
 
 
@@ -256,6 +288,8 @@ def check(text):
                 raise ValueError("unknown fresh-source family or child: " + name)
             if name.startswith(CODEC_PREFIXES) and name not in CODEC_EXPECTED:
                 raise ValueError("unknown FCT1 codec family or child: " + name)
+            if name.startswith(TEMPLATE_SOURCE_PREFIXES) and name not in TEMPLATE_SOURCE_EXPECTED:
+                raise ValueError("unknown captured-template family or child: " + name)
             ancestors = [parent for parent in states if name.startswith(parent + "/")]
             if "/" in name and (not ancestors or any(states[p] != "run" for p in ancestors)):
                 raise ValueError("child without live parent: " + name)
@@ -300,4 +334,5 @@ if __name__ == "__main__":
     print(f"PASS {args.mode}: 4 fresh families, 147 leaves, 5 legacy roots; "
           f"62 lifecycle PG names, 14 lifecycle pure names; "
           f"107 FCT1 names (11 roots, including four fuzz seeds); "
+          f"50 captured-template names (33 pure, 17 constructor PG); "
           f"{count} complete tests, one package pass, zero skips/fails")
