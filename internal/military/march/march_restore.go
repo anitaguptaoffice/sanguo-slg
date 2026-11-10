@@ -121,6 +121,11 @@ func validateRestore(server int32, catalog map[int32]UnitSpec, orders []restoreR
 	claimed := make(map[int64]bool)
 	seenArmy := make(map[int64]bool, len(orders))
 	for _, o := range orders {
+		// Terminal history still requires its retained army ownership anchor.
+		// A missing LEFT JOIN must not be mistaken for permission to release heroes.
+		if o.Owner == nil || *o.Owner <= 0 {
+			return fail()
+		}
 		if o.Status == 4 {
 			continue
 		}
@@ -129,7 +134,7 @@ func validateRestore(server int32, catalog map[int32]UnitSpec, orders []restoreR
 		}
 		if o.ID <= 0 || o.ArmyID <= 0 || o.Origin == nil || *o.Origin <= 0 || o.Purpose < 1 || o.Purpose > 3 ||
 			!validMarchTime(o.DepartAt) || !validMarchTime(o.ArriveAt) || !o.DepartAt.Before(o.ArriveAt) ||
-			o.Owner == nil || *o.Owner <= 0 || o.ArmyStatus == nil || (*o.ArmyStatus != 2 && *o.ArmyStatus != 3) || seenArmy[o.ArmyID] {
+			o.ArmyStatus == nil || (*o.ArmyStatus != 2 && *o.ArmyStatus != 3) || seenArmy[o.ArmyID] {
 			return fail()
 		}
 		seenArmy[o.ArmyID] = true
