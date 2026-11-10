@@ -92,24 +92,55 @@ jobs:
           set -euo pipefail
           evidence="$RUNNER_TEMP/dom-fresh-catalog"
           mkdir -p "$evidence"
-          gofmt="$(go env GOROOT)/bin/gofmt"
+          goroot="$(go env GOROOT)"
+          test -n "$goroot"
+          gofmt="$goroot/bin/gofmt"
           files=(internal/domestic/fresh_source_catalog.go
                  internal/domestic/fresh_city_catalog.go
                  internal/domestic/fresh_source_catalog_test.go
-                 internal/domestic/fresh_source_catalog_pg_test.go)
+                 internal/domestic/fresh_source_catalog_pg_test.go
+                 internal/domestic/fresh_source.go
+                 internal/domestic/fresh_template.go
+                 internal/domestic/fresh_source_test.go
+                 internal/domestic/fresh_source_binding_pg_test.go
+                 internal/domestic/fresh_source_pins_pg_test.go)
           {
             go version
             test -x "$gofmt"
             printf 'gofmt path: %s\n' "$gofmt"
             go version "$gofmt"
             sha256sum "$gofmt"
-            printf 'commit %s\n' "$(git rev-parse HEAD)"
-            git cat-file commit HEAD | sed -n '/^$/q; /^tree /p; /^parent /p'
-            git ls-files --error-unmatch -- "${files[@]}"
-            git diff --cached --exit-code HEAD -- "${files[@]}"
-            git diff --exit-code HEAD -- "${files[@]}"
-            git ls-tree -r HEAD -- "${files[@]}"
-            sha256sum -- "${files[@]}"
+            commit="$(git rev-parse --verify HEAD)"
+            tree="$(git rev-parse --verify "$commit^{tree}")"
+            git cat-file commit "$commit" > "$RUNNER_TEMP/dom-fresh-commit.raw"
+            commit_data="$(cat "$RUNNER_TEMP/dom-fresh-commit.raw")"
+            [[ "$commit" =~ ^[0-9a-f]{40}$ && "$tree" =~ ^[0-9a-f]{40}$ ]]
+            [[ "${commit_data%%$'\n'*}" == "tree $tree" ]]
+            printf 'commit %s\n' "$commit"
+            while IFS= read -r line; do
+              [[ -n "$line" ]] || break
+              case "$line" in
+                tree\ *) printf '%s\n' "$line" ;;
+                parent\ *)
+                  [[ "${line#parent }" =~ ^[0-9a-f]{40}$ ]]
+                  printf '%s\n' "$line"
+                  ;;
+              esac
+            done <<< "$commit_data"
+            tracked="$(git ls-files --error-unmatch -- "${files[@]}")"
+            git diff --cached --exit-code "$commit" -- "${files[@]}"
+            git diff --exit-code "$commit" -- "${files[@]}"
+            entries="$(git ls-tree -r "$commit" -- "${files[@]}")"
+            hashes="$(sha256sum -- "${files[@]}")"
+            python3 - "$tracked" "$entries" "$hashes" \
+              "$commit" "$RUNNER_TEMP/dom-fresh-commit.raw" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, ".github/scripts")
+          from dom_fresh_catalog_gate import check_identity
+          check_identity(Path.cwd(), *sys.argv[1:])
+          PY
+            printf '%s\n' "$tracked" "$entries" "$hashes"
           } | tee "$evidence/identity.txt"
           "$gofmt" -l "${files[@]}" | tee "$evidence/gofmt.list"
           "$gofmt" -d "${files[@]}" > "$evidence/gofmt.diff"
