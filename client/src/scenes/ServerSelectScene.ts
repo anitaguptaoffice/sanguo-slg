@@ -268,9 +268,7 @@ export class ServerSelectScene implements Scene {
     this.status = `进入服 #${this.selectedId}…`;
     this.syncPanel();
     try {
-      const session = existing
-        ? await bootstrapMainCity(ctx.gateway, login, password, serverId, "existing")
-        : await bootstrapMainCity(ctx.gateway, DEFAULT_LOGIN, DEFAULT_PASSWORD, serverId);
+      const session = await bootstrapMainCity(ctx.gateway, login, password, serverId, existing ? "existing" : "demo");
       if (!this.isCurrent(lifecycle) || !this.connected) return;
       await ctx.switchScene("mainCity", session);
     } catch (e) {
