@@ -1,9 +1,18 @@
+import { GATEWAY_WS_URL } from "@/config";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { skinDefaultPanel } from "@/engine/artPanelSkin";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import { formatServerLine, parseGameServerInfo, type GameServerRow } from "@/net/socialFormat";
 import { createOverlayFocusTrap, type OverlayFocusTrap } from "@/ui/overlayFocusTrap";
+
+export function permitsExistingAccountLogin(url: string): boolean {
+  try {
+    const target = new URL(url);
+    return !target.username && !target.password && (target.protocol === "wss:" ||
+      (target.protocol === "ws:" && ["127.0.0.1", "localhost", "[::1]"].includes(target.hostname)));
+  } catch { return false; }
+}
 
 const DEFAULT_LOGIN = "demo";
 const DEFAULT_PASSWORD = "demo123";
@@ -46,6 +55,12 @@ export class ServerSelectScene implements Scene {
       <h2 id="server-select-title">选择游戏服</h2>
       <p class="server-select-hint">账号 ${DEFAULT_LOGIN} · 选服后进入主城</p>
       <ul class="server-list" data-role="server-list"></ul>
+      <form data-role="existing-account" autocomplete="off">
+        <p>登录已有账号，仅进入已有城池；不注册账号或自动建城。</p>
+        <label>账号 <input name="login" autocomplete="off" required></label>
+        <label>密码 <input name="password" type="password" autocomplete="off" required></label>
+        <button type="submit" data-action="login-existing" disabled>登录已有账号</button>
+      </form>
       <button type="button" data-action="refresh-servers">刷新列表</button>
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入游戏</button>
       <p class="server-select-status" data-role="status"></p>
@@ -55,11 +70,20 @@ export class ServerSelectScene implements Scene {
     skinDefaultPanel(this.panel, ctx.assets, 560, 360);
     skinPrimaryButtons(this.panel, ctx.assets);
     this.panel.addEventListener("click", (ev) => this.onClick(ev, ctx));
+    this.panel.addEventListener("input", () => this.syncPanel());
+    this.panel.querySelector("form")!.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      void this.enterGame(ctx, true);
+    });
     this.triggerBtn = this.hud.querySelector<HTMLButtonElement>('[data-role="server-select-trigger"]');
     this.focusTrap = createOverlayFocusTrap({
       root: this.panel,
       trigger: this.triggerBtn,
-      onClose: () => this.syncHudTriggerExpanded(),
+      onClose: () => {
+        this.clearPassword();
+        this.syncPanel();
+        this.syncHudTriggerExpanded();
+      },
     });
     this.triggerBtn?.addEventListener("click", () => this.togglePanel());
     this.focusTrap.open();
@@ -77,7 +101,13 @@ export class ServerSelectScene implements Scene {
     this.listBusy = false;
     this.focusTrap?.dispose();
     this.focusTrap = null;
+    this.clearPassword();
     this.panel?.remove();
+  }
+
+  private clearPassword(): void {
+    const input = this.panel?.querySelector<HTMLInputElement>('input[name="password"]');
+    if (input) input.value = "";
   }
 
   private mountHudChrome(): void {
@@ -189,6 +219,11 @@ export class ServerSelectScene implements Scene {
     if (statusEl) statusEl.textContent = this.status;
     if (enterBtn) enterBtn.disabled = !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s));
+    const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!;
+    const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!;
+    login.disabled = password.disabled = this.entering;
+    this.panel.querySelector<HTMLButtonElement>('[data-action="login-existing"]')!.disabled =
+      !!enterBtn?.disabled || !login.value.trim() || !password.value;
     const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
     const hudBusy =
@@ -214,26 +249,34 @@ export class ServerSelectScene implements Scene {
     if (action === "enter-game") void this.enterGame(ctx);
   }
 
-  private async enterGame(ctx: SceneContext): Promise<void> {
+  private async enterGame(ctx: SceneContext, existing = false): Promise<void> {
     if (!this.active || !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+    const login = existing ? this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim() : DEFAULT_LOGIN;
+    const password = existing ? this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value : DEFAULT_PASSWORD;
+    if (existing && (!login || !password)) return;
+    if (existing && !permitsExistingAccountLogin(GATEWAY_WS_URL)) {
+      this.clearPassword();
+      this.status = "已有账号登录需要加密网关连接；本机开发网关除外";
+      this.syncPanel();
+      return;
+    }
+    this.clearPassword();
     const lifecycle = this.lifecycle;
     const serverId = this.selectedId;
     this.entering = true;
     this.status = `进入服 #${this.selectedId}…`;
     this.syncPanel();
     try {
-      const session = await bootstrapMainCity(
-        ctx.gateway,
-        DEFAULT_LOGIN,
-        DEFAULT_PASSWORD,
-        serverId,
-      );
+      const session = await bootstrapMainCity(ctx.gateway, login, password, serverId, existing ? "existing" : "demo");
       if (!this.isCurrent(lifecycle) || !this.connected) return;
       await ctx.switchScene("mainCity", session);
     } catch (e) {
       if (!this.isCurrent(lifecycle)) return;
-      this.status = `进服失败: ${(e as Error).message}`;
+      this.status = existing
+        ? ((e as Error).message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池"
+          ? (e as Error).message : "登录未完成，请核对账号、密码、所选服或连接后重试")
+        : `进服失败: ${(e as Error).message}`;
       this.syncPanel();
     } finally {
       // Leaving cannot cancel an already submitted bootstrap; keep it single-flight on re-entry.

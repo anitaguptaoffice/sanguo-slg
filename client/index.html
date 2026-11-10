@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%226%22%20fill%3D%22%231a1410%22%2F%3E%3Cpath%20d%3D%22M8%2024V8h16v16h-5v-8h-6v8Z%22%20fill%3D%22%23d6b46b%22%2F%3E%3C%2Fsvg%3E" />
     <title>三国 SLG · H5 骨架</title>
     <style>
       * { box-sizing: border-box; margin: 0; }
@@ -1024,6 +1025,10 @@
         background: transparent; border: none; border-radius: 0;
         box-sizing: border-box; color: #3d2e1f;
       }
+      .server-select-panel form { display: grid; gap: 8px; margin: 12px 0; }
+      .server-select-panel form label { display: grid; grid-template-columns: 48px 1fr; align-items: center; }
+      .server-select-panel form input { box-sizing: border-box; min-width: 0; min-height: 44px; padding: 8px; }
+      .server-select-panel form input:focus-visible { outline: 2px solid #c9a227; outline-offset: 2px; }
       .social-panel {
         position: absolute; left: 50%; transform: translateX(-50%);
         top: calc(56 / 900 * 100%); bottom: calc(56 / 900 * 100%);

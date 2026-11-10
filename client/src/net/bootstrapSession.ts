@@ -74,19 +74,20 @@ function gatewayCode(err: unknown): number | undefined {
   return undefined;
 }
 
-/** 注册（若需要）→ 登录 → 确保有城池 → 拉取内政状态。 */
+/** demo 可注册/建城；existing 仅登录后读取既有城池，服务端原有创角行为不变。 */
 export async function bootstrapMainCity(
   gateway: GatewayPort,
   loginName: string,
   password: string,
   serverId: number,
+  mode: "demo" | "existing" = "demo",
 ): Promise<MainCitySession> {
   let login: LoginResult;
   try {
     login = (await gateway.login(loginName, password, serverId)) as LoginResult;
   } catch (e) {
     const code = gatewayCode(e);
-    if (code === ErrorCode.ACCOUNT_LOGIN_FAILED) {
+    if (mode === "demo" && code === ErrorCode.ACCOUNT_LOGIN_FAILED) {
       await gateway.register(loginName, password);
       login = (await gateway.login(loginName, password, serverId)) as LoginResult;
     } else {
@@ -113,6 +114,7 @@ export async function bootstrapMainCity(
   const list = (await gateway.listPlayerCities()) as { cities?: CitySummary[] };
   assertCurrent();
   let city = list.cities?.find((c) => c.is_capital) ?? list.cities?.[0];
+  if (!city?.city_id && mode === "existing") throw new Error("此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池");
   if (!city?.city_id) {
     const created = (await gateway.createCity(serverId, "主城", 60, 60)) as { city?: CitySummary };
     assertCurrent();
