@@ -1,0 +1,90 @@
+name: Existing account native browser
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: &inputs
+      - '.github/workflows/existing-account-native.yml'
+      - '.github/scripts/existing_account_native*'
+      - '.github/scripts/EXISTING-ACCOUNT-NATIVE.md'
+      - 'client/**'
+      - 'internal/**'
+      - 'cmd/server/**'
+      - 'spec/**'
+      - 'go.mod'
+      - 'go.sum'
+  push:
+    branches: [main]
+    paths: *inputs
+jobs:
+  existing-account-native:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: existing_account_native
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U sanguo -d existing_account_native" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      GOTOOLCHAIN: local
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: sanguo
+      PGPASSWORD: sanguo
+      PGDATABASE: existing_account_native
+      DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/existing_account_native?sslmode=disable
+      REDIS_ADDR: 127.0.0.1:6379
+      HTTP_ADDR: 127.0.0.1:18080
+      VITE_GATEWAY_WS_URL: ws://127.0.0.1:18080/ws
+    steps:
+      - name: Prepare evidence directory
+        shell: bash
+        run: echo "EVIDENCE=$RUNNER_TEMP/existing-account-native" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build and test actual source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$EVIDENCE"
+          test -f client/qa/existingAccount.browser.mjs
+          (cd client && npm ci) 2>&1 | tee "$EVIDENCE/install.txt"
+          node --test .github/scripts/existing_account_native.test.mjs | tee "$EVIDENCE/controls.txt"
+          go build -o "$EVIDENCE/server" ./cmd/server
+          (cd client && npm test && npm run build && npx playwright install --with-deps chromium) 2>&1 | tee "$EVIDENCE/client-build.txt"
+          sha256sum "$(command -v go)" "$(go env GOROOT)/bin/gofmt" "$EVIDENCE/server" > "$EVIDENCE/tools.sha256"
+      - name: Run real gateway and sandboxed Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .github/scripts/existing_account_native.mjs 2>&1 | tee "$EVIDENCE/native-run.txt"
+      - name: Hash all evidence including failures
+        if: always()
+        run: |
+          mkdir -p "$EVIDENCE"
+          cd "$EVIDENCE"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: existing-account-native-evidence
+          path: ${{ env.EVIDENCE }}
+          if-no-files-found: error
+          retention-days: 14
