@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
 // Real-browser scenario only. The caller owns disposable RPC fixtures, services and Chromium.
 // Never record raw frames, credentials, tokens or Playwright traces with filled password fields.
 export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, protoRoot, accounts, artifactDir }) {
@@ -11,16 +10,20 @@ export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, pr
   };
   const rows = [], failures = [], outcomes = [];
   let expected = null, label = 'opening', offline = false, favicon404 = false;
-  const onError = () => failures.push('browser-error');
+  const safePath = url => ['/', '/favicon.ico'].find(
+    path => URL.canParse(url) && new URL(url).pathname === path) ?? '[other]';
+  const onError = () => failures.push({ category: 'pageerror', label });
   const onConsole = msg => {
     if (msg.type() !== 'error') return;
-    if (offline && msg.text().includes('net::ERR_INTERNET_DISCONNECTED')) return;
-    if (favicon404 && msg.text() === 'Failed to load resource: the server responded with a status of 404 (Not Found)' && new URL(msg.location().url).pathname === '/favicon.ico') return;
-    onError();
+    const kind = msg.text() === 'Failed to load resource: the server responded with a status of 404 (Not Found)' ? 'resource-404'
+      : msg.text().includes('net::ERR_INTERNET_DISCONNECTED') ? 'offline' : 'other';
+    if (offline && kind === 'offline') return;
+    if (favicon404 && kind === 'resource-404' && new URL(msg.location().url).pathname === '/favicon.ico') return;
+    failures.push({ category: 'console-error', label, path: safePath(msg.location().url), kind, offline, favicon404 });
   };
   const onResponse = res => {
     if (res.status() === 404 && new URL(res.url()).pathname === '/favicon.ico') favicon404 = true;
-    else if (res.status() >= 400) onError();
+    else if (res.status() >= 400) failures.push({ category: 'http-error', label, path: safePath(res.url()), status: res.status() });
   };
   const onSocket = socket => {
     if (socket.url() !== gatewayUrl) { failures.push('unexpected-websocket'); return; }

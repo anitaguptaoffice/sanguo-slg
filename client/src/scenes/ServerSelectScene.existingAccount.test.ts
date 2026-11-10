@@ -132,14 +132,17 @@ it.each([
   ["ws://[::1]:8080/ws", true], ["ws://game.example/ws", false], ["https://game.example/ws", false],
   ["wss://name:secret@game.example/ws", false], ["not a URL", false],
 ])("credential transport boundary %s", (url, allowed) => expect(permitsExistingAccountLogin(url as string)).toBe(allowed));
-
-it.each([false, true])("does not expose native password failures (action error=%s)", async actionError => {
-  const modulePath = "../../qa/existingAccount.browser.mjs";
-  const { runExistingAccountScenario } = await import(modulePath);
+it.each(["console", "pageerror", "response"].flatMap(event => [false, true].flatMap(actionError => ["other", "resource-404", "offline"].map(kind => ({ event, actionError, kind })))))("redacts native diagnostics $event/$kind (action error=$actionError)", async ({ event, actionError, kind }) => {
+  const { runExistingAccountScenario } = await import("../../qa/existingAccount.browser.mjs");
   const artifactDir = await mkdtemp(`${tmpdir()}/existing-entry-redaction-`);
   const secret = "disposable-redaction-fixture";
   const control: any = {
-    on() {}, off() {}, locator: () => control, async goto() {}, async waitFor() {},
+    on(type: string, handler: (value: any) => void) {
+      if (type !== event) return;
+      if (type === "pageerror") handler(new Error(secret));
+      if (type === "response") handler({ status: () => 500, url: () => `https://user:${secret}@host/${secret}?token=${secret}` });
+      if (type === "console") handler({ type: () => "error", text: () => ({ "resource-404": "Failed to load resource: the server responded with a status of 404 (Not Found)", offline: `net::ERR_INTERNET_DISCONNECTED ${secret}` }[kind] ?? secret), location: () => ({ url: `https://user:${secret}@host/${secret}?password=${secret}` }) });
+    }, off() {}, locator: () => control, async goto() {}, async waitFor() {},
     viewportSize: () => ({ width: 1280, height: 720 }),
     async inputValue() { if (actionError) throw new Error(`fill('${secret}') failed`); return secret; },
   };
@@ -150,6 +153,7 @@ it.each([false, true])("does not expose native password failures (action error=%
     expect(error).toBeInstanceOf(Error);
     expect(error.message).not.toContain(secret);
     expect(error.message).toContain(actionError ? "[redacted]" : "password was not cleared");
-    expect(await readFile(`${artifactDir}/existing-account.json`, "utf8")).not.toContain(secret);
+    const report = await readFile(`${artifactDir}/existing-account.json`, "utf8");
+    expect(report).not.toContain(secret); expect(JSON.parse(report).failures).toEqual([{ category: { console: "console-error", pageerror: "pageerror", response: "http-error" }[event], label: "opening", ...(event === "pageerror" ? {} : { path: "[other]" }), ...(event === "response" ? { status: 500 } : {}), ...(event === "console" ? { kind, offline: false, favicon404: false } : {}) }]);
   } finally { await rm(artifactDir, { recursive: true, force: true }); }
 });
