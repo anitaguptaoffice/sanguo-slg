@@ -84,6 +84,36 @@ jobs:
             exit 1
           fi
           printf 'Verified official Go formatting for %s tracked Recruit cleanup sources\n' "${#files[@]}"
+      - name: Check fresh DOM catalog evidence verifier
+        run: python3 -m unittest discover -s .github/scripts -p test_dom_fresh_catalog_gate.py -v
+      - name: Check fresh DOM catalog Go formatting and identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/dom-fresh-catalog"
+          mkdir -p "$evidence"
+          gofmt="$(go env GOROOT)/bin/gofmt"
+          files=(internal/domestic/fresh_source_catalog.go
+                 internal/domestic/fresh_city_catalog.go
+                 internal/domestic/fresh_source_catalog_test.go
+                 internal/domestic/fresh_source_catalog_pg_test.go)
+          {
+            go version
+            test -x "$gofmt"
+            printf 'gofmt path: %s\n' "$gofmt"
+            go version "$gofmt"
+            sha256sum "$gofmt"
+            printf 'commit %s\n' "$(git rev-parse HEAD)"
+            git cat-file commit HEAD | sed -n '/^$/q; /^tree /p; /^parent /p'
+            git ls-files --error-unmatch -- "${files[@]}"
+            git diff --cached --exit-code HEAD -- "${files[@]}"
+            git diff --exit-code HEAD -- "${files[@]}"
+            git ls-tree -r HEAD -- "${files[@]}"
+            sha256sum -- "${files[@]}"
+          } | tee "$evidence/identity.txt"
+          "$gofmt" -l "${files[@]}" | tee "$evidence/gofmt.list"
+          "$gofmt" -d "${files[@]}" > "$evidence/gofmt.diff"
+          test ! -s "$evidence/gofmt.list"
       - name: Build binaries
         run: |
           make build
@@ -93,13 +123,14 @@ jobs:
       - name: Domestic PostgreSQL regressions (ordinary and race)
         shell: bash
         run: |
+          set -euo pipefail
           for mode in ordinary race; do
             flags=()
             if [[ "$mode" == race ]]; then flags=(-race); fi
             # Legacy fixtures use public; isolate the two runs in disposable DBs.
             docker exec "${{ job.services.postgres.id }}" psql -U sanguo -d sanguo \
               -v ON_ERROR_STOP=1 -c "CREATE DATABASE domestic_$mode"
-            log="$RUNNER_TEMP/domestic-$mode.json"
+            log="$RUNNER_TEMP/dom-fresh-catalog/domestic-$mode.json"
             # Physical restart has a separate two-phase harness; do not claim it.
             DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/domestic_$mode?sslmode=disable" \
             go test ./internal/domestic "${flags[@]}" -count=1 -timeout=5m \
@@ -125,7 +156,20 @@ jobs:
               raise SystemExit(f"PG gate failed: skipped={skipped}, failed={failed}, missing={missing}")
           print(f"Verified all {len(expected)} building-pending tests with zero skips: {sys.argv[1]}")
           PY
+            python3 .github/scripts/dom_fresh_catalog_gate.py "$mode" "$log"
           done
+      - name: Archive fresh DOM catalog evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dom-fresh-catalog-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/dom-fresh-catalog/domestic-ordinary.json
+            ${{ runner.temp }}/dom-fresh-catalog/domestic-race.json
+            ${{ runner.temp }}/dom-fresh-catalog/identity.txt
+            ${{ runner.temp }}/dom-fresh-catalog/gofmt.list
+            ${{ runner.temp }}/dom-fresh-catalog/gofmt.diff
+          if-no-files-found: error
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:
