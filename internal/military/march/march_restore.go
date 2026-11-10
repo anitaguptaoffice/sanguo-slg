@@ -61,36 +61,59 @@ func (r *MarchRestore) Restore(ctx context.Context, h *Hub) (RestoreResult, erro
 	if r == nil || r.pool == nil || ctx == nil || h == nil {
 		return RestoreResult{}, ErrMarchRestore
 	}
-	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	result, items, stacks, err := r.readRestore(ctx)
 	if err != nil {
-		return RestoreResult{}, errors.Join(ErrMarchRestore, err)
+		return RestoreResult{}, err
 	}
-	defer func() { _ = tx.Rollback(context.Background()) }()
+	if err = installRestore(h, items, stacks); err != nil {
+		return RestoreResult{}, err
+	}
+	return result, nil
+}
+
+// No plan escapes until the read-only transaction has confirmed its ending and
+// released its pooled ownership. A cleanup panic cannot replace a read panic.
+func (r *MarchRestore) readRestore(ctx context.Context) (result RestoreResult, items []restoreRow, stacks map[int64][]TroopStack, err error) {
+	conn, err := r.pool.Acquire(ctx)
+	if err != nil {
+		return RestoreResult{}, nil, nil, errors.Join(ErrMarchRestore, err)
+	}
+	defer conn.Release() // Also discards non-idle connections after rollback panic.
+	tx, err := conn.BeginTx(ctx, pgx.TxOptions{IsoLevel: pgx.RepeatableRead, AccessMode: pgx.ReadOnly})
+	if err != nil {
+		return RestoreResult{}, nil, nil, errors.Join(ErrMarchRestore, err)
+	}
+	defer func() {
+		if original := recover(); original != nil {
+			defer func() { panic(original) }()
+		}
+		clean, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if cleanup := tx.Rollback(clean); cleanup != nil {
+			err = errors.Join(ErrMarchRestore, err, cleanup)
+		}
+		if err != nil {
+			result, items, stacks = RestoreResult{}, nil, nil
+		}
+	}()
 	table := func(name string) string { return pgx.Identifier{r.profile.SchemaName, name}.Sanitize() }
 	var orders []restoreRow
 	var troops []restoreTroop
 	var heroes []restoreHero
 	var orphans int64
 	if orders, err = readRestoreRows[restoreRow](ctx, tx, `SELECT o.march_id,o.army_id,o.status,o.from_x,o.from_y,o.to_x,o.to_y,o.purpose,o.depart_at,o.arrive_at,o.return_finish_at,o.origin_city_id,a.owner_player_id,a.status,a.hero_ids FROM `+table("march_order")+` o LEFT JOIN `+table("field_army")+` a ON a.server_id=o.server_id AND a.army_id=o.army_id WHERE o.server_id=$1 ORDER BY o.march_id`, r.profile.ServerID); err != nil {
-		return RestoreResult{}, errors.Join(ErrMarchRestore, err)
+		return RestoreResult{}, nil, nil, errors.Join(ErrMarchRestore, err)
 	}
 	if err = tx.QueryRow(ctx, `SELECT count(*) FROM `+table("field_army")+` a WHERE a.server_id=$1 AND a.status<>1 AND NOT EXISTS (SELECT 1 FROM `+table("march_order")+` o WHERE o.server_id=a.server_id AND o.army_id=a.army_id AND o.status IN (1,3))`, r.profile.ServerID).Scan(&orphans); err != nil {
-		return RestoreResult{}, errors.Join(ErrMarchRestore, err)
+		return RestoreResult{}, nil, nil, errors.Join(ErrMarchRestore, err)
 	}
 	if troops, err = readRestoreRows[restoreTroop](ctx, tx, `SELECT army_id,unit_cfg_id,count FROM `+table("army_troop")+` WHERE server_id=$1 ORDER BY army_id,unit_cfg_id`, r.profile.ServerID); err != nil {
-		return RestoreResult{}, errors.Join(ErrMarchRestore, err)
+		return RestoreResult{}, nil, nil, errors.Join(ErrMarchRestore, err)
 	}
 	if heroes, err = readRestoreRows[restoreHero](ctx, tx, `SELECT hero_id,player_id,status FROM `+table("player_hero")+` WHERE server_id=$1 ORDER BY hero_id`, r.profile.ServerID); err != nil {
-		return RestoreResult{}, errors.Join(ErrMarchRestore, err)
+		return RestoreResult{}, nil, nil, errors.Join(ErrMarchRestore, err)
 	}
-	result, items, stacks, err := validateRestore(r.profile.ServerID, DefaultUnitCatalog(), orders, troops, heroes, orphans)
-	if err != nil {
-		return RestoreResult{}, err
-	}
-	if err := installRestore(h, items, stacks); err != nil {
-		return RestoreResult{}, err
-	}
-	return result, nil
+	return validateRestore(r.profile.ServerID, DefaultUnitCatalog(), orders, troops, heroes, orphans)
 }
 
 func readRestoreRows[T any](ctx context.Context, tx pgx.Tx, sql string, args ...any) ([]T, error) {
