@@ -76,7 +76,7 @@ func TestMarchRestoreRejects(t *testing.T) {
 func TestMarchRestorePlanAndInstall(t *testing.T) {
 	in := restoreSample()
 	depart, arrive := in.orders[0].DepartAt, in.orders[0].ArriveAt
-	in.orders = append(in.orders, restoreRow{50, 60, 4, 1, 1, 2, 2, 1, depart, arrive, nil, restorePtr(int64(100)), nil, nil, []int64{13}})
+	in.orders = append(in.orders, restoreRow{50, 60, 4, 1, 1, 2, 2, 1, depart, arrive, nil, restorePtr(int64(100)), restorePtr(int64(7)), restorePtr(int64(1)), []int64{13}})
 	result, items, stacks, err := validateRestore(1, DefaultUnitCatalog(), in.orders, in.troops, in.heroes, 0)
 	baseOK(t, err)
 	if len(items) != 2 || len(result.Marches) != 2 || len(result.Release) != 1 || result.Release[0] != (HeroRelease{1, 7, 13}) {
