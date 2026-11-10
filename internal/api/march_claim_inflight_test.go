@@ -173,10 +173,20 @@ func exerciseMarchInflight(t *testing.T, s *Server, cityID, first, other int64) 
 	assertInflightEmpty(t, s)
 }
 
+func secondInflightHero(t *testing.T, s *Server, first *hero.Hero) *hero.Hero {
+	t.Helper()
+	h := *first
+	h.HeroID, h.TemplateCfgID = 0, 1002
+	if err := s.heroSvc.Store.CreateHero(context.Background(), &h); err != nil {
+		t.Fatal(err)
+	}
+	return &h
+}
+
 func TestMarchClaimInflightGateway(t *testing.T) {
 	s := garrisonServer(t)
 	first := originHero(t, s, time.Unix(1700000000, 0))
-	other := originHero(t, s, time.Unix(1700000000, 0))
+	other := secondInflightHero(t, s, first)
 	s.cacheCityCoord(7, 0, 0)
 	exerciseMarchInflight(t, s, 7, first.HeroID, other.HeroID)
 }

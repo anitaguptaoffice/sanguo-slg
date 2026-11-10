@@ -18,7 +18,8 @@ func TestMarchClaimInflightPG(t *testing.T) {
 	if err != nil || created == nil || created.Code != 0 || unmarshal(created.Data, &city) != nil || city.City == nil {
 		t.Fatalf("real city setup: %v %v", created, err)
 	}
-	first, other := originHero(t, s, now), originHero(t, s, now)
+	first := originHero(t, s, now)
+	other := secondInflightHero(t, s, first)
 	exerciseMarchInflight(t, s, city.City.CityId, first.HeroID, other.HeroID)
 	peer, err := pgxpool.NewWithConfig(ctx, pool.Config())
 	if err != nil {
