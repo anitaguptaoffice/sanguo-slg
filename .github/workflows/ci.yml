@@ -103,7 +103,15 @@ jobs:
                  internal/domestic/fresh_template.go
                  internal/domestic/fresh_source_test.go
                  internal/domestic/fresh_source_binding_pg_test.go
-                 internal/domestic/fresh_source_pins_pg_test.go)
+                 internal/domestic/fresh_source_pins_pg_test.go
+                 internal/domestic/fresh_template_codec.go
+                 internal/domestic/fresh_template_codec_fuzz_test.go
+                 internal/domestic/fresh_template_codec_golden_test.go
+                 internal/domestic/fresh_template_codec_negative_test.go
+                 internal/domestic/fresh_template_codec_oracle_test.go
+                 internal/domestic/fresh_template_codec_test.go)
+          identity_files=("${files[@]}"
+                          spec/rules/fixtures/fresh_city_template_codec_v1.json)
           {
             go version
             test -x "$gofmt"
@@ -127,17 +135,18 @@ jobs:
                   ;;
               esac
             done <<< "$commit_data"
-            tracked="$(git ls-files --error-unmatch -- "${files[@]}")"
-            git diff --cached --exit-code "$commit" -- "${files[@]}"
-            git diff --exit-code "$commit" -- "${files[@]}"
-            entries="$(git ls-tree -r "$commit" -- "${files[@]}")"
-            hashes="$(sha256sum -- "${files[@]}")"
+            tracked="$(git ls-files --error-unmatch -- "${identity_files[@]}")"
+            git diff --cached --exit-code "$commit" -- "${identity_files[@]}"
+            git diff --exit-code "$commit" -- "${identity_files[@]}"
+            entries="$(git ls-tree -r "$commit" -- "${identity_files[@]}")"
+            hashes="$(sha256sum -- "${identity_files[@]}")"
             python3 - "$tracked" "$entries" "$hashes" \
               "$commit" "$RUNNER_TEMP/dom-fresh-commit.raw" <<'PY'
           import sys
           from pathlib import Path
           sys.path.insert(0, ".github/scripts")
-          from dom_fresh_catalog_gate import check_identity
+          from dom_fresh_catalog_gate import check_identity, check_sources
+          check_sources(Path.cwd())
           check_identity(Path.cwd(), *sys.argv[1:])
           PY
             printf '%s\n' "$tracked" "$entries" "$hashes"
