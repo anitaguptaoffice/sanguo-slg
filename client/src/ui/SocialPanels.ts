@@ -289,6 +289,8 @@ export class SocialPanels {
   private lastRenderedChatMessages: ChatMessageRow[] = [];
   private chatSendPending: object | null = null;
   private chatDraftVersion = 0;
+  // null means not restored yet; an empty string is an authoritative cleared draft.
+  private chatDraftContent: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -577,6 +579,7 @@ export class SocialPanels {
     this.guildPanel.classList.add("hidden");
     openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
+    this.restoreChatInputDraftFromSession();
     const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
     if (sel) sel.value = String(CHAT_CHANNEL_GUILD);
     this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
@@ -694,17 +697,15 @@ export class SocialPanels {
   }
 
   private persistChatInputDraft(): void {
-    persistGuildChatDraft(this.chatContentInput()?.value ?? "");
+    this.chatDraftContent = this.chatContentInput()?.value ?? "";
+    persistGuildChatDraft(this.chatDraftContent);
   }
 
   private restoreChatInputDraftFromSession(): void {
-    const draft = restoreGuildChatDraft();
     const input = this.chatContentInput();
-    if (!input || !draft) {
-      this.syncChatInputCounter();
-      return;
-    }
-    input.value = draft;
+    if (!input) return;
+    this.chatDraftContent ??= restoreGuildChatDraft();
+    input.value = this.chatDraftContent;
     this.syncChatInputCounter();
   }
 
@@ -1169,7 +1170,7 @@ export class SocialPanels {
       const input = this.chatContentInput();
       if (input?.value === raw && this.chatDraftVersion === draftVersion && sameDestination()) {
         input.value = "";
-        persistGuildChatDraft("");
+        this.persistChatInputDraft();
         this.syncChatInputCounter();
       }
       if (sameDestination()) await this.refreshChat(() => current() && sameDestination(), () => {

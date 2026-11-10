@@ -42,6 +42,7 @@ type clockFunc func() time.Time
 // Server wires account, world, and domestic behind the WebSocket gateway.
 type Server struct {
 	citiesMu       sync.RWMutex
+	marchIndexMu   sync.RWMutex // memory bookkeeping only; never held across domain calls
 	log            *slog.Logger
 	account        *account.Service
 	players        *PlayerStore
@@ -72,6 +73,7 @@ type Server struct {
 	cityCoords     map[int64]cityCoord
 	playerMarches  map[int64][]playerMarchRef
 	marchHeroByID  map[int64]marchHeroBinding
+	marchStarting  map[marchStartKey]struct{}
 	nextArmyID     int64
 	now            clockFunc
 	smokeSyncClock *SmokeSyncClock
