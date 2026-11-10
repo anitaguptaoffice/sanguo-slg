@@ -108,9 +108,12 @@ func TestFreshSourceFailureClassification(t *testing.T) {
 }
 
 func TestFreshSourceInvalidHandles(t *testing.T) {
-	for _, p := range []*FreshCityParticipant{nil, {}, {state: freshSourceUnitState()}} {
-		if p.PinWallet(nil, nil) == nil || p.PinCityState(context.Background(), &recruittx.Access{}) == nil {
-			t.Fatal("invalid participant/access accepted")
+	// Nil is intentional input in this rejection matrix, never a request context.
+	for _, ctx := range []context.Context{nil, context.Background()} {
+		for _, p := range []*FreshCityParticipant{nil, {}, {state: freshSourceUnitState()}} {
+			if p.PinWallet(ctx, nil) == nil || p.PinCityState(ctx, &recruittx.Access{}) == nil {
+				t.Fatal("invalid participant/access accepted")
+			}
 		}
 	}
 	for _, h := range []*Hub{nil, {}, NewHub(nil), freshSourceUnitState().hub} {
@@ -130,7 +133,9 @@ func TestFreshSourceConcurrentRetirementCopies(t *testing.T) {
 		go func() {
 			defer group.Done()
 			<-start
-			alias.state.failure(errFreshSourceMetadata)
+			if err := alias.state.failure(errFreshSourceMetadata); err != errFreshSourceMetadata {
+				t.Errorf("retirement changed metadata error: %v", err)
+			}
 			if alias.state.checkWiring() == nil {
 				t.Error("retired alias accepted")
 			}
