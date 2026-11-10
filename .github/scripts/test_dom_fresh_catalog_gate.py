@@ -39,12 +39,12 @@ class EvidenceTests(unittest.TestCase):
                          {"ReadOnly": 4, "ExpectedIdentity": 49,
                           "OperationalErrors": 8, "HostileShape": 86})
         self.assertEqual(len(gate.EXPECTED), 151)
-        self.assertEqual(gate.check(encode(sample())), 232)
+        self.assertEqual(gate.check(encode(sample())), 339)
         other = [event("run", "TestOther"), event("pause", "TestOther"),
                  event("cont", "TestOther"), event("run", "TestOther/a/b"),
                  event("output", "TestOther/a/b", Output='{"Action":"pass"}\n'),
                  event("pass", "TestOther/a/b"), event("pass", "TestOther")]
-        self.assertEqual(gate.check(encode(sample()[:-1] + other + sample()[-1:])), 234)
+        self.assertEqual(gate.check(encode(sample()[:-1] + other + sample()[-1:])), 341)
 
     def test_every_required_name_needs_one_run_and_pass(self):
         good = sample()
@@ -148,7 +148,7 @@ class EvidenceTests(unittest.TestCase):
                 with self.subTest(constant=constant, field=field), self.assertRaises(ValueError):
                     gate.check(text)
             literal = event("output", Output=constant)
-            self.assertEqual(gate.check(encode(good[:-1] + [literal] + good[-1:])), 232)
+            self.assertEqual(gate.check(encode(good[:-1] + [literal] + good[-1:])), 339)
 
 
     def test_lifecycle_closed_names(self):
@@ -182,6 +182,9 @@ class EvidenceTests(unittest.TestCase):
             with patch.dict(gate.SOURCE_HASHES, hashes, clear=True):
                 for name in hashes:
                     (domestic / name).write_bytes(content)
+                fixture = root / gate.FIXTURE_PATH
+                fixture.parent.mkdir(parents=True)
+                fixture.write_bytes((Path(__file__).resolve().parents[2] / gate.FIXTURE_PATH).read_bytes())
                 gate.check_sources(root)
                 for name in hashes:
                     with self.subTest(name=name):
@@ -190,7 +193,7 @@ class EvidenceTests(unittest.TestCase):
                         with self.assertRaises(FileNotFoundError):
                             gate.check_sources(root)
                         path.write_bytes(content + b"unreviewed change")
-                        with self.assertRaisesRegex(ValueError, "unreviewed lifecycle source"):
+                        with self.assertRaisesRegex(ValueError, "unreviewed fresh source"):
                             gate.check_sources(root)
                         path.write_bytes(content)
                 gate.check_sources(root)
@@ -212,9 +215,9 @@ class EvidenceTests(unittest.TestCase):
                             with self.assertRaises(ValueError):
                                 gate.check(text)
                         else:
-                            self.assertEqual(gate.check(text), 232)
+                            self.assertEqual(gate.check(text), 339)
                 literal = event("output", Output=number)
-                self.assertEqual(gate.check(encode(good[:-1] + [literal] + good[-1:])), 232)
+                self.assertEqual(gate.check(encode(good[:-1] + [literal] + good[-1:])), 339)
 
     def test_parallel_ancestors_must_be_active(self):
         good = sample()
@@ -231,8 +234,51 @@ class EvidenceTests(unittest.TestCase):
         valid = [event("run", root), event("run", child), event("pause", child),
                  event("pause", root), event("cont", root), event("cont", child),
                  event("pass", child), event("pass", root)]
-        self.assertEqual(gate.check(encode(good[:-1] + valid + good[-1:])), 234)
+        self.assertEqual(gate.check(encode(good[:-1] + valid + good[-1:])), 341)
 
+
+    def test_codec_closed_inventory_and_every_outcome(self):
+        self.assertEqual(len(gate.CODEC_FAMILIES), 11)
+        self.assertEqual(len(gate.CODEC_EXPECTED), 107)
+        self.assertEqual(gate.CODEC_FAMILIES["FuzzFreshTemplateCodec"],
+                         {"seed#0", "seed#1", "seed#2", "seed#3"})
+        self.assertEqual(len(gate.IDENTITY_FILES), 16)
+        self.assertEqual(sum(name.endswith(".go") for name in gate.IDENTITY_FILES), 15)
+        good = sample()
+        for name in sorted(gate.CODEC_EXPECTED):
+            for action in ("skip", "fail"):
+                self.reject([dict(row, Action=action) if row.get("Test") == name
+                             and row["Action"] == "pass" else row for row in good])
+            for action in ("run", "pass"):
+                index = next(i for i, row in enumerate(good)
+                             if row.get("Test") == name and row["Action"] == action)
+                self.reject(good[:index] + [good[index]] + good[index:])
+            index = next(i for i, row in enumerate(good)
+                         if row.get("Test") == name and row["Action"] == "run") + 1
+            unknown = name + "/unreviewed"
+            self.reject(good[:index] + [event("run", unknown), event("pass", unknown)]
+                        + good[index:])
+            self.reject([event("output", Output=json.dumps(row))
+                         if row.get("Test") == name else row for row in good])
+        for name in ("TestFreshTemplateCodecUnknown", "FuzzFreshTemplateCodecUnknown",
+                     "FuzzFreshTemplateCodec/seed#4"):
+            self.reject(good[:-1] + [event("run", name), event("pass", name)] + good[-1:])
+
+    def test_literal_fixture_identity_is_fail_closed(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = root / gate.FIXTURE_PATH
+            fixture.parent.mkdir(parents=True)
+            original = (Path(__file__).resolve().parents[2] / gate.FIXTURE_PATH).read_bytes()
+            with patch.dict(gate.SOURCE_HASHES, {}, clear=True):
+                with self.assertRaises(FileNotFoundError):
+                    gate.check_sources(root)
+                for data in (b"", original[:-1], original + b"\n", original.replace(b"493", b"494")):
+                    fixture.write_bytes(data)
+                    with self.assertRaisesRegex(ValueError, "literal fixture"):
+                        gate.check_sources(root)
+                fixture.write_bytes(original)
+                gate.check_sources(root)
 
     def test_exact_source_identity_records(self):
         with tempfile.TemporaryDirectory() as directory:

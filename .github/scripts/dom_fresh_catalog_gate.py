@@ -99,7 +99,45 @@ SOURCE_FAMILIES = {
 SOURCE_EXPECTED = set(SOURCE_FAMILIES) | {
     f"{root}/{leaf}" for root, leaves in SOURCE_FAMILIES.items() for leaf in leaves
 }
-REQUIRED = EXPECTED | LEGACY | SOURCE_EXPECTED
+# Closed FCT1 matrix from the reviewed source, never from a passing stream.
+CODEC_PREFIXES = ("TestFreshTemplateCodec", "FuzzFreshTemplateCodec")
+CODEC_VECTORS = {"minimal-empty", "current-default", "int64-max", "unicode-32"}
+CODEC_FAMILIES = {
+    "TestFreshTemplateCodecDataContract": set(),
+    "TestFreshTemplateCodecFailsClosed": set(),
+    "TestFreshTemplateCodecGolden": CODEC_VECTORS,
+    "TestFreshTemplateCodecMaximumAndIsolation": set(),
+    "TestFreshTemplateCodecCanonicalRoundtrip": set(),
+    "TestFreshTemplateCodecDoesNotSelectSemantics": set(),
+    "TestFreshTemplateCodecAllTruncations": CODEC_VECTORS,
+    "TestFreshTemplateCodecReferenceAndSize": set(),
+    "TestFreshTemplateCodecInvalidSnapshots": {
+        "existing_city", "negative_city", "zero_actor", "negative_actor",
+        "nil_buildings", "nil_building", "zero_cfg", "unknown_cfg", "zero_level",
+        "nil_job", "scheduled_job", "settled_epoch", "wallet_checkpoint",
+        "saved_wallet", "job_sequence", "remainder", "catalog_mismatch",
+        "negative_production", "negative_resource", "large_time",
+    } | {f"{kind}-{index}" for kind in ("wallet", "cost") for index in range(4)},
+    "TestFreshTemplateCodecMalformedBytes": {
+        "magic", "encoding", "embedded_label", "empty_label", "long_label",
+        "building_count", "catalog_count", "huge_count", "time_zero",
+        "time_overflow", "resource_four", "resource_255", "missing_reference",
+        "building_order", "duplicate_slot", "catalog_order", "duplicate_ID",
+        "unused_catalog_cost",
+    } | {f"signed64-{offset}-{value:x}"
+         for offset in (16, 24, 32, 40, 66, 74, 82, 90, 98, 106)
+         for value in (1 << 63, (1 << 64) - 1)}
+      | {f"positive32-{offset}-{value:x}" for offset in (52, 56, 62)
+         for value in (0, 1 << 31, (1 << 32) - 1)}
+      | {"slot-" + name for name in (
+          "empty", "nul", "bad_utf8", "overlong", "surrogate",
+          "above_scalar_range", "truncated_utf8", "33_scalars", "129_bytes")},
+    "FuzzFreshTemplateCodec": {f"seed#{index}" for index in range(4)},
+}
+CODEC_EXPECTED = set(CODEC_FAMILIES) | {
+    f"{root}/{leaf}" for root, leaves in CODEC_FAMILIES.items() for leaf in leaves
+}
+REQUIRED = EXPECTED | LEGACY | SOURCE_EXPECTED | CODEC_EXPECTED
 # Changing these bytes requires source review and an explicitly updated inventory.
 SOURCE_HASHES = {
     "fresh_source.go":
@@ -112,20 +150,38 @@ SOURCE_HASHES = {
         "8c3ab8972575c8b32e11ac17f53acc2fbb143d0cf366d60a3c6b76b10a762ee7",
     "fresh_source_pins_pg_test.go":
         "98e0d79d47ecb55e767997d2918d31daac353d5091c1f8518aee92b358888146",
+    "fresh_template_codec.go":
+        "9db858c2b99007326f6861fe42e2f31b6f17ddfb346d51b336f2ac6aab843a72",
+    "fresh_template_codec_fuzz_test.go":
+        "c51b44ee63bf42ac8b2390fe3291ce2a6b31a96632de9af840c4b147d9be7568",
+    "fresh_template_codec_golden_test.go":
+        "cb19af9496c39f16ce2436ceca8cc2e043ff00d80e5243e720fc7184e0280b70",
+    "fresh_template_codec_negative_test.go":
+        "59a1471a9314be70afb37abf19eff76ab9f5c8f03f82e4309caa949284a84cd2",
+    "fresh_template_codec_oracle_test.go":
+        "9e0b5823a82a8afd2af6dd1b04b170dc45d3b31bc3c86db79ed1af5d66075fb0",
+    "fresh_template_codec_test.go":
+        "b2cb708728fcfa9d74f1d602293868aa6de96d27e286602a9dda7bc9c4245af9",
 }
+
+
+FIXTURE_PATH = "spec/rules/fixtures/fresh_city_template_codec_v1.json"
+FIXTURE_HASH = "71b001356ade13454be8e9e9deb7f6a0a66041abd2fdf14dcc500192b7ec4259"
 
 
 def check_sources(root):
     for name, expected in SOURCE_HASHES.items():
         path = root / "internal/domestic" / name
         if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
-            raise ValueError("unreviewed lifecycle source: " + name)
+            raise ValueError("unreviewed fresh source: " + name)
+    if hashlib.sha256((root / FIXTURE_PATH).read_bytes()).hexdigest() != FIXTURE_HASH:
+        raise ValueError("unreviewed FCT1 literal fixture")
 
 
 IDENTITY_FILES = tuple("internal/domestic/" + name for name in (
     "fresh_source_catalog.go", "fresh_city_catalog.go",
     "fresh_source_catalog_test.go", "fresh_source_catalog_pg_test.go",
-)) + tuple("internal/domestic/" + name for name in SOURCE_HASHES)
+)) + tuple("internal/domestic/" + name for name in SOURCE_HASHES) + (FIXTURE_PATH,)
 
 
 def check_identity(root, tracked, entries, hashes, commit, commit_file):
@@ -198,6 +254,8 @@ def check(text):
                 raise ValueError("unknown fresh-catalog family or child: " + name)
             if name.startswith(SOURCE_PREFIXES) and name not in SOURCE_EXPECTED:
                 raise ValueError("unknown fresh-source family or child: " + name)
+            if name.startswith(CODEC_PREFIXES) and name not in CODEC_EXPECTED:
+                raise ValueError("unknown FCT1 codec family or child: " + name)
             ancestors = [parent for parent in states if name.startswith(parent + "/")]
             if "/" in name and (not ancestors or any(states[p] != "run" for p in ancestors)):
                 raise ValueError("child without live parent: " + name)
@@ -241,4 +299,5 @@ if __name__ == "__main__":
     count = check(args.log.read_text(encoding="utf-8"))
     print(f"PASS {args.mode}: 4 fresh families, 147 leaves, 5 legacy roots; "
           f"62 lifecycle PG names, 14 lifecycle pure names; "
+          f"107 FCT1 names (11 roots, including four fuzz seeds); "
           f"{count} complete tests, one package pass, zero skips/fails")
