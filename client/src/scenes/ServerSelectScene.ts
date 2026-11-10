@@ -284,7 +284,7 @@ export class ServerSelectScene implements Scene {
         generation !== ctx.gateway.getSessionGeneration?.()) return;
       // A valid receipt confirms creation only, never an authenticated identity.
       if (/^[1-9][0-9]*$/.test(String(result?.account_id ?? ""))) {
-        this.registrationNotice = "账号已注册，尚未登录或建城；首次建城尚未开放。可重新输入密码并点击登录已有账号。";
+        this.registrationNotice = "账号已注册；本次注册未登录或建城。首次建城尚未开放。可重新输入密码并点击登录已有账号。";
       }
     } catch {
       // Even a failed response may follow a committed insert. Never retry or expose RPC errors.
