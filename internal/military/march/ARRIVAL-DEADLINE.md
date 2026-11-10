@@ -6,7 +6,8 @@ return deadline strictly after its locked order's arrival timestamp, matching
 MarchRestore's existing whole-snapshot validation.
 
 The writer locks and reads status and arrival together. After preserving the
-missing/replayed status outcomes, it canonicalizes a surviving army's deadline
+missing/replayed status outcomes (including infinite stored timestamps), it
+requires a finite arrival and canonicalizes a surviving army's deadline
 to UTC microseconds, checks the supported year range and strict ordering, and
 uses that exact value for the write. A nanosecond-only difference cannot become
 an equal PostgreSQL timestamp. Invalid deadlines fail before any savepoint,

@@ -155,6 +155,12 @@ func TestPGMarchArrivalDeadlineStatusPrecedence(t *testing.T) {
 		{"missing", `DELETE FROM march_order WHERE march_id=500`, ErrArrivalMissing},
 		{"returning", `UPDATE march_order SET status=3 WHERE march_id=500`, ErrArrivalReplayed},
 		{"terminal", `UPDATE march_order SET status=4 WHERE march_id=500`, ErrArrivalReplayed},
+		{"returning-infinity", `UPDATE march_order SET status=3,arrive_at='infinity' WHERE march_id=500`, ErrArrivalReplayed},
+		{"returning-negative-infinity", `UPDATE march_order SET status=3,arrive_at='-infinity' WHERE march_id=500`, ErrArrivalReplayed},
+		{"terminal-positive-infinity", `UPDATE march_order SET status=4,arrive_at='infinity' WHERE march_id=500`, ErrArrivalReplayed},
+		{"terminal-infinity", `UPDATE march_order SET status=4,arrive_at='-infinity' WHERE march_id=500`, ErrArrivalReplayed},
+		{"arrival-infinity", `UPDATE march_order SET arrive_at='infinity' WHERE march_id=500`, ErrMarchTransition},
+		{"arrival-negative-infinity", `UPDATE march_order SET arrive_at='-infinity' WHERE march_id=500`, ErrMarchTransition},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			pool, _, tr := transitionFixture(t, tc.sql)
@@ -173,6 +179,23 @@ func TestPGMarchArrivalDeadlineStatusPrecedence(t *testing.T) {
 			baseOK(t, tx.Commit(ctx))
 			if restoreEndSnapshot(t, pool, tr.profile.SchemaName) != before {
 				t.Fatal("status refusal changed rows or allocators")
+			}
+		})
+	}
+}
+
+func TestPGMarchArrivalDeadlineTerminalInfinity(t *testing.T) {
+	for _, value := range []string{"infinity", "-infinity"} {
+		t.Run(value, func(t *testing.T) {
+			pool, conn, tr := transitionFixture(t, `UPDATE march_order SET arrive_at='`+value+`' WHERE march_id=500`)
+			in := transitionCommit(transitionReport())
+			in.Survivors, in.ReturnAt = nil, time.Time{}
+			got, err := commitTx(pool, tr, in)
+			baseOK(t, err)
+			var absent bool
+			baseOK(t, conn.QueryRow(context.Background(), `SELECT return_finish_at IS NULL FROM march_order WHERE march_id=500`).Scan(&absent))
+			if got.Status != 4 || !absent {
+				t.Fatalf("terminal classification changed: %+v", got)
 			}
 		})
 	}

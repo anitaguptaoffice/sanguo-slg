@@ -11,6 +11,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var (
@@ -98,7 +99,7 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 	}
 	table := func(name string) string { return pgx.Identifier{t.profile.SchemaName, name}.Sanitize() }
 	var current int16
-	var arriveAt time.Time
+	var arriveAt pgtype.Timestamptz
 	err = tx.QueryRow(ctx, `SELECT status,arrive_at FROM `+table("march_order")+` WHERE server_id=$1 AND march_id=$2 AND army_id=$3 FOR UPDATE`,
 		in.ServerID, in.MarchID, in.ArmyID).Scan(&current, &arriveAt)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -115,7 +116,10 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 		return out, ErrMarchTransition
 	}
 	if len(in.Survivors) > 0 {
-		if in.ReturnAt, err = arrivalReturnDeadline(arriveAt, in.ReturnAt); err != nil {
+		if !arriveAt.Valid || arriveAt.InfinityModifier != pgtype.Finite {
+			return out, ErrMarchTransition
+		}
+		if in.ReturnAt, err = arrivalReturnDeadline(arriveAt.Time, in.ReturnAt); err != nil {
 			return out, err
 		}
 	}
