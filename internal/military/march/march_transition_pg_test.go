@@ -14,7 +14,7 @@ import (
 )
 
 const transitionReturnEpoch = 1793282400 // 2026-10-29T14:00:00Z
-const transitionSeedSQL = `INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y) VALUES(1,500,7,2,10,20);INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,path,origin_city_id) VALUES(1,500,500,10,20,30,40,1,now(),now()+interval '1 hour',1,'[]',100);INSERT INTO army_troop VALUES(1,500,1,200),(1,500,2,50);`
+const transitionSeedSQL = `INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y) VALUES(1,500,7,2,10,20);INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,path,origin_city_id) VALUES(1,500,500,10,20,30,40,1,'2026-10-29T12:00:00Z','2026-10-29T13:00:00Z',1,'[]',100);INSERT INTO army_troop VALUES(1,500,1,200),(1,500,2,50);`
 
 func transitionFixture(t *testing.T, extra ...string) (*pgxpool.Pool, *pgx.Conn, *MarchTransition) {
 	t.Helper()
