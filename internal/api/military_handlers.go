@@ -106,6 +106,10 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
 	}
+	if !s.beginMarchStart(pc, req.GetHeroId()) {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_MILITARY_INVALID_MARCH, "hero march request in progress"), nil
+	}
+	defer s.endMarchStart(pc, req.GetHeroId())
 	if _, err := s.domestic.SettleCity(ctx, dom.ID); err != nil {
 		return nil, err
 	}

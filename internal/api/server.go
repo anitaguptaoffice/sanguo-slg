@@ -73,6 +73,7 @@ type Server struct {
 	cityCoords     map[int64]cityCoord
 	playerMarches  map[int64][]playerMarchRef
 	marchHeroByID  map[int64]marchHeroBinding
+	marchStarting  map[marchStartKey]struct{}
 	nextArmyID     int64
 	now            clockFunc
 	smokeSyncClock *SmokeSyncClock
