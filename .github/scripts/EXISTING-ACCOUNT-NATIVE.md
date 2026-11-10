@@ -24,3 +24,4 @@ Top-level failures emit only a fixed phase label, never arbitrary exception text
 Owned browser, sockets and child processes are closed before acceptance. Pure
 negative controls are not live evidence. New exact-head source/composition review,
 all applicable CI and final native evidence are required before conditional merge.
+Initial run 42804810206 failed before jobs; the runner-only evidence path now initializes in a step, not job-level expression evaluation.

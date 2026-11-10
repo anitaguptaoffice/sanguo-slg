@@ -45,8 +45,10 @@ jobs:
       REDIS_ADDR: 127.0.0.1:6379
       HTTP_ADDR: 127.0.0.1:18080
       VITE_GATEWAY_WS_URL: ws://127.0.0.1:18080/ws
-      EVIDENCE: ${{ runner.temp }}/existing-account-native
     steps:
+      - name: Prepare evidence directory
+        shell: bash
+        run: echo "EVIDENCE=$RUNNER_TEMP/existing-account-native" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}

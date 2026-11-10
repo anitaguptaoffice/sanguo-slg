@@ -3,9 +3,15 @@ import test from 'node:test';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { loadCanonicalProto, verifyFixtures, verifyOutcomes } from './existing_account_native.mjs';
 
 const root = resolve(import.meta.dirname, '../..'), require = createRequire(`${root}/client/package.json`);
+test('runner-only evidence path is assigned at step execution, not job expression evaluation', () => {
+  const workflow = readFileSync(`${root}/.github/workflows/existing-account-native.yml`, 'utf8');
+  assert.doesNotMatch(workflow.split('    steps:')[0], /\$\{\{\s*runner\./);
+  assert.match(workflow, /run: echo "EVIDENCE=\$RUNNER_TEMP\/existing-account-native" >> "\$GITHUB_ENV"/);
+});
 test('actual canonical loader avoids legacy duplicate declarations', () => {
   const proto = loadCanonicalProto(root, require('protobufjs'));
   for (const route of ['account.v1.Register', 'account.v1.Login', 'account.v1.EnterGameServer', 'world.v1.CreateCity', 'world.v1.ListPlayerCities', 'domestic.v1.GetCityState']) {
