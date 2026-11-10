@@ -1,6 +1,8 @@
 """Audit one full DOM Go JSON stream against the reviewed fresh-catalog matrix."""
 import argparse
+import hashlib
 import json
+import math
 from pathlib import Path
 
 PACKAGE = "github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
@@ -57,6 +59,98 @@ LEGACY = {
 }
 
 
+# Reviewed source/PG matrix from #2446/#2447/#2448, never inferred from a log.
+SOURCE_PREFIXES = ("TestPGFreshSource", "TestFreshSource")
+SOURCE_FAMILIES = {
+    "TestPGFreshSourceConstructorRejects": {
+        "store_nil", "pool_nil", "shard_zero", "shard_wrong", "catalog_nil",
+        "catalog_invalid", "profile_incomplete", "profile_wrong_database", "hub_nil",
+    },
+    "TestPGFreshSourceOperationalErrors": {
+        "nil_access", "zero_access", "foreign_binding_same_pool", "nil_context",
+        "canceled", "expired", "ended", "sql_aborted",
+    },
+    "TestPGFreshSourceDrift": {
+        f"{table}/{kind}" for table in (
+            "player_wallet", "city_production_checkpoint", "city_building")
+        for kind in ("rename", "column")
+    },
+    "TestPGFreshSourceWiringReentry": {"wallet", "city"},
+    "TestPGFreshSourceCityStageDrift": {"city_production_checkpoint", "city_building"},
+    "TestPGFreshSourceBindingReadOnly": {"quoted_false", "quoted_true"},
+    "TestPGFreshSourceOrder": {
+        f"mask_{mask}/city_{city}" for mask in range(8) for city in ("false", "true")
+    } | {"mode_" + mode for mode in (
+        "ACCESS_SHARE", "ROW_SHARE", "SHARE_ROW_EXCLUSIVE", "ACCESS_EXCLUSIVE")},
+    "TestPGFreshSourceBlockedPins": {
+        "wallet_cancel", "checkpoint_cancel", "building_cancel", "checkpoint_lock_timeout",
+    },
+    "TestPGFreshSourceConcurrentTransactions": set(),
+    "TestFreshSourceCatalogCopy": set(),
+    "TestFreshSourceConcurrentRetirementCopies": set(),
+    "TestFreshSourceFailureClassification": set(),
+    "TestFreshSourceInvalidHandles": set(),
+    "TestFreshSourcePinPlans": set(),
+    "TestFreshSourceWiringRetiresAliases": {
+        "catalog_changed", "catalog_nil", "catalog_removed", "pool_nil",
+        "pool_replaced", "shard", "store_nil", "store_replaced",
+    },
+}
+SOURCE_EXPECTED = set(SOURCE_FAMILIES) | {
+    f"{root}/{leaf}" for root, leaves in SOURCE_FAMILIES.items() for leaf in leaves
+}
+REQUIRED = EXPECTED | LEGACY | SOURCE_EXPECTED
+# Changing these bytes requires source review and an explicitly updated inventory.
+SOURCE_HASHES = {
+    "fresh_source.go":
+        "681e41e673db015fad2d2c90997b80b256477b6436ca2fc9d2c968109f7d0314",
+    "fresh_template.go":
+        "b5fa58f3a2f876656b21e28bba6334b68aca98b86316e08e88bf9cab7aeb2b8d",
+    "fresh_source_test.go":
+        "ad9dff2b7c9472ae8bdc60c24d99a7951afeb13883d35f0962ab068c44ec7289",
+    "fresh_source_binding_pg_test.go":
+        "8c3ab8972575c8b32e11ac17f53acc2fbb143d0cf366d60a3c6b76b10a762ee7",
+    "fresh_source_pins_pg_test.go":
+        "98e0d79d47ecb55e767997d2918d31daac353d5091c1f8518aee92b358888146",
+}
+
+
+def check_sources(root):
+    for name, expected in SOURCE_HASHES.items():
+        path = root / "internal/domestic" / name
+        if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+            raise ValueError("unreviewed lifecycle source: " + name)
+
+
+IDENTITY_FILES = tuple("internal/domestic/" + name for name in (
+    "fresh_source_catalog.go", "fresh_city_catalog.go",
+    "fresh_source_catalog_test.go", "fresh_source_catalog_pg_test.go",
+)) + tuple("internal/domestic/" + name for name in SOURCE_HASHES)
+
+
+def check_identity(root, tracked, entries, hashes, commit, commit_file):
+    raw = Path(commit_file).read_bytes()
+    actual = hashlib.sha1(f"commit {len(raw)}\0".encode() + raw).hexdigest()
+    if actual != commit:
+        raise ValueError("commit object does not match captured identity")
+    expected_entries, expected_hashes = [], []
+    for name in IDENTITY_FILES:
+        path = root / name
+        if path.is_symlink() or not path.is_file() or path.stat().st_mode & 0o111:
+            raise ValueError("expected regular non-executable source: " + name)
+        data = path.read_bytes()
+        blob = hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+        expected_entries.append(f"100644 blob {blob}\t{name}")
+        expected_hashes.append(f"{hashlib.sha256(data).hexdigest()}  {name}")
+    for label, actual, expected in (
+        ("tracked paths", tracked, IDENTITY_FILES),
+        ("commit entries", entries, expected_entries),
+        ("source hashes", hashes, expected_hashes),
+    ):
+        if sorted(actual.splitlines()) != sorted(expected):
+            raise ValueError("incomplete or inconsistent identity: " + label)
+
+
 def unique_object(pairs):
     result = {}
     for key, value in pairs:
@@ -70,12 +164,19 @@ def reject_constant(value):
     raise ValueError("non-JSON numeric constant: " + value)
 
 
+def finite_float(value):
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("non-finite JSON number: " + value)
+    return number
+
+
 def check(text):
     states = {}
     started = ended = False
     for line in text.splitlines():
         event = json.loads(line, object_pairs_hook=unique_object,
-                           parse_constant=reject_constant)
+                           parse_constant=reject_constant, parse_float=finite_float)
         if not isinstance(event, dict) or event.get("Package") != PACKAGE or ended:
             raise ValueError("invalid package/event or event after package pass")
         action, name = event.get("Action"), event.get("Test")
@@ -95,8 +196,10 @@ def check(text):
                 raise ValueError("missing/duplicate test run")
             if name.startswith(PREFIX) and name not in EXPECTED:
                 raise ValueError("unknown fresh-catalog family or child: " + name)
+            if name.startswith(SOURCE_PREFIXES) and name not in SOURCE_EXPECTED:
+                raise ValueError("unknown fresh-source family or child: " + name)
             ancestors = [parent for parent in states if name.startswith(parent + "/")]
-            if "/" in name and (not ancestors or any(states[p] == "pass" for p in ancestors)):
+            if "/" in name and (not ancestors or any(states[p] != "run" for p in ancestors)):
                 raise ValueError("child without live parent: " + name)
             states[name] = "run"
         elif action == "pass" and name is None:
@@ -112,13 +215,18 @@ def check(text):
             required = "pause" if action == "cont" else "run"
             if name is None or states.get(name) != required:
                 raise ValueError("invalid test transition")
+            if action == "cont" and any(
+                name.startswith(parent + "/") and state != "run"
+                for parent, state in states.items()
+            ):
+                raise ValueError("continue without active parent: " + name)
             if action == "pass" and any(
                 child.startswith(name + "/") and state != "pass"
                 for child, state in states.items()
             ):
                 raise ValueError("parent pass before child completion")
             states[name] = "run" if action == "cont" else action
-    missing = (EXPECTED | LEGACY) - states.keys()
+    missing = REQUIRED - states.keys()
     if not ended or missing:
         raise ValueError(f"incomplete evidence: missing={sorted(missing)}")
     return len(states)
@@ -129,6 +237,8 @@ if __name__ == "__main__":
     parser.add_argument("mode", choices=("ordinary", "race"))
     parser.add_argument("log", type=Path)
     args = parser.parse_args()
+    check_sources(Path(__file__).resolve().parents[2])
     count = check(args.log.read_text(encoding="utf-8"))
     print(f"PASS {args.mode}: 4 fresh families, 147 leaves, 5 legacy roots; "
+          f"62 lifecycle PG names, 14 lifecycle pure names; "
           f"{count} complete tests, one package pass, zero skips/fails")
