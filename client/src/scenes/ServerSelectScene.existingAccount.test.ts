@@ -8,12 +8,6 @@ import { ErrorCode } from "@/net/loadProto";
 vi.mock("@/engine/artButtonSkin", () => ({ skinPrimaryButtons: vi.fn() }));
 vi.mock("@/engine/artPanelSkin", () => ({ skinDefaultPanel: vi.fn() }));
 const flush = async () => { for (let i = 0; i < 20; i++) await Promise.resolve(); };
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  let reject!: (error: Error) => void;
-  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
-  return { promise, resolve, reject };
-}
 const scenes: ServerSelectScene[] = [];
 function setup() {
   const scene = new ServerSelectScene(); scenes.push(scene);
@@ -80,7 +74,7 @@ describe("existing account entry", () => {
     expect(f.gateway.login).not.toHaveBeenCalled();
   });
   it("shares single-flight with demo entry and freezes server and credentials", async () => {
-    const f = setup(), pending = deferred<any>(); f.gateway.login.mockReturnValue(pending.promise);
+    const f = setup(), pending = Promise.withResolvers<any>(); f.gateway.login.mockReturnValue(pending.promise);
     await f.start(); f.button("login-existing").click(); f.button("enter-game").click(); f.button("login-existing").click();
     f.layoutFrame.querySelector<HTMLElement>('[data-server-id="1"]')!.click();
     expect(f.input("login").disabled).toBe(true); expect(f.input("password").disabled).toBe(true);
@@ -103,14 +97,14 @@ describe("existing account entry", () => {
     expect(f.input("password").value).toBe(""); expect(f.input("login").value).toBe("");
   });
   it("does not apply a late failure after leaving and reentering", async () => {
-    const f = setup(), pending = deferred<any>(); f.gateway.login.mockReturnValue(pending.promise);
+    const f = setup(), pending = Promise.withResolvers<any>(); f.gateway.login.mockReturnValue(pending.promise);
     await f.start(); f.button("login-existing").click(); f.scene.leave(); await f.scene.enter(f.ctx);
     expect(f.button("enter-game").disabled).toBe(true);
     pending.reject(new Error("old")); await flush();
     expect(f.ctx.switchScene).not.toHaveBeenCalled(); expect(f.layoutFrame.textContent).not.toContain("登录未完成");
   });
   it("rejects stale city reads after an actor generation change", async () => {
-    const f = setup(), pending = deferred<any>(); f.gateway.getCityState.mockReturnValue(pending.promise);
+    const f = setup(), pending = Promise.withResolvers<any>(); f.gateway.getCityState.mockReturnValue(pending.promise);
     await f.start(); f.button("login-existing").click(); await flush(); f.invalidate();
     pending.resolve({ wallet: {} }); await flush();
     expect(f.ctx.switchScene).not.toHaveBeenCalled(); expect(f.gateway.createCity).not.toHaveBeenCalled();
@@ -156,4 +150,11 @@ it.each(["console", "pageerror", "response"].flatMap(event => [false, true].flat
     const report = await readFile(`${artifactDir}/existing-account.json`, "utf8");
     expect(report).not.toContain(secret); expect(JSON.parse(report).failures).toEqual([{ category: { console: "console-error", pageerror: "pageerror", response: "http-error" }[event], label: "opening", ...(event === "pageerror" ? {} : { path: "[other]" }), ...(event === "response" ? { status: 500 } : {}), ...(event === "console" ? { kind, offline: false, favicon404: false } : {}) }]);
   } finally { await rm(artifactDir, { recursive: true, force: true }); }
+});
+it("declares a valid inline SVG favicon without a missing resource request", async () => {
+  const html = new DOMParser().parseFromString(await readFile("index.html", "utf8"), "text/html");
+  const href = html.querySelector('link[rel="icon"]')?.getAttribute("href") ?? "";
+  expect(href).toMatch(/^data:image\/svg\+xml,/);
+  const svg = new DOMParser().parseFromString(decodeURIComponent(href.slice(href.indexOf(",") + 1)), "image/svg+xml");
+  expect(svg.documentElement.namespaceURI).toBe("http://www.w3.org/2000/svg"); expect(svg.querySelector("parsererror")).toBeNull();
 });
