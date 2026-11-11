@@ -13,6 +13,8 @@ import { parseGetHeroDetailResponse, requireHeroIdForDetail } from "@/net/heroMa
 import { getTypes, Routes } from "@/net/loadProto";
 import type protobuf from "protobufjs";
 import type { AuthenticatedIdentity } from "./authenticatedIdentity";
+import { FirstCityGateway } from "./firstCityGateway";
+import type { FirstCityRoute, FirstCityCallOptions } from "./firstCityGateway";
 
 export type GatewayHandlers = {
   onOpen?: () => void;
@@ -143,10 +145,24 @@ export class GatewayClient implements GatewayPort {
   private sessionGeneration = 0;
   private authenticatedIdentity: AuthenticatedIdentity | null = null;
   private cancelConnect: (() => void) | null = null;
+  private firstCityReady = false;
+  private readonly firstCity = new FirstCityGateway(() => this.firstCityReady ? {
+    ws: this.ws, session: this.sessionId, shard: this.boundServerId, generation: this.sessionGeneration,
+  } : null);
+
+  requestFirstCity(route: FirstCityRoute, request: unknown, options?: FirstCityCallOptions) {
+    return this.firstCity.request(route, request, options);
+  }
+
+  private invalidateFirstCity(): void {
+    this.firstCityReady = false;
+    this.firstCity.reset();
+  }
 
   constructor(private readonly url = GATEWAY_WS_URL) {}
 
   connect(handlers: GatewayHandlers = {}): Promise<void> {
+    this.invalidateFirstCity();
     return new Promise((resolve, reject) => {
       this.cancelConnect?.();
       const previous = this.ws;
@@ -190,6 +206,7 @@ export class GatewayClient implements GatewayPort {
       };
       ws.onclose = () => {
         if (!current()) return;
+        this.invalidateFirstCity();
         pending = false;
         clearAttempt();
         this.ws = null;
@@ -221,6 +238,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   async login(loginName: string, password: string, serverId: number) {
+    this.invalidateFirstCity();
     this.authenticatedIdentity = null;
     const generation = ++this.sessionGeneration;
     const { LoginResponse } = getTypes();
@@ -234,6 +252,7 @@ export class GatewayClient implements GatewayPort {
     if (generation !== this.sessionGeneration) throw new Error("会话已变更，请重新进入游戏");
     this.sessionId = data.session_id;
     this.boundServerId = serverId;
+    this.firstCityReady = true;
     return data;
   }
 
@@ -250,6 +269,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   async enterGameServer(serverId: number) {
+    this.invalidateFirstCity();
     this.authenticatedIdentity = null;
     const generation = ++this.sessionGeneration;
     const authenticated = this.sessionId !== "";
@@ -265,6 +285,7 @@ export class GatewayClient implements GatewayPort {
     if (generation !== this.sessionGeneration) throw new Error("会话已变更，请重新进入游戏");
     if (data.session_id) this.sessionId = data.session_id;
     this.boundServerId = data.server_id ?? serverId;
+    this.firstCityReady = authenticated;
     if (authenticated && data.account_id && Number.isInteger(serverId) && serverId > 0 &&
         data.server_id === serverId && data.player?.server_id === serverId &&
         Number.isSafeInteger(data.player.player_id) && data.player.player_id! > 0) {
@@ -1076,6 +1097,7 @@ export class GatewayClient implements GatewayPort {
   }
 
   close(): void {
+    this.invalidateFirstCity();
     this.cancelConnect?.();
     this.authenticatedIdentity = null;
     this.sessionGeneration++;

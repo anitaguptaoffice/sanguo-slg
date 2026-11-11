@@ -34,6 +34,9 @@ Skin-off hides the decoration immediately. Turning it back on restores valid
 mounted decoration, including after a redraw while off; no fetch or RPC is added.
 Repeated refresh/reopen must not duplicate images or persist listeners per old row.
 Local scoped style may be installed with this panel; do not edit held index.html.
+The existing fixed-height skin bar must not clip the title or reward. Within only
+this reward host, allow natural-height wrapping, also with a missing/error image.
+This is a scoped layout fix, not a title-text, focus, keyboard or action change.
 
 ## Separate implementation and evidence
 
