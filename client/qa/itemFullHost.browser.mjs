@@ -7,7 +7,7 @@ const client=resolve(import.meta.dirname,'..'),out=process.env.QA_OUT??'/tmp/ite
 const url='http://127.0.0.1:16498',gateway='http://127.0.0.1:19098';
 mkdirSync(out,{recursive:true});
 const report={tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:client}).toString().trim(),boundary:'Real main.ts, MainCityScene, Canvas, skin, AssetLoader and production files; local mock gateway only, NOT native backend/gameplay acceptance',cases:[],errors:[]};
-assert.equal(report.tree,'7bfbc70aab229d932c93c8f8d6d2e58e5bce65dc');
+assert.equal(report.tree,'c01987a3ca9f8bcd8c89e6323ab18037a4ea0ec7');
 const fixture=resolve(client,'mock-server/item-qa.fixture.mjs');
 let source=readFileSync(resolve(client,'mock-server/server.mjs'),'utf8');
 assert.equal(source.split('bag: { 2004: 2 },').length,2);

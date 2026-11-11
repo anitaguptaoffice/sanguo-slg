@@ -1,7 +1,7 @@
 # QA-ITEM-FULL-HOST-001
 
-Registration: #2482. This test composes immutable #1973, #2480 and #2485 (2f3bef2, including main 66c9c142) in a disposable
-runner checkout, verifies tree 7bfbc70aab229d932c93c8f8d6d2e58e5bce65dc, and never
+Registration: #2482. This test composes immutable #1973, #2480 and #2485 (2f3bef2), plus latest main 7e1f689 in a disposable
+runner checkout, verifies tree c01987a3ca9f8bcd8c89e6323ab18037a4ea0ec7, and never
 updates either branch or releases any hold. The original main.ts, MainCityScene,
 Canvas, skin and AssetLoader run against production manifest/PNG paths.
 
@@ -25,4 +25,4 @@ The refreshed run scrolls every item 2001–2049 into the actual list viewport,
 asserting 20px bounds against every actual clipping ancestor, text and DPR path.
 All 49 geometries and clipping-container bounds are stored per case.
 This is reachability evidence, not independent per-item artwork readability review.
-Earlier run 42994065043 remains evidence only for the prior frozen composition.
+Earlier runs 42994065043 and 43004942625 remain evidence only for their prior frozen compositions.
