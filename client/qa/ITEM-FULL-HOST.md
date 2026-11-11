@@ -1,7 +1,7 @@
 # QA-ITEM-FULL-HOST-001
 
-Registration: #2482. This test composes immutable #1973 and #2480 in a disposable
-runner checkout, verifies tree ef563a5746ec7b8b529030656f73d2660658921a, and never
+Registration: #2482. This test composes immutable #1973, #2480 and #2485 (2f3bef2, including main 66c9c142) in a disposable
+runner checkout, verifies tree 7bfbc70aab229d932c93c8f8d6d2e58e5bce65dc, and never
 updates either branch or releases any hold. The original main.ts, MainCityScene,
 Canvas, skin and AssetLoader run against production manifest/PNG paths.
 
@@ -20,3 +20,8 @@ controls abort one image request, remove one manifest entry, or give a mounted
 DOM image a missing URL, then require text fallback and no broken image.
 These deliberate fault injections are distinct from the six untouched asset runs.
 No test success is claimed until the run finishes and evidence is reviewed.
+
+The refreshed run scrolls every item 2001–2049 into the actual list viewport,
+asserting 20px bounds, text and DPR path, and stores all 49 geometries per case.
+This is reachability evidence, not independent per-item artwork readability review.
+Earlier run 42994065043 remains evidence only for the prior frozen composition.

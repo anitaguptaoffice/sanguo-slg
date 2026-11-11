@@ -26,7 +26,8 @@ jobs:
         run: |
           cd target
           git -c user.name=QA -c user.email=qa@example.invalid merge --no-ff 005e51ed6b56b81c007b4f546831889fb84082a2 -m 'Disposable item host QA'
-          test "$(git rev-parse HEAD^{tree})" = ef563a5746ec7b8b529030656f73d2660658921a
+          git -c user.name=QA -c user.email=qa@example.invalid merge --no-ff 2f3bef2896cd6e01c74def72f2faf363c94e30a4 -m 'Disposable current-main inventory QA'
+          test "$(git rev-parse HEAD^{tree})" = 7bfbc70aab229d932c93c8f8d6d2e58e5bce65dc
           cp ../harness/client/qa/itemFullHost.browser.mjs client/qa/
       - name: Install official locked dependencies
         working-directory: target/client
