@@ -20,5 +20,7 @@ The dedicated regression uses production panels, GatewayClient and protobuf
 with strictly ordered controlled transport responses. It covers zero gold,
 visible inventory/affordability, read failure/retry and interrupted ownership.
 Unknown item-use recovery also leaves the deferred loading state on success or
-failure, without resending either mutation.
+failure, including reopening after close, panel replacement or detach/remount
+abandons a waiting read. Failed recovery permits only read retry; neither
+mutation is resent.
 This is not native-browser, live-economy or deployment acceptance.

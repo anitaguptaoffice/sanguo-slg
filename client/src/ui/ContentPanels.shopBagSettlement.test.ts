@@ -112,3 +112,30 @@ it.each([0, 10002])("clears deferred loading after unknown-use recovery settles 
   expect(f.sent.filter(route => route === "shop.v1.PurchaseShopOffer")).toHaveLength(1);
   expect(f.sent.filter(route => route === "content.v1.UseConsumable")).toHaveLength(1);
 });
+
+it.each(["close", "remount", "peer"].flatMap(kind => [0, 10002].map(code => [kind, code] as const)))(
+  "clears abandoned waiting state after %s and recovery code %s", async (kind, code) => {
+    const f = await setup(false); f.panels.toggleBag(); await f.bagReply(); f.button("use-item").click();
+    await f.reply("content.v1.UseConsumable", "sanguo.content.v1.UseConsumableResponse", {}, 10002);
+    f.panels.toggleShop(); await f.shelfReply(); f.button("buy-offer").click(); f.panels.toggleBag();
+    expect(f.queue.map(r => r.route)).toEqual(["shop.v1.PurchaseShopOffer"]);
+    if (kind === "close") f.panels.toggleBag();
+    if (kind === "remount") { f.panels.detach(); f.panels.attach(); }
+    if (kind === "peer") { const peer = document.createElement("div"); peer.className = "content-panel hidden"; f.mount.append(peer); openCenterPanel(peer); }
+    await f.purchaseReply(64001); expect(f.queue).toHaveLength(0);
+    const recover = async (result: number) => {
+      expect(f.queue.map(r => r.route)).toEqual(["content.v1.ListPlayerBag", "domestic.v1.GetCityState"]);
+      await f.reply("content.v1.ListPlayerBag", "sanguo.content.v1.ListPlayerBagResponse", { items: [] }, result);
+      await f.reply("domestic.v1.GetCityState", "sanguo.domestic.v1.GetCityStateResponse", { wallet: { food: 1100 } });
+      expect(f.mount.querySelector('[data-role="bag-list"]')?.textContent).not.toContain("加载");
+    };
+    f.panels.toggleBag(); await recover(code);
+    if (code) {
+      expect(f.mount.querySelector('[data-role="bag-form-error"]')?.textContent).toContain("资产待同步");
+      f.button("refresh-bag").click(); await recover(0);
+    }
+    expect(f.session.bag).toEqual([]); expect(f.session.wallet.food).toBe(1100);
+    expect(f.delivered).toEqual(f.sent); expect(f.queue).toHaveLength(0);
+    expect(f.sent.filter(route => route === "shop.v1.PurchaseShopOffer")).toHaveLength(1);
+    expect(f.sent.filter(route => route === "content.v1.UseConsumable")).toHaveLength(1);
+});

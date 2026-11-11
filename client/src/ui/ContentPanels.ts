@@ -1086,12 +1086,13 @@ export class ContentPanels {
       await settlement.done;
       if (!actor() || !intent() || this.bagPanel !== panel || panel.parentNode !== this.mount ||
         version !== this.bagReadVersion) return;
-      this.bagListLoading = false;
-      this.renderBagList();
     }
     const state = this.bagUseContext();
     if (state.needsReload) {
       if (this.useConsumableSubmitState === "submitting") return;
+      // Recovery also owns loading left by an abandoned purchase wait on an earlier opening.
+      this.bagListLoading = false;
+      this.renderBagList();
       this.setUseConsumableSubmitState("submitting");
       try {
         if (!await refreshQuestAssets(this.gateway, this.getSession, this.onSessionPatch, state.current)) return;
