@@ -256,7 +256,7 @@ export class SocialPanels {
   private chatReadDestinationKey = "";
   private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
   private rankReadVersion = 0;
-  private rankRead: { boardType: number; current: () => boolean; promise: Promise<void> } | null = null;
+  private rankRead: { boardType: number; page: number; current: () => boolean; promise: Promise<void> } | null = null;
   private rankSnapshotOwner: (() => boolean) | null = null;
   private rankDisplayedType = 0;
   private guildListInflight = new SocialPanelInflight<void>();
@@ -275,6 +275,8 @@ export class SocialPanels {
   private rankListError: string | null = null;
   private guildMembersCache: GuildMemberRow[] = [];
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
+  private readonly rankPageByType = new Map<number, number>();
+  private readonly rankRetryPageByType = new Map<number, { page: number; manual: boolean }>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
   private pendingRankPinPulse = false;
   private rankViewerMyRank = 0;
@@ -308,6 +310,8 @@ export class SocialPanels {
     ++this.rankReadVersion;
     this.rankRead = null;
     this.rankSnapshotByType.clear();
+    this.rankPageByType.clear();
+    this.rankRetryPageByType.clear();
     this.rankSnapshotOwner = null;
     this.rankDisplayedType = 0;
     this.chatSendPending = null;
@@ -339,6 +343,8 @@ export class SocialPanels {
     ++this.rankReadVersion;
     this.rankRead = null;
     this.rankSnapshotByType.clear();
+    this.rankPageByType.clear();
+    this.rankRetryPageByType.clear();
     this.rankSnapshotOwner = null;
     this.rankDisplayedType = 0;
     this.chatSendPending = null;
@@ -425,7 +431,7 @@ export class SocialPanels {
     if (typeSelect) typeSelect.value = String(LB_PLAYER_POWER);
     openCenterPanel(this.rankPanel);
     resetCenterPanelViewportScroll(this.rankPanel);
-    const read = this.refreshRank();
+    const read = this.refreshRank({ page: 1 });
     const version = this.rankReadVersion;
     void read.then(() => {
       if (version === this.rankReadVersion && this.rankSnapshotOwner?.() && !this.rankPanel.classList.contains("hidden")) this.scrollRankHighlightIntoView();
@@ -767,6 +773,12 @@ export class SocialPanels {
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
         <span data-role="rank-refresh-status-text"></span>
       </p>
+      <nav aria-label="排行榜分页">
+        <button type="button" data-action="rank-prev-page" disabled>上一页</button>
+        <span data-role="rank-page-status" aria-live="polite">第 1 页</span>
+        <button type="button" data-action="rank-next-page" disabled>下一页</button>
+        <button type="button" data-action="rank-my-page" disabled>查看我的名次</button>
+      </nav>
       <div class="panel-scroll-body" data-role="rank-scroll">
         <div class="rank-board" data-role="rank-board">
           <div class="rank-viewer-bar" aria-label="我的名次与刷新时间">
@@ -1366,7 +1378,22 @@ export class SocialPanels {
     }, remainingMs + 50);
   }
 
+  private syncRankPaginationUi(boardType = this.selectedLeaderboardType()): void {
+    const snapshot = this.rankSnapshotByType.get(boardType);
+    const page = this.rankPageByType.get(boardType) ?? 1;
+    const pages = Math.max(1, Math.ceil((snapshot?.total_count ?? snapshot?.entries?.length ?? 0) / 20));
+    const mine = Math.ceil((snapshot?.my_rank ?? 0) / 20);
+    const busy = this.rankRead?.current() ?? false;
+    const status = this.rankPanel.querySelector('[data-role="rank-page-status"]');
+    if (status) status.textContent = `第 ${page} / ${pages} 页`;
+    for (const [action, disabled] of [["rank-prev-page", page <= 1], ["rank-next-page", page >= pages], ["rank-my-page", mine < 1 || mine > pages || mine === page]] as const) {
+      const button = this.rankPanel.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (button) button.disabled = busy || disabled;
+    }
+  }
+
   private syncRankRefreshCooldownUi(boardType: number, nowMs = Date.now()): void {
+    this.syncRankPaginationUi(boardType);
     const lastManualMs = readRankManualLastRefreshMs(boardType);
     const remaining = rankRefreshCooldownRemainingMs(lastManualMs, nowMs);
     const stampEl = this.rankPanel.querySelector(`[data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}"]`);
@@ -1379,13 +1406,14 @@ export class SocialPanels {
     const retryBtn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="retry-refresh-rank"]');
     const inCooldown = remaining > 0;
     const busy = this.rankRead?.current() ?? false;
+    const retryCooldown = inCooldown && (this.rankRetryPageByType.get(boardType)?.manual ?? true);
     if (refreshBtn) refreshBtn.disabled = busy || inCooldown;
     for (const btn of this.rankPanel.querySelectorAll<HTMLButtonElement>(
       `.rank-empty-retry-inline[data-action="retry-refresh-rank"]`,
     )) {
-      btn.disabled = busy || inCooldown;
+      btn.disabled = busy || retryCooldown;
     }
-    if (retryBtn) retryBtn.disabled = busy || inCooldown;
+    if (retryBtn) retryBtn.disabled = busy || retryCooldown;
     if (inCooldown) {
       this.scheduleRankCooldownTimer(boardType, remaining);
     } else {
@@ -1501,6 +1529,7 @@ export class SocialPanels {
   }
 
   renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
+    this.syncRankPaginationUi(boardType);
     const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
     if (myEl) {
       myEl.textContent = formatViewerRankSummary(
@@ -1838,7 +1867,7 @@ export class SocialPanels {
     await this.dispatchRankRowDeepLink(link, entry);
   }
 
-  private async refreshRank(opts?: { manual?: boolean }): Promise<void> {
+  private async refreshRank(opts?: { manual?: boolean; page?: number }): Promise<void> {
     const sid = this.serverId();
     const boardType = this.selectedLeaderboardType();
     if (opts?.manual) {
@@ -1848,7 +1877,9 @@ export class SocialPanels {
         return;
       }
     }
-    if (this.rankRead?.boardType === boardType && this.rankRead.current()) return this.rankRead.promise;
+    let targetPage = opts?.page ?? (this.rankRead?.current() ? this.rankRead.page : this.rankPageByType.get(boardType)) ?? 1;
+    if (this.rankSnapshotOwner && !this.rankSnapshotOwner()) targetPage = 1;
+    if (this.rankRead?.boardType === boardType && this.rankRead.page === targetPage && this.rankRead.current()) return this.rankRead.promise;
     const actor = captureActor(this.gateway, this.getSession);
     const panel = this.rankPanel;
     const version = ++this.rankReadVersion;
@@ -1856,6 +1887,8 @@ export class SocialPanels {
       version === this.rankReadVersion && this.selectedLeaderboardType() === boardType;
     if (this.rankSnapshotOwner && !this.rankSnapshotOwner()) {
       this.rankSnapshotByType.clear();
+      this.rankPageByType.clear();
+      this.rankRetryPageByType.clear();
       this.rankDisplayedType = 0;
       this.cachedViewerHeroIds = [];
     }
@@ -1869,7 +1902,8 @@ export class SocialPanels {
     }
     const promise = Promise.resolve().then(async () => {
       if (!current()) return;
-      const hadSnapshot = this.rankSnapshotByType.has(boardType);
+      const previousPage = this.rankPageByType.get(boardType) ?? 1;
+      const hadSnapshot = this.rankSnapshotByType.has(boardType) && previousPage === targetPage;
       if (hadSnapshot) {
         captureLeaderboardPinBeforeRefresh(this.rankPanel, boardType);
       }
@@ -1880,12 +1914,22 @@ export class SocialPanels {
         const prevSnapshot = this.rankSnapshotByType.get(boardType);
         this.rankDensityScanPrevEntries = prevSnapshot?.entries ?? [];
         this.rankDensityScanPrevMyRank = prevSnapshot?.my_rank;
-        const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+        let res = (await this.gateway.getLeaderboard(sid, boardType, targetPage, 20)) as LeaderboardPagePayload;
+        if (!current()) return;
+        const lastPage = Math.max(1, Math.ceil((res.total_count ?? res.entries?.length ?? 0) / 20));
+        if (targetPage > lastPage) {
+          targetPage = lastPage;
+          res = (await this.gateway.getLeaderboard(sid, boardType, targetPage, 20)) as LeaderboardPagePayload;
+          if (!current()) return;
+          if (targetPage > Math.max(1, Math.ceil((res.total_count ?? res.entries?.length ?? 0) / 20))) throw new Error("排行榜已变化，请重试");
+        }
         if (!current()) return;
         const heroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
         if (!current()) return;
         this.cachedViewerHeroIds = heroIds;
         this.pendingRankPinPulse = detectLeaderboardMyRankChange(prevSnapshot?.my_rank, res.my_rank);
+        this.rankPageByType.set(boardType, targetPage);
+        this.rankRetryPageByType.delete(boardType);
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
         writeRankLastRefreshMs(boardType, refreshedAt);
@@ -1893,11 +1937,17 @@ export class SocialPanels {
           writeRankManualLastRefreshMs(boardType, refreshedAt);
           incrementRankManualRefreshCount(boardType);
         }
-        this.showRankRefreshDensity = hadSnapshot;
+        this.showRankRefreshDensity = hadSnapshot && previousPage === targetPage && targetPage === 1;
         this.renderLeaderboardPage(res, boardType);
         this.pendingRankPinPulse = false;
+        if (previousPage !== targetPage) {
+          this.pendingReturnScroll = null;
+          resetCenterPanelViewportScroll(this.rankPanel);
+          const tableScroll = this.rankPanel.querySelector<HTMLElement>(".rank-table-scroll");
+          if (tableScroll) tableScroll.scrollTop = 0;
+        }
         if (
-          hadSnapshot &&
+          hadSnapshot && previousPage === targetPage &&
           !shouldDeferPinApplyForReturnScroll(this.pendingReturnScroll, boardType)
         ) {
           applyLeaderboardPinAfterRefresh(this.rankPanel, boardType);
@@ -1918,6 +1968,7 @@ export class SocialPanels {
         this.onStatus("排行榜已刷新");
       } catch (e) {
         if (!current()) return;
+        this.rankRetryPageByType.set(boardType, { page: targetPage, manual: opts?.page === undefined || !!opts.manual });
         const msg = formatPanelGatewayErrorFromUnknownForList("rank", e);
         const refreshErr = gatewayErrorMessage(e);
         const cached = this.rankSnapshotByType.get(boardType);
@@ -1945,7 +1996,8 @@ export class SocialPanels {
         if (current()) this.syncRankRefreshCooldownUi(boardType);
       }
     });
-    this.rankRead = { boardType, current, promise };
+    this.rankRead = { boardType, page: targetPage, current, promise };
+    this.syncRankPaginationUi(boardType);
     return promise;
   }
 
@@ -2014,7 +2066,17 @@ export class SocialPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-rank" || a === "retry-refresh-rank") void this.refreshRank({ manual: true });
+    if (btn.disabled && ["rank-prev-page", "rank-next-page", "rank-my-page"].includes(a ?? "")) return;
+    const boardType = this.selectedLeaderboardType();
+    const page = this.rankPageByType.get(boardType) ?? 1;
+    if (a === "rank-prev-page") void this.refreshRank({ page: page - 1 });
+    if (a === "rank-next-page") void this.refreshRank({ page: page + 1 });
+    if (a === "rank-my-page") void this.refreshRank({ page: Math.ceil((this.rankSnapshotByType.get(boardType)?.my_rank ?? 0) / 20) });
+    if (a === "refresh-rank") void this.refreshRank({ manual: true });
+    if (a === "retry-refresh-rank") {
+      const retry = this.rankRetryPageByType.get(boardType);
+      void this.refreshRank({ manual: retry?.manual ?? true, page: retry?.page });
+    }
     if (a === "dismiss-rank-summary") this.hideRankEntrySummary();
   }
 }
