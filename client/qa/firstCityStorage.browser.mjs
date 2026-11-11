@@ -12,7 +12,7 @@ const ids = ['22222222-2222-4222-8222-222222222222', '33333333-3333-4333-8333-33
 mkdirSync(out, { recursive: true });
 const git = (...args) => execFileSync('git', args, { cwd: client }).toString().trim();
 const report = { boundary: 'Native Chromium API/storage; controlled peer, not V2 backend or game UI',
-  head: git('rev-parse', 'HEAD'), tree: git('rev-parse', 'HEAD^{tree}'), parents: git('show', '-s', '--format=%P'),
+  head: git('rev-parse', 'HEAD'), tree: git('rev-parse', 'HEAD^{tree}'), parents: [...git('cat-file', '-p', 'HEAD').split('\n\n', 1)[0].matchAll(/^parent ([0-9a-f]+)$/gm)].map(match => match[1]),
   node: process.version, playwright: JSON.parse(readFileSync(resolve(client, 'node_modules/playwright/package.json'))).version,
   cases: [], errors: [], cleanup: {} };
 const files = git('ls-files', '--full-name', '--', 'src/net', 'proto', '../spec/proto', 'package-lock.json', 'qa/firstCityStorage*', 'qa/FIRST-CITY-STORAGE.md', '../.github/workflows/first-city-storage.yml').split('\n');
