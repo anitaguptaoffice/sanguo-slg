@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
-import { createFirstCityIntent } from "./firstCityCanonical";
+import { createFirstCityIntent, validateFirstCityScope, validateFirstCityUuid } from "./firstCityCanonical";
 
 const realm = "11111111-1111-4111-8111-111111111111";
 const command = "22222222-2222-4222-8222-222222222222";
@@ -177,4 +177,20 @@ describe("first-city immutable C1 intent", () => {
     expect(intent.matches(original)).toBe(true);
     expect(intent.proposal.predecessor).toEqual(rejected);
   });
+});
+
+it("reuses strict scope and UUID entries without a fabricated proposal", () => {
+  const input = scope();
+  const snapshot = validateFirstCityScope(input);
+  input.playerId = "1";
+  expect(snapshot).toEqual(make().scope);
+  expect(Object.isFrozen(snapshot)).toBe(true);
+  expect(validateFirstCityUuid(command)).toBe(command);
+  for (const value of [null, 1, {}, command + "\n", command.replace("-4222-", "-1222-")]) {
+    expect(() => validateFirstCityUuid(value)).toThrow("Invalid first-city intent");
+  }
+  for (const value of [null, Object.create(scope()), { ...scope(), playerId: 1 }, { ...scope(), extra: 1 },
+    Object.defineProperty(scope(), "shard", { get: () => { throw new Error("private source"); } })]) {
+    expect(() => validateFirstCityScope(value)).toThrow(new TypeError("Invalid first-city intent"));
+  }
 });

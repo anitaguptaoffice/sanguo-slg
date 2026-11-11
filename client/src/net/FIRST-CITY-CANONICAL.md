@@ -9,6 +9,9 @@ This is a pure business-intent component, not a protobuf mirror or playable flow
 
 `createFirstCityIntent(expectedScope, proposed)` accepts untrusted values and
 throws only `TypeError("Invalid first-city intent")` on invalid input.
+`validateFirstCityScope` and `validateFirstCityUuid` expose the same strict input
+validation for the [request codec](FIRST-CITY-REQUEST-CODEC.md); scope remains a
+copied frozen equality expectation. Get needs no fabricated proposal.
 Scope has `realmId`, numeric `shard`, and `playerId`/`accountId` supplied as
 canonical positive signed64 decimal strings or bigint, never Number.
 Proposal has `commandId`, `predecessor`, `name`, `x`, `y`. Predecessor is exactly

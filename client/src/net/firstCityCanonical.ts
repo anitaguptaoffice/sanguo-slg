@@ -41,7 +41,7 @@ function fields(value: unknown, keys: string[]): Record<string, unknown> {
   return copy;
 }
 
-function uuid(value: unknown): string {
+export function validateFirstCityUuid(value: unknown): string {
   if (typeof value !== "string" || !uuidPattern.test(value)) invalid();
   return value as string;
 }
@@ -112,23 +112,30 @@ function encode(scope: FirstCityScope, proposal: FirstCityProposal, name: Uint8A
   return bytes;
 }
 
+/** Validate and copy an untrusted equality expectation; this grants no authority. */
+export function validateFirstCityScope(expectedScope: unknown): FirstCityScope {
+  try {
+    const s = fields(expectedScope, ["realmId", "shard", "playerId", "accountId"]);
+    return Object.freeze({
+      realmId: validateFirstCityUuid(s.realmId), shard: integer(s.shard, 1, 2147483647),
+      playerId: identity(s.playerId), accountId: identity(s.accountId),
+    });
+  } catch { return invalid(); }
+}
+
 /** Throws a fixed safe TypeError; a successful value grants no permission or effects. */
 export function createFirstCityIntent(expectedScope: unknown, proposed: unknown): FirstCityIntent {
   try {
-    const s = fields(expectedScope, ["realmId", "shard", "playerId", "accountId"]);
+    const scope = validateFirstCityScope(expectedScope);
     const p = fields(proposed, ["commandId", "predecessor", "name", "x", "y"]);
-    const scope = Object.freeze({
-      realmId: uuid(s.realmId), shard: integer(s.shard, 1, 2147483647),
-      playerId: identity(s.playerId), accountId: identity(s.accountId),
-    });
-    const commandId = uuid(p.commandId);
+    const commandId = validateFirstCityUuid(p.commandId);
     // Reading descriptors avoids evaluating a hostile discriminator getter.
     const kind = Object.getOwnPropertyDescriptor(p.predecessor ?? {}, "kind")?.value;
     const previous = fields(p.predecessor, kind === "empty" ? ["kind"] : ["kind", "commandId"]);
     let predecessor: FirstCityPredecessor;
     if (previous.kind === "empty") predecessor = Object.freeze({ kind: "empty" });
-    else if (previous.kind === "rejected" && uuid(previous.commandId) !== commandId) {
-      predecessor = Object.freeze({ kind: "rejected", commandId: uuid(previous.commandId) });
+    else if (previous.kind === "rejected" && validateFirstCityUuid(previous.commandId) !== commandId) {
+      predecessor = Object.freeze({ kind: "rejected", commandId: validateFirstCityUuid(previous.commandId) });
     } else return invalid();
     const name = nameBytes(p.name);
     const proposal = Object.freeze({
