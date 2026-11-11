@@ -1,3 +1,4 @@
+import { mountDailyRewardIcon } from "@/engine/dailyRewardIcon";
 import { claimQuestWithAssets, refreshQuestAssets } from "@/net/questClaimAssets";
 import { captureActor } from "@/net/actorContext";
 import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
@@ -552,6 +553,7 @@ export class DailyQuestPanels {
         main.textContent = line;
         li.appendChild(main);
         appendDailyQuestRowSecondary(li, q);
+        mountDailyRewardIcon(li, q, this.panel, this.assets);
         if (state === DAILY_QUEST_STATE_CLAIMABLE) {
           appendQuestChainQueueHudResidualSubline(
             li,

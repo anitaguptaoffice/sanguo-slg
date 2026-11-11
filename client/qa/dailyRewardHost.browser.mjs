@@ -8,7 +8,7 @@ const out = process.env.QA_OUT ?? '/tmp/daily-reward-host';
 const url = 'http://127.0.0.1:16498', gateway = 'http://127.0.0.1:19098';
 mkdirSync(out, { recursive: true });
 const report = { tree: execFileSync('git', ['rev-parse', 'HEAD^{tree}'], { cwd: client }).toString().trim(), boundary: 'Actual main.ts/MainCityScene/production assets; localhost mock only, not native backend acceptance', cases: [], errors: [] };
-assert.equal(report.tree, 'd5e562ab94970ad70c0cc6e4041a73de946de584');
+assert.equal(report.tree, '839bd3fa3a6726f0e1e7eb28285785c15ebe7e83');
 const fixture = resolve(client, 'mock-server/daily-reward.fixture.mjs');
 let source = readFileSync(resolve(client, 'mock-server/server.mjs'), 'utf8');
 const quests = Object.fromEntries([[1014,'daily_train_1'],[1032,'daily_build_1'],[1033,'daily_march_1']].map(([id,code],i) => [id,{quest_cfg_id:id,quest_code:code,chain_id:400,state:i?2:1,progress_current:0,progress_target:1}]));

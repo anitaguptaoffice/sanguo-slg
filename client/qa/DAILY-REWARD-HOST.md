@@ -1,6 +1,6 @@
 # QA-DAILY-REWARD-ICON-001
 
-Registration #2500. Pin CLIENT #2499 head fb98d645 and verify product treed5e562ab.
+Registration #2500. Pin CLIENT #2499 head c5d3f598 and verify product tree839bd3fa.
 Actual main.ts, MainCityScene, DailyQuestPanels, AssetLoader, manifest and PNGs run
 on localhost. A disposable repository mock fixture adds only three existing daily
 rows and logs route names; no production/native server or economy acceptance.
