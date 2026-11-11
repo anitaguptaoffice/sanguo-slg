@@ -39,5 +39,40 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: item-full-host-${{ github.sha }}
-          path: ${{ runner.temp }}/item-full-host
+          name: item-host-1280-dpr1-${{ github.sha }}
+          path: ${{ runner.temp }}/item-full-host/1280-dpr1-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: item-host-1280-dpr1.5-${{ github.sha }}
+          path: ${{ runner.temp }}/item-full-host/1280-dpr1.5-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: item-host-1280-dpr2-${{ github.sha }}
+          path: ${{ runner.temp }}/item-full-host/1280-dpr2-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: item-host-1600-dpr1-${{ github.sha }}
+          path: ${{ runner.temp }}/item-full-host/1600-dpr1-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: item-host-1600-dpr1.5-${{ github.sha }}
+          path: ${{ runner.temp }}/item-full-host/1600-dpr1.5-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: item-host-1600-dpr2-${{ github.sha }}
+          path: ${{ runner.temp }}/item-full-host/1600-dpr2-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: item-host-report-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/item-full-host/*.json
+            ${{ runner.temp }}/item-full-host/*.log
+            ${{ runner.temp }}/item-full-host/1280-missing*.png
+            ${{ runner.temp }}/item-full-host/1280-dom*.png
+            ${{ runner.temp }}/item-full-host/failure.png

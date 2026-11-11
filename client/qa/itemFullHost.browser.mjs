@@ -18,7 +18,7 @@ writeFileSync(fixture,source);
 const launch=(file,args,name,env={})=>spawn(process.execPath,[file,...args],{cwd:client,env:{...process.env,...env},stdio:['ignore',openSync(`${out}/${name}.log`,'w'),openSync(`${out}/${name}-error.log`,'w')]});
 const mock=launch(fixture,[],'mock',{MOCK_GATEWAY_PORT:'19098'});
 const vite=launch('node_modules/vite/bin/vite.js',['--host','127.0.0.1','--port','16498','--strictPort'],'vite',{VITE_GATEWAY_WS_URL:'ws://127.0.0.1:19098/ws'});
-let browser;
+let browser,lastPage;
 async function ready(address){for(let i=0;i<200;i++){try{if((await fetch(address)).ok)return;}catch{}await new Promise(r=>setTimeout(r,100));}throw new Error('service not ready '+address);}
 async function stop(child){if(child.exitCode!==null||child.signalCode!==null)return;const done=new Promise(r=>child.once('exit',r));child.kill('SIGTERM');await done;}
 try {
@@ -26,15 +26,18 @@ try {
  for(const [width,height,dpr] of [[1280,720,1],[1280,720,1.5],[1280,720,2],[1600,900,1],[1600,900,1.5],[1600,900,2]]){
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});
   await ctx.route('**/*',r=>new URL(r.request().url()).origin===url?r.continue():r.abort());
-  const page=await ctx.newPage();page.setDefaultTimeout(20000);
+  const page=await ctx.newPage();lastPage=page;page.setDefaultTimeout(20000);
   page.on('pageerror',e=>report.errors.push(String(e)));
-  page.on('websocket',s=>{if(s.url()!=='ws://127.0.0.1:19098/ws')report.errors.push('unexpected websocket '+s.url());});
+  page.on('websocket',s=>{const u=new URL(s.url());if(s.url()!=='ws://127.0.0.1:19098/ws'&&!(u.origin==='ws://127.0.0.1:16498'&&u.pathname==='/'))report.errors.push('unexpected websocket origin '+u.origin);});
   await page.goto(url);await page.locator('li[data-server-id="1"]:not(.disabled)').click();
   await page.locator('[data-action="enter-game"]').click();
   const open=page.locator('[data-action="toggle-bag"]');await open.waitFor();await open.click();
   const row=page.locator('[data-item-cfg-id="2001"]'),icon=row.locator('.bag-item-icon');
   await icon.waitFor();await page.waitForFunction(()=>[...document.querySelectorAll('.bag-item-icon')].every(x=>x.complete&&x.naturalWidth>0));
   assert.ok(await page.locator('canvas').count()>0);
+  assert.equal(await page.locator('.bag-item-icon').count(),49);
+  assert.equal(await page.locator('[data-item-cfg-id="9999"] .bag-item-icon').count(),0);
+  assert.ok(await page.locator('[data-item-cfg-id="9999"] .bag-stack-name').innerText());
   assert.equal(await icon.getAttribute('aria-hidden'),'true');
   assert.ok((await icon.getAttribute('src')).includes(`/textures/${dpr>=1.5?2:1}x/items/2001.png`));
   assert.equal(await icon.evaluate(x=>parseFloat(getComputedStyle(x).width)),20);
@@ -59,8 +62,23 @@ try {
   report.cases.push({width,height,dpr,bounds,checks:['real host visible','production PNG','keyboard and mouse','skin off/on','off redraw recovery','close/reopen','repeated refresh']});
   await ctx.close();
  }
+ for(const mode of ['missing-image','missing-entry','dom-image-error']) {
+  const ctx=await browser.newContext({viewport:{width:1280,height:720}});
+  await ctx.route('**/*',async r=>{
+   const u=new URL(r.request().url());if(u.origin!==url)return r.abort();
+   if(mode==='missing-image'&&/textures\/1x\/items\/2001.png$/.test(u.pathname))return r.abort();
+   if(mode==='missing-entry'&&u.pathname.endsWith('/manifest.json')){const response=await r.fetch();const data=await response.json();data.assets=data.assets.filter(a=>a.id!=='item.icon.2001.v1');return r.fulfill({response,json:data});}
+   return r.continue();
+  });
+  const page=await ctx.newPage();lastPage=page;page.setDefaultTimeout(20000);page.on('pageerror',e=>report.errors.push(String(e)));
+  await page.goto(url);await page.locator('li[data-server-id="1"]:not(.disabled)').click();await page.locator('[data-action="enter-game"]').click();
+  await page.locator('[data-action="toggle-bag"]').click();const row=page.locator('[data-item-cfg-id="2001"]');await row.waitFor();
+  if(mode==='dom-image-error'){const icon=row.locator('.bag-item-icon');await icon.waitFor();await icon.evaluate(x=>x.src='/deliberately-missing-qa-icon.png');await page.waitForFunction(()=>!document.querySelector('[data-item-cfg-id="2001"] .bag-item-icon'));}
+  assert.equal(await row.locator('.bag-item-icon').count(),0);assert.ok(await row.locator('.bag-stack-name').innerText());
+  await row.scrollIntoViewIfNeeded();await page.screenshot({path:`${out}/1280-${mode}.png`});report.cases.push({mode,checks:['actual error/missing source fallback preserves text','no startup failure']});await ctx.close();
+ }
  assert.deepEqual(report.errors,[]);report.passed=true;
-} catch(e){report.failure=String(e);process.exitCode=1;} finally {
+} catch(e){report.failure=String(e);if(lastPage&&!lastPage.isClosed())await lastPage.screenshot({path:out+'/failure.png'}).catch(()=>{});process.exitCode=1;} finally {
  await browser?.close();await stop(vite);await stop(mock);unlinkSync(fixture);
  report.cleanup={browserClosed:!browser?.isConnected(),viteStopped:vite.exitCode!==null||vite.signalCode!==null,mockStopped:mock.exitCode!==null||mock.signalCode!==null};
  writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
