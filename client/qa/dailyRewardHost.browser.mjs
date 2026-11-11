@@ -46,20 +46,24 @@ async function refresh(page, keyboard=false) {
   await page.waitForFunction(()=>!window.__qaDailyRowBefore?.isConnected&&!document.querySelector('[data-action="accept-daily"]')?.disabled);await loaded(page);
 }
 async function visibleGeometry(page, phase) {
-  const result=await page.evaluate(()=>{
-    const checks=[];
-    for(const el of document.querySelectorAll('[data-role="daily-list"] .daily-quest-row-main,[data-role="daily-list"] .daily-quest-row-reward,[data-role="daily-list"] .daily-reward-item-icon')){
-      if(el.matches('img')&&getComputedStyle(el).display==='none')continue;
+  const targets=page.locator('[data-role="daily-list"] .daily-quest-row-main,[data-role="daily-list"] .daily-quest-row-reward,[data-role="daily-list"] .daily-reward-item-icon');
+  const result=[];
+  for(let i=0;i<await targets.count();i++){
+    const target=targets.nth(i);
+    if(await target.evaluate(el=>el.matches('img')&&el.closest('[data-art-skin="off"]')))continue;
+    await target.scrollIntoViewIfNeeded();
+    result.push(await target.evaluate(el=>{
       const rects=[];
       if(el.matches('img'))rects.push(el.getBoundingClientRect());
       else {const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);while(walker.nextNode()){const n=walker.currentNode;if(n.textContent.trim()){const range=document.createRange();range.selectNodeContents(n);rects.push(...range.getClientRects());}}}
       const clips=[];for(let a=el.parentElement;a;a=a.parentElement){const s=getComputedStyle(a),b=a.getBoundingClientRect(),x=/(auto|scroll|hidden|clip)/.test(s.overflowX),y=/(auto|scroll|hidden|clip)/.test(s.overflowY);if(x||y)clips.push({x,y,left:b.left+a.clientLeft,top:b.top+a.clientTop,right:b.left+a.clientLeft+a.clientWidth,bottom:b.top+a.clientTop+a.clientHeight});}
       const bounds=rects.map(r=>({left:r.left,top:r.top,right:r.right,bottom:r.bottom}));
-      checks.push({className:el.className,text:el.textContent,bounds,clips,pass:bounds.length>0&&bounds.every(r=>r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&clips.every(c=>(!c.x||(r.left>=c.left&&r.right<=c.right))&&(!c.y||(r.top>=c.top&&r.bottom<=c.bottom))))});
-    }return checks;
-  });
+      return {className:el.className,text:el.textContent,bounds,clips,pass:bounds.length>0&&bounds.every(r=>r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&clips.every(c=>(!c.x||(r.left>=c.left&&r.right<=c.right))&&(!c.y||(r.top>=c.top&&r.bottom<=c.bottom))))};
+    }));
+  }
   report.lastGeometry={phase,result};assert.ok(result.length&&result.every(x=>x.pass),`clipped image/title/reward text during ${phase}`);return {phase,result};
 }
+
 try {
   await ready(url);await ready(gateway);browser=await chromium.launch({chromiumSandbox:true});
   for(const [width,height,dpr] of [[1280,720,1],[1280,720,1.5],[1280,720,2],[1600,900,1],[1600,900,1.5],[1600,900,2]]) {
