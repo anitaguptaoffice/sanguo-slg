@@ -15,3 +15,8 @@ keyboard behavior is edited, and #2311 native acceptance remains its own task.
 No #1973 file/source, PNG, spec, backend or deployment change is included.
 Unit tests do not prove real-browser usability. Exact composed six viewport/DPR
 host cases, fallbacks, screenshots, independent review and required CI remain gates.
+
+Official first-run screenshot exposed the existing fixed 40px skin bar clipping
+reward content. Coordinator authorized natural-height wrapping only for this
+host reward row, including cache/error fallback; no title or interaction logic
+is changed. Final multi-resolution image and text geometry still require QA.

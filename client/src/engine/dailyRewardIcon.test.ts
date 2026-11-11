@@ -49,6 +49,15 @@ describe("independent daily reward icons", () => {
     const s = setup(q), text = s.row.textContent; s.mount();
     expect(s.row.querySelector("img")).toBeNull(); expect(s.row.textContent).toBe(text);
   });
+  it("scopes natural-height wrapping to reward rows even when the cache is absent", () => {
+    const s = setup({ quest_cfg_id: 1014 }, false); s.panel.dataset.centerPanel = "daily";
+    const list = document.createElement("ul"); list.className = "daily-quest-list"; s.panel.append(list); list.append(s.row);
+    const bar = document.createElement("div"); bar.className = "art-filter-row-skin-bar";
+    bar.append(...Array.from(s.row.childNodes)); s.row.append(bar); s.mount();
+    expect(s.row.classList.contains("daily-reward-icon-host")).toBe(true);
+    expect(getComputedStyle(bar).height).toBe("auto"); expect(getComputedStyle(bar).maxHeight).toBe("none");
+    expect(getComputedStyle(bar).flexWrap).toBe("wrap"); expect(s.row.querySelector("img")).toBeNull();
+  });
   it("handles absent cache/loader and broken image without touching text", () => {
     const q = { quest_cfg_id: 1014 }, missing = setup(q, false); missing.mount();
     mountDailyRewardIcon(missing.row, q, missing.panel); expect(missing.row.querySelector("img")).toBeNull();
