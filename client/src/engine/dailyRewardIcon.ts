@@ -1,0 +1,31 @@
+import type { AssetLoader } from "@/engine/AssetLoader";
+import { resolveDailyQuestItemReward } from "@/net/dailyQuestProgressFormat";
+import type { DailyQuestRow } from "@/net/dailyQuestState";
+
+/** Independent daily reward decoration; no bag renderer or claim behavior. */
+export function mountDailyRewardIcon(
+  row: HTMLElement, quest: DailyQuestRow, panel: HTMLElement, assets?: AssetLoader,
+): void {
+  row.querySelectorAll(".daily-reward-item-icon").forEach((img) => img.remove());
+  const target = row.querySelector(".daily-quest-row-reward");
+  const reward = resolveDailyQuestItemReward(quest);
+  if (!target || !reward || !Number.isSafeInteger(reward.reward_item_id) || reward.reward_item_id <= 0) return;
+  const id = `item.icon.${reward.reward_item_id}.v1`;
+  const entry = assets?.getImageForAsset(id);
+  if (!entry || entry.meta.id !== id || entry.meta.kind !== "icon" || !entry.img.getAttribute("src")) return;
+  if (!panel.querySelector("style[data-daily-reward-icons]")) {
+    const style = document.createElement("style");
+    style.dataset.dailyRewardIcons = "";
+    style.textContent = ".daily-reward-item-icon{width:20px;height:20px;object-fit:contain;vertical-align:middle;margin-inline-end:4px;pointer-events:none}" +
+      '[data-art-skin="off"] .daily-reward-item-icon{display:none}';
+    panel.appendChild(style);
+  }
+  const img = document.createElement("img");
+  img.className = "daily-reward-item-icon";
+  img.alt = "";
+  img.setAttribute("aria-hidden", "true");
+  img.width = img.height = 20;
+  img.addEventListener("error", () => img.remove(), { once: true });
+  img.src = entry.img.src;
+  target.prepend(img);
+}

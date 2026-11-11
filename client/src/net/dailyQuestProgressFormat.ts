@@ -61,7 +61,7 @@ export function formatDailyQuestProgressSecondary(q: DailyQuestRow): string | nu
   return base;
 }
 
-function resolveDailyQuestItemReward(
+export function resolveDailyQuestItemReward(
   q: DailyQuestRow,
 ): { reward_item_id: number; quantity: number } | null {
   const rowId = q.reward_item_id ?? 0;
