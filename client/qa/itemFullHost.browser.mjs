@@ -44,7 +44,12 @@ try {
   const visibleItems=[];
   for(let id=2001;id<=2049;id++){
    const candidate=page.locator(`[data-item-cfg-id="${id}"] .bag-item-icon`);await candidate.scrollIntoViewIfNeeded();
-   const evidence=await candidate.evaluate(x=>{const r=x.getBoundingClientRect(),list=x.closest('.bag-list').getBoundingClientRect();return {src:x.getAttribute('src'),x:r.x,y:r.y,width:r.width,height:r.height,insideList:r.top>=list.top&&r.bottom<=list.bottom&&r.left>=list.left&&r.right<=list.right,text:x.closest('[data-item-cfg-id]').querySelector('.bag-stack-name').textContent};});
+   const evidence=await candidate.evaluate(x=>{
+    const r=x.getBoundingClientRect(),clips=[];let insideList=true;
+    for(let a=x.parentElement;a;a=a.parentElement){const s=getComputedStyle(a),b=a.getBoundingClientRect(),clipX=/(auto|scroll|hidden|clip)/.test(s.overflowX),clipY=/(auto|scroll|hidden|clip)/.test(s.overflowY);if(clipX||clipY){const left=b.left+a.clientLeft,top=b.top+a.clientTop,right=left+a.clientWidth,bottom=top+a.clientHeight;clips.push({role:a.getAttribute('data-role'),className:a.className,left,top,right,bottom,clipX,clipY});insideList&&=(!clipX||(r.left>=left&&r.right<=right))&&(!clipY||(r.top>=top&&r.bottom<=bottom));}}
+    return {src:x.getAttribute('src'),x:r.x,y:r.y,width:r.width,height:r.height,insideList,clips,text:x.closest('[data-item-cfg-id]').querySelector('.bag-stack-name').textContent};
+   });
+   assert.ok(evidence.clips.length>0,'missing actual clipping ancestor');
    assert.ok(evidence.insideList&&evidence.width===20&&evidence.height===20&&evidence.x>=0&&evidence.y>=0&&evidence.x+20<=width&&evidence.y+20<=height,`item ${id} clipped`);
    assert.ok(evidence.text&&evidence.src.includes(`/textures/${dpr>=1.5?2:1}x/items/${id}.png`));visibleItems.push({id,...evidence});
   }

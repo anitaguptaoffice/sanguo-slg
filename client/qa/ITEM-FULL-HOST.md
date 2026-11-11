@@ -22,6 +22,7 @@ These deliberate fault injections are distinct from the six untouched asset runs
 No test success is claimed until the run finishes and evidence is reviewed.
 
 The refreshed run scrolls every item 2001–2049 into the actual list viewport,
-asserting 20px bounds, text and DPR path, and stores all 49 geometries per case.
+asserting 20px bounds against every actual clipping ancestor, text and DPR path.
+All 49 geometries and clipping-container bounds are stored per case.
 This is reachability evidence, not independent per-item artwork readability review.
 Earlier run 42994065043 remains evidence only for the prior frozen composition.
