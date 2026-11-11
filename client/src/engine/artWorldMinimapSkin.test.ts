@@ -24,10 +24,10 @@ function loadManifest(): ArtManifestV1 {
 }
 
 describe("ART-WORLD-MINIMAP-010 manifest mount", () => {
-  it("lists two sprite asset ids (61 total manifest entries)", () => {
+  it("lists two sprite asset ids (139 non-item manifest entries)", () => {
     const manifest = loadManifest();
     expect(ART_WORLD_MINIMAP_010_ASSET_IDS).toHaveLength(2);
-    expect(manifest.assets).toHaveLength(139);
+    expect(manifest.assets.filter((asset) => !asset.id.startsWith("item.icon."))).toHaveLength(139);
     for (const id of ART_WORLD_MINIMAP_010_ASSET_IDS) {
       const meta = manifest.assets.find((a) => a.id === id);
       expect(meta).toBeTruthy();
