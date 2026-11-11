@@ -1,5 +1,5 @@
 import { captureActor } from "@/net/actorContext";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
@@ -256,6 +256,7 @@ export class SocialPanels {
   private chatReadDestinationKey = "";
   private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
   private rankReadVersion = 0;
+  private rankLinkVersion = 0;
   private rankRead: { boardType: number; current: () => boolean; promise: Promise<void> } | null = null;
   private rankSnapshotOwner: (() => boolean) | null = null;
   private rankDisplayedType = 0;
@@ -301,6 +302,7 @@ export class SocialPanels {
   ) {}
 
   setRankDeepLinkHandlers(handlers: SocialRankDeepLinkHandlers): void {
+    ++this.rankLinkVersion;
     this.rankDeepLink = { ...handlers };
   }
 
@@ -1789,7 +1791,8 @@ export class SocialPanels {
     applyRankPanelScrollTop(this.rankPanel, pending.scrollTop);
   }
 
-  private async dispatchRankRowDeepLink(link: RankRowDeepLink, entry: LeaderboardEntryRow): Promise<void> {
+  private async dispatchRankRowDeepLink(link: RankRowDeepLink, entry: LeaderboardEntryRow, current: () => boolean): Promise<void> {
+    if (!current()) return;
     const boardType = this.selectedLeaderboardType();
     switch (link.kind) {
       case "hero": {
@@ -1798,12 +1801,13 @@ export class SocialPanels {
           this.onStatus("将领面板未就绪");
           return;
         }
-        this.persistRankScrollForHeroReturn();
         let heroId = link.heroId;
         if (heroId <= 0) {
           const ids = await this.rankDeepLink.getViewerHeroIds?.();
           heroId = ids?.find((id) => id > 0) ?? 0;
         }
+        if (!current()) return;
+        this.persistRankScrollForHeroReturn();
         await handler(heroId);
         return;
       }
@@ -1830,12 +1834,23 @@ export class SocialPanels {
 
   private async onRankRowActivate(tr: HTMLElement): Promise<void> {
     const entry = this.rankEntryFromRow(tr);
-    if (!entry) return;
+    if (!entry || !this.rankSnapshotOwner?.()) return;
+    const panel = this.rankPanel, version = ++this.rankLinkVersion, readVersion = this.rankReadVersion;
+    const actor = captureActor(this.gateway, this.getSession), presentation = captureCenterPanelIntent(panel);
     const boardType = this.selectedLeaderboardType();
     const viewerId = this.viewerPlayerId();
-    const heroIds = await this.rankDeepLink.getViewerHeroIds?.();
-    const link = resolveRankRowDeepLink(boardType, entry, viewerId, heroIds ?? []);
-    await this.dispatchRankRowDeepLink(link, entry);
+    const current = () => actor() && presentation() && panel === this.rankPanel && panel.parentElement === this.mount &&
+      version === this.rankLinkVersion && readVersion === this.rankReadVersion && this.selectedLeaderboardType() === boardType &&
+      panel.contains(tr) && this.rankEntryFromRow(tr) === entry;
+    if (!current()) return;
+    try {
+      const heroIds = await this.rankDeepLink.getViewerHeroIds?.();
+      if (!current()) return;
+      const link = resolveRankRowDeepLink(boardType, entry, viewerId, heroIds ?? []);
+      await this.dispatchRankRowDeepLink(link, entry, current);
+    } catch (error) {
+      if (current()) this.onStatus(formatSocialGatewayError(error));
+    }
   }
 
   private async refreshRank(opts?: { manual?: boolean }): Promise<void> {
