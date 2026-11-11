@@ -1,0 +1,67 @@
+import assert from 'node:assert/strict';
+import {mkdirSync,readFileSync,writeFileSync,openSync,unlinkSync} from 'node:fs';
+import {spawn,execFileSync} from 'node:child_process';
+import {resolve} from 'node:path';
+import {chromium} from 'playwright';
+const client=resolve(import.meta.dirname,'..'),out=process.env.QA_OUT??'/tmp/item-full-host';
+const url='http://127.0.0.1:16498',gateway='http://127.0.0.1:19098';
+mkdirSync(out,{recursive:true});
+const report={tree:execFileSync('git',['rev-parse','HEAD^{tree}'],{cwd:client}).toString().trim(),boundary:'Real main.ts, MainCityScene, Canvas, skin, AssetLoader and production files; local mock gateway only, NOT native backend/gameplay acceptance',cases:[],errors:[]};
+assert.equal(report.tree,'ef563a5746ec7b8b529030656f73d2660658921a');
+const fixture=resolve(client,'mock-server/item-qa.fixture.mjs');
+let source=readFileSync(resolve(client,'mock-server/server.mjs'),'utf8');
+assert.equal(source.split('bag: { 2004: 2 },').length,2);
+source=source.replace('bag: { 2004: 2 },','bag: Object.fromEntries(Array.from({length:49},(_,i)=>[2001+i,i+1]).concat([[9999,1]])),');
+assert.equal(source.split('server.listen(PORT, () => {').length,2);
+source=source.replace('server.listen(PORT, () => {',"server.listen(PORT, '127.0.0.1', () => {");
+writeFileSync(fixture,source);
+const launch=(file,args,name,env={})=>spawn(process.execPath,[file,...args],{cwd:client,env:{...process.env,...env},stdio:['ignore',openSync(`${out}/${name}.log`,'w'),openSync(`${out}/${name}-error.log`,'w')]});
+const mock=launch(fixture,[],'mock',{MOCK_GATEWAY_PORT:'19098'});
+const vite=launch('node_modules/vite/bin/vite.js',['--host','127.0.0.1','--port','16498','--strictPort'],'vite',{VITE_GATEWAY_WS_URL:'ws://127.0.0.1:19098/ws'});
+let browser;
+async function ready(address){for(let i=0;i<200;i++){try{if((await fetch(address)).ok)return;}catch{}await new Promise(r=>setTimeout(r,100));}throw new Error('service not ready '+address);}
+async function stop(child){if(child.exitCode!==null||child.signalCode!==null)return;const done=new Promise(r=>child.once('exit',r));child.kill('SIGTERM');await done;}
+try {
+ await ready(url);await ready(gateway);browser=await chromium.launch({chromiumSandbox:true});
+ for(const [width,height,dpr] of [[1280,720,1],[1280,720,1.5],[1280,720,2],[1600,900,1],[1600,900,1.5],[1600,900,2]]){
+  const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});
+  await ctx.route('**/*',r=>new URL(r.request().url()).origin===url?r.continue():r.abort());
+  const page=await ctx.newPage();page.setDefaultTimeout(20000);
+  page.on('pageerror',e=>report.errors.push(String(e)));
+  page.on('websocket',s=>{if(s.url()!=='ws://127.0.0.1:19098/ws')report.errors.push('unexpected websocket '+s.url());});
+  await page.goto(url);await page.locator('li[data-server-id="1"]:not(.disabled)').click();
+  await page.locator('[data-action="enter-game"]').click();
+  const open=page.locator('[data-action="toggle-bag"]');await open.waitFor();await open.click();
+  const row=page.locator('[data-item-cfg-id="2001"]'),icon=row.locator('.bag-item-icon');
+  await icon.waitFor();await page.waitForFunction(()=>[...document.querySelectorAll('.bag-item-icon')].every(x=>x.complete&&x.naturalWidth>0));
+  assert.ok(await page.locator('canvas').count()>0);
+  assert.equal(await icon.getAttribute('aria-hidden'),'true');
+  assert.ok((await icon.getAttribute('src')).includes(`/textures/${dpr>=1.5?2:1}x/items/2001.png`));
+  assert.equal(await icon.evaluate(x=>parseFloat(getComputedStyle(x).width)),20);
+  await icon.scrollIntoViewIfNeeded();const bounds=await icon.boundingBox();
+  assert.ok(bounds&&bounds.width>0&&bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=width&&bounds.y+bounds.height<=height,'icon clipped');
+  assert.ok(await row.locator('.bag-stack-name').innerText());
+  await page.screenshot({path:`${out}/${width}-dpr${dpr}-on.png`});
+  await page.locator('[data-bag-category="cultivation"]').click();
+  await page.screenshot({path:`${out}/${width}-dpr${dpr}-cultivation.png`});
+  await page.locator('[data-bag-category="consumable"]').click();
+  const refresh=page.locator('[data-action="refresh-bag"]');await refresh.focus();await page.keyboard.press('Enter');await icon.waitFor();
+  const select=page.locator('[data-field="item-id"]');await select.selectOption('2001');await select.focus();await page.keyboard.press('ArrowDown');await page.keyboard.press('Tab');assert.notEqual(await select.inputValue(),'2001');
+  await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='off');assert.equal(await icon.isVisible(),false);
+  await page.screenshot({path:`${out}/${width}-dpr${dpr}-off.png`});
+  await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='on');assert.equal(await icon.isVisible(),true);
+  await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='off');await refresh.click();await page.waitForFunction(()=>document.querySelectorAll('.bag-item-icon').length===0);
+  await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='on');await refresh.click();await icon.waitFor();
+  await open.click();assert.equal(await icon.isVisible(),false);await open.click();await icon.waitFor();
+  for(let i=0;i<3;i++){await refresh.click();await icon.waitFor();}
+  assert.equal(await row.locator('.bag-item-icon').count(),1,'duplicate icons');
+  await page.screenshot({path:`${out}/${width}-dpr${dpr}-restored.png`});
+  report.cases.push({width,height,dpr,bounds,checks:['real host visible','production PNG','keyboard and mouse','skin off/on','off redraw recovery','close/reopen','repeated refresh']});
+  await ctx.close();
+ }
+ assert.deepEqual(report.errors,[]);report.passed=true;
+} catch(e){report.failure=String(e);process.exitCode=1;} finally {
+ await browser?.close();await stop(vite);await stop(mock);unlinkSync(fixture);
+ report.cleanup={browserClosed:!browser?.isConnected(),viteStopped:vite.exitCode!==null||vite.signalCode!==null,mockStopped:mock.exitCode!==null||mock.signalCode!==null};
+ writeFileSync(`${out}/report.json`,JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+}
