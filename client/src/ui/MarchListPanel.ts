@@ -357,11 +357,7 @@ export class MarchListPanel {
     }
     const opening = !this.isOpen();
     if (opening) openCenterPanel(this.panel);
-    const actor = captureActor(this.gateway, () => null);
-    const presentation = captureCenterPanelIntent(this.panel);
-    const mountGeneration = this.listMountGeneration, city = this.getCityId();
-    const pending = { id: marchId, current: () => actor() && presentation() &&
-      mountGeneration === this.listMountGeneration && city === this.getCityId() && this.isOpen() };
+    const pending = this.captureIdReveal(marchId);
     this.pendingIdReveal = pending;
     this.setSelectedMarchId(marchId, true);
     if (this.pendingIdReveal !== pending || !pending.current()) return;
@@ -370,6 +366,14 @@ export class MarchListPanel {
       void this.refreshList();
       this.startPoll();
     }
+  }
+
+  private captureIdReveal(marchId: number) {
+    const actor = captureActor(this.gateway, () => null);
+    const presentation = captureCenterPanelIntent(this.panel);
+    const mountGeneration = this.listMountGeneration, city = this.getCityId();
+    return { id: marchId, current: () => actor() && presentation() &&
+      mountGeneration === this.listMountGeneration && city === this.getCityId() && this.isOpen() };
   }
 
   private readonly onListKeyDownBound = (ev: KeyboardEvent): void => {
@@ -452,6 +456,10 @@ export class MarchListPanel {
       openCenterPanel(this.panel);
       resetCenterPanelViewportScroll(this.panel);
       this.startPoll();
+    }
+    if (opts?.openPanel !== false && marchId != null && Number.isSafeInteger(marchId) && marchId > 0) {
+      // Reveal only from an authoritative snapshot, while this handoff still owns presentation.
+      this.pendingIdReveal = this.captureIdReveal(marchId);
     }
     void this.refreshList().then(() => {
       this.scrollHighlightedMarchIntoView();
