@@ -15,7 +15,7 @@ jobs:
           path: harness
       - uses: actions/checkout@v4
         with:
-          ref: bcc1ae1638083c1ec69fb0fbeb95df39239621bb
+          ref: fb98d645f1b4a47ae6ec76031a154c18eda4b402
           fetch-depth: 0
           persist-credentials: false
           path: target
@@ -25,7 +25,7 @@ jobs:
       - name: Compose immutable source without publishing
         run: |
           cd target
-          test "$(git rev-parse HEAD^{tree})" = 45faf0649827946f3ba911c54821068cb5632602
+          test "$(git rev-parse HEAD^{tree})" = d5e562ab94970ad70c0cc6e4041a73de946de584
           cp ../harness/client/qa/dailyRewardHost.browser.mjs client/qa/
       - name: Install official locked dependencies
         working-directory: target/client
