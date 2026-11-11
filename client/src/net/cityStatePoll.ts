@@ -36,7 +36,8 @@ export class CityStatePoll {
   }
 
   async pollOnce(): Promise<void> {
-    const state = await this.opts.fetch.fetch();
+    // Read failures (including closing the socket to leave) preserve the last snapshot.
+    const state = await this.opts.fetch.fetch().catch(() => null);
     if (state) this.opts.onState(state);
   }
 }
