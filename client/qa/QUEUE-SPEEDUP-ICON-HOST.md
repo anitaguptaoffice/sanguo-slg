@@ -30,3 +30,16 @@ Bounded TERM/KILL service cleanup and browser cleanup are recorded and asserted.
 Independent raw artifact, pixels, geometry, route and cleanup review remains
 mandatory. Syntax checks do not replace browser acceptance. Source full client
 suite/type/build and all exact-head required CI must pass. Holds remain excluded.
+
+## Preserved first run and observation correction
+
+Run 43146975469 / job 130946958678 failed on disabled 1280x720 DPR1 after
+successful off-redraw geometry: Playwright scrollIntoViewIfNeeded retained a node
+while waiting for stability and QueuePanels' one-second render replaced it.
+Artifact 13911603271 preserves report, logs and pixels, ZIP SHA256
+f5915dee2977f5c7fe20da6c686b7c44caaeca86403ecae8106a8390852cf15e.
+No geometry assertion or mutation gate failed; later groups were not completed.
+Correction selects the current host, instant-scrolls it and measures every Range,
+image, button and clipping ancestor in one synchronous evaluation with membership
+checks. No retry, timer freeze, product change or relaxed geometry/route gate.
+Partial current-case evidence is retained. Independent review precedes a new run.

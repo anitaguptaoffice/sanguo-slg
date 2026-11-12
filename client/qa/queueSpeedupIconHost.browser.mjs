@@ -66,8 +66,13 @@ async function inspect(page, phase, disabled, dpr, expectedImages=true, skin=tru
   const results=[];
   assert.equal(await page.locator(button).count(),2);assert.equal(await page.locator(icon).count(),expectedImages?2:0);
   for(let i=0;i<2;i++) {
-    const b=page.locator(button).nth(i);await b.scrollIntoViewIfNeeded();
-    const e=await b.evaluate(el=>{
+    // QueuePanels replaces rows every second. Select, instant-scroll and measure one live node
+    // synchronously so the application tick cannot detach a Playwright action's retained handle.
+    const e=await page.evaluate(({button,i})=>{
+      const hosts=document.querySelectorAll(button),el=hosts[i];
+      if(hosts.length!==2||!el?.isConnected)throw new Error('queue host membership changed');
+      el.scrollIntoView({behavior:'instant',block:'center',inline:'nearest'});
+      if(document.querySelectorAll(button)[i]!==el||!el.isConnected)throw new Error('queue host detached during observation');
       const rect=r=>({left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height});
       const bounds=[{kind:'button',...rect(el.getBoundingClientRect())}],clips=[];
       const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
@@ -76,7 +81,7 @@ async function inspect(page, phase, disabled, dpr, expectedImages=true, skin=tru
       const img=el.querySelector('img.queue-speedup-item-icon'),s=img&&getComputedStyle(img),visible=img&&s.display!=='none';
       if(visible)bounds.push({kind:'image',...rect(img.getBoundingClientRect())});
       return {text:el.textContent,title:el.title,disabled:el.disabled,item:el.dataset.queueSpeedupItem,bounds,clips,img:img?{visible,src:img.getAttribute('src'),alt:img.alt,aria:img.getAttribute('aria-hidden'),tabIndex:img.tabIndex,pointer:s.pointerEvents,fit:s.objectFit,gap:parseFloat(s.marginInlineEnd)}:null,pass:bounds.some(r=>r.kind==='text')&&bounds.every(r=>r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&clips.every(c=>(r.kind==='button'&&c.self)||((!c.x||(r.left>=c.left&&r.right<=c.right))&&(!c.y||(r.top>=c.top&&r.bottom<=c.bottom)))))};
-    });
+    },{button,i});
     report.lastGeometry={phase,index:i,...e};assert.ok(e.pass,`clipping: ${phase}/${i}`);
     assert.equal(e.text,'使用短促工符');assert.equal(e.title,disabled?'背包中无短促工符（道具 2003）':'');assert.equal(e.disabled,disabled);assert.equal(e.item,'2003');
     if(expectedImages){assert.equal(e.img.visible,skin);assert.equal(e.img.alt,'');assert.equal(e.img.aria,'true');assert.equal(e.img.tabIndex,-1);assert.equal(e.img.pointer,'none');assert.equal(e.img.fit,'contain');assert.ok(e.img.gap>=0&&e.img.gap<=4);assert.ok(e.img.src.includes(`/textures/${dpr>=1.5?2:1}x/items/2003.png`));if(skin){const r=e.bounds.find(x=>x.kind==='image');assert.equal(r.width,20);assert.equal(r.height,20);}}
@@ -96,7 +101,7 @@ try {
   for(const [width,height,dpr] of [[1280,720,1],[1280,720,1.5],[1280,720,2],[1600,900,1],[1600,900,1.5],[1600,900,2]])for(const disabled of [false,true]) {
     writeFileSync(modeFile,JSON.stringify({disabled}));const ctx=await context(width,height,dpr);
     const page=await ctx.newPage();lastPage=page;const routeEvidence=await enter(page,disabled);await loaded(page);
-    const name=`${width}-dpr${dpr}-${disabled?'disabled':'enabled'}`,geometry=[];
+    const name=`${width}-dpr${dpr}-${disabled?'disabled':'enabled'}`,geometry=[];report.activeCase={width,height,dpr,disabled,geometry,routeEvidence};
     geometry.push(await inspect(page,'on',disabled,dpr));await page.screenshot({path:`${out}/${name}-on.png`});
     await refresh(page,true);await loaded(page);
     await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='off');
