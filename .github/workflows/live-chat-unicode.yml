@@ -1,0 +1,167 @@
+name: Live chat Unicode native acceptance
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-chat-unicode.yml'
+      - '.github/scripts/live_chat_unicode.mjs'
+      - '.github/scripts/LIVE_CHAT_UNICODE.md'
+      - '.github/scripts/live_chat_unicode.test.mjs'
+permissions:
+  contents: read
+jobs:
+  live-chat-unicode:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        product: [baseline, fixed]
+        include:
+          - product: baseline
+            head: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+            tree: cb3162ade8e15a9ab361b8f2d54ced1f5ea36d40
+            parents: e2b60dda830d9b25f15fcfced4da4acc090a8f1c
+          - product: fixed
+            head: 95b66a8ab7e46cc0f2e52f51d494a5ec3195d489
+            tree: 3a7eb9626e345ae54dd760bfc43eee2351a29284
+            parents: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+    env:
+      QA_QA_HEAD: ${{ github.event.pull_request.head.sha }}
+      QA_PRODUCT: ${{ matrix.product }}
+      QA_PRODUCT_HEAD: ${{ matrix.head }}
+      QA_PRODUCT_TREE: ${{ matrix.tree }}
+      QA_PRODUCT_PARENTS: ${{ matrix.parents }}
+      QA_HELPER_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+      QA_RUNTIME_HEAD: 6889bc773a52957a6135986d8d48c913517f5cd0
+      QA_RUNTIME_TREE: 4e48ea432483beb57801d2e4ea3fa12526a8968e
+      QA_RUNTIME_PARENTS: 7fa66533ff3c6effa991cb0d266e791f4c66a8b8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: live_chat_unicode
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d live_chat_unicode"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Initialize failure evidence
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          printf '{"passed":false,"phase":"setup; inspect job logs"}\n' > evidence/preflight.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: qa-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.head }}
+          path: target
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+          path: runtime-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_RUNTIME_HEAD }}
+          path: chat-runtime-source
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Assert exact independently reviewed inputs
+        working-directory: target
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$QA_PRODUCT_HEAD"
+          test "$(git rev-parse HEAD^{tree})" = "$QA_PRODUCT_TREE"
+          test "$(git show -s --format=%P HEAD)" = "$QA_PRODUCT_PARENTS"
+          test -z "$(git status --porcelain)"
+          test "$(git -C ../qa-source rev-parse HEAD)" = "$QA_QA_HEAD"
+          test -z "$(git -C ../qa-source status --porcelain)"
+          git -C ../qa-source show -s --format='{"head":"%H","tree":"%T","parents":"%P"}' HEAD > ../evidence/qa-provenance.json
+          test "$(git -C ../runtime-source rev-parse HEAD)" = 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+          test "$(git -C ../runtime-source rev-parse HEAD^{tree})" = dc151c5513ea2a2d937e45d4dee12d9f59792c7e
+          test "$(git -C ../runtime-source show -s --format=%P HEAD)" = "$QA_HELPER_PARENTS"
+          test -z "$(git -C ../runtime-source status --porcelain)"
+          test "$(git -C ../chat-runtime-source rev-parse HEAD)" = "$QA_RUNTIME_HEAD"
+          test "$(git -C ../chat-runtime-source rev-parse HEAD^{tree})" = "$QA_RUNTIME_TREE"
+          test "$(git -C ../chat-runtime-source show -s --format=%P HEAD)" = "$QA_RUNTIME_PARENTS"
+          test -z "$(git -C ../chat-runtime-source status --porcelain)"
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache-dependency-path: target/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: target/client/package-lock.json
+      - name: Build actual server and test complete client
+        timeout-minutes: 10
+        working-directory: target
+        env:
+          GOTOOLCHAIN: local
+          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+        run: |
+          set -euo pipefail
+          # Product test discovery must run before any standalone QA module staging.
+          test -z "$(find client -maxdepth 1 -name 'live_*.mjs' -print)"
+          go build -o "$RUNNER_TEMP/live-chat-unicode-server" ./cmd/server 2>&1 | tee ../evidence/build-server.log
+          cd client
+          npm ci 2>&1 | tee ../../evidence/install.log
+          npm test 2>&1 | tee ../../evidence/client-tests.log
+          npm run build 2>&1 | tee ../../evidence/client-build.log
+          npx --no-install playwright install --with-deps chromium
+      - name: Run complete immutable helper and chat negative controls
+        working-directory: target/client
+        run: |
+          set -euo pipefail
+          for file in live_hero_layout_runtime.mjs live_hero_layout_runtime.test.mjs; do
+            cp "../../runtime-source/.github/scripts/$file" .
+            cmp "$file" "../../runtime-source/.github/scripts/$file"
+          done
+          for file in live_chat_runtime.mjs live_chat_runtime.test.mjs; do
+            cp "../../chat-runtime-source/.github/scripts/$file" .
+            cmp "$file" "../../chat-runtime-source/.github/scripts/$file"
+          done
+          for file in live_chat_unicode.mjs live_chat_unicode.test.mjs; do
+            cp "../../qa-source/.github/scripts/$file" .
+            cmp "$file" "../../qa-source/.github/scripts/$file"
+          done
+          node live_hero_layout_runtime.test.mjs | tee ../../evidence/helper-tests.log
+          node live_chat_runtime.test.mjs | tee ../../evidence/runtime-tests.log
+          node live_chat_unicode.test.mjs | tee ../../evidence/scenario-tests.log
+      - name: Verify every required native UI case
+        working-directory: target/client
+        env:
+          QA_OUT: ${{ github.workspace }}/evidence
+          QA_SERVER: ${{ runner.temp }}/live-chat-unicode-server
+          DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/live_chat_unicode?sslmode=disable
+          REDIS_ADDR: 127.0.0.1:6379
+          PGHOST: 127.0.0.1
+          PGUSER: sanguo
+          PGPASSWORD: sanguo
+          PGDATABASE: live_chat_unicode
+        run: node live_chat_unicode.mjs
+      - name: Preserve all evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-chat-unicode-${{ matrix.product }}-${{ github.event.pull_request.head.sha }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
