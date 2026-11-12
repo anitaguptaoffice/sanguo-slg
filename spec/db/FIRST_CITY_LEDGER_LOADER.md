@@ -89,8 +89,9 @@ Requirements:
   `m4_010` / `m4_011` replays idempotently; terminal `durable_state` cannot be reversed; companion functions exist.
 - Skipped when DSN unset (local agents without PG must not fake pass).
 
-Record PostgreSQL `SHOW server_version` in harness output. Full concurrent effect/finalizer **race**
-matrices and restricted-role ACL suites are **not** frozen here (see §7).
+Record PostgreSQL `SHOW server_version` in harness output. Core effect/finalizer terminal races are
+frozen in [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md); full wallet/MIL/DOM contention and
+restricted-role ACL suites are **not** frozen here (see §7).
 
 Ordinary vs race CI: repository `api-pg-test` jobs (ordinary / race) exercise platform DB code paths;
 this card's loader is additionally gated on the disposable PG17 harness above.
@@ -108,7 +109,7 @@ disposable `spec_db_validate`. That is **syntax/order** evidence, not missing-le
 
 | Item | Status |
 |------|--------|
-| Concurrent effect vs finalizer PG17 race harness (companion §5.3 full matrix) | Separate implementation/SPEC card |
+| Concurrent effect vs finalizer PG17 race harness (companion §5.3 core matrix) | Frozen in [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md); full wallet/MIL/DOM contention still open |
 | `player_city_id_seq` reviewed activation | WORLD_CITY_IDENTITY gate |
 | Read-only `validate_only` GUC body (hero_metadata pattern) | Optional follow-on if operators require DR readiness without CREATE |
 | Target realm drain/fence/deploy execution | Not authorized |

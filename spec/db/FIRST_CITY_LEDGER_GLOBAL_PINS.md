@@ -239,6 +239,7 @@ Finalizer must not commit rejection while any concurrent effect transaction coul
 ```
 
 This card adds documentation only; validation confirms existing `m4_010_first_city_ledger.sql` still composes
-with base DDL in disposable `spec_db_validate`. ApplySpecs loader acceptance:
-[FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). Full lock-order race tests remain on implementation cards.
+with base DDL in disposable `spec_db_validate`. ApplySpecs loader:
+[FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). Core effect/finalizer terminal races:
+[FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md).
 
