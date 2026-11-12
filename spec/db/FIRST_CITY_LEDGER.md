@@ -59,8 +59,8 @@ mutable flag.
 proof under READ COMMITTED. Writers must use **all** of the following in one database transaction:
 
 1. **Advisory transaction lock** on a stable 64-bit key derived from `(realm_id, server_id, player_id)`
-   using `pg_advisory_xact_lock(hashtextextended(slot_key, 0))` (or an equivalent reviewed single-slot
-   lock ordering documented on a follow-on global-pins card). Hold this lock for the entire intake or
+   using `pg_advisory_xact_lock(hashtextextended(slot_key_text, 0))` with `slot_key_text` per
+   [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md) §3. Hold this lock for the entire intake or
    head transition.
 2. **`INSERT INTO world_first_city_actor_slot ... ON CONFLICT DO NOTHING`**: create-if-absent for the
    actor slot; on unique violation, proceed to step 3 without assuming EMPTY.
@@ -84,8 +84,8 @@ reviewed; not required for this core schema.
 | Continue / effect / finalizer | READ COMMITTED unless a later card proves SERIALIZABLE for a whole effect txn | Re-lock slot row `FOR UPDATE`; re-read `durable_state` before terminal transition. |
 
 `SELECT FOR UPDATE` alone on an existing slot is necessary but **insufficient** without §4 steps 1–2.
-Effect transactions must pin reviewed WORLD/ACCOUNT/MIL/DOM relations under separately frozen global
-lock order (§10.2 follow-on); this file does not freeze that order.
+Effect transactions must obey [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md); this
+file references intake slot steps only.
 
 ## 6. Constraint and conflict semantics (wire-aligned)
 
@@ -111,8 +111,9 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 1. **SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001** — frozen in
    [FIRST_CITY_LEDGER_OID_PROFILE.md](FIRST_CITY_LEDGER_OID_PROFILE.md); enrollment profile,
    writer inventory and pre-activation ACL/drain obligations (does not certify any realm).
-2. **SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001** — ACCOUNT → slot/command → wallet → CITY/map → MIL/DOM
-   pin order, row locks, and conflict re-read proofs.
+2. **SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001** — frozen in
+   [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md); ACCOUNT → slot/command → wallet →
+   CITY/map → MIL/DOM pin order, row locks, and conflict re-read proofs (does not certify any realm).
 3. **SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001** — participant SQL companions and effect/finalizer
    transitions bound to this schema.
 4. **SPEC-FIRST-CITY-LEDGER-LOADER-001** — ApplySpecs replay, missing-ledger idempotency, and

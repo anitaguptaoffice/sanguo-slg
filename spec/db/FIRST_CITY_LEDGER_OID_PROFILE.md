@@ -93,8 +93,8 @@ Stale or contradictory evidence blocks activation and blocks extending an existi
 | MIL | Markers, troops, inventories | Consumes allocated `city_id`; no MAX+1 path when reviewed allocator is active. |
 | PLATFORM | Narrow PG mechanisms (advisory locks, sequences) | Does not interpret realm strings or cut over routes. |
 
-Global pin order **ACCOUNT → slot/command → wallet → CITY/map → MIL/DOM** is a §10.2
-**follow-on** (SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001); this file states direction only.
+Global pin order **ACCOUNT → slot/command → wallet → CITY/map → MIL/DOM** is frozen in
+[FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md) (SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001).
 
 ## 5. Pre-activation ACL, drain and fencing (mandatory obligations)
 
@@ -156,7 +156,7 @@ lock between old and new writers is not a compatibility proof.
 
 | Card | Status |
 |------|--------|
-| SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001 | Pin order, row locks, conflict re-read proofs — **not done**. |
+| SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001 | Frozen in [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md). |
 | SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Effect/finalizer SQL companions — **not done**. |
 | SPEC-FIRST-CITY-LEDGER-LOADER-001 | ApplySpecs replay / PG17 acceptance — **not done**. |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
