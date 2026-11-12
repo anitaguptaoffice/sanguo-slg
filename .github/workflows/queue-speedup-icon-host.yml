@@ -1,0 +1,44 @@
+name: Queue speedup icon host art
+on:
+  pull_request:
+    paths: ['.github/workflows/queue-speedup-icon-host.yml', 'client/qa/queueSpeedupIconHost.browser.mjs', 'client/qa/QUEUE-SPEEDUP-ICON-HOST.md']
+jobs:
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: harness
+      - uses: actions/checkout@v4
+        with:
+          ref: b98b24b6833e06f1b3f965a4a77dedb2d876ae3f
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compose immutable reviewed source
+        run: |
+          cd target
+          test "$(git rev-parse HEAD)" = b98b24b6833e06f1b3f965a4a77dedb2d876ae3f
+          test "$(git rev-parse HEAD^{tree})" = 6de1bb51739046120841d8af1ba824739320c754
+          cp ../harness/client/qa/queueSpeedupIconHost.browser.mjs client/qa/
+      - name: Install official locked dependencies
+        working-directory: target/client
+        run: npm ci && npx --no-install playwright install --with-deps chromium
+      - name: Test actual host with disposable local fixture
+        working-directory: target/client
+        env:
+          QA_OUT: ${{ runner.temp }}/queue-speedup-host
+        run: node qa/queueSpeedupIconHost.browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: queue-speedup-host-${{ github.sha }}
+          path: ${{ runner.temp }}/queue-speedup-host/
+          if-no-files-found: error
