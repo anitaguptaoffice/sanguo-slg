@@ -98,6 +98,7 @@ Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CIT
 缺行 slot / head 竞争 intake 与 predecessor CAS：[SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001](FIRST_CITY_LEDGER_SLOT_CAS.md)（`go run ./spec/db/tests/first_city_ledger_slot_cas`）。
 跨 actor slot 隔离矩阵：[SPEC-FIRST-CITY-LEDGER-SLOT-ISOLATION-001](FIRST_CITY_LEDGER_SLOT_ISOLATION.md)（`go run ./spec/db/tests/first_city_ledger_slot_isolation`，同上 DSN 约定）。
 同 PK `ID_CONTENT_CONFLICT` / 同 C1 只读路径：[SPEC-FIRST-CITY-LEDGER-ID-CONTENT-CONFLICT-001](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md)（`go run ./spec/db/tests/first_city_ledger_id_content_conflict`）。
+狭义拒绝 finalizer 全 rollback / 白名单 / exact-attempt：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_rollback`）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
