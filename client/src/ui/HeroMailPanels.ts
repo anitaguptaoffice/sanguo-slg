@@ -1354,6 +1354,14 @@ export class HeroMailPanels {
       !this.heroDetailLoading &&
       !this.heroDetailError &&
       !!this.heroDetail;
+    if (host.open && detailPaneOpen) {
+      const active = host.ownerDocument.activeElement;
+      const summary = host.querySelector<HTMLElement>(":scope > summary");
+      if (active && summary && host.contains(active) && !summary.contains(active)) {
+        // Move focus before native details hides its body; preserve the close decision.
+        summary.focus({ preventScroll: true });
+      }
+    }
     host.open = !detailPaneOpen;
   }
 
