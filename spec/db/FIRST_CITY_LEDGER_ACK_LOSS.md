@@ -41,4 +41,5 @@ Record `SHOW server_version` and each `PASS ack_loss:` line.
 
 ## Follow-on
 
+Per-barrier effect-transaction atomicity: [SPEC-FIRST-CITY-LEDGER-ATOMICITY-001](FIRST_CITY_LEDGER_ATOMICITY.md) (`first_city_ledger_atomicity`).
 Realm drain/fence, production admission, CITY_CREATION_RECOVERY §10 items 5–7, full §11 browser — separate cards.
