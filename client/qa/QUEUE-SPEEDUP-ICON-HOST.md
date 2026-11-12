@@ -96,3 +96,16 @@ preserved even when postcheck fails. The identity gate still spans decode, geome
 and compositor capture completion, excluding later disk I/O. No gate is relaxed.
 Timing explains only observation validity; independent native-resolution pixel
 review is still mandatory and stable decoded identity alone is not painted proof.
+
+## Preserved native-resolution diagnostic and explicit viewport clip
+
+Run 43151435193 / artifact 13913942585 failed the physical PNG dimension gate at
+1280/DPR1.5: un-clipped native capture returned1280x720, not1920x1080. ZIP SHA256
+19721b1ca8a6bb0a1ce277cb7105470561f4ae9566dc915e86c625833c329b34
+is preserved. Seven capture brackets stayed stable, native capture103–142ms;
+this partial result does not establish final acceptance.
+The correction follows locked Playwright crPage.takeScreenshot and
+helper.enclosingIntSize: record Page.getLayoutMetrics.visualViewport; clip at its
+pageX/pageY with floor(viewportSize/scale+0.001), using its scale unchanged.
+No deviceScaleFactor division, blind DPR multiplication or image resampling.
+Full-viewport/native-dimension, generation, readiness and geometry gates remain.

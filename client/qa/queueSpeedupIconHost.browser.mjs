@@ -122,9 +122,14 @@ async function capture(page, path, phase, disabled, dpr, expectedImages=true, sk
   const geometry=await inspect(page,phase,disabled,dpr,expectedImages,skin);
   evidence.times.geometry=performance.now();
   evidence.beforeCapture=await page.evaluate(()=>window.__qaCaptureTracker.snapshot());
-  evidence.times.captureStart=performance.now();
-  // Pinned Chromium protocol: lossless full-viewport PNG, faster encoding, no screenshot rescaling.
-  const png=await captureSessions.get(page).send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false,optimizeForSpeed:true});
+  const {visualViewport}=await captureSessions.get(page).send('Page.getLayoutMetrics');
+  const viewport=page.viewportSize();evidence.metrics=visualViewport;
+  assert.ok(Number.isFinite(visualViewport.scale)&&visualViewport.scale>0);
+  assert.ok(Number.isFinite(visualViewport.pageX)&&Number.isFinite(visualViewport.pageY));
+  // Match locked Playwright device-scale screenshot clip; no DPR division or post-resampling.
+  const clip={x:visualViewport.pageX,y:visualViewport.pageY,width:Math.floor(viewport.width/visualViewport.scale+1e-3),height:Math.floor(viewport.height/visualViewport.scale+1e-3),scale:visualViewport.scale};
+  evidence.clip=clip;evidence.times.captureStart=performance.now();
+  const png=await captureSessions.get(page).send('Page.captureScreenshot',{format:'png',clip,fromSurface:true,captureBeyondViewport:false,optimizeForSpeed:true});
   evidence.times.captureReturned=performance.now();
   try { evidence.after=await page.evaluate(({button,icon,startGeneration})=>{
     const {hosts,images}=window.__qaCaptureNodes,currentHosts=[...document.querySelectorAll(button)],currentImages=[...document.querySelectorAll(icon)],tracker=window.__qaCaptureTracker;
