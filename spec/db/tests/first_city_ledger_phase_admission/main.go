@@ -291,8 +291,13 @@ func main() {
 	run(func(p *pgxpool.Pool) {
 		l1, l2 := "f4444444-4444-4444-8444-444444444444", "f5555555-5555-4555-8555-555555555555"
 		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryAcquireAdmission(tx, l1, 1) }), "lease")
+		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return illegalCheckThenBegin(tx, l1) }), "illegal under open")
+		if st, ph := readLease(p, l1); st != "held" || ph != "finalizer_begin" {
+			panic("illegal persisted phase under open without gate")
+		}
+		assert(!withTx(p, func(tx pgx.Tx) (bool, error) { return tryRecordBegin(tx, l1, "effect_begin") }), "gate path required")
 		assert(withTx(p, applyPoison), "poison")
-		_ = withTx(p, func(tx pgx.Tx) (bool, error) { return illegalCheckThenBegin(tx, l1) })
+		assert(!withTx(p, func(tx pgx.Tx) (bool, error) { return illegalCheckThenBegin(tx, l1) }), "illegal when not open")
 		adm, drain, _ := readGate(p)
 		assert(adm == "poisoned" && !withTx(p, func(tx pgx.Tx) (bool, error) { return tryRecordBegin(tx, l1, "finalizer_begin") }), "linearized blocked")
 		if _, ph := readLease(p, l1); ph != "" {

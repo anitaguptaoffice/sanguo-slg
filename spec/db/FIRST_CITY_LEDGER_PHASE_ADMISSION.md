@@ -38,7 +38,7 @@ rollback invariants; unknown drain full matrix; process restart / ACK-loss; onli
 
 1. Close wins race → new `try_acquire_admission` rejected; pre-held lease may still `record_phase` and end.
 2. Poison wins race → new lease / finalizer Begin rejected; `world_first_city_command` stays `PENDING` if seeded.
-3. Check-then-Begin illegal path does not commit phase; linearized path does.
+3. Check-then-Begin **without** gate `FOR UPDATE`: while `admission = open` the anti-pattern may still **persist** lease `phase` (harness shows row write); that outcome is **not contract-legal** for this card — acceptance requires linearized `try_record_begin` (gate `FOR UPDATE` then lease `FOR UPDATE`). When admission ≠ `open`, the illegal path must not succeed; linearized path is exercised after reopen.
 4. Lease `ended` → `try_record_begin` rejected without new admission.
 5. Cleanup attempt after poison → `drain` stays `unresolved`, not `drained`.
 
