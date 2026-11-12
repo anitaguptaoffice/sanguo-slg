@@ -15,7 +15,7 @@ jobs:
           path: harness
       - uses: actions/checkout@v4
         with:
-          ref: 85185e8d1d399e86dae5dcae20c76c601738490b
+          ref: 93618e18902ca2e54375069808281044b51b0889
           fetch-depth: 0
           persist-credentials: false
           path: target
@@ -25,8 +25,8 @@ jobs:
       - name: Compose immutable reviewed source
         run: |
           cd target
-          test "$(git rev-parse HEAD)" = 85185e8d1d399e86dae5dcae20c76c601738490b
-          test "$(git rev-parse HEAD^{tree})" = f0d9b40da03bafa01ba5d81b76892a51f7ef31f2
+          test "$(git rev-parse HEAD)" = 93618e18902ca2e54375069808281044b51b0889
+          test "$(git rev-parse HEAD^{tree})" = 7a1555da00470a54ec5f6c5dda9e4818e9a715eb
           cp ../harness/client/qa/queueSpeedupIconHost.browser.mjs client/qa/
       - name: Install official locked dependencies
         working-directory: target/client

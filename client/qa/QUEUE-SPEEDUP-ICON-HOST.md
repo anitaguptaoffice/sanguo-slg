@@ -1,10 +1,9 @@
 # QA-QUEUE-SPEEDUP-ICON-001
 
 Registration #2511, CLIENT #2508, independent contract #2507 / #2510.
-Immutable candidate source 85185e8d1d399e86dae5dcae20c76c601738490b,
-tree f0d9b40da03bafa01ba5d81b76892a51f7ef31f2, based on main e89520eb.
-Publication/execution remain blocked until independent source and composition
-review. Pin changes require renewed review and affected tests, not blind reruns.
+Immutable merged-main source 93618e18902ca2e54375069808281044b51b0889,
+tree 7a1555da00470a54ec5f6c5dda9e4818e9a715eb, based on main e89520eb.
+New execution remains gated on independent pin/composition review. Pin changes require renewed review and affected tests, not blind reruns.
 
 This harness runs actual main.ts/MainCityScene/QueuePanels/AssetLoader and item
 2003 production PNGs using locked Playwright Chromium with sandbox enabled on
@@ -43,3 +42,15 @@ Correction selects the current host, instant-scrolls it and measures every Range
 image, button and clipping ancestor in one synchronous evaluation with membership
 checks. No retry, timer freeze, product change or relaxed geometry/route gate.
 Partial current-case evidence is retained. Independent review precedes a new run.
+
+## Merged-main provenance run
+
+Previous successful run 43147599430 / artifact 13911888337 remains evidence for
+product 85185e8d1d399e86dae5dcae20c76c601738490b, runtime tree
+f0d9b40da03bafa01ba5d81b76892a51f7ef31f2. Its ZIP SHA256 is
+559af86b226e1b68f5eb78cfd28ef2196936c0e00cf7461a3072cc6c95349e75.
+The new pin targets normally merged main 93618e18902ca2e54375069808281044b51b0889;
+its only difference from that product source is the independently accepted
+67-line docs/art/queue-speedup-icon-host.md. Runtime and harness behavior are
+unchanged. A new official run establishes merged-main provenance, not a retry
+of a failed test. Preserve the prior success and original failed run separately.
