@@ -88,11 +88,15 @@ export function verifyStaging(manifest, staged, env) {
     check(createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex') === row.sourceBlob);
   }
 }
+export function safeError(error, field, allowed, fallback) {
+  try { const value = error?.[field]; return allowed.includes(value) ? value : fallback; }
+  catch { return fallback; }
+}
 export function runCommand({ signal, deadline, env, execute = execFileSync }, bin, args, cwd) {
   try {
     signal.throwIfAborted(); const timeout = commandTimeout(deadline);
     return execute(bin, args, { cwd, env, encoding: 'utf8', timeout, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 16 * 1024 * 1024 }).trim();
-  } catch { throw new Error('MAIL_RUNTIME_COMMAND_FAILED'); }
+  } catch (error) { throw new Error(`MAIL_RUNTIME_COMMAND_${safeError(error, 'code', ['ENOENT', 'ETIMEDOUT'], 'FAILED')}`); }
 }
 export function verifyScenario(result, product, viewport, screenshots) {
   check(result?.product === product && result.nativeAcceptance === false);
@@ -102,6 +106,12 @@ export function verifyScenario(result, product, viewport, screenshots) {
   assert.deepEqual(result.cases, ['open', 'tab-b', 'read-b', 'checkbox', 'unread', 'read-a', 'read-d', 'read-c']);
   assert.deepEqual(result.screenshots, screenshots);
   check(screenshots.length === 8 && new Set(screenshots).size === 8);
+}
+export function preflight(report, name, action) {
+  check(['dependencies', 'node', 'redis-info', 'redis-empty', 'database', 'packages', 'go', 'postgres',
+    'product-head', 'product-clean', 'manifest-load', 'manifest-inventory', 'manifest-bytes', 'provenance', 'empty-db'].includes(name));
+  report.phase = `preflight-${name}`;
+  return action();
 }
 export async function withMailRuntime(scenario) {
   const env = process.env, root = path.resolve(process.cwd(), '..'), client = process.cwd();
@@ -137,23 +147,23 @@ export async function withMailRuntime(scenario) {
   try {
     await deadlineRace(async () => {
       validateEnvironment(env); canSave = true; save();
-      const require = createRequire(path.join(client, 'package.json'));
+      const require = preflight(report, 'dependencies', () => createRequire(path.join(client, 'package.json')));
       const { chromium } = require('playwright'), protobuf = require('protobufjs');
-      check(/^v22\./.test(process.version));
-      check(/^redis_version:7\./m.test(command('redis-cli', ['-h', '127.0.0.1', 'INFO', 'server'])));
-      check(command('redis-cli', ['-h', '127.0.0.1', 'DBSIZE']) === '0');
-      check(command('psql', ['-XAtc', 'SELECT current_database()']) === 'live_mail_keyboard');
-      check(require('playwright/package.json').version === '1.49.1' && require('vite/package.json').version === '6.4.5');
-      check(command('go', ['env', 'GOVERSION']) === 'go1.23.12' && command('go', ['env', 'GOTOOLCHAIN']) === 'local');
-      check(Number(command('psql', ['-XAtc', 'SHOW server_version_num'])) >= 170000 && Number(command('psql', ['-XAtc', 'SHOW server_version_num'])) < 180000);
-      check(command('git', ['rev-parse', 'HEAD']) === env.QA_PRODUCT_HEAD && command('git', ['rev-parse', 'HEAD^{tree}']) === env.QA_PRODUCT_TREE);
-      check(command('git', ['show', '-s', '--format=%P', 'HEAD']) === env.QA_PRODUCT_PARENTS && command('git', ['diff', '--name-only']) === '' && command('git', ['diff', '--cached', '--name-only']) === '');
-      const staged = path.dirname(new URL(import.meta.url).pathname), manifest = JSON.parse(readFileSync(path.join(staged, 'manifest.json'), 'utf8'));
-      assert.deepEqual(readdirSync(staged).sort(), [...manifest.map(row => row.file), 'manifest.json'].sort());
-      verifyStaging(manifest, name => readFileSync(path.join(staged, name)), env);
-      report.provenance = { manifest, productHead: env.QA_PRODUCT_HEAD, productTree: env.QA_PRODUCT_TREE, parents: env.QA_PRODUCT_PARENTS, node: process.version,
-        go: command('go', ['version']), server: hash(readFileSync(env.QA_SERVER)), gm: hash(readFileSync(env.QA_GM)) };
-      check(sql("SELECT count(*) FROM pg_tables WHERE schemaname='public'") === 0);
+      preflight(report, 'node', () => check(/^v22\./.test(process.version)));
+      preflight(report, 'redis-info', () => check(/^redis_version:7\./m.test(command('redis-cli', ['-h', '127.0.0.1', 'INFO', 'server']))));
+      preflight(report, 'redis-empty', () => check(command('redis-cli', ['-h', '127.0.0.1', 'DBSIZE']) === '0'));
+      preflight(report, 'database', () => check(command('psql', ['-XAtc', 'SELECT current_database()']) === 'live_mail_keyboard'));
+      preflight(report, 'packages', () => check(require('playwright/package.json').version === '1.49.1' && require('vite/package.json').version === '6.4.5'));
+      preflight(report, 'go', () => check(command('go', ['env', 'GOVERSION']) === 'go1.23.12' && command('go', ['env', 'GOTOOLCHAIN']) === 'local'));
+      preflight(report, 'postgres', () => check(Number(command('psql', ['-XAtc', 'SHOW server_version_num'])) >= 170000 && Number(command('psql', ['-XAtc', 'SHOW server_version_num'])) < 180000));
+      preflight(report, 'product-head', () => check(command('git', ['rev-parse', 'HEAD']) === env.QA_PRODUCT_HEAD && command('git', ['rev-parse', 'HEAD^{tree}']) === env.QA_PRODUCT_TREE));
+      preflight(report, 'product-clean', () => check(command('git', ['show', '-s', '--format=%P', 'HEAD']) === env.QA_PRODUCT_PARENTS && command('git', ['diff', '--name-only']) === '' && command('git', ['diff', '--cached', '--name-only']) === ''));
+      const staged = path.dirname(new URL(import.meta.url).pathname), manifest = preflight(report, 'manifest-load', () => JSON.parse(readFileSync(path.join(staged, 'manifest.json'), 'utf8')));
+      preflight(report, 'manifest-inventory', () => assert.deepEqual(readdirSync(staged).sort(), [...manifest.map(row => row.file), 'manifest.json'].sort()));
+      preflight(report, 'manifest-bytes', () => verifyStaging(manifest, name => readFileSync(path.join(staged, name)), env));
+      report.provenance = preflight(report, 'provenance', () => ({ manifest, productHead: env.QA_PRODUCT_HEAD, productTree: env.QA_PRODUCT_TREE, parents: env.QA_PRODUCT_PARENTS, node: process.version,
+        go: command('go', ['version']), server: hash(readFileSync(env.QA_SERVER)), gm: hash(readFileSync(env.QA_GM)) }));
+      preflight(report, 'empty-db', () => check(sql("SELECT count(*) FROM pg_tables WHERE schemaname='public'") === 0));
       report.phase = 'services'; const server = start(env.QA_SERVER, [], 'server'); await ready('http://127.0.0.1:8080/healthz', server);
       const preview = start(process.execPath, ['node_modules/vite/bin/vite.js', 'preview', '--host', '127.0.0.1', '--port', '5173', '--strictPort'], 'client', client);
       await ready('http://127.0.0.1:5173', preview);
@@ -229,8 +239,8 @@ export async function withMailRuntime(scenario) {
       for (const { child } of children) check(child.exitCode === null && child.signalCode === null);
       healthy(); report.phase = 'postconditions-complete';
     }, deadline - Date.now(), controller);
-  } catch {
-    report.errors.push('RUNTIME_FAILED'); process.exitCode = 1;
+  } catch (error) {
+    report.errors.push(safeError(error, 'message', ['MAIL_RUNTIME_COMMAND_ENOENT', 'MAIL_RUNTIME_COMMAND_ETIMEDOUT'], 'RUNTIME_FAILED')); process.exitCode = 1;
     if (page && canSave) try {
       if (await page.locator('input[type=password]').evaluateAll(elements => elements.every(element => element.value === '')))
         await page.screenshot({ path: path.join(out, 'failure.png'), timeout: 5000 });

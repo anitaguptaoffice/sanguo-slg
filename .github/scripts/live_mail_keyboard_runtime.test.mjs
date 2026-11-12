@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { createFrameCapture, fixtureSpec, mailCommandArgs, parseGmOutput, runCommand, validateEnvironment, verifyScenario, verifyStaging } from './live_mail_keyboard_runtime.mjs';
+import { createFrameCapture, fixtureSpec, mailCommandArgs, parseGmOutput, preflight, runCommand, safeError, validateEnvironment, verifyScenario, verifyStaging } from './live_mail_keyboard_runtime.mjs';
 const head = 'a'.repeat(40), root = '/tmp/runner/mail';
 const env = { GITHUB_ACTIONS: 'true', QA_WIDTH: '1280', QA_PRODUCT: 'fixed', PGHOST: '127.0.0.1', PGPORT: '5432', PGDATABASE: 'live_mail_keyboard',
   DATABASE_URL: 'postgres://sanguo:sanguo@127.0.0.1:5432/live_mail_keyboard', REDIS_ADDR: '127.0.0.1:6379', RUNNER_TEMP: '/tmp/runner',
@@ -106,4 +106,18 @@ test('actual GM stdout requires two validated logs and exactly one matching rece
     const bad = structuredClone(logs); change(bad); assert.throws(() => parseGmOutput(raw(bad)), error => error.message === 'MAIL_RUNTIME_GM_OUTPUT_INVALID');
   }
   assert.throws(() => parseGmOutput(raw(logs) + '{}'));
+});
+test('preflight retains only fixed checkpoints and safe command failure categories', () => {
+  const report = {}; assert.equal(preflight(report, 'redis-info', () => 42), 42);
+  assert.equal(report.phase, 'preflight-redis-info'); assert.throws(() => preflight(report, 'SECRET', () => {}));
+  assert.equal(report.phase, 'preflight-redis-info');
+  const options = { signal: new AbortController().signal, deadline: Date.now() + 1000, execute() { throw Object.assign(new Error('SECRET'), { code: 'ENOENT' }); } };
+  assert.throws(() => runCommand(options, 'redis-cli', [], '/repo'), error => error.message === 'MAIL_RUNTIME_COMMAND_ENOENT');
+});
+test('nullish and throwing-accessor failures stay failed and secret-free', () => {
+  for (const error of [null, undefined, { get code() { throw 'SECRET'; }, get message() { throw 'SECRET'; } }]) {
+    const options = { signal: new AbortController().signal, deadline: Date.now() + 1000, execute() { throw error; } };
+    assert.throws(() => runCommand(options, 'redis-cli', [], '/repo'), value => value.message === 'MAIL_RUNTIME_COMMAND_FAILED');
+    assert.equal(safeError(error, 'message', ['MAIL_RUNTIME_COMMAND_ENOENT', 'MAIL_RUNTIME_COMMAND_ETIMEDOUT'], 'RUNTIME_FAILED'), 'RUNTIME_FAILED');
+  }
 });
