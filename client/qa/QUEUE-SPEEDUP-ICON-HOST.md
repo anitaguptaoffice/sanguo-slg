@@ -123,3 +123,13 @@ PNG, metrics and timing; any physical dimension failure aborts immediately. No
 resampling, clip multiplier, per-capture metric reset, retry or weakened gate.
 Six preflight PNGs are separate from39 required host captures. This discriminates
 the session-metrics hypothesis; it does not presume success or product acceptance.
+
+## Preserve owned nodes through standalone skin changes
+
+Run43153381424/artifact13914901692 passed six physical preflights and28 captures,
+then standalone off inspection found an unloaded hidden replacement. Preserve ZIP
+db14b328f3a56306d23b824b8d16ce846faa90b44c6daa26fcc23e9fd5b56e68; no full acceptance.
+Keyboard refresh now precedes decoded on-capture. Off toggle and inspection must
+retain that capture's exact loaded hosts/images, checked before and after. The
+same ownership bracket restores on immediately from decoded off-redraw capture.
+No wait for replacement after toggling, reskin, readiness retry or removed assertion.

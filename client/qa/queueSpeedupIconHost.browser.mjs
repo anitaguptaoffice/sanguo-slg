@@ -15,7 +15,7 @@ const modeFile = resolve(client, 'mock-server/queue-art-mode.json');
 const fixture = resolve(client, 'mock-server/queue-art.fixture.mjs');
 mkdirSync(out, { recursive: true });
 const git = arg => execFileSync('git', ['rev-parse', arg], { cwd: client }).toString().trim();
-const report = { head: git('HEAD'), tree: git('HEAD^{tree}'), harnessSHA256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'), boundary: 'Actual main.ts/MainCityScene/QueuePanels/AssetLoader, localhost fixture only, no native economy or deployment acceptance', cases: [], captures: [], preflights: [], pageMetrics: [], errors: [] };
+const report = { head: git('HEAD'), tree: git('HEAD^{tree}'), harnessSHA256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'), boundary: 'Actual main.ts/MainCityScene/QueuePanels/AssetLoader, localhost fixture only, no native economy or deployment acceptance', cases: [], captures: [], preflights: [], pageMetrics: [], lifecycle: [], errors: [] };
 assert.equal(report.head, target);assert.equal(report.tree, tree);
 let source = readFileSync(resolve(client, 'mock-server/server.mjs'), 'utf8');
 function replaceOnce(before, after) { assert.equal(source.split(before).length, 2, before);source = source.replace(before, after); }
@@ -165,6 +165,14 @@ async function capture(page, path, phase, disabled, dpr, expectedImages=true, sk
   assert.ok(!evidence.postcheckError&&evidence.after?.sameHosts&&evidence.after?.sameImages&&evidence.after?.ready,'capture crossed a redraw or image readiness changed');
   return geometry;
 }
+async function ownedSkin(page, skin=null) {
+  const e=await page.evaluate(({button,icon,skin})=>{
+    const {hosts,images}=window.__qaCaptureNodes,currentHosts=[...document.querySelectorAll(button)],currentImages=[...document.querySelectorAll(icon)];
+    const valid=hosts.length===2&&images.length===2&&hosts.every((x,i)=>x===currentHosts[i]&&x.isConnected)&&images.every((x,i)=>x===currentImages[i]&&x.isConnected&&x.complete&&x.naturalWidth>0&&x.naturalHeight>0);
+    const before=window.__qaCaptureTracker.snapshot();if(valid&&skin)document.getElementById('layout-frame').dataset.artSkin=skin;
+    return {skin,valid,before,after:window.__qaCaptureTracker.snapshot()};
+  },{button,icon,skin});report.lifecycle.push(e);assert.ok(e.valid,'skin toggle must retain previously decoded captured nodes');
+}
 async function context(width,height,dpr,mode) {
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});
   await ctx.route('**/*',async r=>{const u=new URL(r.request().url());if(u.origin!==url)return r.abort();
@@ -178,13 +186,11 @@ try {
     writeFileSync(modeFile,JSON.stringify({disabled}));const ctx=await context(width,height,dpr);
     const page=await capturePage(ctx,width,height,dpr);lastPage=page;const routeEvidence=await enter(page,disabled);await loaded(page);
     const name=`${width}-dpr${dpr}-${disabled?'disabled':'enabled'}`,geometry=[];report.activeCase={width,height,dpr,disabled,geometry,routeEvidence};
-    geometry.push(await capture(page,`${out}/${name}-on.png`,'on',disabled,dpr));
     await refresh(page,true);await loaded(page);
-    await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='off');
-    geometry.push(await inspect(page,'off',disabled,dpr,true,false));
+    geometry.push(await capture(page,`${out}/${name}-on.png`,'on',disabled,dpr));
+    await ownedSkin(page,'off');geometry.push(await inspect(page,'off',disabled,dpr,true,false));await ownedSkin(page);
     await refresh(page);await loaded(page);geometry.push(await capture(page,`${out}/${name}-off.png`,'off-redraw',disabled,dpr,true,false));
-    await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='on');
-    geometry.push(await inspect(page,'on-restored',disabled,dpr));
+    await ownedSkin(page,'on');geometry.push(await inspect(page,'on-restored',disabled,dpr));await ownedSkin(page);
     await page.locator('[data-action="refresh-queue"]').focus();await page.keyboard.press('Escape');assert.equal(await page.locator(button).first().isVisible(),false);
     await page.locator('[data-action="toggle-queue"]').click();await loaded(page);
     for(let i=0;i<3;i++){await refresh(page,i===1);await loaded(page);}
