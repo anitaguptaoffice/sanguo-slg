@@ -166,12 +166,15 @@ it("does not reuse a prior successful purchase stamp for a new unknown action", 
 
 
 describe("SHOP settlement invalidates reads started during the request", () => {
-  it.each(["success", "unknown"])("rejects an intervening bag read after hidden %s", async outcome => {
+  it.each(["success", "unknown"])("starts a requested bag read only after hidden %s settlement", async outcome => {
     const f = await setup(), old = deferred<Awaited<ReturnType<typeof f.bag>>>();
     f.click("buy-offer"); f.bag.mockReturnValueOnce(old.promise); f.panels.toggleBag();
+    expect(f.bag).not.toHaveBeenCalled();
     if (outcome === "success") f.request.resolve(f.success); else f.request.reject(new Error("timeout"));
-    await f.settle(); old.resolve({ items: [{ item_cfg_id: 2004, quantity: 4 }] }); await f.settle();
-    expect(f.patch).not.toHaveBeenCalled(); expect(f.city).not.toHaveBeenCalled();
+    await f.settle(); expect(f.bag).toHaveBeenCalledTimes(1);
+    expect(f.session().wallet.gold).toBe(outcome === "success" ? 90 : 100);
+    old.resolve({ items: [{ item_cfg_id: 2004, quantity: 4 }] }); await f.settle();
+    expect(f.session().bag).toEqual([{ item_cfg_id: 2004, quantity: 4 }]); expect(f.city).not.toHaveBeenCalled();
     f.panels.toggleShop(); await f.settle(); expect(f.purchase).toHaveBeenCalledTimes(1);
     expect(f.session().bag).toEqual([{ item_cfg_id: 2001, quantity: 3 }, { item_cfg_id: 2004, quantity: 1 }]);
     expect(f.text("feedback")).toContain(outcome === "success" ? "购买成功" : "结果未知");

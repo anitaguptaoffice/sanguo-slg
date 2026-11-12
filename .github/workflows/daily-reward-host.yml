@@ -1,0 +1,77 @@
+name: Daily reward host art
+on:
+  pull_request:
+    paths: ['.github/workflows/daily-reward-host.yml', 'client/qa/dailyRewardHost.browser.mjs', 'client/qa/DAILY-REWARD-HOST.md']
+jobs:
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          path: harness
+      - uses: actions/checkout@v4
+        with:
+          ref: c5d3f5989aae14f2df71b81d2052517ed75445d6
+          fetch-depth: 0
+          persist-credentials: false
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Compose immutable source without publishing
+        run: |
+          cd target
+          test "$(git rev-parse HEAD^{tree})" = 839bd3fa3a6726f0e1e7eb28285785c15ebe7e83
+          cp ../harness/client/qa/dailyRewardHost.browser.mjs client/qa/
+      - name: Install official locked dependencies
+        working-directory: target/client
+        run: npm ci && npx --no-install playwright install --with-deps chromium
+      - name: Test full host with local mock service
+        working-directory: target/client
+        env:
+          QA_OUT: ${{ runner.temp }}/daily-reward-host
+        run: node qa/dailyRewardHost.browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-1280-dpr1-${{ github.sha }}
+          path: ${{ runner.temp }}/daily-reward-host/1280-dpr1-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-1280-dpr1.5-${{ github.sha }}
+          path: ${{ runner.temp }}/daily-reward-host/1280-dpr1.5-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-1280-dpr2-${{ github.sha }}
+          path: ${{ runner.temp }}/daily-reward-host/1280-dpr2-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-1600-dpr1-${{ github.sha }}
+          path: ${{ runner.temp }}/daily-reward-host/1600-dpr1-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-1600-dpr1.5-${{ github.sha }}
+          path: ${{ runner.temp }}/daily-reward-host/1600-dpr1.5-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-1600-dpr2-${{ github.sha }}
+          path: ${{ runner.temp }}/daily-reward-host/1600-dpr2-*.png
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-reward-report-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/daily-reward-host/*.json
+            ${{ runner.temp }}/daily-reward-host/*.log
+            ${{ runner.temp }}/daily-reward-host/1280-missing*.png
+            ${{ runner.temp }}/daily-reward-host/1280-dom*.png
+            ${{ runner.temp }}/daily-reward-host/failure.png
