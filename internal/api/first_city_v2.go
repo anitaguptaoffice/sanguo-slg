@@ -108,10 +108,15 @@ func (s *Server) handleDiscoverFirstCityIntent(ctx context.Context, pkt *commonv
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city discovery unavailable"), nil
 	}
-	resp := &worldv1.DiscoverFirstCityIntentResponse{
-		Scope: scope,
-		Head:  &worldv1.FirstCityHead{Value: &worldv1.FirstCityHead_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+	head := &worldv1.FirstCityHead{Value: &worldv1.FirstCityHead_Empty{Empty: &worldv1.FirstCityEmpty{}}}
+	if s.firstCityV2Ledger != nil {
+		var err error
+		head, err = s.firstCityV2Ledger.Head(scope)
+		if err != nil {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city discovery unavailable"), nil
+		}
 	}
+	resp := &worldv1.DiscoverFirstCityIntentResponse{Scope: scope, Head: head}
 	data, err := marshal(resp)
 	if err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INTERNAL, "marshal failed"), nil
@@ -147,5 +152,16 @@ func (s *Server) handleSubmitFirstCity(ctx context.Context, pkt *commonv1.Client
 	if _, err := newFirstCityCanonical(derivedActor, expectedActor, domainReq); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid intent"), nil
 	}
-	return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city intake unavailable"), nil
+	if s.firstCityV2Ledger == nil || s.firstCityV2Intake == nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city intake unavailable"), nil
+	}
+	outcome, err := s.attemptFirstCitySubmit(ctx, derived, req.GetProposal(), domainReq, derivedActor, expectedActor)
+	if err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city intake unavailable"), nil
+	}
+	data, err := marshal(&worldv1.SubmitFirstCityResponse{Outcome: outcome})
+	if err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INTERNAL, "marshal failed"), nil
+	}
+	return okResp(pkt.GetTraceId(), data), nil
 }
