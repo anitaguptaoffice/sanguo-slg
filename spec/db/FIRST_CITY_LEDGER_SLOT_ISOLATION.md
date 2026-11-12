@@ -31,4 +31,4 @@ GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_slot_isolation
 
 ## Follow-on (separate SPEC cards)
 
-`ID_CONTENT_CONFLICT`, optional one-PENDING-per-slot partial unique index, ACL, crash barriers, `validate_only` GUC, `player_city_id_seq` activation, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence.
+**SPEC-FIRST-CITY-LEDGER-ID-CONTENT-CONFLICT-001** frozen in [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md) (`first_city_ledger_id_content_conflict`). Optional one-PENDING-per-slot partial unique index, ACL, crash barriers, `validate_only` GUC, `player_city_id_seq` activation, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence.
