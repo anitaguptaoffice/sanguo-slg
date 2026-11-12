@@ -1139,6 +1139,7 @@ export class QueuePanels {
       btn.type = "button";
       btn.className = "art-btn-primary";
       btn.setAttribute("data-action", "speedup-build");
+      btn.dataset.queueSpeedupItem = String(BUILD_QUEUE_SPEEDUP_ITEM_CFG_ID);
       btn.textContent = SPEEDUP_BUTTON_LABEL;
       if (!speedupEnabled) {
         btn.disabled = true;
