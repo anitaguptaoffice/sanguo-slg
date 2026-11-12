@@ -158,7 +158,7 @@ lock between old and new writers is not a compatibility proof.
 |------|--------|
 | SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001 | Frozen in [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md). |
 | SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Frozen in [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md). |
-| SPEC-FIRST-CITY-LEDGER-LOADER-001 | ApplySpecs replay / PG17 acceptance — **not done**. |
+| SPEC-FIRST-CITY-LEDGER-LOADER-001 | Frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
 | Target realm enrollment execution | Drain/fence/deploy — **not authorized** by #2554. |
 
@@ -172,7 +172,7 @@ Do not treat OID profile documentation as completion of those gates.
 
 This card adds documentation only; validation confirms `m4_010_first_city_ledger.sql` still
 composes with base `00*.sql` / `m3_*.sql` / `m4_*.sql` in disposable `spec_db_validate`.
-Loader/isolated PG17 acceptance belongs to SPEC-FIRST-CITY-LEDGER-LOADER-001.
+Loader/isolated PG17 acceptance: [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md).
 
 ## 10. Operator enrollment template (fill at cutover review)
 

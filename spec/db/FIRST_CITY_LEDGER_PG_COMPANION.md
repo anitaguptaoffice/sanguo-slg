@@ -231,7 +231,8 @@ Both classes hold **slot advisory + slot `FOR UPDATE` + command `FOR UPDATE`** b
 
 - Terminal shapes and `rejection_reason` 1/2 match `m4_010_first_city_ledger.sql` and FIRST-CITY-WIRE.md; no new wire fields.
 - Canonical C1 coordinate extraction and FCT1-driven wallet/building INSERT literals remain on implementation cards; companion states **where** they run (effect txn only).
-- **Not frozen here:** SPEC-FIRST-CITY-LEDGER-LOADER-001 (ApplySpecs replay / PG17 isolation); reviewed `player_city_id_seq` activation; full CITY_CREATION_RECOVERY §10 item 3 phase lifecycle; target realm drain/fence execution.
+- **SPEC-FIRST-CITY-LEDGER-LOADER-001** frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) (ApplySpecs replay / disposable PG17 harness); concurrent effect/finalizer race matrix not frozen there.
+- **Not frozen here:** reviewed `player_city_id_seq` activation; full CITY_CREATION_RECOVERY §10 item 3 phase lifecycle; target realm drain/fence execution.
 
 ## 7. Validation
 
@@ -239,4 +240,4 @@ Both classes hold **slot advisory + slot `FOR UPDATE` + command `FOR UPDATE`** b
 ./spec/db/validate.sh
 ```
 
-Confirms `m4_010` + `m4_011` companion helpers compose in disposable `spec_db_validate`. Loader and concurrent effect/finalizer race tests belong to LOADER / implementation cards.
+Confirms `m4_010` + `m4_011` companion helpers compose in disposable `spec_db_validate`. ApplySpecs replay and missing-ledger idempotency: [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) and `first_city_ledger_loader`. Full concurrent effect/finalizer race matrix remains on implementation cards.

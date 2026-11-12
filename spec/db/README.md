@@ -92,7 +92,7 @@ returning；原值无 writer）。归属仍为
 OID/profile 与写入者清单：[SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001](FIRST_CITY_LEDGER_OID_PROFILE.md)。
 全局 pin 序：[SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001](FIRST_CITY_LEDGER_GLOBAL_PINS.md)；
 PG companion：[SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001](FIRST_CITY_LEDGER_PG_COMPANION.md)；
-loader 验收见 `FIRST_CITY_LEDGER.md` §8 第 4 项。
+ApplySpecs loader 与隔离验收：[SPEC-FIRST-CITY-LEDGER-LOADER-001](FIRST_CITY_LEDGER_LOADER.md)（`go run ./spec/db/tests/first_city_ledger_loader`，需 `ALLOW_OWNED_PG17_TEST=1` 与 disposable DSN）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
