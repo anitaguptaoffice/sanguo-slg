@@ -126,5 +126,8 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 6. **SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001** — frozen in
    [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md); §4.2 business + terminal effect-path races
    (`spec/db/tests/first_city_ledger_effect_path`); does not certify any realm.
+7. **SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001** — frozen in
+   [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md); §4 slot/head intake CAS matrix
+   (`spec/db/tests/first_city_ledger_slot_cas`); does not certify any realm.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.
