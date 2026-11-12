@@ -109,3 +109,17 @@ helper.enclosingIntSize: record Page.getLayoutMetrics.visualViewport; clip at it
 pageX/pageY with floor(viewportSize/scale+0.001), using its scale unchanged.
 No deviceScaleFactor division, blind DPR multiplication or image resampling.
 Full-viewport/native-dimension, generation, readiness and geometry gates remain.
+
+## Controlled session metrics and fail-fast calibration
+
+Run43152398177/artifact13914676161 preserved the same dimension failure despite
+explicit clip; ZIPe416e1501d24c46f93060bfbd5c20427604bf54e25c79ed6c376f6c20a84146d.
+The separate capture session now receives the same configured viewport/screen/DPR
+metrics once before navigation, mirroring locked crPage._updateViewport. Browser
+inner/screen dimensions and devicePixelRatio must equal context expectations both
+before and after. Six separate disposable blank-page preflights use this identical
+initialization and native full-viewport capture before any app case. Each saves raw
+PNG, metrics and timing; any physical dimension failure aborts immediately. No
+resampling, clip multiplier, per-capture metric reset, retry or weakened gate.
+Six preflight PNGs are separate from39 required host captures. This discriminates
+the session-metrics hypothesis; it does not presume success or product acceptance.

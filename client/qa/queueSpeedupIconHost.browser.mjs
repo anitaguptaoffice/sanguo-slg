@@ -15,7 +15,7 @@ const modeFile = resolve(client, 'mock-server/queue-art-mode.json');
 const fixture = resolve(client, 'mock-server/queue-art.fixture.mjs');
 mkdirSync(out, { recursive: true });
 const git = arg => execFileSync('git', ['rev-parse', arg], { cwd: client }).toString().trim();
-const report = { head: git('HEAD'), tree: git('HEAD^{tree}'), harnessSHA256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'), boundary: 'Actual main.ts/MainCityScene/QueuePanels/AssetLoader, localhost fixture only, no native economy or deployment acceptance', cases: [], captures: [], errors: [] };
+const report = { head: git('HEAD'), tree: git('HEAD^{tree}'), harnessSHA256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'), boundary: 'Actual main.ts/MainCityScene/QueuePanels/AssetLoader, localhost fixture only, no native economy or deployment acceptance', cases: [], captures: [], preflights: [], pageMetrics: [], errors: [] };
 assert.equal(report.head, target);assert.equal(report.tree, tree);
 let source = readFileSync(resolve(client, 'mock-server/server.mjs'), 'utf8');
 function replaceOnce(before, after) { assert.equal(source.split(before).length, 2, before);source = source.replace(before, after); }
@@ -90,9 +90,31 @@ async function inspect(page, phase, disabled, dpr, expectedImages=true, skin=tru
   return {phase,results};
 }
 const captureSessions = new WeakMap();
+const groups=[[1280,720,1],[1280,720,1.5],[1280,720,2],[1600,900,1],[1600,900,1.5],[1600,900,2]];
+async function capturePage(ctx,width,height,dpr) {
+  const page=await ctx.newPage(),session=await ctx.newCDPSession(page),e={width,height,dpr};report.pageMetrics.push(e);
+  const metrics=()=>page.evaluate(()=>({width:innerWidth,height:innerHeight,dpr:devicePixelRatio,screenWidth:screen.width,screenHeight:screen.height}));
+  e.before=await metrics();assert.deepEqual(e.before,{width,height,dpr,screenWidth:width,screenHeight:height});
+  // Mirror the existing context metrics onto this session once, before any navigation/observation.
+  await session.send('Emulation.setDeviceMetricsOverride',{mobile:false,width,height,screenWidth:width,screenHeight:height,deviceScaleFactor:dpr,screenOrientation:{angle:0,type:'landscapePrimary'},dontSetVisibleSize:false});
+  e.after=await metrics();assert.deepEqual(e.after,e.before);captureSessions.set(page,session);return page;
+}
+async function preflight() {
+  for(const [width,height,dpr] of groups){
+    const e={width,height,dpr,start:performance.now()};report.preflights.push(e);
+    const ctx=await context(width,height,dpr),page=await capturePage(ctx,width,height,dpr);lastPage=page;
+    const session=captureSessions.get(page),{visualViewport:v}=await session.send('Page.getLayoutMetrics');e.metrics=v;
+    assert.ok(Number.isFinite(v.scale)&&v.scale>0&&Number.isFinite(v.pageX)&&Number.isFinite(v.pageY));
+    e.clip={x:v.pageX,y:v.pageY,width:Math.floor(width/v.scale+1e-3),height:Math.floor(height/v.scale+1e-3),scale:v.scale};
+    e.captureStart=performance.now();const png=await session.send('Page.captureScreenshot',{format:'png',clip:e.clip,fromSurface:true,captureBeyondViewport:false,optimizeForSpeed:true});e.captureReturned=performance.now();
+    const bytes=Buffer.from(png.data,'base64');writeFileSync(`${out}/preflight-${width}-dpr${dpr}.png`,bytes);
+    assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');e.png={width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20),bytes:bytes.length};
+    assert.equal(e.png.width,width*dpr);assert.equal(e.png.height,height*dpr);e.passed=true;await ctx.close();
+  }
+}
 async function capture(page, path, phase, disabled, dpr, expectedImages=true, skin=true) {
   const evidence={path,phase,times:{start:performance.now()}};report.captures.push(evidence);
-  if(!captureSessions.has(page))captureSessions.set(page,await page.context().newCDPSession(page));
+  assert.ok(captureSessions.has(page),'capture session must be initialized before navigation');
   await page.evaluate(({button,icon})=>{
     if(!window.__qaCaptureTracker){
       const ids=new WeakMap();let next=0,previous=[];
@@ -151,10 +173,10 @@ async function context(width,height,dpr,mode) {
   return ctx;
 }
 try {
-  await ready(url);await ready(gateway);browser=await chromium.launch({chromiumSandbox:true});
-  for(const [width,height,dpr] of [[1280,720,1],[1280,720,1.5],[1280,720,2],[1600,900,1],[1600,900,1.5],[1600,900,2]])for(const disabled of [false,true]) {
+  await ready(url);await ready(gateway);browser=await chromium.launch({chromiumSandbox:true});await preflight();
+  for(const [width,height,dpr] of groups)for(const disabled of [false,true]) {
     writeFileSync(modeFile,JSON.stringify({disabled}));const ctx=await context(width,height,dpr);
-    const page=await ctx.newPage();lastPage=page;const routeEvidence=await enter(page,disabled);await loaded(page);
+    const page=await capturePage(ctx,width,height,dpr);lastPage=page;const routeEvidence=await enter(page,disabled);await loaded(page);
     const name=`${width}-dpr${dpr}-${disabled?'disabled':'enabled'}`,geometry=[];report.activeCase={width,height,dpr,disabled,geometry,routeEvidence};
     geometry.push(await capture(page,`${out}/${name}-on.png`,'on',disabled,dpr));
     await refresh(page,true);await loaded(page);
@@ -172,7 +194,7 @@ try {
   }
   for(const mode of ['missing-image','missing-cache','dom-image-error']) {
     writeFileSync(modeFile,JSON.stringify({disabled:false}));const ctx=await context(1280,720,1,mode);
-    const page=await ctx.newPage();lastPage=page;const routeEvidence=await enter(page,false);
+    const page=await capturePage(ctx,1280,720,1);lastPage=page;const routeEvidence=await enter(page,false);
     const geometry=await capture(page,`${out}/1280-${mode}.png`,mode,false,1,false);
     routeEvidence.after=routes().slice(routeEvidence.boundary);routeEvidence.mutations=routeEvidence.after.filter(x=>!reads.has(x));report.cases.push({mode,geometry,routeEvidence});assert.deepEqual(routeEvidence.mutations,[]);await ctx.close();
   }
