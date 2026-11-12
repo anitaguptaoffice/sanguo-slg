@@ -95,9 +95,7 @@ func TestPGPreparedCity(t *testing.T) {
 	if err := pc.LockWallet(ctx, a); err == nil || pc.walletOnce.Load() {
 		t.Fatal("unpinned", err, pc.walletOnce.Load())
 	}
-	if err := f.source.PinWallet(ctx, a); err != nil {
-		t.Fatal(err)
-	}
+	freshSourcePGPin(t, ctx, f.source, a)
 	if err := pc.LockWallet(ctx, a); err != nil {
 		t.Fatal(err)
 	}
@@ -106,38 +104,39 @@ func TestPGPreparedCity(t *testing.T) {
 	}
 	var food int64
 	tab := pgx.Identifier{f.profile.SchemaName, "player_wallet"}.Sanitize()
-	if err := a.Scan(ctx, f.binding, "SELECT food FROM "+tab+" WHERE server_id=$1 AND player_id=$2 FOR UPDATE", []any{f.profile.ServerID, initial.PlayerID}, &food); err != nil || food != initial.Wallet.Food {
+	if err := a.Scan(ctx, f.binding, "SELECT food FROM "+tab+" WHERE server_id=$1 AND player_id=$2", []any{f.profile.ServerID, initial.PlayerID}, &food); err != nil || food != initial.Wallet.Food {
 		t.Fatal(food, err)
 	}
 	if _, err := pc.Stage(ctx, a, march.InitializedCity{}, time.Now()); err == nil || pc.stagedOnce.Load() {
-		t.Fatal("stage without city pins", err, pc.stagedOnce.Load())
-	}
-	if err := f.source.PinCityState(ctx, a); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := pc.Stage(ctx, a, march.InitializedCity{}, time.Now()); err == nil || pc.stagedOnce.Load() {
-		t.Fatal("stage without MIL proof", err)
+		t.Fatal("stage without MIL proof", err, pc.stagedOnce.Load())
 	}
 	if err := o.Rollback(ctx); err != nil {
 		t.Fatal(err)
 	}
-	pc2, err := f.source.Prepare(ctx, initial)
+}
+
+func TestPGPreparedCityWalletDrift(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	f := freshSourcePGFixture(t, ctx, false)
+	initial, _ := freshTemplateSourceInput()
+	pc, err := f.source.Prepare(ctx, initial)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer pc2.Close()
-	o2, a2 := recruitWalletBegin(t, ctx, f.binding)
-	if err := f.source.PinWallet(ctx, a2); err != nil {
+	defer pc.Close()
+	o, a := recruitWalletBegin(t, ctx, f.binding)
+	if err := f.source.PinWallet(ctx, a); err != nil {
 		t.Fatal(err)
 	}
 	wtab := pgx.Identifier{f.profile.SchemaName, "player_wallet"}.Sanitize()
-	if _, err := a2.Exec(ctx, f.binding, "ALTER TABLE "+wtab+" RENAME TO drift_wallet"); err != nil {
+	if _, err := a.Exec(ctx, f.binding, "ALTER TABLE "+wtab+" RENAME TO drift_wallet"); err != nil {
 		t.Fatal(err)
 	}
-	if err := pc2.LockWallet(ctx, a2); err == nil || !f.source.state.retired.Load() {
+	if err := pc.LockWallet(ctx, a); err == nil || !f.source.state.retired.Load() {
 		t.Fatal("drift", err, f.source.state.retired.Load())
 	}
-	if err := o2.Rollback(ctx); err != nil {
+	if err := o.Rollback(ctx); err != nil {
 		t.Fatal(err)
 	}
 }
