@@ -77,6 +77,8 @@ type Server struct {
 	nextArmyID     int64
 	now            clockFunc
 	smokeSyncClock *SmokeSyncClock
+	firstCityV2Routes bool
+	firstCityV2Realm  FirstCityV2Realm
 }
 
 // ErrMilitaryDurable rejects incomplete startup composition inputs.
@@ -230,6 +232,10 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	}
 	for route, h := range s.m4.GatewayHandlers() {
 		handlers[route] = h
+	}
+	if s.firstCityV2Routes {
+		handlers[RouteDiscoverFirstCityIntent] = s.handleDiscoverFirstCityIntent
+		handlers[RouteSubmitFirstCity] = s.handleSubmitFirstCity
 	}
 	return gateway.NewRouter(handlers)
 }
