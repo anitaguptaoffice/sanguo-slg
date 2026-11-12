@@ -72,3 +72,27 @@ host/image nodes after capture. Changed membership or readiness fails, preservin
 the PNG rather than retrying. Timers/rendering remain live; no product, route or
 geometry gate changes. The DOM-error fallback is injected on the aligned redraw.
 All39 captures require this gate; independent pixel inspection remains mandatory.
+
+## Capture-generation timing diagnostic
+
+Run 43150168256 / artifact 13913326831 failed closed at capture13, 1280/DPR2
+stock-present/on: sameHosts=false, sameImages=false, ready=true. The prior12
+captures kept identity. Its ZIP SHA256 is
+7f2d77ab2fa487b634ebd52efcb0225fb75b2ba02c1322d61a203499aad572fd.
+Independent native-resolution inspection sees an icon in capture13; a downsampled
+preview's initial blank interpretation was incorrect. The evidence proves a
+crossed generation, not blank pixels or a screenshot taking longer than one second.
+
+Diagnostic capture records monotonic phase times plus passive host-generation
+observations and before/after current node tokens, sources and intrinsic readiness.
+The observer only records DOM changes and dies with its page; timers stay live.
+Locked Playwright1.49.1 Chromium protocol supports Page.captureScreenshot with
+optimizeForSpeed:true: lossless PNG encoding favors speed over size. Native capture
+uses the same sandbox browser, fromSurface:true and captureBeyondViewport:false;
+it retains the full viewport at original DPR, checked via PNG signature/dimensions.
+There is no unsupported-protocol fallback or retry. Postcheck runs immediately
+following native screenshot return, before filesystem persistence. PNG bytes are
+preserved even when postcheck fails. The identity gate still spans decode, geometry
+and compositor capture completion, excluding later disk I/O. No gate is relaxed.
+Timing explains only observation validity; independent native-resolution pixel
+review is still mandatory and stable decoded identity alone is not painted proof.

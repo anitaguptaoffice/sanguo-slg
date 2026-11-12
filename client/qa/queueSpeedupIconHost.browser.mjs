@@ -89,28 +89,53 @@ async function inspect(page, phase, disabled, dpr, expectedImages=true, skin=tru
   }
   return {phase,results};
 }
+const captureSessions = new WeakMap();
 async function capture(page, path, phase, disabled, dpr, expectedImages=true, skin=true) {
-  const evidence={path,phase};report.captures.push(evidence);
-  // Align one observation with a natural redraw. Never pause timers or retry a failed capture.
-  await page.evaluate(button=>window.__qaCaptureBefore=document.querySelector(button),button);
+  const evidence={path,phase,times:{start:performance.now()}};report.captures.push(evidence);
+  if(!captureSessions.has(page))captureSessions.set(page,await page.context().newCDPSession(page));
+  await page.evaluate(({button,icon})=>{
+    if(!window.__qaCaptureTracker){
+      const ids=new WeakMap();let next=0,previous=[];
+      const token=x=>{if(!ids.has(x))ids.set(x,++next);return ids.get(x);};
+      const tracker={generation:0,changes:[]};
+      const update=()=>{const hosts=[...document.querySelectorAll(button)];if(hosts.length!==previous.length||hosts.some((x,i)=>x!==previous[i])){previous=hosts;tracker.generation++;tracker.changes.push({at:performance.now(),generation:tracker.generation,hosts:hosts.map(token)});}};
+      tracker.snapshot=()=>{update();return {at:performance.now(),generation:tracker.generation,hosts:[...document.querySelectorAll(button)].map(x=>({token:token(x),connected:x.isConnected})),images:[...document.querySelectorAll(icon)].map(x=>({token:token(x),connected:x.isConnected,src:x.currentSrc,complete:x.complete,width:x.naturalWidth,height:x.naturalHeight}))};};
+      tracker.observer=new MutationObserver(update);tracker.observer.observe(document.body,{childList:true,subtree:true});window.__qaCaptureTracker=tracker;
+    }
+    window.__qaCaptureBefore=document.querySelector(button);
+  },{button,icon});
+  evidence.start=await page.evaluate(()=>window.__qaCaptureTracker.snapshot());
+  // One natural redraw, no timer freeze or retry if capture is invalidated.
   await page.waitForFunction(button=>window.__qaCaptureBefore&&!window.__qaCaptureBefore.isConnected&&document.querySelectorAll(button).length===2,button);
+  evidence.times.redraw=performance.now();
   if(phase==='dom-image-error'){await loaded(page);await page.locator(icon).evaluateAll(xs=>xs.forEach(x=>x.src='/missing-queue-qa.png'));await page.waitForFunction(icon=>!document.querySelector(icon),icon);}
   evidence.decoded=await page.evaluate(async ({button,icon,expectedImages})=>{
-    const hosts=[...document.querySelectorAll(button)],images=[...document.querySelectorAll(icon)];
+    const hosts=[...document.querySelectorAll(button)],images=[...document.querySelectorAll(icon)],before=window.__qaCaptureTracker.snapshot();
     window.__qaCaptureNodes={hosts,images};
     if(hosts.length!==2||images.length!==(expectedImages?2:0))throw new Error('capture membership mismatch');
-    await Promise.all(images.map(x=>x.decode()));
+    await Promise.all(images.map(x=>x.decode()));const decodedAt=performance.now();
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-    if(hosts.some(x=>!x.isConnected)||images.some(x=>!x.isConnected||!x.complete||!x.naturalWidth))throw new Error('capture changed during decode/paint');
-    return images.map(x=>({src:x.currentSrc,complete:x.complete,width:x.naturalWidth,height:x.naturalHeight}));
+    if(hosts.some(x=>!x.isConnected)||images.some(x=>!x.isConnected||!x.complete||!x.naturalWidth||!x.naturalHeight))throw new Error('capture changed during decode/paint');
+    return {before,decodedAt,painted:window.__qaCaptureTracker.snapshot()};
   },{button,icon,expectedImages});
+  evidence.times.decoded=performance.now();
   const geometry=await inspect(page,phase,disabled,dpr,expectedImages,skin);
-  await page.screenshot({path});
-  evidence.after=await page.evaluate(({button,icon})=>{
-    const {hosts,images}=window.__qaCaptureNodes,currentHosts=[...document.querySelectorAll(button)],currentImages=[...document.querySelectorAll(icon)];
-    return {sameHosts:hosts.length===currentHosts.length&&hosts.every((x,i)=>x===currentHosts[i]&&x.isConnected),sameImages:images.length===currentImages.length&&images.every((x,i)=>x===currentImages[i]&&x.isConnected),ready:images.every(x=>x.complete&&x.naturalWidth>0&&x.naturalHeight>0)};
-  },{button,icon});
-  assert.ok(Object.values(evidence.after).every(Boolean),'capture crossed a redraw or image readiness changed');
+  evidence.times.geometry=performance.now();
+  evidence.beforeCapture=await page.evaluate(()=>window.__qaCaptureTracker.snapshot());
+  evidence.times.captureStart=performance.now();
+  // Pinned Chromium protocol: lossless full-viewport PNG, faster encoding, no screenshot rescaling.
+  const png=await captureSessions.get(page).send('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:false,optimizeForSpeed:true});
+  evidence.times.captureReturned=performance.now();
+  try { evidence.after=await page.evaluate(({button,icon,startGeneration})=>{
+    const {hosts,images}=window.__qaCaptureNodes,currentHosts=[...document.querySelectorAll(button)],currentImages=[...document.querySelectorAll(icon)],tracker=window.__qaCaptureTracker;
+    return {sameHosts:hosts.length===currentHosts.length&&hosts.every((x,i)=>x===currentHosts[i]&&x.isConnected),sameImages:images.length===currentImages.length&&images.every((x,i)=>x===currentImages[i]&&x.isConnected),ready:currentImages.every(x=>x.complete&&x.naturalWidth>0&&x.naturalHeight>0),current:tracker.snapshot(),changes:tracker.changes.filter(x=>x.generation>startGeneration)};
+  },{button,icon,startGeneration:evidence.start.generation}); } catch(e) { evidence.postcheckError=String(e); }
+  evidence.times.postcheck=performance.now();
+  const bytes=Buffer.from(png.data,'base64');writeFileSync(path,bytes);evidence.times.persisted=performance.now();
+  assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+  evidence.png={width:bytes.readUInt32BE(16),height:bytes.readUInt32BE(20),bytes:bytes.length};
+  assert.equal(evidence.png.width,page.viewportSize().width*dpr);assert.equal(evidence.png.height,page.viewportSize().height*dpr);
+  assert.ok(!evidence.postcheckError&&evidence.after?.sameHosts&&evidence.after?.sameImages&&evidence.after?.ready,'capture crossed a redraw or image readiness changed');
   return geometry;
 }
 async function context(width,height,dpr,mode) {
