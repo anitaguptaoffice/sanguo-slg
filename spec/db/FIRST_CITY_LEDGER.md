@@ -123,5 +123,8 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 5. **SPEC-FIRST-CITY-LEDGER-RACE-001** — frozen in
    [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md); companion §5.3 core effect/finalizer races
    (`spec/db/tests/first_city_ledger_race`); does not certify any realm.
+6. **SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001** — frozen in
+   [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md); §4.2 business + terminal effect-path races
+   (`spec/db/tests/first_city_ledger_effect_path`); does not certify any realm.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.

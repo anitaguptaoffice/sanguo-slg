@@ -255,8 +255,10 @@ fixtures only (`success_city_id` test constant); **`player_city_id_seq` is not a
 Isolated PG17 acceptance: `go run ./spec/db/tests/first_city_ledger_race` with
 `ALLOW_OWNED_PG17_TEST=1` and `FIRST_CITY_LEDGER_TEST_DSN` (see [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md)).
 
-**Not frozen on this card:** full effect business path (wallet/MIL/DOM writes), multi-command slot
-CAS races, restricted-role ACL, target-realm drain/fence execution.
+**SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001** frozen in [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md)
+(disposable PG17 harness with real §4.2 business rows; `first_city_ledger_effect_path`).
+
+**Not frozen here:** multi-command slot CAS races, restricted-role ACL, target-realm drain/fence execution.
 
 ## 6. Wire, DDL and follow-on gaps
 
@@ -275,3 +277,5 @@ CAS races, restricted-role ACL, target-realm drain/fence execution.
 Confirms `m4_010` + `m4_011` companion helpers compose in disposable `spec_db_validate`. ApplySpecs replay:
 [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) / `first_city_ledger_loader`. Core effect/finalizer
 races: [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md) / `first_city_ledger_race`.
+Full effect-path business races: [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md) /
+`first_city_ledger_effect_path`.
