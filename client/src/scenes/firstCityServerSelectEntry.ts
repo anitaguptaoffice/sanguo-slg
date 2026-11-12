@@ -9,12 +9,12 @@ export type FirstCityProbeGateway = FirstCityGatewayPort & Readonly<{
   getSessionGeneration?(): number;
 }>;
 
-/** Same transport boundary as explicit existing-account login; not a product default-on flag. */
+/** Local loopback ws only; rejects every wss and remote ws. Not a product default-on flag. */
 export function permitsFirstCityV2Probe(url: string): boolean {
   try {
     const target = new URL(url);
-    return !target.username && !target.password && (target.protocol === "wss:" ||
-      (target.protocol === "ws:" && ["127.0.0.1", "localhost", "[::1]"].includes(target.hostname)));
+    return target.protocol === "ws:" && !target.username && !target.password &&
+      ["127.0.0.1", "localhost", "[::1]"].includes(target.hostname);
   } catch { return false; }
 }
 

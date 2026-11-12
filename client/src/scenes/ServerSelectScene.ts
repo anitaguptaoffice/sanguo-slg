@@ -44,6 +44,7 @@ export class ServerSelectScene implements Scene {
   private gatewayRef: SceneContext["gateway"] | null = null;
   private firstCityProbeEligible = false;
   private firstCityProbeNotice = "";
+  private firstCityProbeInFlight = false;
 
   async enter(ctx: SceneContext): Promise<void> {
     ++this.lifecycle;
@@ -55,6 +56,7 @@ export class ServerSelectScene implements Scene {
     this.gatewayRef = ctx.gateway;
     this.firstCityProbeEligible = false;
     this.firstCityProbeNotice = "";
+    this.firstCityProbeInFlight = false;
     this.status = "连接网关…";
     this.hud = ctx.hud;
     this.mountHudChrome();
@@ -127,6 +129,7 @@ export class ServerSelectScene implements Scene {
     this.gatewayRef = null;
     this.firstCityProbeEligible = false;
     this.firstCityProbeNotice = "";
+    this.firstCityProbeInFlight = false;
     this.panel?.remove();
   }
 
@@ -324,8 +327,9 @@ export class ServerSelectScene implements Scene {
 
   private async discoverFirstCity(ctx: SceneContext): Promise<void> {
     if (!this.active || !this.focusTrap?.isActive() || !this.firstCityProbeEligible || !this.connected ||
-      this.listBusy || this.entering || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
+      this.listBusy || this.entering || this.firstCityProbeInFlight || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
       !supportsFirstCityPersisted(ctx.gateway)) return;
+    this.firstCityProbeInFlight = true;
     const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
     const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
     if (!login || !password ||
@@ -346,6 +350,7 @@ export class ServerSelectScene implements Scene {
       this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
       this.status = "首城 V2 探测未完成";
     } finally {
+      this.firstCityProbeInFlight = false;
       this.entering = false;
       if (this.active) this.syncPanel();
     }
