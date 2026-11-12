@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	worldv2 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v2"
+	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -44,7 +44,7 @@ func TestDiscoverFirstCityIntent(t *testing.T) {
 	if out.GetCode() != 0 {
 		t.Fatalf("discover: %+v", out)
 	}
-	var resp worldv2.DiscoverFirstCityIntentResponse
+	var resp worldv1.DiscoverFirstCityIntentResponse
 	if err := proto.Unmarshal(out.GetData(), &resp); err != nil {
 		t.Fatal(err)
 	}
@@ -74,11 +74,11 @@ func TestSubmitFirstCityValidationUnavailable(t *testing.T) {
 	s.sessions.Bind("sess-fc", PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8})
 	ctx := context.Background()
 	name, x, y := "都城", int32(12), int32(34)
-	req := &worldv2.SubmitFirstCityRequest{
+	req := &worldv1.SubmitFirstCityRequest{
 		ExpectedScope: derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm),
-		Proposal: &worldv2.FirstCityProposal{
+		Proposal: &worldv1.FirstCityProposal{
 			CommandId:  "11111111-1111-4111-8111-111111111111",
-			Predecessor: &worldv2.FirstCityPredecessor{Value: &worldv2.FirstCityPredecessor_Empty{Empty: &worldv2.FirstCityEmpty{}}},
+			Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
 			Name:       &name,
 			X:          &x,
 			Y:          &y,
@@ -103,11 +103,11 @@ func TestSubmitFirstCityScopeMismatch(t *testing.T) {
 	ctx := context.Background()
 	badScope := derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 10, AccountID: 8}, testFirstCityRealm)
 	name, x, y := "都城", int32(0), int32(0)
-	req := &worldv2.SubmitFirstCityRequest{
+	req := &worldv1.SubmitFirstCityRequest{
 		ExpectedScope: badScope,
-		Proposal: &worldv2.FirstCityProposal{
+		Proposal: &worldv1.FirstCityProposal{
 			CommandId:  "22222222-2222-4222-8222-222222222222",
-			Predecessor: &worldv2.FirstCityPredecessor{Value: &worldv2.FirstCityPredecessor_Empty{Empty: &worldv2.FirstCityEmpty{}}},
+			Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
 			Name:       &name,
 			X:          &x,
 			Y:          &y,

@@ -6,9 +6,9 @@ Adopts frozen **SPEC-CITY-CREATION-WIRE-001** (`spec/proto/sanguo/world/v2/first
 
 ## What ships
 
-- API mirror proto under `internal/api/proto/sanguo/world/v2/` with API `go_package`.
-- Complete generated binding `internal/api/pb/sanguo/world/v2/first_city.pb.go` (protoc 3.21.12,
-  protoc-gen-go 1.36.5).
+- API mirror proto `internal/api/proto/sanguo/world/v1/first_city_v2.proto` (protobuf package
+  `sanguo.world.v2`, Go codec package `worldv1` — same PG inventory slot as world v1 bindings).
+- Generated `internal/api/pb/sanguo/world/v1/first_city_v2.pb.go` (protoc 3.21.12, protoc-gen-go 1.36.5).
 - Dormant gateway handlers for `world.v2.DiscoverFirstCityIntent` and `world.v2.SubmitFirstCity`.
 - `Server.EnableFirstCityV2Routes(realmResolver)` registers handlers; **default `NewServer` does not call this**.
 
@@ -24,7 +24,6 @@ Realm resolution is injected only through `FirstCityV2Realm`; there is no produc
 ## Verification
 
 ```sh
-go test -count=1 ./internal/api/pb/sanguo/world/v2
 go test -count=1 ./internal/api -run 'FirstCityV2|FirstCityCanonical'
 ```
 

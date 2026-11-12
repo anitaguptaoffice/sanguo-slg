@@ -1,10 +1,10 @@
 package api
 
 import (
-	worldv2 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v2"
+	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 )
 
-func actorFromFirstCityScope(scope *worldv2.FirstCityScope) (*firstCityActor, bool) {
+func actorFromFirstCityScope(scope *worldv1.FirstCityScope) (*firstCityActor, bool) {
 	if scope == nil {
 		return nil, false
 	}
@@ -20,8 +20,8 @@ func actorFromFirstCityScope(scope *worldv2.FirstCityScope) (*firstCityActor, bo
 	return actor, true
 }
 
-func derivedFirstCityScope(pc PlayerContext, realm string) *worldv2.FirstCityScope {
-	return &worldv2.FirstCityScope{
+func derivedFirstCityScope(pc PlayerContext, realm string) *worldv1.FirstCityScope {
+	return &worldv1.FirstCityScope{
 		RealmId:   realm,
 		ServerId:  pc.ServerID,
 		PlayerId:  pc.PlayerID,
@@ -29,7 +29,7 @@ func derivedFirstCityScope(pc PlayerContext, realm string) *worldv2.FirstCitySco
 	}
 }
 
-func firstCityScopeMatches(expected, derived *worldv2.FirstCityScope) bool {
+func firstCityScopeMatches(expected, derived *worldv1.FirstCityScope) bool {
 	if expected == nil || derived == nil {
 		return false
 	}
@@ -39,15 +39,15 @@ func firstCityScopeMatches(expected, derived *worldv2.FirstCityScope) bool {
 		expected.GetAccountId() == derived.GetAccountId()
 }
 
-func requestFromProposal(p *worldv2.FirstCityProposal) (*firstCityRequest, bool) {
+func requestFromProposal(p *worldv1.FirstCityProposal) (*firstCityRequest, bool) {
 	if p == nil || p.GetPredecessor() == nil {
 		return nil, false
 	}
 	req := &firstCityRequest{command: p.GetCommandId()}
 	switch v := p.GetPredecessor().GetValue().(type) {
-	case *worldv2.FirstCityPredecessor_Empty:
+	case *worldv1.FirstCityPredecessor_Empty:
 		req.prior = &firstCityPrior{empty: v != nil}
-	case *worldv2.FirstCityPredecessor_RejectedCommandId:
+	case *worldv1.FirstCityPredecessor_RejectedCommandId:
 		if v == nil {
 			return nil, false
 		}

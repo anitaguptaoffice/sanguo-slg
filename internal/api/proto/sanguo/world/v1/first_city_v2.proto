@@ -2,13 +2,12 @@ syntax = "proto3";
 
 package sanguo.world.v2;
 
-option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v2;worldv2";
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1;worldv1";
 
 // Registered SPEC-CITY-CREATION-WIRE-001; validity: FIRST-CITY-WIRE.md.
-// Neither this candidate nor generated codecs authorize runtime activation.
+// API codec lives in worldv1 Go package (PG inventory); protobuf package remains sanguo.world.v2.
 message FirstCityEmpty {}
 
-// Output authority; in requests this is only an untrusted equality expectation.
 message FirstCityScope {
   string realm_id = 1;
   int32 server_id = 2;
@@ -31,7 +30,6 @@ message FirstCityProposal {
   optional int32 y = 5;
 }
 
-// Constructed from authenticated scope and validated typed proposal, not a hash.
 message FirstCityCanonical {
   FirstCityScope scope = 1;
   string operation = 2;
@@ -40,7 +38,6 @@ message FirstCityCanonical {
   FirstCityProposal proposal = 5;
 }
 
-// Server-selected immutable content; a reference never replaces retained bytes.
 message FirstCityTemplateRef {
   string template_version = 1;
   string rules_version = 2;
@@ -49,7 +46,6 @@ message FirstCityTemplateRef {
   bytes content_sha256 = 5;
 }
 
-// Original insert/readback result; name/x/y are exactly canonical.proposal's.
 message FirstCitySuccess {
   int64 city_id = 1;
   int32 server_id = 2;
@@ -69,7 +65,6 @@ message FirstCityRejection {
   FirstCityRejectionReason reason = 1;
 }
 
-// Exactly one durable state; UNKNOWN and NOT_OBSERVED are never ledger states.
 message FirstCityRecord {
   FirstCityCanonical canonical = 1;
   FirstCityTemplateRef template = 2;
@@ -95,7 +90,6 @@ enum FirstCityOutcomeKind {
   FIRST_CITY_OUTCOME_NOT_OBSERVED = 4;
 }
 
-// command concerns requested_command_id; head is the actor's current lineage.
 message FirstCityOutcome {
   FirstCityScope scope = 1;
   FirstCityOutcomeKind kind = 2;
@@ -104,7 +98,6 @@ message FirstCityOutcome {
   FirstCityHead head = 5;
 }
 
-// route: world.v2.SubmitFirstCity
 message SubmitFirstCityRequest {
   FirstCityScope expected_scope = 1;
   FirstCityProposal proposal = 2;
@@ -114,7 +107,6 @@ message SubmitFirstCityResponse {
   FirstCityOutcome outcome = 1;
 }
 
-// route: world.v2.ContinueFirstCity
 message ContinueFirstCityRequest {
   FirstCityScope expected_scope = 1;
   FirstCityProposal proposal = 2;
@@ -124,7 +116,6 @@ message ContinueFirstCityResponse {
   FirstCityOutcome outcome = 1;
 }
 
-// route: world.v2.GetFirstCityResult
 message GetFirstCityResultRequest {
   FirstCityScope expected_scope = 1;
   string command_id = 2;
@@ -134,7 +125,6 @@ message GetFirstCityResultResponse {
   FirstCityOutcome outcome = 1;
 }
 
-// route: world.v2.DiscoverFirstCityIntent
 message DiscoverFirstCityIntentRequest {}
 
 message DiscoverFirstCityIntentResponse {

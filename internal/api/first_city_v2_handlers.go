@@ -3,12 +3,12 @@ package api
 import (
 	"context"
 
-	worldv2 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v2"
+	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"google.golang.org/protobuf/proto"
 )
 
-func (s *Server) derivedFirstCityScope(pc PlayerContext) (*worldv2.FirstCityScope, bool) {
+func (s *Server) derivedFirstCityScope(pc PlayerContext) (*worldv1.FirstCityScope, bool) {
 	if s == nil || s.firstCityV2Realm == nil {
 		return nil, false
 	}
@@ -24,20 +24,20 @@ func (s *Server) handleDiscoverFirstCityIntent(ctx context.Context, pkt *commonv
 	if errPkt != nil {
 		return errPkt, nil
 	}
-	var req worldv2.DiscoverFirstCityIntentRequest
+	var req worldv1.DiscoverFirstCityIntentRequest
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
-	if len(pkt.GetPayload()) != 0 && !proto.Equal(&req, &worldv2.DiscoverFirstCityIntentRequest{}) {
+	if len(pkt.GetPayload()) != 0 && !proto.Equal(&req, &worldv1.DiscoverFirstCityIntentRequest{}) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
 	scope, ok := s.derivedFirstCityScope(pc)
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city discovery unavailable"), nil
 	}
-	resp := &worldv2.DiscoverFirstCityIntentResponse{
+	resp := &worldv1.DiscoverFirstCityIntentResponse{
 		Scope: scope,
-		Head:  &worldv2.FirstCityHead{Value: &worldv2.FirstCityHead_Empty{Empty: &worldv2.FirstCityEmpty{}}},
+		Head:  &worldv1.FirstCityHead{Value: &worldv1.FirstCityHead_Empty{Empty: &worldv1.FirstCityEmpty{}}},
 	}
 	data, err := marshal(resp)
 	if err != nil {
@@ -51,7 +51,7 @@ func (s *Server) handleSubmitFirstCity(ctx context.Context, pkt *commonv1.Client
 	if errPkt != nil {
 		return errPkt, nil
 	}
-	var req worldv2.SubmitFirstCityRequest
+	var req worldv1.SubmitFirstCityRequest
 	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
 	}
