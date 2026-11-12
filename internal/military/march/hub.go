@@ -8,18 +8,19 @@ import (
 
 // Hub coordinates recruit queues, march orders, and the scheduler for one game shard.
 type Hub struct {
-	mu         sync.Mutex
-	scheduler  *Scheduler
-	catalog    map[int32]UnitSpec
-	cities     map[int64]*CityState
-	marches    map[int64]*MarchOrder
-	marchCtx   map[int64]marchRuntime
-	nextMarch  int64
-	onArrive   MarchArrivalHandler
-	onFinished MarchFinishedHandler
-	restored   bool    // one durable installation per Hub, including an empty snapshot
-	restoreEv  []Event // validated restore events staged until ActivateRestore
-	now        func() time.Time
+	mu            sync.Mutex
+	scheduler     *Scheduler
+	catalog       map[int32]UnitSpec
+	cities        map[int64]*CityState
+	marches       map[int64]*MarchOrder
+	marchCtx      map[int64]marchRuntime
+	nextMarch     int64
+	onArrive      MarchArrivalHandler
+	arrivalErrors map[int64]error
+	onFinished    MarchFinishedHandler
+	restored      bool    // one durable installation per Hub, including an empty snapshot
+	restoreEv     []Event // validated restore events staged until ActivateRestore
+	now           func() time.Time
 }
 
 // MarchFinishedHandler runs after a march ends (arrival without return, or return complete).
@@ -183,7 +184,7 @@ func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 func (h *Hub) onMarchArrive(ev Event) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	o := h.marches[ev.RefID]
+	o := cloneMarch(h.marches[ev.RefID])
 	if o == nil {
 		return
 	}
@@ -196,16 +197,27 @@ func (h *Hub) onMarchArrive(ev Event) {
 		res, err := h.onArrive(context.Background(), MarchArrivalEvent{
 			MarchID:  ev.RefID,
 			PlayerID: ctx.PlayerID,
-			Troops:   ctx.Troops,
+			Troops:   cloneStacks(ctx.Troops),
 			Order:    *o,
 		})
-		if err == nil && res.BattleRan {
+		if res.Durable && err != nil {
+			if h.arrivalErrors == nil {
+				h.arrivalErrors = make(map[int64]error)
+			}
+			h.arrivalErrors[ev.RefID] = err
+			return
+		}
+		delete(h.arrivalErrors, ev.RefID)
+		if err == nil && (res.BattleRan || res.Durable) {
 			o.LastReportID = res.ReportID
 			ctx.Troops = cloneStacks(res.RemainingTroops)
 			h.marchCtx[ev.RefID] = ctx
-			if troopStackTotal(ctx.Troops) > 0 {
+			if (res.Durable && len(ctx.Troops) > 0) || (!res.Durable && troopStackTotal(ctx.Troops) > 0) {
 				base := ev.DueAt
-				if base.IsZero() {
+				if res.Durable {
+					base = o.ArriveAt // same frozen deadline committed by the resolver
+				}
+				if !res.Durable && base.IsZero() {
 					base = h.now() // manually dispatched event without a deadline
 				}
 				if err := BeginReturn(o, base); err == nil {
@@ -219,12 +231,24 @@ func (h *Hub) onMarchArrive(ev Event) {
 						},
 					})
 				}
+			} else if res.Durable {
+				o.Phase = PhaseReturned
+				o.ReturnFinishAt = time.Time{}
 			}
 		}
 	}
+	h.marches[ev.RefID] = o
 	if !scheduledReturn {
 		h.emitMarchFinished(ev.RefID)
 	}
+}
+
+// MarchArrivalError exposes a quarantined durable failure. Recovery must reconcile
+// persisted state first: a failed outer commit can have an uncertain outcome.
+func (h *Hub) MarchArrivalError(id int64) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.arrivalErrors[id]
 }
 
 // Recall starts return march (arrived → returning).
