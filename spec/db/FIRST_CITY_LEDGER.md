@@ -137,5 +137,7 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
    [FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md); companion §5 narrow finalizer full rollback / whitelist / exact-attempt (`spec/db/tests/first_city_ledger_finalizer_rollback`); does not certify any realm.
 11. **SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001** — frozen in
    [FIRST_CITY_LEDGER_PHASE_ADMISSION.md](FIRST_CITY_LEDGER_PHASE_ADMISSION.md); phase admission / generation-bound lease / close-vs-poison linearization (`spec/db/tests/first_city_ledger_phase_admission`); does not certify any realm or deploy admission controller.
+12. **SPEC-FIRST-CITY-LEDGER-UNKNOWN-DRAIN-001** — frozen in
+   [FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md](FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md); unknown drain / receipt≠source-drain / post-drain generation continue (`spec/db/tests/first_city_ledger_unknown_drain`); does not certify any realm.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.
