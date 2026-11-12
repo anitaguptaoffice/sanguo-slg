@@ -14,8 +14,7 @@ import (
 
 var errPreparedCity = errors.New("domestic: prepared city unavailable")
 
-// PreparedCity owns the DOM preparation gate and private staged state. No
-// exported constructor; APP receives it only from Prepare. Default-off.
+// PreparedCity owns the DOM preparation gate and private staged state (default-off).
 type PreparedCity struct {
 	participant *FreshCityParticipant
 	hub         *Hub
@@ -31,8 +30,6 @@ type PreparedCity struct {
 	staged      *CityState
 }
 
-// Prepare validates and clones a trusted template, then acquires the cancellable
-// Hub preparation gate. It does not Begin SQL, publish or activate routes.
 func (p *FreshCityParticipant) Prepare(ctx context.Context, initial *CityState) (*PreparedCity, error) {
 	if p == nil || p.state == nil || ctx == nil || initial == nil {
 		return nil, errPreparedCity
@@ -75,7 +72,6 @@ func (pc *PreparedCity) source() *freshDomesticSource {
 	return pc.participant.state
 }
 
-// Close idempotently releases the preparation gate and discards unpublished work.
 func (pc *PreparedCity) Close() {
 	if pc == nil || !pc.closed.CompareAndSwap(false, true) {
 		return
@@ -87,9 +83,8 @@ func (pc *PreparedCity) Close() {
 	pc.staged = nil
 }
 
-// LockWallet is one-shot, uses only the caller transaction, and requires the W pin.
 func (pc *PreparedCity) LockWallet(ctx context.Context, a *recruittx.Access) error {
-	if !pc.alive() || a == nil || !pc.walletOnce.CompareAndSwap(false, true) {
+	if !pc.alive() || a == nil || pc.walletOnce.Load() {
 		return errPreparedCity
 	}
 	s := pc.source()
@@ -105,7 +100,7 @@ func (pc *PreparedCity) LockWallet(ctx context.Context, a *recruittx.Access) err
 	err := snapshot.Scan(ctx, s.binding, `SELECT EXISTS (SELECT 1 FROM pg_catalog.pg_locks WHERE pid=pg_catalog.pg_backend_pid() AND granted AND relation=$1::pg_catalog.oid AND mode='RowExclusiveLock')`,
 		[]any{s.profile.Objects["player_wallet"].OID}, &pinned)
 	if err != nil {
-		return err
+		return s.failure(err)
 	}
 	if !pinned {
 		return errPreparedCity
@@ -117,13 +112,13 @@ func (pc *PreparedCity) LockWallet(ctx context.Context, a *recruittx.Access) err
 	_, err = snapshot.Exec(ctx, s.binding, "INSERT INTO "+wallet+"(server_id,player_id,food,wood,iron,stone,gold,updated_at) VALUES($1,$2,$3,$4,$5,$6,0,$7) ON CONFLICT DO NOTHING",
 		s.profile.ServerID, pc.city.PlayerID, pc.city.Wallet.Food, pc.city.Wallet.Wood, pc.city.Wallet.Iron, pc.city.Wallet.Stone, now)
 	if err != nil {
-		return err
+		return s.failure(err)
 	}
 	var food, wood, iron, stone int64
 	err = snapshot.Scan(ctx, s.binding, "SELECT food,wood,iron,stone FROM "+wallet+" WHERE server_id=$1 AND player_id=$2 FOR UPDATE",
 		[]any{s.profile.ServerID, pc.city.PlayerID}, &food, &wood, &iron, &stone)
 	if err != nil {
-		return err
+		return s.failure(err)
 	}
 	if !freshResourcesValid(Resources{Food: food, Wood: wood, Iron: iron, Stone: stone}) {
 		return errPreparedCity
@@ -131,11 +126,13 @@ func (pc *PreparedCity) LockWallet(ctx context.Context, a *recruittx.Access) err
 	if err = snapshot.CheckSameTransaction(ctx, s.binding, &snapshot); err != nil {
 		return err
 	}
+	if !pc.walletOnce.CompareAndSwap(false, true) {
+		return errPreparedCity
+	}
 	pc.walletSnap = snapshot
 	return nil
 }
 
-// Stage is one-shot. It consumes InitializedCity, writes DOM rows, and retains staged state.
 func (pc *PreparedCity) Stage(ctx context.Context, a *recruittx.Access, city march.InitializedCity, at time.Time) (world.CityIdentity, error) {
 	if !pc.alive() || a == nil || !pc.walletOnce.Load() || pc.stagedOnce.Load() {
 		return world.CityIdentity{}, errPreparedCity
@@ -157,7 +154,10 @@ func (pc *PreparedCity) Stage(ctx context.Context, a *recruittx.Access, city mar
  FROM pg_catalog.unnest($1::pg_catalog.oid[]) WITH ORDINALITY e(oid,n)
  LEFT JOIN pg_catalog.pg_locks l ON l.relation OPERATOR(pg_catalog.=) e.oid AND l.pid OPERATOR(pg_catalog.=) pg_catalog.pg_backend_pid() AND l.granted`,
 		[]any{ids}, &mask)
-	if err != nil || mask != 3 {
+	if err != nil {
+		return world.CityIdentity{}, s.failure(err)
+	}
+	if mask != 3 {
 		return world.CityIdentity{}, errPreparedCity
 	}
 	at, err = freshPreparedTime(at)
@@ -177,33 +177,47 @@ func (pc *PreparedCity) Stage(ctx context.Context, a *recruittx.Access, city mar
 	cityTable := pgx.Identifier{schema, "player_city"}.Sanitize()
 	var owner int64
 	err = a.Scan(ctx, s.binding, "SELECT player_id FROM "+cityTable+" WHERE server_id=$1 AND city_id=$2", []any{identity.ServerID, identity.CityID}, &owner)
-	if err != nil || owner != pc.city.PlayerID {
+	if err != nil {
+		return world.CityIdentity{}, s.failure(err)
+	}
+	if owner != pc.city.PlayerID {
 		return world.CityIdentity{}, ErrProductionOwnerMismatch
 	}
 	var exists bool
 	err = a.Scan(ctx, s.binding, `SELECT EXISTS (SELECT 1 FROM `+building+` WHERE server_id=$1 AND city_id=$2
  UNION ALL SELECT 1 FROM `+checkpoint+` WHERE server_id=$1 AND city_id=$2)`, []any{identity.ServerID, identity.CityID}, &exists)
-	if err != nil || exists {
+	if err != nil {
+		return world.CityIdentity{}, s.failure(err)
+	}
+	if exists {
 		return world.CityIdentity{}, ErrCityAlreadyRegistered
 	}
 	tag, err := a.Exec(ctx, s.binding, `INSERT INTO `+checkpoint+`(server_id,city_id,player_id,settled_at,settled_submicro_ns)
  VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING`,
 		identity.ServerID, identity.CityID, pc.city.PlayerID, at.Truncate(time.Microsecond), at.Nanosecond()%1000)
-	if err != nil || tag.RowsAffected() != 1 {
+	if err != nil {
+		return world.CityIdentity{}, s.failure(err)
+	}
+	if tag.RowsAffected() != 1 {
 		return world.CityIdentity{}, ErrCityAlreadyRegistered
 	}
 	for slot, inst := range pc.city.Buildings {
 		tag, err = a.Exec(ctx, s.binding, `INSERT INTO `+building+`(server_id,city_id,slot_key,building_cfg_id,level) VALUES($1,$2,$3,$4,$5)`,
 			identity.ServerID, identity.CityID, slot, inst.CfgID, inst.Level)
-		if err != nil || tag.RowsAffected() != 1 {
-			return world.CityIdentity{}, err
+		if err != nil {
+			return world.CityIdentity{}, s.failure(err)
+		}
+		if tag.RowsAffected() != 1 {
+			return world.CityIdentity{}, ErrCityAlreadyRegistered
 		}
 	}
 	work := cloneCity(pc.city)
 	work.ID, work.PlayerID = identity.CityID, identity.PlayerID
 	work.LastSettleAt, work.productionRemainder = at, [4]int64{}
 	work.Wallet = Resources{} // Publish applies post-commit hydration policy.
-	pc.stagedOnce.Store(true)
+	if !pc.stagedOnce.CompareAndSwap(false, true) {
+		return world.CityIdentity{}, errPreparedCity
+	}
 	pc.identity, pc.staged = identity, work
 	return identity, nil
 }
@@ -215,7 +229,6 @@ func freshPreparedTime(at time.Time) (time.Time, error) {
 	return at.UTC().Truncate(time.Microsecond), nil
 }
 
-// Publish registers Hub caches only after APP confirmed commit. It performs no SQL.
 func (pc *PreparedCity) Publish() error {
 	if !pc.alive() || !pc.stagedOnce.Load() || !pc.publishOnce.CompareAndSwap(false, true) || pc.staged == nil {
 		return errPreparedCity

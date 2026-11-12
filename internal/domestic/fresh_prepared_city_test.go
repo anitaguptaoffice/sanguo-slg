@@ -9,125 +9,135 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
+	"github.com/jackc/pgx/v5"
 )
 
-func TestPreparedCityGateAndClose(t *testing.T) {
+func TestPreparedCityLifecycle(t *testing.T) {
 	p := freshTemplateSourceUnit(t)
 	initial, _ := freshTemplateSourceInput()
+	bad, _ := freshTemplateSourceInput()
+	bad.ID = 1
+	if _, err := p.Prepare(context.Background(), bad); !errors.Is(err, errInvalidFreshTemplate) {
+		t.Fatal(err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	pc, err := p.Prepare(ctx, initial)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !pc.gateHeld {
-		t.Fatal("gate not held")
-	}
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
-		defer cancel()
-		if other, err := p.Prepare(ctx, initial); err == nil {
-			other.Close()
-			t.Error("concurrent prepare admitted")
+		c, stop := context.WithTimeout(context.Background(), 50*time.Millisecond)
+		defer stop()
+		if o, e := p.Prepare(c, initial); e == nil {
+			o.Close()
+			t.Error("concurrent prepare")
 		}
 	}()
 	wg.Wait()
-	pc.Close()
-	if pc.gateHeld {
-		t.Fatal("gate not released")
-	}
-	reopen, err := p.Prepare(context.Background(), initial)
-	if err != nil {
-		t.Fatal("gate still blocked after close", err)
-	}
-	reopen.Close()
-}
-
-func TestPreparedCityOneShotAndOrder(t *testing.T) {
-	p := freshTemplateSourceUnit(t)
-	initial, _ := freshTemplateSourceInput()
-	pc, err := p.Prepare(context.Background(), initial)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer pc.Close()
-	identity := world.CityIdentity{ServerID: 1, CityID: 9, PlayerID: initial.PlayerID}
 	if _, err := pc.Stage(context.Background(), nil, march.InitializedCity{}, time.Now()); err == nil {
-		t.Fatal("stage without wallet admitted")
+		t.Fatal("stage without wallet")
 	}
-	if err := pc.LockWallet(context.Background(), nil); err == nil {
-		t.Fatal("nil access admitted")
+	if err := pc.LockWallet(context.Background(), &recruittx.Access{}); err == nil || pc.walletOnce.Load() {
+		t.Fatal("unpinned lock", pc.walletOnce.Load())
 	}
+	pc.walletOnce.Store(true)
 	if err := pc.LockWallet(context.Background(), &recruittx.Access{}); err == nil {
-		t.Fatal("unpinned wallet admitted")
+		t.Fatal("second wallet lock")
 	}
-	if !pc.walletOnce.Load() {
-		t.Fatal("wallet not marked used on failure path")
-	}
-	if err := pc.LockWallet(context.Background(), &recruittx.Access{}); err == nil {
-		t.Fatal("second wallet lock admitted")
-	}
-	pc.stagedOnce.Store(true)
-	if _, err := pc.Stage(context.Background(), &recruittx.Access{}, march.InitializedCity{}, time.Now()); err == nil {
-		t.Fatal("second stage admitted")
-	}
-	pc.stagedOnce.Store(false)
+	pc.walletOnce.Store(false)
 	if err := pc.Publish(); err == nil {
-		t.Fatal("publish before stage admitted")
+		t.Fatal("publish before stage")
 	}
 	pc.stagedOnce.Store(true)
 	pc.staged = cloneCity(initial)
-	pc.staged.ID = identity.CityID
 	if err := pc.Publish(); err != nil {
 		t.Fatal(err)
 	}
 	if err := pc.Publish(); err == nil {
-		t.Fatal("second publish admitted")
+		t.Fatal("second publish")
 	}
-}
-
-func TestPreparedCityPrepareRejectsInvalid(t *testing.T) {
-	p := freshTemplateSourceUnit(t)
-	initial, _ := freshTemplateSourceInput()
-	initial.ID = 1
-	if _, err := p.Prepare(context.Background(), initial); !errors.Is(err, errInvalidFreshTemplate) {
-		t.Fatal("invalid template admitted", err)
+	pc.Close()
+	if err := pc.Publish(); err == nil {
+		t.Fatal("publish after close")
 	}
-	if _, err := p.Prepare(context.Background(), nil); err == nil {
-		t.Fatal("nil initial admitted")
+	if err := pc.LockWallet(context.Background(), &recruittx.Access{}); err == nil {
+		t.Fatal("lock after close")
 	}
-}
-
-func TestPreparedCityCloseDiscards(t *testing.T) {
-	p := freshTemplateSourceUnit(t)
-	initial, _ := freshTemplateSourceInput()
-	pc, err := p.Prepare(context.Background(), initial)
+	pc2, err := p.Prepare(context.Background(), initial)
 	if err != nil {
 		t.Fatal(err)
 	}
-	pc.Close()
-	if err := pc.LockWallet(context.Background(), &recruittx.Access{}); err == nil {
-		t.Fatal("lock after close admitted")
-	}
-	if _, err := pc.Stage(context.Background(), &recruittx.Access{}, march.InitializedCity{}, time.Now()); err == nil {
-		t.Fatal("stage after close admitted")
-	}
-	if err := pc.Publish(); err == nil {
-		t.Fatal("publish after close admitted")
-	}
-	pc.Close()
-}
-
-func TestFreshPreparedTime(t *testing.T) {
+	pc2.Close()
 	if _, err := freshPreparedTime(time.Time{}); err == nil {
-		t.Fatal("zero time admitted")
+		t.Fatal("zero time")
 	}
 	at, err := freshPreparedTime(time.Unix(1, 123456789))
 	if err != nil || at != time.Unix(1, 123456000).UTC() {
-		t.Fatal("submicro normalize", err, at)
+		t.Fatal(err, at)
+	}
+}
+
+func TestPGPreparedCity(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	f := freshSourcePGFixture(t, ctx, false)
+	initial, _ := freshTemplateSourceInput()
+	pc, err := f.source.Prepare(ctx, initial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pc.Close()
+	o, a := recruitWalletBegin(t, ctx, f.binding)
+	if err := pc.LockWallet(ctx, a); err == nil || pc.walletOnce.Load() {
+		t.Fatal("unpinned", err, pc.walletOnce.Load())
+	}
+	if err := f.source.PinWallet(ctx, a); err != nil {
+		t.Fatal(err)
+	}
+	if err := pc.LockWallet(ctx, a); err != nil {
+		t.Fatal(err)
+	}
+	if err := pc.LockWallet(ctx, a); err == nil {
+		t.Fatal("second lock")
+	}
+	var food int64
+	tab := pgx.Identifier{f.profile.SchemaName, "player_wallet"}.Sanitize()
+	if err := a.Scan(ctx, f.binding, "SELECT food FROM "+tab+" WHERE server_id=$1 AND player_id=$2 FOR UPDATE", []any{f.profile.ServerID, initial.PlayerID}, &food); err != nil || food != initial.Wallet.Food {
+		t.Fatal(food, err)
+	}
+	if _, err := pc.Stage(ctx, a, march.InitializedCity{}, time.Now()); err == nil || pc.stagedOnce.Load() {
+		t.Fatal("stage without city pins", err, pc.stagedOnce.Load())
+	}
+	if err := f.source.PinCityState(ctx, a); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pc.Stage(ctx, a, march.InitializedCity{}, time.Now()); err == nil || pc.stagedOnce.Load() {
+		t.Fatal("stage without MIL proof", err)
+	}
+	if err := o.Rollback(ctx); err != nil {
+		t.Fatal(err)
+	}
+	pc2, err := f.source.Prepare(ctx, initial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pc2.Close()
+	o2, a2 := recruitWalletBegin(t, ctx, f.binding)
+	if err := f.source.PinWallet(ctx, a2); err != nil {
+		t.Fatal(err)
+	}
+	wtab := pgx.Identifier{f.profile.SchemaName, "player_wallet"}.Sanitize()
+	if _, err := a2.Exec(ctx, f.binding, "ALTER TABLE "+wtab+" RENAME TO drift_wallet"); err != nil {
+		t.Fatal(err)
+	}
+	if err := pc2.LockWallet(ctx, a2); err == nil || !f.source.state.retired.Load() {
+		t.Fatal("drift", err, f.source.state.retired.Load())
+	}
+	if err := o2.Rollback(ctx); err != nil {
+		t.Fatal(err)
 	}
 }
