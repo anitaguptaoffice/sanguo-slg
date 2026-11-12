@@ -101,6 +101,7 @@ Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CIT
 狭义拒绝 finalizer 全 rollback / 白名单 / exact-attempt：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_rollback`）。
 phase admission / lease / close-poison 线性化：[SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001](FIRST_CITY_LEDGER_PHASE_ADMISSION.md)（`go run ./spec/db/tests/first_city_ledger_phase_admission`，同上 DSN 约定；夹具表非生产 DDL）。
 未知 drain / receipt≠排空证据：[SPEC-FIRST-CITY-LEDGER-UNKNOWN-DRAIN-001](FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md)（`go run ./spec/db/tests/first_city_ledger_unknown_drain`，同上 DSN 约定）。
+进程重启 / ACK-loss 持久读回：[SPEC-FIRST-CITY-LEDGER-ACK-LOSS-001](FIRST_CITY_LEDGER_ACK_LOSS.md)（`go run ./spec/db/tests/first_city_ledger_ack_loss`，同上 DSN 约定；非 WebSocket / 浏览器矩阵）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 

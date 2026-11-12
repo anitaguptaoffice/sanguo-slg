@@ -57,6 +57,4 @@ Record actual `SHOW server_version` and per-scenario `PASS` lines.
 
 ## Follow-on
 
-Process restart / ACK-loss, realm drain/fence, production admission controller,
-CITY_CREATION_RECOVERY §10 items 5–7 — separate cards. Phase admission remains
-[#2576](FIRST_CITY_LEDGER_PHASE_ADMISSION.md).
+Ack-loss frozen in [FIRST_CITY_LEDGER_ACK_LOSS.md](FIRST_CITY_LEDGER_ACK_LOSS.md); realm drain/fence, production admission, §10 items 5–7 — separate cards.
