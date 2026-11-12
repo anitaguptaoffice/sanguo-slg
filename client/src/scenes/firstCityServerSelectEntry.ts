@@ -39,6 +39,21 @@ export function formatFirstCityProbeStatus(knowledge: FirstCityKnowledge): strin
   return "V2 发现往返已完成；当前无自动建城或进服。";
 }
 
+export async function ensureFirstCitySession(
+  gateway: FirstCityProbeGateway,
+  loginName: string,
+  password: string,
+  serverId: number,
+  generation?: number,
+): Promise<void> {
+  if (!loginName || !password || !Number.isInteger(serverId) || serverId < 1) throw firstCityUnknown();
+  const stamp = generation ?? gateway.getSessionGeneration?.();
+  await gateway.login(loginName, password, serverId);
+  if (stamp !== undefined && gateway.getSessionGeneration?.() !== stamp) throw firstCityUnknown();
+  await gateway.enterGameServer(serverId);
+  if (stamp !== undefined && gateway.getSessionGeneration?.() !== stamp) throw firstCityUnknown();
+}
+
 /** Explicit discover only; never provisions v1 cities or navigates to main city. */
 export async function runFirstCityDiscoverProbe(
   gateway: FirstCityProbeGateway,
@@ -46,13 +61,9 @@ export async function runFirstCityDiscoverProbe(
   password: string,
   serverId: number,
   generation?: number,
-): Promise<string> {
-  if (!loginName || !password || !Number.isInteger(serverId) || serverId < 1) throw firstCityUnknown();
-  const stamp = gateway.getSessionGeneration?.();
-  await gateway.login(loginName, password, serverId);
-  if (stamp !== undefined && gateway.getSessionGeneration?.() !== stamp) throw firstCityUnknown();
-  await gateway.enterGameServer(serverId);
-  if (stamp !== undefined && gateway.getSessionGeneration?.() !== stamp) throw firstCityUnknown();
-  const knowledge = await new FirstCityController(gateway).discover();
-  return formatFirstCityProbeStatus(knowledge);
+): Promise<{ message: string; knowledge: FirstCityKnowledge; controller: FirstCityController }> {
+  await ensureFirstCitySession(gateway, loginName, password, serverId, generation);
+  const controller = new FirstCityController(gateway);
+  const knowledge = await controller.discover();
+  return { message: formatFirstCityProbeStatus(knowledge), knowledge, controller };
 }
