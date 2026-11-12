@@ -258,7 +258,9 @@ Isolated PG17 acceptance: `go run ./spec/db/tests/first_city_ledger_race` with
 **SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001** frozen in [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md)
 (disposable PG17 harness with real §4.2 business rows; `first_city_ledger_effect_path`).
 
-**Not frozen here:** multi-command slot CAS races, restricted-role ACL, target-realm drain/fence execution.
+**SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001** frozen in [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md) (§3 intake slot/head CAS; `first_city_ledger_slot_cas`).
+
+**Not frozen here:** restricted-role ACL, target-realm drain/fence execution.
 
 ## 6. Wire, DDL and follow-on gaps
 
@@ -278,4 +280,5 @@ Confirms `m4_010` + `m4_011` companion helpers compose in disposable `spec_db_va
 [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) / `first_city_ledger_loader`. Core effect/finalizer
 races: [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md) / `first_city_ledger_race`.
 Full effect-path business races: [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md) /
-`first_city_ledger_effect_path`.
+`first_city_ledger_effect_path`. Slot/head intake CAS: [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md) /
+`first_city_ledger_slot_cas`.

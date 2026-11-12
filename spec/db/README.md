@@ -95,6 +95,7 @@ PG companion：[SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001](FIRST_CITY_LEDGER_PG_CO
 ApplySpecs loader 与隔离验收：[SPEC-FIRST-CITY-LEDGER-LOADER-001](FIRST_CITY_LEDGER_LOADER.md)（`go run ./spec/db/tests/first_city_ledger_loader`，需 `ALLOW_OWNED_PG17_TEST=1` 与 disposable DSN）。
 Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CITY-LEDGER-RACE-001](FIRST_CITY_LEDGER_RACE.md)（`go run ./spec/db/tests/first_city_ledger_race`，同上 DSN 约定；不启用 `player_city_id_seq`）。
 含 wallet/MIL/DOM 业务行的完整 effect 路径并发：[SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001](FIRST_CITY_LEDGER_EFFECT_PATH.md)（`go run ./spec/db/tests/first_city_ledger_effect_path`）。
+缺行 slot / head 竞争 intake 与 predecessor CAS：[SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001](FIRST_CITY_LEDGER_SLOT_CAS.md)（`go run ./spec/db/tests/first_city_ledger_slot_cas`）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
