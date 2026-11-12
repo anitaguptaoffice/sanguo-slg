@@ -30,4 +30,5 @@ Fixture `success_city_id=88001` only. `./spec/db/validate.sh` for syntax compose
 ## Follow-on
 
 Full effect business path (wallet/MIL/DOM) races: [SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001](FIRST_CITY_LEDGER_EFFECT_PATH.md)
-(`spec/db/tests/first_city_ledger_effect_path`). Multi-slot CAS, ACL suites, drain/fence — separate SPEC cards.
+(`spec/db/tests/first_city_ledger_effect_path`). Slot/head intake CAS: [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md).
+ACL suites, drain/fence — separate SPEC cards.

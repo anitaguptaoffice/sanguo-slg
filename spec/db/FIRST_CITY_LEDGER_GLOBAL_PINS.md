@@ -229,6 +229,7 @@ Finalizer must not commit rejection while any concurrent effect transaction coul
 |------|--------|
 | SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Frozen in [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md). |
 | SPEC-FIRST-CITY-LEDGER-LOADER-001 | Frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). |
+| SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001 | Frozen in [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md). |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
 | Target realm enrollment execution | Drain/fence/deploy — **not authorized** by #2556. |
 

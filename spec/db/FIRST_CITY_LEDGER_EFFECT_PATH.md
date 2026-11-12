@@ -30,4 +30,4 @@ Core terminal race harness (command PK only): `go run ./spec/db/tests/first_city
 
 ## Follow-on (separate SPEC cards)
 
-Multi-slot / head CAS contention, restricted-role ACL suites, per-barrier crash recovery, `validate_only` GUC, `player_city_id_seq` activation, CITY_CREATION_RECOVERY §10 items 3 and 5–7, target-realm drain/fence execution, and full §11 atomicity matrix beyond the four scenarios above.
+Slot/head intake CAS (competing INITIAL, predecessor CAS): [SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001](FIRST_CITY_LEDGER_SLOT_CAS.md) (`first_city_ledger_slot_cas`). Restricted-role ACL suites, per-barrier crash recovery, `validate_only` GUC, `player_city_id_seq` activation, CITY_CREATION_RECOVERY §10 items 3 and 5–7, target-realm drain/fence execution, and full §11 atomicity matrix beyond the four scenarios above.
