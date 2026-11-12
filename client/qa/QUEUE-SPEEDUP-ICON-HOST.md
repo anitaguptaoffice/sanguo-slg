@@ -1,8 +1,8 @@
 # QA-QUEUE-SPEEDUP-ICON-001
 
 Registration #2511, CLIENT #2508, independent contract #2507 / #2510.
-Immutable merged-main source 93618e18902ca2e54375069808281044b51b0889,
-tree 7a1555da00470a54ec5f6c5dda9e4818e9a715eb, based on main e89520eb.
+Immutable merged-main source b98b24b6833e06f1b3f965a4a77dedb2d876ae3f,
+tree 6de1bb51739046120841d8af1ba824739320c754, based on main e89520eb.
 New execution remains gated on independent pin/composition review. Pin changes require renewed review and affected tests, not blind reruns.
 
 This harness runs actual main.ts/MainCityScene/QueuePanels/AssetLoader and item
@@ -133,3 +133,9 @@ Keyboard refresh now precedes decoded on-capture. Off toggle and inspection must
 retain that capture's exact loaded hosts/images, checked before and after. The
 same ownership bracket restores on immediately from decoded off-redraw capture.
 No wait for replacement after toggling, reskin, readiness retry or removed assertion.
+
+## Latest runtime baseline
+Run43154418624/artifact13915301602 fully accepted only the previous93618e target.
+Latest main b98b24b6833e06f1b3f965a4a77dedb2d876ae3f changes ContentPanels runtime.
+Pins now target tree6de1bb51739046120841d8af1ba824739320c754 without harness changes.
+Fresh full execution and independent raw acceptance are required for this baseline.
