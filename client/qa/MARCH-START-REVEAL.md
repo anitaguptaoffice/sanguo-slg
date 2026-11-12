@@ -2,8 +2,8 @@
 
 ## Frozen inputs and execution
 
-Repair: `dafe0d70f75fec528be03b0711cbfe64076af6ee`, tree
-`dc1b4eeb0df4fbf750ed7a1e0bd8cfeaed66c025` (#2478).
+Repair: `e3c848e4acdb10baef113c3df36b62f44cc86567`, tree
+`0c41aa9a2e444e3af2f22fb540858291bdb68f76` (#2478).
 Baseline: `b98b24b6833e06f1b3f965a4a77dedb2d876ae3f`, tree
 `6de1bb51739046120841d8af1ba824739320c754`. MainCityScene is identical
 between these inputs; MarchListPanel contains the repair under test.
@@ -53,7 +53,13 @@ economy, deployment or production acceptance.
 Each matrix artifact includes report.json with target/tree/harness SHA-256,
 viewport, case results, decoded requests, routes, errors and cleanup; pending and
 settled PNGs; and Vite log. Zero page errors, drained FIFO, one StartMarch per case,
-selected/recent row and visibility assertions are required. Panels detach,
+selected/recent row and geometric visibility assertions are required. Every
+successful reveal must intersect the viewport and all overflow/paint-clipping
+ancestors with at least 90% row width, 50% row area and min(row height, 32px)
+visible height. Geometry records include row bounds, intersection, ancestor
+bounds and scroll dimensions/positions, accounting for layout-frame scaling.
+Settled screenshots and geometry are saved before this gate; the harness never
+scrolls the row or modifies layout to satisfy it. Panels detach,
 gateway closes, browser closes and Vite terminates. Failure exits nonzero and
 writes a partial report; skipped/unexecuted cases are never PASS.
 
@@ -61,3 +67,15 @@ Independent source and artifact/screenshot review and applicable exact-head CI
 remain required before either PR leaves Draft. Baseline/composition changes need
 renewed review and affected tests. This QA adds no production source, dependencies,
 permissions or secrets. Historical #77/#82/#108 holds remain excluded.
+
+## Native review HOLD and regression gate
+
+Independent screenshot review of the earlier harness found that missing-target
+and failed-read recovery left row 9 clipped outside the list at both viewports,
+despite its selected information card and Playwright isVisible() passing. Those
+four settled screenshots and earlier reports remain failure evidence, not native
+acceptance. The geometry gate above corrects this false-positive assertion.
+The independently reviewed source correction is now pinned to the exact repair
+commit/tree above. Native rerun and artifact/screenshot review remain pending;
+previous green reports cannot clear this HOLD. jsdom logic smoke cannot
+validate clipping or replace the native geometry/screenshot gate.

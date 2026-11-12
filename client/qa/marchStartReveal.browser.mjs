@@ -9,12 +9,12 @@ const client = resolve(import.meta.dirname, '..'), out = process.env.QA_OUT;
 assert.ok(out, 'QA_OUT required'); mkdirSync(out, { recursive: true });
 const git = (...args) => execFileSync('git', args, { cwd: client }).toString().trim();
 const baseline = process.env.QA_BASELINE === '1';
-const target = baseline ? 'b98b24b6833e06f1b3f965a4a77dedb2d876ae3f' : 'dafe0d70f75fec528be03b0711cbfe64076af6ee';
+const target = baseline ? 'b98b24b6833e06f1b3f965a4a77dedb2d876ae3f' : 'e3c848e4acdb10baef113c3df36b62f44cc86567';
 const tree = git('rev-parse', 'HEAD^{tree}');
 assert.equal(git('rev-parse', 'HEAD'), target);
-assert.equal(tree, baseline ? '6de1bb51739046120841d8af1ba824739320c754' : 'dc1b4eeb0df4fbf750ed7a1e0bd8cfeaed66c025');
+assert.equal(tree, baseline ? '6de1bb51739046120841d8af1ba824739320c754' : '0c41aa9a2e444e3af2f22fb540858291bdb68f76');
 const report = { target, tree, baseline, harness: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'),
-  boundary: 'Sandboxed native component integration, controlled scene shell and FIFO protobuf transport; no live backend or natural lifecycle.', cases: [], errors: [] };
+  boundary: 'Sandboxed native component integration, controlled scene shell and FIFO protobuf transport; no live backend or natural lifecycle.', cases: [], errors: [], geometry: [] };
 const port = 16528, url = `http://127.0.0.1:${port}`;
 const vite = spawn(process.execPath, ['node_modules/vite/bin/vite.js', '--host', '127.0.0.1', '--port', String(port), '--strictPort'],
   { cwd: client, stdio: ['ignore', openSync(out + '/vite.log', 'w'), 'inherit'] });
@@ -57,6 +57,35 @@ const list=(rows=[old,fresh],total=rows.length,code=0)=>reply('military.v1.ListM
 const start=()=>reply('military.v1.StartMarch',{march:fresh,city_troops:[{unit_cfg_id:1,count:10}]});
 window.qa={panel,scene,gateway,session,queue,sent,delivered,requests,old,fresh,list,start,openCenterPanel};
 panel.toggle();await list([old]);`;
+// Read-only geometry: Playwright isVisible() does not detect overflow clipping.
+const revealGeometry = row => {
+  const rect = r => ({left:r.left,top:r.top,right:r.right,bottom:r.bottom,width:r.width,height:r.height});
+  const bounds = rect(row.getBoundingClientRect()), viewport = {left:0,top:0,right:innerWidth,bottom:innerHeight};
+  const visible = {left:Math.max(bounds.left,0),top:Math.max(bounds.top,0),
+    right:Math.min(bounds.right,innerWidth),bottom:Math.min(bounds.bottom,innerHeight)};
+  const ancestors = [];
+  for(let el=row.parentElement;el;el=el.parentElement) {
+    const style=getComputedStyle(el), box=rect(el.getBoundingClientRect());
+    // client* is unscaled; bounding rectangles include layout-frame transforms.
+    const sx=el.offsetWidth ? box.width/el.offsetWidth : 1, sy=el.offsetHeight ? box.height/el.offsetHeight : 1;
+    const clip={left:box.left+el.clientLeft*sx,top:box.top+el.clientTop*sy,
+      right:box.left+(el.clientLeft+el.clientWidth)*sx,bottom:box.top+(el.clientTop+el.clientHeight)*sy};
+    const paint=/(paint|strict|content)/.test(style.contain);
+    const clipX=paint||/^(hidden|clip|auto|scroll|overlay)$/.test(style.overflowX);
+    const clipY=paint||/^(hidden|clip|auto|scroll|overlay)$/.test(style.overflowY);
+    if(clipX){visible.left=Math.max(visible.left,clip.left);visible.right=Math.min(visible.right,clip.right);}
+    if(clipY){visible.top=Math.max(visible.top,clip.top);visible.bottom=Math.min(visible.bottom,clip.bottom);}
+    ancestors.push({tag:el.tagName,id:el.id,role:el.getAttribute('data-role'),className:el.className,box,clip,
+      clipX,clipY,overflowX:style.overflowX,overflowY:style.overflowY,scrollTop:el.scrollTop,scrollLeft:el.scrollLeft,
+      scrollHeight:el.scrollHeight,scrollWidth:el.scrollWidth,clientHeight:el.clientHeight,clientWidth:el.clientWidth});
+  }
+  const width=Math.max(0,visible.right-visible.left),height=Math.max(0,visible.bottom-visible.top);
+  const areaRatio=bounds.width*bounds.height>0 ? width*height/(bounds.width*bounds.height) : 0;
+  // Require readable row content, not a 1px sliver or only its separate info card.
+  const meaningful=bounds.width>0&&bounds.height>0&&width>=bounds.width*0.9&&
+    height>=Math.min(bounds.height,32)&&areaRatio>=0.5;
+  return {bounds,viewport,visible:{...visible,width,height},areaRatio,meaningful,ancestors};
+};
 const staleModes = ['return', 'manual', 'world'];
 const modes = baseline ? staleModes : [...staleModes, 'compatible', 'missing', 'failure', 'filter', 'selection', 'close', 'back', 'peer', 'city', 'session', 'mount', 'no-presentation'];
 let browser;
@@ -135,6 +164,10 @@ try {
       if (['close','peer','mount','no-presentation'].includes(mode)) assert.equal(await page.evaluate(()=>qa.panel.isOpen()),false);
     } else {
       assert.equal(await row(9).isVisible(),true);assert.equal(await page.evaluate(()=>qa.panel.getSelectedMarchId()),9);
+      const geometry=await row(9).evaluate(revealGeometry);
+      report.geometry.push({width,height,mode,...geometry});
+      await page.screenshot({path:`${out}/${width}-${mode}-settled.png`});
+      assert.equal(geometry.meaningful,true,'selected row must meaningfully intersect viewport and every clipping ancestor');
       assert.match(await row(9).getAttribute('class'),/march-row-selected/);assert.match(await row(9).getAttribute('class'),/march-row-recent/);
       const after=await state();assert.equal(after.filter.etaSort,'eta_desc');
       if(mode==='compatible') assert.deepEqual(after,before);else assert.equal(after.filter.phase,'all');
