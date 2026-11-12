@@ -1,0 +1,68 @@
+name: Bag item icon browser QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/bag-item-icon-qa.yml'
+      - 'client/qa/bagItemIcon.browser.mjs'
+      - 'client/qa/BAG-ITEM-ICON-BROWSER.md'
+permissions:
+  contents: read
+jobs:
+  bag-item-icon-browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: ed32cae751646723ac242849f16a9acb034c8eb4
+            mode: candidate
+            baseline: 'false'
+          - target: 835d036e58c12b1fdc0aad69f1e02049481db364
+            mode: baseline
+            baseline: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: qa-source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.target }}
+          path: target
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 91f3080ac50cc1abb961dac9f50e99c9266a2b6e
+          path: candidate
+          sparse-checkout: docs/art/samples/art-item-icons-001
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: target/client/package-lock.json
+      - name: Install locked official Playwright and browser
+        working-directory: target/client
+        run: |
+          npm ci
+          npx --no-install playwright install --with-deps chromium
+      - name: Verify fixed inputs and run localhost fixture
+        working-directory: target/client
+        env:
+          QA_BASELINE: ${{ matrix.baseline }}
+          QA_OUT: ${{ github.workspace }}/evidence
+          QA_ITEM_ROOT: ${{ github.workspace }}/candidate/docs/art/samples/art-item-icons-001/textures
+        run: |
+          test "$(git rev-parse HEAD)" = ${{ matrix.target }}
+          test "$(git -C ../../candidate rev-parse HEAD)" = 91f3080ac50cc1abb961dac9f50e99c9266a2b6e
+          cp ../../qa-source/client/qa/bagItemIcon.browser.mjs qa/bagItemIcon.browser.mjs
+          node qa/bagItemIcon.browser.mjs
+      - name: Preserve screenshots and result even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bag-item-icon-browser-${{ matrix.mode }}-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 14
