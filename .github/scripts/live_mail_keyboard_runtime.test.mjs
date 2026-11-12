@@ -112,6 +112,7 @@ test('preflight retains only fixed checkpoints and safe command failure categori
   const report = {}; assert.equal(preflight(report, 'redis-info', () => 42), 42);
   assert.equal(report.phase, 'preflight-redis-info'); assert.throws(() => preflight(report, 'SECRET', () => {}));
   assert.equal(report.phase, 'preflight-redis-info');
+  for (const name of ['startup-enter', 'startup-mail', 'startup-settle', 'startup-identity', 'snapshot-health', 'snapshot-sql', 'snapshot-json', 'fixtures-begin']) assert.throws(() => preflight(report, name, () => { throw null; }), () => report.phase === `preflight-${name}`);
   const options = { signal: new AbortController().signal, deadline: Date.now() + 1000, execute() { throw Object.assign(new Error('SECRET'), { code: 'ENOENT' }); } };
   assert.throws(() => runCommand(options, 'redis-cli', [], '/repo'), error => error.message === 'MAIL_RUNTIME_COMMAND_ENOENT');
 });

@@ -110,7 +110,7 @@ export function verifyScenario(result, product, viewport, screenshots) {
 export function preflight(report, name, action) {
   check(['dependencies', 'node', 'redis-info', 'redis-empty', 'database', 'packages', 'go', 'postgres',
     'product-head', 'product-clean', 'manifest-load', 'manifest-inventory', 'manifest-bytes', 'provenance', 'empty-db',
-    'browser-launch', 'browser-connect', 'browser-cdp', 'browser-commandline', 'browser-args', 'browser-binary', 'browser-version', 'browser-sandbox-page', 'browser-sandbox-query', 'browser-sandbox-check', 'browser-evidence'].includes(name));
+    'browser-launch', 'browser-connect', 'browser-cdp', 'browser-commandline', 'browser-args', 'browser-binary', 'browser-version', 'browser-sandbox-page', 'browser-sandbox-query', 'browser-sandbox-check', 'browser-evidence', 'startup-enter', 'startup-mail', 'startup-settle', 'startup-identity', 'snapshot-health', 'snapshot-sql', 'snapshot-json', 'fixtures-begin'].includes(name));
   report.phase = `preflight-${name}`;
   return action();
 }
@@ -128,7 +128,7 @@ export async function withMailRuntime(scenario) {
     for (let i = 0; i < 150; i++) { healthy(); if (verifier.pendingCount === 0) return; await delay(100, undefined, { signal: controller.signal }); }
     fail();
   };
-  const snapshot = label => { healthy(); const value = JSON.parse(command('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-c', `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; ${MAIL_STATE_SQL}; COMMIT`])); report.snapshots.push({ label, value }); return value; };
+  const snapshot = label => { preflight(report, 'snapshot-health', healthy); const raw = preflight(report, 'snapshot-sql', () => command('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-c', `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; ${MAIL_STATE_SQL}; COMMIT`])); const value = preflight(report, 'snapshot-json', () => JSON.parse(raw)); report.snapshots.push({ label, value }); return value; };
   const start = (bin, args, name, cwd = root) => {
     healthy(); const child = spawn(bin, args, { cwd, env: { ...env, HTTP_ADDR: '127.0.0.1:8080' }, stdio: ['ignore', 'ignore', 'ignore'] });
     child.on('error', () => report.errors.push('OWNED_SERVICE_ERROR'));
@@ -208,8 +208,8 @@ export async function withMailRuntime(scenario) {
       report.phase = 'natural-startup'; await page.goto('http://127.0.0.1:5173');
       await page.locator('.server-list li[data-server-id="1"]').click();
       const action = name => page.locator(`[data-action="${name}"]`);
-      await action('enter-game').click(); await action('toggle-mail').waitFor(); await settle();
-      const identity = verifier.identity(); verifier.beginFixtures(snapshot('before-fixtures'));
+      await preflight(report, 'startup-enter', () => action('enter-game').click()); await preflight(report, 'startup-mail', () => action('toggle-mail').waitFor()); await preflight(report, 'startup-settle', settle);
+      const identity = preflight(report, 'startup-identity', () => verifier.identity()), initial = snapshot('before-fixtures'); preflight(report, 'fixtures-begin', () => verifier.beginFixtures(initial));
       report.phase = 'gm-fixtures'; const receipts = []; report.gm = [];
       for (const fixture of fixtureSpec) {
         healthy(); const before = await clock();
@@ -241,7 +241,7 @@ export async function withMailRuntime(scenario) {
       healthy(); report.phase = 'postconditions-complete';
     }, deadline - Date.now(), controller);
   } catch (error) {
-    report.errors.push(safeError(error, 'message', ['MAIL_RUNTIME_COMMAND_ENOENT', 'MAIL_RUNTIME_COMMAND_ETIMEDOUT'], 'RUNTIME_FAILED')); process.exitCode = 1;
+    report.errors.push(safeError(error, 'message', ['MAIL_RUNTIME_COMMAND_ENOENT', 'MAIL_RUNTIME_COMMAND_ETIMEDOUT', 'MAIL_RUNTIME_COMMAND_FAILED'], 'RUNTIME_FAILED')); process.exitCode = 1;
     if (page && canSave) try {
       if (await page.locator('input[type=password]').evaluateAll(elements => elements.every(element => element.value === '')))
         await page.screenshot({ path: path.join(out, 'failure.png'), timeout: 5000 });

@@ -9,8 +9,7 @@ Unchanged lifecycle exports/full tests come from7dc5939f. Pristine product tests
 byte/blob/head-verified staging. Every CDP frame is validated; GM brackets use CDP monotonic time.
 SQL uses REPEATABLE READ READ ONLY, including optional tables. Quiescent steps never retry uncertain actions.
 Complete scenario checks, active-capture browser closure, final SQL/trace seal and owned cleanup are mandatory.
-Evidence retains safe snapshots, receipts/brackets, verifier data, provenance and empty-password screenshots,
-never auth/session/trace IDs, raw frames or arbitrary errors. Preflight labels and failure categories are fixed.
-Nullish/accessor exceptions remain failures. Clean fixed runs are native-candidate/nativeAcceptance=false
-until independent artifact/visual review; baseline stays baseline-defect-control. Failures never imply acceptance.
+Evidence: safe snapshots, GM receipts/brackets, verifier data, provenance and empty-password screenshots; no auth/session/trace IDs, raw frames or arbitrary errors.
+Fixed checkpoints separate startup actions, identity, snapshot health/SQL/JSON and fixture validation; nullish/accessor throws fail closed.
+Clean fixed runs require independent artifact/visual review: native-candidate/nativeAcceptance=false; baseline stays baseline-defect-control, failures never imply acceptance.
 Runtime controls, unchanged helper tests, combined CI and all four native cells remain required gates.
