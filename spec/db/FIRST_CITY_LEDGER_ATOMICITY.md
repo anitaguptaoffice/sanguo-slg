@@ -37,3 +37,8 @@ GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_atomicity
 ```
 
 Record `SHOW server_version` and each `PASS atomicity:` line. Does not certify any target realm or complete §11 product acceptance.
+
+## Follow-on
+
+INITIAL intake arbitration (CITY_CREATION_RECOVERY §5 / §11 INITIAL row): [SPEC-FIRST-CITY-LEDGER-INITIAL-001](FIRST_CITY_LEDGER_INITIAL.md) (`first_city_ledger_initial`).
+Absence / retention/cutover / native browser — separate SPEC cards.
