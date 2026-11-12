@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>热血三国 - GM 管理后台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #1a1d29;
+    color: #e6e9f0;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #232741, #2b3050);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(0,0,0,.4);
+    position: sticky; top: 0; z-index: 10;
+  }
+  header h1 { font-size: 20px; letter-spacing: 2px; }
+  header h1 span { color: #e8b34b; }
+  header .status { font-size: 13px; color: #9aa2bd; }
+  header .status b { color: #5fd07e; }
+  .tabs { display: flex; gap: 8px; padding: 14px 28px 0; }
+  .tabs button {
+    background: #2b3050; color: #c3c9dd; border: none;
+    padding: 9px 20px; border-radius: 8px 8px 0 0;
+    cursor: pointer; font-size: 14px;
+  }
+  .tabs button.active { background: #3a4168; color: #fff; }
+  main { padding: 20px 28px; max-width: 1280px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .card {
+    background: #232741; border-radius: 12px;
+    padding: 20px; margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.25);
+  }
+  .card h3 { font-size: 15px; margin-bottom: 14px; color: #e8b34b; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=password], input[type=number], select {
+    background: #2b3050; border: 1px solid #454c77; color: #e6e9f0;
+    padding: 9px 12px; border-radius: 8px; font-size: 14px; outline: none;
+    min-width: 160px;
+  }
+  input:focus, select:focus { border-color: #e8b34b; }
+  button.primary {
+    background: #e8b34b; color: #1a1d29; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px;
+    cursor: pointer; font-weight: 600;
+  }
+  button.primary:hover { background: #f0c261; }
+  button.danger {
+    background: #b34b4b; color: #fff; border: none;
+    padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  button.danger:hover { background: #c95a5a; }
+  button.small {
+    background: #454c77; color: #fff; border: none;
+    padding: 6px 12px; border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  button.small:hover { background: #55609a; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 14px; }
+  th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid #333a5c; }
+  th { color: #9aa2bd; font-weight: 500; background: #1f2338; }
+  tr:hover td { background: #2b3050; }
+  .result-box {
+    margin-top: 14px; background: #1f2338; border-radius: 8px;
+    padding: 14px; font-size: 13px; color: #9aa2bd;
+    max-height: 320px; overflow: auto; white-space: pre-wrap;
+  }
+  .msg { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-radius: 6px; display: none; }
+  .msg.ok { display: block; background: #1e3a2a; color: #7fdba3; }
+  .msg.err { display: block; background: #3a1e1e; color: #e08a8a; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* 分页 */
+  .pager { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 14px; font-size: 13px; color: #9aa2bd; }
+  .pager button {
+    background: #454c77; color: #fff; border: none;
+    padding: 5px 12px; border-radius: 6px; cursor: pointer;
+  }
+  .pager button:disabled { opacity: .4; cursor: not-allowed; }
+  .pager span b { color: #e8b34b; }
+  .tag-on { color: #5fd07e; font-weight: 600; }
+  .tag-off { color: #9aa2bd; }
+
+  /* 弹窗 */
+  .modal-mask {
+    display: none; position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #232741; border-radius: 12px; padding: 24px;
+    width: 420px; max-width: 92vw;
+    box-shadow: 0 8px 30px rgba(0,0,0,.5);
+  }
+  .modal h3 { font-size: 16px; color: #e8b34b; margin-bottom: 18px; }
+  .modal .field { margin-bottom: 14px; }
+  .modal .field label { display: block; font-size: 13px; color: #9aa2bd; margin-bottom: 6px; }
+  .modal .field input { width: 100%; }
+  .modal .field .hint { font-size: 12px; color: #6f7799; margin-top: 4px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* 登录 */
+  #login-mask {
+    display: flex; position: fixed; inset: 0; z-index: 300;
+    background: rgba(10,12,22,.93);
+    align-items: center; justify-content: center;
+  }
+  .login-box {
+    background: #232741; border-radius: 14px; padding: 34px;
+    width: 380px; max-width: 92vw;
+    box-shadow: 0 10px 40px rgba(0,0,0,.6);
+    text-align: center;
+  }
+  .login-box h2 { font-size: 20px; letter-spacing: 3px; margin-bottom: 4px; }
+  .login-box h2 span { color: #e8b34b; }
+  .login-box .sub { color: #9aa2bd; font-size: 13px; margin-bottom: 24px; }
+  .login-box .field { margin-bottom: 16px; text-align: left; }
+  .login-box .field label { display: block; font-size: 13px; color: #9aa2bd; margin-bottom: 6px; }
+  .login-box .field input { width: 100%; }
+  .login-box button { width: 100%; margin-top: 8px; }
+  .login-box .msg { text-align: center; }
+</style>
+</head>
+<body>
+<div id="login-mask">
+  <div class="login-box">
+    <h2>热血三国 <span>GM 管理后台</span></h2>
+    <div class="sub">请登录后操作</div>
+    <div class="field">
+      <label>账号</label>
+      <input type="text" id="login-username" placeholder="GM 账号" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input type="password" id="login-pwd" placeholder="密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="msg" id="login-msg"></div>
+    <button class="primary" onclick="doLogin()">登 录</button>
+  </div>
+</div>
+<header>
+  <h1>热血三国 <span>GM 管理后台</span></h1>
+  <div style="display:flex;align-items:center;gap:14px">
+    <div class="status">服务状态: <b>● 运行中</b></div>
+    <button class="small" id="btn-logout" onclick="doLogout()" style="display:none">退出登录</button>
+  </div>
+</header>
+<div class="tabs">
+  <button class="active" data-tab="player">玩家管理</button>
+  <button data-tab="announce">系统公告</button>
+  <button data-tab="config">配置表</button>
+  <button data-tab="settings">系统设置</button>
+</div>
+
+<main>
+  <!-- 玩家管理 -->
+  <div class="panel active" id="panel-player">
+    <div class="card">
+      <h3>玩家列表</h3>
+      <div class="row">
+        <input type="text" id="search-name" placeholder="君主名 / 通行证 / UID（模糊搜索）">
+        <button class="primary" onclick="searchPlayer()">搜索</button>
+        <button class="small" onclick="clearSearch()">清空</button>
+        <span style="flex:1"></span>
+        <button class="primary" onclick="openAddModal()">＋ 新增玩家</button>
+      </div>
+      <div class="msg" id="player-msg"></div>
+      <div id="player-list-box"></div>
+      <div class="pager" id="pager" style="display:none">
+        <button id="prev-page" onclick="goPage(currentPage-1)">上一页</button>
+        <span id="page-info"></span>
+        <button id="next-page" onclick="goPage(currentPage+1)">下一页</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>封禁 / 解封</h3>
+      <div class="row">
+        <input type="text" id="forbid-target" placeholder="君主名或 UID（多个用逗号分隔）">
+        <button class="danger" onclick="forbidPlayer()">封禁</button>
+        <button class="small" onclick="unforbidPlayer()">解封</button>
+        <span style="font-size:12px;color:#9aa2bd">封禁会同时踢下线并冻结资源产出</span>
+      </div>
+      <div class="msg" id="forbid-msg"></div>
+    </div>
+  </div>
+
+  <!-- 公告 -->
+  <div class="panel" id="panel-announce">
+    <div class="card">
+      <h3>当前登录公告</h3>
+      <button class="primary" onclick="loadAnnounce()">刷新公告</button>
+      <div class="result-box" id="announce-result">点击刷新查看当前登录公告内容。</div>
+    </div>
+  </div>
+
+  <!-- 配置表 -->
+  <div class="panel" id="panel-config">
+    <div class="card">
+      <h3>配置表浏览</h3>
+      <div class="row">
+        <select id="cfg-select">
+          <option value="things">cfg_things（物品）</option>
+          <option value="armor">cfg_armor（装备）</option>
+          <option value="goods">cfg_goods（商城）</option>
+        </select>
+        <input type="text" id="cfg-keyword" placeholder="名称模糊搜索" style="width:180px">
+        <button class="primary" onclick="loadCfg(1)">查询</button>
+        <span style="font-size:12px;color:#9aa2bd">分页浏览配置表数据，支持按名称搜索</span>
+      </div>
+      <div class="msg" id="cfg-msg"></div>
+      <div id="cfg-table-wrap" style="display:none">
+        <table>
+          <thead id="cfg-thead"></thead>
+          <tbody id="cfg-tbody"></tbody>
+        </table>
+        <div class="pager">
+          <button id="cfg-prev" onclick="cfgGo(cfgPage-1)">上一页</button>
+          <span id="cfg-page-info"></span>
+          <button id="cfg-next" onclick="cfgGo(cfgPage+1)">下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 系统设置 -->
+  <div class="panel" id="panel-settings">
+    <div class="card">
+      <h3>蛮夷地区开放设置</h3>
+      <div class="row">
+        <select id="province-open-select">
+          <option value="1">等级 1 - 仅羌</option>
+          <option value="2">等级 2 - 羌 + 南蛮</option>
+          <option value="3">等级 3 - 羌 + 南蛮 + 山越</option>
+          <option value="4">等级 4 - 羌 + 南蛮 + 山越 + 乌丸</option>
+          <option value="5">等级 5 - 全部开放</option>
+        </select>
+        <button class="primary" onclick="saveProvinceOpen()">保存设置</button>
+        <button class="small" onclick="loadProvinceOpen()">刷新</button>
+        <span style="font-size:12px;color:#9aa2bd">控制羌/南蛮/山越/乌丸/匈奴地图是否可攻击</span>
+      </div>
+      <div class="msg" id="province-open-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>史诗任务进度设置</h3>
+      <div class="row">
+        <span style="font-size:13px">黄巾之乱</span>
+        <select id="epic-huangjin">
+          <option value="-1">-1 未开启</option>
+          <option value="0">0 已开启</option>
+          <option value="1">1 已完成</option>
+        </select>
+        <span style="font-size:13px">讨伐董卓</span>
+        <select id="epic-dongzhuo">
+          <option value="0">0 未开启</option>
+          <option value="1">1 已开启</option>
+          <option value="2">2 十常侍完成</option>
+          <option value="3">3 讨伐完成</option>
+        </select>
+        <button class="primary" onclick="saveEpic()">保存设置</button>
+        <button class="small" onclick="loadEpic()">刷新</button>
+        <span style="font-size:12px;color:#9aa2bd">黄巾史诗完成后才能攻击县城等名城</span>
+      </div>
+      <div class="msg" id="epic-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>名城与活动开放设置</h3>
+      <div class="row">
+        <span style="font-size:13px">洛阳</span>
+        <select id="city-luoyang">
+          <option value="0">0 禁止</option>
+          <option value="1">1 开放</option>
+        </select>
+        <span style="font-size:13px">长安</span>
+        <select id="city-changan">
+          <option value="0">0 禁止</option>
+          <option value="1">1 开放</option>
+        </select>
+        <span style="font-size:13px">全民休战</span>
+        <select id="city-bidwar">
+          <option value="0">0 禁用</option>
+          <option value="1">1 启用</option>
+        </select>
+      </div>
+      <div class="row">
+        <span style="font-size:13px">休战开始时间戳</span>
+        <input type="text" id="city-bidwar-start" style="width:110px" placeholder="unix时间戳">
+        <span style="font-size:13px">休战结束时间戳</span>
+        <input type="text" id="city-bidwar-end" style="width:110px" placeholder="unix时间戳">
+        <button class="primary" onclick="saveCityOpen()">保存设置</button>
+        <button class="small" onclick="loadCityOpen()">刷新</button>
+      </div>
+      <div class="msg" id="city-open-msg"></div>
+    </div>
+  </div>
+</main>
+
+<!-- 新增玩家弹窗 -->
+<div class="modal-mask" id="add-modal">
+  <div class="modal">
+    <h3>新增玩家</h3>
+    <div class="field">
+      <label>玩家账号 *</label>
+      <input type="text" id="add-passport" placeholder="登录账号">
+    </div>
+    <div class="field">
+      <label>初始密码 *</label>
+      <input type="text" id="add-password" placeholder="至少 6 位">
+    </div>
+    <div class="field">
+      <label>君主名</label>
+      <input type="text" id="add-name" placeholder="留空则默认使用账号">
+      <div class="hint">创建后玩家登录进入建城引导，君主名可在游戏内修改</div>
+    </div>
+    <div class="msg" id="add-msg"></div>
+    <div class="modal-footer">
+      <button class="small" onclick="closeModal('add-modal')">取消</button>
+      <button class="primary" onclick="submitAdd()">确定新增</button>
+    </div>
+  </div>
+</div>
+
+<!-- 修改密码弹窗 -->
+<div class="modal-mask" id="pwd-modal">
+  <div class="modal">
+    <h3>修改密码 <span id="pwd-target" style="font-size:13px;color:#9aa2bd"></span></h3>
+    <div class="field">
+      <label>旧密码 *</label>
+      <input type="password" id="pwd-old" placeholder="输入当前密码">
+    </div>
+    <div class="field">
+      <label>新密码 *</label>
+      <input type="password" id="pwd-new" placeholder="至少 6 位">
+      <div class="hint">修改后玩家需使用新密码登录</div>
+    </div>
+    <div class="msg" id="pwd-msg"></div>
+    <div class="modal-footer">
+      <button class="small" onclick="closeModal('pwd-modal')">取消</button>
+      <button class="primary" onclick="submitPwd()">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 充值弹窗 -->
+<div class="modal-mask" id="recharge-modal">
+  <div class="modal">
+    <h3>玩家充值 <span id="rc-target" style="font-size:13px;color:#9aa2bd"></span></h3>
+    <div class="field">
+      <label>元宝</label>
+      <input type="number" id="rc-money" min="0" max="100000" value="0">
+    </div>
+    <div class="field">
+      <label>礼金</label>
+      <input type="number" id="rc-gift" min="0" max="100000" value="0">
+    </div>
+    <div class="field">
+      <label>五铢钱</label>
+      <input type="number" id="rc-wuzhu" min="0" max="100000" value="0">
+    </div>
+    <div class="field">
+      <label>铜钱</label>
+      <input type="number" id="rc-copper" min="0" max="100000" value="0">
+    </div>
+    <div class="hint" style="font-size:12px;color:#6f7799">各项数值范围 0 - 100000，填 0 表示不充</div>
+    <div class="msg" id="rc-msg"></div>
+    <div class="modal-footer">
+      <button class="small" onclick="closeModal('recharge-modal')">取消</button>
+      <button class="primary" onclick="submitRecharge()">确定充值</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'index.php?format=json&';
+let currentPage = 1;
+let currentKeyword = '';
+
+async function callApi(params) {
+  const url = API + new URLSearchParams(params).toString();
+  let resp;
+  try {
+    resp = await fetch(url, { credentials: 'same-origin' });
+  } catch (e) {
+    return { __text: '网络请求失败：' + (e && e.message ? e.message : String(e)) + '（请确认服务器可达后重试）' };
+  }
+  const text = await resp.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch (e) { return { __text: text }; }
+  if (data && data.error === 'not_login') {
+    showLogin('会话已过期，请重新登录');
+    return { __text: 'not_login' };
+  }
+  return data;
+}
+
+// ---------- 登录 ----------
+function showLogin(tip) {
+  document.getElementById('login-mask').style.display = 'flex';
+  document.getElementById('btn-logout').style.display = 'none';
+  if (tip) {
+    const msg = document.getElementById('login-msg');
+    msg.className = 'msg err';
+    msg.textContent = tip;
+  }
+}
+
+function hideLogin() {
+  document.getElementById('login-mask').style.display = 'none';
+  document.getElementById('btn-logout').style.display = '';
+  document.getElementById('login-pwd').value = '';
+}
+
+async function checkLogin() {
+  try {
+    const resp = await fetch(API + 'module=login&action=check', { credentials: 'same-origin' });
+    const data = await resp.json();
+    if (data && data[0] && data[0].status === 'ok') {
+      hideLogin();
+      initLoad();
+    }
+  } catch (e) { /* 保持登录界面 */ }
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const pwd = document.getElementById('login-pwd').value;
+  const msg = document.getElementById('login-msg');
+  if (!username || !pwd) {
+    msg.className = 'msg err';
+    msg.textContent = '请输入账号和密码';
+    return;
+  }
+  msg.className = 'msg';
+  msg.textContent = '登录中...';
+  try {
+    const resp = await fetch(API + 'module=login&action=login', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      body: new URLSearchParams({ username: username, pwd: pwd }).toString()
+    });
+    const data = await resp.json();
+    if (data && data[0] && data[0].status === 'success') {
+      hideLogin();
+      initLoad();
+    } else {
+      msg.className = 'msg err';
+      msg.textContent = '用户名或密码错误';
+    }
+  } catch (e) {
+    msg.className = 'msg err';
+    msg.textContent = '登录请求失败';
+  }
+}
+
+async function doLogout() {
+  await fetch(API + 'module=login&action=logout', { credentials: 'same-origin' });
+  showLogin();
+}
+
+function initLoad() {
+  loadUserList(1);
+  loadProvinceOpen();
+  loadEpic();
+  loadCityOpen();
+}
+
+function showMsg(el, text, ok) {
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+}
+
+// ---------- 玩家列表 ----------
+async function loadUserList(page) {
+  currentPage = page || 1;
+  const msg = document.getElementById('player-msg');
+  const box = document.getElementById('player-list-box');
+  msg.className = 'msg';
+  msg.textContent = '加载中...';
+  const params = { module: 'game', action: 'user_list', page: currentPage };
+  if (currentKeyword) params.keyword = currentKeyword;
+  const data = await callApi(params);
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const list = data.list || [];
+  const total = data.total || 0;
+  msg.className = 'msg';
+  msg.textContent = '';
+  if (!list.length) {
+    box.innerHTML = '<div class="result-box">暂无玩家数据</div>';
+    document.getElementById('pager').style.display = 'none';
+    return;
+  }
+  let html = '<table><thead><tr><th>UID</th><th>君主名</th><th>通行证</th><th>状态</th><th>元宝</th><th>礼金</th><th>铜钱</th><th>声望</th><th>注册时间</th><th>操作</th></tr></thead><tbody>';
+  list.forEach(u => {
+    const isDeleted = String(u.state) === '4';
+    const stateHtml = isDeleted
+      ? '<span style="color:#e5484d">删号</span>'
+      : (u.state_name || u.state);
+    let opsHtml = '';
+    if (isDeleted) {
+      opsHtml = `<button class="primary" style="padding:4px 10px;font-size:12px" onclick="restorePlayer(${u.uid},'${u.name}')">恢复</button>`;
+    } else {
+      opsHtml = `
+        <button class="primary" style="padding:4px 10px;font-size:12px" onclick="openRechargeModal('${u.uid}','${u.name}')">充值</button>
+        <button class="small" onclick="openPwdModal('${u.uid}','${u.name}')">改密</button>
+        <button class="danger" onclick="deletePlayer(${u.uid},'${u.name}')">删除</button>
+        <button class="danger" onclick="quickForbid('${u.uid}')">封禁</button>
+        <button class="small" onclick="quickUnforbid('${u.uid}')">解封</button>`;
+    }
+    html += `<tr>
+      <td>${u.uid}</td><td>${u.name}</td><td>${u.passport}</td><td>${stateHtml}</td>
+      <td>${u.money}</td><td>${u.gift}</td><td>${u.copper ?? 0}</td><td>${u.prestige}</td><td>${u.regtime_text}</td>
+      <td>${opsHtml}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  box.innerHTML = html;
+
+  const totalPages = Math.max(1, Math.ceil(total / (data.pagesize || 10)));
+  document.getElementById('page-info').innerHTML = `共 <b>${total}</b> 条，第 <b>${currentPage}</b> / ${totalPages} 页`;
+  document.getElementById('prev-page').disabled = currentPage <= 1;
+  document.getElementById('next-page').disabled = currentPage >= totalPages;
+  document.getElementById('pager').style.display = 'flex';
+}
+
+function goPage(p) { if (p >= 1) loadUserList(p); }
+
+async function searchPlayer() {
+  currentKeyword = document.getElementById('search-name').value.trim();
+  loadUserList(1);
+}
+
+function clearSearch() {
+  document.getElementById('search-name').value = '';
+  currentKeyword = '';
+  loadUserList(1);
+}
+
+// ---------- 新增玩家 ----------
+function openAddModal() {
+  document.getElementById('add-passport').value = '';
+  document.getElementById('add-password').value = '';
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-msg').className = 'msg';
+  document.getElementById('add-modal').classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+async function submitAdd() {
+  const passport = document.getElementById('add-passport').value.trim();
+  const password = document.getElementById('add-password').value.trim();
+  const name = document.getElementById('add-name').value.trim();
+  const msg = document.getElementById('add-msg');
+  if (!passport) { showMsg(msg, '请输入玩家账号', false); return; }
+  if (!password || password.length < 6) { showMsg(msg, '初始密码至少 6 位', false); return; }
+  msg.className = 'msg';
+  msg.textContent = '创建中...';
+  const data = await callApi({ module: 'game', action: 'add_user', passport: passport, password: password, name: name });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  if (/成功/.test(line)) {
+    showMsg(msg, line, true);
+    setTimeout(() => closeModal('add-modal'), 1200);
+    loadUserList(1);
+  } else {
+    showMsg(msg, line || JSON.stringify(data), false);
+  }
+}
+
+// ---------- 充值 ----------
+let rechargeUid = 0;
+function openRechargeModal(uid, name) {
+  rechargeUid = uid;
+  document.getElementById('rc-target').textContent = `- ${name} (UID ${uid})`;
+  ['rc-money', 'rc-gift', 'rc-wuzhu', 'rc-copper'].forEach(id => document.getElementById(id).value = 0);
+  document.getElementById('rc-msg').className = 'msg';
+  document.getElementById('recharge-modal').classList.add('show');
+}
+
+async function submitRecharge() {
+  const msg = document.getElementById('rc-msg');
+  const money  = parseInt(document.getElementById('rc-money').value)  || 0;
+  const gift   = parseInt(document.getElementById('rc-gift').value)   || 0;
+  const wuzhu  = parseInt(document.getElementById('rc-wuzhu').value)  || 0;
+  const copper = parseInt(document.getElementById('rc-copper').value) || 0;
+  const vals = [money, gift, wuzhu, copper];
+  if (vals.some(v => v < 0 || v > 100000)) { showMsg(msg, '数值必须在 0 - 100000 之间', false); return; }
+  if (vals.every(v => v === 0)) { showMsg(msg, '请至少填写一项', false); return; }
+  msg.className = 'msg';
+  msg.textContent = '充值中...';
+  const data = await callApi({
+    module: 'game', action: 'recharge', uid: rechargeUid,
+    money: money, gift: gift, wuzhu: wuzhu, copper: copper
+  });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  if (/成功/.test(line)) {
+    showMsg(msg, line, true);
+    setTimeout(() => closeModal('recharge-modal'), 1200);
+    loadUserList(currentPage);
+  } else {
+    showMsg(msg, line || JSON.stringify(data), false);
+  }
+}
+
+// ---------- 删除/恢复玩家 ----------
+async function deletePlayer(uid, name) {
+  if (!confirm(`确定要删除玩家「${name}」(UID ${uid}) 吗？\n\n删除后将无法登录（软删号），可在玩家列表中恢复。`)) return;
+  const msg = document.getElementById('player-msg');
+  msg.className = 'msg';
+  msg.textContent = '删除中...';
+  const data = await callApi({ module: 'game', action: 'delete_user', uid: uid });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  if (/已删除/.test(line)) {
+    showMsg(msg, line, true);
+    loadUserList(currentPage);
+  } else {
+    showMsg(msg, line || JSON.stringify(data), false);
+  }
+}
+
+async function restorePlayer(uid, name) {
+  if (!confirm(`确定要恢复玩家「${name}」(UID ${uid}) 吗？\n\n恢复后可正常登录，登录密码将重置为 123456，可在恢复后修改。`)) return;
+  const msg = document.getElementById('player-msg');
+  msg.className = 'msg';
+  msg.textContent = '恢复中...';
+  const data = await callApi({ module: 'game', action: 'restore_user', uid: uid });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  if (/已恢复/.test(line)) {
+    showMsg(msg, line, true);
+    loadUserList(currentPage);
+  } else {
+    showMsg(msg, line || JSON.stringify(data), false);
+  }
+}
+
+// ---------- 修改密码 ----------
+let pwdUid = 0;
+function openPwdModal(uid, name) {
+  pwdUid = uid;
+  document.getElementById('pwd-target').textContent = `- ${name} (UID ${uid})`;
+  document.getElementById('pwd-old').value = '';
+  document.getElementById('pwd-new').value = '';
+  document.getElementById('pwd-msg').className = 'msg';
+  document.getElementById('pwd-modal').classList.add('show');
+}
+
+async function submitPwd() {
+  const oldP = document.getElementById('pwd-old').value.trim();
+  const newP = document.getElementById('pwd-new').value.trim();
+  const msg = document.getElementById('pwd-msg');
+  if (!oldP) { showMsg(msg, '请输入旧密码', false); return; }
+  if (!newP || newP.length < 6) { showMsg(msg, '新密码至少 6 位', false); return; }
+  if (newP === oldP) { showMsg(msg, '新密码不能与旧密码相同', false); return; }
+  msg.className = 'msg';
+  msg.textContent = '修改中...';
+  const data = await callApi({
+    module: 'game', action: 'change_password',
+    uid: pwdUid, old_password: oldP, new_password: newP
+  });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  if (/成功/.test(line)) {
+    showMsg(msg, line, true);
+    setTimeout(() => closeModal('pwd-modal'), 1200);
+  } else {
+    showMsg(msg, line || JSON.stringify(data), false);
+  }
+}
+
+// ---------- 封禁 ----------
+async function forbidPlayer() {
+  const target = document.getElementById('forbid-target').value.trim();
+  const msg = document.getElementById('forbid-msg');
+  if (!target) { showMsg(msg, '请输入君主名或 UID', false); return; }
+  const names = target.split(',').map(s => s.trim()).filter(s => /^\d+$/.test(s) === false).join('\n');
+  const uids  = target.split(',').map(s => s.trim()).filter(s => /^\d+$/.test(s)).join(',');
+  const data = await callApi({
+    module: 'game', action: 'forbiduser',
+    names: names, passports: '', delemail: 0, uids: uids
+  });
+  const lines = (data[0] || []).join('\n');
+  showMsg(msg, lines || JSON.stringify(data), !/不存在|异常|error/.test(lines));
+}
+
+async function unforbidPlayer() {
+  const target = document.getElementById('forbid-target').value.trim();
+  const msg = document.getElementById('forbid-msg');
+  if (!target) { showMsg(msg, '请输入君主名或 UID', false); return; }
+  const data = await callApi({ module: 'game', action: 'unforbiduser', uids: target });
+  const lines = (data[0] || []).join('\n');
+  showMsg(msg, lines || JSON.stringify(data), !/异常|error/.test(lines));
+}
+
+async function quickForbid(uid) {
+  document.getElementById('forbid-target').value = uid;
+  await forbidPlayer();
+}
+async function quickUnforbid(uid) {
+  document.getElementById('forbid-target').value = uid;
+  await unforbidPlayer();
+}
+
+// ---------- 公告 ----------
+async function loadAnnounce() {
+  const box = document.getElementById('announce-result');
+  box.textContent = '加载中...';
+  const data = await callApi({ module: 'announce', action: 'announce' });
+  if (data.__text) { box.textContent = '接口返回异常: ' + data.__text; return; }
+  box.textContent = data && typeof data === 'object'
+    ? Object.entries(data).map(([k, v]) => `${k}: ${v}`).join('\n')
+    : String(data);
+}
+
+// ---------- 配置表 ----------
+let cfgPage = 1;
+const cfgColumns = {
+  things: [['tid', 'ID'], ['name', '名称'], ['position', '位置'], ['inuse', '启用'], ['description', '描述']],
+  armor: [['id', 'ID'], ['name', '名称'], ['part', '部位'], ['type', '类型'], ['hero_level', '等级'], ['inuse', '启用'], ['description', '描述']],
+  goods: [['gid', 'ID'], ['name', '名称'], ['group', '分组'], ['value', '价值'], ['inuse', '启用'], ['description', '描述']],
+};
+
+async function loadCfg(page) {
+  cfgPage = page || 1;
+  const type = document.getElementById('cfg-select').value;
+  const keyword = document.getElementById('cfg-keyword').value.trim();
+  const msg = document.getElementById('cfg-msg');
+  const wrap = document.getElementById('cfg-table-wrap');
+  msg.className = 'msg';
+  msg.textContent = '加载中...';
+  const data = await callApi({
+    module: 'admin', action: 'find_cfg',
+    type: type, keyword: keyword, page: cfgPage, pagesize: 50
+  });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  if (data.error) { showMsg(msg, data.error, false); return; }
+  const list = data.list || [];
+  const total = data.total || 0;
+  if (!list.length) {
+    wrap.style.display = 'none';
+    showMsg(msg, total ? '该页无数据' : '未找到匹配记录', false);
+    return;
+  }
+  const cols = cfgColumns[type] || cfgColumns.things;
+  document.getElementById('cfg-thead').innerHTML =
+    '<tr>' + cols.map(c => '<th>' + c[1] + '</th>').join('') + '</tr>';
+  document.getElementById('cfg-tbody').innerHTML = list.map(row => {
+    return '<tr>' + cols.map(c => {
+      let v = row[c[0]];
+      if (c[0] === 'inuse') v = (String(v) === '1') ? '<span class="tag-on">启用</span>' : '<span class="tag-off">停用</span>';
+      else if (v === null || v === undefined || v === '') v = '-';
+      return '<td>' + v + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+  wrap.style.display = 'block';
+  const totalPages = Math.max(1, Math.ceil(total / (data.pagesize || 50)));
+  document.getElementById('cfg-page-info').innerHTML = `共 <b>${total}</b> 条，第 <b>${cfgPage}</b> / ${totalPages} 页`;
+  document.getElementById('cfg-prev').disabled = cfgPage <= 1;
+  document.getElementById('cfg-next').disabled = cfgPage >= totalPages;
+  msg.className = 'msg';
+  msg.textContent = '';
+}
+
+function cfgGo(p) { if (p >= 1) loadCfg(p); }
+
+// ---------- 蛮夷地区开放 ----------
+async function loadProvinceOpen() {
+  const msg = document.getElementById('province-open-msg');
+  const data = await callApi({ module: 'game', action: 'open_province' });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  const m = String(line).match(/等级\s*(\d)/);
+  if (m) document.getElementById('province-open-select').value = m[1];
+  showMsg(msg, line, true);
+}
+
+async function saveProvinceOpen() {
+  const msg = document.getElementById('province-open-msg');
+  const value = document.getElementById('province-open-select').value;
+  msg.className = 'msg';
+  msg.textContent = '保存中...';
+  const data = await callApi({ module: 'game', action: 'open_province', value: value });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const line = Array.isArray(data) ? (data[0] || '') : (data.error || JSON.stringify(data));
+  if (/已设置/.test(line)) {
+    showMsg(msg, line, true);
+  } else {
+    showMsg(msg, line || JSON.stringify(data), false);
+  }
+}
+
+// ---------- 史诗任务进度 ----------
+async function loadEpic() {
+  const msg = document.getElementById('epic-msg');
+  const data = await callApi({ module: 'game', action: 'set_epic' });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const lines = Array.isArray(data) ? data : [];
+  msg.className = 'msg';
+  msg.innerHTML = lines.map(l => '<div>' + l + '</div>').join('') || '（无数据）';
+  for (const l of lines) {
+    const m = String(l).match(/黄巾之乱史诗状态=(-?\d)/);
+    if (m) document.getElementById('epic-huangjin').value = m[1];
+    const m2 = String(l).match(/讨伐董卓史诗状态=(-?\d)/);
+    if (m2) document.getElementById('epic-dongzhuo').value = m2[1];
+  }
+}
+
+async function saveEpic() {
+  const msg = document.getElementById('epic-msg');
+  msg.className = 'msg';
+  msg.textContent = '保存中...';
+  const h = document.getElementById('epic-huangjin').value;
+  const d = document.getElementById('epic-dongzhuo').value;
+  await callApi({ module: 'game', action: 'set_epic', set: 1, state: 5, value: h });
+  await callApi({ module: 'game', action: 'set_epic', set: 1, state: 7, value: d });
+  await loadEpic();
+}
+
+// ---------- 名城与活动开放 ----------
+async function loadCityOpen() {
+  const msg = document.getElementById('city-open-msg');
+  const data = await callApi({ module: 'game', action: 'set_city_open' });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const lines = Array.isArray(data) ? data : [];
+  msg.className = 'msg';
+  msg.innerHTML = lines.map(l => '<div>' + l + '</div>').join('') || '（无数据）';
+  const kv = {};
+  for (const l of lines) {
+    const m = String(l).match(/^([^=]+)=(-?\d+)/);
+    if (m) kv[m[1]] = m[2];
+  }
+  if (kv['洛阳开放'] !== undefined) document.getElementById('city-luoyang').value = kv['洛阳开放'];
+  if (kv['长安开放'] !== undefined) document.getElementById('city-changan').value = kv['长安开放'];
+  if (kv['全民休战'] !== undefined) document.getElementById('city-bidwar').value = kv['全民休战'];
+  if (kv['休战开始时间戳'] !== undefined) document.getElementById('city-bidwar-start').value = kv['休战开始时间戳'];
+  if (kv['休战结束时间戳'] !== undefined) document.getElementById('city-bidwar-end').value = kv['休战结束时间戳'];
+}
+
+async function saveCityOpen() {
+  const msg = document.getElementById('city-open-msg');
+  msg.className = 'msg';
+  msg.textContent = '保存中...';
+  const data = await callApi({
+    module: 'game', action: 'set_city_open', set: 1,
+    luoyang: document.getElementById('city-luoyang').value,
+    changan: document.getElementById('city-changan').value,
+    bidwar: document.getElementById('city-bidwar').value,
+    start: document.getElementById('city-bidwar-start').value || '',
+    end: document.getElementById('city-bidwar-end').value || ''
+  });
+  if (data.__text) { showMsg(msg, '接口返回异常: ' + data.__text, false); return; }
+  const lines = Array.isArray(data) ? data : [];
+  const line0 = lines[0] || '';
+  if (/已保存/.test(line0)) {
+    showMsg(msg, lines.join('<br>'), true);
+  } else {
+    showMsg(msg, line0 || JSON.stringify(data), false);
+  }
+  await loadCityOpen();
+}
+
+// ---------- 选项卡 ----------
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// 弹窗遮罩点击关闭
+document.querySelectorAll('.modal-mask').forEach(mask => {
+  mask.addEventListener('click', e => { if (e.target === mask) mask.classList.remove('show'); });
+});
+
+// 先检查登录态，通过后再加载数据
+checkLogin();
+</script>
+</body>
+</html>
