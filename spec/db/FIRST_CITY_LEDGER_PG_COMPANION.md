@@ -260,6 +260,7 @@ Isolated PG17 acceptance: `go run ./spec/db/tests/first_city_ledger_race` with
 
 **SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001** frozen in [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md) (§3 intake slot/head CAS; `first_city_ledger_slot_cas`).
 **SPEC-FIRST-CITY-LEDGER-SLOT-ISOLATION-001** frozen in [FIRST_CITY_LEDGER_SLOT_ISOLATION.md](FIRST_CITY_LEDGER_SLOT_ISOLATION.md) (cross-actor intake isolation; `first_city_ledger_slot_isolation`).
+**SPEC-FIRST-CITY-LEDGER-ID-CONTENT-CONFLICT-001** frozen in [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md) (companion §3 ID/C1 conflict path; `first_city_ledger_id_content_conflict`).
 
 **Not frozen here:** restricted-role ACL, target-realm drain/fence execution.
 
@@ -283,4 +284,4 @@ races: [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md) / `first_city_ledg
 Full effect-path business races: [FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md) /
 `first_city_ledger_effect_path`. Slot/head intake CAS: [FIRST_CITY_LEDGER_SLOT_CAS.md](FIRST_CITY_LEDGER_SLOT_CAS.md) /
 `first_city_ledger_slot_cas`. Cross-actor slot isolation: [FIRST_CITY_LEDGER_SLOT_ISOLATION.md](FIRST_CITY_LEDGER_SLOT_ISOLATION.md) /
-`first_city_ledger_slot_isolation`.
+`first_city_ledger_slot_isolation`. ID/C1 conflict path: [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md) / `first_city_ledger_id_content_conflict`.

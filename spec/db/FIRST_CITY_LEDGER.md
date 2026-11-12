@@ -131,5 +131,7 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
    (`spec/db/tests/first_city_ledger_slot_cas`); does not certify any realm.
 8. **SPEC-FIRST-CITY-LEDGER-SLOT-ISOLATION-001** — frozen in
    [FIRST_CITY_LEDGER_SLOT_ISOLATION.md](FIRST_CITY_LEDGER_SLOT_ISOLATION.md); cross-actor slot isolation (`spec/db/tests/first_city_ledger_slot_isolation`); does not certify any realm.
+9. **SPEC-FIRST-CITY-LEDGER-ID-CONTENT-CONFLICT-001** — frozen in
+   [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md); same-PK `ID_CONTENT_CONFLICT` / same-C1 COMMAND (`spec/db/tests/first_city_ledger_id_content_conflict`); does not certify any realm.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.
