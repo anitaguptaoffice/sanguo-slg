@@ -22,10 +22,15 @@ func testFirstCityV2Server(t *testing.T) *Server {
 
 func TestFirstCityV2Handlers(t *testing.T) {
 	t.Run("default-off", func(t *testing.T) {
-		resp := NewServer(nil, nil, nil, nil, nil).GatewayRouter().Dispatch(context.Background(),
-			&commonv1.ClientPacket{Route: RouteDiscoverFirstCityIntent, TraceId: "off"})
-		if resp.GetCode() != int32(commonv1.ErrorCode_COMMON_INVALID_PACKET) {
-			t.Fatalf("route %+v", resp)
+		router := NewServer(nil, nil, nil, nil, nil).GatewayRouter()
+		for _, route := range []string{
+			RouteDiscoverFirstCityIntent, RouteSubmitFirstCity,
+			RouteContinueFirstCity, RouteGetFirstCityResult,
+		} {
+			resp := router.Dispatch(context.Background(), &commonv1.ClientPacket{Route: route, TraceId: "off"})
+			if resp.GetCode() != int32(commonv1.ErrorCode_COMMON_INVALID_PACKET) {
+				t.Fatalf("route %s %+v", route, resp)
+			}
 		}
 	})
 	bind := func(s *Server) func(trace string, payload []byte) *commonv1.ClientPacket {

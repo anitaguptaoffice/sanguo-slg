@@ -103,6 +103,22 @@ func headAcceptsProposal(head *worldv1.FirstCityRecord, proposal *worldv1.FirstC
 	return nil
 }
 
+// installTestRecord seeds ledger state for package tests only.
+func (l *memFirstCityLedger) installTestRecord(scope *worldv1.FirstCityScope, record *worldv1.FirstCityRecord) {
+	key, ok := slotKeyFromScope(scope)
+	if !ok || record == nil || record.GetCanonical() == nil {
+		return
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.byID[key] == nil {
+		l.byID[key] = make(map[string]*worldv1.FirstCityRecord)
+	}
+	id := record.GetCanonical().GetProposal().GetCommandId()
+	l.byID[key][id] = record
+	l.head[key] = record
+}
+
 func protoEqualRecord(a, b *worldv1.FirstCityRecord) bool {
 	if a == nil || b == nil || a.GetCanonical() == nil || b.GetCanonical() == nil {
 		return false

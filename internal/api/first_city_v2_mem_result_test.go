@@ -73,6 +73,94 @@ func TestFirstCityV2ContinueNotObserved(t *testing.T) {
 	}
 }
 
+func TestFirstCityV2ContinueContentConflict(t *testing.T) {
+	s := testFirstCityV2Persisted(t)
+	s.sessions.Bind("sess-fc", PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8})
+	scope := derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm)
+	cmd := "66666666-6666-4666-8666-666666666666"
+	name, x, y := "城", int32(0), int32(0)
+	prop := &worldv1.FirstCityProposal{
+		CommandId: cmd,
+		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+		Name: &name, X: &x, Y: &y,
+	}
+	sub, _ := marshal(&worldv1.SubmitFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+	pkt := &commonv1.ClientPacket{TraceId: "s", SessionId: "sess-fc", ServerId: 1, Payload: sub}
+	if out, _ := s.handleSubmitFirstCity(context.Background(), pkt); out.GetCode() != 0 {
+		t.Fatal(out)
+	}
+	y = 1
+	prop.Y = &y
+	cont, _ := marshal(&worldv1.ContinueFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+	pkt.Payload = cont
+	out, _ := s.handleContinueFirstCity(context.Background(), pkt)
+	var body worldv1.ContinueFirstCityResponse
+	_ = unmarshal(out.GetData(), &body)
+	if body.GetOutcome().GetKind() != worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_ID_CONTENT_CONFLICT {
+		t.Fatalf("continue conflict %+v", body.GetOutcome())
+	}
+}
+
+func TestFirstCityV2ContinueTerminalCommand(t *testing.T) {
+	scope := derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm)
+	tpl := &worldv1.FirstCityTemplateRef{
+		TemplateVersion: "dom-first-city-1", RulesVersion: "first-city-rules-1", CatalogVersion: "dom-default-1",
+		ContentEncodingVersion: 1, ContentSha256: make([]byte, 32),
+	}
+	for name, terminal := range map[string]func(string, *worldv1.FirstCityProposal) *worldv1.FirstCityRecord{
+		"rejected": func(id string, prop *worldv1.FirstCityProposal) *worldv1.FirstCityRecord {
+			canon, _ := firstCityCanonicalMessage(scope, prop)
+			return &worldv1.FirstCityRecord{
+				Canonical: canon, Template: tpl,
+				State: &worldv1.FirstCityRecord_RejectedNoEffect{
+					RejectedNoEffect: &worldv1.FirstCityRejection{Reason: worldv1.FirstCityRejectionReason_FIRST_CITY_REJECTION_TERRAIN},
+				},
+			}
+		},
+		"succeeded": func(id string, prop *worldv1.FirstCityProposal) *worldv1.FirstCityRecord {
+			canon, _ := firstCityCanonicalMessage(scope, prop)
+			capital, wall, morale := true, int32(1), int32(100)
+			return &worldv1.FirstCityRecord{
+				Canonical: canon, Template: tpl,
+				State: &worldv1.FirstCityRecord_Succeeded{Succeeded: &worldv1.FirstCitySuccess{
+					CityId: 42, ServerId: 1, PlayerId: 9, IsCapital: &capital, WallLevel: &wall, Morale: &morale,
+				}},
+			}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			s := testFirstCityV2Persisted(t)
+			s.sessions.Bind("sess-fc", PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8})
+			cmd := map[string]string{"rejected": "77777777-7777-4777-8777-777777777777", "succeeded": "88888888-8888-4888-8888-888888888888"}[name]
+			n, x, y := "城", int32(3), int32(4)
+			prop := &worldv1.FirstCityProposal{
+				CommandId: cmd,
+				Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+				Name: &n, X: &x, Y: &y,
+			}
+			ledger := s.firstCityV2Ledger.(*memFirstCityLedger)
+			ledger.installTestRecord(scope, terminal(cmd, prop))
+			cont, _ := marshal(&worldv1.ContinueFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+			out, _ := s.handleContinueFirstCity(context.Background(), &commonv1.ClientPacket{
+				TraceId: name, SessionId: "sess-fc", ServerId: 1, Payload: cont,
+			})
+			var body worldv1.ContinueFirstCityResponse
+			_ = unmarshal(out.GetData(), &body)
+			if body.GetOutcome().GetKind() != worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_COMMAND {
+				t.Fatalf("kind %+v", body.GetOutcome())
+			}
+			rec := body.GetOutcome().GetCommand()
+			if name == "rejected" {
+				if rec.GetRejectedNoEffect() == nil || rec.GetPending() != nil || rec.GetSucceeded() != nil {
+					t.Fatal("expected rejected terminal")
+				}
+			} else if rec.GetSucceeded() == nil || rec.GetPending() != nil {
+				t.Fatal("expected succeeded terminal")
+			}
+		})
+	}
+}
+
 func TestFirstCityV2ResultUnavailableWithoutLedger(t *testing.T) {
 	s := testFirstCityV2Server(t)
 	s.sessions.Bind("sess-fc", PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8})
@@ -80,6 +168,19 @@ func TestFirstCityV2ResultUnavailableWithoutLedger(t *testing.T) {
 	get, _ := marshal(&worldv1.GetFirstCityResultRequest{ExpectedScope: scope, CommandId: "55555555-5555-4555-8555-555555555555"})
 	out, _ := s.handleGetFirstCityResult(context.Background(), &commonv1.ClientPacket{
 		SessionId: "sess-fc", ServerId: 1, TraceId: "g", Payload: get,
+	})
+	if out.GetCode() != int32(commonv1.ErrorCode_COMMON_UNAVAILABLE) {
+		t.Fatal(out)
+	}
+	name, x, y := "城", int32(0), int32(0)
+	prop := &worldv1.FirstCityProposal{
+		CommandId: "99999999-9999-4999-8999-999999999999",
+		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+		Name: &name, X: &x, Y: &y,
+	}
+	cont, _ := marshal(&worldv1.ContinueFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+	out, _ = s.handleContinueFirstCity(context.Background(), &commonv1.ClientPacket{
+		SessionId: "sess-fc", ServerId: 1, TraceId: "c", Payload: cont,
 	})
 	if out.GetCode() != int32(commonv1.ErrorCode_COMMON_UNAVAILABLE) {
 		t.Fatal(out)
