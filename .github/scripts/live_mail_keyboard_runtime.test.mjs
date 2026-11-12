@@ -1,8 +1,9 @@
+import { MAIL_STATE_SQL } from './mail_keyboard_state.mjs';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { createFrameCapture, fixtureSpec, mailCommandArgs, parseGmOutput, preflight, runCommand, safeError, validateEnvironment, verifyScenario, verifyStaging } from './live_mail_keyboard_runtime.mjs';
+import { createFrameCapture, fixtureSpec, mailCommandArgs, parseGmOutput, preflight, runCommand, safeError, snapshotArgs, validateEnvironment, verifyScenario, verifyStaging } from './live_mail_keyboard_runtime.mjs';
 const head = 'a'.repeat(40), root = '/tmp/runner/mail';
 const env = { GITHUB_ACTIONS: 'true', QA_WIDTH: '1280', QA_PRODUCT: 'fixed', PGHOST: '127.0.0.1', PGPORT: '5432', PGDATABASE: 'live_mail_keyboard',
   DATABASE_URL: 'postgres://sanguo:sanguo@127.0.0.1:5432/live_mail_keyboard', REDIS_ADDR: '127.0.0.1:6379', RUNNER_TEMP: '/tmp/runner',
@@ -81,6 +82,7 @@ test('fixture contract and explicit no acceptance before independent review', ()
   assert.deepEqual(fixtureSpec.map(r => r.attachments.items?.length ?? 0), [1, 0, 0, 0]);
   const source = readFileSync(new URL('./live_mail_keyboard_runtime.mjs', import.meta.url), 'utf8');
   assert.ok(source.includes('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY'));
+  assert.deepEqual(snapshotArgs(), ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-c', 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY', '-c', MAIL_STATE_SQL, '-c', 'COMMIT']);
   assert.equal(source.includes('nativeAcceptance = true'), false);
   assert.match(source, /launchServer\(\{ channel: 'chromium', headless: true, chromiumSandbox: true,/);
 });

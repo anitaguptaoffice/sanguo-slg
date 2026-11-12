@@ -88,6 +88,7 @@ export function verifyStaging(manifest, staged, env) {
     check(createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex') === row.sourceBlob);
   }
 }
+export const snapshotArgs = () => ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-c', 'BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY', '-c', MAIL_STATE_SQL, '-c', 'COMMIT'];
 export function safeError(error, field, allowed, fallback) {
   try { const value = error?.[field]; return allowed.includes(value) ? value : fallback; }
   catch { return fallback; }
@@ -128,7 +129,7 @@ export async function withMailRuntime(scenario) {
     for (let i = 0; i < 150; i++) { healthy(); if (verifier.pendingCount === 0) return; await delay(100, undefined, { signal: controller.signal }); }
     fail();
   };
-  const snapshot = label => { preflight(report, 'snapshot-health', healthy); const raw = preflight(report, 'snapshot-sql', () => command('psql', ['-X', '-qAt', '-v', 'ON_ERROR_STOP=1', '-c', `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; ${MAIL_STATE_SQL}; COMMIT`])); const value = preflight(report, 'snapshot-json', () => JSON.parse(raw)); report.snapshots.push({ label, value }); return value; };
+  const snapshot = label => { preflight(report, 'snapshot-health', healthy); const raw = preflight(report, 'snapshot-sql', () => command('psql', snapshotArgs())); const value = preflight(report, 'snapshot-json', () => JSON.parse(raw)); report.snapshots.push({ label, value }); return value; };
   const start = (bin, args, name, cwd = root) => {
     healthy(); const child = spawn(bin, args, { cwd, env: { ...env, HTTP_ADDR: '127.0.0.1:8080' }, stdio: ['ignore', 'ignore', 'ignore'] });
     child.on('error', () => report.errors.push('OWNED_SERVICE_ERROR'));
