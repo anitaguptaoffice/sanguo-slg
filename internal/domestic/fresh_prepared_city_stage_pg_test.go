@@ -1,9 +1,11 @@
 // DOM-FRESH-PREPARED-CITY-STAGE-PG-001: PG QA for PreparedCity Stage/Publish only.
 // Product base: 15222d663edc3bd9b84e5e884dc77e4bb7e538c6 on branch cursor/dom-fresh-prepared-city-001-384a.
+// Actor locks and WORLD/MIL prerequisites here are a controlled fixture subset, not ACCOUNT/APP enrollment.
 package domestic
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -94,6 +96,7 @@ func preparedCityStageStack(t *testing.T, ctx context.Context) *preparedCityStag
 	return &preparedCityStageEnv{f, w, m}
 }
 
+// preparedCityStageActorLocks mirrors march/world PG tests only; not production ACCOUNT participant wiring.
 func preparedCityStageActorLocks(ctx context.Context, a *recruittx.Access, b *recruittx.Binding, schema string) error {
 	q := func(name string) string { return pgx.Identifier{schema, name}.Sanitize() }
 	if _, err := a.Exec(ctx, b, "LOCK TABLE "+q("account")+","+q("player")+" IN ROW SHARE MODE"); err != nil {
@@ -181,6 +184,15 @@ func TestPGPreparedCityStageQAFlow(t *testing.T) {
 		if err := o.Commit(ctx); err != nil {
 			t.Fatal(err)
 		}
+		wantAt := at.UTC().Truncate(time.Microsecond)
+		wantSub := int16(at.Nanosecond() % 1000)
+		cpTab := pgx.Identifier{stack.profile.SchemaName, "city_production_checkpoint"}.Sanitize()
+		var cpPlayer int64
+		var settled time.Time
+		var sub int16
+		if err := stack.pool.QueryRow(ctx, "SELECT player_id,settled_at,settled_submicro_ns FROM "+cpTab+" WHERE server_id=1 AND city_id=$1", identity.CityID).Scan(&cpPlayer, &settled, &sub); err != nil || cpPlayer != 7 || !settled.Equal(wantAt) || sub != wantSub {
+			t.Fatal("checkpoint row", cpPlayer, settled, sub, wantAt, wantSub, err)
+		}
 		if err := pc.Publish(); err != nil {
 			t.Fatal(err)
 		}
@@ -257,6 +269,9 @@ func TestPGPreparedCityStageQAFlow(t *testing.T) {
 		if pc.stagedOnce.Load() {
 			t.Fatal("stagedOnce set on failed stage")
 		}
+		if _, err := init.Consume(ctx, a); !errors.Is(err, march.ErrInitializedCityProof) {
+			t.Fatalf("double consume want %v got %v", march.ErrInitializedCityProof, err)
+		}
 		if err := o.Rollback(ctx); err != nil {
 			t.Fatal(err)
 		}
@@ -267,9 +282,6 @@ func TestPGPreparedCityStageQAFlow(t *testing.T) {
 		}
 		if !stack.source.state.retired.Load() {
 			t.Fatal("catalog fault did not retire source")
-		}
-		if _, err := init.Consume(ctx, a); err == nil {
-			t.Fatal("double consume admitted")
 		}
 		fresh := preparedCityStageStack(t, ctx)
 		o2, a2 := recruitWalletBegin(t, ctx, fresh.binding)
