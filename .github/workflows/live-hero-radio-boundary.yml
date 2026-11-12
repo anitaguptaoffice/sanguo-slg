@@ -1,0 +1,186 @@
+name: Live hero radio boundary acceptance
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-hero-radio-boundary.yml'
+      - '.github/scripts/live_hero_radio_boundary.mjs'
+      - '.github/scripts/LIVE_HERO_RADIO_BOUNDARY.md'
+permissions:
+  contents: read
+jobs:
+  live-hero-radio:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        width: [1280, 1600]
+        variant: [baseline, fixed]
+        include:
+          - variant: baseline
+            head: d9c84df4b99794f6a8743bcfc7406ef09971bfaf
+            tree: 168afef7629f86ec028bc2882ee74b15220d9b3a
+            parents: 5154d2a44da69e22baa1188e8a3019603b9e6601
+          - variant: fixed
+            head: 55f0253b2246616b4d1e5f3c8b902a798236a36e
+            tree: 2ecf0f945fc333183805693268806d404f018fc4
+            parents: d9c84df4b99794f6a8743bcfc7406ef09971bfaf
+    env:
+      QA_WIDTH: ${{ matrix.width }}
+      QA_VARIANT: ${{ matrix.variant }}
+      QA_PRODUCT: standalone
+      QA_PRODUCT_HEAD: ${{ matrix.head }}
+      QA_PRODUCT_TREE: ${{ matrix.tree }}
+      QA_PRODUCT_PARENTS: ${{ matrix.parents }}
+      QA_RUNTIME_HEAD: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+      QA_RUNTIME_TREE: dc151c5513ea2a2d937e45d4dee12d9f59792c7e
+      QA_RUNTIME_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+      QA_GEOMETRY_HEAD: 283160ae6f9970ff396383ae6815ed9783c64753
+      QA_GEOMETRY_TREE: 5a731de39fec4e35ea120f83492f8d5c93bf4841
+      QA_GEOMETRY_PARENTS: 757e43a9f40d7c92ded6a536ec334de94d69ff6f
+      QA_COLLECTOR_HEAD: 3d62c3d100108b3f2430164ed7b140e4e6330011
+      QA_COLLECTOR_TREE: ac58ad83d44af9b4797f35cf76b180a3b7cad276
+      QA_COLLECTOR_PARENTS: cbdd409b66f48942071f8b793494d5f4af14d6a9
+      QA_REPLAY_HEAD: df9a0968a7d98cffbf2e78d3712b5e99f4c34f2e
+      QA_REPLAY_TREE: 4993ee8ff66861a766894a2e14ef5d6b854b4710
+      QA_REPLAY_PARENTS: cbdd409b66f48942071f8b793494d5f4af14d6a9
+      QA_OUT: ${{ github.workspace }}/evidence
+      QA_PROVENANCE: ${{ github.workspace }}/evidence/radio-provenance.json
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: live_hero_layout
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d live_hero_layout"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Initialize failure evidence
+        run: |
+          set -euo pipefail
+          mkdir -p evidence
+          printf '{"passed":false,"phase":"setup; inspect job logs"}\n' > evidence/preflight.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: qa-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.head }}
+          path: target
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_RUNTIME_HEAD }}
+          path: runtime-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_GEOMETRY_HEAD }}
+          path: geometry-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_COLLECTOR_HEAD }}
+          path: collector-source
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_REPLAY_HEAD }}
+          path: replay-source
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify exact reviewed inputs before copying any files
+        env:
+          QA_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, re, subprocess
+          provenance = {}
+          for name, directory in [('qa', 'qa-source'), ('product', 'target'), ('runtime', 'runtime-source'), ('geometry', 'geometry-source'), ('collector', 'collector-source'), ('replay', 'replay-source')]:
+              def git(*args): return subprocess.check_output(['git', '-C', directory, *args], text=True).strip()
+              actual = {'head': git('rev-parse', 'HEAD'), 'tree': git('rev-parse', 'HEAD^{tree}'), 'parents': git('show', '-s', '--format=%P', 'HEAD').split(), 'clean': not git('status', '--porcelain')}
+              expected_head = os.environ['QA_HEAD' if name == 'qa' else f'QA_{name.upper()}_HEAD']
+              assert re.fullmatch('[0-9a-f]{40}', expected_head) and actual['head'] == expected_head and actual['clean']
+              if name != 'qa':
+                  assert actual['tree'] == os.environ[f'QA_{name.upper()}_TREE']
+                  assert actual['parents'] == os.environ[f'QA_{name.upper()}_PARENTS'].split()
+              provenance[name] = actual
+          with open(os.environ['QA_PROVENANCE'], 'w') as output: json.dump(provenance, output, indent=2)
+          PY
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache-dependency-path: target/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache-dependency-path: target/client/package-lock.json
+      - name: Build actual service and test full client and unchanged helpers
+        timeout-minutes: 10
+        working-directory: target
+        env:
+          GOTOOLCHAIN: local
+          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+        run: |
+          set -euo pipefail
+          go build -o "$RUNNER_TEMP/live-hero-radio-server" ./cmd/server 2>&1 | tee ../evidence/build-server.log
+          cd client
+          npm ci 2>&1 | tee ../../evidence/install.log
+          npm test 2>&1 | tee ../../evidence/client-tests.log
+          npm run build 2>&1 | tee ../../evidence/client-build.log
+          cp ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs .
+          cp ../../geometry-source/.github/scripts/live_hero_layout_geometry.mjs .
+          cp ../../collector-source/.github/scripts/live_hero_radio_collector.mjs .
+          cp ../../replay-source/.github/scripts/live_hero_radio_replay.mjs .
+          cp ../../qa-source/.github/scripts/live_hero_radio_boundary.mjs .qa-live-hero-radio.mjs
+          cmp live_hero_layout_runtime.mjs ../../runtime-source/.github/scripts/live_hero_layout_runtime.mjs
+          cmp live_hero_layout_geometry.mjs ../../geometry-source/.github/scripts/live_hero_layout_geometry.mjs
+          cmp live_hero_radio_collector.mjs ../../collector-source/.github/scripts/live_hero_radio_collector.mjs
+          cmp live_hero_radio_replay.mjs ../../replay-source/.github/scripts/live_hero_radio_replay.mjs
+          cmp .qa-live-hero-radio.mjs ../../qa-source/.github/scripts/live_hero_radio_boundary.mjs
+          node ../../runtime-source/.github/scripts/live_hero_layout_runtime.test.mjs | tee ../../evidence/runtime-tests.log
+          node ../../geometry-source/.github/scripts/live_hero_layout_geometry.test.mjs | tee ../../evidence/geometry-tests.log
+          cp ../../replay-source/.github/scripts/live_hero_radio_replay{,.test}.mjs ../../collector-source/.github/scripts/
+          cmp ../../collector-source/.github/scripts/live_hero_radio_replay.mjs ../../replay-source/.github/scripts/live_hero_radio_replay.mjs
+          cmp ../../collector-source/.github/scripts/live_hero_radio_replay.test.mjs ../../replay-source/.github/scripts/live_hero_radio_replay.test.mjs
+          ln -s ../../target/client/node_modules ../../collector-source/client/node_modules
+          node ../../collector-source/.github/scripts/live_hero_radio_collector.test.mjs | tee ../../evidence/collector-tests.log
+          node ../../collector-source/.github/scripts/live_hero_radio_replay.test.mjs | tee ../../evidence/replay-tests.log
+          node .qa-live-hero-radio.mjs --self-test | tee ../../evidence/runner-tests.log
+          npx --no-install playwright install --with-deps chromium
+      - name: Verify all native radio boundary trials
+        working-directory: target/client
+        env:
+          QA_SERVER: ${{ runner.temp }}/live-hero-radio-server
+          DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/live_hero_layout?sslmode=disable
+          REDIS_ADDR: 127.0.0.1:6379
+          PGHOST: 127.0.0.1
+          PGUSER: sanguo
+          PGPASSWORD: sanguo
+          PGDATABASE: live_hero_layout
+        run: node .qa-live-hero-radio.mjs
+      - name: Preserve all original evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-hero-radio-${{ matrix.variant }}-${{ matrix.width }}-${{ github.event.pull_request.head.sha }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
