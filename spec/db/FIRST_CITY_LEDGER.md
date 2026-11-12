@@ -117,7 +117,8 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 3. **SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001** — frozen in
    [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md); participant SQL companions
    and effect/finalizer transitions bound to this schema.
-4. **SPEC-FIRST-CITY-LEDGER-LOADER-001** — ApplySpecs replay, missing-ledger idempotency, and
-   isolated PG17 acceptance tests (pattern: `hero_metadata_loader`, `recruit_storage_entry`).
+4. **SPEC-FIRST-CITY-LEDGER-LOADER-001** — frozen in
+   [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md); ApplySpecs replay, missing-ledger
+   idempotency, disposable PG17 acceptance (`spec/db/tests/first_city_ledger_loader`).
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.

@@ -228,7 +228,7 @@ Finalizer must not commit rejection while any concurrent effect transaction coul
 | Card | Status |
 |------|--------|
 | SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Frozen in [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md). |
-| SPEC-FIRST-CITY-LEDGER-LOADER-001 | ApplySpecs replay / PG17 acceptance — **not done**. |
+| SPEC-FIRST-CITY-LEDGER-LOADER-001 | Frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
 | Target realm enrollment execution | Drain/fence/deploy — **not authorized** by #2556. |
 
@@ -239,6 +239,6 @@ Finalizer must not commit rejection while any concurrent effect transaction coul
 ```
 
 This card adds documentation only; validation confirms existing `m4_010_first_city_ledger.sql` still composes
-with base DDL in disposable `spec_db_validate`. Loader/isolated PG17 lock-order race tests belong to companion
-and loader cards.
+with base DDL in disposable `spec_db_validate`. ApplySpecs loader acceptance:
+[FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). Full lock-order race tests remain on implementation cards.
 
