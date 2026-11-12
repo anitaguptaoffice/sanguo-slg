@@ -54,3 +54,21 @@ its only difference from that product source is the independently accepted
 67-line docs/art/queue-speedup-icon-host.md. Runtime and harness behavior are
 unchanged. A new official run establishes merged-main provenance, not a retry
 of a failed test. Preserve the prior success and original failed run separately.
+
+## Preserved merged-main pixel gap and capture gate
+
+Run 43148806420 / artifact 13912394287 completed with successful numeric gates,
+but independent raw review found blank restored image slots in both 1280/DPR1.5
+stock states. ZIP SHA256
+3791a0d5edf8de729a431b0d90cc8a57dc9402d7bf02dfc16f265b022b865423
+is preserved; that run is not accepted pixel evidence. Old loaded-node readiness
+was not tied to the nodes in the PNG, so a redraw/decode race is plausible but
+unproven; this does not exclude a real transient presentation defect.
+
+Capture now waits for one natural redraw, decodes the current images, waits two
+animation frames, measures unchanged geometry and captures exactly once. It
+records current image intrinsic dimensions and verifies identical connected
+host/image nodes after capture. Changed membership or readiness fails, preserving
+the PNG rather than retrying. Timers/rendering remain live; no product, route or
+geometry gate changes. The DOM-error fallback is injected on the aligned redraw.
+All39 captures require this gate; independent pixel inspection remains mandatory.

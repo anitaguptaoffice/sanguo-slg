@@ -15,7 +15,7 @@ const modeFile = resolve(client, 'mock-server/queue-art-mode.json');
 const fixture = resolve(client, 'mock-server/queue-art.fixture.mjs');
 mkdirSync(out, { recursive: true });
 const git = arg => execFileSync('git', ['rev-parse', arg], { cwd: client }).toString().trim();
-const report = { head: git('HEAD'), tree: git('HEAD^{tree}'), harnessSHA256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'), boundary: 'Actual main.ts/MainCityScene/QueuePanels/AssetLoader, localhost fixture only, no native economy or deployment acceptance', cases: [], errors: [] };
+const report = { head: git('HEAD'), tree: git('HEAD^{tree}'), harnessSHA256: createHash('sha256').update(readFileSync(import.meta.filename)).digest('hex'), boundary: 'Actual main.ts/MainCityScene/QueuePanels/AssetLoader, localhost fixture only, no native economy or deployment acceptance', cases: [], captures: [], errors: [] };
 assert.equal(report.head, target);assert.equal(report.tree, tree);
 let source = readFileSync(resolve(client, 'mock-server/server.mjs'), 'utf8');
 function replaceOnce(before, after) { assert.equal(source.split(before).length, 2, before);source = source.replace(before, after); }
@@ -80,14 +80,38 @@ async function inspect(page, phase, disabled, dpr, expectedImages=true, skin=tru
       for(let a=el;a;a=a.parentElement){const s=getComputedStyle(a),b=a.getBoundingClientRect(),x=/(auto|scroll|hidden|clip)/.test(s.overflowX),y=/(auto|scroll|hidden|clip)/.test(s.overflowY);if(x||y)clips.push({self:a===el,tag:a.tagName,role:a.dataset.role,className:a.className,x,y,left:b.left+a.clientLeft,top:b.top+a.clientTop,right:b.left+a.clientLeft+a.clientWidth,bottom:b.top+a.clientTop+a.clientHeight});}
       const img=el.querySelector('img.queue-speedup-item-icon'),s=img&&getComputedStyle(img),visible=img&&s.display!=='none';
       if(visible)bounds.push({kind:'image',...rect(img.getBoundingClientRect())});
-      return {text:el.textContent,title:el.title,disabled:el.disabled,item:el.dataset.queueSpeedupItem,bounds,clips,img:img?{visible,src:img.getAttribute('src'),alt:img.alt,aria:img.getAttribute('aria-hidden'),tabIndex:img.tabIndex,pointer:s.pointerEvents,fit:s.objectFit,gap:parseFloat(s.marginInlineEnd)}:null,pass:bounds.some(r=>r.kind==='text')&&bounds.every(r=>r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&clips.every(c=>(r.kind==='button'&&c.self)||((!c.x||(r.left>=c.left&&r.right<=c.right))&&(!c.y||(r.top>=c.top&&r.bottom<=c.bottom)))))};
+      return {text:el.textContent,title:el.title,disabled:el.disabled,item:el.dataset.queueSpeedupItem,bounds,clips,img:img?{visible,complete:img.complete,naturalWidth:img.naturalWidth,naturalHeight:img.naturalHeight,src:img.getAttribute('src'),alt:img.alt,aria:img.getAttribute('aria-hidden'),tabIndex:img.tabIndex,pointer:s.pointerEvents,fit:s.objectFit,gap:parseFloat(s.marginInlineEnd)}:null,pass:bounds.some(r=>r.kind==='text')&&bounds.every(r=>r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&clips.every(c=>(r.kind==='button'&&c.self)||((!c.x||(r.left>=c.left&&r.right<=c.right))&&(!c.y||(r.top>=c.top&&r.bottom<=c.bottom)))))};
     },{button,i});
     report.lastGeometry={phase,index:i,...e};assert.ok(e.pass,`clipping: ${phase}/${i}`);
     assert.equal(e.text,'使用短促工符');assert.equal(e.title,disabled?'背包中无短促工符（道具 2003）':'');assert.equal(e.disabled,disabled);assert.equal(e.item,'2003');
-    if(expectedImages){assert.equal(e.img.visible,skin);assert.equal(e.img.alt,'');assert.equal(e.img.aria,'true');assert.equal(e.img.tabIndex,-1);assert.equal(e.img.pointer,'none');assert.equal(e.img.fit,'contain');assert.ok(e.img.gap>=0&&e.img.gap<=4);assert.ok(e.img.src.includes(`/textures/${dpr>=1.5?2:1}x/items/2003.png`));if(skin){const r=e.bounds.find(x=>x.kind==='image');assert.equal(r.width,20);assert.equal(r.height,20);}}
+    if(expectedImages){assert.ok(e.img.complete&&e.img.naturalWidth>0&&e.img.naturalHeight>0,'current image must be loaded');assert.equal(e.img.visible,skin);assert.equal(e.img.alt,'');assert.equal(e.img.aria,'true');assert.equal(e.img.tabIndex,-1);assert.equal(e.img.pointer,'none');assert.equal(e.img.fit,'contain');assert.ok(e.img.gap>=0&&e.img.gap<=4);assert.ok(e.img.src.includes(`/textures/${dpr>=1.5?2:1}x/items/2003.png`));if(skin){const r=e.bounds.find(x=>x.kind==='image');assert.equal(r.width,20);assert.equal(r.height,20);}}
     results.push(e);
   }
   return {phase,results};
+}
+async function capture(page, path, phase, disabled, dpr, expectedImages=true, skin=true) {
+  const evidence={path,phase};report.captures.push(evidence);
+  // Align one observation with a natural redraw. Never pause timers or retry a failed capture.
+  await page.evaluate(button=>window.__qaCaptureBefore=document.querySelector(button),button);
+  await page.waitForFunction(button=>window.__qaCaptureBefore&&!window.__qaCaptureBefore.isConnected&&document.querySelectorAll(button).length===2,button);
+  if(phase==='dom-image-error'){await loaded(page);await page.locator(icon).evaluateAll(xs=>xs.forEach(x=>x.src='/missing-queue-qa.png'));await page.waitForFunction(icon=>!document.querySelector(icon),icon);}
+  evidence.decoded=await page.evaluate(async ({button,icon,expectedImages})=>{
+    const hosts=[...document.querySelectorAll(button)],images=[...document.querySelectorAll(icon)];
+    window.__qaCaptureNodes={hosts,images};
+    if(hosts.length!==2||images.length!==(expectedImages?2:0))throw new Error('capture membership mismatch');
+    await Promise.all(images.map(x=>x.decode()));
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    if(hosts.some(x=>!x.isConnected)||images.some(x=>!x.isConnected||!x.complete||!x.naturalWidth))throw new Error('capture changed during decode/paint');
+    return images.map(x=>({src:x.currentSrc,complete:x.complete,width:x.naturalWidth,height:x.naturalHeight}));
+  },{button,icon,expectedImages});
+  const geometry=await inspect(page,phase,disabled,dpr,expectedImages,skin);
+  await page.screenshot({path});
+  evidence.after=await page.evaluate(({button,icon})=>{
+    const {hosts,images}=window.__qaCaptureNodes,currentHosts=[...document.querySelectorAll(button)],currentImages=[...document.querySelectorAll(icon)];
+    return {sameHosts:hosts.length===currentHosts.length&&hosts.every((x,i)=>x===currentHosts[i]&&x.isConnected),sameImages:images.length===currentImages.length&&images.every((x,i)=>x===currentImages[i]&&x.isConnected),ready:images.every(x=>x.complete&&x.naturalWidth>0&&x.naturalHeight>0)};
+  },{button,icon});
+  assert.ok(Object.values(evidence.after).every(Boolean),'capture crossed a redraw or image readiness changed');
+  return geometry;
 }
 async function context(width,height,dpr,mode) {
   const ctx=await browser.newContext({viewport:{width,height},deviceScaleFactor:dpr});
@@ -102,25 +126,24 @@ try {
     writeFileSync(modeFile,JSON.stringify({disabled}));const ctx=await context(width,height,dpr);
     const page=await ctx.newPage();lastPage=page;const routeEvidence=await enter(page,disabled);await loaded(page);
     const name=`${width}-dpr${dpr}-${disabled?'disabled':'enabled'}`,geometry=[];report.activeCase={width,height,dpr,disabled,geometry,routeEvidence};
-    geometry.push(await inspect(page,'on',disabled,dpr));await page.screenshot({path:`${out}/${name}-on.png`});
+    geometry.push(await capture(page,`${out}/${name}-on.png`,'on',disabled,dpr));
     await refresh(page,true);await loaded(page);
     await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='off');
     geometry.push(await inspect(page,'off',disabled,dpr,true,false));
-    await refresh(page);await loaded(page);geometry.push(await inspect(page,'off-redraw',disabled,dpr,true,false));await page.screenshot({path:`${out}/${name}-off.png`});
+    await refresh(page);await loaded(page);geometry.push(await capture(page,`${out}/${name}-off.png`,'off-redraw',disabled,dpr,true,false));
     await page.evaluate(()=>document.getElementById('layout-frame').dataset.artSkin='on');
     geometry.push(await inspect(page,'on-restored',disabled,dpr));
     await page.locator('[data-action="refresh-queue"]').focus();await page.keyboard.press('Escape');assert.equal(await page.locator(button).first().isVisible(),false);
     await page.locator('[data-action="toggle-queue"]').click();await loaded(page);
     for(let i=0;i<3;i++){await refresh(page,i===1);await loaded(page);}
-    geometry.push(await inspect(page,'reopened-repeated',disabled,dpr));await page.screenshot({path:`${out}/${name}-restored.png`});
+    geometry.push(await capture(page,`${out}/${name}-restored.png`,'reopened-repeated',disabled,dpr));
     routeEvidence.after=routes().slice(routeEvidence.boundary);routeEvidence.mutations=routeEvidence.after.filter(x=>!reads.has(x));
     report.cases.push({width,height,dpr,disabled,geometry,routeEvidence});assert.deepEqual(routeEvidence.mutations,[]);await ctx.close();
   }
   for(const mode of ['missing-image','missing-cache','dom-image-error']) {
     writeFileSync(modeFile,JSON.stringify({disabled:false}));const ctx=await context(1280,720,1,mode);
     const page=await ctx.newPage();lastPage=page;const routeEvidence=await enter(page,false);
-    if(mode==='dom-image-error'){await loaded(page);await page.locator(icon).evaluateAll(xs=>xs.forEach(x=>x.src='/missing-queue-qa.png'));await page.waitForFunction(icon=>!document.querySelector(icon),icon);}
-    const geometry=await inspect(page,mode,false,1,false);await page.screenshot({path:`${out}/1280-${mode}.png`});
+    const geometry=await capture(page,`${out}/1280-${mode}.png`,mode,false,1,false);
     routeEvidence.after=routes().slice(routeEvidence.boundary);routeEvidence.mutations=routeEvidence.after.filter(x=>!reads.has(x));report.cases.push({mode,geometry,routeEvidence});assert.deepEqual(routeEvidence.mutations,[]);await ctx.close();
   }
   assert.deepEqual(report.errors,[]);report.passed=true;
