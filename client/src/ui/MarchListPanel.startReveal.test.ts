@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { MarchListPanel } from "./MarchListPanel";
 import { openCenterPanel } from "./centerPanelForeground";
 import { GatewayClient } from "@/net/GatewayClient";
@@ -22,9 +22,11 @@ async function setup() {
   }, close() {} });
   const gateway = new GatewayClient();
   Object.assign(gateway, { ws, sessionId: "fixture-session", boundServerId: 1, sessionGeneration: 1 });
+  let now = Date.now();
+  let selectionHook = () => {}, updateHook = () => {};
   let city = 1, grid: { x: number; y: number } | null = { x: 10, y: 20 };
   const mount = document.createElement("div"); document.body.append(mount);
-  const panel = new MarchListPanel(mount, gateway, () => city, () => {}, { getWorldSelectedGrid: () => grid });
+  const panel = new MarchListPanel(mount, gateway, () => city, () => {}, { getWorldSelectedGrid: () => grid, nowMs: () => now, onSelectionChange: () => selectionHook(), onMarchesUpdated: () => updateHook() });
   panel.attach(); cleanup.push(() => { panel.detach(); gateway.close(); });
   const reply = async (route: string, typeName: string, value: object, code = 0) => {
     const req = queue.shift(); expect(req?.route).toBe(route); delivered.push(route);
@@ -33,6 +35,16 @@ async function setup() {
     ws.dispatchEvent(new MessageEvent("message", { data: Uint8Array.from(bytes).buffer })); await flush();
   };
   const listReply = (marches: MarchSummary[] = both, code = 0) => reply("military.v1.ListMarches", "sanguo.military.v1.ListMarchesResponse", { marches, total: marches.length }, code);
+  const scrolled: number[] = [];
+  const descriptor = Object.getOwnPropertyDescriptor(Element.prototype, "scrollIntoView");
+  if (!descriptor) Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value() {} });
+  cleanup.push(() => { if (!descriptor) delete (Element.prototype as Partial<Element>).scrollIntoView; });
+  const scroll = vi.spyOn(Element.prototype, "scrollIntoView").mockImplementation(function (this: Element, options?: boolean | ScrollIntoViewOptions) {
+    if (typeof options === "object" && options.behavior === "smooth") return; // Existing decorative handoff is outside this reveal contract.
+    scrolled.push(Number(this.getAttribute("data-march-id")));
+    expect(this.isConnected).toBe(true);
+  });
+  cleanup.unshift(() => scroll.mockRestore());
   const ids = () => Array.from(panel.getRoot().querySelectorAll("li[data-march-id]")).map(el => Number(el.getAttribute("data-march-id")));
   const phase = (value: string) => panel.getRoot().querySelector<HTMLButtonElement>(`[data-phase="${value}"]`)!.click();
   const sort = () => { const el = panel.getRoot().querySelector<HTMLSelectElement>('[data-action="march-eta-sort"]')!; el.value = "eta_desc"; el.dispatchEvent(new Event("change", { bubbles: true })); };
@@ -46,8 +58,9 @@ async function setup() {
     return military;
   };
   panel.toggle(); await listReply([oldMarch]);
-  return { panel, gateway, mount, queue, sent, delivered, ids, phase, sort, refresh, depart, listReply,
-    changeCity: () => { city = 2; }, clearWorld: () => { grid = null; } };
+  return { panel, gateway, mount, queue, sent, delivered, ids, scrolled, phase, sort, refresh, depart, listReply,
+    onSelection: (fn: () => void) => { selectionHook = fn; }, onUpdate: (fn: () => void) => { updateHook = fn; },
+    expireHighlight: () => { now += 120_000; }, changeCity: () => { city = 2; }, clearWorld: () => { grid = null; } };
 }
 
 it.each(["return", "manual", "world", "missing-world"])("reveals confirmed new march through %s filter", async mode => {
@@ -56,6 +69,7 @@ it.each(["return", "manual", "world", "missing-world"])("reveals confirmed new m
   if (mode === "manual") f.panel.setDestFilter(10, 20);
   if (mode === "world" || mode === "missing-world") { if (mode === "missing-world") f.clearWorld(); f.panel.setDestFilterMode("world"); }
   await f.depart(); await f.listReply();
+  expect(f.scrolled).toEqual([2]);
   expect(f.panel.isOpen()).toBe(true); expect(f.panel.getSelectedMarchId()).toBe(2); expect(f.ids()).toContain(2);
   expect(f.panel.getRoot().querySelector('li.march-row-recent[data-march-id="2"]')).not.toBeNull();
   expect(readMilitaryListFilterSession().etaSort).toBe("eta_desc");
@@ -74,9 +88,12 @@ it("preserves compatible destination and phase and reveals only once", async () 
 it.each(["later-read", "minimap", "failed-read"])("waits for authoritative target after %s without repeating StartMarch", async kind => {
   const f = await setup(); f.panel.setDestFilter(10, 20); f.phase("return");
   await f.depart(); await f.listReply([oldMarch], kind === "failed-read" ? 10002 : 0); expect(f.ids()).not.toContain(2);
+  expect(f.scrolled).toEqual([]);
   if (kind === "minimap") f.panel.syncMinimapMarchFocusFromSnapshot(both);
   else { f.refresh(); await f.listReply(); }
   expect(f.ids()).toContain(2); expect(f.panel.getSelectedMarch()?.march_id).toBe(2);
+  expect(f.scrolled).toEqual([2]);
+  f.refresh(); await f.listReply(); expect(f.scrolled).toEqual([2]);
   expect(f.sent.filter(r => r === "military.v1.StartMarch")).toHaveLength(1);
 });
 
@@ -96,6 +113,7 @@ it.each(["phase", "destination", "sort", "typing", "row", "id", "close", "peer",
     if (action === "remount") { f.panel.detach(); f.panel.attach(); f.panel.toggle(); }
     const filter = readMilitaryListFilterSession();
     await f.listReply(); while (f.queue.length) await f.listReply();
+    expect(f.scrolled).toEqual([]);
     expect(f.ids()).not.toContain(2); expect(readMilitaryListFilterSession()).toEqual(filter);
     if (action !== "remount") expect(f.panel.getDestFilter()).toEqual({ x: 10, y: 20 });
   },
@@ -106,4 +124,52 @@ it("preserves foreground and filters when the successful start has no presentati
   const military = await f.depart(false); await f.listReply();
   expect(f.panel.isOpen()).toBe(false); expect(military.classList.contains("hidden")).toBe(false);
   expect(f.panel.getDestFilter()).toEqual({ x: 10, y: 20 }); expect(readMilitaryListFilterSession().phase).toBe("return");
+});
+
+it.each(["row", "close", "peer", "sort"])("does not scroll a visible target after newer %s intent", async action => {
+  const f = await setup(); await f.depart();
+  if (action === "row") f.panel.getRoot().querySelector<HTMLElement>('li[data-march-id="1"]')!.click();
+  if (action === "close") { f.panel.toggle(); f.panel.toggle(); }
+  if (action === "peer") { const peer = document.createElement("div"); peer.className = "content-panel hidden"; f.mount.append(peer); openCenterPanel(peer); openCenterPanel(f.panel.getRoot()); }
+  if (action === "sort") f.sort();
+  await f.listReply(); while (f.queue.length) await f.listReply();
+  expect(f.ids()).toContain(2); expect(f.scrolled).toEqual([]);
+});
+
+it("does not scroll a visible target for openPanel:false", async () => {
+  const f = await setup(); await f.depart(false); await f.listReply();
+  expect(f.ids()).toContain(2); expect(f.scrolled).toEqual([]);
+});
+
+it.each(["later-read", "minimap", "failed-read"])("scrolls late %s recovery after highlight expiry", async kind => {
+  const f = await setup(); await f.depart();
+  await f.listReply([oldMarch], kind === "failed-read" ? 10002 : 0); f.expireHighlight();
+  if (kind === "minimap") f.panel.syncMinimapMarchFocusFromSnapshot(both);
+  else { f.refresh(); await f.listReply(); }
+  expect(f.panel.getSelectedMarchId()).toBe(2); expect(f.scrolled).toEqual([2]);
+});
+
+it.each(["row", "sort", "peer", "relogin", "city", "remount"])("cancels recovery scroll after newer %s intent", async action => {
+  const f = await setup(); await f.depart(); await f.listReply([oldMarch]);
+  if (action === "row") f.panel.getRoot().querySelector<HTMLElement>('li[data-march-id="1"]')!.click();
+  if (action === "sort") f.sort();
+  if (action === "peer") { const peer = document.createElement("div"); peer.className = "content-panel hidden"; f.mount.append(peer); openCenterPanel(peer); openCenterPanel(f.panel.getRoot()); }
+  if (action === "relogin") Object.assign(f.gateway, { sessionGeneration: 2 });
+  if (action === "city") f.changeCity();
+  if (action === "remount") { f.panel.detach(); f.panel.attach(); }
+  f.panel.syncMinimapMarchFocusFromSnapshot(both);
+  expect(f.scrolled).toEqual([]);
+});
+
+it.each(["selection", "update"].flatMap(hook => ["sort", "destination", "selection"].map(action => [hook, action])))(
+  "cancels final scroll when %s callback introduces newer %s intent", async (hook, action) => {
+    const f = await setup(); await f.depart();
+    const register = hook === "selection" ? f.onSelection : f.onUpdate;
+    register(() => {
+      register(() => {}); // A new selection may invoke the callback recursively.
+      if (action === "sort") f.sort();
+      if (action === "destination") f.panel.setDestFilter(30, 40);
+      if (action === "selection") f.panel.selectMarchById(2);
+    });
+    await f.listReply(); expect(f.ids()).toContain(2); expect(f.scrolled).toEqual([]);
 });
