@@ -82,6 +82,7 @@ test('fixture contract and explicit no acceptance before independent review', ()
   const source = readFileSync(new URL('./live_mail_keyboard_runtime.mjs', import.meta.url), 'utf8');
   assert.ok(source.includes('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY'));
   assert.equal(source.includes('nativeAcceptance = true'), false);
+  assert.match(source, /launchServer\(\{ channel: 'chromium', headless: true, chromiumSandbox: true,/);
 });
 
 test('real GM CLI omits empty rewards flag so attachment-free mail can be sent', () => {

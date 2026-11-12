@@ -1,10 +1,8 @@
 # Mail keyboard native acquisition runtime
 
-#2307: fresh reconstruction on ddc80aab, NEVER MERGE; the old candidate remains unavailable.
-This component owns effects/provenance/acquisition; #2521 owns state, #2309 traffic, #2308 native UI.
-Only the complete independently reviewed official Ubuntu22.04 workflow may execute it:
-Go1.23.12, PG17, Redis7, Node22, Vite6.4.5 and Playwright1.49.1 Chromium1148, fresh baseline/fixed ×1280/1600 cells.
-Natural demo bootstrap precedes four GM sends. C/B/A omit rewards; D retains one item.
+Fresh #2307 on ddc80aab, NEVER MERGE; #2521/#2309/#2308 retain separate responsibilities.
+Reviewed official workflow only: Ubuntu22.04, Go1.23.12, PG17, Redis7, Node22, Vite6.4.5, Playwright1.49.1 full bundled Chromium1148.
+Fresh baseline/fixed ×1280/1600 cells bootstrap demo then four GM sends; C/B/A omit rewards, D retains one item.
 Exactly two validated audit logs and one receipt are required. No claims/grants, synthetic RPC,
 fixture SQL writes, throttling, clock changes or local browser/service fallback.
 Unchanged lifecycle exports/full tests come from7dc5939f. Pristine product tests/build precede

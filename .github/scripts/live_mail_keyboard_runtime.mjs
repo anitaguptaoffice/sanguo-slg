@@ -109,7 +109,8 @@ export function verifyScenario(result, product, viewport, screenshots) {
 }
 export function preflight(report, name, action) {
   check(['dependencies', 'node', 'redis-info', 'redis-empty', 'database', 'packages', 'go', 'postgres',
-    'product-head', 'product-clean', 'manifest-load', 'manifest-inventory', 'manifest-bytes', 'provenance', 'empty-db'].includes(name));
+    'product-head', 'product-clean', 'manifest-load', 'manifest-inventory', 'manifest-bytes', 'provenance', 'empty-db',
+    'browser-launch', 'browser-connect', 'browser-cdp', 'browser-commandline', 'browser-args', 'browser-binary', 'browser-version', 'browser-sandbox-page', 'browser-sandbox-query', 'browser-sandbox-check', 'browser-evidence'].includes(name));
   report.phase = `preflight-${name}`;
   return action();
 }
@@ -176,19 +177,19 @@ export async function withMailRuntime(scenario) {
       const cityState = protoRoot.lookupType('sanguo.domestic.v1.GetCityStateResponse');
       if (!cityState.fields.production_rates) cityState.add(new protobuf.Field('production_rates', 3, 'sanguo.common.v1.ResourceWallet'));
       protoRoot.resolveAll(); verifier = createMailVerifier({ protoRoot, fixtureSpec });
-      browserServer = await acquireOwned(() => chromium.launchServer({ chromiumSandbox: true, timeout: commandTimeout(deadline) }),
-        async value => stopBrowser(value, null, { server: value, pid: value.process().pid }, report), controller.signal);
+      browserServer = await preflight(report, 'browser-launch', () => acquireOwned(() => chromium.launchServer({ channel: 'chromium', headless: true, chromiumSandbox: true, timeout: commandTimeout(deadline) }),
+        async value => stopBrowser(value, null, { server: value, pid: value.process().pid }, report), controller.signal));
       ownership = { server: browserServer, pid: browserServer.process().pid };
-      browser = await acquireOwned(() => chromium.connect(browserServer.wsEndpoint(), { timeout: commandTimeout(deadline) }), value => value.close(), controller.signal);
-      const browserCDP = await browser.newBrowserCDPSession();
-      const args = (await browserCDP.send('Browser.getBrowserCommandLine')).arguments;
-      check(!args.some(arg => /no-sandbox|disable-setuid-sandbox|single-process/.test(arg)));
-      check(/chromium(?:_headless_shell)?-1148\//.test(chromium.executablePath()) && args[0] === chromium.executablePath());
-      check(/^131\./.test(browser.version()));
-      const sandboxPage = await browser.newPage(); await sandboxPage.goto('chrome://sandbox');
-      const sandbox = await sandboxPage.locator('body').innerText();
-      check(/Seccomp-BPF sandbox\s+Yes/.test(sandbox) && /PID namespaces\s+Yes/.test(sandbox)); await sandboxPage.close();
-      report.browser = { version: browser.version(), args, sandbox, binary: hash(readFileSync(chromium.executablePath())) };
+      browser = await preflight(report, 'browser-connect', () => acquireOwned(() => chromium.connect(browserServer.wsEndpoint(), { timeout: commandTimeout(deadline) }), value => value.close(), controller.signal));
+      const browserCDP = await preflight(report, 'browser-cdp', () => browser.newBrowserCDPSession());
+      const args = (await preflight(report, 'browser-commandline', () => browserCDP.send('Browser.getBrowserCommandLine'))).arguments;
+      preflight(report, 'browser-args', () => check(!args.some(arg => /no-sandbox|disable-setuid-sandbox|single-process/.test(arg))));
+      preflight(report, 'browser-binary', () => check(/chromium(?:_headless_shell)?-1148\//.test(chromium.executablePath()) && args[0] === chromium.executablePath()));
+      preflight(report, 'browser-version', () => check(/^131\./.test(browser.version())));
+      const sandboxPage = await preflight(report, 'browser-sandbox-page', () => browser.newPage()); await sandboxPage.goto('chrome://sandbox');
+      const sandbox = await preflight(report, 'browser-sandbox-query', () => sandboxPage.locator('body').innerText());
+      preflight(report, 'browser-sandbox-check', () => check(/Seccomp-BPF sandbox\s+Yes/.test(sandbox) && /PID namespaces\s+Yes/.test(sandbox))); await sandboxPage.close();
+      report.browser = preflight(report, 'browser-evidence', () => ({ version: browser.version(), args, sandbox, binary: hash(readFileSync(chromium.executablePath())) }));
       const width = Number(env.QA_WIDTH), height = width === 1280 ? 720 : 900;
       page = await acquireOwned(() => browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 }), value => value.close(), controller.signal);
       page.setDefaultTimeout(15000); page.setDefaultNavigationTimeout(15000); report.viewport = { width, height };
