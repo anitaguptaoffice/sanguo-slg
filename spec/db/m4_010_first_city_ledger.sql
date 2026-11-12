@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS %1$I.world_first_city_command (
       durable_state <> 2
       OR (terminal_at IS NOT NULL AND rejection_reason IS NULL
           AND success_city_id > 0 AND success_server_id > 0 AND success_player_id > 0
+          AND success_server_id = server_id AND success_player_id = player_id
           AND success_is_capital = true AND success_wall_level = 1 AND success_morale = 100)),
   CONSTRAINT world_first_city_command_rejection_receipt_check CHECK (
       durable_state <> 3

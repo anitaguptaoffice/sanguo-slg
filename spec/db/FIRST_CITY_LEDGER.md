@@ -42,7 +42,9 @@ This card does **not**:
 wallet/MIL/DOM effects (per CITY_CREATION_RECOVERY §6) must also set success receipt columns and
 `terminal_at` on this command row and must not commit business effects without the matching receipt
 update on the same command PK. This DDL states the column contract only; cross-relation atomicity is
-implemented on a follow-on card.
+implemented on a follow-on card. `world_first_city_command_success_receipt_check` physically requires
+`success_server_id = server_id` and `success_player_id = player_id` so the stored success receipt
+matches the command row's canonical scope (FIRST-CITY-WIRE.md §3).
 
 **Rejection receipt** (`durable_state=3`): narrow finalizer (§7) may transition only a matching
 PENDING row to `durable_state=3` with whitelisted `rejection_reason`; no city row, no wallet grant.
