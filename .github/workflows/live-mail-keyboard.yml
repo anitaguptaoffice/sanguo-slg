@@ -40,7 +40,7 @@ jobs:
       VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
       QA_WIDTH: ${{ matrix.width }}
       QA_PRODUCT: ${{ matrix.product }}
-      QA_RUNTIME_HEAD: 9daeeb0e2cd3cf8ff6bb1fc2895098d41635a3ab
+      QA_RUNTIME_HEAD: 4787eabf86bd69167d67dbdd4c392c538d3616df
       QA_TRACE_HEAD: a13dbfdd8b194815adeda03ac38259e602808b02
       QA_STATE_HEAD: d7ed354c33c4e85b0fd1576ffc43d25544302f1c
       QA_HELPER_HEAD: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
