@@ -223,15 +223,47 @@ UPDATE world_first_city_command
 COMMIT;
 ```
 
-### 5.3 Concurrency with effect
+### 5.3 Concurrency with effect (SPEC-FIRST-CITY-LEDGER-RACE-001 frozen)
 
-Both classes hold **slot advisory + slot `FOR UPDATE` + command `FOR UPDATE`** before terminal `UPDATE`. A finalizer must not `COMMIT` `durable_state = 3` while another transaction holds the same command row locked for effect unless that holder has aborted. An effect must not `COMMIT` business effects without success receipt if command is no longer `durable_state = 1`. **Do not** infer outcome from SQL error codes alone (GLOBAL_PINS §6).
+Both **effect/continue** and **narrow rejection finalizer** must acquire, in one transaction and
+before any terminal `UPDATE` on `world_first_city_command`:
+
+| Hold | Mechanism | Until |
+|------|-----------|--------|
+| Slot serialization | `world_first_city_slot_advisory_lock(realm_id, server_id, player_id)` | `COMMIT` / `ROLLBACK` |
+| Slot head | `world_first_city_actor_slot` PK `FOR UPDATE` | same |
+| Command PK | `world_first_city_command` matching row `FOR UPDATE` | same |
+
+**Invariants (row evidence, not SQL error text alone — GLOBAL_PINS §6):**
+
+1. **Effect wins:** If effect `COMMIT`s `durable_state = 2` with a valid success receipt, no
+   concurrent finalizer may `COMMIT` `durable_state = 3` on the same command PK; committed row must
+   remain `2` only.
+2. **Finalizer wins:** If finalizer `COMMIT`s `durable_state = 3` with `rejection_reason IN (1,2)`,
+   no concurrent effect may `COMMIT` success receipt on that PK; committed row must remain `3` only.
+3. **Opponent open:** While a participant holds command `FOR UPDATE` and has not `COMMIT`ted or
+   `ROLLBACK`ed a conflicting terminal transition, observers must see `durable_state = 1` only —
+   no `2`/`3` receipt may appear committed.
+4. **Losers roll back:** After re-read shows `durable_state <> 1`, the late participant must
+   `ROLLBACK` without persisting the opposing terminal shape (zero-row `UPDATE … AND durable_state=1`
+   is not success).
+
+Finalizer still uses `map_cell` / `player_city` **`FOR SHARE`** per §5.1 before rejection terminal
+`UPDATE`; effect still obeys §4.1–§4.3 before success terminal `UPDATE`. Harness uses disposable
+fixtures only (`success_city_id` test constant); **`player_city_id_seq` is not activated**.
+
+Isolated PG17 acceptance: `go run ./spec/db/tests/first_city_ledger_race` with
+`ALLOW_OWNED_PG17_TEST=1` and `FIRST_CITY_LEDGER_TEST_DSN` (see [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md)).
+
+**Not frozen on this card:** full effect business path (wallet/MIL/DOM writes), multi-command slot
+CAS races, restricted-role ACL, target-realm drain/fence execution.
 
 ## 6. Wire, DDL and follow-on gaps
 
 - Terminal shapes and `rejection_reason` 1/2 match `m4_010_first_city_ledger.sql` and FIRST-CITY-WIRE.md; no new wire fields.
 - Canonical C1 coordinate extraction and FCT1-driven wallet/building INSERT literals remain on implementation cards; companion states **where** they run (effect txn only).
-- **SPEC-FIRST-CITY-LEDGER-LOADER-001** frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) (ApplySpecs replay / disposable PG17 harness); concurrent effect/finalizer race matrix not frozen there.
+- **SPEC-FIRST-CITY-LEDGER-LOADER-001** frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) (ApplySpecs replay / disposable PG17 harness).
+- **SPEC-FIRST-CITY-LEDGER-RACE-001** frozen in [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md) (companion §5.3 core races on disposable PG17).
 - **Not frozen here:** reviewed `player_city_id_seq` activation; full CITY_CREATION_RECOVERY §10 item 3 phase lifecycle; target realm drain/fence execution.
 
 ## 7. Validation
@@ -240,4 +272,6 @@ Both classes hold **slot advisory + slot `FOR UPDATE` + command `FOR UPDATE`** b
 ./spec/db/validate.sh
 ```
 
-Confirms `m4_010` + `m4_011` companion helpers compose in disposable `spec_db_validate`. ApplySpecs replay and missing-ledger idempotency: [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) and `first_city_ledger_loader`. Full concurrent effect/finalizer race matrix remains on implementation cards.
+Confirms `m4_010` + `m4_011` companion helpers compose in disposable `spec_db_validate`. ApplySpecs replay:
+[FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md) / `first_city_ledger_loader`. Core effect/finalizer
+races: [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md) / `first_city_ledger_race`.

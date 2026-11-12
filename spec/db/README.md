@@ -93,6 +93,7 @@ OID/profile 与写入者清单：[SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001](FIRST_
 全局 pin 序：[SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001](FIRST_CITY_LEDGER_GLOBAL_PINS.md)；
 PG companion：[SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001](FIRST_CITY_LEDGER_PG_COMPANION.md)；
 ApplySpecs loader 与隔离验收：[SPEC-FIRST-CITY-LEDGER-LOADER-001](FIRST_CITY_LEDGER_LOADER.md)（`go run ./spec/db/tests/first_city_ledger_loader`，需 `ALLOW_OWNED_PG17_TEST=1` 与 disposable DSN）。
+Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CITY-LEDGER-RACE-001](FIRST_CITY_LEDGER_RACE.md)（`go run ./spec/db/tests/first_city_ledger_race`，同上 DSN 约定；不启用 `player_city_id_seq`）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
