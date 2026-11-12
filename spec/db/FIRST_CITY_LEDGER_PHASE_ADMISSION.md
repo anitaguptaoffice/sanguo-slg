@@ -54,6 +54,9 @@ Record actual `SHOW server_version` and per-scenario `PASS` lines.
 
 ## Follow-on
 
-CITY_CREATION_RECOVERY §10 item 3 **remaining** after this slice: unknown drain full matrix,
-process restart / ACK-loss, realm drain/fence, production admission controller — separate cards.
+**SPEC-FIRST-CITY-LEDGER-UNKNOWN-DRAIN-001** frozen in
+[FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md](FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md)
+(`spec/db/tests/first_city_ledger_unknown_drain`). CITY_CREATION_RECOVERY §10 item 3
+**remaining** after that slice: process restart / ACK-loss, realm drain/fence,
+production admission controller — separate cards.
 Concurrent effect/finalizer ordering remains [#2563](FIRST_CITY_LEDGER_RACE.md).
