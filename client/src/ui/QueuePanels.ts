@@ -34,6 +34,7 @@ import {
   type DailyQueueAnchorTarget,
 } from "@/net/dailyQueueAnchor";
 import {
+  buildingCfgIdForSlot,
   findBuildDailyQuestForBuilding,
   findTrainDailyQuestForRecruit,
   formatLinkedDailyQuestProgressSummary,
@@ -159,6 +160,9 @@ export class QueuePanels {
   private militarySection!: HTMLElement;
   private recruits: RecruitQueueEntry[] = [];
   private tickAccum = 0;
+  private buildRowsSnapshot: {
+    keys: string[]; rows: HTMLLIElement[]; current: () => boolean; session: MainCitySession;
+  } | null = null;
   private speedupBusy = false;
   private speedupReloadOwner: (() => boolean) | null = null;
   private speedupOwner: (() => boolean) | null = null;
@@ -228,6 +232,7 @@ export class QueuePanels {
   }
 
   detach(): void {
+    this.buildRowsSnapshot = null;
     ++this.lifecycleVersion;
     ++this.cityReadVersion;
     this.cityReadOwner = null;
@@ -942,6 +947,8 @@ export class QueuePanels {
   }
 
   private render(): void {
+    const previousBuildRows = this.buildRowsSnapshot;
+    this.buildRowsSnapshot = null;
     this.speedupBusy = this.speedupOwner?.() ?? false;
     if (this.speedupReloadOwner && !this.speedupReloadOwner()) this.speedupReloadOwner = null;
     if (this.cityReadOwner && !this.cityReadOwner()) {
@@ -1029,7 +1036,25 @@ export class QueuePanels {
       (key) => !buildRows.some((b) => b.slot_key === key),
     );
 
-    buildUl.innerHTML = "";
+    const keys = buildRows.map((b) => {
+      const slot = b.slot_key, cfg = b.building_cfg_id ?? buildingCfgIdForSlot(slot ?? "");
+      const level = b.level ?? 0, finish = b.upgrade_finish_at_ms;
+      const start = inferBuildUpgradeStartedAtMs(b);
+      if (!slot || slot.trim() !== slot || !Number.isSafeInteger(cfg) || cfg <= 0 ||
+          !Number.isSafeInteger(level) || level < 0 || !Number.isSafeInteger(finish) ||
+          start == null || !Number.isFinite(start)) return null;
+      return JSON.stringify([slot, cfg, level, finish, start]);
+    });
+    const eligible = !this.buildListLoading && !this.buildListError && !completeSlots.length &&
+      keys.length > 0 && keys.every((key) => key !== null) &&
+      new Set(buildRows.map((b) => b.slot_key)).size === buildRows.length;
+    const stableRows = eligible && previousBuildRows?.session === session &&
+      previousBuildRows.current() && keys.length === previousBuildRows.keys.length &&
+      keys.every((key, i) => key === previousBuildRows.keys[i] &&
+        buildUl.children[i] === previousBuildRows.rows[i] &&
+        previousBuildRows.rows[i].querySelector(':scope > button[data-action="speedup-build"]')) &&
+      buildUl.children.length === keys.length ? previousBuildRows.rows : null;
+    if (!stableRows) buildUl.innerHTML = "";
     recruitUl.innerHTML = "";
     this.militarySection.classList.toggle("hidden", recruitLines.length === 0);
 
@@ -1086,7 +1111,8 @@ export class QueuePanels {
       buildUl.appendChild(li);
     }
 
-    for (const b of buildRows) {
+    const renderedRows: HTMLLIElement[] = [];
+    for (const [index, b] of buildRows.entries()) {
       const text = formatBuildingUpgradeQueueLine(b, this.slotLabels, now);
       const li = document.createElement("li");
       const slotKey = b.slot_key ?? "?";
@@ -1148,8 +1174,32 @@ export class QueuePanels {
         }
       }
       li.appendChild(btn);
-      buildUl.appendChild(li);
+      const retained = stableRows?.[index];
+      if (retained) {
+        const button = retained.querySelector<HTMLButtonElement>(
+          ':scope > button[data-action="speedup-build"]',
+        )!;
+        // Keep skin-owned attributes, handlers and icon; never detach the focus target.
+        button.dataset.queueSpeedupItem = btn.dataset.queueSpeedupItem;
+        button.disabled = btn.disabled;
+        button.title = btn.title;
+        for (const attr of Array.from(retained.attributes)) {
+          if (attr.name !== "tabindex" && !li.hasAttribute(attr.name)) retained.removeAttribute(attr.name);
+        }
+        for (const attr of Array.from(li.attributes)) retained.setAttribute(attr.name, attr.value);
+        for (const child of Array.from(retained.childNodes)) if (child !== button) child.remove();
+        for (const child of Array.from(li.childNodes)) {
+          if (child !== btn) retained.insertBefore(child, button);
+        }
+        renderedRows.push(retained);
+      } else {
+        buildUl.appendChild(li);
+        renderedRows.push(li);
+      }
     }
+    if (eligible) this.buildRowsSnapshot = {
+      keys: keys as string[], rows: renderedRows, current: this.captureQueueContext(), session,
+    };
 
     syncListRovingTabindex(buildUl, "li.queue-list-row[data-slot-key]");
 
