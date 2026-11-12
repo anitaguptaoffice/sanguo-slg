@@ -765,11 +765,38 @@ export class ContentPanels {
   private renderQuestList(): void {
     const ul = this.questPanel.querySelector<HTMLElement>('[data-role="quest-list"]');
     if (!ul) return;
+    const active = this.questPanel.ownerDocument.activeElement;
+    const focusedId = !this.questPanel.classList.contains("hidden") &&
+      active instanceof HTMLButtonElement && ul.contains(active) && active.dataset.action === "select-quest"
+      ? active.dataset.questId : undefined;
     ul.innerHTML = "";
     for (const q of this.questRows) {
       const li = document.createElement("li");
       li.textContent = formatQuestLine(q);
+      const id = q.quest_cfg_id;
+      if (typeof id === "number" && Number.isSafeInteger(id) && id > 0) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.action = "select-quest";
+        button.dataset.questId = String(id);
+        button.setAttribute("aria-label", `选择任务 #${id}`);
+        li.append(" ", button);
+      }
       ul.appendChild(li);
+    }
+    this.syncQuestSelection();
+    if (focusedId && this.questPanel.isConnected) {
+      const target = Array.from(ul.querySelectorAll<HTMLButtonElement>('[data-action="select-quest"]'))
+        .find(button => button.dataset.questId === focusedId);
+      target?.focus({ preventScroll: true });
+    }
+  }
+
+  private syncQuestSelection(): void {
+    for (const button of this.questPanel.querySelectorAll<HTMLButtonElement>('[data-action="select-quest"]')) {
+      const selected = Number(button.dataset.questId) === this.selectedQuestId;
+      button.setAttribute("aria-pressed", String(selected));
+      button.textContent = selected ? "已选" : "选择";
     }
   }
 
@@ -1443,6 +1470,7 @@ export class ContentPanels {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "quest-id") {
       this.selectedQuestId = Number((t as HTMLInputElement).value) || 1001;
+      this.syncQuestSelection();
     }
   }
 
@@ -1479,6 +1507,15 @@ export class ContentPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
+    if (a === "select-quest") {
+      const id = Number(btn.dataset.questId);
+      if (!Number.isSafeInteger(id) || id <= 0 || !this.questRows.some(q => q.quest_cfg_id === id)) return;
+      this.selectedQuestId = id;
+      const input = this.questPanel.querySelector<HTMLInputElement>('[data-field="quest-id"]');
+      if (input) input.value = String(id);
+      this.syncQuestSelection();
+      return;
+    }
     if (a === "refresh-quests") void this.refreshQuests();
     if (a === "accept-quest") void this.acceptQuest();
     if (a === "claim-quest") void this.claimQuest();
