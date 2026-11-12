@@ -108,8 +108,9 @@ and `m3_*.sql` / `m4_*.sql` files. No runtime loader in this card.
 
 Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 
-1. **SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001** — target cluster/database/schema OID/profile/writer
-   inventory and ACL proofs at activation.
+1. **SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001** — frozen in
+   [FIRST_CITY_LEDGER_OID_PROFILE.md](FIRST_CITY_LEDGER_OID_PROFILE.md); enrollment profile,
+   writer inventory and pre-activation ACL/drain obligations (does not certify any realm).
 2. **SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001** — ACCOUNT → slot/command → wallet → CITY/map → MIL/DOM
    pin order, row locks, and conflict re-read proofs.
 3. **SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001** — participant SQL companions and effect/finalizer
