@@ -1,0 +1,63 @@
+# QA-MARCH-START-REVEAL-001 (#2516)
+
+## Frozen inputs and execution
+
+Repair: `dafe0d70f75fec528be03b0711cbfe64076af6ee`, tree
+`dc1b4eeb0df4fbf750ed7a1e0bd8cfeaed66c025` (#2478).
+Baseline: `b98b24b6833e06f1b3f965a4a77dedb2d876ae3f`, tree
+`6de1bb51739046120841d8af1ba824739320c754`. MainCityScene is identical
+between these inputs; MarchListPanel contains the repair under test.
+
+The dedicated pull-request workflow checks out each exact input separately,
+copies only this harness from the QA head, installs existing locked dependencies
+with npm ci and official Playwright Chromium on the official Actions runner.
+Run from that input's client directory with `QA_OUT=/absolute/output node
+qa/marchStartReveal.browser.mjs`; baseline additionally requires `QA_BASELINE=1`.
+No browser sandbox flags are disabled: launch requires chromiumSandbox:true.
+Local socket EPERM is a blocker, not permission to bypass the sandbox.
+
+## What this proves (only after actual execution)
+
+At both 1280x720 and 1600x900, native input/click events exercise unmodified
+MainCityScene.onMilitaryClick, startMarch, validation, syncMilitaryPanel and its
+notifyMarchStarted handoff to production MarchListPanel, GatewayClient, protobuf
+and index.html CSS. Initial read, exactly one StartMarch, and subsequent paged
+ListMarches replies are FIFO checked, with decoded requests and route history.
+The returned order does not fabricate a list row. Reveal waits for page two.
+
+Repair matrix: stale Returning, manual destination and world destination filters;
+compatible phase/destination plus ETA descending retention; missing-target later
+refresh; failed read then refresh without repeated write; newer filter/selection;
+close, close-away-back, peer navigation; city/session/mount invalidation; and
+openPanel:false via navigation before StartMarch resolves. Baseline must reproduce
+hidden new row under each stale filter despite the authoritative snapshot
+containing it. It is an expected-failure witness, not a repair acceptance pass.
+
+## Controlled fixture boundaries
+
+The scene shell supplies a minimal military form and native navigation buttons,
+an owned idle hero, ready troops, and a fake EventTarget WebSocket. Production
+GatewayClient serializes requests and receives encoded server packets. Synthetic
+server data supplies an indexed total of 21 with sparse rows across two pages.
+The world selection callback is fixed at (90,91), not a mounted WorldPanels UI.
+Production MarchListPanel creates its own DOM and listeners. Scene HUD rendering,
+city-state cache clearing, arrival tracking, minimap polling and city refresh are
+stubbed; this deliberately avoids unrelated concurrent readers. The full scene
+attach/render loop, world navigation and server economy are not tested. Polling
+is set to one hour; explicit native refresh drives recovery deterministically.
+This is component/integration acceptance, not live backend, natural game lifecycle,
+economy, deployment or production acceptance.
+
+## Evidence and gates
+
+Each matrix artifact includes report.json with target/tree/harness SHA-256,
+viewport, case results, decoded requests, routes, errors and cleanup; pending and
+settled PNGs; and Vite log. Zero page errors, drained FIFO, one StartMarch per case,
+selected/recent row and visibility assertions are required. Panels detach,
+gateway closes, browser closes and Vite terminates. Failure exits nonzero and
+writes a partial report; skipped/unexecuted cases are never PASS.
+
+Independent source and artifact/screenshot review and applicable exact-head CI
+remain required before either PR leaves Draft. Baseline/composition changes need
+renewed review and affected tests. This QA adds no production source, dependencies,
+permissions or secrets. Historical #77/#82/#108 holds remain excluded.

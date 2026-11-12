@@ -1,0 +1,54 @@
+name: March start reveal browser
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ['.github/workflows/march-start-reveal.yml', 'client/qa/marchStartReveal.browser.mjs', 'client/qa/MARCH-START-REVEAL.md']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: repair
+            ref: dafe0d70f75fec528be03b0711cbfe64076af6ee
+            baseline: '0'
+          - name: baseline
+            ref: b98b24b6833e06f1b3f965a4a77dedb2d876ae3f
+            baseline: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          path: harness
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.ref }}
+          persist-credentials: false
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Copy isolated harness and verify syntax
+        run: |
+          cp harness/client/qa/marchStartReveal.browser.mjs target/client/qa/
+          node --check target/client/qa/marchStartReveal.browser.mjs
+      - name: Install locked dependencies and official Chromium
+        working-directory: target/client
+        run: npm ci && npx --no-install playwright install --with-deps chromium
+      - name: Run sandboxed native acceptance or baseline witness
+        working-directory: target/client
+        env:
+          QA_BASELINE: ${{ matrix.baseline }}
+          QA_OUT: ${{ runner.temp }}/march-start-reveal-${{ matrix.name }}
+        run: node qa/marchStartReveal.browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: march-start-reveal-${{ matrix.name }}-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/march-start-reveal-${{ matrix.name }}
+          if-no-files-found: error
