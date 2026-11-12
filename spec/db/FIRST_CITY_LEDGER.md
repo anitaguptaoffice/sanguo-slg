@@ -135,5 +135,7 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
    [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md); same-PK `ID_CONTENT_CONFLICT` / same-C1 COMMAND (`spec/db/tests/first_city_ledger_id_content_conflict`); does not certify any realm.
 10. **SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001** — frozen in
    [FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md); companion §5 narrow finalizer full rollback / whitelist / exact-attempt (`spec/db/tests/first_city_ledger_finalizer_rollback`); does not certify any realm.
+11. **SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001** — frozen in
+   [FIRST_CITY_LEDGER_PHASE_ADMISSION.md](FIRST_CITY_LEDGER_PHASE_ADMISSION.md); phase admission / generation-bound lease / close-vs-poison linearization (`spec/db/tests/first_city_ledger_phase_admission`); does not certify any realm or deploy admission controller.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.

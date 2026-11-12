@@ -57,6 +57,8 @@ Record actual `SHOW server_version` and per-scenario `PASS` lines from harness o
 
 ## Follow-on
 
-CITY_CREATION_RECOVERY §10 item 3 **remaining** slice: continuous command lease, normal close vs poison, phase admission /
-Begin linearization, cleanup and unknown drain — separate SPEC cards. Concurrent effect/finalizer ordering remains
+CITY_CREATION_RECOVERY §10 item 3 **remaining** after
+[#2575](FIRST_CITY_LEDGER_PHASE_ADMISSION.md): unknown drain full matrix, process restart / ACK-loss — separate SPEC
+cards. Phase admission / lease / close-poison linearization frozen in
+[#2575](FIRST_CITY_LEDGER_PHASE_ADMISSION.md). Concurrent effect/finalizer ordering remains
 [#2563](FIRST_CITY_LEDGER_RACE.md).
