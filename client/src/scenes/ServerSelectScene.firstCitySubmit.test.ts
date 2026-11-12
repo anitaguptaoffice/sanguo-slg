@@ -11,15 +11,11 @@ const flush = async () => { for (let i = 0; i < 20; i++) await Promise.resolve()
 const scenes: ServerSelectScene[] = [];
 const scope: FirstCityScope = { realmId: "11111111-1111-4111-8111-111111111111", shard: 1, playerId: 7n, accountId: 44n };
 const proposal = { command_id: "22222222-2222-4222-8222-222222222222", predecessor: { empty: {} }, name: "城", x: 60, y: 60 };
-const wireScope = { realm_id: scope.realmId, server_id: 1, player_id: String(scope.playerId), account_id: String(scope.accountId) };
-const record = (state = "pending") => ({
-  canonical: { scope: wireScope, operation: "world.first_city", operation_version: 2, canonical_version: 1, proposal },
-  template: { template_version: "v1", rules_version: "r1", catalog_version: "c1", content_encoding_version: 1, content_sha256: new Uint8Array(32) },
-  [state]: state === "succeeded" ? { city_id: "1", server_id: 1, player_id: String(scope.playerId), is_capital: true, wall_level: 1, morale: 100 } : {},
-});
-const outcome = (state = "pending") => ({
-  outcome: { scope: wireScope, kind: 1, requested_command_id: proposal.command_id,
-    command: record(state), head: { command: record(state) } },
+const pendingRecord = () => ({
+  intent: { scope, proposal: { commandId: proposal.command_id, predecessor: { kind: "empty" as const }, name: "城", x: 60, y: 60 },
+    encode: () => new Uint8Array(8), matches: () => true },
+  template: { templateVersion: "v1", rulesVersion: "r1", catalogVersion: "c1", contentEncodingVersion: 1, contentSha256: "00" },
+  state: { kind: "pending" as const },
 });
 afterEach(() => { scenes.forEach(s => s.leave()); scenes.length = 0; document.body.replaceChildren(); vi.clearAllMocks(); });
 
@@ -43,11 +39,9 @@ async function setup() {
     getSessionGeneration: () => 1,
     requestPersistedFirstCity: vi.fn(async (route: string) => {
       if (route.endsWith("DiscoverFirstCityIntent")) return discovery;
+      const record = pendingRecord();
       const command = { kind: "command" as const, scope, requestedCommandId: proposal.command_id,
-        command: { intent: { scope, proposal: { commandId: proposal.command_id, predecessor: { kind: "empty" }, name: "城", x: 60, y: 60 }, encode: () => new Uint8Array(8), matches: () => true },
-          template: { templateVersion: "v1", rulesVersion: "r1", catalogVersion: "c1", contentEncodingVersion: 1, contentSha256: "00" },
-          state: { kind: "pending" as const } },
-        head: { kind: "command" as const, record: record() } };
+        command: record, head: { kind: "command" as const, record } };
       observations.push(command);
       return command;
     }),
@@ -81,4 +75,15 @@ it("runs login, enter, then persisted submit after discover", async () => {
   expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route === "world.v2.SubmitFirstCity")).toBe(true);
   expect(gateway.createCity).not.toHaveBeenCalled();
   expect(layoutFrame.textContent).toMatch(/Submit|命令|pending/);
+});
+it("runs persisted continue after submit establishes pending head", async () => {
+  const { layoutFrame, gateway } = await setup();
+  layoutFrame.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value = "城";
+  layoutFrame.querySelector<HTMLInputElement>('input[name="password"]')!.value = "test-password";
+  layoutFrame.querySelector<HTMLButtonElement>('[data-action="submit-first-city"]')!.click(); await flush();
+  const password = layoutFrame.querySelector<HTMLInputElement>('input[name="password"]')!;
+  password.value = "test-password";
+  password.dispatchEvent(new Event("input", { bubbles: true }));
+  layoutFrame.querySelector<HTMLButtonElement>('[data-action="continue-first-city"]')!.click(); await flush();
+  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route === "world.v2.ContinueFirstCity")).toBe(true);
 });
