@@ -1,0 +1,151 @@
+name: Mail keyboard native acceptance
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ['.github/workflows/live-mail-keyboard.yml', '.github/scripts/live_mail_keyboard*', '.github/scripts/LIVE_MAIL_KEYBOARD.md']
+jobs:
+  native:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        width: [1280, 1600]
+        product: [baseline, fixed]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: live_mail_keyboard
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U sanguo -d live_mail_keyboard" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      GOTOOLCHAIN: local
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: sanguo
+      PGPASSWORD: sanguo
+      PGDATABASE: live_mail_keyboard
+      DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/live_mail_keyboard?sslmode=disable
+      REDIS_ADDR: 127.0.0.1:6379
+      VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+      QA_WIDTH: ${{ matrix.width }}
+      QA_PRODUCT: ${{ matrix.product }}
+      QA_RUNTIME_HEAD: 506c1ad8ac2fc5f7c7e7bd0592f44532db97385a
+      QA_TRACE_HEAD: a13dbfdd8b194815adeda03ac38259e602808b02
+      QA_STATE_HEAD: d7ed354c33c4e85b0fd1576ffc43d25544302f1c
+      QA_HELPER_HEAD: 7dc5939f9753a8aa59c94f7101c62a8e4a8eda79
+    steps:
+      - name: Resolve immutable reviewed product pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "$QA_PRODUCT" in
+            baseline) head=ddc80aab02c6124c7a747ad694f7b2b70163c263; tree=5dcde9bfe1fd72eb41524566a8bceb7b39821386; parents="d351956694ddf635632312cc2a6d5a1ffd355df7 df13ba8080157a89896ba1298918e68db307e1a8" ;;
+            fixed) head=541de838056b0fbb1f3c2369a038fb7c49086590; tree=f413fa5b234beea2b033c5e277880fb489d61c6b; parents=ddc80aab02c6124c7a747ad694f7b2b70163c263 ;;
+            *) exit 1 ;;
+          esac
+          for sha in "$head" "$tree" "$QA_RUNTIME_HEAD" "$QA_TRACE_HEAD" "$QA_STATE_HEAD"; do [[ "$sha" =~ ^[a-f0-9]{40}$ ]]; done
+          echo "QA_PRODUCT_HEAD=$head" >> "$GITHUB_ENV"
+          echo "QA_PRODUCT_TREE=$tree" >> "$GITHUB_ENV"
+          echo "QA_PRODUCT_PARENTS=$parents" >> "$GITHUB_ENV"
+          echo "QA_SCENARIO_HEAD=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_ENV"
+          echo "QA_OUT=$RUNNER_TEMP/mail-${QA_PRODUCT}-${QA_WIDTH}" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_PRODUCT_HEAD }}
+          path: product
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_RUNTIME_HEAD }}
+          path: runtime-source
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_TRACE_HEAD }}
+          path: trace-source
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_STATE_HEAD }}
+          path: state-source
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_SCENARIO_HEAD }}
+          path: qa-source
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.QA_HELPER_HEAD }}
+          path: helper-source
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build pristine exact product
+        working-directory: product
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$QA_OUT"
+          test "$(git rev-parse HEAD)" = "$QA_PRODUCT_HEAD"
+          test "$(git rev-parse 'HEAD^{tree}')" = "$QA_PRODUCT_TREE"
+          test "$(git show -s --format=%P HEAD)" = "$QA_PRODUCT_PARENTS"
+          test -z "$(git status --porcelain)"
+          git ls-tree -r HEAD > "$QA_OUT/product-tree.txt"
+          go build -o "$QA_OUT/server" ./cmd/server
+          go build -o "$QA_OUT/gm" ./cmd/gm
+          (cd client && npm ci && npm test && npm run build && npx playwright install --with-deps chromium) 2>&1 | tee "$QA_OUT/build.txt"
+          test -z "$(git status --porcelain)"
+          echo "QA_SERVER=$QA_OUT/server" >> "$GITHUB_ENV"
+          echo "QA_GM=$QA_OUT/gm" >> "$GITHUB_ENV"
+      - name: Stage byte-verified complete QA combination
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib,subprocess
+          destination=pathlib.Path('product/client/.mail-qa'); destination.mkdir()
+          groups={'runtime':('live_mail_keyboard_runtime', 'LIVE_MAIL_KEYBOARD_RUNTIME.md'), 'trace':('mail_keyboard_evidence','MAIL_KEYBOARD_EVIDENCE.md'), 'state':('mail_keyboard_state','MAIL_KEYBOARD_STATE.md'), 'qa':('live_mail_keyboard','LIVE_MAIL_KEYBOARD.md'), 'helper':('live_hero_layout_runtime',None)}
+          manifest=[]
+          for group,(stem,doc) in groups.items():
+            source=pathlib.Path(f'{group}-source'); head=subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()
+            expected=os.environ['QA_SCENARIO_HEAD' if group=='qa' else f'QA_{group.upper()}_HEAD']; assert head==expected
+            for name in [stem+'.mjs',stem+'.test.mjs']+([doc] if doc else []):
+              path='.github/scripts/'+name; raw=subprocess.check_output(['git','-C',str(source),'show',head+':'+path])
+              blob=subprocess.check_output(['git','-C',str(source),'rev-parse',head+':'+path],text=True).strip()
+              (destination/name).write_bytes(raw); manifest.append(dict(file=name,sha256=hashlib.sha256(raw).hexdigest(),sourceHead=head,sourceBlob=blob))
+          (destination/'manifest.json').write_text(json.dumps(manifest,indent=2))
+          PY
+          cp product/client/.mail-qa/manifest.json "$QA_OUT/staged-manifest.json"
+          (cd product/client && node .mail-qa/live_hero_layout_runtime.test.mjs && node --test .mail-qa/mail_keyboard_state.test.mjs .mail-qa/mail_keyboard_evidence.test.mjs .mail-qa/live_mail_keyboard_runtime.test.mjs .mail-qa/live_mail_keyboard.test.mjs) 2>&1 | tee "$QA_OUT/controls.txt"
+      - name: Execute native matrix cell
+        working-directory: product/client
+        shell: bash
+        run: |
+          set -euo pipefail
+          node .mail-qa/live_mail_keyboard.mjs 2>&1 | tee "$QA_OUT/native.txt"
+      - name: Retain failures and hash artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="${QA_OUT:-$RUNNER_TEMP/mail-${QA_PRODUCT}-${QA_WIDTH}}"
+          mkdir -p "$out"; cd "$out"
+          find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS
+          echo "QA_OUT=$out" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mail-keyboard-${{ matrix.product }}-${{ matrix.width }}
+          path: ${{ env.QA_OUT }}
+          if-no-files-found: error
+          retention-days: 14
