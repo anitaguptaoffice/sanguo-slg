@@ -157,7 +157,6 @@ func conn(pool *pgxpool.Pool) *pgxpool.Conn {
 	must(err)
 	return c
 }
-
 func observerOK(p *pgxpool.Pool, a actor) {
 	var orphan, dangling int
 	must(p.QueryRow(ctx, `SELECT count(*) FROM world_first_city_actor_slot s
@@ -187,7 +186,6 @@ func cmdCount(p *pgxpool.Pool, a actor) int {
  WHERE realm_id=$1::uuid AND server_id=$2 AND player_id=$3`, a.realm, a.server, a.player).Scan(&n))
 	return n
 }
-
 func dualInitial(pool *pgxpool.Pool, a, b actor) (bool, bool) {
 	begin := make(chan struct{})
 	var wg sync.WaitGroup
