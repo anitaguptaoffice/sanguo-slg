@@ -238,6 +238,8 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	if s.firstCityV2Routes {
 		handlers[RouteDiscoverFirstCityIntent] = s.handleDiscoverFirstCityIntent
 		handlers[RouteSubmitFirstCity] = s.handleSubmitFirstCity
+		handlers[RouteContinueFirstCity] = s.handleContinueFirstCity
+		handlers[RouteGetFirstCityResult] = s.handleGetFirstCityResult
 	}
 	return gateway.NewRouter(handlers)
 }

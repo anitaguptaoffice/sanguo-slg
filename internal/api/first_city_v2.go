@@ -11,6 +11,8 @@ import (
 const (
 	RouteDiscoverFirstCityIntent = "world.v2.DiscoverFirstCityIntent"
 	RouteSubmitFirstCity         = "world.v2.SubmitFirstCity"
+	RouteContinueFirstCity       = "world.v2.ContinueFirstCity"
+	RouteGetFirstCityResult      = "world.v2.GetFirstCityResult"
 )
 
 type FirstCityV2Realm func(PlayerContext) (realmID string, ok bool)
