@@ -91,7 +91,8 @@ returning；原值无 writer）。归属仍为
 **仅契约前置**：不实施 runtime、不认证目标 realm、不授权 cutover；`002_world.sql` 无 realm 列。
 OID/profile 与写入者清单：[SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001](FIRST_CITY_LEDGER_OID_PROFILE.md)。
 全局 pin 序：[SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001](FIRST_CITY_LEDGER_GLOBAL_PINS.md)；
-companion 与 loader 验收见 `FIRST_CITY_LEDGER.md` §8 第 3–4 项。
+PG companion：[SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001](FIRST_CITY_LEDGER_PG_COMPANION.md)；
+loader 验收见 `FIRST_CITY_LEDGER.md` §8 第 4 项。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 

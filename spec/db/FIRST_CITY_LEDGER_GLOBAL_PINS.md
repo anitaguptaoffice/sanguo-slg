@@ -46,7 +46,7 @@ file extends that proof into the full cross-domain order without rewriting DDL.
 finalizer** must pin only ACCOUNT + ledger relations (§4.1 steps 1–2) before business locks — same pin
 subset, not the full effect table. **Effect/continue** must acquire the full §4.1 pin order. Finalizer
 does not take wallet, map/city, MIL, or DOM relation pins even when §6.3 re-reads terrain or coordinate
-evidence (shared or row locks per companion; not §4.1 steps 3–6).
+evidence (`map_cell` / `player_city` **`FOR SHARE`** per [companion §5.1](FIRST_CITY_LEDGER_PG_COMPANION.md#51-finalizer-lock-modes-companion-resolves-global_pins-63); not §4.1 steps 3–6).
 
 All classes: **READ COMMITTED** minimum unless a later card proves a stronger isolation for a whole effect
 transaction ([FIRST_CITY_LEDGER.md](FIRST_CITY_LEDGER.md) §5). Hold every lock acquired in a step until the
@@ -208,8 +208,8 @@ On abort: roll back **all** business effects and leave command PENDING unless a 
 
 | Evidence | Re-read | Whitelist |
 |----------|---------|-----------|
-| Terrain | `map_cell` (shared or FOR UPDATE per companion) | reason `1` only if still non-buildable |
-| Coordinate | `player_city` at requested cell | reason `2` only if committed occupier exists |
+| Terrain | `map_cell` **`FOR SHARE`** per [companion §5.1](FIRST_CITY_LEDGER_PG_COMPANION.md#51-finalizer-lock-modes-companion-resolves-global_pins-63) | reason `1` only if still non-buildable |
+| Coordinate | `player_city` at requested cell **`FOR SHARE`** per companion §5.1 | reason `2` only if committed occupier exists |
 | Business surface | wallet, MIL, DOM tables | **no** new rows for this command |
 
 Finalizer must not commit rejection while any concurrent effect transaction could still succeed on the same command PK.
@@ -227,7 +227,7 @@ Finalizer must not commit rejection while any concurrent effect transaction coul
 
 | Card | Status |
 |------|--------|
-| SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Effect/finalizer SQL companions — **not done**. |
+| SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Frozen in [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md). |
 | SPEC-FIRST-CITY-LEDGER-LOADER-001 | ApplySpecs replay / PG17 acceptance — **not done**. |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
 | Target realm enrollment execution | Drain/fence/deploy — **not authorized** by #2556. |

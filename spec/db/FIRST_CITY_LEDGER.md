@@ -114,8 +114,9 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 2. **SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001** — frozen in
    [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md); ACCOUNT → slot/command → wallet →
    CITY/map → MIL/DOM pin order, row locks, and conflict re-read proofs (does not certify any realm).
-3. **SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001** — participant SQL companions and effect/finalizer
-   transitions bound to this schema.
+3. **SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001** — frozen in
+   [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md); participant SQL companions
+   and effect/finalizer transitions bound to this schema.
 4. **SPEC-FIRST-CITY-LEDGER-LOADER-001** — ApplySpecs replay, missing-ledger idempotency, and
    isolated PG17 acceptance tests (pattern: `hero_metadata_loader`, `recruit_storage_entry`).
 
