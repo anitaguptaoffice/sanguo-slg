@@ -69,6 +69,9 @@ func (m *MemStore) ListInbox(_ context.Context, serverID int32, playerID int64, 
 		matches = append(matches, row)
 	}
 	sort.Slice(matches, func(i, j int) bool {
+		if matches[i].CreatedAt.Equal(matches[j].CreatedAt) {
+			return matches[i].MailID > matches[j].MailID
+		}
 		return matches[i].CreatedAt.After(matches[j].CreatedAt)
 	})
 	limit := q.Limit
