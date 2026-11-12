@@ -264,8 +264,8 @@ export class ServerSelectScene implements Scene {
     if (probe) probe.hidden = !probeVisible;
     if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
     if (probeBtn) {
-      probeBtn.disabled = !probeVisible || this.entering || this.listBusy || !this.connected ||
-        !login.value.trim() || !password.value || !supportsFirstCityPersisted(this.gatewayRef);
+      probeBtn.disabled = !probeVisible || this.entering || this.firstCityProbeInFlight || this.listBusy ||
+        !this.connected || !login.value.trim() || !password.value || !supportsFirstCityPersisted(this.gatewayRef);
     }
     const hudBusy =
       /^(连接|拉取|进入服)/.test(this.status) || this.status.includes("失败");
@@ -329,7 +329,6 @@ export class ServerSelectScene implements Scene {
     if (!this.active || !this.focusTrap?.isActive() || !this.firstCityProbeEligible || !this.connected ||
       this.listBusy || this.entering || this.firstCityProbeInFlight || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
       !supportsFirstCityPersisted(ctx.gateway)) return;
-    this.firstCityProbeInFlight = true;
     const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
     const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
     if (!login || !password ||
@@ -337,12 +336,18 @@ export class ServerSelectScene implements Scene {
     this.clearPassword();
     const lifecycle = this.lifecycle;
     const generation = ctx.gateway.getSessionGeneration?.();
+    const inProgress = "首城 V2 探测进行中…";
+    this.firstCityProbeInFlight = true;
     this.entering = true;
-    this.firstCityProbeNotice = "首城 V2 探测进行中…";
+    this.firstCityProbeNotice = inProgress;
     this.syncPanel();
     try {
       const message = await runFirstCityDiscoverProbe(ctx.gateway, login, password, this.selectedId, generation);
-      if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) return;
+      if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
+        this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+        this.status = "首城 V2 探测未完成";
+        return;
+      }
       this.firstCityProbeNotice = message;
       this.status = "首城 V2 探测完成；未建城、未进主城。";
     } catch {
@@ -350,6 +355,9 @@ export class ServerSelectScene implements Scene {
       this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
       this.status = "首城 V2 探测未完成";
     } finally {
+      if (this.firstCityProbeNotice === inProgress) {
+        this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+      }
       this.firstCityProbeInFlight = false;
       this.entering = false;
       if (this.active) this.syncPanel();

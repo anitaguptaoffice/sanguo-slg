@@ -53,7 +53,7 @@ async function setup() {
     layoutFrame.querySelector<HTMLButtonElement>('[data-action="login-existing"]')!.click();
     await flush();
   };
-  return { scene, ctx, gateway, layoutFrame, refill, probeDiscover, noCityLogin,
+  return { scene, ctx, gateway, layoutFrame, input, refill, probeDiscover, noCityLogin,
     bumpGeneration: () => { generation++; } };
 }
 
@@ -125,4 +125,21 @@ it("reports probe failure without v1 fallback when persisted discover rejects", 
   await probeDiscover();
   expect(gateway.createCity).not.toHaveBeenCalled();
   expect(layoutFrame.textContent).toContain("探测结果尚未确认");
+});
+it("does not leave probe in-flight locked after blank credentials or a failed attempt", async () => {
+  const { gateway, layoutFrame, noCityLogin, refill, probeDiscover, input } = await setup();
+  await noCityLogin();
+  const probeBtn = () => layoutFrame.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]')!;
+  input("password").value = "";
+  input("password").dispatchEvent(new Event("input", { bubbles: true }));
+  probeBtn().click(); await flush();
+  expect(probeBtn().disabled).toBe(true);
+  refill();
+  expect(probeBtn().disabled).toBe(false);
+  await probeDiscover();
+  gateway.requestPersistedFirstCity.mockRejectedValueOnce(new Error("UNKNOWN"));
+  refill();
+  await probeDiscover();
+  expect(gateway.requestPersistedFirstCity).toHaveBeenCalledTimes(2);
+  expect(layoutFrame.textContent).not.toContain("探测进行中");
 });
