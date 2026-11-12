@@ -22,3 +22,6 @@ gate passes; opening or synchronizing the Draft never starts native execution.
 No native execution, successful artifact, or acceptance is claimed by these files.
 All components, pristine product tests/build, exact-head CI, real native artifacts,
 clean owned shutdown and independent review remain mandatory before product release.
+
+Official Ubuntu jobs install only the Redis host client from the distro package
+repository; the Redis7 service container and strict empty/version checks stay unchanged.
