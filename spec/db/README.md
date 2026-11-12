@@ -82,6 +82,17 @@ returning；原值无 writer）。归属仍为
 影响域/卡：MIL M1/M2/M5、API M3/M6、HERO M4 及未来 APP activation；本文件不授权
 任何实现。
 
+## First-city WORLD ledger (SPEC-FIRST-CITY-LEDGER-DDL-001)
+
+[契约与 CAS / 锁强度说明](FIRST_CITY_LEDGER.md) 与 `m4_010_first_city_ledger.sql` 冻结
+`world_first_city_command` 与 `world_first_city_actor_slot`：稳定 slot 键
+`realm_id + server_id + player_id`、不可回收 `command_id`、当前 head、`canonical_c1`、
+接收时 FCT1 模板、`PENDING` / `SUCCEEDED` / `REJECTED_NO_EFFECT` 及成功/拒绝 receipt 列。
+**仅契约前置**：不实施 runtime、不认证目标 realm、不授权 cutover；`002_world.sql` 无 realm 列。
+OID/profile 与写入者清单：[SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001](FIRST_CITY_LEDGER_OID_PROFILE.md)。
+全局 pin 序：[SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001](FIRST_CITY_LEDGER_GLOBAL_PINS.md)；
+companion 与 loader 验收见 `FIRST_CITY_LEDGER.md` §8 第 3–4 项。
+
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
 `007_domestic_production_checkpoint.sql` adds a dedicated city accrual clock and
