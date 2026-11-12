@@ -5229,10 +5229,6 @@
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .panel-scroll-body {
         padding-bottom: 64px;
       }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"]:has([data-role="hero-detail-bust"]) .panel-scroll-body {
-        flex: 1 1 400px;
-        min-height: 400px;
-      }
       /* HERO-HOST-SCROLL-CLIP: compact fixed recruit chrome so hero-scroll fits 128×160 bust + name at 1280×720. */
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] [data-role="hero-hint"] {
         display: none;
@@ -5243,9 +5239,6 @@
         cursor: pointer;
         color: #4a3828;
         margin: 4px 0;
-      }
-      #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-recruit-host {
-        flex-shrink: 0;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="hero"] .hero-recruit-host:not([open]) .hero-recruit-host-summary {
         margin-bottom: 2px;
@@ -5297,7 +5290,7 @@
         flex-direction: row;
         flex-wrap: nowrap;
         gap: 6px;
-        flex-shrink: 0;
+        flex-shrink: 1;
         width: 100%;
         box-sizing: border-box;
         margin: 2px 0 4px;
@@ -5318,8 +5311,8 @@
       .hero-capture-info [role="button"]:focus-visible { outline: 2px solid #9d7324; }
       #layout-frame.layout-narrow .hero-capture-info { position: relative; }
       #layout-frame.layout-narrow .hero-capture-info[open] > .hero-capture-info-body {
-        position: absolute; top: 100%; left: 0; right: 0; z-index: 8;
-        max-height: 220px; overflow-y: auto; padding: 6px;
+        position: static;
+        max-height: none; overflow: visible; padding: 6px;
         background: #f5edd8; color: #3d2e1f; border: 1px solid #8a713f;
         box-shadow: 0 2px 6px #0004; overflow-wrap: anywhere;
       }
@@ -5378,6 +5371,29 @@
         overflow-x: auto;
         overflow-y: visible;
         flex-shrink: 0;
+      }
+      /* CLIENT-HERO-PANEL-LAYOUT-001: expanded controls must not consume the roster viewport.
+         Percentage caps share this bounded panel's height; controls scroll rather than disappear.
+         The same roster budget applies after detail load, without an overflowing 400px minimum. */
+      #layout-frame .content-panel[data-center-panel="hero"] > .hero-recruit-host,
+      #layout-frame .content-panel[data-center-panel="hero"] > [data-role="hero-capture-sections-row"] {
+        flex: 0 1 auto;
+        min-height: 0;
+        min-width: 0;
+        box-sizing: border-box;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+      }
+      #layout-frame .content-panel[data-center-panel="hero"] > .hero-recruit-host {
+        max-height: 30%;
+      }
+      #layout-frame .content-panel[data-center-panel="hero"] > [data-role="hero-capture-sections-row"] {
+        max-height: 22%;
+      }
+      #layout-frame .content-panel[data-center-panel="hero"] > [data-role="hero-scroll"] {
+        flex: 1 0 40%;
+        min-height: 0;
+        box-sizing: border-box;
       }
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-panel-hint,
       #layout-frame.layout-narrow .content-panel[data-center-panel="world"] .world-tile-info,
