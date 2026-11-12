@@ -42,6 +42,12 @@ file extends that proof into the full cross-domain order without rewriting DDL.
 | **Effect / continue** | Full fresh-city business + success receipt (`durable_state=2`) | **Required** in frozen order after slot re-lock. |
 | **Narrow rejection finalizer** | `durable_state=3` only (reason 1/2) | **Forbidden** — no wallet grant, no `player_city` INSERT, no MIL/DOM init. |
 
+**Relation pins (`LOCK TABLE` / transaction-held OID pins, §4.1):** **intake** and **narrow rejection
+finalizer** must pin only ACCOUNT + ledger relations (§4.1 steps 1–2) before business locks — same pin
+subset, not the full effect table. **Effect/continue** must acquire the full §4.1 pin order. Finalizer
+does not take wallet, map/city, MIL, or DOM relation pins even when §6.3 re-reads terrain or coordinate
+evidence (shared or row locks per companion; not §4.1 steps 3–6).
+
 All classes: **READ COMMITTED** minimum unless a later card proves a stronger isolation for a whole effect
 transaction ([FIRST_CITY_LEDGER.md](FIRST_CITY_LEDGER.md) §5). Hold every lock acquired in a step until the
 transaction ends; no lock downgrade or out-of-order release.
@@ -67,11 +73,12 @@ winner identity from transient absence under READ COMMITTED while another transa
 
 ## 4. Global pin and business-lock sequence
 
-### 4.1 Relation pins (effect/continue only)
+### 4.1 Relation pins
 
 Before business row locks, each participant acquires **transaction-held relation pins** on reviewed OIDs
-in this order (pattern: [FRESH_CITY_PARTICIPANTS.md](../rules/FRESH_CITY_PARTICIPANTS.md) §4). Intake
-transactions pin only ACCOUNT + ledger relations.
+in this order (pattern: [FRESH_CITY_PARTICIPANTS.md](../rules/FRESH_CITY_PARTICIPANTS.md) §4).
+**Intake** and **narrow rejection finalizer** pin only steps 1–2 (ACCOUNT + ledger). **Effect/continue**
+must pin the full table below before any §4.3 wallet lock.
 
 | Order | Domain | Relations (schema-qualified, reviewed release) | Pin mode |
 |------:|--------|--------------------------------------------------|----------|
