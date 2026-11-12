@@ -1,10 +1,11 @@
 name: Mail keyboard native acceptance
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled]
     paths: ['.github/workflows/live-mail-keyboard.yml', '.github/scripts/live_mail_keyboard*', '.github/scripts/LIVE_MAIL_KEYBOARD.md']
 jobs:
   native:
+    if: github.event.action == 'labeled' && github.event.label.name == 'status:review'
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     permissions:
@@ -63,6 +64,7 @@ jobs:
         with:
           ref: ${{ env.QA_PRODUCT_HEAD }}
           path: product
+          fetch-depth: 2
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.QA_RUNTIME_HEAD }}

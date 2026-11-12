@@ -17,6 +17,8 @@ visual review. Settled focus is not proof of an in-flight async interval.
 Pure controls run with node --test .github/scripts/live_mail_keyboard.test.mjs.
 Product and dependency pins identify reviewed immutable trees; source mapping
 and final pinned workflow review remain separate pre-execution gates.
+The native job runs only on adding the existing status:review label after every exact-head CI
+gate passes; opening or synchronizing the Draft never starts native execution.
 No native execution, successful artifact, or acceptance is claimed by these files.
 All components, pristine product tests/build, exact-head CI, real native artifacts,
 clean owned shutdown and independent review remain mandatory before product release.
