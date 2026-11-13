@@ -55,4 +55,4 @@ No DSN / `ALLOW_OWNED_PG17_TEST` → harness `SKIP`, exit 0.
 
 ## 5. Follow-on (separate SPEC cards)
 
-Crash barriers, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence (remainder of [FIRST_CITY_LEDGER_VALIDATE_ONLY.md](FIRST_CITY_LEDGER_VALIDATE_ONLY.md) §5 after this card).
+**SPEC-FIRST-CITY-LEDGER-ATOMICITY-001** frozen in [FIRST_CITY_LEDGER_ATOMICITY.md](FIRST_CITY_LEDGER_ATOMICITY.md) (`first_city_ledger_atomicity`; per-barrier crash barriers). **SPEC-FIRST-CITY-LEDGER-CRASH-GAP-001** — [FIRST_CITY_LEDGER_CRASH_GAP.md](FIRST_CITY_LEDGER_CRASH_GAP.md) (`first_city_ledger_crash_gap`; §10 item 3 rollback→finalizer gap slice). CITY_CREATION_RECOVERY §10 items 3 remaining / 5–7, realm drain/fence — separate SPEC cards.
