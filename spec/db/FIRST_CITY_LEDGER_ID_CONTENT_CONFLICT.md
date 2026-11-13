@@ -27,4 +27,4 @@ GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_id_content_conflict
 
 ## Follow-on
 
-Optional one-PENDING partial unique index, ACL, crash barriers, `validate_only` GUC, `player_city_id_seq`, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence.
+**SPEC-FIRST-CITY-LEDGER-PENDING-UNIQUE-INDEX-001** frozen in [FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md) (`first_city_ledger_pending_unique_index`). ACL, crash barriers, `validate_only` GUC, `player_city_id_seq`, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence.

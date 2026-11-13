@@ -37,6 +37,7 @@ Relevant frozen filenames (must stay in this order):
 | … | `00*.sql`, `m3_*.sql`, earlier `m4_*.sql` | Base domain DDL executed before ledger files. |
 | N | `m4_010_first_city_ledger.sql` | `world_first_city_command`, `world_first_city_actor_slot`, retention triggers. |
 | N+1 | `m4_011_first_city_ledger_companion.sql` | `world_first_city_slot_key_text`, `world_first_city_slot_advisory_lock` helpers. |
+| N+2 | `m4_012_first_city_ledger_pending_unique_index.sql` | Partial unique index `idx_world_first_city_command_one_pending_per_slot` (see [FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md)). |
 
 Earlier committed files (including sequence advances) are **not** rolled back when a later file fails.
 Whole-ApplySpecs is therefore not one atomic transaction across all `m4_*` files.

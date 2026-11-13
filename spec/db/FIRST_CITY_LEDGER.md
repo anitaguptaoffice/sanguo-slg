@@ -72,8 +72,8 @@ Competing INITIAL proposals: at most one succeeds; losers must not write busines
 transaction with an open PENDING intake on the same slot must block at step 3 until the prior
 transaction commits or rolls back—never infer EMPTY from a transient absence under READ COMMITTED.
 
-Optional hardening (follow-on card): partial unique indexes for “at most one PENDING per slot” if
-reviewed; not required for this core schema.
+Partial unique “at most one PENDING per slot” is frozen in
+[FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md) (`m4_012`); it is a catalog backstop, not a substitute for §4 CAS.
 
 ## 5. Transaction isolation and lock strength
 
@@ -133,6 +133,8 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
    [FIRST_CITY_LEDGER_SLOT_ISOLATION.md](FIRST_CITY_LEDGER_SLOT_ISOLATION.md); cross-actor slot isolation (`spec/db/tests/first_city_ledger_slot_isolation`); does not certify any realm.
 9. **SPEC-FIRST-CITY-LEDGER-ID-CONTENT-CONFLICT-001** — frozen in
    [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md); same-PK `ID_CONTENT_CONFLICT` / same-C1 COMMAND (`spec/db/tests/first_city_ledger_id_content_conflict`); does not certify any realm.
+9b. **SPEC-FIRST-CITY-LEDGER-PENDING-UNIQUE-INDEX-001** — frozen in
+   [FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md); one-PENDING partial unique index (`spec/db/tests/first_city_ledger_pending_unique_index`); does not certify any realm.
 10. **SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001** — frozen in
    [FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md); companion §5 narrow finalizer full rollback / whitelist / exact-attempt (`spec/db/tests/first_city_ledger_finalizer_rollback`); does not certify any realm.
 11. **SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001** — frozen in
