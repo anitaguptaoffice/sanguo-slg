@@ -149,5 +149,6 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 20. **SPEC-FIRST-CITY-LEDGER-OLD-BINARY-EXCLUSION-001** — [FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md](FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md) (`first_city_ledger_old_binary_exclusion`); OID §6.1/11 legacy subprocess only; not signed rollback/realm/controller.
 21. **SPEC-FIRST-CITY-LEDGER-DOM-API-CHAIN-EXCLUSION-001** — [FIRST_CITY_LEDGER_DOM_API_CHAIN_EXCLUSION.md](FIRST_CITY_LEDGER_DOM_API_CHAIN_EXCLUSION.md) (`first_city_ledger_dom_api_chain_exclusion`); OID §6.2 DOM `saveCityWithWorld` / API `CreateNewCity` subprocess chain only; not realm/controller/browser/signed rollback.
 22. **SPEC-FIRST-CITY-LEDGER-GM-IMPORT-EXCLUSION-001** — [FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md](FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md) (`first_city_ledger_gm_import_exclusion`); OID §6.3 GM/import batch-SQL maintenance subprocess only; not realm/controller/browser/signed rollback.
+23. **SPEC-FIRST-CITY-LEDGER-SNAPSHOT-FLUSH-EXCLUSION-001** — [FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md](FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md) (`first_city_ledger_snapshot_flush_exclusion`); OID §6.5 snapshot flusher / async persistence subprocess only; not realm/controller/browser/signed rollback.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.
