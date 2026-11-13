@@ -119,7 +119,7 @@ func seqShapeOK(p *pgxpool.Pool) bool {
 	var typ string
 	var inc, minv, maxv, cache, start int64
 	var cycle bool
-	err := p.QueryRow(ctx, `SELECT data_type, increment::bigint, min_value::bigint, max_value::bigint,
+	err := p.QueryRow(ctx, `SELECT data_type, increment_by::bigint, min_value::bigint, max_value::bigint,
  cycle, cache_size::bigint, start_value::bigint FROM pg_sequences WHERE sequencename='player_city_id_seq'`).Scan(
 		&typ, &inc, &minv, &maxv, &cycle, &cache, &start)
 	return err == nil && typ == "bigint" && inc == 1 && minv == 1 && maxv == maxInt64 && !cycle && cache == 1 && start == 1
