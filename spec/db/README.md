@@ -101,6 +101,7 @@ Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CIT
 每 slot 至多一个 PENDING 部分唯一索引：[SPEC-FIRST-CITY-LEDGER-PENDING-UNIQUE-INDEX-001](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md)（`go run ./spec/db/tests/first_city_ledger_pending_unique_index`，无 DSN 时 SKIP）。
 受限角色 ACL / 权限分离：[SPEC-FIRST-CITY-LEDGER-ACL-001](FIRST_CITY_LEDGER_ACL.md)（`go run ./spec/db/tests/first_city_ledger_acl`，同上 DSN 约定）。
 事务局部 `validate_only` GUC：[SPEC-FIRST-CITY-LEDGER-VALIDATE-ONLY-001](FIRST_CITY_LEDGER_VALIDATE_ONLY.md)（`go run ./spec/db/tests/first_city_ledger_validate_only`，同上 DSN 约定；非生产启用/enrollment）。
+`player_city_id_seq` 对象契约与隔离 PG17 序列验收：[SPEC-FIRST-CITY-LEDGER-PLAYER-CITY-ID-SEQ-001](FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md)（`go run ./spec/db/tests/first_city_ledger_player_city_id_seq`，同上 DSN 约定；非生产激活/runtime 分配器）。
 狭义拒绝 finalizer 全 rollback / 白名单 / exact-attempt：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_rollback`）。
 phase admission / lease / close-poison 线性化：[SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001](FIRST_CITY_LEDGER_PHASE_ADMISSION.md)（`go run ./spec/db/tests/first_city_ledger_phase_admission`，同上 DSN 约定；夹具表非生产 DDL）。
 未知 drain / receipt≠排空证据：[SPEC-FIRST-CITY-LEDGER-UNKNOWN-DRAIN-001](FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md)（`go run ./spec/db/tests/first_city_ledger_unknown_drain`，同上 DSN 约定）。
