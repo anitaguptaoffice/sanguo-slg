@@ -55,4 +55,4 @@ Harness records PostgreSQL `server_version`, role attributes (`rolsuper`, `pg_au
 
 ## 5. Follow-on (separate SPEC cards)
 
-**SPEC-FIRST-CITY-LEDGER-VALIDATE-ONLY-001** frozen in [FIRST_CITY_LEDGER_VALIDATE_ONLY.md](FIRST_CITY_LEDGER_VALIDATE_ONLY.md) (`first_city_ledger_validate_only`). Crash barriers, `player_city_id_seq`, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence (remainder of [FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md) Follow-on after ACL).
+**SPEC-FIRST-CITY-LEDGER-VALIDATE-ONLY-001** frozen in [FIRST_CITY_LEDGER_VALIDATE_ONLY.md](FIRST_CITY_LEDGER_VALIDATE_ONLY.md) (`first_city_ledger_validate_only`). **SPEC-FIRST-CITY-LEDGER-PLAYER-CITY-ID-SEQ-001** frozen in [FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md](FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md) (`first_city_ledger_player_city_id_seq`). Crash barriers, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence (remainder of [FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md) Follow-on after ACL).

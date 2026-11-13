@@ -42,4 +42,4 @@ No DSN / `ALLOW_OWNED_PG17_TEST` → harness `SKIP` exit 0.
 
 ## 5. Follow-on (separate SPEC cards)
 
-`player_city_id_seq`, crash barriers, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence (remainder of [FIRST_CITY_LEDGER_ACL.md](FIRST_CITY_LEDGER_ACL.md) §5 after this card).
+**SPEC-FIRST-CITY-LEDGER-PLAYER-CITY-ID-SEQ-001** frozen in [FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md](FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md) (`first_city_ledger_player_city_id_seq`). Crash barriers, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence (remainder of [FIRST_CITY_LEDGER_ACL.md](FIRST_CITY_LEDGER_ACL.md) §5 after this card).
