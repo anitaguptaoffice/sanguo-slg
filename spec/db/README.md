@@ -105,6 +105,7 @@ phase admission / lease / close-poison 线性化：[SPEC-FIRST-CITY-LEDGER-PHASE
 分屏障效果事务原子性（CITY_CREATION_RECOVERY §6/§11）：[SPEC-FIRST-CITY-LEDGER-ATOMICITY-001](FIRST_CITY_LEDGER_ATOMICITY.md)（`go run ./spec/db/tests/first_city_ledger_atomicity`，同上 DSN 约定；非 #2566 并发、非 #2580 ACK-loss）。
 INITIAL 接收仲裁（CITY_CREATION_RECOVERY §5 / §11 INITIAL）：[SPEC-FIRST-CITY-LEDGER-INITIAL-001](FIRST_CITY_LEDGER_INITIAL.md)（`go run ./spec/db/tests/first_city_ledger_initial`，同上 DSN 约定；非 absence/retention/浏览器）。
 瞬时缺行 / 在途 lookup·continuation（§11 absence）：[SPEC-FIRST-CITY-LEDGER-ABSENCE-001](FIRST_CITY_LEDGER_ABSENCE.md)（`go run ./spec/db/tests/first_city_ledger_absence`，同上 DSN 约定；不重跑 #2584 INITIAL / #2578 drain）。
+保留/改绑/不完整 restore fail-closed（§9/§11 retention/cutover）：[SPEC-FIRST-CITY-LEDGER-RETENTION-CUTOVER-001](FIRST_CITY_LEDGER_RETENTION_CUTOVER.md)（`go run ./spec/db/tests/first_city_ledger_retention_cutover`，同上 DSN 约定；非 realm 认证/生产 fence/浏览器）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
