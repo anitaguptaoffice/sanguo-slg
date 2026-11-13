@@ -19,7 +19,9 @@ import (
 const realm = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380dcc"
 
 // content_sha256 must be exactly 32 bytes (m4_010 world_first_city_command_sha256_check).
+// template_fct1 must be 52–262144 bytes (m4_010 world_first_city_command_template_fct1_check).
 const (
+	seedFCT1Min52      = `\x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000`
 	seedSHA32ACL       = `\xabababababababababababababababababababababababababababababababab`
 	seedSHA32DenyDML   = `\xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd`
 	seedSHA32Partial   = `\xefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefefef`
@@ -141,8 +143,8 @@ func seedRow(p *pgxpool.Pool) (cmd string, acct int64) {
 	exec(p, `INSERT INTO world_first_city_command (
  realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
  template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at)
- VALUES ($1::uuid,1,42,$2::uuid,$3,'\x01',1,'t','r','c',1,'\x00',$4,now())`,
-		realm, cmd, acct, seedSHA32ACL)
+ VALUES ($1::uuid,1,42,$2::uuid,$3,'\x01',1,'t','r','c',1,$5,$4,now())`,
+		realm, cmd, acct, seedSHA32ACL, seedFCT1Min52)
 	exec(p, `INSERT INTO world_first_city_actor_slot (realm_id,server_id,player_id,account_id,head_command_id)
  VALUES ($1::uuid,1,42,$2,$3::uuid)`, realm, acct, cmd)
 	return cmd, acct
@@ -200,8 +202,8 @@ func denyDML(pool *pgxpool.Pool, cmd string, acct int64) {
 	_, err := pool.Exec(ctx, `INSERT INTO world_first_city_command (
  realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
  template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at)
- VALUES ($1::uuid,1,42,$2::uuid,$3,'\x02',1,'t','r','c',1,'\x00',$4,now())`,
-		realm, "41000000-0000-4000-8000-000000000099", acct, seedSHA32DenyDML)
+ VALUES ($1::uuid,1,42,$2::uuid,$3,'\x02',1,'t','r','c',1,$5,$4,now())`,
+		realm, "41000000-0000-4000-8000-000000000099", acct, seedSHA32DenyDML, seedFCT1Min52)
 	assert(err != nil && is42501(err), "INSERT denied: "+err.Error())
 	_, err = pool.Exec(ctx, `UPDATE world_first_city_command SET durable_state=2 WHERE command_id=$1::uuid`, cmd)
 	assert(err != nil && is42501(err), "UPDATE denied")
@@ -240,7 +242,7 @@ func scenarioPartialGrantNotEnablement(schema string, observer *pgxpool.Pool, r 
 	before := cmdCount(observer)
 	_, err = pool.Exec(ctx, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
  template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at)
- VALUES ($1::uuid,1,42,'41000000-0000-4000-8000-0000000000aa',1,'\x03',1,'t','r','c',1,'\x00',$2,now())`, realm, seedSHA32Partial)
+ VALUES ($1::uuid,1,42,'41000000-0000-4000-8000-0000000000aa',1,'\x03',1,'t','r','c',1,$3,$2,now())`, realm, seedSHA32Partial, seedFCT1Min52)
 	assert(err != nil && is42501(err), "partial grant does not enable write")
 	assert(cmdCount(observer) == before, "partial grant is not partial enablement")
 	fmt.Println("PASS acl: partial_grants_fail_closed_not_partial_enablement")
@@ -254,8 +256,8 @@ func scenarioRuntimeWorldWriteAllowed(schema string, observer *pgxpool.Pool, acc
 	_, err := pool.Exec(ctx, `INSERT INTO world_first_city_command (
  realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
  template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at)
- VALUES ($1::uuid,1,43,$2::uuid,$3,'\x04',1,'t','r','c',1,'\x00',$4,now())`,
-		realm, newCmd, acct, seedSHA32WorldIns)
+ VALUES ($1::uuid,1,43,$2::uuid,$3,'\x04',1,'t','r','c',1,$5,$4,now())`,
+		realm, newCmd, acct, seedSHA32WorldIns, seedFCT1Min52)
 	if err == nil {
 		assert(cmdCount(observer) == before+1, "narrow WORLD grant allows INSERT in harness only")
 		fmt.Println("PASS acl: runtime_world_narrow_grant_insert_in_disposable_harness_only")
