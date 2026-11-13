@@ -253,7 +253,6 @@ func sMissingMapping(pool *pgxpool.Pool, acct int64) {
 func sNamespaceOnly(pool *pgxpool.Pool, acct int64) {
 	ns := "label-only-realm-ns"
 	writeMapping(pool, &ns, nil, nil, nil, nil, nil, nil, nil, true, true)
-	_ = acct
 	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) {
 		return intakeMapping(tx, acct, "a2222222-2222-4222-8222-222222222222", nil, "仅标签", 3, 4)
 	}), "namespace label not isolation")
@@ -356,9 +355,7 @@ func main() {
 		installFixture(pool)
 		fn(pool, seed(pool))
 	}
-	for _, fn := range []func(*pgxpool.Pool, int64){
-		sMissingMapping, sNamespaceOnly, sBrokenMapping, sFenceInvalidAfterGood, sLawfulMultiCity,
-	} {
+	for _, fn := range []func(*pgxpool.Pool, int64){sMissingMapping, sNamespaceOnly, sBrokenMapping, sFenceInvalidAfterGood, sLawfulMultiCity} {
 		run(fn)
 	}
 	fmt.Println("MODE: isolated PG17 mapping/fence fail-closed; not production fence/realm enroll")
