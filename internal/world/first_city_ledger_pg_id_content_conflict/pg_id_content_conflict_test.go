@@ -114,7 +114,6 @@ func TestPG17IDContentConflictMatrix(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "immutable intake") {
 			t.Fatalf("guard UPDATE: %v", err)
 		}
-		before, _ = m.ReadSnap(ctx, pool, cmd)
 		m2 := NewMatrix(ev, actor, cmd, nil, PayloadByte(0x11))
 		before, err = m2.ReadSnap(ctx, pool, cmd)
 		if err != nil {
