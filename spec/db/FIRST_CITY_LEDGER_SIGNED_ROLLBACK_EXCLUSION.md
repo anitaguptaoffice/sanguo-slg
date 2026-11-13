@@ -18,7 +18,8 @@ Harness 子进程 **`signed_rollback_apply_worker`** 从 `harness_test_rollback_
 | `signed_rollback_no_false_drain` | 制品级 writer 仍活跃时 profile/drain bump 不得解锁 EMPTY intake |
 | `lawful_multi_city_not_blocked` | 合法非首都分城 apply 仍可提交 |
 
-**另卡：** realm、drain/fence、§11 browser、目标 realm 对真实签名制品现场核验、OID §6 第 12 行、`player_city_id_seq`。
+**另卡：** realm、drain/fence、§11 browser、目标 realm 对真实签名制品现场核验、`player_city_id_seq`。
+OID §6 第 12 行新 ledger intake/effect/finalizer 未授权-直至-义务门槛：[NEW-INTAKE-AUTHORIZATION-001](FIRST_CITY_LEDGER_NEW_INTAKE_AUTHORIZATION.md)（#2611；`first_city_ledger_new_intake_authorization`）。
 
 ```bash
 ./spec/db/validate.sh

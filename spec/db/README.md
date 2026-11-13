@@ -115,6 +115,7 @@ GM/import 维护批处理代表子进程：[GM-IMPORT-EXCLUSION-001](FIRST_CITY_
 Snapshot flusher / 异步落盘代表子进程：[SNAPSHOT-FLUSH-EXCLUSION-001](FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_snapshot_flush_exclusion`）。
 Backup restore / retention 作业代表子进程：[RESTORE-JOB-EXCLUSION-001](FIRST_CITY_LEDGER_RESTORE_JOB_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_restore_job_exclusion`）。
 Signed rollback 制品级 apply 代表子进程：[SIGNED-ROLLBACK-EXCLUSION-001](FIRST_CITY_LEDGER_SIGNED_ROLLBACK_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_signed_rollback_exclusion`；非生产签名制品）。
+OID §6 第 12 行新 ledger intake/effect/finalizer 未授权-直至-义务门槛：[NEW-INTAKE-AUTHORIZATION-001](FIRST_CITY_LEDGER_NEW_INTAKE_AUTHORIZATION.md)（`go run ./spec/db/tests/first_city_ledger_new_intake_authorization`；非生产新路径）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
