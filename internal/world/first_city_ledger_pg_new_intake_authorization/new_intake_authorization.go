@@ -50,10 +50,10 @@ func InstallDisposableFixture(ctx context.Context, pool *pgxpool.Pool, realmID s
 	if pool == nil || realmID == "" {
 		return ErrUnauthorized
 	}
-	block := fmt.Sprintf(`CREATE OR REPLACE FUNCTION harness_block_nia_capital() RETURNS trigger LANGUAGE plpgsql AS $$
+	block := `CREATE OR REPLACE FUNCTION harness_block_nia_capital() RETURNS trigger LANGUAGE plpgsql AS $$
  BEGIN IF harness_nia_apply_live() AND NEW.is_capital THEN
   IF NOT harness_nia_route_authorized() THEN RAISE EXCEPTION 'new ledger route unauthorized for capital'; END IF;
- END IF; RETURN NEW; END$$`)
+ END IF; RETURN NEW; END$$`
 	authFn := fmt.Sprintf(`CREATE OR REPLACE FUNCTION harness_nia_route_authorized() RETURNS bool LANGUAGE plpgsql AS $$
 DECLARE rid uuid := '%s'::uuid;
 BEGIN
