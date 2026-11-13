@@ -82,5 +82,5 @@ independent PENDING per distinct slot, terminal (2/3) rows not counting toward t
 
 ## Follow-on (separate SPEC cards)
 
-ACL, crash barriers, `validate_only` GUC, `player_city_id_seq`, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence
-(remainder of [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md) Follow-on after this item).
+**SPEC-FIRST-CITY-LEDGER-ACL-001** frozen in [FIRST_CITY_LEDGER_ACL.md](FIRST_CITY_LEDGER_ACL.md) (`first_city_ledger_acl`). Crash barriers, `validate_only` GUC, `player_city_id_seq`, CITY_CREATION_RECOVERY §10 items 3/5–7, realm drain/fence
+(remainder of [FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md) Follow-on after ACL).
