@@ -108,10 +108,8 @@ func observerSnap(p *pgxpool.Pool) string {
 		b.WriteString(rel + "=" + fmt.Sprint(n) + ";")
 	}
 	var s seqSnap
-	err := p.QueryRow(ctx, `SELECT last_value, is_called FROM player_city_id_seq`).Scan(&s.L, &s.C)
-	if err != nil {
-		b.WriteString("seq=absent")
-		return b.String()
+	if err := p.QueryRow(ctx, `SELECT last_value, is_called FROM player_city_id_seq`).Scan(&s.L, &s.C); err != nil {
+		b.WriteString("seq=absent"); return b.String()
 	}
 	b.WriteString(fmt.Sprintf("seq=%d:%v", s.L, s.C))
 	return b.String()
