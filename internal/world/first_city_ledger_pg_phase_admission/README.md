@@ -1,0 +1,1 @@
+Isolated PG17 phase admission / lease / close-vs-poison linearization (`firstcityledgerpgphaseadmission`); **not production**. Harness tables are disposable test fixtures only. Default path is fail-closed without test `ObligationEvidence`. `ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN=… go test ./internal/world/first_city_ledger_pg_phase_admission/ -count=1 -v`
