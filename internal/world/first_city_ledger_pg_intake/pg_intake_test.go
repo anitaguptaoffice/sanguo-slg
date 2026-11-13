@@ -37,7 +37,7 @@ func TestPG17FirstCityLedgerIntake(t *testing.T) {
 	}
 	t.Log("PostgreSQL", ver)
 	specDir := stageSpecs(t)
-	defer os.RemoveAll(specDir)
+	defer func() { _ = os.RemoveAll(specDir) }()
 	for _, sc := range []struct {
 		name string
 		run  func(*testing.T, *pgxpool.Pool, int64)
@@ -123,7 +123,7 @@ func runIntake(pool *pgxpool.Pool, w Writer, acct int64, cmd string, commit bool
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 	act := Actor{RealmID: testRealm, ServerID: 1, PlayerID: 42, AccountID: acct}
 	if err := w.ApplyPendingIntake(ctx, tx, act, cmd, nil, samplePayload()); err != nil {
 		return err
