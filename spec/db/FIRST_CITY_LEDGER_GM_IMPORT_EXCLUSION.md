@@ -14,7 +14,7 @@ Normative: CITY_CREATION_RECOVERY §9 / §11；[OID_PROFILE](FIRST_CITY_LEDGER_O
 | `gm_import_no_false_drain` | 批处理事务活跃时不得假排空 |
 | `lawful_multi_city_not_blocked` | 合法非首都分城不得误伤 |
 
-**另卡：** realm 认证、生产 drain/fence、§11 browser、签名 rollback、OID §6 第 5/6/7/10 行等。
+**另卡：** realm 认证、生产 drain/fence、§11 browser、签名 rollback、OID §6 第 6/7/10 行等。§6.5 snapshot flusher — [SNAPSHOT-FLUSH-EXCLUSION-001](FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md)。
 
 ```bash
 ./spec/db/validate.sh
