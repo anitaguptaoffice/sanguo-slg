@@ -140,6 +140,7 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 9d. **SPEC-FIRST-CITY-LEDGER-VALIDATE-ONLY-001** — [FIRST_CITY_LEDGER_VALIDATE_ONLY.md](FIRST_CITY_LEDGER_VALIDATE_ONLY.md); `sanguo.first_city_ledger_validate_only` harness; no realm / no `player_city_id_seq`.
 9e. **SPEC-FIRST-CITY-LEDGER-PLAYER-CITY-ID-SEQ-001** — [FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md](FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md); reviewed `player_city_id_seq` shape + disposable PG17 next-value/fail-closed harness (`spec/db/tests/first_city_ledger_player_city_id_seq`); not production activation / not runtime allocator.
 9f. **SPEC-FIRST-CITY-LEDGER-CRASH-GAP-001** — [FIRST_CITY_LEDGER_CRASH_GAP.md](FIRST_CITY_LEDGER_CRASH_GAP.md); §7.9/§11 finalizer effect-rollback crash gap (`spec/db/tests/first_city_ledger_crash_gap`); not ATOMICITY re-run / not realm certification.
+9g. **SPEC-FIRST-CITY-LEDGER-FINALIZER-ACCOUNT-BLOCK-001** — [FIRST_CITY_LEDGER_FINALIZER_ACCOUNT_BLOCK.md](FIRST_CITY_LEDGER_FINALIZER_ACCOUNT_BLOCK.md); §7.6/§11 finalizer ACCOUNT fail-closed (`spec/db/tests/first_city_ledger_finalizer_account_block`); not FINALIZER-ROLLBACK re-run / not realm certification.
 10. **SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001** — frozen in
    [FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md); companion §5 narrow finalizer full rollback / whitelist / exact-attempt (`spec/db/tests/first_city_ledger_finalizer_rollback`); does not certify any realm.
 11. **SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001** — frozen in
