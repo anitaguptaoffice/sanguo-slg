@@ -105,6 +105,7 @@ Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CIT
 效果 rollback→finalizer crash gap（§10 第 3 项切片，非 ATOMICITY 重做）：[SPEC-FIRST-CITY-LEDGER-CRASH-GAP-001](FIRST_CITY_LEDGER_CRASH_GAP.md)（`go run ./spec/db/tests/first_city_ledger_crash_gap`，同上 DSN 约定）。
 finalizer 账号绑定/封禁 fail-closed（§10 第 3 项切片）：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ACCOUNT-BLOCK-001](FIRST_CITY_LEDGER_FINALIZER_ACCOUNT_BLOCK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_account_block`，同上 DSN 约定）。
 finalizer rollback→finalizer 间隙地形翻转（§10 第 3 项切片）：[SPEC-FIRST-CITY-LEDGER-FINALIZER-TERRAIN-GAP-001](FIRST_CITY_LEDGER_FINALIZER_TERRAIN_GAP.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_terrain_gap`，同上 DSN 约定）。
+finalizer 终端 commit 不明 → poison（§10 第 3 项切片）：[SPEC-FIRST-CITY-LEDGER-FINALIZER-COMMIT-UNCERTAIN-POISON-001](FIRST_CITY_LEDGER_FINALIZER_COMMIT_UNCERTAIN_POISON.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_commit_uncertain_poison`，同上 DSN 约定；disposable gate 夹具）。
 狭义拒绝 finalizer 全 rollback / 白名单 / exact-attempt：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_rollback`）。
 phase admission / lease / close-poison 线性化：[SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001](FIRST_CITY_LEDGER_PHASE_ADMISSION.md)（`go run ./spec/db/tests/first_city_ledger_phase_admission`，同上 DSN 约定；夹具表非生产 DDL）。
 未知 drain / receipt≠排空证据：[SPEC-FIRST-CITY-LEDGER-UNKNOWN-DRAIN-001](FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md)（`go run ./spec/db/tests/first_city_ledger_unknown_drain`，同上 DSN 约定）。
