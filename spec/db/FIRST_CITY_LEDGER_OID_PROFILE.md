@@ -161,6 +161,7 @@ lock between old and new writers is not a compatibility proof.
 | SPEC-FIRST-CITY-LEDGER-LOADER-001 | Frozen in [FIRST_CITY_LEDGER_LOADER.md](FIRST_CITY_LEDGER_LOADER.md). |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
 | Target realm enrollment execution | Drain/fence/deploy — **not authorized** by #2554. |
+| SPEC-FIRST-CITY-LEDGER-NEW-INTAKE-AUTHORIZATION-001 | §6 row 12 unauthorized-until-obligations PG17 matrix — frozen in [FIRST_CITY_LEDGER_NEW_INTAKE_AUTHORIZATION.md](FIRST_CITY_LEDGER_NEW_INTAKE_AUTHORIZATION.md); does not authorize production new route. |
 
 Do not treat OID profile documentation as completion of those gates.
 
