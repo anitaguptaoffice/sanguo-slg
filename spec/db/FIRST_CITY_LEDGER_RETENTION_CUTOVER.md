@@ -40,3 +40,4 @@ Record `SHOW server_version` and each `PASS retention:` line. Does **not** certi
 ## Follow-on
 
 §11 native browser、realm drain/fence 生产控制器 — separate SPEC cards.
+物理映射 / fence fail-closed（§9 可隔离部分）：[SPEC-FIRST-CITY-LEDGER-MAPPING-FENCE-001](FIRST_CITY_LEDGER_MAPPING_FENCE.md)（`first_city_ledger_mapping_fence`）；不重复本卡 retention 五条。
