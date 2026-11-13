@@ -37,7 +37,8 @@ func exec(p *pgxpool.Pool, sql string, a ...any) { _, e := p.Exec(ctx, sql, a...
 type seqSnap struct{ L int64; C bool }
 
 func stageSpecDir() {
-	baseDir, err := os.MkdirTemp("", "fc-pcis-specs-")
+	var err error
+	baseDir, err = os.MkdirTemp("", "fc-pcis-specs-")
 	must(err)
 	var paths []string
 	for _, pat := range []string{"00*.sql", "m3_*.sql", "m4_*.sql"} {
