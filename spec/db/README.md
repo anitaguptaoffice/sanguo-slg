@@ -113,6 +113,7 @@ INITIAL 接收仲裁（CITY_CREATION_RECOVERY §5 / §11 INITIAL）：[SPEC-FIRS
 DOM/API `CreateNewCity` 编排链子进程：[DOM-API-CHAIN-EXCLUSION-001](FIRST_CITY_LEDGER_DOM_API_CHAIN_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_dom_api_chain_exclusion`）。
 GM/import 维护批处理代表子进程：[GM-IMPORT-EXCLUSION-001](FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_gm_import_exclusion`）。
 Snapshot flusher / 异步落盘代表子进程：[SNAPSHOT-FLUSH-EXCLUSION-001](FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_snapshot_flush_exclusion`）。
+Backup restore / retention 作业代表子进程：[RESTORE-JOB-EXCLUSION-001](FIRST_CITY_LEDGER_RESTORE_JOB_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_restore_job_exclusion`）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
