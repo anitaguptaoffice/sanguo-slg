@@ -28,6 +28,7 @@ import { formatFirstCityLosingProposalsPanel } from "./firstCityServerSelectLosi
 import { formatFirstCityLocalDraftPanel } from "./firstCityServerSelectLocalDraft";
 import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadConflict";
 import { formatFirstCityIdContentConflictPanel } from "./firstCityServerSelectIdContentConflict";
+import { formatFirstCityNotObservedPanel } from "./firstCityServerSelectNotObserved";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -113,6 +114,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
         <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
         <p class="first-city-id-content-conflict" data-role="first-city-id-content-conflict" role="status" hidden></p>
+        <p class="first-city-not-observed" data-role="first-city-not-observed" role="status" hidden></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
           <label>城名 <input name="fc-name" maxlength="32" autocomplete="off"></label>
           <label>X <input name="fc-x" type="number" min="0" max="499" value="60" autocomplete="off"></label>
@@ -328,6 +330,7 @@ export class ServerSelectScene implements Scene {
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
     const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
     const idContentConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-id-content-conflict"]');
+    const notObserved = this.panel.querySelector<HTMLElement>('[data-role="first-city-not-observed"]');
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
     if (probe) probe.hidden = !probeVisible;
     if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
@@ -371,6 +374,11 @@ export class ServerSelectScene implements Scene {
       const contentText = formatFirstCityIdContentConflictPanel(this.firstCityKnowledge, staleActor);
       idContentConflict.hidden = !probeVisible || !contentText;
       idContentConflict.textContent = contentText;
+    }
+    if (notObserved) {
+      const lookupText = formatFirstCityNotObservedPanel(this.firstCityKnowledge, staleActor);
+      notObserved.hidden = !probeVisible || !lookupText;
+      notObserved.textContent = lookupText;
     }
     if (submitBtn) {
       submitBtn.disabled = !commandReady || !canOfferFirstCitySubmit(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
