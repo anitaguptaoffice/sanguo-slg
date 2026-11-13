@@ -111,6 +111,7 @@ INITIAL 接收仲裁（CITY_CREATION_RECOVERY §5 / §11 INITIAL）：[SPEC-FIRS
 
 旧 writer 子进程：[OLD-BINARY-EXCLUSION-001](FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_old_binary_exclusion`）。
 DOM/API `CreateNewCity` 编排链子进程：[DOM-API-CHAIN-EXCLUSION-001](FIRST_CITY_LEDGER_DOM_API_CHAIN_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_dom_api_chain_exclusion`）。
+GM/import 维护批处理代表子进程：[GM-IMPORT-EXCLUSION-001](FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_gm_import_exclusion`）。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 

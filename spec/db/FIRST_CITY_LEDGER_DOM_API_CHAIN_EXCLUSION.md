@@ -12,7 +12,7 @@ Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §9�
 | `dom_chain_no_false_drain` | 链事务活跃时不得假排空 |
 | `lawful_multi_city_not_blocked` | 合法非首都分城不得误伤 |
 
-**另卡：** realm 认证、drain/fence 生产控制器、§11 browser、签名 rollback、OID §6 其余行。
+**另卡：** realm 认证、drain/fence 生产控制器、§11 browser、签名 rollback、OID §6 其余行（含 §6.3 GM/import — [GM-IMPORT-EXCLUSION-001](FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md)）。
 
 ```bash
 ./spec/db/validate.sh
