@@ -22,4 +22,4 @@ export FIRST_CITY_LEDGER_TEST_DSN='postgres://…' ALLOW_OWNED_PG17_TEST=1
 GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_online_exclusion
 ```
 
-记录 `SHOW server_version` 与各 `PASS online_exclusion:`。Follow-on：§11 browser、生产旧 binary 在线排他、realm 认证、生产 drain/fence 控制器 — 另卡。
+记录 `SHOW server_version` 与各 `PASS online_exclusion:`。Follow-on：[OLD-BINARY-EXCLUSION-001](FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md)；§11 browser、realm、生产 drain/fence — 另卡。

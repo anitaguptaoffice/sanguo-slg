@@ -146,5 +146,6 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 17. **SPEC-FIRST-CITY-LEDGER-RETENTION-CUTOVER-001** — [FIRST_CITY_LEDGER_RETENTION_CUTOVER.md](FIRST_CITY_LEDGER_RETENTION_CUTOVER.md) (`first_city_ledger_retention_cutover`); §9/§11 retention fail-closed only; does not certify any realm or production cutover.
 18. **SPEC-FIRST-CITY-LEDGER-MAPPING-FENCE-001** — [FIRST_CITY_LEDGER_MAPPING_FENCE.md](FIRST_CITY_LEDGER_MAPPING_FENCE.md) (`first_city_ledger_mapping_fence`); §9/§11 physical mapping + continuous fence fail-closed only; does not certify any realm, production online fence, or cutover.
 19. **SPEC-FIRST-CITY-LEDGER-ONLINE-EXCLUSION-001** — [FIRST_CITY_LEDGER_ONLINE_EXCLUSION.md](FIRST_CITY_LEDGER_ONLINE_EXCLUSION.md) (`first_city_ledger_online_exclusion`); §9/§11 leftover connection / direct SQL / allocator progress + last-txn drain fail-closed only; does not certify production old-writer binary exclusion, realm, or cutover.
+20. **SPEC-FIRST-CITY-LEDGER-OLD-BINARY-EXCLUSION-001** — [FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md](FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md) (`first_city_ledger_old_binary_exclusion`); OID §6.1/11 legacy subprocess only; not signed rollback/realm/controller.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.

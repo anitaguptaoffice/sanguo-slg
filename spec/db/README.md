@@ -109,6 +109,8 @@ INITIAL 接收仲裁（CITY_CREATION_RECOVERY §5 / §11 INITIAL）：[SPEC-FIRS
 物理映射 / 持续 fence fail-closed（§9/§11 可隔离证明）：[SPEC-FIRST-CITY-LEDGER-MAPPING-FENCE-001](FIRST_CITY_LEDGER_MAPPING_FENCE.md)（`go run ./spec/db/tests/first_city_ledger_mapping_fence`，同上 DSN 约定；非生产旧 writer 在线排他/realm 认证/浏览器）。
 旧连接 / 直接 SQL / 末事务排空（§9/§11 可隔离证明）：[SPEC-FIRST-CITY-LEDGER-ONLINE-EXCLUSION-001](FIRST_CITY_LEDGER_ONLINE_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_online_exclusion`，同上 DSN 约定；非生产旧 binary 排他/realm 认证/浏览器）。
 
+旧 writer 子进程：[OLD-BINARY-EXCLUSION-001](FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_old_binary_exclusion`）。
+
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
 `007_domestic_production_checkpoint.sql` adds a dedicated city accrual clock and
