@@ -53,6 +53,8 @@ No DSN / `ALLOW_OWNED_PG17_TEST` → harness `SKIP`, exit 0. Record `SHOW server
 
 ## Follow-on
 
-CITY_CREATION_RECOVERY §10 item 3 **remaining** after this slice (if any), §10 items **5–7**, target-realm
-**drain/fence execution**, native browser §11 — separate SPEC cards. Concurrent terminal ordering remains
-[#2563](FIRST_CITY_LEDGER_RACE.md).
+**SPEC-FIRST-CITY-LEDGER-FINALIZER-RECEIPT-NO-SOURCE-DRAIN-001** —
+[FIRST_CITY_LEDGER_FINALIZER_RECEIPT_NO_SOURCE_DRAIN.md](FIRST_CITY_LEDGER_FINALIZER_RECEIPT_NO_SOURCE_DRAIN.md)
+(`first_city_ledger_finalizer_receipt_no_source_drain`). CITY_CREATION_RECOVERY §10 item 3 **remaining** after
+that slice (if any), §10 items **5–7**, target-realm **drain/fence execution**, native browser §11 — separate
+SPEC cards. Concurrent terminal ordering remains [#2563](FIRST_CITY_LEDGER_RACE.md).
