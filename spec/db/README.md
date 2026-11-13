@@ -82,6 +82,47 @@ returning；原值无 writer）。归属仍为
 影响域/卡：MIL M1/M2/M5、API M3/M6、HERO M4 及未来 APP activation；本文件不授权
 任何实现。
 
+## First-city WORLD ledger (SPEC-FIRST-CITY-LEDGER-DDL-001)
+
+[契约与 CAS / 锁强度说明](FIRST_CITY_LEDGER.md) 与 `m4_010_first_city_ledger.sql` 冻结
+`world_first_city_command` 与 `world_first_city_actor_slot`：稳定 slot 键
+`realm_id + server_id + player_id`、不可回收 `command_id`、当前 head、`canonical_c1`、
+接收时 FCT1 模板、`PENDING` / `SUCCEEDED` / `REJECTED_NO_EFFECT` 及成功/拒绝 receipt 列。
+**仅契约前置**：不实施 runtime、不认证目标 realm、不授权 cutover；`002_world.sql` 无 realm 列。
+OID/profile 与写入者清单：[SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001](FIRST_CITY_LEDGER_OID_PROFILE.md)。
+全局 pin 序：[SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001](FIRST_CITY_LEDGER_GLOBAL_PINS.md)；
+PG companion：[SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001](FIRST_CITY_LEDGER_PG_COMPANION.md)；
+ApplySpecs loader 与隔离验收：[SPEC-FIRST-CITY-LEDGER-LOADER-001](FIRST_CITY_LEDGER_LOADER.md)（`go run ./spec/db/tests/first_city_ledger_loader`，需 `ALLOW_OWNED_PG17_TEST=1` 与 disposable DSN）。
+Effect/finalizer 并发 race（companion §5.3 核心矩阵）：[SPEC-FIRST-CITY-LEDGER-RACE-001](FIRST_CITY_LEDGER_RACE.md)（`go run ./spec/db/tests/first_city_ledger_race`，同上 DSN 约定；不启用 `player_city_id_seq`）。
+含 wallet/MIL/DOM 业务行的完整 effect 路径并发：[SPEC-FIRST-CITY-LEDGER-EFFECT-PATH-001](FIRST_CITY_LEDGER_EFFECT_PATH.md)（`go run ./spec/db/tests/first_city_ledger_effect_path`）。
+缺行 slot / head 竞争 intake 与 predecessor CAS：[SPEC-FIRST-CITY-LEDGER-SLOT-CAS-001](FIRST_CITY_LEDGER_SLOT_CAS.md)（`go run ./spec/db/tests/first_city_ledger_slot_cas`）。
+跨 actor slot 隔离矩阵：[SPEC-FIRST-CITY-LEDGER-SLOT-ISOLATION-001](FIRST_CITY_LEDGER_SLOT_ISOLATION.md)（`go run ./spec/db/tests/first_city_ledger_slot_isolation`，同上 DSN 约定）。
+同 PK `ID_CONTENT_CONFLICT` / 同 C1 只读路径：[SPEC-FIRST-CITY-LEDGER-ID-CONTENT-CONFLICT-001](FIRST_CITY_LEDGER_ID_CONTENT_CONFLICT.md)（`go run ./spec/db/tests/first_city_ledger_id_content_conflict`）。
+每 slot 至多一个 PENDING 部分唯一索引：[SPEC-FIRST-CITY-LEDGER-PENDING-UNIQUE-INDEX-001](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md)（`go run ./spec/db/tests/first_city_ledger_pending_unique_index`，无 DSN 时 SKIP）。
+受限角色 ACL / 权限分离：[SPEC-FIRST-CITY-LEDGER-ACL-001](FIRST_CITY_LEDGER_ACL.md)（`go run ./spec/db/tests/first_city_ledger_acl`，同上 DSN 约定）。
+事务局部 `validate_only` GUC：[SPEC-FIRST-CITY-LEDGER-VALIDATE-ONLY-001](FIRST_CITY_LEDGER_VALIDATE_ONLY.md)（`go run ./spec/db/tests/first_city_ledger_validate_only`，同上 DSN 约定；非生产启用/enrollment）。
+`player_city_id_seq` 对象契约与隔离 PG17 序列验收：[SPEC-FIRST-CITY-LEDGER-PLAYER-CITY-ID-SEQ-001](FIRST_CITY_LEDGER_PLAYER_CITY_ID_SEQ.md)（`go run ./spec/db/tests/first_city_ledger_player_city_id_seq`，同上 DSN 约定；非生产激活/runtime 分配器）。
+效果 rollback→finalizer crash gap（§10 第 3 项切片，非 ATOMICITY 重做）：[SPEC-FIRST-CITY-LEDGER-CRASH-GAP-001](FIRST_CITY_LEDGER_CRASH_GAP.md)（`go run ./spec/db/tests/first_city_ledger_crash_gap`，同上 DSN 约定）。
+finalizer 账号绑定/封禁 fail-closed（§10 第 3 项切片）：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ACCOUNT-BLOCK-001](FIRST_CITY_LEDGER_FINALIZER_ACCOUNT_BLOCK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_account_block`，同上 DSN 约定）。
+狭义拒绝 finalizer 全 rollback / 白名单 / exact-attempt：[SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md)（`go run ./spec/db/tests/first_city_ledger_finalizer_rollback`）。
+phase admission / lease / close-poison 线性化：[SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001](FIRST_CITY_LEDGER_PHASE_ADMISSION.md)（`go run ./spec/db/tests/first_city_ledger_phase_admission`，同上 DSN 约定；夹具表非生产 DDL）。
+未知 drain / receipt≠排空证据：[SPEC-FIRST-CITY-LEDGER-UNKNOWN-DRAIN-001](FIRST_CITY_LEDGER_UNKNOWN_DRAIN.md)（`go run ./spec/db/tests/first_city_ledger_unknown_drain`，同上 DSN 约定）。
+进程重启 / ACK-loss 持久读回：[SPEC-FIRST-CITY-LEDGER-ACK-LOSS-001](FIRST_CITY_LEDGER_ACK_LOSS.md)（`go run ./spec/db/tests/first_city_ledger_ack_loss`，同上 DSN 约定；非 WebSocket / 浏览器矩阵）。
+分屏障效果事务原子性（CITY_CREATION_RECOVERY §6/§11）：[SPEC-FIRST-CITY-LEDGER-ATOMICITY-001](FIRST_CITY_LEDGER_ATOMICITY.md)（`go run ./spec/db/tests/first_city_ledger_atomicity`，同上 DSN 约定；非 #2566 并发、非 #2580 ACK-loss）。
+INITIAL 接收仲裁（CITY_CREATION_RECOVERY §5 / §11 INITIAL）：[SPEC-FIRST-CITY-LEDGER-INITIAL-001](FIRST_CITY_LEDGER_INITIAL.md)（`go run ./spec/db/tests/first_city_ledger_initial`，同上 DSN 约定；非 absence/retention/浏览器）。
+瞬时缺行 / 在途 lookup·continuation（§11 absence）：[SPEC-FIRST-CITY-LEDGER-ABSENCE-001](FIRST_CITY_LEDGER_ABSENCE.md)（`go run ./spec/db/tests/first_city_ledger_absence`，同上 DSN 约定；不重跑 #2584 INITIAL / #2578 drain）。
+保留/改绑/不完整 restore fail-closed（§9/§11 retention/cutover）：[SPEC-FIRST-CITY-LEDGER-RETENTION-CUTOVER-001](FIRST_CITY_LEDGER_RETENTION_CUTOVER.md)（`go run ./spec/db/tests/first_city_ledger_retention_cutover`，同上 DSN 约定；非 realm 认证/生产 fence/浏览器）。
+物理映射 / 持续 fence fail-closed（§9/§11 可隔离证明）：[SPEC-FIRST-CITY-LEDGER-MAPPING-FENCE-001](FIRST_CITY_LEDGER_MAPPING_FENCE.md)（`go run ./spec/db/tests/first_city_ledger_mapping_fence`，同上 DSN 约定；非生产旧 writer 在线排他/realm 认证/浏览器）。
+旧连接 / 直接 SQL / 末事务排空（§9/§11 可隔离证明）：[SPEC-FIRST-CITY-LEDGER-ONLINE-EXCLUSION-001](FIRST_CITY_LEDGER_ONLINE_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_online_exclusion`，同上 DSN 约定；非生产旧 binary 排他/realm 认证/浏览器）。
+
+旧 writer 子进程：[OLD-BINARY-EXCLUSION-001](FIRST_CITY_LEDGER_OLD_BINARY_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_old_binary_exclusion`）。
+DOM/API `CreateNewCity` 编排链子进程：[DOM-API-CHAIN-EXCLUSION-001](FIRST_CITY_LEDGER_DOM_API_CHAIN_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_dom_api_chain_exclusion`）。
+GM/import 维护批处理代表子进程：[GM-IMPORT-EXCLUSION-001](FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_gm_import_exclusion`）。
+Snapshot flusher / 异步落盘代表子进程：[SNAPSHOT-FLUSH-EXCLUSION-001](FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_snapshot_flush_exclusion`）。
+Backup restore / retention 作业代表子进程：[RESTORE-JOB-EXCLUSION-001](FIRST_CITY_LEDGER_RESTORE_JOB_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_restore_job_exclusion`）。
+Signed rollback 制品级 apply 代表子进程：[SIGNED-ROLLBACK-EXCLUSION-001](FIRST_CITY_LEDGER_SIGNED_ROLLBACK_EXCLUSION.md)（`go run ./spec/db/tests/first_city_ledger_signed_rollback_exclusion`；非生产签名制品）。
+OID §6 第 12 行新 ledger intake/effect/finalizer 未授权-直至-义务门槛：[NEW-INTAKE-AUTHORIZATION-001](FIRST_CITY_LEDGER_NEW_INTAKE_AUTHORIZATION.md)（`go run ./spec/db/tests/first_city_ledger_new_intake_authorization`；非生产新路径）。
+
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
 `007_domestic_production_checkpoint.sql` adds a dedicated city accrual clock and
