@@ -26,6 +26,7 @@ import {
 import { formatFirstCityCanonicalWinnerPanel } from "./firstCityServerSelectCanonicalWinner";
 import { formatFirstCityLosingProposalsPanel } from "./firstCityServerSelectLosingProposal";
 import { formatFirstCityLocalDraftPanel } from "./firstCityServerSelectLocalDraft";
+import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadConflict";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -109,6 +110,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
+        <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
           <label>城名 <input name="fc-name" maxlength="32" autocomplete="off"></label>
           <label>X <input name="fc-x" type="number" min="0" max="499" value="60" autocomplete="off"></label>
@@ -322,6 +324,7 @@ export class ServerSelectScene implements Scene {
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
+    const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
     if (probe) probe.hidden = !probeVisible;
     if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
@@ -355,6 +358,11 @@ export class ServerSelectScene implements Scene {
       const draftText = formatFirstCityLocalDraftPanel(this.firstCityKnowledge, staleActor);
       localDraft.hidden = !probeVisible || !draftText;
       localDraft.textContent = draftText;
+    }
+    if (headConflict) {
+      const conflictText = formatFirstCityHeadConflictPanel(this.firstCityKnowledge, staleActor);
+      headConflict.hidden = !probeVisible || !conflictText;
+      headConflict.textContent = conflictText;
     }
     if (submitBtn) {
       submitBtn.disabled = !commandReady || !canOfferFirstCitySubmit(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
