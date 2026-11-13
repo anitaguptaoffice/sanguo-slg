@@ -14,6 +14,8 @@ Disposable PG17：子进程真实调用 `internal/world/city_creation.go` `Creat
 | `old_binary_no_false_drain` | legacy 持锁活跃时不得以 profile/drain bump 假排空解锁 EMPTY intake；legacy 结束后方可合法 EMPTY |
 | `lawful_multi_city_not_blocked` | 排他下非首都分城经 legacy `CreateCityInTx` 仍可提交；不误伤合法多城 |
 
+**Follow-on:** OID §6.2 DOM/API 链排他 — [DOM-API-CHAIN-EXCLUSION-001](FIRST_CITY_LEDGER_DOM_API_CHAIN_EXCLUSION.md)（`first_city_ledger_dom_api_chain_exclusion`）；本子进程入口不重跑。
+
 **Out of scope:** [#2592](FIRST_CITY_LEDGER_ONLINE_EXCLUSION.md)–[#2584](FIRST_CITY_LEDGER_INITIAL.md) 已冻场景与五场景不重跑；`cmd/server`、WS/浏览器、§10.5–7、`fresh_admission`、realm 认证、生产 drain/fence 控制器、部署与 cutover。
 
 ```bash
