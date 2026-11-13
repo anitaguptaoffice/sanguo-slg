@@ -27,7 +27,6 @@ const (
 var ctx = context.Background()
 var baseDir, dsn, harnessSchema, repoRoot, workerBin string
 var admin *pgxpool.Pool
-var serial int
 
 func must(err error)           { if err != nil { panic(err) } }
 func assert(ok bool, m string) { if !ok { panic(m) } }
@@ -55,7 +54,6 @@ func stageSpecs() {
 }
 
 func fresh() (*pgxpool.Pool, func()) {
-	serial++
 	schema := fmt.Sprintf("fc_domchain_%d", time.Now().UnixNano())
 	sql(admin, "CREATE SCHEMA "+schema)
 	harnessSchema = schema
@@ -133,7 +131,7 @@ func startWorkerHold(name string, x, y int) (*osexec.Cmd, *bytes.Buffer) {
 func domHoldBusy() bool {
 	c, err := pgx.Connect(ctx, dsn)
 	if err != nil { return false }
-	defer c.Close(ctx)
+	defer func() { must(c.Close(ctx)) }()
 	_, _ = c.Exec(ctx, "SET search_path TO "+harnessSchema)
 	var slot int
 	return c.QueryRow(ctx, `SELECT slot FROM harness_dom_chain_hold WHERE slot=1 FOR UPDATE NOWAIT`).Scan(&slot) != nil
@@ -212,10 +210,12 @@ func sTableLockAlone(pool *pgxpool.Pool, acct int64) {
 	seedRetention(pool, acct); sql(pool, `UPDATE harness_dom_api_state SET exclusion_active=true`)
 	cmd, buf := startWorkerHold("表锁城", 9, 10)
 	defer func() { killWorker(cmd) }()
-	obs, _ := pgx.Connect(ctx, dsn); defer obs.Close(ctx)
+	obs, err := pgx.Connect(ctx, dsn)
+	must(err)
+	defer func() { must(obs.Close(ctx)) }()
 	_, _ = obs.Exec(ctx, "SET search_path TO "+harnessSchema)
 	var cid int64
-	err := obs.QueryRow(ctx, `SELECT city_id FROM player_city WHERE server_id=1 AND player_id=42 AND is_capital FOR UPDATE NOWAIT`).Scan(&cid)
+	err = obs.QueryRow(ctx, `SELECT city_id FROM player_city WHERE server_id=1 AND player_id=42 AND is_capital FOR UPDATE NOWAIT`).Scan(&cid)
 	assert(err == nil && cid == 88001, "row lock only")
 	busy := pollDomBusy()
 	assert(strings.Contains(buf.String(), "WORKER_HOLDING") && busy, "dom chain tx open: "+buf.String())

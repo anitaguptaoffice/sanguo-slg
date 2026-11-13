@@ -33,8 +33,8 @@ func main() {
 	fmt.Println("DOM_CHAIN_ENTRY: internal/domestic/city_atomic.go:CreateNewCity -> pg_store.go:saveCityWithWorld")
 	h := domestic.NewHub(func() time.Time { return time.Unix(1700000000, 0) })
 	h.UseStore(domestic.NewPGStore(pool), 1, 0)
-	initial := &domestic.CityState{PlayerID: 42, Wallet: domestic.Resources{8000, 8000, 5000, 5000},
-		Buildings: map[string]*domestic.BuildingInstance{"hall": {1, 1}, "farm": {2, 1}}}
+	initial := &domestic.CityState{PlayerID: 42, Wallet: domestic.Resources{Food: 8000, Wood: 8000, Stone: 5000, Iron: 5000},
+		Buildings: map[string]*domestic.BuildingInstance{"hall": {CfgID: 1, Level: 1}, "farm": {CfgID: 2, Level: 1}}}
 	participant := func(ctx context.Context, tx pgx.Tx) (int64, error) {
 		if _, err := tx.Exec(ctx, `SELECT set_config('harness.dom_api_chain','1',true)`); err != nil { return 0, err }
 		if mode == "hold" {
