@@ -112,7 +112,8 @@ func observerSnap(p *pgxpool.Pool) string {
 }
 
 func seqShapeOK(p *pgxpool.Pool) bool {
-	var typ, inc, minv, maxv, cache, start int64
+	var typ string
+	var inc, minv, maxv, cache, start int64
 	var cycle bool
 	err := p.QueryRow(ctx, `SELECT data_type, increment::bigint, min_value::bigint, max_value::bigint,
  cycle, cache_size::bigint, start_value::bigint FROM pg_sequences WHERE sequencename='player_city_id_seq'`).Scan(
