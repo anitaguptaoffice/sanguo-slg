@@ -1,6 +1,11 @@
 import { createFirstCityIntent } from "@/net/firstCityCanonical";
 import type { FirstCityController } from "@/net/firstCityController";
 import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
+import {
+  assertFirstCityActorFresh,
+  type FirstCityActorBinding,
+  type FirstCityIdentityGateway,
+} from "./firstCityServerSelectActor";
 import { ensureFirstCitySession as ensureSession, type FirstCityProbeGateway } from "./firstCityServerSelectEntry";
 
 export type FirstCityProposalInput = Readonly<{ name: string; x: number; y: number }>;
@@ -45,16 +50,20 @@ export function buildContinueRequest(knowledge: FirstCityKnowledge): unknown | n
 async function runCommand(
   gateway: FirstCityProbeGateway,
   controller: FirstCityController,
+  knowledge: FirstCityKnowledge,
   loginName: string,
   password: string,
   serverId: number,
   generation: number | undefined,
+  actorBinding: FirstCityActorBinding | null,
   action: (controller: FirstCityController, request: unknown) => Promise<FirstCityKnowledge>,
   request: unknown,
 ): Promise<{ message: string; knowledge: FirstCityKnowledge }> {
   await ensureSession(gateway, loginName, password, serverId, generation);
-  const knowledge = await action(controller, request);
-  return { message: formatFirstCityCommandStatus(knowledge), knowledge };
+  assertFirstCityActorFresh(gateway as FirstCityIdentityGateway, actorBinding, knowledge, loginName, serverId,
+    generation ?? (gateway as FirstCityIdentityGateway).getSessionGeneration?.());
+  const next = await action(controller, request);
+  return { message: formatFirstCityCommandStatus(next), knowledge: next };
 }
 
 export async function runFirstCitySubmitCommand(
@@ -66,10 +75,11 @@ export async function runFirstCitySubmitCommand(
   password: string,
   serverId: number,
   generation?: number,
+  actorBinding: FirstCityActorBinding | null = null,
 ): Promise<{ message: string; knowledge: FirstCityKnowledge }> {
   if (!canOfferFirstCitySubmit(knowledge)) throw new TypeError("Invalid first-city submit");
   const request = buildSubmitRequest(knowledge, input);
-  return runCommand(gateway, controller, loginName, password, serverId, generation,
+  return runCommand(gateway, controller, knowledge, loginName, password, serverId, generation, actorBinding,
     (c, value) => c.submit(value), request);
 }
 
@@ -81,9 +91,10 @@ export async function runFirstCityContinueCommand(
   password: string,
   serverId: number,
   generation?: number,
+  actorBinding: FirstCityActorBinding | null = null,
 ): Promise<{ message: string; knowledge: FirstCityKnowledge }> {
   const request = buildContinueRequest(knowledge);
   if (!request) throw new TypeError("Invalid first-city continue");
-  return runCommand(gateway, controller, loginName, password, serverId, generation,
+  return runCommand(gateway, controller, knowledge, loginName, password, serverId, generation, actorBinding,
     (c, value) => c.continueCommand(value), request);
 }

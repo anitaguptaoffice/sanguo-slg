@@ -27,11 +27,14 @@ it("builds scoped get-result request", () => {
   expect(body.expectedScope).toEqual(scope);
 });
 
-it("gates get-result on valid UUID and available knowledge", () => {
-  expect(canOfferFirstCityResult(empty(), a)).toBe(true);
+it("gates get-result on valid UUID, knowledge ownership and availability", () => {
+  const intent = createFirstCityIntent(scope, { commandId: a, predecessor: { kind: "empty" }, name: "城", x: 1, y: 2 });
+  const owned = { ...empty(), intents: Object.freeze([intent]) };
+  expect(canOfferFirstCityResult(owned, a)).toBe(true);
+  expect(canOfferFirstCityResult(empty(), a)).toBe(false);
   expect(canOfferFirstCityResult(null, a)).toBe(false);
-  expect(canOfferFirstCityResult({ ...empty(), unavailable: true }, a)).toBe(false);
-  expect(canOfferFirstCityResult(empty(), "not-a-uuid")).toBe(false);
+  expect(canOfferFirstCityResult({ ...owned, unavailable: true }, a)).toBe(false);
+  expect(canOfferFirstCityResult(owned, "not-a-uuid")).toBe(false);
 });
 
 it("formats NOT_OBSERVED, pending and succeeded without playable completion claims", () => {

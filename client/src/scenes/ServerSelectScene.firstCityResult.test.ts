@@ -1,4 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
+import { createFirstCityIntent } from "@/net/firstCityCanonical";
 import { ServerSelectScene } from "./ServerSelectScene";
 import type { SceneContext } from "@/engine/SceneManager";
 import type { FirstCityScope } from "@/net/firstCityCanonical";
@@ -20,6 +21,8 @@ async function setup(notObserved = true) {
   const hud = document.getElementById("hud")!;
   const discovery = { kind: "discovery" as const, scope, head: { kind: "empty" as const } };
   const observations: unknown[] = [discovery];
+  const ownedIntent = createFirstCityIntent(scope, { commandId, predecessor: { kind: "empty" }, name: "城", x: 1, y: 2 });
+  let generation = 1;
   const gateway = {
     connect: vi.fn(async () => {}),
     listGameServers: vi.fn(async () => ({ servers: [{ shard: { server_id: 1, status: 1 } }] })),
@@ -30,7 +33,9 @@ async function setup(notObserved = true) {
     createCity: vi.fn(),
     getCityState: vi.fn(),
     getSessionId: () => "s",
-    getSessionGeneration: () => 1,
+    getSessionGeneration: () => generation,
+    getBoundServerId: () => 1,
+    getAuthenticatedIdentity: () => ({ accountId: "44", serverId: 1, playerId: 7, generation }),
     requestPersistedFirstCity: vi.fn(async (route: string) => {
       if (route.endsWith("DiscoverFirstCityIntent")) return discovery;
       const response = notObserved ? {
@@ -48,7 +53,7 @@ async function setup(notObserved = true) {
       observations.push(response);
       return response;
     }),
-    readFirstCityHistory: vi.fn(() => ({ intents: [], observations: observations as any[], unavailable: false })),
+    readFirstCityHistory: vi.fn(() => ({ intents: [ownedIntent], observations: observations as any[], unavailable: false })),
   };
   const ctx = { layoutFrame, hud, gateway, assets: {}, switchScene: vi.fn() } as unknown as SceneContext;
   await scene.enter(ctx);

@@ -15,6 +15,12 @@ import {
   canOfferFirstCityResult, runFirstCityResultCommand, suggestFirstCityResultCommandId,
 } from "./firstCityServerSelectResult";
 import {
+  bindFirstCityActor,
+  firstCityActorBindingDrifted,
+  FIRST_CITY_STALE_ACTOR_NOTICE,
+  type FirstCityActorBinding,
+} from "./firstCityServerSelectActor";
+import {
   permitsFirstCityV2Probe, runFirstCityDiscoverProbe, supportsFirstCityPersisted,
 } from "./firstCityServerSelectEntry";
 
@@ -56,6 +62,7 @@ export class ServerSelectScene implements Scene {
   private firstCityProbeInFlight = false;
   private firstCityController: FirstCityController | null = null;
   private firstCityKnowledge: FirstCityKnowledge | null = null;
+  private firstCityActorBinding: FirstCityActorBinding | null = null;
 
   async enter(ctx: SceneContext): Promise<void> {
     ++this.lifecycle;
@@ -70,6 +77,7 @@ export class ServerSelectScene implements Scene {
     this.firstCityProbeInFlight = false;
     this.firstCityController = null;
     this.firstCityKnowledge = null;
+    this.firstCityActorBinding = null;
     this.status = "连接网关…";
     this.hud = ctx.hud;
     this.mountHudChrome();
@@ -114,7 +122,15 @@ export class ServerSelectScene implements Scene {
     skinDefaultPanel(this.panel, ctx.assets, 560, 360);
     skinPrimaryButtons(this.panel, ctx.assets);
     this.panel.addEventListener("click", (ev) => this.onClick(ev, ctx));
-    this.panel.addEventListener("input", () => this.syncPanel());
+    this.panel.addEventListener("input", (ev) => {
+      const target = ev.target as HTMLElement;
+      if (target instanceof HTMLInputElement && target.name === "login" && this.firstCityKnowledge &&
+        this.firstCityActorBinding && target.value.trim() !== this.firstCityActorBinding.login) {
+        this.clearFirstCityRetain();
+        this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      }
+      this.syncPanel();
+    });
     this.panel.querySelector("form")!.addEventListener("submit", (ev) => {
       ev.preventDefault();
       void this.enterGame(ctx, true);
@@ -154,7 +170,20 @@ export class ServerSelectScene implements Scene {
     this.firstCityProbeInFlight = false;
     this.firstCityController = null;
     this.firstCityKnowledge = null;
+    this.firstCityActorBinding = null;
     this.panel?.remove();
+  }
+
+  private clearFirstCityRetain(): void {
+    this.firstCityController = null;
+    this.firstCityKnowledge = null;
+    this.firstCityActorBinding = null;
+  }
+
+  private firstCityStaleActor(login: string): boolean {
+    if (!this.firstCityKnowledge) return false;
+    return firstCityActorBindingDrifted(this.firstCityActorBinding, this.firstCityKnowledge, login, this.selectedId,
+      this.gatewayRef?.getSessionGeneration?.());
   }
 
   private clearPassword(): void {
@@ -297,8 +326,12 @@ export class ServerSelectScene implements Scene {
     const resultBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="get-first-city-result"]');
     const fcName = this.panel.querySelector<HTMLInputElement>('input[name="fc-name"]');
     const fcCommandId = this.panel.querySelector<HTMLInputElement>('input[name="fc-command-id"]');
+    const staleActor = this.firstCityStaleActor(login.value.trim());
     if (command) command.hidden = !probeVisible || !this.firstCityKnowledge;
-    const commandReady = !!this.firstCityKnowledge && !this.firstCityKnowledge.unavailable;
+    const commandReady = !!this.firstCityKnowledge && !this.firstCityKnowledge.unavailable && !staleActor;
+    if (staleActor && probeStatus && !this.firstCityProbeInFlight) {
+      probeStatus.textContent = FIRST_CITY_STALE_ACTOR_NOTICE;
+    }
     if (submitBtn) {
       submitBtn.disabled = !commandReady || !canOfferFirstCitySubmit(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
         this.entering || !password.value || this.listBusy;
@@ -330,6 +363,10 @@ export class ServerSelectScene implements Scene {
     if (li) {
       const id = Number(li.getAttribute("data-server-id"));
       if (this.servers.some(s => s.server_id === id && this.canEnter(s))) {
+        if (this.firstCityActorBinding && id !== this.firstCityActorBinding.serverId) {
+          this.clearFirstCityRetain();
+          this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+        }
         this.selectedId = id;
         this.syncPanel();
       }
@@ -391,6 +428,11 @@ export class ServerSelectScene implements Scene {
     this.clearPassword();
     const lifecycle = this.lifecycle;
     const generation = ctx.gateway.getSessionGeneration?.();
+    if (this.firstCityStaleActor(login)) {
+      this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      this.syncPanel();
+      return;
+    }
     const inProgress = "首城 V2 探测进行中…";
     this.firstCityProbeInFlight = true;
     this.entering = true;
@@ -405,12 +447,13 @@ export class ServerSelectScene implements Scene {
       }
       this.firstCityController = result.controller;
       this.firstCityKnowledge = result.knowledge;
+      this.firstCityActorBinding = bindFirstCityActor(login, this.selectedId, ctx.gateway.getSessionGeneration?.(),
+        result.knowledge);
       this.firstCityProbeNotice = result.message;
       this.status = "首城 V2 探测完成；未建城、未进主城。";
     } catch {
       if (!this.isCurrent(lifecycle)) return;
-      this.firstCityController = null;
-      this.firstCityKnowledge = null;
+      this.clearFirstCityRetain();
       this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
       this.status = "首城 V2 探测未完成";
     } finally {
@@ -440,6 +483,11 @@ export class ServerSelectScene implements Scene {
     const commandId = this.panel.querySelector<HTMLInputElement>('input[name="fc-command-id"]')!.value;
     if (!login || !password || !canOfferFirstCityResult(this.firstCityKnowledge, commandId) ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+    if (this.firstCityStaleActor(login)) {
+      this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      this.syncPanel();
+      return;
+    }
     this.clearPassword();
     const lifecycle = this.lifecycle;
     const generation = ctx.gateway.getSessionGeneration?.();
@@ -451,7 +499,7 @@ export class ServerSelectScene implements Scene {
     this.syncPanel();
     try {
       const result = await runFirstCityResultCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
-        commandId, login, password, this.selectedId, generation);
+        commandId, login, password, this.selectedId, generation, this.firstCityActorBinding);
       if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
         this.firstCityProbeNotice = failure;
         this.status = "首城 V2 GetResult 未完成";
@@ -482,6 +530,11 @@ export class ServerSelectScene implements Scene {
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
   if (kind === "submit" && !canOfferFirstCitySubmit(this.firstCityKnowledge)) return;
     if (kind === "continue" && !canOfferFirstCityContinue(this.firstCityKnowledge)) return;
+    if (this.firstCityStaleActor(login)) {
+      this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      this.syncPanel();
+      return;
+    }
     this.clearPassword();
     const lifecycle = this.lifecycle;
     const generation = ctx.gateway.getSessionGeneration?.();
@@ -498,10 +551,10 @@ export class ServerSelectScene implements Scene {
         const x = Number(this.panel.querySelector<HTMLInputElement>('input[name="fc-x"]')!.value);
         const y = Number(this.panel.querySelector<HTMLInputElement>('input[name="fc-y"]')!.value);
         result = await runFirstCitySubmitCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
-          { name, x, y }, login, password, this.selectedId, generation);
+          { name, x, y }, login, password, this.selectedId, generation, this.firstCityActorBinding);
       } else {
         result = await runFirstCityContinueCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
-          login, password, this.selectedId, generation);
+          login, password, this.selectedId, generation, this.firstCityActorBinding);
       }
       if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
         this.firstCityProbeNotice = failure;
@@ -549,7 +602,10 @@ export class ServerSelectScene implements Scene {
       if (!this.isCurrent(lifecycle)) return;
       const message = (e as Error).message;
       const noCity = message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池";
-      if (existing && noCity) this.firstCityProbeEligible = true;
+      if (existing && noCity) {
+        this.clearFirstCityRetain();
+        this.firstCityProbeEligible = true;
+      }
       this.status = existing
         ? (noCity ? message : "登录未完成，请核对账号、密码、所选服或连接后重试")
         : `进服失败: ${message}`;

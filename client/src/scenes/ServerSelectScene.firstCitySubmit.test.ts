@@ -41,6 +41,8 @@ async function setup() {
     getCityState: vi.fn(),
     getSessionId: () => "s",
     getSessionGeneration: () => 1,
+    getBoundServerId: () => 1,
+    getAuthenticatedIdentity: () => ({ accountId: "44", serverId: 1, playerId: 7, generation: 1 }),
     requestPersistedFirstCity: vi.fn(async (route: string) => {
       if (route.endsWith("DiscoverFirstCityIntent")) return discovery;
       const command = { kind: "command" as const, scope, requestedCommandId: proposal.command_id,

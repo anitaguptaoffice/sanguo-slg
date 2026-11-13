@@ -2,6 +2,12 @@ import { validateFirstCityUuid } from "@/net/firstCityCanonical";
 import type { FirstCityController } from "@/net/firstCityController";
 import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
 import type { FirstCityResponse } from "@/net/firstCityResponseCodec";
+import {
+  assertFirstCityActorFresh,
+  firstCityKnowledgeOwnsCommandId,
+  type FirstCityActorBinding,
+  type FirstCityIdentityGateway,
+} from "./firstCityServerSelectActor";
 import { ensureFirstCitySession, type FirstCityProbeGateway } from "./firstCityServerSelectEntry";
 
 export function suggestFirstCityResultCommandId(knowledge: FirstCityKnowledge | null): string {
@@ -19,7 +25,7 @@ export function canOfferFirstCityResult(knowledge: FirstCityKnowledge | null, co
   if (!trimmed) return false;
   try {
     validateFirstCityUuid(trimmed);
-    return true;
+    return firstCityKnowledgeOwnsCommandId(knowledge, trimmed);
   } catch {
     return false;
   }
@@ -81,10 +87,13 @@ export async function runFirstCityResultCommand(
   password: string,
   serverId: number,
   generation?: number,
+  actorBinding: FirstCityActorBinding | null = null,
 ): Promise<{ message: string; knowledge: FirstCityKnowledge }> {
   if (!canOfferFirstCityResult(knowledge, commandId)) throw new TypeError("Invalid first-city get result");
   const request = buildGetResultRequest(knowledge, commandId);
   await ensureFirstCitySession(gateway, loginName, password, serverId, generation);
+  assertFirstCityActorFresh(gateway as FirstCityIdentityGateway, actorBinding, knowledge, loginName, serverId,
+    generation ?? (gateway as FirstCityIdentityGateway).getSessionGeneration?.());
   const next = await controller.getResult(request);
   const id = validateFirstCityUuid(commandId.trim());
   return { message: formatFirstCityResultStatus(next, id), knowledge: next };
