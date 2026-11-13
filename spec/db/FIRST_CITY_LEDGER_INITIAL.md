@@ -18,4 +18,5 @@ Record `SHOW server_version` and each `PASS initial:` line. Does not certify any
 
 ## Follow-on
 
-§11 absence / retention/cutover / native browser, realm drain/fence — separate SPEC cards.
+§11 **absence** (in-flight lookup): [SPEC-FIRST-CITY-LEDGER-ABSENCE-001](FIRST_CITY_LEDGER_ABSENCE.md) (`first_city_ledger_absence`).
+§11 retention/cutover / native browser, realm drain/fence — separate SPEC cards.
