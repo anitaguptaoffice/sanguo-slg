@@ -31,6 +31,7 @@ import { formatFirstCityIdContentConflictPanel } from "./firstCityServerSelectId
 import { formatFirstCityNotObservedPanel } from "./firstCityServerSelectNotObserved";
 import { formatFirstCityTerminalReceiptPanel } from "./firstCityServerSelectTerminalReceipt";
 import { formatFirstCityPendingIntakePanel } from "./firstCityServerSelectPendingIntake";
+import { formatFirstCityDiscoveryEmptyPanel } from "./firstCityServerSelectDiscoveryEmpty";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -118,6 +119,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-id-content-conflict" data-role="first-city-id-content-conflict" role="status" hidden></p>
         <p class="first-city-not-observed" data-role="first-city-not-observed" role="status" hidden></p>
         <p class="first-city-pending-intake" data-role="first-city-pending-intake" role="status" hidden></p>
+        <p class="first-city-discovery-empty" data-role="first-city-discovery-empty" role="status" hidden></p>
         <p class="first-city-terminal-receipt" data-role="first-city-terminal-receipt" role="status" hidden></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
           <label>城名 <input name="fc-name" maxlength="32" autocomplete="off"></label>
@@ -336,6 +338,7 @@ export class ServerSelectScene implements Scene {
     const idContentConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-id-content-conflict"]');
     const notObserved = this.panel.querySelector<HTMLElement>('[data-role="first-city-not-observed"]');
     const pendingIntake = this.panel.querySelector<HTMLElement>('[data-role="first-city-pending-intake"]');
+    const discoveryEmpty = this.panel.querySelector<HTMLElement>('[data-role="first-city-discovery-empty"]');
     const terminalReceipt = this.panel.querySelector<HTMLElement>('[data-role="first-city-terminal-receipt"]');
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
     if (probe) probe.hidden = !probeVisible;
@@ -390,6 +393,11 @@ export class ServerSelectScene implements Scene {
       const intakeText = formatFirstCityPendingIntakePanel(this.firstCityKnowledge, staleActor);
       pendingIntake.hidden = !probeVisible || !intakeText;
       pendingIntake.textContent = intakeText;
+    }
+    if (discoveryEmpty) {
+      const emptyText = formatFirstCityDiscoveryEmptyPanel(this.firstCityKnowledge, staleActor);
+      discoveryEmpty.hidden = !probeVisible || !emptyText;
+      discoveryEmpty.textContent = emptyText;
     }
     if (terminalReceipt) {
       const receiptText = formatFirstCityTerminalReceiptPanel(this.firstCityKnowledge, staleActor);
