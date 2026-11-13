@@ -24,6 +24,7 @@ import {
   permitsFirstCityV2Probe, runFirstCityDiscoverProbe, supportsFirstCityPersisted,
 } from "./firstCityServerSelectEntry";
 import { formatFirstCityCanonicalWinnerPanel } from "./firstCityServerSelectCanonicalWinner";
+import { formatFirstCityLosingProposalsPanel } from "./firstCityServerSelectLosingProposal";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -105,6 +106,7 @@ export class ServerSelectScene implements Scene {
         <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
         <p data-role="first-city-probe-status" role="status"></p>
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
+        <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
           <label>城名 <input name="fc-name" maxlength="32" autocomplete="off"></label>
           <label>X <input name="fc-x" type="number" min="0" max="499" value="60" autocomplete="off"></label>
@@ -316,6 +318,7 @@ export class ServerSelectScene implements Scene {
     const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
+    const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
     if (probe) probe.hidden = !probeVisible;
     if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
@@ -339,6 +342,11 @@ export class ServerSelectScene implements Scene {
       const winnerText = formatFirstCityCanonicalWinnerPanel(this.firstCityKnowledge, staleActor);
       canonicalWinner.hidden = !probeVisible || !winnerText;
       canonicalWinner.textContent = winnerText;
+    }
+    if (losingProposal) {
+      const loserText = formatFirstCityLosingProposalsPanel(this.firstCityKnowledge, staleActor);
+      losingProposal.hidden = !probeVisible || !loserText;
+      losingProposal.textContent = loserText;
     }
     if (submitBtn) {
       submitBtn.disabled = !commandReady || !canOfferFirstCitySubmit(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
