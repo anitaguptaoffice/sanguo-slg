@@ -49,7 +49,7 @@ func TestPG17FirstCityLedgerPhaseAdmission(t *testing.T) {
 		t.Fatalf("PostgreSQL 17 required; got %s", ver)
 	}
 	specDir := stageSpecs(t)
-	defer os.RemoveAll(specDir)
+	defer func() { _ = os.RemoveAll(specDir) }()
 	for _, tc := range []struct{ name string; fn func(*testing.T, *pgxpool.Pool) }{
 		{"unauthorized_fail_closed", scUnauth},
 		{"close_wins_rejects_new_admission_held_lease_may_finish", scCloseHeld},
