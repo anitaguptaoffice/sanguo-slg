@@ -129,7 +129,7 @@ func runValidateTx(p *pgxpool.Pool, wantErr string) (gucDuring string) {
 	defer func() { _ = tx.Rollback(ctx) }()
 	_, err = tx.Exec(ctx, "SET TRANSACTION READ ONLY; SET LOCAL "+gucName+"='true'")
 	must(err)
-	must(tx.QueryRow(ctx, "SELECT current_setting('"+gucName+"', true)").Scan(&gucDuring))
+	must(tx.QueryRow(ctx, `SELECT COALESCE(NULLIF(current_setting($1, true), ''), 'false')`, gucName).Scan(&gucDuring))
 	_, err = tx.Exec(ctx, body)
 	if wantErr == "" {
 		must(err)
@@ -146,11 +146,10 @@ func is42501(err error) bool {
 }
 
 func scenarioDefaultOff(p *pgxpool.Pool) {
-	var guc string
-	must(p.QueryRow(ctx, "SELECT current_setting('"+gucName+"', true)").Scan(&guc))
-	assert(guc == "" || guc == "false", "default GUC must be off; got "+guc)
-	runValidateTx(p, "requires READ ONLY")
-	_, err := p.Exec(ctx, `UPDATE world_first_city_command SET durable_state=1
+	assert(value(p, "SELECT COALESCE(NULLIF(current_setting('"+gucName+"', true), ''), 'false')") == "false", "default GUC must be off")
+	_, err := p.Exec(ctx, body)
+	must(err)
+	_, err = p.Exec(ctx, `UPDATE world_first_city_command SET durable_state=1
  WHERE realm_id=$1::uuid AND player_id=42`, realm)
 	must(err)
 	fmt.Println("PASS validate_only: default_guc_off_intake_writable")
@@ -159,9 +158,7 @@ func scenarioDefaultOff(p *pgxpool.Pool) {
 func scenarioNoDurableWrite(p *pgxpool.Pool) {
 	beforeObs, beforeCat := observerSnapshot(p), catalogFP(p)
 	guc := runValidateTx(p, "")
-	var afterGuc string
-	must(p.QueryRow(ctx, "SELECT current_setting('"+gucName+"', true)").Scan(&afterGuc))
-	assert(guc == "true" && (afterGuc == "" || afterGuc == "false"), "GUC local only; after tx off")
+	assert(guc == "true" && value(p, "SELECT COALESCE(NULLIF(current_setting('"+gucName+"', true), ''), 'false')") == "false", "GUC local only; after tx off")
 	assert(observerSnapshot(p) == beforeObs, "observer rows unchanged after validate ROLLBACK")
 	assert(catalogFP(p) == beforeCat, "catalog fingerprint unchanged")
 	fmt.Println("PASS validate_only: set_local_validate_no_durable_write guc_during="+guc)
