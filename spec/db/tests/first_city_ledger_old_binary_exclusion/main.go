@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 	"time"
-
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -77,21 +76,11 @@ func fresh() (*pgxpool.Pool, func()) {
 }
 
 func installFixture(p *pgxpool.Pool) {
-	sql(p, `CREATE TABLE harness_old_binary_state (single_row bool PRIMARY KEY DEFAULT true CHECK (single_row),
- exclusion_active bool NOT NULL DEFAULT false,profile_generation int NOT NULL DEFAULT 0,local_drain_counter int NOT NULL DEFAULT 0);
- INSERT INTO harness_old_binary_state DEFAULT VALUES`)
+	sql(p, `CREATE TABLE harness_old_binary_state (single_row bool PRIMARY KEY DEFAULT true CHECK (single_row),exclusion_active bool NOT NULL DEFAULT false,profile_generation int NOT NULL DEFAULT 0,local_drain_counter int NOT NULL DEFAULT 0); INSERT INTO harness_old_binary_state DEFAULT VALUES`)
 	sql(p, `CREATE TABLE harness_legacy_hold (slot int PRIMARY KEY CHECK (slot=1)); INSERT INTO harness_legacy_hold VALUES (1)`)
-	sql(p, `CREATE OR REPLACE FUNCTION harness_block_legacy_first_city() RETURNS trigger LANGUAGE plpgsql AS $$
- BEGIN IF (SELECT exclusion_active FROM harness_old_binary_state) AND coalesce(current_setting('harness.legacy_writer', true), '') = '1' THEN
-  IF NOT EXISTS (SELECT 1 FROM world_first_city_command WHERE realm_id='`+realm+`'::uuid AND server_id=1 AND player_id=42 AND durable_state=2) THEN
-   RAISE EXCEPTION 'old binary exclusion blocks legacy first-city insert'; END IF;
-  IF NEW.is_capital THEN RAISE EXCEPTION 'old binary exclusion blocks capital insert via legacy writer'; END IF;
- END IF; RETURN NEW; END$$`)
+	sql(p, `CREATE OR REPLACE FUNCTION harness_block_legacy_first_city() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF (SELECT exclusion_active FROM harness_old_binary_state) AND coalesce(current_setting('harness.legacy_writer', true), '') = '1' THEN IF NOT EXISTS (SELECT 1 FROM world_first_city_command WHERE realm_id='`+realm+`'::uuid AND server_id=1 AND player_id=42 AND durable_state=2) THEN RAISE EXCEPTION 'old binary exclusion blocks legacy first-city insert'; END IF; IF NEW.is_capital THEN RAISE EXCEPTION 'old binary exclusion blocks capital insert via legacy writer'; END IF; END IF; RETURN NEW; END$$`)
 	sql(p, `CREATE TRIGGER trg_harness_legacy_pc BEFORE INSERT ON player_city FOR EACH ROW EXECUTE FUNCTION harness_block_legacy_first_city()`)
-	sql(p, `CREATE OR REPLACE FUNCTION harness_prevent_empty_reopen() RETURNS trigger LANGUAGE plpgsql AS $$
- BEGIN IF OLD.head_command_id IS NOT NULL AND NEW.head_command_id IS NULL AND EXISTS (
-  SELECT 1 FROM world_first_city_command WHERE command_id=OLD.head_command_id AND durable_state IN (2,3)) THEN
-  RAISE EXCEPTION 'cannot reopen EMPTY with retained lineage'; END IF; RETURN NEW; END$$`)
+	sql(p, `CREATE OR REPLACE FUNCTION harness_prevent_empty_reopen() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF OLD.head_command_id IS NOT NULL AND NEW.head_command_id IS NULL AND EXISTS (SELECT 1 FROM world_first_city_command WHERE command_id=OLD.head_command_id AND durable_state IN (2,3)) THEN RAISE EXCEPTION 'cannot reopen EMPTY with retained lineage'; END IF; RETURN NEW; END$$`)
 	sql(p, `CREATE TRIGGER trg_harness_no_empty BEFORE UPDATE ON world_first_city_actor_slot FOR EACH ROW EXECUTE FUNCTION harness_prevent_empty_reopen()`)
 	for _, xy := range [][2]int{{7, 8}, {41, 42}, {43, 44}, {60, 61}} { sql(p, `INSERT INTO map_cell (server_id,x,y,terrain,resource_type) VALUES (1,$1,$2,0,0)`, xy[0], xy[1]) }
 }
@@ -107,10 +96,7 @@ func seed(p *pgxpool.Pool) int64 {
 func seedRetention(p *pgxpool.Pool, acct int64) string {
 	cmd := "c1111111-1111-4111-8111-111111111111"
 	c1b, fct1, sha := c1("保留城", 5, 6)
-	sql(p, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
- template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at,terminal_at,
- success_city_id,success_server_id,success_player_id,success_is_capital,success_wall_level,success_morale)
- VALUES ($1::uuid,1,42,$2::uuid,$3,$4,2,'t','r','c',1,$5,$6,now(),now(),88001,1,42,true,1,100)`, realm, cmd, acct, c1b, fct1, sha)
+	sql(p, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at,terminal_at,success_city_id,success_server_id,success_player_id,success_is_capital,success_wall_level,success_morale) VALUES ($1::uuid,1,42,$2::uuid,$3,$4,2,'t','r','c',1,$5,$6,now(),now(),88001,1,42,true,1,100)`, realm, cmd, acct, c1b, fct1, sha)
 	sql(p, `INSERT INTO world_first_city_actor_slot VALUES ($1::uuid,1,42,$3,$2::uuid)`, realm, cmd, acct)
 	sql(p, `INSERT INTO player_city (server_id,city_id,player_id,name,x,y,is_capital) VALUES (1,88001,42,'保留城',5,6,true)`)
 	return cmd
@@ -163,9 +149,7 @@ func intakeEmpty(tx pgx.Tx, acct int64, cmdID, name string, x, y int) (bool, err
 		return false, tx.Rollback(ctx)
 	}
 	c1b, fct1, sha := c1(name, x, y)
-	tag, err := tx.Exec(ctx, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
- template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at)
- VALUES ($1::uuid,1,42,$2::uuid,$3,$4,1,'t','r','c',1,$5,$6,now())`, realm, cmdID, acct, c1b, fct1, sha)
+	tag, err := tx.Exec(ctx, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) VALUES ($1::uuid,1,42,$2::uuid,$3,$4,1,'t','r','c',1,$5,$6,now())`, realm, cmdID, acct, c1b, fct1, sha)
 	if err != nil || tag.RowsAffected() != 1 { return false, tx.Rollback(ctx) }
 	ut, err := tx.Exec(ctx, `UPDATE world_first_city_actor_slot SET head_command_id=$2::uuid WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42 AND head_command_id IS NULL`, realm, cmdID)
 	if err != nil || ut.RowsAffected() != 1 { return false, tx.Rollback(ctx) }
@@ -201,10 +185,7 @@ func sNoEmptyReuse(pool *pgxpool.Pool, acct int64) {
 	var head string
 	must(pool.QueryRow(ctx, `SELECT head_command_id::text FROM world_first_city_actor_slot WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42`, realm).Scan(&head))
 	assert(head == retained, "head still bound")
-	_, err = pool.Exec(ctx, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,
- template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at)
- SELECT realm_id,server_id,player_id,$2::uuid,account_id,canonical_c1,1,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,now()
- FROM world_first_city_command WHERE command_id=$1::uuid`, retained, retained)
+	_, err = pool.Exec(ctx, `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) SELECT realm_id,server_id,player_id,$2::uuid,account_id,canonical_c1,1,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,now() FROM world_first_city_command WHERE command_id=$1::uuid`, retained, retained)
 	assert(err != nil, "cannot reuse command_id")
 	fmt.Println("PASS old_binary_exclusion: no_empty_reopen_or_command_id_reuse")
 }
@@ -212,8 +193,7 @@ func sNoEmptyReuse(pool *pgxpool.Pool, acct int64) {
 func sRollbackPrior(pool *pgxpool.Pool, acct int64) {
 	retained := seedRetention(pool, acct); sql(pool, `UPDATE harness_old_binary_state SET exclusion_active=true`)
 	out := runWorker("rollback_prior", "rollback城", 43, 44, true)
-	var cmdN, pcN int
-	var head string
+	var cmdN, pcN int; var head string
 	must(pool.QueryRow(ctx, `SELECT count(*) FROM world_first_city_command WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42`, realm).Scan(&cmdN))
 	must(pool.QueryRow(ctx, `SELECT count(*) FROM player_city WHERE server_id=1 AND player_id=42`).Scan(&pcN))
 	must(pool.QueryRow(ctx, `SELECT head_command_id::text FROM world_first_city_actor_slot WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42`, realm).Scan(&head))
@@ -267,9 +247,7 @@ func main() {
 	admin, err = pgxpool.New(ctx, dsn)
 	must(err)
 	defer admin.Close()
-	var ver, major string
-	must(admin.QueryRow(ctx, "SHOW server_version").Scan(&ver))
-	must(admin.QueryRow(ctx, `SELECT (current_setting('server_version_num')::integer/10000)::text`).Scan(&major))
+	var ver, major string; must(admin.QueryRow(ctx, "SHOW server_version").Scan(&ver)); must(admin.QueryRow(ctx, `SELECT (current_setting('server_version_num')::integer/10000)::text`).Scan(&major))
 	assert(major == "17", "PG17 required; got "+ver)
 	fmt.Println("PostgreSQL", ver, "legacy_writer_entry:", legacyEntry)
 	workerBin = filepath.Join(os.TempDir(), "fc_legacy_worker_bin")
