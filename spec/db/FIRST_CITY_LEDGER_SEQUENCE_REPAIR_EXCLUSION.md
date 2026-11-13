@@ -14,7 +14,7 @@ Normative: CITY_CREATION_RECOVERY §9 / §11；[OID_PROFILE](FIRST_CITY_LEDGER_O
 | `seq_repair_no_false_drain` | `nextval` 落盘后不得假排空 |
 | `lawful_multi_city_not_blocked` | 合法非首都分城不得误伤 |
 
-**另卡：** realm、drain/fence、§11 browser、rollback、OID §6 第 10–12 行、`player_city_id_seq`。
+**另卡：** realm、drain/fence、§11 browser、rollback、OID §6 第 10 行见 [BACKGROUND_WRITER_EXCLUSION](FIRST_CITY_LEDGER_BACKGROUND_WRITER_EXCLUSION.md)、第 11–12 行、`player_city_id_seq`。
 
 ```bash
 ./spec/db/validate.sh

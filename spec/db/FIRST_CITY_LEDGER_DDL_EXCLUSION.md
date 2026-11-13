@@ -14,7 +14,7 @@ Normative: CITY_CREATION_RECOVERY §9 / §11；[OID_PROFILE](FIRST_CITY_LEDGER_O
 | `ddl_no_false_drain` | DDL 事务仍可能提交时不得假排空 |
 | `lawful_multi_city_not_blocked` | 合法非首都分城不得误伤 |
 
-**另卡：** realm 认证、drain/fence 生产控制器、§11 browser、签名 rollback、OID §6 第 8 行见 [#2605](FIRST_CITY_LEDGER_SEQUENCE_REPAIR_EXCLUSION.md) / 第 10/12 行等。
+**另卡：** realm 认证、drain/fence 生产控制器、§11 browser、签名 rollback、OID §6 第 8 行见 [#2605](FIRST_CITY_LEDGER_SEQUENCE_REPAIR_EXCLUSION.md) / 第 10 行见 [BACKGROUND_WRITER_EXCLUSION](FIRST_CITY_LEDGER_BACKGROUND_WRITER_EXCLUSION.md) / 第 12 行等。
 ```bash
 ./spec/db/validate.sh
 export FIRST_CITY_LEDGER_TEST_DSN='postgres://…' ALLOW_OWNED_PG17_TEST=1
