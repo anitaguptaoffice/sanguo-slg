@@ -112,7 +112,7 @@ disposable `spec_db_validate`. That is **syntax/order** evidence, not missing-le
 |------|--------|
 | Concurrent effect vs finalizer PG17 race harness (companion §5.3 core matrix) | Frozen in [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md); full wallet/MIL/DOM contention still open |
 | `player_city_id_seq` reviewed activation | WORLD_CITY_IDENTITY gate |
-| Read-only `validate_only` GUC body (hero_metadata pattern) | Optional follow-on if operators require DR readiness without CREATE |
+| Read-only `validate_only` GUC body | Frozen in [FIRST_CITY_LEDGER_VALIDATE_ONLY.md](FIRST_CITY_LEDGER_VALIDATE_ONLY.md) (`m4_013_first_city_ledger_validate_only.sql`) |
 | Target realm drain/fence/deploy execution | Not authorized |
 | Runtime MIL/DOM `LOCK TABLE` executable wiring | Implementation cards |
 

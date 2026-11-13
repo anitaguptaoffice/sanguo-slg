@@ -137,6 +137,7 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
    [FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md](FIRST_CITY_LEDGER_PENDING_UNIQUE_INDEX.md); one-PENDING partial unique index (`spec/db/tests/first_city_ledger_pending_unique_index`); does not certify any realm.
 9c. **SPEC-FIRST-CITY-LEDGER-ACL-001** — frozen in
    [FIRST_CITY_LEDGER_ACL.md](FIRST_CITY_LEDGER_ACL.md); restricted-role ACL / privilege separation (`spec/db/tests/first_city_ledger_acl`); does not certify any realm.
+9d. **SPEC-FIRST-CITY-LEDGER-VALIDATE-ONLY-001** — [FIRST_CITY_LEDGER_VALIDATE_ONLY.md](FIRST_CITY_LEDGER_VALIDATE_ONLY.md); `sanguo.first_city_ledger_validate_only` harness; no realm / no `player_city_id_seq`.
 10. **SPEC-FIRST-CITY-LEDGER-FINALIZER-ROLLBACK-001** — frozen in
    [FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md](FIRST_CITY_LEDGER_FINALIZER_ROLLBACK.md); companion §5 narrow finalizer full rollback / whitelist / exact-attempt (`spec/db/tests/first_city_ledger_finalizer_rollback`); does not certify any realm.
 11. **SPEC-FIRST-CITY-LEDGER-PHASE-ADMISSION-001** — frozen in
