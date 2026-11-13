@@ -107,7 +107,12 @@ func observerSnap(p *pgxpool.Pool) string {
 		must(p.QueryRow(ctx, "SELECT count(*) FROM "+rel).Scan(&n))
 		b.WriteString(rel + "=" + fmt.Sprint(n) + ";")
 	}
-	s := readSeq(p)
+	var s seqSnap
+	err := p.QueryRow(ctx, `SELECT last_value, is_called FROM player_city_id_seq`).Scan(&s.L, &s.C)
+	if err != nil {
+		b.WriteString("seq=absent")
+		return b.String()
+	}
 	b.WriteString(fmt.Sprintf("seq=%d:%v", s.L, s.C))
 	return b.String()
 }
