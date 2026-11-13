@@ -51,7 +51,8 @@ No DSN / `ALLOW_OWNED_PG17_TEST` → harness `SKIP`, exit 0. Record `SHOW server
 
 ## Follow-on
 
-CITY_CREATION_RECOVERY §10 item 3 **remaining** (e.g. §11 finalizer **间隙地形变可用** slice,
-§7.10 finalizer commit-uncertain poison), §10 items **5–7**, target-realm **drain/fence execution**,
+**SPEC-FIRST-CITY-LEDGER-FINALIZER-TERRAIN-GAP-001** — [FIRST_CITY_LEDGER_FINALIZER_TERRAIN_GAP.md](FIRST_CITY_LEDGER_FINALIZER_TERRAIN_GAP.md) (`first_city_ledger_finalizer_terrain_gap`).
+CITY_CREATION_RECOVERY §10 item 3 **remaining** (e.g. §7.10 finalizer commit-uncertain poison),
+§10 items **5–7**, target-realm **drain/fence execution**,
 native browser §11 — separate SPEC cards. Concurrent terminal ordering remains
 [#2563](FIRST_CITY_LEDGER_RACE.md).
