@@ -151,5 +151,6 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 22. **SPEC-FIRST-CITY-LEDGER-GM-IMPORT-EXCLUSION-001** — [FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md](FIRST_CITY_LEDGER_GM_IMPORT_EXCLUSION.md) (`first_city_ledger_gm_import_exclusion`); OID §6.3 GM/import batch-SQL maintenance subprocess only; not realm/controller/browser/signed rollback.
 23. **SPEC-FIRST-CITY-LEDGER-SNAPSHOT-FLUSH-EXCLUSION-001** — [FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md](FIRST_CITY_LEDGER_SNAPSHOT_FLUSH_EXCLUSION.md) (`first_city_ledger_snapshot_flush_exclusion`); OID §6.5 snapshot flusher / async persistence subprocess only; not realm/controller/browser/signed rollback.
 24. **SPEC-FIRST-CITY-LEDGER-RESTORE-JOB-EXCLUSION-001** — [FIRST_CITY_LEDGER_RESTORE_JOB_EXCLUSION.md](FIRST_CITY_LEDGER_RESTORE_JOB_EXCLUSION.md) (`first_city_ledger_restore_job_exclusion`); OID §6.6 backup restore / retention job subprocess only; not realm/controller/browser/signed rollback; does not re-run #2588 retention/cutover data matrix.
+25. **SPEC-FIRST-CITY-LEDGER-DDL-EXCLUSION-001** — [FIRST_CITY_LEDGER_DDL_EXCLUSION.md](FIRST_CITY_LEDGER_DDL_EXCLUSION.md) (`first_city_ledger_ddl_exclusion`); OID §6 row 7 DDL only; not realm/controller/browser/signed rollback.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.
