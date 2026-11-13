@@ -33,3 +33,4 @@ Record `SHOW server_version` and each `PASS mapping_fence:` line.
 ## Follow-on
 
 §11 browser、生产旧 writer 在线排他、drain/fence 控制器、realm 认证 — separate cards.
+旧连接/直接 SQL / 末事务排空（§9/§11 可隔离部分）：[SPEC-FIRST-CITY-LEDGER-ONLINE-EXCLUSION-001](FIRST_CITY_LEDGER_ONLINE_EXCLUSION.md)（`first_city_ledger_online_exclusion`）；不重跑本卡 mapping/fence 五条。
