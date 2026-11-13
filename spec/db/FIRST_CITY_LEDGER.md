@@ -143,5 +143,6 @@ Per CITY_CREATION_RECOVERY §10.2, still required before activation:
 14. **SPEC-FIRST-CITY-LEDGER-ATOMICITY-001** — [FIRST_CITY_LEDGER_ATOMICITY.md](FIRST_CITY_LEDGER_ATOMICITY.md) (`first_city_ledger_atomicity`); per-barrier effect txn §6/§11 atomicity only; does not certify any realm.
 15. **SPEC-FIRST-CITY-LEDGER-INITIAL-001** — [FIRST_CITY_LEDGER_INITIAL.md](FIRST_CITY_LEDGER_INITIAL.md) (`first_city_ledger_initial`); §5 / §11 INITIAL intake arbitration only; does not certify any realm.
 16. **SPEC-FIRST-CITY-LEDGER-ABSENCE-001** — [FIRST_CITY_LEDGER_ABSENCE.md](FIRST_CITY_LEDGER_ABSENCE.md) (`first_city_ledger_absence`); §11 absence / in-flight lookup only; does not certify any realm.
+17. **SPEC-FIRST-CITY-LEDGER-RETENTION-CUTOVER-001** — [FIRST_CITY_LEDGER_RETENTION_CUTOVER.md](FIRST_CITY_LEDGER_RETENTION_CUTOVER.md) (`first_city_ledger_retention_cutover`); §9/§11 retention fail-closed only; does not certify any realm or production cutover.
 
 Do not merge runtime until those cards and wire/template artifacts are independently reviewed.

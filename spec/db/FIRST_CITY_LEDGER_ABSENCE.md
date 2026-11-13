@@ -40,4 +40,5 @@ controller, or complete §11 native product acceptance.
 
 ## Follow-on
 
-§11 retention/cutover / native browser、realm drain/fence 生产控制器 — separate SPEC cards.
+§11 retention/cutover — [#2587](https://github.com/anitaguptaoffice/sanguo-slg/issues/2587) /
+[FIRST_CITY_LEDGER_RETENTION_CUTOVER.md](FIRST_CITY_LEDGER_RETENTION_CUTOVER.md). Native browser、realm drain/fence 生产控制器 — separate SPEC cards.
