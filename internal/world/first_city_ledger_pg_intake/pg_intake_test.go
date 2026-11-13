@@ -19,7 +19,7 @@ const testRealm = "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a77"
 
 func TestPG17FirstCityLedgerIntake(t *testing.T) {
 	if os.Getenv("ALLOW_OWNED_PG17_TEST") != "1" || os.Getenv("FIRST_CITY_LEDGER_TEST_DSN") == "" {
-		t.Fatal("ALLOW_OWNED_PG17_TEST=1 and FIRST_CITY_LEDGER_TEST_DSN required")
+		t.Skip("owned isolated PG17 required: ALLOW_OWNED_PG17_TEST=1 and FIRST_CITY_LEDGER_TEST_DSN")
 	}
 	ctx := context.Background()
 	admin, err := pgxpool.New(ctx, os.Getenv("FIRST_CITY_LEDGER_TEST_DSN"))
