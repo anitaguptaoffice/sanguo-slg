@@ -36,6 +36,7 @@ import { formatFirstCityCommandOutcomePanel } from "./firstCityServerSelectComma
 import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuthorizedScope";
 import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
+import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -114,6 +115,7 @@ export class ServerSelectScene implements Scene {
       <p data-role="registration-status" role="status"></p>
       <section class="first-city-probe" data-role="first-city-probe" hidden>
         <p class="first-city-probe-hint">无城池账号可在本机开发网关下<strong>显式</strong>尝试 V2 意图发现；不调用 v1 建城、不进入主城。</p>
+        <p class="first-city-legacy-route-boundary" data-role="first-city-legacy-route-boundary" role="status" hidden></p>
         <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
         <p data-role="first-city-probe-status" role="status"></p>
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
@@ -337,6 +339,7 @@ export class ServerSelectScene implements Scene {
     const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
     const probe = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe"]');
+    const legacyRouteBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-legacy-route-boundary"]');
     const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
@@ -354,6 +357,11 @@ export class ServerSelectScene implements Scene {
     const terminalReceipt = this.panel.querySelector<HTMLElement>('[data-role="first-city-terminal-receipt"]');
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
     if (probe) probe.hidden = !probeVisible;
+    const legacyBoundaryText = formatFirstCityLegacyRouteBoundaryPanel(probeVisible);
+    if (legacyRouteBoundary) {
+      legacyRouteBoundary.hidden = !probeVisible || !legacyBoundaryText;
+      legacyRouteBoundary.textContent = legacyBoundaryText;
+    }
     if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
     if (probeBtn) {
       probeBtn.disabled = !probeVisible || this.entering || this.firstCityProbeInFlight || this.listBusy ||
