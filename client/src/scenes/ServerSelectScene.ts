@@ -24,6 +24,7 @@ import {
   permitsFirstCityV2Probe, runFirstCityDiscoverProbe, supportsFirstCityPersisted,
 } from "./firstCityServerSelectEntry";
 import { formatFirstCityCanonicalWinnerPanel } from "./firstCityServerSelectCanonicalWinner";
+import { formatFirstCityCanonicalWinnerLocalIntentBoundaryPanel } from "./firstCityServerSelectCanonicalWinnerLocalIntentBoundary";
 import { formatFirstCityLosingProposalsPanel } from "./firstCityServerSelectLosingProposal";
 import { formatFirstCityLocalDraftPanel } from "./firstCityServerSelectLocalDraft";
 import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadConflict";
@@ -148,6 +149,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
         <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
+        <p class="first-city-canonical-winner-local-intent-boundary" data-role="first-city-canonical-winner-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-proposal-form-boundary" data-role="first-city-proposal-form-boundary" role="status" hidden></p>
         <p class="first-city-submit-form-local-boundary" data-role="first-city-submit-form-local-boundary" role="status" hidden></p>
         <p class="first-city-submit-form-local-id-boundary" data-role="first-city-submit-form-local-id-boundary" role="status" hidden></p>
@@ -397,6 +399,9 @@ export class ServerSelectScene implements Scene {
     const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
     const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
+    const canonicalWinnerLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-canonical-winner-local-intent-boundary"]',
+    );
     const proposalFormBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-proposal-form-boundary"]');
     const submitFormLocalBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-boundary"]');
     const submitFormLocalIdBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-id-boundary"]');
@@ -490,6 +495,14 @@ export class ServerSelectScene implements Scene {
       const winnerText = formatFirstCityCanonicalWinnerPanel(this.firstCityKnowledge, staleActor);
       canonicalWinner.hidden = !probeVisible || !winnerText;
       canonicalWinner.textContent = winnerText;
+    }
+    if (canonicalWinnerLocalIntentBoundary) {
+      const winnerLocalIntentText = formatFirstCityCanonicalWinnerLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      canonicalWinnerLocalIntentBoundary.hidden = !probeVisible || !winnerLocalIntentText;
+      canonicalWinnerLocalIntentBoundary.textContent = winnerLocalIntentText;
     }
     const formSnapshot = fcName && fcX && fcY
       ? { name: fcName.value, x: Number(fcX.value), y: Number(fcY.value) }
