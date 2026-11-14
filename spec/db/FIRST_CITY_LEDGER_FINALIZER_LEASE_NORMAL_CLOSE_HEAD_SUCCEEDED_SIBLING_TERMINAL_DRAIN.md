@@ -4,4 +4,4 @@
 
 **Invariants:** dual strict classify + slot/evidence aligned; head `durable_state=2` with retained sibling `durable_state=3` must not false-block `declare_drained`; cleanup ≠ drain; unresolved harness pending/unknown still blocks; full strict classify → drain + `generation++`.
 
-`./spec/db/validate.sh`; `FIRST_CITY_LEDGER_TEST_DSN` + `ALLOW_OWNED_PG17_TEST=1` → `go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_head_succeeded_sibling_terminal_drain`. No DSN / flag → `SKIP`, exit 0.
+`./spec/db/validate.sh`; `FIRST_CITY_LEDGER_TEST_DSN` + `ALLOW_OWNED_PG17_TEST=1` → `go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_head_succeeded_sibling_terminal_drain`. No DSN / flag → `SKIP`, exit 0. **Follow-on:** [HEAD-SUCCEEDED-SIBLING-SUCCEEDED-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_SUCCEEDED_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_head_succeeded_sibling_succeeded_drain`); stacks #3000 / #2997; does not close #2737–#2997 Acceptance.
