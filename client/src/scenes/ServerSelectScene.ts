@@ -42,6 +42,7 @@ import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLo
 import { formatFirstCityProposalFormBoundaryPanel } from "./firstCityServerSelectProposalFormBoundary";
 import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalBoundary";
 import { formatFirstCityContinueLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueLocalIntentBoundary";
+import { formatFirstCitySubmitFormLocalIdBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIdBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -130,6 +131,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-proposal-form-boundary" data-role="first-city-proposal-form-boundary" role="status" hidden></p>
         <p class="first-city-submit-form-local-boundary" data-role="first-city-submit-form-local-boundary" role="status" hidden></p>
+        <p class="first-city-submit-form-local-id-boundary" data-role="first-city-submit-form-local-id-boundary" role="status" hidden></p>
         <p class="first-city-continue-local-intent-boundary" data-role="first-city-continue-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
@@ -359,6 +361,7 @@ export class ServerSelectScene implements Scene {
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const proposalFormBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-proposal-form-boundary"]');
     const submitFormLocalBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-boundary"]');
+    const submitFormLocalIdBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-id-boundary"]');
     const continueLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-local-intent-boundary"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
@@ -433,6 +436,11 @@ export class ServerSelectScene implements Scene {
       const submitBoundaryText = formatFirstCitySubmitFormLocalBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
       submitFormLocalBoundary.hidden = !probeVisible || !submitBoundaryText;
       submitFormLocalBoundary.textContent = submitBoundaryText;
+    }
+    if (submitFormLocalIdBoundary) {
+      const submitIdBoundaryText = formatFirstCitySubmitFormLocalIdBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
+      submitFormLocalIdBoundary.hidden = !probeVisible || !submitIdBoundaryText;
+      submitFormLocalIdBoundary.textContent = submitIdBoundaryText;
     }
     if (continueLocalIntentBoundary) {
       const continueBoundaryText = formatFirstCityContinueLocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
