@@ -15,6 +15,8 @@ import type protobuf from "protobufjs";
 import type { AuthenticatedIdentity } from "./authenticatedIdentity";
 import { FirstCityGateway } from "./firstCityGateway";
 import type { FirstCityRoute, FirstCityCallOptions } from "./firstCityGateway";
+import { FirstCityJournal } from "./firstCityJournal";
+import type { FirstCityScope } from "./firstCityCanonical";
 
 export type GatewayHandlers = {
   onOpen?: () => void;
@@ -146,6 +148,7 @@ export class GatewayClient implements GatewayPort {
   private authenticatedIdentity: AuthenticatedIdentity | null = null;
   private cancelConnect: (() => void) | null = null;
   private firstCityReady = false;
+  private readonly firstCityJournal = new FirstCityJournal();
   private readonly firstCity = new FirstCityGateway(() => this.firstCityReady ? {
     ws: this.ws, session: this.sessionId, shard: this.boundServerId, generation: this.sessionGeneration,
   } : null);
@@ -153,6 +156,12 @@ export class GatewayClient implements GatewayPort {
   requestFirstCity(route: FirstCityRoute, request: unknown, options?: FirstCityCallOptions) {
     return this.firstCity.request(route, request, options);
   }
+
+  requestPersistedFirstCity(route: FirstCityRoute, request: unknown, options?: FirstCityCallOptions) {
+    return this.firstCity.request(route, request, options, this.firstCityJournal);
+  }
+
+  readFirstCityHistory(scope: FirstCityScope) { return this.firstCityJournal.read(scope); }
 
   private invalidateFirstCity(): void {
     this.firstCityReady = false;
