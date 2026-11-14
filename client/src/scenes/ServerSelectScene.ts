@@ -32,6 +32,7 @@ import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadCon
 import { formatFirstCityIdContentConflictPanel } from "./firstCityServerSelectIdContentConflict";
 import { formatFirstCityNotObservedPanel } from "./firstCityServerSelectNotObserved";
 import { formatFirstCityTerminalReceiptPanel } from "./firstCityServerSelectTerminalReceipt";
+import { formatFirstCityTerminalReceiptLocalIntentBoundaryPanel } from "./firstCityServerSelectTerminalReceiptLocalIntentBoundary";
 import { formatFirstCityPendingIntakePanel } from "./firstCityServerSelectPendingIntake";
 import { formatFirstCityPendingIntakeLocalIntentBoundaryPanel } from "./firstCityServerSelectPendingIntakeLocalIntentBoundary";
 import { formatFirstCityDiscoveryEmptyPanel } from "./firstCityServerSelectDiscoveryEmpty";
@@ -189,6 +190,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-command-outcome" data-role="first-city-command-outcome" role="status" hidden></p>
         <p class="first-city-command-outcome-local-intent-boundary" data-role="first-city-command-outcome-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-terminal-receipt" data-role="first-city-terminal-receipt" role="status" hidden></p>
+        <p class="first-city-terminal-receipt-local-intent-boundary" data-role="first-city-terminal-receipt-local-intent-boundary" role="status" hidden></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
           <label>城名 <input name="fc-name" maxlength="32" autocomplete="off"></label>
           <label>X <input name="fc-x" type="number" min="0" max="499" value="60" autocomplete="off"></label>
@@ -460,6 +462,9 @@ export class ServerSelectScene implements Scene {
       '[data-role="first-city-command-outcome-local-intent-boundary"]',
     );
     const terminalReceipt = this.panel.querySelector<HTMLElement>('[data-role="first-city-terminal-receipt"]');
+    const terminalReceiptLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-terminal-receipt-local-intent-boundary"]',
+    );
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
     if (probe) probe.hidden = !probeVisible;
     const legacyBoundaryText = formatFirstCityLegacyRouteBoundaryPanel(probeVisible);
@@ -710,6 +715,14 @@ export class ServerSelectScene implements Scene {
       const receiptText = formatFirstCityTerminalReceiptPanel(this.firstCityKnowledge, staleActor);
       terminalReceipt.hidden = !probeVisible || !receiptText;
       terminalReceipt.textContent = receiptText;
+    }
+    if (terminalReceiptLocalIntentBoundary) {
+      const receiptLocalIntentText = formatFirstCityTerminalReceiptLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      terminalReceiptLocalIntentBoundary.hidden = !probeVisible || !receiptLocalIntentText;
+      terminalReceiptLocalIntentBoundary.textContent = receiptLocalIntentText;
     }
     if (submitBtn) {
       submitBtn.disabled = !commandReady || !canOfferFirstCitySubmit(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
