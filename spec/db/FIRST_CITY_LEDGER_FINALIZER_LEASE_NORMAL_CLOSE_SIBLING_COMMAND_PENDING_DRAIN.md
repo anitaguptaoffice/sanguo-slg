@@ -2,7 +2,7 @@
 
 **Not** adopted. Task: [#2981](https://github.com/anitaguptaoffice/sanguo-slg/issues/2981). Stacks [#2972](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_COMMAND_PENDING_DRAIN.md) / [#2971](https://github.com/anitaguptaoffice/sanguo-slg/issues/2971). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.6/§8; complements [#2972](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_COMMAND_PENDING_DRAIN.md) head ledger PENDING (no re-run) and [#2774](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_MULTI_COMMAND_DRAIN.md) harness command `ending=pending` (no re-run). Does not close #2737–#2972 Acceptance.
 
-**Invariants:** after normal close + dual-command strict classify + slot/evidence aligned, head ledger terminal and sibling `world_first_city_command.durable_state=1` blocks `declare_drained`; cleanup alone ≠ drain; sibling ledger terminalization → drain + `generation++`.
+**Invariants:** after normal close + dual-command strict classify + slot/evidence aligned, head ledger terminal and sibling `world_first_city_command.durable_state=1` blocks `declare_drained`; cleanup alone ≠ drain; sibling ledger terminalization → drain + `generation++`. Complements [#3018](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_COMMAND_PENDING_DRAIN.md) head SUCCEEDED + sibling PENDING.
 
 ```bash
 ./spec/db/validate.sh
