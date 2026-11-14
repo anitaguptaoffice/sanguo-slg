@@ -50,6 +50,7 @@ import { formatFirstCityRetainedTemplateLocalIntentBoundaryPanel } from "./first
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
 import { formatFirstCityHeadPredecessorLocalIntentBoundaryPanel } from "./firstCityServerSelectHeadPredecessorLocalIntentBoundary";
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
+import { formatFirstCityLegacyRouteLocalIntentBoundaryPanel } from "./firstCityServerSelectLegacyRouteLocalIntentBoundary";
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
 import { formatFirstCityDurableHeadC1LocalIntentBoundaryPanel } from "./firstCityServerSelectDurableHeadC1LocalIntentBoundary";
 import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLocalC1Divergence";
@@ -157,6 +158,12 @@ export class ServerSelectScene implements Scene {
       <section class="first-city-probe" data-role="first-city-probe" hidden>
         <p class="first-city-probe-hint">无城池账号可在本机开发网关下<strong>显式</strong>尝试 V2 意图发现；不调用 v1 建城、不进入主城。</p>
         <p class="first-city-legacy-route-boundary" data-role="first-city-legacy-route-boundary" role="status" hidden></p>
+        <p
+          class="first-city-legacy-route-local-intent-boundary"
+          data-role="first-city-legacy-route-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
         <p data-role="first-city-probe-status" role="status"></p>
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
@@ -467,6 +474,9 @@ export class ServerSelectScene implements Scene {
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
     const probe = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe"]');
     const legacyRouteBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-legacy-route-boundary"]');
+    const legacyRouteLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-legacy-route-local-intent-boundary"]',
+    );
     const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
@@ -668,6 +678,14 @@ export class ServerSelectScene implements Scene {
       );
       proposalFormLocalIntentBoundary.hidden = !probeVisible || !proposalFormJournalText;
       proposalFormLocalIntentBoundary.textContent = proposalFormJournalText;
+    }
+    if (legacyRouteLocalIntentBoundary) {
+      const legacyRouteJournalText = formatFirstCityLegacyRouteLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      legacyRouteLocalIntentBoundary.hidden = !probeVisible || !legacyRouteJournalText;
+      legacyRouteLocalIntentBoundary.textContent = legacyRouteJournalText;
     }
     if (submitFormLocalBoundary) {
       const submitBoundaryText = formatFirstCitySubmitFormLocalBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
