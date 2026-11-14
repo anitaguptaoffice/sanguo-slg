@@ -1,0 +1,34 @@
+name: First-city native storage
+on:
+  pull_request:
+    paths: ['.github/workflows/first-city-storage.yml', 'client/**', 'spec/proto/**']
+  push:
+    branches: [main]
+    paths: ['.github/workflows/first-city-storage.yml', 'client/**', 'spec/proto/**']
+jobs:
+  chromium-storage:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install locked dependencies and official Chromium
+        working-directory: client
+        run: npm ci && npx --no-install playwright install --with-deps chromium
+      - name: Verify actual checkout with native storage
+        working-directory: client
+        env:
+          QA_OUT: ${{ runner.temp }}/first-city-storage
+        run: node qa/firstCityStorage.browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: first-city-storage-${{ github.sha }}
+          path: ${{ runner.temp }}/first-city-storage
+          if-no-files-found: error
