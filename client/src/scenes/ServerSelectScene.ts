@@ -48,6 +48,7 @@ import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRet
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
+import { formatFirstCityDurableHeadC1LocalIntentBoundaryPanel } from "./firstCityServerSelectDurableHeadC1LocalIntentBoundary";
 import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLocalC1Divergence";
 import { formatFirstCityLocalC1DivergenceLocalIntentBoundaryPanel } from "./firstCityServerSelectLocalC1DivergenceLocalIntentBoundary";
 import { formatFirstCityProposalFormBoundaryPanel } from "./firstCityServerSelectProposalFormBoundary";
@@ -158,6 +159,12 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-retained-template" data-role="first-city-retained-template" role="status" hidden></p>
         <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
         <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
+        <p
+          class="first-city-durable-head-c1-local-intent-boundary"
+          data-role="first-city-durable-head-c1-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-canonical-winner-local-intent-boundary" data-role="first-city-canonical-winner-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-proposal-form-boundary" data-role="first-city-proposal-form-boundary" role="status" hidden></p>
@@ -438,6 +445,9 @@ export class ServerSelectScene implements Scene {
     const retainedTemplate = this.panel.querySelector<HTMLElement>('[data-role="first-city-retained-template"]');
     const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
     const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
+    const durableHeadC1LocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-durable-head-c1-local-intent-boundary"]',
+    );
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const canonicalWinnerLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-canonical-winner-local-intent-boundary"]',
@@ -560,6 +570,11 @@ export class ServerSelectScene implements Scene {
       const c1Text = formatFirstCityDurableHeadC1Panel(this.firstCityKnowledge, staleActor);
       durableHeadC1.hidden = !probeVisible || !c1Text;
       durableHeadC1.textContent = c1Text;
+    }
+    if (durableHeadC1LocalIntentBoundary) {
+      const c1JournalText = formatFirstCityDurableHeadC1LocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
+      durableHeadC1LocalIntentBoundary.hidden = !probeVisible || !c1JournalText;
+      durableHeadC1LocalIntentBoundary.textContent = c1JournalText;
     }
     if (canonicalWinner) {
       const winnerText = formatFirstCityCanonicalWinnerPanel(this.firstCityKnowledge, staleActor);
