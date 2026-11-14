@@ -1,6 +1,6 @@
 # Sibling effect ending pending gates drain (SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-EFFECT-PENDING-DRAIN-001)
 
-**Not** adopted. Task: [#2874](https://github.com/anitaguptaoffice/sanguo-slg/issues/2874)（#2870 栈；#2834 为 #2831 栈平行登记）. Stacks [#2870](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_EFFECT_BEGIN_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2817/#2869/#2808 (no re-run). Does not close #2737–#2869 Acceptance.
+**Not** adopted. Task: [#2874](https://github.com/anitaguptaoffice/sanguo-slg/issues/2874)（#2870 栈；#2834 为 #2831 栈平行登记）. Stacks [#2902](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_EFFECT_BEGIN_DRAIN.md) / [#2869](https://github.com/anitaguptaoffice/sanguo-slg/issues/2869). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2817/#2869/#2902 sibling effect_begin drain (no re-run). Does not close #2737–#2869 Acceptance.
 
 **Invariants:** head strict-classified + sibling `txn_open=false` with `effect_ending=pending` blocks `declare_drained`; cleanup ≠ drain; sibling `effect_ending=known_rollback` → drain + generation++.
 
