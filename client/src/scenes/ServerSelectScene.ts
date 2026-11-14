@@ -5,6 +5,50 @@ import type { Scene, SceneContext } from "@/engine/SceneManager";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import { formatServerLine, parseGameServerInfo, type GameServerRow } from "@/net/socialFormat";
 import { createOverlayFocusTrap, type OverlayFocusTrap } from "@/ui/overlayFocusTrap";
+import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
+import { FirstCityController } from "@/net/firstCityController";
+import {
+  canOfferFirstCityContinue, canOfferFirstCitySubmit,
+  runFirstCityContinueCommand, runFirstCitySubmitCommand,
+} from "./firstCityServerSelectCommand";
+import {
+  canOfferFirstCityResult, runFirstCityResultCommand, suggestFirstCityResultCommandId,
+} from "./firstCityServerSelectResult";
+import {
+  bindFirstCityActor,
+  firstCityActorBindingDrifted,
+  FIRST_CITY_STALE_ACTOR_NOTICE,
+  type FirstCityActorBinding,
+} from "./firstCityServerSelectActor";
+import {
+  permitsFirstCityV2Probe, runFirstCityDiscoverProbe, supportsFirstCityPersisted,
+} from "./firstCityServerSelectEntry";
+import { formatFirstCityCanonicalWinnerPanel } from "./firstCityServerSelectCanonicalWinner";
+import { formatFirstCityLosingProposalsPanel } from "./firstCityServerSelectLosingProposal";
+import { formatFirstCityLocalDraftPanel } from "./firstCityServerSelectLocalDraft";
+import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadConflict";
+import { formatFirstCityIdContentConflictPanel } from "./firstCityServerSelectIdContentConflict";
+import { formatFirstCityNotObservedPanel } from "./firstCityServerSelectNotObserved";
+import { formatFirstCityTerminalReceiptPanel } from "./firstCityServerSelectTerminalReceipt";
+import { formatFirstCityPendingIntakePanel } from "./firstCityServerSelectPendingIntake";
+import { formatFirstCityDiscoveryEmptyPanel } from "./firstCityServerSelectDiscoveryEmpty";
+import { formatFirstCityCommandOutcomePanel } from "./firstCityServerSelectCommandOutcome";
+import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuthorizedScope";
+import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
+import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
+import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
+import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
+import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLocalC1Divergence";
+import { formatFirstCityProposalFormBoundaryPanel } from "./firstCityServerSelectProposalFormBoundary";
+import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalBoundary";
+import { formatFirstCityContinueLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueLocalIntentBoundary";
+import { formatFirstCitySubmitFormLocalIdBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIdBoundary";
+import { formatFirstCitySubmitRejectedHeadBoundaryPanel } from "./firstCityServerSelectSubmitRejectedHeadBoundary";
+import { formatFirstCitySubmitPendingHeadBoundaryPanel } from "./firstCityServerSelectSubmitPendingHeadBoundary";
+import { formatFirstCitySubmitSucceededHeadBoundaryPanel } from "./firstCityServerSelectSubmitSucceededHeadBoundary";
+import { formatFirstCityContinueRejectedHeadBoundaryPanel } from "./firstCityServerSelectContinueRejectedHeadBoundary";
+import { formatFirstCityContinuePendingHeadBoundaryPanel } from "./firstCityServerSelectContinuePendingHeadBoundary";
+import { formatFirstCityContinueSucceededHeadBoundaryPanel } from "./firstCityServerSelectContinueSucceededHeadBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -38,6 +82,13 @@ export class ServerSelectScene implements Scene {
   private hudStatusEl: HTMLElement | null = null;
   private triggerBtn: HTMLButtonElement | null = null;
   private focusTrap: OverlayFocusTrap | null = null;
+  private gatewayRef: SceneContext["gateway"] | null = null;
+  private firstCityProbeEligible = false;
+  private firstCityProbeNotice = "";
+  private firstCityProbeInFlight = false;
+  private firstCityController: FirstCityController | null = null;
+  private firstCityKnowledge: FirstCityKnowledge | null = null;
+  private firstCityActorBinding: FirstCityActorBinding | null = null;
 
   async enter(ctx: SceneContext): Promise<void> {
     ++this.lifecycle;
@@ -46,6 +97,13 @@ export class ServerSelectScene implements Scene {
     this.selectedId = 0;
     this.listBusy = false;
     this.connected = false;
+    this.gatewayRef = ctx.gateway;
+    this.firstCityProbeEligible = false;
+    this.firstCityProbeNotice = "";
+    this.firstCityProbeInFlight = false;
+    this.firstCityController = null;
+    this.firstCityKnowledge = null;
+    this.firstCityActorBinding = null;
     this.status = "连接网关…";
     this.hud = ctx.hud;
     this.mountHudChrome();
@@ -67,6 +125,46 @@ export class ServerSelectScene implements Scene {
         <button type="button" data-action="register-account" disabled>注册新账号（不建城）</button>
       </form>
       <p data-role="registration-status" role="status"></p>
+      <section class="first-city-probe" data-role="first-city-probe" hidden>
+        <p class="first-city-probe-hint">无城池账号可在本机开发网关下<strong>显式</strong>尝试 V2 意图发现；不调用 v1 建城、不进入主城。</p>
+        <p class="first-city-legacy-route-boundary" data-role="first-city-legacy-route-boundary" role="status" hidden></p>
+        <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
+        <p data-role="first-city-probe-status" role="status"></p>
+        <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
+        <p class="first-city-retained-template" data-role="first-city-retained-template" role="status" hidden></p>
+        <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
+        <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
+        <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
+        <p class="first-city-proposal-form-boundary" data-role="first-city-proposal-form-boundary" role="status" hidden></p>
+        <p class="first-city-submit-form-local-boundary" data-role="first-city-submit-form-local-boundary" role="status" hidden></p>
+        <p class="first-city-submit-form-local-id-boundary" data-role="first-city-submit-form-local-id-boundary" role="status" hidden></p>
+        <p class="first-city-submit-rejected-head-boundary" data-role="first-city-submit-rejected-head-boundary" role="status" hidden></p>
+        <p class="first-city-submit-pending-head-boundary" data-role="first-city-submit-pending-head-boundary" role="status" hidden></p>
+        <p class="first-city-submit-succeeded-head-boundary" data-role="first-city-submit-succeeded-head-boundary" role="status" hidden></p>
+        <p class="first-city-continue-rejected-head-boundary" data-role="first-city-continue-rejected-head-boundary" role="status" hidden></p>
+        <p class="first-city-continue-pending-head-boundary" data-role="first-city-continue-pending-head-boundary" role="status" hidden></p>
+        <p class="first-city-continue-succeeded-head-boundary" data-role="first-city-continue-succeeded-head-boundary" role="status" hidden></p>
+        <p class="first-city-continue-local-intent-boundary" data-role="first-city-continue-local-intent-boundary" role="status" hidden></p>
+        <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
+        <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
+        <p class="first-city-local-c1-divergence" data-role="first-city-local-c1-divergence" role="status" hidden></p>
+        <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
+        <p class="first-city-id-content-conflict" data-role="first-city-id-content-conflict" role="status" hidden></p>
+        <p class="first-city-not-observed" data-role="first-city-not-observed" role="status" hidden></p>
+        <p class="first-city-pending-intake" data-role="first-city-pending-intake" role="status" hidden></p>
+        <p class="first-city-discovery-empty" data-role="first-city-discovery-empty" role="status" hidden></p>
+        <p class="first-city-command-outcome" data-role="first-city-command-outcome" role="status" hidden></p>
+        <p class="first-city-terminal-receipt" data-role="first-city-terminal-receipt" role="status" hidden></p>
+        <div class="first-city-command" data-role="first-city-command" hidden>
+          <label>城名 <input name="fc-name" maxlength="32" autocomplete="off"></label>
+          <label>X <input name="fc-x" type="number" min="0" max="499" value="60" autocomplete="off"></label>
+          <label>Y <input name="fc-y" type="number" min="0" max="499" value="60" autocomplete="off"></label>
+          <button type="button" data-action="submit-first-city" disabled>显式 V2 Submit</button>
+          <button type="button" data-action="continue-first-city" disabled>显式 V2 Continue</button>
+          <label>commandId <input name="fc-command-id" maxlength="36" autocomplete="off" spellcheck="false"></label>
+          <button type="button" data-action="get-first-city-result" disabled>显式 V2 GetResult</button>
+        </div>
+      </section>
       <button type="button" data-action="refresh-servers">刷新列表</button>
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入演示账号</button>
       <p class="server-select-status" data-role="status"></p>
@@ -76,7 +174,15 @@ export class ServerSelectScene implements Scene {
     skinDefaultPanel(this.panel, ctx.assets, 560, 360);
     skinPrimaryButtons(this.panel, ctx.assets);
     this.panel.addEventListener("click", (ev) => this.onClick(ev, ctx));
-    this.panel.addEventListener("input", () => this.syncPanel());
+    this.panel.addEventListener("input", (ev) => {
+      const target = ev.target as HTMLElement;
+      if (target instanceof HTMLInputElement && target.name === "login" && this.firstCityKnowledge &&
+        this.firstCityActorBinding && target.value.trim() !== this.firstCityActorBinding.login) {
+        this.clearFirstCityRetain();
+        this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      }
+      this.syncPanel();
+    });
     this.panel.querySelector("form")!.addEventListener("submit", (ev) => {
       ev.preventDefault();
       void this.enterGame(ctx, true);
@@ -110,7 +216,26 @@ export class ServerSelectScene implements Scene {
     this.focusTrap?.dispose();
     this.focusTrap = null;
     this.clearPassword();
+    this.gatewayRef = null;
+    this.firstCityProbeEligible = false;
+    this.firstCityProbeNotice = "";
+    this.firstCityProbeInFlight = false;
+    this.firstCityController = null;
+    this.firstCityKnowledge = null;
+    this.firstCityActorBinding = null;
     this.panel?.remove();
+  }
+
+  private clearFirstCityRetain(): void {
+    this.firstCityController = null;
+    this.firstCityKnowledge = null;
+    this.firstCityActorBinding = null;
+  }
+
+  private firstCityStaleActor(login: string): boolean {
+    if (!this.firstCityKnowledge) return false;
+    return firstCityActorBindingDrifted(this.firstCityActorBinding, this.firstCityKnowledge, login, this.selectedId,
+      this.gatewayRef?.getSessionGeneration?.());
   }
 
   private clearPassword(): void {
@@ -237,6 +362,209 @@ export class ServerSelectScene implements Scene {
       this.registrationAttempted || !this.connected || this.listBusy || this.entering || !login.value.trim() || !password.value;
     const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
+    const probe = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe"]');
+    const legacyRouteBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-legacy-route-boundary"]');
+    const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
+    const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
+    const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
+    const retainedTemplate = this.panel.querySelector<HTMLElement>('[data-role="first-city-retained-template"]');
+    const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
+    const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
+    const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
+    const proposalFormBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-proposal-form-boundary"]');
+    const submitFormLocalBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-boundary"]');
+    const submitFormLocalIdBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-id-boundary"]');
+    const submitRejectedHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-rejected-head-boundary"]');
+    const submitPendingHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-pending-head-boundary"]');
+    const submitSucceededHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-succeeded-head-boundary"]');
+    const continueRejectedHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-rejected-head-boundary"]');
+    const continuePendingHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-pending-head-boundary"]');
+    const continueSucceededHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-succeeded-head-boundary"]');
+    const continueLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-local-intent-boundary"]');
+    const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
+    const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
+    const localC1Divergence = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-c1-divergence"]');
+    const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
+    const idContentConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-id-content-conflict"]');
+    const notObserved = this.panel.querySelector<HTMLElement>('[data-role="first-city-not-observed"]');
+    const pendingIntake = this.panel.querySelector<HTMLElement>('[data-role="first-city-pending-intake"]');
+    const discoveryEmpty = this.panel.querySelector<HTMLElement>('[data-role="first-city-discovery-empty"]');
+    const commandOutcome = this.panel.querySelector<HTMLElement>('[data-role="first-city-command-outcome"]');
+    const terminalReceipt = this.panel.querySelector<HTMLElement>('[data-role="first-city-terminal-receipt"]');
+    const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
+    if (probe) probe.hidden = !probeVisible;
+    const legacyBoundaryText = formatFirstCityLegacyRouteBoundaryPanel(probeVisible);
+    if (legacyRouteBoundary) {
+      legacyRouteBoundary.hidden = !probeVisible || !legacyBoundaryText;
+      legacyRouteBoundary.textContent = legacyBoundaryText;
+    }
+    if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
+    if (probeBtn) {
+      probeBtn.disabled = !probeVisible || this.entering || this.firstCityProbeInFlight || this.listBusy ||
+        !this.connected || !login.value.trim() || !password.value || !supportsFirstCityPersisted(this.gatewayRef);
+    }
+    const command = this.panel.querySelector<HTMLElement>('[data-role="first-city-command"]');
+    const submitBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="submit-first-city"]');
+    const continueBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="continue-first-city"]');
+    const resultBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="get-first-city-result"]');
+    const fcName = this.panel.querySelector<HTMLInputElement>('input[name="fc-name"]');
+    const fcX = this.panel.querySelector<HTMLInputElement>('input[name="fc-x"]');
+    const fcY = this.panel.querySelector<HTMLInputElement>('input[name="fc-y"]');
+    const fcCommandId = this.panel.querySelector<HTMLInputElement>('input[name="fc-command-id"]');
+    const staleActor = this.firstCityStaleActor(login.value.trim());
+    if (command) command.hidden = !probeVisible || !this.firstCityKnowledge;
+    const commandReady = !!this.firstCityKnowledge && !this.firstCityKnowledge.unavailable && !staleActor;
+    if (staleActor && probeStatus && !this.firstCityProbeInFlight) {
+      probeStatus.textContent = FIRST_CITY_STALE_ACTOR_NOTICE;
+    }
+    if (authorizedScope) {
+      const scopeText = formatFirstCityAuthorizedScopePanel(this.firstCityKnowledge, staleActor);
+      authorizedScope.hidden = !probeVisible || !scopeText;
+      authorizedScope.textContent = scopeText;
+    }
+    if (retainedTemplate) {
+      const templateText = formatFirstCityRetainedTemplatePanel(this.firstCityKnowledge, staleActor);
+      retainedTemplate.hidden = !probeVisible || !templateText;
+      retainedTemplate.textContent = templateText;
+    }
+    if (headPredecessor) {
+      const predecessorText = formatFirstCityHeadPredecessorPanel(this.firstCityKnowledge, staleActor);
+      headPredecessor.hidden = !probeVisible || !predecessorText;
+      headPredecessor.textContent = predecessorText;
+    }
+    if (durableHeadC1) {
+      const c1Text = formatFirstCityDurableHeadC1Panel(this.firstCityKnowledge, staleActor);
+      durableHeadC1.hidden = !probeVisible || !c1Text;
+      durableHeadC1.textContent = c1Text;
+    }
+    if (canonicalWinner) {
+      const winnerText = formatFirstCityCanonicalWinnerPanel(this.firstCityKnowledge, staleActor);
+      canonicalWinner.hidden = !probeVisible || !winnerText;
+      canonicalWinner.textContent = winnerText;
+    }
+    const formSnapshot = fcName && fcX && fcY
+      ? { name: fcName.value, x: Number(fcX.value), y: Number(fcY.value) }
+      : null;
+    if (proposalFormBoundary) {
+      const boundaryText = formatFirstCityProposalFormBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
+      proposalFormBoundary.hidden = !probeVisible || !boundaryText;
+      proposalFormBoundary.textContent = boundaryText;
+    }
+    if (submitFormLocalBoundary) {
+      const submitBoundaryText = formatFirstCitySubmitFormLocalBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
+      submitFormLocalBoundary.hidden = !probeVisible || !submitBoundaryText;
+      submitFormLocalBoundary.textContent = submitBoundaryText;
+    }
+    if (submitFormLocalIdBoundary) {
+      const submitIdBoundaryText = formatFirstCitySubmitFormLocalIdBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
+      submitFormLocalIdBoundary.hidden = !probeVisible || !submitIdBoundaryText;
+      submitFormLocalIdBoundary.textContent = submitIdBoundaryText;
+    }
+    if (submitRejectedHeadBoundary) {
+      const rejectedHeadText = formatFirstCitySubmitRejectedHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      submitRejectedHeadBoundary.hidden = !probeVisible || !rejectedHeadText;
+      submitRejectedHeadBoundary.textContent = rejectedHeadText;
+    }
+    if (submitPendingHeadBoundary) {
+      const pendingHeadText = formatFirstCitySubmitPendingHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      submitPendingHeadBoundary.hidden = !probeVisible || !pendingHeadText;
+      submitPendingHeadBoundary.textContent = pendingHeadText;
+    }
+    if (submitSucceededHeadBoundary) {
+      const succeededHeadText = formatFirstCitySubmitSucceededHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      submitSucceededHeadBoundary.hidden = !probeVisible || !succeededHeadText;
+      submitSucceededHeadBoundary.textContent = succeededHeadText;
+    }
+    if (continueRejectedHeadBoundary) {
+      const continueRejectedText = formatFirstCityContinueRejectedHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      continueRejectedHeadBoundary.hidden = !probeVisible || !continueRejectedText;
+      continueRejectedHeadBoundary.textContent = continueRejectedText;
+    }
+    if (continuePendingHeadBoundary) {
+      const continuePendingText = formatFirstCityContinuePendingHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      continuePendingHeadBoundary.hidden = !probeVisible || !continuePendingText;
+      continuePendingHeadBoundary.textContent = continuePendingText;
+    }
+    if (continueSucceededHeadBoundary) {
+      const continueSucceededText = formatFirstCityContinueSucceededHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      continueSucceededHeadBoundary.hidden = !probeVisible || !continueSucceededText;
+      continueSucceededHeadBoundary.textContent = continueSucceededText;
+    }
+    if (continueLocalIntentBoundary) {
+      const continueBoundaryText = formatFirstCityContinueLocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
+      continueLocalIntentBoundary.hidden = !probeVisible || !continueBoundaryText;
+      continueLocalIntentBoundary.textContent = continueBoundaryText;
+    }
+    if (losingProposal) {
+      const loserText = formatFirstCityLosingProposalsPanel(this.firstCityKnowledge, staleActor);
+      losingProposal.hidden = !probeVisible || !loserText;
+      losingProposal.textContent = loserText;
+    }
+    if (localDraft) {
+      const draftText = formatFirstCityLocalDraftPanel(this.firstCityKnowledge, staleActor);
+      localDraft.hidden = !probeVisible || !draftText;
+      localDraft.textContent = draftText;
+    }
+    if (localC1Divergence) {
+      const c1DivergenceText = formatFirstCityLocalC1DivergencePanel(this.firstCityKnowledge, staleActor);
+      localC1Divergence.hidden = !probeVisible || !c1DivergenceText;
+      localC1Divergence.textContent = c1DivergenceText;
+    }
+    if (headConflict) {
+      const conflictText = formatFirstCityHeadConflictPanel(this.firstCityKnowledge, staleActor);
+      headConflict.hidden = !probeVisible || !conflictText;
+      headConflict.textContent = conflictText;
+    }
+    if (idContentConflict) {
+      const contentText = formatFirstCityIdContentConflictPanel(this.firstCityKnowledge, staleActor);
+      idContentConflict.hidden = !probeVisible || !contentText;
+      idContentConflict.textContent = contentText;
+    }
+    if (notObserved) {
+      const lookupText = formatFirstCityNotObservedPanel(this.firstCityKnowledge, staleActor);
+      notObserved.hidden = !probeVisible || !lookupText;
+      notObserved.textContent = lookupText;
+    }
+    if (pendingIntake) {
+      const intakeText = formatFirstCityPendingIntakePanel(this.firstCityKnowledge, staleActor);
+      pendingIntake.hidden = !probeVisible || !intakeText;
+      pendingIntake.textContent = intakeText;
+    }
+    if (discoveryEmpty) {
+      const emptyText = formatFirstCityDiscoveryEmptyPanel(this.firstCityKnowledge, staleActor);
+      discoveryEmpty.hidden = !probeVisible || !emptyText;
+      discoveryEmpty.textContent = emptyText;
+    }
+    if (commandOutcome) {
+      const outcomeText = formatFirstCityCommandOutcomePanel(this.firstCityKnowledge, staleActor);
+      commandOutcome.hidden = !probeVisible || !outcomeText;
+      commandOutcome.textContent = outcomeText;
+    }
+    if (terminalReceipt) {
+      const receiptText = formatFirstCityTerminalReceiptPanel(this.firstCityKnowledge, staleActor);
+      terminalReceipt.hidden = !probeVisible || !receiptText;
+      terminalReceipt.textContent = receiptText;
+    }
+    if (submitBtn) {
+      submitBtn.disabled = !commandReady || !canOfferFirstCitySubmit(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
+        this.entering || !password.value || this.listBusy;
+    }
+    if (continueBtn) {
+      continueBtn.disabled = !commandReady || !canOfferFirstCityContinue(this.firstCityKnowledge) || this.firstCityProbeInFlight ||
+        this.entering || !password.value || this.listBusy;
+    }
+    if (fcName && submitBtn) fcName.disabled = submitBtn.disabled && !canOfferFirstCitySubmit(this.firstCityKnowledge);
+    if (fcCommandId && commandReady) {
+      if (!fcCommandId.value.trim()) {
+        const suggested = suggestFirstCityResultCommandId(this.firstCityKnowledge);
+        if (suggested) fcCommandId.value = suggested;
+      }
+      fcCommandId.disabled = this.firstCityProbeInFlight || this.entering || this.listBusy;
+    }
+    if (resultBtn) {
+      resultBtn.disabled = !commandReady || !canOfferFirstCityResult(this.firstCityKnowledge, fcCommandId?.value ?? "") ||
+        this.firstCityProbeInFlight || this.entering || !password.value || this.listBusy;
+    }
     const hudBusy =
       /^(连接|拉取|进入服)/.test(this.status) || this.status.includes("失败");
     this.setHudStatus(hudBusy ? this.status : "请选择游戏服");
@@ -248,6 +576,10 @@ export class ServerSelectScene implements Scene {
     if (li) {
       const id = Number(li.getAttribute("data-server-id"));
       if (this.servers.some(s => s.server_id === id && this.canEnter(s))) {
+        if (this.firstCityActorBinding && id !== this.firstCityActorBinding.serverId) {
+          this.clearFirstCityRetain();
+          this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+        }
         this.selectedId = id;
         this.syncPanel();
       }
@@ -259,6 +591,10 @@ export class ServerSelectScene implements Scene {
     if (action === "refresh-servers") void this.loadServers(ctx.gateway);
     if (action === "enter-game") void this.enterGame(ctx);
     if (action === "register-account") void this.registerAccount(ctx);
+    if (action === "discover-first-city") void this.discoverFirstCity(ctx);
+    if (action === "submit-first-city") void this.submitFirstCity(ctx);
+    if (action === "continue-first-city") void this.continueFirstCity(ctx);
+    if (action === "get-first-city-result") void this.getFirstCityResult(ctx);
   }
 
   private async registerAccount(ctx: SceneContext): Promise<void> {
@@ -294,6 +630,165 @@ export class ServerSelectScene implements Scene {
     }
   }
 
+  private async discoverFirstCity(ctx: SceneContext): Promise<void> {
+    if (!this.active || !this.focusTrap?.isActive() || !this.firstCityProbeEligible || !this.connected ||
+      this.listBusy || this.entering || this.firstCityProbeInFlight || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
+      !supportsFirstCityPersisted(ctx.gateway)) return;
+    const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
+    const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
+    if (!login || !password ||
+      !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+    this.clearPassword();
+    const lifecycle = this.lifecycle;
+    const generation = ctx.gateway.getSessionGeneration?.();
+    if (this.firstCityStaleActor(login)) {
+      this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      this.syncPanel();
+      return;
+    }
+    const inProgress = "首城 V2 探测进行中…";
+    this.firstCityProbeInFlight = true;
+    this.entering = true;
+    this.firstCityProbeNotice = inProgress;
+    this.syncPanel();
+    try {
+      const result = await runFirstCityDiscoverProbe(ctx.gateway, login, password, this.selectedId, generation);
+      if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
+        this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+        this.status = "首城 V2 探测未完成";
+        return;
+      }
+      this.firstCityController = result.controller;
+      this.firstCityKnowledge = result.knowledge;
+      this.firstCityActorBinding = bindFirstCityActor(login, this.selectedId, ctx.gateway.getSessionGeneration?.(),
+        result.knowledge);
+      this.firstCityProbeNotice = result.message;
+      this.status = "首城 V2 探测完成；未建城、未进主城。";
+    } catch {
+      if (!this.isCurrent(lifecycle)) return;
+      this.clearFirstCityRetain();
+      this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+      this.status = "首城 V2 探测未完成";
+    } finally {
+      if (this.firstCityProbeNotice === inProgress) {
+        this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+      }
+      this.firstCityProbeInFlight = false;
+      this.entering = false;
+      if (this.active) this.syncPanel();
+    }
+  }
+
+  private async submitFirstCity(ctx: SceneContext): Promise<void> {
+    await this.runFirstCityCommand(ctx, "submit");
+  }
+
+  private async continueFirstCity(ctx: SceneContext): Promise<void> {
+    await this.runFirstCityCommand(ctx, "continue");
+  }
+
+  private async getFirstCityResult(ctx: SceneContext): Promise<void> {
+    if (!this.active || !this.focusTrap?.isActive() || !this.firstCityProbeEligible || !this.connected ||
+      this.listBusy || this.entering || this.firstCityProbeInFlight || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
+      !supportsFirstCityPersisted(ctx.gateway) || !this.firstCityController || !this.firstCityKnowledge) return;
+    const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
+    const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
+    const commandId = this.panel.querySelector<HTMLInputElement>('input[name="fc-command-id"]')!.value;
+    if (!login || !password || !canOfferFirstCityResult(this.firstCityKnowledge, commandId) ||
+      !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+    if (this.firstCityStaleActor(login)) {
+      this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      this.syncPanel();
+      return;
+    }
+    this.clearPassword();
+    const lifecycle = this.lifecycle;
+    const generation = ctx.gateway.getSessionGeneration?.();
+    const inProgress = "首城 V2 GetResult 进行中…";
+    const failure = "首城 V2 GetResult 结果尚未确认；未调用 v1 建城，也未进入主城。";
+    this.firstCityProbeInFlight = true;
+    this.entering = true;
+    this.firstCityProbeNotice = inProgress;
+    this.syncPanel();
+    try {
+      const result = await runFirstCityResultCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
+        commandId, login, password, this.selectedId, generation, this.firstCityActorBinding);
+      if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
+        this.firstCityProbeNotice = failure;
+        this.status = "首城 V2 GetResult 未完成";
+        return;
+      }
+      this.firstCityKnowledge = result.knowledge;
+      this.firstCityProbeNotice = result.message;
+      this.status = "首城 V2 GetResult 往返完成；未进主城。";
+    } catch {
+      if (!this.isCurrent(lifecycle)) return;
+      this.firstCityProbeNotice = failure;
+      this.status = "首城 V2 GetResult 未完成";
+    } finally {
+      if (this.firstCityProbeNotice === inProgress) this.firstCityProbeNotice = failure;
+      this.firstCityProbeInFlight = false;
+      this.entering = false;
+      if (this.active) this.syncPanel();
+    }
+  }
+
+  private async runFirstCityCommand(ctx: SceneContext, kind: "submit" | "continue"): Promise<void> {
+    if (!this.active || !this.focusTrap?.isActive() || !this.firstCityProbeEligible || !this.connected ||
+      this.listBusy || this.entering || this.firstCityProbeInFlight || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
+      !supportsFirstCityPersisted(ctx.gateway) || !this.firstCityController || !this.firstCityKnowledge) return;
+    const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
+    const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
+    if (!login || !password ||
+      !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+  if (kind === "submit" && !canOfferFirstCitySubmit(this.firstCityKnowledge)) return;
+    if (kind === "continue" && !canOfferFirstCityContinue(this.firstCityKnowledge)) return;
+    if (this.firstCityStaleActor(login)) {
+      this.firstCityProbeNotice = FIRST_CITY_STALE_ACTOR_NOTICE;
+      this.syncPanel();
+      return;
+    }
+    this.clearPassword();
+    const lifecycle = this.lifecycle;
+    const generation = ctx.gateway.getSessionGeneration?.();
+    const inProgress = kind === "submit" ? "首城 V2 Submit 进行中…" : "首城 V2 Continue 进行中…";
+    this.firstCityProbeInFlight = true;
+    this.entering = true;
+    this.firstCityProbeNotice = inProgress;
+    this.syncPanel();
+    const failure = "首城 V2 命令结果尚未确认；未调用 v1 建城，也未进入主城。";
+    try {
+      let result: { message: string; knowledge: FirstCityKnowledge };
+      if (kind === "submit") {
+        const name = this.panel.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value;
+        const x = Number(this.panel.querySelector<HTMLInputElement>('input[name="fc-x"]')!.value);
+        const y = Number(this.panel.querySelector<HTMLInputElement>('input[name="fc-y"]')!.value);
+        result = await runFirstCitySubmitCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
+          { name, x, y }, login, password, this.selectedId, generation, this.firstCityActorBinding);
+      } else {
+        result = await runFirstCityContinueCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
+          login, password, this.selectedId, generation, this.firstCityActorBinding);
+      }
+      if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
+        this.firstCityProbeNotice = failure;
+        this.status = "首城 V2 命令未完成";
+        return;
+      }
+      this.firstCityKnowledge = result.knowledge;
+      this.firstCityProbeNotice = result.message;
+      this.status = `首城 V2 ${kind === "submit" ? "Submit" : "Continue"} 往返完成；未进主城。`;
+    } catch {
+      if (!this.isCurrent(lifecycle)) return;
+      this.firstCityProbeNotice = failure;
+      this.status = "首城 V2 命令未完成";
+    } finally {
+      if (this.firstCityProbeNotice === inProgress) this.firstCityProbeNotice = failure;
+      this.firstCityProbeInFlight = false;
+      this.entering = false;
+      if (this.active) this.syncPanel();
+    }
+  }
+
   private async enterGame(ctx: SceneContext, existing = false): Promise<void> {
     if (!this.active || !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
@@ -318,10 +813,15 @@ export class ServerSelectScene implements Scene {
       await ctx.switchScene("mainCity", session);
     } catch (e) {
       if (!this.isCurrent(lifecycle)) return;
+      const message = (e as Error).message;
+      const noCity = message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池";
+      if (existing && noCity) {
+        this.clearFirstCityRetain();
+        this.firstCityProbeEligible = true;
+      }
       this.status = existing
-        ? ((e as Error).message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池"
-          ? (e as Error).message : "登录未完成，请核对账号、密码、所选服或连接后重试")
-        : `进服失败: ${(e as Error).message}`;
+        ? (noCity ? message : "登录未完成，请核对账号、密码、所选服或连接后重试")
+        : `进服失败: ${message}`;
       this.syncPanel();
     } finally {
       // Leaving cannot cancel an already submitted bootstrap; keep it single-flight on re-entry.
