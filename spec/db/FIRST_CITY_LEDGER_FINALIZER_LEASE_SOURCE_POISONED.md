@@ -13,3 +13,5 @@ GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_sourc
 ```
 
 No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0.
+
+**Follow-on:** **SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-001** — [FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE.md](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE.md) (`first_city_ledger_finalizer_lease_normal_close`); does not close #2737/#2739/#2744/#2747/#2753/#2757 Acceptance.
