@@ -47,6 +47,7 @@ import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuth
 import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
 import { formatFirstCityRetainedTemplateLocalIntentBoundaryPanel } from "./firstCityServerSelectRetainedTemplateLocalIntentBoundary";
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
+import { formatFirstCityHeadPredecessorLocalIntentBoundaryPanel } from "./firstCityServerSelectHeadPredecessorLocalIntentBoundary";
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
 import { formatFirstCityDurableHeadC1LocalIntentBoundaryPanel } from "./firstCityServerSelectDurableHeadC1LocalIntentBoundary";
@@ -165,6 +166,12 @@ export class ServerSelectScene implements Scene {
           hidden
         ></p>
         <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
+        <p
+          class="first-city-head-predecessor-local-intent-boundary"
+          data-role="first-city-head-predecessor-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
         <p
           class="first-city-durable-head-c1-local-intent-boundary"
@@ -454,6 +461,9 @@ export class ServerSelectScene implements Scene {
       '[data-role="first-city-retained-template-local-intent-boundary"]',
     );
     const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
+    const headPredecessorLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-head-predecessor-local-intent-boundary"]',
+    );
     const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
     const durableHeadC1LocalIntentBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-durable-head-c1-local-intent-boundary"]',
@@ -583,6 +593,14 @@ export class ServerSelectScene implements Scene {
       const predecessorText = formatFirstCityHeadPredecessorPanel(this.firstCityKnowledge, staleActor);
       headPredecessor.hidden = !probeVisible || !predecessorText;
       headPredecessor.textContent = predecessorText;
+    }
+    if (headPredecessorLocalIntentBoundary) {
+      const predecessorJournalText = formatFirstCityHeadPredecessorLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      headPredecessorLocalIntentBoundary.hidden = !probeVisible || !predecessorJournalText;
+      headPredecessorLocalIntentBoundary.textContent = predecessorJournalText;
     }
     if (durableHeadC1) {
       const c1Text = formatFirstCityDurableHeadC1Panel(this.firstCityKnowledge, staleActor);
