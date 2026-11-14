@@ -1,0 +1,13 @@
+# Sibling ledger command PENDING gates drain under normal close (SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-COMMAND-PENDING-DRAIN-001)
+
+**Not** adopted. Task: [#2981](https://github.com/anitaguptaoffice/sanguo-slg/issues/2981). Stacks [#2972](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_COMMAND_PENDING_DRAIN.md) / [#2971](https://github.com/anitaguptaoffice/sanguo-slg/issues/2971). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.6/§8; complements [#2972](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_COMMAND_PENDING_DRAIN.md) head ledger PENDING (no re-run) and [#2774](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_MULTI_COMMAND_DRAIN.md) harness command `ending=pending` (no re-run). Does not close #2737–#2972 Acceptance.
+
+**Invariants:** after normal close + dual-command strict classify + slot/evidence aligned, head ledger terminal and sibling `world_first_city_command.durable_state=1` blocks `declare_drained`; cleanup alone ≠ drain; sibling ledger terminalization → drain + `generation++`. Complements [#3018](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_COMMAND_PENDING_DRAIN.md) head SUCCEEDED + sibling PENDING.
+
+```bash
+./spec/db/validate.sh
+export FIRST_CITY_LEDGER_TEST_DSN='postgres://…?sslmode=disable' ALLOW_OWNED_PG17_TEST=1
+GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_sibling_command_pending_drain
+```
+
+No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [HEAD-PENDING-SIBLING-TERMINAL-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_PENDING_SIBLING_TERMINAL_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_head_pending_sibling_terminal_drain`); stacks #2984 / #2982; does not close #2737–#2982 Acceptance.
