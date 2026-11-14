@@ -40,6 +40,7 @@ import { formatFirstCityTerminalReceiptLocalIntentBoundaryPanel } from "./firstC
 import { formatFirstCityPendingIntakePanel } from "./firstCityServerSelectPendingIntake";
 import { formatFirstCityPendingIntakeLocalIntentBoundaryPanel } from "./firstCityServerSelectPendingIntakeLocalIntentBoundary";
 import { formatFirstCityDiscoveryEmptyPanel } from "./firstCityServerSelectDiscoveryEmpty";
+import { formatFirstCityDiscoveryEmptyLocalIntentBoundaryPanel } from "./firstCityServerSelectDiscoveryEmptyLocalIntentBoundary";
 import { formatFirstCityCommandOutcomePanel } from "./firstCityServerSelectCommandOutcome";
 import { formatFirstCityCommandOutcomeLocalIntentBoundaryPanel } from "./firstCityServerSelectCommandOutcomeLocalIntentBoundary";
 import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuthorizedScope";
@@ -200,6 +201,12 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-pending-intake" data-role="first-city-pending-intake" role="status" hidden></p>
         <p class="first-city-pending-intake-local-intent-boundary" data-role="first-city-pending-intake-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-discovery-empty" data-role="first-city-discovery-empty" role="status" hidden></p>
+        <p
+          class="first-city-discovery-empty-local-intent-boundary"
+          data-role="first-city-discovery-empty-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-discover-empty-head-boundary" data-role="first-city-discover-empty-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-pending-head-boundary" data-role="first-city-discover-pending-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-rejected-head-boundary" data-role="first-city-discover-rejected-head-boundary" role="status" hidden></p>
@@ -472,6 +479,9 @@ export class ServerSelectScene implements Scene {
       '[data-role="first-city-pending-intake-local-intent-boundary"]',
     );
     const discoveryEmpty = this.panel.querySelector<HTMLElement>('[data-role="first-city-discovery-empty"]');
+    const discoveryEmptyLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-discovery-empty-local-intent-boundary"]',
+    );
     const discoverEmptyHeadBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-discover-empty-head-boundary"]',
     );
@@ -734,6 +744,14 @@ export class ServerSelectScene implements Scene {
       const emptyText = formatFirstCityDiscoveryEmptyPanel(this.firstCityKnowledge, staleActor);
       discoveryEmpty.hidden = !probeVisible || !emptyText;
       discoveryEmpty.textContent = emptyText;
+    }
+    if (discoveryEmptyLocalIntentBoundary) {
+      const emptyJournalText = formatFirstCityDiscoveryEmptyLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      discoveryEmptyLocalIntentBoundary.hidden = !probeVisible || !emptyJournalText;
+      discoveryEmptyLocalIntentBoundary.textContent = emptyJournalText;
     }
     if (discoverEmptyHeadBoundary) {
       const discoverEmptyHeadText = formatFirstCityDiscoverEmptyHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
