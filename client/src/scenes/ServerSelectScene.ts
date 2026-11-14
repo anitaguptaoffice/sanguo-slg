@@ -40,6 +40,7 @@ import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelect
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
 import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLocalC1Divergence";
 import { formatFirstCityProposalFormBoundaryPanel } from "./firstCityServerSelectProposalFormBoundary";
+import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -127,6 +128,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-proposal-form-boundary" data-role="first-city-proposal-form-boundary" role="status" hidden></p>
+        <p class="first-city-submit-form-local-boundary" data-role="first-city-submit-form-local-boundary" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
         <p class="first-city-local-c1-divergence" data-role="first-city-local-c1-divergence" role="status" hidden></p>
@@ -354,6 +356,7 @@ export class ServerSelectScene implements Scene {
     const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const proposalFormBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-proposal-form-boundary"]');
+    const submitFormLocalBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-boundary"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
     const localC1Divergence = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-c1-divergence"]');
@@ -415,13 +418,18 @@ export class ServerSelectScene implements Scene {
       canonicalWinner.hidden = !probeVisible || !winnerText;
       canonicalWinner.textContent = winnerText;
     }
+    const formSnapshot = fcName && fcX && fcY
+      ? { name: fcName.value, x: Number(fcX.value), y: Number(fcY.value) }
+      : null;
     if (proposalFormBoundary) {
-      const formSnapshot = fcName && fcX && fcY
-        ? { name: fcName.value, x: Number(fcX.value), y: Number(fcY.value) }
-        : null;
       const boundaryText = formatFirstCityProposalFormBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
       proposalFormBoundary.hidden = !probeVisible || !boundaryText;
       proposalFormBoundary.textContent = boundaryText;
+    }
+    if (submitFormLocalBoundary) {
+      const submitBoundaryText = formatFirstCitySubmitFormLocalBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
+      submitFormLocalBoundary.hidden = !probeVisible || !submitBoundaryText;
+      submitFormLocalBoundary.textContent = submitBoundaryText;
     }
     if (losingProposal) {
       const loserText = formatFirstCityLosingProposalsPanel(this.firstCityKnowledge, staleActor);
