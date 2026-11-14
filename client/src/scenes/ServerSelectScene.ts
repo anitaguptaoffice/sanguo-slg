@@ -35,6 +35,7 @@ import { formatFirstCityDiscoveryEmptyPanel } from "./firstCityServerSelectDisco
 import { formatFirstCityCommandOutcomePanel } from "./firstCityServerSelectCommandOutcome";
 import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuthorizedScope";
 import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
+import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -117,6 +118,7 @@ export class ServerSelectScene implements Scene {
         <p data-role="first-city-probe-status" role="status"></p>
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
         <p class="first-city-retained-template" data-role="first-city-retained-template" role="status" hidden></p>
+        <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
@@ -339,6 +341,7 @@ export class ServerSelectScene implements Scene {
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
     const retainedTemplate = this.panel.querySelector<HTMLElement>('[data-role="first-city-retained-template"]');
+    const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
@@ -377,6 +380,11 @@ export class ServerSelectScene implements Scene {
       const templateText = formatFirstCityRetainedTemplatePanel(this.firstCityKnowledge, staleActor);
       retainedTemplate.hidden = !probeVisible || !templateText;
       retainedTemplate.textContent = templateText;
+    }
+    if (headPredecessor) {
+      const predecessorText = formatFirstCityHeadPredecessorPanel(this.firstCityKnowledge, staleActor);
+      headPredecessor.hidden = !probeVisible || !predecessorText;
+      headPredecessor.textContent = predecessorText;
     }
     if (canonicalWinner) {
       const winnerText = formatFirstCityCanonicalWinnerPanel(this.firstCityKnowledge, staleActor);
