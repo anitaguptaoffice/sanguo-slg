@@ -37,6 +37,7 @@ import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuth
 import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
+import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -121,6 +122,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
         <p class="first-city-retained-template" data-role="first-city-retained-template" role="status" hidden></p>
         <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
+        <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
@@ -345,6 +347,7 @@ export class ServerSelectScene implements Scene {
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
     const retainedTemplate = this.panel.querySelector<HTMLElement>('[data-role="first-city-retained-template"]');
     const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
+    const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
@@ -393,6 +396,11 @@ export class ServerSelectScene implements Scene {
       const predecessorText = formatFirstCityHeadPredecessorPanel(this.firstCityKnowledge, staleActor);
       headPredecessor.hidden = !probeVisible || !predecessorText;
       headPredecessor.textContent = predecessorText;
+    }
+    if (durableHeadC1) {
+      const c1Text = formatFirstCityDurableHeadC1Panel(this.firstCityKnowledge, staleActor);
+      durableHeadC1.hidden = !probeVisible || !c1Text;
+      durableHeadC1.textContent = c1Text;
     }
     if (canonicalWinner) {
       const winnerText = formatFirstCityCanonicalWinnerPanel(this.firstCityKnowledge, staleActor);
