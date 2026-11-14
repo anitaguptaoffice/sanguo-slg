@@ -58,6 +58,7 @@ import { formatFirstCityLocalC1DivergenceLocalIntentBoundaryPanel } from "./firs
 import { formatFirstCityProposalFormBoundaryPanel } from "./firstCityServerSelectProposalFormBoundary";
 import { formatFirstCityProposalFormLocalIntentBoundaryPanel } from "./firstCityServerSelectProposalFormLocalIntentBoundary";
 import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalBoundary";
+import { formatFirstCitySubmitFormLocalIntentBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIntentBoundary";
 import { formatFirstCityContinueLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueLocalIntentBoundary";
 import { formatFirstCitySubmitLocalIntentBoundaryPanel } from "./firstCityServerSelectSubmitLocalIntentBoundary";
 import { formatFirstCitySubmitFormLocalIdBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIdBoundary";
@@ -204,6 +205,12 @@ export class ServerSelectScene implements Scene {
           hidden
         ></p>
         <p class="first-city-submit-form-local-boundary" data-role="first-city-submit-form-local-boundary" role="status" hidden></p>
+        <p
+          class="first-city-submit-form-local-intent-boundary"
+          data-role="first-city-submit-form-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-submit-form-local-id-boundary" data-role="first-city-submit-form-local-id-boundary" role="status" hidden></p>
         <p class="first-city-submit-local-intent-boundary" data-role="first-city-submit-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-submit-rejected-head-boundary" data-role="first-city-submit-rejected-head-boundary" role="status" hidden></p>
@@ -504,6 +511,9 @@ export class ServerSelectScene implements Scene {
       '[data-role="first-city-proposal-form-local-intent-boundary"]',
     );
     const submitFormLocalBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-boundary"]');
+    const submitFormLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-submit-form-local-intent-boundary"]',
+    );
     const submitFormLocalIdBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-id-boundary"]');
     const submitLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-local-intent-boundary"]');
     const submitRejectedHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-rejected-head-boundary"]');
@@ -691,6 +701,14 @@ export class ServerSelectScene implements Scene {
       const submitBoundaryText = formatFirstCitySubmitFormLocalBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
       submitFormLocalBoundary.hidden = !probeVisible || !submitBoundaryText;
       submitFormLocalBoundary.textContent = submitBoundaryText;
+    }
+    if (submitFormLocalIntentBoundary) {
+      const submitFormJournalText = formatFirstCitySubmitFormLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      submitFormLocalIntentBoundary.hidden = !probeVisible || !submitFormJournalText;
+      submitFormLocalIntentBoundary.textContent = submitFormJournalText;
     }
     if (submitFormLocalIdBoundary) {
       const submitIdBoundaryText = formatFirstCitySubmitFormLocalIdBoundaryPanel(this.firstCityKnowledge, formSnapshot, staleActor);
