@@ -42,4 +42,6 @@ No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. Record `SHOW server_version
 
 ## Follow-on
 
-§10 item 3 **remaining** after this slice (if any), §10 items **5–7**, realm drain/fence execution, browser §11 — separate SPEC cards.
+**SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-FINALIZER-ENDING-UNKNOWN-001** — [FIRST_CITY_LEDGER_FINALIZER_LEASE_FINALIZER_ENDING_UNKNOWN.md](FIRST_CITY_LEDGER_FINALIZER_LEASE_FINALIZER_ENDING_UNKNOWN.md) (`first_city_ledger_finalizer_lease_finalizer_ending_unknown`); does not close #2737/#2739/#2744 Acceptance.
+
+§10 item 3 **remaining** after that slice (if any), §10 items **5–7**, realm drain/fence execution, browser §11 — separate SPEC cards.
