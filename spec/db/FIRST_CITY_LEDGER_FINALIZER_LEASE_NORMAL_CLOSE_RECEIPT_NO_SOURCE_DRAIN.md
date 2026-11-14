@@ -10,4 +10,4 @@ export FIRST_CITY_LEDGER_TEST_DSN='postgres://…?sslmode=disable' ALLOW_OWNED_P
 GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_receipt_no_source_drain
 ```
 
-No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [STALE-EVIDENCE-001](FIRST_CITY_LEDGER_FINALIZER_STALE_EVIDENCE.md) (`first_city_ledger_finalizer_stale_evidence`); stacks #2927; does not close #2737–#2927 Acceptance (#2713).
+No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [STALE-EVIDENCE-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_STALE_EVIDENCE_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_stale_evidence_drain`); stacks #2934 / #2927; does not close #2737–#2927 Acceptance (#2713 companion frozen separately).
