@@ -56,6 +56,7 @@ import { formatFirstCityGetPendingHeadBoundaryPanel } from "./firstCityServerSel
 import { formatFirstCityGetRejectedHeadBoundaryPanel } from "./firstCityServerSelectGetRejectedHeadBoundary";
 import { formatFirstCityGetSucceededHeadBoundaryPanel } from "./firstCityServerSelectGetSucceededHeadBoundary";
 import { formatFirstCityDiscoverPendingHeadBoundaryPanel } from "./firstCityServerSelectDiscoverPendingHeadBoundary";
+import { formatFirstCityDiscoverRejectedHeadBoundaryPanel } from "./firstCityServerSelectDiscoverRejectedHeadBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -167,6 +168,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-pending-intake" data-role="first-city-pending-intake" role="status" hidden></p>
         <p class="first-city-discovery-empty" data-role="first-city-discovery-empty" role="status" hidden></p>
         <p class="first-city-discover-pending-head-boundary" data-role="first-city-discover-pending-head-boundary" role="status" hidden></p>
+        <p class="first-city-discover-rejected-head-boundary" data-role="first-city-discover-rejected-head-boundary" role="status" hidden></p>
         <p class="first-city-command-outcome" data-role="first-city-command-outcome" role="status" hidden></p>
         <p class="first-city-terminal-receipt" data-role="first-city-terminal-receipt" role="status" hidden></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
@@ -412,6 +414,9 @@ export class ServerSelectScene implements Scene {
     const discoverPendingHeadBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-discover-pending-head-boundary"]',
     );
+    const discoverRejectedHeadBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-discover-rejected-head-boundary"]',
+    );
     const commandOutcome = this.panel.querySelector<HTMLElement>('[data-role="first-city-command-outcome"]');
     const terminalReceipt = this.panel.querySelector<HTMLElement>('[data-role="first-city-terminal-receipt"]');
     const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
@@ -592,6 +597,11 @@ export class ServerSelectScene implements Scene {
       const discoverPendingText = formatFirstCityDiscoverPendingHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
       discoverPendingHeadBoundary.hidden = !probeVisible || !discoverPendingText;
       discoverPendingHeadBoundary.textContent = discoverPendingText;
+    }
+    if (discoverRejectedHeadBoundary) {
+      const discoverRejectedText = formatFirstCityDiscoverRejectedHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      discoverRejectedHeadBoundary.hidden = !probeVisible || !discoverRejectedText;
+      discoverRejectedHeadBoundary.textContent = discoverRejectedText;
     }
     if (commandOutcome) {
       const outcomeText = formatFirstCityCommandOutcomePanel(this.firstCityKnowledge, staleActor);
