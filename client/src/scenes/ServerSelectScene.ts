@@ -44,6 +44,7 @@ import { formatFirstCityDiscoveryEmptyLocalIntentBoundaryPanel } from "./firstCi
 import { formatFirstCityCommandOutcomePanel } from "./firstCityServerSelectCommandOutcome";
 import { formatFirstCityCommandOutcomeLocalIntentBoundaryPanel } from "./firstCityServerSelectCommandOutcomeLocalIntentBoundary";
 import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuthorizedScope";
+import { formatFirstCityAuthorizedScopeLocalIntentBoundaryPanel } from "./firstCityServerSelectAuthorizedScopeLocalIntentBoundary";
 import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
 import { formatFirstCityRetainedTemplateLocalIntentBoundaryPanel } from "./firstCityServerSelectRetainedTemplateLocalIntentBoundary";
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
@@ -158,6 +159,12 @@ export class ServerSelectScene implements Scene {
         <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
         <p data-role="first-city-probe-status" role="status"></p>
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
+        <p
+          class="first-city-authorized-scope-local-intent-boundary"
+          data-role="first-city-authorized-scope-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-retained-template" data-role="first-city-retained-template" role="status" hidden></p>
         <p
           class="first-city-retained-template-local-intent-boundary"
@@ -456,6 +463,9 @@ export class ServerSelectScene implements Scene {
     const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
+    const authorizedScopeLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-authorized-scope-local-intent-boundary"]',
+    );
     const retainedTemplate = this.panel.querySelector<HTMLElement>('[data-role="first-city-retained-template"]');
     const retainedTemplateLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-retained-template-local-intent-boundary"]',
@@ -575,6 +585,14 @@ export class ServerSelectScene implements Scene {
       const scopeText = formatFirstCityAuthorizedScopePanel(this.firstCityKnowledge, staleActor);
       authorizedScope.hidden = !probeVisible || !scopeText;
       authorizedScope.textContent = scopeText;
+    }
+    if (authorizedScopeLocalIntentBoundary) {
+      const scopeJournalText = formatFirstCityAuthorizedScopeLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      authorizedScopeLocalIntentBoundary.hidden = !probeVisible || !scopeJournalText;
+      authorizedScopeLocalIntentBoundary.textContent = scopeJournalText;
     }
     if (retainedTemplate) {
       const templateText = formatFirstCityRetainedTemplatePanel(this.firstCityKnowledge, staleActor);
