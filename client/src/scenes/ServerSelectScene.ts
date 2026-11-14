@@ -86,6 +86,7 @@ import { formatFirstCityDiscoverPendingHeadBoundaryPanel } from "./firstCityServ
 import { formatFirstCityDiscoverRejectedHeadBoundaryPanel } from "./firstCityServerSelectDiscoverRejectedHeadBoundary";
 import { formatFirstCityDiscoverSucceededHeadBoundaryPanel } from "./firstCityServerSelectDiscoverSucceededHeadBoundary";
 import { formatFirstCityDiscoverEmptyHeadBoundaryPanel } from "./firstCityServerSelectDiscoverEmptyHeadBoundary";
+import { formatFirstCityDiscoverEmptyHeadLocalIntentBoundaryPanel } from "./firstCityServerSelectDiscoverEmptyHeadLocalIntentBoundary";
 import { formatFirstCityDiscoverLocalIntentBoundaryPanel } from "./firstCityServerSelectDiscoverLocalIntentBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
@@ -313,6 +314,12 @@ export class ServerSelectScene implements Scene {
           hidden
         ></p>
         <p class="first-city-discover-empty-head-boundary" data-role="first-city-discover-empty-head-boundary" role="status" hidden></p>
+        <p
+          class="first-city-discover-empty-head-local-intent-boundary"
+          data-role="first-city-discover-empty-head-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-discover-pending-head-boundary" data-role="first-city-discover-pending-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-rejected-head-boundary" data-role="first-city-discover-rejected-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-succeeded-head-boundary" data-role="first-city-discover-succeeded-head-boundary" role="status" hidden></p>
@@ -634,6 +641,9 @@ export class ServerSelectScene implements Scene {
     );
     const discoverEmptyHeadBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-discover-empty-head-boundary"]',
+    );
+    const discoverEmptyHeadLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-discover-empty-head-local-intent-boundary"]',
     );
     const discoverPendingHeadBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-discover-pending-head-boundary"]',
@@ -1024,6 +1034,14 @@ export class ServerSelectScene implements Scene {
       const discoverEmptyHeadText = formatFirstCityDiscoverEmptyHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
       discoverEmptyHeadBoundary.hidden = !probeVisible || !discoverEmptyHeadText;
       discoverEmptyHeadBoundary.textContent = discoverEmptyHeadText;
+    }
+    if (discoverEmptyHeadLocalIntentBoundary) {
+      const discoverEmptyHeadJournalText = formatFirstCityDiscoverEmptyHeadLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      discoverEmptyHeadLocalIntentBoundary.hidden = !probeVisible || !discoverEmptyHeadJournalText;
+      discoverEmptyHeadLocalIntentBoundary.textContent = discoverEmptyHeadJournalText;
     }
     if (discoverPendingHeadBoundary) {
       const discoverPendingText = formatFirstCityDiscoverPendingHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
