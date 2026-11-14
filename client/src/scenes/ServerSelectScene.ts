@@ -26,6 +26,7 @@ import {
 import { formatFirstCityCanonicalWinnerPanel } from "./firstCityServerSelectCanonicalWinner";
 import { formatFirstCityCanonicalWinnerLocalIntentBoundaryPanel } from "./firstCityServerSelectCanonicalWinnerLocalIntentBoundary";
 import { formatFirstCityLosingProposalsPanel } from "./firstCityServerSelectLosingProposal";
+import { formatFirstCityLosingProposalLocalIntentBoundaryPanel } from "./firstCityServerSelectLosingProposalLocalIntentBoundary";
 import { formatFirstCityLocalDraftPanel } from "./firstCityServerSelectLocalDraft";
 import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadConflict";
 import { formatFirstCityIdContentConflictPanel } from "./firstCityServerSelectIdContentConflict";
@@ -169,6 +170,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-get-local-intent-boundary" data-role="first-city-get-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-continue-local-intent-boundary" data-role="first-city-continue-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
+        <p class="first-city-losing-proposal-local-intent-boundary" data-role="first-city-losing-proposal-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
         <p class="first-city-local-c1-divergence" data-role="first-city-local-c1-divergence" role="status" hidden></p>
         <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
@@ -421,6 +423,9 @@ export class ServerSelectScene implements Scene {
     const getLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-get-local-intent-boundary"]');
     const continueLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-local-intent-boundary"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
+    const losingProposalLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-losing-proposal-local-intent-boundary"]',
+    );
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
     const localC1Divergence = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-c1-divergence"]');
     const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
@@ -601,6 +606,14 @@ export class ServerSelectScene implements Scene {
       const loserText = formatFirstCityLosingProposalsPanel(this.firstCityKnowledge, staleActor);
       losingProposal.hidden = !probeVisible || !loserText;
       losingProposal.textContent = loserText;
+    }
+    if (losingProposalLocalIntentBoundary) {
+      const loserLocalIntentText = formatFirstCityLosingProposalLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      losingProposalLocalIntentBoundary.hidden = !probeVisible || !loserLocalIntentText;
+      losingProposalLocalIntentBoundary.textContent = loserLocalIntentText;
     }
     if (localDraft) {
       const draftText = formatFirstCityLocalDraftPanel(this.firstCityKnowledge, staleActor);
