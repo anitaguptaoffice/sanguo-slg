@@ -9,4 +9,4 @@
 export FIRST_CITY_LEDGER_TEST_DSN='postgres://…?sslmode=disable' ALLOW_OWNED_PG17_TEST=1
 GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_sibling_effect_pending_drain
 ```
-No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [SIBLING-EFFECT-TXN-OPEN-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_EFFECT_TXN_OPEN_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_sibling_effect_txn_open_drain`); does not close #2737–#2874 Acceptance.
+No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [SIBLING-EFFECT-TXN-OPEN-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_EFFECT_TXN_OPEN_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_sibling_effect_txn_open_drain`); stacks #2906 / does not close #2737–#2874 Acceptance (#2880).
