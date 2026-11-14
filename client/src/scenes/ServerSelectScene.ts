@@ -100,6 +100,7 @@ import { formatFirstCityDiscoverPendingHeadLocalIntentBoundaryPanel } from "./fi
 import { formatFirstCityDiscoverRejectedHeadLocalIntentBoundaryPanel } from "./firstCityServerSelectDiscoverRejectedHeadLocalIntentBoundary";
 import { formatFirstCityDiscoverSucceededHeadLocalIntentBoundaryPanel } from "./firstCityServerSelectDiscoverSucceededHeadLocalIntentBoundary";
 import { formatFirstCityDiscoverLocalIntentBoundaryPanel } from "./firstCityServerSelectDiscoverLocalIntentBoundary";
+import { formatFirstCityStaleActorLocalIntentBoundaryPanel } from "./firstCityServerSelectStaleActorLocalIntentBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -187,6 +188,12 @@ export class ServerSelectScene implements Scene {
         ></p>
         <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
         <p data-role="first-city-probe-status" role="status"></p>
+        <p
+          class="first-city-stale-actor-local-intent-boundary"
+          data-role="first-city-stale-actor-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
         <p
           class="first-city-authorized-scope-local-intent-boundary"
@@ -626,6 +633,9 @@ export class ServerSelectScene implements Scene {
     );
     const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
+    const staleActorLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-stale-actor-local-intent-boundary"]',
+    );
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
     const authorizedScopeLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-authorized-scope-local-intent-boundary"]',
@@ -810,6 +820,11 @@ export class ServerSelectScene implements Scene {
     const commandReady = !!this.firstCityKnowledge && !this.firstCityKnowledge.unavailable && !staleActor;
     if (staleActor && probeStatus && !this.firstCityProbeInFlight) {
       probeStatus.textContent = FIRST_CITY_STALE_ACTOR_NOTICE;
+    }
+    if (staleActorLocalIntentBoundary) {
+      const staleJournalText = formatFirstCityStaleActorLocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
+      staleActorLocalIntentBoundary.hidden = !probeVisible || !staleJournalText;
+      staleActorLocalIntentBoundary.textContent = staleJournalText;
     }
     if (authorizedScope) {
       const scopeText = formatFirstCityAuthorizedScopePanel(this.firstCityKnowledge, staleActor);
