@@ -1,0 +1,93 @@
+import { describe, expect, it } from "vitest";
+import { createFirstCityIntent } from "@/net/firstCityCanonical";
+import type { FirstCityScope } from "@/net/firstCityCanonical";
+import { createFirstCityKnowledge } from "@/net/firstCityKnowledge";
+import {
+  formatFirstCitySubmitPendingHeadBoundaryPanel,
+  resolveFirstCitySubmitPendingHeadBoundaryView,
+} from "./firstCityServerSelectSubmitPendingHeadBoundary";
+
+const scope: FirstCityScope = {
+  realmId: "11111111-1111-4111-8111-111111111111",
+  shard: 1,
+  playerId: 7n,
+  accountId: 44n,
+};
+const commandId = "22222222-2222-4222-8222-222222222222";
+
+function pendingHeadKnowledge() {
+  const intent = createFirstCityIntent(scope, {
+    commandId,
+    predecessor: { kind: "empty" },
+    name: "待定城",
+    x: 2,
+    y: 3,
+  });
+  const record = {
+    intent,
+    template: { templateVersion: "v1", rulesVersion: "r1", catalogVersion: "c1", contentEncodingVersion: 1, contentSha256: "00" },
+    state: { kind: "pending" as const },
+  };
+  return {
+    ...createFirstCityKnowledge(scope),
+    head: { kind: "command" as const, record },
+    records: [record],
+    incomplete: false,
+    unavailable: false,
+  };
+}
+
+describe("resolveFirstCitySubmitPendingHeadBoundaryView", () => {
+  it("reports pending-head when durable head is pending", () => {
+    const view = resolveFirstCitySubmitPendingHeadBoundaryView(pendingHeadKnowledge());
+    expect(view).toMatchObject({ kind: "pending-head", commandId });
+  });
+
+  it("returns none for empty, rejected, or succeeded head", () => {
+    const pending = pendingHeadKnowledge();
+    expect(resolveFirstCitySubmitPendingHeadBoundaryView({ ...pending, head: { kind: "empty" } }).kind).toBe("none");
+    const baseRecord = pending.head.record;
+    const rejected = { ...baseRecord, state: { kind: "rejected" as const, reason: "terrain" as const } };
+    expect(
+      resolveFirstCitySubmitPendingHeadBoundaryView({
+        ...pending,
+        head: { kind: "command", record: rejected },
+      }).kind,
+    ).toBe("none");
+    const succeeded = {
+      ...baseRecord,
+      state: {
+        kind: "succeeded" as const,
+        cityId: 9n,
+        shard: 1,
+        playerId: 7n,
+        isCapital: true as const,
+        wallLevel: 1 as const,
+        morale: 100 as const,
+      },
+    };
+    expect(
+      resolveFirstCitySubmitPendingHeadBoundaryView({
+        ...pending,
+        head: { kind: "command", record: succeeded },
+      }).kind,
+    ).toBe("none");
+  });
+});
+
+it("withholds on stale-actor, unavailable, and incomplete", () => {
+  const base = pendingHeadKnowledge();
+  expect(resolveFirstCitySubmitPendingHeadBoundaryView(null).reason).toBe("no-knowledge");
+  expect(resolveFirstCitySubmitPendingHeadBoundaryView(base, true).reason).toBe("stale-actor");
+  expect(formatFirstCitySubmitPendingHeadBoundaryPanel({ ...base, unavailable: true })).toMatch(/不可用/);
+  expect(formatFirstCitySubmitPendingHeadBoundaryPanel({ ...base, incomplete: true, head: null })).toMatch(/不完整/);
+});
+
+it("formats pending-head copy with HEAD_CONFLICT hint", () => {
+  const text = formatFirstCitySubmitPendingHeadBoundaryPanel(pendingHeadKnowledge());
+  expect(text).toMatch(/Submit pending-head 边界/);
+  expect(text).toMatch(commandId);
+  expect(text).toMatch(/EMPTY head/);
+  expect(text).toMatch(/HEAD_CONFLICT/);
+  expect(text).toMatch(/待定城/);
+});
