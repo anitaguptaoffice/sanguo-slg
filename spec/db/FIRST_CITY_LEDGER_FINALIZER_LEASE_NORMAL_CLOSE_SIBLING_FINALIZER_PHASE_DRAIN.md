@@ -1,6 +1,6 @@
 # Sibling finalizer phase gates drain (SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-FINALIZER-PHASE-DRAIN-001)
 
-**Not** adopted. Task: [#2863](https://github.com/anitaguptaoffice/sanguo-slg/issues/2863). Stacks [#2855](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_FINALIZER_ENDING_UNKNOWN_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2805/#2830/#2854 (no re-run). Does not close #2737–#2854 Acceptance.
+**Not** adopted. Task: [#2863](https://github.com/anitaguptaoffice/sanguo-slg/issues/2863)（#2870 栈；#2855 为 #2831 栈平行登记）. Stacks [#2894](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_FINALIZER_ENDING_UNKNOWN_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2805/#2830/#2854/#2889 (no re-run). Does not close #2737–#2854 Acceptance.
 
 **Invariants:** head strict-classified + sibling held lease (finalizer gap or `finalizer_begin` in-flight) blocks `declare_drained`; cleanup ≠ drain; sibling classify → drain + generation++.
 

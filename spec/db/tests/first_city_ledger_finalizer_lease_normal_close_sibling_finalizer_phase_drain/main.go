@@ -103,14 +103,20 @@ func finalizerOf(tx pgx.Tx, cmd string) (string, error) {
 	return fe, tx.QueryRow(ctx, `SELECT finalizer_ending FROM harness_finalizer_ending WHERE command_id=$1::uuid FOR UPDATE`, cmd).Scan(&fe)
 }
 
-func gateOpen(tx pgx.Tx) (bool, error) {
+func gateAdm(tx pgx.Tx, allowClosed bool) (bool, error) {
 	var adm string
 	err := tx.QueryRow(ctx, `SELECT admission FROM harness_source_gate WHERE realm_id=$1::uuid FOR UPDATE`, realm).Scan(&adm)
-	return err == nil && adm == "open", err
+	if err != nil {
+		return false, err
+	}
+	if adm == "open" {
+		return true, nil
+	}
+	return allowClosed && adm == "closed", nil
 }
 
 func tryAcquireAdmission(tx pgx.Tx, leaseID string, gen int64) (bool, error) {
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, false)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -122,7 +128,7 @@ func tryAcquireAdmission(tx pgx.Tx, leaseID string, gen int64) (bool, error) {
 }
 
 func tryRecordBegin(tx pgx.Tx, leaseID, phase string) (bool, error) {
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, false)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -143,7 +149,7 @@ func recordEffectRollbackFor(tx pgx.Tx, leaseID, cmd string) (bool, error) {
 	if err != nil || open || end != "known_rollback" {
 		return false, tx.Rollback(ctx)
 	}
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, true)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -164,7 +170,7 @@ func tryFinalizerBeginFor(tx pgx.Tx, leaseID, cmd string) (bool, error) {
 	if err != nil || open || end != "known_rollback" {
 		return false, tx.Rollback(ctx)
 	}
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, true)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
