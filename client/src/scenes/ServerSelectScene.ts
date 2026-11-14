@@ -60,6 +60,7 @@ import { formatFirstCityProposalFormLocalIntentBoundaryPanel } from "./firstCity
 import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalBoundary";
 import { formatFirstCitySubmitFormLocalIntentBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIntentBoundary";
 import { formatFirstCityContinueLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueLocalIntentBoundary";
+import { formatFirstCityContinueCommandIdLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueCommandIdLocalIntentBoundary";
 import { formatFirstCitySubmitLocalIntentBoundaryPanel } from "./firstCityServerSelectSubmitLocalIntentBoundary";
 import { formatFirstCitySubmitFormLocalIdBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIdBoundary";
 import { formatFirstCitySubmitFormLocalIdLocalIntentBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIdLocalIntentBoundary";
@@ -241,6 +242,12 @@ export class ServerSelectScene implements Scene {
           hidden
         ></p>
         <p class="first-city-continue-local-intent-boundary" data-role="first-city-continue-local-intent-boundary" role="status" hidden></p>
+        <p
+          class="first-city-continue-command-id-local-intent-boundary"
+          data-role="first-city-continue-command-id-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-losing-proposal-local-intent-boundary" data-role="first-city-losing-proposal-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
@@ -550,6 +557,9 @@ export class ServerSelectScene implements Scene {
       '[data-role="first-city-get-command-id-local-intent-boundary"]',
     );
     const continueLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-local-intent-boundary"]');
+    const continueCommandIdLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-continue-command-id-local-intent-boundary"]',
+    );
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const losingProposalLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-losing-proposal-local-intent-boundary"]',
@@ -825,6 +835,14 @@ export class ServerSelectScene implements Scene {
       const continueBoundaryText = formatFirstCityContinueLocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
       continueLocalIntentBoundary.hidden = !probeVisible || !continueBoundaryText;
       continueLocalIntentBoundary.textContent = continueBoundaryText;
+    }
+    if (continueCommandIdLocalIntentBoundary) {
+      const continueCommandIdJournalText = formatFirstCityContinueCommandIdLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      continueCommandIdLocalIntentBoundary.hidden = !probeVisible || !continueCommandIdJournalText;
+      continueCommandIdLocalIntentBoundary.textContent = continueCommandIdJournalText;
     }
     if (losingProposal) {
       const loserText = formatFirstCityLosingProposalsPanel(this.firstCityKnowledge, staleActor);
