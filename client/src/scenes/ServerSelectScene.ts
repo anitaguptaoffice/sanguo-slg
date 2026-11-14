@@ -38,6 +38,7 @@ import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRet
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
+import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLocalC1Divergence";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -126,6 +127,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-canonical-winner" data-role="first-city-canonical-winner" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
+        <p class="first-city-local-c1-divergence" data-role="first-city-local-c1-divergence" role="status" hidden></p>
         <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
         <p class="first-city-id-content-conflict" data-role="first-city-id-content-conflict" role="status" hidden></p>
         <p class="first-city-not-observed" data-role="first-city-not-observed" role="status" hidden></p>
@@ -351,6 +353,7 @@ export class ServerSelectScene implements Scene {
     const canonicalWinner = this.panel.querySelector<HTMLElement>('[data-role="first-city-canonical-winner"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const localDraft = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-draft"]');
+    const localC1Divergence = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-c1-divergence"]');
     const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
     const idContentConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-id-content-conflict"]');
     const notObserved = this.panel.querySelector<HTMLElement>('[data-role="first-city-not-observed"]');
@@ -416,6 +419,11 @@ export class ServerSelectScene implements Scene {
       const draftText = formatFirstCityLocalDraftPanel(this.firstCityKnowledge, staleActor);
       localDraft.hidden = !probeVisible || !draftText;
       localDraft.textContent = draftText;
+    }
+    if (localC1Divergence) {
+      const c1DivergenceText = formatFirstCityLocalC1DivergencePanel(this.firstCityKnowledge, staleActor);
+      localC1Divergence.hidden = !probeVisible || !c1DivergenceText;
+      localC1Divergence.textContent = c1DivergenceText;
     }
     if (headConflict) {
       const conflictText = formatFirstCityHeadConflictPanel(this.firstCityKnowledge, staleActor);
