@@ -1,5 +1,6 @@
-// SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-EFFECT-TXN-OPEN-DRAIN-001; disposable PG17.
+// SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-EFFECT-TXN-OPEN-DRAIN-001 (#2870 stack); disposable PG17.
 package main
+
 import (
 	"context"
 	"fmt"
@@ -15,19 +16,31 @@ import (
 )
 
 const (
-	realm      = "d5eebc99-9c0b-4ef8-bb6d-6bb9bd380d55"
-	cmdHead    = "e4eebc99-9c0b-4ef8-bb6d-6bb9bd380e66"
-	cmdSibling = "f4eebc99-9c0b-4ef8-bb6d-6bb9bd380f77"
+	realm      = "d8eebc99-9c0b-4ef8-bb6d-6bb9bd380e01"
+	cmdHead    = "e8eebc99-9c0b-4ef8-bb6d-6bb9bd380e11"
+	cmdSibling = "f8eebc99-9c0b-4ef8-bb6d-6bb9bd380f21"
 )
 
-var ctx = context.Background()
-var baseDir, dsn string
-var admin *pgxpool.Pool
+var (
+	ctx     = context.Background()
+	baseDir string
+	dsn     string
+	admin   *pgxpool.Pool
+)
 
-func must(err error)             { if err != nil { panic(err) } }
-func assert(ok bool, msg string) { if !ok { panic(msg) } }
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+func assert(ok bool, msg string) {
+	if !ok {
+		panic(msg)
+	}
+}
 func exec(p *pgxpool.Pool, sql string, args ...any) { _, e := p.Exec(ctx, sql, args...); must(e) }
-func apply(p *pgxpool.Pool)                       { must(db.ApplySpecs(ctx, p, baseDir)) }
+func apply(p *pgxpool.Pool)                         { must(db.ApplySpecs(ctx, p, baseDir)) }
+
 func fresh() (*pgxpool.Pool, func()) {
 	schema := fmt.Sprintf("fc_lfnc_setod_%x", time.Now().UnixNano())
 	exec(admin, "CREATE SCHEMA "+schema)
@@ -75,9 +88,9 @@ func installFixture(p *pgxpool.Pool) {
 func seedPending(p *pgxpool.Pool) {
 	c1, fct1, sha := `\x01`, `\x`+strings.Repeat("00", 52), `\x`+strings.Repeat("ab", 32)
 	exec(p, `INSERT INTO account (login_name,password_hash,status) VALUES ('lfncsetod_u','lfncsetod_h',1)`)
-	exec(p, `INSERT INTO player (server_id,player_id,account_id,display_name) VALUES (1,14,(SELECT account_id FROM account LIMIT 1),'lfncsetod')`)
-	cmdQ := `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) SELECT '%s'::uuid,1,11,'%s'::uuid,account_id,'%s',1,'t','r','c',1,'%s','%s',now() FROM account`
-	slotQ := `INSERT INTO world_first_city_actor_slot (realm_id,server_id,player_id,account_id,head_command_id) SELECT '%s'::uuid,1,11,account_id,'%s'::uuid FROM account`
+	exec(p, `INSERT INTO player (server_id,player_id,account_id,display_name) VALUES (1,15,(SELECT account_id FROM account LIMIT 1),'lfncsetod')`)
+	cmdQ := `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) SELECT '%s'::uuid,1,12,'%s'::uuid,account_id,'%s',1,'t','r','c',1,'%s','%s',now() FROM account`
+	slotQ := `INSERT INTO world_first_city_actor_slot (realm_id,server_id,player_id,account_id,head_command_id) SELECT '%s'::uuid,1,12,account_id,'%s'::uuid FROM account`
 	exec(p, fmt.Sprintf(cmdQ, realm, cmdHead, c1, fct1, sha))
 	exec(p, fmt.Sprintf(slotQ, realm, cmdHead))
 }
@@ -90,26 +103,32 @@ func normalClose(tx pgx.Tx) (bool, error) {
 	return true, tx.Commit(ctx)
 }
 
-func effectOpen(tx pgx.Tx) (bool, string, error) {
+func effectOf(tx pgx.Tx, cmd string) (bool, string, error) {
 	var open bool
 	var end string
-	err := tx.QueryRow(ctx, `SELECT txn_open,effect_ending FROM harness_effect_txn WHERE command_id=$1::uuid FOR UPDATE`, cmdHead).Scan(&open, &end)
+	err := tx.QueryRow(ctx, `SELECT txn_open,effect_ending FROM harness_effect_txn WHERE command_id=$1::uuid FOR UPDATE`, cmd).Scan(&open, &end)
 	return open, end, err
 }
 
-func finalizerEnding(tx pgx.Tx) (string, error) {
+func finalizerOf(tx pgx.Tx, cmd string) (string, error) {
 	var fe string
-	return fe, tx.QueryRow(ctx, `SELECT finalizer_ending FROM harness_finalizer_ending WHERE command_id=$1::uuid FOR UPDATE`, cmdHead).Scan(&fe)
+	return fe, tx.QueryRow(ctx, `SELECT finalizer_ending FROM harness_finalizer_ending WHERE command_id=$1::uuid FOR UPDATE`, cmd).Scan(&fe)
 }
 
-func gateOpen(tx pgx.Tx) (bool, error) {
+func gateAdm(tx pgx.Tx, allowClosed bool) (bool, error) {
 	var adm string
 	err := tx.QueryRow(ctx, `SELECT admission FROM harness_source_gate WHERE realm_id=$1::uuid FOR UPDATE`, realm).Scan(&adm)
-	return err == nil && adm == "open", err
+	if err != nil {
+		return false, err
+	}
+	if adm == "open" {
+		return true, nil
+	}
+	return allowClosed && adm == "closed", nil
 }
 
 func tryAcquireAdmission(tx pgx.Tx, leaseID string, gen int64) (bool, error) {
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, false)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -121,7 +140,7 @@ func tryAcquireAdmission(tx pgx.Tx, leaseID string, gen int64) (bool, error) {
 }
 
 func tryRecordBegin(tx pgx.Tx, leaseID, phase string) (bool, error) {
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, false)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -137,12 +156,12 @@ func tryRecordBegin(tx pgx.Tx, leaseID, phase string) (bool, error) {
 	return true, tx.Commit(ctx)
 }
 
-func recordEffectRollback(tx pgx.Tx, leaseID string) (bool, error) {
-	open, end, err := effectOpen(tx)
+func recordEffectRollbackFor(tx pgx.Tx, leaseID, cmd string) (bool, error) {
+	open, end, err := effectOf(tx, cmd)
 	if err != nil || open || end != "known_rollback" {
 		return false, tx.Rollback(ctx)
 	}
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, true)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -158,12 +177,12 @@ func recordEffectRollback(tx pgx.Tx, leaseID string) (bool, error) {
 	return true, tx.Commit(ctx)
 }
 
-func tryFinalizerBegin(tx pgx.Tx, leaseID string) (bool, error) {
-	open, end, err := effectOpen(tx)
+func tryFinalizerBeginFor(tx pgx.Tx, leaseID, cmd string) (bool, error) {
+	open, end, err := effectOf(tx, cmd)
 	if err != nil || open || end != "known_rollback" {
 		return false, tx.Rollback(ctx)
 	}
-	ok, err := gateOpen(tx)
+	ok, err := gateAdm(tx, true)
 	if err != nil || !ok {
 		return false, tx.Rollback(ctx)
 	}
@@ -181,8 +200,8 @@ func tryFinalizerBegin(tx pgx.Tx, leaseID string) (bool, error) {
 	return true, tx.Commit(ctx)
 }
 
-func finishFinalizer(tx pgx.Tx, leaseID, ending string) (bool, error) {
-	fe, err := finalizerEnding(tx)
+func finishFinalizerFor(tx pgx.Tx, leaseID, cmd, ending string) (bool, error) {
+	fe, err := finalizerOf(tx, cmd)
 	if err != nil || fe == "known_terminal" || ending != "known_terminal" {
 		return false, tx.Rollback(ctx)
 	}
@@ -192,7 +211,7 @@ func finishFinalizer(tx pgx.Tx, leaseID, ending string) (bool, error) {
 	if err != nil || st != "held" || php == nil || *php != "finalizer_begin" {
 		return false, tx.Rollback(ctx)
 	}
-	tag, err := tx.Exec(ctx, `UPDATE harness_finalizer_ending SET finalizer_ending=$2 WHERE command_id=$1::uuid`, cmdHead, ending)
+	tag, err := tx.Exec(ctx, `UPDATE harness_finalizer_ending SET finalizer_ending=$2 WHERE command_id=$1::uuid`, cmd, ending)
 	if err != nil || tag.RowsAffected() != 1 {
 		return false, tx.Rollback(ctx)
 	}
@@ -210,12 +229,12 @@ func bumpCleanup(tx pgx.Tx) (bool, error) {
 	return true, tx.Commit(ctx)
 }
 
-func endLease(tx pgx.Tx, leaseID string) (bool, error) {
-	open, end, err := effectOpen(tx)
+func endLeaseFor(tx pgx.Tx, leaseID, cmd string) (bool, error) {
+	open, end, err := effectOf(tx, cmd)
 	if err != nil || open || end != "known_rollback" {
 		return false, tx.Rollback(ctx)
 	}
-	fe, err := finalizerEnding(tx)
+	fe, err := finalizerOf(tx, cmd)
 	if err != nil || fe != "known_terminal" {
 		return false, tx.Rollback(ctx)
 	}
@@ -270,17 +289,29 @@ func tryDeclareDrained(tx pgx.Tx) (bool, error) {
 	return true, tx.Commit(ctx)
 }
 
-func closeEffectKnownRollback(p *pgxpool.Pool) {
-	exec(p, `UPDATE harness_effect_txn SET txn_open=false,effect_ending='known_rollback' WHERE command_id=$1::uuid`, cmdHead)
+func closeEffectKnownRollback(p *pgxpool.Pool, cmd string) {
+	exec(p, `UPDATE harness_effect_txn SET txn_open=false,effect_ending='known_rollback' WHERE command_id=$1::uuid`, cmd)
 }
 
-func prepHeadReady(p *pgxpool.Pool, lease string) {
-	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryAcquireAdmission(tx, lease, 1) }), "admit")
-	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryRecordBegin(tx, lease, "effect_begin") }), "effect")
-	closeEffectKnownRollback(p)
-	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return recordEffectRollback(tx, lease) }), "rollback")
-	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryFinalizerBegin(tx, lease) }), "finalizer")
-	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return finishFinalizer(tx, lease, "known_terminal") }), "terminal")
+func prepHeadReady(p *pgxpool.Pool, headLease string) {
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryAcquireAdmission(tx, headLease, 1) }), "admit head")
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryRecordBegin(tx, headLease, "effect_begin") }), "head effect")
+	closeEffectKnownRollback(p, cmdHead)
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return recordEffectRollbackFor(tx, headLease, cmdHead) }), "head rollback")
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return tryFinalizerBeginFor(tx, headLease, cmdHead) }), "head finalizer")
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return finishFinalizerFor(tx, headLease, cmdHead, "known_terminal") }), "head terminal")
+}
+
+func prepSiblingEffectTxnOpen(p *pgxpool.Pool, headLease string) {
+	prepHeadReady(p, headLease)
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return markEnding(tx, cmdSibling, "known_reject") }), "sibling cmd")
+}
+
+func strictCloseHead(p *pgxpool.Pool, headLease string) {
+	assert(withTx(p, normalClose), "close")
+	assert(withTx(p, bumpCleanup), "cleanup")
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return endLeaseFor(tx, headLease, cmdHead) }), "classify head")
+	assert(withTx(p, func(tx pgx.Tx) (bool, error) { return markEnding(tx, cmdHead, "known_reject") }), "head ending")
 }
 
 func withTx(p *pgxpool.Pool, fn func(pgx.Tx) (bool, error)) bool {
@@ -325,21 +356,10 @@ func main() {
 		fn(pool)
 	}
 
-	strictCloseHead := func(p *pgxpool.Pool, lease string) {
-		assert(withTx(p, normalClose), "close")
-		assert(withTx(p, bumpCleanup), "cleanup")
-		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return endLease(tx, lease) }), "classify")
-		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return markEnding(tx, cmdHead, "known_reject") }), "head ending")
-	}
-
-	prepSiblingEffectTxnOpen := func(p *pgxpool.Pool, lease string) {
-		prepHeadReady(p, lease)
-		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return markEnding(tx, cmdSibling, "known_reject") }), "sibling cmd")
-	}
 	run(func(p *pgxpool.Pool) {
-		lease := "9a111111-1111-4111-8111-111111111111"
-		prepSiblingEffectTxnOpen(p, lease)
-		strictCloseHead(p, lease)
+		head := "9e111111-1111-4111-8111-111111111111"
+		prepSiblingEffectTxnOpen(p, head)
+		strictCloseHead(p, head)
 		assert(!withTx(p, tryDeclareDrained), "sibling effect txn open blocks")
 		var open bool
 		must(p.QueryRow(ctx, `SELECT txn_open FROM harness_effect_txn WHERE command_id=$1::uuid`, cmdSibling).Scan(&open))
@@ -351,13 +371,12 @@ func main() {
 	})
 
 	run(func(p *pgxpool.Pool) {
-		lease := "9a222222-2222-4222-8222-222222222222"
-		prepSiblingEffectTxnOpen(p, lease)
+		head := "9e222222-2222-4222-8222-222222222222"
+		prepSiblingEffectTxnOpen(p, head)
 		assert(withTx(p, normalClose), "close")
-		for i := 0; i < 2; i++ {
-			assert(withTx(p, bumpCleanup), "cleanup")
-		}
-		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return endLease(tx, lease) }), "classify")
+		assert(withTx(p, bumpCleanup), "cleanup")
+		assert(withTx(p, bumpCleanup), "cleanup")
+		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return endLeaseFor(tx, head, cmdHead) }), "classify head")
 		assert(withTx(p, func(tx pgx.Tx) (bool, error) { return markEnding(tx, cmdHead, "known_reject") }), "head ending")
 		assert(!withTx(p, tryDeclareDrained), "cleanup no drain")
 		var open bool
@@ -367,9 +386,9 @@ func main() {
 	})
 
 	run(func(p *pgxpool.Pool) {
-		lease := "9a333333-3333-4333-8333-333333333333"
-		prepSiblingEffectTxnOpen(p, lease)
-		strictCloseHead(p, lease)
+		head := "9e333333-3333-4333-8333-333333333333"
+		prepSiblingEffectTxnOpen(p, head)
+		strictCloseHead(p, head)
 		assert(!withTx(p, tryDeclareDrained), "blocked while open")
 		exec(p, `UPDATE harness_effect_txn SET txn_open=false,effect_ending='known_rollback' WHERE command_id=$1::uuid`, cmdSibling)
 		assert(withTx(p, tryDeclareDrained), "drained")
@@ -379,6 +398,5 @@ func main() {
 		assert(adm == "open" && drain == "pending" && gen == 2, "generation")
 		fmt.Println("PASS finalizer_lease_normal_close_sibling_effect_txn_open_drain: close_sibling_effect_txn_open_resolved_drains")
 	})
-
 	fmt.Println("MODE: isolated PG17 sibling-effect-txn-open normal close drain; player_city_id_seq not activated")
 }
