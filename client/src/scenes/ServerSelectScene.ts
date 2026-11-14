@@ -45,6 +45,7 @@ import { formatFirstCityCommandOutcomePanel } from "./firstCityServerSelectComma
 import { formatFirstCityCommandOutcomeLocalIntentBoundaryPanel } from "./firstCityServerSelectCommandOutcomeLocalIntentBoundary";
 import { formatFirstCityAuthorizedScopePanel } from "./firstCityServerSelectAuthorizedScope";
 import { formatFirstCityRetainedTemplatePanel } from "./firstCityServerSelectRetainedTemplate";
+import { formatFirstCityRetainedTemplateLocalIntentBoundaryPanel } from "./firstCityServerSelectRetainedTemplateLocalIntentBoundary";
 import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHeadPredecessor";
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
@@ -157,6 +158,12 @@ export class ServerSelectScene implements Scene {
         <p data-role="first-city-probe-status" role="status"></p>
         <p class="first-city-authorized-scope" data-role="first-city-authorized-scope" role="status" hidden></p>
         <p class="first-city-retained-template" data-role="first-city-retained-template" role="status" hidden></p>
+        <p
+          class="first-city-retained-template-local-intent-boundary"
+          data-role="first-city-retained-template-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-head-predecessor" data-role="first-city-head-predecessor" role="status" hidden></p>
         <p class="first-city-durable-head-c1" data-role="first-city-durable-head-c1" role="status" hidden></p>
         <p
@@ -443,6 +450,9 @@ export class ServerSelectScene implements Scene {
     const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
     const authorizedScope = this.panel.querySelector<HTMLElement>('[data-role="first-city-authorized-scope"]');
     const retainedTemplate = this.panel.querySelector<HTMLElement>('[data-role="first-city-retained-template"]');
+    const retainedTemplateLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-retained-template-local-intent-boundary"]',
+    );
     const headPredecessor = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-predecessor"]');
     const durableHeadC1 = this.panel.querySelector<HTMLElement>('[data-role="first-city-durable-head-c1"]');
     const durableHeadC1LocalIntentBoundary = this.panel.querySelector<HTMLElement>(
@@ -560,6 +570,14 @@ export class ServerSelectScene implements Scene {
       const templateText = formatFirstCityRetainedTemplatePanel(this.firstCityKnowledge, staleActor);
       retainedTemplate.hidden = !probeVisible || !templateText;
       retainedTemplate.textContent = templateText;
+    }
+    if (retainedTemplateLocalIntentBoundary) {
+      const templateJournalText = formatFirstCityRetainedTemplateLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      retainedTemplateLocalIntentBoundary.hidden = !probeVisible || !templateJournalText;
+      retainedTemplateLocalIntentBoundary.textContent = templateJournalText;
     }
     if (headPredecessor) {
       const predecessorText = formatFirstCityHeadPredecessorPanel(this.firstCityKnowledge, staleActor);
