@@ -1,6 +1,6 @@
 # Sibling finalizer ending unknown gates drain (SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-FINALIZER-ENDING-UNKNOWN-DRAIN-001)
 
-**Not** adopted. Task: [#2854](https://github.com/anitaguptaoffice/sanguo-slg/issues/2854)（#2870 栈；#2849 为 #2831 栈平行登记）. Stacks [#2889](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_EFFECT_UNKNOWN_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2792/#2830/#2889 (no re-run). Does not close #2737–#2889 Acceptance.
+**Not** adopted. Task: [#2854](https://github.com/anitaguptaoffice/sanguo-slg/issues/2854)（#2870 栈；#2849 为 #2831 栈平行登记）. Stacks [#2913](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_EFFECT_UNKNOWN_DRAIN.md) / [#2889](https://github.com/anitaguptaoffice/sanguo-slg/issues/2889). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2792/#2830/#2889/#2913 sibling effect-unknown drain (no re-run). Does not close #2737–#2889 Acceptance.
 
 **Invariants:** head strict-classified + sibling `finalizer_ending=unknown` blocks `declare_drained`; cleanup ≠ drain; sibling `known_terminal` → drain + generation++.
 
