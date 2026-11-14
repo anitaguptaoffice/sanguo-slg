@@ -76,6 +76,7 @@ import { formatFirstCityGetPendingHeadBoundaryPanel } from "./firstCityServerSel
 import { formatFirstCityGetRejectedHeadBoundaryPanel } from "./firstCityServerSelectGetRejectedHeadBoundary";
 import { formatFirstCityGetSucceededHeadBoundaryPanel } from "./firstCityServerSelectGetSucceededHeadBoundary";
 import { formatFirstCityGetLocalIntentBoundaryPanel } from "./firstCityServerSelectGetLocalIntentBoundary";
+import { formatFirstCityGetCommandIdLocalIntentBoundaryPanel } from "./firstCityServerSelectGetCommandIdLocalIntentBoundary";
 import { formatFirstCityDiscoverPendingHeadBoundaryPanel } from "./firstCityServerSelectDiscoverPendingHeadBoundary";
 import { formatFirstCityDiscoverRejectedHeadBoundaryPanel } from "./firstCityServerSelectDiscoverRejectedHeadBoundary";
 import { formatFirstCityDiscoverSucceededHeadBoundaryPanel } from "./firstCityServerSelectDiscoverSucceededHeadBoundary";
@@ -233,6 +234,12 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-get-rejected-head-boundary" data-role="first-city-get-rejected-head-boundary" role="status" hidden></p>
         <p class="first-city-get-succeeded-head-boundary" data-role="first-city-get-succeeded-head-boundary" role="status" hidden></p>
         <p class="first-city-get-local-intent-boundary" data-role="first-city-get-local-intent-boundary" role="status" hidden></p>
+        <p
+          class="first-city-get-command-id-local-intent-boundary"
+          data-role="first-city-get-command-id-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-continue-local-intent-boundary" data-role="first-city-continue-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
         <p class="first-city-losing-proposal-local-intent-boundary" data-role="first-city-losing-proposal-local-intent-boundary" role="status" hidden></p>
@@ -539,6 +546,9 @@ export class ServerSelectScene implements Scene {
     const getRejectedHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-get-rejected-head-boundary"]');
     const getSucceededHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-get-succeeded-head-boundary"]');
     const getLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-get-local-intent-boundary"]');
+    const getCommandIdLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-get-command-id-local-intent-boundary"]',
+    );
     const continueLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-local-intent-boundary"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
     const losingProposalLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
@@ -802,6 +812,14 @@ export class ServerSelectScene implements Scene {
       const getLocalIntentText = formatFirstCityGetLocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
       getLocalIntentBoundary.hidden = !probeVisible || !getLocalIntentText;
       getLocalIntentBoundary.textContent = getLocalIntentText;
+    }
+    if (getCommandIdLocalIntentBoundary) {
+      const getCommandIdJournalText = formatFirstCityGetCommandIdLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      getCommandIdLocalIntentBoundary.hidden = !probeVisible || !getCommandIdJournalText;
+      getCommandIdLocalIntentBoundary.textContent = getCommandIdJournalText;
     }
     if (continueLocalIntentBoundary) {
       const continueBoundaryText = formatFirstCityContinueLocalIntentBoundaryPanel(this.firstCityKnowledge, staleActor);
