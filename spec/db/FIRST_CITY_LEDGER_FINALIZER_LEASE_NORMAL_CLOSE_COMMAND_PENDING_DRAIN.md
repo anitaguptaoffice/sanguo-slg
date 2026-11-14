@@ -2,7 +2,7 @@
 
 **Not** adopted. Task: [#2971](https://github.com/anitaguptaoffice/sanguo-slg/issues/2971). Stacks [#2968](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_NOT_CURRENT_HEAD_DRAIN.md) / [#2966](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_NOT_CURRENT_HEAD_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.6/§8; complements [#2968](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_NOT_CURRENT_HEAD_DRAIN.md) slot head alignment (no re-run) and harness command-ending gates (no re-run). Does not close #2737–#2968 Acceptance.
 
-**Invariants:** after normal close + dual-command strict classify + slot/evidence aligned, any `world_first_city_command.durable_state=1` blocks `declare_drained`; cleanup alone ≠ drain; ledger terminalization → drain + `generation++`.
+**Invariants:** after normal close + dual-command strict classify + slot/evidence aligned, any `world_first_city_command.durable_state=1` blocks `declare_drained`; cleanup alone ≠ drain; ledger terminalization → drain + `generation++`. Complements [#3023](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_HARNESS_ONLY_PENDING_DRAIN.md) head SUCCEEDED + sibling harness-only (#3019).
 
 ```bash
 ./spec/db/validate.sh

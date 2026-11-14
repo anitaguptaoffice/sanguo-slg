@@ -1,0 +1,7 @@
+# Head SUCCEEDED + sibling harness-only ending pending gates drain (SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-HEAD-SUCCEEDED-SIBLING-HARNESS-ONLY-PENDING-DRAIN-001)
+
+**Not** adopted. Task: [#3023](https://github.com/anitaguptaoffice/sanguo-slg/issues/3023). Stacks [#3018](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_COMMAND_PENDING_DRAIN.md) / [#3019](https://github.com/anitaguptaoffice/sanguo-slg/pull/3019). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.6/§8/§9; complements [#3018](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_COMMAND_PENDING_DRAIN.md) sibling ledger PENDING (#3019) and [#2972](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_COMMAND_PENDING_DRAIN.md) head ledger PENDING + sibling harness (#2971). Does not close #2737–#3018 Acceptance.
+
+**Invariants:** dual strict classify + slot/evidence aligned; head ledger `durable_state=2` with sibling only in harness and `harness_command.ending` pending blocks `declare_drained`; cleanup ≠ drain; sibling harness ending known + strict classify → drain + `generation++`.
+
+`./spec/db/validate.sh`; `FIRST_CITY_LEDGER_TEST_DSN` + `ALLOW_OWNED_PG17_TEST=1` → `go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_head_succeeded_sibling_harness_only_pending_drain`. No DSN / flag → `SKIP`, exit 0.
