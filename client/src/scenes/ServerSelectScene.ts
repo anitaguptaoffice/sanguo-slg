@@ -44,6 +44,7 @@ import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSe
 import { formatFirstCityContinueLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueLocalIntentBoundary";
 import { formatFirstCitySubmitFormLocalIdBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalIdBoundary";
 import { formatFirstCitySubmitRejectedHeadBoundaryPanel } from "./firstCityServerSelectSubmitRejectedHeadBoundary";
+import { formatFirstCitySubmitPendingHeadBoundaryPanel } from "./firstCityServerSelectSubmitPendingHeadBoundary";
 import { formatFirstCityContinueRejectedHeadBoundaryPanel } from "./firstCityServerSelectContinueRejectedHeadBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
@@ -135,6 +136,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-submit-form-local-boundary" data-role="first-city-submit-form-local-boundary" role="status" hidden></p>
         <p class="first-city-submit-form-local-id-boundary" data-role="first-city-submit-form-local-id-boundary" role="status" hidden></p>
         <p class="first-city-submit-rejected-head-boundary" data-role="first-city-submit-rejected-head-boundary" role="status" hidden></p>
+        <p class="first-city-submit-pending-head-boundary" data-role="first-city-submit-pending-head-boundary" role="status" hidden></p>
         <p class="first-city-continue-rejected-head-boundary" data-role="first-city-continue-rejected-head-boundary" role="status" hidden></p>
         <p class="first-city-continue-local-intent-boundary" data-role="first-city-continue-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-losing-proposal" data-role="first-city-losing-proposal" role="status" hidden></p>
@@ -367,6 +369,7 @@ export class ServerSelectScene implements Scene {
     const submitFormLocalBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-boundary"]');
     const submitFormLocalIdBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-form-local-id-boundary"]');
     const submitRejectedHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-rejected-head-boundary"]');
+    const submitPendingHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-submit-pending-head-boundary"]');
     const continueRejectedHeadBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-rejected-head-boundary"]');
     const continueLocalIntentBoundary = this.panel.querySelector<HTMLElement>('[data-role="first-city-continue-local-intent-boundary"]');
     const losingProposal = this.panel.querySelector<HTMLElement>('[data-role="first-city-losing-proposal"]');
@@ -452,6 +455,11 @@ export class ServerSelectScene implements Scene {
       const rejectedHeadText = formatFirstCitySubmitRejectedHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
       submitRejectedHeadBoundary.hidden = !probeVisible || !rejectedHeadText;
       submitRejectedHeadBoundary.textContent = rejectedHeadText;
+    }
+    if (submitPendingHeadBoundary) {
+      const pendingHeadText = formatFirstCitySubmitPendingHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      submitPendingHeadBoundary.hidden = !probeVisible || !pendingHeadText;
+      submitPendingHeadBoundary.textContent = pendingHeadText;
     }
     if (continueRejectedHeadBoundary) {
       const continueRejectedText = formatFirstCityContinueRejectedHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
