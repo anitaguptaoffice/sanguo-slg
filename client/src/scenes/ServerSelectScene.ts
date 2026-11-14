@@ -49,6 +49,7 @@ import { formatFirstCityHeadPredecessorPanel } from "./firstCityServerSelectHead
 import { formatFirstCityLegacyRouteBoundaryPanel } from "./firstCityServerSelectLegacyRouteBoundary";
 import { formatFirstCityDurableHeadC1Panel } from "./firstCityServerSelectDurableHeadC1";
 import { formatFirstCityLocalC1DivergencePanel } from "./firstCityServerSelectLocalC1Divergence";
+import { formatFirstCityLocalC1DivergenceLocalIntentBoundaryPanel } from "./firstCityServerSelectLocalC1DivergenceLocalIntentBoundary";
 import { formatFirstCityProposalFormBoundaryPanel } from "./firstCityServerSelectProposalFormBoundary";
 import { formatFirstCitySubmitFormLocalBoundaryPanel } from "./firstCityServerSelectSubmitFormLocalBoundary";
 import { formatFirstCityContinueLocalIntentBoundaryPanel } from "./firstCityServerSelectContinueLocalIntentBoundary";
@@ -182,6 +183,12 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-local-draft" data-role="first-city-local-draft" role="status" hidden></p>
         <p class="first-city-local-draft-local-intent-boundary" data-role="first-city-local-draft-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-local-c1-divergence" data-role="first-city-local-c1-divergence" role="status" hidden></p>
+        <p
+          class="first-city-local-c1-divergence-local-intent-boundary"
+          data-role="first-city-local-c1-divergence-local-intent-boundary"
+          role="status"
+          hidden
+        ></p>
         <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
         <p class="first-city-head-conflict-local-intent-boundary" data-role="first-city-head-conflict-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-id-content-conflict" data-role="first-city-id-content-conflict" role="status" hidden></p>
@@ -462,6 +469,9 @@ export class ServerSelectScene implements Scene {
       '[data-role="first-city-local-draft-local-intent-boundary"]',
     );
     const localC1Divergence = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-c1-divergence"]');
+    const localC1DivergenceLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-local-c1-divergence-local-intent-boundary"]',
+    );
     const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
     const headConflictLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-head-conflict-local-intent-boundary"]',
@@ -687,6 +697,14 @@ export class ServerSelectScene implements Scene {
       const c1DivergenceText = formatFirstCityLocalC1DivergencePanel(this.firstCityKnowledge, staleActor);
       localC1Divergence.hidden = !probeVisible || !c1DivergenceText;
       localC1Divergence.textContent = c1DivergenceText;
+    }
+    if (localC1DivergenceLocalIntentBoundary) {
+      const c1JournalText = formatFirstCityLocalC1DivergenceLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      localC1DivergenceLocalIntentBoundary.hidden = !probeVisible || !c1JournalText;
+      localC1DivergenceLocalIntentBoundary.textContent = c1JournalText;
     }
     if (headConflict) {
       const conflictText = formatFirstCityHeadConflictPanel(this.firstCityKnowledge, staleActor);
