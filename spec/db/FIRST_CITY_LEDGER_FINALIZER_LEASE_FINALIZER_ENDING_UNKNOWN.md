@@ -20,4 +20,6 @@ GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_final
 
 No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. Record PG version and each `PASS finalizer_lease_finalizer_ending_unknown:` line.
 
+**SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-SIBLING-UNKNOWN-001** — [FIRST_CITY_LEDGER_FINALIZER_LEASE_SIBLING_UNKNOWN.md](FIRST_CITY_LEDGER_FINALIZER_LEASE_SIBLING_UNKNOWN.md) (`first_city_ledger_finalizer_lease_sibling_unknown`); does not close #2737/#2739/#2744/#2747 Acceptance.
+
 §10 item 3 **remaining** (if any), §10 **5–7**, realm drain/fence, browser §11 — separate cards.
