@@ -1,6 +1,6 @@
 # Sibling effect_begin gates drain (SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-EFFECT-BEGIN-DRAIN-001)
 
-**Not** adopted. Task: [#2869](https://github.com/anitaguptaoffice/sanguo-slg/issues/2869). Stacks [#2864](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_FINALIZER_PHASE_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2808/#2864 (no re-run). Does not close #2737–#2863 Acceptance. **Invariants:** head strict-classified + sibling `effect_begin` in-flight blocks `declare_drained`; cleanup ≠ drain; sibling classify → drain + generation++.
+**Not** adopted. Task: [#2869](https://github.com/anitaguptaoffice/sanguo-slg/issues/2869)（#2870 栈；#2864 为 #2831 栈平行登记）. Stacks [#2898](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_SIBLING_FINALIZER_PHASE_DRAIN.md) / [#2863](https://github.com/anitaguptaoffice/sanguo-slg/issues/2863). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2808/#2863 sibling finalizer-phase drain (no re-run). Does not close #2737–#2863 Acceptance. **Invariants:** head strict-classified + sibling `effect_begin` in-flight blocks `declare_drained`; cleanup ≠ drain; sibling classify → drain + generation++.
 
 ```bash
 ./spec/db/validate.sh

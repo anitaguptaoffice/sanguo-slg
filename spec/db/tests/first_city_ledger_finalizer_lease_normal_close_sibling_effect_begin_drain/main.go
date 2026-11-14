@@ -1,4 +1,4 @@
-// SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-EFFECT-BEGIN-DRAIN-001; disposable PG17.
+// SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-NORMAL-CLOSE-SIBLING-EFFECT-BEGIN-DRAIN-001 (#2898 stack); disposable PG17.
 package main
 
 import (
@@ -381,4 +381,5 @@ func main() {
 		assert(adm == "open" && drain == "pending" && gen == 2, "generation")
 		fmt.Println("PASS finalizer_lease_normal_close_sibling_effect_begin_drain: close_sibling_effect_begin_resolved_drains")
 	})
+	fmt.Println("MODE: isolated PG17 sibling-effect-begin normal close drain; player_city_id_seq not activated")
 }
