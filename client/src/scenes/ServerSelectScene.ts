@@ -30,6 +30,7 @@ import { formatFirstCityLosingProposalLocalIntentBoundaryPanel } from "./firstCi
 import { formatFirstCityLocalDraftPanel } from "./firstCityServerSelectLocalDraft";
 import { formatFirstCityLocalDraftLocalIntentBoundaryPanel } from "./firstCityServerSelectLocalDraftLocalIntentBoundary";
 import { formatFirstCityHeadConflictPanel } from "./firstCityServerSelectHeadConflict";
+import { formatFirstCityHeadConflictLocalIntentBoundaryPanel } from "./firstCityServerSelectHeadConflictLocalIntentBoundary";
 import { formatFirstCityIdContentConflictPanel } from "./firstCityServerSelectIdContentConflict";
 import { formatFirstCityNotObservedPanel } from "./firstCityServerSelectNotObserved";
 import { formatFirstCityTerminalReceiptPanel } from "./firstCityServerSelectTerminalReceipt";
@@ -179,6 +180,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-local-draft-local-intent-boundary" data-role="first-city-local-draft-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-local-c1-divergence" data-role="first-city-local-c1-divergence" role="status" hidden></p>
         <p class="first-city-head-conflict" data-role="first-city-head-conflict" role="status" hidden></p>
+        <p class="first-city-head-conflict-local-intent-boundary" data-role="first-city-head-conflict-local-intent-boundary" role="status" hidden></p>
         <p class="first-city-id-content-conflict" data-role="first-city-id-content-conflict" role="status" hidden></p>
         <p class="first-city-not-observed" data-role="first-city-not-observed" role="status" hidden></p>
         <p class="first-city-pending-intake" data-role="first-city-pending-intake" role="status" hidden></p>
@@ -440,6 +442,9 @@ export class ServerSelectScene implements Scene {
     );
     const localC1Divergence = this.panel.querySelector<HTMLElement>('[data-role="first-city-local-c1-divergence"]');
     const headConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-head-conflict"]');
+    const headConflictLocalIntentBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-head-conflict-local-intent-boundary"]',
+    );
     const idContentConflict = this.panel.querySelector<HTMLElement>('[data-role="first-city-id-content-conflict"]');
     const notObserved = this.panel.querySelector<HTMLElement>('[data-role="first-city-not-observed"]');
     const pendingIntake = this.panel.querySelector<HTMLElement>('[data-role="first-city-pending-intake"]');
@@ -657,6 +662,14 @@ export class ServerSelectScene implements Scene {
       const conflictText = formatFirstCityHeadConflictPanel(this.firstCityKnowledge, staleActor);
       headConflict.hidden = !probeVisible || !conflictText;
       headConflict.textContent = conflictText;
+    }
+    if (headConflictLocalIntentBoundary) {
+      const headConflictLocalIntentText = formatFirstCityHeadConflictLocalIntentBoundaryPanel(
+        this.firstCityKnowledge,
+        staleActor,
+      );
+      headConflictLocalIntentBoundary.hidden = !probeVisible || !headConflictLocalIntentText;
+      headConflictLocalIntentBoundary.textContent = headConflictLocalIntentText;
     }
     if (idContentConflict) {
       const contentText = formatFirstCityIdContentConflictPanel(this.firstCityKnowledge, staleActor);
