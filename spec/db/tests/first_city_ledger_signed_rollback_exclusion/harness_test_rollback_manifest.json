@@ -1,0 +1,5 @@
+{
+  "kind": "harness.test.rollback-artifact/v0",
+  "not_production_signed": true,
+  "note": "harness-only; must not be treated as production signed rollback artifact"
+}
