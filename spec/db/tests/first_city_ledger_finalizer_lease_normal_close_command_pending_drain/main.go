@@ -82,8 +82,8 @@ func seedPending(p *pgxpool.Pool) {
 	exec(p, `INSERT INTO player (server_id,player_id,account_id,display_name) VALUES (1,17,(SELECT account_id FROM account LIMIT 1),'lfnccpd')`)
 	cmdQ := `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) SELECT '%s'::uuid,1,17,'%s'::uuid,account_id,'%s',1,'t','r','c',1,'%s','%s',now() FROM account`
 	slotQ := `INSERT INTO world_first_city_actor_slot (realm_id,server_id,player_id,account_id,head_command_id) SELECT '%s'::uuid,1,17,account_id,'%s'::uuid FROM account`
+	// Ledger: one PENDING row (head) only; sibling lives in harness tables (m4_012 one-PENDING-per-slot).
 	exec(p, fmt.Sprintf(cmdQ, realm, cmdHead, c1, fct1, sha))
-	exec(p, fmt.Sprintf(cmdQ, realm, cmdSibling, c1, fct1, sha))
 	exec(p, fmt.Sprintf(slotQ, realm, cmdHead))
 }
 func normalClose(tx pgx.Tx) (bool, error) {
@@ -294,7 +294,7 @@ func alignAllEvidence(p *pgxpool.Pool) {
 }
 func terminalizeLedgerCommands(p *pgxpool.Pool) {
 	exec(p, `UPDATE world_first_city_command SET durable_state=3,terminal_at=now(),rejection_reason=1
- WHERE realm_id=$1::uuid AND command_id IN ($2::uuid,$3::uuid) AND durable_state=1`, realm, cmdHead, cmdSibling)
+ WHERE realm_id=$1::uuid AND command_id=$2::uuid AND durable_state=1`, realm, cmdHead)
 }
 func withTx(p *pgxpool.Pool, fn func(pgx.Tx) (bool, error)) bool {
 	c, err := p.Acquire(ctx)
