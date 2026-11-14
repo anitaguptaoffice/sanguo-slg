@@ -10,3 +10,5 @@ export FIRST_CITY_LEDGER_TEST_DSN='postgres://…?sslmode=disable' ALLOW_OWNED_P
 GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_sibling_unknown
 ```
 No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0.
+
+**SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-SOURCE-POISONED-001** — [FIRST_CITY_LEDGER_FINALIZER_LEASE_SOURCE_POISONED.md](FIRST_CITY_LEDGER_FINALIZER_LEASE_SOURCE_POISONED.md) (`first_city_ledger_finalizer_lease_source_poisoned`); does not close #2737/#2739/#2744/#2747/#2753 Acceptance.
