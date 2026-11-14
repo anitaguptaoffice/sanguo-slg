@@ -46,5 +46,7 @@ No DSN / `ALLOW_OWNED_PG17_TEST` → harness `SKIP`, exit 0. Record `SHOW server
 
 ## Follow-on
 
-CITY_CREATION_RECOVERY §10 item 3 **remaining** after this slice (if any), §10 items **5–7**,
+**SPEC-FIRST-CITY-LEDGER-FINALIZER-LEASE-TXN-BOUNDARY-UNKNOWN-ENDING-001** — [FIRST_CITY_LEDGER_FINALIZER_LEASE_TXN_BOUNDARY_UNKNOWN_ENDING.md](FIRST_CITY_LEDGER_FINALIZER_LEASE_TXN_BOUNDARY_UNKNOWN_ENDING.md); §7.4 `effect_ending=unknown` lease classify (`first_city_ledger_finalizer_lease_txn_boundary_unknown_ending`); does not close [#2737](https://github.com/anitaguptaoffice/sanguo-slg/issues/2737) Acceptance in full.
+
+CITY_CREATION_RECOVERY §10 item 3 **remaining** after that slice (if any), §10 items **5–7**,
 target-realm **drain/fence execution**, native browser §11 — separate SPEC cards.
