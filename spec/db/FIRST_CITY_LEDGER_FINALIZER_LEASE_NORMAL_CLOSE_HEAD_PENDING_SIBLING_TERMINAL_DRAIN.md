@@ -10,4 +10,4 @@ export FIRST_CITY_LEDGER_TEST_DSN='postgres://…?sslmode=disable' ALLOW_OWNED_P
 GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_finalizer_lease_normal_close_head_pending_sibling_terminal_drain
 ```
 
-No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [HEAD-TERMINAL-SIBLING-TERMINAL-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_TERMINAL_SIBLING_TERMINAL_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_head_terminal_sibling_terminal_drain`); stacks #2991 / #2986; does not close #2737–#2986 Acceptance.
+No DSN / `ALLOW_OWNED_PG17_TEST` → `SKIP`, exit 0. **Follow-on:** [HEAD-TERMINAL-SIBLING-TERMINAL-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_TERMINAL_SIBLING_TERMINAL_DRAIN.md) (`first_city_ledger_finalizer_lease_normal_close_head_terminal_sibling_terminal_drain`); stacks #2991 / #2986; does not close #2737–#2986 Acceptance. Complements [HEAD-PENDING-SIBLING-SUCCEEDED-DRAIN-001](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_PENDING_SIBLING_SUCCEEDED_DRAIN.md) (#3013 / #3008 stack).
