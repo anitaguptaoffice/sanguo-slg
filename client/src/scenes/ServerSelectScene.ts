@@ -58,6 +58,7 @@ import { formatFirstCityGetSucceededHeadBoundaryPanel } from "./firstCityServerS
 import { formatFirstCityDiscoverPendingHeadBoundaryPanel } from "./firstCityServerSelectDiscoverPendingHeadBoundary";
 import { formatFirstCityDiscoverRejectedHeadBoundaryPanel } from "./firstCityServerSelectDiscoverRejectedHeadBoundary";
 import { formatFirstCityDiscoverSucceededHeadBoundaryPanel } from "./firstCityServerSelectDiscoverSucceededHeadBoundary";
+import { formatFirstCityDiscoverEmptyHeadBoundaryPanel } from "./firstCityServerSelectDiscoverEmptyHeadBoundary";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -168,6 +169,7 @@ export class ServerSelectScene implements Scene {
         <p class="first-city-not-observed" data-role="first-city-not-observed" role="status" hidden></p>
         <p class="first-city-pending-intake" data-role="first-city-pending-intake" role="status" hidden></p>
         <p class="first-city-discovery-empty" data-role="first-city-discovery-empty" role="status" hidden></p>
+        <p class="first-city-discover-empty-head-boundary" data-role="first-city-discover-empty-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-pending-head-boundary" data-role="first-city-discover-pending-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-rejected-head-boundary" data-role="first-city-discover-rejected-head-boundary" role="status" hidden></p>
         <p class="first-city-discover-succeeded-head-boundary" data-role="first-city-discover-succeeded-head-boundary" role="status" hidden></p>
@@ -413,6 +415,9 @@ export class ServerSelectScene implements Scene {
     const notObserved = this.panel.querySelector<HTMLElement>('[data-role="first-city-not-observed"]');
     const pendingIntake = this.panel.querySelector<HTMLElement>('[data-role="first-city-pending-intake"]');
     const discoveryEmpty = this.panel.querySelector<HTMLElement>('[data-role="first-city-discovery-empty"]');
+    const discoverEmptyHeadBoundary = this.panel.querySelector<HTMLElement>(
+      '[data-role="first-city-discover-empty-head-boundary"]',
+    );
     const discoverPendingHeadBoundary = this.panel.querySelector<HTMLElement>(
       '[data-role="first-city-discover-pending-head-boundary"]',
     );
@@ -597,6 +602,11 @@ export class ServerSelectScene implements Scene {
       const emptyText = formatFirstCityDiscoveryEmptyPanel(this.firstCityKnowledge, staleActor);
       discoveryEmpty.hidden = !probeVisible || !emptyText;
       discoveryEmpty.textContent = emptyText;
+    }
+    if (discoverEmptyHeadBoundary) {
+      const discoverEmptyHeadText = formatFirstCityDiscoverEmptyHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
+      discoverEmptyHeadBoundary.hidden = !probeVisible || !discoverEmptyHeadText;
+      discoverEmptyHeadBoundary.textContent = discoverEmptyHeadText;
     }
     if (discoverPendingHeadBoundary) {
       const discoverPendingText = formatFirstCityDiscoverPendingHeadBoundaryPanel(this.firstCityKnowledge, staleActor);
