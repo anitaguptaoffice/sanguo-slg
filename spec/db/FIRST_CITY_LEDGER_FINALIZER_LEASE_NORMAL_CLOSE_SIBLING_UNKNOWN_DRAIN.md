@@ -2,7 +2,7 @@
 
 **Not** adopted. Task: [#2775](https://github.com/anitaguptaoffice/sanguo-slg/issues/2775). Stacks [#2774](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_MULTI_COMMAND_DRAIN.md). Normative: [CITY_CREATION_RECOVERY.md](../rules/CITY_CREATION_RECOVERY.md) §7.4/§8; complements #2774 pending slice + #2753 classify (no re-run). Does not close #2737/#2739/#2744/#2747/#2753/#2757/#2761/#2767/#2773 Acceptance.
 
-**Invariants:** head strict-classified + sibling `unknown` blocks drain; cleanup alone ≠ drain; sibling resolved unknown→known allows drain + generation++.
+**Invariants:** head strict-classified + sibling `unknown` blocks drain; cleanup alone ≠ drain; sibling resolved unknown→known allows drain + generation++. Complements [#3032](FIRST_CITY_LEDGER_FINALIZER_LEASE_NORMAL_CLOSE_HEAD_SUCCEEDED_SIBLING_HARNESS_ONLY_UNKNOWN_DRAIN.md) head ledger SUCCEEDED + sibling harness-only unknown (#3024); that slice uses head `durable_state=2` on ledger, not head ledger PENDING here.
 ```bash
 ./spec/db/validate.sh
 export FIRST_CITY_LEDGER_TEST_DSN='postgres://…?sslmode=disable' ALLOW_OWNED_PG17_TEST=1
