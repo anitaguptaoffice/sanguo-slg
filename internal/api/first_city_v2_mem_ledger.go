@@ -103,6 +103,37 @@ func headAcceptsProposal(head *worldv1.FirstCityRecord, proposal *worldv1.FirstC
 	return nil
 }
 
+// Settle replaces one retained PENDING record with its terminal state.
+func (l *memFirstCityLedger) Settle(_ context.Context, scope *worldv1.FirstCityScope, commandID string, next *worldv1.FirstCityRecord) error {
+	key, ok := slotKeyFromScope(scope)
+	if !ok {
+		return errors.New("scope")
+	}
+	if commandID == "" || next == nil || next.GetCanonical() == nil {
+		return errors.New("record")
+	}
+	if next.GetSucceeded() == nil && next.GetRejectedNoEffect() == nil {
+		return errors.New("terminal")
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	prev, ok := l.byID[key][commandID]
+	if !ok || prev.GetPending() == nil {
+		return errFirstCityHeadConflict
+	}
+	if prev.GetCanonical().GetProposal().GetCommandId() != commandID {
+		return errFirstCityHeadConflict
+	}
+	if !firstCityCanonicalBytesEqual(prev.GetCanonical(), next.GetCanonical()) {
+		return errFirstCityHeadConflict
+	}
+	l.byID[key][commandID] = next
+	if head := l.head[key]; head != nil && head.GetCanonical().GetProposal().GetCommandId() == commandID {
+		l.head[key] = next
+	}
+	return nil
+}
+
 // installTestRecord seeds ledger state for package tests only.
 func (l *memFirstCityLedger) installTestRecord(scope *worldv1.FirstCityScope, record *worldv1.FirstCityRecord) {
 	key, ok := slotKeyFromScope(scope)

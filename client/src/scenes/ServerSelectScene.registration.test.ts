@@ -47,11 +47,11 @@ it("requires a separate explicit registration click and never authenticates or c
   f.fill("  fresh  ", " spaces preserved "); f.button("register-account").click(); await flush();
   expect(f.gateway.register).toHaveBeenCalledExactlyOnceWith("fresh", " spaces preserved "); f.noEntry();
   expect(f.layoutFrame.textContent).toContain("账号已注册");
-  expect(f.layoutFrame.textContent).toContain("首次建城尚未开放");
+  expect(f.layoutFrame.textContent).toContain("可在本页创建首城");
   expect(f.input("password").value).toBe(""); expect(f.button("register-account").disabled).toBe(true);
   f.fill(); f.button("login-existing").click(); await flush();
   expect(f.gateway.login).toHaveBeenCalledTimes(1); expect(f.gateway.listPlayerCities).toHaveBeenCalledTimes(1);
-  expect(f.layoutFrame.textContent).toContain("首次建城流程尚未开放");
+  expect(f.layoutFrame.textContent).toContain("请先创建首城");
   expect(f.layoutFrame.textContent).toContain("本次注册未登录或建城");
   expect(f.layoutFrame.textContent).not.toContain("尚未登录");
   expect(f.gateway.createCity).not.toHaveBeenCalled(); expect(f.ctx.switchScene).not.toHaveBeenCalled();

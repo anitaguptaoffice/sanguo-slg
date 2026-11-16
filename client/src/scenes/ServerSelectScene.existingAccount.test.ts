@@ -55,7 +55,7 @@ describe("existing account entry", () => {
   it("shows an incomplete-city notice and never creates a city", async () => {
     const f = setup(); f.gateway.listPlayerCities.mockResolvedValue({ cities: [] }); await f.start();
     f.button("login-existing").click(); await flush();
-    expect(f.layoutFrame.textContent).toContain("首次建城流程尚未开放");
+    expect(f.layoutFrame.textContent).toContain("请先创建首城");
     expect(f.gateway.createCity).not.toHaveBeenCalled(); expect(f.gateway.register).not.toHaveBeenCalled();
     expect(f.gateway.getCityState).not.toHaveBeenCalled(); expect(f.ctx.switchScene).not.toHaveBeenCalled();
   });

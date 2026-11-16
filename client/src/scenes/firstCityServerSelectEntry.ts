@@ -7,6 +7,8 @@ export type FirstCityProbeGateway = FirstCityGatewayPort & Readonly<{
   login(loginName: string, password: string, serverId: number): Promise<unknown>;
   enterGameServer(serverId: number): Promise<unknown>;
   getSessionGeneration?(): number;
+  getBoundServerId?(): number;
+  getSessionId?(): string;
 }>;
 
 /** Local loopback ws only; rejects every wss and remote ws. Not a product default-on flag. */
@@ -27,7 +29,7 @@ export function formatFirstCityProbeStatus(knowledge: FirstCityKnowledge): strin
   if (knowledge.unavailable) return "首城本地证据不可用；未调用 v1 建城，也未进入主城。";
   const terminal = knowledge.records.find(record => record.state.kind === "succeeded");
   if (terminal) {
-    return "探测读到终态记录，但进入主城仍须单独验收；本次不自动跳转。";
+    return "首城已创建，正在进入主城。";
   }
   if (knowledge.head?.kind === "empty") {
     return "V2 发现已完成（durable head 为空）。这不代表可提交建城、服务端已激活或已进入游戏。";
@@ -48,6 +50,11 @@ export async function ensureFirstCitySession(
 ): Promise<void> {
   if (!loginName || !password || !Number.isInteger(serverId) || serverId < 1) throw firstCityUnknown();
   const stamp = generation ?? gateway.getSessionGeneration?.();
+  // Reuse an authenticated session for the same server. Logging in again would bump the
+  // session generation the caller pinned, so the probe would reject its own work.
+  const bound = gateway.getBoundServerId?.();
+  const session = gateway.getSessionId?.();
+  if (session && bound === serverId && gateway.getSessionGeneration?.() === stamp) return;
   await gateway.login(loginName, password, serverId);
   if (stamp !== undefined && gateway.getSessionGeneration?.() !== stamp) throw firstCityUnknown();
   await gateway.enterGameServer(serverId);

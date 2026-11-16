@@ -17,7 +17,7 @@ export function canOfferFirstCityContinue(knowledge: FirstCityKnowledge | null):
 
 export function formatFirstCityCommandStatus(knowledge: FirstCityKnowledge): string {
   const terminal = knowledge.records.find(record => record.state.kind === "succeeded");
-  if (terminal) return "命令已读到 succeeded 终态，但进入主城仍须单独验收；本次不自动跳转。";
+  if (terminal) return "首城已创建，正在进入主城。";
   const pending = knowledge.records.find(record => record.state.kind === "pending");
   if (pending) return "命令处于 pending；Continue 仅在显式点击时发送，不代表服务端已承认。";
   if (knowledge.unavailable) return "首城本地证据不可用；未调用 v1 建城。";

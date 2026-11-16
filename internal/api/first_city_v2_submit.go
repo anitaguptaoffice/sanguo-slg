@@ -96,6 +96,11 @@ func (s *Server) attemptFirstCitySubmit(ctx context.Context, scope *worldv1.Firs
 	if err != nil || !ok {
 		return nil, errors.New("intake")
 	}
+	stored = s.settleFirstCityEffect(ctx, scope, stored)
+	head, err = s.firstCityV2Ledger.Head(scope)
+	if err != nil {
+		return nil, err
+	}
 	return s.firstCityOutcome(scope, worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_COMMAND, id, stored, head), nil
 }
 

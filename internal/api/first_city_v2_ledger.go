@@ -29,6 +29,10 @@ type FirstCityV2Ledger interface {
 	Head(scope *worldv1.FirstCityScope) (*worldv1.FirstCityHead, error)
 	Record(scope *worldv1.FirstCityScope, commandID string) (*worldv1.FirstCityRecord, bool, error)
 	IntakePending(ctx context.Context, scope *worldv1.FirstCityScope, record *worldv1.FirstCityRecord) error
+	// Settle replaces one retained PENDING record with its terminal state (succeeded
+	// or rejected_no_effect) carrying the same canonical intent. It must never move
+	// a record backwards, nor settle a command id that has no PENDING record.
+	Settle(ctx context.Context, scope *worldv1.FirstCityScope, commandID string, next *worldv1.FirstCityRecord) error
 }
 
 // FirstCityV2TemplateIntake selects the immutable template snapshot for first durable intake only.

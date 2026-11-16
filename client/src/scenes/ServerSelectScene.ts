@@ -2,7 +2,7 @@ import { GATEWAY_WS_URL } from "@/config";
 import { skinPrimaryButtons } from "@/engine/artButtonSkin";
 import { skinDefaultPanel } from "@/engine/artPanelSkin";
 import type { Scene, SceneContext } from "@/engine/SceneManager";
-import { bootstrapMainCity } from "@/net/bootstrapSession";
+import { bootstrapMainCity, FIRST_CITY_REQUIRED } from "@/net/bootstrapSession";
 import { formatServerLine, parseGameServerInfo, type GameServerRow } from "@/net/socialFormat";
 import { createOverlayFocusTrap, type OverlayFocusTrap } from "@/ui/overlayFocusTrap";
 import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
@@ -28,7 +28,7 @@ export function permitsExistingAccountLogin(url: string): boolean {
 
 const DEFAULT_LOGIN = "demo";
 const DEFAULT_PASSWORD = "demo123";
-const REGISTER_UNKNOWN = "注册结果尚未确认，账号可能已创建；本页不会重复注册。可重新输入凭据并明确点击登录核实。首次建城尚未开放。";
+const REGISTER_UNKNOWN = "注册结果尚未确认，账号可能已创建；本页不会重复注册。可重新输入凭据并明确点击登录核实。";
 
 export class ServerSelectScene implements Scene {
   readonly name = "serverSelect";
@@ -84,7 +84,7 @@ export class ServerSelectScene implements Scene {
       <p class="server-select-hint">演示账号 ${DEFAULT_LOGIN} 与个人账号分开进入</p>
       <ul class="server-list" data-role="server-list"></ul>
       <form data-role="existing-account" autocomplete="off">
-        <p>登录已有账号仅进入已有城池。注册只创建账号，不会登录或建城；首次建城尚未开放。</p>
+        <p>登录已有账号进入已有城池。账号在所选服还没有城池时，可在本页创建首城。</p>
         <label>账号 <input name="login" autocomplete="off" required></label>
         <label>密码 <input name="password" type="password" autocomplete="off" required></label>
         <button type="submit" data-action="login-existing" disabled>登录已有账号</button>
@@ -92,7 +92,7 @@ export class ServerSelectScene implements Scene {
       </form>
       <p data-role="registration-status" role="status"></p>
       <section class="first-city-probe" data-role="first-city-probe" hidden>
-        <p class="first-city-probe-hint">无城池账号可在本机开发网关下<strong>显式</strong>尝试 V2 意图发现；不调用 v1 建城、不进入主城。</p>
+        <p class="first-city-probe-hint">无城池账号可在本机开发网关下<strong>显式</strong>发现并提交首城意图；提交成功后会进入主城。</p>
         <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
         <p data-role="first-city-probe-status" role="status"></p>
         <div class="first-city-command" data-role="first-city-command" hidden>
@@ -368,7 +368,7 @@ export class ServerSelectScene implements Scene {
         generation !== ctx.gateway.getSessionGeneration?.()) return;
       // A valid receipt confirms creation only, never an authenticated identity.
       if (/^[1-9][0-9]*$/.test(String(result?.account_id ?? ""))) {
-        this.registrationNotice = "账号已注册；本次注册未登录或建城。首次建城尚未开放。可重新输入密码并点击登录已有账号。";
+        this.registrationNotice = "账号已注册；本次注册未登录或建城。可重新输入密码并点击登录，登录后即可创建首城。";
       }
     } catch {
       // Even a failed response may follow a committed insert. Never retry or expose RPC errors.
@@ -481,7 +481,6 @@ export class ServerSelectScene implements Scene {
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
   if (kind === "submit" && !canOfferFirstCitySubmit(this.firstCityKnowledge)) return;
     if (kind === "continue" && !canOfferFirstCityContinue(this.firstCityKnowledge)) return;
-    this.clearPassword();
     const lifecycle = this.lifecycle;
     const generation = ctx.gateway.getSessionGeneration?.();
     const inProgress = kind === "submit" ? "首城 V2 Submit 进行中…" : "首城 V2 Continue 进行中…";
@@ -509,7 +508,14 @@ export class ServerSelectScene implements Scene {
       }
       this.firstCityKnowledge = result.knowledge;
       this.firstCityProbeNotice = result.message;
-      this.status = `首城 V2 ${kind === "submit" ? "Submit" : "Continue"} 往返完成；未进主城。`;
+      const landed = result.knowledge.records.some(record => record.state.kind === "succeeded");
+      if (landed) {
+        this.clearPassword();
+        await this.enterFirstCity(ctx, login, password);
+        return;
+      }
+      this.clearPassword();
+      this.status = `首城 V2 ${kind === "submit" ? "Submit" : "Continue"} 往返完成；尚未进入主城。`;
     } catch {
       if (!this.isCurrent(lifecycle)) return;
       this.firstCityProbeNotice = failure;
@@ -517,6 +523,25 @@ export class ServerSelectScene implements Scene {
     } finally {
       if (this.firstCityProbeNotice === inProgress) this.firstCityProbeNotice = failure;
       this.firstCityProbeInFlight = false;
+      this.entering = false;
+      if (this.active) this.syncPanel();
+    }
+  }
+
+  /** Enters the main city after a first-city intent reached its succeeded terminal state. */
+  private async enterFirstCity(ctx: SceneContext, login: string, password: string): Promise<void> {
+    const lifecycle = this.lifecycle;
+    this.entering = true;
+    this.status = "首城已创建，正在进入主城…";
+    this.syncPanel();
+    try {
+      const session = await bootstrapMainCity(ctx.gateway, login, password, this.selectedId, "existing");
+      if (!this.isCurrent(lifecycle) || !this.connected) return;
+      await ctx.switchScene("mainCity", session);
+    } catch (e) {
+      if (!this.isCurrent(lifecycle)) return;
+      this.status = `首城已创建，但进入主城失败：${(e as Error).message}`;
+    } finally {
       this.entering = false;
       if (this.active) this.syncPanel();
     }
@@ -547,7 +572,7 @@ export class ServerSelectScene implements Scene {
     } catch (e) {
       if (!this.isCurrent(lifecycle)) return;
       const message = (e as Error).message;
-      const noCity = message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池";
+      const noCity = message === FIRST_CITY_REQUIRED;
       if (existing && noCity) this.firstCityProbeEligible = true;
       this.status = existing
         ? (noCity ? message : "登录未完成，请核对账号、密码、所选服或连接后重试")

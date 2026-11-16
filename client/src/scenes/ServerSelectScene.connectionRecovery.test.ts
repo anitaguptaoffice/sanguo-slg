@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { ServerSelectScene } from "./ServerSelectScene";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import type { GatewayHandlers } from "@/net/GatewayClient";
-vi.mock("@/net/bootstrapSession", () => ({ bootstrapMainCity: vi.fn() }));
+vi.mock("@/net/bootstrapSession", () => ({ bootstrapMainCity: vi.fn(), FIRST_CITY_REQUIRED: "此账号在所选服尚无城池；请先创建首城" }));
 vi.mock("@/engine/artButtonSkin", () => ({ skinPrimaryButtons: vi.fn() }));
 vi.mock("@/engine/artPanelSkin", () => ({ skinDefaultPanel: vi.fn() }));
 const flush = async () => { for(let i=0;i<20;i++) await Promise.resolve(); };

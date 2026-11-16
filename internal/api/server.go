@@ -81,6 +81,7 @@ type Server struct {
 	firstCityV2Realm  FirstCityV2Realm
 	firstCityV2Ledger FirstCityV2Ledger
 	firstCityV2Intake FirstCityV2TemplateIntake
+	firstCityV2Effect FirstCityV2Effect
 }
 
 // ErrMilitaryDurable rejects incomplete startup composition inputs.

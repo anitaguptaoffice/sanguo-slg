@@ -63,7 +63,7 @@ it("reveals dormant probe only after a no-city existing login on local gateways"
   expect(probe().hidden).toBe(true);
   await noCityLogin();
   expect(probe().hidden).toBe(false);
-  expect(layoutFrame.textContent).toContain("首次建城流程尚未开放");
+  expect(layoutFrame.textContent).toContain("请先创建首城");
   const loginBefore = gateway.login.mock.calls.length;
   const enterBefore = gateway.enterGameServer.mock.calls.length;
   await probeDiscover();
