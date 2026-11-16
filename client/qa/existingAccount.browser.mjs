@@ -91,7 +91,7 @@ export async function runExistingAccountScenario({ page, baseUrl, gatewayUrl, pr
       await page.locator('[data-action="toggle-military"]:visible').waitFor();
       await page.waitForFunction(city => document.getElementById('hud')?.textContent.includes(city), account.cityName);
     } else {
-      await page.waitForFunction(text => document.querySelector('.server-select-panel [data-role="status"]')?.textContent.includes(text), expectedOutcome === 'empty' ? '首次建城流程尚未开放' : '登录未完成');
+      await page.waitForFunction(text => document.querySelector('.server-select-panel [data-role="status"]')?.textContent.includes(text), expectedOutcome === 'empty' ? '此账号在所选服尚无城池；请先创建首城' : '登录未完成');
       assert.ok((await password.inputValue()) === '', 'password was not cleared after failure');
       assert.equal(await page.locator('[data-action="toggle-military"]').count(), 0, 'unexpected gameplay entry');
     }
