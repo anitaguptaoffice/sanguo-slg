@@ -90,8 +90,8 @@ Requirements:
 - Skipped when DSN unset (local agents without PG must not fake pass).
 
 Record PostgreSQL `SHOW server_version` in harness output. Core effect/finalizer terminal races are
-frozen in [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md); full wallet/MIL/DOM contention and
-restricted-role ACL suites are **not** frozen here (see §7).
+frozen in [FIRST_CITY_LEDGER_RACE.md](FIRST_CITY_LEDGER_RACE.md); full §4.2 business-path contention in
+[FIRST_CITY_LEDGER_EFFECT_PATH.md](FIRST_CITY_LEDGER_EFFECT_PATH.md). Restricted-role ACL suites are **not** frozen here (see §7).
 
 Ordinary vs race CI: repository `api-pg-test` jobs (ordinary / race) exercise platform DB code paths;
 this card's loader is additionally gated on the disposable PG17 harness above.
