@@ -89,7 +89,8 @@ returning；原值无 writer）。归属仍为
 `realm_id + server_id + player_id`、不可回收 `command_id`、当前 head、`canonical_c1`、
 接收时 FCT1 模板、`PENDING` / `SUCCEEDED` / `REJECTED_NO_EFFECT` 及成功/拒绝 receipt 列。
 **仅契约前置**：不实施 runtime、不认证目标 realm、不授权 cutover；`002_world.sql` 无 realm 列。
-OID/profile 清单、全局 pin 序与 loader 验收见 `FIRST_CITY_LEDGER.md` §8 后续卡。
+OID/profile 与写入者清单：[SPEC-FIRST-CITY-LEDGER-OID-PROFILE-001](FIRST_CITY_LEDGER_OID_PROFILE.md)。
+全局 pin 序与 loader 验收见 `FIRST_CITY_LEDGER.md` §8 第 2–4 项后续卡。
 
 ## Fractional production checkpoint (proposed DOM-PRODUCTION-001)
 
