@@ -4,6 +4,7 @@ import { encodeFirstCityRequest, decodeFirstCityRequest } from "./firstCityReque
 import { decodeFirstCityResponse } from "./firstCityResponseCodec";
 import type { FirstCityResponse } from "./firstCityResponseCodec";
 import { firstCityPacket, readFirstCityPacket, firstCityUnknown } from "./firstCityPacket";
+import type { FirstCityJournal } from "./firstCityJournal";
 
 export type FirstCityRoute = `world.v2.${"DiscoverFirstCityIntent" | "SubmitFirstCity" | "ContinueFirstCity" | "GetFirstCityResult"}`;
 export type FirstCityCallOptions = { signal?: AbortSignal; timeoutMs?: number; knownIntent?: Pick<FirstCityIntent, "scope" | "proposal"> };
@@ -22,10 +23,10 @@ export class FirstCityGateway {
     for (const cancel of [...this.pending]) cancel();
   }
 
-  async request(route: FirstCityRoute, value: unknown, options: FirstCityCallOptions = {}): Promise<FirstCityResponse> {
+  async request(route: FirstCityRoute, value: unknown, options: FirstCityCallOptions = {}, journal?: FirstCityJournal): Promise<FirstCityResponse> {
     try {
       const { signal, timeoutMs, knownIntent } = options;
-      const payload = encodeFirstCityRequest(route, value);
+      let payload = encodeFirstCityRequest(route, value);
       const request = decodeFirstCityRequest(route, payload);
       const discovery = route === "world.v2.DiscoverFirstCityIntent";
       const original = "proposal" in request ? createFirstCityIntent(request.expectedScope, request.proposal) :
@@ -37,11 +38,15 @@ export class FirstCityGateway {
       if (!context || !ws || ws.readyState !== WebSocket.OPEN || signal?.aborted ||
         !Number.isInteger(timeout) || timeout < 1 || timeout > 2147483647) throw firstCityUnknown();
       const trace = crypto.randomUUID();
-      const packet = firstCityPacket(route, payload, trace, context.session, context.shard);
       if (discovery) this.reset();
       else if (!("expectedScope" in request) || !this.scope || !sameScope(request.expectedScope, this.scope) ||
         (original && (!sameScope(original.scope, this.scope) || original.proposal.commandId !== commandId))) throw firstCityUnknown();
       const scope = this.scope;
+      if (journal && original && "proposal" in request) {
+        const saved = journal.prepare(route, original);
+        payload = encodeFirstCityRequest(route, { expectedScope: saved.scope, proposal: saved.proposal });
+      }
+      const packet = firstCityPacket(route, payload, trace, context.session, context.shard);
       const current = () => {
         const now = this.context();
         return now && now.ws === ws && now.session === context.session && now.shard === context.shard &&
@@ -73,6 +78,7 @@ export class FirstCityGateway {
             if (response.kind === "discovery") this.scope = response.scope;
             else if (!scope || !sameScope(response.scope, scope) || response.requestedCommandId !== commandId ||
               (response.kind === "command" && original && !original.matches(response.command!.intent.encode()))) return cancel();
+            journal?.observe(route, envelope.data);
             finish(response);
           } catch { cancel(); }
         };
@@ -82,7 +88,10 @@ export class FirstCityGateway {
         ws.addEventListener("close", cancel);
         ws.addEventListener("error", cancel);
         signal?.addEventListener("abort", cancel, { once: true });
-        try { ws.send(packet); } catch { cancel(); }
+        try {
+          if (!current() || signal?.aborted || ws.readyState !== WebSocket.OPEN) return cancel();
+          ws.send(packet);
+        } catch { cancel(); }
       });
     } catch { throw firstCityUnknown(); }
   }
