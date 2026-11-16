@@ -37,3 +37,23 @@ dev-up:
 
 dev-down:
 	docker compose down
+
+# --- Layered local gates -----------------------------------------------------
+# fast:  seconds. No database. Use while editing.
+# gate:  ~1 min. Real PostgreSQL for the changed domains + full client suite.
+# full:  release points only. Whole API PG suite and browser acceptance.
+DATABASE_URL ?= postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+NODE ?= node
+
+test-fast:
+	go build ./...
+	go vet ./...
+	go test -count=1 ./...
+	cd client && NODE_ENV=development npx tsc --noEmit && npx vitest run
+
+test-gate:
+	DATABASE_URL='$(DATABASE_URL)' go test -short -count=1 -timeout=20m ./internal/api ./internal/domestic ./internal/world
+	cd client && NODE_ENV=development npx vitest run && NODE_ENV=development npx vite build
+
+test-full:
+	DATABASE_URL='$(DATABASE_URL)' go test -count=1 -timeout=40m ./internal/api
