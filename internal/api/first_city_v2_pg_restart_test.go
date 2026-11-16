@@ -1,0 +1,109 @@
+package api
+
+import (
+	"context"
+	"fmt"
+	"testing"
+	"time"
+
+	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
+	"google.golang.org/protobuf/proto"
+)
+
+// TestFirstCityPGResultAfterServerReconnect proves PG ledger survives a fresh Server process wiring.
+func TestFirstCityPGResultAfterServerReconnect(t *testing.T) {
+	ctx := context.Background()
+	pool := walletBoundaryPool(t, true)
+	if _, err := pool.Exec(ctx, "DELETE FROM player_city WHERE server_id=1 AND player_id=56"); err != nil {
+		t.Fatal(err)
+	}
+	if err := world.NewPGStore(pool).SaveChunk(ctx, 1, world.GenerateChunk(1, 0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	h := domestic.NewHub(time.Now)
+	h.UseStore(domestic.NewPGStore(pool), 1, 0)
+	s := NewServer(nil, pool, world.NewService(world.NewPGStore(pool)), h, march.NewHub(nil))
+
+	const playerID = int64(56)
+	var accountID int64
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO account(login_name,password_hash,status) VALUES ($1,'x',1) RETURNING account_id`,
+		fmt.Sprintf("fc-restart-%d", playerID)).Scan(&accountID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO player(server_id,player_id,account_id,display_name) VALUES (1,$1,$2,'fc-restart')`,
+		playerID, accountID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO player_wallet(server_id,player_id,food,wood,stone,iron) VALUES (1,$1,8000,8000,5000,5000)`,
+		playerID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM world_first_city_command WHERE server_id=1 AND player_id=$1`, playerID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM world_first_city_actor_slot WHERE server_id=1 AND player_id=$1`, playerID); err != nil {
+		t.Fatal(err)
+	}
+
+	wireFirstCityPG := func(srv *Server) {
+		srv.sessions.Bind("owner", PlayerContext{ServerID: 1, PlayerID: playerID, AccountID: accountID})
+		srv.EnableFirstCityV2Routes(func(PlayerContext) (string, bool) { return testFirstCityRealmUUID, true })
+		srv.WireFirstCityV2Ledger(NewPGFirstCityLedger(pool), fixedTemplateIntake{ref: FirstCityTemplateRef("DATA-002")})
+		srv.WireFirstCityV2Effect(srv.FirstCityCreationEffect())
+	}
+	wireFirstCityPG(s)
+
+	var buildable *world.Cell
+	for _, c := range world.GenerateChunk(1, 0, 0) {
+		if c.Buildable() && c.X > 0 && c.Y > 0 {
+			buildable = &c
+			break
+		}
+	}
+	if buildable == nil {
+		t.Fatal("no buildable tile")
+	}
+	const cmd = "66666666-6666-4666-8666-666666666666"
+	scope := &worldv1.FirstCityScope{RealmId: testFirstCityRealmUUID, ServerId: 1, PlayerId: playerID, AccountId: accountID}
+	proposal := &worldv1.FirstCityProposal{
+		CommandId:   cmd,
+		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+		Name:        proto.String("首城"),
+		X:           proto.Int32(int32(buildable.X)),
+		Y:           proto.Int32(int32(buildable.Y)),
+	}
+	submitPkt := &commonv1.ClientPacket{SessionId: "owner", TraceId: "restart", ServerId: 1,
+		Payload: mustProto(&worldv1.SubmitFirstCityRequest{ExpectedScope: scope, Proposal: proposal})}
+	out, err := s.handleSubmitFirstCity(ctx, submitPkt)
+	if err != nil || out.GetCode() != 0 {
+		t.Fatalf("submit: err=%v code=%d", err, out.GetCode())
+	}
+
+	store := world.NewPGStore(pool)
+	restartedHub := domestic.NewHub(s.now)
+	restartedHub.UseStore(domestic.NewPGStore(pool), 1, 0)
+	restarted := NewServer(s.log, pool, world.NewService(store), restartedHub, march.NewHub(nil))
+	wireFirstCityPG(restarted)
+
+	getPkt := &commonv1.ClientPacket{SessionId: "owner", TraceId: "restart-get", ServerId: 1,
+		Payload: mustProto(&worldv1.GetFirstCityResultRequest{ExpectedScope: scope, CommandId: cmd})}
+	out, err = restarted.handleGetFirstCityResult(ctx, getPkt)
+	if err != nil || out.GetCode() != 0 {
+		t.Fatalf("get: err=%v code=%d msg=%s", err, out.GetCode(), out.GetMsg())
+	}
+	var getResp worldv1.GetFirstCityResultResponse
+	if err := proto.Unmarshal(out.GetData(), &getResp); err != nil {
+		t.Fatal(err)
+	}
+	ok := getResp.GetOutcome().GetCommand().GetSucceeded()
+	if ok == nil || ok.GetCityId() <= 0 {
+		t.Fatalf("outcome = %+v", getResp.GetOutcome())
+	}
+}

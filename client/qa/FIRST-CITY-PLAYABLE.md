@@ -14,6 +14,8 @@
 # 系统 Chromium，避免 Playwright 下载
 export CHROMIUM_PATH=/usr/lib/chromium/chromium
 cd client && node qa/firstCityPlayable.browser.mjs
+# 可选：共享 dev 图上避开占用格
+# QA_FC_X=45 QA_FC_Y=72 node qa/firstCityPlayable.browser.mjs
 ```
 
 成功：`report.json` 中 `passed: true`，步骤含 `main-city`；截图 `/tmp/first-city-playable/main-city.png`。
