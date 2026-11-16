@@ -4,9 +4,68 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.resolve.outputs.client }}
+      go: ${{ steps.resolve.outputs.go }}
+      domestic: ${{ steps.resolve.outputs.domestic }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@451258876b3980276fd71dd0140d0353bfaa2497 # v3.0.2
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - 'spec/proto/**'
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'Makefile'
+              - 'cmd/**'
+              - 'tools/**'
+              - 'spec/**'
+              - '.github/**'
+              - 'docker-compose.yml'
+            domestic:
+              - 'internal/domestic/**'
+              - 'internal/api/recruit_cleanup*.go'
+              - 'spec/rules/**'
+              - 'spec/db/**'
+              - '.github/scripts/dom_fresh_catalog_gate.py'
+              - '.github/scripts/test_dom_fresh_catalog_gate.py'
+              - '.github/workflows/ci.yml'
+      - id: resolve
+        env:
+          FULL_MATRIX: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          F_CLIENT: ${{ steps.filter.outputs.client }}
+          F_GO: ${{ steps.filter.outputs.go }}
+          F_DOMESTIC: ${{ steps.filter.outputs.domestic }}
+        run: |
+          set -euo pipefail
+          if [ "$FULL_MATRIX" = true ]; then
+            echo client=true >> "$GITHUB_OUTPUT"
+            echo go=true >> "$GITHUB_OUTPUT"
+            echo domestic=true >> "$GITHUB_OUTPUT"
+          else
+            echo "client=${F_CLIENT:-false}" >> "$GITHUB_OUTPUT"
+            echo "go=${F_GO:-false}" >> "$GITHUB_OUTPUT"
+            echo "domestic=${F_DOMESTIC:-false}" >> "$GITHUB_OUTPUT"
+          fi
+
   client-build-test:
+    needs: scope
+    if: needs.scope.outputs.client == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -28,8 +87,11 @@ jobs:
       - name: Run client regression tests
         run: npm test
 
-  build-test-lint:
+  go-build-test-lint:
+    needs: scope
+    if: needs.scope.outputs.go == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:17
@@ -163,6 +225,41 @@ jobs:
           make build-gm
       - name: Unit tests
         run: make test
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62.2
+      - name: Smoke boot server wiring
+        env:
+          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+          REDIS_ADDR: localhost:6379
+        run: go run ./cmd/gm
+
+  domestic-pg:
+    needs: scope
+    if: needs.scope.outputs.domestic == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
       - name: Domestic PostgreSQL regressions (ordinary and race)
         shell: bash
         run: |
@@ -170,11 +267,9 @@ jobs:
           for mode in ordinary race; do
             flags=()
             if [[ "$mode" == race ]]; then flags=(-race); fi
-            # Legacy fixtures use public; isolate the two runs in disposable DBs.
             docker exec "${{ job.services.postgres.id }}" psql -U sanguo -d sanguo \
               -v ON_ERROR_STOP=1 -c "CREATE DATABASE domestic_$mode"
             log="$RUNNER_TEMP/dom-fresh-catalog/domestic-$mode.json"
-            # Physical restart has a separate two-phase harness; do not claim it.
             DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/domestic_$mode?sslmode=disable" \
             go test ./internal/domestic "${flags[@]}" -count=1 -timeout=5m \
               -skip '^TestPGQueuePhysicalRestart$' -json | tee "$log"
@@ -213,12 +308,3 @@ jobs:
             ${{ runner.temp }}/dom-fresh-catalog/gofmt.list
             ${{ runner.temp }}/dom-fresh-catalog/gofmt.diff
           if-no-files-found: error
-      - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.62.2
-      - name: Smoke boot server wiring
-        env:
-          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
-          REDIS_ADDR: localhost:6379
-        run: go run ./cmd/gm

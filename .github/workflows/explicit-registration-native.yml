@@ -8,14 +8,25 @@ on:
       - '.github/scripts/existing_account_native.mjs'
       - '.github/scripts/EXPLICIT-REGISTRATION-NATIVE.md'
       - 'client/**'
-      - 'internal/**'
+      - 'internal/account/**'
+      - 'internal/platform/gateway/**'
+      - 'internal/platform/shard/**'
+      - 'internal/world/**'
       - 'cmd/server/**'
-      - 'spec/**'
+      - 'spec/proto/sanguo/account/**'
+      - 'spec/proto/sanguo/common/**'
+      - 'spec/proto/sanguo/world/**'
+      - 'spec/db/**'
       - 'go.mod'
       - 'go.sum'
   push:
     branches: [main]
     paths: *inputs
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   explicit-registration-native:
     runs-on: ubuntu-22.04
