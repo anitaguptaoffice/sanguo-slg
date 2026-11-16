@@ -88,8 +88,7 @@ func (s *Server) attemptFirstCitySubmit(ctx context.Context, scope *worldv1.Firs
 		}
 		return nil, err
 	}
-	head, err := s.firstCityV2Ledger.Head(scope)
-	if err != nil {
+	if _, err := s.firstCityV2Ledger.Head(scope); err != nil {
 		return nil, err
 	}
 	stored, ok, err := s.firstCityV2Ledger.Record(scope, id)
@@ -97,7 +96,7 @@ func (s *Server) attemptFirstCitySubmit(ctx context.Context, scope *worldv1.Firs
 		return nil, errors.New("intake")
 	}
 	stored = s.settleFirstCityEffect(ctx, scope, stored)
-	head, err = s.firstCityV2Ledger.Head(scope)
+	head, err := s.firstCityV2Ledger.Head(scope)
 	if err != nil {
 		return nil, err
 	}

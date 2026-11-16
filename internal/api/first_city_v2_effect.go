@@ -9,7 +9,7 @@ import (
 )
 
 // errFirstCityEffectRejected reports an effect that refused the intent with a typed reason.
-var errFirstCityEffectRejected = errors.New("api: first-city effect rejected")
+var errFirstCityEffectRejected = errors.New("api: first-city effect rejected") //nolint:unused // reserved for effect rejection wiring
 
 // FirstCityV2Effect materializes one accepted first-city intent into a real city.
 // It runs after durable PENDING intake and must be idempotent per command id: a

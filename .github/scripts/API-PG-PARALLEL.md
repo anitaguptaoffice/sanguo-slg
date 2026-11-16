@@ -31,7 +31,7 @@ SmokePath roots. Round-robin replay predicts 206.3–224.7s per shard, about 74%
 less serial test wall time before shared CPU/DB contention and setup. This is an
 estimate, not a live benchmark. Exact-head official runs must establish actual gains.
 
-Full coverage still runs on every PR and main push. Classification/path filtering
-is deferred until dependency effects and required-check behavior are independently
-proved. Protection inspection is integration-restricted; no protection is changed.
+Full coverage still runs on every `main` push. Pull requests use path filters
+(see `docs/CI-PR-SCOPE.md`); narrow diffs skip this workflow when `internal/api/**`
+is untouched. Protection inspection is integration-restricted; no protection is changed.
 Controls: `python3 -m unittest discover -s .github/scripts -p test_api_pg_parallel.py -v`.

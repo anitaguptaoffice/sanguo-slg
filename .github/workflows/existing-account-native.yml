@@ -5,16 +5,25 @@ on:
     paths: &inputs
       - '.github/workflows/existing-account-native.yml'
       - '.github/scripts/existing_account_native*'
+      - '.github/scripts/EXPLICIT-REGISTRATION-NATIVE.md'
       - '.github/scripts/EXISTING-ACCOUNT-NATIVE.md'
       - 'client/**'
-      - 'internal/**'
+      - 'internal/account/**'
+      - 'internal/platform/gateway/**'
+      - 'internal/platform/shard/**'
       - 'cmd/server/**'
-      - 'spec/**'
+      - 'spec/proto/sanguo/account/**'
+      - 'spec/proto/sanguo/common/**'
       - 'go.mod'
       - 'go.sum'
   push:
     branches: [main]
     paths: *inputs
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   existing-account-native:
     runs-on: ubuntu-22.04

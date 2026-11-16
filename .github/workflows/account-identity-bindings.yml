@@ -4,6 +4,21 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths: &account-identity-pr
+      - '.github/workflows/account-identity-bindings.yml'
+      - '.github/scripts/check_account_identity_bindings_json.py'
+      - '.github/ACCOUNT-IDENTITY-BINDINGS.md'
+      - 'internal/account/**'
+      - 'internal/platform/gateway/pb/sanguo/account/**'
+      - 'spec/proto/sanguo/account/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/server/**'
+      - 'internal/platform/gateway/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   account-identity-bindings:
