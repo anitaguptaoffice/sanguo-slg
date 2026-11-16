@@ -28,17 +28,21 @@ func (t firstCityTemplateIntake) SelectTemplate(context.Context, *worldv1.FirstC
 }
 
 // composeFirstCity enables the world.v2 first-city routes and installs the ledger,
-// template intake and creation effect. The ledger is process-local: intents and
-// receipts survive login reconnects but not a server restart. A SQL-backed ledger
-// and the full recovery matrix remain separate cards.
+// template intake and creation effect. When PostgreSQL is available, intents and
+// terminal receipts persist across process restarts; without a pool, falls back to mem.
 func composeFirstCity(srv *api.Server) {
 	srv.EnableFirstCityV2Routes(func(pc api.PlayerContext) (string, bool) {
 		return firstCityRealmID(pc.ServerID), true
 	})
-	srv.WireFirstCityV2Ledger(
-		api.NewMemFirstCityLedger(),
-		firstCityTemplateIntake{ref: api.FirstCityTemplateRef(firstCityCatalogVersion)},
-	)
+	intake := firstCityTemplateIntake{ref: api.FirstCityTemplateRef(firstCityCatalogVersion)}
+	var ledger api.FirstCityV2Ledger
+	if srv != nil && srv.PlayersPool() != nil {
+		ledger = api.NewPGFirstCityLedger(srv.PlayersPool())
+	}
+	if ledger == nil {
+		ledger = api.NewMemFirstCityLedger()
+	}
+	srv.WireFirstCityV2Ledger(ledger, intake)
 	srv.WireFirstCityV2Effect(srv.FirstCityCreationEffect())
 }
 

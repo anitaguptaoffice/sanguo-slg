@@ -164,7 +164,7 @@ func TestFirstCitySubmitCreatesCityPG(t *testing.T) {
 	}
 	s.sessions.Bind("owner", PlayerContext{ServerID: 1, PlayerID: 55, AccountID: accountID})
 	s.EnableFirstCityV2Routes(func(PlayerContext) (string, bool) { return testFirstCityRealmUUID, true })
-	s.WireFirstCityV2Ledger(NewMemFirstCityLedger(), fixedTemplateIntake{ref: FirstCityTemplateRef("DATA-002")})
+	s.WireFirstCityV2Ledger(NewPGFirstCityLedger(pool), fixedTemplateIntake{ref: FirstCityTemplateRef("DATA-002")})
 	s.WireFirstCityV2Effect(s.FirstCityCreationEffect())
 
 	var buildable *world.Cell
@@ -227,5 +227,14 @@ func TestFirstCitySubmitCreatesCityPG(t *testing.T) {
 	}
 	if cities != 1 {
 		t.Fatalf("player_city rows after replay = %d", cities)
+	}
+	var cmdState int
+	if err := pool.QueryRow(ctx, `SELECT durable_state FROM world_first_city_command
+ WHERE realm_id=$1::uuid AND server_id=1 AND player_id=55 AND command_id=$2::uuid`,
+		testFirstCityRealmUUID, testFirstCityCommand).Scan(&cmdState); err != nil {
+		t.Fatal(err)
+	}
+	if cmdState != 2 {
+		t.Fatalf("ledger durable_state = %d", cmdState)
 	}
 }
