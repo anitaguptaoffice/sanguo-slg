@@ -276,6 +276,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dom-fresh-catalog"
           for mode in ordinary race; do
             flags=()
             if [[ "$mode" == race ]]; then flags=(-race); fi
