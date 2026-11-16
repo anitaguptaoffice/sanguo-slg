@@ -5,6 +5,9 @@ import type { Scene, SceneContext } from "@/engine/SceneManager";
 import { bootstrapMainCity } from "@/net/bootstrapSession";
 import { formatServerLine, parseGameServerInfo, type GameServerRow } from "@/net/socialFormat";
 import { createOverlayFocusTrap, type OverlayFocusTrap } from "@/ui/overlayFocusTrap";
+import {
+  permitsFirstCityV2Probe, runFirstCityDiscoverProbe, supportsFirstCityPersisted,
+} from "./firstCityServerSelectEntry";
 
 export function permitsExistingAccountLogin(url: string): boolean {
   try {
@@ -38,6 +41,10 @@ export class ServerSelectScene implements Scene {
   private hudStatusEl: HTMLElement | null = null;
   private triggerBtn: HTMLButtonElement | null = null;
   private focusTrap: OverlayFocusTrap | null = null;
+  private gatewayRef: SceneContext["gateway"] | null = null;
+  private firstCityProbeEligible = false;
+  private firstCityProbeNotice = "";
+  private firstCityProbeInFlight = false;
 
   async enter(ctx: SceneContext): Promise<void> {
     ++this.lifecycle;
@@ -46,6 +53,10 @@ export class ServerSelectScene implements Scene {
     this.selectedId = 0;
     this.listBusy = false;
     this.connected = false;
+    this.gatewayRef = ctx.gateway;
+    this.firstCityProbeEligible = false;
+    this.firstCityProbeNotice = "";
+    this.firstCityProbeInFlight = false;
     this.status = "连接网关…";
     this.hud = ctx.hud;
     this.mountHudChrome();
@@ -67,6 +78,11 @@ export class ServerSelectScene implements Scene {
         <button type="button" data-action="register-account" disabled>注册新账号（不建城）</button>
       </form>
       <p data-role="registration-status" role="status"></p>
+      <section class="first-city-probe" data-role="first-city-probe" hidden>
+        <p class="first-city-probe-hint">无城池账号可在本机开发网关下<strong>显式</strong>尝试 V2 意图发现；不调用 v1 建城、不进入主城。</p>
+        <button type="button" data-action="discover-first-city" disabled>V2 首城意图发现（仅探测）</button>
+        <p data-role="first-city-probe-status" role="status"></p>
+      </section>
       <button type="button" data-action="refresh-servers">刷新列表</button>
       <button type="button" class="art-btn-primary art-btn-primary-full" data-action="enter-game" disabled>进入演示账号</button>
       <p class="server-select-status" data-role="status"></p>
@@ -110,6 +126,10 @@ export class ServerSelectScene implements Scene {
     this.focusTrap?.dispose();
     this.focusTrap = null;
     this.clearPassword();
+    this.gatewayRef = null;
+    this.firstCityProbeEligible = false;
+    this.firstCityProbeNotice = "";
+    this.firstCityProbeInFlight = false;
     this.panel?.remove();
   }
 
@@ -237,6 +257,16 @@ export class ServerSelectScene implements Scene {
       this.registrationAttempted || !this.connected || this.listBusy || this.entering || !login.value.trim() || !password.value;
     const refreshBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="refresh-servers"]');
     if (refreshBtn) refreshBtn.disabled = this.listBusy || this.entering;
+    const probe = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe"]');
+    const probeBtn = this.panel.querySelector<HTMLButtonElement>('[data-action="discover-first-city"]');
+    const probeStatus = this.panel.querySelector<HTMLElement>('[data-role="first-city-probe-status"]');
+    const probeVisible = this.firstCityProbeEligible && permitsFirstCityV2Probe(GATEWAY_WS_URL);
+    if (probe) probe.hidden = !probeVisible;
+    if (probeStatus) probeStatus.textContent = this.firstCityProbeNotice;
+    if (probeBtn) {
+      probeBtn.disabled = !probeVisible || this.entering || this.firstCityProbeInFlight || this.listBusy ||
+        !this.connected || !login.value.trim() || !password.value || !supportsFirstCityPersisted(this.gatewayRef);
+    }
     const hudBusy =
       /^(连接|拉取|进入服)/.test(this.status) || this.status.includes("失败");
     this.setHudStatus(hudBusy ? this.status : "请选择游戏服");
@@ -259,6 +289,7 @@ export class ServerSelectScene implements Scene {
     if (action === "refresh-servers") void this.loadServers(ctx.gateway);
     if (action === "enter-game") void this.enterGame(ctx);
     if (action === "register-account") void this.registerAccount(ctx);
+    if (action === "discover-first-city") void this.discoverFirstCity(ctx);
   }
 
   private async registerAccount(ctx: SceneContext): Promise<void> {
@@ -294,6 +325,45 @@ export class ServerSelectScene implements Scene {
     }
   }
 
+  private async discoverFirstCity(ctx: SceneContext): Promise<void> {
+    if (!this.active || !this.focusTrap?.isActive() || !this.firstCityProbeEligible || !this.connected ||
+      this.listBusy || this.entering || this.firstCityProbeInFlight || !permitsFirstCityV2Probe(GATEWAY_WS_URL) ||
+      !supportsFirstCityPersisted(ctx.gateway)) return;
+    const login = this.panel.querySelector<HTMLInputElement>('input[name="login"]')!.value.trim();
+    const password = this.panel.querySelector<HTMLInputElement>('input[name="password"]')!.value;
+    if (!login || !password ||
+      !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
+    this.clearPassword();
+    const lifecycle = this.lifecycle;
+    const generation = ctx.gateway.getSessionGeneration?.();
+    const inProgress = "首城 V2 探测进行中…";
+    this.firstCityProbeInFlight = true;
+    this.entering = true;
+    this.firstCityProbeNotice = inProgress;
+    this.syncPanel();
+    try {
+      const message = await runFirstCityDiscoverProbe(ctx.gateway, login, password, this.selectedId, generation);
+      if (!this.isCurrent(lifecycle) || generation !== ctx.gateway.getSessionGeneration?.()) {
+        this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+        this.status = "首城 V2 探测未完成";
+        return;
+      }
+      this.firstCityProbeNotice = message;
+      this.status = "首城 V2 探测完成；未建城、未进主城。";
+    } catch {
+      if (!this.isCurrent(lifecycle)) return;
+      this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+      this.status = "首城 V2 探测未完成";
+    } finally {
+      if (this.firstCityProbeNotice === inProgress) {
+        this.firstCityProbeNotice = "首城 V2 探测结果尚未确认；未调用 v1 建城，也未进入主城。";
+      }
+      this.firstCityProbeInFlight = false;
+      this.entering = false;
+      if (this.active) this.syncPanel();
+    }
+  }
+
   private async enterGame(ctx: SceneContext, existing = false): Promise<void> {
     if (!this.active || !this.connected || this.listBusy || this.entering ||
       !this.servers.some(s => s.server_id === this.selectedId && this.canEnter(s))) return;
@@ -318,10 +388,12 @@ export class ServerSelectScene implements Scene {
       await ctx.switchScene("mainCity", session);
     } catch (e) {
       if (!this.isCurrent(lifecycle)) return;
+      const message = (e as Error).message;
+      const noCity = message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池";
+      if (existing && noCity) this.firstCityProbeEligible = true;
       this.status = existing
-        ? ((e as Error).message === "此账号在所选服尚无城池；首次建城流程尚未开放，本次未注册账号或创建城池"
-          ? (e as Error).message : "登录未完成，请核对账号、密码、所选服或连接后重试")
-        : `进服失败: ${(e as Error).message}`;
+        ? (noCity ? message : "登录未完成，请核对账号、密码、所选服或连接后重试")
+        : `进服失败: ${message}`;
       this.syncPanel();
     } finally {
       // Leaving cannot cancel an already submitted bootstrap; keep it single-flight on re-entry.
