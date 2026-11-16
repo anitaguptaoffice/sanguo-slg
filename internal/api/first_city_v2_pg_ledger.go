@@ -87,7 +87,7 @@ func (l *pgFirstCityLedger) IntakePending(ctx context.Context, scope *worldv1.Fi
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	var acctStatus int
 	if err := tx.QueryRow(ctx, `SELECT status FROM account WHERE account_id=$1 FOR SHARE`, key.account).Scan(&acctStatus); err != nil {
@@ -184,7 +184,7 @@ func (l *pgFirstCityLedger) Settle(ctx context.Context, scope *worldv1.FirstCity
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if _, err := tx.Exec(ctx, `SELECT world_first_city_slot_advisory_lock($1::uuid,$2,$3)`, key.realm, key.shard, key.player); err != nil {
 		return err
