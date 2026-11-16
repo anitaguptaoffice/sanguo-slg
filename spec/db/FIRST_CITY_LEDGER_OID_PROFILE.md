@@ -21,8 +21,8 @@ through-commit fencing obligations aligned with CITY_CREATION_RECOVERY §9.
 This card does **not**:
 - certify, enroll, cut over, drain, fence, deploy or enable any production realm;
 - modify `m4_010_first_city_ledger.sql`, `002_world.sql`, proto field numbers or wire shapes;
-- freeze global lock pin order, PG companion SQL, ApplySpecs loader or runtime writers
-  (FIRST_CITY_LEDGER.md §8 items 2–4 remain separate);
+- freeze PG companion SQL, ApplySpecs loader or runtime writers (global pin order frozen in
+  [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md); FIRST_CITY_LEDGER.md §8 items 3–4 remain separate);
 - grant mixed old/new writer operation or legacy adoption of retained ledger rows;
 - substitute table locks, profile checks or process-local drain counters for external
   through-commit drain (§5).
@@ -87,14 +87,14 @@ Stale or contradictory evidence blocks activation and blocks extending an existi
 | Domain | Authority retained | First-city ledger interaction |
 |--------|-------------------|------------------------------|
 | ACCOUNT | `player` / account binding, ActorGuard semantics | Intake verifies `account_id` on command rows; WORLD does not rebind accounts. |
-| WORLD | Slot/command lineage, head, immutable C1/FCT1, receipts in `m4_010` tables | Owns ledger DDL surface; effect path still inserts `player_city` under separate pins (not frozen here). |
+| WORLD | Slot/command lineage, head, immutable C1/FCT1, receipts in `m4_010` tables | Owns ledger DDL surface; effect path `player_city` / map pins frozen in [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md) §4. |
 | APP/API | Orchestration, source admission, Binding, generation | Begins transactions; does not substitute for ACCOUNT/WORLD SQL authority. |
 | DOM | Wallet init, buildings, checkpoint | Consumes exact FreshCity identity after WORLD INSERT; no ledger overwrite. |
 | MIL | Markers, troops, inventories | Consumes allocated `city_id`; no MAX+1 path when reviewed allocator is active. |
 | PLATFORM | Narrow PG mechanisms (advisory locks, sequences) | Does not interpret realm strings or cut over routes. |
 
-Global pin order **ACCOUNT → slot/command → wallet → CITY/map → MIL/DOM** is a §10.2
-**follow-on** (SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001); this file states direction only.
+Global pin order **ACCOUNT → slot/command → wallet → CITY/map → MIL/DOM** is frozen in
+[FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md) (SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001).
 
 ## 5. Pre-activation ACL, drain and fencing (mandatory obligations)
 
@@ -156,7 +156,7 @@ lock between old and new writers is not a compatibility proof.
 
 | Card | Status |
 |------|--------|
-| SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001 | Pin order, row locks, conflict re-read proofs — **not done**. |
+| SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001 | Frozen in [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md). |
 | SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Effect/finalizer SQL companions — **not done**. |
 | SPEC-FIRST-CITY-LEDGER-LOADER-001 | ApplySpecs replay / PG17 acceptance — **not done**. |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
