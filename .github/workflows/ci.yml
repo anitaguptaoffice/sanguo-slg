@@ -221,6 +221,16 @@ jobs:
           "$gofmt" -l "${files[@]}" | tee "$evidence/gofmt.list"
           "$gofmt" -d "${files[@]}" > "$evidence/gofmt.diff"
           test ! -s "$evidence/gofmt.list"
+      - name: Archive fresh DOM catalog identity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dom-fresh-catalog-identity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/dom-fresh-catalog/identity.txt
+            ${{ runner.temp }}/dom-fresh-catalog/gofmt.list
+            ${{ runner.temp }}/dom-fresh-catalog/gofmt.diff
+          if-no-files-found: error
       - name: Build binaries
         run: |
           make build
@@ -306,7 +316,4 @@ jobs:
           path: |
             ${{ runner.temp }}/dom-fresh-catalog/domestic-ordinary.json
             ${{ runner.temp }}/dom-fresh-catalog/domestic-race.json
-            ${{ runner.temp }}/dom-fresh-catalog/identity.txt
-            ${{ runner.temp }}/dom-fresh-catalog/gofmt.list
-            ${{ runner.temp }}/dom-fresh-catalog/gofmt.diff
           if-no-files-found: error
