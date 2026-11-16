@@ -157,7 +157,7 @@ lock between old and new writers is not a compatibility proof.
 | Card | Status |
 |------|--------|
 | SPEC-FIRST-CITY-LEDGER-GLOBAL-PINS-001 | Frozen in [FIRST_CITY_LEDGER_GLOBAL_PINS.md](FIRST_CITY_LEDGER_GLOBAL_PINS.md). |
-| SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Effect/finalizer SQL companions — **not done**. |
+| SPEC-FIRST-CITY-LEDGER-PG-COMPANION-001 | Frozen in [FIRST_CITY_LEDGER_PG_COMPANION.md](FIRST_CITY_LEDGER_PG_COMPANION.md). |
 | SPEC-FIRST-CITY-LEDGER-LOADER-001 | ApplySpecs replay / PG17 acceptance — **not done**. |
 | Reviewed `player_city_id_seq` activation | WORLD_CITY_IDENTITY gate — **not done**. |
 | Target realm enrollment execution | Drain/fence/deploy — **not authorized** by #2554. |
