@@ -34,7 +34,7 @@
 ## 4. 首城：当前源码与下一步（2026-11-16 增量）
 - **main 已装配**：`composeFirstCity` 在 `internal/platform/runtime` 默认用 **PG ledger**（`world_first_city_*`；无 pool 时回退 mem）。客户端选服 UI 支持本机 `ws://127.0.0.1:8080/ws` 下 Discover/Submit，成功后自动进主城。
 - **已合入 backlog**：FIRST-CITY-RELEASE / FIRST-CITY-ENABLE、多数 CLIENT-FIRST-CITY-*；#2506 队列 **first-city-storage** 与 `client/qa/firstCityStorage.browser.mjs` 已在 main。
-- **本地可玩冒烟**：见 [client/qa/FIRST-CITY-PLAYABLE.md](../client/qa/FIRST-CITY-PLAYABLE.md)（真实网关，非 storage peer）。
+- **本地可玩冒烟**：见 [client/qa/FIRST-CITY-PLAYABLE.md](../client/qa/FIRST-CITY-PLAYABLE.md)（`firstCityPlayable.browser.mjs`；可用 `QA_FC_X`/`QA_FC_Y` 避占格）。PG 重启读回：`TestFirstCityPGResultAfterServerReconnect`（`DATABASE_URL`）。
 - **仍缺**：effect/continue 与 companion 同 txn 全 pin 序（当前 settle 仅写 receipt；CreateCity 仍走既有 DOM/WORLD 路径）；ACK-loss/Continue 跨重启编排；DOM PreparedCity 等产品卡按合同单开。
 - 历史 Draft 表（#2505/#2529 等）若与 main 重复，以 **main HEAD** 与上述冒烟为准；勿再假定「尚未开放」或 runtime 未接线。
 
