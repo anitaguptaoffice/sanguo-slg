@@ -98,7 +98,7 @@ export async function runExplicitRegistrationScenario({ page, baseUrl, gatewayUr
     if (city) {
       await page.locator('[data-action="toggle-military"]:visible').waitFor();
       await page.waitForFunction(name => document.getElementById('hud')?.textContent.includes(name), account.cityName);
-    } else await textWait(page.locator('.server-select-panel [data-role="status"]'), bad ? '登录未完成' : '首次建城流程尚未开放');
+    } else await textWait(page.locator('.server-select-panel [data-role="status"]'), bad ? '登录未完成' : '此账号在所选服尚无城池；请先创建首城');
     const rows = requests.slice(start), auth = rows.filter(r => r.route === 'account.v1.Login');
     assert.equal(auth.length, 1); assert.equal(auth[0].matchesInput, true); assert.equal(auth[0].code, bad ? 20001 : 0);
     const entryRoutes = ['account.v1.Login', 'account.v1.EnterGameServer', 'world.v1.ListPlayerCities', 'domestic.v1.GetCityState'];

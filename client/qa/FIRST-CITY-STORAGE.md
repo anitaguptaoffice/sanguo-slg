@@ -10,3 +10,5 @@ Reports retain exact checkout/parents/tree, source hashes, versions, every case,
 Auth uses only synthetic placeholders. Evidence must never contain real credentials or user information.
 Complete browser erasure followed by a new instance cannot prove prior history; absence is never server EMPTY or execution authority.
 Run `node qa/firstCityStorage.browser.mjs` only through the registered official workflow. Syntax checks are not native PASS.
+
+Local (optional): clean git tree required. Set `CHROMIUM_PATH` to system Chromium to skip `npx playwright install`.

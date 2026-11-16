@@ -129,7 +129,12 @@ try {
     if (i === 199 || vite.exitCode !== null) throw Error('Vite failed to start');
     await wait(100);
   }
-  browser = await chromium.launch({ chromiumSandbox: true }); report.chromium = browser.version();
+  const chromiumPath = process.env.CHROMIUM_PATH;
+  browser = await chromium.launch({
+    chromiumSandbox: true,
+    ...(chromiumPath ? { executablePath: chromiumPath } : {}),
+  });
+  report.chromium = browser.version();
   await check('concurrent-reload-terminal-and-explicit-continue', async () => {
     peer.mode = 'race'; const a = await boot(), b = await boot(), before = peer.effects.length;
     assert.deepEqual((await Promise.all([call(a, 'SubmitFirstCity'), call(b, 'SubmitFirstCity', ids[1])])).sort(), ['command', 'headConflict']);

@@ -31,14 +31,12 @@
 | 出征/恢复列表定位 | #2478 产品 `d3519566`，#2517 QA `ddc80aab` | 修正恢复后目标行被裁切，30修复case+6基线，3908测试/build，合后14工作流通过；受控组件集成 |
 | 其他较早交付 | 已有账号登录 #2419、WORLD持久化 #2176/#2177/#2185/#2189、聊天Unicode #2285、公会在线态 #2294/#2305 | 查各PR最终记录，不把对应NEVER MERGE诊断PR当产品；不扩展为全游戏完成 |
 
-## 4. 首城：当前源码与下一步
-- #2505 `d9556557e8a5340b32f95dd1bc603d9caf40c3b7`：完整意图持久化/发出前写入读回，Draft未合；14适用工作流成功，Tasks sync条件跳过。先前artifact上传失败经仅失败job重跑已通过，旧失败保留。
-- #2506 `820799fea6d3ff7ffb19b2b808c81b32befa9283`：修正浅克隆来源的原生存储QA，Draft未合。16工作流仍queued；[native run 43095620263](https://github.com/anitaguptaoffice/sanguo-slg/actions/runs/43095620263) 零job。没有确证的调度原因，不拿旧25case报告替代新来源验收。
-- #2529 `574c31d9615e7093a2bc67759a3c87abd718fde1`：单调状态恢复/冲突识别reducer，Draft未合；两个独审问题已修，源码独审和14适用CI成功。
-- #2529 + 当前main的临时组合 `8e502e7` / tree `dde359b0`：负责人报告Node22.23.4下592文件/3959测试+build通过；完整组合审计未结束。两个账户browser工作流测试的是PR head，不是这个组合。临时commit不是远端可恢复发布保证。
-- 完整V2首城仍缺：实际UI接线、服务端入口、账本/仲裁、事务协调、原子落库、断线与重启恢复、真实PG+浏览器全流程。旧注册流程能创建city，不等于新V2首城合同已完成。
-- DOM PreparedCity 生命周期只是下一步计划，尚无已交付代码；先核对现有DOM/物理账本契约和领域所有权，再注册单域任务。不要重复实现已有codec/Gateway。
-- 不继续尝试曾被拒绝的无关操作；排队修复与合同缺口分别处理。最终合并前重新核对main/head与组合有效性。
+## 4. 首城：当前源码与下一步（2026-11-16 增量）
+- **main 已装配**：`composeFirstCity` 在 `internal/platform/runtime` 默认启用 **mem ledger**（进程内；重启丢首城状态）。客户端选服 UI 支持本机 `ws://127.0.0.1:8080/ws` 下 Discover/Submit，成功后自动进主城。
+- **已合入 backlog**：FIRST-CITY-RELEASE / FIRST-CITY-ENABLE、多数 CLIENT-FIRST-CITY-*；#2506 队列 **first-city-storage** 与 `client/qa/firstCityStorage.browser.mjs` 已在 main。
+- **本地可玩冒烟**：见 [client/qa/FIRST-CITY-PLAYABLE.md](../client/qa/FIRST-CITY-PLAYABLE.md)（真实网关，非 storage peer）。
+- **仍缺（不阻塞 mem 下可进主城）**：SPEC-FIRST-CITY-LEDGER-* PG 矩阵与运行时 PG ledger；服务端重启后首城意图恢复；DOM PreparedCity 等产品卡按合同单开。
+- 历史 Draft 表（#2505/#2529 等）若与 main 重复，以 **main HEAD** 与上述冒烟为准；勿再假定「尚未开放」或 runtime 未接线。
 
 ## 5. 收件箱键盘：完整可恢复实验栈
 原产品 #2310 `c32329193e2eaa1b62a2668a35359237175ef22f` 保持原Draft/HOLD，未改其ref。下面全部为独立 **NEVER MERGE** 验证分支，不是可合入产品。
