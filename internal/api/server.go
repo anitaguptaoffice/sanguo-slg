@@ -174,6 +174,14 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 	return srv
 }
 
+// PlayersPool returns the account/player database pool when the server is PG-backed.
+func (s *Server) PlayersPool() *pgxpool.Pool {
+	if s == nil || s.players == nil {
+		return nil
+	}
+	return s.players.Pool
+}
+
 // BindSession implements shard.Binder after login or enter-server.
 func (s *Server) BindSession(sessionID string, serverID int32, playerID int64, accountID int64) {
 	s.sessions.Bind(sessionID, PlayerContext{
