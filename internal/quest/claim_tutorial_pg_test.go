@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -38,9 +39,8 @@ func (s failClaimSave) UpsertPlayerQuest(ctx context.Context, row PlayerQuestRow
 func claimPGFixture(t *testing.T) (*pgxpool.Pool, *MemCatalog, func(Store) (*Service, *observedContentGranter)) {
 	t.Helper()
 	pool := openQuestTestDB(t)
-	t.Cleanup(pool.Close)
 	applyQuestSchema(t, pool)
-	specDir, err := questTestSpecDir(".")
+	specDir, err := pgfixture.SpecDir()
 	if err != nil {
 		t.Fatal(err)
 	}

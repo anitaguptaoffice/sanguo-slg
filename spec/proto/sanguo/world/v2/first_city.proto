@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package sanguo.world.v2;
+
+option go_package = "github.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/world/v2;worldv2";
+
+// Registered SPEC-CITY-CREATION-WIRE-001; validity: FIRST-CITY-WIRE.md.
+// Neither this candidate nor generated codecs authorize runtime activation.
+message FirstCityEmpty {}
+
+// Output authority; in requests this is only an untrusted equality expectation.
+message FirstCityScope {
+  string realm_id = 1;
+  int32 server_id = 2;
+  int64 player_id = 3;
+  int64 account_id = 4;
+}
+
+message FirstCityPredecessor {
+  oneof value {
+    FirstCityEmpty empty = 1;
+    string rejected_command_id = 2;
+  }
+}
+
+message FirstCityProposal {
+  string command_id = 1;
+  FirstCityPredecessor predecessor = 2;
+  optional string name = 3;
+  optional int32 x = 4;
+  optional int32 y = 5;
+}
+
+// Constructed from authenticated scope and validated typed proposal, not a hash.
+message FirstCityCanonical {
+  FirstCityScope scope = 1;
+  string operation = 2;
+  uint32 operation_version = 3;
+  uint32 canonical_version = 4;
+  FirstCityProposal proposal = 5;
+}
+
+// Server-selected immutable content; a reference never replaces retained bytes.
+message FirstCityTemplateRef {
+  string template_version = 1;
+  string rules_version = 2;
+  string catalog_version = 3;
+  uint32 content_encoding_version = 4;
+  bytes content_sha256 = 5;
+}
+
+// Original insert/readback result; name/x/y are exactly canonical.proposal's.
+message FirstCitySuccess {
+  int64 city_id = 1;
+  int32 server_id = 2;
+  int64 player_id = 3;
+  optional bool is_capital = 4;
+  optional int32 wall_level = 5;
+  optional int32 morale = 6;
+}
+
+enum FirstCityRejectionReason {
+  FIRST_CITY_REJECTION_REASON_UNSPECIFIED = 0;
+  FIRST_CITY_REJECTION_TERRAIN = 1;
+  FIRST_CITY_REJECTION_COORDINATE_OCCUPIED = 2;
+}
+
+message FirstCityRejection {
+  FirstCityRejectionReason reason = 1;
+}
+
+// Exactly one durable state; UNKNOWN and NOT_OBSERVED are never ledger states.
+message FirstCityRecord {
+  FirstCityCanonical canonical = 1;
+  FirstCityTemplateRef template = 2;
+  oneof state {
+    FirstCityEmpty pending = 3;
+    FirstCitySuccess succeeded = 4;
+    FirstCityRejection rejected_no_effect = 5;
+  }
+}
+
+message FirstCityHead {
+  oneof value {
+    FirstCityEmpty empty = 1;
+    FirstCityRecord command = 2;
+  }
+}
+
+enum FirstCityOutcomeKind {
+  FIRST_CITY_OUTCOME_UNSPECIFIED = 0;
+  FIRST_CITY_OUTCOME_COMMAND = 1;
+  FIRST_CITY_OUTCOME_ID_CONTENT_CONFLICT = 2;
+  FIRST_CITY_OUTCOME_HEAD_CONFLICT = 3;
+  FIRST_CITY_OUTCOME_NOT_OBSERVED = 4;
+}
+
+// command concerns requested_command_id; head is the actor's current lineage.
+message FirstCityOutcome {
+  FirstCityScope scope = 1;
+  FirstCityOutcomeKind kind = 2;
+  string requested_command_id = 3;
+  FirstCityRecord command = 4;
+  FirstCityHead head = 5;
+}
+
+// route: world.v2.SubmitFirstCity
+message SubmitFirstCityRequest {
+  FirstCityScope expected_scope = 1;
+  FirstCityProposal proposal = 2;
+}
+
+message SubmitFirstCityResponse {
+  FirstCityOutcome outcome = 1;
+}
+
+// route: world.v2.ContinueFirstCity
+message ContinueFirstCityRequest {
+  FirstCityScope expected_scope = 1;
+  FirstCityProposal proposal = 2;
+}
+
+message ContinueFirstCityResponse {
+  FirstCityOutcome outcome = 1;
+}
+
+// route: world.v2.GetFirstCityResult
+message GetFirstCityResultRequest {
+  FirstCityScope expected_scope = 1;
+  string command_id = 2;
+}
+
+message GetFirstCityResultResponse {
+  FirstCityOutcome outcome = 1;
+}
+
+// route: world.v2.DiscoverFirstCityIntent
+message DiscoverFirstCityIntentRequest {}
+
+message DiscoverFirstCityIntentResponse {
+  FirstCityScope scope = 1;
+  FirstCityHead head = 2;
+}

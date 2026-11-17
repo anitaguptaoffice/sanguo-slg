@@ -1,4 +1,5 @@
 import type { AssetLoader } from "@/engine/AssetLoader";
+import { mountQueueSpeedupIcon } from "@/engine/queueSpeedupIcon";
 
 const BTN_ASSET = "ui.button.primary.v1";
 
@@ -39,6 +40,7 @@ export function skinPrimaryButtons(
 ): void {
   const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>(selector));
   for (const btn of buttons) {
+    mountQueueSpeedupIcon(btn, assets);
     if (btn.dataset.artSkin === "off") continue;
     if (btn.dataset.artSkinned === "1") continue;
     btn.dataset.artSkinned = "1";

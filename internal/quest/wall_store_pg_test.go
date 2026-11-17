@@ -37,7 +37,6 @@ func waitWallWriterBlocked(t *testing.T, pool *pgxpool.Pool, app string) {
 
 func TestPGWallLockedCurrentRowRaces(t *testing.T) {
 	pool := openQuestTestDB(t)
-	t.Cleanup(pool.Close)
 	applyQuestSchema(t, pool)
 	ctx := context.Background()
 	for _, mode := range []string{"receipt_beats_normal", "receipt_beats_stale_accept", "new_claim_beats_normal", "legacy_marker_beats_stale_accept"} {
@@ -107,7 +106,6 @@ func TestPGWallLockedCurrentRowRaces(t *testing.T) {
 
 func TestPGWallRejectMalformedRowsAndGenericMarker(t *testing.T) {
 	pool := openQuestTestDB(t)
-	t.Cleanup(pool.Close)
 	applyQuestSchema(t, pool)
 	ctx := context.Background()
 	st := NewPGStore(pool)

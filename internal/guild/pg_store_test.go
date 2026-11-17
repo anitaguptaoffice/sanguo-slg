@@ -2,16 +2,8 @@ package guild
 
 import (
 	"context"
-	"fmt"
-	"os"
-	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
-
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestPGStoreGuildLifecycle(t *testing.T) {
@@ -49,46 +41,5 @@ func TestPGStoreGuildLifecycle(t *testing.T) {
 	updated, _ := store.GetGuild(ctx, 9, 1)
 	if updated.MemberCount != 1 {
 		t.Fatalf("count=%d", updated.MemberCount)
-	}
-}
-
-func openGuildTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	pool, err := pgxpool.New(context.Background(), url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	schema := fmt.Sprintf("guild_test_%d", time.Now().UnixNano())
-	if _, err := pool.Exec(context.Background(), "CREATE SCHEMA "+pgx.Identifier{schema}.Sanitize()); err != nil {
-		pool.Close()
-		t.Fatal(err)
-	}
-	config, err := pgxpool.ParseConfig(url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	config.ConnConfig.RuntimeParams["search_path"] = schema
-	isolated, err := pgxpool.NewWithConfig(context.Background(), config)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		isolated.Close()
-		_, _ = pool.Exec(context.Background(), "DROP SCHEMA "+pgx.Identifier{schema}.Sanitize()+" CASCADE")
-		pool.Close()
-	})
-	return isolated
-}
-
-func applyGuildSchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	_, file, _, _ := runtime.Caller(0)
-	specDir := filepath.Join(filepath.Dir(file), "..", "..", "spec", "db")
-	if err := db.ApplySpecs(context.Background(), pool, specDir); err != nil {
-		t.Fatal(err)
 	}
 }

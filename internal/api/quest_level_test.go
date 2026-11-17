@@ -84,6 +84,7 @@ func TestTutorialLevelClaimPersistencePG(t *testing.T) {
 }
 
 func TestTutorialLevelFailureDuplicateAndReceiptRecoveryPG(t *testing.T) {
+	isolateWalletDDL(t)
 	s, pool := levelFixture(t)
 	a := levelPlayer(t, s, 1, 7)
 	levelRows(t, pool, a, 1001)
