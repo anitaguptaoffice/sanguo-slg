@@ -1,7 +1,11 @@
 import { createFirstCityIntent } from "@/net/firstCityCanonical";
 import type { FirstCityController } from "@/net/firstCityController";
 import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
-import { ensureFirstCitySession as ensureSession, type FirstCityProbeGateway } from "./firstCityServerSelectEntry";
+import {
+  ensureFirstCitySession as ensureSession,
+  runFirstCityDiscoverProbe,
+  type FirstCityProbeGateway,
+} from "./firstCityServerSelectEntry";
 
 export type FirstCityProposalInput = Readonly<{ name: string; x: number; y: number }>;
 
@@ -74,6 +78,24 @@ export async function runFirstCitySubmitCommand(
 }
 
 /** Submit then, when durable head is still pending, one explicit Continue (effect / ACK-loss recovery). */
+/** After Submit transport UNKNOWN, rediscover durable head then Continue when pending (WS ACK-loss recovery). */
+export async function runFirstCityRecoverAfterSubmitTransportFailure(
+  gateway: FirstCityProbeGateway,
+  loginName: string,
+  password: string,
+  serverId: number,
+  generation?: number,
+): Promise<{ message: string; knowledge: FirstCityKnowledge; controller: FirstCityController }> {
+  const probe = await runFirstCityDiscoverProbe(gateway, loginName, password, serverId, generation);
+  if (canOfferFirstCityContinue(probe.knowledge)) {
+    const continued = await runFirstCityContinueCommand(
+      gateway, probe.controller, probe.knowledge, loginName, password, serverId, generation,
+    );
+    return { message: continued.message, knowledge: continued.knowledge, controller: probe.controller };
+  }
+  return { message: probe.message, knowledge: probe.knowledge, controller: probe.controller };
+}
+
 export async function runFirstCitySubmitThroughTerminal(
   gateway: FirstCityProbeGateway,
   controller: FirstCityController,

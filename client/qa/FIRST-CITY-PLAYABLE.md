@@ -1,6 +1,6 @@
 # 首城 V2 本地可玩冒烟
 
-**边界**：真实 `make dev` 栈（Go 网关 + PG + Vite），非 mock peer。证明注册 → 无城登录 → Discover → Submit（遇 pending 自动一次 Continue）→ 进主城。
+**边界**：真实 `make dev` 栈（Go 网关 + PG + Vite），非 mock peer。证明注册 → 无城登录 → Discover → Submit（遇 pending 自动一次 Continue；传输失败则 Discover 再 Continue）→ 进主城。
 
 ## 前置
 

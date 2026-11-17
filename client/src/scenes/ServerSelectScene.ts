@@ -9,7 +9,7 @@ import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
 import { FirstCityController } from "@/net/firstCityController";
 import {
   canOfferFirstCityContinue, canOfferFirstCitySubmit,
-  runFirstCityContinueCommand, runFirstCitySubmitThroughTerminal,
+  runFirstCityContinueCommand, runFirstCityRecoverAfterSubmitTransportFailure, runFirstCitySubmitThroughTerminal,
 } from "./firstCityServerSelectCommand";
 import {
   canOfferFirstCityResult, runFirstCityGetResultCommand, suggestResultCommandId,
@@ -518,8 +518,32 @@ export class ServerSelectScene implements Scene {
       this.status = `首城 V2 ${kind === "submit" ? "Submit" : "Continue"} 往返完成；尚未进入主城。`;
     } catch {
       if (!this.isCurrent(lifecycle)) return;
-      this.firstCityProbeNotice = failure;
-      this.status = "首城 V2 命令未完成";
+      let handled = false;
+      if (kind === "submit") {
+        try {
+          const recovered = await runFirstCityRecoverAfterSubmitTransportFailure(
+            ctx.gateway, login, password, this.selectedId, generation,
+          );
+          if (generation === ctx.gateway.getSessionGeneration?.()) {
+            this.firstCityController = recovered.controller;
+            this.firstCityKnowledge = recovered.knowledge;
+            this.firstCityProbeNotice = recovered.message;
+            const landed = recovered.knowledge.records.some(record => record.state.kind === "succeeded");
+            if (landed) {
+              this.clearPassword();
+              await this.enterFirstCity(ctx, login, password);
+              handled = true;
+            } else {
+              this.status = "首城 V2 经 Discover 恢复；尚未进入主城。";
+              handled = true;
+            }
+          }
+        } catch { /* keep failure messaging below */ }
+      }
+      if (!handled) {
+        this.firstCityProbeNotice = failure;
+        this.status = "首城 V2 命令未完成";
+      }
     } finally {
       if (this.firstCityProbeNotice === inProgress) this.firstCityProbeNotice = failure;
       this.firstCityProbeInFlight = false;
