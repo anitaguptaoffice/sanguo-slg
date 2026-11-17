@@ -2008,7 +2008,10 @@ export class SocialPanels {
     }).finally(() => {
       if (this.rankRead?.promise === promise) {
         this.rankRead = null;
-        if (current()) this.syncRankRefreshCooldownUi(boardType);
+        if (this.rankPanel === panel && panel.parentElement === this.mount &&
+            version === this.rankReadVersion && this.selectedLeaderboardType() === boardType) {
+          this.syncRankRefreshCooldownUi(boardType);
+        }
       }
     });
     this.rankRead = { boardType, page: targetPage, current, promise };

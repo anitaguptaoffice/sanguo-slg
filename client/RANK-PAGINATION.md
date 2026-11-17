@@ -19,3 +19,6 @@ Actual SocialPanels DOM events run with a mocked gateway in jsdom. Coverage incl
 ## Acceptance hold
 
 Keep Draft until independent final-tree review, full applicable tests/build, exact-head CI and real acceptance pass. Real browser1280/1600 keyboard/mouse, toolbar layout, scrolling and hero-return behavior, plus live gateway paging on both boards, must be checked. Live browser/server acceptance has NOT been run here. No deployment or historical hold release is implied.
+
+Pending reads release only their own mounted controls even when the actor changes.
+Old completions cannot unlock a newer request; the next actor starts at page1.

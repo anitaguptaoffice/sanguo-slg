@@ -158,3 +158,27 @@ describe("rank return after snapshot shrink", () => {
     } finally { s.panels.detach(); }
   });
 });
+
+describe("pagination actor replacement while pending", () => {
+  it("releases old request controls and starts the new actor at page1", async () => {
+    const s = await setup(); try {
+      const pending = deferred(); s.gateway.getLeaderboard.mockReturnValueOnce(pending.promise);
+      s.click("rank-next-page"); await flush(); s.relogin();
+      pending.resolve(page(2)); await flush();
+      expect(s.button("rank-next-page").disabled).toBe(false);
+      expect(s.ranks()).not.toContain("[player 21]");
+      s.click("rank-next-page"); await flush();
+      expect(s.gateway.getLeaderboard).toHaveBeenLastCalledWith(1, 1, 1, 20);
+    } finally { s.panels.detach(); }
+  });
+  it("does not let an old completion unlock a new pending request", async () => {
+    const s = await setup(); try {
+      const old = deferred(), fresh = deferred();
+      s.gateway.getLeaderboard.mockReturnValueOnce(old.promise); s.click("rank-next-page"); await flush();
+      s.relogin(); s.gateway.getLeaderboard.mockReturnValueOnce(fresh.promise);
+      s.select(2); await flush(); old.resolve(page(2)); await flush();
+      expect(s.button("rank-next-page").disabled).toBe(true);
+      fresh.resolve(page(1)); await flush(); expect(s.button("rank-next-page").disabled).toBe(false);
+    } finally { s.panels.detach(); }
+  });
+});
