@@ -88,6 +88,12 @@ func TestWalletBoundaryExternalCreditSpendSettleReload(t *testing.T) {
 
 func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 	t.Helper()
+	if len(fullSchema) > 0 && fullSchema[0] {
+		pgfixture.SkipFullSpecUnderShort(t)
+		if pgfixture.ReuseEnabled() {
+			return pgfixture.WarmPool(t)
+		}
+	}
 	url := os.Getenv("DATABASE_URL")
 	if url == "" {
 		t.Skip("DATABASE_URL not set")
@@ -116,12 +122,6 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 		admin.Close()
 	})
 	if len(fullSchema) > 0 && fullSchema[0] {
-		if testing.Short() {
-			t.Skip("full ApplySpecs PG fixture skipped under -short; use: go test -count=1 -run <TestName> ./internal/api or make test-full")
-		}
-		if pgfixture.ReuseEnabled() {
-			return pgfixture.WarmPool(t)
-		}
 		if err := db.ApplySpecs(ctx, pool, "../../spec/db"); err != nil {
 			t.Fatal(err)
 		}
@@ -140,6 +140,7 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 }
 
 func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
+	isolateWalletDDL(t)
 	ctx := context.Background()
 	pool := walletBoundaryPool(t, true)
 	now := time.Unix(1700000000, 0)

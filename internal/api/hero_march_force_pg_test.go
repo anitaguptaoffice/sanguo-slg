@@ -258,6 +258,7 @@ func TestHeroMarchForcePGInterleavings(t *testing.T) {
 }
 
 func TestHeroMarchForcePGLockedStateAndWriteFailure(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, op := range []string{"detail", "rest"} {
 		for _, absent := range []bool{false, true} {
 			for _, change := range []string{"level", "owner", "write"} {
