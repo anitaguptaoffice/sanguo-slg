@@ -31,12 +31,21 @@ Record exact commit, server version, commands, test/subtest counts, no skips,
 results and cleanup. Missing DATABASE_URL skips the PG test and is **not** a
 pass. A non-PG17 server fails. The wider march suite also needs psql.
 
-## HOLD
+## Local acceptance (2026-11-17)
 
-At authoring time, no usable Go compiler/gofmt/PostgreSQL toolchain is available.
-Compilation, formatting, ordinary/race execution and PG17 acceptance remain
-unverified. Keep this PR and #1980 Draft/HOLD until exact-head independent review,
-applicable ordinary/race tests and required CI pass with real PG17 evidence.
+The original authoring toolchain limitation is resolved. The normal composition
+of original #1980/#1983 with main was independently reviewed at source commit
+3768283694e26857be6442f01cdf5de86cdfb8d2 (tree
+6cba75917dc8d6ef26cd692ea06c3da79386b40c). Owned PostgreSQL 17 ordinary and race
+runs of `./internal/military/...` each passed 217 root tests with no skipped test
+cases, including all five real Resolver/Hub/Restore scenarios above. The parent
+package has no test files; its package-level skip is not a skipped test case.
+The later merge of main cf140156 changes only API files; military source blobs
+remain identical. Formatting is checked separately on the changed Go paths.
+User-authorized local acceptance replaces waiting for online CI; this record
+supersedes the historical toolchain/merge hold, not the runtime limitations.
+
+## Runtime limitations
 The commit failpoint proves a definite server-side rollback, not an uncertain
 network outcome; uncertain commits still require persisted-state reconciliation.
 No activation/deployment or durable return-credit acceptance is claimed.
