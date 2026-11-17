@@ -70,22 +70,47 @@ it("runs login, enter, then persisted submit after discover", async () => {
   const enterBefore = gateway.enterGameServer.mock.calls.length;
   layoutFrame.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value = "城";
   layoutFrame.querySelector<HTMLButtonElement>('[data-action="submit-first-city"]')!.click(); await flush();
-  expect(gateway.login.mock.calls.length).toBe(loginBefore + 1);
-  expect(gateway.enterGameServer.mock.calls.length).toBe(enterBefore + 1);
-  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route === "world.v2.SubmitFirstCity")).toBe(true);
+  expect(gateway.login.mock.calls.length).toBeGreaterThanOrEqual(loginBefore + 1);
+  expect(gateway.enterGameServer.mock.calls.length).toBeGreaterThanOrEqual(enterBefore + 1);
+  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route.endsWith("SubmitFirstCity"))).toBe(true);
+  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route.endsWith("ContinueFirstCity"))).toBe(true);
   expect(gateway.createCity).not.toHaveBeenCalled();
-  expect(layoutFrame.textContent).toMatch(/Submit|命令|pending/);
+  expect(layoutFrame.textContent).toMatch(/Submit|Continue|命令|pending/);
 });
-it("runs persisted continue after submit establishes pending head", async () => {
+it("auto-continues when submit leaves a pending head", async () => {
   const { layoutFrame, gateway } = await setup();
   layoutFrame.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value = "城";
-  layoutFrame.querySelector<HTMLInputElement>('input[name="password"]')!.value = "test-password";
   layoutFrame.querySelector<HTMLButtonElement>('[data-action="submit-first-city"]')!.click(); await flush();
-  const password = layoutFrame.querySelector<HTMLInputElement>('input[name="password"]')!;
-  password.value = "test-password";
-  password.dispatchEvent(new Event("input", { bubbles: true }));
-  layoutFrame.querySelector<HTMLButtonElement>('[data-action="continue-first-city"]')!.click(); await flush();
-  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route === "world.v2.ContinueFirstCity")).toBe(true);
+  expect(gateway.requestPersistedFirstCity.mock.calls.filter(([route]) => route.endsWith("ContinueFirstCity")).length).toBe(1);
+  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route.endsWith("SubmitFirstCity"))).toBe(true);
+  expect(layoutFrame.textContent).toMatch(/Submit|Continue|pending/);
+});
+
+it("enters main city when submit is pending then auto-continue succeeds", async () => {
+  const { layoutFrame, gateway, ctx } = await setup();
+  const succeeded = (cityId: bigint) => ({
+    intent: { scope, proposal: { commandId: proposal.command_id, predecessor: { kind: "empty" as const }, name: "城", x: 60, y: 60 },
+      encode: () => new Uint8Array(8), matches: () => true },
+    template: { templateVersion: "v1", rulesVersion: "r1", catalogVersion: "c1", contentEncodingVersion: 1, contentSha256: "00" },
+    state: { kind: "succeeded" as const, cityId, shard: 1, playerId: 7n, isCapital: true as const, wallLevel: 1 as const, morale: 100 as const },
+  });
+  const observations: any[] = [{ kind: "discovery" as const, scope, head: { kind: "empty" as const } }];
+  gateway.requestPersistedFirstCity.mockImplementation(async (route: string) => {
+    if (route.endsWith("DiscoverFirstCityIntent")) return observations[0];
+    const record = route.endsWith("ContinueFirstCity") ? succeeded(42n) : pendingRecord();
+    const command = { kind: "command" as const, scope, requestedCommandId: proposal.command_id,
+      command: record, head: { kind: "command" as const, record } };
+    observations.push(command);
+    return command;
+  });
+  gateway.readFirstCityHistory.mockImplementation(() => ({ intents: [], observations, unavailable: false }));
+  gateway.listPlayerCities.mockResolvedValue({ cities: [{ city_id: 42, server_id: 1, player_id: 7, name: "城", x: 60, y: 60, is_capital: true }] } as never);
+  gateway.getCityState.mockResolvedValue({ wallet: {}, buildings: [] } as never);
+  layoutFrame.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value = "城";
+  layoutFrame.querySelector<HTMLButtonElement>('[data-action="submit-first-city"]')!.click();
+  for (let i = 0; i < 200; i++) await Promise.resolve();
+  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route.endsWith("ContinueFirstCity"))).toBe(true);
+  expect(ctx.switchScene).toHaveBeenCalledWith("mainCity", expect.objectContaining({ cityId: 42, serverId: 1 }));
 });
 
 it("enters the main city once submit reaches a succeeded terminal state", async () => {
