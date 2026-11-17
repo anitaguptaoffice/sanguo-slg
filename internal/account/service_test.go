@@ -2,18 +2,17 @@ package account
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestRegisterLoginRefreshMultiServer(t *testing.T) {
-	pool := openTestDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openAccountTestDB(t)
 	ctx := context.Background()
 	applyAccountSchema(t, pool)
 
@@ -70,35 +69,6 @@ func TestRegisterLoginRefreshMultiServer(t *testing.T) {
 	}
 	if refreshed.GetSessionExpiresAtMs() != fixed.Add(24*time.Hour).UnixMilli() {
 		t.Fatalf("unexpected expiry %d", refreshed.GetSessionExpiresAtMs())
-	}
-}
-
-func openTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
-	if err != nil {
-		t.Fatalf("db: %v", err)
-	}
-	return pool
-}
-
-func applyAccountSchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	// Login reads player_wallet, which is defined by the domestic migration.
-	for _, name := range []string{"001_account.sql", "003_domestic.sql"} {
-		path := filepath.Join("..", "..", "spec", "db", name)
-		sql, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatalf("read schema %s: %v", name, err)
-		}
-		if _, err := pool.Exec(context.Background(), string(sql)); err != nil {
-			t.Fatalf("apply schema %s: %v", name, err)
-		}
 	}
 }
 

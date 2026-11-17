@@ -655,6 +655,11 @@ export class HeroMailPanels {
   private mailListRpcPage: MailRow[] = [];
   private mailListError = "";
   private mailListLoading = false;
+  private mailReadVersion = 0;
+  private mailMutationVersion = 0;
+  private mailNextOffset = 0;
+  private mailPageTotal = 0;
+  private mailPageOwner: (() => boolean) | null = null;
   private heroListLoadError: string | null = null;
   private heroListFilter: HeroListFilter = "all";
   private heroListSort: HeroListSort = "level_desc";
@@ -786,6 +791,11 @@ export class HeroMailPanels {
   ) {}
 
   attach(): void {
+    ++this.mailReadVersion;
+    this.mailNextOffset = this.mailPageTotal = 0;
+    this.mailPageOwner = null;
+    this.mailListRpcPage = [];
+    this.mails = [];
     this.mailFilter = readMailInboxFilterSession() ?? MAIL_INBOX_FILTER_ALL;
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
@@ -809,6 +819,7 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    ++this.mailReadVersion;
     ++this.persuadeGeneration;
     this.persuadeState = null;
     this.heroesRefreshInflight = false;
@@ -858,8 +869,8 @@ export class HeroMailPanels {
   /** 会话钱包/背包变更时刷新招募可负担对比（与 HUD 快照一致）。 */
   refreshRecruitAffordability(): void {
     if (!this.heroPanel || this.heroPanel.classList.contains("hidden")) return;
-    this.renderTemplateList();
-    this.renderHeroList();
+    this.renderTemplateList(true);
+    this.renderHeroList(true);
     this.syncHotelRecruitUi();
     this.syncCaptiveHeroUi();
     this.syncPersuadeUi();
@@ -1354,6 +1365,14 @@ export class HeroMailPanels {
       !this.heroDetailLoading &&
       !this.heroDetailError &&
       !!this.heroDetail;
+    if (host.open && detailPaneOpen) {
+      const active = host.ownerDocument.activeElement;
+      const summary = host.querySelector<HTMLElement>(":scope > summary");
+      if (active && summary && host.contains(active) && !summary.contains(active)) {
+        // Move focus before native details hides its body; preserve the close decision.
+        summary.focus({ preventScroll: true });
+      }
+    }
     host.open = !detailPaneOpen;
   }
 
@@ -2277,16 +2296,17 @@ export class HeroMailPanels {
           <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-unclaimed-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
         </button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
-        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取全部附件</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取已加载附件</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
       <p class="mail-tab-unread-sweep hidden" data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <p class="mail-daily-hud-combined-sweep hidden" data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <p class="mail-form-error hidden" data-role="mail-form-error" role="alert"></p>
-      <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 含未领附件的邮件可「领取全部」或勾选后批量领取，逐封调用领取并汇总结果。</p>
+      <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 已加载的未领附件可「领取已加载附件」或勾选后批量领取，逐封调用领取并汇总结果。</p>
       <p class="mail-inbox-status" data-role="mail-status"></p>
       <div class="panel-scroll-body" data-role="mail-scroll">
         <ul class="mail-list" data-role="mail-list"></ul>
+        <button type="button" data-action="load-more-mail" hidden>加载更早邮件</button>
         <div class="mail-detail hidden" data-role="mail-detail">
           <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
           <pre class="mail-body" data-role="mail-body"></pre>
@@ -2343,7 +2363,72 @@ export class HeroMailPanels {
     if (loader) remountPanelFilterChips(this.heroPanel, loader);
   }
 
-  private renderHeroList(): void {
+  private detailRefreshCache: { root: HTMLElement; detail: HeroDetail | null; key: string } | null = null;
+
+  private syncDetailEconomy(root: HTMLElement, markup: string): boolean {
+    const fresh = document.createElement("div");
+    fresh.innerHTML = markup;
+    const writes: (() => void)[] = [];
+    const texts = [".recruit-afford-primary", ".recruit-afford-secondary", '[data-role="hero-upgrade-item-gap"]',
+      ".hero-cultivation-item-hint", '[data-role="hero-cultivation-disabled-reason"]',
+      ...["gold-hint", "item-hint", "cd", "disabled-reason"].map(role => `[data-role="hero-largess-${role}"]`)];
+    for (const selector of texts) {
+      const current = [...root.querySelectorAll<HTMLElement>(selector)];
+      const next = [...fresh.querySelectorAll<HTMLElement>(selector)];
+      if (current.length !== next.length) return false;
+      for (let i = 0; i < next.length; i++) {
+        const a = current[i], b = next[i];
+        if (a.tagName !== b.tagName || a.dataset.kind !== b.dataset.kind) return false;
+        writes.push(() => {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          for (const cls of ["hidden", "recruit-cost-deficit", "hero-upgrade-item-gap-warn"]) {
+            a.classList.toggle(cls, b.classList.contains(cls));
+          }
+        });
+      }
+    }
+    for (const role of ["hero-detail-consumable-stack-line", "hero-detail-consumable-stack-residual-line"]) {
+      const a = root.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const b = fresh.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const anchor = root.querySelector('[data-role="recruit-afford-summary"], .hero-attr-table');
+      if (!anchor) return false;
+      writes.push(() => {
+        if (!b) a?.remove();
+        else if (!a) anchor.before(b);
+        else {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          a.classList.toggle("hero-detail-consumable-stack-residual-deficit", b.classList.contains("hero-detail-consumable-stack-residual-deficit"));
+        }
+      });
+    }
+    for (const action of ["hero-use-cultivation-item", "hero-largess-submit"]) {
+      const a = root.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      const b = fresh.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (!a || !b) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.textContent !== b.textContent) a.textContent = b.textContent; });
+    }
+    const select = root.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    const nextSelect = fresh.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    if (!select || !nextSelect || select.options.length !== nextSelect.options.length) return false;
+    for (let i = 0; i < select.options.length; i++) {
+      const a = select.options[i], b = nextSelect.options[i];
+      if (a.value !== b.value) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.text !== b.text) a.text = b.text; });
+    }
+    const controls = 'input[data-action="hero-largess-kind"], button[data-action^="hero-expr-"]';
+    const current = [...root.querySelectorAll<HTMLElement>(controls)];
+    const next = [...fresh.querySelectorAll<HTMLElement>(controls)];
+    if (current.length !== next.length || current.some((a, i) =>
+      ["type", "name"].some(key => a.getAttribute(key) !== next[i].getAttribute(key)) ||
+      a.tagName !== next[i].tagName || a.dataset.action !== next[i].dataset.action ||
+      a.dataset.hours !== next[i].dataset.hours || a.getAttribute("value") !== next[i].getAttribute("value"))) return false;
+    for (const write of writes) write();
+    syncHeroDetailExprControls(root, this.heroExprSubmitState, this.heroDetail,
+      this.sessionEconomy().wallet, this.heroExprHoursPref, Date.now());
+    return true;
+  }
+
+  private renderHeroList(economyRefresh = false): void {
     this.syncHeroUpgradePendingState();
     this.syncHeroRestPendingState();
     this.syncHeroPointPendingState();
@@ -2671,6 +2756,7 @@ export class HeroMailPanels {
       ),
     );
     if (detailEl) {
+      if (!this.selectedHeroId || this.heroDetailCollapsed || this.heroDetailLoading || this.heroDetailError) this.detailRefreshCache = null;
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
         this.syncHeroRecruitHostExpanded();
@@ -2726,7 +2812,7 @@ export class HeroMailPanels {
           this.getHeroLargessNextAtMs(),
           Date.now(),
         );
-        detailEl.innerHTML = renderHeroDetailMarkup(
+        const markup = renderHeroDetailMarkup(
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
@@ -2735,8 +2821,18 @@ export class HeroMailPanels {
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
         );
+        const key = JSON.stringify([this.selectedHeroId, this.heroDetail, this.recruitTemplateForHeroDetail(),
+          this.heroDetailListContext, this.heroUpgradeSubmitState, this.heroForceSubmitState,
+          this.heroPointSubmitState, this.heroExprSubmitState, this.heroCultivationSubmitState,
+          this.heroLargessSubmitState, this.heroLargessGiftMode, this.heroLargessItemCfgId,
+          this.recruitBagReady(), this.recruitBagError]);
+        const cache = this.detailRefreshCache;
+        const synced = economyRefresh && cache?.root === detailEl && cache.detail === this.heroDetail &&
+          cache.key === key && this.syncDetailEconomy(detailEl, markup);
+        if (!synced) detailEl.innerHTML = markup;
+        this.detailRefreshCache = { root: detailEl, detail: this.heroDetail, key };
         this.ensureHeroLargessCooldownTimer();
-        mountHeroDetailBust(
+        if (!synced) mountHeroDetailBust(
           detailEl,
           this.heroDetail?.template_cfg_id,
           this.heroDetail?.template_name || heroTemplateLabel(this.heroDetail?.template_cfg_id),
@@ -2777,7 +2873,7 @@ export class HeroMailPanels {
     return mergeRecruitTemplateOwnership(this.recruitTemplates, this.heroes);
   }
 
-  private renderTemplateList(): void {
+  private renderTemplateList(economyRefresh = false): void {
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
@@ -2957,13 +3053,13 @@ export class HeroMailPanels {
     }
     const pickId = this.selectedTemplateId || displayTemplates[0]?.template_cfg_id || 0;
     if (pickId) sel.value = String(pickId);
-    this.applyTemplateSelection(pickId);
+    this.applyTemplateSelection(pickId, { economyRefresh });
     applyRecruitScrollAnchorSession(this.heroPanel);
   }
 
   private applyTemplateSelection(
     templateCfgId: number,
-    opts?: { skipHeroListRender?: boolean },
+    opts?: { skipHeroListRender?: boolean; economyRefresh?: boolean },
   ): void {
     const displayTemplates = this.recruitTemplatesForDisplay();
     const row = displayTemplates.find((t) => t.template_cfg_id === templateCfgId);
@@ -3000,7 +3096,7 @@ export class HeroMailPanels {
     });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
-    if (!opts?.skipHeroListRender) this.renderHeroList();
+    if (!opts?.skipHeroListRender) this.renderHeroList(opts?.economyRefresh);
   }
 
   private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
@@ -3192,6 +3288,24 @@ export class HeroMailPanels {
   }
 
   private patchMailInboxSnapshot(mailId: number, patch: MailRow): void {
+    ++this.mailMutationVersion;
+    const previous = this.mailListRpcPage.find((m) => m.mail_id === mailId);
+    if (previous) {
+      const next = { ...previous, ...patch };
+      if (this.mailFilter === MAIL_INBOX_FILTER_UNREAD && mailIsUnread(previous) && !mailIsUnread(next)) {
+        this.mailNextOffset = Math.max(0, this.mailNextOffset - 1);
+        this.mailPageTotal = Math.max(0, this.mailPageTotal - 1);
+        ++this.mailReadVersion; // A pending unread page used the pre-read offset.
+        this.mailListLoading = false;
+        this.mailListRpcPage = this.mailListRpcPage.filter((m) => m.mail_id !== mailId);
+      } else {
+        this.mailListRpcPage = this.mailListRpcPage.map((m) => m.mail_id === mailId ? next : m);
+      }
+    }
+    if (!previous && this.mailListLoading) {
+      // Refresh discarded the old cache: restart after the mutation, not from a pre-read snapshot.
+      void this.refreshMail();
+    }
     this.mailInboxSnapshot = upsertMailRow(this.mailInboxSnapshot, { ...patch, mail_id: mailId });
     this.setMailFilterButtons();
   }
@@ -3211,6 +3325,8 @@ export class HeroMailPanels {
   }
 
   private async refreshMailInboxSnapshot(): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.mailPanel, version = this.mailReadVersion, mutation = this.mailMutationVersion;
     const sid = this.serverId();
     if (!sid) {
       this.mailInboxSnapshot = [];
@@ -3223,6 +3339,8 @@ export class HeroMailPanels {
         pageSize: 50,
         pageOffset: 0,
       })) as { mails?: MailRow[] };
+      if (!actor() || this.mailPanel !== panel || panel.parentElement !== this.mount ||
+          version !== this.mailReadVersion || mutation !== this.mailMutationVersion) return;
       this.mailInboxSnapshot = res.mails ?? [];
       this.setMailFilterButtons();
     } catch {
@@ -3231,6 +3349,11 @@ export class HeroMailPanels {
   }
 
   private renderMailList(): void {
+    const more = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="load-more-mail"]');
+    if (more) {
+      more.hidden = this.mailNextOffset >= this.mailPageTotal;
+      more.disabled = this.mailListLoading;
+    }
     const ul = this.mailPanel.querySelector<HTMLElement>('[data-role="mail-list"]');
     const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
     const detailWrap = this.mailPanel.querySelector('[data-role="mail-detail"]');
@@ -4587,7 +4710,21 @@ export class HeroMailPanels {
     return this.refreshMailInner();
   }
 
-  private async refreshMailInner(): Promise<void> {
+  private async refreshMailInner(append = false): Promise<void> {
+    if (append && !this.mailPageOwner?.()) append = false;
+    if (append && (this.mailListLoading || this.mailNextOffset >= this.mailPageTotal)) return;
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.mailPanel;
+    const version = ++this.mailReadVersion;
+    const filter = this.mailFilter;
+    const current = () => actor() && this.mailPanel === panel && panel.parentElement === this.mount &&
+      version === this.mailReadVersion && filter === this.mailFilter;
+    if (!append) {
+      this.mailNextOffset = this.mailPageTotal = 0;
+      this.mailListRpcPage = [];
+      if (this.mailPageOwner && !this.mailPageOwner()) this.mails = [];
+    }
+    const offset = this.mailNextOffset;
     const sid = this.serverId();
     this.onStatus("拉取邮件…");
     this.mailListError = "";
@@ -4598,21 +4735,30 @@ export class HeroMailPanels {
       const res = (await this.gateway.listPlayerMail(sid, {
         filter: rpcFilter,
         pageSize: 50,
+        ...(append ? { pageOffset: offset } : {}),
       })) as {
         mails?: MailRow[];
         total_count?: number;
       };
+      if (!current()) return;
       const page = res.mails ?? [];
-      this.mailListRpcPage = [...page];
-      this.mails = this.applyMailListClientFilters(page);
+      this.mailNextOffset = offset + page.length;
+      this.mailPageTotal = page.length ? (res.total_count ?? this.mailNextOffset) : this.mailNextOffset;
+      this.mailPageOwner = actor;
+      this.mailListRpcPage = [...new Map([...(append ? this.mailListRpcPage : []), ...page].map((m) => [m.mail_id, m])).values()];
+      this.mails = this.applyMailListClientFilters(this.mailListRpcPage);
       if (rpcFilter === MAIL_INBOX_FILTER_ALL) {
-        this.mailInboxSnapshot = [...page];
+        this.mailInboxSnapshot = [...this.mailListRpcPage];
       } else {
         void this.refreshMailInboxSnapshot();
       }
+      const unreadMutation = this.mailMutationVersion;
       const unreadSnap = await this.pullMailUnreadSnapshot();
-      this.mailUnreadTotal = unreadSnap.count;
-      this.mailUnreadFirstId = unreadSnap.firstId;
+      if (!current()) return;
+      if (unreadMutation === this.mailMutationVersion) {
+        this.mailUnreadTotal = unreadSnap.count;
+        this.mailUnreadFirstId = unreadSnap.firstId;
+      }
       this.setMailFilterButtons();
       if (!this.selectedMailId && this.mails[0]?.mail_id) {
         this.selectedMailId = this.mails[0].mail_id!;
@@ -4636,22 +4782,36 @@ export class HeroMailPanels {
       this.applyMailBadgeCountsFromSnapshot();
       if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
+      if (!current()) return;
       this.mailListError = (e as Error).message || "加载收件箱失败，请稍后重试";
-      this.mails = [];
+      if (!append) this.mails = [];
       this.renderMailList();
       this.onStatus(this.mailListError);
     } finally {
-      this.mailListLoading = false;
-      this.renderMailList();
+      // Only this request may release its loading flag, including after actor
+      // invalidation. An older request must never release a newer one's flag.
+      if (version === this.mailReadVersion && this.mailPanel === panel && panel.parentElement === this.mount) {
+        this.mailListLoading = false;
+        if (!actor()) {
+          this.mails = [];
+          this.mailListRpcPage = [];
+          this.mailInboxSnapshot = [];
+          this.selectedMailId = 0;
+        }
+        this.renderMailList();
+      }
     }
   }
 
   private async markMailRead(mailId: number): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession), panel = this.mailPanel;
+    const current = () => actor() && this.mailPanel === panel && panel.parentElement === this.mount;
     const sid = this.serverId();
     const row = this.mails.find((m) => m.mail_id === mailId);
     if (!row || !mailIsUnread(row)) return;
     try {
       const res = (await this.gateway.markPlayerMailRead(sid, mailId)) as { mail?: MailRow };
+      if (!current()) return;
       if (res.mail) {
         this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
         if (mailIsUnread(row)) {
@@ -4671,7 +4831,7 @@ export class HeroMailPanels {
       }
       if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
-      this.onStatus((e as Error).message);
+      if (current()) this.onStatus((e as Error).message);
     }
   }
 
@@ -4685,7 +4845,7 @@ export class HeroMailPanels {
     await this.markMailRead(mailId);
   }
 
-  private async syncBagFromServer(): Promise<BagStack[] | null> {
+  private async syncBagFromServer(current = captureActor(this.gateway, this.getSession)): Promise<BagStack[] | null> {
     const session = this.getSession();
     if (!session) return null;
     const sid = this.serverId();
@@ -4693,6 +4853,7 @@ export class HeroMailPanels {
       const bagRes = (await this.gateway.listPlayerBag(sid)) as {
         items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      if (!current()) return null;
       const bag = bagFromListPlayerBagResponse(bagRes.items);
       this.onSessionPatch({ bag });
       return bag;
@@ -4715,6 +4876,8 @@ export class HeroMailPanels {
   > {
     const sid = this.serverId();
     const mailBeforeClaim = this.mails.find((m) => m.mail_id === mailId);
+    const current = captureActor(this.gateway, this.getSession);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
@@ -4725,13 +4888,15 @@ export class HeroMailPanels {
         wallet_after?: MainCitySession["wallet"];
         bag_items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      const freshAssets = settle();
+      if (!current()) return { ok: false, message: "" };
       const session = this.getSession();
       const claimPatch = session
         ? applyMailClaimResult(this.mails, mailId, res, session)
         : null;
       const nextMails = claimPatch?.mails ?? syncMailRowAfterClaim(this.mails, mailId, res);
       this.applyMailsAfterClaim(nextMails, mailId);
-      if (claimPatch) {
+      if (claimPatch && freshAssets) {
         this.onSessionPatch({ bag: claimPatch.bag, wallet: claimPatch.wallet });
       }
       this.mailBatchSelected.delete(mailId);
@@ -4740,11 +4905,14 @@ export class HeroMailPanels {
         syncMailRowAfterClaim([], mailId, res).find((m) => m.mail_id === mailId);
       if (updatedRow) {
         this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow, res.granted, mailBeforeClaim);
+        this.patchMailInboxSnapshot(mailId, updatedRow);
       }
       this.applyMailBadgeCountsFromSnapshot();
       return { ok: true, granted: res.granted };
     } catch (e) {
       return { ok: false, message: gatewayErrorMessage(e) };
+    } finally {
+      settle(); // Errors also invalidate reads, even after the panel is hidden.
     }
   }
 
@@ -4760,15 +4928,19 @@ export class HeroMailPanels {
     this.claimMailInflight = mailId;
     this.renderMailList();
     this.onStatus(`领取附件 #${mailId}…`);
+    const current = captureActor(this.gateway, this.getSession);
     const step = await this.claimMailAttachmentsForId(mailId);
     let pulseMailId = 0;
     try {
+      if (!current()) return;
       if (step.ok) {
         pulseMailId = mailId;
         this.rememberMailClaimInlineSuccess(mailId, step.granted);
         this.renderMailList();
-        await this.syncBagFromServer();
+        await this.syncBagFromServer(current);
+        if (!current()) return;
         const snap = await this.pullMailUnreadSnapshot();
+        if (!current()) return;
         this.mailUnreadTotal = snap.count;
         this.mailUnreadFirstId = snap.firstId;
         this.applyMailBadgeCountsFromSnapshot();
@@ -4781,8 +4953,10 @@ export class HeroMailPanels {
       }
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      if (current()) {
+        this.renderMailList();
+        if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      }
     }
   }
 
@@ -4807,7 +4981,7 @@ export class HeroMailPanels {
       return;
     }
     const ordered = selectAllUnclaimedMailIds(this.mails);
-    await this.runSequentialMailClaims(ordered, `领取全部附件 ${ordered.length} 封（逐封）…`);
+    await this.runSequentialMailClaims(ordered, `领取已加载附件 ${ordered.length} 封（逐封）…`);
   }
 
   private async runSequentialMailClaims(ordered: number[], statusPrefix: string): Promise<void> {
@@ -4819,16 +4993,21 @@ export class HeroMailPanels {
     this.onStatus(statusPrefix);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     const pulseMailIds: number[] = [];
+    const current = captureActor(this.gateway, this.getSession);
     try {
       for (const mailId of ordered) {
+        if (!current()) return;
         const step = await this.claimMailAttachmentsForId(mailId);
+        if (!current()) return;
         attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
         if (step.ok) pulseMailIds.push(mailId);
         else this.mailBatchClaimFailedIds.add(mailId);
         this.renderMailList();
       }
-      await this.syncBagFromServer();
+      await this.syncBagFromServer(current);
+      if (!current()) return;
       const snap = await this.pullMailUnreadSnapshot();
+      if (!current()) return;
       this.mailUnreadTotal = snap.count;
       this.mailUnreadFirstId = snap.firstId;
       this.applyMailBadgeCountsFromSnapshot();
@@ -4840,8 +5019,10 @@ export class HeroMailPanels {
       this.onStatus(summary.summaryText);
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      if (current()) {
+        this.renderMailList();
+        for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      }
     }
   }
 
@@ -5183,6 +5364,7 @@ export class HeroMailPanels {
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-mail") void this.refreshMail();
+    if (a === "load-more-mail") void this.refreshMailInner(true);
     if (a === "mail-filter-all") {
       this.mailFilter = MAIL_INBOX_FILTER_ALL;
       writeMailInboxFilterSession(this.mailFilter);
