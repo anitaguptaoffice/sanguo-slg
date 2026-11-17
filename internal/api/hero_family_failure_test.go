@@ -51,6 +51,7 @@ func familyFailureFixture(t *testing.T, op string) (*pgxpool.Pool, *Server, *com
 }
 
 func TestFamilyAtomicPGAllWriteFailuresRollback(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, tc := range []struct{ op, stage, sql string }{
 		{"accept", "consume", `CREATE TRIGGER fail AFTER DELETE ON player_hero_coming FOR EACH ROW EXECUTE FUNCTION fail_family()`},
 		{"accept", "status", `CREATE TRIGGER fail AFTER UPDATE ON player_hero FOR EACH ROW EXECUTE FUNCTION fail_family()`},
@@ -157,6 +158,7 @@ func TestFamilyAtomicPGLostAcknowledgementNeverReplaysOrPublishes(t *testing.T) 
 }
 
 func TestFamilyAtomicPGPostcommitFailureAndReloadRemainSuccess(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, op := range []string{"summon", "befriend", "persuade"} {
 		t.Run(op, func(t *testing.T) {
 			pool, s, pkt := familyFailureFixture(t, op)

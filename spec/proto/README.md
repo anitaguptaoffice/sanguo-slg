@@ -20,10 +20,13 @@ H5 客户端经 **WebSocket 二进制帧** 收发 **Protobuf 3** 消息。契约
 | `sanguo/shop/v1/` | 商城 | `ListShopShelf`、`PurchaseShopOffer` |
 | `sanguo/gm/v1/` | 运营 GM | `LookupPlayer`、`GrantReward`、`MutePlayer`、`KickPlayer` |
 
+首次建城 V2 使用独立 [wire 契约](FIRST-CITY-WIRE.md) 与 `sanguo.world.v2`。
+旧 `world.v1.CreateCity` 的协议及合法多城语义不变。
+
 ## WebSocket 约定
 
 1. 一帧一条 `ClientPacket`（上行）；服务端回一条 `ServerPacket`（下行）。
-2. `ClientPacket.route` 与请求消息类型一一对应，命名：`<domain>.v1.<Method>`，例如 `account.v1.Login`。
+2. `ClientPacket.route` 与请求消息类型一一对应，命名：`<domain>.v<version>.<Method>`，例如 `account.v1.Login`。
 3. `ClientPacket.payload` 为对应 `*Request` 的 protobuf 序列化；鉴权会话放在 `session_id`（登录接口除外）。进服后 `server_id` 与账号会话绑定，后续请求应携带并与服务端校验一致。
 4. 统一响应包 **`ServerPacket`**：`code` / `msg` / `data`。
    - `code == 0` 表示成功；`data` 为对应 `*Response` 的序列化。
