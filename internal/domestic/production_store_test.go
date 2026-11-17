@@ -7,16 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func productionTestPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	skipDomesticPGUnderShort(t)
-	if pgfixture.ReuseEnabled() {
-		return pgfixture.WarmPool(t)
-	}
 	admin := openDomesticTestDB(t)
 	schema := fmt.Sprintf("production_%d", time.Now().UnixNano())
 	if _, err := admin.Exec(context.Background(), "CREATE SCHEMA "+schema); err != nil {

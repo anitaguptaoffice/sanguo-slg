@@ -170,11 +170,20 @@ try {
     }
   });
   for (const fault of ['getter', 'read', 'write', 'quota', 'noop', 'corrupt']) {
-    for (const action of ['SubmitFirstCity', 'ContinueFirstCity', 'GetFirstCityResult']) await check(`barrier-${action}-${fault}`, async () => {
+    for (const action of ['SubmitFirstCity', 'ContinueFirstCity']) await check(`barrier-${action}-${fault}`, async () => {
       const page = await boot(), before = peer.effects.length; await page.evaluate(fault => qa.fault = fault, fault);
       assert.match(await call(page, action), /UNKNOWN/);
       await page.evaluate(() => qa.fault = ''); assert.equal((await history(page)).unavailable, true);
       assert.match(await call(page, action), /UNKNOWN/); assert.equal(peer.effects.length, before);
+      assert.deepEqual((await history(page)).intents.map(x => x.proposal.commandId), [ids[0]]);
+    });
+    await check(`barrier-GetFirstCityResult-${fault}`, async () => {
+      const page = await boot(), before = peer.effects.length;
+      assert.equal(await call(page, 'SubmitFirstCity'), 'command');
+      await page.evaluate(fault => qa.fault = fault, fault);
+      assert.match(await call(page, 'GetFirstCityResult'), /UNKNOWN/);
+      await page.evaluate(() => qa.fault = ''); assert.equal((await history(page)).unavailable, true);
+      assert.match(await call(page, 'GetFirstCityResult'), /UNKNOWN/); assert.equal(peer.effects.length, before);
       assert.deepEqual((await history(page)).intents.map(x => x.proposal.commandId), [ids[0]]);
     });
   }

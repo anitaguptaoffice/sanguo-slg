@@ -33,7 +33,15 @@ func applyDomesticSchema(t *testing.T, pool *pgxpool.Pool) {
 		t.Fatal(err)
 	}
 	if schema == pgfixture.DefaultWarmSchema {
-		return
+		var n int
+		if err := pool.QueryRow(context.Background(),
+			`SELECT count(*)::int FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+			 WHERE n.nspname=current_schema() AND c.relkind='r' AND c.relname='city_production_checkpoint'`).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		if n == 1 {
+			return
+		}
 	}
 	for _, name := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "007_domestic_production_checkpoint.sql", "m4_008_work_queue_id_sequence.sql"} {
 		specDir, err := pgfixture.SpecDir()
