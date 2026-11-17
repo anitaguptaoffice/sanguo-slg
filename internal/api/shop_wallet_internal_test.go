@@ -13,6 +13,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -87,6 +88,12 @@ func TestWalletBoundaryExternalCreditSpendSettleReload(t *testing.T) {
 
 func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 	t.Helper()
+	if len(fullSchema) > 0 && fullSchema[0] {
+		pgfixture.SkipFullSpecUnderShort(t)
+		if pgfixture.ReuseEnabled() {
+			return pgfixture.WarmPool(t)
+		}
+	}
 	url := os.Getenv("DATABASE_URL")
 	if url == "" {
 		t.Skip("DATABASE_URL not set")
@@ -104,7 +111,7 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg.ConnConfig.RuntimeParams["search_path"] = schema
+	cfg.ConnConfig.RuntimeParams["search_path"] = schema + ",pg_catalog"
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -133,6 +140,7 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 }
 
 func TestWalletBoundaryRecruitCommitFailureDoesNotQueue(t *testing.T) {
+	isolateWalletDDL(t)
 	ctx := context.Background()
 	pool := walletBoundaryPool(t, true)
 	now := time.Unix(1700000000, 0)

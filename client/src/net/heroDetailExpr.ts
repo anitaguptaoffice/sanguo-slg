@@ -150,11 +150,19 @@ export function applyHeroExprFinishToDetail(
   res: HeroExprFinishResult,
 ): HeroDetail {
   const base = detail ?? { hero_id: res.hero_id };
+  // Current gameplay only increases cumulative EXP; a lower total is an older settlement.
+  const exp = base.hero_id === res.hero_id && base.exp != null &&
+    Number.isFinite(base.exp) && Number.isFinite(res.exp) && res.exp < base.exp ? base.exp : res.exp;
   return {
     ...base,
     hero_id: res.hero_id,
     status: res.status,
-    exp: res.exp,
+    exp,
+    // Settlement does not change level; preserve its threshold using authoritative total EXP.
+    // A repeated response has a zero delta, unlike adding exp_gained again.
+    exp_current: base.hero_id === res.hero_id && base.exp != null && base.exp_current != null &&
+      Number.isFinite(base.exp) && Number.isFinite(base.exp_current) && Number.isFinite(exp)
+      ? base.exp_current + (exp - base.exp) : base.exp_current,
     expr_ends_at_ms: undefined,
     expr_hours: undefined,
   };
@@ -209,6 +217,7 @@ export function heroExprBeginDisabledReason(
 
 export function heroExprCancelDisabledReason(detail: HeroDetail | null | undefined): string {
   if (!detail?.hero_id) return "请先选择将领";
+  if (detail.status == null && !isHeroExprInProgress(detail)) return "当前详情未提供历练状态，无法取消";
   if (!isHeroExprInProgress(detail)) return "将领未在历练中";
   return "";
 }
@@ -218,6 +227,9 @@ export function heroExprFinishDisabledReason(
   nowMs: number,
 ): string {
   if (!detail?.hero_id) return "请先选择将领";
+  // A missing session snapshot is not proof of idleness or of an unfinished training.
+  if (heroExprEndsAtMs(detail) == null &&
+    (detail.status == null || detail.status === HERO_STATUS_EXPR)) return "";
   if (!isHeroExprInProgress(detail)) return "将领未在历练中";
   if (!heroExprCompleteNow(detail, nowMs)) {
     const ends = heroExprEndsAtMs(detail);
@@ -232,6 +244,7 @@ export function heroExprFasterDisabledReason(
   nowMs: number,
 ): string {
   if (!detail?.hero_id) return "请先选择将领";
+  if (detail.status == null && !isHeroExprInProgress(detail)) return "当前详情未提供历练状态，无法加速";
   if (!isHeroExprInProgress(detail)) return "将领未在历练中";
   if (heroExprCompleteNow(detail, nowMs)) return "历练已结束，请点完成领取";
   return "";
@@ -304,8 +317,12 @@ export function formatHeroExprStatusLine(
     if (ends != null && nowMs >= ends) {
       return `历练已结束 · ${hrs}小时 · 可领取经验`;
     }
-    return `历练中 · ${hrs}小时`;
+    return "历练中 · 结束时间未知，领取时由服务器核实";
   }
+  if (detail.status == null) {
+    return "当前详情未提供历练状态。若此前已开始历练且已到期，可尝试领取，由服务器核实。";
+  }
+  if (detail.status !== HERO_STATUS_IDLE) return `当前状态：${formatHeroStatusLabel(detail.status)}`;
   const h = normalizeHeroExprHours(hoursPref);
   const cost = heroExprGoldCost(detail.level, h);
   const reward = heroExprRewardExp(detail.level, h);
@@ -375,6 +392,22 @@ export function formatHeroExprGatewayErrorFromUnknown(err: unknown): string {
   return raw;
 }
 
+/** Finish errors do not imply rollback: saving EXP and removing the session are separate. */
+export function formatHeroExprFinishError(err: unknown): string {
+  if (err instanceof Error && (err as Error & { code?: number }).code === 10001) {
+    if (err.message === "hero: expr not finished yet") {
+      return "服务器确认历练尚未到期，本次未发放经验。请稍后手动领取。";
+    }
+    if (err.message === "hero: hero is not in training") {
+      return "服务器当前未找到进行中的历练。请刷新详情核对经验；这不能确认之前的领取结果。";
+    }
+    if (err.message === "hero: expr session not found") {
+      return "未找到可结算的历练记录，请刷新详情核对经验。若此前已开始历练但仍无法领取，请保留此提示。";
+    }
+  }
+  return "本次领取结果暂无法确认，经验可能已经到账。请勿连续提交；可刷新详情核对当前经验，但不能据此确认上次请求是否完成。";
+}
+
 export function renderHeroDetailExprMarkup(
   submitState: UseConsumableSubmitState,
   detail?: HeroDetail | null,
@@ -409,7 +442,7 @@ export function renderHeroDetailExprMarkup(
   const showFasterReason = fasterReason && fasterDisabled && !inflight && inExpr;
   const beginLabel = inflight ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "开始历练";
   const cancelLabel = inflight ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "取消历练";
-  const finishLabel = inflight ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "完成历练";
+  const finishLabel = inflight ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "领取已到期历练";
   const fasterLabel = inflight ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "加速完成";
   return `<section class="hero-detail-expr" aria-label="将领历练">
     <p class="hero-expr-summary" data-role="hero-expr-summary">${summary}</p>
@@ -417,7 +450,7 @@ export function renderHeroDetailExprMarkup(
     <div class="hero-expr-action-row">
       <button type="button" data-action="hero-expr-begin"${beginDisabled || inExpr ? " disabled" : ""}>${beginLabel}</button>
       <button type="button" data-action="hero-expr-cancel"${cancelDisabled || !inExpr ? " disabled" : ""}>${cancelLabel}</button>
-      <button type="button" data-action="hero-expr-finish"${finishDisabled || !inExpr ? " disabled" : ""}>${finishLabel}</button>
+      <button type="button" data-action="hero-expr-finish"${finishDisabled ? " disabled" : ""}>${finishLabel}</button>
       <button type="button" data-action="hero-expr-faster"${fasterDisabled || !inExpr ? " disabled" : ""}>${fasterLabel}</button>
     </div>
     <p class="march-form-error-sibling hero-expr-disabled-reason${showBeginReason ? "" : " hidden"}" data-role="hero-expr-begin-disabled-reason">${beginReason}</p>
@@ -493,9 +526,9 @@ export function syncHeroDetailExprControls(
   }
   const finishBtn = panelRoot?.querySelector<HTMLButtonElement>('[data-action="hero-expr-finish"]');
   if (finishBtn) {
-    finishBtn.disabled = heroExprFinishDisabled(submitState, detail, now) || !inExpr;
+    finishBtn.disabled = heroExprFinishDisabled(submitState, detail, now);
     finishBtn.textContent =
-      submitState === "submitting" ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "完成历练";
+      submitState === "submitting" ? USE_CONSUMABLE_SUBMIT_INFLIGHT_LABEL : "领取已到期历练";
   }
   const fasterBtn = panelRoot?.querySelector<HTMLButtonElement>('[data-action="hero-expr-faster"]');
   if (fasterBtn) {
