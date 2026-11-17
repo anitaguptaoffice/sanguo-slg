@@ -4,9 +4,10 @@ import { beginAssetRead, claimQuestWithAssets, refreshQuestAssets, QUEST_ASSETS_
 import { bagUseCapabilityHint } from "@/net/bagUseCapability";
 import { captureActor } from "@/net/actorContext";
 import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   bagStackQuantity,
   type BagStack,
@@ -179,6 +180,7 @@ export class ContentPanels {
   private bagBatchCheckedSlots = new Set<number>();
   private shopReadVersion = 0;
   private shopState?: { current: () => boolean; busy: string; needsReload: boolean; unknown: boolean; outcome: string; warning: string };
+  private shopSettlement: { current: () => boolean; done: Promise<void>; release: () => void } | null = null;
   private shopListLoading = false;
   private shopListError: string | null = null;
   private bagListLoading = false;
@@ -198,6 +200,7 @@ export class ContentPanels {
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
     private readonly onShopMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
+    private readonly artAssets?: Pick<AssetLoader, "getImageForAsset">,
   ) {}
 
   setBagReturnHeroDetailHandler(handler: (heroId: number) => void): void {
@@ -227,6 +230,8 @@ export class ContentPanels {
   }
 
   detach(): void {
+    this.shopSettlement?.release();
+    this.shopSettlement = null;
     this.shopState = undefined;
     ++this.shopReadVersion;
     this.questPanel?.remove();
@@ -762,11 +767,38 @@ export class ContentPanels {
   private renderQuestList(): void {
     const ul = this.questPanel.querySelector<HTMLElement>('[data-role="quest-list"]');
     if (!ul) return;
+    const active = this.questPanel.ownerDocument.activeElement;
+    const focusedId = !this.questPanel.classList.contains("hidden") &&
+      active instanceof HTMLButtonElement && ul.contains(active) && active.dataset.action === "select-quest"
+      ? active.dataset.questId : undefined;
     ul.innerHTML = "";
     for (const q of this.questRows) {
       const li = document.createElement("li");
       li.textContent = formatQuestLine(q);
+      const id = q.quest_cfg_id;
+      if (typeof id === "number" && Number.isSafeInteger(id) && id > 0) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.action = "select-quest";
+        button.dataset.questId = String(id);
+        button.setAttribute("aria-label", `选择任务 #${id}`);
+        li.append(" ", button);
+      }
       ul.appendChild(li);
+    }
+    this.syncQuestSelection();
+    if (focusedId && this.questPanel.isConnected) {
+      const target = Array.from(ul.querySelectorAll<HTMLButtonElement>('[data-action="select-quest"]'))
+        .find(button => button.dataset.questId === focusedId);
+      target?.focus({ preventScroll: true });
+    }
+  }
+
+  private syncQuestSelection(): void {
+    for (const button of this.questPanel.querySelectorAll<HTMLButtonElement>('[data-action="select-quest"]')) {
+      const selected = Number(button.dataset.questId) === this.selectedQuestId;
+      button.setAttribute("aria-pressed", String(selected));
+      button.textContent = selected ? "已选" : "选择";
     }
   }
 
@@ -827,6 +859,20 @@ export class ContentPanels {
       const nameSpan = document.createElement("span");
       nameSpan.className = "bag-stack-name";
       nameSpan.textContent = name;
+      const itemId = row.item_cfg_id;
+      if (Number.isSafeInteger(itemId) && (itemId ?? 0) > 0 &&
+          !this.bagPanel.closest("[data-art-skin='off']")) {
+        const image = this.artAssets?.getImageForAsset(`item.icon.${itemId}.v1`);
+        if (image?.img.src) {
+          const icon = document.createElement("img");
+          icon.className = "bag-item-icon";
+          icon.alt = "";
+          icon.setAttribute("aria-hidden", "true");
+          icon.onerror = () => icon.remove();
+          icon.src = image.img.src;
+          nameSpan.prepend(icon);
+        }
+      }
       const qtySpan = document.createElement("span");
       qtySpan.className = "bag-stack-qty";
       qtySpan.textContent = formatBagStackQty(row.quantity);
@@ -1071,9 +1117,25 @@ export class ContentPanels {
   }
 
   private async refreshBag(): Promise<void> {
+    const settlement = this.shopSettlement;
+    if (settlement?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const panel = this.bagPanel;
+      const intent = captureCenterPanelIntent(panel);
+      const version = ++this.bagReadVersion;
+      this.bagListLoading = true;
+      this.renderBagList();
+      // A read must not supersede a purchase's full wallet receipt before it arrives.
+      await settlement.done;
+      if (!actor() || !intent() || this.bagPanel !== panel || panel.parentNode !== this.mount ||
+        version !== this.bagReadVersion) return;
+    }
     const state = this.bagUseContext();
     if (state.needsReload) {
       if (this.useConsumableSubmitState === "submitting") return;
+      // Recovery also owns loading left by an abandoned purchase wait on an earlier opening.
+      this.bagListLoading = false;
+      this.renderBagList();
       this.setUseConsumableSubmitState("submitting");
       try {
         if (!await refreshQuestAssets(this.gateway, this.getSession, this.onSessionPatch, state.current)) return;
@@ -1360,61 +1422,71 @@ export class ContentPanels {
       this.syncShopPurchaseSubmit();
       return;
     }
-    state.busy = "buy";
-    state.needsReload = true;
-    state.unknown = false;
-    state.outcome = state.warning = "";
-    this.shopPurchaseFlash.delete(offerId);
-    this.shopLastGrantedItemCfgId = 0;
-    const receiptCurrent = beginAssetRead(this.gateway); // Capture freshness before dispatch.
-    ++this.shopReadVersion;
-    this.renderShopList();
-    let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
+    let release!: () => void;
+    const done = new Promise<void>(resolve => { release = resolve; });
+    const settlement = { current: state.current, done, release };
+    this.shopSettlement = settlement;
     try {
-      res = await this.gateway.purchaseShopOffer(this.serverId(), offerId, purchaseCount) as typeof res;
-    } catch (e) {
+      state.busy = "buy";
+      state.needsReload = true;
+      state.unknown = false;
+      state.outcome = state.warning = "";
+      this.shopPurchaseFlash.delete(offerId);
+      this.shopLastGrantedItemCfgId = 0;
+      const receiptCurrent = beginAssetRead(this.gateway); // Capture freshness before dispatch.
+      ++this.shopReadVersion;
+      this.renderShopList();
+      let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
+      try {
+        res = await this.gateway.purchaseShopOffer(this.serverId(), offerId, purchaseCount) as typeof res;
+      } catch (e) {
+        if (!state.current()) return;
+        const known = isKnownShopRejection(e);
+        if (!known) beginAssetRead(this.gateway); // Invalidate reads started during an unconfirmed purchase.
+        state.unknown = !known;
+        state.outcome = known ? "" : SHOP_UNKNOWN_OUTCOME;
+        state.warning = known ? formatPanelGatewayErrorFromUnknown("shop", e) : SHOP_RELOAD_FAILED;
+        state.needsReload = !known;
+        state.busy = "";
+        this.syncShopPurchaseSubmit();
+        this.shopStatus(state.outcome || state.warning);
+        return; // Never replay, compensate or infer rollback from an unavailable response.
+      }
       if (!state.current()) return;
-      const known = isKnownShopRejection(e);
-      if (!known) beginAssetRead(this.gateway); // Invalidate reads started during an unconfirmed purchase.
-      state.unknown = !known;
-      state.outcome = known ? "" : SHOP_UNKNOWN_OUTCOME;
-      state.warning = known ? formatPanelGatewayErrorFromUnknown("shop", e) : SHOP_RELOAD_FAILED;
-      state.needsReload = !known;
-      state.busy = "";
+      const freshWallet = receiptCurrent() && this.getSession()?.wallet === walletBefore &&
+        this.getSession()?.bag === bagBefore;
+      beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
+      // This full successful receipt includes gold; city-state reads do not. Never merge granted-item deltas.
+      if (freshWallet && res.wallet_after) this.onSessionPatch({ wallet: { ...res.wallet_after } });
+      if (!state.current()) return;
+      const granted = res.granted_items?.items?.[0];
+      this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
+      state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {
+        itemCfgId: granted?.item_cfg_id, grantedQty: granted?.quantity,
+      })}`; // granted_items already contains total quantity, not quantity per purchase.
+      state.warning = SHOP_RELOAD_FAILED;
+      this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
       this.syncShopPurchaseSubmit();
-      this.shopStatus(state.outcome || state.warning);
-      return; // Never replay, compensate or infer rollback from an unavailable response.
+      if (this.shopPanel.classList.contains("hidden")) {
+        state.busy = "";
+        this.syncShopPurchaseSubmit();
+        return; // Closing never cancels the sent action or starts background recovery.
+      }
+      const pulseKeys = walletShopPurchaseDeductPulseKeys(walletBefore, res.wallet_after, offer?.price_resources, purchaseCount);
+      if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
+      this.shopStatus(state.outcome);
+      await this.reloadShopState(true);
+    } finally {
+      settlement.release();
+      if (this.shopSettlement === settlement) this.shopSettlement = null;
     }
-    if (!state.current()) return;
-    const freshWallet = receiptCurrent() && this.getSession()?.wallet === walletBefore &&
-      this.getSession()?.bag === bagBefore;
-    beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
-    // This full successful receipt includes gold; city-state reads do not. Never merge granted-item deltas.
-    if (freshWallet && res.wallet_after) this.onSessionPatch({ wallet: { ...res.wallet_after } });
-    if (!state.current()) return;
-    const granted = res.granted_items?.items?.[0];
-    this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
-    state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {
-      itemCfgId: granted?.item_cfg_id, grantedQty: granted?.quantity,
-    })}`; // granted_items already contains total quantity, not quantity per purchase.
-    state.warning = SHOP_RELOAD_FAILED;
-    this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
-    this.syncShopPurchaseSubmit();
-    if (this.shopPanel.classList.contains("hidden")) {
-      state.busy = "";
-      this.syncShopPurchaseSubmit();
-      return; // Closing never cancels the sent action or starts background recovery.
-    }
-    const pulseKeys = walletShopPurchaseDeductPulseKeys(walletBefore, res.wallet_after, offer?.price_resources, purchaseCount);
-    if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
-    this.shopStatus(state.outcome);
-    await this.reloadShopState(true);
   }
 
   private onQuestSelect(ev: Event): void {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "quest-id") {
       this.selectedQuestId = Number((t as HTMLInputElement).value) || 1001;
+      this.syncQuestSelection();
     }
   }
 
@@ -1451,6 +1523,15 @@ export class ContentPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
+    if (a === "select-quest") {
+      const id = Number(btn.dataset.questId);
+      if (!Number.isSafeInteger(id) || id <= 0 || !this.questRows.some(q => q.quest_cfg_id === id)) return;
+      this.selectedQuestId = id;
+      const input = this.questPanel.querySelector<HTMLInputElement>('[data-field="quest-id"]');
+      if (input) input.value = String(id);
+      this.syncQuestSelection();
+      return;
+    }
     if (a === "refresh-quests") void this.refreshQuests();
     if (a === "accept-quest") void this.acceptQuest();
     if (a === "claim-quest") void this.claimQuest();

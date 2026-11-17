@@ -4,6 +4,17 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths:
+      - '.github/workflows/recruit-tx-panic-pg.yml'
+      - 'internal/platform/recruittx/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/server/**'
+      - 'internal/platform/gateway/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   recruit-tx-pg-test:
