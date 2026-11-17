@@ -32,9 +32,9 @@ WebSocket, error codes alone, or mocks.
 ## Acceptance
 
 ```bash
-./spec/db/validate.sh
-export FIRST_CITY_LEDGER_TEST_DSN='postgres://…' ALLOW_OWNED_PG17_TEST=1
-GOTOOLCHAIN=local go run ./spec/db/tests/first_city_ledger_ack_loss
+ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN='postgres://…' \
+  bash spec/db/tests/first_city_ledger_ack_loss.sh
+# or: make test-spec-fc-ack-loss ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN='…'
 ```
 
 Record `SHOW server_version` and each `PASS ack_loss:` line.
