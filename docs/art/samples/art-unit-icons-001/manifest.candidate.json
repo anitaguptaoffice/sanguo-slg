@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "pack": "shared",
+  "texture_delivery": "standalone_png",
+  "base_url": "/assets/art/v1/",
+  "assets": [
+    {
+      "id": "unit.icon.1.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/units/1.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/units/1.png"
+        }
+      ],
+      "tags": [
+        "art-unit-icons-001",
+        "unit_cfg_id:1",
+        "unit_code:infantry"
+      ]
+    },
+    {
+      "id": "unit.icon.2.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/units/2.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/units/2.png"
+        }
+      ],
+      "tags": [
+        "art-unit-icons-001",
+        "unit_cfg_id:2",
+        "unit_code:cavalry"
+      ]
+    },
+    {
+      "id": "unit.icon.3.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/units/3.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/units/3.png"
+        }
+      ],
+      "tags": [
+        "art-unit-icons-001",
+        "unit_cfg_id:3",
+        "unit_code:archer"
+      ]
+    },
+    {
+      "id": "unit.icon.4.v1",
+      "kind": "icon",
+      "display_size": {
+        "w": 64,
+        "h": 64
+      },
+      "anchor": {
+        "x": 32,
+        "y": 32
+      },
+      "anchor_unit": "pixels",
+      "variants": [
+        {
+          "scale": 1,
+          "path": "textures/1x/units/4.png"
+        },
+        {
+          "scale": 2,
+          "path": "textures/2x/units/4.png"
+        }
+      ],
+      "tags": [
+        "art-unit-icons-001",
+        "unit_cfg_id:4",
+        "unit_code:siege"
+      ]
+    }
+  ]
+}

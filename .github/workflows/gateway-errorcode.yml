@@ -2,8 +2,21 @@ name: Gateway ErrorCode validation
 
 on:
   pull_request:
+    paths:
+      - '.github/workflows/gateway-errorcode.yml'
+      - '.github/scripts/gateway_errorcode_check.py'
+      - '.github/scripts/test_gateway_errorcode_check.py'
+      - 'internal/platform/gateway/**'
+      - 'spec/proto/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/server/**'
   push:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   gateway-errorcode:

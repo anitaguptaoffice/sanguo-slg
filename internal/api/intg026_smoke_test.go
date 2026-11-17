@@ -14,7 +14,6 @@ import (
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,12 +34,8 @@ func TestINTG026Wave29SmokePath(t *testing.T) {
 }
 
 func runINTG026SmokePath(t *testing.T, beforeRestart intg026BeforeRestartHook) {
-	pool := openDB(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		intg026Failf(t, "apply spec/db", "err=%v", err)
-	}
 	if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {
 		intg026Failf(t, "seed dev server", "err=%v", err)
 	}

@@ -143,6 +143,20 @@ func (s *state) cleanup(ctx context.Context) error {
 	return err
 }
 
+// Undertx runs fn on the owner's underlying pgx.Tx while holding the admission gate.
+// Callers must not commit or roll back the transaction. Used for first-city atomic ledger settle.
+func (o *Owner) Undertx(ctx context.Context, fn func(context.Context, pgx.Tx) error) error {
+	if o == nil || o.s == nil || fn == nil {
+		return ErrInactive
+	}
+	call, leave, err := o.Access().enter(ctx, o.s.binding)
+	if err != nil {
+		return err
+	}
+	defer leave()
+	return fn(call, o.s.tx)
+}
+
 func (o *Owner) Commit(ctx context.Context) (err error) {
 	if o == nil || o.s == nil {
 		return ErrInactive

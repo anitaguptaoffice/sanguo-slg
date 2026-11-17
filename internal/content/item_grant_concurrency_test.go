@@ -26,6 +26,7 @@ func TestPGItemGrantConcurrentLegacyAndGMWriters(t *testing.T) {
 	type result struct {
 		worker, success, rejected int
 		err                       error
+		rejectedKeys              []string
 	}
 	results, start := make(chan result, 4), make(chan struct{})
 	for worker := 0; worker < 4; worker++ {
@@ -67,7 +68,14 @@ func TestPGItemGrantConcurrentLegacyAndGMWriters(t *testing.T) {
 						continue // A known rejected purchase is never replayed.
 					}
 				} else if worker == 1 {
-					_, err = s.GrantContext(ctx, actor, pkg, fmt.Sprintf("legacy:%d:%d", actor.PlayerID, n))
+					key := fmt.Sprintf("legacy:%d:%d", actor.PlayerID, n)
+					_, err = s.GrantContext(ctx, actor, pkg, key)
+					// The legacy allocator also has a bounded contention budget.
+					if err != nil && err.Error() == "content: grant ID allocation contention" {
+						r.rejected++
+						r.rejectedKeys = append(r.rejectedKeys, key)
+						continue
+					}
 				} else {
 					// Reproduce GM's independent MAX+1 enqueue, then its real
 					// ProcessGrant consumer. Existing GM PK rejects are allowed.
@@ -97,12 +105,23 @@ func TestPGItemGrantConcurrentLegacyAndGMWriters(t *testing.T) {
 	}
 	close(start)
 	counts := make([]int, 4)
+	var rejectedKeys []string
 	for range 4 {
 		r := <-results
 		if r.err != nil || r.success+r.rejected != 12 {
-			t.Fatalf("worker result: %+v", r)
+			t.Errorf("worker=%d success=%d rejected=%d error=%v", r.worker, r.success, r.rejected, r.err)
 		}
 		counts[r.worker] = r.success
+		rejectedKeys = append(rejectedKeys, r.rejectedKeys...)
+	}
+	if t.Failed() {
+		t.FailNow() // Join every worker before test cleanup can close its pool.
+	}
+	for _, key := range rejectedKeys {
+		var receipts int
+		if err := pool.QueryRow(ctx, `SELECT count(*) FROM reward_grant_queue WHERE server_id=$1 AND idempotency_key=$2`, p.ServerID, key).Scan(&receipts); err != nil || receipts != 0 {
+			t.Fatalf("rejected legacy key=%s receipts=%d error=%v", key, receipts, err)
+		}
 	}
 	for i, actor := range players {
 		want, spent := counts[0]+counts[1], counts[0]
