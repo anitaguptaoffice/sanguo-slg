@@ -136,7 +136,9 @@ func returnRollbackPanicChild(t *testing.T, double bool) {
 		"rollback panic became known-ended or confirmed", a.result)
 	returnLifetimeState(t, f.generation, 1, true, false)
 	backend := owned.get(trace.pid)
-	returnLifetimeCheck(t, backend != nil && trace.pid != f.observer.PgConn().PID(), "rollback backend not owned")
+	if backend == nil || trace.pid == f.observer.PgConn().PID() {
+		t.Fatal("rollback backend not owned")
+	}
 	var active bool
 	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT EXISTS(SELECT FROM pg_catalog.pg_stat_activity WHERE pid=$1 AND backend_start=$2::timestamptz AND xact_start IS NOT NULL)", trace.pid, backend.started).Scan(&active))
 	returnLifetimeCheck(t, active, "test did not leave a real transaction after rollback panic")
