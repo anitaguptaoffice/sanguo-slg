@@ -1,7 +1,6 @@
 package march
 
 import (
-	"bytes"
 	"context"
 	"time"
 
@@ -27,36 +26,12 @@ func (p *RecruitParticipant) Prepare(ctx context.Context, a *recruittx.Access, s
 	if err != nil {
 		return nil, err
 	}
-	var owner int64
-	var cohort []byte
-	var format int16
-	if err = recruitHistoryRead(ctx, a, s, `SELECT owner_player_id,cohort_id,format_version FROM `+pgx.Identifier{s.profile.SchemaName, "mil_city_origin"}.Sanitize()+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 FOR UPDATE`, []any{scope.ServerID, intent.CityID}, &owner, &cohort, &format); err != nil {
+	snapshot, err := readRecruitPending(ctx, a, s, recruitScope{server: scope.ServerID, player: scope.PlayerID, city: intent.CityID})
+	if err != nil {
 		return nil, err
 	}
-	if owner != scope.PlayerID || format != 1 || !bytes.Equal(cohort, s.profile.Cohort[:]) {
-		return nil, ErrRecruitUnavailable
-	}
-	var units, counts, wounded []int32
-	if err = recruitHistoryRead(ctx, a, s, `SELECT COALESCE(pg_catalog.array_agg(unit_cfg_id ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]),COALESCE(pg_catalog.array_agg(count ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]),COALESCE(pg_catalog.array_agg(wounded ORDER BY unit_cfg_id),'{}'::pg_catalog.int4[]) FROM (SELECT unit_cfg_id,count,wounded FROM `+pgx.Identifier{s.profile.SchemaName, "city_troop"}.Sanitize()+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 ORDER BY unit_cfg_id FOR UPDATE) q`, []any{scope.ServerID, intent.CityID}, &units, &counts, &wounded); err != nil {
-		return nil, err
-	}
-	if len(units) != 4 || len(counts) != 4 || len(wounded) != 4 {
-		return nil, ErrRecruitUnavailable
-	}
-	stock := make([]recruitStockRow, 4)
-	for i := range units {
-		stock[i] = recruitStockRow{server: scope.ServerID, city: intent.CityID, unit: units[i], ready: int64(counts[i]), wounded: int64(wounded[i])}
-	}
-	var ids, players []int64
-	var statuses []int16
-	var starts, finishes []time.Time
-	var payloads []string
-	if err = recruitHistoryRead(ctx, a, s, `SELECT COALESCE(pg_catalog.array_agg(queue_id ORDER BY queue_id),'{}'::pg_catalog.int8[]),COALESCE(pg_catalog.array_agg(player_id ORDER BY queue_id),'{}'::pg_catalog.int8[]),COALESCE(pg_catalog.array_agg(status ORDER BY queue_id),'{}'::pg_catalog.int2[]),COALESCE(pg_catalog.array_agg(start_at ORDER BY queue_id),'{}'::pg_catalog.timestamptz[]),COALESCE(pg_catalog.array_agg(finish_at ORDER BY queue_id),'{}'::pg_catalog.timestamptz[]),COALESCE(pg_catalog.array_agg(payload::pg_catalog.text ORDER BY queue_id),'{}'::pg_catalog.text[]) FROM (SELECT queue_id,player_id,status,start_at,finish_at,payload FROM `+pgx.Identifier{s.profile.SchemaName, "work_queue"}.Sanitize()+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 AND queue_type OPERATOR(pg_catalog.=) 3 AND status IN (0,1) ORDER BY queue_id FOR UPDATE) q`, []any{scope.ServerID, intent.CityID}, &ids, &players, &statuses, &starts, &finishes, &payloads); err != nil {
-		return nil, err
-	}
-	if len(ids) != len(players) || len(ids) != len(statuses) || len(ids) != len(starts) || len(ids) != len(finishes) || len(ids) != len(payloads) {
-		return nil, ErrRecruitUnavailable
-	}
+	stock, ids, players := snapshot.stock, snapshot.ids, snapshot.players
+	statuses, starts, finishes, payloads := snapshot.statuses, snapshot.starts, snapshot.finishes, snapshot.payloads
 	rows := make([]recruitPendingRow, len(ids))
 	for i := range ids {
 		payload, err := decodeRecruitPayload([]byte(payloads[i]), p.catalog)

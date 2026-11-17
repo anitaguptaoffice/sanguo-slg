@@ -13,7 +13,7 @@ export function formatChatInputCounter(
   maxLength: number = CHAT_SEND_MAX_CONTENT_LENGTH,
 ): string {
   const max = Math.max(1, Math.trunc(maxLength));
-  const n = Math.min(countChatContentRunes(content), max);
+  const n = countChatContentRunes(content);
   return `${n}/${max}`;
 }
 

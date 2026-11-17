@@ -81,7 +81,7 @@ func (p *PGStore) ListInbox(ctx context.Context, serverID int32, playerID int64,
 		       status, expire_at, created_at, read_at, claimed_at
 		FROM player_mail
 		WHERE server_id = $1 AND player_id = $2 AND status <> 3 AND `+filterSQL+`
-		ORDER BY created_at DESC
+		ORDER BY created_at DESC, mail_id DESC
 		LIMIT $3 OFFSET $4`, serverID, playerID, limit, q.Offset)
 	if err != nil {
 		return ListResult{}, err

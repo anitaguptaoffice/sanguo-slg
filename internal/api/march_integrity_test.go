@@ -91,7 +91,7 @@ func TestMarchListUsesConsistentCurrentSurvivors(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			s.recordPlayerMarch(55, 7, order.ID, 1, original)
+			s.recordPlayerMarch(PlayerContext{ServerID: 1, PlayerID: 55}, 7, order.ID, 1, original)
 			call := func() *militaryv1.ListMarchesResponse {
 				t.Helper()
 				resp, err := s.handleListMarches(ctx, &commonv1.ClientPacket{SessionId: "owner", ServerId: 1, Payload: mustProto(&militaryv1.ListMarchesRequest{CityId: 7})})
