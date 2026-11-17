@@ -57,7 +57,7 @@ func (s *Server) attemptFirstCityGet(scope *worldv1.FirstCityScope, commandID st
 	return s.firstCityOutcome(scope, worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_COMMAND, commandID, existing, head), nil
 }
 
-func (s *Server) attemptFirstCityContinue(scope *worldv1.FirstCityScope, proposal *worldv1.FirstCityProposal, domainReq *firstCityRequest, derived, expected *firstCityActor) (*worldv1.FirstCityOutcome, error) {
+func (s *Server) attemptFirstCityContinue(ctx context.Context, scope *worldv1.FirstCityScope, proposal *worldv1.FirstCityProposal, domainReq *firstCityRequest, derived, expected *firstCityActor) (*worldv1.FirstCityOutcome, error) {
 	c1, err := newFirstCityCanonical(derived, expected, domainReq)
 	if err != nil {
 		return nil, err
@@ -87,6 +87,13 @@ func (s *Server) attemptFirstCityContinue(scope *worldv1.FirstCityScope, proposa
 	if head.GetCommand() == nil || head.GetCommand().GetCanonical().GetProposal().GetCommandId() != id {
 		return nil, errors.New("head mismatch")
 	}
+	if existing.GetPending() != nil {
+		existing = s.settleFirstCityEffect(ctx, scope, existing)
+		head, err = s.firstCityV2Ledger.Head(scope)
+		if err != nil {
+			return nil, err
+		}
+	}
 	return s.firstCityOutcome(scope, worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_COMMAND, id, existing, head), nil
 }
 
@@ -102,7 +109,7 @@ func (s *Server) handleContinueFirstCity(ctx context.Context, pkt *commonv1.Clie
 	if s.firstCityV2Ledger == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city continue unavailable"), nil
 	}
-	outcome, err := s.attemptFirstCityContinue(derived, req.GetProposal(), domainReq, derivedActor, expectedActor)
+	outcome, err := s.attemptFirstCityContinue(ctx, derived, req.GetProposal(), domainReq, derivedActor, expectedActor)
 	if err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city continue unavailable"), nil
 	}
