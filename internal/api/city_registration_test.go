@@ -146,6 +146,7 @@ func TestCreateCityRegistrationReload(t *testing.T) {
 }
 
 func TestCreateCityRegistrationCommitFailureBoundary(t *testing.T) {
+	isolateWalletDDL(t)
 	ctx := context.Background()
 	s, pool, _, log := registrationServer(t)
 	if _, err := pool.Exec(ctx, `CREATE FUNCTION reject_registration() RETURNS trigger LANGUAGE plpgsql AS $$

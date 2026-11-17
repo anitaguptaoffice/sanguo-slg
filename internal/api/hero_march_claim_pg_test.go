@@ -67,6 +67,7 @@ func claimPGWant(t *testing.T, ctx context.Context, pool *pgxpool.Pool, id int64
 }
 
 func TestHeroMarchClaimPGGateway(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, absent := range []bool{false, true} {
 		t.Run(fmt.Sprintf("force_absent_%t", absent), func(t *testing.T) {
 			s, pool, now, _ := registrationServer(t) // Actual NewServer/wireM3, no Store wrapper.

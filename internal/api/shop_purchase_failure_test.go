@@ -19,6 +19,7 @@ func shopMixedFixture(s *Server) {
 }
 
 func TestShopAtomicPGFailureRollsBackEveryComponent(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, stage := range []string{"wallet", "currency-item", "ledger", "counter", "receipt", "reward-item", "commit"} {
 		t.Run(stage, func(t *testing.T) {
 			pool, s := atomicShopFixture(t)

@@ -20,3 +20,9 @@ go test -race -count=1 ./internal/api -run 'TestSmokeDailyCalendarClockPG|TestIN
 Set DATABASE_URL to that database. Missing database configuration skips these
 tests and is not acceptance. The shared fixture remains available for the
 next test after a restart connection closes.
+
+Fault-injection tests that rename tables or install triggers/functions call
+`isolateWalletDDL(t)` before fixture acquisition. Their subtests use disposable
+schemas, because TRUNCATE cannot restore DDL. Data-only tests retain warm reuse.
+This opt-out is test-local and restored automatically; do not globally disable
+warm reuse merely to conceal fixture contamination.

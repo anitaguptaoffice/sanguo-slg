@@ -164,6 +164,7 @@ func TestRecruitAtomicPGRejectsWithoutMutation(t *testing.T) {
 }
 
 func TestRecruitAtomicPGSQLFailuresRollbackAllAssets(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, stage := range []string{"after-wallet", "after-item", "after-insert", "before-commit"} {
 		t.Run(stage, func(t *testing.T) {
 			pool := walletBoundaryPool(t, true)
