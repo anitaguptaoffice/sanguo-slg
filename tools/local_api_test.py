@@ -152,7 +152,7 @@ def main():
         if CANCELED.is_set():
             raise InterruptedError("Local API run canceled")
         for _ in range(100):
-            ready = subprocess.run(["docker", "exec", name, "pg_isready", "-U", "sanguo"],
+            ready = subprocess.run(["docker", "exec", name, "pg_isready", "-h", "127.0.0.1", "-U", "sanguo"],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if ready.returncode == 0:
                 break
