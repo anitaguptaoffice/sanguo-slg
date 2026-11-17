@@ -35,7 +35,6 @@ func TestGrantReceiptUnsupported(t *testing.T) {
 
 func TestPGGrantReceiptReadOnly(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	ctx := context.Background()
 	cat, err := EmbeddedCatalog()

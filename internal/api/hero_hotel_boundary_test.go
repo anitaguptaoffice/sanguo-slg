@@ -87,6 +87,7 @@ func TestHotelAtomicPGDistinctParticipantPoolsFailClosed(t *testing.T) {
 // not introspectable here: same-object UseStore(otherPG) is not called detected.
 // These assertions prove it cannot retarget the private transaction participant.
 func TestHotelAtomicPGExposedCacheStoreCannotRedirectTransaction(t *testing.T) {
+	isolateWalletPools(t)
 	for _, kind := range []string{"other-pg", "memory"} {
 		t.Run(kind, func(t *testing.T) {
 			pool, s := hotelFixture(t)

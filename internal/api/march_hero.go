@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 )
 
 type marchHeroBinding struct {
@@ -22,11 +23,10 @@ func (s *Server) wireMarchHeroLifecycle() {
 }
 
 func (s *Server) releaseMarchHeroByMarchID(ctx context.Context, marchID int64) {
-	b, ok := s.lookupMarchHero(marchID)
+	b, ok := s.takeMarchHero(marchID)
 	if !ok || b.heroID == 0 {
 		return
 	}
-	s.clearMarchHero(marchID)
 	if s.heroSvc == nil || b.serverID == 0 {
 		return
 	}
@@ -38,4 +38,20 @@ func (s *Server) claimMarchHero(ctx context.Context, pc PlayerContext, heroID in
 		return hero.ErrHeroNotFound
 	}
 	return s.heroSvc.ClaimForMarch(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, heroID)
+}
+
+// registerStartedMarch is called once after successful legacy CreateMarch.
+// Finish may already have fired. Snapshot only after releasing the index lock:
+// MIL invokes the finish callback while holding its own Hub lock.
+func (s *Server) registerStartedMarch(pc PlayerContext, cityID, marchID, heroID int64, troops []march.TroopStack) {
+	s.recordPlayerMarch(pc, cityID, marchID, heroID, troops)
+	s.reconcileFinishedMarch(marchID)
+}
+
+func (s *Server) reconcileFinishedMarch(marchID int64) {
+	order, _ := s.military.SnapshotMarch(marchID)
+	if order != nil && (order.Phase == march.PhaseArrived || order.Phase == march.PhaseReturned) {
+		// Request cancellation must not consume the only valid release attempt.
+		s.releaseMarchHeroByMarchID(context.Background(), marchID)
+	}
 }

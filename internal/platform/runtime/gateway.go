@@ -59,6 +59,7 @@ func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	if err := srv.WireM4Content(ctx); err != nil {
 		a.Log.Error("m4 content wire failed", "err", err)
 	}
+	composeFirstCity(ctx, srv, a.DB, hub)
 	go srv.RunDomesticScheduler(ctx)
 	go srv.RunMilitaryScheduler(ctx)
 	go srv.RunRankScheduler(ctx)

@@ -36,14 +36,15 @@ export type GuildMemberRow = {
   role?: number;
   power?: number;
   joined_at_ms?: number;
-  /** 可选：ListGuildMembers 成员在线 hint（无字段时由列表计数回退）。 */
+  /** 可选在线 hint；现行生产协议无此字段，缺失不表示离线。 */
   is_online?: boolean;
 };
 
-/** 从成员行统计在线人数（`is_online === true`）。 */
-export function countGuildMembersOnline(members: GuildMemberRow[]): number {
+/** 仅完整的布尔在线信息可计数；缺失信息与确认离线不同。 */
+export function countGuildMembersOnline(members: GuildMemberRow[]): number | undefined {
   let n = 0;
   for (const m of members) {
+    if (typeof m.is_online !== "boolean") return undefined;
     if (m.is_online === true) n += 1;
   }
   return n;
@@ -53,7 +54,7 @@ export type GuildMemberOnlineSummaryInput = {
   members: GuildMemberRow[];
   /** ListGuildMembersResponse.total_count；缺省为 members.length。 */
   totalCount?: number;
-  /** 网关在线计数 hint；缺省为 countGuildMembersOnline(members)。 */
+  /** 完整在线计数 hint；缺省仅在全量成员在线信息齐全时统计。 */
   onlineCount?: number;
 };
 
@@ -61,10 +62,11 @@ export type GuildMemberOnlineSummaryInput = {
 export function formatGuildMemberOnlineSummaryLine(input: GuildMemberOnlineSummaryInput): string {
   const total = Math.max(0, input.totalCount ?? input.members.length);
   const online =
-    input.onlineCount !== undefined && input.onlineCount >= 0
+    input.onlineCount !== undefined && Number.isInteger(input.onlineCount) &&
+    input.onlineCount >= 0 && input.onlineCount <= total
       ? input.onlineCount
-      : countGuildMembersOnline(input.members);
-  return `在线 ${online} / 共 ${total} 人`;
+      : total === input.members.length ? countGuildMembersOnline(input.members) : undefined;
+  return `在线${online === undefined ? "未知" : ` ${online}`} / 共 ${total} 人`;
 }
 
 /** 成员列表头 DOM class（CLIENT-217）。 */
