@@ -1,3 +1,4 @@
+import { canOfferFirstCitySubmit, formatFirstCityRejection } from "./firstCityServerSelectCommand";
 import { validateFirstCityUuid } from "@/net/firstCityCanonical";
 import type { FirstCityController } from "@/net/firstCityController";
 import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
@@ -23,7 +24,13 @@ export function formatFirstCityResultStatus(knowledge: FirstCityKnowledge): stri
     const state = observation.command.state.kind;
     if (state === "succeeded") return "GetFirstCityResult 读到 succeeded 终态；进入主城须另卡，本页不跳转。";
     if (state === "pending") return "GetFirstCityResult 读到 pending；不代表服务端已最终承认。";
-    return "GetFirstCityResult 读到 rejected_no_effect；未调用 v1 建城。";
+    const rejected = observation.command;
+    if (rejected.state.kind === "rejected") {
+      const head = knowledge.head;
+      const current = head?.kind === "command" &&
+        head.record.intent.proposal.commandId === rejected.intent.proposal.commandId;
+      return formatFirstCityRejection(rejected.state.reason, current && canOfferFirstCitySubmit(knowledge));
+    }
   }
   if (knowledge.unavailable) return "首城本地证据不可用；未调用 v1 建城。";
   return "GetFirstCityResult 往返完成；未进入主城，亦不宣称可玩首城完成。";

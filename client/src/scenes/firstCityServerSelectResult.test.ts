@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { createFirstCityIntent } from "@/net/firstCityCanonical";
-import { createFirstCityKnowledge } from "@/net/firstCityKnowledge";
+import { createFirstCityKnowledge, reduceFirstCityKnowledge } from "@/net/firstCityKnowledge";
 import {
   canOfferFirstCityResult, formatFirstCityResultStatus, suggestResultCommandId,
 } from "./firstCityServerSelectResult";
@@ -25,4 +25,23 @@ it("describes notObserved without implying success", () => {
 });
 it("refuses unavailable knowledge", () => {
   expect(canOfferFirstCityResult({ ...createFirstCityKnowledge(scope), unavailable: true })).toBe(false);
+});
+
+it.each(["terrain", "coordinateOccupied"] as const)("reports %s rejection without using old history to authorize a successor", reason => {
+  const intent = createFirstCityIntent(scope, { commandId, predecessor: { kind: "empty" }, name: "城", x: 70, y: 70 });
+  const record = { intent, template: { templateVersion: "v1", rulesVersion: "r1", catalogVersion: "c1",
+    contentEncodingVersion: 1, contentSha256: "00".repeat(32) }, state: { kind: "rejected" as const, reason } };
+  const current = reduceFirstCityKnowledge(createFirstCityKnowledge(scope), { intents: [intent], unavailable: false,
+    observations: [{ kind: "command", scope, requestedCommandId: commandId, command: record,
+      head: { kind: "command", record } }] });
+  expect(formatFirstCityResultStatus(current)).toContain(reason === "terrain" ? "地形" : "占用");
+  expect(formatFirstCityResultStatus(current)).toContain("更换坐标");
+  const successor = { ...record, intent: createFirstCityIntent(scope, {
+    commandId: "33333333-3333-4333-8333-333333333333", predecessor: { kind: "rejected", commandId },
+    name: "新城", x: 71, y: 70 }), state: { kind: "pending" as const } };
+  const historical = reduceFirstCityKnowledge(current, { intents: [successor.intent], unavailable: false,
+    observations: [{ kind: "command", scope, requestedCommandId: commandId, command: record,
+      head: { kind: "command", record: successor } }] });
+  expect(formatFirstCityResultStatus(historical)).not.toContain("更换坐标");
+  expect(formatFirstCityResultStatus(historical)).toContain("勿重复提交");
 });
