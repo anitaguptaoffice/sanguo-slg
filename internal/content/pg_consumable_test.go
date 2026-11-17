@@ -12,7 +12,6 @@ import (
 
 func TestPGResourcePackAtomicConsumption(t *testing.T) {
 	pool := openContentTestDB(t)
-	defer pool.Close()
 	applyContentSchema(t, pool)
 	ctx := context.Background()
 	cat, err := EmbeddedCatalog()
