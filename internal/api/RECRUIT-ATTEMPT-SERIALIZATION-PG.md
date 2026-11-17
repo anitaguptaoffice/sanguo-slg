@@ -1,0 +1,17 @@
+# Concurrent actual Recruit acceptance evidence
+
+Card #2190 / API-RECRUIT-ATTEMPT-SERIALIZATION-PG-001. Only this document and recruit_attempt_serialization_pg_test.go belong to the card.
+Frozen base 6221308e18003fe943ea798fcf7597d672dda95e / tree 0cd876e3dd17a18990bb5a1371eb09a0499633db; no dependency source changes.
+Tests-first c0703de26c1fbd7e7c658d30a4931f5151768317 / tree 749a120483fd0262b892dd827a694bcad77402e4 is unexecuted source, not behavioral red.
+The #2172 fixture supplies owned PG17 schema, independent observer, captured identities/catalog, exactly two pool slots and safe bounded cleanup. No synthetic admission or replacement coordinator is used.
+Both callers invoke #2163's actual private admit on one Recruit generation. Its lease admission increments pending and does not serialize calls; the two actual account/player FOR SHARE locks are compatible.
+At leader pre-COMMIT, qualified NOWAIT probes require account, player, wallet, city and all four stock locks; every original committed row remains visible unchanged, except the nontransactional allocated sequence.
+The follower must independently appear at exact wallet FOR UPDATE SQL, with pg_blocking_pids exactly equal to the leader, a distinct traced backend, two acquired slots and two pending attempts. Polling frequency is not the lock proof.
+After leader confirmation, the post-wallet gate holds the follower while the observer reads every immutable acceptance/job/origin field, distinct nonzero four-resource debit, unchanged gold, queue100 and one sequence allocation.
+The original unrelated queue1 retains all values/xmin/ctid. All unrelated tables and all other sequences remain identical. Sequence snapshots explicitly include last_value/log_cnt/is_called; row locks may change xmax, which is not a business mutation.
+Equal-intent follower returns the exact immutable acceptance; changed-count follower returns exact ErrRecruitConflict with known-ended clean rollback, no confirmation and no retired generation. Both leave the entire committed checkpoint unchanged.
+Closed per-backend SQL ordering proves Find follows wallet acquisition and historical calls never allocate/debit/write or inspect current city/stock. Negative trace controls reject unknown SQL and missing Begin/ending/Find. A later original-intent replay must also be immutable and no-write.
+The fixture cleanup cancels/releases gates, joins, closes/drains dormant owners, proves lock release and simultaneously reacquires/reads/releases both pool slots. No PID cancellation/termination or historic backend ownership assumption is used.
+Official focused gate: go test ./internal/api -run '^TestPGRecruitAttemptConcurrentCommandReplay$' -count=1 -v, repeated with -race on Go1.23.12/PG17, plus full applicable packages, no configured-database skip, independent exact-head/combination review and required CI. #2178 owns later inventory extension; this card changes no workflow.
+Local Go/gofmt/PostgreSQL/race are unperformed and no runtime was installed. Static inspection and whitespace checks do not claim runtime acceptance.
+No Recruit/Return shared-controller certification (Return is not invoked), public transport/journal, full conflict/version/actor matrix, process restart, crash/network recovery, completion, enrollment, writer fencing, natural acceptance or production activation/deployment. Historical #77/#82/#108 holds remain excluded; no publication in this preparation step.
