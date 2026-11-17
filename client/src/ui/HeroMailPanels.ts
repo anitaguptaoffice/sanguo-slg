@@ -668,7 +668,7 @@ export class HeroMailPanels {
   private heroDetail: HeroDetail | null = null;
   private heroDetailLoading = false;
   private heroDetailReadGeneration = 0;
-  private heroBagLinkGeneration = 0;
+  private heroLinkGeneration = 0;
   private heroDetailError: string | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
@@ -1359,21 +1359,18 @@ export class HeroMailPanels {
   private syncHeroRecruitHostExpanded(): void {
     const host = this.heroPanel?.querySelector<HTMLDetailsElement>('[data-role="hero-recruit-host"]');
     if (!host) return;
-    const detailPaneOpen =
-      this.selectedHeroId > 0 &&
-      !this.heroDetailCollapsed &&
-      !this.heroDetailLoading &&
-      !this.heroDetailError &&
-      !!this.heroDetail;
-    if (host.open && detailPaneOpen) {
+    const detailKey = String(this.selectedHeroId > 0 && !this.heroDetailCollapsed ? this.selectedHeroId : 0);
+    // Navigation sets the default; refresh preserves the player's disclosure choice.
+    if (host.dataset.detailHeroId === detailKey) return;
+    host.dataset.detailHeroId = detailKey;
+    if (host.open && detailKey !== "0") {
       const active = host.ownerDocument.activeElement;
       const summary = host.querySelector<HTMLElement>(":scope > summary");
       if (active && summary && host.contains(active) && !summary.contains(active)) {
-        // Move focus before native details hides its body; preserve the close decision.
         summary.focus({ preventScroll: true });
       }
     }
-    host.open = !detailPaneOpen;
+    host.open = detailKey === "0";
   }
 
   private serverId(): number {
@@ -3929,14 +3926,14 @@ export class HeroMailPanels {
 
   private invalidateHeroDetailRead(): void {
     this.clearHeroExprCountdownTimer();
-    ++this.heroBagLinkGeneration;
+    ++this.heroLinkGeneration;
     ++this.heroDetailReadGeneration;
     this.heroDetailLoading = false;
     this.heroDetail = null;
   }
 
   private beginHeroDetailNavigation(heroId: number): () => boolean {
-    ++this.heroBagLinkGeneration;
+    ++this.heroLinkGeneration;
     const current = this.beginHeroDetailRead();
     this.selectedHeroId = heroId;
     this.heroDetail = null;
@@ -3960,7 +3957,7 @@ export class HeroMailPanels {
     opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean; current?: () => boolean },
   ): Promise<void> {
     // Receipt reconciliation refreshes data, not the player's navigation intent.
-    if (!opts?.skipListSelectionWrite) ++this.heroBagLinkGeneration;
+    if (!opts?.skipListSelectionWrite) ++this.heroLinkGeneration;
     const owner = opts?.current ?? this.beginHeroDetailRead();
     if (!owner()) return;
     const current = () => owner() && this.selectedHeroId === heroId && !this.heroDetailCollapsed;
@@ -4545,11 +4542,13 @@ export class HeroMailPanels {
     }
   }
 
-  private async refreshRecruitTemplates(): Promise<void> {
+  private async refreshRecruitTemplates(current: () => boolean = () => true): Promise<boolean> {
+    if (!current()) return false;
     const sid = this.serverId();
     this.onStatus("拉取招募模板…");
     try {
       const res = await this.gateway.listRecruitTemplates(sid, { pageSize: 50 });
+      if (!current()) return false;
       const { templates, totalCount } = parseRecruitTemplates(res as { templates?: RecruitTemplatePreview[]; total_count?: number });
       this.recruitTemplates = templates;
       const prev = this.selectedTemplateId;
@@ -4559,10 +4558,13 @@ export class HeroMailPanels {
         if (pick) this.applyTemplateSelection(pick.templateCfgId);
       }
       this.onStatus(`招募模板 ${templates.length}/${totalCount} 条`);
+      return true;
     } catch (e) {
+      if (!current()) return false;
       this.recruitTemplates = [];
       this.renderTemplateList();
       this.onStatus((e as Error).message);
+      return false;
     }
   }
 
@@ -5053,6 +5055,7 @@ export class HeroMailPanels {
   private onHeroChange(ev: Event): void {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "template-select") {
+      ++this.heroLinkGeneration;
       const id = Number((t as HTMLSelectElement).value) || 0;
       if (id) this.applyTemplateSelection(id);
       return;
@@ -5076,6 +5079,11 @@ export class HeroMailPanels {
   }
 
   private onHeroClick(ev: Event): void {
+    const summary = (ev.target as HTMLElement).closest("summary");
+    if (summary?.parentElement?.matches('[data-role="hero-recruit-host"]')) {
+      ++this.heroLinkGeneration;
+      return; // Native pointer and keyboard activation owns the disclosure state.
+    }
     const btn = (ev.target as HTMLElement).closest("button");
     const btnAction = btn?.getAttribute("data-action");
     if (btnAction && ["captive-summon-confirm", "captive-release", "persuade-primary", "coming-accept-confirm", "coming-reject"].includes(btnAction)) {
@@ -5097,6 +5105,7 @@ export class HeroMailPanels {
     }
     const tplLi = (ev.target as HTMLElement).closest("li[data-template-id]");
     if (tplLi && !btn) {
+      ++this.heroLinkGeneration;
       const id = Number(tplLi.getAttribute("data-template-id"));
       if (id) this.applyTemplateSelection(id);
       return;
@@ -5229,15 +5238,23 @@ export class HeroMailPanels {
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {
-    ++this.heroBagLinkGeneration;
+    const current = this.beginHeroLink();
     const tplId = this.heroDetail?.template_cfg_id;
     if (!tplId) {
       this.onStatus("请先点选将领加载详情");
       return;
     }
-    if (!this.recruitTemplates.length) await this.refreshRecruitTemplates();
+    if (!current()) return;
+    if (!this.recruitTemplates.length && !await this.refreshRecruitTemplates(current)) return;
+    if (!current()) return;
+    if (!this.recruitTemplates.some(t => t.template_cfg_id === tplId)) {
+      this.onStatus(`招募模板 #${tplId} 当前不可用，请刷新模板列表`);
+      return;
+    }
     writeRecruitScrollAnchorSession(tplId);
     this.applyTemplateSelection(tplId);
+    const host = this.heroPanel.querySelector<HTMLDetailsElement>('[data-role="hero-recruit-host"]');
+    if (host) host.open = true;
     applyRecruitScrollAnchorSession(this.heroPanel);
     this.onStatus(`招募区已预选模板 #${tplId}`);
   }
@@ -5258,19 +5275,19 @@ export class HeroMailPanels {
     this.onStatus(`背包已高亮招募所需道具 ${itemCfgId}，请查看持有数量`);
   }
 
-  /** A bag read may complete after newer navigation, but must not navigate for it. */
-  private beginHeroBagLink(): () => boolean {
-    const request = ++this.heroBagLinkGeneration;
+  /** A related-view read must not navigate after a newer hero/panel intent. */
+  private beginHeroLink(): () => boolean {
+    const request = ++this.heroLinkGeneration;
     const heroId = this.selectedHeroId;
     const actor = captureActor(this.gateway, this.getSession);
     const presentation = captureCenterPanelIntent(this.heroPanel);
-    return () => request === this.heroBagLinkGeneration &&
+    return () => request === this.heroLinkGeneration &&
       heroId === this.selectedHeroId && !this.heroDetailCollapsed && actor() && presentation() &&
       this.heroPanel.parentNode === this.mount;
   }
 
   private async openHeroBagCultivationDeepLink(): Promise<void> {
-    const current = this.beginHeroBagLink();
+    const current = this.beginHeroLink();
     if (!current()) return;
     const heroId = this.selectedHeroId;
     let items = this.sessionEconomy().bag;
@@ -5311,7 +5328,7 @@ export class HeroMailPanels {
   }
 
   private async openRelatedCultivationItems(): Promise<void> {
-    const current = this.beginHeroBagLink();
+    const current = this.beginHeroLink();
     if (!current()) return;
     const heroId = this.selectedHeroId;
     const sid = this.serverId();
