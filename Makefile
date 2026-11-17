@@ -54,6 +54,12 @@ test-fast:
 test-gate:
 	DATABASE_URL='$(DATABASE_URL)' go test -short -count=1 -timeout=20m ./internal/api ./internal/domestic ./internal/world
 	cd client && NODE_ENV=development npx vitest run && NODE_ENV=development npx vite build
+	@if [ "$${ALLOW_OWNED_PG17_TEST:-}" = "1" ]; then \
+	  dsn="$${FIRST_CITY_LEDGER_TEST_DSN:-$${DATABASE_URL:-$(FC_ACK_DEFAULT_DSN)}}"; \
+	  ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN="$$dsn" bash spec/db/tests/first_city_ledger_ack_loss.sh; \
+	  ALLOW_OWNED_PG17_TEST=1 DATABASE_URL="$$dsn" FIRST_CITY_LEDGER_TEST_DSN="$$dsn" \
+	    go test -count=1 -timeout=5m ./internal/api -run TestSpecFirstCityLedgerAckLossHarness; \
+	fi
 
 test-full:
 	DATABASE_URL='$(DATABASE_URL)' go test -count=1 -timeout=40m ./internal/api

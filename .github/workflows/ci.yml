@@ -237,6 +237,13 @@ jobs:
           make build-gm
       - name: Unit tests
         run: make test
+      - name: First-city ledger ACK-loss harness (#2579)
+        env:
+          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+          ALLOW_OWNED_PG17_TEST: "1"
+        run: |
+          make test-spec-fc-ack-loss ALLOW_OWNED_PG17_TEST=1
+          go test -count=1 -timeout=5m ./internal/api -run TestSpecFirstCityLedgerAckLossHarness
       - name: Lint
         uses: golangci/golangci-lint-action@v6
         with:

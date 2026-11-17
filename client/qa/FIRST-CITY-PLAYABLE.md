@@ -34,6 +34,7 @@ DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable' \
 ```bash
 make dev-up
 ALLOW_OWNED_PG17_TEST=1 make test-spec-fc-ack-loss
+# 完整 local gate（含 ACK-loss，需 dev PG）：ALLOW_OWNED_PG17_TEST=1 make test-gate
 # 或：ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable' \
 #   go test ./internal/api -run TestSpecFirstCityLedgerAckLossHarness -count=1
 ```
