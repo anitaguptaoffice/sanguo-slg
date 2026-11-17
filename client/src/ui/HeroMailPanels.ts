@@ -656,6 +656,7 @@ export class HeroMailPanels {
   private mailListError = "";
   private mailListLoading = false;
   private mailReadVersion = 0;
+  private mailMutationVersion = 0;
   private mailNextOffset = 0;
   private mailPageTotal = 0;
   private mailPageOwner: (() => boolean) | null = null;
@@ -3287,6 +3288,7 @@ export class HeroMailPanels {
   }
 
   private patchMailInboxSnapshot(mailId: number, patch: MailRow): void {
+    ++this.mailMutationVersion;
     const previous = this.mailListRpcPage.find((m) => m.mail_id === mailId);
     if (previous) {
       const next = { ...previous, ...patch };
@@ -3300,7 +3302,7 @@ export class HeroMailPanels {
         this.mailListRpcPage = this.mailListRpcPage.map((m) => m.mail_id === mailId ? next : m);
       }
     }
-    if (!previous && this.mailFilter === MAIL_INBOX_FILTER_UNREAD && this.mailListLoading && !mailIsUnread(patch)) {
+    if (!previous && this.mailListLoading) {
       // Refresh discarded the old cache: restart after the mutation, not from a pre-read snapshot.
       void this.refreshMail();
     }
@@ -3323,6 +3325,8 @@ export class HeroMailPanels {
   }
 
   private async refreshMailInboxSnapshot(): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.mailPanel, version = this.mailReadVersion, mutation = this.mailMutationVersion;
     const sid = this.serverId();
     if (!sid) {
       this.mailInboxSnapshot = [];
@@ -3335,6 +3339,8 @@ export class HeroMailPanels {
         pageSize: 50,
         pageOffset: 0,
       })) as { mails?: MailRow[] };
+      if (!actor() || this.mailPanel !== panel || panel.parentElement !== this.mount ||
+          version !== this.mailReadVersion || mutation !== this.mailMutationVersion) return;
       this.mailInboxSnapshot = res.mails ?? [];
       this.setMailFilterButtons();
     } catch {
@@ -4689,8 +4695,8 @@ export class HeroMailPanels {
   }
 
   private async refreshMailInner(append = false): Promise<void> {
-    if (append && (this.mailListLoading || this.mailNextOffset >= this.mailPageTotal)) return;
     if (append && !this.mailPageOwner?.()) append = false;
+    if (append && (this.mailListLoading || this.mailNextOffset >= this.mailPageTotal)) return;
     const actor = captureActor(this.gateway, this.getSession);
     const panel = this.mailPanel;
     const version = ++this.mailReadVersion;
@@ -4730,10 +4736,13 @@ export class HeroMailPanels {
       } else {
         void this.refreshMailInboxSnapshot();
       }
+      const unreadMutation = this.mailMutationVersion;
       const unreadSnap = await this.pullMailUnreadSnapshot();
       if (!current()) return;
-      this.mailUnreadTotal = unreadSnap.count;
-      this.mailUnreadFirstId = unreadSnap.firstId;
+      if (unreadMutation === this.mailMutationVersion) {
+        this.mailUnreadTotal = unreadSnap.count;
+        this.mailUnreadFirstId = unreadSnap.firstId;
+      }
       this.setMailFilterButtons();
       if (!this.selectedMailId && this.mails[0]?.mail_id) {
         this.selectedMailId = this.mails[0].mail_id!;
@@ -4763,19 +4772,30 @@ export class HeroMailPanels {
       this.renderMailList();
       this.onStatus(this.mailListError);
     } finally {
-      if (current()) {
+      // Only this request may release its loading flag, including after actor
+      // invalidation. An older request must never release a newer one's flag.
+      if (version === this.mailReadVersion && this.mailPanel === panel && panel.parentElement === this.mount) {
         this.mailListLoading = false;
+        if (!actor()) {
+          this.mails = [];
+          this.mailListRpcPage = [];
+          this.mailInboxSnapshot = [];
+          this.selectedMailId = 0;
+        }
         this.renderMailList();
       }
     }
   }
 
   private async markMailRead(mailId: number): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession), panel = this.mailPanel;
+    const current = () => actor() && this.mailPanel === panel && panel.parentElement === this.mount;
     const sid = this.serverId();
     const row = this.mails.find((m) => m.mail_id === mailId);
     if (!row || !mailIsUnread(row)) return;
     try {
       const res = (await this.gateway.markPlayerMailRead(sid, mailId)) as { mail?: MailRow };
+      if (!current()) return;
       if (res.mail) {
         this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
         if (mailIsUnread(row)) {
@@ -4795,7 +4815,7 @@ export class HeroMailPanels {
       }
       if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
-      this.onStatus((e as Error).message);
+      if (current()) this.onStatus((e as Error).message);
     }
   }
 

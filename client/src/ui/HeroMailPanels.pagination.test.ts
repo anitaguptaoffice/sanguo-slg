@@ -135,3 +135,66 @@ describe('refresh mutation reconciliation', () => {
     } finally { s.panels.detach(); }
   });
 });
+
+describe('pending page ownership and mutation recovery', () => {
+  it('releases an old actor pending append so the new actor can load', async () => {
+    const s = await setup(); try {
+      const pending = deferred(); s.page.mockReturnValueOnce(pending.promise); s.click('load-more-mail');
+      s.relogin(); pending.resolve({mails:[row(50)], total_count:51}); await flush();
+      const more = s.panels.getMailRoot().querySelector<HTMLButtonElement>('[data-action="load-more-mail"]')!;
+      expect(more.disabled).toBe(false);
+      s.page.mockResolvedValueOnce({mails:[row(200)],total_count:1}); s.click('load-more-mail'); await flush();
+      expect(s.ids()).toEqual([200]);
+    } finally { s.panels.detach(); }
+  });
+  it('does not resurrect a claimed attachment from a pending refresh', async () => {
+    const s = await setup(); try {
+      const attached = {...row(100),attachments:{items:[{item_cfg_id:2001,quantity:1}]}};
+      s.page.mockResolvedValueOnce({mails:[attached],total_count:1}); s.click('mail-filter-unclaimed'); await flush();
+      const pending = deferred(); s.page.mockReturnValueOnce(pending.promise); s.click('refresh-mail');
+      s.page.mockResolvedValue({mails:[row(100,2)],total_count:1});
+      s.gateway.claimPlayerMailAttachments.mockResolvedValueOnce({mail:row(100,2),granted:{}});
+      s.click('claim-mail'); await flush(); expect(s.ids()).not.toContain(100);
+      pending.resolve({mails:[attached],total_count:1}); await flush(); expect(s.ids()).not.toContain(100);
+    } finally { s.panels.detach(); }
+  });
+});
+
+describe('mail actor guards', () => {
+  it('does not apply an old actor mark-read result to a new actor with the same mail ID', async () => {
+    const s = await setup(); try {
+      s.page.mockImplementation((opts) => Promise.resolve({mails:opts.filter===1?[row(90,0)]:[],total_count:1}));
+      s.click('mail-filter-unread'); await flush();
+      const pending = deferred(); s.gateway.markPlayerMailRead.mockReturnValueOnce(pending.promise);
+      s.panels.getMailRoot().querySelector<HTMLElement>('li[data-mail-id="90"]')!.click();
+      s.relogin(); s.click('refresh-mail'); await flush(); expect(s.ids()).toEqual([90]);
+      pending.resolve({mail:row(90,1)}); await flush(); expect(s.ids()).toEqual([90]);
+    } finally { s.panels.detach(); }
+  });
+  it('does not release a newer request when the old actor request finishes', async () => {
+    const s = await setup(); try {
+      const old = deferred(), fresh = deferred(); s.page.mockReturnValueOnce(old.promise); s.click('load-more-mail');
+      s.relogin(); s.page.mockReturnValueOnce(fresh.promise); s.click('refresh-mail');
+      old.resolve({mails:[row(50)],total_count:51}); await flush();
+      expect(s.panels.getMailRoot().querySelector<HTMLButtonElement>('[data-action="load-more-mail"]')!.disabled).toBe(true);
+      fresh.resolve({mails:[row(200)],total_count:1}); await flush(); expect(s.ids()).toEqual([200]);
+    } finally { s.panels.detach(); }
+  });
+});
+
+it('does not overwrite a confirmed local read with an older unread count', async () => {
+  const s = await setup(); try {
+    s.page.mockResolvedValue({mails:[row(90,0)],total_count:1});
+    s.click('refresh-mail'); await flush();
+    const count = deferred(); let held = false;
+    s.gateway.listPlayerMail.mockImplementation((_sid, opts) => {
+      if (opts?.pageSize !== 1) return s.page(opts);
+      if (!held) { held = true; return count.promise; }
+      return Promise.resolve({mails:[],total_count:0});
+    });
+    s.click('refresh-mail'); await flush();
+    s.panels.getMailRoot().querySelector<HTMLElement>('li[data-mail-id="90"]')!.click(); await flush();
+    count.resolve({mails:[row(90,0)],total_count:1}); await flush();
+    expect((s.panels as unknown as {mailUnreadTotal:number}).mailUnreadTotal).toBe(0);
+  } finally { s.panels.detach(); }
+});
