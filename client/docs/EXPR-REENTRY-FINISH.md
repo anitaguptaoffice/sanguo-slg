@@ -36,3 +36,15 @@ hero/account/navigation changes and interrupted requests. #2265 startup evidence
 is not this feature's acceptance. Keep Draft until independent exact-head source,
 #2004/#2065 composition, all applicable CI and this live gate pass. No held ref or
 production changes; preserve both sides of known cleanup/navigation conflicts.
+
+## Local acceptance update (2026-11-17)
+
+The user explicitly authorized local acceptance and accelerated time-dependent
+checks. This supersedes the historical natural-hour/online-CI waiting gate above.
+Real Chromium at both sizes passed UI registration, city creation, recruitment,
+idle rejection, Begin, reload/unknown state and early rejection. Each isolated
+account received only a disclosed 10-gold fixture. After the early rejection,
+both session timestamps were shifted back one hour, preserving the 3600-second
+duration. A second reload and explicit Finish persisted EXP=20, level=1, idle
+status and deleted the session. This is controlled-deadline acceptance, not
+natural elapsed-time evidence or a completed upgrade (20/100 EXP).
