@@ -43,3 +43,9 @@ the available machine load, not a timing guarantee. SIGTERM cleanup was separate
 verified in0.37s; missing/skipped discovered roots and inherited/persisted Go flags
 have explicit rejection/override controls. Race-mode evidence is required before
 accepting changes whose scope requires race testing.
+# PostgreSQL startup readiness
+
+The readiness probe uses loopback TCP. The image's temporary initialization
+server accepts Unix sockets before stopping and starting the final server;
+socket-only readiness can therefore pass just before the database disappears.
+TCP readiness waits for the final server without adding a fixed startup sleep.
