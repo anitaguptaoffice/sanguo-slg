@@ -118,7 +118,7 @@ func resetWarmSchema(ctx context.Context, pool *pgxpool.Pool) error {
 	if _, err := pool.Exec(ctx, `SELECT pg_advisory_lock($1)`, warmAdvisoryLockKey); err != nil {
 		return err
 	}
-	defer pool.Exec(ctx, `SELECT pg_advisory_unlock($1)`, warmAdvisoryLockKey)
+	defer func() { _, _ = pool.Exec(ctx, `SELECT pg_advisory_unlock($1)`, warmAdvisoryLockKey) }()
 	_, err := pool.Exec(ctx, `DO $r$
 DECLARE r RECORD;
 BEGIN

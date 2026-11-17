@@ -178,8 +178,9 @@ try {
       assert.deepEqual((await history(page)).intents.map(x => x.proposal.commandId), [ids[0]]);
     });
     await check(`barrier-GetFirstCityResult-${fault}`, async () => {
-      const page = await boot(), before = peer.effects.length;
+      const page = await boot();
       assert.equal(await call(page, 'SubmitFirstCity'), 'command');
+      const before = peer.effects.length;
       await page.evaluate(fault => qa.fault = fault, fault);
       assert.match(await call(page, 'GetFirstCityResult'), /UNKNOWN/);
       await page.evaluate(() => qa.fault = ''); assert.equal((await history(page)).unavailable, true);

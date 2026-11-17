@@ -2,12 +2,9 @@ package api_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http/httptest"
-	"net/url"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -360,51 +357,6 @@ func (c *integrationClock) set(nt time.Time) { c.t = nt }
 func openWarmSpecDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	return pgfixture.WarmPool(t)
-}
-
-// openDB gives each API test an isolated schema. Reopened pools use the same
-// search_path so restart assertions exercise persisted state, not a fresh fixture.
-func openDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	ctx := context.Background()
-	admin, err := db.Open(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	schema := fmt.Sprintf("api_test_%d", time.Now().UnixNano())
-	if _, err := admin.Exec(ctx, "CREATE SCHEMA "+schema); err != nil {
-		admin.Close()
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		defer admin.Close()
-		if _, err := admin.Exec(context.Background(), "DROP SCHEMA "+schema+" CASCADE"); err != nil {
-			t.Errorf("drop isolated test schema: %v", err)
-		}
-	})
-	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
-		u, err := url.Parse(dsn)
-		if err != nil {
-			t.Fatal(err)
-		}
-		q := u.Query()
-		q.Set("search_path", schema)
-		u.RawQuery = q.Encode()
-		dsn = u.String()
-	} else {
-		dsn += " search_path=" + schema
-	}
-	t.Setenv("DATABASE_URL", dsn)
-	pool, err := db.Open(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
 }
 
 type smokeCityTile struct{ X, Y int32 }
