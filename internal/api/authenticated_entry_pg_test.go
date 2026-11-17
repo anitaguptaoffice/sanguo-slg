@@ -181,6 +181,7 @@ func (f *entryWireFixture) reject(t *testing.T, p *commonv1.ClientPacket, code c
 }
 
 func TestAuthenticatedEntryWirePG(t *testing.T) {
+	isolateWalletDDL(t)
 	f := newEntryWireFixture(t)
 	pool := f.s.players.Pool
 	const firstID int64 = 9007199254740993
