@@ -21,6 +21,7 @@ const (
 type recruitAttemptResult struct {
 	outcome                    recruitAttemptOutcome
 	confirmed                  march.RecruitAcceptance
+	completion                 march.RecruitCompletion // Set only after a completion Commit succeeds.
 	cause, cleanup, diagnostic error
 }
 type recruitAttempt struct {
@@ -28,6 +29,8 @@ type recruitAttempt struct {
 	accountID, queueID  int64
 	scope               march.RecruitScope
 	intent              march.RecruitIntent
+	isCompletion        bool // False preserves the existing admission record kind.
+	candidate           march.RecruitCandidate
 	phase               string
 	result              recruitAttemptResult
 	fault, cleanupFault any
