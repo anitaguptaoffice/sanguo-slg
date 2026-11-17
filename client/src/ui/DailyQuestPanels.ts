@@ -1,3 +1,4 @@
+import { mountDailyRewardIcon } from "@/engine/dailyRewardIcon";
 import { claimQuestWithAssets, refreshQuestAssets } from "@/net/questClaimAssets";
 import { captureActor } from "@/net/actorContext";
 import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
@@ -43,7 +44,7 @@ import {
   scheduleQuestClaimRowPulse,
   scrollQuestClaimableIntoView,
 } from "@/net/dailyQuestClaimFeedback";
-import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
+import { DAILY_QUEST_STATE_ACCEPTABLE, DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
 import type { AssetLoader } from "@/engine/AssetLoader";
@@ -103,6 +104,7 @@ export class DailyQuestPanels {
   private listFilter: DailyQuestListFilter = "all";
   private listLoading = false;
   private listReadVersion = 0;
+  private selectionIntent = 0;
   private listError: string | null = null;
   private claimBatchInflight = false;
   private claimInflight = false;
@@ -144,6 +146,8 @@ export class DailyQuestPanels {
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
+    this.panel.addEventListener("center-panel-suspend", () => { ++this.selectionIntent; });
+    this.renderList();
   }
 
   detach(): void {
@@ -192,8 +196,8 @@ export class DailyQuestPanels {
     openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     const current = this.captureCurrentPanel();
-    void this.refreshList(questCfgId).then(() => {
-      if (!current()) return;
+    void this.refreshList(questCfgId).then((selected) => {
+      if (!selected?.() || !current()) return;
       scrollDailyQuestCfgRowIntoView(this.panel, questCfgId);
     });
   }
@@ -204,8 +208,8 @@ export class DailyQuestPanels {
       resetCenterPanelViewportScroll(this.panel);
       this.renderBattleReportBanner();
       const current = this.captureCurrentPanel();
-      void this.refreshList(undefined, "default").then(() => {
-        if (!current()) return;
+      void this.refreshList(undefined, "default").then((selected) => {
+        if (!selected?.() || !current()) return;
         scrollQuestClaimableIntoView(this.panel, this.rows, this.listFilter);
       });
     }
@@ -230,8 +234,8 @@ export class DailyQuestPanels {
     this.dailyClaimableCountOverride =
       opts?.claimableCount != null ? Math.max(0, opts.claimableCount) : null;
     const current = this.captureCurrentPanel();
-    void this.refreshList(preferredCfgId, "todo-badge").then(() => {
-      if (!current()) return;
+    void this.refreshList(preferredCfgId, "todo-badge").then((selected) => {
+      if (!selected?.() || !current()) return;
       this.dailyClaimableCountOverride = null;
       const id = this.selectedCfgId;
       if (id > 0) {
@@ -246,8 +250,8 @@ export class DailyQuestPanels {
     const wasOpen = this.isOpen();
     openCenterPanel(this.panel);
     const current = this.captureCurrentPanel();
-    void this.refreshList(preferredCfgId, "center-claimable").then(() => {
-      if (!current()) return;
+    void this.refreshList(preferredCfgId, "center-claimable").then((selected) => {
+      if (!selected?.() || !current()) return;
       const id = this.selectedCfgId;
       if (id <= 0 || opts?.skipScroll) return;
       scrollCenterTodoTarget(this.panel, centerTodoScrollTargetId("daily", id));
@@ -256,8 +260,8 @@ export class DailyQuestPanels {
   }
 
   /** 招募闭环：后台刷新 chain 400，可选聚焦日课·访贤行。 */
-  refreshChainList(focusCfgId?: number): Promise<void> {
-    return this.refreshList(focusCfgId);
+  async refreshChainList(focusCfgId?: number): Promise<void> {
+    await this.refreshList(focusCfgId);
   }
 
   private serverId(): number {
@@ -470,10 +474,26 @@ export class DailyQuestPanels {
     }
   }
 
+  private syncSingleQuestActions(): void {
+    const selected = this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId);
+    const accept = this.panel.querySelector<HTMLButtonElement>('[data-action="accept-daily"]');
+    const claim = this.panel.querySelector<HTMLButtonElement>('[data-action="claim-daily"]');
+    if (accept) accept.disabled = this.listLoading || this.acceptInflight || selected?.state !== DAILY_QUEST_STATE_ACCEPTABLE;
+    if (claim) claim.disabled = this.listLoading || this.claimInflight || this.claimBatchInflight || selected?.state !== DAILY_QUEST_STATE_CLAIMABLE;
+  }
+
   private renderList(): void {
     const ul = this.panel.querySelector<HTMLElement>('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
+    const displayRows = this.visibleRows();
+    if (!displayRows.some(r => r.quest_cfg_id === this.selectedCfgId)) {
+      this.selectedCfgId = pickDefaultDailyQuest(displayRows)?.quest_cfg_id ?? 0;
+    }
+    const selected = displayRows.find(r => r.quest_cfg_id === this.selectedCfgId) ?? null;
+    if (pre) pre.textContent = formatDailyQuestDetail(selected);
+    this.renderNextStep(selected);
+    this.syncSingleQuestActions();
     this.renderDailyChainTabs();
     this.updateFilterButtons();
     this.renderDailyClaimableSweep();
@@ -492,7 +512,6 @@ export class DailyQuestPanels {
       });
       return;
     }
-    const displayRows = this.visibleRows();
     if (!displayRows.length) {
       const msg = this.rows.length
         ? dailyQuestListEmptyMessage(this.listFilter)
@@ -534,6 +553,7 @@ export class DailyQuestPanels {
         main.textContent = line;
         li.appendChild(main);
         appendDailyQuestRowSecondary(li, q);
+        mountDailyRewardIcon(li, q, this.panel, this.assets);
         if (state === DAILY_QUEST_STATE_CLAIMABLE) {
           appendQuestChainQueueHudResidualSubline(
             li,
@@ -634,9 +654,6 @@ export class DailyQuestPanels {
         ul.appendChild(li);
       }
     }
-    const selected = this.rows.find((r) => r.quest_cfg_id === this.selectedCfgId) ?? null;
-    if (pre) pre.textContent = formatDailyQuestDetail(selected);
-    this.renderNextStep(selected);
     this.renderBattleReportBanner();
     this.syncDailyFilterUiSkins();
   }
@@ -684,7 +701,9 @@ export class DailyQuestPanels {
   private async refreshList(
     focusCfgId?: number,
     pickMode: "default" | "todo-badge" | "center-claimable" = "default",
-  ): Promise<void> {
+  ): Promise<(() => boolean) | null> {
+    const intent = this.selectionIntent;
+    const selectionCurrent = () => intent === this.selectionIntent;
     const actor = this.captureCurrentPanel();
     const version = ++this.listReadVersion;
     const current = () => actor() && version === this.listReadVersion && this.panel.parentNode === this.mount;
@@ -699,50 +718,63 @@ export class DailyQuestPanels {
         chainId: 0,
         includeCompleted: true,
       });
-      if (!current()) return;
+      if (!current()) return null;
       renderSuccessfulReadNotice(this.panel, res);
       const catalogRows = filterDailyQuestRowsToCatalogChains(
         dailyQuestsFromListResponse(res as { quests?: DailyQuestRow[] }),
       );
+      // Keep the authoritative catalog, but do not replay superseded navigation.
+      const focus = selectionCurrent() ? focusCfgId : undefined;
+      const mode = selectionCurrent() ? pickMode : "default";
       let preferredChainId = this.activeChainId;
-      if (focusCfgId != null && focusCfgId > 0) {
-        const focused = catalogRows.find((r) => r.quest_cfg_id === focusCfgId);
+      if (focus != null && focus > 0) {
+        const focused = catalogRows.find((r) => r.quest_cfg_id === focus);
         if (focused?.chain_id) preferredChainId = focused.chain_id;
       }
       this.applyChainTabRows(catalogRows, preferredChainId, false);
       let pick: DailyQuestRow | null = null;
-      if (focusCfgId != null && focusCfgId > 0) {
-        pick = this.rows.find((r) => r.quest_cfg_id === focusCfgId) ?? null;
+      if (focus != null && focus > 0) {
+        pick = this.rows.find((r) => r.quest_cfg_id === focus) ?? null;
       }
-      if (!pick && pickMode === "todo-badge") {
+      if (!pick && mode === "todo-badge") {
         const todoId = pickFirstDailyTodoQuestCfgId(this.rows);
         if (todoId > 0) pick = this.rows.find((r) => r.quest_cfg_id === todoId) ?? null;
       }
-      if (!pick && pickMode === "center-claimable") {
+      if (!pick && mode === "center-claimable") {
         const claimId = pickFirstClaimableDailyQuestCfgId(this.rows);
         if (claimId > 0) pick = this.rows.find((r) => r.quest_cfg_id === claimId) ?? null;
       }
-      if (!pick) pick = pickDefaultDailyQuest(this.rows);
-      if (pick?.quest_cfg_id) this.selectedCfgId = pick.quest_cfg_id;
+      if (pick && !this.visibleRows().some(r => r.quest_cfg_id === pick?.quest_cfg_id)) {
+        // Explicit queue/HUD intent takes precedence over a remembered incompatible filter.
+        this.listFilter = "all";
+        writeDailyQuestListFilterSession(this.listFilter);
+      }
+      if (!pick) pick = this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId) ??
+        pickDefaultDailyQuest(this.visibleRows());
+      this.selectedCfgId = pick?.quest_cfg_id ?? 0;
       this.renderList();
       this.publishDailyChainSnapshot();
-      this.onStatus(`日常 ${this.rows.length} 条`);
+      if (selectionCurrent()) this.onStatus(`日常 ${this.rows.length} 条`);
+      return () => current() && selectionCurrent();
     } catch (e) {
-      if (!current()) return;
+      if (!current()) return null;
       const msg = (e as Error).message || "日常列表加载失败，请点「刷新列表」重试";
       this.listError = msg;
       this.rows = [];
       this.renderList();
-      this.onStatus(msg);
+      if (selectionCurrent()) this.onStatus(msg);
+      return null;
     } finally {
-      if (!current()) return;
+      if (!current()) return null;
       this.listLoading = false;
+      this.dailyClaimableCountOverride = null;
       this.renderList();
     }
   }
 
   private async acceptDaily(): Promise<void> {
-    if (this.acceptInflight) return;
+    if (this.acceptInflight || this.listLoading ||
+      this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId)?.state !== DAILY_QUEST_STATE_ACCEPTABLE) return;
     const current = this.captureCurrentPanel();
     const mounted = this.capturePanel();
     const id = this.selectedCfgId;
@@ -769,13 +801,14 @@ export class DailyQuestPanels {
     } finally {
       if (mounted()) {
         this.acceptInflight = false;
-        if (button) button.disabled = false;
+        this.syncSingleQuestActions();
       }
     }
   }
 
   private async claimDaily(): Promise<void> {
-    if (this.claimInflight || this.claimBatchInflight) return;
+    if (this.claimInflight || this.claimBatchInflight || this.listLoading ||
+      this.visibleRows().find(r => r.quest_cfg_id === this.selectedCfgId)?.state !== DAILY_QUEST_STATE_CLAIMABLE) return;
     const current = this.captureCurrentPanel();
     const mounted = this.capturePanel();
     const id = this.selectedCfgId;
@@ -811,7 +844,7 @@ export class DailyQuestPanels {
     } finally {
       if (!mounted()) return;
       this.claimInflight = false;
-      if (button) button.disabled = false;
+      this.syncSingleQuestActions();
     }
   }
 
@@ -905,6 +938,7 @@ export class DailyQuestPanels {
     }
     const li = (ev.target as HTMLElement).closest("li[data-quest-cfg-id]");
     if (li) {
+      ++this.selectionIntent;
       this.selectedCfgId = Number(li.getAttribute("data-quest-cfg-id")) || 0;
       this.renderList();
       return;
@@ -912,12 +946,13 @@ export class DailyQuestPanels {
     const chainTabBtn = (ev.target as HTMLElement).closest("[data-daily-chain-id]");
     if (chainTabBtn) {
       const chainId = Number(chainTabBtn.getAttribute("data-daily-chain-id")) || 0;
-      if (chainId > 0) this.switchDailyChainTab(chainId, true);
+      if (chainId > 0) { ++this.selectionIntent; this.switchDailyChainTab(chainId, true); }
       return;
     }
     const filterBtn = (ev.target as HTMLElement).closest('[data-action="daily-filter"]');
     if (filterBtn) {
       const f = filterBtn.getAttribute("data-filter") as DailyQuestListFilter | null;
+      if (f) ++this.selectionIntent;
       if (f && f !== this.listFilter) {
         this.listFilter = f;
         writeDailyQuestListFilterSession(f);
@@ -927,6 +962,7 @@ export class DailyQuestPanels {
     }
     const locateBtn = (ev.target as HTMLElement).closest('[data-action="daily-locate-first"]');
     if (locateBtn) {
+      ++this.selectionIntent;
       this.locateFirstClaimableRow();
       return;
     }

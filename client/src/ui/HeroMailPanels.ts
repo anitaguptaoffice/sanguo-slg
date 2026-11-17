@@ -1,8 +1,10 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
+import { heroMarchForceSessionRevision } from "@/net/heroMarchForceSession";
 import { captureActor } from "@/net/actorContext";
 import { beginAssetMutation } from "@/net/assetMutation";
 import { beginAssetRead, captureAssetRead } from "@/net/questClaimAssets";
 import { HOTEL_UNKNOWN_OUTCOME, HOTEL_CURRENT_STATE_ONLY, HOTEL_RELOAD_FAILED, readHotelCurrentState } from "@/net/hotelOutcome";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   PANEL_STATE_LOADING_MESSAGE,
@@ -578,6 +580,8 @@ import {
   formatHeroPointClearSuccessStatus,
   formatHeroPointGatewayErrorFromUnknown,
   heroPointSnapshotFromDetail,
+  heroPointSnapshotFromResult,
+  heroPointUnsupportedReason,
   mergeHeroPointSnapshot,
   renderHeroDetailPointsMarkup,
   setHeroPointFormErrorDisplay,
@@ -662,6 +666,8 @@ export class HeroMailPanels {
   private selectedMailId = 0;
   private heroDetail: HeroDetail | null = null;
   private heroDetailLoading = false;
+  private heroDetailReadGeneration = 0;
+  private heroBagLinkGeneration = 0;
   private heroDetailError: string | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
@@ -722,8 +728,8 @@ export class HeroMailPanels {
   private captiveReleaseInflight = false;
   private persuadeTargets: PersuadeTarget[] = [];
   private selectedPersuadeNpcId = 0;
-  private persuadeListInflight = false;
-  private persuadePrimaryInflight = false;
+  private persuadeGeneration = 0;
+  private persuadeState: { current: () => boolean; session: MainCitySession | null; primary: boolean; list: boolean; pending: boolean; outcome: string; warning: string } | null = null;
   private comingHeroesAll: ComingHeroRow[] = [];
   private comingHeroes: ComingHeroRow[] = [];
   private selectedComingHeroId = 0;
@@ -746,17 +752,20 @@ export class HeroMailPanels {
   private heroLargessNextAtByHeroId = new Map<number, number>();
   private heroLargessCooldownTimer: ReturnType<typeof setInterval> | null = null;
   private heroUpgradeSubmitState: UseConsumableSubmitState = "idle";
+  private heroRestRequests = new Map<number, { actor: () => boolean; detail: HeroDetail; forceChanged: boolean }>();
+  private heroUpgradeRequests = new Map<number, { actor: () => boolean }>();
+  private heroPointRequests = new Map<number, { actor: () => boolean }>();
   private heroPointSubmitState: UseConsumableSubmitState = "idle";
   private heroForceSubmitState: UseConsumableSubmitState = "idle";
   private heroPointSnapshotByHeroId = new Map<
     number,
-    ReturnType<typeof heroPointSnapshotFromDetail>
+    { actor: () => boolean; snapshot: ReturnType<typeof heroPointSnapshotFromDetail> }
   >();
   private heroExprSubmitState: UseConsumableSubmitState = "idle";
   private heroExprHoursPref = 1;
   private heroExprSnapshotByHeroId = new Map<
     number,
-    ReturnType<typeof heroExprSnapshotFromDetail>
+    { actor: () => boolean; snapshot: ReturnType<typeof heroExprSnapshotFromDetail> }
   >();
   private heroExprCountdownTimer: ReturnType<typeof setInterval> | null = null;
   private heroFocusTrap: CenterPanelFocusTrap | null = null;
@@ -810,6 +819,10 @@ export class HeroMailPanels {
 
   detach(): void {
     ++this.mailReadVersion;
+    ++this.persuadeGeneration;
+    this.persuadeState = null;
+    this.heroesRefreshInflight = false;
+    this.invalidateHeroDetailRead();
     this.hotelState = null;
     ++this.heroReadGeneration;
     ++this.recruitBagGeneration;
@@ -824,6 +837,9 @@ export class HeroMailPanels {
   }
 
   private closeHeroFromKeyboard(): void {
+    ++this.heroReadGeneration;
+    this.heroesRefreshInflight = false;
+    this.invalidateHeroDetailRead();
     this.heroPanel.classList.add("hidden");
   }
 
@@ -852,8 +868,8 @@ export class HeroMailPanels {
   /** 会话钱包/背包变更时刷新招募可负担对比（与 HUD 快照一致）。 */
   refreshRecruitAffordability(): void {
     if (!this.heroPanel || this.heroPanel.classList.contains("hidden")) return;
-    this.renderTemplateList();
-    this.renderHeroList();
+    this.renderTemplateList(true);
+    this.renderHeroList(true);
     this.syncHotelRecruitUi();
     this.syncCaptiveHeroUi();
     this.syncPersuadeUi();
@@ -1016,6 +1032,9 @@ export class HeroMailPanels {
   }
 
   toggleHero(): void {
+    ++this.heroReadGeneration;
+    this.heroesRefreshInflight = false;
+    this.invalidateHeroDetailRead();
     toggleCenterPanel(this.heroPanel);
     if (!this.heroPanel.classList.contains("hidden")) {
       this.recruitBagKey = null;
@@ -1036,7 +1055,9 @@ export class HeroMailPanels {
     openCenterPanel(this.heroPanel);
     void this.ensureRecruitBag();
     resetCenterPanelViewportScroll(this.heroPanel);
+    const current = this.beginHeroDetailNavigation(heroId);
     if (!this.heroes.length) await this.refreshHeroes();
+    if (!current()) return;
     let id = heroId;
     if (id <= 0) {
       id = this.heroes.find((h) => (h.hero_id ?? 0) > 0)?.hero_id ?? 0;
@@ -1046,8 +1067,8 @@ export class HeroMailPanels {
       this.onStatus("暂无将领可查看");
       return;
     }
-    await this.loadHeroDetail(id);
-    this.syncHeroPanelFocusTrap();
+    await this.loadHeroDetail(id, { current });
+    if (current()) this.syncHeroPanelFocusTrap();
   }
 
   isMailOpen(): boolean {
@@ -1099,10 +1120,11 @@ export class HeroMailPanels {
     if (!heroId) return;
     openCenterPanel(this.heroPanel);
     resetCenterPanelViewportScroll(this.heroPanel);
-    this.selectedHeroId = heroId;
+    const current = this.beginHeroDetailNavigation(heroId);
     void this.refreshHeroes().then(() => {
-      void this.loadHeroDetail(heroId).then(() => {
-        scrollHeroListRowIntoView(this.heroPanel, heroId);
+      if (!current()) return;
+      void this.loadHeroDetail(heroId, { current }).then(() => {
+        if (current()) scrollHeroListRowIntoView(this.heroPanel, heroId);
       });
     });
   }
@@ -1342,6 +1364,14 @@ export class HeroMailPanels {
       !this.heroDetailLoading &&
       !this.heroDetailError &&
       !!this.heroDetail;
+    if (host.open && detailPaneOpen) {
+      const active = host.ownerDocument.activeElement;
+      const summary = host.querySelector<HTMLElement>(":scope > summary");
+      if (active && summary && host.contains(active) && !summary.contains(active)) {
+        // Move focus before native details hides its body; preserve the close decision.
+        summary.focus({ preventScroll: true });
+      }
+    }
     host.open = !detailPaneOpen;
   }
 
@@ -1718,6 +1748,33 @@ export class HeroMailPanels {
     }
   }
 
+  private persuadeContext() {
+    if (!this.persuadeState?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const panel = this.heroPanel, generation = this.persuadeGeneration;
+      const state = { current: () => this.persuadeState === state && actor() && (!state.session || this.getSession() === state.session) &&
+        this.heroPanel === panel && panel.parentNode === this.mount && generation === this.persuadeGeneration,
+        session: null as MainCitySession | null, primary: false, list: false, pending: false, outcome: "", warning: "" };
+      this.persuadeState = state;
+      this.persuadeTargets = [];
+      this.selectedPersuadeNpcId = 0;
+    }
+    return this.persuadeState;
+  }
+
+  private async syncPersuadeBag(state: NonNullable<HeroMailPanels["persuadeState"]>): Promise<void> {
+    const session = this.getSession();
+    if (!session || !state.current()) return;
+    const bag = session.bag, latest = beginAssetRead(this.gateway);
+    try {
+      const res = await this.gateway.listPlayerBag(session.serverId) as { items?: BagStack[] };
+      if (!state.current() || !latest() || this.getSession()?.bag !== bag) return;
+      const snapshot = bagFromListPlayerBagResponse(res.items);
+      state.pending = false;
+      if (JSON.stringify(snapshot) !== JSON.stringify(bag)) this.onSessionPatch({ bag: snapshot });
+    } catch { /* Confirmed consumption survives failed reads; only explicit reads retry. */ }
+  }
+
   private selectedPersuadeTarget(): PersuadeTarget | undefined {
     return this.persuadeTargets.find((t) => t.npc_cfg_id === this.selectedPersuadeNpcId);
   }
@@ -1735,57 +1792,78 @@ export class HeroMailPanels {
   }
 
   private syncPersuadeUi(): void {
+    const state = this.persuadeContext();
     const { wallet, bag } = this.sessionEconomy();
     syncPersuadeMeta(this.heroPanel, this.persuadeTargets.length);
     renderPersuadeTargetList(this.heroPanel, this.persuadeTargets, this.selectedPersuadeNpcId);
     this.syncCaptureDisclosure("persuade-section", this.selectedPersuadeTarget()?.display_name);
     syncPersuadePreview(this.heroPanel, this.selectedPersuadeTarget(), wallet, bag);
-    syncPersuadeListRefreshButton(this.heroPanel, this.persuadeListInflight);
+    syncPersuadeListRefreshButton(this.heroPanel, state.list || state.primary);
     syncPersuadePrimaryButton(
       this.heroPanel,
-      this.persuadePrimaryInflight,
+      state.primary || state.list,
       this.selectedPersuadeTarget(),
       wallet,
       bag,
     );
+    const pending = state.pending ? "背包待同步，请拉取结交目标重试" : "";
+    setPersuadeFormError(this.heroPanel, [pending, state.warning].filter(Boolean).join("；") || null);
+    const meta = this.heroPanel.querySelector('[data-role="persuade-meta"]');
+    if (meta && state.outcome) meta.textContent += `；${state.outcome}`;
+    if (state.pending && resolvePersuadePrimaryAction(this.selectedPersuadeTarget()) === "persuade") {
+      const button = this.heroPanel.querySelector<HTMLButtonElement>('[data-action="persuade-primary"]');
+      if (button) { button.disabled = true; button.title = pending; }
+      const preview = this.heroPanel.querySelector('[data-role="persuade-preview"]');
+      if (preview) preview.textContent = `${this.selectedPersuadeTarget()?.display_name} · ${pending}`;
+    }
   }
 
-  private async refreshPersuadeTargets(): Promise<void> {
-    if (this.persuadeListInflight) return;
+  private async refreshPersuadeTargets(owned = false): Promise<void> {
+    const state = this.persuadeContext();
+    if (state.list || (state.primary && !owned)) return;
     const sid = this.serverId();
-    this.persuadeListInflight = true;
-    setPersuadeFormError(this.heroPanel, null);
+    state.list = true;
+    state.warning = "";
     this.syncPersuadeUi();
-    this.onStatus("拉取结交目标…");
     try {
+      if (state.pending) await this.syncPersuadeBag(state);
+      if (!state.current()) return;
       const res = await this.gateway.listPersuadeTargets(sid);
-      this.applyPersuadeListPayload(res);
-      this.onStatus(`结交目标 ${this.persuadeTargets.length} 名`);
+      if (!state.current()) return;
+      this.applyPersuadeListPayload(res, { keepSelection: owned || !!state.outcome });
     } catch (e) {
-      const msg = formatPersuadeGatewayError(e);
-      setPersuadeFormError(this.heroPanel, msg);
-      this.onStatus(msg);
+      if (!state.current()) return;
+      state.warning = `结交目标待刷新：${formatPersuadeGatewayError(e)}`;
     } finally {
-      this.persuadeListInflight = false;
-      this.syncPersuadeUi();
+      if (state.current()) {
+        state.list = false;
+        this.syncPersuadeUi();
+        if (!owned || state.outcome || state.pending || state.warning) {
+          this.onStatus([state.outcome, state.pending ? "背包待同步，请拉取结交目标重试" : "", state.warning]
+            .filter(Boolean).join("；") || `结交目标 ${this.persuadeTargets.length} 名`);
+        }
+      }
     }
   }
 
   private async runPersuadePrimary(): Promise<void> {
-    if (this.persuadePrimaryInflight) return;
+    const state = this.persuadeContext();
+    if (state.primary || state.list) return;
     const target = this.selectedPersuadeTarget();
     const npcId = target?.npc_cfg_id ?? 0;
     const action = resolvePersuadePrimaryAction(target);
+    if (action === "persuade" && state.pending) return;
     const sid = this.serverId();
     const cityId = this.cityId();
     if (!cityId || !npcId) {
       setPersuadeFormError(this.heroPanel, "尚未进入城池或未选择结交目标");
       return;
     }
-    this.persuadePrimaryInflight = true;
-    setPersuadeFormError(this.heroPanel, null);
+    state.session = this.getSession();
+    state.primary = true;
+    state.outcome = state.warning = "";
     this.syncPersuadeUi();
-    const current = captureActor(this.gateway, this.getSession);
+    const current = state.current;
     const settle = beginAssetMutation(this.gateway, current);
     try {
       if (action === "persuade") {
@@ -1795,7 +1873,10 @@ export class HeroMailPanels {
         settle();
         if (!current()) return;
         const delta = res.friend_delta != null ? Number(res.friend_delta) : 0;
-        this.onStatus(`游说成功，友好+${delta}`);
+        state.outcome = `${target?.display_name}游说成功，友好+${delta}`;
+        state.pending = true;
+        this.syncPersuadeUi();
+        this.onStatus(state.outcome);
       } else if (action === "befriend" || action === "hire") {
         const res = (await this.gateway.lionizeHero(sid, cityId, npcId)) as {
           befriended?: boolean;
@@ -1815,18 +1896,15 @@ export class HeroMailPanels {
         }
       }
       if (!current()) return;
-      const listRes = await this.gateway.listPersuadeTargets(sid);
-      if (!current()) return;
-      this.applyPersuadeListPayload(listRes, { keepSelection: true });
+      await this.refreshPersuadeTargets(true);
     } catch (e) {
       settle();
       if (!current()) return;
       const msg = formatPersuadeGatewayError(e);
-      setPersuadeFormError(this.heroPanel, msg);
+      state.warning = msg;
       this.onStatus(msg);
     } finally {
-      this.persuadePrimaryInflight = false;
-      if (current()) this.syncPersuadeUi();
+      if (current()) { state.primary = false; this.syncPersuadeUi(); }
     }
   }
 
@@ -2284,7 +2362,75 @@ export class HeroMailPanels {
     if (loader) remountPanelFilterChips(this.heroPanel, loader);
   }
 
-  private renderHeroList(): void {
+  private detailRefreshCache: { root: HTMLElement; detail: HeroDetail | null; key: string } | null = null;
+
+  private syncDetailEconomy(root: HTMLElement, markup: string): boolean {
+    const fresh = document.createElement("div");
+    fresh.innerHTML = markup;
+    const writes: (() => void)[] = [];
+    const texts = [".recruit-afford-primary", ".recruit-afford-secondary", '[data-role="hero-upgrade-item-gap"]',
+      ".hero-cultivation-item-hint", '[data-role="hero-cultivation-disabled-reason"]',
+      ...["gold-hint", "item-hint", "cd", "disabled-reason"].map(role => `[data-role="hero-largess-${role}"]`)];
+    for (const selector of texts) {
+      const current = [...root.querySelectorAll<HTMLElement>(selector)];
+      const next = [...fresh.querySelectorAll<HTMLElement>(selector)];
+      if (current.length !== next.length) return false;
+      for (let i = 0; i < next.length; i++) {
+        const a = current[i], b = next[i];
+        if (a.tagName !== b.tagName || a.dataset.kind !== b.dataset.kind) return false;
+        writes.push(() => {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          for (const cls of ["hidden", "recruit-cost-deficit", "hero-upgrade-item-gap-warn"]) {
+            a.classList.toggle(cls, b.classList.contains(cls));
+          }
+        });
+      }
+    }
+    for (const role of ["hero-detail-consumable-stack-line", "hero-detail-consumable-stack-residual-line"]) {
+      const a = root.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const b = fresh.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const anchor = root.querySelector('[data-role="recruit-afford-summary"], .hero-attr-table');
+      if (!anchor) return false;
+      writes.push(() => {
+        if (!b) a?.remove();
+        else if (!a) anchor.before(b);
+        else {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          a.classList.toggle("hero-detail-consumable-stack-residual-deficit", b.classList.contains("hero-detail-consumable-stack-residual-deficit"));
+        }
+      });
+    }
+    for (const action of ["hero-use-cultivation-item", "hero-largess-submit"]) {
+      const a = root.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      const b = fresh.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (!a || !b) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.textContent !== b.textContent) a.textContent = b.textContent; });
+    }
+    const select = root.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    const nextSelect = fresh.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    if (!select || !nextSelect || select.options.length !== nextSelect.options.length) return false;
+    for (let i = 0; i < select.options.length; i++) {
+      const a = select.options[i], b = nextSelect.options[i];
+      if (a.value !== b.value) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.text !== b.text) a.text = b.text; });
+    }
+    const controls = 'input[data-action="hero-largess-kind"], button[data-action^="hero-expr-"]';
+    const current = [...root.querySelectorAll<HTMLElement>(controls)];
+    const next = [...fresh.querySelectorAll<HTMLElement>(controls)];
+    if (current.length !== next.length || current.some((a, i) =>
+      ["type", "name"].some(key => a.getAttribute(key) !== next[i].getAttribute(key)) ||
+      a.tagName !== next[i].tagName || a.dataset.action !== next[i].dataset.action ||
+      a.dataset.hours !== next[i].dataset.hours || a.getAttribute("value") !== next[i].getAttribute("value"))) return false;
+    for (const write of writes) write();
+    syncHeroDetailExprControls(root, this.heroExprSubmitState, this.heroDetail,
+      this.sessionEconomy().wallet, this.heroExprHoursPref, Date.now());
+    return true;
+  }
+
+  private renderHeroList(economyRefresh = false): void {
+    this.syncHeroUpgradePendingState();
+    this.syncHeroRestPendingState();
+    this.syncHeroPointPendingState();
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-list"]');
     const detailEl = this.heroPanel.querySelector<HTMLElement>('[data-role="hero-detail"]');
     if (!ul) return;
@@ -2609,6 +2755,7 @@ export class HeroMailPanels {
       ),
     );
     if (detailEl) {
+      if (!this.selectedHeroId || this.heroDetailCollapsed || this.heroDetailLoading || this.heroDetailError) this.detailRefreshCache = null;
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
         this.syncHeroRecruitHostExpanded();
@@ -2664,7 +2811,7 @@ export class HeroMailPanels {
           this.getHeroLargessNextAtMs(),
           Date.now(),
         );
-        detailEl.innerHTML = renderHeroDetailMarkup(
+        const markup = renderHeroDetailMarkup(
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
@@ -2673,8 +2820,18 @@ export class HeroMailPanels {
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
         );
+        const key = JSON.stringify([this.selectedHeroId, this.heroDetail, this.recruitTemplateForHeroDetail(),
+          this.heroDetailListContext, this.heroUpgradeSubmitState, this.heroForceSubmitState,
+          this.heroPointSubmitState, this.heroExprSubmitState, this.heroCultivationSubmitState,
+          this.heroLargessSubmitState, this.heroLargessGiftMode, this.heroLargessItemCfgId,
+          this.recruitBagReady(), this.recruitBagError]);
+        const cache = this.detailRefreshCache;
+        const synced = economyRefresh && cache?.root === detailEl && cache.detail === this.heroDetail &&
+          cache.key === key && this.syncDetailEconomy(detailEl, markup);
+        if (!synced) detailEl.innerHTML = markup;
+        this.detailRefreshCache = { root: detailEl, detail: this.heroDetail, key };
         this.ensureHeroLargessCooldownTimer();
-        mountHeroDetailBust(
+        if (!synced) mountHeroDetailBust(
           detailEl,
           this.heroDetail?.template_cfg_id,
           this.heroDetail?.template_name || heroTemplateLabel(this.heroDetail?.template_cfg_id),
@@ -2715,7 +2872,7 @@ export class HeroMailPanels {
     return mergeRecruitTemplateOwnership(this.recruitTemplates, this.heroes);
   }
 
-  private renderTemplateList(): void {
+  private renderTemplateList(economyRefresh = false): void {
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
@@ -2895,13 +3052,13 @@ export class HeroMailPanels {
     }
     const pickId = this.selectedTemplateId || displayTemplates[0]?.template_cfg_id || 0;
     if (pickId) sel.value = String(pickId);
-    this.applyTemplateSelection(pickId);
+    this.applyTemplateSelection(pickId, { economyRefresh });
     applyRecruitScrollAnchorSession(this.heroPanel);
   }
 
   private applyTemplateSelection(
     templateCfgId: number,
-    opts?: { skipHeroListRender?: boolean },
+    opts?: { skipHeroListRender?: boolean; economyRefresh?: boolean },
   ): void {
     const displayTemplates = this.recruitTemplatesForDisplay();
     const row = displayTemplates.find((t) => t.template_cfg_id === templateCfgId);
@@ -2938,7 +3095,7 @@ export class HeroMailPanels {
     });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
-    if (!opts?.skipHeroListRender) this.renderHeroList();
+    if (!opts?.skipHeroListRender) this.renderHeroList(opts?.economyRefresh);
   }
 
   private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
@@ -3470,6 +3627,9 @@ export class HeroMailPanels {
     pulseOnSuccess?: boolean;
   }): Promise<void> {
     if (this.heroesRefreshInflight) return;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const detailGeneration = this.heroDetailReadGeneration;
+    const restoreSelection = () => opts?.restoreSelection && detailGeneration === this.heroDetailReadGeneration;
     const actor = captureActor(this.gateway, this.getSession);
     const generation = ++this.heroReadGeneration;
     const current = () => actor() && generation === this.heroReadGeneration && this.heroPanel.parentNode === this.mount;
@@ -3489,18 +3649,18 @@ export class HeroMailPanels {
       this.heroes = (res.heroes ?? []).map((row) => normalizeListPlayerHeroSummary(row));
       this.heroListLastRefreshedAtMs = Date.now();
       syncHeroListRefreshedAtDisplay(this.heroPanel, this.heroListLastRefreshedAtMs);
-      const returnRestore = opts?.restoreSelection ? readHeroListReturnState() : null;
+      const returnRestore = restoreSelection() ? readHeroListReturnState() : null;
       const listScrollRestore =
         returnRestore ??
-        (opts?.restoreSelection ? readHeroListSelectedSession() : null);
-      if (opts?.restoreSelection && returnRestore) {
+        (restoreSelection() ? readHeroListSelectedSession() : null);
+      if (restoreSelection() && returnRestore) {
         this.heroListFilter = returnRestore.filter;
         this.heroListSort = returnRestore.sort;
         writeHeroListFilterSession(this.heroListFilter);
         writeHeroListSortSession(this.heroListSort);
         this.persistHeroListFilterChipResidual();
       }
-      if (opts?.restoreSelection) {
+      if (restoreSelection()) {
         const stored = readHeroDetailSelectedSession();
         const listPick = pickRestoredHeroId(this.heroes, listScrollRestore?.heroId ?? null);
         const detailPick = pickRestoredHeroId(this.heroes, stored);
@@ -3511,7 +3671,7 @@ export class HeroMailPanels {
           this.heroDetailListContext = null;
         }
       } else if (
-        this.selectedHeroId > 0 &&
+        detailGeneration === this.heroDetailReadGeneration && this.selectedHeroId > 0 &&
         !this.heroes.some((h) => h.hero_id === this.selectedHeroId)
       ) {
         this.selectedHeroId = 0;
@@ -3519,17 +3679,20 @@ export class HeroMailPanels {
       }
       this.renderHeroList();
       this.renderTemplateList();
-      if (opts?.restoreSelection && this.selectedHeroId > 0 && !this.heroDetailCollapsed) {
-        await this.loadHeroDetail(this.selectedHeroId, {
+      if (restoreSelection() && this.selectedHeroId > 0 && !this.heroDetailCollapsed) {
+        const detailRequest = this.loadHeroDetail(this.selectedHeroId, {
           skipListSelectionWrite: true,
           fromHeroList: !!returnRestore,
         });
+        const restoredGeneration = this.heroDetailReadGeneration;
+        await detailRequest;
+        if (!current() || !presentation() || restoredGeneration !== this.heroDetailReadGeneration) return;
         if (listScrollRestore && listScrollRestore.heroId === this.selectedHeroId) {
           applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
         } else {
           scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
         }
-      } else if (opts?.restoreSelection && listScrollRestore) {
+      } else if (restoreSelection() && listScrollRestore) {
         applyHeroPanelListScrollTop(this.heroPanel, listScrollRestore.scrollTop);
         if (this.selectedHeroId > 0) {
           scrollHeroListRowIntoView(this.heroPanel, this.selectedHeroId);
@@ -3551,6 +3714,7 @@ export class HeroMailPanels {
       }
       this.onStatus(msg);
     } finally {
+      if (generation !== this.heroReadGeneration) return;
       this.heroesRefreshInflight = false;
       syncHeroListRefreshButton(this.heroPanel, false);
     }
@@ -3609,7 +3773,7 @@ export class HeroMailPanels {
     const snap = heroPointSnapshotFromDetail(detail);
     const heroId = detail?.hero_id;
     if (!heroId || !snap) return;
-    this.heroPointSnapshotByHeroId.set(heroId, snap);
+    this.heroPointSnapshotByHeroId.set(heroId, { actor: captureActor(this.gateway, this.getSession), snapshot: snap });
   }
 
   private persistHeroExprSnapshot(detail: HeroDetail | null | undefined): void {
@@ -3620,7 +3784,7 @@ export class HeroMailPanels {
       this.heroExprSnapshotByHeroId.delete(heroId);
       return;
     }
-    this.heroExprSnapshotByHeroId.set(heroId, snap);
+    this.heroExprSnapshotByHeroId.set(heroId, { actor: captureActor(this.gateway, this.getSession), snapshot: snap });
   }
 
   private clearHeroExprCountdownTimer(): void {
@@ -3631,13 +3795,19 @@ export class HeroMailPanels {
   }
 
   private ensureHeroExprCountdownTimer(): void {
+    const panel = this.heroPanel;
+    const displayed = () => panel.parentNode === this.mount && !panel.classList.contains("hidden");
     const inExpr = isHeroExprInProgress(this.heroDetail);
-    if (!inExpr) {
+    if (!displayed() || !inExpr) {
       this.clearHeroExprCountdownTimer();
       return;
     }
     if (this.heroExprCountdownTimer != null) return;
     this.heroExprCountdownTimer = window.setInterval(() => {
+      if (panel !== this.heroPanel || !displayed() || !isHeroExprInProgress(this.heroDetail)) {
+        this.clearHeroExprCountdownTimer();
+        return;
+      }
       const { wallet } = this.sessionEconomy();
       syncHeroDetailExprControls(
         this.heroPanel,
@@ -3647,9 +3817,6 @@ export class HeroMailPanels {
         this.heroExprHoursPref,
         Date.now(),
       );
-      if (!isHeroExprInProgress(this.heroDetail)) {
-        this.clearHeroExprCountdownTimer();
-      }
     }, 1000);
   }
 
@@ -3710,6 +3877,7 @@ export class HeroMailPanels {
   }
 
   private restoreHeroListFromReturnState(): void {
+    this.invalidateHeroDetailRead();
     const snap = consumeHeroListReturnState();
     const highlightHeroId = snap?.heroId ?? 0;
     if (snap) {
@@ -3737,10 +3905,43 @@ export class HeroMailPanels {
     this.onStatus(snap ? "已返回将领列表" : "列表已展开");
   }
 
+  private invalidateHeroDetailRead(): void {
+    this.clearHeroExprCountdownTimer();
+    ++this.heroBagLinkGeneration;
+    ++this.heroDetailReadGeneration;
+    this.heroDetailLoading = false;
+    this.heroDetail = null;
+  }
+
+  private beginHeroDetailNavigation(heroId: number): () => boolean {
+    ++this.heroBagLinkGeneration;
+    const current = this.beginHeroDetailRead();
+    this.selectedHeroId = heroId;
+    this.heroDetail = null;
+    this.heroDetailError = null;
+    this.heroDetailLoading = true;
+    this.heroDetailCollapsed = false;
+    this.renderHeroList();
+    return current;
+  }
+
+  private beginHeroDetailRead(): () => boolean {
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const generation = ++this.heroDetailReadGeneration;
+    const actor = captureActor(this.gateway, this.getSession);
+    return () => presentation() && actor() && generation === this.heroDetailReadGeneration &&
+      this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden");
+  }
+
   private async loadHeroDetail(
     heroId: number,
-    opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean },
+    opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean; current?: () => boolean },
   ): Promise<void> {
+    // Receipt reconciliation refreshes data, not the player's navigation intent.
+    if (!opts?.skipListSelectionWrite) ++this.heroBagLinkGeneration;
+    const owner = opts?.current ?? this.beginHeroDetailRead();
+    if (!owner()) return;
+    const current = () => owner() && this.selectedHeroId === heroId && !this.heroDetailCollapsed;
     const sid = this.serverId();
     this.selectedHeroId = heroId;
     this.heroDetailCollapsed = false;
@@ -3760,16 +3961,21 @@ export class HeroMailPanels {
     this.resetHeroPointSubmitFeedback();
     this.resetHeroForceSubmitFeedback();
     this.resetHeroExprSubmitFeedback();
+    this.heroDetail = null;
     this.heroDetailLoading = true;
     this.heroDetailError = null;
     this.renderHeroList();
     this.onStatus(`将领详情 #${heroId}…`);
     try {
       const res = await this.gateway.getHeroDetail(sid, heroId);
+      if (!current()) return;
       const parsed = parseGetHeroDetailResponse(res);
+      if (parsed?.hero_id !== heroId) throw new Error("将领详情与所选将领不一致，请重试");
       this.heroDetail = mergeHeroExprSnapshot(
-        mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId) ?? null),
-        this.heroExprSnapshotByHeroId.get(heroId) ?? null,
+        mergeHeroPointSnapshot(parsed, this.heroPointSnapshotByHeroId.get(heroId)?.actor()
+          ? this.heroPointSnapshotByHeroId.get(heroId)!.snapshot : null),
+        this.heroExprSnapshotByHeroId.get(heroId)?.actor()
+          ? this.heroExprSnapshotByHeroId.get(heroId)!.snapshot : null,
       );
       this.persistHeroPointSnapshot(this.heroDetail);
       persistHeroMarchForceFromDetail(this.heroDetail);
@@ -3779,19 +3985,39 @@ export class HeroMailPanels {
       this.heroDetailError = null;
       this.onStatus("详情已加载");
     } catch (e) {
+      if (!current()) return;
       this.heroDetail = null;
       this.heroDetailError = formatPanelGatewayErrorFromUnknown("recruit", e);
       this.onStatus(this.heroDetailError);
     } finally {
+      if (!current()) return;
       this.heroDetailLoading = false;
       this.renderHeroList();
     }
   }
 
+  private syncHeroUpgradePendingState(): void {
+    if (this.heroUpgradeRequests.get(this.selectedHeroId)?.actor()) {
+      this.heroUpgradeSubmitState = "submitting";
+    } else if (this.heroUpgradeSubmitState === "submitting") {
+      this.heroUpgradeSubmitState = "idle";
+    }
+  }
+
   private async upgradeSelectedHero(): Promise<void> {
-    if (this.heroUpgradeSubmitState === "submitting" || !this.selectedHeroId) return;
+    if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
+    if (this.heroUpgradeRequests.get(this.selectedHeroId)?.actor()) return;
     const heroId = this.selectedHeroId;
     const detailBefore = this.heroDetail;
+    const request = { actor: captureActor(this.gateway, this.getSession) };
+    this.heroUpgradeRequests.set(heroId, request);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => request.actor() && presentation() &&
+      generation === this.heroDetailReadGeneration && this.selectedHeroId === heroId &&
+      this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed && this.heroPanel.parentNode === this.mount;
+    const release = () => { if (this.heroUpgradeRequests.get(heroId) === request) this.heroUpgradeRequests.delete(heroId); };
+    this.heroUpgradeSubmitState = "idle";
     this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
       type: "SUBMIT",
     });
@@ -3802,6 +4028,15 @@ export class HeroMailPanels {
     this.onStatus("将领升级…");
     try {
       const res = await this.gateway.upgradeHero(sid, heroId);
+      release();
+      if (res.hero_id !== heroId) throw new Error("升级结果与所选将领不一致，请刷新详情");
+      if (!current()) {
+        if (request.actor() && this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+            this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
       const detailAfter = applyUpgradeHeroToDetail(this.heroDetail, res);
       this.heroDetail = detailAfter;
       this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
@@ -3816,6 +4051,8 @@ export class HeroMailPanels {
       );
       this.onStatus(statusText);
     } catch (e) {
+      release();
+      if (!current()) return;
       this.heroUpgradeSubmitState = useConsumableSubmitStateMachine(this.heroUpgradeSubmitState, {
         type: "FAIL",
       });
@@ -3824,54 +4061,118 @@ export class HeroMailPanels {
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
+      release();
+      if (request.actor() && this.selectedHeroId === heroId && this.heroPanel.parentNode === this.mount) {
+        this.syncHeroUpgradePendingState();
+        syncHeroDetailUpgradeButton(this.heroPanel, this.heroUpgradeSubmitState, this.heroDetail);
+      }
     }
   }
 
+  private syncHeroPointPendingState(): void {
+    if (this.heroPointRequests.get(this.selectedHeroId)?.actor()) this.heroPointSubmitState = "submitting";
+    else if (this.heroPointSubmitState === "submitting") this.heroPointSubmitState = "idle";
+  }
+
   private async addHeroPointForStat(stat: HeroPointAllocStat): Promise<void> {
-    if (this.heroPointSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    await this.submitHeroPoints(stat);
+  }
+
+  private async submitHeroPoints(stat: HeroPointAllocStat | null): Promise<void> {
+    if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
-    const targets = buildAddHeroPointTargets(this.heroDetail, stat);
-    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-      type: "SUBMIT",
-    });
+    if (this.heroPointRequests.get(heroId)?.actor()) return;
+    const unsupported = heroPointUnsupportedReason(this.heroDetail);
+    if (unsupported) {
+      setHeroPointFormErrorDisplay(this.heroPanel, unsupported);
+      this.onStatus(unsupported);
+      return;
+    }
+    const request = { actor: captureActor(this.gateway, this.getSession) };
+    this.heroPointRequests.set(heroId, request);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => request.actor() && presentation() && generation === this.heroDetailReadGeneration &&
+      this.selectedHeroId === heroId && this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed &&
+      this.heroPanel.parentNode === this.mount;
+    const release = () => { if (this.heroPointRequests.get(heroId) === request) this.heroPointRequests.delete(heroId); };
+    const targets = stat ? buildAddHeroPointTargets(this.heroDetail, stat) : null;
+    this.heroPointSubmitState = "submitting";
     setHeroPointFormErrorDisplay(this.heroPanel, null);
     setHeroPointSuccessDisplay(this.heroPanel, null);
     syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
-    const sid = this.serverId();
-    this.onStatus("潜力加点…");
+    this.onStatus(stat ? "潜力加点…" : "潜力洗点…");
     try {
-      const res = await this.gateway.addHeroPoint(sid, heroId, targets);
-      const detailAfter = applyHeroPointResultToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroPointSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "SUCCESS",
-      });
+      const res = stat && targets
+        ? await this.gateway.addHeroPoint(this.serverId(), heroId, targets)
+        : await this.gateway.clearHeroPoint(this.serverId(), heroId);
+      release();
+      if (res.hero_id !== heroId) throw new Error("潜力结果与所选将领不一致，请刷新详情");
+      const snapshot = heroPointSnapshotFromResult(res);
+      if (!snapshot) throw new Error("潜力结果无效，请刷新详情");
+      if (!request.actor()) return;
+      // GetHeroDetail omits adds/remaining: preserve this receipt before any navigation check or reread.
+      this.heroPointSnapshotByHeroId.set(heroId, { actor: request.actor, snapshot });
+      if (!current() || snapshot.level !== this.heroDetail?.level) {
+        if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+            this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
+      this.heroDetail = applyHeroPointResultToDetail(this.heroDetail, res);
+      // A confirmed allocation also supersedes older upgrade/rest presentation snapshots.
+      ++this.heroDetailReadGeneration;
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
+      this.heroPointSubmitState = "idle";
       this.renderHeroList();
-      const statusText = formatHeroPointAddSuccessStatus(stat);
+      const statusText = stat ? formatHeroPointAddSuccessStatus(stat) : formatHeroPointClearSuccessStatus(this.heroDetail);
       setHeroPointSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
-        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
-      );
+      scheduleHeroDetailStatPulse(this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null);
       this.onStatus(statusText);
     } catch (e) {
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "FAIL",
-      });
+      release();
+      if (!current()) return;
+      this.heroPointSubmitState = "error";
       const msg = formatHeroPointGatewayErrorFromUnknown(e);
       setHeroPointFormErrorDisplay(this.heroPanel, msg);
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+      release();
+      if (request.actor() && this.selectedHeroId === heroId && this.heroPanel.parentNode === this.mount) {
+        this.syncHeroPointPendingState();
+        syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
+      }
     }
   }
 
+  private syncHeroRestPendingState(): void {
+    const pending = this.heroRestRequests.get(this.selectedHeroId);
+    const detail = this.heroDetail;
+    // Upgrade can change the visible cap without writing the force cache. Remember that observation.
+    if (pending?.actor() && detail?.hero_id === this.selectedHeroId &&
+        (detail.level !== pending.detail.level || detail.march_force !== pending.detail.march_force ||
+         detail.march_force_max !== pending.detail.march_force_max)) pending.forceChanged = true;
+    if (this.heroRestRequests.get(this.selectedHeroId)?.actor()) this.heroForceSubmitState = "submitting";
+    else if (this.heroForceSubmitState === "submitting") this.heroForceSubmitState = "idle";
+  }
+
   private async restHeroForceSelected(): Promise<void> {
-    if (this.heroForceSubmitState === "submitting" || !this.selectedHeroId || !this.heroDetail) return;
+    if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
+    if (this.heroRestRequests.get(this.selectedHeroId)?.actor()) return;
     const heroId = this.selectedHeroId;
+    const detailBefore = this.heroDetail;
+    const request = { actor: captureActor(this.gateway, this.getSession), detail: detailBefore, forceChanged: false };
+    this.heroRestRequests.set(heroId, request);
+    const revision = heroMarchForceSessionRevision(heroId);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => request.actor() && presentation() && generation === this.heroDetailReadGeneration &&
+      this.selectedHeroId === heroId && this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed &&
+      this.heroPanel.parentNode === this.mount;
+    const release = () => { if (this.heroRestRequests.get(heroId) === request) this.heroRestRequests.delete(heroId); };
+    this.heroForceSubmitState = "idle";
     this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
       type: "SUBMIT",
     });
@@ -3882,10 +4183,21 @@ export class HeroMailPanels {
     this.onStatus("将领休整…");
     try {
       const res = await this.gateway.restHero(sid, heroId);
-      const detailAfter = applyRestHeroToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      persistHeroMarchForceFromDetail(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
+      release();
+      if (res.hero_id !== heroId) throw new Error("休整结果与所选将领不一致，请刷新详情");
+      if (!request.actor()) return;
+      const detailAfter = applyRestHeroToDetail(detailBefore, res);
+      const cacheUnchanged = !request.forceChanged && revision === heroMarchForceSessionRevision(heroId);
+      if (cacheUnchanged) persistHeroMarchForceFromDetail(detailAfter);
+      if (!current() || !cacheUnchanged) {
+        if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+            this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
+      this.heroDetail = applyRestHeroToDetail(this.heroDetail, res);
+      this.heroes = syncHeroSummaryFromDetail(this.heroes, this.heroDetail);
       this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
         type: "SUCCESS",
       });
@@ -3897,6 +4209,8 @@ export class HeroMailPanels {
       );
       this.onStatus(statusText);
     } catch (e) {
+      release();
+      if (!current()) return;
       this.heroForceSubmitState = useConsumableSubmitStateMachine(this.heroForceSubmitState, {
         type: "FAIL",
       });
@@ -3905,48 +4219,16 @@ export class HeroMailPanels {
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      syncHeroDetailForceControls(this.heroPanel, this.heroForceSubmitState, this.heroDetail);
+      release();
+      if (request.actor() && this.selectedHeroId === heroId && this.heroPanel.parentNode === this.mount) {
+        this.syncHeroRestPendingState();
+        syncHeroDetailForceControls(this.heroPanel, this.heroForceSubmitState, this.heroDetail);
+      }
     }
   }
 
   private async clearHeroPointsSelected(): Promise<void> {
-    if (this.heroPointSubmitState === "submitting" || !this.selectedHeroId) return;
-    const heroId = this.selectedHeroId;
-    this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-      type: "SUBMIT",
-    });
-    setHeroPointFormErrorDisplay(this.heroPanel, null);
-    setHeroPointSuccessDisplay(this.heroPanel, null);
-    syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
-    const sid = this.serverId();
-    this.onStatus("潜力洗点…");
-    try {
-      const res = await this.gateway.clearHeroPoint(sid, heroId);
-      const detailAfter = applyHeroPointResultToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroPointSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "SUCCESS",
-      });
-      this.renderHeroList();
-      const statusText = formatHeroPointClearSuccessStatus(detailAfter);
-      setHeroPointSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
-        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
-      );
-      this.onStatus(statusText);
-    } catch (e) {
-      this.heroPointSubmitState = useConsumableSubmitStateMachine(this.heroPointSubmitState, {
-        type: "FAIL",
-      });
-      const msg = formatHeroPointGatewayErrorFromUnknown(e);
-      setHeroPointFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
-      this.onStatus(msg);
-    } finally {
-      syncHeroDetailPointsControls(this.heroPanel, this.heroPointSubmitState, this.heroDetail);
-    }
+    await this.submitHeroPoints(null);
   }
 
   private syncHeroExprControlsNow(): void {
@@ -3999,105 +4281,69 @@ export class HeroMailPanels {
     }
   }
 
-  private async cancelHeroExprSelected(): Promise<void> {
-    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
-    const heroId = this.selectedHeroId;
-    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
-    setHeroExprFormErrorDisplay(this.heroPanel, null);
-    setHeroExprSuccessDisplay(this.heroPanel, null);
-    this.syncHeroExprControlsNow();
-    const sid = this.serverId();
-    this.onStatus("取消历练…");
-    try {
-      const res = await this.gateway.cancelHeroExpr(sid, heroId);
-      const detailAfter = applyCancelHeroExprToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroExprSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
-      this.clearHeroExprCountdownTimer();
-      this.renderHeroList();
-      const statusText = formatHeroExprCancelSuccessStatus();
-      setHeroExprSuccessDisplay(this.heroPanel, statusText);
-      this.onStatus(statusText);
-    } catch (e) {
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
-      const msg = formatHeroExprGatewayErrorFromUnknown(e);
-      setHeroExprFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
-      this.onStatus(msg);
-    } finally {
-      this.syncHeroExprControlsNow();
-    }
-  }
+  private async cancelHeroExprSelected(): Promise<void> { await this.settleHeroExprSelected("cancel"); }
+  private async finishHeroExprSelected(): Promise<void> { await this.settleHeroExprSelected("finish"); }
+  private async fasterHeroExprSelected(): Promise<void> { await this.settleHeroExprSelected("faster"); }
 
-  private async finishHeroExprSelected(): Promise<void> {
-    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
+  private async settleHeroExprSelected(action: "cancel" | "finish" | "faster"): Promise<void> {
+    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId ||
+      this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
-    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
+    const detailBefore = this.heroDetail;
+    const actor = captureActor(this.gateway, this.getSession);
+    const generation = this.heroDetailReadGeneration;
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    const current = () => actor() && presentation() && generation === this.heroDetailReadGeneration &&
+      this.selectedHeroId === heroId && this.heroDetail?.hero_id === heroId && !this.heroDetailCollapsed &&
+      this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden");
+    this.heroExprSubmitState = "submitting";
     setHeroExprFormErrorDisplay(this.heroPanel, null);
     setHeroExprSuccessDisplay(this.heroPanel, null);
     this.syncHeroExprControlsNow();
     const sid = this.serverId();
-    this.onStatus("领取历练经验…");
+    this.onStatus(action === "cancel" ? "取消历练…" : action === "finish" ? "领取历练经验…" : "加速历练…");
     try {
-      const res = await this.gateway.finishHeroExpr(sid, heroId);
-      const detailAfter = applyHeroExprFinishToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
+      const res = await (action === "cancel" ? this.gateway.cancelHeroExpr(sid, heroId) :
+        action === "finish" ? this.gateway.finishHeroExpr(sid, heroId) : this.gateway.fasterHeroExpr(sid, heroId));
+      if (!actor()) return;
+      if (res.hero_id !== heroId) throw new Error("历练结果与所选将领不一致，请刷新详情");
+      const finish = res as Parameters<typeof applyHeroExprFinishToDetail>[1];
+      const base = this.heroDetail?.hero_id === heroId ? this.heroDetail : detailBefore;
+      const detailAfter = action === "cancel" ? applyCancelHeroExprToDetail(base, res) :
+        applyHeroExprFinishToDetail(base, finish);
       this.persistHeroExprSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
+      // Settlement changes only status/EXP, never another action's level or loyalty.
+      this.heroes = this.heroes.map(h => h.hero_id === heroId ? { ...h, status: res.status,
+        ...(action !== "cancel" ? { exp: Math.max(h.exp ?? 0, detailAfter.exp ?? 0) } : {}) } : h);
+      if (!current()) {
+        if (this.selectedHeroId === heroId && !this.heroDetailCollapsed &&
+          this.heroPanel.parentNode === this.mount && !this.heroPanel.classList.contains("hidden")) {
+          // A newer detail read may predate settlement. Read fresh state; never replay the command.
+          await this.loadHeroDetail(heroId, { skipListSelectionWrite: true });
+        }
+        return;
+      }
+      this.heroExprSubmitState = "idle";
+      this.heroDetail = detailAfter;
       this.clearHeroExprCountdownTimer();
       this.renderHeroList();
-      const statusText = formatHeroExprFinishSuccessStatus(res);
+      const statusText = action === "cancel" ? formatHeroExprCancelSuccessStatus() :
+        action === "finish" ? formatHeroExprFinishSuccessStatus(finish) : formatHeroExprFasterSuccessStatus(finish);
       setHeroExprSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
+      if (action !== "cancel") scheduleHeroDetailStatPulse(
         this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
       );
       this.onStatus(statusText);
     } catch (e) {
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
+      if (!current()) return;
+      this.heroExprSubmitState = "error";
       const msg = formatHeroExprGatewayErrorFromUnknown(e);
       setHeroExprFormErrorDisplay(this.heroPanel, msg);
       this.renderHeroList();
       this.onStatus(msg);
     } finally {
-      this.syncHeroExprControlsNow();
-    }
-  }
-
-  private async fasterHeroExprSelected(): Promise<void> {
-    if (this.heroExprSubmitState === "submitting" || !this.selectedHeroId) return;
-    const heroId = this.selectedHeroId;
-    this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUBMIT" });
-    setHeroExprFormErrorDisplay(this.heroPanel, null);
-    setHeroExprSuccessDisplay(this.heroPanel, null);
-    this.syncHeroExprControlsNow();
-    const sid = this.serverId();
-    this.onStatus("加速历练…");
-    try {
-      const res = await this.gateway.fasterHeroExpr(sid, heroId);
-      const detailAfter = applyHeroExprFinishToDetail(this.heroDetail, res);
-      this.heroDetail = detailAfter;
-      this.persistHeroExprSnapshot(detailAfter);
-      this.heroes = syncHeroSummaryFromDetail(this.heroes, detailAfter);
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "SUCCESS" });
-      this.clearHeroExprCountdownTimer();
-      this.renderHeroList();
-      const statusText = formatHeroExprFasterSuccessStatus(res);
-      setHeroExprSuccessDisplay(this.heroPanel, statusText);
-      scheduleHeroDetailStatPulse(
-        this.heroPanel.querySelector('[data-role="hero-detail"]') as HTMLElement | null,
-      );
-      this.onStatus(statusText);
-    } catch (e) {
-      this.heroExprSubmitState = useConsumableSubmitStateMachine(this.heroExprSubmitState, { type: "FAIL" });
-      const msg = formatHeroExprGatewayErrorFromUnknown(e);
-      setHeroExprFormErrorDisplay(this.heroPanel, msg);
-      this.renderHeroList();
-      this.onStatus(msg);
-    } finally {
-      this.syncHeroExprControlsNow();
+      if (this.heroExprSubmitState === "submitting") this.heroExprSubmitState = "idle";
+      if (this.heroPanel.parentNode === this.mount) this.syncHeroExprControlsNow();
     }
   }
 
@@ -4321,7 +4567,7 @@ export class HeroMailPanels {
       ]);
       if (!current() || !latest() || (this.getSession()?.bag !== bag || this.getSession()?.wallet !== wallet) || !state?.wallet ||
           (this.cityStateFetch && !this.cityStateFetch.isCurrent(state))) return;
-      this.onSessionPatch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: state.wallet });
+      this.onSessionPatch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: mergeCityResourceWallet(wallet, state.wallet) });
     } catch { /* Preserve both prior snapshots if the aggregate read fails. */ }
   }
 
@@ -4563,7 +4809,7 @@ export class HeroMailPanels {
     await this.markMailRead(mailId);
   }
 
-  private async syncBagFromServer(): Promise<BagStack[] | null> {
+  private async syncBagFromServer(current = captureActor(this.gateway, this.getSession)): Promise<BagStack[] | null> {
     const session = this.getSession();
     if (!session) return null;
     const sid = this.serverId();
@@ -4571,6 +4817,7 @@ export class HeroMailPanels {
       const bagRes = (await this.gateway.listPlayerBag(sid)) as {
         items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      if (!current()) return null;
       const bag = bagFromListPlayerBagResponse(bagRes.items);
       this.onSessionPatch({ bag });
       return bag;
@@ -4593,6 +4840,8 @@ export class HeroMailPanels {
   > {
     const sid = this.serverId();
     const mailBeforeClaim = this.mails.find((m) => m.mail_id === mailId);
+    const current = captureActor(this.gateway, this.getSession);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
@@ -4603,13 +4852,15 @@ export class HeroMailPanels {
         wallet_after?: MainCitySession["wallet"];
         bag_items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      const freshAssets = settle();
+      if (!current()) return { ok: false, message: "" };
       const session = this.getSession();
       const claimPatch = session
         ? applyMailClaimResult(this.mails, mailId, res, session)
         : null;
       const nextMails = claimPatch?.mails ?? syncMailRowAfterClaim(this.mails, mailId, res);
       this.applyMailsAfterClaim(nextMails, mailId);
-      if (claimPatch) {
+      if (claimPatch && freshAssets) {
         this.onSessionPatch({ bag: claimPatch.bag, wallet: claimPatch.wallet });
       }
       this.mailBatchSelected.delete(mailId);
@@ -4624,6 +4875,8 @@ export class HeroMailPanels {
       return { ok: true, granted: res.granted };
     } catch (e) {
       return { ok: false, message: gatewayErrorMessage(e) };
+    } finally {
+      settle(); // Errors also invalidate reads, even after the panel is hidden.
     }
   }
 
@@ -4639,15 +4892,19 @@ export class HeroMailPanels {
     this.claimMailInflight = mailId;
     this.renderMailList();
     this.onStatus(`领取附件 #${mailId}…`);
+    const current = captureActor(this.gateway, this.getSession);
     const step = await this.claimMailAttachmentsForId(mailId);
     let pulseMailId = 0;
     try {
+      if (!current()) return;
       if (step.ok) {
         pulseMailId = mailId;
         this.rememberMailClaimInlineSuccess(mailId, step.granted);
         this.renderMailList();
-        await this.syncBagFromServer();
+        await this.syncBagFromServer(current);
+        if (!current()) return;
         const snap = await this.pullMailUnreadSnapshot();
+        if (!current()) return;
         this.mailUnreadTotal = snap.count;
         this.mailUnreadFirstId = snap.firstId;
         this.applyMailBadgeCountsFromSnapshot();
@@ -4660,8 +4917,10 @@ export class HeroMailPanels {
       }
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      if (current()) {
+        this.renderMailList();
+        if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      }
     }
   }
 
@@ -4698,16 +4957,21 @@ export class HeroMailPanels {
     this.onStatus(statusPrefix);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     const pulseMailIds: number[] = [];
+    const current = captureActor(this.gateway, this.getSession);
     try {
       for (const mailId of ordered) {
+        if (!current()) return;
         const step = await this.claimMailAttachmentsForId(mailId);
+        if (!current()) return;
         attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
         if (step.ok) pulseMailIds.push(mailId);
         else this.mailBatchClaimFailedIds.add(mailId);
         this.renderMailList();
       }
-      await this.syncBagFromServer();
+      await this.syncBagFromServer(current);
+      if (!current()) return;
       const snap = await this.pullMailUnreadSnapshot();
+      if (!current()) return;
       this.mailUnreadTotal = snap.count;
       this.mailUnreadFirstId = snap.firstId;
       this.applyMailBadgeCountsFromSnapshot();
@@ -4719,8 +4983,10 @@ export class HeroMailPanels {
       this.onStatus(summary.summaryText);
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      if (current()) {
+        this.renderMailList();
+        for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      }
     }
   }
 
@@ -4927,6 +5193,7 @@ export class HeroMailPanels {
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {
+    ++this.heroBagLinkGeneration;
     const tplId = this.heroDetail?.template_cfg_id;
     if (!tplId) {
       this.onStatus("请先点选将领加载详情");
@@ -4955,7 +5222,20 @@ export class HeroMailPanels {
     this.onStatus(`背包已高亮招募所需道具 ${itemCfgId}，请查看持有数量`);
   }
 
+  /** A bag read may complete after newer navigation, but must not navigate for it. */
+  private beginHeroBagLink(): () => boolean {
+    const request = ++this.heroBagLinkGeneration;
+    const heroId = this.selectedHeroId;
+    const actor = captureActor(this.gateway, this.getSession);
+    const presentation = captureCenterPanelIntent(this.heroPanel);
+    return () => request === this.heroBagLinkGeneration &&
+      heroId === this.selectedHeroId && !this.heroDetailCollapsed && actor() && presentation() &&
+      this.heroPanel.parentNode === this.mount;
+  }
+
   private async openHeroBagCultivationDeepLink(): Promise<void> {
+    const current = this.beginHeroBagLink();
+    if (!current()) return;
     const heroId = this.selectedHeroId;
     let items = this.sessionEconomy().bag;
     const sid = this.serverId();
@@ -4965,11 +5245,13 @@ export class HeroMailPanels {
       };
       items = bagFromListPlayerBagResponse(bagRes.items);
     } catch (e) {
+      if (!current()) return;
       const msg = formatPanelGatewayErrorFromUnknown("bag", e);
       setHeroCultivationFormErrorDisplay(this.heroPanel, msg);
       this.onStatus(msg);
       return;
     }
+    if (!current()) return;
     const pick = pickHeroDetailBagDeepLink(heroId, items);
     if (!pick.ok) {
       setHeroCultivationFormErrorDisplay(this.heroPanel, pick.errorMessage);
@@ -4993,6 +5275,9 @@ export class HeroMailPanels {
   }
 
   private async openRelatedCultivationItems(): Promise<void> {
+    const current = this.beginHeroBagLink();
+    if (!current()) return;
+    const heroId = this.selectedHeroId;
     const sid = this.serverId();
     let items = this.sessionEconomy().bag;
     try {
@@ -5003,6 +5288,7 @@ export class HeroMailPanels {
     } catch {
       /* 使用会话背包快照 */
     }
+    if (!current()) return;
     const ids = filterHeroCultivationBagItemIds(items);
     if (this.onOpenHeroCultivationBag) {
       const first = ids[0] ?? 0;
@@ -5010,7 +5296,7 @@ export class HeroMailPanels {
         this.onOpenHeroCultivationBag(
           buildHeroBagDeepLinkQuery({
             highlightItemId: first,
-            returnHeroId: this.selectedHeroId,
+            returnHeroId: heroId,
             openSource: "hero",
           }),
         );

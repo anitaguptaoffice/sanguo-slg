@@ -9,6 +9,14 @@ export const CHAT_LAST_READ_TS_STORAGE_KEY = "chat-last-read-ts";
 
 export type ChatLastReadMap = Record<string, number>;
 
+function defaultChatStorage(): Storage | null {
+  try {
+    return typeof localStorage !== "undefined" ? localStorage : null;
+  } catch {
+    return null; // Browser policy may reject the getter before getItem/setItem runs.
+  }
+}
+
 export type ChatChannelSnapshot = {
   key: string;
   channel: number;
@@ -45,9 +53,7 @@ export function parseChatLastReadMap(raw: string | null | undefined): ChatLastRe
 }
 
 export function readChatLastReadMap(
-  storage: Pick<Storage, "getItem"> | null = typeof localStorage !== "undefined"
-    ? localStorage
-    : null,
+  storage: Pick<Storage, "getItem"> | null = defaultChatStorage(),
 ): ChatLastReadMap {
   try {
     return parseChatLastReadMap(storage?.getItem(CHAT_LAST_READ_TS_STORAGE_KEY) ?? null);
@@ -58,9 +64,7 @@ export function readChatLastReadMap(
 
 export function writeChatLastReadMap(
   map: ChatLastReadMap,
-  storage: Pick<Storage, "setItem"> | null = typeof localStorage !== "undefined"
-    ? localStorage
-    : null,
+  storage: Pick<Storage, "setItem"> | null = defaultChatStorage(),
 ): void {
   try {
     storage?.setItem(CHAT_LAST_READ_TS_STORAGE_KEY, JSON.stringify(map));
@@ -198,9 +202,7 @@ export class ChatUnreadTracker {
   onCounts?: () => void;
 
   constructor(
-    storage: Pick<Storage, "getItem" | "setItem"> | null = typeof localStorage !== "undefined"
-      ? localStorage
-      : null,
+    storage: Pick<Storage, "getItem" | "setItem"> | null = defaultChatStorage(),
   ) {
     this.storage = storage;
     this.lastRead = readChatLastReadMap(storage);

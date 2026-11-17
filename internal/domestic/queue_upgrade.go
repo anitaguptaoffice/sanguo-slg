@@ -16,6 +16,17 @@ func (p *PGStore) startBuildingUpgrade(ctx context.Context, sid int32, c *CitySt
 	var result UpgradeResult
 	var job *BuildJob
 	err = p.saveCityInTx(ctx, sid, c, cat, now, func(work *CityState, tx pgx.Tx) error {
+		// saveCityInTx holds the player's wallet row lock. Inspect durable jobs
+		// here so independent Hubs with stale caches cannot both accept the slot.
+		var pending bool
+		if err := tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM work_queue
+ WHERE server_id=$1 AND city_id=$2 AND queue_type=$3 AND status IN (0,1)
+ AND payload->>'slot'=$4)`, sid, work.ID, queueTypeBuild, slot).Scan(&pending); err != nil {
+			return err
+		}
+		if pending {
+			return ErrInvalidUpgrade
+		}
 		settleProduction(work, cat, now)
 		var err error
 		result, job, err = startUpgradeWithAllocator(work, cat, now, slot, cfgID, func() (int64, error) { return p.allocateQueueID(ctx, tx, binding) })

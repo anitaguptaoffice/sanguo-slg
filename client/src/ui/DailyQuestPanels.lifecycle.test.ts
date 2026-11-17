@@ -11,14 +11,14 @@ function deferred<T = unknown>() {
 }
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const rows = [1012, 1014].map((id) => ({ quest_cfg_id: id, chain_id: 400, state: 3 }));
-function setup() {
+function setup(state = 3) {
   const mount = document.createElement("div");
   const status = vi.fn();
   const patch = vi.fn();
   const session = { serverId: 1, cityId: 1, cityName: "城", wallet: {}, buildings: [], cityTroops: [], bag: [] } as MainCitySession;
   const gateway = {
     getBoundServerId: () => 1,
-    listPlayerQuests: vi.fn().mockResolvedValue({ quests: rows }),
+    listPlayerQuests: vi.fn().mockResolvedValue({ quests: rows.map(row => ({ ...row, state })) }),
     acceptQuest: vi.fn().mockResolvedValue({}),
     claimQuestReward: vi.fn().mockResolvedValue({}),
     listPlayerBag: vi.fn().mockResolvedValue({ items: [] }),
@@ -32,7 +32,7 @@ function setup() {
 beforeEach(() => { sessionStorage.clear(); });
 describe("daily action lifecycle", () => {
   it("accept sends once while pending, then allows retry after failure", async () => {
-    const { panels, gateway, click } = setup();
+    const { panels, gateway, click } = setup(1);
     panels.toggle(); await flush();
     const pending = deferred();
     gateway.acceptQuest.mockReturnValueOnce(pending.promise);
@@ -70,7 +70,7 @@ describe("daily action lifecycle", () => {
     panels.detach();
   });
   it("old accept completion neither refreshes nor unlocks a new mount's acceptance", async () => {
-    const { panels, gateway, click, status } = setup();
+    const { panels, gateway, click, status } = setup(1);
     panels.toggle(); await flush();
     const old = deferred(), fresh = deferred();
     gateway.acceptQuest.mockReturnValueOnce(old.promise).mockReturnValueOnce(fresh.promise);

@@ -17,7 +17,7 @@ async function setup(action: "template" | "captive" | "befriend" | "persuade", s
   const gateway = {
     getBoundServerId: () => 1, getSessionId: () => "token", getSessionGeneration: () => generation,
     listPlayerBag: vi.fn().mockResolvedValue({items: session.bag}),
-    getCityState: vi.fn().mockResolvedValue({wallet: {food: 90, gold: 9500}}),
+    getCityState: vi.fn().mockResolvedValue({wallet: {food: 90, gold: 0}}),
     listPlayerHeroes: vi.fn().mockResolvedValue({heroes: []}),
     listRecruitTemplates: vi.fn().mockResolvedValue({templates: [{template_cfg_id:1001, recruit_cost:{food:10}, recruit_item:{item_cfg_id:2004,quantity:1}}]}),
     listPlayerQuests: vi.fn().mockResolvedValue({quests:[]}),
@@ -55,12 +55,12 @@ describe("family/template settlement epoch", () => {
       f.gateway.listPlayerBag.mockResolvedValue({items:[{item_cfg_id:2004,quantity:2}]});
       if (outcome === "success") f.mutation.resolve(action === "befriend" ? {befriended:true,display_name:"甲"} : {hero_id:42,display_name:"新将领"});
       else f.mutation.reject(new Error("gateway timeout"));
-      await flush(); old.resolve({wallet:{food:100,gold:10000}});
+      await flush(); old.resolve({wallet:{food:100,gold:0}});
       const state = await pending; await flush();
       if (outcome === "success" && action !== "befriend") {
         // Production constructor supplies this same CityStateFetch; post-recruit recovery reused pre-commit poll.
         expect(f.session().bag).toEqual([{item_cfg_id:2004,quantity:2}]);
-        expect(f.session().wallet).toEqual({food:90,gold:9500});
+        expect(f.session().wallet).toEqual({food:90,gold:10000});
       }
       expect(state).toBeNull();
     });
