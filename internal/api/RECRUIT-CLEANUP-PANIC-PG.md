@@ -12,7 +12,7 @@ signal is NOT atomic identity binding. Its earlier safety claim is withdrawn.
 
 Required cases: TestPGRecruitGenerationConstructorCleanupPanic and
 TestRecruitPanicAbsenceRejectsInvalidIdentity, official Go 1.23 / owned PG17 with
-host psql, ordinary AND race, zero unintended skips/failures. The child runs only
+host psql, ordinary AND race, zero unintended skips/failures. The guarded child runs only
 this compiled test binary and anchored PG case, preserving race instrumentation.
 The pure negative case rejects zero/missing PID/start before any database action.
 Actual 34-object Recruit profile and concrete constructor execute; no Return
@@ -43,4 +43,4 @@ explicitly as cleanup-unverified without guessed kill targets or schema cleanup.
 No official Go/gofmt/build, PG17, race or CI ran here. Final head/tree are recorded
 on the issue. Independent component/combination review, applicable packages and
 required CI remain gates; wire lost-ack, business coordination, activation and
-deployment are separate. No production hooks/private wrappers/reflection/unsafe.
+deployment are separate. No production hooks, private-field access, reflection or unsafe.

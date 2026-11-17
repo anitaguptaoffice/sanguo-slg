@@ -40,8 +40,7 @@ func TestTutorialReconciliationStores(t *testing.T) {
 	t.Run("mem", func(t *testing.T) { testTutorialReconciliation(t, NewMemStore()) })
 	t.Run("pg", func(t *testing.T) {
 		pool := openQuestTestDB(t)
-		t.Cleanup(pool.Close)
-		applyQuestSchema(t, pool)
+			applyQuestSchema(t, pool)
 		if _, err := pool.Exec(context.Background(), `DELETE FROM player_quest WHERE server_id=93`); err != nil {
 			t.Fatal(err)
 		}

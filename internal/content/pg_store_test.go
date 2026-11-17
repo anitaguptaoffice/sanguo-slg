@@ -2,17 +2,15 @@ package content
 
 import (
 	"context"
-	"os"
 	"testing"
 
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 )
 
 func TestPGStoreGrantSurvivesRestart(t *testing.T) {
-	pool := openContentTestDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := pgfixture.WarmPool(t)
 	ctx := context.Background()
-	applyContentSchema(t, pool)
 	store := NewPGStore(pool)
 
 	cat, err := EmbeddedCatalog()
@@ -52,25 +50,5 @@ func TestPGStoreGrantSurvivesRestart(t *testing.T) {
 	qty, _ = svc2.Get(p, 2001)
 	if qty != 3 {
 		t.Fatalf("duplicate must not double items: %d", qty)
-	}
-}
-
-func openContentTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	pool, err := db.Open(context.Background(), url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return pool
-}
-
-func applyContentSchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	if err := db.ApplySpecs(context.Background(), pool, "../../spec/db"); err != nil {
-		t.Fatal(err)
 	}
 }

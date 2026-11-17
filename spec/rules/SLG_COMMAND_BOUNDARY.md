@@ -115,6 +115,17 @@ Commit 返回错误、连接丢失或确认包丢失，并不一概意味着回�
 瞬时缺行、超时和缓存 miss 都不够。不得换身份规避不确定性。
 在稳定身份/receipt 契约落地前，只能安全重载/人工核对，不能承诺自动恢复原请求。
 
+首次建城的唯一专用例外见 [CITY_CREATION_RECOVERY](CITY_CREATION_RECOVERY.md)：
+允许先原子保留可权威发现的 PENDING 意图及 predecessor 仲裁，不代表业务接受；
+成功 receipt 仍与完整新城业务效果同事务提交，intake 不得含部分业务效果。
+仅该契约的确认全事务回滚及受锁保护的终态拒绝提交可形成 REJECTED_NO_EFFECT；
+原拒绝身份永久保留、不再执行，新明确意图须新 ID 和 exact rejected predecessor。
+已知本地或已接收意图不得因 PENDING/unknown/NOT_OBSERVED 换 ID；
+无本地意图且无已知 head 的明确 INITIAL 提案只按 EMPTY CAS 仲裁，不证明旧包失败。
+不同 pending winner 必须展示实际规范内容并再次明确继续，不能自动执行；
+所有继续均须满足事务序列化及 source/phase 门槛，receipt 不解除整个 source 的 unknown。
+该例外不适用于 legacy CreateCity、Recruit 或其他命令，不提供 wire/DDL/运行时启用许可。
+
 ## 6. 新城与旧数据边界
 
 Option B 的选定方向是应用层实际 Begin、固定 WORLD → MIL → DOM 新城参与步骤；
