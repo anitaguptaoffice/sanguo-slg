@@ -10,16 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 )
 
 func TestPGGrantAtomicPersistence(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	ctx := context.Background()
-	if err := db.ApplySpecs(ctx, pool, "../../spec/db"); err != nil {
-		t.Fatal(err)
-	}
+	applyContentSchema(t, pool)
 	cat, err := EmbeddedCatalog()
 	if err != nil {
 		t.Fatal(err)

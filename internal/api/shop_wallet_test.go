@@ -8,17 +8,14 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/shop"
 )
 
 func TestPgShopWalletSpend(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
