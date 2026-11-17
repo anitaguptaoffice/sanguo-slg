@@ -9,7 +9,7 @@ import type { FirstCityKnowledge } from "@/net/firstCityKnowledge";
 import { FirstCityController } from "@/net/firstCityController";
 import {
   canOfferFirstCityContinue, canOfferFirstCitySubmit,
-  runFirstCityContinueCommand, runFirstCitySubmitCommand,
+  runFirstCityContinueCommand, runFirstCitySubmitThroughTerminal,
 } from "./firstCityServerSelectCommand";
 import {
   canOfferFirstCityResult, runFirstCityGetResultCommand, suggestResultCommandId,
@@ -495,7 +495,7 @@ export class ServerSelectScene implements Scene {
         const name = this.panel.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value;
         const x = Number(this.panel.querySelector<HTMLInputElement>('input[name="fc-x"]')!.value);
         const y = Number(this.panel.querySelector<HTMLInputElement>('input[name="fc-y"]')!.value);
-        result = await runFirstCitySubmitCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
+        result = await runFirstCitySubmitThroughTerminal(ctx.gateway, this.firstCityController, this.firstCityKnowledge,
           { name, x, y }, login, password, this.selectedId, generation);
       } else {
         result = await runFirstCityContinueCommand(ctx.gateway, this.firstCityController, this.firstCityKnowledge,

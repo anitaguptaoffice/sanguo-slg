@@ -73,6 +73,26 @@ export async function runFirstCitySubmitCommand(
     (c, value) => c.submit(value), request);
 }
 
+/** Submit then, when durable head is still pending, one explicit Continue (effect / ACK-loss recovery). */
+export async function runFirstCitySubmitThroughTerminal(
+  gateway: FirstCityProbeGateway,
+  controller: FirstCityController,
+  knowledge: FirstCityKnowledge,
+  input: FirstCityProposalInput,
+  loginName: string,
+  password: string,
+  serverId: number,
+  generation?: number,
+): Promise<{ message: string; knowledge: FirstCityKnowledge }> {
+  const afterSubmit = await runFirstCitySubmitCommand(
+    gateway, controller, knowledge, input, loginName, password, serverId, generation,
+  );
+  if (!canOfferFirstCityContinue(afterSubmit.knowledge)) return afterSubmit;
+  return runFirstCityContinueCommand(
+    gateway, controller, afterSubmit.knowledge, loginName, password, serverId, generation,
+  );
+}
+
 export async function runFirstCityContinueCommand(
   gateway: FirstCityProbeGateway,
   controller: FirstCityController,
