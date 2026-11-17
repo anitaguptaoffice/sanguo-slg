@@ -4,6 +4,17 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths:
+      - '.github/workflows/military-return-pending-pg.yml'
+      - 'internal/military/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/server/**'
+      - 'internal/platform/gateway/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   march-pg-test:

@@ -22,7 +22,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
@@ -31,17 +31,14 @@ import (
 
 // TestM3SocialSmokePath covers选服 → 登录进服 → 世界聊天 → 军团 → 排行刷新与查询 (INTG-003).
 func TestM3SocialSmokePath(t *testing.T) {
+	pgfixture.SkipFullSpecUnderShort(t)
 	const serverID = int32(1)
 	fail := func(step string, err error) {
 		t.Fatalf("M3 smoke failed at step=%q server_id=%d: %v", step, serverID, err)
 	}
 
-	pool := openDB(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		fail("apply_specs", err)
-	}
 	if err := db.SeedDevServer(ctx, pool, serverID, "S1"); err != nil {
 		fail("seed_dev_server", err)
 	}

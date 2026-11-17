@@ -31,13 +31,18 @@ type recruitCompletionState struct {
 // Complete runs in the caller's transaction after the WORLD city FOR UPDATE lock,
 // repeats the frozen lock-ordered validation and applies effects atomically.
 func (p *RecruitParticipant) Complete(ctx context.Context, a *recruittx.Access, c RecruitCandidate) (RecruitCompletion, error) {
-	st, err := p.recruitCompletionLocked(ctx, a, c)
+	if a == nil {
+		_, err := p.recruitCompletionLocked(ctx, nil, c)
+		return 0, err
+	}
+	access := *a
+	st, err := p.recruitCompletionLocked(ctx, &access, c)
 	if err != nil {
 		return 0, err
 	}
 	switch st.plan.disposition {
 	case recruitCompletionDue:
-		if err = p.recruitCompletionApply(ctx, a, c, st); err != nil {
+		if err = p.recruitCompletionApply(ctx, &access, c, st); err != nil {
 			return 0, err
 		}
 		return RecruitCompleted, nil
