@@ -26,5 +26,5 @@ cd client && node qa/firstCityPlayable.browser.mjs
 
 ```bash
 DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable' \
-  go test ./internal/api -run TestFirstCityV2 -count=1
+  go test ./internal/api -run 'TestFirstCityV2|TestFirstCityPG' -count=1
 ```
