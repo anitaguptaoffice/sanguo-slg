@@ -1,0 +1,44 @@
+name: Shop Bag settlement browser
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths: ['.github/workflows/shop-bag-settlement.yml', 'client/qa/shopBagSettlement.browser.mjs', 'client/qa/SHOP-BAG-SETTLEMENT.md']
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+          path: harness
+      - uses: actions/checkout@v4
+        with:
+          ref: 6d21279dbfbc522b67a3a8b1e8d4b978e09b1002
+          persist-credentials: false
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify immutable target and copy QA only
+        run: |
+          test "$(git -C target rev-parse HEAD^{tree})" = 58f042526a31e79dbf468a145b863165f0188293
+          cp harness/client/qa/shopBagSettlement.browser.mjs target/client/qa/
+          node --check target/client/qa/shopBagSettlement.browser.mjs
+      - name: Install official locked browser dependencies
+        working-directory: target/client
+        run: npm ci && npx --no-install playwright install --with-deps chromium
+      - name: Run sandboxed native component acceptance
+        working-directory: target/client
+        env:
+          QA_OUT: ${{ runner.temp }}/shop-bag-settlement
+        run: node qa/shopBagSettlement.browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shop-bag-settlement-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/shop-bag-settlement
+          if-no-files-found: error

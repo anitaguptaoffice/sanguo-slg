@@ -19,8 +19,12 @@ import (
 
 func registrationServer(t *testing.T) (*Server, *pgxpool.Pool, time.Time, *bytes.Buffer) {
 	t.Helper()
+	return registrationServerOnPool(t, walletBoundaryPool(t, true))
+}
+
+func registrationServerOnPool(t *testing.T, pool *pgxpool.Pool) (*Server, *pgxpool.Pool, time.Time, *bytes.Buffer) {
+	t.Helper()
 	ctx := context.Background()
-	pool := walletBoundaryPool(t, true)
 	now := time.Unix(1700000000, 123456789)
 	seedRegistrationPlayer(t, pool, 55, domestic.Resources{Food: 1000})
 	if _, err := pool.Exec(ctx, "UPDATE player_wallet SET updated_at=$1", now.Add(-time.Hour)); err != nil {
@@ -142,6 +146,7 @@ func TestCreateCityRegistrationReload(t *testing.T) {
 }
 
 func TestCreateCityRegistrationCommitFailureBoundary(t *testing.T) {
+	isolateWalletDDL(t)
 	ctx := context.Background()
 	s, pool, _, log := registrationServer(t)
 	if _, err := pool.Exec(ctx, `CREATE FUNCTION reject_registration() RETURNS trigger LANGUAGE plpgsql AS $$

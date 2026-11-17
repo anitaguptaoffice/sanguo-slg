@@ -2,12 +2,9 @@ package api_test
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http/httptest"
-	"net/url"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -23,9 +20,9 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -33,12 +30,9 @@ import (
 )
 
 func TestLoginCreateCityUpgradeFlow(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
@@ -208,12 +202,9 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 }
 
 func TestM2BattleReportSmokePath(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
@@ -362,49 +353,10 @@ func (c *integrationClock) Now() time.Time { return c.t }
 
 func (c *integrationClock) set(nt time.Time) { c.t = nt }
 
-// openDB gives each API test an isolated schema. Reopened pools use the same
-// search_path so restart assertions exercise persisted state, not a fresh fixture.
-func openDB(t *testing.T) *pgxpool.Pool {
+// openWarmSpecDB is the default full-spec PostgreSQL entry for api_test smokes.
+func openWarmSpecDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	dsn := os.Getenv("DATABASE_URL")
-	if dsn == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	ctx := context.Background()
-	admin, err := db.Open(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	schema := fmt.Sprintf("api_test_%d", time.Now().UnixNano())
-	if _, err := admin.Exec(ctx, "CREATE SCHEMA "+schema); err != nil {
-		admin.Close()
-		t.Fatal(err)
-	}
-	t.Cleanup(func() {
-		defer admin.Close()
-		if _, err := admin.Exec(context.Background(), "DROP SCHEMA "+schema+" CASCADE"); err != nil {
-			t.Errorf("drop isolated test schema: %v", err)
-		}
-	})
-	if strings.HasPrefix(dsn, "postgres://") || strings.HasPrefix(dsn, "postgresql://") {
-		u, err := url.Parse(dsn)
-		if err != nil {
-			t.Fatal(err)
-		}
-		q := u.Query()
-		q.Set("search_path", schema)
-		u.RawQuery = q.Encode()
-		dsn = u.String()
-	} else {
-		dsn += " search_path=" + schema
-	}
-	t.Setenv("DATABASE_URL", dsn)
-	pool, err := db.Open(ctx, dsn)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
+	return pgfixture.WarmPool(t)
 }
 
 type smokeCityTile struct{ X, Y int32 }
