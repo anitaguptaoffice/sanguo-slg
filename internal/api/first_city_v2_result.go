@@ -39,7 +39,7 @@ func (s *Server) firstCityValidatedIntent(ctx context.Context, pkt *commonv1.Cli
 	return derived, domainReq, derivedActor, expectedActor, nil
 }
 
-func (s *Server) attemptFirstCityGet(scope *worldv1.FirstCityScope, commandID string) (*worldv1.FirstCityOutcome, error) {
+func (s *Server) attemptFirstCityGet(ctx context.Context, scope *worldv1.FirstCityScope, commandID string) (*worldv1.FirstCityOutcome, error) {
 	if _, valid := firstCityUUID(commandID); !valid {
 		return nil, errors.New("command")
 	}
@@ -53,6 +53,14 @@ func (s *Server) attemptFirstCityGet(scope *worldv1.FirstCityScope, commandID st
 	}
 	if !ok {
 		return s.firstCityOutcome(scope, worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_NOT_OBSERVED, commandID, nil, head), nil
+	}
+	if existing.GetPending() != nil && head.GetCommand() != nil &&
+		head.GetCommand().GetCanonical().GetProposal().GetCommandId() == commandID {
+		existing = s.settleFirstCityEffect(ctx, scope, existing)
+		head, err = s.firstCityV2Ledger.Head(scope)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return s.firstCityOutcome(scope, worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_COMMAND, commandID, existing, head), nil
 }
@@ -139,7 +147,7 @@ func (s *Server) handleGetFirstCityResult(ctx context.Context, pkt *commonv1.Cli
 	if s.firstCityV2Ledger == nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city lookup unavailable"), nil
 	}
-	outcome, err := s.attemptFirstCityGet(derived, req.GetCommandId())
+	outcome, err := s.attemptFirstCityGet(ctx, derived, req.GetCommandId())
 	if err != nil {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "first-city lookup unavailable"), nil
 	}

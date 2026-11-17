@@ -53,6 +53,40 @@ func TestFirstCityV2MemGetAndContinue(t *testing.T) {
 	}
 }
 
+func TestFirstCityV2GetSettlesPending(t *testing.T) {
+	s := testFirstCityV2Persisted(t)
+	fx := &stubEffect{err: errors.New("effect unavailable")}
+	s.WireFirstCityV2Effect(fx)
+	s.sessions.Bind("sess-fc", PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8})
+	scope := derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm)
+	cmd := "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1"
+	name, x, y := "城", int32(4), int32(5)
+	prop := &worldv1.FirstCityProposal{
+		CommandId: cmd,
+		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+		Name: &name, X: &x, Y: &y,
+	}
+	pkt := func(trace string, payload []byte) *commonv1.ClientPacket {
+		return &commonv1.ClientPacket{TraceId: trace, SessionId: "sess-fc", ServerId: 1, Payload: payload}
+	}
+	subReq, _ := marshal(&worldv1.SubmitFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+	if out, _ := s.handleSubmitFirstCity(context.Background(), pkt("sub", subReq)); out.GetCode() != 0 {
+		t.Fatal(out)
+	}
+	fx.err = nil
+	fx.cityID = 88
+	getReq, _ := marshal(&worldv1.GetFirstCityResultRequest{ExpectedScope: scope, CommandId: cmd})
+	out, _ := s.handleGetFirstCityResult(context.Background(), pkt("get", getReq))
+	var getBody worldv1.GetFirstCityResultResponse
+	_ = unmarshal(out.GetData(), &getBody)
+	if getBody.GetOutcome().GetCommand().GetSucceeded().GetCityId() != 88 {
+		t.Fatalf("get %+v", getBody.GetOutcome())
+	}
+	if fx.calls != 2 {
+		t.Fatalf("effect calls = %d", fx.calls)
+	}
+}
+
 func TestFirstCityV2ContinueSettlesPending(t *testing.T) {
 	s := testFirstCityV2Persisted(t)
 	fx := &stubEffect{err: errors.New("effect unavailable")}

@@ -363,3 +363,93 @@ func TestFirstCityPGDuplicateSubmitPendingNoDoubleCity(t *testing.T) {
 		t.Fatalf("effect attempts = %d want 1", flaky.attempt.Load())
 	}
 }
+
+// TestFirstCityPGGetSettlesPending mirrors poll Get after durable PENDING intake.
+func TestFirstCityPGGetSettlesPending(t *testing.T) {
+	ctx := context.Background()
+	pool := walletBoundaryPool(t, true)
+	const playerID = int64(59)
+	if _, err := pool.Exec(ctx, "DELETE FROM player_city WHERE server_id=1 AND player_id=$1", playerID); err != nil {
+		t.Fatal(err)
+	}
+	if err := world.NewPGStore(pool).SaveChunk(ctx, 1, world.GenerateChunk(1, 0, 0)); err != nil {
+		t.Fatal(err)
+	}
+	h := domestic.NewHub(time.Now)
+	h.UseStore(domestic.NewPGStore(pool), 1, 0)
+	s := NewServer(nil, pool, world.NewService(world.NewPGStore(pool)), h, march.NewHub(nil))
+
+	var accountID int64
+	if err := pool.QueryRow(ctx,
+		`INSERT INTO account(login_name,password_hash,status) VALUES ($1,'x',1) RETURNING account_id`,
+		fmt.Sprintf("fc-get-%d", playerID)).Scan(&accountID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO player(server_id,player_id,account_id,display_name) VALUES (1,$1,$2,'fc-get')`,
+		playerID, accountID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx,
+		`INSERT INTO player_wallet(server_id,player_id,food,wood,stone,iron) VALUES (1,$1,8000,8000,5000,5000)`,
+		playerID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM world_first_city_command WHERE server_id=1 AND player_id=$1`, playerID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := pool.Exec(ctx, `DELETE FROM world_first_city_actor_slot WHERE server_id=1 AND player_id=$1`, playerID); err != nil {
+		t.Fatal(err)
+	}
+
+	var buildable *world.Cell
+	for _, c := range world.GenerateChunk(1, 0, 0) {
+		if c.Buildable() && c.X > 0 && c.Y > 0 {
+			buildable = &c
+			break
+		}
+	}
+	if buildable == nil {
+		t.Fatal("no buildable tile")
+	}
+	const cmd = "99999999-9999-4999-8999-999999999991"
+	scope := &worldv1.FirstCityScope{RealmId: testFirstCityRealmUUID, ServerId: 1, PlayerId: playerID, AccountId: accountID}
+	proposal := &worldv1.FirstCityProposal{
+		CommandId:   cmd,
+		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+		Name:        proto.String("首城"),
+		X:           proto.Int32(int32(buildable.X)),
+		Y:           proto.Int32(int32(buildable.Y)),
+	}
+	flaky := &failOnceFirstCityEffect{}
+	s.sessions.Bind("owner", PlayerContext{ServerID: 1, PlayerID: playerID, AccountID: accountID})
+	s.EnableFirstCityV2Routes(func(PlayerContext) (string, bool) { return testFirstCityRealmUUID, true })
+	s.WireFirstCityV2Ledger(NewPGFirstCityLedger(pool), fixedTemplateIntake{ref: FirstCityTemplateRef("DATA-002")})
+	flaky.inner = s.FirstCityCreationEffect()
+	s.WireFirstCityV2Effect(flaky)
+
+	submitPkt := &commonv1.ClientPacket{SessionId: "owner", TraceId: "get-submit", ServerId: 1,
+		Payload: mustProto(&worldv1.SubmitFirstCityRequest{ExpectedScope: scope, Proposal: proposal})}
+	out, err := s.handleSubmitFirstCity(ctx, submitPkt)
+	if err != nil || out.GetCode() != 0 {
+		t.Fatal(err, out)
+	}
+	s.WireFirstCityV2Effect(s.FirstCityCreationEffect())
+
+	getPkt := &commonv1.ClientPacket{SessionId: "owner", TraceId: "get-settle", ServerId: 1,
+		Payload: mustProto(&worldv1.GetFirstCityResultRequest{ExpectedScope: scope, CommandId: cmd})}
+	out, err = s.handleGetFirstCityResult(ctx, getPkt)
+	if err != nil || out.GetCode() != 0 {
+		t.Fatal(err, out)
+	}
+	var getResp worldv1.GetFirstCityResultResponse
+	if err := proto.Unmarshal(out.GetData(), &getResp); err != nil {
+		t.Fatal(err)
+	}
+	if getResp.GetOutcome().GetCommand().GetSucceeded().GetCityId() <= 0 {
+		t.Fatalf("get %+v", getResp.GetOutcome())
+	}
+	if flaky.attempt.Load() != 1 {
+		t.Fatalf("effect attempts = %d", flaky.attempt.Load())
+	}
+}
