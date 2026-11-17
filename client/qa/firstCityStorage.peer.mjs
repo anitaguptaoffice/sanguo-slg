@@ -46,7 +46,13 @@ export async function startPeer(client) {
         peer.packets.push({ direction: 'request', route, trace: packet.trace_id, data: Buffer.from(packet.payload).toString('hex') });
         if (route.endsWith('DiscoverFirstCityIntent')) return reply({ scope, head: { empty: {} } });
         const id = request.proposal?.command_id ?? request.command_id;
-        if (route.endsWith('GetFirstCityResult')) return reply({ outcome: { scope, kind: 4, requested_command_id: id, head: { empty: {} } } });
+        if (route.endsWith('GetFirstCityResult')) {
+          if (peer.mode === 'pendingThenGet') {
+            const command = record(scope, { command_id: id, name: '城é', x: 0, y: 499, predecessor: { empty: {} } }, true);
+            return reply({ outcome: { scope, kind: 1, requested_command_id: id, command, head: { command } } });
+          }
+          return reply({ outcome: { scope, kind: 4, requested_command_id: id, head: { empty: {} } } });
+        }
         peer.effects.push({ route, request });
         if (peer.mode === 'drop') return;
         if (peer.mode === 'race') {
@@ -59,7 +65,8 @@ export async function startPeer(client) {
           }
           return;
         }
-        const command = record(scope, request.proposal, true);
+        const terminal = peer.mode !== 'pending';
+        const command = record(scope, request.proposal, terminal);
         reply({ outcome: { scope, kind: 1, requested_command_id: id, command, head: { command } } });
       } catch (error) { peer.errors.push(String(error.stack)); socket.close(); }
     });

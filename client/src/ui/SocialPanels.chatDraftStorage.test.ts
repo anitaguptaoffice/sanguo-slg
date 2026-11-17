@@ -6,6 +6,26 @@ import { SocialPanels } from "./SocialPanels";
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 const attached: SocialPanels[] = [];
+const sessionBacking = new Map<string, string>();
+
+function makeSessionStorage(block: { setItem?: boolean; removeItem?: boolean }): Storage {
+  return {
+    get length() {
+      return sessionBacking.size;
+    },
+    key: (i: number) => [...sessionBacking.keys()][i] ?? null,
+    getItem: (k: string) => (sessionBacking.has(k) ? sessionBacking.get(k)! : null),
+    setItem: (k: string, v: string) => {
+      if (block.setItem && k === key) throw new DOMException("Unavailable", "QuotaExceededError");
+      sessionBacking.set(k, v);
+    },
+    removeItem: (k: string) => {
+      if (block.removeItem && k === key) throw new DOMException("Unavailable", "SecurityError");
+      sessionBacking.delete(k);
+    },
+    clear: () => sessionBacking.clear(),
+  } as Storage;
+}
 function setup() {
   const mount = document.createElement("div");
   document.body.append(mount);
@@ -27,16 +47,18 @@ function setup() {
   return { panels, mount, gateway, input, write, send, reopen, counter };
 }
 function deny(method: "setItem" | "removeItem") {
-  const original = Storage.prototype[method];
-  return vi.spyOn(Storage.prototype, method).mockImplementation(function (this: Storage, name: string, value?: string) {
-    if (this === sessionStorage && name === key) throw new DOMException("Unavailable", method === "setItem" ? "QuotaExceededError" : "SecurityError");
-    return original.call(this, name, value!);
-  });
+  vi.stubGlobal("sessionStorage", makeSessionStorage({ [method]: true }));
 }
-beforeEach(() => sessionStorage.clear());
+beforeEach(() => {
+  sessionBacking.clear();
+  vi.stubGlobal("sessionStorage", makeSessionStorage({}));
+});
 afterEach(() => {
   attached.splice(0).forEach((panels) => panels.detach());
-  vi.restoreAllMocks(); sessionStorage.clear(); document.body.replaceChildren();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  sessionBacking.clear();
+  document.body.replaceChildren();
 });
 
 describe("chat draft storage is best effort", () => {
@@ -113,13 +135,14 @@ describe("chat draft storage is best effort", () => {
     const f = setup();
     f.mount.querySelector<HTMLInputElement>('[data-field="guild-name"]')!.value = "guild";
     f.mount.querySelector<HTMLButtonElement>('[data-action="create-guild"]')!.click(); await flush();
-    const fault = deny("setItem");
+    deny("setItem");
     const mention = document.createElement("button");
     mention.dataset.action = "guild-mention"; mention.dataset.displayName = "Alice";
     f.mount.querySelector('[data-center-panel="guild"]')!.append(mention); mention.click();
     const draft = f.input().value; expect(draft).toContain("Alice"); f.reopen();
     expect(f.input().value).toBe(draft);
-    fault.mockRestore(); f.reopen();
+    vi.stubGlobal("sessionStorage", makeSessionStorage({}));
+    f.reopen();
     expect(sessionStorage.getItem(key)).toBe(draft);
     expect(f.gateway.sendChatMessage).not.toHaveBeenCalled();
   });

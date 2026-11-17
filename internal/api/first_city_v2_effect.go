@@ -66,6 +66,11 @@ func (s *Server) settleFirstCityEffect(ctx context.Context, scope *worldv1.First
 	if s.firstCityV2Effect == nil || pending == nil || pending.GetCanonical() == nil {
 		return pending
 	}
+	if s.firstCityPrepared != nil {
+		if ledger, ok := s.firstCityV2Ledger.(*pgFirstCityLedger); ok {
+			return s.settleFirstCityEffectPreparedPG(ctx, scope, pending, ledger)
+		}
+	}
 	proposal := pending.GetCanonical().GetProposal()
 	cityID, reason, err := s.firstCityV2Effect.Create(ctx, scope, proposal)
 	if err != nil {

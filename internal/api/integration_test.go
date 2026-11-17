@@ -23,9 +23,9 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -33,12 +33,9 @@ import (
 )
 
 func TestLoginCreateCityUpgradeFlow(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
@@ -208,12 +205,9 @@ func TestLoginCreateCityUpgradeFlow(t *testing.T) {
 }
 
 func TestM2BattleReportSmokePath(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}
@@ -361,6 +355,12 @@ type integrationClock struct {
 func (c *integrationClock) Now() time.Time { return c.t }
 
 func (c *integrationClock) set(nt time.Time) { c.t = nt }
+
+// openWarmSpecDB is the default full-spec PostgreSQL entry for api_test smokes.
+func openWarmSpecDB(t *testing.T) *pgxpool.Pool {
+	t.Helper()
+	return pgfixture.WarmPool(t)
+}
 
 // openDB gives each API test an isolated schema. Reopened pools use the same
 // search_path so restart assertions exercise persisted state, not a fresh fixture.

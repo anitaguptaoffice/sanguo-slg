@@ -39,7 +39,10 @@
 - **SPEC #2579 ACK-loss（PG 层）**：`make test-spec-fc-ack-loss`；CI `go-build-test-lint` 步执行 harness + `TestSpecFirstCityLedgerAckLossHarness`；可选本地 `ALLOW_OWNED_PG17_TEST=1 make test-gate` 追加同一套。
 - **Get 被动 settle**：head 一致且 PENDING 时 `GetFirstCityResult` 走 `settleFirstCityEffect`（见 `internal/api/FIRST-CITY-GET-SETTLE.md`）；`TestFirstCityPGGetSettlesPending`。
 - **DOM PreparedCity（默认关）**：`SANGUO_FIRST_CITY_USE_PREPARED_CITY=1` + `createFirstCityViaPreparedCity`；见 `FIRST-CITY-DOM-PREPARED-CITY.md`。
-- **仍缺**：effect 与 companion 同 txn 全 pin 序；`firstCityStorage.browser.mjs` 全矩阵；PreparedCity 与 dev `make` 默认可玩验收（需 env + MIL profile OIDs）。
+- **PreparedCity PG**：`TestFirstCitySubmitCreatesCityPreparedPG`（显式 wiring，不依赖 env）。
+- **Prepared + PG ledger 原子 settle**：`settleFirstCityEffectPreparedPG` / `settleOnTx`（effect+receipt 同事务；完整 companion §4.1 全 pin 仍属 ATOMICITY 卡）。
+- **Storage 矩阵**：`firstCityStorage.browser.mjs` 含 `GetFirstCityResult` barrier 与 `get-after-pending-resume`。
+- **仍缺**：dev 默认 `SANGUO_FIRST_CITY_USE_PREPARED_CITY=1` 端到端（需 MIL fresh profile 文件 + OID 验收）；SPEC ATOMICITY harness 与运行时 companion SQL 全量对齐。
 - 历史 Draft 表（#2505/#2529 等）若与 main 重复，以 **main HEAD** 与上述冒烟为准；勿再假定「尚未开放」或 runtime 未接线。
 
 ## 5. 收件箱键盘：完整可恢复实验栈

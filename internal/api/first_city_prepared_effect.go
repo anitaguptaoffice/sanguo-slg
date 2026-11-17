@@ -54,7 +54,9 @@ func (s *Server) createFirstCityViaPreparedCity(ctx context.Context, pc PlayerCo
 	if s.domestic == nil || !s.domestic.SupportsAtomicCityCreation(s.players.Pool, pc.ServerID) {
 		return 0, errCityCreationUnavailable
 	}
-	owner, err := src.Binding.Begin(ctx)
+	txCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	owner, err := src.Binding.Begin(txCtx)
 	if err != nil {
 		return 0, err
 	}
@@ -66,44 +68,47 @@ func (s *Server) createFirstCityViaPreparedCity(ctx context.Context, pc PlayerCo
 	}()
 	access := owner.Access()
 	schema := src.Profile.SchemaName
-	if err := firstCityPreparedActorLocks(ctx, access, src.Binding, schema); err != nil {
+	if err := firstCityPreparedTxnPath(txCtx, access, src.Binding, schema); err != nil {
 		return 0, err
 	}
-	if err := src.World.Pin(ctx, access); err != nil {
+	if err := firstCityPreparedActorLocks(txCtx, access, src.Binding, schema); err != nil {
 		return 0, err
 	}
-	if err := src.Mil.Pin(ctx, access); err != nil {
+	if err := src.World.Pin(txCtx, access); err != nil {
+		return 0, err
+	}
+	if err := src.Mil.Pin(txCtx, access); err != nil {
 		return 0, err
 	}
 	var status int
-	if err := access.Scan(ctx, src.Binding, "SELECT status FROM "+pgx.Identifier{schema, "account"}.Sanitize()+" WHERE account_id=$1 FOR SHARE",
+	if err := access.Scan(txCtx, src.Binding, "SELECT status FROM "+pgx.Identifier{schema, "account"}.Sanitize()+" WHERE account_id=$1 FOR SHARE",
 		[]any{pc.AccountID}, &status); err != nil || status != 1 {
 		return 0, errCityCreationUnavailable
 	}
 	var bound int64
-	if err := access.Scan(ctx, src.Binding, "SELECT account_id FROM "+pgx.Identifier{schema, "player"}.Sanitize()+
+	if err := access.Scan(txCtx, src.Binding, "SELECT account_id FROM "+pgx.Identifier{schema, "player"}.Sanitize()+
 		" WHERE server_id=$1 AND player_id=$2 FOR SHARE", []any{pc.ServerID, pc.PlayerID}, &bound); err != nil || bound != pc.AccountID {
 		return 0, errCityCreationUnavailable
 	}
 	initial := firstCityInitialState(pc.PlayerID)
-	prep, err := src.Dom.Prepare(ctx, initial)
+	prep, err := src.Dom.Prepare(txCtx, initial)
 	if err != nil {
 		return 0, err
 	}
 	defer prep.Close()
-	if err := src.Dom.PinWallet(ctx, access); err != nil {
+	if err := src.Dom.PinWallet(txCtx, access); err != nil {
 		return 0, err
 	}
-	if err := src.Dom.PinCityState(ctx, access); err != nil {
+	if err := src.Dom.PinCityState(txCtx, access); err != nil {
 		return 0, err
 	}
-	if err := prep.LockWallet(ctx, access); err != nil {
+	if err := prep.LockWallet(txCtx, access); err != nil {
 		return 0, err
 	}
 	if name == "" {
 		name = "MainCity"
 	}
-	proof, err := src.World.Insert(ctx, access, world.City{
+	proof, err := src.World.Insert(txCtx, access, world.City{
 		ServerID: pc.ServerID, PlayerID: pc.PlayerID, Name: name,
 		X: x, Y: y, IsCapital: true, WallLevel: 1, Morale: 100,
 	})
@@ -115,18 +120,18 @@ func (s *Server) createFirstCityViaPreparedCity(ctx context.Context, pc PlayerCo
 		now = s.now
 	}
 	at := now().UTC()
-	init, err := src.Mil.Initialize(ctx, access, proof, at)
+	init, err := src.Mil.Initialize(txCtx, access, proof, at)
 	if err != nil {
 		return 0, err
 	}
-	identity, err := prep.Stage(ctx, access, init, at)
+	identity, err := prep.Stage(txCtx, access, init, at)
 	if err != nil {
 		if errors.Is(err, domestic.ErrCityAlreadyRegistered) {
 			return identity.CityID, nil
 		}
 		return 0, err
 	}
-	if err := owner.Commit(ctx); err != nil {
+	if err := owner.Commit(txCtx); err != nil {
 		return 0, err
 	}
 	committed = true
