@@ -42,6 +42,7 @@ type clockFunc func() time.Time
 // Server wires account, world, and domestic behind the WebSocket gateway.
 type Server struct {
 	citiesMu       sync.RWMutex
+	marchIndexMu   sync.RWMutex // memory bookkeeping only; never held across domain calls
 	log            *slog.Logger
 	account        *account.Service
 	players        *PlayerStore
@@ -72,9 +73,16 @@ type Server struct {
 	cityCoords     map[int64]cityCoord
 	playerMarches  map[int64][]playerMarchRef
 	marchHeroByID  map[int64]marchHeroBinding
+	marchStarting  map[marchStartKey]struct{}
 	nextArmyID     int64
 	now            clockFunc
 	smokeSyncClock *SmokeSyncClock
+	firstCityV2Routes bool
+	firstCityV2Realm  FirstCityV2Realm
+	firstCityV2Ledger FirstCityV2Ledger
+	firstCityV2Intake FirstCityV2TemplateIntake
+	firstCityV2Effect   FirstCityV2Effect
+	firstCityPrepared   *FirstCityPreparedCreationSource
 }
 
 // ErrMilitaryDurable rejects incomplete startup composition inputs.
@@ -167,6 +175,14 @@ func NewServer(log *slog.Logger, pool *pgxpool.Pool, worldSvc *world.Service, do
 	return srv
 }
 
+// PlayersPool returns the account/player database pool when the server is PG-backed.
+func (s *Server) PlayersPool() *pgxpool.Pool {
+	if s == nil || s.players == nil {
+		return nil
+	}
+	return s.players.Pool
+}
+
 // BindSession implements shard.Binder after login or enter-server.
 func (s *Server) BindSession(sessionID string, serverID int32, playerID int64, accountID int64) {
 	s.sessions.Bind(sessionID, PlayerContext{
@@ -228,6 +244,12 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	}
 	for route, h := range s.m4.GatewayHandlers() {
 		handlers[route] = h
+	}
+	if s.firstCityV2Routes {
+		handlers[RouteDiscoverFirstCityIntent] = s.handleDiscoverFirstCityIntent
+		handlers[RouteSubmitFirstCity] = s.handleSubmitFirstCity
+		handlers[RouteContinueFirstCity] = s.handleContinueFirstCity
+		handlers[RouteGetFirstCityResult] = s.handleGetFirstCityResult
 	}
 	return gateway.NewRouter(handlers)
 }

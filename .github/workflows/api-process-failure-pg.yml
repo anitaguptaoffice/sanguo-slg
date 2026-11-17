@@ -3,6 +3,21 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths:
+      - '.github/workflows/api-process-failure-pg.yml'
+      - '.github/scripts/api_process_failure*'
+      - '.github/scripts/process_failure*'
+      - '.github/scripts/verify_api_process_failure.py'
+      - 'internal/api/recruit_cleanup*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/server/**'
+      - 'internal/platform/gateway/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   process-failure-pg:
     runs-on: ubuntu-latest

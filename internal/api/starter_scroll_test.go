@@ -111,6 +111,7 @@ func TestStarterScrollPolicyPG(t *testing.T) {
 }
 
 func TestStarterScrollFailuresAndRoutesPG(t *testing.T) {
+	isolateWalletDDL(t)
 	ctx := context.Background()
 	pool := walletBoundaryPool(t, true)
 	s := starterServer(t, pool, 1)

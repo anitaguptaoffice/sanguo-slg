@@ -2,11 +2,7 @@ package hero
 
 import (
 	"context"
-	"os"
 	"testing"
-
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestPGStoreCreateSurvivesRestart(t *testing.T) {
@@ -42,23 +38,3 @@ func TestPGStoreCreateSurvivesRestart(t *testing.T) {
 	}
 }
 
-func openHeroTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	pool, err := db.Open(context.Background(), url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
-}
-
-func applyHeroSchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	if err := db.ApplySpecs(context.Background(), pool, "../../spec/db"); err != nil {
-		t.Fatal(err)
-	}
-}
