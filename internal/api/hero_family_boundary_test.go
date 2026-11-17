@@ -76,6 +76,7 @@ func TestFamilyAtomicPGRejectsActorScopeAndRewiredMetadata(t *testing.T) {
 }
 
 func TestFamilyAtomicPGMetadataSchemaMissingHasNoLazyDDLFallback(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, tc := range []struct{ op, table string }{{"accept", "player_hero_coming"}, {"summon", "player_hero_captive"}, {"befriend", "player_hero_lionize"}} {
 		t.Run(tc.op, func(t *testing.T) {
 			pool, s, pkt := familyFailureFixture(t, tc.op)

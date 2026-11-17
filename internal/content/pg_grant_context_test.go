@@ -10,7 +10,6 @@ import (
 
 func TestPGGrantContextLockTimeoutAndRetry(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	ctx := context.Background()
 	for _, lockTable := range []string{"player_wallet", "player_item"} {

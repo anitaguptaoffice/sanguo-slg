@@ -2,14 +2,11 @@ package report
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/battle"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 )
 
 func TestSaveGetListMem(t *testing.T) {
@@ -102,7 +99,8 @@ func TestListPaginationMem(t *testing.T) {
 }
 
 func TestPGStoreSaveGetList(t *testing.T) {
-	pool := openTestDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openReportTestDB(t)
 	ctx := context.Background()
 	applyMilitarySchema(t, pool)
 
@@ -136,33 +134,5 @@ func TestPGStoreSaveGetList(t *testing.T) {
 	page, err := svc.ListForPlayer(ctx, ListParams{ServerID: 7, PlayerID: 1000, Limit: 5})
 	if err != nil || page.Total != 1 {
 		t.Fatalf("list: %+v err=%v", page, err)
-	}
-}
-
-func openTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
-	if err != nil {
-		t.Fatalf("db: %v", err)
-	}
-	return pool
-}
-
-func applyMilitarySchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	// Go tests run from this package directory, internal/military/report.
-	root := filepath.Join("..", "..", "..", "spec", "db", "004_military.sql")
-	sql, err := os.ReadFile(root)
-	if err != nil {
-		t.Fatalf("read schema: %v", err)
-	}
-	_, err = pool.Exec(context.Background(), string(sql))
-	if err != nil {
-		t.Fatalf("apply schema: %v", err)
 	}
 }

@@ -68,6 +68,7 @@ func TestWallLevelPGSecondReadRecoveryRefreshesFloor(t *testing.T) {
 }
 
 func TestReviewerWallSecondReadLevelFailureIsExplicit(t *testing.T) {
+	isolateWalletDDL(t)
 	s, pool, a := wallLevelFixture(t)
 	ctx := context.Background()
 	tutorialSQL(t, pool, `INSERT INTO city_building(server_id,city_id,slot_key,building_cfg_id,level) VALUES(1,70,'wall',7,1)`)
