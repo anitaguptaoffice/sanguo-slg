@@ -135,6 +135,9 @@ func (s *Service) MarchForceForHero(ctx context.Context, p PlayerRef, h *Hero) (
 		return MarchForceView{}, ErrHeroNotFound
 	}
 	now := s.now()
+	if store, ok := s.Store.(marchForceStore); ok {
+		return store.marchForceForHero(ctx, p, h.HeroID, now)
+	}
 	st, err := s.loadMarchForceState(ctx, p.ServerID, h.HeroID, h.Level, h.Status, now)
 	if err != nil {
 		return MarchForceView{}, err
@@ -152,6 +155,9 @@ func (s *Service) RestHero(ctx context.Context, p PlayerRef, heroID int64) (Marc
 		return MarchForceView{}, ErrHeroNotFound
 	}
 	now := s.now()
+	if store, ok := s.Store.(marchForceStore); ok {
+		return store.restHero(ctx, p, heroID, now)
+	}
 	st, err := s.Store.GetMarchForceState(ctx, p.ServerID, heroID)
 	if err != nil {
 		return MarchForceView{}, err

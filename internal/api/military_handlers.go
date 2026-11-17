@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"time"
 
 	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
@@ -101,6 +102,14 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	if errPkt != nil {
 		return errPkt, nil
 	}
+	coord, ok := s.cityCoordinate(req.GetCityId())
+	if !ok {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
+	}
+	if !s.beginMarchStart(pc, req.GetHeroId()) {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_MILITARY_INVALID_MARCH, "hero march request in progress"), nil
+	}
+	defer s.endMarchStart(pc, req.GetHeroId())
 	if _, err := s.domestic.SettleCity(ctx, dom.ID); err != nil {
 		return nil, err
 	}
@@ -108,13 +117,9 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 		return s.mapMarchHeroErr(pkt.GetTraceId(), err), nil
 	}
 	s.ensureMilitaryCity(dom)
-	coord, ok := s.cityCoordinate(req.GetCityId())
-	if !ok {
-		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
-	}
-	s.nextArmyID++
+	armyID := s.allocateMarchArmyID()
 	order, err := s.military.CreateMarch(march.StartMarchRequest{
-		ArmyID:       s.nextArmyID,
+		ArmyID:       armyID,
 		OriginCityID: req.GetCityId(),
 		PlayerID:     pc.PlayerID,
 		HeroID:       req.GetHeroId(),
@@ -127,12 +132,14 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	})
 	if err != nil {
 		if s.heroSvc != nil {
-			_ = s.heroSvc.ReleaseFromMarch(ctx, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetHeroId())
+			// A definite creation rejection must not inherit a canceled request.
+			cleanup, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			defer cancel()
+			_ = s.heroSvc.ReleaseFromMarch(cleanup, hero.PlayerRef{ServerID: pc.ServerID, PlayerID: pc.PlayerID}, req.GetHeroId())
 		}
 		return s.mapMarchCreateErr(pkt.GetTraceId(), err), nil
 	}
-	s.recordPlayerMarch(pc.PlayerID, req.GetCityId(), order.ID, req.GetHeroId(), stacks)
-	s.bindMarchHeroServer(order.ID, pc.ServerID)
+	s.registerStartedMarch(pc, req.GetCityId(), order.ID, req.GetHeroId(), stacks)
 	data, err := marshal(&militaryv1.StartMarchResponse{
 		March:      marchSummaryProto(req.GetCityId(), order, stacks),
 		CityTroops: troopStacksProto(s.military.SnapshotCity(dom.ID).Troops, stacks),

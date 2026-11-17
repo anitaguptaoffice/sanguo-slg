@@ -79,4 +79,7 @@ message EnterGameServerResponse {
   sanguo.common.v1.PlayerProfile player = 3;
   sanguo.common.v1.ResourceWallet wallet = 4;
   int64 session_expires_at_ms = 5;
+  // Positive immutable account.account_id of this authenticated session/player/server.
+  // Missing/zero means identity unavailable (legacy server); see AUTH-ACCOUNT-IDENTITY.md.
+  int64 account_id = 6;
 }

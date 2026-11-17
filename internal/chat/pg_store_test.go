@@ -1,39 +1,12 @@
 package chat
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-func openChatTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	pool, err := pgxpool.New(context.Background(), url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return pool
-}
-
-func applyChatSchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	specDir, err := chatTestSpecDir(".")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := db.ApplySpecs(context.Background(), pool, specDir); err != nil {
-		t.Fatal(err)
-	}
-}
 
 // chatTestSpecDir mirrors runtime.RepoRoot's go.mod ascent without importing
 // runtime, which imports this domain through api and would create a test cycle.

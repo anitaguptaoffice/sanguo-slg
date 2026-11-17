@@ -83,6 +83,7 @@ func TestCreateCityAtomicDefaultsAndParticipantFailure(t *testing.T) {
 }
 
 func TestCreateCityAtomicDOMFailureAndCancellation(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, mode := range []string{"domestic-sql", "canceled", "bounds"} {
 		t.Run(mode, func(t *testing.T) {
 			s, pool, _, _ := registrationServer(t)
