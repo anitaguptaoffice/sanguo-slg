@@ -27,8 +27,11 @@ func (s *Server) WireFirstCityV2Effect(effect FirstCityV2Effect) {
 }
 
 // FirstCityCreationEffect builds the effect that places the city through the same
-// DOM/WORLD atomic creation path as world.v1.CreateCity.
+// DOM/WORLD atomic creation path as world.v1.CreateCity, or PreparedCity when wired.
 func (s *Server) FirstCityCreationEffect() FirstCityV2Effect {
+	if s.firstCityPrepared != nil {
+		return firstCityPreparedCreationEffect{srv: s}
+	}
 	return firstCityCreationEffect{srv: s}
 }
 
