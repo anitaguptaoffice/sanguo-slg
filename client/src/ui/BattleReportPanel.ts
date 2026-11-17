@@ -1,4 +1,5 @@
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureActor } from "@/net/actorContext";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { selectDeepLinkBattleReportId } from "@/net/battleReportDeepLink";
@@ -187,9 +188,15 @@ export class BattleReportPanel {
   private roundsTableExpanded = false;
   private highlightedRound = 0;
   private listError = "";
+  private listNeedsRefresh = false;
   private detailError = "";
   private listLoading = false;
+  private listRequestVersion = 0;
   private detailLoading = false;
+  private detailRequestVersion = 0;
+  private gridLinkVersion = 0;
+  private reportsActor: (() => boolean) | null = null;
+  private attached = false;
   /** 上一封/下一封切换后把焦点拉回详情顶栏导航（CLIENT-094）。 */
   private focusDetailNavAfterRender = false;
   /** CLIENT-254/270：列表重绘后补相邻键盘导航残余环 + 深环。 */
@@ -207,6 +214,10 @@ export class BattleReportPanel {
   }
 
   attach(): void {
+    this.reportsActor = null;
+    this.listRequestVersion++;
+    this.detailRequestVersion++;
+    this.attached = true;
     const savedFilter = readBattleReportOutcomeFilterSession();
     if (savedFilter) this.outcomeFilter = savedFilter;
     const savedTimeWindow = readBattleReportTimeWindowFilterSession();
@@ -219,6 +230,10 @@ export class BattleReportPanel {
   }
 
   detach(): void {
+    this.reportsActor = null;
+    this.attached = false;
+    this.listRequestVersion++;
+    this.detailRequestVersion++;
     this.clearMapReplay();
     this.panel?.removeEventListener("keydown", this.onKeyDownBound);
   }
@@ -256,11 +271,13 @@ export class BattleReportPanel {
     openCenterPanel(this.panel);
     resetCenterPanelViewportScroll(this.panel);
     this.applyOutcomeFilterBridgeFromMail();
-    await this.refreshList();
+    const detailVersion = this.detailRequestVersion;
+    const current = await this.refreshList();
+    if (!current?.() || !this.isOpen()) return;
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
     const reportId = selectDeepLinkBattleReportId(this.reports, hintReportId);
-    if (reportId > 0) await this.openReport(reportId);
+    if (reportId > 0 && detailVersion === this.detailRequestVersion) await this.openReport(reportId);
   }
 
   getLocationFilter(): { x: number; y: number } | null {
@@ -269,6 +286,7 @@ export class BattleReportPanel {
 
   clearLocationFilter(): void {
     if (!this.locationFilter) return;
+    ++this.gridLinkVersion;
     this.locationFilter = null;
     this.updateLocationFilterUi();
     this.renderList();
@@ -283,16 +301,52 @@ export class BattleReportPanel {
     hintReportId?: number,
   ): Promise<void> {
     if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    const atGrid = (r: BattleReportSummary) => {
+      const location = parseBattleReportLocation(r);
+      return location?.x === x && location.y === y;
+    };
+    const cachedActor = this.reportsActor;
+    const cachedHint = cachedActor?.() && this.reports.some(r => r.report_id === hintReportId && atGrid(r))
+      ? hintReportId : undefined;
+    const gridVersion = ++this.gridLinkVersion;
     this.locationFilter = { x, y };
+    this.clearGridReportDetail();
     openCenterPanel(this.panel);
+    const presentation = captureCenterPanelIntent(this.panel);
     resetCenterPanelViewportScroll(this.panel);
-    await this.refreshList();
+    const detailVersion = this.detailRequestVersion;
+    const current = await this.refreshList();
+    if (!current?.() || !this.isOpen() || !presentation() || gridVersion !== this.gridLinkVersion) return;
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
     this.updateLocationFilterUi();
     this.renderList();
-    const reportId = selectDeepLinkBattleReportId(this.reports, hintReportId ?? null);
+    if (!current() || !presentation() || gridVersion !== this.gridLinkVersion ||
+        detailVersion !== this.detailRequestVersion) return;
+    // A world shortcut can target a report loaded on a later offset page.
+    // Keep that identity, not a fabricated list row; GetBattleReport remains authoritative.
+    const freshHint = this.reports.find(r => r.report_id === hintReportId);
+    const knownHint = freshHint ? (atGrid(freshHint) ? freshHint.report_id : undefined)
+      : (cachedActor?.() ? cachedHint : undefined);
+    const reportId = knownHint ??
+      selectDeepLinkBattleReportId(this.visibleReports());
     if (reportId > 0) await this.openReport(reportId);
+  }
+
+  private clearGridReportDetail(): void {
+    ++this.detailRequestVersion;
+    this.selectedReportId = 0;
+    this.detailLoading = false;
+    this.detailError = "";
+    this.detailText = "";
+    this.detailRounds = [];
+    this.detailView = undefined;
+    this.detailSummary = undefined;
+    this.detailResult = "";
+    this.roundsTableExpanded = false;
+    this.highlightedRound = 0;
+    this.focusDetailNavAfterRender = false;
+    this.clearMapReplay();
   }
 
   getReportsSnapshot(): BattleReportSummary[] {
@@ -300,7 +354,8 @@ export class BattleReportPanel {
   }
 
   private async openAndSyncUnread(): Promise<void> {
-    await this.refreshList();
+    const current = await this.refreshList();
+    if (!current?.() || !this.isOpen()) return;
     this.panelOpts?.unreadSession?.markPanelOpened(this.reports);
     this.panelOpts?.onUnreadChange?.(0);
   }
@@ -458,9 +513,11 @@ export class BattleReportPanel {
         !this.listLoading && this.reports.length > 0 && this.total > 0;
       btn.hidden = !showPager;
       if (showPager) {
-        const canMore = hasMoreBattleReports(this.reports.length, this.total);
+        const canMore = !this.listNeedsRefresh && hasMoreBattleReports(this.reports.length, this.total);
         btn.disabled = !canMore;
-        btn.textContent = canMore
+        btn.textContent = this.listNeedsRefresh
+          ? "请刷新列表后继续"
+          : canMore
           ? BATTLE_REPORT_LOAD_MORE_LABEL
           : battleReportAllLoadedLabel(this.total);
       }
@@ -985,11 +1042,22 @@ export class BattleReportPanel {
     }
   }
 
-  private async refreshList(): Promise<void> {
+  private beginListRead(): () => boolean {
+    const version = ++this.listRequestVersion;
+    const panel = this.panel;
+    const actor = captureActor(this.gateway, () => null);
+    return () => this.attached && this.panel === panel && version === this.listRequestVersion && actor();
+  }
+
+  private async refreshList(): Promise<(() => boolean) | null> {
+    if (!this.attached) return null;
+    const current = this.beginListRead();
+    let succeeded = false;
     this.listError = "";
     this.listLoading = true;
     this.reports = [];
     this.total = 0;
+    this.listNeedsRefresh = false;
     this.renderList();
     this.onStatus("拉取战报…");
     try {
@@ -997,21 +1065,28 @@ export class BattleReportPanel {
         reports?: BattleReportSummary[];
         total?: number;
       };
+      if (!current()) return null;
+      succeeded = true;
       this.reports = res.reports ?? [];
+      this.reportsActor = captureActor(this.gateway, () => null);
       this.total = res.total ?? this.reports.length;
       this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
     } catch (e) {
+      if (!current()) return null;
       this.reports = [];
       this.total = 0;
       this.listError = `列表加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
     }
+    if (!current()) return null;
     this.listLoading = false;
     this.renderList();
+    return succeeded ? current : null;
   }
 
   private async loadMoreReports(): Promise<void> {
-    if (this.listLoading || !hasMoreBattleReports(this.reports.length, this.total)) return;
+    if (!this.attached || this.listLoading || this.listNeedsRefresh || !hasMoreBattleReports(this.reports.length, this.total)) return;
+    const current = this.beginListRead();
     this.listError = "";
     this.listLoading = true;
     const offset = this.reports.length;
@@ -1022,14 +1097,31 @@ export class BattleReportPanel {
         reports?: BattleReportSummary[];
         total?: number;
       };
+      if (!current()) return;
       const batch = res.reports ?? [];
-      this.reports = [...this.reports, ...batch];
-      this.total = res.total ?? this.total;
-      this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
+      // Offset pages are not snapshots. Never append an overlapping page:
+      // duplicate IDs would make adjacent navigation return the same report.
+      const ids = new Set(this.reports.map((r) => r.report_id));
+      const overlaps = batch.some((r) => {
+        if (ids.has(r.report_id)) return true;
+        ids.add(r.report_id);
+        return false;
+      });
+      if (!batch.length || overlaps) {
+        this.listNeedsRefresh = true;
+        this.listError = "战报分页已变化或未取得新记录，请刷新列表";
+        this.onStatus(this.listError);
+      } else {
+        this.reports = [...this.reports, ...batch];
+        this.total = res.total ?? this.total;
+        this.onStatus(`战报 ${this.reports.length}/${this.total} 条`);
+      }
     } catch (e) {
+      if (!current()) return;
       this.listError = `加载更多失败：${(e as Error).message}`;
       this.onStatus(this.listError);
     }
+    if (!current()) return;
     this.listLoading = false;
     this.renderList();
   }
@@ -1044,6 +1136,7 @@ export class BattleReportPanel {
 
   private setOutcomeFilter(filter: BattleReportOutcomeFilter): void {
     if (this.outcomeFilter === filter) return;
+    ++this.gridLinkVersion;
     this.outcomeFilter = filter;
     writeBattleReportOutcomeFilterSession(filter);
     this.renderList();
@@ -1051,6 +1144,7 @@ export class BattleReportPanel {
 
   private setTimeWindowFilter(filter: BattleReportTimeWindowFilter): void {
     if (this.timeWindowFilter === filter) return;
+    ++this.gridLinkVersion;
     this.timeWindowFilter = filter;
     writeBattleReportTimeWindowFilterSession(filter);
     this.renderList();
@@ -1060,6 +1154,12 @@ export class BattleReportPanel {
     reportId: number,
     opts?: { preserveRoundNav?: boolean },
   ): Promise<void> {
+    if (!this.attached) return;
+    const version = ++this.detailRequestVersion;
+    const panel = this.panel;
+    const actor = captureActor(this.gateway, () => null);
+    const current = () => this.attached && this.panel === panel &&
+      version === this.detailRequestVersion && this.selectedReportId === reportId && actor();
     if (reportId !== this.selectedReportId) this.clearMapReplay();
     const preserveRoundNav = opts?.preserveRoundNav === true;
     const preservedRound = preserveRoundNav ? this.highlightedRound : 0;
@@ -1083,6 +1183,7 @@ export class BattleReportPanel {
           detail?: BattleReportDetailView;
         };
       };
+      if (!current()) return;
       this.detailSummary = res.report?.summary;
       this.detailResult = res.report?.detail?.result ?? "";
       this.detailView = res.report?.detail;
@@ -1106,6 +1207,7 @@ export class BattleReportPanel {
       }
       this.onStatus("战报已加载");
     } catch (e) {
+      if (!current()) return;
       this.detailError = `详情加载失败：${(e as Error).message}`;
       this.detailText = "";
       this.detailRounds = [];
@@ -1114,6 +1216,7 @@ export class BattleReportPanel {
       this.detailResult = "";
       this.onStatus(this.detailError);
     }
+    if (!current()) return;
     this.detailLoading = false;
     this.renderList();
     if (this.focusDetailNavAfterRender) {

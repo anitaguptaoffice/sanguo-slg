@@ -1,3 +1,4 @@
+import { captureActor } from "@/net/actorContext";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { AssetLoader } from "@/engine/AssetLoader";
 import {
@@ -157,6 +158,8 @@ export class WorldPanels {
   private marchDestHighlight: { x: number; y: number } | null = null;
   private citiesLoading = false;
   private citiesLoadError: string | null = null;
+  private citiesReadVersion = 0;
+  private citiesOwner: (() => boolean) | null = null;
   private readonly intelEtaResidualTimers: WorldTileIntelEtaResidualTimers =
     createWorldTileIntelEtaResidualTimers();
   private readonly intelEtaCrossResidualTimers: WorldTileIntelEtaCrossResidualTimers =
@@ -188,12 +191,18 @@ export class WorldPanels {
   ) {}
 
   attach(): void {
+    this.detach();
+    this.cities = [];
+    this.citiesOwner = null;
+    this.citiesLoading = false;
+    this.citiesLoadError = null;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
   }
 
   detach(): void {
+    ++this.citiesReadVersion;
     this.panel?.remove();
   }
 
@@ -591,6 +600,7 @@ export class WorldPanels {
   }
 
   private renderList(): void {
+    if (this.citiesOwner && !this.citiesOwner()) this.cities = [];
     const ul = this.panel.querySelector('[data-role="world-list"]');
     if (!ul) return;
     ul.innerHTML = "";
@@ -868,21 +878,35 @@ export class WorldPanels {
   }
 
   private async refreshList(): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.panel;
+    const version = ++this.citiesReadVersion;
+    const current = () => actor() && this.panel === panel && panel.parentNode === this.mount &&
+      version === this.citiesReadVersion;
+    if (this.citiesOwner && !this.citiesOwner()) {
+      this.cities = [];
+      this.citiesOwner = null;
+      this.renderList();
+    }
     this.citiesLoading = true;
     this.citiesLoadError = null;
     this.renderInfoCard();
     this.onStatus("拉取城池列表…");
     try {
       const res = await this.gateway.listPlayerCities();
+      if (!current()) return;
+      this.citiesOwner = actor;
       this.cities = citiesFromListPlayerCitiesResponse(res as { cities?: PlayerCitySummary[] });
       this.citiesLoadError = null;
       this.renderList();
       this.onStatus(`世界 · ${this.cities.length} 座城池`);
     } catch (e) {
+      if (!current()) return;
       this.citiesLoadError = formatPanelGatewayErrorFromUnknown("world", e);
       this.renderInfoCard();
       this.onStatus(this.citiesLoadError);
     } finally {
+      if (!current()) return;
       this.citiesLoading = false;
       this.renderInfoCard();
     }

@@ -13,7 +13,7 @@ async function fixture() {
   let generation = 1;
   const gateway = {
     getBoundServerId: () => 1, getSessionId: () => "same-token", getSessionGeneration: () => generation,
-    listPlayerBag: vi.fn(async () => ({ items: session.bag })), getCityState: vi.fn(async () => ({ wallet: { gold: 90 } })),
+    listPlayerBag: vi.fn(async () => ({ items: session.bag })), getCityState: vi.fn(async () => ({ wallet: { food: 90 } })),
     listPlayerHeroes: vi.fn(async () => ({ heroes: [] })), listRecruitTemplates: vi.fn(async () => ({ templates: [] })),
     listHotelRecruitCandidates: vi.fn(async () => pool), refreshHotelRecruitPool: vi.fn(async () => pool),
     recruitHotelCandidate: vi.fn(async () => ({ hero_id: 42, display_name: "赵武" })),
@@ -44,7 +44,7 @@ describe("CLIENT-HOTEL-OUTCOME", () => {
     f.gateway.listHotelRecruitCandidates.mockResolvedValue({ ...pool, candidates: [] });
     f.click("reload-hotel-state"); await flush();
     expect(f.outcome()).toContain("已招入"); expect(f.warning()).toContain("仅显示当前状态");
-    expect(f.session().wallet.gold).toBe(90); expect(f.gateway.recruitHotelCandidate).toHaveBeenCalledTimes(1);
+    expect(f.session().wallet.food).toBe(90); expect(f.gateway.recruitHotelCandidate).toHaveBeenCalledTimes(1);
   });
   it.each(["listPlayerBag", "getCityState", "listPlayerHeroes"] as const)("retains confirmed paid refresh when %s fails", async method => {
     const f = await fixture(); f.gateway[method].mockRejectedValue(new Error("lost read"));
@@ -97,12 +97,12 @@ describe("CLIENT-HOTEL-OUTCOME", () => {
     if (change !== "detach") { f.panels.toggleHero(); f.panels.toggleHero(); await flush(); expect(f.outcome()).toBe(""); }
   });
   it.each(["actor", "generation", "assets", "wallet", "detach"])("rejects stale current-state reload after %s changes", async change => {
-    const f = await fixture(); const pending = deferred<{ wallet: { gold: number } }>();
+    const f = await fixture(); const pending = deferred<{ wallet: { food: number } }>();
     f.gateway.getCityState.mockReturnValue(pending.promise); f.click("refresh-hotel-pool"); await flush();
     if (change === "actor") f.changeActor(); if (change === "generation") f.reenter();
     if (change === "assets") beginAssetRead(f.gateway as unknown as GatewayPort);
     if (change === "wallet") f.session().wallet = { gold: 700 }; if (change === "detach") f.panels.detach();
-    pending.resolve({ wallet: { gold: 90 } }); await flush(); expect(f.patch).not.toHaveBeenCalled();
+    pending.resolve({ wallet: { food: 90 } }); await flush(); expect(f.patch).not.toHaveBeenCalled();
     if (change === "assets" || change === "wallet") { expect(f.outcome()).toBe("客栈池已刷新"); expect(f.warning()).toContain("加载未完成"); }
   });
 });
@@ -121,7 +121,7 @@ describe("hotel settlement epoch", () => {
       const pending = fetch.fetch(); f.panels.toggleHero();
       if (outcome === "success") mutation.resolve(action === "recruit-hotel-candidate" ? { hero_id: 42 } : pool);
       else mutation.reject(new Error("gateway timeout"));
-      await flush(); old.resolve({ wallet: { gold: 100 } });
+      await flush(); old.resolve({ wallet: { food: 100 } });
       const state = await pending;
       expect(f.gateway.getCityState).toHaveBeenCalledTimes(1);
       expect(state).toBeNull();
@@ -169,6 +169,6 @@ it.each(["success", "unknown"])("hidden hotel %s settlement permits only fresh r
   f.panels.toggleHero(); await flush();
   expect(f.gateway.getCityState).toHaveBeenCalledTimes(1);
   f.click("reload-hotel-state"); await flush();
-  old.resolve({ wallet: { gold: 100 } }); expect(await pending).toBeNull();
-  expect(f.session().wallet.gold).toBe(90); expect(f.gateway.recruitHotelCandidate).toHaveBeenCalledTimes(1);
+  old.resolve({ wallet: { food: 100 } }); expect(await pending).toBeNull();
+  expect(f.session().wallet.food).toBe(90); expect(f.gateway.recruitHotelCandidate).toHaveBeenCalledTimes(1);
 });

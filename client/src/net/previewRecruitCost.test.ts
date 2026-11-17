@@ -46,4 +46,28 @@ describe("previewRecruitCost", () => {
     expect(previewRecruitCost(99, 10, {})).toBeNull();
     expect(previewRecruitCost(1, 0, {})).toBeNull();
   });
+
+  it.each([NaN, Infinity, -Infinity, -1, 0, 0.5, Number.MAX_SAFE_INTEGER + 1])(
+    "rejects invalid or unsafe quantity %s", (qty) => {
+      expect(previewRecruitCost(1, qty, {})).toBeNull();
+    },
+  );
+
+  it("preserves existing floor behavior for finite positive fractions", () => {
+    expect(previewRecruitCost(1, 2.9, {})).toEqual(previewRecruitCost(1, 2, {}));
+  });
+
+  it.each([1, 2, 3, 4])("keeps all computed integers safe for unit %s", (unitId) => {
+    const spec = troopRecruitSpecForCfgId(unitId)!;
+    const largestFactor = Math.max(spec.secPerUnit, ...Object.values(spec.recruitCostPerUnit));
+    const maxExactQty = Math.floor(Number.MAX_SAFE_INTEGER / largestFactor);
+    const preview = previewRecruitCost(unitId, maxExactQty, {});
+    expect(preview).not.toBeNull();
+    for (const value of [preview!.qty, preview!.timeSec, ...Object.values(preview!.cost)]) {
+      expect(Number.isSafeInteger(value)).toBe(true);
+    }
+    expect(previewRecruitCost(unitId, maxExactQty + 1, {})).toBeNull();
+    expect(previewRecruitCost(unitId, Number.MAX_SAFE_INTEGER, {})).toBeNull();
+  });
+
 });

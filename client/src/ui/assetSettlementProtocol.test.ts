@@ -42,7 +42,7 @@ for (const [action, method] of actions) {
       const fixtures: Record<string, object> = {
         Login: {session_id:"token"}, ListPlayerHeroes:{heroes:[]}, ListPlayerQuests:{quests:[]}, ListComingHeroes:{coming:[]},
         ListPlayerBag:{items:committed ? [{item_cfg_id:2004,quantity:2}] : session.bag},
-        GetCityState:{wallet:committed ? {food:90,gold:9500} : session.wallet},
+        GetCityState:{wallet:{food:committed ? 90 : session.wallet.food}},
         ListRecruitTemplates:{templates:[{template_cfg_id:1001,recruit_cost:{food:10},recruit_item:{item_cfg_id:2004,quantity:1}}]},
         ListHotelRecruitCandidates:pool, ListCaptiveHeroes:{captives:[{hero_id:21,city_id:7,display_name:"俘虏"}]},
         TrySummonCaptive:{hero_id:21,gold_cost:500,items:[{item_cfg_id:2004,quantity:1}]},
@@ -72,10 +72,10 @@ for (const [action, method] of actions) {
         ? {remaining:2,wallet_after:{food:1100,gold:10000}} : {hero_id:42,befriended:true,friend_delta:10};
       mutation.resolve(packet(`${method}Response`, value));
     } else mutation.reject(new Error("gateway timeout"));
-    await flush(); oldCity.resolve(packet("GetCityStateResponse",{wallet:{food:100,gold:10000}}));
+    await flush(); oldCity.resolve(packet("GetCityStateResponse",{wallet:{food:100}}));
     expect(await pending).toBeNull(); await flush();
     if (outcome === "success" && (method === "RecruitHero" || method === "SureSummonCaptive")) {
-      expect(session.wallet).toMatchObject({food:90,gold:9500}); expect(session.bag).toEqual([{item_cfg_id:2004,quantity:2}]);
+      expect(session.wallet).toMatchObject({food:90,gold:10000}); expect(session.bag).toEqual([{item_cfg_id:2004,quantity:2}]);
     }
     expect(wireRoutes.filter(route => route === Routes[method])).toHaveLength(1);
     expect(session.player?.level).toBeUndefined();

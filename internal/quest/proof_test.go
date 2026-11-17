@@ -40,8 +40,7 @@ func TestTutorialProofStores(t *testing.T) {
 	t.Run("mem", func(t *testing.T) { testTutorialProofStore(t, NewMemStore()) })
 	t.Run("pg", func(t *testing.T) {
 		pool := openQuestTestDB(t)
-		t.Cleanup(pool.Close)
-		applyQuestSchema(t, pool)
+			applyQuestSchema(t, pool)
 		if _, err := pool.Exec(context.Background(), `DELETE FROM player_quest WHERE server_id=91`); err != nil {
 			t.Fatal(err)
 		}
@@ -190,7 +189,6 @@ func testTutorialProofStore(t *testing.T, store Store) {
 
 func TestPGRejectInvalidStoredProof(t *testing.T) {
 	pool := openQuestTestDB(t)
-	t.Cleanup(pool.Close)
 	applyQuestSchema(t, pool)
 	ctx := context.Background()
 	if _, err := pool.Exec(ctx, `DELETE FROM player_quest WHERE server_id=92`); err != nil {

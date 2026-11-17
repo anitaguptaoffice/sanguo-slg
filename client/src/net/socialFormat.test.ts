@@ -81,8 +81,8 @@ describe("socialFormat", () => {
       { display_name: "乙", is_online: false },
       { display_name: "丙" },
     ];
-    expect(countGuildMembersOnline(members)).toBe(1);
-    expect(formatGuildMemberOnlineSummaryLine({ members })).toBe("在线 1 / 共 3 人");
+    expect(countGuildMembersOnline(members)).toBeUndefined();
+    expect(formatGuildMemberOnlineSummaryLine({ members })).toBe("在线未知 / 共 3 人");
     expect(formatGuildMemberOnlineSummaryLine({ members, totalCount: 10, onlineCount: 6 })).toBe(
       "在线 6 / 共 10 人",
     );

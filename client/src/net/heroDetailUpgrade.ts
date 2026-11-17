@@ -1,3 +1,5 @@
+import { heroMarchForceMaxFromLevel } from "@/net/heroDetailForce";
+import { heroPointRemainingAtLevel } from "@/net/heroDetailPoints";
 import type { HeroAttributes, HeroDetail } from "@/net/heroMailState";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import {
@@ -66,6 +68,14 @@ export function applyUpgradeHeroToDetail(
     ...base,
     hero_id: res.hero_id,
     level: res.level,
+    // The old detail cap belongs to its old level; upgrading does not refill current stamina.
+    march_force_max: (base.hero_id == null || base.hero_id === res.hero_id) &&
+      res.level > (base.level ?? res.previous_level)
+      ? heroMarchForceMaxFromLevel(res.level) : base.march_force_max,
+    // Upgrading changes the budget, not the already allocated points.
+    potential_remaining: heroPointRemainingAtLevel(
+      { ...base, level: base.level ?? res.previous_level }, res.level,
+    ),
     exp: res.exp,
     exp_current: res.exp_current,
     exp_to_next: res.exp_to_next,

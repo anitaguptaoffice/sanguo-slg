@@ -1,0 +1,15 @@
+# CLIENT-CITY-WALLET-GOLD-001
+
+Issue #2035. ResourceWallet has a gold field, but current production GetCityState, StartBuildingUpgrade and RecruitTroop serialize only food/wood/iron/stone through internal/api/domestic_handlers.go walletProto. Domestic Resources has no gold. The unchanged protobuf decoder correctly supplies a default gold=0, which must not be interpreted as a newly measured player balance.
+
+A source-specific merge copies only these four city resources, including real zero, over the current wallet. It preserves last-known player gold and returns the existing wallet when no city snapshot exists. Applied to all seven city application boundaries: bootstrap, main-city poll/manual refresh, queue refresh, hero recruitment asset refresh, quest assets, hotel current state, shop current state; main-city build/recruit receipts use the same rule. Read/actor/generation checks and full-wallet receipts remain unchanged.
+
+Bootstrap starts from EnterGameServer wallet (or login fallback), so a genuine entry gold=0 still overrides an old login balance. Generic decoder, patchSession, consumable/mail receipts are not filtered: an authoritative full-wallet zero remains valid. Production-wire regressions encode only four resources via getProtoRoot and decodeGatewayResponse rather than the mock server's full-wallet city payload.
+
+This prevents false gold erasure; it does NOT reconcile actual gold spent/rewarded by hero training, largess, quests, hotel or shop. Their existing city-based recovery has no authoritative gold source. Displayed gold remains last known until an actually authoritative full-wallet result; hotel/shop status text states that limitation. No mutation is retried, no inferred grant/spend is applied, no backend/protocol or spending semantics are changed.
+
+Regression before implementation: 7 failures / 2 passes across real-wire/bootstrap/all city-read consumers. Existing freshness tests that invented GetCityState/build gold authority now exercise supported food/wood changes while retaining actor, generation, late-read and duplicate-submit checks. New tests preserve explicit real gold zero and all city resources zero. Native browser/live backend not run; no production acceptance claim. Final test/review/CI and temporary held #2000/#2004 combinations are mapped in the PR; both held drafts remain unchanged.
+
+## Verified delivery
+
+Runtime source 8e0c647d156785c851dfd1e92f5f1abb4ee6b3fd: 223 focused tests, complete 542 files / 3124 tests (`npm test -- --maxWorkers=2`, no exclusions), and build/typecheck passed. Independent review additionally exercised 35 adversarial real-wire/consumer probes and build, including true authoritative gold-zero updates and stale read ownership. Combined #2000 head f05365fb480357d25d0df3c58602eecf96ca2229 plus #2004 head adc2c9e56b2e1d1134f648e3d0d6b4f22f37f6ae: 284 tests/build plus the independent 35 probes passed. Only existing startMarch and detach conflicts were resolved by retaining both intents. Final cleanup removes one duplicate identical test assertion (22 affected tests rerun); runtime is unchanged. Source/tree/review/remote-head/CI mapping remains in the PR.
