@@ -203,7 +203,9 @@ func recruitCompletionTerminalChild(t *testing.T, mode string) {
 	}
 	recruitLifetimeState(t, g, 1, true, false)
 	backend := f.owned.get(trace.pid)
-	returnLifetimeCheck(t, backend != nil && trace.pid != f.observer.PgConn().PID(), "original owned backend absent")
+	if backend == nil || trace.pid == f.observer.PgConn().PID() {
+		t.Fatal("original owned backend absent")
+	}
 	var active bool
 	returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT EXISTS(SELECT FROM pg_stat_activity WHERE pid=$1 AND backend_start=$2::timestamptz AND xact_start IS NOT NULL)", trace.pid, backend.started).Scan(&active))
 	returnLifetimeCheck(t, active == (mode == "partial_rollback"), "unexpected transaction lifetime", active)

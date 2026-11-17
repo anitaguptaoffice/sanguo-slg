@@ -168,7 +168,9 @@ func recruitAdmissionPanicChild(t *testing.T, mode string) {
 	}
 	recruitLifetimeState(t, g, 1, true, false)
 	backend := owned.get(trace.pid)
-	returnLifetimeCheck(t, backend != nil && trace.pid != observer.PgConn().PID(), "missing original transport")
+	if backend == nil || trace.pid == observer.PgConn().PID() {
+		t.Fatal("missing original transport")
+	}
 	var active bool
 	returnPGOK(t, observer.QueryRow(ctx, "SELECT EXISTS(SELECT FROM pg_catalog.pg_stat_activity WHERE pid=$1 AND backend_start=$2::timestamptz AND xact_start IS NOT NULL)", trace.pid, backend.started).Scan(&active))
 	returnLifetimeCheck(t, active == double, "unexpected transaction lifetime", active)
