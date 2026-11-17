@@ -12,6 +12,7 @@ import (
 
 func productionTestPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
+	skipDomesticPGUnderShort(t)
 	admin := openDomesticTestDB(t)
 	schema := fmt.Sprintf("production_%d", time.Now().UnixNano())
 	if _, err := admin.Exec(context.Background(), "CREATE SCHEMA "+schema); err != nil {

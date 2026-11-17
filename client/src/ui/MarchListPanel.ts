@@ -1,5 +1,7 @@
+import { readMarchListSnapshot } from "@/net/marchListSnapshot";
 import { beginMarchSnapshotRead } from "@/net/marchSnapshotRead";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureActor } from "@/net/actorContext";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import { detectNewMarchArrivalReminders, type MarchArrivalReminder } from "@/net/marchArrival";
 import {
@@ -165,6 +167,8 @@ export class MarchListPanel {
   ) => void;
   private lastListSnapshot: MarchSummary[] = [];
   private selectedMarchId: number | null = null;
+  private idRevealRevision = 0;
+  private pendingIdReveal: { id: number; scroll: boolean; current: () => boolean } | null = null;
   private destFilterMode: MarchDestFilterMode = "all";
   private manualDestFilter: { x: number; y: number } | null = null;
   private listFilter: MilitaryListFilterV1 = readMilitaryListFilterSession();
@@ -229,6 +233,7 @@ export class MarchListPanel {
 
   /** 世界城池列表点选时联动「世界选中格」筛选（客户端快照，无新 RPC）。 */
   syncWorldGridSelection(grid: { x: number; y: number } | null): void {
+    this.cancelIdReveal();
     if (grid != null) {
       this.destFilterMode = "world";
     } else if (this.destFilterMode === "world") {
@@ -240,6 +245,7 @@ export class MarchListPanel {
 
   /** @deprecated 使用 syncWorldGridSelection / setDestFilterMode */
   setDestFilter(x: number | null, y: number | null): void {
+    this.cancelIdReveal();
     if (x == null || y == null || !Number.isFinite(x) || !Number.isFinite(y)) {
       this.destFilterMode = "all";
       this.manualDestFilter = null;
@@ -252,6 +258,7 @@ export class MarchListPanel {
   }
 
   setDestFilterMode(mode: MarchDestFilterMode): void {
+    this.cancelIdReveal();
     this.destFilterMode = mode;
     if (mode !== "manual") this.manualDestFilter = null;
     this.renderFilterControls();
@@ -274,6 +281,7 @@ export class MarchListPanel {
     destY: number,
     opts?: { preferWorldSelection?: boolean },
   ): void {
+    this.cancelIdReveal();
     if (!Number.isFinite(destX) || !Number.isFinite(destY)) return;
     const worldGrid = this.getWorldSelectedGrid?.() ?? null;
     const useWorld =
@@ -303,6 +311,7 @@ export class MarchListPanel {
   selectMarchByDest(destX: number, destY: number): boolean {
     const match = findFirstMarchByDest(this.marches, destX, destY);
     if (!match?.march_id) return false;
+    this.revealMarchFilters(match);
     this.setSelectedMarchId(match.march_id);
     if (!this.isOpen()) {
       openCenterPanel(this.panel);
@@ -312,18 +321,73 @@ export class MarchListPanel {
     return true;
   }
 
+  private revealMarchFilters(match: MarchSummary): void {
+    const dest = this.resolveDestFilter();
+    if ((dest && (dest.x !== match.to_x || dest.y !== match.to_y)) ||
+      (this.destFilterMode === "world" && !dest)) {
+      if (Number.isFinite(match.to_x) && Number.isFinite(match.to_y)) {
+        this.destFilterMode = "manual";
+        this.manualDestFilter = { x: match.to_x!, y: match.to_y! };
+      } else {
+        this.destFilterMode = "all";
+        this.manualDestFilter = null;
+      }
+    }
+    if (!applyMilitaryListClientFilters([match], this.listFilter, this.nowMs()).length) {
+      this.listFilter = { ...this.listFilter, phase: "all" };
+      writeMilitaryListFilterSession(this.listFilter);
+    }
+    this.renderFilterControls();
+  }
+
+  private cancelIdReveal(): void {
+    this.pendingIdReveal = null;
+    this.idRevealRevision++;
+  }
+
+  private resolvePendingIdReveal(): (() => void) | undefined {
+    const pending = this.pendingIdReveal;
+    if (!pending) return;
+    if (!pending.current()) { this.cancelIdReveal(); return; }
+    const match = this.marches.find(m => m.march_id === pending.id);
+    if (!match) return; // Only an authoritative snapshot can supply the target.
+    this.revealMarchFilters(match);
+    this.pendingIdReveal = null; // Consume without invalidating this reveal's final scroll.
+    this.setSelectedMarchId(pending.id, true);
+    return () => {
+      // Scroll only after the caller's final render, even when recovery outlives the highlight.
+      if (!pending.scroll || !pending.current() || this.selectedMarchId !== pending.id) return;
+      this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${pending.id}"]`)
+        ?.scrollIntoView?.({ block: "nearest" });
+    };
+  }
+
   selectMarchById(marchId: number | null, opts?: { openPanel?: boolean }): void {
-    if (opts?.openPanel && marchId != null && !this.isOpen()) {
-      syncMinimapMarchFocusSession(marchId);
-      this.selectedMarchId = marchId;
-      openCenterPanel(this.panel);
-      void this.refreshList();
-      this.startPoll();
-      const march = this.marches.find((m) => m.march_id === marchId) ?? null;
-      this.onSelectionChange?.(march);
+    this.cancelIdReveal();
+    if (!opts?.openPanel || marchId == null || !Number.isSafeInteger(marchId) || marchId <= 0) {
+      this.setSelectedMarchId(marchId);
       return;
     }
-    this.setSelectedMarchId(marchId);
+    const opening = !this.isOpen();
+    if (opening) openCenterPanel(this.panel);
+    const pending = this.captureIdReveal(marchId);
+    this.pendingIdReveal = pending;
+    this.setSelectedMarchId(marchId, true);
+    if (this.pendingIdReveal !== pending || !pending.current()) return;
+    this.resolvePendingIdReveal();
+    if (opening || this.pendingIdReveal) {
+      void this.refreshList();
+      this.startPoll();
+    }
+  }
+
+  private captureIdReveal(marchId: number, scroll = false) {
+    const actor = captureActor(this.gateway, () => null);
+    const presentation = captureCenterPanelIntent(this.panel);
+    const mountGeneration = this.listMountGeneration, city = this.getCityId();
+    const revision = this.idRevealRevision;
+    return { id: marchId, scroll, current: () => revision === this.idRevealRevision && actor() && presentation() &&
+      mountGeneration === this.listMountGeneration && city === this.getCityId() && this.isOpen() };
   }
 
   private readonly onListKeyDownBound = (ev: KeyboardEvent): void => {
@@ -336,12 +400,16 @@ export class MarchListPanel {
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
     this.panel.addEventListener("change", (ev) => this.onFilterChange(ev));
+    this.panel.addEventListener("input", (ev) => {
+      if ((ev.target as HTMLElement).closest('[data-role="march-dest-filter"]')) this.cancelIdReveal();
+    });
     this.panel.addEventListener("keydown", this.onListKeyDownBound);
     this.renderFilterControls();
     this.mountFilterSkins();
   }
 
   detach(): void {
+    this.cancelIdReveal();
     this.listMountGeneration++;
     this.stopPoll();
     this.clearHighlightExpiryTimer();
@@ -389,6 +457,7 @@ export class MarchListPanel {
     marchId?: number | null,
     opts?: { march?: MarchSummary | null; toX?: number; toY?: number; openPanel?: boolean },
   ): void {
+    this.cancelIdReveal();
     const fallbackToX = opts?.toX ?? 0;
     const fallbackToY = opts?.toY ?? 0;
     if (marchId != null && marchId > 0) {
@@ -402,8 +471,11 @@ export class MarchListPanel {
       resetCenterPanelViewportScroll(this.panel);
       this.startPoll();
     }
+    if (opts?.openPanel !== false && marchId != null && Number.isSafeInteger(marchId) && marchId > 0) {
+      // Reveal only from an authoritative snapshot, while this handoff still owns presentation.
+      this.pendingIdReveal = this.captureIdReveal(marchId, true);
+    }
     void this.refreshList().then(() => {
-      this.scrollHighlightedMarchIntoView();
       const march =
         opts?.march ??
         (marchId != null ? this.marches.find((m) => m.march_id === marchId) ?? null : null);
@@ -897,7 +969,8 @@ export class MarchListPanel {
     }
   }
 
-  private setSelectedMarchId(marchId: number | null): void {
+  private setSelectedMarchId(marchId: number | null, preserveIdReveal = false): void {
+    if (!preserveIdReveal) this.cancelIdReveal();
     syncMinimapMarchFocusSession(marchId);
     const nextHighlight = resolveMarchHighlightOnRowSelect(
       marchId,
@@ -932,10 +1005,7 @@ export class MarchListPanel {
     const cityId = this.getCityId();
     const prevSnapshot = this.lastListSnapshot;
     try {
-      const res = (await this.gateway.listMarches(cityId, 20, 0)) as {
-        marches?: MarchSummary[];
-        total?: number;
-      };
+      const res = await readMarchListSnapshot(this.gateway, cityId, current);
       if (!current(true)) return;
       const nextMarches = res.marches ?? [];
       this.pendingPhaseChangePulseIds = detectMarchPhaseChange(prevSnapshot, nextMarches);
@@ -947,11 +1017,12 @@ export class MarchListPanel {
       this.syncPollTimers();
     } catch (e) {
       if (!current()) return;
-      this.marches = [];
-      this.lastListSnapshot = [];
       this.listError = `加载失败：${(e as Error).message}`;
       this.onStatus(this.listError);
       this.stopPoll();
+      this.listLoading = false;
+      this.renderList();
+      return;
     } finally {
       if (generation === this.listRequestGeneration && !fresh()) {
         this.listLoading = false;
@@ -965,11 +1036,13 @@ export class MarchListPanel {
       this.selectedMarchId = null;
       this.onSelectionChange?.(null);
     }
+    const scrollToRevealed = this.resolvePendingIdReveal();
     this.syncHighlightFromSession();
     this.tryRestoreMinimapMarchFocus();
     this.onMarchesUpdated?.(this.marches);
     this.listLoading = false;
     this.renderList();
+    scrollToRevealed?.();
   }
 
   /** 同步小地图的权威列表，避免关闭面板后旧阶段覆盖军事/世界只读摘要。 */
@@ -981,9 +1054,11 @@ export class MarchListPanel {
     this.lastListSnapshot = marches.map(m => ({ ...m }));
     this.listLoading = false;
     this.listError = "";
+    const scrollToRevealed = this.resolvePendingIdReveal();
     this.applyMinimapMarchFocusRestore(marches);
     this.syncPollTimers();
     this.renderList();
+    scrollToRevealed?.();
   }
 
   /** 会话内恢复小地图↔军情焦点（CLIENT-090）；不覆盖用户已选行。 */
@@ -1032,13 +1107,6 @@ export class MarchListPanel {
       clearTimeout(this.highlightExpiryTimer);
       this.highlightExpiryTimer = null;
     }
-  }
-
-  private scrollHighlightedMarchIntoView(): void {
-    if (!this.highlightState) return;
-    const id = this.highlightState.march_id;
-    const li = this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
-    li?.scrollIntoView?.({ block: "nearest" });
   }
 
   private syncPollTimers(): void {
@@ -1104,6 +1172,7 @@ export class MarchListPanel {
   }
 
   private setListFilter(next: MilitaryListFilterV1): void {
+    this.cancelIdReveal();
     if (
       next.phase === this.listFilter.phase &&
       next.etaSort === this.listFilter.etaSort
@@ -1243,6 +1312,7 @@ export class MarchListPanel {
     if (!btn) return;
     if (btn.getAttribute("data-action") === "refresh-marches") void this.refreshList();
     if (btn.getAttribute("data-action") === "apply-march-dest-filter") {
+      this.cancelIdReveal();
       const root = this.panel.querySelector('[data-role="march-dest-filter"]');
       const xRaw = (root?.querySelector('[data-field="filter-to-x"]') as HTMLInputElement)?.value.trim() ?? "";
       const yRaw = (root?.querySelector('[data-field="filter-to-y"]') as HTMLInputElement)?.value.trim() ?? "";

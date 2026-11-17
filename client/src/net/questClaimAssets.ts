@@ -1,3 +1,4 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { applyClaimPlayerLevel, PROFILE_REENTRY_HINT } from "./tutorialPlayerLevel";
 import type { GatewayPort } from "./GatewayClient";
 import type { MainCitySession, ResourceWallet } from "./bootstrapSession";
@@ -16,7 +17,7 @@ export function captureAssetRead(gateway: GatewayPort): () => boolean {
 }
 export const QUEST_ASSETS_PENDING = "资产待同步，请刷新背包和主城后重试";
 
-/** Replace authenticated snapshots atomically. Never add a receipt's granted_rewards. */
+/** Refresh bag and city resources atomically; retain last known gold. Never add granted_rewards. */
 export async function refreshQuestAssets(gateway: GatewayPort, getSession: () => MainCitySession | null,
   patch: (value: Partial<MainCitySession>) => void, current = captureActor(gateway, getSession)): Promise<boolean> {
   const session = getSession();
@@ -32,7 +33,7 @@ export async function refreshQuestAssets(gateway: GatewayPort, getSession: () =>
     if (!latest() || getSession()?.bag !== bag || getSession()?.wallet !== wallet || !state.wallet) {
       throw new Error(QUEST_ASSETS_PENDING);
     }
-    patch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: state.wallet });
+    patch({ bag: bagFromListPlayerBagResponse(bagRes.items), wallet: mergeCityResourceWallet(wallet, state.wallet) });
     return true;
   } catch {
     if (!current()) return false;

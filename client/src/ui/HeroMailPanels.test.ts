@@ -3625,11 +3625,11 @@ describe("HeroMailPanels", () => {
         persuadeHero: vi.fn().mockRejectedValue(new Error("hero: persuade on cooldown")),
         getBoundServerId: () => 1,
       } as unknown as GatewayPort;
-      const session = (): MainCitySession => ({
+      const session: MainCitySession = {
         ...sessionBase(),
         bag: [{ item_cfg_id: 2004, quantity: 1 }],
-      });
-      const panels = new HeroMailPanels(mount, gateway, session, () => {}, () => {});
+      };
+      const panels = new HeroMailPanels(mount, gateway, () => session, () => {}, () => {});
       panels.attach();
       panels.toggleHero();
       await flushPromises();

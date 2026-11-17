@@ -13,6 +13,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -104,7 +105,7 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg.ConnConfig.RuntimeParams["search_path"] = schema
+	cfg.ConnConfig.RuntimeParams["search_path"] = schema + ",pg_catalog"
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -115,6 +116,12 @@ func walletBoundaryPool(t *testing.T, fullSchema ...bool) *pgxpool.Pool {
 		admin.Close()
 	})
 	if len(fullSchema) > 0 && fullSchema[0] {
+		if testing.Short() {
+			t.Skip("full ApplySpecs PG fixture skipped under -short; use: go test -count=1 -run <TestName> ./internal/api or make test-full")
+		}
+		if pgfixture.ReuseEnabled() {
+			return pgfixture.WarmPool(t)
+		}
 		if err := db.ApplySpecs(ctx, pool, "../../spec/db"); err != nil {
 			t.Fatal(err)
 		}
