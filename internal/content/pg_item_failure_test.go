@@ -10,7 +10,6 @@ import (
 
 func TestPGItemDebitCancellationKeepsCacheAndStock(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	for _, table := range []string{"player_wallet", "player_item"} {
 		for _, participant := range []bool{false, true} {
@@ -63,7 +62,6 @@ func TestPGItemDebitCancellationKeepsCacheAndStock(t *testing.T) {
 
 func TestPGItemReadSerializesAbsentGrant(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	ctx := context.Background()
 	s, grant := itemPGService(t, pool), itemPGService(t, pool)
@@ -100,7 +98,6 @@ func TestPGItemReadSerializesAbsentGrant(t *testing.T) {
 
 func TestPGRemoveStatementAndCommitFailureDoNotPublish(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	for _, deferred := range []bool{false, true} {
 		t.Run(fmt.Sprintf("deferred_%v", deferred), func(t *testing.T) {

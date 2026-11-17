@@ -52,6 +52,7 @@ func TestShopAtomicGatewayPGSuccessAndCountDefault(t *testing.T) {
 }
 
 func TestShopAtomicGatewayPGRejectAndUnknownNoSuccessEvent(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, kind := range []string{"body-shard", "envelope-shard", "missing-binding", "private-sql", "lost-commit"} {
 		t.Run(kind, func(t *testing.T) {
 			pool, s := atomicShopFixture(t)
@@ -102,6 +103,7 @@ func TestShopAtomicGatewayPGRejectAndUnknownNoSuccessEvent(t *testing.T) {
 }
 
 func TestShopAtomicGatewayPGShelfReadFailsClosed(t *testing.T) {
+	isolateWalletDDL(t)
 	pool, s := atomicShopFixture(t)
 	packet := &commonv1.ClientPacket{Route: RouteListShopShelf, SessionId: "recruit", ServerId: 1, Payload: mustProto(&shopv1.ListShopShelfRequest{ServerId: 1, ShelfId: 1})}
 	resp := s.GatewayRouter().Dispatch(context.Background(), packet)

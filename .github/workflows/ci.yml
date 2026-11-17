@@ -4,9 +4,70 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  scope:
+    runs-on: ubuntu-latest
+    outputs:
+      client: ${{ steps.resolve.outputs.client }}
+      go: ${{ steps.resolve.outputs.go }}
+      domestic: ${{ steps.resolve.outputs.domestic }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        if: github.event_name == 'pull_request'
+        id: filter
+        with:
+          filters: |
+            client:
+              - 'client/**'
+              - 'spec/proto/**'
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'Makefile'
+              - 'cmd/**'
+              - 'tools/**'
+              - 'spec/**'
+              - '.github/**'
+              - 'docker-compose.yml'
+            domestic:
+              - 'internal/domestic/**'
+              - 'internal/api/recruit_cleanup*.go'
+              - 'spec/rules/**'
+              - 'spec/db/**'
+              - '.github/scripts/dom_fresh_catalog_gate.py'
+              - '.github/scripts/test_dom_fresh_catalog_gate.py'
+              - '.github/workflows/ci.yml'
+      - id: resolve
+        env:
+          FULL_MATRIX: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+          F_CLIENT: ${{ steps.filter.outputs.client }}
+          F_GO: ${{ steps.filter.outputs.go }}
+          F_DOMESTIC: ${{ steps.filter.outputs.domestic }}
+        run: |
+          set -euo pipefail
+          if [ "$FULL_MATRIX" = true ]; then
+            echo client=true >> "$GITHUB_OUTPUT"
+            echo go=true >> "$GITHUB_OUTPUT"
+            echo domestic=true >> "$GITHUB_OUTPUT"
+          else
+            echo "client=${F_CLIENT:-false}" >> "$GITHUB_OUTPUT"
+            echo "go=${F_GO:-false}" >> "$GITHUB_OUTPUT"
+            echo "domestic=${F_DOMESTIC:-false}" >> "$GITHUB_OUTPUT"
+          fi
+
   client-build-test:
+    needs: scope
+    if: needs.scope.outputs.client == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -28,8 +89,11 @@ jobs:
       - name: Run client regression tests
         run: npm test
 
-  build-test-lint:
+  go-build-test-lint:
+    needs: scope
+    if: needs.scope.outputs.go == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:17
@@ -59,23 +123,173 @@ jobs:
         with:
           go-version: "1.23.x"
           cache: true
+      - name: Check Recruit cleanup Go formatting
+        shell: bash
+        run: |
+          set -euo pipefail
+          go version
+          gofmt="$(go env GOROOT)/bin/gofmt"
+          test -x "$gofmt"
+          go version "$gofmt"
+          git rev-parse HEAD HEAD^{tree}
+          git ls-files -z -- 'internal/api/recruit_cleanup*.go' > "$RUNNER_TEMP/recruit-cleanup-files"
+          mapfile -d '' -t files < "$RUNNER_TEMP/recruit-cleanup-files"
+          test "${#files[@]}" -gt 0
+          git ls-files --error-unmatch -- internal/api/recruit_cleanup_failure_guard_test.go \
+            internal/api/recruit_cleanup_panic_process_pg_test.go > /dev/null
+          git diff --cached --exit-code HEAD -- 'internal/api/recruit_cleanup*.go'
+          git diff --exit-code HEAD -- 'internal/api/recruit_cleanup*.go'
+          git ls-tree -r HEAD -- "${files[@]}"
+          sha256sum -- "${files[@]}"
+          unformatted="$("$gofmt" -l "${files[@]}")"
+          if [[ -n "$unformatted" ]]; then
+            printf 'Unformatted Recruit cleanup sources:\n%s\n' "$unformatted"
+            "$gofmt" -d "${files[@]}"
+            exit 1
+          fi
+          printf 'Verified official Go formatting for %s tracked Recruit cleanup sources\n' "${#files[@]}"
+      - name: Check fresh DOM catalog evidence verifier
+        run: python3 -m unittest discover -s .github/scripts -p test_dom_fresh_catalog_gate.py -v
+      - name: Check fresh DOM catalog Go formatting and identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence="$RUNNER_TEMP/dom-fresh-catalog"
+          mkdir -p "$evidence"
+          goroot="$(go env GOROOT)"
+          test -n "$goroot"
+          gofmt="$goroot/bin/gofmt"
+          files=(internal/domestic/fresh_source_catalog.go
+                 internal/domestic/fresh_city_catalog.go
+                 internal/domestic/fresh_source_catalog_test.go
+                 internal/domestic/fresh_source_catalog_pg_test.go
+                 internal/domestic/fresh_source.go
+                 internal/domestic/fresh_template.go
+                 internal/domestic/fresh_source_test.go
+                 internal/domestic/fresh_source_binding_pg_test.go
+                 internal/domestic/fresh_source_pins_pg_test.go
+                 internal/domestic/fresh_template_codec.go
+                 internal/domestic/fresh_template_codec_fuzz_test.go
+                 internal/domestic/fresh_template_codec_golden_test.go
+                 internal/domestic/fresh_template_codec_negative_test.go
+                 internal/domestic/fresh_template_codec_oracle_test.go
+                 internal/domestic/fresh_template_codec_test.go
+                 internal/domestic/fresh_template_source.go
+                 internal/domestic/fresh_template_source_test.go
+                 internal/domestic/fresh_template_source_pg_test.go)
+          identity_files=("${files[@]}"
+                          spec/rules/fixtures/fresh_city_template_codec_v1.json)
+          {
+            go version
+            test -x "$gofmt"
+            printf 'gofmt path: %s\n' "$gofmt"
+            go version "$gofmt"
+            sha256sum "$gofmt"
+            commit="$(git rev-parse --verify HEAD)"
+            tree="$(git rev-parse --verify "$commit^{tree}")"
+            git cat-file commit "$commit" > "$RUNNER_TEMP/dom-fresh-commit.raw"
+            commit_data="$(cat "$RUNNER_TEMP/dom-fresh-commit.raw")"
+            [[ "$commit" =~ ^[0-9a-f]{40}$ && "$tree" =~ ^[0-9a-f]{40}$ ]]
+            [[ "${commit_data%%$'\n'*}" == "tree $tree" ]]
+            printf 'commit %s\n' "$commit"
+            while IFS= read -r line; do
+              [[ -n "$line" ]] || break
+              case "$line" in
+                tree\ *) printf '%s\n' "$line" ;;
+                parent\ *)
+                  [[ "${line#parent }" =~ ^[0-9a-f]{40}$ ]]
+                  printf '%s\n' "$line"
+                  ;;
+              esac
+            done <<< "$commit_data"
+            tracked="$(git ls-files --error-unmatch -- "${identity_files[@]}")"
+            git diff --cached --exit-code "$commit" -- "${identity_files[@]}"
+            git diff --exit-code "$commit" -- "${identity_files[@]}"
+            entries="$(git ls-tree -r "$commit" -- "${identity_files[@]}")"
+            hashes="$(sha256sum -- "${identity_files[@]}")"
+            python3 - "$tracked" "$entries" "$hashes" \
+              "$commit" "$RUNNER_TEMP/dom-fresh-commit.raw" <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, ".github/scripts")
+          from dom_fresh_catalog_gate import check_identity, check_sources
+          check_sources(Path.cwd())
+          check_identity(Path.cwd(), *sys.argv[1:])
+          PY
+            printf '%s\n' "$tracked" "$entries" "$hashes"
+          } | tee "$evidence/identity.txt"
+          "$gofmt" -l "${files[@]}" | tee "$evidence/gofmt.list"
+          "$gofmt" -d "${files[@]}" > "$evidence/gofmt.diff"
+          test ! -s "$evidence/gofmt.list"
+      - name: Archive fresh DOM catalog identity evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dom-fresh-catalog-identity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/dom-fresh-catalog/identity.txt
+            ${{ runner.temp }}/dom-fresh-catalog/gofmt.list
+            ${{ runner.temp }}/dom-fresh-catalog/gofmt.diff
+          if-no-files-found: error
       - name: Build binaries
         run: |
           make build
           make build-gm
       - name: Unit tests
         run: make test
+      - name: First-city ledger ACK-loss harness (#2579)
+        env:
+          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+          ALLOW_OWNED_PG17_TEST: "1"
+        run: |
+          make test-spec-fc-ack-loss ALLOW_OWNED_PG17_TEST=1
+          go test -count=1 -timeout=5m ./internal/api -run TestSpecFirstCityLedgerAckLossHarness
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62.2
+      - name: Smoke boot server wiring
+        env:
+          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+          REDIS_ADDR: localhost:6379
+        run: go run ./cmd/gm
+
+  domestic-pg:
+    needs: scope
+    if: needs.scope.outputs.domestic == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
       - name: Domestic PostgreSQL regressions (ordinary and race)
         shell: bash
         run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/dom-fresh-catalog"
           for mode in ordinary race; do
             flags=()
             if [[ "$mode" == race ]]; then flags=(-race); fi
-            # Legacy fixtures use public; isolate the two runs in disposable DBs.
             docker exec "${{ job.services.postgres.id }}" psql -U sanguo -d sanguo \
               -v ON_ERROR_STOP=1 -c "CREATE DATABASE domestic_$mode"
-            log="$RUNNER_TEMP/domestic-$mode.json"
-            # Physical restart has a separate two-phase harness; do not claim it.
+            log="$RUNNER_TEMP/dom-fresh-catalog/domestic-$mode.json"
             DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/domestic_$mode?sslmode=disable" \
             go test ./internal/domestic "${flags[@]}" -count=1 -timeout=5m \
               -skip '^TestPGQueuePhysicalRestart$' -json | tee "$log"
@@ -100,13 +314,14 @@ jobs:
               raise SystemExit(f"PG gate failed: skipped={skipped}, failed={failed}, missing={missing}")
           print(f"Verified all {len(expected)} building-pending tests with zero skips: {sys.argv[1]}")
           PY
+            python3 .github/scripts/dom_fresh_catalog_gate.py "$mode" "$log"
           done
-      - name: Lint
-        uses: golangci/golangci-lint-action@v6
+      - name: Archive fresh DOM catalog evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          version: v1.62.2
-      - name: Smoke boot server wiring
-        env:
-          DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
-          REDIS_ADDR: localhost:6379
-        run: go run ./cmd/gm
+          name: dom-fresh-catalog-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/dom-fresh-catalog/domestic-ordinary.json
+            ${{ runner.temp }}/dom-fresh-catalog/domestic-race.json
+          if-no-files-found: error
