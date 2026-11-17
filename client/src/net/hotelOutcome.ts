@@ -1,3 +1,4 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import type { GatewayPort } from "./GatewayClient";
 import type { MainCitySession, ResourceWallet } from "./bootstrapSession";
 import { bagFromListPlayerBagResponse } from "./bagState";
@@ -5,7 +6,7 @@ import type { HeroSummary } from "./heroMailState";
 import { beginAssetRead } from "./questClaimAssets";
 
 export const HOTEL_UNKNOWN_OUTCOME = "操作结果暂无法确认，可能已生效，请勿重复提交。请重新加载当前状态核对将领、钱包和背包。";
-export const HOTEL_CURRENT_STATE_ONLY = "仅显示当前状态；客栈列表可能自然补充，背包可能触发既有初始赠送，不能据此判定上次操作结果。";
+export const HOTEL_CURRENT_STATE_ONLY = "仅显示当前状态（金币保留已有显示，未重新对账）；客栈列表可能自然补充，背包可能触发既有初始赠送，不能据此判定上次操作结果。";
 export const HOTEL_RELOAD_FAILED = "当前状态加载未完成，请重新加载当前状态；不会重发招入或访贤请求。";
 
 /** Existing RPCs, not a receipt lookup: list may sync the pool; bag may grant starter items. */
@@ -26,5 +27,5 @@ export async function readHotelCurrentState(gateway: GatewayPort, getSession: ()
   if (!fresh() || !cityRes.wallet) {
     throw new Error(HOTEL_RELOAD_FAILED);
   }
-  return { heroes: heroRes.heroes ?? [], bag: bagFromListPlayerBagResponse(bagRes.items), wallet: cityRes.wallet, pool, fresh };
+  return { heroes: heroRes.heroes ?? [], bag: bagFromListPlayerBagResponse(bagRes.items), wallet: mergeCityResourceWallet(wallet, cityRes.wallet), pool, fresh };
 }

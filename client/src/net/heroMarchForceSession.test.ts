@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   HERO_MARCH_FORCE_SESSION_KEY,
   readHeroMarchForceSession,
+  heroMarchForceSessionRevision,
+  clearHeroMarchForceSession,
   writeHeroMarchForceSession,
 } from "@/net/heroMarchForceSession";
 
@@ -20,4 +22,10 @@ describe("heroMarchForceSession", () => {
     expect(entry?.max).toBe(40);
     expect(map.get(HERO_MARCH_FORCE_SESSION_KEY)).toContain('"7"');
   });
+});
+
+it("revisions distinguish every write/clear, isolate heroes and storage, and tolerate no storage",()=>{
+ const a={getItem:()=>null,setItem:()=>{}},b={getItem:()=>null,setItem:()=>{}};
+ expect(heroMarchForceSessionRevision(7,a)).toBe(0);writeHeroMarchForceSession(7,5,24,a);writeHeroMarchForceSession(7,5,24,a);expect(heroMarchForceSessionRevision(7,a)).toBe(2);expect(heroMarchForceSessionRevision(8,a)).toBe(0);expect(heroMarchForceSessionRevision(7,b)).toBe(0);
+ clearHeroMarchForceSession(7,a);clearHeroMarchForceSession(7,a);expect(heroMarchForceSessionRevision(7,a)).toBe(4);expect(heroMarchForceSessionRevision(7,null)).toBe(0);
 });

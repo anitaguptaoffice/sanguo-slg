@@ -1,8 +1,14 @@
+import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { positivePlayerLevel } from "./tutorialPlayerLevel";
 import { garrisonPatch } from "@/net/garrisonState";
 import { ErrorCode } from "@/net/loadProto";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { AuthenticatedIdentity } from "./authenticatedIdentity";
 import type { BagStack } from "@/net/bagState";
+
+/** Thrown when an authenticated account has no city in the selected server yet. */
+export const FIRST_CITY_REQUIRED = "此账号在所选服尚无城池；请先创建首城";
+
 
 export type ResourceWallet = {
   food?: number;
@@ -34,6 +40,8 @@ export type CityTroopStack = {
 };
 
 export type MainCitySession = {
+  /** Live authority check, not a retained account snapshot or V2 capability. */
+  getAuthenticatedIdentity?(): AuthenticatedIdentity | null;
   serverId: number;
   player: PlayerProfile;
   wallet: ResourceWallet;
@@ -70,19 +78,20 @@ function gatewayCode(err: unknown): number | undefined {
   return undefined;
 }
 
-/** 注册（若需要）→ 登录 → 确保有城池 → 拉取内政状态。 */
+/** demo 可注册/建城；existing 仅登录后读取既有城池，服务端原有创角行为不变。 */
 export async function bootstrapMainCity(
   gateway: GatewayPort,
   loginName: string,
   password: string,
   serverId: number,
+  mode: "demo" | "existing" = "demo",
 ): Promise<MainCitySession> {
   let login: LoginResult;
   try {
     login = (await gateway.login(loginName, password, serverId)) as LoginResult;
   } catch (e) {
     const code = gatewayCode(e);
-    if (code === ErrorCode.ACCOUNT_LOGIN_FAILED) {
+    if (mode === "demo" && code === ErrorCode.ACCOUNT_LOGIN_FAILED) {
       await gateway.register(loginName, password);
       login = (await gateway.login(loginName, password, serverId)) as LoginResult;
     } else {
@@ -91,6 +100,7 @@ export async function bootstrapMainCity(
   }
 
   const entered = await gateway.enterGameServer(serverId) as LoginResult;
+  const identity = gateway.getAuthenticatedIdentity?.();
   const generation = gateway.getSessionGeneration?.();
   const token = gateway.getSessionId?.();
   const assertCurrent = () => {
@@ -108,6 +118,7 @@ export async function bootstrapMainCity(
   const list = (await gateway.listPlayerCities()) as { cities?: CitySummary[] };
   assertCurrent();
   let city = list.cities?.find((c) => c.is_capital) ?? list.cities?.[0];
+  if (!city?.city_id && mode === "existing") throw new Error(FIRST_CITY_REQUIRED);
   if (!city?.city_id) {
     const created = (await gateway.createCity(serverId, "主城", 60, 60)) as { city?: CitySummary };
     assertCurrent();
@@ -126,9 +137,15 @@ export async function bootstrapMainCity(
 
   assertCurrent();
   return {
+    getAuthenticatedIdentity(this: MainCitySession) {
+      return identity && gateway.getAuthenticatedIdentity?.() === identity &&
+        gateway.getSessionGeneration?.() === generation && identity.generation === generation &&
+        identity.serverId === this.serverId && identity.serverId === this.player.server_id &&
+        identity.playerId === this.player.player_id ? identity : null;
+    },
     serverId,
     player: { ...profile, level: positivePlayerLevel(profile.level) ?? 1 },
-    wallet: state.wallet ?? entered.wallet ?? login.wallet ?? {},
+    wallet: mergeCityResourceWallet(entered.wallet ?? login.wallet ?? {}, state.wallet),
     productionRates: state.production_rates,
     cityId: city.city_id,
     cityName: city.name ?? "主城",

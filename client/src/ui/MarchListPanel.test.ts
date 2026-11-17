@@ -49,6 +49,7 @@ describe("MarchListPanel", () => {
 
     await vi.waitFor(() => {
       expect(gateway.listMarches).toHaveBeenCalledWith(42, 20, 0);
+      expect(mount.querySelector(".march-list-empty")?.textContent).toContain("暂无行军");
     });
 
     const li = mount.querySelector(".march-list li");
@@ -80,7 +81,7 @@ describe("MarchListPanel", () => {
     panel.toggle();
 
     await vi.waitFor(() => {
-      expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+      expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1);
     });
 
     const row = mount.querySelector(".march-list li[data-march-id]");
@@ -115,7 +116,7 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(mount.querySelector(".march-list li[data-march-id]")).not.toBeNull());
 
     const meta = () => mount.querySelector(".march-row-meta")?.textContent ?? "";
     expect(meta()).toContain("剩余 2m");
@@ -138,7 +139,7 @@ describe("MarchListPanel", () => {
     const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1));
 
     mount.querySelector('.march-list li[data-march-id="3"]')!.click();
     expect(sessionStorage.getItem(MINIMAP_MARCH_FOCUS_SESSION_KEY)).toBe("3");
@@ -201,7 +202,7 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1));
 
     mount.querySelector('.march-list li[data-march-id="5"]')!.click();
     const card = mount.querySelector(".march-info-card");
@@ -241,7 +242,7 @@ describe("MarchListPanel", () => {
     const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1));
     mount.querySelector('.march-list li[data-march-id="2"]')!.click();
     const coord = mount.querySelector('[data-role="march-info-card-eta-residual-coord"]');
     expect(coord?.textContent).toBe("目的格 (9,10)");
@@ -266,7 +267,7 @@ describe("MarchListPanel", () => {
     const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1));
 
     const row = mount.querySelector('.march-list li[data-march-id="11"]');
     expect(row?.querySelector(".intel-row-phase-subline")?.textContent).toContain("行军中");
@@ -304,7 +305,7 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(1));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1));
     mount.querySelector('.march-list li[data-march-id="7"]')!.click();
     const replayBtn = mount.querySelector(
       '[data-action="march-info-replay-battle-report"]',
@@ -330,7 +331,7 @@ describe("MarchListPanel", () => {
     const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2));
 
     const first = mount.querySelector('.march-list li[data-march-id="3"]') as HTMLElement;
     first.click();
@@ -352,11 +353,11 @@ describe("MarchListPanel", () => {
     const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2));
 
     panel.setDestFilter(10, 20);
     expect(panel.getDestFilterMode()).toBe("manual");
-    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1);
     expect(mount.querySelector('.march-list li[data-march-id="1"]')).toBeTruthy();
     expect(mount.querySelector(".march-list-row-dest-match")).toBeTruthy();
     expect(gateway.listMarches).toHaveBeenCalledTimes(1);
@@ -377,14 +378,14 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2));
 
     panel.setDestFilterMode("world");
-    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1);
     expect(gateway.listMarches).toHaveBeenCalledTimes(1);
 
     panel.setDestFilterMode("all");
-    expect(mount.querySelectorAll(".march-list li").length).toBe(2);
+    expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2);
   });
 
   it("openIntelViewForGrid applies manual filter when world grid mismatches", async () => {
@@ -402,15 +403,15 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2));
 
     panel.openIntelViewForGrid(1, 1);
     expect(panel.getDestFilterMode()).toBe("manual");
-    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1);
 
     panel.openIntelViewForGrid(60, 60);
     expect(panel.getDestFilterMode()).toBe("world");
-    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1);
   });
 
   it("notifyMarchStarted opens panel and shows recent ETA inline (CLIENT-116)", async () => {
@@ -434,7 +435,7 @@ describe("MarchListPanel", () => {
     expect(panel.isOpen()).toBe(false);
     panel.notifyMarchStarted(99);
     expect(panel.isOpen()).toBe(true);
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalled());
+    await vi.waitFor(() => expect(mount.querySelector(".march-list li[data-march-id]")).not.toBeNull());
     expect(panel.getSelectedMarchId()).toBe(99);
     const eta = mount.querySelector('[data-role="march-row-recent-eta"]');
     expect(eta?.textContent).toMatch(/^ETA /);
@@ -610,7 +611,7 @@ describe("MarchListPanel", () => {
     panel.attach();
     panel.setRecentMarchHighlight(11);
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2));
 
     expect(
       mount.querySelector('.march-list li[data-march-id="11"]')?.classList.contains(MARCH_ROW_RECENT_CLASS),
@@ -643,9 +644,9 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(mount.querySelector(".march-list li[data-march-id]")).not.toBeNull());
     await panel.getRoot().querySelector<HTMLButtonElement>('[data-action="refresh-marches"]')!.click();
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(mount.querySelector(".march-phase-changed")).not.toBeNull());
     const row = mount.querySelector('.march-list li[data-march-id="5"]');
     expect(row?.classList.contains("march-phase-changed")).toBe(true);
     vi.advanceTimersByTime(3000);
@@ -680,13 +681,13 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(mount.querySelector(".march-list li[data-march-id]")).not.toBeNull());
     mount.querySelector('.march-list li[data-march-id="5"]')!.click();
     const stripBefore = mount.querySelector(".march-intel-phase-eta-strip");
     expect(stripBefore?.textContent).toContain("行军中");
 
     await panel.getRoot().querySelector<HTMLButtonElement>('[data-action="refresh-marches"]')!.click();
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(mount.querySelector(".march-phase-changed")).not.toBeNull());
 
     const row = mount.querySelector('.march-list li[data-march-id="5"]');
     const strip = mount.querySelector(".march-intel-phase-eta-strip");
@@ -749,7 +750,7 @@ describe("MarchListPanel", () => {
     });
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(gateway.listMarches).toHaveBeenCalledTimes(1));
+    await vi.waitFor(() => expect(mount.querySelector(".march-list li[data-march-id]")).not.toBeNull());
     await panel.getRoot().querySelector<HTMLButtonElement>('[data-action="refresh-marches"]')!.click();
     await vi.waitFor(() => expect(onMarchArrivalReminders).toHaveBeenCalled());
     expect(onMarchArrivalReminders.mock.calls[0][0][0]).toMatchObject({
@@ -818,13 +819,13 @@ describe("MarchListPanel", () => {
     const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
     panel.attach();
     panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li").length).toBe(2));
+    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(2));
 
     const returnChip = mount.querySelector(
       '[data-action="march-phase-filter-chip"][data-phase="return"]',
     ) as HTMLButtonElement;
     returnChip.click();
-    expect(mount.querySelectorAll(".march-list li").length).toBe(1);
+    expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1);
     expect(mount.querySelector('.march-list li[data-march-id="2"]')).toBeTruthy();
     expect(sessionStorage.getItem(MILITARY_LIST_FILTER_SESSION_KEY)).toContain('"return"');
   });

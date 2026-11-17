@@ -12,7 +12,7 @@ export type CityChiefView = {
   production_bonus?: number;
 };
 
-export type CityChiefSubmitPhase = "idle" | "loading" | "appointing" | "clearing";
+export type CityChiefSubmitPhase = "idle" | "loading" | "appointing" | "clearing" | "uncertain";
 
 export const CITY_CHIEF_HALL_SLOT_KEY = "hall";
 
@@ -147,12 +147,12 @@ export async function runSetCityChief(
   serverId: number,
   cityId: number,
   heroId: number,
-): Promise<{ chief: CityChiefView; error: string | null }> {
+): Promise<{ chief: CityChiefView | null; error: string | null }> {
   try {
     const res = await gateway.setCityChief(serverId, cityId, heroId);
     return { chief: parseCityChiefView(res), error: null };
   } catch (e) {
-    return { chief: { city_id: cityId }, error: formatCityChiefGatewayError(e) };
+    return { chief: null, error: formatCityChiefGatewayError(e) };
   }
 }
 
@@ -160,11 +160,11 @@ export async function runClearCityChief(
   gateway: GatewayPort,
   serverId: number,
   cityId: number,
-): Promise<{ chief: CityChiefView; error: string | null }> {
+): Promise<{ chief: CityChiefView | null; error: string | null }> {
   try {
     await gateway.clearCityChief(serverId, cityId);
     return { chief: { city_id: cityId, hero_id: 0 }, error: null };
   } catch (e) {
-    return { chief: { city_id: cityId }, error: formatCityChiefGatewayError(e) };
+    return { chief: null, error: formatCityChiefGatewayError(e) };
   }
 }

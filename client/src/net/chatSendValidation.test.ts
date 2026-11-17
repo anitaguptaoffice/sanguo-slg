@@ -11,6 +11,8 @@ describe("chatSendValidation (CLIENT-160)", () => {
   it("formatChatInputCounter shows rune count over max", () => {
     expect(formatChatInputCounter("")).toBe(`0/${CHAT_SEND_MAX_CONTENT_LENGTH}`);
     expect(formatChatInputCounter("你好")).toBe(`2/${CHAT_SEND_MAX_CONTENT_LENGTH}`);
+    expect(formatChatInputCounter("😀".repeat(501))).toBe("501/500");
+    expect(formatChatInputCounter("😀中a", 2)).toBe("3/2");
   });
 
   it("countChatContentRunes counts astral symbols as one", () => {
