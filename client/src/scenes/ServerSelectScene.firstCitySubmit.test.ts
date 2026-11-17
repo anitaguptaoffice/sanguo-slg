@@ -138,6 +138,51 @@ it("enters the main city once submit reaches a succeeded terminal state", async 
   expect(ctx.switchScene).toHaveBeenCalledWith("mainCity", expect.objectContaining({ cityId: 42, serverId: 1 }));
 });
 
+it("recovers with discover and continue when submit transport fails", async () => {
+  const { layoutFrame, gateway, ctx } = await setup();
+  let submitRejected = false;
+  const succeeded = (cityId: bigint) => ({
+    intent: { scope, proposal: { commandId: proposal.command_id, predecessor: { kind: "empty" as const }, name: "城", x: 60, y: 60 },
+      encode: () => new Uint8Array(8), matches: () => true },
+    template: { templateVersion: "v1", rulesVersion: "r1", catalogVersion: "c1", contentEncodingVersion: 1, contentSha256: "00" },
+    state: { kind: "succeeded" as const, cityId, shard: 1, playerId: 7n, isCapital: true as const, wallLevel: 1 as const, morale: 100 as const },
+  });
+  const observations: any[] = [{ kind: "discovery" as const, scope, head: { kind: "empty" as const } }];
+  gateway.requestPersistedFirstCity.mockImplementation(async (route: string) => {
+    if (route.endsWith("DiscoverFirstCityIntent")) {
+      if (submitRejected) {
+        const record = pendingRecord();
+        const command = { kind: "discovery" as const, scope, head: { kind: "command" as const, record } };
+        observations.push(command);
+        return command;
+      }
+      return observations[0];
+    }
+    if (route.endsWith("SubmitFirstCity")) {
+      submitRejected = true;
+      throw new Error("UNKNOWN");
+    }
+    if (route.endsWith("ContinueFirstCity")) {
+      const record = succeeded(42n);
+      const command = { kind: "command" as const, scope, requestedCommandId: proposal.command_id,
+        command: record, head: { kind: "command" as const, record } };
+      observations.push(command);
+      return command;
+    }
+    throw new Error(route);
+  });
+  gateway.readFirstCityHistory.mockImplementation(() => ({ intents: [], observations, unavailable: false }));
+  gateway.listPlayerCities.mockResolvedValue({ cities: [{ city_id: 42, server_id: 1, player_id: 7, name: "城", x: 60, y: 60, is_capital: true }] } as never);
+  gateway.getCityState.mockResolvedValue({ wallet: {}, buildings: [] } as never);
+  layoutFrame.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value = "城";
+  layoutFrame.querySelector<HTMLButtonElement>('[data-action="submit-first-city"]')!.click();
+  for (let i = 0; i < 200; i++) await Promise.resolve();
+  expect(submitRejected).toBe(true);
+  expect(gateway.requestPersistedFirstCity.mock.calls.filter(([route]) => route.endsWith("DiscoverFirstCityIntent")).length).toBeGreaterThanOrEqual(2);
+  expect(gateway.requestPersistedFirstCity.mock.calls.some(([route]) => route.endsWith("ContinueFirstCity"))).toBe(true);
+  expect(ctx.switchScene).toHaveBeenCalledWith("mainCity", expect.objectContaining({ cityId: 42, serverId: 1 }));
+});
+
 it("stays on server select when submit is still pending", async () => {
   const { layoutFrame, ctx, gateway } = await setup();
   layoutFrame.querySelector<HTMLInputElement>('input[name="fc-name"]')!.value = "城";
