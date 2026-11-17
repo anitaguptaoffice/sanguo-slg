@@ -57,3 +57,10 @@ test-gate:
 
 test-full:
 	DATABASE_URL='$(DATABASE_URL)' go test -count=1 -timeout=40m ./internal/api
+
+# SPEC-FIRST-CITY-LEDGER-ACK-LOSS-001 (#2579): disposable PG17; creates fc_ack_* schemas only.
+FC_ACK_DEFAULT_DSN := postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+test-spec-fc-ack-loss:
+	@: $${ALLOW_OWNED_PG17_TEST:?set ALLOW_OWNED_PG17_TEST=1}; \
+	dsn="$${FIRST_CITY_LEDGER_TEST_DSN:-$${DATABASE_URL:-$(FC_ACK_DEFAULT_DSN)}}"; \
+	ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN="$$dsn" bash spec/db/tests/first_city_ledger_ack_loss.sh

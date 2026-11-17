@@ -36,7 +36,8 @@
 - **已合入 backlog**：FIRST-CITY-RELEASE / FIRST-CITY-ENABLE、多数 CLIENT-FIRST-CITY-*；#2506 队列 **first-city-storage** 与 `client/qa/firstCityStorage.browser.mjs` 已在 main。
 - **本地可玩冒烟**：见 [client/qa/FIRST-CITY-PLAYABLE.md](../client/qa/FIRST-CITY-PLAYABLE.md)（`firstCityPlayable.browser.mjs`；可用 `QA_FC_X`/`QA_FC_Y` 避占格）。PG 重启：`TestFirstCityPGResultAfterServerReconnect`（终态读回）；`TestFirstCityPGContinueAfterPendingReconnect`（durable PENDING → Continue settlement，`DATABASE_URL`）。
 - **可玩 ACK-loss（轻量）**：服务端 Continue settlement（#3056）；选服 Submit 在 durable **pending** 时自动一次 Continue（`runFirstCitySubmitThroughTerminal`）；`TestFirstCityPGDuplicateSubmitPendingNoDoubleCity`。
-- **仍缺**：effect 与 companion 同 txn 全 pin 序；SPEC #2579 `first_city_ledger_ack_loss` 全矩阵与 WS 丢包重连编排；Get 对 PENDING 是否被动 settle；DOM PreparedCity 等产品卡按合同单开。
+- **SPEC #2579 ACK-loss（PG 层）**：`make test-spec-fc-ack-loss ALLOW_OWNED_PG17_TEST=1`（或 `spec/db/tests/first_city_ledger_ack_loss.sh`）；Go 桥接 `TestSpecFirstCityLedgerAckLossHarness`。与 `internal/api` PG ledger 互补，不代替 WS/浏览器矩阵。
+- **仍缺**：effect 与 companion 同 txn 全 pin 序；#2579 之上 WS 丢包重连编排；Get 对 PENDING 是否被动 settle；DOM PreparedCity 等产品卡按合同单开。
 - 历史 Draft 表（#2505/#2529 等）若与 main 重复，以 **main HEAD** 与上述冒烟为准；勿再假定「尚未开放」或 runtime 未接线。
 
 ## 5. 收件箱键盘：完整可恢复实验栈

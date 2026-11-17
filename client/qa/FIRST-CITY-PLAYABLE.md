@@ -28,3 +28,12 @@ cd client && node qa/firstCityPlayable.browser.mjs
 DATABASE_URL='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable' \
   go test ./internal/api -run 'TestFirstCityV2|TestFirstCityPG' -count=1
 ```
+
+## SPEC #2579 ACK-loss（PG17 隔离 schema，非 WebSocket）
+
+```bash
+make dev-up
+ALLOW_OWNED_PG17_TEST=1 make test-spec-fc-ack-loss
+# 或：ALLOW_OWNED_PG17_TEST=1 FIRST_CITY_LEDGER_TEST_DSN='postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable' \
+#   go test ./internal/api -run TestSpecFirstCityLedgerAckLossHarness -count=1
+```
