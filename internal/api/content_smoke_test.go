@@ -22,7 +22,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"google.golang.org/protobuf/proto"
 )
@@ -33,12 +33,9 @@ func smokeStep(t *testing.T, name string) {
 
 // TestM4ContentSmokePath: 接任务 → 推进 → 领奖入背包 → 商城购买 → GM 发奖（INTG-004 / DATA-002 cfg 子集）。
 func TestM4ContentSmokePath(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}

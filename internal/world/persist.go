@@ -2,6 +2,7 @@ package world
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -17,7 +18,7 @@ func (p *PGStore) LoadChunk(ctx context.Context, sid int32, cx, cy int) ([]Cell,
 	minX, minY, maxX, maxY := ChunkBounds(cx, cy)
 	rows, err := p.Pool.Query(ctx,
 		`SELECT x,y,terrain,COALESCE(resource_type,0),resource_level FROM map_cell
-		 WHERE server_id=$1 AND x>=$2 AND x<$3 AND y>=$4 AND y<$5`, sid, minX, maxX, minY, maxY)
+		 WHERE server_id=$1 AND x>=$2 AND x<$3 AND y>=$4 AND y<$5 ORDER BY y,x`, sid, minX, maxX, minY, maxY)
 	if err != nil {
 		return nil, false, err
 	}
@@ -34,6 +35,25 @@ func (p *PGStore) LoadChunk(ctx context.Context, sid int32, cx, cy int) ([]Cell,
 }
 
 func (p *PGStore) SaveChunk(ctx context.Context, sid int32, cells []Cell) error {
+	if len(cells) == 0 {
+		return nil
+	}
+	tx, err := p.Pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	return saveChunkTransaction(ctx, tx, sid, cells)
+}
+
+// saveChunkTransaction owns the transaction begun by SaveChunk, including its end.
+func saveChunkTransaction(ctx context.Context, tx pgx.Tx, sid int32, cells []Cell) error {
+	defer func() {
+		// Caller cancellation must not prevent cleanup or replace the original error.
+		cleanup, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = tx.Rollback(cleanup)
+	}()
+	batch := &pgx.Batch{}
 	q := `INSERT INTO map_cell(server_id,x,y,terrain,resource_type,resource_level)
 		VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(server_id,x,y) DO UPDATE SET
 		terrain=EXCLUDED.terrain,resource_type=EXCLUDED.resource_type,resource_level=EXCLUDED.resource_level`
@@ -42,11 +62,15 @@ func (p *PGStore) SaveChunk(ctx context.Context, sid int32, cells []Cell) error 
 		if c.ResourceType != 0 {
 			rt = &c.ResourceType
 		}
-		if _, err := p.Pool.Exec(ctx, q, sid, c.X, c.Y, c.Terrain, rt, c.ResourceLevel); err != nil {
-			return err
-		}
+		// Separate ordered statements retain last-write-wins for duplicate coordinates.
+		batch.Queue(q, sid, c.X, c.Y, c.Terrain, rt, c.ResourceLevel)
 	}
-	return nil
+	// Close drains every result and preserves the first batch error before COMMIT.
+	if err := tx.SendBatch(ctx, batch).Close(); err != nil {
+		return err
+	}
+	// A commit error can have an unknown outcome: return it unchanged, never retry.
+	return tx.Commit(ctx)
 }
 
 func (p *PGStore) CreateCity(ctx context.Context, c City) error {

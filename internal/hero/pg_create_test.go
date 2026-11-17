@@ -7,12 +7,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func identityStore(t *testing.T) *PGStore {
 	t.Helper()
+	pgfixture.SkipFullSpecUnderShort(t)
+	if pgfixture.ReuseEnabled() {
+		return NewPGStore(pgfixture.WarmPool(t))
+	}
 	ctx := context.Background()
 	admin := openHeroTestDB(t)
 	schema := fmt.Sprintf("hero_identity_%d", time.Now().UnixNano())

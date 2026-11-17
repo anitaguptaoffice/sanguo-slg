@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -24,7 +23,6 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
@@ -64,12 +62,8 @@ func TestINTG006Data002SmokePath(t *testing.T) {
 }
 
 func runINTGData002Smoke(t *testing.T) {
-	pool := openDB(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		smokeFailf(t, "apply spec/db", "err=%v", err)
-	}
 	if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {
 		smokeFailf(t, "seed dev server", "err=%v", err)
 	}
@@ -111,12 +105,11 @@ func runINTGData002Smoke(t *testing.T) {
 
 func reopenDBPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Fatal("DATABASE_URL not set")
-	}
+	// The fixture owns the shared pool. Restart connections own their lifetime
+	// but retain the same schema and committed data, without resetting it.
+	cfg := openWarmSpecDB(t).Config()
 	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -158,6 +151,14 @@ func smokeFailf(t *testing.T, step string, format string, args ...any) {
 
 func startData002SmokeGateway(t *testing.T, log *slog.Logger, pool *pgxpool.Pool, worldStore *world.PGStore) (*api.Server, *httptest.Server, string) {
 	t.Helper()
+	// Quest calendar time is deliberately separate from military/build advancement.
+	return startData002SmokeGatewayWithCalendar(t, log, pool, worldStore, func() time.Time {
+		return time.Date(2030, time.January, 2, 23, 59, 59, 0, time.UTC)
+	})
+}
+
+func startData002SmokeGatewayWithCalendar(t *testing.T, log *slog.Logger, pool *pgxpool.Pool, worldStore *world.PGStore, calendarNow func() time.Time) (*api.Server, *httptest.Server, string) {
+	t.Helper()
 	ctx := context.Background()
 	syncClk := &api.SmokeSyncClock{T: time.Now()}
 	domHub := domestic.NewHub(syncClk.Now)
@@ -171,6 +172,7 @@ func startData002SmokeGateway(t *testing.T, log *slog.Logger, pool *pgxpool.Pool
 	if err := apiSrv.WireM4Content(ctx); err != nil {
 		t.Fatal(err)
 	}
+	apiSrv.SetSmokeQuestCalendarClockForTest(calendarNow)
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
 	gw := gateway.NewServer(log, gwCfg, gateway.AccessControl{}, account.SessionValidator{Svc: apiSrv.AccountService()}, apiSrv.GatewayRouter())

@@ -128,7 +128,7 @@ import {
   syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
 } from "@/net/marchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeper";
 import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
-import { setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
+import { readMarchUnitCfgId, setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
   formatMarchFormValidationSweepLine,
   syncMarchFormValidationSweepLine,
@@ -682,7 +682,13 @@ export class MainCityScene implements Scene {
         <label>带队将领
           <select data-field="march-hero" aria-label="出征带队将领"></select>
         </label>
-        <label>出征步兵 <input type="number" data-field="march-count" min="1" value="50" /></label>
+        <label>出征兵种
+          <select data-field="march-unit" aria-label="出征兵种">
+            <option value="1">步兵</option><option value="2">骑兵</option>
+            <option value="3">弓兵</option><option value="4">器械</option>
+          </select>
+        </label>
+        <label>出征数量 <input type="number" data-field="march-count" min="1" value="50" /></label>
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
         <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
@@ -750,6 +756,7 @@ export class MainCityScene implements Scene {
       (keys) => {
         if (keys.length) scheduleHudResourcePulse(this.hud, keys);
       },
+      this.assets,
     );
     this.content.attach();
     this.dailyQuest = new DailyQuestPanels(
@@ -967,7 +974,7 @@ export class MainCityScene implements Scene {
       {
         marchFormRoot: this.militaryPanel,
         onFilled: (x, y) => {
-          openCenterPanel(this.militaryPanel);
+          this.openMilitaryPanel();
           setMarchTargetFieldHighlight(this.militaryPanel, false);
           this.renderHud();
           this.syncMilitaryPanel();
@@ -1202,7 +1209,10 @@ export class MainCityScene implements Scene {
     });
     this.toolbar.addEventListener("click", (ev) => this.onToolbarClick(ev));
     this.militaryPanel.addEventListener("click", (ev) => this.onMilitaryClick(ev));
-    this.militaryPanel.addEventListener("change", (ev) => this.onMilitaryRecruitFieldChange(ev));
+    this.militaryPanel.addEventListener("change", (ev) => {
+      this.onMilitaryRecruitFieldChange(ev);
+      if ((ev.target as HTMLElement).getAttribute("data-field") === "march-unit") this.onMilitaryFormInput(ev);
+    });
     this.militaryPanel.addEventListener("input", (ev) => {
       this.onMilitaryRecruitFieldChange(ev);
       this.onMilitaryFormInput(ev);
@@ -1344,7 +1354,7 @@ export class MainCityScene implements Scene {
       case "train_troops":
         this.queuePanels.open();
         this.queuePanels.flashDailyQueueAnchorHighlight(queueAnchorTarget);
-        openCenterPanel(this.militaryPanel);
+        this.openMilitaryPanel();
         this.syncMilitaryPanel();
         this.status = "已打开「队列」与「军事」募兵（练兵日常 QUEST-003）";
         break;
@@ -1547,7 +1557,7 @@ export class MainCityScene implements Scene {
 
   private onMilitaryFormInput(ev: Event): void {
     const field = (ev.target as HTMLElement).getAttribute("data-field");
-    if (field !== "to-x" && field !== "to-y" && field !== "march-count" && field !== "march-hero") {
+    if (field !== "to-x" && field !== "to-y" && field !== "march-count" && field !== "march-hero" && field !== "march-unit") {
       return;
     }
     if (field === "to-x" || field === "to-y") {
@@ -1569,6 +1579,7 @@ export class MainCityScene implements Scene {
       this.syncIntelListFromMarchFormCoords();
     }
     this.syncMilitaryPanel();
+    if (field === "march-unit") this.renderHud();
   }
 
   private syncIntelListFromMarchFormCoords(): void {
@@ -1659,7 +1670,7 @@ export class MainCityScene implements Scene {
     const layoutFrame = document.getElementById("layout-frame");
     openMilitaryQueueBannerAndHighlight(marchId, {
       openMilitaryPanel: () => {
-        openCenterPanel(this.militaryPanel);
+        this.openMilitaryPanel();
         resetCenterPanelViewportScroll(this.militaryPanel);
       },
       highlightMilitaryBanner: (jump) => {
@@ -1680,7 +1691,7 @@ export class MainCityScene implements Scene {
       this.renderHud();
       return;
     }
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     this.suppressMarchTargetHighlightClear = true;
     const prefill = prefillMarchFormFromIntelResidualDeepestDeepestDeepestDeepestDeeper(
@@ -1731,6 +1742,7 @@ export class MainCityScene implements Scene {
     const troopReserve = buildMarchFormTroopReserveLine(
       marchSnap.marchCountRaw,
       readyGarrison(this.session),
+      marchSnap.unitCfgId,
     );
     if (troopReserve && this.session?.garrisonStatus !== "ready") troopReserve.line = "城内可用兵力待同步（请刷新）";
     syncMarchFormTroopReserveLine(this.militaryPanel, troopReserve);
@@ -1759,6 +1771,7 @@ export class MainCityScene implements Scene {
       toXRaw: marchSnap.toXRaw,
       toYRaw: marchSnap.toYRaw,
       marchCountRaw: marchSnap.marchCountRaw,
+      unitCfgId: marchSnap.unitCfgId,
       heroIdRaw: marchSnap.heroIdRaw,
       ownedHeroes: this.marchFormHeroes,
       localBusyHeroIds: this.marchLocalBusyHeroIds,
@@ -1859,7 +1872,7 @@ export class MainCityScene implements Scene {
     if (!target) return;
     writeRecruitHighlightQueueSession(target.queue_id);
     this.recruitQueueHighlightId = target.queue_id;
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     resetCenterPanelViewportScroll(this.militaryPanel);
     applyRecruitQueueJumpToMilitaryPanel(this.militaryPanel, target);
     this.queuePanels.highlightRecruitQueue(target.queue_id);
@@ -2395,7 +2408,7 @@ export class MainCityScene implements Scene {
     }
     this.world?.selectGridAt(world.wx, world.wy, { source: "minimap" });
     this.focusMinimapOnWorldGrid(world.wx, world.wy);
-    openCenterPanel(this.militaryPanel);
+    this.openMilitaryPanel();
     this.status = marchTargetStatusMessage("minimap", world.wx, world.wy);
     this.renderHud();
     this.syncMilitaryPanel();
@@ -2803,11 +2816,13 @@ export class MainCityScene implements Scene {
     const troopReserve = buildMarchFormTroopReserveLine(
       marchSnap.marchCountRaw,
       readyGarrison(this.session),
+      marchSnap.unitCfgId,
     );
     const marchValidated = validateMarchForm({
       toXRaw: marchSnap.toXRaw,
       toYRaw: marchSnap.toYRaw,
       marchCountRaw: marchSnap.marchCountRaw,
+      unitCfgId: marchSnap.unitCfgId,
       heroIdRaw: marchSnap.heroIdRaw,
       ownedHeroes: this.marchFormHeroes,
       localBusyHeroIds: this.marchLocalBusyHeroIds,
@@ -2926,7 +2941,7 @@ export class MainCityScene implements Scene {
         .openPanelWithDeepLink(snap.firstUnreadBattleReportId)
         .then(() => this.renderHud());
     } else if (panel === "military") {
-      openCenterPanel(this.militaryPanel);
+      this.openMilitaryPanel();
       resetCenterPanelViewportScroll(this.militaryPanel);
       this.syncMilitaryPanel();
     }
@@ -3330,6 +3345,12 @@ export class MainCityScene implements Scene {
     }
   }
 
+  /** Every explicit entry refreshes the roster; never poll from render/sync. */
+  private openMilitaryPanel(): void {
+    openCenterPanel(this.militaryPanel);
+    void this.refreshMarchFormHeroes();
+  }
+
   private async refreshMarchFormHeroes(): Promise<void> {
     this.ensureMarchHeroActor();
     if (!this.session || this.marchHeroListLoading) return;
@@ -3367,7 +3388,9 @@ export class MainCityScene implements Scene {
   private async startMarch(): Promise<void> {
     if (!this.session) return;
     this.ensureMarchHeroActor();
+    const unitCfgId = readMarchUnitCfgId(this.militaryPanel);
     const validated = validateMarchForm({
+      unitCfgId,
       toXRaw: (this.field("to-x") as HTMLInputElement)?.value ?? "",
       toYRaw: (this.field("to-y") as HTMLInputElement)?.value ?? "",
       marchCountRaw: (this.field("march-count") as HTMLInputElement)?.value ?? "",
@@ -3391,7 +3414,7 @@ export class MainCityScene implements Scene {
     this.cityStateFetch.clear();
     const presentMarchResult = captureCenterPanelIntent(this.militaryPanel);
     setMarchFormErrorDisplay(this.militaryPanel, null);
-    const troops = [{ unit_cfg_id: 1, count: marchCount }];
+    const troops = [{ unit_cfg_id: unitCfgId, count: marchCount }];
     this.marchSubmitState = marchSubmitStateMachine(this.marchSubmitState, { type: "SUBMIT" });
     this.syncMilitaryPanel();
     this.renderHud();

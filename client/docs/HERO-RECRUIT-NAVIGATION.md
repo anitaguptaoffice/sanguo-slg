@@ -16,4 +16,8 @@ Keep the PR Draft until real 1280×720 and 1600×900 browser checks establish:
 - Manual open/close survives template changes and refresh; another hero restores the compact layout.
 - Cold template reads cannot steal Back/another hero/another panel navigation; retry displays truthful errors.
 
-#2004 mail pagination is a same-file held draft. Validate a temporary combination; do not change its branch or release its hold. No browser startup restriction is bypassed.
+#2004 mail pagination is now merged. This integration retains its behavior and the later mainline scroll/focus fixes; current-head local tests and browser acceptance replace the old temporary-combination requirement.
+
+## Current-main focus integration
+
+This behavior supersedes the older refresh-always-closes focus rule: affordability/template rerenders preserve manual disclosure state and focus. Actual navigation to another hero still moves focus to the summary before hiding focused controls, with preventScroll; external or summary focus is not stolen. Countdown cleanup and existing mail/hero guards remain intact.
