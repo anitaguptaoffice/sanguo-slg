@@ -143,6 +143,20 @@ func (s *state) cleanup(ctx context.Context) error {
 	return err
 }
 
+// Undertx runs fn on the owner's underlying pgx.Tx while holding the admission gate.
+// Callers must not commit or roll back the transaction. Used for first-city atomic ledger settle.
+func (o *Owner) Undertx(ctx context.Context, fn func(context.Context, pgx.Tx) error) error {
+	if o == nil || o.s == nil || fn == nil {
+		return ErrInactive
+	}
+	call, leave, err := o.Access().enter(ctx, o.s.binding)
+	if err != nil {
+		return err
+	}
+	defer leave()
+	return fn(call, o.s.tx)
+}
+
 func (o *Owner) Commit(ctx context.Context) (err error) {
 	if o == nil || o.s == nil {
 		return ErrInactive
@@ -158,9 +172,13 @@ func (o *Owner) Commit(ctx context.Context) (err error) {
 	committed := false
 	defer func() {
 		if !committed {
+			if original := recover(); original != nil {
+				// Even a cleanup panic must not replace the original Commit panic.
+				defer func() { panic(original) }()
+			}
 			err = errors.Join(err, s.cleanup(call))
 		}
-	}() // also runs on panic; the panic continues after bounded cleanup
+	}() // bounded cleanup is only an attempt; it cannot establish the outcome
 	if err = s.tx.Commit(call); err != nil {
 		return errors.Join(ErrOutcomeUnknown, err)
 	}

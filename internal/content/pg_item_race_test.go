@@ -11,7 +11,6 @@ import (
 
 func TestPGRemoveTwoStaleServicesOneBook(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	a, b := itemPGService(t, pool), itemPGService(t, pool)
 	p := PlayerRef{1, time.Now().UnixNano()}
@@ -57,7 +56,6 @@ func TestPGRemoveTwoStaleServicesOneBook(t *testing.T) {
 
 func TestPGGrantRemoveRaceAbsentZeroAndPositive(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	for _, initial := range []int32{-1, 0, 1} {
 		t.Run(fmt.Sprintf("initial_%d", initial), func(t *testing.T) {

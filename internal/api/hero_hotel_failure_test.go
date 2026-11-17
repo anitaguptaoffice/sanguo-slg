@@ -13,6 +13,7 @@ import (
 )
 
 func TestHotelAtomicPGAllWriteFailuresRollback(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, tc := range []struct {
 		op          hotelOperation
 		stage, fail string
@@ -180,6 +181,7 @@ func TestHotelAtomicPGLostCommitAcknowledgementNeverReplays(t *testing.T) {
 }
 
 func TestHotelAtomicPGPostcommitFailureRemainsSuccess(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, op := range []hotelOperation{hotelRefresh, hotelRecruit} {
 		t.Run(string(op), func(t *testing.T) {
 			pool, s := hotelFixture(t)

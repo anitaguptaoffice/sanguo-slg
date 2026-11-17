@@ -1,5 +1,5 @@
 import { captureActor } from "@/net/actorContext";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { MainCitySession } from "@/net/bootstrapSession";
 import {
@@ -137,7 +137,6 @@ import {
   type LeaderboardReturnScrollPayload,
 } from "@/net/leaderboardReturnScroll";
 import {
-  CHAT_SEND_MAX_CONTENT_LENGTH,
   formatChatInputCounter,
   validateSendChatContent,
 } from "@/net/chatSendValidation";
@@ -257,7 +256,8 @@ export class SocialPanels {
   private chatReadDestinationKey = "";
   private chatRead: { key: string; current: () => boolean; promise: Promise<void> } | null = null;
   private rankReadVersion = 0;
-  private rankRead: { boardType: number; current: () => boolean; promise: Promise<void> } | null = null;
+  private rankLinkVersion = 0;
+  private rankRead: { boardType: number; page: number; current: () => boolean; promise: Promise<void> } | null = null;
   private rankSnapshotOwner: (() => boolean) | null = null;
   private rankDisplayedType = 0;
   private guildListInflight = new SocialPanelInflight<void>();
@@ -276,6 +276,8 @@ export class SocialPanels {
   private rankListError: string | null = null;
   private guildMembersCache: GuildMemberRow[] = [];
   private readonly guildRoleGroupExpanded = new Map<number, boolean>();
+  private readonly rankPageByType = new Map<number, number>();
+  private readonly rankRetryPageByType = new Map<number, { page: number; manual: boolean }>();
   private readonly rankSnapshotByType = new Map<number, LeaderboardPagePayload>();
   private pendingRankPinPulse = false;
   private rankViewerMyRank = 0;
@@ -290,6 +292,8 @@ export class SocialPanels {
   private lastRenderedChatMessages: ChatMessageRow[] = [];
   private chatSendPending: object | null = null;
   private chatDraftVersion = 0;
+  // null means not restored yet; an empty string is an authoritative cleared draft.
+  private chatDraftContent: string | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -300,6 +304,7 @@ export class SocialPanels {
   ) {}
 
   setRankDeepLinkHandlers(handlers: SocialRankDeepLinkHandlers): void {
+    ++this.rankLinkVersion;
     this.rankDeepLink = { ...handlers };
   }
 
@@ -307,6 +312,8 @@ export class SocialPanels {
     ++this.rankReadVersion;
     this.rankRead = null;
     this.rankSnapshotByType.clear();
+    this.rankPageByType.clear();
+    this.rankRetryPageByType.clear();
     this.rankSnapshotOwner = null;
     this.rankDisplayedType = 0;
     this.chatSendPending = null;
@@ -338,6 +345,8 @@ export class SocialPanels {
     ++this.rankReadVersion;
     this.rankRead = null;
     this.rankSnapshotByType.clear();
+    this.rankPageByType.clear();
+    this.rankRetryPageByType.clear();
     this.rankSnapshotOwner = null;
     this.rankDisplayedType = 0;
     this.chatSendPending = null;
@@ -424,7 +433,7 @@ export class SocialPanels {
     if (typeSelect) typeSelect.value = String(LB_PLAYER_POWER);
     openCenterPanel(this.rankPanel);
     resetCenterPanelViewportScroll(this.rankPanel);
-    const read = this.refreshRank();
+    const read = this.refreshRank({ page: 1 });
     const version = this.rankReadVersion;
     void read.then(() => {
       if (version === this.rankReadVersion && this.rankSnapshotOwner?.() && !this.rankPanel.classList.contains("hidden")) this.scrollRankHighlightIntoView();
@@ -578,6 +587,7 @@ export class SocialPanels {
     this.guildPanel.classList.add("hidden");
     openCenterPanel(this.chatPanel);
     resetCenterPanelViewportScroll(this.chatPanel);
+    this.restoreChatInputDraftFromSession();
     const sel = this.chatPanel.querySelector('[data-field="channel"]') as HTMLSelectElement | null;
     if (sel) sel.value = String(CHAT_CHANNEL_GUILD);
     this.syncChatChannelUi(CHAT_CHANNEL_GUILD);
@@ -640,7 +650,7 @@ export class SocialPanels {
         <ul class="chat-log" data-role="chat-log"></ul>
       </div>
       <label class="chat-input-label">内容
-        <input type="text" data-field="chat-content" maxlength="${CHAT_SEND_MAX_CONTENT_LENGTH}" placeholder="输入消息" aria-describedby="chat-input-counter" />
+        <input type="text" data-field="chat-content" placeholder="输入消息" aria-describedby="chat-input-counter" />
         <span class="chat-input-counter" id="chat-input-counter" data-role="chat-input-counter" aria-live="polite"></span>
       </label>
       <button type="button" data-action="send-chat">发送</button>
@@ -695,17 +705,15 @@ export class SocialPanels {
   }
 
   private persistChatInputDraft(): void {
-    persistGuildChatDraft(this.chatContentInput()?.value ?? "");
+    this.chatDraftContent = this.chatContentInput()?.value ?? "";
+    persistGuildChatDraft(this.chatDraftContent);
   }
 
   private restoreChatInputDraftFromSession(): void {
-    const draft = restoreGuildChatDraft();
     const input = this.chatContentInput();
-    if (!input || !draft) {
-      this.syncChatInputCounter();
-      return;
-    }
-    input.value = draft;
+    if (!input) return;
+    this.chatDraftContent ??= restoreGuildChatDraft();
+    input.value = this.chatDraftContent;
     this.syncChatInputCounter();
   }
 
@@ -767,6 +775,12 @@ export class SocialPanels {
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
         <span data-role="rank-refresh-status-text"></span>
       </p>
+      <nav aria-label="排行榜分页">
+        <button type="button" data-action="rank-prev-page" disabled>上一页</button>
+        <span data-role="rank-page-status" aria-live="polite">第 1 页</span>
+        <button type="button" data-action="rank-next-page" disabled>下一页</button>
+        <button type="button" data-action="rank-my-page" disabled>查看我的名次</button>
+      </nav>
       <div class="panel-scroll-body" data-role="rank-scroll">
         <div class="rank-board" data-role="rank-board">
           <div class="rank-viewer-bar" aria-label="我的名次与刷新时间">
@@ -1170,7 +1184,7 @@ export class SocialPanels {
       const input = this.chatContentInput();
       if (input?.value === raw && this.chatDraftVersion === draftVersion && sameDestination()) {
         input.value = "";
-        persistGuildChatDraft("");
+        this.persistChatInputDraft();
         this.syncChatInputCounter();
       }
       if (sameDestination()) await this.refreshChat(() => current() && sameDestination(), () => {
@@ -1208,9 +1222,25 @@ export class SocialPanels {
     buttons.forEach((button) => { button.disabled = true; });
     this.onStatus(action === "create" ? "创建军团…" : "加入军团…");
     try {
-      const res = (await (action === "create" ? this.gateway.createGuild(sid, name!) : this.gateway.joinGuild(sid, gid))) as {
-        guild?: { guild_id?: number; name?: string };
-      };
+      let restored = false;
+      let res: { guild?: { guild_id?: number; name?: string } };
+      try {
+        res = await (action === "create" ? this.gateway.createGuild(sid, name!) : this.gateway.joinGuild(sid, gid)) as typeof res;
+      } catch (error) {
+        // GUILD_ALREADY_MEMBER proves membership somewhere, never in the requested guild.
+        if (action !== "join" || (error as { code?: number })?.code !== 60002 || !current()) throw error;
+        const playerId = this.getSession()?.player?.player_id;
+        if (!Number.isSafeInteger(playerId) || !playerId || playerId <= 0) throw error;
+        const roster = await this.gateway.listGuildMembers(sid, gid, 1) as {
+          guild?: { guild_id?: number; server_id?: number; name?: string };
+          members?: GuildMemberRow[];
+        };
+        if (!current()) return;
+        if (roster.guild?.guild_id !== gid || roster.guild.server_id !== sid ||
+          !roster.members?.some(member => member.player_id === playerId)) throw error;
+        res = roster;
+        restored = true;
+      }
       if (!current()) return;
       ++this.guildReadVersion;
       this.guildListInflight = new SocialPanelInflight<void>();
@@ -1224,7 +1254,7 @@ export class SocialPanels {
       this.invalidateChatRead();
       this.syncGuildSummary();
       await this.refreshMembers();
-      if (current()) this.onStatus(`已${action === "create" ? "创建" : "加入"}「${this.guildName}」`);
+      if (current()) this.onStatus(`已${restored ? "恢复军团" : action === "create" ? "创建" : "加入"}「${this.guildName}」`);
     } catch (e) {
       if (current()) this.onStatus(formatSocialGatewayError(e));
     } finally {
@@ -1350,7 +1380,22 @@ export class SocialPanels {
     }, remainingMs + 50);
   }
 
+  private syncRankPaginationUi(boardType = this.selectedLeaderboardType()): void {
+    const snapshot = this.rankSnapshotByType.get(boardType);
+    const page = this.rankPageByType.get(boardType) ?? 1;
+    const pages = Math.max(1, Math.ceil((snapshot?.total_count ?? snapshot?.entries?.length ?? 0) / 20));
+    const mine = Math.ceil((snapshot?.my_rank ?? 0) / 20);
+    const busy = this.rankRead?.current() ?? false;
+    const status = this.rankPanel.querySelector('[data-role="rank-page-status"]');
+    if (status) status.textContent = `第 ${page} / ${pages} 页`;
+    for (const [action, disabled] of [["rank-prev-page", page <= 1], ["rank-next-page", page >= pages], ["rank-my-page", mine < 1 || mine > pages || mine === page]] as const) {
+      const button = this.rankPanel.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (button) button.disabled = busy || disabled;
+    }
+  }
+
   private syncRankRefreshCooldownUi(boardType: number, nowMs = Date.now()): void {
+    this.syncRankPaginationUi(boardType);
     const lastManualMs = readRankManualLastRefreshMs(boardType);
     const remaining = rankRefreshCooldownRemainingMs(lastManualMs, nowMs);
     const stampEl = this.rankPanel.querySelector(`[data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}"]`);
@@ -1363,13 +1408,14 @@ export class SocialPanels {
     const retryBtn = this.rankPanel.querySelector<HTMLButtonElement>('[data-action="retry-refresh-rank"]');
     const inCooldown = remaining > 0;
     const busy = this.rankRead?.current() ?? false;
+    const retryCooldown = inCooldown && (this.rankRetryPageByType.get(boardType)?.manual ?? true);
     if (refreshBtn) refreshBtn.disabled = busy || inCooldown;
     for (const btn of this.rankPanel.querySelectorAll<HTMLButtonElement>(
       `.rank-empty-retry-inline[data-action="retry-refresh-rank"]`,
     )) {
-      btn.disabled = busy || inCooldown;
+      btn.disabled = busy || retryCooldown;
     }
-    if (retryBtn) retryBtn.disabled = busy || inCooldown;
+    if (retryBtn) retryBtn.disabled = busy || retryCooldown;
     if (inCooldown) {
       this.scheduleRankCooldownTimer(boardType, remaining);
     } else {
@@ -1485,6 +1531,7 @@ export class SocialPanels {
   }
 
   renderLeaderboardPage(res: LeaderboardPagePayload, boardType: number): void {
+    this.syncRankPaginationUi(boardType);
     const myEl = this.rankPanel.querySelector('[data-role="viewer-rank"]');
     if (myEl) {
       myEl.textContent = formatViewerRankSummary(
@@ -1773,7 +1820,8 @@ export class SocialPanels {
     applyRankPanelScrollTop(this.rankPanel, pending.scrollTop);
   }
 
-  private async dispatchRankRowDeepLink(link: RankRowDeepLink, entry: LeaderboardEntryRow): Promise<void> {
+  private async dispatchRankRowDeepLink(link: RankRowDeepLink, entry: LeaderboardEntryRow, current: () => boolean): Promise<void> {
+    if (!current()) return;
     const boardType = this.selectedLeaderboardType();
     switch (link.kind) {
       case "hero": {
@@ -1782,12 +1830,13 @@ export class SocialPanels {
           this.onStatus("将领面板未就绪");
           return;
         }
-        this.persistRankScrollForHeroReturn();
         let heroId = link.heroId;
         if (heroId <= 0) {
           const ids = await this.rankDeepLink.getViewerHeroIds?.();
           heroId = ids?.find((id) => id > 0) ?? 0;
         }
+        if (!current()) return;
+        this.persistRankScrollForHeroReturn();
         await handler(heroId);
         return;
       }
@@ -1814,15 +1863,26 @@ export class SocialPanels {
 
   private async onRankRowActivate(tr: HTMLElement): Promise<void> {
     const entry = this.rankEntryFromRow(tr);
-    if (!entry) return;
+    if (!entry || !this.rankSnapshotOwner?.()) return;
+    const panel = this.rankPanel, version = ++this.rankLinkVersion, readVersion = this.rankReadVersion;
+    const actor = captureActor(this.gateway, this.getSession), presentation = captureCenterPanelIntent(panel);
     const boardType = this.selectedLeaderboardType();
     const viewerId = this.viewerPlayerId();
-    const heroIds = await this.rankDeepLink.getViewerHeroIds?.();
-    const link = resolveRankRowDeepLink(boardType, entry, viewerId, heroIds ?? []);
-    await this.dispatchRankRowDeepLink(link, entry);
+    const current = () => actor() && presentation() && panel === this.rankPanel && panel.parentElement === this.mount &&
+      version === this.rankLinkVersion && readVersion === this.rankReadVersion && this.selectedLeaderboardType() === boardType &&
+      panel.contains(tr) && this.rankEntryFromRow(tr) === entry;
+    if (!current()) return;
+    try {
+      const heroIds = await this.rankDeepLink.getViewerHeroIds?.();
+      if (!current()) return;
+      const link = resolveRankRowDeepLink(boardType, entry, viewerId, heroIds ?? []);
+      await this.dispatchRankRowDeepLink(link, entry, current);
+    } catch (error) {
+      if (current()) this.onStatus(formatSocialGatewayError(error));
+    }
   }
 
-  private async refreshRank(opts?: { manual?: boolean }): Promise<void> {
+  private async refreshRank(opts?: { manual?: boolean; page?: number }): Promise<void> {
     const sid = this.serverId();
     const boardType = this.selectedLeaderboardType();
     if (opts?.manual) {
@@ -1832,7 +1892,9 @@ export class SocialPanels {
         return;
       }
     }
-    if (this.rankRead?.boardType === boardType && this.rankRead.current()) return this.rankRead.promise;
+    let targetPage = opts?.page ?? (this.rankRead?.current() ? this.rankRead.page : this.rankPageByType.get(boardType)) ?? 1;
+    if (this.rankSnapshotOwner && !this.rankSnapshotOwner()) targetPage = 1;
+    if (this.rankRead?.boardType === boardType && this.rankRead.page === targetPage && this.rankRead.current()) return this.rankRead.promise;
     const actor = captureActor(this.gateway, this.getSession);
     const panel = this.rankPanel;
     const version = ++this.rankReadVersion;
@@ -1840,6 +1902,8 @@ export class SocialPanels {
       version === this.rankReadVersion && this.selectedLeaderboardType() === boardType;
     if (this.rankSnapshotOwner && !this.rankSnapshotOwner()) {
       this.rankSnapshotByType.clear();
+      this.rankPageByType.clear();
+      this.rankRetryPageByType.clear();
       this.rankDisplayedType = 0;
       this.cachedViewerHeroIds = [];
     }
@@ -1853,7 +1917,8 @@ export class SocialPanels {
     }
     const promise = Promise.resolve().then(async () => {
       if (!current()) return;
-      const hadSnapshot = this.rankSnapshotByType.has(boardType);
+      const previousPage = this.rankPageByType.get(boardType) ?? 1;
+      const hadSnapshot = this.rankSnapshotByType.has(boardType) && previousPage === targetPage;
       if (hadSnapshot) {
         captureLeaderboardPinBeforeRefresh(this.rankPanel, boardType);
       }
@@ -1864,12 +1929,22 @@ export class SocialPanels {
         const prevSnapshot = this.rankSnapshotByType.get(boardType);
         this.rankDensityScanPrevEntries = prevSnapshot?.entries ?? [];
         this.rankDensityScanPrevMyRank = prevSnapshot?.my_rank;
-        const res = (await this.gateway.getLeaderboard(sid, boardType, 1, 20)) as LeaderboardPagePayload;
+        let res = (await this.gateway.getLeaderboard(sid, boardType, targetPage, 20)) as LeaderboardPagePayload;
+        if (!current()) return;
+        const lastPage = Math.max(1, Math.ceil((res.total_count ?? res.entries?.length ?? 0) / 20));
+        if (targetPage > lastPage) {
+          targetPage = lastPage;
+          res = (await this.gateway.getLeaderboard(sid, boardType, targetPage, 20)) as LeaderboardPagePayload;
+          if (!current()) return;
+          if (targetPage > Math.max(1, Math.ceil((res.total_count ?? res.entries?.length ?? 0) / 20))) throw new Error("排行榜已变化，请重试");
+        }
         if (!current()) return;
         const heroIds = (await this.rankDeepLink.getViewerHeroIds?.()) ?? [];
         if (!current()) return;
         this.cachedViewerHeroIds = heroIds;
         this.pendingRankPinPulse = detectLeaderboardMyRankChange(prevSnapshot?.my_rank, res.my_rank);
+        this.rankPageByType.set(boardType, targetPage);
+        this.rankRetryPageByType.delete(boardType);
         this.rankSnapshotByType.set(boardType, res);
         const refreshedAt = Date.now();
         writeRankLastRefreshMs(boardType, refreshedAt);
@@ -1877,11 +1952,17 @@ export class SocialPanels {
           writeRankManualLastRefreshMs(boardType, refreshedAt);
           incrementRankManualRefreshCount(boardType);
         }
-        this.showRankRefreshDensity = hadSnapshot;
+        this.showRankRefreshDensity = hadSnapshot && previousPage === targetPage && targetPage === 1;
         this.renderLeaderboardPage(res, boardType);
         this.pendingRankPinPulse = false;
+        if (previousPage !== targetPage) {
+          this.pendingReturnScroll = null;
+          resetCenterPanelViewportScroll(this.rankPanel);
+          const tableScroll = this.rankPanel.querySelector<HTMLElement>(".rank-table-scroll");
+          if (tableScroll) tableScroll.scrollTop = 0;
+        }
         if (
-          hadSnapshot &&
+          hadSnapshot && previousPage === targetPage &&
           !shouldDeferPinApplyForReturnScroll(this.pendingReturnScroll, boardType)
         ) {
           applyLeaderboardPinAfterRefresh(this.rankPanel, boardType);
@@ -1902,6 +1983,7 @@ export class SocialPanels {
         this.onStatus("排行榜已刷新");
       } catch (e) {
         if (!current()) return;
+        this.rankRetryPageByType.set(boardType, { page: targetPage, manual: opts?.page === undefined || !!opts.manual });
         const msg = formatPanelGatewayErrorFromUnknownForList("rank", e);
         const refreshErr = gatewayErrorMessage(e);
         const cached = this.rankSnapshotByType.get(boardType);
@@ -1926,10 +2008,14 @@ export class SocialPanels {
     }).finally(() => {
       if (this.rankRead?.promise === promise) {
         this.rankRead = null;
-        if (current()) this.syncRankRefreshCooldownUi(boardType);
+        if (this.rankPanel === panel && panel.parentElement === this.mount &&
+            version === this.rankReadVersion && this.selectedLeaderboardType() === boardType) {
+          this.syncRankRefreshCooldownUi(boardType);
+        }
       }
     });
-    this.rankRead = { boardType, current, promise };
+    this.rankRead = { boardType, page: targetPage, current, promise };
+    this.syncRankPaginationUi(boardType);
     return promise;
   }
 
@@ -1970,8 +2056,14 @@ export class SocialPanels {
       const roleKey = Number(btn.getAttribute("data-role-key"));
       if (!Number.isFinite(roleKey)) return;
       const next = !this.isGuildRoleGroupExpanded(roleKey);
+      const restoreFocus = this.guildPanel.ownerDocument.activeElement === btn;
       this.guildRoleGroupExpanded.set(roleKey, next);
       this.renderGuildMembersList(this.guildMembersCache);
+      if (restoreFocus) {
+        this.guildPanel.querySelector<HTMLButtonElement>(
+          `[data-action="toggle-guild-role-group"][data-role-key="${roleKey}"]`,
+        )?.focus({ preventScroll: true });
+      }
     }
     if (a === "open-guild-chat-channel") this.openGuildChatChannel();
   }
@@ -1992,7 +2084,17 @@ export class SocialPanels {
     const btn = (ev.target as HTMLElement).closest("button");
     if (!btn) return;
     const a = btn.getAttribute("data-action");
-    if (a === "refresh-rank" || a === "retry-refresh-rank") void this.refreshRank({ manual: true });
+    if (btn.disabled && ["rank-prev-page", "rank-next-page", "rank-my-page"].includes(a ?? "")) return;
+    const boardType = this.selectedLeaderboardType();
+    const page = this.rankPageByType.get(boardType) ?? 1;
+    if (a === "rank-prev-page") void this.refreshRank({ page: page - 1 });
+    if (a === "rank-next-page") void this.refreshRank({ page: page + 1 });
+    if (a === "rank-my-page") void this.refreshRank({ page: Math.ceil((this.rankSnapshotByType.get(boardType)?.my_rank ?? 0) / 20) });
+    if (a === "refresh-rank") void this.refreshRank({ manual: true });
+    if (a === "retry-refresh-rank") {
+      const retry = this.rankRetryPageByType.get(boardType);
+      void this.refreshRank({ manual: retry?.manual ?? true, page: retry?.page });
+    }
     if (a === "dismiss-rank-summary") this.hideRankEntrySummary();
   }
 }

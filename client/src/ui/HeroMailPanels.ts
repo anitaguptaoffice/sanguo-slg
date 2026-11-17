@@ -581,6 +581,7 @@ import {
   formatHeroPointGatewayErrorFromUnknown,
   heroPointSnapshotFromDetail,
   heroPointSnapshotFromResult,
+  heroPointUnsupportedReason,
   mergeHeroPointSnapshot,
   renderHeroDetailPointsMarkup,
   setHeroPointFormErrorDisplay,
@@ -654,6 +655,11 @@ export class HeroMailPanels {
   private mailListRpcPage: MailRow[] = [];
   private mailListError = "";
   private mailListLoading = false;
+  private mailReadVersion = 0;
+  private mailMutationVersion = 0;
+  private mailNextOffset = 0;
+  private mailPageTotal = 0;
+  private mailPageOwner: (() => boolean) | null = null;
   private heroListLoadError: string | null = null;
   private heroListFilter: HeroListFilter = "all";
   private heroListSort: HeroListSort = "level_desc";
@@ -662,7 +668,7 @@ export class HeroMailPanels {
   private heroDetail: HeroDetail | null = null;
   private heroDetailLoading = false;
   private heroDetailReadGeneration = 0;
-  private heroBagLinkGeneration = 0;
+  private heroLinkGeneration = 0;
   private heroDetailError: string | null = null;
   private recruitTemplates: RecruitTemplatePreview[] = [];
   private selectedTemplateId = 0;
@@ -723,8 +729,8 @@ export class HeroMailPanels {
   private captiveReleaseInflight = false;
   private persuadeTargets: PersuadeTarget[] = [];
   private selectedPersuadeNpcId = 0;
-  private persuadeListInflight = false;
-  private persuadePrimaryInflight = false;
+  private persuadeGeneration = 0;
+  private persuadeState: { current: () => boolean; session: MainCitySession | null; primary: boolean; list: boolean; pending: boolean; outcome: string; warning: string } | null = null;
   private comingHeroesAll: ComingHeroRow[] = [];
   private comingHeroes: ComingHeroRow[] = [];
   private selectedComingHeroId = 0;
@@ -785,6 +791,11 @@ export class HeroMailPanels {
   ) {}
 
   attach(): void {
+    ++this.mailReadVersion;
+    this.mailNextOffset = this.mailPageTotal = 0;
+    this.mailPageOwner = null;
+    this.mailListRpcPage = [];
+    this.mails = [];
     this.mailFilter = readMailInboxFilterSession() ?? MAIL_INBOX_FILTER_ALL;
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
@@ -808,6 +819,9 @@ export class HeroMailPanels {
   }
 
   detach(): void {
+    ++this.mailReadVersion;
+    ++this.persuadeGeneration;
+    this.persuadeState = null;
     this.heroesRefreshInflight = false;
     this.invalidateHeroDetailRead();
     this.hotelState = null;
@@ -855,8 +869,8 @@ export class HeroMailPanels {
   /** 会话钱包/背包变更时刷新招募可负担对比（与 HUD 快照一致）。 */
   refreshRecruitAffordability(): void {
     if (!this.heroPanel || this.heroPanel.classList.contains("hidden")) return;
-    this.renderTemplateList();
-    this.renderHeroList();
+    this.renderTemplateList(true);
+    this.renderHeroList(true);
     this.syncHotelRecruitUi();
     this.syncCaptiveHeroUi();
     this.syncPersuadeUi();
@@ -1345,13 +1359,18 @@ export class HeroMailPanels {
   private syncHeroRecruitHostExpanded(): void {
     const host = this.heroPanel?.querySelector<HTMLDetailsElement>('[data-role="hero-recruit-host"]');
     if (!host) return;
-    const detailPaneOpen =
-      this.selectedHeroId > 0 &&
-      !this.heroDetailCollapsed &&
-      !this.heroDetailLoading &&
-      !this.heroDetailError &&
-      !!this.heroDetail;
-    host.open = !detailPaneOpen;
+    const detailKey = String(this.selectedHeroId > 0 && !this.heroDetailCollapsed ? this.selectedHeroId : 0);
+    // Navigation sets the default; refresh preserves the player's disclosure choice.
+    if (host.dataset.detailHeroId === detailKey) return;
+    host.dataset.detailHeroId = detailKey;
+    if (host.open && detailKey !== "0") {
+      const active = host.ownerDocument.activeElement;
+      const summary = host.querySelector<HTMLElement>(":scope > summary");
+      if (active && summary && host.contains(active) && !summary.contains(active)) {
+        summary.focus({ preventScroll: true });
+      }
+    }
+    host.open = detailKey === "0";
   }
 
   private serverId(): number {
@@ -1727,6 +1746,33 @@ export class HeroMailPanels {
     }
   }
 
+  private persuadeContext() {
+    if (!this.persuadeState?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const panel = this.heroPanel, generation = this.persuadeGeneration;
+      const state = { current: () => this.persuadeState === state && actor() && (!state.session || this.getSession() === state.session) &&
+        this.heroPanel === panel && panel.parentNode === this.mount && generation === this.persuadeGeneration,
+        session: null as MainCitySession | null, primary: false, list: false, pending: false, outcome: "", warning: "" };
+      this.persuadeState = state;
+      this.persuadeTargets = [];
+      this.selectedPersuadeNpcId = 0;
+    }
+    return this.persuadeState;
+  }
+
+  private async syncPersuadeBag(state: NonNullable<HeroMailPanels["persuadeState"]>): Promise<void> {
+    const session = this.getSession();
+    if (!session || !state.current()) return;
+    const bag = session.bag, latest = beginAssetRead(this.gateway);
+    try {
+      const res = await this.gateway.listPlayerBag(session.serverId) as { items?: BagStack[] };
+      if (!state.current() || !latest() || this.getSession()?.bag !== bag) return;
+      const snapshot = bagFromListPlayerBagResponse(res.items);
+      state.pending = false;
+      if (JSON.stringify(snapshot) !== JSON.stringify(bag)) this.onSessionPatch({ bag: snapshot });
+    } catch { /* Confirmed consumption survives failed reads; only explicit reads retry. */ }
+  }
+
   private selectedPersuadeTarget(): PersuadeTarget | undefined {
     return this.persuadeTargets.find((t) => t.npc_cfg_id === this.selectedPersuadeNpcId);
   }
@@ -1744,57 +1790,78 @@ export class HeroMailPanels {
   }
 
   private syncPersuadeUi(): void {
+    const state = this.persuadeContext();
     const { wallet, bag } = this.sessionEconomy();
     syncPersuadeMeta(this.heroPanel, this.persuadeTargets.length);
     renderPersuadeTargetList(this.heroPanel, this.persuadeTargets, this.selectedPersuadeNpcId);
     this.syncCaptureDisclosure("persuade-section", this.selectedPersuadeTarget()?.display_name);
     syncPersuadePreview(this.heroPanel, this.selectedPersuadeTarget(), wallet, bag);
-    syncPersuadeListRefreshButton(this.heroPanel, this.persuadeListInflight);
+    syncPersuadeListRefreshButton(this.heroPanel, state.list || state.primary);
     syncPersuadePrimaryButton(
       this.heroPanel,
-      this.persuadePrimaryInflight,
+      state.primary || state.list,
       this.selectedPersuadeTarget(),
       wallet,
       bag,
     );
+    const pending = state.pending ? "背包待同步，请拉取结交目标重试" : "";
+    setPersuadeFormError(this.heroPanel, [pending, state.warning].filter(Boolean).join("；") || null);
+    const meta = this.heroPanel.querySelector('[data-role="persuade-meta"]');
+    if (meta && state.outcome) meta.textContent += `；${state.outcome}`;
+    if (state.pending && resolvePersuadePrimaryAction(this.selectedPersuadeTarget()) === "persuade") {
+      const button = this.heroPanel.querySelector<HTMLButtonElement>('[data-action="persuade-primary"]');
+      if (button) { button.disabled = true; button.title = pending; }
+      const preview = this.heroPanel.querySelector('[data-role="persuade-preview"]');
+      if (preview) preview.textContent = `${this.selectedPersuadeTarget()?.display_name} · ${pending}`;
+    }
   }
 
-  private async refreshPersuadeTargets(): Promise<void> {
-    if (this.persuadeListInflight) return;
+  private async refreshPersuadeTargets(owned = false): Promise<void> {
+    const state = this.persuadeContext();
+    if (state.list || (state.primary && !owned)) return;
     const sid = this.serverId();
-    this.persuadeListInflight = true;
-    setPersuadeFormError(this.heroPanel, null);
+    state.list = true;
+    state.warning = "";
     this.syncPersuadeUi();
-    this.onStatus("拉取结交目标…");
     try {
+      if (state.pending) await this.syncPersuadeBag(state);
+      if (!state.current()) return;
       const res = await this.gateway.listPersuadeTargets(sid);
-      this.applyPersuadeListPayload(res);
-      this.onStatus(`结交目标 ${this.persuadeTargets.length} 名`);
+      if (!state.current()) return;
+      this.applyPersuadeListPayload(res, { keepSelection: owned || !!state.outcome });
     } catch (e) {
-      const msg = formatPersuadeGatewayError(e);
-      setPersuadeFormError(this.heroPanel, msg);
-      this.onStatus(msg);
+      if (!state.current()) return;
+      state.warning = `结交目标待刷新：${formatPersuadeGatewayError(e)}`;
     } finally {
-      this.persuadeListInflight = false;
-      this.syncPersuadeUi();
+      if (state.current()) {
+        state.list = false;
+        this.syncPersuadeUi();
+        if (!owned || state.outcome || state.pending || state.warning) {
+          this.onStatus([state.outcome, state.pending ? "背包待同步，请拉取结交目标重试" : "", state.warning]
+            .filter(Boolean).join("；") || `结交目标 ${this.persuadeTargets.length} 名`);
+        }
+      }
     }
   }
 
   private async runPersuadePrimary(): Promise<void> {
-    if (this.persuadePrimaryInflight) return;
+    const state = this.persuadeContext();
+    if (state.primary || state.list) return;
     const target = this.selectedPersuadeTarget();
     const npcId = target?.npc_cfg_id ?? 0;
     const action = resolvePersuadePrimaryAction(target);
+    if (action === "persuade" && state.pending) return;
     const sid = this.serverId();
     const cityId = this.cityId();
     if (!cityId || !npcId) {
       setPersuadeFormError(this.heroPanel, "尚未进入城池或未选择结交目标");
       return;
     }
-    this.persuadePrimaryInflight = true;
-    setPersuadeFormError(this.heroPanel, null);
+    state.session = this.getSession();
+    state.primary = true;
+    state.outcome = state.warning = "";
     this.syncPersuadeUi();
-    const current = captureActor(this.gateway, this.getSession);
+    const current = state.current;
     const settle = beginAssetMutation(this.gateway, current);
     try {
       if (action === "persuade") {
@@ -1804,7 +1871,10 @@ export class HeroMailPanels {
         settle();
         if (!current()) return;
         const delta = res.friend_delta != null ? Number(res.friend_delta) : 0;
-        this.onStatus(`游说成功，友好+${delta}`);
+        state.outcome = `${target?.display_name}游说成功，友好+${delta}`;
+        state.pending = true;
+        this.syncPersuadeUi();
+        this.onStatus(state.outcome);
       } else if (action === "befriend" || action === "hire") {
         const res = (await this.gateway.lionizeHero(sid, cityId, npcId)) as {
           befriended?: boolean;
@@ -1824,18 +1894,15 @@ export class HeroMailPanels {
         }
       }
       if (!current()) return;
-      const listRes = await this.gateway.listPersuadeTargets(sid);
-      if (!current()) return;
-      this.applyPersuadeListPayload(listRes, { keepSelection: true });
+      await this.refreshPersuadeTargets(true);
     } catch (e) {
       settle();
       if (!current()) return;
       const msg = formatPersuadeGatewayError(e);
-      setPersuadeFormError(this.heroPanel, msg);
+      state.warning = msg;
       this.onStatus(msg);
     } finally {
-      this.persuadePrimaryInflight = false;
-      if (current()) this.syncPersuadeUi();
+      if (current()) { state.primary = false; this.syncPersuadeUi(); }
     }
   }
 
@@ -2226,16 +2293,17 @@ export class HeroMailPanels {
           <span class="mail-filter-tab-badge hidden" data-ui-filter-badge="count" data-role="mail-filter-unclaimed-count" data-filter-badge-count="0" aria-hidden="true" hidden></span>
         </button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="refresh-mail">刷新</button>
-        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取全部附件</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取已加载附件</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
       <p class="mail-tab-unread-sweep hidden" data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <p class="mail-daily-hud-combined-sweep hidden" data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <p class="mail-form-error hidden" data-role="mail-form-error" role="alert"></p>
-      <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 含未领附件的邮件可「领取全部」或勾选后批量领取，逐封调用领取并汇总结果。</p>
+      <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 已加载的未领附件可「领取已加载附件」或勾选后批量领取，逐封调用领取并汇总结果。</p>
       <p class="mail-inbox-status" data-role="mail-status"></p>
       <div class="panel-scroll-body" data-role="mail-scroll">
         <ul class="mail-list" data-role="mail-list"></ul>
+        <button type="button" data-action="load-more-mail" hidden>加载更早邮件</button>
         <div class="mail-detail hidden" data-role="mail-detail">
           <h4 class="mail-detail-title" data-role="mail-detail-title"></h4>
           <pre class="mail-body" data-role="mail-body"></pre>
@@ -2292,7 +2360,72 @@ export class HeroMailPanels {
     if (loader) remountPanelFilterChips(this.heroPanel, loader);
   }
 
-  private renderHeroList(): void {
+  private detailRefreshCache: { root: HTMLElement; detail: HeroDetail | null; key: string } | null = null;
+
+  private syncDetailEconomy(root: HTMLElement, markup: string): boolean {
+    const fresh = document.createElement("div");
+    fresh.innerHTML = markup;
+    const writes: (() => void)[] = [];
+    const texts = [".recruit-afford-primary", ".recruit-afford-secondary", '[data-role="hero-upgrade-item-gap"]',
+      ".hero-cultivation-item-hint", '[data-role="hero-cultivation-disabled-reason"]',
+      ...["gold-hint", "item-hint", "cd", "disabled-reason"].map(role => `[data-role="hero-largess-${role}"]`)];
+    for (const selector of texts) {
+      const current = [...root.querySelectorAll<HTMLElement>(selector)];
+      const next = [...fresh.querySelectorAll<HTMLElement>(selector)];
+      if (current.length !== next.length) return false;
+      for (let i = 0; i < next.length; i++) {
+        const a = current[i], b = next[i];
+        if (a.tagName !== b.tagName || a.dataset.kind !== b.dataset.kind) return false;
+        writes.push(() => {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          for (const cls of ["hidden", "recruit-cost-deficit", "hero-upgrade-item-gap-warn"]) {
+            a.classList.toggle(cls, b.classList.contains(cls));
+          }
+        });
+      }
+    }
+    for (const role of ["hero-detail-consumable-stack-line", "hero-detail-consumable-stack-residual-line"]) {
+      const a = root.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const b = fresh.querySelector<HTMLElement>(`[data-role="${role}"]`);
+      const anchor = root.querySelector('[data-role="recruit-afford-summary"], .hero-attr-table');
+      if (!anchor) return false;
+      writes.push(() => {
+        if (!b) a?.remove();
+        else if (!a) anchor.before(b);
+        else {
+          if (a.textContent !== b.textContent) a.textContent = b.textContent;
+          a.classList.toggle("hero-detail-consumable-stack-residual-deficit", b.classList.contains("hero-detail-consumable-stack-residual-deficit"));
+        }
+      });
+    }
+    for (const action of ["hero-use-cultivation-item", "hero-largess-submit"]) {
+      const a = root.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      const b = fresh.querySelector<HTMLButtonElement>(`[data-action="${action}"]`);
+      if (!a || !b) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.textContent !== b.textContent) a.textContent = b.textContent; });
+    }
+    const select = root.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    const nextSelect = fresh.querySelector<HTMLSelectElement>('[data-field="hero-largess-item"]');
+    if (!select || !nextSelect || select.options.length !== nextSelect.options.length) return false;
+    for (let i = 0; i < select.options.length; i++) {
+      const a = select.options[i], b = nextSelect.options[i];
+      if (a.value !== b.value) return false;
+      writes.push(() => { a.disabled = b.disabled; if (a.text !== b.text) a.text = b.text; });
+    }
+    const controls = 'input[data-action="hero-largess-kind"], button[data-action^="hero-expr-"]';
+    const current = [...root.querySelectorAll<HTMLElement>(controls)];
+    const next = [...fresh.querySelectorAll<HTMLElement>(controls)];
+    if (current.length !== next.length || current.some((a, i) =>
+      ["type", "name"].some(key => a.getAttribute(key) !== next[i].getAttribute(key)) ||
+      a.tagName !== next[i].tagName || a.dataset.action !== next[i].dataset.action ||
+      a.dataset.hours !== next[i].dataset.hours || a.getAttribute("value") !== next[i].getAttribute("value"))) return false;
+    for (const write of writes) write();
+    syncHeroDetailExprControls(root, this.heroExprSubmitState, this.heroDetail,
+      this.sessionEconomy().wallet, this.heroExprHoursPref, Date.now());
+    return true;
+  }
+
+  private renderHeroList(economyRefresh = false): void {
     this.syncHeroUpgradePendingState();
     this.syncHeroRestPendingState();
     this.syncHeroPointPendingState();
@@ -2620,6 +2753,7 @@ export class HeroMailPanels {
       ),
     );
     if (detailEl) {
+      if (!this.selectedHeroId || this.heroDetailCollapsed || this.heroDetailLoading || this.heroDetailError) this.detailRefreshCache = null;
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
         detailEl.innerHTML = renderHeroDetailMarkup(null);
         this.syncHeroRecruitHostExpanded();
@@ -2675,7 +2809,7 @@ export class HeroMailPanels {
           this.getHeroLargessNextAtMs(),
           Date.now(),
         );
-        detailEl.innerHTML = renderHeroDetailMarkup(
+        const markup = renderHeroDetailMarkup(
           this.heroDetail,
           this.recruitAffordSummaryForHeroDetail(),
           this.recruitTemplateForHeroDetail(),
@@ -2684,8 +2818,18 @@ export class HeroMailPanels {
           bag,
           formatHeroDetailFromListHint(this.heroDetailListContext),
         );
+        const key = JSON.stringify([this.selectedHeroId, this.heroDetail, this.recruitTemplateForHeroDetail(),
+          this.heroDetailListContext, this.heroUpgradeSubmitState, this.heroForceSubmitState,
+          this.heroPointSubmitState, this.heroExprSubmitState, this.heroCultivationSubmitState,
+          this.heroLargessSubmitState, this.heroLargessGiftMode, this.heroLargessItemCfgId,
+          this.recruitBagReady(), this.recruitBagError]);
+        const cache = this.detailRefreshCache;
+        const synced = economyRefresh && cache?.root === detailEl && cache.detail === this.heroDetail &&
+          cache.key === key && this.syncDetailEconomy(detailEl, markup);
+        if (!synced) detailEl.innerHTML = markup;
+        this.detailRefreshCache = { root: detailEl, detail: this.heroDetail, key };
         this.ensureHeroLargessCooldownTimer();
-        mountHeroDetailBust(
+        if (!synced) mountHeroDetailBust(
           detailEl,
           this.heroDetail?.template_cfg_id,
           this.heroDetail?.template_name || heroTemplateLabel(this.heroDetail?.template_cfg_id),
@@ -2693,7 +2837,7 @@ export class HeroMailPanels {
           this.heroPanel,
         );
         this.syncHeroRecruitHostExpanded();
-        ensureHeroDetailBustNameInScrollClip(this.heroPanel);
+        if (!synced) ensureHeroDetailBustNameInScrollClip(this.heroPanel);
         scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeeperSweep(detailEl, this.heroDetail, bag);
         scheduleHeroDetailConsumableStackResidualDeepestSweep(detailEl, this.heroDetail, bag);
@@ -2726,7 +2870,7 @@ export class HeroMailPanels {
     return mergeRecruitTemplateOwnership(this.recruitTemplates, this.heroes);
   }
 
-  private renderTemplateList(): void {
+  private renderTemplateList(economyRefresh = false): void {
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     const preview = this.heroPanel.querySelector('[data-role="recruit-preview"]');
@@ -2906,13 +3050,13 @@ export class HeroMailPanels {
     }
     const pickId = this.selectedTemplateId || displayTemplates[0]?.template_cfg_id || 0;
     if (pickId) sel.value = String(pickId);
-    this.applyTemplateSelection(pickId);
+    this.applyTemplateSelection(pickId, { economyRefresh });
     applyRecruitScrollAnchorSession(this.heroPanel);
   }
 
   private applyTemplateSelection(
     templateCfgId: number,
-    opts?: { skipHeroListRender?: boolean },
+    opts?: { skipHeroListRender?: boolean; economyRefresh?: boolean },
   ): void {
     const displayTemplates = this.recruitTemplatesForDisplay();
     const row = displayTemplates.find((t) => t.template_cfg_id === templateCfgId);
@@ -2949,7 +3093,7 @@ export class HeroMailPanels {
     });
     const sel = this.heroPanel.querySelector('[data-field="template-select"]') as HTMLSelectElement;
     if (sel && templateCfgId) sel.value = String(templateCfgId);
-    if (!opts?.skipHeroListRender) this.renderHeroList();
+    if (!opts?.skipHeroListRender) this.renderHeroList(opts?.economyRefresh);
   }
 
   private recruitSubmitPhase(): ReturnType<typeof resolveRecruitSubmitPhase> {
@@ -3141,6 +3285,24 @@ export class HeroMailPanels {
   }
 
   private patchMailInboxSnapshot(mailId: number, patch: MailRow): void {
+    ++this.mailMutationVersion;
+    const previous = this.mailListRpcPage.find((m) => m.mail_id === mailId);
+    if (previous) {
+      const next = { ...previous, ...patch };
+      if (this.mailFilter === MAIL_INBOX_FILTER_UNREAD && mailIsUnread(previous) && !mailIsUnread(next)) {
+        this.mailNextOffset = Math.max(0, this.mailNextOffset - 1);
+        this.mailPageTotal = Math.max(0, this.mailPageTotal - 1);
+        ++this.mailReadVersion; // A pending unread page used the pre-read offset.
+        this.mailListLoading = false;
+        this.mailListRpcPage = this.mailListRpcPage.filter((m) => m.mail_id !== mailId);
+      } else {
+        this.mailListRpcPage = this.mailListRpcPage.map((m) => m.mail_id === mailId ? next : m);
+      }
+    }
+    if (!previous && this.mailListLoading) {
+      // Refresh discarded the old cache: restart after the mutation, not from a pre-read snapshot.
+      void this.refreshMail();
+    }
     this.mailInboxSnapshot = upsertMailRow(this.mailInboxSnapshot, { ...patch, mail_id: mailId });
     this.setMailFilterButtons();
   }
@@ -3160,6 +3322,8 @@ export class HeroMailPanels {
   }
 
   private async refreshMailInboxSnapshot(): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.mailPanel, version = this.mailReadVersion, mutation = this.mailMutationVersion;
     const sid = this.serverId();
     if (!sid) {
       this.mailInboxSnapshot = [];
@@ -3172,6 +3336,8 @@ export class HeroMailPanels {
         pageSize: 50,
         pageOffset: 0,
       })) as { mails?: MailRow[] };
+      if (!actor() || this.mailPanel !== panel || panel.parentElement !== this.mount ||
+          version !== this.mailReadVersion || mutation !== this.mailMutationVersion) return;
       this.mailInboxSnapshot = res.mails ?? [];
       this.setMailFilterButtons();
     } catch {
@@ -3180,6 +3346,11 @@ export class HeroMailPanels {
   }
 
   private renderMailList(): void {
+    const more = this.mailPanel.querySelector<HTMLButtonElement>('[data-action="load-more-mail"]');
+    if (more) {
+      more.hidden = this.mailNextOffset >= this.mailPageTotal;
+      more.disabled = this.mailListLoading;
+    }
     const ul = this.mailPanel.querySelector<HTMLElement>('[data-role="mail-list"]');
     const statusEl = this.mailPanel.querySelector('[data-role="mail-status"]');
     const detailWrap = this.mailPanel.querySelector('[data-role="mail-detail"]');
@@ -3190,6 +3361,12 @@ export class HeroMailPanels {
       '[data-action="mail-open-battle-report"]',
     ) as HTMLButtonElement | null;
     if (!ul) return;
+    const focused = document.activeElement;
+    const focusRow = focused instanceof HTMLElement && ul.contains(focused)
+      ? focused.closest<HTMLElement>("li[data-mail-id]") : null;
+    const focusId = focusRow?.dataset.mailId;
+    const focusIndex = focusRow ? Array.from(ul.children).indexOf(focusRow) : -1;
+    const focusRole = focused?.getAttribute("data-role");
     this.setMailFilterButtons();
     ul.innerHTML = "";
     if (statusEl) {
@@ -3242,7 +3419,9 @@ export class HeroMailPanels {
           pick.appendChild(document.createTextNode("勾选"));
           li.appendChild(pick);
         }
-        const titleSpan = document.createElement("span");
+        const titleSpan = document.createElement("button");
+        titleSpan.type = "button";
+        titleSpan.setAttribute("data-role", "mail-open");
         titleSpan.className = "mail-row-title";
         if (mailRowShowsUnreadDot(m)) {
           const dot = document.createElement("span");
@@ -3421,6 +3600,14 @@ export class HeroMailPanels {
       if (claimBtn instanceof HTMLButtonElement) {
         claimBtn.disabled = this.claimMailInflight !== 0;
       }
+    }
+    if (focusId && (focusRole === "mail-open" || focusRole === "mail-batch-checkbox")) {
+      const rows = Array.from(ul.querySelectorAll<HTMLElement>("li[data-mail-id]"));
+      const same = rows.find(row => row.dataset.mailId === focusId);
+      const target = same?.querySelector<HTMLElement>(`[data-role="${focusRole}"]`) ??
+        (same ?? rows[Math.min(focusIndex, rows.length - 1)])?.querySelector<HTMLElement>('[data-role="mail-open"]') ??
+        this.mailPanel.querySelector<HTMLElement>('[data-action="mail-filter-unread"]');
+      target?.focus({ preventScroll: true });
     }
     this.syncMailClaimInlineFeedback(sel?.mail_id ?? 0);
     this.pruneMailBatchSelection();
@@ -3627,13 +3814,19 @@ export class HeroMailPanels {
   }
 
   private ensureHeroExprCountdownTimer(): void {
+    const panel = this.heroPanel;
+    const displayed = () => panel.parentNode === this.mount && !panel.classList.contains("hidden");
     const inExpr = isHeroExprInProgress(this.heroDetail);
-    if (!inExpr) {
+    if (!displayed() || !inExpr) {
       this.clearHeroExprCountdownTimer();
       return;
     }
     if (this.heroExprCountdownTimer != null) return;
     this.heroExprCountdownTimer = window.setInterval(() => {
+      if (panel !== this.heroPanel || !displayed() || !isHeroExprInProgress(this.heroDetail)) {
+        this.clearHeroExprCountdownTimer();
+        return;
+      }
       const { wallet } = this.sessionEconomy();
       syncHeroDetailExprControls(
         this.heroPanel,
@@ -3643,9 +3836,6 @@ export class HeroMailPanels {
         this.heroExprHoursPref,
         Date.now(),
       );
-      if (!isHeroExprInProgress(this.heroDetail)) {
-        this.clearHeroExprCountdownTimer();
-      }
     }, 1000);
   }
 
@@ -3735,14 +3925,15 @@ export class HeroMailPanels {
   }
 
   private invalidateHeroDetailRead(): void {
-    ++this.heroBagLinkGeneration;
+    this.clearHeroExprCountdownTimer();
+    ++this.heroLinkGeneration;
     ++this.heroDetailReadGeneration;
     this.heroDetailLoading = false;
     this.heroDetail = null;
   }
 
   private beginHeroDetailNavigation(heroId: number): () => boolean {
-    ++this.heroBagLinkGeneration;
+    ++this.heroLinkGeneration;
     const current = this.beginHeroDetailRead();
     this.selectedHeroId = heroId;
     this.heroDetail = null;
@@ -3766,7 +3957,7 @@ export class HeroMailPanels {
     opts?: { skipListSelectionWrite?: boolean; fromHeroList?: boolean; current?: () => boolean },
   ): Promise<void> {
     // Receipt reconciliation refreshes data, not the player's navigation intent.
-    if (!opts?.skipListSelectionWrite) ++this.heroBagLinkGeneration;
+    if (!opts?.skipListSelectionWrite) ++this.heroLinkGeneration;
     const owner = opts?.current ?? this.beginHeroDetailRead();
     if (!owner()) return;
     const current = () => owner() && this.selectedHeroId === heroId && !this.heroDetailCollapsed;
@@ -3910,6 +4101,12 @@ export class HeroMailPanels {
     if (!this.selectedHeroId || this.heroDetailLoading || this.heroDetail?.hero_id !== this.selectedHeroId) return;
     const heroId = this.selectedHeroId;
     if (this.heroPointRequests.get(heroId)?.actor()) return;
+    const unsupported = heroPointUnsupportedReason(this.heroDetail);
+    if (unsupported) {
+      setHeroPointFormErrorDisplay(this.heroPanel, unsupported);
+      this.onStatus(unsupported);
+      return;
+    }
     const request = { actor: captureActor(this.gateway, this.getSession) };
     this.heroPointRequests.set(heroId, request);
     const generation = this.heroDetailReadGeneration;
@@ -4345,11 +4542,13 @@ export class HeroMailPanels {
     }
   }
 
-  private async refreshRecruitTemplates(): Promise<void> {
+  private async refreshRecruitTemplates(current: () => boolean = () => true): Promise<boolean> {
+    if (!current()) return false;
     const sid = this.serverId();
     this.onStatus("拉取招募模板…");
     try {
       const res = await this.gateway.listRecruitTemplates(sid, { pageSize: 50 });
+      if (!current()) return false;
       const { templates, totalCount } = parseRecruitTemplates(res as { templates?: RecruitTemplatePreview[]; total_count?: number });
       this.recruitTemplates = templates;
       const prev = this.selectedTemplateId;
@@ -4359,10 +4558,13 @@ export class HeroMailPanels {
         if (pick) this.applyTemplateSelection(pick.templateCfgId);
       }
       this.onStatus(`招募模板 ${templates.length}/${totalCount} 条`);
+      return true;
     } catch (e) {
+      if (!current()) return false;
       this.recruitTemplates = [];
       this.renderTemplateList();
       this.onStatus((e as Error).message);
+      return false;
     }
   }
 
@@ -4510,7 +4712,21 @@ export class HeroMailPanels {
     return this.refreshMailInner();
   }
 
-  private async refreshMailInner(): Promise<void> {
+  private async refreshMailInner(append = false): Promise<void> {
+    if (append && !this.mailPageOwner?.()) append = false;
+    if (append && (this.mailListLoading || this.mailNextOffset >= this.mailPageTotal)) return;
+    const actor = captureActor(this.gateway, this.getSession);
+    const panel = this.mailPanel;
+    const version = ++this.mailReadVersion;
+    const filter = this.mailFilter;
+    const current = () => actor() && this.mailPanel === panel && panel.parentElement === this.mount &&
+      version === this.mailReadVersion && filter === this.mailFilter;
+    if (!append) {
+      this.mailNextOffset = this.mailPageTotal = 0;
+      this.mailListRpcPage = [];
+      if (this.mailPageOwner && !this.mailPageOwner()) this.mails = [];
+    }
+    const offset = this.mailNextOffset;
     const sid = this.serverId();
     this.onStatus("拉取邮件…");
     this.mailListError = "";
@@ -4521,21 +4737,30 @@ export class HeroMailPanels {
       const res = (await this.gateway.listPlayerMail(sid, {
         filter: rpcFilter,
         pageSize: 50,
+        ...(append ? { pageOffset: offset } : {}),
       })) as {
         mails?: MailRow[];
         total_count?: number;
       };
+      if (!current()) return;
       const page = res.mails ?? [];
-      this.mailListRpcPage = [...page];
-      this.mails = this.applyMailListClientFilters(page);
+      this.mailNextOffset = offset + page.length;
+      this.mailPageTotal = page.length ? (res.total_count ?? this.mailNextOffset) : this.mailNextOffset;
+      this.mailPageOwner = actor;
+      this.mailListRpcPage = [...new Map([...(append ? this.mailListRpcPage : []), ...page].map((m) => [m.mail_id, m])).values()];
+      this.mails = this.applyMailListClientFilters(this.mailListRpcPage);
       if (rpcFilter === MAIL_INBOX_FILTER_ALL) {
-        this.mailInboxSnapshot = [...page];
+        this.mailInboxSnapshot = [...this.mailListRpcPage];
       } else {
         void this.refreshMailInboxSnapshot();
       }
+      const unreadMutation = this.mailMutationVersion;
       const unreadSnap = await this.pullMailUnreadSnapshot();
-      this.mailUnreadTotal = unreadSnap.count;
-      this.mailUnreadFirstId = unreadSnap.firstId;
+      if (!current()) return;
+      if (unreadMutation === this.mailMutationVersion) {
+        this.mailUnreadTotal = unreadSnap.count;
+        this.mailUnreadFirstId = unreadSnap.firstId;
+      }
       this.setMailFilterButtons();
       if (!this.selectedMailId && this.mails[0]?.mail_id) {
         this.selectedMailId = this.mails[0].mail_id!;
@@ -4559,22 +4784,36 @@ export class HeroMailPanels {
       this.applyMailBadgeCountsFromSnapshot();
       if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
+      if (!current()) return;
       this.mailListError = (e as Error).message || "加载收件箱失败，请稍后重试";
-      this.mails = [];
+      if (!append) this.mails = [];
       this.renderMailList();
       this.onStatus(this.mailListError);
     } finally {
-      this.mailListLoading = false;
-      this.renderMailList();
+      // Only this request may release its loading flag, including after actor
+      // invalidation. An older request must never release a newer one's flag.
+      if (version === this.mailReadVersion && this.mailPanel === panel && panel.parentElement === this.mount) {
+        this.mailListLoading = false;
+        if (!actor()) {
+          this.mails = [];
+          this.mailListRpcPage = [];
+          this.mailInboxSnapshot = [];
+          this.selectedMailId = 0;
+        }
+        this.renderMailList();
+      }
     }
   }
 
   private async markMailRead(mailId: number): Promise<void> {
+    const actor = captureActor(this.gateway, this.getSession), panel = this.mailPanel;
+    const current = () => actor() && this.mailPanel === panel && panel.parentElement === this.mount;
     const sid = this.serverId();
     const row = this.mails.find((m) => m.mail_id === mailId);
     if (!row || !mailIsUnread(row)) return;
     try {
       const res = (await this.gateway.markPlayerMailRead(sid, mailId)) as { mail?: MailRow };
+      if (!current()) return;
       if (res.mail) {
         this.mails = this.mails.map((m) => (m.mail_id === mailId ? { ...m, ...res.mail } : m));
         if (mailIsUnread(row)) {
@@ -4594,7 +4833,7 @@ export class HeroMailPanels {
       }
       if (!this.isMailOpen()) void this.syncUnreadBadge();
     } catch (e) {
-      this.onStatus((e as Error).message);
+      if (current()) this.onStatus((e as Error).message);
     }
   }
 
@@ -4608,7 +4847,7 @@ export class HeroMailPanels {
     await this.markMailRead(mailId);
   }
 
-  private async syncBagFromServer(): Promise<BagStack[] | null> {
+  private async syncBagFromServer(current = captureActor(this.gateway, this.getSession)): Promise<BagStack[] | null> {
     const session = this.getSession();
     if (!session) return null;
     const sid = this.serverId();
@@ -4616,6 +4855,7 @@ export class HeroMailPanels {
       const bagRes = (await this.gateway.listPlayerBag(sid)) as {
         items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      if (!current()) return null;
       const bag = bagFromListPlayerBagResponse(bagRes.items);
       this.onSessionPatch({ bag });
       return bag;
@@ -4638,6 +4878,8 @@ export class HeroMailPanels {
   > {
     const sid = this.serverId();
     const mailBeforeClaim = this.mails.find((m) => m.mail_id === mailId);
+    const current = captureActor(this.gateway, this.getSession);
+    const settle = beginAssetMutation(this.gateway, current);
     try {
       const res = (await this.gateway.claimPlayerMailAttachments(sid, mailId)) as {
         mail?: MailRow;
@@ -4648,13 +4890,15 @@ export class HeroMailPanels {
         wallet_after?: MainCitySession["wallet"];
         bag_items?: { item_cfg_id?: number; quantity?: number }[];
       };
+      const freshAssets = settle();
+      if (!current()) return { ok: false, message: "" };
       const session = this.getSession();
       const claimPatch = session
         ? applyMailClaimResult(this.mails, mailId, res, session)
         : null;
       const nextMails = claimPatch?.mails ?? syncMailRowAfterClaim(this.mails, mailId, res);
       this.applyMailsAfterClaim(nextMails, mailId);
-      if (claimPatch) {
+      if (claimPatch && freshAssets) {
         this.onSessionPatch({ bag: claimPatch.bag, wallet: claimPatch.wallet });
       }
       this.mailBatchSelected.delete(mailId);
@@ -4663,11 +4907,14 @@ export class HeroMailPanels {
         syncMailRowAfterClaim([], mailId, res).find((m) => m.mail_id === mailId);
       if (updatedRow) {
         this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow, res.granted, mailBeforeClaim);
+        this.patchMailInboxSnapshot(mailId, updatedRow);
       }
       this.applyMailBadgeCountsFromSnapshot();
       return { ok: true, granted: res.granted };
     } catch (e) {
       return { ok: false, message: gatewayErrorMessage(e) };
+    } finally {
+      settle(); // Errors also invalidate reads, even after the panel is hidden.
     }
   }
 
@@ -4683,15 +4930,19 @@ export class HeroMailPanels {
     this.claimMailInflight = mailId;
     this.renderMailList();
     this.onStatus(`领取附件 #${mailId}…`);
+    const current = captureActor(this.gateway, this.getSession);
     const step = await this.claimMailAttachmentsForId(mailId);
     let pulseMailId = 0;
     try {
+      if (!current()) return;
       if (step.ok) {
         pulseMailId = mailId;
         this.rememberMailClaimInlineSuccess(mailId, step.granted);
         this.renderMailList();
-        await this.syncBagFromServer();
+        await this.syncBagFromServer(current);
+        if (!current()) return;
         const snap = await this.pullMailUnreadSnapshot();
+        if (!current()) return;
         this.mailUnreadTotal = snap.count;
         this.mailUnreadFirstId = snap.firstId;
         this.applyMailBadgeCountsFromSnapshot();
@@ -4704,8 +4955,10 @@ export class HeroMailPanels {
       }
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      if (current()) {
+        this.renderMailList();
+        if (pulseMailId > 0) this.pulseMailRowAfterClaim(pulseMailId);
+      }
     }
   }
 
@@ -4730,7 +4983,7 @@ export class HeroMailPanels {
       return;
     }
     const ordered = selectAllUnclaimedMailIds(this.mails);
-    await this.runSequentialMailClaims(ordered, `领取全部附件 ${ordered.length} 封（逐封）…`);
+    await this.runSequentialMailClaims(ordered, `领取已加载附件 ${ordered.length} 封（逐封）…`);
   }
 
   private async runSequentialMailClaims(ordered: number[], statusPrefix: string): Promise<void> {
@@ -4742,16 +4995,21 @@ export class HeroMailPanels {
     this.onStatus(statusPrefix);
     const attempts: ({ ok: true } | { ok: false; message: string })[] = [];
     const pulseMailIds: number[] = [];
+    const current = captureActor(this.gateway, this.getSession);
     try {
       for (const mailId of ordered) {
+        if (!current()) return;
         const step = await this.claimMailAttachmentsForId(mailId);
+        if (!current()) return;
         attempts.push(step.ok ? { ok: true } : { ok: false, message: step.message });
         if (step.ok) pulseMailIds.push(mailId);
         else this.mailBatchClaimFailedIds.add(mailId);
         this.renderMailList();
       }
-      await this.syncBagFromServer();
+      await this.syncBagFromServer(current);
+      if (!current()) return;
       const snap = await this.pullMailUnreadSnapshot();
+      if (!current()) return;
       this.mailUnreadTotal = snap.count;
       this.mailUnreadFirstId = snap.firstId;
       this.applyMailBadgeCountsFromSnapshot();
@@ -4763,8 +5021,10 @@ export class HeroMailPanels {
       this.onStatus(summary.summaryText);
     } finally {
       this.claimMailInflight = 0;
-      this.renderMailList();
-      for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      if (current()) {
+        this.renderMailList();
+        for (const id of pulseMailIds) this.pulseMailRowAfterClaim(id);
+      }
     }
   }
 
@@ -4795,6 +5055,7 @@ export class HeroMailPanels {
   private onHeroChange(ev: Event): void {
     const t = ev.target as HTMLElement;
     if (t.getAttribute("data-field") === "template-select") {
+      ++this.heroLinkGeneration;
       const id = Number((t as HTMLSelectElement).value) || 0;
       if (id) this.applyTemplateSelection(id);
       return;
@@ -4818,6 +5079,11 @@ export class HeroMailPanels {
   }
 
   private onHeroClick(ev: Event): void {
+    const summary = (ev.target as HTMLElement).closest("summary");
+    if (summary?.parentElement?.matches('[data-role="hero-recruit-host"]')) {
+      ++this.heroLinkGeneration;
+      return; // Native pointer and keyboard activation owns the disclosure state.
+    }
     const btn = (ev.target as HTMLElement).closest("button");
     const btnAction = btn?.getAttribute("data-action");
     if (btnAction && ["captive-summon-confirm", "captive-release", "persuade-primary", "coming-accept-confirm", "coming-reject"].includes(btnAction)) {
@@ -4839,6 +5105,7 @@ export class HeroMailPanels {
     }
     const tplLi = (ev.target as HTMLElement).closest("li[data-template-id]");
     if (tplLi && !btn) {
+      ++this.heroLinkGeneration;
       const id = Number(tplLi.getAttribute("data-template-id"));
       if (id) this.applyTemplateSelection(id);
       return;
@@ -4971,15 +5238,23 @@ export class HeroMailPanels {
   }
 
   private async openRecruitForCurrentHero(): Promise<void> {
-    ++this.heroBagLinkGeneration;
+    const current = this.beginHeroLink();
     const tplId = this.heroDetail?.template_cfg_id;
     if (!tplId) {
       this.onStatus("请先点选将领加载详情");
       return;
     }
-    if (!this.recruitTemplates.length) await this.refreshRecruitTemplates();
+    if (!current()) return;
+    if (!this.recruitTemplates.length && !await this.refreshRecruitTemplates(current)) return;
+    if (!current()) return;
+    if (!this.recruitTemplates.some(t => t.template_cfg_id === tplId)) {
+      this.onStatus(`招募模板 #${tplId} 当前不可用，请刷新模板列表`);
+      return;
+    }
     writeRecruitScrollAnchorSession(tplId);
     this.applyTemplateSelection(tplId);
+    const host = this.heroPanel.querySelector<HTMLDetailsElement>('[data-role="hero-recruit-host"]');
+    if (host) host.open = true;
     applyRecruitScrollAnchorSession(this.heroPanel);
     this.onStatus(`招募区已预选模板 #${tplId}`);
   }
@@ -5000,19 +5275,19 @@ export class HeroMailPanels {
     this.onStatus(`背包已高亮招募所需道具 ${itemCfgId}，请查看持有数量`);
   }
 
-  /** A bag read may complete after newer navigation, but must not navigate for it. */
-  private beginHeroBagLink(): () => boolean {
-    const request = ++this.heroBagLinkGeneration;
+  /** A related-view read must not navigate after a newer hero/panel intent. */
+  private beginHeroLink(): () => boolean {
+    const request = ++this.heroLinkGeneration;
     const heroId = this.selectedHeroId;
     const actor = captureActor(this.gateway, this.getSession);
     const presentation = captureCenterPanelIntent(this.heroPanel);
-    return () => request === this.heroBagLinkGeneration &&
+    return () => request === this.heroLinkGeneration &&
       heroId === this.selectedHeroId && !this.heroDetailCollapsed && actor() && presentation() &&
       this.heroPanel.parentNode === this.mount;
   }
 
   private async openHeroBagCultivationDeepLink(): Promise<void> {
-    const current = this.beginHeroBagLink();
+    const current = this.beginHeroLink();
     if (!current()) return;
     const heroId = this.selectedHeroId;
     let items = this.sessionEconomy().bag;
@@ -5053,7 +5328,7 @@ export class HeroMailPanels {
   }
 
   private async openRelatedCultivationItems(): Promise<void> {
-    const current = this.beginHeroBagLink();
+    const current = this.beginHeroLink();
     if (!current()) return;
     const heroId = this.selectedHeroId;
     const sid = this.serverId();
@@ -5106,6 +5381,7 @@ export class HeroMailPanels {
     if (!btn) return;
     const a = btn.getAttribute("data-action");
     if (a === "refresh-mail") void this.refreshMail();
+    if (a === "load-more-mail") void this.refreshMailInner(true);
     if (a === "mail-filter-all") {
       this.mailFilter = MAIL_INBOX_FILTER_ALL;
       writeMailInboxFilterSession(this.mailFilter);

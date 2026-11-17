@@ -1,0 +1,26 @@
+Independent static unit candidate review — #1967
+Reviewer: independent reviewer (independent of generation/export)
+Date: 2026-11-02 UTC
+Result: PASS for four static candidate icons; no visual/export blockers found.
+
+Directly inspected 4-icon contact sheet and all 8 actual 64px/128px exports.
+Identity: 1 infantry = shield and spear; 2 cavalry = saddle and stirrups; 3 archer = bow and quiver; 4 siege = assembled traction-style catapult. All four silhouettes remain clearly distinct and recognizable at64px. Identity mapping is reviewed against the supplied task contract; gameplay cfg_unit.sql mapping was verified by coordinator, not independently re-read here.
+No baked UI text, exterior UI frame, or visible clipping. Wooden/bronze/leather/rope materials and jade accents have coherent stylized ancient-war presentation; no obvious modern equipment. This is visual coherence review, not historical/archaeological certification or mechanical simulation of catapult operation.
+All sources1254x1254 RGBA; all exports64x64/128x128 RGBA with fully transparent borders. Minimum alpha-bbox margin4px at1x and9px at2x. Independently reproduced all8 full-canvas56/112px downsample+centered64/128px transparent-extent exports; maximum absolute RGBA-channel difference1 (quantization level), with no evidence of upscale/crop/repaint.
+Optional polish only: cavalry's identity is equipment-based rather than a horse silhouette, consistent with requested design; fine catapult rope details naturally disappear at64px, while machine silhouette stays legible.
+
+Exact reviewed files:
+source/1.png SHA256 4fba0892d6525b7ca43a2900d05394b5b1325b361e47932577dc3dc0217a3f5a
+textures/1x/units/1.png SHA256 182844ce97b4b1abead2c5d3ba728f98986caf40f4e055b868ba099610ed6610 alpha_bbox=(4, 4, 60, 58)
+textures/2x/units/1.png SHA256 3c1c3cfeaf6caa4f7b02c03918b69869ae0950c3393106826c55cad6d3f3cdfb alpha_bbox=(9, 9, 119, 115)
+source/2.png SHA256 9ea6b92a47c1e70865e13633a86c1675c0a424b5e03bb117fd0ed4edf2865c74
+textures/1x/units/2.png SHA256 7c41523f8723ec39f7e07718767935ecce1f06447580b6ead0458f9f5552e3c1 alpha_bbox=(11, 6, 56, 57)
+textures/2x/units/2.png SHA256 a9bfb77f9627ad3cd4a6a79f595dc51dbd1b28e164f4312a01a72fd2d0156156 alpha_bbox=(22, 14, 110, 114)
+source/3.png SHA256 e88dbdd7d8bedecf237fdda9631fe3c826f8a45f7d846a2594414e42f7a57901
+textures/1x/units/3.png SHA256 de69bbca9ae20ae11c90476565eb8d7c594743e226c98808f656993f02a9803b alpha_bbox=(6, 4, 59, 60)
+textures/2x/units/3.png SHA256 df3cbc4f75c75f462ef21f3557a717fe31f227ccd794c512579649ca7493edc7 alpha_bbox=(13, 9, 118, 118)
+source/4.png SHA256 247f10d4ba6779af68dca12b0d88f0aaae6efa770a829a485450515a3cd571a8
+textures/1x/units/4.png SHA256 a6650acbf286a666a669c7155dc21ab05ec4acb758d9be87a89486288918c5d3 alpha_bbox=(5, 5, 60, 58)
+textures/2x/units/4.png SHA256 221fe9a8243943feda81523e1881f0b214c71c6d9bc11bfbcdd856bd1ef1e4a1 alpha_bbox=(10, 11, 118, 114)
+
+Limitations: candidate static icons only; NOT runtime integration acceptance, frozen host-size/key/fallback contract, gameplay screenshot validation, animated units/directions/frames, merge approval, or acceptance of unrelated art. No image edits made by reviewer.
