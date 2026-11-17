@@ -119,6 +119,7 @@ func TestWallLevelPGLegacyRequiresExplicitNoPayoutClaim(t *testing.T) {
 }
 
 func TestWallLevelPGReceiptAndLevelWriteFailureRecovery(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, kind := range []string{"completion", "level"} {
 		t.Run(kind, func(t *testing.T) {
 			s, pool, a := wallLevelFixture(t)

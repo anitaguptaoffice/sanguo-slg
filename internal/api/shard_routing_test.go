@@ -17,7 +17,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
@@ -25,12 +25,9 @@ import (
 )
 
 func TestListGameServersAndServerIDBinding(t *testing.T) {
-	pool := openDB(t)
+	pgfixture.SkipFullSpecUnderShort(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		t.Fatal(err)
-	}
 	if err := db.SeedDevServer(ctx, pool, 1, "S1"); err != nil {
 		t.Fatal(err)
 	}

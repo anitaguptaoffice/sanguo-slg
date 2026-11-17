@@ -4,6 +4,19 @@ on:
   push:
     branches: [main]
   pull_request:
+    paths:
+      - '.github/workflows/platform-identity-pg.yml'
+      - '.github/scripts/check_platform_identity_json.py'
+      - '.github/PLATFORM-IDENTITY-PG.md'
+      - 'internal/platform/shard/**'
+      - 'go.mod'
+      - 'go.sum'
+      - 'cmd/server/**'
+      - 'internal/platform/gateway/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   platform-identity-pg:

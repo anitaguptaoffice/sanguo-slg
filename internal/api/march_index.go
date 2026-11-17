@@ -11,7 +11,7 @@ type playerMarchRef struct {
 	troops  []march.TroopStack
 }
 
-func (s *Server) recordPlayerMarch(playerID int64, cityID int64, marchID int64, heroID int64, troops []march.TroopStack) {
+func (s *Server) recordPlayerMarch(pc PlayerContext, cityID int64, marchID int64, heroID int64, troops []march.TroopStack) {
 	s.marchIndexMu.Lock()
 	defer s.marchIndexMu.Unlock()
 	if s.playerMarches == nil {
@@ -20,22 +20,13 @@ func (s *Server) recordPlayerMarch(playerID int64, cityID int64, marchID int64, 
 	if s.marchHeroByID == nil {
 		s.marchHeroByID = make(map[int64]marchHeroBinding)
 	}
-	s.playerMarches[playerID] = append(s.playerMarches[playerID], playerMarchRef{
+	s.playerMarches[pc.PlayerID] = append(s.playerMarches[pc.PlayerID], playerMarchRef{
 		marchID: marchID,
 		cityID:  cityID,
 		heroID:  heroID,
 		troops:  append([]march.TroopStack(nil), troops...),
 	})
-	s.marchHeroByID[marchID] = marchHeroBinding{playerID: playerID, serverID: 0, heroID: heroID}
-}
-
-func (s *Server) bindMarchHeroServer(marchID int64, serverID int32) {
-	s.marchIndexMu.Lock()
-	defer s.marchIndexMu.Unlock()
-	if b, ok := s.marchHeroByID[marchID]; ok {
-		b.serverID = serverID
-		s.marchHeroByID[marchID] = b
-	}
+	s.marchHeroByID[marchID] = marchHeroBinding{playerID: pc.PlayerID, serverID: pc.ServerID, heroID: heroID}
 }
 
 func (s *Server) lookupMarchHero(marchID int64) (marchHeroBinding, bool) {
@@ -48,12 +39,13 @@ func (s *Server) lookupMarchHero(marchID int64) (marchHeroBinding, bool) {
 	return b, ok
 }
 
-func (s *Server) clearMarchHero(marchID int64) {
+// takeMarchHero grants one release attempt without holding the lock in HERO.
+func (s *Server) takeMarchHero(marchID int64) (marchHeroBinding, bool) {
 	s.marchIndexMu.Lock()
 	defer s.marchIndexMu.Unlock()
-	if s.marchHeroByID != nil {
-		delete(s.marchHeroByID, marchID)
-	}
+	b, ok := s.marchHeroByID[marchID]
+	delete(s.marchHeroByID, marchID)
+	return b, ok
 }
 
 func (s *Server) listPlayerMarches(playerID int64, cityID int64, limit, offset int32) ([]playerMarchRef, int32) {
