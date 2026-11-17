@@ -170,6 +170,25 @@ AND (head_command_id IS NULL OR head_command_id=$5::uuid)`,
 }
 
 func (l *pgFirstCityLedger) Settle(ctx context.Context, scope *worldv1.FirstCityScope, commandID string, next *worldv1.FirstCityRecord) error {
+	if l == nil || l.pool == nil {
+		return errors.New("ledger")
+	}
+	tx, err := l.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if err := l.settleOnTx(ctx, tx, scope, commandID, next); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
+}
+
+// settleOnTx folds one terminal receipt into world_first_city_command inside an existing transaction.
+func (l *pgFirstCityLedger) settleOnTx(ctx context.Context, tx pgx.Tx, scope *worldv1.FirstCityScope, commandID string, next *worldv1.FirstCityRecord) error {
+	if l == nil || tx == nil {
+		return errors.New("ledger")
+	}
 	key, ok := slotKeyFromScope(scope)
 	if !ok {
 		return errors.New("scope")
@@ -180,12 +199,6 @@ func (l *pgFirstCityLedger) Settle(ctx context.Context, scope *worldv1.FirstCity
 	if next.GetSucceeded() == nil && next.GetRejectedNoEffect() == nil {
 		return errors.New("terminal")
 	}
-	tx, err := l.pool.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = tx.Rollback(ctx) }()
-
 	if _, err := tx.Exec(ctx, `SELECT world_first_city_slot_advisory_lock($1::uuid,$2,$3)`, key.realm, key.shard, key.player); err != nil {
 		return err
 	}
@@ -223,7 +236,7 @@ WHERE realm_id=$1::uuid AND server_id=$2 AND player_id=$3 AND command_id=$4::uui
 	if err != nil || tag.RowsAffected() != 1 {
 		return errFirstCityHeadConflict
 	}
-	return tx.Commit(ctx)
+	return nil
 }
 
 func bytesEqualC1(a, b []byte) bool { return len(a) == len(b) && string(a) == string(b) }

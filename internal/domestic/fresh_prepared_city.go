@@ -239,5 +239,9 @@ func (pc *PreparedCity) Publish() error {
 	work := cloneCity(pc.staged)
 	settleProduction(work, pc.catalog, pc.hub.now())
 	pc.hub.registerCityLocked(work)
+	if pc.gateHeld {
+		pc.hub.mu.Unlock()
+		pc.gateHeld = false
+	}
 	return nil
 }

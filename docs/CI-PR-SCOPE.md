@@ -21,14 +21,19 @@ feedback time; `push` to `main` still runs the complete gate set.
 
 ## Local gates (while developing)
 
+Full tier model, PG fixture rules, and migration backlog:
+[TESTING-TIERS.md](TESTING-TIERS.md).
+
 Match remote scope to local cost; do not wait on GitHub for the full matrix
 during tight iteration.
 
 | Makefile target | When |
 |---|---|
-| `make test-fast` | Default while editing (no DB). |
-| `make test-gate` | Before merge when you touched api/domestic/world or client build paths. |
+| `make test-fast` | Default while editing: `-short` (skips full-spec PG), `-p $(nproc)` package parallelism. |
+| `make test-gate` | Before merge when you touched api/domestic/world or client build paths. Uses shared PG fixture (`SANGUO_PG_REUSE_SPEC=1`: one `ApplySpecs` per process, `TRUNCATE` between tests). |
 | `make test-full` | Optional before merge when you changed `internal/api` heavily; mirrors API return PG locally. |
+
+**PostgreSQL speed (local):** `walletBoundaryPool(t, true)` defaults to **reuse** (`SANGUO_PG_REUSE_SPEC=1`). First test pays for `ApplySpecs`; later tests reset data in milliseconds. Disable with `SANGUO_PG_REUSE_SPEC=0` if debugging isolation. Targeted PG runs: `go test -count=1 -run TestName ./internal/api` (no `-short`).
 
 Keep feature PRs free of workflow-only diffs; land CI changes in a dedicated PR.
 

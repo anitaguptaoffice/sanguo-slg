@@ -13,8 +13,8 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	questv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/quest/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db/pgfixture"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/quest"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
@@ -23,7 +23,6 @@ import (
 )
 
 // Real gateway + PG evidence, not a direct quest-service or row-mutation test.
-// There is no short-mode skip; the shared openDB only skips absent DATABASE_URL.
 func TestSmokeDailyCalendarClockPG(t *testing.T) {
 	for _, useDefault := range []bool{true, false} {
 		name := "explicit_UTC_midnight"
@@ -31,12 +30,10 @@ func TestSmokeDailyCalendarClockPG(t *testing.T) {
 			name = "default_calendar_restart"
 		}
 		t.Run(name, func(t *testing.T) {
-			pool := openDB(t)
+			pgfixture.SkipFullSpecUnderShort(t)
+			pool := openWarmSpecDB(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 			defer cancel()
-			if err := db.ApplySpecs(ctx, pool, runtime.RepoRoot()+"/spec/db"); err != nil {
-				t.Fatal(err)
-			}
 			if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {
 				t.Fatal(err)
 			}

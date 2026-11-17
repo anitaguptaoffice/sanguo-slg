@@ -12,4 +12,5 @@
 
 **Env:** `SANGUO_FIRST_CITY_USE_PREPARED_CITY=1` → `runtime.maybeFirstCityPreparedSource` + `WireFirstCityPreparedCreation`. PG ledger settle receipt unchanged until atomicity card.
 
-**Next:** PG smoke with env on + `TestPGPreparedCityStageQAFlow`-class profile; companion single-txn pin with settle.
+**PG smoke:** `TestFirstCitySubmitCreatesCityPreparedPG` (`DATABASE_URL`, full ApplySpecs schema).  
+**Ledger atomicity (small step):** when PreparedCity is wired and PG ledger is active, `settleFirstCityEffect` uses `settleFirstCityEffectPreparedPG` so business placement and `world_first_city_command` terminal receipt commit in one `recruittx` transaction (`settleOnTx`). Legacy `createPlayerCity` + separate `Settle` unchanged.

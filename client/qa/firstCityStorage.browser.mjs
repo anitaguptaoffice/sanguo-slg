@@ -177,6 +177,16 @@ try {
       assert.match(await call(page, action), /UNKNOWN/); assert.equal(peer.effects.length, before);
       assert.deepEqual((await history(page)).intents.map(x => x.proposal.commandId), [ids[0]]);
     });
+    await check(`barrier-GetFirstCityResult-${fault}`, async () => {
+      const page = await boot();
+      assert.equal(await call(page, 'SubmitFirstCity'), 'command');
+      const before = peer.effects.length;
+      await page.evaluate(fault => qa.fault = fault, fault);
+      assert.match(await call(page, 'GetFirstCityResult'), /UNKNOWN/);
+      await page.evaluate(() => qa.fault = ''); assert.equal((await history(page)).unavailable, true);
+      assert.match(await call(page, 'GetFirstCityResult'), /UNKNOWN/); assert.equal(peer.effects.length, before);
+      assert.deepEqual((await history(page)).intents.map(x => x.proposal.commandId), [ids[0]]);
+    });
   }
   for (const loss of ['clear', 'remove', 'overwrite', 'valid-change', 'malformed']) await check(`external-${loss}`, async () => {
     const a = await boot(), b = await boot(); assert.equal(await call(a, 'SubmitFirstCity'), 'command');
@@ -238,6 +248,21 @@ try {
     const retained = await history(page); assert.equal(retained.unavailable, true);
     assert.ok(retained.observations.some(x => x.command?.state.kind === 'succeeded'));
     assert.match(await call(page, 'ContinueFirstCity'), /UNKNOWN/); assert.equal(peer.effects.length, before + 1);
+  });
+  await check('get-after-pending-resume', async () => {
+    peer.mode = 'pending';
+    const page = await boot();
+    assert.equal(await call(page, 'SubmitFirstCity'), 'command');
+    assert.equal(peer.effects.at(-1).request.proposal.command_id, ids[0]);
+    peer.mode = 'pendingThenGet';
+    await page.evaluate(() => { qa.timeout = 8000; });
+    assert.equal(await call(page, 'GetFirstCityResult'), 'command');
+    const terminal = await history(page);
+    assert.ok(terminal.observations.some(x => x.command?.state.cityId));
+    await evidence('get-after-pending-resume');
+    await page.reload(); await boot('', page);
+    assert.deepEqual(await history(page), terminal);
+    peer.mode = 'success';
   });
   await check('unknown-empty-not-observed-retain-identity', async () => {
     peer.mode = 'drop'; const page = await boot(), before = peer.effects.length;

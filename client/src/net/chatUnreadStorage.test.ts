@@ -4,7 +4,10 @@ import { CHAT_CHANNEL_WORLD } from "./socialFormat";
 
 const snapshot = { key: "world", channel: CHAT_CHANNEL_WORLD, messages: [{ sent_at_ms: 100 }, { sent_at_ms: 200 }] };
 function denyGetter() {
-  return vi.spyOn(window, "localStorage", "get").mockImplementation(() => { throw new DOMException("blocked", "SecurityError"); });
+  return vi.spyOn(Storage.prototype, "getItem").mockImplementation(function (this: Storage, k: string) {
+    if (this === globalThis.localStorage) throw new DOMException("blocked", "SecurityError");
+    return Storage.prototype.getItem.call(this, k);
+  });
 }
 function exercise(tracker: ChatUnreadTracker) {
   const counts = vi.fn(); tracker.onCounts = counts;
@@ -14,7 +17,18 @@ function exercise(tracker: ChatUnreadTracker) {
   tracker.markChannelRead("world", 200); expect(tracker.getSummary(0).world).toBe(0);
   expect(counts).toHaveBeenCalledTimes(3);
 }
-afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); localStorage.clear(); });
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  const ls = globalThis.localStorage;
+  if (ls && typeof ls.clear === "function") {
+    try {
+      ls.clear();
+    } catch {
+      /* SecurityError from denied getter tests */
+    }
+  }
+});
 
 it.each(["read", "write"])("contains a denied default getter in the %s helper", operation => {
   denyGetter();
@@ -25,8 +39,14 @@ it("keeps tracker counts and notifications in memory when the default getter is 
   denyGetter(); exercise(new ChatUnreadTracker());
 });
 it("works when the global store does not exist", () => {
-  vi.stubGlobal("localStorage", undefined); expect(readChatLastReadMap()).toEqual({});
-  expect(() => writeChatLastReadMap({ world: 200 })).not.toThrow(); exercise(new ChatUnreadTracker());
+  vi.stubGlobal("localStorage", undefined);
+  try {
+    expect(readChatLastReadMap()).toEqual({});
+    expect(() => writeChatLastReadMap({ world: 200 })).not.toThrow();
+    exercise(new ChatUnreadTracker());
+  } finally {
+    vi.unstubAllGlobals();
+  }
 });
 it("explicit null never consults a denied browser getter", () => {
   const getter = denyGetter(); expect(readChatLastReadMap(null)).toEqual({});
@@ -49,7 +69,15 @@ it.each(["read", "write"])("contains %s failures while retaining in-memory updat
   expect(storage.setItem).toHaveBeenCalledTimes(2);
 });
 it("preserves ordinary default persistence and malformed-map fallback", () => {
-  localStorage.setItem(CHAT_LAST_READ_TS_STORAGE_KEY, "not JSON"); expect(readChatLastReadMap()).toEqual({});
-  exercise(new ChatUnreadTracker()); expect(readChatLastReadMap()).toEqual({ world: 200 });
-  const fresh = new ChatUnreadTracker(); fresh.replaceSnapshot(snapshot); expect(fresh.getSummary(0).world).toBe(0);
+  const backing = new Map<string, string>([[CHAT_LAST_READ_TS_STORAGE_KEY, "not JSON"]]);
+  const storage = {
+    getItem: (k: string) => backing.get(k) ?? null,
+    setItem: (k: string, v: string) => { backing.set(k, v); },
+  };
+  expect(readChatLastReadMap(storage)).toEqual({});
+  exercise(new ChatUnreadTracker(storage));
+  expect(readChatLastReadMap(storage)).toEqual({ world: 200 });
+  const fresh = new ChatUnreadTracker(storage);
+  fresh.replaceSnapshot(snapshot);
+  expect(fresh.getSummary(0).world).toBe(0);
 });
