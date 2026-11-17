@@ -31,7 +31,9 @@ func TestSmokeDailyCalendarClockPG(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			pgfixture.SkipFullSpecUnderShort(t)
-			pool := openWarmSpecDB(t)
+			// This test closes its initial connection to simulate restart; the
+			// process-wide fixture pool must remain owned by pgfixture.
+			pool := reopenDBPool(t)
 			ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 			defer cancel()
 			if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {

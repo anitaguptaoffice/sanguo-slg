@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -106,12 +105,11 @@ func runINTGData002Smoke(t *testing.T) {
 
 func reopenDBPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Fatal("DATABASE_URL not set")
-	}
+	// The fixture owns the shared pool. Restart connections own their lifetime
+	// but retain the same schema and committed data, without resetting it.
+	cfg := openWarmSpecDB(t).Config()
 	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
