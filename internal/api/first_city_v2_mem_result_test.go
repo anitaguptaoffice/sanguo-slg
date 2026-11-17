@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
@@ -49,6 +50,48 @@ func TestFirstCityV2MemGetAndContinue(t *testing.T) {
 	if contBody.GetOutcome().GetKind() != worldv1.FirstCityOutcomeKind_FIRST_CITY_OUTCOME_COMMAND ||
 		contBody.GetOutcome().GetCommand().GetSucceeded() != nil {
 		t.Fatalf("continue %+v", contBody.GetOutcome())
+	}
+}
+
+func TestFirstCityV2ContinueSettlesPending(t *testing.T) {
+	s := testFirstCityV2Persisted(t)
+	fx := &stubEffect{err: errors.New("effect unavailable")}
+	s.WireFirstCityV2Effect(fx)
+	s.sessions.Bind("sess-fc", PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8})
+	scope := derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm)
+	cmd := "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"
+	name, x, y := "城", int32(2), int32(3)
+	prop := &worldv1.FirstCityProposal{
+		CommandId: cmd,
+		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
+		Name: &name, X: &x, Y: &y,
+	}
+	pkt := func(trace string, payload []byte) *commonv1.ClientPacket {
+		return &commonv1.ClientPacket{TraceId: trace, SessionId: "sess-fc", ServerId: 1, Payload: payload}
+	}
+	subReq, _ := marshal(&worldv1.SubmitFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+	out, _ := s.handleSubmitFirstCity(context.Background(), pkt("sub", subReq))
+	var subBody worldv1.SubmitFirstCityResponse
+	_ = unmarshal(out.GetData(), &subBody)
+	if subBody.GetOutcome().GetCommand().GetPending() == nil {
+		t.Fatalf("submit pending %+v", subBody.GetOutcome())
+	}
+	fx.err = nil
+	fx.cityID = 77
+	contReq, _ := marshal(&worldv1.ContinueFirstCityRequest{ExpectedScope: scope, Proposal: prop})
+	out, _ = s.handleContinueFirstCity(context.Background(), pkt("cont", contReq))
+	var contBody worldv1.ContinueFirstCityResponse
+	_ = unmarshal(out.GetData(), &contBody)
+	if contBody.GetOutcome().GetCommand().GetSucceeded().GetCityId() != 77 {
+		t.Fatalf("continue %+v", contBody.GetOutcome())
+	}
+	if fx.calls != 2 {
+		t.Fatalf("effect calls = %d want 2", fx.calls)
+	}
+	out, _ = s.handleContinueFirstCity(context.Background(), pkt("cont2", contReq))
+	_ = unmarshal(out.GetData(), &contBody)
+	if contBody.GetOutcome().GetCommand().GetSucceeded().GetCityId() != 77 || fx.calls != 2 {
+		t.Fatalf("repeat continue %+v calls=%d", contBody.GetOutcome(), fx.calls)
 	}
 }
 
