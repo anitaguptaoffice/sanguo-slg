@@ -126,6 +126,7 @@ func TestShopAtomicPGConfirmedCommitSurvivesRefreshFailure(t *testing.T) {
 }
 
 func TestShopAtomicPGDependencyActorAndCapacityRejects(t *testing.T) {
+	isolateWalletPools(t)
 	for _, kind := range []string{"no-player", "wrong-account", "no-wallet", "foreign-cache-pool", "foreign-private-pool", "foreign-shop", "missing-binding", "wrong-catalog", "count", "stack", "item", "gold", "unknown-offer", "canceled"} {
 		t.Run(kind, func(t *testing.T) {
 			pool, s := atomicShopFixture(t)

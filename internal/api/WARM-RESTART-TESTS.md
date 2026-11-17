@@ -26,3 +26,7 @@ Fault-injection tests that rename tables or install triggers/functions call
 schemas, because TRUNCATE cannot restore DDL. Data-only tests retain warm reuse.
 This opt-out is test-local and restored automatically; do not globally disable
 warm reuse merely to conceal fixture contamination.
+
+Cross-pool boundary tests call `isolateWalletPools(t)` before acquiring fixtures.
+Each fixture must own a distinct schema and pool; warm reuse would erase the
+foreign-pool condition or duplicate seeded accounts. Preserve rejection assertions.

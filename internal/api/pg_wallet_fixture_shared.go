@@ -19,3 +19,9 @@ func isolateWalletDDL(t *testing.T) {
 	t.Helper()
 	t.Setenv(pgfixture.EnvReuseSpec, "0")
 }
+
+// isolateWalletPools preserves independent databases for cross-pool boundary tests.
+func isolateWalletPools(t *testing.T) {
+	t.Helper()
+	t.Setenv(pgfixture.EnvReuseSpec, "0")
+}

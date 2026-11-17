@@ -109,6 +109,7 @@ func TestRecruitAtomicPGExactCostAndRestart(t *testing.T) {
 }
 
 func TestRecruitAtomicPGRejectsWithoutMutation(t *testing.T) {
+	isolateWalletPools(t)
 	for _, kind := range []string{"resources", "books", "unknown", "unknown-item", "wrong-shard", "missing-actor", "wrong-account", "negative-actor", "missing-wallet", "missing-content", "missing-hero", "missing-ports", "wrong-pool"} {
 		t.Run(kind, func(t *testing.T) {
 			pool := walletBoundaryPool(t, true)
