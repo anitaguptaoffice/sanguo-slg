@@ -18,8 +18,8 @@ async function setup(detail = true, templates = false) {
     getSessionGeneration: () => 1,
     getBoundServerId: () => 1,
     listPlayerBag: vi.fn(async () => ({ items: [] })),
-    listPlayerHeroes: vi.fn(async () => ({ heroes: [{ hero_id: 7, level: 1 }], total_count: 1 })),
-    getHeroDetail: vi.fn(async () => ({ hero_id: 7, template_cfg_id: 1001, template_name: "Hero 7", level: 1 })),
+    listPlayerHeroes: vi.fn(async () => ({ heroes: [{ hero_id: 7, level: 1 }, { hero_id: 8, level: 1 }, { hero_id: 9, level: 1 }], total_count: 3 })),
+    getHeroDetail: vi.fn(async (_sid: number, id: number) => ({ hero_id: id, template_cfg_id: 1001, template_name: `Hero ${id}`, level: 1 })),
     listRecruitTemplates: vi.fn(async () => ({ templates: templates ? [{ template_cfg_id: 1001,
       template_name: "Hero 7", already_owned: true, costs: [] }] : [], total_count: templates ? 1 : 0 })),
     recruitHero: vi.fn(),
@@ -53,7 +53,7 @@ async function setup(detail = true, templates = false) {
 
 const controls = ['[data-action="refresh-templates"]', '[data-field="template-select"]'];
 
-it.each(controls)("public affordability refresh reaches collapse with the same focused %s", async selector => {
+it.each(controls)("public affordability refresh preserves the same focused %s", async selector => {
   const { panel, host, gateway } = await setup();
   const control = host.querySelector<HTMLElement>(selector)!;
   control.focus();
@@ -69,12 +69,13 @@ it.each(controls)("public affordability refresh reaches collapse with the same f
   // Production wallet/bag patch entry point calls renderTemplateList before renderHeroList.
   panel.refreshRecruitAffordability();
   expect(observations).toEqual([{ active: control, connected: true, sameNode: true, open: true }]);
-  expect(host.open).toBe(false);
+  expect(host.open).toBe(true);
+  expect(document.activeElement).toBe(control);
   expect(control.isConnected).toBe(true);
   expect(gateway.recruitHero).not.toHaveBeenCalled();
 });
 
-it.each(controls)("returns focus to the summary when refresh hides %s", async selector => {
+it.each(controls)("returns focus to the summary when navigation hides %s", async selector => {
   const { panel, host, summary } = await setup();
   const focus = summary.focus.bind(summary);
   const openAtFocus: boolean[] = [];
@@ -83,7 +84,8 @@ it.each(controls)("returns focus to the summary when refresh hides %s", async se
     focus(options);
   });
   host.querySelector<HTMLElement>(selector)!.focus();
-  panel.refreshRecruitAffordability();
+  host.parentElement!.querySelector<HTMLElement>('li[data-hero-id="8"]')!.click();
+  await flush();
   expect(host.open).toBe(false);
   expect(document.activeElement).toBe(summary);
   expect(openAtFocus).toEqual([true]);
@@ -98,7 +100,8 @@ it.each(["summary", "outside-host", "outside-root"])("does not steal %s focus on
     ? mount.querySelector<HTMLElement>('[data-action="refresh-heroes"]')! : outside;
   target.focus();
   const focus = vi.spyOn(summary, "focus");
-  panel.refreshRecruitAffordability();
+  host.parentElement!.querySelector<HTMLElement>('li[data-hero-id="8"]')!.click();
+  await flush();
   expect(host.open).toBe(false);
   expect(document.activeElement).toBe(target);
   expect(focus).not.toHaveBeenCalled();
@@ -115,7 +118,7 @@ it("does not move focus when list-only refresh keeps recruitment open", async ()
   expect(focus).not.toHaveBeenCalled();
 });
 
-it("does not refocus an already-closed host, and transfers again after native reopening", async () => {
+it("does not refocus a closed host, and transfers on navigation after reopening", async () => {
   const { panel, host, summary } = await setup();
   summary.click();
   expect(host.open).toBe(false);
@@ -128,7 +131,8 @@ it("does not refocus an already-closed host, and transfers again after native re
   summary.click();
   expect(host.open).toBe(true);
   host.querySelector<HTMLElement>(controls[0]!)!.focus();
-  panel.refreshRecruitAffordability();
+  host.parentElement!.querySelector<HTMLElement>('li[data-hero-id="8"]')!.click();
+  await flush();
   expect(host.open).toBe(false);
   expect(document.activeElement).toBe(summary);
   expect(focus).toHaveBeenCalledTimes(1);
@@ -146,7 +150,7 @@ it("a hidden panel affordability refresh leaves external focus alone", async () 
   expect(focus).not.toHaveBeenCalled();
 });
 
-it.each(controls)("loaded templates retain %s until the first of two real list renders", async selector => {
+it.each(controls)("loaded templates retain %s across both real list renders", async selector => {
   const { panel, host, summary } = await setup(true, true);
   const control = host.querySelector<HTMLElement>(selector)!;
   control.focus();
@@ -162,9 +166,26 @@ it.each(controls)("loaded templates retain %s until the first of two real list r
   panel.refreshRecruitAffordability();
   expect(observations).toEqual([
     { active: control, open: true, sameNode: true, connected: true },
-    { active: summary, open: false, sameNode: true, connected: true },
+    { active: control, open: true, sameNode: true, connected: true },
   ]);
+  expect(host.open).toBe(true);
+  expect(document.activeElement).toBe(control);
+  expect(focus).not.toHaveBeenCalled();
+  host.parentElement!.querySelector<HTMLElement>('li[data-hero-id="8"]')!.click();
+  await flush();
   expect(host.open).toBe(false);
   expect(document.activeElement).toBe(summary);
   expect(focus).toHaveBeenCalledTimes(1);
+});
+
+it("navigation does not refocus an already-closed recruitment host", async () => {
+  const { host, summary } = await setup();
+  summary.click();
+  summary.focus();
+  const focus = vi.spyOn(summary, "focus");
+  host.parentElement!.querySelector<HTMLElement>('li[data-hero-id="8"]')!.click();
+  await flush();
+  expect(host.open).toBe(false);
+  expect(document.activeElement).toBe(summary);
+  expect(focus).not.toHaveBeenCalled();
 });
