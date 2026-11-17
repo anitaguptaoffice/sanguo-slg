@@ -226,6 +226,11 @@ func startUpgradeWithAllocator(c *CityState, cat map[int32]BuildingSpec, now tim
 	if !ok {
 		return UpgradeResult{}, nil, ErrUnknownBuilding
 	}
+	for _, pending := range c.BuildJobs {
+		if pending.Slot == slot && (pending.Status == QueueWaiting || pending.Status == QueueActive) {
+			return UpgradeResult{}, nil, ErrInvalidUpgrade
+		}
+	}
 	inst := slotB(c, slot)
 	tgt := int32(1)
 	if inst != nil {

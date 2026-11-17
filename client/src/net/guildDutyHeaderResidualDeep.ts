@@ -22,7 +22,7 @@ export function formatGuildDutyHeaderResidualDeepLine(input: GuildDutyHeaderResi
   const parts = [
     header,
     `巩固 职务 ${dutyCount} 人`,
-    `本组在线 ${groupOnlineN}/${dutyCount}`,
+    `本组在线 ${groupOnlineN ?? "未知"}/${dutyCount}`,
   ];
   if (input.guildOnlineSummary) {
     parts.push(formatGuildMemberOnlineSummaryLine(input.guildOnlineSummary));

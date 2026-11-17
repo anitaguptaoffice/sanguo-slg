@@ -1,0 +1,104 @@
+name: Live quest browser QA
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/live-quest-browser-qa.yml'
+      - '.github/scripts/live_quest_browser.mjs'
+      - '.github/scripts/LIVE_QUEST_BROWSER_QA.md'
+permissions:
+  contents: read
+jobs:
+  live-quest-browser:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        width: [1280, 1600]
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: live_quest
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d live_quest"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - name: Initialize failure evidence
+        run: |
+          mkdir -p evidence
+          printf '{"passed":false,"phase":"setup; inspect job logs until report.json exists"}\n' > evidence/preflight.json
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: qa-source
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: e2b60dda830d9b25f15fcfced4da4acc090a8f1c
+          path: target
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reproduce the independently reviewed source combination
+        working-directory: target
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = e2b60dda830d9b25f15fcfced4da4acc090a8f1c
+          git diff d575a1df738e104dc63272844a7af53ae7fd53a1 304e6d2b709586500a53d0049419e5c4d9dd1160 -- \
+            client/docs/QUEST-ROW-SELECTION.md client/src/ui/ContentPanels.questSelection.test.ts \
+            client/src/ui/ContentPanels.ts | git apply --index
+          test "$(git write-tree)" = 8d2bb9b655eaefa227a0af95f0cd32dc8aebee28
+          git diff --cached --check
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.12'
+          cache-dependency-path: target/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: target/client/package-lock.json
+      - name: Build actual server and complete client
+        working-directory: target
+        env:
+          GOTOOLCHAIN: local
+          VITE_GATEWAY_WS_URL: ws://127.0.0.1:8080/ws
+        run: |
+          go build -o "$RUNNER_TEMP/live-quest-server" ./cmd/server
+          cd client
+          npm ci
+          npm run build
+          npm test -- src/ui/ContentPanels.questSelection.test.ts src/ui/ContentPanels.questContrast.test.ts src/ui/ContentPanels.test.ts src/net/questClaimAssets.test.ts
+          npx --no-install playwright install --with-deps chromium
+      - name: Run the full client against the real isolated gateway
+        working-directory: target/client
+        env:
+          QA_WIDTH: ${{ matrix.width }}
+          QA_OUT: ${{ github.workspace }}/evidence
+          QA_SERVER: ${{ runner.temp }}/live-quest-server
+          DATABASE_URL: postgres://sanguo:sanguo@127.0.0.1:5432/live_quest?sslmode=disable
+          REDIS_ADDR: 127.0.0.1:6379
+          PGHOST: 127.0.0.1
+          PGUSER: sanguo
+          PGPASSWORD: sanguo
+          PGDATABASE: live_quest
+        run: |
+          cp ../../qa-source/.github/scripts/live_quest_browser.mjs .qa-live-quest.mjs
+          node .qa-live-quest.mjs
+      - name: Preserve evidence including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-quest-${{ matrix.width }}-${{ github.event.pull_request.head.sha }}
+          path: evidence/
+          if-no-files-found: error
+          retention-days: 14
