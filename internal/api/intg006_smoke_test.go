@@ -6,7 +6,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -24,7 +23,6 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
@@ -64,12 +62,8 @@ func TestINTG006Data002SmokePath(t *testing.T) {
 }
 
 func runINTGData002Smoke(t *testing.T) {
-	pool := openDB(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		smokeFailf(t, "apply spec/db", "err=%v", err)
-	}
 	if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {
 		smokeFailf(t, "seed dev server", "err=%v", err)
 	}
@@ -111,12 +105,11 @@ func runINTGData002Smoke(t *testing.T) {
 
 func reopenDBPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Fatal("DATABASE_URL not set")
-	}
+	// The fixture owns the shared pool. Restart connections own their lifetime
+	// but retain the same schema and committed data, without resetting it.
+	cfg := openWarmSpecDB(t).Config()
 	ctx := context.Background()
-	pool, err := db.Open(ctx, url)
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
