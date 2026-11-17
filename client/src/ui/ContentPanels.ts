@@ -4,9 +4,10 @@ import { beginAssetRead, claimQuestWithAssets, refreshQuestAssets, QUEST_ASSETS_
 import { bagUseCapabilityHint } from "@/net/bagUseCapability";
 import { captureActor } from "@/net/actorContext";
 import { renderSuccessfulReadNotice } from "@/net/successfulReadNotice";
-import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
+import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { MainCitySession, ResourceWallet } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
+import type { AssetLoader } from "@/engine/AssetLoader";
 import {
   bagStackQuantity,
   type BagStack,
@@ -179,6 +180,7 @@ export class ContentPanels {
   private bagBatchCheckedSlots = new Set<number>();
   private shopReadVersion = 0;
   private shopState?: { current: () => boolean; busy: string; needsReload: boolean; unknown: boolean; outcome: string; warning: string };
+  private shopSettlement: { current: () => boolean; done: Promise<void>; release: () => void } | null = null;
   private shopListLoading = false;
   private shopListError: string | null = null;
   private bagListLoading = false;
@@ -198,6 +200,7 @@ export class ContentPanels {
     private onSessionPatch: (patch: Partial<MainCitySession>) => void,
     private onStatus: (msg: string) => void,
     private readonly onShopMaterialPulse?: (keys: (keyof ResourceWallet)[]) => void,
+    private readonly artAssets?: Pick<AssetLoader, "getImageForAsset">,
   ) {}
 
   setBagReturnHeroDetailHandler(handler: (heroId: number) => void): void {
@@ -227,6 +230,8 @@ export class ContentPanels {
   }
 
   detach(): void {
+    this.shopSettlement?.release();
+    this.shopSettlement = null;
     this.shopState = undefined;
     ++this.shopReadVersion;
     this.questPanel?.remove();
@@ -342,7 +347,7 @@ export class ContentPanels {
 
   private syncShopInlineStateResidualRing(): void {
     const wallet = this.sessionWallet();
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId) ?? null;
+    const offer = this.selectedVisibleShopOffer() ?? null;
     if (!shouldBagShopInlineStateResidualRing("shop", null, wallet, offer)) return;
     const li = this.shopPanel.querySelector<HTMLElement>(
       `li[data-offer-id="${this.selectedOfferId}"]`,
@@ -574,7 +579,7 @@ export class ContentPanels {
 
   private syncShopWalletGap(): void {
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    const offer = this.selectedVisibleShopOffer();
     applyShopPurchaseAffordDisplay(
       this.shopPanel,
       offer?.price_resources,
@@ -605,7 +610,7 @@ export class ContentPanels {
 
   private shopPurchaseCanAfford(): boolean {
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === this.selectedOfferId);
+    const offer = this.selectedVisibleShopOffer();
     return validatePurchaseShopOffer({
       offer,
       offerId: this.selectedOfferId,
@@ -827,6 +832,20 @@ export class ContentPanels {
       const nameSpan = document.createElement("span");
       nameSpan.className = "bag-stack-name";
       nameSpan.textContent = name;
+      const itemId = row.item_cfg_id;
+      if (Number.isSafeInteger(itemId) && (itemId ?? 0) > 0 &&
+          !this.bagPanel.closest("[data-art-skin='off']")) {
+        const image = this.artAssets?.getImageForAsset(`item.icon.${itemId}.v1`);
+        if (image?.img.src) {
+          const icon = document.createElement("img");
+          icon.className = "bag-item-icon";
+          icon.alt = "";
+          icon.setAttribute("aria-hidden", "true");
+          icon.onerror = () => icon.remove();
+          icon.src = image.img.src;
+          nameSpan.prepend(icon);
+        }
+      }
       const qtySpan = document.createElement("span");
       qtySpan.className = "bag-stack-qty";
       qtySpan.textContent = formatBagStackQty(row.quantity);
@@ -916,6 +935,11 @@ export class ContentPanels {
     }
   }
 
+  private selectedVisibleShopOffer(): ShopOffer | undefined {
+    if (this.shopListLoading || this.shopListError) return undefined;
+    return this.visibleShopOffers().find(o => o.offer_id === this.selectedOfferId);
+  }
+
   private visibleShopOffers(): ShopOffer[] {
     return filterShopOffersByCategory(this.shopOffers, this.shopCategory);
   }
@@ -988,8 +1012,8 @@ export class ContentPanels {
       sel.appendChild(opt);
     }
     const stillVisible = visible.some((o) => o.offer_id === this.selectedOfferId);
-    if (!stillVisible && visible[0]?.offer_id) {
-      this.selectedOfferId = visible[0].offer_id ?? this.selectedOfferId;
+    if (!stillVisible) {
+      this.selectedOfferId = visible[0]?.offer_id ?? 0;
     }
     if (visible[0]?.offer_id) {
       sel.value = String(this.selectedOfferId || visible[0].offer_id);
@@ -1066,9 +1090,25 @@ export class ContentPanels {
   }
 
   private async refreshBag(): Promise<void> {
+    const settlement = this.shopSettlement;
+    if (settlement?.current()) {
+      const actor = captureActor(this.gateway, this.getSession);
+      const panel = this.bagPanel;
+      const intent = captureCenterPanelIntent(panel);
+      const version = ++this.bagReadVersion;
+      this.bagListLoading = true;
+      this.renderBagList();
+      // A read must not supersede a purchase's full wallet receipt before it arrives.
+      await settlement.done;
+      if (!actor() || !intent() || this.bagPanel !== panel || panel.parentNode !== this.mount ||
+        version !== this.bagReadVersion) return;
+    }
     const state = this.bagUseContext();
     if (state.needsReload) {
       if (this.useConsumableSubmitState === "submitting") return;
+      // Recovery also owns loading left by an abandoned purchase wait on an earlier opening.
+      this.bagListLoading = false;
+      this.renderBagList();
       this.setUseConsumableSubmitState("submitting");
       try {
         if (!await refreshQuestAssets(this.gateway, this.getSession, this.onSessionPatch, state.current)) return;
@@ -1345,8 +1385,9 @@ export class ContentPanels {
     if (!state.current() || state.busy || state.needsReload || !this.getSession() || this.shopPanel.classList.contains("hidden")) return;
     const offerId = this.selectedOfferId;
     const purchaseCount = 1;
-    const offer = this.shopOffers.find((o) => o.offer_id === offerId);
+    const offer = this.selectedVisibleShopOffer();
     const walletBefore = this.getSession()?.wallet;
+    const bagBefore = this.getSession()?.bag;
     const validated = validatePurchaseShopOffer({ offer, offerId, purchaseCount, wallet: walletBefore });
     if (!validated.ok) {
       state.warning = validated.message;
@@ -1354,50 +1395,64 @@ export class ContentPanels {
       this.syncShopPurchaseSubmit();
       return;
     }
-    state.busy = "buy";
-    state.needsReload = true;
-    state.unknown = false;
-    state.outcome = state.warning = "";
-    this.shopPurchaseFlash.delete(offerId);
-    this.shopLastGrantedItemCfgId = 0;
-    beginAssetRead(this.gateway); // Older bag/wallet reads must not overwrite a submitted purchase.
-    ++this.shopReadVersion;
-    this.renderShopList();
-    let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
+    let release!: () => void;
+    const done = new Promise<void>(resolve => { release = resolve; });
+    const settlement = { current: state.current, done, release };
+    this.shopSettlement = settlement;
     try {
-      res = await this.gateway.purchaseShopOffer(this.serverId(), offerId, purchaseCount) as typeof res;
-    } catch (e) {
+      state.busy = "buy";
+      state.needsReload = true;
+      state.unknown = false;
+      state.outcome = state.warning = "";
+      this.shopPurchaseFlash.delete(offerId);
+      this.shopLastGrantedItemCfgId = 0;
+      const receiptCurrent = beginAssetRead(this.gateway); // Capture freshness before dispatch.
+      ++this.shopReadVersion;
+      this.renderShopList();
+      let res: { granted_items?: { items?: { item_cfg_id?: number; quantity?: number }[] }; wallet_after?: ResourceWallet };
+      try {
+        res = await this.gateway.purchaseShopOffer(this.serverId(), offerId, purchaseCount) as typeof res;
+      } catch (e) {
+        if (!state.current()) return;
+        const known = isKnownShopRejection(e);
+        if (!known) beginAssetRead(this.gateway); // Invalidate reads started during an unconfirmed purchase.
+        state.unknown = !known;
+        state.outcome = known ? "" : SHOP_UNKNOWN_OUTCOME;
+        state.warning = known ? formatPanelGatewayErrorFromUnknown("shop", e) : SHOP_RELOAD_FAILED;
+        state.needsReload = !known;
+        state.busy = "";
+        this.syncShopPurchaseSubmit();
+        this.shopStatus(state.outcome || state.warning);
+        return; // Never replay, compensate or infer rollback from an unavailable response.
+      }
       if (!state.current()) return;
-      const known = isKnownShopRejection(e);
-      if (!known) beginAssetRead(this.gateway); // Invalidate reads started during an unconfirmed purchase.
-      state.unknown = !known;
-      state.outcome = known ? "" : SHOP_UNKNOWN_OUTCOME;
-      state.warning = known ? formatPanelGatewayErrorFromUnknown("shop", e) : SHOP_RELOAD_FAILED;
-      state.needsReload = !known;
-      state.busy = "";
+      const freshWallet = receiptCurrent() && this.getSession()?.wallet === walletBefore &&
+        this.getSession()?.bag === bagBefore;
+      beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
+      // This full successful receipt includes gold; city-state reads do not. Never merge granted-item deltas.
+      if (freshWallet && res.wallet_after) this.onSessionPatch({ wallet: { ...res.wallet_after } });
+      if (!state.current()) return;
+      const granted = res.granted_items?.items?.[0];
+      this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
+      state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {
+        itemCfgId: granted?.item_cfg_id, grantedQty: granted?.quantity,
+      })}`; // granted_items already contains total quantity, not quantity per purchase.
+      state.warning = SHOP_RELOAD_FAILED;
+      this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
       this.syncShopPurchaseSubmit();
-      this.shopStatus(state.outcome || state.warning);
-      return; // Never replay, compensate or infer rollback from an unavailable response.
+      if (this.shopPanel.classList.contains("hidden")) {
+        state.busy = "";
+        this.syncShopPurchaseSubmit();
+        return; // Closing never cancels the sent action or starts background recovery.
+      }
+      const pulseKeys = walletShopPurchaseDeductPulseKeys(walletBefore, res.wallet_after, offer?.price_resources, purchaseCount);
+      if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
+      this.shopStatus(state.outcome);
+      await this.reloadShopState(true);
+    } finally {
+      settlement.release();
+      if (this.shopSettlement === settlement) this.shopSettlement = null;
     }
-    if (!state.current()) return;
-    beginAssetRead(this.gateway); // Invalidate intervening reads even when hidden; do not start recovery.
-    const granted = res.granted_items?.items?.[0];
-    this.shopLastGrantedItemCfgId = Math.floor(Number(granted?.item_cfg_id) || 0);
-    state.outcome = `${formatShopPurchaseSuccess(offerId)} · ${formatShopPurchaseFeedback(purchaseCount, undefined, {
-      itemCfgId: granted?.item_cfg_id, grantedQty: granted?.quantity,
-    })}`; // granted_items already contains total quantity, not quantity per purchase.
-    state.warning = SHOP_RELOAD_FAILED;
-    this.shopPurchaseFlash.set(offerId, `已购 +${purchaseCount}`);
-    this.syncShopPurchaseSubmit();
-    if (this.shopPanel.classList.contains("hidden")) {
-      state.busy = "";
-      this.syncShopPurchaseSubmit();
-      return; // Closing never cancels the sent action or starts background recovery.
-    }
-    const pulseKeys = walletShopPurchaseDeductPulseKeys(walletBefore, res.wallet_after, offer?.price_resources, purchaseCount);
-    if (pulseKeys.length) this.onShopMaterialPulse?.(pulseKeys);
-    this.shopStatus(state.outcome);
-    await this.reloadShopState(true);
   }
 
   private onQuestSelect(ev: Event): void {

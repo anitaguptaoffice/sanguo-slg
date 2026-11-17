@@ -150,11 +150,19 @@ export function applyHeroExprFinishToDetail(
   res: HeroExprFinishResult,
 ): HeroDetail {
   const base = detail ?? { hero_id: res.hero_id };
+  // Current gameplay only increases cumulative EXP; a lower total is an older settlement.
+  const exp = base.hero_id === res.hero_id && base.exp != null &&
+    Number.isFinite(base.exp) && Number.isFinite(res.exp) && res.exp < base.exp ? base.exp : res.exp;
   return {
     ...base,
     hero_id: res.hero_id,
     status: res.status,
-    exp: res.exp,
+    exp,
+    // Settlement does not change level; preserve its threshold using authoritative total EXP.
+    // A repeated response has a zero delta, unlike adding exp_gained again.
+    exp_current: base.hero_id === res.hero_id && base.exp != null && base.exp_current != null &&
+      Number.isFinite(base.exp) && Number.isFinite(base.exp_current) && Number.isFinite(exp)
+      ? base.exp_current + (exp - base.exp) : base.exp_current,
     expr_ends_at_ms: undefined,
     expr_hours: undefined,
   };

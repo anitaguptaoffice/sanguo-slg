@@ -34,7 +34,6 @@ func TestItemGrantPoolProvenance(t *testing.T) {
 func itemGrantFixture(t *testing.T) (*Service, *pgxpool.Pool, PlayerRef) {
 	t.Helper()
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	s := itemPGService(t, pool)
 	p := PlayerRef{1, time.Now().UnixNano()}
