@@ -895,18 +895,19 @@ export class MainCityScene implements Scene {
       {
         unreadSession: this.battleReportUnread,
         onUnreadChange: (count) => { if (currentScene()) this.updateReportsToolbarBadge(count); },
-        onViewOnMap: (summary) => this.focusMinimapOnBattleReport(summary),
-        onCoordReplay: (summary) => this.replayBattleReportOnMinimap(summary),
-        onViewIntelNearReport: (summary) => this.openIntelNearBattleReport(summary),
+        onViewOnMap: (summary) => { if (currentScene()) this.focusMinimapOnBattleReport(summary); },
+        onCoordReplay: (summary) => { if (currentScene()) this.replayBattleReportOnMinimap(summary); },
+        onViewIntelNearReport: (summary) => { if (currentScene()) this.openIntelNearBattleReport(summary); },
         canOfferIntelJump: (summary) =>
-          canOfferBattleReportIntelJump(this.minimapMarches, summary),
-        onClearMapReplay: () => this.clearBattleReportMinimapReplay(),
+          currentScene() && canOfferBattleReportIntelJump(this.minimapMarches, summary),
+        onClearMapReplay: () => { if (currentScene()) this.clearBattleReportMinimapReplay(); },
         onOpenRelatedMail: (mailId) => {
           if (!currentScene()) return;
           this.heroMail.openAndHighlightMail(mailId);
           this.renderHud();
         },
         getDailyChainRows: () => {
+          if (!currentScene()) return [];
           const fromPanel = this.dailyQuest.getRowsSnapshot();
           if (fromPanel.length) return fromPanel;
           return this.hudTodoBadgePoll.getDeepLinkSnapshot().dailyChainRows;
@@ -917,10 +918,10 @@ export class MainCityScene implements Scene {
           this.status = "已打开「日常」并定位对应日课（只读，不自动领奖）";
           this.renderHud();
         },
-        getBattleReportLinkContext: () => ({
+        getBattleReportLinkContext: () => currentScene() ? ({
           viewerPlayerId: this.session?.player?.player_id,
           viewerHeroes: this.heroMail.getHeroesSnapshot(),
-        }),
+        }) : ({}),
         onOpenBattleReportHero: (heroId) => {
           if (!currentScene()) return;
           this.heroMail.openAndHighlightHero(heroId);
@@ -938,8 +939,8 @@ export class MainCityScene implements Scene {
           this.status = message;
           this.renderHud();
         },
-        onOpenReplayWorldTile: (summary) => this.openWorldTileFromBattleReport(summary),
-        onListIntelJump: (summary) => this.jumpFromBattleReportListToIntelOrMinimap(summary),
+        onOpenReplayWorldTile: (summary) => { if (currentScene()) this.openWorldTileFromBattleReport(summary); },
+        onListIntelJump: (summary) => { if (currentScene()) this.jumpFromBattleReportListToIntelOrMinimap(summary); },
         filterListSkinAssets: this.assets,
       },
     );
@@ -1398,6 +1399,7 @@ export class MainCityScene implements Scene {
     this.content?.detach();
     this.heroMail?.detach();
     this.battleReports?.detach();
+    this.battleReports?.getRoot().remove();
     this.marchList?.detach();
     this.dailyQuest?.detach();
     this.world?.detach();

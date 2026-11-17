@@ -71,6 +71,26 @@ it("old unguarded hero-list errors, badge snapshots and rank navigation cannot t
   expect(applyMail).not.toHaveBeenCalled(); expect(applyCounts).not.toHaveBeenCalled(); expect(f.hud.innerHTML).toBe(html);
   expect(f.layoutFrame.querySelector(".world-panel")!.classList.contains("hidden")).toBe(true);
 });
+it("removes opened reports on return and revokes old report navigation after reentry", async () => {
+  const f = await setup(); f.click("toggle-reports"); await flush();
+  const old = f.main.battleReports, root = old.getRoot(), opts = old.panelOpts;
+  expect(root.isConnected).toBe(true);
+  f.click("return-server-select"); await flush();
+  expect(root.isConnected).toBe(false);
+  await f.reenter();
+  expect(f.layoutFrame.querySelectorAll(".battle-report-panel")).toHaveLength(1);
+  const pairs = [
+    ["onViewOnMap", "focusMinimapOnBattleReport"], ["onCoordReplay", "replayBattleReportOnMinimap"],
+    ["onViewIntelNearReport", "openIntelNearBattleReport"], ["onClearMapReplay", "clearBattleReportMinimapReplay"],
+    ["onOpenReplayWorldTile", "openWorldTileFromBattleReport"], ["onListIntelJump", "jumpFromBattleReportListToIntelOrMinimap"],
+  ];
+  for (const [callback, method] of pairs) {
+    const spy = vi.spyOn(f.main, method); opts[callback]({}); expect(spy).not.toHaveBeenCalled();
+  }
+  expect(opts.canOfferIntelJump({})).toBe(false);
+  expect(opts.getDailyChainRows()).toEqual([]);
+  expect(opts.getBattleReportLinkContext()).toEqual({});
+});
 it("reentry drops prior actor display caches even if the new roster/march reads are empty", async () => {
   const f = await setup(), oldTracker = f.main.chatUnreadTracker, oldReports = f.main.battleReportUnread;
   Object.assign(f.main, { lastMarch: { march_id: 90 }, minimapMarches: [{ march_id: 90 }], walletGainBrief: "old reward", marchArrivalHudReminder: { marchId: 90 }, status: "old actor", activeDomesticSlotKey: "farm" });

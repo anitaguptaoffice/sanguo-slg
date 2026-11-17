@@ -69,6 +69,7 @@ async function setup(type = 1) {
   const world = document.createElement("section"); world.className = "content-panel hidden"; mount.append(world);
   // Actual scene callback wiring and hero navigation, without unrelated city polling.
   const host = Object.assign(Object.create(MainCityScene.prototype), { gateway, session, social, heroMail: hero, renderHud: vi.fn(),
+    sceneActive: true, marchSnapshotGeneration: 1,
     world: { getRoot: () => world, toggle: () => openCenterPanel(world), selectGridAt: vi.fn() }, focusMinimapOnWorldGrid: vi.fn() });
   host.wireSocialRankDeepLinks();
   const opened = vi.spyOn(hero, "openHeroDetailDeepLink");

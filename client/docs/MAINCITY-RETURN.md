@@ -1,6 +1,6 @@
-# Explicit return to server selection (browser HOLD)
+# Explicit return to server selection
 
-CLIENT-MAINCITY-RETURN-001 / #2072; base a40ee766812130319f0fd500df3db716fec9fbad. New interaction remains Draft until real browser acceptance; automated DOM tests are not visual/live acceptance.
+CLIENT-MAINCITY-RETURN-001 / #2072; base a40ee766812130319f0fd500df3db716fec9fbad. Current-main integration retains the original source; automated DOM tests are not visual/live acceptance.
 
 The main-city toolbar offers 返回选服. The native confirmation explains that leaving disconnects the client, does not cancel submitted operations, and unresolved outcomes must be verified after entering again instead of blindly resubmitting. Cancel leaves the current view/connection intact. Confirm closes the old gateway before the existing SceneManager transition. Server selection retains an outcome notice and only connects/lists servers; login still requires its explicit Enter Game action. Existing authentication and server-availability checks are unchanged. This is not logout-token revocation or automatic gameplay reconnection.
 
@@ -8,6 +8,6 @@ Scene entry owns a revocable gateway facade. Identity getters stay synchronous a
 
 Regression: mounted MainCityScene + SceneManager + ServerSelectScene, real DOM clicks and gateway doubles. Baseline: 12 failures / 3 passing controls across return and CityStatePoll tests. Initial fixed version: 15 passing. Independent review then reproduced a late MarchList selection callback overwriting the reentered actor HUD; the final version fences retained navigation callbacks and adds that regression (16 focused tests). Covers confirm/cancel/repeated clicks, close-before-connect/list, no auto-login, explicit reentry, pending refresh/recruit errors, old mail batch continuation and mark-read suppression, old callback isolation, receiver binding, transient cache reset and failed-connection retry. Commands: `npm test -- --maxWorkers=2 src/scenes/mainCityReturn.test.ts src/net/cityStatePoll.test.ts`; full suite and `npm run build` required on final tree.
 
-Held #2000 combination is tested only in an isolated temporary tree. Its existing startMarch conflict retains both actor validation and selected-unit read. That branch and every historical/art/VERIFY hold remain unchanged.
+The current main already includes #2000 and #2004. Normal integration preserves actor validation, selected-unit read, mail behavior and later first-city entry fixes. The prototype-only rank navigation fixture explicitly supplies the active scene lifecycle otherwise established by enter.
 
-Browser gate: 1280×720 and 1600×900 toolbar visibility/scroll, keyboard focus, native confirm cancel/confirm, selection notice readability and interrupted connection/reentry. No browser launched under the current restriction. No production deployment, protocol/backend changes, automatic login, or mutation retries.
+Browser gate: 1280×720 and 1600×900 toolbar visibility/scroll, keyboard focus, native confirm cancel/confirm, selection notice readability and interrupted connection/reentry. Native Chromium passed both sizes, including cancel, confirm, notice visibility, reentry and closing only the test-owned WebSocket before returning. No production deployment, protocol/backend changes, automatic login, or mutation retries.
