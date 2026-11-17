@@ -28,6 +28,49 @@ message RecruitTroopResponse {
   int64 finish_at_ms = 4;
 }
 
+// route: military.v1.RecruitTroopV2
+// Contract only: dormant until all MIL_RECRUIT_TRANSPORT.md activation gates pass.
+// Never fall back to RecruitTroop. Actor/shard come from authenticated binding.
+message RecruitTroopV2Request {
+  int64 city_id = 1;
+  int32 unit_cfg_id = 2;
+  int32 count = 3;
+  // Caller persists exactly 16 nonzero-as-a-whole random bytes BEFORE first send.
+  bytes command_id = 4;
+  // Compare the full uint32 on historical readback; only 1 can create acceptance.
+  uint32 intent_version = 5;
+}
+
+message RecruitTroopV2Response {
+  // Required on success; absence is unknown, never proof of rejection.
+  RecruitAcceptance acceptance = 1;
+}
+
+// Immutable first-acceptance receipt, not current wallet/stock/queue state.
+// All int64 fields require exact representation; no lossy JS number conversion.
+message RecruitAcceptance {
+  int64 queue_id = 1;
+  int64 city_id = 2;
+  int32 unit_cfg_id = 3;
+  int32 count = 4;
+  // Exact nonnegative costs; no gold field.
+  int64 food_paid = 5;
+  int64 wood_paid = 6;
+  int64 iron_paid = 7;
+  int64 stone_paid = 8;
+  int64 duration_sec = 9;
+  // 0 waiting or 1 active AT acceptance. Zero is valid, not missing success.
+  int32 initial_status = 10;
+  // Signed Unix milliseconds, canonical UTC years 0001–9999.
+  int64 accepted_at_ms = 11;
+  int64 initial_start_at_ms = 12;
+  int64 initial_finish_at_ms = 13;
+  // Exactly 75 ASCII bytes: recruit-v1: followed by 64 lowercase hex digits.
+  bytes catalog_version = 14;
+  // Exactly 32 trusted SHA-256 digest bytes.
+  bytes rule_digest = 15;
+}
+
 // 行军状态机阶段（与 internal/military/march.MarchPhase 对齐）。
 enum MarchPhase {
   MARCH_PHASE_UNSPECIFIED = 0;

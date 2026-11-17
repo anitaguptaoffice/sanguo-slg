@@ -1,5 +1,9 @@
 # H5 客户端（CLIENT-001 ~ CLIENT-036+）
 
+## 首城 V2 本地验收
+
+本机 `make dev` 栈下走通 **注册 → 无城登录 → V2 Discover/Submit → 主城**，步骤与命令见 [qa/FIRST-CITY-PLAYABLE.md](qa/FIRST-CITY-PLAYABLE.md)。日常迭代用根目录 `make test-fast`；动 api/client 合 PR 前用 `make test-gate`。
+
 ## CLIENT-032 manifest 美术接线
 
 主树 `client/public/assets/art/v1/manifest.json`（#218）已落地样件，H5 接线 asset id：

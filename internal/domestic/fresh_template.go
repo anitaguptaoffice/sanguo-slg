@@ -20,13 +20,9 @@ func snapshotFreshTemplate(initial *CityState, catalog map[int32]BuildingSpec) (
 		!freshResourcesValid(initial.Wallet) {
 		return nil, nil, errInvalidFreshTemplate
 	}
-	copyCatalog := make(map[int32]BuildingSpec, len(catalog))
-	for id, spec := range catalog {
-		if id <= 0 || spec.ID != id || spec.BaseTimeSec <= 0 || spec.BaseTimeSec > math.MaxInt64/int64(time.Second) ||
-			!freshResourcesValid(spec.BaseCost) || spec.ProdPerHour < 0 || spec.ProdRes < 0 || spec.ProdRes >= 4 {
-			return nil, nil, errInvalidFreshTemplate
-		}
-		copyCatalog[id] = spec
+	copyCatalog, err := snapshotFreshCatalog(catalog)
+	if err != nil {
+		return nil, nil, err
 	}
 	for slot, building := range initial.Buildings {
 		// PostgreSQL varchar(32) counts characters, not bytes; text cannot contain NUL.
@@ -52,4 +48,20 @@ func snapshotFreshTemplate(initial *CityState, catalog map[int32]BuildingSpec) (
 
 func freshResourcesValid(r Resources) bool {
 	return r.Food >= 0 && r.Wood >= 0 && r.Stone >= 0 && r.Iron >= 0
+}
+
+// snapshotFreshCatalog preserves the existing trusted template catalog rules.
+func snapshotFreshCatalog(catalog map[int32]BuildingSpec) (map[int32]BuildingSpec, error) {
+	if catalog == nil {
+		return nil, errInvalidFreshTemplate
+	}
+	copyCatalog := make(map[int32]BuildingSpec, len(catalog))
+	for id, spec := range catalog {
+		if id <= 0 || spec.ID != id || spec.BaseTimeSec <= 0 || spec.BaseTimeSec > math.MaxInt64/int64(time.Second) ||
+			!freshResourcesValid(spec.BaseCost) || spec.ProdPerHour < 0 || spec.ProdRes < 0 || spec.ProdRes >= 4 {
+			return nil, errInvalidFreshTemplate
+		}
+		copyCatalog[id] = spec
+	}
+	return copyCatalog, nil
 }

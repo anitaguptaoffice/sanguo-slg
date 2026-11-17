@@ -109,6 +109,7 @@ func TestRecruitAtomicPGExactCostAndRestart(t *testing.T) {
 }
 
 func TestRecruitAtomicPGRejectsWithoutMutation(t *testing.T) {
+	isolateWalletPools(t)
 	for _, kind := range []string{"resources", "books", "unknown", "unknown-item", "wrong-shard", "missing-actor", "wrong-account", "negative-actor", "missing-wallet", "missing-content", "missing-hero", "missing-ports", "wrong-pool"} {
 		t.Run(kind, func(t *testing.T) {
 			pool := walletBoundaryPool(t, true)
@@ -164,6 +165,7 @@ func TestRecruitAtomicPGRejectsWithoutMutation(t *testing.T) {
 }
 
 func TestRecruitAtomicPGSQLFailuresRollbackAllAssets(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, stage := range []string{"after-wallet", "after-item", "after-insert", "before-commit"} {
 		t.Run(stage, func(t *testing.T) {
 			pool := walletBoundaryPool(t, true)
