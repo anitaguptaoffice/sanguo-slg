@@ -70,19 +70,11 @@ AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owne
 			t.Fatal("unexpected paid admission change", name)
 		}
 	}
+	advancePaidRecruitSchedules(t, ctx, observer, profile, g, &accepted[0], &accepted[1], &accepted[2])
+	before = returnPGSnapshot(t, ctx, observer, profile)
 	stable := recruitPromotionStable(t, ctx, observer)
 	var lower, upper time.Time
-	for {
-		returnPGOK(t, observer.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&lower))
-		if !lower.UTC().Before(accepted[0].InitialFinishAt) {
-			break
-		}
-		select {
-		case <-time.After(25 * time.Millisecond):
-		case <-ctx.Done():
-			t.Fatal("real paid active did not become due", ctx.Err())
-		}
-	}
+	returnPGOK(t, observer.QueryRow(ctx, "SELECT clock_timestamp()").Scan(&lower))
 	start := len(trace.events())
 	call := startRecruitNoeffect(t, g, &trace.recruitNoeffectTrace, candidates[0])
 	pid := returnLifetimeReached(t, call.clock)
