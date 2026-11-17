@@ -5,7 +5,7 @@
 ## 前置
 
 1. `make dev-up`
-2. 根目录：`go run ./cmd/server`（`:8080/ws`）
+2. 根目录：`go run ./cmd/server`（`:8080/ws`）；可选 `SANGUO_FIRST_CITY_USE_PREPARED_CITY=1`（需 MIL fresh profile 与 PreparedCity 栈）
 3. `client`：`VITE_GATEWAY_WS_URL=ws://127.0.0.1:8080/ws npx vite --host 127.0.0.1 --port 5273 --strictPort`
 
 ## 命令

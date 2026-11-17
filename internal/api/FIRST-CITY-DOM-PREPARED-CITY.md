@@ -1,6 +1,6 @@
 # First-city DOM PreparedCity product card (tracking)
 
-**Status:** partial. Live first-city effect uses `createPlayerCity` → `Hub.CreateNewCity` atomic path, not the full `FreshCityParticipant` → `PreparedCity` (Prepare / LockWallet / Stage / Publish / Close) chain from [CITY_CREATION_RECOVERY](../../spec/rules/CITY_CREATION_RECOVERY.md) §10 item 5.
+**Status:** default-off wired. Set `SANGUO_FIRST_CITY_USE_PREPARED_CITY=1` at server start (requires `MilitaryDurable` + DOM hub). Effect uses `createFirstCityViaPreparedCity` (Prepare / LockWallet / Stage / Publish). Legacy `createPlayerCity` remains when unwired.
 
 | Layer | Today | PreparedCity card |
 |-------|--------|-------------------|
@@ -10,4 +10,6 @@
 
 **Non-goals on this card:** cutover, realm enrollment, replacing legacy `world.v1.CreateCity`, or merging effect+settle into one companion txn (separate card).
 
-**Next implementation slice:** wire `MilitaryDurable.FreshCity()` into first-city effect behind default-off flag; stage through `PreparedCity` with existing starter `firstCityInitialState`, then keep PG ledger settle receipt unchanged until atomicity card lands.
+**Env:** `SANGUO_FIRST_CITY_USE_PREPARED_CITY=1` → `runtime.maybeFirstCityPreparedSource` + `WireFirstCityPreparedCreation`. PG ledger settle receipt unchanged until atomicity card.
+
+**Next:** PG smoke with env on + `TestPGPreparedCityStageQAFlow`-class profile; companion single-txn pin with settle.

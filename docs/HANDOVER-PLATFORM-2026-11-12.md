@@ -38,8 +38,8 @@
 - **可玩 ACK-loss（轻量）**：服务端 Continue settlement（#3056）；选服 Submit 在 durable **pending** 时自动一次 Continue（`runFirstCitySubmitThroughTerminal`）；Submit 传输 **UNKNOWN** 时 `runFirstCityRecoverAfterSubmitTransportFailure`（Discover → Continue）；`TestFirstCityPGDuplicateSubmitPendingNoDoubleCity`。
 - **SPEC #2579 ACK-loss（PG 层）**：`make test-spec-fc-ack-loss`；CI `go-build-test-lint` 步执行 harness + `TestSpecFirstCityLedgerAckLossHarness`；可选本地 `ALLOW_OWNED_PG17_TEST=1 make test-gate` 追加同一套。
 - **Get 被动 settle**：head 一致且 PENDING 时 `GetFirstCityResult` 走 `settleFirstCityEffect`（见 `internal/api/FIRST-CITY-GET-SETTLE.md`）；`TestFirstCityPGGetSettlesPending`。
-- **DOM PreparedCity 卡**：跟踪 `internal/api/FIRST-CITY-DOM-PREPARED-CITY.md`；`TestFirstCityTemplateRefFCT1` / starter 对齐；完整 Prepare→Publish 链未接 live effect。
-- **仍缺**：effect 与 companion 同 txn 全 pin 序；`firstCityStorage.browser.mjs` 全矩阵；PreparedCity 接 `FirstCityCreationEffect`。
+- **DOM PreparedCity（默认关）**：`SANGUO_FIRST_CITY_USE_PREPARED_CITY=1` + `createFirstCityViaPreparedCity`；见 `FIRST-CITY-DOM-PREPARED-CITY.md`。
+- **仍缺**：effect 与 companion 同 txn 全 pin 序；`firstCityStorage.browser.mjs` 全矩阵；PreparedCity 与 dev `make` 默认可玩验收（需 env + MIL profile OIDs）。
 - 历史 Draft 表（#2505/#2529 等）若与 main 重复，以 **main HEAD** 与上述冒烟为准；勿再假定「尚未开放」或 runtime 未接线。
 
 ## 5. 收件箱键盘：完整可恢复实验栈
