@@ -10,7 +10,17 @@ import {
 export type FirstCityProposalInput = Readonly<{ name: string; x: number; y: number }>;
 
 export function canOfferFirstCitySubmit(knowledge: FirstCityKnowledge | null): boolean {
-  return !!knowledge && !knowledge.unavailable && knowledge.head?.kind === "empty";
+  if (!knowledge || knowledge.unavailable || knowledge.incomplete) return false;
+  // A stale rejected head cannot authorize another command after an uncertain send.
+  if (knowledge.intents.some(intent => !knowledge.records.some(record => {
+    if (record.intent.proposal.commandId === intent.proposal.commandId) return record.state.kind !== "pending";
+    // A durable sibling won the immutable predecessor CAS: this local proposal
+    // cannot have been accepted, even though HEAD_CONFLICT stores no record for it.
+    const a = intent.proposal.predecessor, b = record.intent.proposal.predecessor;
+    return a.kind === "empty" ? b.kind === "empty" : b.kind === "rejected" && a.commandId === b.commandId;
+  }))) return false;
+  const head = knowledge.head;
+  return head?.kind === "empty" || (head?.kind === "command" && head.record.state.kind === "rejected");
 }
 
 export function canOfferFirstCityContinue(knowledge: FirstCityKnowledge | null): boolean {
@@ -19,19 +29,33 @@ export function canOfferFirstCityContinue(knowledge: FirstCityKnowledge | null):
   return head?.kind === "command" && head.record.state.kind === "pending";
 }
 
+export function formatFirstCityRejection(reason: "terrain" | "coordinateOccupied", canRetry: boolean): string {
+  const cause = reason === "terrain" ? "此处地形不能建城" : "此坐标已被占用";
+  return `建城未成功：${cause}。` + (canRetry
+    ? "请更换坐标，再点击提交创建新城；原命令不会重试。"
+    : "请先查询当前建城状态，勿重复提交。");
+}
+
 export function formatFirstCityCommandStatus(knowledge: FirstCityKnowledge): string {
-  const terminal = knowledge.records.find(record => record.state.kind === "succeeded");
-  if (terminal) return "首城已创建，正在进入主城。";
-  const pending = knowledge.records.find(record => record.state.kind === "pending");
-  if (pending) return "命令处于 pending；Continue 仅在显式点击时发送，不代表服务端已承认。";
-  if (knowledge.unavailable) return "首城本地证据不可用；未调用 v1 建城。";
-  return "V2 命令往返已完成；未进入主城，亦不宣称生产首城成功。";
+  if (knowledge.unavailable || knowledge.incomplete) return "建城结果尚未确认，请先查询当前状态，勿重复提交。";
+  const head = knowledge.head;
+  if (head?.kind === "command") {
+    const state = head.record.state;
+    if (state.kind === "succeeded") return "首城已创建，正在进入主城。";
+    if (state.kind === "pending") return "建城仍在处理中；请点击继续查询处理结果，勿重复提交。";
+    return formatFirstCityRejection(state.reason, canOfferFirstCitySubmit(knowledge));
+  }
+  return "建城结果尚未确认，未进入主城；请先查询当前状态。";
 }
 
 export function buildSubmitRequest(knowledge: FirstCityKnowledge, input: FirstCityProposalInput): unknown {
+  if (!canOfferFirstCitySubmit(knowledge)) throw new TypeError("Invalid first-city submit");
+  const predecessor = knowledge.head?.kind === "command"
+    ? { kind: "rejected" as const, commandId: knowledge.head.record.intent.proposal.commandId }
+    : { kind: "empty" as const };
   const intent = createFirstCityIntent(knowledge.scope, {
     commandId: crypto.randomUUID(),
-    predecessor: { kind: "empty" },
+    predecessor,
     name: input.name,
     x: input.x,
     y: input.y,
