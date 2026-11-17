@@ -62,7 +62,7 @@ func TestReturnedMarchHistoryPaginationAndAuthorization(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				s.recordPlayerMarch(player, city, o.ID, 0, troops)
+				s.recordPlayerMarch(PlayerContext{ServerID: 1, PlayerID: player}, city, o.ID, 0, troops)
 				return o
 			}
 			var cityIDs []int64

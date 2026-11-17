@@ -127,6 +127,9 @@ func (h *Handlers) handleEnterGameServer(ctx context.Context, pkt *commonv1.Clie
 		}
 		return nil, err
 	}
+	if accountID <= 0 {
+		return errPkt(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAUTHORIZED, "session identity invalid"), nil
+	}
 	if !expiresAt.After(h.now()) {
 		return errPkt(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAUTHORIZED, "session expired"), nil
 	}
@@ -157,9 +160,10 @@ func (h *Handlers) handleEnterGameServer(ctx context.Context, pkt *commonv1.Clie
 	h.binder.BindSession(sessionID, serverID, player.PlayerID, accountID)
 
 	resp := &accountv1.EnterGameServerResponse{
-		SessionId:           sessionID,
-		ServerId:            serverID,
-		SessionExpiresAtMs:  expiresAt.UnixMilli(),
+		SessionId:          sessionID,
+		ServerId:           serverID,
+		SessionExpiresAtMs: expiresAt.UnixMilli(),
+		AccountId:          accountID,
 		Player: &commonpb.PlayerProfile{
 			ServerId:    player.ServerID,
 			PlayerId:    player.PlayerID,

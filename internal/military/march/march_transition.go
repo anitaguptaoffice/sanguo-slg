@@ -11,6 +11,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 var (
@@ -71,6 +72,16 @@ func validateArrivalCommit(serverID int32, in *ArrivalCommit) error {
 	return nil
 }
 
+// Compare exactly the UTC microseconds pgx persists, not a sub-microsecond
+// Go deadline that could become equal to arrive_at after encoding.
+func arrivalReturnDeadline(arrive, returned time.Time) (time.Time, error) {
+	returned = returned.UTC().Truncate(time.Microsecond)
+	if !validMarchTime(arrive.UTC()) || !validMarchTime(returned) || !returned.After(arrive) {
+		return time.Time{}, ErrMarchTransition
+	}
+	return returned, nil
+}
+
 // Commit transitions one status-1 order. The order row is locked before the
 // report sequence is audited and allocated. Every write runs in a savepoint:
 // any returned error rolls it back (SQL errors abort the transaction first),
@@ -88,8 +99,9 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 	}
 	table := func(name string) string { return pgx.Identifier{t.profile.SchemaName, name}.Sanitize() }
 	var current int16
-	err = tx.QueryRow(ctx, `SELECT status FROM `+table("march_order")+` WHERE server_id=$1 AND march_id=$2 AND army_id=$3 FOR UPDATE`,
-		in.ServerID, in.MarchID, in.ArmyID).Scan(&current)
+	var arriveAt pgtype.Timestamptz
+	err = tx.QueryRow(ctx, `SELECT status,arrive_at FROM `+table("march_order")+` WHERE server_id=$1 AND march_id=$2 AND army_id=$3 FOR UPDATE`,
+		in.ServerID, in.MarchID, in.ArmyID).Scan(&current, &arriveAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return out, ErrArrivalMissing
 	}
@@ -102,6 +114,14 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 	case 1:
 	default:
 		return out, ErrMarchTransition
+	}
+	if len(in.Survivors) > 0 {
+		if !arriveAt.Valid || arriveAt.InfinityModifier != pgtype.Finite {
+			return out, ErrMarchTransition
+		}
+		if in.ReturnAt, err = arrivalReturnDeadline(arriveAt.Time, in.ReturnAt); err != nil {
+			return out, err
+		}
 	}
 	survivors := in.Survivors
 	if in.Report == nil {

@@ -42,3 +42,16 @@ describe("CityStatePoll", () => {
     expect(CITY_STATE_POLL_SLOW_SEC).toBe(30);
   });
 });
+
+it("preserves state on failed reads and permits the next scheduled read", async () => {
+  const getCityState = vi.fn().mockRejectedValueOnce(new Error("gateway disconnected"))
+    .mockResolvedValue({ wallet: { food: 7 } });
+  const onState = vi.fn();
+  const poll = new CityStatePoll({ fetch: new CityStateFetch({ getCityState }, () => 9), onState,
+    isPanelVisible: () => true, fastIntervalSec: 1 });
+  await expect(poll.pollOnce()).resolves.toBeUndefined();
+  expect(onState).not.toHaveBeenCalled();
+  poll.tick(1);
+  await vi.waitFor(() => expect(onState).toHaveBeenCalledWith({ wallet: { food: 7 } }));
+  expect(getCityState).toHaveBeenCalledTimes(2);
+});

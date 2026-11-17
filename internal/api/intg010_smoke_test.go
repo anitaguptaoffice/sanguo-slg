@@ -17,7 +17,6 @@ import (
 	guildv1 "github.com/anitaguptaoffice/sanguo-slg/internal/guild/pb/sanguo/guild/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,12 +34,8 @@ func TestINTG010Wave13SmokePath(t *testing.T) {
 }
 
 func runINTG010Wave13Smoke(t *testing.T) {
-	pool := openDB(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		intg010Failf(t, "apply spec/db", "err=%v", err)
-	}
 	if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {
 		intg010Failf(t, "seed dev server", "err=%v", err)
 	}

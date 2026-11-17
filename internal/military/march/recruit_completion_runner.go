@@ -80,8 +80,10 @@ func (p *RecruitParticipant) ApplyDueRecruits(ctx context.Context, a *recruittx.
 	if p == nil || p.source == nil || p.source.binding == nil || p.catalog == nil || ctx == nil || a == nil || p.source.retired.Load() || len(due) > MaxDueRecruits {
 		return nil, ErrRecruitUnavailable
 	}
+	access := *a
+	jobs := append([]RecruitDueJob(nil), due...)
 	var city, player int64
-	for _, job := range due {
+	for _, job := range jobs {
 		c := job.RecruitCandidate
 		if c.ServerID != p.source.profile.ServerID || c.PlayerID <= 0 || c.CityID <= 0 ||
 			c.QueueID < 1 || c.QueueID > 9007199254740991 || !validRecruitTime(job.FinishAt) {
@@ -95,7 +97,7 @@ func (p *RecruitParticipant) ApplyDueRecruits(ctx context.Context, a *recruittx.
 	}
 	if city != 0 {
 		var owner int64
-		if err := recruitHistoryRead(ctx, a, p.source, `SELECT player_id FROM `+p.source.table("player_city")+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 FOR UPDATE`, []any{p.source.profile.ServerID, city}, &owner); err != nil {
+		if err := recruitHistoryRead(ctx, &access, p.source, `SELECT player_id FROM `+p.source.table("player_city")+` WHERE server_id OPERATOR(pg_catalog.=) $1 AND city_id OPERATOR(pg_catalog.=) $2 FOR UPDATE`, []any{p.source.profile.ServerID, city}, &owner); err != nil {
 			return nil, err
 		}
 		// The MIL marker proves only that this city's job was accepted at some
@@ -104,17 +106,17 @@ func (p *RecruitParticipant) ApplyDueRecruits(ctx context.Context, a *recruittx.
 			return nil, ErrRecruitUnavailable
 		}
 	}
-	out := make([]RecruitDueEffect, 0, len(due))
-	for _, job := range due {
+	out := make([]RecruitDueEffect, 0, len(jobs))
+	for _, job := range jobs {
 		c := job.RecruitCandidate
-		disposition, err := p.Complete(ctx, a, c)
+		disposition, err := p.Complete(ctx, &access, c)
 		if err != nil {
 			return nil, err
 		}
 		if disposition != RecruitCompleted {
 			continue
 		}
-		effect, err := p.recruitDueEffect(ctx, a, c)
+		effect, err := p.recruitDueEffect(ctx, &access, c)
 		if err != nil {
 			return nil, err
 		}
