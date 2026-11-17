@@ -48,6 +48,7 @@ func TestRecruitAtomicPGConcurrentTemplateConstraint(t *testing.T) {
 }
 
 func TestRecruitAtomicPGIdentityCollisionIsNotTemplateRejection(t *testing.T) {
+	isolateWalletDDL(t)
 	pool := walletBoundaryPool(t, true)
 	seedRecruitActor(t, pool, 7, hero.Resources{Food: 50000, Wood: 50000, Stone: 50000, Iron: 50000, Gold: 17}, 2)
 	s := recruitServer(t, pool, 7)
