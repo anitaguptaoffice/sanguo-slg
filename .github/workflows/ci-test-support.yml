@@ -1,0 +1,46 @@
+name: CI test support
+on:
+  pull_request:
+    paths:
+      - .github/scripts/ci_test_support.py
+      - .github/scripts/test_ci_test_support.py
+      - .github/scripts/CI-TEST-SUPPORT.md
+      - .github/workflows/ci-test-support.yml
+  push:
+    branches: [main]
+    paths:
+      - .github/scripts/ci_test_support.py
+      - .github/scripts/test_ci_test_support.py
+      - .github/scripts/CI-TEST-SUPPORT.md
+      - .github/workflows/ci-test-support.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify complete CI test support duty
+        shell: bash
+        env:
+          EXPECTED_HEAD: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          umask 077
+          export TMPDIR="$RUNNER_TEMP"
+          test ! -e "$RUNNER_TEMP/ci-test-support"
+          python3 -I -B .github/scripts/test_ci_test_support.py "$EXPECTED_HEAD" > "$RUNNER_TEMP/ci-test-support.log" 2>&1
+          test -s "$RUNNER_TEMP/ci-test-support/source-records.json"
+          test -s "$RUNNER_TEMP/ci-test-support/unittest.txt"
+          echo 'CI test support acceptance passed; retaining fixed source records and complete unittest result.'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ci-test-support-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/ci-test-support/source-records.json
+            ${{ runner.temp }}/ci-test-support/unittest.txt
+          if-no-files-found: error

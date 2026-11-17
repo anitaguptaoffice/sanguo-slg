@@ -6,6 +6,7 @@ import (
 )
 
 func TestWallCatalogPGWiringDoesNotHideMalformedConfiguration(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, kind := range []string{"unknown-objective-field", "wrong-objective-type", "wrong-reward-type", "query-error"} {
 		t.Run(kind, func(t *testing.T) {
 			_, pool, _ := wallLevelFixture(t)

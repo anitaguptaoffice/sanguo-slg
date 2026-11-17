@@ -28,7 +28,6 @@ func itemPGQuantity(t *testing.T, pool *pgxpool.Pool, p PlayerRef, id int32) int
 
 func TestPGItemTxRollbackAndPostcommitInvalidation(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	// The caller holds the only connection: participant pool access would time out.
 	cfg := pool.Config()
@@ -122,7 +121,6 @@ func TestPGItemTxRollbackAndPostcommitInvalidation(t *testing.T) {
 
 func TestPGItemTxExactIdentityAbsentAndZero(t *testing.T) {
 	pool := openContentTestDB(t)
-	t.Cleanup(pool.Close)
 	applyContentSchema(t, pool)
 	s := itemPGService(t, pool)
 	ctx := context.Background()
