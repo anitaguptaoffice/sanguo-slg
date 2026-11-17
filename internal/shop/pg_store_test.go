@@ -2,14 +2,10 @@ package shop
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/content"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func TestPGStorePurchaseLimitsSurviveRestart(t *testing.T) {
@@ -133,24 +129,3 @@ func checkShopParticipantRows(t *testing.T, svc *Service, actor content.PlayerRe
 	}
 }
 
-func openShopTestDB(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	url := os.Getenv("DATABASE_URL")
-	if url == "" {
-		t.Skip("DATABASE_URL not set")
-	}
-	pool, err := pgxpool.New(context.Background(), url)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(pool.Close)
-	return pool
-}
-
-func applyShopSchema(t *testing.T, pool *pgxpool.Pool) {
-	t.Helper()
-	specDir := filepath.Join("..", "..", "spec", "db")
-	if err := db.ApplySpecs(context.Background(), pool, specDir); err != nil {
-		t.Fatal(err)
-	}
-}

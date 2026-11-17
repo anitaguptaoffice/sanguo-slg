@@ -6,11 +6,9 @@ import (
 
 	apicommon "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/common/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/obs"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
-	"github.com/jackc/pgx/v5"
 )
 
 func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -40,33 +38,7 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 	if x == 0 && y == 0 {
 		x, y = 50, 50
 	}
-	c := world.City{
-		ServerID:  serverID,
-		PlayerID:  pc.PlayerID,
-		Name:      name,
-		X:         x,
-		Y:         y,
-		IsCapital: true,
-		WallLevel: 1,
-		Morale:    100,
-	}
-	cityState := &domestic.CityState{
-		PlayerID: pc.PlayerID,
-		Wallet: domestic.Resources{
-			Food: 8000, Wood: 8000, Stone: 5000, Iron: 5000,
-		},
-		Buildings: map[string]*domestic.BuildingInstance{
-			"hall": {CfgID: 1, Level: 1},
-			"farm": {CfgID: 2, Level: 1},
-		},
-	}
-	cityID, err := s.domestic.CreateNewCity(ctx, serverID, cityState, func(ctx context.Context, tx pgx.Tx) (int64, error) {
-		staged, err := s.world.CreateCityInTx(ctx, tx, c)
-		if err == nil {
-			c = staged
-		}
-		return staged.CityID, err
-	})
+	c, err := s.createPlayerCity(ctx, pc, name, x, y)
 	if err != nil {
 		if errors.Is(err, world.ErrOccupied) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "coordinate occupied"), nil
@@ -79,8 +51,7 @@ func (s *Server) handleCreateCity(ctx context.Context, pkt *commonv1.ClientPacke
 		s.log.ErrorContext(ctx, "city creation failed", "server_id", serverID, "player_id", pc.PlayerID, "error", err)
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INTERNAL, "city creation failed; reload cities before retry"), nil
 	}
-	s.cacheCity(cityID, s.citySnapshot(cityID))
-	s.registerNewCity(cityID, x, y)
+	cityID := c.CityID
 	summary := &apicommon.PlayerCitySummary{
 		CityId: cityID, Name: name, X: int32(x), Y: int32(y),
 		IsCapital: true, WallLevel: 1, Morale: 100,

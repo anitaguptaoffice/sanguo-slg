@@ -13,7 +13,6 @@ import (
 	herov1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/hero/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/runtime"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
 	"google.golang.org/protobuf/proto"
@@ -33,12 +32,8 @@ func TestINTG025Wave28SmokePath(t *testing.T) {
 }
 
 func runINTG025Wave28Smoke(t *testing.T) {
-	pool := openDB(t)
+	pool := openWarmSpecDB(t)
 	ctx := context.Background()
-	root := runtime.RepoRoot()
-	if err := db.ApplySpecs(ctx, pool, root+"/spec/db"); err != nil {
-		intg025Failf(t, "apply spec/db", "err=%v", err)
-	}
 	if err := db.SeedDevServer(ctx, pool, intg006ServerID, "S1"); err != nil {
 		intg025Failf(t, "seed dev server", "err=%v", err)
 	}

@@ -91,6 +91,7 @@ func (tr bootstrapTrace) TraceQueryEnd(ctx context.Context, c *pgx.Conn, d pgx.T
 }
 
 func TestPlayerBootstrapRollbackAndRetryPG(t *testing.T) {
+	isolateWalletDDL(t)
 	for _, stage := range []string{"wallet-insert", "after-wallet", "commit", "cancel-before", "cancel-player", "cancel-wallet", "disconnect-player"} {
 		t.Run(stage, func(t *testing.T) {
 			p := walletBoundaryPool(t)
