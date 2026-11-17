@@ -22,7 +22,7 @@ type recruitReturnRowsState struct {
 
 func recruitReturnRowsPaid(t *testing.T, f *recruitCompleteReturnPG, observed *recruitReturnObservedTrace) recruitReturnRowsState {
 	t.Helper()
-	// Setup only, before either actual admission. Never change paid schedules.
+	// Stock setup precedes actual admission; time advances only after paid assertions.
 	returnPGExec(t, f.ctx, f.observer, "UPDATE city_troop SET count=2147483636 WHERE server_id=1 AND city_id=1 AND unit_cfg_id=1")
 	before := snapshotReturnAttemptPG(t, f.returnAttemptPG, false)
 	var state recruitReturnRowsState
@@ -60,19 +60,10 @@ AND cohort_id=decode('03000000000000000000000000000000','hex'))`).Scan(&exact))
 	}
 	state.paid = snapshotReturnAttemptPG(t, f.returnAttemptPG, false)
 	recruitCompleteReturnChanges(t, before, state.paid, map[string]bool{"player_wallet": true, "work_queue": true, "mil_recruit_origin": true, "mil_recruit_receipt": true, "work_queue_id_seq": true})
+	advancePaidRecruitSchedules(t, f.ctx, f.observer, f.profile, f.recruit, &state.first, &state.second)
+	state.paid = snapshotReturnAttemptPG(t, f.returnAttemptPG, false)
 	state.stable = recruitPromotionStable(t, f.ctx, f.observer)
-	for {
-		var due bool
-		returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT clock_timestamp()>=$1", state.first.InitialFinishAt).Scan(&due))
-		if due {
-			return state
-		}
-		select {
-		case <-time.After(25 * time.Millisecond):
-		case <-f.ctx.Done():
-			t.Fatal("near-capacity paid schedule did not become due", f.ctx.Err())
-		}
-	}
+	return state
 }
 
 func recruitReturnRowsCheckpoint(t *testing.T, f *recruitCompleteReturnPG, state recruitReturnRowsState, lower, upper time.Time) map[string]string {

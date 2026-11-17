@@ -57,18 +57,8 @@ AND EXISTS (SELECT FROM mil_city_origin WHERE server_id=1 AND city_id=1 AND owne
 	}
 	paid := snapshotReturnAttemptPG(t, f.returnAttemptPG, false)
 	recruitCompleteReturnChanges(t, initial, paid, map[string]bool{"player_wallet": true, "work_queue": true, "mil_recruit_origin": true, "mil_recruit_receipt": true, "work_queue_id_seq": true})
-	for {
-		var due bool
-		returnPGOK(t, f.observer.QueryRow(f.ctx, "SELECT clock_timestamp()>=$1", first.InitialFinishAt).Scan(&due))
-		if due {
-			break
-		}
-		select {
-		case <-time.After(25 * time.Millisecond):
-		case <-f.ctx.Done():
-			t.Fatal("paired real paid schedule did not become due", f.ctx.Err())
-		}
-	}
+	advancePaidRecruitSchedules(t, f.ctx, f.observer, f.profile, f.recruit, &first, &second)
+	paid = snapshotReturnAttemptPG(t, f.returnAttemptPG, false)
 	stable := recruitPromotionStable(t, f.ctx, f.observer)
 	selected, full = mark()
 	at, finish := f.complete(t, true, candidate, paid)

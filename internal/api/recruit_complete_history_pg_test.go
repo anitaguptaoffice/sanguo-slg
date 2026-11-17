@@ -86,19 +86,7 @@ AND cohort_id=decode('03000000000000000000000000000000','hex') AND format_versio
 			t.Fatal("unexpected admission change", name)
 		}
 	}
-	// Wait on actual PG time, bounded by ctx; never rewrite the paid schedule.
-	for {
-		var due bool
-		returnPGOK(t, observer.QueryRow(ctx, "SELECT clock_timestamp()>=$1", accepted.InitialFinishAt).Scan(&due))
-		if due {
-			break
-		}
-		select {
-		case <-time.After(25 * time.Millisecond):
-		case <-ctx.Done():
-			t.Fatal("real paid schedule did not become due", ctx.Err())
-		}
-	}
+	advancePaidRecruitSchedules(t, ctx, observer, profile, g, &accepted)
 	for _, step := range []struct {
 		name, change string
 		replay       bool
