@@ -39,19 +39,36 @@ class Socket extends EventTarget {
   }
 }
 
-type WaitAccess = { ws: Socket; sendAndWait(packet: Uint8Array, trace: string): Promise<ArrayBuffer> };
+type WaitAccess = { ws: Socket; sendAndWait(packet: Uint8Array, trace: string, signal?: AbortSignal): Promise<ArrayBuffer> };
 function connected() {
   const gateway = new GatewayClient();
   const socket = new Socket();
   const access = gateway as unknown as WaitAccess;
   access.ws = socket;
-  return { gateway, socket, wait: (trace: string) => access.sendAndWait(new Uint8Array([1]), trace) };
+  return { gateway, socket, wait: (trace: string, signal?: AbortSignal) => access.sendAndWait(new Uint8Array([1]), trace, signal) };
 }
 
 beforeEach(() => { vi.useFakeTimers(); vi.stubGlobal("WebSocket", Socket); });
 afterEach(() => { vi.clearAllTimers(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
 describe("gateway request cleanup", () => {
+  it("aborts only the owning exchange and avoids sends for already aborted signals", async () => {
+    const { socket, wait } = connected();
+    const controller = new AbortController();
+    const first = expect(wait("cancelled", controller.signal)).rejects.toThrow("gateway request aborted");
+    const second = wait("other");
+    controller.abort();
+    await first;
+    expect(socket.count()).toBe(2);
+    expect(vi.getTimerCount()).toBe(1);
+    expect(() => wait("stale", controller.signal)).toThrow("gateway request aborted");
+    expect(socket.send).toHaveBeenCalledTimes(2);
+    socket.reply("cancelled");
+    await expect(second).resolves.toBe(socket.reply("other"));
+    expect(socket.count()).toBe(0);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("cleans a matching response but ignores unrelated traces", async () => {
     const { socket, wait } = connected();
     const pending = wait("wanted");
