@@ -1,6 +1,7 @@
 package gateway_test
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"net/http"
@@ -67,6 +68,62 @@ func TestHandshakeAndPing(t *testing.T) {
 	resp := sendPacket(t, c, &commonv1.ClientPacket{Route: gateway.RoutePing, TraceId: "t1"})
 	if resp.Code != 0 || resp.TraceId != "t1" {
 		t.Fatalf("ping: %+v", resp)
+	}
+}
+
+func TestPreparedRecruitSubprotocol(t *testing.T) {
+	const (
+		route    = "military.v1.RecruitTroopV2"
+		protocol = "sanguo.recruit-v2"
+	)
+	for _, test := range []struct {
+		name                        string
+		prepared, installed, public bool
+		offer, want                 string
+	}{
+		{name: "verified", prepared: true, installed: true, offer: protocol, want: protocol},
+		{name: "legacy", installed: true, offer: protocol},
+		{name: "no offer", prepared: true, installed: true},
+		{name: "unsupported offer", prepared: true, installed: true, offer: "sanguo.recruit-v1"},
+		{name: "route absent", prepared: true, offer: protocol},
+		{name: "route not private", prepared: true, installed: true, public: true, offer: protocol},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := gateway.DefaultConfig()
+			cfg.PreparedRecruit = test.prepared
+			cfg.PublicRoutes[route] = test.public
+			handlers := map[string]gateway.RouteHandler{}
+			if test.installed {
+				handlers[route] = func(context.Context, *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+					return &commonv1.ServerPacket{Data: []byte("dispatch")}, nil
+				}
+			}
+			srv := gateway.NewServer(testLog(), cfg, gateway.AccessControl{}, gateway.MapSessions{}, gateway.NewRouter(handlers))
+			httpSrv := httptest.NewServer(srv.Handler())
+			defer httpSrv.Close()
+			dialer := *websocket.DefaultDialer
+			if test.offer != "" {
+				dialer.Subprotocols = []string{test.offer}
+			}
+			ws, _, err := dialer.Dial("ws"+strings.TrimPrefix(httpSrv.URL, "http"), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = ws.Close() }()
+			if ws.Subprotocol() != test.want {
+				t.Fatalf("negotiated %q, want %q", ws.Subprotocol(), test.want)
+			}
+			ping := sendPacket(t, ws, &commonv1.ClientPacket{Route: gateway.RoutePing, TraceId: "ping"})
+			if ping.GetCode() != 0 || ping.GetTraceId() != "ping" {
+				t.Fatal("handshake changed gateway framing", ping)
+			}
+			if test.want != "" {
+				got := sendPacket(t, ws, &commonv1.ClientPacket{Route: route, TraceId: "unauthenticated"})
+				if got.GetCode() != int32(commonv1.ErrorCode_COMMON_UNAUTHORIZED) || len(got.GetData()) != 0 {
+					t.Fatal("confirmed capability bypassed authentication", got)
+				}
+			}
+		})
 	}
 }
 

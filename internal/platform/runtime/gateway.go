@@ -41,6 +41,7 @@ func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler 
 
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
+	gwCfg.PreparedRecruit = a.Config.PreparedRecruit
 	validator := account.SessionValidator{Svc: apiSrv.AccountService()}
 	router := apiSrv.GatewayRouter()
 	if a.Config.PreparedFirstCity {

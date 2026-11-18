@@ -16,6 +16,11 @@ the durable due worker. This requires prepared first-city and the exact
 40-object profile including the 11 ACCOUNT objects. A 29-object first-city
 profile still works without the Recruit opt-in. March requires its own wiring.
 
+The prepared gateway selects `sanguo.recruit-v2` when offered on `/ws`.
+Selection is a transport capability; every Recruit V2 request still needs
+the authenticated actor and live source. The existing handshake is used by
+clients that offer no subprotocol.
+
 Stopping the prepared service cancels gateway requests and the due worker.
 The runtime waits up to 15 seconds for the worker to exit before closing
 its PostgreSQL pool. Pool close has a separate 5-second deadline. Either
