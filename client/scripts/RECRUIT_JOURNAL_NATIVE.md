@@ -25,3 +25,7 @@ and reopen the same disk profile before inspecting durable state. The fixture
 supplies synthetic live identities to the adapter. Authentication, network
 dispatch, acknowledgement loss, result persistence, and production storage
 enrollment are separate integration work.
+
+The dormant submission coordinator uses a controlled exchange in these tests.
+Activation requires real gateway verification and an external profile fence
+across restart when a quarantine write cannot be verified.

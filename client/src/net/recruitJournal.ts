@@ -13,6 +13,8 @@ const digest = async (value: unknown) =>
   hex(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(stringify(value)))));
 const invalid = (): never => { throw new Error("Recruit journal unavailable"); };
 const pending = (phase: string) => phase === "prepared" || phase === "attempting" || phase === "unknown";
+const rejectionCodes = ["50001", "50002", "50003", "50004", "30001"];
+const blockedScopes = new Set<string>();
 
 type Scope = readonly [string, string, string, "RecruitTroop"];
 type LiveIdentity = () => AuthenticatedIdentity | null;
@@ -28,6 +30,15 @@ export type RecruitJournalHandle = Readonly<{
 }>;
 export type RecruitJournalInspection = Readonly<{
   phase: "unknown" | "accepted" | "rejected"; command: RecruitJournalHandle;
+}>;
+export type RecruitSubmissionResult = "accepted" | "rejected" | "unknown" | "busy" | "quarantined";
+export type RecruitSubmissionChannel = Readonly<{
+  // Caller must enforce reviewed profile enrollment and server capability.
+  authorize(identity: AuthenticatedIdentity): void;
+  // Preserve denial outside the journal when its quarantine write cannot be verified.
+  blockProfile(identity: AuthenticatedIdentity): void;
+  // Start exactly one correlated V2 exchange synchronously. No deferred sends.
+  exchange(body: Uint8Array, identity: AuthenticatedIdentity, signal: AbortSignal): Promise<Uint8Array>;
 }>;
 type Snapshot = { head: string | null; commands: Stored[] };
 type ScanResult = readonly [IDBValidKey[], unknown[], IDBValidKey[], unknown[]];
@@ -133,7 +144,7 @@ function verifyShape(value: unknown, scope: Scope, key: string): Stored {
     case "unknown": if (!row.uncertain || row.outcome !== null) return invalid(); break;
     case "accepted": if (!row.attempt) return invalid(); validateAccepted(row.outcome, row.payload); break;
     case "rejected":
-      if (!row.attempt || row.uncertain || !["50001", "50002", "50003", "50004", "30001"].some(code => code === row.outcome)) return invalid();
+      if (!row.attempt || row.uncertain || !rejectionCodes.some(code => code === row.outcome)) return invalid();
       break;
     case "quarantined": quarantinePrior(row.outcome, row, scope, key); break;
     default: return invalid();
@@ -141,11 +152,11 @@ function verifyShape(value: unknown, scope: Scope, key: string): Stored {
   return row;
 }
 
-async function verifyDigests(row: Stored, scope: Scope): Promise<void> {
+async function verifyDigests(row: Stored, scope: Scope, allowedQuarantine?: Stored): Promise<void> {
   if (await digest(row.payload) !== row.payloadDigest || await digest(digestInput(row)) !== row.recordDigest) invalid();
   if (row.phase === "quarantined") {
     await verifyDigests(quarantinePrior(row.outcome, row, scope, row.payload[5]), scope);
-    invalid();
+    if (!allowedQuarantine || stringify(signedRecord(row)) !== stringify(signedRecord(allowedQuarantine))) invalid();
   }
 }
 
@@ -241,44 +252,169 @@ function transaction(db: IDBDatabase, scope: Scope, mode: "readonly" | "readwrit
   });
 }
 
-/** Dormant storage only. The live accessor must come from authenticated entry. */
-export async function openRecruitJournal(live: LiveIdentity) {
-  const identity = live();
-  if (!identity || !globalThis.isSecureContext || !globalThis.indexedDB ||
+type ReplyMetadata = Pick<Stored, "outcome" | "uncertain"> & { phase: Exclude<RecruitSubmissionResult, "busy"> };
+
+function replyMetadata(raw: Uint8Array | null, row: Stored, current: boolean): ReplyMetadata {
+  const unknown = { phase: "unknown", outcome: null, uncertain: true } as const;
+  if (!raw) return unknown;
+  const quarantine = (reason: string): ReplyMetadata => ({ phase: "quarantined", uncertain: true,
+    outcome: [reason, stringify(signedRecord(row)), hex(raw)] });
+  try {
+    const schema = getProtoRoot().lookupType("sanguo.common.v1.ServerPacket");
+    const packet = schema.decode(raw) as unknown as { code: number; data: Uint8Array };
+    // The gateway emits canonical protobuf. Reject malformed widths, duplicate
+    // fields and unknown evidence before trusting any business rejection code.
+    if (hex(schema.encode(packet).finish()) !== hex(raw)) return unknown;
+    if (packet.code === 50008 && !packet.data.length) return quarantine("intent-conflict");
+    if (packet.code === 0) {
+      const a = decodeRecruitV2Response(packet.data);
+      if (a.city_id !== row.payload[7] || String(a.unit_cfg_id) !== row.payload[8] || String(a.count) !== row.payload[9]) {
+        return quarantine("receipt-conflict");
+      }
+      const outcome = [a.queue_id, a.city_id, a.unit_cfg_id, a.count, a.food_paid, a.wood_paid, a.iron_paid, a.stone_paid,
+        a.duration_sec, a.initial_status, a.accepted_at_ms, a.initial_start_at_ms, a.initial_finish_at_ms].map(String);
+      outcome.push(hex(Uint8Array.from(a.catalog_version)), hex(Uint8Array.from(a.rule_digest)));
+      if (row.phase === "rejected") return quarantine("terminal-conflict");
+      if (row.phase === "accepted" && stringify(row.outcome) !== stringify(outcome)) return quarantine("receipt-conflict");
+      return { phase: "accepted", outcome, uncertain: row.uncertain };
+    }
+    const code = String(packet.code);
+    if (current && !row.uncertain && !packet.data.length && rejectionCodes.includes(code)) {
+      return { phase: "rejected", outcome: code, uncertain: false };
+    }
+  } catch { /* A malformed reply provides no conclusive result. */ }
+  return unknown;
+}
+
+async function exchangeWithDeadline(channel: RecruitSubmissionChannel, body: Uint8Array, identity: AuthenticatedIdentity) {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const deadline = new Promise<null>(resolve => {
+      timer = setTimeout(() => { resolve(null); controller.abort(); }, 15000);
+    });
+    return await Promise.race([deadline, channel.exchange(body, identity, controller.signal)]);
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
+async function openJournal(live: LiveIdentity, channel?: RecruitSubmissionChannel) {
+  const initial = live();
+  if (!initial || !globalThis.isSecureContext || !globalThis.indexedDB ||
       !globalThis.crypto?.subtle || !navigator.locks || !navigator.storage?.persisted) return invalid();
+  const identity = Object.freeze({ ...initial });
   const scope = scopeOf(identity), generation = small(identity.generation, 0, Number.MAX_SAFE_INTEGER);
   const scopeKey = stringify(scope);
   let closed = false;
   const guard = () => {
     const current = live();
-    if (closed || !current || current.generation !== generation || stringify(scopeOf(current)) !== scopeKey) invalid();
+    if (closed || blockedScopes.has(scopeKey) || !current ||
+        current.generation !== generation || stringify(scopeOf(current)) !== scopeKey) invalid();
   };
   await navigator.storage.persisted();
   guard();
   const db = await openDatabase();
-  const close = () => { closed = true; db.close(); };
-  db.onversionchange = db.onclose = close;
+  let exchanges = 0;
+  const close = () => { closed = true; if (!exchanges) db.close(); };
+  db.onversionchange = db.onclose = () => { closed = true; db.close(); };
+  const readStorage = async (allowedQuarantine?: Stored) => {
+    const snapshot = await transaction(db, scope, "readonly");
+    for (const row of snapshot.commands) await verifyDigests(row, scope, allowedQuarantine);
+    return snapshot;
+  };
   const read = async () => {
     guard();
-    const snapshot = await transaction(db, scope, "readonly");
-    for (const row of snapshot.commands) await verifyDigests(row, scope);
+    const snapshot = await readStorage();
     guard();
     return snapshot;
   };
+  const handles = new WeakMap<RecruitJournalHandle, boolean>();
   const handle = (row: Stored): RecruitJournalHandle => {
     const [, , , , , commandHex, , city_id, unit, count] = row.payload;
     const intent = Object.freeze({ city_id, unit_cfg_id: Number(unit), count: Number(count) });
-    return Object.freeze({
+    const value = Object.freeze({
       commandHex, payloadDigest: row.payloadDigest, intent,
       encodeRequest() {
         guard();
         return encodeRecruitV2Request({ ...intent, command_id: unhex(commandHex), intent_version: 1 });
       },
     });
+    handles.set(value, false);
+    return value;
   };
+  const replace = async (before: Snapshot, updated: Stored, beforeWrite?: () => void) => {
+    updated.recordDigest = await digest(digestInput(updated));
+    const key = updated.payload[5];
+    verifyShape(updated, scope, key);
+    await transaction(db, scope, "readwrite", (tx, actual) => {
+      beforeWrite?.();
+      if (signature(actual) !== signature(before)) invalid();
+      tx.objectStore("commands").put(updated, [...scope, key]);
+    });
+    const after = await readStorage(updated.phase === "quarantined" ? updated : undefined);
+    const saved = after.commands.find(row => row.payload[5] === key);
+    if (!saved || stringify(signedRecord(saved)) !== stringify(signedRecord(updated))) invalid();
+  };
+  const stillCurrent = () => { try { guard(); return true; } catch { return false; } };
+  async function submit(command: RecruitJournalHandle): Promise<RecruitSubmissionResult> {
+    if (!channel || !handles.has(command)) return invalid();
+    guard();
+    let reportFailedMarker!: () => void;
+    const failedMarker = new Promise<"unknown">(resolve => { reportFailedMarker = () => resolve("unknown"); });
+    const attempt = navigator.locks.request(stringify(["recruit-send-v1", ...scope]), { ifAvailable: true }, async lock => {
+      if (!lock) return "busy";
+      guard();
+      channel.authorize(identity);
+      const before = await read();
+      const row = before.commands.find(r => r.payload[5] === command.commandHex);
+      if (!row || row.payloadDigest !== command.payloadDigest || before.head !== command.commandHex) return invalid();
+      if (row.phase === "accepted" || row.phase === "rejected") return row.phase;
+      if (!pending(row.phase) || row.attempt === Number.MAX_SAFE_INTEGER) return invalid();
+      const uncertain = row.uncertain || row.phase !== "prepared" || !handles.get(command);
+      handles.set(command, false);
+      const attempted: Stored = { ...row, phase: "attempting", attempt: row.attempt + 1, uncertain, outcome: null };
+      exchanges++;
+      let fenced = false;
+      const classifyReply = (raw: Uint8Array | null, record: Stored, current: boolean) => {
+        const metadata = replyMetadata(raw, record, current);
+        if (metadata.phase === "quarantined") {
+          blockedScopes.add(scopeKey);
+          fenced = true;
+        }
+        return metadata;
+      };
+      try {
+        await replace(before, attempted, guard);
+        channel.authorize(identity);
+        const body = command.encodeRequest(); // Recheck identity immediately before exchange.
+        const raw = (await exchangeWithDeadline(channel, body, identity))?.slice() ?? null;
+        const reply = classifyReply(raw, attempted, stillCurrent());
+        const observed = await readStorage();
+        const prior = observed.commands.find(r => r.payload[5] === command.commandHex);
+        if (!prior || prior.payloadDigest !== row.payloadDigest || prior.attempt !== attempted.attempt) return invalid();
+        const same = stringify(signedRecord(prior)) === stringify(signedRecord(attempted));
+        const phase = prior.phase;
+        const terminal = phase === "accepted" || phase === "rejected";
+        if (!same && !terminal) return invalid();
+        const metadata = same ? reply : classifyReply(raw, prior, false);
+        if (terminal && !fenced) return stillCurrent() ? phase : "unknown";
+        await replace(observed, { ...prior, ...metadata }, metadata.phase === "rejected" ? guard : undefined);
+        if (fenced) blockedScopes.delete(scopeKey);
+        return stillCurrent() ? metadata.phase : "unknown";
+      } catch {
+        if (!fenced) return "unknown";
+        try { channel.blockProfile(identity); } catch { /* Retain the local fence even if external recording fails. */ }
+        reportFailedMarker();
+        // Keep sibling tabs out even though the caller has already received unknown.
+        return new Promise<never>(() => {});
+      }
+      finally { if (--exchanges === 0 && closed) db.close(); }
+    });
+    return Promise.race([attempt, failedMarker]);
+  }
   try { await read(); } catch (err) { close(); throw err; }
   return Object.freeze({
-    close,
+    close, submit,
     async inspect(key?: string): Promise<RecruitJournalInspection | null> {
       if (key !== undefined) commandHex(key);
       const snapshot = await read();
@@ -322,9 +458,22 @@ export async function openRecruitJournal(live: LiveIdentity) {
         const after = await read();
         const saved = after.commands.find(r => r.payload[5] === key);
         if (!saved || after.head !== key || stringify(signedRecord(saved)) !== stringify(signedRecord(row))) return invalid();
-        return handle(saved);
+        const created = handle(saved);
+        handles.set(created, true);
+        return created;
       }
       throw new Error("Recruit journal command generation exhausted");
     },
   });
+}
+
+/** Offline interface has no connection to a submission channel. */
+export async function openRecruitJournal(live: LiveIdentity) {
+  const { close, inspect, prepare } = await openJournal(live);
+  return Object.freeze({ close, inspect, prepare });
+}
+
+/** Dormant coordinator. Runtime authorization and the gateway transport are separate. */
+export function openRecruitSubmissionJournal(live: LiveIdentity, channel: RecruitSubmissionChannel) {
+  return openJournal(live, channel);
 }
