@@ -42,6 +42,12 @@ func (s *Server) preparedMarchHandler(ctx context.Context) (gateway.RouteHandler
 	}
 	writer := durableMarchCreator{server: s, source: g, store: store}
 	return func(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+		g.s.mu.Lock()
+		closed := g.s.closed
+		g.s.mu.Unlock()
+		if closed {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "prepared march unavailable"), nil
+		}
 		return s.startMarch(ctx, pkt, true, writer.write)
 	}, nil
 }

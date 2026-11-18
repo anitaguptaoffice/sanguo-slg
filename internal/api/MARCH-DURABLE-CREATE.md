@@ -12,3 +12,7 @@ unconfirmed commit retires admission and retains the hero for recovery.
 After confirmed commit, publication failure also requires recovery
 without a replacement order or debit. The entry stays private until the
 prepared runtime has its matched arrival and return workers.
+
+After the generation closes, the route returns unavailable before any actor or
+city reads. The exact-handler PostgreSQL tests intercept the create COMMIT
+acknowledgement and separately isolate a bounded rollback panic in a subprocess.
