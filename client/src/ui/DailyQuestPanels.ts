@@ -486,6 +486,10 @@ export class DailyQuestPanels {
     const ul = this.panel.querySelector<HTMLElement>('[data-role="daily-list"]');
     const pre = this.panel.querySelector('[data-role="daily-detail"]');
     if (!ul) return;
+    const focused = ul.ownerDocument.activeElement?.closest("button.daily-quest-row-main");
+    const focusedCfgId = focused && ul.contains(focused)
+      ? focused.closest("li")?.getAttribute("data-quest-cfg-id")
+      : null;
     const displayRows = this.visibleRows();
     if (!displayRows.some(r => r.quest_cfg_id === this.selectedCfgId)) {
       this.selectedCfgId = pickDefaultDailyQuest(displayRows)?.quest_cfg_id ?? 0;
@@ -503,6 +507,7 @@ export class DailyQuestPanels {
       renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
         assets: this.assets,
       });
+      this.restoreTitleFocus(ul, focusedCfgId);
       return;
     }
     if (this.listError && !this.rows.length) {
@@ -510,6 +515,7 @@ export class DailyQuestPanels {
         legacyClass: "daily-quest-list-empty",
         assets: this.assets,
       });
+      this.restoreTitleFocus(ul, focusedCfgId);
       return;
     }
     if (!displayRows.length) {
@@ -548,7 +554,11 @@ export class DailyQuestPanels {
           now,
         );
         if (queueHint) line = `${line} · ${queueHint}`;
-        const main = document.createElement("span");
+        const main = document.createElement(id > 0 ? "button" : "span");
+        if (main instanceof HTMLButtonElement) {
+          main.type = "button";
+          main.setAttribute("aria-pressed", String(id === this.selectedCfgId));
+        }
         main.className = "daily-quest-row-main";
         main.textContent = line;
         li.appendChild(main);
@@ -656,11 +666,32 @@ export class DailyQuestPanels {
     }
     this.renderBattleReportBanner();
     this.syncDailyFilterUiSkins();
+    this.restoreTitleFocus(ul, focusedCfgId);
+  }
+
+  private restoreTitleFocus(list: HTMLElement, cfgId: string | null | undefined): void {
+    if (!cfgId || !this.panel.isConnected || this.panel.closest(".hidden, [hidden], [inert]")) return;
+    const doc = list.ownerDocument;
+    if (doc.activeElement !== doc.body) return;
+    const title = [...list.querySelectorAll<HTMLButtonElement>("button.daily-quest-row-main")]
+      .find((button) => button.closest("li")?.getAttribute("data-quest-cfg-id") === cfgId);
+    const fallback = this.panel.querySelector<HTMLButtonElement>('[data-action="daily-filter"][aria-pressed="true"]');
+    (title ?? fallback)?.focus({ preventScroll: true });
   }
 
   private syncDailyFilterUiSkins(): void {
     if (!this.assets) return;
     mountFilterUiSkins(this.panel, this.assets);
+    for (const row of this.panel.querySelectorAll(".daily-quest-list li.art-filter-row--skinned")) {
+      const bar = row.querySelector(":scope > .art-filter-row-skin-bar");
+      const detail = row.querySelector(":scope > .art-filter-row-detail");
+      if (!bar || !detail) continue;
+      // The fixed-height skin bar needs the full title width. Progress and
+      // reward details belong below it, alongside the separate links.
+      const details = [...bar.children].filter((el) =>
+        !el.matches(".daily-quest-row-main, .daily-quest-row-claim-dot"));
+      detail.prepend(...details);
+    }
   }
 
   private renderBattleReportBanner(): void {

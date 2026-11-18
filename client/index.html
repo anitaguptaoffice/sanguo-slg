@@ -2794,7 +2794,8 @@
       button.art-filter-chip.art-filter-chip--skinned .art-filter-chip-label {
         color: #3d2e1f;
       }
-      .mail-list button.mail-row-title {
+      .mail-list button.mail-row-title,
+      .daily-quest-list button.daily-quest-row-main {
         display: inline-block;
         box-sizing: border-box;
         margin: 0;
@@ -2809,7 +2810,8 @@
         overflow-wrap: anywhere;
         cursor: pointer;
       }
-      .mail-list button.mail-row-title:focus-visible {
+      .mail-list button.mail-row-title:focus-visible,
+      .daily-quest-list button.daily-quest-row-main:focus-visible {
         outline: 2px solid currentColor;
         outline-offset: -2px;
       }
@@ -2918,6 +2920,9 @@
       .daily-quest-list li.art-filter-row--skinned .art-filter-row-skin-bar {
         width: 100%;
         box-sizing: border-box;
+      }
+      .daily-quest-list li.art-filter-row--skinned > .art-filter-row-detail {
+        width: 100%;
       }
       .art-filter-chip-evidence-staging,
       .art-filter-row-evidence-staging {
