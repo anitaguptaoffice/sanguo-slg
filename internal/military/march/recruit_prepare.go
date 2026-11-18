@@ -40,27 +40,21 @@ func (p *RecruitParticipant) Prepare(ctx context.Context, a *recruittx.Access, s
 	if err != nil {
 		return nil, err
 	}
-	snapshot, err := readRecruitPending(ctx, a, s, recruitScope{server: scope.ServerID, player: scope.PlayerID, city: intent.CityID})
+	city := recruitScope{server: scope.ServerID, player: scope.PlayerID, city: intent.CityID}
+	snapshot, err := readRecruitPending(ctx, a, s, city)
 	if err != nil {
 		return nil, err
 	}
-	stock, ids, players := snapshot.stock, snapshot.ids, snapshot.players
-	statuses, starts, finishes, payloads := snapshot.statuses, snapshot.starts, snapshot.finishes, snapshot.payloads
-	rows := make([]recruitPendingRow, len(ids))
-	for i := range ids {
-		payload, err := decodeRecruitPayload([]byte(payloads[i]), p.catalog)
-		if err != nil {
-			return nil, ErrRecruitUnavailable
-		}
-		starts[i], finishes[i] = starts[i].UTC(), finishes[i].UTC()
-		rows[i] = recruitPendingRow{scope: recruitScope{server: scope.ServerID, player: players[i], city: intent.CityID}, id: ids[i], kind: 3, status: statuses[i], payload: payload, start: starts[i], finish: finishes[i]}
+	rows, err := snapshot.decodeRows(city, p.catalog)
+	if err != nil {
+		return nil, err
 	}
-	summary, err := validateRecruitPending(recruitScope{server: scope.ServerID, player: scope.PlayerID, city: intent.CityID}, stock, rows, p.catalog)
+	summary, err := validateRecruitPending(city, snapshot.stock, rows, p.catalog)
 	if err != nil {
 		return nil, ErrRecruitUnavailable
 	}
 	if len(rows) > 0 {
-		if err = validateRecruitPendingEvidence(ctx, a, s, scope, intent.CityID, ids); err != nil {
+		if err = validateRecruitPendingEvidence(ctx, a, s, scope, intent.CityID, snapshot.ids); err != nil {
 			return nil, err
 		}
 	}
@@ -88,7 +82,7 @@ func (p *RecruitParticipant) Prepare(ctx context.Context, a *recruittx.Access, s
 	if sample, err = canonicalRecruitTime(sample); err != nil {
 		return nil, ErrRecruitUnavailable
 	}
-	schedule, err := planRecruitSchedule(sample, plan.DurationSeconds(), finishes)
+	schedule, err := planRecruitSchedule(sample, plan.DurationSeconds(), snapshot.finishes)
 	if err != nil {
 		// The processing sample, pending finishes and plan duration have
 		// already been validated. Only this proposed finish can overflow.
