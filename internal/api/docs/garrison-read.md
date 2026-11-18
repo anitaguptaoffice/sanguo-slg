@@ -16,3 +16,17 @@ recruit completion versus copied snapshots. This is NOT military PostgreSQL or
 queue crash durability; restart recovery and real H5 march/return remain separate gates.
 With DATABASE_URL set, TestCityGarrisonPostgresOwnership also exercises the actual
 PostgreSQL world ownership lookup and rejects the same player on the wrong shard.
+
+## Prepared local recruiting
+
+With the prepared Recruit generation installed, GetCityState uses committed
+stock. It repeats the WORLD owner check under the stock writers' city barrier
+and reads the bound MIL marker and four ready balances in one statement. The
+transaction rolls back and releases its source lease before publication.
+Invalid evidence or a retired source leaves field 4 absent. Four certified
+zero balances produce a present empty message. The read never publishes a
+stock cache, advances work, or substitutes the legacy Hub. The existing wallet
+settlement, building fields, and production rates remain independent.
+
+The PG17 gateway test uses controlled schedule advancement to verify pending
+and committed stock, reconstruction, and exact read-after-credit behavior.
