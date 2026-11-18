@@ -83,6 +83,8 @@ type Server struct {
 	firstCityV2Intake FirstCityV2TemplateIntake
 	firstCityV2Effect   FirstCityV2Effect
 	firstCityPrepared   *FirstCityPreparedCreationSource
+
+	preparedRecruit *recruitGeneration
 }
 
 // ErrMilitaryDurable rejects incomplete startup composition inputs.
@@ -224,12 +226,16 @@ func (s *Server) GatewayRouter() *gateway.Router {
 		}
 		handlers[route] = h
 	}
-	handlers[RouteCreateCity] = s.handleCreateCity
+	if s.preparedRecruit != nil {
+		handlers[routeRecruitTroopV2] = s.recruitV2Handler(s.preparedRecruit)
+	} else {
+		handlers[RouteCreateCity] = s.handleCreateCity
+		handlers[RouteRecruitTroop] = s.handleRecruitTroop
+		handlers[RouteStartMarch] = s.handleStartMarch
+	}
 	handlers[RouteListPlayerCities] = s.handleListPlayerCities
 	handlers[RouteStartBuildingUpgrade] = s.handleStartBuildingUpgrade
 	handlers[RouteGetCityState] = s.handleGetCityState
-	handlers[RouteRecruitTroop] = s.handleRecruitTroop
-	handlers[RouteStartMarch] = s.handleStartMarch
 	handlers[RouteListMarches] = s.handleListMarches
 	handlers[RouteGetBattleReport] = s.wrapGameplayOnSuccess(obs.EventBattleReportReady, s.handleGetBattleReport)
 	handlers[RouteListBattleReports] = s.handleListBattleReports
@@ -390,7 +396,7 @@ func (s *Server) RunDomesticScheduler(ctx context.Context) {
 
 // RunMilitaryScheduler ticks march/recruit queues until ctx is cancelled.
 func (s *Server) RunMilitaryScheduler(ctx context.Context) {
-	if s.military == nil {
+	if s.military == nil || s.preparedRecruit != nil {
 		return
 	}
 	s.military.RunScheduler(ctx)
