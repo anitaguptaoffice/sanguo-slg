@@ -1,6 +1,8 @@
 package api
 
 import (
+	"slices"
+
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 )
 
@@ -43,6 +45,17 @@ func (s *Server) lookupMarchHero(marchID int64) (marchHeroBinding, bool) {
 	}
 	b, ok := s.marchHeroByID[marchID]
 	return b, ok
+}
+
+// forgetPreparedMarch removes the provisional Hub binding after publication
+// failure. The confirmed database order remains for the next startup.
+func (s *Server) forgetPreparedMarch(playerID, marchID int64) {
+	s.marchIndexMu.Lock()
+	defer s.marchIndexMu.Unlock()
+	s.playerMarches[playerID] = slices.DeleteFunc(s.playerMarches[playerID], func(ref playerMarchRef) bool {
+		return ref.marchID == marchID
+	})
+	delete(s.marchHeroByID, marchID)
 }
 
 // takeMarchHero grants one release attempt without holding the lock in HERO.
