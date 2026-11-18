@@ -186,6 +186,64 @@ restore/uncertainty is an external block as well; a local flag cannot certify it
 own absence after rollback. There is no clear-quarantine/reopen API in this card.
 Any repair or migration needs a separate reviewed evidence-preserving protocol.
 
+### Local prepared recovery guard
+
+The enrolled local Demo described by [V2 wire](../proto/RECRUIT-V2.md) also uses
+an independent host-owned recovery guard. Its persistent storage is outside
+the browser profile. Pair one guard, one browser origin and one reviewed
+gateway source for their entire enrolled lifetime. Provision the guard
+explicitly. An unconfigured, missing, invalid, mismatched or unavailable guard
+disables V2 sends by this browser. Browser-local flags, receipts or an empty
+new guard store cannot replace the enrolled guard after a restart.
+
+1. With the existing Web Lock held, the browser first commits and validates
+   its exact attempting record (§5). Before sending, require a confirmed
+   external reservation identifying the enrollment, canonical scope, exact
+   key and typed intent, and this attempt. The guard atomically records the
+   reservation as outstanding and returns a unique reservation ID. Recheck
+   the live actor, socket and enrolled capability following this round trip.
+   A failed or unknown reservation outcome permits no send. A distinct
+   command cannot supersede an outstanding reservation in that scope.
+2. The live attempt owner may settle only its exact reservation, after a
+   conclusive acceptance or permitted rejection has committed and been
+   read back from the browser journal. This is a positive settlement of
+   the original attempt, not a recovery operation. Missing/contradictory
+   outcomes, a failed journal write, scope changes and interrupted settlement
+   leave the guard outstanding unless its terminal transition was confirmed.
+   Timeout, process exit, lost local markers and storage restarts never
+   expire an outstanding reservation or grant another send.
+3. For an interrupted attempt the independent local owner/controller may
+   authorize one deliberate retry of the exact retained key and intent.
+   Require affirmative retained recovery evidence for that attempt and
+   read-only reconciliation against the enrolled authoritative source.
+   A matching server receipt alone cannot clear known or unresolved local
+   conflict, restored evidence or uncertain enrollment. A controller may
+   certify a witnessed lost-reply case when it independently observed the
+   exact attempt and interruption and verified the matching committed receipt
+   and unchanged ownership of the profile. Persist the authorization and
+   evidence reference outside the browser. Without affirmative evidence,
+   leave the attempt outstanding and refuse sends. Recovery never edits
+   the browser journal or creates a new key.
+4. Reserving a recovery atomically spends the one-use authorization and
+   records a fresh outstanding reservation. Old reservation IDs, an
+   alternate tuple, actor or source, and concurrent attempts cannot settle
+   or spend it. The local controller's recovery authorization has no
+   browser-callable API. The local sideband for the enrolled application
+   exposes only read-only availability, reservation and settlement. Check
+   availability before preparing a distinct local command so an outstanding
+   external reservation cannot strand a newer unsent record. Availability
+   alone permits no send; reservation still checks and changes external
+   state atomically. The sideband carries no gateway session credentials and
+   does not send or proxy game packets. The normal gateway still verifies
+   the authenticated actor, source and request.
+
+Retain external history and fail closed on ambiguity or storage failure.
+The release test independently verifies both an approved exact-key lost-reply
+recovery and a contradictory response whose quarantine and fallback writes
+fail. The latter survives browser and guard process restart and sends zero
+commands until an independent recovery is established. No browser-local
+acknowledgement, source change, or production rollout is authorized here.
+
 Prepared records found on reload are recoverable by exact identity, but never
 proof that no send occurred. Conservatively treat a recovered prepared record
 as unknown before any retry; only its live original creation handle may start
