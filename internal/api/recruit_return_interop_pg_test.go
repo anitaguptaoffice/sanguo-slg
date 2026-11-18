@@ -74,7 +74,7 @@ func TestPGRecruitReturnInteroperability(t *testing.T) {
 				recruitAttemptPGRecorded(t, f.events(recruitPID), f.observer, f.recruit.s.profile, false)
 			} else {
 				r := recruitCall.recruit
-				if r.outcome != recruitKnownEnded || !errors.Is(r.cause, march.ErrRecruitUnavailable) || r.confirmed != (march.RecruitAcceptance{}) || r.cleanup != nil || r.diagnostic != nil {
+				if r.outcome != recruitKnownEnded || r.cause != march.ErrRecruitAdmissionCount || r.confirmed != (march.RecruitAcceptance{}) || r.cleanup != nil || r.diagnostic != nil {
 					t.Fatal("capacity rejection is not known-ended", r)
 				}
 				recruitReturnRejectionRecorded(t, f.events(recruitPID), recruitPID, f.observer.PgConn().PID(), f.recruit.s.profile)
@@ -93,7 +93,7 @@ func TestPGRecruitReturnInteroperability(t *testing.T) {
 			f.recruit.s.admission.s.mu.Lock()
 			pending := f.recruit.s.admission.s.pending
 			f.recruit.s.admission.s.mu.Unlock()
-			if closed == tc.recruitFirst || records != map[bool]int{true: 0, false: 1}[tc.recruitFirst] || pending != 0 {
+			if closed || records != 0 || pending != 0 {
 				t.Fatal("Recruit generation outcome bookkeeping", closed, records, pending)
 			}
 			recruitReturnEffects(t, f, tc.ready, tc.applied, tc.recruitFirst, recruitCall.recruit.confirmed)

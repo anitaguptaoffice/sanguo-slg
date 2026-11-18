@@ -64,7 +64,13 @@ func recruitDebitCost(cost march.Resources) (domestic.Resources, error) {
 
 // Exact sentinels only: wrapped/coarse failures may include source diagnostics.
 func recruitAttemptCloses(err error) bool {
-	return err != nil && err != march.ErrRecruitConflict && err != march.ErrRecruitUnsupportedVersion && err != domestic.ErrRecruitWalletFunds
+	switch err {
+	case nil, march.ErrRecruitConflict, march.ErrRecruitUnsupportedVersion,
+		march.ErrRecruitAdmissionCount, march.ErrRecruitAdmissionUnit, domestic.ErrRecruitWalletFunds:
+		return false
+	default:
+		return true
+	}
 }
 
 // No SQL here; state -> admission lock order. Diagnostics never rewrite outcome.
