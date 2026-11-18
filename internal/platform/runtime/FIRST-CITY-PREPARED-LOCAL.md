@@ -9,4 +9,15 @@ The 14-object MIL-only profile remains usable outside this mode.
 An invalid opted-in profile stops startup. The local gateway omits legacy
 create, recruit and march writes and GM HTTP routes. The legacy military
 scheduler stays stopped. Use an exclusive database with no other game or
-maintenance writers. Recruit and march activation require their own wiring.
+maintenance writers.
+
+`SANGUO_PREPARED_RECRUIT=1` additionally enables authenticated Recruit V2 and
+the durable due worker. This requires prepared first-city and the exact
+40-object profile including the 11 ACCOUNT objects. A 29-object first-city
+profile still works without the Recruit opt-in. March requires its own wiring.
+
+Stopping the prepared service cancels gateway requests and the due worker.
+The runtime waits up to 15 seconds for the worker to exit before closing
+its PostgreSQL pool. Pool close has a separate 5-second deadline. Either
+runtime timeout is reported as a server error. Check the worker log for a
+source drain warning before handing this database to another writer.

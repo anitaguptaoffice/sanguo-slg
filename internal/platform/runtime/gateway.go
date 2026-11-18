@@ -73,10 +73,18 @@ func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
 			return nil, fmt.Errorf("compose prepared first-city: %w", err)
 		}
 	}
+	composeFirstCity(srv, prepared)
+	if a.Config.PreparedRecruit {
+		if profiles.recruit == nil {
+			return nil, fmt.Errorf("prepared recruit requires the complete ACCOUNT, WORLD, DOM and MIL profile")
+		}
+		if err := srv.WirePreparedRecruit(ctx, *profiles.recruit, profiles.catalog); err != nil {
+			return nil, fmt.Errorf("compose prepared recruit: %w", err)
+		}
+	}
 	if err := srv.WireM4Content(ctx); err != nil {
 		a.Log.Error("m4 content wire failed", "err", err)
 	}
-	composeFirstCity(srv, prepared)
 	go srv.RunDomesticScheduler(ctx)
 	if !a.Config.PreparedFirstCity {
 		go srv.RunMilitaryScheduler(ctx)

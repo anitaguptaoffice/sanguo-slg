@@ -14,6 +14,9 @@ import (
 
 func (a *App) validatePreparedFirstCityLocal() error {
 	if !a.Config.PreparedFirstCity {
+		if a.Config.PreparedRecruit {
+			return fmt.Errorf("prepared recruit requires prepared first-city mode")
+		}
 		return nil
 	}
 	host, _, err := net.SplitHostPort(a.Config.HTTPAddr)

@@ -14,6 +14,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
 	accountv1 "github.com/anitaguptaoffice/sanguo-slg/internal/account/pb/sanguo/account/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
+	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/config"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
@@ -23,6 +24,7 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/shard"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/protobuf/proto"
 )
@@ -88,7 +90,10 @@ func TestPGPreparedFirstCityRuntime(t *testing.T) {
 	bad.MILFreshProfileFile = writeMilProfile(t, milFile(missing))
 	nonlocal := cfg
 	nonlocal.HTTPAddr = ":8080"
-	for _, invalid := range []config.Config{bad, nonlocal, {PreparedFirstCity: true, HTTPAddr: cfg.HTTPAddr}} {
+	recruitWithoutAccounts := cfg
+	recruitWithoutAccounts.PreparedRecruit = true
+	for _, invalid := range []config.Config{bad, nonlocal, recruitWithoutAccounts,
+		{PreparedFirstCity: true, HTTPAddr: cfg.HTTPAddr}, {PreparedRecruit: true, HTTPAddr: cfg.HTTPAddr}} {
 		if srv, err := (&App{Config: invalid, Log: log, DB: pool}).NewAPIServer(ctx); srv != nil || err == nil {
 			t.Fatal("requested prepared mode fell back to a legacy server")
 		}
@@ -103,6 +108,11 @@ func TestPGPreparedFirstCityRuntime(t *testing.T) {
 		t.Cleanup(stop)
 		srv, err := app.NewAPIServer(runCtx)
 		preparedCheck(t, err)
+		var stopRecruit func() error
+		if app.Config.PreparedRecruit {
+			stopRecruit = startPreparedRecruitWorker(runCtx, srv.RunPreparedRecruitScheduler)
+			t.Cleanup(func() { preparedCheck(t, stopRecruit()) })
+		}
 		handler := app.HTTPHandler(runCtx, srv)
 		rr := httptest.NewRecorder()
 		handler.ServeHTTP(rr, httptest.NewRequest(http.MethodPost, "/gm/grant", nil))
@@ -113,7 +123,14 @@ func TestPGPreparedFirstCityRuntime(t *testing.T) {
 		t.Cleanup(httpSrv.Close)
 		ws, _, err := websocket.DefaultDialer.DialContext(runCtx, "ws"+strings.TrimPrefix(httpSrv.URL, "http")+"/ws", nil)
 		preparedCheck(t, err)
-		closeRuntime := func() { _ = ws.Close(); stop(); httpSrv.Close() }
+		closeRuntime := func() {
+			stop()
+			_ = ws.Close()
+			httpSrv.Close()
+			if stopRecruit != nil {
+				preparedCheck(t, stopRecruit())
+			}
+		}
 		t.Cleanup(closeRuntime)
 		deadline, _ := runCtx.Deadline()
 		preparedCheck(t, ws.SetReadDeadline(deadline))
@@ -167,7 +184,7 @@ func TestPGPreparedFirstCityRuntime(t *testing.T) {
 		}
 	}
 	stop()
-	ws, _ = start()
+	ws, stop = start()
 	session = ""
 	login()
 	var result worldv1.GetFirstCityResultResponse
@@ -182,4 +199,148 @@ func TestPGPreparedFirstCityRuntime(t *testing.T) {
 	if !exact || !proto.Equal(submitted.GetOutcome().GetCommand(), result.GetOutcome().GetCommand()) {
 		t.Fatal("fresh runtime did not retain the exact prepared city and receipt")
 	}
+	const recruitRoute = "military.v1.RecruitTroopV2"
+	if got := send(recruitRoute, nil, nil); got.GetMsg() != "unknown route" {
+		t.Fatal("first-city opt-in exposed Recruit by itself", got)
+	}
+	stop()
+	// Extend only the reviewed owned source. Use an independent object inventory.
+	for _, name := range strings.Fields("account account_pkey uq_account_login_name account_account_id_seq account_session account_session_pkey idx_account_session_account player player_pkey uq_player_account_per_server idx_player_account") {
+		var identity freshsource.ObjectIdentity
+		preparedCheck(t, observer.QueryRow(ctx, "SELECT oid,relowner FROM pg_catalog.pg_class WHERE relnamespace=$1 AND relname=$2",
+			p.SchemaOID, name).Scan(&identity.OID, &identity.OwnerOID))
+		p.Objects[name] = identity
+	}
+	app.Config.PreparedRecruit = true
+	app.Config.MILFreshProfileFile = writeMilProfile(t, milFile(p))
+	ws, stop = start()
+	session = ""
+	login()
+	player := discover.GetScope().GetPlayerId()
+	wallet := func() int64 {
+		t.Helper()
+		var food int64
+		preparedCheck(t, observer.QueryRow(ctx, "SELECT food FROM player_wallet WHERE server_id=1 AND player_id=$1", player).Scan(&food))
+		return food
+	}
+	before := wallet()
+	const count int32 = 120
+	intent := &militaryv1.RecruitTroopV2Request{CityId: city, UnitCfgId: 1, Count: count,
+		CommandId: []byte("prepared-recruit"), IntentVersion: 1}
+	var accepted militaryv1.RecruitTroopV2Response
+	send(recruitRoute, intent, &accepted)
+	a := accepted.GetAcceptance()
+	if a.GetQueueId() <= 0 || a.GetCityId() != city || a.GetCount() != count ||
+		a.GetFoodPaid() != int64(count) || wallet() != before-int64(count) {
+		t.Fatalf("wrong prepared admission or debit: %v", &accepted)
+	}
+	stop()
+	ws, stop = start()
+	session = ""
+	login()
+	var replay militaryv1.RecruitTroopV2Response
+	send(recruitRoute, intent, &replay)
+	if !proto.Equal(&replay, &accepted) || wallet() != before-int64(count) {
+		t.Fatal("restart replay changed the immutable acceptance or paid again")
+	}
+	stop()
+
+	// Advance only the fixture-owned schedule and its paired initial evidence.
+	tx, err := observer.Begin(ctx)
+	preparedCheck(t, err)
+	defer func() { _ = tx.Rollback(ctx) }()
+	args := []any{a.GetQueueId(), player, city, a.GetInitialStartAtMs(), a.GetInitialFinishAtMs(), a.GetAcceptedAtMs()}
+	tag, err := tx.Exec(ctx, `WITH moved AS (
+ UPDATE work_queue SET start_at=start_at-interval '1 hour',finish_at=finish_at-interval '1 hour'
+ WHERE server_id=1 AND queue_id=$1 AND player_id=$2 AND city_id=$3 AND queue_type=3 AND status=1
+ AND start_at=to_timestamp($4::bigint/1000.0) AND finish_at=to_timestamp($5::bigint/1000.0) RETURNING queue_id)
+ UPDATE mil_recruit_receipt SET accepted_at=accepted_at-interval '1 hour',
+ initial_start_at=initial_start_at-interval '1 hour',initial_finish_at=initial_finish_at-interval '1 hour'
+ WHERE server_id=1 AND queue_id IN (SELECT queue_id FROM moved) AND city_id=$3
+ AND accepted_at=to_timestamp($6::bigint/1000.0)
+ AND initial_start_at=to_timestamp($4::bigint/1000.0) AND initial_finish_at=to_timestamp($5::bigint/1000.0)`, args...)
+	preparedCheck(t, err)
+	if tag.RowsAffected() != 1 {
+		t.Fatal("time fixture did not advance the exact owned job")
+	}
+	preparedCheck(t, tx.Commit(ctx))
+	ws, stop = start() // The real scheduler scans already-due work at startup.
+	wait, cancelWait := context.WithTimeout(ctx, 5*time.Second)
+	defer cancelWait()
+	poll := time.NewTicker(10 * time.Millisecond)
+	defer poll.Stop()
+	for {
+		var settled bool
+		preparedCheck(t, observer.QueryRow(wait, `SELECT
+ (SELECT count FROM city_troop WHERE server_id=1 AND city_id=$1 AND unit_cfg_id=1)=$2
+ AND (SELECT status FROM work_queue WHERE server_id=1 AND queue_id=$3)=2
+ AND (SELECT count(*) FROM work_queue WHERE server_id=1 AND queue_type=3)=1
+ AND (SELECT count(*) FROM mil_recruit_receipt)=1`, city, count, a.GetQueueId()).Scan(&settled))
+		if settled {
+			break
+		}
+		select {
+		case <-wait.Done():
+			t.Fatal("prepared startup worker did not apply exactly one due credit")
+		case <-poll.C:
+		}
+	}
+	if wallet() != before-int64(count) {
+		t.Fatal("due processing debited the wallet again")
+	}
+	stop()
+
+	// Hold the actual due worker inside its PostgreSQL read while the runtime stops.
+	gate := &preparedDueStopTrace{entered: make(chan struct{}), canceled: make(chan struct{}), release: make(chan struct{})}
+	cfgWithTrace := pool.Config()
+	cfgWithTrace.ConnConfig.Tracer = gate
+	traced, err := pgxpool.NewWithConfig(ctx, cfgWithTrace)
+	preparedCheck(t, err)
+	defer traced.Close()
+	workerCtx, cancelWorker := context.WithCancel(ctx)
+	defer cancelWorker()
+	app.DB = traced
+	srv, err := app.NewAPIServer(workerCtx)
+	preparedCheck(t, err)
+	stopWorker := startPreparedRecruitWorker(workerCtx, srv.RunPreparedRecruitScheduler)
+	released := false
+	defer func() {
+		if !released {
+			close(gate.release)
+			preparedCheck(t, stopWorker())
+		}
+	}()
+	preparedCheck(t, waitPreparedShutdown(gate.entered, 5*time.Second, "worker did not reach its due read"))
+	stopped := make(chan error, 1)
+	go func() { stopped <- stopWorker() }()
+	preparedCheck(t, waitPreparedShutdown(gate.canceled, 5*time.Second, "worker did not see cancellation"))
+	select {
+	case err := <-stopped:
+		t.Fatalf("worker stop returned before the due read was released: %v", err)
+	default:
+	}
+	close(gate.release)
+	released = true
+	select {
+	case err := <-stopped:
+		preparedCheck(t, err)
+	case <-ctx.Done():
+		t.Fatal("worker did not exit after the due read was released")
+	}
 }
+
+type preparedDueStopTrace struct {
+	entered, canceled, release chan struct{}
+}
+
+func (g *preparedDueStopTrace) TraceQueryStart(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
+	if data.SQL == "SELECT pg_catalog.clock_timestamp()" {
+		close(g.entered)
+		<-ctx.Done()
+		close(g.canceled)
+		<-g.release
+	}
+	return ctx
+}
+
+func (*preparedDueStopTrace) TraceQueryEnd(context.Context, *pgx.Conn, pgx.TraceQueryEndData) {}

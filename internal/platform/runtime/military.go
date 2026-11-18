@@ -167,6 +167,9 @@ func composeMilitaryStartup(ctx context.Context, log *slog.Logger, pool *pgxpool
 	if err == nil {
 		var handle *api.MilitaryDurable
 		if handle, err = composeMilitary(ctx, pool, p, catalog); err == nil {
+			if prepared != nil {
+				prepared.catalog = catalog
+			}
 			return handle, prepared
 		}
 	}
