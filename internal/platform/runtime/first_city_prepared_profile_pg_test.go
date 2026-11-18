@@ -121,8 +121,19 @@ func TestPGPreparedFirstCityRuntime(t *testing.T) {
 		}
 		httpSrv := httptest.NewServer(handler)
 		t.Cleanup(httpSrv.Close)
-		ws, _, err := websocket.DefaultDialer.DialContext(runCtx, "ws"+strings.TrimPrefix(httpSrv.URL, "http")+"/ws", nil)
+		const protocol = "sanguo.recruit-v2"
+		dialer := *websocket.DefaultDialer
+		dialer.Subprotocols = []string{protocol}
+		ws, _, err := dialer.DialContext(runCtx, "ws"+strings.TrimPrefix(httpSrv.URL, "http")+"/ws", nil)
 		preparedCheck(t, err)
+		t.Cleanup(func() { _ = ws.Close() })
+		wantProtocol := ""
+		if app.Config.PreparedRecruit {
+			wantProtocol = protocol
+		}
+		if ws.Subprotocol() != wantProtocol {
+			t.Fatalf("prepared runtime negotiated %q, want %q", ws.Subprotocol(), wantProtocol)
+		}
 		closeRuntime := func() {
 			stop()
 			_ = ws.Close()
