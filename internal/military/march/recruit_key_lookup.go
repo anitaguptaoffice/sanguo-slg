@@ -81,10 +81,17 @@ func (p *RecruitParticipant) ReverseAbsent(ctx context.Context, a *recruittx.Acc
 }
 
 func (p *RecruitParticipant) recruitLookup(ctx context.Context, a *recruittx.Access, scope RecruitScope) (*freshMilitarySource, error) {
+	if scope.PlayerID <= 0 || scope.CommandID == (RecruitCommandID{}) {
+		return nil, ErrRecruitUnavailable
+	}
+	return p.pinnedRecruitReadSource(ctx, a, scope.ServerID)
+}
+
+func (p *RecruitParticipant) pinnedRecruitReadSource(ctx context.Context, a *recruittx.Access, serverID int32) (*freshMilitarySource, error) {
 	if p == nil || p.source == nil || p.source.binding == nil || p.catalog == nil || ctx == nil || a == nil || p.source.retired.Load() {
 		return nil, ErrRecruitUnavailable
 	}
-	if scope.ServerID <= 0 || scope.ServerID != p.source.profile.ServerID || scope.PlayerID <= 0 || scope.CommandID == (RecruitCommandID{}) {
+	if serverID <= 0 || serverID != p.source.profile.ServerID {
 		return nil, ErrRecruitUnavailable
 	}
 	s := p.source
