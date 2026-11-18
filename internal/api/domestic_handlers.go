@@ -8,6 +8,7 @@ import (
 	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 )
 
 func (s *Server) handleStartBuildingUpgrade(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -86,9 +87,23 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	if city == nil || city.PlayerID != pc.PlayerID {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 	}
-	garrison, err := s.readyGarrison(city.ID, pc.PlayerID)
-	if err != nil {
-		return nil, err
+	var (
+		garrison *domesticv1.CityGarrisonSnapshot
+		err      error
+	)
+	if s.preparedRecruit == nil {
+		garrison, err = s.readyGarrison(city.ID, pc.PlayerID)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		garrison, err = s.preparedRecruit.readReadyGarrison(ctx, pc, city.ID)
+		if errors.Is(err, world.ErrRecruitCity) {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+		}
+		if err != nil {
+			s.log.WarnContext(ctx, "prepared garrison unavailable", "server_id", pc.ServerID, "city_id", city.ID, "err", err)
+		}
 	}
 	if err := s.accrueCityWithQuest(ctx, pc.ServerID, city); err != nil {
 		return nil, err

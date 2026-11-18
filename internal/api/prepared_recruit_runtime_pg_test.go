@@ -6,17 +6,22 @@ import (
 	"io"
 	"log/slog"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
+	domesticv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/domestic/v1"
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/gorilla/websocket"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestPGPreparedRecruitRuntime(t *testing.T) {
@@ -26,11 +31,30 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	military := recruitSourceProjection(full, recruitPGNames[20:])
 	catalog := recruitAttemptPGCatalog(t)
 	returnPGExec(t, ctx, observer, "SELECT setval('work_queue_id_seq',100,false)")
+	productionDDL, err := os.ReadFile("../../spec/db/007_domestic_production_checkpoint.sql")
+	returnPGOK(t, err)
+	returnPGExec(t, ctx, observer, string(productionDDL))
+	returnPGExec(t, ctx, observer, `INSERT INTO account(account_id,login_name,password_hash) OVERRIDING SYSTEM VALUE
+ VALUES(2,'foreign-fixture','not-a-credential');
+ INSERT INTO account_session(session_id,account_id,expires_at) VALUES('00000000-0000-0000-0000-000000000002',2,'2030-01-01');
+ INSERT INTO player(server_id,player_id,account_id,display_name) VALUES(1,2,2,'foreign fixture');
+ INSERT INTO player_city(server_id,city_id,player_id,name,x,y) VALUES(1,2,1,'empty city',1,0);
+ INSERT INTO city_production_checkpoint(server_id,city_id,player_id,settled_at) VALUES(1,1,1,'2026-01-01'),(1,2,1,'2026-01-01');
+ INSERT INTO city_building(server_id,city_id,slot_key,building_cfg_id) VALUES(1,1,'hall',1);
+ INSERT INTO mil_city_origin SELECT server_id,2,owner_player_id,cohort_id,format_version,created_at FROM mil_city_origin WHERE city_id=1;
+ INSERT INTO city_troop SELECT 1,2,u,0,u FROM generate_series(1,4) u;
+ UPDATE work_queue SET status=2 WHERE server_id=1 AND queue_id=1 AND queue_type=1`)
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	const session = "00000000-0000-0000-0000-000000000001"
+	const (
+		session        = "00000000-0000-0000-0000-000000000001"
+		foreignSession = "00000000-0000-0000-0000-000000000002"
+	)
 	start := func() (*Server, *websocket.Conn, func()) {
 		t.Helper()
-		s := NewServer(log, pool, nil, nil, nil)
+		now := func() time.Time { return time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC) }
+		hub := domestic.NewHub(now)
+		hub.UseStore(domestic.NewPGStore(pool), 1, 0)
+		s := NewServer(log, pool, world.NewService(world.NewPGStore(pool)), hub, march.NewHub(now))
 		absent := s.GatewayRouter().Dispatch(ctx, &commonv1.ClientPacket{Route: routeRecruitTroopV2})
 		if absent.GetMsg() != "unknown route" {
 			t.Fatal("Recruit V2 exposed before prepared startup", absent)
@@ -56,7 +80,11 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		if s.WirePreparedRecruit(ctx, profile, catalog) == nil || s.PublicRoutes()[routeRecruitTroopV2] {
 			t.Fatal("prepared runtime is replaceable or makes Recruit public")
 		}
-		s.BindSessionForTest(session, PlayerContext{ServerID: 1, PlayerID: 1, AccountID: 1})
+		s.BindSession(session, 1, 1, 1)
+		s.BindSession(foreignSession, 1, 2, 2)
+		// Deliberately disagree with the committed source and test no fallback.
+		s.SeedCityTroopsForTest(1, 1, 777)
+		s.SeedCityTroopsForTest(2, 1, 777)
 		cfg := gateway.DefaultConfig()
 		cfg.PublicRoutes = s.PublicRoutes()
 		handler := gateway.NewServer(log, cfg, gateway.AccessControl{}, account.SessionValidator{Svc: s.AccountService()}, s.GatewayRouter())
@@ -100,7 +128,37 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		}
 		return reply
 	}
+	readCity := func(token string, shard int32, city int64, code commonv1.ErrorCode) *domesticv1.GetCityStateResponse {
+		t.Helper()
+		req := mustProto(&domesticv1.GetCityStateRequest{CityId: city})
+		reply := send(RouteGetCityState, token, "get-city", shard, req, true)
+		if reply.GetCode() != int32(code) || code != 0 && len(reply.GetData()) != 0 {
+			t.Fatal("unexpected garrison route result", reply)
+		}
+		out := new(domesticv1.GetCityStateResponse)
+		if code == 0 {
+			returnPGOK(t, unmarshal(reply.GetData(), out))
+		}
+		return out
+	}
+	readyCity := func(unitThree int32, food int64) {
+		t.Helper()
+		got := readCity(session, 1, 1, 0)
+		expected := &domesticv1.CityGarrisonSnapshot{Troops: []*domesticv1.ReadyTroopCount{
+			{UnitCfgId: 1, Count: 11}, {UnitCfgId: 2, Count: 12}, {UnitCfgId: 3, Count: unitThree}, {UnitCfgId: 4, Count: 14},
+		}}
+		if !proto.Equal(got.GetGarrison(), expected) || got.GetWallet().GetFood() != food ||
+			len(got.GetBuildings()) != 1 || got.GetBuildings()[0].GetSlotKey() != "hall" || got.GetProductionRates() == nil {
+			t.Fatal("garrison, wallet or existing city fields differ from committed state", got)
+		}
+	}
+	empty := readCity(session, 1, 2, 0).GetGarrison()
+	if empty == nil || len(empty.GetTroops()) != 0 {
+		t.Fatal("valid all-zero ready stock did not encode as present-empty", empty)
+	}
 	unpaid := returnPGSnapshot(t, ctx, observer, profile)
+	readCity(foreignSession, 1, 1, commonv1.ErrorCode_WORLD_CITY_NOT_FOUND)
+	readCity(session, 2, 1, commonv1.ErrorCode_COMMON_INVALID_PACKET)
 	if got := send(routeRecruitTroopV2, "", "guest", 1, payload, true); got.GetCode() != int32(commonv1.ErrorCode_COMMON_UNAUTHORIZED) {
 		t.Fatal("missing authenticated session", got)
 	}
@@ -145,6 +203,14 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		!reflect.DeepEqual(paid, returnPGSnapshot(t, ctx, observer, profile)) {
 		t.Fatal("fresh runtime replay changed receipt, wallet or queue", replay)
 	}
+	paidFood := int64(100) - accepted.Cost.Food
+	readyCity(13, paidFood)
+	pending := returnPGSnapshot(t, ctx, observer, profile)
+	for _, relation := range []string{"city_troop", "work_queue", "mil_recruit_receipt"} {
+		if paid[relation] != pending[relation] {
+			t.Fatal("reading the pending garrison changed military state", relation)
+		}
+	}
 
 	ticks, cadence := make(chan struct{}), make(chan struct{})
 	done := make(chan struct{})
@@ -186,7 +252,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		}
 	}
 	finishedPass()
-	if !reflect.DeepEqual(paid, returnPGSnapshot(t, ctx, observer, profile)) {
+	if !reflect.DeepEqual(pending, returnPGSnapshot(t, ctx, observer, profile)) {
 		t.Fatal("early worker pass changed persisted state")
 	}
 	advancePaidRecruitSchedules(t, ctx, observer, profile, restarted.preparedRecruit, &accepted)
@@ -209,6 +275,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	if !reflect.DeepEqual(credited, returnPGSnapshot(t, ctx, observer, profile)) {
 		t.Fatal("additional worker pass repeated the stock credit")
 	}
+	readyCity(15, paidFood)
 	stopWorker()
 	select {
 	case <-done:
@@ -217,5 +284,25 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	}
 	if got := send(routeRecruitTroopV2, session, "closed", 1, payload, true); got.GetCode() != int32(commonv1.ErrorCode_COMMON_UNAVAILABLE) {
 		t.Fatal("retired source still admitted operations", got)
+	}
+	if retired := readCity(session, 1, 1, 0).GetGarrison(); retired != nil {
+		t.Fatal("retired prepared source exposed a stale or empty garrison", retired)
+	}
+	_, ws, stopRestored := start()
+	defer stopRestored()
+	readyCity(15, paidFood)
+	militaryAfterRead := returnPGSnapshot(t, ctx, observer, profile)
+	for _, relation := range []string{"city_troop", "work_queue", "mil_recruit_receipt"} {
+		if credited[relation] != militaryAfterRead[relation] {
+			t.Fatal("restored garrison read repeated a military effect", relation)
+		}
+	}
+	tag, err := observer.Exec(ctx, "DELETE FROM city_troop WHERE server_id=1 AND city_id=1 AND unit_cfg_id=2")
+	returnPGOK(t, err)
+	if tag.RowsAffected() != 1 {
+		t.Fatal("fixture did not remove the expected ready row")
+	}
+	if missing := readCity(session, 1, 1, 0).GetGarrison(); missing != nil {
+		t.Fatal("incomplete evidence exposed a partial or cached garrison", missing)
 	}
 }
