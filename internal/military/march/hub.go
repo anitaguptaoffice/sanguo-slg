@@ -25,6 +25,10 @@ type Hub struct {
 	onDurableReturn DurableMarchReturnHandler
 	durableReturns  map[int64]struct{}
 	returnErrors    map[int64]error
+
+	onPreparedArrival MarchArrivalHandler
+	preparedArrivals  map[int64]struct{}
+	arrivalResolverMu sync.Mutex
 }
 
 // MarchFinishedHandler runs after a march ends (arrival without return, or return complete).
@@ -137,6 +141,9 @@ func (h *Hub) onRecruitComplete(ev Event) {
 func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
+	if h.onPreparedArrival != nil {
+		return nil, ErrInvalidMarch
+	}
 	troops, err := NormalizeMarchTroops(h.catalog, req.Troops)
 	if err != nil {
 		return nil, err
@@ -187,6 +194,11 @@ func (h *Hub) CreateMarch(req StartMarchRequest) (*MarchOrder, error) {
 // on-time live arrival differs only by scheduler tick latency.
 func (h *Hub) onMarchArrive(ev Event) {
 	h.mu.Lock()
+	if resolve := h.onPreparedArrival; resolve != nil {
+		h.mu.Unlock()
+		h.onPreparedMarchArrival(ev, resolve)
+		return
+	}
 	defer h.mu.Unlock()
 	o := cloneMarch(h.marches[ev.RefID])
 	if o == nil {

@@ -91,8 +91,13 @@ func arrivalPGSnapshot(t *testing.T, conn *pgx.Conn, tables ...string) string {
 }
 
 func TestPGDurableResolverHubRestore(t *testing.T) {
-	for _, scenario := range []string{"battle", "no-battle", "all-dead", "sql-failure", "outer-commit-failure"} {
+	for _, scenario := range []string{
+		"battle", "no-battle", "all-dead", "sql-failure", "outer-commit-failure",
+		"prepared-battle", "prepared-no-battle", "prepared-all-dead", "prepared-outer-commit-failure",
+	} {
 		t.Run(scenario, func(t *testing.T) {
+			prepared := strings.HasPrefix(scenario, "prepared-")
+			scenario := strings.TrimPrefix(scenario, "prepared-")
 			pool, observer, profile := arrivalPGFixture(t)
 			ctx := context.Background()
 			now := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
@@ -127,9 +132,17 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 			hub := march.NewHub(func() time.Time { return now })
 			finished := 0
 			hub.SetMarchFinishedHandler(func(int64) { finished++ })
-			hub.SetMarchArrivalHandler(resolver.HubHandler())
 			restored, err := restore.Restore(ctx, hub)
 			arrivalPGOK(t, err)
+			if prepared {
+				arrivalPGOK(t, hub.SetDurableMarchReturnHandler(func(march.DurableMarchReturnEvent) (march.ReturnObservation, error) {
+					t.Error("return ran during the arrival phase")
+					return march.ReturnObservation{}, march.ErrReturnUnavailable
+				}))
+				arrivalPGOK(t, hub.SetPreparedMarchArrivalHandler(resolver.HubHandler()))
+			} else {
+				hub.SetMarchArrivalHandler(resolver.HubHandler())
+			}
 			if len(restored.Marches) != 1 || hub.Tick() != 0 {
 				t.Fatal("restore did not stage exactly one arrival")
 			}
