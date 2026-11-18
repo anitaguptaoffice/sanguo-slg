@@ -2,15 +2,100 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+	"github.com/jackc/pgx/v5"
 )
 
 type marchHeroBinding struct {
-	playerID int64
-	serverID int32
-	heroID   int64
+	playerID     int64
+	serverID     int32
+	heroID       int64
+	otherHeroIDs []int64
+}
+
+// MarchRestoreReady reports whether the prepared startup snapshot was bound.
+// It is published before scheduling or serving any requests.
+func (s *Server) MarchRestoreReady() bool { return s != nil && s.marchRestoreReady }
+
+// RestorePreparedMarches runs once on a new server with the isolated local
+// source. On failure the caller discards the server and Hub.
+func (s *Server) RestorePreparedMarches(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	pool := s.PlayersPool()
+	if pool == nil || s.milDurable == nil || s.heroSvc == nil {
+		return march.ErrMarchRestore
+	}
+	heroStore, ok := s.heroSvc.Store.(*hero.PGStore)
+	if !ok || heroStore.Pool != pool {
+		return fmt.Errorf("%w: HERO source does not match", march.ErrMarchRestore)
+	}
+	profile := s.milDurable.Profile()
+	restore, err := march.NewMarchRestore(ctx, pool, profile)
+	if err != nil {
+		return err
+	}
+	// Separate lock connection keeps the pool usable for the snapshot and HERO.
+	acquired, err := pool.Acquire(ctx)
+	if err != nil {
+		return err
+	}
+	owner := acquired.Hijack()
+	defer func() {
+		clean, stop := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer stop()
+		_ = owner.Close(clean)
+	}()
+	err = pgx.BeginTxFunc(ctx, owner, pgx.TxOptions{AccessMode: pgx.ReadOnly}, func(tx pgx.Tx) error {
+		var locked, sameHero bool
+		const lockNamespace = 0x4d415243 // MARCH startup
+		heroTable := pgx.Identifier{profile.SchemaName, "player_hero"}.Sanitize()
+		if err := tx.QueryRow(ctx, `SELECT pg_catalog.pg_try_advisory_xact_lock($1,$2),
+			COALESCE(pg_catalog.to_regclass('player_hero') = pg_catalog.to_regclass($3), false)`,
+			lockNamespace, int32(profile.SchemaOID), heroTable).Scan(&locked, &sameHero); err != nil {
+			return err
+		}
+		if !locked || !sameHero {
+			return fmt.Errorf("%w: recovery already in progress or HERO relation does not match", march.ErrMarchRestore)
+		}
+		result, err := restore.Restore(ctx, s.military)
+		if err != nil {
+			return err
+		}
+		if err := s.releaseOrphanMarchHeroes(ctx, result.Release); err != nil {
+			return err
+		}
+		for _, restored := range result.Marches {
+			_, troops := s.military.SnapshotMarch(restored.MarchID)
+			pc := PlayerContext{PlayerID: restored.PlayerID, ServerID: restored.ServerID}
+			s.recordPlayerMarchWithHeroes(pc, restored.OriginCityID, restored.MarchID, restored.HeroIDs[0], restored.HeroIDs[1:], troops)
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	// ActivateRestore belongs to the later durable arrival and return wiring.
+	s.marchRestoreReady = true
+	return nil
+}
+
+func (s *Server) releaseOrphanMarchHeroes(ctx context.Context, releases []march.HeroRelease) error {
+	for _, release := range releases {
+		actor := hero.PlayerRef{ServerID: release.ServerID, PlayerID: release.PlayerID}
+		err := s.heroSvc.ReleaseFromMarch(ctx, actor, release.HeroID)
+		if err != nil && ctx.Err() == nil {
+			err = s.heroSvc.ReleaseFromMarch(ctx, actor, release.HeroID)
+		}
+		if err != nil {
+			return fmt.Errorf("release restored orphan hero %d: %w", release.HeroID, err)
+		}
+	}
+	return ctx.Err()
 }
 
 func (s *Server) wireMarchHeroLifecycle() {

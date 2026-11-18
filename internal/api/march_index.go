@@ -12,6 +12,10 @@ type playerMarchRef struct {
 }
 
 func (s *Server) recordPlayerMarch(pc PlayerContext, cityID int64, marchID int64, heroID int64, troops []march.TroopStack) {
+	s.recordPlayerMarchWithHeroes(pc, cityID, marchID, heroID, nil, troops)
+}
+
+func (s *Server) recordPlayerMarchWithHeroes(pc PlayerContext, cityID, marchID, heroID int64, otherHeroIDs []int64, troops []march.TroopStack) {
 	s.marchIndexMu.Lock()
 	defer s.marchIndexMu.Unlock()
 	if s.playerMarches == nil {
@@ -26,7 +30,9 @@ func (s *Server) recordPlayerMarch(pc PlayerContext, cityID int64, marchID int64
 		heroID:  heroID,
 		troops:  append([]march.TroopStack(nil), troops...),
 	})
-	s.marchHeroByID[marchID] = marchHeroBinding{playerID: pc.PlayerID, serverID: pc.ServerID, heroID: heroID}
+	s.marchHeroByID[marchID] = marchHeroBinding{
+		playerID: pc.PlayerID, serverID: pc.ServerID, heroID: heroID, otherHeroIDs: append([]int64(nil), otherHeroIDs...),
+	}
 }
 
 func (s *Server) lookupMarchHero(marchID int64) (marchHeroBinding, bool) {

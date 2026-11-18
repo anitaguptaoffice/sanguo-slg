@@ -14,7 +14,13 @@ maintenance writers.
 `SANGUO_PREPARED_RECRUIT=1` additionally enables authenticated Recruit V2 and
 the durable due worker. This requires prepared first-city and the exact
 40-object profile including the 11 ACCOUNT objects. A 29-object first-city
-profile still works without the Recruit opt-in. March requires its own wiring.
+profile still works without the Recruit opt-in.
+
+Prepared startup reads the live march snapshot and releases proven orphan
+heroes before opening the listener. Check `/healthz` for
+`"march_restore":"ready"`. A restore or hero release failure stops startup.
+Restored marches are visible, with deadlines staged until durable arrival and
+return are wired. Continue using one gateway with an exclusive database.
 
 The prepared gateway selects `sanguo.recruit-v2` when offered on `/ws`.
 Selection is a transport capability; every Recruit V2 request still needs

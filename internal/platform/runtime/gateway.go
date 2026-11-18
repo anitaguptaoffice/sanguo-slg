@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -37,7 +38,23 @@ func (a *App) PrepareGame(ctx context.Context, repoRoot string) error {
 // HTTPHandler returns health checks and the WebSocket gateway.
 func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz", healthz)
+	if a.Config.PreparedFirstCity {
+		ready := apiSrv.MarchRestoreReady()
+		mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			status, restore := "ok", "ready"
+			if !ready {
+				status, restore = "unavailable", "unavailable"
+				w.WriteHeader(http.StatusServiceUnavailable)
+			}
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": status, "march_restore": restore})
+		})
+		if !ready {
+			return mux
+		}
+	} else {
+		mux.HandleFunc("/healthz", healthz)
+	}
 
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
@@ -81,6 +98,11 @@ func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
 		}
 		if err := srv.WirePreparedRecruit(ctx, *profiles.recruit, profiles.catalog); err != nil {
 			return nil, fmt.Errorf("compose prepared recruit: %w", err)
+		}
+	}
+	if a.Config.PreparedFirstCity {
+		if err := srv.RestorePreparedMarches(ctx); err != nil {
+			return nil, fmt.Errorf("restore prepared march: %w", err)
 		}
 	}
 	if err := srv.WireM4Content(ctx); err != nil {
