@@ -1,6 +1,8 @@
 import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { positivePlayerLevel } from "./tutorialPlayerLevel";
 import { garrisonPatch } from "@/net/garrisonState";
+import { parseCurrentRecruitQueue, type CurrentRecruitQueue } from "@/net/currentRecruitQueue";
+import type { CityStateSnapshot } from "./cityStateFetch";
 import { ErrorCode } from "@/net/loadProto";
 import type { GatewayPort } from "@/net/GatewayClient";
 import type { AuthenticatedIdentity } from "./authenticatedIdentity";
@@ -55,6 +57,7 @@ export type MainCitySession = {
   buildings: CityBuilding[];
   cityTroops: CityTroopStack[];
   garrisonStatus?: "unknown" | "stale" | "ready";
+  currentRecruitQueue?: CurrentRecruitQueue | null;
   bag: BagStack[];
 };
 
@@ -128,12 +131,7 @@ export async function bootstrapMainCity(
     throw new Error("无法获取城池");
   }
 
-  const state = (await gateway.getCityState(city.city_id)) as {
-    wallet?: ResourceWallet;
-    buildings?: CityBuilding[];
-    production_rates?: ResourceWallet;
-    garrison?: unknown;
-  };
+  const state = (await gateway.getCityState(city.city_id)) as CityStateSnapshot;
 
   assertCurrent();
   return {
@@ -153,6 +151,8 @@ export async function bootstrapMainCity(
     cityY: city.y ?? 60,
     buildings: state.buildings ?? [],
     ...garrisonPatch({ cityTroops: [], garrisonStatus: "unknown" }, state.garrison),
+    ...(gateway.preparedRecruit === true
+      ? { currentRecruitQueue: parseCurrentRecruitQueue(state.recruit_queue) } : {}),
     bag: [],
   };
 }

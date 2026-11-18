@@ -2,6 +2,7 @@ import { BAG_USE_UNKNOWN, useBagItemWithAssets } from "@/net/bagUseAssets";
 import { beginAssetRead, refreshQuestAssets, QUEST_ASSETS_PENDING } from "@/net/questClaimAssets";
 import { mergeCityResourceWallet } from "@/net/cityResourceWallet";
 import { captureActor } from "@/net/actorContext";
+import { renderCurrentRecruitQueue } from "@/net/currentRecruitQueue";
 import { openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { CityBuilding, MainCitySession } from "@/net/bootstrapSession";
 import type { GatewayPort } from "@/net/GatewayClient";
@@ -543,7 +544,7 @@ export class QueuePanels {
     if (this.tickAccum < 1) return;
     this.tickAccum = 0;
     this.render();
-    void this.checkRecruitCompletions();
+    if (this.gateway.preparedRecruit !== true) void this.checkRecruitCompletions();
   }
 
   private buildPanel(): HTMLElement {
@@ -989,22 +990,26 @@ export class QueuePanels {
     );
     if (!buildUl || !recruitUl) return;
     const session = this.getSession();
+    const prepared = this.gateway.preparedRecruit === true;
+    const currentRecruitQueue = session?.currentRecruitQueue ?? null;
     const now = Date.now();
-    const prevRecruitSnapshot = this.recruitDetectSnapshot;
-    this.recruits = pruneFinishedRecruits(this.recruits, now);
-    const recruitJustCompleted = detectRecruitQueueJustCompleted(
-      prevRecruitSnapshot,
-      this.recruits,
-      now,
-    );
-    // Pulse rendering is re-entrant: advance detection before notifying completion.
-    this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
-    if (recruitJustCompleted.length) {
-      this.notifyRecruitJustCompleted(recruitJustCompleted);
-      this.onRecruitQueueJustCompleted?.(recruitJustCompleted);
+    if (!prepared) {
+      const prevRecruitSnapshot = this.recruitDetectSnapshot;
+      this.recruits = pruneFinishedRecruits(this.recruits, now);
+      const recruitJustCompleted = detectRecruitQueueJustCompleted(prevRecruitSnapshot, this.recruits, now);
+      // Pulse rendering is re-entrant: advance detection before notifying completion.
+      this.recruitDetectSnapshot = this.recruits.map((e) => ({ ...e }));
+      if (recruitJustCompleted.length) {
+        this.notifyRecruitJustCompleted(recruitJustCompleted);
+        this.onRecruitQueueJustCompleted?.(recruitJustCompleted);
+      }
     }
     if (overviewEl) {
-      overviewEl.textContent = formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
+      const recruitCount = currentRecruitQueue
+        ? `${currentRecruitQueue.jobs.length}${currentRecruitQueue.hasMore ? "+" : ""}` : "待同步";
+      overviewEl.textContent = prepared
+        ? `建造 ${activeBuildingUpgrades(this.buildings(), now).length} · 募兵 ${recruitCount}`
+        : formatQueuePanelOverviewBar(this.buildings(), this.recruits, now);
     }
     this.renderNextQueueFinishPreview(
       previewEl,
@@ -1203,7 +1208,8 @@ export class QueuePanels {
 
     syncListRovingTabindex(buildUl, "li.queue-list-row[data-slot-key]");
 
-    for (const entry of this.recruits) {
+    if (prepared) renderCurrentRecruitQueue(recruitUl, currentRecruitQueue);
+    for (const entry of prepared ? [] : this.recruits) {
       const text = formatRecruitQueueLine(entry, now);
       const li = document.createElement("li");
       li.className = "queue-list-row";
