@@ -85,6 +85,8 @@ type Server struct {
 	firstCityPrepared   *FirstCityPreparedCreationSource
 
 	preparedRecruit *recruitGeneration
+
+	marchRestoreReady bool
 }
 
 // ErrMilitaryDurable rejects incomplete startup composition inputs.
@@ -396,7 +398,7 @@ func (s *Server) RunDomesticScheduler(ctx context.Context) {
 
 // RunMilitaryScheduler ticks march/recruit queues until ctx is cancelled.
 func (s *Server) RunMilitaryScheduler(ctx context.Context) {
-	if s.military == nil || s.preparedRecruit != nil {
+	if s.military == nil || s.preparedRecruit != nil || s.marchRestoreReady {
 		return
 	}
 	s.military.RunScheduler(ctx)
