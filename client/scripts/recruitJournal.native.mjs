@@ -110,7 +110,8 @@ async function boot(p) {
   p.on('websocket', socket => { report.network.push({ websocket: socket.url() }); });
   await p.goto(origin + rawQuery);
   await p.evaluate(async database => {
-    const { openRecruitJournal } = await import('/src/net/recruitJournal.ts');
+    const { openRecruitJournal, openRecruitSubmissionJournal } = await import('/src/net/recruitJournal.ts');
+    const { getProtoRoot } = await import('/src/net/loadProto.ts');
     const identity = { accountId: '1', serverId: 1, playerId: 1, generation: 1 };
     const request = req => new Promise((resolve, reject) => {
       req.onsuccess = () => resolve(req.result);
@@ -136,6 +137,37 @@ async function boot(p) {
       async open() {
         f.journal?.close();
         f.journal = await openRecruitJournal(f.live);
+      },
+      async openSubmission(authorize = () => {}) {
+        f.close();
+        f.sent = [];
+        f.blocked = [];
+        f.journal = await openRecruitSubmissionJournal(f.live, {
+          authorize,
+          blockProfile: identity => f.blocked.push(identity),
+          exchange(bytes, identity, signal) {
+            f.sent.push({ bytes: Array.from(bytes), identity, aborted: signal.aborted });
+            return new Promise((resolve, reject) => {
+              f.reply = (code, patch) => resolve(f.packet(code, patch));
+              f.disconnect = () => reject(Error('Controlled lost reply'));
+            });
+          },
+        });
+      },
+      packet(code, patch) {
+        const root = getProtoRoot();
+        const response = root.lookupType('sanguo.military.v1.RecruitTroopV2Response');
+        const envelope = root.lookupType('sanguo.common.v1.ServerPacket');
+        const acceptance = { queue_id: '1', city_id: '9', unit_cfg_id: 1, count: 2, food_paid: '8', wood_paid: '9',
+          duration_sec: '2', initial_status: 1, accepted_at_ms: '0', initial_start_at_ms: '0', initial_finish_at_ms: '2000',
+          catalog_version: new TextEncoder().encode('recruit-v1:' + '1'.repeat(64)), rule_digest: new Uint8Array(32).fill(0xaa), ...patch };
+        const data = code === 0 ? response.encode(response.fromObject({ acceptance })).finish() : undefined;
+        return envelope.encode(envelope.fromObject({ code, data, trace_id: 'fixture-reply' })).finish();
+      },
+      async start(recovered = false) {
+        const command = recovered ? (await f.journal.inspect()).command : f.prepared;
+        f.result = f.journal.submit(command);
+        f.result.catch(() => {});
       },
       close() { f.journal?.close(); f.journal = null; },
       async reset() {
@@ -546,6 +578,189 @@ try {
     assert.deepEqual(after, ['unknown', before[0], before[1], before[2], before[4]]);
     assert.deepEqual(await dump(), raw);
     return after.slice(0, 3);
+  });
+  const begin = async () => {
+    await reset();
+    await ev(() => fixture.openSubmission());
+    const saved = await prepare();
+    await ev(() => fixture.start());
+    await page.waitForFunction(() => fixture.sent.length === 1);
+    const [keys, rows, , slots] = await dump();
+    assert.equal(keys[0][4], saved[0]);
+    assert.equal(slots[0], saved[0]);
+    assert.deepEqual([rows[0].phase, rows[0].attempt, rows[0].uncertain], ['attempting', 1, false]);
+    assert.deepEqual((await ev(() => fixture.sent[0])).bytes, saved[4]);
+    return saved;
+  };
+  const respond = (code, patch) => ev(({ code, patch }) => { fixture.reply(code, patch); return fixture.result; }, { code, patch });
+  await test('scope Web Lock and same-key replay after lost reply', 'one send at a time; sticky uncertainty', async () => {
+    const saved = await begin();
+    const tab = await boot(await ctx.newPage());
+    try {
+      const busy = await tab.evaluate(async () => {
+        await fixture.openSubmission();
+        await fixture.start(true);
+        return [await fixture.result, fixture.sent.length];
+      });
+      assert.deepEqual(busy, ['busy', 0]);
+    } finally { await tab.close(); }
+    assert.equal(await ev(() => { fixture.disconnect(); return fixture.result; }), 'unknown');
+    await ev(() => fixture.start(true));
+    await page.waitForFunction(() => fixture.sent.length === 2);
+    assert.deepEqual((await ev(() => fixture.sent[1])).bytes, saved[4]);
+    assert.equal(await respond(50004), 'unknown');
+    const unknown = (await dump())[1][0];
+    assert.deepEqual([unknown.phase, unknown.attempt, unknown.uncertain], ['unknown', 2, true]);
+    await ev(() => fixture.start(true));
+    await page.waitForFunction(() => fixture.sent.length === 3);
+    assert.equal(await respond(0), 'accepted');
+    const final = (await dump())[1][0];
+    assert.deepEqual([final.phase, final.attempt, final.uncertain, final.outcome], ['accepted', 3, true, acceptedOutcome]);
+    await ev(() => fixture.start(true));
+    assert.deepEqual(await ev(async () => [await fixture.result, fixture.sent.length]), ['accepted', 3]);
+    return final.phase;
+  });
+  await test('first live certified business rejection', 'persist resolved rejection before next action', async () => {
+    const saved = await begin();
+    assert.equal(await respond(50004), 'rejected');
+    const rejected = (await dump())[1][0];
+    assert.deepEqual([rejected.phase, rejected.attempt, rejected.uncertain, rejected.outcome], ['rejected', 1, false, '50004']);
+    assert.notEqual((await prepare(saved[0]))[0], saved[0]);
+  });
+  for (const [name, stage] of [['attempt write abort', 'attempting'], ['receipt write abort', 'accepted']]) {
+    await test(name, stage === 'attempting' ? 'no exchange' : 'retain pending evidence', async () => {
+      if (stage === 'accepted') await begin();
+      else { await reset(); await ev(() => fixture.openSubmission()); await prepare(); }
+      const state = await ev(async target => {
+        const put = IDBObjectStore.prototype.put;
+        let aborted = false;
+        IDBObjectStore.prototype.put = function (row, key) {
+          const req = put.call(this, row, key);
+          if (row.phase === target) req.addEventListener('success', () => { aborted = true; this.transaction.abort(); });
+          return req;
+        };
+        try {
+          if (target === 'accepted') fixture.reply(0);
+          else await fixture.start();
+          return [await fixture.result, fixture.sent.length, aborted];
+        } finally { IDBObjectStore.prototype.put = put; }
+      }, stage);
+      const beforeSend = stage === 'attempting';
+      assert.deepEqual(state, ['unknown', beforeSend ? 0 : 1, true]);
+      assert.equal((await dump())[1][0].phase, beforeSend ? 'prepared' : 'attempting');
+      return state;
+    });
+  }
+  await test('late acceptance after closing original login', 'settle original scope only', async () => {
+    await begin();
+    await ev(() => {
+      fixture.journal.close();
+      fixture.identity = { accountId: '2', playerId: 1, serverId: 1, generation: 2 };
+    });
+    assert.equal(await respond(0), 'unknown');
+    assert.deepEqual((await dump())[1][0].outcome, acceptedOutcome);
+    await ev(() => fixture.open());
+    assert.equal(await ev(() => fixture.inspect()), null);
+    return { published: false, original: 'accepted' };
+  });
+  for (const stage of ['readback abort', 'authorization loss']) await test('attempt ' + stage, 'durable attempt; no exchange', async () => {
+    await reset();
+    const result = await ev(async ({ stage, intent }) => {
+      const native = IDBDatabase.prototype.transaction;
+      let committed = false;
+      await fixture.openSubmission(() => {
+        if (stage === 'authorization loss' && committed) throw Error('Capability revoked');
+      });
+      await fixture.prepare(null, intent);
+      IDBDatabase.prototype.transaction = function (...args) {
+        const tx = native.apply(this, args);
+        if (tx.mode === 'readwrite') tx.addEventListener('complete', () => { committed = true; });
+        if (tx.mode === 'readonly' && committed && stage === 'readback abort') {
+          tx.objectStore('commands').count().addEventListener('success', () => tx.abort());
+        }
+        return tx;
+      };
+      try {
+        await fixture.start();
+        return [await fixture.result, fixture.sent.length, committed];
+      } finally { IDBDatabase.prototype.transaction = native; }
+    }, { stage, intent });
+    assert.deepEqual(result, ['unknown', 0, true]);
+    assert.equal((await dump())[1][0].phase, 'attempting');
+    return result;
+  });
+  for (const [code, patch, reason] of [[50008, null, 'intent-conflict'], [0, { city_id: '10' }, 'receipt-conflict']]) {
+    await test(reason, 'persist original attempting record and raw conflicting reply', async () => {
+      await begin();
+      const [row] = (await dump())[1];
+      assert.equal(await respond(code, patch), 'quarantined');
+      const [saved] = (await dump())[1];
+      assert.deepEqual(JSON.parse(saved.outcome[1]), [row.payload, row.payloadDigest, row.phase,
+        String(row.attempt), row.uncertain, row.outcome, row.recordDigest]);
+      assert.equal(saved.outcome[0], reason);
+      assert.equal(saved.outcome[2], Buffer.from(await ev(([c, p]) => Array.from(fixture.packet(c, p)), [code, patch])).toString('hex'));
+      mustRefuse(await openFailure());
+      return reason;
+    });
+  }
+  for (const phase of ['accepted', 'rejected']) {
+    await test('conflicting evidence after ' + phase, 'quarantine without replacing original terminal evidence', async () => {
+      await begin();
+      const [[key], [attempting]] = await dump();
+      const outcome = phase === 'accepted' ? ['2', ...acceptedOutcome.slice(1)] : '50004';
+      const original = { ...attempting, phase, outcome };
+      original.recordDigest = recordHash(original);
+      await ev(([key, row]) => fixture.seed([[key, row]], []), [key, original]);
+      assert.equal(await respond(0), 'quarantined');
+      const [, saved] = (await dump())[1][0].outcome;
+      assert.deepEqual(JSON.parse(saved), [original.payload, original.payloadDigest, phase, String(original.attempt),
+        original.uncertain, outcome, original.recordDigest]);
+    });
+  }
+  await test('browser crashes after dispatch before terminal persistence', 'reopen and explicitly retry exact previously sent bytes', async () => {
+    const saved = await begin();
+    await halt(true);
+    await launch();
+    await ev(() => fixture.openSubmission());
+    assert.equal((await ev(() => fixture.inspect()))[0], 'unknown');
+    assert.equal(await ev(() => fixture.sent.length), 0);
+    await ev(() => fixture.start(true));
+    await page.waitForFunction(() => fixture.sent.length === 1);
+    assert.deepEqual((await ev(() => fixture.sent[0])).bytes, saved[4]);
+    assert.equal(await respond(0), 'accepted');
+    const row = (await dump())[1][0];
+    assert.deepEqual([row.phase, row.attempt, row.uncertain], ['accepted', 2, true]);
+    return row.phase;
+  });
+  for (const stage of ['reply read', 'quarantine write']) await test(stage + ' abort', 'keep evidence and refuse retries', async () => {
+    await begin();
+    const original = await dump();
+    const result = await ev(async stage => {
+      const proto = IDBObjectStore.prototype;
+      const method = stage === 'reply read' ? 'getAllKeys' : 'put';
+      const native = proto[method];
+      proto[method] = function (...args) {
+        const req = native.apply(this, args);
+        if (this.name === 'commands' && (method === 'getAllKeys' || args[0].phase === 'quarantined')) {
+          req.addEventListener('success', () => this.transaction.abort());
+        }
+        return req;
+      };
+      try {
+        fixture.reply(50008);
+        return [await fixture.result, await fixture.failure(() => fixture.journal.submit(fixture.prepared)),
+          fixture.sent.length, fixture.blocked[0], await fixture.failure(() => fixture.openSubmission())];
+      } finally { proto[method] = native; }
+    }, stage);
+    assert.deepEqual(result, ['unknown', 'Error: Recruit journal unavailable', 1,
+      { accountId: '1', serverId: 1, playerId: 1, generation: 1 }, 'Error: Recruit journal unavailable']);
+    assert.deepEqual(await dump(), original);
+    const tab = await boot(await ctx.newPage());
+    assert.deepEqual(await tab.evaluate(async () => {
+      await fixture.openSubmission(); await fixture.start(true); return [await fixture.result, fixture.sent.length];
+    }), ['busy', 0]);
+    await page.close();
+    page = tab;
   });
   assert.deepEqual(report.network, []);
 } finally {
