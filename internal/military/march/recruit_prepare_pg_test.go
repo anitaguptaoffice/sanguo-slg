@@ -3,6 +3,7 @@ package march
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -168,6 +169,72 @@ func TestPGRecruitPreparePendingAndRejects(t *testing.T) {
 		}
 		baseOK(t, o.Rollback(ctx))
 	})
+}
+
+func TestPGRecruitPrepareRequestRejections(t *testing.T) {
+	pool, b, profile := freshSourceFixture(t)
+	prepareBase(t, pool, profile)
+	baseSQL(t, pool, "INSERT INTO player_wallet(server_id,player_id,food) VALUES(1,1,100)")
+	pending, _, retained, manifest := historyDefaults(t)
+	manifest.Rules[0].Cost.Food = math.MaxInt64
+	var err error
+	manifest.Version, err = RecruitManifestVersion(manifest.Rules)
+	baseOK(t, err)
+	catalog, err := NewRecruitCatalog([]RecruitManifest{retained, manifest}, manifest.Version)
+	baseOK(t, err)
+	scope := RecruitScope{1, 1, RecruitCommandID{9}}
+	o, a, ctx := baseOwner(t, b)
+	participant, err := NewRecruitParticipant(ctx, b, a, profile, catalog)
+	baseOK(t, err)
+	baseOK(t, participant.Pin(ctx, a))
+	snapshot := func() string {
+		t.Helper()
+		var rows, wallet string
+		var last int64
+		var called bool
+		baseOK(t, a.Scan(ctx, b, prepareSnap, nil, &rows))
+		baseOK(t, a.Scan(ctx, b, "SELECT row_to_json(w)::text FROM player_wallet w WHERE server_id=1 AND player_id=1", nil, &wallet))
+		baseOK(t, a.Scan(ctx, b, "SELECT last_value,is_called FROM work_queue_id_seq", nil, &last, &called))
+		if last != 1 || called {
+			t.Fatalf("rejection allocated a queue ID: %d %v", last, called)
+		}
+		return rows + wallet
+	}
+	before := snapshot()
+	for _, tc := range []struct {
+		name        string
+		unit, count int32
+		want        error
+	}{
+		{"zero count", 1, 0, ErrRecruitAdmissionCount},
+		{"unknown unit", 5, 1, ErrRecruitAdmissionUnit},
+		{"proposed capacity", 1, math.MaxInt32, ErrRecruitAdmissionCount},
+		{"proposed cost overflow", 1, 2, ErrRecruitAdmissionCount},
+	} {
+		adm, err := participant.Prepare(ctx, a, scope, RecruitIntent{Version: 1, CityID: 100, UnitCfgID: tc.unit, Count: tc.count})
+		if adm != nil || err != tc.want || !errors.Is(err, ErrRecruitUnavailable) || snapshot() != before {
+			t.Fatalf("%s: admission=%v error=%v", tc.name, adm, err)
+		}
+	}
+	// The existing job and receipt are valid. Only the proposed job would
+	// cross the maximum supported timestamp, without waiting for either job.
+	finish := time.Date(9999, 12, 31, 23, 59, 59, 999000000, time.UTC)
+	start := finish.Add(-time.Duration(pending.duration) * time.Second)
+	pending.accepted, pending.qstart, pending.rstart = start, start, start
+	pending.qfinish, pending.rfinish = finish, finish
+	prepareSeedRow(t, ctx, a, b, *pending)
+	before = snapshot()
+	adm, err := participant.Prepare(ctx, a, scope, RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 2, Count: 1})
+	if adm != nil || err != ErrRecruitAdmissionCount || snapshot() != before {
+		t.Fatalf("proposed finish overflow: admission=%v error=%v", adm, err)
+	}
+	execPrep(t, ctx, a, b, "DELETE FROM city_troop WHERE unit_cfg_id=4")
+	before = snapshot()
+	adm, err = participant.Prepare(ctx, a, scope, RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 5, Count: 1})
+	if adm != nil || err != ErrRecruitUnavailable || snapshot() != before {
+		t.Fatalf("invalid persisted state: admission=%v error=%v", adm, err)
+	}
+	baseOK(t, o.Rollback(ctx))
 }
 
 func preparePending(t *testing.T) (*RecruitCatalog, historyRow, historyRow) {
