@@ -49,7 +49,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		session        = "00000000-0000-0000-0000-000000000001"
 		foreignSession = "00000000-0000-0000-0000-000000000002"
 	)
-	start := func() (*Server, *websocket.Conn, func()) {
+	start := func(checkLegacy bool) (*Server, *websocket.Conn, func()) {
 		t.Helper()
 		now := func() time.Time { return time.Date(2026, time.January, 1, 0, 0, 0, 0, time.UTC) }
 		hub := domestic.NewHub(now)
@@ -58,6 +58,16 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		absent := s.GatewayRouter().Dispatch(ctx, &commonv1.ClientPacket{Route: routeRecruitTroopV2})
 		if absent.GetMsg() != "unknown route" {
 			t.Fatal("Recruit V2 exposed before prepared startup", absent)
+		}
+		if checkLegacy {
+			s.BindSession(session, 1, 1, 1)
+			got := s.GatewayRouter().Dispatch(ctx, &commonv1.ClientPacket{Route: RouteGetCityState,
+				SessionId: session, ServerId: 1, Payload: mustProto(&domesticv1.GetCityStateRequest{CityId: 1})})
+			var state domesticv1.GetCityStateResponse
+			returnPGOK(t, unmarshal(got.GetData(), &state))
+			if got.GetCode() != 0 || state.GetGarrison() == nil || state.GetRecruitQueue() != nil {
+				t.Fatal("legacy request acquired prepared queue authority", got, &state)
+			}
 		}
 		owner, err := binding.Begin(ctx)
 		returnPGOK(t, err)
@@ -105,7 +115,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		}
 		return s, ws, closeSource
 	}
-	_, ws, stopFirst := start()
+	_, ws, stopFirst := start(true)
 	key := march.RecruitCommandID{9}
 	payload, err := marshal(&militaryv1.RecruitTroopV2Request{
 		CityId: 1, UnitCfgId: 3, Count: 2, CommandId: key[:], IntentVersion: 1,
@@ -141,7 +151,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		}
 		return out
 	}
-	readyCity := func(unitThree int32, food int64) {
+	readyCity := func(unitThree int32, food int64) *domesticv1.CurrentRecruitQueue {
 		t.Helper()
 		got := readCity(session, 1, 1, 0)
 		expected := &domesticv1.CityGarrisonSnapshot{Troops: []*domesticv1.ReadyTroopCount{
@@ -151,10 +161,15 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 			len(got.GetBuildings()) != 1 || got.GetBuildings()[0].GetSlotKey() != "hall" || got.GetProductionRates() == nil {
 			t.Fatal("garrison, wallet or existing city fields differ from committed state", got)
 		}
+		return got.GetRecruitQueue()
 	}
-	empty := readCity(session, 1, 2, 0).GetGarrison()
-	if empty == nil || len(empty.GetTroops()) != 0 {
+	empty := readCity(session, 1, 2, 0)
+	if empty.GetGarrison() == nil || len(empty.GetGarrison().GetTroops()) != 0 {
 		t.Fatal("valid all-zero ready stock did not encode as present-empty", empty)
+	}
+	emptyQueue := &domesticv1.CurrentRecruitQueue{}
+	if !proto.Equal(empty.GetRecruitQueue(), emptyQueue) {
+		t.Fatal("known empty queue did not round-trip with presence", empty)
 	}
 	unpaid := returnPGSnapshot(t, ctx, observer, profile)
 	readCity(foreignSession, 1, 1, commonv1.ErrorCode_WORLD_CITY_NOT_FOUND)
@@ -193,7 +208,7 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	stopFirst() // The first client closes without ever reading its response.
 	accepted := recruitAttemptPGObserved(t, ctx, observer)
 	paid := returnPGSnapshot(t, ctx, observer, profile)
-	restarted, nextWS, stopNext := start()
+	restarted, nextWS, stopNext := start(false)
 	defer stopNext()
 	ws = nextWS
 	replay := send(routeRecruitTroopV2, session, "replayed", 1, payload, true)
@@ -204,7 +219,16 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		t.Fatal("fresh runtime replay changed receipt, wallet or queue", replay)
 	}
 	paidFood := int64(100) - accepted.Cost.Food
-	readyCity(13, paidFood)
+	assertActive := func(queue *domesticv1.CurrentRecruitQueue, finish time.Time) {
+		t.Helper()
+		want := &domesticv1.CurrentRecruitQueue{Jobs: []*domesticv1.CurrentRecruitJob{
+			{QueueId: 100, UnitCfgId: 3, Count: 2, Status: 1, FinishAtMs: finish.UnixMilli()},
+		}}
+		if !proto.Equal(queue, want) {
+			t.Fatal("unexpected persisted pending view", queue)
+		}
+	}
+	assertActive(readyCity(13, paidFood), accepted.InitialFinishAt)
 	pending := returnPGSnapshot(t, ctx, observer, profile)
 	for _, relation := range []string{"city_troop", "work_queue", "mil_recruit_receipt"} {
 		if paid[relation] != pending[relation] {
@@ -256,6 +280,9 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 		t.Fatal("early worker pass changed persisted state")
 	}
 	advancePaidRecruitSchedules(t, ctx, observer, profile, restarted.preparedRecruit, &accepted)
+	var elapsedFinish time.Time
+	returnPGOK(t, observer.QueryRow(ctx, "SELECT finish_at FROM work_queue WHERE server_id=1 AND queue_id=100").Scan(&elapsedFinish))
+	assertActive(readyCity(13, paidFood), elapsedFinish)
 	advanced := returnPGSnapshot(t, ctx, observer, profile)
 	tick()
 	credited := returnPGSnapshot(t, ctx, observer, profile)
@@ -275,7 +302,9 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	if !reflect.DeepEqual(credited, returnPGSnapshot(t, ctx, observer, profile)) {
 		t.Fatal("additional worker pass repeated the stock credit")
 	}
-	readyCity(15, paidFood)
+	if !proto.Equal(readyCity(15, paidFood), emptyQueue) {
+		t.Fatal("committed completion left a pending job")
+	}
 	stopWorker()
 	select {
 	case <-done:
@@ -285,17 +314,23 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	if got := send(routeRecruitTroopV2, session, "closed", 1, payload, true); got.GetCode() != int32(commonv1.ErrorCode_COMMON_UNAVAILABLE) {
 		t.Fatal("retired source still admitted operations", got)
 	}
-	if retired := readCity(session, 1, 1, 0).GetGarrison(); retired != nil {
-		t.Fatal("retired prepared source exposed a stale or empty garrison", retired)
+	if retired := readCity(session, 1, 1, 0); retired.GetGarrison() != nil || retired.GetRecruitQueue() != nil {
+		t.Fatal("retired prepared source exposed a stale or empty military view", retired)
 	}
-	_, ws, stopRestored := start()
+	_, ws, stopRestored := start(false)
 	defer stopRestored()
-	readyCity(15, paidFood)
+	if !proto.Equal(readyCity(15, paidFood), emptyQueue) {
+		t.Fatal("restored queue included terminal work")
+	}
 	militaryAfterRead := returnPGSnapshot(t, ctx, observer, profile)
 	for _, relation := range []string{"city_troop", "work_queue", "mil_recruit_receipt"} {
 		if credited[relation] != militaryAfterRead[relation] {
 			t.Fatal("restored garrison read repeated a military effect", relation)
 		}
+	}
+	returnPGExec(t, ctx, observer, "UPDATE work_queue SET status=1 WHERE server_id=1 AND queue_id=100 AND status=2; DELETE FROM mil_recruit_receipt WHERE server_id=1 AND queue_id=100")
+	if readyCity(15, paidFood) != nil {
+		t.Fatal("corrupt queue published authority or hid the valid garrison")
 	}
 	tag, err := observer.Exec(ctx, "DELETE FROM city_troop WHERE server_id=1 AND city_id=1 AND unit_cfg_id=2")
 	returnPGOK(t, err)

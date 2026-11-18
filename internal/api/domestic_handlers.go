@@ -89,6 +89,7 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 	}
 	var (
 		garrison *domesticv1.CityGarrisonSnapshot
+		queue    *domesticv1.CurrentRecruitQueue
 		err      error
 	)
 	if s.preparedRecruit == nil {
@@ -97,13 +98,15 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 			return nil, err
 		}
 	} else {
-		garrison, err = s.preparedRecruit.readReadyGarrison(ctx, pc, city.ID)
+		var view preparedCityMilitaryView
+		view, err = s.preparedRecruit.readCityMilitary(ctx, pc, city.ID)
 		if errors.Is(err, world.ErrRecruitCity) {
 			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
 		}
 		if err != nil {
 			s.log.WarnContext(ctx, "prepared garrison unavailable", "server_id", pc.ServerID, "city_id", city.ID, "err", err)
 		}
+		garrison, queue = view.garrison, view.queue
 	}
 	if err := s.accrueCityWithQuest(ctx, pc.ServerID, city); err != nil {
 		return nil, err
@@ -133,6 +136,7 @@ func (s *Server) handleGetCityState(ctx context.Context, pkt *commonv1.ClientPac
 		Buildings:       buildings,
 		ProductionRates: walletProto(prod),
 		Garrison:        garrison,
+		RecruitQueue:    queue,
 	})
 	if err != nil {
 		return nil, err
