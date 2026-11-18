@@ -99,6 +99,10 @@ func TestPGPreparedMarchRestoreStartup(t *testing.T) {
 	releases("33333")
 
 	exec(`CREATE SEQUENCE restore_attempt_17; CREATE SEQUENCE restore_attempt_18;
+		CREATE FUNCTION reject_full_hero_write() RETURNS trigger LANGUAGE plpgsql AS $$
+		BEGIN RAISE EXCEPTION 'fixture requires a status-only write'; END $$;
+		CREATE TRIGGER status_only_restore BEFORE UPDATE OF loyalty, force ON player_hero
+		  FOR EACH ROW EXECUTE FUNCTION reject_full_hero_write();
 		CREATE FUNCTION check_release() RETURNS trigger LANGUAGE plpgsql AS $$
 		BEGIN
 		  IF (NEW.hero_id=17 AND nextval('restore_attempt_17')=1)

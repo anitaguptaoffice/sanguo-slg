@@ -66,7 +66,7 @@ func (s *Server) RestorePreparedMarches(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if err := s.releaseOrphanMarchHeroes(ctx, result.Release); err != nil {
+		if err := s.releaseOrphanMarchHeroes(ctx, profile.SchemaName, result.Release); err != nil {
 			return err
 		}
 		for _, restored := range result.Marches {
@@ -84,14 +84,10 @@ func (s *Server) RestorePreparedMarches(ctx context.Context) error {
 	return nil
 }
 
-func (s *Server) releaseOrphanMarchHeroes(ctx context.Context, releases []march.HeroRelease) error {
+func (s *Server) releaseOrphanMarchHeroes(ctx context.Context, schema string, releases []march.HeroRelease) error {
 	for _, release := range releases {
 		actor := hero.PlayerRef{ServerID: release.ServerID, PlayerID: release.PlayerID}
-		err := s.heroSvc.ReleaseFromMarch(ctx, actor, release.HeroID)
-		if err != nil && ctx.Err() == nil {
-			err = s.heroSvc.ReleaseFromMarch(ctx, actor, release.HeroID)
-		}
-		if err != nil {
+		if err := s.heroSvc.ReleaseMarchOrphan(ctx, schema, actor, release.HeroID); err != nil {
 			return fmt.Errorf("release restored orphan hero %d: %w", release.HeroID, err)
 		}
 	}

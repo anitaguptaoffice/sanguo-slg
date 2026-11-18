@@ -19,6 +19,8 @@ profile still works without the Recruit opt-in.
 Prepared startup reads the live march snapshot and releases proven orphan
 heroes before opening the listener. Check `/healthz` for
 `"march_restore":"ready"`. A restore or hero release failure stops startup.
+HERO checks for a live link again under the hero row lock and updates only
+the proven orphan's status.
 Restored marches are visible, with deadlines staged until durable arrival and
 return are wired. Continue using one gateway with an exclusive database.
 
