@@ -127,7 +127,7 @@ import {
   formatMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
   syncMarchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeperLine,
 } from "@/net/marchFormTroopMarginResidualDeepestDeepestDeepestDeepestDeeper";
-import { setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
+import { readTroopRecruitForm, setTroopRecruitFormError, syncTroopRecruitFormPreview } from "@/ui/troopRecruitForm";
 import { readMarchUnitCfgId, setMarchFormErrorDisplay, validateMarchForm } from "@/net/marchFormValidation";
 import {
   formatMarchFormValidationSweepLine,
@@ -702,6 +702,8 @@ export class MainCityScene implements Scene {
         <p class="troop-recruit-preview" data-role="troop-recruit-preview"></p>
         <p class="march-form-error hidden" data-role="troop-recruit-form-error" role="alert"></p>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="recruit">募兵</button>
+        <button type="button" data-action="retry-prepared-recruit" hidden>重试上次募兵</button>
+        <p data-role="prepared-recruit-status" role="status"></p>
         <p class="military-recruit-view-queue hidden" data-role="recruit-view-queue-wrap">
           <button type="button" data-action="view-recruit-queue">查看队列</button>
         </p>
@@ -1624,6 +1626,7 @@ export class MainCityScene implements Scene {
       return;
     }
     if (action === "recruit") void this.recruit();
+    if (action === "retry-prepared-recruit") void this.recruitPrepared(true);
     if (action === "march") void this.startMarch();
     if (action === "clear-march-target") {
       clearMarchTargetFromForm(this.militaryPanel);
@@ -1874,11 +1877,23 @@ export class MainCityScene implements Scene {
       this.marchSubmitState,
       marchFormAllowsSubmit(marchValidated, troopReserve),
     );
-    const recruitPreview = syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
+    const preparedRecruit = this.gateway.preparedRecruit === true;
+    const canRecruit = preparedRecruit
+      ? this.preparedRecruitIntent() !== null
+      : syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet)?.canAfford ?? false;
+    if (preparedRecruit) {
+      const preview = this.militaryPanel.querySelector('[data-role="troop-recruit-preview"]');
+      if (preview) preview.textContent = "费用和耗时由服务器核定";
+      const retry = this.militaryPanel.querySelector<HTMLButtonElement>('[data-action="retry-prepared-recruit"]');
+      if (retry) {
+        retry.hidden = false;
+        retry.disabled = this.recruitTroopSubmitState === "submitting";
+      }
+    }
     syncRecruitTroopSubmitButton(
       this.militaryPanel,
       this.recruitTroopSubmitState,
-      recruitPreview?.canAfford ?? false,
+      canRecruit,
     );
     const recruitSnapshot = this.queuePanels?.getRecruitQueueSnapshot() ?? [];
     const highlightId =
@@ -1966,7 +1981,6 @@ export class MainCityScene implements Scene {
     resetCenterPanelViewportScroll(this.militaryPanel);
     applyRecruitQueueJumpToMilitaryPanel(this.militaryPanel, target);
     this.queuePanels.highlightRecruitQueue(target.queue_id);
-    syncTroopRecruitFormPreview(this.militaryPanel, this.session?.wallet);
     this.syncMilitaryPanel();
     this.renderHud();
   }
@@ -3361,7 +3375,65 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
+  private preparedRecruitIntent() {
+    const city = this.session?.cityId ?? 0;
+    const { unitCfgId, count } = readTroopRecruitForm(this.militaryPanel);
+    if (!Number.isSafeInteger(city) || city <= 0 || ![1, 2, 3, 4].includes(unitCfgId) ||
+        !Number.isInteger(count) || count <= 0 || count > 2147483647) return null;
+    return { city_id: String(city), unit_cfg_id: unitCfgId, count };
+  }
+
+  private async recruitPrepared(retry: boolean): Promise<void> {
+    if (this.gateway.preparedRecruit !== true || !this.gateway.submitPreparedRecruit ||
+        !this.session || this.recruitSubmitOwner?.()) return;
+    const intent = retry ? null : this.preparedRecruitIntent();
+    if (!retry && !intent) return;
+    const session = this.session;
+    const actor = captureActor(this.gateway, () => this.session);
+    const generation = this.marchSnapshotGeneration;
+    const current = () => this.recruitSubmitOwner === current && this.session === session &&
+      actor() && generation === this.marchSnapshotGeneration;
+    const feedback = this.militaryPanel.querySelector('[data-role="prepared-recruit-status"]');
+    if (feedback) feedback.textContent = "";
+    this.recruitSubmitOwner = current;
+    this.recruitTroopSubmitState = "submitting";
+    this.syncMilitaryPanel();
+    this.cityStateFetch.clear();
+    let message: string;
+    try {
+      const result = await this.gateway.submitPreparedRecruit(intent ?? undefined);
+      if (!current()) return;
+      const statuses = {
+        accepted: "募兵已受理",
+        rejected: "本次募兵未通过",
+        unknown: "募兵结果待确认，请重试上次募兵",
+        busy: "另一个页面正在处理募兵，请稍后重试",
+        quarantined: "募兵记录需要核验",
+        "retry-required": "上次募兵结果待确认，请先重试",
+        "nothing-to-retry": "没有待确认的募兵",
+      };
+      message = statuses[result];
+      if (result === "accepted") {
+        this.cityStateFetch.clear();
+        const state = await this.cityStateFetch.fetch().catch(() => null);
+        if (!current()) return;
+        if (state) this.applyCityStateFromFetch(state);
+      }
+    } catch (error) {
+      if (!current()) return;
+      message = error instanceof Error ? error.message : "暂时无法确认募兵，请重试上次募兵";
+    } finally {
+      if (this.recruitSubmitOwner === current) this.recruitSubmitOwner = null;
+    }
+    this.recruitTroopSubmitState = "idle";
+    this.status = message;
+    if (feedback) feedback.textContent = message;
+    this.syncMilitaryPanel();
+    this.renderHud();
+  }
+
   private async recruit(): Promise<void> {
+    if (this.gateway.preparedRecruit === true) return this.recruitPrepared(false);
     if (!this.session || this.recruitSubmitOwner?.()) return;
     const preview = syncTroopRecruitFormPreview(this.militaryPanel, this.session.wallet);
     if (!preview?.canAfford) {

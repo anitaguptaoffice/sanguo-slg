@@ -35,6 +35,8 @@ export type RecruitSubmissionResult = "accepted" | "rejected" | "unknown" | "bus
 export type RecruitSubmissionChannel = Readonly<{
   // Caller must enforce reviewed profile enrollment and server capability.
   authorize(identity: AuthenticatedIdentity): void;
+  // Opted-in local activation reserves externally after attempting readback.
+  reserve?(command: RecruitJournalHandle): Promise<void>;
   // Preserve denial outside the journal when its quarantine write cannot be verified.
   blockProfile(identity: AuthenticatedIdentity): void;
   // Start exactly one correlated V2 exchange synchronously. No deferred sends.
@@ -386,6 +388,10 @@ async function openJournal(live: LiveIdentity, channel?: RecruitSubmissionChanne
       try {
         await replace(before, attempted, guard);
         channel.authorize(identity);
+        if (channel.reserve) {
+          await channel.reserve(command);
+          channel.authorize(identity);
+        }
         const body = command.encodeRequest(); // Recheck identity immediately before exchange.
         const raw = (await exchangeWithDeadline(channel, body, identity))?.slice() ?? null;
         const reply = classifyReply(raw, attempted, stillCurrent());
