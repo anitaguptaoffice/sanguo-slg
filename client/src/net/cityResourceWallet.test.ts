@@ -41,7 +41,7 @@ it("queue refresh uses only city resources", async () => {
  const f = fixture(), p = new QueuePanels(document.createElement("div"), f.gateway, () => f.session, {}, () => {}, () => {}, () => {}); panels.push(p); p.attach(); p.open(); await (p as any).refreshCityState(); expect(f.session.wallet.gold).toBe(700); expect(f.session.wallet.food).toBe(0);
 });
 it("main-city snapshot application uses city resources without clobbering gold", () => {
- const f = fixture(), s = new MainCityScene() as any; Object.assign(s, { session: f.session, cityStateFetch: { isCurrent: () => true }, patchSession: f.patch, buildCompleteTodos: { onCityBuildings: () => {}, pendingSlotKeys: () => [] }, renderHud: () => {}, syncSlotUpgradeOverlay: () => {} });
+ const f = fixture(), s = new MainCityScene() as any; Object.assign(s, { session: f.session, gateway: f.gateway, cityStateFetch: { isCurrent: () => true }, patchSession: f.patch, buildCompleteTodos: { onCityBuildings: () => {}, pendingSlotKeys: () => [] }, renderHud: () => {}, syncSlotUpgradeOverlay: () => {} });
  const state = wire(); delete state.buildings; s.applyCityStateFromFetch(state); expect(f.session.wallet.gold).toBe(700); expect(f.session.wallet.food).toBe(0);
 });
 it("source-specific merging preserves gold but accepts zero resources and absent wallet", async () => {
