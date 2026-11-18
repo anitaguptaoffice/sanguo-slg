@@ -682,6 +682,16 @@ export class DailyQuestPanels {
   private syncDailyFilterUiSkins(): void {
     if (!this.assets) return;
     mountFilterUiSkins(this.panel, this.assets);
+    for (const row of this.panel.querySelectorAll(".daily-quest-list li.art-filter-row--skinned")) {
+      const bar = row.querySelector(":scope > .art-filter-row-skin-bar");
+      const detail = row.querySelector(":scope > .art-filter-row-detail");
+      if (!bar || !detail) continue;
+      // The fixed-height skin bar needs the full title width. Progress and
+      // reward details belong below it, alongside the separate links.
+      const details = [...bar.children].filter((el) =>
+        !el.matches(".daily-quest-row-main, .daily-quest-row-claim-dot"));
+      detail.prepend(...details);
+    }
   }
 
   private renderBattleReportBanner(): void {
