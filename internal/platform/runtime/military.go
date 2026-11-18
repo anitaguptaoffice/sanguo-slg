@@ -141,8 +141,13 @@ func loadMilitaryStartupProfile(raw []byte) (freshsource.Profile, *march.Recruit
 // or the validation transaction cannot end cleanly. Observations never replace
 // the expected profile.
 func ComposeMilitary(ctx context.Context, log *slog.Logger, pool *pgxpool.Pool, path string) *api.MilitaryDurable {
+	handle, _ := composeMilitaryStartup(ctx, log, pool, path)
+	return handle
+}
+
+func composeMilitaryStartup(ctx context.Context, log *slog.Logger, pool *pgxpool.Pool, path string) (*api.MilitaryDurable, *preparedCityProfiles) {
 	if path == "" {
-		return nil
+		return nil, nil
 	}
 	if log == nil {
 		log = slog.Default()
@@ -150,17 +155,23 @@ func ComposeMilitary(ctx context.Context, log *slog.Logger, pool *pgxpool.Pool, 
 	raw, err := os.ReadFile(path)
 	if err != nil {
 		log.Warn("military durable disabled", "reason", "startup profile unreadable")
-		return nil
+		return nil, nil
 	}
 	p, catalog, err := loadMilitaryStartupProfile(raw)
+	var prepared *preparedCityProfiles
+	if err == nil && len(p.Objects) != 14 {
+		if prepared, err = splitPreparedCityProfile(p); err == nil {
+			p = prepared.military
+		}
+	}
 	if err == nil {
 		var handle *api.MilitaryDurable
 		if handle, err = composeMilitary(ctx, pool, p, catalog); err == nil {
-			return handle
+			return handle, prepared
 		}
 	}
 	log.Warn("military durable disabled", "reason", err.Error()[:min(len(err.Error()), 160)])
-	return nil
+	return nil, nil
 }
 
 // One bounded validation transaction; any error drops the handle.

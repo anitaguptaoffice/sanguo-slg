@@ -8,8 +8,6 @@ import (
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // firstCityCatalogVersion identifies the spec data subset the starter city content
@@ -32,7 +30,7 @@ func (t firstCityTemplateIntake) SelectTemplate(context.Context, *worldv1.FirstC
 // composeFirstCity enables the world.v2 first-city routes and installs the ledger,
 // template intake and creation effect. When PostgreSQL is available, intents and
 // terminal receipts persist across process restarts; without a pool, falls back to mem.
-func composeFirstCity(ctx context.Context, srv *api.Server, pool *pgxpool.Pool, hub *domestic.Hub) {
+func composeFirstCity(srv *api.Server, prepared *api.FirstCityPreparedCreationSource) {
 	srv.EnableFirstCityV2Routes(func(pc api.PlayerContext) (string, bool) {
 		return firstCityRealmID(pc.ServerID), true
 	})
@@ -45,8 +43,8 @@ func composeFirstCity(ctx context.Context, srv *api.Server, pool *pgxpool.Pool, 
 		ledger = api.NewMemFirstCityLedger()
 	}
 	srv.WireFirstCityV2Ledger(ledger, intake)
-	if src := maybeFirstCityPreparedSource(ctx, srv, pool, hub); src != nil {
-		srv.WireFirstCityPreparedCreation(src)
+	if prepared != nil {
+		srv.WireFirstCityPreparedCreation(prepared)
 	}
 	srv.WireFirstCityV2Effect(srv.FirstCityCreationEffect())
 }

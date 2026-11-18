@@ -2,16 +2,17 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"time"
 
-	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/account"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	platformdb "github.com/anitaguptaoffice/sanguo-slg/internal/platform/db"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 )
 
@@ -41,13 +42,21 @@ func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler 
 	gwCfg := gateway.DefaultConfig()
 	gwCfg.PublicRoutes = apiSrv.PublicRoutes()
 	validator := account.SessionValidator{Svc: apiSrv.AccountService()}
-	gateway.Mount(mux, a.Log, gwCfg, gateway.AccessControl{}, validator, apiSrv.GatewayRouter())
-	api.MountGmHTTP(mux, apiSrv.Gm())
+	router := apiSrv.GatewayRouter()
+	if a.Config.PreparedFirstCity {
+		router = router.WithoutRoutes(api.RouteCreateCity, api.RouteRecruitTroop, api.RouteStartMarch)
+	} else {
+		api.MountGmHTTP(mux, apiSrv.Gm())
+	}
+	gateway.Mount(mux, a.Log, gwCfg, gateway.AccessControl{}, validator, router)
 	return mux
 }
 
 // NewAPIServer constructs the integration server and starts domestic scheduling.
-func (a *App) NewAPIServer(ctx context.Context) *api.Server {
+func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
+	if err := a.validatePreparedFirstCityLocal(); err != nil {
+		return nil, err
+	}
 	worldSvc := world.NewService(world.NewPGStore(a.DB))
 	hub := domestic.NewHub(time.Now)
 	hub.UseStore(domestic.NewPGStore(a.DB), defaultShardID, 30*time.Second)
@@ -55,13 +64,23 @@ func (a *App) NewAPIServer(ctx context.Context) *api.Server {
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub)
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	srv.AttachBattleReports(reportSvc)
-	srv.AttachMilitaryDurable(ComposeMilitary(ctx, a.Log, a.DB, a.Config.MILFreshProfileFile))
+	military, profiles := composeMilitaryStartup(ctx, a.Log, a.DB, a.Config.MILFreshProfileFile)
+	srv.AttachMilitaryDurable(military)
+	var prepared *api.FirstCityPreparedCreationSource
+	if a.Config.PreparedFirstCity {
+		var err error
+		if prepared, err = composeFirstCityPreparedSource(ctx, military, profiles, a.DB, hub); err != nil {
+			return nil, fmt.Errorf("compose prepared first-city: %w", err)
+		}
+	}
 	if err := srv.WireM4Content(ctx); err != nil {
 		a.Log.Error("m4 content wire failed", "err", err)
 	}
-	composeFirstCity(ctx, srv, a.DB, hub)
+	composeFirstCity(srv, prepared)
 	go srv.RunDomesticScheduler(ctx)
-	go srv.RunMilitaryScheduler(ctx)
+	if !a.Config.PreparedFirstCity {
+		go srv.RunMilitaryScheduler(ctx)
+	}
 	go srv.RunRankScheduler(ctx)
-	return srv
+	return srv, nil
 }
