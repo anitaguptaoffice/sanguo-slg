@@ -30,3 +30,10 @@ settlement, building fields, and production rates remain independent.
 
 The PG17 gateway test uses controlled schedule advancement to verify pending
 and committed stock, reconstruction, and exact read-after-credit behavior.
+
+The same prepared read transaction reads the current queue under the WORLD
+barrier. Field 5 is absent on legacy or unavailable queue evidence; a valid
+empty field reports no pending jobs. Invalid queue data does not overwrite the
+independently validated garrison. Both fields require confirmed transaction end.
+Generate the mirrored Go binding with protoc 36.1 and the go.mod-pinned
+protoc-gen-go v1.36.5 using the existing GARRISON-WIRE-REPAIR.md command.

@@ -29,7 +29,7 @@ func TestGarrisonWireCompatibility(t *testing.T) {
 	}
 	old := file.Messages().ByName("GetCityStateResponse")
 	current := (&GetCityStateResponse{}).ProtoReflect().Descriptor()
-	if old.Fields().Len() != 3 || current.Fields().Len() != 4 {
+	if old.Fields().Len() != 3 || current.Fields().Len() != 5 {
 		t.Fatal("response shape drift")
 	}
 	for i := 0; i < 3; i++ {
@@ -94,6 +94,14 @@ func TestGarrisonWireCompatibility(t *testing.T) {
 	}
 	if got := marshal(&GetCityStateResponse{Garrison: &CityGarrisonSnapshot{}}); !bytes.Equal(got, []byte{0x22, 0}) {
 		t.Fatalf("present-empty=%x", got)
+	}
+	queue := current.Fields().ByNumber(5)
+	if queue == nil || queue.Name() != "recruit_queue" || !queue.HasPresence() || queue.Message() == nil ||
+		queue.Message().FullName() != "sanguo.domestic.v1.CurrentRecruitQueue" {
+		t.Fatal("current queue field drift")
+	}
+	if got := marshal(&GetCityStateResponse{RecruitQueue: &CurrentRecruitQueue{}}); !bytes.Equal(got, []byte{0x2a, 0}) {
+		t.Fatalf("present-empty queue=%x", got)
 	}
 	row := (&ReadyTroopCount{}).ProtoReflect().Descriptor()
 	if row.FullName() != "sanguo.domestic.v1.ReadyTroopCount" || row.Fields().Len() != 2 || row.Fields().ByName("wounded") != nil {

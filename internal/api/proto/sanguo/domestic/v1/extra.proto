@@ -25,6 +25,22 @@ message CityGarrisonSnapshot {
   repeated ReadyTroopCount troops = 1;
 }
 
+message CurrentRecruitJob {
+  int64 queue_id = 1;
+  int32 unit_cfg_id = 2;
+  int32 count = 3;
+  // 0 = waiting, 1 = active. Terminal work is excluded.
+  int32 status = 4;
+  // Current work_queue finish in Unix milliseconds; estimated while waiting.
+  int64 finish_at_ms = 5;
+}
+
+message CurrentRecruitQueue {
+  // Oldest pending prefix, in ascending queue_id order.
+  repeated CurrentRecruitJob jobs = 1;
+  bool has_more = 2;
+}
+
 message GetCityStateResponse {
   sanguo.common.v1.ResourceWallet wallet = 1;
   repeated sanguo.common.v1.CityBuilding buildings = 2;
@@ -32,4 +48,5 @@ message GetCityStateResponse {
   sanguo.common.v1.ResourceWallet production_rates = 3;
   // Absent: unknown/unavailable. Present empty: authoritative zero ready troops.
   CityGarrisonSnapshot garrison = 4;
+  CurrentRecruitQueue recruit_queue = 5;
 }
