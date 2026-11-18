@@ -57,7 +57,10 @@ describe("optional item icon loading", () => {
     });
     return requested;
   }
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
 
   it.each([1, 2])("loads item icons at DPR %s", async (dpr) => {
     const requested = setup([item("present.png")]);
@@ -106,5 +109,73 @@ describe("optional item icon loading", () => {
   it("still rejects a failed manifest request", async () => {
     setup([], [], false);
     await expect(new AssetLoader().loadAll(1)).rejects.toThrow("art manifest fetch failed: 503");
+  });
+
+  function manualImages(assets: unknown[]) {
+    setup(assets);
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    const images: ManualImage[] = [];
+    class ManualImage {
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      removeAttribute = vi.fn();
+      constructor() { images.push(this); }
+    }
+    vi.stubGlobal("Image", ManualImage);
+    return images;
+  }
+
+  it("expires an optional image at 15 seconds and discards late callbacks after retry", async () => {
+    const images = manualImages([item()]);
+    const loader = new AssetLoader();
+    const completed = vi.fn();
+    const first = loader.loadAll(1).then(completed);
+    await vi.advanceTimersByTimeAsync(14_999);
+    const old = images[0];
+    const late = old.onload;
+    expect(completed).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(completed).toHaveBeenCalledOnce();
+    await first;
+    expect(old.removeAttribute).toHaveBeenCalledWith("src");
+    expect(old.onload).toBeNull();
+    expect(old.onerror).toBeNull();
+    expect(loader.getImageForAsset("item.icon.2001.v1")).toBeUndefined();
+
+    const retry = loader.loadAll(1);
+    await vi.advanceTimersByTimeAsync(0);
+    images[1].onload?.();
+    await retry;
+    late?.();
+    expect(loader.getImageForAsset("item.icon.2001.v1")?.img).toBe(images[1]);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(["item first", "required first", "button state"])("keeps a shared %s path waiting past the optional deadline", async (mode) => {
+    const shared = required("same.png");
+    const icon = item("same.png");
+    const assets = mode === "button state"
+      ? [icon, { ...required(), button_states: { normal: [{ scale: 1, path: "same.png" }] } }]
+      : mode === "item first" ? [icon, shared] : [shared, icon];
+    const images = manualImages(assets);
+    const completed = vi.fn();
+    const result = new AssetLoader().loadAll(1).then(completed);
+    const rejected = expect(result).rejects.toThrow("failed to load art");
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(completed).not.toHaveBeenCalled();
+    expect(images[0].removeAttribute).not.toHaveBeenCalled();
+    images[0].onerror?.();
+    await rejected;
+  });
+
+  it.each([true, false])("clears the timer after a synchronous src failure (optional %s)", async (optional) => {
+    manualImages([optional ? item() : required()]);
+    vi.stubGlobal("Image", class {
+      set src(_value: string) { throw new Error("src unavailable"); }
+    });
+    const result = new AssetLoader().loadAll(1);
+    if (optional) await expect(result).resolves.toBeUndefined();
+    else await expect(result).rejects.toThrow("src unavailable");
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
