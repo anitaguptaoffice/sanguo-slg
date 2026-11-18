@@ -27,3 +27,15 @@ This is not shared serialization with RestHero, detail regeneration, office,
 upgrade, expression, stale ReleaseFromMarch or other snapshot writers. It adds no
 claim generation, orphan scan or restart recovery. It does not activate durable
 MIL persistence or alter deployment gates. Existing PG claims do use this fix.
+
+## Orphan recovery at startup
+
+`ReleaseMarchOrphan` consumes an individual candidate from the reviewed
+startup restore. Under a PostgreSQL hero row lock, it checks the current
+army and order link in the same schema, then updates only the claimed
+hero's status. Live orders and unresolved army links block release.
+Concurrent recovery calls on the same hero serialize and an already
+released hero needs no write. A store failure gets one fresh attempt
+unless the startup context ended or the candidate is definitively invalid.
+Claim and legacy release retain their existing behavior. The startup
+caller must own the exclusive source before other march writers start.
