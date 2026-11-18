@@ -19,9 +19,9 @@ type recruitPendingSnapshot struct {
 	payloads         []string
 }
 
-// readRecruitPending requires an already validated, pinned source and the ordered
-// outer actor/wallet/WORLD barriers. It locks marker, ALL stock, then ALL pending.
-// It neither certifies the 23-object Return source nor classifies terminal history.
+// readRecruitPending requires an already validated, pinned source and the WORLD
+// barrier. Writers also hold their earlier actor/wallet barriers. It locks marker,
+// all stock, then all pending, without classifying terminal history.
 func readRecruitPending(ctx context.Context, a *recruittx.Access, s *freshMilitarySource, scope recruitScope) (recruitPendingSnapshot, error) {
 	if ctx == nil || a == nil || s == nil || s.binding == nil || s.retired.Load() {
 		return recruitPendingSnapshot{}, ErrRecruitUnavailable
@@ -57,4 +57,18 @@ func readRecruitPending(ctx context.Context, a *recruittx.Access, s *freshMilita
 		return recruitPendingSnapshot{}, ErrRecruitUnavailable
 	}
 	return recruitPendingSnapshot{stock: stock, ids: ids, players: players, statuses: statuses, starts: starts, finishes: finishes, payloads: payloads}, nil
+}
+
+func (p recruitPendingSnapshot) decodeRows(scope recruitScope, catalog *RecruitCatalog) ([]recruitPendingRow, error) {
+	rows := make([]recruitPendingRow, len(p.ids))
+	for i, id := range p.ids {
+		payload, err := decodeRecruitPayload([]byte(p.payloads[i]), catalog)
+		if err != nil {
+			return nil, ErrRecruitUnavailable
+		}
+		p.starts[i], p.finishes[i] = p.starts[i].UTC(), p.finishes[i].UTC()
+		rows[i] = recruitPendingRow{scope: recruitScope{server: scope.server, player: p.players[i], city: scope.city},
+			id: id, kind: 3, status: p.statuses[i], payload: payload, start: p.starts[i], finish: p.finishes[i]}
+	}
+	return rows, nil
 }
