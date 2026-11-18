@@ -1,7 +1,10 @@
 import { expect, it } from "vitest";
+import type { GatewayPort } from "./GatewayClient";
+import type { MainCitySession } from "./bootstrapSession";
 import { parseCurrentRecruitQueue, renderCurrentRecruitQueue } from "./currentRecruitQueue";
 import { decodeGatewayResponse } from "./decodeGatewayResponse";
 import { getTypes } from "./loadProto";
+import { QueuePanels } from "@/ui/QueuePanels";
 
 const active = {
   queue_id: 41, unit_cfg_id: 1, count: 5, status: 1, finish_at_ms: Date.UTC(2020, 0, 1),
@@ -51,5 +54,30 @@ it("renders elapsed active and waiting work until an authoritative replacement a
   renderCurrentRecruitQueue(list, null);
   expect(list.textContent).toBe("募兵队列待同步");
   renderCurrentRecruitQueue(list, { jobs: [], hasMore: false });
+  expect(list.textContent).toBe("暂无募兵");
+});
+
+it("keeps the prepared queue section visible without any local or building jobs", () => {
+  const mount = document.createElement("div");
+  const session: MainCitySession = {
+    serverId: 1, player: {}, wallet: {}, cityId: 1, cityName: "城池",
+    buildings: [], cityTroops: [], bag: [],
+    currentRecruitQueue: parseCurrentRecruitQueue({ jobs: [active, waiting] }),
+  };
+  const gateway = { preparedRecruit: true } as GatewayPort;
+  const panel = new QueuePanels(mount, gateway, () => session, {}, () => {}, () => {}, () => {});
+  panel.attach();
+  panel.open();
+  const section = mount.querySelector('[data-role="queue-military-section"]')!;
+  const list = section.querySelector('[data-role="queue-recruit-list"]')!;
+  expect(section.classList.contains("hidden")).toBe(false);
+  expect(list.textContent).toContain("训练中");
+  expect(list.textContent).toContain("等待");
+  session.currentRecruitQueue = null;
+  panel.tick(1);
+  expect(list.textContent).toBe("募兵队列待同步");
+  session.currentRecruitQueue = parseCurrentRecruitQueue({});
+  panel.tick(1);
+  expect(section.classList.contains("hidden")).toBe(false);
   expect(list.textContent).toBe("暂无募兵");
 });

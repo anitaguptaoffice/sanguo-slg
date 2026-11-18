@@ -1623,6 +1623,10 @@ export class MainCityScene implements Scene {
       return;
     }
     if (action === "view-recruit-queue") {
+      if (this.gateway.preparedRecruit === true) {
+        this.queuePanels.open();
+        return;
+      }
       const qid = Number(btn.dataset.queueId) || this.recruitQueueHighlightId || 0;
       if (qid > 0) this.openRecruitQueueAndHighlight(qid);
       return;
@@ -1906,14 +1910,11 @@ export class MainCityScene implements Scene {
     if (preparedRecruit) {
       const list = this.militaryPanel.querySelector('[data-role="military-recruit-queue-list"]');
       if (list) renderCurrentRecruitQueue(list, this.session?.currentRecruitQueue ?? null);
+      this.militaryPanel.querySelector('[data-role="recruit-view-queue-wrap"]')?.classList.remove("hidden");
     } else {
       syncMilitaryRecruitQueueList(this.militaryPanel, recruitSnapshot, Date.now(), highlightId);
+      syncMilitaryRecruitViewQueueLink(this.militaryPanel, recruitSnapshot, highlightId);
     }
-    syncMilitaryRecruitViewQueueLink(
-      this.militaryPanel,
-      recruitSnapshot,
-      highlightId,
-    );
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
     syncMarchFormValidationSweepLine(
       this.militaryPanel,

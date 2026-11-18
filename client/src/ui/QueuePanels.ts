@@ -1061,7 +1061,8 @@ export class QueuePanels {
       buildUl.children.length === keys.length ? previousBuildRows.rows : null;
     if (!stableRows) buildUl.innerHTML = "";
     recruitUl.innerHTML = "";
-    this.militarySection.classList.toggle("hidden", recruitLines.length === 0);
+    this.militarySection.classList.toggle("hidden", !prepared && recruitLines.length === 0);
+    if (prepared) renderCurrentRecruitQueue(recruitUl, currentRecruitQueue);
 
     if (this.buildListLoading) {
       renderPanelStateListRow(buildUl, "loading", PANEL_STATE_LOADING_MESSAGE);
@@ -1076,7 +1077,7 @@ export class QueuePanels {
       return;
     }
 
-    if (!buildRows.length && !recruitLines.length && !completeSlots.length) {
+    if (!prepared && !buildRows.length && !recruitLines.length && !completeSlots.length) {
       renderPanelStateListRow(buildUl, "empty", "（当前无排队中的升级或募兵）", {
         legacyClass: "queue-list-empty",
       });
@@ -1208,7 +1209,6 @@ export class QueuePanels {
 
     syncListRovingTabindex(buildUl, "li.queue-list-row[data-slot-key]");
 
-    if (prepared) renderCurrentRecruitQueue(recruitUl, currentRecruitQueue);
     for (const entry of prepared ? [] : this.recruits) {
       const text = formatRecruitQueueLine(entry, now);
       const li = document.createElement("li");
