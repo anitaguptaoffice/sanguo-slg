@@ -103,12 +103,14 @@ func (a *App) ServeHTTP(ctx context.Context) (result error) {
 			result = errors.Join(result, err)
 		}()
 	}
-	root, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	if err := a.PrepareGame(runCtx, root); err != nil {
-		return err
+	if startup == nil {
+		root, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		if err := a.PrepareGame(runCtx, root); err != nil {
+			return err
+		}
 	}
 	apiSrv, err := a.newAPIServer(runCtx, startup)
 	if err != nil {

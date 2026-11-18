@@ -3,7 +3,9 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -58,6 +60,25 @@ func (a *App) acquireLocalMarchStartup(ctx context.Context) (_ *localMarchStartu
 	}
 	if !locked {
 		return nil, fmt.Errorf("local prepared march writer already active")
+	}
+	rows, err := startup.owner.Query(bounded, `SELECT relname,oid,relowner FROM pg_catalog.pg_class
+		WHERE relnamespace=$1 AND relname=ANY($2::name[])`, profile.SchemaOID, slices.Collect(maps.Keys(profile.Objects)))
+	if err != nil {
+		return nil, err
+	}
+	var name string
+	var oid, owner uint32
+	tag, err := pgx.ForEachRow(rows, []any{&name, &oid, &owner}, func() error {
+		if expected := profile.Objects[name]; oid != expected.OID || owner != expected.OwnerOID {
+			return badMilitary("prepared march object identity: " + name)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if tag.RowsAffected() != int64(len(profile.Objects)) {
+		return nil, badMilitary("prepared march object identity is missing")
 	}
 	return startup, nil
 }

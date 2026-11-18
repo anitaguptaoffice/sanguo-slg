@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log/slog"
+	"maps"
 	"strings"
 	"testing"
 	"time"
@@ -30,6 +31,15 @@ func TestPGPreparedMarchLoopbackWriter(t *testing.T) {
 		preparedCheck(t, pool.QueryRow(ctx, "SELECT oid,relowner FROM pg_catalog.pg_class WHERE relnamespace=$1 AND relname=$2",
 			profile.SchemaOID, name).Scan(&identity.OID, &identity.OwnerOID))
 		profile.Objects[name] = identity
+	}
+	wrong := profile
+	wrong.Objects = maps.Clone(profile.Objects)
+	drift := wrong.Objects["city_troop"]
+	drift.OID++
+	wrong.Objects["city_troop"] = drift
+	app.Config.MILFreshProfileFile = writeMilProfile(t, milFile(wrong))
+	if startup, err := app.acquireLocalMarchStartup(ctx); startup != nil || err == nil || !strings.Contains(err.Error(), "city_troop") {
+		t.Fatal("live object drift obtained the writer lease", err)
 	}
 	app.Config.MILFreshProfileFile = writeMilProfile(t, milFile(profile))
 	if srv, err := app.NewAPIServer(ctx); srv != nil || err == nil {
