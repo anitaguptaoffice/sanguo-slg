@@ -270,7 +270,7 @@ func TestPGPreparedArrivalFencesSharedDefendersAfterUnacknowledgedCommit(t *test
 	pool, observer, profile := arrivalPGFixture(t)
 	ctx := context.Background()
 	due := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
-	arrivalPGSQL(t, pool, `INSERT INTO player_hero(server_id,hero_id,player_id,template_cfg_id,status) VALUES(1,11,7,1,3),(1,12,7,1,3);
+	arrivalPGSQL(t, pool, `INSERT INTO player_hero(server_id,hero_id,player_id,template_cfg_id,status) VALUES(1,11,7,1,3),(1,12,7,2,3);
 		INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y,hero_ids) VALUES(1,500,7,2,0,0,'{11}'),(1,501,7,2,0,0,'{12}');
 		INSERT INTO army_troop VALUES(1,500,1,2000),(1,501,1,2000)`)
 	arrivalPGSQL(t, pool, `INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,origin_city_id)
