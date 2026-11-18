@@ -2,18 +2,32 @@ package march
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/recruittx"
 	"github.com/jackc/pgx/v5"
 )
 
+// These exact results describe request-specific failures after checking stored
+// evidence. Older callers can still match the generic unavailable error.
+var (
+	ErrRecruitAdmissionCount = fmt.Errorf("%w: requested recruit count cannot be accepted", ErrRecruitUnavailable)
+	ErrRecruitAdmissionUnit  = fmt.Errorf("%w: unknown recruit unit", ErrRecruitUnavailable)
+)
+
 func validRecruitIntent(intent RecruitIntent) error {
 	if intent.Version != 1 {
 		return ErrRecruitUnsupportedVersion
 	}
-	if intent.CityID <= 0 || intent.UnitCfgID < 1 || intent.UnitCfgID > 4 || intent.Count <= 0 {
+	if intent.CityID <= 0 {
 		return ErrRecruitUnavailable
+	}
+	if intent.Count <= 0 {
+		return ErrRecruitAdmissionCount
+	}
+	if intent.UnitCfgID < 1 || intent.UnitCfgID > 4 {
+		return ErrRecruitAdmissionUnit
 	}
 	return nil
 }
@@ -54,13 +68,16 @@ func (p *RecruitParticipant) Prepare(ctx context.Context, a *recruittx.Access, s
 		return nil, err
 	}
 	if summary.canAddCount(intent.UnitCfgID, intent.Count) != nil {
-		return nil, ErrRecruitUnavailable
+		return nil, ErrRecruitAdmissionCount
 	}
 	rule, err := p.catalog.Current(intent.UnitCfgID)
 	if err != nil {
 		return nil, ErrRecruitUnavailable
 	}
 	plan, err := rule.Plan(RecruitRequest{CityID: intent.CityID, UnitCfgID: intent.UnitCfgID, Count: intent.Count})
+	if err == ErrRecruitOverflow {
+		return nil, ErrRecruitAdmissionCount
+	}
 	if err != nil {
 		return nil, ErrRecruitUnavailable
 	}
@@ -73,7 +90,9 @@ func (p *RecruitParticipant) Prepare(ctx context.Context, a *recruittx.Access, s
 	}
 	schedule, err := planRecruitSchedule(sample, plan.DurationSeconds(), finishes)
 	if err != nil {
-		return nil, ErrRecruitUnavailable
+		// The processing sample, pending finishes and plan duration have
+		// already been validated. Only this proposed finish can overflow.
+		return nil, ErrRecruitAdmissionCount
 	}
 	var queueID int64
 	if err = recruitHistoryRead(ctx, a, s, `SELECT pg_catalog.nextval($1::pg_catalog.regclass)`, []any{pgx.Identifier{s.profile.SchemaName, "work_queue_id_seq"}.Sanitize()}, &queueID); err != nil {

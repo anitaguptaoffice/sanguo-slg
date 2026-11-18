@@ -17,12 +17,12 @@ func TestRecruitPrepareValidation(t *testing.T) {
 		{RecruitIntent{Version: 65537, CityID: 100, UnitCfgID: 1, Count: 2}, ErrRecruitUnsupportedVersion},
 		{RecruitIntent{Version: 4294967295, CityID: 100, UnitCfgID: 1, Count: 2}, ErrRecruitUnsupportedVersion},
 		{RecruitIntent{Version: 1, CityID: 0, UnitCfgID: 1, Count: 2}, ErrRecruitUnavailable},
-		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 0, Count: 2}, ErrRecruitUnavailable},
-		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 5, Count: 2}, ErrRecruitUnavailable},
-		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: 0}, ErrRecruitUnavailable},
-		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: -1}, ErrRecruitUnavailable},
+		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 0, Count: 2}, ErrRecruitAdmissionUnit},
+		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 5, Count: 2}, ErrRecruitAdmissionUnit},
+		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: 0}, ErrRecruitAdmissionCount},
+		{RecruitIntent{Version: 1, CityID: 100, UnitCfgID: 1, Count: -1}, ErrRecruitAdmissionCount},
 	} {
-		if err := validRecruitIntent(c.intent); !errors.Is(err, c.want) {
+		if err := validRecruitIntent(c.intent); err != c.want {
 			t.Fatal(c.intent, err)
 		}
 	}
