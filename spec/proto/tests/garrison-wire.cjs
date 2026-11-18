@@ -55,8 +55,9 @@ const shape = type => type.fieldsArray.map(f => [f.name, f.id, f.type, f.repeate
 assert.deepEqual(shape(next).slice(0, 3), shape(old));
 assert.deepEqual(shape(current).slice(0, 3), shape(old));
 const mirrored = !!current.fields.garrison;
-assert.deepEqual(shape(current), mirrored ? shape(next) : shape(old),
-  'active adapter must match the complete old or new contract');
+const queueMirrored = !!current.fields.recruit_queue;
+assert.deepEqual(shape(current), shape(next).slice(0, queueMirrored ? 5 : mirrored ? 4 : 3),
+  'active adapter must match an adopted wire version');
 const normalize = (type, message) => type.toObject(message, { longs: String });
 const encode = (type, value) => {
   const message = type.fromObject(value);
@@ -115,3 +116,26 @@ if (mirrored) {
   assert.equal(owns(current.decode(Uint8Array.from([0x22, 0x00])), 'garrison'), true);
 }
 console.log(`PASS active adapter: ${mirrored ? 'post' : 'pre'}-mirror fields/presence`);
+
+assert.deepEqual(fields(next)[4], ['recruit_queue', 5, 'CurrentRecruitQueue', false]);
+assert.deepEqual([...encode(next, { recruit_queue: {} })], [0x2a, 0x00]);
+assert.equal(owns(next.decode(oldBytes), 'recruit_queue'), false);
+assert.equal(owns(next.decode(Uint8Array.of(0x2a, 0)), 'recruit_queue'), true);
+const jobs = Array.from({ length: 64 }, (_, i) => ({
+  queue_id: String(9007199254740928n + BigInt(i)), unit_cfg_id: 4, count: 2147483647,
+  status: i === 0 ? 1 : 0, finish_at_ms: i === 0 ? '1793037000123' : '1793036999123',
+}));
+const queue = { jobs, has_more: true };
+const both = { ...baseline, garrison: { troops: [{ unit_cfg_id: 1, count: 4 }] } };
+const withQueue = encode(next, { ...both, recruit_queue: queue });
+assert.deepEqual(normalize(old, old.decode(withQueue)), expected);
+const decodedQueue = next.decode(withQueue);
+assert.equal(decodedQueue.recruit_queue.jobs[1].status, 0, 'waiting is a legal scalar default');
+assert.equal(normalize(next, decodedQueue).recruit_queue.jobs[63].queue_id, '9007199254740991');
+assert.equal(decodedQueue.recruit_queue.has_more, true);
+assert.deepEqual(encode(next, decodedQueue), withQueue);
+const activeQueue = current.decode(withQueue);
+assert.equal(owns(activeQueue, 'recruit_queue'), queueMirrored);
+assert.deepEqual(normalize(current, activeQueue),
+  normalize(current, current.decode(queueMirrored ? withQueue : encode(next, both))));
+console.log('PASS current queue: optional message, FIFO rows, bounded prefix, existing fields');
