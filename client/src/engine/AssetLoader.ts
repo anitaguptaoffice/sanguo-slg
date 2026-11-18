@@ -7,6 +7,7 @@ import {
 } from "@/engine/artManifest";
 
 export const ART_MANIFEST_URL = "assets/art/v1/manifest.json";
+const OPTIONAL_IMAGE_DEADLINE_MS = 15_000;
 
 export type PlaceholderAsset = { id: string; color: string; label: string };
 
@@ -86,7 +87,7 @@ export class AssetLoader {
     }
     const loads: Promise<void>[] = [];
     for (const { variant, required } of toLoad.values()) {
-      const load = this.loadImage(variant.path, variant, packBase, viteBase);
+      const load = this.loadImage(variant.path, variant, packBase, viteBase, required);
       loads.push(required ? load : load.catch(() => undefined));
     }
     await Promise.all(loads);
@@ -97,18 +98,38 @@ export class AssetLoader {
     variant: ArtScaleVariant,
     packBase: string,
     viteBase: string,
+    required: boolean,
   ): Promise<void> {
     const key = path;
     if (this.images.has(key)) return Promise.resolve();
     const url = joinArtBaseUrl(packBase, viteBase, path);
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => {
+      let settled = false;
+      const finish = (error: Error | null, timedOut = false) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        img.onload = null;
+        img.onerror = null;
+        if (error) {
+          if (timedOut) img.removeAttribute("src");
+          reject(error);
+          return;
+        }
         this.images.set(key, { img, variant });
         resolve();
       };
-      img.onerror = () => reject(new Error(`failed to load art: ${url}`));
-      img.src = url;
+      const timer = required ? undefined : setTimeout(() => {
+        finish(new Error(`optional art load timed out: ${url}`), true);
+      }, OPTIONAL_IMAGE_DEADLINE_MS);
+      img.onload = () => finish(null);
+      img.onerror = () => finish(new Error(`failed to load art: ${url}`));
+      try {
+        img.src = url;
+      } catch (error) {
+        finish(error instanceof Error ? error : new Error(`failed to load art: ${url}`));
+      }
     });
   }
 
