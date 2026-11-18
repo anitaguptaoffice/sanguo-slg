@@ -21,6 +21,10 @@ type Hub struct {
 	restored      bool    // one durable installation per Hub, including an empty snapshot
 	restoreEv     []Event // validated restore events staged until ActivateRestore
 	now           func() time.Time
+
+	onDurableReturn DurableMarchReturnHandler
+	durableReturns  map[int64]struct{}
+	returnErrors    map[int64]error
 }
 
 // MarchFinishedHandler runs after a march ends (arrival without return, or return complete).
@@ -276,6 +280,11 @@ func (h *Hub) Recall(marchID int64) error {
 
 func (h *Hub) onMarchReturn(ev Event) {
 	h.mu.Lock()
+	if complete := h.onDurableReturn; complete != nil {
+		h.mu.Unlock()
+		h.onDurableMarchReturn(ev, complete)
+		return
+	}
 	defer h.mu.Unlock()
 	o := h.marches[ev.RefID]
 	if o == nil || o.Phase != PhaseReturning {

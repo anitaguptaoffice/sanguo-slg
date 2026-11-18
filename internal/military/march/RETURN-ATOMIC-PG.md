@@ -26,3 +26,13 @@ Separate evidence must cover public read-only invalid-stock/lifecycle combinatio
 and deferred commit failure on an isolated auxiliary relation. Lost acknowledgement,
 process death, APP unknown cleanup, production composition and activation remain out.
 Applied is provisional until outer commit; no cache, HERO or production claim.
+
+# Hub return boundary
+
+A prepared runtime installs the durable return handler before activating the
+restored Hub. The consumer copies the order and origin under the mutex, then
+lets APP complete and confirm the transaction outside that mutex. A matching
+confirmed terminal publishes the returned phase and notifies the caller
+without updating volatile city stock. A confirmed early read preserves the
+retained deadline and reschedules. An uncertain or invalid result quarantines
+the event for restart recovery. The legacy path keeps its existing behavior.
