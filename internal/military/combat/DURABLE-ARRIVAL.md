@@ -14,6 +14,9 @@ isolated order and troop snapshot to the resolver outside the Hub mutex.
 Prepared resolutions run in series for the shared defender garrisons. The Hub
 publishes confirmed survivors before scheduling return or notifying terminal
 completion, and terminal notifications can read the Hub.
+An uncertain or invalid result fences all subsequent prepared resolutions in
+that Hub generation, since the shared defenders may no longer reflect the
+most recent committed battle. Recovery must reconcile before restarting them.
 
 Hub exposes failures through `MarchArrivalError`. Failed arrivals retain marching
 memory, do not finish, and are quarantined without automatic retry. An uncertain

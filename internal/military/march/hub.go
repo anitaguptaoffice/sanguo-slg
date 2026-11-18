@@ -26,9 +26,10 @@ type Hub struct {
 	durableReturns  map[int64]struct{}
 	returnErrors    map[int64]error
 
-	onPreparedArrival MarchArrivalHandler
-	preparedArrivals  map[int64]struct{}
-	arrivalResolverMu sync.Mutex
+	onPreparedArrival  MarchArrivalHandler
+	preparedArrivals   map[int64]struct{}
+	arrivalResolverMu  sync.Mutex
+	arrivalResolverErr error // guarded by arrivalResolverMu
 }
 
 // MarchFinishedHandler runs after a march ends (arrival without return, or return complete).

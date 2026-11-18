@@ -37,15 +37,12 @@ func (h *Hub) onPreparedMarchArrival(event Event, resolve MarchArrivalHandler) {
 	h.preparedArrivals[event.RefID] = struct{}{}
 	h.mu.Unlock()
 
-	out, err := h.resolvePreparedArrival(resolve, candidate)
+	out, err := h.resolvePreparedArrival(resolve, candidate, &arrived, rt)
 	h.mu.Lock()
 	delete(h.preparedArrivals, event.RefID)
 	if h.marches[event.RefID] != order || order.Phase != PhaseMarching {
 		h.mu.Unlock()
 		return
-	}
-	if err == nil {
-		err = h.confirmPreparedArrival(&arrived, rt, out)
 	}
 	if err != nil {
 		if h.arrivalErrors == nil {
@@ -70,12 +67,20 @@ func (h *Hub) onPreparedMarchArrival(event Event, resolve MarchArrivalHandler) {
 	}
 }
 
-// Serialize prepared resolutions for the shared defender garrisons while keeping
-// Hub reads available throughout the resolver's transaction.
-func (h *Hub) resolvePreparedArrival(resolve MarchArrivalHandler, event MarchArrivalEvent) (MarchArrivalOutcome, error) {
+// Serialize resolutions for the shared defenders while keeping Hub reads
+// available. An unconfirmed result can leave their memory behind PostgreSQL.
+func (h *Hub) resolvePreparedArrival(resolve MarchArrivalHandler, event MarchArrivalEvent, arrived *MarchOrder, rt marchRuntime) (MarchArrivalOutcome, error) {
 	h.arrivalResolverMu.Lock()
 	defer h.arrivalResolverMu.Unlock()
-	return resolve(context.Background(), event)
+	if h.arrivalResolverErr != nil {
+		return MarchArrivalOutcome{}, h.arrivalResolverErr
+	}
+	out, err := resolve(context.Background(), event)
+	if err == nil {
+		err = h.confirmPreparedArrival(arrived, rt, out)
+	}
+	h.arrivalResolverErr = err
+	return out, err
 }
 
 func (h *Hub) confirmPreparedArrival(order *MarchOrder, rt marchRuntime, out MarchArrivalOutcome) error {
