@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"maps"
 
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 	"google.golang.org/protobuf/proto"
@@ -21,6 +22,15 @@ func NewRouter(handlers map[string]RouteHandler) *Router {
 		handlers = map[string]RouteHandler{}
 	}
 	return &Router{handlers: handlers}
+}
+
+// WithoutRoutes returns an independent route table excluding the listed handlers.
+func (r *Router) WithoutRoutes(routes ...string) *Router {
+	handlers := maps.Clone(r.handlers)
+	for _, route := range routes {
+		delete(handlers, route)
+	}
+	return NewRouter(handlers)
 }
 
 // Dispatch returns a handler response or a standard gateway error packet.

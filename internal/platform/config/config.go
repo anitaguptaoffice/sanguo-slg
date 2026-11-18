@@ -14,6 +14,8 @@ type Config struct {
 	// MILFreshProfileFile is the reviewed MIL startup profile path. Empty
 	// leaves the durable military path disabled.
 	MILFreshProfileFile string
+	// PreparedFirstCity selects the isolated loopback startup path.
+	PreparedFirstCity bool
 }
 
 // Load reads configuration from environment variables with local-dev defaults.
@@ -25,6 +27,7 @@ func Load() (Config, error) {
 		RedisAddr:   envOr("REDIS_ADDR", "localhost:6379"),
 
 		MILFreshProfileFile: os.Getenv("MIL_FRESH_PROFILE_FILE"),
+		PreparedFirstCity:   os.Getenv("SANGUO_FIRST_CITY_USE_PREPARED_CITY") == "1",
 	}
 	if cfg.HTTPAddr == "" {
 		return Config{}, fmt.Errorf("HTTP_ADDR must not be empty")

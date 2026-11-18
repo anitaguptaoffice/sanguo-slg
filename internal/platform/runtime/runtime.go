@@ -69,6 +69,9 @@ func healthz(w http.ResponseWriter, _ *http.Request) {
 
 // ServeHTTP starts the game HTTP server (health + WebSocket gateway).
 func (a *App) ServeHTTP(ctx context.Context) error {
+	if err := a.validatePreparedFirstCityLocal(); err != nil {
+		return err
+	}
 	root, err := os.Getwd()
 	if err != nil {
 		return err
@@ -76,7 +79,10 @@ func (a *App) ServeHTTP(ctx context.Context) error {
 	if err := a.PrepareGame(ctx, root); err != nil {
 		return err
 	}
-	apiSrv := a.NewAPIServer(ctx)
+	apiSrv, err := a.NewAPIServer(ctx)
+	if err != nil {
+		return err
+	}
 	srv := &http.Server{Addr: a.Config.HTTPAddr, Handler: a.HTTPHandler(ctx, apiSrv)}
 	go func() {
 		<-ctx.Done()
