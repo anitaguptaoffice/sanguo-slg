@@ -62,7 +62,10 @@ func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler 
 	validator := account.SessionValidator{Svc: apiSrv.AccountService()}
 	router := apiSrv.GatewayRouter()
 	if a.Config.PreparedFirstCity {
-		router = router.WithoutRoutes(api.RouteCreateCity, api.RouteRecruitTroop, api.RouteStartMarch)
+		router = router.WithoutRoutes(api.RouteCreateCity, api.RouteRecruitTroop)
+		if !a.Config.PreparedMarch {
+			router = router.WithoutRoutes(api.RouteStartMarch)
+		}
 	} else {
 		api.MountGmHTTP(mux, apiSrv.Gm())
 	}
@@ -72,8 +75,15 @@ func (a *App) HTTPHandler(ctx context.Context, apiSrv *api.Server) http.Handler 
 
 // NewAPIServer constructs the integration server and starts domestic scheduling.
 func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
+	return a.newAPIServer(ctx, nil)
+}
+
+func (a *App) newAPIServer(ctx context.Context, startup *localMarchStartup) (*api.Server, error) {
 	if err := a.validatePreparedFirstCityLocal(); err != nil {
 		return nil, err
+	}
+	if a.Config.PreparedMarch && startup == nil {
+		return nil, fmt.Errorf("prepared march requires the local server writer lease")
 	}
 	worldSvc := world.NewService(world.NewPGStore(a.DB))
 	hub := domestic.NewHub(time.Now)
@@ -82,7 +92,18 @@ func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub)
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	srv.AttachBattleReports(reportSvc)
-	military, profiles := composeMilitaryStartup(ctx, a.Log, a.DB, a.Config.MILFreshProfileFile)
+	var military *api.MilitaryDurable
+	var profiles *preparedCityProfiles
+	if startup != nil {
+		profiles = startup.profiles
+		var err error
+		military, err = composeMilitary(ctx, a.DB, profiles.military, profiles.catalog)
+		if err != nil {
+			return nil, fmt.Errorf("compose local prepared military: %w", err)
+		}
+	} else {
+		military, profiles = composeMilitaryStartup(ctx, a.Log, a.DB, a.Config.MILFreshProfileFile)
+	}
 	srv.AttachMilitaryDurable(military)
 	var prepared *api.FirstCityPreparedCreationSource
 	if a.Config.PreparedFirstCity {
@@ -92,8 +113,8 @@ func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
 		}
 	}
 	composeFirstCity(srv, prepared)
-	if a.Config.PreparedRecruit {
-		if profiles.recruit == nil {
+	if a.Config.PreparedRecruit && !a.Config.PreparedMarch {
+		if profiles == nil || profiles.recruit == nil {
 			return nil, fmt.Errorf("prepared recruit requires the complete ACCOUNT, WORLD, DOM and MIL profile")
 		}
 		if err := srv.WirePreparedRecruit(ctx, *profiles.recruit, profiles.catalog); err != nil {
@@ -103,6 +124,11 @@ func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
 	if a.Config.PreparedFirstCity {
 		if err := srv.RestorePreparedMarches(ctx); err != nil {
 			return nil, fmt.Errorf("restore prepared march: %w", err)
+		}
+	}
+	if a.Config.PreparedMarch {
+		if err := srv.WirePreparedMarch(ctx, *profiles.march, profiles.catalog); err != nil {
+			return nil, fmt.Errorf("wire local prepared march: %w", err)
 		}
 	}
 	if err := srv.WireM4Content(ctx); err != nil {

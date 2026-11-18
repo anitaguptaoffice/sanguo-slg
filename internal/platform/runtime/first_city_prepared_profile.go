@@ -14,10 +14,13 @@ var preparedDomesticObjects = []string{"player_wallet", "player_wallet_pkey", "c
 var preparedRecruitAccountObjects = []string{"account", "account_pkey", "uq_account_login_name",
 	"account_account_id_seq", "account_session", "account_session_pkey", "idx_account_session_account",
 	"player", "player_pkey", "uq_player_account_per_server", "idx_player_account"}
+var preparedReturnObjects = []string{"march_order", "march_order_pkey", "idx_march_arrive", "idx_march_return",
+	"field_army", "field_army_pkey", "idx_field_army_owner", "army_troop", "army_troop_pkey"}
 
 type preparedCityProfiles struct {
 	world, domestic, military freshsource.Profile
 	recruit                   *freshsource.Profile
+	march                     *freshsource.Profile
 	catalog                   *march.RecruitCatalog
 }
 
@@ -25,7 +28,9 @@ type preparedCityProfiles struct {
 // the exact remaining inventory and every participant validates its own source.
 func splitPreparedCityProfile(p freshsource.Profile) (*preparedCityProfiles, error) {
 	cityObjects := 14 + len(preparedWorldObjects) + len(preparedDomesticObjects)
-	withRecruit := len(p.Objects) == cityObjects+len(preparedRecruitAccountObjects)
+	recruitObjects := cityObjects + len(preparedRecruitAccountObjects)
+	withMarch := len(p.Objects) == recruitObjects+len(preparedReturnObjects)
+	withRecruit := withMarch || len(p.Objects) == recruitObjects
 	if len(p.Objects) != cityObjects && !withRecruit {
 		return nil, badMilitary("prepared-city object inventory")
 	}
@@ -37,6 +42,18 @@ func splitPreparedCityProfile(p freshsource.Profile) (*preparedCityProfiles, err
 		// Recruit needs the wallet and its primary key, not city buildings/checkpoints.
 		for _, name := range preparedDomesticObjects[2:] {
 			delete(recruit.Objects, name)
+		}
+		if withMarch {
+			marchProfile := recruit
+			marchProfile.Objects = maps.Clone(recruit.Objects)
+			out.march = &marchProfile
+			for _, name := range preparedReturnObjects {
+				if _, ok := out.military.Objects[name]; !ok {
+					return nil, badMilitary("prepared return inventory")
+				}
+				delete(out.military.Objects, name)
+				delete(recruit.Objects, name)
+			}
 		}
 		for _, name := range preparedRecruitAccountObjects {
 			if _, ok := out.military.Objects[name]; !ok {
