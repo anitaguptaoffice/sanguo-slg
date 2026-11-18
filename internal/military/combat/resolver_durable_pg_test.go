@@ -91,8 +91,13 @@ func arrivalPGSnapshot(t *testing.T, conn *pgx.Conn, tables ...string) string {
 }
 
 func TestPGDurableResolverHubRestore(t *testing.T) {
-	for _, scenario := range []string{"battle", "no-battle", "all-dead", "sql-failure", "outer-commit-failure"} {
+	for _, scenario := range []string{
+		"battle", "no-battle", "all-dead", "sql-failure", "outer-commit-failure",
+		"prepared-battle", "prepared-no-battle", "prepared-all-dead", "prepared-outer-commit-failure",
+	} {
 		t.Run(scenario, func(t *testing.T) {
+			prepared := strings.HasPrefix(scenario, "prepared-")
+			scenario := strings.TrimPrefix(scenario, "prepared-")
 			pool, observer, profile := arrivalPGFixture(t)
 			ctx := context.Background()
 			now := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
@@ -127,9 +132,17 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 			hub := march.NewHub(func() time.Time { return now })
 			finished := 0
 			hub.SetMarchFinishedHandler(func(int64) { finished++ })
-			hub.SetMarchArrivalHandler(resolver.HubHandler())
 			restored, err := restore.Restore(ctx, hub)
 			arrivalPGOK(t, err)
+			if prepared {
+				arrivalPGOK(t, hub.SetDurableMarchReturnHandler(func(march.DurableMarchReturnEvent) (march.ReturnObservation, error) {
+					t.Error("return ran during the arrival phase")
+					return march.ReturnObservation{}, march.ErrReturnUnavailable
+				}))
+				arrivalPGOK(t, hub.SetPreparedMarchArrivalHandler(resolver.HubHandler()))
+			} else {
+				hub.SetMarchArrivalHandler(resolver.HubHandler())
+			}
 			if len(restored.Marches) != 1 || hub.Tick() != 0 {
 				t.Fatal("restore did not stage exactly one arrival")
 			}
@@ -238,5 +251,75 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 				t.Fatal("restart replayed combat or wrote persistent return/city credit")
 			}
 		})
+	}
+}
+
+var errArrivalCommitUnacknowledged = errors.New("arrival commit acknowledgement unavailable")
+
+type unacknowledgedArrivalTx struct{ pgx.Tx }
+
+func (tx unacknowledgedArrivalTx) Commit(ctx context.Context) error {
+	if err := tx.Tx.Commit(ctx); err != nil {
+		return err
+	}
+	// PostgreSQL committed. Model losing its acknowledgement at the resolver boundary.
+	return errArrivalCommitUnacknowledged
+}
+
+func TestPGPreparedArrivalFencesSharedDefendersAfterUnacknowledgedCommit(t *testing.T) {
+	pool, observer, profile := arrivalPGFixture(t)
+	ctx := context.Background()
+	due := time.Date(2026, 11, 4, 12, 0, 0, 0, time.UTC)
+	arrivalPGSQL(t, pool, `INSERT INTO player_hero(server_id,hero_id,player_id,template_cfg_id,status) VALUES(1,11,7,1,3),(1,12,7,2,3);
+		INSERT INTO field_army(server_id,army_id,owner_player_id,status,x,y,hero_ids) VALUES(1,500,7,2,0,0,'{11}'),(1,501,7,2,0,0,'{12}');
+		INSERT INTO army_troop VALUES(1,500,1,2000),(1,501,1,2000)`)
+	arrivalPGSQL(t, pool, `INSERT INTO march_order(server_id,march_id,army_id,from_x,from_y,to_x,to_y,purpose,depart_at,arrive_at,status,origin_city_id)
+		VALUES(1,500,500,0,0,5,5,1,$1,$2,1,100),(1,501,501,0,0,5,5,1,$1,$3,1,100)`,
+		due.Add(-time.Hour), due, due.Add(time.Second))
+	service := report.NewService(report.NewPGStore(pool))
+	transition, err := march.NewMarchTransition(service, profile)
+	arrivalPGOK(t, err)
+	garrisons := M2FixtureGarrisons()
+	originalDefenders := garrisons.Get(5, 5)
+	resolver := NewResolver(1, service, garrisons, nil)
+	starts := 0
+	arrivalPGOK(t, resolver.EnableDurableArrival(func(ctx context.Context, opts pgx.TxOptions) (pgx.Tx, error) {
+		starts++
+		tx, err := pool.BeginTx(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+		return unacknowledgedArrivalTx{tx}, nil
+	}, transition))
+	restore, err := march.NewMarchRestore(ctx, pool, profile)
+	arrivalPGOK(t, err)
+	hub := march.NewHub(nil)
+	_, err = restore.Restore(ctx, hub)
+	arrivalPGOK(t, err)
+	arrivalPGOK(t, hub.SetDurableMarchReturnHandler(func(march.DurableMarchReturnEvent) (march.ReturnObservation, error) {
+		t.Error("unconfirmed arrival scheduled a return")
+		return march.ReturnObservation{}, march.ErrReturnUnavailable
+	}))
+	arrivalPGOK(t, hub.SetPreparedMarchArrivalHandler(resolver.HubHandler()))
+	arrivalPGOK(t, hub.ActivateRestore())
+	if hub.Scheduler().PollDue(due.Add(time.Second)) != 2 || starts != 1 || !hub.Scheduler().NextDue().IsZero() {
+		t.Fatal("fenced second arrival entered the shared resolver", starts)
+	}
+	for _, id := range []int64{500, 501} {
+		if !errors.Is(hub.MarchArrivalError(id), errArrivalCommitUnacknowledged) || hub.March(id).Phase != march.PhaseMarching {
+			t.Fatal("unconfirmed resolution was published", id, hub.MarchArrivalError(id))
+		}
+	}
+	var statuses []int16
+	var reports int
+	arrivalPGOK(t, observer.QueryRow(ctx, `SELECT array_agg(status ORDER BY march_id),(SELECT count(*) FROM battle_report) FROM march_order`).Scan(&statuses, &reports))
+	if !reflect.DeepEqual(statuses, []int16{3, 1}) || reports != 1 || !reflect.DeepEqual(originalDefenders, garrisons.Get(5, 5)) {
+		t.Fatal("expected one committed battle and no second battle against stale defenders", statuses, reports)
+	}
+	fresh := march.NewHub(nil)
+	_, err = restore.Restore(ctx, fresh)
+	arrivalPGOK(t, err)
+	if fresh.March(500).Phase != march.PhaseReturning || fresh.March(501).Phase != march.PhaseMarching {
+		t.Fatal("restart failed to distinguish committed and fenced marches")
 	}
 }
