@@ -17,6 +17,8 @@ import { FirstCityGateway } from "./firstCityGateway";
 import type { FirstCityRoute, FirstCityCallOptions } from "./firstCityGateway";
 import { FirstCityJournal } from "./firstCityJournal";
 import type { FirstCityScope } from "./firstCityCanonical";
+import { openRecruitSubmissionJournal } from "./recruitJournal";
+import type { RecruitSubmissionChannel } from "./recruitJournal";
 
 export type GatewayHandlers = {
   onOpen?: () => void;
@@ -162,6 +164,26 @@ export class GatewayClient implements GatewayPort {
   }
 
   readFirstCityHistory(scope: FirstCityScope) { return this.firstCityJournal.read(scope); }
+
+  openRecruitSubmission(policy: Pick<RecruitSubmissionChannel, "authorize" | "blockProfile">) {
+    return openRecruitSubmissionJournal(() => this.authenticatedIdentity, {
+      authorize: identity => policy.authorize(identity),
+      blockProfile: identity => policy.blockProfile(identity),
+      exchange: async (payload, identity, signal) => {
+        const live = this.authenticatedIdentity;
+        if (!live || !this.sessionId || live.generation !== identity.generation ||
+            live.accountId !== identity.accountId || live.playerId !== identity.playerId ||
+            live.serverId !== identity.serverId || this.boundServerId !== live.serverId) {
+          throw new Error("Recruit session unavailable");
+        }
+        const trace_id = crypto.randomUUID();
+        const packet = getTypes().ClientPacket.encode({ route: "military.v1.RecruitTroopV2", payload, trace_id,
+          session_id: this.sessionId, server_id: live.serverId }).finish();
+        // The journal may persist a late accepted receipt in its original scope.
+        return new Uint8Array(await this.sendAndWait(packet, trace_id, signal));
+      },
+    });
+  }
 
   private invalidateFirstCity(): void {
     this.firstCityReady = false;
@@ -1067,8 +1089,9 @@ export class GatewayClient implements GatewayPort {
     return response;
   }
 
-  private sendAndWait(packet: Uint8Array, traceId: string): Promise<ArrayBuffer> {
+  private sendAndWait(packet: Uint8Array, traceId: string, signal?: AbortSignal): Promise<ArrayBuffer> {
     const ws = this.ws;
+    if (signal?.aborted) throw new Error("gateway request aborted");
     if (!ws || ws.readyState !== WebSocket.OPEN) {
       throw new Error("gateway not connected");
     }
@@ -1077,6 +1100,7 @@ export class GatewayClient implements GatewayPort {
         clearTimeout(timer);
         ws.removeEventListener("message", onMessage);
         ws.removeEventListener("close", onClose);
+        signal?.removeEventListener("abort", onAbort);
       };
       const timer = setTimeout(() => {
         cleanup();
@@ -1086,16 +1110,23 @@ export class GatewayClient implements GatewayPort {
         cleanup();
         reject(new Error("gateway disconnected"));
       };
+      const onAbort = () => {
+        cleanup();
+        reject(new Error("gateway request aborted"));
+      };
       const onMessage = (ev: MessageEvent) => {
         const buf = ev.data as ArrayBuffer;
-        const { ServerPacket } = getTypes();
-        const sp = ServerPacket.decode(new Uint8Array(buf)) as unknown as { trace_id?: string };
-        if (sp.trace_id !== traceId) return;
+        if (signal && !(buf instanceof ArrayBuffer)) return;
+        try {
+          const sp = getTypes().ServerPacket.decode(new Uint8Array(buf)) as unknown as { trace_id?: string };
+          if (sp.trace_id !== traceId) return;
+        } catch { return; }
         cleanup();
         resolve(buf);
       };
       ws.addEventListener("message", onMessage);
       ws.addEventListener("close", onClose);
+      signal?.addEventListener("abort", onAbort, { once: true });
       try {
         ws.send(packet);
       } catch (error) {

@@ -8,7 +8,9 @@ import os from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { chromium } from 'playwright';
+import protobuf from 'protobufjs';
 import { createServer } from 'vite';
+import { WebSocketServer } from 'ws';
 
 const client = resolve(import.meta.dirname, '..');
 const repo = dirname(client);
@@ -19,7 +21,8 @@ await mkdir(output, { recursive: true });
 const profile = await mkdtemp(join(os.tmpdir(), 'sanguo-recruit-journal-'));
 const git = (...args) => execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim();
 const sha = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
-const source = ['client/src/net/recruitJournal.ts', 'client/scripts/recruitJournal.native.mjs', 'client/scripts/RECRUIT_JOURNAL_NATIVE.md'];
+const source = ['client/src/net/recruitJournal.ts', 'client/scripts/recruitJournal.native.mjs',
+  'client/scripts/RECRUIT_JOURNAL_NATIVE.md', 'client/src/net/GatewayClient.ts'];
 const report = {
   head: git('rev-parse', 'HEAD'), tree: git('rev-parse', 'HEAD^{tree}'),
   source: Object.fromEntries(await Promise.all(source.map(async file =>
@@ -42,7 +45,7 @@ const acceptedOutcome = ['1', '9', '1', '2', '8', '9', '0', '0', '2', '1', '0', 
 const rejected = record(defaultScope, keyA, { phase: 'rejected', attempt: 1, outcome: '50004' });
 const accepted = record(defaultScope, keyA, { phase: 'accepted', attempt: 1, uncertain: true, outcome: acceptedOutcome });
 
-let server, http, origin, child, exit, browser, ctx, page;
+let server, http, origin, child, exit, browser, ctx, page, peerURL;
 async function bounded(promise, label, ms = 10000) {
   let timer;
   try {
@@ -80,6 +83,7 @@ async function launch() {
     const req = route.request(), url = new URL(req.url());
     const known = url.pathname === rawQuery || url.pathname === '/favicon.ico' ||
       /^\/src\/net\/(recruitJournal|loadProto|recruitV2Codec)\.ts$/.test(url.pathname) ||
+      peerURL && url.pathname.startsWith('/src/') && url.pathname.endsWith('.ts') ||
       url.pathname.startsWith('/proto/sanguo/') && url.pathname.endsWith('.proto') ||
       url.pathname.startsWith('/@fs' + repo + '/spec/proto/sanguo/') && url.pathname.endsWith('.proto');
     const dependency = url.pathname.startsWith('/@fs' + profile + '/vite-cache/deps/') ||
@@ -107,7 +111,10 @@ async function halt(crash) {
   child = browser = ctx = page = undefined;
 }
 async function boot(p) {
-  p.on('websocket', socket => { report.network.push({ websocket: socket.url() }); });
+  p.on('websocket', socket => {
+    if (socket.url() === peerURL) report.gatewayConnections = (report.gatewayConnections ?? 0) + 1;
+    else report.network.push({ websocket: socket.url() });
+  });
   await p.goto(origin + rawQuery);
   await p.evaluate(async database => {
     const { openRecruitJournal, openRecruitSubmissionJournal } = await import('/src/net/recruitJournal.ts');
@@ -229,8 +236,50 @@ const mustRefuse = (error, pattern = /^Error: Recruit journal unavailable$/) => 
 const openFailure = () => ev(() => fixture.failure(() => fixture.open()));
 const prepare = (expected = null, data = intent) => ev(({ expected, data }) => fixture.prepare(expected, data), { expected, data });
 
+async function gatewayPeer() {
+  const root = new protobuf.Root();
+  for (const file of ['common/v1/envelope', 'common/v1/types', 'account/v1/account', 'military/v1/military']) {
+    protobuf.parse(await readFile(join(repo, 'spec/proto/sanguo', file + '.proto'), 'utf8'), root, { keepCase: true });
+  }
+  const type = name => root.lookupType('sanguo.' + name);
+  const ClientPacket = type('common.v1.ClientPacket'), ServerPacket = type('common.v1.ServerPacket');
+  const reply = (socket, packet) => socket.send(ServerPacket.encode(packet).finish());
+  const peer = new WebSocketServer({ server: http, path: '/recruit-gateway-fixture' });
+  const calls = [];
+  peer.on('connection', socket => socket.on('message', (raw, binary) => {
+    const packet = ClientPacket.decode(new Uint8Array(raw));
+    if (packet.route === 'account.v1.Login') {
+      const { login_name } = type('account.v1.LoginRequest').decode(packet.payload);
+      const data = type('account.v1.LoginResponse').encode({ session_id: 'fixture-' + login_name }).finish();
+      reply(socket, { trace_id: packet.trace_id, data });
+    } else if (packet.route === 'account.v1.EnterGameServer') {
+      const account = packet.session_id.slice('fixture-'.length);
+      const entry = type('account.v1.EnterGameServerResponse');
+      const data = entry.encode(entry.fromObject({ session_id: packet.session_id, server_id: 1, account_id: account,
+        player: { server_id: 1, player_id: Number(account) } })).finish();
+      reply(socket, { trace_id: packet.trace_id, data });
+    } else {
+      calls.push({ socket, packet, binary });
+      peer.emit('fixture-request', calls.at(-1));
+    }
+  }));
+  const acceptance = type('military.v1.RecruitTroopV2Response');
+  const data = acceptance.encode(acceptance.fromObject({ acceptance: {
+    queue_id: '1', city_id: '9', unit_cfg_id: 1, count: 2, food_paid: '8', wood_paid: '9', duration_sec: '2',
+    initial_status: 1, initial_finish_at_ms: '2000', catalog_version: Buffer.from('recruit-v1:' + '1'.repeat(64)),
+    rule_digest: new Uint8Array(32).fill(0xaa),
+  } })).finish();
+  const next = async () => (await bounded(once(peer, 'fixture-request'), 'Recruit V2 frame'))[0];
+  const close = async () => {
+    for (const socket of peer.clients) socket.terminate();
+    await new Promise((resolve, reject) => peer.close(error => error ? reject(error) : resolve()));
+  };
+  return { calls, data, reply, next, close };
+}
+
 try {
   server = await createServer({ root: client, configFile: false, logLevel: 'error', cacheDir: join(profile, 'vite-cache'),
+    resolve: { alias: { '@': join(client, 'src') } },
     optimizeDeps: { noDiscovery: true, include: ['protobufjs'] },
     plugins: [{ name: 'recruit-journal-fixture', configureServer(vite) {
       vite.middlewares.use((req, res, next) => {
@@ -761,6 +810,79 @@ try {
     }), ['busy', 0]);
     await page.close();
     page = tab;
+  });
+  await test('authenticated binary WebSocket journal exchange', 'no fallback; exact same-key retry; late reply isolated', async () => {
+    await reset();
+    const peer = await gatewayPeer();
+    peerURL = origin.replace(/^http:/, 'ws:') + '/recruit-gateway-fixture';
+    try {
+      await ev(async url => {
+        const { GatewayClient } = await import('/src/net/GatewayClient.ts');
+        const gateway = fixture.gateway = new GatewayClient(url);
+        fixture.authenticate = async (account, reconnect) => {
+          fixture.close();
+          if (reconnect) await gateway.connect();
+          await gateway.login(account, 'fixture-only', 1);
+          await gateway.enterGameServer(1);
+          fixture.journal = await gateway.openRecruitSubmission({
+            authorize(identity) {
+              if (!fixture.permitted || identity.accountId !== account) throw Error('Profile disabled');
+            },
+            blockProfile() { fixture.permitted = false; },
+          });
+        };
+        await fixture.authenticate('1', true);
+      }, peerURL);
+      const saved = await prepare();
+      await ev(() => fixture.start());
+      assert.equal(await ev(() => fixture.failure(() => fixture.result)), 'Error: Profile disabled');
+      assert.equal(peer.calls.length, 0);
+      const firstFrame = peer.next();
+      await ev(() => { fixture.permitted = true; return fixture.start(); });
+      const first = await firstFrame;
+      const row = (await dump())[1][0];
+      assert.deepEqual([row.phase, row.attempt, row.payload[5]], ['attempting', 1, saved[0]]);
+      first.socket.terminate();
+      assert.equal(await ev(() => fixture.result), 'unknown');
+      await ev(() => fixture.authenticate('1', true));
+      const retryFrame = peer.next();
+      await ev(() => fixture.start(true));
+      const retry = await retryFrame;
+      peer.reply(retry.socket, { trace_id: first.packet.trace_id, data: peer.data });
+      retry.socket.send(Uint8Array.of(0));
+      peer.reply(retry.socket, { trace_id: retry.packet.trace_id, code: 10003 });
+      assert.equal(await ev(() => fixture.result), 'unknown');
+      const lateFrame = peer.next();
+      await ev(() => fixture.start(true));
+      const late = await lateFrame;
+      mustRefuse(await ev(async () => {
+        const prior = fixture.journal;
+        const { command } = await prior.inspect();
+        await fixture.authenticate('2', false);
+        return fixture.failure(() => prior.submit(command));
+      }));
+      assert.equal(await ev(() => fixture.inspect()), null);
+      peer.reply(late.socket, { trace_id: late.packet.trace_id, data: peer.data });
+      assert.equal(await ev(() => fixture.result), 'unknown');
+      const final = (await dump())[1][0];
+      assert.deepEqual([final.phase, final.attempt, final.outcome], ['accepted', 3, acceptedOutcome]);
+      assert.equal(await ev(() => fixture.inspect()), null);
+      assert.equal(peer.calls.length, 3);
+      const traces = new Set();
+      for (const { packet, binary } of peer.calls) {
+        assert.deepEqual([packet.route, packet.server_id, packet.session_id, binary],
+          ['military.v1.RecruitTroopV2', 1, 'fixture-1', true]);
+        assert.deepEqual(Array.from(packet.payload), saved[4]);
+        traces.add(packet.trace_id);
+      }
+      assert.equal(traces.size, 3);
+      assert.equal(report.gatewayConnections, 2);
+      return { route: first.packet.route, sends: peer.calls.length, distinctTraces: traces.size, original: final.phase };
+    } finally {
+      await ev(() => fixture.gateway?.close());
+      await peer.close();
+      peerURL = undefined;
+    }
   });
   assert.deepEqual(report.network, []);
 } finally {
