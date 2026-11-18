@@ -3,7 +3,9 @@ package runtime
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -79,13 +81,20 @@ func (a *App) ServeHTTP(ctx context.Context) error {
 	if err := a.PrepareGame(ctx, root); err != nil {
 		return err
 	}
-	apiSrv, err := a.NewAPIServer(ctx)
+	runCtx, cancelRun := context.WithCancel(ctx)
+	defer cancelRun()
+	apiSrv, err := a.NewAPIServer(runCtx)
 	if err != nil {
 		return err
 	}
-	srv := &http.Server{Addr: a.Config.HTTPAddr, Handler: a.HTTPHandler(ctx, apiSrv)}
+	srv := &http.Server{Addr: a.Config.HTTPAddr, Handler: a.HTTPHandler(runCtx, apiSrv)}
+	var stopRecruit func() error
+	if a.Config.PreparedRecruit {
+		srv.BaseContext = func(net.Listener) context.Context { return runCtx }
+		stopRecruit = startPreparedRecruitWorker(runCtx, apiSrv.RunPreparedRecruitScheduler)
+	}
 	go func() {
-		<-ctx.Done()
+		<-runCtx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = srv.Shutdown(shutdownCtx)
@@ -93,10 +102,50 @@ func (a *App) ServeHTTP(ctx context.Context) error {
 
 	a.Log.Info("server listening", "addr", a.Config.HTTPAddr, "ws", "/ws")
 	err = srv.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	cancelRun()
+	if errors.Is(err, http.ErrServerClosed) {
+		err = nil
+	}
+	if stopRecruit == nil {
 		return err
 	}
-	return nil
+	// Join the worker before closing the pool. A stuck lease must not block
+	// the process exit after the worker's own bounded cleanup.
+	if workerErr := stopRecruit(); workerErr != nil {
+		return errors.Join(err, workerErr)
+	}
+	closed := make(chan struct{})
+	go func() {
+		defer close(closed)
+		a.DB.Close()
+	}()
+	poolErr := waitPreparedShutdown(closed, 5*time.Second, "prepared recruit database pool close timed out")
+	return errors.Join(err, poolErr)
+}
+
+func startPreparedRecruitWorker(parent context.Context, run func(context.Context)) func() error {
+	ctx, cancel := context.WithCancel(parent)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		run(ctx)
+	}()
+	return func() error {
+		cancel()
+		// Allow for transaction rollback and source drain within the worker.
+		return waitPreparedShutdown(done, 15*time.Second, "prepared recruit worker shutdown timed out")
+	}
+}
+
+func waitPreparedShutdown(done <-chan struct{}, timeout time.Duration, message string) error {
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-done:
+		return nil
+	case <-timer.C:
+		return errors.New(message)
+	}
 }
 
 // RepoRoot finds the module root for migrations when tests run from subpackages.

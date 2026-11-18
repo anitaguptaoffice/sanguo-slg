@@ -3,6 +3,7 @@ package runtime
 import (
 	"maps"
 
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
 )
 
@@ -10,19 +11,41 @@ var preparedWorldObjects = []string{"map_cell", "map_cell_pkey", "player_city", 
 	"player_city_server_id_x_y_key", "idx_player_city_owner", "player_city_id_seq"}
 var preparedDomesticObjects = []string{"player_wallet", "player_wallet_pkey", "city_production_checkpoint",
 	"city_production_checkpoint_pkey", "idx_city_production_player", "city_building", "city_building_pkey", "idx_city_building_cfg"}
+var preparedRecruitAccountObjects = []string{"account", "account_pkey", "uq_account_login_name",
+	"account_account_id_seq", "account_session", "account_session_pkey", "idx_account_session_account",
+	"player", "player_pkey", "uq_player_account_per_server", "idx_player_account"}
 
 type preparedCityProfiles struct {
 	world, domestic, military freshsource.Profile
+	recruit                   *freshsource.Profile
+	catalog                   *march.RecruitCatalog
 }
 
 // Copy expectations from one reviewed profile. The MIL constructor verifies
 // the exact remaining inventory and every participant validates its own source.
 func splitPreparedCityProfile(p freshsource.Profile) (*preparedCityProfiles, error) {
-	if len(p.Objects) != 14+len(preparedWorldObjects)+len(preparedDomesticObjects) {
+	cityObjects := 14 + len(preparedWorldObjects) + len(preparedDomesticObjects)
+	withRecruit := len(p.Objects) == cityObjects+len(preparedRecruitAccountObjects)
+	if len(p.Objects) != cityObjects && !withRecruit {
 		return nil, badMilitary("prepared-city object inventory")
 	}
 	out := &preparedCityProfiles{world: p, domestic: p, military: p}
 	out.military.Objects = maps.Clone(p.Objects)
+	if withRecruit {
+		recruit := p
+		recruit.Objects = maps.Clone(p.Objects)
+		// Recruit needs the wallet and its primary key, not city buildings/checkpoints.
+		for _, name := range preparedDomesticObjects[2:] {
+			delete(recruit.Objects, name)
+		}
+		for _, name := range preparedRecruitAccountObjects {
+			if _, ok := out.military.Objects[name]; !ok {
+				return nil, badMilitary("prepared recruit account inventory")
+			}
+			delete(out.military.Objects, name)
+		}
+		out.recruit = &recruit
+	}
 	for _, group := range []struct {
 		profile *freshsource.Profile
 		names   []string
