@@ -13,6 +13,9 @@ import (
 )
 
 func (a *App) validatePreparedFirstCityLocal() error {
+	if a.Config.PreparedMarch && (!a.Config.PreparedFirstCity || !a.Config.PreparedRecruit || a.Config.MILFreshProfileFile == "") {
+		return fmt.Errorf("prepared march requires prepared first-city, prepared recruit and a reviewed source")
+	}
 	if !a.Config.PreparedFirstCity {
 		if a.Config.PreparedRecruit {
 			return fmt.Errorf("prepared recruit requires prepared first-city mode")
