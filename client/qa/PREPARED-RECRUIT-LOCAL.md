@@ -27,6 +27,12 @@ the debit and pending job independently of the browser. Withhold a
 committed reply, close both processes, reenter with the same profile, and
 verify identical request bytes and one committed debit/receipt. Advance
 only the fixture's owned schedule and verify one credit in PostgreSQL
-and the military UI. Restart the guard as well. An unapproved retry must
+and the military UI. The military and queue panels read the current pending
+jobs from the same city-state path. They distinguish waiting, training, empty
+and unavailable. Verify that the promoted job shows the new live finish and
+that reopening the game restores the pending set or committed ready stock.
+An elapsed finish does not remove a job from either panel.
+
+Restart the guard as well. An unapproved retry must
 send zero requests, including after contradictory browser evidence and
 failure of both quarantine writes. See #3115 for the exact runs.

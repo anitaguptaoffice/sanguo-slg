@@ -116,7 +116,8 @@ import {
 import { MarchArrivalPoll } from "@/net/marchArrivalPoll";
 import { gatewayErrorMessage } from "@/net/contentFeedback";
 import { garrisonPatch, readyGarrison } from "@/net/garrisonState";
-import { CityStateFetch } from "@/net/cityStateFetch";
+import { CityStateFetch, type CityStateSnapshot } from "@/net/cityStateFetch";
+import { parseCurrentRecruitQueue, renderCurrentRecruitQueue } from "@/net/currentRecruitQueue";
 import { CityStatePoll } from "@/net/cityStatePoll";
 import { formatPanelGatewayErrorFromUnknown } from "@/net/contentFormValidation";
 import {
@@ -1126,6 +1127,7 @@ export class MainCityScene implements Scene {
       },
       () => {
         this.renderHud();
+        if (this.gateway.preparedRecruit === true) void this.cityStatePoll.pollOnce();
       },
       () => this.syncMilitaryPanel(),
       () => {
@@ -1621,6 +1623,10 @@ export class MainCityScene implements Scene {
       return;
     }
     if (action === "view-recruit-queue") {
+      if (this.gateway.preparedRecruit === true) {
+        this.queuePanels.open();
+        return;
+      }
       const qid = Number(btn.dataset.queueId) || this.recruitQueueHighlightId || 0;
       if (qid > 0) this.openRecruitQueueAndHighlight(qid);
       return;
@@ -1901,12 +1907,14 @@ export class MainCityScene implements Scene {
       readRecruitHighlightQueueSession() ??
       this.queuePanels?.getHighlightedRecruitQueueId() ??
       null;
-    syncMilitaryRecruitQueueList(this.militaryPanel, recruitSnapshot, Date.now(), highlightId);
-    syncMilitaryRecruitViewQueueLink(
-      this.militaryPanel,
-      recruitSnapshot,
-      highlightId,
-    );
+    if (preparedRecruit) {
+      const list = this.militaryPanel.querySelector('[data-role="military-recruit-queue-list"]');
+      if (list) renderCurrentRecruitQueue(list, this.session?.currentRecruitQueue ?? null);
+      this.militaryPanel.querySelector('[data-role="recruit-view-queue-wrap"]')?.classList.remove("hidden");
+    } else {
+      syncMilitaryRecruitQueueList(this.militaryPanel, recruitSnapshot, Date.now(), highlightId);
+      syncMilitaryRecruitViewQueueLink(this.militaryPanel, recruitSnapshot, highlightId);
+    }
     syncMarchFormInlineFeedback(this.militaryPanel, this.marchFormFeedbackContext());
     syncMarchFormValidationSweepLine(
       this.militaryPanel,
@@ -2440,6 +2448,7 @@ export class MainCityScene implements Scene {
 
   private onQueuePanelVisibilityChange(open: boolean): void {
     if (open) {
+      if (this.gateway.preparedRecruit === true) void this.cityStatePoll.pollOnce();
       const slotKey =
         this.queuePanels.getHighlightedBuildSlotKey() ??
         this.domesticSlotStrip?.getSelectedSlotKey();
@@ -2656,14 +2665,12 @@ export class MainCityScene implements Scene {
     this.domesticSlotStrip?.sync();
   }
 
-  private applyCityStateFromFetch(state: {
-    wallet?: ResourceWallet;
-    buildings?: CityBuilding[];
-    production_rates?: ResourceWallet;
-    garrison?: unknown;
-  }): void {
+  private applyCityStateFromFetch(state: CityStateSnapshot): void {
     if (!this.session) return;
     if (!this.cityStateFetch.isCurrent(state)) return;
+    if (this.gateway.preparedRecruit === true) {
+      this.session.currentRecruitQueue = parseCurrentRecruitQueue(state.recruit_queue);
+    }
     const prevBuildings = this.session.buildings;
     const nowMs = Date.now();
     let justCompleted: string[] = [];
@@ -2701,12 +2708,7 @@ export class MainCityScene implements Scene {
     );
   }
 
-  private applyCityStatePoll(state: {
-    wallet?: ResourceWallet;
-    buildings?: CityBuilding[];
-    production_rates?: ResourceWallet;
-    garrison?: unknown;
-  }): void {
+  private applyCityStatePoll(state: CityStateSnapshot): void {
     this.applyCityStateFromFetch(state);
   }
 
@@ -3292,12 +3294,7 @@ export class MainCityScene implements Scene {
     this.status = "刷新中…";
     this.renderHud();
     try {
-      const state = (await this.cityStateFetch.fetch()) as {
-        wallet?: ResourceWallet;
-        buildings?: CityBuilding[];
-        production_rates?: ResourceWallet;
-        garrison?: unknown;
-      } | null;
+      const state = await this.cityStateFetch.fetch();
       if (!owned()) return;
       if (state) {
         this.applyCityStateFromFetch(state);
@@ -3522,6 +3519,7 @@ export class MainCityScene implements Scene {
   /** Every explicit entry refreshes the roster; never poll from render/sync. */
   private openMilitaryPanel(): void {
     openCenterPanel(this.militaryPanel);
+    if (this.gateway.preparedRecruit === true) void this.cityStatePoll.pollOnce();
     void this.refreshMarchFormHeroes();
   }
 

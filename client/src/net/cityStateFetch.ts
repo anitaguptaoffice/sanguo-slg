@@ -7,6 +7,7 @@ export type CityStateSnapshot = {
   buildings?: CityBuilding[];
   production_rates?: ResourceWallet;
   garrison?: unknown;
+  recruit_queue?: unknown;
 };
 
 /** GetCityState 单飞：同一 city 在 in-flight 期间复用同一 Promise。 */
