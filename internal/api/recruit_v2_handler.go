@@ -14,7 +14,7 @@ import (
 const routeRecruitTroopV2 = "military.v1.RecruitTroopV2"
 
 // recruitV2Handler requires the gateway's live session validation before
-// dispatch. Only a future fenced composition can register it.
+// dispatch. The prepared composition supplies the checked generation.
 func (s *Server) recruitV2Handler(g *recruitGeneration) gateway.RouteHandler {
 	return func(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
 		trace := pkt.GetTraceId()
