@@ -30,3 +30,9 @@ blocked. This changes one active exceptional path, not all legacy behavior.
 Later insufficient-stock/store failures and ignored hero-release errors remain
 separate; this is not cross-domain atomic dispatch or restart recovery. #2377,
 #2379, all historical holds and the no-deployment boundary are unchanged.
+
+# Prepared entry gate
+
+The private prepared path shares the request, actor and origin validation.
+It requires an attack purpose and a composed writer before any settlement or
+hero claim. The legacy gateway still routes to the existing handler.

@@ -9,6 +9,7 @@ import (
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/domestic"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/hero"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/combat"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
 )
@@ -79,7 +80,15 @@ func (s *Server) handleRecruitTroop(ctx context.Context, pkt *commonv1.ClientPac
 	return okResp(pkt.GetTraceId(), data), nil
 }
 
+type preparedMarchWriter func(context.Context, PlayerContext, *militaryv1.StartMarchRequest, cityCoord, []march.TroopStack, string) (*commonv1.ServerPacket, error)
+
 func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	return s.startMarch(ctx, pkt, false, nil)
+}
+
+// A prepared caller without its exclusively composed writer fails closed.
+// Only the legacy entry currently routes to this handler.
+func (s *Server) startMarch(ctx context.Context, pkt *commonv1.ClientPacket, prepared bool, write preparedMarchWriter) (*commonv1.ServerPacket, error) {
 	pc, errPkt := s.playerCtx(ctx, pkt)
 	if errPkt != nil {
 		return errPkt, nil
@@ -105,6 +114,12 @@ func (s *Server) handleStartMarch(ctx context.Context, pkt *commonv1.ClientPacke
 	coord, ok := s.cityCoordinate(req.GetCityId())
 	if !ok {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode(50005), "city coordinates unknown"), nil
+	}
+	if prepared {
+		if write == nil || req.GetPurpose() != combat.PurposeAttack {
+			return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_UNAVAILABLE, "prepared march unavailable"), nil
+		}
+		return write(ctx, pc, &req, coord, stacks, pkt.GetTraceId())
 	}
 	if !s.beginMarchStart(pc, req.GetHeroId()) {
 		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_MILITARY_INVALID_MARCH, "hero march request in progress"), nil
