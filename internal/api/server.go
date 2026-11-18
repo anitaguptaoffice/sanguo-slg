@@ -85,6 +85,7 @@ type Server struct {
 	firstCityPrepared   *FirstCityPreparedCreationSource
 
 	preparedRecruit *recruitGeneration
+	preparedMarch   *preparedMarchRuntime
 
 	marchRestoreReady bool
 }
@@ -233,7 +234,12 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	} else {
 		handlers[RouteCreateCity] = s.handleCreateCity
 		handlers[RouteRecruitTroop] = s.handleRecruitTroop
-		handlers[RouteStartMarch] = s.handleStartMarch
+		if s.firstCityPrepared == nil && !s.marchRestoreReady {
+			handlers[RouteStartMarch] = s.handleStartMarch
+		}
+	}
+	if s.preparedMarch != nil {
+		handlers[RouteStartMarch] = s.preparedMarch.route
 	}
 	handlers[RouteListPlayerCities] = s.handleListPlayerCities
 	handlers[RouteStartBuildingUpgrade] = s.handleStartBuildingUpgrade
