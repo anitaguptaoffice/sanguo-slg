@@ -9,8 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const (
-)
+const ()
 
 // Server is the WebSocket gateway HTTP handler.
 type Server struct {
