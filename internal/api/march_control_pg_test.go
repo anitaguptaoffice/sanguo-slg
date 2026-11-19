@@ -1,7 +1,6 @@
 package api
 
 import (
-	"os"
 	"testing"
 
 	militaryv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/military/v1"
@@ -19,9 +18,6 @@ func TestPGMarchRecallAndSpeedupGateway(t *testing.T) {
 	svc := content.NewService(cat)
 	f.s.contentSvc = svc
 	f.s.contentCatalog = &contentCatalogBinding{service: svc, catalog: cat}
-	contentDDL, err := os.ReadFile("../../spec/db/006_content.sql")
-	returnPGOK(t, err)
-	returnPGExec(t, f.ctx, f.observer, string(contentDDL))
 	returnPGExec(t, f.ctx, f.observer, `INSERT INTO player_item(server_id,player_id,item_cfg_id,quantity) VALUES(1,1,2100,1)`)
 
 	start, err := f.request(f.ctx, "owner", 10, 5)
