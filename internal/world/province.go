@@ -33,6 +33,23 @@ func ProvinceCenters(sid int32) []provinceCenter {
 	return centers
 }
 
+// Province is the exported view of one province seed.
+type Province struct {
+	ID   int16
+	Name string
+	X, Y int
+}
+
+// ProvinceLayout returns the 14 province seeds with their player-facing names.
+func ProvinceLayout(sid int32) []Province {
+	centers := ProvinceCenters(sid)
+	out := make([]Province, len(centers))
+	for i, c := range centers {
+		out[i] = Province{ID: c.id, Name: ProvinceNames[c.id-1], X: c.x, Y: c.y}
+	}
+	return out
+}
+
 // ProvinceAt returns the province id and its center distance for a coordinate.
 func ProvinceAt(sid int32, x, y int) (int16, float64) {
 	best, bestDist := int16(0), math.MaxFloat64

@@ -153,13 +153,20 @@ func (p *PGStore) ClearResourceOccupancy(ctx context.Context, sid int32, x, y in
 // Viewport returns the tiles inside an inclusive rectangle.
 func (p *PGStore) Viewport(ctx context.Context, sid int32, minX, minY, maxX, maxY int) ([]TileView, error) {
 	rows, err := p.Pool.Query(ctx, `
-		SELECT m.x, m.y, m.terrain, COALESCE(m.resource_type,0), m.resource_level,
-		       m.level, m.max_level, m.province_id, COALESCE(m.owner_city_id,0), m.npc_kind,
+		SELECT m.x, m.y,
+		       CASE WHEN site.city_id IS NOT NULL THEN 0 ELSE m.terrain END,
+		       COALESCE(m.resource_type,0), m.resource_level,
+		       m.level, m.max_level, m.province_id,
+		       COALESCE(m.owner_city_id, site.city_id, 0), m.npc_kind,
 		       m.garrison_json, m.recover_at,
-		       COALESCE(c.player_id,0), COALESCE(pl.display_name,''), COALESCE(c.name,'')
+		       COALESCE(owner.player_id, site.player_id, 0),
+		       COALESCE(owner_pl.display_name, site_pl.display_name, ''),
+		       COALESCE(owner.name, site.name, '')
 		FROM map_cell m
-		LEFT JOIN player_city c ON c.server_id = m.server_id AND c.city_id = m.owner_city_id
-		LEFT JOIN player pl ON pl.server_id = c.server_id AND pl.player_id = c.player_id
+		LEFT JOIN player_city site ON site.server_id = m.server_id AND site.x = m.x AND site.y = m.y
+		LEFT JOIN player_city owner ON owner.server_id = m.server_id AND owner.city_id = m.owner_city_id
+		LEFT JOIN player owner_pl ON owner_pl.server_id = owner.server_id AND owner_pl.player_id = owner.player_id
+		LEFT JOIN player site_pl ON site_pl.server_id = site.server_id AND site_pl.player_id = site.player_id
 		WHERE m.server_id = $1 AND m.x BETWEEN $2 AND $3 AND m.y BETWEEN $4 AND $5
 		ORDER BY m.y, m.x`, sid, minX, maxX, minY, maxY)
 	if err != nil {

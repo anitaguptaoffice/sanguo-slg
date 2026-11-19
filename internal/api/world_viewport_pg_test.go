@@ -50,6 +50,12 @@ func TestPGWorldViewportGateway(t *testing.T) {
 	if len(view.GetTiles()) != 2 {
 		t.Fatalf("viewport tiles %d, want 2", len(view.GetTiles()))
 	}
+	if len(view.GetProvinces()) != world.ProvinceCount {
+		t.Fatalf("viewport provinces %d, want %d", len(view.GetProvinces()), world.ProvinceCount)
+	}
+	if view.GetProvinces()[0].GetName() == "" || view.GetProvinces()[0].GetProvinceId() == 0 {
+		t.Fatalf("province centre: %+v", view.GetProvinces()[0])
+	}
 	if view.GetTiles()[0].GetProvinceName() == "" || view.GetTiles()[0].GetNpcKind() != 1 {
 		t.Fatalf("tile summary: %+v", view.GetTiles()[0])
 	}

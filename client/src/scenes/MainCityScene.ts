@@ -60,6 +60,7 @@ import { BattleReportPanel } from "@/ui/BattleReportPanel";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 import { DailyQuestPanels } from "@/ui/DailyQuestPanels";
 import { WorldPanels } from "@/ui/WorldPanels";
+import { WorldMapScene } from "@/scenes/WorldMapScene";
 import { appendManhattanToStatus } from "@/ui/marchWorldListLink";
 import { QueuePanels } from "@/ui/QueuePanels";
 import { resolveDailyQueueAnchorTarget } from "@/net/dailyQueueAnchor";
@@ -356,6 +357,7 @@ export class MainCityScene implements Scene {
   private marchList!: MarchListPanel;
   private dailyQuest!: DailyQuestPanels;
   private world!: WorldPanels;
+  private worldMap!: WorldMapScene;
   private queuePanels!: QueuePanels;
   private slotUpgradeOverlay!: MainCitySlotUpgradeOverlay;
   private domesticSlotStrip!: MainCityDomesticSlotStrip;
@@ -521,6 +523,7 @@ export class MainCityScene implements Scene {
       <button type="button" data-action="toggle-shop" title="商城"><span class="toolbar-btn-label">商城</span></button>
       <button type="button" data-action="toggle-hero" title="将领"><span class="toolbar-btn-label">将领</span></button>
       <button type="button" data-action="toggle-mail" data-role="mail-toolbar-btn" title="邮件"><span class="toolbar-btn-label">邮件</span></button>
+      <button type="button" data-action="open-world-map" title="全屏世界大地图"><span class="toolbar-btn-label">大地图</span></button>
       <button type="button" data-action="toggle-world" title="世界"><span class="toolbar-btn-label">世界</span></button>
       <button type="button" data-action="toggle-queue" data-role="queue-toolbar-btn" title="队列"><span class="toolbar-btn-label">队列</span></button>
       </div>
@@ -597,6 +600,12 @@ export class MainCityScene implements Scene {
     this.domesticSlotStrip.attach();
     parent.appendChild(this.toolbar);
     parent.appendChild(this.militaryPanel);
+    this.worldMap = new WorldMapScene(parent, {
+      gateway: () => this.gateway,
+      getSession: () => this.session,
+      onMarchTarget: (x, y) => this.prefillMarchTargetFromWorld(x, y),
+    });
+    this.worldMap.attach();
     this.chatUnreadTracker.onCounts = () => { if (currentScene()) this.applyChatUnreadCounts(); };
     this.social = new SocialPanels(
       parent,
@@ -1156,6 +1165,7 @@ export class MainCityScene implements Scene {
     this.marchList?.detach();
     this.dailyQuest?.detach();
     this.world?.detach();
+    this.worldMap?.detach();
     this.queuePanels?.detach();
     this.buildingPanel?.detach();
     this.domesticSlotStrip?.detach();
@@ -1324,6 +1334,7 @@ export class MainCityScene implements Scene {
       this.heroMail.toggleMail();
       if (!this.heroMail.isMailOpen()) void this.hudTodoBadgePoll.pollOnce();
     }
+    if (action === "open-world-map") this.openWorldMap();
     if (action === "toggle-world") this.world.toggle();
     if (action === "toggle-queue") {
       this.queuePanels.toggle();
@@ -1500,6 +1511,30 @@ export class MainCityScene implements Scene {
       },
     });
     this.status = `军事：队列顶栏已定位行军 #${marchId}`;
+    this.renderHud();
+  }
+
+  private openWorldMap(): void {
+    if (!this.session) return;
+    this.worldMap.open(this.session.cityX ?? 60, this.session.cityY ?? 60);
+    this.renderHud();
+  }
+
+  private prefillMarchTargetFromWorld(x: number, y: number): void {
+    this.openMilitaryPanel();
+    const xInput = this.field("to-x") as HTMLInputElement | null;
+    const yInput = this.field("to-y") as HTMLInputElement | null;
+    if (xInput) {
+      xInput.value = String(x);
+      xInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    if (yInput) {
+      yInput.value = String(y);
+      yInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    setMarchTargetFieldHighlight(this.militaryPanel, true);
+    this.status = `出征目标已从大地图设为 (${x}, ${y})`;
+    this.syncMilitaryPanel();
     this.renderHud();
   }
 
