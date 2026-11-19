@@ -114,7 +114,7 @@ func (p *ReturnParticipant) returnLocked(ctx context.Context, a *recruittx.Acces
 func classifyReturnGraph(c ReturnCandidate, origin ReturnOrigin, s returnLockedSnapshot) returnPhase {
 	if s.armyID != c.ArmyID || s.owner != c.PlayerID || s.cityID == nil || *s.cityID != c.CityID ||
 		s.fromX != origin.X || s.fromY != origin.Y || s.toX < 0 || s.toX >= 500 || s.toY < 0 || s.toY >= 500 ||
-		s.purpose < 1 || s.purpose > 3 || !validMarchTime(s.depart) || !validMarchTime(s.arrive) ||
+		s.purpose < 1 || s.purpose > 4 || !validMarchTime(s.depart) || !validMarchTime(s.arrive) ||
 		!s.depart.Before(s.arrive) || len(s.heroes) == 0 || len(s.units) != len(s.counts) {
 		return 0
 	}

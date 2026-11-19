@@ -58,7 +58,7 @@ func (h *Hub) walletOperation(ctx context.Context, id int64, settle bool, fn fun
 	defer h.mu.Unlock()
 	err := h.updateCityLocked(ctx, id, func(c *CityState) error {
 		if settle {
-			settleProduction(c, h.cat, h.now())
+			h.settle(ctx, c)
 		}
 		if fn != nil {
 			w, err := fn(c.Wallet)
@@ -84,7 +84,7 @@ func (h *Hub) SettleCityWithProduction(ctx context.Context, id int64) (wallet, p
 	defer h.mu.Unlock()
 	err = h.updateCityLocked(ctx, id, func(c *CityState) error {
 		before := c.Wallet
-		settleProduction(c, h.cat, h.now())
+		h.settle(ctx, c)
 		production = Resources{c.Wallet.Food - before.Food, c.Wallet.Wood - before.Wood, c.Wallet.Stone - before.Stone, c.Wallet.Iron - before.Iron}
 		return nil
 	})

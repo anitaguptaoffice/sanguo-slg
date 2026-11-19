@@ -322,6 +322,12 @@ describe("military proto encode/decode", () => {
     expect(text).toContain("守方守将：野地守将 Lv4 · 武 66 智 54");
     expect(text).toContain("战利品：粮320 木560 金12 道具#2003×1");
     expect(text).toContain("主将经验 +80");
+    expect(
+      formatBattleReportContext({ target_name: "森林 Lv4", occupy_result: "occupied" }),
+    ).toContain("野地已占领");
+    expect(
+      formatBattleReportContext({ target_name: "森林 Lv4", occupy_result: "cap_reached" }),
+    ).toContain("官府等级不足，附属野地已满");
     expect(formatBattleReportContext({})).toBeNull();
   });
 

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"math"
+	"strconv"
 
 	worldv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/world/v1"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
@@ -16,6 +17,10 @@ const (
 	RouteGetWorldTileDetail = "world.v1.GetWorldTileDetail"
 	// maxViewportRadius bounds one viewport query to 81×81 tiles.
 	maxViewportRadius = 40
+	// RouteListOwnedFields lists the wild tiles owned by one city.
+	RouteListOwnedFields = "world.v1.ListOwnedFields"
+	// RouteAbandonField releases one owned wild tile.
+	RouteAbandonField = "world.v1.AbandonField"
 )
 
 func (s *Server) handleGetWorldViewport(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -174,4 +179,103 @@ func abs(v int) int {
 		return -v
 	}
 	return v
+}
+
+func (s *Server) ownCity(ctx context.Context, pc PlayerContext, cityID int64) (bool, error) {
+	cities, err := s.world.Store.PlayerCities(ctx, pc.ServerID, pc.PlayerID)
+	if err != nil {
+		return false, err
+	}
+	for _, city := range cities {
+		if city.CityID == cityID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (s *Server) handleListOwnedFields(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	var req worldv1.ListOwnedFieldsRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	owned, err := s.ownCity(ctx, pc, req.GetCityId())
+	if err != nil {
+		return nil, err
+	}
+	if !owned {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	tiles, err := s.world.OwnedFields(ctx, pc.ServerID, req.GetCityId())
+	if err != nil {
+		return nil, err
+	}
+	out := &worldv1.ListOwnedFieldsResponse{Fields: make([]*worldv1.WorldOwnedField, 0, len(tiles))}
+	for _, tile := range tiles {
+		out.Fields = append(out.Fields, &worldv1.WorldOwnedField{
+			X: int32(tile.X), Y: int32(tile.Y), Terrain: int32(tile.Terrain), Level: int32(tile.Level),
+			Name:         world.TerrainName(tile.Terrain) + " Lv" + strconv.Itoa(int(tile.Level)),
+			BonusPercent: worldPrimaryBonus(s.world.Wild, tile.Cell),
+		})
+	}
+	data, err := marshal(out)
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
+func (s *Server) handleAbandonField(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
+	pc, errPkt := s.playerCtx(ctx, pkt)
+	if errPkt != nil {
+		return errPkt, nil
+	}
+	var req worldv1.AbandonFieldRequest
+	if err := unmarshal(pkt.GetPayload(), &req); err != nil {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_COMMON_INVALID_PACKET, "invalid payload"), nil
+	}
+	owned, err := s.ownCity(ctx, pc, req.GetCityId())
+	if err != nil {
+		return nil, err
+	}
+	if !owned {
+		return errResp(pkt.GetTraceId(), commonv1.ErrorCode_WORLD_CITY_NOT_FOUND, "city not found"), nil
+	}
+	abandoned, err := s.world.AbandonField(ctx, pc.ServerID, req.GetCityId(), int(req.GetX()), int(req.GetY()))
+	if err != nil {
+		return nil, err
+	}
+	data, err := marshal(&worldv1.AbandonFieldResponse{Abandoned: abandoned})
+	if err != nil {
+		return nil, err
+	}
+	return okResp(pkt.GetTraceId(), data), nil
+}
+
+// ownedFieldBonus sums the owned wild tiles' production percentages in wallet
+// order: food, wood, stone, iron.
+func (s *Server) ownedFieldBonus(ctx context.Context, sid int32, cityID int64) [4]int64 {
+	var bonus [4]int64
+	if s.world == nil || s.world.Wild == nil || cityID <= 0 {
+		return bonus
+	}
+	fields, err := s.world.OwnedFields(ctx, sid, cityID)
+	if err != nil {
+		return bonus
+	}
+	for _, field := range fields {
+		terrain := s.world.Wild.Terrain(field.Terrain)
+		if terrain == nil {
+			continue
+		}
+		bonus[0] += terrain.BonusPercent.Food
+		bonus[1] += terrain.BonusPercent.Wood
+		bonus[2] += terrain.BonusPercent.Stone
+		bonus[3] += terrain.BonusPercent.Iron
+	}
+	return bonus
 }

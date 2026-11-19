@@ -223,3 +223,43 @@ func (p *PGStore) SaveGarrison(ctx context.Context, serverID int32, x, y int, ga
 		WHERE server_id = $1 AND x = $2 AND y = $3`, serverID, x, y, garrisonJSON, recoverAt)
 	return err
 }
+
+// OwnedFields returns the tiles owned by one city, ordered by position.
+func (p *PGStore) OwnedFields(ctx context.Context, sid int32, cityID int64) ([]TileView, error) {
+	rows, err := p.Pool.Query(ctx, `
+		SELECT m.x, m.y, m.terrain, COALESCE(m.resource_type,0), m.resource_level,
+		       m.level, m.max_level, m.province_id, m.owner_city_id, m.npc_kind,
+		       m.garrison_json, m.recover_at
+		FROM map_cell m
+		WHERE m.server_id = $1 AND m.owner_city_id = $2
+		ORDER BY m.y, m.x`, sid, cityID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []TileView
+	for rows.Next() {
+		var tile TileView
+		var recoverAt *time.Time
+		if err := rows.Scan(&tile.X, &tile.Y, &tile.Terrain, &tile.ResourceType, &tile.ResourceLevel,
+			&tile.Level, &tile.MaxLevel, &tile.ProvinceID, &tile.OwnerCityID, &tile.NpcKind,
+			&tile.GarrisonJSON, &recoverAt); err != nil {
+			return nil, err
+		}
+		if recoverAt != nil {
+			tile.RecoverAt = *recoverAt
+		}
+		out = append(out, tile)
+	}
+	return out, rows.Err()
+}
+
+// AbandonField clears ownership only when the tile still belongs to the city.
+func (p *PGStore) AbandonField(ctx context.Context, sid int32, cityID int64, x, y int) (bool, error) {
+	tag, err := p.Pool.Exec(ctx, `UPDATE map_cell SET owner_city_id = NULL
+		WHERE server_id = $1 AND x = $2 AND y = $3 AND owner_city_id = $4`, sid, x, y, cityID)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() > 0, nil
+}

@@ -10,7 +10,7 @@ const domesticMainHallCfgID = 1
 const domesticProdBonusPerMainHallLevel = 0.05
 
 // cityProductionRatesPerHour mirrors domestic.settleProduction hourly output (spec/rules/domestic.md).
-func cityProductionRatesPerHour(c *domestic.CityState, cat map[int32]domestic.BuildingSpec) domestic.Resources {
+func cityProductionRatesPerHour(c *domestic.CityState, cat map[int32]domestic.BuildingSpec, fieldBonus [4]int64) domestic.Resources {
 	if c == nil {
 		return domestic.Resources{}
 	}
@@ -46,5 +46,17 @@ func cityProductionRatesPerHour(c *domestic.CityState, cat map[int32]domestic.Bu
 			rates.Iron += oh
 		}
 	}
+	applyFieldBonus(&rates, fieldBonus)
 	return rates
+}
+
+// applyFieldBonus scales hourly rates by the owned-field percentages.
+func applyFieldBonus(rates *domestic.Resources, fieldBonus [4]int64) {
+	values := []*int64{&rates.Food, &rates.Wood, &rates.Stone, &rates.Iron}
+	for i, value := range values {
+		if fieldBonus[i] <= 0 {
+			continue
+		}
+		*value = *value * (100 + fieldBonus[i]) / 100
+	}
 }

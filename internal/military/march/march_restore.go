@@ -155,7 +155,7 @@ func validateRestore(server int32, catalog map[int32]UnitSpec, orders []restoreR
 		if o.Status != 1 && o.Status != 3 {
 			return fail()
 		}
-		if o.ID <= 0 || o.ArmyID <= 0 || o.Origin == nil || *o.Origin <= 0 || o.Purpose < 1 || o.Purpose > 3 ||
+		if o.ID <= 0 || o.ArmyID <= 0 || o.Origin == nil || *o.Origin <= 0 || o.Purpose < 1 || o.Purpose > 4 ||
 			!validMarchTime(o.DepartAt) || !validMarchTime(o.ArriveAt) || !o.DepartAt.Before(o.ArriveAt) ||
 			o.ArmyStatus == nil || (*o.ArmyStatus != 2 && *o.ArmyStatus != 3) || seenArmy[o.ArmyID] {
 			return fail()

@@ -87,6 +87,8 @@ export class WorldPanels {
   private citiesLoadError: string | null = null;
   private citiesReadVersion = 0;
   private citiesOwner: (() => boolean) | null = null;
+  private ownedFields: { x: number; y: number; name: string; bonus_percent: number }[] = [];
+  private ownedFieldsOwner: (() => boolean) | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -103,6 +105,8 @@ export class WorldPanels {
     this.citiesOwner = null;
     this.citiesLoading = false;
     this.citiesLoadError = null;
+    this.ownedFields = [];
+    this.ownedFieldsOwner = null;
     this.panel = this.buildPanel();
     this.mount.appendChild(this.panel);
     this.panel.addEventListener("click", (ev) => this.onClick(ev));
@@ -208,6 +212,78 @@ export class WorldPanels {
     );
   }
 
+  private async refreshOwnedFields(): Promise<void> {
+    const cityId = this.currentCityId();
+    const ul = this.panel?.querySelector<HTMLElement>('[data-role="owned-field-list"]');
+    const summary = this.panel?.querySelector<HTMLElement>('[data-role="owned-fields-summary"]');
+    if (!ul || !summary) return;
+    if (!cityId || typeof this.gateway.listOwnedFields !== "function") {
+      this.ownedFields = [];
+      ul.innerHTML = "";
+      summary.textContent = "尚未占领野地。";
+      return;
+    }
+    const actor = captureActor(this.gateway, () => this.getSession());
+    const owner = () => actor() && this.currentCityId() === cityId;
+    this.ownedFieldsOwner = owner;
+    try {
+      const response = (await this.gateway.listOwnedFields(cityId)) as {
+        fields?: { x?: number; y?: number; name?: string; bonus_percent?: number }[];
+      };
+      if (!owner()) return;
+      this.ownedFields = (response.fields ?? []).map((field) => ({
+        x: field.x ?? 0,
+        y: field.y ?? 0,
+        name: field.name ?? "野地",
+        bonus_percent: field.bonus_percent ?? 0,
+      }));
+      this.renderOwnedFields();
+    } catch (error) {
+      if (!owner()) return;
+      this.ownedFields = [];
+      ul.innerHTML = "";
+      summary.textContent = `野地列表加载失败：${formatPanelGatewayErrorFromUnknown("world", error)}`;
+    }
+  }
+
+  private renderOwnedFields(): void {
+    const ul = this.panel?.querySelector<HTMLElement>('[data-role="owned-field-list"]');
+    const summary = this.panel?.querySelector<HTMLElement>('[data-role="owned-fields-summary"]');
+    if (!ul || !summary) return;
+    ul.innerHTML = "";
+    if (!this.ownedFields.length) {
+      summary.textContent = "尚未占领野地。";
+      return;
+    }
+    summary.textContent = `附属野地 ${this.ownedFields.length} 块（产量加成按地形叠加）。`;
+    for (const field of this.ownedFields) {
+      const li = document.createElement("li");
+      li.className = "world-owned-field-row";
+      li.textContent = `${field.name} (${field.x},${field.y}) · 产量 +${field.bonus_percent}% `;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.action = "abandon-field";
+      button.dataset.x = String(field.x);
+      button.dataset.y = String(field.y);
+      button.textContent = "放弃";
+      li.appendChild(button);
+      ul.appendChild(li);
+    }
+  }
+
+  private async abandonField(x: number, y: number): Promise<void> {
+    const cityId = this.currentCityId();
+    if (!cityId || typeof this.gateway.abandonField !== "function") return;
+    if (!window.confirm(`放弃 (${x},${y}) 的附属野地？产量加成会立即失效。`)) return;
+    try {
+      await this.gateway.abandonField(cityId, x, y);
+      this.onStatus(`已放弃附属野地 (${x},${y})`);
+    } catch (error) {
+      this.onStatus(formatPanelGatewayErrorFromUnknown("world", error));
+    }
+    await this.refreshOwnedFields();
+  }
+
   private buildPanel(): HTMLElement {
     const el = document.createElement("div");
     el.className = "content-panel hidden world-panel";
@@ -232,6 +308,9 @@ export class WorldPanels {
       <button type="button" data-action="refresh-world">刷新城池</button>
       <div class="panel-scroll-body" data-role="world-scroll">
         <ul class="world-city-list" data-role="world-list"></ul>
+        <h4>附属野地</h4>
+        <p class="world-owned-fields-summary" data-role="owned-fields-summary">尚未占领野地。</p>
+        <ul class="world-owned-field-list" data-role="owned-field-list"></ul>
       </div>
     `;
     return el;
@@ -426,6 +505,7 @@ export class WorldPanels {
   }
 
   private async refreshList(): Promise<void> {
+    void this.refreshOwnedFields();
     const actor = captureActor(this.gateway, this.getSession);
     const panel = this.panel;
     const version = ++this.citiesReadVersion;
@@ -481,6 +561,13 @@ export class WorldPanels {
 
   private onClick(ev: Event): void {
     const target = ev.target as HTMLElement;
+    const abandonBtn = target.closest("button[data-action='abandon-field']") as HTMLButtonElement | null;
+    if (abandonBtn) {
+      const x = Number(abandonBtn.dataset.x);
+      const y = Number(abandonBtn.dataset.y);
+      if (Number.isFinite(x) && Number.isFinite(y)) void this.abandonField(x, y);
+      return;
+    }
     const infoCard = target.closest('[data-role="world-tile-info"]');
     if (
       infoCard &&

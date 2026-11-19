@@ -209,22 +209,30 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 		in.ServerID, in.ArmyID, in.ToX, in.ToY, armyStatus)); err != nil {
 		return out, errors.Join(ErrMarchTransition, err)
 	}
+	occupyResult := ""
+	if in.Occupy != nil && in.Occupy.CityID > 0 && in.Occupy.Limit > 0 {
+		occupySQL := `UPDATE ` + table("map_cell") + ` SET owner_city_id = $4
+			WHERE server_id = $1 AND x = $2 AND y = $3 AND owner_city_id IS NULL
+			  AND (SELECT count(*) FROM ` + table("map_cell") + ` WHERE server_id = $1 AND owner_city_id = $4) < $5`
+		tag, err := tx.Exec(ctx, occupySQL, in.ServerID, in.ToX, in.ToY, in.Occupy.CityID, in.Occupy.Limit)
+		if err != nil {
+			return out, errors.Join(ErrMarchTransition, err)
+		}
+		if tag.RowsAffected() > 0 {
+			occupyResult = "occupied"
+		} else {
+			occupyResult = "cap_reached"
+		}
+	}
 	if in.Report != nil {
 		p := *in.Report
 		p.ReportID = reportID
+		p.Report.OccupyResult = occupyResult
 		rec, err := t.reports.SaveTx(ctx, tx, t.profile.SchemaName, p)
 		if err != nil {
 			return out, errors.Join(ErrMarchTransition, err)
 		}
 		out.ReportID = rec.ReportID
-	}
-	if in.Occupy != nil && in.Occupy.CityID > 0 && in.Occupy.Limit > 0 {
-		occupySQL := `UPDATE ` + table("map_cell") + ` SET owner_city_id = $4
-			WHERE server_id = $1 AND x = $2 AND y = $3 AND owner_city_id IS NULL
-			  AND (SELECT count(*) FROM ` + table("map_cell") + ` WHERE server_id = $1 AND owner_city_id = $4) < $5`
-		if _, err = tx.Exec(ctx, occupySQL, in.ServerID, in.ToX, in.ToY, in.Occupy.CityID, in.Occupy.Limit); err != nil {
-			return out, errors.Join(ErrMarchTransition, err)
-		}
 	}
 	if in.Loot != nil {
 		items, err := json.Marshal(in.Loot.Items)

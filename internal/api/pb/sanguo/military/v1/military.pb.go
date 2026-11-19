@@ -1439,6 +1439,8 @@ type BattleReportDetail struct {
 	DefenderHero  *BattleHeroSummary `protobuf:"bytes,9,opt,name=defender_hero,json=defenderHero,proto3" json:"defender_hero,omitempty"`
 	Loot          *BattleLoot        `protobuf:"bytes,10,opt,name=loot,proto3" json:"loot,omitempty"`
 	HeroExpGained int64              `protobuf:"varint,11,opt,name=hero_exp_gained,json=heroExpGained,proto3" json:"hero_exp_gained,omitempty"`
+	// R1-S5: 占领结果（"occupied" / "cap_reached" / 空）。
+	OccupyResult  string `protobuf:"bytes,12,opt,name=occupy_result,json=occupyResult,proto3" json:"occupy_result,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1548,6 +1550,13 @@ func (x *BattleReportDetail) GetHeroExpGained() int64 {
 		return x.HeroExpGained
 	}
 	return 0
+}
+
+func (x *BattleReportDetail) GetOccupyResult() string {
+	if x != nil {
+		return x.OccupyResult
+	}
+	return ""
 }
 
 type BattleRound struct {
@@ -1991,7 +2000,7 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\x05stone\x18\x03 \x01(\x03R\x05stone\x12\x12\n" +
 	"\x04iron\x18\x04 \x01(\x03R\x04iron\x12\x12\n" +
 	"\x04gold\x18\x05 \x01(\x03R\x04gold\x128\n" +
-	"\x05items\x18\x06 \x03(\v2\".sanguo.military.v1.BattleLootItemR\x05items\"\xb2\b\n" +
+	"\x05items\x18\x06 \x03(\v2\".sanguo.military.v1.BattleLootItemR\x05items\"\xd7\b\n" +
 	"\x12BattleReportDetail\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\tR\x06result\x127\n" +
 	"\x06rounds\x18\x02 \x03(\v2\x1f.sanguo.military.v1.BattleRoundR\x06rounds\x12o\n" +
@@ -2005,7 +2014,8 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\rdefender_hero\x18\t \x01(\v2%.sanguo.military.v1.BattleHeroSummaryR\fdefenderHero\x122\n" +
 	"\x04loot\x18\n" +
 	" \x01(\v2\x1e.sanguo.military.v1.BattleLootR\x04loot\x12&\n" +
-	"\x0fhero_exp_gained\x18\v \x01(\x03R\rheroExpGained\x1aE\n" +
+	"\x0fhero_exp_gained\x18\v \x01(\x03R\rheroExpGained\x12#\n" +
+	"\roccupy_result\x18\f \x01(\tR\foccupyResult\x1aE\n" +
 	"\x17AttackerCasualtiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aE\n" +

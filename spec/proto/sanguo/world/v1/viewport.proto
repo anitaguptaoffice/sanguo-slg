@@ -71,3 +71,33 @@ message GetWorldTileDetailResponse {
   int32 resource_bonus_percent = 4;
   int32 distance_from_capital = 5;
 }
+
+// 附属野地：本城已占领的野地列表。
+message WorldOwnedField {
+  int32 x = 1;
+  int32 y = 2;
+  int32 terrain = 3;
+  int32 level = 4;
+  string name = 5;
+  int32 bonus_percent = 6;
+}
+
+// route: world.v1.ListOwnedFields
+message ListOwnedFieldsRequest {
+  int64 city_id = 1;
+}
+
+message ListOwnedFieldsResponse {
+  repeated WorldOwnedField fields = 1;
+}
+
+// route: world.v1.AbandonField
+message AbandonFieldRequest {
+  int64 city_id = 1;
+  int32 x = 2;
+  int32 y = 3;
+}
+
+message AbandonFieldResponse {
+  bool abandoned = 1;
+}

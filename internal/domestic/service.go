@@ -106,7 +106,15 @@ func mainHallLvl(c *CityState) int32 {
 	return 0
 }
 
+// settleProduction keeps the historical signature for pure callers without
+// field bonuses.
 func settleProduction(c *CityState, cat map[int32]BuildingSpec, now time.Time) {
+	settleProductionWithBonus(c, cat, now, [4]int64{})
+}
+
+// settleProductionWithBonus applies owned-field percentages on top of the
+// building rates. Percent order is food, wood, stone, iron.
+func settleProductionWithBonus(c *CityState, cat map[int32]BuildingSpec, now time.Time, fieldBonus [4]int64) {
 	// Invalid wallets must not mint capped credit via an overflowing cap-balance.
 	// Store-backed callers reject them; the pure calculation leaves them untouched.
 	if c.Wallet.Food < 0 || c.Wallet.Wood < 0 || c.Wallet.Stone < 0 || c.Wallet.Iron < 0 {
@@ -139,6 +147,13 @@ func settleProduction(c *CityState, cat map[int32]BuildingSpec, now time.Time) {
 		// result exactly, even when rates or elapsed products exceed int64.
 		rate, _ := new(big.Float).SetFloat64(math.Floor(float64(sp.ProdPerHour) * float64(inst.Level) * bonus)).Int(nil)
 		earned[sp.ProdRes].Add(&earned[sp.ProdRes], rate)
+	}
+	for i := range earned {
+		if fieldBonus[i] <= 0 {
+			continue
+		}
+		earned[i].Mul(&earned[i], big.NewInt(100+fieldBonus[i]))
+		earned[i].Quo(&earned[i], big.NewInt(100))
 	}
 	elapsed, denominator := big.NewInt(int64(el)), big.NewInt(int64(time.Hour))
 	wallet := []*int64{&c.Wallet.Food, &c.Wallet.Wood, &c.Wallet.Stone, &c.Wallet.Iron}
@@ -357,6 +372,21 @@ type Hub struct {
 	serverID   int32
 	flushEvery time.Duration
 	lastFlush  time.Time
+	fieldBonus func(ctx context.Context, serverID int32, cityID int64) [4]int64
+}
+
+// UseFieldBonus installs the owned-field production bonus provider. Percent
+// order is food, wood, stone, iron.
+func (h *Hub) UseFieldBonus(provider func(ctx context.Context, serverID int32, cityID int64) [4]int64) {
+	h.fieldBonus = provider
+}
+
+func (h *Hub) settle(ctx context.Context, c *CityState) {
+	var bonus [4]int64
+	if h.fieldBonus != nil {
+		bonus = h.fieldBonus(ctx, h.serverID, c.ID)
+	}
+	settleProductionWithBonus(c, h.cat, h.now(), bonus)
 }
 
 func NewHub(now func() time.Time) *Hub {
@@ -393,7 +423,7 @@ func (h *Hub) RegisterCity(c *CityState) error {
 		return ErrCityNotFound
 	}
 	h.registerCityLocked(c)
-	settleProduction(c, h.cat, h.now())
+	h.settle(context.Background(), c)
 	return nil
 }
 

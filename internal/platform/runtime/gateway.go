@@ -73,6 +73,24 @@ func (a *App) newAPIServer(ctx context.Context) (*api.Server, error) {
 	worldSvc.Wild = wild
 	hub := domestic.NewHub(time.Now)
 	hub.UseStore(domestic.NewPGStore(a.DB), defaultShardID, 30*time.Second)
+	hub.UseFieldBonus(func(ctx context.Context, sid int32, cityID int64) [4]int64 {
+		var bonus [4]int64
+		fields, err := worldSvc.OwnedFields(ctx, sid, cityID)
+		if err != nil {
+			return bonus
+		}
+		for _, field := range fields {
+			terrain := wild.Terrain(field.Terrain)
+			if terrain == nil {
+				continue
+			}
+			bonus[0] += terrain.BonusPercent.Food
+			bonus[1] += terrain.BonusPercent.Wood
+			bonus[2] += terrain.BonusPercent.Stone
+			bonus[3] += terrain.BonusPercent.Iron
+		}
+		return bonus
+	})
 	militaryHub := march.NewHub(time.Now)
 	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub, api.NewWorldGarrisons(worldSvc, defaultShardID))
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)

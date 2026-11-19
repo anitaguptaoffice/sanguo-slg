@@ -27,7 +27,7 @@ func mustErr(t *testing.T, err, want error) {
 func TestMarchCreateValidation(t *testing.T) {
 	for _, mutate := range []func(*MarchCreate){
 		func(in *MarchCreate) { in.ServerID = 2 }, func(in *MarchCreate) { in.PlayerID = 0 }, func(in *MarchCreate) { in.OwnerPlayerID = 8 },
-		func(in *MarchCreate) { in.ArmyStatus = 1 }, func(in *MarchCreate) { in.OriginCityID = 0 }, func(in *MarchCreate) { in.Purpose = 4 },
+		func(in *MarchCreate) { in.ArmyStatus = 1 }, func(in *MarchCreate) { in.OriginCityID = 0 }, func(in *MarchCreate) { in.Purpose = 5 },
 		func(in *MarchCreate) { in.DepartAt = time.Time{} }, func(in *MarchCreate) { in.ArriveAt = in.DepartAt }, func(in *MarchCreate) { in.Troops = nil },
 		func(in *MarchCreate) { in.Troops[0].UnitCfgID = 0 }, func(in *MarchCreate) { in.Troops[0].Count = 0 }, func(in *MarchCreate) { in.Troops[1] = in.Troops[0] },
 		func(in *MarchCreate) { in.HeroIDs = nil }, func(in *MarchCreate) { in.HeroIDs[0] = 0 }, func(in *MarchCreate) { in.HeroIDs[1] = in.HeroIDs[0] },

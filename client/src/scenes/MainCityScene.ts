@@ -574,6 +574,13 @@ export class MainCityScene implements Scene {
         <label>带队将领
           <select data-field="march-hero" aria-label="出征带队将领"></select>
         </label>
+        <label>出征目的
+          <select data-field="march-purpose" aria-label="出征目的">
+            <option value="1">攻击</option>
+            <option value="3">掠夺</option>
+            <option value="4">占领</option>
+          </select>
+        </label>
         <label>出征兵种
           <select data-field="march-unit" aria-label="出征兵种">
             <option value="1">步兵</option><option value="2">骑兵</option>
@@ -584,7 +591,7 @@ export class MainCityScene implements Scene {
         <p class="march-form-summary" data-role="march-form-summary" aria-live="polite"></p>
         <p class="march-form-summary-warn hidden" data-role="march-form-summary-warn" role="status"></p>
         <p class="march-form-error hidden" data-role="march-form-error" role="alert"></p>
-        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征攻击</button>
+        <button type="button" class="art-btn-primary art-btn-primary-full" data-action="march">出征</button>
         <p class="military-march" data-role="march"></p>
       </div>
     `;
@@ -3090,6 +3097,8 @@ export class MainCityScene implements Scene {
       return;
     }
     const { toX, toY, marchCount, heroId } = validated;
+    const purposeRaw = Number((this.field("march-purpose") as HTMLSelectElement)?.value ?? PURPOSE_ATTACK);
+    const purpose = [PURPOSE_ATTACK, 3, 4].includes(purposeRaw) ? purposeRaw : PURPOSE_ATTACK;
     const session = this.session;
     const actor = captureActor(this.gateway, () => this.session);
     const generation = this.marchSnapshotGeneration;
@@ -3106,7 +3115,7 @@ export class MainCityScene implements Scene {
         this.session.cityId,
         toX,
         toY,
-        PURPOSE_ATTACK,
+        purpose,
         heroId,
         troops.map((t) => ({ unit_cfg_id: t.unit_cfg_id ?? 1, count: t.count ?? 0 })),
       )) as { march?: MarchSummary; city_troops?: CityTroopStack[] };

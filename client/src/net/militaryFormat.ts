@@ -637,6 +637,7 @@ export type BattleReportDetailView = {
   defender_hero?: BattleHeroView;
   loot?: BattleLootView;
   hero_exp_gained?: number;
+  occupy_result?: string;
   attacker_hero_level?: number;
   defender_hero_level?: number;
   rounds?: {
@@ -692,6 +693,8 @@ export function formatBattleReportContext(detail: BattleReportDetailView | undef
     if (resources.length || items.length) parts.push(`战利品：${[...resources, ...items].join(" ")}`);
   }
   if ((detail.hero_exp_gained ?? 0) > 0) parts.push(`主将经验 +${detail.hero_exp_gained}`);
+  if (detail.occupy_result === "occupied") parts.push("野地已占领");
+  if (detail.occupy_result === "cap_reached") parts.push("官府等级不足，附属野地已满，部队携战利品返程");
   return parts.length ? parts.join(" · ") : null;
 }
 

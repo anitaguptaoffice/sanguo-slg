@@ -85,4 +85,7 @@ type BattleReport struct {
 	AttackerHero HeroSummary
 	DefenderHero HeroSummary
 	Loot         Loot
+	// OccupyResult is "occupied", "cap_reached" or empty when the march did
+	// not carry an occupation intent (R1-S5).
+	OccupyResult string
 }

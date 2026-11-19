@@ -37,7 +37,7 @@ func TestMarchRestoreRejects(t *testing.T) {
 		"army unknown":      func(in *restoreInput) { *in.orders[0].ArmyStatus = 9 },
 		"army missing":      func(in *restoreInput) { in.orders[0].ArmyStatus = nil },
 		"army garrison":     func(in *restoreInput) { *in.orders[0].ArmyStatus = 1 },
-		"purpose":           func(in *restoreInput) { in.orders[0].Purpose = 4 },
+		"purpose":           func(in *restoreInput) { in.orders[0].Purpose = 5 },
 		"depart zero":       func(in *restoreInput) { in.orders[0].DepartAt = time.Time{} },
 		"arrive order":      func(in *restoreInput) { in.orders[0].ArriveAt = in.orders[0].DepartAt },
 		"marching deadline": func(in *restoreInput) { in.orders[0].ReturnAt = restorePtr(in.orders[0].ArriveAt) },

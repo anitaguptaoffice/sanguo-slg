@@ -55,6 +55,8 @@ export const Routes = {
   ListPlayerCities: "world.v1.ListPlayerCities",
   GetWorldViewport: "world.v1.GetWorldViewport",
   GetWorldTileDetail: "world.v1.GetWorldTileDetail",
+  ListOwnedFields: "world.v1.ListOwnedFields",
+  AbandonField: "world.v1.AbandonField",
   GetCityState: "domestic.v1.GetCityState",
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
   RecruitTroop: "military.v1.RecruitTroop",
@@ -143,6 +145,10 @@ export type ProtoTypes = {
   GetWorldViewportResponse: protobuf.Type;
   GetWorldTileDetailRequest: protobuf.Type;
   GetWorldTileDetailResponse: protobuf.Type;
+  ListOwnedFieldsRequest: protobuf.Type;
+  ListOwnedFieldsResponse: protobuf.Type;
+  AbandonFieldRequest: protobuf.Type;
+  AbandonFieldResponse: protobuf.Type;
   GetCityStateRequest: protobuf.Type;
   GetCityStateResponse: protobuf.Type;
   StartBuildingUpgradeRequest: protobuf.Type;
@@ -278,6 +284,10 @@ export function getTypes(): ProtoTypes {
     GetWorldViewportResponse: r.lookupType("sanguo.world.v1.GetWorldViewportResponse"),
     GetWorldTileDetailRequest: r.lookupType("sanguo.world.v1.GetWorldTileDetailRequest"),
     GetWorldTileDetailResponse: r.lookupType("sanguo.world.v1.GetWorldTileDetailResponse"),
+    ListOwnedFieldsRequest: r.lookupType("sanguo.world.v1.ListOwnedFieldsRequest"),
+    ListOwnedFieldsResponse: r.lookupType("sanguo.world.v1.ListOwnedFieldsResponse"),
+    AbandonFieldRequest: r.lookupType("sanguo.world.v1.AbandonFieldRequest"),
+    AbandonFieldResponse: r.lookupType("sanguo.world.v1.AbandonFieldResponse"),
     GetCityStateRequest: r.lookupType("sanguo.domestic.v1.GetCityStateRequest"),
     GetCityStateResponse: r.lookupType("sanguo.domestic.v1.GetCityStateResponse"),
     StartBuildingUpgradeRequest: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeRequest"),

@@ -593,6 +593,285 @@ func (x *GetWorldTileDetailResponse) GetDistanceFromCapital() int32 {
 	return 0
 }
 
+// 附属野地：本城已占领的野地列表。
+type WorldOwnedField struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	X             int32                  `protobuf:"varint,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,2,opt,name=y,proto3" json:"y,omitempty"`
+	Terrain       int32                  `protobuf:"varint,3,opt,name=terrain,proto3" json:"terrain,omitempty"`
+	Level         int32                  `protobuf:"varint,4,opt,name=level,proto3" json:"level,omitempty"`
+	Name          string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
+	BonusPercent  int32                  `protobuf:"varint,6,opt,name=bonus_percent,json=bonusPercent,proto3" json:"bonus_percent,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorldOwnedField) Reset() {
+	*x = WorldOwnedField{}
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorldOwnedField) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorldOwnedField) ProtoMessage() {}
+
+func (x *WorldOwnedField) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorldOwnedField.ProtoReflect.Descriptor instead.
+func (*WorldOwnedField) Descriptor() ([]byte, []int) {
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *WorldOwnedField) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *WorldOwnedField) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *WorldOwnedField) GetTerrain() int32 {
+	if x != nil {
+		return x.Terrain
+	}
+	return 0
+}
+
+func (x *WorldOwnedField) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *WorldOwnedField) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *WorldOwnedField) GetBonusPercent() int32 {
+	if x != nil {
+		return x.BonusPercent
+	}
+	return 0
+}
+
+// route: world.v1.ListOwnedFields
+type ListOwnedFieldsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CityId        int64                  `protobuf:"varint,1,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOwnedFieldsRequest) Reset() {
+	*x = ListOwnedFieldsRequest{}
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOwnedFieldsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOwnedFieldsRequest) ProtoMessage() {}
+
+func (x *ListOwnedFieldsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOwnedFieldsRequest.ProtoReflect.Descriptor instead.
+func (*ListOwnedFieldsRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListOwnedFieldsRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+type ListOwnedFieldsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Fields        []*WorldOwnedField     `protobuf:"bytes,1,rep,name=fields,proto3" json:"fields,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOwnedFieldsResponse) Reset() {
+	*x = ListOwnedFieldsResponse{}
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOwnedFieldsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOwnedFieldsResponse) ProtoMessage() {}
+
+func (x *ListOwnedFieldsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOwnedFieldsResponse.ProtoReflect.Descriptor instead.
+func (*ListOwnedFieldsResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ListOwnedFieldsResponse) GetFields() []*WorldOwnedField {
+	if x != nil {
+		return x.Fields
+	}
+	return nil
+}
+
+// route: world.v1.AbandonField
+type AbandonFieldRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CityId        int64                  `protobuf:"varint,1,opt,name=city_id,json=cityId,proto3" json:"city_id,omitempty"`
+	X             int32                  `protobuf:"varint,2,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,3,opt,name=y,proto3" json:"y,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AbandonFieldRequest) Reset() {
+	*x = AbandonFieldRequest{}
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AbandonFieldRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AbandonFieldRequest) ProtoMessage() {}
+
+func (x *AbandonFieldRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AbandonFieldRequest.ProtoReflect.Descriptor instead.
+func (*AbandonFieldRequest) Descriptor() ([]byte, []int) {
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *AbandonFieldRequest) GetCityId() int64 {
+	if x != nil {
+		return x.CityId
+	}
+	return 0
+}
+
+func (x *AbandonFieldRequest) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *AbandonFieldRequest) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+type AbandonFieldResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Abandoned     bool                   `protobuf:"varint,1,opt,name=abandoned,proto3" json:"abandoned,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AbandonFieldResponse) Reset() {
+	*x = AbandonFieldResponse{}
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AbandonFieldResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AbandonFieldResponse) ProtoMessage() {}
+
+func (x *AbandonFieldResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AbandonFieldResponse.ProtoReflect.Descriptor instead.
+func (*AbandonFieldResponse) Descriptor() ([]byte, []int) {
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *AbandonFieldResponse) GetAbandoned() bool {
+	if x != nil {
+		return x.Abandoned
+	}
+	return false
+}
+
 var File_sanguo_world_v1_viewport_proto protoreflect.FileDescriptor
 
 const file_sanguo_world_v1_viewport_proto_rawDesc = "" +
@@ -648,7 +927,24 @@ const file_sanguo_world_v1_viewport_proto_rawDesc = "" +
 	"\aactions\x18\x02 \x03(\tR\aactions\x12#\n" +
 	"\rgarrison_tier\x18\x03 \x01(\x05R\fgarrisonTier\x124\n" +
 	"\x16resource_bonus_percent\x18\x04 \x01(\x05R\x14resourceBonusPercent\x122\n" +
-	"\x15distance_from_capital\x18\x05 \x01(\x05R\x13distanceFromCapitalBGZEgithub.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/world/v1;worldv1b\x06proto3"
+	"\x15distance_from_capital\x18\x05 \x01(\x05R\x13distanceFromCapital\"\x96\x01\n" +
+	"\x0fWorldOwnedField\x12\f\n" +
+	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\x12\x18\n" +
+	"\aterrain\x18\x03 \x01(\x05R\aterrain\x12\x14\n" +
+	"\x05level\x18\x04 \x01(\x05R\x05level\x12\x12\n" +
+	"\x04name\x18\x05 \x01(\tR\x04name\x12#\n" +
+	"\rbonus_percent\x18\x06 \x01(\x05R\fbonusPercent\"1\n" +
+	"\x16ListOwnedFieldsRequest\x12\x17\n" +
+	"\acity_id\x18\x01 \x01(\x03R\x06cityId\"S\n" +
+	"\x17ListOwnedFieldsResponse\x128\n" +
+	"\x06fields\x18\x01 \x03(\v2 .sanguo.world.v1.WorldOwnedFieldR\x06fields\"J\n" +
+	"\x13AbandonFieldRequest\x12\x17\n" +
+	"\acity_id\x18\x01 \x01(\x03R\x06cityId\x12\f\n" +
+	"\x01x\x18\x02 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x03 \x01(\x05R\x01y\"4\n" +
+	"\x14AbandonFieldResponse\x12\x1c\n" +
+	"\tabandoned\x18\x01 \x01(\bR\tabandonedBGZEgithub.com/anitaguptaoffice/sanguo-slg/gen/go/sanguo/world/v1;worldv1b\x06proto3"
 
 var (
 	file_sanguo_world_v1_viewport_proto_rawDescOnce sync.Once
@@ -662,7 +958,7 @@ func file_sanguo_world_v1_viewport_proto_rawDescGZIP() []byte {
 	return file_sanguo_world_v1_viewport_proto_rawDescData
 }
 
-var file_sanguo_world_v1_viewport_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_sanguo_world_v1_viewport_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_sanguo_world_v1_viewport_proto_goTypes = []any{
 	(*GetWorldViewportRequest)(nil),    // 0: sanguo.world.v1.GetWorldViewportRequest
 	(*WorldTileSummary)(nil),           // 1: sanguo.world.v1.WorldTileSummary
@@ -671,17 +967,23 @@ var file_sanguo_world_v1_viewport_proto_goTypes = []any{
 	(*GetWorldViewportResponse)(nil),   // 4: sanguo.world.v1.GetWorldViewportResponse
 	(*GetWorldTileDetailRequest)(nil),  // 5: sanguo.world.v1.GetWorldTileDetailRequest
 	(*GetWorldTileDetailResponse)(nil), // 6: sanguo.world.v1.GetWorldTileDetailResponse
+	(*WorldOwnedField)(nil),            // 7: sanguo.world.v1.WorldOwnedField
+	(*ListOwnedFieldsRequest)(nil),     // 8: sanguo.world.v1.ListOwnedFieldsRequest
+	(*ListOwnedFieldsResponse)(nil),    // 9: sanguo.world.v1.ListOwnedFieldsResponse
+	(*AbandonFieldRequest)(nil),        // 10: sanguo.world.v1.AbandonFieldRequest
+	(*AbandonFieldResponse)(nil),       // 11: sanguo.world.v1.AbandonFieldResponse
 }
 var file_sanguo_world_v1_viewport_proto_depIdxs = []int32{
 	1, // 0: sanguo.world.v1.GetWorldViewportResponse.tiles:type_name -> sanguo.world.v1.WorldTileSummary
 	2, // 1: sanguo.world.v1.GetWorldViewportResponse.marches:type_name -> sanguo.world.v1.WorldMarchLine
 	3, // 2: sanguo.world.v1.GetWorldViewportResponse.provinces:type_name -> sanguo.world.v1.WorldProvinceCenter
 	1, // 3: sanguo.world.v1.GetWorldTileDetailResponse.tile:type_name -> sanguo.world.v1.WorldTileSummary
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	7, // 4: sanguo.world.v1.ListOwnedFieldsResponse.fields:type_name -> sanguo.world.v1.WorldOwnedField
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_world_v1_viewport_proto_init() }
@@ -695,7 +997,7 @@ func file_sanguo_world_v1_viewport_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_world_v1_viewport_proto_rawDesc), len(file_sanguo_world_v1_viewport_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
