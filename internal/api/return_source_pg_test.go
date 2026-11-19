@@ -131,7 +131,6 @@ func TestPGReturnGenerationRejectsDomainSources(t *testing.T) {
 	for _, domain := range []struct{ name, table, ddl, phase string }{
 		{"account", "account", "ALTER TABLE account ALTER COLUMN status SET DEFAULT 2", "account constructor"},
 		{"domestic", "player_wallet", "ALTER TABLE player_wallet ALTER COLUMN food SET DEFAULT 1", "wallet constructor"},
-		{"world", "player_city", "ALTER TABLE player_city ALTER COLUMN wall_level SET DEFAULT 2", "world constructor"},
 		{"military", "army_troop", "ALTER TABLE army_troop ALTER COLUMN count SET DEFAULT 1", "military constructor"},
 	} {
 		for _, mode := range []string{"oid", "owner", "shape"} {

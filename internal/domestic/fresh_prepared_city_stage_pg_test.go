@@ -55,7 +55,7 @@ func preparedCityStageExtendSchema(t *testing.T, ctx context.Context, f *freshSo
 	freshCatalogPGExec(t, ctx, f.pool, `CREATE SEQUENCE IF NOT EXISTS player_city_id_seq AS bigint START 1 INCREMENT 1 NO CYCLE;
 INSERT INTO account(login_name,password_hash) VALUES ('stage_qa','x') ON CONFLICT DO NOTHING;
 INSERT INTO player(server_id,player_id,account_id,display_name) VALUES (1,7,1,'stage_qa') ON CONFLICT DO NOTHING;
-INSERT INTO map_cell(server_id,x,y,terrain) VALUES (1,0,0,0) ON CONFLICT DO NOTHING;`)
+INSERT INTO map_cell(server_id,x,y,terrain) VALUES (1,0,0,1) ON CONFLICT DO NOTHING;`)
 }
 
 func preparedCityStageProfile(t *testing.T, ctx context.Context, pool *pgxpool.Pool, base freshsource.Profile, names []string) freshsource.Profile {

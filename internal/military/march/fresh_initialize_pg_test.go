@@ -25,7 +25,7 @@ func initializeFixture(t *testing.T) (*pgxpool.Pool, *recruittx.Binding, *FreshC
  INSERT INTO account(login_name,password_hash) VALUES('fixture','not-a-credential');
  INSERT INTO player(server_id,player_id,account_id,display_name) VALUES(1,7,1,'fixture');
  INSERT INTO player_wallet(server_id,player_id,food) VALUES(1,7,8000);
- INSERT INTO map_cell(server_id,x,y,terrain) VALUES(1,0,0,0)`)
+ INSERT INTO map_cell(server_id,x,y,terrain) VALUES(1,0,0,1)`)
 	wp, _ := freshsource.Snapshot(p)
 	wp.Objects = map[string]freshsource.ObjectIdentity{}
 	for _, name := range []string{"map_cell", "map_cell_pkey", "player_city", "player_city_pkey", "player_city_server_id_x_y_key", "idx_player_city_owner", "player_city_id_seq"} {
