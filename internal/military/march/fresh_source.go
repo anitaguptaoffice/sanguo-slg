@@ -13,6 +13,17 @@ import (
 
 var ErrFreshCitySource = errors.New("march: fresh city source unavailable")
 
+// MilitarySourceObjectNames returns the fixed MIL relation inventory the durable
+// runtime resolves from the live catalog.
+func MilitarySourceObjectNames() []string {
+	names := make([]string, 0, 14)
+	names = append(names, freshBaseNames[:]...)
+	names = append(names, freshQueueNames[:]...)
+	names = append(names, freshRetainedNames[:]...)
+	names = append(names, "work_queue_id_seq")
+	return names
+}
+
 // FreshCityParticipant captures local consistency, not approval or provenance.
 // APP still owns its admission lease, external exclusions and transaction end.
 // Copies share irreversible retirement. No Initialize or live caller is wired here.

@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
@@ -11,35 +10,6 @@ import (
 	"github.com/anitaguptaoffice/sanguo-slg/internal/world"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-func (a *App) validatePreparedFirstCityLocal() error {
-	if a.Config.PreparedMarch && (!a.Config.PreparedFirstCity || !a.Config.PreparedRecruit || a.Config.MILFreshProfileFile == "") {
-		return fmt.Errorf("prepared march requires prepared first-city, prepared recruit and a reviewed source")
-	}
-	if !a.Config.PreparedFirstCity {
-		if a.Config.PreparedRecruit {
-			return fmt.Errorf("prepared recruit requires prepared first-city mode")
-		}
-		return nil
-	}
-	host, _, err := net.SplitHostPort(a.Config.HTTPAddr)
-	if err != nil || !net.ParseIP(host).IsLoopback() {
-		return fmt.Errorf("prepared first-city requires a loopback HTTP listener")
-	}
-	if a.DB == nil {
-		return fmt.Errorf("prepared first-city requires a local PostgreSQL source")
-	}
-	conn := a.DB.Config().ConnConfig
-	if conn.Host != "localhost" && !net.ParseIP(conn.Host).IsLoopback() {
-		return fmt.Errorf("prepared first-city requires a loopback PostgreSQL source")
-	}
-	for _, fallback := range conn.Fallbacks {
-		if fallback.Host != "localhost" && !net.ParseIP(fallback.Host).IsLoopback() {
-			return fmt.Errorf("prepared first-city requires loopback PostgreSQL fallbacks")
-		}
-	}
-	return nil
-}
 
 func composeFirstCityPreparedSource(ctx context.Context, md *api.MilitaryDurable, profiles *preparedCityProfiles, pool *pgxpool.Pool, hub *domestic.Hub) (source *api.FirstCityPreparedCreationSource, err error) {
 	if md == nil || profiles == nil || !hub.SupportsAtomicCityCreation(pool, defaultShardID) {

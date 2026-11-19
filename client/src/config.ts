@@ -2,9 +2,3 @@
 export const GATEWAY_WS_URL =
   (import.meta.env.VITE_GATEWAY_WS_URL as string | undefined) ??
   "ws://127.0.0.1:8080/ws";
-
-export const PREPARED_RECRUIT = import.meta.env.VITE_PREPARED_RECRUIT === "1";
-export const PREPARED_RECRUIT_GUARD = {
-  url: (import.meta.env.VITE_PREPARED_RECRUIT_GUARD_URL as string | undefined) ?? "",
-  id: (import.meta.env.VITE_PREPARED_RECRUIT_GUARD_ID as string | undefined) ?? "",
-};

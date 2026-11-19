@@ -1,15 +1,10 @@
 package runtime
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"log/slog"
-	"math"
-	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/api"
@@ -19,162 +14,31 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// MIL_FRESH_PROFILE_FILE names a reviewed deployment file: format 1, the
-// serialized freshsource.Profile expectations and the reviewed recruit manifests.
-const militaryStartupFormat = 1
-
-var errMilitaryProfile = errors.New("runtime: invalid military startup profile")
-
-// militaryStartupProfile publishes the reviewed Profile values verbatim.
-type militaryStartupProfile struct {
-	freshsource.Profile
-	Format          int               `json:"format"`
-	Manifests       []json.RawMessage `json:"recruit_manifests"`
-	CurrentManifest string            `json:"recruit_current"`
-}
-
-// militaryFixedArrays reads the three fixed-size fields without coercing them.
-type militaryFixedArrays struct {
-	ReleaseDigest  json.RawMessage `json:"ReleaseDigest"`
-	EvidenceDigest json.RawMessage `json:"EvidenceDigest"`
-	Cohort         json.RawMessage `json:"Cohort"`
-}
-
-// strictMilitaryArrays validates the reviewed encoding before any fixed-array
-// copy: encoding/json silently zero-fills a short array and truncates a long
-// one, so each digest must be exactly 32 JSON numbers and the cohort exactly 16,
-// each an integer in 0..255. Strings, base64, nulls, nested values and extra
-// elements are rejected instead of being coerced or discarded.
-func strictMilitaryArrays(raw []byte) (release, evidence, cohort []byte, err error) {
-	var wire militaryFixedArrays
-	if err = json.Unmarshal(raw, &wire); err != nil {
-		return nil, nil, nil, badMilitary("json")
-	}
-	if release, err = strictJSONBytes(wire.ReleaseDigest, 32); err != nil {
-		return nil, nil, nil, badMilitary("ReleaseDigest")
-	}
-	if evidence, err = strictJSONBytes(wire.EvidenceDigest, 32); err != nil {
-		return nil, nil, nil, badMilitary("EvidenceDigest")
-	}
-	if cohort, err = strictJSONBytes(wire.Cohort, 16); err != nil {
-		return nil, nil, nil, badMilitary("Cohort")
-	}
-	return release, evidence, cohort, nil
-}
-
-func strictJSONBytes(raw json.RawMessage, size int) ([]byte, error) {
-	decoder := json.NewDecoder(bytes.NewReader(raw))
-	token, err := decoder.Token()
-	if err != nil || token != json.Delim('[') {
-		return nil, errMilitaryProfile
-	}
-	out := make([]byte, 0, size)
-	for decoder.More() {
-		token, err = decoder.Token()
-		if err != nil {
-			return nil, errMilitaryProfile
-		}
-		number, ok := token.(float64)
-		if !ok || number < 0 || number > 255 || number != math.Trunc(number) {
-			return nil, errMilitaryProfile
-		}
-		out = append(out, byte(number))
-	}
-	if token, err = decoder.Token(); err != nil || token != json.Delim(']') || len(out) != size {
-		return nil, errMilitaryProfile
-	}
-	if _, err = decoder.Token(); err != io.EOF {
-		return nil, errMilitaryProfile
-	}
-	return out, nil
-}
+var errMilitaryProfile = errors.New("runtime: invalid military source")
 
 func badMilitary(field string) error { return fmt.Errorf("%w: %s", errMilitaryProfile, field) }
 
-// catalog accepts only reviewed manifests; live rows never supply rules.
-func (f militaryStartupProfile) catalog() (*march.RecruitCatalog, error) {
-	records := make([]march.RecruitManifest, 0, len(f.Manifests))
-	for _, raw := range f.Manifests {
-		record, err := march.DecodeRecruitManifest(raw)
-		if err != nil {
-			return nil, badMilitary("recruit_manifests")
-		}
-		records = append(records, record)
+// composeRuntimeMilitary builds the one durable military path from the live
+// database plus the reviewed recruit manifests shipped in the repository.
+// There is no external profile file and no in-memory fallback.
+func composeRuntimeMilitary(ctx context.Context, pool *pgxpool.Pool) (*api.MilitaryDurable, *preparedCityProfiles, error) {
+	if ctx == nil || pool == nil {
+		return nil, nil, badMilitary("missing database")
 	}
-	catalog, err := march.NewRecruitCatalog(records, f.CurrentManifest)
+	catalog, err := march.LoadRecruitCatalogDir(filepath.Join(RepoRoot(), march.RecruitManifestDir))
 	if err != nil {
-		return nil, badMilitary("recruit_current")
+		return nil, nil, fmt.Errorf("load recruit manifests: %w", err)
 	}
-	return catalog, nil
-}
-
-func loadMilitaryStartupProfile(raw []byte) (freshsource.Profile, *march.RecruitCatalog, error) {
-	release, evidence, cohort, err := strictMilitaryArrays(raw)
+	profiles, err := loadRuntimeProfiles(ctx, pool, defaultShardID)
 	if err != nil {
-		return freshsource.Profile{}, nil, err
+		return nil, nil, err
 	}
-	var f militaryStartupProfile
-	decoder := json.NewDecoder(bytes.NewReader(raw))
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&f); err != nil {
-		return freshsource.Profile{}, nil, badMilitary("json")
-	}
-	if _, err := decoder.Token(); err != io.EOF {
-		return freshsource.Profile{}, nil, badMilitary("trailing data")
-	}
-	copy(f.ReleaseDigest[:], release)
-	copy(f.EvidenceDigest[:], evidence)
-	copy(f.Cohort[:], cohort)
-	if f.Format != militaryStartupFormat {
-		return freshsource.Profile{}, nil, badMilitary("format")
-	}
-	p, err := freshsource.Snapshot(f.Profile)
+	military, err := composeMilitary(ctx, pool, profiles.military, catalog)
 	if err != nil {
-		return freshsource.Profile{}, nil, badMilitary("profile")
+		return nil, nil, err
 	}
-	catalog, err := f.catalog()
-	return p, catalog, err
-}
-
-// ComposeMilitary assembles the durable MIL participants or returns nil (today's
-// gateway) when the profile is absent, invalid, mismatched with the live source
-// or the validation transaction cannot end cleanly. Observations never replace
-// the expected profile.
-func ComposeMilitary(ctx context.Context, log *slog.Logger, pool *pgxpool.Pool, path string) *api.MilitaryDurable {
-	handle, _ := composeMilitaryStartup(ctx, log, pool, path)
-	return handle
-}
-
-func composeMilitaryStartup(ctx context.Context, log *slog.Logger, pool *pgxpool.Pool, path string) (*api.MilitaryDurable, *preparedCityProfiles) {
-	if path == "" {
-		return nil, nil
-	}
-	if log == nil {
-		log = slog.Default()
-	}
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		log.Warn("military durable disabled", "reason", "startup profile unreadable")
-		return nil, nil
-	}
-	p, catalog, err := loadMilitaryStartupProfile(raw)
-	var prepared *preparedCityProfiles
-	if err == nil && len(p.Objects) != 14 {
-		if prepared, err = splitPreparedCityProfile(p); err == nil {
-			p = prepared.military
-		}
-	}
-	if err == nil {
-		var handle *api.MilitaryDurable
-		if handle, err = composeMilitary(ctx, pool, p, catalog); err == nil {
-			if prepared != nil {
-				prepared.catalog = catalog
-			}
-			return handle, prepared
-		}
-	}
-	log.Warn("military durable disabled", "reason", err.Error()[:min(len(err.Error()), 160)])
-	return nil, nil
+	profiles.catalog = catalog
+	return military, profiles, nil
 }
 
 // One bounded validation transaction; any error drops the handle.

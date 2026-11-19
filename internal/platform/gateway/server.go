@@ -10,8 +10,6 @@ import (
 )
 
 const (
-	preparedRecruitSubprotocol = "sanguo.recruit-v2"
-	preparedRecruitRoute       = "military.v1.RecruitTroopV2"
 )
 
 // Server is the WebSocket gateway HTTP handler.
@@ -33,10 +31,6 @@ func NewServer(log *slog.Logger, cfg Config, access AccessControl, sessions Sess
 	if cfg.PublicRoutes == nil {
 		cfg.PublicRoutes = DefaultConfig().PublicRoutes
 	}
-	var subprotocols []string
-	if cfg.PreparedRecruit && router != nil && router.handlers[preparedRecruitRoute] != nil && !cfg.PublicRoutes[preparedRecruitRoute] {
-		subprotocols = []string{preparedRecruitSubprotocol}
-	}
 	return &Server{
 		log:      log,
 		cfg:      cfg,
@@ -48,7 +42,7 @@ func NewServer(log *slog.Logger, cfg Config, access AccessControl, sessions Sess
 			ReadBufferSize:  4096,
 			WriteBufferSize: 4096,
 			CheckOrigin:     func(*http.Request) bool { return true },
-			Subprotocols:    subprotocols,
+			Subprotocols:    nil,
 		},
 	}
 }

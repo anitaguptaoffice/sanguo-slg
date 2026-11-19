@@ -70,62 +70,23 @@ func healthz(w http.ResponseWriter, _ *http.Request) {
 }
 
 // ServeHTTP starts the game HTTP server (health + WebSocket gateway).
-func (a *App) ServeHTTP(ctx context.Context) (result error) {
-	if err := a.validatePreparedFirstCityLocal(); err != nil {
-		return err
-	}
+func (a *App) ServeHTTP(ctx context.Context) error {
 	runCtx, cancelRun := context.WithCancelCause(ctx)
 	defer cancelRun(nil)
-	var startup *localMarchStartup
-	retainLease := false
-	if a.Config.PreparedMarch {
-		var err error
-		startup, err = a.acquireLocalMarchStartup(runCtx)
-		if err != nil {
-			return err
-		}
-		watched := make(chan struct{})
-		go func() {
-			defer close(watched)
-			if err := startup.watch(runCtx); err != nil {
-				cancelRun(err)
-			}
-		}()
-		defer func() {
-			cancelRun(nil)
-			err := waitPreparedShutdown(watched, 3*time.Second, "prepared march writer watcher did not join")
-			if err == nil && !retainLease {
-				err = startup.close()
-			}
-			if cause := context.Cause(runCtx); cause != nil && ctx.Err() == nil && !errors.Is(cause, context.Canceled) {
-				err = errors.Join(err, cause)
-			}
-			result = errors.Join(result, err)
-		}()
+	root, err := os.Getwd()
+	if err != nil {
+		return err
 	}
-	if startup == nil {
-		root, err := os.Getwd()
-		if err != nil {
-			return err
-		}
-		if err := a.PrepareGame(runCtx, root); err != nil {
-			return err
-		}
+	if err := a.PrepareGame(runCtx, root); err != nil {
+		return err
 	}
-	apiSrv, err := a.newAPIServer(runCtx, startup)
+	apiSrv, err := a.newAPIServer(runCtx)
 	if err != nil {
 		return err
 	}
 	srv := &http.Server{Addr: a.Config.HTTPAddr, Handler: a.HTTPHandler(runCtx, apiSrv)}
-	var stopRecruit func() error
-	var stopMarch func() error
-	if a.Config.PreparedRecruit {
-		srv.BaseContext = func(net.Listener) context.Context { return runCtx }
-		stopRecruit = startPreparedRecruitWorker(runCtx, apiSrv.RunPreparedRecruitScheduler)
-	}
-	if a.Config.PreparedMarch {
-		stopMarch = startPreparedWorker(runCtx, apiSrv.RunPreparedMarchScheduler, "prepared march")
-	}
+	srv.BaseContext = func(net.Listener) context.Context { return runCtx }
+	stopMarch := startPreparedWorker(runCtx, apiSrv.RunPreparedMarchScheduler, "prepared march")
 	go func() {
 		<-runCtx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -139,31 +100,7 @@ func (a *App) ServeHTTP(ctx context.Context) (result error) {
 	if errors.Is(err, http.ErrServerClosed) {
 		err = nil
 	}
-	if stopRecruit == nil {
-		return err
-	}
-	// Join the worker before closing the pool. A stuck lease must not block
-	// the process exit after the worker's own bounded cleanup.
-	workerErr := stopRecruit()
-	if stopMarch != nil {
-		workerErr = errors.Join(workerErr, stopMarch())
-	}
-	if workerErr != nil {
-		retainLease = true // The process owns the writer lock until termination.
-		return errors.Join(err, workerErr)
-	}
-	closed := make(chan struct{})
-	go func() {
-		defer close(closed)
-		a.DB.Close()
-	}()
-	poolErr := waitPreparedShutdown(closed, 5*time.Second, "prepared recruit database pool close timed out")
-	retainLease = poolErr != nil
-	return errors.Join(err, poolErr)
-}
-
-func startPreparedRecruitWorker(parent context.Context, run func(context.Context)) func() error {
-	return startPreparedWorker(parent, run, "prepared recruit")
+	return errors.Join(err, stopMarch())
 }
 
 func startPreparedWorker(parent context.Context, run func(context.Context), name string) func() error {

@@ -26,14 +26,12 @@ func TestLoadDefaults(t *testing.T) {
 func TestLoadFromEnv(t *testing.T) {
 	t.Setenv("HTTP_ADDR", ":9090")
 	t.Setenv("LOG_LEVEL", "debug")
-	t.Setenv("MIL_FRESH_PROFILE_FILE", "/run/reviewed/mil-profile.json")
 
 	cfg, err := Load()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.HTTPAddr != ":9090" || cfg.LogLevel != "debug" ||
-		cfg.MILFreshProfileFile != "/run/reviewed/mil-profile.json" {
+	if cfg.HTTPAddr != ":9090" || cfg.LogLevel != "debug" {
 		t.Fatalf("unexpected cfg: %+v", cfg)
 	}
 }
