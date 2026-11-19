@@ -117,8 +117,22 @@ func recruitReturnSQLOrder(applied bool) []string {
 	return strings.Fields(order + " commit")
 }
 
+// lootSettlementSQL marks the R1-S4 reward statements. They run after the
+// frozen return graph and are covered by TestPGCreditMarchLoot instead.
+func lootSettlementSQL(sql string) bool {
+	return strings.Contains(sql, "march_loot") || strings.Contains(sql, "player_item") || strings.Contains(sql, "player_hero")
+}
+
 func recruitReturnSQLRecorded(events []returnPGQuery, observer uint32, set map[string]string, applied bool) error {
 	want := recruitReturnSQLOrder(applied)
+	filtered := make([]returnPGQuery, 0, len(events))
+	for _, q := range events {
+		if lootSettlementSQL(q.sql) {
+			continue
+		}
+		filtered = append(filtered, q)
+	}
+	events = filtered
 	if len(events) != len(want) {
 		return fmt.Errorf("Return SQL count: got=%d want=%d", len(events), len(want))
 	}

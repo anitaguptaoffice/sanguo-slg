@@ -123,10 +123,13 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 	var loot *march.LootRecord
 	if rep.Result == battle.ResultAttackerWin {
 		rep.Loot = g.Loot
-		loot = &march.LootRecord{Food: g.Loot.Food, Wood: g.Loot.Wood, Stone: g.Loot.Stone,
-			Iron: g.Loot.Iron, Gold: g.Loot.Gold, HeroExp: g.Loot.HeroExp}
-		for _, item := range g.Loot.Items {
-			loot.Items = append(loot.Items, march.LootItem{ItemCfgID: item.ItemCfgID, Count: item.Count})
+		if g.Loot.Food > 0 || g.Loot.Wood > 0 || g.Loot.Stone > 0 || g.Loot.Iron > 0 ||
+			g.Loot.Gold > 0 || g.Loot.HeroExp > 0 || len(g.Loot.Items) > 0 {
+			loot = &march.LootRecord{Food: g.Loot.Food, Wood: g.Loot.Wood, Stone: g.Loot.Stone,
+				Iron: g.Loot.Iron, Gold: g.Loot.Gold, HeroExp: g.Loot.HeroExp}
+			for _, item := range g.Loot.Items {
+				loot.Items = append(loot.Items, march.LootItem{ItemCfgID: item.ItemCfgID, Count: item.Count})
+			}
 		}
 	}
 
