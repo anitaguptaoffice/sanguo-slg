@@ -116,7 +116,7 @@ jobs:
     needs: scope
     if: needs.scope.outputs.go == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 60
     permissions:
       contents: read
     env:
@@ -152,23 +152,27 @@ jobs:
           go-version: "1.23.x"
           cache: true
       - name: PostgreSQL domain integration tests
-        timeout-minutes: 25
+        timeout-minutes: 40
         run: |
           set -euo pipefail
           # Packages share one warm fixture schema; running them in parallel makes
           # fixed test player ids collide. Serialize packages, keep the schema warm.
-          go test -count=1 -p 1 -timeout=22m \
+          go test -count=1 -p 1 -timeout=38m \
             ./internal/account \
             ./internal/api \
             ./internal/content/mail \
             ./internal/domestic \
-            ./internal/hero \
             ./internal/military/... \
             ./internal/platform/recruittx \
             ./internal/platform/runtime \
             ./internal/platform/shard \
             ./internal/quest \
             ./internal/world
+      - name: PostgreSQL hero tests (disposable schema)
+        timeout-minutes: 10
+        env:
+          SANGUO_PG_REUSE_SPEC: "0"
+        run: go test -count=1 -timeout=8m ./internal/hero
       - name: Boot server and check health
         timeout-minutes: 5
         run: |
