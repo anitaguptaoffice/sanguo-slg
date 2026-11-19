@@ -10,10 +10,6 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
-  REDIS_ADDR: localhost:6379
-
 jobs:
   scope:
     runs-on: ubuntu-latest
@@ -123,6 +119,9 @@ jobs:
     timeout-minutes: 35
     permissions:
       contents: read
+    env:
+      DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+      REDIS_ADDR: localhost:6379
     services:
       postgres:
         image: postgres:17
@@ -156,9 +155,20 @@ jobs:
         timeout-minutes: 25
         run: |
           set -euo pipefail
-          DATABASE_URL="postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable" \
-          REDIS_ADDR=localhost:6379 \
-          go test -count=1 -timeout=22m ./internal/api ./internal/domestic ./internal/world ./internal/military/...
+          # Packages share one warm fixture schema; running them in parallel makes
+          # fixed test player ids collide. Serialize packages, keep the schema warm.
+          go test -count=1 -p 1 -timeout=22m \
+            ./internal/account \
+            ./internal/api \
+            ./internal/content/mail \
+            ./internal/domestic \
+            ./internal/hero \
+            ./internal/military/... \
+            ./internal/platform/recruittx \
+            ./internal/platform/runtime \
+            ./internal/platform/shard \
+            ./internal/quest \
+            ./internal/world
       - name: Boot server and check health
         timeout-minutes: 5
         run: |
