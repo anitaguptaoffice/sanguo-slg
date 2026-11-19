@@ -24,7 +24,7 @@ func installRestore(h *Hub, items []restoreRow, stacks map[int64][]TroopStack) e
 	for _, it := range items {
 		troops := stacks[it.ArmyID]
 		order := &MarchOrder{
-			ID: it.ID, ArmyID: it.ArmyID,
+			ID: it.ID, ArmyID: it.ArmyID, OriginCityID: *it.Origin,
 			FromX: int(it.FromX), FromY: int(it.FromY), ToX: int(it.ToX), ToY: int(it.ToY),
 			Purpose: int16(it.Purpose), Phase: PhaseMarching, Speed: EffectiveMarchSpeed(catalog, troops),
 			DepartAt: it.DepartAt, ArriveAt: it.ArriveAt,

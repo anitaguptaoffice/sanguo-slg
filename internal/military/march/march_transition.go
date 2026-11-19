@@ -33,6 +33,15 @@ type ArrivalCommit struct {
 	Report          *report.SaveParams
 	// Loot is the reward of a won battle; nil when nothing was won.
 	Loot *LootRecord
+	// Occupy marks a won occupy march: the tile becomes owned by the origin city
+	// when that city still has a free field slot.
+	Occupy *OccupyRequest
+}
+
+// OccupyRequest is the wild-land occupation intent.
+type OccupyRequest struct {
+	CityID int64
+	Limit  int
 }
 
 // ArrivalCommitted is the committed status and allocated report identity.
@@ -208,6 +217,14 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 			return out, errors.Join(ErrMarchTransition, err)
 		}
 		out.ReportID = rec.ReportID
+	}
+	if in.Occupy != nil && in.Occupy.CityID > 0 && in.Occupy.Limit > 0 {
+		occupySQL := `UPDATE ` + table("map_cell") + ` SET owner_city_id = $4
+			WHERE server_id = $1 AND x = $2 AND y = $3 AND owner_city_id IS NULL
+			  AND (SELECT count(*) FROM ` + table("map_cell") + ` WHERE server_id = $1 AND owner_city_id = $4) < $5`
+		if _, err = tx.Exec(ctx, occupySQL, in.ServerID, in.ToX, in.ToY, in.Occupy.CityID, in.Occupy.Limit); err != nil {
+			return out, errors.Join(ErrMarchTransition, err)
+		}
 	}
 	if in.Loot != nil {
 		items, err := json.Marshal(in.Loot.Items)

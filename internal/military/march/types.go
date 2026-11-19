@@ -79,14 +79,15 @@ type RecruitJob struct {
 
 // MarchOrder tracks one army movement through pending → marching → arrived → returning → returned.
 type MarchOrder struct {
-	ID      int64
-	ArmyID  int64
-	FromX   int
-	FromY   int
-	ToX     int
-	ToY     int
-	Purpose int16
-	Phase   MarchPhase
+	ID           int64
+	ArmyID       int64
+	OriginCityID int64
+	FromX        int
+	FromY        int
+	ToX          int
+	ToY          int
+	Purpose      int16
+	Phase        MarchPhase
 	// Effective march speed (slowest unit in the stack), from cfg_unit.stats.speed.
 	Speed int
 

@@ -34,7 +34,7 @@ func (h *Hub) PublishCommittedMarch(in MarchCreate, ids MarchIdentity) (*MarchOr
 	}
 	slices.SortFunc(troops, func(a, b TroopStack) int { return cmp.Compare(a.UnitCfgID, b.UnitCfgID) })
 	order := &MarchOrder{
-		ID: ids.MarchID, ArmyID: ids.ArmyID,
+		ID: ids.MarchID, ArmyID: ids.ArmyID, OriginCityID: in.OriginCityID,
 		FromX: int(in.FromX), FromY: int(in.FromY), ToX: int(in.ToX), ToY: int(in.ToY),
 		Purpose: in.Purpose, Phase: PhaseMarching, Speed: EffectiveMarchSpeed(h.catalog, troops),
 		DepartAt: in.DepartAt, ArriveAt: in.ArriveAt,
