@@ -8,6 +8,7 @@ import {
   filterBattleReportsByOutcome,
   filterBattleReportsByTimeWindow,
   findMostRecentBattleReportAtGrid,
+  formatBattleReportContext,
   formatBattleReportDetail,
   formatBattleReportCoordinateTag,
   formatBattleReportListPrimaryLine,
@@ -306,6 +307,22 @@ describe("military proto encode/decode", () => {
     ];
     expect(filterBattleReportsByLocation(reports, 2, 2).map((r) => r.report_id)).toEqual([1, 2]);
     expect(findMostRecentBattleReportAtGrid(reports, 2, 2)?.report_id).toBe(2);
+  });
+
+  it("formats the R1-S4 battle context", () => {
+    const text = formatBattleReportContext({
+      target_name: "森林 Lv4",
+      attacker_hero: { name: "刘备", level: 10, force: 72, intel: 75 },
+      defender_hero: { name: "野地守将", level: 4, force: 66, intel: 54 },
+      loot: { food: 320, wood: 560, gold: 12, items: [{ item_cfg_id: 2003, count: 1 }] },
+      hero_exp_gained: 80,
+    });
+    expect(text).toContain("目标：森林 Lv4");
+    expect(text).toContain("攻方主将：刘备 Lv10 · 武 72 智 75");
+    expect(text).toContain("守方守将：野地守将 Lv4 · 武 66 智 54");
+    expect(text).toContain("战利品：粮320 木560 金12 道具#2003×1");
+    expect(text).toContain("主将经验 +80");
+    expect(formatBattleReportContext({})).toBeNull();
   });
 
   it("round-trips StartMarchRequest", () => {

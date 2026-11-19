@@ -19,8 +19,8 @@ func Simulate(in BattleInput) BattleReport {
 
 	attMorale := clampMorale(in.Attacker.Morale)
 	defMorale := clampMorale(in.Defender.Morale)
-	attHeroAtk, attHeroDef := heroMults(in.Attacker.HeroLevel)
-	defHeroAtk, defHeroDef := heroMults(in.Defender.HeroLevel)
+	attHeroAtk, attHeroDef := heroStatsMults(in.Attacker)
+	defHeroAtk, defHeroDef := heroStatsMults(in.Defender)
 
 	round := 0
 	for round < maxRounds {
@@ -69,6 +69,19 @@ func Simulate(in BattleInput) BattleReport {
 	report.AttackerCasualties = casualties(startAtt, att)
 	report.DefenderCasualties = casualties(startDef, def)
 	return report
+}
+
+// heroStatsMults layers the R1-S4 attribute multipliers on the level bonus:
+// 1 + force/200 attack and 1 + intel/200 defense.
+func heroStatsMults(a Army) (atk, def float64) {
+	atk, def = heroMults(a.HeroLevel)
+	if a.HeroForce > 0 {
+		atk *= 1 + float64(a.HeroForce)/200
+	}
+	if a.HeroIntel > 0 {
+		def *= 1 + float64(a.HeroIntel)/200
+	}
+	return atk, def
 }
 
 func strikeOrder(in BattleInput, att, def map[TroopType]int) bool {

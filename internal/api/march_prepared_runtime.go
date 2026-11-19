@@ -66,6 +66,30 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 		return err
 	}
 	resolver := combat.NewResolver(profile.ServerID, reports, NewWorldGarrisons(s.world, profile.ServerID), nil)
+	resolver.HeroStats = func(ctx context.Context, serverID, playerID, heroID int64) (combat.HeroCombatStats, error) {
+		detail, err := s.heroSvc.GetHeroDetail(ctx, hero.PlayerRef{ServerID: int32(serverID), PlayerID: playerID}, heroID)
+		if err != nil {
+			return combat.HeroCombatStats{}, err
+		}
+		force, intel := detail.Hero.Force, detail.Hero.Intel
+		if force <= 0 {
+			force = detail.ExpectedStats.Force
+		}
+		if intel <= 0 {
+			intel = detail.ExpectedStats.Intel
+		}
+		if force <= 0 || intel <= 0 {
+			if template, ok := s.heroSvc.Catalog[detail.Hero.TemplateCfgID]; ok {
+				if force <= 0 {
+					force = template.Base.Force
+				}
+				if intel <= 0 {
+					intel = template.Base.Intel
+				}
+			}
+		}
+		return combat.HeroCombatStats{Name: detail.TemplateName, Level: detail.Hero.Level, Force: force, Intel: intel}, nil
+	}
 	if err = resolver.EnableDurableArrival(pool.BeginTx, transition); err != nil {
 		return err
 	}

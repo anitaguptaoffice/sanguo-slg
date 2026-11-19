@@ -132,6 +132,11 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 		DefenderCasualties: troopMapToProto(rep.DefenderCasualties),
 		FinalAttacker:      troopMapToProto(rep.FinalAttacker),
 		FinalDefender:      troopMapToProto(rep.FinalDefender),
+		TargetName:         rep.TargetName,
+		AttackerHero:       heroSummaryProto(rep.AttackerHero),
+		DefenderHero:       heroSummaryProto(rep.DefenderHero),
+		HeroExpGained:      rep.Loot.HeroExp,
+		Loot:               lootProto(rep.Loot),
 	}
 	for _, rr := range rep.Rounds {
 		d.Rounds = append(d.Rounds, &militaryv1.BattleRound{
@@ -143,6 +148,24 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 		})
 	}
 	return d
+}
+
+func heroSummaryProto(h battle.HeroSummary) *militaryv1.BattleHeroSummary {
+	if h.Name == "" && h.Level == 0 {
+		return nil
+	}
+	return &militaryv1.BattleHeroSummary{Name: h.Name, Level: h.Level, Force: h.Force, Intel: h.Intel}
+}
+
+func lootProto(l battle.Loot) *militaryv1.BattleLoot {
+	if l.Food == 0 && l.Wood == 0 && l.Stone == 0 && l.Iron == 0 && l.Gold == 0 && len(l.Items) == 0 {
+		return nil
+	}
+	out := &militaryv1.BattleLoot{Food: l.Food, Wood: l.Wood, Stone: l.Stone, Iron: l.Iron, Gold: l.Gold}
+	for _, item := range l.Items {
+		out.Items = append(out.Items, &militaryv1.BattleLootItem{ItemCfgId: item.ItemCfgID, Count: item.Count})
+	}
+	return out
 }
 
 func troopMapToProto(m map[battle.TroopType]int) map[string]int32 {

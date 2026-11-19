@@ -33,7 +33,11 @@ func (h *Hub) onPreparedMarchArrival(event Event, resolve MarchArrivalHandler) {
 	}
 	arrived := *order
 	_ = MarkArrived(&arrived)
-	candidate := MarchArrivalEvent{MarchID: order.ID, PlayerID: rt.PlayerID, Order: arrived, Troops: cloneStacks(rt.Troops)}
+	heroIDs := make([]int64, 0, 1)
+	if rt.HeroID > 0 {
+		heroIDs = append(heroIDs, rt.HeroID)
+	}
+	candidate := MarchArrivalEvent{MarchID: order.ID, PlayerID: rt.PlayerID, HeroIDs: heroIDs, Order: arrived, Troops: cloneStacks(rt.Troops)}
 	h.preparedArrivals[event.RefID] = struct{}{}
 	h.mu.Unlock()
 
