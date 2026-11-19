@@ -94,6 +94,33 @@ func FirstCityTemplateRef(catalogVersion string) *worldv1.FirstCityTemplateRef {
 	}
 }
 
+// initializeDurableCity gives a freshly created city the durable MIL origin and
+// the four garrison rows the durable recruit/march path expects. It runs in the
+// caller's creation transaction so a city is never published half-initialized.
+func (s *Server) initializeDurableCity(ctx context.Context, tx pgx.Tx, playerID, cityID int64) error {
+	if s.milDurable == nil {
+		return nil
+	}
+	profile := s.milDurable.Profile()
+	if _, err := tx.Exec(ctx, `
+		INSERT INTO mil_city_origin (server_id, city_id, owner_player_id, cohort_id, format_version, created_at)
+		SELECT $1, $2, $3, $4, 1, date_trunc('milliseconds', now())
+		WHERE NOT EXISTS (SELECT 1 FROM mil_city_origin WHERE server_id = $1 AND city_id = $2)`,
+		profile.ServerID, cityID, playerID, profile.Cohort[:]); err != nil {
+		return err
+	}
+	for unit := int32(1); unit <= 4; unit++ {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO city_troop (server_id, city_id, unit_cfg_id, count, wounded)
+			VALUES ($1, $2, $3, 0, 0)
+			ON CONFLICT (server_id, city_id, unit_cfg_id) DO NOTHING`,
+			profile.ServerID, cityID, unit); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // createPlayerCity places one capital city for pc through the DOM/WORLD atomic
 // creation path. Callers own request validation; error mapping stays with them.
 func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name string, x, y int) (world.City, error) {
@@ -122,10 +149,14 @@ func (s *Server) createPlayerCity(ctx context.Context, pc PlayerContext, name st
 	}
 	cityID, err := s.domestic.CreateNewCity(ctx, serverID, firstCityInitialState(pc.PlayerID), func(ctx context.Context, tx pgx.Tx) (int64, error) {
 		staged, err := s.world.CreateCityInTx(ctx, tx, c)
-		if err == nil {
-			c = staged
+		if err != nil {
+			return 0, err
 		}
-		return staged.CityID, err
+		c = staged
+		if err := s.initializeDurableCity(ctx, tx, pc.PlayerID, staged.CityID); err != nil {
+			return 0, err
+		}
+		return staged.CityID, nil
 	})
 	if err != nil {
 		return world.City{}, err

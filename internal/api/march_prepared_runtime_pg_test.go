@@ -47,9 +47,11 @@ func TestPGPreparedMarchRuntimeLifecycle(t *testing.T) {
 					Troops: []*apicommon.CityTroopStack{{UnitCfgId: 1, Count: 2000}}})}
 			assertUnwired := func() {
 				t.Helper()
-				if got := s.GatewayRouter().Dispatch(ctx, request); got.GetMsg() != "unknown route" ||
-					s.preparedRecruit != nil || !s.military.Scheduler().NextDue().IsZero() {
-					t.Fatal("prepared route or scheduler became visible after rejected startup", got)
+				// A rejected durable wiring never serves: the runtime aborts startup.
+				// The bare standard handler may exist, but no durable route, recruit
+				// generation or scheduler may be published.
+				if s.preparedMarch != nil || s.preparedRecruit != nil || !s.military.Scheduler().NextDue().IsZero() {
+					t.Fatal("durable route or scheduler became visible after rejected startup")
 				}
 			}
 			unrelatedBinding := new(recruittx.Binding)

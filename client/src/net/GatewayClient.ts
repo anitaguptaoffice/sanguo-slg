@@ -1,6 +1,6 @@
 import { rememberSuccessfulReadNotice } from "@/net/successfulReadNotice";
 import { decodeGatewayResponse } from "@/net/decodeGatewayResponse";
-import { GATEWAY_WS_URL, PREPARED_RECRUIT, PREPARED_RECRUIT_GUARD } from "@/config";
+import { GATEWAY_WS_URL } from "@/config";
 import {
   parseBeginHeroExprResponse,
   parseCancelHeroExprResponse,
@@ -20,8 +20,6 @@ import type { FirstCityScope } from "./firstCityCanonical";
 import { openRecruitSubmissionJournal } from "./recruitJournal";
 import type { RecruitJournalIntent, RecruitSubmissionChannel, RecruitSubmissionResult } from "./recruitJournal";
 
-const recruitProtocol = "sanguo.recruit-v2";
-const loopback = new Set(["127.0.0.1", "[::1]", "localhost"]);
 
 type PreparedRecruitResult = RecruitSubmissionResult | "retry-required" | "nothing-to-retry";
 
@@ -173,7 +171,6 @@ export class GatewayClient implements GatewayPort {
   readFirstCityHistory(scope: FirstCityScope) { return this.firstCityJournal.read(scope); }
 
   openRecruitSubmission(policy: Pick<RecruitSubmissionChannel, "authorize" | "blockProfile" | "reserve">) {
-    if (this.preparedRecruit && !policy.reserve) throw new Error("需要独立的募兵恢复记录");
     return openRecruitSubmissionJournal(() => this.authenticatedIdentity, {
       authorize: identity => policy.authorize(identity),
       blockProfile: identity => policy.blockProfile(identity),
@@ -194,75 +191,33 @@ export class GatewayClient implements GatewayPort {
     });
   }
 
-  private async recruitGuard(operation: string, identity: AuthenticatedIdentity, fields = {}) {
-    const { url, id } = this.guard;
-    const endpoint = new URL(url || "about:blank");
-    if (endpoint.protocol !== "http:" || endpoint.hostname !== "127.0.0.1" || endpoint.origin !== url ||
-        !endpoint.port || !/^[0-9a-f]{32}$/.test(id)) throw new Error("本地募兵恢复服务未配置");
-    const response = await fetch(`${url}/${operation}`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      credentials: "omit", signal: AbortSignal.timeout(4000),
-      body: JSON.stringify({ id, gateway: this.url,
-        scope: [identity.accountId, String(identity.serverId), String(identity.playerId)], ...fields }),
-    });
-    if (!response.ok) throw new Error("募兵恢复需本地核验");
-    return await response.json() as { available?: boolean; reservation?: string; settled?: boolean };
-  }
-
   async submitPreparedRecruit(intent?: RecruitJournalIntent): Promise<PreparedRecruitResult> {
     const socket = this.ws;
     const identity = this.authenticatedIdentity;
     if (!identity) throw new Error("请先登录并进入游戏服");
     const recoveryBlock = `sanguo-recruit-block-v1:${identity.accountId}:${identity.serverId}:${identity.playerId}`;
     const authorize = () => {
-      if (!this.preparedRecruit || !socket || socket !== this.ws || socket.readyState !== WebSocket.OPEN ||
-          socket.protocol !== recruitProtocol || identity !== this.authenticatedIdentity || !this.sessionId ||
+      if (!socket || socket !== this.ws || socket.readyState !== WebSocket.OPEN ||
+          identity !== this.authenticatedIdentity || !this.sessionId ||
           identity.serverId !== this.boundServerId) {
         throw new Error("当前连接无法使用募兵 V2，请重新登录");
       }
       if (localStorage.getItem(recoveryBlock) !== null) throw new Error("募兵记录需要核验");
     };
     authorize();
-    let reservation: string | undefined;
-    let reservationError: unknown;
+    // The journal keeps the command id locally; the server's unique command_id
+    // makes a retry idempotent, so no external recovery service is required.
     const journal = await this.openRecruitSubmission({
       authorize,
       blockProfile: () => localStorage.setItem(recoveryBlock, "1"),
-      reserve: async command => {
-        const { city_id, unit_cfg_id, count } = command.intent;
-        try {
-          const result = await this.recruitGuard("reserve", identity, {
-            command: [command.commandHex, "1", city_id, String(unit_cfg_id), String(count)],
-          });
-          if (!result.reservation || !/^[0-9a-f]{32}$/.test(result.reservation)) {
-            throw new Error("未确认募兵恢复授权");
-          }
-          reservation = result.reservation;
-        } catch (error) {
-          reservationError = error;
-          throw error;
-        }
-      },
     });
     try {
       const last = await journal.inspect();
       authorize();
       if (intent === undefined && last?.phase !== "unknown") return "nothing-to-retry";
-      if (intent !== undefined) {
-        if (last?.phase === "unknown") return "retry-required";
-        const availability = await this.recruitGuard("availability", identity);
-        authorize();
-        if (availability.available !== true) throw new Error("上次募兵需本地核验");
-      }
+      if (intent !== undefined && last?.phase === "unknown") return "retry-required";
       const command = intent === undefined ? last!.command : await journal.prepare(last?.command.commandHex ?? null, intent);
-      const result = await journal.submit(command);
-      if (reservationError) throw reservationError;
-      if (reservation && (result === "accepted" || result === "rejected")) {
-        authorize();
-        const settled = await this.recruitGuard("settle", identity, { reservation, outcome: result }).catch(() => null);
-        if (settled?.settled !== true) throw new Error("募兵结果已保存，恢复记录需本地核验");
-      }
-      return result;
+      return await journal.submit(command);
     } finally {
       journal.close();
     }
@@ -273,8 +228,10 @@ export class GatewayClient implements GatewayPort {
     this.firstCity.reset();
   }
 
-  constructor(private readonly url = GATEWAY_WS_URL, readonly preparedRecruit = PREPARED_RECRUIT,
-    private readonly guard = PREPARED_RECRUIT_GUARD) {}
+  /** The single durable recruit route is always active; no handshake opt-in. */
+  readonly preparedRecruit = true;
+
+  constructor(private readonly url = GATEWAY_WS_URL) {}
 
   connect(handlers: GatewayHandlers = {}): Promise<void> {
     this.invalidateFirstCity();
@@ -287,16 +244,7 @@ export class GatewayClient implements GatewayPort {
       this.sessionGeneration++;
       this.sessionId = "";
       this.boundServerId = 0;
-      if (this.preparedRecruit) {
-        const endpoint = new URL(this.url);
-        if (!loopback.has(location.hostname) || !loopback.has(endpoint.hostname) ||
-            !["ws:", "wss:"].includes(endpoint.protocol) || endpoint.pathname !== "/ws" ||
-            endpoint.username || endpoint.password || endpoint.search || endpoint.hash) {
-          reject(new Error("募兵 V2 需要本地页面和本地 /ws 网关"));
-          return;
-        }
-      }
-      const ws = this.preparedRecruit ? new WebSocket(this.url, recruitProtocol) : new WebSocket(this.url);
+      const ws = new WebSocket(this.url);
       this.ws = ws;
       ws.binaryType = "arraybuffer";
       let pending = true;
@@ -318,10 +266,6 @@ export class GatewayClient implements GatewayPort {
       this.cancelConnect = cancel;
       ws.onopen = () => {
         if (!current() || !pending) return;
-        if (this.preparedRecruit && ws.protocol !== recruitProtocol) {
-          fail(new Error("本地网关未确认募兵 V2"));
-          return;
-        }
         pending = false;
         clearAttempt();
         resolve();
@@ -329,7 +273,7 @@ export class GatewayClient implements GatewayPort {
       };
       ws.onerror = (e) => {
         if (!current()) return;
-        fail(this.preparedRecruit ? new Error("本地募兵 V2 网关连接失败") : e);
+        fail(e);
         handlers.onError?.(e);
       };
       ws.onclose = () => {

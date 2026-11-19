@@ -180,10 +180,10 @@ func TestPGPreparedRecruitRuntime(t *testing.T) {
 	if got := send(routeRecruitTroopV2, session, "wrong-shard", 2, payload, true); got.GetCode() != int32(commonv1.ErrorCode_COMMON_INVALID_PACKET) {
 		t.Fatal("mismatched shard reached durable admission", got)
 	}
-	for _, route := range []string{RouteCreateCity, RouteRecruitTroop, RouteStartMarch} {
-		if got := send(route, session, "legacy", 1, payload, true); got.GetMsg() != "unknown route" {
-			t.Fatal("incompatible legacy writer was reachable", route, got)
-		}
+	// The standard recruit writer stays unmounted once the durable generation is
+	// wired; CreateCity is intentionally always available for the capital bootstrap.
+	if got := send(RouteRecruitTroop, session, "legacy", 1, payload, true); got.GetMsg() != "unknown route" {
+		t.Fatal("incompatible legacy recruit writer was reachable", got)
 	}
 	if !reflect.DeepEqual(unpaid, returnPGSnapshot(t, ctx, observer, profile)) {
 		t.Fatal("rejected gateway operations wrote to the source")

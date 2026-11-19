@@ -16,8 +16,6 @@ type Config struct {
 	PongWait     time.Duration
 	// Routes that do not require a valid session_id.
 	PublicRoutes map[string]bool
-	// PreparedRecruit requests the local capability handshake when the private V2 route is installed.
-	PreparedRecruit bool
 }
 
 // DefaultConfig returns production-ish defaults.
