@@ -1,4 +1,6 @@
-# Wave 7/9 核心配置子集（DATA-002 第二批上限）
+# Wave 7/9 核心配置子集（DATA-002 第二批上限）[历史归档]
+
+> **[SUPERSEDED 2026-11-18]**：本文的人为行数封顶与“不纳入表”限制已随 1:1 深度复刻重规划废止，不再作为 `R1 → R5` 配置扩量的阻断依据。现行原版配置对齐规范见 [`docs/plan/01-LEGACY-PARITY-SPEC.md`](../../docs/plan/01-LEGACY-PARITY-SPEC.md)。（若历史单测校验 `SUBSET_LIMITS` 常量，可在扩充对应 `spec/data` 切片时同步上调或移除该常量检查。）
 
 对照 `origin/reference/legacy-source` 中 `reference/legacy/db/TABLES.md`（只读，见 [docs/reference.md](../../docs/reference.md)）划定 **M4 可玩闭环** 所需静态配置的上限。DATA-001 首批灌数与 INTG-005 冒烟不得超出当时行数；**DATA-002** 在 INTG-005 + CLIENT-006 通过后由编排者授权约 **+50%** 上限扩量（本表为第二批硬顶）。
 

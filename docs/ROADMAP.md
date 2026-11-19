@@ -1,6 +1,32 @@
 # 路线图
 
-旧编排 bot 的停工交接见 [HANDOVER-2026-10-26.md](./HANDOVER-2026-10-26.md)（该 bot 在 wave:59 后不再开新波）；接手团队可继续独立工程与美术工作，当前边界见 [接手阶段工作约定](./SUCCESSOR-POLICY-2026-10-26.md)。以下波次记录保留历史范围与验收结论。
+> **2026-11-18 重规划生效（权威入口）**：本项目已正式切换至**《热血三国》原版全量系统 1:1 深度复刻（`Phase R0 → R5` 垂直功能切片）**路线。
+> - **现行研发宪章**：[`AGENTS.md`](../AGENTS.md)
+> - **总规划与切片任务卡**：[`docs/plan/README.md`](plan/README.md)
+>   - 原版 1:1 规则与数值映射总纲：[`docs/plan/01-LEGACY-PARITY-SPEC.md`](plan/01-LEGACY-PARITY-SPEC.md)
+>   - `Phase R0` 清创与单轨合一手册：[`docs/plan/02-R0-SURGICAL-CLEANUP-RUNBOOK.md`](plan/02-R0-SURGICAL-CLEANUP-RUNBOOK.md)
+>   - `Phase R1 (M-Next)` 全屏大地图与野地/黄巾 PvE 切片：[`docs/plan/03-R1-WORLD-PVE-SLICES.md`](plan/03-R1-WORLD-PVE-SLICES.md)
+>   - `Phase R2–R5` 全量系统切片蓝图：[`docs/plan/04-R2-R5-SYSTEM-BLUEPRINT.md`](plan/04-R2-R5-SYSTEM-BLUEPRINT.md)
+>   - 多 Agent 并行协作手册：[`docs/plan/05-MULTI-AGENT-WORKFLOW.md`](plan/05-MULTI-AGENT-WORKFLOW.md)
+>
+> 下方 `M0–M4` 与 `Wave 7–59` 仅作为历史归档保留，其范围禁令与波次规则已废止。
+
+---
+
+## 现行总路线（Phase R0 → R5）
+
+- [ ] **Phase R0：止血、清创与单轨运行时合一**（`R0-1` 拆 CI 旧锁与收敛 workflow → `R0-2` 删前端 516 个波次废文件 → `R0-3` 后端解除 `loopback` 双轨分裂）
+- [ ] **Phase R1（`M-Next`）：全屏世界大地图与野地/黄巾真实 PvE 闭环**（`R1-S1` 8 地形与守军管线 → `R1-S2` 全屏 `WorldMapScene` → `R1-S3` 将领统兵与召回/加速 → `R1-S4` 真实战斗与完整战报 → `R1-S5` 附属野地占领加成与采集 → `R1-S6` 大地图原创美术包）
+- [ ] **Phase R2：原版内外城、人口税收经济、书院 28 科技与全兵种城防**（`R2-S1` ～ `R2-S6`）
+- [ ] **Phase R3：射程推进战术战斗引擎、装备坐骑工坊与历史名将闭环**（`R3-S1` ～ `R3-S5`）
+- [ ] **Phase R4：爵位分城、斥候侦察烽火与同服 PvP 联盟战争**（`R4-S1` ～ `R4-S4`）
+- [ ] **Phase R5：县/郡/州/洛阳 34 名城国战、战役副本与 3000 CCU 开服收口**（`R5-S1` ～ `R5-S4`）
+
+---
+
+## 历史归档记录（M0–M4 / Wave 1–59，已停用）
+
+旧编排 bot 的停工交接见 [HANDOVER-2026-10-26.md](./HANDOVER-2026-10-26.md)（该 bot 在 wave:59 后不再开新波）；以下波次记录仅保留历史快照。
 
 ## M0 规格（2–3 周）
 

@@ -1,125 +1,77 @@
-# AGENTS.md
+# AGENTS.md — 1:1 复刻与垂直切片研发宪章
 
-多 agent 协作约定。任何接入本仓库的 agent 必须先读这份文件，再读自己的权威任务卡（`tasks/backlog.yml`；接手阶段限定手工卡见第二节）。
+> **2026-11-18 重规划生效**：本文为仓库唯一最高协作宪章，全面取代 `docs/HANDOVER-2026-10-26.md`、`docs/SUCCESSOR-POLICY-2026-10-26.md`、`docs/HANDOVER-PLATFORM-2026-11-12.md` 及 `spec/data/CORE_SUBSET.md` 中的历史波次规则、行数切香肠约束与玩法范围禁令。任何接入本仓库的协调器或执行 Agent 开工前必须先读本文与 [`docs/plan/README.md`](docs/plan/README.md)。
 
-**复刻项目**：原版资料只读，用法与边界见 [`docs/reference.md`](docs/reference.md)。**禁止合并** PR #77、#82。实现时规则看 `server/`、流程看 `swf/`、数值看 `db/`、视觉看 `art/`；不要把原版代码、文案或美术复制进主树（`internal/`、`client/assets` 等）。
+---
 
-## 一、唯一真源
+## 一、项目目标与版权红线
 
-| 内容 | 位置 | 谁可以改 |
-|---|---|---|
-| 任务卡 | `tasks/backlog.yml`；第二节限定手工卡以其 GitHub issue 为真源 | 仅人工 / 编排者 |
-| 接口契约 | `spec/proto/` `spec/db/` | 只能通过独立 PR 修改，需 review |
-| 规则说明 | `spec/rules/` | 对应域 agent |
-| 代码 | `internal/<domain>/` | 该域 agent，其他人只读 |
+1. **北极星目标**：对标只读参照分支 `origin/reference/legacy-source`（`reference/legacy/`）与 `origin/art/reference-assets`，实现《热血三国》网页 SLG **全量核心系统 1:1 深度复刻**——世界州郡与野地/黄巾、内外城 20 种建筑、人口/民心/税收经济、书院 28 项科技、全兵种与 5 类城防、射程推进回合制战术战斗、历史名将寻访/生擒/招降、铁匠铺/马厩装备坐骑养成、爵位分城、侦察烽火、联盟战争及县/郡/州/洛阳名城国战与战役副本。
+2. **只读参照与原创重制红线（不可逾越）**：
+   - 规则查 `reference/legacy/server/game/*.php`，流程查 `reference/legacy/swf/`，数值结构查 `reference/legacy/db/schema.sql` 与 `bloodwar.sql.gz`，视觉密度对标 `reference/art/`（用法见 [`docs/reference.md`](docs/reference.md)）。
+   - **代码、数据库表结构、游戏内文案、美术资源 100% 重新实现**。严禁将原版 PHP 源码、原版配置描述文本或原版图片文件复制进主树（`internal/`、`spec/data/`、`client/`）。
+   - **永久禁止合并**历史参照与 Hold 分支：PR [#77](https://github.com/anitaguptaoffice/sanguo-slg/pull/77)、[#82](https://github.com/anitaguptaoffice/sanguo-slg/pull/82)、[#108](https://github.com/anitaguptaoffice/sanguo-slg/pull/108) 以及所有标题带 `[NEVER MERGE]` / `[HOLD]` 的历史分支。
 
-**跨域改动一律禁止。** 需要别的域配合时，提 issue 或在 PR 里说明，不要直接改别人的目录。
+---
 
-## 二、领任务
+## 二、全面废止的旧规则（严禁继续沿用）
 
-### 接手阶段限定手工注册（普通单域卡）
+以下历史惯性与限制自 2026-11-18 起**正式废止**：
 
-- 仅对用户已授权的本项目后续工程修复、已确认的原创美术及其独立接入，由编排者在 GitHub 手工建立自包含任务 issue；遵守 [接手约定](docs/SUCCESSOR-POLICY-2026-10-26.md) 的范围与保留限制。不新增 wave，不恢复旧 bot；此入口不授予全仓自动改动、范围外功能、部署或新的外部权限。
-- 这类卡以其唯一 GitHub issue 为**权威注册**，无需再写入 backlog 或触发同步；这是第一节与 [任务说明](tasks/README.md) 中 backlog 真源规则的限定例外，优先于“所有卡必须来自 backlog”的泛称。backlog 已登记卡仍以 backlog 为真源，不能用手工副本覆盖；注册前核对 backlog 与现有 issue 的 ID、scope 和负责人，避免重复卡及并发写入冲突。
-- issue 标题用 `[全局唯一任务 ID] 标题`；正文必须写明授权依据、目标、单一 domain / owner_dir、精确文件 scope / out_of_scope、改动 ≤400 行、输入契约与参照链接、依赖任务 / PR 及解除阻断条件、可验证验收、负责人和状态。无依赖须明确写无；字段不全不得开工。
-- 领卡前确认依赖与同域并发写入者，记录唯一负责人；同文件或共享写入边界有冲突时先协调、阻断依赖卡。状态沿用第六节标签，并在 issue 保持负责人和状态一致；无 wave 的手工卡按 ID / domain 查询，不使用下方 wave:1 筛选来判断是否存在。
-- issue 与 draft PR 双向链接，PR 关联 `Closes #...`；保留原始 source commit / tree、修正 commit、最终 PR head / 合并 commit 的映射和精确测试证据（无既有源时明确写新实现）。本地工作或源 commit 不等于已注册，不追认旧历史已履行领卡 / PR 流程。
-- 一卡一 PR、单域、≤400 行及第四至七节要求不变；所有 `spec/` 变更（含 rules-only）先走独立 SPEC-only PR、独立 review，满足适用契约冻结 / 通知门槛后再推进依赖实现。每个最终组件及依赖组合均须审阅和验证，不发布已知有缺陷的中间态；共同启用的写入者须协调兼容性与回滚边界。
-- 精确最终 head 须通过独立 review、全部必需 CI 与适用单测 / 集成 / 真实验收；基线或内容变更重核 review 并重跑受影响验证。合并后核验 main / push CI；源码合并不等于部署或生产验收，迁移、排空等部署门槛单独保留。历史 reference / art / VERIFY hold（含 #77 / #82 / #108）不合并，也不借新卡搬运规避。
-- 此入口只调整注册组织方式，不修改 `tasks/backlog.yml`、同步工具 / 工作流、CODEOWNERS、分支保护、权限或安全门槛；不触发旧波次同步。第三节一次性接收栈及其累计 diff 例外不扩展至这些普通卡；遇到真实门槛阻断仍报告并解决，不以本节作豁免。
+1. **废止历史玩法禁令**：解禁 `CancelMarch`（行军召回）、行军/建造/募兵/科技加速、内外城建筑与科技新 RPC、战报协议扩量、装备养成、多城筑城、名城与副本配置扩量；废止 `DATA-002` / `CORE_SUBSET.md` 的人为行数封顶。
+2. **废止机械单域禁令与 400 行切卡**：不再要求把一个玩家功能拆成几十张单目录 ≤400 行的碎片卡；不再搞 `wave:20–59` 式的伪迭代（“巩固再加深 N 层”）。
+3. **废止过度形式化容灾仪式**：不再新增 PostgreSQL catalog OID 钉死（`freshsource` OID pin）、`COMMIT` 物理断连状态机穷举证明、或浏览器外部 Python 恢复许可脚本（`recruit_recovery_guard.py` 类仪式）。服务端一致性统一采用**标准 PostgreSQL ACID 事务 + `SELECT ... FOR UPDATE` 行锁 + 业务请求幂等键**。
+4. **废止旧波次同步工具**：严禁运行 `tools/tasks_sync.py` 或触发 `.github/workflows/tasks-sync.yml` 重放历史 `tasks/backlog.yml`。
 
-以下命令仅示例 backlog 的 wave:1 领卡；手工卡使用其准确 issue 编号，仍遵守认领和状态规则。
+---
 
-```bash
-# 看有哪些可领的
-gh issue list --label status:ready --label wave:1 --limit 50
+## 三、现行交付模式：垂直功能切片（Vertical Slice）
 
-# 领一张（自己 assign 自己，打 in-progress）
-gh issue edit <number> --add-label status:in-progress --remove-label status:ready
-gh issue edit <number> --add-assignee @me
-```
+所有研发按 [`docs/plan/README.md`](docs/plan/README.md) 拆解的阶段（`R0 → R5`）与切片卡（如 `R0-1`、`R1-S1`）推进：
 
-一次只领一张。领了就要在 24 小时内出 PR，否则放回 `status:ready`。
+1. **切片定义**：一张切片卡代表一个**玩家在浏览器中可端到端体验并验收的完整子系统或清理目标**（见 `docs/plan/02-*.md` ～ `04-*.md`）。
+2. **契约与实现组织**：
+   - 小中型切片允许在同一 PR 内配套更新 `spec/`（`proto` / `db` / `data`）→ 生成物 → `internal/` → `client/`，一次性打通端到端闭环。
+   - 若多 Agent 并行开发同一阶段（如后端与客户端同时做 `R1`），先提一张轻量的 `contract: <Slice-ID> ...` PR 冻结 `spec/proto` 与 `spec/db`，合并后前后端与美术并行合围。
+3. **PR 粒度与可读性**：
+   - 新增业务实现 PR 建议控制在 **≤ 1,500 行净有效代码**（不含 protoc 生成物、seed 数据与测试夹具）；`R0` 历史包袱清创删除行数不设上限。
+   - 每个切片对应唯一 GitHub Issue（标题 `[<Slice-ID>] <标题>`）与唯一 PR（正文关联 `Closes #<issue>`）。
 
-## 三、分支与提交
+---
 
-```bash
-git worktree add ../rxsg-<task-id> -b feat/<task-id>
-```
+## 四、四大架构与质量红线（Review 必审）
 
-- 分支名：`feat/SPEC-001`、`fix/MIL-012`
-- 提交信息：`<task-id>: <一句话>`，正文写清改了什么、怎么验证
-- 一个 PR 只做一张卡，改动 ≤ 400 行；普通及后续实现仍按此规则，不得用下述一次性接收路径代替日常领卡与 PR。
+### 1. 单一标准可部署运行时
+- `cmd/server` 只能维护**唯一一套标准运行时路径**（`make dev` 与远程容器部署同构，基于常规 `DATABASE_URL` 与 `REDIS_ADDR`）。
+- **严禁**新增仅限 `127.0.0.1` / `loopback` 运行的分叉模式、外部本地 profile 文件锁或双套并存的 v1/v2 重复业务 Hub。
 
-### 一次性接收已交付修复栈（ORCH-INTEGRATION-RELEASE-001）
+### 2. 前端零堆叠与正式产品级 UI
+- **严禁**新建任何 `*Residual*`、`*Deep*`、`*Deeper*`、`*Deepest*`、`*Sweep*`、`*NarrowManifest*` 补丁文件。迭代已有界面时直接修改目标 Scene / Panel 组件本身。
+- **严禁**在玩家可见 UI 中渲染协议包名（如 `military.v1`）、DPR 探针（如 `art 1x @1.0dpr`）、裸内部 ID 或重复堆叠的状态摘要行。
 
-- 仅接收基线 `fcc35527f9d0ea8e6fa2f1cfad868ab421819e62` 至稳定源 `867f686667c889cd679ea9b6bd5f07cfc9d4dc74` 的 189 个源 commit；后续至 `c05152164dc80b357ab86f0eec521269328c6087` 的 11 个源 commit 须完成自身必需验收后另批处理。除此以外的新研发不在此一次性范围内。
-- 源 commit 不等同正式任务卡，也不宣称历史领卡/逐卡 PR 流程已经履行。接收时保留不可变逐 commit 清单（来源/parent/tree、域/scope、路径、行数），按最终修正后的**单域审阅组**逐组给出独立 review、修正来源与精确证据，再审阅完整依赖组合。
-- 编排接收卡可在 GitHub issue 手工注册，必须自包含目标、输入契约、允许文件、验收、参照与负责人/状态，并说明为何不触发 backlog 的旧 wave 全量同步；不新增 wave，不改 `tasks/backlog.yml`、同步工作流或权限。普通任务注册规则不变。
-- 仅该栈的 SPEC-only 与实现整合发布 PR 的累计 diff 豁免 400 行；这只改变接收/发布组织方式，不授权跨域开发或新增业务逻辑。普通正式卡仍单域且 ≤ 400 行；后发现的修复另立对应域正式卡、独立 review 和验证，并作为显式修正加入新的批准源 tree，不改写原冻结快照。
-- 所有改变的 `spec/`（含 rules-only）必须先进入独立 SPEC-only 整合 PR，独立审阅并满足第四、五节的契约/通知/冻结门槛；实现整合 PR 不混入 spec 新差异。每个最终单域组件及全部依赖必须完成审阅，不能把已知有缺陷的中间 commit 当成可单独发布状态。
-- 发布清单须固定基线、原始与修正后的最终源码 tree、单域审阅组映射、测试证据、排除项和已知限制；最终代码逐路径/模式/blob 与批准源一致。只有另行审阅并逐项列明的编排说明和公开发布证据可作为非代码例外。
-- 未解决的阻断 finding、缺失依赖、仍待必需验收的组件和历史 reference/art hold（含 #77/#82/#108）不得进入整合包。有共同启用约束的组件必须完整整合，核对生产入口、写入者兼容性与回滚边界；运行时迁移/排空等仍是独立部署门槛。
-- 全部 PR 从 draft 开始，精确最终 head 必须通过独立 review、所有必需 CI 和真实集成/验收门槛；CI 跳过的数据库/自然流程不算已验收。基线或内容变化须重核审阅有效性并重跑受影响验证。不更改 CODEOWNERS、分支保护、CI 权限、审批或任何安全门槛。
-- 仅在既有自主合并授权内合并，并核验合并后 main tree 与 push CI；此一次性接收不代表部署、生产就绪、完整游戏验收或解除历史 hold。完成本冻结栈接收后不再用于新实现。
+### 3. 配置真源驱动（禁止业务硬编码假桩）
+- 建筑、科技、兵种、城防、世界地形、野地/黄巾守军、掉落、名将、装备、任务数值一律沉淀在 `spec/data/source/*.yml` 并经生成脚本产出确定性 seed（`spec/data/generated/`）。
+- **严禁**在 Go 或 TypeScript 代码中硬编码坐标桩（如 `(5,5)` 内存驻军）或脱离原版量纲的临时指数公式。
 
-## 四、PR 要求
+### 4. 可控时钟测试与真实可玩门禁
+- **时间推进测试**：涉及建造、科技、募兵、行军、历练、野地刷新的单测与集成测试，必须注入可控时钟或在隔离测试事务中定向推进目标记录时间戳；**严禁**为业务时长 `sleep` 干等。
+- **三层门禁**：
+  1. `make test-fast`（单元与类型检查，无库秒级反馈）；
+  2. `make test-gate`（受影响域的 PostgreSQL 真实事务测试 + `client` 构建与单测）；
+  3. **切片可玩验收（Playable Gate）**：所有玩法切片合并前，必须在真实 Go Server + PostgreSQL 17 + Headless Browser 下跑通该切片定义的玩家操作链路并留存可复现脚本/报告。
 
-- 标题：`<task-id> <标题>`
-- 正文必须包含：关联 issue（`Closes #12`）、做了什么、怎么验证、影响范围
-- CI 必须绿
-- 越界改动（改了非 `scope` 里的文件）CI 直接 fail
-- 不满足以下任一条件不予合并：
-  - [ ] 单测覆盖新增逻辑
-  - [ ] 集成测试通过
-  - [ ] 没有修改 `spec/`（除非本卡就是 spec 卡）
-  - [ ] 文档更新
+---
 
-## 五、契约变更
+## 五、接手导航与唯一目录真源
 
-改 `spec/proto/` 或 `spec/db/` 必须：
-
-1. 单独开 PR，标题 `contract: <说明>`
-2. 在 PR 里列出受影响的域和任务卡
-3. 合并后由编排者通知相关 agent 更新
-
-契约冻结期内（每周评审后到下次评审前）不接受变更。
-
-## 六、进度怎么看
-
-```bash
-# 全局
-gh issue list --state open --limit 200
-
-# 按域
-gh issue list --label domain:military --state all
-
-# 当前迭代
-gh issue list --label wave:1 --state open
-```
-
-看板口径：
-
-| 标签 | 含义 |
+| 内容 | 权威路径 |
 |---|---|
-| `status:ready` | 契约已就绪，可开工 |
-| `status:blocked` | 等依赖 |
-| `status:in-progress` | 已认领 |
-| `status:review` | PR 待审 |
-| `status:done` | 已合并，等关单 |
-
-## 七、上下文自包含
-
-每张任务卡必须能让 agent 在**不读其他代码**的情况下开工，卡里要有：目标、输入契约、允许改的文件、验收标准、参照物。
-
-卡里缺信息，先提 issue 补卡，不要靠猜。
-
-## 八、时间推进测试
-
-用户要求：涉及历练、募兵、建造、行军、到期、重试或其他时间等待的测试，必须使用可靠的时间推进方案，不得为业务时长干等。维护此类旧测试时同样适用。
-
-- 单元/组件测试优先注入可控时钟，并同步推进依赖它的 timer/scheduler；仅改 `Date.now()` 而让真实定时器继续运行不算可靠方案。异步结果须等待明确的完成条件。
-- 真实服务/数据库验收可使用隔离的受控时间夹具：先完成真实开始与提前拒绝，再推进本次测试拥有的记录到目标时间；限定记录身份和预期状态，检查更新行数，保留必要的时长关系与前后证据。不得修改生产时钟、生产时长或其他测试的数据。
-- 按行为覆盖到期前、恰好到期、到期后以及重复执行，验证返回值和实际持久化结果；后端精确边界宜由注入时钟的测试证明，不用浏览器/网络延迟猜测。保留费用、奖励、所有权和幂等性等原有断言。
-- 真实 I/O、进程启动和并发同步只使用有截止时间的条件等待/握手，不以固定长 `sleep` 或无限重试代替完成信号。真实超时或调度器本身的测试可使用最小必要的墙钟等待，并说明原因及上限。
-- 记录所用时钟/夹具和推进量，清理测试状态；受控时间证据不得称为自然等待证据。不因提速跳过失败分支、减少验收范围或改动生产语义。
+| 重规划总览与阶段入口 | [`docs/plan/README.md`](docs/plan/README.md) |
+| 《热血三国》原版 1:1 规则与数值映射字典 | [`docs/plan/01-LEGACY-PARITY-SPEC.md`](docs/plan/01-LEGACY-PARITY-SPEC.md) |
+| Phase R0 外科清创与单轨合一施工手册 | [`docs/plan/02-R0-SURGICAL-CLEANUP-RUNBOOK.md`](docs/plan/02-R0-SURGICAL-CLEANUP-RUNBOOK.md) |
+| Phase R1（M-Next）全屏大地图与野地/黄巾 PvE 切片卡 | [`docs/plan/03-R1-WORLD-PVE-SLICES.md`](docs/plan/03-R1-WORLD-PVE-SLICES.md) |
+| Phase R2–R5 全量系统切片蓝图 | [`docs/plan/04-R2-R5-SYSTEM-BLUEPRINT.md`](docs/plan/04-R2-R5-SYSTEM-BLUEPRINT.md) |
+| 多 Agent（Herdr）并行调度与验收手册 | [`docs/plan/05-MULTI-AGENT-WORKFLOW.md`](docs/plan/05-MULTI-AGENT-WORKFLOW.md) |
+| 顶层里程碑看板 | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
+| 原版只读参照说明 | [`docs/reference.md`](docs/reference.md) |
+| 通信协议与数据库 Schema | `spec/proto/`、`spec/db/`、`spec/data/` |
