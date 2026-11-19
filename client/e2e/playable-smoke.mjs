@@ -62,6 +62,30 @@ async function main() {
       detail: `${resourceAmounts} resource entries · ${hudText.replace(/\s+/g, " ").slice(0, 100)}`,
     });
 
+    await page.locator('[data-action="open-world-map"]').click();
+    await page.waitForSelector('[data-role="world-map-layer"]:not(.hidden)', { timeout: 15000 });
+    await page.waitForFunction(
+      () => /已载入\s+\d+\s+格/.test(document.querySelector('[data-role="world-map-status"]')?.textContent ?? ""),
+      { timeout: 30000 },
+    );
+    const mapStatus = (await page.locator('[data-role="world-map-status"]').innerText()).trim();
+    const mapPixel = await page.evaluate(() => {
+      const canvas = document.querySelector('[data-role="world-map-canvas"]');
+      const context = canvas.getContext("2d");
+      const data = context.getImageData(Math.floor(canvas.width / 2), Math.floor(canvas.height / 2), 1, 1).data;
+      return [data[0], data[1], data[2]];
+    });
+    if (mapPixel[0] + mapPixel[1] + mapPixel[2] < 30) {
+      throw new Error(`world map canvas is blank: ${mapPixel.join(",")}`);
+    }
+    record("world map rendered", { detail: `${mapStatus} · centre pixel ${mapPixel.join(",")}` });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, "world-map.png") });
+    await page.locator('[data-action="world-map-close"]').click();
+    await page.waitForFunction(
+      () => document.querySelector('[data-role="world-map-layer"]')?.classList.contains("hidden"),
+      { timeout: 10000 },
+    );
+
     await page.locator('[data-action="toggle-world"]').click();
     await page.waitForSelector(".world-panel:not(.hidden)", { timeout: 15000 });
     const worldText = (await page.locator(".world-panel").innerText()).trim();
