@@ -76,7 +76,6 @@ jobs:
         working-directory: client
         run: npm run build
       - name: Run playable smoke
-        working-directory: client
         env:
           APP_URL: http://127.0.0.1:4173
           REPORT_PATH: ${{ runner.temp }}/playable-smoke-report.json
@@ -84,20 +83,22 @@ jobs:
         run: |
           set -euo pipefail
           trap 'kill "$server_pid" "$preview_pid" 2>/dev/null || true' EXIT
-          ../bin/server > ../server.log 2>&1 &
+          # cmd/server resolves spec/db from the working directory, so it must
+          # start from the repo root; the Vite preview must start from client/.
+          ./bin/server > server.log 2>&1 &
           server_pid=$!
           for _ in $(seq 1 90); do
             if curl -fsS http://127.0.0.1:8080/healthz; then break; fi
             sleep 1
           done
           curl -fsS http://127.0.0.1:8080/healthz
-          npx vite preview --host 127.0.0.1 --port 4173 --strictPort > ../preview.log 2>&1 &
+          (cd client && exec npx vite preview --host 127.0.0.1 --port 4173 --strictPort > ../preview.log 2>&1) &
           preview_pid=$!
           for _ in $(seq 1 60); do
             if curl -fsS http://127.0.0.1:4173/; then break; fi
             sleep 1
           done
-          node e2e/playable-smoke.mjs
+          cd client && node e2e/playable-smoke.mjs
       - name: Archive playable smoke evidence
         if: always()
         uses: actions/upload-artifact@v4
