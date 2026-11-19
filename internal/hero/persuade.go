@@ -7,22 +7,22 @@ import (
 )
 
 var (
-	ErrPersuadeUnknownNPC    = errors.New("hero: persuade target not in M1 roster")
-	ErrPersuadeNotBefriended = errors.New("hero: lionize befriending required before persuade")
-	ErrInsufficientFriend    = errors.New("hero: insufficient friend for lionize hire")
-	ErrPersuadeCooldown      = errors.New("hero: persuade on cooldown")
-	ErrLionizeAlreadyDone    = errors.New("hero: famous hero already recruited via lionize")
-	ErrLionizeAlreadyFriend     = errors.New("hero: already befriended; use persuade or hire")
-	ErrPersuadeFriendSaturated  = errors.New("hero: friend sufficient; call LionizeHero to recruit")
+	ErrPersuadeUnknownNPC      = errors.New("hero: persuade target not in M1 roster")
+	ErrPersuadeNotBefriended   = errors.New("hero: lionize befriending required before persuade")
+	ErrInsufficientFriend      = errors.New("hero: insufficient friend for lionize hire")
+	ErrPersuadeCooldown        = errors.New("hero: persuade on cooldown")
+	ErrLionizeAlreadyDone      = errors.New("hero: famous hero already recruited via lionize")
+	ErrLionizeAlreadyFriend    = errors.New("hero: already befriended; use persuade or hire")
+	ErrPersuadeFriendSaturated = errors.New("hero: friend sufficient; call LionizeHero to recruit")
 )
 
 // PersuadeTargetView is one row for ListPersuadeTargets.
 type PersuadeTargetView struct {
-	Target          PersuadeNPCTarget
-	Friend          int32
-	State           int16
-	HireFriendMin   int32
-	NextPersuadeAt  time.Time
+	Target         PersuadeNPCTarget
+	Friend         int32
+	State          int16
+	HireFriendMin  int32
+	NextPersuadeAt time.Time
 }
 
 // PersuadeHeroResult is one persuade step outcome.
@@ -35,13 +35,13 @@ type PersuadeHeroResult struct {
 
 // LionizeHeroResult covers befriending or hiring via lionize.
 type LionizeHeroResult struct {
-	NpcCfgID    int32
-	Friend      int32
-	State       int16
-	Hero        *Hero
-	GoldSpent   int64
-	Befriended  bool
-	Recruited   bool
+	NpcCfgID   int32
+	Friend     int32
+	State      int16
+	Hero       *Hero
+	GoldSpent  int64
+	Befriended bool
+	Recruited  bool
 }
 
 func (s *Service) loadLionizeStore() (LionizeStore, error) {

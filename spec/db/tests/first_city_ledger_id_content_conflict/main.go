@@ -44,7 +44,7 @@ func assert(ok bool, msg string) {
 	}
 }
 func exec(p *pgxpool.Pool, sql string, args ...any) { _, err := p.Exec(ctx, sql, args...); must(err) }
-func apply(p *pgxpool.Pool)                          { must(db.ApplySpecs(ctx, p, baseDir)) }
+func apply(p *pgxpool.Pool)                         { must(db.ApplySpecs(ctx, p, baseDir)) }
 
 func fresh() (*pgxpool.Pool, func()) {
 	serial++

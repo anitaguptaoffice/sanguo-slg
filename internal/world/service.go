@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	ErrOccupied   = errors.New("world: coordinate occupied")
-	ErrBadTerrain = errors.New("world: terrain not buildable")
+	ErrOccupied    = errors.New("world: coordinate occupied")
+	ErrBadTerrain  = errors.New("world: terrain not buildable")
 	ErrOutOfBounds = errors.New("world: out of bounds")
 )
 

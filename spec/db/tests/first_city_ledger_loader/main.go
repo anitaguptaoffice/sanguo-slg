@@ -16,16 +16,16 @@ import (
 )
 
 const (
-	migrationDDL        = "m4_010_first_city_ledger.sql"
-	migrationCompanion  = "m4_011_first_city_ledger_companion.sql"
+	migrationDDL       = "m4_010_first_city_ledger.sql"
+	migrationCompanion = "m4_011_first_city_ledger_companion.sql"
 )
 
 var (
-	ctx      = context.Background()
-	baseDir  string
-	dsn      string
-	admin    *pgxpool.Pool
-	serial   int
+	ctx        = context.Background()
+	baseDir    string
+	dsn        string
+	admin      *pgxpool.Pool
+	serial     int
 	ledgerRels = []string{
 		"world_first_city_command",
 		"world_first_city_actor_slot",

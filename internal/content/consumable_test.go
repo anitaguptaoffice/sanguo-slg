@@ -98,4 +98,3 @@ func TestUseTrainToken(t *testing.T) {
 		t.Fatalf("train %+v", res.Train)
 	}
 }
-

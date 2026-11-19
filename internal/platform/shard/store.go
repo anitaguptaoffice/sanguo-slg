@@ -11,12 +11,12 @@ import (
 
 // ServerListRow is one visible game_server entry for the picker UI.
 type ServerListRow struct {
-	ServerID     int32
-	DisplayName  string
-	Status       int16
-	OpenedAt     *time.Time
-	OnlineCount  int32
-	HasPlayer    bool
+	ServerID    int32
+	DisplayName string
+	Status      int16
+	OpenedAt    *time.Time
+	OnlineCount int32
+	HasPlayer   bool
 }
 
 // Store reads shard metadata from PostgreSQL (platform scope only).

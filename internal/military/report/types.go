@@ -15,18 +15,18 @@ const (
 
 // Record is one persisted battle report row.
 type Record struct {
-	ServerID           int32
-	ReportID           int64
-	AttackerPlayerID   int64
-	DefenderPlayerID   int64
-	HasDefenderPlayer  bool
-	DefenderCityID     int64
-	HasDefenderCity    bool
-	LocationX          int
-	LocationY          int
-	Outcome            int16
-	Detail             battle.BattleReport
-	CreatedAt          time.Time
+	ServerID          int32
+	ReportID          int64
+	AttackerPlayerID  int64
+	DefenderPlayerID  int64
+	HasDefenderPlayer bool
+	DefenderCityID    int64
+	HasDefenderCity   bool
+	LocationX         int
+	LocationY         int
+	Outcome           int16
+	Detail            battle.BattleReport
+	CreatedAt         time.Time
 }
 
 // SaveParams describes metadata when archiving a battle.BattleReport.

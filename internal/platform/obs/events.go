@@ -10,11 +10,11 @@ import (
 
 // Stable gameplay telemetry event names (TELEMETRY-001).
 const (
-	EventLogin              = "login"
-	EventCreateCity         = "create_city"
-	EventBattleReportReady  = "battle_report_ready"
-	EventShopPurchase       = "shop_purchase"
-	EventQuestClaimReward   = "quest_claim_reward"
+	EventLogin             = "login"
+	EventCreateCity        = "create_city"
+	EventBattleReportReady = "battle_report_ready"
+	EventShopPurchase      = "shop_purchase"
+	EventQuestClaimReward  = "quest_claim_reward"
 )
 
 // PlayerRef identifies a shard player without PII.

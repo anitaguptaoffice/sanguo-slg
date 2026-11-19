@@ -29,10 +29,18 @@ var (
 	serial  int
 )
 
-func must(err error)              { if err != nil { panic(err) } }
-func assert(ok bool, m string)    { if !ok { panic(m) } }
+func must(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+func assert(ok bool, m string) {
+	if !ok {
+		panic(m)
+	}
+}
 func exec(p *pgxpool.Pool, sql string, a ...any) { _, e := p.Exec(ctx, sql, a...); must(e) }
-func apply(p *pgxpool.Pool) { must(db.ApplySpecs(ctx, p, baseDir)) }
+func apply(p *pgxpool.Pool)                      { must(db.ApplySpecs(ctx, p, baseDir)) }
 
 func c1(name string, x, y int) (c1, fct1, sha string) {
 	body := append([]byte{0x01}, []byte(name)...)
@@ -187,7 +195,9 @@ func sAckLoss(pool *pgxpool.Pool, acct int64) {
 	assert(withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, cmd, nil, "洛阳", 12, 34) }), "ok")
 	n, x, y := proposal(pool, cmd)
 	assert(n == "洛阳" && x == 12 && y == 34 && bizSum(pool) == 0, "readback")
-	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, "b2222222-2222-4222-8222-222222222222", nil, "许昌", 1, 2) }), "no2")
+	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) {
+		return intake(tx, acct, "b2222222-2222-4222-8222-222222222222", nil, "许昌", 1, 2)
+	}), "no2")
 	fmt.Println("PASS initial: old_intake_ack_loss_readback_reject_empty")
 }
 
@@ -260,9 +270,13 @@ func sRejectSuccessor(pool *pgxpool.Pool, acct int64) {
 	term(pool, cmdA, 3)
 	assert(head(pool) == cmdA, "retain")
 	assert(withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, cmdB, &cmdA, "益州", 5, 6) }), "B")
-	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, "baaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", nil, "幽州", 1, 1) }), "EMPTY")
+	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) {
+		return intake(tx, acct, "baaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", nil, "幽州", 1, 1)
+	}), "EMPTY")
 	bad := "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, "bccccccc-cccc-4ccc-8ccc-cccccccccccc", &bad, "并州", 2, 2) }), "stale")
+	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) {
+		return intake(tx, acct, "bccccccc-cccc-4ccc-8ccc-cccccccccccc", &bad, "并州", 2, 2)
+	}), "stale")
 	assert(head(pool) == cmdB, "succ")
 	fmt.Println("PASS initial: reject_successor_exact_pred")
 }
@@ -282,8 +296,16 @@ func sDualProposal(pool *pgxpool.Pool, acct int64) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 	okA, okB := false, false
-	go func() { defer wg.Done(); <-begin; okA = withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, cmdA, nil, "甲城", 30, 31) }) }()
-	go func() { defer wg.Done(); <-begin; okB = withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, cmdB, nil, "乙城", 32, 33) }) }()
+	go func() {
+		defer wg.Done()
+		<-begin
+		okA = withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, cmdA, nil, "甲城", 30, 31) })
+	}()
+	go func() {
+		defer wg.Done()
+		<-begin
+		okB = withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, cmdB, nil, "乙城", 32, 33) })
+	}()
 	close(begin)
 	wg.Wait()
 	assert((okA != okB) && bizSum(pool) == 0, "one winner")
@@ -305,7 +327,9 @@ func sDualProposal(pool *pgxpool.Pool, acct int64) {
 func sLineageEmpty(pool *pgxpool.Pool, acct int64) {
 	p := "c1111111-1111-4111-8111-111111111111"
 	assert(withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, p, nil, "p", 1, 2) }), "p")
-	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, "c2222222-2222-4222-8222-222222222222", nil, "x", 3, 4) }), "pend")
+	assert(!withTx(pool, func(tx pgx.Tx) (bool, error) {
+		return intake(tx, acct, "c2222222-2222-4222-8222-222222222222", nil, "x", 3, 4)
+	}), "pend")
 	fmt.Println("PASS initial: pending_rejects_empty")
 	pool2, done := fresh()
 	defer done()
@@ -314,7 +338,9 @@ func sLineageEmpty(pool *pgxpool.Pool, acct int64) {
 	s := "c3333333-3333-4333-8333-333333333333"
 	assert(withTx(pool2, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, s, nil, "s", 5, 6) }), "s")
 	term(pool2, s, 2)
-	assert(!withTx(pool2, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, "c4444444-4444-4444-8444-444444444444", nil, "y", 7, 8) }), "succ")
+	assert(!withTx(pool2, func(tx pgx.Tx) (bool, error) {
+		return intake(tx, acct, "c4444444-4444-4444-8444-444444444444", nil, "y", 7, 8)
+	}), "succ")
 	fmt.Println("PASS initial: succeeded_rejects_empty")
 	pool3, done3 := fresh()
 	defer done3()
@@ -323,7 +349,9 @@ func sLineageEmpty(pool *pgxpool.Pool, acct int64) {
 	r := "c5555555-5555-4555-8555-555555555555"
 	assert(withTx(pool3, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, r, nil, "r", 9, 10) }), "r")
 	term(pool3, r, 3)
-	assert(!withTx(pool3, func(tx pgx.Tx) (bool, error) { return intake(tx, acct, "c6666666-6666-4666-8666-666666666666", nil, "z", 11, 12) }), "rej")
+	assert(!withTx(pool3, func(tx pgx.Tx) (bool, error) {
+		return intake(tx, acct, "c6666666-6666-4666-8666-666666666666", nil, "z", 11, 12)
+	}), "rej")
 	assert(head(pool3) == r, "slot kept")
 	fmt.Println("PASS initial: rejection_rejects_empty")
 }

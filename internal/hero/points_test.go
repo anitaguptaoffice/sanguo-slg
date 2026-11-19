@@ -38,7 +38,7 @@ func TestAddHeroPointInsufficientPotential(t *testing.T) {
 	h, tpl := testHeroL5(t)
 	base := StatsAtLevel(tpl, 5)
 	_, err := AddHeroPointOnce(h, tpl, AddHeroPointRequest{
-		HeroID: 1,
+		HeroID:   1,
 		Politics: base.Politics + 3,
 		Force:    base.Force + 3,
 		Intel:    base.Intel,

@@ -17,9 +17,9 @@ const (
 
 // MailType values align with player_mail.mail_type.
 const (
-	TypeSystem         int16 = 1
-	TypeReward         int16 = 2
-	TypeAnnouncement   int16 = 3
+	TypeSystem       int16 = 1
+	TypeReward       int16 = 2
+	TypeAnnouncement int16 = 3
 )
 
 // InboxFilter selects which non-deleted mails appear in a list query.

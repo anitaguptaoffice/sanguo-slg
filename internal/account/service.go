@@ -91,7 +91,7 @@ func (s *Service) Login(ctx context.Context, loginName, password string, serverI
 		return nil, err
 	}
 	return &accountv1.LoginResponse{
-		SessionId:           sessionID,
+		SessionId:          sessionID,
 		SessionExpiresAtMs: expires.UnixMilli(),
 		Player: &commonpb.PlayerProfile{
 			ServerId:    player.ServerID,
@@ -133,7 +133,7 @@ func (s *Service) RefreshSession(ctx context.Context, sessionID string) (*accoun
 		return nil, err
 	}
 	return &accountv1.RefreshSessionResponse{
-		SessionId:           sessionID,
+		SessionId:          sessionID,
 		SessionExpiresAtMs: expiresAt.UnixMilli(),
 	}, nil
 }

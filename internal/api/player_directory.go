@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-
 )
 
 // DisplayName implements chat/guild PlayerDirectory.

@@ -77,8 +77,8 @@ func (s *Service) MarkRead(ctx context.Context, serverID int32, playerID int64, 
 
 // ClaimResult is returned after claiming mail attachments.
 type ClaimResult struct {
-	Mail   Mail
-	Grant  content.GrantResult
+	Mail  Mail
+	Grant content.GrantResult
 }
 
 // ClaimAttachments grants mail attachments via CONTENT-002 and marks the mail claimed.

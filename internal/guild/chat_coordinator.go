@@ -16,8 +16,8 @@ type ChatCoordinator struct {
 	chat    *chat.Service
 	store   chat.Store
 	players chat.PlayerDirectory
-	limits chat.Limits
-	now    func() time.Time
+	limits  chat.Limits
+	now     func() time.Time
 }
 
 // NewChatCoordinator wires guild membership checks into chat send/list for the guild channel.
@@ -31,8 +31,8 @@ func NewChatCoordinator(guildSvc *Service, chatSvc *chat.Service, store chat.Sto
 		chat:    chatSvc,
 		store:   store,
 		players: players,
-		limits: lim,
-		now:    time.Now,
+		limits:  lim,
+		now:     time.Now,
 	}
 }
 

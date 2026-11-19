@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	RouteListPlayerMail            = "content.v1.ListPlayerMail"
-	RouteMarkPlayerMailRead        = "content.v1.MarkPlayerMailRead"
+	RouteListPlayerMail             = "content.v1.ListPlayerMail"
+	RouteMarkPlayerMailRead         = "content.v1.MarkPlayerMailRead"
 	RouteClaimPlayerMailAttachments = "content.v1.ClaimPlayerMailAttachments"
 )
 
@@ -103,10 +103,10 @@ func (s *Server) handleClaimPlayerMailAttachments(ctx context.Context, pkt *comm
 		bag = append(bag, &contentv1.PlayerItemStack{ItemCfgId: st.ItemCfgID, Quantity: st.Quantity})
 	}
 	data, err := marshal(&contentv1.ClaimPlayerMailAttachmentsResponse{
-		Mail:         playerMailToProto(res.Mail),
-		Granted:      rewardPackageToProto(res.Mail.Attachments),
-		WalletAfter:  resourceWalletToProto(res.Grant.Wallet),
-		BagItems:     bag,
+		Mail:        playerMailToProto(res.Mail),
+		Granted:     rewardPackageToProto(res.Mail.Attachments),
+		WalletAfter: resourceWalletToProto(res.Grant.Wallet),
+		BagItems:    bag,
 	})
 	if err != nil {
 		return nil, err

@@ -8,10 +8,10 @@ import (
 
 // MemStore is an in-memory Store for unit tests.
 type MemStore struct {
-	mu       sync.Mutex
-	headers  map[string]SnapshotMeta
-	entries  map[string][]Entry
-	latest   map[string]int64 // server:type -> batch_id
+	mu        sync.Mutex
+	headers   map[string]SnapshotMeta
+	entries   map[string][]Entry
+	latest    map[string]int64 // server:type -> batch_id
 	nextBatch map[string]int64
 }
 

@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	realm = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
-	cmdID = "e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44"
+	realm      = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+	cmdID      = "e0eebc99-9c0b-4ef8-bb6d-6bb9bd380a44"
 	mapX, mapY = 10, 20
 )
 

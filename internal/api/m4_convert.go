@@ -80,20 +80,20 @@ func resourceWalletToProto(w content.ResourceWallet) *apicommon.ResourceWallet {
 
 func shopOfferToProto(o shop.Offer) *shopv1.ShopOffer {
 	return &shopv1.ShopOffer{
-		OfferId:              o.OfferID,
-		ShelfId:              o.ShelfID,
-		ShelfName:            o.ShelfName,
-		SortOrder:            o.SortOrder,
-		ItemCfgId:            o.ItemCfgID,
-		QuantityPerPurchase:  o.QuantityPerPurchase,
-		PriceResources:       resourceWalletToProto(o.PriceResources),
-		LimitType:            shopv1.PurchaseLimitType(o.LimitType),
-		PurchaseLimit:        o.PurchaseLimit,
-		PurchasedCount:       o.PurchasedCount,
-		LimitResetsAtMs:      o.LimitResetsAtMs,
-		StockTotal:           o.StockTotal,
-		StockRemaining:       o.StockRemaining,
-		SoldOut:              o.SoldOut,
+		OfferId:             o.OfferID,
+		ShelfId:             o.ShelfID,
+		ShelfName:           o.ShelfName,
+		SortOrder:           o.SortOrder,
+		ItemCfgId:           o.ItemCfgID,
+		QuantityPerPurchase: o.QuantityPerPurchase,
+		PriceResources:      resourceWalletToProto(o.PriceResources),
+		LimitType:           shopv1.PurchaseLimitType(o.LimitType),
+		PurchaseLimit:       o.PurchaseLimit,
+		PurchasedCount:      o.PurchasedCount,
+		LimitResetsAtMs:     o.LimitResetsAtMs,
+		StockTotal:          o.StockTotal,
+		StockRemaining:      o.StockRemaining,
+		SoldOut:             o.SoldOut,
 	}
 }
 

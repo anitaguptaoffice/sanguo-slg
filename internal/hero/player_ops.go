@@ -25,18 +25,18 @@ type ListResult struct {
 
 // HeroDetail enriches a hero row with template metadata.
 type HeroDetail struct {
-	Hero                *Hero
-	TemplateName        string
-	TemplateCode        string
-	Rarity              int16
-	LoyaltyMin          int32
-	LoyaltyMax          int32
-	Tagline             string
-	ExpectedStats       BaseStats
-	ExpTowardNext       int64
-	UpgradeExpRequired  int64
-	MarchForce          int32
-	MarchForceMax       int32
+	Hero               *Hero
+	TemplateName       string
+	TemplateCode       string
+	Rarity             int16
+	LoyaltyMin         int32
+	LoyaltyMax         int32
+	Tagline            string
+	ExpectedStats      BaseStats
+	ExpTowardNext      int64
+	UpgradeExpRequired int64
+	MarchForce         int32
+	MarchForceMax      int32
 }
 
 // InventoryPort loads and commits recruit/largess costs against the content/wallet layer.
@@ -122,7 +122,7 @@ func (s *Service) GetHeroDetail(ctx context.Context, p PlayerRef, heroID int64) 
 			Hero: h, TemplateName: name, TemplateCode: "hotel_random", Rarity: 1,
 			LoyaltyMin: LoyaltyMin, LoyaltyMax: LoyaltyMax,
 			ExpectedStats: BaseStats{Force: h.Force, Intel: h.Intel, Politics: h.Politics, Command: h.Command},
-			MarchForce: mf.Current, MarchForceMax: mf.Max,
+			MarchForce:    mf.Current, MarchForceMax: mf.Max,
 		}, nil
 	}
 	t, ok := s.Catalog[h.TemplateCfgID]

@@ -5,16 +5,16 @@ const (
 	PersuadeItemCfgID       = 2004 // M1 stand-in for legacy 锦囊 gid=13
 	PersuadeItemQty         = 1    // legacy 15
 	PersuadeFriendDelta     = 10
-	LionizeInitialFriend    = 10   // legacy LionizeHero friend=10
-	LionizeHireFriendMin    = 30   // M1 delta; legacy PersuadeHero requires friend>=100
+	LionizeInitialFriend    = 10 // legacy LionizeHero friend=10
+	LionizeHireFriendMin    = 30 // M1 delta; legacy PersuadeHero requires friend>=100
 	PersuadeCooldownSeconds = 24 * 3600
 )
 
 // LionizeState mirrors legacy sys_lionize.state subset for M1.
 const (
-	LionizeStateNone        int16 = 0
-	LionizeStateBefriended  int16 = 1
-	LionizeStateRecruited   int16 = 2
+	LionizeStateNone       int16 = 0
+	LionizeStateBefriended int16 = 1
+	LionizeStateRecruited  int16 = 2
 )
 
 // PersuadeNPCTarget is a seeded famous-general target (subset of DATA-002 templates).

@@ -1,4 +1,6 @@
-# sanguo-slg 换平台交接（2026-11-12）
+# sanguo-slg 换平台交接（2026-11-12）[历史快照归档]
+
+> **[SUPERSEDED 2026-11-18]**：本文仅为 2026-11-12 历史快照（文中列出的旧 Draft PR 已于 11-16～11-18 收敛关闭或替代）。现行研发宪章与 `R0 → R5` 1:1 复刻蓝图以 [`AGENTS.md`](../AGENTS.md) 和 [`docs/plan/README.md`](plan/README.md) 为准。
 任务：[ORCH-PLATFORM-HANDOVER-20261112 / #2530](https://github.com/anitaguptaoffice/sanguo-slg/issues/2530)
 本次交接暂停新增开发、合并和下一轮原生验收激活，保留代码、失败记录与现有分支。本文是状态快照，不是全部功能完成或部署证明。
 

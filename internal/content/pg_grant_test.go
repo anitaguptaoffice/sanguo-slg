@@ -9,7 +9,6 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
 )
 
 func TestPGGrantAtomicPersistence(t *testing.T) {

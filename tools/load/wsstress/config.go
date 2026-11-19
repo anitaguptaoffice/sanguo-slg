@@ -9,10 +9,10 @@ import (
 
 // Config drives a WebSocket connection stress run.
 type Config struct {
-	WSURL              string
-	Concurrency        int
-	HandshakeTimeout   time.Duration
-	DialParallelism    int
+	WSURL            string
+	Concurrency      int
+	HandshakeTimeout time.Duration
+	DialParallelism  int
 }
 
 const (

@@ -37,4 +37,3 @@ func TestPGStoreCreateSurvivesRestart(t *testing.T) {
 		t.Fatalf("list: %+v err=%v", heroes, err)
 	}
 }
-

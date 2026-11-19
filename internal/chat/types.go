@@ -40,17 +40,17 @@ func (l Limits) ToProto() *chatv1.ChatSendLimits {
 
 // Message is one row in chat_message plus routing metadata for API mapping.
 type Message struct {
-	ServerID            int32
-	ChannelID           int64
-	MessageID           int64
-	ChannelType         int16
-	SenderPlayerID      int64
-	SenderDisplayName   string
-	RecipientPlayerID   int64
-	GuildID             int64
-	Content             string
-	CreatedAt           time.Time
-	PeerPlayerID        int64 // normalized other party for private list display
+	ServerID          int32
+	ChannelID         int64
+	MessageID         int64
+	ChannelType       int16
+	SenderPlayerID    int64
+	SenderDisplayName string
+	RecipientPlayerID int64
+	GuildID           int64
+	Content           string
+	CreatedAt         time.Time
+	PeerPlayerID      int64 // normalized other party for private list display
 }
 
 // ListQuery loads recent messages for a channel instance.
@@ -99,15 +99,15 @@ func channelToProto(t int16) chatv1.ChatChannel {
 
 func (m Message) ToProto() *chatv1.ChatMessage {
 	out := &chatv1.ChatMessage{
-		MessageId:           m.MessageID,
-		ServerId:            m.ServerID,
-		Channel:             channelToProto(m.ChannelType),
-		SenderPlayerId:      m.SenderPlayerID,
-		SenderDisplayName:   m.SenderDisplayName,
-		RecipientPlayerId:   m.RecipientPlayerID,
-		GuildId:             m.GuildID,
-		Content:             m.Content,
-		SentAtMs:            m.CreatedAt.UnixMilli(),
+		MessageId:         m.MessageID,
+		ServerId:          m.ServerID,
+		Channel:           channelToProto(m.ChannelType),
+		SenderPlayerId:    m.SenderPlayerID,
+		SenderDisplayName: m.SenderDisplayName,
+		RecipientPlayerId: m.RecipientPlayerID,
+		GuildId:           m.GuildID,
+		Content:           m.Content,
+		SentAtMs:          m.CreatedAt.UnixMilli(),
 	}
 	return out
 }

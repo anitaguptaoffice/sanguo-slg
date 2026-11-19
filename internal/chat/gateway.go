@@ -15,10 +15,10 @@ const (
 	RouteListChatMessages = "chat.v1.ListChatMessages"
 
 	// spec/proto/sanguo/common/v1/envelope.proto (61000–61999)
-	errCodeChatChannelForbidden   commonv1.ErrorCode = 61001
-	errCodeChatContentTooLong     commonv1.ErrorCode = 61002
-	errCodeChatRateLimited        commonv1.ErrorCode = 61003
-	errCodeChatRecipientNotFound  commonv1.ErrorCode = 61004
+	errCodeChatChannelForbidden  commonv1.ErrorCode = 61001
+	errCodeChatContentTooLong    commonv1.ErrorCode = 61002
+	errCodeChatRateLimited       commonv1.ErrorCode = 61003
+	errCodeChatRecipientNotFound commonv1.ErrorCode = 61004
 	// Next chat band code after CHAT_GUILD_REQUIRED (61005) in envelope.proto.
 	errCodeChatPlayerMuted commonv1.ErrorCode = 61006
 )

@@ -13,8 +13,8 @@ type memStore struct {
 	cities map[string]City
 }
 
-func (m *memStore) key(sid int32, cx, cy int) string   { return fmt.Sprintf("%d/%d/%d", sid, cx, cy) }
-func (m *memStore) tile(sid int32, x, y int) string    { return fmt.Sprintf("%d@%d,%d", sid, x, y) }
+func (m *memStore) key(sid int32, cx, cy int) string { return fmt.Sprintf("%d/%d/%d", sid, cx, cy) }
+func (m *memStore) tile(sid int32, x, y int) string  { return fmt.Sprintf("%d@%d,%d", sid, x, y) }
 func (m *memStore) LoadChunk(_ context.Context, sid int32, cx, cy int) ([]Cell, bool, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

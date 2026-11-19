@@ -16,9 +16,9 @@ const (
 
 // LargessRequest is one largess attempt for a owned hero.
 type LargessRequest struct {
-	HeroID     int64
-	Kind       LargessGiftKind
-	ItemCfgID  int32
+	HeroID    int64
+	Kind      LargessGiftKind
+	ItemCfgID int32
 }
 
 // LargessResult is the committed largess outcome.

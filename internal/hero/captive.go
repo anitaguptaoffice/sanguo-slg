@@ -25,15 +25,15 @@ type CaptiveStore interface {
 
 // InjectCaptiveInput seeds a captive hero (GM/tests; battle产俘 follow-up).
 type InjectCaptiveInput struct {
-	CityID          int64
-	TemplateCfgID   int32
-	DisplayName     string
-	Level           int32
-	Force           int32
-	Intel           int32
-	Politics        int32
-	Command         int32
-	Loyalty         int
+	CityID        int64
+	TemplateCfgID int32
+	DisplayName   string
+	Level         int32
+	Force         int32
+	Intel         int32
+	Politics      int32
+	Command       int32
+	Loyalty       int
 }
 
 // CountOwnedHeroes excludes captives and coming offers from招贤馆容量 (legacy cityHasHeroPosition).
