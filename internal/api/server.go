@@ -229,14 +229,11 @@ func (s *Server) GatewayRouter() *gateway.Router {
 		}
 		handlers[route] = h
 	}
+	// One durable runtime: the standard city creation route and the single
+	// durable recruit route are always mounted.
+	handlers[RouteCreateCity] = s.handleCreateCity
 	if s.preparedRecruit != nil {
 		handlers[routeRecruitTroopV2] = s.recruitV2Handler(s.preparedRecruit)
-	} else {
-		handlers[RouteCreateCity] = s.handleCreateCity
-		handlers[RouteRecruitTroop] = s.handleRecruitTroop
-		if s.firstCityPrepared == nil && !s.marchRestoreReady {
-			handlers[RouteStartMarch] = s.handleStartMarch
-		}
 	}
 	if s.preparedMarch != nil {
 		handlers[RouteStartMarch] = s.preparedMarch.route
