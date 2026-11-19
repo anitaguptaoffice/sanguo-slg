@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MainCityScene } from './MainCityScene';
 import { MarchListPanel } from '@/ui/MarchListPanel';
 import { formatMarchHint } from '@/net/militaryFormat';
-import { countIntelInProgressMarches } from '@/net/hudMilitaryTodoSweep';
+import { countIntelInProgressMarches } from '@/ui/worldMinimap';
 import { resolveMarchFormReadonlyStripModel } from '@/net/marchFormReadonlyStrip';
 const returned = { march_id: 7, phase: 5, from_x: 60, from_y: 60, to_x: 5, to_y: 5, arrive_at_ms: 2000, return_finish_at_ms: 0 };
 const panels: MarchListPanel[] = [];

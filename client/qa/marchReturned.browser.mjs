@@ -20,8 +20,7 @@ async function install(page, historyOnly = false, skin = "fallback") {
     const { decodeGatewayResponse } = await import('/src/net/decodeGatewayResponse.ts');
     const { GatewayClient } = await import('/src/net/GatewayClient.ts');
     const { MarchListPanel } = await import('/src/ui/MarchListPanel.ts');
-    const { countIntelInProgressMarches } = await import('/src/net/hudMilitaryTodoSweep.ts');
-    const { collectMinimapDestMarkers, DEFAULT_MINIMAP_VIEW } = await import('/src/ui/worldMinimap.ts');
+    const { collectMinimapDestMarkers, countIntelInProgressMarches, DEFAULT_MINIMAP_VIEW } = await import('/src/ui/worldMinimap.ts');
     const { drawWorldMinimap } = await import('/src/ui/drawWorldMinimap.ts');
     const { buildWorldInfoCardSummary } = await import('/src/ui/worldInfoCard.ts');
     const { writeBattleReportReplaySession } = await import('/src/net/battleReportIntelReplayJump.ts');

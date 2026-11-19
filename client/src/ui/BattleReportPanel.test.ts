@@ -17,15 +17,6 @@ import {
   REPORT_LIST_DENSITY_TIMESTAMP_CLASS,
   REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS,
 } from "@/net/battleReportListDensityKeyboard";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidual";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEP_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeep";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPER_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeeper";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepest";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeeper";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeepestDeeper";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeepestDeepest";
-import { REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeepestDeepestDeeper";
-import { BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS } from "@/net/battleReportDetailTemplateResidual";
 import { OPEN_INTEL_FOR_REPORT_ACTION } from "@/net/battleReportRoundSummaryIntelLink";
 import {
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
@@ -939,10 +930,7 @@ describe("BattleReportPanel", () => {
     const band = mount.querySelector(`.${BATTLE_REPORT_OUTCOME_BAND_CLASS}`);
     const strip = mount.querySelector(`.${BATTLE_REPORT_ROUND_SUMMARY_STRIP_CLASS}`);
     expect(strip?.textContent).toBe(formatBattleReportRoundSummaryStrip(detail));
-    expect(band?.nextElementSibling?.classList.contains("battle-report-side-template-residual")).toBe(
-      true,
-    );
-    expect(band?.nextElementSibling?.nextElementSibling).toBe(strip);
+    expect(band?.nextElementSibling).toBe(strip);
     expect(mount.querySelector(".battle-report-rounds-table")).toBeTruthy();
     expect(mount.querySelector(".battle-report-round-jump")).toBeTruthy();
   });
@@ -1112,36 +1100,6 @@ describe("BattleReportPanel", () => {
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(8);
     const row8 = mount.querySelector('li[data-report-id="8"]') as HTMLElement;
     expect(row8.classList.contains(REPORT_LIST_KEYBOARD_FOCUS_RING_CLASS)).toBe(true);
-    expect(row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_RING_CLASS)).toBe(
-      true,
-    );
-    expect(row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEP_RING_CLASS)).toBe(
-      true,
-    );
-    expect(
-      row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPER_RING_CLASS),
-    ).toBe(true);
-    expect(
-      row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_RING_CLASS),
-    ).toBe(true);
-    expect(
-      row8.classList.contains(REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPER_RING_CLASS),
-    ).toBe(true);
-    expect(
-      row8.classList.contains(
-        REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
-      ),
-    ).toBe(true);
-    expect(
-      row8.classList.contains(
-        REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS,
-      ),
-    ).toBe(true);
-    expect(
-      row8.classList.contains(
-        REPORT_LIST_KEYBOARD_ADJACENT_NAV_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS,
-      ),
-    ).toBe(true);
 
     const root = mount.querySelector(".battle-report-panel") as HTMLElement;
     root.setAttribute(BATTLE_REPORT_LIST_KEYBOARD_ATTR, "off");
@@ -1438,7 +1396,7 @@ describe("BattleReportPanel", () => {
     expect(gateway.getBattleReport).toHaveBeenLastCalledWith(2);
   });
 
-  it("renders template residual line and coord readonly copy bar (CLIENT-240)", async () => {
+  it("renders side summary, round strip and list intel jump tag", async () => {
     const mount = document.createElement("div");
     const summary = {
       report_id: 40,
@@ -1474,21 +1432,6 @@ describe("BattleReportPanel", () => {
     );
     await flushPromises();
     const detail = mount.querySelector('[data-role="report-detail"]');
-    expect(
-      detail?.querySelector(".battle-report-side-template-residual-line")?.textContent,
-    ).toContain("吕布");
-    expect(
-      detail?.querySelector(".battle-report-side-template-residual-subline")?.textContent,
-    ).toContain("兵力损耗");
-    const copyBtn = detail?.querySelector(
-      '[data-action="copy-report-coords-readonly"]',
-    ) as HTMLButtonElement;
-    expect(copyBtn).toBeTruthy();
-    expect(copyBtn?.textContent).toBe("12,34");
-    copyBtn?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(copyBtn?.classList.contains(BATTLE_REPORT_COORD_COPY_BAR_RESIDUAL_SWEEP_CLASS)).toBe(
-      true,
-    );
     expect(detail?.querySelector(".battle-report-detail-side-line")).toBeTruthy();
     expect(detail?.querySelector(".battle-report-round-summary-strip")).toBeTruthy();
     expect(mount.querySelector(".report-list-intel-jump-tag")).toBeTruthy();

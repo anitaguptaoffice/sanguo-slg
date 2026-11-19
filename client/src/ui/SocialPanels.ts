@@ -71,6 +71,7 @@ import {
 } from "@/net/socialPanelRefreshSession";
 import {
   chatChannelStorageKey,
+  chatUnreadSeparatorDomClassName,
   estimateChatUnreadCount,
   findChatUnreadSeparatorIndex,
   formatChatUnreadSweepLine,
@@ -80,35 +81,6 @@ import {
   shouldShowChatUnreadSeparator,
   maxChatMessageSentAtMs,
 } from "@/net/chatUnread";
-import {
-  GUILD_ROLE_GROUP_HEADER_LINE_ROLE,
-  GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS,
-} from "@/net/guildDutyHeaderResidual";
-import { GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS } from "@/net/guildDutyHeaderResidualDeep";
-import { GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS } from "@/net/guildDutyHeaderResidualDeeper";
-import {
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeepest";
-import {
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeepestDeeper";
-import {
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeepestDeepestDeeper";
-import {
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeepestDeepestDeepest";
-import {
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeepestDeepestDeepestDeeper";
-import {
-  formatGuildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeperLine,
-  GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS,
-} from "@/net/guildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeper";
-import {
-  chatUnreadSeparatorResidualDeepestDeepestDeepestDeepestDeeperDomClassName,
-  scheduleGuildChatUnreadFirstMsgDeepestDeepestDeepestDeepestDeeperSweepRing,
-} from "@/net/guildChatUnreadDividerResidualDeepestDeepestDeepestDeepestDeeper";
 import { formatHudBadgeCount } from "@/net/hudTodoBadge";
 import { hudTodoSocialBadgesFromChatSummary } from "@/net/hudTodoBadges";
 import { resetCenterPanelViewportScroll } from "@/ui/contentPanelScroll";
@@ -154,90 +126,7 @@ import {
   renderRankEmptyTableRow,
   writeRankManualLastRefreshMs,
 } from "@/net/rankRefreshCooldown";
-import {
-  formatRankPinRefreshResidualLine,
-  syncRankPinRefreshResidualLine,
-} from "@/net/rankPinRefreshResidual";
-import { incrementRankManualRefreshCount, readRankManualRefreshCount } from "@/net/rankManualRefreshCountSession";
-import { pulseRankPinKeepResidualRingsAfterManualRefresh } from "@/net/rankPinKeepResidualDeepRing";
-import { highlightRankPinKeepResidualRing } from "@/net/rankPinKeepResidualRing";
-import {
-  formatRankRefreshCooldownResidualStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE,
-  syncRankRefreshCooldownResidualStamp,
-} from "@/net/rankRefreshCooldownResidual";
-import {
-  formatRankRefreshCooldownResidualDeepStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeepStamp,
-} from "@/net/rankRefreshCooldownResidualDeep";
-import {
-  formatRankRefreshCooldownResidualDeeperStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPER_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeeperStamp,
-} from "@/net/rankRefreshCooldownResidualDeeper";
-import {
-  formatRankRefreshCooldownResidualDeepestStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeepestStamp,
-} from "@/net/rankRefreshCooldownResidualDeepest";
-import {
-  formatRankRefreshCooldownResidualDeepestDeeperStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeepestDeeperStamp,
-} from "@/net/rankRefreshCooldownResidualDeepestDeeper";
-import {
-  formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeepestDeepestDeeperStamp,
-} from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
-import {
-  formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeepestDeepestDeepestStamp,
-} from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepest";
-import {
-  formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp,
-  RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE,
-  syncRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp,
-} from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepestDeeper";
-import {
-  appendRankListDensityScanResidualDeepSubline,
-  formatRankListDensityScanResidualDeepLine,
-} from "@/net/rankListDensityScanResidualDeep";
-import {
-  appendRankListDensityScanResidualDeeperSubline,
-  formatRankListDensityScanResidualDeeperLine,
-} from "@/net/rankListDensityScanResidualDeeper";
-import {
-  appendRankListDensityScanResidualDeepestSubline,
-  formatRankListDensityScanResidualDeepestLine,
-} from "@/net/rankListDensityScanResidualDeepest";
-import {
-  appendRankListDensityScanResidualDeepestDeeperSubline,
-  formatRankListDensityScanResidualDeepestDeeperLine,
-} from "@/net/rankListDensityScanResidualDeepestDeeper";
-import {
-  appendRankListDensityScanResidualDeepestDeepestDeeperSubline,
-  formatRankListDensityScanResidualDeepestDeepestDeeperLine,
-} from "@/net/rankListDensityScanResidualDeepestDeepestDeeper";
-import {
-  appendRankListDensityScanResidualDeepestDeepestDeepestSubline,
-  formatRankListDensityScanResidualDeepestDeepestDeepestLine,
-} from "@/net/rankListDensityScanResidualDeepestDeepestDeepest";
-import {
-  appendRankListDensityScanResidualDeepestDeepestDeepestDeeperSubline,
-  formatRankListDensityScanResidualDeepestDeepestDeepestDeeperLine,
-} from "@/net/rankListDensityScanResidualDeepestDeepestDeepestDeeper";
-import {
-  appendRankListDensityScanResidualDeepestDeepestDeepestDeepestDeeperSubline,
-  formatRankListDensityScanResidualDeepestDeepestDeepestDeepestDeeperLine,
-} from "@/net/rankListDensityScanResidualDeepestDeepestDeepestDeepestDeeper";
-import {
-  appendRankListDensityScanResidualSubline,
-  formatRankListDensityScanResidualLine,
-  lookupPreviousLeaderboardRank,
-} from "@/net/rankListDensityScanResidual";
+import { incrementRankManualRefreshCount } from "@/net/rankManualRefreshCountSession";
 
 export type SocialRankDeepLinkHandlers = {
   getViewerHeroIds?: () => Promise<number[]>;
@@ -286,8 +175,6 @@ export class SocialPanels {
   private cachedViewerHeroIds: number[] = [];
   private pendingReturnScroll: LeaderboardReturnScrollPayload | null = null;
   private showRankRefreshDensity = false;
-  private rankDensityScanPrevEntries: LeaderboardEntryRow[] = [];
-  private rankDensityScanPrevMyRank: number | undefined;
   private rankCooldownTimer: ReturnType<typeof setTimeout> | null = null;
   private lastRenderedChatMessages: ChatMessageRow[] = [];
   private chatSendPending: object | null = null;
@@ -762,14 +649,6 @@ export class SocialPanels {
       </label>
       <button type="button" data-action="refresh-rank">刷新排行榜</button>
       <span class="rank-refresh-cooldown-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_STAMP_ROLE}" aria-live="polite"></span>
-      <p class="rank-refresh-cooldown-residual-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deep-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEP_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deepest-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deepest-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deepest-deepest-deepest-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_STAMP_ROLE}" aria-live="polite"></p>
-      <p class="rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper-stamp hidden" data-role="${RANK_REFRESH_COOLDOWN_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_STAMP_ROLE}" aria-live="polite"></p>
       <button type="button" class="social-refresh-retry hidden" data-action="retry-refresh-rank" data-role="rank-refresh-retry">重试</button>
       <p class="social-refresh-status" data-role="rank-refresh-status" hidden aria-live="polite">
         <span class="social-refresh-spinner" data-role="rank-refresh-spinner" hidden></span>
@@ -786,7 +665,6 @@ export class SocialPanels {
           <div class="rank-viewer-bar" aria-label="我的名次与刷新时间">
             <div data-role="viewer-rank">我的名次：—</div>
             <div class="rank-last-refresh-line hidden" data-role="rank-last-refresh" aria-label="上次刷新"></div>
-            <div class="rank-pin-refresh-residual-line hidden" data-role="rank-pin-refresh-residual-line" aria-live="polite"></div>
           </div>
           <p class="rank-snapshot-meta hidden" data-role="rank-snapshot"></p>
           <aside
@@ -967,12 +845,8 @@ export class SocialPanels {
           ul.appendChild(this.buildChatUnreadSeparator(unreadCount));
           dividerInserted = true;
         }
-        const isFirstUnreadRow = dividerAt >= 0 && flatIndex === dividerAt;
         const row = this.buildChatMessageRow(m);
         ul.appendChild(row);
-        if (isFirstUnreadRow) {
-          scheduleGuildChatUnreadFirstMsgDeepestDeepestDeepestDeepestDeeperSweepRing(row);
-        }
         flatIndex += 1;
       }
     }
@@ -982,7 +856,7 @@ export class SocialPanels {
 
   private buildChatUnreadSeparator(unreadCount: number): HTMLLIElement {
     const li = document.createElement("li");
-    li.className = chatUnreadSeparatorResidualDeepestDeepestDeepestDeepestDeeperDomClassName();
+    li.className = chatUnreadSeparatorDomClassName();
     li.setAttribute("role", "separator");
     const sweep = formatChatUnreadSweepLine(unreadCount);
     li.setAttribute("aria-label", sweep);
@@ -1049,21 +923,15 @@ export class SocialPanels {
       count.setAttribute("data-role", "guild-role-group-count");
       count.setAttribute("aria-hidden", "true");
       count.textContent = formatGuildRoleGroupCountLabel(group.members.length);
-      const residual = document.createElement("span");
-      residual.className = `${GUILD_ROLE_GROUP_HEADER_RESIDUAL_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEP_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS} ${GUILD_DUTY_HEADER_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_LINE_CLASS}`;
-      residual.setAttribute("data-role", GUILD_ROLE_GROUP_HEADER_LINE_ROLE);
-      residual.setAttribute("aria-hidden", "true");
-      residual.textContent = formatGuildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeperLine({
-        label: group.label,
-        expanded,
-        members: group.members,
-        guildOnlineSummary: {
-          members: this.guildMembersCache,
-          totalCount: this.guildMemberTotalCount || this.guildMembersCache.length,
-          onlineCount: this.guildMemberOnlineCountHint,
-        },
-      });
-      head.append(toggle, count, residual);
+      const headerLine = document.createElement("span");
+      headerLine.className = "guild-role-group-header-line";
+      headerLine.setAttribute("data-role", "guild-role-group-header-line");
+      headerLine.setAttribute("aria-hidden", "true");
+      headerLine.textContent = [
+        formatGuildRoleGroupHeaderLine(group.label, expanded, group.members.length),
+        formatGuildMemberOnlineSummaryLine({ members: group.members }),
+      ].join(" · ");
+      head.append(toggle, count, headerLine);
       ul.appendChild(head);
       if (!expanded) continue;
       for (const m of group.members) {
@@ -1421,76 +1289,6 @@ export class SocialPanels {
     } else {
       this.clearRankCooldownTimer();
     }
-    const lastRefreshMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
-    syncRankRefreshCooldownResidualStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualStamp(lastRefreshMs, lastManualMs, nowMs) || null,
-    );
-    const manualCount = readRankManualRefreshCount(boardType);
-    syncRankRefreshCooldownResidualDeepStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeepStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    syncRankRefreshCooldownResidualDeeperStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeeperStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    syncRankRefreshCooldownResidualDeepestStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeepestStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    syncRankRefreshCooldownResidualDeepestDeeperStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeepestDeeperStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    syncRankRefreshCooldownResidualDeepestDeepestDeeperStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    syncRankRefreshCooldownResidualDeepestDeepestDeepestStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    syncRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp(
-      this.rankPanel,
-      formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp(
-        lastRefreshMs,
-        lastManualMs,
-        manualCount,
-        nowMs,
-      ) || null,
-    );
-    this.syncRankPinRefreshResidualBar(boardType, this.rankViewerMyRank, nowMs);
   }
 
   private syncRankLastRefreshBar(boardType: number): void {
@@ -1500,19 +1298,6 @@ export class SocialPanels {
     const line = formatRankLastRefreshLine(atMs);
     el.textContent = line;
     el.classList.toggle("hidden", !line);
-  }
-
-  private syncRankPinRefreshResidualBar(
-    boardType: number,
-    myRank?: number,
-    nowMs = Date.now(),
-  ): void {
-    const lastRefreshMs = this.refreshClock.rank.lastUpdatedMs || readRankLastRefreshMs(boardType);
-    const lastManualMs = readRankManualLastRefreshMs(boardType);
-    syncRankPinRefreshResidualLine(
-      this.rankPanel,
-      formatRankPinRefreshResidualLine(myRank, lastRefreshMs, lastManualMs, nowMs),
-    );
   }
 
   private renderRankListGatewayError(): void {
@@ -1543,7 +1328,6 @@ export class SocialPanels {
     }
     this.syncRankLastRefreshBar(boardType);
     this.rankViewerMyRank = res.my_rank ?? 0;
-    this.syncRankPinRefreshResidualBar(boardType, this.rankViewerMyRank);
     const snapEl = this.rankPanel.querySelector('[data-role="rank-snapshot"]');
     if (snapEl) {
       const meta = formatLeaderboardSnapshotMeta(res);
@@ -1575,135 +1359,8 @@ export class SocialPanels {
             primary.className = "leaderboard-top-density-line";
             primary.textContent = formatLeaderboardTopDensityLine(entry);
             densityTd.appendChild(primary);
-            const prevRank = lookupPreviousLeaderboardRank(this.rankDensityScanPrevEntries, entry);
-            appendRankListDensityScanResidualSubline(
-              densityTd,
-              formatRankListDensityScanResidualLine(boardType, entry, prevRank),
-            );
-            appendRankListDensityScanResidualDeepSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepLine(boardType, entry, prevRank),
-            );
-            appendRankListDensityScanResidualDeeperSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeeperLine(boardType, entry, prevRank),
-            );
-            appendRankListDensityScanResidualDeepestSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepestLine(boardType, entry, prevRank),
-            );
-            appendRankListDensityScanResidualDeepestDeeperSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepestDeeperLine(boardType, entry, prevRank),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeeperSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepestDeepestDeeperLine(boardType, entry, prevRank),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeepestSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepestDeepestDeepestLine(
-                boardType,
-                entry,
-                prevRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeepestDeeperSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepestDeepestDeepestDeeperLine(
-                boardType,
-                entry,
-                prevRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeepestDeepestDeeperSubline(
-              densityTd,
-              formatRankListDensityScanResidualDeepestDeepestDeepestDeepestDeeperLine(
-                boardType,
-                entry,
-                prevRank,
-              ),
-            );
             densityTr.appendChild(densityTd);
             tbody.appendChild(densityTr);
-          }
-          const viewerResidual = formatRankListDensityScanResidualLine(
-            boardType,
-            { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-            this.rankDensityScanPrevMyRank,
-          );
-          if (viewerResidual && (res.my_rank ?? 0) > 0) {
-            const viewerTr = document.createElement("tr");
-            viewerTr.className = "rank-my-density-scan-residual-row";
-            const viewerTd = document.createElement("td");
-            viewerTd.colSpan = 4;
-            appendRankListDensityScanResidualSubline(viewerTd, viewerResidual);
-            appendRankListDensityScanResidualDeepSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeeperSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeeperLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepestLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeeperSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepestDeeperLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeeperSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepestDeepestDeeperLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeepestSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepestDeepestDeepestLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeepestDeeperSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepestDeepestDeepestDeeperLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            appendRankListDensityScanResidualDeepestDeepestDeepestDeepestDeeperSubline(
-              viewerTd,
-              formatRankListDensityScanResidualDeepestDeepestDeepestDeepestDeeperLine(
-                boardType,
-                { rank: res.my_rank, score: res.my_score ?? fallbackScore },
-                this.rankDensityScanPrevMyRank,
-              ),
-            );
-            viewerTr.appendChild(viewerTd);
-            tbody.appendChild(viewerTr);
           }
         }
       }
@@ -1927,8 +1584,6 @@ export class SocialPanels {
       try {
         this.rankListError = null;
         const prevSnapshot = this.rankSnapshotByType.get(boardType);
-        this.rankDensityScanPrevEntries = prevSnapshot?.entries ?? [];
-        this.rankDensityScanPrevMyRank = prevSnapshot?.my_rank;
         let res = (await this.gateway.getLeaderboard(sid, boardType, targetPage, 20)) as LeaderboardPagePayload;
         if (!current()) return;
         const lastPage = Math.max(1, Math.ceil((res.total_count ?? res.entries?.length ?? 0) / 20));
@@ -1974,12 +1629,6 @@ export class SocialPanels {
           stale: false,
         });
         this.syncRankRefreshCooldownUi(boardType, refreshedAt);
-        if (opts?.manual) {
-          pulseRankPinKeepResidualRingsAfterManualRefresh(
-            this.rankPanel,
-            highlightRankPinKeepResidualRing,
-          );
-        }
         this.onStatus("排行榜已刷新");
       } catch (e) {
         if (!current()) return;

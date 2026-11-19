@@ -13,9 +13,14 @@ import { MarchArrivalPoll } from "./marchArrivalPoll";
 import { detectNewMarchArrivalReminders } from "./marchArrival";
 import { heroIdsOnActiveMarch } from "./cityChiefOffice";
 import { applyMilitaryListClientFilters, DEFAULT_MILITARY_LIST_FILTER } from "./militaryListFilter";
-import { countIntelInProgressMarches, findFirstIntelInProgressMarchId } from "./hudMilitaryTodoSweep";
 import { buildMarchIntelRemarchPrefill } from "./marchIntelRemarch";
-import { collectMinimapDestMarkers, marchHasRouteOnMinimap, minimapDestShowsEtaBadge } from "@/ui/worldMinimap";
+import {
+  collectMinimapDestMarkers,
+  countIntelInProgressMarches,
+  findFirstIntelInProgressMarchId,
+  marchHasRouteOnMinimap,
+  minimapDestShowsEtaBadge,
+} from "@/ui/worldMinimap";
 import { countMarchesAtTile, findMostRecentInProgressMarchAtTile } from "@/ui/minimapMarchStack";
 import { buildWorldInfoCardSummary } from "@/ui/worldInfoCard";
 import { filterMarchesByDestination } from "@/ui/marchWorldListLink";

@@ -18,15 +18,6 @@ import {
   detectMarchPhaseChange,
   scheduleIntelPhaseChangeFlash,
 } from "@/net/marchIntelPhaseChangeFlash";
-import { scheduleIntelPhaseChangeResidualDeepPulse } from "@/net/marchIntelPhaseChangeResidualDeepPulse";
-import { scheduleIntelPhaseChangeResidualDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
-import { scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeeperPulse";
-import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse";
-import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestDeepestDeeperPulse";
-import { scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeepestDeepestPulse";
-import { scheduleIntelPhaseChangeResidualDeepestDeeperPulse } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
-import { scheduleIntelPhaseChangeResidualDeepestPulse } from "@/net/marchIntelPhaseChangeResidualDeepestPulse";
-import { scheduleIntelPhaseChangeResidualPulse } from "@/net/marchIntelPhaseChangeResidualPulse";
 import {
   scheduleMarchPhaseChangedPulse,
 } from "@/net/marchPhaseListRefresh";
@@ -106,19 +97,10 @@ import {
   syncMarchIntelPhaseEtaMutualHighlight,
 } from "@/net/marchIntelPhaseEtaStrip";
 import {
-  formatMarchIntelEtaResidualCoordLine,
-  MARCH_INTEL_ETA_RESIDUAL_COORD_CLASS,
-  MARCH_INTEL_ETA_RESIDUAL_COORD_ROLE,
-} from "@/ui/worldTileIntelEtaResidual";
-import {
   applyMarchSubmitIntelHandoff,
   MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE,
   MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS,
 } from "@/net/marchSubmitIntelHandoff";
-import {
-  applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeepestDeepestDeeper,
-  MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE,
-} from "@/net/marchSubmitIntelRefreshStamp";
 export type MarchListPanelOptions = {
   /** ART-UI-FILTER-008：筛选 chip / 列表行九宫 / badge.dot（CLIENT-124）。 */
   assets?: AssetLoader;
@@ -488,12 +470,6 @@ export class MarchListPanel {
           toY: fallbackToY,
           nowMs,
         });
-        applyMarchSubmitIntelRefreshStampResidualDeepestDeepestDeepestDeepestDeeper(
-          this.panel,
-          marchId,
-          nowMs,
-          nowMs,
-        );
       }
     });
   }
@@ -514,7 +490,6 @@ export class MarchListPanel {
     el.innerHTML = `
       <h3>行军</h3>
       <p class="${MARCH_SUBMIT_INTEL_HANDOFF_STRIP_CLASS} hidden" data-role="${MARCH_SUBMIT_INTEL_HANDOFF_LINE_ROLE}" aria-live="polite"></p>
-      <p class="hidden" data-role="${MARCH_SUBMIT_INTEL_REFRESH_STAMP_ROLE}" aria-live="polite"></p>
       <p data-role="march-hint">military.v1.ListMarches；打开面板时每 ${this.pollIntervalMs / 1000}s 自动刷新进行中行军，剩余时间每秒更新。</p>
       <fieldset class="march-dest-filter" data-role="march-dest-filter">
         <legend>目的格点筛选</legend>
@@ -552,7 +527,6 @@ export class MarchListPanel {
         <p class="march-info-card-state hidden" data-role="march-info-card-state"></p>
         <div class="march-info-card-body hidden" data-role="march-info-card-body">
           <p class="${MARCH_INTEL_PHASE_ETA_STRIP_CLASS}" data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"></p>
-          <p class="${MARCH_INTEL_ETA_RESIDUAL_COORD_CLASS}" data-role="${MARCH_INTEL_ETA_RESIDUAL_COORD_ROLE}"></p>
           <p class="march-info-card-primary" data-role="march-info-card-primary"></p>
           <p class="march-info-card-secondary" data-role="march-info-card-secondary"></p>
           <div class="march-info-card-actions">
@@ -790,17 +764,13 @@ export class MarchListPanel {
     const phaseEtaStripEl = this.panel?.querySelector<HTMLElement>(
       `[data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"]`,
     );
-    const etaResidualCoordEl = this.panel?.querySelector<HTMLElement>(
-      `[data-role="${MARCH_INTEL_ETA_RESIDUAL_COORD_ROLE}"]`,
-    );
     if (
       !card ||
       !stateEl ||
       !bodyEl ||
       !primaryEl ||
       !secondaryEl ||
-      !phaseEtaStripEl ||
-      !etaResidualCoordEl
+      !phaseEtaStripEl
     )
       return;
 
@@ -840,8 +810,6 @@ export class MarchListPanel {
       card.classList.add("hidden");
       card.classList.remove(MARCH_ROW_SELECTED_CLASS);
       syncMarchIntelPhaseEtaMutualHighlight(this.panel, null);
-      etaResidualCoordEl.textContent = "";
-      etaResidualCoordEl.classList.add("hidden");
       return;
     }
 
@@ -853,14 +821,6 @@ export class MarchListPanel {
     const now = this.nowMs();
     phaseEtaStripEl.classList.toggle("march-phase-returned", march.phase === MARCH_PHASE_RETURNED);
     phaseEtaStripEl.textContent = formatMarchIntelPhaseEtaStrip(march, now);
-    const coordLine = formatMarchIntelEtaResidualCoordLine(march);
-    if (coordLine) {
-      etaResidualCoordEl.textContent = coordLine;
-      etaResidualCoordEl.classList.remove("hidden");
-    } else {
-      etaResidualCoordEl.textContent = "";
-      etaResidualCoordEl.classList.add("hidden");
-    }
     primaryEl.textContent = formatMarchInfoCardPrimary(march);
     secondaryEl.textContent = formatMarchInfoCardSecondary(march, now);
     syncMarchIntelPhaseEtaMutualHighlight(this.panel, march.march_id ?? null);
@@ -894,30 +854,12 @@ export class MarchListPanel {
       const li = this.panel.querySelector<HTMLElement>(`.march-list li[data-march-id="${id}"]`);
       scheduleMarchPhaseChangedPulse(li);
       scheduleIntelPhaseChangeFlash(li);
-      scheduleIntelPhaseChangeResidualPulse(li);
-      scheduleIntelPhaseChangeResidualDeepPulse(li);
-      scheduleIntelPhaseChangeResidualDeeperPulse(li);
-      scheduleIntelPhaseChangeResidualDeepestPulse(li);
-      scheduleIntelPhaseChangeResidualDeepestDeeperPulse(li);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse(li);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse(li);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse(li);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeepestDeeperPulse(li);
     }
     if (this.selectedMarchId != null && changedIds.has(this.selectedMarchId)) {
       const strip = this.panel.querySelector<HTMLElement>(
         `[data-role="${MARCH_INTEL_PHASE_ETA_STRIP_ROLE}"].${MARCH_INTEL_PHASE_ETA_STRIP_CLASS}`,
       );
       scheduleIntelPhaseChangeFlash(strip);
-      scheduleIntelPhaseChangeResidualPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepPulse(strip);
-      scheduleIntelPhaseChangeResidualDeeperPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepestPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepestDeeperPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeeperPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeeperPulse(strip);
-      scheduleIntelPhaseChangeResidualDeepestDeepestDeepestDeepestDeeperPulse(strip);
     }
     this.pendingPhaseChangePulseIds = [];
   }

@@ -6,17 +6,6 @@ import {
   INTEL_PHASE_CHANGE_FLASH_CLASS,
   INTEL_PHASE_CHANGE_FLASH_MS,
 } from "@/net/marchIntelPhaseChangeFlash";
-import {
-  INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS,
-  INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_MS,
-} from "@/net/marchIntelPhaseChangeResidualDeepPulse";
-import { INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeeperPulse";
-import { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestDeeperPulse";
-import { INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS } from "@/net/marchIntelPhaseChangeResidualDeepestPulse";
-import {
-  INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS,
-  INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS,
-} from "@/net/marchIntelPhaseChangeResidualPulse";
 import { MarchListPanel } from "@/ui/MarchListPanel";
 
 describe("MarchListPanel", () => {
@@ -224,31 +213,6 @@ describe("MarchListPanel", () => {
     expect(onRemarchFromRow).toHaveBeenCalled();
   });
 
-  it("shows eta residual coord subline on march info card (CLIENT-237)", async () => {
-    const gateway = {
-      listMarches: vi.fn().mockResolvedValue({
-        marches: [
-          {
-            march_id: 2,
-            to_x: 9,
-            to_y: 10,
-            phase: 2,
-            arrive_at_ms: Date.now() + 30_000,
-          },
-        ],
-        total: 1,
-      }),
-    };
-    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
-    panel.attach();
-    panel.toggle();
-    await vi.waitFor(() => expect(mount.querySelectorAll(".march-list li[data-march-id]").length).toBe(1));
-    mount.querySelector('.march-list li[data-march-id="2"]')!.click();
-    const coord = mount.querySelector('[data-role="march-info-card-eta-residual-coord"]');
-    expect(coord?.textContent).toBe("目的格 (9,10)");
-    expect(coord?.classList.contains("march-intel-eta-residual-coord")).toBe(true);
-  });
-
   it("shows phase-eta strip and intel-row-phase-subline mutual highlight (CLIENT-205)", async () => {
     const gateway = {
       listMarches: vi.fn().mockResolvedValue({
@@ -453,117 +417,6 @@ describe("MarchListPanel", () => {
     ).toBeTruthy();
   });
 
-  it("notifyMarchStarted applies residual deepest-deepest-deepest-deeper intel refresh stamp and list row pulse (CLIENT-365)", async () => {
-    vi.useFakeTimers();
-    const arriveAt = Date.now() + 30 * 60_000;
-    const gateway = {
-      listMarches: vi.fn().mockResolvedValue({
-        marches: [{ march_id: 88, phase: 2, to_x: 3, to_y: 4, arrive_at_ms: arriveAt }],
-        total: 1,
-      }),
-    };
-    const panel = new MarchListPanel(mount, gateway as never, () => 1, () => {});
-    panel.attach();
-    panel.notifyMarchStarted(88, { toX: 3, toY: 4 });
-    await vi.waitFor(() => {
-      const stamp = mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]');
-      expect(stamp?.textContent).toMatch(/新行军 #88/);
-      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-deep")).toBe(true);
-      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deep")).toBe(true);
-      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deeper")).toBe(true);
-      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deepest")).toBe(true);
-      expect(stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deepest-deeper")).toBe(
-        true,
-      );
-      expect(
-        stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deepest-deepest-deeper"),
-      ).toBe(true);
-      expect(
-        stamp?.classList.contains("march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest"),
-      ).toBe(true);
-      expect(
-        stamp?.classList.contains(
-          "march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deeper",
-        ),
-      ).toBe(true);
-      expect(
-        stamp?.classList.contains(
-          "march-submit-intel-refresh-stamp-residual-deepest-deepest-deepest-deepest-deeper",
-        ),
-      ).toBe(true);
-    });
-    const row = mount.querySelector('.march-list li[data-march-id="88"]');
-    expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(true);
-    const subline = row?.querySelector(".intel-row-phase-subline");
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-pulse")).toBe(true);
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deep-pulse")).toBe(
-      true,
-    );
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deeper-pulse")).toBe(
-      true,
-    );
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deepest-pulse")).toBe(
-      true,
-    );
-    expect(
-      subline?.classList.contains("intel-list-refresh-march-subline-residual-deepest-deeper-pulse"),
-    ).toBe(true);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deeper-pulse",
-      ),
-    ).toBe(true);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-pulse",
-      ),
-    ).toBe(true);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-deeper-pulse",
-      ),
-    ).toBe(true);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-deepest-deeper-pulse",
-      ),
-    ).toBe(true);
-    vi.advanceTimersByTime(3000);
-    expect(row?.classList.contains("intel-list-refresh-march-pulse")).toBe(false);
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-pulse")).toBe(false);
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deep-pulse")).toBe(
-      false,
-    );
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deeper-pulse")).toBe(
-      false,
-    );
-    expect(subline?.classList.contains("intel-list-refresh-march-subline-residual-deepest-pulse")).toBe(
-      false,
-    );
-    expect(
-      subline?.classList.contains("intel-list-refresh-march-subline-residual-deepest-deeper-pulse"),
-    ).toBe(false);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deeper-pulse",
-      ),
-    ).toBe(false);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-pulse",
-      ),
-    ).toBe(false);
-    expect(
-      subline?.classList.contains(
-        "intel-list-refresh-march-subline-residual-deepest-deepest-deepest-deeper-pulse",
-      ),
-    ).toBe(false);
-    expect(mount.querySelector('[data-role="march-submit-intel-refresh-stamp"]')?.classList.contains("hidden")).toBe(
-      true,
-    );
-    vi.useRealTimers();
-  });
-
   it("notifyMarchStarted applies intel handoff strip and intel-new-march-highlight (CLIENT-222)", async () => {
     vi.useFakeTimers();
     const arriveAt = Date.now() + 30 * 60_000;
@@ -693,38 +546,8 @@ describe("MarchListPanel", () => {
     const strip = mount.querySelector(".march-intel-phase-eta-strip");
     expect(row?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(true);
     expect(strip?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(true);
     expect(strip?.textContent).toContain("已到达");
-    vi.advanceTimersByTime(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(false);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_PULSE_CLASS)).toBe(false);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(true);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(true);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(true);
-    vi.advanceTimersByTime(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_MS - INTEL_PHASE_CHANGE_RESIDUAL_PULSE_MS);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(false);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_CLASS)).toBe(false);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(false);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPER_PULSE_CLASS)).toBe(false);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(false);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_PULSE_CLASS)).toBe(false);
-    expect(row?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(false);
-    expect(strip?.classList.contains(INTEL_PHASE_CHANGE_RESIDUAL_DEEPEST_DEEPER_PULSE_CLASS)).toBe(false);
-    vi.advanceTimersByTime(INTEL_PHASE_CHANGE_FLASH_MS - INTEL_PHASE_CHANGE_RESIDUAL_DEEP_PULSE_MS);
+    vi.advanceTimersByTime(INTEL_PHASE_CHANGE_FLASH_MS);
     expect(row?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(false);
     expect(strip?.classList.contains(INTEL_PHASE_CHANGE_FLASH_CLASS)).toBe(false);
     vi.useRealTimers();

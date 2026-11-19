@@ -195,7 +195,7 @@ describe("ContentPanels bag cfg summary and source tag (CLIENT-175)", () => {
     sessionStorage.removeItem("bag-open-source-v1");
     const mount = document.createElement("div");
     const session = baseSession();
-    session.bag = [{ item_cfg_id: 2017, quantity: 2 }];
+    session.bag = [{ item_cfg_id: 2001, quantity: 5 }];
     const gateway = {
       getBoundServerId: () => 1,
       listPlayerBag: async () => ({
@@ -352,13 +352,13 @@ describe("ContentPanels bag shop return highlight (CLIENT-210)", () => {
   });
 });
 
-describe("ContentPanels bag shop inline residual and panel return highlight (CLIENT-256)", () => {
-  it("rings bag inline state at stack cap and highlights category tab after rank return", async () => {
+describe("ContentPanels panel return highlight and shop afford inline (CLIENT-256)", () => {
+  it("highlights the retained bag category tab after rank return", async () => {
     sessionStorage.removeItem("bag-category-tab-v1");
     sessionStorage.removeItem("panel-return-source-v1");
     const mount = document.createElement("div");
     const session = baseSession();
-    session.bag = [{ item_cfg_id: 2001, quantity: 99 }];
+    session.bag = [{ item_cfg_id: 2001, quantity: 5 }];
     const gateway = {
       getBoundServerId: () => 1,
       listPlayerBag: async () => ({ items: session.bag }),
@@ -373,28 +373,7 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
     panels.attach();
     panels.toggleBag();
     await vi.waitFor(() => {
-      const inline = mount.querySelector(".bag-row-inline-state");
-      expect(inline?.classList.contains("bag-shop-inline-state-residual-ring")).toBe(true);
-      expect(inline?.classList.contains("bag-shop-inline-state-residual-deep-ring")).toBe(true);
-      expect(inline?.classList.contains("bag-shop-inline-state-residual-deeper-ring")).toBe(true);
-      expect(inline?.classList.contains("bag-shop-inline-state-residual-deepest-ring")).toBe(true);
-      expect(
-        inline?.classList.contains("bag-shop-inline-state-residual-deepest-deeper-ring"),
-      ).toBe(true);
-      expect(
-        inline?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deeper-ring"),
-      ).toBe(true);
-      expect(
-        inline?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deepest-ring"),
-      ).toBe(true);
-      expect(
-        inline?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deepest-deeper-ring"),
-      ).toBe(true);
-      expect(
-        inline?.classList.contains(
-          "bag-shop-inline-state-residual-deepest-deepest-deepest-deepest-deeper-ring",
-        ),
-      ).toBe(true);
+      expect(mount.querySelector(".bag-row-inline-state")?.textContent).toContain("×5");
     });
     const consumableTab = mount.querySelector(
       '[data-bag-category="consumable"]',
@@ -406,31 +385,11 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
     panels.toggleBag();
     await vi.waitFor(() => {
       const tab = mount.querySelector('[data-bag-category="consumable"]');
-      expect(tab?.classList.contains("panel-return-source-highlight-residual")).toBe(true);
-      expect(tab?.classList.contains("panel-return-source-highlight-residual-deep")).toBe(true);
-      expect(tab?.classList.contains("panel-return-source-highlight-residual-deeper")).toBe(true);
-      expect(tab?.classList.contains("panel-return-source-highlight-residual-deepest")).toBe(true);
-      expect(
-        tab?.classList.contains("panel-return-source-highlight-residual-deepest-deeper"),
-      ).toBe(true);
-      expect(
-        tab?.classList.contains("panel-return-source-highlight-residual-deepest-deepest-deeper"),
-      ).toBe(true);
-      expect(
-        tab?.classList.contains("panel-return-source-highlight-residual-deepest-deepest-deepest"),
-      ).toBe(true);
-      expect(
-        tab?.classList.contains("panel-return-source-highlight-residual-deepest-deepest-deepest-deeper"),
-      ).toBe(true);
-      expect(
-        tab?.classList.contains(
-          "panel-return-source-highlight-residual-deepest-deepest-deepest-deepest-deeper",
-        ),
-      ).toBe(true);
+      expect(tab?.classList.contains("panel-return-source-highlight")).toBe(true);
     });
   });
 
-  it("rings shop afford inline when wallet insufficient", async () => {
+  it("shows shop-offer-afford-inline when wallet is insufficient", async () => {
     sessionStorage.removeItem("panel-return-source-v1");
     const mount = document.createElement("div");
     const listShopShelf = vi.fn().mockResolvedValue({
@@ -459,27 +418,8 @@ describe("ContentPanels bag shop inline residual and panel return highlight (CLI
     panels.toggleShop();
     await vi.waitFor(() => {
       const afford = mount.querySelector(".shop-offer-afford-inline");
-      expect(afford?.classList.contains("bag-shop-inline-state-residual-ring")).toBe(true);
-      expect(afford?.classList.contains("bag-shop-inline-state-residual-deep-ring")).toBe(true);
-      expect(afford?.classList.contains("bag-shop-inline-state-residual-deeper-ring")).toBe(true);
-      expect(afford?.classList.contains("bag-shop-inline-state-residual-deepest-ring")).toBe(true);
-      expect(
-        afford?.classList.contains("bag-shop-inline-state-residual-deepest-deeper-ring"),
-      ).toBe(true);
-      expect(
-        afford?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deeper-ring"),
-      ).toBe(true);
-      expect(
-        afford?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deepest-ring"),
-      ).toBe(true);
-      expect(
-        afford?.classList.contains("bag-shop-inline-state-residual-deepest-deepest-deepest-deeper-ring"),
-      ).toBe(true);
-      expect(
-        afford?.classList.contains(
-          "bag-shop-inline-state-residual-deepest-deepest-deepest-deepest-deeper-ring",
-        ),
-      ).toBe(true);
+      expect(afford?.textContent).toContain("缺少");
+      expect(afford?.textContent).toContain("币 95");
     });
   });
 });

@@ -6,12 +6,13 @@ import {
 } from "@/net/dailyQuestListFilter";
 import { DAILY_QUEST_STATE_CLAIMABLE } from "@/net/hudTodoBadge";
 import type { DailyQuestRow } from "@/net/dailyQuestState";
-import { DAILY_QUEST_PROGRESS_SECONDARY_CLASS } from "@/engine/filterListNarrowManifest";
 import {
   DAILY_QUEST_CHAIN_TYPE_SUBLINE_CLASS,
   formatQuestChainTypeSubline,
 } from "@/net/questChainTypeSubline";
 
+/** 日常行次行链进度样式挂点（列表密度样式复用）。 */
+export const DAILY_QUEST_PROGRESS_SECONDARY_CLASS = "daily-quest-row-progress";
 export const DAILY_QUEST_PROGRESS_BAR_CLASS = "daily-quest-progress";
 export const DAILY_QUEST_PROGRESS_FILL_CLASS = "daily-quest-progress-fill";
 export const DAILY_QUEST_REWARD_LINE_CLASS = "daily-quest-row-reward";

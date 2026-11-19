@@ -1,8 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { getProtoRoot } from "./loadProto";
 import { decodeGatewayResponse } from "./decodeGatewayResponse";
-import { countGuildMembersOnline, formatGuildMemberOnlineSummaryLine, type GuildMemberRow } from "./socialFormat";
-import { formatGuildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeperLine as formatDeepest } from "./guildDutyHeaderResidualDeepestDeepestDeepestDeepestDeeper";
+import {
+  countGuildMembersOnline,
+  formatGuildMemberOnlineSummaryLine,
+  formatGuildRoleGroupHeaderLine,
+  type GuildMemberRow,
+} from "./socialFormat";
 import { SocialPanels } from "@/ui/SocialPanels";
 import type { GatewayPort } from "./GatewayClient";
 import type { MainCitySession } from "./bootstrapSession";
@@ -32,10 +36,7 @@ it("production guild protobuf has no presence fields and must not imply offline"
   expect(response).not.toHaveProperty("online_count");
   expect(formatGuildMemberOnlineSummaryLine({ members: response.members, totalCount: response.total_count }))
     .toBe("在线未知 / 共 2 人");
-  const line = formatDeepest({ label: "成员", expanded: true, members: response.members });
-  expect(line.match(/本组在线 未知\/2/g)).toHaveLength(8);
-  expect(line).not.toMatch(/在线 0/);
-  expect(line).toContain("▼ 成员 · 2 人");
+  expect(formatGuildRoleGroupHeaderLine("成员", true, response.members.length)).toContain("▼ 成员 · 2 人");
 });
 
 it.each([
@@ -50,9 +51,6 @@ it.each([
 ])("presence knowledge: $text with total $total", ({ members, total, online, text }) => {
   expect(countGuildMembersOnline(members)).toBe(online);
   expect(formatGuildMemberOnlineSummaryLine({ members, totalCount: total })).toBe(`在线${text} / 共 ${total} 人`);
-  const groupText = online === undefined ? "未知" : String(online);
-  const line = formatDeepest({ label: "成员", expanded: false, members });
-  expect(line.split(`本组在线 ${groupText}/${members.length}`)).toHaveLength(9);
 });
 
 it("an explicit complete count keeps authoritative zero even with unknown members", () => {
@@ -81,9 +79,10 @@ it("actual mounted join and refresh path renders decoded unknown presence withou
   const headers = mount.querySelectorAll('[data-role="guild-role-group-header-line"]');
   expect(headers).toHaveLength(2);
   for (const header of headers) {
-    expect(header.textContent!.match(/本组在线 未知\/1/g)).toHaveLength(8);
-    expect(header.textContent).toContain("在线未知 / 共 2 人");
-    expect(header.textContent).not.toMatch(/在线 0/);
+    const text = header.textContent ?? "";
+    expect(text).not.toContain("本组在线");
+    expect(text.match(/在线未知 \/ 共 1 人/g)).toHaveLength(1);
+    expect(text).not.toMatch(/在线 0/);
   }
   expect([...mount.querySelectorAll('[data-role="guild-role-group-count"]')].map(el => el.textContent))
     .toEqual(["1", "1"]);

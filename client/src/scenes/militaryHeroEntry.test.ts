@@ -100,13 +100,12 @@ it("mounted first recruitment then world-city click enables a leader without a t
   expect(f.panel.querySelector<HTMLButtonElement>('[data-action="march"]')!.disabled).toBe(false);
   expect(f.gateway.startMarch).not.toHaveBeenCalled(); expect(f.gateway.recruitHero).toHaveBeenCalledTimes(1);
 });
-it.each(["daily", "intel", "banner", "queue", "hud"])("mounted %s entry refreshes without submitting or replacing target fields", async route => {
+it.each(["daily", "intel", "banner", "queue"])("mounted %s entry refreshes without submitting or replacing target fields", async route => {
   const f = await mounted(); await f.gateway.recruitHero();
   if (route === "daily") f.internals.navigateDailyQuest({ kind: "train_troops" });
   if (route === "intel") f.internals.openMilitaryFromIntelRemarch({ march_id: 5, to_x: 65, to_y: 65, troops: [{ unit_cfg_id: 1, count: 10 }] });
   if (route === "banner") f.internals.openMilitaryQueueBannerHighlight(5);
   if (route === "queue") { f.internals.queuePanels.addRecruitEntry({ queue_id: 5, unit_cfg_id: 1, count: 10, finish_at_ms: Date.now() + 60000 }); f.internals.openMilitaryRecruitFromQueueRow({ queue_id: 5 }); }
-  if (route === "hud") { vi.spyOn(f.internals, "hudMilitaryTodoSweepCounts").mockReturnValue({ marchSubmittable: 1, intelInProgress: 0, reportsUnread: 0 }); f.internals.openHudMilitaryTodoDeepLink("march"); }
   await flush(); expect(f.gateway.listPlayerHeroes).toHaveBeenCalledTimes(2); expect(f.select().value).toBe("7"); expect(f.gateway.startMarch).not.toHaveBeenCalled();
 });
 function deferred<T>() { let resolve!: (v: T) => void, reject!: (e: Error) => void; const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; }

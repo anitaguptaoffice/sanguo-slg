@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildRecruitItemGapBagDeepLink,
-  formatRecruitFormInlineHint,
-  parseRecruitItemGapBagDeepLink,
-  RECRUIT_ITEM_GAP_BAG_QUERY_KEY,
-  serializeRecruitItemGapBagDeepLink,
-} from "@/net/recruitFormInlineHint";
-import { parseHeroBagDeepLinkQuery } from "@/net/heroDetailBagDeepLink";
+import { formatRecruitFormInlineHint } from "@/net/recruitFormInlineHint";
 
 describe("formatRecruitFormInlineHint (CLIENT-201)", () => {
   it("warns when no template selected", () => {
@@ -64,24 +57,5 @@ describe("formatRecruitFormInlineHint (CLIENT-201)", () => {
     expect(hint.hasWarn).toBe(true);
     expect(hint.canSubmit).toBe(false);
     expect(hint.itemGapItemCfgId).toBeNull();
-  });
-});
-
-describe("recruit item gap bag deep link (CLIENT-201)", () => {
-  it("round-trips recruitItemGap query with highlightItemId", () => {
-    const serialized = serializeRecruitItemGapBagDeepLink(2017);
-    expect(serialized).toContain(`${RECRUIT_ITEM_GAP_BAG_QUERY_KEY}=1`);
-    expect(serialized).toContain("highlightItemId=2017");
-    const parsed = parseRecruitItemGapBagDeepLink(serialized);
-    expect(parsed?.itemCfgId).toBe(2017);
-    expect(parsed?.link.recruitItemGap).toBe(true);
-    expect(parseHeroBagDeepLinkQuery(serialized)?.highlightItemId).toBe(2017);
-  });
-
-  it("parseRecruitItemGapBagDeepLink rejects hero deep link without recruitItemGap flag", () => {
-    const link = buildRecruitItemGapBagDeepLink(2017);
-    const heroOnly = `highlightItemId=2017&bagCategory=cultivation`;
-    expect(parseRecruitItemGapBagDeepLink(heroOnly)).toBeNull();
-    expect(link.recruitItemGap).toBe(true);
   });
 });

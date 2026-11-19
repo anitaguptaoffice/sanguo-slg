@@ -9,11 +9,6 @@ import {
 } from "@/net/heroMailState";
 import { scrollHeroListRowIntoView } from "@/net/heroListRefreshFeedback";
 import { formatRecruitWalletCompareLine, syncRecruitWalletCompareLine } from "@/net/recruitWalletCompare";
-import {
-  formatRecruitWalletCompareResidualLine,
-  syncRecruitWalletCompareResidualLine,
-} from "@/net/recruitWalletCompareResidual";
-import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 
 /** 招募主按钮默认文案（CLIENT-098）。 */
 export const RECRUIT_SUBMIT_DEFAULT_LABEL = "招募";
@@ -156,26 +151,21 @@ export function refreshRecruitWalletSweepDisplays(
   bag: BagStack[] | undefined,
 ): void {
   if (!template || templateCfgId <= 0) return;
-  const sweep = formatRecruitWalletSweepLine(wallet, template, bag ?? []);
-  const { primary } = recruitAffordabilityForTemplate(template, wallet, bag);
+  const { primary, secondary, result } = recruitAffordabilityForTemplate(template, wallet, bag);
   const preview = formRoot?.querySelector<HTMLElement>('[data-role="recruit-preview"]');
   if (preview && !preview.classList.contains(RECRUIT_SUBMITTING_CLASS)) {
-    preview.textContent = `${primary} — ${sweep.text}`;
+    preview.textContent = `${primary} — ${secondary}`;
   }
   const rowSecondary = formRoot?.querySelector<HTMLElement>(
     `li[data-template-id="${templateCfgId}"] .recruit-afford-secondary`,
   );
   if (rowSecondary) {
-    rowSecondary.textContent = sweep.text;
-    rowSecondary.classList.toggle("recruit-cost-deficit", sweep.hasDeficit);
+    rowSecondary.textContent = secondary;
+    rowSecondary.classList.toggle("recruit-cost-deficit", !result.canAfford);
   }
   syncRecruitWalletCompareLine(
     formRoot,
     formatRecruitWalletCompareLine(wallet, template, bag ?? []),
-  );
-  syncRecruitWalletCompareResidualLine(
-    formRoot,
-    formatRecruitWalletCompareResidualLine(wallet, template, bag ?? []),
   );
 }
 

@@ -2,7 +2,10 @@ import { captureActor } from "@/net/actorContext";
 import { captureCenterPanelIntent, openCenterPanel, toggleCenterPanel } from "@/ui/centerPanelForeground";
 import type { BattleReportUnreadSession } from "@/net/battleReportUnread";
 import type { GatewayPort } from "@/net/GatewayClient";
-import { selectDeepLinkBattleReportId } from "@/net/battleReportDeepLink";
+import {
+  pickLatestBattleReportId,
+  selectDeepLinkBattleReportId,
+} from "@/net/battleReportDeepLink";
 import {
   battleReportRoundJumpNumbers,
   battleReportRoundRowDomId,
@@ -110,7 +113,6 @@ import {
   BATTLE_REPORT_LIST_INTEL_JUMP_ACTION,
   BATTLE_REPORT_LIST_INTEL_JUMP_TAG_CLASS,
 } from "@/net/battleReportListIntelJump";
-import { BATTLE_REPORT_LIST_STREAK_LINE_CLASS } from "@/engine/wave37WorldIntelBattleReportMailBagNarrowManifest";
 import {
   OPEN_INTEL_FOR_REPORT_ACTION,
   REPORT_ROUND_SUMMARY_INTEL_LINK_CLASS,
@@ -119,25 +121,15 @@ import {
   formatBattleReportLocationFields,
   parseBattleReportLocation,
 } from "@/net/battleReportMinimapFocus";
-import { pulseBattleReportListKeyboardAdjacentNavResidualRings } from "@/net/battleReportListKeyboardAdjacentNavResidualDeepestDeepestDeepestDeepestDeeper";
-import {
-  applyBattleReportCoordsReadonlySelect,
-  BATTLE_REPORT_COORD_COPY_BAR_CLASS,
-  BATTLE_REPORT_COORD_COPY_TEXT_ROLE,
-  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS,
-  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS,
-  BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_SUBLINE_CLASS,
-  COPY_REPORT_COORDS_READONLY_ACTION,
-  formatBattleReportCoordsCopyText,
-  formatBattleReportSideTemplateResidualLine,
-  shouldShowBattleReportCoordCopyBar,
-} from "@/net/battleReportDetailTemplateResidual";
 import {
   battleReportReplayGridLinkLabel,
   battleReportWorldTileGrid,
 } from "@/ui/worldTileInfoFromBattleReport";
 
 const PAGE_LIMIT = 20;
+
+/** 列表行次行连胜文案样式挂点。 */
+const BATTLE_REPORT_LIST_STREAK_LINE_CLASS = "battle-report-list-streak-line";
 
 export type BattleReportPanelOptions = {
   unreadSession?: BattleReportUnreadSession;
@@ -199,8 +191,6 @@ export class BattleReportPanel {
   private attached = false;
   /** 上一封/下一封切换后把焦点拉回详情顶栏导航（CLIENT-094）。 */
   private focusDetailNavAfterRender = false;
-  /** CLIENT-254/270：列表重绘后补相邻键盘导航残余环 + 深环。 */
-  private adjacentNavResidualRingReportId: number | null = null;
 
   constructor(
     private readonly mount: HTMLElement,
@@ -328,8 +318,7 @@ export class BattleReportPanel {
     const freshHint = this.reports.find(r => r.report_id === hintReportId);
     const knownHint = freshHint ? (atGrid(freshHint) ? freshHint.report_id : undefined)
       : (cachedActor?.() ? cachedHint : undefined);
-    const reportId = knownHint ??
-      selectDeepLinkBattleReportId(this.visibleReports());
+    const reportId = knownHint ?? pickLatestBattleReportId(this.visibleReports());
     if (reportId > 0) await this.openReport(reportId);
   }
 
@@ -644,19 +633,7 @@ export class BattleReportPanel {
       this.selectedReportId,
     );
     syncBattleReportListKeyboardFocusRing(ul as HTMLElement, this.selectedReportId);
-    this.flushAdjacentNavResidualRing(ul as HTMLElement);
     this.renderDetail();
-  }
-
-  private flushAdjacentNavResidualRing(list: HTMLElement): void {
-    const id = this.adjacentNavResidualRingReportId;
-    if (id == null || id <= 0 || this.detailLoading) return;
-    pulseBattleReportListKeyboardAdjacentNavResidualRings(list, id);
-    this.adjacentNavResidualRingReportId = null;
-  }
-
-  private queueAdjacentNavResidualRing(reportId: number): void {
-    if (reportId > 0) this.adjacentNavResidualRingReportId = reportId;
   }
 
   private renderDetail(): void {
@@ -698,27 +675,6 @@ export class BattleReportPanel {
       outcomeBand.setAttribute("aria-label", "战报胜负结果");
       outcomeBand.textContent = formatBattleReportOutcomeHeadline(summary);
       detailEl.appendChild(outcomeBand);
-    }
-
-    if (summary) {
-      const residual = formatBattleReportSideTemplateResidualLine({
-        summary,
-        detail: this.detailView,
-      });
-      const residualBar = document.createElement("div");
-      residualBar.className = BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_CLASS;
-      residualBar.setAttribute("aria-label", "攻守模板摘要");
-      const residualLine = document.createElement("p");
-      residualLine.className = BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_LINE_CLASS;
-      residualLine.textContent = residual.templateLine;
-      residualBar.appendChild(residualLine);
-      if (residual.casualtySubline) {
-        const residualSub = document.createElement("p");
-        residualSub.className = BATTLE_REPORT_SIDE_TEMPLATE_RESIDUAL_SUBLINE_CLASS;
-        residualSub.textContent = residual.casualtySubline;
-        residualBar.appendChild(residualSub);
-      }
-      detailEl.appendChild(residualBar);
     }
 
     const roundSummaryText = formatBattleReportRoundSummaryStrip(this.detailView);
@@ -815,21 +771,6 @@ export class BattleReportPanel {
         ? formatBattleReportLocationFields(location)
         : "location_x/location_y 未知";
       locationArea.appendChild(xy);
-      if (location && shouldShowBattleReportCoordCopyBar(summary)) {
-        const copyBar = document.createElement("button");
-        copyBar.type = "button";
-        copyBar.className = BATTLE_REPORT_COORD_COPY_BAR_CLASS;
-        copyBar.setAttribute("data-action", COPY_REPORT_COORDS_READONLY_ACTION);
-        copyBar.setAttribute(
-          "aria-label",
-          `只读复制坐标 ${formatBattleReportCoordsCopyText(location)}`,
-        );
-        const copyText = document.createElement("span");
-        copyText.setAttribute("data-role", BATTLE_REPORT_COORD_COPY_TEXT_ROLE);
-        copyText.textContent = formatBattleReportCoordsCopyText(location);
-        copyBar.appendChild(copyText);
-        locationArea.appendChild(copyBar);
-      }
       if (location) {
         const mapBtn = document.createElement("button");
         mapBtn.type = "button";
@@ -1315,11 +1256,6 @@ export class BattleReportPanel {
     } else if (action === "expand-rounds") {
       this.roundsTableExpanded = true;
       this.renderDetail();
-    } else if (action === COPY_REPORT_COORDS_READONLY_ACTION) {
-      const textEl = btn.querySelector<HTMLElement>(
-        `[data-role="${BATTLE_REPORT_COORD_COPY_TEXT_ROLE}"]`,
-      );
-      if (textEl) applyBattleReportCoordsReadonlySelect(textEl);
     } else if (action === "view-on-map" && this.detailSummary) {
       this.panelOpts?.onViewOnMap?.(this.detailSummary);
     } else if (action === BATTLE_REPORT_COORD_REPLAY_ACTION && this.detailSummary) {
@@ -1426,7 +1362,6 @@ export class BattleReportPanel {
         orderedIds,
         selectedReportId: this.selectedReportId,
         onSelectReportId: (id) => {
-          this.queueAdjacentNavResidualRing(id);
           void this.openReport(id, { preserveRoundNav: true });
         },
       })
@@ -1440,7 +1375,6 @@ export class BattleReportPanel {
         onActivate: (row) => {
           const id = Number(row.getAttribute("data-report-id"));
           if (id > 0) {
-            this.queueAdjacentNavResidualRing(id);
             void this.openReport(id);
           }
         },

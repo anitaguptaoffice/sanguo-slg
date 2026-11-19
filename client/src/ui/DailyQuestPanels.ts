@@ -69,21 +69,6 @@ import {
   formatDailyQuestRowPrimary,
 } from "@/net/dailyQuestProgressFormat";
 import {
-  appendQuestChainQueueHudResidualDeepSubline,
-  appendQuestChainQueueHudResidualDeeperSubline,
-  appendQuestChainQueueHudResidualDeepestDeepestDeepestDeepestSubline,
-  appendQuestChainQueueHudResidualDeepestDeepestDeepestDeeperSubline,
-  appendQuestChainQueueHudResidualDeepestDeepestDeepestSubline,
-  appendQuestChainQueueHudResidualDeepestDeepestDeeperSubline,
-  appendQuestChainQueueHudResidualDeepestDeeperSubline,
-  appendQuestChainQueueHudResidualDeepestSubline,
-  appendQuestChainQueueHudResidualSubline,
-} from "@/net/questChainQueueHudResidual";
-import {
-  formatDailyClaimableSweepLine,
-  scheduleDailyClaimProgressSweepPulse,
-} from "@/net/dailyClaimableSweep";
-import {
   dailyQuestRowsForChain,
   filterDailyQuestRowsToCatalogChains,
   pickDailyChainTabs,
@@ -275,7 +260,6 @@ export class DailyQuestPanels {
     el.dataset.centerPanel = "daily";
     el.innerHTML = `
       <h3>日常</h3>
-      <p class="daily-claimable-sweep hidden" data-role="daily-claimable-sweep" aria-live="polite" hidden></p>
       <p class="daily-battle-report-banner hidden" data-role="daily-report-banner" data-action="daily-open-reports" role="button" tabindex="0" hidden></p>
       <p data-role="daily-hint">日常多链；接取后由服务端自动累积进度，无需手填上报。</p>
       <div class="daily-chain-tabs" data-role="daily-chain-tabs" role="tablist" aria-label="日常链类型"></div>
@@ -428,26 +412,6 @@ export class DailyQuestPanels {
     this.onStatus(`已定位可领取日常 #${id}`);
   }
 
-  private renderDailyClaimableSweep(): void {
-    const el = this.panel.querySelector('[data-role="daily-claimable-sweep"]') as HTMLElement | null;
-    if (!el) return;
-    const line = formatDailyClaimableSweepLine(this.hudDailyChainRows());
-    if (!line) {
-      el.hidden = true;
-      el.classList.add("hidden");
-      el.textContent = "";
-      return;
-    }
-    el.hidden = false;
-    el.classList.remove("hidden");
-    el.textContent = line;
-  }
-
-  private pulseDailyClaimableSweep(): void {
-    const el = this.panel.querySelector('[data-role="daily-claimable-sweep"]') as HTMLElement | null;
-    scheduleDailyClaimProgressSweepPulse(el);
-  }
-
   private renderStateSummary(): void {
     const summaryEl = this.panel.querySelector('[data-role="daily-state-summary"]') as HTMLElement | null;
     if (!summaryEl) return;
@@ -500,7 +464,6 @@ export class DailyQuestPanels {
     this.syncSingleQuestActions();
     this.renderDailyChainTabs();
     this.updateFilterButtons();
-    this.renderDailyClaimableSweep();
     this.renderStateSummary();
     ul.innerHTML = "";
     if (this.listLoading && !this.rows.length) {
@@ -564,89 +527,6 @@ export class DailyQuestPanels {
         li.appendChild(main);
         appendDailyQuestRowSecondary(li, q);
         mountDailyRewardIcon(li, q, this.panel, this.assets);
-        if (state === DAILY_QUEST_STATE_CLAIMABLE) {
-          appendQuestChainQueueHudResidualSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeeperSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepestSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepestDeeperSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepestDeepestDeeperSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepestDeepestDeepestSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepestDeepestDeepestDeeperSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-          appendQuestChainQueueHudResidualDeepestDeepestDeepestDeepestSubline(
-            li,
-            q,
-            buildings,
-            recruits,
-            slotLabels,
-            this.rows,
-            now,
-          );
-        }
         for (const tag of dailyQuestCrossLinkTags(q)) {
           const tagBtn = document.createElement("button");
           tagBtn.type = "button";
@@ -865,7 +745,6 @@ export class DailyQuestPanels {
       await this.refreshList();
       if (!current()) return;
       this.publishDailyChainSnapshot();
-      this.pulseDailyClaimableSweep();
       this.onStatus("日常奖励已领取");
     } catch (e) {
       if (!current()) return;
@@ -930,7 +809,6 @@ export class DailyQuestPanels {
         this.setDailyFormError(summary.lastError);
       }
       this.onStatus(summary.summaryText);
-      if (pulseCfgIds.length) this.pulseDailyClaimableSweep();
     } finally {
       if (!mounted()) return;
       this.claimBatchInflight = false;

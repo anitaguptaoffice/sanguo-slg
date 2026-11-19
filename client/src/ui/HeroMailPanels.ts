@@ -56,77 +56,6 @@ import {
   heroListRowShowsLoyaltyWarnDot,
 } from "@/net/heroListLoyaltySubline";
 import {
-  formatHeroListLoyaltyResidualSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualWarnDot,
-} from "@/net/heroListLoyaltyResidualSubline";
-import {
-  formatHeroListLoyaltyResidualDeepSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEP_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepSubline";
-import {
-  formatHeroListLoyaltyResidualDeeperSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPER_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeeperWarnDot,
-} from "@/net/heroListLoyaltyResidualDeeperSubline";
-import {
-  formatHeroListLoyaltyResidualDeepestSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPEST_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepestWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepestSubline";
-import {
-  formatHeroListLoyaltyResidualDeepestDeeperSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPER_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepestDeeperWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepestDeeperSubline";
-import {
-  formatHeroListLoyaltyResidualDeepestDeepestDeeperSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepestDeepestDeeperWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepestDeepestDeeperSubline";
-import {
-  formatHeroListLoyaltyResidualDeepestDeepestDeepestSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepestDeepestDeepestWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestSubline";
-import {
-  formatHeroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeeperWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline";
-import {
-  formatHeroListLoyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
-  HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-  HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS,
-  heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeepestDeeperWarnDot,
-} from "@/net/heroListLoyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline";
-import { scheduleHeroDetailConsumableStackResidualDeepSweep } from "@/net/heroDetailConsumableStackResidualDeepSweep";
-import { scheduleHeroDetailConsumableStackResidualDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeeperSweep";
-import { scheduleHeroDetailConsumableStackResidualDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestSweep";
-import { scheduleHeroDetailConsumableStackResidualDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeeperSweep";
-import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeeperSweep";
-import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestSweep";
-import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep";
-import { scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeepestDeeperSweep } from "@/net/heroDetailConsumableStackResidualDeepestDeepestDeepestDeepestDeeperSweep";
-import {
   heroListFilteredEmptyMessage,
   heroListRowsForDisplay,
   readHeroListFilterSession,
@@ -137,92 +66,6 @@ import {
   writeHeroListFilterSession,
   writeHeroListSortSession,
 } from "@/net/heroListFilter";
-import {
-  formatHeroListFilterChipResidualSweepLine,
-  readHeroListFilterChipResidualSession,
-  syncHeroListFilterChipResidualSweep,
-  type HeroListFilterChipAction,
-} from "@/net/heroListFilterChipResidual";
-import {
-  formatHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweepLine,
-  readHeroListFilterChipResidualDeepestDeepestDeepestDeepestSession,
-  syncHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweep,
-} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeepest";
-import {
-  formatHeroListFilterChipResidualDeepestDeepestDeepestSweepLine,
-  readHeroListFilterChipResidualDeepestDeepestDeepestSession,
-  syncHeroListFilterChipResidualDeepestDeepestDeepestSweep,
-} from "@/net/heroListFilterChipResidualDeepestDeepestDeepest";
-import {
-  captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper,
-  formatHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweepLine,
-  readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession,
-  syncHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweep,
-} from "@/net/heroListFilterChipResidualDeepestDeepestDeepestDeeper";
-import {
-  formatHeroListFilterChipResidualDeepestDeepestDeeperSweepLine,
-  readHeroListFilterChipResidualDeepestDeepestDeeperSession,
-  syncHeroListFilterChipResidualDeepestDeepestDeeperSweep,
-} from "@/net/heroListFilterChipResidualDeepestDeepestDeeper";
-import {
-  captureHeroListFilterChipResidualDeepestDeeper,
-  formatHeroListFilterChipResidualDeepestDeeperSweepLine,
-  readHeroListFilterChipResidualDeepestDeeperSession,
-  syncHeroListFilterChipResidualDeepestDeeperSweep,
-} from "@/net/heroListFilterChipResidualDeepestDeeper";
-import {
-  formatHeroListFilterChipResidualDeepestSweepLine,
-  readHeroListFilterChipResidualDeepestSession,
-  syncHeroListFilterChipResidualDeepestSweep,
-} from "@/net/heroListFilterChipResidualDeepest";
-import {
-  captureHeroListFilterChipResidualDeeper,
-  formatHeroListFilterChipResidualDeeperSweepLine,
-  readHeroListFilterChipResidualDeeperSession,
-  syncHeroListFilterChipResidualDeeperSweep,
-} from "@/net/heroListFilterChipResidualDeeper";
-import {
-  formatHeroListFilterChipResidualDeepSweepLine,
-  readHeroListFilterChipResidualDeepSession,
-  syncHeroListFilterChipResidualDeepSweep,
-} from "@/net/heroListFilterChipResidualDeep";
-import {
-  appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep,
-  skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeepestSweep,
-} from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeepestSweep";
-import {
-  appendHeroPanelStateResidualDeepestDeepestDeepestSweep,
-  skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep,
-} from "@/net/heroPanelStateResidualDeepestDeepestDeepestSweep";
-import {
-  appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep,
-  skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep,
-} from "@/net/heroPanelStateResidualDeepestDeepestDeepestDeeperSweep";
-import {
-  appendHeroPanelStateResidualDeepestDeepestDeeperSweep,
-  skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep,
-} from "@/net/heroPanelStateResidualDeepestDeepestDeeperSweep";
-import {
-  appendHeroPanelStateResidualDeepestDeeperSweep,
-  skimHeroDetailPanelStateResidualDeepestDeeperSweep,
-} from "@/net/heroPanelStateResidualDeepestDeeperSweep";
-import {
-  appendHeroPanelStateResidualDeepestSweep,
-  skimHeroDetailPanelStateResidualDeepestSweep,
-} from "@/net/heroPanelStateResidualDeepestSweep";
-import {
-  appendHeroPanelStateResidualDeeperSweep,
-  skimHeroDetailPanelStateResidualDeeperSweep,
-} from "@/net/heroPanelStateResidualDeeperSweep";
-import {
-  appendHeroPanelStateResidualDeepSweep,
-  skimHeroDetailPanelStateResidualDeepSweep,
-} from "@/net/heroPanelStateResidualDeepSweep";
-import {
-  appendHeroPanelStateResidualSweep,
-  skimHeroDetailPanelStateResidualSweep,
-  type HeroPanelStateResidualContext,
-} from "@/net/heroPanelStateResidualSweep";
 import {
   applyMailClaimResult,
   syncMailRowAfterClaim,
@@ -265,15 +108,6 @@ import {
   resolveMailListPlayerMailFilter,
 } from "@/net/mailInboxTabFormat";
 import { mailPanelTabBadgeCounts, mailToolbarBadgeCount } from "@/net/hudTodoBadges";
-import {
-  MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE,
-  MAIL_TAB_UNREAD_SWEEP_ROLE,
-  formatMailTabUnreadSweepLine,
-  mailInboxFilterToUnreadSweepTab,
-  scheduleMailTabHudSyncPulse,
-  setHudCenterPanelDeepLinkRefreshStamp,
-} from "@/net/mailTabUnreadSweep";
-import { formatMailPanelHudCombinedSweepLine } from "@/net/questClaimHudLink";
 import {
   mailInboxEmptyListClass,
   mailInboxLoadErrorListHint,
@@ -327,44 +161,8 @@ import {
   scheduleMailClaimRowPulse,
 } from "@/net/mailClaimFeedback";
 import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeeperSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepestSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepestDeeperSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepestDeepestDeeperSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepestDeepestDeepestSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSubline";
-import {
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS,
-  MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-} from "@/net/mailAttachmentClaimResidualDeepestDeepestDeepestDeepestDeeperSubline";
-import {
-  pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeepestDeepestDeeper,
-  syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepestDeepestDeeper,
+  scheduleMailClaimHudSyncPulse,
+  syncHudMailQuestBadgeAfterClaim,
 } from "@/net/mailClaimHudBadgeSync";
 import {
   compareRecruitAffordability,
@@ -377,62 +175,11 @@ import {
   applyRecruitScrollAnchorSession,
   writeRecruitScrollAnchorSession,
 } from "@/net/recruitScrollAnchor";
-import { formatRecruitWalletSweepLine } from "@/net/recruitWalletSweep";
 import {
   formatRecruitWalletCompareLine,
   syncRecruitWalletCompareLine,
 } from "@/net/recruitWalletCompare";
 import {
-  formatRecruitWalletCompareResidualLine,
-  syncRecruitWalletCompareResidualLine,
-} from "@/net/recruitWalletCompareResidual";
-import {
-  formatRecruitTemplateInlineResidualDeepSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepSummary";
-import {
-  formatRecruitTemplateInlineResidualDeeperSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeeperSummary";
-import {
-  formatRecruitTemplateInlineResidualDeepestSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepestSummary";
-import {
-  formatRecruitTemplateInlineResidualDeepestDeeperSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepestDeeperSummary";
-import {
-  formatRecruitTemplateInlineResidualDeepestDeepestDeeperSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeeperSummary";
-import {
-  formatRecruitTemplateInlineResidualDeepestDeepestDeepestSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeepestSummary";
-import {
-  formatRecruitTemplateInlineResidualDeepestDeepestDeepestDeeperSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeepestDeeperSummary";
-import {
-  formatRecruitTemplateInlineResidualDeepestDeepestDeepestDeepestDeeperSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualDeepestDeepestDeepestDeepestDeeperSummary";
-import {
-  formatRecruitTemplateInlineResidualSummary,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS,
-  RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE,
-} from "@/net/recruitTemplateInlineResidualSummary";
-import {
-  buildRecruitItemGapBagDeepLink,
   formatRecruitFormInlineHint,
   syncRecruitFormInlineHintDisplay,
 } from "@/net/recruitFormInlineHint";
@@ -681,32 +428,6 @@ export class HeroMailPanels {
   private mailBatchClaimFailedIds = new Set<number>();
   /** CLIENT-192：单封领取详情行内成功文案（按 mail_id 记忆，切换邮件仍可见）。 */
   private mailClaimSuccessLineByMailId = new Map<number, string>();
-  /** CLIENT-255：列表行附件领取残余次行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualSublineByMailId = new Map<number, string>();
-  /** CLIENT-271：列表行附件领取残余加深次行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeepSublineByMailId = new Map<number, string>();
-  /** CLIENT-287：列表行附件领取残余巩固再加深第三行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeeperSublineByMailId = new Map<number, string>();
-  /** CLIENT-303：列表行附件领取残余巩固再加深一层第四行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeepestSublineByMailId = new Map<number, string>();
-  /** CLIENT-319：列表行附件领取残余巩固再加深二层第五行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeepestDeeperSublineByMailId = new Map<number, string>();
-  /** CLIENT-335：列表行附件领取残余巩固再加深三层第六行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeepestDeepestDeeperSublineByMailId = new Map<number, string>();
-  private mailAttachmentClaimResidualDeepestDeepestDeepestSublineByMailId = new Map<
-    number,
-    string
-  >();
-  /** CLIENT-367：列表行附件领取残余巩固再加深五层第八行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSublineByMailId = new Map<
-    number,
-    string
-  >();
-  /** CLIENT-383：列表行附件领取残余巩固再加深五层第九行（按 mail_id 记忆）。 */
-  private mailAttachmentClaimResidualDeepestDeepestDeepestDeepestDeeperSublineByMailId = new Map<
-    number,
-    string
-  >();
   private mailClaimInlinePulseMailId = 0;
   /** CLIENT-209：与 HUD 深链轮询同源的日常 chain 400 快照（只读扫读，无新 RPC）。 */
   private mailHudTodoDailyRows: DailyQuestRow[] = [];
@@ -802,9 +523,6 @@ export class HeroMailPanels {
     this.mailBattleCategory = readMailBattleCategoryTabSession();
     this.heroListFilter = readHeroListFilterSession();
     this.heroListSort = readHeroListSortSession();
-    if (!readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession()) {
-      captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper(this.heroListFilter, this.heroListSort);
-    }
     this.heroPanel = this.buildHeroPanel();
     this.mailPanel = this.buildMailPanel();
     this.mount.appendChild(this.heroPanel);
@@ -1252,25 +970,11 @@ export class HeroMailPanels {
     if (!this.mailPanel) return;
     const row = findMailListRow(this.mailPanel, mailId);
     scheduleMailClaimRowPulse(row);
-    pulseMailClaimHudSyncAfterClaimResidualDeepestDeepestDeepestDeepestDeeper(row);
-    this.bumpMailClaimHudTodoSweepLinkage();
+    scheduleMailClaimHudSyncPulse(row);
   }
 
-  /** CLIENT-241：领取成功后刷新邮件面板 HUD 扫读行并触发 mail-tab-hud-sync-pulse。 */
-  private bumpMailClaimHudTodoSweepLinkage(): void {
-    if (!this.isMailOpen()) return;
-    this.mailHudTodoRefreshStamp = Date.now();
-    this.mailHudTodoPulsePending = true;
-    this.syncMailHudTodoSweepDom();
-  }
-
-  private applyHudMailQuestBadgeAfterClaim(
-    mailId: number,
-    rowAfter: MailRow,
-    granted?: MailClaimGrantedPayload,
-    mailBeforeClaim?: MailRow,
-  ): void {
-    const sync = syncHudMailQuestBadgeAfterClaimResidualDeepestDeepestDeepestDeepestDeeper(
+  private applyHudMailQuestBadgeAfterClaim(mailId: number, rowAfter: MailRow): void {
+    const sync = syncHudMailQuestBadgeAfterClaim(
       {
         mailUnreadTotal: this.mailUnreadTotal,
         mailInboxSnapshot: this.mailInboxSnapshot,
@@ -1278,65 +982,8 @@ export class HeroMailPanels {
       },
       mailId,
       rowAfter,
-      mailInboxFilterToUnreadSweepTab(this.mailFilter),
-      granted,
-      mailBeforeClaim,
     );
     this.mailInboxSnapshot = sync.mailInboxSnapshot;
-    if (sync.attachmentClaimResidualSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeeperSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeeperSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeeperSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepestSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepestSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepestSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepestDeeperSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepestDeeperSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepestDeeperSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepestDeepestDeeperSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepestDeepestDeeperSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepestDeepestDeeperSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepestDeepestDeepestSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepestDeepestDeepestSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepestDeepestDeepestSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepestDeepestDeepestDeeperSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepestDeepestDeepestDeeperSubline,
-      );
-    }
-    if (sync.attachmentClaimResidualDeepestDeepestDeepestDeepestDeeperSubline && mailId > 0) {
-      this.mailAttachmentClaimResidualDeepestDeepestDeepestDeepestDeeperSublineByMailId.set(
-        mailId,
-        sync.attachmentClaimResidualDeepestDeepestDeepestDeepestDeeperSubline,
-      );
-    }
   }
 
   private syncMailClaimInlineFeedback(mailId: number): void {
@@ -2085,13 +1732,12 @@ export class HeroMailPanels {
       <p class="march-form-error-sibling hidden" data-role="hero-list-form-error" role="alert"></p>
       <details class="hero-recruit-host" data-role="hero-recruit-host" open>
         <summary class="hero-recruit-host-summary">招募 / 客栈</summary>
-        <p data-role="hero-hint">hero.v1 列表/详情/招募；模板与消耗来自 ListRecruitTemplates。</p>
+        <p data-role="hero-hint">将领列表 / 详情 / 招募；模板与消耗来自招募模板列表。</p>
         <button type="button" data-action="refresh-templates">刷新招募模板</button>
         <label>招募模板
           <select data-field="template-select"><option value="">（先刷新模板）</option></select>
         </label>
         <p class="recruit-wallet-compare-line hidden" data-role="recruit-wallet-compare-line" aria-live="polite"></p>
-        <p class="recruit-wallet-compare-residual-line hidden" data-role="recruit-wallet-compare-residual-line" aria-live="polite"></p>
         <p class="recruit-cost-preview" data-role="recruit-preview"></p>
         <p class="recruit-form-inline-hint hidden" data-role="recruit-form-inline-hint" aria-live="polite"></p>
         <button type="button" class="hidden recruit-goto-bag-item-gap-btn" data-action="recruit-goto-bag-item-gap">打开背包</button>
@@ -2204,60 +1850,6 @@ export class HeroMailPanels {
             <span class="art-filter-chip-label">忠诚↓</span>
           </button>
         </div>
-        <p
-          class="hero-list-filter-chip-residual-sweep hidden"
-          data-role="hero-list-filter-chip-residual-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deep-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deep-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deeper-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deeper-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deepest-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deepest-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deepest-deeper-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deepest-deeper-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deepest-deepest-deeper-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deepest-deepest-deeper-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deepest-deepest-deepest-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-deepest-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
-        <p
-          class="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep hidden"
-          data-role="hero-list-filter-chip-residual-deepest-deepest-deepest-deeper-sweep"
-          aria-live="polite"
-          hidden
-        ></p>
         <ul class="hero-list" data-role="hero-list"></ul>
         <div class="hero-detail" data-role="hero-detail"></div>
       </div>
@@ -2298,8 +1890,6 @@ export class HeroMailPanels {
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-all">领取已加载附件</button>
         <button type="button" class="art-btn-primary art-btn-primary-full" data-action="claim-mail-batch">批量领取勾选</button>
       </div>
-      <p class="mail-tab-unread-sweep hidden" data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}" aria-live="polite" hidden></p>
-      <p class="mail-daily-hud-combined-sweep hidden" data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}" aria-live="polite" hidden></p>
       <p class="mail-form-error hidden" data-role="mail-form-error" role="alert"></p>
       <p class="mail-batch-hint" data-role="mail-batch-hint">当前 tab 已加载的未领附件可「领取已加载附件」或勾选后批量领取，逐封调用领取并汇总结果。</p>
       <p class="mail-inbox-status" data-role="mail-status"></p>
@@ -2316,26 +1906,6 @@ export class HeroMailPanels {
       </div>
     `;
     return el;
-  }
-
-  private heroPanelStateResidualContext(
-    overrides?: Partial<HeroPanelStateResidualContext>,
-  ): HeroPanelStateResidualContext {
-    return {
-      filter: this.heroListFilter,
-      sort: this.heroListSort,
-      listGatewayError: this.heroListLoadError,
-      hasGatewayRetry: false,
-      ...overrides,
-    };
-  }
-
-  private persistHeroListFilterChipResidual(lastChipAction?: HeroListFilterChipAction): void {
-    captureHeroListFilterChipResidualDeepestDeepestDeepestDeeper(
-      this.heroListFilter,
-      this.heroListSort,
-      lastChipAction,
-    );
   }
 
   private heroListFilterContext(): HeroListFilterContext | undefined {
@@ -2386,7 +1956,7 @@ export class HeroMailPanels {
         });
       }
     }
-    for (const role of ["hero-detail-consumable-stack-line", "hero-detail-consumable-stack-residual-line"]) {
+    for (const role of ["hero-detail-consumable-stack-line"]) {
       const a = root.querySelector<HTMLElement>(`[data-role="${role}"]`);
       const b = fresh.querySelector<HTMLElement>(`[data-role="${role}"]`);
       const anchor = root.querySelector('[data-role="recruit-afford-summary"], .hero-attr-table');
@@ -2396,7 +1966,6 @@ export class HeroMailPanels {
         else if (!a) anchor.before(b);
         else {
           if (a.textContent !== b.textContent) a.textContent = b.textContent;
-          a.classList.toggle("hero-detail-consumable-stack-residual-deficit", b.classList.contains("hero-detail-consumable-stack-residual-deficit"));
         }
       });
     }
@@ -2442,60 +2011,22 @@ export class HeroMailPanels {
       this.heroListSort,
       this.heroListFilterContext(),
     );
-    const residualCtx = (overrides?: Partial<HeroPanelStateResidualContext>) =>
-      this.heroPanelStateResidualContext(overrides);
     if (!this.heroes.length && this.heroListLoadError) {
       const li = renderPanelGatewayErrorListRow(ul, this.heroListLoadError, {
         assets: this.assets,
         retryAction: "retry-refresh-heroes",
       });
-      appendHeroPanelStateResidualSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "error", residualCtx({ hasGatewayRetry: true }));
     } else if (this.heroesRefreshInflight && !this.heroes.length) {
       const li = renderPanelStateListRow(ul, "loading", PANEL_STATE_LOADING_MESSAGE, {
         assets: this.assets,
       });
-      appendHeroPanelStateResidualSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeeperSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepestSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepestDeeperSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "loading", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "loading", residualCtx());
     } else if (!this.heroes.length) {
       const msg = heroListLines([])[0];
       const li = renderPanelStateListRow(ul, "empty", msg, { assets: this.assets });
-      appendHeroPanelStateResidualSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeeperSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else if (!visibleHeroes.length) {
       const li = renderPanelStateListRow(ul, "empty", heroListFilteredEmptyMessage(this.heroListFilter), {
         assets: this.assets,
       });
-      appendHeroPanelStateResidualSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeeperSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeeperSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeeperSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeepestSweep(li, "empty", residualCtx());
-      appendHeroPanelStateResidualDeepestDeepestDeepestDeeperSweep(li, "empty", residualCtx());
     } else {
       for (const h of visibleHeroes) {
         const li = document.createElement("li");
@@ -2528,169 +2059,8 @@ export class HeroMailPanels {
         loyaltySubline.appendChild(
           document.createTextNode(formatHeroListLoyaltySubline(rowSource, filterCtx)),
         );
-        const loyaltyResidualSubline = document.createElement("span");
-        loyaltyResidualSubline.className = HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_CLASS;
-        loyaltyResidualSubline.setAttribute("data-role", HERO_LIST_LOYALTY_RESIDUAL_SUBLINE_ROLE);
-        if (heroListRowShowsLoyaltyResidualWarnDot(rowSource, filterCtx)) {
-          const residualDot = document.createElement("span");
-          residualDot.className = HERO_LOYALTY_RESIDUAL_WARN_DOT_CLASS;
-          residualDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualSubline.appendChild(residualDot);
-        }
-        loyaltyResidualSubline.appendChild(
-          document.createTextNode(formatHeroListLoyaltyResidualSubline(rowSource, filterCtx)),
-        );
-        const loyaltyResidualDeepSubline = document.createElement("span");
-        loyaltyResidualDeepSubline.className = HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_CLASS;
-        loyaltyResidualDeepSubline.setAttribute("data-role", HERO_LIST_LOYALTY_RESIDUAL_DEEP_SUBLINE_ROLE);
-        if (heroListRowShowsLoyaltyResidualDeepWarnDot(rowSource, filterCtx)) {
-          const deepDot = document.createElement("span");
-          deepDot.className = HERO_LOYALTY_RESIDUAL_DEEP_WARN_DOT_CLASS;
-          deepDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepSubline.appendChild(deepDot);
-        }
-        loyaltyResidualDeepSubline.appendChild(
-          document.createTextNode(formatHeroListLoyaltyResidualDeepSubline(rowSource, filterCtx)),
-        );
-        const loyaltyResidualDeeperSubline = document.createElement("span");
-        loyaltyResidualDeeperSubline.className = HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_CLASS;
-        loyaltyResidualDeeperSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPER_SUBLINE_ROLE,
-        );
-        if (heroListRowShowsLoyaltyResidualDeeperWarnDot(rowSource, filterCtx)) {
-          const deeperDot = document.createElement("span");
-          deeperDot.className = HERO_LOYALTY_RESIDUAL_DEEPER_WARN_DOT_CLASS;
-          deeperDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeeperSubline.appendChild(deeperDot);
-        }
-        loyaltyResidualDeeperSubline.appendChild(
-          document.createTextNode(formatHeroListLoyaltyResidualDeeperSubline(rowSource, filterCtx)),
-        );
-        const loyaltyResidualDeepestSubline = document.createElement("span");
-        loyaltyResidualDeepestSubline.className = HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_SUBLINE_CLASS;
-        loyaltyResidualDeepestSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_SUBLINE_ROLE,
-        );
-        if (heroListRowShowsLoyaltyResidualDeepestWarnDot(rowSource, filterCtx)) {
-          const deepestDot = document.createElement("span");
-          deepestDot.className = HERO_LOYALTY_RESIDUAL_DEEPEST_WARN_DOT_CLASS;
-          deepestDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepestSubline.appendChild(deepestDot);
-        }
-        loyaltyResidualDeepestSubline.appendChild(
-          document.createTextNode(formatHeroListLoyaltyResidualDeepestSubline(rowSource, filterCtx)),
-        );
-        const loyaltyResidualDeepestDeeperSubline = document.createElement("span");
-        loyaltyResidualDeepestDeeperSubline.className =
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS;
-        loyaltyResidualDeepestDeeperSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
-        );
-        if (heroListRowShowsLoyaltyResidualDeepestDeeperWarnDot(rowSource, filterCtx)) {
-          const deepestDeeperDot = document.createElement("span");
-          deepestDeeperDot.className = HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPER_WARN_DOT_CLASS;
-          deepestDeeperDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepestDeeperSubline.appendChild(deepestDeeperDot);
-        }
-        loyaltyResidualDeepestDeeperSubline.appendChild(
-          document.createTextNode(
-            formatHeroListLoyaltyResidualDeepestDeeperSubline(rowSource, filterCtx),
-          ),
-        );
-        const loyaltyResidualDeepestDeepestDeeperSubline = document.createElement("span");
-        loyaltyResidualDeepestDeepestDeeperSubline.className =
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
-        loyaltyResidualDeepestDeepestDeeperSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-        );
-        if (heroListRowShowsLoyaltyResidualDeepestDeepestDeeperWarnDot(rowSource, filterCtx)) {
-          const deepestDeepestDeeperDot = document.createElement("span");
-          deepestDeepestDeeperDot.className =
-            HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS;
-          deepestDeepestDeeperDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepestDeepestDeeperSubline.appendChild(deepestDeepestDeeperDot);
-        }
-        loyaltyResidualDeepestDeepestDeeperSubline.appendChild(
-          document.createTextNode(
-            formatHeroListLoyaltyResidualDeepestDeepestDeeperSubline(rowSource, filterCtx),
-          ),
-        );
-        const loyaltyResidualDeepestDeepestDeepestSubline = document.createElement("span");
-        loyaltyResidualDeepestDeepestDeepestSubline.className =
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS;
-        loyaltyResidualDeepestDeepestDeepestSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_ROLE,
-        );
-        if (heroListRowShowsLoyaltyResidualDeepestDeepestDeepestWarnDot(rowSource, filterCtx)) {
-          const deepestDeepestDeepestDot = document.createElement("span");
-          deepestDeepestDeepestDot.className =
-            HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_WARN_DOT_CLASS;
-          deepestDeepestDeepestDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepestDeepestDeepestSubline.appendChild(deepestDeepestDeepestDot);
-        }
-        loyaltyResidualDeepestDeepestDeepestSubline.appendChild(
-          document.createTextNode(
-            formatHeroListLoyaltyResidualDeepestDeepestDeepestSubline(rowSource, filterCtx),
-          ),
-        );
-        const loyaltyResidualDeepestDeepestDeepestDeeperSubline = document.createElement("span");
-        loyaltyResidualDeepestDeepestDeepestDeeperSubline.className =
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
-        loyaltyResidualDeepestDeepestDeepestDeeperSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-        );
-        if (heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeeperWarnDot(rowSource, filterCtx)) {
-          const deepestDeepestDeepestDeeperDot = document.createElement("span");
-          deepestDeepestDeepestDeeperDot.className =
-            HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS;
-          deepestDeepestDeepestDeeperDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepestDeepestDeepestDeeperSubline.appendChild(deepestDeepestDeepestDeeperDot);
-        }
-        loyaltyResidualDeepestDeepestDeepestDeeperSubline.appendChild(
-          document.createTextNode(
-            formatHeroListLoyaltyResidualDeepestDeepestDeepestDeeperSubline(rowSource, filterCtx),
-          ),
-        );
-        const loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline = document.createElement("span");
-        loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.className =
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
-        loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.setAttribute(
-          "data-role",
-          HERO_LIST_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-        );
-        if (
-          heroListRowShowsLoyaltyResidualDeepestDeepestDeepestDeepestDeeperWarnDot(rowSource, filterCtx)
-        ) {
-          const deepestDeepestDeepestDeepestDeeperDot = document.createElement("span");
-          deepestDeepestDeepestDeepestDeeperDot.className =
-            HERO_LOYALTY_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_WARN_DOT_CLASS;
-          deepestDeepestDeepestDeepestDeeperDot.setAttribute("aria-hidden", "true");
-          loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.appendChild(
-            deepestDeepestDeepestDeepestDeeperDot,
-          );
-        }
-        loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline.appendChild(
-          document.createTextNode(
-            formatHeroListLoyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline(rowSource, filterCtx),
-          ),
-        );
         body.appendChild(primarySpan);
         body.appendChild(loyaltySubline);
-        body.appendChild(loyaltyResidualSubline);
-        body.appendChild(loyaltyResidualDeepSubline);
-        body.appendChild(loyaltyResidualDeeperSubline);
-        body.appendChild(loyaltyResidualDeepestSubline);
-        body.appendChild(loyaltyResidualDeepestDeeperSubline);
-        body.appendChild(loyaltyResidualDeepestDeepestDeeperSubline);
-        body.appendChild(loyaltyResidualDeepestDeepestDeepestSubline);
-        body.appendChild(loyaltyResidualDeepestDeepestDeepestDeeperSubline);
-        body.appendChild(loyaltyResidualDeepestDeepestDeepestDeepestDeeperSubline);
         body.appendChild(secondarySpan);
         li.appendChild(body);
         mountHeroListAvatar(li, h.template_cfg_id, heroTemplateLabel(h.template_cfg_id), this.assets, this.heroPanel);
@@ -2708,52 +2078,6 @@ export class HeroMailPanels {
     }
     syncListRovingTabindex(ul, "li[data-hero-id]");
     skimHeroPanelStateChrome(this.heroPanel, this.assets);
-    syncHeroListFilterChipResidualSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualSweepLine(readHeroListFilterChipResidualSession()),
-    );
-    syncHeroListFilterChipResidualDeepSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepSweepLine(readHeroListFilterChipResidualDeepSession()),
-    );
-    syncHeroListFilterChipResidualDeeperSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeeperSweepLine(readHeroListFilterChipResidualDeeperSession()),
-    );
-    syncHeroListFilterChipResidualDeepestSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepestSweepLine(readHeroListFilterChipResidualDeepestSession()),
-    );
-    syncHeroListFilterChipResidualDeepestDeeperSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepestDeeperSweepLine(
-        readHeroListFilterChipResidualDeepestDeeperSession(),
-      ),
-    );
-    syncHeroListFilterChipResidualDeepestDeepestDeeperSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepestDeepestDeeperSweepLine(
-        readHeroListFilterChipResidualDeepestDeepestDeeperSession(),
-      ),
-    );
-    syncHeroListFilterChipResidualDeepestDeepestDeepestSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepestDeepestDeepestSweepLine(
-        readHeroListFilterChipResidualDeepestDeepestDeepestSession(),
-      ),
-    );
-    syncHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepestDeepestDeepestDeepestSweepLine(
-        readHeroListFilterChipResidualDeepestDeepestDeepestDeepestSession(),
-      ),
-    );
-    syncHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweep(
-      this.heroPanel,
-      formatHeroListFilterChipResidualDeepestDeepestDeepestDeeperSweepLine(
-        readHeroListFilterChipResidualDeepestDeepestDeepestDeeperSession(),
-      ),
-    );
     if (detailEl) {
       if (!this.selectedHeroId || this.heroDetailCollapsed || this.heroDetailLoading || this.heroDetailError) this.detailRefreshCache = null;
       if (!this.selectedHeroId || this.heroDetailCollapsed) {
@@ -2761,27 +2085,9 @@ export class HeroMailPanels {
         this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailLoading) {
         detailEl.innerHTML = renderHeroDetailStateLoadingMarkup();
-        skimHeroDetailPanelStateResidualSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeepestSweep(detailEl, "loading", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep(detailEl, "loading", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else if (this.heroDetailError) {
         detailEl.innerHTML = renderHeroDetailStateErrorMarkup(this.heroDetailError);
-        skimHeroDetailPanelStateResidualSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeeperSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeeperSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeepestSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeepestSweep(detailEl, "error", residualCtx());
-        skimHeroDetailPanelStateResidualDeepestDeepestDeepestDeeperSweep(detailEl, "error", residualCtx());
         this.syncHeroRecruitHostExpanded();
       } else {
         const { bag, wallet } = this.sessionEconomy();
@@ -2840,30 +2146,6 @@ export class HeroMailPanels {
         );
         this.syncHeroRecruitHostExpanded();
         if (!synced) ensureHeroDetailBustNameInScrollClip(this.heroPanel);
-        scheduleHeroDetailConsumableStackResidualDeepSweep(detailEl, this.heroDetail, bag);
-        scheduleHeroDetailConsumableStackResidualDeeperSweep(detailEl, this.heroDetail, bag);
-        scheduleHeroDetailConsumableStackResidualDeepestSweep(detailEl, this.heroDetail, bag);
-        scheduleHeroDetailConsumableStackResidualDeepestDeeperSweep(detailEl, this.heroDetail, bag);
-        scheduleHeroDetailConsumableStackResidualDeepestDeepestDeeperSweep(
-          detailEl,
-          this.heroDetail,
-          bag,
-        );
-        scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestSweep(
-          detailEl,
-          this.heroDetail,
-          bag,
-        );
-        scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeeperSweep(
-          detailEl,
-          this.heroDetail,
-          bag,
-        );
-        scheduleHeroDetailConsumableStackResidualDeepestDeepestDeepestDeepestDeeperSweep(
-          detailEl,
-          this.heroDetail,
-          bag,
-        );
       }
     }
   }
@@ -2906,123 +2188,22 @@ export class HeroMailPanels {
         formatRecruitFormInlineHint(undefined, this.sessionEconomy().wallet, this.sessionEconomy().bag),
       );
       syncRecruitWalletCompareLine(this.heroPanel, null);
-      syncRecruitWalletCompareResidualLine(this.heroPanel, null);
       syncRecruitSubmitButton(this.heroPanel, this.recruitSubmitPhase(), false);
       return;
     }
     const { wallet, bag } = this.sessionEconomy();
     for (const t of displayTemplates) {
       const li = document.createElement("li");
-      const { primary } = recruitAffordabilityForTemplate(t, wallet, bag);
-      const sweep = formatRecruitWalletSweepLine(wallet, t, bag);
+      const { primary, secondary, result } = recruitAffordabilityForTemplate(t, wallet, bag);
       const primarySpan = document.createElement("span");
       primarySpan.className = "recruit-afford-primary";
       primarySpan.textContent = primary;
       const secondarySpan = document.createElement("span");
       secondarySpan.className = "recruit-afford-secondary";
-      secondarySpan.textContent = sweep.text;
-      if (sweep.hasDeficit) secondarySpan.classList.add("recruit-cost-deficit");
-      const residualSpan = document.createElement("span");
-      residualSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_CLASS;
-      residualSpan.setAttribute("data-role", RECRUIT_TEMPLATE_INLINE_RESIDUAL_SUMMARY_ROLE);
-      const residualSummary = formatRecruitTemplateInlineResidualSummary(wallet, t, bag);
-      residualSpan.textContent = residualSummary ?? "";
-      residualSpan.hidden = !residualSummary;
-      const residualDeepSpan = document.createElement("span");
-      residualDeepSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_CLASS;
-      residualDeepSpan.setAttribute("data-role", RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEP_SUMMARY_ROLE);
-      const residualDeepSummary = formatRecruitTemplateInlineResidualDeepSummary(wallet, t, bag);
-      residualDeepSpan.textContent = residualDeepSummary ?? "";
-      residualDeepSpan.hidden = !residualDeepSummary;
-      const residualDeeperSpan = document.createElement("span");
-      residualDeeperSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_CLASS;
-      residualDeeperSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPER_SUMMARY_ROLE,
-      );
-      const residualDeeperSummary = formatRecruitTemplateInlineResidualDeeperSummary(wallet, t, bag);
-      residualDeeperSpan.textContent = residualDeeperSummary ?? "";
-      residualDeeperSpan.hidden = !residualDeeperSummary;
-      const residualDeepestSpan = document.createElement("span");
-      residualDeepestSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_CLASS;
-      residualDeepestSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_SUMMARY_ROLE,
-      );
-      const residualDeepestSummary = formatRecruitTemplateInlineResidualDeepestSummary(wallet, t, bag);
-      residualDeepestSpan.textContent = residualDeepestSummary ?? "";
-      residualDeepestSpan.hidden = !residualDeepestSummary;
-      const residualDeepestDeeperSpan = document.createElement("span");
-      residualDeepestDeeperSpan.className = RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_CLASS;
-      residualDeepestDeeperSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPER_SUMMARY_ROLE,
-      );
-      const residualDeepestDeeperSummary = formatRecruitTemplateInlineResidualDeepestDeeperSummary(
-        wallet,
-        t,
-        bag,
-      );
-      residualDeepestDeeperSpan.textContent = residualDeepestDeeperSummary ?? "";
-      residualDeepestDeeperSpan.hidden = !residualDeepestDeeperSummary;
-      const residualDeepestDeepestDeeperSpan = document.createElement("span");
-      residualDeepestDeepestDeeperSpan.className =
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS;
-      residualDeepestDeepestDeeperSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
-      );
-      const residualDeepestDeepestDeeperSummary =
-        formatRecruitTemplateInlineResidualDeepestDeepestDeeperSummary(wallet, t, bag);
-      residualDeepestDeepestDeeperSpan.textContent = residualDeepestDeepestDeeperSummary ?? "";
-      residualDeepestDeepestDeeperSpan.hidden = !residualDeepestDeepestDeeperSummary;
-      const residualDeepestDeepestDeepestSpan = document.createElement("span");
-      residualDeepestDeepestDeepestSpan.className =
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_CLASS;
-      residualDeepestDeepestDeepestSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUMMARY_ROLE,
-      );
-      const residualDeepestDeepestDeepestSummary =
-        formatRecruitTemplateInlineResidualDeepestDeepestDeepestSummary(wallet, t, bag);
-      residualDeepestDeepestDeepestSpan.textContent = residualDeepestDeepestDeepestSummary ?? "";
-      residualDeepestDeepestDeepestSpan.hidden = !residualDeepestDeepestDeepestSummary;
-      const residualDeepestDeepestDeepestDeeperSpan = document.createElement("span");
-      residualDeepestDeepestDeepestDeeperSpan.className =
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS;
-      residualDeepestDeepestDeepestDeeperSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
-      );
-      const residualDeepestDeepestDeepestDeeperSummary =
-        formatRecruitTemplateInlineResidualDeepestDeepestDeepestDeeperSummary(wallet, t, bag);
-      residualDeepestDeepestDeepestDeeperSpan.textContent =
-        residualDeepestDeepestDeepestDeeperSummary ?? "";
-      residualDeepestDeepestDeepestDeeperSpan.hidden = !residualDeepestDeepestDeepestDeeperSummary;
-      const residualDeepestDeepestDeepestDeepestDeeperSpan = document.createElement("span");
-      residualDeepestDeepestDeepestDeepestDeeperSpan.className =
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_CLASS;
-      residualDeepestDeepestDeepestDeepestDeeperSpan.setAttribute(
-        "data-role",
-        RECRUIT_TEMPLATE_INLINE_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUMMARY_ROLE,
-      );
-      const residualDeepestDeepestDeepestDeepestDeeperSummary =
-        formatRecruitTemplateInlineResidualDeepestDeepestDeepestDeepestDeeperSummary(wallet, t, bag);
-      residualDeepestDeepestDeepestDeepestDeeperSpan.textContent =
-        residualDeepestDeepestDeepestDeepestDeeperSummary ?? "";
-      residualDeepestDeepestDeepestDeepestDeeperSpan.hidden =
-        !residualDeepestDeepestDeepestDeepestDeeperSummary;
+      secondarySpan.textContent = secondary;
+      if (!result.canAfford) secondarySpan.classList.add("recruit-cost-deficit");
       li.appendChild(primarySpan);
       li.appendChild(secondarySpan);
-      li.appendChild(residualSpan);
-      li.appendChild(residualDeepSpan);
-      li.appendChild(residualDeeperSpan);
-      li.appendChild(residualDeepestSpan);
-      li.appendChild(residualDeepestDeeperSpan);
-      li.appendChild(residualDeepestDeepestDeeperSpan);
-      li.appendChild(residualDeepestDeepestDeepestSpan);
-      li.appendChild(residualDeepestDeepestDeepestDeeperSpan);
-      li.appendChild(residualDeepestDeepestDeepestDeepestDeeperSpan);
       const heroIdForTemplate = resolveHeroIdForRecruitTemplate(this.heroes, t.template_cfg_id);
       const viewBtn = document.createElement("button");
       viewBtn.type = "button";
@@ -3072,9 +2253,8 @@ export class HeroMailPanels {
     if (preview) {
       if (row) {
         const { wallet, bag } = this.sessionEconomy();
-        const { primary } = recruitAffordabilityForTemplate(row, wallet, bag);
-        const sweep = formatRecruitWalletSweepLine(wallet, row, bag);
-        preview.textContent = `${primary} — ${sweep.text}`;
+        const { primary, secondary } = recruitAffordabilityForTemplate(row, wallet, bag);
+        preview.textContent = `${primary} — ${secondary}`;
       } else {
         preview.textContent = this.recruitTemplates.length ? "请选择模板" : "";
       }
@@ -3083,10 +2263,6 @@ export class HeroMailPanels {
     syncRecruitWalletCompareLine(
       this.heroPanel,
       row ? formatRecruitWalletCompareLine(wallet, row, bag) : null,
-    );
-    syncRecruitWalletCompareResidualLine(
-      this.heroPanel,
-      row ? formatRecruitWalletCompareResidualLine(wallet, row, bag) : null,
     );
     this.syncRecruitFormInlineState(row);
     const ul = this.heroPanel.querySelector<HTMLElement>('[data-role="template-list"]');
@@ -3192,7 +2368,6 @@ export class HeroMailPanels {
     }
     if (loader) remountPanelFilterChips(this.mailPanel, loader);
     this.syncMailBattleCategoryDom();
-    this.syncMailHudTodoSweepDom();
   }
 
   private applyMailListClientFilters(page: MailRow[]): MailRow[] {
@@ -3228,58 +2403,6 @@ export class HeroMailPanels {
     sweepEl.hidden = false;
     sweepEl.classList.remove("hidden");
     sweepEl.textContent = line;
-  }
-
-  /** CLIENT-209：HUD 待办轮询刷新戳记与邮件 tab 扫读联动（由 MainCityScene 驱动）。 */
-  syncMailTabHudTodoLinkage(input: {
-    dailyRows: DailyQuestRow[];
-    stamp: number;
-    pulse?: boolean;
-  }): void {
-    this.mailHudTodoDailyRows = input.dailyRows.slice();
-    this.mailHudTodoRefreshStamp = input.stamp;
-    if (input.pulse) this.mailHudTodoPulsePending = true;
-    if (this.isMailOpen()) this.syncMailHudTodoSweepDom();
-  }
-
-  private syncMailHudTodoSweepDom(): void {
-    const tabCounts = mailPanelTabBadgeCounts({
-      mailUnreadTotal: this.mailUnreadTotal,
-      mailClaimablePage: this.mailInboxSnapshot,
-    });
-    const unreadForTab = this.mailFilterTabCountOverride?.unreadForTab ?? tabCounts.unreadTab;
-    const unclaimedCount = this.mailFilterTabCountOverride?.unclaimedCount ?? tabCounts.unclaimedTab;
-    const counts = { unreadForTab, unclaimedCount };
-    const tabLine = formatMailTabUnreadSweepLine(
-      mailInboxFilterToUnreadSweepTab(this.mailFilter),
-      counts,
-    );
-    const combinedLine = formatMailPanelHudCombinedSweepLine(counts, this.mailHudTodoDailyRows);
-    const tabEl = this.mailPanel.querySelector<HTMLElement>(`[data-role="${MAIL_TAB_UNREAD_SWEEP_ROLE}"]`);
-    const combinedEl = this.mailPanel.querySelector<HTMLElement>(
-      `[data-role="${MAIL_DAILY_HUD_COMBINED_SWEEP_ROLE}"]`,
-    );
-    const syncLine = (el: HTMLElement | null, line: string | null) => {
-      if (!el) return;
-      if (!line) {
-        el.hidden = true;
-        el.classList.add("hidden");
-        el.textContent = "";
-        return;
-      }
-      el.hidden = false;
-      el.classList.remove("hidden");
-      el.textContent = line;
-    };
-    syncLine(tabEl, tabLine);
-    syncLine(combinedEl, combinedLine);
-    const stamp = this.mailHudTodoRefreshStamp;
-    for (const el of [tabEl, combinedEl]) {
-      if (!el || stamp <= 0) continue;
-      setHudCenterPanelDeepLinkRefreshStamp(el, stamp);
-      if (this.mailHudTodoPulsePending) scheduleMailTabHudSyncPulse(el);
-    }
-    this.mailHudTodoPulsePending = false;
   }
 
   private setMailFilterButtons(): void {
@@ -3454,137 +2577,6 @@ export class HeroMailPanels {
         if (mailHasUnclaimedAttachments(m)) summarySpan.classList.add("mail-row-meta-attach");
         li.appendChild(titleSpan);
         li.appendChild(summarySpan);
-        const residualSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualSubline) {
-          const residualSpan = document.createElement("span");
-          residualSpan.className = MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_CLASS;
-          residualSpan.setAttribute("data-role", MAIL_ATTACHMENT_CLAIM_RESIDUAL_SUBLINE_ROLE);
-          residualSpan.textContent = residualSubline;
-          li.appendChild(residualSpan);
-        }
-        const residualDeepSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualDeepSubline) {
-          const residualDeepSpan = document.createElement("span");
-          residualDeepSpan.className = MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_CLASS;
-          residualDeepSpan.setAttribute("data-role", MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEP_SUBLINE_ROLE);
-          residualDeepSpan.textContent = residualDeepSubline;
-          li.appendChild(residualDeepSpan);
-        }
-        const residualDeeperSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeeperSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualDeeperSubline) {
-          const residualDeeperSpan = document.createElement("span");
-          residualDeeperSpan.className = MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_CLASS;
-          residualDeeperSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPER_SUBLINE_ROLE,
-          );
-          residualDeeperSpan.textContent = residualDeeperSubline;
-          li.appendChild(residualDeeperSpan);
-        }
-        const residualDeepestSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepestSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualDeepestSubline) {
-          const residualDeepestSpan = document.createElement("span");
-          residualDeepestSpan.className = MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_CLASS;
-          residualDeepestSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_SUBLINE_ROLE,
-          );
-          residualDeepestSpan.textContent = residualDeepestSubline;
-          li.appendChild(residualDeepestSpan);
-        }
-        const residualDeepestDeeperSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepestDeeperSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualDeepestDeeperSubline) {
-          const residualDeepestDeeperSpan = document.createElement("span");
-          residualDeepestDeeperSpan.className =
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_CLASS;
-          residualDeepestDeeperSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPER_SUBLINE_ROLE,
-          );
-          residualDeepestDeeperSpan.textContent = residualDeepestDeeperSubline;
-          li.appendChild(residualDeepestDeeperSpan);
-        }
-        const residualDeepestDeepestDeeperSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepestDeepestDeeperSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualDeepestDeepestDeeperSubline) {
-          const residualDeepestDeepestDeeperSpan = document.createElement("span");
-          residualDeepestDeepestDeeperSpan.className =
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
-          residualDeepestDeepestDeeperSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-          );
-          residualDeepestDeepestDeeperSpan.textContent = residualDeepestDeepestDeeperSubline;
-          li.appendChild(residualDeepestDeepestDeeperSpan);
-        }
-        const residualDeepestDeepestDeepestSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepestDeepestDeepestSublineByMailId.get(m.mail_id)
-            : undefined;
-        if (residualDeepestDeepestDeepestSubline) {
-          const residualDeepestDeepestDeepestSpan = document.createElement("span");
-          residualDeepestDeepestDeepestSpan.className =
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_CLASS;
-          residualDeepestDeepestDeepestSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_SUBLINE_ROLE,
-          );
-          residualDeepestDeepestDeepestSpan.textContent = residualDeepestDeepestDeepestSubline;
-          li.appendChild(residualDeepestDeepestDeepestSpan);
-        }
-        const residualDeepestDeepestDeepestDeeperSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepestDeepestDeepestDeeperSublineByMailId.get(
-                m.mail_id,
-              )
-            : undefined;
-        if (residualDeepestDeepestDeepestDeeperSubline) {
-          const residualDeepestDeepestDeepestDeeperSpan = document.createElement("span");
-          residualDeepestDeepestDeepestDeeperSpan.className =
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
-          residualDeepestDeepestDeepestDeeperSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-          );
-          residualDeepestDeepestDeepestDeeperSpan.textContent =
-            residualDeepestDeepestDeepestDeeperSubline;
-          li.appendChild(residualDeepestDeepestDeepestDeeperSpan);
-        }
-        const residualDeepestDeepestDeepestDeepestDeeperSubline =
-          m.mail_id != null
-            ? this.mailAttachmentClaimResidualDeepestDeepestDeepestDeepestDeeperSublineByMailId.get(
-                m.mail_id,
-              )
-            : undefined;
-        if (residualDeepestDeepestDeepestDeepestDeeperSubline) {
-          const residualDeepestDeepestDeepestDeepestDeeperSpan = document.createElement("span");
-          residualDeepestDeepestDeepestDeepestDeeperSpan.className =
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_CLASS;
-          residualDeepestDeepestDeepestDeepestDeeperSpan.setAttribute(
-            "data-role",
-            MAIL_ATTACHMENT_CLAIM_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPEST_DEEPER_SUBLINE_ROLE,
-          );
-          residualDeepestDeepestDeepestDeepestDeeperSpan.textContent =
-            residualDeepestDeepestDeepestDeepestDeeperSubline;
-          li.appendChild(residualDeepestDeepestDeepestDeepestDeeperSpan);
-        }
         ul.appendChild(li);
       }
     }
@@ -3679,7 +2671,6 @@ export class HeroMailPanels {
         this.heroListSort = returnRestore.sort;
         writeHeroListFilterSession(this.heroListFilter);
         writeHeroListSortSession(this.heroListSort);
-        this.persistHeroListFilterChipResidual();
       }
       if (restoreSelection()) {
         const stored = readHeroDetailSelectedSession();
@@ -3906,7 +2897,6 @@ export class HeroMailPanels {
       this.heroListSort = snap.sort;
       writeHeroListFilterSession(snap.filter);
       writeHeroListSortSession(snap.sort);
-      this.persistHeroListFilterChipResidual();
       this.selectedHeroId = pickRestoredHeroId(this.heroes, snap.heroId) ?? snap.heroId;
       applyHeroListReturnScroll(this.heroPanel, snap.scrollTop);
       writeHeroListSelectedSession({
@@ -4891,7 +3881,6 @@ export class HeroMailPanels {
     | { ok: false; message: string }
   > {
     const sid = this.serverId();
-    const mailBeforeClaim = this.mails.find((m) => m.mail_id === mailId);
     const current = captureActor(this.gateway, this.getSession);
     const settle = beginAssetMutation(this.gateway, current);
     try {
@@ -4920,7 +3909,7 @@ export class HeroMailPanels {
         nextMails.find((m) => m.mail_id === mailId) ??
         syncMailRowAfterClaim([], mailId, res).find((m) => m.mail_id === mailId);
       if (updatedRow) {
-        this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow, res.granted, mailBeforeClaim);
+        this.applyHudMailQuestBadgeAfterClaim(mailId, updatedRow);
         this.patchMailInboxSnapshot(mailId, updatedRow);
       }
       this.applyMailBadgeCountsFromSnapshot();
@@ -5182,25 +4171,21 @@ export class HeroMailPanels {
     if (a === "hero-filter-all") {
       this.heroListFilter = "all";
       writeHeroListFilterSession(this.heroListFilter);
-      this.persistHeroListFilterChipResidual("hero-filter-all");
       this.renderHeroList();
     }
     if (a === "hero-filter-deployable") {
       this.heroListFilter = "deployable";
       writeHeroListFilterSession(this.heroListFilter);
-      this.persistHeroListFilterChipResidual("hero-filter-deployable");
       this.renderHeroList();
     }
     if (a === "hero-sort-level") {
       this.heroListSort = "level_desc";
       writeHeroListSortSession(this.heroListSort);
-      this.persistHeroListFilterChipResidual("hero-sort-level");
       this.renderHeroList();
     }
     if (a === "hero-sort-loyalty") {
       this.heroListSort = "loyalty_desc";
       writeHeroListSortSession(this.heroListSort);
-      this.persistHeroListFilterChipResidual("hero-sort-loyalty");
       this.renderHeroList();
     }
     if (a === "retry-recruit-bag") void this.ensureRecruitBag();
@@ -5283,7 +4268,11 @@ export class HeroMailPanels {
       this.onStatus(`养成道具 item_cfg_id=${itemCfgId}`);
       return;
     }
-    const link = buildRecruitItemGapBagDeepLink(itemCfgId);
+    const link = buildHeroBagDeepLinkQuery({
+      highlightItemId: itemCfgId,
+      openSource: "hero",
+      recruitItemGap: true,
+    });
     this.onOpenHeroCultivationBag(link);
     setRecruitAffordabilityErrorDisplay(this.heroPanel, null);
     this.onStatus(`背包已高亮招募所需道具 ${itemCfgId}，请查看持有数量`);

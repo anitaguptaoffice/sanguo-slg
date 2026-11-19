@@ -794,41 +794,6 @@ describe("DailyQuestPanels", () => {
     pulseSpy.mockRestore();
   });
 
-  it("renders daily claimable sweep on panel header (CLIENT-193)", async () => {
-    const mount = document.createElement("div");
-    const gateway: GatewayPort = {
-      listPlayerQuests: vi.fn().mockResolvedValue({
-        quests: [
-          {
-            quest_cfg_id: 1013,
-            quest_code: "daily_wood_1",
-            chain_id: 400,
-            state: 3,
-            progress_current: 3,
-            progress_target: 4,
-          },
-        ],
-      }),
-      getBoundServerId: () => 1,
-    } as unknown as GatewayPort;
-    const session: MainCitySession = {
-      serverId: 1,
-      cityId: 1,
-      cityName: "城",
-      wallet: {},
-      buildings: [],
-      cityTroops: [],
-      bag: [],
-    };
-    const panels = new DailyQuestPanels(mount, gateway, () => session, () => {}, () => {});
-    panels.attach();
-    panels.toggle();
-    await flushPromises();
-    const sweep = mount.querySelector('[data-role="daily-claimable-sweep"]');
-    expect(sweep?.textContent).toBe("可领 1 · #1013 进度 75%");
-    expect(mount.querySelector(".daily-quest-progress-fill")).toBeTruthy();
-  });
-
   it("renders chain type subline on claimable row (CLIENT-218)", async () => {
     const mount = document.createElement("div");
     const gateway: GatewayPort = {
@@ -864,94 +829,6 @@ describe("DailyQuestPanels", () => {
       "主线 · 链进度 4/4 · 可领取",
     );
     expect(row?.querySelector(".daily-quest-progress-fill")).toBeTruthy();
-  });
-
-  it("renders chain-queue HUD residual subline when queue active (CLIENT-250)", async () => {
-    const now = 1_700_000_000_000;
-    vi.spyOn(Date, "now").mockReturnValue(now);
-    const mount = document.createElement("div");
-    const gateway: GatewayPort = {
-      listPlayerQuests: vi.fn().mockResolvedValue({
-        quests: [
-          {
-            quest_cfg_id: 1013,
-            quest_code: "daily_wood_1",
-            chain_id: 400,
-            state: 3,
-            progress_current: 4,
-            progress_target: 4,
-          },
-        ],
-      }),
-      getBoundServerId: () => 1,
-    } as unknown as GatewayPort;
-    const session: MainCitySession = {
-      serverId: 1,
-      cityId: 1,
-      cityName: "城",
-      wallet: {},
-      buildings: [{ slot_key: "farm", level: 1, upgrade_finish_at_ms: now + 90_000 }],
-      cityTroops: [],
-      bag: [],
-    };
-    const panels = new DailyQuestPanels(
-      mount,
-      gateway,
-      () => session,
-      () => {},
-      () => {},
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      () => session.buildings,
-      { farm: "农田" },
-      () => [],
-    );
-    panels.attach();
-    panels.toggle();
-    await flushPromises();
-    const row = mount.querySelector('li[data-quest-cfg-id="1013"]');
-    expect(row?.querySelector(".daily-quest-chain-type-subline")).toBeTruthy();
-    expect(row?.querySelector(".daily-quest-chain-queue-hud-residual-subline")?.textContent).toBe(
-      "主线 · 队列下一完成 <1h",
-    );
-    const deep = row?.querySelector(".daily-quest-chain-queue-hud-residual-deep-subline");
-    expect(deep?.textContent).toContain("深链巩固");
-    expect(deep?.textContent).toContain("队列下一完成");
-    const deeper = row?.querySelector(".daily-quest-chain-queue-hud-residual-deeper-subline");
-    expect(deeper?.textContent).toContain("巩固再加深");
-    expect(deeper?.textContent).toContain("队列下一完成");
-    const deepest = row?.querySelector(".daily-quest-chain-queue-hud-residual-deepest-subline");
-    expect(deepest?.textContent).toContain("巩固再加深一层");
-    expect(deepest?.textContent).toContain("队列下一完成");
-    const deepestDeeper = row?.querySelector(
-      ".daily-quest-chain-queue-hud-residual-deepest-deeper-subline",
-    );
-    expect(deepestDeeper?.textContent).toContain("巩固再加深二层");
-    expect(deepestDeeper?.textContent).toContain("队列下一完成");
-    const deepestDeepestDeeper = row?.querySelector(
-      ".daily-quest-chain-queue-hud-residual-deepest-deepest-deeper-subline",
-    );
-    expect(deepestDeepestDeeper?.textContent).toContain("巩固再加深三层");
-    expect(deepestDeepestDeeper?.textContent).toContain("队列下一完成");
-    const deepestDeepestDeepest = row?.querySelector(
-      ".daily-quest-chain-queue-hud-residual-deepest-deepest-deepest-subline",
-    );
-    expect(deepestDeepestDeepest?.textContent).toContain("巩固再加深四层");
-    expect(deepestDeepestDeepest?.textContent).toContain("队列下一完成");
-    const deepestDeepestDeepestDeeper = row?.querySelector(
-      ".daily-quest-chain-queue-hud-residual-deepest-deepest-deepest-deeper-subline",
-    );
-    expect(deepestDeepestDeepestDeeper?.textContent).toContain("巩固再加深五层");
-    expect(deepestDeepestDeepestDeeper?.textContent).toContain("队列下一完成");
-    const deepestDeepestDeepestDeepest = row?.querySelector(
-      ".daily-quest-chain-queue-hud-residual-deepest-deepest-deepest-deepest-subline",
-    );
-    expect(deepestDeepestDeepestDeepest?.textContent).toContain("巩固再加深五层");
-    expect(deepestDeepestDeepestDeepest?.textContent).toContain("队列下一完成");
-    vi.restoreAllMocks();
   });
 
   it("renders progress bar and reward line on secondary row (CLIENT-174)", async () => {

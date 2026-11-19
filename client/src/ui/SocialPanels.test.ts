@@ -10,23 +10,7 @@ import {
   RANK_MANUAL_REFRESH_COOLDOWN_MS,
   RANK_MANUAL_REFRESH_SESSION_KEY,
 } from "@/net/rankRefreshCooldown";
-import { formatRankRefreshCooldownResidualStamp } from "@/net/rankRefreshCooldownResidual";
 import { RANK_MANUAL_REFRESH_COUNT_SESSION_KEY } from "@/net/rankManualRefreshCountSession";
-import { formatRankRefreshCooldownResidualDeepStamp } from "@/net/rankRefreshCooldownResidualDeep";
-import { formatRankRefreshCooldownResidualDeeperStamp } from "@/net/rankRefreshCooldownResidualDeeper";
-import { formatRankRefreshCooldownResidualDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepest";
-import { formatRankRefreshCooldownResidualDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeeper";
-import { formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeeper";
-import { formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepest";
-import { formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp } from "@/net/rankRefreshCooldownResidualDeepestDeepestDeepestDeeper";
-import { RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS } from "@/net/rankPinKeepResidualDeepRing";
-import { RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeeperRing";
-import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestRing";
-import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeeperRing";
-import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeeperRing";
-import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeepestRing";
-import { RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS } from "@/net/rankPinKeepResidualDeepestDeepestDeepestDeeperRing";
-import { RANK_PIN_KEEP_RESIDUAL_RING_CLASS } from "@/net/rankPinKeepResidualRing";
 import { LEADERBOARD_PIN_SESSION_KEY } from "@/net/leaderboardPin";
 import {
   LEADERBOARD_RETURN_SCROLL_SESSION_KEY,
@@ -244,9 +228,6 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     const pin = mount.querySelector(".rank-pin-row");
     expect(pin?.querySelector(".rank-pin-primary")?.textContent).toContain("我的排名 #2");
     expect(pin?.querySelector(".rank-pin-secondary")?.textContent).toContain("上次刷新");
-    expect(
-      mount.querySelector('[data-role="rank-pin-refresh-residual-line"]')?.textContent,
-    ).toContain("钉选 #2");
     expect(pin?.classList.contains(RANK_MY_RANK_CHANGED_PULSE_CLASS)).toBe(false);
     mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
     await flushPromises();
@@ -296,50 +277,6 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     await flushPromises();
     expect(mount.querySelector(".rank-refreshed-hint-row")?.textContent).toContain("三甲快览");
     expect(mount.querySelectorAll(".rank-top-density-row").length).toBe(3);
-    expect(
-      mount.querySelector(".rank-top-density-row [data-role='rank-list-density-scan-residual-line']")
-        ?.textContent,
-    ).toContain("密度扫读");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deep-line']",
-      )?.textContent,
-    ).toContain("扫读加深");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deeper-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深一层");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-deeper-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深二层");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-deepest-deeper-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深三层");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-deepest-deepest-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深四层");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-deepest-deepest-deeper-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深五层");
-    expect(
-      mount.querySelector(
-        ".rank-top-density-row [data-role='rank-list-density-scan-residual-deepest-deepest-deepest-deepest-deeper-line']",
-      )?.textContent,
-    ).toContain("扫读巩固再加深五层");
     expect(mount.querySelector(".rank-pin-row")?.querySelector(".rank-pin-primary")?.textContent).toContain(
       "我的排名 #2",
     );
@@ -405,7 +342,7 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     await flushPromises();
   });
 
-  it("CLIENT-248 / CLIENT-376: manual refresh shows cooldown residual stamp and pin keep ring", async () => {
+  it("CLIENT-248: manual refresh shows cooldown stamp and keeps refresh disabled", async () => {
     const mount = document.createElement("div");
     const now = 1_700_000_000_000;
     const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
@@ -430,91 +367,13 @@ describe("SocialPanels narrow scroll (CLIENT-078 + CLIENT-095)", () => {
     panels.toggleRank();
     await flushPromises();
     try {
-      mount.querySelector('[data-action="refresh-rank"]')?.dispatchEvent(new Event("click", { bubbles: true }));
+      const refreshBtn = mount.querySelector<HTMLButtonElement>('[data-action="refresh-rank"]');
+      refreshBtn?.dispatchEvent(new Event("click", { bubbles: true }));
       await flushPromises();
-      const residual = mount.querySelector('[data-role="rank-refresh-cooldown-residual"]');
-      expect(residual?.textContent).toBe(
-        formatRankRefreshCooldownResidualStamp(now, now, now),
-      );
-      expect(residual?.classList.contains("hidden")).toBe(false);
-      expect(mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_RING_CLASS)).toBe(
-        true,
-      );
       expect(mount.querySelector('[data-role="rank-refresh-cooldown"]')?.textContent).toBe(
         formatRankRefreshCooldownStamp(now, now),
       );
-      const deep = mount.querySelector('[data-role="rank-refresh-cooldown-residual-deep"]');
-      expect(deep?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeepStamp(now, now, 1, now),
-      );
-      expect(deep?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEP_RING_CLASS),
-      ).toBe(true);
-      const deeper = mount.querySelector('[data-role="rank-refresh-cooldown-residual-deeper"]');
-      expect(deeper?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeeperStamp(now, now, 1, now),
-      );
-      expect(deeper?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPER_RING_CLASS),
-      ).toBe(true);
-      const deepest = mount.querySelector('[data-role="rank-refresh-cooldown-residual-deepest"]');
-      expect(deepest?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeepestStamp(now, now, 1, now),
-      );
-      expect(deepest?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount.querySelector(".rank-pin-row")?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_RING_CLASS),
-      ).toBe(true);
-      const deepestDeeper = mount.querySelector(
-        '[data-role="rank-refresh-cooldown-residual-deepest-deeper"]',
-      );
-      expect(deepestDeeper?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeepestDeeperStamp(now, now, 1, now),
-      );
-      expect(deepestDeeper?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount
-          .querySelector(".rank-pin-row")
-          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPER_RING_CLASS),
-      ).toBe(true);
-      const deepestDeepestDeeper = mount.querySelector(
-        '[data-role="rank-refresh-cooldown-residual-deepest-deepest-deeper"]',
-      );
-      expect(deepestDeepestDeeper?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeepestDeepestDeeperStamp(now, now, 1, now),
-      );
-      expect(deepestDeepestDeeper?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount
-          .querySelector(".rank-pin-row")
-          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
-      ).toBe(true);
-      const deepestDeepestDeepest = mount.querySelector(
-        '[data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest"]',
-      );
-      expect(deepestDeepestDeepest?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeepestDeepestDeepestStamp(now, now, 1, now),
-      );
-      expect(deepestDeepestDeepest?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount
-          .querySelector(".rank-pin-row")
-          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_RING_CLASS),
-      ).toBe(true);
-      const deepestDeepestDeepestDeeper = mount.querySelector(
-        '[data-role="rank-refresh-cooldown-residual-deepest-deepest-deepest-deeper"]',
-      );
-      expect(deepestDeepestDeepestDeeper?.textContent).toBe(
-        formatRankRefreshCooldownResidualDeepestDeepestDeepestDeeperStamp(now, now, 1, now),
-      );
-      expect(deepestDeepestDeepestDeeper?.classList.contains("hidden")).toBe(false);
-      expect(
-        mount
-          .querySelector(".rank-pin-row")
-          ?.classList.contains(RANK_PIN_KEEP_RESIDUAL_DEEPEST_DEEPEST_DEEPEST_DEEPER_RING_CLASS),
-      ).toBe(true);
+      expect(refreshBtn?.disabled).toBe(true);
     } finally {
       nowSpy.mockRestore();
     }
@@ -937,30 +796,9 @@ describe("SocialPanels chat & guild", () => {
     expect(
       mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
     ).toContain("在线");
-    expect(
-      mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
-    ).toContain("巩固再加深一层");
-    expect(
-      mount.querySelector(".guild-duty-header-residual-deepest-line"),
-    ).toBeTruthy();
-    expect(
-      mount.querySelector(".guild-duty-header-residual-deepest-deepest-deeper-line"),
-    ).toBeTruthy();
-    expect(
-      mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
-    ).toContain("巩固再加深三层");
-    expect(
-      mount.querySelector(".guild-duty-header-residual-deepest-deepest-deepest-line"),
-    ).toBeTruthy();
-    expect(
-      mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
-    ).toContain("巩固再加深四层");
-    expect(
-      mount.querySelector(".guild-duty-header-residual-deepest-deepest-deepest-deeper-line"),
-    ).toBeTruthy();
-    expect(
-      mount.querySelector('[data-role="guild-role-group-header-line"]')?.textContent,
-    ).toContain("巩固再加深五层");
+    const headerLine = mount.querySelector('[data-role="guild-role-group-header-line"]');
+    expect(headerLine?.textContent).toBe("▼ 团长 · 1 人 · 在线未知 / 共 1 人");
+    expect(headerLine?.textContent).not.toContain("本组在线");
     mount
       .querySelector('[data-action="toggle-guild-role-group"][data-role-key="2"]')
       ?.dispatchEvent(new Event("click", { bubbles: true }));
@@ -1010,44 +848,7 @@ describe("SocialPanels chat & guild", () => {
     const separator = mount.querySelector(".chat-unread-separator");
     expect(separator).toBeTruthy();
     expect(separator?.classList.contains("guild-chat-unread-separator")).toBe(true);
-    expect(separator?.classList.contains("guild-chat-unread-divider-residual-sweep")).toBe(true);
-    expect(separator?.classList.contains("guild-chat-unread-divider-residual-deep-sweep")).toBe(
-      true,
-    );
-    expect(separator?.classList.contains("guild-chat-unread-divider-residual-deeper-sweep")).toBe(
-      true,
-    );
-    expect(separator?.classList.contains("guild-chat-unread-divider-residual-deepest-sweep")).toBe(
-      true,
-    );
-    expect(
-      separator?.classList.contains("guild-chat-unread-divider-residual-deepest-deeper-sweep"),
-    ).toBe(true);
-    expect(
-      separator?.classList.contains("guild-chat-unread-divider-residual-deepest-deepest-deeper-sweep"),
-    ).toBe(true);
-    expect(
-      separator?.classList.contains("guild-chat-unread-divider-residual-deepest-deepest-deepest-sweep"),
-    ).toBe(true);
-    expect(
-      separator?.classList.contains(
-        "guild-chat-unread-divider-residual-deepest-deepest-deepest-deeper-sweep",
-      ),
-    ).toBe(true);
-    expect(
-      separator?.classList.contains(
-        "guild-chat-unread-divider-residual-deepest-deepest-deepest-deepest-deeper-sweep",
-      ),
-    ).toBe(true);
     expect(separator?.textContent).toBe("1 条未读");
-    const unreadRow = mount.querySelector(".chat-log li.chat-msg:last-child");
-    expect(unreadRow?.classList.contains("guild-chat-unread-first-msg-sweep-ring")).toBe(true);
-    expect(unreadRow?.classList.contains("guild-chat-unread-first-msg-deep-sweep-ring")).toBe(
-      true,
-    );
-    expect(unreadRow?.classList.contains("guild-chat-unread-first-msg-deeper-sweep-ring")).toBe(
-      true,
-    );
     expect(mount.querySelector('[data-role="chat-mark-read"]')?.classList.contains("hidden")).toBe(
       false,
     );
