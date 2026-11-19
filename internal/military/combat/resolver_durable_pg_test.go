@@ -147,7 +147,7 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 				t.Fatal("restore did not stage exactly one arrival")
 			}
 			beforeOrder, beforeTroops := hub.SnapshotMarch(500)
-			beforeDefenders := garrisons.Get(5, 5)
+			beforeDefenders := garrisons.Get(context.Background(), 5, 5)
 			beforeRows := arrivalPGSnapshot(t, observer, "march_order", "field_army", "army_troop", "battle_report")
 			beforeCity := arrivalPGSnapshot(t, observer, "city_troop")
 			arrivalPGOK(t, hub.ActivateRestore())
@@ -160,7 +160,7 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 				if !errors.As(hub.MarchArrivalError(500), &pgErr) || pgErr.Code != "P0001" || pgErr.Message != "arrival acceptance failpoint" {
 					t.Fatalf("failpoint not reached: %v", hub.MarchArrivalError(500))
 				}
-				if !reflect.DeepEqual(order, beforeOrder) || !reflect.DeepEqual(survivors, beforeTroops) || !reflect.DeepEqual(garrisons.Get(5, 5), beforeDefenders) || finished != 0 {
+				if !reflect.DeepEqual(order, beforeOrder) || !reflect.DeepEqual(survivors, beforeTroops) || !reflect.DeepEqual(garrisons.Get(context.Background(), 5, 5), beforeDefenders) || finished != 0 {
 					t.Fatal("failed transaction published memory")
 				}
 				if arrivalPGSnapshot(t, observer, "march_order", "field_army", "army_troop", "battle_report") != beforeRows || arrivalPGSnapshot(t, observer, "city_troop") != beforeCity {
@@ -280,7 +280,7 @@ func TestPGPreparedArrivalFencesSharedDefendersAfterUnacknowledgedCommit(t *test
 	transition, err := march.NewMarchTransition(service, profile)
 	arrivalPGOK(t, err)
 	garrisons := garrisonFixture()
-	originalDefenders := garrisons.Get(5, 5)
+	originalDefenders := garrisons.Get(context.Background(), 5, 5)
 	resolver := NewResolver(1, service, garrisons, nil)
 	starts := 0
 	arrivalPGOK(t, resolver.EnableDurableArrival(func(ctx context.Context, opts pgx.TxOptions) (pgx.Tx, error) {
@@ -313,7 +313,7 @@ func TestPGPreparedArrivalFencesSharedDefendersAfterUnacknowledgedCommit(t *test
 	var statuses []int16
 	var reports int
 	arrivalPGOK(t, observer.QueryRow(ctx, `SELECT array_agg(status ORDER BY march_id),(SELECT count(*) FROM battle_report) FROM march_order`).Scan(&statuses, &reports))
-	if !reflect.DeepEqual(statuses, []int16{3, 1}) || reports != 1 || !reflect.DeepEqual(originalDefenders, garrisons.Get(5, 5)) {
+	if !reflect.DeepEqual(statuses, []int16{3, 1}) || reports != 1 || !reflect.DeepEqual(originalDefenders, garrisons.Get(context.Background(), 5, 5)) {
 		t.Fatal("expected one committed battle and no second battle against stale defenders", statuses, reports)
 	}
 	fresh := march.NewHub(nil)

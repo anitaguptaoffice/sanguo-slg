@@ -311,6 +311,13 @@ def build_world_wild(source: dict, item_by_code: dict[str, int]) -> str:
             out.append({"item_cfg_id": cfg, "weight": int(drop["weight"])})
         return out
 
+    curve = source.get("npc_hero_curve") or {}
+    force_curve = [int(v) for v in curve.get("force_by_level", [])]
+    intel_curve = [int(v) for v in curve.get("intel_by_level", [])]
+    exp_curve = [int(v) for v in curve.get("hero_exp_by_level", [])]
+    if len(force_curve) != 10 or len(intel_curve) != 10 or len(exp_curve) != 10:
+        raise ValueError("world_wild: npc_hero_curve must hold ten values per stat")
+
     def levels(entry: dict) -> list[dict]:
         totals = [int(v) for v in entry["total_by_level"]]
         if len(totals) != 10 or any(v <= 0 for v in totals):
@@ -323,6 +330,9 @@ def build_world_wild(source: dict, item_by_code: dict[str, int]) -> str:
             rows.append({
                 "level": level,
                 "hero_level": level,
+                "hero_force": force_curve[level - 1],
+                "hero_intel": intel_curve[level - 1],
+                "hero_exp": exp_curve[level - 1],
                 "troops": split_wild_troops(total, entry["troop_mix"]),
                 "loot": loot,
                 "items": drops(entry),

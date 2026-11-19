@@ -2,6 +2,7 @@ package march
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"strings"
@@ -30,6 +31,8 @@ type ArrivalCommit struct {
 	Survivors       []TroopStack
 	ReturnAt        time.Time
 	Report          *report.SaveParams
+	// Loot is the reward of a won battle; nil when nothing was won.
+	Loot *LootRecord
 }
 
 // ArrivalCommitted is the committed status and allocated report identity.
@@ -205,6 +208,21 @@ func (t *MarchTransition) Commit(ctx context.Context, tx pgx.Tx, in ArrivalCommi
 			return out, errors.Join(ErrMarchTransition, err)
 		}
 		out.ReportID = rec.ReportID
+	}
+	if in.Loot != nil {
+		items, err := json.Marshal(in.Loot.Items)
+		if err != nil {
+			return out, errors.Join(ErrMarchTransition, err)
+		}
+		lootSQL := `INSERT INTO ` + table("march_loot") + `(server_id,march_id,food,wood,stone,iron,gold,items,hero_exp)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+			ON CONFLICT (server_id,march_id) DO UPDATE SET food=EXCLUDED.food,wood=EXCLUDED.wood,stone=EXCLUDED.stone,
+			iron=EXCLUDED.iron,gold=EXCLUDED.gold,items=EXCLUDED.items,hero_exp=EXCLUDED.hero_exp`
+		if _, err = tx.Exec(ctx, lootSQL,
+			in.ServerID, in.MarchID, in.Loot.Food, in.Loot.Wood, in.Loot.Stone, in.Loot.Iron, in.Loot.Gold,
+			items, in.Loot.HeroExp); err != nil {
+			return out, errors.Join(ErrMarchTransition, err)
+		}
 	}
 	if _, err = tx.Exec(ctx, `RELEASE SAVEPOINT march_arrival`); err != nil {
 		active = false

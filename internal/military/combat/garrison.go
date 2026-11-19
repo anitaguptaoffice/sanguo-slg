@@ -1,19 +1,30 @@
 package combat
 
-import "github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+import (
+	"context"
+
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/battle"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/military/march"
+)
 
 // Garrison is a fixed-coordinate NPC defender stack (M2 fixture).
 type Garrison struct {
 	Troops    []march.TroopStack
 	HeroLevel int
+	HeroForce int32
+	HeroIntel int32
 	Morale    float64
+	// R1-S4 report metadata: tile label, defender hero name and reward profile.
+	Name     string
+	HeroName string
+	Loot     battle.Loot
 }
 
 // GarrisonSource resolves defenders for one destination tile. The in-memory
 // table is used by tests; the server wires a world-backed source.
 type GarrisonSource interface {
-	Get(x, y int) *Garrison
-	ApplyRemaining(x, y int, troops []march.TroopStack)
+	Get(ctx context.Context, x, y int) *Garrison
+	ApplyRemaining(ctx context.Context, x, y int, troops []march.TroopStack)
 }
 
 // GarrisonTable maps tile coordinates to defenders.
@@ -39,7 +50,7 @@ func (t *GarrisonTable) Set(x, y int, g Garrison) {
 }
 
 // Get returns a garrison copy at (x, y), or nil if none.
-func (t *GarrisonTable) Get(x, y int) *Garrison {
+func (t *GarrisonTable) Get(_ context.Context, x, y int) *Garrison {
 	if t == nil {
 		return nil
 	}
@@ -53,7 +64,7 @@ func (t *GarrisonTable) Get(x, y int) *Garrison {
 }
 
 // ApplyRemaining overwrites defender troops after battle (zero count removes the tile).
-func (t *GarrisonTable) ApplyRemaining(x, y int, troops []march.TroopStack) {
+func (t *GarrisonTable) ApplyRemaining(_ context.Context, x, y int, troops []march.TroopStack) {
 	if t == nil {
 		return
 	}

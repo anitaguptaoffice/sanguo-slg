@@ -27,6 +27,9 @@ type WildTroop struct {
 type WildLevel struct {
 	Level     int16
 	HeroLevel int16
+	HeroForce int32
+	HeroIntel int32
+	HeroExp   int64
 	Troops    []WildTroop
 	Loot      WildLoot
 	Items     []WildDrop
@@ -71,6 +74,9 @@ type wildJSON struct {
 type wildLevel struct {
 	Level     int16 `json:"level"`
 	HeroLevel int16 `json:"hero_level"`
+	HeroForce int32 `json:"hero_force"`
+	HeroIntel int32 `json:"hero_intel"`
+	HeroExp   int64 `json:"hero_exp"`
 	Troops    []struct {
 		UnitCfgID int32 `json:"unit_cfg_id"`
 		Count     int32 `json:"count"`
@@ -145,7 +151,7 @@ func fillLevels(dst []*WildLevel, src []wildLevel) error {
 		if row.Level < 1 || row.Level > 10 {
 			return fmt.Errorf("level %d out of range", row.Level)
 		}
-		level := &WildLevel{Level: row.Level, HeroLevel: row.HeroLevel,
+		level := &WildLevel{Level: row.Level, HeroLevel: row.HeroLevel, HeroForce: row.HeroForce, HeroIntel: row.HeroIntel, HeroExp: row.HeroExp,
 			Loot: WildLoot{Food: row.Loot.Food, Wood: row.Loot.Wood, Stone: row.Loot.Stone, Iron: row.Loot.Iron, Gold: row.Loot.Gold}}
 		for _, troop := range row.Troops {
 			if troop.UnitCfgID < 1 || troop.UnitCfgID > 4 || troop.Count <= 0 {

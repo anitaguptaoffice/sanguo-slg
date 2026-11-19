@@ -89,7 +89,7 @@ func returnPGFixture(t *testing.T, tracer pgx.QueryTracer, configure ...func(*pg
 	cfg.ConnConfig.RuntimeParams["datestyle"] = "ISO, YMD"
 	observer, err = pgx.ConnectConfig(ctx, cfg.ConnConfig.Copy())
 	returnPGOK(t, err)
-	for _, file := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "004_military.sql", "m4_008_work_queue_id_sequence.sql", "m4_030_world_tile.sql"} {
+	for _, file := range []string{"001_account.sql", "002_world.sql", "003_domestic.sql", "004_military.sql", "m4_008_work_queue_id_sequence.sql", "m4_030_world_tile.sql", "m4_040_march_loot.sql"} {
 		body, err := os.ReadFile("../../spec/db/" + file)
 		returnPGOK(t, err)
 		returnPGExec(t, ctx, observer, string(body))

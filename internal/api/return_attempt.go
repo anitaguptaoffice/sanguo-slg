@@ -224,6 +224,10 @@ func (g *returnGeneration) complete(ctx context.Context, c march.ReturnCandidate
 		r.cause = errReturnGeneration
 		return
 	}
+	phase = "loot settlement"
+	if r.cause = creditMarchLoot(ctx, &access, s.binding, s.profile.SchemaName, c); r.cause != nil {
+		return
+	}
 	phase = "commit"
 	if r.cause = owner.Commit(ctx); r.cause == nil {
 		r.outcome, r.confirmed = returnConfirmed, observation // Before any bookkeeping.

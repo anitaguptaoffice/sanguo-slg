@@ -31,7 +31,7 @@ func TestDurableResolverTransactionBoundary(t *testing.T) {
 	for _, stage := range []string{"begin", "transition", "commit", "success", "no-battle"} {
 		t.Run(stage, func(t *testing.T) {
 			r := NewResolver(1, nil, garrisonFixture(), nil)
-			before := r.Garrisons.Get(5, 5)
+			before := r.Garrisons.Get(context.Background(), 5, 5)
 			ev := march.MarchArrivalEvent{MarchID: 9, PlayerID: 1001,
 				Troops: []march.TroopStack{{UnitCfgID: 1, Count: 200}},
 				Order: march.MarchOrder{ArmyID: 7, ToX: 5, ToY: 5, Purpose: PurposeAttack,
@@ -53,7 +53,7 @@ func TestDurableResolverTransactionBoundary(t *testing.T) {
 				if got != tx || in.ArmyID != 7 || in.MarchID != 9 || in.ServerID != 1 {
 					t.Fatalf("incorrect transaction input: %+v", in)
 				}
-				if !reflect.DeepEqual(r.Garrisons.Get(5, 5), before) {
+				if !reflect.DeepEqual(r.Garrisons.Get(context.Background(), 5, 5), before) {
 					t.Fatal("defenders mutated before commit")
 				}
 				if stage == "no-battle" {
@@ -78,7 +78,7 @@ func TestDurableResolverTransactionBoundary(t *testing.T) {
 			}
 			failed := stage == "begin" || stage == "transition" || stage == "commit"
 			if failed {
-				if !errors.Is(err, failure) || !reflect.DeepEqual(r.Garrisons.Get(5, 5), before) {
+				if !errors.Is(err, failure) || !reflect.DeepEqual(r.Garrisons.Get(context.Background(), 5, 5), before) {
 					t.Fatalf("failure published state: err=%v", err)
 				}
 			} else if err != nil || out.ReportID != 77 || tx.commits != 1 {
@@ -90,7 +90,7 @@ func TestDurableResolverTransactionBoundary(t *testing.T) {
 			if stage == "transition" && tx.commits != 0 {
 				t.Fatal("committed failed transition")
 			}
-			if stage == "success" && reflect.DeepEqual(r.Garrisons.Get(5, 5), before) {
+			if stage == "success" && reflect.DeepEqual(r.Garrisons.Get(context.Background(), 5, 5), before) {
 				t.Fatal("defenders not published")
 			}
 		})

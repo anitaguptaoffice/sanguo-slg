@@ -9,6 +9,11 @@ import (
 
 // ArmyFromStacks maps cfg_unit stacks to battle.Army using catalog unit codes.
 func ArmyFromStacks(catalog map[int32]march.UnitSpec, stacks []march.TroopStack, heroLevel int, morale float64) battle.Army {
+	return ArmyFromStacksWithHero(catalog, stacks, heroLevel, 0, 0, morale)
+}
+
+// ArmyFromStacksWithHero additionally carries the hero force/intel multipliers.
+func ArmyFromStacksWithHero(catalog map[int32]march.UnitSpec, stacks []march.TroopStack, heroLevel int, force, intel int32, morale float64) battle.Army {
 	troops := make(map[battle.TroopType]int)
 	for _, st := range stacks {
 		if st.Count <= 0 {
@@ -27,7 +32,7 @@ func ArmyFromStacks(catalog map[int32]march.UnitSpec, stacks []march.TroopStack,
 	if morale <= 0 {
 		morale = 1
 	}
-	return battle.Army{Troops: troops, HeroLevel: heroLevel, Morale: morale}
+	return battle.Army{Troops: troops, HeroLevel: heroLevel, HeroForce: force, HeroIntel: intel, Morale: morale}
 }
 
 func troopTypeFromCode(code string) (battle.TroopType, error) {

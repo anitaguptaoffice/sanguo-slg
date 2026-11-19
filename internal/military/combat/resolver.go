@@ -13,10 +13,12 @@ import (
 
 // Resolver runs battle simulation and archives reports on march arrival.
 type Resolver struct {
-	ServerID      int32
-	Reports       *report.Service
-	Garrisons     GarrisonSource
-	UnitCatalog   map[int32]march.UnitSpec
+	ServerID    int32
+	Reports     *report.Service
+	Garrisons   GarrisonSource
+	UnitCatalog map[int32]march.UnitSpec
+	// HeroStats loads the attacker hero's level/force/intel; nil keeps level 0.
+	HeroStats     func(ctx context.Context, serverID, playerID, heroID int64) (HeroCombatStats, error)
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
 	commitArrival func(context.Context, pgx.Tx, march.ArrivalCommit) (march.ArrivalCommitted, error)
@@ -48,12 +50,21 @@ func (r *Resolver) EnableDurableArrival(begin func(context.Context, pgx.TxOption
 	return nil
 }
 
+// HeroCombatStats is the attacker contribution to one battle.
+type HeroCombatStats struct {
+	Name  string
+	Level int32
+	Force int32
+	Intel int32
+}
+
 // ArrivalResult is the battle outcome and persisted report id (zero if no battle ran).
 type ArrivalResult struct {
 	ReportID          int64
 	Report            battle.BattleReport
 	AttackerRemaining []march.TroopStack
 	DefenderRemaining []march.TroopStack
+	Loot              *march.LootRecord
 	BattleRan         bool
 }
 
@@ -80,7 +91,7 @@ func (r *Resolver) allocReportID() int64 {
 
 // ResolveAttackGarrison handles PurposeAttack against a fixed garrison tile.
 func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArrivalEvent) (ArrivalResult, error) {
-	g := r.Garrisons.Get(ev.Order.ToX, ev.Order.ToY)
+	g := r.Garrisons.Get(ctx, ev.Order.ToX, ev.Order.ToY)
 	if ev.Order.Purpose != PurposeAttack || g == nil {
 		if r.commitArrival != nil {
 			return r.persistArrival(ctx, ev, ArrivalResult{AttackerRemaining: append([]march.TroopStack(nil), ev.Troops...)})
@@ -92,21 +103,39 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 	attackerID := fmt.Sprintf("player-%d", ev.PlayerID)
 	defenderID := fmt.Sprintf("garrison-%d-%d", ev.Order.ToX, ev.Order.ToY)
 
+	var hero HeroCombatStats
+	if r.HeroStats != nil && len(ev.HeroIDs) == 1 && ev.HeroIDs[0] > 0 {
+		if stats, err := r.HeroStats(ctx, int64(r.ServerID), ev.PlayerID, ev.HeroIDs[0]); err == nil {
+			hero = stats
+		}
+	}
 	bin := battle.BattleInput{
 		BattleID:   battleID,
 		AttackerID: attackerID,
 		DefenderID: defenderID,
-		Attacker:   ArmyFromStacks(r.UnitCatalog, ev.Troops, 0, 1),
-		Defender:   ArmyFromStacks(r.UnitCatalog, g.Troops, g.HeroLevel, g.Morale),
+		Attacker:   ArmyFromStacksWithHero(r.UnitCatalog, ev.Troops, int(hero.Level), hero.Force, hero.Intel, 1),
+		Defender:   ArmyFromStacksWithHero(r.UnitCatalog, g.Troops, g.HeroLevel, g.HeroForce, g.HeroIntel, g.Morale),
 	}
 	rep := battle.Simulate(bin)
+	rep.TargetName = g.Name
+	rep.AttackerHero = battle.HeroSummary{Name: hero.Name, Level: hero.Level, Force: hero.Force, Intel: hero.Intel}
+	rep.DefenderHero = battle.HeroSummary{Name: g.HeroName, Level: int32(g.HeroLevel), Force: g.HeroForce, Intel: g.HeroIntel}
+	var loot *march.LootRecord
+	if rep.Result == battle.ResultAttackerWin {
+		rep.Loot = g.Loot
+		loot = &march.LootRecord{Food: g.Loot.Food, Wood: g.Loot.Wood, Stone: g.Loot.Stone,
+			Iron: g.Loot.Iron, Gold: g.Loot.Gold, HeroExp: g.Loot.HeroExp}
+		for _, item := range g.Loot.Items {
+			loot.Items = append(loot.Items, march.LootItem{ItemCfgID: item.ItemCfgID, Count: item.Count})
+		}
+	}
 
 	attRemain := StacksFromArmy(r.UnitCatalog, rep.FinalAttacker)
 	defRemain := StacksFromArmy(r.UnitCatalog, rep.FinalDefender)
 	if r.commitArrival != nil {
-		return r.persistArrival(ctx, ev, ArrivalResult{Report: rep, AttackerRemaining: attRemain, DefenderRemaining: defRemain, BattleRan: true})
+		return r.persistArrival(ctx, ev, ArrivalResult{Report: rep, AttackerRemaining: attRemain, DefenderRemaining: defRemain, Loot: loot, BattleRan: true})
 	}
-	r.Garrisons.ApplyRemaining(ev.Order.ToX, ev.Order.ToY, defRemain)
+	r.Garrisons.ApplyRemaining(ctx, ev.Order.ToX, ev.Order.ToY, defRemain)
 
 	reportID := r.allocReportID()
 	rec, err := r.Reports.Save(ctx, report.SaveParams{
@@ -126,6 +155,7 @@ func (r *Resolver) ResolveAttackGarrison(ctx context.Context, ev march.MarchArri
 		Report:            rep,
 		AttackerRemaining: attRemain,
 		DefenderRemaining: defRemain,
+		Loot:              loot,
 		BattleRan:         true,
 	}, nil
 }
@@ -142,7 +172,7 @@ func (r *Resolver) persistArrival(ctx context.Context, ev march.MarchArrivalEven
 		}
 	}
 	in := march.ArrivalCommit{ServerID: r.ServerID, MarchID: ev.MarchID, ArmyID: order.ArmyID,
-		ToX: int32(order.ToX), ToY: int32(order.ToY), Survivors: result.AttackerRemaining}
+		ToX: int32(order.ToX), ToY: int32(order.ToY), Survivors: result.AttackerRemaining, Loot: result.Loot}
 	if len(in.Survivors) > 0 {
 		if err := march.BeginReturn(&order, order.ArriveAt); err != nil {
 			return ArrivalResult{}, err
@@ -171,7 +201,7 @@ func (r *Resolver) persistArrival(ctx context.Context, ev march.MarchArrivalEven
 	}
 	result.ReportID = committed.ReportID
 	if result.BattleRan {
-		r.Garrisons.ApplyRemaining(order.ToX, order.ToY, result.DefenderRemaining)
+		r.Garrisons.ApplyRemaining(ctx, order.ToX, order.ToY, result.DefenderRemaining)
 	}
 	return result, nil
 }

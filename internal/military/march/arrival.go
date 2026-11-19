@@ -8,6 +8,7 @@ import (
 type MarchArrivalEvent struct {
 	MarchID  int64
 	PlayerID int64
+	HeroIDs  []int64
 	Troops   []TroopStack
 	Order    MarchOrder
 }

@@ -1217,6 +1217,212 @@ func (x *BattleReportSummary) GetCreatedAtMs() int64 {
 	return 0
 }
 
+// 战报主将名片。
+type BattleHeroSummary struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Level         int32                  `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitempty"`
+	Force         int32                  `protobuf:"varint,3,opt,name=force,proto3" json:"force,omitempty"`
+	Intel         int32                  `protobuf:"varint,4,opt,name=intel,proto3" json:"intel,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BattleHeroSummary) Reset() {
+	*x = BattleHeroSummary{}
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BattleHeroSummary) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BattleHeroSummary) ProtoMessage() {}
+
+func (x *BattleHeroSummary) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BattleHeroSummary.ProtoReflect.Descriptor instead.
+func (*BattleHeroSummary) Descriptor() ([]byte, []int) {
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *BattleHeroSummary) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *BattleHeroSummary) GetLevel() int32 {
+	if x != nil {
+		return x.Level
+	}
+	return 0
+}
+
+func (x *BattleHeroSummary) GetForce() int32 {
+	if x != nil {
+		return x.Force
+	}
+	return 0
+}
+
+func (x *BattleHeroSummary) GetIntel() int32 {
+	if x != nil {
+		return x.Intel
+	}
+	return 0
+}
+
+type BattleLootItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemCfgId     int32                  `protobuf:"varint,1,opt,name=item_cfg_id,json=itemCfgId,proto3" json:"item_cfg_id,omitempty"`
+	Count         int32                  `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BattleLootItem) Reset() {
+	*x = BattleLootItem{}
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BattleLootItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BattleLootItem) ProtoMessage() {}
+
+func (x *BattleLootItem) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BattleLootItem.ProtoReflect.Descriptor instead.
+func (*BattleLootItem) Descriptor() ([]byte, []int) {
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *BattleLootItem) GetItemCfgId() int32 {
+	if x != nil {
+		return x.ItemCfgId
+	}
+	return 0
+}
+
+func (x *BattleLootItem) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+// 战斗胜利战利品（返程入账）。
+type BattleLoot struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Food          int64                  `protobuf:"varint,1,opt,name=food,proto3" json:"food,omitempty"`
+	Wood          int64                  `protobuf:"varint,2,opt,name=wood,proto3" json:"wood,omitempty"`
+	Stone         int64                  `protobuf:"varint,3,opt,name=stone,proto3" json:"stone,omitempty"`
+	Iron          int64                  `protobuf:"varint,4,opt,name=iron,proto3" json:"iron,omitempty"`
+	Gold          int64                  `protobuf:"varint,5,opt,name=gold,proto3" json:"gold,omitempty"`
+	Items         []*BattleLootItem      `protobuf:"bytes,6,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BattleLoot) Reset() {
+	*x = BattleLoot{}
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BattleLoot) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BattleLoot) ProtoMessage() {}
+
+func (x *BattleLoot) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BattleLoot.ProtoReflect.Descriptor instead.
+func (*BattleLoot) Descriptor() ([]byte, []int) {
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *BattleLoot) GetFood() int64 {
+	if x != nil {
+		return x.Food
+	}
+	return 0
+}
+
+func (x *BattleLoot) GetWood() int64 {
+	if x != nil {
+		return x.Wood
+	}
+	return 0
+}
+
+func (x *BattleLoot) GetStone() int64 {
+	if x != nil {
+		return x.Stone
+	}
+	return 0
+}
+
+func (x *BattleLoot) GetIron() int64 {
+	if x != nil {
+		return x.Iron
+	}
+	return 0
+}
+
+func (x *BattleLoot) GetGold() int64 {
+	if x != nil {
+		return x.Gold
+	}
+	return 0
+}
+
+func (x *BattleLoot) GetItems() []*BattleLootItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 // 单场战斗明细，与 battle.BattleReport JSON 字段对齐（兵种键见 spec/rules/combat.md §1）。
 type BattleReportDetail struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1227,13 +1433,19 @@ type BattleReportDetail struct {
 	DefenderCasualties map[string]int32 `protobuf:"bytes,4,rep,name=defender_casualties,json=defenderCasualties,proto3" json:"defender_casualties,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	FinalAttacker      map[string]int32 `protobuf:"bytes,5,rep,name=final_attacker,json=finalAttacker,proto3" json:"final_attacker,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	FinalDefender      map[string]int32 `protobuf:"bytes,6,rep,name=final_defender,json=finalDefender,proto3" json:"final_defender,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	// R1-S4: 目标名（如「森林 Lv4」「黄巾营寨 Lv3」）、攻守主将与战利品。
+	TargetName    string             `protobuf:"bytes,7,opt,name=target_name,json=targetName,proto3" json:"target_name,omitempty"`
+	AttackerHero  *BattleHeroSummary `protobuf:"bytes,8,opt,name=attacker_hero,json=attackerHero,proto3" json:"attacker_hero,omitempty"`
+	DefenderHero  *BattleHeroSummary `protobuf:"bytes,9,opt,name=defender_hero,json=defenderHero,proto3" json:"defender_hero,omitempty"`
+	Loot          *BattleLoot        `protobuf:"bytes,10,opt,name=loot,proto3" json:"loot,omitempty"`
+	HeroExpGained int64              `protobuf:"varint,11,opt,name=hero_exp_gained,json=heroExpGained,proto3" json:"hero_exp_gained,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *BattleReportDetail) Reset() {
 	*x = BattleReportDetail{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[15]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1245,7 +1457,7 @@ func (x *BattleReportDetail) String() string {
 func (*BattleReportDetail) ProtoMessage() {}
 
 func (x *BattleReportDetail) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[15]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1258,7 +1470,7 @@ func (x *BattleReportDetail) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BattleReportDetail.ProtoReflect.Descriptor instead.
 func (*BattleReportDetail) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{15}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *BattleReportDetail) GetResult() string {
@@ -1303,6 +1515,41 @@ func (x *BattleReportDetail) GetFinalDefender() map[string]int32 {
 	return nil
 }
 
+func (x *BattleReportDetail) GetTargetName() string {
+	if x != nil {
+		return x.TargetName
+	}
+	return ""
+}
+
+func (x *BattleReportDetail) GetAttackerHero() *BattleHeroSummary {
+	if x != nil {
+		return x.AttackerHero
+	}
+	return nil
+}
+
+func (x *BattleReportDetail) GetDefenderHero() *BattleHeroSummary {
+	if x != nil {
+		return x.DefenderHero
+	}
+	return nil
+}
+
+func (x *BattleReportDetail) GetLoot() *BattleLoot {
+	if x != nil {
+		return x.Loot
+	}
+	return nil
+}
+
+func (x *BattleReportDetail) GetHeroExpGained() int64 {
+	if x != nil {
+		return x.HeroExpGained
+	}
+	return 0
+}
+
 type BattleRound struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Round           int32                  `protobuf:"varint,1,opt,name=round,proto3" json:"round,omitempty"`
@@ -1316,7 +1563,7 @@ type BattleRound struct {
 
 func (x *BattleRound) Reset() {
 	*x = BattleRound{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[16]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1328,7 +1575,7 @@ func (x *BattleRound) String() string {
 func (*BattleRound) ProtoMessage() {}
 
 func (x *BattleRound) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[16]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1341,7 +1588,7 @@ func (x *BattleRound) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BattleRound.ProtoReflect.Descriptor instead.
 func (*BattleRound) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{16}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *BattleRound) GetRound() int32 {
@@ -1389,7 +1636,7 @@ type BattleReportView struct {
 
 func (x *BattleReportView) Reset() {
 	*x = BattleReportView{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[17]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1401,7 +1648,7 @@ func (x *BattleReportView) String() string {
 func (*BattleReportView) ProtoMessage() {}
 
 func (x *BattleReportView) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[17]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1414,7 +1661,7 @@ func (x *BattleReportView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BattleReportView.ProtoReflect.Descriptor instead.
 func (*BattleReportView) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{17}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *BattleReportView) GetSummary() *BattleReportSummary {
@@ -1442,7 +1689,7 @@ type GetBattleReportRequest struct {
 
 func (x *GetBattleReportRequest) Reset() {
 	*x = GetBattleReportRequest{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[18]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1454,7 +1701,7 @@ func (x *GetBattleReportRequest) String() string {
 func (*GetBattleReportRequest) ProtoMessage() {}
 
 func (x *GetBattleReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[18]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1467,7 +1714,7 @@ func (x *GetBattleReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBattleReportRequest.ProtoReflect.Descriptor instead.
 func (*GetBattleReportRequest) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{18}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetBattleReportRequest) GetReportId() int64 {
@@ -1486,7 +1733,7 @@ type GetBattleReportResponse struct {
 
 func (x *GetBattleReportResponse) Reset() {
 	*x = GetBattleReportResponse{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[19]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1498,7 +1745,7 @@ func (x *GetBattleReportResponse) String() string {
 func (*GetBattleReportResponse) ProtoMessage() {}
 
 func (x *GetBattleReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[19]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1511,7 +1758,7 @@ func (x *GetBattleReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBattleReportResponse.ProtoReflect.Descriptor instead.
 func (*GetBattleReportResponse) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{19}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetBattleReportResponse) GetReport() *BattleReportView {
@@ -1533,7 +1780,7 @@ type ListBattleReportsRequest struct {
 
 func (x *ListBattleReportsRequest) Reset() {
 	*x = ListBattleReportsRequest{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[20]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1545,7 +1792,7 @@ func (x *ListBattleReportsRequest) String() string {
 func (*ListBattleReportsRequest) ProtoMessage() {}
 
 func (x *ListBattleReportsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[20]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1558,7 +1805,7 @@ func (x *ListBattleReportsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBattleReportsRequest.ProtoReflect.Descriptor instead.
 func (*ListBattleReportsRequest) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{20}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListBattleReportsRequest) GetLimit() int32 {
@@ -1585,7 +1832,7 @@ type ListBattleReportsResponse struct {
 
 func (x *ListBattleReportsResponse) Reset() {
 	*x = ListBattleReportsResponse{}
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[21]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1597,7 +1844,7 @@ func (x *ListBattleReportsResponse) String() string {
 func (*ListBattleReportsResponse) ProtoMessage() {}
 
 func (x *ListBattleReportsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_military_v1_military_proto_msgTypes[21]
+	mi := &file_sanguo_military_v1_military_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1610,7 +1857,7 @@ func (x *ListBattleReportsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBattleReportsResponse.ProtoReflect.Descriptor instead.
 func (*ListBattleReportsResponse) Descriptor() ([]byte, []int) {
-	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{21}
+	return file_sanguo_military_v1_military_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ListBattleReportsResponse) GetReports() []*BattleReportSummary {
@@ -1728,14 +1975,37 @@ const file_sanguo_military_v1_military_proto_rawDesc = "" +
 	"\n" +
 	"location_y\x18\x06 \x01(\x05R\tlocationY\x12\x18\n" +
 	"\aoutcome\x18\a \x01(\x05R\aoutcome\x12\"\n" +
-	"\rcreated_at_ms\x18\b \x01(\x03R\vcreatedAtMs\"\x9d\x06\n" +
+	"\rcreated_at_ms\x18\b \x01(\x03R\vcreatedAtMs\"i\n" +
+	"\x11BattleHeroSummary\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05level\x18\x02 \x01(\x05R\x05level\x12\x14\n" +
+	"\x05force\x18\x03 \x01(\x05R\x05force\x12\x14\n" +
+	"\x05intel\x18\x04 \x01(\x05R\x05intel\"F\n" +
+	"\x0eBattleLootItem\x12\x1e\n" +
+	"\vitem_cfg_id\x18\x01 \x01(\x05R\titemCfgId\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\xac\x01\n" +
+	"\n" +
+	"BattleLoot\x12\x12\n" +
+	"\x04food\x18\x01 \x01(\x03R\x04food\x12\x12\n" +
+	"\x04wood\x18\x02 \x01(\x03R\x04wood\x12\x14\n" +
+	"\x05stone\x18\x03 \x01(\x03R\x05stone\x12\x12\n" +
+	"\x04iron\x18\x04 \x01(\x03R\x04iron\x12\x12\n" +
+	"\x04gold\x18\x05 \x01(\x03R\x04gold\x128\n" +
+	"\x05items\x18\x06 \x03(\v2\".sanguo.military.v1.BattleLootItemR\x05items\"\xb2\b\n" +
 	"\x12BattleReportDetail\x12\x16\n" +
 	"\x06result\x18\x01 \x01(\tR\x06result\x127\n" +
 	"\x06rounds\x18\x02 \x03(\v2\x1f.sanguo.military.v1.BattleRoundR\x06rounds\x12o\n" +
 	"\x13attacker_casualties\x18\x03 \x03(\v2>.sanguo.military.v1.BattleReportDetail.AttackerCasualtiesEntryR\x12attackerCasualties\x12o\n" +
 	"\x13defender_casualties\x18\x04 \x03(\v2>.sanguo.military.v1.BattleReportDetail.DefenderCasualtiesEntryR\x12defenderCasualties\x12`\n" +
 	"\x0efinal_attacker\x18\x05 \x03(\v29.sanguo.military.v1.BattleReportDetail.FinalAttackerEntryR\rfinalAttacker\x12`\n" +
-	"\x0efinal_defender\x18\x06 \x03(\v29.sanguo.military.v1.BattleReportDetail.FinalDefenderEntryR\rfinalDefender\x1aE\n" +
+	"\x0efinal_defender\x18\x06 \x03(\v29.sanguo.military.v1.BattleReportDetail.FinalDefenderEntryR\rfinalDefender\x12\x1f\n" +
+	"\vtarget_name\x18\a \x01(\tR\n" +
+	"targetName\x12J\n" +
+	"\rattacker_hero\x18\b \x01(\v2%.sanguo.military.v1.BattleHeroSummaryR\fattackerHero\x12J\n" +
+	"\rdefender_hero\x18\t \x01(\v2%.sanguo.military.v1.BattleHeroSummaryR\fdefenderHero\x122\n" +
+	"\x04loot\x18\n" +
+	" \x01(\v2\x1e.sanguo.military.v1.BattleLootR\x04loot\x12&\n" +
+	"\x0fhero_exp_gained\x18\v \x01(\x03R\rheroExpGained\x1aE\n" +
 	"\x17AttackerCasualtiesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aE\n" +
@@ -1795,7 +2065,7 @@ func file_sanguo_military_v1_military_proto_rawDescGZIP() []byte {
 }
 
 var file_sanguo_military_v1_military_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_sanguo_military_v1_military_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_sanguo_military_v1_military_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_sanguo_military_v1_military_proto_goTypes = []any{
 	(MarchPhase)(0),                   // 0: sanguo.military.v1.MarchPhase
 	(*RecruitTroopRequest)(nil),       // 1: sanguo.military.v1.RecruitTroopRequest
@@ -1813,50 +2083,57 @@ var file_sanguo_military_v1_military_proto_goTypes = []any{
 	(*ListMarchesRequest)(nil),        // 13: sanguo.military.v1.ListMarchesRequest
 	(*ListMarchesResponse)(nil),       // 14: sanguo.military.v1.ListMarchesResponse
 	(*BattleReportSummary)(nil),       // 15: sanguo.military.v1.BattleReportSummary
-	(*BattleReportDetail)(nil),        // 16: sanguo.military.v1.BattleReportDetail
-	(*BattleRound)(nil),               // 17: sanguo.military.v1.BattleRound
-	(*BattleReportView)(nil),          // 18: sanguo.military.v1.BattleReportView
-	(*GetBattleReportRequest)(nil),    // 19: sanguo.military.v1.GetBattleReportRequest
-	(*GetBattleReportResponse)(nil),   // 20: sanguo.military.v1.GetBattleReportResponse
-	(*ListBattleReportsRequest)(nil),  // 21: sanguo.military.v1.ListBattleReportsRequest
-	(*ListBattleReportsResponse)(nil), // 22: sanguo.military.v1.ListBattleReportsResponse
-	nil,                               // 23: sanguo.military.v1.BattleReportDetail.AttackerCasualtiesEntry
-	nil,                               // 24: sanguo.military.v1.BattleReportDetail.DefenderCasualtiesEntry
-	nil,                               // 25: sanguo.military.v1.BattleReportDetail.FinalAttackerEntry
-	nil,                               // 26: sanguo.military.v1.BattleReportDetail.FinalDefenderEntry
-	nil,                               // 27: sanguo.military.v1.BattleRound.AttackerTroopsEntry
-	nil,                               // 28: sanguo.military.v1.BattleRound.DefenderTroopsEntry
-	(*v1.CityTroopStack)(nil),         // 29: sanguo.common.v1.CityTroopStack
-	(*v1.ResourceWallet)(nil),         // 30: sanguo.common.v1.ResourceWallet
+	(*BattleHeroSummary)(nil),         // 16: sanguo.military.v1.BattleHeroSummary
+	(*BattleLootItem)(nil),            // 17: sanguo.military.v1.BattleLootItem
+	(*BattleLoot)(nil),                // 18: sanguo.military.v1.BattleLoot
+	(*BattleReportDetail)(nil),        // 19: sanguo.military.v1.BattleReportDetail
+	(*BattleRound)(nil),               // 20: sanguo.military.v1.BattleRound
+	(*BattleReportView)(nil),          // 21: sanguo.military.v1.BattleReportView
+	(*GetBattleReportRequest)(nil),    // 22: sanguo.military.v1.GetBattleReportRequest
+	(*GetBattleReportResponse)(nil),   // 23: sanguo.military.v1.GetBattleReportResponse
+	(*ListBattleReportsRequest)(nil),  // 24: sanguo.military.v1.ListBattleReportsRequest
+	(*ListBattleReportsResponse)(nil), // 25: sanguo.military.v1.ListBattleReportsResponse
+	nil,                               // 26: sanguo.military.v1.BattleReportDetail.AttackerCasualtiesEntry
+	nil,                               // 27: sanguo.military.v1.BattleReportDetail.DefenderCasualtiesEntry
+	nil,                               // 28: sanguo.military.v1.BattleReportDetail.FinalAttackerEntry
+	nil,                               // 29: sanguo.military.v1.BattleReportDetail.FinalDefenderEntry
+	nil,                               // 30: sanguo.military.v1.BattleRound.AttackerTroopsEntry
+	nil,                               // 31: sanguo.military.v1.BattleRound.DefenderTroopsEntry
+	(*v1.CityTroopStack)(nil),         // 32: sanguo.common.v1.CityTroopStack
+	(*v1.ResourceWallet)(nil),         // 33: sanguo.common.v1.ResourceWallet
 }
 var file_sanguo_military_v1_military_proto_depIdxs = []int32{
-	29, // 0: sanguo.military.v1.RecruitTroopResponse.troop:type_name -> sanguo.common.v1.CityTroopStack
-	30, // 1: sanguo.military.v1.RecruitTroopResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
+	32, // 0: sanguo.military.v1.RecruitTroopResponse.troop:type_name -> sanguo.common.v1.CityTroopStack
+	33, // 1: sanguo.military.v1.RecruitTroopResponse.wallet:type_name -> sanguo.common.v1.ResourceWallet
 	5,  // 2: sanguo.military.v1.RecruitTroopV2Response.acceptance:type_name -> sanguo.military.v1.RecruitAcceptance
 	0,  // 3: sanguo.military.v1.MarchSummary.phase:type_name -> sanguo.military.v1.MarchPhase
-	29, // 4: sanguo.military.v1.MarchSummary.troops:type_name -> sanguo.common.v1.CityTroopStack
-	29, // 5: sanguo.military.v1.StartMarchRequest.troops:type_name -> sanguo.common.v1.CityTroopStack
+	32, // 4: sanguo.military.v1.MarchSummary.troops:type_name -> sanguo.common.v1.CityTroopStack
+	32, // 5: sanguo.military.v1.StartMarchRequest.troops:type_name -> sanguo.common.v1.CityTroopStack
 	6,  // 6: sanguo.military.v1.StartMarchResponse.march:type_name -> sanguo.military.v1.MarchSummary
-	29, // 7: sanguo.military.v1.StartMarchResponse.city_troops:type_name -> sanguo.common.v1.CityTroopStack
+	32, // 7: sanguo.military.v1.StartMarchResponse.city_troops:type_name -> sanguo.common.v1.CityTroopStack
 	6,  // 8: sanguo.military.v1.RecallMarchResponse.march:type_name -> sanguo.military.v1.MarchSummary
 	6,  // 9: sanguo.military.v1.SpeedupMarchResponse.march:type_name -> sanguo.military.v1.MarchSummary
 	6,  // 10: sanguo.military.v1.ListMarchesResponse.marches:type_name -> sanguo.military.v1.MarchSummary
-	17, // 11: sanguo.military.v1.BattleReportDetail.rounds:type_name -> sanguo.military.v1.BattleRound
-	23, // 12: sanguo.military.v1.BattleReportDetail.attacker_casualties:type_name -> sanguo.military.v1.BattleReportDetail.AttackerCasualtiesEntry
-	24, // 13: sanguo.military.v1.BattleReportDetail.defender_casualties:type_name -> sanguo.military.v1.BattleReportDetail.DefenderCasualtiesEntry
-	25, // 14: sanguo.military.v1.BattleReportDetail.final_attacker:type_name -> sanguo.military.v1.BattleReportDetail.FinalAttackerEntry
-	26, // 15: sanguo.military.v1.BattleReportDetail.final_defender:type_name -> sanguo.military.v1.BattleReportDetail.FinalDefenderEntry
-	27, // 16: sanguo.military.v1.BattleRound.attacker_troops:type_name -> sanguo.military.v1.BattleRound.AttackerTroopsEntry
-	28, // 17: sanguo.military.v1.BattleRound.defender_troops:type_name -> sanguo.military.v1.BattleRound.DefenderTroopsEntry
-	15, // 18: sanguo.military.v1.BattleReportView.summary:type_name -> sanguo.military.v1.BattleReportSummary
-	16, // 19: sanguo.military.v1.BattleReportView.detail:type_name -> sanguo.military.v1.BattleReportDetail
-	18, // 20: sanguo.military.v1.GetBattleReportResponse.report:type_name -> sanguo.military.v1.BattleReportView
-	15, // 21: sanguo.military.v1.ListBattleReportsResponse.reports:type_name -> sanguo.military.v1.BattleReportSummary
-	22, // [22:22] is the sub-list for method output_type
-	22, // [22:22] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	17, // 11: sanguo.military.v1.BattleLoot.items:type_name -> sanguo.military.v1.BattleLootItem
+	20, // 12: sanguo.military.v1.BattleReportDetail.rounds:type_name -> sanguo.military.v1.BattleRound
+	26, // 13: sanguo.military.v1.BattleReportDetail.attacker_casualties:type_name -> sanguo.military.v1.BattleReportDetail.AttackerCasualtiesEntry
+	27, // 14: sanguo.military.v1.BattleReportDetail.defender_casualties:type_name -> sanguo.military.v1.BattleReportDetail.DefenderCasualtiesEntry
+	28, // 15: sanguo.military.v1.BattleReportDetail.final_attacker:type_name -> sanguo.military.v1.BattleReportDetail.FinalAttackerEntry
+	29, // 16: sanguo.military.v1.BattleReportDetail.final_defender:type_name -> sanguo.military.v1.BattleReportDetail.FinalDefenderEntry
+	16, // 17: sanguo.military.v1.BattleReportDetail.attacker_hero:type_name -> sanguo.military.v1.BattleHeroSummary
+	16, // 18: sanguo.military.v1.BattleReportDetail.defender_hero:type_name -> sanguo.military.v1.BattleHeroSummary
+	18, // 19: sanguo.military.v1.BattleReportDetail.loot:type_name -> sanguo.military.v1.BattleLoot
+	30, // 20: sanguo.military.v1.BattleRound.attacker_troops:type_name -> sanguo.military.v1.BattleRound.AttackerTroopsEntry
+	31, // 21: sanguo.military.v1.BattleRound.defender_troops:type_name -> sanguo.military.v1.BattleRound.DefenderTroopsEntry
+	15, // 22: sanguo.military.v1.BattleReportView.summary:type_name -> sanguo.military.v1.BattleReportSummary
+	19, // 23: sanguo.military.v1.BattleReportView.detail:type_name -> sanguo.military.v1.BattleReportDetail
+	21, // 24: sanguo.military.v1.GetBattleReportResponse.report:type_name -> sanguo.military.v1.BattleReportView
+	15, // 25: sanguo.military.v1.ListBattleReportsResponse.reports:type_name -> sanguo.military.v1.BattleReportSummary
+	26, // [26:26] is the sub-list for method output_type
+	26, // [26:26] is the sub-list for method input_type
+	26, // [26:26] is the sub-list for extension type_name
+	26, // [26:26] is the sub-list for extension extendee
+	0,  // [0:26] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_military_v1_military_proto_init() }
@@ -1870,7 +2147,7 @@ func file_sanguo_military_v1_military_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_military_v1_military_proto_rawDesc), len(file_sanguo_military_v1_military_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   28,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

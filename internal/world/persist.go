@@ -215,3 +215,11 @@ func (p *PGStore) MarchLines(ctx context.Context, sid int32, minX, minY, maxX, m
 	}
 	return out, rows.Err()
 }
+
+// SaveGarrison persists a wild tile's remaining defenders and recovery deadline.
+func (p *PGStore) SaveGarrison(ctx context.Context, serverID int32, x, y int, garrisonJSON []byte, recoverAt time.Time) error {
+	_, err := p.Pool.Exec(ctx, `
+		UPDATE map_cell SET garrison_json = $4, recover_at = $5
+		WHERE server_id = $1 AND x = $2 AND y = $3`, serverID, x, y, garrisonJSON, recoverAt)
+	return err
+}

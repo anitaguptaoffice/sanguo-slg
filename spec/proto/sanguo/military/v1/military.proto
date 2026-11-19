@@ -181,6 +181,29 @@ message BattleReportSummary {
   int64 created_at_ms = 8;
 }
 
+// 战报主将名片。
+message BattleHeroSummary {
+  string name = 1;
+  int32 level = 2;
+  int32 force = 3;
+  int32 intel = 4;
+}
+
+message BattleLootItem {
+  int32 item_cfg_id = 1;
+  int32 count = 2;
+}
+
+// 战斗胜利战利品（返程入账）。
+message BattleLoot {
+  int64 food = 1;
+  int64 wood = 2;
+  int64 stone = 3;
+  int64 iron = 4;
+  int64 gold = 5;
+  repeated BattleLootItem items = 6;
+}
+
 // 单场战斗明细，与 battle.BattleReport JSON 字段对齐（兵种键见 spec/rules/combat.md §1）。
 message BattleReportDetail {
   // attacker_win / defender_win（与 battle.Result 一致；平局见 summary.outcome=3）。
@@ -190,6 +213,12 @@ message BattleReportDetail {
   map<string, int32> defender_casualties = 4;
   map<string, int32> final_attacker = 5;
   map<string, int32> final_defender = 6;
+  // R1-S4: 目标名（如「森林 Lv4」「黄巾营寨 Lv3」）、攻守主将与战利品。
+  string target_name = 7;
+  BattleHeroSummary attacker_hero = 8;
+  BattleHeroSummary defender_hero = 9;
+  BattleLoot loot = 10;
+  int64 hero_exp_gained = 11;
 }
 
 message BattleRound {

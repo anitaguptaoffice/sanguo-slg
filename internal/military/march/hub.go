@@ -211,9 +211,14 @@ func (h *Hub) onMarchArrive(ev Event) {
 	ctx := h.marchCtx[ev.RefID]
 	scheduledReturn := false
 	if h.onArrive != nil && ctx.PlayerID != 0 {
+		heroIDs := make([]int64, 0, 1)
+		if ctx.HeroID > 0 {
+			heroIDs = append(heroIDs, ctx.HeroID)
+		}
 		res, err := h.onArrive(context.Background(), MarchArrivalEvent{
 			MarchID:  ev.RefID,
 			PlayerID: ctx.PlayerID,
+			HeroIDs:  heroIDs,
 			Troops:   cloneStacks(ctx.Troops),
 			Order:    *o,
 		})

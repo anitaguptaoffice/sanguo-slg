@@ -620,8 +620,23 @@ export function formatBattleResultText(result: string | undefined): string {
   return BATTLE_RESULT_LABEL[result] ?? result;
 }
 
+export type BattleHeroView = { name?: string; level?: number; force?: number; intel?: number };
+export type BattleLootView = {
+  food?: number;
+  wood?: number;
+  stone?: number;
+  iron?: number;
+  gold?: number;
+  items?: { item_cfg_id?: number; count?: number }[];
+};
+
 export type BattleReportDetailView = {
   result?: string;
+  target_name?: string;
+  attacker_hero?: BattleHeroView;
+  defender_hero?: BattleHeroView;
+  loot?: BattleLootView;
+  hero_exp_gained?: number;
   attacker_hero_level?: number;
   defender_hero_level?: number;
   rounds?: {
@@ -646,6 +661,38 @@ export function formatBattleRoundLine(round: BattleRoundView | undefined): strin
   const def = formatCasualtyMap(round.defender_troops);
   const dmg = `伤害 攻→守 ${round.attacker_to_def_hp ?? 0} / 守→攻 ${round.defender_to_att_hp ?? 0}`;
   return `第 ${n} 回合 · 攻 ${att} · 守 ${def} · ${dmg}`;
+}
+
+/** R1-S4 战报上下文：目标、攻守主将与战利品。 */
+export function formatBattleReportContext(detail: BattleReportDetailView | undefined): string | null {
+  if (!detail) return null;
+  const parts: string[] = [];
+  if (detail.target_name) parts.push(`目标：${detail.target_name}`);
+  const heroLine = (label: string, hero: BattleHeroView | undefined): string | null =>
+    hero?.name ? `${label}：${hero.name} Lv${hero.level ?? 1} · 武 ${hero.force ?? 0} 智 ${hero.intel ?? 0}` : null;
+  const attacker = heroLine("攻方主将", detail.attacker_hero);
+  const defender = heroLine("守方守将", detail.defender_hero);
+  if (attacker) parts.push(attacker);
+  if (defender) parts.push(defender);
+  const loot = detail.loot;
+  if (loot) {
+    const rawResources: [string, number | undefined][] = [
+      ["粮", loot.food],
+      ["木", loot.wood],
+      ["石", loot.stone],
+      ["铁", loot.iron],
+      ["金", loot.gold],
+    ];
+    const resources = rawResources
+      .filter(([, value]) => (value ?? 0) > 0)
+      .map(([key, value]) => `${key}${value}`);
+    const items = (loot.items ?? [])
+      .filter((it) => (it.count ?? 0) > 0)
+      .map((it) => `道具#${it.item_cfg_id}×${it.count}`);
+    if (resources.length || items.length) parts.push(`战利品：${[...resources, ...items].join(" ")}`);
+  }
+  if ((detail.hero_exp_gained ?? 0) > 0) parts.push(`主将经验 +${detail.hero_exp_gained}`);
+  return parts.length ? parts.join(" · ") : null;
 }
 
 export function formatBattleReportDetail(

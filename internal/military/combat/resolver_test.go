@@ -34,7 +34,7 @@ func TestResolveAttackGarrisonStableOutcome(t *testing.T) {
 		AttackerID: "player-1001",
 		DefenderID: "garrison-5-5",
 		Attacker:   ArmyFromStacks(march.DefaultUnitCatalog(), ev.Troops, 0, 1),
-		Defender:   ArmyFromStacks(march.DefaultUnitCatalog(), fix.Get(5, 5).Troops, 0, 1),
+		Defender:   ArmyFromStacks(march.DefaultUnitCatalog(), fix.Get(context.Background(), 5, 5).Troops, 0, 1),
 	})
 
 	res1, err := r.ResolveAttackGarrison(ctx, ev)

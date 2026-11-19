@@ -53,6 +53,7 @@ import {
   battleReportOutcomeChipLabel,
   countBattleReportsByOutcome,
   filterBattleReportsByTimeWindow,
+  formatBattleReportContext,
   formatBattleReportDetail,
   formatBattleReportFoeWithoutCoord,
   BATTLE_REPORT_OUTCOME_BAND_CLASS,
@@ -677,6 +678,15 @@ export class BattleReportPanel {
       detailEl.appendChild(outcomeBand);
     }
 
+    const contextText = formatBattleReportContext(this.detailView);
+    if (contextText) {
+      const context = document.createElement("div");
+      context.className = "battle-report-detail-context";
+      context.setAttribute("aria-label", "战报目标、主将与战利品");
+      context.textContent = contextText;
+      detailEl.appendChild(context);
+    }
+
     const roundSummaryText = formatBattleReportRoundSummaryStrip(this.detailView);
     if (roundSummaryText) {
       const roundStrip = document.createElement("div");
@@ -797,7 +807,11 @@ export class BattleReportPanel {
       head.className = "battle-report-detail-head";
       const foe = document.createElement("span");
       foe.className = "battle-report-detail-foe";
-      foe.textContent = formatBattleReportFoeWithoutCoord(summary);
+      const defenderHero = this.detailView?.defender_hero;
+      foe.textContent =
+        defenderHero?.name
+          ? `守方守将：${defenderHero.name} Lv${defenderHero.level ?? 1}`
+          : formatBattleReportFoeWithoutCoord(summary);
       head.appendChild(foe);
       detailEl.appendChild(head);
 
