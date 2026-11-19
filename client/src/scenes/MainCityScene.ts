@@ -1517,7 +1517,7 @@ export class MainCityScene implements Scene {
     this.renderHud();
   }
 
-  private static readonly MARCH_SPEEDUP_ITEM_CFG_ID = 2050;
+  private static readonly MARCH_SPEEDUP_ITEM_CFG_ID = 2100;
 
   private hasMarchSpeedupItem(): boolean {
     return (this.session?.bag ?? []).some(

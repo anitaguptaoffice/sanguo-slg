@@ -22,7 +22,7 @@ func TestPGMarchRecallAndSpeedupGateway(t *testing.T) {
 	contentDDL, err := os.ReadFile("../../spec/db/006_content.sql")
 	returnPGOK(t, err)
 	returnPGExec(t, f.ctx, f.observer, string(contentDDL))
-	returnPGExec(t, f.ctx, f.observer, `INSERT INTO player_item(server_id,player_id,item_cfg_id,quantity) VALUES(1,1,2050,1)`)
+	returnPGExec(t, f.ctx, f.observer, `INSERT INTO player_item(server_id,player_id,item_cfg_id,quantity) VALUES(1,1,2100,1)`)
 
 	start, err := f.request(f.ctx, "owner", 10, 5)
 	if err != nil || start.GetCode() != 0 {
@@ -37,7 +37,7 @@ func TestPGMarchRecallAndSpeedupGateway(t *testing.T) {
 
 	speedup := f.s.GatewayRouter().Dispatch(f.ctx, &commonv1.ClientPacket{
 		Route: RouteSpeedupMarch, SessionId: "owner", ServerId: 1, TraceId: "speedup",
-		Payload: mustProto(&militaryv1.SpeedupMarchRequest{MarchId: marchID, ItemCfgId: 2050}),
+		Payload: mustProto(&militaryv1.SpeedupMarchRequest{MarchId: marchID, ItemCfgId: 2100}),
 	})
 	if speedup.GetCode() != 0 {
 		t.Fatalf("speedup failed: %+v", speedup)
@@ -50,7 +50,7 @@ func TestPGMarchRecallAndSpeedupGateway(t *testing.T) {
 
 	empty := f.s.GatewayRouter().Dispatch(f.ctx, &commonv1.ClientPacket{
 		Route: RouteSpeedupMarch, SessionId: "owner", ServerId: 1, TraceId: "speedup-empty",
-		Payload: mustProto(&militaryv1.SpeedupMarchRequest{MarchId: marchID, ItemCfgId: 2050}),
+		Payload: mustProto(&militaryv1.SpeedupMarchRequest{MarchId: marchID, ItemCfgId: 2100}),
 	})
 	if empty.GetCode() != int32(commonv1.ErrorCode_MILITARY_INVALID_MARCH) {
 		t.Fatalf("empty stock code %d", empty.GetCode())
