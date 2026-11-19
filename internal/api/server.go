@@ -235,6 +235,15 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	if s.preparedRecruit != nil {
 		handlers[routeRecruitTroopV2] = s.recruitV2Handler(s.preparedRecruit)
 	}
+	// The durable wiring replaces these standard handlers at startup. Bare
+	// servers (unit tests, partial composition) keep the legacy handlers so a
+	// route is always present.
+	if s.milDurable == nil {
+		handlers[RouteRecruitTroop] = s.handleRecruitTroop
+	}
+	if s.preparedMarch == nil {
+		handlers[RouteStartMarch] = s.handleStartMarch
+	}
 	if s.preparedMarch != nil {
 		handlers[RouteStartMarch] = s.preparedMarch.route
 	}
