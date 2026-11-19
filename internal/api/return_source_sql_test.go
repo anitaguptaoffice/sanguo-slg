@@ -32,8 +32,6 @@ var returnSQLReviewed = []struct{ file, symbol, digest string }{
 	{"account/fresh_actor_indexes.go", "freshActorIdentityCatalog", "2f124b9d58ab83dfa80e3c5a49c389f2651e449c35dd07c2afb6291a520ebd92"},
 	{"domestic/recruit_wallet_catalog.go", "recruitWalletCatalog", "9cd3fda5e0207a9ade628b5b693323fb1f321240dea73430673934f78254967c"},
 	{"world/city_sequence.go", "citySequenceMetadata", "2cc8f943b9baaeee3772eb23e48850fa1696b8c8619e2ac549284c217629e2a4"},
-	{"world/fresh_source_catalog.go", "freshSourceCatalog", "63da00f9d0b79e696cb3127f9bbb1c8ac71da97acaf06b979dce7f5c750c7996"},
-	{"world/fresh_source.go", "validateFreshSource", "a18658fff5cd577db0273468e4607e4ce443eb2b11a1fe6ee74e06abd6f94f9d"},
 	{"military/march/fresh_base_catalog.go", "freshBaseHeader", "c868434fb93eb0d9dfd10e8fdb2c7ce69666117ea49571210b33b40a0cddfb43"},
 	{"military/march/fresh_base_catalog.go", "freshBaseCatalog", "7dd5ac247a98852de20e85cd2173d940915bd516319bbe980fca402acbe06d6c"},
 	{"military/march/fresh_queue_catalog.go", "freshQueueCatalog", "20249087131a4f2f6f974ec1fda22d289bef173ded7e8a282902cd8b2e15891f"},

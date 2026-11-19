@@ -164,7 +164,7 @@ func startData002SmokeGatewayWithCalendar(t *testing.T, log *slog.Logger, pool *
 	domHub := domestic.NewHub(syncClk.Now)
 	domHub.UseStore(domestic.NewPGStore(pool), intg006ServerID, 0)
 	milHub := march.NewHub(syncClk.Now)
-	reports := api.WireM2Combat(intg006ServerID, pool, milHub)
+	reports := api.WireM2Combat(intg006ServerID, pool, milHub, apiTestGarrisons())
 	apiSrv := api.NewServer(log, pool, world.NewService(worldStore), domHub, milHub)
 	apiSrv.AttachBattleReports(reports)
 	apiSrv.SetClock(syncClk.Now)

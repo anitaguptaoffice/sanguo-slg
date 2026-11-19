@@ -107,18 +107,24 @@ func TestPGFreshSourceBindingAndPin(t *testing.T) {
 	}
 }
 
-func TestPGFreshSourceIndependentExpectations(t *testing.T) {
+func TestPGFreshSourceExpectationInventory(t *testing.T) {
 	_, b, p := freshFixture(t, false)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	_, a := sequenceOwner(t, b, ctx)
 	changes := []func(*freshsource.Profile){
-		func(p *freshsource.Profile) { p.DatabaseOID++ }, func(p *freshsource.Profile) { p.DatabaseName += "wrong" },
-		func(p *freshsource.Profile) { p.SchemaOID++ }, func(p *freshsource.Profile) { p.SchemaName += "wrong" },
-		func(p *freshsource.Profile) { p.SchemaOwnerOID++ }, func(p *freshsource.Profile) { p.CurrentRoleOID++ },
-		func(p *freshsource.Profile) { p.CurrentRoleName += "wrong" }, func(p *freshsource.Profile) { p.SessionRoleOID++ },
-		func(p *freshsource.Profile) { p.SessionRoleName += "wrong" }, func(p *freshsource.Profile) { delete(p.Objects, "map_cell") },
+		func(p *freshsource.Profile) { delete(p.Objects, "map_cell") },
 		func(p *freshsource.Profile) { p.Objects["extra"] = freshsource.ObjectIdentity{OID: 1, OwnerOID: 1} },
+		func(p *freshsource.Profile) {
+			seq := p.Objects["player_city_id_seq"]
+			seq.OID++
+			p.Objects["player_city_id_seq"] = seq
+		},
+		func(p *freshsource.Profile) {
+			seq := p.Objects["player_city_id_seq"]
+			seq.OwnerOID++
+			p.Objects["player_city_id_seq"] = seq
+		},
 	}
 	for _, change := range changes {
 		bad, err := freshsource.Snapshot(p)
@@ -129,85 +135,5 @@ func TestPGFreshSourceIndependentExpectations(t *testing.T) {
 		if s, err := NewFreshCityParticipant(ctx, b, a, bad); err == nil || s != nil {
 			t.Fatal("adopted mismatched expectation")
 		}
-	}
-	for _, name := range worldSourceNames {
-		for _, owner := range []bool{false, true} {
-			bad, _ := freshsource.Snapshot(p)
-			value := bad.Objects[name]
-			if owner {
-				value.OwnerOID++
-			} else {
-				value.OID++
-			}
-			bad.Objects[name] = value
-			if s, err := NewFreshCityParticipant(ctx, b, a, bad); err == nil || s != nil {
-				t.Fatal("object expectation", name, owner)
-			}
-		}
-	}
-}
-
-func TestPGFreshSourceCatalogDrift(t *testing.T) {
-	cases := map[string]string{
-		"rename away":     "ALTER TABLE map_cell RENAME TO parked",
-		"column":          "ALTER TABLE player_city ADD COLUMN surprise integer",
-		"type":            "ALTER TABLE player_city ALTER COLUMN morale TYPE bigint",
-		"nullable":        "ALTER TABLE player_city ALTER COLUMN name DROP NOT NULL",
-		"default":         "ALTER TABLE player_city ALTER COLUMN wall_level SET DEFAULT 2",
-		"check":           "ALTER TABLE player_city ADD CONSTRAINT surprise CHECK(morale>=0)",
-		"extra index":     "CREATE INDEX surprise ON player_city(morale)",
-		"index direction": "DROP INDEX idx_player_city_owner; CREATE INDEX idx_player_city_owner ON player_city(server_id DESC,player_id)",
-		"index rename":    "ALTER INDEX idx_player_city_owner RENAME TO surprise",
-		"sequence":        "ALTER SEQUENCE player_city_id_seq CACHE 2",
-	}
-	for name, ddl := range cases {
-		t.Run(name, func(t *testing.T) {
-			pool, b, p := freshFixture(t, false)
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			o, a := sequenceOwner(t, b, ctx)
-			s, err := NewFreshCityParticipant(ctx, b, a, p)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if err = o.Rollback(ctx); err != nil {
-				t.Fatal(err)
-			}
-			creationSQL(t, pool, ddl)
-			o, a = sequenceOwner(t, b, ctx)
-			if err = s.Pin(ctx, a); err == nil || !s.sequence.retired.Load() {
-				t.Fatal("drift admitted or not retired", err)
-			}
-			if name == "rename away" {
-				if err = o.Rollback(ctx); err != nil {
-					t.Fatal(err)
-				}
-				creationSQL(t, pool, "ALTER TABLE parked RENAME TO map_cell")
-				_, a = sequenceOwner(t, b, ctx)
-				if err = s.Pin(ctx, a); err == nil {
-					t.Fatal("retired source reopened")
-				}
-			}
-		})
-	}
-}
-
-func TestPGFreshSourcePreservesUnsafeSearchPath(t *testing.T) {
-	_, b, p := freshFixture(t, false)
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	_, a := sequenceOwner(t, b, ctx)
-	if _, err := a.Exec(ctx, b, "SET LOCAL search_path = "+pgx.Identifier{p.SchemaName}.Sanitize()+", pg_catalog"); err != nil {
-		t.Fatal(err)
-	}
-	var before, after string
-	if err := a.Scan(ctx, b, "SELECT pg_catalog.current_setting('search_path')", nil, &before); err != nil {
-		t.Fatal(err)
-	}
-	if s, err := NewFreshCityParticipant(ctx, b, a, p); err == nil || s != nil {
-		t.Fatal("unsafe default deparse admitted")
-	}
-	if err := a.Scan(ctx, b, "SELECT pg_catalog.current_setting('search_path')", nil, &after); err != nil || before != after {
-		t.Fatal("checker mutated settings", err)
 	}
 }

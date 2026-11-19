@@ -9,6 +9,13 @@ type Garrison struct {
 	Morale    float64
 }
 
+// GarrisonSource resolves defenders for one destination tile. The in-memory
+// table is used by tests; the server wires a world-backed source.
+type GarrisonSource interface {
+	Get(x, y int) *Garrison
+	ApplyRemaining(x, y int, troops []march.TroopStack)
+}
+
 // GarrisonTable maps tile coordinates to defenders.
 type GarrisonTable struct {
 	cells map[int64]Garrison
@@ -64,18 +71,4 @@ func (t *GarrisonTable) ApplyRemaining(x, y int, troops []march.TroopStack) {
 	g := t.cells[key]
 	g.Troops = remaining
 	t.cells[key] = g
-}
-
-// M2FixtureGarrisons is the wave-4 minimal attack target: (5,5) field garrison.
-func M2FixtureGarrisons() *GarrisonTable {
-	t := NewGarrisonTable()
-	t.Set(5, 5, Garrison{
-		Troops: []march.TroopStack{
-			{UnitCfgID: 1, Count: 120},
-			{UnitCfgID: 3, Count: 40},
-		},
-		HeroLevel: 0,
-		Morale:    1,
-	})
-	return t
 }

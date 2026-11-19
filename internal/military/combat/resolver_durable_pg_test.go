@@ -121,7 +121,7 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 			service := report.NewService(report.NewPGStore(pool))
 			transition, err := march.NewMarchTransition(service, profile)
 			arrivalPGOK(t, err)
-			garrisons := M2FixtureGarrisons()
+			garrisons := garrisonFixture()
 			if scenario == "no-battle" {
 				garrisons = NewGarrisonTable()
 			}
@@ -220,7 +220,7 @@ func TestPGDurableResolverHubRestore(t *testing.T) {
 			restartFinished := 0
 			restarted.SetMarchFinishedHandler(func(int64) { restartFinished++ })
 			calls := 0
-			freshResolver := NewResolver(1, service, M2FixtureGarrisons(), nil)
+			freshResolver := NewResolver(1, service, garrisonFixture(), nil)
 			arrivalPGOK(t, freshResolver.EnableDurableArrival(pool.BeginTx, transition))
 			restarted.SetMarchArrivalHandler(func(ctx context.Context, ev march.MarchArrivalEvent) (march.MarchArrivalOutcome, error) {
 				calls++
@@ -279,7 +279,7 @@ func TestPGPreparedArrivalFencesSharedDefendersAfterUnacknowledgedCommit(t *test
 	service := report.NewService(report.NewPGStore(pool))
 	transition, err := march.NewMarchTransition(service, profile)
 	arrivalPGOK(t, err)
-	garrisons := M2FixtureGarrisons()
+	garrisons := garrisonFixture()
 	originalDefenders := garrisons.Get(5, 5)
 	resolver := NewResolver(1, service, garrisons, nil)
 	starts := 0

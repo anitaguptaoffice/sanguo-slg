@@ -93,14 +93,21 @@ func compatImage(t testing.TB, ctx context.Context, c *pgx.Conn) string {
 
 func compatObserved(t testing.TB, ctx context.Context, c *pgx.Conn) []Cell {
 	t.Helper()
-	rows, err := c.Query(ctx, `SELECT x,y,terrain,COALESCE(resource_type,0),resource_level
+	rows, err := c.Query(ctx, `SELECT x,y,terrain,COALESCE(resource_type,0),resource_level,
+ level,max_level,province_id,COALESCE(owner_city_id,0),npc_kind,garrison_json,recover_at
  FROM map_cell WHERE server_id=7 AND x>=100 AND x<150 AND y>=150 AND y<200 ORDER BY y,x`)
 	compatOK(t, err)
 	defer rows.Close()
 	got := []Cell{}
 	for rows.Next() {
 		var cell Cell
-		compatOK(t, rows.Scan(&cell.X, &cell.Y, &cell.Terrain, &cell.ResourceType, &cell.ResourceLevel))
+		var recoverAt *time.Time
+		compatOK(t, rows.Scan(&cell.X, &cell.Y, &cell.Terrain, &cell.ResourceType, &cell.ResourceLevel,
+			&cell.Level, &cell.MaxLevel, &cell.ProvinceID, &cell.OwnerCityID, &cell.NpcKind,
+			&cell.GarrisonJSON, &recoverAt))
+		if recoverAt != nil {
+			cell.RecoverAt = *recoverAt
+		}
 		got = append(got, cell)
 	}
 	compatOK(t, rows.Err())
@@ -137,11 +144,11 @@ func TestPGChunkCompatibilitySparseAndLegacy(t *testing.T) {
 	if err != nil || found || len(cells) != 0 {
 		t.Fatal("empty load", cells, found, err)
 	}
-	want := []Cell{{100, 150, TerrainPlain, 0, 4}, {149, 150, TerrainWater, 2, 3}, {100, 199, TerrainMountain, 0, 1}, {149, 199, TerrainPlain, 3, 2}}
-	input := []Cell{want[3], want[1], want[2], {100, 150, TerrainWater, 4, 5}, want[0], {-1, 501, TerrainMountain, 0, 0}, {501, -1, TerrainWater, 0, 0}, {99, 150, TerrainWater, 0, 0}, {150, 150, TerrainWater, 0, 0}, {100, 149, TerrainWater, 0, 0}, {100, 200, TerrainWater, 0, 0}}
+	want := []Cell{{X: 100, Y: 150, Terrain: TerrainPlain, Level: 1, MaxLevel: 1}, {X: 149, Y: 150, Terrain: TerrainLake, ResourceType: 2, ResourceLevel: 3, Level: 1, MaxLevel: 1}, {X: 100, Y: 199, Terrain: TerrainMountain, Level: 1, MaxLevel: 1}, {X: 149, Y: 199, Terrain: TerrainPlain, ResourceType: 3, ResourceLevel: 2, Level: 1, MaxLevel: 1}}
+	input := []Cell{want[3], want[1], want[2], {X: 100, Y: 150, Terrain: TerrainLake, ResourceType: 4, ResourceLevel: 5, Level: 1, MaxLevel: 1}, want[0], {X: -1, Y: 501, Terrain: TerrainMountain, Level: 1, MaxLevel: 1}, {X: 501, Y: -1, Terrain: TerrainLake, Level: 1, MaxLevel: 1}, {X: 99, Y: 150, Terrain: TerrainLake, Level: 1, MaxLevel: 1}, {X: 150, Y: 150, Terrain: TerrainLake, Level: 1, MaxLevel: 1}, {X: 100, Y: 149, Terrain: TerrainLake, Level: 1, MaxLevel: 1}, {X: 100, Y: 200, Terrain: TerrainLake, Level: 1, MaxLevel: 1}}
 	beforeInput := append([]Cell(nil), input...)
 	compatOK(t, s.SaveChunk(ctx, 7, input))
-	compatOK(t, s.SaveChunk(ctx, 8, []Cell{{100, 150, TerrainMountain, 1, 5}}))
+	compatOK(t, s.SaveChunk(ctx, 8, []Cell{{X: 100, Y: 150, Terrain: TerrainMountain, ResourceType: 1, ResourceLevel: 5, Level: 1, MaxLevel: 1}}))
 	if !reflect.DeepEqual(input, beforeInput) {
 		t.Fatal("SaveChunk mutated input")
 	}
@@ -205,7 +212,7 @@ func TestPGChunkCompatibilityUpdateRollbackAndCommit(t *testing.T) {
 	loaded := compatCells(t, ctx, s, observer, updated)
 	for _, want := range updated {
 		got, ok := cellAt(loaded, want.X, want.Y)
-		if !ok || got != want {
+		if !ok || !reflect.DeepEqual(got, want) {
 			t.Fatal("complete image cannot be indexed", want, got)
 		}
 	}
@@ -221,7 +228,7 @@ func TestPGChunkCompatibilityUpdateRollbackAndCommit(t *testing.T) {
 
 func TestPGChunkCompatibilityRefreshBoundary(t *testing.T) {
 	ctx, s, observer := compatPG(t, nil)
-	original := []Cell{{100, 150, TerrainPlain, 1, 1}, {101, 150, TerrainPlain, 2, 4}, {102, 150, TerrainPlain, 3, 5}, {103, 150, TerrainPlain, 0, 0}}
+	original := []Cell{{X: 100, Y: 150, Terrain: TerrainPlain, ResourceType: 1, ResourceLevel: 1, Level: 1, MaxLevel: 1}, {X: 101, Y: 150, Terrain: TerrainPlain, ResourceType: 2, ResourceLevel: 4, Level: 1, MaxLevel: 1}, {X: 102, Y: 150, Terrain: TerrainPlain, ResourceType: 3, ResourceLevel: 5, Level: 1, MaxLevel: 1}, {X: 103, Y: 150, Terrain: TerrainPlain, Level: 1, MaxLevel: 1}}
 	compatOK(t, s.SaveChunk(ctx, 7, original))
 	compatOK(t, s.SaveChunk(ctx, 8, original))
 	compatExec(t, ctx, observer, `INSERT INTO resource_node_state(server_id,x,y,occupier_player_id,gather_rate)

@@ -24,7 +24,7 @@ func TestGetAndListBattleReports(t *testing.T) {
 	milHub := march.NewHub(clk.Now)
 	store := report.NewMemStore()
 	reportSvc := report.NewService(store)
-	resolver := combat.NewResolver(1, reportSvc, combat.M2FixtureGarrisons(), nil)
+	resolver := combat.NewResolver(1, reportSvc, apiTestGarrisons(), nil)
 	milHub.SetMarchArrivalHandler(resolver.HubHandler())
 
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))

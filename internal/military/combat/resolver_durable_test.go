@@ -30,7 +30,7 @@ func TestDurableResolverTransactionBoundary(t *testing.T) {
 	failure := errors.New("injected storage failure")
 	for _, stage := range []string{"begin", "transition", "commit", "success", "no-battle"} {
 		t.Run(stage, func(t *testing.T) {
-			r := NewResolver(1, nil, M2FixtureGarrisons(), nil)
+			r := NewResolver(1, nil, garrisonFixture(), nil)
 			before := r.Garrisons.Get(5, 5)
 			ev := march.MarchArrivalEvent{MarchID: 9, PlayerID: 1001,
 				Troops: []march.TroopStack{{UnitCfgID: 1, Count: 200}},

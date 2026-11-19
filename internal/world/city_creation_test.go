@@ -45,7 +45,11 @@ func (tx *creationTx) QueryRow(_ context.Context, q string, _ ...any) pgx.Row {
 			*v[0].(*int64) = 7
 			return tx.ownerErr
 		case strings.Contains(q, "FROM map_cell"):
-			*v[0].(*Terrain), *v[1].(*int16) = tx.terrain, tx.resource
+			terrain := tx.terrain
+			if terrain == TerrainCity {
+				terrain = TerrainPlain // zero-value fixture means buildable plain
+			}
+			*v[0].(*Terrain), *v[1].(*int16) = terrain, tx.resource
 			return tx.mapErr
 		case strings.Contains(q, "MAX(city_id)"):
 			*v[0].(*int64) = tx.maxID
@@ -108,7 +112,7 @@ func TestCreateCityInTxGuardsAndConflictClassification(t *testing.T) {
 	}{
 		{"owner", creationTx{ownerErr: pgx.ErrNoRows}, ErrCityOwnerMissing},
 		{"missing map", creationTx{mapErr: pgx.ErrNoRows}, ErrBadTerrain},
-		{"water", creationTx{terrain: TerrainWater}, ErrBadTerrain},
+		{"water", creationTx{terrain: TerrainLake}, ErrBadTerrain},
 		{"resource", creationTx{resource: 1}, ErrBadTerrain},
 		{"exhausted", creationTx{maxID: math.MaxInt64}, ErrInvalidCity},
 		{"owner SQL", creationTx{ownerErr: unexpected}, unexpected},

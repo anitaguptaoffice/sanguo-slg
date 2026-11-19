@@ -275,6 +275,78 @@ def build_catalog_json(items: list[dict]) -> str:
     ) + "\n"
 
 
+UNIT_IDS = {"infantry": 1, "cavalry": 2, "archer": 3, "siege": 4}
+
+
+def split_wild_troops(total: int, mix: dict) -> list[dict]:
+    """Split a deterministic total across the configured unit mix."""
+    keys = [k for k in ("infantry", "cavalry", "archer", "siege") if int(mix.get(k, 0)) > 0]
+    if not keys or total <= 0:
+        raise ValueError("world_wild: empty troop mix or total")
+    weight = sum(int(mix[k]) for k in keys)
+    largest = max(keys, key=lambda k: int(mix[k]))
+    out, assigned = [], 0
+    for key in keys:
+        if key == largest:
+            continue
+        count = max(1, total * int(mix[key]) // weight)
+        out.append({"unit_cfg_id": UNIT_IDS[key], "count": count})
+        assigned += count
+    out.append({"unit_cfg_id": UNIT_IDS[largest], "count": max(1, total - assigned)})
+    out.sort(key=lambda row: row["unit_cfg_id"])
+    return out
+
+
+def build_world_wild(source: dict, item_by_code: dict[str, int]) -> str:
+    base_drops = source.get("item_drops") or []
+
+    def drops(entry: dict) -> list[dict]:
+        raw = entry.get("item_drops") or base_drops
+        out = []
+        for drop in raw:
+            cfg = item_by_code.get(drop["code"])
+            if cfg is None:
+                raise ValueError(f"world_wild: unknown item {drop['code']}")
+            out.append({"item_cfg_id": cfg, "weight": int(drop["weight"])})
+        return out
+
+    def levels(entry: dict) -> list[dict]:
+        totals = [int(v) for v in entry["total_by_level"]]
+        if len(totals) != 10 or any(v <= 0 for v in totals):
+            raise ValueError("world_wild: total_by_level must hold ten positive values")
+        rows = []
+        for index, total in enumerate(totals):
+            level = index + 1
+            loot = {k: int(entry["loot_per_level"].get(k, 0)) * level
+                    for k in ("food", "wood", "stone", "iron", "gold")}
+            rows.append({
+                "level": level,
+                "hero_level": level,
+                "troops": split_wild_troops(total, entry["troop_mix"]),
+                "loot": loot,
+                "items": drops(entry),
+            })
+        return rows
+
+    out = {"version": int(source["version"]), "terrains": {}, "npc_camps": {}}
+    for key, entry in source["terrains"].items():
+        out["terrains"][str(int(entry["terrain_id"]))] = {
+            "terrain": int(entry["terrain_id"]),
+            "name": entry["name"],
+            "bonus_percent": {k: int(v) for k, v in (entry.get("bonus_percent") or {}).items()},
+            "levels": levels(entry),
+        }
+    for key, entry in source["npc_camps"].items():
+        out["npc_camps"][str(int(entry["npc_kind"]))] = {
+            "npc_kind": int(entry["npc_kind"]),
+            "name": entry["name"],
+            "levels": levels(entry),
+        }
+    if len(out["terrains"]) != 7:
+        raise ValueError(f"world_wild: expected 7 wild terrains, got {len(out['terrains'])}")
+    return json.dumps(out, ensure_ascii=False, separators=(",", ":")) + "\n"
+
+
 def build_buildings(params: dict, meta_source: dict) -> list[dict]:
     build, production, main_hall = (
         params["domestic"]["build"],
@@ -356,6 +428,7 @@ def generate() -> dict[str, str]:
     buildings_src = load_yaml(SOURCE / "buildings.yml")
     quests_src = load_yaml(SOURCE / "quests.yml")
     shop_src = load_yaml(SOURCE / "shop.yml")
+    world_wild_src = load_yaml(SOURCE / "world_wild.yml")
 
     units = build_units(params)
     heroes = build_heroes(heroes_src)
@@ -442,6 +515,7 @@ def generate() -> dict[str, str]:
         )
         + "\n",
         "catalog.json": build_catalog_json(items),
+        "world_wild.json": build_world_wild(world_wild_src, item_by_code),
     }
 
 

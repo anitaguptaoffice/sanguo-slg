@@ -10,11 +10,15 @@ var (
 	ErrOccupied    = errors.New("world: coordinate occupied")
 	ErrBadTerrain  = errors.New("world: terrain not buildable")
 	ErrOutOfBounds = errors.New("world: out of bounds")
+	// ErrViewportUnavailable reports a store that cannot answer map viewports.
+	ErrViewportUnavailable = errors.New("world: viewport unavailable")
 )
 
 type Service struct {
 	Store  Store
 	Loader *Loader
+	// Wild is the immutable world_wild profile loaded at startup.
+	Wild *WildConfig
 }
 
 func NewService(s Store) *Service { return &Service{Store: s, Loader: NewLoader(s, 4)} }

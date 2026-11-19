@@ -7,13 +7,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// WireM2Combat attaches PG-backed reports and the M2 garrison resolver to the march hub.
-func WireM2Combat(shardID int32, pool *pgxpool.Pool, hub *march.Hub) *report.Service {
+// WireM2Combat attaches PG-backed reports and a world-backed garrison resolver.
+func WireM2Combat(shardID int32, pool *pgxpool.Pool, hub *march.Hub, garrisons combat.GarrisonSource) *report.Service {
 	if hub == nil || pool == nil {
 		return nil
 	}
 	svc := report.NewService(report.NewPGStore(pool))
-	resolver := combat.NewResolver(shardID, svc, combat.M2FixtureGarrisons(), nil)
+	resolver := combat.NewResolver(shardID, svc, garrisons, nil)
 	hub.SetMarchArrivalHandler(resolver.HubHandler())
 	return svc
 }

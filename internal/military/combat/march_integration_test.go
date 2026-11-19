@@ -27,7 +27,7 @@ func TestHubMarchArriveTriggersCombatAndReport(t *testing.T) {
 
 	store := report.NewMemStore()
 	svc := report.NewService(store)
-	resolver := combat.NewResolver(7, svc, combat.M2FixtureGarrisons(), nil)
+	resolver := combat.NewResolver(7, svc, integrationGarrisons(), nil)
 	h.SetMarchArrivalHandler(resolver.HubHandler())
 
 	h.RegisterCity(&march.CityState{
@@ -98,4 +98,13 @@ func TestHubMarchArriveTriggersCombatAndReport(t *testing.T) {
 	if h.Tick() != 0 || finished != 1 || !reflect.DeepEqual(home, h.SnapshotCity(10)) {
 		t.Fatal("repeated tick changed settlement")
 	}
+}
+
+func integrationGarrisons() *combat.GarrisonTable {
+	t := combat.NewGarrisonTable()
+	t.Set(5, 5, combat.Garrison{
+		Troops: []march.TroopStack{{UnitCfgID: 1, Count: 120}, {UnitCfgID: 3, Count: 40}},
+		Morale: 1,
+	})
+	return t
 }

@@ -4,9 +4,17 @@ CREATE TABLE map_cell (
     server_id       INT          NOT NULL,
     x               INT          NOT NULL,
     y               INT          NOT NULL,
-    terrain         SMALLINT     NOT NULL, -- 地形枚举：平原/山地/水域等
+    -- 0=城池 1=平地 2=荒漠 3=森林 4=草原 5=山地 6=湖泊 7=沼泽
+    terrain         SMALLINT     NOT NULL,
     resource_type   SMALLINT,              -- 可采集资源类型，空地 NULL
     resource_level  SMALLINT     NOT NULL DEFAULT 0,
+    level           SMALLINT     NOT NULL DEFAULT 1,
+    max_level       SMALLINT     NOT NULL DEFAULT 1,
+    province_id     SMALLINT     NOT NULL DEFAULT 0,
+    owner_city_id   BIGINT,
+    npc_kind        SMALLINT     NOT NULL DEFAULT 0,
+    garrison_json   JSONB,
+    recover_at      TIMESTAMPTZ,
     PRIMARY KEY (server_id, x, y)
 );
 COMMENT ON TABLE map_cell IS '静态地图格：地形与资源点定义，开服时灌入';

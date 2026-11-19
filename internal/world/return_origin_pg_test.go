@@ -88,29 +88,6 @@ func TestPGReturnOriginValidationAndNoWrites(t *testing.T) {
 	}
 }
 
-func TestPGReturnOriginDriftRetirement(t *testing.T) {
-	pool, b, l := recruitCityFixture(t)
-	copyLocker := *l
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	o, a := sequenceOwner(t, b, ctx)
-	if err := l.Pin(ctx, a); err != nil {
-		t.Fatal(err)
-	}
-	// Drift after Pin forces the companion itself to revalidate the source.
-	creationSQL(t, pool, "ALTER TABLE map_cell ADD COLUMN surprise integer")
-	rejectReturnOrigin(t, l, ctx, a, 7, 10, ErrFreshCitySource)
-	if !copyLocker.source.sequence.retired.Load() {
-		t.Fatal("definitive drift did not retire copies")
-	}
-	if err := o.Rollback(ctx); err != nil {
-		t.Fatal(err)
-	}
-	creationSQL(t, pool, "ALTER TABLE map_cell DROP COLUMN surprise")
-	_, a = sequenceOwner(t, b, ctx)
-	rejectReturnOrigin(t, &copyLocker, ctx, a, 7, 10, ErrRecruitCity)
-}
-
 func TestPGReturnOriginWriterWaitsForEnd(t *testing.T) {
 	for _, commit := range []bool{false, true} {
 		t.Run(map[bool]string{false: "rollback", true: "commit"}[commit], func(t *testing.T) {

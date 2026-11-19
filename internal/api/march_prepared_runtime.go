@@ -65,7 +65,7 @@ func (s *Server) WirePreparedMarch(ctx context.Context, profile freshsource.Prof
 	if err != nil {
 		return err
 	}
-	resolver := combat.NewResolver(profile.ServerID, reports, combat.M2FixtureGarrisons(), nil)
+	resolver := combat.NewResolver(profile.ServerID, reports, NewWorldGarrisons(s.world, profile.ServerID), nil)
 	if err = resolver.EnableDurableArrival(pool.BeginTx, transition); err != nil {
 		return err
 	}
