@@ -1,0 +1,113 @@
+name: Playable Smoke
+
+# Real PostgreSQL 17 + Redis 7 + cmd/server + built client + headless browser.
+# This gate grows with every playable slice (R1+); it is never mocked.
+
+on:
+  pull_request:
+    paths:
+      - "client/**"
+      - "cmd/**"
+      - "internal/**"
+      - "spec/**"
+      - "docker-compose.yml"
+      - "Makefile"
+      - ".github/workflows/playable-smoke.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: playable-smoke-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playable-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: sanguo
+          POSTGRES_PASSWORD: sanguo
+          POSTGRES_DB: sanguo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sanguo -d sanguo"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://sanguo:sanguo@localhost:5432/sanguo?sslmode=disable
+      REDIS_ADDR: localhost:6379
+      HTTP_ADDR: :8080
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Build server
+        run: go build -o bin/server ./cmd/server
+      - name: Install client dependencies and browsers
+        working-directory: client
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Build client
+        working-directory: client
+        run: npm run build
+      - name: Start server and preview client
+        run: |
+          set -euo pipefail
+          ./bin/server > server.log 2>&1 &
+          echo $! > server.pid
+          for _ in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/healthz; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/healthz
+          (cd client && npx vite preview --port 4173 --strictPort > preview.log 2>&1 &)
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:4173/; then break; fi
+            sleep 1
+          done
+      - name: Run playable smoke
+        working-directory: client
+        env:
+          APP_URL: http://127.0.0.1:4173
+          REPORT_PATH: ${{ runner.temp }}/playable-smoke-report.json
+          SCREENSHOT_DIR: ${{ runner.temp }}/playable-smoke-screenshots
+        run: node e2e/playable-smoke.mjs
+      - name: Archive playable smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playable-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/playable-smoke-report.json
+            ${{ runner.temp }}/playable-smoke-screenshots/
+          if-no-files-found: warn
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          tail -200 server.log || true
+          tail -100 client/preview.log || true

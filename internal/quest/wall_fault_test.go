@@ -54,7 +54,7 @@ func TestWallStorageFaultMatrix(t *testing.T) {
 	t.Run("mem", func(t *testing.T) { testWallStorageFaults(t, NewMemStore()) })
 	t.Run("pg", func(t *testing.T) {
 		pool := openQuestTestDB(t)
-			applyQuestSchema(t, pool)
+		applyQuestSchema(t, pool)
 		testWallStorageFaults(t, NewPGStore(pool))
 	})
 }

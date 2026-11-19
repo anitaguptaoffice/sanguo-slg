@@ -26,18 +26,18 @@ const (
 )
 
 var (
-	ctx                         = context.Background()
-	baseDir, dsn                string
-	admin                       *pgxpool.Pool
-	serial                      int
-	cmdIns                      = `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) VALUES ($1::uuid,1,42,$2::uuid,$3,$4,1,'t','r','c',1,$5,$6,now())`
-	slotUpsert                  = `INSERT INTO world_first_city_actor_slot (realm_id,server_id,player_id,account_id,head_command_id) VALUES ($1::uuid,1,42,$2,NULL) ON CONFLICT (realm_id,server_id,player_id) DO NOTHING`
-	slotLock                    = `SELECT world_first_city_slot_advisory_lock($1::uuid,1,42)`
-	headForUpdate               = `SELECT head_command_id::text FROM world_first_city_actor_slot WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42 FOR UPDATE`
-	headSet                     = `UPDATE world_first_city_actor_slot SET head_command_id=$2::uuid WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42 AND head_command_id IS NULL`
-	cmdStateForUpdate           = `SELECT durable_state FROM world_first_city_command WHERE command_id=$1::uuid FOR UPDATE`
-	termReject                  = `UPDATE world_first_city_command SET durable_state=3,terminal_at=now(),rejection_reason=1 WHERE command_id=$1::uuid AND durable_state=1`
-	termSuccess                 = `UPDATE world_first_city_command SET durable_state=2,terminal_at=now(),success_city_id=$2,success_server_id=1,success_player_id=42,success_is_capital=true,success_wall_level=1,success_morale=100 WHERE command_id=$1::uuid AND durable_state=1`
+	ctx               = context.Background()
+	baseDir, dsn      string
+	admin             *pgxpool.Pool
+	serial            int
+	cmdIns            = `INSERT INTO world_first_city_command (realm_id,server_id,player_id,command_id,account_id,canonical_c1,durable_state,template_version,rules_version,catalog_version,content_encoding_version,template_fct1,content_sha256,received_at) VALUES ($1::uuid,1,42,$2::uuid,$3,$4,1,'t','r','c',1,$5,$6,now())`
+	slotUpsert        = `INSERT INTO world_first_city_actor_slot (realm_id,server_id,player_id,account_id,head_command_id) VALUES ($1::uuid,1,42,$2,NULL) ON CONFLICT (realm_id,server_id,player_id) DO NOTHING`
+	slotLock          = `SELECT world_first_city_slot_advisory_lock($1::uuid,1,42)`
+	headForUpdate     = `SELECT head_command_id::text FROM world_first_city_actor_slot WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42 FOR UPDATE`
+	headSet           = `UPDATE world_first_city_actor_slot SET head_command_id=$2::uuid WHERE realm_id=$1::uuid AND server_id=1 AND player_id=42 AND head_command_id IS NULL`
+	cmdStateForUpdate = `SELECT durable_state FROM world_first_city_command WHERE command_id=$1::uuid FOR UPDATE`
+	termReject        = `UPDATE world_first_city_command SET durable_state=3,terminal_at=now(),rejection_reason=1 WHERE command_id=$1::uuid AND durable_state=1`
+	termSuccess       = `UPDATE world_first_city_command SET durable_state=2,terminal_at=now(),success_city_id=$2,success_server_id=1,success_player_id=42,success_is_capital=true,success_wall_level=1,success_morale=100 WHERE command_id=$1::uuid AND durable_state=1`
 )
 
 func must(err error) {
@@ -52,7 +52,9 @@ func assert(ok bool, msg string) {
 }
 func exec(p *pgxpool.Pool, sql string, args ...any) { _, err := p.Exec(ctx, sql, args...); must(err) }
 func apply(p *pgxpool.Pool)                         { must(db.ApplySpecs(ctx, p, baseDir)) }
-func c1() (c1, fct1, sha string)                   { return `\x01`, `\x` + strings.Repeat("00", 52), `\x` + strings.Repeat("ab", 32) }
+func c1() (c1, fct1, sha string) {
+	return `\x01`, `\x` + strings.Repeat("00", 52), `\x` + strings.Repeat("ab", 32)
+}
 
 func poolInSchema(schema string, max int) *pgxpool.Pool {
 	cfg, err := pgxpool.ParseConfig(dsn)

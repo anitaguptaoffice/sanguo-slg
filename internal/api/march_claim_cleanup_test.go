@@ -16,13 +16,13 @@ type marchCleanupKey struct{}
 // It also makes the memory store obey the context that PostgreSQL already uses.
 type marchCleanupStore struct {
 	hero.Store
-	t                             *testing.T
-	afterClaim                    func()
+	t                              *testing.T
+	afterClaim                     func()
 	claimReadErr, claimSaveErr     error
 	releaseReadErr, releaseSaveErr error
-	claimed                       bool
-	reads, saves                  int
-	cleanup                       context.Context
+	claimed                        bool
+	reads, saves                   int
+	cleanup                        context.Context
 }
 
 func (s *marchCleanupStore) GetHero(ctx context.Context, sid int32, id int64) (*hero.Hero, error) {
@@ -88,10 +88,10 @@ func assertMarchCleanupEnded(t *testing.T, store *marchCleanupStore, reads, save
 
 func TestMarchRejectedClaimCleanup(t *testing.T) {
 	for _, tc := range []struct {
-		name                                string
+		name                                 string
 		cancel, readFail, saveFail           bool
 		claimReadFail, claimUnknown, success bool
-		reads, saves                        int
+		reads, saves                         int
 	}{
 		{name: "canceled-rejection", cancel: true, reads: 1, saves: 1},
 		{name: "ordinary-rejection", reads: 1, saves: 1},

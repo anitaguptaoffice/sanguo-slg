@@ -75,7 +75,7 @@ func ParseRewardsJSON(raw []byte) (RewardBundle, error) {
 		return RewardBundle{}, nil
 	}
 	var wire struct {
-		RewardPackID string `json:"reward_pack_id"`
+		RewardPackID string           `json:"reward_pack_id"`
 		Resources    map[string]int64 `json:"resources"`
 		Items        []struct {
 			ItemCfgID int32 `json:"item_cfg_id"`

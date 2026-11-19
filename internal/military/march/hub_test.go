@@ -40,7 +40,7 @@ func TestHubMarchArrivesOnSchedule(t *testing.T) {
 	m, err := h.CreateMarch(StartMarchRequest{
 		ArmyID: 7,
 		FromX:  0, FromY: 0,
-		ToX:    5, ToY: 5,
+		ToX: 5, ToY: 5,
 		Troops: []TroopStack{{UnitCfgID: 1, Count: 1}},
 	})
 	if err != nil {

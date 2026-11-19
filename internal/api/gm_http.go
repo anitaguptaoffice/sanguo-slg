@@ -25,11 +25,11 @@ type gmHTTP struct {
 }
 
 type gmLookupReq struct {
-	Token         string `json:"token"`
-	Audit         GmAudit
-	ServerID      int32  `json:"server_id"`
-	PlayerID      int64  `json:"player_id"`
-	AccountLogin  string `json:"account_login"`
+	Token        string `json:"token"`
+	Audit        GmAudit
+	ServerID     int32  `json:"server_id"`
+	PlayerID     int64  `json:"player_id"`
+	AccountLogin string `json:"account_login"`
 }
 
 func (h *gmHTTP) lookup(w http.ResponseWriter, r *http.Request) {
@@ -52,12 +52,12 @@ func (h *gmHTTP) lookup(w http.ResponseWriter, r *http.Request) {
 }
 
 type gmGrantReq struct {
-	Token           string                 `json:"token"`
-	Audit           GmAudit
-	ServerID        int32                  `json:"server_id"`
-	PlayerID        int64                  `json:"player_id"`
-	IdempotencyKey  string                 `json:"idempotency_key"`
-	Rewards         content.RewardPackage  `json:"rewards"`
+	Token          string `json:"token"`
+	Audit          GmAudit
+	ServerID       int32                 `json:"server_id"`
+	PlayerID       int64                 `json:"player_id"`
+	IdempotencyKey string                `json:"idempotency_key"`
+	Rewards        content.RewardPackage `json:"rewards"`
 }
 
 func (h *gmHTTP) grant(w http.ResponseWriter, r *http.Request) {
@@ -82,8 +82,8 @@ func (h *gmHTTP) grant(w http.ResponseWriter, r *http.Request) {
 type gmKickReq struct {
 	Token    string `json:"token"`
 	Audit    GmAudit
-	ServerID int32  `json:"server_id"`
-	PlayerID int64  `json:"player_id"`
+	ServerID int32 `json:"server_id"`
+	PlayerID int64 `json:"player_id"`
 }
 
 func (h *gmHTTP) kick(w http.ResponseWriter, r *http.Request) {
@@ -106,11 +106,11 @@ func (h *gmHTTP) kick(w http.ResponseWriter, r *http.Request) {
 }
 
 type gmMuteReq struct {
-	Token        string `json:"token"`
-	Audit        GmAudit
-	ServerID     int32  `json:"server_id"`
-	PlayerID     int64  `json:"player_id"`
-	MuteUntilMS  int64  `json:"mute_until_ms"`
+	Token       string `json:"token"`
+	Audit       GmAudit
+	ServerID    int32 `json:"server_id"`
+	PlayerID    int64 `json:"player_id"`
+	MuteUntilMS int64 `json:"mute_until_ms"`
 }
 
 func (h *gmHTTP) mute(w http.ResponseWriter, r *http.Request) {

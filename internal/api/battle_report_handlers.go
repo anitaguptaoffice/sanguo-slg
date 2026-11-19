@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	RouteGetBattleReport    = "military.v1.GetBattleReport"
-	RouteListBattleReports  = "military.v1.ListBattleReports"
-	defaultReportListLimit  = 20
-	maxReportListLimit      = 100
+	RouteGetBattleReport   = "military.v1.GetBattleReport"
+	RouteListBattleReports = "military.v1.ListBattleReports"
+	defaultReportListLimit = 20
+	maxReportListLimit     = 100
 )
 
 func (s *Server) handleGetBattleReport(ctx context.Context, pkt *commonv1.ClientPacket) (*commonv1.ServerPacket, error) {
@@ -135,11 +135,11 @@ func battleReportDetailProto(rep battle.BattleReport) *militaryv1.BattleReportDe
 	}
 	for _, rr := range rep.Rounds {
 		d.Rounds = append(d.Rounds, &militaryv1.BattleRound{
-			Round:            int32(rr.Round),
-			AttackerTroops:   troopMapToProto(rr.AttackerTroops),
-			DefenderTroops:   troopMapToProto(rr.DefenderTroops),
-			AttackerToDefHp:  int32(rr.AttackerToDefHP),
-			DefenderToAttHp:  int32(rr.DefenderToAttHP),
+			Round:           int32(rr.Round),
+			AttackerTroops:  troopMapToProto(rr.AttackerTroops),
+			DefenderTroops:  troopMapToProto(rr.DefenderTroops),
+			AttackerToDefHp: int32(rr.AttackerToDefHP),
+			DefenderToAttHp: int32(rr.DefenderToAttHP),
 		})
 	}
 	return d

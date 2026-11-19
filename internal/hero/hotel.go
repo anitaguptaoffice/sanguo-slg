@@ -21,10 +21,10 @@ const HotelRefreshItemCfgID = 2004
 const hotelLoyaltyDefault = 70
 
 var (
-	ErrHotelNotBuilt       = errors.New("hero: hotel not built")
+	ErrHotelNotBuilt         = errors.New("hero: hotel not built")
 	ErrHotelCandidateMissing = errors.New("hero: hotel candidate not found")
-	ErrHotelCapacityFull   = errors.New("hero: hero capacity full (office level)")
-	ErrInsufficientGold    = errors.New("hero: insufficient gold")
+	ErrHotelCapacityFull     = errors.New("hero: hero capacity full (office level)")
+	ErrInsufficientGold      = errors.New("hero: insufficient gold")
 )
 
 // HotelCandidate is one row in the per-city recruit pool.
@@ -105,7 +105,7 @@ func goldNeedForHotelHero(level int32, force, intel, politics int32) int64 {
 		if sum <= 90 {
 			return 0
 		}
-		return int64(sum-90)
+		return int64(sum - 90)
 	}
 	bonus := over(force) + over(intel) + over(politics)
 	return int64(level)*20*50 + bonus*50*50
@@ -152,8 +152,8 @@ func GenerateHotelCandidate(rng randomIntn, cityID int64, hotelLevel int32, cand
 		CandidateID: candidateID, CityID: cityID,
 		DisplayName: randomHotelName(rng, sex), Sex: sex, FaceID: face, Level: hlevel,
 		Force: force, Intel: intel, Politics: politics, Command: 0,
-		Loyalty: hotelLoyaltyDefault,
-		GoldCost: goldNeedForHotelHero(hlevel, force, intel, politics),
+		Loyalty:     hotelLoyaltyDefault,
+		GoldCost:    goldNeedForHotelHero(hlevel, force, intel, politics),
 		GeneratedAt: now,
 	}
 }

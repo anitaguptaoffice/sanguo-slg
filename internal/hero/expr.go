@@ -8,12 +8,12 @@ import (
 
 // M1 历练时长与奖励（legacy beginExprHero / finishHeroExpr 简化；见 spec/rules/legacy_alignment.md §7）。
 const (
-	ExprHoursDefault  int32 = 1
-	ExprHoursMin      int32 = 1
-	ExprHoursMax      int32 = 4
-	ExprSecondsPerHour      = 3600
-	exprGoldPerLevelHour    = 10
-	exprExpPerLevelHour     = 20
+	ExprHoursDefault     int32 = 1
+	ExprHoursMin         int32 = 1
+	ExprHoursMax         int32 = 4
+	ExprSecondsPerHour         = 3600
+	exprGoldPerLevelHour       = 10
+	exprExpPerLevelHour        = 20
 )
 
 // ExprSession is an in-progress hero training run (legacy sys_hero_expr).
@@ -34,7 +34,7 @@ type ExprBeginResult struct {
 
 // ExprFinishResult is returned when training completes (natural or accelerated).
 type ExprFinishResult struct {
-	Hero     *Hero
+	Hero      *Hero
 	ExpGained int64
 }
 

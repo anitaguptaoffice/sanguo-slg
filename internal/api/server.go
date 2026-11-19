@@ -41,48 +41,48 @@ type clockFunc func() time.Time
 
 // Server wires account, world, and domestic behind the WebSocket gateway.
 type Server struct {
-	citiesMu       sync.RWMutex
-	marchIndexMu   sync.RWMutex // memory bookkeeping only; never held across domain calls
-	log            *slog.Logger
-	account        *account.Service
-	players        *PlayerStore
-	world          *world.Service
-	domestic       *domestic.Hub
-	military       *march.Hub
-	reports        *report.Service
-	sessions       *SessionRegistry
-	gm             *GmService
-	shard          *shard.Handlers
-	m3             *assembly.M3
-	m4             *assembly.M4
-	rankSvc        *rank.Service
-	rankSch        *rank.Scheduler
-	questSvc       *quest.Service
-	shopSvc        *shop.Service
-	shopPurchase   *shopPurchaseDependencies
-	contentSvc     *content.Service
-	contentCatalog *contentCatalogBinding
-	mailSvc        *mail.Service
-	heroSvc        *hero.Service
-	milDurable     *MilitaryDurable
-	recruit        *recruitDependencies
-	hotel          *hotelDependencies
-	family         *familyDependencies
-	questChainIDs  []int32
-	cities         map[int64]*domestic.CityState
-	cityCoords     map[int64]cityCoord
-	playerMarches  map[int64][]playerMarchRef
-	marchHeroByID  map[int64]marchHeroBinding
-	marchStarting  map[marchStartKey]struct{}
-	nextArmyID     int64
-	now            clockFunc
-	smokeSyncClock *SmokeSyncClock
+	citiesMu          sync.RWMutex
+	marchIndexMu      sync.RWMutex // memory bookkeeping only; never held across domain calls
+	log               *slog.Logger
+	account           *account.Service
+	players           *PlayerStore
+	world             *world.Service
+	domestic          *domestic.Hub
+	military          *march.Hub
+	reports           *report.Service
+	sessions          *SessionRegistry
+	gm                *GmService
+	shard             *shard.Handlers
+	m3                *assembly.M3
+	m4                *assembly.M4
+	rankSvc           *rank.Service
+	rankSch           *rank.Scheduler
+	questSvc          *quest.Service
+	shopSvc           *shop.Service
+	shopPurchase      *shopPurchaseDependencies
+	contentSvc        *content.Service
+	contentCatalog    *contentCatalogBinding
+	mailSvc           *mail.Service
+	heroSvc           *hero.Service
+	milDurable        *MilitaryDurable
+	recruit           *recruitDependencies
+	hotel             *hotelDependencies
+	family            *familyDependencies
+	questChainIDs     []int32
+	cities            map[int64]*domestic.CityState
+	cityCoords        map[int64]cityCoord
+	playerMarches     map[int64][]playerMarchRef
+	marchHeroByID     map[int64]marchHeroBinding
+	marchStarting     map[marchStartKey]struct{}
+	nextArmyID        int64
+	now               clockFunc
+	smokeSyncClock    *SmokeSyncClock
 	firstCityV2Routes bool
 	firstCityV2Realm  FirstCityV2Realm
 	firstCityV2Ledger FirstCityV2Ledger
 	firstCityV2Intake FirstCityV2TemplateIntake
-	firstCityV2Effect   FirstCityV2Effect
-	firstCityPrepared   *FirstCityPreparedCreationSource
+	firstCityV2Effect FirstCityV2Effect
+	firstCityPrepared *FirstCityPreparedCreationSource
 
 	preparedRecruit *recruitGeneration
 	preparedMarch   *preparedMarchRuntime

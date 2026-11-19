@@ -29,9 +29,9 @@ type Service struct {
 	HotelStore   HotelStore
 	levels       *LevelTable
 	// RNG is configured only before concurrent service use; draws use rngMu.
-	RNG          *rand.Rand
-	rngMu        sync.Mutex
-	clock        func() time.Time
+	RNG   *rand.Rand
+	rngMu sync.Mutex
+	clock func() time.Time
 }
 
 func NewService() *Service {

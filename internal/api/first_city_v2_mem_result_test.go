@@ -19,9 +19,9 @@ func TestFirstCityV2MemGetAndContinue(t *testing.T) {
 	cmd := "33333333-3333-4333-8333-333333333333"
 	name, x, y := "城", int32(0), int32(499)
 	prop := &worldv1.FirstCityProposal{
-		CommandId: cmd,
+		CommandId:   cmd,
 		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-		Name: &name, X: &x, Y: &y,
+		Name:        &name, X: &x, Y: &y,
 	}
 	getReq, _ := marshal(&worldv1.GetFirstCityResultRequest{ExpectedScope: scope, CommandId: cmd})
 	out, err := s.handleGetFirstCityResult(context.Background(), pkt("get-miss", getReq))
@@ -62,9 +62,9 @@ func TestFirstCityV2GetSettlesPending(t *testing.T) {
 	cmd := "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb1"
 	name, x, y := "城", int32(4), int32(5)
 	prop := &worldv1.FirstCityProposal{
-		CommandId: cmd,
+		CommandId:   cmd,
 		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-		Name: &name, X: &x, Y: &y,
+		Name:        &name, X: &x, Y: &y,
 	}
 	pkt := func(trace string, payload []byte) *commonv1.ClientPacket {
 		return &commonv1.ClientPacket{TraceId: trace, SessionId: "sess-fc", ServerId: 1, Payload: payload}
@@ -96,9 +96,9 @@ func TestFirstCityV2ContinueSettlesPending(t *testing.T) {
 	cmd := "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"
 	name, x, y := "城", int32(2), int32(3)
 	prop := &worldv1.FirstCityProposal{
-		CommandId: cmd,
+		CommandId:   cmd,
 		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-		Name: &name, X: &x, Y: &y,
+		Name:        &name, X: &x, Y: &y,
 	}
 	pkt := func(trace string, payload []byte) *commonv1.ClientPacket {
 		return &commonv1.ClientPacket{TraceId: trace, SessionId: "sess-fc", ServerId: 1, Payload: payload}
@@ -135,9 +135,9 @@ func TestFirstCityV2ContinueNotObserved(t *testing.T) {
 	scope := derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm)
 	name, x, y := "城", int32(1), int32(1)
 	prop := &worldv1.FirstCityProposal{
-		CommandId: "44444444-4444-4444-8444-444444444444",
+		CommandId:   "44444444-4444-4444-8444-444444444444",
 		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-		Name: &name, X: &x, Y: &y,
+		Name:        &name, X: &x, Y: &y,
 	}
 	data, _ := marshal(&worldv1.ContinueFirstCityRequest{ExpectedScope: scope, Proposal: prop})
 	out, _ := s.handleContinueFirstCity(context.Background(), &commonv1.ClientPacket{
@@ -157,9 +157,9 @@ func TestFirstCityV2ContinueContentConflict(t *testing.T) {
 	cmd := "66666666-6666-4666-8666-666666666666"
 	name, x, y := "城", int32(0), int32(0)
 	prop := &worldv1.FirstCityProposal{
-		CommandId: cmd,
+		CommandId:   cmd,
 		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-		Name: &name, X: &x, Y: &y,
+		Name:        &name, X: &x, Y: &y,
 	}
 	sub, _ := marshal(&worldv1.SubmitFirstCityRequest{ExpectedScope: scope, Proposal: prop})
 	pkt := &commonv1.ClientPacket{TraceId: "s", SessionId: "sess-fc", ServerId: 1, Payload: sub}
@@ -211,9 +211,9 @@ func TestFirstCityV2ContinueTerminalCommand(t *testing.T) {
 			cmd := map[string]string{"rejected": "77777777-7777-4777-8777-777777777777", "succeeded": "88888888-8888-4888-8888-888888888888"}[name]
 			n, x, y := "城", int32(3), int32(4)
 			prop := &worldv1.FirstCityProposal{
-				CommandId: cmd,
+				CommandId:   cmd,
 				Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-				Name: &n, X: &x, Y: &y,
+				Name:        &n, X: &x, Y: &y,
 			}
 			ledger := s.firstCityV2Ledger.(*memFirstCityLedger)
 			ledger.installTestRecord(scope, terminal(cmd, prop))
@@ -251,9 +251,9 @@ func TestFirstCityV2ResultUnavailableWithoutLedger(t *testing.T) {
 	}
 	name, x, y := "城", int32(0), int32(0)
 	prop := &worldv1.FirstCityProposal{
-		CommandId: "99999999-9999-4999-8999-999999999999",
+		CommandId:   "99999999-9999-4999-8999-999999999999",
 		Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-		Name: &name, X: &x, Y: &y,
+		Name:        &name, X: &x, Y: &y,
 	}
 	cont, _ := marshal(&worldv1.ContinueFirstCityRequest{ExpectedScope: scope, Proposal: prop})
 	out, _ = s.handleContinueFirstCity(context.Background(), &commonv1.ClientPacket{

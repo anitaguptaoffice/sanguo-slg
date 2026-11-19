@@ -10,15 +10,15 @@ import (
 )
 
 type gmPlayerRow struct {
-	AccountID    int64
-	LoginName    string
-	AccountBan   bool
-	ServerID     int32
-	PlayerID     int64
-	DisplayName  string
-	Level        int32
-	Power        int64
-	Wallet       content.ResourceWallet
+	AccountID   int64
+	LoginName   string
+	AccountBan  bool
+	ServerID    int32
+	PlayerID    int64
+	DisplayName string
+	Level       int32
+	Power       int64
+	Wallet      content.ResourceWallet
 }
 
 func lookupPlayerRow(ctx context.Context, pool *pgxpool.Pool, serverID int32, playerID int64, login string) (gmPlayerRow, error) {

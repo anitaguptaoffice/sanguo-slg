@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
-
 )
 
 func TestPGGrantPreservesItemOnlyWalletClock(t *testing.T) {

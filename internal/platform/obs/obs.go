@@ -41,7 +41,7 @@ func (h ctxHandler) Handle(ctx context.Context, r slog.Record) error {
 	return h.Handler.Handle(ctx, r)
 }
 func (h ctxHandler) WithAttrs(a []slog.Attr) slog.Handler { return ctxHandler{h.Handler.WithAttrs(a)} }
-func (h ctxHandler) WithGroup(n string) slog.Handler    { return ctxHandler{h.Handler.WithGroup(n)} }
+func (h ctxHandler) WithGroup(n string) slog.Handler      { return ctxHandler{h.Handler.WithGroup(n)} }
 
 // Wrap applies trace id, Prometheus metrics, and JSON access logs.
 func Wrap(log *slog.Logger, next http.Handler) http.Handler {
@@ -100,7 +100,10 @@ type Metrics struct {
 	queue    atomic.Uint64
 }
 
-type latAgg struct{ sum float64; n uint64 }
+type latAgg struct {
+	sum float64
+	n   uint64
+}
 
 var defaultMetrics = &Metrics{
 	counts:   map[reqKey]uint64{},

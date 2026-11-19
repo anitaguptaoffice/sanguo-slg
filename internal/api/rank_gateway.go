@@ -6,8 +6,8 @@ import (
 
 	rankv1 "github.com/anitaguptaoffice/sanguo-slg/internal/api/pb/sanguo/rank/v1"
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway"
-	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	commonv1 "github.com/anitaguptaoffice/sanguo-slg/internal/platform/gateway/pb/sanguo/common/v1"
+	"github.com/anitaguptaoffice/sanguo-slg/internal/rank"
 	"google.golang.org/protobuf/proto"
 )
 

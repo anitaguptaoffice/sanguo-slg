@@ -6,9 +6,9 @@ import (
 
 // hub tracks live connections for caps and session reconnect (single session per ID).
 type hub struct {
-	mu           sync.Mutex
-	count        int
-	max          int
+	mu        sync.Mutex
+	count     int
+	max       int
 	bySession map[string]*conn
 }
 

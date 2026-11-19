@@ -11,9 +11,9 @@ import (
 var errFirstCityHeadConflict = errors.New("first-city head conflict")
 
 type memFirstCityLedger struct {
-	mu    sync.Mutex
-	head  map[firstCitySlotKey]*worldv1.FirstCityRecord
-	byID  map[firstCitySlotKey]map[string]*worldv1.FirstCityRecord
+	mu   sync.Mutex
+	head map[firstCitySlotKey]*worldv1.FirstCityRecord
+	byID map[firstCitySlotKey]map[string]*worldv1.FirstCityRecord
 }
 
 func NewMemFirstCityLedger() *memFirstCityLedger {

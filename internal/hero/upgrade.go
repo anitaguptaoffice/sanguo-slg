@@ -6,10 +6,10 @@ import (
 
 // UpgradeResult is the hero row after a successful level-up.
 type UpgradeResult struct {
-	Hero            *Hero
-	PreviousLevel   int32
-	ExpConsumed     int64
-	UpgradeExpCost  int64
+	Hero           *Hero
+	PreviousLevel  int32
+	ExpConsumed    int64
+	UpgradeExpCost int64
 }
 
 // ApplyStatsForLevel recomputes stored attrs from template growth at level plus point adds.

@@ -7,10 +7,10 @@ import (
 )
 
 type firstCitySlotKey struct {
-	realm      string
-	shard      int32
-	player     int64
-	account    int64
+	realm   string
+	shard   int32
+	player  int64
+	account int64
 }
 
 func slotKeyFromScope(scope *worldv1.FirstCityScope) (firstCitySlotKey, bool) {

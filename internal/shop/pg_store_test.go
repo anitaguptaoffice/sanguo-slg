@@ -128,4 +128,3 @@ func checkShopParticipantRows(t *testing.T, svc *Service, actor content.PlayerRe
 		t.Fatalf("counter=%d/%d/%s want=%d/%d/%s err=%v", gotTotal, gotDaily, period, total, daily, at.Format("2006-01-02"), err)
 	}
 }
-

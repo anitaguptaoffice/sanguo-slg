@@ -29,9 +29,9 @@ func newRateLimiter(limits Limits) *rateLimiter {
 }
 
 type rateDecision struct {
-	Allowed          bool
+	Allowed           bool
 	RemainingInWindow int32
-	NextAllowedAtMS  int64
+	NextAllowedAtMS   int64
 }
 
 func (r *rateLimiter) check(key rateKey, now time.Time) rateDecision {

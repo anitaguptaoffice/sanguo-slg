@@ -41,9 +41,9 @@ func TestFirstCityV2MemIntakePending(t *testing.T) {
 	req := &worldv1.SubmitFirstCityRequest{
 		ExpectedScope: derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm),
 		Proposal: &worldv1.FirstCityProposal{
-			CommandId: cmd,
+			CommandId:   cmd,
 			Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-			Name: &name, X: &x, Y: &y,
+			Name:        &name, X: &x, Y: &y,
 		},
 	}
 	data, _ := marshal(req)
@@ -85,9 +85,9 @@ func TestFirstCityV2MemIntakeContentConflict(t *testing.T) {
 	base := &worldv1.SubmitFirstCityRequest{
 		ExpectedScope: derivedFirstCityScope(PlayerContext{ServerID: 1, PlayerID: 9, AccountID: 8}, testFirstCityRealm),
 		Proposal: &worldv1.FirstCityProposal{
-			CommandId: "22222222-2222-4222-8222-222222222222",
+			CommandId:   "22222222-2222-4222-8222-222222222222",
 			Predecessor: &worldv1.FirstCityPredecessor{Value: &worldv1.FirstCityPredecessor_Empty{Empty: &worldv1.FirstCityEmpty{}}},
-			Name: &name, X: &x, Y: &y,
+			Name:        &name, X: &x, Y: &y,
 		},
 	}
 	d0, _ := marshal(base)

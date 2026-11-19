@@ -14,12 +14,12 @@ type WorldBroadcastFunc func(msg Message)
 
 // Service implements send/list for world and private channels.
 type Service struct {
-	store     Store
-	players   PlayerDirectory
-	limits    Limits
-	limiter   *rateLimiter
-	now       func() time.Time
-	onWorld   WorldBroadcastFunc
+	store   Store
+	players PlayerDirectory
+	limits  Limits
+	limiter *rateLimiter
+	now     func() time.Time
+	onWorld WorldBroadcastFunc
 }
 
 // NewService wires dependencies. players may be nil only in tests that skip private chat.

@@ -8,9 +8,9 @@ import (
 )
 
 type memHotelStore struct {
-	rows      []*HotelCandidate
-	lastTick  time.Time
-	nextID    int64
+	rows     []*HotelCandidate
+	lastTick time.Time
+	nextID   int64
 }
 
 func (m *memHotelStore) ListCandidates(_ context.Context, _ int32, _ int64) ([]*HotelCandidate, error) {

@@ -10,9 +10,9 @@ import (
 
 // MemStore is an in-memory Store for unit tests.
 type MemStore struct {
-	mu      sync.Mutex
-	seq     map[int32]int64
-	byKey   map[string]Mail
+	mu    sync.Mutex
+	seq   map[int32]int64
+	byKey map[string]Mail
 }
 
 // NewMemStore creates an empty mem store.

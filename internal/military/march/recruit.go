@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	ErrInvalidCount     = errors.New("march: recruit count must be positive")
-	ErrUnknownUnit      = errors.New("march: unknown unit_cfg_id")
-	ErrInsufficientRes  = errors.New("march: insufficient resources")
-	ErrJobNotFound      = errors.New("march: recruit job not found")
-	ErrCityNotFound     = errors.New("march: city not found")
+	ErrInvalidCount    = errors.New("march: recruit count must be positive")
+	ErrUnknownUnit     = errors.New("march: unknown unit_cfg_id")
+	ErrInsufficientRes = errors.New("march: insufficient resources")
+	ErrJobNotFound     = errors.New("march: recruit job not found")
+	ErrCityNotFound    = errors.New("march: city not found")
 )
 
 // RecruitSlots is the default concurrent recruit jobs per city (M1).

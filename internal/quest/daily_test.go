@@ -65,7 +65,7 @@ func TestDailyResetAtDayBoundary(t *testing.T) {
 	}
 
 	quests, _, err := svc.ListPlayerQuests(ctx, actor, ListQuestsFilter{
-		ChainIDs: []int32{DailyChainID},
+		ChainIDs:  []int32{DailyChainID},
 		QuestType: QuestTypeDaily,
 	})
 	if err != nil {

@@ -18,10 +18,10 @@ const (
 
 // CityChiefView is the current chief appointment for a city.
 type CityChiefView struct {
-	CityID           int64
-	HeroID           int64
-	Loyalty          int
-	ProductionBonus  float64
+	CityID          int64
+	HeroID          int64
+	Loyalty         int
+	ProductionBonus float64
 }
 
 // CityOwnershipPort checks that a player owns a city (wired from domestic in API layer).
