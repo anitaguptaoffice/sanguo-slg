@@ -104,7 +104,7 @@ func TestSaveChunkBatchPreservesInput(t *testing.T) {
 	cells := []Cell{
 		{X: 501, Y: -1, Terrain: TerrainPlain, ResourceType: 3, ResourceLevel: 4},
 		{X: 501, Y: -1, Terrain: TerrainMountain, ResourceLevel: 5},
-		{X: 9, Y: 2, Terrain: TerrainWater, ResourceType: 2, ResourceLevel: 1},
+		{X: 9, Y: 2, Terrain: TerrainLake, ResourceType: 2, ResourceLevel: 1},
 	}
 	before := append([]Cell(nil), cells...)
 	if err := saveChunkTransaction(ctx, tx, 37, cells); err != nil {
@@ -113,19 +113,28 @@ func TestSaveChunkBatchPreservesInput(t *testing.T) {
 	if !reflect.DeepEqual(cells, before) || tx.batch.Len() != len(cells) {
 		t.Fatal("input changed, filtered or deduplicated")
 	}
-	const columns = "INSERT INTO map_cell(server_id,x,y,terrain,resource_type,resource_level)"
-	const update = "ON CONFLICT(server_id,x,y) DO UPDATE SET terrain=EXCLUDED.terrain,resource_type=EXCLUDED.resource_type,resource_level=EXCLUDED.resource_level"
+	const columns = "INSERT INTO map_cell(server_id,x,y,terrain,resource_type,resource_level,level,max_level,province_id,owner_city_id,npc_kind,garrison_json,recover_at)"
+	const update = "ON CONFLICT(server_id,x,y) DO UPDATE SET terrain=EXCLUDED.terrain,resource_type=EXCLUDED.resource_type,resource_level=EXCLUDED.resource_level, level=EXCLUDED.level,max_level=EXCLUDED.max_level,province_id=EXCLUDED.province_id, owner_city_id=EXCLUDED.owner_city_id,npc_kind=EXCLUDED.npc_kind, garrison_json=EXCLUDED.garrison_json,recover_at=EXCLUDED.recover_at"
 	for i, q := range tx.batch.QueuedQueries {
 		c := cells[i]
 		sql := strings.Join(strings.Fields(q.SQL), " ")
-		if sql != columns+" VALUES($1,$2,$3,$4,$5,$6) "+update {
+		if sql != columns+" VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) "+update {
 			t.Fatalf("changed upsert columns or statement semantics: %s", sql)
 		}
 		var rt *int16
 		if c.ResourceType != 0 {
 			rt = &c.ResourceType
 		}
-		want := []any{int32(37), c.X, c.Y, c.Terrain, rt, c.ResourceLevel}
+		level, maxLevel := c.Level, c.MaxLevel
+		if level < 1 {
+			level = 1
+		}
+		if maxLevel < 1 {
+			maxLevel = 1
+		}
+		var owner *int64
+		var recoverAt *time.Time
+		want := []any{int32(37), c.X, c.Y, c.Terrain, rt, c.ResourceLevel, level, maxLevel, c.ProvinceID, owner, c.NpcKind, c.GarrisonJSON, recoverAt}
 		if !reflect.DeepEqual(q.Arguments, want) {
 			t.Fatalf("row %d arguments: got %#v want %#v", i, q.Arguments, want)
 		}

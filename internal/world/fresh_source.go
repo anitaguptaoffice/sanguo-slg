@@ -2,7 +2,6 @@ package world
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/anitaguptaoffice/sanguo-slg/internal/platform/freshsource"
@@ -68,34 +67,17 @@ func (p *FreshCityParticipant) Pin(ctx context.Context, a *recruittx.Access) err
 	return err
 }
 
+// validateFreshSource keeps the one durable invariant this component needs:
+// the city-id sequence still exists in the configured schema and belongs to the
+// expected owner. Table column/constraint shapes are owned by spec/db and
+// ApplySpecs, not re-proved on every transaction.
 func validateFreshSource(ctx context.Context, a *recruittx.Access, b *recruittx.Binding, p freshsource.Profile) (citySequenceStamp, error) {
 	stamp, err := inspectCitySequence(ctx, a, b, p.SchemaName)
 	if err != nil {
 		return stamp, err
 	}
 	seq := p.Objects["player_city_id_seq"]
-	if stamp.database != p.DatabaseOID || stamp.databaseName != p.DatabaseName || stamp.namespace != p.SchemaOID ||
-		stamp.schemaOwner != p.SchemaOwnerOID || stamp.roleOID != p.CurrentRoleOID || stamp.sessionOID != p.SessionRoleOID ||
-		stamp.role != p.CurrentRoleName || stamp.session != p.SessionRoleName || stamp.sequence != seq.OID || stamp.owner != seq.OwnerOID {
-		return citySequenceStamp{}, ErrFreshCitySource
-	}
-	var first string
-	if err = a.Scan(ctx, b, `SELECT (pg_catalog.current_schemas(true))[1]::pg_catalog.text`, nil, &first); err != nil {
-		return citySequenceStamp{}, err
-	}
-	// Safe builtin-default deparse, without changing any caller setting.
-	if first != "pg_catalog" {
-		return citySequenceStamp{}, ErrFreshCitySource
-	}
-	objects, err := json.Marshal(p.Objects)
-	if err != nil {
-		return citySequenceStamp{}, err
-	}
-	var valid bool
-	if err = a.Scan(ctx, b, freshSourceCatalog, []any{objects, p.SchemaOID, worldColumnShape, worldConstraintShape, worldIndexShape}, &valid); err != nil {
-		return citySequenceStamp{}, err
-	}
-	if !valid {
+	if stamp.sequence != seq.OID || stamp.owner != seq.OwnerOID {
 		return citySequenceStamp{}, ErrFreshCitySource
 	}
 	return stamp, nil

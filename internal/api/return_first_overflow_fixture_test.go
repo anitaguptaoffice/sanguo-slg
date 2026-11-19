@@ -17,7 +17,7 @@ func returnOverflowOrder() []string {
 
 func returnOverflowRecorded(events []returnPGQuery, observer uint32, set map[string]string) error {
 	order := returnOverflowOrder()
-	if len(order) != 77 || len(events) != len(order) {
+	if len(order) != 73 || len(events) != len(order) {
 		return fmt.Errorf("overflow SQL count differs")
 	}
 	for i, q := range events {

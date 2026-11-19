@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 )
 
 const (
@@ -13,19 +14,62 @@ const (
 	VisionRadius  = 5
 )
 
+// Terrain follows the original world type scale (cfg_world_type 0..7).
 type Terrain int16
 
 const (
-	TerrainPlain    Terrain = 0
-	TerrainMountain Terrain = 1
-	TerrainWater    Terrain = 2
+	TerrainCity     Terrain = 0
+	TerrainPlain    Terrain = 1
+	TerrainDesert   Terrain = 2
+	TerrainForest   Terrain = 3
+	TerrainGrass    Terrain = 4
+	TerrainMountain Terrain = 5
+	TerrainLake     Terrain = 6
+	TerrainSwamp    Terrain = 7
 )
+
+// TerrainName returns the player-facing terrain label.
+func TerrainName(t Terrain) string {
+	switch t {
+	case TerrainCity:
+		return "城池"
+	case TerrainPlain:
+		return "平地"
+	case TerrainDesert:
+		return "荒漠"
+	case TerrainForest:
+		return "森林"
+	case TerrainGrass:
+		return "草原"
+	case TerrainMountain:
+		return "山地"
+	case TerrainLake:
+		return "湖泊"
+	case TerrainSwamp:
+		return "沼泽"
+	default:
+		return "未知"
+	}
+}
 
 type Cell struct {
 	X, Y          int
 	Terrain       Terrain
 	ResourceType  int16
 	ResourceLevel int16
+	// Level is the wild-land level (1..10); MaxLevel is its recoverable ceiling.
+	Level      int16
+	MaxLevel   int16
+	ProvinceID int16
+	// OwnerCityID is the occupying player city, 0 when unowned.
+	OwnerCityID int64
+	// NpcKind is 0 for a plain wild tile and 1 for a yellow-turban camp.
+	NpcKind int16
+	// GarrisonJSON stores the remaining defenders after a battle; nil means the
+	// configured full garrison.
+	GarrisonJSON []byte
+	// RecoverAt is the garrison recovery deadline; zero means none.
+	RecoverAt time.Time
 }
 
 type City struct {
@@ -41,7 +85,10 @@ type City struct {
 
 type Coord struct{ X, Y int }
 
-func (c Cell) Buildable() bool { return c.Terrain == TerrainPlain && c.ResourceType == 0 }
+// Buildable reports whether a city may be placed on this tile.
+func (c Cell) Buildable() bool {
+	return c.Terrain == TerrainPlain && c.ResourceType == 0 && c.NpcKind == 0 && c.OwnerCityID == 0
+}
 
 func ChunkCoord(x, y int) (int, int) { return x / ChunkSize, y / ChunkSize }
 

@@ -35,7 +35,7 @@ func newDeploymentPG(t *testing.T) deploymentPG {
 		INSERT INTO account(login_name,password_hash) VALUES('fixture','not-a-credential');
 		INSERT INTO player(server_id,player_id,account_id,display_name) VALUES(1,1,1,'fixture');
 		INSERT INTO player_wallet(server_id,player_id,food) VALUES(1,1,8000);
-		INSERT INTO map_cell(server_id,x,y,terrain) VALUES(1,0,0,0);
+		INSERT INTO map_cell(server_id,x,y,terrain) VALUES(1,0,0,1);
 		INSERT INTO player_city(server_id,city_id,player_id,name,x,y) VALUES(1,100,1,'Fixture',0,0);
 		SELECT setval('player_city_id_seq',100,true);
 		UPDATE city_troop SET count=9,wounded=2 WHERE unit_cfg_id=2;

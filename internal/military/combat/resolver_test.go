@@ -14,7 +14,7 @@ func TestResolveAttackGarrisonStableOutcome(t *testing.T) {
 	store := report.NewMemStore()
 	svc := report.NewService(store)
 
-	r := NewResolver(1, svc, M2FixtureGarrisons(), nil)
+	r := NewResolver(1, svc, garrisonFixture(), nil)
 	ev := march.MarchArrivalEvent{
 		MarchID:  9,
 		PlayerID: 1001,
@@ -28,7 +28,7 @@ func TestResolveAttackGarrisonStableOutcome(t *testing.T) {
 		},
 	}
 
-	fix := M2FixtureGarrisons()
+	fix := garrisonFixture()
 	want := battle.Simulate(battle.BattleInput{
 		BattleID:   "march-9",
 		AttackerID: "player-1001",

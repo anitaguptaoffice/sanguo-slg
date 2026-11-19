@@ -219,7 +219,7 @@ func TestM2BattleReportSmokePath(t *testing.T) {
 	domHub := domestic.NewHub(clk.Now)
 	domHub.UseStore(domestic.NewPGStore(pool), 1, 0)
 	milHub := march.NewHub(clk.Now)
-	reportSvc := api.WireM2Combat(1, pool, milHub)
+	reportSvc := api.WireM2Combat(1, pool, milHub, apiTestGarrisons())
 	apiSrv := api.NewServer(log, pool, world.NewService(store), domHub, milHub)
 	apiSrv.SetClock(clk.Now)
 	apiSrv.AttachBattleReports(reportSvc)

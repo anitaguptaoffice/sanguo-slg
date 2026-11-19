@@ -15,7 +15,7 @@ import (
 type Resolver struct {
 	ServerID      int32
 	Reports       *report.Service
-	Garrisons     *GarrisonTable
+	Garrisons     GarrisonSource
 	UnitCatalog   map[int32]march.UnitSpec
 	nextReport    int64
 	beginArrival  func(context.Context, pgx.TxOptions) (pgx.Tx, error)
@@ -23,7 +23,7 @@ type Resolver struct {
 }
 
 // NewResolver wires dependencies; catalog defaults to march.DefaultUnitCatalog when nil.
-func NewResolver(serverID int32, reports *report.Service, garrisons *GarrisonTable, catalog map[int32]march.UnitSpec) *Resolver {
+func NewResolver(serverID int32, reports *report.Service, garrisons GarrisonSource, catalog map[int32]march.UnitSpec) *Resolver {
 	if catalog == nil {
 		catalog = march.DefaultUnitCatalog()
 	}

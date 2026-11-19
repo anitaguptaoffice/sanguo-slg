@@ -105,7 +105,7 @@ func recruitReturnSQLSet(t *testing.T, p freshsource.Profile) map[string]string 
 
 func recruitReturnSQLOrder(applied bool) []string {
 	a := "header actor-tables actor-FK actor-indexes actor-identity"
-	w := "city-sequence current-schema world-catalog"
+	w := "city-sequence"
 	r := "header mil-base header mil-queue header mil-retained mil-retained-FK recruit-sequence-catalog recruit-sequence-read recruit-retained-write-privilege header return-catalog"
 	order := "begin pin:account pin:player " + a + " pin:player_wallet wallet-catalog pin:player_city " + w +
 		" pin:mil_city_origin pin:city_troop pin:work_queue pin:mil_recruit_origin pin:mil_recruit_receipt pin:march_order pin:field_army pin:army_troop " + r +
@@ -140,9 +140,9 @@ func TestRecruitCompletionReturnSQLWitness(t *testing.T) {
 	set := recruitReturnSQLSet(t, p)
 	for _, applied := range []bool{false, true} {
 		order := recruitReturnSQLOrder(applied)
-		want := 76
+		want := 72
 		if applied {
-			want = 88
+			want = 84
 		}
 		if len(order) != want {
 			t.Fatal("frozen Return stage count changed", applied, len(order))

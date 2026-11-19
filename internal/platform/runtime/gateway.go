@@ -66,10 +66,15 @@ func (a *App) NewAPIServer(ctx context.Context) (*api.Server, error) {
 
 func (a *App) newAPIServer(ctx context.Context) (*api.Server, error) {
 	worldSvc := world.NewService(world.NewPGStore(a.DB))
+	wild, err := world.LoadWildConfig(filepath.Join(RepoRoot(), "spec/data/generated/world_wild.json"))
+	if err != nil {
+		return nil, err
+	}
+	worldSvc.Wild = wild
 	hub := domestic.NewHub(time.Now)
 	hub.UseStore(domestic.NewPGStore(a.DB), defaultShardID, 30*time.Second)
 	militaryHub := march.NewHub(time.Now)
-	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub)
+	reportSvc := api.WireM2Combat(defaultShardID, a.DB, militaryHub, api.NewWorldGarrisons(worldSvc, defaultShardID))
 	srv := api.NewServer(a.Log, a.DB, worldSvc, hub, militaryHub)
 	srv.AttachBattleReports(reportSvc)
 

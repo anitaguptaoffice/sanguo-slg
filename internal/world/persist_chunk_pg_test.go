@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -264,9 +265,10 @@ func TestPGChunkLoadCanonicalHeapOrder(t *testing.T) {
 		if c.ResourceType != 0 {
 			resource = c.ResourceType
 		}
-		rows = append(rows, []any{int32(7), c.X, c.Y, int16(c.Terrain), resource, c.ResourceLevel})
+		rows = append(rows, []any{int32(7), c.X, c.Y, int16(c.Terrain), resource, c.ResourceLevel,
+			c.Level, c.MaxLevel, c.ProvinceID, c.NpcKind})
 	}
-	if n, err := observer.CopyFrom(ctx, pgx.Identifier{"map_cell"}, []string{"server_id", "x", "y", "terrain", "resource_type", "resource_level"}, pgx.CopyFromRows(rows)); err != nil || n != int64(len(want)) {
+	if n, err := observer.CopyFrom(ctx, pgx.Identifier{"map_cell"}, []string{"server_id", "x", "y", "terrain", "resource_type", "resource_level", "level", "max_level", "province_id", "npc_kind"}, pgx.CopyFromRows(rows)); err != nil || n != int64(len(want)) {
 		t.Fatal("reverse heap fixture", n, err)
 	}
 	got, found, err := NewPGStore(pool).LoadChunk(ctx, 7, 2, 3)
@@ -296,13 +298,13 @@ func TestPGChunkLoadCanonicalHeapOrder(t *testing.T) {
 	}
 	t.Logf("actual query plan: %s; first coordinate=(%d,%d)", strings.Join(lines, " | "), got[0].X, got[0].Y)
 	for i, expected := range want {
-		if got[i] != expected {
+		if !reflect.DeepEqual(got[i], expected) {
 			t.Errorf("noncanonical row %d: got=%+v want=%+v", i, got[i], expected)
 			break
 		}
 	}
 	cell, ok := cellAt(got, want[0].X, want[0].Y)
-	if !ok || cell != want[0] {
+	if !ok || !reflect.DeepEqual(cell, want[0]) {
 		t.Errorf("cellAt selected wrong cell: got=%+v want=%+v ok=%t", cell, want[0], ok)
 	}
 }

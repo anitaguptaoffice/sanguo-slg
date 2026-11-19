@@ -75,29 +75,6 @@ func TestPGRecruitCityLockValidation(t *testing.T) {
 	}
 }
 
-func TestPGRecruitCityRetirementSharedAcrossCopies(t *testing.T) {
-	pool, b, l := recruitCityFixture(t)
-	copyLocker := *l
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	creationSQL(t, pool, "ALTER TABLE map_cell ADD COLUMN surprise integer")
-	o, a := sequenceOwner(t, b, ctx)
-	if err := l.Pin(ctx, a); err == nil {
-		t.Fatal("source drift accepted")
-	}
-	if !l.source.sequence.retired.Load() {
-		t.Fatal("not retired")
-	}
-	if err := o.Rollback(ctx); err != nil {
-		t.Fatal(err)
-	}
-	creationSQL(t, pool, "ALTER TABLE map_cell DROP COLUMN surprise")
-	_, a = sequenceOwner(t, b, ctx)
-	if copyLocker.Pin(ctx, a) == nil || copyLocker.Lock(ctx, a, 7, 10) == nil {
-		t.Fatal("retired copy reopened")
-	}
-}
-
 func TestPGRecruitCityOwnerUpdateWaitsForEnd(t *testing.T) {
 	for _, commit := range []bool{true, false} {
 		t.Run(map[bool]string{true: "commit", false: "rollback"}[commit], func(t *testing.T) {
@@ -193,9 +170,10 @@ func TestPGRecruitCityConstructorRejectsWrongExpectations(t *testing.T) {
 		func(p *freshsource.Profile) { delete(p.Objects, "player_city") },
 		func(p *freshsource.Profile) { p.Objects["extra"] = freshsource.ObjectIdentity{OID: 1, OwnerOID: 1} },
 		func(p *freshsource.Profile) { p.ServerID = 0 },
-		func(p *freshsource.Profile) { p.DatabaseOID++ },
 		func(p *freshsource.Profile) {
-			p.Objects["player_city"] = freshsource.ObjectIdentity{OID: 1, OwnerOID: 1}
+			seq := p.Objects["player_city_id_seq"]
+			seq.OID++
+			p.Objects["player_city_id_seq"] = seq
 		},
 	} {
 		bad, err := freshsource.Snapshot(p)
