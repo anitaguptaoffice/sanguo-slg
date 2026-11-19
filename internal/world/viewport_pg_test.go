@@ -45,7 +45,12 @@ func TestPGViewportReturnsTilesAndOwnership(t *testing.T) {
 	if tiles[0].X != 5 || tiles[2].X != 7 {
 		t.Fatalf("tiles not ordered by y,x: %+v", tiles)
 	}
+	// The plain tile at (6,5) is the site of city 9: the viewport marks it as a
+	// city tile and carries the site owner even though owner_city_id was NULL.
 	owned := tiles[1]
+	if owned.Terrain != TerrainCity || owned.OwnerCityID != 9 {
+		t.Fatalf("city site not promoted: %+v", owned)
+	}
 	if owned.OwnerPlayerID != 7 || owned.OwnerName != "领主" || owned.OwnerCityName != "主城" {
 		t.Fatalf("owner join missing: %+v", owned)
 	}

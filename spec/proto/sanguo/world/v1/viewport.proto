@@ -42,9 +42,18 @@ message WorldMarchLine {
   int64 owner_player_id = 8;
 }
 
+// 州郡中心：供大地图"州郡跳转"使用。
+message WorldProvinceCenter {
+  int32 province_id = 1;
+  string name = 2;
+  int32 x = 3;
+  int32 y = 4;
+}
+
 message GetWorldViewportResponse {
   repeated WorldTileSummary tiles = 1;
   repeated WorldMarchLine marches = 2;
+  repeated WorldProvinceCenter provinces = 3;
 }
 
 // route: world.v1.GetWorldTileDetail

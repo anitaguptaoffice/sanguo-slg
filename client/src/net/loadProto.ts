@@ -53,6 +53,8 @@ export const Routes = {
   GetLeaderboard: "rank.v1.GetLeaderboard",
   CreateCity: "world.v1.CreateCity",
   ListPlayerCities: "world.v1.ListPlayerCities",
+  GetWorldViewport: "world.v1.GetWorldViewport",
+  GetWorldTileDetail: "world.v1.GetWorldTileDetail",
   GetCityState: "domestic.v1.GetCityState",
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
   RecruitTroop: "military.v1.RecruitTroop",
@@ -135,6 +137,10 @@ export type ProtoTypes = {
   CreateCityResponse: protobuf.Type;
   ListPlayerCitiesRequest: protobuf.Type;
   ListPlayerCitiesResponse: protobuf.Type;
+  GetWorldViewportRequest: protobuf.Type;
+  GetWorldViewportResponse: protobuf.Type;
+  GetWorldTileDetailRequest: protobuf.Type;
+  GetWorldTileDetailResponse: protobuf.Type;
   GetCityStateRequest: protobuf.Type;
   GetCityStateResponse: protobuf.Type;
   StartBuildingUpgradeRequest: protobuf.Type;
@@ -262,6 +268,10 @@ export function getTypes(): ProtoTypes {
     CreateCityResponse: r.lookupType("sanguo.world.v1.CreateCityResponse"),
     ListPlayerCitiesRequest: r.lookupType("sanguo.world.v1.ListPlayerCitiesRequest"),
     ListPlayerCitiesResponse: r.lookupType("sanguo.world.v1.ListPlayerCitiesResponse"),
+    GetWorldViewportRequest: r.lookupType("sanguo.world.v1.GetWorldViewportRequest"),
+    GetWorldViewportResponse: r.lookupType("sanguo.world.v1.GetWorldViewportResponse"),
+    GetWorldTileDetailRequest: r.lookupType("sanguo.world.v1.GetWorldTileDetailRequest"),
+    GetWorldTileDetailResponse: r.lookupType("sanguo.world.v1.GetWorldTileDetailResponse"),
     GetCityStateRequest: r.lookupType("sanguo.domestic.v1.GetCityStateRequest"),
     GetCityStateResponse: r.lookupType("sanguo.domestic.v1.GetCityStateResponse"),
     StartBuildingUpgradeRequest: r.lookupType("sanguo.domestic.v1.StartBuildingUpgradeRequest"),

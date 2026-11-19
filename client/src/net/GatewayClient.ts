@@ -41,6 +41,8 @@ export type GatewayPort = {
   register(loginName: string, password: string): Promise<unknown>;
   login(loginName: string, password: string, serverId: number): Promise<unknown>;
   listPlayerCities(): Promise<unknown>;
+  getWorldViewport(centerX: number, centerY: number, radiusX: number, radiusY: number): Promise<unknown>;
+  getWorldTileDetail(x: number, y: number): Promise<unknown>;
   createCity(serverId: number, name: string, x: number, y: number): Promise<unknown>;
   getCityState(cityId: number): Promise<unknown>;
   startBuildingUpgrade(cityId: number, slotKey: string, buildingCfgId: number): Promise<unknown>;
@@ -458,6 +460,28 @@ export class GatewayClient implements GatewayPort {
   async listPlayerCities() {
     const { ListPlayerCitiesResponse } = getTypes();
     return this.rpc(Routes.ListPlayerCities, "ListPlayerCitiesRequest", {}, ListPlayerCitiesResponse, true);
+  }
+
+  async getWorldViewport(centerX: number, centerY: number, radiusX: number, radiusY: number) {
+    const { GetWorldViewportResponse } = getTypes();
+    return this.rpc(
+      Routes.GetWorldViewport,
+      "GetWorldViewportRequest",
+      { center_x: centerX, center_y: centerY, radius_x: radiusX, radius_y: radiusY },
+      GetWorldViewportResponse,
+      true,
+    );
+  }
+
+  async getWorldTileDetail(x: number, y: number) {
+    const { GetWorldTileDetailResponse } = getTypes();
+    return this.rpc(
+      Routes.GetWorldTileDetail,
+      "GetWorldTileDetailRequest",
+      { x, y },
+      GetWorldTileDetailResponse,
+      true,
+    );
   }
 
   async createCity(serverId: number, name: string, x: number, y: number) {

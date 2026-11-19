@@ -33,6 +33,11 @@ func (s *Server) handleGetWorldViewport(ctx context.Context, pkt *commonv1.Clien
 		return nil, err
 	}
 	out := &worldv1.GetWorldViewportResponse{Tiles: make([]*worldv1.WorldTileSummary, 0, len(tiles))}
+	for _, province := range world.ProvinceLayout(pc.ServerID) {
+		out.Provinces = append(out.Provinces, &worldv1.WorldProvinceCenter{
+			ProvinceId: int32(province.ID), Name: province.Name, X: int32(province.X), Y: int32(province.Y),
+		})
+	}
 	for _, tile := range tiles {
 		out.Tiles = append(out.Tiles, worldTileSummary(tile))
 	}

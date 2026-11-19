@@ -333,17 +333,87 @@ func (x *WorldMarchLine) GetOwnerPlayerId() int64 {
 	return 0
 }
 
+// 州郡中心：供大地图"州郡跳转"使用。
+type WorldProvinceCenter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProvinceId    int32                  `protobuf:"varint,1,opt,name=province_id,json=provinceId,proto3" json:"province_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	X             int32                  `protobuf:"varint,3,opt,name=x,proto3" json:"x,omitempty"`
+	Y             int32                  `protobuf:"varint,4,opt,name=y,proto3" json:"y,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WorldProvinceCenter) Reset() {
+	*x = WorldProvinceCenter{}
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorldProvinceCenter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorldProvinceCenter) ProtoMessage() {}
+
+func (x *WorldProvinceCenter) ProtoReflect() protoreflect.Message {
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorldProvinceCenter.ProtoReflect.Descriptor instead.
+func (*WorldProvinceCenter) Descriptor() ([]byte, []int) {
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *WorldProvinceCenter) GetProvinceId() int32 {
+	if x != nil {
+		return x.ProvinceId
+	}
+	return 0
+}
+
+func (x *WorldProvinceCenter) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *WorldProvinceCenter) GetX() int32 {
+	if x != nil {
+		return x.X
+	}
+	return 0
+}
+
+func (x *WorldProvinceCenter) GetY() int32 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
 type GetWorldViewportResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Tiles         []*WorldTileSummary    `protobuf:"bytes,1,rep,name=tiles,proto3" json:"tiles,omitempty"`
 	Marches       []*WorldMarchLine      `protobuf:"bytes,2,rep,name=marches,proto3" json:"marches,omitempty"`
+	Provinces     []*WorldProvinceCenter `protobuf:"bytes,3,rep,name=provinces,proto3" json:"provinces,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetWorldViewportResponse) Reset() {
 	*x = GetWorldViewportResponse{}
-	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[3]
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -355,7 +425,7 @@ func (x *GetWorldViewportResponse) String() string {
 func (*GetWorldViewportResponse) ProtoMessage() {}
 
 func (x *GetWorldViewportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[3]
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -368,7 +438,7 @@ func (x *GetWorldViewportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorldViewportResponse.ProtoReflect.Descriptor instead.
 func (*GetWorldViewportResponse) Descriptor() ([]byte, []int) {
-	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{3}
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetWorldViewportResponse) GetTiles() []*WorldTileSummary {
@@ -385,6 +455,13 @@ func (x *GetWorldViewportResponse) GetMarches() []*WorldMarchLine {
 	return nil
 }
 
+func (x *GetWorldViewportResponse) GetProvinces() []*WorldProvinceCenter {
+	if x != nil {
+		return x.Provinces
+	}
+	return nil
+}
+
 // route: world.v1.GetWorldTileDetail
 // 单个格点详情：地形加成、归属、公开守军规模档位与可执行动作。
 type GetWorldTileDetailRequest struct {
@@ -397,7 +474,7 @@ type GetWorldTileDetailRequest struct {
 
 func (x *GetWorldTileDetailRequest) Reset() {
 	*x = GetWorldTileDetailRequest{}
-	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[4]
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -409,7 +486,7 @@ func (x *GetWorldTileDetailRequest) String() string {
 func (*GetWorldTileDetailRequest) ProtoMessage() {}
 
 func (x *GetWorldTileDetailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[4]
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -422,7 +499,7 @@ func (x *GetWorldTileDetailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorldTileDetailRequest.ProtoReflect.Descriptor instead.
 func (*GetWorldTileDetailRequest) Descriptor() ([]byte, []int) {
-	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{4}
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetWorldTileDetailRequest) GetX() int32 {
@@ -453,7 +530,7 @@ type GetWorldTileDetailResponse struct {
 
 func (x *GetWorldTileDetailResponse) Reset() {
 	*x = GetWorldTileDetailResponse{}
-	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[5]
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -465,7 +542,7 @@ func (x *GetWorldTileDetailResponse) String() string {
 func (*GetWorldTileDetailResponse) ProtoMessage() {}
 
 func (x *GetWorldTileDetailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[5]
+	mi := &file_sanguo_world_v1_viewport_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -478,7 +555,7 @@ func (x *GetWorldTileDetailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorldTileDetailResponse.ProtoReflect.Descriptor instead.
 func (*GetWorldTileDetailResponse) Descriptor() ([]byte, []int) {
-	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{5}
+	return file_sanguo_world_v1_viewport_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetWorldTileDetailResponse) GetTile() *WorldTileSummary {
@@ -552,10 +629,17 @@ const file_sanguo_world_v1_viewport_proto_rawDesc = "" +
 	"\x05phase\x18\x06 \x01(\x05R\x05phase\x12 \n" +
 	"\farrive_at_ms\x18\a \x01(\x03R\n" +
 	"arriveAtMs\x12&\n" +
-	"\x0fowner_player_id\x18\b \x01(\x03R\rownerPlayerId\"\x8e\x01\n" +
+	"\x0fowner_player_id\x18\b \x01(\x03R\rownerPlayerId\"f\n" +
+	"\x13WorldProvinceCenter\x12\x1f\n" +
+	"\vprovince_id\x18\x01 \x01(\x05R\n" +
+	"provinceId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\f\n" +
+	"\x01x\x18\x03 \x01(\x05R\x01x\x12\f\n" +
+	"\x01y\x18\x04 \x01(\x05R\x01y\"\xd2\x01\n" +
 	"\x18GetWorldViewportResponse\x127\n" +
 	"\x05tiles\x18\x01 \x03(\v2!.sanguo.world.v1.WorldTileSummaryR\x05tiles\x129\n" +
-	"\amarches\x18\x02 \x03(\v2\x1f.sanguo.world.v1.WorldMarchLineR\amarches\"7\n" +
+	"\amarches\x18\x02 \x03(\v2\x1f.sanguo.world.v1.WorldMarchLineR\amarches\x12B\n" +
+	"\tprovinces\x18\x03 \x03(\v2$.sanguo.world.v1.WorldProvinceCenterR\tprovinces\"7\n" +
 	"\x19GetWorldTileDetailRequest\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x05R\x01y\"\xfc\x01\n" +
@@ -578,24 +662,26 @@ func file_sanguo_world_v1_viewport_proto_rawDescGZIP() []byte {
 	return file_sanguo_world_v1_viewport_proto_rawDescData
 }
 
-var file_sanguo_world_v1_viewport_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_sanguo_world_v1_viewport_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_sanguo_world_v1_viewport_proto_goTypes = []any{
 	(*GetWorldViewportRequest)(nil),    // 0: sanguo.world.v1.GetWorldViewportRequest
 	(*WorldTileSummary)(nil),           // 1: sanguo.world.v1.WorldTileSummary
 	(*WorldMarchLine)(nil),             // 2: sanguo.world.v1.WorldMarchLine
-	(*GetWorldViewportResponse)(nil),   // 3: sanguo.world.v1.GetWorldViewportResponse
-	(*GetWorldTileDetailRequest)(nil),  // 4: sanguo.world.v1.GetWorldTileDetailRequest
-	(*GetWorldTileDetailResponse)(nil), // 5: sanguo.world.v1.GetWorldTileDetailResponse
+	(*WorldProvinceCenter)(nil),        // 3: sanguo.world.v1.WorldProvinceCenter
+	(*GetWorldViewportResponse)(nil),   // 4: sanguo.world.v1.GetWorldViewportResponse
+	(*GetWorldTileDetailRequest)(nil),  // 5: sanguo.world.v1.GetWorldTileDetailRequest
+	(*GetWorldTileDetailResponse)(nil), // 6: sanguo.world.v1.GetWorldTileDetailResponse
 }
 var file_sanguo_world_v1_viewport_proto_depIdxs = []int32{
 	1, // 0: sanguo.world.v1.GetWorldViewportResponse.tiles:type_name -> sanguo.world.v1.WorldTileSummary
 	2, // 1: sanguo.world.v1.GetWorldViewportResponse.marches:type_name -> sanguo.world.v1.WorldMarchLine
-	1, // 2: sanguo.world.v1.GetWorldTileDetailResponse.tile:type_name -> sanguo.world.v1.WorldTileSummary
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3, // 2: sanguo.world.v1.GetWorldViewportResponse.provinces:type_name -> sanguo.world.v1.WorldProvinceCenter
+	1, // 3: sanguo.world.v1.GetWorldTileDetailResponse.tile:type_name -> sanguo.world.v1.WorldTileSummary
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_sanguo_world_v1_viewport_proto_init() }
@@ -609,7 +695,7 @@ func file_sanguo_world_v1_viewport_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sanguo_world_v1_viewport_proto_rawDesc), len(file_sanguo_world_v1_viewport_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
