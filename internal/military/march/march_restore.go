@@ -165,7 +165,9 @@ func validateRestore(server int32, catalog map[int32]UnitSpec, orders []restoreR
 			if o.ReturnAt != nil && !o.ReturnAt.IsZero() {
 				return fail()
 			}
-		} else if o.ReturnAt == nil || !validMarchTime(*o.ReturnAt) || !o.ReturnAt.After(o.ArriveAt) {
+		} else if o.ReturnAt == nil || !validMarchTime(*o.ReturnAt) || !o.ReturnAt.After(o.DepartAt) {
+			// A mid-flight recall returns before the original arrival, so only the
+			// departure ordering is universal.
 			return fail()
 		}
 		st := stacks[o.ArmyID]

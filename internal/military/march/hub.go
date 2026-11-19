@@ -268,6 +268,56 @@ func (h *Hub) MarchArrivalError(id int64) error {
 	return h.arrivalErrors[id]
 }
 
+// ApplyRecall mirrors a durable recall into the Hub: marching or arrived troops
+// become returning at the persisted deadline.
+func (h *Hub) ApplyRecall(marchID int64, returnAt time.Time) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	o := h.marches[marchID]
+	if o == nil {
+		return ErrMarchNotFound
+	}
+	if o.Phase == PhaseReturning {
+		return nil
+	}
+	if o.Phase != PhaseMarching && o.Phase != PhaseArrived {
+		return ErrInvalidPhase
+	}
+	o.Phase = PhaseReturning
+	o.ReturnFinishAt = returnAt
+	h.scheduler.Cancel(EventMarchArrive, o.ID)
+	h.scheduler.Cancel(EventMarchReturnDone, o.ID)
+	h.scheduler.Schedule(Event{Kind: EventMarchReturnDone, DueAt: returnAt, RefID: o.ID,
+		Handler: func(ev Event) { h.onMarchReturn(ev) }})
+	return nil
+}
+
+// ApplySpeedup mirrors a durable deadline change; the queued event re-schedules
+// itself when it fires before the new deadline.
+func (h *Hub) ApplySpeedup(marchID int64, deadline time.Time) error {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	o := h.marches[marchID]
+	if o == nil {
+		return ErrMarchNotFound
+	}
+	switch o.Phase {
+	case PhaseMarching:
+		o.ArriveAt = deadline
+		h.scheduler.Cancel(EventMarchArrive, o.ID)
+		h.scheduler.Schedule(Event{Kind: EventMarchArrive, DueAt: deadline, RefID: o.ID,
+			Handler: func(ev Event) { h.onMarchArrive(ev) }})
+	case PhaseReturning:
+		o.ReturnFinishAt = deadline
+		h.scheduler.Cancel(EventMarchReturnDone, o.ID)
+		h.scheduler.Schedule(Event{Kind: EventMarchReturnDone, DueAt: deadline, RefID: o.ID,
+			Handler: func(ev Event) { h.onMarchReturn(ev) }})
+	default:
+		return ErrInvalidPhase
+	}
+	return nil
+}
+
 // Recall starts return march (arrived → returning).
 func (h *Hub) Recall(marchID int64) error {
 	h.mu.Lock()

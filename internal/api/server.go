@@ -247,6 +247,8 @@ func (s *Server) GatewayRouter() *gateway.Router {
 	if s.preparedMarch != nil {
 		handlers[RouteStartMarch] = s.preparedMarch.route
 	}
+	handlers[RouteRecallMarch] = s.handleRecallMarch
+	handlers[RouteSpeedupMarch] = s.handleSpeedupMarch
 	handlers[RouteListPlayerCities] = s.handleListPlayerCities
 	handlers[RouteGetWorldViewport] = s.handleGetWorldViewport
 	handlers[RouteGetWorldTileDetail] = s.handleGetWorldTileDetail

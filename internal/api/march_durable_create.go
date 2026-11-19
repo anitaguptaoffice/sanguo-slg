@@ -71,6 +71,9 @@ func (c durableMarchCreator) write(ctx context.Context, pc PlayerContext, req *m
 	defer s.endMarchStart(pc, req.GetHeroId())
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+	if reason := s.marchLimitViolation(ctx, pc, req.GetCityId(), req.GetHeroId(), troops); reason != "" {
+		return errResp(trace, commonv1.ErrorCode_MILITARY_INVALID_MARCH, reason), nil
+	}
 	canonical := slices.Clone(troops)
 	slices.SortFunc(canonical, func(a, b march.TroopStack) int { return cmp.Compare(a.UnitCfgID, b.UnitCfgID) })
 	in := march.MarchCreate{ServerID: pc.ServerID, PlayerID: pc.PlayerID, OwnerPlayerID: pc.PlayerID,

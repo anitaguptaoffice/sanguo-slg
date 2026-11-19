@@ -75,6 +75,25 @@ func (s *Scheduler) PollDue(now time.Time) int {
 	return len(due)
 }
 
+// Cancel removes pending events of one kind for a reference. It reports how
+// many were removed.
+func (s *Scheduler) Cancel(kind EventKind, refID int64) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	kept := s.events[:0]
+	removed := 0
+	for _, item := range s.events {
+		if item.ev.Kind == kind && item.ev.RefID == refID {
+			removed++
+			continue
+		}
+		kept = append(kept, item)
+	}
+	s.events = kept
+	heap.Init(&s.events)
+	return removed
+}
+
 // NextDue returns the earliest pending due time, or zero if empty.
 func (s *Scheduler) NextDue() time.Time {
 	s.mu.Lock()

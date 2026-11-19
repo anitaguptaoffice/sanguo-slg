@@ -59,6 +59,8 @@ export const Routes = {
   StartBuildingUpgrade: "domestic.v1.StartBuildingUpgrade",
   RecruitTroop: "military.v1.RecruitTroop",
   StartMarch: "military.v1.StartMarch",
+  RecallMarch: "military.v1.RecallMarch",
+  SpeedupMarch: "military.v1.SpeedupMarch",
   ListMarches: "military.v1.ListMarches",
   ListBattleReports: "military.v1.ListBattleReports",
   GetBattleReport: "military.v1.GetBattleReport",
@@ -149,6 +151,10 @@ export type ProtoTypes = {
   RecruitTroopResponse: protobuf.Type;
   StartMarchRequest: protobuf.Type;
   StartMarchResponse: protobuf.Type;
+  RecallMarchRequest: protobuf.Type;
+  RecallMarchResponse: protobuf.Type;
+  SpeedupMarchRequest: protobuf.Type;
+  SpeedupMarchResponse: protobuf.Type;
   ListMarchesRequest: protobuf.Type;
   ListMarchesResponse: protobuf.Type;
   ListBattleReportsRequest: protobuf.Type;
@@ -280,6 +286,10 @@ export function getTypes(): ProtoTypes {
     RecruitTroopResponse: r.lookupType("sanguo.military.v1.RecruitTroopResponse"),
     StartMarchRequest: r.lookupType("sanguo.military.v1.StartMarchRequest"),
     StartMarchResponse: r.lookupType("sanguo.military.v1.StartMarchResponse"),
+    RecallMarchRequest: r.lookupType("sanguo.military.v1.RecallMarchRequest"),
+    RecallMarchResponse: r.lookupType("sanguo.military.v1.RecallMarchResponse"),
+    SpeedupMarchRequest: r.lookupType("sanguo.military.v1.SpeedupMarchRequest"),
+    SpeedupMarchResponse: r.lookupType("sanguo.military.v1.SpeedupMarchResponse"),
     ListMarchesRequest: r.lookupType("sanguo.military.v1.ListMarchesRequest"),
     ListMarchesResponse: r.lookupType("sanguo.military.v1.ListMarchesResponse"),
     ListBattleReportsRequest: r.lookupType("sanguo.military.v1.ListBattleReportsRequest"),

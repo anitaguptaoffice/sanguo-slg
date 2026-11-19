@@ -1,5 +1,5 @@
 {
-  "bag_max_distinct_items": 57,
+  "bag_max_distinct_items": 58,
   "items": [
     {
       "item_cfg_id": 2001,
@@ -676,6 +676,20 @@
         "grants": {
           "wood": 400
         }
+      }
+    },
+    {
+      "item_cfg_id": 2100,
+      "code": "speedup_march",
+      "name": "急行军令",
+      "item_type": 2,
+      "max_stack": 99,
+      "meta": {
+        "description": "缩短在途行军或返程 5 分钟。",
+        "speedup_sec": 300,
+        "applies_to": [
+          "march"
+        ]
       }
     }
   ]

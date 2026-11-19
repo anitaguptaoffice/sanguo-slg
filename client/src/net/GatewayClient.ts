@@ -49,6 +49,8 @@ export type GatewayPort = {
   recruitTroop(cityId: number, unitCfgId: number, count: number): Promise<unknown>;
   readonly preparedRecruit?: boolean;
   submitPreparedRecruit?(intent?: RecruitJournalIntent): Promise<PreparedRecruitResult>;
+  recallMarch(marchId: number): Promise<unknown>;
+  speedupMarch(marchId: number, itemCfgId: number): Promise<unknown>;
   startMarch(
     cityId: number,
     toX: number,
@@ -519,6 +521,22 @@ export class GatewayClient implements GatewayPort {
       "RecruitTroopRequest",
       { city_id: cityId, unit_cfg_id: unitCfgId, count },
       RecruitTroopResponse,
+      true,
+    );
+  }
+
+  async recallMarch(marchId: number) {
+    const { RecallMarchResponse } = getTypes();
+    return this.rpc(Routes.RecallMarch, "RecallMarchRequest", { march_id: marchId }, RecallMarchResponse, true);
+  }
+
+  async speedupMarch(marchId: number, itemCfgId: number) {
+    const { SpeedupMarchResponse } = getTypes();
+    return this.rpc(
+      Routes.SpeedupMarch,
+      "SpeedupMarchRequest",
+      { march_id: marchId, item_cfg_id: itemCfgId },
+      SpeedupMarchResponse,
       true,
     );
   }

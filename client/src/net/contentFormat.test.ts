@@ -11,7 +11,7 @@ describe("contentFormat", () => {
 
   it("uses canonical DATA-002 names only where established UI labels are absent", () => {
     const catalog = JSON.parse(readFileSync(new URL("../../../internal/content/seed/catalog.json", import.meta.url), "utf8"));
-    const established = new Set([2001, 2002, 2003, 2004, 2005, 2006, 2017, 2020]);
+    const established = new Set([2001, 2002, 2003, 2004, 2005, 2006, 2017, 2020, 2100]);
     for (const item of catalog.items) if (!established.has(item.item_cfg_id)) expect(itemLabel(item.item_cfg_id)).toBe(item.name);
     expect(itemLabel(2001)).toBe("谷袋·初备");
     expect(itemLabel(2002)).toBe("木料捆·初备");

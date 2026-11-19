@@ -95,7 +95,8 @@ def build_heroes(source: dict) -> list[dict]:
 def build_items(source: dict) -> list[dict]:
     return [
         {
-            "item_cfg_id": ITEM_ID_START + i,
+            # Explicit ids reserve the legacy cfg_goods range (2050-2058).
+            "item_cfg_id": int(it["id"]) if "id" in it else ITEM_ID_START + i,
             "code": it["code"],
             "name": it["name"],
             "item_type": it["item_type"],

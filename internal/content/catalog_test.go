@@ -18,18 +18,17 @@ func TestEmbeddedCatalogMatchesItemsSeed(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	codes := regexp.MustCompile(`(?m)^\s+-\s+\{\s*code:\s*([a-z0-9_]+)`).FindAllStringSubmatch(string(raw), -1)
+	codes := regexp.MustCompile(`(?m)^\s+-\s+\{\s*(?:id:\s*\d+,\s*)?code:\s*([a-z0-9_]+)`).FindAllStringSubmatch(string(raw), -1)
 	if len(codes) != len(cat.Items) {
 		t.Fatalf("item count: seed %d catalog %d", len(codes), len(cat.Items))
 	}
-	for i, m := range codes {
-		id := int32(2001 + i)
-		def, ok := cat.Items[id]
-		if !ok {
-			t.Fatalf("missing id %d", id)
-		}
-		if def.Code != m[1] {
-			t.Fatalf("id %d code %q seed %q", id, def.Code, m[1])
+	byCode := make(map[string]int32, len(cat.Items))
+	for id, def := range cat.Items {
+		byCode[def.Code] = id
+	}
+	for _, m := range codes {
+		if _, ok := byCode[m[1]]; !ok {
+			t.Fatalf("missing seed code %q in catalog", m[1])
 		}
 	}
 }

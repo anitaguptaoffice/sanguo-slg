@@ -42,7 +42,7 @@ func TestMarchRestoreRejects(t *testing.T) {
 		"arrive order":      func(in *restoreInput) { in.orders[0].ArriveAt = in.orders[0].DepartAt },
 		"marching deadline": func(in *restoreInput) { in.orders[0].ReturnAt = restorePtr(in.orders[0].ArriveAt) },
 		"return missing":    func(in *restoreInput) { in.orders[1].ReturnAt = nil },
-		"return early":      func(in *restoreInput) { *in.orders[1].ReturnAt = in.orders[1].ArriveAt },
+		"return early":      func(in *restoreInput) { *in.orders[1].ReturnAt = in.orders[1].DepartAt },
 		"troops missing":    func(in *restoreInput) { in.troops = nil },
 		"troop unknown":     func(in *restoreInput) { in.troops[0].Unit = 99 },
 		"troop zero":        func(in *restoreInput) { in.troops[0].Count = 0 },

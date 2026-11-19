@@ -136,11 +136,23 @@ func classifyReturnGraph(c ReturnCandidate, origin ReturnOrigin, s returnLockedS
 	if s.status == 4 && s.armyStatus == 1 && atDestination && len(s.units) == 0 && s.returnAt == nil {
 		return returnAnnihilated
 	}
-	if len(s.units) == 0 || s.returnAt == nil || !validMarchTime(*s.returnAt) || !s.returnAt.After(s.arrive) {
+	if len(s.units) == 0 || s.returnAt == nil || !validMarchTime(*s.returnAt) {
 		return 0
 	}
-	if s.status == 3 && s.armyStatus == 2 && atDestination {
-		return returnReturning
+	// A mid-flight recall turns back before the original arrival and never reaches
+	// the destination; every other return graph keeps the normal ordering.
+	if s.status == 3 && s.armyStatus == 2 {
+		if atDestination && s.returnAt.After(s.arrive) {
+			return returnReturning
+		}
+		// A mid-flight recall turns back before the original arrival and never
+		// reaches the destination.
+		if !atDestination && s.returnAt.Before(s.arrive) {
+			return returnReturning
+		}
+	}
+	if !s.returnAt.After(s.arrive) {
+		return 0
 	}
 	if s.status == 4 && s.armyStatus == 1 && s.x == origin.X && s.y == origin.Y {
 		return returnCredited
