@@ -363,6 +363,7 @@ export class WorldMapScene {
         radius.y,
       )) as { tiles?: Tile[]; marches?: MarchLine[]; provinces?: Province[] };
       if (!this.opened || generation !== this.fetchGeneration) return;
+      if (this.tiles.size > 20000) this.tiles.clear();
       for (const tile of reply.tiles ?? []) this.tiles.set(`${tile.x}:${tile.y}`, tile);
       this.marches = reply.marches ?? [];
       if (reply.provinces?.length) {
