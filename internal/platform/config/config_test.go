@@ -9,7 +9,6 @@ func TestLoadDefaults(t *testing.T) {
 	t.Setenv("HTTP_ADDR", "")
 	t.Setenv("DATABASE_URL", "")
 	t.Setenv("REDIS_ADDR", "")
-	t.Setenv("MIL_FRESH_PROFILE_FILE", "")
 
 	cfg, err := Load()
 	if err != nil {
